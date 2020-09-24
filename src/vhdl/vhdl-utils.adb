@@ -308,6 +308,8 @@ package body Vhdl.Utils is
                | Iir_Kind_Component_Declaration
                | Iir_Kind_Function_Declaration
                | Iir_Kind_Procedure_Declaration
+               | Iir_Kind_Function_Instantiation_Declaration
+               | Iir_Kind_Procedure_Instantiation_Declaration
                | Iir_Kind_Attribute_Declaration
                | Iir_Kind_Nature_Declaration
                | Iir_Kind_Subnature_Declaration

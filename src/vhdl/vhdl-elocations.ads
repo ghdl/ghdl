@@ -264,6 +264,9 @@ package Vhdl.Elocations is
    --
    --   Get/Set_Is_Location (Field4)
 
+   -- Iir_Kind_Function_Instantiation_Declaration (None)
+   -- Iir_Kind_Procedure_Instantiation_Declaration (None)
+
    -- Iir_Kind_Interface_Function_Declaration (None)
    -- Iir_Kind_Interface_Procedure_Declaration (None)
 

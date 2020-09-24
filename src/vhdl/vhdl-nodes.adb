@@ -1265,6 +1265,8 @@ package body Vhdl.Nodes is
            | Iir_Kind_Procedure_Declaration
            | Iir_Kind_Function_Body
            | Iir_Kind_Procedure_Body
+           | Iir_Kind_Function_Instantiation_Declaration
+           | Iir_Kind_Procedure_Instantiation_Declaration
            | Iir_Kind_Spectrum_Quantity_Declaration
            | Iir_Kind_Across_Quantity_Declaration
            | Iir_Kind_Through_Quantity_Declaration
@@ -3265,6 +3267,22 @@ package body Vhdl.Nodes is
                      "no field Implicit_Definition");
       Set_Field7 (D, Iir_Predefined_Functions'Pos (Def));
    end Set_Implicit_Definition;
+
+   function Get_Uninstantiated_Subprogram_Name (N : Iir) return Iir is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Uninstantiated_Subprogram_Name (Get_Kind (N)),
+                     "no field Uninstantiated_Subprogram_Name");
+      return Get_Field6 (N);
+   end Get_Uninstantiated_Subprogram_Name;
+
+   procedure Set_Uninstantiated_Subprogram_Name (N : Iir; Name : Iir) is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Uninstantiated_Subprogram_Name (Get_Kind (N)),
+                     "no field Uninstantiated_Subprogram_Name");
+      Set_Field6 (N, Name);
+   end Set_Uninstantiated_Subprogram_Name;
 
    function Get_Default_Value (Target : Iir) return Iir is
    begin

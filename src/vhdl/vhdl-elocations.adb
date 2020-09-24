@@ -284,6 +284,8 @@ package body Vhdl.Elocations is
            | Iir_Kind_Psl_Declaration
            | Iir_Kind_Psl_Endpoint_Declaration
            | Iir_Kind_Enumeration_Literal
+           | Iir_Kind_Function_Instantiation_Declaration
+           | Iir_Kind_Procedure_Instantiation_Declaration
            | Iir_Kind_Terminal_Declaration
            | Iir_Kind_Free_Quantity_Declaration
            | Iir_Kind_Spectrum_Quantity_Declaration

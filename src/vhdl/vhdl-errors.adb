@@ -512,6 +512,10 @@ package body Vhdl.Errors is
             return Disp_Identifier (Node, "procedure");
          when Iir_Kind_Function_Declaration =>
             return Disp_Identifier (Node, "function");
+         when Iir_Kind_Function_Instantiation_Declaration =>
+            return Disp_Identifier (Node, "function instantiation");
+         when Iir_Kind_Procedure_Instantiation_Declaration =>
+            return Disp_Identifier (Node, "procedure instantiation");
          when Iir_Kind_Interface_Procedure_Declaration =>
             return Disp_Identifier (Node, "interface procedure");
          when Iir_Kind_Interface_Function_Declaration =>

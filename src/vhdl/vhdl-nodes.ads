@@ -1662,6 +1662,30 @@ package Vhdl.Nodes is
    -- Only for Iir_Kind_Procedure_Body:
    --   Get/Set_Suspend_Flag (Flag11)
 
+   -- Iir_Kind_Function_Instantiation_Declaration (Medium)
+   -- Iir_Kind_Procedure_Instantiation_Declaration (Medium)
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   -- Only for Iir_Kind_Function_Instantiation_Declaration:
+   --   Get/Set_Return_Type (Field1)
+   --
+   -- Only for Iir_Kind_Function_Instantiation_Declaration:
+   --   Get/Set_Type (Alias Field1)
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Identifier (Field3)
+   --
+   --   Get/Set_Subprogram_Hash (Field4)
+   --
+   --   Get/Set_Interface_Declaration_Chain (Field5)
+   --
+   --  A signature or a simple name.
+   --   Get/Set_Uninstantiated_Subprogram_Name (Field6)
+   --
+   --   Get/Set_Generic_Map_Aspect_Chain (Field8)
+
    -- Iir_Kind_Interface_Function_Declaration (Medium)
    -- Iir_Kind_Interface_Procedure_Declaration (Medium)
    --
@@ -4897,6 +4921,8 @@ package Vhdl.Nodes is
       Iir_Kind_Procedure_Declaration,           --  Subprg, Proc
       Iir_Kind_Function_Body,
       Iir_Kind_Procedure_Body,
+      Iir_Kind_Function_Instantiation_Declaration,
+      Iir_Kind_Procedure_Instantiation_Declaration,
 
       Iir_Kind_Terminal_Declaration,
 
@@ -7906,6 +7932,10 @@ package Vhdl.Nodes is
    --  Field: Field7 (pos)
    function Get_Implicit_Definition (D : Iir) return Iir_Predefined_Functions;
    procedure Set_Implicit_Definition (D : Iir; Def : Iir_Predefined_Functions);
+
+   --  Field: Field6
+   function Get_Uninstantiated_Subprogram_Name (N : Iir) return Iir;
+   procedure Set_Uninstantiated_Subprogram_Name (N : Iir; Name : Iir);
 
    --  Get the default value of an object declaration.
    --  Null_iir if no default value.

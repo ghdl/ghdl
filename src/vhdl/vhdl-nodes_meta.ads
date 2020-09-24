@@ -180,6 +180,7 @@ package Vhdl.Nodes_Meta is
       Field_Impure_Depth,
       Field_Return_Type,
       Field_Implicit_Definition,
+      Field_Uninstantiated_Subprogram_Name,
       Field_Default_Value,
       Field_Deferred_Declaration,
       Field_Deferred_Declaration_Flag,
@@ -759,6 +760,8 @@ package Vhdl.Nodes_Meta is
    function Has_Impure_Depth (K : Iir_Kind) return Boolean;
    function Has_Return_Type (K : Iir_Kind) return Boolean;
    function Has_Implicit_Definition (K : Iir_Kind) return Boolean;
+   function Has_Uninstantiated_Subprogram_Name (K : Iir_Kind)
+      return Boolean;
    function Has_Default_Value (K : Iir_Kind) return Boolean;
    function Has_Deferred_Declaration (K : Iir_Kind) return Boolean;
    function Has_Deferred_Declaration_Flag (K : Iir_Kind) return Boolean;

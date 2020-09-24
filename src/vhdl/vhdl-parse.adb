@@ -79,6 +79,7 @@ package body Vhdl.Parse is
                                              First_Cond : Iir) return Iir;
    function Parse_Simultaneous_Case_Statement
      (Label : Name_Id; Loc : Location_Type; Expr : Iir) return Iir;
+   function Parse_Generic_Map_Aspect return Iir;
 
    --  Maximum number of nested parenthesis, before generating an error.
    Max_Parenthesis_Depth : constant Natural := 1000;
@@ -1997,10 +1998,20 @@ package body Vhdl.Parse is
       end if;
    end Parse_Subprogram_Designator;
 
+   --  Emit an error message is function declaration SUBPRG has no return
+   --  type mark.
+   procedure Check_Function_Specification (Subprg : Iir) is
+   begin
+      if Get_Return_Type_Mark (Subprg) = Null_Iir then
+         Error_Msg_Parse ("'return' expected");
+         Set_Return_Type_Mark (Subprg, Create_Error_Node);
+      end if;
+   end Check_Function_Specification;
+
    --  Precond: '(' or return or any
    --  Postcond: next token
    procedure Parse_Subprogram_Parameters_And_Return
-     (Subprg : Iir; Is_Func : Boolean)
+     (Subprg : Iir; Is_Func : Boolean; Required : Boolean)
    is
       Old : Iir;
       pragma Unreferenced (Old);
@@ -2049,9 +2060,8 @@ package body Vhdl.Parse is
               (Subprg, Parse_Type_Mark (Check_Paren => True));
          end if;
       else
-         if Is_Func then
-            Error_Msg_Parse ("'return' expected");
-            Set_Return_Type_Mark (Subprg, Create_Error_Node);
+         if Is_Func and Required then
+            Check_Function_Specification (Subprg);
          end if;
       end if;
    end Parse_Subprogram_Parameters_And_Return;
@@ -2128,7 +2138,7 @@ package body Vhdl.Parse is
       Parse_Subprogram_Designator (Subprg);
 
       Parse_Subprogram_Parameters_And_Return
-        (Subprg, Kind = Iir_Kind_Interface_Function_Declaration);
+        (Subprg, Kind = Iir_Kind_Interface_Function_Declaration, True);
 
       --  TODO: interface_subprogram_default
 
@@ -5326,6 +5336,7 @@ package body Vhdl.Parse is
            | Tok_Impure =>
             Decl := Parse_Subprogram_Declaration;
             if Decl /= Null_Iir
+              and then Get_Kind (Decl) in Iir_Kinds_Subprogram_Declaration
               and then Get_Subprogram_Body (Decl) /= Null_Iir
             then
                if Get_Kind (Parent) = Iir_Kind_Package_Declaration then
@@ -8022,109 +8033,12 @@ package body Vhdl.Parse is
       end loop;
    end Parse_Sequential_Statements;
 
-   --  precond : PROCEDURE, FUNCTION, PURE or IMPURE.
-   --  postcond: next token.
-   --
-   --  [ LRM93 2.1 ]
-   --  subprogram_declaration ::= subprogram_specification ;
-   --
-   --  [ LRM93 2.1 ]
-   --  subprogram_specification ::=
-   --      PROCEDURE designator [ ( formal_parameter_list ) ]
-   --    | [ PURE | IMPURE ] FUNCTION designator [ ( formal_parameter_list ) ]
-   --          RETURN type_mark
-   --
-   --  [ LRM93 2.2 ]
-   --  subprogram_body ::=
-   --      subprogram_specification IS
-   --          subprogram_declarative_part
-   --      BEGIN
-   --          subprogram_statement_part
-   --      END [ subprogram_kind ] [ designator ] ;
-   --
-   --  [ LRM93 2.1 ]
-   --  designator ::= identifier | operator_symbol
-   --
-   --  [ LRM93 2.1 ]
-   --  operator_symbol ::= string_literal
-   function Parse_Subprogram_Declaration return Iir
+   procedure Parse_Subprogram_Body (Subprg : Iir; Is_Loc : Location_Type)
    is
-      Kind : Iir_Kind;
-      Subprg: Iir;
+      Kind : constant Iir_Kind := Get_Kind (Subprg);
       Subprg_Body : Iir;
-      Start_Loc, Is_Loc, Begin_Loc, End_Loc : Location_Type;
+      Begin_Loc, End_Loc : Location_Type;
    begin
-      --  Create the node.
-      Start_Loc := Get_Token_Location;
-      case Current_Token is
-         when Tok_Procedure =>
-            Kind := Iir_Kind_Procedure_Declaration;
-         when Tok_Function
-           | Tok_Pure
-           | Tok_Impure =>
-            Kind := Iir_Kind_Function_Declaration;
-         when others =>
-            raise Internal_Error;
-      end case;
-      Subprg := Create_Iir (Kind);
-      Set_Location (Subprg);
-      Set_Implicit_Definition (Subprg, Iir_Predefined_None);
-
-      case Current_Token is
-         when Tok_Procedure =>
-            null;
-         when Tok_Function =>
-            --  LRM93 2.1
-            --  A function is impure if its specification contains the
-            --  reserved word IMPURE; otherwise it is said to be pure.
-            Set_Pure_Flag (Subprg, True);
-         when Tok_Pure
-           | Tok_Impure =>
-            Set_Pure_Flag (Subprg, Current_Token = Tok_Pure);
-            if Flags.Vhdl_Std = Vhdl_87 then
-               Error_Msg_Parse
-                 ("'pure' and 'impure' are not allowed in vhdl 87");
-            end if;
-            Set_Has_Pure (Subprg, True);
-            --  FIXME: what to do in case of error ??
-
-            --  Eat 'pure' or 'impure'.
-            Scan;
-
-            Expect (Tok_Function, "'function' must follow 'pure' or 'impure'");
-         when others =>
-            raise Internal_Error;
-      end case;
-
-      --  Eat 'procedure' or 'function'.
-      Scan;
-
-      --  Designator.
-      Parse_Subprogram_Designator (Subprg);
-
-      Parse_Subprogram_Parameters_And_Return
-        (Subprg, Kind = Iir_Kind_Function_Declaration);
-
-      if Flag_Elocations then
-         Create_Elocations (Subprg);
-         Set_Start_Location (Subprg, Start_Loc);
-      end if;
-
-      case Current_Token is
-         when Tok_Is =>
-            --  Skip 'is'.
-            Is_Loc := Get_Token_Location;
-            Scan;
-         when Tok_Begin =>
-            Error_Msg_Parse ("missing 'is' before 'begin'");
-            Is_Loc := Get_Token_Location;
-         when others =>
-            --  Skip ';'.
-            Expect_Scan (Tok_Semi_Colon);
-
-            return Subprg;
-      end case;
-
       --  The body.
       Set_Has_Body (Subprg, True);
       if Kind = Iir_Kind_Function_Declaration then
@@ -8204,7 +8118,181 @@ package body Vhdl.Parse is
             null;
       end case;
       Scan_Semi_Colon_Declaration ("subprogram body");
+   end Parse_Subprogram_Body;
 
+   --  precond : NEW
+   --
+   --  LRM08 4.4 Subprogram instantiation declarations
+   --  subprogram_instantiation_declaration ::=
+   --    subprogram_kind designator IS
+   --      NEW uninstantiated_subprogram_name [ signature ]
+   --      [ generic_map_aspect ];
+   function Parse_Subprogram_Instantiation (Subprg : Iir) return Iir
+   is
+      Res : Iir;
+   begin
+      case Iir_Kinds_Subprogram_Declaration (Get_Kind (Subprg)) is
+         when Iir_Kind_Function_Declaration =>
+            Res := Create_Iir (Iir_Kind_Function_Instantiation_Declaration);
+            if Get_Has_Pure (Subprg) then
+               Error_Msg_Parse
+                 (+Subprg, "pure/impure not allowed for instantiations");
+            end if;
+            if Get_Return_Type_Mark (Subprg) /= Null_Iir then
+               Error_Msg_Parse
+                 (+Subprg, "return type not allowed for instantiations");
+            end if;
+         when Iir_Kind_Procedure_Declaration =>
+            Res := Create_Iir (Iir_Kind_Procedure_Instantiation_Declaration);
+      end case;
+      Location_Copy (Res, Subprg);
+      Set_Identifier (Res, Get_Identifier (Subprg));
+
+      if Get_Interface_Declaration_Chain (Subprg) /= Null_Iir then
+         Error_Msg_Parse
+           (+Subprg, "interfaces not allowed for instantiations");
+      end if;
+
+      --  Skip 'new'.
+      Scan;
+
+      Set_Uninstantiated_Subprogram_Name (Res, Parse_Signature_Name);
+
+      if Current_Token = Tok_Generic then
+         Set_Generic_Map_Aspect_Chain (Res, Parse_Generic_Map_Aspect);
+      end if;
+
+      --  Skip ';'.
+      Expect_Scan (Tok_Semi_Colon);
+
+      return Res;
+   end Parse_Subprogram_Instantiation;
+
+   --  precond : PROCEDURE, FUNCTION, PURE or IMPURE.
+   --  postcond: next token.
+   --
+   --  [ LRM93 2.1 ]
+   --  subprogram_declaration ::= subprogram_specification ;
+   --
+   --  [ LRM93 2.1 ]
+   --  subprogram_specification ::=
+   --      PROCEDURE designator [ ( formal_parameter_list ) ]
+   --    | [ PURE | IMPURE ] FUNCTION designator [ ( formal_parameter_list ) ]
+   --          RETURN type_mark
+   --
+   --  [ LRM93 2.2 ]
+   --  subprogram_body ::=
+   --      subprogram_specification IS
+   --          subprogram_declarative_part
+   --      BEGIN
+   --          subprogram_statement_part
+   --      END [ subprogram_kind ] [ designator ] ;
+   --
+   --  [ LRM93 2.1 ]
+   --  designator ::= identifier | operator_symbol
+   --
+   --  [ LRM93 2.1 ]
+   --  operator_symbol ::= string_literal
+   function Parse_Subprogram_Declaration return Iir
+   is
+      Kind : Iir_Kind;
+      Subprg : Iir;
+      Gen : Iir;
+      Start_Loc, Is_Loc : Location_Type;
+   begin
+      --  Create the node.
+      Start_Loc := Get_Token_Location;
+      case Current_Token is
+         when Tok_Procedure =>
+            Kind := Iir_Kind_Procedure_Declaration;
+         when Tok_Function
+           | Tok_Pure
+           | Tok_Impure =>
+            Kind := Iir_Kind_Function_Declaration;
+         when others =>
+            raise Internal_Error;
+      end case;
+      Subprg := Create_Iir (Kind);
+      Set_Location (Subprg);
+      Set_Implicit_Definition (Subprg, Iir_Predefined_None);
+
+      case Current_Token is
+         when Tok_Procedure =>
+            null;
+         when Tok_Function =>
+            --  LRM93 2.1
+            --  A function is impure if its specification contains the
+            --  reserved word IMPURE; otherwise it is said to be pure.
+            Set_Pure_Flag (Subprg, True);
+         when Tok_Pure
+           | Tok_Impure =>
+            Set_Pure_Flag (Subprg, Current_Token = Tok_Pure);
+            if Flags.Vhdl_Std = Vhdl_87 then
+               Error_Msg_Parse
+                 ("'pure' and 'impure' are not allowed in vhdl 87");
+            end if;
+            Set_Has_Pure (Subprg, True);
+            --  FIXME: what to do in case of error ??
+
+            --  Eat 'pure' or 'impure'.
+            Scan;
+
+            Expect (Tok_Function, "'function' must follow 'pure' or 'impure'");
+         when others =>
+            raise Internal_Error;
+      end case;
+
+      --  Eat 'procedure' or 'function'.
+      Scan;
+
+      --  Designator.
+      Parse_Subprogram_Designator (Subprg);
+
+      if Current_Token = Tok_Generic then
+         --  Eat 'generic'
+         Scan;
+
+         Gen := Parse_Interface_List (Generic_Interface_List, Subprg);
+         Set_Generic_Chain (Subprg, Gen);
+      end if;
+
+      Parse_Subprogram_Parameters_And_Return
+        (Subprg, Kind = Iir_Kind_Function_Declaration, False);
+
+      if Flag_Elocations then
+         Create_Elocations (Subprg);
+         Set_Start_Location (Subprg, Start_Loc);
+      end if;
+
+      case Current_Token is
+         when Tok_Is =>
+            --  Skip 'is'.
+            Is_Loc := Get_Token_Location;
+            Scan;
+
+            if Current_Token = Tok_New then
+               return Parse_Subprogram_Instantiation (Subprg);
+            end if;
+         when Tok_Begin =>
+            Error_Msg_Parse ("missing 'is' before 'begin'");
+            Is_Loc := Get_Token_Location;
+         when others =>
+            if Kind = Iir_Kind_Function_Declaration then
+               Check_Function_Specification (Subprg);
+            end if;
+
+            --  Skip ';'.
+            Expect_Scan (Tok_Semi_Colon);
+
+            return Subprg;
+      end case;
+
+      if Kind = Iir_Kind_Function_Declaration then
+         Check_Function_Specification (Subprg);
+      end if;
+
+      --  The body.
+      Parse_Subprogram_Body (Subprg, Is_Loc);
       return Subprg;
    end Parse_Subprogram_Declaration;
 
