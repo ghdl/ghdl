@@ -36,6 +36,8 @@ package body Vhdl.Evaluation is
    --  If FORCE is true, always return a literal.
    function Eval_Expr_Keep_Orig (Expr : Iir; Force : Boolean) return Iir;
 
+   function Eval_Check_Bound (Expr : Iir; Sub_Type : Iir) return Boolean;
+
    function Eval_Enum_To_String (Lit : Iir; Orig : Iir) return Iir;
    function Eval_Integer_Image (Val : Int64; Orig : Iir) return Iir;
    function Eval_Floating_Image (Val : Fp64; Orig : Iir) return Iir;
@@ -3417,8 +3419,9 @@ package body Vhdl.Evaluation is
            and then Get_Kind (Atype) in Iir_Kinds_Range_Type_Definition
          then
             --  Check bounds (as this can be done).
-            --  FIXME: create overflow_expr ?
-            Eval_Check_Bound (Res, Atype);
+            if not Eval_Check_Bound (Res, Atype) then
+               Res := Build_Overflow (Res, Atype);
+            end if;
          end if;
 
          return Res;
@@ -3657,13 +3660,24 @@ package body Vhdl.Evaluation is
       end case;
    end Eval_Is_In_Bound;
 
-   procedure Eval_Check_Bound (Expr : Iir; Sub_Type : Iir) is
+   function Eval_Check_Bound (Expr : Iir; Sub_Type : Iir) return Boolean is
    begin
       --  Note: use True not to repeat a message in case of overflow.
       if not Eval_Is_In_Bound (Expr, Sub_Type, True) then
          Warning_Msg_Sem (Warnid_Runtime_Error, +Expr,
                           "static expression violates bounds");
+         return False;
+      else
+         return True;
       end if;
+   end Eval_Check_Bound;
+
+   procedure Eval_Check_Bound (Expr : Iir; Sub_Type : Iir)
+   is
+      Res : Boolean;
+   begin
+      Res := Eval_Check_Bound (Expr, Sub_Type);
+      pragma Unreferenced (Res);
    end Eval_Check_Bound;
 
    function Eval_Is_Range_In_Bound

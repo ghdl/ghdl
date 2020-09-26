@@ -1727,36 +1727,38 @@ package body Vhdl.Sem_Expr is
       Is_Dyadic : constant Boolean :=
         Get_Kind (Expr) in Iir_Kinds_Dyadic_Operator;
       Interface_Chain : Iir;
-      Err : Boolean;
-      Left : Iir;
-      Right : Iir;
+      Err             : Boolean;
+      Left            : Iir;
+      Left_Type       : Iir;
+      Right           : Iir;
+      Right_Type      : Iir;
    begin
       Set_Type (Expr, Get_Return_Type (Decl));
       Interface_Chain := Get_Interface_Declaration_Chain (Decl);
       Err := False;
       Left := Get_Left (Expr);
+      Left_Type := Get_Type (Interface_Chain);
       if Is_Overloaded (Left) then
-         Left := Sem_Expression_Ov
-           (Left, Get_Base_Type (Get_Type (Interface_Chain)));
+         Left := Sem_Expression_Ov (Left, Get_Base_Type (Left_Type));
          if Left = Null_Iir then
             Err := True;
-         else
-            Set_Left (Expr, Left);
          end if;
       end if;
+      Left := Eval_Expr_Check_If_Static (Left, Left_Type);
       Check_Read (Left);
+      Set_Left (Expr, Left);
       if Is_Dyadic then
          Right := Get_Right (Expr);
+         Right_Type := Get_Type (Get_Chain (Interface_Chain));
          if Is_Overloaded (Right) then
-            Right := Sem_Expression_Ov
-              (Right, Get_Base_Type (Get_Type (Get_Chain (Interface_Chain))));
+            Right := Sem_Expression_Ov (Right, Get_Base_Type (Right_Type));
             if Right = Null_Iir then
                Err := True;
-            else
-               Set_Right (Expr, Right);
             end if;
          end if;
+         Right := Eval_Expr_Check_If_Static (Right, Right_Type);
          Check_Read (Right);
+         Set_Right (Expr, Right);
       end if;
       if not Err then
          Set_Implementation (Expr, Decl);
