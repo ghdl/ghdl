@@ -156,6 +156,26 @@ package body Synth.Objtypes is
       return W;
    end Discrete_Range_Width;
 
+   function In_Bounds (Bnd : Bound_Type; V : Int32) return Boolean is
+   begin
+      case Bnd.Dir is
+         when Dir_To =>
+            return V >= Bnd.Left and then V <= Bnd.Right;
+         when Dir_Downto =>
+            return V <= Bnd.Left and then V >= Bnd.Right;
+      end case;
+   end In_Bounds;
+
+   function In_Range (Rng : Discrete_Range_Type; V : Int64) return Boolean is
+   begin
+      case Rng.Dir is
+         when Dir_To =>
+            return V >= Rng.Left and then V <= Rng.Right;
+         when Dir_Downto =>
+            return V <= Rng.Left and then V >= Rng.Right;
+      end case;
+   end In_Range;
+
    function Create_Bit_Type return Type_Acc
    is
       subtype Bit_Type_Type is Type_Type (Type_Bit);

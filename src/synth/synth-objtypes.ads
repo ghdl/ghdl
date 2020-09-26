@@ -224,6 +224,9 @@ package Synth.Objtypes is
 
    function Create_Protected_Type return Type_Acc;
 
+   function In_Bounds (Bnd : Bound_Type; V : Int32) return Boolean;
+   function In_Range (Rng : Discrete_Range_Type; V : Int64) return Boolean;
+
    --  Return the bounds of dimension DIM of a vector/array.  For a vector,
    --  DIM must be 1.
    function Get_Array_Bound (Typ : Type_Acc; Dim : Dim_Type)

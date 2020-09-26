@@ -2195,16 +2195,6 @@ package body Synth.Stmts is
       end case;
    end Synth_Procedure_Call;
 
-   function In_Range (Rng : Discrete_Range_Type; V : Int64) return Boolean is
-   begin
-      case Rng.Dir is
-         when Dir_To =>
-            return V >= Rng.Left and then V <= Rng.Right;
-         when Dir_Downto =>
-            return V <= Rng.Left and then V >= Rng.Right;
-      end case;
-   end In_Range;
-
    procedure Update_Index (Rng : Discrete_Range_Type; V : in out Valtyp)
    is
       T : Int64;

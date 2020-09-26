@@ -1072,16 +1072,6 @@ package body Synth.Expr is
       end case;
    end Synth_Name;
 
-   function In_Bounds (Bnd : Bound_Type; V : Int32) return Boolean is
-   begin
-      case Bnd.Dir is
-         when Dir_To =>
-            return V >= Bnd.Left and then V <= Bnd.Right;
-         when Dir_Downto =>
-            return V <= Bnd.Left and then V >= Bnd.Right;
-      end case;
-   end In_Bounds;
-
    --  Convert index IDX in PFX to an offset.
    --  SYN_INST and LOC are used in case of error.
    function Index_To_Offset
