@@ -73,13 +73,16 @@ package Vhdl.Sem is
    --  LRM 2.2  Subprogram Bodies.
    procedure Sem_Subprogram_Body (Subprg : Iir);
 
+   --  LRM08 4.4  Subprogram instantiation declarations
+   procedure Sem_Subprogram_Instantiation_Declaration (Decl : Iir);
+
    --  LRM 2.5  Package Declarations.
    procedure Sem_Package_Declaration (Pkg : Iir_Package_Declaration);
 
    --  LRM 2.6  Package Bodies.
    procedure Sem_Package_Body (Decl : Iir);
 
-   --  LRM08 4.9  Package Instantiation Declaration
+   --  LRM08 4.9  Package Instantiation Declarations
    procedure Sem_Package_Instantiation_Declaration (Decl : Iir);
 
    --  Do late analysis checks (pure rules).

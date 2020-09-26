@@ -1681,10 +1681,16 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Interface_Declaration_Chain (Field5)
    --
+   --   Get/Set_Generic_Chain (Field6)
+   --
    --  A signature or a simple name.
-   --   Get/Set_Uninstantiated_Subprogram_Name (Field6)
+   --   Get/Set_Uninstantiated_Subprogram_Name (Field7)
    --
    --   Get/Set_Generic_Map_Aspect_Chain (Field8)
+   --
+   --   Get/Set_Instance_Source_File (Field10)
+   --
+   --   Get/Set_Visible_Flag (Flag4)
 
    -- Iir_Kind_Interface_Function_Declaration (Medium)
    -- Iir_Kind_Interface_Procedure_Declaration (Medium)
@@ -7933,7 +7939,7 @@ package Vhdl.Nodes is
    function Get_Implicit_Definition (D : Iir) return Iir_Predefined_Functions;
    procedure Set_Implicit_Definition (D : Iir; Def : Iir_Predefined_Functions);
 
-   --  Field: Field6
+   --  Field: Field7
    function Get_Uninstantiated_Subprogram_Name (N : Iir) return Iir;
    procedure Set_Uninstantiated_Subprogram_Name (N : Iir; Name : Iir);
 

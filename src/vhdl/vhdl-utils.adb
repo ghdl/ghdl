@@ -1819,6 +1819,15 @@ package body Vhdl.Utils is
         and then Get_Generic_Map_Aspect_Chain (Header) /= Null_Iir;
    end Is_Generic_Mapped_Package;
 
+   --  LRM08 4.2 Subprogram declarations
+   --  If the subprogram header contains the reserved word GENERIC, a generic
+   --  list, and no generic map aspect, the subprogram is called an
+   --  uninstantiated subprogram.
+   function Is_Uninstantiated_Subprogram (Subprg : Iir) return Boolean is
+   begin
+      return Get_Generic_Chain (Subprg) /= Null_Iir;
+   end Is_Uninstantiated_Subprogram;
+
    function Kind_In (N : Iir; K1, K2 : Iir_Kind) return Boolean
    is
       K : constant Iir_Kind := Get_Kind (N);

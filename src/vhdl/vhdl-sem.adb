@@ -410,9 +410,15 @@ package body Vhdl.Sem is
             Miss := Missing_Allowed;
          when Iir_Kind_Block_Header =>
             Miss := Missing_Generic;
+         when Iir_Kind_Procedure_Instantiation_Declaration
+            | Iir_Kind_Function_Instantiation_Declaration =>
+            --  LRM08 4.4
+            --  Each formal generic (or member thereof) shall be associated
+            --  at most once.
+            Miss := Missing_Generic;
          when Iir_Kind_Package_Instantiation_Declaration
-           | Iir_Kind_Interface_Package_Declaration
-           | Iir_Kind_Package_Header =>
+            | Iir_Kind_Interface_Package_Declaration
+            | Iir_Kind_Package_Header =>
             --  LRM08 4.9
             --  Each formal generic (or member thereof) shall be associated
             --  at most once.
@@ -1925,6 +1931,12 @@ package body Vhdl.Sem is
       --     subprogram body.
       Open_Declarative_Region;
 
+      -- Sem generics.
+      if Get_Kind (Subprg) in Iir_Kinds_Subprogram_Declaration then
+         Sem_Interface_Chain
+           (Get_Generic_Chain (Subprg), Generic_Interface_List);
+      end if;
+
       --  Sem interfaces.
       Interface_Chain := Get_Interface_Declaration_Chain (Subprg);
       case Get_Kind (Subprg) is
@@ -2218,6 +2230,93 @@ package body Vhdl.Sem is
          Set_All_Sensitized_State (Spec, No_Signal);
       end if;
    end Sem_Subprogram_Body;
+
+   function Sem_Uninstantiated_Subprogram_Name (Decl : Iir) return Iir
+   is
+      Name : Iir;
+      Subprg : Iir;
+   begin
+      Name := Get_Uninstantiated_Subprogram_Name (Decl);
+      if Get_Kind (Name) = Iir_Kind_Signature then
+         --  TODO
+         raise Internal_Error;
+      end if;
+
+      Name := Sem_Denoting_Name (Name);
+      Set_Uninstantiated_Subprogram_Name (Decl, Name);
+      Subprg := Get_Named_Entity (Name);
+      if Is_Error (Subprg) then
+         return Subprg;
+      end if;
+
+      if Is_Overload_List (Subprg) then
+         --  TODO
+         raise Internal_Error;
+      end if;
+
+      if Get_Kind (Subprg) not in Iir_Kinds_Subprogram_Declaration then
+         Error_Class_Match (Name, "package");
+         return Create_Error (Subprg);
+      end if;
+
+      case Get_Kind (Decl) is
+         when Iir_Kind_Procedure_Instantiation_Declaration =>
+            if Get_Kind (Subprg) /= Iir_Kind_Procedure_Declaration then
+               Error_Msg_Sem
+                 (+Name,
+                  "a procedure instantiation cannot instantiate %i", +Subprg);
+               return Create_Error (Subprg);
+            end if;
+         when Iir_Kind_Function_Instantiation_Declaration =>
+            if Get_Kind (Subprg) /= Iir_Kind_Function_Declaration then
+               Error_Msg_Sem
+                 (+Name,
+                  "a function instantiation cannot instantiate %i", +Subprg);
+               return Create_Error (Subprg);
+            end if;
+         when others =>
+            raise Internal_Error;
+      end case;
+
+      if not Is_Uninstantiated_Subprogram (Subprg) then
+         Error_Msg_Sem
+           (+Name, "%n is not an uninstantiated subprogram", +Subprg);
+         return Create_Error (Subprg);
+      end if;
+
+      return Subprg;
+   end Sem_Uninstantiated_Subprogram_Name;
+
+   procedure Sem_Subprogram_Instantiation_Declaration (Decl : Iir)
+   is
+      Subprg : Iir;
+   begin
+      Xref_Decl (Decl);
+
+      Subprg := Sem_Uninstantiated_Subprogram_Name (Decl);
+      if Subprg = Null_Iir or Is_Error (Subprg) then
+         --  What could be done ?
+         return;
+      end if;
+
+      --  LRM08 4.4 Subprogram instantiation declarations
+      --  The generic map aspect, if present, optionally associates a single
+      --  actual with each formal generic (or member thereof) in the
+      --  corresponding subprogram declaration.  Each formal generic (of member
+      --  thereof) shall be associated at most once.
+      if not Sem_Generic_Association_Chain (Subprg, Decl) then
+         --  FIXME: stop analysis here ?
+         return;
+      end if;
+
+      --  Create the interface parameters.
+      Sem_Inst.Instantiate_Subprogram_Declaration (Decl, Subprg);
+
+      --  Add DECL.  Must be done after parameters creation to handle
+      --  homographs.
+      Sem_Scopes.Add_Name (Decl);
+      Set_Visible_Flag (Decl, True);
+   end Sem_Subprogram_Instantiation_Declaration;
 
    --  Return the subprogram body of SPEC.  If there is no body, and if SPEC
    --  is an instance, returns the body of the generic specification but only

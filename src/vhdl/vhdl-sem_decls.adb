@@ -2276,6 +2276,7 @@ package body Vhdl.Sem_Decls is
             end if;
          when Iir_Kind_Component_Declaration =>
             Sem_Component_Declaration (Decl);
+
          when Iir_Kind_Function_Declaration
            | Iir_Kind_Procedure_Declaration =>
             if Is_Implicit_Subprogram (Decl) then
@@ -2291,8 +2292,12 @@ package body Vhdl.Sem_Decls is
                end if;
             end if;
          when Iir_Kind_Function_Body
-           | Iir_Kind_Procedure_Body =>
+            | Iir_Kind_Procedure_Body =>
             Sem_Subprogram_Body (Decl);
+         when Iir_Kind_Function_Instantiation_Declaration
+            | Iir_Kind_Procedure_Instantiation_Declaration =>
+            Sem_Subprogram_Instantiation_Declaration (Decl);
+
          when Iir_Kind_Non_Object_Alias_Declaration =>
             --  Added by Sem_Alias_Declaration.  Need to check that no
             --  existing attribute specification apply to them.

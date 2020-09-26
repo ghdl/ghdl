@@ -2913,7 +2913,7 @@ package body Vhdl.Canon is
    begin
       case Get_Kind (Decl) is
          when Iir_Kind_Procedure_Body
-           | Iir_Kind_Function_Body =>
+            | Iir_Kind_Function_Body =>
             Canon_Declarations (Top, Decl, Null_Iir);
             if Canon_Flag_Sequentials_Stmts then
                Stmts := Get_Sequential_Statement_Chain (Decl);
@@ -2922,7 +2922,10 @@ package body Vhdl.Canon is
             end if;
 
          when Iir_Kind_Procedure_Declaration
-           | Iir_Kind_Function_Declaration =>
+            | Iir_Kind_Function_Declaration =>
+            null;
+         when Iir_Kind_Function_Instantiation_Declaration
+            | Iir_Kind_Procedure_Instantiation_Declaration =>
             null;
 
          when Iir_Kind_Type_Declaration =>
@@ -2936,15 +2939,15 @@ package body Vhdl.Canon is
             end;
 
          when Iir_Kind_Anonymous_Type_Declaration
-           | Iir_Kind_Subtype_Declaration =>
+            | Iir_Kind_Subtype_Declaration =>
             null;
 
          when Iir_Kind_Protected_Type_Body =>
             Canon_Declarations (Top, Decl, Null_Iir);
 
          when Iir_Kind_Variable_Declaration
-           | Iir_Kind_Signal_Declaration
-           | Iir_Kind_Constant_Declaration =>
+            | Iir_Kind_Signal_Declaration
+            | Iir_Kind_Constant_Declaration =>
             if Canon_Flag_Expressions then
                Canon_Subtype_Indication_If_Anonymous (Get_Type (Decl));
                Canon_Expression (Get_Default_Value (Decl));
@@ -3042,7 +3045,7 @@ package body Vhdl.Canon is
             null;
 
          when Iir_Kind_Nature_Declaration
-           | Iir_Kind_Subnature_Declaration =>
+            | Iir_Kind_Subnature_Declaration =>
             null;
          when Iir_Kind_Terminal_Declaration =>
             null;

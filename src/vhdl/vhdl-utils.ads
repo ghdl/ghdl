@@ -390,6 +390,8 @@ package Vhdl.Utils is
    function Is_Uninstantiated_Package (Pkg : Iir) return Boolean;
    function Is_Generic_Mapped_Package (Pkg : Iir) return Boolean;
 
+   function Is_Uninstantiated_Subprogram (Subprg : Iir) return Boolean;
+
    --  Return TRUE if the base name of NAME is a signal object.
    function Is_Signal_Object (Name: Iir) return Boolean;
 

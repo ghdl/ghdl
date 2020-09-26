@@ -3273,7 +3273,7 @@ package body Vhdl.Nodes is
       pragma Assert (N /= Null_Iir);
       pragma Assert (Has_Uninstantiated_Subprogram_Name (Get_Kind (N)),
                      "no field Uninstantiated_Subprogram_Name");
-      return Get_Field6 (N);
+      return Get_Field7 (N);
    end Get_Uninstantiated_Subprogram_Name;
 
    procedure Set_Uninstantiated_Subprogram_Name (N : Iir; Name : Iir) is
@@ -3281,7 +3281,7 @@ package body Vhdl.Nodes is
       pragma Assert (N /= Null_Iir);
       pragma Assert (Has_Uninstantiated_Subprogram_Name (Get_Kind (N)),
                      "no field Uninstantiated_Subprogram_Name");
-      Set_Field6 (N, Name);
+      Set_Field7 (N, Name);
    end Set_Uninstantiated_Subprogram_Name;
 
    function Get_Default_Value (Target : Iir) return Iir is
