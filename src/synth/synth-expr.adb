@@ -776,16 +776,16 @@ package body Synth.Expr is
             return Vt;
          when Type_Discrete =>
             pragma Assert (Vtype.Kind in Type_All_Discrete);
-            declare
-               N : Net;
-            begin
-               if Vtype.W /= Dtype.W then
-                  --  Truncate.
-                  --  TODO: check overflow.
-                  case Vt.Val.Kind is
-                     when Value_Net
-                       | Value_Wire
-                       | Value_Alias =>
+            case Vt.Val.Kind is
+               when Value_Net
+                  | Value_Wire
+                  | Value_Alias =>
+                  if Vtype.W /= Dtype.W then
+                     --  Truncate.
+                     --  TODO: check overflow.
+                     declare
+                        N : Net;
+                     begin
                         if Is_Static_Val (Vt.Val) then
                            return Create_Value_Discrete
                              (Get_Static_Discrete (Vt), Dtype);
@@ -800,20 +800,27 @@ package body Synth.Expr is
                              (Ctxt, N, Dtype.W, Get_Location (Loc));
                         end if;
                         return Create_Value_Net (N, Dtype);
-                     when Value_Const =>
-                        return Synth_Subtype_Conversion
-                          (Ctxt, (Vt.Typ, Vt.Val.C_Val), Dtype, Bounds, Loc);
-                     when Value_Memory =>
-                        return Create_Value_Discrete
-                          (Read_Discrete (Vt), Dtype);
-                     when others =>
-                        raise Internal_Error;
-                  end case;
-               else
-                  --  TODO: check overflow if sign differ.
-                  return Vt;
-               end if;
-            end;
+                     end;
+                  else
+                     return Vt;
+                  end if;
+               when Value_Const =>
+                  return Synth_Subtype_Conversion
+                    (Ctxt, (Vt.Typ, Vt.Val.C_Val), Dtype, Bounds, Loc);
+               when Value_Memory =>
+                  --  Check for overflow.
+                  declare
+                     Val : constant Int64 := Read_Discrete (Vt);
+                  begin
+                     if not In_Range (Dtype.Drange, Val) then
+                        Error_Msg_Synth (+Loc, "value out of range");
+                        return No_Valtyp;
+                     end if;
+                     return Create_Value_Discrete (Val, Dtype);
+                  end;
+               when others =>
+                  raise Internal_Error;
+            end case;
          when Type_Float =>
             pragma Assert (Vtype.Kind = Type_Float);
             --  TODO: check range
