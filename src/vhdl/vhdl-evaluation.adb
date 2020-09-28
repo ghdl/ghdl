@@ -3663,13 +3663,13 @@ package body Vhdl.Evaluation is
    function Eval_Check_Bound (Expr : Iir; Sub_Type : Iir) return Boolean is
    begin
       --  Note: use True not to repeat a message in case of overflow.
-      if not Eval_Is_In_Bound (Expr, Sub_Type, True) then
-         Warning_Msg_Sem (Warnid_Runtime_Error, +Expr,
-                          "static expression violates bounds");
-         return False;
-      else
+      if Eval_Is_In_Bound (Expr, Sub_Type, True) then
          return True;
       end if;
+
+      Warning_Msg_Sem (Warnid_Runtime_Error, +Expr,
+                       "static expression violates bounds");
+      return False;
    end Eval_Check_Bound;
 
    procedure Eval_Check_Bound (Expr : Iir; Sub_Type : Iir)
