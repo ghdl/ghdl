@@ -1744,7 +1744,6 @@ package body Vhdl.Sem_Expr is
             Err := True;
          end if;
       end if;
-      Left := Eval_Expr_Check_If_Static (Left, Left_Type);
       Check_Read (Left);
       Set_Left (Expr, Left);
       if Is_Dyadic then
@@ -1756,17 +1755,26 @@ package body Vhdl.Sem_Expr is
                Err := True;
             end if;
          end if;
-         Right := Eval_Expr_Check_If_Static (Right, Right_Type);
          Check_Read (Right);
          Set_Right (Expr, Right);
       end if;
       if not Err then
          Set_Implementation (Expr, Decl);
          Sem_Subprogram_Call_Finish (Expr, Decl);
-         return Eval_Expr_If_Static (Expr);
-      else
-         return Expr;
+         if Get_Expr_Staticness (Expr) = Locally then
+            return Eval_Expr_If_Static (Expr);
+         else
+            --  The result is not static, but an operand may be static.
+            --  Evaluate it.
+            Left := Eval_Expr_Check_If_Static (Left, Left_Type);
+            Set_Left (Expr, Left);
+            if Is_Dyadic then
+               Right := Eval_Expr_Check_If_Static (Right, Right_Type);
+               Set_Right (Expr, Right);
+            end if;
+         end if;
       end if;
+      return Expr;
    end Set_Operator_Unique_Interpretation;
 
    --  Display an error message for sem_operator.
