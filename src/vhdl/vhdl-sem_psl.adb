@@ -394,10 +394,13 @@ package body Vhdl.Sem_Psl is
       if Expr = Null_Iir then
          return N;
       end if;
-      Free_Node (N);
       Expr_Type := Get_Type (Expr);
+      if Expr_Type = Null_Iir then
+         return N;
+      end if;
+      Free_Node (N);
       if not Is_Overload_List (Expr_Type)
-        and then not  Is_Psl_Boolean_Type (Expr_Type)
+        and then not Is_Psl_Boolean_Type (Expr_Type)
       then
          Error_Msg_Sem (+Expr, "type of expression must be boolean");
          return PSL.Hash.Get_PSL_Node (HDL_Node (Expr), Get_Location (Expr));
