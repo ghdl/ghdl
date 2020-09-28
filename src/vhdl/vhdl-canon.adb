@@ -2926,7 +2926,12 @@ package body Vhdl.Canon is
             null;
          when Iir_Kind_Function_Instantiation_Declaration
             | Iir_Kind_Procedure_Instantiation_Declaration =>
-            null;
+            --  Canon map aspect.
+            Set_Generic_Map_Aspect_Chain
+              (Decl,
+               Canon_Association_Chain_And_Actuals
+                 (Get_Generic_Chain (Decl),
+                  Get_Generic_Map_Aspect_Chain (Decl), Decl));
 
          when Iir_Kind_Type_Declaration =>
             declare
