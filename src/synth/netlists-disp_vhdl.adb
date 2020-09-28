@@ -1288,9 +1288,12 @@ package body Netlists.Disp_Vhdl is
                   Disp_Template
                     ("  \o0 <= '1' when \i0 /= (\n0 downto 0 => '0') else '0';"
                        & NL, Inst, (0 => Iw - 1));
-               else
+               elsif Iw = 1 then
                   Disp_Template
                     ("  \o0 <= \i0; -- reduce or" & NL, Inst);
+               else
+                  Disp_Template
+                    ("  \o0 <= '0'; -- reduce or" & NL, Inst);
                end if;
             end;
          when Id_Red_And =>
@@ -1301,9 +1304,12 @@ package body Netlists.Disp_Vhdl is
                   Disp_Template
                     ("  \o0 <= '1' when \i0 = (\n0 downto 0 => '1') else '0';"
                        & NL, Inst, (0 => Iw - 1));
-               else
+               elsif Iw = 1 then
                   Disp_Template
                     ("  \o0 <= \i0; -- reduce and" & NL, Inst);
+               else
+                  Disp_Template
+                    ("  \o0 <= '1'; -- reduce and" & NL, Inst);
                end if;
             end;
          when Id_Red_Xor =>
@@ -1316,9 +1322,12 @@ package body Netlists.Disp_Vhdl is
                      Disp_Template (" xor \i0(\n0)", Inst, (0 => I));
                   end loop;
                   Disp_Template (";" & NL, Inst);
-               else
+               elsif Iw = 1 then
                   Disp_Template
                     ("  \o0 <= \i0; -- reduce xor" & NL, Inst);
+               else
+                  Disp_Template
+                    ("  \o0 <= '0'; -- reduce xor" & NL, Inst);
                end if;
             end;
 
