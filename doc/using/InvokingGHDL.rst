@@ -257,6 +257,9 @@ Options
   which means VHDL-93 with relaxed rules. For details on ``STANDARD``
   values see section :ref:`VHDL_standards`.
 
+  This option resets the effect of :option:`-frelaxed`, so it should
+  be the first option.
+
 .. option:: -fsynopsys
 
   Allow the use of synopsys non-standard packages
