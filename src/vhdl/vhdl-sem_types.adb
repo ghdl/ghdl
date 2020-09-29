@@ -1051,9 +1051,13 @@ package body Vhdl.Sem_Types is
             --  Index_Name is a subtype_indication, which can be a type_mark.
          else
             --  Avoid errors.
-            Index_Name :=
-              Build_Simple_Name (Natural_Subtype_Declaration, Index_Type);
-            Set_Type (Index_Name, Natural_Subtype_Definition);
+            Index_Name := Create_Iir (Iir_Kind_Integer_Subtype_Definition);
+            Location_Copy (Index_Name, Index_Type);
+            Set_Range_Constraint
+              (Index_Name,
+               Create_Error_Expr (Index_Type, Integer_Subtype_Definition));
+            Set_Parent_Type (Index_Name, Integer_Subtype_Definition);
+            Set_Type_Staticness (Index_Name, Globally);
          end if;
 
          Set_Nth_Element (Index_List, I, Index_Name);
