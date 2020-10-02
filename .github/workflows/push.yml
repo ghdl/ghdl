@@ -44,24 +44,27 @@ jobs:
 #
 
   lin:
-    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      max-parallel: 3
+      max-parallel: 4
       matrix:
-        task: [
-          { backend: mcode, version: '' },
-          { backend: llvm,  version: '-5.0' },
-          { backend: gcc,   version: '-8.3.0' }
+        backend: [
+          { os: 18, b: mcode },
+          { os: 20, b: mcode },
+          { os: 18, b: llvm-5.0 },
+          { os: 20, b: llvm-10 },
+          { os: 18, b: gcc-8.3.0 },
+          { os: 20, b: gcc-9.3.0 }
         ]
+    runs-on: ubuntu-${{ matrix.backend.os }}.04
     steps:
 
     - uses: actions/checkout@v2
 
     - name: Build and test GHDL in containers
       run: |
-        TASK=ubuntu18+${{ matrix.task.backend }}${{ matrix.task.version }} ./dist/ci-run.sh -c
-        mv ghdl-*-ubuntu18-*.tgz ghdl-gha-ubuntu-${{ matrix.task.backend }}.tgz
+        TASK=ubuntu${{ matrix.backend.os }}+${{ matrix.backend.b }}${{ matrix.backend.v }} ./dist/ci-run.sh -c
+        mv ghdl-*-ubuntu${{ matrix.backend.os }}-*.tgz ghdl-gha-ubuntu-${{ matrix.backend.os }}.04-$(echo ${{ matrix.backend.b }} | sed 's#-.*##g').tgz
 
     - uses: actions/upload-artifact@v2
       with:
