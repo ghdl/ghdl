@@ -58,6 +58,50 @@ See :ghdlsharp:`1174` for on-going discussion about other output formats.
 .. TIP::
    Files can be provided in any order.
 
+.. _synthesis_options:
+
+Synthesis options
+==================
+
+In addition to analyze options, there are some synthesis specific options.
+
+.. option:: -gNAME=VALUE
+
+  Override top unit generic `NAME` with value `VALUE`. Similar to the run-time option :option:`-gGENERIC=VALUE`.
+
+  Example::
+
+    $ ghdl --synth --std=08 -gDEPTH=12 my_unit
+
+.. option:: --vendor-library=NAME
+
+  Any unit from library NAME is a black box.
+
+  Example::
+
+    $ ghdl --synth --std=08 --vendor-library=vendorlib my_unit
+
+.. option:: --no-formal
+
+  Neither synthesize assert nor PSL.
+
+  Example::
+
+    $ ghdl --synth --std=08 --no-formal my_unit
+
+.. option:: --no-assert-cover
+
+  Disable automatic cover PSL assertion activation. If this option isn't used, GHDL generates
+  `cover` directives for each `assert` directive automatically during synthesis.
+
+  Example::
+
+    $ ghdl --synth --std=08 --no-assert-cover my_unit
+
+.. TIP::
+  Furthermore there are lot of debug options available. Beware: These debug options should only used
+  for debugging purposes as they aren't guaranteed to be stable during development of GHDL's synthesis feature. You can find them in the file `src/ghdldrv/ghdlsynth.adb <https://github.com/ghdl/ghdl/blob/master/src/ghdldrv/ghdlsynth.adb>`_ in the procedure `Decode_Option()`.
+
 .. _Synth:plugin:
 
 Yosys plugin
