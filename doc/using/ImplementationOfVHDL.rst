@@ -121,8 +121,8 @@ PSL implementation
 A PSL statement is considered as a process, so it's not allowed within
 a process.
 
-All PSL assertions must be clocked (GHDL doesn't support unclocked assertions).
-Furthermore only one clock per assertion is allowed.
+All PSL directives (`assert`, `assume`, `restrict`, `cover`) must be clocked (GHDL doesn't support unclocked directives).
+Furthermore only one clock per directive is allowed.
 
 You can either use a default clock like this:
 
