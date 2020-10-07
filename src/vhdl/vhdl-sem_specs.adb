@@ -234,6 +234,7 @@ package body Vhdl.Sem_Specs is
    is
       use Vhdl.Tokens;
       Attr_Expr : constant Iir := Get_Expression (Attr);
+      Attr_Class : constant Token_Type := Get_Entity_Class (Attr);
 
       El : Iir_Attribute_Value;
 
@@ -247,10 +248,12 @@ package body Vhdl.Sem_Specs is
       --  LRM93 5.1
       --  It is an error if the class of those names is not the same as that
       --  denoted by the entity class.
-      if Get_Entity_Class_Kind (Decl) /= Get_Entity_Class (Attr) then
+      if Attr_Class /= Tok_Invalid
+        and then Get_Entity_Class_Kind (Decl) /= Attr_Class
+      then
          if Check_Class then
-            Error_Msg_Sem (+Attr, "%n is not of class %t",
-                           (+Decl, +Get_Entity_Class (Attr)));
+            Error_Msg_Sem
+              (+Attr, "%n is not of class %t", (+Decl, +Attr_Class));
             if Get_Kind (Decl) = Iir_Kind_Subtype_Declaration
               and then Get_Entity_Class (Attr) = Tok_Type
               and then Get_Type (Decl) /= Null_Iir
