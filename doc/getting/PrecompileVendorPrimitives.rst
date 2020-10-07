@@ -35,7 +35,7 @@ Supported Vendors Libraries
   * `ec`
   * `ecp`, `ecp2`, `ecp3`, `ecp5u`
   * `lptm`, `lptm2`
-  * `machxo`, `machxo2`, `machxo3l`
+  * `machxo`, `machxo2`, `machxo3l`, `machxo3d`
   * `sc`, `scm`
   * `xp`, `xp2`
 

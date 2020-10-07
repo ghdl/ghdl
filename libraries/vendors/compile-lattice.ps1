@@ -44,7 +44,7 @@
 #       o Lattice device libraries:
 #         - EC, ECP, ECP2, ECP3, ECP5U
 #         - LPTM, LPTM2
-#         - MachXO, MachXO2, MachXO3L
+#         - MachXO, MachXO2, MachXO3L, MachXO3D
 #         - SC, SCM
 #         - XP, XP2
 # 
@@ -78,6 +78,8 @@ param(
 	[switch]$MachXO2 =		$false,
 	# Compile the Lattice MachXO3L device libraries
 	[switch]$MachXO3L =		$false,
+	# Compile the Lattice MachXO3D device libraries
+	[switch]$MachXO3D =		$false,
 	
 	# Compile the Lattice SC device libraries
 	[switch]$sc =					$false,
@@ -126,7 +128,7 @@ Import-Module $PSScriptRoot\shared.psm1 -Verbose:$false -Debug:$false -ArgumentL
 $Help = $Help -or (-not ($All -or 
 										($ec -or $ecp -or $ecp2 -or $ecp3 -or $ecp5u) -or 
 										($lptm -or $lptm2) -or 
-										($MachXO -or $MachXO2 -or $MachXO3L) -or 
+										($MachXO -or $MachXO2 -or $MachXO3L -or $MachXO3D) -or 
 										($sc -or $scm) -or
 										($xp -or $xp2) -or
 										$Clean))
@@ -146,6 +148,7 @@ if ($All)
 	$MachXO =		$true
 	$MachXO2 =	$true
 	$MachXO3L =	$true
+	$MachXO3D =	$true
 	$sc =				$true
 	$scm =			$true
 	$xp =				$true
@@ -201,6 +204,7 @@ $FileLists = @{
 	"machxo" =		@("MACHXO_CMB.vhd", "MACHXO_SEQ.vhd", "MACHXOCOMP.vhd", "MACHXO_CNT.vhd", "MACHXO_IO.vhd", "MACHXO_LUT.vhd", "MACHXO_MEM.vhd", "MACHXO_MISC.vhd");
 	"machxo2" =		@("MACHXO2_CMB.vhd", "MACHXO2_SEQ.vhd", "MACHXO2COMP.vhd", "MACHXO2_CNT.vhd", "gsr_pur_assign.vhd", "MACHXO2_IO.vhd", "MACHXO2_LUT.vhd", "MACHXO2_MEM.vhd", "MACHXO2_MISC.vhd");
 	"machxo3l" =	@("MACHXO3L_CMB.vhd", "MACHXO3L_SEQ.vhd", "MACHXO3LCOMP.vhd", "gsr_pur_assign.vhd", "MACHXO3L_CNT.vhd", "MACHXO3L_IO.vhd", "MACHXO3L_LUT.vhd", "MACHXO3L_MEM.vhd", "MACHXO3L_MISC.vhd");
+	"machxo3d" =	@("MACHXO3D_CMB.vhd", "MACHXO3D_SEQ.vhd", "MACHXO3DCOMP.vhd", "gsr_pur_assign.vhd", "MACHXO3D_CNT.vhd", "MACHXO3D_IO.vhd", "MACHXO3D_LUT.vhd", "MACHXO3D_MEM.vhd", "MACHXO3D_MISC.vhd");
 	"sc" =				@("ORCA_CMB.vhd", "ORCA_SEQ.vhd", "ORCACOMP.vhd", "ORCA_CNT.vhd", "ORCA_IO.vhd", "ORCA_MEM.vhd", "ORCA_MIS.vhd", "ORCA_SL.vhd");
 	"scm" =				@("ORCA_CMB.vhd", "ORCA_SEQ.vhd", "ORCACOMP.vhd", "ORCA_CNT.vhd", "ORCA_IO.vhd", "ORCA_MEM.vhd", "ORCA_MIS.vhd", "ORCA_SL.vhd");
 	"xp" =				@("ORCA_CMB.vhd", "ORCA_SEQ.vhd", "ORCACOMP.vhd", "ORCA_LUT.vhd", "ORCA_MISC.vhd", "ORCA_CNT.vhd", "ORCA_IO.vhd", "ORCA_MEM.vhd");
@@ -321,6 +325,17 @@ if ((-not $StopCompiling) -and $MachXO2)
 # ==============================================================================
 if ((-not $StopCompiling) -and $machxo3l)
 {	$Library = "machxo3l"
+	$SourceFiles = $FileLists[$Library] | % { "$SourceDirectory\$Library\src\$_" }
+	
+	$ErrorCount += 0
+	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+}
+
+# Lattice MachXO3D library
+# ==============================================================================
+if ((-not $StopCompiling) -and $machxo3d)
+{	$Library = "machxo3d"
 	$SourceFiles = $FileLists[$Library] | % { "$SourceDirectory\$Library\src\$_" }
 	
 	$ErrorCount += 0
