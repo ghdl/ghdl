@@ -23,6 +23,7 @@ with Name_Table;
 with Std_Names;
 with Str_Table;
 with Mutils; use Mutils;
+with Errorout; use Errorout;
 
 with Vhdl.Types;
 with Vhdl.Ieee.Std_Logic_1164; use Vhdl.Ieee.Std_Logic_1164;
@@ -829,7 +830,9 @@ package body Synth.Expr is
             pragma Assert (Vtype.Kind = Type_Vector
                              or Vtype.Kind = Type_Slice);
             if Dtype.W /= Vtype.W then
-               Error_Msg_Synth (+Loc, "mismatching vector length");
+               Error_Msg_Synth
+                 (+Loc, "mismatching vector length; got %v, expect %v",
+                  (Errorout."+" (Vtype.W), +Dtype.W));
                return No_Valtyp;
             end if;
             if Bounds then
