@@ -711,6 +711,11 @@ package body Synth.Insts is
       Formal_Typ := Get_Subtype_Object (Inter_Inst, Get_Type (Inter));
 
       Act := Synth_Expression_With_Type (Act_Inst, Actual, Formal_Typ);
+      Act := Synth_Subtype_Conversion
+        (Get_Build (Act_Inst), Act, Formal_Typ, False, Assoc);
+      if Act = No_Valtyp then
+         return No_Net;
+      end if;
       return Get_Net (Ctxt, Act);
    end Synth_Input_Assoc;
 
@@ -798,6 +803,7 @@ package body Synth.Insts is
       Inter : Node;
       Nbr_Inputs : Port_Nbr;
       Nbr_Outputs : Port_Nbr;
+      N : Net;
    begin
       Assoc := Ports_Assoc;
       Assoc_Inter := Get_Port_Chain (Inst_Obj.Decl);
@@ -810,9 +816,11 @@ package body Synth.Insts is
             case Mode_To_Port_Kind (Get_Mode (Inter)) is
                when Port_In =>
                   --  Connect the net to the input.
-                  Connect (Get_Input (Inst, Nbr_Inputs),
-                           Synth_Input_Assoc
-                             (Syn_Inst, Assoc, Inst_Obj.Syn_Inst, Inter));
+                  N := Synth_Input_Assoc
+                    (Syn_Inst, Assoc, Inst_Obj.Syn_Inst, Inter);
+                  if N /= No_Net then
+                     Connect (Get_Input (Inst, Nbr_Inputs), N);
+                  end if;
                   Nbr_Inputs := Nbr_Inputs + 1;
                when Port_Out
                  | Port_Inout =>
