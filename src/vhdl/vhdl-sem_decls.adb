@@ -950,7 +950,8 @@ package body Vhdl.Sem_Decls is
          end if;
       else
          pragma Assert (Get_Kind (Last_Decl) = Get_Kind (Decl));
-         pragma Assert (Get_Has_Identifier_List (Last_Decl));
+         pragma Assert (Get_Has_Identifier_List (Last_Decl)
+                          or Flag_Force_Analysis);
          Set_Is_Ref (Decl, True);
          Default_Value := Get_Default_Value (Last_Decl);
          Atype := Get_Subtype_Indication (Last_Decl);
@@ -1343,9 +1344,15 @@ package body Vhdl.Sem_Decls is
       Sem_Scopes.Add_Name (Decl);
       Xref_Decl (Decl);
 
-      A_Type := Sem_Type_Mark (Get_Type_Mark (Decl));
-      Set_Type_Mark (Decl, A_Type);
-      A_Type := Get_Type (A_Type);
+      A_Type := Get_Type_Mark (Decl);
+      if A_Type /= Null_Iir then
+         A_Type := Sem_Type_Mark (A_Type);
+         Set_Type_Mark (Decl, A_Type);
+         A_Type := Get_Type (A_Type);
+      else
+         A_Type := Create_Error_Type (Decl);
+      end if;
+
       Set_Type (Decl, A_Type);
 
       --  LRM93 4.4  Attribute declarations.
