@@ -414,16 +414,18 @@ Options
 
 .. option:: --time-resolution=<UNIT>
 
+  .. ATTENTION::
+    This feature is supported with *mcode* backend only. It is not possible to support it with either LLVM or GCC backends,
+    because it needs to apply globally.
+
   Set the base time resolution of the simulation. This option is supported in commands :option:`-a` and :option:`-r` only.
-  Allowed values are ``auto`` (default with *mcode*), ``fs`` (default with LLVM/GCC), ``ps``, ``ns``, ``us``, ``ms`` or ``sec``.
+  Allowed values are ``auto`` (default), ``fs``, ``ps``, ``ns``, ``us``, ``ms`` or ``sec``. With LLVM/GCC, the value is fixed
+  to ``fs``.
 
   .. HINT::
     When overriding the time resolution, all the time units that are used in the design must be larger. Using units below
     the resolution will produce a failure.
 
-  .. ATTENTION::
-    This feature is supported with *mcode* backend only. It is not possible to support it with either LLVM or GCC backends,
-    because it needs to apply globally.
 
 Warnings
 ========
