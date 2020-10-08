@@ -67,7 +67,7 @@ In addition to analyze options, there are some synthesis specific options.
 
 .. option:: -gNAME=VALUE
 
-  Override top unit generic `NAME` with value `VALUE`. Similar to the run-time option :option:`-gGENERIC=VALUE`.
+  Override top unit generic `NAME` with value `VALUE`. Similar to the run-time option :option:`-gGENERIC`.
 
   Example::
 
@@ -99,8 +99,9 @@ In addition to analyze options, there are some synthesis specific options.
     $ ghdl --synth --std=08 --no-assert-cover my_unit
 
 .. TIP::
-  Furthermore there are lot of debug options available. Beware: These debug options should only used
-  for debugging purposes as they aren't guaranteed to be stable during development of GHDL's synthesis feature. You can find them in the file `src/ghdldrv/ghdlsynth.adb <https://github.com/ghdl/ghdl/blob/master/src/ghdldrv/ghdlsynth.adb>`_ in the procedure `Decode_Option()`.
+  Furthermore there are lot of debug options available. Beware: these debug options should only used
+  for debugging purposes as they aren't guaranteed to be stable during development of GHDL's synthesis feature.
+  You can find them in the file :ghdlsrc:`src/ghdldrv/ghdlsynth.adb <ghdlsynth.adb>` in the procedure ``Decode_Option()``.
 
 .. _Synth:plugin:
 
