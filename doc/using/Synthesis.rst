@@ -101,7 +101,7 @@ In addition to analyze options, there are some synthesis specific options.
 .. TIP::
   Furthermore there are lot of debug options available. Beware: these debug options should only used
   for debugging purposes as they aren't guaranteed to be stable during development of GHDL's synthesis feature.
-  You can find them in the file :ghdlsrc:`src/ghdldrv/ghdlsynth.adb <ghdlsynth.adb>` in the procedure ``Decode_Option()``.
+  You can find them in the file :ghdlsrc:`ghdlsynth.adb <src/ghdldrv/ghdlsynth.adb>` in the procedure ``Decode_Option()``.
 
 .. _Synth:plugin:
 
