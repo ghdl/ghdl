@@ -5741,13 +5741,17 @@ package body Vhdl.Parse is
 
                return Res;
 
-            when Tok_Semi_Colon =>
+            when Tok_Semi_Colon
+               | Tok_Then
+               | Tok_Generate
+               | Tok_Loop =>
                --  Surely a missing parenthesis.
                --  FIXME: in case of multiple missing parenthesises, several
                --    messages will be displayed
                Error_Msg_Parse
                  ("missing ')' for opening parenthesis at %l", +Loc);
                return Expr;
+
             when others =>
                --  Surely a parse error...
                null;
