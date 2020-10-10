@@ -1481,6 +1481,10 @@ package body Vhdl.Sem_Scopes is
    is
       Nname : Iir;
    begin
+      if Name = Null_Iir then
+         return;
+      end if;
+
       case Get_Kind (Name) is
          when Iir_Kind_Overload_List =>
             Add_Declarations_List (Get_Overload_List (Name), True);
