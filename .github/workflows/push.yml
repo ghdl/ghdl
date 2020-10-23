@@ -81,7 +81,7 @@ jobs:
     - uses: actions/checkout@v2
 
     - run: |
-        brew update
+        brew update || true
         brew install p7zip
         ./dist/macosx/install-ada.sh
 
