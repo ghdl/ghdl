@@ -294,7 +294,7 @@ fi
 # Define default file extensions for Windows or Linux-like systems and
 # use -fPIC or not.
 case "$build" in
-  *mingw* | *cygwin*) SOEXT=".dll";   EXEEXT=".exe"; PIC_FLAGS="";;
+  *mingw* | *cygwin* | *windows-gnu*) SOEXT=".dll";   EXEEXT=".exe"; PIC_FLAGS="";;
   *darwin*)           SOEXT=".dylib"; EXEEXT="";     PIC_FLAGS="";;
   *)                  SOEXT=".so";    EXEEXT="";     PIC_FLAGS="-fPIC";;
 esac
