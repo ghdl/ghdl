@@ -57,7 +57,7 @@ GRT_ELF_EXEC_OPTS:=-Wl,--version-script=@/grt.ver -Wl,--export-dynamic
 #     functions) so that a vpi object file can refer them.
 #  GRT_SHARED_OPTS: platform specific options to be added during link of
 #     -shared simulation binaries.  Used instead of GET_EXEC_OPTS
-ifeq ($(filter-out mingw32 mingw64,$(osys)),)
+ifeq ($(filter-out mingw32 mingw64 windows,$(osys)),)
   # For windows.
   GRT_TARGET_OBJS=win32.o clock.o
   GRT_EXTRA_LIB=-ldbghelp
