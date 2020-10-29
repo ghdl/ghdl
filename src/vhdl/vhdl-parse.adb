@@ -5763,7 +5763,7 @@ package body Vhdl.Parse is
       Set_Location (Res, Loc);
       Chain_Init (First, Last);
       loop
-         if Current_Token = Tok_Others then
+         if Current_Token = Tok_Others and then Expr = Null_Iir then
             Assoc := Parse_A_Choice (Null_Iir, Loc);
             Expect (Tok_Double_Arrow);
 
