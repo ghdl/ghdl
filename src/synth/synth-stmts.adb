@@ -2273,30 +2273,86 @@ package body Synth.Stmts is
       end if;
    end Loop_Control_Init;
 
-   function Loop_Control_And (C : Seq_Context; L : Net; R : Wire_Id) return Net
+   procedure Loop_Control_And_Start (Is_Net : out Boolean;
+                                 S      : out Boolean;
+                                 N      : out Net;
+                                 En     : Net) is
+   begin
+      if En = No_Net then
+         Is_Net := False;
+         N := No_Net;
+         S := True;
+      else
+         Is_Net := True;
+         N := En;
+         S := True;
+      end if;
+   end Loop_Control_And_Start;
+
+   procedure Loop_Control_And (C : Seq_Context;
+                               Is_Net : in out Boolean;
+                               S      : in out Boolean;
+                               N      : in out Net;
+                               R : Wire_Id)
    is
       Res : Net;
    begin
       if R = No_Wire_Id or else Is_Static_Bit1 (R) then
-         return L;
+         --  No change.
+         return;
       end if;
 
-      pragma Assert (not Is_Static_Bit0 (R));
+      if Is_Static_Bit0 (R) then
+         --  Stays 0.
+         Is_Net := False;
+         S := False;
+         N := No_Net;
+         return;
+      end if;
+
+      if not Is_Net and then not S then
+         --  Was 0, remains 0.
+         return;
+      end if;
+
+      pragma Assert (Is_Net or else S);
 
       --  Optimize common cases.
       Res := Get_Current_Value (null, R);
 
-      if L /= No_Net then
-         Res := Build_Dyadic (Get_Build (C.Inst), Id_And, L, Res);
-         Set_Location (Res, C.Cur_Loop.Loop_Stmt);
+      if Is_Net then
+         N := Build_Dyadic (Get_Build (C.Inst), Id_And, N, Res);
+         Set_Location (N, C.Cur_Loop.Loop_Stmt);
+      else
+         N := Res;
       end if;
-      return Res;
+
+      Is_Net := True;
    end Loop_Control_And;
+
+   procedure Loop_Control_And_Assign (C : Seq_Context;
+                                      Is_Net : Boolean;
+                                      S      : Boolean;
+                                      N      : Net;
+                                      W      : Wire_Id) is
+   begin
+      if Is_Net then
+         Phi_Assign_Net (Get_Build (C.Inst), W, N, 0);
+      else
+         if S then
+            Phi_Assign_Static (W, Bit1);
+         else
+            Phi_Assign_Static (W, Bit0);
+         end if;
+      end if;
+   end Loop_Control_And_Assign;
 
    procedure Loop_Control_Update (C : Seq_Context)
    is
       Lc : constant Loop_Context_Acc := C.Cur_Loop;
-      Res : Net;
+      N  : Net;
+      S  : Boolean;
+      Is_Net : Boolean;
    begin
       if not Lc.Need_Quit then
          --  No next/exit statement for this loop.  So no control.
@@ -2305,38 +2361,36 @@ package body Synth.Stmts is
 
       --  Execution continue iff:
       --  1. Loop was enabled (Lc.Saved_En)
-      Res := Lc.Saved_En;
+      Loop_Control_And_Start (Is_Net, S, N, Lc.Saved_En);
 
       --  2. No return (C.W_Ret)
-      Res := Loop_Control_And (C, Res, C.W_Ret);
+      Loop_Control_And (C, Is_Net, S, N, C.W_Ret);
 
       --  3. No exit.
-      Res := Loop_Control_And (C, Res, Lc.W_Exit);
+      Loop_Control_And (C, Is_Net, S, N, Lc.W_Exit);
 
       --  4. No quit.
-      Res := Loop_Control_And (C, Res, Lc.W_Quit);
+      Loop_Control_And (C, Is_Net, S, N, Lc.W_Quit);
 
-      if Res /= No_Net then
-         Phi_Assign_Net (Get_Build (C.Inst), C.W_En, Res, 0);
-      else
-         Phi_Assign_Static (C.W_En, Bit1);
-      end if;
+      Loop_Control_And_Assign (C, Is_Net, S, N, C.W_En);
    end Loop_Control_Update;
 
    procedure Loop_Control_Finish (C : Seq_Context)
    is
       Lc : constant Loop_Context_Acc := C.Cur_Loop;
-      Res : Net;
+      N   : Net;
+      S  : Boolean;
+      Is_Net : Boolean;
    begin
       --  Execution continue after this loop iff:
       --  1. Loop was enabled (Lc.Saved_En)
-      Res := Lc.Saved_En;
+      Loop_Control_And_Start (Is_Net, S, N, Lc.Saved_En);
 
       --  2. No return (C.W_Ret)
-      Res := Loop_Control_And (C, Res, C.W_Ret);
+      Loop_Control_And (C, Is_Net, S, N, C.W_Ret);
 
       --  3. No quit (C.W_Quit)
-      Res := Loop_Control_And (C, Res, Lc.W_Quit);
+      Loop_Control_And (C, Is_Net, S, N, Lc.W_Quit);
 
       Phi_Discard_Wires (Lc.W_Quit, Lc.W_Exit);
 
@@ -2350,11 +2404,7 @@ package body Synth.Stmts is
 
       Release (C.Cur_Loop.Wire_Mark);
 
-      if Res /= No_Net then
-         Phi_Assign_Net (Get_Build (C.Inst), C.W_En, Res, 0);
-      else
-         Phi_Assign_Static (C.W_En, Bit1);
-      end if;
+      Loop_Control_And_Assign (C, Is_Net, S, N, C.W_En);
    end Loop_Control_Finish;
 
    procedure Synth_Dynamic_Exit_Next_Statement
