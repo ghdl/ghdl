@@ -7998,6 +7998,11 @@ package body Vhdl.Parse is
                Scan;
                goto Again;
 
+            when Tok_Tick =>
+               Unexpected ("statement");
+               Resync_To_End_Of_Statement;
+               goto Again;
+
             when others =>
                return First_Stmt;
          end case;
