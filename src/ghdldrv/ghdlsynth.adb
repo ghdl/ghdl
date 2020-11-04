@@ -426,6 +426,9 @@ package body Ghdlsynth is
          end;
       end loop;
 
+      --  Forget any previous errors.
+      Errorout.Nbr_Errors := 0;
+
       --  Find the command.  This is a little bit convoluted...
       Decode_Command_Options (Cmd, Args, First_Arg);
 
