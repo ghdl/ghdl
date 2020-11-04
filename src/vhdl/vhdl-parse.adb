@@ -6607,6 +6607,24 @@ package body Vhdl.Parse is
       return Res;
    end Parse_Expression;
 
+   --  Like Parse_Expression, but assumed the expression is followed by a
+   --  reserved identifier.  As a result, it will diagnoses extra parentheses.
+   function Parse_Expression_Keyword return Iir
+   is
+      Res : Iir;
+   begin
+      Res := Parse_Expression;
+
+      if Current_Token = Tok_Right_Paren then
+         Error_Msg_Parse ("extra ')' ignored");
+
+         --  Skip ')'.
+         Scan;
+      end if;
+
+      return Res;
+   end Parse_Expression_Keyword;
+
    --  precond : next token
    --  postcond: next token.
    --
@@ -7138,14 +7156,10 @@ package body Vhdl.Parse is
 
       Clause := Res;
       loop
-         Set_Condition (Clause, Parse_Expression);
+         Set_Condition (Clause, Parse_Expression_Keyword);
          Then_Loc := Get_Token_Location;
-         if Current_Token = Tok_Then then
-            --  Eat 'then'.
-            Scan;
-         else
-            Expect_Error (Tok_Then, "'then' is expected here");
-         end if;
+         --  Eat 'then'.
+         Expect_Scan (Tok_Then, "'then' is expected here");
 
          Set_Sequential_Statement_Chain
            (Clause, Parse_Sequential_Statements (Res));
