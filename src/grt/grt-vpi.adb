@@ -1566,14 +1566,16 @@ package body Grt.Vpi is
 
    -- int vpi_get_vlog_info(p_vpi_vlog_info vlog_info_p)
    function vpi_get_vlog_info (info : p_vpi_vlog_info) return integer is
+      function To_Address is new Ada.Unchecked_Conversion
+         (Source => Grt.Options.Argv_Type, Target => System.Address);
    begin
       if Flag_Trace then
          Trace_Start ("vpi_get_vlog_info");
          Trace_Newline;
       end if;
 
-      info.all := (Argc => 0,
-                   Argv => Null_Address,
+      info.all := (Argc => Options.Argc,
+                   Argv => To_Address(Options.Argv),
                    Product => To_Ghdl_C_String (Product'Address),
                    Version => To_Ghdl_C_String (GhdlVersion'Address));
       return 1;
