@@ -148,7 +148,7 @@ package body Synth.Objtypes is
       else
          declare
             Wl : constant Width := Width (Clog2 (Uns64 (-Lo)));
-            Wh : constant Width := Width (Clog2 (Uns64 (Hi)));
+            Wh : constant Width := Width (Clog2 (Uns64 (Hi) + 1));
          begin
             W := Width'Max (Wl, Wh) + 1;
          end;
