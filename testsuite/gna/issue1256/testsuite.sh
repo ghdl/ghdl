@@ -5,7 +5,7 @@
 analyze enum_test.vhdl
 elab enum_test
 
-if ghdl_has_feature enum_test vpi; then
+if c_compiler_is_available && ghdl_has_feature enum_test vpi; then
   add_vpi_path
 
   $GHDL --vpi-compile -v gcc -c vpi_plugin.c
