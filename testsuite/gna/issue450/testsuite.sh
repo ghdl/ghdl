@@ -5,7 +5,7 @@
 analyze disptree.vhdl
 elab disptree
 
-if ghdl_has_feature disptree vpi; then
+if c_compiler_is_available && ghdl_has_feature disptree vpi; then
   add_vpi_path
 
   $GHDL --vpi-compile -v gcc -c vpi2.c

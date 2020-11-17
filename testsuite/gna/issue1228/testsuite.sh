@@ -5,7 +5,7 @@
 analyze test_load.vhdl
 elab test_load
 
-if ghdl_has_feature test_load vpi; then
+if c_compiler_is_available && ghdl_has_feature test_load vpi; then
   add_vpi_path
 
   $GHDL --vpi-compile -v gcc $CFLAGS -c vpi1.c

@@ -148,6 +148,15 @@ synth_tb()
   clean
 }
 
+# Check if a C compiler is installed on this system
+c_compiler_is_available ()
+{
+  if [ -z $CC ]; then
+    CC="gcc"
+  fi
+  which $CC
+}
+
 # Check if a feature is present
 ghdl_has_feature ()
 {

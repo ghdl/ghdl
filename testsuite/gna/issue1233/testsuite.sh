@@ -5,7 +5,7 @@
 analyze adder.vhdl
 elab adder
 
-if ghdl_has_feature adder vpi; then
+if c_compiler_is_available && ghdl_has_feature adder vpi; then
   add_vpi_path
 
   $GHDL --vpi-compile -v gcc -c vpi_plugin.c
