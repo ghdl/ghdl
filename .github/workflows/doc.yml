@@ -15,7 +15,8 @@ jobs:
         docker build -t ghdl/doc - <<-EOF
         FROM ghdl/vunit:llvm
         ENV PYTHONPATH=/src/python
-        RUN apt update -qq && apt install -y gnat-gps
+        RUN apt update -qq && apt install -y gnat-gps \
+         && ln -s /usr/bin/pip3 /usr/bin/pip
         EOF
 
     - name: Run gnatdoc
