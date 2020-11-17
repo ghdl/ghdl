@@ -17,7 +17,7 @@ env:
     - TASK=buster+mcode
       TARGS="--gpl --no-synth"
     - TASK=ubuntu20+mcode
-    - TASK=ubuntu20+llvm-5.0
+    - TASK=ubuntu20+llvm-10
     - TASK=fedora33+mcode
     - TASK=fedora33+llvm
 
