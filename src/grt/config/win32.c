@@ -198,6 +198,14 @@ __ghdl_run_through_longjump (int (*func)(void))
 void
 grt_save_backtrace (struct backtrace_addrs *bt, int skip)
 {
+  /* FIXME
+  testsuite/gna/issue635 fails on GitHub Actions when executed with
+  LLVM backend on MINGW64 (MSYS2). GHDL returns '3', instead of '0'.
+  This dummy printf fixes it, surprisingly.
+  See https://github.com/ghdl/ghdl/pull/1516
+  */
+  printf("");
+
   CONTEXT ctxt;
 
   RtlCaptureContext (&ctxt);
