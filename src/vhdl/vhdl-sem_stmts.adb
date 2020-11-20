@@ -587,7 +587,7 @@ package body Vhdl.Sem_Stmts is
                      elsif Time <= Last_Time then
                         Error_Msg_Sem
                           (+Expr,
-                           "time must be greather than previous transaction");
+                           "time must be greater than previous transaction");
                      else
                         Last_Time := Time;
                      end if;
