@@ -81,9 +81,8 @@ if ($env:BUILD_BACKEND -eq "mcode")
 elseif ($env:BUILD_BACKEND -eq "llvm")
 {	Write-Host "Configuring GHDL for $($env:BUILD_MINGW), LLVM..." -Foreground Yellow
 
-	c:\msys64\usr\bin\bash.exe -c "../../configure --prefix=$GHDL_PREFIX_DIR --with-llvm-config LDFLAGS=-static CXX=g++" 2>&1 | Restore-NativeCommandStream | %{ "$_" }
+	c:\msys64\usr\bin\bash.exe -c "../../configure --prefix=$GHDL_PREFIX_DIR --with-llvm-config='llvm-config --link-static' LDFLAGS='-static' --enable-libghdl --enable-synth CXX=clang++" 2>&1 | Restore-NativeCommandStream | %{ "$_" }
 }
-
 
 Write-Host "Building GHDL and libraries..." -Foreground Yellow
 c:\msys64\usr\bin\make.exe 2>&1 | Restore-NativeCommandStream | %{ "$_" }
