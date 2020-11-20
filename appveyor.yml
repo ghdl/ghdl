@@ -2,7 +2,7 @@
 # General configuration
 # =============================================================================
 # Virtual Machine Image
-image: WMF 5
+image: Visual Studio 2019
 # Build names
 version: '{branch}-{build}'
 # Branches to build
