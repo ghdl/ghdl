@@ -349,7 +349,7 @@ package body Ghdlmain is
                Decode_Option (Cmd, Arg.all, "", Res);
                case Res is
                   when Option_Unknown =>
-                     Error ("unknown option '" & Arg.all & "'");
+                     Error ("unknown command option '" & Arg.all & "'");
                      raise Option_Error;
                   when Option_Err =>
                      raise Option_Error;

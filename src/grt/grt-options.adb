@@ -435,7 +435,7 @@ package body Grt.Options is
          Wave_Opt.File.Start
            (Option (18 .. Option'Last), To_Be_Created => True);
       elsif not Grt.Hooks.Call_Option_Hooks (Option) then
-         Error_S ("unknown option '");
+         Error_S ("unknown run option '");
          Diag_C (Option);
          Error_E ("', try --help");
       end if;
