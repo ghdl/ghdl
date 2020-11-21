@@ -239,6 +239,9 @@ package body Grt.Options is
       Status := Decode_Option_Ok;
       if Option = "--" then
          Status := Decode_Option_Last;
+      elsif Option (1) = '+' then
+         --  For VPI/VHPI - plusargs.
+         null;
       elsif Option = "--help" or else Option = "-h" then
          Help;
          Status := Decode_Option_Stop;

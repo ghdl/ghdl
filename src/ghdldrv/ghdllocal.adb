@@ -1735,7 +1735,9 @@ package body Ghdllocal is
          declare
             Sec : constant String_Access := Args (Next_Arg);
          begin
-            if Sec (Sec'First) /= '-' then
+            if Sec (Sec'First) /= '-'
+              and then Sec (Sec'First) /= '+'
+            then
                Sec_Id := Convert_Name (Sec.all);
                Next_Arg := Args'First + 2;
                if Sec_Id = Null_Identifier then
