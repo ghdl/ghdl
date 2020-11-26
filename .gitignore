@@ -16,26 +16,31 @@ testsuite/get_entities
 /dist/msys2-mingw/**/logpipe.*
 /dist/msys2-mingw/**/*.log
 
-# Generated directories on Linux
-lib/
-
 # Generated files on Linux
-/Makefile
-libghdlvpi.so
-version.ads
-version.tmp
 config.status
 default_paths.ads
+doc/_build/
 elf_arch.ads
-ghdl.gpr
 ghdl1-*
+ghdl.gpr
 ghdl_llvm
+ghdl_mcode
+ghdlsynth_maybe.ads
 grt-backtraces-impl.ads
 grt-files
 grt-files.in
 grt.lst
+lib/
+libghdl-*.so
+libghdl.a
+libghdl.bind
+libghdl.link
+libghdlvpi.so
 libgrt.a
+/Makefile
+ortho_code-x86-flags.ads
 run-bind.adb
 run-bind.ads
 src/version.ads
-doc/_build/
+version.ads
+version.tmp
