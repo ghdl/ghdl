@@ -48,23 +48,23 @@ jobs:
       fail-fast: false
       max-parallel: 4
       matrix:
-        backend: [
-          { os: 18, b: mcode },
-          { os: 20, b: mcode },
-          { os: 18, b: llvm-5.0 },
-          { os: 20, b: llvm-10 },
-          { os: 18, b: gcc-8.3.0 },
-          { os: 20, b: gcc-9.3.0 }
+        include: [
+          { os: 18, backend: mcode },
+          { os: 20, backend: mcode },
+          { os: 18, backend: llvm-5.0 },
+          { os: 20, backend: llvm-10 },
+          { os: 18, backend: gcc-8.3.0 },
+          { os: 20, backend: gcc-9.3.0 }
         ]
-    runs-on: ubuntu-${{ matrix.backend.os }}.04
+    runs-on: ubuntu-${{ matrix.os }}.04
     steps:
 
     - uses: actions/checkout@v2
 
     - name: Build and test GHDL in containers
       run: |
-        TASK=ubuntu${{ matrix.backend.os }}+${{ matrix.backend.b }}${{ matrix.backend.v }} ./dist/ci-run.sh -c
-        mv ghdl-*-ubuntu${{ matrix.backend.os }}-*.tgz ghdl-gha-ubuntu-${{ matrix.backend.os }}.04-$(echo ${{ matrix.backend.b }} | sed 's#-.*##g').tgz
+        TASK=ubuntu${{ matrix.os }}+${{ matrix.backend }} ./dist/ci-run.sh -c
+        mv ghdl-*-ubuntu${{ matrix.os }}-*.tgz ghdl-gha-ubuntu-${{ matrix.os }}.04-$(echo ${{ matrix.backend }} | sed 's#-.*##g').tgz
 
     - uses: actions/upload-artifact@v2
       with:
@@ -103,15 +103,15 @@ jobs:
       fail-fast: false
       max-parallel: 2
       matrix:
-        task: [
+        include: [
           {installs: "MINGW32", pkg: "mcode"},
           #{installs: "MINGW32", pkg: "llvm"},  ! Not yet functional
           #{installs: "MINGW64", pkg: "mcode"}, ! mcode is not yet supported on win64
           {installs: "MINGW64", pkg: "llvm"},
         ]
     env:
-      MINGW_INSTALLS: ${{ matrix.task.installs }}
-      TARGET: ${{ matrix.task.pkg }}
+      MINGW_INSTALLS: ${{ matrix.installs }}
+      TARGET: ${{ matrix.pkg }}
     defaults:
       run:
         shell: msys2 {0}
@@ -129,20 +129,18 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Build and (hopefully) install package
-      run: |
-        ./dist/msys2-mingw/run.sh -b
-        cp ./dist/msys2-mingw/${{ matrix.task.pkg }}/mingw-*ghdl*.pkg.tar.zst ghdl-gha-${{ matrix.installs }}-${{ matrix.task }}.zst
+      run: ./dist/msys2-mingw/run.sh -b
 
     - uses: actions/upload-artifact@v2
       with:
-        name: ${{ matrix.task.installs }}-${{ matrix.task.pkg }}-builddir
+        name: ${{ matrix.installs }}-${{ matrix.pkg }}-builddir
         path: |
-          ./dist/msys2-mingw/${{ matrix.task.pkg }}/src/
-          ./dist/msys2-mingw/${{ matrix.task.pkg }}/pkg/
+          ./dist/msys2-mingw/${{ matrix.pkg }}/src/
+          ./dist/msys2-mingw/${{ matrix.pkg }}/pkg/
 
     - uses: actions/upload-artifact@v2
       with:
-        path: ./dist/msys2-mingw/${{ matrix.task.pkg }}/mingw-*ghdl*.pkg.tar.zst
+        path: ./dist/msys2-mingw/${{ matrix.pkg }}/mingw-*ghdl*.pkg.tar.zst
 
     - name: Test package
       run: |
@@ -150,7 +148,7 @@ jobs:
         env | grep MINGW
         GHDL=ghdl ./testsuite/testsuite.sh
       env:
-        MSYSTEM: ${{ matrix.task.installs }}
+        MSYSTEM: ${{ matrix.installs }}
 
 #
 # NIGHTLY
