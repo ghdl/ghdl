@@ -6,9 +6,11 @@ on:
 jobs:
   linux:
     runs-on: ubuntu-latest
+    name: '📓 Docs'
     steps:
 
-    - uses: actions/checkout@v2
+    - name: '🧰 Checkout'
+      uses: actions/checkout@v2
 
     - name: Build ghdl/doc
       run: |
@@ -32,11 +34,13 @@ jobs:
         chmod +x run.sh
         docker run --rm -v $(pwd):/src -w /src ghdl/doc ./run.sh
 
-    - uses: buildthedocs/btd@v0
+    - name: '📓 BuildTheDocs (BTD)'
+      uses: buildthedocs/btd@v0
       with:
         token: ${{ github.token }}
 
-    - uses: actions/upload-artifact@v2
+    - name: '📤 Upload artifact: HTML and LaTeX'
+      uses: actions/upload-artifact@v2
       with:
         name: doc
         path: |

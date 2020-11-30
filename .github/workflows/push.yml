@@ -15,11 +15,14 @@ jobs:
 
   fmt:
     runs-on: ubuntu-latest
+    name: '🐍 Format (black)'
     steps:
 
-    - uses: actions/checkout@v2
+    - name: '🧰 Checkout'
+      uses: actions/checkout@v2
 
-    - uses: actions/setup-python@v2
+    - name: '🐍 Setup Python'
+      uses: actions/setup-python@v2
       with:
         python-version: 3.8
 
@@ -33,9 +36,11 @@ jobs:
 
   gpl:
     runs-on: ubuntu-latest
+    name: '🐧 GPL · mcode'
     steps:
 
-    - uses: actions/checkout@v2
+    - name: '🧰 Checkout'
+      uses: actions/checkout@v2
 
     - run: TASK=buster+mcode ./dist/ci-run.sh -c --gpl --no-synth
 
@@ -56,17 +61,20 @@ jobs:
           { os: 18, backend: gcc-8.3.0 },
           { os: 20, backend: gcc-9.3.0 }
         ]
+    name: '🐧 Ubuntu ${{ matrix.os }} · ${{ matrix.backend }}'
     runs-on: ubuntu-${{ matrix.os }}.04
     steps:
 
-    - uses: actions/checkout@v2
+    - name: '🧰 Checkout'
+      uses: actions/checkout@v2
 
     - name: Build and test GHDL in containers
       run: |
         TASK=ubuntu${{ matrix.os }}+${{ matrix.backend }} ./dist/ci-run.sh -c
         mv ghdl-*-ubuntu${{ matrix.os }}-*.tgz ghdl-gha-ubuntu-${{ matrix.os }}.04-$(echo ${{ matrix.backend }} | sed 's#-.*##g').tgz
 
-    - uses: actions/upload-artifact@v2
+    - name: '📤 Upload artifact: package'
+      uses: actions/upload-artifact@v2
       with:
         path: ghdl-gha-ubuntu-*.tgz
 
@@ -76,11 +84,14 @@ jobs:
 
   osx:
     runs-on: macOS-latest
+    name: '🍎 macOS · mcode'
     steps:
 
-    - uses: actions/checkout@v2
+    - name: '🧰 Checkout'
+      uses: actions/checkout@v2
 
-    - run: |
+    - name: '⚙️ Dependencies (brew)'
+      run: |
         brew update || true
         brew install p7zip
         ./dist/macosx/install-ada.sh
@@ -109,6 +120,7 @@ jobs:
           #{installs: "MINGW64", pkg: "mcode"}, ! mcode is not yet supported on win64
           {installs: "MINGW64", pkg: "llvm"},
         ]
+    name: '🟪 MSYS2 · ${{ matrix.installs }} · ${{ matrix.pkg }}'
     env:
       MINGW_INSTALLS: ${{ matrix.installs }}
       TARGET: ${{ matrix.pkg }}
@@ -117,7 +129,8 @@ jobs:
         shell: msys2 {0}
     steps:
 
-    - uses: msys2/setup-msys2@v2
+    - name: '🟪 Setup MSYS2'
+      uses: msys2/setup-msys2@v2
       with:
         msystem: MSYS
         update: true
@@ -126,19 +139,22 @@ jobs:
     - run: git config --global core.autocrlf input
       shell: bash
 
-    - uses: actions/checkout@v2
+    - name: '🧰 Checkout'
+      uses: actions/checkout@v2
 
     - name: Build and (hopefully) install package
       run: ./dist/msys2-mingw/run.sh -b
 
-    - uses: actions/upload-artifact@v2
+    - name: '📤 Upload artifact: builddir'
+      uses: actions/upload-artifact@v2
       with:
         name: ${{ matrix.installs }}-${{ matrix.pkg }}-builddir
         path: |
           ./dist/msys2-mingw/${{ matrix.pkg }}/src/
           ./dist/msys2-mingw/${{ matrix.pkg }}/pkg/
 
-    - uses: actions/upload-artifact@v2
+    - name: '📤 Upload artifact: package'
+      uses: actions/upload-artifact@v2
       with:
         path: ./dist/msys2-mingw/${{ matrix.pkg }}/mingw-*ghdl*.pkg.tar.zst
 
@@ -158,9 +174,11 @@ jobs:
     if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
     needs: [ lin, win ]
     runs-on: ubuntu-latest
+    name: '📦 Nightly'
     steps:
 
-    - uses: actions/download-artifact@v2
+    - name: '📥 Download artifacts'
+      uses: actions/download-artifact@v2
 
     - uses: eine/tip@master
       with:
