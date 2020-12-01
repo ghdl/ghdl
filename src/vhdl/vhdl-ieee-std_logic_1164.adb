@@ -137,6 +137,54 @@ package body Vhdl.Ieee.Std_Logic_1164 is
       return True;
    end Is_Vector_Integer_Function;
 
+   --  Return True iff the profile of FUNC is:
+   --    (l : std_[u]logic_vector; r : std_ulogic)
+   function Is_Suv_Log_Function (Func : Iir) return Boolean
+   is
+      Inter : constant Iir := Get_Interface_Declaration_Chain (Func);
+      Inter2 : Iir;
+   begin
+      if Get_Implicit_Definition (Func) /= Iir_Predefined_None then
+         return False;
+      end if;
+      if Inter = Null_Iir or else not Is_Vector_Parameter (Inter) then
+         return False;
+      end if;
+      Inter2 := Get_Chain (Inter);
+      if Inter2 =  Null_Iir or else not Is_Scalar_Parameter (Inter2) then
+         return False;
+      end if;
+      if Get_Chain (Inter2) /= Null_Iir then
+         return False;
+      end if;
+
+      return True;
+   end Is_Suv_Log_Function;
+
+   --  Return True iff the profile of FUNC is:
+   --    (l : std_ulogic; r: std_[u]logic_vector)
+   function Is_Log_Suv_Function (Func : Iir) return Boolean
+   is
+      Inter : constant Iir := Get_Interface_Declaration_Chain (Func);
+      Inter2 : Iir;
+   begin
+      if Get_Implicit_Definition (Func) /= Iir_Predefined_None then
+         return False;
+      end if;
+      if Inter = Null_Iir or else not Is_Scalar_Parameter (Inter) then
+         return False;
+      end if;
+      Inter2 := Get_Chain (Inter);
+      if Inter2 =  Null_Iir or else not Is_Vector_Parameter (Inter2) then
+         return False;
+      end if;
+      if Get_Chain (Inter2) /= Null_Iir then
+         return False;
+      end if;
+
+      return True;
+   end Is_Log_Suv_Function;
+
    --  Return True iff the profile of FUNC is: (l : std_[u]logic_vector)
    function Is_Vector_Function (Func : Iir) return Boolean
    is
@@ -397,6 +445,40 @@ package body Vhdl.Ieee.Std_Logic_1164 is
                         when Name_Is_X =>
                            Predefined :=
                              Iir_Predefined_Ieee_1164_Scalar_Is_X;
+                        when others =>
+                           Predefined := Iir_Predefined_None;
+                     end case;
+                  elsif Is_Suv_Log_Function (Decl) then
+                     case Get_Identifier (Decl) is
+                        when Name_And =>
+                           Predefined := Iir_Predefined_Ieee_1164_And_Suv_Log;
+                        when Name_Nand =>
+                           Predefined := Iir_Predefined_Ieee_1164_Nand_Suv_Log;
+                        when Name_Or =>
+                           Predefined := Iir_Predefined_Ieee_1164_Or_Suv_Log;
+                        when Name_Nor =>
+                           Predefined := Iir_Predefined_Ieee_1164_Nor_Suv_Log;
+                        when Name_Xor =>
+                           Predefined := Iir_Predefined_Ieee_1164_Xor_Suv_Log;
+                        when Name_Xnor =>
+                           Predefined := Iir_Predefined_Ieee_1164_Xnor_Suv_Log;
+                        when others =>
+                           Predefined := Iir_Predefined_None;
+                     end case;
+                  elsif Is_Log_Suv_Function (Decl) then
+                     case Get_Identifier (Decl) is
+                        when Name_And =>
+                           Predefined := Iir_Predefined_Ieee_1164_And_Log_Suv;
+                        when Name_Nand =>
+                           Predefined := Iir_Predefined_Ieee_1164_Nand_Log_Suv;
+                        when Name_Or =>
+                           Predefined := Iir_Predefined_Ieee_1164_Or_Log_Suv;
+                        when Name_Nor =>
+                           Predefined := Iir_Predefined_Ieee_1164_Nor_Log_Suv;
+                        when Name_Xor =>
+                           Predefined := Iir_Predefined_Ieee_1164_Xor_Log_Suv;
+                        when Name_Xnor =>
+                           Predefined := Iir_Predefined_Ieee_1164_Xnor_Log_Suv;
                         when others =>
                            Predefined := Iir_Predefined_None;
                      end case;

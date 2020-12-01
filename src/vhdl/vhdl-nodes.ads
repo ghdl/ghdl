@@ -5595,6 +5595,20 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_1164_Rising_Edge,
       Iir_Predefined_Ieee_1164_Falling_Edge,
 
+      -- VHDL-2008 vector/element logic operators
+      Iir_Predefined_Ieee_1164_And_Suv_Log,
+      Iir_Predefined_Ieee_1164_And_Log_Suv,
+      Iir_Predefined_Ieee_1164_Nand_Suv_Log,
+      Iir_Predefined_Ieee_1164_Nand_Log_Suv,
+      Iir_Predefined_Ieee_1164_Or_Suv_Log,
+      Iir_Predefined_Ieee_1164_Or_Log_Suv,
+      Iir_Predefined_Ieee_1164_Nor_Suv_Log,
+      Iir_Predefined_Ieee_1164_Nor_Log_Suv,
+      Iir_Predefined_Ieee_1164_Xor_Suv_Log,
+      Iir_Predefined_Ieee_1164_Xor_Log_Suv,
+      Iir_Predefined_Ieee_1164_Xnor_Suv_Log,
+      Iir_Predefined_Ieee_1164_Xnor_Log_Suv,
+
       -- VHDL-2008 unary logic operators
       Iir_Predefined_Ieee_1164_And_Suv,
       Iir_Predefined_Ieee_1164_Nand_Suv,
