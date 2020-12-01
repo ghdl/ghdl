@@ -1740,7 +1740,7 @@ package body Synth.Expr is
       end case;
    end Synth_Type_Conversion;
 
-   procedure Error_Ieee_Operator (Imp : Node; Loc : Node)
+   function Error_Ieee_Operator (Imp : Node; Loc : Node) return Boolean
    is
       use Std_Names;
       Parent : constant Iir := Get_Parent (Imp);
@@ -1763,11 +1763,14 @@ package body Synth.Expr is
                  (+Loc, "unhandled predefined IEEE operator %i", +Imp);
                Error_Msg_Synth
                  (+Imp, " declared here");
+               return True;
             when others =>
                --  ieee 2008 packages are handled like regular packages.
                null;
          end case;
       end if;
+
+      return False;
    end Error_Ieee_Operator;
 
    function Synth_String_Literal
@@ -2136,9 +2139,12 @@ package body Synth.Expr is
                        (Syn_Inst, Id_Or, Get_Left (Expr), Get_Right (Expr),
                         Bit_Type, Expr);
                   when Iir_Predefined_None =>
-                     Error_Ieee_Operator (Imp, Expr);
-                     return Synth_User_Operator
-                       (Syn_Inst, Get_Left (Expr), Get_Right (Expr), Expr);
+                     if Error_Ieee_Operator (Imp, Expr) then
+                        return No_Valtyp;
+                     else
+                        return Synth_User_Operator
+                          (Syn_Inst, Get_Left (Expr), Get_Right (Expr), Expr);
+                     end if;
                   when others =>
                      return Synth_Dyadic_Operation
                        (Syn_Inst, Imp,
@@ -2152,9 +2158,12 @@ package body Synth.Expr is
                  Get_Implicit_Definition (Imp);
             begin
                if Def = Iir_Predefined_None then
-                  Error_Ieee_Operator (Imp, Expr);
-                  return Synth_User_Operator
-                    (Syn_Inst, Get_Operand (Expr), Null_Node, Expr);
+                  if Error_Ieee_Operator (Imp, Expr) then
+                     return No_Valtyp;
+                  else
+                     return Synth_User_Operator
+                       (Syn_Inst, Get_Operand (Expr), Null_Node, Expr);
+                  end if;
                else
                   return Synth_Monadic_Operation
                     (Syn_Inst, Imp, Get_Operand (Expr), Expr);
