@@ -827,6 +827,10 @@ package body Synth.Oper is
             return Synth_Compare (Id_Ule, Boolean_Type);
          when Iir_Predefined_Enum_Less =>
             return Synth_Compare (Id_Ult, Boolean_Type);
+         when Iir_Predefined_Enum_Greater_Equal =>
+            return Synth_Compare (Id_Uge, Boolean_Type);
+         when Iir_Predefined_Enum_Greater =>
+            return Synth_Compare (Id_Ugt, Boolean_Type);
 
          when Iir_Predefined_Std_Ulogic_Match_Equality =>
             return Synth_Compare (Id_Eq, Logic_Type);
