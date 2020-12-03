@@ -401,6 +401,29 @@ package body Synth.Oper is
       return Create_Value_Net (N, Create_Res_Bound (Right));
    end Synth_Dyadic_Int_Sgn;
 
+   function Synth_Dyadic_Vec_Log (Ctxt : Context_Acc;
+                                  Id   : Dyadic_Module_Id;
+                                  Vec, Log : Valtyp;
+                                  Expr     : Node) return Valtyp
+   is
+      V : constant Net := Get_Net (Ctxt, Vec);
+      L : constant Net := Get_Net (Ctxt, Log);
+      Wd : constant Width := Get_Width (V);
+      Res : Net;
+      N   : Net;
+      Inst : Instance;
+   begin
+      Res := Build_Concatn (Ctxt, Wd, Wd);
+      Inst := Get_Net_Parent (Res);
+      for I in 1 .. Wd loop
+         N := Build2_Extract (Ctxt, V, I - 1, 1);
+         N := Build_Dyadic (Ctxt, Id, N, L);
+         Set_Location (N, Expr);
+         Connect (Get_Input (Inst, Port_Nbr (Wd - I)), N);
+      end loop;
+      return Create_Value_Net (Res, Create_Res_Bound (Vec));
+   end Synth_Dyadic_Vec_Log;
+
    function Synth_Compare_Xxx_Xxx (Ctxt : Context_Acc;
                                    Id : Compare_Module_Id;
                                    W : Width;
@@ -808,6 +831,31 @@ package body Synth.Oper is
             | Iir_Predefined_Ieee_Numeric_Std_Xnor_Uns_Uns
             | Iir_Predefined_Ieee_Numeric_Std_Xnor_Sgn_Sgn =>
             return Synth_Vec_Dyadic (Id_Xnor);
+
+         when Iir_Predefined_Ieee_1164_And_Suv_Log =>
+            return Synth_Dyadic_Vec_Log (Ctxt, Id_And, Left, Right, Expr);
+         when Iir_Predefined_Ieee_1164_And_Log_Suv =>
+            return Synth_Dyadic_Vec_Log (Ctxt, Id_And, Right, Left, Expr);
+         when Iir_Predefined_Ieee_1164_Nand_Suv_Log =>
+            return Synth_Dyadic_Vec_Log (Ctxt, Id_Nand, Left, Right, Expr);
+         when Iir_Predefined_Ieee_1164_Nand_Log_Suv =>
+            return Synth_Dyadic_Vec_Log (Ctxt, Id_Nand, Right, Left, Expr);
+         when Iir_Predefined_Ieee_1164_Or_Suv_Log =>
+            return Synth_Dyadic_Vec_Log (Ctxt, Id_Or, Left, Right, Expr);
+         when Iir_Predefined_Ieee_1164_Or_Log_Suv =>
+            return Synth_Dyadic_Vec_Log (Ctxt, Id_Or, Right, Left, Expr);
+         when Iir_Predefined_Ieee_1164_Nor_Suv_Log =>
+            return Synth_Dyadic_Vec_Log (Ctxt, Id_Nor, Left, Right, Expr);
+         when Iir_Predefined_Ieee_1164_Nor_Log_Suv =>
+            return Synth_Dyadic_Vec_Log (Ctxt, Id_Nor, Right, Left, Expr);
+         when Iir_Predefined_Ieee_1164_Xor_Suv_Log =>
+            return Synth_Dyadic_Vec_Log (Ctxt, Id_Xor, Left, Right, Expr);
+         when Iir_Predefined_Ieee_1164_Xor_Log_Suv =>
+            return Synth_Dyadic_Vec_Log (Ctxt, Id_Xor, Right, Left, Expr);
+         when Iir_Predefined_Ieee_1164_Xnor_Suv_Log =>
+            return Synth_Dyadic_Vec_Log (Ctxt, Id_Xnor, Left, Right, Expr);
+         when Iir_Predefined_Ieee_1164_Xnor_Log_Suv =>
+            return Synth_Dyadic_Vec_Log (Ctxt, Id_Xnor, Right, Left, Expr);
 
          when Iir_Predefined_Enum_Equality =>
             if Left_Typ = Bit_Type
@@ -1542,11 +1590,13 @@ package body Synth.Oper is
             return Synth_Shift (Id_Asr, Id_Lsl);
 
          when Iir_Predefined_Ieee_Numeric_Std_Sll_Uns_Int
-           |  Iir_Predefined_Ieee_Numeric_Std_Sll_Sgn_Int =>
+            | Iir_Predefined_Ieee_Numeric_Std_Sll_Sgn_Int
+            | Iir_Predefined_Ieee_1164_Vector_Sll =>
             return Synth_Shift (Id_Lsl, Id_Lsr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Srl_Uns_Int
-           |  Iir_Predefined_Ieee_Numeric_Std_Srl_Sgn_Int =>
+            | Iir_Predefined_Ieee_Numeric_Std_Srl_Sgn_Int
+            | Iir_Predefined_Ieee_1164_Vector_Srl =>
             return Synth_Shift (Id_Lsr, Id_Lsl);
 
          when Iir_Predefined_Ieee_1164_Vector_Ror =>
