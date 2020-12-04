@@ -409,18 +409,12 @@ package body Synth.Oper is
       V : constant Net := Get_Net (Ctxt, Vec);
       L : constant Net := Get_Net (Ctxt, Log);
       Wd : constant Width := Get_Width (V);
+      Lv : Net;
       Res : Net;
-      N   : Net;
-      Inst : Instance;
    begin
-      Res := Build_Concatn (Ctxt, Wd, Wd);
-      Inst := Get_Net_Parent (Res);
-      for I in 1 .. Wd loop
-         N := Build2_Extract (Ctxt, V, I - 1, 1);
-         N := Build_Dyadic (Ctxt, Id, N, L);
-         Set_Location (N, Expr);
-         Connect (Get_Input (Inst, Port_Nbr (Wd - I)), N);
-      end loop;
+      Lv := Build2_Sresize (Ctxt, L, Wd, Get_Location (Expr));
+      Res := Build_Dyadic (Ctxt, Id, V, Lv);
+      Set_Location (Res, Expr);
       return Create_Value_Net (Res, Create_Res_Bound (Vec));
    end Synth_Dyadic_Vec_Log;
 
