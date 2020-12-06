@@ -873,11 +873,11 @@ package body Synth.Ieee.Numeric_Std is
 
       for I in 1 .. Size loop
          if I <= Old_Size then
-            B := Read_Std_Logic (Val.Mem, I - 1);
+            B := Read_Std_Logic (Val.Mem, Old_Size - I);
          else
             B := Pad;
          end if;
-         Write_Std_Logic (Res.Mem, I - 1, B);
+         Write_Std_Logic (Res.Mem, Size - I, B);
       end loop;
 
       return Res;

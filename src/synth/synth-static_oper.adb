@@ -861,6 +861,9 @@ package body Synth.Static_Oper is
          when Iir_Predefined_Ieee_Numeric_Std_Resize_Sgn_Nat =>
             return Resize_Vec
               (Get_Memtyp (Param1), Uns32 (Read_Discrete (Param2)), True);
+         when Iir_Predefined_Ieee_Numeric_Std_Resize_Uns_Nat =>
+            return Resize_Vec
+              (Get_Memtyp (Param1), Uns32 (Read_Discrete (Param2)), False);
 
          when Iir_Predefined_Ieee_1164_To_Stdlogicvector_Bv =>
             declare
