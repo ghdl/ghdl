@@ -28,17 +28,17 @@ This directory contains the sources of GHDL, the open-source analyzer, compiler,
 
 # Main features
 
-Full support for the [1987](http://ieeexplore.ieee.org/document/26487/), [1993](http://ieeexplore.ieee.org/document/392561/), [2002](http://ieeexplore.ieee.org/document/1003477/) versions of the [IEEE](www.ieee.org) [1076](http://standards.ieee.org/develop/wg/P1076.html) VHDL standard, and partial for the latest [2008](http://ieeexplore.ieee.org/document/4772740/) revision.
+Full support for the [1987](https://ieeexplore.ieee.org/document/26487/), [1993](https://ieeexplore.ieee.org/document/392561/), [2002](https://ieeexplore.ieee.org/document/1003477/) versions of the [IEEE](https://www.ieee.org) [1076](https://standards.ieee.org/develop/wg/P1076.html) VHDL standard, and partial for the latest [2008](https://ieeexplore.ieee.org/document/4772740/) revision.
 
 Partial support of [PSL](https://en.wikipedia.org/wiki/Property_Specification_Language).
 
-By using a code generator ([LLVM](http://llvm.org/), [GCC](http://gcc.gnu.org/) or, [x86_64](https://en.wikipedia.org/wiki/X86-64)/[i386](https://en.wikipedia.org/wiki/Intel_80386) only, a built-in one), it is much faster than any interpreted simulator. It can handle very large designs, such as [leon3/grlib](http://www.gaisler.com/index.php/downloads/leongrlib).
+By using a code generator ([LLVM](https://llvm.org/), [GCC](https://gcc.gnu.org/) or, [x86_64](https://en.wikipedia.org/wiki/X86-64)/[i386](https://en.wikipedia.org/wiki/Intel_80386) only, a built-in one), it is much faster than any interpreted simulator. It can handle very large designs, such as [leon3/grlib](https://www.gaisler.com/index.php/downloads/leongrlib).
 
-GHDL runs on [GNU/Linux](http://en.wikipedia.org/wiki/Linux_distribution), [Windows](http://en.wikipedia.org/wiki/Microsoft_Windows) and [macOS](http://en.wikipedia.org/wiki/MacOS); on `x86`, `x86_64`, `armv6/armv7/aarch32` and `aarch64`. You can freely [download](https://github.com/ghdl/ghdl/releases) a binary distribution for your OS, use [GHDL Docker images](https://github.com/ghdl/docker), or try to build it on your own machine (see *'Getting GHDL'* below).
+GHDL runs on [GNU/Linux](https://en.wikipedia.org/wiki/Linux_distribution), [Windows](https://en.wikipedia.org/wiki/Microsoft_Windows) and [macOS](https://en.wikipedia.org/wiki/MacOS); on `x86`, `x86_64`, `armv6/armv7/aarch32` and `aarch64`. You can freely [download](https://github.com/ghdl/ghdl/releases) a binary distribution for your OS, use [GHDL Docker images](https://github.com/ghdl/docker), or try to build it on your own machine (see *'Getting GHDL'* below).
 
-Can write waveforms to a [GHW](http://ghdl.github.io/ghdl/using/Simulation.html?highlight=GHW#cmdoption-wave), [VCD](https://en.wikipedia.org/wiki/Value_change_dump) or FST file. Combined with a [GUI](http://en.wikipedia.org/wiki/Graphical_user_interface)-based [waveform viewer](https://en.wikipedia.org/wiki/Waveform_viewer) and a good text editor, GHDL is a very powerful tool for writing, testing and simulating your code.
+Can write waveforms to a [GHW](https://ghdl.github.io/ghdl/using/Simulation.html?highlight=GHW#cmdoption-wave), [VCD](https://en.wikipedia.org/wiki/Value_change_dump) or FST file. Combined with a [GUI](https://en.wikipedia.org/wiki/Graphical_user_interface)-based [waveform viewer](https://en.wikipedia.org/wiki/Waveform_viewer) and a good text editor, GHDL is a very powerful tool for writing, testing and simulating your code.
 
-Supported third party projects: [cocotb](https://github.com/potentialventures/cocotb) (through the [VPI interface](https://en.wikipedia.org/wiki/Verilog_Procedural_Interface)), [OSVVM](http://osvvm.org), [UVVM](https://github.com/UVVM/UVVM), [VUnit](https://vunit.github.io), ...
+Supported third party projects: [cocotb](https://github.com/potentialventures/cocotb) (through the [VPI interface](https://en.wikipedia.org/wiki/Verilog_Procedural_Interface)), [OSVVM](https://osvvm.org), [UVVM](https://github.com/UVVM/UVVM), [VUnit](https://vunit.github.io), ...
 
 GHDL is free software:
 
@@ -63,7 +63,7 @@ GHDL currently supports three different back-ends (code generators). Each has it
 
 In order to follow the traditional way to `configure` and `make`, you need an Ada compiler. Most GNU/Linux package managers provide a package named `gcc-ada` or `gcc-gnat`.
 
-> Alternatively, GNAT GPL can be downloaded anonymously from [libre.adacore.com](http://libre.adacore.com/tools/gnat-gpl-edition/) (later than 2017 is suggested; for x86, 32 or 64 bits). Then, untar and run the *doinstall* script.
+> Alternatively, GNAT GPL can be downloaded anonymously from [libre.adacore.com](https://libre.adacore.com/tools/gnat-gpl-edition/) (later than 2017 is suggested; for x86, 32 or 64 bits). Then, untar and run the *doinstall* script.
 
 > Depending on the OS and distribution you are using, you will also need to install some toolchain dependencies, such as `zlib`. See '[Building](https://ghdl.github.io/ghdl/getting/)' for specific package names.
 
