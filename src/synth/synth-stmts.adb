@@ -575,7 +575,10 @@ package body Synth.Stmts is
          if Dyn.Pfx_Off.Net_Off /= 0 then
             N := Build2_Extract (Ctxt, N, Dyn.Pfx_Off.Net_Off, Dyn.Pfx_Typ.W);
          end if;
-         N := Build_Dyn_Extract (Ctxt, N, Dyn.Voff, Off, Res_Typ.W);
+         if Res_Typ.W /= 0 then
+            --  Do not try to extract if the net is null.
+            N := Build_Dyn_Extract (Ctxt, N, Dyn.Voff, Off, Res_Typ.W);
+         end if;
       else
          pragma Assert (not Is_Static (Obj.Val));
          N := Build2_Extract (Ctxt, N, Off, Res_Typ.W);
