@@ -836,8 +836,9 @@ package body Vhdl.Sem_Specs is
          --  GHDL: test based on the entity_class.
          case Get_Entity_Class (Spec) is
             when Tok_Entity
-              | Tok_Architecture
-              | Tok_Configuration =>
+               | Tok_Architecture
+               | Tok_Configuration =>
+               Set_Static_Attribute_Flag (Spec, True);
                if Get_Expr_Staticness (Expr) /= Locally then
                   Error_Msg_Sem_Relaxed
                     (Spec, Warnid_Attribute,

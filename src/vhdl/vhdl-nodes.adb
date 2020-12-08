@@ -2090,6 +2090,22 @@ package body Vhdl.Nodes is
       Set_Field4 (Val, Attr);
    end Set_Attribute_Specification;
 
+   function Get_Static_Attribute_Flag (Attr : Iir) return Boolean is
+   begin
+      pragma Assert (Attr /= Null_Iir);
+      pragma Assert (Has_Static_Attribute_Flag (Get_Kind (Attr)),
+                     "no field Static_Attribute_Flag");
+      return Get_Flag2 (Attr);
+   end Get_Static_Attribute_Flag;
+
+   procedure Set_Static_Attribute_Flag (Attr : Iir; Flag : Boolean) is
+   begin
+      pragma Assert (Attr /= Null_Iir);
+      pragma Assert (Has_Static_Attribute_Flag (Get_Kind (Attr)),
+                     "no field Static_Attribute_Flag");
+      Set_Flag2 (Attr, Flag);
+   end Set_Static_Attribute_Flag;
+
    function Get_Signal_List (Target : Iir) return Iir_Flist is
    begin
       pragma Assert (Target /= Null_Iir);

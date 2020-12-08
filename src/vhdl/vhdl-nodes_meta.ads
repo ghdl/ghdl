@@ -108,6 +108,7 @@ package Vhdl.Nodes_Meta is
       Field_Attribute_Designator,
       Field_Attribute_Specification_Chain,
       Field_Attribute_Specification,
+      Field_Static_Attribute_Flag,
       Field_Signal_List,
       Field_Quantity_List,
       Field_Designated_Entity,
@@ -687,6 +688,7 @@ package Vhdl.Nodes_Meta is
    function Has_Attribute_Specification_Chain (K : Iir_Kind)
       return Boolean;
    function Has_Attribute_Specification (K : Iir_Kind) return Boolean;
+   function Has_Static_Attribute_Flag (K : Iir_Kind) return Boolean;
    function Has_Signal_List (K : Iir_Kind) return Boolean;
    function Has_Quantity_List (K : Iir_Kind) return Boolean;
    function Has_Designated_Entity (K : Iir_Kind) return Boolean;

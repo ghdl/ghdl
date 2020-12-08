@@ -3315,7 +3315,7 @@ package body Vhdl.Sem_Names is
            | Iir_Kind_Unit_Declaration
            | Iir_Kind_Component_Declaration
            | Iir_Kinds_Library_Unit =>
-            --  FIXME: to complete
+            --  FIXME: complete
             null;
          when Iir_Kinds_Sequential_Statement
            | Iir_Kinds_Concurrent_Statement =>
@@ -3340,6 +3340,15 @@ package body Vhdl.Sem_Names is
       end if;
 
       Xref_Ref (Attr, Value);
+
+      if Get_Static_Attribute_Flag (Get_Attribute_Specification (Value))
+        and then not Get_Is_Within_Flag (Prefix)
+        and then Get_Expr_Staticness (Value) /= Locally
+      then
+         Error_Msg_Sem
+           (+Attr, "non-locally static attribute cannot be referenced here");
+         return Error_Mark;
+      end if;
 
       return Value;
    end Sem_User_Attribute;

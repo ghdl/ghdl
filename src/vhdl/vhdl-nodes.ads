@@ -811,6 +811,8 @@ package Vhdl.Nodes is
    --   Get/Set_Attribute_Designator (Field6)
    --
    --   Get/Set_Attribute_Specification_Chain (Field7)
+   --
+   --   Get/Set_Static_Attribute_Flag (Flag2)
 
    -- Iir_Kind_Attribute_Value (Short)
    --  An attribute value is the element of the chain of attribute of an
@@ -973,6 +975,8 @@ package Vhdl.Nodes is
    --   Get/Set_Block_Configuration (Field4)
    --
    --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Is_Within_Flag (Flag5)
    --
    --   Get/Set_End_Has_Reserved_Id (Flag8)
    --
@@ -7579,6 +7583,14 @@ package Vhdl.Nodes is
    --  Field: Field4 Ref
    function Get_Attribute_Specification (Val : Iir) return Iir;
    procedure Set_Attribute_Specification (Val : Iir; Attr : Iir);
+
+   --  True for attributes on entity, configuration and architecture.  They
+   --  are expected to be read from anywhere so the value is expected to be
+   --  locally static, but this is not followed by many users and
+   --  implementations.
+   --  Field: Flag2
+   function Get_Static_Attribute_Flag (Attr : Iir) return Boolean;
+   procedure Set_Static_Attribute_Flag (Attr : Iir; Flag : Boolean);
 
    --  Field: Field3 Of_Maybe_Ref (uc)
    function Get_Signal_List (Target : Iir) return Iir_Flist;

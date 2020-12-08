@@ -720,6 +720,7 @@ package body Vhdl.Sem is
       Entity_Unit : Iir_Design_Unit;
    begin
       Xref_Decl (Decl);
+      Set_Is_Within_Flag (Decl, True);
 
       --  LRM 1.3
       --  The entity name identifies the name of the entity declaration that
@@ -758,6 +759,7 @@ package body Vhdl.Sem is
 
       Sem_Block_Configuration (Get_Block_Configuration (Decl), Decl);
       Close_Declarative_Region;
+      Set_Is_Within_Flag (Decl, False);
    end Sem_Configuration_Declaration;
 
    --  Analyze the block specification of a block statement or of a generate

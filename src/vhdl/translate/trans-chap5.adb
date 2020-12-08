@@ -61,13 +61,14 @@ package body Trans.Chap5 is
    is
       Spec_Expr : constant Iir := Get_Expression (Spec);
       Spec_Type : constant Iir := Get_Type (Spec_Expr);
-      Attr   : constant Iir_Attribute_Declaration :=
+      Attr      : constant Iir_Attribute_Declaration :=
         Get_Named_Entity (Get_Attribute_Designator (Spec));
-      Mark   : Id_Mark_Type;
-      Mark2  : Id_Mark_Type;
-      Info   : Object_Info_Acc;
-      Val    : Iir;
-      Num    : Natural;
+      Mark      : Id_Mark_Type;
+      Mark2     : Id_Mark_Type;
+      Info      : Object_Info_Acc;
+      Val       : Iir;
+      Num       : Natural;
+      Vtype     : O_Tnode;
    begin
       Push_Identifier_Prefix_Uniq (Mark);
       if Is_Anonymous_Type_Definition (Spec_Type) then
@@ -80,10 +81,19 @@ package body Trans.Chap5 is
       Val := Get_Attribute_Value_Spec_Chain (Spec);
       while Is_Valid (Val) loop
          Info := Add_Info (Val, Kind_Object);
-         Info.Object_Var := Create_Var
-           (Create_Var_Identifier (Attr, "V", Num),
-            Chap4.Get_Object_Type (Get_Info (Spec_Type), Mode_Value),
-            Global_Storage);
+         Vtype := Chap4.Get_Object_Type (Get_Info (Spec_Type), Mode_Value);
+         if Get_Static_Attribute_Flag (Spec)
+           and then Get_Expr_Staticness (Spec_Expr) = Locally
+         then
+            --  Create a global var so that the attribute can be referenced
+            --  from outside.  This is possible only if the attribute is
+            --  locally static.
+            Info.Object_Var := Create_Global_Var
+              (Create_Identifier (Attr, "V"), Vtype, Global_Storage);
+         else
+            Info.Object_Var := Create_Var
+              (Create_Var_Identifier (Attr, "V", Num), Vtype, Global_Storage);
+         end if;
 
          --  Create only one object if the expression is static.
          exit when Get_Expr_Staticness (Spec_Expr) /= None;
