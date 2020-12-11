@@ -248,7 +248,10 @@ package body Synth.Insts is
       use Name_Table;
       Id_Len : constant Natural := Get_Name_Length (Id);
       Str_Len : constant Natural := Id_Len + 512;
-      pragma Assert (GNAT.SHA1.Hash_Length = 20);
+
+      --  True in practice (and used to set the length of STR, but doesn't work
+      --  anymore with gcc/gnat 11.
+      --  pragma Assert (GNAT.SHA1.Hash_Length = 20);
       Str : String (1 .. Str_Len + 41);
       Len : Natural;
 
