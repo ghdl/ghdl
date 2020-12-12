@@ -770,6 +770,17 @@ package body Synth.Objtypes is
       return (Vtype, Alloc_Memory (Vtype));
    end Create_Memory;
 
+   function Create_Memory_Zero (Vtype : Type_Acc) return Memtyp
+   is
+      Mem : Memory_Ptr;
+   begin
+      Mem := Alloc_Memory (Vtype);
+      for I in 1 .. Vtype.Sz loop
+         Write_U8 (Mem + (I - 1), 0);
+      end loop;
+      return (Vtype, Mem);
+   end Create_Memory_Zero;
+
    function Create_Memory_U8 (Val : Ghdl_U8; Vtype : Type_Acc)
                              return Memtyp
    is

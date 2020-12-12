@@ -2170,12 +2170,22 @@ package body Synth.Expr is
                end if;
             end;
          when Iir_Kind_Simple_Name
-           | Iir_Kind_Selected_Name
-           | Iir_Kind_Interface_Signal_Declaration --  For PSL.
-           | Iir_Kind_Signal_Declaration   -- For PSL.
-           | Iir_Kind_Implicit_Dereference
-           | Iir_Kind_Dereference =>
-            return Synth_Name (Syn_Inst, Expr);
+            | Iir_Kind_Selected_Name
+            | Iir_Kind_Interface_Signal_Declaration --  For PSL.
+            | Iir_Kind_Signal_Declaration   -- For PSL.
+            | Iir_Kind_Implicit_Dereference
+            | Iir_Kind_Dereference =>
+            declare
+               Res : Valtyp;
+            begin
+               Res := Synth_Name (Syn_Inst, Expr);
+               if Res.Typ.W = 0 and then Res.Val.Kind /= Value_Memory then
+                  --  This is a null object.  As nothing can be done about it,
+                  --  returns 0.
+                  return Create_Value_Memtyp (Create_Memory_Zero (Res.Typ));
+               end if;
+               return Res;
+            end;
          when Iir_Kind_Reference_Name =>
             --  Only used for anonymous signals in internal association.
             return Synth_Expression_With_Type

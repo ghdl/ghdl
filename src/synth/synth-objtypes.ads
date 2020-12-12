@@ -125,6 +125,10 @@ package Synth.Objtypes is
       Sz : Size_Type;
 
       --  Number of bits (when in a net) for this type.
+      --  Can be zero only if the type has only 0 or 1 value (like a discrete
+      --  type with 1 element, a null vector, or a null array).
+      --  For non synthesizable types (like files or protected type), just
+      --  use 32.
       W : Width;
 
       case Kind is
@@ -291,6 +295,10 @@ package Synth.Objtypes is
 
    function Alloc_Memory (Vtype : Type_Acc) return Memory_Ptr;
    function Create_Memory (Vtype : Type_Acc) return Memtyp;
+
+   --  Like Create_Memory but initialize to 0.  To be used only for types
+   --  of width 0.
+   function Create_Memory_Zero (Vtype : Type_Acc) return Memtyp;
 
    function Is_Equal (L, R : Memtyp) return Boolean;
 
