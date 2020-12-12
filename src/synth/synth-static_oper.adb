@@ -695,6 +695,8 @@ package body Synth.Static_Oper is
 
          when Iir_Predefined_Ieee_1164_Or_Suv =>
             return Synth_Vector_Reduce ('0', Operand, Or_Table);
+         when Iir_Predefined_Ieee_1164_Xor_Suv =>
+            return Synth_Vector_Reduce ('0', Operand, Xor_Table);
 
          when others =>
             Error_Msg_Synth
