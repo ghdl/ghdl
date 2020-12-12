@@ -2227,7 +2227,11 @@ package body Synth.Expr is
                Val := Synth_Expression (Syn_Inst, Pfx);
                Strip_Const (Val);
                Res_Typ := Val.Typ.Rec.E (Idx + 1).Typ;
-               if Is_Static (Val.Val) then
+               if Res_Typ.W = 0 and then Val.Val.Kind /= Value_Memory then
+                  --  This is a null object.  As nothing can be done about it,
+                  --  returns 0.
+                  return Create_Value_Memtyp (Create_Memory_Zero (Res_Typ));
+               elsif Is_Static (Val.Val) then
                   Res := Create_Value_Memory (Res_Typ);
                   Copy_Memory
                     (Res.Val.Mem, Val.Val.Mem + Val.Typ.Rec.E (Idx + 1).Moff,
