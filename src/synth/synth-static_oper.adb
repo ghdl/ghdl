@@ -119,7 +119,8 @@ package body Synth.Static_Oper is
          when Iir_Predefined_Error =>
             return Null_Memtyp;
 
-         when Iir_Predefined_Boolean_Xor =>
+         when Iir_Predefined_Boolean_Xor
+            | Iir_Predefined_Bit_Xor =>
             return Create_Memory_U8
               (Boolean'Pos (Boolean'Val (Read_Discrete (Left))
                               xor Boolean'Val (Read_Discrete (Right))),
@@ -364,6 +365,25 @@ package body Synth.Static_Oper is
             return Create_Memory_U8
               (Boolean'Pos (Read_Access (Left) /= Read_Access (Right)),
                Boolean_Type);
+
+         when Iir_Predefined_TF_Array_Xor =>
+            if Left.Typ.Sz /= Right.Typ.Sz then
+               Error_Msg_Synth (+Expr, "length mismatch");
+               return Left;
+            else
+               declare
+                  Res : Memtyp;
+                  L, R : Boolean;
+               begin
+                  Res := Create_Memory (Left.Typ);
+                  for I in 1 .. Left.Typ.Sz loop
+                     L := Boolean'Val (Read_U8 (Left.Mem + (I - 1)));
+                     R := Boolean'Val (Read_U8 (Right.Mem + (I - 1)));
+                     Write_U8 (Res.Mem + (I - 1), Boolean'Pos (L xor R));
+                  end loop;
+                  return Res;
+               end;
+            end if;
 
          when Iir_Predefined_Ieee_1164_Vector_And
            | Iir_Predefined_Ieee_Numeric_Std_And_Uns_Uns
@@ -875,7 +895,8 @@ package body Synth.Static_Oper is
                return Create_Memory_U8 (Std_Ulogic'Pos (B), Res_Typ);
             end;
 
-         when Iir_Predefined_Ieee_1164_To_Stdlogicvector_Bv =>
+         when Iir_Predefined_Ieee_1164_To_Stdlogicvector_Bv
+            | Iir_Predefined_Ieee_1164_To_Stdulogicvector_Bv =>
             declare
                El_Type : constant Type_Acc := Get_Array_Element (Res_Typ);
                Res : Memtyp;
