@@ -2,7 +2,9 @@
 
 . ../../testenv.sh
 
-synth_analyze ent
+for f in ent ent2 xor01 xor02; do
+  synth_analyze $f
+done
 
 clean
 
