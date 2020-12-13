@@ -825,18 +825,18 @@ package body Synth.Static_Oper is
             end;
 
          when Iir_Predefined_Ieee_Numeric_Std_Touns_Nat_Nat_Uns
-           | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Int =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Int =>
             return Eval_To_Vector
               (Uns64 (Read_Discrete (Param1)), Read_Discrete (Param2),
                Res_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Tosgn_Int_Nat_Sgn
-           | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Int =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Int =>
             return Eval_To_Vector
               (To_Uns64 (Read_Discrete (Param1)), Read_Discrete (Param2),
                Res_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Toint_Uns_Nat
-           | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Uns
-           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Conv_Integer =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Conv_Integer =>
             --  UNSIGNED to Natural.
             return Create_Memory_Discrete
               (Eval_Unsigned_To_Integer (Get_Memtyp (Param1), Expr), Res_Typ);
@@ -867,6 +867,14 @@ package body Synth.Static_Oper is
             return Resize_Vec
               (Get_Memtyp (Param1), Uns32 (Read_Discrete (Param2)), False);
 
+         when Iir_Predefined_Ieee_1164_To_Stdulogic =>
+            declare
+               B : Std_Ulogic;
+            begin
+               B := Read_Bit_To_Std_Logic (Param1.Val.Mem, 0);
+               return Create_Memory_U8 (Std_Ulogic'Pos (B), Res_Typ);
+            end;
+
          when Iir_Predefined_Ieee_1164_To_Stdlogicvector_Bv =>
             declare
                El_Type : constant Type_Acc := Get_Array_Element (Res_Typ);
@@ -877,16 +885,13 @@ package body Synth.Static_Oper is
                Bnd := Create_Vec_Type_By_Length
                  (Uns32 (Vec_Length (Param1.Typ)), El_Type);
                Res := Create_Memory (Bnd);
-               for I in 1 .. Vec_Length (Param1.Typ) loop
-                  if Read_U8 (Param1.Val.Mem + Size_Type (I - 1)) = 0 then
-                     B := '0';
-                  else
-                     B := '1';
-                  end if;
-                  Write_Std_Logic (Res.Mem, Uns32 (I - 1), B);
+               for I in 1 .. Uns32 (Vec_Length (Param1.Typ)) loop
+                  B := Read_Bit_To_Std_Logic (Param1.Val.Mem, I - 1);
+                  Write_Std_Logic (Res.Mem, I - 1, B);
                end loop;
                return Res;
             end;
+
          when Iir_Predefined_Ieee_Math_Real_Log2 =>
             declare
                function Log2 (Arg : Fp64) return Fp64;

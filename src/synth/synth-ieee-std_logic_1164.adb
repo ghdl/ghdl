@@ -28,4 +28,17 @@ package body Synth.Ieee.Std_Logic_1164 is
    begin
       Write_U8 (M + Size_Type (Off), Std_Ulogic'Pos (Val));
    end Write_Std_Logic;
+
+   function Read_Bit_To_Std_Logic (M : Memory_Ptr; Off : Uns32)
+                                   return Std_Ulogic is
+   begin
+      case Read_U8 (M + Size_Type (Off)) is
+         when 0 =>
+            return '0';
+         when 1 =>
+            return '1';
+         when others =>
+            raise Constraint_Error;
+      end case;
+   end Read_Bit_To_Std_Logic;
 end Synth.Ieee.Std_Logic_1164;

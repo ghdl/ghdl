@@ -43,6 +43,10 @@ package Synth.Ieee.Std_Logic_1164 is
    function Read_Std_Logic (M : Memory_Ptr; Off : Uns32) return Std_Ulogic;
    procedure Write_Std_Logic (M : Memory_Ptr; Off : Uns32; Val : Std_Ulogic);
 
+   --  Read as standard.bit and convert to std_logic.
+   function Read_Bit_To_Std_Logic (M : Memory_Ptr; Off : Uns32)
+                                   return Std_Ulogic;
+
    type Table_1d is array (Std_Ulogic) of Std_Ulogic;
    type Table_2d is array (Std_Ulogic, Std_Ulogic) of Std_Ulogic;
 
