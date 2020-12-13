@@ -1908,6 +1908,7 @@ package body Synth.Oper is
          when Iir_Predefined_Ieee_1164_To_Bitvector
             | Iir_Predefined_Ieee_1164_To_Stdlogicvector_Suv
             | Iir_Predefined_Ieee_1164_To_Stdlogicvector_Bv
+            | Iir_Predefined_Ieee_1164_To_Stdulogicvector_Bv
             | Iir_Predefined_Ieee_Numeric_Std_To_01_Uns
             | Iir_Predefined_Ieee_Numeric_Std_To_01_Sgn
             | Iir_Predefined_Ieee_1164_To_X01_Slv =>
@@ -1917,7 +1918,8 @@ package body Synth.Oper is
             --  A no-op (with change of bounds).
             return Create_Value_Net (Get_Net (Ctxt, L), Create_Res_Bound (L));
          when Iir_Predefined_Ieee_1164_To_Bit
-            | Iir_Predefined_Ieee_1164_To_X01_Log =>
+            | Iir_Predefined_Ieee_1164_To_X01_Log
+            | Iir_Predefined_Ieee_1164_To_Stdulogic =>
             --  A no-op.
             return Create_Value_Net (Get_Net (Ctxt, L), Res_Typ);
 
