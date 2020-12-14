@@ -895,6 +895,32 @@ package body Synth.Static_Oper is
                return Create_Memory_U8 (Std_Ulogic'Pos (B), Res_Typ);
             end;
 
+         when Iir_Predefined_Ieee_1164_To_X01_Log =>
+            declare
+               B : Std_Ulogic;
+            begin
+               B := Read_Std_Logic (Param1.Val.Mem, 0);
+               B := To_X01 (B);
+               return Create_Memory_U8 (Std_Ulogic'Pos (B), Res_Typ);
+            end;
+         when Iir_Predefined_Ieee_1164_To_X01_Slv =>
+            declare
+               El_Type : constant Type_Acc := Get_Array_Element (Res_Typ);
+               Res : Memtyp;
+               Bnd : Type_Acc;
+               B : Std_Ulogic;
+            begin
+               Bnd := Create_Vec_Type_By_Length
+                 (Uns32 (Vec_Length (Param1.Typ)), El_Type);
+               Res := Create_Memory (Bnd);
+               for I in 1 .. Uns32 (Vec_Length (Param1.Typ)) loop
+                  B := Read_Std_Logic (Param1.Val.Mem, I - 1);
+                  B := To_X01 (B);
+                  Write_Std_Logic (Res.Mem, I - 1, B);
+               end loop;
+               return Res;
+            end;
+
          when Iir_Predefined_Ieee_1164_To_Stdlogicvector_Bv
             | Iir_Predefined_Ieee_1164_To_Stdulogicvector_Bv =>
             declare
