@@ -19,6 +19,16 @@
 --  MA 02110-1301, USA.
 
 package body Synth.Ieee.Std_Logic_1164 is
+   function Read_Bit (M : Memory_Ptr; Off : Uns32) return Bit is
+   begin
+      return Bit'Val (Read_U8 (M + Size_Type (Off)));
+   end Read_Bit;
+
+   procedure Write_Bit (M : Memory_Ptr; Off : Uns32; Val : Bit) is
+   begin
+      Write_U8 (M + Size_Type (Off), Bit'Pos (Val));
+   end Write_Bit;
+
    function Read_Std_Logic (M : Memory_Ptr; Off : Uns32) return Std_Ulogic is
    begin
       return Std_Ulogic'Val (Read_U8 (M + Size_Type (Off)));
@@ -28,6 +38,15 @@ package body Synth.Ieee.Std_Logic_1164 is
    begin
       Write_U8 (M + Size_Type (Off), Std_Ulogic'Pos (Val));
    end Write_Std_Logic;
+
+   function To_Bit (S : Std_Ulogic; Xmap : Bit) return Bit is
+   begin
+      case S is
+         when '0' | 'L' => return '0';
+         when '1' | 'H' => return '1';
+         when others => return Xmap;
+      end case;
+   end To_Bit;
 
    function Read_Bit_To_Std_Logic (M : Memory_Ptr; Off : Uns32)
                                    return Std_Ulogic is

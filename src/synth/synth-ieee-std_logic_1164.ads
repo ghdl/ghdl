@@ -22,6 +22,13 @@ with Types; use Types;
 with Synth.Objtypes; use Synth.Objtypes;
 
 package Synth.Ieee.Std_Logic_1164 is
+
+   --  For std.standard.  Should a package be created ?
+   type Bit is ('0', '1');
+
+   function Read_Bit (M : Memory_Ptr; Off : Uns32) return Bit;
+   procedure Write_Bit (M : Memory_Ptr; Off : Uns32; Val : Bit);
+
    --  From openieee.
 
    --  Unresolved logic state.
@@ -46,6 +53,8 @@ package Synth.Ieee.Std_Logic_1164 is
    --  Read as standard.bit and convert to std_logic.
    function Read_Bit_To_Std_Logic (M : Memory_Ptr; Off : Uns32)
                                    return Std_Ulogic;
+
+   function To_Bit (S : Std_Ulogic; Xmap : Bit) return Bit;
 
    type Table_1d is array (Std_Ulogic) of Std_Ulogic;
    type Table_2d is array (Std_Ulogic, Std_Ulogic) of Std_Ulogic;

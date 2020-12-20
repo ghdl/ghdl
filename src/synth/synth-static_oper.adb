@@ -939,6 +939,38 @@ package body Synth.Static_Oper is
                return Res;
             end;
 
+         when Iir_Predefined_Ieee_1164_To_Bit =>
+            declare
+               V : Std_Ulogic;
+               X : Bit;
+               R : Bit;
+            begin
+               V := Read_Std_Logic (Param1.Val.Mem, 0);
+               X := Read_Bit (Param2.Val.Mem, 0);
+               R := To_Bit (V, X);
+               return Create_Memory_U8 (Bit'Pos(R), Res_Typ);
+            end;
+         when Iir_Predefined_Ieee_1164_To_Bitvector =>
+            declare
+               El_Type : constant Type_Acc := Get_Array_Element (Res_Typ);
+               Res     : Memtyp;
+               Bnd     : Type_Acc;
+               S       : Std_Ulogic;
+               X       : Bit;
+               R       : Bit;
+            begin
+               X := Read_Bit (Param2.Val.Mem, 0);
+               Bnd := Create_Vec_Type_By_Length
+                 (Uns32 (Vec_Length (Param1.Typ)), El_Type);
+               Res := Create_Memory (Bnd);
+               for I in 1 .. Uns32 (Vec_Length (Param1.Typ)) loop
+                  S := Read_Std_Logic (Param1.Val.Mem, I - 1);
+                  R := To_Bit (S, X);
+                  Write_Bit (Res.Mem, I - 1, R);
+               end loop;
+               return Res;
+            end;
+
          when Iir_Predefined_Ieee_Math_Real_Log2 =>
             declare
                function Log2 (Arg : Fp64) return Fp64;
