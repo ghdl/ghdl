@@ -1,0 +1,53 @@
+name: MSYS2
+
+on:
+  push:
+  pull_request:
+
+jobs:
+
+  test:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        task:
+          - default
+          - clang
+          - llvm
+          - static
+          - llvm-static
+        sys:
+          - { msystem: MINGW64, arch: x86_64 }
+          - { msystem: MINGW32, arch: i686   }
+    name: ${{ matrix.sys.msystem }} ${{ matrix.sys.arch }} | ${{ matrix.task }}
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+
+    - run: git config --global core.autocrlf input
+      shell: bash
+
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - uses: msys2/setup-msys2@v2
+      with:
+        msystem: ${{ matrix.sys.msystem }}
+        update: true
+        install: >
+          base-devel
+          mingw-w64-${{ matrix.sys.arch }}-toolchain
+
+    - name: Build
+      run: |
+        cd msys2/${{ matrix.task }}
+        makepkg-mingw --noconfirm --noprogressbar -sCLf
+      env:
+        MINGW_ARCH: ${{ matrix.sys.msystem }}
+
+    - run: pacman -U --noconfirm --noprogressbar msys2/${{ matrix.task }}/*.zst
+
+    - run: ghdl --help

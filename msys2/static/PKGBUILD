@@ -1,0 +1,89 @@
+_realname=ghdl
+pkgbase="mingw-w64-${_realname}"
+pkgname='__placeholder__'
+pkgver=test
+pkgrel=1
+pkgdesc='GHDL: the open-source analyzer, compiler, simulator and (experimental) synthesizer for VHDL (mingw-w64)'
+arch=('any')
+license=('GPL2+')
+url='https://github.com/ghdl'
+groups=("${MINGW_PACKAGE_PREFIX}-eda")
+checkdepends=("${MINGW_PACKAGE_PREFIX}-python")
+provides=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+makedepends=("${MINGW_PACKAGE_PREFIX}-clang" "${MINGW_PACKAGE_PREFIX}-gcc-ada")
+source=('libghdl_static.diff')
+sha512sums=('SKIP')
+
+prepare() {
+  cd "${srcdir}"/../../..
+  patch -p1 < "${srcdir}"/libghdl_static.diff
+}
+
+build() {
+  [[ -d "${srcdir}"/build-${CARCH} ]] && rm -rf "${srcdir}"/build-${CARCH}
+  mkdir -p "${srcdir}"/build-${CARCH} && cd "${srcdir}"/build-${CARCH}
+
+  if [ "$CARCH" = "i686" ]; then
+    echo 'Configuring ghdl-mcode...'
+    ../../../../configure \
+        --prefix=${MINGW_PREFIX} \
+        --enable-checks \
+        --enable-libghdl \
+        --enable-synth \
+        LDFLAGS="-static"
+  fi
+
+  if [ "$CARCH" = "x86_64" ]; then
+    echo 'Configuring ghdl-llvm...'
+    ../../../../configure \
+        --prefix=${MINGW_PREFIX} \
+        --enable-checks \
+        --enable-libghdl \
+        --enable-synth \
+        --with-llvm-config="llvm-config --link-static" \
+        LDFLAGS="-static"
+  fi
+
+  make GNATMAKE="gnatmake -j$(nproc)" GNAT_BARGS="-bargs -E -static" GNAT_LARGS="-static -lz"
+}
+
+check() {
+  cd "${srcdir}/build-${CARCH}"
+  make install.vpi.local
+  make test
+}
+
+_package() {
+  cd "${srcdir}"/build-${CARCH}
+  mkdir -p "${pkgdir}${MINGW_PREFIX}/lib"
+  make DESTDIR="${pkgdir}" install
+
+  # License
+  install -Dm644 ${srcdir}/../../../doc/licenses.rst ${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/licenses.rst
+}
+
+if [ "${CARCH}" = "x86_64" ]; then
+  pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}-llvm")
+
+  package() {
+    pkgdesc="$pkgdesc (LLVM backend) (mingw-w64)"
+    depends=(
+      "${MINGW_PACKAGE_PREFIX}-zlib"
+      "${MINGW_PACKAGE_PREFIX}-clang"
+      "${MINGW_PACKAGE_PREFIX}-llvm"
+    )
+    options=(!emptydirs)
+
+    _package
+  }
+fi
+if [ "${CARCH}" = "i686" ]; then
+  pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}-mcode")
+
+  package() {
+    pkgdesc="$pkgdesc (mcode backend) (mingw-w64)"
+    depends=("${MINGW_PACKAGE_PREFIX}-zlib")
+
+    _package
+  }
+fi

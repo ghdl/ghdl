@@ -1,0 +1,9 @@
+--- a/src/grt/grt-zlib.ads
++++ b/src/grt/grt-zlib.ads
+@@ -27,7 +27,6 @@ with System; use System;
+ with Grt.C; use Grt.C;
+
+ package Grt.Zlib is
+-   pragma Linker_Options ("-lz");
+
+    type gzFile is new System.Address;
