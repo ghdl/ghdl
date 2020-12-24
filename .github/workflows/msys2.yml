@@ -40,14 +40,20 @@ jobs:
         install: >
           base-devel
           mingw-w64-${{ matrix.sys.arch }}-toolchain
+          mingw-w64-${{ matrix.sys.arch }}-diffutils
+          mingw-w64-${{ matrix.sys.arch }}-python-pip
 
     - name: Build
       run: |
         cd msys2/${{ matrix.task }}
-        makepkg-mingw --noconfirm --noprogressbar -sCLf
+        makepkg-mingw --noconfirm --noprogressbar -sCLf --nocheck
       env:
         MINGW_ARCH: ${{ matrix.sys.msystem }}
 
-    - run: pacman -U --noconfirm --noprogressbar msys2/${{ matrix.task }}/*.zst
+    - run: |
+        pacman -U --noconfirm --noprogressbar msys2/${{ matrix.task }}/*.zst
+        pip3 install -r testsuite/requirements.txt
 
     - run: ghdl --help
+
+    - run: GHDL=ghdl ./testsuite/testsuite.sh

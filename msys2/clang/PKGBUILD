@@ -10,7 +10,10 @@ url='https://github.com/ghdl'
 groups=("${MINGW_PACKAGE_PREFIX}-eda")
 checkdepends=("${MINGW_PACKAGE_PREFIX}-python")
 provides=("${MINGW_PACKAGE_PREFIX}-${_realname}")
-makedepends=("${MINGW_PACKAGE_PREFIX}-clang" "${MINGW_PACKAGE_PREFIX}-gcc-ada")
+makedepends=(
+  "${MINGW_PACKAGE_PREFIX}-clang"
+  "${MINGW_PACKAGE_PREFIX}-gcc-ada"
+)
 source=()
 sha512sums=()
 
@@ -48,7 +51,7 @@ build() {
 check() {
   cd "${srcdir}/build-${CARCH}"
   make install.vpi.local
-  make test
+  make CC=gcc test
 }
 
 _package() {
@@ -66,9 +69,10 @@ if [ "${CARCH}" = "x86_64" ]; then
   package() {
     pkgdesc="$pkgdesc (LLVM backend) (mingw-w64)"
     depends=(
-      "${MINGW_PACKAGE_PREFIX}-zlib"
+      "${MINGW_PACKAGE_PREFIX}-gcc-ada"
       "${MINGW_PACKAGE_PREFIX}-clang"
       "${MINGW_PACKAGE_PREFIX}-llvm"
+      "${MINGW_PACKAGE_PREFIX}-zlib"
     )
     options=(!emptydirs)
 
@@ -80,7 +84,8 @@ if [ "${CARCH}" = "i686" ]; then
 
   package() {
     pkgdesc="$pkgdesc (mcode backend) (mingw-w64)"
-    depends=("${MINGW_PACKAGE_PREFIX}-zlib")
+    depends=("${MINGW_PACKAGE_PREFIX}-gcc-ada"
+             "${MINGW_PACKAGE_PREFIX}-zlib")
 
     _package
   }
