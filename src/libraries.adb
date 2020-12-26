@@ -630,15 +630,13 @@ package body Libraries is
    end Load_Library;
 
    -- Note: the scanner shouldn't be in use, since this procedure uses it.
-   procedure Load_Std_Library (Build_Standard : Boolean := True)
+   function Load_Std_Library (Build_Standard : Boolean := True) return Boolean
    is
       use Vhdl.Std_Package;
       Dir : Name_Id;
    begin
-      if Libraries_Chain /= Null_Iir then
-         --  This procedure must not be called twice.
-         raise Internal_Error;
-      end if;
+      --  This procedure must not be called twice.
+      pragma Assert (Libraries_Chain = Null_Iir);
 
       Flags.Create_Flag_String;
 
@@ -668,7 +666,7 @@ package body Libraries is
         and then not Flags.Bootstrap
       then
          Error_Msg_Option ("cannot find ""std"" library");
-         raise Option_Error;
+         return False;
       end if;
 
       if Build_Standard then
@@ -682,6 +680,7 @@ package body Libraries is
       end if;
 
       Set_Visible_Flag (Std_Library, True);
+      return True;
    end Load_Std_Library;
 
    procedure Load_Work_Library (Empty : Boolean := False)

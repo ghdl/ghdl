@@ -116,7 +116,8 @@ package Ghdllocal is
    procedure Disp_Config_Prefixes;
 
    --  Setup standard libaries path.  If LOAD is true, then load them now.
-   procedure Setup_Libraries (Load : Boolean);
+   --  Return TRUE in case of success, FALSE in case of failure.
+   function Setup_Libraries (Load : Boolean) return Boolean;
 
    --  Set Exec_Prefix from program name.  Called by Setup_Libraries.
    procedure Set_Exec_Prefix_From_Program_Name;

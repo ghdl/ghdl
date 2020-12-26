@@ -72,6 +72,7 @@ def _get_libghdl_path():
 
 # Load the shared library
 _libghdl_path = _get_libghdl_path()
+# print("Load {}".format(_libghdl_path))
 libghdl = ctypes.CDLL(_libghdl_path)
 
 # Initialize it.
@@ -90,8 +91,12 @@ def set_option(opt):
 
 
 def analyze_init():
-    return libghdl.libghdl__analyze_init()
+    # Deprecated as it may raise an exception.  Use analyze_init_status
+    libghdl.libghdl__analyze_init()
 
+def analyze_init_status():
+    # Return 0 in case of success
+    return libghdl.libghdl__analyze_init_status()
 
 def analyze_file(fname):
     return libghdl.libghdl__analyze_file(*_to_char_p(fname))

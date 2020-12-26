@@ -555,7 +555,9 @@ package body Ghdlxml is
       Files : File_Data_Array;
    begin
       --  Load work library.
-      Setup_Libraries (True);
+      if not Setup_Libraries (True) then
+         return;
+      end if;
 
       --  Parse all files.
       for I in Files'Range loop

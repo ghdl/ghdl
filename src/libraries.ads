@@ -94,7 +94,8 @@ package Libraries is
 
    --  Initialize the library manager and load the STD library.
    --  If BUILD_STANDARD is false, the std.standard library is not created.
-   procedure Load_Std_Library (Build_Standard : Boolean := True);
+   --  Return TRUE in case of success, FALSE in case of failure.
+   function Load_Std_Library (Build_Standard : Boolean := True) return Boolean;
 
    -- Save the work library as a host-dependent library.
    procedure Save_Work_Library;

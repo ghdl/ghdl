@@ -399,7 +399,7 @@ package body Ghdllocal is
       Libraries.Add_Library_Path (Path);
    end Add_Library_Name;
 
-   procedure Setup_Libraries (Load : Boolean)
+   function Setup_Libraries (Load : Boolean) return Boolean
    is
       use Flags;
    begin
@@ -462,9 +462,12 @@ package body Ghdllocal is
            (Get_Machine_Path_Prefix & Directory_Separator);
       end if;
       if Load then
-         Libraries.Load_Std_Library;
+         if not Libraries.Load_Std_Library then
+            return False;
+         end if;
          Libraries.Load_Work_Library;
       end if;
+      return True;
    end Setup_Libraries;
 
    procedure Disp_Config_Prefixes is
@@ -476,7 +479,9 @@ package body Ghdllocal is
          Put_Line (Switch_Prefix_Path.all);
       end if;
 
-      Setup_Libraries (False);
+      if not Setup_Libraries (False) then
+         Put_Line ("(error while loading libraries)");
+      end if;
 
       Put ("environment prefix (GHDL_PREFIX): ");
       if Prefix_Env = null then
@@ -637,7 +642,9 @@ package body Ghdllocal is
    is
       pragma Unreferenced (Cmd);
    begin
-      Setup_Libraries (True);
+      if not Setup_Libraries (True) then
+         return;
+      end if;
 
       if Args'Length = 0 then
          Disp_Library (Std_Names.Name_Work);
@@ -701,7 +708,9 @@ package body Ghdllocal is
       Flag_Add : constant Boolean := False;
    begin
       Flags.Bootstrap := True;
-      Libraries.Load_Std_Library;
+      if not Libraries.Load_Std_Library then
+         raise Option_Error;
+      end if;
       Libraries.Load_Work_Library;
 
       for I in Args'Range loop
@@ -765,7 +774,9 @@ package body Ghdllocal is
       Next_Unit : Iir;
       Lib : Iir;
    begin
-      Setup_Libraries (True);
+      if not Setup_Libraries (True) then
+         return;
+      end if;
 
       --  Parse all files.
       for I in Args'Range loop
@@ -916,7 +927,10 @@ package body Ghdllocal is
    is
       Error_1 : Boolean;
    begin
-      Setup_Libraries (True);
+      if not Setup_Libraries (True) then
+         Error := True;
+         return;
+      end if;
 
       --  Parse all files.
       Error := False;
@@ -1015,7 +1029,9 @@ package body Ghdllocal is
 
       Flags.Bootstrap := True;
       --  Load libraries.
-      Libraries.Load_Std_Library;
+      if not Libraries.Load_Std_Library then
+         raise Option_Error;
+      end if;
       Libraries.Load_Work_Library;
 
       File := Get_Design_File_Chain (Libraries.Work_Library);
@@ -1123,8 +1139,11 @@ package body Ghdllocal is
          raise Option_Error;
       end if;
 
-      Setup_Libraries (False);
-      Libraries.Load_Std_Library;
+      if not Setup_Libraries (False)
+        or else not Libraries.Load_Std_Library
+      then
+         return;
+      end if;
       Dir := Work_Directory;
       Work_Directory := Null_Identifier;
       Libraries.Load_Work_Library;
@@ -1200,7 +1219,9 @@ package body Ghdllocal is
          raise Option_Error;
       end if;
       Flags.Bootstrap := True;
-      Libraries.Load_Std_Library;
+      if not Libraries.Load_Std_Library then
+         raise Option_Error;
+      end if;
       Vhdl.Prints.Disp_Vhdl (Vhdl.Std_Package.Std_Standard_Unit);
    end Perform_Action;
 
@@ -1238,7 +1259,9 @@ package body Ghdllocal is
       From : Iir;
       Top : Iir;
    begin
-      Setup_Libraries (True);
+      if not Setup_Libraries (True) then
+         return;
+      end if;
 
       if Args'Length = 0 then
          From := Work_Library;
@@ -1813,7 +1836,9 @@ package body Ghdllocal is
       Next_Arg : Natural;
    begin
       Extract_Elab_Unit ("--elab-order", Args, Next_Arg, Prim_Id, Sec_Id);
-      Setup_Libraries (True);
+      if not Setup_Libraries (True) then
+         return;
+      end if;
       Files_List := Build_Dependence (Prim_Id, Sec_Id);
 
       Files_It := List_Iterate (Files_List);

@@ -584,7 +584,9 @@ package body Ghdldrv is
       use Libraries;
    begin
       Set_Tools_Name (Cmd);
-      Setup_Libraries (Load);
+      if not Setup_Libraries (Load) then
+         raise Option_Error;
+      end if;
       Locate_Tools (Cmd);
       for I in 2 .. Get_Nbr_Paths loop
          Add_Argument (Cmd.Compiler_Args,
@@ -1882,7 +1884,9 @@ package body Ghdldrv is
          Set_Elab_Units (Cmd, "--gen-makefile", Args);
       end if;
 
-      Setup_Libraries (True);
+      if not Setup_Libraries (True) then
+         raise Option_Error;
+      end if;
       Files_List := Build_Dependence (Primary_Id, Secondary_Id);
 
       Ghdllocal.Gen_Makefile_Disp_Header;

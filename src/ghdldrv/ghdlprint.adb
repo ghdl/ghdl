@@ -692,7 +692,9 @@ package body Ghdlprint is
       Flags.Bootstrap := True;
       Flags.Flag_Elocations := True;
       --  Load word library.
-      Libraries.Load_Std_Library;
+      if not Libraries.Load_Std_Library then
+         raise Option_Error;
+      end if;
       Libraries.Load_Work_Library;
 
       --  First loop: parse source file, check destination file does not
@@ -1066,7 +1068,10 @@ package body Ghdlprint is
       Id : Name_Id;
    begin
       if Cmd.Flag_Sem then
-         Setup_Libraries (True);
+         -- Libraries are required for semantic analysis.
+         if not Setup_Libraries (True) then
+            return;
+         end if;
       end if;
 
       --  Keep parenthesis during parse.
@@ -1437,7 +1442,9 @@ package body Ghdlprint is
       Flags.Flag_Xref := True;
 
       --  Load work library.
-      Setup_Libraries (True);
+      if not Setup_Libraries (True) then
+         return;
+      end if;
 
       Output_Dir := Cmd.Output_Dir;
       if Output_Dir = null then
@@ -1690,7 +1697,9 @@ package body Ghdlprint is
       Files : File_Data_Array;
    begin
       --  Load work library.
-      Setup_Libraries (True);
+      if not Setup_Libraries (True) then
+         return;
+      end if;
 
       Vhdl.Xrefs.Init;
       Flags.Flag_Xref := True;

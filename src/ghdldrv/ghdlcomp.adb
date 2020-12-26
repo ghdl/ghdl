@@ -307,10 +307,15 @@ package body Ghdlcomp is
    procedure Common_Compile_Init (Analyze_Only : Boolean) is
    begin
       if Analyze_Only then
-         Setup_Libraries (True);
+         if not Setup_Libraries (True) then
+            raise Option_Error;
+         end if;
       else
-         Setup_Libraries (False);
-         Libraries.Load_Std_Library;
+         if not Setup_Libraries (False)
+           or else not Libraries.Load_Std_Library
+         then
+            raise Option_Error;
+         end if;
          --  WORK library is not loaded.  FIXME: why ?
       end if;
 
@@ -739,7 +744,9 @@ package body Ghdlcomp is
       Lib : Iir_Library_Declaration;
    begin
       Extract_Elab_Unit ("-m", Args, Next_Arg, Prim_Id, Sec_Id);
-      Setup_Libraries (True);
+      if not Setup_Libraries (True) then
+         return;
+      end if;
 
       --  Create list of files.
       Files_List := Build_Dependence (Prim_Id, Sec_Id);
@@ -881,7 +888,9 @@ package body Ghdlcomp is
       Next_Arg : Natural;
    begin
       Extract_Elab_Unit ("--gen-makefile", Args, Next_Arg, Prim_Id, Sec_Id);
-      Setup_Libraries (True);
+      if not Setup_Libraries (True) then
+         return;
+      end if;
       Files_List := Build_Dependence (Prim_Id, Sec_Id);
 
       Ghdllocal.Gen_Makefile_Disp_Header;

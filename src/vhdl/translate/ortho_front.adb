@@ -540,7 +540,9 @@ package body Ortho_Front is
    begin
       if Nbr_Parse = 0 then
          --  Initialize only once...
-         Libraries.Load_Std_Library;
+         if not Libraries.Load_Std_Library then
+            raise Option_Error;
+         end if;
 
          --  Here, time_base can be set.
          Translation.Initialize;
