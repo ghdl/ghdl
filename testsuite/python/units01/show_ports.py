@@ -101,7 +101,8 @@ if __name__ == "__main__":
     # Initialization: set options and then load libaries
     errorout_console.Install_Handler()
     libghdl.set_option(b"--std=08")
-    libghdl.analyze_init()
+    if libghdl.analyze_init_status() != 0:
+        raise Exception("libghdl initialization error")
 
     # Recursively find and parse all the files with extension *.vhdl
     if len(argv) > 1:

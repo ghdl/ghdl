@@ -14,8 +14,8 @@ def init():
     # Set options.  This must be done before analyze_init()
     libghdl.set_option(b"--std=08")
     # Finish initialization. This will load the standard package
-    libghdl.analyze_init()
-
+    if libghdl.analyze_init_status() != 0:
+        raise Exception("libghdl initialization error")
 
 def get_identifier_ptr(n):
     """Return the python string from node :param n: identifier"""
