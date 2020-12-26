@@ -8,6 +8,7 @@ from libghdl.thin import files_map
 from libghdl.thin.vhdl import nodes
 from libghdl.thin.vhdl import sem_lib
 from libghdl.thin.vhdl import pyutils
+from libghdl.thin import errorout_console
 
 
 def get_identifier_ptr(n):
@@ -98,6 +99,7 @@ def list_units(filename):
 
 if __name__ == "__main__":
     # Initialization: set options and then load libaries
+    errorout_console.Install_Handler()
     libghdl.set_option(b"--std=08")
     libghdl.analyze_init()
 

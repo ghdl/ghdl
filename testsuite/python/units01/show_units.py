@@ -4,11 +4,16 @@ from libghdl.thin import name_table
 from libghdl.thin import files_map
 from libghdl.thin.vhdl import nodes
 from libghdl.thin.vhdl import sem_lib
+from libghdl.thin import errorout_console
 
 
 def init():
     """Initialization: set options and then load libaries"""
+    # Print error messages on the console
+    errorout_console.Install_Handler()
+    # Set options.  This must be done before analyze_init()
     libghdl.set_option(b"--std=08")
+    # Finish initialization. This will load the standard package
     libghdl.analyze_init()
 
 
