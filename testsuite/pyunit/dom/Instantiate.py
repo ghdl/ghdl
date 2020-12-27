@@ -9,6 +9,7 @@ if __name__ == "__main__":
 	print("Use: 'python -m unitest <testcase module>'")
 	exit(1)
 
+
 class Instantiate(TestCase):
 	def test_Design(self):
 		design = Design()
