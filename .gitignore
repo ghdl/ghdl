@@ -1,15 +1,8 @@
+# Ada outputs
 *~
 *.ali
 *.o
 b~*.ad?
-*.v87
-*.v93
-*.v08
-*.cf
-.gdb_history
-*.pyc
-
-testsuite/get_entities
 
 # Generated files on windows.
 /build/
@@ -19,7 +12,6 @@ testsuite/get_entities
 # Generated files on Linux
 config.status
 default_paths.ads
-doc/_build/
 elf_arch.ads
 ghdl1-*
 ghdl.gpr
@@ -44,3 +36,35 @@ run-bind.ads
 src/version.ads
 version.ads
 version.tmp
+
+# GDB outputs
+.gdb_history
+
+# GHDL outputs
+*.v87
+*.v93
+*.v08
+*.cf
+
+# GHDLs testsuite
+testsuite/get_entities
+
+# Python cache and object files
+__pycache__/
+*.py[cod]
+
+# Python installation packages
+dist/
+
+# Coverage.py
+.coverage
+.cov
+coverage.xml
+
+# Sphinx
+doc/_build/
+doc/pyGHDL/**/*.*
+!doc/pyGHDL/index.rst
+
+# IntelliJ project files
+/.idea/workspace.xml
