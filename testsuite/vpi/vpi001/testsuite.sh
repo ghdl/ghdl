@@ -16,6 +16,10 @@ if c_compiler_is_available && ghdl_has_feature myentity vpi; then
       echo "Error in output"
       exit 1;
   fi
+  if grep -q error myentity.out; then
+      echo "error in output"
+      exit 1;
+  fi
 
   rm -f vpi1.vpi vpi1.o myentity.out
 fi

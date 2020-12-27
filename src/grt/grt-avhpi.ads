@@ -32,6 +32,7 @@ with System; use System;
 with Grt.Types; use Grt.Types;
 with Grt.Rtis; use Grt.Rtis;
 with Grt.Rtis_Addr; use Grt.Rtis_Addr;
+with Grt.Rtiis; use Grt.Rtiis;
 
 package Grt.Avhpi is
    --  Object Kinds.
@@ -535,17 +536,18 @@ private
             It_Cur : Ghdl_Index_Type;
             It2 : Ghdl_Index_Type;
             Max2 : Ghdl_Index_Type;
-         when AvhpiNameIteratorK
-           | VhpiIndexedNameK =>
-            N_Addr : Address;
-            N_Type : Ghdl_Rti_Access;
+         when AvhpiNameIteratorK =>
+            N_Obj : Ghdl_Object_Rtii;
             N_Idx : Ghdl_Index_Type;
-            N_Obj : Ghdl_Rtin_Object_Acc;
+            N_Size : Ghdl_Index_Type;
+         when VhpiIndexedNameK =>
+            Comp_Obj : Ghdl_Object_Rtii;
          when VhpiSigDeclK
            | VhpiPortDeclK
            | VhpiGenericDeclK
            | VhpiConstDeclK =>
-            Obj : Ghdl_Rtin_Object_Acc;
+            -- Doesn't use shared context.
+            Obj : Ghdl_Object_Rtii;
          when VhpiSubtypeIndicK
            | VhpiSubtypeDeclK
            | VhpiArrayTypeDeclK
@@ -564,8 +566,6 @@ private
          when others =>
             null;
       end case;
-      --  Current Object.
-      --Obj : Ghdl_Rti_Access;
    end record;
 
    Null_Handle : constant VhpiHandleT := (Kind => VhpiUndefined,
