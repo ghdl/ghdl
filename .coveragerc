@@ -1,0 +1,12 @@
+[run]
+branch = true
+
+[report]
+skip_covered = True
+skip_empty = True
+
+[html]
+directory = .cov
+
+[xml]
+output = coverage.xml
