@@ -1,9 +1,9 @@
-import libghdl.thin.name_table as name_table
-import libghdl.thin.files_map as files_map
-import libghdl.thin.vhdl.pyutils as pyutils
-import libghdl.thin.vhdl.nodes as nodes
-import libghdl.thin.vhdl.nodes_meta as nodes_meta
-import libghdl.thin.vhdl.elocations as elocations
+import pyGHDL.libghdl.name_table as name_table
+import pyGHDL.libghdl.files_map as files_map
+import pyGHDL.libghdl.vhdl.nodes as nodes
+import pyGHDL.libghdl.vhdl.nodes_meta as nodes_meta
+import pyGHDL.libghdl.vhdl.elocations as elocations
+import pyGHDL.libghdl.utils as pyutils
 
 from . import lsp
 

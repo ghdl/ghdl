@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from setuptools import setup
+from setuptools import setup, find_packages
 import re
 
 
@@ -21,16 +21,14 @@ def get_version():
 version = get_version()
 
 setup(
-    name="pyghdl",
+    name="pyGHDL",
     version=version,
-    description="VHDL Language Server and interface to ghdl, a VHDL analyzer",
-    long_description=open("README").read(),
+    description="Python bindings for GHDL and high-level APIs (incl. LSP)",
     author="Tristan Gingold",
     author_email="tgingold@free.fr",
     url="http://github.com/ghdl/ghdl",
     license="GPL-2.0-or-later",
-    package_dir={"libghdl": "libghdl", "vhdl_langserver": "vhdl_langserver"},
-    packages=["libghdl", "libghdl.thin", "libghdl.thin.vhdl", "vhdl_langserver"],
+    packages=find_packages(),
     # List run-time dependencies here. For an analysis of "install_requires"
     # vs pip's requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
