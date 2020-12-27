@@ -6,8 +6,7 @@ import logging
 import sys
 import os
 
-import libghdl
-import libghdl.thin.errorout_console
+import pyGHDL.libghdl as libghdl
 
 from . import version
 from . import lsp
@@ -72,7 +71,7 @@ def main():
     args = parser.parse_args()
 
     if args.disp_config:
-        libghdl.thin.errorout_console.Install_Handler()
+        libghdl.errorout_console.Install_Handler()
         libghdl.disp_config()
         return
 

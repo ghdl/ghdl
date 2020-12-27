@@ -1,10 +1,10 @@
 from ctypes import c_char_p, c_int32, c_int, c_bool, sizeof, c_void_p, byref
-import libghdl.thin.name_table as name_table
-import libghdl.thin.vhdl.nodes as nodes
-import libghdl.thin.vhdl.nodes_meta as nodes_meta
-import libghdl.thin.vhdl.lists as lists
-import libghdl.thin.vhdl.flists as flists
-from libghdl.thin.vhdl.nodes_meta import Attr, types
+import pyGHDL.libghdl.name_table as name_table
+import pyGHDL.libghdl.vhdl.nodes as nodes
+import pyGHDL.libghdl.vhdl.nodes_meta as nodes_meta
+import pyGHDL.libghdl.vhdl.lists as lists
+import pyGHDL.libghdl.vhdl.flists as flists
+from pyGHDL.libghdl.vhdl.nodes_meta import Attr, types
 
 
 def name_image(nameid):

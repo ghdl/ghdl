@@ -1,14 +1,14 @@
 import ctypes
 import logging
 import os
-import libghdl.thin.name_table as name_table
-import libghdl.thin.files_map as files_map
-import libghdl.thin.files_map_editor as files_map_editor
-import libghdl.thin.libraries as libraries
-import libghdl.thin.vhdl.nodes as nodes
-import libghdl.thin.vhdl.sem_lib as sem_lib
-import libghdl.thin.vhdl.sem as sem
-import libghdl.thin.vhdl.formatters as formatters
+import pyGHDL.libghdl.name_table as name_table
+import pyGHDL.libghdl.files_map as files_map
+import pyGHDL.libghdl.files_map_editor as files_map_editor
+import pyGHDL.libghdl.libraries as libraries
+import pyGHDL.libghdl.vhdl.nodes as nodes
+import pyGHDL.libghdl.vhdl.sem_lib as sem_lib
+import pyGHDL.libghdl.vhdl.sem as sem
+import pyGHDL.libghdl.vhdl.formatters as formatters
 
 from . import symbols, references
 
@@ -67,7 +67,7 @@ class Document(object):
         if not change_range:
             # The whole file has changed
             raise AssertionError
-            # if len(text_bytes) < thin.Files_Map.Get_Buffer_Length(self._fe):
+            # if len(text_bytes) < libghdl.Files_Map.Get_Buffer_Length(self._fe):
             #    xxxx_replace
             # else:
             #    xxxx_free

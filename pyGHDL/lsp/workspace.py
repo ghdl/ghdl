@@ -2,19 +2,19 @@ import logging
 import os
 import json
 from ctypes import byref
-import libghdl
-import libghdl.thin.errorout_memory as errorout_memory
-import libghdl.thin.flags
-import libghdl.thin.errorout as errorout
-import libghdl.thin.files_map as files_map
-import libghdl.thin.libraries as libraries
-import libghdl.thin.name_table as name_table
-import libghdl.thin.vhdl.nodes as nodes
-import libghdl.thin.vhdl.lists as lists
-import libghdl.thin.vhdl.std_package as std_package
-import libghdl.thin.vhdl.parse
-import libghdl.thin.vhdl.pyutils as pyutils
-import libghdl.thin.vhdl.sem_lib as sem_lib
+import pyGHDL.libghdl as libghdl
+import pyGHDL.libghdl.errorout_memory as errorout_memory
+import pyGHDL.libghdl.flags
+import pyGHDL.libghdl.errorout as errorout
+import pyGHDL.libghdl.files_map as files_map
+import pyGHDL.libghdl.libraries as libraries
+import pyGHDL.libghdl.name_table as name_table
+import pyGHDL.libghdl.vhdl.nodes as nodes
+import pyGHDL.libghdl.vhdl.lists as lists
+import pyGHDL.libghdl.vhdl.std_package as std_package
+import pyGHDL.libghdl.vhdl.parse
+import pyGHDL.libghdl.vhdl.sem_lib as sem_lib
+import pyGHDL.libghdl.utils as pyutils
 
 from . import lsp
 from . import document, symbols
@@ -40,16 +40,16 @@ class Workspace(object):
         self._prj = {}
         self._last_linted_doc = None
         errorout_memory.Install_Handler()
-        libghdl.thin.flags.Flag_Elocations.value = True
-        # thin.Flags.Verbose.value = True
+        libghdl.flags.Flag_Elocations.value = True
+        # libghdl.Flags.Verbose.value = True
         # We do analysis even in case of errors.
-        libghdl.thin.vhdl.parse.Flag_Parse_Parenthesis.value = True
+        libghdl.vhdl.parse.Flag_Parse_Parenthesis.value = True
         # Force analysis to get more feedback + navigation even in case
         # of errors.
-        libghdl.thin.flags.Flag_Force_Analysis.value = True
+        libghdl.flags.Flag_Force_Analysis.value = True
         # Do not consider analysis order issues.
-        libghdl.thin.flags.Flag_Elaborate_With_Outdated.value = True
-        libghdl.thin.errorout.Enable_Warning(errorout.Msgid.Warnid_Unused, True)
+        libghdl.flags.Flag_Elaborate_With_Outdated.value = True
+        libghdl.errorout.Enable_Warning(errorout.Msgid.Warnid_Unused, True)
         self.read_project()
         self.set_options_from_project()
         libghdl.analyze_init()
