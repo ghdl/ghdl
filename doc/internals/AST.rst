@@ -75,7 +75,7 @@ either a node reference, a boolean flag or a enumerated type (like
 node or to a list.
 
 The accessors for the node are generated automatically by the python
-script :file:`src/xtools/pnodes.py`.
+script :file:`src/scripts/pnodes.py`.
 
 Why a meta-model ?
 ******************

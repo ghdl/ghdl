@@ -20,11 +20,18 @@
 # be committed and distribued with the sources, so that users don't need to
 # regenerate them (and don't need to have python installed).
 
-PNODES=../../python/xtools/pnodes.py
+PNODES=../../scripts/pnodes.py
 
 DEPS=psl-nodes.ads psl-nodes.adb.in $(PNODES)
 
-PNODES_FLAGS=--field-file=psl-nodes.adb.in --kind-file=psl-nodes.ads --node-file=psl-nodes.ads --template-file=psl-nodes.adb.in --meta-basename=psl-nodes_meta --kind-type=Nkind --kind-prefix=N_ --node-type=Node
+PNODES_FLAGS=--field-file=psl-nodes.adb.in \
+  --kind-file=psl-nodes.ads \
+  --node-file=psl-nodes.ads \
+  --template-file=psl-nodes.adb.in \
+  --meta-basename=psl-nodes_meta \
+  --kind-type=Nkind \
+  --kind-prefix=N_ \
+  --node-type=Node
 
 GEN_FILES=psl-nodes.adb psl-nodes_meta.ads psl-nodes_meta.adb
 

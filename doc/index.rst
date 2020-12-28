@@ -145,7 +145,7 @@ GHDL
    using/Foreign
    using/ImplementationOfVHDL
    using/ImplementationOfVITAL
-   using/py/libghdl
+   using/pyGHDL/index
 
 .. raw:: latex
 

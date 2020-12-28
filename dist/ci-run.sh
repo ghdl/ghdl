@@ -420,12 +420,24 @@ ci_run () {
   if [ "x$IS_MACOS" = "xtrue" ]; then
       CC=clang \
       prefix="`cd ./install-mcode; pwd`/usr/local" \
-      ./testsuite/testsuite.sh sanity gna vests vpi
+      ./testsuite/testsuite.sh sanity pyunit gna vests vpi
   else
       # Build ghdl/ghdl:$GHDL_IMAGE_TAG image
       build_img_ghdl
+      case "$GHDL_IMAGE_TAG" in
+        *ubuntu*)
+          GHDL_TEST_IMAGE="test:$GHDL_IMAGE_TAG-py"
+          docker build -t "$GHDL_TEST_IMAGE" - <<-EOF
+FROM ghdl/ghdl:$GHDL_IMAGE_TAG
+RUN apt update -qq && apt install -y python
+EOF
+        ;;
+        *)
+          GHDL_TEST_IMAGE="ghdl/ghdl:$GHDL_IMAGE_TAG"
+        ;;
+      esac
       # Run test in docker container
-      tests="sanity"
+      tests="sanity pyunit"
       if [ "x$ISGPL" != "xtrue" ]; then
         tests="$tests gna"
       fi
@@ -434,7 +446,7 @@ ci_run () {
         tests="$tests synth"
       fi
       tests="$tests vpi"
-      $RUN "ghdl/ghdl:$GHDL_IMAGE_TAG" bash -c "GHDL=ghdl ./testsuite/testsuite.sh $tests"
+      $RUN "$GHDL_TEST_IMAGE" bash -c "GHDL=ghdl ./testsuite/testsuite.sh $tests"
   fi
 
   if [ ! -f testsuite/test_ok ]; then
