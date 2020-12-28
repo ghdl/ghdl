@@ -45,10 +45,12 @@ class Document(VHDLModel_Document):
 	__ghdlSourceFileEntry:  Any
 	__ghdlFile:             Any
 
-	def __init__(self, path : Path = None):
+	def __init__(self, path : Path = None, dontParse: bool = False):
 		super().__init__(path)
 
 		self.__ghdl_init()
+		if (dontParse == False):
+			self.parse()
 
 	def __ghdl_init(self):
 		# Read input file

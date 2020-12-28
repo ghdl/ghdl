@@ -1,7 +1,8 @@
 from pathlib  import Path
 from unittest import TestCase
 
-from pyVHDLModel.VHDLModel import Design, Library, Document, Entity
+from pyGHDL.dom.Misc       import Design, Library, Document
+from pyGHDL.dom.DesignUnit import Entity, Architecture
 
 
 if __name__ == "__main__":
@@ -10,16 +11,29 @@ if __name__ == "__main__":
 	exit(1)
 
 
-class Instantiate(TestCase):
+class SimpleEntity(TestCase):
+	_path: Path = Path("testsuite/pyunit/SimpleEntity.vhdl")
+
 	def test_Design(self):
 		design = Design()
 
-	def test_Library(self):
-		library = Library()
+		self.assertIsNotNone(design)
+
+	# def test_Library(self):
+	# 	library = Library()
 
 	def test_Document(self):
-		path = Path("tests.vhdl")
-		document = Document(path)
+		design = Design()
+		document = Document(self._path)
+		design.Documents.append(document)
+
+		self.assertTrue(len(design.Documents) == 1)
 
 	def test_Entity(self):
-		entity = Entity("entity_1")
+		design = Design()
+		document = Document(self._path)
+		design.Documents.append(document)
+
+		self.assertEqual(len(design.Documents[0].Entities), 1)
+		self.assertTrue(design.Documents[0].Entities[0].Name == "e1")
+
