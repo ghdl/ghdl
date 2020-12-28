@@ -20,18 +20,23 @@
 # be committed and distribued with the sources, so that users don't need to
 # regenerate them (and don't need to have python installed).
 
-PNODES=../../python/xtools/pnodes.py
-PNODESPY=../../python/xtools/pnodespy.py
+PNODES=../../scripts/pnodes.py
+PNODESPY=../../scripts/pnodespy.py
 
 DEPS=vhdl-nodes.ads vhdl-nodes.adb.in $(PNODES)
 
-GEN_FILES=vhdl-nodes.adb vhdl-nodes_meta.ads vhdl-nodes_meta.adb \
-  vhdl-elocations.adb vhdl-elocations_meta.ads vhdl-elocations_meta.adb \
-  ../../python/libghdl/thin/vhdl/nodes.py \
-  ../../python/libghdl/thin/vhdl/nodes_meta.py \
-  ../../python/libghdl/thin/vhdl/tokens.py \
-  ../../python/libghdl/thin/vhdl/elocations.py \
-  ../../python/libghdl/thin/errorout.py ../../python/libghdl/thin/std_names.py
+GEN_FILES=vhdl-nodes.adb \
+  vhdl-nodes_meta.ads \
+  vhdl-nodes_meta.adb \
+  vhdl-elocations.adb \
+  vhdl-elocations_meta.ads \
+  vhdl-elocations_meta.adb \
+  ../../pyGHDL/libghdl/vhdl/nodes.py \
+  ../../pyGHDL/libghdl/vhdl/nodes_meta.py \
+  ../../pyGHDL/libghdl/vhdl/tokens.py \
+  ../../pyGHDL/libghdl/vhdl/elocations.py \
+  ../../pyGHDL/libghdl/errorout.py \
+  ../../pyGHDL/libghdl/std_names.py
 
 NODES_FLAGS=--node-file=vhdl-nodes.ads --field-file=vhdl-nodes.adb.in \
   --template-file=vhdl-nodes.adb.in --kind-file=vhdl-nodes.ads \
@@ -73,32 +78,32 @@ vhdl-elocations_meta.adb: vhdl-elocations_meta.adb.in vhdl-elocations.ads $(DEPS
 	$(PNODES) $(ELOCATIONS_FLAGS) meta_body > $@
 	chmod -w $@
 
-../../python/libghdl/thin/vhdl/nodes.py: $(DEPS) $(PNODESPY)
+../../pyGHDL/libghdl/vhdl/nodes.py: $(DEPS) $(PNODESPY)
 	$(RM) $@
 	$(PNODESPY) $(NODES_FLAGS) libghdl-nodes > $@
 	chmod -w $@
 
-../../python/libghdl/thin/vhdl/nodes_meta.py: $(DEPS) $(PNODESPY)
+../../pyGHDL/libghdl/vhdl/nodes_meta.py: $(DEPS) $(PNODESPY)
 	$(RM) $@
 	$(PNODESPY) $(NODES_FLAGS) libghdl-meta > $@
 	chmod -w $@
 
-../../python/libghdl/thin/std_names.py: $(PNODESPY) ../std_names.ads
+../../pyGHDL/libghdl/std_names.py: $(PNODESPY) ../std_names.ads
 	$(RM) $@
 	$(PNODESPY) $(NODES_FLAGS) libghdl-names > $@
 	chmod -w $@
 
-../../python/libghdl/thin/vhdl/tokens.py: $(PNODESPY) vhdl-tokens.ads
+../../pyGHDL/libghdl/vhdl/tokens.py: $(PNODESPY) vhdl-tokens.ads
 	$(RM) $@
 	$(PNODESPY) $(NODES_FLAGS) libghdl-tokens > $@
 	chmod -w $@
 
-../../python/libghdl/thin/vhdl/elocations.py: $(PNODESPY) vhdl-elocations.ads
+../../pyGHDL/libghdl/vhdl/elocations.py: $(PNODESPY) vhdl-elocations.ads
 	$(RM) $@
 	$(PNODESPY) $(ELOCATIONS_FLAGS) libghdl-elocs > $@
 	chmod -w $@
 
-../../python/libghdl/thin/errorout.py: $(PNODESPY) ../errorout.ads
+../../pyGHDL/libghdl/errorout.py: $(PNODESPY) ../errorout.ads
 	$(RM) $@
 	$(PNODESPY) $(ELOCATIONS_FLAGS) libghdl-errorout > $@
 	chmod -w $@
