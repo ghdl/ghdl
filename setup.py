@@ -79,7 +79,7 @@ setuptools_setup(
 
 	author="Tristan Gingold",
 	author_email="tgingold@free.fr",
-
+	license="GPL-2.0-or-later",
 	description="Python binding for GHDL and high-level APIs (incl. LSP).",
 	long_description=long_description,
 	long_description_content_type="text/markdown",
@@ -91,12 +91,16 @@ setuptools_setup(
 		'Issue Tracker': sourceCodeURL + "/issues"
 	},
 
-	packages=setuptools_find_packages(),
+	python_requires='>=3.8',
+	install_requires=requirements,
+	packages=setuptools_find_packages(exclude=("tests",)),
 	entry_points={
 		'console_scripts': [
 			"ghdl-ls = pyGHDL.cli.lsp:main"
 		]
 	},
+
+	keywords="Python3 VHDL Parser Compiler Simulator GHDL",
 	classifiers=[
 		"License :: OSI Approved :: GNU General Public License v2 or later (GPLv2+)",
 		"Operating System :: MacOS",
@@ -113,9 +117,5 @@ setuptools_setup(
 		"Topic :: Software Development :: Compilers",
 		"Topic :: Software Development :: Testing",
 		"Topic :: Utilities",
-	],
-	keywords="Python3 VHDL Parser Compiler Simulator GHDL",
-
-	python_requires='>=3.8',
-	install_requires=requirements,
+	]
 )
