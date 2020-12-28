@@ -52,6 +52,8 @@ set -e
 #    echo "test failed ($failures)" && exit 1
 #fi
 
-cd $(dirname "$0")/..
+cd $(dirname "$0")/../..
 
-python3 -m unittest pyunit
+export PYTHONPATH=$(pwd)/pyGHDL
+
+python3 -m unittest testsuite.pyunit

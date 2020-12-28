@@ -425,7 +425,7 @@ ci_run () {
       # Build ghdl/ghdl:$GHDL_IMAGE_TAG image
       build_img_ghdl
       case "$GHDL_IMAGE_TAG" in
-        *ubuntu*)
+        *ubuntu*|*buster*)
           GHDL_TEST_IMAGE="test:$GHDL_IMAGE_TAG-py"
           docker build -t "$GHDL_TEST_IMAGE" - <<-EOF
 FROM ghdl/ghdl:$GHDL_IMAGE_TAG
