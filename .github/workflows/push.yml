@@ -115,15 +115,14 @@ jobs:
       max-parallel: 2
       matrix:
         include: [
-          {installs: "MINGW32", pkg: "mcode"},
-          #{installs: "MINGW32", pkg: "llvm"},  ! Not yet functional
-          #{installs: "MINGW64", pkg: "mcode"}, ! mcode is not yet supported on win64
-          {installs: "MINGW64", pkg: "llvm"},
+          {installs: "MINGW32", arch: i686, pkg: "mcode"},
+          #{installs: "MINGW32", arch: i686, pkg: "llvm"},  ! Not yet functional
+          #{installs: "MINGW64", arch: x86_64, pkg: "mcode"}, ! mcode is not yet supported on win64
+          {installs: "MINGW64", arch: x86_64, pkg: "llvm"},
         ]
     name: '🟪 MSYS2 · ${{ matrix.installs }} · ${{ matrix.pkg }}'
     env:
       MINGW_INSTALLS: ${{ matrix.installs }}
-      TARGET: ${{ matrix.pkg }}
     defaults:
       run:
         shell: msys2 {0}
@@ -134,29 +133,40 @@ jobs:
       with:
         msystem: MSYS
         update: true
-        install: base-devel git
+        install: >
+          base-devel
+          git
+          mingw-w64-${{ matrix.arch }}-toolchain
 
     - run: git config --global core.autocrlf input
       shell: bash
 
     - name: '🧰 Checkout'
       uses: actions/checkout@v2
+      with:
+        # The command 'git describe' (used for version) needs the history.
+        fetch-depth: 0
 
-    - name: Build and (hopefully) install package
-      run: ./dist/msys2-mingw/run.sh -b
+    - name: Build package
+      run: |
+        cd dist/msys2-${{ matrix.pkg }}
+        makepkg-mingw --noconfirm --noprogressbar -sCLf
+
+    - name: Install package
+      run: pacman --noconfirm -U dist/msys2-${{ matrix.pkg }}/mingw-w64-*-any.pkg.tar.zst
 
     - name: '📤 Upload artifact: builddir'
       uses: actions/upload-artifact@v2
       with:
         name: ${{ matrix.installs }}-${{ matrix.pkg }}-builddir
         path: |
-          ./dist/msys2-mingw/${{ matrix.pkg }}/src/
-          ./dist/msys2-mingw/${{ matrix.pkg }}/pkg/
+          ./dist/msys2-${{ matrix.pkg }}/src/
+          ./dist/msys2-${{ matrix.pkg }}/pkg/
 
     - name: '📤 Upload artifact: package'
       uses: actions/upload-artifact@v2
       with:
-        path: ./dist/msys2-mingw/${{ matrix.pkg }}/mingw-*ghdl*.pkg.tar.zst
+        path: ./dist/msys2-${{ matrix.pkg }}/mingw-*ghdl*.pkg.tar.zst
 
     - name: Test package
       run: |
