@@ -8,4 +8,4 @@ Python Interface
 
    libghdl
    vhdl
-   pyutils
+   utils

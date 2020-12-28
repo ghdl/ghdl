@@ -143,15 +143,16 @@ do_pyunit () {
   gstart "[GHDL - test] pyunit"
   cd pyunit
 
-  dirs=`./testsuite.sh --list-tests`
-  if ./testsuite.sh > test.log 2>&1 ; then
-    printf "pyunit: ${ANSI_GREEN}ok${ANSI_NOCOLOR}\n"
-    # Don't disp log
-  else
-    printf "pyunit: ${ANSI_RED}failed${ANSI_NOCOLOR}\n"
-    cat test.log
-    failures="$failures"
-  fi
+  ./testsuite.sh
+
+#  if ./testsuite.sh > test.log 2>&1 ; then
+#    printf "pyunit: ${ANSI_GREEN}ok${ANSI_NOCOLOR}\n"
+#    # Don't disp log
+#  else
+#    printf "pyunit: ${ANSI_RED}failed${ANSI_NOCOLOR}\n"
+#    cat test.log
+#    failures="$failures"
+#  fi
 
   cd ..
   gend

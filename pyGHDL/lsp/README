@@ -9,7 +9,7 @@ develop tools around the parser and analyzer.
 To install:
 1) First install ghdl (add --enable-python during configuration).
    This is needed so that the libraries are available
-2) In ghdl/python, install pyghdl.  There is a setup.py script, so you can do:
+2) In ghdl, install pyGHDL.  There is a setup.py script, so you can do:
    $ pip install .
    To install for development: pip install -e .
    Add --user to install in your home directory.

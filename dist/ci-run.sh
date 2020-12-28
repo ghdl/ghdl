@@ -429,7 +429,7 @@ ci_run () {
           GHDL_TEST_IMAGE="test:$GHDL_IMAGE_TAG-py"
           docker build -t "$GHDL_TEST_IMAGE" - <<-EOF
 FROM ghdl/ghdl:$GHDL_IMAGE_TAG
-RUN apt update -qq && apt install -y python
+RUN apt update -qq && apt install -y python3
 EOF
         ;;
         *)
