@@ -2,7 +2,6 @@ from pathlib  import Path
 from unittest import TestCase
 
 from pyGHDL.dom.Misc       import Design, Library, Document
-from pyGHDL.dom.DesignUnit import Entity, Architecture
 
 
 if __name__ == "__main__":
@@ -37,3 +36,10 @@ class SimpleEntity(TestCase):
 		self.assertEqual(len(design.Documents[0].Entities), 1)
 		self.assertTrue(design.Documents[0].Entities[0].Name == "e1")
 
+	def test_Architecture(self):
+		design = Design()
+		document = Document(self._path)
+		design.Documents.append(document)
+
+		self.assertEqual(len(design.Documents[0].Architectures), 1)
+		self.assertTrue(design.Documents[0].Architectures[0].Name == "behav")
