@@ -1,7 +1,9 @@
 from unittest import TestSuite
 
-from testsuite.pyunit import libghdl, dom
-
+try:
+	from testsuite.pyunit import libghdl, dom
+except ModuleNotFoundError:
+	from pyunit import libghdl, dom
 
 def load_tests(loader, testCases, pattern):
 	suite = TestSuite()

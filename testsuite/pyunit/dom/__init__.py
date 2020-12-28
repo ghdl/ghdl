@@ -1,6 +1,9 @@
 from unittest import TestSuite
 
-from testsuite.pyunit.dom import SimpleEntity
+try:
+	from testsuite.pyunit.dom import SimpleEntity
+except ModuleNotFoundError:
+	from pyunit.dom import SimpleEntity
 
 def load_tests(loader, testCases, pattern):
 	suite = TestSuite()
