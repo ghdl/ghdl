@@ -16,7 +16,8 @@ if __name__ == "__main__":
 
 
 class Instantiate(TestCase):
-	_filename : Path = Path("testsuite/pyunit/SimpleEntity.vhdl")
+	_root = Path(__file__).resolve().parent.parent
+	_filename : Path = _root / "SimpleEntity.vhdl"
 
 	@staticmethod
 	def getIdentifier(node):

@@ -32,6 +32,8 @@ class Design(VHDLModel_Design):
 		errorout_console.Install_Handler()
 
 		libghdl.set_option(b"--std=08")
+
+	# Finish initialization. This will load the standard package.
 #		if libghdl.analyze_init_status() != 0:
 #			raise LibGHDLException("Error initializing 'libghdl'.")
 

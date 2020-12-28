@@ -11,7 +11,8 @@ if __name__ == "__main__":
 
 
 class SimpleEntity(TestCase):
-	_path: Path = Path("testsuite/pyunit/SimpleEntity.vhdl")
+	_root = Path(__file__).resolve().parent.parent
+	_filename : Path = _root / "SimpleEntity.vhdl"
 
 	def test_Design(self):
 		design = Design()
@@ -23,14 +24,14 @@ class SimpleEntity(TestCase):
 
 	def test_Document(self):
 		design = Design()
-		document = Document(self._path)
+		document = Document(self._filename)
 		design.Documents.append(document)
 
 		self.assertTrue(len(design.Documents) == 1)
 
 	def test_Entity(self):
 		design = Design()
-		document = Document(self._path)
+		document = Document(self._filename)
 		design.Documents.append(document)
 
 		self.assertEqual(len(design.Documents[0].Entities), 1)
@@ -38,7 +39,7 @@ class SimpleEntity(TestCase):
 
 	def test_Architecture(self):
 		design = Design()
-		document = Document(self._path)
+		document = Document(self._filename)
 		design.Documents.append(document)
 
 		self.assertEqual(len(design.Documents[0].Architectures), 1)
