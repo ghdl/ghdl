@@ -3,7 +3,8 @@ use     ieee.numeric_std.all;
 
 entity e1 is
 	generic (
-		BITS : positive = 8
+		BITS : positive := 8
+	);
 	port (
 	  Clock: in  std_logic;
 	  Reset: in  std_logic;

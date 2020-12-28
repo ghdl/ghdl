@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Any, NoReturn
 from unittest import TestCase
 
 import libghdl
@@ -17,25 +16,12 @@ if __name__ == "__main__":
 
 
 class Instantiate(TestCase):
-	_filename : Path = Path("simpleEntity.vhdl")
-	_sfe: Any
-	_file: Any
-
-	_continueTesting = True
+	_filename : Path = Path("testsuite/pyunit/libghdl/simpleEntity.vhdl")
 
 	@staticmethod
 	def getIdentifier(node):
 		"""Return the Python string from node :param:`node` identifier"""
 		return name_table.Get_Name_Ptr(nodes.Get_Identifier(node)).decode("utf-8")
-
-	def setUp(self) -> None:
-		"""Check for every test, if tests should continue."""
-		if not self.__class__._continueTesting:
-			self.skipTest("No reason to go on.")
-
-	def fail(self, msg: Any = ...) -> NoReturn:
-		self.__class__._continueTesting = False
-		super().fail(msg)
 
 	def test_InitializeGHDL(self) -> None:
 		"""Initialization: set options and then load libaries"""
@@ -50,30 +36,27 @@ class Instantiate(TestCase):
 		if libghdl.analyze_init_status() != 0:
 			self.fail("libghdl initialization error")
 
-	def test_ReadSourceFile(self) -> None:
 		# Load the file
 		file_id = name_table.Get_Identifier(str(self._filename).encode("utf_8"))
-		self._sfe = files_map.Read_Source_File(name_table.Null_Identifier, file_id)
-		if self._sfe == files_map.No_Source_File_Entry:
+		sfe = files_map.Read_Source_File(name_table.Null_Identifier, file_id)
+		if sfe == files_map.No_Source_File_Entry:
 			self.fail("Cannot read file '{!s}'".format(self._filename))
 
-	def test_ParseFile(self) -> None:
 		# Parse
-		self._file = sem_lib.Load_File(self._sfe)
+		file = sem_lib.Load_File(sfe)
 
-	def test_ListDesignUnits_WhileLoop(self) -> None:
 		# Display all design units
-		designUnit = nodes.Get_First_Design_Unit(self._file)
+		designUnit = nodes.Get_First_Design_Unit(file)
 		while designUnit != nodes.Null_Iir:
 			libraryUnit = nodes.Get_Library_Unit(designUnit)
 
 			if nodes.Get_Kind(libraryUnit) == nodes.Iir_Kind.Entity_Declaration:
 				entityName = self.getIdentifier(libraryUnit)
-				self.assertTrue(entityName == "e1")
+				self.assertEqual(entityName, "e1", "expected entity name 'e1', got '{}'".format(entityName))
 
 			elif nodes.Get_Kind(libraryUnit) == nodes.Iir_Kind.Architecture_Body:
 				architectureName = self.getIdentifier(libraryUnit)
-				self.assertTrue(architectureName == "arch")
+				self.assertEqual(architectureName, "behav", "expected architecture name 'behav', got '{}'".format(architectureName))
 
 			else:
 				self.fail("Unknown unit.")
