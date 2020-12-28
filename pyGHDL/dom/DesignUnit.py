@@ -7,9 +7,10 @@ from pyVHDLModel.VHDLModel import PackageBody   as VHDLModel_PackageBody
 from pyVHDLModel.VHDLModel import Context       as VHDLModel_Context
 from pyVHDLModel.VHDLModel import Configuration as VHDLModel_Configuration
 
-from libghdl.thin.vhdl  import nodes, pyutils
+from pyGHDL.libghdl.vhdl   import nodes
+import pyGHDL.libghdl.utils as pyutils
 
-from pyGHDL.dom.Common  import GHDLMixin
+from pyGHDL.dom.Common     import GHDLMixin
 
 __all__ = []
 __api__ = __all__

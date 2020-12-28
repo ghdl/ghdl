@@ -7,9 +7,9 @@ from pyVHDLModel.VHDLModel  import Design        as VHDLModel_Design
 from pyVHDLModel.VHDLModel  import Library       as VHDLModel_Library
 from pyVHDLModel.VHDLModel  import Document      as VHDLModel_Document
 
-import libghdl
-from libghdl.thin           import name_table, files_map, errorout_console
-from libghdl.thin.vhdl      import nodes, sem_lib
+import pyGHDL.libghdl       as libghdl
+from pyGHDL.libghdl         import name_table, files_map, errorout_console
+from pyGHDL.libghdl.vhdl    import nodes, sem_lib
 
 from pyGHDL.dom.Common      import LibGHDLException, GHDLException
 from pyGHDL.dom.DesignUnit  import Entity, Architecture, Package, PackageBody, Context, Configuration

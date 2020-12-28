@@ -1,12 +1,9 @@
-from pathlib import Path
-from unittest import TestCase
+from pathlib              import Path
+from unittest             import TestCase
 
-import libghdl
-from libghdl.thin import name_table
-from libghdl.thin import files_map
-from libghdl.thin.vhdl import nodes
-from libghdl.thin.vhdl import sem_lib
-from libghdl.thin import errorout_console
+import pyGHDL.libghdl     as libghdl
+from pyGHDL.libghdl       import name_table, files_map, errorout_console
+from pyGHDL.libghdl.vhdl  import nodes, sem_lib
 
 
 if __name__ == "__main__":
