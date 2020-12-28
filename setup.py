@@ -36,22 +36,24 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
 #
-import setuptools
-from re import compile as re_compile
+from pathlib    import Path
+from re         import compile as re_compile
+from setuptools import setup as setuptools_setup, find_packages as setuptools_find_packages
 
 gitHubNamespace = "ghdl"
 projectName = "ghdl"
 packageName = "pyGHDL"
+packagePath = Path(packageName)
 
-# read (local) README for upload to PyPI
-with open("README.md", "r") as file:
+# Read (local) README for upload to PyPI
+readmeFile = packagePath / "README.md"
+with readmeFile.open("r") as file:
 	long_description = file.read()
 
 # Read requirements file and add them to package dependency list
-requirements = []
-with open("requirements.txt") as file:
-	for line in file.readlines():
-		requirements.append(line)
+requirementsFile = packagePath / "requirements.txt"
+with requirementsFile.open("r") as file:
+	requirements = [line for line in file.readlines()]
 
 def get_version():
 	# Try from version.py.  Reads it to avoid loading the shared library.
@@ -71,7 +73,7 @@ sourceCodeURL =     "https://github.com/{namespace}/{projectName}".format(namesp
 documentationURL =  "https://{namespace}.github.io/{projectName}/using/py/index.html".format(namespace=gitHubNamespace, projectName=projectName)
 
 # Assemble all package information
-setuptools.setup(
+setuptools_setup(
 	name=packageName,
 	version=get_version(),
 
@@ -89,7 +91,7 @@ setuptools.setup(
 		'Issue Tracker': sourceCodeURL + "/issues"
 	},
 
-	packages=setuptools.find_packages(),
+	packages=setuptools_find_packages(),
 	entry_points={
 		'console_scripts': [
 			"ghdl-ls = pyGHDL.cli.lsp:main"
