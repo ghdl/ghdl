@@ -3,11 +3,9 @@
 Python Interface
 ################
 
-.. automodule:: libghdl
-
 .. toctree::
    :hidden:
 
-   thin
+   libghdl
    vhdl
    pyutils
