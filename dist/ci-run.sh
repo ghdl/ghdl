@@ -420,12 +420,12 @@ ci_run () {
   if [ "x$IS_MACOS" = "xtrue" ]; then
       CC=clang \
       prefix="`cd ./install-mcode; pwd`/usr/local" \
-      ./testsuite/testsuite.sh sanity gna vests vpi
+      ./testsuite/testsuite.sh sanity pyunit gna vests vpi
   else
       # Build ghdl/ghdl:$GHDL_IMAGE_TAG image
       build_img_ghdl
       # Run test in docker container
-      tests="sanity"
+      tests="sanity pyunit"
       if [ "x$ISGPL" != "xtrue" ]; then
         tests="$tests gna"
       fi
