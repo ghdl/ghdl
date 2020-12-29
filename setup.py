@@ -91,7 +91,7 @@ setuptools_setup(
 		'Issue Tracker': sourceCodeURL + "/issues"
 	},
 
-	python_requires='>=3.8',
+	python_requires='>=3.7',
 	install_requires=requirements,
 	packages=setuptools_find_packages(exclude=("tests",)),
 	entry_points={
@@ -107,6 +107,7 @@ setuptools_setup(
 		"Operating System :: Microsoft :: Windows :: Windows 10",
 		"Operating System :: POSIX :: Linux",
 		"Programming Language :: Python :: 3 :: Only",
+		"Programming Language :: Python :: 3.7",
 		"Programming Language :: Python :: 3.8",
 		"Programming Language :: Python :: 3.9",
 		"Development Status :: 4 - Beta",
