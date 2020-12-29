@@ -142,7 +142,7 @@ do_gna () {
 do_pyunit () {
   gstart "[GHDL - test] pyunit"
 
-  cd $(dirname "$0")/..
+  cd $(realpath "$0")/..
   PYTHONPATH=$(pwd) python3 -m unittest testsuite.pyunit
 
   gend
