@@ -464,16 +464,14 @@ def gen_choices(choices):
     """Generate a choice 'when A | B ... Z =>' using elements of CHOICES."""
     is_first = True
     for c in choices:
+        ch = prefix_name + c
         if is_first:
-            print("        ", end='')
-            print("when", end='')
+            is_first = False
+            print("         when " + ch, end='')
         else:
             print()
-            print("        ", end='')
-            print("  |", end='')
-        print(prefix_name + c, end='')
-        is_first = False
-    print("=>")
+            print("           | " + ch, end='')
+    print(" =>")
 
 
 def gen_get_format(formats, nodes, kinds):
