@@ -141,22 +141,11 @@ do_gna () {
 # The Python Unit testsuite: regression testsuite for Python bindings to libghdl
 do_pyunit () {
   gstart "[GHDL - test] pyunit"
-  cd pyunit
 
-  ./testsuite.sh
+  cd $(dirname "$0")/..
+  PYTHONPATH=$(pwd) python3 -m unittest testsuite.pyunit
 
-#  if ./testsuite.sh > test.log 2>&1 ; then
-#    printf "pyunit: ${ANSI_GREEN}ok${ANSI_NOCOLOR}\n"
-#    # Don't disp log
-#  else
-#    printf "pyunit: ${ANSI_RED}failed${ANSI_NOCOLOR}\n"
-#    cat test.log
-#    failures="$failures"
-#  fi
-
-  cd ..
   gend
-  [ "$failures" = "" ] || exit 1
 }
 
 # The VESTS testsuite: compliance testsuite, from: https://github.com/nickg/vests.git 388250486a
