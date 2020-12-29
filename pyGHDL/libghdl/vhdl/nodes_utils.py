@@ -1,4 +1,5 @@
-from libghdl import libghdl
+from pyGHDL.libghdl import libghdl
+
 
 Strip_Denoting_Name = libghdl.vhdl__utils__strip_denoting_name
 

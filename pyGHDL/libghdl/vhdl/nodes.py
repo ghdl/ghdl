@@ -1,4 +1,5 @@
-from libghdl import libghdl
+from pyGHDL.libghdl import libghdl
+
 
 Null_Iir = 0
 

@@ -1,5 +1,6 @@
-from libghdl import libghdl
+from pyGHDL.libghdl import libghdl
 from ctypes import c_int
+
 
 Std_Logic_1164_Pkg = c_int.in_dll(
     libghdl, "vhdl__ieee__std_logic_1164__std_logic_1164_pkg"

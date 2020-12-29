@@ -1,4 +1,4 @@
-from libghdl import libghdl
+from pyGHDL.libghdl import libghdl
 
 
 # From nodes_meta

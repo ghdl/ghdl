@@ -1,4 +1,4 @@
-from libghdl import libghdl
+from pyGHDL.libghdl import libghdl
 from ctypes import c_bool, sizeof
 
 assert sizeof(c_bool) == 1

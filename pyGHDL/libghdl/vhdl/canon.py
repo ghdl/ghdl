@@ -1,5 +1,6 @@
-from libghdl import libghdl
+from pyGHDL.libghdl import libghdl
 from ctypes import c_bool
+
 
 Flag_Concurrent_Stmts = c_bool.in_dll(
     libghdl, "vhdl__canon__canon_flag_concurrent_stmts"

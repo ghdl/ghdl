@@ -430,6 +430,7 @@ ci_run () {
       case "$GHDL_IMAGE_TAG" in
         *ubuntu20*|*buster*)
           GHDL_TEST_IMAGE="test:$GHDL_IMAGE_TAG-py"
+          gstart "[CI] Docker build $GHDL_TEST_IMAGE" "$ANSI_BLUE"
           docker build -t "$GHDL_TEST_IMAGE" . -f- <<-EOF
 # syntax=docker/dockerfile:experimental
 FROM ghdl/ghdl:$GHDL_IMAGE_TAG
@@ -437,7 +438,8 @@ RUN apt update -qq && apt install -y python3 python3-pip
 RUN --mount=type=bind,src=./,target=/tmp/ghdl/ \
   pip3 install -r /tmp/ghdl/testsuite/requirements.txt
 EOF
-        tests+=" pyunit"
+          gend
+          tests+=" pyunit"
         ;;
         *)
           GHDL_TEST_IMAGE="ghdl/ghdl:$GHDL_IMAGE_TAG"
