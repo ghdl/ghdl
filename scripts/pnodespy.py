@@ -3,6 +3,9 @@
 """Like pnodes but output for python"""
 
 from __future__ import print_function
+
+import sys
+
 import pnodes
 import re
 
