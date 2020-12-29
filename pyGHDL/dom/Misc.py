@@ -33,9 +33,9 @@ class Design(VHDLModel_Design):
 
 		libghdl.set_option(b"--std=08")
 
-	# Finish initialization. This will load the standard package.
-#		if libghdl.analyze_init_status() != 0:
-#			raise LibGHDLException("Error initializing 'libghdl'.")
+		# Finish initialization. This will load the standard package.
+		if libghdl.analyze_init_status() != 0:
+			raise LibGHDLException("Error initializing 'libghdl'.")
 
 @export
 class Library(VHDLModel_Library):

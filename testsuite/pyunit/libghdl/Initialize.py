@@ -31,8 +31,8 @@ class Instantiate(TestCase):
 		libghdl.set_option(b"--std=08")
 
 		# Finish initialization. This will load the standard package.
-#		if libghdl.analyze_init_status() != 0:
-#			self.fail("libghdl initialization error")
+		if libghdl.analyze_init_status() != 0:
+			self.fail("libghdl initialization error")
 
 		# Load the file
 		file_id = name_table.Get_Identifier(str(self._filename).encode("utf_8"))
