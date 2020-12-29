@@ -457,7 +457,7 @@ uninstall.libghdl:
 
 libghdl-py.tgz:
 	[ -d pythonb ] || $(MKDIR) pythonb
-	$(CP) -r $(srcdir)/python/libghdl $(srcdir)/python/setup.py pythonb
+	$(CP) -r $(srcdir)/pyGHDL/libghdl $(srcdir)/setup.py pythonb
 	tar -zcvf $@ -C pythonb .
 
 ################ ghwdump #################################################

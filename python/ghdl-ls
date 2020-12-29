@@ -1,4 +1,0 @@
-#! /usr/bin/env python3
-import vhdl_langserver.main as main
-
-main.main()

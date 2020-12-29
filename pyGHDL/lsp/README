@@ -1,0 +1,18 @@
+pyghdl is a language server for VHDL based on ghdl.
+
+It implements the Language Server Protocol.
+The server is implemented in Python (3.x) but relies on libghdl for parsing.
+
+It also provides a python interface to libghdl, which could be used to
+develop tools around the parser and analyzer.
+
+To install:
+1) First install ghdl (add --enable-python during configuration).
+   This is needed so that the libraries are available
+2) In ghdl, install pyGHDL.  There is a setup.py script, so you can do:
+   $ pip install .
+   To install for development: pip install -e .
+   Add --user to install in your home directory.
+
+The executable is named 'ghdl-ls'.  It uses stdin/stdout to communicate with
+its client.

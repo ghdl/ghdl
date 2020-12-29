@@ -424,17 +424,42 @@ ci_run () {
   else
       # Build ghdl/ghdl:$GHDL_IMAGE_TAG image
       build_img_ghdl
-      # Run test in docker container
+
       tests="sanity"
+
+      case "$GHDL_IMAGE_TAG" in
+        *ubuntu20*|*buster*)
+          GHDL_TEST_IMAGE="test:$GHDL_IMAGE_TAG-py"
+          gstart "[CI] Docker build $GHDL_TEST_IMAGE" "$ANSI_BLUE"
+          docker build -t "$GHDL_TEST_IMAGE" . -f- <<-EOF
+# syntax=docker/dockerfile:experimental
+FROM ghdl/ghdl:$GHDL_IMAGE_TAG
+RUN apt update -qq && apt install -y python3 python3-pip
+RUN --mount=type=bind,src=./,target=/tmp/ghdl/ \
+  pip3 install -r /tmp/ghdl/testsuite/requirements.txt
+EOF
+          gend
+          tests+=" pyunit"
+        ;;
+        *)
+          GHDL_TEST_IMAGE="ghdl/ghdl:$GHDL_IMAGE_TAG"
+        ;;
+      esac
+
       if [ "x$ISGPL" != "xtrue" ]; then
-        tests="$tests gna"
+        tests+=" gna"
       fi
-      tests="$tests vests"
+
+      tests+=" vests"
+
       if [ "x$ISSYNTH" = "xtrue" ]; then
-        tests="$tests synth"
+        tests+=" synth"
       fi
-      tests="$tests vpi"
-      $RUN "ghdl/ghdl:$GHDL_IMAGE_TAG" bash -c "GHDL=ghdl ./testsuite/testsuite.sh $tests"
+
+      tests+=" vpi"
+
+      # Run tests in docker container
+      $RUN "$GHDL_TEST_IMAGE" bash -c "GHDL=ghdl ./testsuite/testsuite.sh $tests"
   fi
 
   if [ ! -f testsuite/test_ok ]; then

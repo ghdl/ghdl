@@ -112,7 +112,7 @@ do_sanity () {
   [ "$failures" = "" ] || exit 1
 }
 
-# The GNA testsuite: regression testsuite using reports/issues from gna.org
+# The GNA testsuite: regression testsuite using reports/issues from gna.org and from GitHub
 do_gna () {
   gstart "[GHDL - test] gna"
   cd gna
@@ -136,6 +136,15 @@ do_gna () {
   cd ..
   gend
   [ "$failures" = "" ] || exit 1
+}
+
+# The Python Unit testsuite: regression testsuite for Python bindings to libghdl
+do_pyunit () {
+  gstart "[GHDL - test] pyunit"
+  cd ..
+  PYTHONPATH=$(pwd) python3 -m unittest testsuite.pyunit.libghdl.Initialize
+  cd testsuite
+  gend
 }
 
 # The VESTS testsuite: compliance testsuite, from: https://github.com/nickg/vests.git 388250486a
@@ -226,7 +235,7 @@ for opt; do
   esac
 done
 
-if [ "x$tests" = "x" ]; then tests="sanity gna vests synth vpi"; fi
+if [ "x$tests" = "x" ]; then tests="sanity pyunit gna vests synth vpi"; fi
 
 echo "tests: $tests"
 
@@ -234,10 +243,11 @@ echo "tests: $tests"
 do_test() {
   case $1 in
     sanity) do_sanity;;
+    pyunit) do_pyunit;;
     gna)    do_gna;;
     vests)  do_vests;;
     synth)  do_synth;;
-    vpi) do_vpi;;
+    vpi)    do_vpi;;
     *)
       printf "${ANSI_RED}$0: test name '$1' is unknown${ANSI_NOCOLOR}\n"
       exit 1;;
