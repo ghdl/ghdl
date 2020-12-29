@@ -7,10 +7,10 @@ import sys
 import os
 
 import pyGHDL.libghdl as libghdl
-
-from . import version
-from . import lsp
-from . import vhdl_ls
+from pyGHDL.libghdl     import version, errorout_console
+from pyGHDL.lsp         import LSPConnTrace
+from pyGHDL.lsp.lsp     import LSPConn, LanguageProtocolServer
+from pyGHDL.lsp.vhdl_ls import VhdlLanguageServer
 
 logger = logging.getLogger("ghdl-ls")
 
@@ -46,7 +46,7 @@ def main():
     args = parser.parse_args()
 
     if args.disp_config:
-        libghdl.errorout_console.Install_Handler()
+        errorout_console.Install_Handler()
         libghdl.disp_config()
         return
 
@@ -81,7 +81,7 @@ def main():
     if args.input is not None:
         instream = open(args.input, "rb")
 
-    conn = lsp.LSPConn(instream, sys.stdout.buffer)
+    conn = LSPConn(instream, sys.stdout.buffer)
 
     trace_file = args.trace_file
     if trace_file is None:
@@ -94,10 +94,10 @@ def main():
         else:
             logger.info("Traces disabled when -i/--input")
 
-    handler = vhdl_ls.VhdlLanguageServer()
+    handler = VhdlLanguageServer()
 
     try:
-        server = lsp.LanguageProtocolServer(handler, conn)
+        server = LanguageProtocolServer(handler, conn)
         server.run()
     except Exception:
         logger.exception("Uncaught error")
