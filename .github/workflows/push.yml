@@ -137,6 +137,7 @@ jobs:
           base-devel
           git
           mingw-w64-${{ matrix.arch }}-toolchain
+          mingw-w64-${{ matrix.arch }}-python-pip
 
     - run: git config --global core.autocrlf input
       shell: bash
@@ -170,8 +171,7 @@ jobs:
 
     - name: Test package
       run: |
-        env | grep MSYSTEM
-        env | grep MINGW
+        pip3 install -r testsuite/requirements.txt
         GHDL=ghdl ./testsuite/testsuite.sh
       env:
         MSYSTEM: ${{ matrix.installs }}
