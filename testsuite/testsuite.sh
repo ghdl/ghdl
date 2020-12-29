@@ -141,10 +141,9 @@ do_gna () {
 # The Python Unit testsuite: regression testsuite for Python bindings to libghdl
 do_pyunit () {
   gstart "[GHDL - test] pyunit"
-
-  cd $(realpath "$0")/..
+  cd ..
   PYTHONPATH=$(pwd) python3 -m unittest testsuite.pyunit
-
+  cd testsuite
   gend
 }
 
