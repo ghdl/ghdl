@@ -798,6 +798,42 @@ package body Trans.Chap3 is
       Close_Temp;
    end Elab_Composite_Subtype_Layout;
 
+   procedure Elab_Composite_Subtype_Size (Def : Iir; Target : Mnode)
+   is
+      Info : constant Type_Info_Acc := Get_Info (Def);
+      T : Mnode;
+   begin
+      case Type_Mode_Composite (Info.Type_Mode) is
+         when Type_Mode_Static_Record
+            | Type_Mode_Static_Array =>
+            --  Precomputed.
+            null;
+         when Type_Mode_Complex_Record
+            | Type_Mode_Complex_Array =>
+            Open_Temp;
+            T := Stabilize (Target);
+            Gen_Call_Type_Builder (T, Def, Mode_Value);
+            if Get_Has_Signal_Flag (Def) then
+               Gen_Call_Type_Builder (T, Def, Mode_Signal);
+            end if;
+            Close_Temp;
+         when Type_Mode_Unbounded_Record =>
+            null;
+         when Type_Mode_Unbounded_Array =>
+            if Get_Array_Element_Constraint (Def) = Null_Iir then
+               --  Element is defined by the subtype.
+               return;
+            end if;
+            Elab_Composite_Subtype_Size
+              (Get_Element_Subtype (Def),
+               Array_Bounds_To_Element_Layout (Layout_To_Bounds (Target),
+                 Def));
+         when Type_Mode_Protected =>
+            --  Not expected.
+            raise Internal_Error;
+      end case;
+   end Elab_Composite_Subtype_Size;
+
    procedure Elab_Composite_Subtype_Layout (Def : Iir)
    is
       Info : constant Type_Info_Acc := Get_Info (Def);
@@ -807,16 +843,11 @@ package body Trans.Chap3 is
          return;
       end if;
 
+      --  Fill ranges and length.
       Elab_Composite_Subtype_Layout (Def, Get_Composite_Type_Layout (Info));
 
-      if Is_Complex_Type (Info) then
-         Gen_Call_Type_Builder
-           (Get_Composite_Type_Layout (Info), Def, Mode_Value);
-         if Get_Has_Signal_Flag (Def) then
-            Gen_Call_Type_Builder
-              (Get_Composite_Type_Layout (Info), Def, Mode_Signal);
-         end if;
-      end if;
+      --  Compute sizes.
+      Elab_Composite_Subtype_Size (Def, Get_Composite_Type_Layout (Info));
    end Elab_Composite_Subtype_Layout;
 
    --  Create a variable containing the layout for composite subtype DEF.
