@@ -6,6 +6,7 @@ on:
 
 env:
   CI: true
+  DOCKER_BUILDKIT: 1
 
 jobs:
 
