@@ -142,7 +142,7 @@ do_gna () {
 do_pyunit () {
   gstart "[GHDL - test] pyunit"
   cd ..
-  PYTHONPATH=$(pwd) python3 -m unittest testsuite.pyunit
+  PYTHONPATH=$(pwd) python3 -m unittest testsuite.pyunit.libghdl.Initialize
   cd testsuite
   gend
 }
