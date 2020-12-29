@@ -102,7 +102,7 @@ def read_fields(file):
     while l != "     );\n":
         m = pat_field_name.match(l)
         if m is None:
-            print l
+            print(l)
             raise "bad literal within Format_Type"
         name = m.group(1)
         formats.append(name)
@@ -468,54 +468,54 @@ def gen_choices(choices):
     is_first = True
     for c in choices:
         if is_first:
-            print "        ",
-            print "when",
+            print("        ", end=' ')
+            print("when", end=' ')
         else:
-            print
-            print "        ",
-            print "  |",
-        print prefix_name + c,
+            print()
+            print("        ", end=' ')
+            print("  |", end=' ')
+        print(prefix_name + c, end=' ')
         is_first = False
-    print "=>"
+    print("=>")
 
 
 def gen_get_format(formats, nodes, kinds):
     """Generate the Get_Format function."""
-    print "   function Get_Format (Kind : " + type_name + ") " + "return Format_Type is"
-    print "   begin"
-    print "      case Kind is"
+    print("   function Get_Format (Kind : " + type_name + ") " + "return Format_Type is")
+    print("   begin")
+    print("      case Kind is")
     for f in formats:
         choices = [k for k in kinds if nodes[k].format == f]
         gen_choices(choices)
-        print "            return Format_" + f + ";"
-    print "      end case;"
-    print "   end Get_Format;"
+        print("            return Format_" + f + ";")
+    print("      end case;")
+    print("   end Get_Format;")
 
 
 def gen_subprg_header(decl):
     if len(decl) < 76:
-        print decl + " is"
+        print(decl + " is")
     else:
-        print decl
-        print "   is"
-    print "   begin"
+        print(decl)
+        print("   is")
+    print("   begin")
 
 
 def gen_assert(func):
-    print "      pragma Assert (" + func.pname + " /= Null_" + node_type + ");"
+    print("      pragma Assert (" + func.pname + " /= Null_" + node_type + ");")
     cond = "(Has_" + func.name + " (Get_Kind (" + func.pname + ")),"
     msg = '"no field ' + func.name + '");'
     if len(cond) < 60:
-        print "      pragma Assert " + cond
-        print "                     " + msg
+        print("      pragma Assert " + cond)
+        print("                     " + msg)
     else:
-        print "      pragma Assert"
-        print "         " + cond
-        print "          " + msg
+        print("      pragma Assert")
+        print("         " + cond)
+        print("          " + msg)
 
 
 def get_field_type(fields, f):
-    for fld in fields.values():
+    for fld in list(fields.values()):
         if f in fld:
             return fld[f]
     return None
@@ -526,13 +526,13 @@ def gen_get_set(func, nodes, fields):
     rtype = func.rtype
     # If the function needs several fields, it must be user defined
     if func.conv == "grp":
-        print "   type %s_Conv is record" % rtype
+        print("   type %s_Conv is record" % rtype)
         for f in func.fields:
-            print "      %s: %s;" % (f, get_field_type(fields, f))
-        print "   end record;"
-        print "   pragma Pack (%s_Conv);" % rtype
-        print "   pragma Assert (%s_Conv'Size = %s'Size);" % (rtype, rtype)
-        print
+            print("      %s: %s;" % (f, get_field_type(fields, f)))
+        print("   end record;")
+        print("   pragma Pack (%s_Conv);" % rtype)
+        print("   pragma Assert (%s_Conv'Size = %s'Size);" % (rtype, rtype))
+        print()
     else:
         f = func.fields[0]
         g = "Get_" + f + " (" + func.pname + ")"
@@ -558,22 +558,22 @@ def gen_get_set(func, nodes, fields):
         + rtype
     )
     if func.conv == "grp":
-        print subprg
-        print "   is"
-        print "      function To_%s is new Ada.Unchecked_Conversion" % func.rtype
-        print "         (%s_Conv, %s);" % (rtype, rtype)
-        print "      Conv : %s_Conv;" % rtype
-        print "   begin"
+        print(subprg)
+        print("   is")
+        print("      function To_%s is new Ada.Unchecked_Conversion" % func.rtype)
+        print("         (%s_Conv, %s);" % (rtype, rtype))
+        print("      Conv : %s_Conv;" % rtype)
+        print("   begin")
     else:
         gen_subprg_header(subprg)
     gen_assert(func)
     if func.conv == "grp":
         for f in func.fields:
-            print "      Conv.%s := Get_%s (%s);" % (f, f, func.pname)
+            print("      Conv.%s := Get_%s (%s);" % (f, f, func.pname))
         g = "To_%s (Conv)" % rtype
-    print "      return " + g + ";"
-    print "   end Get_" + func.name + ";"
-    print
+    print("      return " + g + ";")
+    print("   end Get_" + func.name + ";")
+    print()
 
     subprg = (
         "   procedure Set_"
@@ -589,55 +589,55 @@ def gen_get_set(func, nodes, fields):
         + ")"
     )
     if func.conv == "grp":
-        print subprg
-        print "   is"
-        print "      function To_%s_Conv is new Ada.Unchecked_Conversion" % func.rtype
-        print "         (%s, %s_Conv);" % (rtype, rtype)
-        print "      Conv : %s_Conv;" % rtype
-        print "   begin"
+        print(subprg)
+        print("   is")
+        print("      function To_%s_Conv is new Ada.Unchecked_Conversion" % func.rtype)
+        print("         (%s, %s_Conv);" % (rtype, rtype))
+        print("      Conv : %s_Conv;" % rtype)
+        print("   begin")
     else:
         gen_subprg_header(subprg)
     gen_assert(func)
     if func.conv == "grp":
-        print "      Conv := To_%s_Conv (%s);" % (rtype, func.rname)
+        print("      Conv := To_%s_Conv (%s);" % (rtype, func.rname))
         for f in func.fields:
-            print "      Set_%s (%s, Conv.%s);" % (f, func.pname, f)
+            print("      Set_%s (%s, Conv.%s);" % (f, func.pname, f))
     else:
-        print "      Set_" + f + " (" + func.pname + ", " + s + ");"
-    print "   end Set_" + func.name + ";"
-    print
+        print("      Set_" + f + " (" + func.pname + ", " + s + ");")
+    print("   end Set_" + func.name + ";")
+    print()
 
 
 def funcs_of_node(n):
-    return sorted([fv.name for fv in n.fields.values() if fv])
+    return sorted([fv.name for fv in list(n.fields.values()) if fv])
 
 
 def gen_has_func_spec(name, suff):
     spec = "   function Has_" + name + " (K : " + type_name + ")"
     ret = " return Boolean" + suff
     if len(spec) < 60:
-        print spec + ret
+        print(spec + ret)
     else:
-        print spec
-        print "     " + ret
+        print(spec)
+        print("     " + ret)
 
 
 def do_disp_formats():
     for fmt in fields:
-        print "Fields of Format_" + fmt
+        print("Fields of Format_" + fmt)
         fld = fields[fmt]
         for k in fld:
-            print "  " + k + " (" + fld[k] + ")"
+            print("  " + k + " (" + fld[k] + ")")
 
 
 def do_disp_kinds():
-    print "Kinds are:"
+    print("Kinds are:")
     for k in kinds:
-        print "  " + prefix_name + k
+        print("  " + prefix_name + k)
 
 
 def do_disp_funcs():
-    print "Functions are:"
+    print("Functions are:")
     for f in funcs:
         s = "{0} ({1}: {2}".format(f.name, f.field, f.rtype)
         if f.acc:
@@ -645,25 +645,25 @@ def do_disp_funcs():
         if f.conv:
             s += " conv:" + f.conv
         s += ")"
-        print s
+        print(s)
 
 
 def do_disp_types():
-    print "Types are:"
+    print("Types are:")
     s = set([])
     for f in funcs:
         s |= set([f.rtype])
     for t in sorted(s):
-        print "  " + t
+        print("  " + t)
 
 
 def do_disp_nodes():
     for k in kinds:
         v = nodes[k]
-        print prefix_name + k + " (" + v.format + ")"
-        flds = [fk for fk, fv in v.fields.items() if fv]
+        print(prefix_name + k + " (" + v.format + ")")
+        flds = [fk for fk, fv in list(v.fields.items()) if fv]
         for fk in sorted(flds):
-            print "  " + fk + ": " + v.fields[fk].name
+            print("  " + fk + ": " + v.fields[fk].name)
 
 
 def do_get_format():
@@ -674,10 +674,10 @@ def do_body():
     lr = linereader(template_file)
     while True:
         l = lr.get().rstrip()
-        print l
+        print(l)
         if l == "   --  Subprograms":
             gen_get_format(formats, nodes, kinds)
-            print
+            print()
             for f in funcs:
                 gen_get_set(f, nodes, fields)
         if l[0:3] == "end":
@@ -705,9 +705,9 @@ def gen_enum(prefix, vals):
     last = None
     for v in vals:
         if last:
-            print last + ","
+            print(last + ",")
         last = prefix + v
-    print last
+    print(last)
 
 
 def do_meta_specs():
@@ -723,18 +723,18 @@ def do_meta_specs():
             gen_enum("      Attr_", get_attributes())
         elif l == "   --  FUNCS":
             for t in types:
-                print "   function Get_" + t
-                print "      (N : " + node_type + "; F : Fields_Enum) return " + t + ";"
-                print "   procedure Set_" + t
-                print "      (N : " + node_type + "; F : Fields_Enum; V: " + t + ");"
-                print
+                print("   function Get_" + t)
+                print("      (N : " + node_type + "; F : Fields_Enum) return " + t + ";")
+                print("   procedure Set_" + t)
+                print("      (N : " + node_type + "; F : Fields_Enum; V: " + t + ");")
+                print()
             for f in funcs:
                 gen_has_func_spec(f.name, ";")
         elif l[0:3] == "end":
-            print l
+            print(l)
             break
         else:
-            print l
+            print(l)
 
 
 def do_meta_body():
@@ -745,34 +745,34 @@ def do_meta_body():
             last = None
             for f in funcs:
                 if last:
-                    print last + ","
+                    print(last + ",")
                 last = "      Field_" + f.name + " => Type_" + f.rtype
-            print last
+            print(last)
         elif l == "         --  FIELD_IMAGE":
             for f in funcs:
-                print "         when Field_" + f.name + " =>"
-                print '            return "' + f.name.lower() + '";'
+                print("         when Field_" + f.name + " =>")
+                print('            return "' + f.name.lower() + '";')
         elif l == "         --  IIR_IMAGE":
             for k in kinds:
-                print "         when " + prefix_name + k + " =>"
-                print '            return "' + k.lower() + '";'
+                print("         when " + prefix_name + k + " =>")
+                print('            return "' + k.lower() + '";')
         elif l == "         --  FIELD_ATTRIBUTE":
             for f in funcs:
-                print "         when Field_" + f.name + " =>"
+                print("         when Field_" + f.name + " =>")
                 if f.acc:
                     attr = f.acc
                 else:
                     attr = "None"
-                print "            return Attr_" + attr + ";"
+                print("            return Attr_" + attr + ";")
         elif l == "      --  FIELDS_ARRAY":
             last = None
             nodes_types = [node_type, node_type + "_List", node_type + "_Flist"]
             for k in kinds:
                 v = nodes[k]
                 if last:
-                    print last + ","
+                    print(last + ",")
                 last = None
-                print "      --  " + prefix_name + k
+                print("      --  " + prefix_name + k)
                 # Get list of physical fields for V, in some order.
                 if flag_keep_order:
                     flds = v.order
@@ -781,7 +781,7 @@ def do_meta_body():
                     flds = sorted(
                         [
                             fk
-                            for fk, fv in v.fields.items()
+                            for fk, fv in list(v.fields.items())
                             if fv and fv.rtype not in nodes_types
                         ]
                     )
@@ -792,7 +792,7 @@ def do_meta_body():
                 fldsn = []
                 for fk in flds:
                     if last:
-                        print last + ","
+                        print(last + ",")
                     # Remove duplicate
                     fn = v.fields[fk].name
                     if fn not in fldsn:
@@ -801,19 +801,19 @@ def do_meta_body():
                     else:
                         last = None
             if last:
-                print last
+                print(last)
         elif l == "      --  FIELDS_ARRAY_POS":
             pos = -1
             last = None
             for k in kinds:
                 v = nodes[k]
                 # Create a set to remove duplicate for 'grp'.
-                flds = set([fv.name for fk, fv in v.fields.items() if fv])
+                flds = set([fv.name for fk, fv in list(v.fields.items()) if fv])
                 pos += len(flds)
                 if last:
-                    print last + ","
+                    print(last + ",")
                 last = "      " + prefix_name + k + " => {}".format(pos)
-            print last
+            print(last)
         elif l == "   --  FUNCS_BODY":
             # Build list of types
             s = set([])
@@ -821,58 +821,58 @@ def do_meta_body():
                 s |= set([f.rtype])
             types = [t for t in sorted(s)]
             for t in types:
-                print "   function Get_" + t
-                print "      (N : " + node_type + "; F : Fields_Enum) return " + t + " is"
-                print "   begin"
-                print "      pragma Assert (Fields_Type (F) = Type_" + t + ");"
-                print "      case F is"
+                print("   function Get_" + t)
+                print("      (N : " + node_type + "; F : Fields_Enum) return " + t + " is")
+                print("   begin")
+                print("      pragma Assert (Fields_Type (F) = Type_" + t + ");")
+                print("      case F is")
                 for f in funcs:
                     if f.rtype == t:
-                        print "         when Field_" + f.name + " =>"
-                        print "            return Get_" + f.name + " (N);"
-                print "         when others =>"
-                print "            raise Internal_Error;"
-                print "      end case;"
-                print "   end Get_" + t + ";"
-                print
-                print "   procedure Set_" + t
-                print "      (N : " + node_type + "; F : Fields_Enum; V: " + t + ") is"
-                print "   begin"
-                print "      pragma Assert (Fields_Type (F) = Type_" + t + ");"
-                print "      case F is"
+                        print("         when Field_" + f.name + " =>")
+                        print("            return Get_" + f.name + " (N);")
+                print("         when others =>")
+                print("            raise Internal_Error;")
+                print("      end case;")
+                print("   end Get_" + t + ";")
+                print()
+                print("   procedure Set_" + t)
+                print("      (N : " + node_type + "; F : Fields_Enum; V: " + t + ") is")
+                print("   begin")
+                print("      pragma Assert (Fields_Type (F) = Type_" + t + ");")
+                print("      case F is")
                 for f in funcs:
                     if f.rtype == t:
-                        print "         when Field_" + f.name + " =>"
-                        print "            Set_" + f.name + " (N, V);"
-                print "         when others =>"
-                print "            raise Internal_Error;"
-                print "      end case;"
-                print "   end Set_" + t + ";"
-                print
+                        print("         when Field_" + f.name + " =>")
+                        print("            Set_" + f.name + " (N, V);")
+                print("         when others =>")
+                print("            raise Internal_Error;")
+                print("      end case;")
+                print("   end Set_" + t + ";")
+                print()
             for f in funcs:
                 gen_has_func_spec(f.name, " is")
                 choices = [k for k in kinds if f.name in nodes[k].attrs]
                 if len(choices) == 0:
-                    print "      pragma Unreferenced (K);"
-                print "   begin"
+                    print("      pragma Unreferenced (K);")
+                print("   begin")
                 if len(choices) == 0:
-                    print "      return False;"
+                    print("      return False;")
                 elif len(choices) == 1:
-                    print "      return K = " + prefix_name + choices[0] + ";"
+                    print("      return K = " + prefix_name + choices[0] + ";")
                 else:
-                    print "      case K is"
+                    print("      case K is")
                     gen_choices(choices)
-                    print "            return True;"
-                    print "         when others =>"
-                    print "            return False;"
-                    print "      end case;"
-                print "   end Has_" + f.name + ";"
-                print
+                    print("            return True;")
+                    print("         when others =>")
+                    print("            return False;")
+                    print("      end case;")
+                print("   end Has_" + f.name + ";")
+                print()
         elif l[0:3] == "end":
-            print l
+            print(l)
             break
         else:
-            print l
+            print(l)
 
 
 actions = {
@@ -890,7 +890,7 @@ actions = {
 
 def main():
     parser = argparse.ArgumentParser(description="Meta-grammar processor")
-    parser.add_argument("action", choices=actions.keys(), default="disp-nodes")
+    parser.add_argument("action", choices=list(actions.keys()), default="disp-nodes")
     parser.add_argument(
         "--field-file",
         dest="field_file",
@@ -973,13 +973,13 @@ def main():
         nodes = read_nodes(node_file, kinds, kinds_ranges, fields, funcs)
 
     except ParseError as e:
-        print >> sys.stderr, e
-        print >> sys.stderr, "in {0}:{1}:{2}".format(e.lr.filename, e.lr.lineno, e.lr.l)
+        print(e, file=sys.stderr)
+        print("in {0}:{1}:{2}".format(e.lr.filename, e.lr.lineno, e.lr.l), file=sys.stderr)
         sys.exit(1)
 
     f = actions.get(args.action, None)
     if not f:
-        print >> sys.stderr, "Action {0} is unknown".format(args.action)
+        print("Action {0} is unknown".format(args.action), file=sys.stderr)
         sys.exit(1)
     f()
 
