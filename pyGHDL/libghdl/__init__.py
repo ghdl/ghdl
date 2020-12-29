@@ -3,7 +3,7 @@ import os
 import sys
 from os.path import dirname, join, exists, normpath
 from shutil import which
-from libghdl.version import __version__
+from pyGHDL.libghdl.version import __version__
 
 
 def _to_char_p(arg):

@@ -1,5 +1,6 @@
-from libghdl import libghdl
+from pyGHDL.libghdl import libghdl
 from ctypes import c_bool
+
 
 Parse_Design_File = libghdl.vhdl__parse__parse_design_file
 

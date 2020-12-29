@@ -1,5 +1,6 @@
-from libghdl import libghdl
+from pyGHDL.libghdl import libghdl
 from ctypes import c_int, c_bool
+
 
 Set_File = libghdl.vhdl__scanner__set_file
 

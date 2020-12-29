@@ -54,6 +54,6 @@ set -e
 
 cd $(dirname "$0")/../..
 
-export PYTHONPATH=$(pwd)/pyGHDL
+export PYTHONPATH=$(pwd)
 
 python3 -m unittest testsuite.pyunit

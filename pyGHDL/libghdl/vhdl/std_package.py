@@ -1,5 +1,6 @@
-from libghdl import libghdl
+from pyGHDL.libghdl import libghdl
 from ctypes import c_int32
+
 
 # Use .value
 Std_Location = c_int32.in_dll(libghdl, "vhdl__std_package__std_location")

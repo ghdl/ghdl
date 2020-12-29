@@ -1,4 +1,4 @@
-from libghdl import libghdl
+from pyGHDL.libghdl import libghdl
 from ctypes import c_int32
 
 Get_Libraries_Chain = libghdl.libraries__get_libraries_chain

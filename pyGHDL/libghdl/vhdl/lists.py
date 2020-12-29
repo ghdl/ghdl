@@ -1,5 +1,6 @@
-from libghdl import libghdl
+from pyGHDL.libghdl import libghdl
 from ctypes import c_int32, c_bool, POINTER, Structure
+
 
 List_Type = c_int32
 

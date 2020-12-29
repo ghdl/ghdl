@@ -1,4 +1,4 @@
-from libghdl import libghdl
+from pyGHDL.libghdl import libghdl
 from ctypes import c_char_p
 
 Get_Name_Length = libghdl.name_table__get_name_length

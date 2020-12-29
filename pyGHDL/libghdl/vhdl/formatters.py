@@ -1,5 +1,6 @@
-from libghdl import libghdl
+from pyGHDL.libghdl import libghdl
 from ctypes import c_int32, c_char_p
+
 
 Indent_String = libghdl.vhdl__formatters__indent_string
 

@@ -1,4 +1,5 @@
-from libghdl import libghdl
+from pyGHDL.libghdl import libghdl
+
 
 Load_File = libghdl.vhdl__sem_lib__load_file
 

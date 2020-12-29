@@ -1,4 +1,4 @@
-from libghdl import libghdl
+from pyGHDL.libghdl import libghdl
 from ctypes import c_void_p
 
 EOT = b"\x04"
