@@ -1,4 +1,4 @@
-from pyGHDL.libghdl import libghdl
+from libghdl import libghdl
 
 
 Get_Start_Location = libghdl.vhdl__elocations__get_start_location

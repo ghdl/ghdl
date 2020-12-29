@@ -1,5 +1,4 @@
-from pyGHDL.libghdl import libghdl
-
+from libghdl import libghdl
 
 Null_Iir = 0
 
@@ -9,6 +8,7 @@ Iir_List_All = 1
 Null_Iir_Flist = 0
 Iir_Flist_Others = 1
 Iir_Flist_All = 2
+
 
 
 class Iir_Kind:
@@ -330,30 +330,6 @@ class Iir_Kind:
 
 
 class Iir_Kinds:
-    Variable_Assignment_Statement = [
-        Iir_Kind.Variable_Assignment_Statement,
-        Iir_Kind.Conditional_Variable_Assignment_Statement,
-    ]
-
-    Denoting_Name = [
-        Iir_Kind.Character_Literal,
-        Iir_Kind.Simple_Name,
-        Iir_Kind.Selected_Name,
-        Iir_Kind.Operator_Symbol,
-        Iir_Kind.Reference_Name,
-    ]
-
-    Case_Choice = [
-        Iir_Kind.Choice_By_Range,
-        Iir_Kind.Choice_By_Expression,
-        Iir_Kind.Choice_By_Others,
-    ]
-
-    Array_Type_Definition = [
-        Iir_Kind.Array_Type_Definition,
-        Iir_Kind.Array_Subtype_Definition,
-    ]
-
     Library_Unit = [
         Iir_Kind.Entity_Declaration,
         Iir_Kind.Configuration_Declaration,
@@ -367,33 +343,31 @@ class Iir_Kinds:
         Iir_Kind.Architecture_Body,
     ]
 
-    Array_Choice = [
-        Iir_Kind.Choice_By_Range,
-        Iir_Kind.Choice_By_Expression,
-        Iir_Kind.Choice_By_Others,
-        Iir_Kind.Choice_By_None,
+    Primary_Unit = [
+        Iir_Kind.Entity_Declaration,
+        Iir_Kind.Configuration_Declaration,
+        Iir_Kind.Context_Declaration,
+        Iir_Kind.Package_Declaration,
+        Iir_Kind.Package_Instantiation_Declaration,
+        Iir_Kind.Vmode_Declaration,
+        Iir_Kind.Vprop_Declaration,
+        Iir_Kind.Vunit_Declaration,
     ]
 
-    Subprogram_Declaration = [
-        Iir_Kind.Function_Declaration,
-        Iir_Kind.Procedure_Declaration,
+    Secondary_Unit = [
+        Iir_Kind.Package_Body,
+        Iir_Kind.Architecture_Body,
     ]
 
-    Subtype_Attribute = [
-        Iir_Kind.Base_Attribute,
-        Iir_Kind.Subtype_Attribute,
-        Iir_Kind.Element_Attribute,
+    Package_Declaration = [
+        Iir_Kind.Package_Declaration,
+        Iir_Kind.Package_Instantiation_Declaration,
     ]
 
-    Scalar_Subtype_Definition = [
-        Iir_Kind.Physical_Subtype_Definition,
-        Iir_Kind.Floating_Subtype_Definition,
-        Iir_Kind.Integer_Subtype_Definition,
-        Iir_Kind.Enumeration_Subtype_Definition,
-    ]
-
-    Subnature_Definition = [
-        Iir_Kind.Array_Subnature_Definition,
+    Verification_Unit = [
+        Iir_Kind.Vmode_Declaration,
+        Iir_Kind.Vprop_Declaration,
+        Iir_Kind.Vunit_Declaration,
     ]
 
     Literal = [
@@ -405,48 +379,14 @@ class Iir_Kinds:
         Iir_Kind.Physical_Fp_Literal,
     ]
 
-    Nature_Indication = [
-        Iir_Kind.Scalar_Nature_Definition,
-        Iir_Kind.Record_Nature_Definition,
-        Iir_Kind.Array_Nature_Definition,
-        Iir_Kind.Array_Subnature_Definition,
+    Physical_Literal = [
+        Iir_Kind.Physical_Int_Literal,
+        Iir_Kind.Physical_Fp_Literal,
     ]
 
-    Process_Statement = [
-        Iir_Kind.Sensitized_Process_Statement,
-        Iir_Kind.Process_Statement,
-    ]
-
-    Nature_Definition = [
-        Iir_Kind.Scalar_Nature_Definition,
-        Iir_Kind.Record_Nature_Definition,
-        Iir_Kind.Array_Nature_Definition,
-    ]
-
-    Object_Declaration = [
-        Iir_Kind.Object_Alias_Declaration,
-        Iir_Kind.Free_Quantity_Declaration,
-        Iir_Kind.Spectrum_Quantity_Declaration,
-        Iir_Kind.Noise_Quantity_Declaration,
-        Iir_Kind.Across_Quantity_Declaration,
-        Iir_Kind.Through_Quantity_Declaration,
-        Iir_Kind.File_Declaration,
-        Iir_Kind.Guard_Signal_Declaration,
-        Iir_Kind.Signal_Declaration,
-        Iir_Kind.Variable_Declaration,
-        Iir_Kind.Constant_Declaration,
-        Iir_Kind.Iterator_Declaration,
-        Iir_Kind.Interface_Constant_Declaration,
-        Iir_Kind.Interface_Variable_Declaration,
-        Iir_Kind.Interface_Signal_Declaration,
-        Iir_Kind.Interface_File_Declaration,
-        Iir_Kind.Interface_Quantity_Declaration,
-    ]
-
-    Clause = [
-        Iir_Kind.Library_Clause,
-        Iir_Kind.Use_Clause,
-        Iir_Kind.Context_Reference,
+    Array_Type_Definition = [
+        Iir_Kind.Array_Type_Definition,
+        Iir_Kind.Array_Subtype_Definition,
     ]
 
     Type_And_Subtype_Definition = [
@@ -470,66 +410,54 @@ class Iir_Kinds:
         Iir_Kind.Physical_Type_Definition,
     ]
 
-    External_Name = [
-        Iir_Kind.External_Constant_Name,
-        Iir_Kind.External_Signal_Name,
-        Iir_Kind.External_Variable_Name,
+    Subtype_Definition = [
+        Iir_Kind.Array_Subtype_Definition,
+        Iir_Kind.Record_Subtype_Definition,
+        Iir_Kind.Access_Subtype_Definition,
+        Iir_Kind.Physical_Subtype_Definition,
+        Iir_Kind.Floating_Subtype_Definition,
+        Iir_Kind.Integer_Subtype_Definition,
+        Iir_Kind.Enumeration_Subtype_Definition,
     ]
 
-    Dereference = [
-        Iir_Kind.Dereference,
-        Iir_Kind.Implicit_Dereference,
+    Scalar_Subtype_Definition = [
+        Iir_Kind.Physical_Subtype_Definition,
+        Iir_Kind.Floating_Subtype_Definition,
+        Iir_Kind.Integer_Subtype_Definition,
+        Iir_Kind.Enumeration_Subtype_Definition,
     ]
 
-    Primary_Unit = [
-        Iir_Kind.Entity_Declaration,
-        Iir_Kind.Configuration_Declaration,
-        Iir_Kind.Context_Declaration,
-        Iir_Kind.Package_Declaration,
-        Iir_Kind.Package_Instantiation_Declaration,
-        Iir_Kind.Vmode_Declaration,
-        Iir_Kind.Vprop_Declaration,
-        Iir_Kind.Vunit_Declaration,
+    Scalar_Type_And_Subtype_Definition = [
+        Iir_Kind.Physical_Subtype_Definition,
+        Iir_Kind.Floating_Subtype_Definition,
+        Iir_Kind.Integer_Subtype_Definition,
+        Iir_Kind.Enumeration_Subtype_Definition,
+        Iir_Kind.Enumeration_Type_Definition,
+        Iir_Kind.Integer_Type_Definition,
+        Iir_Kind.Floating_Type_Definition,
+        Iir_Kind.Physical_Type_Definition,
     ]
 
-    Record_Choice = [
-        Iir_Kind.Choice_By_Others,
-        Iir_Kind.Choice_By_None,
-        Iir_Kind.Choice_By_Name,
+    Range_Type_Definition = [
+        Iir_Kind.Physical_Subtype_Definition,
+        Iir_Kind.Floating_Subtype_Definition,
+        Iir_Kind.Integer_Subtype_Definition,
+        Iir_Kind.Enumeration_Subtype_Definition,
+        Iir_Kind.Enumeration_Type_Definition,
     ]
 
-    Functions_And_Literals = [
-        Iir_Kind.Enumeration_Literal,
-        Iir_Kind.Function_Declaration,
+    Discrete_Type_Definition = [
+        Iir_Kind.Integer_Subtype_Definition,
+        Iir_Kind.Enumeration_Subtype_Definition,
+        Iir_Kind.Enumeration_Type_Definition,
+        Iir_Kind.Integer_Type_Definition,
     ]
 
-    Verification_Unit = [
-        Iir_Kind.Vmode_Declaration,
-        Iir_Kind.Vprop_Declaration,
-        Iir_Kind.Vunit_Declaration,
-    ]
-
-    Secondary_Unit = [
-        Iir_Kind.Package_Body,
-        Iir_Kind.Architecture_Body,
-    ]
-
-    Package_Declaration = [
-        Iir_Kind.Package_Declaration,
-        Iir_Kind.Package_Instantiation_Declaration,
-    ]
-
-    Psl_Builtin = [
-        Iir_Kind.Psl_Prev,
-        Iir_Kind.Psl_Stable,
-        Iir_Kind.Psl_Rose,
-        Iir_Kind.Psl_Fell,
-    ]
-
-    Generate_Statement = [
-        Iir_Kind.If_Generate_Statement,
-        Iir_Kind.Case_Generate_Statement,
-        Iir_Kind.For_Generate_Statement,
+    Composite_Type_Definition = [
+        Iir_Kind.Record_Type_Definition,
+        Iir_Kind.Array_Type_Definition,
+        Iir_Kind.Array_Subtype_Definition,
+        Iir_Kind.Record_Subtype_Definition,
     ]
 
     Composite_Subtype_Definition = [
@@ -537,68 +465,59 @@ class Iir_Kinds:
         Iir_Kind.Record_Subtype_Definition,
     ]
 
-    Choice = [
-        Iir_Kind.Choice_By_Range,
-        Iir_Kind.Choice_By_Expression,
-        Iir_Kind.Choice_By_Others,
-        Iir_Kind.Choice_By_None,
-        Iir_Kind.Choice_By_Name,
+    Type_Declaration = [
+        Iir_Kind.Type_Declaration,
+        Iir_Kind.Anonymous_Type_Declaration,
+        Iir_Kind.Subtype_Declaration,
     ]
 
-    If_Case_Generate_Statement = [
-        Iir_Kind.If_Generate_Statement,
-        Iir_Kind.Case_Generate_Statement,
+    Nature_Definition = [
+        Iir_Kind.Scalar_Nature_Definition,
+        Iir_Kind.Record_Nature_Definition,
+        Iir_Kind.Array_Nature_Definition,
     ]
 
-    Simple_Concurrent_Statement = [
-        Iir_Kind.Sensitized_Process_Statement,
-        Iir_Kind.Process_Statement,
-        Iir_Kind.Concurrent_Simple_Signal_Assignment,
-        Iir_Kind.Concurrent_Conditional_Signal_Assignment,
-        Iir_Kind.Concurrent_Selected_Signal_Assignment,
-        Iir_Kind.Concurrent_Assertion_Statement,
-        Iir_Kind.Concurrent_Procedure_Call_Statement,
-        Iir_Kind.Concurrent_Break_Statement,
-        Iir_Kind.Psl_Assert_Directive,
-        Iir_Kind.Psl_Assume_Directive,
-        Iir_Kind.Psl_Cover_Directive,
-        Iir_Kind.Psl_Restrict_Directive,
+    Subnature_Definition = [
+        Iir_Kind.Array_Subnature_Definition,
     ]
 
-    Non_Alias_Object_Declaration = [
-        Iir_Kind.File_Declaration,
-        Iir_Kind.Guard_Signal_Declaration,
-        Iir_Kind.Signal_Declaration,
-        Iir_Kind.Variable_Declaration,
-        Iir_Kind.Constant_Declaration,
-        Iir_Kind.Iterator_Declaration,
-        Iir_Kind.Interface_Constant_Declaration,
-        Iir_Kind.Interface_Variable_Declaration,
-        Iir_Kind.Interface_Signal_Declaration,
-        Iir_Kind.Interface_File_Declaration,
+    Nature_Indication = [
+        Iir_Kind.Scalar_Nature_Definition,
+        Iir_Kind.Record_Nature_Definition,
+        Iir_Kind.Array_Nature_Definition,
+        Iir_Kind.Array_Subnature_Definition,
     ]
 
-    Entity_Aspect = [
-        Iir_Kind.Entity_Aspect_Entity,
-        Iir_Kind.Entity_Aspect_Configuration,
-        Iir_Kind.Entity_Aspect_Open,
+    Nonoverloadable_Declaration = [
+        Iir_Kind.Type_Declaration,
+        Iir_Kind.Anonymous_Type_Declaration,
+        Iir_Kind.Subtype_Declaration,
+        Iir_Kind.Nature_Declaration,
+        Iir_Kind.Subnature_Declaration,
+        Iir_Kind.Package_Header,
+        Iir_Kind.Unit_Declaration,
+        Iir_Kind.Library_Declaration,
+        Iir_Kind.Component_Declaration,
+        Iir_Kind.Attribute_Declaration,
+        Iir_Kind.Group_Template_Declaration,
+        Iir_Kind.Group_Declaration,
+        Iir_Kind.Element_Declaration,
+        Iir_Kind.Nature_Element_Declaration,
     ]
 
-    Subprogram_Body = [
-        Iir_Kind.Function_Body,
-        Iir_Kind.Procedure_Body,
-    ]
-
-    Source_Quantity_Declaration = [
-        Iir_Kind.Spectrum_Quantity_Declaration,
-        Iir_Kind.Noise_Quantity_Declaration,
-    ]
-
-    Specification = [
-        Iir_Kind.Attribute_Specification,
-        Iir_Kind.Disconnection_Specification,
-        Iir_Kind.Step_Limit_Specification,
-        Iir_Kind.Configuration_Specification,
+    Monadic_Operator = [
+        Iir_Kind.Identity_Operator,
+        Iir_Kind.Negation_Operator,
+        Iir_Kind.Absolute_Operator,
+        Iir_Kind.Not_Operator,
+        Iir_Kind.Implicit_Condition_Operator,
+        Iir_Kind.Condition_Operator,
+        Iir_Kind.Reduction_And_Operator,
+        Iir_Kind.Reduction_Or_Operator,
+        Iir_Kind.Reduction_Nand_Operator,
+        Iir_Kind.Reduction_Nor_Operator,
+        Iir_Kind.Reduction_Xor_Operator,
+        Iir_Kind.Reduction_Xnor_Operator,
     ]
 
     Dyadic_Operator = [
@@ -634,6 +553,202 @@ class Iir_Kinds:
         Iir_Kind.Modulus_Operator,
         Iir_Kind.Remainder_Operator,
         Iir_Kind.Exponentiation_Operator,
+    ]
+
+    Psl_Builtin = [
+        Iir_Kind.Psl_Prev,
+        Iir_Kind.Psl_Stable,
+        Iir_Kind.Psl_Rose,
+        Iir_Kind.Psl_Fell,
+    ]
+
+    Functions_And_Literals = [
+        Iir_Kind.Enumeration_Literal,
+        Iir_Kind.Function_Declaration,
+    ]
+
+    Subprogram_Declaration = [
+        Iir_Kind.Function_Declaration,
+        Iir_Kind.Procedure_Declaration,
+    ]
+
+    Subprogram_Body = [
+        Iir_Kind.Function_Body,
+        Iir_Kind.Procedure_Body,
+    ]
+
+    Process_Statement = [
+        Iir_Kind.Sensitized_Process_Statement,
+        Iir_Kind.Process_Statement,
+    ]
+
+    Interface_Object_Declaration = [
+        Iir_Kind.Interface_Constant_Declaration,
+        Iir_Kind.Interface_Variable_Declaration,
+        Iir_Kind.Interface_Signal_Declaration,
+        Iir_Kind.Interface_File_Declaration,
+        Iir_Kind.Interface_Quantity_Declaration,
+    ]
+
+    Interface_Subprogram_Declaration = [
+        Iir_Kind.Interface_Function_Declaration,
+        Iir_Kind.Interface_Procedure_Declaration,
+    ]
+
+    Interface_Declaration = [
+        Iir_Kind.Interface_Constant_Declaration,
+        Iir_Kind.Interface_Variable_Declaration,
+        Iir_Kind.Interface_Signal_Declaration,
+        Iir_Kind.Interface_File_Declaration,
+        Iir_Kind.Interface_Quantity_Declaration,
+        Iir_Kind.Interface_Terminal_Declaration,
+        Iir_Kind.Interface_Type_Declaration,
+        Iir_Kind.Interface_Package_Declaration,
+        Iir_Kind.Interface_Function_Declaration,
+        Iir_Kind.Interface_Procedure_Declaration,
+    ]
+
+    Object_Declaration = [
+        Iir_Kind.Object_Alias_Declaration,
+        Iir_Kind.Free_Quantity_Declaration,
+        Iir_Kind.Spectrum_Quantity_Declaration,
+        Iir_Kind.Noise_Quantity_Declaration,
+        Iir_Kind.Across_Quantity_Declaration,
+        Iir_Kind.Through_Quantity_Declaration,
+        Iir_Kind.File_Declaration,
+        Iir_Kind.Guard_Signal_Declaration,
+        Iir_Kind.Signal_Declaration,
+        Iir_Kind.Variable_Declaration,
+        Iir_Kind.Constant_Declaration,
+        Iir_Kind.Iterator_Declaration,
+        Iir_Kind.Interface_Constant_Declaration,
+        Iir_Kind.Interface_Variable_Declaration,
+        Iir_Kind.Interface_Signal_Declaration,
+        Iir_Kind.Interface_File_Declaration,
+        Iir_Kind.Interface_Quantity_Declaration,
+    ]
+
+    Branch_Quantity_Declaration = [
+        Iir_Kind.Across_Quantity_Declaration,
+        Iir_Kind.Through_Quantity_Declaration,
+    ]
+
+    Source_Quantity_Declaration = [
+        Iir_Kind.Spectrum_Quantity_Declaration,
+        Iir_Kind.Noise_Quantity_Declaration,
+    ]
+
+    Quantity_Declaration = [
+        Iir_Kind.Free_Quantity_Declaration,
+        Iir_Kind.Spectrum_Quantity_Declaration,
+        Iir_Kind.Noise_Quantity_Declaration,
+        Iir_Kind.Across_Quantity_Declaration,
+        Iir_Kind.Through_Quantity_Declaration,
+    ]
+
+    Non_Alias_Object_Declaration = [
+        Iir_Kind.File_Declaration,
+        Iir_Kind.Guard_Signal_Declaration,
+        Iir_Kind.Signal_Declaration,
+        Iir_Kind.Variable_Declaration,
+        Iir_Kind.Constant_Declaration,
+        Iir_Kind.Iterator_Declaration,
+        Iir_Kind.Interface_Constant_Declaration,
+        Iir_Kind.Interface_Variable_Declaration,
+        Iir_Kind.Interface_Signal_Declaration,
+        Iir_Kind.Interface_File_Declaration,
+    ]
+
+    Association_Element_Parameters = [
+        Iir_Kind.Association_Element_By_Expression,
+        Iir_Kind.Association_Element_By_Individual,
+        Iir_Kind.Association_Element_Open,
+    ]
+
+    Association_Element = [
+        Iir_Kind.Association_Element_By_Expression,
+        Iir_Kind.Association_Element_By_Individual,
+        Iir_Kind.Association_Element_Open,
+        Iir_Kind.Association_Element_Package,
+        Iir_Kind.Association_Element_Type,
+        Iir_Kind.Association_Element_Subprogram,
+        Iir_Kind.Association_Element_Terminal,
+    ]
+
+    Choice = [
+        Iir_Kind.Choice_By_Range,
+        Iir_Kind.Choice_By_Expression,
+        Iir_Kind.Choice_By_Others,
+        Iir_Kind.Choice_By_None,
+        Iir_Kind.Choice_By_Name,
+    ]
+
+    Case_Choice = [
+        Iir_Kind.Choice_By_Range,
+        Iir_Kind.Choice_By_Expression,
+        Iir_Kind.Choice_By_Others,
+    ]
+
+    Array_Choice = [
+        Iir_Kind.Choice_By_Range,
+        Iir_Kind.Choice_By_Expression,
+        Iir_Kind.Choice_By_Others,
+        Iir_Kind.Choice_By_None,
+    ]
+
+    Record_Choice = [
+        Iir_Kind.Choice_By_Others,
+        Iir_Kind.Choice_By_None,
+        Iir_Kind.Choice_By_Name,
+    ]
+
+    Entity_Aspect = [
+        Iir_Kind.Entity_Aspect_Entity,
+        Iir_Kind.Entity_Aspect_Configuration,
+        Iir_Kind.Entity_Aspect_Open,
+    ]
+
+    Denoting_Name = [
+        Iir_Kind.Character_Literal,
+        Iir_Kind.Simple_Name,
+        Iir_Kind.Selected_Name,
+        Iir_Kind.Operator_Symbol,
+        Iir_Kind.Reference_Name,
+    ]
+
+    Denoting_And_External_Name = [
+        Iir_Kind.Character_Literal,
+        Iir_Kind.Simple_Name,
+        Iir_Kind.Selected_Name,
+        Iir_Kind.Operator_Symbol,
+        Iir_Kind.Reference_Name,
+        Iir_Kind.External_Constant_Name,
+        Iir_Kind.External_Signal_Name,
+        Iir_Kind.External_Variable_Name,
+    ]
+
+    Name = [
+        Iir_Kind.Character_Literal,
+        Iir_Kind.Simple_Name,
+        Iir_Kind.Selected_Name,
+        Iir_Kind.Operator_Symbol,
+        Iir_Kind.Reference_Name,
+        Iir_Kind.External_Constant_Name,
+        Iir_Kind.External_Signal_Name,
+        Iir_Kind.External_Variable_Name,
+        Iir_Kind.Selected_By_All_Name,
+        Iir_Kind.Parenthesis_Name,
+    ]
+
+    Dereference = [
+        Iir_Kind.Dereference,
+        Iir_Kind.Implicit_Dereference,
+    ]
+
+    External_Name = [
+        Iir_Kind.External_Constant_Name,
+        Iir_Kind.External_Signal_Name,
+        Iir_Kind.External_Variable_Name,
     ]
 
     Expression_Attribute = [
@@ -682,228 +797,6 @@ class Iir_Kinds:
         Iir_Kind.Low_Array_Attribute,
         Iir_Kind.Length_Array_Attribute,
         Iir_Kind.Ascending_Array_Attribute,
-    ]
-
-    Monadic_Operator = [
-        Iir_Kind.Identity_Operator,
-        Iir_Kind.Negation_Operator,
-        Iir_Kind.Absolute_Operator,
-        Iir_Kind.Not_Operator,
-        Iir_Kind.Implicit_Condition_Operator,
-        Iir_Kind.Condition_Operator,
-        Iir_Kind.Reduction_And_Operator,
-        Iir_Kind.Reduction_Or_Operator,
-        Iir_Kind.Reduction_Nand_Operator,
-        Iir_Kind.Reduction_Nor_Operator,
-        Iir_Kind.Reduction_Xor_Operator,
-        Iir_Kind.Reduction_Xnor_Operator,
-    ]
-
-    Interface_Declaration = [
-        Iir_Kind.Interface_Constant_Declaration,
-        Iir_Kind.Interface_Variable_Declaration,
-        Iir_Kind.Interface_Signal_Declaration,
-        Iir_Kind.Interface_File_Declaration,
-        Iir_Kind.Interface_Quantity_Declaration,
-        Iir_Kind.Interface_Terminal_Declaration,
-        Iir_Kind.Interface_Type_Declaration,
-        Iir_Kind.Interface_Package_Declaration,
-        Iir_Kind.Interface_Function_Declaration,
-        Iir_Kind.Interface_Procedure_Declaration,
-    ]
-
-    Array_Attribute = [
-        Iir_Kind.Left_Array_Attribute,
-        Iir_Kind.Right_Array_Attribute,
-        Iir_Kind.High_Array_Attribute,
-        Iir_Kind.Low_Array_Attribute,
-        Iir_Kind.Length_Array_Attribute,
-        Iir_Kind.Ascending_Array_Attribute,
-        Iir_Kind.Range_Array_Attribute,
-        Iir_Kind.Reverse_Range_Array_Attribute,
-    ]
-
-    Sequential_Statement = [
-        Iir_Kind.Simple_Signal_Assignment_Statement,
-        Iir_Kind.Conditional_Signal_Assignment_Statement,
-        Iir_Kind.Selected_Waveform_Assignment_Statement,
-        Iir_Kind.Signal_Force_Assignment_Statement,
-        Iir_Kind.Signal_Release_Assignment_Statement,
-        Iir_Kind.Null_Statement,
-        Iir_Kind.Assertion_Statement,
-        Iir_Kind.Report_Statement,
-        Iir_Kind.Wait_Statement,
-        Iir_Kind.Variable_Assignment_Statement,
-        Iir_Kind.Conditional_Variable_Assignment_Statement,
-        Iir_Kind.Return_Statement,
-        Iir_Kind.For_Loop_Statement,
-        Iir_Kind.While_Loop_Statement,
-        Iir_Kind.Next_Statement,
-        Iir_Kind.Exit_Statement,
-        Iir_Kind.Case_Statement,
-        Iir_Kind.Procedure_Call_Statement,
-        Iir_Kind.Break_Statement,
-        Iir_Kind.If_Statement,
-    ]
-
-    Denoting_And_External_Name = [
-        Iir_Kind.Character_Literal,
-        Iir_Kind.Simple_Name,
-        Iir_Kind.Selected_Name,
-        Iir_Kind.Operator_Symbol,
-        Iir_Kind.Reference_Name,
-        Iir_Kind.External_Constant_Name,
-        Iir_Kind.External_Signal_Name,
-        Iir_Kind.External_Variable_Name,
-    ]
-
-    Association_Element_Parameters = [
-        Iir_Kind.Association_Element_By_Expression,
-        Iir_Kind.Association_Element_By_Individual,
-        Iir_Kind.Association_Element_Open,
-    ]
-
-    Range_Type_Definition = [
-        Iir_Kind.Physical_Subtype_Definition,
-        Iir_Kind.Floating_Subtype_Definition,
-        Iir_Kind.Integer_Subtype_Definition,
-        Iir_Kind.Enumeration_Subtype_Definition,
-        Iir_Kind.Enumeration_Type_Definition,
-    ]
-
-    Discrete_Type_Definition = [
-        Iir_Kind.Integer_Subtype_Definition,
-        Iir_Kind.Enumeration_Subtype_Definition,
-        Iir_Kind.Enumeration_Type_Definition,
-        Iir_Kind.Integer_Type_Definition,
-    ]
-
-    Concurrent_Statement = [
-        Iir_Kind.Sensitized_Process_Statement,
-        Iir_Kind.Process_Statement,
-        Iir_Kind.Concurrent_Simple_Signal_Assignment,
-        Iir_Kind.Concurrent_Conditional_Signal_Assignment,
-        Iir_Kind.Concurrent_Selected_Signal_Assignment,
-        Iir_Kind.Concurrent_Assertion_Statement,
-        Iir_Kind.Concurrent_Procedure_Call_Statement,
-        Iir_Kind.Concurrent_Break_Statement,
-        Iir_Kind.Psl_Assert_Directive,
-        Iir_Kind.Psl_Assume_Directive,
-        Iir_Kind.Psl_Cover_Directive,
-        Iir_Kind.Psl_Restrict_Directive,
-        Iir_Kind.Block_Statement,
-        Iir_Kind.If_Generate_Statement,
-        Iir_Kind.Case_Generate_Statement,
-        Iir_Kind.For_Generate_Statement,
-        Iir_Kind.Component_Instantiation_Statement,
-        Iir_Kind.Psl_Default_Clock,
-    ]
-
-    Signal_Attribute = [
-        Iir_Kind.Delayed_Attribute,
-        Iir_Kind.Stable_Attribute,
-        Iir_Kind.Quiet_Attribute,
-        Iir_Kind.Transaction_Attribute,
-    ]
-
-    Type_Declaration = [
-        Iir_Kind.Type_Declaration,
-        Iir_Kind.Anonymous_Type_Declaration,
-        Iir_Kind.Subtype_Declaration,
-    ]
-
-    Next_Exit_Statement = [
-        Iir_Kind.Next_Statement,
-        Iir_Kind.Exit_Statement,
-    ]
-
-    Association_Element = [
-        Iir_Kind.Association_Element_By_Expression,
-        Iir_Kind.Association_Element_By_Individual,
-        Iir_Kind.Association_Element_Open,
-        Iir_Kind.Association_Element_Package,
-        Iir_Kind.Association_Element_Type,
-        Iir_Kind.Association_Element_Subprogram,
-        Iir_Kind.Association_Element_Terminal,
-    ]
-
-    Interface_Object_Declaration = [
-        Iir_Kind.Interface_Constant_Declaration,
-        Iir_Kind.Interface_Variable_Declaration,
-        Iir_Kind.Interface_Signal_Declaration,
-        Iir_Kind.Interface_File_Declaration,
-        Iir_Kind.Interface_Quantity_Declaration,
-    ]
-
-    Composite_Type_Definition = [
-        Iir_Kind.Record_Type_Definition,
-        Iir_Kind.Array_Type_Definition,
-        Iir_Kind.Array_Subtype_Definition,
-        Iir_Kind.Record_Subtype_Definition,
-    ]
-
-    Interface_Subprogram_Declaration = [
-        Iir_Kind.Interface_Function_Declaration,
-        Iir_Kind.Interface_Procedure_Declaration,
-    ]
-
-    Branch_Quantity_Declaration = [
-        Iir_Kind.Across_Quantity_Declaration,
-        Iir_Kind.Through_Quantity_Declaration,
-    ]
-
-    Type_Attribute = [
-        Iir_Kind.Left_Type_Attribute,
-        Iir_Kind.Right_Type_Attribute,
-        Iir_Kind.High_Type_Attribute,
-        Iir_Kind.Low_Type_Attribute,
-        Iir_Kind.Ascending_Type_Attribute,
-    ]
-
-    Signal_Value_Attribute = [
-        Iir_Kind.Event_Attribute,
-        Iir_Kind.Active_Attribute,
-        Iir_Kind.Last_Event_Attribute,
-        Iir_Kind.Last_Active_Attribute,
-        Iir_Kind.Last_Value_Attribute,
-        Iir_Kind.Driving_Attribute,
-        Iir_Kind.Driving_Value_Attribute,
-    ]
-
-    Quantity_Declaration = [
-        Iir_Kind.Free_Quantity_Declaration,
-        Iir_Kind.Spectrum_Quantity_Declaration,
-        Iir_Kind.Noise_Quantity_Declaration,
-        Iir_Kind.Across_Quantity_Declaration,
-        Iir_Kind.Through_Quantity_Declaration,
-    ]
-
-    Nonoverloadable_Declaration = [
-        Iir_Kind.Type_Declaration,
-        Iir_Kind.Anonymous_Type_Declaration,
-        Iir_Kind.Subtype_Declaration,
-        Iir_Kind.Nature_Declaration,
-        Iir_Kind.Subnature_Declaration,
-        Iir_Kind.Package_Header,
-        Iir_Kind.Unit_Declaration,
-        Iir_Kind.Library_Declaration,
-        Iir_Kind.Component_Declaration,
-        Iir_Kind.Attribute_Declaration,
-        Iir_Kind.Group_Template_Declaration,
-        Iir_Kind.Group_Declaration,
-        Iir_Kind.Element_Declaration,
-        Iir_Kind.Nature_Element_Declaration,
-    ]
-
-    Scalar_Type_And_Subtype_Definition = [
-        Iir_Kind.Physical_Subtype_Definition,
-        Iir_Kind.Floating_Subtype_Definition,
-        Iir_Kind.Integer_Subtype_Definition,
-        Iir_Kind.Enumeration_Subtype_Definition,
-        Iir_Kind.Enumeration_Type_Definition,
-        Iir_Kind.Integer_Type_Definition,
-        Iir_Kind.Floating_Type_Definition,
-        Iir_Kind.Physical_Type_Definition,
     ]
 
     Attribute = [
@@ -962,34 +855,18 @@ class Iir_Kinds:
         Iir_Kind.Reverse_Range_Array_Attribute,
     ]
 
-    Physical_Literal = [
-        Iir_Kind.Physical_Int_Literal,
-        Iir_Kind.Physical_Fp_Literal,
+    Type_Attribute = [
+        Iir_Kind.Left_Type_Attribute,
+        Iir_Kind.Right_Type_Attribute,
+        Iir_Kind.High_Type_Attribute,
+        Iir_Kind.Low_Type_Attribute,
+        Iir_Kind.Ascending_Type_Attribute,
     ]
 
-    Simultaneous_Statement = [
-        Iir_Kind.Simple_Simultaneous_Statement,
-        Iir_Kind.Simultaneous_Null_Statement,
-        Iir_Kind.Simultaneous_Procedural_Statement,
-        Iir_Kind.Simultaneous_Case_Statement,
-        Iir_Kind.Simultaneous_If_Statement,
-    ]
-
-    Concurrent_Signal_Assignment = [
-        Iir_Kind.Concurrent_Simple_Signal_Assignment,
-        Iir_Kind.Concurrent_Conditional_Signal_Assignment,
-        Iir_Kind.Concurrent_Selected_Signal_Assignment,
-    ]
-
-    Range_Attribute = [
-        Iir_Kind.Range_Array_Attribute,
-        Iir_Kind.Reverse_Range_Array_Attribute,
-    ]
-
-    Name_Attribute = [
-        Iir_Kind.Simple_Name_Attribute,
-        Iir_Kind.Instance_Name_Attribute,
-        Iir_Kind.Path_Name_Attribute,
+    Subtype_Attribute = [
+        Iir_Kind.Base_Attribute,
+        Iir_Kind.Subtype_Attribute,
+        Iir_Kind.Element_Attribute,
     ]
 
     Scalar_Type_Attribute = [
@@ -1001,33 +878,157 @@ class Iir_Kinds:
         Iir_Kind.Rightof_Attribute,
     ]
 
-    Name = [
-        Iir_Kind.Character_Literal,
-        Iir_Kind.Simple_Name,
-        Iir_Kind.Selected_Name,
-        Iir_Kind.Operator_Symbol,
-        Iir_Kind.Reference_Name,
-        Iir_Kind.External_Constant_Name,
-        Iir_Kind.External_Signal_Name,
-        Iir_Kind.External_Variable_Name,
-        Iir_Kind.Selected_By_All_Name,
-        Iir_Kind.Parenthesis_Name,
+    Array_Attribute = [
+        Iir_Kind.Left_Array_Attribute,
+        Iir_Kind.Right_Array_Attribute,
+        Iir_Kind.High_Array_Attribute,
+        Iir_Kind.Low_Array_Attribute,
+        Iir_Kind.Length_Array_Attribute,
+        Iir_Kind.Ascending_Array_Attribute,
+        Iir_Kind.Range_Array_Attribute,
+        Iir_Kind.Reverse_Range_Array_Attribute,
     ]
 
-    Subtype_Definition = [
-        Iir_Kind.Array_Subtype_Definition,
-        Iir_Kind.Record_Subtype_Definition,
-        Iir_Kind.Access_Subtype_Definition,
-        Iir_Kind.Physical_Subtype_Definition,
-        Iir_Kind.Floating_Subtype_Definition,
-        Iir_Kind.Integer_Subtype_Definition,
-        Iir_Kind.Enumeration_Subtype_Definition,
+    Range_Attribute = [
+        Iir_Kind.Range_Array_Attribute,
+        Iir_Kind.Reverse_Range_Array_Attribute,
+    ]
+
+    Signal_Attribute = [
+        Iir_Kind.Delayed_Attribute,
+        Iir_Kind.Stable_Attribute,
+        Iir_Kind.Quiet_Attribute,
+        Iir_Kind.Transaction_Attribute,
+    ]
+
+    Signal_Value_Attribute = [
+        Iir_Kind.Event_Attribute,
+        Iir_Kind.Active_Attribute,
+        Iir_Kind.Last_Event_Attribute,
+        Iir_Kind.Last_Active_Attribute,
+        Iir_Kind.Last_Value_Attribute,
+        Iir_Kind.Driving_Attribute,
+        Iir_Kind.Driving_Value_Attribute,
+    ]
+
+    Name_Attribute = [
+        Iir_Kind.Simple_Name_Attribute,
+        Iir_Kind.Instance_Name_Attribute,
+        Iir_Kind.Path_Name_Attribute,
+    ]
+
+    Concurrent_Statement = [
+        Iir_Kind.Sensitized_Process_Statement,
+        Iir_Kind.Process_Statement,
+        Iir_Kind.Concurrent_Simple_Signal_Assignment,
+        Iir_Kind.Concurrent_Conditional_Signal_Assignment,
+        Iir_Kind.Concurrent_Selected_Signal_Assignment,
+        Iir_Kind.Concurrent_Assertion_Statement,
+        Iir_Kind.Concurrent_Procedure_Call_Statement,
+        Iir_Kind.Concurrent_Break_Statement,
+        Iir_Kind.Psl_Assert_Directive,
+        Iir_Kind.Psl_Assume_Directive,
+        Iir_Kind.Psl_Cover_Directive,
+        Iir_Kind.Psl_Restrict_Directive,
+        Iir_Kind.Block_Statement,
+        Iir_Kind.If_Generate_Statement,
+        Iir_Kind.Case_Generate_Statement,
+        Iir_Kind.For_Generate_Statement,
+        Iir_Kind.Component_Instantiation_Statement,
+        Iir_Kind.Psl_Default_Clock,
+    ]
+
+    Simple_Concurrent_Statement = [
+        Iir_Kind.Sensitized_Process_Statement,
+        Iir_Kind.Process_Statement,
+        Iir_Kind.Concurrent_Simple_Signal_Assignment,
+        Iir_Kind.Concurrent_Conditional_Signal_Assignment,
+        Iir_Kind.Concurrent_Selected_Signal_Assignment,
+        Iir_Kind.Concurrent_Assertion_Statement,
+        Iir_Kind.Concurrent_Procedure_Call_Statement,
+        Iir_Kind.Concurrent_Break_Statement,
+        Iir_Kind.Psl_Assert_Directive,
+        Iir_Kind.Psl_Assume_Directive,
+        Iir_Kind.Psl_Cover_Directive,
+        Iir_Kind.Psl_Restrict_Directive,
+    ]
+
+    Generate_Statement = [
+        Iir_Kind.If_Generate_Statement,
+        Iir_Kind.Case_Generate_Statement,
+        Iir_Kind.For_Generate_Statement,
+    ]
+
+    Concurrent_Signal_Assignment = [
+        Iir_Kind.Concurrent_Simple_Signal_Assignment,
+        Iir_Kind.Concurrent_Conditional_Signal_Assignment,
+        Iir_Kind.Concurrent_Selected_Signal_Assignment,
+    ]
+
+    If_Case_Generate_Statement = [
+        Iir_Kind.If_Generate_Statement,
+        Iir_Kind.Case_Generate_Statement,
+    ]
+
+    Simultaneous_Statement = [
+        Iir_Kind.Simple_Simultaneous_Statement,
+        Iir_Kind.Simultaneous_Null_Statement,
+        Iir_Kind.Simultaneous_Procedural_Statement,
+        Iir_Kind.Simultaneous_Case_Statement,
+        Iir_Kind.Simultaneous_If_Statement,
+    ]
+
+    Sequential_Statement = [
+        Iir_Kind.Simple_Signal_Assignment_Statement,
+        Iir_Kind.Conditional_Signal_Assignment_Statement,
+        Iir_Kind.Selected_Waveform_Assignment_Statement,
+        Iir_Kind.Signal_Force_Assignment_Statement,
+        Iir_Kind.Signal_Release_Assignment_Statement,
+        Iir_Kind.Null_Statement,
+        Iir_Kind.Assertion_Statement,
+        Iir_Kind.Report_Statement,
+        Iir_Kind.Wait_Statement,
+        Iir_Kind.Variable_Assignment_Statement,
+        Iir_Kind.Conditional_Variable_Assignment_Statement,
+        Iir_Kind.Return_Statement,
+        Iir_Kind.For_Loop_Statement,
+        Iir_Kind.While_Loop_Statement,
+        Iir_Kind.Next_Statement,
+        Iir_Kind.Exit_Statement,
+        Iir_Kind.Case_Statement,
+        Iir_Kind.Procedure_Call_Statement,
+        Iir_Kind.Break_Statement,
+        Iir_Kind.If_Statement,
+    ]
+
+    Next_Exit_Statement = [
+        Iir_Kind.Next_Statement,
+        Iir_Kind.Exit_Statement,
+    ]
+
+    Variable_Assignment_Statement = [
+        Iir_Kind.Variable_Assignment_Statement,
+        Iir_Kind.Conditional_Variable_Assignment_Statement,
     ]
 
     Allocator = [
         Iir_Kind.Allocator_By_Expression,
         Iir_Kind.Allocator_By_Subtype,
     ]
+
+    Clause = [
+        Iir_Kind.Library_Clause,
+        Iir_Kind.Use_Clause,
+        Iir_Kind.Context_Reference,
+    ]
+
+    Specification = [
+        Iir_Kind.Attribute_Specification,
+        Iir_Kind.Disconnection_Specification,
+        Iir_Kind.Step_Limit_Specification,
+        Iir_Kind.Configuration_Specification,
+    ]
+
 
 
 class Iir_Mode:
@@ -1719,7 +1720,6 @@ class Iir_Predefined:
     Ieee_Std_Logic_Misc_Xnor_Reduce_Slv = 651
     Ieee_Std_Logic_Misc_Xnor_Reduce_Suv = 652
 
-
 Get_Kind = libghdl.vhdl__nodes__get_kind
 Get_Location = libghdl.vhdl__nodes__get_location
 
@@ -1895,13 +1895,9 @@ Get_Attribute_Designator = libghdl.vhdl__nodes__get_attribute_designator
 
 Set_Attribute_Designator = libghdl.vhdl__nodes__set_attribute_designator
 
-Get_Attribute_Specification_Chain = (
-    libghdl.vhdl__nodes__get_attribute_specification_chain
-)
+Get_Attribute_Specification_Chain = libghdl.vhdl__nodes__get_attribute_specification_chain
 
-Set_Attribute_Specification_Chain = (
-    libghdl.vhdl__nodes__set_attribute_specification_chain
-)
+Set_Attribute_Specification_Chain = libghdl.vhdl__nodes__set_attribute_specification_chain
 
 Get_Attribute_Specification = libghdl.vhdl__nodes__get_attribute_specification
 
@@ -2075,13 +2071,9 @@ Get_Bound_Vunit_Chain = libghdl.vhdl__nodes__get_bound_vunit_chain
 
 Set_Bound_Vunit_Chain = libghdl.vhdl__nodes__set_bound_vunit_chain
 
-Get_Verification_Block_Configuration = (
-    libghdl.vhdl__nodes__get_verification_block_configuration
-)
+Get_Verification_Block_Configuration = libghdl.vhdl__nodes__get_verification_block_configuration
 
-Set_Verification_Block_Configuration = (
-    libghdl.vhdl__nodes__set_verification_block_configuration
-)
+Set_Verification_Block_Configuration = libghdl.vhdl__nodes__set_verification_block_configuration
 
 Get_Block_Configuration = libghdl.vhdl__nodes__get_block_configuration
 
@@ -2203,13 +2195,9 @@ Get_Implicit_Definition = libghdl.vhdl__nodes__get_implicit_definition
 
 Set_Implicit_Definition = libghdl.vhdl__nodes__set_implicit_definition
 
-Get_Uninstantiated_Subprogram_Name = (
-    libghdl.vhdl__nodes__get_uninstantiated_subprogram_name
-)
+Get_Uninstantiated_Subprogram_Name = libghdl.vhdl__nodes__get_uninstantiated_subprogram_name
 
-Set_Uninstantiated_Subprogram_Name = (
-    libghdl.vhdl__nodes__set_uninstantiated_subprogram_name
-)
+Set_Uninstantiated_Subprogram_Name = libghdl.vhdl__nodes__set_uninstantiated_subprogram_name
 
 Get_Default_Value = libghdl.vhdl__nodes__get_default_value
 
@@ -2355,13 +2343,9 @@ Get_Resolution_Indication = libghdl.vhdl__nodes__get_resolution_indication
 
 Set_Resolution_Indication = libghdl.vhdl__nodes__set_resolution_indication
 
-Get_Record_Element_Resolution_Chain = (
-    libghdl.vhdl__nodes__get_record_element_resolution_chain
-)
+Get_Record_Element_Resolution_Chain = libghdl.vhdl__nodes__get_record_element_resolution_chain
 
-Set_Record_Element_Resolution_Chain = (
-    libghdl.vhdl__nodes__set_record_element_resolution_chain
-)
+Set_Record_Element_Resolution_Chain = libghdl.vhdl__nodes__set_record_element_resolution_chain
 
 Get_Tolerance = libghdl.vhdl__nodes__get_tolerance
 
@@ -2431,13 +2415,9 @@ Get_Index_Subtype_List = libghdl.vhdl__nodes__get_index_subtype_list
 
 Set_Index_Subtype_List = libghdl.vhdl__nodes__set_index_subtype_list
 
-Get_Index_Subtype_Definition_List = (
-    libghdl.vhdl__nodes__get_index_subtype_definition_list
-)
+Get_Index_Subtype_Definition_List = libghdl.vhdl__nodes__get_index_subtype_definition_list
 
-Set_Index_Subtype_Definition_List = (
-    libghdl.vhdl__nodes__set_index_subtype_definition_list
-)
+Set_Index_Subtype_Definition_List = libghdl.vhdl__nodes__set_index_subtype_definition_list
 
 Get_Element_Subtype_Indication = libghdl.vhdl__nodes__get_element_subtype_indication
 
@@ -2475,13 +2455,9 @@ Get_Designated_Type = libghdl.vhdl__nodes__get_designated_type
 
 Set_Designated_Type = libghdl.vhdl__nodes__set_designated_type
 
-Get_Designated_Subtype_Indication = (
-    libghdl.vhdl__nodes__get_designated_subtype_indication
-)
+Get_Designated_Subtype_Indication = libghdl.vhdl__nodes__get_designated_subtype_indication
 
-Set_Designated_Subtype_Indication = (
-    libghdl.vhdl__nodes__set_designated_subtype_indication
-)
+Set_Designated_Subtype_Indication = libghdl.vhdl__nodes__set_designated_subtype_indication
 
 Get_Index_List = libghdl.vhdl__nodes__get_index_list
 
@@ -2695,13 +2671,9 @@ Get_Default_Binding_Indication = libghdl.vhdl__nodes__get_default_binding_indica
 
 Set_Default_Binding_Indication = libghdl.vhdl__nodes__set_default_binding_indication
 
-Get_Default_Configuration_Declaration = (
-    libghdl.vhdl__nodes__get_default_configuration_declaration
-)
+Get_Default_Configuration_Declaration = libghdl.vhdl__nodes__get_default_configuration_declaration
 
-Set_Default_Configuration_Declaration = (
-    libghdl.vhdl__nodes__set_default_configuration_declaration
-)
+Set_Default_Configuration_Declaration = libghdl.vhdl__nodes__set_default_configuration_declaration
 
 Get_Expression = libghdl.vhdl__nodes__get_expression
 
@@ -2999,13 +2971,9 @@ Get_Association_Choices_Chain = libghdl.vhdl__nodes__get_association_choices_cha
 
 Set_Association_Choices_Chain = libghdl.vhdl__nodes__set_association_choices_chain
 
-Get_Case_Statement_Alternative_Chain = (
-    libghdl.vhdl__nodes__get_case_statement_alternative_chain
-)
+Get_Case_Statement_Alternative_Chain = libghdl.vhdl__nodes__get_case_statement_alternative_chain
 
-Set_Case_Statement_Alternative_Chain = (
-    libghdl.vhdl__nodes__set_case_statement_alternative_chain
-)
+Set_Case_Statement_Alternative_Chain = libghdl.vhdl__nodes__set_case_statement_alternative_chain
 
 Get_Choice_Staticness = libghdl.vhdl__nodes__get_choice_staticness
 
