@@ -8,7 +8,7 @@ from pyVHDLModel.VHDLModel  import Library       as VHDLModel_Library
 from pyVHDLModel.VHDLModel  import Document      as VHDLModel_Document
 
 import pyGHDL.libghdl       as libghdl
-from pyGHDL.libghdl         import name_table, files_map, errorout_console
+from pyGHDL.libghdl         import name_table, files_map, errorout_memory
 from pyGHDL.libghdl.vhdl    import nodes, sem_lib
 
 from pyGHDL.dom.Common      import LibGHDLException, GHDLException
@@ -28,8 +28,8 @@ class Design(VHDLModel_Design):
 	def __ghdl_init(self):
 		"""Initialization: set options and then load libraries"""
 
-		# Print error messages on the console
-		errorout_console.Install_Handler()
+		# Collect error messages in memory
+		errorout_memory.Install_Handler()
 
 		libghdl.set_option(b"--std=08")
 
