@@ -106,7 +106,7 @@ jobs:
         GITHUB_OS: ${{ runner.os }}
 
 #
-# Windows
+# Windows Build
 #
 
   win:
@@ -121,7 +121,7 @@ jobs:
           #{installs: "MINGW64", arch: x86_64, pkg: "mcode"}, ! mcode is not yet supported on win64
           {installs: "MINGW64", arch: x86_64, pkg: "llvm"},
         ]
-    name: '🟪 MSYS2 · ${{ matrix.installs }} · ${{ matrix.pkg }}'
+    name: '🟪 Build · ${{ matrix.installs }} · ${{ matrix.pkg }}'
     env:
       MINGW_INSTALLS: ${{ matrix.installs }}
     defaults:
@@ -138,7 +138,6 @@ jobs:
           base-devel
           git
           mingw-w64-${{ matrix.arch }}-toolchain
-          mingw-w64-${{ matrix.arch }}-python-pip
 
     - run: git config --global core.autocrlf input
       shell: bash
@@ -154,9 +153,6 @@ jobs:
         cd dist/msys2-${{ matrix.pkg }}
         makepkg-mingw --noconfirm --noprogressbar -sCLf
 
-    - name: Install package
-      run: pacman --noconfirm -U dist/msys2-${{ matrix.pkg }}/mingw-w64-*-any.pkg.tar.zst
-
     - name: '📤 Upload artifact: builddir'
       uses: actions/upload-artifact@v2
       with:
@@ -170,12 +166,61 @@ jobs:
       with:
         path: ./dist/msys2-${{ matrix.pkg }}/mingw-*ghdl*.pkg.tar.zst
 
-    - name: Test package
+#
+# Windows Test
+#
+
+  win-test:
+    needs: win
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        sys: [
+          {installs: "MINGW32", arch: i686, pkg: "mcode"},
+          #{installs: "MINGW32", arch: i686, pkg: "llvm"},  ! Not yet functional
+          #{installs: "MINGW64", arch: x86_64, pkg: "mcode"}, ! mcode is not yet supported on win64
+          {installs: "MINGW64", arch: x86_64, pkg: "llvm"},
+        ]
+        suite: [
+          'sanity pyunit vpi',
+          'gna',
+          'vests',
+          'synth',
+        ]
+    name: '🟪 Test · ${{ matrix.sys.installs }} · ${{ matrix.sys.pkg }} · ${{ matrix.suite }}'
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+
+    - name: '🟪 Setup MSYS2'
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: ${{ matrix.sys.installs }}
+        update: true
+        install: >
+          mingw-w64-${{ matrix.sys.arch }}-diffutils
+          mingw-w64-${{ matrix.sys.arch }}-gcc
+          mingw-w64-${{ matrix.sys.arch }}-python-pip
+
+    - run: git config --global core.autocrlf input
+      shell: bash
+
+    - name: '🧰 Checkout'
+      uses: actions/checkout@v2
+
+    - name: '📥 Download artifact: package'
+      uses: actions/download-artifact@v2
+
+    - name: Install package and Python dependencies
       run: |
+        pacman --noconfirm -U artifact/mingw-w64-${{ matrix.sys.arch }}-ghdl-${{ matrix.sys.pkg }}-*.zst
         pip3 install -r testsuite/requirements.txt
-        GHDL=ghdl ./testsuite/testsuite.sh
-      env:
-        MSYSTEM: ${{ matrix.installs }}
+
+    - name: Test package
+      run: GHDL=ghdl ./testsuite/testsuite.sh ${{ matrix.suite }}
 
 #
 # NIGHTLY
@@ -183,7 +228,7 @@ jobs:
 
   nightly:
     if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
-    needs: [ lin, win ]
+    needs: [ lin, win-test ]
     runs-on: ubuntu-latest
     name: '📦 Nightly'
     steps:

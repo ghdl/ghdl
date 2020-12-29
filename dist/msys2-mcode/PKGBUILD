@@ -5,13 +5,18 @@ pkgver=ci
 pkgrel=1
 pkgdesc="GHDL: the open-source analyzer, compiler, simulator and (experimental) synthesizer for VHDL (mcode backend) (mingw-w64)"
 arch=('any')
-depends=('zlib-devel')
-makedepends=("${MINGW_PACKAGE_PREFIX}-gcc" "${MINGW_PACKAGE_PREFIX}-gcc-ada")
+depends=('zlib-devel'
+         "${MINGW_PACKAGE_PREFIX}-gcc-ada")
+makedepends=("${MINGW_PACKAGE_PREFIX}-gcc")
 
 build() {
   mkdir "${srcdir}/builddir"
   cd "${srcdir}/builddir"
-  ../../../../configure --prefix=${MINGW_PREFIX} LDFLAGS=-static --enable-libghdl --enable-synth
+  ../../../../configure \
+    --prefix=${MINGW_PREFIX} \
+    LDFLAGS=-static \
+    --enable-libghdl \
+    --enable-synth
   make GNATMAKE="gnatmake -j$(nproc)"
 }
 
