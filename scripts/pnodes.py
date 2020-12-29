@@ -73,15 +73,13 @@ class ParseError(Exception):
         self.msg = msg
 
     def __str__(self):
-        return "Error: " + self.msg
-        return (
-            "Parse error at " + self.lr.filname + ":" + self.lr.lineno + ": " + self.msg
-        )
+        return ("Parse error at {lr.filname}:{lr.lineno}: {msg}".format(lr=self.lr, msg=self.msg))
+
 
 
 # Return fields description.
 # This is a dictionary.  The keys represent the possible format of a node.
-# The values are dictionnaries representing fields.  Keys are fields name, and
+# The values are dictionaries representing fields.  Keys are fields name, and
 # values are fields type.
 def read_fields(file):
     fields = {}
@@ -94,7 +92,7 @@ def read_fields(file):
 
     # Skip '('
     if lr.get() != "     (\n":
-        raise "no open parenthesis after Format_Type"
+        raise Exception("no open parenthesis after Format_Type")
 
     # Read formats
     l = lr.get()
@@ -103,7 +101,7 @@ def read_fields(file):
         m = pat_field_name.match(l)
         if m is None:
             print(l)
-            raise "bad literal within Format_Type"
+            raise Exception("bad literal within Format_Type")
         name = m.group(1)
         formats.append(name)
         fields[name] = {}
@@ -113,7 +111,6 @@ def read_fields(file):
     l = lr.get()
     pat_fields = re.compile("   -- Fields of Format_(\w+):\n")
     pat_field_desc = re.compile("   --   (\w+) : (\w+).*\n")
-    format_name = ""
     common_desc = {}
 
     # Read until common fields.
@@ -208,7 +205,7 @@ def read_kinds(filename):
             l = lr.get()
             mf = pat_first.match(l)
             if not mf:
-                raise ParseError(lr, "badly formated first bound of subtype")
+                raise ParseError(lr, "badly formatted first bound of subtype")
             first = kinds.index(mf.group(1))
             idx = first
             has_middle = None
@@ -450,7 +447,7 @@ def read_nodes(filename, kinds, kinds_ranges, fields, funcs):
             name = m.group(1)
             fmt = m.group(2)
             names = [(k, fmt) for k in kinds_ranges[name]]
-            l = lr.get()
+            lr.get()
             read_nodes_fields(lr, names, fields, nodes, funcs_dict)
             continue
         if pat_comment_line.match(l) or pat_comment_box.match(l):
@@ -468,13 +465,13 @@ def gen_choices(choices):
     is_first = True
     for c in choices:
         if is_first:
-            print("        ", end=' ')
-            print("when", end=' ')
+            print("        ", end='')
+            print("when", end='')
         else:
             print()
-            print("        ", end=' ')
-            print("  |", end=' ')
-        print(prefix_name + c, end=' ')
+            print("        ", end='')
+            print("  |", end='')
+        print(prefix_name + c, end='')
         is_first = False
     print("=>")
 
@@ -639,7 +636,7 @@ def do_disp_kinds():
 def do_disp_funcs():
     print("Functions are:")
     for f in funcs:
-        s = "{0} ({1}: {2}".format(f.name, f.field, f.rtype)
+        s = "{0} ({1}: {2}".format(f.name, f.fields, f.rtype)
         if f.acc:
             s += " acc:" + f.acc
         if f.conv:
@@ -652,7 +649,7 @@ def do_disp_types():
     print("Types are:")
     s = set([])
     for f in funcs:
-        s |= set([f.rtype])
+        s |= {f.rtype}
     for t in sorted(s):
         print("  " + t)
 
@@ -687,7 +684,7 @@ def do_body():
 def get_types():
     s = set([])
     for f in funcs:
-        s |= set([f.rtype])
+        s |= {f.rtype}
     return [t for t in sorted(s)]
 
 
@@ -695,7 +692,7 @@ def get_attributes():
     s = set([])
     for f in funcs:
         if f.acc:
-            s |= set([f.acc])
+            s |= {f.acc}
     res = [t for t in sorted(s)]
     res.insert(0, "None")
     return res
@@ -818,7 +815,7 @@ def do_meta_body():
             # Build list of types
             s = set([])
             for f in funcs:
-                s |= set([f.rtype])
+                s |= {f.rtype}
             types = [t for t in sorted(s)]
             for t in types:
                 print("   function Get_" + t)
