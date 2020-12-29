@@ -1,4 +1,4 @@
--r ../requirements.txt
+-r ../pyGHDL/requirements.txt
 
 # Coverage collection
 Coverage>=5.3

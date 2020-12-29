@@ -1,4 +1,4 @@
-#-r ../requirements.txt
+-r ../pyGHDL/requirements.txt
 sphinx>=3.0.0
 recommonmark
 python-dateutil

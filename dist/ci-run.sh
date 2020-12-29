@@ -420,32 +420,43 @@ ci_run () {
   if [ "x$IS_MACOS" = "xtrue" ]; then
       CC=clang \
       prefix="`cd ./install-mcode; pwd`/usr/local" \
-      ./testsuite/testsuite.sh sanity pyunit gna vests vpi
+      ./testsuite/testsuite.sh sanity gna vests vpi
   else
       # Build ghdl/ghdl:$GHDL_IMAGE_TAG image
       build_img_ghdl
+
+      tests="sanity"
+
       case "$GHDL_IMAGE_TAG" in
-        *ubuntu*|*buster*)
+        *ubuntu20*|*buster*)
           GHDL_TEST_IMAGE="test:$GHDL_IMAGE_TAG-py"
-          docker build -t "$GHDL_TEST_IMAGE" - <<-EOF
+          docker build -t "$GHDL_TEST_IMAGE" . -f- <<-EOF
+# syntax=docker/dockerfile:experimental
 FROM ghdl/ghdl:$GHDL_IMAGE_TAG
-RUN apt update -qq && apt install -y python3
+RUN apt update -qq && apt install -y python3 python3-pip
+RUN --mount=type=bind,src=./,target=/tmp/ghdl/ \
+  pip3 install -r /tmp/ghdl/testsuite/requirements.txt
 EOF
+        tests+=" pyunit"
         ;;
         *)
           GHDL_TEST_IMAGE="ghdl/ghdl:$GHDL_IMAGE_TAG"
         ;;
       esac
-      # Run test in docker container
-      tests="sanity pyunit"
+
       if [ "x$ISGPL" != "xtrue" ]; then
-        tests="$tests gna"
+        tests+=" gna"
       fi
-      tests="$tests vests"
+
+      tests+=" vests"
+
       if [ "x$ISSYNTH" = "xtrue" ]; then
-        tests="$tests synth"
+        tests+=" synth"
       fi
-      tests="$tests vpi"
+
+      tests+=" vpi"
+
+      # Run tests in docker container
       $RUN "$GHDL_TEST_IMAGE" bash -c "GHDL=ghdl ./testsuite/testsuite.sh $tests"
   fi
 
