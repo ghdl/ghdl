@@ -216,7 +216,7 @@ def do_libghdl_names():
         if m:
             name_def = m.group(1)
             name_ref = m.group(2)
-            val = m.group(3)
+            val = m.group(4)
             if not val:
                 val = 0
             val_ref = dict.get(name_ref, None)
