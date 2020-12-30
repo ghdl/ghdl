@@ -297,7 +297,7 @@ def declarations_iter(n) -> Generator[Any]:
         nodes.Iir_Kind.Component_Instantiation_Statement,
     ]:
         return
-    assert False, "unknown node of kind {}".format(kind_image(k))
+    raise Exception("Unknown node of kind {}".format(kind_image(k)))
 
 
 def concurrent_stmts_iter(n) -> Generator[Any]:
@@ -457,4 +457,4 @@ def sequential_iter(n) -> Generator[Any]:
     ]:
         return
     else:
-        assert False, "unknown node of kind {}".format(kind_image(k))
+        raise Exception("Unknown node of kind {}".format(kind_image(k)))
