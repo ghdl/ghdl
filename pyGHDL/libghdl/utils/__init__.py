@@ -100,7 +100,7 @@ def leftest_location(n):
             return nodes.Get_Location(n)
 
 
-def fields_iter(n) -> Generator[Any]:
+def fields_iter(n) -> Generator[Any, None, None]:
     """Iterate on fields of node :param:`n`."""
     if n == nodes.Null_Iir:
         return
@@ -111,7 +111,7 @@ def fields_iter(n) -> Generator[Any]:
         yield nodes_meta.get_field_by_index(i)
 
 
-def chain_iter(n) -> Generator[Any]:
+def chain_iter(n) -> Generator[Any, None, None]:
     """Iterate of a chain headed by node :param:`n`."""
     while n != nodes.Null_Iir:
         yield n
@@ -123,7 +123,7 @@ def chain_to_list(n) -> List[Any]:
     return [e for e in chain_iter(n)]
 
 
-def nodes_iter(n) -> Generator[Any]:
+def nodes_iter(n) -> Generator[Any, None, None]:
     """
     Iterate all nodes of :param:`n`, including :param:`n`.
     Nodes are returned only once.
@@ -165,7 +165,7 @@ def nodes_iter(n) -> Generator[Any]:
                         yield n2
 
 
-def list_iter(lst) -> Generator[Any]:
+def list_iter(lst) -> Generator[Any, None, None]:
     """Iterate all element of Iir_List :param:`lst`."""
     if lst <= nodes.Iir_List_All:
         return
@@ -175,7 +175,7 @@ def list_iter(lst) -> Generator[Any]:
         lists.Next(byref(iter))
 
 
-def flist_iter(lst) -> Generator[Any]:
+def flist_iter(lst) -> Generator[Any, None, None]:
     """Iterate all element of Iir_List :param:`lst`."""
     if lst <= nodes.Iir_Flist_All:
         return
@@ -183,7 +183,7 @@ def flist_iter(lst) -> Generator[Any]:
         yield flists.Get_Nth_Element(lst, i)
 
 
-def declarations_iter(n) -> Generator[Any]:
+def declarations_iter(n) -> Generator[Any, None, None]:
     """Iterate all declarations in node :param:`n`."""
     k = nodes.Get_Kind(n)
     if nodes_meta.Has_Generic_Chain(k):
@@ -300,7 +300,7 @@ def declarations_iter(n) -> Generator[Any]:
     raise Exception("Unknown node of kind {}".format(kind_image(k)))
 
 
-def concurrent_stmts_iter(n) -> Generator[Any]:
+def concurrent_stmts_iter(n) -> Generator[Any, None, None]:
     """Iterate concurrent statements in node :param:`n`."""
     k = nodes.Get_Kind(n)
     if k == nodes.Iir_Kind.Design_File:
@@ -336,7 +336,7 @@ def concurrent_stmts_iter(n) -> Generator[Any]:
                     yield n2
 
 
-def constructs_iter(n) -> Generator[Any]:
+def constructs_iter(n) -> Generator[Any, None, None]:
     """
     Iterate library units, concurrent statements and declarations
     that appear directly within a declarative part.
@@ -405,7 +405,7 @@ def constructs_iter(n) -> Generator[Any]:
                     yield n3
 
 
-def sequential_iter(n) -> Generator[Any]:
+def sequential_iter(n) -> Generator[Any, None, None]:
     """
     Iterate sequential statements. The first node must be either
     a process or a subprogram body.
