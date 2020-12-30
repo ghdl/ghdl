@@ -6,7 +6,7 @@ skip_covered = True
 skip_empty = True
 
 [html]
-directory = .cov
+directory = ../build/coverage
 
 [xml]
-output = coverage.xml
+output = ../build/coverage.xml

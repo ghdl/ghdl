@@ -1,7 +1,8 @@
 -r ../pyGHDL/requirements.txt
-sphinx>=3.0.0
-recommonmark
-python-dateutil
+
+sphinx>=3.4.1
+recommonmark>=0.7.1
+python-dateutil>=2.8.1
 # sphinxcontrib-textstyle>=0.2.1
 # sphinxcontrib-spelling>=2.2.0
 # changelog>=0.3.5
