@@ -57,7 +57,7 @@ def do_iirs_subprg():
 
 def do_libghdl_elocations():
     classname = "vhdl__elocations"
-    print("from libghdl import libghdl")
+    print("from pyGHDL.libghdl import libghdl")
     print()
     for k in pnodes.funcs:
         print()
@@ -143,7 +143,7 @@ def read_spec_enum(type_name, prefix, class_name):
 
 
 def do_libghdl_nodes():
-    print("from libghdl import libghdl")
+    print("from pyGHDL.libghdl import libghdl")
     print(
         """
 Null_Iir = 0
@@ -167,7 +167,7 @@ Iir_Flist_All = 2
 
 
 def do_libghdl_meta():
-    print("from libghdl import libghdl")
+    print("from pyGHDL.libghdl import libghdl")
     print(
         """
 
@@ -239,7 +239,7 @@ def do_libghdl_tokens():
 
 
 def do_libghdl_errorout():
-    print("from libghdl import libghdl")
+    print("from pyGHDL.libghdl import libghdl")
     print("\n" "Enable_Warning = libghdl.errorout__enable_warning")
     read_enum(
         "../errorout.ads",
