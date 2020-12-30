@@ -1,5 +1,5 @@
 library ieee;
-use     ieee.numeric_std.all
+use     ieee.numeric_std.all;
 
 package pack_1 is
 	constant const_1 : boolean;
