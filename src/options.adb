@@ -59,6 +59,9 @@ package body Options is
       Vhdl.Nodes.Finalize;
       Files_Map.Finalize;
       Libraries.Finalize;
+      --  TODO: finalize errors (reset counters, handlers...)
+      --  TODO: PSL
+      --  TODO: backend
    end Finalize;
 
    function Option_Warning (Opt: String; Val : Boolean) return Option_State is
