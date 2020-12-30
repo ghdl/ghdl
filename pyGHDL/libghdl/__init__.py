@@ -39,8 +39,6 @@ from pathlib import Path
 from shutil import which
 from typing import Tuple
 
-from deprecated.sphinx import deprecated
-
 from pyGHDL.libghdl.version import __version__
 
 
