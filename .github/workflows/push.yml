@@ -14,22 +14,22 @@ jobs:
 # Format
 #
 
-  fmt:
-    runs-on: ubuntu-latest
-    name: '🐍 Format (black)'
-    steps:
-
-    - name: '🧰 Checkout'
-      uses: actions/checkout@v2
-
-    - name: '🐍 Setup Python'
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.8
-
-    - run: python -m pip install black
-
-    - run: python -m black --check python
+#  fmt:
+#    runs-on: ubuntu-latest
+#    name: '🐍 Format (black)'
+#    steps:
+#
+#    - name: '🧰 Checkout'
+#      uses: actions/checkout@v2
+#
+#    - name: '🐍 Setup Python'
+#      uses: actions/setup-python@v2
+#      with:
+#        python-version: 3.8
+#
+#    - run: python -m pip install black
+#
+#    - run: python -m black --check python
 
 #
 # GPL
