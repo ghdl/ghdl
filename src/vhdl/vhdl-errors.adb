@@ -258,7 +258,7 @@ package body Vhdl.Errors is
            | Iir_Kind_Nature_Element_Declaration =>
             return Disp_Identifier (Node, "element");
          when Iir_Kind_Record_Element_Constraint =>
-            return "record element constraint";
+            return "record element constraint " & Image_Identifier (Node);
          when Iir_Kind_Array_Element_Resolution =>
             return "array element resolution";
          when Iir_Kind_Record_Resolution =>
