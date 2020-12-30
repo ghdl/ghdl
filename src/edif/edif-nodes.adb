@@ -134,10 +134,10 @@ package body Edif.Nodes is
    function Int32_To_Node is new Ada.Unchecked_Conversion
      (Source => Int32, Target => Node);
 
-   function Bit2_Type_To_Direction_Type is new Ada.Unchecked_Conversion
-     (Bit2_Type, Direction_Type);
-   function Direction_Type_To_Bit2_Type is new Ada.Unchecked_Conversion
-     (Direction_Type, Bit2_Type);
+   function Bit2_Type_To_Dir_Type is new Ada.Unchecked_Conversion
+     (Bit2_Type, Dir_Type);
+   function Dir_Type_To_Bit2_Type is new Ada.Unchecked_Conversion
+     (Dir_Type, Bit2_Type);
 
 
    function Node_To_Location_Type (N : Node) return Location_Type is
@@ -865,20 +865,20 @@ package body Edif.Nodes is
       Set_Field4 (N, View);
    end Set_View;
 
-   function Get_Direction (N : Node) return Direction_Type is
+   function Get_Direction (N : Node) return Dir_Type is
    begin
       pragma Assert (N /= Null_Node);
       pragma Assert (Has_Direction (Get_Kind (N)),
                      "no field Direction");
-      return Bit2_Type_To_Direction_Type (Get_State1 (N));
+      return Bit2_Type_To_Dir_Type (Get_State1 (N));
    end Get_Direction;
 
-   procedure Set_Direction (N : Node; Dir : Direction_Type) is
+   procedure Set_Direction (N : Node; Dir : Dir_Type) is
    begin
       pragma Assert (N /= Null_Node);
       pragma Assert (Has_Direction (Get_Kind (N)),
                      "no field Direction");
-      Set_State1 (N, Direction_Type_To_Bit2_Type (Dir));
+      Set_State1 (N, Dir_Type_To_Bit2_Type (Dir));
    end Set_Direction;
 
    function Get_Boolean (N : Node) return Boolean is

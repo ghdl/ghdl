@@ -61,7 +61,7 @@ package Edif.Nodes is
 
    Null_Node : constant Node := 0;
 
-   type Direction_Type is
+   type Dir_Type is
      (
       Dir_Input,
       Dir_Output,
@@ -394,8 +394,8 @@ package Edif.Nodes is
    procedure Set_View (N : Node; View : Node);
 
    --  Field: State1 (uc)
-   function Get_Direction (N : Node) return Direction_Type;
-   procedure Set_Direction (N : Node; Dir : Direction_Type);
+   function Get_Direction (N : Node) return Dir_Type;
+   procedure Set_Direction (N : Node; Dir : Dir_Type);
 
    --  Field: Flag1
    function Get_Boolean (N : Node) return Boolean;
