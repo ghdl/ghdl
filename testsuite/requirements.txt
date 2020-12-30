@@ -1,4 +1,7 @@
 -r ../pyGHDL/requirements.txt
 
+pytest>=6.2.1
+pytest-cov>=2.10.1
+
 # Coverage collection
 Coverage>=5.3
