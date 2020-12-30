@@ -19,27 +19,47 @@
 with Simple_IO;
 with Errorout; use Errorout;
 with Types; use Types;
-with Libraries;
 with Std_Names;
+with Name_Table;
+with Str_Table;
+with Libraries;
 with PSL.Nodes;
 with PSL.Dump_Tree;
+with Flags; use Flags;
+with Files_Map;
+
+with Vhdl.Nodes;
+with Vhdl.Lists;
 with Vhdl.Disp_Tree;
 with Vhdl.Scanner;
 with Vhdl.Parse;
 with Vhdl.Errors;
 with Vhdl.Back_End; use Vhdl.Back_End;
-with Flags; use Flags;
-with Files_Map;
 
 package body Options is
    procedure Initialize is
    begin
+      Name_Table.Initialize;
       Std_Names.Std_Names_Initialize;
-      Libraries.Init_Paths;
+      Str_Table.Initialize;
+      Vhdl.Lists.Initialize;
+      Vhdl.Nodes.Initialize;
+      Files_Map.Initialize;
+      Libraries.Initialize;
       PSL.Nodes.Init (Libraries.Library_Location);
       PSL.Dump_Tree.Dump_Hdl_Node := Vhdl.Disp_Tree.Disp_Tree_For_Psl'Access;
       Vhdl.Errors.Initialize;
    end Initialize;
+
+   procedure Finalize is
+   begin
+      Name_Table.Finalize;
+      Str_Table.Finalize;
+      Vhdl.Lists.Finalize;
+      Vhdl.Nodes.Finalize;
+      Files_Map.Finalize;
+      Libraries.Finalize;
+   end Finalize;
 
    function Option_Warning (Opt: String; Val : Boolean) return Option_State is
    begin

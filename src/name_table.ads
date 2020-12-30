@@ -86,6 +86,10 @@ package Name_Table is
    --  Be sure all info fields have their default value.
    procedure Assert_No_Infos;
 
+   --  Initialize this package
+   --  This must be called once and only once before any use.
+   procedure Initialize;
+
    --  Free all resources.  The package cannot be used anymore after calling
    --  this procedure.
    procedure Finalize;

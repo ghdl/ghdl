@@ -17,7 +17,6 @@
 --  02111-1307, USA.
 with Types; use Types;
 with Vhdl.Nodes; use Vhdl.Nodes;
-with Std_Names;
 
 package Libraries is
    -- This package defines the library manager.
@@ -41,7 +40,7 @@ package Libraries is
 
    --  Library declaration for the std library.
    --  This is also the first library of the libraries chain.
-   Std_Library : Iir_Library_Declaration := Null_Iir;
+   Std_Library : Iir_Library_Declaration;
 
    --  Library declaration for the work library.
    --  Note: the identifier of the work_library is work_library_name, which
@@ -49,7 +48,7 @@ package Libraries is
    Work_Library: Iir_Library_Declaration;
 
    --  Name of the WORK library.
-   Work_Library_Name : Name_Id := Std_Names.Name_Work;
+   Work_Library_Name : Name_Id;
 
    --  Directory of the work library.
    --  Set by default by INIT_PATHS to the local directory.
@@ -67,7 +66,10 @@ package Libraries is
 
    --  Initialize library paths table.
    --  Set the local path.
-   procedure Init_Paths;
+   procedure Initialize;
+
+   --  Free memory
+   procedure Finalize;
 
    --  Add PATH in the search path.
    procedure Add_Library_Path (Path : String);

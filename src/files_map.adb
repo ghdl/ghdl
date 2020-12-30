@@ -1213,12 +1213,16 @@ package body Files_Map is
    pragma Unreferenced (Debug_Source_Lines);
    pragma Unreferenced (Debug_Source_Loc);
 
-   procedure Initialize is
+   procedure Finalize is
    begin
       for I in Source_Files.First .. Source_Files.Last loop
          Free_Source_File (I);
       end loop;
       Source_Files.Free;
+   end Finalize;
+
+   procedure Initialize is
+   begin
       Source_Files.Init;
       Next_Location := Location_Nil + 1;
    end Initialize;

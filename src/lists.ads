@@ -69,8 +69,10 @@ package Lists is
    --  Destroy a list.
    procedure Destroy_List (List : in out List_Type);
 
-   --  Free all the lists and reset to initial state.
-   --  Must be used to free the memory used by the lists.
+   --  Free all the lists.
+   procedure Finalize;
+
+   --  Reset to initial state.
    procedure Initialize;
 
    --  Append ELEMENT to the list.  It's an O(1) operation.

@@ -261,8 +261,11 @@ package Files_Map is
    function Image (Loc : Location_Type; Filename : Boolean := True)
                   return String;
 
-   --  Free all memory and reinitialize.
+   --  Initialize.
    procedure Initialize;
+
+   --  Free all memory.
+   procedure Finalize;
 
 private
    Lines_Table_Init : Natural := 64;

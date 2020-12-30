@@ -741,9 +741,13 @@ package body Vhdl.Nodes is
 
    procedure Initialize is
    begin
-      Nodet.Free;
       Nodet.Init;
    end Initialize;
+
+   procedure Finalize is
+   begin
+      Nodet.Free;
+   end Finalize;
 
    function Is_Null (Node : Iir) return Boolean is
    begin

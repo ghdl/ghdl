@@ -103,8 +103,6 @@ package body Name_Table is
                            Info => 0));
    end Append_Terminator;
 
-   --  Initialize this package
-   --  This must be called once and only once before any use.
    procedure Initialize is
    begin
       Strings_Table.Init;
@@ -454,6 +452,4 @@ package body Name_Table is
          end loop;
       end;
    end Disp_Stats;
-begin
-   Initialize;
 end Name_Table;
