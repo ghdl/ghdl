@@ -91,8 +91,8 @@ def attr_image(a) -> str:
 
 def leftest_location(n):
     while True:
-        if n == Null_Iir:
-            return No_Location
+        if n == nodes.Null_Iir:
+            return files_map.No_Location
         k = nodes.Get_Kind(n)
         if k == nodes.Iir_Kind.Array_Subtype_Definition:
             n = nodes.Get_Subtype_Type_Mark(n)
@@ -138,28 +138,28 @@ def nodes_iter(n) -> Generator[Any]:
         #            n, fields_image(f), types_image(typ))
         if typ == nodes_meta.types.Iir:
             attr = nodes_meta.get_field_attribute(f)
-            if attr == Attr.ANone:
+            if attr == nodes_meta.Attr.ANone:
                 for n1 in nodes_iter(nodes_meta.Get_Iir(n, f)):
                     yield n1
-            elif attr == Attr.Chain:
+            elif attr == nodes_meta.Attr.Chain:
                 n2 = nodes_meta.Get_Iir(n, f)
                 while n2 != nodes.Null_Iir:
                     for n1 in nodes_iter(n2):
                         yield n1
                     n2 = nodes.Get_Chain(n2)
-            elif attr == Attr.Maybe_Ref:
+            elif attr == nodes_meta.Attr.Maybe_Ref:
                 if not nodes.Get_Is_Ref(n, f):
                     for n1 in nodes_iter(nodes_meta.Get_Iir(n, f)):
                         yield n1
-        elif typ == types.Iir_List:
+        elif typ == nodes_meta.types.Iir_List:
             attr = nodes_meta.get_field_attribute(f)
-            if attr == Attr.ANone:
+            if attr == nodes_meta.Attr.ANone:
                 for n1 in list_iter(nodes_meta.Get_Iir_List(n, f)):
                     for n2 in nodes_iter(n1):
                         yield n2
-        elif typ == types.Iir_Flist:
+        elif typ == nodes_meta.types.Iir_Flist:
             attr = nodes_meta.get_field_attribute(f)
-            if attr == Attr.ANone:
+            if attr == nodes_meta.Attr.ANone:
                 for n1 in flist_iter(nodes_meta.Get_Iir_Flist(n, f)):
                     for n2 in nodes_iter(n1):
                         yield n2
@@ -234,17 +234,17 @@ def declarations_iter(n) -> Generator[Any]:
             yield n1
     if nodes_meta.Has_Else_Clause(k):
         n1 = nodes.Get_Else_Clause(n)
-        if n1 != Null_Iir:
+        if n1 != nodes.Null_Iir:
             for n2 in declarations_iter(n1):
                 yield n2
     if nodes_meta.Has_Generate_Else_Clause(k):
         n1 = nodes.Get_Generate_Else_Clause(n)
-        if n1 != Null_Iir:
+        if n1 != nodes.Null_Iir:
             for n2 in declarations_iter(n1):
                 yield n2
     if nodes_meta.Has_Block_Header(k):
         n1 = nodes.Get_Block_Header(n)
-        if n1 != Null_Iir:
+        if n1 != nodes.Null_Iir:
             for n2 in declarations_iter(n1):
                 yield n2
     # All these nodes are handled:
@@ -323,7 +323,7 @@ def concurrent_stmts_iter(n) -> Generator[Any]:
         for n1 in concurrent_stmts_iter(nodes.Get_Generate_Statement_Body(n)):
             yield n1
     elif k == nodes.Iir_Kind.If_Generate_Statement:
-        while n != Null_Iir:
+        while n != nodes.Null_Iir:
             for n1 in concurrent_stmts_iter(nodes.Get_Generate_Statement_Body(n)):
                 yield n1
             n = nodes.Get_Generate_Else_Clause(n)
@@ -331,7 +331,7 @@ def concurrent_stmts_iter(n) -> Generator[Any]:
         alt = nodes.Get_Case_Statement_Alternative_Chain(n)
         for n1 in chain_iter(alt):
             blk = nodes.Get_Associated_Block(n1)
-            if blk != Null_Iir:
+            if blk != nodes.Null_Iir:
                 for n2 in concurrent_stmts_iter(nodes.Get_Generate_Statement_Body(n)):
                     yield n2
 
@@ -341,7 +341,7 @@ def constructs_iter(n) -> Generator[Any]:
     Iterate library units, concurrent statements and declarations
     that appear directly within a declarative part.
     """
-    if n == thin.Null_Iir:
+    if n == nodes.Null_Iir:
         return
     k = nodes.Get_Kind(n)
     if k == nodes.Iir_Kind.Design_File:
@@ -388,7 +388,7 @@ def constructs_iter(n) -> Generator[Any]:
         for n2 in constructs_iter(n1):
             yield n2
     elif k == nodes.Iir_Kind.If_Generate_Statement:
-        while n != Null_Iir:
+        while n != nodes.Null_Iir:
             n1 = nodes.Get_Generate_Statement_Body(n)
             yield n1
             for n2 in constructs_iter(n1):
@@ -398,7 +398,7 @@ def constructs_iter(n) -> Generator[Any]:
         alt = nodes.Get_Case_Statement_Alternative_Chain(n)
         for n1 in chain_iter(alt):
             blk = nodes.Get_Associated_Block(n1)
-            if blk != Null_Iir:
+            if blk != nodes.Null_Iir:
                 n2 = nodes.Get_Generate_Statement_Body(blk)
                 yield n2
                 for n3 in constructs_iter(n2):
@@ -410,7 +410,7 @@ def sequential_iter(n) -> Generator[Any]:
     Iterate sequential statements. The first node must be either
     a process or a subprogram body.
     """
-    if n == thin.Null_Iir:
+    if n == nodes.Null_Iir:
         return
     k = nodes.Get_Kind(n)
     if k in [
@@ -426,7 +426,7 @@ def sequential_iter(n) -> Generator[Any]:
     elif k == nodes.Iir_Kind.If_Statement:
         while True:
             n = nodes.Get_Chain(n)
-            if n == thin.Null_Iir:
+            if n == nodes.Null_Iir:
                 break
             yield n
             for n1 in sequential_iter(n):
@@ -434,7 +434,7 @@ def sequential_iter(n) -> Generator[Any]:
     elif k == nodes.Iir_Kind.Case_Statement:
         for ch in chain_iter(nodes.Get_Case_Statement_Alternative_Chain(n)):
             stmt = nodes.Get_Associated_Chain(ch)
-            if stmt != thin.Null_Iir:
+            if stmt != nodes.Null_Iir:
                 for n1 in chain_iter(stmt):
                     yield n1
                     for n2 in sequential_iter(n1):
