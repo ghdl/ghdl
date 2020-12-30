@@ -11,25 +11,36 @@ env:
 jobs:
 
 #
-# Format
+# pyGHDL
 #
 
-#  fmt:
-#    runs-on: ubuntu-latest
-#    name: '🐍 Format (black)'
-#    steps:
-#
-#    - name: '🧰 Checkout'
-#      uses: actions/checkout@v2
-#
-#    - name: '🐍 Setup Python'
-#      uses: actions/setup-python@v2
-#      with:
-#        python-version: 3.8
-#
+  fmt:
+    runs-on: ubuntu-latest
+    name: '🐍 pyGHDL'
+    steps:
+
+    - name: '🧰 Checkout'
+      uses: actions/checkout@v2
+
+    - name: '🐍 Setup Python'
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
+    - name: Install dependencies
+      run: |
+        sudo apt update -qq
+        sudo apt install -y gnat
+
+    - name: Update Python bindings
+      run: ./scripts/update_py_bindings.sh
+
+    - name: Check if Python bindings changed
+      run: git diff --quiet || git status
+
 #    - run: python -m pip install black
 #
-#    - run: python -m black --check python
+#    - run: python -m black --check pyGHDL
 
 #
 # GPL
