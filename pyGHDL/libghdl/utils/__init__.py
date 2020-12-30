@@ -33,6 +33,7 @@
 # ============================================================================
 #
 from ctypes import byref
+from typing import List, Any, Generator
 
 import pyGHDL.libghdl.name_table as name_table
 import pyGHDL.libghdl.files_map as files_map
@@ -40,14 +41,15 @@ import pyGHDL.libghdl.vhdl.nodes as nodes
 import pyGHDL.libghdl.vhdl.nodes_meta as nodes_meta
 import pyGHDL.libghdl.vhdl.lists as lists
 import pyGHDL.libghdl.vhdl.flists as flists
-#from pyGHDL.libghdl.vhdl.nodes_meta import Attr, types
 
 
-def name_image(nameid):
+def name_image(nameid) -> str:
+    """Lookup a :param:`nameid` and return its string."""
     return name_table.Get_Name_Ptr(nameid).decode("utf-8")
 
 
-def _build_enum_image(cls):
+def _build_enum_image(cls) -> List[str]:
+    """Create a lookup table for enumeration values to literal names."""
     d = [e for e in dir(cls) if e[0] != "_"]
     res = [None] * len(d)
     for e in d:
@@ -58,32 +60,32 @@ def _build_enum_image(cls):
 _fields_image = _build_enum_image(nodes_meta.fields)
 
 
-def fields_image(idx):
-    """String representation of field idx"""
+def fields_image(idx) -> str:
+    """String representation of field :param:`idx`."""
     return _fields_image[idx]
 
 
 _kind_image = _build_enum_image(nodes.Iir_Kind)
 
 
-def kind_image(k):
-    """String representation of Iir_Kind k"""
+def kind_image(k) -> str:
+    """String representation of Iir_Kind :param:`k`."""
     return _kind_image[k]
 
 
 _types_image = _build_enum_image(nodes_meta.types)
 
 
-def types_image(t):
-    """String representation of Nodes_Meta.Types t"""
+def types_image(t) -> str:
+    """String representation of Nodes_Meta.Types :param:`t`."""
     return _types_image[t]
 
 
 _attr_image = _build_enum_image(nodes_meta.Attr)
 
 
-def attr_image(a):
-    """String representation of Nodes_Meta.Attr a"""
+def attr_image(a) -> str:
+    """String representation of Nodes_Meta.Attr :param:`a`."""
     return _attr_image[a]
 
 
@@ -98,8 +100,8 @@ def leftest_location(n):
             return nodes.Get_Location(n)
 
 
-def fields_iter(n):
-    """Iterate on fields of node n"""
+def fields_iter(n) -> Generator[Any]:
+    """Iterate on fields of node :param:`n`."""
     if n == nodes.Null_Iir:
         return
     k = nodes.Get_Kind(n)
@@ -109,21 +111,23 @@ def fields_iter(n):
         yield nodes_meta.get_field_by_index(i)
 
 
-def chain_iter(n):
-    """Iterate of a chain headed by node n"""
+def chain_iter(n) -> Generator[Any]:
+    """Iterate of a chain headed by node :param:`n`."""
     while n != nodes.Null_Iir:
         yield n
         n = nodes.Get_Chain(n)
 
 
-def chain_to_list(n):
-    """Convert a chain headed by node n to a python list"""
+def chain_to_list(n) -> List[Any]:
+    """Convert a chain headed by node :param:`n` to a Python list."""
     return [e for e in chain_iter(n)]
 
 
-def nodes_iter(n):
-    """Iterate of all nodes of n, including n.
-    Nodes are returned only once."""
+def nodes_iter(n) -> Generator[Any]:
+    """
+    Iterate all nodes of :param:`n`, including :param:`n`.
+    Nodes are returned only once.
+    """
     if n == nodes.Null_Iir:
         return
     #    print 'nodes_iter for {0}'.format(n)
@@ -161,8 +165,8 @@ def nodes_iter(n):
                         yield n2
 
 
-def list_iter(lst):
-    """Iterate of all element of Iir_List lst."""
+def list_iter(lst) -> Generator[Any]:
+    """Iterate all element of Iir_List :param:`lst`."""
     if lst <= nodes.Iir_List_All:
         return
     iter = lists.Iterate(lst)
@@ -171,16 +175,16 @@ def list_iter(lst):
         lists.Next(byref(iter))
 
 
-def flist_iter(lst):
-    """Iterate of all element of Iir_List lst."""
+def flist_iter(lst) -> Generator[Any]:
+    """Iterate all element of Iir_List :param:`lst`."""
     if lst <= nodes.Iir_Flist_All:
         return
     for i in range(flists.Flast(lst) + 1):
         yield flists.Get_Nth_Element(lst, i)
 
 
-def declarations_iter(n):
-    """Iterator on all declarations in n."""
+def declarations_iter(n) -> Generator[Any]:
+    """Iterate all declarations in node :param:`n`."""
     k = nodes.Get_Kind(n)
     if nodes_meta.Has_Generic_Chain(k):
         for n1 in chain_iter(nodes.Get_Generic_Chain(n)):
@@ -296,8 +300,8 @@ def declarations_iter(n):
     assert False, "unknown node of kind {}".format(kind_image(k))
 
 
-def concurrent_stmts_iter(n):
-    """Iterator on concurrent statements in n."""
+def concurrent_stmts_iter(n) -> Generator[Any]:
+    """Iterate concurrent statements in node :param:`n`."""
     k = nodes.Get_Kind(n)
     if k == nodes.Iir_Kind.Design_File:
         for n1 in chain_iter(nodes.Get_First_Design_Unit(n)):
@@ -332,9 +336,11 @@ def concurrent_stmts_iter(n):
                     yield n2
 
 
-def constructs_iter(n):
-    """Iterator on library unit, concurrent statements and declarations
-    that appear directly within a declarative part."""
+def constructs_iter(n) -> Generator[Any]:
+    """
+    Iterate library units, concurrent statements and declarations
+    that appear directly within a declarative part.
+    """
     if n == thin.Null_Iir:
         return
     k = nodes.Get_Kind(n)
@@ -399,9 +405,11 @@ def constructs_iter(n):
                     yield n3
 
 
-def sequential_iter(n):
-    """Iterator on sequential statements.  The first node must be either
-    a process or a subprogram body."""
+def sequential_iter(n) -> Generator[Any]:
+    """
+    Iterate sequential statements. The first node must be either
+    a process or a subprogram body.
+    """
     if n == thin.Null_Iir:
         return
     k = nodes.Get_Kind(n)
