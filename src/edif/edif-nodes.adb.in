@@ -134,10 +134,10 @@ package body Edif.Nodes is
    function Int32_To_Node is new Ada.Unchecked_Conversion
      (Source => Int32, Target => Node);
 
-   function Bit2_Type_To_Direction_Type is new Ada.Unchecked_Conversion
-     (Bit2_Type, Direction_Type);
-   function Direction_Type_To_Bit2_Type is new Ada.Unchecked_Conversion
-     (Direction_Type, Bit2_Type);
+   function Bit2_Type_To_Dir_Type is new Ada.Unchecked_Conversion
+     (Bit2_Type, Dir_Type);
+   function Dir_Type_To_Bit2_Type is new Ada.Unchecked_Conversion
+     (Dir_Type, Bit2_Type);
 
 
    function Node_To_Location_Type (N : Node) return Location_Type is

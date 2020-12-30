@@ -24,7 +24,7 @@ package Edif.Nodes_Meta is
    type Types_Enum is
      (
       Type_Boolean,
-      Type_Direction_Type,
+      Type_Dir_Type,
       Type_Int32,
       Type_Name_Id,
       Type_Node,
@@ -117,10 +117,10 @@ package Edif.Nodes_Meta is
    procedure Set_Boolean
       (N : Node; F : Fields_Enum; V: Boolean);
 
-   function Get_Direction_Type
-      (N : Node; F : Fields_Enum) return Direction_Type;
-   procedure Set_Direction_Type
-      (N : Node; F : Fields_Enum; V: Direction_Type);
+   function Get_Dir_Type
+      (N : Node; F : Fields_Enum) return Dir_Type;
+   procedure Set_Dir_Type
+      (N : Node; F : Fields_Enum; V: Dir_Type);
 
    function Get_Int32
       (N : Node; F : Fields_Enum) return Int32;

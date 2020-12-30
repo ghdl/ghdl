@@ -28,13 +28,11 @@ with Ghdlmain; use Ghdlmain;
 with Ghdllocal; use Ghdllocal;
 with Simple_IO; use Simple_IO;
 
-with Str_Table;
 with Hash;
 with Interning;
-with Files_Map;
 with Name_Table;
 with Flags;
-with Libraries;
+with Options;
 with Errorout; use Errorout;
 
 with Vhdl.Nodes; use Vhdl.Nodes;
@@ -42,7 +40,6 @@ with Vhdl.Std_Package;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Canon;
 with Vhdl.Ieee.Std_Logic_1164;
-with Vhdl.Lists;
 with Ortho_Jit;
 with Ortho_Nodes; use Ortho_Nodes;
 with Trans_Decls;
@@ -764,12 +761,7 @@ package body Ghdlrun is
       Ortho_Jit.Finish;
 
       Translation.Finalize;
-      Vhdl.Lists.Finalize;
-      Str_Table.Finalize;
-      Vhdl.Nodes.Finalize;
-      Files_Map.Finalize;
-      Name_Table.Finalize;
-      Libraries.Finalize;
+      Options.Finalize;
 
       if Flag_Verbose then
          Put_Line ("Starting simulation");

@@ -50,7 +50,7 @@ package body Edif.Nodes_Meta is
       Field_Cell_Ref => Type_Node,
       Field_Library_Ref => Type_Node,
       Field_View => Type_Node,
-      Field_Direction => Type_Direction_Type,
+      Field_Direction => Type_Dir_Type,
       Field_Boolean => Type_Boolean,
       Field_Value => Type_Node,
       Field_Owner => Type_Node,
@@ -481,29 +481,29 @@ package body Edif.Nodes_Meta is
       end case;
    end Set_Boolean;
 
-   function Get_Direction_Type
-      (N : Node; F : Fields_Enum) return Direction_Type is
+   function Get_Dir_Type
+      (N : Node; F : Fields_Enum) return Dir_Type is
    begin
-      pragma Assert (Fields_Type (F) = Type_Direction_Type);
+      pragma Assert (Fields_Type (F) = Type_Dir_Type);
       case F is
          when Field_Direction =>
             return Get_Direction (N);
          when others =>
             raise Internal_Error;
       end case;
-   end Get_Direction_Type;
+   end Get_Dir_Type;
 
-   procedure Set_Direction_Type
-      (N : Node; F : Fields_Enum; V: Direction_Type) is
+   procedure Set_Dir_Type
+      (N : Node; F : Fields_Enum; V: Dir_Type) is
    begin
-      pragma Assert (Fields_Type (F) = Type_Direction_Type);
+      pragma Assert (Fields_Type (F) = Type_Dir_Type);
       case F is
          when Field_Direction =>
             Set_Direction (N, V);
          when others =>
             raise Internal_Error;
       end case;
-   end Set_Direction_Type;
+   end Set_Dir_Type;
 
    function Get_Int32
       (N : Node; F : Fields_Enum) return Int32 is
