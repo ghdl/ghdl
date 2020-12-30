@@ -204,10 +204,10 @@ def declarations_iter(n) -> Generator[Any]:
             elif k1 == nodes.Iir_Kind.Signal_Attribute_Declaration:
                 # Not a declaration
                 pass
-            elif k1 in [
+            elif k1 in (
                 nodes.Iir_Kind.Type_Declaration,
                 nodes.Iir_Kind.Anonymous_Type_Declaration,
-            ]:
+            ):
                 yield n1
                 # Handle nested declarations: record elements, physical units,
                 # enumeration literals...
@@ -248,7 +248,7 @@ def declarations_iter(n) -> Generator[Any]:
             for n2 in declarations_iter(n1):
                 yield n2
     # All these nodes are handled:
-    if k in [
+    if k in (
         nodes.Iir_Kind.Entity_Declaration,
         nodes.Iir_Kind.Architecture_Body,
         nodes.Iir_Kind.Package_Declaration,
@@ -295,7 +295,7 @@ def declarations_iter(n) -> Generator[Any]:
         nodes.Iir_Kind.Procedure_Declaration,
         nodes.Iir_Kind.Procedure_Body,
         nodes.Iir_Kind.Component_Instantiation_Statement,
-    ]:
+    ):
         return
     raise Exception("Unknown node of kind {}".format(kind_image(k)))
 
@@ -310,10 +310,10 @@ def concurrent_stmts_iter(n) -> Generator[Any]:
     elif k == nodes.Iir_Kind.Design_Unit:
         for n1 in concurrent_stmts_iter(nodes.Get_Library_Unit(n)):
             yield n1
-    elif (
-        k == nodes.Iir_Kind.Entity_Declaration
-        or k == nodes.Iir_Kind.Architecture_Body
-        or k == nodes.Iir_Kind.Block_Statement
+    elif k in (
+        nodes.Iir_Kind.Entity_Declaration,
+        nodes.Iir_Kind.Architecture_Body,
+        nodes.Iir_Kind.Block_Statement
     ):
         for n1 in chain_iter(nodes.Get_Concurrent_Statement_Chain(n)):
             yield n1
@@ -353,12 +353,12 @@ def constructs_iter(n) -> Generator[Any]:
         yield n1
         for n2 in constructs_iter(n1):
             yield n2
-    elif k in [
+    elif k in (
         nodes.Iir_Kind.Entity_Declaration,
         nodes.Iir_Kind.Architecture_Body,
         nodes.Iir_Kind.Block_Statement,
         nodes.Iir_Kind.Generate_Statement_Body,
-    ]:
+    ):
         for n1 in chain_iter(nodes.Get_Declaration_Chain(n)):
             yield n1
             for n2 in constructs_iter(n1):
@@ -367,7 +367,7 @@ def constructs_iter(n) -> Generator[Any]:
             yield n1
             for n2 in constructs_iter(n1):
                 yield n2
-    elif k in [
+    elif k in (
         nodes.Iir_Kind.Configuration_Declaration,
         nodes.Iir_Kind.Package_Declaration,
         nodes.Iir_Kind.Package_Body,
@@ -377,7 +377,7 @@ def constructs_iter(n) -> Generator[Any]:
         nodes.Iir_Kind.Protected_Type_Body,
         nodes.Iir_Kind.Process_Statement,
         nodes.Iir_Kind.Sensitized_Process_Statement,
-    ]:
+    ):
         for n1 in chain_iter(nodes.Get_Declaration_Chain(n)):
             yield n1
             for n2 in constructs_iter(n1):
@@ -413,12 +413,12 @@ def sequential_iter(n) -> Generator[Any]:
     if n == nodes.Null_Iir:
         return
     k = nodes.Get_Kind(n)
-    if k in [
+    if k in (
         nodes.Iir_Kind.Process_Statement,
         nodes.Iir_Kind.Sensitized_Process_Statement,
         nodes.Iir_Kind.Function_Body,
         nodes.Iir_Kind.Procedure_Body,
-    ]:
+    ):
         for n1 in chain_iter(nodes.Get_Sequential_Statement_Chain(n)):
             yield n1
             for n2 in sequential_iter(n1):
@@ -444,7 +444,7 @@ def sequential_iter(n) -> Generator[Any]:
             yield n1
             for n2 in sequential_iter(n1):
                 yield n2
-    elif k in [
+    elif k in (
         nodes.Iir_Kind.Assertion_Statement,
         nodes.Iir_Kind.Wait_Statement,
         nodes.Iir_Kind.Null_Statement,
@@ -454,7 +454,7 @@ def sequential_iter(n) -> Generator[Any]:
         nodes.Iir_Kind.Variable_Assignment_Statement,
         nodes.Iir_Kind.Simple_Signal_Assignment_Statement,
         nodes.Iir_Kind.Procedure_Call_Statement,
-    ]:
+    ):
         return
     else:
         raise Exception("Unknown node of kind {}".format(kind_image(k)))
