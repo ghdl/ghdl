@@ -15,22 +15,25 @@
 --  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with Interfaces.C_Streams;
 with System;
+with Interfaces.C_Streams;
 with GNAT.OS_Lib;
+
 with Logging; use Logging;
 with Tables;
 with Errorout; use Errorout;
 with Options; use Options;
+with Name_Table; use Name_Table;
+with Str_Table;
+with Files_Map;
+with Flags;
+with Std_Names;
+
+with Vhdl.Tokens;
+with Vhdl.Std_Package;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Scanner;
 with Vhdl.Utils; use Vhdl.Utils;
-with Name_Table; use Name_Table;
-with Str_Table;
-with Vhdl.Tokens;
-with Files_Map;
-with Flags;
-with Vhdl.Std_Package;
 
 package body Libraries is
    --  Chain of known libraries.  This is also the top node of all iir node.
@@ -69,17 +72,27 @@ package body Libraries is
 
    --  Initialize paths table.
    --  Set the local path.
-   procedure Init_Paths is
+   procedure Initialize is
    begin
       --  Always look in current directory first.
+      Paths.Init;
       Name_Nil := Get_Identifier ("");
       Paths.Append (Name_Nil);
 
       Local_Directory := Name_Nil;
       Work_Directory := Name_Nil;
 
+      Libraries_Chain := Null_Iir;
+      Std_Library := Null_Iir;
+      Work_Library_Name := Std_Names.Name_Work;
+
       Create_Virtual_Locations;
-   end Init_Paths;
+   end Initialize;
+
+   procedure Finalize is
+   begin
+      Paths.Free;
+   end Finalize;
 
    function Path_To_Id (Path : String) return Name_Id is
    begin

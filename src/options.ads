@@ -47,8 +47,25 @@ package Options is
    -- Disp help about these options.
    procedure Disp_Options_Help;
 
+   --  Initialization
+   --  There are several stages:
+   --  1) C, C++ initialization, Ada elaboration
+   --     That should be automatic
+   --  2) ghdl initialization
+   --     Call the Initialize procedure below.
+   --  3) Set options
+   --  4) VHDL initialization (build of standard package)
+   --     Done by setup_libraries.  Must be done after options because
+   --     the standard package changes according to the options
+   --  5) Analyze...
+   --  6) Finalize to free all the memory.
+   --     Then you can restart from 2).
+
    --  Front-end intialization.
    procedure Initialize;
+
+   --  Free all the memory.
+   procedure Finalize;
 
    Option_Error: exception;
 end Options;

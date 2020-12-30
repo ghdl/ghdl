@@ -157,11 +157,15 @@ package body Lists is
       List := Null_List;
    end Destroy_List;
 
-   procedure Initialize is
+   procedure Finalize is
    begin
       Listt.Free;
-      Listt.Init;
       Chunkt.Free;
+   end Finalize;
+
+   procedure Initialize is
+   begin
+      Listt.Init;
       Chunkt.Init;
       List_Free_Chain := Null_List;
       Chunk_Free_List := No_Chunk_Index;

@@ -23,6 +23,7 @@ class Instantiate(TestCase):
 
 	def test_InitializeGHDL(self) -> None:
 		"""Initialization: set options and then load libaries"""
+		libghdl.initialize()
 
 		# Print error messages on the console.
 		errorout_console.Install_Handler()

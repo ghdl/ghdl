@@ -7338,8 +7338,11 @@ package Vhdl.Nodes is
    type Free_Iir_Hook is access procedure (N : Iir);
    procedure Register_Free_Hook (Hook : Free_Iir_Hook);
 
-   --  Free all and reinit.
+   --  Initialize.
    procedure Initialize;
+
+   --  Free all the memory.
+   procedure Finalize;
 
    --  Disp statistics about node usage.
    procedure Disp_Stats;

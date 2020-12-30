@@ -27,6 +27,9 @@ class Design(VHDLModel_Design):
 
 	def __ghdl_init(self):
 		"""Initialization: set options and then load libraries"""
+		# Initialize libghdl
+		libghdl.finalize()
+		libghdl.initialize()
 
 		# Collect error messages in memory
 		errorout_memory.Install_Handler()

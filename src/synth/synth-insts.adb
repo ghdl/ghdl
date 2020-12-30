@@ -837,6 +837,7 @@ package body Synth.Insts is
       end loop;
 
       if Inst_Obj.Encoding = Name_Parameters then
+         --  Copy values of the generics to module parameters.
          declare
             Inter : Node;
             Vt : Valtyp;

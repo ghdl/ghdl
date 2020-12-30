@@ -58,6 +58,9 @@ package Str_Table is
    --  valid anymore.
    function String8_Address (Id : String8_Id) return System.Address;
 
-   --  Free all the memory and reinitialize the package.
+   --  Free all the memory
+   procedure Finalize;
+
+   --  Initialize the package.
    procedure Initialize;
 end Str_Table;
