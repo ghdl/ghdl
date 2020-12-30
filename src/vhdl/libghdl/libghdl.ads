@@ -36,7 +36,8 @@ package Libghdl is
    --  To be called before Analyze_File to initialize analysis.
    function Analyze_Init_Status return Integer;
 
-   --  Deprecated.  Raise an exception in case of error.
+   --  Deprecated, use Analyze_Init_Status instead.
+   --  Raise an exception in case of error.
    procedure Analyze_Init;
 
    --  Analyze one file.

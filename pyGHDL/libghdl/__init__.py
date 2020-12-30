@@ -76,13 +76,24 @@ _libghdl_path = _get_libghdl_path()
 libghdl = ctypes.CDLL(_libghdl_path)
 
 # Initialize it.
+# First Ada elaboration (must be the first call)
 libghdl.libghdl_init()
+# Then 'normal' initialization (set hooks)
 libghdl.libghdl__set_hooks_for_analysis()
 
 # Set the prefix in order to locate the vhdl libraries.
 libghdl.libghdl__set_exec_prefix(
     *_to_char_p(dirname(dirname(_libghdl_path)).encode("utf-8"))
 )
+
+def finalize():
+    "Free all the memory, be ready for a new initialization"
+    libghdl.options__finalize()
+
+
+def initialize():
+    "Initialize or re-initialize the library"
+    libghdl.options__initialize()
 
 
 def set_option(opt):

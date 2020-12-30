@@ -90,7 +90,11 @@ package body Str_Table is
 
    procedure Initialize is
    begin
-      String8_Table.Free;
       String8_Table.Init;
    end Initialize;
+
+   procedure Finalize is
+   begin
+      String8_Table.Free;
+   end Finalize;
 end Str_Table;
