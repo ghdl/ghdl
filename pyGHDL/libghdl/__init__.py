@@ -1,3 +1,37 @@
+# =============================================================================
+#               ____ _   _ ____  _       _ _ _           _         _ _
+#  _ __  _   _ / ___| | | |  _ \| |     | (_) |__   __ _| |__   __| | |
+# | '_ \| | | | |  _| |_| | | | | |     | | | '_ \ / _` | '_ \ / _` | |
+# | |_) | |_| | |_| |  _  | |_| | |___ _| | | |_) | (_| | | | | (_| | |
+# | .__/ \__, |\____|_| |_|____/|_____(_)_|_|_.__/ \__, |_| |_|\__,_|_|
+# |_|    |___/                                     |___/
+# =============================================================================
+# Authors:          Tristan Gingold
+#
+# Package package:  Python binding and low-level API for shared library 'libghdl'.
+#
+# License:
+# ============================================================================
+# Copyright (C) 2019-2020 Tristan Gingold
+#
+#	GHDL is free software; you can redistribute it and/or modify it under
+#	the terms of the GNU General Public License as published by the Free
+#	Software Foundation; either version 2, or (at your option) any later
+#	version.
+#
+#	GHDL is distributed in the hope that it will be useful, but WITHOUT ANY
+#	WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#	FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+#	for more details.
+#
+#	You should have received a copy of the GNU General Public License
+#	along with GHDL; see the file COPYING.  If not, write to the Free
+#	Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+#	02111-1307, USA.
+#
+# SPDX-License-Identifier: GPL-2.0-or-later
+# ============================================================================
+#
 import ctypes
 import os
 import sys
@@ -35,7 +69,17 @@ def _check_libghdl_bindir(bindir, basename):
 
 
 def _get_libghdl_path():
-    """Locate the directory where the shared library is"""
+    """
+    Locate the directory where the shared library is installed.
+
+    Search order:
+
+    1. `GHDL_PREFIX` - directory (prefix) of the vhdl libraries.
+    2. `VUNIT_GHDL_PATH` - path of the `ghdl` binary when using VUnit.
+    3. `GHDL` - name of, or path to the `ghdl` binary.
+    4. Try within `libghdl/` Python installation.
+    5. Try when running from the build directory.
+    """
     basename = _get_libghdl_name()
     # Try GHDL_PREFIX
     r = os.environ.get("GHDL_PREFIX")
