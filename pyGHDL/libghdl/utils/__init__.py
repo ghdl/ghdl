@@ -33,7 +33,6 @@
 # ============================================================================
 #
 from ctypes import byref
-from typing import List, Any, Generator
 
 import pyGHDL.libghdl.name_table as name_table
 import pyGHDL.libghdl.vhdl.nodes as nodes
