@@ -1,3 +1,6 @@
+# Auto generated Python source file from Ada sources
+# Call 'make' in 'src/vhdl' to regenerate:
+#
 class Name:
     First_Character = 1
     Last_Character = 256
