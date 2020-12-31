@@ -35,37 +35,41 @@
 import ctypes
 import os
 import sys
-from os.path import dirname, join, exists, normpath
+from pathlib import Path
 from shutil import which
+from typing import Tuple
+
 from pyGHDL.libghdl.version import __version__
 
 
-def _to_char_p(arg):
+def _to_char_p(arg: bytes) -> Tuple[ctypes.c_char_p, int]:
     return ctypes.c_char_p(arg), len(arg)
 
 
-def _get_libghdl_name():
+def _get_libghdl_name() -> Path:
     """Get the name of the libghdl library (with version and extension)"""
     ver = __version__.replace("-", "_").replace(".", "_")
     ext = {"win32": "dll", "cygwin": "dll", "darwin": "dylib"}.get(sys.platform, "so")
-    return "libghdl-{version}.{ext}".format(version=ver, ext=ext)
+    return Path("libghdl-{version}.{ext}".format(version=ver, ext=ext))
 
 
-def _check_libghdl_libdir(libdir, basename):
-    """Return libghdl path in :param libdir" if found or None"""
+def _check_libghdl_libdir(libdir: Path, basename: Path) -> Path:
+    """Returns libghdl path in :param:`libdir`, if found."""
     if libdir is None:
-        return None
+        raise ValueError("Parameter 'libdir' is None.")
     # print('libghdl: check in {}'.format(libdir))
-    res = join(libdir, basename)
-    if exists(res):
+    res = libdir / basename
+    if res.exists():
         return res
-    return None
+
+    raise FileNotFoundError(str(res))
 
 
-def _check_libghdl_bindir(bindir, basename):
+def _check_libghdl_bindir(bindir: Path, basename: Path) -> Path:
     if bindir is None:
-        return None
-    return _check_libghdl_libdir(normpath(join(bindir, "..", "lib")), basename)
+        raise ValueError("Parameter 'bindir' is None.")
+
+    return _check_libghdl_libdir((bindir / "../lib").resolve(), basename)
 
 
 def _get_libghdl_path():
@@ -83,34 +87,43 @@ def _get_libghdl_path():
     basename = _get_libghdl_name()
 
     # Try GHDL_PREFIX
+    # GHDL_PREFIX is the prefix of the vhdl libraries, so remove the
+    # last path component.
     r = os.environ.get("GHDL_PREFIX")
-    if r is not None:
-        # GHDL_PREFIX is the prefix of the vhdl libraries, so remove the
-        # last path component.
-        r = _check_libghdl_libdir(dirname(r), basename)
-        if r is not None:
-            return r
+    try:
+        return _check_libghdl_libdir(Path(r).parent, basename)
+    except (TypeError, FileNotFoundError):
+        pass
+
     # Try VUNIT_GHDL_PATH (path of the ghdl binary when using VUnit).
-    r = _check_libghdl_bindir(os.environ.get("VUNIT_GHDL_PATH"), basename)
-    if r is not None:
-        return r
+    r = os.environ.get("VUNIT_GHDL_PATH")
+    try:
+      return _check_libghdl_bindir(Path(r), basename)
+    except (TypeError, FileNotFoundError):
+        pass
+
     # Try GHDL (name/path of the ghdl binary)
     r = os.environ.get("GHDL", "ghdl")
     r = which(r)
-    if r is not None:
-        r = _check_libghdl_bindir(dirname(r), basename)
-        if r is not None:
-            return r
+    try:
+        return _check_libghdl_bindir(Path(r).parent, basename)
+    except (TypeError, FileNotFoundError):
+        pass
+
     # Try within libghdl/ python installation
-    r = __file__
-    r = _check_libghdl_bindir(dirname(r), basename)
-    if r is not None:
-        return r
+    r = Path(__file__)
+    try:
+        return _check_libghdl_bindir(r.parent, basename)
+    except (TypeError, FileNotFoundError):
+        pass
+
     # Try when running from the build directory
-    r = normpath(join(dirname(__file__), "..", "..", "lib"))
-    r = _check_libghdl_libdir(r, basename)
-    if r is not None:
-        return r
+    r = (r.parent / "../../lib").resolve()
+    try:
+        return _check_libghdl_libdir(r, basename)
+    except (TypeError, FileNotFoundError):
+        pass
+
     # Failed.
     raise Exception("Cannot find libghdl {}".format(basename))
 
@@ -118,7 +131,7 @@ def _get_libghdl_path():
 # Load the shared library
 _libghdl_path = _get_libghdl_path()
 # print("Load {}".format(_libghdl_path))
-libghdl = ctypes.CDLL(_libghdl_path)
+libghdl = ctypes.CDLL(str(_libghdl_path))
 
 # Initialize it.
 # First Ada elaboration (must be the first call)
@@ -128,7 +141,7 @@ libghdl.libghdl__set_hooks_for_analysis()
 
 # Set the prefix in order to locate the VHDL libraries.
 libghdl.libghdl__set_exec_prefix(
-    *_to_char_p(dirname(dirname(_libghdl_path)).encode("utf-8"))
+    *_to_char_p(str(_libghdl_path.parent.parent).encode("utf-8"))
 )
 
 def finalize() -> None:
