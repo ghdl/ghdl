@@ -1,17 +1,21 @@
-from ctypes import c_char_p, c_int32, c_int, c_bool, sizeof, c_void_p, byref
+from ctypes import byref
+from typing import List, Any, Generator
+
 import pyGHDL.libghdl.name_table as name_table
+import pyGHDL.libghdl.files_map as files_map
 import pyGHDL.libghdl.vhdl.nodes as nodes
 import pyGHDL.libghdl.vhdl.nodes_meta as nodes_meta
 import pyGHDL.libghdl.vhdl.lists as lists
 import pyGHDL.libghdl.vhdl.flists as flists
-from pyGHDL.libghdl.vhdl.nodes_meta import Attr, types
 
 
-def name_image(nameid):
+def name_image(nameid) -> str:
+    """Lookup a :param:`nameid` and return its string."""
     return name_table.Get_Name_Ptr(nameid).decode("utf-8")
 
 
-def _build_enum_image(cls):
+def _build_enum_image(cls) -> List[str]:
+    """Create a lookup table for enumeration values to literal names."""
     d = [e for e in dir(cls) if e[0] != "_"]
     res = [None] * len(d)
     for e in d:
@@ -22,39 +26,39 @@ def _build_enum_image(cls):
 _fields_image = _build_enum_image(nodes_meta.fields)
 
 
-def fields_image(idx):
-    """String representation of field idx"""
+def fields_image(idx) -> str:
+    """String representation of field :param:`idx`."""
     return _fields_image[idx]
 
 
 _kind_image = _build_enum_image(nodes.Iir_Kind)
 
 
-def kind_image(k):
-    """String representation of Iir_Kind k"""
+def kind_image(k) -> str:
+    """String representation of Iir_Kind :param:`k`."""
     return _kind_image[k]
 
 
 _types_image = _build_enum_image(nodes_meta.types)
 
 
-def types_image(t):
-    """String representation of Nodes_Meta.Types t"""
+def types_image(t) -> str:
+    """String representation of Nodes_Meta.Types :param:`t`."""
     return _types_image[t]
 
 
 _attr_image = _build_enum_image(nodes_meta.Attr)
 
 
-def attr_image(a):
-    """String representation of Nodes_Meta.Attr a"""
+def attr_image(a) -> str:
+    """String representation of Nodes_Meta.Attr :param:`a`."""
     return _attr_image[a]
 
 
 def leftest_location(n):
     while True:
-        if n == Null_Iir:
-            return No_Location
+        if n == nodes.Null_Iir:
+            return files_map.No_Location
         k = nodes.Get_Kind(n)
         if k == nodes.Iir_Kind.Array_Subtype_Definition:
             n = nodes.Get_Subtype_Type_Mark(n)
@@ -62,8 +66,8 @@ def leftest_location(n):
             return nodes.Get_Location(n)
 
 
-def fields_iter(n):
-    """Iterate on fields of node n"""
+def fields_iter(n) -> Generator[Any, None, None]:
+    """Iterate on fields of node :param:`n`."""
     if n == nodes.Null_Iir:
         return
     k = nodes.Get_Kind(n)
@@ -73,21 +77,23 @@ def fields_iter(n):
         yield nodes_meta.get_field_by_index(i)
 
 
-def chain_iter(n):
-    """Iterate of a chain headed by node n"""
+def chain_iter(n) -> Generator[Any, None, None]:
+    """Iterate of a chain headed by node :param:`n`."""
     while n != nodes.Null_Iir:
         yield n
         n = nodes.Get_Chain(n)
 
 
-def chain_to_list(n):
-    """Convert a chain headed by node n to a python list"""
+def chain_to_list(n) -> List[Any]:
+    """Convert a chain headed by node :param:`n` to a Python list."""
     return [e for e in chain_iter(n)]
 
 
-def nodes_iter(n):
-    """Iterate of all nodes of n, including n.
-    Nodes are returned only once."""
+def nodes_iter(n) -> Generator[Any, None, None]:
+    """
+    Iterate all nodes of :param:`n`, including :param:`n`.
+    Nodes are returned only once.
+    """
     if n == nodes.Null_Iir:
         return
     #    print 'nodes_iter for {0}'.format(n)
@@ -98,35 +104,35 @@ def nodes_iter(n):
         #            n, fields_image(f), types_image(typ))
         if typ == nodes_meta.types.Iir:
             attr = nodes_meta.get_field_attribute(f)
-            if attr == Attr.ANone:
+            if attr == nodes_meta.Attr.ANone:
                 for n1 in nodes_iter(nodes_meta.Get_Iir(n, f)):
                     yield n1
-            elif attr == Attr.Chain:
+            elif attr == nodes_meta.Attr.Chain:
                 n2 = nodes_meta.Get_Iir(n, f)
                 while n2 != nodes.Null_Iir:
                     for n1 in nodes_iter(n2):
                         yield n1
                     n2 = nodes.Get_Chain(n2)
-            elif attr == Attr.Maybe_Ref:
+            elif attr == nodes_meta.Attr.Maybe_Ref:
                 if not nodes.Get_Is_Ref(n, f):
                     for n1 in nodes_iter(nodes_meta.Get_Iir(n, f)):
                         yield n1
-        elif typ == types.Iir_List:
+        elif typ == nodes_meta.types.Iir_List:
             attr = nodes_meta.get_field_attribute(f)
-            if attr == Attr.ANone:
+            if attr == nodes_meta.Attr.ANone:
                 for n1 in list_iter(nodes_meta.Get_Iir_List(n, f)):
                     for n2 in nodes_iter(n1):
                         yield n2
-        elif typ == types.Iir_Flist:
+        elif typ == nodes_meta.types.Iir_Flist:
             attr = nodes_meta.get_field_attribute(f)
-            if attr == Attr.ANone:
+            if attr == nodes_meta.Attr.ANone:
                 for n1 in flist_iter(nodes_meta.Get_Iir_Flist(n, f)):
                     for n2 in nodes_iter(n1):
                         yield n2
 
 
-def list_iter(lst):
-    """Iterate of all element of Iir_List lst."""
+def list_iter(lst) -> Generator[Any, None, None]:
+    """Iterate all element of Iir_List :param:`lst`."""
     if lst <= nodes.Iir_List_All:
         return
     iter = lists.Iterate(lst)
@@ -135,16 +141,16 @@ def list_iter(lst):
         lists.Next(byref(iter))
 
 
-def flist_iter(lst):
-    """Iterate of all element of Iir_List lst."""
+def flist_iter(lst) -> Generator[Any, None, None]:
+    """Iterate all element of Iir_List :param:`lst`."""
     if lst <= nodes.Iir_Flist_All:
         return
     for i in range(flists.Flast(lst) + 1):
         yield flists.Get_Nth_Element(lst, i)
 
 
-def declarations_iter(n):
-    """Iterator on all declarations in n."""
+def declarations_iter(n) -> Generator[Any, None, None]:
+    """Iterate all declarations in node :param:`n`."""
     k = nodes.Get_Kind(n)
     if nodes_meta.Has_Generic_Chain(k):
         for n1 in chain_iter(nodes.Get_Generic_Chain(n)):
@@ -164,10 +170,10 @@ def declarations_iter(n):
             elif k1 == nodes.Iir_Kind.Signal_Attribute_Declaration:
                 # Not a declaration
                 pass
-            elif k1 in [
+            elif k1 in (
                 nodes.Iir_Kind.Type_Declaration,
                 nodes.Iir_Kind.Anonymous_Type_Declaration,
-            ]:
+            ):
                 yield n1
                 # Handle nested declarations: record elements, physical units,
                 # enumeration literals...
@@ -194,21 +200,21 @@ def declarations_iter(n):
             yield n1
     if nodes_meta.Has_Else_Clause(k):
         n1 = nodes.Get_Else_Clause(n)
-        if n1 != Null_Iir:
+        if n1 != nodes.Null_Iir:
             for n2 in declarations_iter(n1):
                 yield n2
     if nodes_meta.Has_Generate_Else_Clause(k):
         n1 = nodes.Get_Generate_Else_Clause(n)
-        if n1 != Null_Iir:
+        if n1 != nodes.Null_Iir:
             for n2 in declarations_iter(n1):
                 yield n2
     if nodes_meta.Has_Block_Header(k):
         n1 = nodes.Get_Block_Header(n)
-        if n1 != Null_Iir:
+        if n1 != nodes.Null_Iir:
             for n2 in declarations_iter(n1):
                 yield n2
     # All these nodes are handled:
-    if k in [
+    if k in (
         nodes.Iir_Kind.Entity_Declaration,
         nodes.Iir_Kind.Architecture_Body,
         nodes.Iir_Kind.Package_Declaration,
@@ -255,13 +261,13 @@ def declarations_iter(n):
         nodes.Iir_Kind.Procedure_Declaration,
         nodes.Iir_Kind.Procedure_Body,
         nodes.Iir_Kind.Component_Instantiation_Statement,
-    ]:
+    ):
         return
-    assert False, "unknown node of kind {}".format(kind_image(k))
+    raise Exception("Unknown node of kind {}".format(kind_image(k)))
 
 
-def concurrent_stmts_iter(n):
-    """Iterator on concurrent statements in n."""
+def concurrent_stmts_iter(n) -> Generator[Any, None, None]:
+    """Iterate concurrent statements in node :param:`n`."""
     k = nodes.Get_Kind(n)
     if k == nodes.Iir_Kind.Design_File:
         for n1 in chain_iter(nodes.Get_First_Design_Unit(n)):
@@ -270,10 +276,10 @@ def concurrent_stmts_iter(n):
     elif k == nodes.Iir_Kind.Design_Unit:
         for n1 in concurrent_stmts_iter(nodes.Get_Library_Unit(n)):
             yield n1
-    elif (
-        k == nodes.Iir_Kind.Entity_Declaration
-        or k == nodes.Iir_Kind.Architecture_Body
-        or k == nodes.Iir_Kind.Block_Statement
+    elif k in (
+        nodes.Iir_Kind.Entity_Declaration,
+        nodes.Iir_Kind.Architecture_Body,
+        nodes.Iir_Kind.Block_Statement
     ):
         for n1 in chain_iter(nodes.Get_Concurrent_Statement_Chain(n)):
             yield n1
@@ -283,7 +289,7 @@ def concurrent_stmts_iter(n):
         for n1 in concurrent_stmts_iter(nodes.Get_Generate_Statement_Body(n)):
             yield n1
     elif k == nodes.Iir_Kind.If_Generate_Statement:
-        while n != Null_Iir:
+        while n != nodes.Null_Iir:
             for n1 in concurrent_stmts_iter(nodes.Get_Generate_Statement_Body(n)):
                 yield n1
             n = nodes.Get_Generate_Else_Clause(n)
@@ -291,15 +297,17 @@ def concurrent_stmts_iter(n):
         alt = nodes.Get_Case_Statement_Alternative_Chain(n)
         for n1 in chain_iter(alt):
             blk = nodes.Get_Associated_Block(n1)
-            if blk != Null_Iir:
+            if blk != nodes.Null_Iir:
                 for n2 in concurrent_stmts_iter(nodes.Get_Generate_Statement_Body(n)):
                     yield n2
 
 
-def constructs_iter(n):
-    """Iterator on library unit, concurrent statements and declarations
-    that appear directly within a declarative part."""
-    if n == thin.Null_Iir:
+def constructs_iter(n) -> Generator[Any, None, None]:
+    """
+    Iterate library units, concurrent statements and declarations
+    that appear directly within a declarative part.
+    """
+    if n == nodes.Null_Iir:
         return
     k = nodes.Get_Kind(n)
     if k == nodes.Iir_Kind.Design_File:
@@ -311,12 +319,12 @@ def constructs_iter(n):
         yield n1
         for n2 in constructs_iter(n1):
             yield n2
-    elif k in [
+    elif k in (
         nodes.Iir_Kind.Entity_Declaration,
         nodes.Iir_Kind.Architecture_Body,
         nodes.Iir_Kind.Block_Statement,
         nodes.Iir_Kind.Generate_Statement_Body,
-    ]:
+    ):
         for n1 in chain_iter(nodes.Get_Declaration_Chain(n)):
             yield n1
             for n2 in constructs_iter(n1):
@@ -325,7 +333,7 @@ def constructs_iter(n):
             yield n1
             for n2 in constructs_iter(n1):
                 yield n2
-    elif k in [
+    elif k in (
         nodes.Iir_Kind.Configuration_Declaration,
         nodes.Iir_Kind.Package_Declaration,
         nodes.Iir_Kind.Package_Body,
@@ -335,7 +343,7 @@ def constructs_iter(n):
         nodes.Iir_Kind.Protected_Type_Body,
         nodes.Iir_Kind.Process_Statement,
         nodes.Iir_Kind.Sensitized_Process_Statement,
-    ]:
+    ):
         for n1 in chain_iter(nodes.Get_Declaration_Chain(n)):
             yield n1
             for n2 in constructs_iter(n1):
@@ -346,7 +354,7 @@ def constructs_iter(n):
         for n2 in constructs_iter(n1):
             yield n2
     elif k == nodes.Iir_Kind.If_Generate_Statement:
-        while n != Null_Iir:
+        while n != nodes.Null_Iir:
             n1 = nodes.Get_Generate_Statement_Body(n)
             yield n1
             for n2 in constructs_iter(n1):
@@ -356,25 +364,27 @@ def constructs_iter(n):
         alt = nodes.Get_Case_Statement_Alternative_Chain(n)
         for n1 in chain_iter(alt):
             blk = nodes.Get_Associated_Block(n1)
-            if blk != Null_Iir:
+            if blk != nodes.Null_Iir:
                 n2 = nodes.Get_Generate_Statement_Body(blk)
                 yield n2
                 for n3 in constructs_iter(n2):
                     yield n3
 
 
-def sequential_iter(n):
-    """Iterator on sequential statements.  The first node must be either
-    a process or a subprogram body."""
-    if n == thin.Null_Iir:
+def sequential_iter(n) -> Generator[Any, None, None]:
+    """
+    Iterate sequential statements. The first node must be either
+    a process or a subprogram body.
+    """
+    if n == nodes.Null_Iir:
         return
     k = nodes.Get_Kind(n)
-    if k in [
+    if k in (
         nodes.Iir_Kind.Process_Statement,
         nodes.Iir_Kind.Sensitized_Process_Statement,
         nodes.Iir_Kind.Function_Body,
         nodes.Iir_Kind.Procedure_Body,
-    ]:
+    ):
         for n1 in chain_iter(nodes.Get_Sequential_Statement_Chain(n)):
             yield n1
             for n2 in sequential_iter(n1):
@@ -382,7 +392,7 @@ def sequential_iter(n):
     elif k == nodes.Iir_Kind.If_Statement:
         while True:
             n = nodes.Get_Chain(n)
-            if n == thin.Null_Iir:
+            if n == nodes.Null_Iir:
                 break
             yield n
             for n1 in sequential_iter(n):
@@ -390,7 +400,7 @@ def sequential_iter(n):
     elif k == nodes.Iir_Kind.Case_Statement:
         for ch in chain_iter(nodes.Get_Case_Statement_Alternative_Chain(n)):
             stmt = nodes.Get_Associated_Chain(ch)
-            if stmt != thin.Null_Iir:
+            if stmt != nodes.Null_Iir:
                 for n1 in chain_iter(stmt):
                     yield n1
                     for n2 in sequential_iter(n1):
@@ -400,7 +410,7 @@ def sequential_iter(n):
             yield n1
             for n2 in sequential_iter(n1):
                 yield n2
-    elif k in [
+    elif k in (
         nodes.Iir_Kind.Assertion_Statement,
         nodes.Iir_Kind.Wait_Statement,
         nodes.Iir_Kind.Null_Statement,
@@ -410,7 +420,7 @@ def sequential_iter(n):
         nodes.Iir_Kind.Variable_Assignment_Statement,
         nodes.Iir_Kind.Simple_Signal_Assignment_Statement,
         nodes.Iir_Kind.Procedure_Call_Statement,
-    ]:
+    ):
         return
     else:
-        assert False, "unknown node of kind {}".format(kind_image(k))
+        raise Exception("Unknown node of kind {}".format(kind_image(k)))
