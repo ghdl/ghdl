@@ -76,5 +76,11 @@ package Synth.Flags is
    --  asserted has been started.
    Flag_Assert_Cover : Boolean := True;
 
+   --  If true, treat all PSL assert directives like assume directives
+   Flag_Assert_As_Assume : Boolean := False;
+
+   --  If true, treat all PSL assume directives like assert directives
+   Flag_Assume_As_Assert : Boolean := False;
+
    Flag_Verbose : Boolean := False;
 end Synth.Flags;

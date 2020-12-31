@@ -3587,11 +3587,19 @@ package body Synth.Stmts is
          when Iir_Kind_Psl_Restrict_Directive =>
             Synth_Psl_Restrict_Directive (Syn_Inst, Stmt);
          when Iir_Kind_Psl_Assume_Directive =>
-            Synth_Psl_Assume_Directive (Syn_Inst, Stmt);
+            if Flags.Flag_Assume_As_Assert then
+               Synth_Psl_Assert_Directive (Syn_Inst, Stmt);
+            else
+               Synth_Psl_Assume_Directive (Syn_Inst, Stmt);
+            end if;
          when Iir_Kind_Psl_Cover_Directive =>
             Synth_Psl_Cover_Directive (Syn_Inst, Stmt);
          when Iir_Kind_Psl_Assert_Directive =>
-            Synth_Psl_Assert_Directive (Syn_Inst, Stmt);
+            if Flags.Flag_Assert_As_Assume then
+               Synth_Psl_Assume_Directive (Syn_Inst, Stmt);
+            else
+               Synth_Psl_Assert_Directive (Syn_Inst, Stmt);
+            end if;
          when Iir_Kind_Concurrent_Assertion_Statement =>
             --  Passive statement.
             Synth_Concurrent_Assertion_Statement (Syn_Inst, Stmt);
