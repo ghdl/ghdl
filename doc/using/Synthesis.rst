@@ -92,11 +92,38 @@ simulation back-ends. Hence, available options for synthesis are the same as for
 .. option:: --no-assert-cover
 
   Disable automatic cover PSL assertion activation. If this option isn't used, GHDL generates
-  `cover` directives for each `assert` directive automatically during synthesis.
+  `cover` directives for each `assert` directive (with an implication operator) automatically during synthesis.
 
   Example::
 
     $ ghdl --synth --std=08 --no-assert-cover my_unit
+
+.. option:: --assert-assumes
+
+  Treat all PSL asserts like PSL assumes. If this option is used, GHDL generates an `assume` directive
+  for each `assert` directive during synthesis. This is similar to the `-assert-assumes`
+  option of Yosys' `read_verilog <http://www.clifford.at/yosys/cmd_read_verilog.html>`_ command.
+
+  Example::
+
+    $ ghdl --synth --std=08 --assert-assumes my_unit
+
+  As all PSL asserts are treated like PSL assumes, no `cover` directives are automatically generated for them,
+  regardless of using the :option:`--no-assert-cover` or not.
+
+
+.. option:: --assume-asserts
+
+  Treat all PSL assumes like PSL asserts. If this option is used, GHDL generates an `assert` directive
+  for each `assume` directive during synthesis. This is similar to the `-assume-asserts`
+  option of Yosys' `read_verilog <http://www.clifford.at/yosys/cmd_read_verilog.html>`_ command.
+
+  Example::
+
+    $ ghdl --synth --std=08 --assume-asserts my_unit
+
+  `cover` directives are automatically generated for the resulting asserts (with an implication operator)
+  if :option:`--no-assert-cover` isn't used.
 
 .. TIP::
   Furthermore there are lot of debug options available. Beware: these debug options should only used

@@ -128,6 +128,10 @@ package body Ghdlsynth is
       P ("    Neither synthesize assert nor PSL");
       P ("  --no-assert-cover");
       P ("    Cover PSL assertion activation");
+      P ("  --assert-assumes");
+      P ("    Treat all PSL asserts like PSL assumes");
+      P ("  --assume-asserts");
+      P ("    Treat all PSL assumes like PSL asserts");
    end Disp_Long_Help;
 
    procedure Decode_Option (Cmd : in out Command_Synth;
@@ -152,6 +156,10 @@ package body Ghdlsynth is
          Synth.Flags.Flag_Assert_Cover := False;
       elsif Option = "--assert-cover" then
          Synth.Flags.Flag_Assert_Cover := True;
+      elsif Option = "--assert-assumes" then
+         Synth.Flags.Flag_Assert_As_Assume := True;
+      elsif Option = "--assume-asserts" then
+         Synth.Flags.Flag_Assume_As_Assert := True;
       elsif Option = "--top-name=hash" then
          Cmd.Top_Encoding := Name_Hash;
       elsif Option = "--top-name=asis" then
