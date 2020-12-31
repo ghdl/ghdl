@@ -798,6 +798,8 @@ package body Trans.Chap3 is
       Close_Temp;
    end Elab_Composite_Subtype_Layout;
 
+   --  Compute sizes for DEF (settings the size fields of layout variable
+   --  TARGET) for all the new constraints.
    procedure Elab_Composite_Subtype_Size (Def : Iir; Target : Mnode)
    is
       Info : constant Type_Info_Acc := Get_Info (Def);
@@ -818,7 +820,26 @@ package body Trans.Chap3 is
             end if;
             Close_Temp;
          when Type_Mode_Unbounded_Record =>
-            null;
+            declare
+               El : Iir;
+               El_Type : Iir;
+            begin
+               El := Get_Owned_Elements_Chain (Def);
+               if El = Null_Iir then
+                  --  No new constraints.
+                  return;
+               end if;
+               Open_Temp;
+               T := Stabilize (Target);
+               while El /= Null_Iir loop
+                  El_Type := Get_Type (El);
+                  Elab_Composite_Subtype_Size
+                    (El_Type,
+                     Record_Layout_To_Element_Layout (T, El));
+                  El := Get_Chain (El);
+               end loop;
+               Close_Temp;
+            end;
          when Type_Mode_Unbounded_Array =>
             if Get_Array_Element_Constraint (Def) = Null_Iir then
                --  Element is defined by the subtype.
@@ -846,7 +867,7 @@ package body Trans.Chap3 is
       --  Fill ranges and length.
       Elab_Composite_Subtype_Layout (Def, Get_Composite_Type_Layout (Info));
 
-      --  Compute sizes.
+      --  Compute sizes for this subtype.
       Elab_Composite_Subtype_Size (Def, Get_Composite_Type_Layout (Info));
    end Elab_Composite_Subtype_Layout;
 
