@@ -1,3 +1,6 @@
+# Auto generated Python source file from Ada sources
+# Call 'make' in 'src/vhdl' to regenerate:
+#
 from pyGHDL.libghdl import libghdl
 
 Null_Iir = 0
@@ -1724,1473 +1727,1106 @@ Get_Kind = libghdl.vhdl__nodes__get_kind
 Get_Location = libghdl.vhdl__nodes__get_location
 
 Get_First_Design_Unit = libghdl.vhdl__nodes__get_first_design_unit
-
 Set_First_Design_Unit = libghdl.vhdl__nodes__set_first_design_unit
 
 Get_Last_Design_Unit = libghdl.vhdl__nodes__get_last_design_unit
-
 Set_Last_Design_Unit = libghdl.vhdl__nodes__set_last_design_unit
 
 Get_Library_Declaration = libghdl.vhdl__nodes__get_library_declaration
-
 Set_Library_Declaration = libghdl.vhdl__nodes__set_library_declaration
 
 Get_File_Checksum = libghdl.vhdl__nodes__get_file_checksum
-
 Set_File_Checksum = libghdl.vhdl__nodes__set_file_checksum
 
 Get_Analysis_Time_Stamp = libghdl.vhdl__nodes__get_analysis_time_stamp
-
 Set_Analysis_Time_Stamp = libghdl.vhdl__nodes__set_analysis_time_stamp
 
 Get_Design_File_Source = libghdl.vhdl__nodes__get_design_file_source
-
 Set_Design_File_Source = libghdl.vhdl__nodes__set_design_file_source
 
 Get_Library = libghdl.vhdl__nodes__get_library
-
 Set_Library = libghdl.vhdl__nodes__set_library
 
 Get_File_Dependence_List = libghdl.vhdl__nodes__get_file_dependence_list
-
 Set_File_Dependence_List = libghdl.vhdl__nodes__set_file_dependence_list
 
 Get_Design_File_Filename = libghdl.vhdl__nodes__get_design_file_filename
-
 Set_Design_File_Filename = libghdl.vhdl__nodes__set_design_file_filename
 
 Get_Design_File_Directory = libghdl.vhdl__nodes__get_design_file_directory
-
 Set_Design_File_Directory = libghdl.vhdl__nodes__set_design_file_directory
 
 Get_Design_File = libghdl.vhdl__nodes__get_design_file
-
 Set_Design_File = libghdl.vhdl__nodes__set_design_file
 
 Get_Design_File_Chain = libghdl.vhdl__nodes__get_design_file_chain
-
 Set_Design_File_Chain = libghdl.vhdl__nodes__set_design_file_chain
 
 Get_Library_Directory = libghdl.vhdl__nodes__get_library_directory
-
 Set_Library_Directory = libghdl.vhdl__nodes__set_library_directory
 
 Get_Date = libghdl.vhdl__nodes__get_date
-
 Set_Date = libghdl.vhdl__nodes__set_date
 
 Get_Context_Items = libghdl.vhdl__nodes__get_context_items
-
 Set_Context_Items = libghdl.vhdl__nodes__set_context_items
 
 Get_Dependence_List = libghdl.vhdl__nodes__get_dependence_list
-
 Set_Dependence_List = libghdl.vhdl__nodes__set_dependence_list
 
 Get_Analysis_Checks_List = libghdl.vhdl__nodes__get_analysis_checks_list
-
 Set_Analysis_Checks_List = libghdl.vhdl__nodes__set_analysis_checks_list
 
 Get_Date_State = libghdl.vhdl__nodes__get_date_state
-
 Set_Date_State = libghdl.vhdl__nodes__set_date_state
 
 Get_Guarded_Target_State = libghdl.vhdl__nodes__get_guarded_target_state
-
 Set_Guarded_Target_State = libghdl.vhdl__nodes__set_guarded_target_state
 
 Get_Library_Unit = libghdl.vhdl__nodes__get_library_unit
-
 Set_Library_Unit = libghdl.vhdl__nodes__set_library_unit
 
 Get_Hash_Chain = libghdl.vhdl__nodes__get_hash_chain
-
 Set_Hash_Chain = libghdl.vhdl__nodes__set_hash_chain
 
 Get_Design_Unit_Source_Pos = libghdl.vhdl__nodes__get_design_unit_source_pos
-
 Set_Design_Unit_Source_Pos = libghdl.vhdl__nodes__set_design_unit_source_pos
 
 Get_Design_Unit_Source_Line = libghdl.vhdl__nodes__get_design_unit_source_line
-
 Set_Design_Unit_Source_Line = libghdl.vhdl__nodes__set_design_unit_source_line
 
 Get_Design_Unit_Source_Col = libghdl.vhdl__nodes__get_design_unit_source_col
-
 Set_Design_Unit_Source_Col = libghdl.vhdl__nodes__set_design_unit_source_col
 
 Get_Value = libghdl.vhdl__nodes__get_value
-
 Set_Value = libghdl.vhdl__nodes__set_value
 
 Get_Enum_Pos = libghdl.vhdl__nodes__get_enum_pos
-
 Set_Enum_Pos = libghdl.vhdl__nodes__set_enum_pos
 
 Get_Physical_Literal = libghdl.vhdl__nodes__get_physical_literal
-
 Set_Physical_Literal = libghdl.vhdl__nodes__set_physical_literal
 
 Get_Fp_Value = libghdl.vhdl__nodes__get_fp_value
-
 Set_Fp_Value = libghdl.vhdl__nodes__set_fp_value
 
 Get_Simple_Aggregate_List = libghdl.vhdl__nodes__get_simple_aggregate_list
-
 Set_Simple_Aggregate_List = libghdl.vhdl__nodes__set_simple_aggregate_list
 
 Get_String8_Id = libghdl.vhdl__nodes__get_string8_id
-
 Set_String8_Id = libghdl.vhdl__nodes__set_string8_id
 
 Get_String_Length = libghdl.vhdl__nodes__get_string_length
-
 Set_String_Length = libghdl.vhdl__nodes__set_string_length
 
 Get_Bit_String_Base = libghdl.vhdl__nodes__get_bit_string_base
-
 Set_Bit_String_Base = libghdl.vhdl__nodes__set_bit_string_base
 
 Get_Has_Signed = libghdl.vhdl__nodes__get_has_signed
-
 Set_Has_Signed = libghdl.vhdl__nodes__set_has_signed
 
 Get_Has_Sign = libghdl.vhdl__nodes__get_has_sign
-
 Set_Has_Sign = libghdl.vhdl__nodes__set_has_sign
 
 Get_Has_Length = libghdl.vhdl__nodes__get_has_length
-
 Set_Has_Length = libghdl.vhdl__nodes__set_has_length
 
 Get_Literal_Length = libghdl.vhdl__nodes__get_literal_length
-
 Set_Literal_Length = libghdl.vhdl__nodes__set_literal_length
 
 Get_Literal_Origin = libghdl.vhdl__nodes__get_literal_origin
-
 Set_Literal_Origin = libghdl.vhdl__nodes__set_literal_origin
 
 Get_Range_Origin = libghdl.vhdl__nodes__get_range_origin
-
 Set_Range_Origin = libghdl.vhdl__nodes__set_range_origin
 
 Get_Literal_Subtype = libghdl.vhdl__nodes__get_literal_subtype
-
 Set_Literal_Subtype = libghdl.vhdl__nodes__set_literal_subtype
 
 Get_Allocator_Subtype = libghdl.vhdl__nodes__get_allocator_subtype
-
 Set_Allocator_Subtype = libghdl.vhdl__nodes__set_allocator_subtype
 
 Get_Entity_Class = libghdl.vhdl__nodes__get_entity_class
-
 Set_Entity_Class = libghdl.vhdl__nodes__set_entity_class
 
 Get_Entity_Name_List = libghdl.vhdl__nodes__get_entity_name_list
-
 Set_Entity_Name_List = libghdl.vhdl__nodes__set_entity_name_list
 
 Get_Attribute_Designator = libghdl.vhdl__nodes__get_attribute_designator
-
 Set_Attribute_Designator = libghdl.vhdl__nodes__set_attribute_designator
 
 Get_Attribute_Specification_Chain = libghdl.vhdl__nodes__get_attribute_specification_chain
-
 Set_Attribute_Specification_Chain = libghdl.vhdl__nodes__set_attribute_specification_chain
 
 Get_Attribute_Specification = libghdl.vhdl__nodes__get_attribute_specification
-
 Set_Attribute_Specification = libghdl.vhdl__nodes__set_attribute_specification
 
 Get_Static_Attribute_Flag = libghdl.vhdl__nodes__get_static_attribute_flag
-
 Set_Static_Attribute_Flag = libghdl.vhdl__nodes__set_static_attribute_flag
 
 Get_Signal_List = libghdl.vhdl__nodes__get_signal_list
-
 Set_Signal_List = libghdl.vhdl__nodes__set_signal_list
 
 Get_Quantity_List = libghdl.vhdl__nodes__get_quantity_list
-
 Set_Quantity_List = libghdl.vhdl__nodes__set_quantity_list
 
 Get_Designated_Entity = libghdl.vhdl__nodes__get_designated_entity
-
 Set_Designated_Entity = libghdl.vhdl__nodes__set_designated_entity
 
 Get_Formal = libghdl.vhdl__nodes__get_formal
-
 Set_Formal = libghdl.vhdl__nodes__set_formal
 
 Get_Actual = libghdl.vhdl__nodes__get_actual
-
 Set_Actual = libghdl.vhdl__nodes__set_actual
 
 Get_Actual_Conversion = libghdl.vhdl__nodes__get_actual_conversion
-
 Set_Actual_Conversion = libghdl.vhdl__nodes__set_actual_conversion
 
 Get_Formal_Conversion = libghdl.vhdl__nodes__get_formal_conversion
-
 Set_Formal_Conversion = libghdl.vhdl__nodes__set_formal_conversion
 
 Get_Whole_Association_Flag = libghdl.vhdl__nodes__get_whole_association_flag
-
 Set_Whole_Association_Flag = libghdl.vhdl__nodes__set_whole_association_flag
 
 Get_Collapse_Signal_Flag = libghdl.vhdl__nodes__get_collapse_signal_flag
-
 Set_Collapse_Signal_Flag = libghdl.vhdl__nodes__set_collapse_signal_flag
 
 Get_Artificial_Flag = libghdl.vhdl__nodes__get_artificial_flag
-
 Set_Artificial_Flag = libghdl.vhdl__nodes__set_artificial_flag
 
 Get_Open_Flag = libghdl.vhdl__nodes__get_open_flag
-
 Set_Open_Flag = libghdl.vhdl__nodes__set_open_flag
 
 Get_After_Drivers_Flag = libghdl.vhdl__nodes__get_after_drivers_flag
-
 Set_After_Drivers_Flag = libghdl.vhdl__nodes__set_after_drivers_flag
 
 Get_We_Value = libghdl.vhdl__nodes__get_we_value
-
 Set_We_Value = libghdl.vhdl__nodes__set_we_value
 
 Get_Time = libghdl.vhdl__nodes__get_time
-
 Set_Time = libghdl.vhdl__nodes__set_time
 
 Get_Associated_Expr = libghdl.vhdl__nodes__get_associated_expr
-
 Set_Associated_Expr = libghdl.vhdl__nodes__set_associated_expr
 
 Get_Associated_Block = libghdl.vhdl__nodes__get_associated_block
-
 Set_Associated_Block = libghdl.vhdl__nodes__set_associated_block
 
 Get_Associated_Chain = libghdl.vhdl__nodes__get_associated_chain
-
 Set_Associated_Chain = libghdl.vhdl__nodes__set_associated_chain
 
 Get_Choice_Name = libghdl.vhdl__nodes__get_choice_name
-
 Set_Choice_Name = libghdl.vhdl__nodes__set_choice_name
 
 Get_Choice_Expression = libghdl.vhdl__nodes__get_choice_expression
-
 Set_Choice_Expression = libghdl.vhdl__nodes__set_choice_expression
 
 Get_Choice_Range = libghdl.vhdl__nodes__get_choice_range
-
 Set_Choice_Range = libghdl.vhdl__nodes__set_choice_range
 
 Get_Same_Alternative_Flag = libghdl.vhdl__nodes__get_same_alternative_flag
-
 Set_Same_Alternative_Flag = libghdl.vhdl__nodes__set_same_alternative_flag
 
 Get_Element_Type_Flag = libghdl.vhdl__nodes__get_element_type_flag
-
 Set_Element_Type_Flag = libghdl.vhdl__nodes__set_element_type_flag
 
 Get_Architecture = libghdl.vhdl__nodes__get_architecture
-
 Set_Architecture = libghdl.vhdl__nodes__set_architecture
 
 Get_Block_Specification = libghdl.vhdl__nodes__get_block_specification
-
 Set_Block_Specification = libghdl.vhdl__nodes__set_block_specification
 
 Get_Prev_Block_Configuration = libghdl.vhdl__nodes__get_prev_block_configuration
-
 Set_Prev_Block_Configuration = libghdl.vhdl__nodes__set_prev_block_configuration
 
 Get_Configuration_Item_Chain = libghdl.vhdl__nodes__get_configuration_item_chain
-
 Set_Configuration_Item_Chain = libghdl.vhdl__nodes__set_configuration_item_chain
 
 Get_Attribute_Value_Chain = libghdl.vhdl__nodes__get_attribute_value_chain
-
 Set_Attribute_Value_Chain = libghdl.vhdl__nodes__set_attribute_value_chain
 
 Get_Spec_Chain = libghdl.vhdl__nodes__get_spec_chain
-
 Set_Spec_Chain = libghdl.vhdl__nodes__set_spec_chain
 
 Get_Value_Chain = libghdl.vhdl__nodes__get_value_chain
-
 Set_Value_Chain = libghdl.vhdl__nodes__set_value_chain
 
 Get_Attribute_Value_Spec_Chain = libghdl.vhdl__nodes__get_attribute_value_spec_chain
-
 Set_Attribute_Value_Spec_Chain = libghdl.vhdl__nodes__set_attribute_value_spec_chain
 
 Get_Entity_Name = libghdl.vhdl__nodes__get_entity_name
-
 Set_Entity_Name = libghdl.vhdl__nodes__set_entity_name
 
 Get_Package = libghdl.vhdl__nodes__get_package
-
 Set_Package = libghdl.vhdl__nodes__set_package
 
 Get_Package_Body = libghdl.vhdl__nodes__get_package_body
-
 Set_Package_Body = libghdl.vhdl__nodes__set_package_body
 
 Get_Instance_Package_Body = libghdl.vhdl__nodes__get_instance_package_body
-
 Set_Instance_Package_Body = libghdl.vhdl__nodes__set_instance_package_body
 
 Get_Need_Body = libghdl.vhdl__nodes__get_need_body
-
 Set_Need_Body = libghdl.vhdl__nodes__set_need_body
 
 Get_Macro_Expanded_Flag = libghdl.vhdl__nodes__get_macro_expanded_flag
-
 Set_Macro_Expanded_Flag = libghdl.vhdl__nodes__set_macro_expanded_flag
 
 Get_Need_Instance_Bodies = libghdl.vhdl__nodes__get_need_instance_bodies
-
 Set_Need_Instance_Bodies = libghdl.vhdl__nodes__set_need_instance_bodies
 
 Get_Hierarchical_Name = libghdl.vhdl__nodes__get_hierarchical_name
-
 Set_Hierarchical_Name = libghdl.vhdl__nodes__set_hierarchical_name
 
 Get_Inherit_Spec_Chain = libghdl.vhdl__nodes__get_inherit_spec_chain
-
 Set_Inherit_Spec_Chain = libghdl.vhdl__nodes__set_inherit_spec_chain
 
 Get_Vunit_Item_Chain = libghdl.vhdl__nodes__get_vunit_item_chain
-
 Set_Vunit_Item_Chain = libghdl.vhdl__nodes__set_vunit_item_chain
 
 Get_Bound_Vunit_Chain = libghdl.vhdl__nodes__get_bound_vunit_chain
-
 Set_Bound_Vunit_Chain = libghdl.vhdl__nodes__set_bound_vunit_chain
 
 Get_Verification_Block_Configuration = libghdl.vhdl__nodes__get_verification_block_configuration
-
 Set_Verification_Block_Configuration = libghdl.vhdl__nodes__set_verification_block_configuration
 
 Get_Block_Configuration = libghdl.vhdl__nodes__get_block_configuration
-
 Set_Block_Configuration = libghdl.vhdl__nodes__set_block_configuration
 
 Get_Concurrent_Statement_Chain = libghdl.vhdl__nodes__get_concurrent_statement_chain
-
 Set_Concurrent_Statement_Chain = libghdl.vhdl__nodes__set_concurrent_statement_chain
 
 Get_Chain = libghdl.vhdl__nodes__get_chain
-
 Set_Chain = libghdl.vhdl__nodes__set_chain
 
 Get_Port_Chain = libghdl.vhdl__nodes__get_port_chain
-
 Set_Port_Chain = libghdl.vhdl__nodes__set_port_chain
 
 Get_Generic_Chain = libghdl.vhdl__nodes__get_generic_chain
-
 Set_Generic_Chain = libghdl.vhdl__nodes__set_generic_chain
 
 Get_Type = libghdl.vhdl__nodes__get_type
-
 Set_Type = libghdl.vhdl__nodes__set_type
 
 Get_Subtype_Indication = libghdl.vhdl__nodes__get_subtype_indication
-
 Set_Subtype_Indication = libghdl.vhdl__nodes__set_subtype_indication
 
 Get_Discrete_Range = libghdl.vhdl__nodes__get_discrete_range
-
 Set_Discrete_Range = libghdl.vhdl__nodes__set_discrete_range
 
 Get_Type_Definition = libghdl.vhdl__nodes__get_type_definition
-
 Set_Type_Definition = libghdl.vhdl__nodes__set_type_definition
 
 Get_Subtype_Definition = libghdl.vhdl__nodes__get_subtype_definition
-
 Set_Subtype_Definition = libghdl.vhdl__nodes__set_subtype_definition
 
 Get_Incomplete_Type_Declaration = libghdl.vhdl__nodes__get_incomplete_type_declaration
-
 Set_Incomplete_Type_Declaration = libghdl.vhdl__nodes__set_incomplete_type_declaration
 
 Get_Interface_Type_Subprograms = libghdl.vhdl__nodes__get_interface_type_subprograms
-
 Set_Interface_Type_Subprograms = libghdl.vhdl__nodes__set_interface_type_subprograms
 
 Get_Nature_Definition = libghdl.vhdl__nodes__get_nature_definition
-
 Set_Nature_Definition = libghdl.vhdl__nodes__set_nature_definition
 
 Get_Nature = libghdl.vhdl__nodes__get_nature
-
 Set_Nature = libghdl.vhdl__nodes__set_nature
 
 Get_Subnature_Indication = libghdl.vhdl__nodes__get_subnature_indication
-
 Set_Subnature_Indication = libghdl.vhdl__nodes__set_subnature_indication
 
 Get_Mode = libghdl.vhdl__nodes__get_mode
-
 Set_Mode = libghdl.vhdl__nodes__set_mode
 
 Get_Guarded_Signal_Flag = libghdl.vhdl__nodes__get_guarded_signal_flag
-
 Set_Guarded_Signal_Flag = libghdl.vhdl__nodes__set_guarded_signal_flag
 
 Get_Signal_Kind = libghdl.vhdl__nodes__get_signal_kind
-
 Set_Signal_Kind = libghdl.vhdl__nodes__set_signal_kind
 
 Get_Base_Name = libghdl.vhdl__nodes__get_base_name
-
 Set_Base_Name = libghdl.vhdl__nodes__set_base_name
 
 Get_Interface_Declaration_Chain = libghdl.vhdl__nodes__get_interface_declaration_chain
-
 Set_Interface_Declaration_Chain = libghdl.vhdl__nodes__set_interface_declaration_chain
 
 Get_Subprogram_Specification = libghdl.vhdl__nodes__get_subprogram_specification
-
 Set_Subprogram_Specification = libghdl.vhdl__nodes__set_subprogram_specification
 
 Get_Sequential_Statement_Chain = libghdl.vhdl__nodes__get_sequential_statement_chain
-
 Set_Sequential_Statement_Chain = libghdl.vhdl__nodes__set_sequential_statement_chain
 
 Get_Simultaneous_Statement_Chain = libghdl.vhdl__nodes__get_simultaneous_statement_chain
-
 Set_Simultaneous_Statement_Chain = libghdl.vhdl__nodes__set_simultaneous_statement_chain
 
 Get_Subprogram_Body = libghdl.vhdl__nodes__get_subprogram_body
-
 Set_Subprogram_Body = libghdl.vhdl__nodes__set_subprogram_body
 
 Get_Overload_Number = libghdl.vhdl__nodes__get_overload_number
-
 Set_Overload_Number = libghdl.vhdl__nodes__set_overload_number
 
 Get_Subprogram_Depth = libghdl.vhdl__nodes__get_subprogram_depth
-
 Set_Subprogram_Depth = libghdl.vhdl__nodes__set_subprogram_depth
 
 Get_Subprogram_Hash = libghdl.vhdl__nodes__get_subprogram_hash
-
 Set_Subprogram_Hash = libghdl.vhdl__nodes__set_subprogram_hash
 
 Get_Impure_Depth = libghdl.vhdl__nodes__get_impure_depth
-
 Set_Impure_Depth = libghdl.vhdl__nodes__set_impure_depth
 
 Get_Return_Type = libghdl.vhdl__nodes__get_return_type
-
 Set_Return_Type = libghdl.vhdl__nodes__set_return_type
 
 Get_Implicit_Definition = libghdl.vhdl__nodes__get_implicit_definition
-
 Set_Implicit_Definition = libghdl.vhdl__nodes__set_implicit_definition
 
 Get_Uninstantiated_Subprogram_Name = libghdl.vhdl__nodes__get_uninstantiated_subprogram_name
-
 Set_Uninstantiated_Subprogram_Name = libghdl.vhdl__nodes__set_uninstantiated_subprogram_name
 
 Get_Default_Value = libghdl.vhdl__nodes__get_default_value
-
 Set_Default_Value = libghdl.vhdl__nodes__set_default_value
 
 Get_Deferred_Declaration = libghdl.vhdl__nodes__get_deferred_declaration
-
 Set_Deferred_Declaration = libghdl.vhdl__nodes__set_deferred_declaration
 
 Get_Deferred_Declaration_Flag = libghdl.vhdl__nodes__get_deferred_declaration_flag
-
 Set_Deferred_Declaration_Flag = libghdl.vhdl__nodes__set_deferred_declaration_flag
 
 Get_Shared_Flag = libghdl.vhdl__nodes__get_shared_flag
-
 Set_Shared_Flag = libghdl.vhdl__nodes__set_shared_flag
 
 Get_Design_Unit = libghdl.vhdl__nodes__get_design_unit
-
 Set_Design_Unit = libghdl.vhdl__nodes__set_design_unit
 
 Get_Block_Statement = libghdl.vhdl__nodes__get_block_statement
-
 Set_Block_Statement = libghdl.vhdl__nodes__set_block_statement
 
 Get_Signal_Driver = libghdl.vhdl__nodes__get_signal_driver
-
 Set_Signal_Driver = libghdl.vhdl__nodes__set_signal_driver
 
 Get_Declaration_Chain = libghdl.vhdl__nodes__get_declaration_chain
-
 Set_Declaration_Chain = libghdl.vhdl__nodes__set_declaration_chain
 
 Get_File_Logical_Name = libghdl.vhdl__nodes__get_file_logical_name
-
 Set_File_Logical_Name = libghdl.vhdl__nodes__set_file_logical_name
 
 Get_File_Open_Kind = libghdl.vhdl__nodes__get_file_open_kind
-
 Set_File_Open_Kind = libghdl.vhdl__nodes__set_file_open_kind
 
 Get_Element_Position = libghdl.vhdl__nodes__get_element_position
-
 Set_Element_Position = libghdl.vhdl__nodes__set_element_position
 
 Get_Use_Clause_Chain = libghdl.vhdl__nodes__get_use_clause_chain
-
 Set_Use_Clause_Chain = libghdl.vhdl__nodes__set_use_clause_chain
 
 Get_Context_Reference_Chain = libghdl.vhdl__nodes__get_context_reference_chain
-
 Set_Context_Reference_Chain = libghdl.vhdl__nodes__set_context_reference_chain
 
 Get_Selected_Name = libghdl.vhdl__nodes__get_selected_name
-
 Set_Selected_Name = libghdl.vhdl__nodes__set_selected_name
 
 Get_Type_Declarator = libghdl.vhdl__nodes__get_type_declarator
-
 Set_Type_Declarator = libghdl.vhdl__nodes__set_type_declarator
 
 Get_Complete_Type_Definition = libghdl.vhdl__nodes__get_complete_type_definition
-
 Set_Complete_Type_Definition = libghdl.vhdl__nodes__set_complete_type_definition
 
 Get_Incomplete_Type_Ref_Chain = libghdl.vhdl__nodes__get_incomplete_type_ref_chain
-
 Set_Incomplete_Type_Ref_Chain = libghdl.vhdl__nodes__set_incomplete_type_ref_chain
 
 Get_Associated_Type = libghdl.vhdl__nodes__get_associated_type
-
 Set_Associated_Type = libghdl.vhdl__nodes__set_associated_type
 
 Get_Enumeration_Literal_List = libghdl.vhdl__nodes__get_enumeration_literal_list
-
 Set_Enumeration_Literal_List = libghdl.vhdl__nodes__set_enumeration_literal_list
 
 Get_Entity_Class_Entry_Chain = libghdl.vhdl__nodes__get_entity_class_entry_chain
-
 Set_Entity_Class_Entry_Chain = libghdl.vhdl__nodes__set_entity_class_entry_chain
 
 Get_Group_Constituent_List = libghdl.vhdl__nodes__get_group_constituent_list
-
 Set_Group_Constituent_List = libghdl.vhdl__nodes__set_group_constituent_list
 
 Get_Unit_Chain = libghdl.vhdl__nodes__get_unit_chain
-
 Set_Unit_Chain = libghdl.vhdl__nodes__set_unit_chain
 
 Get_Primary_Unit = libghdl.vhdl__nodes__get_primary_unit
-
 Set_Primary_Unit = libghdl.vhdl__nodes__set_primary_unit
 
 Get_Identifier = libghdl.vhdl__nodes__get_identifier
-
 Set_Identifier = libghdl.vhdl__nodes__set_identifier
 
 Get_Label = libghdl.vhdl__nodes__get_label
-
 Set_Label = libghdl.vhdl__nodes__set_label
 
 Get_Visible_Flag = libghdl.vhdl__nodes__get_visible_flag
-
 Set_Visible_Flag = libghdl.vhdl__nodes__set_visible_flag
 
 Get_Range_Constraint = libghdl.vhdl__nodes__get_range_constraint
-
 Set_Range_Constraint = libghdl.vhdl__nodes__set_range_constraint
 
 Get_Direction = libghdl.vhdl__nodes__get_direction
-
 Set_Direction = libghdl.vhdl__nodes__set_direction
 
 Get_Left_Limit = libghdl.vhdl__nodes__get_left_limit
-
 Set_Left_Limit = libghdl.vhdl__nodes__set_left_limit
 
 Get_Right_Limit = libghdl.vhdl__nodes__get_right_limit
-
 Set_Right_Limit = libghdl.vhdl__nodes__set_right_limit
 
 Get_Left_Limit_Expr = libghdl.vhdl__nodes__get_left_limit_expr
-
 Set_Left_Limit_Expr = libghdl.vhdl__nodes__set_left_limit_expr
 
 Get_Right_Limit_Expr = libghdl.vhdl__nodes__get_right_limit_expr
-
 Set_Right_Limit_Expr = libghdl.vhdl__nodes__set_right_limit_expr
 
 Get_Parent_Type = libghdl.vhdl__nodes__get_parent_type
-
 Set_Parent_Type = libghdl.vhdl__nodes__set_parent_type
 
 Get_Simple_Nature = libghdl.vhdl__nodes__get_simple_nature
-
 Set_Simple_Nature = libghdl.vhdl__nodes__set_simple_nature
 
 Get_Base_Nature = libghdl.vhdl__nodes__get_base_nature
-
 Set_Base_Nature = libghdl.vhdl__nodes__set_base_nature
 
 Get_Resolution_Indication = libghdl.vhdl__nodes__get_resolution_indication
-
 Set_Resolution_Indication = libghdl.vhdl__nodes__set_resolution_indication
 
 Get_Record_Element_Resolution_Chain = libghdl.vhdl__nodes__get_record_element_resolution_chain
-
 Set_Record_Element_Resolution_Chain = libghdl.vhdl__nodes__set_record_element_resolution_chain
 
 Get_Tolerance = libghdl.vhdl__nodes__get_tolerance
-
 Set_Tolerance = libghdl.vhdl__nodes__set_tolerance
 
 Get_Plus_Terminal_Name = libghdl.vhdl__nodes__get_plus_terminal_name
-
 Set_Plus_Terminal_Name = libghdl.vhdl__nodes__set_plus_terminal_name
 
 Get_Minus_Terminal_Name = libghdl.vhdl__nodes__get_minus_terminal_name
-
 Set_Minus_Terminal_Name = libghdl.vhdl__nodes__set_minus_terminal_name
 
 Get_Plus_Terminal = libghdl.vhdl__nodes__get_plus_terminal
-
 Set_Plus_Terminal = libghdl.vhdl__nodes__set_plus_terminal
 
 Get_Minus_Terminal = libghdl.vhdl__nodes__get_minus_terminal
-
 Set_Minus_Terminal = libghdl.vhdl__nodes__set_minus_terminal
 
 Get_Magnitude_Expression = libghdl.vhdl__nodes__get_magnitude_expression
-
 Set_Magnitude_Expression = libghdl.vhdl__nodes__set_magnitude_expression
 
 Get_Phase_Expression = libghdl.vhdl__nodes__get_phase_expression
-
 Set_Phase_Expression = libghdl.vhdl__nodes__set_phase_expression
 
 Get_Power_Expression = libghdl.vhdl__nodes__get_power_expression
-
 Set_Power_Expression = libghdl.vhdl__nodes__set_power_expression
 
 Get_Simultaneous_Left = libghdl.vhdl__nodes__get_simultaneous_left
-
 Set_Simultaneous_Left = libghdl.vhdl__nodes__set_simultaneous_left
 
 Get_Simultaneous_Right = libghdl.vhdl__nodes__get_simultaneous_right
-
 Set_Simultaneous_Right = libghdl.vhdl__nodes__set_simultaneous_right
 
 Get_Text_File_Flag = libghdl.vhdl__nodes__get_text_file_flag
-
 Set_Text_File_Flag = libghdl.vhdl__nodes__set_text_file_flag
 
 Get_Only_Characters_Flag = libghdl.vhdl__nodes__get_only_characters_flag
-
 Set_Only_Characters_Flag = libghdl.vhdl__nodes__set_only_characters_flag
 
 Get_Is_Character_Type = libghdl.vhdl__nodes__get_is_character_type
-
 Set_Is_Character_Type = libghdl.vhdl__nodes__set_is_character_type
 
 Get_Nature_Staticness = libghdl.vhdl__nodes__get_nature_staticness
-
 Set_Nature_Staticness = libghdl.vhdl__nodes__set_nature_staticness
 
 Get_Type_Staticness = libghdl.vhdl__nodes__get_type_staticness
-
 Set_Type_Staticness = libghdl.vhdl__nodes__set_type_staticness
 
 Get_Constraint_State = libghdl.vhdl__nodes__get_constraint_state
-
 Set_Constraint_State = libghdl.vhdl__nodes__set_constraint_state
 
 Get_Index_Subtype_List = libghdl.vhdl__nodes__get_index_subtype_list
-
 Set_Index_Subtype_List = libghdl.vhdl__nodes__set_index_subtype_list
 
 Get_Index_Subtype_Definition_List = libghdl.vhdl__nodes__get_index_subtype_definition_list
-
 Set_Index_Subtype_Definition_List = libghdl.vhdl__nodes__set_index_subtype_definition_list
 
 Get_Element_Subtype_Indication = libghdl.vhdl__nodes__get_element_subtype_indication
-
 Set_Element_Subtype_Indication = libghdl.vhdl__nodes__set_element_subtype_indication
 
 Get_Element_Subtype = libghdl.vhdl__nodes__get_element_subtype
-
 Set_Element_Subtype = libghdl.vhdl__nodes__set_element_subtype
 
 Get_Element_Subnature_Indication = libghdl.vhdl__nodes__get_element_subnature_indication
-
 Set_Element_Subnature_Indication = libghdl.vhdl__nodes__set_element_subnature_indication
 
 Get_Element_Subnature = libghdl.vhdl__nodes__get_element_subnature
-
 Set_Element_Subnature = libghdl.vhdl__nodes__set_element_subnature
 
 Get_Index_Constraint_List = libghdl.vhdl__nodes__get_index_constraint_list
-
 Set_Index_Constraint_List = libghdl.vhdl__nodes__set_index_constraint_list
 
 Get_Array_Element_Constraint = libghdl.vhdl__nodes__get_array_element_constraint
-
 Set_Array_Element_Constraint = libghdl.vhdl__nodes__set_array_element_constraint
 
 Get_Elements_Declaration_List = libghdl.vhdl__nodes__get_elements_declaration_list
-
 Set_Elements_Declaration_List = libghdl.vhdl__nodes__set_elements_declaration_list
 
 Get_Owned_Elements_Chain = libghdl.vhdl__nodes__get_owned_elements_chain
-
 Set_Owned_Elements_Chain = libghdl.vhdl__nodes__set_owned_elements_chain
 
 Get_Designated_Type = libghdl.vhdl__nodes__get_designated_type
-
 Set_Designated_Type = libghdl.vhdl__nodes__set_designated_type
 
 Get_Designated_Subtype_Indication = libghdl.vhdl__nodes__get_designated_subtype_indication
-
 Set_Designated_Subtype_Indication = libghdl.vhdl__nodes__set_designated_subtype_indication
 
 Get_Index_List = libghdl.vhdl__nodes__get_index_list
-
 Set_Index_List = libghdl.vhdl__nodes__set_index_list
 
 Get_Reference = libghdl.vhdl__nodes__get_reference
-
 Set_Reference = libghdl.vhdl__nodes__set_reference
 
 Get_Nature_Declarator = libghdl.vhdl__nodes__get_nature_declarator
-
 Set_Nature_Declarator = libghdl.vhdl__nodes__set_nature_declarator
 
 Get_Across_Type_Mark = libghdl.vhdl__nodes__get_across_type_mark
-
 Set_Across_Type_Mark = libghdl.vhdl__nodes__set_across_type_mark
 
 Get_Through_Type_Mark = libghdl.vhdl__nodes__get_through_type_mark
-
 Set_Through_Type_Mark = libghdl.vhdl__nodes__set_through_type_mark
 
 Get_Across_Type_Definition = libghdl.vhdl__nodes__get_across_type_definition
-
 Set_Across_Type_Definition = libghdl.vhdl__nodes__set_across_type_definition
 
 Get_Through_Type_Definition = libghdl.vhdl__nodes__get_through_type_definition
-
 Set_Through_Type_Definition = libghdl.vhdl__nodes__set_through_type_definition
 
 Get_Across_Type = libghdl.vhdl__nodes__get_across_type
-
 Set_Across_Type = libghdl.vhdl__nodes__set_across_type
 
 Get_Through_Type = libghdl.vhdl__nodes__get_through_type
-
 Set_Through_Type = libghdl.vhdl__nodes__set_through_type
 
 Get_Target = libghdl.vhdl__nodes__get_target
-
 Set_Target = libghdl.vhdl__nodes__set_target
 
 Get_Waveform_Chain = libghdl.vhdl__nodes__get_waveform_chain
-
 Set_Waveform_Chain = libghdl.vhdl__nodes__set_waveform_chain
 
 Get_Guard = libghdl.vhdl__nodes__get_guard
-
 Set_Guard = libghdl.vhdl__nodes__set_guard
 
 Get_Delay_Mechanism = libghdl.vhdl__nodes__get_delay_mechanism
-
 Set_Delay_Mechanism = libghdl.vhdl__nodes__set_delay_mechanism
 
 Get_Reject_Time_Expression = libghdl.vhdl__nodes__get_reject_time_expression
-
 Set_Reject_Time_Expression = libghdl.vhdl__nodes__set_reject_time_expression
 
 Get_Force_Mode = libghdl.vhdl__nodes__get_force_mode
-
 Set_Force_Mode = libghdl.vhdl__nodes__set_force_mode
 
 Get_Has_Force_Mode = libghdl.vhdl__nodes__get_has_force_mode
-
 Set_Has_Force_Mode = libghdl.vhdl__nodes__set_has_force_mode
 
 Get_Sensitivity_List = libghdl.vhdl__nodes__get_sensitivity_list
-
 Set_Sensitivity_List = libghdl.vhdl__nodes__set_sensitivity_list
 
 Get_Process_Origin = libghdl.vhdl__nodes__get_process_origin
-
 Set_Process_Origin = libghdl.vhdl__nodes__set_process_origin
 
 Get_Package_Origin = libghdl.vhdl__nodes__get_package_origin
-
 Set_Package_Origin = libghdl.vhdl__nodes__set_package_origin
 
 Get_Condition_Clause = libghdl.vhdl__nodes__get_condition_clause
-
 Set_Condition_Clause = libghdl.vhdl__nodes__set_condition_clause
 
 Get_Break_Element = libghdl.vhdl__nodes__get_break_element
-
 Set_Break_Element = libghdl.vhdl__nodes__set_break_element
 
 Get_Selector_Quantity = libghdl.vhdl__nodes__get_selector_quantity
-
 Set_Selector_Quantity = libghdl.vhdl__nodes__set_selector_quantity
 
 Get_Break_Quantity = libghdl.vhdl__nodes__get_break_quantity
-
 Set_Break_Quantity = libghdl.vhdl__nodes__set_break_quantity
 
 Get_Timeout_Clause = libghdl.vhdl__nodes__get_timeout_clause
-
 Set_Timeout_Clause = libghdl.vhdl__nodes__set_timeout_clause
 
 Get_Postponed_Flag = libghdl.vhdl__nodes__get_postponed_flag
-
 Set_Postponed_Flag = libghdl.vhdl__nodes__set_postponed_flag
 
 Get_Callees_List = libghdl.vhdl__nodes__get_callees_list
-
 Set_Callees_List = libghdl.vhdl__nodes__set_callees_list
 
 Get_Passive_Flag = libghdl.vhdl__nodes__get_passive_flag
-
 Set_Passive_Flag = libghdl.vhdl__nodes__set_passive_flag
 
 Get_Resolution_Function_Flag = libghdl.vhdl__nodes__get_resolution_function_flag
-
 Set_Resolution_Function_Flag = libghdl.vhdl__nodes__set_resolution_function_flag
 
 Get_Wait_State = libghdl.vhdl__nodes__get_wait_state
-
 Set_Wait_State = libghdl.vhdl__nodes__set_wait_state
 
 Get_All_Sensitized_State = libghdl.vhdl__nodes__get_all_sensitized_state
-
 Set_All_Sensitized_State = libghdl.vhdl__nodes__set_all_sensitized_state
 
 Get_Seen_Flag = libghdl.vhdl__nodes__get_seen_flag
-
 Set_Seen_Flag = libghdl.vhdl__nodes__set_seen_flag
 
 Get_Pure_Flag = libghdl.vhdl__nodes__get_pure_flag
-
 Set_Pure_Flag = libghdl.vhdl__nodes__set_pure_flag
 
 Get_Foreign_Flag = libghdl.vhdl__nodes__get_foreign_flag
-
 Set_Foreign_Flag = libghdl.vhdl__nodes__set_foreign_flag
 
 Get_Resolved_Flag = libghdl.vhdl__nodes__get_resolved_flag
-
 Set_Resolved_Flag = libghdl.vhdl__nodes__set_resolved_flag
 
 Get_Signal_Type_Flag = libghdl.vhdl__nodes__get_signal_type_flag
-
 Set_Signal_Type_Flag = libghdl.vhdl__nodes__set_signal_type_flag
 
 Get_Has_Signal_Flag = libghdl.vhdl__nodes__get_has_signal_flag
-
 Set_Has_Signal_Flag = libghdl.vhdl__nodes__set_has_signal_flag
 
 Get_Purity_State = libghdl.vhdl__nodes__get_purity_state
-
 Set_Purity_State = libghdl.vhdl__nodes__set_purity_state
 
 Get_Elab_Flag = libghdl.vhdl__nodes__get_elab_flag
-
 Set_Elab_Flag = libghdl.vhdl__nodes__set_elab_flag
 
 Get_Vendor_Library_Flag = libghdl.vhdl__nodes__get_vendor_library_flag
-
 Set_Vendor_Library_Flag = libghdl.vhdl__nodes__set_vendor_library_flag
 
 Get_Configuration_Mark_Flag = libghdl.vhdl__nodes__get_configuration_mark_flag
-
 Set_Configuration_Mark_Flag = libghdl.vhdl__nodes__set_configuration_mark_flag
 
 Get_Configuration_Done_Flag = libghdl.vhdl__nodes__get_configuration_done_flag
-
 Set_Configuration_Done_Flag = libghdl.vhdl__nodes__set_configuration_done_flag
 
 Get_Index_Constraint_Flag = libghdl.vhdl__nodes__get_index_constraint_flag
-
 Set_Index_Constraint_Flag = libghdl.vhdl__nodes__set_index_constraint_flag
 
 Get_Hide_Implicit_Flag = libghdl.vhdl__nodes__get_hide_implicit_flag
-
 Set_Hide_Implicit_Flag = libghdl.vhdl__nodes__set_hide_implicit_flag
 
 Get_Assertion_Condition = libghdl.vhdl__nodes__get_assertion_condition
-
 Set_Assertion_Condition = libghdl.vhdl__nodes__set_assertion_condition
 
 Get_Report_Expression = libghdl.vhdl__nodes__get_report_expression
-
 Set_Report_Expression = libghdl.vhdl__nodes__set_report_expression
 
 Get_Severity_Expression = libghdl.vhdl__nodes__get_severity_expression
-
 Set_Severity_Expression = libghdl.vhdl__nodes__set_severity_expression
 
 Get_Instantiated_Unit = libghdl.vhdl__nodes__get_instantiated_unit
-
 Set_Instantiated_Unit = libghdl.vhdl__nodes__set_instantiated_unit
 
 Get_Generic_Map_Aspect_Chain = libghdl.vhdl__nodes__get_generic_map_aspect_chain
-
 Set_Generic_Map_Aspect_Chain = libghdl.vhdl__nodes__set_generic_map_aspect_chain
 
 Get_Port_Map_Aspect_Chain = libghdl.vhdl__nodes__get_port_map_aspect_chain
-
 Set_Port_Map_Aspect_Chain = libghdl.vhdl__nodes__set_port_map_aspect_chain
 
 Get_Configuration_Name = libghdl.vhdl__nodes__get_configuration_name
-
 Set_Configuration_Name = libghdl.vhdl__nodes__set_configuration_name
 
 Get_Component_Configuration = libghdl.vhdl__nodes__get_component_configuration
-
 Set_Component_Configuration = libghdl.vhdl__nodes__set_component_configuration
 
 Get_Configuration_Specification = libghdl.vhdl__nodes__get_configuration_specification
-
 Set_Configuration_Specification = libghdl.vhdl__nodes__set_configuration_specification
 
 Get_Default_Binding_Indication = libghdl.vhdl__nodes__get_default_binding_indication
-
 Set_Default_Binding_Indication = libghdl.vhdl__nodes__set_default_binding_indication
 
 Get_Default_Configuration_Declaration = libghdl.vhdl__nodes__get_default_configuration_declaration
-
 Set_Default_Configuration_Declaration = libghdl.vhdl__nodes__set_default_configuration_declaration
 
 Get_Expression = libghdl.vhdl__nodes__get_expression
-
 Set_Expression = libghdl.vhdl__nodes__set_expression
 
 Get_Conditional_Expression_Chain = libghdl.vhdl__nodes__get_conditional_expression_chain
-
 Set_Conditional_Expression_Chain = libghdl.vhdl__nodes__set_conditional_expression_chain
 
 Get_Allocator_Designated_Type = libghdl.vhdl__nodes__get_allocator_designated_type
-
 Set_Allocator_Designated_Type = libghdl.vhdl__nodes__set_allocator_designated_type
 
 Get_Selected_Waveform_Chain = libghdl.vhdl__nodes__get_selected_waveform_chain
-
 Set_Selected_Waveform_Chain = libghdl.vhdl__nodes__set_selected_waveform_chain
 
 Get_Conditional_Waveform_Chain = libghdl.vhdl__nodes__get_conditional_waveform_chain
-
 Set_Conditional_Waveform_Chain = libghdl.vhdl__nodes__set_conditional_waveform_chain
 
 Get_Guard_Expression = libghdl.vhdl__nodes__get_guard_expression
-
 Set_Guard_Expression = libghdl.vhdl__nodes__set_guard_expression
 
 Get_Guard_Decl = libghdl.vhdl__nodes__get_guard_decl
-
 Set_Guard_Decl = libghdl.vhdl__nodes__set_guard_decl
 
 Get_Guard_Sensitivity_List = libghdl.vhdl__nodes__get_guard_sensitivity_list
-
 Set_Guard_Sensitivity_List = libghdl.vhdl__nodes__set_guard_sensitivity_list
 
 Get_Signal_Attribute_Chain = libghdl.vhdl__nodes__get_signal_attribute_chain
-
 Set_Signal_Attribute_Chain = libghdl.vhdl__nodes__set_signal_attribute_chain
 
 Get_Block_Block_Configuration = libghdl.vhdl__nodes__get_block_block_configuration
-
 Set_Block_Block_Configuration = libghdl.vhdl__nodes__set_block_block_configuration
 
 Get_Package_Header = libghdl.vhdl__nodes__get_package_header
-
 Set_Package_Header = libghdl.vhdl__nodes__set_package_header
 
 Get_Block_Header = libghdl.vhdl__nodes__get_block_header
-
 Set_Block_Header = libghdl.vhdl__nodes__set_block_header
 
 Get_Uninstantiated_Package_Name = libghdl.vhdl__nodes__get_uninstantiated_package_name
-
 Set_Uninstantiated_Package_Name = libghdl.vhdl__nodes__set_uninstantiated_package_name
 
 Get_Uninstantiated_Package_Decl = libghdl.vhdl__nodes__get_uninstantiated_package_decl
-
 Set_Uninstantiated_Package_Decl = libghdl.vhdl__nodes__set_uninstantiated_package_decl
 
 Get_Instance_Source_File = libghdl.vhdl__nodes__get_instance_source_file
-
 Set_Instance_Source_File = libghdl.vhdl__nodes__set_instance_source_file
 
 Get_Generate_Block_Configuration = libghdl.vhdl__nodes__get_generate_block_configuration
-
 Set_Generate_Block_Configuration = libghdl.vhdl__nodes__set_generate_block_configuration
 
 Get_Generate_Statement_Body = libghdl.vhdl__nodes__get_generate_statement_body
-
 Set_Generate_Statement_Body = libghdl.vhdl__nodes__set_generate_statement_body
 
 Get_Alternative_Label = libghdl.vhdl__nodes__get_alternative_label
-
 Set_Alternative_Label = libghdl.vhdl__nodes__set_alternative_label
 
 Get_Generate_Else_Clause = libghdl.vhdl__nodes__get_generate_else_clause
-
 Set_Generate_Else_Clause = libghdl.vhdl__nodes__set_generate_else_clause
 
 Get_Condition = libghdl.vhdl__nodes__get_condition
-
 Set_Condition = libghdl.vhdl__nodes__set_condition
 
 Get_Else_Clause = libghdl.vhdl__nodes__get_else_clause
-
 Set_Else_Clause = libghdl.vhdl__nodes__set_else_clause
 
 Get_Parameter_Specification = libghdl.vhdl__nodes__get_parameter_specification
-
 Set_Parameter_Specification = libghdl.vhdl__nodes__set_parameter_specification
 
 Get_Parent = libghdl.vhdl__nodes__get_parent
-
 Set_Parent = libghdl.vhdl__nodes__set_parent
 
 Get_Loop_Label = libghdl.vhdl__nodes__get_loop_label
-
 Set_Loop_Label = libghdl.vhdl__nodes__set_loop_label
 
 Get_Exit_Flag = libghdl.vhdl__nodes__get_exit_flag
-
 Set_Exit_Flag = libghdl.vhdl__nodes__set_exit_flag
 
 Get_Next_Flag = libghdl.vhdl__nodes__get_next_flag
-
 Set_Next_Flag = libghdl.vhdl__nodes__set_next_flag
 
 Get_Component_Name = libghdl.vhdl__nodes__get_component_name
-
 Set_Component_Name = libghdl.vhdl__nodes__set_component_name
 
 Get_Instantiation_List = libghdl.vhdl__nodes__get_instantiation_list
-
 Set_Instantiation_List = libghdl.vhdl__nodes__set_instantiation_list
 
 Get_Entity_Aspect = libghdl.vhdl__nodes__get_entity_aspect
-
 Set_Entity_Aspect = libghdl.vhdl__nodes__set_entity_aspect
 
 Get_Default_Entity_Aspect = libghdl.vhdl__nodes__get_default_entity_aspect
-
 Set_Default_Entity_Aspect = libghdl.vhdl__nodes__set_default_entity_aspect
 
 Get_Binding_Indication = libghdl.vhdl__nodes__get_binding_indication
-
 Set_Binding_Indication = libghdl.vhdl__nodes__set_binding_indication
 
 Get_Named_Entity = libghdl.vhdl__nodes__get_named_entity
-
 Set_Named_Entity = libghdl.vhdl__nodes__set_named_entity
 
 Get_Alias_Declaration = libghdl.vhdl__nodes__get_alias_declaration
-
 Set_Alias_Declaration = libghdl.vhdl__nodes__set_alias_declaration
 
 Get_Referenced_Name = libghdl.vhdl__nodes__get_referenced_name
-
 Set_Referenced_Name = libghdl.vhdl__nodes__set_referenced_name
 
 Get_Expr_Staticness = libghdl.vhdl__nodes__get_expr_staticness
-
 Set_Expr_Staticness = libghdl.vhdl__nodes__set_expr_staticness
 
 Get_Scalar_Size = libghdl.vhdl__nodes__get_scalar_size
-
 Set_Scalar_Size = libghdl.vhdl__nodes__set_scalar_size
 
 Get_Error_Origin = libghdl.vhdl__nodes__get_error_origin
-
 Set_Error_Origin = libghdl.vhdl__nodes__set_error_origin
 
 Get_Operand = libghdl.vhdl__nodes__get_operand
-
 Set_Operand = libghdl.vhdl__nodes__set_operand
 
 Get_Left = libghdl.vhdl__nodes__get_left
-
 Set_Left = libghdl.vhdl__nodes__set_left
 
 Get_Right = libghdl.vhdl__nodes__get_right
-
 Set_Right = libghdl.vhdl__nodes__set_right
 
 Get_Unit_Name = libghdl.vhdl__nodes__get_unit_name
-
 Set_Unit_Name = libghdl.vhdl__nodes__set_unit_name
 
 Get_Name = libghdl.vhdl__nodes__get_name
-
 Set_Name = libghdl.vhdl__nodes__set_name
 
 Get_Group_Template_Name = libghdl.vhdl__nodes__get_group_template_name
-
 Set_Group_Template_Name = libghdl.vhdl__nodes__set_group_template_name
 
 Get_Name_Staticness = libghdl.vhdl__nodes__get_name_staticness
-
 Set_Name_Staticness = libghdl.vhdl__nodes__set_name_staticness
 
 Get_Prefix = libghdl.vhdl__nodes__get_prefix
-
 Set_Prefix = libghdl.vhdl__nodes__set_prefix
 
 Get_Signature_Prefix = libghdl.vhdl__nodes__get_signature_prefix
-
 Set_Signature_Prefix = libghdl.vhdl__nodes__set_signature_prefix
 
 Get_External_Pathname = libghdl.vhdl__nodes__get_external_pathname
-
 Set_External_Pathname = libghdl.vhdl__nodes__set_external_pathname
 
 Get_Pathname_Suffix = libghdl.vhdl__nodes__get_pathname_suffix
-
 Set_Pathname_Suffix = libghdl.vhdl__nodes__set_pathname_suffix
 
 Get_Pathname_Expression = libghdl.vhdl__nodes__get_pathname_expression
-
 Set_Pathname_Expression = libghdl.vhdl__nodes__set_pathname_expression
 
 Get_In_Formal_Flag = libghdl.vhdl__nodes__get_in_formal_flag
-
 Set_In_Formal_Flag = libghdl.vhdl__nodes__set_in_formal_flag
 
 Get_Slice_Subtype = libghdl.vhdl__nodes__get_slice_subtype
-
 Set_Slice_Subtype = libghdl.vhdl__nodes__set_slice_subtype
 
 Get_Suffix = libghdl.vhdl__nodes__get_suffix
-
 Set_Suffix = libghdl.vhdl__nodes__set_suffix
 
 Get_Index_Subtype = libghdl.vhdl__nodes__get_index_subtype
-
 Set_Index_Subtype = libghdl.vhdl__nodes__set_index_subtype
 
 Get_Parameter = libghdl.vhdl__nodes__get_parameter
-
 Set_Parameter = libghdl.vhdl__nodes__set_parameter
 
 Get_Parameter_2 = libghdl.vhdl__nodes__get_parameter_2
-
 Set_Parameter_2 = libghdl.vhdl__nodes__set_parameter_2
 
 Get_Parameter_3 = libghdl.vhdl__nodes__get_parameter_3
-
 Set_Parameter_3 = libghdl.vhdl__nodes__set_parameter_3
 
 Get_Parameter_4 = libghdl.vhdl__nodes__get_parameter_4
-
 Set_Parameter_4 = libghdl.vhdl__nodes__set_parameter_4
 
 Get_Attr_Chain = libghdl.vhdl__nodes__get_attr_chain
-
 Set_Attr_Chain = libghdl.vhdl__nodes__set_attr_chain
 
 Get_Signal_Attribute_Declaration = libghdl.vhdl__nodes__get_signal_attribute_declaration
-
 Set_Signal_Attribute_Declaration = libghdl.vhdl__nodes__set_signal_attribute_declaration
 
 Get_Actual_Type = libghdl.vhdl__nodes__get_actual_type
-
 Set_Actual_Type = libghdl.vhdl__nodes__set_actual_type
 
 Get_Actual_Type_Definition = libghdl.vhdl__nodes__get_actual_type_definition
-
 Set_Actual_Type_Definition = libghdl.vhdl__nodes__set_actual_type_definition
 
 Get_Association_Chain = libghdl.vhdl__nodes__get_association_chain
-
 Set_Association_Chain = libghdl.vhdl__nodes__set_association_chain
 
 Get_Individual_Association_Chain = libghdl.vhdl__nodes__get_individual_association_chain
-
 Set_Individual_Association_Chain = libghdl.vhdl__nodes__set_individual_association_chain
 
 Get_Subprogram_Association_Chain = libghdl.vhdl__nodes__get_subprogram_association_chain
-
 Set_Subprogram_Association_Chain = libghdl.vhdl__nodes__set_subprogram_association_chain
 
 Get_Aggregate_Info = libghdl.vhdl__nodes__get_aggregate_info
-
 Set_Aggregate_Info = libghdl.vhdl__nodes__set_aggregate_info
 
 Get_Sub_Aggregate_Info = libghdl.vhdl__nodes__get_sub_aggregate_info
-
 Set_Sub_Aggregate_Info = libghdl.vhdl__nodes__set_sub_aggregate_info
 
 Get_Aggr_Dynamic_Flag = libghdl.vhdl__nodes__get_aggr_dynamic_flag
-
 Set_Aggr_Dynamic_Flag = libghdl.vhdl__nodes__set_aggr_dynamic_flag
 
 Get_Aggr_Min_Length = libghdl.vhdl__nodes__get_aggr_min_length
-
 Set_Aggr_Min_Length = libghdl.vhdl__nodes__set_aggr_min_length
 
 Get_Aggr_Low_Limit = libghdl.vhdl__nodes__get_aggr_low_limit
-
 Set_Aggr_Low_Limit = libghdl.vhdl__nodes__set_aggr_low_limit
 
 Get_Aggr_High_Limit = libghdl.vhdl__nodes__get_aggr_high_limit
-
 Set_Aggr_High_Limit = libghdl.vhdl__nodes__set_aggr_high_limit
 
 Get_Aggr_Others_Flag = libghdl.vhdl__nodes__get_aggr_others_flag
-
 Set_Aggr_Others_Flag = libghdl.vhdl__nodes__set_aggr_others_flag
 
 Get_Aggr_Named_Flag = libghdl.vhdl__nodes__get_aggr_named_flag
-
 Set_Aggr_Named_Flag = libghdl.vhdl__nodes__set_aggr_named_flag
 
 Get_Aggregate_Expand_Flag = libghdl.vhdl__nodes__get_aggregate_expand_flag
-
 Set_Aggregate_Expand_Flag = libghdl.vhdl__nodes__set_aggregate_expand_flag
 
 Get_Association_Choices_Chain = libghdl.vhdl__nodes__get_association_choices_chain
-
 Set_Association_Choices_Chain = libghdl.vhdl__nodes__set_association_choices_chain
 
 Get_Case_Statement_Alternative_Chain = libghdl.vhdl__nodes__get_case_statement_alternative_chain
-
 Set_Case_Statement_Alternative_Chain = libghdl.vhdl__nodes__set_case_statement_alternative_chain
 
 Get_Choice_Staticness = libghdl.vhdl__nodes__get_choice_staticness
-
 Set_Choice_Staticness = libghdl.vhdl__nodes__set_choice_staticness
 
 Get_Procedure_Call = libghdl.vhdl__nodes__get_procedure_call
-
 Set_Procedure_Call = libghdl.vhdl__nodes__set_procedure_call
 
 Get_Implementation = libghdl.vhdl__nodes__get_implementation
-
 Set_Implementation = libghdl.vhdl__nodes__set_implementation
 
 Get_Parameter_Association_Chain = libghdl.vhdl__nodes__get_parameter_association_chain
-
 Set_Parameter_Association_Chain = libghdl.vhdl__nodes__set_parameter_association_chain
 
 Get_Method_Object = libghdl.vhdl__nodes__get_method_object
-
 Set_Method_Object = libghdl.vhdl__nodes__set_method_object
 
 Get_Subtype_Type_Mark = libghdl.vhdl__nodes__get_subtype_type_mark
-
 Set_Subtype_Type_Mark = libghdl.vhdl__nodes__set_subtype_type_mark
 
 Get_Subnature_Nature_Mark = libghdl.vhdl__nodes__get_subnature_nature_mark
-
 Set_Subnature_Nature_Mark = libghdl.vhdl__nodes__set_subnature_nature_mark
 
 Get_Type_Conversion_Subtype = libghdl.vhdl__nodes__get_type_conversion_subtype
-
 Set_Type_Conversion_Subtype = libghdl.vhdl__nodes__set_type_conversion_subtype
 
 Get_Type_Mark = libghdl.vhdl__nodes__get_type_mark
-
 Set_Type_Mark = libghdl.vhdl__nodes__set_type_mark
 
 Get_File_Type_Mark = libghdl.vhdl__nodes__get_file_type_mark
-
 Set_File_Type_Mark = libghdl.vhdl__nodes__set_file_type_mark
 
 Get_Return_Type_Mark = libghdl.vhdl__nodes__get_return_type_mark
-
 Set_Return_Type_Mark = libghdl.vhdl__nodes__set_return_type_mark
 
 Get_Has_Disconnect_Flag = libghdl.vhdl__nodes__get_has_disconnect_flag
-
 Set_Has_Disconnect_Flag = libghdl.vhdl__nodes__set_has_disconnect_flag
 
 Get_Has_Active_Flag = libghdl.vhdl__nodes__get_has_active_flag
-
 Set_Has_Active_Flag = libghdl.vhdl__nodes__set_has_active_flag
 
 Get_Is_Within_Flag = libghdl.vhdl__nodes__get_is_within_flag
-
 Set_Is_Within_Flag = libghdl.vhdl__nodes__set_is_within_flag
 
 Get_Type_Marks_List = libghdl.vhdl__nodes__get_type_marks_list
-
 Set_Type_Marks_List = libghdl.vhdl__nodes__set_type_marks_list
 
 Get_Implicit_Alias_Flag = libghdl.vhdl__nodes__get_implicit_alias_flag
-
 Set_Implicit_Alias_Flag = libghdl.vhdl__nodes__set_implicit_alias_flag
 
 Get_Alias_Signature = libghdl.vhdl__nodes__get_alias_signature
-
 Set_Alias_Signature = libghdl.vhdl__nodes__set_alias_signature
 
 Get_Attribute_Signature = libghdl.vhdl__nodes__get_attribute_signature
-
 Set_Attribute_Signature = libghdl.vhdl__nodes__set_attribute_signature
 
 Get_Overload_List = libghdl.vhdl__nodes__get_overload_list
-
 Set_Overload_List = libghdl.vhdl__nodes__set_overload_list
 
 Get_Simple_Name_Identifier = libghdl.vhdl__nodes__get_simple_name_identifier
-
 Set_Simple_Name_Identifier = libghdl.vhdl__nodes__set_simple_name_identifier
 
 Get_Simple_Name_Subtype = libghdl.vhdl__nodes__get_simple_name_subtype
-
 Set_Simple_Name_Subtype = libghdl.vhdl__nodes__set_simple_name_subtype
 
 Get_Protected_Type_Body = libghdl.vhdl__nodes__get_protected_type_body
-
 Set_Protected_Type_Body = libghdl.vhdl__nodes__set_protected_type_body
 
 Get_Protected_Type_Declaration = libghdl.vhdl__nodes__get_protected_type_declaration
-
 Set_Protected_Type_Declaration = libghdl.vhdl__nodes__set_protected_type_declaration
 
 Get_Use_Flag = libghdl.vhdl__nodes__get_use_flag
-
 Set_Use_Flag = libghdl.vhdl__nodes__set_use_flag
 
 Get_End_Has_Reserved_Id = libghdl.vhdl__nodes__get_end_has_reserved_id
-
 Set_End_Has_Reserved_Id = libghdl.vhdl__nodes__set_end_has_reserved_id
 
 Get_End_Has_Identifier = libghdl.vhdl__nodes__get_end_has_identifier
-
 Set_End_Has_Identifier = libghdl.vhdl__nodes__set_end_has_identifier
 
 Get_End_Has_Postponed = libghdl.vhdl__nodes__get_end_has_postponed
-
 Set_End_Has_Postponed = libghdl.vhdl__nodes__set_end_has_postponed
 
 Get_Has_Label = libghdl.vhdl__nodes__get_has_label
-
 Set_Has_Label = libghdl.vhdl__nodes__set_has_label
 
 Get_Has_Begin = libghdl.vhdl__nodes__get_has_begin
-
 Set_Has_Begin = libghdl.vhdl__nodes__set_has_begin
 
 Get_Has_End = libghdl.vhdl__nodes__get_has_end
-
 Set_Has_End = libghdl.vhdl__nodes__set_has_end
 
 Get_Has_Is = libghdl.vhdl__nodes__get_has_is
-
 Set_Has_Is = libghdl.vhdl__nodes__set_has_is
 
 Get_Has_Pure = libghdl.vhdl__nodes__get_has_pure
-
 Set_Has_Pure = libghdl.vhdl__nodes__set_has_pure
 
 Get_Has_Body = libghdl.vhdl__nodes__get_has_body
-
 Set_Has_Body = libghdl.vhdl__nodes__set_has_body
 
 Get_Has_Parameter = libghdl.vhdl__nodes__get_has_parameter
-
 Set_Has_Parameter = libghdl.vhdl__nodes__set_has_parameter
 
 Get_Has_Component = libghdl.vhdl__nodes__get_has_component
-
 Set_Has_Component = libghdl.vhdl__nodes__set_has_component
 
 Get_Has_Identifier_List = libghdl.vhdl__nodes__get_has_identifier_list
-
 Set_Has_Identifier_List = libghdl.vhdl__nodes__set_has_identifier_list
 
 Get_Has_Mode = libghdl.vhdl__nodes__get_has_mode
-
 Set_Has_Mode = libghdl.vhdl__nodes__set_has_mode
 
 Get_Has_Class = libghdl.vhdl__nodes__get_has_class
-
 Set_Has_Class = libghdl.vhdl__nodes__set_has_class
 
 Get_Has_Delay_Mechanism = libghdl.vhdl__nodes__get_has_delay_mechanism
-
 Set_Has_Delay_Mechanism = libghdl.vhdl__nodes__set_has_delay_mechanism
 
 Get_Suspend_Flag = libghdl.vhdl__nodes__get_suspend_flag
-
 Set_Suspend_Flag = libghdl.vhdl__nodes__set_suspend_flag
 
 Get_Is_Ref = libghdl.vhdl__nodes__get_is_ref
-
 Set_Is_Ref = libghdl.vhdl__nodes__set_is_ref
 
 Get_Is_Forward_Ref = libghdl.vhdl__nodes__get_is_forward_ref
-
 Set_Is_Forward_Ref = libghdl.vhdl__nodes__set_is_forward_ref
 
 Get_Psl_Property = libghdl.vhdl__nodes__get_psl_property
-
 Set_Psl_Property = libghdl.vhdl__nodes__set_psl_property
 
 Get_Psl_Sequence = libghdl.vhdl__nodes__get_psl_sequence
-
 Set_Psl_Sequence = libghdl.vhdl__nodes__set_psl_sequence
 
 Get_Psl_Declaration = libghdl.vhdl__nodes__get_psl_declaration
-
 Set_Psl_Declaration = libghdl.vhdl__nodes__set_psl_declaration
 
 Get_Psl_Expression = libghdl.vhdl__nodes__get_psl_expression
-
 Set_Psl_Expression = libghdl.vhdl__nodes__set_psl_expression
 
 Get_Psl_Boolean = libghdl.vhdl__nodes__get_psl_boolean
-
 Set_Psl_Boolean = libghdl.vhdl__nodes__set_psl_boolean
 
 Get_PSL_Clock = libghdl.vhdl__nodes__get_psl_clock
-
 Set_PSL_Clock = libghdl.vhdl__nodes__set_psl_clock
 
 Get_PSL_NFA = libghdl.vhdl__nodes__get_psl_nfa
-
 Set_PSL_NFA = libghdl.vhdl__nodes__set_psl_nfa
 
 Get_PSL_Nbr_States = libghdl.vhdl__nodes__get_psl_nbr_states
-
 Set_PSL_Nbr_States = libghdl.vhdl__nodes__set_psl_nbr_states
 
 Get_PSL_Clock_Sensitivity = libghdl.vhdl__nodes__get_psl_clock_sensitivity
-
 Set_PSL_Clock_Sensitivity = libghdl.vhdl__nodes__set_psl_clock_sensitivity
 
 Get_PSL_EOS_Flag = libghdl.vhdl__nodes__get_psl_eos_flag
-
 Set_PSL_EOS_Flag = libghdl.vhdl__nodes__set_psl_eos_flag
 
 Get_Count_Expression = libghdl.vhdl__nodes__get_count_expression
-
 Set_Count_Expression = libghdl.vhdl__nodes__set_count_expression
 
 Get_Clock_Expression = libghdl.vhdl__nodes__get_clock_expression
-
 Set_Clock_Expression = libghdl.vhdl__nodes__set_clock_expression
 
 Get_Default_Clock = libghdl.vhdl__nodes__get_default_clock
-
 Set_Default_Clock = libghdl.vhdl__nodes__set_default_clock
+

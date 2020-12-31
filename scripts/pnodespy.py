@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
-"""Like pnodes but output for python"""
+"""Like pnodes but output for Python"""
 
 from __future__ import print_function
 
 import sys
+from textwrap import dedent
 
 import pnodes
 import re
@@ -13,9 +14,11 @@ libname = "libghdl"
 
 
 def print_enum(name, vals):
-    print()
-    print()
-    print("class {0}:".format(name))
+    print(dedent("""
+
+        class {0}:
+        """).format(name), end=''
+    )
     for n, k in enumerate(vals):
         if k == "None":
             k = "PNone"
@@ -37,40 +40,33 @@ def do_class_kinds():
 
 def do_iirs_subprg():
     classname = "vhdl__nodes"
-    print()
-    print("Get_Kind = {0}.{1}__get_kind".format(libname, classname))
-    print("Get_Location = {0}.{1}__get_location".format(libname, classname))
+    print(dedent("""
+        Get_Kind = {libname}.{classname}__get_kind
+        Get_Location = {libname}.{classname}__get_location
+        """).format(libname=libname, classname=classname)
+    )
     for k in pnodes.funcs:
-        print()
-        print(
-            "Get_{0} = {1}.{2}__get_{3}".format(
-                k.name, libname, classname, k.name.lower()
-            )
-        )
-        print()
-        print(
-            "Set_{0} = {1}.{2}__set_{3}".format(
-                k.name, libname, classname, k.name.lower(), k.pname, k.rname
-            )
+        print(dedent("""\
+            Get_{kname} = {libname}.{classname}__get_{kname_lower}
+            Set_{kname} = {libname}.{classname}__set_{kname_lower}
+            """).format(kname=k.name, kname_lower=k.name.lower(), libname=libname, classname=classname)
         )
 
 
 def do_libghdl_elocations():
     classname = "vhdl__elocations"
-    print("from pyGHDL.libghdl import libghdl")
-    print()
+    print(dedent("""\
+        # Auto generated Python source file from Ada sources
+        # Call 'make' in 'src/vhdl' to regenerate:
+        #
+        from pyGHDL.libghdl import libghdl
+        """)
+    )
     for k in pnodes.funcs:
-        print()
-        print(
-            "Get_{0} = {1}.{2}__get_{3}".format(
-                k.name, libname, classname, k.name.lower()
-            )
-        )
-        print()
-        print(
-            "Set_{0} = {1}.{2}__set_{3}".format(
-                k.name, libname, classname, k.name.lower(), k.pname, k.rname
-            )
+        print(dedent("""\
+            Get_{kname} = {libname}.{classname}__get_{kname_lower}
+            Set_{kname} = {libname}.{classname}__set_{kname_lower}
+            """).format(kname=k.name, kname_lower=k.name.lower(), libname=libname, classname=classname)
         )
 
 
@@ -143,19 +139,23 @@ def read_spec_enum(type_name, prefix, class_name):
 
 
 def do_libghdl_nodes():
-    print("from pyGHDL.libghdl import libghdl")
-    print(
-        """
-Null_Iir = 0
+    print(dedent("""\
+        # Auto generated Python source file from Ada sources
+        # Call 'make' in 'src/vhdl' to regenerate:
+        #
+        from pyGHDL.libghdl import libghdl
 
-Null_Iir_List = 0
-Iir_List_All = 1
+        Null_Iir = 0
 
-Null_Iir_Flist = 0
-Iir_Flist_Others = 1
-Iir_Flist_All = 2
-"""
+        Null_Iir_List = 0
+        Iir_List_All = 1
+
+        Null_Iir_Flist = 0
+        Iir_Flist_Others = 1
+        Iir_Flist_All = 2
+        """)
     )
+
     do_class_kinds()
     read_spec_enum("Iir_Mode", "Iir_", "Iir_Mode")
     read_spec_enum("Iir_Staticness", "", "Iir_Staticness")
@@ -167,21 +167,25 @@ Iir_Flist_All = 2
 
 
 def do_libghdl_meta():
-    print("from pyGHDL.libghdl import libghdl")
-    print(
-        """
+    print(dedent("""\
+        # Auto generated Python source file from Ada sources
+        # Call 'make' in 'src/vhdl' to regenerate:
+        #
+        from pyGHDL.libghdl import libghdl
 
-# From nodes_meta
-get_fields_first = libghdl.vhdl__nodes_meta__get_fields_first
 
-get_fields_last = libghdl.vhdl__nodes_meta__get_fields_last
+        # From nodes_meta
+        get_fields_first = libghdl.vhdl__nodes_meta__get_fields_first
 
-get_field_by_index = libghdl.vhdl__nodes_meta__get_field_by_index
+        get_fields_last = libghdl.vhdl__nodes_meta__get_fields_last
 
-get_field_type = libghdl.vhdl__nodes_meta__get_field_type
+        get_field_by_index = libghdl.vhdl__nodes_meta__get_field_by_index
 
-get_field_attribute = libghdl.vhdl__nodes_meta__get_field_attribute"""
-    )
+        get_field_type = libghdl.vhdl__nodes_meta__get_field_type
+
+        get_field_attribute = libghdl.vhdl__nodes_meta__get_field_attribute
+        """), end='')
+
     do_class_types()
     do_class_field_attributes()
     do_class_fields()
@@ -226,7 +230,12 @@ def do_libghdl_names():
             val_max = max(val_max, val)
             dict[name_def] = val
             res.append((name_def, val))
-    print("class Name:")
+    print(dedent("""\
+        # Auto generated Python source file from Ada sources
+        # Call 'make' in 'src/vhdl' to regenerate:
+        #
+        class Name:
+        """), end='')
     for n, v in res:
         # Avoid clash with Python names
         if n in ["False", "True", "None"]:
@@ -235,12 +244,24 @@ def do_libghdl_names():
 
 
 def do_libghdl_tokens():
+    print(dedent("""\
+        # Auto generated Python source file from Ada sources
+        # Call 'make' in 'src/vhdl' to regenerate:
+        #
+        """), end='')
     read_enum("vhdl-tokens.ads", "Token_Type", "Tok_", "Tok")
 
 
 def do_libghdl_errorout():
-    print("from pyGHDL.libghdl import libghdl")
-    print("\n" "Enable_Warning = libghdl.errorout__enable_warning")
+    print(dedent("""\
+        # Auto generated Python source file from Ada sources
+        # Call 'make' in 'src/vhdl' to regenerate:
+        #
+        from pyGHDL.libghdl import libghdl
+
+        Enable_Warning = libghdl.errorout__enable_warning
+        """), end='')
+
     read_enum(
         "../errorout.ads",
         "Msgid_Type",

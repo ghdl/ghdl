@@ -1,3 +1,6 @@
+# Auto generated Python source file from Ada sources
+# Call 'make' in 'src/vhdl' to regenerate:
+#
 from pyGHDL.libghdl import libghdl
 
 Enable_Warning = libghdl.errorout__enable_warning
