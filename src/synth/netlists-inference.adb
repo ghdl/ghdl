@@ -361,6 +361,7 @@ package body Netlists.Inference is
 
          --  Create the FF.
          if Rst = No_Net then
+            --  No async reset
             pragma Assert (Rst_Val = No_Net);
             if Els = No_Net then
                if Init /= No_Net then

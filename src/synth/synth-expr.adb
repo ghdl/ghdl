@@ -1210,6 +1210,13 @@ package body Synth.Expr is
 
          --  Use the base type as the subtype of the index is not synth-ed.
          Idx_Val := Synth_Expression_With_Basetype (Syn_Inst, Idx_Expr);
+         if Idx_Val = No_Valtyp then
+            --  Propagate errorc
+            Voff := No_Net;
+            Off := (0, 0);
+            return;
+         end if;
+
          Strip_Const (Idx_Val);
 
          Bnd := Get_Array_Bound (Pfx_Type, Dim_Type (I + 1));
