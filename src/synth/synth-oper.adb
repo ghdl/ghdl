@@ -1930,6 +1930,7 @@ package body Synth.Oper is
             | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Int =>
             return Synth_Conv_Vector (True);
          when Iir_Predefined_Ieee_Numeric_Std_Toint_Uns_Nat
+            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_To_Integer_Slv_Nat
             | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Uns
             | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Log
             | Iir_Predefined_Ieee_Std_Logic_Unsigned_Conv_Integer =>
