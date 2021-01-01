@@ -5873,6 +5873,9 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_Numeric_Std_To_01_Uns,
       Iir_Predefined_Ieee_Numeric_Std_To_01_Sgn,
 
+      --  Numeric_Std_Unsigned (ieee2008)
+      Iir_Predefined_Ieee_Numeric_Std_Unsigned_To_Integer_Slv_Nat,
+
       --  Math_Real
       Iir_Predefined_Ieee_Math_Real_Ceil,
       Iir_Predefined_Ieee_Math_Real_Floor,

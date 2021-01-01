@@ -21,6 +21,7 @@ with Vhdl.Sem_Specs;
 with Vhdl.Ieee.Std_Logic_1164;
 with Vhdl.Ieee.Vital_Timing;
 with Vhdl.Ieee.Numeric;
+with Vhdl.Ieee.Numeric_Std_Unsigned;
 with Vhdl.Ieee.Math_Real;
 with Vhdl.Ieee.Std_Logic_Unsigned;
 with Vhdl.Ieee.Std_Logic_Arith;
@@ -60,7 +61,11 @@ package body Vhdl.Post_Sems is
                when Name_VITAL_Timing =>
                   Vhdl.Ieee.Vital_Timing.Extract_Declarations (Lib_Unit);
                when Name_Numeric_Std =>
-                  Vhdl.Ieee.Numeric.Extract_Std_Declarations (Lib_Unit);
+                  Vhdl.Ieee.Numeric.Extract_Std_Declarations
+                    (Lib_Unit);
+               when Name_Numeric_Std_Unsigned =>
+                  Vhdl.Ieee.Numeric_Std_Unsigned.Extract_Declarations
+                    (Lib_Unit);
                when Name_Math_Real =>
                   Vhdl.Ieee.Math_Real.Extract_Declarations (Lib_Unit);
                when Name_Std_Logic_Unsigned =>

@@ -615,17 +615,18 @@ package body Std_Names is
       Def ("built_in",              Name_Built_In);
       Def ("none",                  Name_None);
 
-      Def ("ieee",               Name_Ieee);
-      Def ("std_logic_1164",     Name_Std_Logic_1164);
-      Def ("vital_timing",       Name_VITAL_Timing);
-      Def ("numeric_std",        Name_Numeric_Std);
-      Def ("numeric_bit",        Name_Numeric_Bit);
-      Def ("std_logic_arith",    Name_Std_Logic_Arith);
-      Def ("std_logic_signed",   Name_Std_Logic_Signed);
-      Def ("std_logic_unsigned", Name_Std_Logic_Unsigned);
-      Def ("std_logic_textio",   Name_Std_Logic_Textio);
-      Def ("std_logic_misc",     Name_Std_Logic_Misc);
-      Def ("math_real",          Name_Math_Real);
+      Def ("ieee",                  Name_Ieee);
+      Def ("std_logic_1164",        Name_Std_Logic_1164);
+      Def ("vital_timing",          Name_VITAL_Timing);
+      Def ("numeric_std",           Name_Numeric_Std);
+      Def ("numeric_bit",           Name_Numeric_Bit);
+      Def ("numeric_std_unsigned",  Name_Numeric_Std_Unsigned);
+      Def ("std_logic_arith",       Name_Std_Logic_Arith);
+      Def ("std_logic_signed",      Name_Std_Logic_Signed);
+      Def ("std_logic_unsigned",    Name_Std_Logic_Unsigned);
+      Def ("std_logic_textio",      Name_Std_Logic_Textio);
+      Def ("std_logic_misc",        Name_Std_Logic_Misc);
+      Def ("math_real",             Name_Math_Real);
 
       Def ("std_ulogic",         Name_Std_Ulogic);
       Def ("std_ulogic_vector",  Name_Std_Ulogic_Vector);

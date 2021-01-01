@@ -695,19 +695,20 @@ package Std_Names is
    Name_None :                  constant Name_Id := Name_First_Misc + 041;
    Name_Last_Misc :             constant Name_Id := Name_None;
 
-   Name_First_Ieee_Pkg     : constant Name_Id := Name_Last_Misc + 1;
-   Name_Ieee               : constant Name_Id := Name_First_Ieee_Pkg + 000;
-   Name_Std_Logic_1164     : constant Name_Id := Name_First_Ieee_Pkg + 001;
-   Name_VITAL_Timing       : constant Name_Id := Name_First_Ieee_Pkg + 002;
-   Name_Numeric_Std        : constant Name_Id := Name_First_Ieee_Pkg + 003;
-   Name_Numeric_Bit        : constant Name_Id := Name_First_Ieee_Pkg + 004;
-   Name_Std_Logic_Arith    : constant Name_Id := Name_First_Ieee_Pkg + 005;
-   Name_Std_Logic_Signed   : constant Name_Id := Name_First_Ieee_Pkg + 006;
-   Name_Std_Logic_Unsigned : constant Name_Id := Name_First_Ieee_Pkg + 007;
-   Name_Std_Logic_Textio   : constant Name_Id := Name_First_Ieee_Pkg + 008;
-   Name_Std_Logic_Misc     : constant Name_Id := Name_First_Ieee_Pkg + 009;
-   Name_Math_Real          : constant Name_Id := Name_First_Ieee_Pkg + 010;
-   Name_Last_Ieee_Pkg      : constant Name_Id := Name_Math_Real;
+   Name_First_Ieee_Pkg       : constant Name_Id := Name_Last_Misc + 1;
+   Name_Ieee                 : constant Name_Id := Name_First_Ieee_Pkg + 000;
+   Name_Std_Logic_1164       : constant Name_Id := Name_First_Ieee_Pkg + 001;
+   Name_VITAL_Timing         : constant Name_Id := Name_First_Ieee_Pkg + 002;
+   Name_Numeric_Std          : constant Name_Id := Name_First_Ieee_Pkg + 003;
+   Name_Numeric_Bit          : constant Name_Id := Name_First_Ieee_Pkg + 004;
+   Name_Numeric_Std_Unsigned : constant Name_Id := Name_First_Ieee_Pkg + 005;
+   Name_Std_Logic_Arith      : constant Name_Id := Name_First_Ieee_Pkg + 006;
+   Name_Std_Logic_Signed     : constant Name_Id := Name_First_Ieee_Pkg + 007;
+   Name_Std_Logic_Unsigned   : constant Name_Id := Name_First_Ieee_Pkg + 008;
+   Name_Std_Logic_Textio     : constant Name_Id := Name_First_Ieee_Pkg + 009;
+   Name_Std_Logic_Misc       : constant Name_Id := Name_First_Ieee_Pkg + 010;
+   Name_Math_Real            : constant Name_Id := Name_First_Ieee_Pkg + 011;
+   Name_Last_Ieee_Pkg        : constant Name_Id := Name_Math_Real;
 
    Name_First_Ieee_Name    : constant Name_Id := Name_Last_Ieee_Pkg + 1;
    Name_Std_Ulogic         : constant Name_Id := Name_First_Ieee_Name + 000;
