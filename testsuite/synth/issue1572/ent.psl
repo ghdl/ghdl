@@ -1,0 +1,11 @@
+vunit i_ent(ent(synthesis))
+{
+   default clock is rising_edge(clk_i);
+
+   process (all)
+      variable num_colors : integer_vector(0 to 7);
+   begin
+      num_colors := (others => 0);
+      num_colors(to_integer(u0)) := num_colors(to_integer(u0)) + 1;
+   end process;
+}
