@@ -5,11 +5,6 @@
 GHDL
 ####
 
-.. image:: _static/logo.png
-   :width: 400 px
-   :align: center
-   :target: https://github.com/ghdl/ghdl-cosim
-
 .. raw:: html
 
    <p style="text-align: center;">

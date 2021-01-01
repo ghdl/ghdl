@@ -99,6 +99,8 @@ except Exception as ex:
 
 # -- Options for HTML output ----------------------------------------------
 
+html_logo = '_static/img/logo.png'
+
 html_theme_options = {
     'logo_only': True,
     'home_breadcrumbs': False,
@@ -115,6 +117,9 @@ html_theme = "_theme"
 
 html_static_path = ['_static']
 html_extra_path = [str(Path(__file__).resolve().parent.parent / 'public')]
+
+html_logo = str(Path(html_static_path[0]) / 'logo.png')
+html_favicon = str(Path(html_static_path[0]) / 'icon.png')
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'GHDLdoc'
