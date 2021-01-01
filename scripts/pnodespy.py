@@ -25,6 +25,14 @@ def print_enum(name, vals):
         print("    {0} = {1}".format(k, n))
 
 
+def print_file_header():
+    print(dedent("""\
+        # Auto generated Python source file from Ada sources
+        # Call 'make' in 'src/vhdl' to regenerate:
+        #
+    """), end='')
+
+
 def do_class_kinds():
     print_enum(pnodes.prefix_name.rstrip("_"), pnodes.kinds)
     print()
@@ -55,13 +63,9 @@ def do_iirs_subprg():
 
 def do_libghdl_elocations():
     classname = "vhdl__elocations"
-    print(dedent("""\
-        # Auto generated Python source file from Ada sources
-        # Call 'make' in 'src/vhdl' to regenerate:
-        #
-        from pyGHDL.libghdl import libghdl
-        """)
-    )
+    print_file_header()
+    print("from pyGHDL.libghdl import libghdl")
+    print()
     for k in pnodes.funcs:
         print(dedent("""\
             Get_{kname} = {libname}.{classname}__get_{kname_lower}
@@ -139,10 +143,8 @@ def read_spec_enum(type_name, prefix, class_name):
 
 
 def do_libghdl_nodes():
+    print_file_header()
     print(dedent("""\
-        # Auto generated Python source file from Ada sources
-        # Call 'make' in 'src/vhdl' to regenerate:
-        #
         from pyGHDL.libghdl import libghdl
 
         Null_Iir = 0
@@ -167,10 +169,8 @@ def do_libghdl_nodes():
 
 
 def do_libghdl_meta():
+    print_file_header()
     print(dedent("""\
-        # Auto generated Python source file from Ada sources
-        # Call 'make' in 'src/vhdl' to regenerate:
-        #
         from pyGHDL.libghdl import libghdl
 
 
@@ -230,12 +230,8 @@ def do_libghdl_names():
             val_max = max(val_max, val)
             dict[name_def] = val
             res.append((name_def, val))
-    print(dedent("""\
-        # Auto generated Python source file from Ada sources
-        # Call 'make' in 'src/vhdl' to regenerate:
-        #
-        class Name:
-        """), end='')
+    print_file_header()
+    print("class Name:")
     for n, v in res:
         # Avoid clash with Python names
         if n in ["False", "True", "None"]:
@@ -244,19 +240,13 @@ def do_libghdl_names():
 
 
 def do_libghdl_tokens():
-    print(dedent("""\
-        # Auto generated Python source file from Ada sources
-        # Call 'make' in 'src/vhdl' to regenerate:
-        #
-        """), end='')
+    print_file_header()
     read_enum("vhdl-tokens.ads", "Token_Type", "Tok_", "Tok")
 
 
 def do_libghdl_errorout():
+    print_file_header()
     print(dedent("""\
-        # Auto generated Python source file from Ada sources
-        # Call 'make' in 'src/vhdl' to regenerate:
-        #
         from pyGHDL.libghdl import libghdl
 
         Enable_Warning = libghdl.errorout__enable_warning
