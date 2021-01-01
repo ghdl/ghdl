@@ -283,11 +283,8 @@ jobs:
         pacman --noconfirm -U artifact/mingw-w64-x86_64-ghdl-llvm-*.zst
         pip3 install -r testsuite/requirements.txt
 
-    - name: Test package
-      run: |
-        GHDL=ghdl \
-        PYTEST_ARGS='--cov=.. --cov-config=.coveragerc' \
-        ./testsuite/testsuite.sh pyunit
+    - name: Run tests to generate coverage report
+      run: PYTHONPATH=$(pwd)/.. python3 -m pytest -rA --cov=.. --cov-config=.coveragerc testsuite/pyunit
 
 #---
 
