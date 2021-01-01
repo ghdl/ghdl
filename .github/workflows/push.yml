@@ -109,7 +109,7 @@ jobs:
 # Windows Build
 #
 
-  win:
+  win-build:
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -171,7 +171,7 @@ jobs:
 #
 
   win-test:
-    needs: win
+    needs: win-build
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -248,6 +248,46 @@ jobs:
         -H 'Accept: application/vnd.github.everest-preview+json' \
         -H "Authorization: token ${{ secrets.GHDL_BOT }}" \
         --data '{"event_type": "ghdl"}'
+
+#
+# Coverage (MINGW64)
+#
+
+  coverage:
+    needs: win-build
+    runs-on: windows-latest
+    name: '🟪 Coverage'
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+
+    - name: '🟪 Setup MSYS2'
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW64
+        update: true
+        install: mingw-w64-x86_64-python-pip
+
+    - run: git config --global core.autocrlf input
+      shell: bash
+
+    - name: '🧰 Checkout'
+      uses: actions/checkout@v2
+
+    - name: '📥 Download artifact: package'
+      uses: actions/download-artifact@v2
+
+    - name: Install package and Python dependencies
+      run: |
+        pacman --noconfirm -U artifact/mingw-w64-x86_64-ghdl-llvm-*.zst
+        pip3 install -r testsuite/requirements.txt
+
+    - name: Test package
+      run: |
+        GHDL=ghdl \
+        PYTEST_ARGS='--cov=.. --cov-config=.coveragerc' \
+        ./testsuite/testsuite.sh pyunit
 
 #---
 
