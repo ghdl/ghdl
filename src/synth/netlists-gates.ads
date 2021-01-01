@@ -186,6 +186,8 @@ package Netlists.Gates is
    --  Output:  0: Q
    Id_Iadff : constant Module_Id := 67;
 
+   subtype Dff_Module_Id is Module_Id range Id_Dff .. Id_Iadff;
+
    --  Multi clock dff.  ELSE is the output of the next DFF.
    --  Inputs:  0: CLK
    --           1: D

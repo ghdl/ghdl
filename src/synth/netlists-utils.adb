@@ -289,6 +289,19 @@ package body Netlists.Utils is
       end;
    end Same_Net;
 
+   function Same_Clock (L, R : Net) return Boolean
+   is
+      Linst : constant Instance := Get_Net_Parent (L);
+      Rinst : constant Instance := Get_Net_Parent (R);
+   begin
+      if Get_Id (Linst) /= Get_Id (Rinst) then
+         return False;
+      end if;
+      pragma Assert (Get_Id (Linst) in Edge_Module_Id);
+      return Same_Net (Get_Input_Net (Linst, 0),
+                       Get_Input_Net (Rinst, 0));
+   end Same_Clock;
+
    procedure Copy_Attributes (Dest : Instance; Src : Instance)
    is
       Attr : Attribute;

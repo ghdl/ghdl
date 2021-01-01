@@ -90,6 +90,10 @@ package Netlists.Utils is
    --  selection of the same net.
    function Same_Net (L, R : Net) return Boolean;
 
+   --  Like Same_Net but for a clock.  L and R must be both the output of
+   --  an edge detector.
+   function Same_Clock (L, R : Net) return Boolean;
+
    --  If N is the output of a signal or isignal, return the driver of the
    --  input.
    function Skip_Signal (N : Net) return Net;

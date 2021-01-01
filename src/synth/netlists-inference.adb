@@ -334,14 +334,19 @@ package body Netlists.Inference is
    is
       Ndata : Net;
       Res   : Net;
+      Els_Net : Net;
+      Els_Inst : Instance;
    begin
+      Els_Net := Els;
+      pragma Unreferenced (Els);
+
       if Off = 0
         and then Rst = No_Net
         and then not Synth.Flags.Flag_Debug_Nomemory1
         and then Can_Infere_RAM (Data, Prev_Val)
       then
          --  Maybe it is a RAM.
-         Res := Infere_RAM (Ctxt, Data, Els, Clk, Clk_Enable);
+         Res := Infere_RAM (Ctxt, Data, Els_Net, Clk, Clk_Enable);
       else
          if Clk_Enable /= No_Net then
             --  If there is a condition with the clock, that's an enable which
@@ -363,7 +368,17 @@ package body Netlists.Inference is
          if Rst = No_Net then
             --  No async reset
             pragma Assert (Rst_Val = No_Net);
-            if Els = No_Net then
+
+            if Els_Net /= No_Net then
+               Els_Inst := Get_Net_Parent (Els_Net);
+               if Get_Id (Els_Inst) in Dff_Module_Id
+                 and then Same_Clock (Clk, Get_Input_Net (Els_Inst, 0))
+               then
+                  Els_Net := No_Net;
+               end if;
+            end if;
+
+            if Els_Net = No_Net then
                if Init /= No_Net then
                   Res := Build_Idff (Ctxt, Clk, D => Ndata, Init => Init);
                else
@@ -372,13 +387,13 @@ package body Netlists.Inference is
             else
                if Init /= No_Net then
                   Res := Build_Midff (Ctxt, Clk, D => Ndata,
-                                      Els => Els, Init => Init);
+                                      Els => Els_Net, Init => Init);
                else
-                  Res := Build_Mdff (Ctxt, Clk, D => Ndata, Els => Els);
+                  Res := Build_Mdff (Ctxt, Clk, D => Ndata, Els => Els_Net);
                end if;
             end if;
          else
-            if Els /= No_Net then
+            if Els_Net /= No_Net then
                Error_Msg_Synth
                  (Loc, "synchronous code does not expect else part");
             end if;
