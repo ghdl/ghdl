@@ -17,20 +17,34 @@ depends=(
 makedepends=(
   "${MINGW_PACKAGE_PREFIX}-gcc"
 )
+checkdepends=(
+  "${MINGW_PACKAGE_PREFIX}-python-pip"
+)
 
 build() {
-  mkdir "${srcdir}/builddir"
-  cd "${srcdir}/builddir"
+  echo '::group::Build'
+  mkdir "${srcdir}/build-${CARCH}"
+  cd "${srcdir}/build-${CARCH}"
   ../../../../configure \
     --prefix=${MINGW_PREFIX} \
     LDFLAGS="-static -Wl,--stack=8388608" \
     --enable-libghdl \
     --enable-synth
   make GNATMAKE="gnatmake -j$(nproc)"
+  echo '::endgroup::'
+}
+
+check() {
+  cd "${srcdir}/build-${CARCH}"
+  make install.vpi.local
+  pip3 install -r ../../../../testsuite/requirements.txt
+  GHDL_PREFIX="${srcdir}/build-${CARCH}" make test
 }
 
 package() {
-  cd "${srcdir}/builddir"
+  echo '::group::Package'
+  cd "${srcdir}/build-${CARCH}"
   mkdir -p "${pkgdir}${MINGW_PREFIX}/lib"
   make DESTDIR="${pkgdir}" install
+  echo '::endgroup::'
 }
