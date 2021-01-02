@@ -32,6 +32,14 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
 #
+"""
+This module contains all DOM classes for VHDL's design units (:cls:`entity <Entity>`,
+:cls:`architecture <Architecture>`, :cls:`package <Package>`,
+:cls:`package body <PackageBody>`, :cls:`context <Context>` and
+:cls:`configuration <Configuration>`.
+
+
+"""
 from pydecor import export
 
 from pyVHDLModel.VHDLModel import Entity        as VHDLModel_Entity

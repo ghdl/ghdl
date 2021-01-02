@@ -32,6 +32,10 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
 #
+"""
+.. todo::
+   Add a module documentation.
+"""
 from pydecor import export
 
 from pyVHDLModel.VHDLModel import Modes
