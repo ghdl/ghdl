@@ -35,6 +35,8 @@
 from ctypes import byref
 from typing import List, Any, Generator
 
+from pydecor import export
+
 import pyGHDL.libghdl.name_table as name_table
 import pyGHDL.libghdl.files_map as files_map
 import pyGHDL.libghdl.vhdl.nodes as nodes

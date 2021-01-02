@@ -32,8 +32,10 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
 #
-from pyGHDL.libghdl import libghdl
 from ctypes import c_void_p
+
+from pyGHDL.libghdl import libghdl
+
 
 EOT = b"\x04"
 

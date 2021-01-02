@@ -32,8 +32,10 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
 #
-from pyGHDL.libghdl import libghdl
 from ctypes import c_int32, c_char_p, c_bool
+
+from pyGHDL.libghdl import libghdl
+
 
 Replace_Text = libghdl.files_map__editor__replace_text_ptr
 Replace_Text.argstype = [c_int32, c_int32, c_int32, c_int32, c_char_p, c_int32]

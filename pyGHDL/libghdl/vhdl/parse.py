@@ -32,8 +32,9 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
 #
-from pyGHDL.libghdl import libghdl
 from ctypes import c_bool
+
+from pyGHDL.libghdl import libghdl
 
 
 Parse_Design_File = libghdl.vhdl__parse__parse_design_file
