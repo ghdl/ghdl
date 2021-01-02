@@ -32,8 +32,11 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
 #
-from pyGHDL.libghdl import libghdl
 from ctypes import c_int8, c_int32, c_char_p, Structure
+
+from pydecor import export
+
+from pyGHDL.libghdl import libghdl
 
 
 class Error_Message(Structure):

@@ -32,8 +32,10 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
 #
-from pyGHDL.libghdl import libghdl
 from ctypes import c_int32
+
+from pyGHDL.libghdl import libghdl
+
 
 Get_Libraries_Chain = libghdl.libraries__get_libraries_chain
 

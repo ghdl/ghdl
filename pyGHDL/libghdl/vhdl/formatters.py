@@ -32,8 +32,9 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
 #
-from pyGHDL.libghdl import libghdl
 from ctypes import c_int32, c_char_p
+
+from pyGHDL.libghdl import libghdl
 
 
 Indent_String = libghdl.vhdl__formatters__indent_string

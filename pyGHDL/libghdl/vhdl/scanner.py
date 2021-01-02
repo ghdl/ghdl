@@ -32,8 +32,9 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
 #
-from pyGHDL.libghdl import libghdl
 from ctypes import c_int, c_bool
+
+from pyGHDL.libghdl import libghdl
 
 
 Set_File = libghdl.vhdl__scanner__set_file

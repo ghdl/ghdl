@@ -32,8 +32,9 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
 #
-from pyGHDL.libghdl import libghdl
 from ctypes import c_int
+
+from pyGHDL.libghdl import libghdl
 
 
 Std_Logic_1164_Pkg = c_int.in_dll(

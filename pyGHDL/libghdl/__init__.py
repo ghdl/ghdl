@@ -39,6 +39,8 @@ from pathlib import Path
 from shutil import which
 from typing import Tuple
 
+from pydecor import export
+
 from pyGHDL.libghdl.version import __version__
 
 
