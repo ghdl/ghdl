@@ -45,6 +45,7 @@ import pyGHDL.libghdl.vhdl.lists as lists
 import pyGHDL.libghdl.vhdl.flists as flists
 
 
+@export
 def name_image(nameid) -> str:
     """Lookup a :param:`nameid` and return its string."""
     return name_table.Get_Name_Ptr(nameid).decode("utf-8")
@@ -62,6 +63,7 @@ def _build_enum_image(cls) -> List[str]:
 _fields_image = _build_enum_image(nodes_meta.fields)
 
 
+@export
 def fields_image(idx) -> str:
     """String representation of field :param:`idx`."""
     return _fields_image[idx]
@@ -70,6 +72,7 @@ def fields_image(idx) -> str:
 _kind_image = _build_enum_image(nodes.Iir_Kind)
 
 
+@export
 def kind_image(k) -> str:
     """String representation of Iir_Kind :param:`k`."""
     return _kind_image[k]
@@ -78,6 +81,7 @@ def kind_image(k) -> str:
 _types_image = _build_enum_image(nodes_meta.types)
 
 
+@export
 def types_image(t) -> str:
     """String representation of Nodes_Meta.Types :param:`t`."""
     return _types_image[t]
@@ -86,11 +90,13 @@ def types_image(t) -> str:
 _attr_image = _build_enum_image(nodes_meta.Attr)
 
 
+@export
 def attr_image(a) -> str:
     """String representation of Nodes_Meta.Attr :param:`a`."""
     return _attr_image[a]
 
 
+@export
 def leftest_location(n):
     while True:
         if n == nodes.Null_Iir:
@@ -102,6 +108,7 @@ def leftest_location(n):
             return nodes.Get_Location(n)
 
 
+@export
 def fields_iter(n) -> Generator[Any, None, None]:
     """Iterate on fields of node :param:`n`."""
     if n == nodes.Null_Iir:
@@ -113,6 +120,7 @@ def fields_iter(n) -> Generator[Any, None, None]:
         yield nodes_meta.get_field_by_index(i)
 
 
+@export
 def chain_iter(n) -> Generator[Any, None, None]:
     """Iterate of a chain headed by node :param:`n`."""
     while n != nodes.Null_Iir:
@@ -120,11 +128,13 @@ def chain_iter(n) -> Generator[Any, None, None]:
         n = nodes.Get_Chain(n)
 
 
+@export
 def chain_to_list(n) -> List[Any]:
     """Convert a chain headed by node :param:`n` to a Python list."""
     return [e for e in chain_iter(n)]
 
 
+@export
 def nodes_iter(n) -> Generator[Any, None, None]:
     """
     Iterate all nodes of :param:`n`, including :param:`n`.
@@ -167,6 +177,7 @@ def nodes_iter(n) -> Generator[Any, None, None]:
                         yield n2
 
 
+@export
 def list_iter(lst) -> Generator[Any, None, None]:
     """Iterate all element of Iir_List :param:`lst`."""
     if lst <= nodes.Iir_List_All:
@@ -177,6 +188,7 @@ def list_iter(lst) -> Generator[Any, None, None]:
         lists.Next(byref(iter))
 
 
+@export
 def flist_iter(lst) -> Generator[Any, None, None]:
     """Iterate all element of Iir_List :param:`lst`."""
     if lst <= nodes.Iir_Flist_All:
@@ -185,6 +197,7 @@ def flist_iter(lst) -> Generator[Any, None, None]:
         yield flists.Get_Nth_Element(lst, i)
 
 
+@export
 def declarations_iter(n) -> Generator[Any, None, None]:
     """Iterate all declarations in node :param:`n`."""
     k = nodes.Get_Kind(n)
@@ -302,6 +315,7 @@ def declarations_iter(n) -> Generator[Any, None, None]:
     raise Exception("Unknown node of kind {}".format(kind_image(k)))
 
 
+@export
 def concurrent_stmts_iter(n) -> Generator[Any, None, None]:
     """Iterate concurrent statements in node :param:`n`."""
     k = nodes.Get_Kind(n)
@@ -338,6 +352,7 @@ def concurrent_stmts_iter(n) -> Generator[Any, None, None]:
                     yield n2
 
 
+@export
 def constructs_iter(n) -> Generator[Any, None, None]:
     """
     Iterate library units, concurrent statements and declarations
@@ -407,6 +422,7 @@ def constructs_iter(n) -> Generator[Any, None, None]:
                     yield n3
 
 
+@export
 def sequential_iter(n) -> Generator[Any, None, None]:
     """
     Iterate sequential statements. The first node must be either

@@ -146,21 +146,25 @@ libghdl.libghdl__set_exec_prefix(
     *_to_char_p(str(_libghdl_path.parent.parent).encode("utf-8"))
 )
 
+@export
 def finalize() -> None:
     """Free all the memory, be ready for a new initialization."""
     libghdl.options__finalize()
 
 
+@export
 def initialize() -> None:
     """Initialize or re-initialize the shared library."""
     libghdl.options__initialize()
 
 
+@export
 def set_option(opt: bytes) -> bool:
     """Set option :param:`opt`. Return true, if the option is known and handled."""
     return libghdl.libghdl__set_option(*_to_char_p(opt)) == 0
 
 
+@export
 def analyze_init() -> None:
     """
     Initialize the analyzer.
@@ -170,15 +174,18 @@ def analyze_init() -> None:
     """
     libghdl.libghdl__analyze_init()
 
+@export
 def analyze_init_status() -> int:
     """Initialize the analyzer. Returns 0 in case of success."""
     return libghdl.libghdl__analyze_init_status()
 
+@export
 def analyze_file(fname: bytes):
     """"Analyze a given filename :param:`fname`."""
     return libghdl.libghdl__analyze_file(*_to_char_p(fname))
 
 
+@export
 def disp_config():
     """"Display the configured prefixes for libghdl."""
     return libghdl.ghdllocal__disp_config_prefixes()

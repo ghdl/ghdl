@@ -42,6 +42,7 @@ from pyGHDL.libghdl import libghdl
 List_Type = c_int32
 
 
+@export
 class Iterator(Structure):
     _fields_ = [("chunk", c_int32), ("chunk_idx", c_int32), ("remain", c_int32)]
 
