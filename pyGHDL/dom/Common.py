@@ -40,7 +40,6 @@ from pyGHDL.libghdl        import name_table
 from pyGHDL.libghdl.vhdl   import nodes
 
 __all__ = []
-__api__ = __all__
 
 
 @export
