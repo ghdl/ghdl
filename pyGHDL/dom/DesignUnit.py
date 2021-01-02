@@ -44,12 +44,11 @@ from pyVHDLModel.VHDLModel import Configuration as VHDLModel_Configuration
 from pyGHDL.libghdl.vhdl   import nodes
 import pyGHDL.libghdl.utils as pyutils
 
-from pyGHDL.dom.Common     import GHDLMixin
+from pyGHDL.dom.Common        import GHDLMixin
+from pyGHDL.dom.InterfaceItem import GenericConstantInterfaceItem, PortSignalInterfaceItem
 
 __all__ = []
-__api__ = __all__
 
-from pyGHDL.dom.InterfaceItem import GenericConstantInterfaceItem, PortSignalInterfaceItem
 
 
 @export

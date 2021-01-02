@@ -49,7 +49,6 @@ from pyGHDL.dom.Common      import LibGHDLException, GHDLException
 from pyGHDL.dom.DesignUnit  import Entity, Architecture, Package, PackageBody, Context, Configuration
 
 __all__ = []
-__api__ = __all__
 
 
 @export

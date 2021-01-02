@@ -40,7 +40,6 @@ from pyVHDLModel.VHDLModel  import GenericConstantInterfaceItem as VHDLModel_Gen
 from pyGHDL.dom.Common      import GHDLMixin
 
 __all__ = []
-__api__ = __all__
 
 
 @export
