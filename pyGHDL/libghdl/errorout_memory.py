@@ -39,6 +39,7 @@ from pydecor import export
 from pyGHDL.libghdl import libghdl
 
 
+@export
 class Error_Message(Structure):
     _fields_ = [
         ("id", c_int8),
