@@ -38,7 +38,7 @@
 """
 from pydecor import export
 
-from pyVHDLModel.VHDLModel import Modes
+from pyVHDLModel.VHDLModel import Mode
 
 from pyGHDL.libghdl        import name_table
 from pyGHDL.libghdl.vhdl   import nodes
@@ -64,11 +64,11 @@ class GHDLException(GHDLBaseException):
 @export
 class GHDLMixin:
 	_MODE_TRANSLATION = {
-		nodes.Iir_Mode.In_Mode:      Modes.In,
-		nodes.Iir_Mode.Out_Mode:     Modes.Out,
-		nodes.Iir_Mode.Inout_Mode:   Modes.InOut,
-		nodes.Iir_Mode.Buffer_Mode:  Modes.Buffer,
-		nodes.Iir_Mode.Linkage_Mode: Modes.Linkage
+		nodes.Iir_Mode.In_Mode:      Mode.In,
+		nodes.Iir_Mode.Out_Mode:     Mode.Out,
+		nodes.Iir_Mode.Inout_Mode:   Mode.InOut,
+		nodes.Iir_Mode.Buffer_Mode:  Mode.Buffer,
+		nodes.Iir_Mode.Linkage_Mode: Mode.Linkage
 	}
 
 	@classmethod
