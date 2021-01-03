@@ -30,6 +30,11 @@ with Grt.Severity;
 with Grt.Options; use Grt.Options;
 with Grt.Fcvt;
 with Grt.Backtraces;
+with Grt.Signals;
+with Grt.Rtis_Addr;
+with Grt.Threads;
+with Grt.Processes;
+with Grt.Rtis_Utils;
 
 package body Grt.Lib is
    --procedure Memcpy (Dst : Address; Src : Address; Size : Size_T);
@@ -52,8 +57,16 @@ package body Grt.Lib is
                         Loc : Ghdl_Location_Ptr)
    is
       use Grt.Severity;
+      use Grt.Signals;
+      use Grt.Rtis_Addr;
+      use Grt.Threads;
+      use Grt.Processes;
+      use Grt.Rtis_Utils;
+
       Level : constant Integer := Severity mod 256;
       Bt : Backtrace_Addrs;
+      Proc : Process_Acc;
+      Proc_Rti : Rti_Context;
    begin
       Report_S;
       Diag_C (Loc.Filename);
@@ -92,6 +105,15 @@ package body Grt.Lib is
          Error_E_Call_Stack (Bt);
       elsif Level >= Grt.Options.Backtrace_Severity then
          Save_Backtrace (Bt, 2);
+         Proc := Get_Current_Process;
+         if Proc /= null then
+            Proc_Rti := Get_Rti_Context (Proc);
+            if Proc_Rti /= Null_Context then
+               Diag_C ("in process ");
+               Put (Get_Error_Stream, Proc_Rti);
+               Newline_Err;
+            end if;
+         end if;
          Grt.Backtraces.Put_Err_Backtrace (Bt);
       end if;
    end Do_Report;
