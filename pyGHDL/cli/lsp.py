@@ -35,10 +35,12 @@
 #
 from __future__ import absolute_import
 
-import argparse
-import logging
+from argparse import ArgumentParser
+from logging import getLogger, DEBUG, INFO, ERROR, basicConfig
 import sys
 import os
+
+from pydecor import export
 
 import pyGHDL.libghdl as libghdl
 from pyGHDL.libghdl     import version, errorout_console
@@ -46,10 +48,11 @@ from pyGHDL.lsp         import LSPConnTrace
 from pyGHDL.lsp.lsp     import LSPConn, LanguageProtocolServer
 from pyGHDL.lsp.vhdl_ls import VhdlLanguageServer
 
-logger = logging.getLogger("ghdl-ls")
+__loggerName = "ghdl-ls"
 
 
-def rotate_log_files(basename, num):
+def __rotate_log_files(basename: str, num: int):
+    """Rotate existing log files."""
     for i in range(num, 0, -1):
         oldfile = "{}.{}".format(basename, i - 1)
         if os.path.isfile(oldfile):
@@ -58,8 +61,9 @@ def rotate_log_files(basename, num):
         os.rename(basename, "{}.0".format(basename))
 
 
-def main():
-    parser = argparse.ArgumentParser(description="VHDL Language Protocol Server")
+def _generateCLIParser() -> ArgumentParser:
+    """Creates an CLI argument parser based on ``argparse``."""
+    parser = ArgumentParser(description="VHDL Language Protocol Server")
     parser.add_argument(
         "--version", "-V", action="version", version="%(prog)s " + version.__version__
     )
@@ -69,7 +73,7 @@ def main():
     parser.add_argument(
         "--log-file", help="Redirect logs to the given file instead of stderr"
     )
-    parser.add_argument("--trace-file", help="Save rpc data to FILE.in and FILE.out (overrides GHDL_LS_TRACE)")
+    parser.add_argument("--trace-file", help="Save RPC data to FILE.in and FILE.out (overrides :env:`GHDL_LS_TRACE`)")
     parser.add_argument("--input", "-i", help="Read request from file")
     parser.add_argument(
         "--disp-config",
@@ -77,6 +81,15 @@ def main():
         help="Disp installation configuration and exit",
     )
 
+    return parser
+
+
+@export
+def main():
+    """Entrypoint of GHDL's Language Protocol Server."""
+    logger = getLogger(__loggerName)
+
+    parser = _generateCLIParser()
     args = parser.parse_args()
 
     if args.disp_config:
@@ -86,18 +99,19 @@ def main():
 
     # Setup logging
     if args.verbose >= 2:
-        loglevel = logging.DEBUG
+        loglevel = DEBUG
     elif args.verbose >= 1:
-        loglevel = logging.INFO
+        loglevel = INFO
     else:
-        loglevel = logging.ERROR
+        loglevel = ERROR
 
     if args.log_file:
-        rotate_log_files(args.log_file, 5)
+        __rotate_log_files(args.log_file, 5)
         logstream = open(args.log_file, "w")
     else:
         logstream = sys.stderr
-    logging.basicConfig(
+
+    basicConfig(
         format="%(asctime)-15s [%(levelname)s] %(message)s",
         stream=logstream,
         level=loglevel,
@@ -122,8 +136,8 @@ def main():
         trace_file = os.environ.get("GHDL_LS_TRACE")
     if trace_file is not None:
         if args.input is None:
-            rotate_log_files(trace_file + ".in", 5)
-            rotate_log_files(trace_file + ".out", 5)
+            __rotate_log_files(trace_file + ".in", 5)
+            __rotate_log_files(trace_file + ".out", 5)
             conn = LSPConnTrace(trace_file, conn)
         else:
             logger.info("Traces disabled when -i/--input")
@@ -136,6 +150,7 @@ def main():
     except Exception:
         logger.exception("Uncaught error")
         sys.exit(1)
+
 
 if __name__ == '__main__':
     main()
