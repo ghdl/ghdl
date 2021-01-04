@@ -39,6 +39,7 @@ this is provided from a ``pyGHDL`` packages with four sub-packages:
 
 
 .. toctree::
+   :hidden:
 
    ../../pyGHDL/pyGHDL.cli
    ../../pyGHDL/pyGHDL.dom
@@ -64,7 +65,15 @@ search path.
 
 .. _CMDREF-ghdlls:
 
-.. autoprogram:: LSP-AutoProgram:parser
+.. autoprogram:: AutoProgram:lsp_parser
+   :prog: ghdl-ls
+   :groups:
+   :label: CmdRef:ghdlls:
+
+.. _CMDREF-pnodes:
+
+.. #
+   autoprogram:: AutoProgram:pnodes_parser
    :prog: ghdl-ls
    :groups:
    :label: CmdRef:ghdlls:

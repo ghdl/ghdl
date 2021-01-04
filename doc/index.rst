@@ -165,6 +165,7 @@ GHDL
    internals/Frontend
    internals/AST
    internals/RTI
+   gnatdoc/index
 
 .. raw:: latex
 

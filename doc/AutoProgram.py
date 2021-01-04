@@ -29,7 +29,11 @@ from sys import path as sys_path
 
 sys_path.append("..")
 
-from pyGHDL.cli.lsp import _generateCLIParser
+from pyGHDL.cli.lsp import _generateCLIParser as lsp_parserGenerator
+# from scripts.pnodes import _generateCLIParser as pnodes_parserGenerator
+# from scripts.pnodespy import _generateCLIParser as pnodespy_parserGenerator
 
 # entry point
-parser = _generateCLIParser()
+lsp_parser = lsp_parserGenerator()
+# pnodes_parser = pnodes_parserGenerator()
+# pnodespy_parser = pnodespy_parserGenerator()
