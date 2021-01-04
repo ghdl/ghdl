@@ -82,11 +82,6 @@ except Exception as ex:
     print(ex)
     rst_prolog = ""
 
-# -- Options for HTML output ----------------------------------------------
-
-
-# Output file base name for HTML help builder.
-htmlhelp_basename = 'GHDLdoc'
 
 
 # ==============================================================================
@@ -101,7 +96,8 @@ html_theme_options = {
 }
 
 html_static_path = ['_static']
-html_extra_path = [str(Path(__file__).resolve().parent.parent / 'public')]
+# '/public' will contain the output from gnatdoc
+html_extra_path = [str(Path(__file__).resolve().parent.parent / 'public')]   # FIXME: if not exist, create directory
 
 html_logo = str(Path(html_static_path[0]) / 'logo.png')
 html_favicon = str(Path(html_static_path[0]) / 'icon.png')
