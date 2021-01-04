@@ -17,7 +17,7 @@ sys.path.insert(0, abspath('../pyGHDL'))
 # Project information
 # ==============================================================================
 project = u'GHDL'
-copyright = u'2002-2020, Tristan Gingold and contributors'
+copyright = u'2002-2021, Tristan Gingold and contributors'
 author = u'Tristan Gingold and contributors'
 
 # ==============================================================================

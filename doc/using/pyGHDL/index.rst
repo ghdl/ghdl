@@ -39,8 +39,12 @@ this is provided from a ``pyGHDL`` packages with four sub-packages:
 
 
 .. toctree::
+   :hidden:
 
-   ../../pyGHDL/pyGHDL
+   ../../pyGHDL/pyGHDL.cli
+   ../../pyGHDL/pyGHDL.dom
+   ../../pyGHDL/pyGHDL.libghdl
+   ../../pyGHDL/pyGHDL.lsp
 
 
 .. toctree::
