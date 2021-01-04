@@ -2970,7 +2970,16 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Has_Signal_Flag (Flag3)
    --
+   --  True if the indexes are constrained (either by this definition or by
+   --  a parent).
    --   Get/Set_Index_Constraint_Flag (Flag4)
+   --
+   --  If True, an array constraint is lexically present (at least for the
+   --  index).  This can be an index constraint or 'open'.
+   --   Get/Set_Has_Array_Constraint_Flag (Flag5)
+   --
+   --  If True, an element constraint is lexically present.  It can be 'open'.
+   --   Get/Set_Has_Element_Constraint_Flag (Flag6)
 
    -- Iir_Kind_Range_Expression (Short)
    --
@@ -8269,6 +8278,14 @@ package Vhdl.Nodes is
    --  Field: Field8
    function Get_Array_Element_Constraint (Def : Iir) return Iir;
    procedure Set_Array_Element_Constraint (Def : Iir; El : Iir);
+
+   --  Field: Flag5
+   function Get_Has_Array_Constraint_Flag (Def : Iir) return Boolean;
+   procedure Set_Has_Array_Constraint_Flag (Def : Iir; Flag : Boolean);
+
+   --  Field: Flag6
+   function Get_Has_Element_Constraint_Flag (Def : Iir) return Boolean;
+   procedure Set_Has_Element_Constraint_Flag (Def : Iir; Flag : Boolean);
 
    --  List of elements of a record.
    --  For a record_type_definition: Is_Ref is false, as the elements

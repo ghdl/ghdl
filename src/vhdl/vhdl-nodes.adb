@@ -4285,6 +4285,38 @@ package body Vhdl.Nodes is
       Set_Field8 (Def, El);
    end Set_Array_Element_Constraint;
 
+   function Get_Has_Array_Constraint_Flag (Def : Iir) return Boolean is
+   begin
+      pragma Assert (Def /= Null_Iir);
+      pragma Assert (Has_Has_Array_Constraint_Flag (Get_Kind (Def)),
+                     "no field Has_Array_Constraint_Flag");
+      return Get_Flag5 (Def);
+   end Get_Has_Array_Constraint_Flag;
+
+   procedure Set_Has_Array_Constraint_Flag (Def : Iir; Flag : Boolean) is
+   begin
+      pragma Assert (Def /= Null_Iir);
+      pragma Assert (Has_Has_Array_Constraint_Flag (Get_Kind (Def)),
+                     "no field Has_Array_Constraint_Flag");
+      Set_Flag5 (Def, Flag);
+   end Set_Has_Array_Constraint_Flag;
+
+   function Get_Has_Element_Constraint_Flag (Def : Iir) return Boolean is
+   begin
+      pragma Assert (Def /= Null_Iir);
+      pragma Assert (Has_Has_Element_Constraint_Flag (Get_Kind (Def)),
+                     "no field Has_Element_Constraint_Flag");
+      return Get_Flag6 (Def);
+   end Get_Has_Element_Constraint_Flag;
+
+   procedure Set_Has_Element_Constraint_Flag (Def : Iir; Flag : Boolean) is
+   begin
+      pragma Assert (Def /= Null_Iir);
+      pragma Assert (Has_Has_Element_Constraint_Flag (Get_Kind (Def)),
+                     "no field Has_Element_Constraint_Flag");
+      Set_Flag6 (Def, Flag);
+   end Set_Has_Element_Constraint_Flag;
+
    function Get_Elements_Declaration_List (Decl : Iir) return Iir_Flist is
    begin
       pragma Assert (Decl /= Null_Iir);

@@ -516,27 +516,27 @@ package body Vhdl.Prints is
    end Disp_Array_Sub_Definition_Indexes;
 
    procedure Disp_Array_Element_Constraint
-     (Ctxt : in out Ctxt_Class; Def : Iir; Type_Mark : Iir)
-   is
-      Def_El : constant Iir := Get_Element_Subtype (Def);
-      Tm_El : constant Iir := Get_Element_Subtype (Type_Mark);
-      Has_Index : constant Boolean := Get_Index_Constraint_Flag (Def);
-      Has_Own_Element_Subtype : constant Boolean := Def_El /= Tm_El;
+     (Ctxt : in out Ctxt_Class; Def : Iir; Type_Mark : Iir) is
    begin
-      if not Has_Index and not Has_Own_Element_Subtype then
+      if not Get_Has_Array_Constraint_Flag (Def)
+        and then not Get_Has_Element_Constraint_Flag (Def)
+      then
          return;
       end if;
 
-      if Get_Constraint_State (Type_Mark) /= Fully_Constrained
-        and then Has_Index
-      then
-         Disp_Array_Sub_Definition_Indexes (Ctxt, Def);
+      if Get_Has_Array_Constraint_Flag (Def) then
+         if Get_Index_Constraint_List (Def) = Null_Iir_Flist then
+            Disp_Token (Ctxt, Tok_Left_Paren);
+            Disp_Token (Ctxt, Tok_Open);
+            Disp_Token (Ctxt, Tok_Right_Paren);
+         else
+            Disp_Array_Sub_Definition_Indexes (Ctxt, Def);
+         end if;
       end if;
 
-      if Has_Own_Element_Subtype
-        and then Get_Kind (Def_El) in Iir_Kinds_Composite_Type_Definition
-      then
-         Disp_Element_Constraint (Ctxt, Def_El, Tm_El);
+      if Get_Has_Element_Constraint_Flag (Def) then
+         Disp_Element_Constraint (Ctxt, Get_Array_Element_Constraint (Def),
+                                  Get_Element_Subtype (Type_Mark));
       end if;
    end Disp_Array_Element_Constraint;
 
@@ -4970,6 +4970,7 @@ package body Vhdl.Prints is
          --  A space after a keyword.
          if Tok /= Tok_Semi_Colon
            and Tok /= Tok_Dot
+             and Tok /= Tok_Right_Paren
          then
             return True;
          end if;
@@ -5003,7 +5004,10 @@ package body Vhdl.Prints is
          --  Always a space after ',', ':', ':='
          return True;
       elsif Tok = Tok_Left_Paren then
-         if Prev_Tok /= Tok_Tick and Prev_Tok /= Tok_Left_Paren then
+         if Prev_Tok /= Tok_Tick
+           and Prev_Tok /= Tok_Left_Paren
+           and Prev_Tok /= Tok_Right_Paren
+         then
             --  A space before '('.
             return True;
          end if;

@@ -1924,6 +1924,7 @@ package body Vhdl.Sem_Types is
 
       Res := Create_Iir (Iir_Kind_Array_Subtype_Definition);
       Location_Copy (Res, Name);
+      Set_Has_Array_Constraint_Flag (Res, True);
       Chain := Get_Association_Chain (Name);
       if Get_Kind (Chain) = Iir_Kind_Association_Element_Open then
          if Get_Chain (Chain) /= Null_Iir then
@@ -1950,6 +1951,7 @@ package body Vhdl.Sem_Types is
             when Iir_Kinds_Array_Type_Definition =>
                Set_Array_Element_Constraint
                  (Res, Reparse_As_Array_Constraint (Def, Def_El_Type));
+               Set_Has_Element_Constraint_Flag (Res, True);
             when others =>
                Error_Kind ("reparse_as_array_constraint", Def_El_Type);
          end case;

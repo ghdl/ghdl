@@ -3220,6 +3220,7 @@ package body Vhdl.Parse is
       --  Index_constraint.
       Set_Location (Def);
       Set_Index_Constraint_Flag (Def, True);
+      Set_Has_Array_Constraint_Flag (Def, True);
 
       --  Eat '('.
       Scan;
@@ -3249,6 +3250,7 @@ package body Vhdl.Parse is
          El_Def := Create_Iir (Iir_Kind_Array_Subtype_Definition);
          Parse_Element_Constraint (El_Def);
          Set_Array_Element_Constraint (Def, El_Def);
+         Set_Has_Element_Constraint_Flag (Def, True);
       end if;
    end Parse_Element_Constraint;
 
