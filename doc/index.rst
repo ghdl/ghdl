@@ -175,3 +175,4 @@ GHDL
    :hidden:
 
    genindex
+   py-modindex
