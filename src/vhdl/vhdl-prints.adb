@@ -3110,13 +3110,22 @@ package body Vhdl.Prints is
             when Iir_Kind_For_Loop_Statement =>
                Disp_For_Loop_Statement (Ctxt, Stmt);
             when Iir_Kind_While_Loop_Statement =>
-               Start_Hbox (Ctxt);
-               Disp_Label (Ctxt, Stmt);
-               if Get_Condition (Stmt) /= Null_Iir then
-                  Disp_Token (Ctxt, Tok_While);
-                  Print (Ctxt, Get_Condition (Stmt));
-               end if;
-               Close_Hbox (Ctxt);
+               declare
+                  Cond : constant Iir := Get_Condition (Stmt);
+               begin
+                  --  As an HBox cannot be empty, check before opening it.
+                  if Get_Label (Stmt) /= Null_Identifier
+                    or else Cond /= Null_Iir
+                  then
+                     Start_Hbox (Ctxt);
+                     Disp_Label (Ctxt, Stmt);
+                     if Get_Condition (Stmt) /= Null_Iir then
+                        Disp_Token (Ctxt, Tok_While);
+                        Print (Ctxt, Get_Condition (Stmt));
+                     end if;
+                     Close_Hbox (Ctxt);
+                  end if;
+               end;
                Start_Hbox (Ctxt);
                Disp_Token (Ctxt, Tok_Loop);
                Close_Hbox (Ctxt);
