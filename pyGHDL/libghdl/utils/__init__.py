@@ -47,7 +47,7 @@ import pyGHDL.libghdl.vhdl.flists as flists
 
 @export
 def name_image(nameid) -> str:
-    """Lookup a :param:`nameid` and return its string."""
+    """Lookup a :obj:`nameid` and return its string."""
     return name_table.Get_Name_Ptr(nameid).decode("utf-8")
 
 
@@ -65,7 +65,7 @@ _fields_image = _build_enum_image(nodes_meta.fields)
 
 @export
 def fields_image(idx) -> str:
-    """String representation of field :param:`idx`."""
+    """String representation of field :obj:`idx`."""
     return _fields_image[idx]
 
 
@@ -74,7 +74,7 @@ _kind_image = _build_enum_image(nodes.Iir_Kind)
 
 @export
 def kind_image(k) -> str:
-    """String representation of Iir_Kind :param:`k`."""
+    """String representation of Iir_Kind :obj:`k`."""
     return _kind_image[k]
 
 
@@ -83,7 +83,7 @@ _types_image = _build_enum_image(nodes_meta.types)
 
 @export
 def types_image(t) -> str:
-    """String representation of Nodes_Meta.Types :param:`t`."""
+    """String representation of Nodes_Meta.Types :obj:`t`."""
     return _types_image[t]
 
 
@@ -92,7 +92,7 @@ _attr_image = _build_enum_image(nodes_meta.Attr)
 
 @export
 def attr_image(a) -> str:
-    """String representation of Nodes_Meta.Attr :param:`a`."""
+    """String representation of Nodes_Meta.Attr :obj:`a`."""
     return _attr_image[a]
 
 
@@ -110,7 +110,7 @@ def leftest_location(n):
 
 @export
 def fields_iter(n) -> Generator[Any, None, None]:
-    """Iterate on fields of node :param:`n`."""
+    """Iterate on fields of node :obj:`n`."""
     if n == nodes.Null_Iir:
         return
     k = nodes.Get_Kind(n)
@@ -122,7 +122,7 @@ def fields_iter(n) -> Generator[Any, None, None]:
 
 @export
 def chain_iter(n) -> Generator[Any, None, None]:
-    """Iterate of a chain headed by node :param:`n`."""
+    """Iterate of a chain headed by node :obj:`n`."""
     while n != nodes.Null_Iir:
         yield n
         n = nodes.Get_Chain(n)
@@ -130,14 +130,14 @@ def chain_iter(n) -> Generator[Any, None, None]:
 
 @export
 def chain_to_list(n) -> List[Any]:
-    """Convert a chain headed by node :param:`n` to a Python list."""
+    """Convert a chain headed by node :obj:`n` to a Python list."""
     return [e for e in chain_iter(n)]
 
 
 @export
 def nodes_iter(n) -> Generator[Any, None, None]:
     """
-    Iterate all nodes of :param:`n`, including :param:`n`.
+    Iterate all nodes of :obj:`n`, including :obj:`n`.
     Nodes are returned only once.
     """
     if n == nodes.Null_Iir:
@@ -179,7 +179,7 @@ def nodes_iter(n) -> Generator[Any, None, None]:
 
 @export
 def list_iter(lst) -> Generator[Any, None, None]:
-    """Iterate all element of Iir_List :param:`lst`."""
+    """Iterate all element of Iir_List :obj:`lst`."""
     if lst <= nodes.Iir_List_All:
         return
     iter = lists.Iterate(lst)
@@ -190,7 +190,7 @@ def list_iter(lst) -> Generator[Any, None, None]:
 
 @export
 def flist_iter(lst) -> Generator[Any, None, None]:
-    """Iterate all element of Iir_List :param:`lst`."""
+    """Iterate all element of Iir_List :obj:`lst`."""
     if lst <= nodes.Iir_Flist_All:
         return
     for i in range(flists.Flast(lst) + 1):
@@ -199,7 +199,7 @@ def flist_iter(lst) -> Generator[Any, None, None]:
 
 @export
 def declarations_iter(n) -> Generator[Any, None, None]:
-    """Iterate all declarations in node :param:`n`."""
+    """Iterate all declarations in node :obj:`n`."""
     k = nodes.Get_Kind(n)
     if nodes_meta.Has_Generic_Chain(k):
         for n1 in chain_iter(nodes.Get_Generic_Chain(n)):
@@ -317,7 +317,7 @@ def declarations_iter(n) -> Generator[Any, None, None]:
 
 @export
 def concurrent_stmts_iter(n) -> Generator[Any, None, None]:
-    """Iterate concurrent statements in node :param:`n`."""
+    """Iterate concurrent statements in node :obj:`n`."""
     k = nodes.Get_Kind(n)
     if k == nodes.Iir_Kind.Design_File:
         for n1 in chain_iter(nodes.Get_First_Design_Unit(n)):

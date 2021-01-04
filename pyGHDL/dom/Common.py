@@ -73,12 +73,12 @@ class GHDLMixin:
 
 	@classmethod
 	def _ghdlNodeToName(cls, node):
-		"""Return the python string from node :param:`node` identifier"""
+		"""Return the python string from node :obj:`node` identifier"""
 		return name_table.Get_Name_Ptr(nodes.Get_Identifier(node)).decode("utf-8")
 
 	@classmethod
 	def _ghdlPortToMode(cls, port):
-		"""Return the mode of a port."""
+		"""Return the mode of a :obj:`port`."""
 		try:
 			return cls._MODE_TRANSLATION[nodes.Get_Mode(port)]
 		except KeyError:
