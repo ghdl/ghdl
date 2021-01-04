@@ -145,7 +145,7 @@ def createTagShields(data='latest'):
       i = x[3][1:-1]
       for latex in [False, True]:
          printShieldSrc(i, i,
-            'https://img.shields.io/github/downloads/ghdl/ghdl/' + i + '.svg?longCache=true&style=flat-square&logo=github&label=%7F',
+            'https://img.shields.io/github/downloads/ghdl/ghdl/' + i + '?longCache=true&style=flat-square&logo=github&label=%7F',
             'https://github.com/ghdl/ghdl/releases/download/' + i, latex=latex)
 
    return assets
@@ -172,7 +172,7 @@ def createReleasesShields(tag='latest'):
       i = name
       for l in [False, True]:
          printShieldSrc(i+'/total', i+' Total',
-            'https://img.shields.io/github/downloads/ghdl/ghdl/' + i + '/total.svg?longCache=true&style=flat-square&logo=github&label=%7F',
+            'https://img.shields.io/github/downloads/ghdl/ghdl/' + i + '/total?longCache=true&style=flat-square&logo=github&label=%7F',
             'https://github.com/ghdl/ghdl/releases/' + i, l)
 
    out = {'releases': releases, 'assets': createTagShields(t)}
