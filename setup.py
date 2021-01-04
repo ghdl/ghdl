@@ -89,7 +89,7 @@ setuptools_setup(
 		'Issue Tracker': sourceCodeURL + "/issues"
 	},
 
-	python_requires='>=3.7',
+	python_requires='>=3.6',
 	install_requires=requirements,
 	packages=setuptools_find_packages(exclude=("tests",)),
 	entry_points={
