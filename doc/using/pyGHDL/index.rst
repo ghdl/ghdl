@@ -33,7 +33,7 @@ this is provided from a ``pyGHDL`` packages with four sub-packages:
 
 .. topic:: pyGHDL.lsp
 
-   *pyGHDL.dom* is `language server protocol <https://en.wikipedia.org/wiki/Language_Server_Protocol>`__
+   *pyGHDL.lsp* is `language server protocol <https://en.wikipedia.org/wiki/Language_Server_Protocol>`__
    (LSP) written in Python. The implementation offers an HTTPS service that can
    be used e.g. by editors and IDEs supporting LSP.
 
