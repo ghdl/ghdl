@@ -49,8 +49,8 @@ master_doc = 'index'
 # The suffix(es) of source filenames.
 source_suffix = {
     '.rst': 'restructuredtext',
-    # '.txt': 'markdown',
-    '.md': 'markdown',
+#    '.txt': 'markdown',
+#    '.md': 'markdown',
 }
 
 # Add any paths that contain templates here, relative to this directory.
@@ -184,7 +184,7 @@ extensions = [
     'btd.sphinx.inheritance_diagram',
 
     # Other extensions
-    'recommonmark',
+#    'recommonmark',
     'exec',
 #     'DocumentMember',
     'sphinx_fontawesome',
