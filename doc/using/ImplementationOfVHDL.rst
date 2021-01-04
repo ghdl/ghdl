@@ -128,15 +128,15 @@ You can either use a default clock like this:
 
 .. code-block:: VHDL
 
-    default clock is rising_edge (CLK);
-    assert always
-      a -> eventually! b;
+   default clock is rising_edge (CLK);
+   assert always
+     a -> eventually! b;
 
 or use a clocked expression (note the use of parentheses):
 
-.. code-block:: VHDL
+.. code-block::
 
-    assert (always a -> next[3](b)) @rising_edge(clk);
+   assert (always a -> next[3](b)) @rising_edge(clk);
 
 
 Of course only the simple subset of PSL is allowed.
@@ -201,7 +201,7 @@ PSL vunit files (VHDL-2008 / Synthesis only)
 
 GHDL supports vunit (Verification Unit) files.
 
-.. code-block:: VHDL
+.. code-block::
 
     vunit vunit_name (entity_name(architecture_name))
     {
