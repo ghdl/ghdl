@@ -31,11 +31,11 @@ this is provided from a ``pyGHDL`` packages with four sub-packages:
    The DOM is using ``libghdl`` for file analysis and parsing.
 
 
-.. topic:: pyGHDL.dom
+.. topic:: pyGHDL.lsp
 
-   *pyGHDL.dom* is language server protocol (LSP) written in Python. The
-   implementation offers an HTTPS service that can be used e.g. by editors and
-   IDEs supporting LSP.
+   *pyGHDL.dom* is `language server protocol <https://en.wikipedia.org/wiki/Language_Server_Protocol>`__
+   (LSP) written in Python. The implementation offers an HTTPS service that can
+   be used e.g. by editors and IDEs supporting LSP.
 
 
 .. toctree::
@@ -45,11 +45,3 @@ this is provided from a ``pyGHDL`` packages with four sub-packages:
    ../../pyGHDL/pyGHDL.dom
    ../../pyGHDL/pyGHDL.libghdl
    ../../pyGHDL/pyGHDL.lsp
-
-
-.. toctree::
-   :hidden:
-
-   libghdl
-   vhdl
-   utils
