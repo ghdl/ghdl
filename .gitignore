@@ -55,6 +55,7 @@ __pycache__/
 
 # Python installation packages
 dist/
+pyGHDL.egg-info/
 
 # Coverage.py
 .coverage
@@ -63,6 +64,7 @@ coverage.xml
 
 # Sphinx
 doc/_build/
+doc/_theme/
 doc/pyGHDL/**/*.*
 !doc/pyGHDL/index.rst
 
