@@ -18,7 +18,7 @@ class Instantiate(TestCase):
 
 	@staticmethod
 	def getIdentifier(node):
-		"""Return the Python string from node :param:`node` identifier"""
+		"""Return the Python string from node :obj:`node` identifier"""
 		return name_table.Get_Name_Ptr(nodes.Get_Identifier(node)).decode("utf-8")
 
 	def test_InitializeGHDL(self) -> None:

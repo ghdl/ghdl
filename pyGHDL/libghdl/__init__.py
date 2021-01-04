@@ -56,7 +56,7 @@ def _get_libghdl_name() -> Path:
 
 
 def _check_libghdl_libdir(libdir: Path, basename: Path) -> Path:
-    """Returns libghdl path in :param:`libdir`, if found."""
+    """Returns libghdl path in :obj:`libdir`, if found."""
     if libdir is None:
         raise ValueError("Parameter 'libdir' is None.")
     # print('libghdl: check in {}'.format(libdir))
@@ -160,7 +160,7 @@ def initialize() -> None:
 
 @export
 def set_option(opt: bytes) -> bool:
-    """Set option :param:`opt`. Return true, if the option is known and handled."""
+    """Set option :obj:`opt`. Return true, if the option is known and handled."""
     return libghdl.libghdl__set_option(*_to_char_p(opt)) == 0
 
 
@@ -181,7 +181,7 @@ def analyze_init_status() -> int:
 
 @export
 def analyze_file(fname: bytes):
-    """"Analyze a given filename :param:`fname`."""
+    """"Analyze a given filename :obj:`fname`."""
     return libghdl.libghdl__analyze_file(*_to_char_p(fname))
 
 
