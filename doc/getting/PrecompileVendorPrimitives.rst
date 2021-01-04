@@ -152,7 +152,7 @@ Compiling on Windows
 
 * **Step 0 - Configure the scripts (optional)**
 
-    See the next section for how to configure `config.psm1`.
+  See the next section for how to configure `config.psm1`.
 
 * **Step 1 - Browse to your simulation working directory**
 
@@ -173,10 +173,10 @@ Compiling on Windows
 
 * **Step 3 - Viewing the result**
 
-    This creates vendor directories in your current working directory and
-    compiles the vendor files into them.
+  This creates vendor directories in your current working directory and
+  compiles the vendor files into them.
 
-  .. code-block:: PowerShell
+  .. code-block::
 
      PS> dir
          Directory: D:\temp\ghdl
