@@ -6,38 +6,42 @@ Python Interfaces
 .. #
    we have 2 interfaces (libghdl, dom) and a service (LSP) as well as CLI entry points.
 
-GHDL offers two Python interfaces and a language server protocol service:
+GHDL offers two Python interfaces and a language server protocol service. All
+this is provided from a ``pyGHDL`` packages with four sub-packages:
 
-* ``pyGHDL.libghdl`` - low-level API to ``libghdl``
-* ``pyGHDL.dom`` - high-level API as document object model (DOM)
-* ``pyGHDL.lsp`` - language server protocol (LSP) implementation and service
+* ``pyGHDL.cli`` - Command line interface (CLI) applications.
+* ``pyGHDL.dom`` - High-level API as document object model (DOM).
+* ``pyGHDL.libghdl`` - Low-level API to ``libghdl``
+* ``pyGHDL.lsp`` - Language server protocol (LSP) implementation and service
 
-.. rubric:: ``pyGHDL.libghdl``
 
-   ``pyGHDL.libghdl`` is a low-level API directly interacting with the shared
+.. topic:: pyGHDL.libghdl
+
+   *pyGHDL.libghdl* is a low-level API directly interacting with the shared
    library ``libghdl....so``/``libghdl....dll``. This is a procedural and C-like
    interface.
 
    It comes with some Python generators for easier iterating linked lists.
 
 
-.. rubric:: ``pyGHDL.dom``
+.. topic:: pyGHDL.dom
 
-   ``pyGHDL.dom`` is a high-level API offering a document object model (DOM).
+   *pyGHDL.dom* is a high-level API offering a document object model (DOM).
    The underlying abstract VHDL language model is provided by `pyVHDLModel <https://github.com/VHDL/pyVHDLModel>`__.
    The DOM is using ``libghdl`` for file analysis and parsing.
 
 
-.. rubric:: ``pyGHDL.dom``
+.. topic:: pyGHDL.dom
 
-   ``pyGHDL.dom`` is language server protocol (LSP) written in Python. The
+   *pyGHDL.dom* is language server protocol (LSP) written in Python. The
    implementation offers an HTTPS service that can be used e.g. by editors and
    IDEs supporting LSP.
 
-.. toctree::
-   :hidden:
 
-   ../../pyGHDL/index
+.. toctree::
+
+   ../../pyGHDL/pyGHDL
+
 
 .. toctree::
    :hidden:
