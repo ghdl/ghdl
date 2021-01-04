@@ -177,10 +177,15 @@ extensions = [
     'sphinx.ext.extlinks',
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',
-    'sphinx.ext.graphviz',
+#    'sphinx.ext.graphviz',
     'sphinx.ext.mathjax',
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
+
+    # BuildTheDocs extensions
+    'btd.sphinx.autoprogram',
+    'btd.sphinx.graphviz',
+    'btd.sphinx.inheritance_diagram',
 
     # Other extensions
     'recommonmark',
@@ -210,12 +215,12 @@ intersphinx_mapping = {
 # ==============================================================================
 # see: https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html#configuration
 autodoc_member_order = "bysource"       # alphabetical, groupwise, bysource
-autodoc_default_options = {
-    "members": True,
-    'undoc-members': True,
-    #'private-members': True,
-    'inherited-members': True,
-}
+# autodoc_default_options = {
+#     "members": True,
+#     'undoc-members': True,
+#     #'private-members': True,
+#     'inherited-members': True,
+# }
 
 
 # ==============================================================================
