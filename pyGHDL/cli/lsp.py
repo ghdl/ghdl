@@ -69,7 +69,7 @@ def main():
     parser.add_argument(
         "--log-file", help="Redirect logs to the given file instead of stderr"
     )
-    parser.add_argument("--trace-file", help="Save rpc data to FILE.in and FILE.out")
+    parser.add_argument("--trace-file", help="Save rpc data to FILE.in and FILE.out (overrides GHDL_LS_TRACE)")
     parser.add_argument("--input", "-i", help="Read request from file")
     parser.add_argument(
         "--disp-config",
