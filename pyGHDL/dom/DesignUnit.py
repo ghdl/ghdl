@@ -33,10 +33,10 @@
 # ============================================================================
 #
 """
-This module contains all DOM classes for VHDL's design units (:cls:`entity <Entity>`,
-:cls:`architecture <Architecture>`, :cls:`package <Package>`,
-:cls:`package body <PackageBody>`, :cls:`context <Context>` and
-:cls:`configuration <Configuration>`.
+This module contains all DOM classes for VHDL's design units (:class:`entity <Entity>`,
+:class:`architecture <Architecture>`, :class:`package <Package>`,
+:class:`package body <PackageBody>`, :class:`context <Context>` and
+:class:`configuration <Configuration>`.
 
 
 """
@@ -56,7 +56,6 @@ from pyGHDL.dom.Common        import GHDLMixin
 from pyGHDL.dom.InterfaceItem import GenericConstantInterfaceItem, PortSignalInterfaceItem
 
 __all__ = []
-
 
 
 @export
