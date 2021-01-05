@@ -252,15 +252,17 @@ do_test() {
   esac
 }
 
-for t in $tests; do do_test $t; done
-
-printf "${ANSI_GREEN}[GHDL - test] SUCCESSFUL${ANSI_NOCOLOR}\n"
-touch test_ok
-
 gstart "GHDL is: $GHDL"
 $GHDL version
+echo "REF: `$GHDL version ref`"
+echo "HASH: `$GHDL version hash`"
 gend
 
 gstart "GHDL help"
 $GHDL help
 gend
+
+for t in $tests; do do_test $t; done
+
+printf "${ANSI_GREEN}[GHDL - test] SUCCESSFUL${ANSI_NOCOLOR}\n"
+touch test_ok

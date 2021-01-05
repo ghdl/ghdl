@@ -260,6 +260,19 @@ package body Ghdlmain is
       pragma Unreferenced (Cmd);
       use Simple_IO;
    begin
+      if Args'Length /= 0 then
+         if Args (1).all = "ref" then
+            Put_Line (Version.Ghdl_Ref);
+            return;
+         end if;
+         if Args (1).all = "hash" then
+            Put_Line (Version.Ghdl_Hash);
+            return;
+         end if;
+         Error ("warning: 'version' subcommand '"
+                & Args(1).all & "' not supported");
+         return;
+      end if;
       Put ("GHDL ");
       Put (Version.Ghdl_Ver);
       Put (' ');
@@ -278,9 +291,6 @@ package body Ghdlmain is
                 & "GNU General Public License.  There is NO");
       Put_Line ("warranty; not even for MERCHANTABILITY or"
                 & " FITNESS FOR A PARTICULAR PURPOSE.");
-      if Args'Length /= 0 then
-         Error ("warning: command '--version' does not accept any argument");
-      end if;
    end Perform_Action;
 
    --  Disp MSG on the standard output with the command name.
