@@ -407,7 +407,13 @@ ci_run () {
       gend
 
       printf "$ANSI_BLUE[CI] Build ghdl in docker image ghdl/build:$BUILD_IMAGE_TAG\n"
-      $RUN -e GHDL_DESC="$(git describe --dirty)@${BUILD_IMAGE_TAG}" -e CONFIG_OPTS="$CONFIG_OPTS" "ghdl/build:$BUILD_IMAGE_TAG" bash -c "${scriptdir}/ci-run.sh $BUILD_CMD_OPTS build"
+      $RUN \
+        -e GHDL_VER_DESC="$(git describe --dirty)" \
+        -e GHDL_VER_REF="$(git rev-parse --abbrev-ref HEAD)@${BUILD_IMAGE_TAG}" \
+        -e GHDL_VER_HASH="$(git rev-parse HEAD)" \
+        -e CONFIG_OPTS="$CONFIG_OPTS" \
+        ghdl/build:"$BUILD_IMAGE_TAG" \
+        bash -c "${scriptdir}/ci-run.sh $BUILD_CMD_OPTS build"
   fi
 
   if [ ! -f build_ok ]; then
