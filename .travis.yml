@@ -7,7 +7,7 @@ dist: xenial
 services: docker
 language: minimal
 install: skip
-script: ./dist/ci-run.sh -c $TARGS
+script: ./scripts/ci-run.sh -c $TARGS
 
 # For each linux build, a different job/instance (with the constraints
 # above) is executed in parallel in stage 'test'.
@@ -46,7 +46,7 @@ jobs:
       cache:
         directories:
           - gnat
-      install: ./dist/macosx/install-ada.sh
+      install: ./scripts/macosx/install-ada.sh
       before_script: PATH=$PWD/gnat/bin:$PATH
       addons:
         homebrew:
@@ -57,7 +57,7 @@ jobs:
 #   - <<: *osx
 #     osx_image: xcode9.4
     - env: TASK="man"
-      script: ./dist/man.sh
+      script: ./scripts/man.sh
       deploy:
         - <<: *dep
           file: "doc/_build/man/ghdl.1"

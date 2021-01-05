@@ -396,7 +396,7 @@ echo "with $pkg_synth;" > ghdlsynth_maybe.ads
 echo "package Ghdlsynth_Maybe renames $pkg_synth;" >> ghdlsynth_maybe.ads
 
 # Generate default_paths.ads
-# Also update dist/windows/mcode/default_paths.ads if you change this
+# Also update scripts/windows/mcode/default_paths.ads if you change this
 # template.
 echo "Generate default_paths.ads"
 sed -e "s%@COMPILER_GCC@%ghdl1-gcc$EXEEXT%" \

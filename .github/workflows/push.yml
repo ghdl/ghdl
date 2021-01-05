@@ -54,7 +54,7 @@ jobs:
     - name: '🧰 Checkout'
       uses: actions/checkout@v2
 
-    - run: TASK=buster+mcode ./dist/ci-run.sh -c --gpl --no-synth
+    - run: TASK=buster+mcode ./scripts/ci-run.sh -c --gpl --no-synth
 
 #
 # GNU/Linux
@@ -82,7 +82,7 @@ jobs:
 
     - name: Build and test GHDL in containers
       run: |
-        TASK=ubuntu${{ matrix.os }}+${{ matrix.backend }} ./dist/ci-run.sh -c
+        TASK=ubuntu${{ matrix.os }}+${{ matrix.backend }} ./scripts/ci-run.sh -c
         mv ghdl-*-ubuntu${{ matrix.os }}-*.tgz ghdl-gha-ubuntu-${{ matrix.os }}.04-$(echo ${{ matrix.backend }} | sed 's#-.*##g').tgz
 
     - name: '📤 Upload artifact: package'
@@ -106,12 +106,12 @@ jobs:
       run: |
         brew update || true
         brew install p7zip
-        ./dist/macosx/install-ada.sh
+        ./scripts/macosx/install-ada.sh
 
     - name: Build and test GHDL
       run: |
         PATH=$PWD/gnat/bin:$PATH
-        ./dist/ci-run.sh -c
+        ./scripts/ci-run.sh -c
       env:
         TASK: macosx+mcode
         GITHUB_OS: ${{ runner.os }}
@@ -161,7 +161,7 @@ jobs:
 
     - name: Build package
       run: |
-        cd dist/msys2-${{ matrix.pkg }}
+        cd scripts/msys2-${{ matrix.pkg }}
         makepkg-mingw --noconfirm --noprogressbar -sCLf
 
     - name: '📤 Upload artifact: builddir'
@@ -169,13 +169,13 @@ jobs:
       with:
         name: ${{ matrix.installs }}-${{ matrix.pkg }}-builddir
         path: |
-          ./dist/msys2-${{ matrix.pkg }}/src/
-          ./dist/msys2-${{ matrix.pkg }}/pkg/
+          ./scripts/msys2-${{ matrix.pkg }}/src/
+          ./scripts/msys2-${{ matrix.pkg }}/pkg/
 
     - name: '📤 Upload artifact: package'
       uses: actions/upload-artifact@v2
       with:
-        path: ./dist/msys2-${{ matrix.pkg }}/mingw-*ghdl*.pkg.tar.zst
+        path: ./scripts/msys2-${{ matrix.pkg }}/mingw-*ghdl*.pkg.tar.zst
 
 #
 # Windows Test

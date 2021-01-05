@@ -86,212 +86,212 @@ This document was generated on Sep 20, 2019 - 03:55.
 
 
 @menu
-* About GHDL:: 
-* Contributing:: 
-* Copyrights | Licenses:: 
-* Quick Start Guide:: 
-* Invoking GHDL:: 
-* Simulation and runtime:: 
-* Interfacing to other languages:: 
-* Releases and sources:: 
-* Building GHDL from Sources:: 
-* Precompile Vendor Primitives:: 
-* Command Reference:: 
-* Coding Style:: 
-* Implementation of VHDL:: 
-* Implementation of VITAL:: 
-* Roadmap | Future Improvements:: 
-* Meta:: 
-* Index: Index<2>. 
-* Index:: 
+* About GHDL::
+* Contributing::
+* Copyrights | Licenses::
+* Quick Start Guide::
+* Invoking GHDL::
+* Simulation and runtime::
+* Interfacing to other languages::
+* Releases and sources::
+* Building GHDL from Sources::
+* Precompile Vendor Primitives::
+* Command Reference::
+* Coding Style::
+* Implementation of VHDL::
+* Implementation of VITAL::
+* Roadmap | Future Improvements::
+* Meta::
+* Index: Index<2>.
+* Index::
 
 @detailmenu
  --- The Detailed Node Listing ---
 
 About GHDL
 
-* What is VHDL?:: 
-* What is GHDL?:: 
-* Who uses GHDL?:: 
+* What is VHDL?::
+* What is GHDL?::
+* Who uses GHDL?::
 
 Contributing
 
-* Reporting bugs:: 
-* Requesting enhancements:: 
-* Improving the documentation:: 
-* Fork@comma{} modify and pull-request: Fork modify and pull-request. 
-* Related interesting projects:: 
+* Reporting bugs::
+* Requesting enhancements::
+* Improving the documentation::
+* Fork@comma{} modify and pull-request: Fork modify and pull-request.
+* Related interesting projects::
 
 Copyrights | Licenses
 
-* GNU GPLv2:: 
-* CC-BY-SA:: 
-* List of Contributors:: 
+* GNU GPLv2::
+* CC-BY-SA::
+* List of Contributors::
 
 Quick Start Guide
 
-* The ‘Hello world’ program:: 
-* The heartbeat program:: 
-* A full adder:: 
-* Starting with a design:: 
-* Starting with your design:: 
+* The ‘Hello world’ program::
+* The heartbeat program::
+* A full adder::
+* Starting with a design::
+* Starting with your design::
 
 Invoking GHDL
 
-* Design building commands:: 
-* Design rebuilding commands:: 
-* Options:: 
-* Warnings:: 
-* Diagnostics Control:: 
-* Library commands:: 
-* VPI build commands:: 
-* IEEE library pitfalls:: 
+* Design building commands::
+* Design rebuilding commands::
+* Options::
+* Warnings::
+* Diagnostics Control::
+* Library commands::
+* VPI build commands::
+* IEEE library pitfalls::
 
 Design building commands
 
-* Analysis [-a]:: 
-* Elaboration [-e]:: 
-* Run [-r]:: 
-* Elaborate and run [--elab-run]:: 
-* Check syntax [-s]:: 
-* Analyze and elaborate [-c]:: 
+* Analysis [-a]::
+* Elaboration [-e]::
+* Run [-r]::
+* Elaborate and run [--elab-run]::
+* Check syntax [-s]::
+* Analyze and elaborate [-c]::
 
 Design rebuilding commands
 
-* Import [-i]:: 
-* Make [-m]:: 
-* Generate Makefile [--gen-makefile]:: 
-* Generate dependency file command [--gen-depends]:: 
+* Import [-i]::
+* Make [-m]::
+* Generate Makefile [--gen-makefile]::
+* Generate dependency file command [--gen-depends]::
 
 Library commands
 
-* Directory [--dir]:: 
-* Clean [--clean]:: 
-* Remove [--remove]:: 
-* Copy [--copy]:: 
+* Directory [--dir]::
+* Clean [--clean]::
+* Remove [--remove]::
+* Copy [--copy]::
 
 VPI build commands
 
-* compile [--vpi-compile]:: 
-* link [--vpi-link]:: 
-* cflags [--vpi-cflags]:: 
-* ldflags [--vpi-ldflags]:: 
-* include dir [--vpi-include-dir]:: 
-* library dir [--vpi-library-dir]:: 
+* compile [--vpi-compile]::
+* link [--vpi-link]::
+* cflags [--vpi-cflags]::
+* ldflags [--vpi-ldflags]::
+* include dir [--vpi-include-dir]::
+* library dir [--vpi-library-dir]::
 
 Simulation and runtime
 
-* Simulation options:: 
-* Export waveforms:: 
-* Export hierarchy and references:: 
-* Debugging:: 
+* Simulation options::
+* Export waveforms::
+* Export hierarchy and references::
+* Debugging::
 
 Debugging
 
-* GNU Debugger (GDB): GNU Debugger GDB. 
+* GNU Debugger (GDB): GNU Debugger GDB.
 
 Interfacing to other languages
 
-* Foreign declarations:: 
-* Linking foreign object files to GHDL:: 
-* Wrapping and starting a GHDL simulation from a foreign program:: 
-* Linking GHDL to Ada/C:: 
-* Dynamically loading foreign objects from GHDL:: 
-* Dynamically loading GHDL:: 
-* Using GRT from Ada:: 
+* Foreign declarations::
+* Linking foreign object files to GHDL::
+* Wrapping and starting a GHDL simulation from a foreign program::
+* Linking GHDL to Ada/C::
+* Dynamically loading foreign objects from GHDL::
+* Dynamically loading GHDL::
+* Using GRT from Ada::
 
 Foreign declarations
 
-* Restrictions on foreign declarations:: 
+* Restrictions on foreign declarations::
 
 Releases and sources
 
-* Downloading pre-built packages:: 
-* Downloading Source Files:: 
+* Downloading pre-built packages::
+* Downloading Source Files::
 
 Building GHDL from Sources
 
-* Directory structure:: 
-* mcode backend:: 
-* LLVM backend:: 
-* GCC backend:: 
+* Directory structure::
+* mcode backend::
+* LLVM backend::
+* GCC backend::
 
 mcode backend
 
-* GCC/GNAT; GNU/Linux or Windows (MinGW/MSYS2): GCC/GNAT GNU/Linux or Windows MinGW/MSYS2. 
-* GNAT GPL; Windows: GNAT GPL Windows. 
+* GCC/GNAT; GNU/Linux or Windows (MinGW/MSYS2): GCC/GNAT GNU/Linux or Windows MinGW/MSYS2.
+* GNAT GPL; Windows: GNAT GPL Windows.
 
 LLVM backend
 
-* GCC/GNAT; GNU/Linux or Windows (MinGW/MSYS2): GCC/GNAT GNU/Linux or Windows MinGW/MSYS2<2>. 
+* GCC/GNAT; GNU/Linux or Windows (MinGW/MSYS2): GCC/GNAT GNU/Linux or Windows MinGW/MSYS2<2>.
 
 Precompile Vendor Primitives
 
-* Supported Vendors Libraries:: 
-* Supported Simulation and Verification Libraries:: 
-* Script Configuration:: 
-* Compiling on Linux:: 
-* Compiling on Windows:: 
-* Configuration Files:: 
+* Supported Vendors Libraries::
+* Supported Simulation and Verification Libraries::
+* Script Configuration::
+* Compiling on Linux::
+* Compiling on Windows::
+* Configuration Files::
 
 Configuration Files
 
-* For Linux; config.sh: For Linux config sh. 
-* For Windows; config.psm1: For Windows config psm1. 
-* Selectable Options for the Bash Scripts;: Selectable Options for the Bash Scripts. 
-* Selectable Options for the PowerShell Scripts;: Selectable Options for the PowerShell Scripts. 
+* For Linux; config.sh: For Linux config sh.
+* For Windows; config.psm1: For Windows config psm1.
+* Selectable Options for the Bash Scripts;: Selectable Options for the Bash Scripts.
+* Selectable Options for the PowerShell Scripts;: Selectable Options for the PowerShell Scripts.
 
 Command Reference
 
-* Environment variables:: 
-* Misc commands:: 
-* File commands:: 
-* GCC/LLVM only commands:: 
-* Options: Options<2>. 
-* Passing options to other programs:: 
+* Environment variables::
+* Misc commands::
+* File commands::
+* GCC/LLVM only commands::
+* Options: Options<2>.
+* Passing options to other programs::
 
 Misc commands
 
-* Help [-h]:: 
-* Display config [--disp-config]:: 
-* Display standard [--disp-standard]:: 
-* Version [--version]:: 
+* Help [-h]::
+* Display config [--disp-config]::
+* Display standard [--disp-standard]::
+* Version [--version]::
 
 File commands
 
-* Pretty print [--pp-html]:: 
-* Find [-f]:: 
-* Chop [--chop]:: 
-* Lines [--lines]:: 
+* Pretty print [--pp-html]::
+* Find [-f]::
+* Chop [--chop]::
+* Lines [--lines]::
 
 GCC/LLVM only commands
 
-* Bind [--bind]:: 
-* Link [--link]:: 
-* List link [--list-link]:: 
+* Bind [--bind]::
+* Link [--link]::
+* List link [--list-link]::
 
 Implementation of VHDL
 
-* VHDL standards:: 
-* PSL implementation:: 
-* Source representation:: 
-* Library database:: 
-* Top entity:: 
-* Using vendor libraries:: 
+* VHDL standards::
+* PSL implementation::
+* Source representation::
+* Library database::
+* Top entity::
+* Using vendor libraries::
 
 Implementation of VITAL
 
-* VITAL packages:: 
-* VHDL restrictions for VITAL:: 
-* Backannotation:: 
-* Negative constraint calculation:: 
+* VITAL packages::
+* VHDL restrictions for VITAL::
+* Backannotation::
+* Negative constraint calculation::
 
 Meta
 
-* General guidelines to edit the documentation:: 
-* Guidelines to edit section ‘Building’:: 
-* Documentation configuration:: 
-* Dist:: 
+* General guidelines to edit the documentation::
+* Guidelines to edit section ‘Building’::
+* Documentation configuration::
+* Dist::
 
 @end detailmenu
 @end menu
@@ -302,9 +302,9 @@ Meta
 
 
 @menu
-* What is VHDL?:: 
-* What is GHDL?:: 
-* Who uses GHDL?:: 
+* What is VHDL?::
+* What is GHDL?::
+* Who uses GHDL?::
 
 @end menu
 
@@ -341,7 +341,7 @@ GHDL aims at implementing VHDL as defined by IEEE 1076@footnote{http://ieeexplor
 Several third party projects are supported: VUnit@footnote{https://vunit.github.io/}, OSVVM@footnote{http://osvvm.org/}, cocotb@footnote{https://github.com/potentialventures/cocotb} (through the VPI interface@footnote{https://en.wikipedia.org/wiki/Verilog_Procedural_Interface}), …
 
 @cartouche
-@quotation Hint 
+@quotation Hint
 Although synthesis is not supported yet, there is some experimental feature to generate RTL netlists (VHDL or EDIF) from synthesisable code. For subcommand @code{--synth} to be available, GHDL must be configured/built with option @code{--enable-synth} (GCC 8.1>= required, due to some new GNAT features which are only available in recent releases). Since this is a proof-of-concept, the output is mostly a dump of an internal structure for now. Therefore, it is not very useful, except for debugging.
 
 Moreover, ghdlsynth@footnote{https://github.com/tgingold/ghdlsynth-beta} is a complementary repository that lets GHDL to be loaded by yosys@footnote{http://www.clifford.at/yosys/} as a frontend plugin module, in order to generate bitstreams for some FPGA devices.
@@ -380,9 +380,9 @@ If you are more familiar with GHDL, you might start asking yourself how it works
 
 While using GHDL, you might find flaws, such as bugs, missing features, typos in the documentation, or topics which still are
 not covered. In order to improve GHDL, we welcome bug reports, suggestions, and contributions for any aspect of
-GHDL. Whether it’s a bug or an enhancement, have a look at the 
+GHDL. Whether it’s a bug or an enhancement, have a look at the
 @image{/Users/gingold/devel/ghdl/doc/build/doctrees/images/75d23ce669cbc7993d4d057361ad0c2a3d5d5271/ghdl,,,Open issues,svg}
- and 
+ and
 @image{/Users/gingold/devel/ghdl/doc/build/doctrees/images/e1c1423669df5839910ed47f754b67708d362d8b/ghdl,,,Closed issues,svg}
  to see
 if someone already told us about it. You might find a solution there.
@@ -390,28 +390,28 @@ if someone already told us about it. You might find a solution there.
 If you found no information on your topic, please, report so that we are aware! You can reach us through various ways:
 
 @image{/Users/gingold/devel/ghdl/doc/build/doctrees/images/16176de4998e1a71b2f57993443202b2d81671f4/chat-on%20gitter-4db797,,,Talk to us on Gitter,svg}
- or open a 
+ or open a
 @image{/Users/gingold/devel/ghdl/doc/build/doctrees/images/dfb2204df41464917807ba7d4295bf10566f1193/new-issue-yellowgreen,,,Open new issue at GitHub,svg}
 .
 
 @cartouche
-@quotation Hint 
+@quotation Hint
 Since the development of GHDL started fifteen years ago, multiple platforms have been used as a support for both distribution and getting feedback. However, the development is now centralized in github.
 @end quotation
 @end cartouche
 
 @cartouche
-@quotation Tip 
+@quotation Tip
 How To Ask Questions The Smart Way@footnote{www.catb.org/~esr/faqs/smart-questions.html}
 @end quotation
 @end cartouche
 
 @menu
-* Reporting bugs:: 
-* Requesting enhancements:: 
-* Improving the documentation:: 
-* Fork@comma{} modify and pull-request: Fork modify and pull-request. 
-* Related interesting projects:: 
+* Reporting bugs::
+* Requesting enhancements::
+* Improving the documentation::
+* Fork@comma{} modify and pull-request: Fork modify and pull-request.
+* Related interesting projects::
 
 @end menu
 
@@ -421,32 +421,32 @@ How To Ask Questions The Smart Way@footnote{www.catb.org/~esr/faqs/smart-questio
 
 
 @cartouche
-@quotation Tip 
+@quotation Tip
 
 @itemize *
 
-@item 
+@item
 If the compiler crashes, this is a bug. Reliable tools never crash.
 
-@item 
+@item
 If the compiler emits an error message for a perfectly valid input or does not emit an error message for an invalid input, this may be a bug.
 
-@item 
+@item
 If the executable created from your VHDL sources crashes, this may be a bug at runtime or the code itself may be wrong. However, since VHDL has a notion of pointers, an erroneous VHDL program (using invalid pointers for example) may crash.
 
-@item 
+@item
 If a compiler message is not clear enough, please tell us. The error messages can be improved, but we do not have enough experience with them.
 @end itemize
 @end quotation
 @end cartouche
 
-Please, report issues of this kind through 
+Please, report issues of this kind through
 @image{/Users/gingold/devel/ghdl/doc/build/doctrees/images/bac95e4b3b8c2d7bfbc31a7ce9892272a524ef30/new-bug--report-yellowgreen,,,Open new bug report at GitHub,svg}
 , as this allows us to categorize issues into groups and
 to assign developers to them. You can track the issue’s state and see how it’s getting solved.
 
 @cartouche
-@quotation Important 
+@quotation Important
 As suggested in the bug report template, please elaborate a @cite{Minimal (non) Working Example} (MWE@footnote{https://en.wikipedia.org/wiki/Minimal_Working_Example}) prior to sending the report, so that the possible bug source is isolated. Should it fulfill the format requirements of issue-runner@footnote{https://github.com/1138-4EB/issue-runner}, you would be able to test your bug with the latest GHDL version. Please do so in order to ensure that the bug is not solved already.
 
 Also, please include enough information in the bug report, for the maintainers to reproduce the problem. The template includes:
@@ -454,38 +454,38 @@ Also, please include enough information in the bug report, for the maintainers t
 
 @itemize *
 
-@item 
+@item
 Operating system and version of GHDL (you can get it with @code{ghdl --version}).
 
-@item 
+@item
 Whether you have built GHDL from sources (provide short SHA of the used commit) or used the binary distribution (note which release/tag).
 
 
 @itemize *
 
-@item 
+@item
 If you cannot compile, please report which compiler you are using and the version.
 @end itemize
 
-@item 
+@item
 Content of the input files which comprise the MWE
 
-@item 
+@item
 Description of the problem:
 
 
 @itemize *
 
-@item 
+@item
 Comment explaining whether the MWE should compile or not; if yes, whether or not is should run until the assertion.
 
-@item 
+@item
 What you expect to happen and what you actually get. If you know the LRM well enough, please specify which paragraph might not be implemented well.
 
-@item 
+@item
 Samples of any log.
 
-@item 
+@item
 Anything else that you think would be helpful.
 @end itemize
 @end itemize
@@ -493,7 +493,7 @@ Anything else that you think would be helpful.
 @end cartouche
 
 @cartouche
-@quotation Note 
+@quotation Note
 If you don’t know the LRM, be aware that an issue claimed as a bug report may be rejected because there is no bug according to it. GHDL aims at implementing VHDL as defined in IEEE 1076@footnote{http://ieeexplore.ieee.org/document/4772740/}. However, some other tools allow constructs which do not fully follow the standard revisions. Therefore, comparisons with other VHDL is not a solid argument. Some of them are supported by GHDL (see @ref{14,,IEEE library pitfalls}), but any such enhancement will have very low priority.
 @end quotation
 @end cartouche
@@ -505,7 +505,7 @@ If you don’t know the LRM, be aware that an issue claimed as a bug report may 
 
 
 @image{/Users/gingold/devel/ghdl/doc/build/doctrees/images/89dd2439936c60b66feb51ba1c0d6a38facef2d8/1561565e8455e49d1382462c9afb48178cccd06f,,,Open new feature request at GitHub,svg?logo=github&style=flat-square&longCache=true}
- 
+
 @image{/Users/gingold/devel/ghdl/doc/build/doctrees/images/16176de4998e1a71b2f57993443202b2d81671f4/chat-on%20gitter-4db797,,,Talk to us on Gitter,svg}
 
 
@@ -529,22 +529,22 @@ maintainers to pull your copy. See @ref{18,,Fork@comma{} modify and pull-request
 
 
 @cartouche
-@quotation Tip 
+@quotation Tip
 
 @itemize *
 
-@item 
-Before starting any modification, you might want to have a look at 
+@item
+Before starting any modification, you might want to have a look at
 @image{/Users/gingold/devel/ghdl/doc/build/doctrees/images/c3a4692a25333d57bb8c1ce54f97f15c6846ba63/ghdl,,,Open pull requests,svg}
- and 
+ and
 @image{/Users/gingold/devel/ghdl/doc/build/doctrees/images/6497f995f9ef9e87d1fe97a236cebe38959dc915/ghdl,,,Closed pull requests,svg}
-, to check which other contributions are being made or have been made. If you observe that the modifications you are about to start might conflict with any other, please 
+, to check which other contributions are being made or have been made. If you observe that the modifications you are about to start might conflict with any other, please
 @image{/Users/gingold/devel/ghdl/doc/build/doctrees/images/16176de4998e1a71b2f57993443202b2d81671f4/chat-on%20gitter-4db797,,,Talk to us on Gitter,svg}
- or open a 
+ or open a
 @image{/Users/gingold/devel/ghdl/doc/build/doctrees/images/82b759af84cd517081b3c031dfbe444f16595fb9/f125673efc1475d3e54f355fd17e00e44587099a,,,Open new Pull Request (PR) at GitHub,svg?logo=github&style=flat-square&longCache=true}
  to coordinate.
 
-@item 
+@item
 See section @ref{1a,,Directory structure} to faster find the location of the sources you need to modify, and/or to know where to place new ones.
 @end itemize
 @end quotation
@@ -555,36 +555,36 @@ write access to our repositories, the project is hosted at GitHub, which follows
 flow@footnote{https://help.github.com/articles/github-flow/} . That is:
 
 
-@enumerate 
+@enumerate
 
-@item 
+@item
 Make a copy (fork@footnote{https://help.github.com/articles/fork-a-repo/}) of the project.
 
-@item 
+@item
 Do the changes you wish (edit, add, rename, move and/or delete).
 
-@item 
+@item
 When you think that the changes are ready to be merged, notify the maintainers by opening a Pull Request@footnote{https://help.github.com/articles/creating-a-pull-request/} (PR).
 
-@item 
+@item
 The maintainers will review the proposed changes and will reply in the corresponding thread if any further modification is required. If so, you can keep adding commits to the same branch, and the PR will be automatically updated.
 
-@item 
+@item
 Last, the maintainers will merge your branch. You will be notified, the PR will be closed, and you’ll be allowed to delete the branch, if you want.
 @end enumerate
 
 @cartouche
-@quotation Tip 
+@quotation Tip
 
 @itemize *
 
-@item 
+@item
 It is recommended to read A successful Git branching model@footnote{http://nvie.com/posts/a-successful-git-branching-model/} for a reference on how maintainers expect to handle multiple branches. However, our actual model is not as exhaustive as explained there.
 
-@item 
+@item
 Some commit messages can automatically close@footnote{https://help.github.com/articles/closing-issues-via-commit-messages/} issues. This is a very useful feature, which you are not required to use. However beware that using @cite{fix} anywhere in the commit message can have side effects. If you closed any issue unexpectedly, just reply to it (even if it’s closed) so that maintainers can check it.
 
-@item 
+@item
 It is recommended to read @ref{1b,,Coding Style} before contributing modifications to Ada sources.
 @end itemize
 @end quotation
@@ -616,15 +616,15 @@ If you have an interesting project, please send us feedback or get listed on our
 
 @itemize -
 
-@item 
+@item
 The GHDL front-end package @code{std.textio}, and the runtime library @code{grt} are given under @ref{20,,GNU GPLv2}.
 
-@item 
+@item
 The documentation is given under @ref{21,,CC-BY-SA}.
 @end itemize
 
 @cartouche
-@quotation Warning 
+@quotation Warning
 As a consequence of the runtime copyright, you are not allowed to distribute an executable produced by GHDL without the VHDL sources. To my mind, this is not a real restriction, since it is pointless to distribute VHDL executable. Please, send a comment (@ref{16,,Requesting enhancements}) if you don’t like this policy.
 @end quotation
 @end cartouche
@@ -632,7 +632,7 @@ As a consequence of the runtime copyright, you are not allowed to distribute an 
 
 @itemize -
 
-@item 
+@item
 The following packages are copyrighted by third parties (see corresponding sources for more information):
 
 @quotation
@@ -640,7 +640,7 @@ The following packages are copyrighted by third parties (see corresponding sourc
 
 @itemize -
 
-@item 
+@item
 These from library @code{ieee} are copyrighted by Institute of Electrical and Electronics Engineers (IEEE)@footnote{https://www.ieee.org} :
 
 @quotation
@@ -648,18 +648,18 @@ These from library @code{ieee} are copyrighted by Institute of Electrical and El
 
 @itemize -
 
-@item 
+@item
 @code{numeric_bit} and @code{numeric_std}: the source files may be distributed without change, except as permitted by the standard; these may not be sold or distributed for profit. [see also IEEE 1076.3@footnote{http://ieeexplore.ieee.org/document/592543/} ]
 
-@item 
+@item
 @code{std_logic_1164}, @code{Math_Real} and @code{Math_Complex}
 
-@item 
+@item
 @code{VITAL_Primitives}, @code{VITAL_Timing} and @code{VITAL_Memory} [see also IEEE 1076.4@footnote{http://ieeexplore.ieee.org/document/954750/} ]
 @end itemize
 @end quotation
 
-@item 
+@item
 The following sources may be used and distributed without restriction, provided that the copyright statements are not removed from the files and that any derivative work contains the copyright notice.
 
 @quotation
@@ -667,10 +667,10 @@ The following sources may be used and distributed without restriction, provided 
 
 @itemize -
 
-@item 
+@item
 @code{synopsys} directory: @code{std_logic_arith}, @code{std_logic_signed}, @code{std_logic_unsigned} and @code{std_logic_textio} are copyrighted by Synopsys@comma{} Inc.@footnote{https://www.synopsys.com/}
 
-@item 
+@item
 @code{mentor} directory: @code{std_logic_arith} is copyrighted by Mentor Graphics@footnote{https://www.mentor.com}
 @end itemize
 @end quotation
@@ -679,9 +679,9 @@ The following sources may be used and distributed without restriction, provided 
 @end itemize
 
 @menu
-* GNU GPLv2:: 
-* CC-BY-SA:: 
-* List of Contributors:: 
+* GNU GPLv2::
+* CC-BY-SA::
+* List of Contributors::
 
 @end menu
 
@@ -706,13 +706,13 @@ This is a free documentation; you can redistribute it and/or modify it under the
 
 @itemize -
 
-@item 
+@item
 @strong{Attribution}: you must provide the name of the creator and attribution parties (more info@footnote{https://wiki.creativecommons.org/wiki/License_Versions#Detailed_attribution_comparison_chart}), a copyright notice, a license notice, a disclaimer notice, a link to the material, a link to the license and indicate if changes were made (see marking guide@footnote{https://wiki.creativecommons.org/wiki/Best_practices_for_attribution#This_is_a_good_attribution_for_material_you_modified_slightly} and more info@footnote{https://wiki.creativecommons.org/wiki/License_Versions#Modifications_and_adaptations_must_be_marked_as_such}). You may do so in any reasonable manner, but not in any way that suggests we endorse you or your use.
 
-@item 
+@item
 @strong{ShareAlike}: if you remix, transform, or build upon the material, you must distribute your contributions under the same license as the original.
 
-@item 
+@item
 @strong{No additional restrictions}: you may not apply legal terms or technological measures that legally restrict others from doing anything the license permits.
 @end itemize
 
@@ -724,7 +724,7 @@ See CC-BY-SA-4.0 Legal Code@footnote{https://creativecommons.org/licenses/by-sa/
 
 
 
-@multitable {xxxxxxxxxxxxxxxxxxxxxxxxxxx} {xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx} 
+@multitable {xxxxxxxxxxxxxxxxxxxxxxxxxxx} {xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx}
 @headitem
 
 Contributor @footnote{
@@ -829,7 +829,7 @@ Debian packaging
 
 
 
-Only those who made substantial contributions are shown in the table above, but many others contributed with minor patches. You can find a list at 
+Only those who made substantial contributions are shown in the table above, but many others contributed with minor patches. You can find a list at
 @image{/Users/gingold/devel/ghdl/doc/build/doctrees/images/6f8cd1a5e6840820b92af0cbdd95adc63019ebd5/ghdl,,,Contributors,svg}
 
 
@@ -858,11 +858,11 @@ __________________________________________________________________
 In this chapter, you will learn how to use @cite{GHDL} by working on a few examples.
 
 @menu
-* The ‘Hello world’ program:: 
-* The heartbeat program:: 
-* A full adder:: 
-* Starting with a design:: 
-* Starting with your design:: 
+* The ‘Hello world’ program::
+* The heartbeat program::
+* A full adder::
+* Starting with a design::
+* Starting with your design::
 
 @end menu
 
@@ -894,14 +894,14 @@ end behaviour;
 @end example
 
 @cartouche
-@quotation Tip 
+@quotation Tip
 
 @itemize *
 
-@item 
+@item
 Both @code{.vhdl} and @code{.vhd} extensions are used for VHDL source files, while @code{.v} is used for Verilog.
 
-@item 
+@item
 Unless you use especial characters, either @cite{UTF-8} or @cite{ISO-8859-1} encodings can be used. However, if you do, the latter should be used. The standard defines ASCII (7-bit encoding) or ISO Latin-1 (ISO-8859-1) as default. However, GHDL has a relaxing option, @ref{29,,--mb-comments} (multi byte), to allow UTF-8 or other encodings in comments.
 @end itemize
 @end quotation
@@ -910,13 +910,13 @@ Unless you use especial characters, either @cite{UTF-8} or @cite{ISO-8859-1} enc
 
 @itemize -
 
-@item 
+@item
 First, you have to compile the file; this is called @cite{analysis} of a design file in @cite{VHDL} terms. Run @code{ghdl -a hello.vhdl} in the @cite{shell}. This command creates or updates a file @code{work-obj93.cf}, which describes the library @code{work}.
 
-@item 
+@item
 Then, run @code{ghdl -e hello_world} in the @cite{shell}. Option @ref{2a,,-e} means @emph{elaborate}, which is used to build a design, with the @code{hello_world} entity at the top of the hierarchy.
 
-@item 
+@item
 Last, you can directly launch the simulation running @code{ghdl -r hello_world} in the @cite{shell}. The result of the simulation will be shown on screen:
 @end itemize
 
@@ -925,26 +925,26 @@ Hello world!
 @end example
 
 @cartouche
-@quotation Hint 
+@quotation Hint
 If a GCC/LLVM variant of @cite{GHDL} is used:
 
 
 @itemize *
 
-@item 
+@item
 @cite{Analysis} generates a file, @code{hello.o}, which is the object file corresponding to your @cite{VHDL} program. This is not created with mcode.
 
-@item 
+@item
 The elaboration step is mandatory after running the analysis and prior to launching the simulation. This will generate an executable binary named @code{hello_world}.
 
-@item 
+@item
 As a result, @ref{2b,,-r} is just a passthrough to the binary generated in the @cite{elaboration}. Therefore, the executable can be run directly, @code{./hello_world}. See @ref{2b,,-r} for more informartion.
 @end itemize
 @end quotation
 @end cartouche
 
 @cartouche
-@quotation Hint 
+@quotation Hint
 @ref{2a,,-e} can be bypassed with mcode, since @ref{2b,,-r} actually elaborates the design and saves it on memory before running the simulation. But you can still use it to check for some elaboration problems.
 @end quotation
 @end cartouche
@@ -1066,7 +1066,7 @@ end behav;
 As usual, you should analyze the design, @code{ghdl -a adder_tb.vhdl}.
 
 @cartouche
-@quotation Hint 
+@quotation Hint
 Then, if required, elaborate the testbench: @code{ghdl -e adder_tb}. You do not need to specify which object files are required, since GHDL knows them and automatically adds them.
 @end quotation
 @end cartouche
@@ -1093,12 +1093,12 @@ Unless you are only studying VHDL, you will work with larger designs than the on
 
 @itemize -
 
-@item 
+@item
 First, untar the sources: @code{tar zxvf dlx.tar.gz}.
 @end itemize
 
 @cartouche
-@quotation Hint 
+@quotation Hint
 In order not to pollute the sources with the library, it is a good idea to create a @code{work/} subdirectory for the @cite{WORK} library. To any GHDL commands, we will add the @code{--workdir=work} option, so that all files generated by the compiler (except the executable) will be placed in this directory.
 
 @example
@@ -1111,15 +1111,15 @@ $ mkdir work
 
 @itemize *
 
-@item 
+@item
 Then, we will run the @code{dlx_test_behaviour} design. We need to analyze all the design units for the design hierarchy, in the correct order. GHDL provides an easy way to do this, by importing the sources, @code{ghdl -i --workdir=work *.vhdl}.
 
-@item 
+@item
 GHDL knows all the design units of the DLX, but none of them has been analyzed. Run the make option, @code{ghdl -m --workdir=work dlx_test_behaviour}, which analyzes and elaborates a design. This creates many files in the @code{work/} directory, and (GCC/LLVM only) the @code{dlx_test_behaviour} executable in the current directory.
 @end itemize
 
 @cartouche
-@quotation Hint 
+@quotation Hint
 The simulation needs to have a DLX program contained in the file @code{dlx.out}. This memory image will be loaded in the DLX memory. Just take one sample: @code{cp test_loop.out dlx.out}.
 @end quotation
 @end cartouche
@@ -1127,7 +1127,7 @@ The simulation needs to have a DLX program contained in the file @code{dlx.out}.
 
 @itemize *
 
-@item 
+@item
 Now, you can run the test suite: @code{ghdl -r --workdir=work dlx_test_behaviour}. The test bench monitors the bus and displays each instruction executed. It finishes with an assertion of severity level note:
 
 @example
@@ -1135,7 +1135,7 @@ dlx-behaviour.vhdl:395:11:(assertion note): TRAP instruction
  encountered, execution halted
 @end example
 
-@item 
+@item
 Lastly, since the clock is still running, you have to manually stop the program with the @code{C-c} key sequence. This behavior prevents you from running the test bench in batch mode. However, you may force the simulator to stop when an assertion above or equal a certain severity level occurs. To do so, call run with this option instead: @code{ghdl -r --workdir=work dlx_test_behaviour --assert-level=note`}. With this option, the program stops just after the previous message:
 
 @example
@@ -1146,26 +1146,26 @@ error: assertion failed
 @end itemize
 
 @cartouche
-@quotation Tip 
+@quotation Tip
 If you want to make room on your hard drive, you can either:
 
 
 @itemize *
 
-@item 
+@item
 Clean the design library with the GHDL command @code{ghdl --clean --workdir=work}. This removes the executable and all the object files. If you want to rebuild the design at this point, just do the make command as shown above.
 
-@item 
+@item
 Remove the design library with the GHDL command @code{ghdl --remove --workdir=work}. This removes the executable, all the object files and the library file. If you want to rebuild the design, you have to import the sources again and make the design.
 
-@item 
+@item
 Remove the @code{work/} directory: @code{rm -rf work}. Only the executable is kept. If you want to rebuild the design, create the @code{work/} directory, import the sources, and make the design.
 @end itemize
 @end quotation
 @end cartouche
 
 @cartouche
-@quotation Warning 
+@quotation Warning
 Sometimes, a design does not fully follow the VHDL standards. For example it might use the badly engineered @code{std_logic_unsigned} package. GHDL supports this VHDL dialect through some options: @code{--ieee=synopsys -fexplicit}. See section @ref{14,,IEEE library pitfalls}, for more details.
 @end quotation
 @end cartouche
@@ -1181,25 +1181,25 @@ tips are:
 
 @itemize *
 
-@item 
+@item
 Don’t forget to select the VHDL standard you want to use.  The
 default is @code{--std=93c} which means VHDL-93 with some relaxed
 rules.  Use @code{--std=08} for VHDL-2008 (albeit not fully
 implemented).  All the units must be analyzed with the same standard.
 
-@item 
+@item
 Use @code{--work=LIB_NAME} to analyze files into the @code{LIB_NAME} library.
 If you analyze other files from a different directory, give the path
 of the @code{LIB_NAME} library using @code{-P/path/to/name/directory/}.
 
-@item 
+@item
 Use @code{--ieee=synopsys} if your design depends on the non-standard
 ieee library.
 
-@item 
+@item
 Use @code{-fexplicit} if needed.
 
-@item 
+@item
 Use the same options for elaboration.
 @end itemize
 
@@ -1227,27 +1227,27 @@ The form of the @code{ghdl} command is @code{ghdl command [options...]}. There a
 
 @itemize *
 
-@item 
+@item
 The first argument selects the command. The options are used to slightly modify the action.
 
-@item 
+@item
 No option is allowed before the command. Except for the run command, no option is allowed after a filename or a unit name.
 @end itemize
 
 @cartouche
-@quotation Hint 
+@quotation Hint
 If the number of options is large and the command line length is beyond the system limit, you can use a response file. An argument that starts with a @code{@@} is considered as a response file; it is replaced by arguments read from the file (separated by blanks and end of line).
 @end quotation
 @end cartouche
 
 @cartouche
-@quotation Hint 
+@quotation Hint
 Only the most common commands and options are shown here. For the most advanced and experimental features see section @ref{f,,Command Reference}.
 @end quotation
 @end cartouche
 
 @cartouche
-@quotation Warning 
+@quotation Warning
 During analysis and elaboration GHDL may read the @code{std} and @code{ieee} files. The location of these files is based on the prefix, which is (in order of priority):
 
 @quotation
@@ -1255,16 +1255,16 @@ During analysis and elaboration GHDL may read the @code{std} and @code{ieee} fil
 
 @itemize *
 
-@item 
+@item
 the @code{--PREFIX} command line option
 
-@item 
-the 
+@item
+the
 @geindex GHDL_PREFIX
 @geindex environment variable; GHDL_PREFIX
 @ref{34,,GHDL_PREFIX} environment variable
 
-@item 
+@item
 a built-in default path. It is a hard-coded path on GNU/Linux, and it corresponds to the value of the @code{HKLM\Software\Ghdl\Install_Dir} registry entry on Windows.
 @end itemize
 
@@ -1274,14 +1274,14 @@ You should use the @ref{35,,--disp-config} command to display and debug installa
 @end cartouche
 
 @menu
-* Design building commands:: 
-* Design rebuilding commands:: 
-* Options:: 
-* Warnings:: 
-* Diagnostics Control:: 
-* Library commands:: 
-* VPI build commands:: 
-* IEEE library pitfalls:: 
+* Design building commands::
+* Design rebuilding commands::
+* Options::
+* Warnings::
+* Diagnostics Control::
+* Library commands::
+* VPI build commands::
+* IEEE library pitfalls::
 
 @end menu
 
@@ -1295,12 +1295,12 @@ The most commonly used commands of GHDL are those to analyze and elaborate a des
 @geindex cmd analysis
 
 @menu
-* Analysis [-a]:: 
-* Elaboration [-e]:: 
-* Run [-r]:: 
-* Elaborate and run [--elab-run]:: 
-* Check syntax [-s]:: 
-* Analyze and elaborate [-c]:: 
+* Analysis [-a]::
+* Elaboration [-e]::
+* Run [-r]::
+* Elaborate and run [--elab-run]::
+* Check syntax [-s]::
+* Analyze and elaborate [-c]::
 
 @end menu
 
@@ -1335,7 +1335,7 @@ Re-analyzes all the configurations, entities, architectures and package declarat
 
 @itemize *
 
-@item 
+@item
 The elaboration command, @ref{2a,,-e}, must be followed by a name of either:
 
 @quotation
@@ -1343,13 +1343,13 @@ The elaboration command, @ref{2a,,-e}, must be followed by a name of either:
 
 @itemize *
 
-@item 
+@item
 a configuration unit
 
-@item 
+@item
 an entity unit
 
-@item 
+@item
 an entity unit followed by a name of an architecture unit
 @end itemize
 @end quotation
@@ -1360,14 +1360,14 @@ Name of the units must be a simple name, without any dot. You can select the nam
 
 @itemize *
 
-@item 
+@item
 If the GCC/LLVM backend was enabled during the compilation of GHDL, the elaboration command creates an executable containing the code of the VHDL sources, the elaboration code and simulation code to execute a design hierarchy. The executable is created in the current directory and the the filename is the name of the primary unit, or for the latter case, the concatenation of the name of the primary unit, a dash, and the name of the secondary unit (or architecture). Option @code{-o} followed by a filename can override the default executable filename.
 
-@item 
+@item
 If mcode is used, this command elaborates the design but does not generate anything. Since the run command also elaborates the design, this can be skipped.
 
 @cartouche
-@quotation Warning 
+@quotation Warning
 This elaboration command is not a complete elaboration in terms of the VHDL standard. The actual elaboration is performed at runtime. Therefore, in order to get a complete VHDL elaboration without running the simulation, @code{ghdl --elab-run --no-run} is required.
 @end quotation
 @end cartouche
@@ -1390,10 +1390,10 @@ Runs/simulates a design. The options and arguments are the same as for the elabo
 
 @itemize *
 
-@item 
+@item
 GGC/LLVM: simply, the filename of the executable is determined and it is executed. Options are ignored. You may also directly execute the program. The executable must be in the current directory.
 
-@item 
+@item
 mcode: the design is elaborated and the simulation is launched. As a consequence, you must use the same options used during analysis.
 @end itemize
 
@@ -1402,13 +1402,13 @@ This command exists for three reasons:
 
 @itemize *
 
-@item 
+@item
 You are using GCC/LLVM, but you don’t need to create the executable program name.
 
-@item 
+@item
 It is coherent with the @ref{38,,-a} and @ref{2a,,-e} commands.
 
-@item 
+@item
 It works with mcode implementation, where the executable code is generated in memory.
 @end itemize
 
@@ -1455,7 +1455,7 @@ Analyze files but do not generate code. This command may be used to check the sy
 @end deffn
 
 @cartouche
-@quotation Hint 
+@quotation Hint
 With GCC/LLVM, @ref{2a,,-e} should be used, and @ref{2b,,-r} with mcode.
 @end quotation
 @end cartouche
@@ -1469,27 +1469,27 @@ The advantages over the traditional approach (analyze and then elaborate) are:
 
 @itemize *
 
-@item 
+@item
 The compilation cycle is achieved in one command.
 
-@item 
+@item
 Since the files are only parsed once, the compilation cycle may be faster.
 
-@item 
+@item
 You don’t need to know an analysis order.
 
-@item 
+@item
 This command produces a smaller executable, since unused units and subprograms do not generate code.
 @end itemize
 
 @cartouche
-@quotation Hint 
+@quotation Hint
 However, you should know that most of the time is spent in code generation and the analyze and elaborate command generates code for all units needed, even units of @code{std} and @code{ieee} libraries. Therefore, according to the design, the time for this command may be higher than the time for the analyze command followed by the elaborate command.
 @end quotation
 @end cartouche
 
 @cartouche
-@quotation Warning 
+@quotation Warning
 This command is still under development. In case of problems, you should go back to the traditional way.
 @end quotation
 @end cartouche
@@ -1504,10 +1504,10 @@ Analyzing and elaborating a design consisting of several files can be tricky, du
 @geindex cmd importing files
 
 @menu
-* Import [-i]:: 
-* Make [-m]:: 
-* Generate Makefile [--gen-makefile]:: 
-* Generate dependency file command [--gen-depends]:: 
+* Import [-i]::
+* Make [-m]::
+* Generate Makefile [--gen-makefile]::
+* Generate dependency file command [--gen-depends]::
 
 @end menu
 
@@ -1524,14 +1524,14 @@ Analyzing and elaborating a design consisting of several files can be tricky, du
 All the files specified in the command line are scanned, parsed and added into the libraries but as not yet analyzed. No object files are created. Its purpose is to localize design units in the design files. The make command will then be able to recursively build a hierarchy from an entity name or a configuration name.
 
 @cartouche
-@quotation Hint 
+@quotation Hint
 
 @itemize *
 
-@item 
+@item
 Note that all the files are added to the work library. If you have many libraries, you must use the command for each library.
 
-@item 
+@item
 Since the files are parsed, there must be correct files. However, since they are not analyzed, many errors are tolerated by this command.
 @end itemize
 @end quotation
@@ -1556,10 +1556,10 @@ Analyze automatically outdated files and elaborate a design. The primary unit de
 
 @itemize *
 
-@item 
+@item
 With option @ref{4a,,--bind}, GHDL will stop before the final linking step. This is useful when the main entry point is not GHDL and you’re linking GHDL object files into a foreign program.
 
-@item 
+@item
 With option @ref{4b,,-f} (force), GHDL analyzes all the units of the work library needed to create the design hierarchy. Outdated units are recompiled. This is useful if you want to compile a design hierarchy with new compilation flags (for example, to add the @emph{-g} debugging option).
 @end itemize
 
@@ -1618,7 +1618,7 @@ Theses rules can then be integrated in another Makefile.
 @geindex 1076.3
 
 @cartouche
-@quotation Hint 
+@quotation Hint
 Besides the options described below, @cite{GHDL} passes any debugging options (those that begin with @code{-g}) and optimizations options (those that begin with -O@footnote{https://docs.python.org/3.6/using/cmdline.html#cmdoption-o} or @ref{4b,,-f}) to @cite{GCC}. Refer to the @cite{GCC} manual for details.
 @end quotation
 @end cartouche
@@ -1729,7 +1729,7 @@ package. See section @ref{14,,IEEE library pitfalls}, for an example.
 @end deffn
 
 @cartouche
-@quotation Warning 
+@quotation Warning
 This option is not set by default. I don’t think this option is a good feature, because it breaks the encapsulation rule. When set, an operator can be silently overridden in another package. You’d do better to fix your design and use the @code{numeric_std} package.
 @end quotation
 @end cartouche
@@ -1803,13 +1803,13 @@ Be verbose. For example, for analysis, elaboration and make commands, GHDL displ
 Some constructions are not erroneous but dubious. Warnings are diagnostic messages that report such constructions. Some warnings are reported only during analysis, others during elaboration.
 
 @cartouche
-@quotation Hint 
+@quotation Hint
 You could disable a warning by using the @code{--warn-no-XXX} or @code{-Wno-XXX} instead of @code{--warn-XXX} or @code{-WXXX}.
 @end quotation
 @end cartouche
 
 @cartouche
-@quotation Hint 
+@quotation Hint
 The warnings @code{-Wbinding}, @code{-Wlibrary}, @code{-Wshared},
 @code{-Wpure}, @code{-Wspecs}, @code{-Whide}, @code{-Wport} are enabled by
 default.
@@ -2010,10 +2010,10 @@ Furthermore, GHDL provides a few commands which act on a library:
 @geindex cmd library directory
 
 @menu
-* Directory [--dir]:: 
-* Clean [--clean]:: 
-* Remove [--remove]:: 
-* Copy [--copy]:: 
+* Directory [--dir]::
+* Clean [--clean]::
+* Remove [--remove]::
+* Copy [--copy]::
 
 @end menu
 
@@ -2088,12 +2088,12 @@ command before its execution.
 @geindex cmd VPI compile
 
 @menu
-* compile [--vpi-compile]:: 
-* link [--vpi-link]:: 
-* cflags [--vpi-cflags]:: 
-* ldflags [--vpi-ldflags]:: 
-* include dir [--vpi-include-dir]:: 
-* library dir [--vpi-library-dir]:: 
+* compile [--vpi-compile]::
+* link [--vpi-link]::
+* cflags [--vpi-cflags]::
+* ldflags [--vpi-ldflags]::
+* include dir [--vpi-include-dir]::
+* library dir [--vpi-library-dir]::
 
 @end menu
 
@@ -2342,7 +2342,7 @@ end good;
 @geindex Math_Complex
 
 @cartouche
-@quotation Hint 
+@quotation Hint
 The @code{ieee} math packages (@code{math_real} and @code{math_complex}) provided with @cite{GHDL} are fully compliant with the @cite{IEEE} standard.
 @end quotation
 @end cartouche
@@ -2364,10 +2364,10 @@ The @code{ieee} math packages (@code{math_real} and @code{math_complex}) provide
 
 
 @menu
-* Simulation options:: 
-* Export waveforms:: 
-* Export hierarchy and references:: 
-* Debugging:: 
+* Simulation options::
+* Export waveforms::
+* Export hierarchy and references::
+* Debugging::
 
 @end menu
 
@@ -2401,7 +2401,7 @@ all options available, including the debugging ones.
 Set value @cite{VALUE} to generic with name @cite{GENERIC}.
 
 @cartouche
-@quotation Warning 
+@quotation Warning
 This is currently a run option; but in the future it will be deprecated to
 become an elaboration option only.
 @end quotation
@@ -2623,39 +2623,39 @@ dumps only signals whose base type is of the following:
 
 @itemize *
 
-@item 
+@item
 types defined in the @code{std.standard} package:
 
 
 @itemize *
 
-@item 
+@item
 @code{bit}
 
-@item 
+@item
 @code{bit_vector}
 @end itemize
 
-@item 
+@item
 types defined in the @code{ieee.std_logic_1164} package:
 
 
 @itemize *
 
-@item 
+@item
 @code{std_ulogic}
 
-@item 
+@item
 @code{std_logic} (because it is a subtype of @code{std_ulogic})
 
-@item 
+@item
 @code{std_ulogic_vector}
 
-@item 
+@item
 @code{std_logic_vector}
 @end itemize
 
-@item 
+@item
 any integer type
 @end itemize
 
@@ -2717,16 +2717,16 @@ design. @cite{KIND} is optional, but if set must be one of:
 
 @itemize *
 
-@item 
+@item
 @code{none} Do not display hierarchy. Same as if the option was not present.
 
-@item 
+@item
 @code{inst} Display entities, architectures, instances, blocks and generates statements.
 
-@item 
+@item
 @code{proc} Like @code{inst} but also display processes.
 
-@item 
+@item
 @code{port} Like @code{proc} but display ports and signals too.
 If @cite{KIND} is not specified, the hierarchy is displayed with the
 @code{port} mode.
@@ -2751,10 +2751,10 @@ The set of @code{file} are analyzed, and then, if the analysis is successful, ht
 
 @itemize *
 
-@item 
+@item
 If the option @code{--format=html2} is specified, then the generated html files follow the HTML 2.0 standard, and colours are specified with @cite{<FONT>} tags. However, colours are hard-coded.
 
-@item 
+@item
 If the option @code{--format=css} is specified, then the generated html files follow the HTML 4.0 standard, and use the CSS-1 file @code{ghdl.css} to specify colours. This file is generated only if it does not already exist (it is never overwritten) and can be customized by the user to change colours or appearance. Refer to a generated file and its comments for more information.
 @end itemize
 @end deffn
@@ -2774,14 +2774,14 @@ Outputs an XML representation of the decorated syntax tree for the input file an
 @end deffn
 
 @cartouche
-@quotation Warning 
+@quotation Warning
 
 @itemize *
 
-@item 
+@item
 The AST slightly changes from time to time (particularly when new nodes are added for new language features), so be liberal in what is allowed by your tool. Also, the XML can be quite large so consider it only during prototyping.
 
-@item 
+@item
 Note that at this time there is no XML dump of the elaborated design.
 @end itemize
 @end quotation
@@ -2879,7 +2879,7 @@ Allow @code{--work=std}
 @end deffn
 
 @menu
-* GNU Debugger (GDB): GNU Debugger GDB. 
+* GNU Debugger (GDB): GNU Debugger GDB.
 
 @end menu
 
@@ -2891,7 +2891,7 @@ Allow @code{--work=std}
 @geindex `__ghdl_fatal`
 
 @cartouche
-@quotation Warning 
+@quotation Warning
 Debugging VHDL programs using @cite{GDB} is possible only with GCC/LLVM.
 @end quotation
 @end cartouche
@@ -2939,7 +2939,7 @@ You can define a subprogram in a foreign language (such as @cite{C} or
 @cite{Ada}) and import it into a VHDL design.
 
 @cartouche
-@quotation Hint 
+@quotation Hint
 VHPIDIRECT is the simplest way to call C code from VHDL. VHPI is a complex API to interface C and VHDL, which allows to
 inspect the hierarchy, set callbacks and/or assign signals. GHDL does not support VHPI. For these kind of features, it is
 suggested to use VPI instead (see @ref{86,,VPI build commands}).
@@ -2947,13 +2947,13 @@ suggested to use VPI instead (see @ref{86,,VPI build commands}).
 @end cartouche
 
 @menu
-* Foreign declarations:: 
-* Linking foreign object files to GHDL:: 
-* Wrapping and starting a GHDL simulation from a foreign program:: 
-* Linking GHDL to Ada/C:: 
-* Dynamically loading foreign objects from GHDL:: 
-* Dynamically loading GHDL:: 
-* Using GRT from Ada:: 
+* Foreign declarations::
+* Linking foreign object files to GHDL::
+* Wrapping and starting a GHDL simulation from a foreign program::
+* Linking GHDL to Ada/C::
+* Dynamically loading foreign objects from GHDL::
+* Dynamically loading GHDL::
+* Using GRT from Ada::
 
 @end menu
 
@@ -2997,7 +2997,7 @@ upper-case keyword followed by one or more blanks). The linkage name of the
 subprogram follows.
 
 @menu
-* Restrictions on foreign declarations:: 
+* Restrictions on foreign declarations::
 
 @end menu
 
@@ -3111,7 +3111,7 @@ process is not trivial: you have to elaborate your program and your
 @cite{VHDL} design.
 
 @cartouche
-@quotation Hint 
+@quotation Hint
 If the foreign language is C, this procedure is equivalent to the one described in
 @ref{c8,,Linking foreign object files to GHDL}, which is easier. Thus, this procedure is
 explained for didactic purposes. When suitable, we suggest to use @code{-e} instead
@@ -3205,7 +3205,7 @@ GHDL simulations in parallel.
 
 
 @cartouche
-@quotation Warning 
+@quotation Warning
 This topic is only for advanced users who know how to use @cite{Ada}
 and @cite{GNAT}. This is provided only for reference; we have tested
 this once before releasing @cite{GHDL} 0.19, but this is not checked at
@@ -3316,8 +3316,8 @@ Root instance name: counter
 
 
 @menu
-* Downloading pre-built packages:: 
-* Downloading Source Files:: 
+* Downloading pre-built packages::
+* Downloading Source Files::
 
 @end menu
 
@@ -3329,7 +3329,7 @@ Root instance name: counter
 @c TODO How to extend this directive to use `.. only:: html` and `.. only:: html` in the python code passed to it?
 
 @cartouche
-@quotation Error 
+@quotation Error
 Unable to execute python code at Releases.rst:108:
 
 <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1051)>
@@ -3349,7 +3349,7 @@ Unable to execute python code at Releases.rst:108:
 
 
 @cartouche
-@quotation Hint 
+@quotation Hint
 All the following procedures will retrieve the latest development version of GHDL, i.e., the @cite{master} branch at github.com/ghdl/ghdl@footnote{https://github.com/ghdl/ghdl}.
 We do our best to keep it stable, but bugs can seldom be published. See @cite{HINT} boxes below for instructions to get older releases.
 @end quotation
@@ -3363,7 +3363,7 @@ choose your desired format/version:
 
 
 @cartouche
-@quotation Hint 
+@quotation Hint
 To download a specific version of GHDL, use this alternative URL, where @code{<format>} is @code{tar.gz} or @code{zip}: @code{https://codeload.github.com/ghdl/ghdl/<format>/<tag>}.
 @end quotation
 @end cartouche
@@ -3377,7 +3377,7 @@ account and have already uploaded an OpenSSH public key to GitHub, otherwise
 use HTTPS if you have no account or you want to use login credentials.
 
 
-@multitable {xxxxxxxxxxxx} {xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx} 
+@multitable {xxxxxxxxxxxx} {xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx}
 @headitem
 
 Protocol
@@ -3406,7 +3406,7 @@ SSH
 
 
 @cartouche
-@quotation Hint 
+@quotation Hint
 Execute @code{git checkout -b stable <tag>} after @code{git clone}, to checkout a specific version of GHDL.
 @end quotation
 @end cartouche
@@ -3430,7 +3430,7 @@ git remote rename origin github
 @end example
 
 @cartouche
-@quotation Note 
+@quotation Note
 Executing the following instructions in Windows Command Prompt (@code{cmd.exe})
 won’t function or will result in errors! All Windows command line instructions are
 intended for @code{Windows PowerShell}, if not marked otherwise. @code{Windows PowerShell}
@@ -3463,7 +3463,7 @@ offers HTTPS and SSH as transfer protocols. See the @ref{d8,,Downloading Source 
 page for further details.
 
 @cartouche
-@quotation Important 
+@quotation Important
 Since GHDL is written in @cite{Ada}, independently of the code generator you use,
 the a compiler is required. Most GNU/Linux package managers provide a package
 named @code{gcc-ada} or @code{gcc-gnat}. Alternatively, @cite{GNU Ada compiler}, @cite{GNAT GPL},
@@ -3480,20 +3480,20 @@ GHDL currently supports three different back-ends (code generators):
 
 @itemize *
 
-@item 
+@item
 mcode - built-in x86 (or x86_64) code generator
 
-@item 
+@item
 GCC - Gnu Compiler Collection (gcc.gnu.org@footnote{http://gcc.gnu.org/})
 
-@item 
+@item
 LLVM - Low-Level Virtual Machine (llvm.org@footnote{http://llvm.org/})
 @end itemize
 
 Here is a short comparison, so that you can choose the one you want to use:
 
 
-@multitable {xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx} {xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx} {xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx} 
+@multitable {xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx} {xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx} {xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx}
 @headitem
 
 Back-end
@@ -3515,13 +3515,13 @@ Cons
 
 @itemize *
 
-@item 
+@item
 Very easy to build
 
-@item 
+@item
 Very quick analysis
 
-@item 
+@item
 Can handle very large designs
 @end itemize
 
@@ -3530,10 +3530,10 @@ Can handle very large designs
 
 @itemize *
 
-@item 
+@item
 Simulation is slower
 
-@item 
+@item
 x86_64/i386 only
 @end itemize
 
@@ -3546,16 +3546,16 @@ x86_64/i386 only
 
 @itemize *
 
-@item 
+@item
 Generated code is faster
 
-@item 
+@item
 Generated code can be debugged (with @code{-g})
 
-@item 
+@item
 Easier to build than GCC
 
-@item 
+@item
 Ported to many platforms (x86, x86_64, armv7/aarch64)
 @end itemize
 
@@ -3564,7 +3564,7 @@ Ported to many platforms (x86, x86_64, armv7/aarch64)
 
 @itemize *
 
-@item 
+@item
 Build is more complex than mcode
 @end itemize
 
@@ -3577,13 +3577,13 @@ Build is more complex than mcode
 
 @itemize *
 
-@item 
+@item
 Generated code is faster (particularly with @code{-O} or @code{-O2})
 
-@item 
+@item
 Generated code can be debugged (with @code{-g})
 
-@item 
+@item
 Ported to many platforms (x86, x86_64, PowerPC, SPARC)
 @end itemize
 
@@ -3592,13 +3592,13 @@ Ported to many platforms (x86, x86_64, PowerPC, SPARC)
 
 @itemize *
 
-@item 
+@item
 Build is even more complex
 
-@item 
+@item
 Analysis can take time (particularly for large units)
 
-@item 
+@item
 Code coverage collection (@code{gcov}) is unique to GCC
 @end itemize
 
@@ -3617,10 +3617,10 @@ Code coverage collection (@code{gcov}) is unique to GCC
 @c # define a hard kine break for HTML
 
 @menu
-* Directory structure:: 
-* mcode backend:: 
-* LLVM backend:: 
-* GCC backend:: 
+* Directory structure::
+* mcode backend::
+* LLVM backend::
+* GCC backend::
 
 @end menu
 
@@ -3632,10 +3632,10 @@ Code coverage collection (@code{gcov}) is unique to GCC
 
 @itemize *
 
-@item 
+@item
 @code{src}: sources of GHDL, all of them in Ada.
 
-@item 
+@item
 @code{libraries}: mostly third party libraries such as, @cite{ieee}, @cite{mentor},
 @cite{std}, @cite{synopsys} and @cite{vital}. Except for a few shell and @cite{Python} scripts, all
 the content is written in VHDL.
@@ -3643,7 +3643,7 @@ the content is written in VHDL.
 
 @itemize *
 
-@item 
+@item
 Vendors like Altera, Lattice and Xilinx have their own simulation libraries,
 especially for FPGA primitives, soft and hard macros. These libraries cannot
 be shipped with GHDL, but we offer prepared compile scripts to
@@ -3653,58 +3653,58 @@ See @ref{e3,,Precompile Vendor Primitives} for information on how to
 use them.
 @end itemize
 
-@item 
+@item
 @code{dist}: scripts and auxiliary files to build GHDL in different
 environments:
 
 
 @itemize *
 
-@item 
+@item
 @code{gcc}: header and configuration files to build GHDL with GCC (all
 platforms).
 
-@item 
+@item
 @code{linux}: build and test script written in shell, and other auxiliary
 files used to i) launch docker containers and ii) automate multiple builds
 in Travis CI@footnote{https://travis-ci.org/}.
 
-@item 
+@item
 @code{windows}:
 
 
 @itemize *
 
-@item 
+@item
 @code{mcode}:
 
-@item 
+@item
 @code{appveyor}:
 @end itemize
 @end itemize
 
-@item 
+@item
 @code{doc}: @cite{Markdown} and @cite{reStructuredText} sources and auxiliary files to
 build the documentation with Sphinx@footnote{http://www.sphinx-doc.org}. In fact,
 Read the Docs@footnote{http://readthedocs.org} (RTD) is used to automatically build
 and deploy this site and/or PDF you are reading.
 
-@item 
+@item
 @code{testsuite}: files used for testing.
 
-@item 
+@item
 @cite{.yml} configuration files for CI environments (@code{readthedocs},
 @code{travis}, and @code{appveyor}) and @cite{ignore} files for source control
 management tools (@code{git} and @code{.hg}).
 
-@item 
+@item
 Files for building GHDL: @code{configure} and @code{Makefile.in}.
 
-@item 
+@item
 Auxiliary files for development: @code{.gdbinit} and @code{ghdl.gpr.in}
 (GNAT project file).
 
-@item 
+@item
 Text files: @code{COPYING.md}, @code{NEWS.md}, and @code{README.md}.
 @end itemize
 
@@ -3729,8 +3729,8 @@ simplest procedure, because it requires the fewest dependencies and configuratio
 options.
 
 @menu
-* GCC/GNAT; GNU/Linux or Windows (MinGW/MSYS2): GCC/GNAT GNU/Linux or Windows MinGW/MSYS2. 
-* GNAT GPL; Windows: GNAT GPL Windows. 
+* GCC/GNAT; GNU/Linux or Windows (MinGW/MSYS2): GCC/GNAT GNU/Linux or Windows MinGW/MSYS2.
+* GNAT GPL; Windows: GNAT GPL Windows.
 
 @end menu
 
@@ -3745,10 +3745,10 @@ options.
 
 @itemize *
 
-@item 
+@item
 GCC (Gnu Compiler Collection)
 
-@item 
+@item
 GNAT (Ada compiler for GCC)
 @end itemize
 
@@ -3757,21 +3757,21 @@ GHDL is configured by @code{configure} and built by @code{make}.
 
 @itemize *
 
-@item 
+@item
 First, GHDL needs to be configured. It is common to specify a @code{PREFIX}
 (installation directory like @code{/usr/local} or @code{/opt/ghdl}). Without any
 other option, @code{configure} selects @cite{mcode} as the backend.
 
-@item 
+@item
 Next, @code{make} starts the compilation process.
 
-@item 
+@item
 Finally, @code{make install} installs GHDL into the installation directory
 specified by @code{PREFIX}.
 @end itemize
 
 @cartouche
-@quotation Hint 
+@quotation Hint
 ON GNU/Linux, you may need super user privileges (@code{sudo ...}).
 @end quotation
 @end cartouche
@@ -3799,13 +3799,13 @@ $ make install
 
 @itemize *
 
-@item 
+@item
 GNAT GPL from @indicateurl{http://libre.adacore.com}
 
-@item 
+@item
 PowerShell 4
 
-@item 
+@item
 PowerShell Community Extensions (PSCX)
 @end itemize
 
@@ -3852,18 +3852,18 @@ CreatePackage options:
 
 @itemize *
 
-@item 
+@item
 GCC (Gnu Compiler Collection)
 
-@item 
+@item
 GNAT (Ada compiler for GCC)
 
-@item 
+@item
 LLVM (Low-Level-Virtual Machine) and CLANG (Compiler front-end for LLVM): 3.5, 3.8, 3.9, 4.0, 5.0, 6.0, 7.0 or 8.0
 @end itemize
 
 @menu
-* GCC/GNAT; GNU/Linux or Windows (MinGW/MSYS2): GCC/GNAT GNU/Linux or Windows MinGW/MSYS2<2>. 
+* GCC/GNAT; GNU/Linux or Windows (MinGW/MSYS2): GCC/GNAT GNU/Linux or Windows MinGW/MSYS2<2>.
 
 @end menu
 
@@ -3873,7 +3873,7 @@ LLVM (Low-Level-Virtual Machine) and CLANG (Compiler front-end for LLVM): 3.5, 3
 
 
 @cartouche
-@quotation Hint 
+@quotation Hint
 You need to install LLVM (usually depends on @code{libedit}, see #29@footnote{https://github.com/ghdl/ghdl/issues/29}). Debugging is only supported with LLVM 3.5.
 @end quotation
 @end cartouche
@@ -3883,17 +3883,17 @@ GHDL is configured by @code{configure} and built by @code{make}.
 
 @itemize *
 
-@item 
+@item
 First, GHDL needs to be configured. It is common to specify a @code{PREFIX}
 (installation directory like @code{/usr/local} or @code{/opt/ghdl}). Set the proper
 arg, @code{./configure --with-llvm-config}, to select LLVM backend. If
 @code{llvm-config} is not in your path, you can specify it:
 @code{./configure --with-llvm-config=LLVM_INSTALL/bin/llvm-config}.
 
-@item 
+@item
 Next, @code{make} starts the compilation process.
 
-@item 
+@item
 Finally, @code{make install} installs GHDL into the installation directory
 specified by @code{PREFIX}.
 @end itemize
@@ -3911,7 +3911,7 @@ $ make install
 @end example
 
 @cartouche
-@quotation Hint 
+@quotation Hint
 If you want to have stack backtraces on errors (like assert failure or index of out bounds), you need to configure and build @code{libbacktrace} from GCC (you don’t need to configure GCC). Then add the following arg to configure: @code{--with-backtrace-lib=/path-to-gcc-build/libbacktrace/.libs/libbacktrace.a}
 @end quotation
 @end cartouche
@@ -3933,7 +3933,7 @@ If you want to have stack backtraces on errors (like assert failure or index of 
 
 
 @cartouche
-@quotation Todo 
+@quotation Todo
 Instructions to build GHDL with GCC backend on Windows are not available yet.
 @end quotation
 @end cartouche
@@ -3944,18 +3944,18 @@ Instructions to build GHDL with GCC backend on Windows are not available yet.
 
 @itemize *
 
-@item 
+@item
 GCC (Gnu Compiler Collection)
 
-@item 
+@item
 GNAT (Ada compiler for GCC)
 
-@item 
+@item
 GCC source files. Download and untar the sources of version 4.9.x, 5.x, 6.x or 7.x.
 @end itemize
 
 @cartouche
-@quotation Hint 
+@quotation Hint
 There are some dependencies for building GCC (@code{gmp}, @code{mpfr} and @code{mpc}). If you have not installed them on your system, you can either build them manually or use the @code{download_prerequisites} script provided in the GCC source tree (recommended): @code{cd /path/to/gcc/source/dir && ./contrib/download_prerequisites}.
 @end quotation
 @end cartouche
@@ -3963,19 +3963,19 @@ There are some dependencies for building GCC (@code{gmp}, @code{mpfr} and @code{
 
 @itemize *
 
-@item 
+@item
 First configure GHDL, specify GCC source directory and installation prefix (like  @code{/usr/local} or @code{/opt/ghdl}).
 
-@item 
+@item
 Next, invoke @code{make copy-sources} to copy GHDL sources in the source directory.
 
-@item 
+@item
 Then, configure GCC. The list of @code{--disable} configure options can be adjusted to your needs. GHDL does not require all these optional libraries and disabling them will speed up the build.
 
-@item 
+@item
 Now, build and install GCC with @code{make}.
 
-@item 
+@item
 Last, build and install GHDL libraries.
 @end itemize
 
@@ -3999,25 +3999,25 @@ $ make install
 @end example
 
 @cartouche
-@quotation Hint 
+@quotation Hint
 Note that the prefix directory to configure @code{gcc} must be the same as the one used to configure GHDL. If you have manually built @code{gmp}/@code{mpfr}/@code{mpc} (without using the script in @code{contrib}), and, if you have installed them in a non-standard directory, you may need to add @code{--with-gmp=GMP_INSTALL_DIR}.
 @end quotation
 @end cartouche
 
 @cartouche
-@quotation Hint 
+@quotation Hint
 If your system gcc was configured with @code{--enable-default-pie} (check if that option appears in the output of @code{gcc -v}), you should also add it.
 @end quotation
 @end cartouche
 
 @cartouche
-@quotation Hint 
+@quotation Hint
 If you don’t want to install @code{makeinfo}, do @code{make install MAKEINFO=true} instead.
 @end quotation
 @end cartouche
 
 @cartouche
-@quotation Hint 
+@quotation Hint
 Once GCC (with GHDL) has been built once, it is possible to work on the GHDL source tree without copying it in the GCC tree. Commands are:
 
 @example
@@ -4042,7 +4042,7 @@ If your system gcc was built with @code{--enable-default-pie}, add
 @end cartouche
 
 @cartouche
-@quotation Hint 
+@quotation Hint
 For ppc64 (and AIX ?) platform, the object file format contains an identifier for the source language. Because gcc doesn’t know about VHDL, gcc crashes very early. This could be fixed with a very simple change in @code{gcc/config/rs6000/rs6000.c}, @code{function rs6000_output_function_epilogue} (as of gcc 4.8):
 
 @example
@@ -4058,7 +4058,7 @@ For ppc64 (and AIX ?) platform, the object file format contains an identifier fo
 @end cartouche
 
 @cartouche
-@quotation Hint 
+@quotation Hint
 The output of both GCC and LLVM is an executable file, but @cite{mcode} does not
 generate any. Therefore, if using GCC/LLVM, the call with argument @code{-r} can
 be replaced with direct execution of the binary. See section @ref{d,,Quick Start Guide}.
@@ -4071,7 +4071,7 @@ know where the content will be placed and which files are expected to be
 created.
 
 @cartouche
-@quotation Hint 
+@quotation Hint
 In these instructions, the configure script is executed in the source directory; but you can execute in a different
 directory too, like this:
 
@@ -4087,19 +4087,19 @@ $ ../path/to/ghdl/configure ...
 @end cartouche
 
 @cartouche
-@quotation Hint 
+@quotation Hint
 On Windows, building GHDL with mcode backend and GNAT GPL 32 bit seems to be the only way to get a standalone native executable.
 
 
 @itemize *
 
-@item 
+@item
 MINGW/MSYS2 builds depend on the environment/runtime.
 
-@item 
+@item
 For 64 bit, no native compiler exists from AdaCore.
 
-@item 
+@item
 That Ada to .NET compiler, which might work for 32 or 64 bit. is not up-to-date.
 @end itemize
 @end quotation
@@ -4139,12 +4139,12 @@ Generic Colourizer @indicateurl{http://kassiopeia.juls.savba.sk/~garabik/softwar
 }.
 
 @menu
-* Supported Vendors Libraries:: 
-* Supported Simulation and Verification Libraries:: 
-* Script Configuration:: 
-* Compiling on Linux:: 
-* Compiling on Windows:: 
-* Configuration Files:: 
+* Supported Vendors Libraries::
+* Supported Simulation and Verification Libraries::
+* Script Configuration::
+* Compiling on Linux::
+* Compiling on Windows::
+* Configuration Files::
 
 @end menu
 
@@ -4156,97 +4156,97 @@ Generic Colourizer @indicateurl{http://kassiopeia.juls.savba.sk/~garabik/softwar
 
 @itemize *
 
-@item 
+@item
 Altera/Intel Quartus (13.0 or later):
 
 
 @itemize *
 
-@item 
+@item
 @cite{lpm}, @cite{sgate}
 
-@item 
+@item
 @cite{altera}, @cite{altera_mf}, @cite{altera_lnsim}
 
-@item 
+@item
 @cite{arriaii}, @cite{arriaii_pcie_hip}, @cite{arriaiigz}
 
-@item 
+@item
 @cite{arriav}, @cite{arriavgz}, @cite{arriavgz_pcie_hip}
 
-@item 
+@item
 @cite{cycloneiv}, @cite{cycloneiv_pcie_hip}, @cite{cycloneive}
 
-@item 
+@item
 @cite{cyclonev}
 
-@item 
+@item
 @cite{max}, @cite{maxii}, @cite{maxv}
 
-@item 
+@item
 @cite{stratixiv}, @cite{stratixiv_pcie_hip}
 
-@item 
+@item
 @cite{stratixv}, @cite{stratixv_pcie_hip}
 
-@item 
+@item
 @cite{fiftyfivenm}, @cite{twentynm}
 @end itemize
 
-@item 
+@item
 Lattice (3.6 or later):
 
 
 @itemize *
 
-@item 
+@item
 @cite{ec}
 
-@item 
+@item
 @cite{ecp}, @cite{ecp2}, @cite{ecp3}, @cite{ecp5u}
 
-@item 
+@item
 @cite{lptm}, @cite{lptm2}
 
-@item 
+@item
 @cite{machxo}, @cite{machxo2}, @cite{machxo3l}
 
-@item 
+@item
 @cite{sc}, @cite{scm}
 
-@item 
+@item
 @cite{xp}, @cite{xp2}
 @end itemize
 
-@item 
+@item
 Xilinx ISE (14.0 or later):
 
 
 @itemize *
 
-@item 
+@item
 @cite{unisim} (incl. @cite{secureip})
 
-@item 
+@item
 @cite{unimacro}
 
-@item 
+@item
 @cite{simprim} (incl. @cite{secureip})
 
-@item 
+@item
 @cite{xilinxcorelib}
 @end itemize
 
-@item 
+@item
 Xilinx Vivado (2014.1 or later):
 
 
 @itemize *
 
-@item 
+@item
 @cite{unisim} (incl. @cite{secureip})
 
-@item 
+@item
 @cite{unimacro}
 @end itemize
 @end itemize
@@ -4259,50 +4259,50 @@ Xilinx Vivado (2014.1 or later):
 
 @itemize *
 
-@item 
+@item
 OSVVM (for VHDL-2008)
 
 
 @itemize *
 
-@item 
+@item
 osvvm
 @end itemize
 
-@item 
+@item
 UVVM (for VHDL-2008)
 
 
 @itemize *
 
-@item 
+@item
 uvvm-utilities
 
-@item 
+@item
 uvvm-vvc-framework
 
-@item 
+@item
 uvvm-vip-avalon_mm
 
-@item 
+@item
 uvvm-vip-axi_lite
 
-@item 
+@item
 uvvm-vip-axi_stream
 
-@item 
+@item
 uvvm-vip-gpio
 
-@item 
+@item
 uvvm-vip-i2c
 
-@item 
+@item
 uvvm-vip-sbi
 
-@item 
+@item
 uvvm-vip-spi
 
-@item 
+@item
 uvvm-vip-uart
 @end itemize
 @end itemize
@@ -4347,7 +4347,7 @@ __________________________________________________________________
 
 @itemize *
 
-@item 
+@item
 
 @table @asis
 
@@ -4356,7 +4356,7 @@ __________________________________________________________________
 See the next section for how to configure @cite{config.sh}.
 @end table
 
-@item 
+@item
 @strong{Step 1 - Browse to your simulation working directory}
 
 @example
@@ -4364,7 +4364,7 @@ $ cd <MySimulationFolder>
 `@w{`}`
 @end example
 
-@item 
+@item
 @strong{Step 2 - Start the compilation script(s)}
 
 @example
@@ -4380,7 +4380,7 @@ In most cases GHDL is installed into `/usr/local/`. The scripts are
 installed into the `lib` directory.
 @end example
 
-@item 
+@item
 
 @table @asis
 
@@ -4415,7 +4415,7 @@ __________________________________________________________________
 
 @itemize *
 
-@item 
+@item
 
 @table @asis
 
@@ -4424,14 +4424,14 @@ __________________________________________________________________
 See the next section for how to configure @cite{config.psm1}.
 @end table
 
-@item 
+@item
 @strong{Step 1 - Browse to your simulation working directory}
 
 @example
 PS> cd <MySimulationFolder>
 @end example
 
-@item 
+@item
 @strong{Step 2 - Start the compilation script(s)}
 
 @example
@@ -4443,7 +4443,7 @@ PS> <GHDL>\libraries\vendors\compile-osvvm.ps1 -All
 PS> <GHDL>\libraries\vendors\compile-uvvm.ps1 -All
 @end example
 
-@item 
+@item
 
 @table @asis
 
@@ -4478,10 +4478,10 @@ __________________________________________________________________
 
 
 @menu
-* For Linux; config.sh: For Linux config sh. 
-* For Windows; config.psm1: For Windows config psm1. 
-* Selectable Options for the Bash Scripts;: Selectable Options for the Bash Scripts. 
-* Selectable Options for the PowerShell Scripts;: Selectable Options for the PowerShell Scripts. 
+* For Linux; config.sh: For Linux config sh.
+* For Windows; config.psm1: For Windows config psm1.
+* Selectable Options for the Bash Scripts;: Selectable Options for the Bash Scripts.
+* Selectable Options for the PowerShell Scripts;: Selectable Options for the PowerShell Scripts.
 
 @end menu
 
@@ -4536,7 +4536,7 @@ $InstallationDirectory = @@@{
 
 @itemize *
 
-@item 
+@item
 Common parameters to most scripts:
 
 @example
@@ -4548,7 +4548,7 @@ Common parameters to most scripts:
 --halt-on-error, -H   Stop compiling if an error occurred.
 @end example
 
-@item 
+@item
 @cite{compile-altera.sh}
 
 Selectable libraries:
@@ -4569,7 +4569,7 @@ Compile options:
 --vhdl2008            Compile selected libraries with VHDL-2008.
 @end example
 
-@item 
+@item
 @cite{compile-xilinx-ise.sh}
 
 Selectable libraries:
@@ -4590,7 +4590,7 @@ Compile options:
 --vhdl2008            Compile selected libraries with VHDL-2008.
 @end example
 
-@item 
+@item
 @cite{compile-xilinx-vivado.sh}
 
 Selectable libraries:
@@ -4609,7 +4609,7 @@ Compile options:
 --vhdl2008            Compile selected libraries with VHDL-2008.
 @end example
 
-@item 
+@item
 @cite{compile-osvvm.sh}
 
 Selectable libraries:
@@ -4619,7 +4619,7 @@ Selectable libraries:
 --osvvm               Compile the OSVVM library.
 @end example
 
-@item 
+@item
 @cite{compile-uvvm.sh}
 
 Selectable libraries:
@@ -4638,7 +4638,7 @@ Selectable libraries:
 
 @itemize *
 
-@item 
+@item
 Common parameters to all scripts:
 
 @example
@@ -4647,7 +4647,7 @@ Common parameters to all scripts:
 -SuppressWarnings     Don't show warnings. Report errors only.
 @end example
 
-@item 
+@item
 @cite{compile-altera.ps1}
 
 Selectable libraries:
@@ -4668,7 +4668,7 @@ Compile options:
 -VHDL2008             Compile selected libraries with VHDL-2008.
 @end example
 
-@item 
+@item
 @cite{compile-xilinx-ise.ps1}
 
 Selectable libraries:
@@ -4689,7 +4689,7 @@ Compile options:
 -VHDL2008             Compile selected libraries with VHDL-2008.
 @end example
 
-@item 
+@item
 @cite{compile-xilinx-vivado.ps1}
 
 Selectable libraries:
@@ -4708,7 +4708,7 @@ Compile options:
 -VHDL2008             Compile selected libraries with VHDL-2008.
 @end example
 
-@item 
+@item
 @cite{compile-osvvm.ps1}
 
 Selectable libraries:
@@ -4718,7 +4718,7 @@ Selectable libraries:
 -OSVVM                Compile the OSVVM library.
 @end example
 
-@item 
+@item
 @cite{compile-uvvm.ps1}
 
 Selectable libraries:
@@ -4753,18 +4753,18 @@ __________________________________________________________________
 
 
 @cartouche
-@quotation Hint 
+@quotation Hint
 The most common commands and options are shown in section @ref{e,,Invoking GHDL}. Here the advanced and experimental features are described.
 @end quotation
 @end cartouche
 
 @menu
-* Environment variables:: 
-* Misc commands:: 
-* File commands:: 
-* GCC/LLVM only commands:: 
-* Options: Options<2>. 
-* Passing options to other programs:: 
+* Environment variables::
+* Misc commands::
+* File commands::
+* GCC/LLVM only commands::
+* Options: Options<2>.
+* Passing options to other programs::
 
 @end menu
 
@@ -4788,10 +4788,10 @@ There are a few GHDL commands which are seldom useful.
 @geindex cmd help
 
 @menu
-* Help [-h]:: 
-* Display config [--disp-config]:: 
-* Display standard [--disp-standard]:: 
-* Version [--version]:: 
+* Help [-h]::
+* Display config [--disp-config]::
+* Display standard [--disp-standard]::
+* Version [--version]::
 
 @end menu
 
@@ -4871,10 +4871,10 @@ The following commands act on one or several files. These are not analyzed, ther
 @geindex vhdl to html
 
 @menu
-* Pretty print [--pp-html]:: 
-* Find [-f]:: 
-* Chop [--chop]:: 
-* Lines [--lines]:: 
+* Pretty print [--pp-html]::
+* Find [-f]::
+* Chop [--chop]::
+* Lines [--lines]::
 
 @end menu
 
@@ -4895,10 +4895,10 @@ The style of the html file can be modified with the @code{--format=} option:
 
 @itemize *
 
-@item 
+@item
 By default or when the @code{--format=html2} option is specified, the output is an HTML 2.0 file, with colours set through @cite{<FONT>} tags.
 
-@item 
+@item
 When the @code{--format=css} option is specified, the output is an HTML 4.0 file, with colours set through a CSS file, whose name is @code{ghdl.css}. See Cross-reference_command, for more details about this CSS file.
 @end itemize
 
@@ -4933,13 +4933,13 @@ The provided files are read, and a file is written in the current directory for 
 
 @itemize *
 
-@item 
+@item
 For an entity declaration, a package declaration, or a configuration the file name is @code{NAME.vhdl}, where @cite{NAME} is the name of the design unit.
 
-@item 
+@item
 For a package body, the filename is @code{NAME-body.vhdl}.
 
-@item 
+@item
 Finally, for an architecture @cite{ARCH} of an entity @cite{ENTITY}, the filename is @code{ENTITY-ARCH.vhdl}.
 @end itemize
 
@@ -4971,9 +4971,9 @@ Display on the standard output lines of files preceded by line number.
 @geindex cmd GCC/LLVM binding
 
 @menu
-* Bind [--bind]:: 
-* Link [--link]:: 
-* List link [--list-link]:: 
+* Bind [--bind]::
+* Link [--link]::
+* List link [--list-link]::
 
 @end menu
 
@@ -4990,7 +4990,7 @@ Display on the standard output lines of files preceded by line number.
 Performs only the first stage of the elaboration command; the list of object files is created but the executable is not built. This command should be used only when the main entry point is not GHDL.
 
 @cartouche
-@quotation Hint 
+@quotation Hint
 Currently, the objects generated by @code{--bind} are created in the working directory. This behaviour is different from other object files generated with @code{-a}, which are always placed in the same directory as the @cite{WORK} library. It is possible to provide an output path with @code{ghdl --bind -o path/primary_unit primary_unit}. However, @code{ghdl --list-link} will only search in the current path.
 @end quotation
 @end cartouche
@@ -5024,16 +5024,16 @@ Performs only the second stage of the elaboration command: the executable is cre
 This command may be used only after a bind command. GHDL displays all the files which will be linked to create an executable and additional arguments for the linker. This command is intended to add object files in a link of a foreign program. This command should be used only after @code{ghdl --bind}, as some files generated by it are looked for in the current path.
 
 @cartouche
-@quotation Hint 
+@quotation Hint
 One of the arguments returned by @code{--list-link} is @code{-Wl,--version-script=PREFIX/lib/ghdl/grt.ver}, where @cite{PREFIX} is the installation path of GHDL. This will hide most of the symbols when the target executable binary is built. In some contexts, where the binary is to be loaded dynamically, the user might want additional symbols to be accessible. There are two possible approaches to have it done:
 
 
 @itemize *
 
-@item 
+@item
 Filter the output of @code{--list-link} with e.g. @code{sed}.
 
-@item 
+@item
 Provide an additional non-anonymous version script: @code{-Wl,-Wl,--version-script=file.ver}.
 @end itemize
 @end quotation
@@ -5091,7 +5091,7 @@ Use @code{COMMAND} as the linker driver. If @code{COMMAND} is not a path, then i
 
 
 @cartouche
-@quotation Warning 
+@quotation Warning
 These options are only available with GCC/LLVM.
 @end quotation
 @end cartouche
@@ -5161,20 +5161,20 @@ declaration). Don’t repeat the comment before the subprogram body.
 
 @itemize *
 
-@item 
+@item
 For subprograms:
 
 
-@enumerate 
+@enumerate
 
-@item 
+@item
 Declare on one line when possible:
 
 @example
 function Translate_Static_Aggregate (Aggr : Iir) return O_Cnode
 @end example
 
-@item 
+@item
 If not possible, put the return on the next line:
 
 @example
@@ -5182,7 +5182,7 @@ function Translate_Static_String (Str_Type : Iir; Str_Ident : Name_Id)
                                  return O_Cnode
 @end example
 
-@item 
+@item
 If not possible, put parameters and return on the next line:
 
 @example
@@ -5190,7 +5190,7 @@ function Create_String_Literal_Var_Inner
   (Str : Iir; Element_Type : Iir; Str_Type : O_Tnode) return Var_Type
 @end example
 
-@item 
+@item
 If not possible, return on the next line:
 
 @example
@@ -5199,7 +5199,7 @@ function Translate_Shortcut_Operator
   return O_Enode
 @end example
 
-@item 
+@item
 If not possible, one parameter per line, just after subprogram name:
 
 @example
@@ -5209,7 +5209,7 @@ procedure Translate_Static_Aggregate_1 (List : in out O_Array_Aggr_List;
                                         El_Type : Iir)
 @end example
 
-@item 
+@item
 If not possible, add a return after subprogram name:
 
 @example
@@ -5221,11 +5221,11 @@ function Translate_Predefined_TF_Array_Element
   return O_Enode
 @end example
 
-@item 
+@item
 If not possible, ask yourself what is wrong!  Shorten a name.
 @end enumerate
 
-@item 
+@item
 Rule for the ‘is’: on a new line only if the declarative part is not empty:
 
 @quotation
@@ -5258,7 +5258,7 @@ procedure Predeclare_Scope_Type
 @end example
 @end quotation
 
-@item 
+@item
 Generic instantiation: put the generic actual part on a new line:
 
 @quotation
@@ -5269,20 +5269,20 @@ procedure Free is new Ada.Unchecked_Deallocation
 @end example
 @end quotation
 
-@item 
+@item
 For if/then statement:
 
 
-@enumerate 
+@enumerate
 
-@item 
+@item
 ‘then’ on the same line:
 
 @example
 if Get_Expr_Staticness (Decl) = Locally then
 @end example
 
-@item 
+@item
 If not possible, ‘then’ is alone on its line aligned with the ‘if’:
 
 @example
@@ -5291,11 +5291,11 @@ if Expr = Null_Iir
 then
 @end example
 
-@item 
+@item
 For a multiline condition, ‘or else’ and ‘and then’ should start lines.
 @end enumerate
 
-@item 
+@item
 ‘Local’ variable declaration:
 Do not initialize variables, constants must be declared before variables:
 
@@ -5333,12 +5333,12 @@ not use a constant.
 This chapter describes several implementation defined aspects of VHDL in GHDL.
 
 @menu
-* VHDL standards:: 
-* PSL implementation:: 
-* Source representation:: 
-* Library database:: 
-* Top entity:: 
-* Using vendor libraries:: 
+* VHDL standards::
+* PSL implementation::
+* Source representation::
+* Library database::
+* Top entity::
+* Using vendor libraries::
 
 @end menu
 
@@ -5389,19 +5389,19 @@ reasons:
 
 @itemize *
 
-@item 
+@item
 the syntax of file declaration has changed (this is the most visible source
 of incompatibility),
 
-@item 
+@item
 new keywords were introduced (group, impure, inertial, literal,
 postponed, pure, reject, rol, ror, shared, sla, sll, sra, srl,
 unaffected, xnor),
 
-@item 
+@item
 some dynamic behaviours have changed (the concatenation is one of them),
 
-@item 
+@item
 rules have been added.
 @end itemize
 
@@ -5440,10 +5440,10 @@ Select VHDL-93 standard with relaxed rules:
 
 @itemize *
 
-@item 
+@item
 VHDL-87 file declarations are accepted;
 
-@item 
+@item
 default binding indication rules of VHDL-02 are used. Default binding rules
 are often used, but they are particularly obscure before VHDL-02.
 @end itemize
@@ -5464,7 +5464,7 @@ Select VHDL-2008 standard (partially implemented).
 Multiple standards can be used in a design:
 
 
-@multitable {xxxxxxx} {xxxxxxxxxxxxxxxxxx} 
+@multitable {xxxxxxx} {xxxxxxxxxxxxxxxxxx}
 @headitem
 
 GROUP
@@ -5501,7 +5501,7 @@ VHDL Standard
 
 
 @cartouche
-@quotation Note 
+@quotation Note
 The standards in each group are considered compatible: you can elaborate a design mixing these standards. However, standards of different groups are not compatible.
 @end quotation
 @end cartouche
@@ -5605,11 +5605,11 @@ hierarchy:
 
 @itemize *
 
-@item 
+@item
 The generic must have a default value, and the value of a generic is its
 default value.
 
-@item 
+@item
 The ports type must be constrained.
 @end itemize
 
@@ -5653,10 +5653,10 @@ This chapter describes how VITAL is implemented in GHDL. Support of VITAL is
 really in a preliminary stage. Do not expect too much of it as of right now.
 
 @menu
-* VITAL packages:: 
-* VHDL restrictions for VITAL:: 
-* Backannotation:: 
-* Negative constraint calculation:: 
+* VITAL packages::
+* VHDL restrictions for VITAL::
+* Backannotation::
+* Negative constraint calculation::
 
 @end menu
 
@@ -5763,25 +5763,25 @@ We have several axes for @cite{GHDL} improvements:
 
 @itemize *
 
-@item 
+@item
 Documentation
 
-@item 
+@item
 Better diagnostics messages (warning and error)
 
-@item 
+@item
 Full support of VHDL-2008
 
-@item 
+@item
 Optimization (simulation speed)
 
-@item 
+@item
 Graphical tools (to see waves and to debug)
 
-@item 
+@item
 Style checks
 
-@item 
+@item
 VITAL acceleration
 @end itemize
 
@@ -5802,10 +5802,10 @@ VITAL acceleration
 
 
 @menu
-* General guidelines to edit the documentation:: 
-* Guidelines to edit section ‘Building’:: 
-* Documentation configuration:: 
-* Dist:: 
+* General guidelines to edit the documentation::
+* Guidelines to edit section ‘Building’::
+* Documentation configuration::
+* Dist::
 
 @end menu
 
@@ -5817,18 +5817,18 @@ VITAL acceleration
 @quotation
 
 
-@enumerate 
+@enumerate
 
-@item 
+@item
 It’s better for version control systems and diff tools to break lines at a sensible number of characters. Long lines appear as one diff. Also merging is more complex because merges are line based. Long unbreakable items may be longer (links, refs, etc.). We chose to use 160 chars.
 
-@item 
+@item
 Please indent all directive content by 3 spaces (not 2, and no tabs).
 
-@item 
+@item
 Please use @code{*} as an itemize character, since @code{-} and @code{+} are supported by docutils, but not officially supported by Sphinx.
 
-@item 
+@item
 Please underline all headlines with at least as many characters as the headline is long. Following the Python pattern for headlines the levels are:
 
 @example
@@ -5839,7 +5839,7 @@ Please underline all headlines with at least as many characters as the headline 
 ‘’’’’’’’’’’’’’’’’’’’’’’’
 @end example
 
-@item 
+@item
 It’s not required to write
 
 @example
@@ -5871,14 +5871,14 @@ Please simplify all usages of @code{:samp:`code`} to @code{`@w{`}code`@w{`}} for
 
 @itemize -
 
-@item 
+@item
 Search pattern:: @code{(.+?)}
 
-@item 
+@item
 Replace pattern:: @code{\1}
 @end itemize
 
-@item 
+@item
 Each backend has one folder and each platform/compiler has one file. Please note that page headlines are different from ToC headline:
 
 @example
@@ -5889,10 +5889,10 @@ Each backend has one folder and each platform/compiler has one file. Please note
    file2
 @end example
 
-@item 
+@item
 Documentation should not use “you”, “we”, …, because it’s not an interactive conversation or informal letter. It’s like a thesis, everything is structured and formal. However, to make it more friendly to newcomers, we agree to allow informal language in the section @ref{d,,Quick Start Guide}.
 
-@item 
+@item
 Please keep errors to a minimum.
 @end enumerate
 @end quotation
@@ -5909,16 +5909,16 @@ We would like to see a list like:
 
 @itemize *
 
-@item 
+@item
 gcc (Gnu Compiler Collection)
 
-@item 
+@item
 gcc-gnat (Ada compiler for GCC)
 
-@item 
+@item
 llvm-del (LLVM development package)
 
-@item 
+@item
 …
 @end itemize
 
@@ -5932,16 +5932,16 @@ The goal is also to explain what a user is installing and what the few lines in 
 
 @itemize *
 
-@item 
+@item
 Python snippet for Sphinx’s @cite{conf.py} to extract the current version number from Git (latest tag name). [#200@footnote{https://github.com/ghdl/ghdl/issues/200}, #221@footnote{https://github.com/ghdl/ghdl/issues/221}]
 
-@item 
+@item
 Reference @code{genindex.html} from the navigation bar. [#200@footnote{https://github.com/ghdl/ghdl/issues/200}]
 
-@item 
+@item
 Create “parts” (LaTeX terminology / chapter headlines) in navigation bar. [#200@footnote{https://github.com/ghdl/ghdl/issues/200}]
 
-@item 
+@item
 
 @table @asis
 
@@ -5950,17 +5950,17 @@ Create “parts” (LaTeX terminology / chapter headlines) in navigation bar. [#
 
 @itemize *
 
-@item 
+@item
 To decompress the inventory file: @cite{curl -s http://ghdl.readthedocs.io/en/latest/objects.inv | tail -n+5 | openssl zlib -d}. From how-to-uncompress-zlib-data-in-unix@footnote{http://unix.stackexchange.com/questions/22834/how-to-uncompress-zlib-data-in-unix}.
 
-@item 
+@item
 External ref and link to section:
 
 @example
 :ref:`GHDL Roadmap <ghdl:CHANGE:Roadmap>`
 @end example
 
-@item 
+@item
 External ref to option (no link):
 
 @example
@@ -5979,8 +5979,8 @@ External ref to option (no link):
 
 @itemize *
 
-@item 
-Ubuntu uses @cite{dash} instead of @cite{bash} when a shell script is run. As a result, some functionalities, such as arrays like @code{array[1]}, are not supported. Therefore, build scripts in @cite{dist/linux} should not use those functionalities unless they are sourced in a @cite{bash} shell. That is, @code{travis-ci.sh} uses arrays, since it is sourced in the Travis CI machine. But @code{docker-buildtest.sh} and @code{buildtest.sh} do not use any. The same applies to the scripts in @cite{testsuite}.
+@item
+Ubuntu uses @cite{dash} instead of @cite{bash} when a shell script is run. As a result, some functionalities, such as arrays like @code{array[1]}, are not supported. Therefore, build scripts should not use those functionalities unless they are sourced in a @cite{bash} shell. That is, @code{travis-ci.sh} uses arrays, since it is sourced in the Travis CI machine. But @code{docker-buildtest.sh} and @code{buildtest.sh} do not use any. The same applies to the scripts in @cite{testsuite}.
 @end itemize
 
 @c # preload commonly known graphical characters like (c)

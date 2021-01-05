@@ -6,8 +6,10 @@ b~*.ad?
 
 # Generated files on windows.
 /build/
-/dist/msys2-mingw/**/logpipe.*
-/dist/msys2-mingw/**/*.log
+/scripts/msys2-*/logpipe.*
+/scripts/msys2-*/*.log*
+/scripts/msys2-*/src/
+/scripts/msys2-*/pkg/
 
 # Generated files on Linux
 config.status

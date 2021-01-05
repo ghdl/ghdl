@@ -145,7 +145,7 @@ Shell
 =====
 
 Ubuntu uses `dash` instead of `bash` when a shell script is run. As a result, some functionalities, such as arrays like
-``array[1]``, are not supported. Therefore, build scripts in `dist/linux` should not use those functionalities unless
+``array[1]``, are not supported. Therefore, build scripts should not use those functionalities unless
 they are sourced in a `bash` shell. The same applies to the scripts in `testsuite`.
 
 Guidelines to edit the documentation
