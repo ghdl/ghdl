@@ -261,11 +261,11 @@ package body Ghdlmain is
       use Simple_IO;
    begin
       if Args'Length /= 0 then
-         if Args (1).all = "ref" then
+         if Args (1).all = "ref" or else Args (1).all = "--ref" then
             Put_Line (Version.Ghdl_Ref);
             return;
          end if;
-         if Args (1).all = "hash" then
+         if Args (1).all = "hash" or else Args (1).all = "--hash" then
             Put_Line (Version.Ghdl_Hash);
             return;
          end if;
