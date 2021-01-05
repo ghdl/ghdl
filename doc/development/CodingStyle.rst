@@ -199,7 +199,7 @@ Guidelines to edit the documentation
             ToC entry <file1>
             file2
 
-   7) Documentation should not use “you”, “we”, …, because it’s not an interactive conversation or informal letter. It’s like a thesis, everything is structured and formal. However, to make it more friendly to newcomers, we agree to allow informal language in the section :ref:`USING:QuickStart`.
+   7) Documentation should not use “you”, “we”, …, because it’s not an interactive conversation or informal letter. It’s like a thesis, everything is structured and formal. However, to make it more friendly to newcomers, we agree to allow informal language in the Quick Start Guide.
 
    8) Please keep errors to a minimum.
 

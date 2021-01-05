@@ -1,68 +1,7 @@
-.. _RELEASE:
+.. _SOURCES:
 
-Releases and sources
-####################
-
-.. contents:: Contents of this Page
-   :local:
-
-Using package managers
-**********************
-
-Package managers of many popular distributions provide pre-built packages of GHDL. This is the case for `apt`
-(Debian/Ubuntu), `dnf` (Fedora/CentOS) or `pacman` (Arch Linux). Since GHDL supports three different backends and two
-library sets (_regular_ or GPL-compatible), at least six packages with different features might be available in each package
-manager. See differences between backends in :ref:`BUILD`.
-
-.. _RELEASE:packages:
-
-Downloading pre-built packages
-******************************
-
-Assets from nightly GHDL builds are available at `github.com/ghdl/ghdl/releases/nightly <https://github.com/ghdl/ghdl/releases/nightly>`__.
-These are mostly meant to be used in Continuous Integration (CI) workflows. Precisely, `setup-ghdl-ci <https://github.com/ghdl/setup-ghdl-ci>`__
-allows to easily setup nightly assets in GitHub Actions workflows.
-
-Furthermore, assets from stable builds are available for a larger set of platforms:
-
-.. TODO How to extend this directive to use `.. only:: html` and `.. only:: html` in the python code passed to it?
-
-.. exec::
-   from helpers import createReleasesShields, printReleaseTab, printReleasesList
-
-   # Optionally, provide a <tag> name to get the assets table of a specific release. By default, the table of 'latest' is returned.
-   data = createReleasesShields()
-
-.. only:: html
-
-   .. exec::
-      from helpers import printReleaseTab
-      printReleaseTab('data')
-
-.. only:: latex
-
-   .. exec::
-      from helpers import printReleaseTab
-      printReleaseTab('data', latex=True)
-
-.. rubric :: Pre-built packages of older releases
-
-.. only:: html
-
-   .. exec::
-      from helpers import printReleasesList
-      printReleasesList('data')
-
-.. only:: latex
-
-   .. exec::
-      from helpers import printReleasesList
-      printReleasesList('data', latex=True)
-
-.. _RELEASE:Sources:
-
-Downloading Source Files
-************************
+Sources
+#######
 
 .. HINT::
 
@@ -74,8 +13,7 @@ Downloading Source Files
 
 .. rubric :: Tarball/zip-file
 
-GHDL can be downloaded as a zip-file or tarball from GitHub. See the following table, to
-choose your desired format/version:
+GHDL can be downloaded as a zip-file or tarball from GitHub. See the following table to choose your desired format/version:
 
 .. only:: html
 
@@ -104,10 +42,9 @@ choose your desired format/version:
 
 .. rubric :: git clone
 
-GHDL can be downloaded (cloned) with ``git clone`` from GitHub. GitHub offers
-the transfer protocols HTTPS and SSH. You should use SSH if you have a GitHub
-account and have already uploaded an OpenSSH public key to GitHub, otherwise
-use HTTPS if you have no account or you want to use login credentials.
+GHDL can be downloaded (cloned) with ``git clone`` from GitHub. GitHub offers the transfer protocols HTTPS and SSH. You should
+use SSH if you have a GitHub account and have already uploaded an OpenSSH public key to GitHub, otherwise use HTTPS if you
+have no account or you want to use login credentials.
 
 +----------+----------------------------------------+
 | Protocol | GitHub Repository URL                  |
@@ -141,7 +78,5 @@ Command line instructions to clone GHDL with SSH protocol:
 
 .. NOTE::
 
-   Executing the following instructions in Windows Command Prompt (:program:`cmd.exe`)
-   won't function or will result in errors! All Windows command line instructions are
-   intended for :program:`Windows PowerShell`, if not marked otherwise. :program:`Windows PowerShell`
-   can be installed or upgraded to v5.1 by installing the `Windows Management Framework <https://docs.microsoft.com/en-us/powershell/wmf/5.1/install-configure>`_.
+   Executing the following instructions in Windows Command Prompt (:program:`cmd.exe`) won't function or will result in
+   errors! All Windows command line instructions are intended for :program:`Windows PowerShell`, if not marked otherwise.

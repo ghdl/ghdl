@@ -1,7 +1,36 @@
+.. _PACKAGES:
+
+Getting | Installing
+####################
+
+Package managers
+****************
+
+Package managers of many popular distributions provide pre-built packages of GHDL. This is the case for `apt`
+(Debian/Ubuntu), `dnf` (Fedora), `pacman` (Arch Linux, MSYS2) or `brew` (macOS). Since GHDL supports three different backends
+and two library sets (*regular* or *GPL-compatible*), at least six packages with different features might be available in
+each package manager.
+
+As a rule of thumb, mcode backend is the fastest for analysis and synthesis. It also allows setting the base simulation time
+for speeding up execution. Therefore, it is the recommended pick if available on your platform (x86/amd64, on Windows x86
+only). On other platforms, or for using specific features for co-simulation or code coverage, LLVM or GCC need to be used.
+See further differences between backends in :ref:`BUILD`.
+
+.. _RELEASE:packages:
+
+Nightly packages
+****************
+
+Assets from nightly GHDL builds are available at `github.com/ghdl/ghdl/releases/nightly <https://github.com/ghdl/ghdl/releases/nightly>`__.
+These are mostly meant to be used in Continuous Integration (CI) workflows. Precisely, `setup-ghdl-ci <https://github.com/ghdl/setup-ghdl-ci>`__
+allows to easily setup nightly assets in GitHub Actions workflows.
+
+However, users on Windows (MSYS2) or Ubuntu might want to download the tarballs/zipfiles and extract/install them locally.
+
 .. _GETTING:PrecompVendor:
 
 Precompile Vendor Primitives
-############################
+****************************
 
 Vendors like Lattice, Intel (Altera) and Xilinx have their own simulation libraries,
 especially for FPGA primitives, soft and hard macros. These libraries cannot
@@ -11,9 +40,12 @@ are also popular simulation and verification libraries like OSVVM [#f1]_ or
 UVVM [#f2]_, which can be pre-compiled, too.
 
 The compilation scripts are writen in the shell languages: *PowerShell* for
-*Windows™* and *Bash* for *GNU/Linux*, *MacOS*, *MSYS2*/*MinGW*. The
+*Windows™* and *Bash* for *GNU/Linux*, *MacOS* and *MSYS2*/*MinGW*. The
 compile scripts can colorize the GHDL warning and error lines with the help
 of ``grc/grcat`` [#f4]_.
+
+.. HINT::
+  Vendor precompile scripts for OSVVM and UVVM are tested periodically in `ghdl/extended-tests <https://github.com/ghdl/extended-tests>`__.
 
 Supported Vendors Libraries
 ===========================

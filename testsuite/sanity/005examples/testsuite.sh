@@ -8,7 +8,7 @@ if [ ! -d ../../../doc ]; then
   exit 0
 fi
 
-for d in ../../../doc/quick_start/*/; do
+for d in ../../../doc/quick_start/simulation/*/; do
   cp "$d"*.vhdl ./
 done
 
