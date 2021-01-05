@@ -249,7 +249,7 @@ Options
 
   Specify the directory where the ``WORK`` library is located. When this option is not present, the ``WORK`` library is in the current directory. The object files created by the compiler are always placed in the same directory as the ``WORK`` library.
 
-  Use option :option:`-P <-P<DIRECTORY>>` to specify where libraries other than ``WORK`` are placed.
+  Use option :option:`-P <-P>` to specify where libraries other than ``WORK`` are placed.
 
 .. option:: --std=<STANDARD>
 
@@ -551,7 +551,7 @@ Library commands
 
 A new library is created implicitly, by compiling entities (packages etc.) into it: ``ghdl -a --work=my_custom_lib my_file.vhdl``.
 
-A library's source code is usually stored and compiled into its own directory, that you specify with the :option:`--workdir` option: ``ghdl -a --work=my_custom_lib --workdir=my_custom_libdir my_custom_lib_srcdir/my_file.vhdl``. See also the :option:`-P <-P<DIRECTORY>>` command line option.
+A library's source code is usually stored and compiled into its own directory, that you specify with the :option:`--workdir` option: ``ghdl -a --work=my_custom_lib --workdir=my_custom_libdir my_custom_lib_srcdir/my_file.vhdl``. See also the :option:`-P <-P>` command line option.
 
 Furthermore, GHDL provides a few commands which act on a library:
 
