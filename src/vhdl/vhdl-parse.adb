@@ -5745,6 +5745,7 @@ package body Vhdl.Parse is
 
             when Tok_Semi_Colon
                | Tok_Then
+               | Tok_Is
                | Tok_Generate
                | Tok_Loop =>
                --  Surely a missing parenthesis.
@@ -6856,7 +6857,7 @@ package body Vhdl.Parse is
       Res : Iir;
    begin
       Flag_Parse_Parenthesis := True;
-      Res := Parse_Expression;
+      Res := Parse_Expression_Keyword;
       Flag_Parse_Parenthesis := Prev_Flag;
 
       return Res;
