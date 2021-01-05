@@ -30,7 +30,7 @@ The following tips might be useful:
 
 * Use :option:`--work=LIB_NAME <--work>` to analyze files into the ``LIB_NAME`` library.
   To use files analyzed to a different directory, give the path
-  to the ``LIB_NAME`` library using :option:`-P/path/to/name/directory/ <-P<DIRECTORY>>`.
+  to the ``LIB_NAME`` library using :option:`-P/path/to/name/directory/ <-P>`.
 
 * Use the same options for analysis and elaboration. E.g., first analyse with ``ghdl -a --std=08 --work=mylib myfile.vhdl``;
   and then elaborate and run with ``ghdl --elab-run --std=08 top``.
