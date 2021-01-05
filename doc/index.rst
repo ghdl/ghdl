@@ -140,7 +140,6 @@ GHDL
    using/Foreign
    using/ImplementationOfVHDL
    using/ImplementationOfVITAL
-   using/pyGHDL/index
 
 .. raw:: latex
 
@@ -152,6 +151,8 @@ GHDL
 
    development/Debugging
    development/CodingStyle
+   gnatdoc/index
+   pyGHDL/index
 
 .. raw:: latex
 
@@ -165,7 +166,6 @@ GHDL
    internals/Frontend
    internals/AST
    internals/RTI
-   gnatdoc/index
 
 .. raw:: latex
 
