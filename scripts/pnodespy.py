@@ -282,4 +282,5 @@ def _generateCLIParser():
     return pnodes._generateCLIParser()
 
 
-pnodes.main()
+if __name__ == "__main__":
+    pnodes.main()
