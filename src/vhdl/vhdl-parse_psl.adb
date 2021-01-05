@@ -104,6 +104,10 @@ package body Vhdl.Parse_Psl is
             Res := Binary_Psl_Operator_To_Vhdl (N, Iir_Kind_And_Operator);
          when N_Or_Prop =>
             Res := Binary_Psl_Operator_To_Vhdl (N, Iir_Kind_Or_Operator);
+         when N_Paren_Prop =>
+            Res := Create_Iir (Iir_Kind_Parenthesis_Expression);
+            Set_Location (Res, Get_Location (N));
+            Set_Expression (Res, Psl_To_Vhdl (Get_Property (N)));
          when others =>
             Error_Msg_Parse
               (+N, "PSL construct not allowed as VHDL expression");
