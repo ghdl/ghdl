@@ -20,6 +20,10 @@ GHDL
      -->
    </p>
 
+   <p style="text-align: center; font-weight: 700; font-size: 125%; margin: 24px 0;">
+   GHDL: free and open-source analyzer, compiler, simulator and (experimental) synthesizer for VHDL
+   </p>
+
 .. only:: html
 
    News
