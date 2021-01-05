@@ -1,5 +1,16 @@
 package Version is
-   Ghdl_Ver : constant String := "@VER@";
+
+   Ghdl_Ver     : constant String :=
+   "@VER@";
+
+   Ghdl_Ref     : constant String :=
+   "@REF@";
+
+   Ghdl_Hash    : constant String :=
+   "@HASH@";
+
    Ghdl_Release : constant String :=
-      "(tarball) [Dunoon edition]";
+   "(@DESC@)" &
+   " [Dunoon edition]";
+
 end Version;

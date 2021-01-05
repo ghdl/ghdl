@@ -163,9 +163,21 @@ GRTSRCDIR=$(abs_srcdir)/src/grt
 include $(srcdir)/src/grt/Makefile.inc
 
 version.tmp: $(srcdir)/src/version.in force
-#	Create version.tmp from version.in, using git date/hash, or envvar GHDL_DESC. Defaults to 'tarball'.
-	if test -d $(srcdir)/.git && desc=`cd $(srcdir); git describe --dirty`; then GHDL_DESC="$$desc"; fi; \
-	$(SED) -e "s/[(].*[)]/($$GHDL_DESC)/" -e "s/@VER@/$(ghdl_version)/" < $< > $@; \
+#	Create version.tmp from version.in, using git date/hash, or envvars.
+	GHDL_VER_DESC=$${GHDL_VER_DESC:-tarball}; \
+	GHDL_VER_REF=$${GHDL_VER_REF:-unknown}; \
+	GHDL_VER_HASH=$${GHDL_VER_HASH:-unknown}; \
+	if test -d $(srcdir)/.git && desc=`cd $(srcdir); git describe --dirty --long`; then \
+	  GHDL_VER_DESC=`echo $$desc | sed -e 's/\([^-]*-g\)/r\1/' -e 's/-/./g' -e 's/^v//g'`; \
+	  GHDL_VER_REF=`cd $(srcdir); git rev-parse --abbrev-ref HEAD`; \
+	  GHDL_VER_HASH=`cd $(srcdir); git rev-parse HEAD`; \
+	fi; \
+	sed \
+	  -e "s#@VER@#$(ghdl_version)#" \
+	  -e "s#@DESC@#$${GHDL_VER_DESC}#" \
+	  -e "s#@REF@#$${GHDL_VER_REF}#" \
+	  -e "s#@HASH@#$${GHDL_VER_HASH}#" \
+	  < $< > $@;
 
 version.ads: version.tmp
 #	Change version.ads only if version.tmp has been modified to avoid
