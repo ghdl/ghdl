@@ -273,10 +273,10 @@ copy-sources.gcc: version.ads
 	$(CP) -p $(srcdir)/doc/ghdl.texi $(srcdir)/doc/ghdl.1 $(gcc_vhdl_dir)
 	$(MKDIR) $(gcc_vhdl_dir)/ghdldrv
 	$(CP) -pR $(srcdir)/src/ghdldrv/*.ad? $(gcc_vhdl_dir)/ghdldrv
-	$(CP) -p $(srcdir)/dist/gcc/Make-lang.in $(gcc_vhdl_dir)
-	$(CP) -p $(srcdir)/dist/gcc/config-lang.in $(gcc_vhdl_dir)
-	$(CP) -p $(srcdir)/dist/gcc/lang-options.h $(gcc_vhdl_dir)
-	$(CP) -p $(srcdir)/dist/gcc/lang-specs.h $(gcc_vhdl_dir)
+	$(CP) -p $(srcdir)/scripts/gcc/Make-lang.in $(gcc_vhdl_dir)
+	$(CP) -p $(srcdir)/scripts/gcc/config-lang.in $(gcc_vhdl_dir)
+	$(CP) -p $(srcdir)/scripts/gcc/lang-options.h $(gcc_vhdl_dir)
+	$(CP) -p $(srcdir)/scripts/gcc/lang-specs.h $(gcc_vhdl_dir)
 
 # To build vhdl libs using a non-installed ghdl, define GHDL_GCC_BIN to the
 # path of ghdl and GHDL1_GCC_BIN to path of ghdl1
@@ -569,7 +569,7 @@ install.vhdllib: install.dirs
 	done
 #	ANSI color
 	$(INSTALL_DATA) -p \
-	    $(srcdir)/dist/ansi_color.sh $(DESTDIR)$(VHDL_LIB_DIR)/;
+	    $(srcdir)/scripts/ansi_color.sh $(DESTDIR)$(VHDL_LIB_DIR)/;
 #	Vendors scripts
 	$(MKDIR) -p $(DESTDIR)$(VHDL_LIB_DIR)/vendors
 	$(INSTALL_DATA) -p \

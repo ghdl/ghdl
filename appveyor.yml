@@ -34,24 +34,24 @@ environment:
 init:
   - ps: Write-Host "Initializing virtual machine ..."
   - ps: $env:PATH = "C:\msys64\$($env:BUILD_MINGW)\bin;C:\msys64\usr\bin;" + $env:PATH
-#  - ps: Import-Module .\dist\appveyor\shared.psm1 -Verbose
+#  - ps: Import-Module .\scripts\appveyor\shared.psm1 -Verbose
 
 # installation scripts to run
 install:
-  - ps: .\dist\windows\appveyor\install.ps1
-  - ps: .\dist\windows\appveyor\info.ps1
+  - ps: .\scripts\windows\appveyor\install.ps1
+  - ps: .\scripts\windows\appveyor\info.ps1
 
 # Build flow
 # Disable MSBuild
 build: off
 # build scripts to run
 build_script:
-  - ps: .\dist\windows\appveyor\build.ps1
+  - ps: .\scripts\windows\appveyor\build.ps1
 
 # Test flow
 # test scripts to run
 test_script:
-  - ps: .\dist\windows\appveyor\test.ps1
+  - ps: .\scripts\windows\appveyor\test.ps1
 
 
 # =============================================================================
