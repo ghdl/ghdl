@@ -1,12 +1,16 @@
-_realname=ghdl-mcode
+_realname=ghdl
 pkgbase=mingw-w64-${_realname}
 pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
 pkgver=ci
 pkgrel=1
 pkgdesc="GHDL: the open-source analyzer, compiler, simulator and (experimental) synthesizer for VHDL (mcode backend) (mingw-w64)"
 arch=('any')
-depends=('zlib-devel'
-         "${MINGW_PACKAGE_PREFIX}-gcc-ada")
+provides=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}-mcode")
+depends=(
+  "${MINGW_PACKAGE_PREFIX}-gcc-ada"
+  'zlib-devel'
+)
 makedepends=("${MINGW_PACKAGE_PREFIX}-gcc")
 
 build() {
