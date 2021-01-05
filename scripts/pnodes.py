@@ -2,7 +2,7 @@
 
 import re
 import sys
-import argparse
+from argparse import ArgumentParser
 
 field_file = "nodes.ads"
 kind_file = "iirs.ads"
@@ -883,8 +883,9 @@ actions = {
 }
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Meta-grammar processor")
+def _generateCLIParser() -> ArgumentParser:
+    """"""
+    parser = ArgumentParser(description="Meta-grammar processor")
     parser.add_argument("action", choices=list(actions.keys()), default="disp-nodes")
     parser.add_argument(
         "--field-file",
@@ -941,6 +942,12 @@ def main():
         help="keep field order of nodes",
     )
     parser.set_defaults(flag_keep_order=False)
+
+    return parser
+
+
+def main():
+    parser = _generateCLIParser()
     args = parser.parse_args()
 
     # At some point, it would be simpler to create a class...

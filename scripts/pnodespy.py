@@ -4,11 +4,15 @@
 
 from __future__ import print_function
 
+import re
 import sys
 from textwrap import dedent
 
-import pnodes
-import re
+try:
+  import scripts.pnodes as pnodes
+except:
+  import pnodes
+
 
 libname = "libghdl"
 
@@ -272,6 +276,10 @@ pnodes.actions.update(
         "libghdl-errorout": do_libghdl_errorout,
     }
 )
+
+
+def _generateCLIParser():
+    return pnodes._generateCLIParser()
 
 
 pnodes.main()

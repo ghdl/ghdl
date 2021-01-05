@@ -72,8 +72,14 @@ search path.
 
 .. _CMDREF-pnodes:
 
-.. #
-   autoprogram:: AutoProgram:pnodes_parser
-   :prog: ghdl-ls
+.. autoprogram:: AutoProgram:pnodes_parser
+   :prog: pnodes
    :groups:
-   :label: CmdRef:ghdlls:
+   :label: CmdRef:pnodes:
+
+.. _CMDREF-pnodespy:
+
+.. autoprogram:: AutoProgram:pnodespy_parser
+   :prog: pnodespy
+   :groups:
+   :label: CmdRef:pnodespy:
