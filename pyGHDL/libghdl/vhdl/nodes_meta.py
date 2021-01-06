@@ -1,6 +1,7 @@
 # Auto generated Python source file from Ada sources
 # Call 'make' in 'src/vhdl' to regenerate:
 #
+from pydecor import export
 from pyGHDL.libghdl import libghdl
 
 
@@ -16,6 +17,7 @@ get_field_type = libghdl.vhdl__nodes_meta__get_field_type
 get_field_attribute = libghdl.vhdl__nodes_meta__get_field_attribute
 
 
+@export
 class types:
     Boolean = 0
     Date_State_Type = 1
@@ -52,6 +54,7 @@ class types:
     Tri_State_Type = 32
 
 
+@export
 class Attr:
     ANone = 0
     Chain = 1
@@ -64,6 +67,7 @@ class Attr:
     Ref = 8
 
 
+@export
 class fields:
     First_Design_Unit = 0
     Last_Design_Unit = 1

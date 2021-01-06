@@ -71,11 +71,12 @@ class Design(VHDLModel_Design):
 		# Collect error messages in memory
 		errorout_memory.Install_Handler()
 
-		libghdl.set_option(b"--std=08")
+		libghdl.set_option("--std=08")
 
 		# Finish initialization. This will load the standard package.
 		if libghdl.analyze_init_status() != 0:
 			raise LibGHDLException("Error initializing 'libghdl'.")
+
 
 @export
 class Library(VHDLModel_Library):
@@ -97,7 +98,7 @@ class Document(VHDLModel_Document):
 
 	def __ghdl_init(self):
 		# Read input file
-		self.__ghdlFileID = name_table.Get_Identifier(str(self.Path).encode("utf_8"))
+		self.__ghdlFileID = name_table.Get_Identifier(str(self.Path))
 		self.__ghdlSourceFileEntry = files_map.Read_Source_File(name_table.Null_Identifier, self.__ghdlFileID)
 		if self.__ghdlSourceFileEntry == files_map.No_Source_File_Entry:
 			raise LibGHDLException("Cannot load file '{!s}'".format(self.Path))

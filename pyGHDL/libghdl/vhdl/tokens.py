@@ -1,8 +1,10 @@
 # Auto generated Python source file from Ada sources
 # Call 'make' in 'src/vhdl' to regenerate:
 #
+from pydecor import export
 
 
+@export
 class Tok:
     Invalid = 0
     Left_Paren = 1

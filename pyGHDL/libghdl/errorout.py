@@ -1,11 +1,17 @@
 # Auto generated Python source file from Ada sources
 # Call 'make' in 'src/vhdl' to regenerate:
 #
+from pydecor import export
 from pyGHDL.libghdl import libghdl
+from pyGHDL.libghdl._types import MessageIdWarnings
 
-Enable_Warning = libghdl.errorout__enable_warning
+
+@export
+def Enable_Warning(Id: MessageIdWarnings, Enable: bool) -> None:
+    libghdl.errorout__enable_warning(Id, Enable)
 
 
+@export
 class Msgid:
     Msgid_Note = 0
     Warnid_Library = 1
