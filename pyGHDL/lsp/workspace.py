@@ -295,7 +295,7 @@ class Workspace(object):
             )
             # Recurse
             self.obsolete_dependent_units(un, antideps)
-            if nodes.Set_Date_State(un) == nodes.Date_State.Disk:
+            if nodes.Get_Date_State(un) == nodes.Date_State.Disk:
                 # Already obsolete!
                 continue
             # FIXME: just de-analyze ?
