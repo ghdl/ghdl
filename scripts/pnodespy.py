@@ -20,6 +20,7 @@ libname = "libghdl"
 def print_enum(name, vals):
     print(dedent("""
 
+        @export
         class {0}:
         """).format(name), end=''
     )
@@ -34,14 +35,18 @@ def print_file_header():
         # Auto generated Python source file from Ada sources
         # Call 'make' in 'src/vhdl' to regenerate:
         #
+        from pydecor import export
     """), end='')
 
 
 def do_class_kinds():
     print_enum(pnodes.prefix_name.rstrip("_"), pnodes.kinds)
-    print()
-    print()
-    print("class Iir_Kinds:")
+    print(dedent("""
+
+        @export
+        class Iir_Kinds:
+        """
+    ), end='')
     for k, v in pnodes.kinds_ranges.items():
         print("    {0} = [".format(k))
         for e in v:
@@ -159,8 +164,7 @@ def do_libghdl_nodes():
         Null_Iir_Flist = 0
         Iir_Flist_Others = 1
         Iir_Flist_All = 2
-        """)
-    )
+        """), end='')
 
     do_class_kinds()
     read_spec_enum("Iir_Mode", "Iir_", "Iir_Mode")
@@ -176,6 +180,7 @@ def do_libghdl_meta():
     print_file_header()
     print(dedent("""\
         from pyGHDL.libghdl import libghdl
+        from pyGHDL.libghdl._types import IirKind
 
 
         # From nodes_meta
@@ -235,7 +240,12 @@ def do_libghdl_names():
             dict[name_def] = val
             res.append((name_def, val))
     print_file_header()
-    print("class Name:")
+    print(dedent("""
+
+        @export
+        class Name:
+        """), end='')
+
     for n, v in res:
         # Avoid clash with Python names
         if n in ["False", "True", "None"]:
@@ -253,7 +263,9 @@ def do_libghdl_errorout():
     print(dedent("""\
         from pyGHDL.libghdl import libghdl
 
-        Enable_Warning = libghdl.errorout__enable_warning
+        @export
+        def Enable_Warning(Id: int, Enable: bool) -> None:
+            libghdl.errorout__enable_warning(Id, Enable)
         """), end='')
 
     read_enum(
