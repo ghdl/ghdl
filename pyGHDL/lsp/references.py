@@ -63,7 +63,7 @@ def find_def(n, loc):
                 if res is not None:
                     return res
             elif attr == nodes_meta.Attr.Maybe_Ref:
-                if not nodes.Get_Is_Ref(n, f):
+                if not nodes.Get_Is_Ref(n):
                     res = find_def(nodes_meta.Get_Iir(n, f), loc)
                     if res is not None:
                         return res
