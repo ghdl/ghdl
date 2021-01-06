@@ -79,13 +79,12 @@ def Get_Error_Record(Idx: ErrorIndex): # FIXME: returns Error_Message
 
 
 @export
-def Get_Error_Message(Idx: ErrorIndex) -> str:   # FIXME: check '*_addr' vs string return value
+def Get_Error_Message(Idx: ErrorIndex) -> str:
     func = libghdl.errorout__memory__get_error_message_addr
     func.argstype = [c_int32]
     func.restype = c_char_p
 
-    # FIXME: don't we need to encode to utf-8?
-    return func(Idx)
+    return func(Idx).decode("utf-8")
 
 
 @export

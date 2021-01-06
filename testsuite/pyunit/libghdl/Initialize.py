@@ -19,7 +19,7 @@ class Instantiate(TestCase):
 	@staticmethod
 	def getIdentifier(node):
 		"""Return the Python string from node :obj:`node` identifier"""
-		return name_table.Get_Name_Ptr(nodes.Get_Identifier(node)).decode("utf-8")
+		return name_table.Get_Name_Ptr(nodes.Get_Identifier(node))
 
 	def test_InitializeGHDL(self) -> None:
 		"""Initialization: set options and then load libaries"""

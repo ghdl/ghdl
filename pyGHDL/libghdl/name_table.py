@@ -56,7 +56,7 @@ def Get_Name_Length(Id: NameId) -> int:
 
 
 @export
-def Get_Name_Ptr(Id: NameId) -> bytes:
+def Get_Name_Ptr(Id: NameId) -> str:
     """
     Get the address of the first character of ID.  The address is valid until
     the next call to Get_Identifier (which may reallocate the string table).
@@ -67,8 +67,8 @@ def Get_Name_Ptr(Id: NameId) -> bytes:
     """
     func = libghdl.name_table__get_name_ptr
     func.restype = c_char_p
-    # FIXME: don't we need to encode to utf-8?
-    return func(Id)
+
+    return func(Id).decode("utf-8")
 
 
 @export
@@ -76,9 +76,11 @@ def Get_Identifier(string: str) -> NameId:
     """
     Get or create an entry in the name table.
 
-    Note:
-    * an identifier is represented in all lower case letter,
-    * an extended identifier is represented in backslashes, double internal backslashes are simplified.
+    .. note::
+
+       * an identifier is represented in all lower case letter,
+       * an extended identifier is represented in backslashes, double internal
+         backslashes are simplified.
 
     :param string: String to create or lookup.
     :return:       Id in name table.
