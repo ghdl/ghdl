@@ -37,6 +37,8 @@ from typing import List, Any, Generator
 
 from pydecor import export
 
+from pyGHDL.libghdl._decorator import EnumLookupTable
+from pyGHDL.libghdl._types import NameId
 import pyGHDL.libghdl.name_table as name_table
 import pyGHDL.libghdl.files_map as files_map
 import pyGHDL.libghdl.vhdl.nodes as nodes
@@ -46,54 +48,33 @@ import pyGHDL.libghdl.vhdl.flists as flists
 
 
 @export
-def name_image(nameid) -> str:
-    """Lookup a :obj:`nameid` and return its string."""
-    return name_table.Get_Name_Ptr(nameid).decode("utf-8")
+def name_image(NameId: NameId) -> str:
+    """Lookup a :obj:`NameId` and return its string."""
+    return name_table.Get_Name_Ptr(NameId)
 
 
-def _build_enum_image(cls) -> List[str]:
-    """Create a lookup table for enumeration values to literal names."""
-    d = [e for e in dir(cls) if e[0] != "_"]
-    res = [None] * len(d)
-    for e in d:
-        res[getattr(cls, e)] = e
-    return res
+#@export # FIXME: see above
+@EnumLookupTable(nodes_meta.fields)
+def fields_image(idx: int) -> str:
+    """String representation of Nodes_Meta.fields :obj:`idx`."""
 
 
-_fields_image = _build_enum_image(nodes_meta.fields)
+#@export # FIXME: see above
+@EnumLookupTable(nodes.Iir_Kind)
+def kind_image(k: int) -> str:
+    """String representation of Nodes.Iir_Kind :obj:`k`."""
 
 
-@export
-def fields_image(idx) -> str:
-    """String representation of field :obj:`idx`."""
-    return _fields_image[idx]
-
-
-_kind_image = _build_enum_image(nodes.Iir_Kind)
-
-
-@export
-def kind_image(k) -> str:
-    """String representation of Iir_Kind :obj:`k`."""
-    return _kind_image[k]
-
-
-_types_image = _build_enum_image(nodes_meta.types)
-
-
-@export
-def types_image(t) -> str:
+#@export # FIXME: see above
+@EnumLookupTable(nodes_meta.types)
+def types_image(t: int) -> str:
     """String representation of Nodes_Meta.Types :obj:`t`."""
-    return _types_image[t]
 
 
-_attr_image = _build_enum_image(nodes_meta.Attr)
-
-
-@export
-def attr_image(a) -> str:
+#@export # FIXME: see above
+@EnumLookupTable(nodes_meta.Attr)
+def attr_image(a: int) -> str:
     """String representation of Nodes_Meta.Attr :obj:`a`."""
-    return _attr_image[a]
 
 
 @export
