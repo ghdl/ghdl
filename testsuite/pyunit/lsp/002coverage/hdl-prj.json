@@ -1,0 +1,5 @@
+{ "files": [
+    { "file": "../files/adder.vhdl", "language": "vhdl" },
+    { "file": "../files/heartbeat.vhdl", "language": "vhdl" },
+    { "file": "../files/adder_tb.vhdl", "language": "vhdl" }
+]}

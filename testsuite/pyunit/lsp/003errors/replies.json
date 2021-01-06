@@ -1,0 +1,110 @@
+[
+  {
+    "jsonrpc": "2.0",
+    "id": 0,
+    "result": {
+      "capabilities": {
+        "textDocumentSync": {
+          "openClose": true,
+          "change": 2,
+          "save": {
+            "includeText": true
+          }
+        },
+        "hoverProvider": false,
+        "definitionProvider": true,
+        "referencesProvider": false,
+        "documentHighlightProvider": false,
+        "documentSymbolProvider": true,
+        "codeActionProvider": false,
+        "documentFormattingProvider": false,
+        "documentRangeFormattingProvider": true,
+        "renameProvider": false
+      }
+    }
+  },
+  {
+    "jsonrpc": "2.0",
+    "method": "textDocument/publishDiagnostics",
+    "params": {
+      "uri": "file:///home/tgingold/work/vhdl-language-server/tests/003errors/tc.vhdl",
+      "diagnostics": [
+        {
+          "source": "ghdl",
+          "range": {
+            "start": {
+              "line": 2,
+              "character": 9
+            },
+            "end": {
+              "line": 2,
+              "character": 9
+            }
+          },
+          "message": "unit \"std_logic_unsigned\" not found in library \"ieee\"",
+          "severity": 1
+        },
+        {
+          "source": "ghdl",
+          "range": {
+            "start": {
+              "line": 2,
+              "character": 9
+            },
+            "end": {
+              "line": 2,
+              "character": 9
+            }
+          },
+          "message": " (use --ieee=synopsys for non-standard synopsys packages)",
+          "severity": 1
+        }
+      ]
+    }
+  },
+  {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": [
+      {
+        "kind": 2,
+        "name": "tb",
+        "location": {
+          "uri": "file:///home/tgingold/work/vhdl-language-server/tests/003errors/tc.vhdl",
+          "range": {
+            "start": {
+              "line": 4,
+              "character": 0
+            },
+            "end": {
+              "line": 5,
+              "character": 0
+            }
+          }
+        }
+      },
+      {
+        "kind": 2,
+        "name": "behav",
+        "location": {
+          "uri": "file:///home/tgingold/work/vhdl-language-server/tests/003errors/tc.vhdl",
+          "range": {
+            "start": {
+              "line": 7,
+              "character": 0
+            },
+            "end": {
+              "line": 11,
+              "character": 0
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "jsonrpc": "2.0",
+    "id": 2,
+    "result": null
+  }
+]

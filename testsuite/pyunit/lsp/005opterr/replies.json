@@ -1,0 +1,116 @@
+[
+  {
+    "jsonrpc": "2.0",
+    "method": "window/showMessage",
+    "params": {
+      "type": 1,
+      "message": "error with option: --unknown-option"
+    }
+  },
+  {
+    "jsonrpc": "2.0",
+    "id": 0,
+    "result": {
+      "capabilities": {
+        "textDocumentSync": {
+          "openClose": true,
+          "change": 2,
+          "save": {
+            "includeText": true
+          }
+        },
+        "hoverProvider": false,
+        "definitionProvider": true,
+        "referencesProvider": false,
+        "documentHighlightProvider": false,
+        "documentSymbolProvider": true,
+        "codeActionProvider": false,
+        "documentFormattingProvider": false,
+        "documentRangeFormattingProvider": true,
+        "renameProvider": false
+      }
+    }
+  },
+  {
+    "jsonrpc": "2.0",
+    "method": "textDocument/publishDiagnostics",
+    "params": {
+      "uri": "file:///home/tgingold/work/ghdl-language-server/ghdl-ls/tests/files/heartbeat.vhdl",
+      "diagnostics": []
+    }
+  },
+  {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": [
+      {
+        "kind": 2,
+        "name": "heartbeat",
+        "location": {
+          "uri": "file:///home/tgingold/work/ghdl-language-server/ghdl-ls/tests/files/heartbeat.vhdl",
+          "range": {
+            "start": {
+              "line": 4,
+              "character": 0
+            },
+            "end": {
+              "line": 6,
+              "character": 0
+            }
+          }
+        }
+      },
+      {
+        "kind": 2,
+        "name": "behaviour",
+        "location": {
+          "uri": "file:///home/tgingold/work/ghdl-language-server/ghdl-ls/tests/files/heartbeat.vhdl",
+          "range": {
+            "start": {
+              "line": 8,
+              "character": 0
+            },
+            "end": {
+              "line": 20,
+              "character": 0
+            }
+          }
+        }
+      },
+      {
+        "kind": 6,
+        "name": "clk_process",
+        "location": {
+          "uri": "file:///home/tgingold/work/ghdl-language-server/ghdl-ls/tests/files/heartbeat.vhdl",
+          "range": {
+            "start": {
+              "line": 13,
+              "character": 15
+            },
+            "end": {
+              "line": 19,
+              "character": 2
+            }
+          }
+        },
+        "containerName": {
+          "kind": 2,
+          "name": "behaviour",
+          "location": {
+            "uri": "file:///home/tgingold/work/ghdl-language-server/ghdl-ls/tests/files/heartbeat.vhdl",
+            "range": {
+              "start": {
+                "line": 8,
+                "character": 0
+              },
+              "end": {
+                "line": 20,
+                "character": 0
+              }
+            }
+          }
+        }
+      }
+    ]
+  }
+]

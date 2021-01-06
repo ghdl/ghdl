@@ -1,0 +1,39 @@
+[
+  {
+    "jsonrpc": "2.0",
+    "method": "window/showMessage",
+    "params": {
+      "type": 1,
+      "message": "cannot load nofile.vhdl: No such file or directory"
+    }
+  },
+  {
+    "jsonrpc": "2.0",
+    "id": 0,
+    "result": {
+      "capabilities": {
+        "textDocumentSync": {
+          "openClose": true,
+          "change": 2,
+          "save": {
+            "includeText": true
+          }
+        },
+        "hoverProvider": false,
+        "definitionProvider": true,
+        "referencesProvider": false,
+        "documentHighlightProvider": false,
+        "documentSymbolProvider": true,
+        "codeActionProvider": false,
+        "documentFormattingProvider": false,
+        "documentRangeFormattingProvider": true,
+        "renameProvider": false
+      }
+    }
+  },
+  {
+    "jsonrpc": "2.0",
+    "id": 2,
+    "result": null
+  }
+]
