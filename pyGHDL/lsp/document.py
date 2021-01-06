@@ -40,11 +40,11 @@ class Document(object):
         src_bytes = source.encode(Document.encoding, "replace")
         src_len = len(src_bytes)
         buf_len = src_len + Document.initial_gap_size
-        fileid = name_table.Get_Identifier(filename.encode("utf-8"))
+        fileid = name_table.Get_Identifier(filename)
         if os.path.isabs(filename):
             dirid = name_table.Null_Identifier
         else:
-            dirid = name_table.Get_Identifier(dirname.encode("utf-8"))
+            dirid = name_table.Get_Identifier(dirname)
         sfe = files_map.Reserve_Source_File(dirid, fileid, buf_len)
         files_map_editor.Fill_Text(sfe, ctypes.c_char_p(src_bytes), src_len)
         return sfe

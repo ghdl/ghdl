@@ -94,7 +94,7 @@ def goto_definition(n, loc):
     log.debug(
         "for loc %u id=%s",
         loc,
-        name_table.Get_Name_Ptr(nodes.Get_Identifier(ref)).decode("utf-8"),
+        name_table.Get_Name_Ptr(nodes.Get_Identifier(ref)),
     )
     ent = nodes.Get_Named_Entity(ref)
     return None if ent == nodes.Null_Iir else ent

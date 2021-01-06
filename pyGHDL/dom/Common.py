@@ -72,9 +72,9 @@ class GHDLMixin:
 	}
 
 	@classmethod
-	def _ghdlNodeToName(cls, node):
+	def _ghdlNodeToName(cls, node) -> str:
 		"""Return the python string from node :obj:`node` identifier"""
-		return name_table.Get_Name_Ptr(nodes.Get_Identifier(node)).decode("utf-8")
+		return name_table.Get_Name_Ptr(nodes.Get_Identifier(node))
 
 	@classmethod
 	def _ghdlPortToMode(cls, port):

@@ -194,7 +194,7 @@ class Workspace(object):
                 return
             log.info("Using options: %s", ghdl_opts)
             for opt in ghdl_opts:
-                if not libghdl.set_option(opt.encode("utf-8")):
+                if not libghdl.set_option(opt):
                     self._server.show_message(
                         lsp.MessageType.Error, "error with option: {}".format(opt)
                     )
@@ -234,7 +234,7 @@ class Workspace(object):
         diag = {}
         for i in range(nbr_msgs):
             hdr = errorout_memory.Get_Error_Record(i + 1)
-            msg = errorout_memory.Get_Error_Message(i + 1).decode("utf-8")
+            msg = errorout_memory.Get_Error_Message(i + 1)
             if hdr.file == 0:
                 # Possible for error limit reached.
                 continue
@@ -452,12 +452,12 @@ class Workspace(object):
             return res
 
         # Find library
-        lib_id = name_table.Get_Identifier(library.encode("utf-8"))
+        lib_id = name_table.Get_Identifier(library)
         lib = libraries.Get_Library_No_Create(lib_id)
         if lib == name_table.Null_Identifier:
             return None
         # Find entity
-        ent_id = name_table.Get_Identifier(name.encode("utf-8"))
+        ent_id = name_table.Get_Identifier(name)
         unit = libraries.Find_Primary_Unit(lib, ent_id)
         if unit == nodes.Null_Iir:
             return None
