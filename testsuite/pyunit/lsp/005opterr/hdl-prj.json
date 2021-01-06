@@ -1,0 +1,4 @@
+{ "options": { "ghdl_analysis": [ "--unknown-option" ]},
+  "files": [
+    { "file": "../files/heartbeat.vhdl", "language": "vhdl" }
+]}

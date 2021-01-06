@@ -1,0 +1,42 @@
+[
+  {
+    "jsonrpc": "2.0",
+    "method": "window/showMessage",
+    "params": {
+      "type": 1,
+      "message": "json error in project file ./hdl-prj.json:1:3"
+    }
+  },
+  {
+    "jsonrpc": "2.0",
+    "id": 0,
+    "result": {
+      "capabilities": {
+        "textDocumentSync": {
+          "openClose": true,
+          "change": 2,
+          "save": {
+            "includeText": true
+          }
+        },
+        "hoverProvider": false,
+        "definitionProvider": true,
+        "referencesProvider": false,
+        "documentHighlightProvider": false,
+        "documentSymbolProvider": true,
+        "codeActionProvider": false,
+        "documentFormattingProvider": false,
+        "documentRangeFormattingProvider": true,
+        "renameProvider": false
+      }
+    }
+  },
+  {
+    "jsonrpc": "2.0",
+    "method": "textDocument/publishDiagnostics",
+    "params": {
+      "uri": "file:///../files/hello.vhdl",
+      "diagnostics": []
+    }
+  }
+]
