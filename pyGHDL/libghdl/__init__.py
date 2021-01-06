@@ -7,12 +7,13 @@
 # |_|    |___/                                     |___/
 # =============================================================================
 # Authors:          Tristan Gingold
+#                   Patrick Lehmann
 #
 # Package package:  Python binding and low-level API for shared library 'libghdl'.
 #
 # License:
 # ============================================================================
-# Copyright (C) 2019-2020 Tristan Gingold
+# Copyright (C) 2019-2021 Tristan Gingold
 #
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -32,20 +33,16 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
 #
-import ctypes
+from ctypes import c_char_p, CDLL
 import os
 import sys
 from pathlib import Path
 from shutil import which
-from typing import Tuple
 
 from pydecor import export
 
+from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.version import __version__
-
-
-def _to_char_p(arg: bytes) -> Tuple[ctypes.c_char_p, int]:
-    return ctypes.c_char_p(arg), len(arg)
 
 
 def _get_libghdl_name() -> Path:
@@ -129,22 +126,27 @@ def _get_libghdl_path():
     # Failed.
     raise Exception("Cannot find libghdl {}".format(basename))
 
+def _initialize():
+    # Load the shared library
+    _libghdl_path = _get_libghdl_path()
+    # print("Load {}".format(_libghdl_path))
+    libghdl = CDLL(str(_libghdl_path))
 
-# Load the shared library
-_libghdl_path = _get_libghdl_path()
-# print("Load {}".format(_libghdl_path))
-libghdl = ctypes.CDLL(str(_libghdl_path))
+    # Initialize it.
+    # First Ada elaboration (must be the first call)
+    libghdl.libghdl_init()
+    # Then 'normal' initialization (set hooks)
+    libghdl.libghdl__set_hooks_for_analysis()
 
-# Initialize it.
-# First Ada elaboration (must be the first call)
-libghdl.libghdl_init()
-# Then 'normal' initialization (set hooks)
-libghdl.libghdl__set_hooks_for_analysis()
+    # Set the prefix in order to locate the VHDL libraries.
+    prefix = str(_libghdl_path.parent.parent).encode("utf-8")
+    libghdl.libghdl__set_exec_prefix(c_char_p(prefix), len(prefix))
 
-# Set the prefix in order to locate the VHDL libraries.
-libghdl.libghdl__set_exec_prefix(
-    *_to_char_p(str(_libghdl_path.parent.parent).encode("utf-8"))
-)
+    return libghdl
+
+# Initialize shared library when package is loaded
+libghdl = _initialize()
+
 
 @export
 def finalize() -> None:
@@ -159,9 +161,10 @@ def initialize() -> None:
 
 
 @export
-def set_option(opt: bytes) -> bool:
+def set_option(opt: str) -> bool:
     """Set option :obj:`opt`. Return true, if the option is known and handled."""
-    return libghdl.libghdl__set_option(*_to_char_p(opt)) == 0
+    opt = opt.encode("utf-8")
+    return libghdl.libghdl__set_option(c_char_p(opt), len(opt)) == 0
 
 
 @export
@@ -174,18 +177,21 @@ def analyze_init() -> None:
     """
     libghdl.libghdl__analyze_init()
 
+
 @export
 def analyze_init_status() -> int:
     """Initialize the analyzer. Returns 0 in case of success."""
     return libghdl.libghdl__analyze_init_status()
 
+
 @export
-def analyze_file(fname: bytes):
-    """"Analyze a given filename :obj:`fname`."""
-    return libghdl.libghdl__analyze_file(*_to_char_p(fname))
+def analyze_file(fname: str) -> Iir:
+    """Analyze a given filename :obj:`fname`."""
+    fname = fname.encode("utf-8")
+    return libghdl.libghdl__analyze_file(c_char_p(fname), len(fname))
 
 
 @export
-def disp_config():
-    """"Display the configured prefixes for libghdl."""
-    return libghdl.ghdllocal__disp_config_prefixes()
+def disp_config() -> None:
+    """Display the configured prefixes for libghdl."""
+    libghdl.ghdllocal__disp_config_prefixes()

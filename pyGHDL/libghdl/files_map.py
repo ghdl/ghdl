@@ -7,12 +7,13 @@
 # |_|    |___/                                     |___/
 # =============================================================================
 # Authors:          Tristan Gingold
+#                   Patrick Lehmann
 #
 # Package package:  Python binding and low-level API for shared library 'libghdl'.
 #
 # License:
 # ============================================================================
-# Copyright (C) 2019-2020 Tristan Gingold
+# Copyright (C) 2019-2021 Tristan Gingold
 #
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -34,7 +35,10 @@
 #
 from ctypes import c_void_p
 
+from pydecor import export
+
 from pyGHDL.libghdl import libghdl
+from pyGHDL.libghdl._types import NameId, SourceFileEntry
 
 
 EOT = b"\x04"
@@ -69,7 +73,9 @@ Get_File_Buffer.restype = c_void_p
 Get_File_Length = libghdl.files_map__get_file_length
 Set_File_Length = libghdl.files_map__set_file_length
 
-Read_Source_File = libghdl.files_map__read_source_file
+@export
+def Read_Source_File(DirectoryId: NameId, NameId: NameId) -> SourceFileEntry:
+    return libghdl.files_map__read_source_file(DirectoryId, NameId)
 
 Reserve_Source_File = libghdl.files_map__reserve_source_file
 

@@ -1,6 +1,7 @@
 # Auto generated Python source file from Ada sources
 # Call 'make' in 'src/vhdl' to regenerate:
 #
+from pydecor import export
 from pyGHDL.libghdl import libghdl
 
 Null_Iir = 0
@@ -13,7 +14,7 @@ Iir_Flist_Others = 1
 Iir_Flist_All = 2
 
 
-
+@export
 class Iir_Kind:
     Unused = 0
     Error = 1
@@ -332,6 +333,7 @@ class Iir_Kind:
     Attribute_Name = 314
 
 
+@export
 class Iir_Kinds:
     Library_Unit = [
         Iir_Kind.Entity_Declaration,
@@ -1034,6 +1036,7 @@ class Iir_Kinds:
 
 
 
+@export
 class Iir_Mode:
     Unknown_Mode = 0
     Linkage_Mode = 1
@@ -1043,6 +1046,7 @@ class Iir_Mode:
     In_Mode = 5
 
 
+@export
 class Iir_Staticness:
     Unknown = 0
     PNone = 1
@@ -1050,17 +1054,20 @@ class Iir_Staticness:
     Locally = 3
 
 
+@export
 class Iir_Constraint:
     Unconstrained = 0
     Partially_Constrained = 1
     Fully_Constrained = 2
 
 
+@export
 class Iir_Delay_Mechanism:
     Inertial_Delay = 0
     Transport_Delay = 1
 
 
+@export
 class Date_State:
     Extern = 0
     Disk = 1
@@ -1068,6 +1075,7 @@ class Date_State:
     Analyze = 3
 
 
+@export
 class Iir_Predefined:
     Error = 0
     Boolean_And = 1

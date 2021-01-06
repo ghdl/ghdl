@@ -7,12 +7,13 @@
 # |_|    |___/                                     |___/
 # =============================================================================
 # Authors:          Tristan Gingold
+#                   Patrick Lehmann
 #
 # Package package:  Python binding and low-level API for shared library 'libghdl'.
 #
 # License:
 # ============================================================================
-# Copyright (C) 2019-2020 Tristan Gingold
+# Copyright (C) 2019-2021 Tristan Gingold
 #
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -37,6 +38,7 @@ from ctypes import c_int8, c_int32, c_char_p, Structure
 from pydecor import export
 
 from pyGHDL.libghdl import libghdl
+from pyGHDL.libghdl._types import ErrorIndex
 
 
 @export
@@ -57,16 +59,35 @@ Msg_Main = 1
 Msg_Related = 2
 Msg_Last = 3
 
-Install_Handler = libghdl.errorout__memory__install_handler
 
-Get_Nbr_Messages = libghdl.errorout__memory__get_nbr_messages
+@export
+def Install_Handler() -> None:
+    libghdl.errorout__memory__install_handler()
 
-Get_Error_Record = libghdl.errorout__memory__get_error_record
-Get_Error_Record.argstypes = [c_int32]
-Get_Error_Record.restype = Error_Message
 
-Get_Error_Message = libghdl.errorout__memory__get_error_message_addr
-Get_Error_Message.argstype = [c_int32]
-Get_Error_Message.restype = c_char_p
+@export
+def Get_Nbr_Messages() -> ErrorIndex:
+    return libghdl.errorout__memory__get_nbr_messages()
 
-Clear_Errors = libghdl.errorout__memory__clear_errors
+
+@export
+def Get_Error_Record(Idx: ErrorIndex): # FIXME: returns Error_Message
+    func = libghdl.errorout__memory__get_error_record
+    func.argstypes = [c_int32]
+    func.restype = Error_Message
+    return func(Idx)
+
+
+@export
+def Get_Error_Message(Idx: ErrorIndex) -> str:   # FIXME: check '*_addr' vs string return value
+    func = libghdl.errorout__memory__get_error_message_addr
+    func.argstype = [c_int32]
+    func.restype = c_char_p
+
+    # FIXME: don't we need to encode to utf-8?
+    return func(Idx)
+
+
+@export
+def Clear_Errors() -> None:
+    libghdl.errorout__memory__clear_errors()

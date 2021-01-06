@@ -29,14 +29,14 @@ class Instantiate(TestCase):
 		errorout_console.Install_Handler()
 
 		# Set options. This must be done before analyze_init()
-		libghdl.set_option(b"--std=08")
+		libghdl.set_option("--std=08")
 
 		# Finish initialization. This will load the standard package.
 		if libghdl.analyze_init_status() != 0:
 			self.fail("libghdl initialization error")
 
 		# Load the file
-		file_id = name_table.Get_Identifier(str(self._filename).encode("utf_8"))
+		file_id = name_table.Get_Identifier(str(self._filename))
 		sfe = files_map.Read_Source_File(name_table.Null_Identifier, file_id)
 		if sfe == files_map.No_Source_File_Entry:
 			self.fail("Cannot read file '{!s}'".format(self._filename))
