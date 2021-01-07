@@ -7,12 +7,13 @@
 # |_|    |___/                                     |___/
 # =============================================================================
 # Authors:          Tristan Gingold
+#                   Patrick Lehmann
 #
-# Package package:  Python binding and low-level API for shared library 'libghdl'.
+# Package module:   Python binding and low-level API for shared library 'libghdl'.
 #
 # License:
 # ============================================================================
-# Copyright (C) 2019-2020 Tristan Gingold
+# Copyright (C) 2019-2021 Tristan Gingold
 #
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -36,14 +37,12 @@ from ctypes import c_int32
 
 from pyGHDL.libghdl import libghdl
 
+__all__ = [
+	'Std_Location',
+	'Standard_Package',
+	'Character_Type_Definition'
+]
 
-# Use .value
-Std_Location = c_int32.in_dll(libghdl, "vhdl__std_package__std_location")
-
-# Use .value
-Standard_Package = c_int32.in_dll(libghdl, "vhdl__std_package__standard_package")
-
-# Use .value
-Character_Type_Definition = c_int32.in_dll(
-    libghdl, "vhdl__std_package__character_type_definition"
-)
+Std_Location = c_int32.in_dll(libghdl, "vhdl__std_package__std_location")         #: Virtual location for the ``std.standard`` package. Type ``Location_Type``. Use ``.value`` to access this variable inside libghdl.
+Standard_Package = c_int32.in_dll(libghdl, "vhdl__std_package__standard_package") #: Virtual package ``std.package``. Type ``Iir_Package_Declaration``. Use ``.value`` to access this variable inside libghdl.
+Character_Type_Definition = c_int32.in_dll(libghdl, "vhdl__std_package__character_type_definition") #: Predefined character. Type ``Iir_Enumeration_Type_Definition``. Use ``.value`` to access this variable inside libghdl.

@@ -7,12 +7,13 @@
 # |_|    |___/                                     |___/
 # =============================================================================
 # Authors:          Tristan Gingold
+#                   Patrick Lehmann
 #
-# Package package:  Python binding and low-level API for shared library 'libghdl'.
+# Package module:   Python binding and low-level API for shared library 'libghdl'.
 #
 # License:
 # ============================================================================
-# Copyright (C) 2019-2020 Tristan Gingold
+# Copyright (C) 2019-2021 Tristan Gingold
 #
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -32,17 +33,71 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
 #
-from pyGHDL.libghdl import libghdl
+from pydecor import export
+
+from pyGHDL.libghdl import libghdl, Iir
 
 
-Strip_Denoting_Name = libghdl.vhdl__utils__strip_denoting_name
+@export
+def Strip_Denoting_Name(Name: Iir) -> Iir:
+	"""
+	If :obj:`Name` is a simple or an expanded name, return the denoted declaration.
+	Otherwise, return :obj:`Name`.
 
-Get_Entity = libghdl.vhdl__utils__get_entity
+	:param Name: Simple or an expanded name.
+	:return:     Denoted declaration.
+	"""
+	return libghdl.vhdl__utils__strip_denoting_name(Name)
 
-Is_Second_Subprogram_Specification = (
-    libghdl.vhdl__utils__is_second_subprogram_specification
-)
 
-Get_Entity_From_Entity_Aspect = libghdl.vhdl__utils__get_entity_from_entity_aspect
+@export
+def Get_Entity(Decl: Iir) -> Iir:
+	"""
+	This is a wrapper around ``Get_Entity_Name`` to return the entity declaration
+	of the entity name of :obj:`Decl`, or ``Null_Iir`` in case of error.
 
-Get_Interface_Of_Formal = libghdl.vhdl__utils__get_interface_of_formal
+	:param Decl: Declaration
+	:return:     Entity
+	"""
+	return libghdl.vhdl__utils__get_entity(Decl)
+
+
+@export
+def Is_Second_Subprogram_Specification(Spec: Iir) -> bool:
+	"""
+	Check if :obj:`Spec` is the subprogram specification of a subprogram body
+	which was previously declared. In that case, the only use of :obj:`Spec`
+	is to match the body with its declaration.
+
+	:param Spec: Specification
+	:return:     ``True`` if subprogram specification and previously declared subprogram body match
+  """
+	return libghdl.vhdl__utils__is_second_subprogram_specification(Spec)
+
+
+@export
+def Get_Entity_From_Entity_Aspect(Aspect: Iir) -> Iir:
+	"""
+	Extract the entity from :obj:`Aspect`.
+
+	.. note::
+
+	   If :obj:`Aspect` is a component declaration, return :obj:`Aspect`. |br|
+	   If :obj:`Aspect` is open, return ``Null_Iir``
+
+	:param Aspect: Aspect
+	:return:       Entity
+  """
+	return libghdl.vhdl__utils__get_entity_from_entity_aspect(Aspect)
+
+
+@export
+def Get_Interface_Of_Formal(Formal: Iir) -> Iir:
+	"""
+	Get the interface corresponding to the formal name :obj:`Formal`. This is
+	always an interface, even if the formal is a name.
+
+  :param Formal: The formal.
+  :return:       The corresponding interface.
+  """
+	return libghdl.vhdl__utils__get_interface_of_formal(Formal)

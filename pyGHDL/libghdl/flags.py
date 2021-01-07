@@ -7,12 +7,13 @@
 # |_|    |___/                                     |___/
 # =============================================================================
 # Authors:          Tristan Gingold
+#                   Patrick Lehmann
 #
-# Package package:  Python binding and low-level API for shared library 'libghdl'.
+# Package module:   Python binding and low-level API for shared library 'libghdl'.
 #
 # License:
 # ============================================================================
-# Copyright (C) 2019-2020 Tristan Gingold
+# Copyright (C) 2019-2021 Tristan Gingold
 #
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -36,6 +37,12 @@ from ctypes import c_bool, sizeof
 
 from pyGHDL.libghdl import libghdl
 
+__all__ = [
+	'Flag_Elocations',
+	'Verbose',
+	'Flag_Elaborate_With_Outdated',
+	'Flag_Force_Analysis'
+]
 
 assert sizeof(c_bool) == 1
 

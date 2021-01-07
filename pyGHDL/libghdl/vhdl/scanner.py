@@ -7,12 +7,13 @@
 # |_|    |___/                                     |___/
 # =============================================================================
 # Authors:          Tristan Gingold
+#                   Patrick Lehmann
 #
-# Package package:  Python binding and low-level API for shared library 'libghdl'.
+# Package module:   Python binding and low-level API for shared library 'libghdl'.
 #
 # License:
 # ============================================================================
-# Copyright (C) 2019-2020 Tristan Gingold
+# Copyright (C) 2019-2021 Tristan Gingold
 #
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -34,26 +35,95 @@
 #
 from ctypes import c_int, c_bool
 
+from pydecor import export
+
 from pyGHDL.libghdl import libghdl
+from pyGHDL.libghdl._types import SourceFileEntry, NameId
 
 
-Set_File = libghdl.vhdl__scanner__set_file
-
-Close_File = libghdl.vhdl__scanner__close_file
-
-Scan = libghdl.vhdl__scanner__scan
+__all__ = [
+	'Current_Token',
+	'Flag_Comment'
+]
 
 # This is a c_int, so you want to use its .value
 Current_Token = c_int.in_dll(libghdl, "vhdl__scanner__current_token")
-
 Flag_Comment = c_bool.in_dll(libghdl, "vhdl__scanner__flag_comment")
 
-Get_Current_Line = libghdl.vhdl__scanner__get_current_line
 
-Get_Token_Offset = libghdl.vhdl__scanner__get_token_offset
+@export
+def Set_File(SourceFile: SourceFileEntry) -> None:
+	"""
+	Initialize the scanner with file :obj:`SourceFile`.
 
-Get_Token_Position = libghdl.vhdl__scanner__get_token_position
+	:param SourceFile: File to scan.
+	"""
+	libghdl.vhdl__scanner__set_file(SourceFile)
 
-Get_Position = libghdl.vhdl__scanner__get_position
 
-Current_Identifier = libghdl.vhdl__scanner__current_identifier
+@export
+def Close_File() -> None:
+	"""Finalize the scanner."""
+	libghdl.vhdl__scanner__close_file()
+
+
+@export
+def Scan() -> None:
+	"""Get a new token."""
+	libghdl.vhdl__scanner__scan()
+
+
+@export
+def Get_Current_Line() -> int:
+	"""
+	Get the current token's line.
+
+	:return: Current token's line.
+	"""
+	"""   --  Get the current location, or the location of the current token.
+   --  Since a token cannot spread over lines, file and line of the current
+   --  token are the same as those of the current position.
+   --  The offset is the offset in the current line."""
+	return libghdl.vhdl__scanner__get_current_line()
+
+
+@export
+def Get_Token_Offset() -> int:
+	"""
+	Get the current token's offset in the current line.
+
+	:return: Current token's offset.
+	"""
+	return libghdl.vhdl__scanner__get_token_offset()
+
+
+@export
+def Get_Token_Position():
+	"""
+	Get the current token's position.
+
+	:return: Current token's position. Type: ``Source_Ptr``
+	"""
+	return libghdl.vhdl__scanner__get_token_position()
+
+
+@export
+def Get_Position():
+	"""
+	Get the current position.
+
+	:return: Current position. Type: ``Source_Ptr``
+	"""
+	return libghdl.vhdl__scanner__get_position()
+
+
+@export
+def Current_Identifier() -> NameId:
+	"""
+	When :attr:`~pyGHDL.libghdl.vhdl.scanner.Current_Token` is an
+	``tok_identifier``, ``tok_char`` or ``tok_string``, its name_id can be
+	retrieved via this function.
+
+	:return: NameId of the current token.
+	"""
+	return libghdl.vhdl__scanner__current_identifier()

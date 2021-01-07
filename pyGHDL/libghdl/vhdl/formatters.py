@@ -7,12 +7,13 @@
 # |_|    |___/                                     |___/
 # =============================================================================
 # Authors:          Tristan Gingold
+#                   Patrick Lehmann
 #
-# Package package:  Python binding and low-level API for shared library 'libghdl'.
+# Package module:   Python binding and low-level API for shared library 'libghdl'.
 #
 # License:
 # ============================================================================
-# Copyright (C) 2019-2020 Tristan Gingold
+# Copyright (C) 2019-2021 Tristan Gingold
 #
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -34,17 +35,67 @@
 #
 from ctypes import c_int32, c_char_p
 
+from pydecor import export
+
 from pyGHDL.libghdl import libghdl
 
 
-Indent_String = libghdl.vhdl__formatters__indent_string
+@export
+def Indent_String(File, Handle, FirstLine: int, LastLine: int) -> None:
+	"""
+	Reindent all lines of F between [First_Line; Last_Line] to :obj:`Handle`.
 
-Allocate_Handle = libghdl.vhdl__formatters__allocate_handle
+	:param File:      File to indent lines within. Type: ``Iir_Design_File``
+	:param Handle:    undocumented. Type: ``Vstring_Acc``
+	:param FirstLine: undocumented.
+	:param LastLine:  undocumented.
+	"""
+	libghdl.vhdl__formatters__indent_string(File, Handle, FirstLine, LastLine)
 
-Get_Length = libghdl.vhdl__formatters__get_length
-Get_Length.restype = c_int32
 
-Get_C_String = libghdl.vhdl__formatters__get_c_string
-Get_C_String.restype = c_char_p
+@export
+def Allocate_Handle():
+	"""
+	.. todo:: Undocumented in Ada code.
 
-Free_Handle = libghdl.vhdl__formatters__free_handle
+	:return: undocumented. Type: ``Vstring_Acc``
+	"""
+	return libghdl.vhdl__formatters__allocate_handle()
+
+
+@export
+def Get_Length(Handle) -> int:
+	"""
+	.. todo:: Undocumented in Ada code.
+
+	:param Handle: undocumented. Type: ``Vstring_Acc``
+	:return:       undocumented.
+	"""
+	func = libghdl.vhdl__formatters__get_length
+	func.restype = c_int32
+
+	return func(Handle)
+
+
+@export
+def Get_C_String(Handle):
+	"""
+	.. todo:: Undocumented in Ada code.
+
+	:param Handle: undocumented. Type: ``Vstring_Acc``
+	:return:       Type: ``Grt.Types.Ghdl_C_String``
+	"""
+	func = libghdl.vhdl__formatters__get_c_string
+	func.restype = c_char_p
+
+	return func(Handle)
+
+
+@export
+def Free_Handle(Handle) -> None:
+	"""
+	.. todo:: Undocumented in Ada code.
+
+	:param Handle: undocumented. Type: ``Vstring_Acc``
+	"""
+	libghdl.vhdl__formatters__free_handle(Handle)

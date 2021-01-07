@@ -7,12 +7,13 @@
 # |_|    |___/                                     |___/
 # =============================================================================
 # Authors:          Tristan Gingold
+#                   Patrick Lehmann
 #
-# Package package:  Python binding and low-level API for shared library 'libghdl'.
+# Package module:   Python binding and low-level API for shared library 'libghdl'.
 #
 # License:
 # ============================================================================
-# Copyright (C) 2019-2020 Tristan Gingold
+# Copyright (C) 2019-2021 Tristan Gingold
 #
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -34,14 +35,51 @@
 #
 from ctypes import c_int32
 
+from pydecor import export
+
 from pyGHDL.libghdl import libghdl
 
+__all__ = [
+	'Flist_Type',
+	'Ffirst'
+]
 
-Flist_Type = c_int32
+Flist_Type = c_int32  #: First index of a ``FList``.
 
 Ffirst = 0
-Flast = libghdl.vhdl__flists__flast
 
-Length = libghdl.vhdl__flists__length
+@export
+def Flast(FList) -> int:
+	"""
+	Last index of :obj:`FList`.
 
-Get_Nth_Element = libghdl.vhdl__flists__get_nth_element
+	.. hint:: Could be used to iterate.
+
+	:param FList: List to query.
+	:return:      Index of the last element in the list.
+	"""
+	return libghdl.vhdl__flists__flast(FList)
+
+
+@export
+def Length(FList) -> int:
+	"""
+	Get the length of :obj:`FList`.
+
+	:param FList: List to query.
+	:return:      Number of elements in the list.
+	"""
+	return libghdl.vhdl__flists__length(FList)
+
+
+@export
+def Get_Nth_Element(FList, N: int):
+	"""
+	Get the N-th element of :obj:`FList`.
+
+	First element has index 0.
+
+	:param FList: List to query.
+	:return:      Type: ``El_Type``
+	"""
+	return libghdl.vhdl__flists__get_nth_element(FList, N)

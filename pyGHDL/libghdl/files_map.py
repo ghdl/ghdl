@@ -40,6 +40,11 @@ from pydecor import export
 from pyGHDL.libghdl import libghdl
 from pyGHDL.libghdl._types import NameId, SourceFileEntry
 
+__all__ = [
+	'EOT',
+	'No_Source_File_Entry',
+	'No_Location',
+]
 
 EOT = b"\x04"
 

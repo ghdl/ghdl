@@ -7,12 +7,13 @@
 # |_|    |___/                                     |___/
 # =============================================================================
 # Authors:          Tristan Gingold
+#                   Patrick Lehmann
 #
-# Package package:  Python binding and low-level API for shared library 'libghdl'.
+# Package module:   Python binding and low-level API for shared library 'libghdl'.
 #
 # License:
 # ============================================================================
-# Copyright (C) 2019-2020 Tristan Gingold
+# Copyright (C) 2019-2021 Tristan Gingold
 #
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -34,9 +35,25 @@
 #
 from ctypes import c_bool
 
+from pydecor import export
+
 from pyGHDL.libghdl import libghdl
 
+__all__ = [
+	'Flag_Parse_Parenthesis'
+]
 
-Parse_Design_File = libghdl.vhdl__parse__parse_design_file
 
 Flag_Parse_Parenthesis = c_bool.in_dll(libghdl, "vhdl__parse__flag_parse_parenthesis")
+
+
+@export
+def Parse_Design_File():
+	"""
+	Parse a file.
+
+	..note:: The scanner must have been initialized as for parse_design_unit.
+
+	:return: Return :obj:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir` in case of error. Type: ``Iir_Design_File``
+	"""
+	return libghdl.vhdl__parse__parse_design_file()
