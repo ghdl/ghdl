@@ -7,12 +7,13 @@
 # |_|    |___/                                     |___/
 # =============================================================================
 # Authors:          Tristan Gingold
+#                   Patrick Lehmann
 #
-# Package package:  Python binding and low-level API for shared library 'libghdl'.
+# Package module:   Python binding and low-level API for shared library 'libghdl'.
 #
 # License:
 # ============================================================================
-# Copyright (C) 2019-2020 Tristan Gingold
+# Copyright (C) 2019-2021 Tristan Gingold
 #
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -36,6 +37,11 @@ from ctypes import c_bool
 
 from pyGHDL.libghdl import libghdl
 
+__all__ = [
+	'Flag_Concurrent_Stmts',
+	'Flag_Configurations',
+	'Flag_Associations'
+]
 
 Flag_Concurrent_Stmts = c_bool.in_dll(
     libghdl, "vhdl__canon__canon_flag_concurrent_stmts"

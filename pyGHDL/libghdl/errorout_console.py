@@ -9,7 +9,7 @@
 # Authors:          Tristan Gingold
 #                   Patrick Lehmann
 #
-# Package package:  Python binding and low-level API for shared library 'libghdl'.
+# Package module:   Python binding and low-level API for shared library 'libghdl'.
 #
 # License:
 # ============================================================================
@@ -40,4 +40,5 @@ from pyGHDL.libghdl import libghdl
 
 @export
 def Install_Handler() -> None:
+    """Install the handlers for reporting errors."""
     libghdl.errorout__console__install_handler()

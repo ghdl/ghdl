@@ -7,12 +7,13 @@
 # |_|    |___/                                     |___/
 # =============================================================================
 # Authors:          Tristan Gingold
+#                   Patrick Lehmann
 #
-# Package package:  Python binding and low-level API for shared library 'libghdl'.
+# Package module:   Python binding and low-level API for shared library 'libghdl'.
 #
 # License:
 # ============================================================================
-# Copyright (C) 2019-2020 Tristan Gingold
+# Copyright (C) 2019-2021 Tristan Gingold
 #
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -32,7 +33,19 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
 #
+from pydecor import export
+
 from pyGHDL.libghdl import libghdl
 
 
-Semantic = libghdl.vhdl__sem__semantic
+@export
+def Semantic(DesignUnit) -> None:
+	"""
+	Do the semantic analysis of design unit :obj:`DesignUnit`.
+
+  Also add a few node or change some nodes, when for exemple an identifier is
+  changed into an access to the type.
+
+  :param DesignUnit: Design unit to semantically analyze. Type: ``Iir_Design_Unit``
+  """
+	libghdl.vhdl__sem__semantic(DesignUnit)
