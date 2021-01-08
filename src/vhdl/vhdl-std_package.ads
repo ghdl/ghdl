@@ -30,7 +30,7 @@ package Vhdl.Std_Package is
    Std_Source_File : Source_File_Entry := No_Source_File_Entry;
    Std_Location: Location_Type := Location_Nil;
 
-   -- Some well know values declared in the STANDARD package.
+   -- Some well known values declared in the STANDARD package.
    -- These values (except time_base) *must* not be modified, and are set by
    -- create_std_standard_package.
 

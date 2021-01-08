@@ -167,7 +167,7 @@ package Libraries is
 
    --  Find an entity whose name is NAME in any library.
    --  If there is no such entity, return NULL_IIR.
-   --  If there are severals entities, return NULL_IIR;
+   --  If there are several entities, return NULL_IIR;
    function Find_Entity_For_Component (Name: Name_Id) return Iir_Design_Unit;
 
    --  Decode '--work=NAME' command line option and return the identifier
@@ -177,7 +177,7 @@ package Libraries is
    --  Return Null_Identifier if NAME is not a valid name.
    function Decode_Work_Option (Opt : String) return Name_Id;
 
-   --  Get the chain of libraries.  Can be used only to read (it musn't be
+   --  Get the chain of libraries.  Can be used only to read (it mustn't be
    --  modified).
    function Get_Libraries_Chain return Iir_Library_Declaration;
 end Libraries;
