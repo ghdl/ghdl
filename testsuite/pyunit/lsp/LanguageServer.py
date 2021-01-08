@@ -1,6 +1,7 @@
 from io import BytesIO
 from json import load as json_load, loads as json_loads, dumps as json_dumps
 from os import environ
+from sys import executable
 from pathlib import Path
 from subprocess import run as subprocess_run, PIPE
 from typing import Optional
@@ -52,7 +53,6 @@ def show_diffs(name, ref, res):
 
 class JSONTest(TestCase):
 	_LSPTestDirectory = Path(__file__).parent.resolve()
-	__GHDLLSExecutable = environ.get('GHDLLS', 'ghdl-ls')
 
 	def _RequestResponse(self, requestFile: Path, responseFile: Optional[Path] = None):
 		# Convert the JSON input file to an LSP string.
@@ -66,7 +66,7 @@ class JSONTest(TestCase):
 
 		# Run
 		p = subprocess_run(
-			[self.__GHDLLSExecutable],
+			[executable, '-m', 'pyGHDL.cli.lsp'],
 			input=conn.res.encode('utf-8'),
 			stdout=PIPE
 		)
