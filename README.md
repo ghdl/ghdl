@@ -100,6 +100,15 @@ That's all!
 
 - [pyGHDL](pyGHDL) is a Python interface to `libghdl`. Currently, it is only used by `ghdl-ls`; however, it can be useful for advanced users which are willing to build Python utilities based on GHDL.
 
+<p align="center">
+  <a title="Codecov - Branch Coverage" href="https://codecov.io/gh/ghdl/ghdl"><img alt="Codecov - Branch Coverage" src="https://img.shields.io/codecov/c/github/ghdl/ghdl?longCache=true&style=flat-square&logo=Codecov&logoColor=fff"></a><!--
+  -->
+  <a title="Codacy - Quality" href="https://app.codacy.com/gh/ghdl/ghdl/dashboard"><img alt="Codacy - Quality" src="https://img.shields.io/codacy/grade/dc4f2c76ba7e4f598389ab1f8d7d53e9?longCache=true&style=flat-square&logo=Codacy&logoColor=fff"></a><!--
+  -->
+  <a title="Codacy - Coverage" href="https://app.codacy.com/gh/ghdl/ghdl/dashboard"><img alt="Codacy - Coverage" src="https://img.shields.io/codacy/coverage/dc4f2c76ba7e4f598389ab1f8d7d53e9?longCache=true&style=flat-square&logo=Codacy&logoColor=fff"></a><!--
+  -->
+</p>
+
 - **[experimental]** [ghdl-yosys-plugin](https://github.com/ghdl/ghdl-yosys-plugin) is the integration of GHDL as a frontend plugin module for [Yosys Open SYnthesis Suite](http://www.clifford.at/yosys/), which uses the `libghdl` library (built with `--enable-synth`).
 
 - **[deprecated]** `ghdl_simul`, which supports interpreted simulation, is available for historical reasons and for development/debugging only. It is very slow compared to the 'regular' compiled simulation and not all the features are supported.
