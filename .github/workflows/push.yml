@@ -124,12 +124,12 @@ jobs:
       max-parallel: 2
       matrix:
         include: [
-          {installs: "MINGW32", arch: i686, pkg: "mcode"},
-          #{installs: "MINGW32", arch: i686, pkg: "llvm"},  ! Not yet functional
-          #{installs: "MINGW64", arch: x86_64, pkg: "mcode"}, ! mcode is not yet supported on win64
-          {installs: "MINGW64", arch: x86_64, pkg: "llvm"},
+          {icon: '🟦', installs: 'MINGW32', arch: i686,   pkg: 'mcode' },
+          #{icon: '🟦', installs: "MINGW32", arch: i686,   pkg: "llvm"  }, ! Not yet functional
+          #{icon: '🟪', installs: "MINGW64", arch: x86_64, pkg: "mcode" }, ! mcode is not yet supported on win64
+          {icon: '🟪', installs: 'MINGW64', arch: x86_64, pkg: 'llvm'  },
         ]
-    name: '🟪 Build · ${{ matrix.installs }} · ${{ matrix.pkg }}'
+    name: '${{ matrix.icon }} Build · ${{ matrix.installs }} · ${{ matrix.pkg }}'
     env:
       MINGW_INSTALLS: ${{ matrix.installs }}
     defaults:
@@ -137,7 +137,7 @@ jobs:
         shell: msys2 {0}
     steps:
 
-    - name: '🟪 Setup MSYS2'
+    - name: '${{ matrix.icon }} Setup MSYS2'
       uses: msys2/setup-msys2@v2
       with:
         msystem: MSYS
@@ -166,13 +166,13 @@ jobs:
       with:
         name: ${{ matrix.installs }}-${{ matrix.pkg }}-builddir
         path: |
-          ./scripts/msys2-${{ matrix.pkg }}/src/
-          ./scripts/msys2-${{ matrix.pkg }}/pkg/
+          scripts/msys2-${{ matrix.pkg }}/src/
+          scripts/msys2-${{ matrix.pkg }}/pkg/
 
     - name: '📤 Upload artifact: package'
       uses: actions/upload-artifact@v2
       with:
-        path: ./scripts/msys2-${{ matrix.pkg }}/mingw-*ghdl*.pkg.tar.zst
+        path: scripts/msys2-${{ matrix.pkg }}/mingw-*ghdl*.pkg.tar.zst
 
 #
 # Windows Test
@@ -186,10 +186,10 @@ jobs:
       max-parallel: 8
       matrix:
         sys: [
-          {installs: "MINGW32", arch: i686, pkg: "mcode"},
-          #{installs: "MINGW32", arch: i686, pkg: "llvm"},  ! Not yet functional
-          #{installs: "MINGW64", arch: x86_64, pkg: "mcode"}, ! mcode is not yet supported on win64
-          {installs: "MINGW64", arch: x86_64, pkg: "llvm"},
+          {icon: '🟦', installs: 'MINGW32', arch: i686,   pkg: 'mcode' },
+          #{icon: '🟦', installs: "MINGW32", arch: i686,   pkg: "llvm"  }, ! Not yet functional
+          #{icon: '🟪', installs: "MINGW64", arch: x86_64, pkg: "mcode" }, ! mcode is not yet supported on win64
+          {icon: '🟪', installs: 'MINGW64', arch: x86_64, pkg: 'llvm'  },
         ]
         suite: [
           'sanity pyunit vpi',
@@ -197,13 +197,13 @@ jobs:
           'vests',
           'synth',
         ]
-    name: '🟪 Test · ${{ matrix.sys.installs }} · ${{ matrix.sys.pkg }} · ${{ matrix.suite }}'
+    name: '${{ matrix.sys.icon }} Test · ${{ matrix.sys.installs }} · ${{ matrix.sys.pkg }} · ${{ matrix.suite }}'
     defaults:
       run:
         shell: msys2 {0}
     steps:
 
-    - name: '🟪 Setup MSYS2'
+    - name: '${{ matrix.sys.icon }} Setup MSYS2'
       uses: msys2/setup-msys2@v2
       with:
         msystem: ${{ matrix.sys.installs }}
@@ -264,7 +264,7 @@ jobs:
   coverage:
     needs: win-build
     runs-on: windows-latest
-    name: '🟪 Coverage'
+    name: '📈 Coverage'
     defaults:
       run:
         shell: msys2 {0}
@@ -292,7 +292,48 @@ jobs:
         pip3 install -r testsuite/requirements.txt
 
     - name: Run tests to generate coverage report
-      run: PYTHONPATH=$(pwd)/.. python3 -m pytest -rA --cov=.. --cov-config=.coveragerc testsuite/pyunit
+      run: |
+        PYTHONPATH=$(pwd)/.. python3 -m pytest -rA --cov=.. --cov-config=.coveragerc testsuite/pyunit
+
+    - name: Generate XML coverage report
+      if: always()
+      run: coverage xml
+
+    - name: '📤 Upload artifact: coverage report'
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: coverage
+        path: coverage.xml
+
+#
+# Coverage Publish (Ubuntu)
+#
+
+  coverage-publish:
+    needs: coverage
+    if: always() && github.repository == 'ghdl/ghdl' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    name: '📮 Publish coverage report'
+    steps:
+
+    - name: '📥 Download artifact: coverage report'
+      uses: actions/download-artifact@v2
+      with:
+        name: coverage
+
+    - name: CodeCov
+      uses: codecov/codecov-action@v1
+      with:
+        file: coverage.xml
+        flags: unittests
+        env_vars: PYTHON
+
+    - name: Codacy
+      uses: codacy/codacy-coverage-reporter-action@master
+      with:
+        project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+        coverage-reports: coverage.xml
 
 #---
 
