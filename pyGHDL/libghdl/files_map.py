@@ -242,9 +242,9 @@ def Discard_Source_File(File: SourceFileEntry) -> None:
 	"""
 	Mark :obj:`File` as unavailable: clear the name and directory.
 
-  .. hint:: This is needed before creating a new source file with the same name.
+	.. hint:: This is needed before creating a new source file with the same name.
 
-  :param File: Source file to discard.
+	:param File: Source file to discard.
 	"""
 	libghdl.files_map__discard_source_file(File)
 
