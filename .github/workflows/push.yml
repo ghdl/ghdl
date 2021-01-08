@@ -103,10 +103,7 @@ jobs:
       uses: actions/checkout@v2
 
     - name: '⚙️ Dependencies (brew)'
-      run: |
-        brew update || true
-        brew install p7zip
-        ./scripts/macosx/install-ada.sh
+      run: ./scripts/macosx/install-ada.sh
 
     - name: Build and test GHDL
       run: |
