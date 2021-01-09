@@ -48,9 +48,9 @@ import pyGHDL.libghdl.vhdl.flists as flists
 
 
 @export
-def name_image(NameId: NameId) -> str:
-    """Lookup a :obj:`NameId` and return its string."""
-    return name_table.Get_Name_Ptr(NameId)
+def name_image(Id: NameId) -> str:
+    """Lookup a :obj:`Id` and return its string."""
+    return name_table.Get_Name_Ptr(Id)
 
 
 #@export # FIXME: see above

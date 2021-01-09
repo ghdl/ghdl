@@ -43,9 +43,9 @@ def Semantic(DesignUnit) -> None:
 	"""
 	Do the semantic analysis of design unit :obj:`DesignUnit`.
 
-  Also add a few node or change some nodes, when for exemple an identifier is
-  changed into an access to the type.
+	Also add a few node or change some nodes, when for example an identifier is
+	changed into an access to the type.
 
-  :param DesignUnit: Design unit to semantically analyze. Type: ``Iir_Design_Unit``
-  """
+	:param DesignUnit: Design unit to semantically analyze. Type: ``Iir_Design_Unit``
+	"""
 	libghdl.vhdl__sem__semantic(DesignUnit)
