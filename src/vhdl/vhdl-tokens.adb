@@ -52,13 +52,18 @@ package body Vhdl.Tokens is
          when Tok_Dot =>
             return ".";
 
+         when Tok_Block_Comment_Start =>
+            return "/*";
+         when Tok_Block_Comment_End =>
+            return "*/";
+
          when Tok_Eof =>
             return "<EOF>";
          when Tok_Newline =>
             return "<newline>";
          when Tok_Line_Comment =>
             return "<line-comment>";
-         when Tok_Block_Comment =>
+         when Tok_Block_Comment_Text =>
             return "<block-comment>";
          when Tok_Character =>
             return "<character>";

@@ -69,6 +69,9 @@ package Vhdl.Scanner is
    -- Advances the lexical analyser.  Put a new token into current_token.
    procedure Scan;
 
+   --  Advances the lexical analyzer within a block comment.
+   procedure Scan_Block_Comment;
+
    -- Initialize the scanner with file SOURCE_FILE.
    procedure Set_File (Source_File : Source_File_Entry);
 

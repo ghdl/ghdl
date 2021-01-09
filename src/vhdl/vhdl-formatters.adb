@@ -17,9 +17,15 @@
 --  02111-1307, USA.
 
 with Ada.Unchecked_Deallocation;
+with Ada.Unchecked_Conversion;
+
 with Types; use Types;
 with Files_Map;
 with Simple_IO;
+with Utils_IO;
+with Dyn_Tables;
+with Flags;
+
 with Vhdl.Tokens; use Vhdl.Tokens;
 with Vhdl.Scanner; use Vhdl.Scanner;
 with Vhdl.Prints; use Vhdl.Prints;
@@ -67,7 +73,12 @@ package body Vhdl.Formatters is
    package Format_Disp_Ctxt is
       type Format_Ctxt is new Disp_Ctxt with private;
 
-      procedure Init (Ctxt : out Format_Ctxt; Sfe : Source_File_Entry);
+      procedure Init (Ctxt : out Format_Ctxt;
+                      Sfe : Source_File_Entry;
+                      First_Line : Positive := 1;
+                      Last_Line : Positive := Positive'Last);
+      procedure Free (Ctxt : in out Format_Ctxt);
+
       procedure Start_Hbox (Ctxt : in out Format_Ctxt);
       procedure Close_Hbox (Ctxt : in out Format_Ctxt);
       procedure Start_Vbox (Ctxt : in out Format_Ctxt);
@@ -76,188 +87,577 @@ package body Vhdl.Formatters is
       procedure Start_Lit (Ctxt : in out Format_Ctxt; Tok : Token_Type);
       procedure Disp_Char (Ctxt : in out Format_Ctxt; C : Character);
       procedure Close_Lit (Ctxt : in out Format_Ctxt);
+
+      package Token_Table is new Dyn_Tables
+        (Table_Component_Type => Uns32,
+         Table_Index_Type => Natural,
+         Table_Low_Bound => 1);
+
+      function Get_Source_File_Entry (Ctxt : Format_Ctxt)
+                                     return Source_File_Entry;
+
+      subtype Etoken_Type is Nat32 range 0 .. 2**10 - 1;
+      subtype Col_Type is Natural range 0 .. 2**16 - 1;
+
+      --  Entry in Token_Table for token TOK with column COL.
+      --  Unfortunately it is not possible to pack records with discriminant
+      --  with GNAT.  So it is done manually.
+      type Etoken_Record is record
+         Flag_Token : Boolean;
+         Flag1 : Boolean;
+         Flag2 : Boolean;
+         Flag3 : Boolean;
+         Flag4 : Boolean;
+         Flag5 : Boolean;
+         Tok : Etoken_Type;
+         Col : Col_Type;
+      end record;
+      pragma Pack (Etoken_Record);
+      for Etoken_Record'Size use 32;
+
+      type Evalue_Record is record
+         Flag_Token : Boolean;
+         Value : Nat32;
+      end record;
+      pragma Pack (Evalue_Record);
+      for Evalue_Record'Size use 32;
+
+      Etok_Last : constant Etoken_Type := Token_Type'Pos (Token_Type'Last);
+      Etok_Start_Vbox : constant Etoken_Type := Etok_Last + 1;
+      Etok_Close_Vbox : constant Etoken_Type := Etok_Last + 2;
+      Etok_Set_Vbox   : constant Etoken_Type := Etok_Last + 3;
+      Etok_No_Indent  : constant Etoken_Type := Etok_Last + 4;
+
+      procedure Append_Eof (Ctxt : in out Format_Ctxt);
+      procedure Read_Token (Ctxt : Format_Ctxt;
+                            Idx : Natural;
+                            Tok : out Etoken_Type;
+                            Col : out Natural);
+      procedure Write_Token (Ctxt : Format_Ctxt;
+                             Idx : Natural;
+                             Col : Natural);
+
+      --  Token_Source_Type are followed in the stream by two values:
+      --    the length of the token (number of characters)
+      --    the position in the sources
+      --  With these two values, it is possible to print the tokens.
+
+      function Read_Value (Ctxt : Format_Ctxt; Idx : Natural) return Nat32;
+
+      type Printer_Ctxt is abstract tagged null record;
+      procedure Put (Ctxt : in out Printer_Ctxt; C : Character) is abstract;
    private
       type Format_Ctxt is new Disp_Ctxt with record
+         First_Line : Natural;
+         Last_Line : Natural;
+         Lineno : Natural;
+         Enable : Boolean;
+         Flag_Lit : Boolean;
          Vnum : Natural;
          Hnum : Natural;
-         Prev_Tok : Token_Type;
+         Hfirst : Boolean;
          Sfe : Source_File_Entry;
-         Source : File_Buffer_Acc;
+         Toks : Token_Table.Instance;
       end record;
-
-      procedure Disp_Newline (Ctxt : in out Format_Ctxt);
-      procedure Disp_Indent (Ctxt : in out Format_Ctxt);
-      procedure Put (Ctxt : in out Format_Ctxt; C : Character);
-      procedure Sync (Ctxt : in out Format_Ctxt; Tok : Token_Type);
    end Format_Disp_Ctxt;
 
    package body Format_Disp_Ctxt is
-      procedure Init (Ctxt : out Format_Ctxt; Sfe : Source_File_Entry) is
+      function To_Etoken_Record is new Ada.Unchecked_Conversion
+        (Uns32, Etoken_Record);
+      function To_Uns32 is new Ada.Unchecked_Conversion
+        (Etoken_Record, Uns32);
+      function To_Evalue_Record is new Ada.Unchecked_Conversion
+        (Uns32, Evalue_Record);
+      function To_Uns32 is new Ada.Unchecked_Conversion
+        (Evalue_Record, Uns32);
+
+      procedure Read_Token (Ctxt : Format_Ctxt;
+                            Idx : Natural;
+                            Tok : out Etoken_Type;
+                            Col : out Natural)
+      is
+         Etok : Etoken_Record;
       begin
-         Ctxt := (Vnum => 0,
+         Etok := To_Etoken_Record (Ctxt.Toks.Table (Idx));
+         pragma Assert (Etok.Flag_Token);
+         Tok := Etok.Tok;
+         Col := Etok.Col;
+      end Read_Token;
+
+      procedure Write_Token (Ctxt : Format_Ctxt;
+                             Idx : Natural;
+                             Col : Natural)
+      is
+         Etok : Etoken_Record;
+      begin
+         Etok := To_Etoken_Record (Ctxt.Toks.Table (Idx));
+         pragma Assert (Etok.Flag_Token);
+         Etok.Col := Col;
+         Ctxt.Toks.Table (Idx) := To_Uns32 (Etok);
+      end Write_Token;
+
+      function Read_Value (Ctxt : Format_Ctxt; Idx : Natural) return Nat32
+      is
+         V : Evalue_Record;
+      begin
+         V := To_Evalue_Record (Ctxt.Toks.Table (Idx));
+         pragma Assert (not V.Flag_Token);
+         return V.Value;
+      end Read_Value;
+
+      procedure Append_Token (Ctxt : in out Format_Ctxt;
+                              Tok : Etoken_Type;
+                              Col : Natural)
+      is
+         Etok : Etoken_Record;
+      begin
+         Etok := (Flag_Token => True,
+                  Tok => Tok,
+                  Col => Col,
+                  others => False);
+         Token_Table.Append (Ctxt.Toks, To_Uns32 (Etok));
+      end Append_Token;
+
+      procedure Append_Token (Ctxt : in out Format_Ctxt; Tok : Token_Type) is
+      begin
+         Append_Token (Ctxt, Token_Type'Pos (Tok), Get_Token_Offset + 1);
+      end Append_Token;
+
+      procedure Append_Value (Ctxt : in out Format_Ctxt;
+                              Val : Nat32)
+      is
+         V : Evalue_Record;
+      begin
+         V := (Flag_Token => False,
+               Value => Val);
+         Token_Table.Append (Ctxt.Toks, To_Uns32 (V));
+      end Append_Value;
+
+      procedure Append_Source_Token (Ctxt : in out Format_Ctxt;
+                                     Tok : Token_Type) is
+      begin
+         Append_Token (Ctxt, Token_Type'Pos (Tok), Get_Token_Offset + 1);
+         Append_Value (Ctxt, Get_Token_Length);
+         Append_Value (Ctxt, Nat32 (Get_Token_Position));
+      end Append_Source_Token;
+
+      procedure Append_Eof (Ctxt : in out Format_Ctxt) is
+      begin
+         Append_Token (Ctxt, Token_Type'Pos (Tok_Eof), 0);
+      end Append_Eof;
+
+      procedure Init (Ctxt : out Format_Ctxt;
+                      Sfe : Source_File_Entry;
+                      First_Line : Positive := 1;
+                      Last_Line : Positive := Positive'Last) is
+      begin
+         Ctxt := (First_Line => First_Line,
+                  Last_Line => Last_Line,
+                  Lineno => 1,
+                  Enable => First_Line = 1,
+                  Flag_Lit => False,
+                  Vnum => 0,
                   Hnum => 0,
-                  Prev_Tok => Tok_Newline,
+                  Hfirst => True,
                   Sfe => Sfe,
-                  Source => Files_Map.Get_File_Source (Sfe));
+                  Toks => <>);
+         Token_Table.Init (Ctxt.Toks, 1024);
+         if First_Line = 1 then
+            Append_Token (Ctxt, Etok_No_Indent, 0);
+         end if;
       end Init;
 
-      procedure Put (Ctxt : in out Format_Ctxt; C : Character)
-      is
-         pragma Unreferenced (Ctxt);
+      procedure Free (Ctxt : in out Format_Ctxt) is
       begin
-         Simple_IO.Put (C);
-      end Put;
+         Token_Table.Free (Ctxt.Toks);
+      end Free;
+
+      function Get_Source_File_Entry (Ctxt : Format_Ctxt)
+                                     return Source_File_Entry is
+      begin
+         return Ctxt.Sfe;
+      end Get_Source_File_Entry;
+
+      procedure Skip_Newline (Ctxt : in out Format_Ctxt) is
+      begin
+         Ctxt.Lineno := Ctxt.Lineno + 1;
+         if Ctxt.Enable then
+            Append_Token (Ctxt, Token_Type'Pos (Tok_Newline), 0);
+            if Ctxt.Last_Line < Ctxt.Lineno then
+               Ctxt.Enable := False;
+            end if;
+         else
+            if Ctxt.First_Line = Ctxt.Lineno then
+               Ctxt.Enable := True;
+               Append_Token (Ctxt, Etok_Set_Vbox, Ctxt.Vnum);
+               if Ctxt.Hfirst then
+                  Append_Token (Ctxt, Etok_No_Indent, 0);
+               end if;
+            end if;
+         end if;
+      end Skip_Newline;
+
+      procedure Skip_Spaces (Ctxt : in out Format_Ctxt) is
+      begin
+         loop
+            case Current_Token is
+               when Tok_Eof =>
+                  raise Internal_Error;
+               when Tok_Newline =>
+                  Skip_Newline (Ctxt);
+                  Scan;
+               when Tok_Line_Comment =>
+                  if Ctxt.Enable then
+                     Append_Source_Token (Ctxt, Current_Token);
+                  end if;
+                  Scan;
+               when Tok_Block_Comment_Start =>
+                  if Ctxt.Enable then
+                     Append_Token (Ctxt, Tok_Block_Comment_Start);
+                  end if;
+                  loop
+                     Scan_Block_Comment;
+                     case Current_Token is
+                        when Tok_Eof =>
+                           exit;
+                        when Tok_Block_Comment_Text =>
+                           if Ctxt.Enable then
+                              Append_Source_Token (Ctxt, Current_Token);
+                           end if;
+                        when Tok_Block_Comment_End =>
+                           if Ctxt.Enable then
+                              Append_Token (Ctxt, Tok_Block_Comment_End);
+                           end if;
+                           exit;
+                        when Tok_Newline =>
+                           Skip_Newline (Ctxt);
+                        when others =>
+                           raise Internal_Error;
+                     end case;
+                  end loop;
+                  Scan;
+               when others =>
+                  exit;
+            end case;
+         end loop;
+      end Skip_Spaces;
 
       procedure Start_Hbox (Ctxt : in out Format_Ctxt) is
       begin
          Ctxt.Hnum := Ctxt.Hnum + 1;
+         if Ctxt.Hnum = 1 then
+            Ctxt.Hfirst := True;
+         end if;
       end Start_Hbox;
-
-      procedure Disp_Newline (Ctxt : in out Format_Ctxt) is
-      begin
-         Put (Ctxt, ASCII.LF);
-         Ctxt.Prev_Tok := Tok_Newline;
-      end Disp_Newline;
 
       procedure Close_Hbox (Ctxt : in out Format_Ctxt) is
       begin
-         Ctxt.Hnum := Ctxt.Hnum - 1;
-         if Ctxt.Hnum = 0 then
-            Disp_Newline (Ctxt);
+         if Ctxt.Enable and Ctxt.Hnum = 1 then
+            Append_Token (Ctxt, Etok_No_Indent, 0);
          end if;
+         Ctxt.Hnum := Ctxt.Hnum - 1;
       end Close_Hbox;
 
       procedure Start_Vbox (Ctxt : in out Format_Ctxt) is
       begin
          pragma Assert (Ctxt.Hnum = 0);
          Ctxt.Vnum := Ctxt.Vnum + 1;
+         if Ctxt.Enable then
+            Append_Token (Ctxt, Etok_Start_Vbox, Ctxt.Vnum);
+         end if;
       end Start_Vbox;
 
       procedure Close_Vbox (Ctxt : in out Format_Ctxt) is
       begin
+         Skip_Spaces (Ctxt);
          Ctxt.Vnum := Ctxt.Vnum - 1;
-      end Close_Vbox;
-
-      procedure Disp_Indent (Ctxt : in out Format_Ctxt) is
-      begin
-         for I in 1 .. Ctxt.Vnum loop
-            Put (Ctxt, ' ');
-            Put (Ctxt, ' ');
-         end loop;
-      end Disp_Indent;
-
-      procedure Disp_Space (Ctxt : in out Format_Ctxt; Tok : Token_Type)
-      is
-         Prev_Tok : constant Token_Type := Ctxt.Prev_Tok;
-      begin
-         if Prev_Tok = Tok_Newline
-           and then Ctxt.Hnum = 1
-         then
-            Disp_Indent (Ctxt);
-         elsif Need_Space (Tok, Prev_Tok) then
-            Put (Ctxt, ' ');
+         if Ctxt.Enable then
+            Append_Token (Ctxt, Etok_Close_Vbox, Ctxt.Vnum);
          end if;
-         Ctxt.Prev_Tok := Tok;
-      end Disp_Space;
+      end Close_Vbox;
 
       procedure Disp_Token (Ctxt : in out Format_Ctxt; Tok : Token_Type) is
       begin
-         Sync (Ctxt, Tok);
-         Disp_Space (Ctxt, Tok);
-         Disp_Str (Ctxt, Image (Tok));
+         Skip_Spaces (Ctxt);
+         if Ctxt.Enable then
+            Append_Token (Ctxt, Tok);
+         end if;
+         Ctxt.Hfirst := False;
+         Check_Token (Tok);
+         Scan;
       end Disp_Token;
 
       procedure Start_Lit (Ctxt : in out Format_Ctxt; Tok : Token_Type) is
       begin
-         Sync (Ctxt, Tok);
-         Disp_Space (Ctxt, Tok);
+         pragma Assert (not Ctxt.Flag_Lit);
+         Ctxt.Flag_Lit := True;
+         Skip_Spaces (Ctxt);
+
+         --  For bit string with length (vhdl08), first store the length.
+         if Tok = Tok_Bit_String
+           and then Current_Token = Tok_Integer_Letter
+         then
+            if Ctxt.Enable then
+               Append_Source_Token (Ctxt, Tok_Integer_Letter);
+            end if;
+            Scan;
+         end if;
+
+         if Ctxt.Enable then
+            Append_Source_Token (Ctxt, Tok);
+         end if;
+         Ctxt.Hfirst := False;
+         Check_Token (Tok);
+         Scan;
       end Start_Lit;
 
-      procedure Disp_Char (Ctxt : in out Format_Ctxt; C : Character) is
+      procedure Disp_Char (Ctxt : in out Format_Ctxt; C : Character)
+      is
+         pragma Unreferenced (C);
       begin
-         Put (Ctxt, C);
+         pragma Assert (Ctxt.Flag_Lit);
+         null;
       end Disp_Char;
 
       procedure Close_Lit (Ctxt : in out Format_Ctxt) is
       begin
-         null;
+         pragma Assert (Ctxt.Flag_Lit);
+         Ctxt.Flag_Lit := False;
       end Close_Lit;
-
-      procedure Sync (Ctxt : in out Format_Ctxt; Tok : Token_Type) is
-      begin
-         --  The easy case.
-         loop
-            case Current_Token is
-               when Tok_Eof =>
-                  raise Internal_Error;
-               when Tok_Newline =>
-                  --  Ignored
-                  Scan;
-                  --  But empty lines are kept.
-                  while Current_Token = Tok_Newline loop
-                     Disp_Newline (Ctxt);
-                     Scan;
-                  end loop;
-               when Tok_Line_Comment
-                 | Tok_Block_Comment =>
-                  --  Display the comment as it is.
-                  declare
-                     P : Source_Ptr;
-                  begin
-                     --  Re-indent the comment unless this is an end-of-line
-                     --  comment or a comment at line 0.
-                     if Ctxt.Prev_Tok = Tok_Newline then
-                        --  Compute the offset.  Not trivial for block
-                        --  comment as this is a multi-line token and
-                        --  Get_Token_Offset is not valid in that case.
-                        declare
-                           Off : Natural;
-                           Line_Pos : Source_Ptr;
-                           Line : Positive;
-                        begin
-                           if Current_Token = Tok_Block_Comment then
-                              Files_Map.File_Pos_To_Coord
-                                (Ctxt.Sfe, Get_Token_Position,
-                                 Line_Pos, Line, Off);
-                           else
-                              Off := Get_Token_Offset;
-                           end if;
-                           if Off /= 0 then
-                              Disp_Indent (Ctxt);
-                           end if;
-                        end;
-                     end if;
-
-                     P := Get_Token_Position;
-                     for I in 1 .. Get_Token_Length loop
-                        Disp_Char (Ctxt, Ctxt.Source (P));
-                        P := P + 1;
-                     end loop;
-                  end;
-                  Scan;
-                  while Current_Token = Tok_Newline loop
-                     Disp_Newline (Ctxt);
-                     Scan;
-                  end loop;
-               when others =>
-                  if Current_Token = Tok_Integer_Letter
-                    and then Tok = Tok_Bit_String
-                  then
-                     Scan;
-                  end if;
-                  Check_Token (Tok);
-                  Scan;
-                  return;
-            end case;
-         end loop;
-      end Sync;
    end Format_Disp_Ctxt;
 
-   procedure Format (F : Iir_Design_File)
+   procedure Reindent (Ctxt : in out Format_Disp_Ctxt.Format_Ctxt;
+                       Respace : Boolean := False)
+   is
+      use Format_Disp_Ctxt;
+      --  Number of spaces for indentation.
+      Indentation : constant Natural := 2;
+      I : Natural;
+      Etok : Etoken_Type;
+      Tok : Token_Type;
+      Col : Natural;
+
+      --  Previous token.  This is used to decide whether a space must be
+      --  inserted between two tokens.
+      Prev_Tok : Token_Type;
+      Cur_Col : Natural;
+      Diff_Col : Integer;
+      Indent : Natural;
+      Extra_Indent : Boolean;
+   begin
+      I := Token_Table.First;
+      Cur_Col := 1;
+      Indent := 1;
+      Prev_Tok := Tok_Newline;
+      Extra_Indent := True;
+      Diff_Col := 0;
+      loop
+         Read_Token (Ctxt, I, Etok, Col);
+
+         if Etok <= Etok_Last then
+            Tok := Token_Type'Val (Etok);
+            case Tok is
+               when Tok_Eof =>
+                  exit;
+               when Tok_Newline =>
+                  Cur_Col := 1;
+               when Token_Source_Type
+                 | Tok_Block_Comment_Start
+                 | Tok_First_Delimiter .. Token_Type'Last =>
+                  if Cur_Col = 1 then
+                     --  First token of the line, reindent it.
+                     Cur_Col := Indent;
+                     if Extra_Indent then
+                        Cur_Col := Cur_Col + Indentation;
+                     end if;
+                     Diff_Col := Cur_Col - Col;
+                  else
+                     if Respace then
+                        --  Just adjust position.
+                        if Need_Space (Tok, Prev_Tok) then
+                           Cur_Col := Cur_Col + 1;
+                        end if;
+                     else
+                        Cur_Col := Col + Diff_Col;
+                     end if;
+                  end if;
+                  Write_Token (Ctxt, I, Cur_Col);
+
+                  if Tok /= Tok_Line_Comment
+                    and then Tok /= Tok_Block_Comment_Start
+                  then
+                     --  If there is a new line in the current hbox, add an
+                     --  extra indentation.
+                     Extra_Indent := True;
+                  end if;
+               when Tok_Block_Comment_Text
+                 | Tok_Block_Comment_End =>
+                  null;
+               when Tok_Invalid =>
+                  raise Internal_Error;
+            end case;
+
+            case Tok is
+               when Tok_Eof
+                 | Tok_Invalid =>
+                  raise Internal_Error;
+               when Tok_Newline =>
+                  I := I + 1;
+               when Token_Source_Type
+                 | Tok_Block_Comment_Text =>
+                  if Respace then
+                     --  Increment column by the length of the token
+                     Cur_Col := Cur_Col + Natural (Read_Value (Ctxt, I + 1));
+                  else
+                     --  A token is at least one character.
+                     Cur_Col := Cur_Col + 1;
+                  end if;
+                  I := I + 3;
+               when Tok_First_Delimiter .. Token_Type'Last
+                  | Tok_Block_Comment_Start
+                  | Tok_Block_Comment_End =>
+                  if Respace then
+                     declare
+                        S : constant String := Image (Tok);
+                     begin
+                        Cur_Col := Cur_Col + S'Length;
+                     end;
+                  else
+                     --  A token is at least one character.
+                     Cur_Col := Cur_Col + 1;
+                  end if;
+                  I := I + 1;
+            end case;
+         else
+            case Etok is
+               when Etok_Start_Vbox
+                 | Etok_Close_Vbox =>
+                  Indent := Col * Indentation + 1;
+                  Extra_Indent := False;
+               when Etok_Set_Vbox =>
+                  Indent := Col * Indentation + 1;
+               when Etok_No_Indent =>
+                  Extra_Indent := False;
+               when others =>
+                  raise Internal_Error;
+            end case;
+            I := I + 1;
+         end if;
+
+         Prev_Tok := Tok;
+      end loop;
+   end Reindent;
+
+   type IO_Printer_Ctxt is new Format_Disp_Ctxt.Printer_Ctxt with null record;
+   procedure Put (Ctxt : in out IO_Printer_Ctxt; C : Character)
+   is
+      pragma Unreferenced (Ctxt);
+   begin
+      if C = ASCII.LF then
+         Simple_IO.New_Line;
+      else
+         Simple_IO.Put (C);
+      end if;
+   end Put;
+
+   procedure Reprint (Ctxt : Format_Disp_Ctxt.Format_Ctxt;
+                      Prnt : in out Format_Disp_Ctxt.Printer_Ctxt'Class)
+   is
+      use Format_Disp_Ctxt;
+      Sfe : constant Source_File_Entry := Get_Source_File_Entry (Ctxt);
+      I : Natural;
+      Etok : Etoken_Type;
+      Tok : Token_Type;
+      Col : Natural;
+      Cur_Col : Natural;
+   begin
+      I := Token_Table.First;
+      Cur_Col := 1;
+      loop
+         Read_Token (Ctxt, I, Etok, Col);
+         I := I + 1;
+
+         if Flags.Verbose then
+            declare
+               use Simple_IO;
+               use Utils_IO;
+            begin
+               Put (' ');
+               if Etok <= Etok_Last then
+                  Put (Image (Token_Type'Val (Etok)));
+               else
+                  case Etok is
+                     when Etok_Start_Vbox =>
+                        Put ("[");
+                     when Etok_Close_Vbox =>
+                        Put ("]");
+                     when Etok_Set_Vbox =>
+                        Put ("V");
+                     when Etok_No_Indent =>
+                        Put ("B");
+                     when others =>
+                        raise Internal_Error;
+                  end case;
+               end if;
+               Put ('@');
+               Put_Int32 (Nat32 (Col));
+            end;
+         end if;
+
+         while Cur_Col < Col loop
+            Prnt.Put (' ');
+            Cur_Col := Cur_Col + 1;
+         end loop;
+
+         if Etok <= Etok_Last then
+            Tok := Token_Type'Val (Etok);
+            case Tok is
+               when Tok_Eof =>
+                  exit;
+               when Tok_Newline =>
+                  Prnt.Put (ASCII.LF);
+                  Cur_Col := 1;
+               when Token_Source_Type
+                 | Tok_Block_Comment_Text =>
+                  declare
+                     Buf : constant File_Buffer_Acc :=
+                       Files_Map.Get_File_Source (Sfe);
+                     Len : Nat32;
+                     Pos : Source_Ptr;
+                  begin
+                     Len := Read_Value (Ctxt, I);
+                     Pos := Source_Ptr (Read_Value (Ctxt, I + 1));
+                     for K in 0 .. Len - 1 loop
+                        Prnt.Put (Buf (Pos + Source_Ptr (K)));
+                     end loop;
+                     Cur_Col := Cur_Col + Natural (Len);
+                     I := I + 2;
+                  end;
+               when Tok_First_Delimiter .. Token_Type'Last
+                 | Tok_Block_Comment_Start
+                 | Tok_Block_Comment_End =>
+                  declare
+                     S : constant String := Image (Tok);
+                  begin
+                     for I in S'Range loop
+                        Prnt.Put (S (I));
+                     end loop;
+                     Cur_Col := Cur_Col + S'Length;
+                  end;
+               when Tok_Invalid =>
+                  null;
+            end case;
+         end if;
+      end loop;
+   end Reprint;
+
+   procedure Format_Init (F : Iir_Design_File;
+                          First_Line : Positive := 1;
+                          Last_Line : Positive := Positive'Last;
+                          Ctxt : out Format_Disp_Ctxt.Format_Ctxt)
    is
       use Format_Disp_Ctxt;
       Sfe : constant Source_File_Entry := Get_Design_File_Source (F);
-      Ctxt : Format_Ctxt;
    begin
       Scanner.Flag_Comment := True;
       Scanner.Flag_Newline := True;
@@ -265,254 +665,34 @@ package body Vhdl.Formatters is
       Set_File (Sfe);
       Scan;
 
-      Init (Ctxt, Sfe);
+      Init (Ctxt, Sfe, First_Line, Last_Line);
       Prints.Disp_Vhdl (Ctxt, F);
+
       Close_File;
       Scanner.Flag_Comment := False;
       Scanner.Flag_Newline := False;
+
+      Append_Eof (Ctxt);
+   end Format_Init;
+
+   procedure Format (F : Iir_Design_File;
+                     Level : Format_Level;
+                     First_Line : Positive := 1;
+                     Last_Line : Positive := Positive'Last)
+   is
+      use Format_Disp_Ctxt;
+      Ctxt : Format_Ctxt;
+      Prnt : IO_Printer_Ctxt;
+   begin
+      Format_Init (F, First_Line, Last_Line, Ctxt);
+
+      if Level > Format_None then
+         Reindent (Ctxt, Level = Format_Space);
+      end if;
+      Reprint (Ctxt, Prnt);
+
+      Free (Ctxt);
    end Format;
-
-   package Indent_Disp_Ctxt is
-      type Indent_Ctxt is new Disp_Ctxt with record
-         Vnum : Natural;
-         Hnum : Natural;
-         Hfirst : Boolean;  --  First token in the hbox.
-         Last_Tok : Source_Ptr;
-         Col : Natural;
-         Line : Positive;
-         First_Line : Positive;
-         Last_Line : Positive;
-         Discard_Output : Boolean;
-         Sfe : Source_File_Entry;
-         Source : File_Buffer_Acc;
-      end record;
-
-      procedure Init (Ctxt : out Indent_Ctxt;
-                      Sfe : Source_File_Entry;
-                      First_Line : Positive;
-                      Last_Line : Positive);
-      procedure Start_Hbox (Ctxt : in out Indent_Ctxt);
-      procedure Close_Hbox (Ctxt : in out Indent_Ctxt);
-      procedure Start_Vbox (Ctxt : in out Indent_Ctxt);
-      procedure Close_Vbox (Ctxt : in out Indent_Ctxt);
-      procedure Disp_Token (Ctxt : in out Indent_Ctxt; Tok : Token_Type);
-      procedure Start_Lit (Ctxt : in out Indent_Ctxt; Tok : Token_Type);
-      procedure Disp_Char (Ctxt : in out Indent_Ctxt; C : Character) is null;
-      procedure Close_Lit (Ctxt : in out Indent_Ctxt) is null;
-      procedure Put (Ctxt : in out Indent_Ctxt; C : Character);
-   private
-      procedure Sync (Ctxt : in out Indent_Ctxt; Tok : Token_Type);
-   end Indent_Disp_Ctxt;
-
-   package body Indent_Disp_Ctxt is
-      procedure Init (Ctxt : out Indent_Ctxt;
-                      Sfe : Source_File_Entry;
-                      First_Line : Positive;
-                      Last_Line : Positive) is
-      begin
-         Ctxt := (Vnum => 0,
-                  Hnum => 0,
-                  Hfirst => False,
-                  Last_Tok => Source_Ptr_Org,
-                  Col => 0,
-                  Line => 1,
-                  First_Line => First_Line,
-                  Last_Line => Last_Line,
-                  Discard_Output => First_Line > 1,
-                  Sfe => Sfe,
-                  Source => Files_Map.Get_File_Source (Sfe));
-
-         Scanner.Flag_Comment := True;
-         Scanner.Flag_Newline := True;
-
-         Set_File (Sfe);
-         Scan;
-      end Init;
-
-      procedure Put (Ctxt : in out Indent_Ctxt; C : Character)
-      is
-         pragma Unreferenced (Ctxt);
-      begin
-         Simple_IO.Put (C);
-      end Put;
-
-      procedure Disp_Spaces (Ctxt : in out Indent_Ctxt)
-      is
-         use Files_Map;
-         C : Character;
-         P : Source_Ptr;
-         N_Col : Natural;
-         Bef_Tok : Source_Ptr;
-         Indent : Natural;
-      begin
-         if Ctxt.Discard_Output then
-            return;
-         end if;
-
-         if Ctxt.Col = 0 then
-            --  Reindent.
-            Indent := Ctxt.Vnum;
-            if Ctxt.Hnum > 0 and not Ctxt.Hfirst then
-               Indent := Indent + 1;
-            end if;
-            for I in 1 .. 2 * Indent loop
-               Put (Indent_Ctxt'Class (Ctxt), ' ');
-            end loop;
-            Ctxt.Col := 2 * Indent;
-         else
-            P := Ctxt.Last_Tok;
-            Bef_Tok := Get_Token_Position;
-            while P < Bef_Tok loop
-               C := Ctxt.Source (P);
-               if C = ASCII.HT then
-                  --  Expand TABS.
-                  N_Col := Ctxt.Col + Tab_Stop;
-                  N_Col := N_Col - N_Col mod Tab_Stop;
-                  while Ctxt.Col < N_Col loop
-                     Put (Indent_Ctxt'Class (Ctxt), ' ');
-                     Ctxt.Col := Ctxt.Col + 1;
-                  end loop;
-               else
-                  Put (Indent_Ctxt'Class (Ctxt), ' ');
-                  Ctxt.Col := Ctxt.Col + 1;
-               end if;
-               P := P + 1;
-            end loop;
-         end if;
-      end Disp_Spaces;
-
-      --  Disp text for sources for the current token.
-      procedure Disp_Text (Ctxt : in out Indent_Ctxt)
-      is
-         Aft_Tok : constant Source_Ptr := Get_Position;
-         P : Source_Ptr;
-      begin
-         if Ctxt.Discard_Output then
-            return;
-         end if;
-
-         P := Get_Token_Position;
-         while P < Aft_Tok loop
-            Put (Indent_Ctxt'Class (Ctxt), Ctxt.Source (P));
-            Ctxt.Col := Ctxt.Col + 1;
-            P := P + 1;
-         end loop;
-      end Disp_Text;
-
-      procedure Disp_Comments (Ctxt : in out Indent_Ctxt) is
-      begin
-         loop
-            case Current_Token is
-               when Tok_Eof =>
-                  raise Internal_Error;
-               when Tok_Newline =>
-                  if not Ctxt.Discard_Output then
-                     Put (Indent_Ctxt'Class (Ctxt), ASCII.LF);
-                  end if;
-                  Ctxt.Col := 0;
-                  Ctxt.Line := Ctxt.Line + 1;
-                  Ctxt.Discard_Output :=
-                    Ctxt.Line < Ctxt.First_Line
-                    or Ctxt.Line > Ctxt.Last_Line;
-               when Tok_Line_Comment
-                 | Tok_Block_Comment =>
-                  Disp_Spaces (Ctxt);
-                  Disp_Text (Ctxt);
-               when others =>
-                  exit;
-            end case;
-            Ctxt.Last_Tok := Get_Position;
-            Scan;
-         end loop;
-      end Disp_Comments;
-
-      procedure Start_Hbox (Ctxt : in out Indent_Ctxt) is
-      begin
-         Disp_Comments (Ctxt);
-         Ctxt.Hnum := Ctxt.Hnum + 1;
-         Ctxt.Hfirst := True;
-      end Start_Hbox;
-
-      procedure Close_Hbox (Ctxt : in out Indent_Ctxt) is
-      begin
-         --  An hbox cannot be empty.
-         pragma Assert (Ctxt.Hfirst = False);
-         Ctxt.Hnum := Ctxt.Hnum - 1;
-      end Close_Hbox;
-
-      procedure Start_Vbox (Ctxt : in out Indent_Ctxt) is
-      begin
-         pragma Assert (Ctxt.Hnum = 0);
-         Ctxt.Vnum := Ctxt.Vnum + 1;
-      end Start_Vbox;
-
-      procedure Close_Vbox (Ctxt : in out Indent_Ctxt) is
-      begin
-         Ctxt.Vnum := Ctxt.Vnum - 1;
-      end Close_Vbox;
-
-      procedure Sync (Ctxt : in out Indent_Ctxt; Tok : Token_Type) is
-      begin
-         Disp_Comments (Ctxt);
-         Disp_Spaces (Ctxt);
-         Disp_Text (Ctxt);
-         if Current_Token = Tok_Integer_Letter
-           and then Tok = Tok_Bit_String
-         then
-            Scan;
-            Disp_Text (Ctxt);
-         end if;
-         Check_Token (Tok);
-         Ctxt.Last_Tok := Get_Position;
-         Ctxt.Hfirst := False;
-         Scan;
-      end Sync;
-
-      procedure Disp_Token (Ctxt : in out Indent_Ctxt; Tok : Token_Type) is
-      begin
-         Sync (Ctxt, Tok);
-      end Disp_Token;
-
-      procedure Start_Lit (Ctxt : in out Indent_Ctxt; Tok : Token_Type) is
-      begin
-         Sync (Ctxt, Tok);
-      end Start_Lit;
-   end Indent_Disp_Ctxt;
-
-   package Indent_Vstrings_Ctxt is
-      use Grt.Vstrings;
-
-      type Vstring_Ctxt is new Indent_Disp_Ctxt.Indent_Ctxt with private;
-
-      procedure Init (Ctxt : out Vstring_Ctxt;
-                      Handle : Vstring_Acc;
-                      Sfe : Source_File_Entry;
-                      First_Line : Positive;
-                      Last_Line : Positive);
-      procedure Put (Ctxt : in out Vstring_Ctxt; C : Character);
-   private
-      type Vstring_Ctxt is new Indent_Disp_Ctxt.Indent_Ctxt with record
-         Hand : Vstring_Acc;
-      end record;
-   end Indent_Vstrings_Ctxt;
-
-   package body Indent_Vstrings_Ctxt is
-      procedure Init (Ctxt : out Vstring_Ctxt;
-                      Handle : Vstring_Acc;
-                      Sfe : Source_File_Entry;
-                      First_Line : Positive;
-                      Last_Line : Positive) is
-      begin
-         Indent_Disp_Ctxt.Init (Indent_Disp_Ctxt.Indent_Ctxt (Ctxt), Sfe,
-                                First_Line, Last_Line);
-         Ctxt.Hand := Handle;
-      end Init;
-
-      procedure Put (Ctxt : in out Vstring_Ctxt; C : Character) is
-      begin
-         Append (Ctxt.Hand.all, C);
-      end Put;
-   end Indent_Vstrings_Ctxt;
 
    function Allocate_Handle return Vstring_Acc is
    begin
@@ -541,51 +721,30 @@ package body Vhdl.Formatters is
       Deallocate (Handle1);
    end Free_Handle;
 
+   type Vstring_Printer_Ctxt is new Format_Disp_Ctxt.Printer_Ctxt with record
+      Handle : Vstring_Acc;
+   end record;
+
+   procedure Put (Ctxt : in out Vstring_Printer_Ctxt; C : Character) is
+   begin
+      Grt.Vstrings.Append (Ctxt.Handle.all, C);
+   end Put;
+
    procedure Indent_String (F : Iir_Design_File;
                             Handle : Vstring_Acc;
                             First_Line : Positive := 1;
                             Last_Line : Positive := Positive'Last)
    is
-      use Indent_Vstrings_Ctxt;
-      Sfe : constant Source_File_Entry := Get_Design_File_Source (F);
-      Ctxt : Vstring_Ctxt;
+      use Format_Disp_Ctxt;
+      Ctxt : Format_Ctxt;
+      Prnt : Vstring_Printer_Ctxt;
    begin
-      Init (Ctxt, Handle, Sfe, First_Line, Last_Line);
-      Prints.Disp_Vhdl (Ctxt, F);
+      Format_Init (F, First_Line, Last_Line, Ctxt);
 
-      Close_File;
-      Scanner.Flag_Comment := False;
-      Scanner.Flag_Newline := False;
+      Prnt := (Format_Disp_Ctxt.Printer_Ctxt with Handle);
+      Reindent (Ctxt, False);
+      Reprint (Ctxt, Prnt);
+
+      Free (Ctxt);
    end Indent_String;
-
-   procedure Indent (F : Iir_Design_File;
-                     First_Line : Positive := 1;
-                     Last_Line : Positive := Positive'Last) is
-   begin
-      if False then
-         --  Display character per character.  Slow but useful for debugging.
-         declare
-            use Indent_Disp_Ctxt;
-            Sfe : constant Source_File_Entry := Get_Design_File_Source (F);
-            Ctxt : Indent_Ctxt;
-         begin
-            Init (Ctxt, Sfe, First_Line, Last_Line);
-            Prints.Disp_Vhdl (Ctxt, F);
-         end;
-      else
-         declare
-            use Grt.Types;
-            Handle : Vstring_Acc;
-            Res : Ghdl_C_String;
-            Len : Natural;
-         begin
-            Handle := Allocate_Handle;
-            Indent_String (F, Handle, First_Line, Last_Line);
-            Res := Get_C_String (Handle);
-            Len := Get_Length (Handle);
-            Simple_IO.Put (Res (1 .. Len));
-            Free_Handle (Handle);
-         end;
-      end if;
-   end Indent;
 end Vhdl.Formatters;

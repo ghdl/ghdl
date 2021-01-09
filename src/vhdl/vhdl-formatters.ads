@@ -21,11 +21,26 @@ with Grt.Types;
 with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Vhdl.Formatters is
-   --  Format/pretty print the file F.
-   procedure Format (F : Iir_Design_File);
+   type Format_Level is
+     (
+      --  No re-formatting.
+      --  Trailing spaces are removed, keywords are converted to lower case.
+      Format_None,
 
-   --  Reindent the file.
-   procedure Indent (F : Iir_Design_File;
+      --  Format_None + start of each line is adjusted
+      Format_Indent,
+
+      --  Format_Indent + spaces between tokens is adjusted
+      Format_Space
+     );
+
+   --  Format/pretty print the file F.
+   --  If FLAG_REINDENT is true, lines are reindented.  Otherwise the output is
+   --  the same as the input except keywords are converted to lower case.
+   --  If FLAG_RESPACE is true (which implies FLAG_REINDENT), spaces between
+   --   tokens are adjusted.
+   procedure Format (F : Iir_Design_File;
+                     Level : Format_Level;
                      First_Line : Positive := 1;
                      Last_Line : Positive := Positive'Last);
 

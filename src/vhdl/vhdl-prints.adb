@@ -202,9 +202,8 @@ package body Vhdl.Prints is
    procedure Disp_Function_Name (Ctxt : in out Ctxt_Class; Func: Iir)
    is
       use Name_Table;
-      Id: Name_Id;
+      Id : constant Name_Id := Get_Identifier (Func);
    begin
-      Id := Get_Identifier (Func);
       case Id is
          when Name_Id_Operators
            | Name_Word_Operators

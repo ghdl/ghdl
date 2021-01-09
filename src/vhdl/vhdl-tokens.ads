@@ -23,6 +23,31 @@ package Vhdl.Tokens is
      (
       Tok_Invalid,     -- current_token is not valid.
 
+      Tok_Eof,                 -- End of file.
+      Tok_Newline,
+
+      Tok_Block_Comment_Start, --  Start of a block comment (/*)
+      Tok_Block_Comment_End,   --  End of a block comment (*/)
+
+      Tok_Block_Comment_Text,  --  Text within a block comment (no newline)
+      Tok_Line_Comment,        --  End of line comment (--)
+      Tok_Character,
+      Tok_Identifier,
+      Tok_Integer,
+      Tok_Real,
+      Tok_String,
+
+      --  This token corresponds to a base specifier followed by bit_value.
+      --  The base specifier is stored in Name_Buffer/Name_Length like an
+      --  identifier (in lowercase), the String8_Id contains the expanded bit
+      --  value.
+      Tok_Bit_String,
+
+      --  An integer immediately followed by a letter.  This is used by to
+      --  scan vhdl 2008 (and later) bit string with a length.
+      Tok_Integer_Letter,
+
+      --  Delimiters
       Tok_Left_Paren,          -- (
       Tok_Right_Paren,         -- )
       Tok_Left_Bracket,        -- [
@@ -39,26 +64,6 @@ package Vhdl.Tokens is
       Tok_Dot,                 -- .
 
       Tok_Equal_Equal,         -- == (AMS Vhdl)
-
-      Tok_Eof,                 -- End of file.
-      Tok_Newline,
-      Tok_Line_Comment,        --  End of line comment (--)
-      Tok_Block_Comment,       --  Block comment (/*  .. */)
-      Tok_Character,
-      Tok_Identifier,
-      Tok_Integer,
-      Tok_Real,
-      Tok_String,
-
-      --  This token corresponds to a base specifier followed by bit_value.
-      --  The base specifier is stored in Name_Buffer/Name_Length like an
-      --  identifier (in lowercase), the String8_Id contains the expanded bit
-      --  value.
-      Tok_Bit_String,
-
-      --  An integer immediately followed by a letter.  This is used by to
-      --  scan vhdl 2008 (and later) bit string with a length.
-      Tok_Integer_Letter,
 
    -- relational_operator
       Tok_Equal,               -- =
@@ -323,7 +328,20 @@ package Vhdl.Tokens is
    subtype Token_Multiplying_Operator_Type is Token_Type range
      Tok_Star .. Tok_Rem;
 
-   Tok_First_Keyword :  constant Tokens.Token_Type := Tokens.Tok_Mod;
+   --  These tokens represent text in the source whose exact meaning needs
+   --  extra data (like the value of an integer, the exact identifier...).
+   subtype Token_Source_Type is Token_Type range
+     Tok_Line_Comment ..
+   --Tok_Character
+   --Tok_Identifier
+   --Tok_Integer
+   --Tok_Real
+   --Tok_String
+   --Tok_Bit_String
+     Tok_Integer_Letter;
+
+   Tok_First_Delimiter : constant Token_Type := Tok_Left_Paren;
+   Tok_First_Keyword :   constant Token_Type := Tok_Mod;
 
    -- Return the name of the token.
    function Image (Token: Token_Type) return String;

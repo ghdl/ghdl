@@ -1977,6 +1977,68 @@ package body Vhdl.Scanner is
                       +Source (Pos));
    end Error_Bad_Character;
 
+   procedure Scan_Block_Comment is
+   begin
+      Current_Context.Prev_Pos := Pos;
+      Current_Context.Token_Pos := Pos;
+
+      loop
+         case Source (Pos) is
+            when '/' =>
+               --  LRM08 15.9
+               --  Moreover, an occurrence of a solidus character
+               --  immediately followed by an asterisk character
+               --  within a delimited comment is not interpreted as
+               --  the start of a nested delimited comment.
+               if Source (Pos + 1) = '*' then
+                  Warning_Msg_Scan (Warnid_Nested_Comment,
+                                    "'/*' found within a block comment");
+               end if;
+               Pos := Pos + 1;
+            when '*' =>
+               if Source (Pos + 1) = '/' then
+                  if Pos > Current_Context.Token_Pos then
+                     Current_Token := Tok_Block_Comment_Text;
+                  else
+                     Pos := Pos + 2;
+                     Current_Token := Tok_Block_Comment_End;
+                  end if;
+                  return;
+               else
+                  Pos := Pos + 1;
+               end if;
+            when CR =>
+               if Pos > Current_Context.Token_Pos then
+                  Current_Token := Tok_Block_Comment_Text;
+               else
+                  Scan_CR_Newline;
+                  Current_Token := Tok_Newline;
+               end if;
+               return;
+            when LF =>
+               if Pos > Current_Context.Token_Pos then
+                  Current_Token := Tok_Block_Comment_Text;
+               else
+                  Scan_LF_Newline;
+                  Current_Token := Tok_Newline;
+               end if;
+               return;
+            when Files_Map.EOT =>
+               if Pos >= Current_Context.File_Len then
+                  --  Point at the start of the comment.
+                  Error_Msg_Scan
+                    (+Get_Token_Location,
+                     "block comment not terminated at end of file");
+                  Current_Token := Tok_Eof;
+                  return;
+               end if;
+               Pos := Pos + 1;
+            when others =>
+               Pos := Pos + 1;
+         end case;
+      end loop;
+   end Scan_Block_Comment;
+
    -- Get a new token.
    procedure Scan is
    begin
@@ -2123,48 +2185,16 @@ package body Vhdl.Scanner is
                --  Skip '/*'.
                Pos := Pos + 2;
 
-               loop
-                  case Source (Pos) is
-                     when '/' =>
-                        --  LRM08 15.9
-                        --  Moreover, an occurrence of a solidus character
-                        --  immediately followed by an asterisk character
-                        --  within a delimited comment is not interpreted as
-                        --  the start of a nested delimited comment.
-                        if Source (Pos + 1) = '*' then
-                           Warning_Msg_Scan
-                             (Warnid_Nested_Comment,
-                              "'/*' found within a block comment");
-                        end if;
-                        Pos := Pos + 1;
-                     when '*' =>
-                        if Source (Pos + 1) = '/' then
-                           Pos := Pos + 2;
-                           exit;
-                        else
-                           Pos := Pos + 1;
-                        end if;
-                     when CR =>
-                        Scan_CR_Newline;
-                     when LF =>
-                        Scan_LF_Newline;
-                     when Files_Map.EOT =>
-                        if Pos >= Current_Context.File_Len then
-                           --  Point at the start of the comment.
-                           Error_Msg_Scan
-                             (+Get_Token_Location,
-                              "block comment not terminated at end of file");
-                           exit;
-                        end if;
-                        Pos := Pos + 1;
-                     when others =>
-                        Pos := Pos + 1;
-                  end case;
-               end loop;
                if Flag_Comment then
-                  Current_Token := Tok_Block_Comment;
+                  Current_Token := Tok_Block_Comment_Start;
                   return;
                end if;
+
+               loop
+                  Scan_Block_Comment;
+                  exit when Current_Token = Tok_Block_Comment_End
+                    or else Current_Token = Tok_Eof;
+               end loop;
                goto Again;
             else
                Current_Token := Tok_Slash;
