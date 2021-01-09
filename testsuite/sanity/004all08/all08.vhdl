@@ -250,11 +250,11 @@ architecture behav of reg_tb is
   begin
     case n is
       when 0 =>
-        return x"0000_0000";
+        return 32x"0000_0000";
       when 1 =>
-        return x"0000_0001";
+        return 32d"1";
       when 2 =>
-        return x"1111_1111";
+        return 32sb"1";
       when 3 | 4 =>
         return data_type'(x"3333_4444");
       when 5 to 7 =>
