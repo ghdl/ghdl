@@ -71,7 +71,7 @@ def Is_Second_Subprogram_Specification(Spec: Iir) -> bool:
 
 	:param Spec: Specification
 	:return:     ``True`` if subprogram specification and previously declared subprogram body match
-  """
+	"""
 	return libghdl.vhdl__utils__is_second_subprogram_specification(Spec)
 
 
@@ -80,14 +80,12 @@ def Get_Entity_From_Entity_Aspect(Aspect: Iir) -> Iir:
 	"""
 	Extract the entity from :obj:`Aspect`.
 
-	.. note::
-
-	   If :obj:`Aspect` is a component declaration, return :obj:`Aspect`. |br|
-	   If :obj:`Aspect` is open, return ``Null_Iir``
+	If :obj:`Aspect` is a component declaration, return :obj:`Aspect`. If it's
+	open, return ``Null_Iir``
 
 	:param Aspect: Aspect
 	:return:       Entity
-  """
+	"""
 	return libghdl.vhdl__utils__get_entity_from_entity_aspect(Aspect)
 
 
@@ -97,7 +95,7 @@ def Get_Interface_Of_Formal(Formal: Iir) -> Iir:
 	Get the interface corresponding to the formal name :obj:`Formal`. This is
 	always an interface, even if the formal is a name.
 
-  :param Formal: The formal.
-  :return:       The corresponding interface.
-  """
+	:param Formal: The formal.
+	:return:       The corresponding interface.
+	"""
 	return libghdl.vhdl__utils__get_interface_of_formal(Formal)

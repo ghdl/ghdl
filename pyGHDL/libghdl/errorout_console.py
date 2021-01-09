@@ -40,5 +40,5 @@ from pyGHDL.libghdl import libghdl
 
 @export
 def Install_Handler() -> None:
-    """Install the handlers for reporting errors."""
-    libghdl.errorout__console__install_handler()
+	"""Install the handlers for reporting errors."""
+	libghdl.errorout__console__install_handler()

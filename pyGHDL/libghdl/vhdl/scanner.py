@@ -76,14 +76,13 @@ def Scan() -> None:
 @export
 def Get_Current_Line() -> int:
 	"""
-	Get the current token's line.
+	Get the current location, or the location of the current token.
+
+	Since a token cannot spread over lines, file and line of the current token are
+	the same as those of the current position. The offset is the offset in the current line.
 
 	:return: Current token's line.
 	"""
-	"""   --  Get the current location, or the location of the current token.
-   --  Since a token cannot spread over lines, file and line of the current
-   --  token are the same as those of the current position.
-   --  The offset is the offset in the current line."""
 	return libghdl.vhdl__scanner__get_current_line()
 
 

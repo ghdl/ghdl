@@ -90,38 +90,38 @@ def _get_libghdl_path():
 	# last path component.
 	r = os.environ.get("GHDL_PREFIX")
 	try:
-	    return _check_libghdl_libdir(Path(r).parent, basename)
+		return _check_libghdl_libdir(Path(r).parent, basename)
 	except (TypeError, FileNotFoundError):
-	    pass
+		pass
 
 	# Try VUNIT_GHDL_PATH (path of the ghdl binary when using VUnit).
 	r = os.environ.get("VUNIT_GHDL_PATH")
 	try:
-	  return _check_libghdl_bindir(Path(r), basename)
+		return _check_libghdl_bindir(Path(r), basename)
 	except (TypeError, FileNotFoundError):
-	    pass
+		pass
 
 	# Try GHDL (name/path of the ghdl binary)
 	r = os.environ.get("GHDL", "ghdl")
 	r = which(r)
 	try:
-	    return _check_libghdl_bindir(Path(r).parent, basename)
+		return _check_libghdl_bindir(Path(r).parent, basename)
 	except (TypeError, FileNotFoundError):
-	    pass
+		pass
 
 	# Try within libghdl/ python installation
 	r = Path(__file__)
 	try:
-	    return _check_libghdl_bindir(r.parent, basename)
+		return _check_libghdl_bindir(r.parent, basename)
 	except (TypeError, FileNotFoundError):
-	    pass
+		pass
 
 	# Try when running from the build directory
 	r = (r.parent / "../../lib").resolve()
 	try:
-	    return _check_libghdl_libdir(r, basename)
+		return _check_libghdl_libdir(r, basename)
 	except (TypeError, FileNotFoundError):
-	    pass
+		pass
 
 	# Failed.
 	raise Exception("Cannot find libghdl {}".format(basename))
