@@ -64,7 +64,16 @@ File commands
 
 The following commands act on one or several files. These are not analyzed, therefore, they work even if a file has semantic errors.
 
-.. index:: cmd file pretty printing
+.. index:: cmd file format
+
+Format [``fmt``]
+-----------------------
+
+.. option:: fmt <file>
+
+Format on the standard output the input file.
+
+
 .. index:: vhdl to html
 
 Pretty print [``--pp-html``]
