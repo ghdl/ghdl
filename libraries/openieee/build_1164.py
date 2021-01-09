@@ -17,7 +17,6 @@
 #  along with GCC; see the file COPYING2.  If not see
 #  <http://www.gnu.org/licenses/>.
 
-import re
 import sys
 
 # Supported versions
@@ -241,7 +240,7 @@ def disp_shift_funcs(func, typ):
     gen_shift(func != "sll", '-', '+')
     w("""    end if;
     return res;
-  end "{0}";\n""".format(func, typ))
+  end "{0}";\n""".format(func))
 
 def gen_rot(is_left, plus, minus):
     if is_left:
@@ -280,7 +279,6 @@ def disp_all_log_funcs(version):
         disp_scalar_binary(f)
     disp_scalar_unary("not")
     for v in vec_types:
-        typ = "std_" + v + "_vector"
         for f in binary_funcs:
             disp_vec_binary(f, v)
         disp_vec_unary("not", v)
@@ -385,17 +383,17 @@ def disp_conv_bv_vec(typ, v):
     "Generate function body for bit vector conversion"
     utyp = typ.upper();
     w("""
-  function to_{1} (b : bit_vector) return std_{2}_vector
+  function to_{0} (b : bit_vector) return std_{1}_vector
   is
     subtype res_range is natural range 1 to b'length;
     alias ba : bit_vector (res_range) is b;
-    variable res : std_{2}_vector (res_range);
+    variable res : std_{1}_vector (res_range);
   begin
     for i in res_range loop
       res (i) := bit_to_x01 (ba (i));
     end loop;
     return res;
-  end to_{1};\n""".format(typ, utyp, v))
+  end to_{0};\n""".format(utyp, v))
 
 def disp_conv_b_t(typ):
     "Generate function body for bit conversion"
