@@ -3024,7 +3024,7 @@ package body Vhdl.Sem_Expr is
          --  emitted for a case stmt.
          --  FIXME: what about individual associations?
          if not Is_Case_Stmt then
-            --  LRM93 §7.3.2.2
+            --  LRM93 7.3.2.2
             --  A named association of an array aggregate is allowed to have
             --  a choice that is not locally static, or likewise a choice that
             --  is a null range, only if the aggregate includes a single
@@ -4536,7 +4536,7 @@ package body Vhdl.Sem_Expr is
       Lib : Iir;
       Cur_Lib : Iir;
    begin
-      --  LRM93 §2.6
+      --  LRM93 2.6
       --  Within a package declaration that contains the declaration
       --  of a deferred constant, and within the body of that package,
       --  before the end of the corresponding full declaration, the

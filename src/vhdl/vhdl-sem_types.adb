@@ -465,7 +465,7 @@ package body Vhdl.Sem_Types is
             Val := Eval_Physical_Literal (Val);
             Set_Physical_Literal (Unit, Val);
 
-            --  LRM93 §3.1
+            --  LRM93 3.1
             --  The position number of unit names need not lie within the range
             --  specified by the range constraint.
             --  GHDL: this was not true in VHDL87.
@@ -554,7 +554,7 @@ package body Vhdl.Sem_Types is
       Check_No_File_Type (El_Type, Def);
       Set_Signal_Type_Flag (Def, Get_Signal_Type_Flag (El_Type));
 
-      --  LRM93 §3.2.1.1
+      --  LRM93 3.2.1.1
       --  The same requirement exists [must define a constrained
       --  array subtype] [...] for the element subtype indication
       --  of an array type definition, if the type of the array
@@ -1100,7 +1100,7 @@ package body Vhdl.Sem_Types is
 
       Set_Signal_Type_Flag (Def, Get_Signal_Type_Flag (Base_Type));
 
-      --  According to LRM93 §7.4.1, an unconstrained array type
+      --  According to LRM93 7.4.1, an unconstrained array type
       --  is not static.
       Set_Type_Staticness (Base_Type, None);
       Set_Type_Staticness (Def, Min (Staticness,

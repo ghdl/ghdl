@@ -1144,7 +1144,7 @@ package body Vhdl.Sem is
             Error_Kind ("sem_block_configuration", Father);
       end case;
 
-      --  LRM93 §10.1
+      --  LRM93 10.1
       --  10. A block configuration
       Sem_Scopes.Open_Scope_Extension;
 

@@ -66,7 +66,7 @@ package Simul.Elaboration is
      (Block: Block_Instance_Acc; Decl: Iir; Init : Init_Value_Kind)
      return Iir_Value_Literal_Acc;
 
-   --  LRM93 §12.3.1.3  Subtype Declarations
+   --  LRM93 12.3.1.3  Subtype Declarations
    --  The elaboration of a subtype indication creates a subtype.
    --  Used for allocator.
    procedure Elaborate_Subtype_Indication

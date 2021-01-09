@@ -145,7 +145,7 @@ package body Simul.Environments is
                raise Constraint_Error;
             end if;
          when Iir_Value_Array =>
-            --  LRM93 §7.2.2
+            --  LRM93 7.2.2
             --  For discrete array types, the relation < (less than) is defined
             --  such as the left operand is less than the right operand if
             --  and only if:

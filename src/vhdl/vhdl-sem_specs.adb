@@ -2010,7 +2010,7 @@ package body Vhdl.Sem_Specs is
       end if;
    end Create_Default_Map_Aspect;
 
-   --  LRM93 §5.2.2
+   --  LRM93 5.2.2
    function Get_Visible_Entity_Declaration (Comp: Iir_Component_Declaration)
      return Iir_Design_Unit
    is

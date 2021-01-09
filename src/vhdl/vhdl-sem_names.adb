@@ -639,7 +639,7 @@ package body Vhdl.Sem_Names is
    begin
       Expr_Staticness := Locally;
 
-      -- LRM93 §6.4: there must be one such expression for each index
+      -- LRM93 6.4: there must be one such expression for each index
       -- position of the array and each expression must be of the
       -- type of the corresponding index.
       -- Loop on the indexes.
@@ -2178,7 +2178,7 @@ package body Vhdl.Sem_Names is
       Set_Named_Entity (Name, Res);
    end Sem_Simple_Name;
 
-   --  LRM93 §6.3
+   --  LRM93 6.3
    --  Selected Names.
    procedure Sem_Selected_Name
      (Name: Iir; Keep_Alias : Boolean := False; Soft : Boolean := False)
@@ -2443,7 +2443,7 @@ package body Vhdl.Sem_Names is
            | Iir_Kind_For_Generate_Statement
            | Iir_Kind_Block_Statement
            | Iir_Kind_For_Loop_Statement =>
-            --  LRM93 §6.3
+            --  LRM93 6.3
             --  An expanded name denotes a named entity declared immediatly
             --  within a named construct if the prefix that is an entity
             --  interface, an architecture, a subprogram, a block statement,
@@ -4402,7 +4402,7 @@ package body Vhdl.Sem_Names is
       Set_Named_Entity (Attr, Res);
    end Sem_Attribute_Name;
 
-   --  LRM93 §6
+   --  LRM93 6
    procedure Sem_Name (Name : Iir; Keep_Alias : Boolean := False) is
    begin
       --  Exit now if NAME was already analyzed.

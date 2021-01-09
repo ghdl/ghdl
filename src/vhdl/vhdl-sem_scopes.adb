@@ -913,7 +913,7 @@ package body Vhdl.Sem_Scopes is
       else
          --  There is already a declaration in the current scope.
          if Potentially then
-            -- LRM93 §10.4 item #1
+            -- LRM93 10.4 item #1
             -- Discard the new and potentially visible declaration.
             -- However, add the type.
             -- FIXME: Add_In_Visible_List (Ident, Decl);
@@ -950,7 +950,7 @@ package body Vhdl.Sem_Scopes is
 
                -- None of the two declarations are potentially visible, ie
                -- both are visible.
-               -- LRM §10.3:
+               -- LRM 10.3:
                --  Two declarations that occur immediately within the same
                --  declarative region must not be homographs,
                -- FIXME: unless one of them is the implicit declaration of a
@@ -965,7 +965,7 @@ package body Vhdl.Sem_Scopes is
                return;
             else
                --  Homograph, not in the same scope.
-               --  LRM §10.3:
+               --  LRM93 10.3:
                --  A declaration is said to be hidden within (part of) an inner
                --  declarative region if the inner region contains an homograph
                --  of this declaration; the outer declaration is the hidden

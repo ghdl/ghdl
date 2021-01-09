@@ -316,7 +316,7 @@ package body Simul.Simulation.Main is
                raise Internal_Error;
          end case;
 
-         --  LRM93 §12.4.4  Other Concurrent Statements
+         --  LRM93 12.4.4  Other Concurrent Statements
          --  All other concurrent statements are either process
          --  statements or are statements for which there is an
          --  equivalent process statement.
@@ -820,7 +820,7 @@ package body Simul.Simulation.Main is
                else
                   Src := Formal_Expr;
                end if;
-               --  LRM93 §12.6.2
+               --  LRM93 12.6.2
                --  A signal is said to be active [...] if one of its source
                --  is active.
                Connect (Local_Expr, Src, Connect_Source);

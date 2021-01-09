@@ -904,7 +904,7 @@ package body Simul.Elaboration is
       end if;
    end Elaborate_Subtype_Indication_If_Anonymous;
 
-   --  LRM93 §12.3.1.3  Subtype Declarations
+   --  LRM93 12.3.1.3  Subtype Declarations
    --  The elaboration of a subtype indication creates a subtype.
    procedure Elaborate_Subtype_Indication
      (Instance : Block_Instance_Acc; Ind : Iir)
@@ -948,7 +948,7 @@ package body Simul.Elaboration is
       end case;
    end Elaborate_Subtype_Indication;
 
-   --  LRM93 §12.3.1.2  Type Declarations.
+   --  LRM93 12.3.1.2  Type Declarations.
    procedure Elaborate_Type_Definition
      (Instance : Block_Instance_Acc; Def : Iir)
    is
@@ -1015,7 +1015,7 @@ package body Simul.Elaboration is
       end case;
    end Elaborate_Type_Definition;
 
-   --  LRM93 §12.3.1.2  Type Declarations.
+   --  LRM93 12.3.1.2  Type Declarations.
    procedure Elaborate_Type_Declaration
      (Instance : Block_Instance_Acc; Decl : Iir_Type_Declaration)
    is
@@ -1105,7 +1105,7 @@ package body Simul.Elaboration is
    begin
       Decl := Port_Chain;
       while Decl /= Null_Iir loop
-         --  LRM93 §12.2.3
+         --  LRM93 12.2.3
          --  The elaboration of a port declaration consists of elaborating the
          --  subtype indication and then creating a port of that subtype.
          Elaborate_Subtype_Indication_If_Anonymous (Instance, Get_Type (Decl));
@@ -1117,7 +1117,7 @@ package body Simul.Elaboration is
       end loop;
    end Elaborate_Port_Clause;
 
-   --  LRM93 §12.2.2  The generic Map Aspect
+   --  LRM93 12.2.2  The generic Map Aspect
    procedure Elaborate_Generic_Map_Aspect
      (Target_Instance : Block_Instance_Acc;
       Local_Instance : Block_Instance_Acc;
@@ -1279,7 +1279,7 @@ package body Simul.Elaboration is
    end Elab_Connect;
 
    --  LRM93 12.2.3  The Port Clause
-   --  LRM93 §12.2.4  The Port Map Aspect
+   --  LRM93 12.2.4  The Port Map Aspect
    procedure Elaborate_Port_Map_Aspect
      (Formal_Instance : Block_Instance_Acc;
       Actual_Instance : Block_Instance_Acc;
@@ -1425,7 +1425,7 @@ package body Simul.Elaboration is
       end loop;
    end Elaborate_Port_Map_Aspect;
 
-   --  LRM93 §12.2  Elaboration of a block header
+   --  LRM93 12.2  Elaboration of a block header
    --  Elaboration of a block header consists of the elaboration of the
    --  generic clause, the generic map aspect, the port clause, and the port
    --  map aspect, in that order.
@@ -1464,7 +1464,7 @@ package body Simul.Elaboration is
                              Instance => Instance));
    end Elaborate_Guard_Signal;
 
-   --  LRM93 §12.4.1  Block statements.
+   --  LRM93 12.4.1  Block statements.
    procedure Elaborate_Block_Statement
      (Instance : Block_Instance_Acc; Block : Iir_Block_Statement)
    is
@@ -1599,7 +1599,7 @@ package body Simul.Elaboration is
       end;
    end Create_Default_Association;
 
-   --  LRM93 §12.4.3
+   --  LRM93 12.4.3
    function Is_Fully_Bound (Conf : Iir) return Boolean
    is
       Binding : Iir;
@@ -1854,7 +1854,7 @@ package body Simul.Elaboration is
       end if;
    end Elaborate_Psl_Directive;
 
-   --  LRM93 §12.4  Elaboration of a Statement Part.
+   --  LRM93 12.4  Elaboration of a Statement Part.
    procedure Elaborate_Concurrent_Statement_Part
      (Instance : Block_Instance_Acc; Stmt_Chain: Iir)
    is
@@ -1953,7 +1953,7 @@ package body Simul.Elaboration is
       return Val;
    end Elaborate_Default_Value;
 
-   --  LRM93 §12.3.1.1  Subprogram Declaration and Bodies
+   --  LRM93 12.3.1.1  Subprogram Declaration and Bodies
    procedure Elaborate_Interface_List
      (Instance : Block_Instance_Acc; Inter_Chain : Iir)
    is
@@ -1979,7 +1979,7 @@ package body Simul.Elaboration is
       end loop;
    end Elaborate_Interface_List;
 
-   --  LRM93 §12.3.1.1  Subprogram Declaration and Bodies
+   --  LRM93 12.3.1.1  Subprogram Declaration and Bodies
    procedure Elaborate_Subprogram_Declaration
      (Instance : Block_Instance_Acc; Decl : Iir)
    is
@@ -2390,7 +2390,7 @@ package body Simul.Elaboration is
         Unshare_Bounds (Res, Instance_Pool);
    end Elaborate_Alias_Declaration;
 
-   --  LRM93 §12.3.2.3  Disconnection Specifications
+   --  LRM93 12.3.2.3  Disconnection Specifications
    procedure Elaborate_Disconnection_Specification
      (Instance : Block_Instance_Acc;
       Decl : Iir_Disconnection_Specification)
@@ -2401,7 +2401,7 @@ package body Simul.Elaboration is
       Sig : Iir;
       Val : Iir_Value_Literal_Acc;
    begin
-      --  LRM93 §12.3.2.3
+      --  LRM93 12.3.2.3
       --  Elaboration of a disconnection specification proceeds as follows:
       --  2. The time expression is evaluated to determine the disconnection
       --     time for drivers of the affected signals.
@@ -2416,7 +2416,7 @@ package body Simul.Elaboration is
          Error_Msg_Sem (+Decl, "time must be non-negative");
       end if;
 
-      --  LRM93 §12.3.2.3
+      --  LRM93 12.3.2.3
       --  1. The guarded signal specification is elaborated in order to
       --     identify the signals affected by the disconnection specification.
       --
@@ -2489,7 +2489,7 @@ package body Simul.Elaboration is
       Elaborate_Subtype_Indication (Instance, Ind);
    end Elaborate_Declaration_Type;
 
-   --  LRM93 §12.3.1  Elaboration of a declaration
+   --  LRM93 12.3.1  Elaboration of a declaration
    procedure Elaborate_Declaration (Instance : Block_Instance_Acc; Decl : Iir)
    is
       Expr_Mark : Mark_Type;
@@ -2790,7 +2790,7 @@ package body Simul.Elaboration is
       end loop;
    end Finalize_Declarative_Part;
 
-   --  LRM93 §12.3  Elaboration of a Declarative Part
+   --  LRM93 12.3  Elaboration of a Declarative Part
    procedure Elaborate_Declarative_Part
      (Instance : Block_Instance_Acc; Decl_Chain : Iir)
    is
