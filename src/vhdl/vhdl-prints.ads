@@ -21,11 +21,26 @@ with Vhdl.Tokens; use Vhdl.Tokens;
 with PSL.Types; use PSL.Types;
 
 package Vhdl.Prints is
+   --  Vertical alignment
+   type Valign_Type is
+     (
+      --  Align the colon (which separates identifier from mode or subtype).
+      Valign_Colon,
+
+      --  Align the assign token (either for declarations or assignments).
+      Valign_Assign,
+
+      --  Align the subtype indication.
+      Valign_Typemark
+     );
+
    type Disp_Ctxt is abstract tagged null record;
    procedure Start_Hbox (Ctxt : in out Disp_Ctxt) is abstract;
    procedure Close_Hbox (Ctxt : in out Disp_Ctxt) is abstract;
    procedure Start_Vbox (Ctxt : in out Disp_Ctxt) is abstract;
    procedure Close_Vbox (Ctxt : in out Disp_Ctxt) is abstract;
+   procedure Valign (Ctxt : in out Disp_Ctxt; Point : Valign_Type)
+     is abstract;
    procedure Disp_Token (Ctxt : in out Disp_Ctxt; Tok : Token_Type)
       is abstract;
    procedure Start_Lit (Ctxt : in out Disp_Ctxt; Tok : Token_Type)

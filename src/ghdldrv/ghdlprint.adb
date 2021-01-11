@@ -1008,6 +1008,7 @@ package body Ghdlprint is
       Flag_Sem : Boolean := True;
       Flag_Format : Boolean := False;
       Level : Format_Level := Format_Indent;
+      Flag_Realign : Boolean := False;
       Flag_Force : Boolean := False;
       First_Line : Positive := 1;
       Last_Line : Positive := Positive'Last;
@@ -1052,6 +1053,9 @@ package body Ghdlprint is
          Res := Option_Ok;
       elsif Option = "--force" then
          Cmd.Flag_Force := True;
+         Res := Option_Ok;
+      elsif Option = "--realign" then
+         Cmd.Flag_Realign := True;
          Res := Option_Ok;
       elsif Option'Length > 8 and then Option (1 .. 8) = "--range=" then
          declare
@@ -1152,6 +1156,7 @@ package body Ghdlprint is
          if Cmd.Flag_Format then
             Vhdl.Formatters.Format (Design_File,
                                     Cmd.Level,
+                                    Cmd.Flag_Realign,
                                     Cmd.First_Line, Cmd.Last_Line);
          end if;
       end loop;

@@ -35,12 +35,9 @@ package Vhdl.Formatters is
      );
 
    --  Format/pretty print the file F.
-   --  If FLAG_REINDENT is true, lines are reindented.  Otherwise the output is
-   --  the same as the input except keywords are converted to lower case.
-   --  If FLAG_RESPACE is true (which implies FLAG_REINDENT), spaces between
-   --   tokens are adjusted.
    procedure Format (F : Iir_Design_File;
                      Level : Format_Level;
+                     Flag_Realign : Boolean;
                      First_Line : Positive := 1;
                      Last_Line : Positive := Positive'Last);
 

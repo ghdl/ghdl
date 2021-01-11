@@ -83,6 +83,7 @@ package body Vhdl.Formatters is
       procedure Close_Hbox (Ctxt : in out Format_Ctxt);
       procedure Start_Vbox (Ctxt : in out Format_Ctxt);
       procedure Close_Vbox (Ctxt : in out Format_Ctxt);
+      procedure Valign (Ctxt : in out Format_Ctxt; Point : Valign_Type);
       procedure Disp_Token (Ctxt : in out Format_Ctxt; Tok : Token_Type);
       procedure Start_Lit (Ctxt : in out Format_Ctxt; Tok : Token_Type);
       procedure Disp_Char (Ctxt : in out Format_Ctxt; C : Character);
@@ -127,6 +128,7 @@ package body Vhdl.Formatters is
       Etok_Close_Vbox : constant Etoken_Type := Etok_Last + 2;
       Etok_Set_Vbox   : constant Etoken_Type := Etok_Last + 3;
       Etok_No_Indent  : constant Etoken_Type := Etok_Last + 4;
+      Etok_Valign     : constant Etoken_Type := Etok_Last + 5;
 
       procedure Append_Eof (Ctxt : in out Format_Ctxt);
       procedure Read_Token (Ctxt : Format_Ctxt;
@@ -342,6 +344,13 @@ package body Vhdl.Formatters is
          end loop;
       end Skip_Spaces;
 
+      procedure Valign (Ctxt : in out Format_Ctxt; Point : Valign_Type) is
+      begin
+         if Ctxt.Enable then
+            Append_Token (Ctxt, Etok_Valign, Valign_Type'Pos (Point));
+         end if;
+      end Valign;
+
       procedure Start_Hbox (Ctxt : in out Format_Ctxt) is
       begin
          Ctxt.Hnum := Ctxt.Hnum + 1;
@@ -538,6 +547,8 @@ package body Vhdl.Formatters is
                   Indent := Col * Indentation + 1;
                when Etok_No_Indent =>
                   Extra_Indent := False;
+               when Etok_Valign =>
+                  null;
                when others =>
                   raise Internal_Error;
             end case;
@@ -547,6 +558,180 @@ package body Vhdl.Formatters is
          Prev_Tok := Tok;
       end loop;
    end Reindent;
+
+   --  Realign some token.
+   --  For objects declarations of the same region, the colon (:), the subtype
+   --   indication and the default value will be aligned on the same column.
+   procedure Realign (Ctxt : in out Format_Disp_Ctxt.Format_Ctxt;
+                      Vbox : in out Natural)
+   is
+      use Format_Disp_Ctxt;
+
+      type Valign_Natural is array (Valign_Type) of Natural;
+      type Valign_Boolean is array (Valign_Type) of Boolean;
+
+      --  Maximum offset relative to previous alignment.
+      Vpos : Valign_Natural;
+
+      --  True when the realignment was done in the current line.  Used to
+      --  discard same alignment marker that appears later.
+      Vdone : Valign_Boolean;
+
+      I : Natural;
+      Etok : Etoken_Type;
+      Tok : Token_Type;
+      Col : Natural;
+      Skip : Natural;
+
+      Valign : Valign_Type;
+
+      Diff_Col : Integer;
+      Cum_Col : Integer;
+      Prev_Col : Integer;
+   begin
+      I := Vbox;
+
+      Vpos := (others => 0);
+      Vdone := (others => False);
+      Diff_Col := 0;
+
+      --  First pass: compute the positions
+      loop
+         Read_Token (Ctxt, I, Etok, Col);
+
+         if Etok <= Etok_Last then
+            Tok := Token_Type'Val (Etok);
+            case Tok is
+               when Tok_Eof =>
+                  exit;
+               when Tok_Invalid =>
+                  raise Internal_Error;
+               when Tok_Newline =>
+                  --  Restart positions.
+                  Vdone := (others => False);
+                  Prev_Col := 0;
+                  I := I + 1;
+               when Token_Source_Type
+                 | Tok_Block_Comment_Text =>
+                  I := I + 3;
+               when Tok_First_Delimiter .. Token_Type'Last
+                  | Tok_Block_Comment_Start
+                  | Tok_Block_Comment_End =>
+                  I := I + 1;
+            end case;
+         else
+            case Etok is
+               when Etok_Start_Vbox =>
+                  --  Nested vbox
+                  I := I + 1;
+                  Realign (Ctxt, I);
+               when Etok_Close_Vbox =>
+                  exit;
+               when Etok_Set_Vbox =>
+                  I := I + 1;
+               when Etok_No_Indent =>
+                  I := I + 1;
+               when Etok_Valign =>
+                  --  Ok, the serious work.
+                  Valign := Valign_Type'Val (Col);
+                  if not Vdone (Valign) then
+                     --  The first presence on this line.
+                     --  Read position of the next token.
+                     Read_Token (Ctxt, I + 1, Etok, Col);
+                     pragma Assert (Etok <= Etok_Last);
+                     Vdone (Valign) := True;
+                     Diff_Col := Col - Prev_Col;
+                     if Vpos (Valign) < Diff_Col then
+                        Vpos (Valign) := Diff_Col;
+                     end if;
+                     Prev_Col := Col;
+                  end if;
+                  I := I + 1;
+               when others =>
+                  raise Internal_Error;
+            end case;
+         end if;
+      end loop;
+
+      --  Second pass: adjust the offsets
+      I := Vbox;
+      Vdone := (others => False);
+      Diff_Col := 0;
+      Skip := 0;
+      Cum_Col := 0;
+
+      loop
+         Read_Token (Ctxt, I, Etok, Col);
+
+         if Etok <= Etok_Last then
+            Tok := Token_Type'Val (Etok);
+            case Tok is
+               when Tok_Eof =>
+                  Vbox := I;
+                  exit;
+               when Tok_Invalid =>
+                  raise Internal_Error;
+               when Tok_Newline =>
+                  Vdone := (others => False);
+                  Diff_Col := 0;
+                  Cum_Col := 0;
+                  I := I + 1;
+               when Token_Source_Type
+                 | Tok_Block_Comment_Text =>
+                  if Skip = 0 then
+                     Write_Token (Ctxt, I, Col + Diff_Col);
+                  end if;
+                  I := I + 3;
+               when Tok_First_Delimiter .. Token_Type'Last
+                 | Tok_Block_Comment_Start
+                 | Tok_Block_Comment_End =>
+                  if Skip = 0 then
+                     Write_Token (Ctxt, I, Col + Diff_Col);
+                  end if;
+                  I := I + 1;
+            end case;
+         else
+            case Etok is
+               when Etok_Start_Vbox =>
+                  --  Nested vbox
+                  Skip := Skip + 1;
+               when Etok_Close_Vbox =>
+                  if Skip = 0 then
+                     Vbox := I + 1;
+                     exit;
+                  else
+                     Skip := Skip - 1;
+                  end if;
+               when Etok_Set_Vbox =>
+                  null;
+               when Etok_No_Indent =>
+                  null;
+               when Etok_Valign =>
+                  --  Ok, the serious work.
+                  if Skip = 0 then
+                     Valign := Valign_Type'Val (Col);
+                     if Vpos (Valign) /= 0 and then not Vdone (Valign) then
+                        Vdone (Valign) := True;
+                        Cum_Col := Cum_Col + Vpos (Valign);
+                        Read_Token (Ctxt, I + 1, Etok, Col);
+                        Diff_Col := Cum_Col - Col;
+                     end if;
+                  end if;
+               when others =>
+                  raise Internal_Error;
+            end case;
+            I := I + 1;
+         end if;
+      end loop;
+   end Realign;
+
+   procedure Realign (Ctxt : in out Format_Disp_Ctxt.Format_Ctxt)
+   is
+      I : Natural;
+   begin
+      I := Format_Disp_Ctxt.Token_Table.First;
+      Realign (Ctxt, I);
+   end Realign;
 
    type IO_Printer_Ctxt is new Format_Disp_Ctxt.Printer_Ctxt with null record;
    procedure Put (Ctxt : in out IO_Printer_Ctxt; C : Character)
@@ -595,12 +780,16 @@ package body Vhdl.Formatters is
                         Put ("V");
                      when Etok_No_Indent =>
                         Put ("B");
+                     when Etok_Valign =>
+                        Put ("A");
                      when others =>
                         raise Internal_Error;
                   end case;
                end if;
-               Put ('@');
+               Put (':');
                Put_Int32 (Nat32 (Col));
+               Put ('@');
+               Put_Int32 (Nat32 (I - 1));
             end;
          end if;
 
@@ -677,6 +866,7 @@ package body Vhdl.Formatters is
 
    procedure Format (F : Iir_Design_File;
                      Level : Format_Level;
+                     Flag_Realign : Boolean;
                      First_Line : Positive := 1;
                      Last_Line : Positive := Positive'Last)
    is
@@ -689,10 +879,24 @@ package body Vhdl.Formatters is
       if Level > Format_None then
          Reindent (Ctxt, Level = Format_Space);
       end if;
+
+      if Flag_Realign then
+         Realign (Ctxt);
+      end if;
+
       Reprint (Ctxt, Prnt);
 
       Free (Ctxt);
    end Format;
+
+   procedure Dump_Fmt (Ctxt : Format_Disp_Ctxt.Format_Ctxt)
+   is
+      Prnt : IO_Printer_Ctxt;
+   begin
+      Reprint (Ctxt, Prnt);
+   end Dump_Fmt;
+
+   pragma Unreferenced (Dump_Fmt);
 
    function Allocate_Handle return Vstring_Acc is
    begin
@@ -743,6 +947,7 @@ package body Vhdl.Formatters is
 
       Prnt := (Format_Disp_Ctxt.Printer_Ctxt with Handle);
       Reindent (Ctxt, False);
+      Realign (Ctxt);
       Reprint (Ctxt, Prnt);
 
       Free (Ctxt);

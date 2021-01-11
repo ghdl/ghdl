@@ -1161,6 +1161,7 @@ package body Vhdl.Prints is
       Default: constant Iir := Get_Default_Value (Obj);
    begin
       if Default /= Null_Iir then
+         Valign (Ctxt, Valign_Assign);
          Disp_Token (Ctxt, Tok_Assign);
          Print (Ctxt, Default);
       end if;
@@ -1171,10 +1172,12 @@ package body Vhdl.Prints is
    is
       Ind : constant Iir := Get_Subtype_Indication (Inter);
    begin
+      Valign (Ctxt, Valign_Colon);
       Disp_Token (Ctxt, Tok_Colon);
       if Get_Has_Mode (Inter) then
          Disp_Mode (Ctxt, Get_Mode (Inter));
       end if;
+      Valign (Ctxt, Valign_Typemark);
       if Ind = Null_Iir then
          --  For implicit subprogram
          Disp_Type (Ctxt, Get_Type (Inter));
@@ -1636,7 +1639,9 @@ package body Vhdl.Prints is
          Disp_Token (Ctxt, Tok_Comma);
          Disp_Name_Of (Ctxt, Next_Decl);
       end loop;
+      Valign (Ctxt, Valign_Colon);
       Disp_Token (Ctxt, Tok_Colon);
+      Valign (Ctxt, Valign_Typemark);
       Disp_Subtype_Indication (Ctxt, Get_Subtype_Indication (Decl));
       if Get_Kind (Decl) = Iir_Kind_Signal_Declaration then
          Disp_Signal_Kind (Ctxt, Decl);
@@ -1697,7 +1702,7 @@ package body Vhdl.Prints is
       end if;
 
       Inter := Get_Interface_Declaration_Chain (Subprg);
-      Disp_Interface_Chain (Ctxt, Inter, False);
+      Disp_Interface_Chain (Ctxt, Inter, True);
 
       case Get_Kind (Subprg) is
          when Iir_Kind_Function_Declaration
@@ -5038,6 +5043,7 @@ package body Vhdl.Prints is
       procedure Close_Hbox (Ctxt : in out Simple_Ctxt);
       procedure Start_Vbox (Ctxt : in out Simple_Ctxt);
       procedure Close_Vbox (Ctxt : in out Simple_Ctxt);
+      procedure Valign (Ctxt : in out Simple_Ctxt; Point : Valign_Type);
       procedure Disp_Token (Ctxt : in out Simple_Ctxt; Tok : Token_Type);
       procedure Start_Lit (Ctxt : in out Simple_Ctxt; Tok : Token_Type);
       procedure Disp_Char (Ctxt : in out Simple_Ctxt; C : Character);
@@ -5091,6 +5097,11 @@ package body Vhdl.Prints is
       begin
          Ctxt.Vnum := Ctxt.Vnum - 1;
       end Close_Vbox;
+
+      procedure Valign (Ctxt : in out Simple_Ctxt; Point : Valign_Type) is
+      begin
+         null;
+      end Valign;
 
       procedure Disp_Space (Ctxt : in out Simple_Ctxt; Tok : Token_Type)
       is
