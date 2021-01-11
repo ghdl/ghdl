@@ -68,14 +68,14 @@ def Iterate(List) -> Iterator:
 	:return:     Iterator structure.
 	"""
 	func = libghdl.vhdl__lists__iterate
-	func.argstype = [(c_int32)]
+	func.argstype = [c_int32]
 	func.restype = Iterator
 
 	return func(List)
 
 
 @export
-def Is_Valid(Iterator) -> bool:
+def Is_Valid(it: Iterator) -> bool:
 	"""
 	Check if iterator reached the end.
 
@@ -86,11 +86,11 @@ def Is_Valid(Iterator) -> bool:
 	func.argstype = [POINTER(Iterator)]
 	func.restype = c_bool
 
-	return func(Iterator)
+	return func(it)
 
 
 @export
-def Next(Iterator):
+def Next(it: Iterator):
 	"""
 	Move iterator to the next element.
 
@@ -101,11 +101,11 @@ def Next(Iterator):
 	func.argstype = [POINTER(Iterator)]
 	func.restype = None
 
-	func(Iterator)
+	func(it)
 
 
 @export
-def Get_Element(Iterator) -> int:
+def Get_Element(it: Iterator) -> int:
 	"""
 	Get the current element from iterator.
 
@@ -116,7 +116,7 @@ def Get_Element(Iterator) -> int:
 	func.argstype = [POINTER(Iterator)]
 	func.restype = c_int32
 
-	return func(Iterator)
+	return func(it)
 
 
 @export
@@ -130,14 +130,14 @@ def Get_Nbr_Elements(List) -> int:
 	:return:     Number of list elements.
 	"""
 	func = libghdl.vhdl__lists__get_nbr_elements
-	func.argtype = [(c_int32)]
+	func.argtype = [c_int32]
 	func.restype = c_int32
 
 	return func(List)
 
 
 @export
-def Create_Iir_List():
+def Create_Iir_List() -> int:
 	"""
 	Create a list.
 
