@@ -1,42 +1,42 @@
-# EMACS settings: -*-	tab-width: 2; indent-tabs-mode: t -*-
+# EMACS settings: -*- tab-width: 2; indent-tabs-mode: t -*-
 # vim: tabstop=2:shiftwidth=2:noexpandtab
 # kate: tab-width 2; replace-tabs off; indent-width 2;
-# 
-# ==============================================================================
-#	Authors:						Patrick Lehmann
-# 
-#	PowerShell Script:	Script to compile the simulation libraries from Altera
-#											Quartus for GHDL on Windows
-# 
-# Description:
-# ------------------------------------
-#	This is a PowerShell script (executable) which:
-#		- creates a subdirectory in the current working directory
-#		- compiles all Altera Quartus simulation libraries and packages
 #
 # ==============================================================================
-#	Copyright (C) 2015-2016 Patrick Lehmann - Dresden, Germany
-#	Copyright (C) 2017 Patrick Lehmann - Freiburg, Germany
-#	
-#	GHDL is free software; you can redistribute it and/or modify it under
-#	the terms of the GNU General Public License as published by the Free
-#	Software Foundation; either version 2, or (at your option) any later
-#	version.
-#	
-#	GHDL is distributed in the hope that it will be useful, but WITHOUT ANY
-#	WARRANTY; without even the implied warranty of MERCHANTABILITY or
-#	FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-#	for more details.
-#	
-#	You should have received a copy of the GNU General Public License
-#	along with GHDL; see the file COPYING.  If not, write to the Free
-#	Software Foundation, 59 Temple Place - Suite 330, Boston, MA
-#	02111-1307, USA.
+# Authors:            Patrick Lehmann
+#
+# PowerShell Script:  Script to compile the simulation libraries from Intel
+#                     Quartus for GHDL on Windows
+#
+# Description:
+# ------------------------------------
+# This is a PowerShell script (executable) which:
+#   - creates a subdirectory in the current working directory
+#   - compiles all Altera Quartus simulation libraries and packages
+#
+# ==============================================================================
+# Copyright (C) 2017-2021 Patrick Lehmann - Boetzingen, Germany
+# Copyright (C) 2015-2016 Patrick Lehmann - Dresden, Germany
+#
+# GHDL is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation; either version 2, or (at your option) any later
+# version.
+#
+# GHDL is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with GHDL; see the file COPYING.  If not, write to the Free
+# Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+# 02111-1307, USA.
 # ==============================================================================
 
 # .SYNOPSIS
 # This CmdLet compiles the simulation libraries from Altera.
-# 
+#
 # .DESCRIPTION
 # This CmdLet:
 #   (1) creates a subdirectory in the current working directory
@@ -51,67 +51,67 @@
 #         - stratixiv, stratixiv_pcie_hip
 #         - stratixv, stratixv_pcie_hip
 #         - fiftyfivenm, twentynm
-# 
+#
 [CmdletBinding()]
 param(
 	# Show the embedded help page(s)
-	[switch]$Help =				$false,
-	
+	[switch]$Help =       $false,
+
 	# Compile all libraries and packages.
-	[switch]$All =				$false,
-	
+	[switch]$All =        $false,
+
 	# Compile the Altera standard libraries: lpm, sgate, altera, altera_mf, altera_lnsim
-	[switch]$Altera =			$false,
-	
+	[switch]$Altera =     $false,
+
 	# Compile the Altera Max device libraries
-	[switch]$Max =				$false,
-	
+	[switch]$Max =        $false,
+
 	# Compile the Altera Cyclone device libraries
-	[switch]$Cyclone =		$false,
-	
+	[switch]$Cyclone =    $false,
+
 	# Compile the Altera Arria device libraries
-	[switch]$Arria =			$false,
-	
+	[switch]$Arria =      $false,
+
 	# Compile the Altera Stratix device libraries
-	[switch]$Stratix =		$false,
-	
+	[switch]$Stratix =    $false,
+
 	# Unknown device library
-	[switch]$Nanometer =	$false,
-	
+	[switch]$Nanometer =  $false,
+
 	# Clean up directory before analyzing.
-	[switch]$Clean =			$false,
-	
+	[switch]$Clean =      $false,
+
 	# Set VHDL Standard to '93.
-	[switch]$VHDL93 =			$false,
+	[switch]$VHDL93 =     $false,
 	# Set VHDL Standard to '08.
-	[switch]$VHDL2008 =		$false,
-	
+	[switch]$VHDL2008 =   $false,
+
 	# Skip warning messages. (Show errors only.)
 	[switch]$SuppressWarnings = $false,
 	# Halt on errors.
-	[switch]$HaltOnError =			$false,
-	
+	[switch]$HaltOnError =      $false,
+
 	# Set vendor library source directory.
-	[string]$Source =			"",
+	[string]$Source =     "",
 	# Set output directory name.
-	[string]$Output =			"",
+	[string]$Output =     "",
 	# Set GHDL binary directory.
-	[string]$GHDL =				""
+	[string]$GHDL =       ""
 )
 
 # ---------------------------------------------
 # save working directory
-$WorkingDir =		Get-Location
+$WorkingDir =     Get-Location
 
 # set default values
-$EnableDebug =		[bool]$PSCmdlet.MyInvocation.BoundParameters["Debug"]
-$EnableVerbose =	[bool]$PSCmdlet.MyInvocation.BoundParameters["Verbose"] -or $EnableDebug
+$EnableDebug =    [bool]$PSCmdlet.MyInvocation.BoundParameters["Debug"]
+$EnableVerbose =  [bool]$PSCmdlet.MyInvocation.BoundParameters["Verbose"] -or $EnableDebug
 
 # load modules from GHDL's 'vendors' library directory
-$EnableVerbose -and	(Write-Host "Loading modules..." -ForegroundColor Gray	) | Out-Null
-$EnableDebug -and		(Write-Host "  Import-Module $PSScriptRoot\config.psm1 -Verbose:`$$false -Debug:`$$false -ArgumentList `"IntelQuartus`"" -ForegroundColor DarkGray	) | Out-Null
+$EnableVerbose -and  (Write-Host "Loading modules..." -ForegroundColor Gray  ) | Out-Null
+$EnableDebug -and    (Write-Host "  Import-Module $PSScriptRoot\config.psm1 -Verbose:`$$false -Debug:`$$false -ArgumentList `"IntelQuartus`"" -ForegroundColor DarkGray  ) | Out-Null
 Import-Module $PSScriptRoot\config.psm1 -Verbose:$false -Debug:$false -ArgumentList "IntelQuartus"
-$EnableDebug -and		(Write-Host "  Import-Module $PSScriptRoot\shared.psm1 -Verbose:`$$false -Debug:`$$false -ArgumentList @(`"Intel Quartus Prime`", `"$WorkingDir`")" -ForegroundColor DarkGray	) | Out-Null
+$EnableDebug -and    (Write-Host "  Import-Module $PSScriptRoot\shared.psm1 -Verbose:`$$false -Debug:`$$false -ArgumentList @(`"Intel Quartus Prime`", `"$WorkingDir`")" -ForegroundColor DarkGray  ) | Out-Null
 Import-Module $PSScriptRoot\shared.psm1 -Verbose:$false -Debug:$false -ArgumentList @("Intel Quartus Prime", "$WorkingDir")
 
 # Display help if no command was selected
@@ -122,17 +122,17 @@ if ($Help)
 	Exit-CompileScript
 }
 if ($All)
-{	$Altera =			$true
-	$Max =				$true
-	$Cyclone =		$true
-	$Arria =			$true
-	$Stratix =		$true
-	$Nanometer =	$true
+{	$Altera =      $true
+	$Max =        $true
+	$Cyclone =    $true
+	$Arria =      $true
+	$Stratix =    $true
+	$Nanometer =  $true
 }
 
 function Get-AlteraQuartusDirectory
 {	if (Test-Path env:QUARTUS_ROOTDIR)
-	{	return $QUARTUS_ROOTDIR + "\" + (Get-VendorToolSourceDirectory)		}
+	{	return $QUARTUS_ROOTDIR + "\" + (Get-VendorToolSourceDirectory)    }
 	else
 	{	$EnvSourceDir = ""
 		foreach ($Drive in Get-PSDrive -PSProvider 'FileSystem')
@@ -151,10 +151,10 @@ function Get-AlteraQuartusDirectory
 		}
 	}
 }
-				
-$SourceDirectory =			Get-SourceDirectory $Source (Get-AlteraQuartusDirectory)
-$DestinationDirectory =	Get-DestinationDirectory $Output
-$GHDLBinary =						Get-GHDLBinary $GHDL
+
+$SourceDirectory =      Get-SourceDirectory $Source (Get-AlteraQuartusDirectory)
+$DestinationDirectory =  Get-DestinationDirectory $Output
+$GHDLBinary =            Get-GHDLBinary $GHDL
 
 # create "Altera" directory and change to it
 New-DestinationDirectory $DestinationDirectory
@@ -164,20 +164,32 @@ cd $DestinationDirectory
 $VHDLVersion,$VHDLStandard,$VHDLFlavor = Get-VHDLVariables $VHDL93 $VHDL2008
 
 # define global GHDL Options
-$GHDLOptions = @("-a", "--std=$VHDLStandard", "-fexplicit", "-frelaxed-rules", "--mb-comments", "--warn-binding", "--ieee=$VHDLFlavor", "--no-vital-checks", "-P$DestinationDirectory")
+$GHDLOptions = @(
+	"-a",
+	"-fexplicit",
+	"-frelaxed-rules",
+	"--mb-comments",
+	"-Wbinding",
+	"-Wno-hide",
+	"-Wno-library",
+	"--ieee=$VHDLFlavor",
+	"--no-vital-checks",
+	"--std=$VHDLStandard",
+	"-P$DestinationDirectory"
+)
 
 # extract data from configuration
-# $SourceDir =			$InstallationDirectory["AlteraQuartus"] + "\quartus\eda\sim_lib"
+# $SourceDir =      $InstallationDirectory["AlteraQuartus"] + "\quartus\eda\sim_lib"
 
-$StopCompiling =	$false
-$ErrorCount =			0
+$StopCompiling =  $false
+$ErrorCount =     0
 
 # Cleanup directories
 # ==============================================================================
 if ($Clean)
 {	Write-Host "[ERROR]: '-Clean' is not implemented!" -ForegroundColor Red
 	Exit-CompileScript -1
-	
+
 	Write-Host "Cleaning up vendor directory ..." -ForegroundColor Yellow
 	rm *.cf
 }
@@ -193,9 +205,8 @@ if ((-not $StopCompiling) -and $Altera)
 		"220model.vhd"
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
-	
-	$ErrorCount += 0
-	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+
+	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
@@ -207,9 +218,8 @@ if ((-not $StopCompiling) -and $Altera)
 		"sgate.vhd"
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
-	
-	$ErrorCount += 0
-	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+
+	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
@@ -225,9 +235,8 @@ if ((-not $StopCompiling) -and $Altera)
 		"alt_dspbuilder_package.vhd"
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
-	
-	$ErrorCount += 0
-	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+
+	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
@@ -239,9 +248,8 @@ if ((-not $StopCompiling) -and $Altera)
 		"altera_mf.vhd"
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
-	
-	$ErrorCount += 0
-	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+
+	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
@@ -252,9 +260,8 @@ if ((-not $StopCompiling) -and $Altera)
 		"altera_lnsim_components.vhd"
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
-	
-	$ErrorCount += 0
-	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+
+	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
@@ -268,10 +275,11 @@ if ((-not $StopCompiling) -and $Max)
 		"max_components.vhd"
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
-	
-	$ErrorCount += 0
-	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
-	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+
+	if (Test-Path $SourceFiles[0])
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	}
 }
 
 # compile maxii library
@@ -282,10 +290,11 @@ if ((-not $StopCompiling) -and $Max)
 		"maxii_components.vhd"
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
-	
-	$ErrorCount += 0
-	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
-	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+
+	if (Test-Path $SourceFiles[0])
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	}
 }
 
 # compile maxv library
@@ -296,10 +305,11 @@ if ((-not $StopCompiling) -and $Max)
 		"maxv_components.vhd"
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
-	
-	$ErrorCount += 0
-	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
-	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+
+	if (Test-Path $SourceFiles[0])
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	}
 }
 
 # compile arriaii library
@@ -312,10 +322,11 @@ if ((-not $StopCompiling) -and $Arria)
 		"arriaii_hssi_atoms.vhd"
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
-	
-	$ErrorCount += 0
-	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
-	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+
+	if (Test-Path $SourceFiles[0])
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	}
 }
 
 # compile arriaii_pcie_hip library
@@ -326,10 +337,11 @@ if ((-not $StopCompiling) -and $Arria)
 		"arriaii_pcie_hip_atoms.vhd"
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
-	
-	$ErrorCount += 0
-	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
-	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+
+	if (Test-Path $SourceFiles[0])
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	}
 }
 
 # compile arriaiigz library
@@ -341,10 +353,11 @@ if ((-not $StopCompiling) -and $Arria)
 		"arriaiigz_hssi_components.vhd"
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
-	
-	$ErrorCount += 0
-	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
-	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+
+	if (Test-Path $SourceFiles[0])
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	}
 }
 
 # compile arriav library
@@ -357,10 +370,11 @@ if ((-not $StopCompiling) -and $Arria)
 		"arriav_hssi_atoms.vhd"
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
-	
-	$ErrorCount += 0
-	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
-	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+
+	if (Test-Path $SourceFiles[0])
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	}
 }
 
 # compile arriavgz library
@@ -373,10 +387,11 @@ if ((-not $StopCompiling) -and $Arria)
 		"arriavgz_hssi_atoms.vhd"
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
-	
-	$ErrorCount += 0
-	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
-	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+
+	if (Test-Path $SourceFiles[0])
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	}
 }
 
 # compile arriavgz_pcie_hip library
@@ -387,10 +402,11 @@ if ((-not $StopCompiling) -and $Arria)
 		"arriavgz_pcie_hip_atoms.vhd"
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
-	
-	$ErrorCount += 0
-	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
-	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+
+	if (Test-Path $SourceFiles[0])
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	}
 }
 
 # compile cycloneiv library
@@ -403,10 +419,11 @@ if ((-not $StopCompiling) -and $Cyclone)
 		"cycloneiv_hssi_atoms.vhd"
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
-	
-	$ErrorCount += 0
-	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
-	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+
+	if (Test-Path $SourceFiles[0])
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	}
 }
 
 # compile cycloneiv_pcie_hip library
@@ -417,10 +434,11 @@ if ((-not $StopCompiling) -and $Cyclone)
 		"cycloneiv_pcie_hip_atoms.vhd"
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
-	
-	$ErrorCount += 0
-	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
-	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+
+	if (Test-Path $SourceFiles[0])
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	}
 }
 
 # compile cycloneive library
@@ -431,10 +449,11 @@ if ((-not $StopCompiling) -and $Cyclone)
 		"cycloneive_components.vhd"
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
-	
-	$ErrorCount += 0
-	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
-	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+
+	if (Test-Path $SourceFiles[0])
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	}
 }
 
 # compile cyclonev library
@@ -447,10 +466,11 @@ if ((-not $StopCompiling) -and $Cyclone)
 		"cyclonev_hssi_atoms.vhd"
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
-	
-	$ErrorCount += 0
-	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
-	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+
+	if (Test-Path $SourceFiles[0])
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	}
 }
 
 # compile stratixiv library
@@ -463,10 +483,11 @@ if ((-not $StopCompiling) -and $Stratix)
 		"stratixiv_hssi_atoms.vhd"
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
-	
-	$ErrorCount += 0
-	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
-	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+
+	if (Test-Path $SourceFiles[0])
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	}
 }
 
 # compile stratixiv_pcie_hip library
@@ -477,10 +498,11 @@ if ((-not $StopCompiling) -and $Stratix)
 		"stratixiv_pcie_hip_atoms.vhd"
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
-	
-	$ErrorCount += 0
-	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
-	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+
+	if (Test-Path $SourceFiles[0])
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	}
 }
 
 # compile stratixv library
@@ -493,10 +515,11 @@ if ((-not $StopCompiling) -and $Stratix)
 		"stratixv_hssi_atoms.vhd"
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
-	
-	$ErrorCount += 0
-	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
-	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+
+	if (Test-Path $SourceFiles[0])
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	}
 }
 
 # compile stratixv_pcie_hip library
@@ -507,10 +530,11 @@ if ((-not $StopCompiling) -and $Stratix)
 		"stratixv_pcie_hip_atoms.vhd"
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
-	
-	$ErrorCount += 0
-	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
-	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+
+	if (Test-Path $SourceFiles[0])
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	}
 }
 
 # compile fiftyfivenm library
@@ -521,10 +545,11 @@ if ((-not $StopCompiling) -and $Nanometer)
 		"fiftyfivenm_components.vhd"
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
-	
-	$ErrorCount += 0
-	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
-	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+
+	if (Test-Path $SourceFiles[0])
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	}
 }
 
 # compile twentynm library
@@ -539,17 +564,18 @@ if ((-not $StopCompiling) -and $Nanometer)
 		"twentynm_hssi_atoms.vhd"
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
-	
-	$ErrorCount += 0
-	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
-	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+
+	if (Test-Path $SourceFiles[0])
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	}
 }
 
 Write-Host "--------------------------------------------------------------------------------"
 Write-Host "Compiling Altera libraries " -NoNewline
 if ($ErrorCount -gt 0)
-{	Write-Host "[FAILED]" -ForegroundColor Red				}
+{	Write-Host "[FAILED]" -ForegroundColor Red        }
 else
-{	Write-Host "[SUCCESSFUL]" -ForegroundColor Green	}
+{	Write-Host "[SUCCESSFUL]" -ForegroundColor Green  }
 
 Exit-CompileScript
