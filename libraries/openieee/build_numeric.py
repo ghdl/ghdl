@@ -5,7 +5,7 @@
 #  The algorithms are very simple: carry ripple adder, restoring division.
 #  This file is part of GHDL.
 #  Both this file and the outputs of this file are copyrighted.
-#  Copyright (C) 2015 Tristan Gingold
+#  Copyright (C) 2015-2021 Tristan Gingold
 #
 #  GHDL is free software; you can redistribute it and/or modify it under
 #  the terms of the GNU General Public License as published by the Free
@@ -18,7 +18,7 @@
 #  for more details.
 #
 #  You should have received a copy of the GNU General Public License
-#  along with GCC; see the file COPYING2.  If not see
+#  along with GHDL; see the file COPYING.md.  If not see
 #  <http://www.gnu.org/licenses/>.
 
 import re

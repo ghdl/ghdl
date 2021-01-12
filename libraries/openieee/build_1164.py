@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #  Generate the body of ieee.std_logic_1164 from a template.
 #  This file is part of GHDL.
-#  Copyright (C) 2015 Tristan Gingold
+#  Copyright (C) 2015-2021 Tristan Gingold
 #
 #  GHDL is free software; you can redistribute it and/or modify it under
 #  the terms of the GNU General Public License as published by the Free
@@ -14,7 +14,7 @@
 #  for more details.
 #
 #  You should have received a copy of the GNU General Public License
-#  along with GCC; see the file COPYING2.  If not see
+#  along with GHDL; see the file COPYING.md.  If not see
 #  <http://www.gnu.org/licenses/>.
 
 import sys
