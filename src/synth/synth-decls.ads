@@ -59,6 +59,9 @@ package Synth.Decls is
                                  Decls : Iir;
                                  Is_Subprg : Boolean := False);
 
+   procedure Finalize_Declaration (Syn_Inst : Synth_Instance_Acc;
+                                   Decl : Iir;
+                                   Is_Subprg : Boolean);
    procedure Finalize_Declarations (Syn_Inst : Synth_Instance_Acc;
                                     Decls : Iir;
                                     Is_Subprg : Boolean := False);

@@ -232,7 +232,10 @@ package Synth.Environment is
    procedure Add_Conc_Assign
      (Wid : Wire_Id; Val : Net; Off : Uns32; Stmt : Source.Syn_Src);
 
-   procedure Finalize_Assignments (Ctxt : Builders.Context_Acc);
+   procedure Finalize_Assignment
+     (Ctxt : Builders.Context_Acc; Wid : Wire_Id);
+
+   procedure Finalize_Wires;
 
    --  A static wire is a wire_signal which has one whole (same width as the
    --  wire) assignment and whose assignment value is a const net.

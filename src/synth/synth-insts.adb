@@ -966,8 +966,12 @@ package body Synth.Insts is
          New_Sname_User (Get_Identifier (Stmt), Get_Sname (Syn_Inst)));
       Set_Location (Inst, Stmt);
 
+      Push_Phi;
+
       Synth_Instantiate_Module
         (Syn_Inst, Inst, Inst_Obj, Get_Port_Map_Aspect_Chain (Stmt));
+
+      Pop_And_Merge_Phi (Get_Build (Syn_Inst), Stmt);
    end Synth_Direct_Instantiation_Statement;
 
    procedure Synth_Design_Instantiation_Statement
@@ -1056,6 +1060,8 @@ package body Synth.Insts is
    begin
       pragma Assert (Get_Component_Configuration (Stmt) /= Null_Node);
       pragma Assert (Get_Kind (Aspect) = Iir_Kind_Entity_Aspect_Entity);
+
+      Push_Phi;
 
       Inst_Name := New_Sname_User (Get_Identifier (Stmt),
                                    Get_Sname (Syn_Inst));
@@ -1186,6 +1192,10 @@ package body Synth.Insts is
             Next_Association_Interface (Assoc, Assoc_Inter);
          end loop;
       end;
+
+      Pop_And_Merge_Phi (Ctxt, Stmt);
+
+      Finalize_Declarations (Comp_Inst, Get_Port_Chain (Component));
    end Synth_Component_Instantiation_Statement;
 
    procedure Synth_Dependencies (Parent_Inst : Synth_Instance_Acc; Unit : Node)
@@ -1536,9 +1546,10 @@ package body Synth.Insts is
          Synth_Verification_Units (Syn_Inst, Arch);
       end if;
 
-      Finalize_Assignments (Get_Build (Syn_Inst));
-
       Finalize_Declarations (Syn_Inst, Get_Declaration_Chain (Arch));
+      Finalize_Declarations (Syn_Inst, Get_Port_Chain (Entity));
+
+      Finalize_Wires;
 
       --  Remove unused gates.  This is not only an optimization but also
       --  a correctness point: there might be some unsynthesizable gates, like

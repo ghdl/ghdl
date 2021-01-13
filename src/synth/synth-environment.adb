@@ -76,7 +76,9 @@ package body Synth.Environment is
       --  Check the wire was not already free.
       pragma Assert (Wire_Rec.Kind /= Wire_None);
 
+      --  All the assignments have been handled.
       pragma Assert (Wire_Rec.Cur_Assign = No_Seq_Assign);
+
       Wire_Rec.Kind := Wire_None;
    end Free_Wire;
 
@@ -398,7 +400,11 @@ package body Synth.Environment is
          when True =>
             --  Create a net.  No inference to do.
             Res := Synth.Context.Get_Memtyp_Net (Ctxt, Asgn_Rec.Val.Val);
-            Add_Conc_Assign (Wid, Res, 0, Stmt);
+            if Wire_Rec.Kind = Wire_Enable then
+               Connect (Get_Input (Get_Net_Parent (Outport), 0), Res);
+            else
+               Add_Conc_Assign (Wid, Res, 0, Stmt);
+            end if;
          when False =>
             P := Asgn_Rec.Val.Asgns;
             pragma Assert (P /= No_Partial_Assign);
@@ -412,8 +418,10 @@ package body Synth.Environment is
                   elsif Wire_Rec.Kind = Wire_Enable then
                      --  Possibly infere a idff/iadff.
                      pragma Assert (Pa.Offset = 0);
+                     pragma Assert (Pa.Next = No_Partial_Assign);
                      Res := Inference.Infere_Assert
                        (Ctxt, Pa.Value, Outport, Stmt);
+                     Connect (Get_Input (Get_Net_Parent (Outport), 0), Res);
                   else
                      --  Note: lifetime is currently based on the kind of the
                      --   wire (variable -> not reused beyond this process).
@@ -421,9 +429,8 @@ package body Synth.Environment is
                      Res := Inference.Infere
                        (Ctxt, Pa.Value, Pa.Offset, Outport, Stmt,
                         Wire_Rec.Kind = Wire_Variable);
+                     Add_Conc_Assign (Wid, Res, Pa.Offset, Stmt);
                   end if;
-
-                  Add_Conc_Assign (Wid, Res, Pa.Offset, Stmt);
                   P := Pa.Next;
                end;
             end loop;
@@ -996,9 +1003,10 @@ package body Synth.Environment is
    end Finalize_Complex_Assignment;
 
    procedure Finalize_Assignment
-     (Ctxt : Builders.Context_Acc; Wire_Rec : Wire_Id_Record)
+     (Ctxt : Builders.Context_Acc; Wid : Wire_Id)
    is
       use Vhdl.Nodes;
+      Wire_Rec : Wire_Id_Record renames Wire_Id_Table.Table (Wid);
       Gate_Inst : constant Instance := Get_Net_Parent (Wire_Rec.Gate);
       Inp : constant Input := Get_Input (Gate_Inst, 0);
       Value : Net;
@@ -1036,15 +1044,17 @@ package body Synth.Environment is
                   Finalize_Complex_Assignment (Ctxt, Wire_Rec, Value);
                end if;
             end;
+            Wire_Rec.Final_Assign := No_Conc_Assign;
          when others =>
             --  Multiple assignments.
             Finalize_Complex_Assignment (Ctxt, Wire_Rec, Value);
+            Wire_Rec.Final_Assign := No_Conc_Assign;
       end case;
 
       Connect (Inp, Value);
    end Finalize_Assignment;
 
-   procedure Finalize_Assignments (Ctxt : Builders.Context_Acc) is
+   procedure Finalize_Wires is
    begin
       pragma Assert (Phis_Table.Last = No_Phi_Id);
       --  pragma Assert (Assign_Table.Last = No_Seq_Assign);
@@ -1053,14 +1063,15 @@ package body Synth.Environment is
          declare
             Wire_Rec : Wire_Id_Record renames Wire_Id_Table.Table (Wid);
          begin
-            pragma Assert (Wire_Rec.Kind /= Wire_None);
-            pragma Assert (Wire_Rec.Cur_Assign = No_Seq_Assign);
-            Finalize_Assignment (Ctxt, Wire_Rec);
+            pragma Assert (Wire_Rec.Kind = Wire_None
+                             or Wire_Rec.Kind = Wire_Enable);
+            pragma Assert (Wire_Rec.Final_Assign = No_Conc_Assign);
+            null;
          end;
       end loop;
 
       Wire_Id_Table.Set_Last (No_Wire_Id);
-   end Finalize_Assignments;
+   end Finalize_Wires;
 
    --  Sort the LEN first wires of chain W (linked by Chain) in Id increasing
    --  values.  The result is assigned to FIRST and the first non-sorted wire

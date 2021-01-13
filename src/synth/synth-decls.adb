@@ -1094,14 +1094,24 @@ package body Synth.Decls is
          pragma Assert (Is_Error (Syn_Inst));
          return;
       end if;
+      if Vt.Val.Kind = Value_Net then
+         --  Could be a net for in ports.
+         return;
+      end if;
+
+      Finalize_Assignment (Get_Build (Syn_Inst), Vt.Val.W);
 
       Gate_Net := Get_Wire_Gate (Vt.Val.W);
       Gate := Get_Net_Parent (Gate_Net);
       case Get_Id (Gate) is
-         when Id_Signal =>
+         when Id_Signal
+            | Id_Output
+            | Id_Inout =>
             Drv := Get_Input_Net (Gate, 0);
             Def_Val := No_Net;
-         when Id_Isignal =>
+         when Id_Isignal
+            | Id_Ioutput
+            | Id_Iinout =>
             Drv := Get_Input_Net (Gate, 0);
             Def_Val := Get_Input_Net (Gate, 1);
          when others =>
@@ -1140,14 +1150,18 @@ package body Synth.Decls is
                declare
                   Vt : constant Valtyp := Get_Value (Syn_Inst, Decl);
                begin
-                  if Vt /= No_Valtyp then
+                  if Vt /= No_Valtyp
+                    and then Vt.Val.Kind = Value_Wire
+                  then
+                     Finalize_Assignment (Get_Build (Syn_Inst), Vt.Val.W);
                      Free_Wire (Vt.Val.W);
                   end if;
                end;
             end if;
          when Iir_Kind_Constant_Declaration =>
             null;
-         when Iir_Kind_Signal_Declaration =>
+         when Iir_Kind_Signal_Declaration
+            | Iir_Kind_Interface_Signal_Declaration =>
             pragma Assert (not Is_Subprg);
             Finalize_Signal (Syn_Inst, Decl);
          when Iir_Kind_Anonymous_Signal_Declaration =>

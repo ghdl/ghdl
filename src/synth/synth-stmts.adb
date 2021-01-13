@@ -3057,9 +3057,9 @@ package body Synth.Stmts is
       Mark (M, Proc_Pool);
       Instance_Pool := Proc_Pool'Access;
 
-      if Is_Valid (Decls_Chain) then
-         Synth_Declarations (C.Inst, Decls_Chain);
-      end if;
+      Push_Phi;
+
+      Synth_Declarations (C.Inst, Decls_Chain);
 
       Set_Wire_Gate (C.W_En, Build_Control_Signal (Syn_Inst, 1, Proc));
       Phi_Assign_Static (C.W_En, Bit1);
@@ -3075,11 +3075,16 @@ package body Synth.Stmts is
          end case;
       end if;
 
-      --  FIXME: free W_En ?
+      Pop_And_Merge_Phi (Ctxt, Proc);
+
+      Finalize_Declarations (C.Inst, Decls_Chain);
 
       Free_Instance (C.Inst);
       Release (M, Proc_Pool);
       Instance_Pool := Prev_Instance_Pool;
+
+      Finalize_Assignment (Ctxt, C.W_En);
+      Free_Wire (C.W_En);
    end Synth_Process_Statement;
 
    function Synth_User_Function_Call
@@ -3167,6 +3172,7 @@ package body Synth.Stmts is
       Synth_Declarations (Blk_Inst, Get_Declaration_Chain (Blk));
       Synth_Concurrent_Statements
         (Blk_Inst, Get_Concurrent_Statement_Chain (Blk));
+      Finalize_Declarations (Blk_Inst, Get_Declaration_Chain (Blk));
 
       Free_Instance (Blk_Inst);
       Release (M, Proc_Pool);
@@ -3440,6 +3446,8 @@ package body Synth.Stmts is
       Synth_Concurrent_Statements
         (Bod_Inst, Get_Concurrent_Statement_Chain (Bod));
 
+      Finalize_Declarations (Bod_Inst, Decls_Chain);
+
       Free_Instance (Bod_Inst);
       Release (M, Proc_Pool);
       Instance_Pool := Prev_Instance_Pool;
@@ -3553,15 +3561,12 @@ package body Synth.Stmts is
             Synth_Procedure_Call (Syn_Inst, Stmt);
             Pop_And_Merge_Phi (Ctxt, Stmt);
          when Iir_Kinds_Process_Statement =>
-            Push_Phi;
             Synth_Process_Statement (Syn_Inst, Stmt);
-            Pop_And_Merge_Phi (Ctxt, Stmt);
          when Iir_Kind_If_Generate_Statement =>
             Synth_If_Generate_Statement (Syn_Inst, Stmt);
          when Iir_Kind_For_Generate_Statement =>
             Synth_For_Generate_Statement (Syn_Inst, Stmt);
          when Iir_Kind_Component_Instantiation_Statement =>
-            Push_Phi;
             if Is_Component_Instantiation (Stmt) then
                declare
                   Comp_Config : constant Node :=
@@ -3579,7 +3584,6 @@ package body Synth.Stmts is
             else
                Synth_Design_Instantiation_Statement (Syn_Inst, Stmt);
             end if;
-            Pop_And_Merge_Phi (Ctxt, Stmt);
          when Iir_Kind_Block_Statement =>
             Synth_Block_Statement (Syn_Inst, Stmt);
          when Iir_Kind_Psl_Default_Clock =>
@@ -3755,6 +3759,37 @@ package body Synth.Stmts is
       end loop;
 
       Synth_Attribute_Values (Unit_Inst, Unit);
+
+      --  Finalize
+      Item := Get_Vunit_Item_Chain (Unit);
+      while Item /= Null_Node loop
+         case Get_Kind (Item) is
+            when Iir_Kind_Psl_Default_Clock
+              | Iir_Kind_Psl_Assert_Directive
+              | Iir_Kind_Psl_Assume_Directive
+              | Iir_Kind_Psl_Restrict_Directive
+              | Iir_Kind_Psl_Cover_Directive =>
+               null;
+            when Iir_Kinds_Concurrent_Signal_Assignment
+               | Iir_Kinds_Process_Statement
+               | Iir_Kinds_Generate_Statement
+               | Iir_Kind_Block_Statement
+               | Iir_Kind_Concurrent_Procedure_Call_Statement
+               | Iir_Kind_Component_Instantiation_Statement =>
+               null;
+            when Iir_Kind_Signal_Declaration
+              | Iir_Kind_Function_Declaration
+              | Iir_Kind_Procedure_Declaration
+              | Iir_Kind_Function_Body
+              | Iir_Kind_Procedure_Body
+              | Iir_Kind_Attribute_Declaration
+              | Iir_Kind_Attribute_Specification =>
+               Finalize_Declaration (Unit_Inst, Item, False);
+            when others =>
+               Error_Kind ("synth_verification_unit(2)", Item);
+         end case;
+         Item := Get_Chain (Item);
+      end loop;
 
       Free_Instance (Unit_Inst);
       Release (M, Proc_Pool);
