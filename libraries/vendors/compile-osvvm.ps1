@@ -110,10 +110,20 @@ $GHDLOptions = @(
 	"-fexplicit",
 	"-frelaxed-rules",
 	"--mb-comments",
-	"-Wbinding",
-	"-Wno-hide",
-	"-Wno-others",
-	"-Wno-static",
+  "-Wbinding"
+)
+if (-not $EnableDebug)
+{	$GHDLOptions += @(
+		"-Wno-hide"
+	)
+}
+if (-not ($EnableVerbose -or $EnableDebug))
+{ $GHDLOptions += @(
+		"-Wno-others",
+		"-Wno-static"
+	)
+}
+$GHDLOptions += @(
 	"--ieee=$VHDLFlavor",
 	"--no-vital-checks",
 	"--std=$VHDLStandard",
@@ -164,7 +174,7 @@ if ((-not $StopCompiling) -and $OSVVM)
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 
-	$ErrorCount +=Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 

@@ -158,10 +158,21 @@ $GHDLOptions = @(
 	"-fexplicit",
 	"-frelaxed-rules",
 	"--mb-comments",
-	"-Wbinding",
-	"-Wno-hide",
-	"-Wno-others",
-	"-Wno-shared",
+	"-Wbinding"
+)
+if (-not $EnableDebug)
+{	$GHDLOptions += @(
+		"-Wno-hide"
+	)
+}
+if (-not ($EnableVerbose -or $EnableDebug))
+{ $GHDLOptions += @(
+		"-Wno-others",
+		"-Wno-static",
+		"-Wno-shared"          # UVVM specific
+	)
+}
+$GHDLOptions += @(
 	"--ieee=$VHDLFlavor",
 	"--no-vital-checks",
 	"--std=$VHDLStandard",

@@ -169,9 +169,21 @@ $GHDLOptions = @(
 	"-fexplicit",
 	"-frelaxed-rules",
 	"--mb-comments",
-	"-Wbinding",
-	"-Wno-hide",
-	"-Wno-library",
+	"-Wbinding"
+)
+if (-not $EnableDebug)
+{	$GHDLOptions += @(
+		"-Wno-hide"
+	)
+}
+if (-not ($EnableVerbose -or $EnableDebug))
+{ $GHDLOptions += @(
+		"-Wno-library",
+		"-Wno-others",
+		"-Wno-static"
+	)
+}
+$GHDLOptions += @(
 	"--ieee=$VHDLFlavor",
 	"--no-vital-checks",
 	"--std=$VHDLStandard",
