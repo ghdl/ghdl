@@ -44,7 +44,7 @@
 [CmdletBinding()]
 param(
 	# Show the embedded help page(s)
-	[switch]$Help =              $false,
+	[switch]$Help =             $false,
 
 	# Compile all libraries and packages.
 	[switch]$All =              $false,
@@ -77,10 +77,10 @@ $EnableDebug =    [bool]$PSCmdlet.MyInvocation.BoundParameters["Debug"]
 $EnableVerbose =  [bool]$PSCmdlet.MyInvocation.BoundParameters["Verbose"] -or $EnableDebug
 
 # load modules from GHDL's 'vendors' library directory
-$EnableVerbose -and  (Write-Host "Loading modules..." -ForegroundColor Gray  ) | Out-Null
-$EnableDebug -and    (Write-Host "  Import-Module $PSScriptRoot\config.psm1 -Verbose:`$$false -Debug:`$$false -ArgumentList `"OSVVM`"" -ForegroundColor DarkGray  ) | Out-Null
+$EnableVerbose -and (Write-Host "Loading modules..." -ForegroundColor Gray  ) | Out-Null
+$EnableDebug -and   (Write-Host "  Import-Module $PSScriptRoot\config.psm1 -Verbose:`$$false -Debug:`$$false -ArgumentList `"OSVVM`"" -ForegroundColor DarkGray                      ) | Out-Null
 Import-Module $PSScriptRoot\config.psm1 -Verbose:$false -ArgumentList "OSVVM"
-$EnableDebug -and    (Write-Host "  Import-Module $PSScriptRoot\shared.psm1 -Verbose:`$$false -Debug:`$$false -ArgumentList @(`"OSVVM`", `"$WorkingDir`")" -ForegroundColor DarkGray  ) | Out-Null
+$EnableDebug -and   (Write-Host "  Import-Module $PSScriptRoot\shared.psm1 -Verbose:`$$false -Debug:`$$false -ArgumentList @(`"OSVVM`", `"$WorkingDir`")" -ForegroundColor DarkGray  ) | Out-Null
 Import-Module $PSScriptRoot\shared.psm1 -Verbose:$false -ArgumentList @("OSVVM", "$WorkingDir")
 
 # Display help if no command was selected
@@ -90,7 +90,7 @@ if ($Help -or (-not ($All -or $OSVVM -or $Clean)))
 }
 
 if ($All)
-{	$OSVVM =      $true
+{	$OSVVM = $true
 }
 
 
@@ -151,30 +151,45 @@ if ($Clean)
 # ==============================================================================
 # compile osvvm library
 if ((-not $StopCompiling) -and $OSVVM)
-{	$Library = "osvvm"
-	$Files = @(
-	  "NamePkg.vhd",
-	  "OsvvmGlobalPkg.vhd",
-	  "VendorCovApiPkg.vhd",
-	  "TranscriptPkg.vhd",
-	  "TextUtilPkg.vhd",
-	  "AlertLogPkg.vhd",
-	  "MessagePkg.vhd",
-	  "SortListPkg_int.vhd",
-	  "RandomBasePkg.vhd",
-	  "RandomPkg.vhd",
-	  "CoveragePkg.vhd",
-	  "MemoryPkg.vhd",
-	  "ScoreboardGenericPkg.vhd",
-	  "ScoreboardPkg_slv.vhd",
-	  "ScoreboardPkg_int.vhd",
-	  "ResolutionPkg.vhd",
-	  "TbUtilPkg.vhd",
-	  "OsvvmContext.vhd"
-	)
-	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
+{	$PkgFiles = @()
+	$CoverageFile = ""
+	$CompilerOrder = Get-Content "$SourceDirectory\osvvm.pro"
+	foreach ($Line in $CompilerOrder)
+	{	if ($Line.StartsWith("#"))
+		{ continue }
+		elseif ($Line.StartsWith("library "))
+		{	$Library = $Line.Substring(8)
+			continue
+		}
+		elseif ($Line.StartsWith("analyze "))
+		{	$SourceFile = $Line.Substring(8) }
+		elseif ($Line.StartsWith("  analyze "))
+		{	if ($CoverageFile -eq "")
+			{	$CoverageFile = $Line.Substring(10)
+				continue
+			}
+			else
+			{	$SourceFile = $Line.Substring(10) }
+		}
+		else
+		{ Write-Host "Unknown parser instruction in compile order file." -ForegroundColor Yellow
+			continue
+		}
 
-	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+		$Path = "$SourceDirectory\$SourceFile"
+		try
+		{	$PkgFiles += Resolve-Path $Path  }
+		catch
+		{	Write-Host "[ERROR]: When resolving path '$Path'." -ForegroundColor Red }
+	}
+
+	if ($EnableDebug)
+	{	Write-Host "    VHDL Library name: $Library" -ForegroundColor DarkGray
+		foreach ($File in $PkgFiles)
+	  {	Write-Host "      $File" -ForegroundColor DarkGray }
+	}
+
+	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $PkgFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 

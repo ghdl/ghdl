@@ -244,10 +244,10 @@ foreach ($VIPDirectory in (Get-ChildItem -Path $SourceDirectory -Directory "*VIP
 
 	if ($EnableDebug)
 	{	Write-Host "    VHDL Library name: $VIPName"    -ForegroundColor DarkGray
-
 		foreach ($File in $VIPFiles)
 	  {	Write-Host "      $File" -ForegroundColor DarkGray }
 	}
+
 	$VIP_Files[$VIPName] = @{
 	  "Variable" =  "UVVM_$VIPVariable";
 	  "Library" =    $VIPName;
