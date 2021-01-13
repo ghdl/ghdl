@@ -77,8 +77,11 @@ $EnableDebug =    [bool]$PSCmdlet.MyInvocation.BoundParameters["Debug"]
 $EnableVerbose =  [bool]$PSCmdlet.MyInvocation.BoundParameters["Verbose"] -or $EnableDebug
 
 # load modules from GHDL's 'vendors' library directory
-Import-Module $PSScriptRoot\config.psm1 -Verbose:$false -Debug:$false -ArgumentList "OSVVM"
-Import-Module $PSScriptRoot\shared.psm1 -Verbose:$false -Debug:$false -ArgumentList @("OSVVM", "$WorkingDir")
+$EnableVerbose -and  (Write-Host "Loading modules..." -ForegroundColor Gray  ) | Out-Null
+$EnableDebug -and    (Write-Host "  Import-Module $PSScriptRoot\config.psm1 -Verbose:`$$false -Debug:`$$false -ArgumentList `"OSVVM`"" -ForegroundColor DarkGray  ) | Out-Null
+Import-Module $PSScriptRoot\config.psm1 -Verbose:$false -ArgumentList "OSVVM"
+$EnableDebug -and    (Write-Host "  Import-Module $PSScriptRoot\shared.psm1 -Verbose:`$$false -Debug:`$$false -ArgumentList @(`"OSVVM`", `"$WorkingDir`")" -ForegroundColor DarkGray  ) | Out-Null
+Import-Module $PSScriptRoot\shared.psm1 -Verbose:$false -ArgumentList @("OSVVM", "$WorkingDir")
 
 # Display help if no command was selected
 if ($Help -or (-not ($All -or $OSVVM -or $Clean)))

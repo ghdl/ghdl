@@ -1,7 +1,6 @@
 # EMACS settings: -*-	tab-width: 2; indent-tabs-mode: t -*-
 # vim: tabstop=2:shiftwidth=2:noexpandtab
 # kate: tab-width 2; replace-tabs off; indent-width 2;
-#
 # ==============================================================================
 #	Authors:						Patrick Lehmann
 #
@@ -48,7 +47,7 @@ $Settings = @{
 		"DestinationDirectory" =  "altera"
 	};
 	"IntelQuartus" =		@{
-		"InstallationDirectory" = "";								# "C:\IntelFPGA\18.1\quartus";
+		"InstallationDirectory" = "";								# "C:\IntelFPGA\20.1\quartus";
 		"SourceDirectory" =       "eda\sim_lib";
 		"DestinationDirectory" =  "intel"
 	};

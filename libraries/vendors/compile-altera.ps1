@@ -108,8 +108,11 @@ $EnableDebug =    [bool]$PSCmdlet.MyInvocation.BoundParameters["Debug"]
 $EnableVerbose =  [bool]$PSCmdlet.MyInvocation.BoundParameters["Verbose"] -or $EnableDebug
 
 # load modules from GHDL's 'vendors' library directory
-Import-Module $PSScriptRoot\config.psm1 -Verbose:$false -Debug:$false -ArgumentList "AlteraQuartus"
-Import-Module $PSScriptRoot\shared.psm1 -Verbose:$false -Debug:$false -ArgumentList @("Altera Quartus", "$WorkingDir")
+$EnableVerbose -and  (Write-Host "Loading modules..." -ForegroundColor Gray  ) | Out-Null
+$EnableDebug -and    (Write-Host "  Import-Module $PSScriptRoot\config.psm1 -Verbose:`$$false -Debug:`$$false -ArgumentList `"AlteraQuartus`"" -ForegroundColor DarkGray  ) | Out-Null
+Import-Module $PSScriptRoot\config.psm1 -Verbose:$false -ArgumentList "AlteraQuartus"
+$EnableDebug -and    (Write-Host "  Import-Module $PSScriptRoot\shared.psm1 -Verbose:`$$false -Debug:`$$false -ArgumentList @(`"Altera Quartus`", `"$WorkingDir`")" -ForegroundColor DarkGray  ) | Out-Null
+Import-Module $PSScriptRoot\shared.psm1 -Verbose:$false -ArgumentList @("Altera Quartus", "$WorkingDir")
 
 # Display help if no command was selected
 $Help = $Help -or (-not ($All -or $Altera -or $Max -or $Cyclone -or $Arria -or $Stratix -or $Nanometer -or $Clean))

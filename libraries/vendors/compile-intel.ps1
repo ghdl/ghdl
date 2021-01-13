@@ -138,8 +138,8 @@ function Get-AlteraQuartusDirectory
 		foreach ($Drive in Get-PSDrive -PSProvider 'FileSystem')
 		{	$Path = $Drive.Name + ":\" + "Altera"
 			if (Test-Path $Path -PathType Container)
-			{	foreach ($Major in 16..13)
-				{	foreach ($Minor in 3..0)
+			{	foreach ($Major in 21..13)
+				{	foreach ($Minor in 5..0)
 					{	$Dir = $Path + "\" + $Major + "." + $Minor + "\quartus"
 						if (Test-Path $Dir -PathType Container)
 						{	$EnvSourceDir = $Dir + "\" + (Get-VendorToolSourceDirectory)
