@@ -153,9 +153,22 @@ if ($Clean)
 if ((-not $StopCompiling) -and $OSVVM)
 {	$PkgFiles = @()
 	$CoverageFile = ""
-	$CompilerOrder = Get-Content "$SourceDirectory\osvvm.pro"
+
+	$CompilerOrderFile = "osvvm.pro"
+	$EnableVerbose -and (Write-Host "  Search for 'osvvm' directory..." -ForegroundColor Gray                          ) | Out-Null
+	if (Test-Path "$SourceDirectory\$CompilerOrderFile")
+	{	$PackageDirectory = $SourceDirectory	       }
+	elseif (Test-Path "$SourceDirectory\osvvm\$CompilerOrderFile")
+	{	$PackageDirectory = "$SourceDirectory\osvvm" }
+	$EnableDebug -and   (Write-Host "    Found '$CompilerOrderFile' in '$PackageDirectory'" -ForegroundColor DarkGray  ) | Out-Null
+
+	$CompilerOrder = Get-Content "$PackageDirectory\osvvm.pro"
 	foreach ($Line in $CompilerOrder)
-	{	if ($Line.StartsWith("#"))
+	{	if ($Line.StartsWith("#") -or $Line -eq "")
+		{ continue }
+		elseif ($Line.StartsWith("if"))
+		{ continue }
+		elseif ($Line.StartsWith("}"))
 		{ continue }
 		elseif ($Line.StartsWith("library "))
 		{	$Library = $Line.Substring(8)
@@ -173,10 +186,11 @@ if ((-not $StopCompiling) -and $OSVVM)
 		}
 		else
 		{ Write-Host "Unknown parser instruction in compile order file." -ForegroundColor Yellow
+			Write-Host "  $Line"
 			continue
 		}
 
-		$Path = "$SourceDirectory\$SourceFile"
+		$Path = "$PackageDirectory\$SourceFile"
 		try
 		{	$PkgFiles += Resolve-Path $Path  }
 		catch
