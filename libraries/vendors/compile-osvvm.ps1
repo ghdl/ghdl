@@ -49,8 +49,19 @@ param(
 	# Compile all libraries and packages.
 	[switch]$All =              $false,
 
-	# Compile all OSVVM packages.
+	# Compile all OSVVM packages (utility library and common packages).
 	[switch]$OSVVM =            $false,
+		# Compile all OSVVM 'utility' packages.
+		[switch]$OSVVM_Utilities =          $false,
+		# Compile all OSVVM 'common' packages.
+		[switch]$OSVVM_Common =             $false,
+
+	# Compile all OSVVM verfication IPs.
+	[switch]$OSVVM_VIP =        $false,
+		# Compile OSVVM's AXI4 models (AXI4, AXI4-Lite, AXI4-Stream).
+		[switch]$OSVVM_VIP_AXI4 =           $false,
+		# Compile OSVVM's UART model.
+		[switch]$OSVVM_VIP_UART =           $false,
 
 	# Clean up directory before analyzing.
 	[switch]$Clean =            $false,
@@ -84,13 +95,25 @@ $EnableDebug -and   (Write-Host "  Import-Module $PSScriptRoot\shared.psm1 -Verb
 Import-Module $PSScriptRoot\shared.psm1 -Verbose:$false -ArgumentList @("OSVVM", "$WorkingDir")
 
 # Display help if no command was selected
-if ($Help -or (-not ($All -or $OSVVM -or $Clean)))
+if ($Help -or (-not ($All -or $Clean -or
+                    ($OSVVM -or     ($OSVVM_Utilities -or $OSVVM_Common)) -or
+                    ($OSVVM_VIP -or ($OSVVM_VIP_AXI4 -or $OSVVM_VIP_UART))
+	)))
 {	Get-Help $MYINVOCATION.InvocationName -Detailed
 	Exit-CompileScript
 }
 
 if ($All)
-{	$OSVVM = $true
+{	$OSVVM =                    $true
+	$OSVVM_VIP =                $true
+}
+if ($OSVVM)
+{	$OSVVM_Utilities =          $true
+	$OSVVM_Common =             $true
+}
+if ($OSVVM_VIP)
+{	$OSVVM_VIP_AXI4 =           $true
+	$OSVVM_VIP_UART =           $true
 }
 
 
@@ -130,8 +153,6 @@ $GHDLOptions += @(
 	"-P$DestinationDirectory"
 )
 
-# extract data from configuration
-# $SourceDir =      $InstallationDirectory["AlteraQuartus"] + "\quartus\eda\sim_lib"
 
 $StopCompiling =  $false
 $ErrorCount =     0
@@ -147,31 +168,97 @@ if ($Clean)
 }
 
 
-# OSVVM packages
-# ==============================================================================
-# compile osvvm library
-if ((-not $StopCompiling) -and $OSVVM)
-{	$PkgFiles = @()
+function Get-CompileOrderedFiles
+{	<#
+		.SYNOPSIS
+		Read *.pro files
+
+		.DESCRIPTION
+		Recursive function to read *.pro files
+
+		.PARAMETER CurrentDirectory
+		Current working directory. All paths in *.pro files are relative to this directory.
+		.PARAMETER CompileOrderFile
+		*.pro file to read and analyze
+		.PARAMETER Level
+		Level since root directory
+	#>
+	[CmdletBinding()]
+	param(
+		[string]$CurrentDirectory,
+		[string]$CompileOrderFile,
+		[int]$Level = 0
+	)
+
+#	Write-Host "$CurrentDirectory - $CompileOrderFile - $Level"
+
+	$FileSets =  [ordered]@{}
+	$Libraries = [ordered]@{}
+	$Libraries["work"] = @{
+		"Library" = "work";
+		"Files"   = @()
+	}
 	$CoverageFile = ""
 
-	$CompilerOrderFile = "osvvm.pro"
-	$EnableVerbose -and (Write-Host "  Search for 'osvvm' directory..." -ForegroundColor Gray                          ) | Out-Null
-	if (Test-Path "$SourceDirectory\$CompilerOrderFile")
-	{	$PackageDirectory = $SourceDirectory	       }
-	elseif (Test-Path "$SourceDirectory\osvvm\$CompilerOrderFile")
-	{	$PackageDirectory = "$SourceDirectory\osvvm" }
-	$EnableDebug -and   (Write-Host "    Found '$CompilerOrderFile' in '$PackageDirectory'" -ForegroundColor DarkGray  ) | Out-Null
-
-	$CompilerOrder = Get-Content "$PackageDirectory\osvvm.pro"
-	foreach ($Line in $CompilerOrder)
+	$CompileOrder = Get-Content "$CurrentDirectory\$CompileOrderFile"
+	foreach ($Line in $CompileOrder)
 	{	if ($Line.StartsWith("#") -or $Line -eq "")
 		{ continue }
+		elseif ($Line.StartsWith("include "))
+		{	$IncludeFile = $Line.Substring(8)
+			$File = "$CurrentDirectory\$IncludeFile"
+			if (Test-Path $File)
+			{	$Dir = Split-Path -Path $File -Resolve
+				$File = Split-Path -Path $File -Resolve -Leaf
+
+				if ($Level -eq 0) # VIP Level
+				{	$VIPName = Split-Path -Path $Dir -Leaf
+					$Lib = Get-CompileOrderedFiles $Dir $File ($Level + 1)
+
+					$VIPName = $VIPName.ToUpper()
+					$VariableName = switch ( $VIPName )
+						{	"OSVVM"  { "OSVVM_Utilities"    }
+							"COMMON" { "OSVVM_Common"       }
+							default  { "OSVVM_VIP_$VIPName" }
+						}
+
+					$FileSets[$VIPName] = @{
+						"Variable" =  $VariableName;
+						"Component" = $VIPName;
+						"Libraries" = $Lib
+					}
+				}
+				else
+				{	$Lib = Get-CompileOrderedFiles $Dir $File ($Level + 1)
+					foreach ($LibName in $Lib.Keys)
+					{	if ($LibName -eq "work")
+						{	$LibraryName = $Libraries["work"]["Library"]
+							$Libraries[$LibraryName]["Files"] += $Lib["work"]["Files"]
+						}
+						elseif ($Libraries.Contains($LibName))
+						{	$Libraries[$LibName]["Files"] += $Lib[$LibName]["Files"] }
+						else
+						{	$Libraries[$LibName] = @{
+								"Library" = $LibName;
+								"Files" =   $Lib[$LibName]["Files"]
+							}
+						}
+					} # for LibName
+				} # Level
+			} # Test-Path
+			continue
+		} # include
 		elseif ($Line.StartsWith("if"))
 		{ continue }
 		elseif ($Line.StartsWith("}"))
 		{ continue }
 		elseif ($Line.StartsWith("library "))
-		{	$Library = $Line.Substring(8)
+		{	$LibraryName = $Line.Substring(8)
+			$Libraries["work"]["Library"] = $LibraryName
+			$Libraries[$LibraryName] = @{
+				"Library" = $LibraryName;
+				"Files"   = @()
+			}
 			continue
 		}
 		elseif ($Line.StartsWith("analyze "))
@@ -185,30 +272,76 @@ if ((-not $StopCompiling) -and $OSVVM)
 			{	$SourceFile = $Line.Substring(10) }
 		}
 		else
-		{ Write-Host "Unknown parser instruction in compile order file." -ForegroundColor Yellow
+		{ Write-Host "[ERROR]: Unknown instruction in compile order file." -ForegroundColor Red
 			Write-Host "  $Line"
 			continue
 		}
 
-		$Path = "$PackageDirectory\$SourceFile"
+		$Path = "$CurrentDirectory\$SourceFile"
 		try
-		{	$PkgFiles += Resolve-Path $Path  }
+		{	$LibraryName = $Libraries["work"]["Library"]
+			$Libraries[$LibraryName]["Files"] += Resolve-Path $Path  }
 		catch
 		{	Write-Host "[ERROR]: When resolving path '$Path'." -ForegroundColor Red }
 	}
 
-	if ($EnableDebug)
-	{	Write-Host "    VHDL Library name: $Library" -ForegroundColor DarkGray
-		foreach ($File in $PkgFiles)
-	  {	Write-Host "      $File" -ForegroundColor DarkGray }
+	if ($Level -eq 0)
+	{	return $FileSets	}
+	else
+	{	return $Libraries }
+}
+
+
+$CompileOrderFile = "OsvvmLibraries.pro"
+if (Test-Path "$SourceDirectory\$CompileOrderFile")
+{	$FileSets = Get-CompileOrderedFiles $SourceDirectory $CompileOrderFile }
+else
+{	Write-Host "[ERROR]: File '$CompileOrderFile' not found." -ForegroundColor Red }
+
+
+#	$CompileOrderFile = "osvvm.pro"
+#	$EnableVerbose -and (Write-Host "  Search for 'osvvm' directory..." -ForegroundColor Gray                          ) | Out-Null
+#	if (Test-Path "$SourceDirectory\$CompileOrderFile")
+#	{	$PackageDirectory = $SourceDirectory	       }
+#	elseif (Test-Path "$SourceDirectory\osvvm\$CompileOrderFile")
+#	{	$PackageDirectory = "$SourceDirectory\osvvm" }
+#	$EnableDebug -and   (Write-Host "    Found '$CompileOrderFile' in '$PackageDirectory'" -ForegroundColor DarkGray  ) | Out-Null
+
+# Analyze OSVVM library and models
+# ==============================================================================
+foreach ($VIPName in $FileSets.Keys)
+{	$VariableName = $FileSets[$VIPName]["Variable"]
+	try
+	{	$Enabled = Get-Variable $VariableName -ValueOnly }
+	catch
+	{	Write-Host "[ERROR]: Found a new OSVVM component not supported by this script. Skipping." -ForegroundColor Red
+		continue
 	}
 
-	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $PkgFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
-	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	if ((-not $StopCompiling) -and (Get-Variable $VariableName -ValueOnly))
+	{	Write-Host ("Component: " + $FileSets[$VIPName]["Component"]) -Foreground Magenta
+
+		foreach ($LibraryName in $FileSets[$VIPName]["Libraries"].Keys)
+		{	if ($LibraryName -eq "work")
+			{	if ($FileSets[$VIPName]["Libraries"][$LibraryName]["Files"].Count -ne 0)
+				{	Write-Host ("[ERROR]: Library 'works' contains " + $FileSets[$VIPName]["Libraries"][$LibraryName]["Files"].Count + " files.") -ForegroundColor Red
+					foreach ($File in $FileSets[$VIPName]["Libraries"][$LibraryName]["Files"])
+					{	Write-Host "  $File" -Foreground Red }
+				}
+				continue
+			}
+
+			$Library =      $FileSets[$VIPName]["Libraries"][$LibraryName]["Library"]
+			$SourceFiles =  $FileSets[$VIPName]["Libraries"][$LibraryName]["Files"]
+
+			$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+			$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+		}
+	}
 }
 
 Write-Host "--------------------------------------------------------------------------------"
-Write-Host "Compiling OSVVM packages " -NoNewline
+Write-Host "Compiling OSVVM " -NoNewline
 if ($ErrorCount -gt 0)
 {	Write-Host "[FAILED]" -ForegroundColor Red        }
 else

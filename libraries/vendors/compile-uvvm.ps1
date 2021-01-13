@@ -51,12 +51,12 @@ param(
 
 	# Compile all UVVM packages.
 	[switch]$UVVM =               $false,
-	# Compile all UVVM Utility packages.
-	[switch]$UVVM_Utilities =     $false,
-	# Compile all UVVM VCC Framework packages.
-	[switch]$UVVM_VCC_Framework = $false,
+		# Compile all UVVM Utility packages.
+		[switch]$UVVM_Utilities =           $false,
+		# Compile all UVVM VCC Framework packages.
+		[switch]$UVVM_VCC_Framework =       $false,
 	# Compile all UVVM Verification IPs (VIPs).
-	[switch]$UVVM_VIP =                   $false,
+	[switch]$UVVM_VIP =           $false,
 	  # Compile VIP: Avalon_MM
 	  [switch]$UVVM_VIP_Avalon_MM =       $false,
 	  # Compile VIP: AXI-Lite
@@ -114,7 +114,8 @@ if ($Help -or (-not ($All -or $Clean -or
                     ($UVVM -or      ($UVVM_Utilities -or $UVVM_VVC_Framework)) -or
                     ($UVVM_VIP -or  ($UVVM_VIP_Avalon_MM -or $UVVM_VIP_AXI_Lite -or $UVVM_VIP_AXI_Stream -or
                                      $UVVM_VIP_Clock_Generator -or $UVVM_VIP_GPIO -or $UVVM_VIP_I2C -or $UVVM_VIP_SBI -or
-                                     $UVVM_VIP_Scoreboard -or $UVVM_VIP_SPI -or $UVVM_VIP_UART))    )))
+                                     $UVVM_VIP_Scoreboard -or $UVVM_VIP_SPI -or $UVVM_VIP_UART))
+	)))
 {	Get-Help $MYINVOCATION.InvocationName -Detailed
 	Exit-CompileScript
 }
@@ -179,8 +180,6 @@ $GHDLOptions += @(
 	"-P$DestinationDirectory"
 )
 
-# extract data from configuration
-# $SourceDir =      $InstallationDirectory["AlteraQuartus"] + "\quartus\eda\sim_lib"
 
 $StopCompiling =  $false
 $ErrorCount =     0
@@ -228,8 +227,8 @@ foreach ($VIPDirectory in (Get-ChildItem -Path $SourceDirectory -Directory "*VIP
 	$EnableDebug -and   (Write-Host "    Reading compile order from '$SourceDirectory\$VIPName\script\compile_order.txt'" -ForegroundColor DarkGray ) | Out-Null
 
 	$VIPFiles = @()
-	$CompilerOrder = Get-Content "$SourceDirectory\$VIPName\script\compile_order.txt"
-	foreach ($Line in $CompilerOrder)
+	$CompileOrder = Get-Content "$SourceDirectory\$VIPName\script\compile_order.txt"
+	foreach ($Line in $CompileOrder)
 	{	if ($Line.StartsWith("# "))
 		{	if ($Line.StartsWith("# library "))
 			{	$VIPName = $Line.Substring(10) }
@@ -252,7 +251,7 @@ foreach ($VIPDirectory in (Get-ChildItem -Path $SourceDirectory -Directory "*VIP
 	  "Variable" =  "UVVM_$VIPVariable";
 	  "Library" =    $VIPName;
 	  "Files" =      $VIPFiles
-	};
+	}
 }
 
 
