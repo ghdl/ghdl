@@ -2334,6 +2334,15 @@ package body Vhdl.Sem_Names is
                --  Not a synopsys package.
                return;
          end case;
+         if Get_Identifier
+           (Get_Library (Get_Design_File (Sem.Get_Current_Design_Unit)))
+           = Name_Ieee
+         then
+            --  No error when referenced from an ieee package.  That could
+            --  happen only for synopsys packages, so an error will be
+            --  emitted when the user references the first synopsys package.
+            return;
+         end if;
          Error_Msg_Sem
            (+Name, "use of synopsys package %i needs the -fsynopsys option",
             +Suffix);
