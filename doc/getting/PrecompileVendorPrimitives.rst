@@ -269,8 +269,8 @@ individual parts. In addition, the amount of printout to the console can be
 controlled. Some scripts may offer vendor specific options.
 
 
-For the Bash Scripts:
----------------------
+For Bash Scripts:
+-----------------
 
 * Common parameters to most scripts:
 
