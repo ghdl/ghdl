@@ -36,10 +36,10 @@ def show_diffs(name, ref, res):
 				print('{}.{} unexpected in the result'.format(name, k))
 	elif isinstance(ref, str) and isinstance(res, str):
 		if res != ref:
-			print('{}: mismatch (ref: {}, result: {})'.format(name, res, ref))
+			print('{}: mismatch (ref: {}, result: {})'.format(name, ref, res))
 	elif isinstance(ref, int) and isinstance(res, int):
 		if res != ref:
-			print('{}: mismatch (ref: {}, result: {})'.format(name, res, ref))
+			print('{}: mismatch (ref: {}, result: {})'.format(name, ref, res))
 	elif isinstance(ref, list) and isinstance(res, list):
 		for i in range(min(len(ref), len(res))):
 			show_diffs('{}[{}]'.format(name, i), ref[i], res[i])
@@ -54,7 +54,10 @@ def show_diffs(name, ref, res):
 class JSONTest(TestCase):
 	_LSPTestDirectory = Path(__file__).parent.resolve()
 
-	def _RequestResponse(self, requestFile: Path, responseFile: Optional[Path] = None):
+	subdir = None
+
+	def _RequestResponse(self, requestName: str, responseName: Optional[str] = None):
+		requestFile = self._LSPTestDirectory / self.subdir / requestName
 		# Convert the JSON input file to an LSP string.
 		with requestFile.open('r') as file:
 			res = json_load(file)
@@ -68,12 +71,13 @@ class JSONTest(TestCase):
 		p = subprocess_run(
 			[executable, '-m', 'pyGHDL.cli.lsp'],
 			input=conn.res.encode('utf-8'),
-			stdout=PIPE
-		)
+			cwd=self._LSPTestDirectory / self.subdir,
+			stdout=PIPE)
 		self.assertEqual(p.returncode, 0, "Language server executable exit with a non-zero return code.")
 
-		if responseFile is None:
+		if responseName is None:
 			return
+		responseFile = self._LSPTestDirectory / self.subdir / responseName
 
 		# Check output
 		in_io = BytesIO(p.stdout)
@@ -112,95 +116,67 @@ class JSONTest(TestCase):
 
 
 class Test001_Simple(JSONTest):
-	__subdir = Path("001simple")
+	subdir = Path("001simple")
 
 	def test_Request_Response(self):
-		requestFile = self._LSPTestDirectory / self.__subdir / "cmds.json"
-		responseFile = self._LSPTestDirectory / self.__subdir / "replies.json"
+		self._RequestResponse("cmds.json", "replies.json")
 
-		self._RequestResponse(requestFile, responseFile)
 
 class Test002_Coverage(JSONTest):
-	__subdir = Path("002coverage")
+	subdir = Path("002coverage")
 
-	@skip("deactivated")
 	def test_Request_Response(self):
-		requestFile = self._LSPTestDirectory / self.__subdir / "cmds.json"
-		responseFile = self._LSPTestDirectory / self.__subdir / "replies.json"
+		self._RequestResponse("cmds.json", "replies.json")
 
-		self._RequestResponse(requestFile, responseFile)
 
 class Test003_Errors(JSONTest):
-	__subdir = Path("003errors")
+	subdir = Path("003errors")
 
 	def test_Crash1(self):
-		requestFile = self._LSPTestDirectory / self.__subdir / "crash1.json"
-
-		self._RequestResponse(requestFile)
+		self._RequestResponse("crash1.json")
 
 	def test_Crash2(self):
-		requestFile = self._LSPTestDirectory / self.__subdir / "crash2.json"
+		self._RequestResponse("crash2.json")
 
-		self._RequestResponse(requestFile)
-
-	@skip("deactivated")
 	def test_Request_Response(self):
-		requestFile = self._LSPTestDirectory / self.__subdir / "cmds.json"
-		responseFile = self._LSPTestDirectory / self.__subdir / "replies.json"
-
-		self._RequestResponse(requestFile, responseFile)
+		self._RequestResponse("cmds.json", "replies.json")
 
 
 class Test004_Error_Project(JSONTest):
-	__subdir = Path("004errprj")
+	subdir = Path("004errprj")
 
-	@skip("deactivated")
 	def test_Request_Response(self):
-		commandFile = self._LSPTestDirectory / self.__subdir / "cmds.json"
-		responseFile = self._LSPTestDirectory / self.__subdir / "replies.json"
+		self._RequestResponse("cmds.json", "replies.json")
 
-		self._RequestResponse(commandFile, responseFile)
 
 class Test005_Create(JSONTest):
-	__subdir = Path("005create")
+	subdir = Path("005create")
 
-	@skip("deactivated")
 	def test_Request_Response(self):
-		commandFile = self._LSPTestDirectory / self.__subdir / "cmds.json"
-		responseFile = self._LSPTestDirectory / self.__subdir / "replies.json"
+		self._RequestResponse("cmds.json", "replies.json")
 
-		self._RequestResponse(commandFile, responseFile)
 
 # FIXME: is this case 6?
 class Test005_Option_Error(JSONTest):
-	__subdir = Path("005opterr")
+	subdir = Path("005opterr")
 
-	@skip("deactivated")
 	def test_Request_Response(self):
-		commandFile = self._LSPTestDirectory / self.__subdir / "cmds.json"
-		responseFile = self._LSPTestDirectory / self.__subdir / "replies.json"
+		self._RequestResponse("cmds.json", "replies.json")
 
-		self._RequestResponse(commandFile, responseFile)
 
 #class Test006_?????(JSONTest):
 #	_CASE = Path("006?????")
 
+
 class Test007_Error_Project(JSONTest):
-	__subdir = Path("007errprj")
+	subdir = Path("007errprj")
 
-	@skip("deactivated")
 	def test_Request_Response(self):
-		commandFile = self._LSPTestDirectory / self.__subdir / "cmds.json"
-		responseFile = self._LSPTestDirectory / self.__subdir / "replies.json"
+		self._RequestResponse("cmds.json", "replies.json")
 
-		self._RequestResponse(commandFile, responseFile)
 
 class Test008_Error_NoFile(JSONTest):
-	__subdir = Path("008errnofile")
+	subdir = Path("008errnofile")
 
-	@skip("deactivated")
 	def test_Request_Response(self):
-		commandFile = self._LSPTestDirectory / self.__subdir / "cmds.json"
-		responseFile = self._LSPTestDirectory / self.__subdir / "replies.json"
-
-		self._RequestResponse(commandFile, responseFile)
+		self._RequestResponse("cmds.json", "replies.json")

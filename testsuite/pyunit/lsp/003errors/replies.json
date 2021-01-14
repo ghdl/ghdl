@@ -27,7 +27,7 @@
     "jsonrpc": "2.0",
     "method": "textDocument/publishDiagnostics",
     "params": {
-      "uri": "file:///home/tgingold/work/vhdl-language-server/tests/003errors/tc.vhdl",
+      "uri": "file://pyunit/lsp/003errors/tc.vhdl",
       "diagnostics": [
         {
           "source": "ghdl",
