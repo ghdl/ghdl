@@ -104,7 +104,7 @@ if ($Help -or (-not ($All -or $Clean -or
                                      $UVVM_VIP_Clock_Generator -or $UVVM_VIP_GPIO -or $UVVM_VIP_I2C -or $UVVM_VIP_SBI -or
                                      $UVVM_VIP_Scoreboard -or $UVVM_VIP_SPI -or $UVVM_VIP_UART))
 	)))
-{	Get-Help $MYINVOCATION.InvocationName -Detailed
+{	Get-Help $MYINVOCATION.MyCommand.Path -Detailed
 	Exit-CompileScript
 }
 

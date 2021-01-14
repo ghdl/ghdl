@@ -88,7 +88,7 @@ Import-Module $PSScriptRoot\shared.psm1 -Verbose:$false -ArgumentList @("Xilinx 
 $Help = $Help -or (-not ($All -or $Unisim -or $Simprim -or $Unimacro))
 
 if ($Help)
-{	Get-Help $MYINVOCATION.InvocationName -Detailed
+{	Get-Help $MYINVOCATION.MyCommand.Path -Detailed
 	Exit-CompileScript
 }
 if ($All)

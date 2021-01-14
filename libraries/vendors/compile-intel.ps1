@@ -105,7 +105,7 @@ Import-Module $PSScriptRoot\shared.psm1 -Verbose:$false -Debug:$false -ArgumentL
 $Help = $Help -or (-not ($All -or $Altera -or $Max -or $Cyclone -or $Arria -or $Stratix -or $Nanometer -or $Clean))
 
 if ($Help)
-{	Get-Help $MYINVOCATION.InvocationName -Detailed
+{	Get-Help $MYINVOCATION.MyCommand.Path -Detailed
 	Exit-CompileScript
 }
 if ($All)

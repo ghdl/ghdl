@@ -74,23 +74,23 @@ $env:GHDL_PREFIX_DIR = $GHDL_PREFIX_DIR
 mkdir $GHDL_BUILD_DIR | cd
 
 if ($env:BUILD_BACKEND -eq "mcode")
-{	Write-Host "Configuring GHDL for $($env:BUILD_MINGW), mcode..." -Foreground Yellow
+{	Write-Host "Configuring GHDL for $($env:BUILD_MINGW), mcode..." -ForegroundColor Yellow
 
 	c:\msys64\usr\bin\bash.exe -c "../../configure --prefix=$GHDL_PREFIX_DIR LDFLAGS=-static" 2>&1 | Restore-NativeCommandStream | %{ "$_" }
 }
 elseif ($env:BUILD_BACKEND -eq "llvm")
-{	Write-Host "Configuring GHDL for $($env:BUILD_MINGW), LLVM..." -Foreground Yellow
+{	Write-Host "Configuring GHDL for $($env:BUILD_MINGW), LLVM..." -ForegroundColor Yellow
 
 	c:\msys64\usr\bin\bash.exe -c "../../configure --prefix=$GHDL_PREFIX_DIR --with-llvm-config='llvm-config --link-static' LDFLAGS='-static' --enable-libghdl --enable-synth CXX=clang++" 2>&1 | Restore-NativeCommandStream | %{ "$_" }
 }
 
-Write-Host "Building GHDL and libraries..." -Foreground Yellow
+Write-Host "Building GHDL and libraries..." -ForegroundColor Yellow
 c:\msys64\usr\bin\make.exe 2>&1 | Restore-NativeCommandStream | %{ "$_" }
 $Err = $LastExitCode
 
 if ($Err -eq 0)
 {
-  Write-Host "Installing GHDL and libraries..." -Foreground Yellow
+  Write-Host "Installing GHDL and libraries..." -ForegroundColor Yellow
   c:\msys64\usr\bin\make.exe install 2>&1 | Restore-NativeCommandStream | %{ "$_" }
   $Err = $LastExitCode
 }
@@ -99,7 +99,7 @@ if ($Err -eq 0)
 
 if ($Err -eq 0)
 {
-  Write-Host "Building binary archives..." -Foreground Yellow
+  Write-Host "Building binary archives..." -ForegroundColor Yellow
   cd c:\Tools
   7z a "$($env:APPVEYOR_BUILD_FOLDER)\$ZipFile" -r "GHDL\$PREFIX_DIRNAME\"
 

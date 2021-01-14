@@ -97,7 +97,7 @@ Import-Module $PSScriptRoot\shared.psm1 -Verbose:$false -Debug:$false -ArgumentL
 $Help = $Help -or (-not ($Compile -or $VHDL87 -or $VHDL93 -or $VHDL2008 -or $Clean))
 
 if ($Help)
-{	Get-Help $MYINVOCATION.InvocationName -Detailed
+{	Get-Help $MYINVOCATION.MyCommand.Path -Detailed
 	Exit-CompileScript
 }
 if ($Compile)

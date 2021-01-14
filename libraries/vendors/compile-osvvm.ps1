@@ -87,7 +87,7 @@ if ($Help -or (-not ($All -or $Clean -or
                     ($OSVVM -or     ($OSVVM_Utilities -or $OSVVM_Common)) -or
                     ($OSVVM_VIP -or ($OSVVM_VIP_AXI4 -or $OSVVM_VIP_UART))
 	)))
-{	Get-Help $MYINVOCATION.InvocationName -Detailed
+{	Get-Help $MYINVOCATION.MyCommand.Path -Detailed
 	Exit-CompileScript
 }
 
@@ -307,14 +307,14 @@ foreach ($VIPName in $FileSets.Keys)
 	}
 
 	if ((-not $StopCompiling) -and (Get-Variable $VariableName -ValueOnly))
-	{	Write-Host ("Component: " + $FileSets[$VIPName]["Component"]) -Foreground Magenta
+	{	Write-Host ("Component: " + $FileSets[$VIPName]["Component"]) -ForegroundColor Magenta
 
 		foreach ($LibraryName in $FileSets[$VIPName]["Libraries"].Keys)
 		{	if ($LibraryName -eq "work")
 			{	if ($FileSets[$VIPName]["Libraries"][$LibraryName]["Files"].Count -ne 0)
 				{	Write-Host ("[ERROR]: Library 'works' contains " + $FileSets[$VIPName]["Libraries"][$LibraryName]["Files"].Count + " files.") -ForegroundColor Red
 					foreach ($File in $FileSets[$VIPName]["Libraries"][$LibraryName]["Files"])
-					{	Write-Host "  $File" -Foreground Red }
+					{	Write-Host "  $File" -ForegroundColor Red }
 				}
 				continue
 			}

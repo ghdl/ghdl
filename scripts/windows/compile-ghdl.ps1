@@ -112,7 +112,7 @@ if (-not $Hosted)
 }
 
 if ($Help)
-{	Get-Help $MYINVOCATION.InvocationName -Detailed
+{	Get-Help $MYINVOCATION.MyCommand.Path -Detailed
 	Exit-CompileScript
 }
 

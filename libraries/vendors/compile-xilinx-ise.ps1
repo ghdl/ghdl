@@ -77,11 +77,6 @@ param(
 	[string]$GHDL =             ""
 )
 
-if ($Help)
-{	Get-Help $MYINVOCATION.InvocationName -Detailed
-	return
-}
-
 # ---------------------------------------------
 # save working directory
 $WorkingDir =     Get-Location
@@ -101,7 +96,7 @@ Import-Module $PSScriptRoot\shared.psm1 -Verbose:$false -ArgumentList @("Xilinx 
 $Help = $Help -or (-not ($All -or $Unisim -or $Simprim -or $Unimacro -or $CoreLib -or $Clean))
 
 if ($Help)
-{	Get-Help $MYINVOCATION.InvocationName -Detailed
+{	Get-Help $MYINVOCATION.MyCommand.Path -Detailed
 	Exit-CompileScript
 }
 if ($All)

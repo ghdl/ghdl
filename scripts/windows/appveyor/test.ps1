@@ -46,7 +46,7 @@ function Restore-NativeCommandStream
 	}
 }
 
-Write-Host "Run testsuites..." -Foreground Yellow
+Write-Host "Run testsuites..." -ForegroundColor Yellow
 cd "$($env:APPVEYOR_BUILD_FOLDER)\testsuite"
 # Use a MinGW compatible path
 $env:GHDL="$($env:GHDL_PREFIX_DIR)/bin/ghdl.exe"
@@ -56,7 +56,7 @@ $Err = 0
 
 # =============================================================================
 $TestFramework =  "GNA"
-Write-Host "Running GNA tests..." -Foreground Yellow
+Write-Host "Running GNA tests..." -ForegroundColor Yellow
 cd gna
 
 $Directories = dir -Directory *
@@ -64,7 +64,7 @@ foreach ($Directory in $Directories)
 {	$TestName = "GNA test: {0}" -f $Directory.Name
 	$FileName = $Directory.Name
 
-	Write-Host $TestName -Foreground Yellow
+	Write-Host $TestName -ForegroundColor Yellow
 	cd $Directory
 	Add-AppveyorTest -Name $TestName -Framework $TestFramework -FileName $FileName -Outcome Running
 	$start = Get-Date
@@ -72,11 +72,11 @@ foreach ($Directory in $Directories)
 	$end = Get-Date
 	$TotalMilliseconds = ($end - $start).TotalMilliseconds
 	if ($LastExitCode -eq 0)
-	{ Write-Host "PASSED" -Foreground Green
+	{ Write-Host "PASSED" -ForegroundColor Green
 		Update-AppveyorTest -Name $TestName -Framework $TestFramework -FileName $FileName -Outcome Passed -Duration $TotalMilliseconds
 	}
 	else
-	{	Write-Host "FAILED" -Foreground Red
+	{	Write-Host "FAILED" -ForegroundColor Red
 		Update-AppveyorTest -Name $TestName -Framework $TestFramework -FileName $FileName -Outcome Failed -Duration $TotalMilliseconds
 		$Err = 1
 	}
@@ -85,14 +85,14 @@ cd ..\..
 
 # =============================================================================
 $TestFramework =  "VESTS"
-Write-Host "Running VESTS tests..." -Foreground Yellow
+Write-Host "Running VESTS tests..." -ForegroundColor Yellow
 
 cd vests
 
 $TestName = "VESTS test:" # {0}" -f $Directory
 $FileName = "VESTS" #$Directory
 
-Write-Host $TestName -Foreground Yellow
+Write-Host $TestName -ForegroundColor Yellow
 # Disable vests.  It works but takes ~20 min
 if ($true)
 {	Add-AppveyorTest -Name $TestName -Framework $TestFramework -FileName $FileName -Outcome Skipped
@@ -105,11 +105,11 @@ else
 	$end = Get-Date
 	$TotalMilliseconds = ($end - $start).TotalMilliseconds
 	if ($LastExitCode -eq 0)
-	{ Write-Host "PASSED" -Foreground Green
+	{ Write-Host "PASSED" -ForegroundColor Green
 		Update-AppveyorTest -Name $TestName -Framework $TestFramework -FileName $FileName -Outcome Passed -Duration $TotalMilliseconds
 	}
 	else
-	{	Write-Host "FAILED" -Foreground Red
+	{	Write-Host "FAILED" -ForegroundColor Red
 		Update-AppveyorTest -Name $TestName -Framework $TestFramework -FileName $FileName -Outcome Failed -Duration $TotalMilliseconds
 		$Err = 1
 	}

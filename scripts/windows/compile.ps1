@@ -128,7 +128,7 @@ Write-Host "GHDL for Windows - GHDL compile and bundle script" -ForegroundColor 
 Write-Host "================================================================================" -ForegroundColor Magenta
 
 if ($Help)
-{	Get-Help $MYINVOCATION.InvocationName -Detailed
+{	Get-Help $MYINVOCATION.MyCommand.Path -Detailed
 	Exit-CompileScript
 }
 

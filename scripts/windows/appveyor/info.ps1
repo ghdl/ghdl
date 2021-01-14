@@ -47,22 +47,22 @@ function Restore-NativeCommandStream
 }
 
 
-Write-Host ("ExecutionPolicy = {0}" -f (Get-ExecutionPolicy)) -Foreground Yellow
-Write-Host "List env:..." -Foreground Yellow
+Write-Host ("ExecutionPolicy = {0}" -f (Get-ExecutionPolicy)) -ForegroundColor Yellow
+Write-Host "List env:..." -ForegroundColor Yellow
 dir env: | foreach { Write-Host ("  {0}={1}" -f $_.Name,$_.Value) }
-Write-Host "Print env:PATH..." -Foreground Yellow
+Write-Host "Print env:PATH..." -ForegroundColor Yellow
 $env:PATH.Split(";") | foreach { Write-Host "  $_" }
-Write-Host "Print GCC setup..." -Foreground Yellow
+Write-Host "Print GCC setup..." -ForegroundColor Yellow
 gcc.exe -v 2>&1 | Restore-NativeCommandStream | %{ "$_" }
-Write-Host "Print GCC search directories..." -Foreground Yellow
+Write-Host "Print GCC search directories..." -ForegroundColor Yellow
 gcc.exe -print-search-dirs 2>&1 | Restore-NativeCommandStream | %{ "$_" }
 
 if ($env:BUILD_BACKEND -eq "llvm")
-{	Write-Host "Print CLang setup..." -Foreground Yellow
+{	Write-Host "Print CLang setup..." -ForegroundColor Yellow
 	clang.exe -v 2>&1 | Restore-NativeCommandStream | %{ "$_" }
-	Write-Host "Print CLang search directories..." -Foreground Yellow
+	Write-Host "Print CLang search directories..." -ForegroundColor Yellow
 	clang.exe -print-search-dirs 2>&1 | Restore-NativeCommandStream | %{ "$_" }
 }
 
-Write-Host "Print gnatls setup..." -Foreground Yellow
+Write-Host "Print gnatls setup..." -ForegroundColor Yellow
 gnatls.exe -v 2>&1 | Restore-NativeCommandStream | %{ "$_" }
