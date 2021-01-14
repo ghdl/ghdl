@@ -1,17 +1,5 @@
-# EMACS settings: -*- tab-width: 2; indent-tabs-mode: t -*-
-# vim: tabstop=2:shiftwidth=2:noexpandtab
-# kate: tab-width 2; replace-tabs off; indent-width 2;
-#
 # ==============================================================================
 # Authors:            Patrick Lehmann
-#
-# PowerShell Script:  Script to compile the OSVVM library for GHDL on Windows
-#
-# Description:
-# ------------------------------------
-# This is a PowerShell script (executable) which:
-#   - creates a subdirectory in the current working directory
-#   - compiles all OSVVM packages
 #
 # ==============================================================================
 # Copyright (C) 2017-2021 Patrick Lehmann - Boetzingen, Germany
@@ -34,7 +22,7 @@
 # ==============================================================================
 
 # .SYNOPSIS
-# This CmdLet compiles the OSVVM library.
+# Script to compile the OSVVM libraries and verification models for GHDL on Windows.
 #
 # .DESCRIPTION
 # This CmdLet:

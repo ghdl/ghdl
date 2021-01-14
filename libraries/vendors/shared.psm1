@@ -1,16 +1,5 @@
-# EMACS settings: -*- tab-width: 2; indent-tabs-mode: t -*-
-# vim: tabstop=2:shiftwidth=2:noexpandtab
-# kate: tab-width 2; replace-tabs off; indent-width 2;
 # ==============================================================================
 # Authors:            Patrick Lehmann
-#
-# PowerShell Module:  The module provides common CmdLets for the library
-#                     pre-compilation process.
-#
-# Description:
-# ------------------------------------
-# This PowerShell module provides CommandLets (CmdLets) to handle the GHDL.exe
-# output streams (stdout and stderr).
 #
 # ==============================================================================
 # Copyright (C) 2017-2021 Patrick Lehmann - Boetzingen, Germany
@@ -32,6 +21,13 @@
 # 02111-1307, USA.
 # ==============================================================================
 
+# .SYNOPSIS
+# This module provides common CmdLets for the library pre-compilation process.
+#
+# .DESCRIPTION
+# This PowerShell module provides CommandLets (CmdLets) to handle the 'ghdl.exe'
+# output streams (stdout and stderr).
+#
 [CmdletBinding()]
 param(
 	[Parameter(Mandatory=$true)][string]$VendorToolName,

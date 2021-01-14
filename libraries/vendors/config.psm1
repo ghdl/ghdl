@@ -1,15 +1,5 @@
-# EMACS settings: -*-	tab-width: 2; indent-tabs-mode: t -*-
-# vim: tabstop=2:shiftwidth=2:noexpandtab
-# kate: tab-width 2; replace-tabs off; indent-width 2;
 # ==============================================================================
 #	Authors:						Patrick Lehmann
-#
-#	PowerShell Module:	Configurable directories to local installed tools
-#
-# Description:
-# ------------------------------------
-#	This PowerShell module exports variables containing the users local tool
-#	environment.
 #
 # ==============================================================================
 #	Copyright (C) 2017-2021 Patrick Lehmann - Boetzingen, Germany
@@ -30,6 +20,13 @@
 #	Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #	02111-1307, USA.
 # ==============================================================================
+
+# .SYNOPSIS
+# Configuration files to store settings and installation directories for 3rd party tools..
+#
+# .DESCRIPTION
+# This configuaration file stores settings for pre-compile scripts, so scripts
+# can be called with less command line arguments.
 #
 [CmdletBinding()]
 param(
