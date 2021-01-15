@@ -1,7 +1,3 @@
-# EMACS settings: -*-	tab-width: 2; indent-tabs-mode: t -*-
-# vim: tabstop=2:shiftwidth=2:noexpandtab
-# kate: tab-width 2; replace-tabs off; indent-width 2;
-#
 # ==============================================================================
 #	Authors:						Patrick Lehmann
 #
@@ -14,7 +10,7 @@
 # ==============================================================================
 #	Copyright (C) 2017-2021 Patrick Lehmann - Boetzingen, Germany
 #	Copyright (C) 2015-2016 Patrick Lehmann - Dresden, Germany
-#	
+#
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
 #  the Free Software Foundation, either version 2 of the License, or
@@ -50,9 +46,8 @@ else	# fall back to GHDL found via PATH
 	fi
 fi
 
-# Analyze_Filter=GHDL/filter.analyze.sh
+Analyze_Filter=filter.analyze.sh
 Analyze_Parameters=(
-	-frelaxed-rules
 	--mb-comments
 )
 
@@ -60,9 +55,9 @@ VERBOSE=${VERBOSE:-0}
 DEBUG=${DEBUG:-0}
 CONTINUE_ON_ERROR=${CONTINUE_ON_ERROR:-0}
 
-test $VERBOSE -eq 1 && echo -e "  Declaring Bash functions for GHDL..."
+test $VERBOSE -eq 1 && echo -e "  Declaring Bash procedures for GHDL..."
 
-test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}function SetupDirectories( <Index> <Name> )${ANSI_NOCOLOR}"
+test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}procedure SetupDirectories( <Index> <Name> )${ANSI_NOCOLOR}"
 # SetupDirectories
 # -> $Index
 # -> $Name
@@ -112,7 +107,7 @@ SetupDirectories() {
 	fi
 }
 
-test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}function SetupGRCat( undocumented )${ANSI_NOCOLOR}"
+test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}procedure SetupGRCat( undocumented )${ANSI_NOCOLOR}"
 # SetupGRCat
 # -> undocumented
 SetupGRCat() {
@@ -126,40 +121,40 @@ SetupGRCat() {
 	fi
 }
 
-test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}function CreateDestinationDirectory( undocumented )${ANSI_NOCOLOR}"
+test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}procedure CreateDestinationDirectory( undocumented )${ANSI_NOCOLOR}"
 # CreateDestinationDirectory
 # -> undocumented
 CreateDestinationDirectory() {
 	if [ -d "$DestinationDirectory" ]; then
-		echo -e "${ANSI_YELLOW}Vendor directory '$DestinationDirectory' already exists.${ANSI_NOCOLOR}"
+		echo -e "${COLORED_WARNING} Vendor directory '$DestinationDirectory' already exists.${ANSI_NOCOLOR}"
 	elif [ -f "$DestinationDirectory" ]; then
 		echo 1>&2 -e "${COLORED_ERROR} Vendor directory '$DestinationDirectory' already exists as a file.${ANSI_NOCOLOR}"
 		exit 1
 	else
-		echo -e "${ANSI_YELLOW}Creating vendor directory: '$DestinationDirectory'.${ANSI_NOCOLOR}"
+		echo -e "Creating vendor directory: '$DestinationDirectory'.${ANSI_NOCOLOR}"
 		mkdir -p "$DestinationDirectory"
 	fi
 }
 
-test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}function GHDLSetup( <VHDLStandard> )${ANSI_NOCOLOR}"
+test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}procedure GHDLSetup( <VHDLStandard> )${ANSI_NOCOLOR}"
 # GHDLSetup
-# -> $VHDLStandard     # FIXME: make it a real parameter
+# -> $VHDLStandard
 # <= $VHDLVersion
 # <= $VHDLStandard
 # <= $VHDLFlavor
 GHDLSetup() {
-	if [ $VHDLStandard -eq 93 ]; then
+	if [ $1 -eq 93 ]; then
 		VHDLVersion="v93"
 		VHDLStandard="93c"
 		VHDLFlavor="synopsys"
-	elif [ $VHDLStandard -eq 2008 ]; then
+	elif [ $1 -eq 2008 ]; then
 		VHDLVersion="v08"
 		VHDLStandard="08"
 		VHDLFlavor="synopsys"
 	fi
 }
 
-test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}function CreateVHDLLibrary( <StructName> <LibraryName> <LibraryPath> <VHDLVersion> <Files[*]> )${ANSI_NOCOLOR}"
+test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}procedure CreateVHDLLibrary( <StructName> <LibraryName> <LibraryPath> <VHDLVersion> <Files[*]> )${ANSI_NOCOLOR}"
 # CreateLibraryStruct
 # -> $StructName
 # -> $LibraryName
@@ -177,7 +172,7 @@ CreateLibraryStruct() {
 	FilesRef=( "$*" )
 }
 
-test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}function DeleteLibraryStruct( <StructName> )${ANSI_NOCOLOR}"
+test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}procedure DeleteLibraryStruct( <StructName> )${ANSI_NOCOLOR}"
 # DeleteLibraryStruct
 # -> $StructName
 DeleteLibraryStruct() {
@@ -189,7 +184,7 @@ DeleteLibraryStruct() {
 	unset "${StructName}_Files"
 }
 
-test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}function PrintLibraryStruct( <StructName> )${ANSI_NOCOLOR}"
+test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}procedure PrintLibraryStruct( <StructName> )${ANSI_NOCOLOR}"
 # PrintLibraryStruct
 # -> $StructName
 PrintLibraryStruct() {
@@ -208,7 +203,7 @@ PrintLibraryStruct() {
 
 declare -A GHDLLibraryMapping
 
-test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}function CreateVHDLLibrary( <LibraryName> <DirectoryName> <VHDLVersion> )${ANSI_NOCOLOR}"
+test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}procedure CreateVHDLLibrary( <LibraryName> <DirectoryName> <VHDLVersion> )${ANSI_NOCOLOR}"
 # CreateVHDLLibrary
 # -> $LibraryName
 # -> $DirectoryName
@@ -228,7 +223,7 @@ CreateVHDLLibrary() {
 	GHDLLibraryMapping[$LibraryName]=$LibraryDir
 }
 
-test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}function AnalyzeVHDL( <LibraryName> <SourceDirectory> <LibraryPath> <File> )${ANSI_NOCOLOR}"
+test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}procedure AnalyzeVHDL( <LibraryName> <SourceDirectory> <LibraryPath> <File> )${ANSI_NOCOLOR}"
 # AnalyzeVHDL
 # -> $LibraryName
 # -> $SourceDirectory
@@ -274,33 +269,33 @@ AnalyzeVHDL() {
 		$GHDL -a ${Analyze_Parameters[@]} ${Parameters[@]} --work=$LibraryName --workdir=$DestinationDirectory "$SourceFile"
 		ExitCode=$?
 		if [[ $ExitCode -ne 0 ]]; then
-			echo 1>&2 -e "${COLORED_ERROR} While analyzing '$File'. ExitCode: $ExitCode${ANSI_NOCOLOR}"
+			echo 1>&2 -e "$Filter_Indent${COLORED_ERROR} While analyzing '$File'. ExitCode: $ExitCode${ANSI_NOCOLOR}"
 			test $CONTINUE_ON_ERROR -eq 0 && exit 1
 		fi
-	# else
-		# test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}$GHDL -a ${Analyze_Parameters[*]} ${Parameters[*]} --work=$LibraryName \"$SourceFile\" | \\\\${ANSI_NOCOLOR}"
-		# test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}$GHDLScriptDir/$Analyze_Filter ${Filter_Parameters[*]} -i \"$Filter_Indent\"${ANSI_NOCOLOR}"
-		# $GHDL -a ${Analyze_Parameters[@]} ${Parameters[@]} --work=$LibraryName "$SourceFile" 2>&1 | $GHDLScriptDir/$Analyze_Filter ${Filter_Parameters[@]} -i "$Filter_Indent"
-		# local PiplineStatus=("${PIPESTATUS[@]}")
-		# if [[ ${PiplineStatus[0]}  -ne 0 ]]; then
-			# echo 1>&2 -e "${COLORED_ERROR} While analyzing '$File'. ExitCode: ${PiplineStatus[0]}${ANSI_NOCOLOR}"
-			# if [[ $CONTINUE_ON_ERROR -eq 1 ]]; then
-				# exit 1;
-			# fi
-		# elif [[ ${PiplineStatus[1]}  -ne 0 ]]; then
-			# case $(( ${PiplineStatus[1]} % 4 )) in
-				# TODO: implement CONTINUE_ON_ERROR in cases ...
-				# 3) echo 1>&2 -e "$Filter_Indent${ANSI_RED}Fatal errors detected by filtering script. ExitCode: ${PiplineStatus[1]}${ANSI_NOCOLOR}"; exit 1 ;;
-				# 2) echo 1>&2 -e "$Filter_Indent${ANSI_RED}Errors detected by filtering script. ExitCode: ${PiplineStatus[1]}${ANSI_NOCOLOR}"; exit 1 ;;
-				# 1) echo 1>&2 -e "$Filter_Indent${ANSI_YELLOW}Warnings detected by filtering script.${ANSI_NOCOLOR}" ;;
-				# 0) test $DEBUG -eq 1 && echo 1>&2 -e "$Filter_Indent${ANSI_YELLOW}Warnings detected by filtering script.${ANSI_NOCOLOR}" ;;
-			# esac
-		# fi
+	 else
+		 test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}$GHDL -a ${Analyze_Parameters[*]} ${Parameters[*]} --work=$LibraryName \"$SourceFile\" 2>&1 | \\\\${ANSI_NOCOLOR}"
+		 test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}$ScriptDir/$Analyze_Filter ${Filter_Parameters[*]} -i \"$Filter_Indent\"${ANSI_NOCOLOR}"
+		 $GHDL -a ${Analyze_Parameters[@]} ${Parameters[@]} --work=$LibraryName "$SourceFile" 2>&1 | $ScriptDir/$Analyze_Filter ${Filter_Parameters[@]} -i "$Filter_Indent"
+		 local PiplineStatus=("${PIPESTATUS[@]}")
+		 if [[ ${PiplineStatus[0]}  -ne 0 ]]; then
+			 echo 1>&2 -e "$Filter_Indent${COLORED_ERROR} While analyzing '$File'. ExitCode: ${PiplineStatus[0]}${ANSI_NOCOLOR}"
+			 if [[ $CONTINUE_ON_ERROR -eq 1 ]]; then
+				 exit 1;
+			 fi
+		 elif [[ ${PiplineStatus[1]}  -ne 0 ]]; then
+			 case $(( ${PiplineStatus[1]} % 4 )) in
+				 # TODO: implement CONTINUE_ON_ERROR in cases ...
+				 3) echo 1>&2 -e "$Filter_Indent${ANSI_RED}Fatal errors detected by filtering script. ExitCode: ${PiplineStatus[1]}${ANSI_NOCOLOR}"; exit 1 ;;
+				 2) echo 1>&2 -e "$Filter_Indent${ANSI_RED}Errors detected by filtering script. ExitCode: ${PiplineStatus[1]}${ANSI_NOCOLOR}"; exit 1 ;;
+				 1) echo 1>&2 -e "$Filter_Indent${ANSI_YELLOW}Warnings detected by filtering script.${ANSI_NOCOLOR}" ;;
+				 0) test $DEBUG -eq 1 && echo 1>&2 -e "$Filter_Indent${ANSI_YELLOW}Warnings detected by filtering script.${ANSI_NOCOLOR}" ;;
+			 esac
+		 fi
 	fi
 }
 
 
-test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}function AnalyzeLibrary( <LibraryName> <SourceDirectory> <LibraryPath> <Files[*]> )${ANSI_NOCOLOR}"
+test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}procedure AnalyzeLibrary( <LibraryName> <SourceDirectory> <LibraryPath> <Files[*]> )${ANSI_NOCOLOR}"
 # AnalyzeLibrary
 # -> LibraryName
 # -> SourceDirectory
@@ -315,13 +310,13 @@ AnalyzeLibrary() {
 	echo -e "${ANSI_YELLOW}Analyzing files into library '$LibraryName'...${ANSI_NOCOLOR}"
 
 	for File in $Files; do
-		test $VERBOSE -eq 1 && echo -e "  Analyzing '$File'"
+		test $VERBOSE -eq 1 && echo -e "${ANSI_CYAN}  Analyzing '$File'${ANSI_NOCOLOR}"
 
 		AnalyzeVHDL $LibraryName "$SourceDirectory" "$LibraryPath" "$File"
 	done
 }
 
-test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}function Compile( <SourceDirectory> <Libraries> )${ANSI_NOCOLOR}"
+test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}procedure Compile( <SourceDirectory> <Libraries> )${ANSI_NOCOLOR}"
 # Compile
 # -> SourceDirectory
 # -> VHDLLibraries
