@@ -17,7 +17,7 @@
 #
 #
 # ==========================================================================
-# Copyright © 2016-2017 Patrick Lehmann - Dresden, Germany
+# Copyright Â© 2016-2017 Patrick Lehmann - Dresden, Germany
 # ==========================================================================
 [CmdletBinding()]
 param(
@@ -65,22 +65,22 @@ function Exit-Script
   #>
   [CmdletBinding()]
   param([int]$ExitCode = 0)
-  
+
   # restore environment
   # rm env:GHDL -ErrorAction SilentlyContinue
-  
+
   cd $WorkingDir
-  
+
   # unload modules
   # Remove-Module precompile -Verbose:$false
-  
+
 	Pop-EnvironmentBlock
   # exit with exit code
   exit $ExitCode
 }
 
 if ($Help)
-{ Get-Help $MYINVOCATION.InvocationName -Detailed
+{ Get-Help $MYINVOCATION.MyCommand.Path -Detailed
   Exit-Script
 }
 
@@ -135,108 +135,108 @@ $I18NSphinxOpts = "${env:SPHINXOPTS} $SourceDir"
 
 
 if ($clean)
-{ $EnableVerbose -and (Write-Host "Cleaning build directory '$BuildDir'..." -Foreground DarkCyan  ) | Out-Null
+{ $EnableVerbose -and (Write-Host "Cleaning build directory '$BuildDir'..." -ForegroundColor DarkCyan  ) | Out-Null
 	$EnableDebug   -and (Write-Host "  dir -Path $BuildDir * -Directory | rmdir -Recurse"           ) | Out-Null
 	dir -Path $BuildDir * -Directory | rmdir -Recurse
-	
-  Write-Host "Cleaning finished." -Foreground Green
+
+  Write-Host "Cleaning finished." -ForegroundColor Green
 }
 
 if ($html)
 { $expr = "$SphinxBuild -b html -t GHDLInternal $AllSphinxOpts $BuildDir\html"
-  $EnableVerbose -and (Write-Host "Building target 'html' into '$BuildDir\html'..." -Foreground DarkCyan  ) | Out-Null
-	$EnableDebug   -and (Write-Host "  $expr" -Foreground Cyan ) | Out-Null
+  $EnableVerbose -and (Write-Host "Building target 'html' into '$BuildDir\html'..." -ForegroundColor DarkCyan  ) | Out-Null
+	$EnableDebug   -and (Write-Host "  $expr" -ForegroundColor Cyan ) | Out-Null
 	Invoke-Expression $expr
   if ($LastExitCode -ne 0)
   { Exit-Script 1 }
-  Write-Host "Build finished. The HTML pages are in $BuildDir\html." -Foreground Green
+  Write-Host "Build finished. The HTML pages are in $BuildDir\html." -ForegroundColor Green
 }
 
 if ($dirhtml)
 { $expr = "$SphinxBuild -b dirhtml $AllSphinxOpts $BuildDir\dirhtml"
-  $EnableVerbose -and (Write-Host "Building target 'dirhtml' into '$BuildDir\dirhtml'..." -Foreground DarkCyan  ) | Out-Null
-	$EnableDebug   -and (Write-Host "  $expr" -Foreground Cyan ) | Out-Null
+  $EnableVerbose -and (Write-Host "Building target 'dirhtml' into '$BuildDir\dirhtml'..." -ForegroundColor DarkCyan  ) | Out-Null
+	$EnableDebug   -and (Write-Host "  $expr" -ForegroundColor Cyan ) | Out-Null
   Invoke-Expression $expr
   if ($LastExitCode -ne 0)
   { Exit-Script 1 }
-  Write-Host "Build finished. The HTML pages are in $BuildDir\dirhtml." -Foreground Green
+  Write-Host "Build finished. The HTML pages are in $BuildDir\dirhtml." -ForegroundColor Green
 }
 
 if ($singlehtml)
 { $expr = "$SphinxBuild -b singlehtml $AllSphinxOpts $BuildDir\singlehtml"
-  $EnableVerbose -and (Write-Host "Building target 'singlehtml' into '$BuildDir\singlehtml'..." -Foreground DarkCyan  ) | Out-Null
-	$EnableDebug   -and (Write-Host "  $expr" -Foreground Cyan ) | Out-Null
+  $EnableVerbose -and (Write-Host "Building target 'singlehtml' into '$BuildDir\singlehtml'..." -ForegroundColor DarkCyan  ) | Out-Null
+	$EnableDebug   -and (Write-Host "  $expr" -ForegroundColor Cyan ) | Out-Null
   Invoke-Expression $expr
   if ($LastExitCode -ne 0)
   { Exit-Script 1 }
-  Write-Host "Build finished. The HTML file is in $BuildDir\singlehtml." -Foreground Green
+  Write-Host "Build finished. The HTML file is in $BuildDir\singlehtml." -ForegroundColor Green
 }
 
 if ($latex)
 { $expr = "$SphinxBuild -b latex $AllSphinxOpts $BuildDir\pdf"
-  $EnableVerbose -and (Write-Host "Building target 'latex' into '$BuildDir\pdf'..." -Foreground DarkCyan  ) | Out-Null
-	$EnableDebug   -and (Write-Host "  $expr" -Foreground Cyan ) | Out-Null
+  $EnableVerbose -and (Write-Host "Building target 'latex' into '$BuildDir\pdf'..." -ForegroundColor DarkCyan  ) | Out-Null
+	$EnableDebug   -and (Write-Host "  $expr" -ForegroundColor Cyan ) | Out-Null
   Invoke-Expression $expr
   if ($LastExitCode -ne 0)
   { Exit-Script 1 }
-  Write-Host "Build finished. The LaTeX sources are in $BuildDir\pdf." -Foreground Green
+  Write-Host "Build finished. The LaTeX sources are in $BuildDir\pdf." -ForegroundColor Green
 }
 if ($pdf)
 {	cd "$BuildDir\pdf"
 
 	cp "$BuildDir\pdf\GHDL.tex" "$BuildDir\pdf\GHDL.tex"
-	
+
 	$expr = "pdflatex.exe $BuildDir\pdf\GHDL.tex"
-	$EnableVerbose -and (Write-Host "Building target 'pdf' into '$BuildDir\pdf'..." -Foreground DarkCyan  ) | Out-Null
-	Write-Host "Compiling with pdflatex.exe..." -Foreground Yellow
-	$EnableDebug   -and (Write-Host "  $expr" -Foreground Cyan ) | Out-Null
+	$EnableVerbose -and (Write-Host "Building target 'pdf' into '$BuildDir\pdf'..." -ForegroundColor DarkCyan  ) | Out-Null
+	Write-Host "Compiling with pdflatex.exe..." -ForegroundColor Yellow
+	$EnableDebug   -and (Write-Host "  $expr" -ForegroundColor Cyan ) | Out-Null
   Invoke-Expression $expr
   if ($LastExitCode -ne 0)
   { Exit-Script 1 }
-  
+
 	$expr = "makeindex.exe .\GHDL.idx"
-	Write-Host "Creating index with makeindex.exe..." -Foreground Yellow
-	$EnableDebug   -and (Write-Host "  $expr" -Foreground Cyan ) | Out-Null
+	Write-Host "Creating index with makeindex.exe..." -ForegroundColor Yellow
+	$EnableDebug   -and (Write-Host "  $expr" -ForegroundColor Cyan ) | Out-Null
   Invoke-Expression $expr
   if ($LastExitCode -ne 0)
   { Exit-Script 1 }
-  
+
 	$expr = "pdflatex.exe $BuildDir\pdf\GHDL.tex"
-	Write-Host "Compiling with pdflatex.exe..." -Foreground Yellow
+	Write-Host "Compiling with pdflatex.exe..." -ForegroundColor Yellow
   Invoke-Expression $expr
   if ($LastExitCode -ne 0)
   { Exit-Script 1 }
-  Write-Host "Build finished. The PDF file is in $BuildDir\pdf." -Foreground Green
+  Write-Host "Build finished. The PDF file is in $BuildDir\pdf." -ForegroundColor Green
 }
 
 if ($pickle)
 { $expr = "$SphinxBuild -b pickle $AllSphinxOpts $BuildDir\pickle"
-  $EnableVerbose -and (Write-Host "Building target 'pickle' into '$BuildDir\pickle'..." -Foreground DarkCyan  ) | Out-Null
-	$EnableDebug   -and (Write-Host "  $expr" -Foreground Cyan ) | Out-Null
+  $EnableVerbose -and (Write-Host "Building target 'pickle' into '$BuildDir\pickle'..." -ForegroundColor DarkCyan  ) | Out-Null
+	$EnableDebug   -and (Write-Host "  $expr" -ForegroundColor Cyan ) | Out-Null
   Invoke-Expression $expr
   if ($LastExitCode -ne 0)
   { Exit-Script 1 }
-  Write-Host "Build finished. Now you can process the pickle files." -Foreground Green
+  Write-Host "Build finished. Now you can process the pickle files." -ForegroundColor Green
 }
 
 if ($json)
 { $expr = "$SphinxBuild -b json $AllSphinxOpts $BuildDir\json"
-  $EnableVerbose -and (Write-Host "Building target 'json' into '$BuildDir\json'..." -Foreground DarkCyan  ) | Out-Null
-	$EnableDebug   -and (Write-Host "  $expr" -Foreground Cyan ) | Out-Null
+  $EnableVerbose -and (Write-Host "Building target 'json' into '$BuildDir\json'..." -ForegroundColor DarkCyan  ) | Out-Null
+	$EnableDebug   -and (Write-Host "  $expr" -ForegroundColor Cyan ) | Out-Null
   Invoke-Expression $expr
   if ($LastExitCode -ne 0)
   { Exit-Script 1 }
-  Write-Host "Build finished. Now you can process the json files." -Foreground Green
+  Write-Host "Build finished. Now you can process the json files." -ForegroundColor Green
 }
 
 if ($linkcheck)
 { $expr = "$SphinxBuild -b linkcheck $AllSphinxOpts $BuildDir\linkcheck"
-  $EnableVerbose -and (Write-Host "Building target 'html' into '$BuildDir\html'..." -Foreground DarkCyan  ) | Out-Null
-	$EnableDebug   -and (Write-Host "  $expr" -Foreground Cyan ) | Out-Null
+  $EnableVerbose -and (Write-Host "Building target 'html' into '$BuildDir\html'..." -ForegroundColor DarkCyan  ) | Out-Null
+	$EnableDebug   -and (Write-Host "  $expr" -ForegroundColor Cyan ) | Out-Null
   Invoke-Expression $expr
   if ($LastExitCode -ne 0)
   { Exit-Script 1 }
-  Write-Host "Link check complete. Look for any errors in the above output or in $BuildDir\linkcheck\output.txt." -Foreground Green
+  Write-Host "Link check complete. Look for any errors in the above output or in $BuildDir\linkcheck\output.txt." -ForegroundColor Green
 }
 
 Exit-Script

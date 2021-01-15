@@ -3,11 +3,12 @@
 # kate: tab-width 2; replace-tabs off; indent-width 2;
 # 
 # ==============================================================================
-#  Authors:            Patrick Lehmann  (ported batch file to PowerShell)
-#                      Brian Davis      (contributions to the batch file)
-#                      Tristan Gingold  (initial batch file for compilations on Windows)
+#  Authors:
+#    Patrick Lehmann  (ported batch file to PowerShell)
+#    Brian Davis      (contributions to the batch file)
+#    Tristan Gingold  (initial batch file for compilations on Windows)
 # 
-#  PowerShell Script:  Script to compile GHDL for Windows
+#  PowerShell Script: Script to compile GHDL for Windows
 # 
 # Description:
 # ------------------------------------
@@ -128,7 +129,7 @@ Write-Host "GHDL for Windows - GHDL compile and bundle script" -ForegroundColor 
 Write-Host "================================================================================" -ForegroundColor Magenta
 
 if ($Help)
-{	Get-Help $MYINVOCATION.InvocationName -Detailed
+{	Get-Help $MYINVOCATION.MyCommand.Path -Detailed
 	Exit-CompileScript
 }
 

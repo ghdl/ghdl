@@ -2,34 +2,32 @@
 # EMACS settings: -*-	tab-width: 2; indent-tabs-mode: t -*-
 # vim: tabstop=2:shiftwidth=2:noexpandtab
 # kate: tab-width 2; replace-tabs off; indent-width 2;
-# 
 # ==============================================================================
-#	Authors:						Patrick Lehmann
-# 
-#	Bash Script:				Configurable directories to local installed tools
-# 
+#  Authors:
+#    Patrick Lehmann
+#
+#  Bash Script:  Configurable directories to local installed tools
+#
 # Description:
 # ------------------------------------
-#	This Bash file exports variables containing the users local tool environment.
+#  This Bash file exports variables containing the users local tool environment.
 #
 # ==============================================================================
-#	Copyright (C) 2015-2016 Patrick Lehmann - Dresden, Germany
-#	Copyright (C) 2017-2018 Patrick Lehmann - Freiburg, Germany
-#	
-#	GHDL is free software; you can redistribute it and/or modify it under
-#	the terms of the GNU General Public License as published by the Free
-#	Software Foundation; either version 2, or (at your option) any later
-#	version.
-#	
-#	GHDL is distributed in the hope that it will be useful, but WITHOUT ANY
-#	WARRANTY; without even the implied warranty of MERCHANTABILITY or
-#	FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-#	for more details.
-#	
-#	You should have received a copy of the GNU General Public License
-#	along with GHDL; see the file COPYING.  If not, write to the Free
-#	Software Foundation, 59 Temple Place - Suite 330, Boston, MA
-#	02111-1307, USA.
+#  Copyright (C) 2017-2021 Patrick Lehmann - Boetzingen, Germany
+#  Copyright (C) 2015-2016 Patrick Lehmann - Dresden, Germany
+#
+#  This program is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program.  If not, see <gnu.org/licenses>.
 # ==============================================================================
 
 
@@ -37,17 +35,17 @@
 # - vendor tool chain installation paths or
 # - library root directories
 # in the following dictionary.
-# 
-# These values are used if no command line argument (--src) is passed to a
+#
+# These values are used if no command line argument (--source) is passed to a
 # compile script. Empty strings means not configured.
 declare -A InstallationDirectories
 InstallationDirectories[AlteraQuartus]=""     # "/opt/altera/16.0/quartus"
-InstallationDirectories[IntelQuartus]=""      # "/opt/intelFPGA/17.1/quartus"
-InstallationDirectories[LatticeDiamond]=""    # "/usr/local/diamond/3.7_x64"
+InstallationDirectories[IntelQuartus]=""      # "/opt/intelFPGA/20.1/quartus"
+InstallationDirectories[LatticeDiamond]=""    # "/usr/local/diamond/3.10_x64"
 InstallationDirectories[OSVVM]=""	   					# "~/git/github/osvvm"
 InstallationDirectories[UVVM]=""	   					# "~/git/github/uvvm_all"
 InstallationDirectories[XilinxISE]=""	  		  # "/opt/Xilinx/14.7/ISE_DS/ISE"
-InstallationDirectories[XilinxVivado]=""      # "/opt/Xilinx/Vivado/2017.4"
+InstallationDirectories[XilinxVivado]=""      # "/opt/Xilinx/Vivado/2020.2"
 
 # Configure preferred output directories for each library set:
 declare -A DestinationDirectories
