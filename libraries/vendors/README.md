@@ -114,6 +114,9 @@ For a detailed documentation and all command line options see
 - Missing features
   - Implement `--clean` commands
 
+- describe usage with -P
+
+- document offered procedures and functions
 
 ------------------------
 Author: Patrick Lehmann  

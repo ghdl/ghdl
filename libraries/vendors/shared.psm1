@@ -350,10 +350,12 @@ function Start-PrimitiveCompilation
 	$EnableDebug -and   (Write-Host "    mkdir $LibraryDirectory"  -ForegroundColor DarkGray  ) | Out-Null
 	mkdir $LibraryDirectory -ErrorAction SilentlyContinue | Out-Null
 	$EnableDebug -and   (Write-Host "    cd $LibraryDirectory"     -ForegroundColor DarkGray  ) | Out-Null
+
 	cd $LibraryDirectory
+
 	$ErrorCount = 0
 	foreach ($File in $SourceFiles)
-	{	Write-Host "  Analyzing primitive file '$File'" -ForegroundColor DarkCyan
+	{	$EnableVerbose -and (Write-Host "  Analyzing primitive file '$File'" -ForegroundColor DarkCyan  ) | Out-Null
 		$InvokeExpr = "& '$GHDLBinary' " + ($GHDLOptions -join " ") + " --work=$Library " + $File + " 2>&1"
 		$EnableDebug -and (Write-Host "    $InvokeExpr"              -ForegroundColor DarkGray  ) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings -Indent:"$Indent"

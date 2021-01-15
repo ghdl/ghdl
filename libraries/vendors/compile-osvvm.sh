@@ -2,18 +2,18 @@
 # ==============================================================================
 #  Authors:
 #    Patrick Lehmann
-# 
+#
 #  Bash Script:  Script to compile the OSVVM library for GHDL on Linux
-# 
+#
 # Description:
 # ------------------------------------
 #  This is a Bash script (executable) which:
 #    - creates a subdirectory in the current working directory
-#    - compiles all OSVVM packages 
+#    - compiles all OSVVM packages
 #
 # ==============================================================================
 #  Copyright (C) 2015-2016 Patrick Lehmann - Dresden, Germany
-# 
+#
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
 #  the Free Software Foundation, either version 2 of the License, or
@@ -47,7 +47,7 @@ CLEAN=0
 COMPILE_OSVVM=0
 VERBOSE=0
 DEBUG=0
-FILTERING=0  # TODO: 1
+FILTERING=1
 SUPPRESS_WARNINGS=0
 HALT_ON_ERROR=0
 DestDir=""
@@ -161,10 +161,16 @@ fi
 
 
 # Source configuration file from GHDL's 'vendors' library directory
+echo -e "${ANSI_MAGENTA}Loading environment...${ANSI_NOCOLOR}"
 source $ScriptDir/config.sh
 if [[ $? -ne 0 ]]; then echo 1>&2 -e "${COLORED_ERROR} While loading configuration.${ANSI_NOCOLOR}"     ; exit 1; fi
 source $ScriptDir/shared.sh
 if [[ $? -ne 0 ]]; then echo 1>&2 -e "${COLORED_ERROR} While loading further procedures.${ANSI_NOCOLOR}"; exit 1; fi
+
+# <= $VHDLVersion
+# <= $VHDLStandard
+# <= $VHDLFlavor
+GHDLSetup 2008
 
 # -> $SourceDirectories
 # -> $DestinationDirectories
@@ -180,23 +186,29 @@ CreateDestinationDirectory
 cd $DestinationDirectory
 
 
-# => $SUPPRESS_WARNINGS
-# <= $GRC_COMMAND
-SetupGRCat
-
-
 # Extend global GHDL Options
 Analyze_Parameters+=(
 	-fexplicit
-	--no-vital-checks
 	-Wbinding
-	-Wno-hide
-	-Wno-others
-	-Wno-static
-	--std=08
+)
+if [[ $DEBUG -eq 0 ]]; then
+	Analyze_Parameters+=(
+		-Wno-hide
+	)
+fi
+if [[ ! (VERBOSE -eq 1) && ($DEBUG -eq 1) ]]; then
+	Analyze_Parameters+=(
+		-Wno-others
+		-Wno-static
+	)
+fi
+Analyze_Parameters+=(
+	--ieee=$VHDLFlavor
+	--no-vital-checks
+	--std=$VHDLStandard
+	-frelaxed
 	-P$DestinationDirectory
 )
-VHDLVersion="v08"
 
 
 # Cleanup directory
@@ -210,7 +222,7 @@ fi
 
 # Library osvvm
 # ==============================================================================
-StructName="OSVVM"
+StructName="OSVVM_osvvm"
 Files=(
 	NamePkg.vhd
 	OsvvmGlobalPkg.vhd
