@@ -36,11 +36,13 @@ class LSPConn:
 def path_from_uri(uri):
     # Convert file uri to path (strip html like head part)
     if not uri.startswith("file://"):
+        # No scheme
         return uri
-    if os.name == "nt":
-        _, path = uri.split("file:///", 1)
-    else:
-        _, path = uri.split("file://", 1)
+    _, path = uri.split("file://", 1)
+    if os.name == "nt" and path.startswith("/"):
+        # On windows, absolute files start like "/C:/aa/bbb".
+        # Remove the first "/".
+        path = path[1:]
     return os.path.normpath(unquote(path))
 
 
