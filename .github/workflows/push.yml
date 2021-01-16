@@ -371,7 +371,7 @@ jobs:
 
     - name: Run tests to generate coverage report
       run: |
-        PYTHONPATH=$(pwd)/.. python3 -m pytest -rA --cov=.. --cov-config=.coveragerc testsuite/pyunit
+        PYTHONPATH=$(pwd) python3 -m pytest -rA --cov=.. --cov-config=.coveragerc testsuite/pyunit
 
     - name: Generate XML coverage report
       if: always()
