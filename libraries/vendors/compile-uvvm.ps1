@@ -141,29 +141,28 @@ cd $DestinationDirectory
 $VHDLVersion,$VHDLStandard,$VHDLFlavor = Get-VHDLVariables
 
 # define global GHDL Options
-$GHDLOptions = @(
-	"-a",
-	"-fexplicit",
-	"-frelaxed-rules",
+$Analyze_Parameters = @(
 	"--mb-comments",
-	"-Wbinding"
+	"-Wbinding",
+	"-fexplicit",
+	"-Wno-shared"          # UVVM specific
 )
 if (-not $EnableDebug)
-{	$GHDLOptions += @(
+{	$Analyze_Parameters += @(
 		"-Wno-hide"
 	)
 }
 if (-not ($EnableVerbose -or $EnableDebug))
-{ $GHDLOptions += @(
+{ $Analyze_Parameters += @(
 		"-Wno-others",
-		"-Wno-static",
-		"-Wno-shared"          # UVVM specific
+		"-Wno-static"
 	)
 }
-$GHDLOptions += @(
+$Analyze_Parameters += @(
 	"--ieee=$VHDLFlavor",
 	"--no-vital-checks",
 	"--std=$VHDLStandard",
+	"-frelaxed",
 	"-P$DestinationDirectory"
 )
 
@@ -249,7 +248,7 @@ if ((-not $StopCompiling) -and $UVVM_Utilities)
 {	$Library = "uvvm_util"
 	$SourceFiles = $UVVM_Util_Files | % { "$SourceDirectory\$_" }
 
-	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+	$ErrorCount += Start-PackageCompilation $GHDLBinary $Analyze_Parameters $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
@@ -258,7 +257,7 @@ if ((-not $StopCompiling) -and $UVVM_VCC_Framework)
 {	$Library = "uvvm_vvc_framework"
 	$SourceFiles = $UVVM_VVC_Files | % { "$SourceDirectory\$_" }
 
-	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+	$ErrorCount += Start-PackageCompilation $GHDLBinary $Analyze_Parameters $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
@@ -268,7 +267,7 @@ foreach ($vip in $VIP_Files.Keys)
 	{	$Library =      $VIP_Files[$vip]["Library"]
 		$SourceFiles =  $VIP_Files[$vip]["Files"] #| % { "$SourceDirectory\$_" }
 
-		$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+		$ErrorCount += Start-PackageCompilation $GHDLBinary $Analyze_Parameters $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 	}
 }

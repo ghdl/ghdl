@@ -112,28 +112,27 @@ $GHDLBinary =           Get-GHDLBinary $GHDL
 New-DestinationDirectory $DestinationDirectory
 cd $DestinationDirectory
 
-$VHDLVersion,$VHDLStandard,$VHDLFlavor = Get-VHDLVariables
+$VHDLVersion,$VHDLStandard,$VHDLFlavor = Get-VHDLVariables -VHDL2008
 
 # define global GHDL Options
-$GHDLOptions = @(
-	"-a",
+$Analyze_Parameters = @(
 	"-fexplicit",
 	"-frelaxed-rules",
 	"--mb-comments",
   "-Wbinding"
 )
 if (-not $EnableDebug)
-{	$GHDLOptions += @(
+{	$Analyze_Parameters += @(
 		"-Wno-hide"
 	)
 }
 if (-not ($EnableVerbose -or $EnableDebug))
-{ $GHDLOptions += @(
+{ $Analyze_Parameters += @(
 		"-Wno-others",
 		"-Wno-static"
 	)
 }
-$GHDLOptions += @(
+$Analyze_Parameters += @(
 	"--ieee=$VHDLFlavor",
 	"--no-vital-checks",
 	"--std=$VHDLStandard",
@@ -321,7 +320,7 @@ foreach ($VIPName in $FileSets.Keys)
 			$Library =      $FileSets[$VIPName]["Libraries"][$LibraryName]["Library"]
 			$SourceFiles =  $FileSets[$VIPName]["Libraries"][$LibraryName]["Files"]
 
-			$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+			$ErrorCount += Start-PackageCompilation $GHDLBinary $Analyze_Parameters $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 			$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 		}
 	}

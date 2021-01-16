@@ -150,26 +150,25 @@ cd $DestinationDirectory
 $VHDLVersion,$VHDLStandard,$VHDLFlavor = Get-VHDLVariables $VHDL93 $VHDL2008
 
 # define global GHDL Options
-$GHDLOptions = @(
-	"-a",
+$Analyze_Parameters = @(
 	"-fexplicit",
 	"-frelaxed-rules",
 	"--mb-comments",
 	"-Wbinding"
 )
 if (-not $EnableDebug)
-{	$GHDLOptions += @(
+{	$Analyze_Parameters += @(
 		"-Wno-hide"
 	)
 }
 if (-not ($EnableVerbose -or $EnableDebug))
-{ $GHDLOptions += @(
+{ $Analyze_Parameters += @(
 		"-Wno-library",
 		"-Wno-others",
 		"-Wno-static"
 	)
 }
-$GHDLOptions += @(
+$Analyze_Parameters += @(
 	"--ieee=$VHDLFlavor",
 	"--no-vital-checks",
 	"--std=$VHDLStandard",
@@ -204,7 +203,7 @@ if ((-not $StopCompiling) -and $Altera)
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 
-	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+	$ErrorCount += Start-PackageCompilation $GHDLBinary $Analyze_Parameters $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
@@ -217,7 +216,7 @@ if ((-not $StopCompiling) -and $Altera)
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 
-	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+	$ErrorCount += Start-PackageCompilation $GHDLBinary $Analyze_Parameters $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
@@ -234,7 +233,7 @@ if ((-not $StopCompiling) -and $Altera)
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 
-	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+	$ErrorCount += Start-PackageCompilation $GHDLBinary $Analyze_Parameters $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
@@ -247,7 +246,7 @@ if ((-not $StopCompiling) -and $Altera)
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 
-	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+	$ErrorCount += Start-PackageCompilation $GHDLBinary $Analyze_Parameters $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
@@ -259,7 +258,7 @@ if ((-not $StopCompiling) -and $Altera)
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 
-	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+	$ErrorCount += Start-PackageCompilation $GHDLBinary $Analyze_Parameters $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
@@ -275,7 +274,7 @@ if ((-not $StopCompiling) -and $Max)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 
 	if (Test-Path $SourceFiles[0])
-	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $Analyze_Parameters $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 	}
 }
@@ -290,7 +289,7 @@ if ((-not $StopCompiling) -and $Max)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 
 	if (Test-Path $SourceFiles[0])
-	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $Analyze_Parameters $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 	}
 }
@@ -305,7 +304,7 @@ if ((-not $StopCompiling) -and $Max)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 
 	if (Test-Path $SourceFiles[0])
-	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $Analyze_Parameters $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 	}
 }
@@ -322,7 +321,7 @@ if ((-not $StopCompiling) -and $Arria)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 
 	if (Test-Path $SourceFiles[0])
-	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $Analyze_Parameters $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 	}
 }
@@ -337,7 +336,7 @@ if ((-not $StopCompiling) -and $Arria)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 
 	if (Test-Path $SourceFiles[0])
-	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $Analyze_Parameters $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 	}
 }
@@ -353,7 +352,7 @@ if ((-not $StopCompiling) -and $Arria)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 
 	if (Test-Path $SourceFiles[0])
-	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $Analyze_Parameters $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 	}
 }
@@ -370,7 +369,7 @@ if ((-not $StopCompiling) -and $Arria)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 
 	if (Test-Path $SourceFiles[0])
-	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $Analyze_Parameters $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 	}
 }
@@ -387,7 +386,7 @@ if ((-not $StopCompiling) -and $Arria)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 
 	if (Test-Path $SourceFiles[0])
-	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $Analyze_Parameters $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 	}
 }
@@ -402,7 +401,7 @@ if ((-not $StopCompiling) -and $Arria)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 
 	if (Test-Path $SourceFiles[0])
-	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $Analyze_Parameters $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 	}
 }
@@ -419,7 +418,7 @@ if ((-not $StopCompiling) -and $Cyclone)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 
 	if (Test-Path $SourceFiles[0])
-	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $Analyze_Parameters $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 	}
 }
@@ -434,7 +433,7 @@ if ((-not $StopCompiling) -and $Cyclone)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 
 	if (Test-Path $SourceFiles[0])
-	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $Analyze_Parameters $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 	}
 }
@@ -449,7 +448,7 @@ if ((-not $StopCompiling) -and $Cyclone)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 
 	if (Test-Path $SourceFiles[0])
-	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $Analyze_Parameters $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 	}
 }

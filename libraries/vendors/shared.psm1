@@ -188,8 +188,8 @@ function Get-VHDLVariables
 	#>
 	[CmdletBinding()]
 	param(
-		[bool]$VHDL93 =   $false,
-		[bool]$VHDL2008 = $true
+		[switch]$VHDL93 =   $false,
+		[switch]$VHDL2008 = $true
 	)
 
 	if ($VHDL93)
@@ -260,7 +260,7 @@ function Start-PackageCompilation
 	[CmdletBinding()]
 	param(
 		[Parameter(Mandatory=$true)][string]$GHDLBinary,
-		[Parameter(Mandatory=$true)][string[]]$GHDLOptions,
+		[Parameter(Mandatory=$true)][string[]]$Analyze_Parameters,
 		[Parameter(Mandatory=$true)][string]$DestinationDirectory,
 		[Parameter(Mandatory=$true)][string]$Library,
 		[Parameter(Mandatory=$true)][string]$VHDLVersion,
@@ -272,8 +272,12 @@ function Start-PackageCompilation
 	$EnableDebug =    [bool]$PSCmdlet.MyInvocation.BoundParameters["Debug"]
 	$EnableVerbose =  [bool]$PSCmdlet.MyInvocation.BoundParameters["Verbose"] -or $EnableDebug
 
+	$Parameters = $Analyze_Parameters
+
 	if ($EnableDebug)
-	{	$Indent = "      "  }
+	{	$Parameters += "-v"
+		$Indent =      "      "
+	}
 	elseif ($EnableVerbose)
 	{	$Indent = "    "    }
 	else
@@ -289,7 +293,7 @@ function Start-PackageCompilation
 	$ErrorCount = 0
 	foreach ($File in $SourceFiles)
 	{	Write-Host "  Analyzing package file '$File'" -ForegroundColor DarkCyan
-		$InvokeExpr = "& '$GHDLBinary' " + ($GHDLOptions -join " ") + " --work=$Library " + $File + " 2>&1"
+		$InvokeExpr = "& '$GHDLBinary' -a " + ($Parameters -join " ") + " --work=$Library " + $File + " 2>&1"
 		$EnableDebug -and (Write-Host "    $InvokeExpr"                  -ForegroundColor DarkGray  ) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings -Indent:"$Indent"
 		if (($LastExitCode -ne 0) -or $ErrorRecordFound)
@@ -325,7 +329,7 @@ function Start-PrimitiveCompilation
 	[CmdletBinding()]
 	param(
 		[Parameter(Mandatory=$true)][string]$GHDLBinary,
-		[Parameter(Mandatory=$true)][string[]]$GHDLOptions,
+		[Parameter(Mandatory=$true)][string[]]$Analyze_Parameters,
 		[Parameter(Mandatory=$true)][string]$DestinationDirectory,
 		[Parameter(Mandatory=$true)][string]$Library,
 		[Parameter(Mandatory=$true)][string]$VHDLVersion,
@@ -337,8 +341,12 @@ function Start-PrimitiveCompilation
 	$EnableDebug =    [bool]$PSCmdlet.MyInvocation.BoundParameters["Debug"]
 	$EnableVerbose =  [bool]$PSCmdlet.MyInvocation.BoundParameters["Verbose"] -or $EnableDebug
 
+	$Parameters = $Analyze_Parameters
+
 	if ($EnableDebug)
-	{	$Indent = "      "  }
+	{	$Parameters += "-v"
+		$Indent =      "      "
+	}
 	elseif ($EnableVerbose)
 	{	$Indent = "    "    }
 	else
@@ -356,8 +364,8 @@ function Start-PrimitiveCompilation
 	$ErrorCount = 0
 	foreach ($File in $SourceFiles)
 	{	$EnableVerbose -and (Write-Host "  Analyzing primitive file '$File'" -ForegroundColor DarkCyan  ) | Out-Null
-		$InvokeExpr = "& '$GHDLBinary' " + ($GHDLOptions -join " ") + " --work=$Library " + $File + " 2>&1"
-		$EnableDebug -and (Write-Host "    $InvokeExpr"              -ForegroundColor DarkGray  ) | Out-Null
+		$InvokeExpr = "& '$GHDLBinary' -a " + ($Parameters -join " ") + " --work=$Library " + $File + " 2>&1"
+		$EnableDebug -and (Write-Host "    $InvokeExpr"                      -ForegroundColor DarkGray  ) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings -Indent:"$Indent"
 		if (($LastExitCode -ne 0) -or $ErrorRecordFound)
 		{	$ErrorCount += 1
@@ -441,6 +449,12 @@ function Write-ColoredGHDLLine
 		{	if ($InputObject -match ":\d+:\d+:warning:\s")
 			{	if (-not $SuppressWarnings)
 				{	Write-Host "${Indent}WARNING: " -NoNewline -ForegroundColor Yellow
+					Write-Host $InputObject
+				}
+			}
+			elseif ($InputObject -match ":\d+:\d+:note:\s")
+			{	if (-not $SuppressWarnings)
+				{	Write-Host "${Indent}NOTE: " -NoNewline -ForegroundColor DarkCyan
 					Write-Host $InputObject
 				}
 			}
