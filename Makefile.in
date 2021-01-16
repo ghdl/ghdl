@@ -37,7 +37,7 @@ ghdl_version=@ghdl_version@
 libghdl_version=@libghdl_version@
 enable_werror=@enable_werror@
 enable_checks=@enable_checks@
-enable_openieee=@enable_openieee@
+enable_gplcompat=@enable_gplcompat@
 enable_libghdl=@enable_libghdl@
 default_pic=@default_pic@
 
@@ -118,7 +118,7 @@ LIBDST_DIR:=$(libdirsuffix)
 LIBVHDL_FLAGS_TO_PASS=\
  LIBSRC_DIR="$(LIBSRC_DIR)" \
  LIBDST_DIR="$(LIBDST_DIR)" \
- enable_openieee="$(enable_openieee)" \
+ enable_gplcompat="$(enable_gplcompat)" \
  LN="$(LN)" CP="$(CP)" MKDIR="$(MKDIR)"
 
 # Object files from grt for the synthesis.
@@ -533,21 +533,27 @@ install.vpi.local: all.vpi
 
 ################ Libraries ###############################################
 
-VHDLLIB_SUBDIRS_COMMON= src/std src/std/v87 src/std/v93 src/std/v08 \
-  src/synopsys src/synopsys/v08 \
-  std/v87 ieee/v87 \
-  std/v93 ieee/v93 \
-  std/v08 ieee/v08 \
-  src/openieee
+VHDLLIB_SUBDIRS= \
+  ieee/v87 \
+  ieee/v93 \
+  ieee/v08 \
+  std/v87 \
+  std/v93 \
+  std/v08 \
+  src/ieee \
+  src/ieee/v87 \
+  src/ieee/v93 \
+  src/ieee2008 \
+  src/std \
+  src/std/v87 \
+  src/std/v93 \
+  src/std/v08 \
+  src/synopsys \
+  src/synopsys/v08 \
+  src/upf
 
-VHDLLIB_SUBDIRS_FULL= src/ieee src/vital95 src/vital2000 \
-  src/ieee/v87 src/ieee/v93 src/ieee2008
-
-ifeq ($(enable_openieee),false)
-VHDLLIB_SUBDIRS=$(VHDLLIB_SUBDIRS_COMMON) $(VHDLLIB_SUBDIRS_FULL)
-else
-VHDLLIB_SUBDIRS=$(VHDLLIB_SUBDIRS_COMMON) \
-  src/openieee/v87 src/openieee/v93 src/openieee/v08
+ifeq ($(enable_gplcompat),false)
+VHDLLIB_SUBDIRS+=src/vital95 src/vital2000
 endif
 
 install.dirs:
@@ -610,8 +616,7 @@ create-dirs: force
 
 # Remove non GPL compatible source files
 clean-pure-gpl:
-#       IEEE 1164 or vital libraries aren't GPL compatible
-	$(RM) -rf libraries/ieee libraries/ieee2008
+#       Vital libraries aren't GPL compatible
 	$(RM) -rf libraries/vital95 libraries/vital2000
 #	The GNA testsuite contains open-source reproducer that may not be GPL.
 	$(RM) -rf testsuite/gna

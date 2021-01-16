@@ -9,14 +9,19 @@ Releases and sources
 Using package managers
 **********************
 
-Package managers of many popular distributions provide pre-built packages of GHDL. This is the case for `apt` (Debian/Ubuntu), `dnf` (Fedora/CentOS) or `pacman` (Arch Linux). Since GHDL supports three different backends and two library sets (ieee or openieee), at least six packages with different features might be available in each package manager. See differences between backends in :ref:`BUILD`.
+Package managers of many popular distributions provide pre-built packages of GHDL. This is the case for `apt`
+(Debian/Ubuntu), `dnf` (Fedora/CentOS) or `pacman` (Arch Linux). Since GHDL supports three different backends and two
+library sets (_regular_ or GPL-compatible), at least six packages with different features might be available in each package
+manager. See differences between backends in :ref:`BUILD`.
 
 .. _RELEASE:packages:
 
 Downloading pre-built packages
 ******************************
 
-Assets from nightly GHDL builds are available at `github.com/ghdl/ghdl/releases/nightly <https://github.com/ghdl/ghdl/releases/nightly>`_. These are mostly meant to be used in Continuous Integration (CI) workflows. Precisely, `setup-ghdl-ci <https://github.com/ghdl/setup-ghdl-ci>`_ allows to easily setup nightly assets in GitHub Actions workflows.
+Assets from nightly GHDL builds are available at `github.com/ghdl/ghdl/releases/nightly <https://github.com/ghdl/ghdl/releases/nightly>`__.
+These are mostly meant to be used in Continuous Integration (CI) workflows. Precisely, `setup-ghdl-ci <https://github.com/ghdl/setup-ghdl-ci>`__
+allows to easily setup nightly assets in GitHub Actions workflows.
 
 Furthermore, assets from stable builds are available for a larger set of platforms:
 
@@ -61,8 +66,9 @@ Downloading Source Files
 
 .. HINT::
 
-   All the following procedures will retrieve the latest development version of GHDL, i.e., the `master` branch at `github.com/ghdl/ghdl <https://github.com/ghdl/ghdl>`_.
-   We do our best to keep it stable, but bugs can seldom be published. See `HINT` boxes below for instructions to get older releases.
+   All the following procedures will retrieve the latest development version of GHDL, i.e., the `master` branch at
+   `github.com/ghdl/ghdl <https://github.com/ghdl/ghdl>`_. We do our best to keep it stable, but bugs can seldom be
+   published. See `HINT` boxes below for instructions to get older releases.
 
 .. _RELEASE:Sources:Zip:
 
@@ -91,7 +97,8 @@ choose your desired format/version:
 
 .. HINT::
 
-   To download a specific version of GHDL, use this alternative URL, where ``<format>`` is ``tar.gz`` or ``zip``: ``https://codeload.github.com/ghdl/ghdl/<format>/<tag>``.
+   To download a specific version of GHDL, use this alternative URL, where ``<format>`` is ``tar.gz`` or ``zip``:
+   ``https://codeload.github.com/ghdl/ghdl/<format>/<tag>``.
 
 .. _RELEASE:Sources:GitClone:
 

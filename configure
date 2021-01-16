@@ -41,7 +41,7 @@ build=
 build_mode=
 enable_werror=true
 enable_checks=true
-enable_openieee=unknown
+enable_gplcompat=unknown
 enable_libghdl=true
 enable_synth=true
 default_pic=false
@@ -52,7 +52,7 @@ PIC_FLAGS=-fPIC
 show_help=no
 progname=$0
 
-subst_vars="CC CXX GNATMAKE MAKE CFLAGS LDFLAGS build srcdir abs_srcdir prefix backend libdirsuffix libdirreverse gcc_src_dir llvm_config llvm_be backtrace_lib build_mode EXEEXT SOEXT PIC_FLAGS default_pic enable_werror enable_checks enable_openieee enable_libghdl libghdl_version ghdl_version"
+subst_vars="CC CXX GNATMAKE MAKE CFLAGS LDFLAGS build srcdir abs_srcdir prefix backend libdirsuffix libdirreverse gcc_src_dir llvm_config llvm_be backtrace_lib build_mode EXEEXT SOEXT PIC_FLAGS default_pic enable_werror enable_checks enable_gplcompat enable_libghdl libghdl_version ghdl_version"
 
 # Find srcdir
 srcdir=`dirname $progname`
@@ -102,8 +102,8 @@ for opt do
     --disable-werror)       enable_werror=false;;
     --enable-checks)        enable_checks=true;;
     --disable-checks)       enable_checks=false;;
-    --enable-openieee)      enable_openieee=true;;
-    --disable-openieee)     enable_openieee=false;;
+    --enable-gplcompat)     enable_gplcompat=true;;
+    --disable-gplcompat)    enable_gplcompat=false;;
     --enable-libghdl)       enable_libghdl=true;;
     --disable-libghdl)      enable_libghdl=false;;
     --enable-synth)         enable_synth=true;;
@@ -133,7 +133,7 @@ Options [defaults in brackets]:
   --disable-werror            warnings don't stop build
   --disable-checks            disable internal checks
   --disable-libghdl           do not build libghdl shared library
-  --enable-openieee           use gpl-compatible sources for ieee library
+  --enable-gplcompat          use GPL-compatible sources for ieee library
   --enable-libghdl            also build the libghdl shared library
   --disable-synth             do not build with synthesis feature
 EOF
@@ -198,19 +198,19 @@ if [ "$enable_libghdl" = true ]; then
     fi
 fi
 
-# Default for enable_openieee
-if [ "$enable_openieee" = "unknown" ]; then
-  if test -d $srcdir/libraries/ieee ; then
-    enable_openieee=false
+# Default for enable_gplcompat
+if [ "$enable_gplcompat" = "unknown" ]; then
+  if test -d $srcdir/libraries/vital95 && test -d $srcdir/libraries/vital2000; then
+    enable_gplcompat=false
     echo "Use full IEEE library"
   else
-    enable_openieee=true
-    echo "Use openieee source files for IEEE library (but partial)"
+    enable_gplcompat=true
+    echo "Use GPL-compatible source files for IEEE library (but partial)"
   fi
-elif [ "$enable_openieee" = false ]; then
-  if ! test -d $srcdir/libraries/ieee ; then
-    echo "Sorry, full ieee library source files not present"
-    echo "consider --enable-openieee"
+elif [ "$enable_gplcompat" = false ]; then
+  if ! test -d $srcdir/libraries/vital95 || ! test -d $srcdir/libraries/vital2000; then
+    echo "Sorry, full IEEE library source files not present"
+    echo "consider --enable-gplcompat"
     exit 1
   fi
 fi
