@@ -88,11 +88,11 @@ ISSYNTH=true
 for arg in "$@"; do
   shift
   case "$arg" in
-      "--color"|"-color")       set -- "$@" "-c";;
-      "--backend"|"-backend")   set -- "$@" "-b";;
-      "--pkg"|"-pkg")           set -- "$@" "-p";;
-      "--gpl"|"-gpl")           set -- "$@" "-g";;
-      "--no-synth"|"-no-synth") set -- "$@" "-s";;
+      "--color"|"-color")         set -- "$@" "-c";;
+      "--backend"|"-backend")     set -- "$@" "-b";;
+      "--pkg"|"-pkg")             set -- "$@" "-p";;
+      "--gplcompat"|"-gplcompat") set -- "$@" "-g";;
+      "--no-synth"|"-no-synth")   set -- "$@" "-s";;
     *) set -- "$@" "$arg"
   esac
 done
@@ -192,9 +192,9 @@ buildCmdOpts () {
   BUILD_CMD_OPTS="$ENABLECOLOR -b $DBACK"
 
   if [ "x$ISGPL" = "xtrue" ]; then
-      BUILD_CMD_OPTS="$BUILD_CMD_OPTS --gpl"
-      PKG_NAME="${PKG_NAME}-gpl"
-      DEXT="-gpl"
+      BUILD_CMD_OPTS="$BUILD_CMD_OPTS --gplcompat"
+      PKG_NAME="${PKG_NAME}-gplcompat"
+      DEXT="-gplcompat"
   fi
   export BUILD_CMD_OPTS="${BUILD_CMD_OPTS} -p $PKG_NAME"
 
@@ -238,6 +238,7 @@ build () {
       mkdir "$GPLDIR"
       cp -pdrl $files "$GPLDIR"
       tar -zcf "${GPLDIR}.tgz" "$GPLDIR"
+      CONFIG_OPTS+=' --enable-gplcompat'
       gend
   fi
 

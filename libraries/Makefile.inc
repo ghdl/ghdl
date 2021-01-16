@@ -26,38 +26,46 @@
 
 vhdl.libs.all: vhdl.libs.v87 vhdl.libs.v93 vhdl.libs.v08
 
-enable_openieee=false
+enable_gplcompat=false
 
-ifeq ($(enable_openieee),false)
-# Full libraries
 vhdl.libs.v87: std.v87 ieee.v87
 vhdl.libs.v93: std.v93 ieee.v93
 vhdl.libs.v08: std.v08 ieee.v08 $(LIBDST_DIR)/src/ieee2008/LICENSE
-else
-# GPL compatible
-vhdl.libs.v87: std.v87 ieee.v87
-vhdl.libs.v93: std.v93 ieee.v93
-vhdl.libs.v08: std.v08 ieee.v08
-endif
 
-STD_SRCS := textio.vhdl textio-body.vhdl
-SYNOPSYS_BSRCS := std_logic_arith.vhdl \
-  std_logic_unsigned.vhdl std_logic_signed.vhdl
-SYNOPSYS_V_BSRCS := std_logic_misc.vhdl std_logic_misc-body.vhdl
-SYNOPSYS8793_BSRCS := std_logic_textio.vhdl
-UPF_SRCS := openieee/upf.vhdl openieee/upf-body.vhdl
+STD_SRCS := \
+  textio.vhdl \
+  textio-body.vhdl
 
-ifeq ($(enable_openieee),false)
-IEEE_SRCS := std_logic_1164.vhdl std_logic_1164-body.vhdl \
-  numeric_bit.vhdl numeric_bit-body.vhdl \
-  numeric_std.vhdl numeric_std-body.vhdl
-MATH_SRCS := math_real.vhdl math_real-body.vhdl \
-  math_complex.vhdl math_complex-body.vhdl
-VITAL95_BSRCS := vital95/vital_timing.vhdl vital95/vital_timing-body.vhdl \
-  vital95/vital_primitives.vhdl vital95/vital_primitives-body.vhdl
-VITAL2000_BSRCS := vital2000/timing_p.vhdl vital2000/timing_b.vhdl \
-  vital2000/prmtvs_p.vhdl vital2000/prmtvs_b.vhdl \
-  vital2000/memory_p.vhdl vital2000/memory_b.vhdl
+SYNOPSYS_BSRCS := \
+  std_logic_arith.vhdl \
+  std_logic_unsigned.vhdl \
+  std_logic_signed.vhdl
+
+SYNOPSYS_V_BSRCS := \
+  std_logic_misc.vhdl \
+  std_logic_misc-body.vhdl
+
+SYNOPSYS8793_BSRCS := \
+  std_logic_textio.vhdl
+
+UPF_SRCS := \
+  upf/upf.vhdl \
+  upf/upf-body.vhdl
+
+IEEE_SRCS := \
+  std_logic_1164.vhdl \
+  std_logic_1164-body.vhdl \
+  numeric_bit.vhdl \
+  numeric_bit-body.vhdl \
+  numeric_std.vhdl \
+  numeric_std-body.vhdl
+
+MATH_SRCS := \
+  math_real.vhdl \
+  math_real-body.vhdl \
+  math_complex.vhdl \
+  math_complex-body.vhdl
+
 IEEE08_BSRCS := \
   ieee2008/std_logic_1164.vhdl ieee2008/std_logic_1164-body.vhdl \
   ieee2008/std_logic_textio.vhdl \
@@ -78,19 +86,21 @@ IEEE08_BSRCS := \
 IEEE87_BSRCS := $(addprefix ieee/v87/,$(IEEE_SRCS)) $(UPF_SRCS)
 IEEE93_BSRCS := $(addprefix ieee/v93/,$(IEEE_SRCS)) $(addprefix ieee/,$(MATH_SRCS)) $(UPF_SRCS)
 
-else
-IEEE_SRCS := std_logic_1164.vhdl std_logic_1164-body.vhdl \
-  numeric_bit.vhdl numeric_bit-body.vhdl \
-  numeric_std.vhdl numeric_std-body.vhdl
-MATH_SRCS := math_real.vhdl math_real-body.vhdl
 VITAL95_BSRCS :=
 VITAL2000_BSRCS :=
-IEEE08_BSRCS := v08/std_logic_1164.vhdl v08/std_logic_1164-body.vhdl \
- math_real.vhdl math_real-body.vhdl
-
-IEEE87_BSRCS := $(addprefix openieee/v87/,$(IEEE_SRCS)) $(UPF_SRCS)
-IEEE93_BSRCS := $(addprefix openieee/v93/,$(IEEE_SRCS)) $(addprefix openieee/,$(MATH_SRCS)) $(UPF_SRCS)
-IEEE08_BSRCS := $(addprefix openieee/,$(IEEE08_BSRCS)) $(UPF_SRCS)
+ifeq ($(enable_gplcompat),false)
+VITAL95_BSRCS := \
+  vital95/vital_timing.vhdl \
+  vital95/vital_timing-body.vhdl \
+  vital95/vital_primitives.vhdl \
+  vital95/vital_primitives-body.vhdl
+VITAL2000_BSRCS := \
+  vital2000/timing_p.vhdl \
+  vital2000/timing_b.vhdl \
+  vital2000/prmtvs_p.vhdl \
+  vital2000/prmtvs_b.vhdl \
+  vital2000/memory_p.vhdl \
+  vital2000/memory_b.vhdl
 endif
 
 ANALYZE=$(GHDL) -a $(GHDL_FLAGS)
@@ -158,7 +168,7 @@ $(STD87_DIR)/std-obj87.cf: $(ANALYZE_DEP) $(STD87_SRCS)
 $(LIBDST_DIR)/src/ieee/v87/%.vhdl: $(LIBSRC_DIR)/ieee/%.vhdl
 	$(SED_V87) < $< > $@
 
-$(LIBDST_DIR)/src/openieee/v87/%.vhdl: $(LIBSRC_DIR)/openieee/v87/%.vhdl
+$(LIBDST_DIR)/src/upf/%.vhdl: $(LIBSRC_DIR)/upf/%.vhdl
 	$(CP) $< $@
 
 $(LIBDST_DIR)/src/vital95/%.vhdl: $(LIBSRC_DIR)/vital95/%.vhdl
@@ -203,13 +213,10 @@ $(STD93_DIR)/std-obj93.cf: $(ANALYZE_DEP) $(STD93_SRCS)
 $(LIBDST_DIR)/src/ieee/v93/%.vhdl: $(LIBSRC_DIR)/ieee/%.vhdl
 	$(SED_V93) < $< > $@
 
+$(LIBDST_DIR)/src/upf/%.vhdl: $(LIBSRC_DIR)/upf/%.vhdl
+	$(CP) $< $@
+
 $(LIBDST_DIR)/src/ieee/%.vhdl: $(LIBSRC_DIR)/ieee/%.vhdl
-	$(CP) $< $@
-
-$(LIBDST_DIR)/src/openieee/%.vhdl: $(LIBSRC_DIR)/openieee/%.vhdl
-	$(CP) $< $@
-
-$(LIBDST_DIR)/src/openieee/v93/%.vhdl: $(LIBSRC_DIR)/openieee/v93/%.vhdl
 	$(CP) $< $@
 
 $(LIBDST_DIR)/src/vital2000/%.vhdl: $(LIBSRC_DIR)/vital2000/%.vhdl
@@ -255,8 +262,9 @@ $(LIBDST_DIR)/src/ieee2008/%.vhdl: $(LIBSRC_DIR)/ieee2008/%.vhdl
 $(LIBDST_DIR)/src/ieee2008/LICENSE: $(LIBSRC_DIR)/ieee2008/LICENSE
 	$(CP) $< $@
 
-$(LIBDST_DIR)/src/openieee/v08/%.vhdl: $(LIBSRC_DIR)/openieee/v08/%.vhdl
+$(LIBDST_DIR)/src/upf/%.vhdl: $(LIBSRC_DIR)/upf/%.vhdl
 	$(CP) $< $@
+
 
 ANALYZE_IEEE08=$(ANALYZE08) -P../.. --work=ieee
 ANALYZE_VITAL08=$(ANALYZE08) -P../.. --work=ieee -frelaxed-rules

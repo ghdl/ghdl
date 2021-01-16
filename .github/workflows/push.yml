@@ -113,7 +113,7 @@ jobs:
     - name: '🧰 Checkout'
       uses: actions/checkout@v2
 
-    - run: TASK=buster+mcode ./scripts/ci-run.sh -c --gpl --no-synth
+    - run: TASK=buster+mcode ./scripts/ci-run.sh -c --gplcompat
 
 #
 # GNU/Linux
