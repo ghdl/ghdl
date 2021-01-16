@@ -367,6 +367,8 @@ Options
 .. option:: -frelaxed
 .. option:: -frelaxed-rules
 
+  .. IMPORTANT:: The effects this option are reset by :option:`--std`, so it should be the placed *after* that option.
+
   Slightly relax some rules to be compatible with various other
   simulators or synthesizers:
 
