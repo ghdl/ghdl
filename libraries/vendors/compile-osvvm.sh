@@ -3,7 +3,7 @@
 #  Authors:
 #    Patrick Lehmann
 #
-#  Bash Script:  Script to compile the OSVVM library for GHDL on Linux
+#  Bash Script:  Script to compile the OSVVM library for GHDL on Linux.
 #
 # Description:
 # ------------------------------------
@@ -12,6 +12,7 @@
 #    - compiles all OSVVM packages
 #
 # ==============================================================================
+#  Copyright (C) 2017-2021 Patrick Lehmann - Boetzingen, Germany
 #  Copyright (C) 2015-2016 Patrick Lehmann - Dresden, Germany
 #
 #  This program is free software: you can redistribute it and/or modify
