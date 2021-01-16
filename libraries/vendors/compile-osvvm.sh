@@ -244,7 +244,7 @@ Files=(
 	OsvvmContext.vhd
 )
 CreateLibraryStruct $StructName "osvvm" "." $VHDLVersion "${Files[@]}"
-test $COMPILE_OSVVM -eq 1 && Libraries+=($StructName)
+test $COMPILE_OSVVM -eq 1 && Libraries+=("$StructName")
 
 # for VIPName in ${VIPNames[*]}; do
 	# VarName="COMPILE_OSVVM_${VIPName}"
@@ -254,7 +254,7 @@ test $COMPILE_OSVVM -eq 1 && Libraries+=($StructName)
 # done
 
 # Compile libraries
-if [[ "$Libraries" != "" ]]; then
+if [[ ${#Libraries[@]} -ne 0 ]]; then
 	Compile "$SourceDirectory" "${Libraries[*]}"
 
 	echo "--------------------------------------------------------------------------------"

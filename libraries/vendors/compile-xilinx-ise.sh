@@ -211,14 +211,14 @@ fi
 # Search Xilinx ISE in default installation locations
 DefaultDirectories=("/opt/Xilinx" "/opt/xilinx" "/c/Xilinx")
 if [ ! -z $XILINX ]; then
-	EnvSourceDir=$XILINX/${Xilinx_ISE_Settings[SourceDirectory]}
+	EnvSourceDir="$XILINX/${Xilinx_ISE_Settings[SourceDirectory]}"
 else
 	for DefaultDir in "${DefaultDirectories[@]}"; do
 		for Major in 14 13; do
 			for Minor in 7 6 5 4 3 2 1 0; do
 				Dir=$DefaultDir/${Major}.${Minor}/ISE_DS
 				if [ -d $Dir ]; then
-					EnvSourceDir=$Dir/${Xilinx_ISE_Settings[SourceDirectory]}
+					EnvSourceDir="$Dir/${Xilinx_ISE_Settings[SourceDirectory]}"
 					break 3
 				fi
 			done
@@ -298,7 +298,7 @@ while IFS= read -r File; do
 done < <(grep --no-filename -R '^[a-zA-Z]' "$SourceDirectory/${Library}s/primitive/vhdl_analyze_order")
 
 CreateLibraryStruct $StructName $Library "${Library}s" $VHDLVersion "${Files[@]}"
-test $COMPILE_UNISIM -eq 1 && Libraries+=($StructName)
+test $COMPILE_UNISIM -eq 1 && Libraries+=("$StructName")
 
 # Reading unisim secureip files
 StructName="UNISIM_SECUREIP"
@@ -310,7 +310,7 @@ while IFS= read -r File; do
 done < <(grep --no-filename -R '^[a-zA-Z]' "$SourceDirectory/${Library}s/secureip/vhdl_analyze_order")
 
 CreateLibraryStruct $StructName "secureip" "${Library}s" $VHDLVersion "${Files[@]}"
-test $COMPILE_UNISIM -eq 1 && test $COMPILE_SECUREIP -eq 1 && Libraries+=($StructName)
+test $COMPILE_UNISIM -eq 1 && test $COMPILE_SECUREIP -eq 1 && Libraries+=("$StructName")
 
 
 # Library unimacro
@@ -325,7 +325,7 @@ Files=(
 Files=( $(cd $SourceDirectory/$Library; LC_COLLATE=C ls *_MACRO.vhd) )
 
 CreateLibraryStruct $StructName $Library $Library $VHDLVersion "${Files[@]}"
-test $COMPILE_UNIMACRO -eq 1 && Libraries+=($StructName)
+test $COMPILE_UNIMACRO -eq 1 && Libraries+=("$StructName")
 
 
 # Library simprim
@@ -343,7 +343,7 @@ Files=(
 # done < <(grep --no-filename -R '^[a-zA-Z]' "$SourceDirectory/${Library}s/primitive/other/vhdl_analyze_order")
 
 CreateLibraryStruct $StructName $Library "${Library}s" $VHDLVersion "${Files[@]}"
-test $COMPILE_SIMPRIM -eq 1 && Libraries+=($StructName)
+test $COMPILE_SIMPRIM -eq 1 && Libraries+=("$StructName")
 
 
 # Reading simprim secureip files
@@ -356,7 +356,7 @@ while IFS= read -r File; do
 done < <(grep --no-filename -R '^[a-zA-Z]' "$SourceDirectory/${Library}s/secureip/other/vhdl_analyze_order")
 
 CreateLibraryStruct $StructName "secureip" "${Library}s" $VHDLVersion "${Files[@]}"
-test $COMPILE_SIMPRIM -eq 1 && test $COMPILE_SECUREIP -eq 1 && Libraries+=($StructName)
+test $COMPILE_SIMPRIM -eq 1 && test $COMPILE_SECUREIP -eq 1 && Libraries+=("$StructName")
 
 
 # Library xilinxcorelib
@@ -370,7 +370,7 @@ while IFS= read -r File; do
 done < <(grep --no-filename -R '^[a-zA-Z]' "$SourceDirectory/XilinxCoreLib/vhdl_analyze_order")
 
 CreateLibraryStruct $StructName $Library "XilinxCoreLib" $VHDLVersion "${Files[@]}"
-test $COMPILE_CORELIB -eq 1 && Libraries+=($StructName)
+test $COMPILE_CORELIB -eq 1 && Libraries+=("$StructName")
 
 if [[ $DEBUG -eq 1 ]]; then
 	for StructName in ${Libraries[*]}; do
@@ -379,7 +379,7 @@ if [[ $DEBUG -eq 1 ]]; then
 fi
 
 # Compile libraries
-if [[ "$Libraries" != "" ]]; then
+if [[ ${#Libraries[@]} -ne 0 ]]; then
 	Compile "$SourceDirectory" "${Libraries[*]}"
 
 	echo "--------------------------------------------------------------------------------"
