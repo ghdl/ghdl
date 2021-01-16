@@ -3,13 +3,12 @@
 #  Authors:
 #    Patrick Lehmann
 #
-#  Bash Script:  Script to compile the UVVM library for GHDL on Linux.
+#  Bash Script (executable):
+#    Script to compile the UVVM library for GHDL on Linux.
 #
-# Description:
-# ------------------------------------
-#  This is a Bash script (executable) which:
-#    - creates a subdirectory in the current working directory
-#    - compiles all UVVM packages
+#  Description:
+#    - Creates a subdirectory in the current working directory
+#    - Compiles all UVVM packages and verification IPs
 #
 # ==============================================================================
 #  Copyright (C) 2017-2021 Patrick Lehmann - Boetzingen, Germany
@@ -30,7 +29,7 @@
 # ==============================================================================
 
 # Work around for Darwin (Mac OS)
-READLINK=readlink; if [[ $(uname) == "Darwin" ]]; then READLINK=greadlink; fi
+test greadlink --version > /dev/null 2>&1 && READLINK=greadlink || READLINK=readlink
 
 # Save working directory
 WorkingDir=$(pwd)
@@ -74,7 +73,7 @@ SUPPRESS_WARNINGS=0
 HALT_ON_ERROR=0
 DestDir=""
 SrcDir=""
-while [[ $# > 0 ]]; do
+while [[ $# -gt 0 ]]; do
 	case "$1" in
 		-c|--clean)
 			COMMAND=3
