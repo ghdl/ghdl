@@ -5,8 +5,8 @@
     "method": "initialize",
     "params": {
       "processId": 5529,
-      "rootPath": "/home/tgingold/work/vhdl-language-server/tests/003errors",
-      "rootUri": "file:///home/tgingold/work/vhdl-language-server/tests/003errors",
+      "rootPath": "/003errors",
+      "rootUri": "file://003errors",
       "capabilities": {
         "workspace": {
           "applyEdit": true,
@@ -203,7 +203,7 @@
       "trace": "off",
       "workspaceFolders": [
         {
-          "uri": "file:///home/tgingold/work/vhdl-language-server/tests/003errors",
+          "uri": "file://pyunit/lsp/003errors",
           "name": "003errors"
         }
       ]
@@ -219,7 +219,7 @@
     "method": "textDocument/didOpen",
     "params": {
       "textDocument": {
-        "uri": "file:///home/tgingold/work/vhdl-language-server/tests/003errors/tc.vhdl",
+        "uri": "file://pyunit/lsp/003errors/tc.vhdl",
         "languageId": "vhdl",
         "version": 1,
         "text": "library ieee;\nuse ieee.std_logic_1164.all;\nuse ieee.std_logic_unsigned.all;\n\nentity tb is\nend tb;\n\narchitecture behav of tb is\n    signal s : std_logic_vector(7 downto 0);\nbegin\n    assert s /= x\"73\";\nend behav;        \n"
@@ -232,7 +232,7 @@
     "method": "textDocument/documentSymbol",
     "params": {
       "textDocument": {
-        "uri": "file:///home/tgingold/work/vhdl-language-server/tests/003errors/tc.vhdl"
+        "uri": "file://pyunit/lsp/003errors/tc.vhdl"
       }
     }
   },
