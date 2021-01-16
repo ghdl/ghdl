@@ -367,7 +367,7 @@ Options
 .. option:: -frelaxed
 .. option:: -frelaxed-rules
 
-  .. IMPORTANT:: The effects this option are reset by :option:`--std`, so it should be the placed *after* that option.
+  .. IMPORTANT:: The effects of this option are reset by :option:`--std`, so it should be placed *after* that option.
 
   Slightly relax some rules to be compatible with various other
   simulators or synthesizers:
@@ -391,7 +391,7 @@ Options
         constant state1 : state := state1;
       end pkg2;
 
-    Some code (such as Xilinx packages) have such constructs, which are valid.
+    Some code (such as Xilinx packages) have such constructs, which are invalid.
 
     (The scope of the ``state1`` constant starts at the `constant`
     keyword. Because the constant ``state1`` and the enumeration
