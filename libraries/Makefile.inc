@@ -1,5 +1,5 @@
 #  -*- Makefile -*- for the VHDL libraries.
-#  Copyright (C) 2002, 2003, 2004, 2005 Tristan Gingold
+#  Copyright (C) 2002-2021 Tristan Gingold
 #
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -67,20 +67,30 @@ MATH_SRCS := \
   math_complex-body.vhdl
 
 IEEE08_BSRCS := \
-  ieee2008/std_logic_1164.vhdl ieee2008/std_logic_1164-body.vhdl \
+  ieee2008/std_logic_1164.vhdl \
+  ieee2008/std_logic_1164-body.vhdl \
   ieee2008/std_logic_textio.vhdl \
-  ieee2008/math_real.vhdl ieee2008/math_real-body.vhdl \
-  ieee2008/math_complex.vhdl ieee2008/math_complex-body.vhdl \
-  ieee2008/numeric_bit.vhdl ieee2008/numeric_bit-body.vhdl \
-  ieee2008/numeric_bit_unsigned.vhdl ieee2008/numeric_bit_unsigned-body.vhdl \
-  ieee2008/numeric_std.vhdl ieee2008/numeric_std-body.vhdl \
-  ieee2008/numeric_std_unsigned.vhdl ieee2008/numeric_std_unsigned-body.vhdl \
+  ieee2008/math_real.vhdl \
+  ieee2008/math_real-body.vhdl \
+  ieee2008/math_complex.vhdl \
+  ieee2008/math_complex-body.vhdl \
+  ieee2008/numeric_bit.vhdl \
+  ieee2008/numeric_bit-body.vhdl \
+  ieee2008/numeric_bit_unsigned.vhdl \
+  ieee2008/numeric_bit_unsigned-body.vhdl \
+  ieee2008/numeric_std.vhdl \
+  ieee2008/numeric_std-body.vhdl \
+  ieee2008/numeric_std_unsigned.vhdl \
+  ieee2008/numeric_std_unsigned-body.vhdl \
   ieee2008/fixed_float_types.vhdl \
-  ieee2008/fixed_generic_pkg.vhdl ieee2008/fixed_generic_pkg-body.vhdl \
+  ieee2008/fixed_generic_pkg.vhdl \
+  ieee2008/fixed_generic_pkg-body.vhdl \
   ieee2008/fixed_pkg.vhdl \
-  ieee2008/float_generic_pkg.vhdl ieee2008/float_generic_pkg-body.vhdl \
+  ieee2008/float_generic_pkg.vhdl \
+  ieee2008/float_generic_pkg-body.vhdl \
   ieee2008/float_pkg.vhdl \
-  ieee2008/ieee_bit_context.vhdl ieee2008/ieee_std_context.vhdl \
+  ieee2008/ieee_bit_context.vhdl \
+  ieee2008/ieee_std_context.vhdl \
   $(UPF_SRCS)
 
 IEEE87_BSRCS := $(addprefix ieee/v87/,$(IEEE_SRCS)) $(UPF_SRCS)
