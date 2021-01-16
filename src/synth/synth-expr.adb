@@ -537,6 +537,12 @@ package body Synth.Expr is
                return Res.Typ;
             end;
 
+         when Iir_Kind_String_Literal8 =>
+            --  TODO: the value should be computed (once) and its type
+            --  returned.
+            return Synth.Decls.Synth_Subtype_Indication
+              (Syn_Inst, Get_Type (Expr));
+
          when others =>
             Vhdl.Errors.Error_Kind ("synth_type_of_object", Expr);
       end case;
