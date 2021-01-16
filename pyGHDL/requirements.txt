@@ -1,5 +1,2 @@
-# FIXME: remove this dependency. Only lsp/lsp.py uses it.
-attrs
-
 pydecor>=2.0.1
 pyVHDLModel>=0.7.3

@@ -1,8 +1,6 @@
 import os
 import logging
 import json
-import attr
-from attr.validators import instance_of
 
 try:
     from urllib.parse import unquote, quote
@@ -275,37 +273,3 @@ class SymbolKind(object):
     Number = 16
     Boolean = 17
     Array = 18
-
-
-@attr.s
-class HoverInfo(object):
-    language = attr.ib()
-    value = attr.ib()
-
-
-@attr.s
-class Completion(object):
-    label = attr.ib()
-    kind = attr.ib()
-    detail = attr.ib()
-    documentation = attr.ib()
-
-
-@attr.s
-class Position(object):
-    line = attr.ib()
-    character = attr.ib()
-
-
-@attr.s
-class Range(object):
-    start = attr.ib(validator=instance_of(Position))
-    end = attr.ib(validator=instance_of(Position))
-
-
-@attr.s
-class Diagnostic(object):
-    range = attr.ib(validator=instance_of(Range))
-    severity = attr.ib()
-    source = attr.ib()
-    message = attr.ib()
