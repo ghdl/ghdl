@@ -30,7 +30,7 @@
 # ==============================================================================
 
 # work around for Darwin (Mac OS)
-READLINK=readlink; if [[ $(uname) == "Darwin" ]]; then READLINK=greadlink; fi
+test greadlink --version > /dev/null 2>&1 && READLINK=greadlink || READLINK=readlink
 
 # Save working directory
 WorkingDir=$(pwd)

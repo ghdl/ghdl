@@ -84,6 +84,14 @@ documentation on how to use [Precompile Scripts](https://ghdl.github.io/ghdl/get
 
 ---------------------------------------------------------------------
 
+## Usage
+
+*TODO*
+
+
+
+---------------------------------------------------------------------
+
 ## Options
 
 Each script has an integrated help. Use `script.sh --help` (Bash) or
@@ -108,15 +116,14 @@ For a detailed documentation and all command line options see
 - OSVVM
   - switch / search directories if normal OSVVM or OsvvmLibraries is specified as source
 
-- Bash scripts
-  - Verify `--source` is used instead of `--src`
-
 - Missing features
   - Implement `--clean` commands
 
 - describe usage with -P
 
 - document offered procedures and functions
+
+- don't enforce `--output` if `--source` is used.
 
 ------------------------
 Author: Patrick Lehmann  

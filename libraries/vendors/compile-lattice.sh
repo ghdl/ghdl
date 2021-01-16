@@ -4,15 +4,13 @@
 #    Markus Koch
 #    Patrick Lehmann
 #
-#  Bash Script:
-#    Script to compile the simulation libraries from Lattice
-#    Diamond for GHDL on Linux
+#  Bash Script (executable):
+#    Script to compile the simulation libraries from Lattice Diamond for GHDL on
+#    Linux
 #
 # Description:
-# ------------------------------------
-#  This is a Bash script (executable) which:
-#    - creates a subdirectory in the current working directory
-#    - compiles all Lattice Diamond simulation libraries and packages
+#    - Creates a subdirectory in the current working directory
+#    - Compiles all Lattice Diamond simulation libraries and packages
 #
 # ==============================================================================
 #  Copyright (C) 2017-2021 Patrick Lehmann - Boetzingen, Germany
@@ -34,7 +32,7 @@
 # ==============================================================================
 
 # Work around for Darwin (Mac OS)
-READLINK=readlink; if [[ $(uname) == "Darwin" ]]; then READLINK=greadlink; fi
+test greadlink --version > /dev/null 2>&1 && READLINK=greadlink || READLINK=readlink
 
 # Save working directory
 WorkingDir=$(pwd)
@@ -156,7 +154,7 @@ if [[ $COMMAND -le 1 ]]; then
 	echo "Libraries:"
 	echo "  -a --all                     Compile all Lattice simulation libraries."
 	for Device in $DeviceList; do
-	  printf "     --%-19s Device primitives for '%s'.\n" "${Device,,}" "$Device"
+	  printf "     --%-23s Device primitives for '%s'.\n" "${Device,,}" "$Device"
 	done
 	echo ""
 	echo "Library compile options:"

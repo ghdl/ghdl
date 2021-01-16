@@ -1,15 +1,16 @@
 # ==============================================================================
-#	Authors:						Patrick Lehmann
+#  Authors:
+#    Patrick Lehmann
 #
-#	Bash Script:				This is a Bash resource file.
+#	 Bash Script:
+#	   This is a Bash resource file for sourcing.
 #
-# Description:
-# ------------------------------------
-#		TODO
+#  Description:
+#	   Provide Bash procedures to easily use GHDL in Bash scripts.
 #
 # ==============================================================================
-#	Copyright (C) 2017-2021 Patrick Lehmann - Boetzingen, Germany
-#	Copyright (C) 2015-2016 Patrick Lehmann - Dresden, Germany
+#  Copyright (C) 2017-2021 Patrick Lehmann - Boetzingen, Germany
+#  Copyright (C) 2015-2016 Patrick Lehmann - Dresden, Germany
 #
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -100,7 +101,7 @@ SetupDirectories() {
 	fi
 
 	# Resolve paths to an absolute paths
-	READLINK=readlink; if [[ $(uname) == "Darwin" ]]; then READLINK=greadlink; fi
+	test greadlink --version > /dev/null 2>&1 && READLINK=greadlink || READLINK=readlink
 	SourceDirectory=$($READLINK -f $SourceDirectory)
 	if [[ ! "$DestinationDirectory" = /* ]]; then
 		DestinationDirectory=$WorkingDir/$DestinationDirectory

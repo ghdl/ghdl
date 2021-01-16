@@ -3,15 +3,13 @@
 #  Authors:
 #    Patrick Lehmann
 #
-#  Bash Script:
-#    Script to compile the simulation libraries from Xilinx ISE
-#    for GHDL on Linux
+#  Bash Script (executable):
+#    Script to compile the simulation libraries from Xilinx ISE for GHDL on
+#    Linux
 #
 # Description:
-# ------------------------------------
-#  This is a Bash script (executable) which:
-#    - creates a subdirectory in the current working directory
-#    - compiles all Xilinx ISE simulation libraries and packages
+#    - Creates a subdirectory in the current working directory
+#    - Compiles all Xilinx ISE simulation libraries and packages
 #
 # ==============================================================================
 #  Copyright (C) 2017-2021 Patrick Lehmann - Boetzingen, Germany
@@ -32,7 +30,7 @@
 # ==============================================================================
 
 # Work around for Darwin (Mac OS)
-READLINK=readlink; if [[ $(uname) == "Darwin" ]]; then READLINK=greadlink; fi
+test greadlink --version > /dev/null 2>&1 && READLINK=greadlink || READLINK=readlink
 
 # Save working directory
 WorkingDir=$(pwd)
