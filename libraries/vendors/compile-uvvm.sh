@@ -271,7 +271,7 @@ if [[ $COMMAND -le 1 ]]; then
 	echo "Verbosity:"
 	echo "  -v --verbose                  Print verbose messages."
 	echo "  -d --debug                    Print debug messages."
-#	echo "  -n --no-filter                Disable output filtering scripts."
+	echo "  -n --no-filter                Disable output filtering scripts."
 	echo "  -N --no-warnings              Suppress all warnings. Show only error messages."
 	echo ""
 	exit $COMMAND
@@ -333,7 +333,7 @@ CreateDestinationDirectory
 cd $DestinationDirectory
 
 
-# Extend global GHDL Options
+# Extend global GHDL Options TODO: move to GHDLSetup
 Analyze_Parameters+=(
 	-fexplicit
 	-Wbinding

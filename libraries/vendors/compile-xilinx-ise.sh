@@ -62,7 +62,7 @@ VHDLStandard=93
 GHDLBinDir=""
 DestDir=""
 SrcDir=""
-while [[ $# > 0 ]]; do
+while [[ $# -gt 0 ]]; do
 	case "$1" in
 		-c|--clean)
 			COMMAND=3
@@ -182,7 +182,7 @@ if [[ $COMMAND -le 1 ]]; then
 	echo "Verbosity:"
 	echo "  -v --verbose                 Print verbose messages."
 	echo "  -d --debug                   Print debug messages."
-#	echo "  -n --no-filter               Disable output filtering scripts."
+	echo "  -n --no-filter               Disable output filtering scripts."
 	echo "  -N --no-warnings             Suppress all warnings. Show only error messages."
 	echo ""
 	exit $COMMAND
@@ -196,28 +196,6 @@ if [[ $COMMAND -eq 2 ]]; then
 	COMPILE_SECUREIP=1
 fi
 
-if [[ $VHDLStandard -eq 2008 ]]; then
-	echo -e "${ANSI_RED}Not all Xilinx primitives are VHDL-2008 compatible! Setting CONTINUE_ON_ERROR to TRUE.${ANSI_NOCOLOR}"
-	CONTINUE_ON_ERROR=1
-fi
-
-
-DefaultDirectories=("/opt/Xilinx" "/opt/xilinx")
-if [ ! -z $XILINX ]; then
-	EnvSourceDir=$XILINX/${SourceDirectories[XilinxISE]}
-else
-	for DefaultDir in ${DefaultDirectories[@]}; do
-		for Major in 14 13; do
-			for Minor in 7 6 5 4 3 2 1 0; do
-				Dir=$DefaultDir/${Major}.${Minor}/ISE_DS/ISE
-				if [ -d $Dir ]; then
-					EnvSourceDir=$Dir/${SourceDirectories[XilinxISE]}
-					break 3
-				fi
-			done
-		done
-	done
-fi
 
 # Source configuration file from GHDL's 'vendors' library directory
 echo -e "${ANSI_MAGENTA}Loading environment...${ANSI_NOCOLOR}"
@@ -225,6 +203,31 @@ source $ScriptDir/config.sh
 if [[ $? -ne 0 ]]; then echo 1>&2 -e "${COLORED_ERROR} While loading configuration.${ANSI_NOCOLOR}"     ; exit 1; fi
 source $ScriptDir/shared.sh
 if [[ $? -ne 0 ]]; then echo 1>&2 -e "${COLORED_ERROR} While loading further procedures.${ANSI_NOCOLOR}"; exit 1; fi
+
+# Warn that some files might not be VHDL-2008 ready. Thus enabled continue on error.
+if [[ $VHDLStandard -eq 2008 ]]; then
+	echo -e "${ANSI_RED}Not all Xilinx primitives are VHDL-2008 compatible! Setting CONTINUE_ON_ERROR to TRUE.${ANSI_NOCOLOR}"
+	CONTINUE_ON_ERROR=1
+fi
+
+# Search Xilinx ISE in default installation locations
+DefaultDirectories=("/opt/Xilinx" "/opt/xilinx" "/c/Xilinx")
+if [ ! -z $XILINX ]; then
+	EnvSourceDir=$XILINX/${Xilinx_ISE_Settings[SourceDirectory]}
+else
+	for DefaultDir in "${DefaultDirectories[@]}"; do
+		for Major in 14 13; do
+			for Minor in 7 6 5 4 3 2 1 0; do
+				Dir=$DefaultDir/${Major}.${Minor}/ISE_DS
+				if [ -d $Dir ]; then
+					EnvSourceDir=$Dir/${Xilinx_ISE_Settings[SourceDirectory]}
+					break 3
+				fi
+			done
+		done
+	done
+fi
+
 
 # <= $VHDLVersion
 # <= $VHDLStandard
@@ -238,7 +241,7 @@ GHDLSetup $VHDLStandard
 # -> $DestDir
 # <= $SourceDirectory
 # <= $DestinationDirectory
-SetupDirectories XilinxISE "Xilinx ISE"
+SetupDirectories Xilinx_ISE "Xilinx ISE"
 
 # create "xilinx-ise" directory and change to it
 # => $DestinationDirectory
@@ -246,7 +249,7 @@ CreateDestinationDirectory
 cd $DestinationDirectory
 
 
-# Extend global GHDL Options
+# Extend global GHDL Options TODO: move to GHDLSetup TODO: move to GHDLSetup
 Analyze_Parameters+=(
 	-fexplicit
 	-Wbinding

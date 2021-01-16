@@ -61,7 +61,7 @@ VHDLStandard=93
 GHDLBinDir=""
 DestDir=""
 SrcDir=""
-while [[ $# > 0 ]]; do
+while [[ $# -gt 0 ]]; do
 	case "$1" in
 		-c|--clean)
 			COMMAND=3
@@ -176,7 +176,7 @@ if [[ $COMMAND -le 1 ]]; then
 	echo "Verbosity:"
 	echo "  -v --verbose                 Print verbose messages."
 	echo "  -d --debug                   Print debug messages."
-#	echo "  -n --no-filter               Disable output filtering scripts."
+	echo "  -n --no-filter               Disable output filtering scripts."
 	echo "  -N --no-warnings             Suppress all warnings. Show only error messages."
 	echo ""
 	exit $COMMAND
@@ -189,28 +189,6 @@ if [[ $COMMAND -eq 2 ]]; then
 	COMPILE_SECUREIP=1
 fi
 
-if [[ $VHDLStandard -eq 2008 ]]; then
-	echo -e "${ANSI_RED}Not all Xilinx primitives are VHDL-2008 compatible! Setting CONTINUE_ON_ERROR to TRUE.${ANSI_NOCOLOR}"
-	CONTINUE_ON_ERROR=1
-fi
-
-
-DefaultDirectories=("/opt/Xilinx/Vivado" "/opt/xilinx/Vivado")
-if [ ! -z $XILINX_VIVADO ]; then
-	EnvSourceDir=$XILINX_VIVADO/${SourceDirectories[XilinxVivado]}
-else
-	for DefaultDir in ${DefaultDirectories[@]}; do
-		for Major in 2021 2020 2019 2018 2017 2016 2015 2014; do
-			for Minor in 4 3 2 1; do
-				Dir=$DefaultDir/${Major}.${Minor}
-				if [ -d $Dir ]; then
-					EnvSourceDir=$Dir/${SourceDirectories[XilinxVivado]}
-					break 3
-				fi
-			done
-		done
-	done
-fi
 
 # Source configuration file from GHDL's 'vendors' library directory
 echo -e "${ANSI_MAGENTA}Loading environment...${ANSI_NOCOLOR}"
@@ -218,6 +196,31 @@ source $ScriptDir/config.sh
 if [[ $? -ne 0 ]]; then echo 1>&2 -e "${COLORED_ERROR} While loading configuration.${ANSI_NOCOLOR}"     ; exit 1; fi
 source $ScriptDir/shared.sh
 if [[ $? -ne 0 ]]; then echo 1>&2 -e "${COLORED_ERROR} While loading further procedures.${ANSI_NOCOLOR}"; exit 1; fi
+
+# Warn that some files might not be VHDL-2008 ready. Thus enabled continue on error.
+if [[ $VHDLStandard -eq 2008 ]]; then
+	echo -e "${ANSI_RED}Not all Xilinx primitives are VHDL-2008 compatible! Setting CONTINUE_ON_ERROR to TRUE.${ANSI_NOCOLOR}"
+	CONTINUE_ON_ERROR=1
+fi
+
+# Search Xilinx Vivado in default installation locations
+DefaultDirectories=("/opt/Xilinx/Vivado" "/opt/xilinx/Vivado" "/c/Xilinx/Vivado")
+if [ ! -z $XILINX_VIVADO ]; then
+	EnvSourceDir=$XILINX_VIVADO/${Xilinx_Vivado_Settings[SourceDirectory]}
+else
+	for DefaultDir in "${DefaultDirectories[@]}"; do
+		for Major in 2021 2020 2019 2018 2017 2016 2015 2014; do
+			for Minor in 4 3 2 1; do
+				Dir=$DefaultDir/${Major}.${Minor}
+				if [ -d $Dir ]; then
+					EnvSourceDir=$Dir/${Xilinx_Vivado_Settings[SourceDirectory]}
+					break 3
+				fi
+			done
+		done
+	done
+fi
+
 
 # <= $VHDLVersion
 # <= $VHDLStandard
@@ -231,7 +234,7 @@ GHDLSetup $VHDLStandard
 # -> $DestDir
 # <= $SourceDirectory
 # <= $DestinationDirectory
-SetupDirectories XilinxVivado "Xilinx Vivado"
+SetupDirectories Xilinx_Vivado "Xilinx Vivado"
 
 # create "xilinx-vivado" directory and change to it
 # => $DestinationDirectory
@@ -239,7 +242,7 @@ CreateDestinationDirectory
 cd $DestinationDirectory
 
 
-# Extend global GHDL Options
+# Extend global GHDL Options TODO: move to GHDLSetup
 Analyze_Parameters+=(
 	-fexplicit
 	-Wbinding
