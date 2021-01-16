@@ -4,25 +4,31 @@
 Invoking GHDL
 #############
 
-The form of the :program:`ghdl` command is ``ghdl command [options...]``. There are multiple available commands, but these general rules apply:
+The form of the :program:`ghdl` command is ``ghdl command [options...]``. There are multiple available commands, but these
+general rules apply:
 
 * The first argument selects the command. The options are used to slightly modify the action.
 * No option is allowed before the command. Except for the run command, no option is allowed after a filename or a unit name.
 
 .. HINT::
-   If the number of options is large and the command line length is beyond the system limit, you can use a response file. An argument that starts with a ``@`` is considered as a response file; it is replaced by arguments read from the file (separated by blanks and end of line).
+  If the number of options is large and the command line length is beyond the system limit, you can use a response file. An
+  argument that starts with a ``@`` is considered as a response file; it is replaced by arguments read from the file
+  (separated by blanks and end of line).
 
 .. HINT::
-   Only the most common commands and options are shown here. For the most advanced and experimental features see section :ref:`REF:Command`.
+  Only the most common commands and options are shown here. For the most advanced and experimental features see section
+  :ref:`REF:Command`.
 
 .. WARNING::
-   During analysis and elaboration GHDL may read the ``std`` and ``ieee`` files. The location of these files is based on the prefix, which is (in order of priority):
+  During analysis and elaboration GHDL may read the ``std`` and ``ieee`` files. The location of these files is based on the
+  prefix, which is (in order of priority):
 
-	* the :option:`--PREFIX` command line option
-	* the :envvar:`GHDL_PREFIX` environment variable
-	* a built-in default path. It is a hard-coded path on GNU/Linux, and it corresponds to the value of the ``HKLM\Software\Ghdl\Install_Dir`` registry entry on Windows.
+  * the :option:`--PREFIX` command line option
+  * the :envvar:`GHDL_PREFIX` environment variable
+  * a built-in default path. It is a hard-coded path on GNU/Linux, and it corresponds to the value of the
+    ``HKLM\Software\Ghdl\Install_Dir`` registry entry on Windows.
 
-	You should use the :option:`--disp-config` command to display and debug installation problems.
+  You should use the :option:`--disp-config` command to display and debug installation problems.
 
 Design building commands
 ========================
@@ -62,9 +68,9 @@ files required for the executable. Then, it links all these files with the runti
 
 * The elaboration command, :option:`-e`, must be followed by a name of either:
 
-	* a configuration unit
-	* an entity unit
-	* an entity unit followed by a name of an architecture unit
+  * a configuration unit
+  * an entity unit
+  * an entity unit followed by a name of an architecture unit
 
   Name of the units must be a simple name, without any dot. You can select the name of the `WORK` library with the
   :option:`--work=NAME <--work>` option, as described in :ref:`GHDL:options`. See section :ref:`Top_entity`, for the
@@ -80,7 +86,9 @@ files required for the executable. Then, it links all these files with the runti
   elaborates the design, this can be skipped.
 
   .. WARNING::
-     This elaboration command is not a complete elaboration in terms of the VHDL standard. The actual elaboration is performed at runtime. Therefore, in order to get a complete VHDL elaboration without running the simulation, ``ghdl --elab-run --no-run`` is required. See :option:`--no-run`.
+    This elaboration command is not a complete elaboration in terms of the VHDL standard. The actual elaboration is
+    performed at runtime. Therefore, in order to get a complete VHDL elaboration without running the simulation,
+    ``ghdl --elab-run --no-run`` is required. See :option:`--no-run`.
 
 
 .. index:: cmd run
@@ -92,10 +100,14 @@ Run [``-r``]
 
 .. option:: -r <[options...] primary_unit [secondary_unit] [simulation_options...]>
 
-Runs/simulates a design. Two sets of options are accepted, both of them being separated by ``primary_unit [secondary_unit]``. For the first set, ``options...``, arguments are the same as for the :ref:`elaboration command <Elaboration:command>`. For the second set, ``simulation_options...``, arguments are defined in :ref:`USING:Simulation`.
+Runs/simulates a design. Two sets of options are accepted, both of them being separated by ``primary_unit [secondary_unit]``.
+For the first set, ``options...``, arguments are the same as for the :ref:`elaboration command <Elaboration:command>`. For
+the second set, ``simulation_options...``, arguments are defined in :ref:`USING:Simulation`.
 
-* GGC/LLVM: the filename of the executable is determined and it is executed. Elaboration options are ignored. You may also directly execute the program. The executable must be in the current directory.
-* mcode: the design is elaborated and the simulation is launched. As a consequence, you must use the same options used during analysis.
+* GGC/LLVM: the filename of the executable is determined and it is executed. Elaboration options are ignored. You may also
+  directly execute the program. The executable must be in the current directory.
+* mcode: the design is elaborated and the simulation is launched. As a consequence, you must use the same options used during
+  analysis.
 
 This command exists for three reasons:
 
@@ -113,7 +125,8 @@ Elaborate and run [``--elab-run``]
 
 .. option:: --elab-run <[options...] primary_unit [secondary_unit] [simulation_options...]>
 
-Acts like the elaboration command followed by the run command. Note that this command accepts two sets of options. See :option:`-e`, :option:`-r` and :ref:`USING:Simulation`.
+Acts like the elaboration command followed by the run command. Note that this command accepts two sets of options. See
+:option:`-e`, :option:`-r` and :ref:`USING:Simulation`.
 
 
 .. index:: cmd checking syntax
@@ -123,7 +136,8 @@ Check syntax [``-s``]
 
 .. option:: -s <[options] files>
 
-Analyze files but do not generate code. This command may be used to check the syntax of files. It does not update the library.
+Analyze files but do not generate code. This command may be used to check the syntax of files. It does not update the
+library.
 
 
 .. index:: cmd analyze and elaborate
@@ -134,11 +148,14 @@ Analyze and elaborate [``-c``]
 .. option:: -c <[options] file... -<e|r> primary_unit [secondary_unit]>
 
 .. HINT::
-   With GCC/LLVM, :option:`-e` should be used, and :option:`-r` with mcode.
+  With GCC/LLVM, :option:`-e` should be used, and :option:`-r` with mcode.
 
-The files are first parsed, and then a elaboration is performed, which drives an analysis. Effectively, analysis and elaboration are combined, but there is no explicit call to :option:`-a`. With GCC/LLVM, code is generated during the elaboration. With mcode, the simulation is launched after the elaboration.
+The files are first parsed, and then a elaboration is performed, which drives an analysis. Effectively, analysis and
+elaboration are combined, but there is no explicit call to :option:`-a`. With GCC/LLVM, code is generated during the
+elaboration. With mcode, the simulation is launched after the elaboration.
 
-All the units of the files are put into the `work` library. But, the work library is neither read from disk nor saved. Therefore, you must give all the files of the `work` library your design needs.
+All the units of the files are put into the `work` library. But, the work library is neither read from disk nor saved.
+Therefore, you must give all the files of the `work` library your design needs.
 
 The advantages over the traditional approach (analyze and then elaborate) are:
 
@@ -148,16 +165,19 @@ The advantages over the traditional approach (analyze and then elaborate) are:
 * This command produces a smaller executable, since unused units and subprograms do not generate code.
 
 .. HINT::
-   However, you should know that most of the time is spent in code generation and the analyze and elaborate command generates code for all units needed, even units of ``std`` and ``ieee`` libraries. Therefore, according to the design, the time for this command may be higher than the time for the analyze command followed by the elaborate command.
+  However, you should know that most of the time is spent in code generation and the analyze and elaborate command
+  generates code for all units needed, even units of ``std`` and ``ieee`` libraries. Therefore, according to the design,
+  the time for this command may be higher than the time for the analyze command followed by the elaborate command.
 
 .. WARNING::
-   This command is still under development. In case of problems, you should go back to the traditional way.
+  This command is still under development. In case of problems, you should go back to the traditional way.
 
 
 Design rebuilding commands
 ==========================
 
-Analyzing and elaborating a design consisting of several files can be tricky, due to dependencies. GHDL has a few commands to rebuild a design.
+Analyzing and elaborating a design consisting of several files can be tricky, due to dependencies. GHDL has a few commands
+to rebuild a design.
 
 
 .. index:: cmd importing files
@@ -169,12 +189,15 @@ Import [``-i``]
 
 .. option:: -i <[options] file...>
 
-All the files specified in the command line are scanned, parsed and added into the libraries but as not yet analyzed. No object files are created. Its purpose is to localize design units in the design files. The make command will then be able to recursively build a hierarchy from an entity name or a configuration name.
+All the files specified in the command line are scanned, parsed and added into the libraries but as not yet analyzed. No
+object files are created. Its purpose is to localize design units in the design files. The make command will then be able to
+recursively build a hierarchy from an entity name or a configuration name.
 
 .. HINT::
-
-	* Note that all the files are added to the work library. If you have many libraries, you must use the command for each library.
-	* Since the files are parsed, there must be correct files. However, since they are not analyzed, many errors are tolerated by this command.
+  * Note that all the files are added to the work library. If you have many libraries, you must use the command for each
+    library.
+  * Since the files are parsed, there must be correct files. However, since they are not analyzed, many errors are tolerated
+    by this command.
 
 See :option:`-m`, to actually build the design.
 
@@ -188,20 +211,34 @@ Make [``-m``]
 
 .. option:: -m <[options] primary [secondary]>
 
-Analyze automatically outdated files and elaborate a design. The primary unit denoted by the ``primary`` argument must already be known by the system, either because you have already analyzed it (even if you have modified it) or because you have imported it. A file may be outdated because it has been modified (e.g. you have just edited it), or because a design unit contained in the file depends on a unit which is outdated. This rule is of course recursive.
+Analyze automatically outdated files and elaborate a design. The primary unit denoted by the ``primary`` argument must already
+be known by the system, either because you have already analyzed it (even if you have modified it) or because you have imported
+it. A file may be outdated because it has been modified (e.g. you have just edited it), or because a design unit contained in
+the file depends on a unit which is outdated. This rule is of course recursive.
 
-* With option ``--bind``, GHDL will stop before the final linking step. This is useful when the main entry point is not GHDL and you're linking GHDL object files into a foreign program.
-* With option ``-f`` (force), GHDL analyzes all the units of the work library needed to create the design hierarchy. Outdated units are recompiled. This is useful if you want to compile a design hierarchy with new compilation flags (for example, to add the ``-g`` debugging option).
+* With option ``--bind``, GHDL will stop before the final linking step. This is useful when the main entry point is not GHDL
+  and you're linking GHDL object files into a foreign program.
+* With option ``-f`` (force), GHDL analyzes all the units of the work library needed to create the design hierarchy. Outdated
+  units are recompiled. This is useful if you want to compile a design hierarchy with new compilation flags (for example, to
+  add the ``-g`` debugging option).
 
-The make command will only re-analyze design units in the work library. GHDL fails if it has to analyze an outdated unit from another library.
+The make command will only re-analyze design units in the work library. GHDL fails if it has to analyze an outdated unit from
+another library.
 
-The purpose of this command is to be able to compile a design without prior knowledge of file order. In the VHDL model, some units must be analyzed before others (e.g. an entity before its architecture). It might be a nightmare to analyze a full design of several files if you don't have the ordered list of files. This command computes an analysis order.
+The purpose of this command is to be able to compile a design without prior knowledge of file order. In the VHDL model, some
+units must be analyzed before others (e.g. an entity before its architecture). It might be a nightmare to analyze a full
+design of several files if you don't have the ordered list of files. This command computes an analysis order.
 
-The make command fails when a unit was not previously parsed. For example, if you split a file containing several design units into several files, you must either import these new files or analyze them so that GHDL knows in which file these units are.
+The make command fails when a unit was not previously parsed. For example, if you split a file containing several design
+units into several files, you must either import these new files or analyze them so that GHDL knows in which file these
+units are.
 
-The make command imports files which have been modified. Then, a design hierarchy is internally built as if no units are outdated. Then, all outdated design units, using the dependencies of the design hierarchy, are analyzed. If necessary, the design hierarchy is elaborated.
+The make command imports files which have been modified. Then, a design hierarchy is internally built as if no units are
+outdated. Then, all outdated design units, using the dependencies of the design hierarchy, are analyzed. If necessary, the
+design hierarchy is elaborated.
 
-This is not perfect, since the default architecture (the most recently analyzed one) may change while outdated design files are analyzed. In such a case, re-run the make command of GHDL.
+This is not perfect, since the default architecture (the most recently analyzed one) may change while outdated design files
+are analyzed. In such a case, re-run the make command of GHDL.
 
 
 .. index:: cmd generate makefile
@@ -222,7 +259,8 @@ Generate dependency file command [``--gen-depends``]
 
 Generate a Makefile containing only dependencies to build a design unit.
 
-This command works like the make and gen-makefile commands (see :option:`-m`), but instead of a full makefile only dependencies without rules are generated on the standard output.
+This command works like the make and gen-makefile commands (see :option:`-m`), but instead of a full makefile only
+dependencies without rules are generated on the standard output.
 Theses rules can then be integrated in another Makefile.
 
 .. _GHDL:options:
@@ -239,15 +277,19 @@ Options
 
 .. option:: --work=<LIB_NAME>
 
-  Specify the name of the ``WORK`` library. Analyzed units are always placed in the library logically named ``WORK``. With this option, you can set its name. By default, the name is ``work``.
+  Specify the name of the ``WORK`` library. Analyzed units are always placed in the library logically named ``WORK``. With
+  this option, you can set its name. By default, the name is ``work``.
 
-  `GHDL` checks whether ``WORK`` is a valid identifier. Although being more or less supported, the ``WORK`` identifier should not be an extended identifier, since the filesystem may prevent it from working correctly (due to case sensitivity or forbidden characters in filenames).
+  `GHDL` checks whether ``WORK`` is a valid identifier. Although being more or less supported, the ``WORK`` identifier
+  should not be an extended identifier, since the filesystem may prevent it from working correctly (due to case sensitivity
+  or forbidden characters in filenames).
 
   `VHDL` rules forbid you from adding units to the ``std`` library. Furthermore, you should not put units in the ``ieee`` library.
 
 .. option:: --workdir=<DIR>
 
-  Specify the directory where the ``WORK`` library is located. When this option is not present, the ``WORK`` library is in the current directory. The object files created by the compiler are always placed in the same directory as the ``WORK`` library.
+  Specify the directory where the ``WORK`` library is located. When this option is not present, the ``WORK`` library is in
+  the current directory. The object files created by the compiler are always placed in the same directory as the ``WORK`` library.
 
   Use option :option:`-P <-P>` to specify where libraries other than ``WORK`` are placed.
 
@@ -257,8 +299,8 @@ Options
   which means VHDL-93 with relaxed rules. For details on ``STANDARD``
   values see section :ref:`VHDL_standards`.
 
-  This option resets the effect of :option:`-frelaxed`, so it should
-  be the first option.
+  .. IMPORTANT:: This option resets the effect of :option:`-frelaxed`, so it should
+    be the first option.
 
 .. option:: -fsynopsys
 
@@ -318,7 +360,9 @@ Options
   This may be used to avoid the most common pitfall of the ``std_logic_arith``
   package. See section :ref:`IEEE_library_pitfalls`, for an example.
 
-.. WARNING:: This option is not set by default. I don't think this option is a good feature, because it breaks the encapsulation rule. When set, an operator can be silently overridden in another package. You'd do better to fix your design and use the ``numeric_std`` package.
+.. WARNING:: This option is not set by default. I don't think this option is a good feature, because it breaks the
+  encapsulation rule. When set, an operator can be silently overridden in another package. You'd do better to fix your
+  design and use the ``numeric_std`` package.
 
 .. option:: -frelaxed
 .. option:: -frelaxed-rules
@@ -331,18 +375,19 @@ Options
   * Default binding indication rules of VHDL-02 are used. Default binding rules
     are often used, but they are particularly obscure before VHDL-02.
 
-  * Within an object declaration, allow references to the name (which references the hidden declaration). This ignores the error in the following code:
+  * Within an object declaration, allow references to the name (which references the hidden declaration). This ignores the
+    error in the following code:
 
     .. code-block:: VHDL
 
-     package pkg1 is
-       type state is (state1, state2, state3);
-     end pkg1;
+      package pkg1 is
+        type state is (state1, state2, state3);
+      end pkg1;
 
-     use work.pkg1.all;
-     package pkg2 is
-       constant state1 : state := state1;
-     end pkg2;
+      use work.pkg1.all;
+      package pkg2 is
+        constant state1 : state := state1;
+      end pkg2;
 
     Some code (such as Xilinx packages) have such constructs, which are valid.
 
@@ -386,16 +431,21 @@ Options
 
   Define the output format of some options, such as :option:`--pp-html` or :option:`--xref-html`.
 
-  * By default or when :option:`--format=html2 <--format>` is specified, generated files follow the HTML 2.0 standard, and colours are specified with `<FONT>` tags. However, colours are hard-coded.
+  * By default or when :option:`--format=html2 <--format>` is specified, generated files follow the HTML 2.0 standard, and
+    colours are specified with `<FONT>` tags. However, colours are hard-coded.
 
-  * If :option:`--format=css <--format>` is specified, generated files follow the HTML 4.0 standard, and use the CSS-1 file :file:`ghdl.css` to specify colours. This file is generated only if it does not already exist (it is never overwritten) and can be customized by the user to change colours or appearance. Refer to a generated file and its comments for more information.
+  * If :option:`--format=css <--format>` is specified, generated files follow the HTML 4.0 standard, and use the CSS-1 file
+    :file:`ghdl.css` to specify colours. This file is generated only if it does not already exist (it is never overwritten)
+    and can be customized by the user to change colours or appearance. Refer to a generated file and its comments for more
+    information.
 
 .. option:: --no-vital-checks
 .. option:: --vital-checks
 
   Disable or enable checks of restriction on VITAL units. Checks are enabled by default.
 
-  Checks are performed only when a design unit is decorated by a VITAL attribute. The VITAL attributes are ``VITAL_Level0`` and ``VITAL_Level1``, both declared in the ``ieee.VITAL_Timing`` package.
+  Checks are performed only when a design unit is decorated by a VITAL attribute. The VITAL attributes are ``VITAL_Level0``
+  and ``VITAL_Level1``, both declared in the ``ieee.VITAL_Timing`` package.
 
   Currently, VITAL checks are only partially implemented. See section :ref:`VHDL_restrictions_for_VITAL` for more details.
 
@@ -430,15 +480,16 @@ Options
 Warnings
 ========
 
-Some constructions are not erroneous but dubious. Warnings are diagnostic messages that report such constructions. Some warnings are reported only during analysis, others during elaboration.
+Some constructions are not erroneous but dubious. Warnings are diagnostic messages that report such constructions. Some
+warnings are reported only during analysis, others during elaboration.
 
 .. HINT::
-   You could disable a warning by using the ``--warn-no-XXX`` or ``-Wno-XXX`` instead of ``--warn-XXX`` or ``-WXXX``.
+  You could disable a warning by using the ``--warn-no-XXX`` or ``-Wno-XXX`` instead of ``--warn-XXX`` or ``-WXXX``.
 
 .. HINT::
-   The warnings ``-Wbinding``, ``-Wlibrary``, ``-Wshared``,
-   ``-Wpure``, ``-Wspecs``, ``-Whide``, ``-Wport`` are enabled by
-   default.
+  The warnings ``-Wbinding``, ``-Wlibrary``, ``-Wshared``,
+  ``-Wpure``, ``-Wspecs``, ``-Whide``, ``-Wport`` are enabled by
+  default.
 
 .. option:: --warn-library
 
@@ -446,13 +497,19 @@ Some constructions are not erroneous but dubious. Warnings are diagnostic messag
 
 .. option:: --warn-default-binding
 
-  During analyze, warns if a component instantiation has neither configuration specification nor default binding. This may be useful if you want to detect during analyze possibly unbound components if you don't use configuration. See section :ref:`VHDL_standards` for more details about default binding rules.
+  During analyze, warns if a component instantiation has neither configuration specification nor default binding. This may
+  be useful if you want to detect during analyze possibly unbound components if you don't use configuration. See section
+  :ref:`VHDL_standards` for more details about default binding rules.
 
 .. option:: --warn-binding
 
-  During elaboration, warns if a component instantiation is not bound (and not explicitly left unbound). Also warns if a port of an entity is not bound in a configuration specification or in a component configuration. This warning is enabled by default, since default binding rules are somewhat complex and an unbound component is most often unexpected.
+  During elaboration, warns if a component instantiation is not bound (and not explicitly left unbound). Also warns if a
+  port of an entity is not bound in a configuration specification or in a component configuration. This warning is enabled
+  by default, since default binding rules are somewhat complex and an unbound component is most often unexpected.
 
-  However, warnings are still emitted if a component instantiation is inside a generate statement. As a consequence, if you use the conditional generate statement to select a component according to the implementation, you will certainly get warnings.
+  However, warnings are still emitted if a component instantiation is inside a generate statement. As a consequence, if you
+  use the conditional generate statement to select a component according to the implementation, you will certainly get
+  warnings.
 
 .. option:: --warn-reserved
 
@@ -473,13 +530,16 @@ Some constructions are not erroneous but dubious. Warnings are diagnostic messag
 
 .. option:: --warn-delayed-checks
 
-  Warns for checks that cannot be done during analysis time and are postponed to elaboration time. This is because not all procedure bodies are available during analysis (either because a package body has not yet been analysed or because `GHDL` doesn't read not required package bodies).
+  Warns for checks that cannot be done during analysis time and are postponed to elaboration time. This is because not all
+  procedure bodies are available during analysis (either because a package body has not yet been analysed or because `GHDL`
+  doesn't read not required package bodies).
 
   These are checks for no wait statements in a procedure called in a sensitized process and checks for pure rules of a function.
 
 .. option:: --warn-body
 
-  Emit a warning if a package body which is not required is analyzed. If a package does not declare a subprogram or a deferred constant, the package does not require a body.
+  Emit a warning if a package body which is not required is analyzed. If a package does not declare a subprogram or a
+  deferred constant, the package does not require a body.
 
 .. option:: --warn-specs
 
@@ -534,7 +594,8 @@ Diagnostics Control
 .. option:: -fdiagnostics-show-option
 .. option:: -fno-diagnostics-show-option
 
-  Control whether the warning option is displayed at the end of warning messages, so that the user can easily know how to disable it.
+  Control whether the warning option is displayed at the end of warning messages, so that the user can easily know how to
+  disable it.
 
 .. option:: -fcaret-diagnostics
 .. option:: -fno-caret-diagnostics
@@ -551,7 +612,9 @@ Library commands
 
 A new library is created implicitly, by compiling entities (packages etc.) into it: ``ghdl -a --work=my_custom_lib my_file.vhdl``.
 
-A library's source code is usually stored and compiled into its own directory, that you specify with the :option:`--workdir` option: ``ghdl -a --work=my_custom_lib --workdir=my_custom_libdir my_custom_lib_srcdir/my_file.vhdl``. See also the :option:`-P <-P>` command line option.
+A library's source code is usually stored and compiled into its own directory, that you specify with the :option:`--workdir`
+option: ``ghdl -a --work=my_custom_lib --workdir=my_custom_libdir my_custom_lib_srcdir/my_file.vhdl``. See also the
+:option:`-P <-P>` command line option.
 
 Furthermore, GHDL provides a few commands which act on a library:
 
@@ -560,7 +623,8 @@ Furthermore, GHDL provides a few commands which act on a library:
 
 .. option:: --dir <[options] [libs]>
 
-Displays the content of the design libraries (by default the ``work`` library). All options are allowed, but only a few are meaningful: :option:`--work`, :option:`--workdir` and :option:`--std`.
+Displays the content of the design libraries (by default the ``work`` library). All options are allowed, but only a few are
+meaningful: :option:`--work`, :option:`--workdir` and :option:`--std`.
 
 
 .. index:: cmd library clean
@@ -598,8 +662,10 @@ Make a local copy of an existing library. This is very useful if you want to add
 VPI build commands
 ==================
 
-These commands simplify the compile and the link of a user vpi module. They are all wrappers: the arguments are in fact a whole command line that is executed with additional switches. Currently a unix-like compiler (like `cc`, `gcc` or `clang`) is expected: the additional switches use their syntax. The only option is `-v` which displays the
-command before its execution.
+These commands simplify the compile and the link of a user vpi module. They are all wrappers: the arguments are in fact a
+whole command line that is executed with additional switches. Currently a unix-like compiler (like `cc`, `gcc` or `clang`)
+is expected: the additional switches use their syntax. The only option is `-v` which displays the command before its
+execution.
 
 
 .. index:: cmd VPI compile
@@ -731,12 +797,15 @@ When you analyze this design, GHDL does not accept it (two long lines have been 
       [std_logic_vector, std_logic_vector return boolean]
   ../translate/ghdldrv/ghdl: compilation error
 
-Indeed, the `"="` operator is defined in both packages, and both are visible at the place it is used. The first declaration is an implicit one, which occurs when the `std_logic_vector` type is declared and is an element to element comparison. The second one is an explicit declared function, with the semantics of an unsigned comparison.
+Indeed, the `"="` operator is defined in both packages, and both are visible at the place it is used. The first declaration
+is an implicit one, which occurs when the `std_logic_vector` type is declared and is an element to element comparison. The
+second one is an explicit declared function, with the semantics of an unsigned comparison.
 
-With some analysers, the explicit declaration has priority over the implicit declaration, and this design can be analyzed without error. However, this is not the rule given by the VHDL LRM, and since GHDL follows these rules,
-it emits an error.
+With some analysers, the explicit declaration has priority over the implicit declaration, and this design can be analyzed
+without error. However, this is not the rule given by the VHDL LRM, and since GHDL follows these rules, it emits an error.
 
-You can force GHDL to use this rule with the *-fexplicit* option (see :ref:`GHDL:options` for further details). However it is easy to fix this error, by using a selected name:
+You can force GHDL to use this rule with the *-fexplicit* option (see :ref:`GHDL:options` for further details). However it
+is easy to fix this error, by using a selected name:
 
 .. code-block:: VHDL
 
@@ -795,4 +864,5 @@ It is better to only use the standard packages defined by IEEE, which provide th
 .. index:: Math_Complex
 
 .. HINT::
-   The ``ieee`` math packages (``math_real`` and ``math_complex``) provided with `GHDL` are fully compliant with the `IEEE` standard.
+  The ``ieee`` math packages (``math_real`` and ``math_complex``) provided with `GHDL` are fully compliant with the `IEEE`
+  standard.
