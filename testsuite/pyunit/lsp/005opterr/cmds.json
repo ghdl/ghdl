@@ -5,8 +5,8 @@
     "method": "initialize",
     "params": {
       "processId": 14698,
-      "rootPath": "/home/tgingold/work/ghdl-language-server/ghdl-ls/tests/005opterr",
-      "rootUri": "file:///home/tgingold/work/ghdl-language-server/ghdl-ls/tests/005opterr",
+	"rootPath": ".",
+	"rootUri": "file://.",
       "capabilities": {
         "workspace": {
           "applyEdit": true,
@@ -224,7 +224,7 @@
       "trace": "off",
       "workspaceFolders": [
         {
-          "uri": "file:///home/tgingold/work/ghdl-language-server/ghdl-ls/tests/005opterr",
+          "uri": "file://005opterr",
           "name": "005opterr"
         }
       ]
@@ -240,7 +240,7 @@
     "method": "textDocument/didOpen",
     "params": {
       "textDocument": {
-        "uri": "file:///home/tgingold/work/ghdl-language-server/ghdl-ls/tests/files/heartbeat.vhdl",
+        "uri": "file://files/heartbeat.vhdl",
         "languageId": "vhdl",
         "version": 1,
         "text": "\nlibrary ieee;\nuse ieee.std_logic_1164.all;\n\nentity heartbeat is\n  port ( clk: out std_logic);\nend heartbeat;\n\narchitecture behaviour of heartbeat\nis\n  constant clk_period : time := 10 ns;\nbegin\n  -- Clock process definition\n  clk_process: process\n  begin\n    clk <= '0';\n    wait for clk_period/2;\n    clk <= '1';\n    wait for clk_period/2;\n  end process;\nend behaviour;\n\n"
@@ -253,7 +253,7 @@
     "method": "textDocument/documentSymbol",
     "params": {
       "textDocument": {
-        "uri": "file:///home/tgingold/work/ghdl-language-server/ghdl-ls/tests/files/heartbeat.vhdl"
+        "uri": "file://files/heartbeat.vhdl"
       }
     }
   }

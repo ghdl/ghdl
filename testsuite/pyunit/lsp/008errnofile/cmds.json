@@ -5,8 +5,8 @@
     "method": "initialize",
     "params": {
       "processId": 19954,
-      "rootPath": "/home/tgingold/work/ghdl-language-server/ghdl-ls/tests/008errnofile",
-      "rootUri": "file:///home/tgingold/work/ghdl-language-server/ghdl-ls/tests/008errnofile",
+      "rootPath": ".",
+      "rootUri": "file://.",
       "capabilities": {
         "workspace": {
           "applyEdit": true,

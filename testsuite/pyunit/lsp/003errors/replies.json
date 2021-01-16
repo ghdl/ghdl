@@ -70,7 +70,7 @@
         "kind": 2,
         "name": "tb",
         "location": {
-          "uri": "file:///home/tgingold/work/vhdl-language-server/tests/003errors/tc.vhdl",
+          "uri": "file://003errors/tc.vhdl",
           "range": {
             "start": {
               "line": 4,
@@ -87,7 +87,7 @@
         "kind": 2,
         "name": "behav",
         "location": {
-          "uri": "file:///home/tgingold/work/vhdl-language-server/tests/003errors/tc.vhdl",
+          "uri": "file://003errors/tc.vhdl",
           "range": {
             "start": {
               "line": 7,
