@@ -5,7 +5,7 @@ Synthesis
 #########
 
 .. WARNING::
-   This is experimental and work in progress! If you find crashes or unsupported features, please :ref:`report them <reporting_bugs>`!
+  This is experimental and work in progress! If you find crashes or unsupported features, please :ref:`report them <reporting_bugs>`!
 
 Since ``v0.37``, GHDL features a built-in (experimental) synthesis kernel with two backends: ``synth`` and ``yosys-plugin``.
 Currently, synthesis is supported as a front-end of other synthesis and technology mapping tools.
@@ -19,20 +19,20 @@ Synthesis [``--synth``]
 ***********************
 
 .. HINT::
-   This command is useful for checking that a design can be synthesized, before actually running a complete synthesis
-   tool. In fact, because this is expected to be much faster, it can be used as a frequent check.
+  This command is useful for checking that a design can be synthesized, before actually running a complete synthesis
+  tool. In fact, because this is expected to be much faster, it can be used as a frequent check.
 
 .. TIP::
-   Since GHDL's front-end supports multiple versions of the standard, but the synthesised netlists are generated using
-   a subset of VHDL 1993, GHDL's synthesis features can be used as a preprocessor with tools that do support older
-   versions of the standard, but which don't provide the most recent features.
+  Since GHDL's front-end supports multiple versions of the standard, but the synthesised netlists are generated using
+  a subset of VHDL 1993, GHDL's synthesis features can be used as a preprocessor with tools that do support older
+  versions of the standard, but which don't provide the most recent features.
 
 .. option:: --synth <[options] primary_unit [secondary_unit]>
 
 Elaborates for synthesis the design whose top unit is indicated by ``primary_unit [secondary_unit]``.
 
 .. ATTENTION::
-   All the units must have been analyzed; that is, the artifacts of previously executed :option:`-a` calls must exist.
+  All the units must have been analyzed; that is, the artifacts of previously executed :option:`-a` calls must exist.
 
 .. option:: --synth <[options] files... -e primary_unit [secondary_unit]>
 
@@ -43,7 +43,7 @@ Currently, the output is a generic netlist using a (very simple) subset of VHDL 
 See :ghdlsharp:`1174` for on-going discussion about other output formats.
 
 .. TIP::
-   Files can be provided in any order.
+  Files can be provided in any order.
 
 .. _synthesis_options:
 
@@ -51,15 +51,15 @@ Synthesis options
 *****************
 
 .. HINT::
-   Multiple pragmas are supported for preventing blocks of code from being synthesized:
+  Multiple pragmas are supported for preventing blocks of code from being synthesized:
 
-   ``-- pragma|synopsys|synthesis (synthesis|translate)( |_)(on|off)``
+  ``-- pragma|synopsys|synthesis (synthesis|translate)( |_)(on|off)``
 
-   For example:
+  For example:
 
-   - ``-- pragma translate off``
-   - ``-- synthesis translate_on``
-   - ``-- synopsys synthesis_off``
+  * ``-- pragma translate off``
+  * ``-- synthesis translate_on``
+  * ``-- synopsys synthesis_off``
 
 Due to GHDL's modular architecture (see :ref:`INT:Overview`), the synthesis kernel shares the VHDL parsing front-end with the
 simulation back-ends. Hence, available options for synthesis are the same as for analysis and/or simulation elaboration
@@ -147,8 +147,8 @@ depending of how is the plugin built. See `README <https://github.com/ghdl/ghdl-
 guidelines.
 
 .. HINT::
-   ghdl-yosys-plugin is a thin layer that converts the internal representation of :option:`--synth` to Yosys' C API. Hence,
-   it is suggested to check the designs with :option:`--synth` before running synthesis with Yosys.
+  ghdl-yosys-plugin is a thin layer that converts the internal representation of :option:`--synth` to Yosys' C API. Hence,
+  it is suggested to check the designs with :option:`--synth` before running synthesis with Yosys.
 
 Convert (V)HDL to other formats
 ===============================
