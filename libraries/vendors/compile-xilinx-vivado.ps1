@@ -134,26 +134,25 @@ if ($VHDL2008)
 $VHDLVersion,$VHDLStandard,$VHDLFlavor = Get-VHDLVariables $VHDL93 $VHDL2008
 
 # define global GHDL Options
-$GHDLOptions = @(
-	"-a",
+$Analyze_Parameters = @(
 	"-fexplicit",
 	"-frelaxed-rules",
 	"--mb-comments",
 	"-Wbinding"
 )
 if (-not $EnableDebug)
-{	$GHDLOptions += @(
+{	$Analyze_Parameters += @(
 		"-Wno-hide"
 	)
 }
 if (-not ($EnableVerbose -or $EnableDebug))
-{ $GHDLOptions += @(
+{ $Analyze_Parameters += @(
 		"-Wno-library",
 		"-Wno-others",
 		"-Wno-static"
 	)
 }
-$GHDLOptions += @(
+$Analyze_Parameters += @(
 	"--ieee=$VHDLFlavor",
 	"--no-vital-checks",
 	"--std=$VHDLStandard",
@@ -191,7 +190,7 @@ if ((-not $StopCompiling) -and $Unisim)
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 
-	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+	$ErrorCount += Start-PackageCompilation $GHDLBinary $Analyze_Parameters $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
@@ -200,7 +199,7 @@ if ((-not $StopCompiling) -and $Unisim)
 {	$Library = "unisim"
 	$SourceFiles = dir "$SourceDirectory\unisims\primitive\*.vhd*"
 
-	$ErrorCount += Start-PrimitiveCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+	$ErrorCount += Start-PrimitiveCompilation $GHDLBinary $Analyze_Parameters $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
@@ -209,7 +208,7 @@ if ((-not $StopCompiling) -and $Unisim)
 {	$Library = "unisim"
 	$SourceFiles = dir "$SourceDirectory\unisims\retarget\*.vhd*"
 
-	$ErrorCount += Start-PrimitiveCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+	$ErrorCount += Start-PrimitiveCompilation $GHDLBinary $Analyze_Parameters $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
@@ -218,7 +217,7 @@ if ((-not $StopCompiling) -and $Unisim -and $SecureIP)
 {	$Library = "secureip"
 	$SourceFiles = dir "$SourceDirectory\unisims\secureip\*.vhd*"
 
-	$ErrorCount += Start-PrimitiveCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+	$ErrorCount += Start-PrimitiveCompilation $GHDLBinary $Analyze_Parameters $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
@@ -232,7 +231,7 @@ if ((-not $StopCompiling) -and $Unimacro)
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 
-	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+	$ErrorCount += Start-PackageCompilation $GHDLBinary $Analyze_Parameters $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
@@ -241,7 +240,7 @@ if ((-not $StopCompiling) -and $Unimacro)
 {	$Library = "unimacro"
 	$SourceFiles = dir "$SourceDirectory\unimacro\*_MACRO.vhd*"
 
-	$ErrorCount += Start-PrimitiveCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+	$ErrorCount += Start-PrimitiveCompilation $GHDLBinary $Analyze_Parameters $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
