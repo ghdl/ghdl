@@ -68,15 +68,15 @@ declare -A UVVM_Settings=(
 )
 
 declare -A Xilinx_ISE_Settings=(
-	["InstallationDirectory"]=""              # "/opt/Xilinx/14.7/ISE_DS/ISE"
-	["SourceDirectory"]="eda/sim_lib"
-	["DestinationDirectory"]="vhdl/src"
+	["InstallationDirectory"]=""              # "/opt/Xilinx/14.7/ISE_DS"
+	["SourceDirectory"]="ISE/vhdl/src"
+	["DestinationDirectory"]="xilinx-ise"
 )
 
 declare -A Xilinx_Vivado_Settings=(
 	["InstallationDirectory"]=""              # "/opt/Xilinx/Vivado/2020.2"
-	["SourceDirectory"]="eda/sim_lib"
-	["DestinationDirectory"]="data/vhdl/src"
+	["SourceDirectory"]="data/vhdl/src"
+	["DestinationDirectory"]="xilinx-vivado"
 )
 
 

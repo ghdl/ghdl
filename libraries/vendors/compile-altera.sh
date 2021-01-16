@@ -62,7 +62,7 @@ HALT_ON_ERROR=0
 VHDLStandard=93
 DestDir=""
 SrcDir=""
-while [[ $# > 0 ]]; do
+while [[ $# -gt 0 ]]; do
 	case "$1" in
 		-c|--clean)
 			COMMAND=3
@@ -188,7 +188,7 @@ if [[ $COMMAND -le 1 ]]; then
 	echo "Verbosity:"
 	echo "  -v --verbose                 Print verbose messages."
 	echo "  -d --debug                   Print debug messages."
-#	echo "  -n --no-filter               Disable output filtering scripts."
+	echo "  -n --no-filter               Disable output filtering scripts."
 	echo "  -N --no-warnings             Suppress all warnings. Show only error messages."
 	echo ""
 	exit $COMMAND
@@ -203,27 +203,6 @@ if [[ $COMMAND -eq 2 ]]; then
 	COMPILE_NM=1
 fi
 
-if [[ $VHDLStandard -eq 2008 ]]; then
-	echo -e "${ANSI_RED}Not all Altera packages are VHDL-2008 compatible! Setting CONTINUE_ON_ERROR to TRUE.${ANSI_NOCOLOR}"
-	CONTINUE_ON_ERROR=1
-fi
-
-DefaultDirectories=("/opt/Altera" "/opt/altera")
-if [ ! -z $QUARTUS_ROOTDIR ]; then
-	EnvSourceDir=$QUARTUS_ROOTDIR/${SourceDirectories[AlteraQuartus]}
-else
-	for DefaultDir in ${DefaultDirectories[@]}; do
-		for Major in 16 15 14 13; do
-			for Minor in 1 0; do
-				Dir=$DefaultDir/${Major}.${Minor}/quartus
-				if [ -d $Dir ]; then
-					EnvSourceDir=$Dir/${SourceDirectories[AlteraQuartus]}
-					break 3
-				fi
-			done
-		done
-	done
-fi
 
 # Source configuration file from GHDL's 'vendors' library directory
 echo -e "${ANSI_MAGENTA}Loading environment...${ANSI_NOCOLOR}"
@@ -231,6 +210,31 @@ source $ScriptDir/config.sh
 if [[ $? -ne 0 ]]; then echo 1>&2 -e "${COLORED_ERROR} While loading configuration.${ANSI_NOCOLOR}"     ; exit 1; fi
 source $ScriptDir/shared.sh
 if [[ $? -ne 0 ]]; then echo 1>&2 -e "${COLORED_ERROR} While loading further procedures.${ANSI_NOCOLOR}"; exit 1; fi
+
+# Warn that some files might not be VHDL-2008 ready. Thus enabled continue on error.
+if [[ $VHDLStandard -eq 2008 ]]; then
+	echo -e "${ANSI_RED}Not all Altera packages are VHDL-2008 compatible! Setting CONTINUE_ON_ERROR to TRUE.${ANSI_NOCOLOR}"
+	CONTINUE_ON_ERROR=1
+fi
+
+# Search Altera Quartus in default installation locations
+DefaultDirectories=("/opt/Altera" "/opt/altera" "/c/Altera")
+if [ ! -z $QUARTUS_ROOTDIR ]; then
+	EnvSourceDir=$QUARTUS_ROOTDIR/${Altera_Quartus_Settings[SourceDirectory]}
+else
+	for DefaultDir in "${DefaultDirectories[@]}"; do
+		for Major in 16 15 14 13; do
+			for Minor in 1 0; do
+				Dir=$DefaultDir/${Major}.${Minor}/quartus
+				if [ -d $Dir ]; then
+					EnvSourceDir=$Dir/${Altera_Quartus_Settings[SourceDirectory]}
+					break 3
+				fi
+			done
+		done
+	done
+fi
+
 
 # <= $VHDLVersion
 # <= $VHDLStandard
@@ -243,7 +247,7 @@ GHDLSetup $VHDLStandard
 # -> $DestDir
 # <= $SourceDirectory
 # <= $DestinationDirectory
-SetupDirectories AlteraQuartus "Altera Quartus"
+SetupDirectories Altera_Quartus "Altera Quartus"
 
 # create "osvvm" directory and change to it
 # => $DestinationDirectory
@@ -251,7 +255,7 @@ CreateDestinationDirectory
 cd $DestinationDirectory
 
 
-# Extend global GHDL Options
+# Extend global GHDL Options TODO: move to GHDLSetup
 Analyze_Parameters+=(
 	-fexplicit
 	-Wbinding

@@ -252,7 +252,7 @@ AnalyzeVHDL() {
 
 	if [[ $FILTERING -eq 0 ]]; then
 		test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}$GHDL -a ${Analyze_Parameters[*]} ${Parameters[*]} --work=$LibraryName \"$SourceFile\"${ANSI_NOCOLOR}"
-		$GHDL -a ${Analyze_Parameters[@]} ${Parameters[@]} --work=$LibraryName --workdir=$DestinationDirectory "$SourceFile"
+		$GHDL -a "${Analyze_Parameters[@]}" "${Parameters[@]}" --work=$LibraryName --workdir=$DestinationDirectory "$SourceFile"
 		ExitCode=$?
 		if [[ $ExitCode -ne 0 ]]; then
 			echo 1>&2 -e "$Filter_Indent${COLORED_ERROR} While analyzing '$File'. ExitCode: $ExitCode${ANSI_NOCOLOR}"
@@ -261,7 +261,7 @@ AnalyzeVHDL() {
 	 else
 		 test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}$GHDL -a ${Analyze_Parameters[*]} ${Parameters[*]} --work=$LibraryName \"$SourceFile\" 2>&1 | \\\\${ANSI_NOCOLOR}"
 		 test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}$ScriptDir/$Analyze_Filter ${Filter_Parameters[*]} -i \"$Filter_Indent\"${ANSI_NOCOLOR}"
-		 $GHDL -a ${Analyze_Parameters[@]} ${Parameters[@]} --work=$LibraryName "$SourceFile" 2>&1 | $ScriptDir/$Analyze_Filter ${Filter_Parameters[@]} -i "$Filter_Indent"
+		 $GHDL -a "${Analyze_Parameters[@]}" "${Parameters[@]}" --work=$LibraryName "$SourceFile" 2>&1 | $ScriptDir/$Analyze_Filter "${Filter_Parameters[@]}" -i "$Filter_Indent"
 		 local PiplineStatus=("${PIPESTATUS[@]}")
 		 if [[ ${PiplineStatus[0]}  -ne 0 ]]; then
 			 echo 1>&2 -e "$Filter_Indent${COLORED_ERROR} While analyzing '$File'. ExitCode: ${PiplineStatus[0]}${ANSI_NOCOLOR}"
