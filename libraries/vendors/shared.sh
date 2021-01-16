@@ -71,7 +71,7 @@ SetupDirectories() {
 
 	# source directory
 	# ----------------------
-	# If a command line argument ('--src') was passed in, use it, else use the default value
+	# If a command line argument ('--source') was passed in, use it, else use the default value
 	# from config.sh
 	if [[ ! -z "$SrcDir" ]]; then
 		SourceDirectory=${SrcDir%/}										# remove trailing slashes
@@ -82,7 +82,7 @@ SetupDirectories() {
 	fi
 	# output directory
 	# ----------------------
-	# If a command line argument ('--out') was passed in, use it, else use the default value
+	# If a command line argument ('--output') was passed in, use it, else use the default value
 	# from config.sh
 	if [[ ! -z "$DestDir" ]]; then
 		DestinationDirectory=${DestDir%/}												# remove trailing slashes
@@ -92,7 +92,7 @@ SetupDirectories() {
 
 	if [[ -z $SourceDirectory || -z $DestinationDirectory ]]; then
 		echo 1>&2 -e "${COLORED_ERROR} $Name is not configured in '$ScriptDir/config.sh'.${ANSI_NOCOLOR}"
-		echo 1>&2 -e "  Use adv. options '--src' and '--out' or configure 'config.sh'."
+		echo 1>&2 -e "  Use adv. options '--source' and '--output' or configure 'config.sh'."
 		exit 1
 	elif [[ ! -d $SourceDirectory ]]; then
 		echo 1>&2 -e "${COLORED_ERROR} Path '$SourceDirectory' does not exist.${ANSI_NOCOLOR}"
@@ -104,20 +104,6 @@ SetupDirectories() {
 	SourceDirectory=$($READLINK -f $SourceDirectory)
 	if [[ ! "$DestinationDirectory" = /* ]]; then
 		DestinationDirectory=$WorkingDir/$DestinationDirectory
-	fi
-}
-
-test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}procedure SetupGRCat( undocumented )${ANSI_NOCOLOR}"
-# SetupGRCat
-# -> undocumented
-SetupGRCat() {
-	if [ -z "$(which grcat 2>/dev/null)" ]; then
-		# if grcat (generic colourizer) is not installed, use a dummy pipe command like 'cat'
-		GRC_COMMAND="cat"
-	elif [ $SUPPRESS_WARNINGS -eq 1 ]; then
-		GRC_COMMAND="grcat $ScriptDir/ghdl.skipwarning.grcrules"
-	else
-		GRC_COMMAND="grcat $ScriptDir/ghdl.grcrules"
 	fi
 }
 

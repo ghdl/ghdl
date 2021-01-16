@@ -3,7 +3,7 @@
 #  Authors:
 #    Patrick Lehmann
 #
-#  Bash Script:  Script to compile the UVVM library for GHDL on Linux
+#  Bash Script:  Script to compile the UVVM library for GHDL on Linux.
 #
 # Description:
 # ------------------------------------
@@ -50,13 +50,21 @@ COMPILE_UVVM_UTILITIES=0
 COMPILE_UVVM_VVC_FRAMEWORK=0
 COMPILE_UVVM_VIP=0
 COMPILE_UVVM_VIP_AVALON_MM=0
+COMPILE_UVVM_VIP_AVALON_ST=0
+COMPILE_UVVM_VIP_AXI=0
 COMPILE_UVVM_VIP_AXILITE=0
 COMPILE_UVVM_VIP_AXISTREAM=0
 COMPILE_UVVM_VIP_CLOCK_GENERATOR=0
+COMPILE_UVVM_VIP_ERROR_INJECTION=0
+COMPILE_UVVM_VIP_ETHERNET=0
+COMPILE_UVVM_VIP_GMII=0
 COMPILE_UVVM_VIP_GPIO=0
+COMPILE_UVVM_VIP_HVVC_TO_VVC_BRIDGE=0
 COMPILE_UVVM_VIP_I2C=0
+COMPILE_UVVM_VIP_RGMII=0
 COMPILE_UVVM_VIP_SBI=0
 COMPILE_UVVM_VIP_SCOREBOARD=0
+COMPILE_UVVM_VIP_SPEC_COV=0
 COMPILE_UVVM_VIP_SPI=0
 COMPILE_UVVM_VIP_UART=0
 VERBOSE=0
@@ -95,6 +103,14 @@ while [[ $# > 0 ]]; do
 			COMMAND=3
 			COMPILE_UVVM_VIP_AVALON_MM=1
 			;;
+		--uvvm-vip-avalon_st)
+			COMMAND=3
+			COMPILE_UVVM_VIP_AVALON_ST=1
+			;;
+		--uvvm-vip-axi)
+			COMMAND=3
+			COMPILE_UVVM_VIP_AXI=1
+			;;
 		--uvvm-vip-axi_lite)
 			COMMAND=3
 			COMPILE_UVVM_VIP_AXILITE=1
@@ -107,17 +123,41 @@ while [[ $# > 0 ]]; do
 			COMMAND=3
 			COMPILE_UVVM_VIP_CLOCK_GENERATOR=1
 			;;
+		--uvvm-vip-error)
+			COMMAND=3
+			COMPILE_UVVM_VIP_ERROR_INJECTION=1
+			;;
+		--uvvm-vip-ethernet)
+			COMMAND=3
+			COMPILE_UVVM_VIP_ETHERNET=1
+			;;
+		--uvvm-vip-gmii)
+			COMMAND=3
+			COMPILE_UVVM_VIP_GMII=1
+			;;
 		--uvvm-vip-gpio)
 			COMMAND=3
 			COMPILE_UVVM_VIP_GPIO=1
+			;;
+		--uvvm-vip-hvvc2vvc)
+			COMMAND=3
+			COMPILE_UVVM_VIP_HVVC_TO_VVC_BRIDGE=1
 			;;
 		--uvvm-vip-i2c)
 			COMMAND=3
 			COMPILE_UVVM_VIP_I2C=1
 			;;
+		--uvvm-vip-rgmii)
+			COMMAND=3
+			COMPILE_UVVM_VIP_RGMII=1
+			;;
 		--uvvm-vip-sbi)
 			COMMAND=3
 			COMPILE_UVVM_VIP_SBI=1
+			;;
+		--uvvm-vip-spec)
+			COMMAND=3
+			COMPILE_UVVM_VIP_SPEC_COV=1
 			;;
 		--uvvm-vip-spi)
 			COMMAND=3
@@ -202,13 +242,21 @@ if [[ $COMMAND -le 1 ]]; then
 	echo ""
 	echo "Verification IPs:"
 	echo "     --uvvm-vip-avalon_mm      Altera/Intel Avalon Memory Mapped"
-	echo "     --uvvm-vip-axi_lite       ARM AMBA AXI4 Lite"
-	echo "     --uvvm-vip-axi_stream     ARM AMBA AXI4 Stream"
+	echo "     --uvvm-vip-avalon_st      Altera/Intel Avalon Stream"
+	echo "     --uvvm-vip-axi            ARM AMBA AXI4"
+	echo "     --uvvm-vip-axi_lite       ARM AMBA AXI4-Lite"
+	echo "     --uvvm-vip-axi_stream     ARM AMBA AXI4-Stream"
 	echo "     --uvvm-vip-clock          Clock generator"
+	echo "     --uvvm-vip-error          Error injection"
+	echo "     --uvvm-vip-ethernet       Ethernet"
+	echo "     --uvvm-vip-gmii           GMII"
 	echo "     --uvvm-vip-gpio           General Purpose Input/Output (GPIO)"
-	echo "     --uvvm-vip-i2c            Inter-Integrated Circuit (I²C)"
+	echo "     --uvvm-vip-hvvc2vvc       HVVC to VCC bridge"
+	echo "     --uvvm-vip-i2c            Inter-Integrated Circuit (IÂ²C)"
+	echo "     --uvvm-vip-rgmii          RGMII"
 	echo "     --uvvm-vip-sbi            Simple Bus Interface"
 	echo "     --uvvm-vip-scoreboard     Scoreboard"
+	echo "     --uvvm-vip-spec           Specification Coverage"
 	echo "     --uvvm-vip-spi            Serial Peripheral Interface"
 	echo "     --uvvm-vip-uart           Universal Asynchronous Receiver Transmitter (UART)"
 	echo ""
@@ -239,13 +287,21 @@ if [[ $COMPILE_UVVM -eq 1 ]]; then
 fi
 if [[ $COMPILE_UVVM_VIP -eq 1 ]]; then
 	COMPILE_UVVM_VIP_AVALON_MM=1
+	COMPILE_UVVM_VIP_AVALON_ST=1
+	COMPILE_UVVM_VIP_AXI=1
 	COMPILE_UVVM_VIP_AXILITE=1
 	COMPILE_UVVM_VIP_AXISTREAM=1
 	COMPILE_UVVM_VIP_CLOCK_GENERATOR=1
+	COMPILE_UVVM_VIP_ERROR_INJECTION=1
+	COMPILE_UVVM_VIP_ETHERNET=1
+	COMPILE_UVVM_VIP_GMII=1
 	COMPILE_UVVM_VIP_GPIO=1
+	COMPILE_UVVM_VIP_HVVC_TO_VVC_BRIDGE=1
 	COMPILE_UVVM_VIP_I2C=1
+	COMPILE_UVVM_VIP_RGMII=1
 	COMPILE_UVVM_VIP_SBI=1
 	COMPILE_UVVM_VIP_SCOREBOARD=1
+	COMPILE_UVVM_VIP_SPEC_COV=1
 	COMPILE_UVVM_VIP_SPI=1
 	COMPILE_UVVM_VIP_UART=1
 fi

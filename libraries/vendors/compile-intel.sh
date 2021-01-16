@@ -55,7 +55,7 @@ COMPILE_STRATIX=0
 COMPILE_NM=0
 VERBOSE=0
 DEBUG=0
-FILTERING=0  # TODO: 1
+FILTERING=1
 SKIP_LARGE_FILES=0
 SUPPRESS_WARNINGS=0
 HALT_ON_ERROR=0
@@ -128,11 +128,11 @@ while [[ $# > 0 ]]; do
 			GHDL="$2"				# overwrite a potentially existing GHDL environment variable
 			shift						# skip argument
 			;;
-		--src)
+		--source)
 			SrcDir="$2"
 			shift						# skip argument
 			;;
-		--out)
+		--output)
 			DestDir="$2"
 			shift						# skip argument
 			;;
@@ -162,34 +162,34 @@ if [[ $COMMAND -le 1 ]]; then
 	echo "  compile-intel.sh [<verbosity>] <common command>|<library> [<options>] [<adv. options>]"
 	echo ""
 	echo "Common commands:"
-	echo "  -h --help                Print this help page"
-	echo "  -c --clean               Remove all generated files"
+	echo "  -h --help                    Print this help page"
+	echo "  -c --clean                   Remove all generated files"
 	echo ""
 	echo "Libraries:"
-	echo "  -a --all                 Compile all Intel simulation libraries."
-	echo "     --intel               Compile the Altera standard libraries: lpm, sgate, altera, altera_mf, altera_lnsim."
-	echo "     --max                 Compile the Intel Max device libraries."
-	echo "     --cyclone             Compile the Intel Cyclone device libraries."
-	echo "     --arria               Compile the Intel Arria device libraries."
-	echo "     --stratix             Compile the Intel Stratix device libraries."
-	echo "     --nanometer           Unknown device library."
+	echo "  -a --all                     Compile all Intel simulation libraries."
+	echo "     --intel                   Compile the Altera standard libraries: lpm, sgate, altera, altera_mf, altera_lnsim."
+	echo "     --max                     Compile the Intel Max device libraries."
+	echo "     --cyclone                 Compile the Intel Cyclone device libraries."
+	echo "     --arria                   Compile the Intel Arria device libraries."
+	echo "     --stratix                 Compile the Intel Stratix device libraries."
+	echo "     --nanometer               Unknown device library."
 	echo ""
 	echo "Library compile options:"
-	echo "     --vhdl93              Compile the libraries with VHDL-93."
-	echo "     --vhdl2008            Compile the libraries with VHDL-2008."
-	echo "  -S --skip-largefiles     Don't compile large files. Exclude *HSSI* and *HIP* files."
-	echo "  -H --halt-on-error       Halt on error(s)."
+	echo "     --vhdl93                  Compile the libraries with VHDL-93."
+	echo "     --vhdl2008                Compile the libraries with VHDL-2008."
+	echo "  -S --skip-largefiles         Don't compile large files. Exclude *HSSI* and *HIP* files."
+	echo "  -H --halt-on-error           Halt on error(s)."
 	echo ""
 	echo "Advanced options:"
-	echo "     --ghdl <GHDL binary>  Path to GHDL's executable, e.g. /usr/local/bin/ghdl"
-	echo "     --out <dir name>      Name of the output directory, e.g. uvvm_util"
-	echo "     --src <Path to UVVM>  Path to the sources."
+	echo "     --ghdl <GHDL binary>      Path to GHDL's executable, e.g. /usr/local/bin/ghdl"
+	echo "     --output <dir name>       Name of the output directory, e.g. intel"
+	echo "     --source <Path to Quartus>Path to the sources."
 	echo ""
 	echo "Verbosity:"
-	echo "  -v --verbose             Print verbose messages."
-	echo "  -d --debug               Print debug messages."
-#	echo "  -n --no-filter           Disable output filtering scripts."
-	echo "  -N --no-warnings         Suppress all warnings. Show only error messages."
+	echo "  -v --verbose                 Print verbose messages."
+	echo "  -d --debug                   Print debug messages."
+#	echo "  -n --no-filter               Disable output filtering scripts."
+	echo "  -N --no-warnings             Suppress all warnings. Show only error messages."
 	echo ""
 	exit $COMMAND
 fi
@@ -232,6 +232,11 @@ if [[ $? -ne 0 ]]; then echo 1>&2 -e "${COLORED_ERROR} While loading configurati
 source $ScriptDir/shared.sh
 if [[ $? -ne 0 ]]; then echo 1>&2 -e "${COLORED_ERROR} While loading further procedures.${ANSI_NOCOLOR}"; exit 1; fi
 
+# <= $VHDLVersion
+# <= $VHDLStandard
+# <= $VHDLFlavor
+GHDLSetup $VHDLStandard
+
 # -> $SourceDirectories
 # -> $DestinationDirectories
 # -> $SrcDir
@@ -245,26 +250,28 @@ SetupDirectories AlteraQuartus "Intel Quartus"
 CreateDestinationDirectory
 cd $DestinationDirectory
 
-# => $SUPPRESS_WARNINGS
-# <= $GRC_COMMAND
-SetupGRCat
-
-# -> $VHDLStandard
-# <= $VHDLVersion
-# <= $VHDLStandard
-# <= $VHDLFlavor
-GHDLSetup
 
 # Extend global GHDL Options
 Analyze_Parameters+=(
 	-fexplicit
-	--no-vital-checks
 	-Wbinding
-	-Wno-hide
-	-Wno-others
-	-Wno-parenthesis
+)
+if [[ $DEBUG -eq 0 ]]; then
+	Analyze_Parameters+=(
+		-Wno-hide
+	)
+fi
+if [[ ! (VERBOSE -eq 1) && ($DEBUG -eq 1) ]]; then
+	Analyze_Parameters+=(
+		-Wno-others
+		-Wno-static
+	)
+fi
+Analyze_Parameters+=(
 	--ieee=$VHDLFlavor
+	--no-vital-checks
 	--std=$VHDLStandard
+	-frelaxed
 	-P$DestinationDirectory
 )
 
