@@ -113,7 +113,7 @@ while [[ $# -gt 0 ]]; do
 			if [[ "${1:0:2}" == "--" ]]; then
 				key=${1:2}; key=${key,,}
 				for Device in $DeviceList; do
-					if [[ $key == ${Device,,} ]]; then
+					if [[ $key == "${Device,,}" ]]; then
 						declare "DEV_${Device}_Enable"=1
 						COMMAND=3
 						FOUND=1
@@ -199,14 +199,14 @@ fi
 # Search Lattice Diamond in default installation locations
 DefaultDirectories=("/usr/local/diamond" "/opt/Diamond" "/opt/diamond" "/c/Lattice/Diamond")
 if [ ! -z $LSC_DIAMOND ]; then
-	EnvSourceDir=$FOUNDRY/../${Lattice_Diamond_Settings[SourceDirectory]}
+	EnvSourceDir="$FOUNDRY/../${Lattice_Diamond_Settings[SourceDirectory]}"
 else
 	for DefaultDir in "${DefaultDirectories[@]}"; do
 		for Major in 3; do
 			for Minor in 12 11 10 9 8 7 6 5; do
 				Dir=$DefaultDir/${Major}.${Minor}_x64
 				if [ -d $Dir ]; then
-					EnvSourceDir=$Dir/${Lattice_Diamond_Settings[SourceDirectory]}
+					EnvSourceDir="$Dir/${Lattice_Diamond_Settings[SourceDirectory]}"
 					break 3
 				fi
 			done
@@ -287,15 +287,14 @@ Files=(
 	ORCA_IO.vhd
 	ORCA_MEM.vhd
 )
-if [[ -f "$SourceDirectory/$SourceDir/$Files" ]]; then
+if [[ -f "$SourceDirectory/$SourceDir/${Files[0]}" ]]; then
 	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'EC'.${ANSI_NOCOLOR}"
 	CreateLibraryStruct $StructName "ec" $SourceDir $VHDLVersion "${Files[@]}"
 
 	VarName="DEV_${StructName}_Enable"
-	test ${!VarName} -eq 1 && Libraries+=($StructName)
-else
-	echo "not found: $SourceDirectory/$Files"
-
+	test ${!VarName} -eq 1 && Libraries+=("$StructName")
+#else
+#	echo "not found: $SourceDirectory/${Files[0]}"
 fi
 
 # ECP devices
@@ -311,12 +310,12 @@ Files=(
 	ORCA_IO.vhd
 	ORCA_MEM.vhd
 )
-if [[ -f "$SourceDirectory/$SourceDir/$Files" ]]; then
+if [[ -f "$SourceDirectory/$SourceDir/${Files[0]}" ]]; then
 	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'ECP'.${ANSI_NOCOLOR}"
 	CreateLibraryStruct $StructName "ecp" $SourceDir $VHDLVersion "${Files[@]}"
 
 	VarName="DEV_${StructName}_Enable"
-	test ${!VarName} -eq 1 && Libraries+=($StructName)
+	test ${!VarName} -eq 1 && Libraries+=("$StructName")
 fi
 
 
@@ -335,12 +334,12 @@ Files=(
 	ECP2_MULT.vhd
 	ECP2_SL.vhd
 )
-if [[ -f "$SourceDirectory/$SourceDir/$Files" ]]; then
+if [[ -f "$SourceDirectory/$SourceDir/${Files[0]}" ]]; then
 	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'ECP2'.${ANSI_NOCOLOR}"
 	CreateLibraryStruct $StructName "ecp2" $SourceDir $VHDLVersion "${Files[@]}"
 
 	VarName="DEV_${StructName}_Enable"
-	test ${!VarName} -eq 1 && Libraries+=($StructName)
+	test ${!VarName} -eq 1 && Libraries+=("$StructName")
 fi
 
 # ECP3 devices
@@ -358,12 +357,12 @@ Files=(
 	ECP3_MULT.vhd
 	ECP3_SL.vhd
 )
-if [[ -f "$SourceDirectory/$SourceDir/$Files" ]]; then
+if [[ -f "$SourceDirectory/$SourceDir/${Files[0]}" ]]; then
 	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'ECP3'.${ANSI_NOCOLOR}"
 	CreateLibraryStruct $StructName "ecp3" $SourceDir $VHDLVersion "${Files[@]}"
 
 	VarName="DEV_${StructName}_Enable"
-	test ${!VarName} -eq 1 && Libraries+=($StructName)
+	test ${!VarName} -eq 1 && Libraries+=("$StructName")
 fi
 
 # ECP5U devices
@@ -380,12 +379,12 @@ Files=(
 	ECP5U_SL.vhd
 	gsr_pur_assign.vhd
 )
-if [[ -f "$SourceDirectory/$SourceDir/$Files" ]]; then
+if [[ -f "$SourceDirectory/$SourceDir/${Files[0]}" ]]; then
 	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'ECP5U'.${ANSI_NOCOLOR}"
 	CreateLibraryStruct $StructName "ecp5u" $SourceDir $VHDLVersion "${Files[@]}"
 
 	VarName="DEV_${StructName}_Enable"
-	test ${!VarName} -eq 1 && Libraries+=($StructName)
+	test ${!VarName} -eq 1 && Libraries+=("$StructName")
 fi
 
 # LPTM devices
@@ -401,12 +400,12 @@ Files=(
 	MACHXO_MEM.vhd
 	MACHXO_MISC.vhd
 )
-if [[ -f "$SourceDirectory/$SourceDir/$Files" ]]; then
+if [[ -f "$SourceDirectory/$SourceDir/${Files[0]}" ]]; then
 	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'LPTM'.${ANSI_NOCOLOR}"
 	CreateLibraryStruct $StructName "lptm" $SourceDir $VHDLVersion "${Files[@]}"
 
 	VarName="DEV_${StructName}_Enable"
-	test ${!VarName} -eq 1 && Libraries+=($StructName)
+	test ${!VarName} -eq 1 && Libraries+=("$StructName")
 fi
 
 # LPTM2 devices
@@ -423,12 +422,12 @@ Files=(
 	MACHXO2_MEM.vhd
 	MACHXO2_MISC.vhd
 )
-if [[ -f "$SourceDirectory/$SourceDir/$Files" ]]; then
+if [[ -f "$SourceDirectory/$SourceDir/${Files[0]}" ]]; then
 	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'LPTM2'.${ANSI_NOCOLOR}"
 	CreateLibraryStruct $StructName "lptm2" $SourceDir $VHDLVersion "${Files[@]}"
 
 	VarName="DEV_${StructName}_Enable"
-	test ${!VarName} -eq 1 && Libraries+=($StructName)
+	test ${!VarName} -eq 1 && Libraries+=("$StructName")
 fi
 
 # MachXO devices
@@ -444,12 +443,12 @@ Files=(
 	MACHXO_MEM.vhd
 	MACHXO_MISC.vhd
 )
-if [[ -f "$SourceDirectory/$SourceDir/$Files" ]]; then
+if [[ -f "$SourceDirectory/$SourceDir/${Files[0]}" ]]; then
 	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'MachXO'.${ANSI_NOCOLOR}"
 	CreateLibraryStruct $StructName "machxo" $SourceDir $VHDLVersion "${Files[@]}"
 
 	VarName="DEV_${StructName}_Enable"
-	test ${!VarName} -eq 1 && Libraries+=($StructName)
+	test ${!VarName} -eq 1 && Libraries+=("$StructName")
 fi
 
 # MachXO2 devices
@@ -466,12 +465,12 @@ Files=(
 	MACHXO2_MEM.vhd
 	MACHXO2_MISC.vhd
 )
-if [[ -f "$SourceDirectory/$SourceDir/$Files" ]]; then
+if [[ -f "$SourceDirectory/$SourceDir/${Files[0]}" ]]; then
 	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'MachXO2'.${ANSI_NOCOLOR}"
 	CreateLibraryStruct $StructName "machxo2" $SourceDir $VHDLVersion "${Files[@]}"
 
 	VarName="DEV_${StructName}_Enable"
-	test ${!VarName} -eq 1 && Libraries+=($StructName)
+	test ${!VarName} -eq 1 && Libraries+=("$StructName")
 fi
 
 # MachXO3L devices
@@ -488,12 +487,12 @@ Files=(
 	MACHXO3L_MEM.vhd
 	MACHXO3L_MISC.vhd
 )
-if [[ -f "$SourceDirectory/$SourceDir/$Files" ]]; then
+if [[ -f "$SourceDirectory/$SourceDir/${Files[0]}" ]]; then
 	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'MachXO3L'.${ANSI_NOCOLOR}"
 	CreateLibraryStruct $StructName "machxo3l" $SourceDir $VHDLVersion "${Files[@]}"
 
 	VarName="DEV_${StructName}_Enable"
-	test ${!VarName} -eq 1 && Libraries+=($StructName)
+	test ${!VarName} -eq 1 && Libraries+=("$StructName")
 fi
 
 # SC devices
@@ -509,12 +508,12 @@ Files=(
 	ORCA_MIS.vhd
 	ORCA_SL.vhd
 )
-if [[ -f "$SourceDirectory/$SourceDir/$Files" ]]; then
+if [[ -f "$SourceDirectory/$SourceDir/${Files[0]}" ]]; then
 	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'SC'.${ANSI_NOCOLOR}"
 	CreateLibraryStruct $StructName "sc" $SourceDir $VHDLVersion "${Files[@]}"
 
 	VarName="DEV_${StructName}_Enable"
-	test ${!VarName} -eq 1 && Libraries+=($StructName)
+	test ${!VarName} -eq 1 && Libraries+=("$StructName")
 fi
 
 # SCM devices
@@ -530,12 +529,12 @@ Files=(
 	ORCA_MIS.vhd
 	ORCA_SL.vhd
 )
-if [[ -f "$SourceDirectory/$SourceDir/$Files" ]]; then
+if [[ -f "$SourceDirectory/$SourceDir/${Files[0]}" ]]; then
 	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'SCM'.${ANSI_NOCOLOR}"
 	CreateLibraryStruct $StructName "scm" $SourceDir $VHDLVersion "${Files[@]}"
 
 	VarName="DEV_${StructName}_Enable"
-	test ${!VarName} -eq 1 && Libraries+=($StructName)
+	test ${!VarName} -eq 1 && Libraries+=("$StructName")
 fi
 
 # XP devices
@@ -551,12 +550,12 @@ Files=(
 	ORCA_IO.vhd
 	ORCA_MEM.vhd
 )
-if [[ -f "$SourceDirectory/$SourceDir/$Files" ]]; then
+if [[ -f "$SourceDirectory/$SourceDir/${Files[0]}" ]]; then
 	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'XP'.${ANSI_NOCOLOR}"
 	CreateLibraryStruct $StructName "xp" $SourceDir $VHDLVersion "${Files[@]}"
 
 	VarName="DEV_${StructName}_Enable"
-	test ${!VarName} -eq 1 && Libraries+=($StructName)
+	test ${!VarName} -eq 1 && Libraries+=("$StructName")
 fi
 
 # XP2 devices
@@ -574,12 +573,12 @@ Files=(
 	XP2_MULT.vhd
 	XP2_SL.vhd
 )
-if [[ -f "$SourceDirectory/$SourceDir/$Files" ]]; then
+if [[ -f "$SourceDirectory/$SourceDir/${Files[0]}" ]]; then
 	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'XP2'.${ANSI_NOCOLOR}"
 	CreateLibraryStruct $StructName "xp2" $SourceDir $VHDLVersion "${Files[@]}"
 
 	VarName="DEV_${StructName}_Enable"
-	test ${!VarName} -eq 1 && Libraries+=($StructName)
+	test ${!VarName} -eq 1 && Libraries+=("$StructName")
 fi
 
 # if [[ $DEBUG -eq 1 ]]; then
@@ -589,7 +588,7 @@ fi
 # fi
 
 # Compile libraries
-if [[ "$Libraries" != "" ]]; then
+if [[ ${#Libraries[@]} -ne 0 ]]; then
 	Compile "$SourceDirectory" "${Libraries[*]}"
 
 	echo "--------------------------------------------------------------------------------"

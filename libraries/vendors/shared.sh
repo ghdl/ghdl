@@ -104,7 +104,7 @@ SetupDirectories() {
 	test greadlink --version > /dev/null 2>&1 && READLINK=greadlink || READLINK=readlink
 	SourceDirectory=$($READLINK -f $SourceDirectory)
 	if [[ ! "$DestinationDirectory" = /* ]]; then
-		DestinationDirectory=$WorkingDir/$DestinationDirectory
+		DestinationDirectory="$WorkingDir/$DestinationDirectory"
 	fi
 }
 

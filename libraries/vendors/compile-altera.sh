@@ -218,14 +218,14 @@ fi
 # Search Altera Quartus in default installation locations
 DefaultDirectories=("/opt/Altera" "/opt/altera" "/c/Altera")
 if [ ! -z $QUARTUS_ROOTDIR ]; then
-	EnvSourceDir=$QUARTUS_ROOTDIR/${Altera_Quartus_Settings[SourceDirectory]}
+	EnvSourceDir="$QUARTUS_ROOTDIR/${Altera_Quartus_Settings[SourceDirectory]}"
 else
 	for DefaultDir in "${DefaultDirectories[@]}"; do
 		for Major in 16 15 14 13; do
 			for Minor in 1 0; do
 				Dir=$DefaultDir/${Major}.${Minor}/quartus
 				if [ -d $Dir ]; then
-					EnvSourceDir=$Dir/${Altera_Quartus_Settings[SourceDirectory]}
+					EnvSourceDir="$Dir/${Altera_Quartus_Settings[SourceDirectory]}"
 					break 3
 				fi
 			done
@@ -297,7 +297,7 @@ Files=(
 	220model.vhd
 )
 CreateLibraryStruct $StructName "lpm" "." $VHDLVersion "${Files[@]}"
-test $COMPILE_ALTERA -eq 1 && Libraries+=($StructName)
+test $COMPILE_ALTERA -eq 1 && Libraries+=("$StructName")
 
 StructName="SGATE"
 Files=(
@@ -305,7 +305,7 @@ Files=(
 	sgate.vhd
 )
 CreateLibraryStruct $StructName "sgate" "." $VHDLVersion "${Files[@]}"
-test $COMPILE_ALTERA -eq 1 && Libraries+=($StructName)
+test $COMPILE_ALTERA -eq 1 && Libraries+=("$StructName")
 
 StructName="ALTERA"
 Files=(
@@ -317,7 +317,7 @@ Files=(
 	alt_dspbuilder_package.vhd
 )
 CreateLibraryStruct $StructName "altera" "." $VHDLVersion "${Files[@]}"
-test $COMPILE_ALTERA -eq 1 && Libraries+=($StructName)
+test $COMPILE_ALTERA -eq 1 && Libraries+=("$StructName")
 
 StructName="ALTERA_MF"
 Files=(
@@ -325,7 +325,7 @@ Files=(
 	altera_mf.vhd
 )
 CreateLibraryStruct $StructName "altera_mf" "." $VHDLVersion "${Files[@]}"
-test $COMPILE_ALTERA -eq 1 && Libraries+=($StructName)
+test $COMPILE_ALTERA -eq 1 && Libraries+=("$StructName")
 
 
 StructName="ALTERA_LNSIM"
@@ -333,7 +333,7 @@ Files=(
 	altera_lnsim_components.vhd
 )
 CreateLibraryStruct $StructName "altera_lnsim" "." $VHDLVersion "${Files[@]}"
-test $COMPILE_ALTERA -eq 1 && Libraries+=($StructName)
+test $COMPILE_ALTERA -eq 1 && Libraries+=("$StructName")
 
 
 # Altera device libraries
@@ -346,11 +346,11 @@ Files=(
 	max_atoms.vhd
 	max_components.vhd
 )
-if [[ -f "$SourceDirectory/$Files" ]]; then
+if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
 	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Max'.${ANSI_NOCOLOR}"
 	CreateLibraryStruct $StructName "max" "." $VHDLVersion "${Files[@]}"
 
-	test $COMPILE_MAX -eq 1 && Libraries+=($StructName)
+	test $COMPILE_MAX -eq 1 && Libraries+=("$StructName")
 fi
 
 # Max II library
@@ -359,11 +359,11 @@ Files=(
 	maxii_atoms.vhd
 	maxii_components.vhd
 )
-if [[ -f "$SourceDirectory/$Files" ]]; then
+if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
 	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Max II'.${ANSI_NOCOLOR}"
 	CreateLibraryStruct $StructName "maxii" "." $VHDLVersion "${Files[@]}"
 
-	test $COMPILE_MAX -eq 1 && Libraries+=($StructName)
+	test $COMPILE_MAX -eq 1 && Libraries+=("$StructName")
 fi
 
 # Max V library
@@ -372,11 +372,11 @@ Files=(
 	maxv_atoms.vhd
 	maxv_components.vhd
 )
-if [[ -f "$SourceDirectory/$Files" ]]; then
+if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
 	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Max V'.${ANSI_NOCOLOR}"
 	CreateLibraryStruct $StructName "maxv" "." $VHDLVersion "${Files[@]}"
 
-	test $COMPILE_MAX -eq 1 && Libraries+=($StructName)
+	test $COMPILE_MAX -eq 1 && Libraries+=("$StructName")
 fi
 
 # Arria II library
@@ -391,11 +391,11 @@ if [[ $SKIP_LARGE_FILES -eq 0 ]]; then
 		arriaii_hssi_atoms.vhd
 	)
 fi
-if [[ -f "$SourceDirectory/$Files" ]]; then
+if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
 	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Arria II'.${ANSI_NOCOLOR}"
 	CreateLibraryStruct $StructName "arriaii" "." $VHDLVersion "${Files[@]}"
 
-	test $COMPILE_ARRIA -eq 1 && Libraries+=($StructName)
+	test $COMPILE_ARRIA -eq 1 && Libraries+=("$StructName")
 fi
 
 # Arria II (PCIe) library
@@ -405,11 +405,11 @@ if [[ $SKIP_LARGE_FILES -eq 0 ]]; then
 		arriaii_pcie_hip_components.vhd
 		arriaii_pcie_hip_atoms.vhd
 	)
-	if [[ -f "$SourceDirectory/$Files" ]]; then
+	if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
 		test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Arria II (PCIe)'.${ANSI_NOCOLOR}"
 		CreateLibraryStruct $StructName "arriaii_pcie_hip" "." $VHDLVersion "${Files[@]}"
 
-		test $COMPILE_ARRIA -eq 1 && Libraries+=($StructName)
+		test $COMPILE_ARRIA -eq 1 && Libraries+=("$StructName")
 	fi
 fi
 
@@ -424,11 +424,11 @@ if [[ $SKIP_LARGE_FILES -eq 0 ]]; then
 		arriaiigz_hssi_components.vhd
 	)
 fi
-if [[ -f "$SourceDirectory/$Files" ]]; then
+if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
 	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Arria II GZ'.${ANSI_NOCOLOR}"
 	CreateLibraryStruct $StructName "arriaiigz" "." $VHDLVersion "${Files[@]}"
 
-	test $COMPILE_ARRIA -eq 1 && Libraries+=($StructName)
+	test $COMPILE_ARRIA -eq 1 && Libraries+=("$StructName")
 fi
 
 # ArriaV library
@@ -443,11 +443,11 @@ if [[ $SKIP_LARGE_FILES -eq 0 ]]; then
 		arriav_hssi_atoms.vhd
 	)
 fi
-if [[ -f "$SourceDirectory/$Files" ]]; then
+if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
 	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Arria V'.${ANSI_NOCOLOR}"
 	CreateLibraryStruct $StructName "arriav" "." $VHDLVersion "${Files[@]}"
 
-	test $COMPILE_ARRIA -eq 1 && Libraries+=($StructName)
+	test $COMPILE_ARRIA -eq 1 && Libraries+=("$StructName")
 fi
 
 # Arria V GZ library
@@ -462,11 +462,11 @@ if [[ $SKIP_LARGE_FILES -eq 0 ]]; then
 		arriavgz_hssi_atoms.vhd
 	)
 fi
-if [[ -f "$SourceDirectory/$Files" ]]; then
+if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
 	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Arria V GZ'.${ANSI_NOCOLOR}"
 	CreateLibraryStruct $StructName "arriavgz" "." $VHDLVersion "${Files[@]}"
 
-	test $COMPILE_ARRIA -eq 1 && Libraries+=($StructName)
+	test $COMPILE_ARRIA -eq 1 && Libraries+=("$StructName")
 fi
 
 # Arria V GZ (PCIe) library
@@ -476,11 +476,11 @@ if [[ $SKIP_LARGE_FILES -eq 0 ]]; then
 		arriavgz_pcie_hip_components.vhd
 		arriavgz_pcie_hip_atoms.vhd
 	)
-	if [[ -f "$SourceDirectory/$Files" ]]; then
+	if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
 		test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Arria V GZ (PCIe)'.${ANSI_NOCOLOR}"
 		CreateLibraryStruct $StructName "arriavgz_pcie_hip" "." $VHDLVersion "${Files[@]}"
 
-		test $COMPILE_ARRIA -eq 1 && Libraries+=($StructName)
+		test $COMPILE_ARRIA -eq 1 && Libraries+=("$StructName")
 	fi
 fi
 
@@ -490,11 +490,11 @@ Files=(
 	cyclone_atoms.vhd
 	cyclone_components.vhd
 )
-if [[ -f "$SourceDirectory/$Files" ]]; then
+if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
 	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Cyclone'.${ANSI_NOCOLOR}"
 	CreateLibraryStruct $StructName "cyclone" "." $VHDLVersion "${Files[@]}"
 
-	test $COMPILE_CYCLONE -eq 1 && Libraries+=($StructName)
+	test $COMPILE_CYCLONE -eq 1 && Libraries+=("$StructName")
 fi
 
 # Cyclone II library
@@ -503,11 +503,11 @@ Files=(
 	cycloneii_atoms.vhd
 	cycloneii_components.vhd
 )
-if [[ -f "$SourceDirectory/$Files" ]]; then
+if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
 	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Cyclone II'.${ANSI_NOCOLOR}"
 	CreateLibraryStruct $StructName "cycloneii" "." $VHDLVersion "${Files[@]}"
 
-	test $COMPILE_CYCLONE -eq 1 && Libraries+=($StructName)
+	test $COMPILE_CYCLONE -eq 1 && Libraries+=("$StructName")
 fi
 
 # Cyclone III library
@@ -516,11 +516,11 @@ Files=(
 	cycloneiii_atoms.vhd
 	cycloneiii_components.vhd
 )
-if [[ -f "$SourceDirectory/$Files" ]]; then
+if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
 	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Cyclone III'.${ANSI_NOCOLOR}"
 	CreateLibraryStruct $StructName "cycloneiii" "." $VHDLVersion "${Files[@]}"
 
-	test $COMPILE_CYCLONE -eq 1 && Libraries+=($StructName)
+	test $COMPILE_CYCLONE -eq 1 && Libraries+=("$StructName")
 fi
 
 # Cyclone IV library
@@ -535,11 +535,11 @@ if [[ $SKIP_LARGE_FILES -eq 0 ]]; then
 		cycloneiv_hssi_atoms.vhd
 	)
 fi
-if [[ -f "$SourceDirectory/$Files" ]]; then
+if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
 	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Cyclone IV'.${ANSI_NOCOLOR}"
 	CreateLibraryStruct $StructName "cycloneiv" "." $VHDLVersion "${Files[@]}"
 
-	test $COMPILE_CYCLONE -eq 1 && Libraries+=($StructName)
+	test $COMPILE_CYCLONE -eq 1 && Libraries+=("$StructName")
 fi
 
 # Cyclone IV (PCIe) library
@@ -549,11 +549,11 @@ if [[ $SKIP_LARGE_FILES -eq 0 ]]; then
 		cycloneiv_pcie_hip_components.vhd
 		cycloneiv_pcie_hip_atoms.vhd
 	)
-	if [[ -f "$SourceDirectory/$Files" ]]; then
+	if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
 		test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Cyclone IV (PCIe)'.${ANSI_NOCOLOR}"
 		CreateLibraryStruct $StructName "cycloneiv_pcie_hip" "." $VHDLVersion "${Files[@]}"
 
-		test $COMPILE_CYCLONE -eq 1 && Libraries+=($StructName)
+		test $COMPILE_CYCLONE -eq 1 && Libraries+=("$StructName")
 	fi
 fi
 
@@ -563,11 +563,11 @@ Files=(
 	cycloneive_atoms.vhd
 	cycloneive_components.vhd
 )
-if [[ -f "$SourceDirectory/$Files" ]]; then
+if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
 	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Cyclone IV E'.${ANSI_NOCOLOR}"
 	CreateLibraryStruct $StructName "cycloneive" "." $VHDLVersion "${Files[@]}"
 
-	test $COMPILE_CYCLONE -eq 1 && Libraries+=($StructName)
+	test $COMPILE_CYCLONE -eq 1 && Libraries+=("$StructName")
 fi
 
 # Cyclone V library
@@ -582,11 +582,11 @@ if [[ $SKIP_LARGE_FILES -eq 0 ]]; then
 		cyclonev_hssi_atoms.vhd
 	)
 fi
-if [[ -f "$SourceDirectory/$Files" ]]; then
+if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
 	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Cyclone V'.${ANSI_NOCOLOR}"
 	CreateLibraryStruct $StructName "cyclonev" "." $VHDLVersion "${Files[@]}"
 
-	test $COMPILE_CYCLONE -eq 1 && Libraries+=($StructName)
+	test $COMPILE_CYCLONE -eq 1 && Libraries+=("$StructName")
 fi
 
 # Stratix IV library
@@ -601,11 +601,11 @@ if [[ $SKIP_LARGE_FILES -eq 0 ]]; then
 		stratixiv_hssi_atoms.vhd
 	)
 fi
-if [[ -f "$SourceDirectory/$Files" ]]; then
+if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
 	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Stratix IV'.${ANSI_NOCOLOR}"
 	CreateLibraryStruct $StructName "stratixiv" "." $VHDLVersion "${Files[@]}"
 
-	test $COMPILE_STRATIX -eq 1 && Libraries+=($StructName)
+	test $COMPILE_STRATIX -eq 1 && Libraries+=("$StructName")
 fi
 
 # Stratix IV (PCIe) library
@@ -615,11 +615,11 @@ if [[ $SKIP_LARGE_FILES -eq 0 ]]; then
 		stratixiv_pcie_hip_components.vhd
 		stratixiv_pcie_hip_atoms.vhd
 	)
-	if [[ -f "$SourceDirectory/$Files" ]]; then
+	if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
 		test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Stratix IV (PCIe)'.${ANSI_NOCOLOR}"
 		CreateLibraryStruct $StructName "stratixiv_pcie_hip" "." $VHDLVersion "${Files[@]}"
 
-		test $COMPILE_STRATIX -eq 1 && Libraries+=($StructName)
+		test $COMPILE_STRATIX -eq 1 && Libraries+=("$StructName")
 	fi
 fi
 
@@ -635,11 +635,11 @@ if [[ $SKIP_LARGE_FILES -eq 0 ]]; then
 		stratixv_hssi_atoms.vhd
 	)
 fi
-if [[ -f "$SourceDirectory/$Files" ]]; then
+if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
 	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Stratix V'.${ANSI_NOCOLOR}"
 	CreateLibraryStruct $StructName "stratixv" "." $VHDLVersion "${Files[@]}"
 
-	test $COMPILE_STRATIX -eq 1 && Libraries+=($StructName)
+	test $COMPILE_STRATIX -eq 1 && Libraries+=("$StructName")
 fi
 
 # Stratix V (PCIe) library
@@ -649,11 +649,11 @@ if [[ $SKIP_LARGE_FILES -eq 0 ]]; then
 		stratixv_pcie_hip_components.vhd
 		stratixv_pcie_hip_atoms.vhd
 	)
-	if [[ -f "$SourceDirectory/$Files" ]]; then
+	if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
 		test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Stratix V (PCIe)'.${ANSI_NOCOLOR}"
 		CreateLibraryStruct $StructName "stratixv_pcie_hip" "." $VHDLVersion "${Files[@]}"
 
-		test $COMPILE_STRATIX -eq 1 && Libraries+=($StructName)
+		test $COMPILE_STRATIX -eq 1 && Libraries+=("$StructName")
 	fi
 fi
 
@@ -663,11 +663,11 @@ Files=(
 	fiftyfivenm_atoms.vhd
 	fiftyfivenm_components.vhd
 )
-if [[ -f "$SourceDirectory/$Files" ]]; then
+if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
 	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device '55 nm'.${ANSI_NOCOLOR}"
 	CreateLibraryStruct $StructName "fiftyfivenm" "." $VHDLVersion "${Files[@]}"
 
-	test $COMPILE_NM -eq 1 && Libraries+=($StructName)
+	test $COMPILE_NM -eq 1 && Libraries+=("$StructName")
 fi
 
 # 20 nm library
@@ -684,11 +684,11 @@ if [[ $SKIP_LARGE_FILES -eq 0 ]]; then
 		twentynm_hssi_atoms.vhd
 	)
 fi
-if [[ -f "$SourceDirectory/$Files" ]]; then
+if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
 	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device '20 nm'.${ANSI_NOCOLOR}"
 	CreateLibraryStruct $StructName "twentynm" "." $VHDLVersion "${Files[@]}"
 
-	test $COMPILE_NM -eq 1 && Libraries+=($StructName)
+	test $COMPILE_NM -eq 1 && Libraries+=("$StructName")
 fi
 
 # if [[ $DEBUG -eq 1 ]]; then
@@ -698,7 +698,7 @@ fi
 # fi
 
 # Compile libraries
-if [[ "$Libraries" != "" ]]; then
+if [[ ${#Libraries[@]} -ne 0 ]]; then
 	Compile "$SourceDirectory" "${Libraries[*]}"
 
 	echo "--------------------------------------------------------------------------------"

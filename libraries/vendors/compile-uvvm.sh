@@ -388,7 +388,7 @@ done < <(cat "$SourceDirectory/$LibraryPath/script/compile_order.txt")
 
 CreateLibraryStruct $StructName $LibraryName $LibraryPath $VHDLVersion "${Files[@]}"
 
-test $COMPILE_UVVM_UTILITIES -eq 1 && Libraries+=($StructName)
+test $COMPILE_UVVM_UTILITIES -eq 1 && Libraries+=("$StructName")
 
 
 # Reading uvvm_vvc_framework library files
@@ -408,7 +408,7 @@ done < <(cat "$SourceDirectory/$LibraryPath/script/compile_order.txt")
 
 CreateLibraryStruct $StructName $LibraryName $LibraryPath $VHDLVersion "${Files[@]}"
 
-test $COMPILE_UVVM_VVC_FRAMEWORK -eq 1 && Libraries+=($StructName)
+test $COMPILE_UVVM_VVC_FRAMEWORK -eq 1 && Libraries+=("$StructName")
 
 
 # Verification IPs
@@ -442,7 +442,7 @@ while IFS= read -r VIPDirectory; do
 	CreateLibraryStruct $StructName $LibraryName $LibraryPath $VHDLVersion "${Files[@]}"
 
 	VarName="COMPILE_UVVM_${VIPName}"
-	test ${!VarName} -eq 1 && Libraries+=($StructName)
+	test ${!VarName} -eq 1 && Libraries+=("$StructName")
 done < <(find $SourceDirectory/*vip* -type d -prune)
 
 # if [[ $DEBUG -eq 1 ]]; then
@@ -451,7 +451,7 @@ done < <(find $SourceDirectory/*vip* -type d -prune)
 	# done
 # fi
 
-if [[ $Libraries != "" ]]; then
+if [[ ${#Libraries[@]} -ne 0 ]]; then
 	Compile "$SourceDirectory" "${Libraries[*]}"
 
 	echo "--------------------------------------------------------------------------------"

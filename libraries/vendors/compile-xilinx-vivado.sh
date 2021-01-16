@@ -204,14 +204,14 @@ fi
 # Search Xilinx Vivado in default installation locations
 DefaultDirectories=("/opt/Xilinx/Vivado" "/opt/xilinx/Vivado" "/c/Xilinx/Vivado")
 if [ ! -z $XILINX_VIVADO ]; then
-	EnvSourceDir=$XILINX_VIVADO/${Xilinx_Vivado_Settings[SourceDirectory]}
+	EnvSourceDir="$XILINX_VIVADO/${Xilinx_Vivado_Settings[SourceDirectory]}"
 else
 	for DefaultDir in "${DefaultDirectories[@]}"; do
 		for Major in 2021 2020 2019 2018 2017 2016 2015 2014; do
 			for Minor in 4 3 2 1; do
 				Dir=$DefaultDir/${Major}.${Minor}
 				if [ -d $Dir ]; then
-					EnvSourceDir=$Dir/${Xilinx_Vivado_Settings[SourceDirectory]}
+					EnvSourceDir="$Dir/${Xilinx_Vivado_Settings[SourceDirectory]}"
 					break 3
 				fi
 			done
@@ -297,7 +297,7 @@ while IFS= read -r File; do
 done < <(grep --no-filename -R '^[a-zA-Z]' "$SourceDirectory/${Library}s/retarget/vhdl_analyze_order")
 
 CreateLibraryStruct $StructName $Library "${Library}s" $VHDLVersion "${Files[@]}"
-test $COMPILE_UNISIM -eq 1 && Libraries+=($StructName)
+test $COMPILE_UNISIM -eq 1 && Libraries+=("$StructName")
 
 # Reading unisim secureip files
 StructName="UNISIM_SECUREIP"
@@ -306,7 +306,7 @@ test $DEBUG -eq 1   && echo -e "    ${ANSI_DARK_GRAY}Scanning directory '$Source
 Files=( $(cd $SourceDirectory/${Library}s/secureip; LC_COLLATE=C ls *.vhd) )
 
 CreateLibraryStruct $StructName "secureip" "${Library}s/secureip" $VHDLVersion "${Files[@]}"
-test $COMPILE_UNISIM -eq 1 && test $COMPILE_SECUREIP -eq 1 && Libraries+=($StructName)
+test $COMPILE_UNISIM -eq 1 && test $COMPILE_SECUREIP -eq 1 && Libraries+=("$StructName")
 
 
 # Library unimacro
@@ -323,7 +323,7 @@ while IFS= read -r File; do
 done < <(grep --no-filename -R '^[a-zA-Z]' "$SourceDirectory/$Library/vhdl_analyze_order")
 
 CreateLibraryStruct $StructName $Library $Library $VHDLVersion "${Files[@]}"
-test $COMPILE_UNIMACRO -eq 1 && Libraries+=($StructName)
+test $COMPILE_UNIMACRO -eq 1 && Libraries+=("$StructName")
 
 # Library unifast
 # ==============================================================================
@@ -336,7 +336,7 @@ while IFS= read -r File; do
 done < <(grep --no-filename -R '^[a-zA-Z]' "$SourceDirectory/$Library/primitive/vhdl_analyze_order")
 
 CreateLibraryStruct $StructName $Library "$Library/primitive" $VHDLVersion "${Files[@]}"
-test $COMPILE_UNIFAST -eq 1 && Libraries+=($StructName)
+test $COMPILE_UNIFAST -eq 1 && Libraries+=("$StructName")
 
 # Reading unifast secureip files
 StructName="UNIFAST_SECUREIP"
@@ -345,11 +345,11 @@ test $DEBUG -eq 1   && echo -e "    ${ANSI_DARK_GRAY}Scanning directory '$Source
 Files=( $(cd $SourceDirectory/$Library/secureip; LC_COLLATE=C ls *.vhd) )
 
 CreateLibraryStruct $StructName "secureip" "$Library/secureip" $VHDLVersion "${Files[@]}"
-test $COMPILE_UNIFAST -eq 1 && test $COMPILE_SECUREIP -eq 1 && Libraries+=($StructName)
+test $COMPILE_UNIFAST -eq 1 && test $COMPILE_SECUREIP -eq 1 && Libraries+=("$StructName")
 
 
 # Compile libraries
-if [[ "$Libraries" != "" ]]; then
+if [[ ${#Libraries[@]} -ne 0 ]]; then
 	Compile "$SourceDirectory" "${Libraries[*]}"
 
 	echo "--------------------------------------------------------------------------------"
