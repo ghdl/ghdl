@@ -44,22 +44,38 @@ param(
 		[switch]$UVVM_VCC_Framework =       $false,
 	# Compile all UVVM Verification IPs (VIPs).
 	[switch]$UVVM_VIP =           $false,
-	  # Compile VIP: Avalon_MM
+	  # Compile VIP: Avalon Memory Mapped
 	  [switch]$UVVM_VIP_Avalon_MM =       $false,
+	  # Compile VIP: Avalon Stream
+	  [switch]$UVVM_VIP_Avalon_ST =       $false,
+	  # Compile VIP: AXI
+	  [switch]$UVVM_VIP_AXI =             $false,
 	  # Compile VIP: AXI-Lite
 	  [switch]$UVVM_VIP_AXI_Lite =        $false,
 	  # Compile VIP: AXI-Stream
 	  [switch]$UVVM_VIP_AXI_Stream =      $false,
 	  # Compile VIP: Clock Generator
 	  [switch]$UVVM_VIP_Clock_Generator = $false,
+	  # Compile VIP: Error Injection
+	  [switch]$UVVM_VIP_Error_Injection = $false,
+	  # Compile VIP: Ethernet
+	  [switch]$UVVM_VIP_Ethernet =        $false,
+	  # Compile VIP: GMII
+	  [switch]$UVVM_VIP_GMII =            $false,
 	  # Compile VIP: GPIO
 	  [switch]$UVVM_VIP_GPIO =            $false,
+	  # Compile VIP: HVVC to VVC Bridge
+	  [switch]$UVVM_VIP_HVVC2VVC =        $false,
 	  # Compile VIP: I2C
 	  [switch]$UVVM_VIP_I2C =             $false,
-	  # Compile VIP: Scoreboard
-	  [switch]$UVVM_VIP_Scoreboard =      $false,
+	  # Compile VIP: RGMII
+	  [switch]$UVVM_VIP_RGMII =           $false,
 	  # Compile VIP: SBI (Simple Byte Interface)
 	  [switch]$UVVM_VIP_SBI =             $false,
+	  # Compile VIP: Scoreboard
+	  [switch]$UVVM_VIP_Scoreboard =      $false,
+	  # Compile VIP: Specifaction Coverage
+	  [switch]$UVVM_VIP_Spec_Cov =        $false,
 	  # Compile VIP: SPI
 	  [switch]$UVVM_VIP_SPI =             $false,
 	  # Compile VIP: UART
@@ -99,9 +115,11 @@ Import-Module $PSScriptRoot\shared.psm1 -Verbose:$false -ArgumentList @("UVVM", 
 # Display help if no command was selected
 if ($Help -or (-not ($All -or $Clean -or
                     ($UVVM -or      ($UVVM_Utilities -or $UVVM_VVC_Framework)) -or
-                    ($UVVM_VIP -or  ($UVVM_VIP_Avalon_MM -or $UVVM_VIP_AXI_Lite -or $UVVM_VIP_AXI_Stream -or
-                                     $UVVM_VIP_Clock_Generator -or $UVVM_VIP_GPIO -or $UVVM_VIP_I2C -or $UVVM_VIP_SBI -or
-                                     $UVVM_VIP_Scoreboard -or $UVVM_VIP_SPI -or $UVVM_VIP_UART))
+                    ($UVVM_VIP -or  ($UVVM_VIP_Avalon_MM -or $UVVM_VIP_Avalon_ST -or $UVVM_VIP_AXI -or $UVVM_VIP_AXI_Lite -or
+                                     $UVVM_VIP_AXI_Stream -or $UVVM_VIP_Clock_Generator -or $UVVM_VIP_Error_Injection -or
+											               $UVVM_VIP_Ethernet -or $UVVM_VIP_GMII -or $UVVM_VIP_GPIO -or $UVVM_VIP_HVVC2VVC -or
+											               $UVVM_VIP_I2C -or $UVVM_VIP_RGMII -or $UVVM_VIP_SBI -or $UVVM_VIP_Scoreboard -or
+											               $UVVM_VIP_Spec_Cov -or $UVVM_VIP_SPI -or $UVVM_VIP_UART))
 	)))
 {	Get-Help $MYINVOCATION.MyCommand.Path -Detailed
 	Exit-CompileScript
@@ -117,13 +135,21 @@ if ($UVVM)
 }
 if ($UVVM_VIP)
 {	$UVVM_VIP_Avalon_MM =       $true
+	$UVVM_VIP_Avalon_ST =       $true
+	$UVVM_VIP_AXI =             $true
 	$UVVM_VIP_AXI_Lite =        $true
 	$UVVM_VIP_AXI_Stream =      $true
 	$UVVM_VIP_Clock_Generator = $true
+	$UVVM_VIP_Error_Injection = $true
+	$UVVM_VIP_Ethernet =        $true
+	$UVVM_VIP_GMII =            $true
 	$UVVM_VIP_GPIO =            $true
+	$UVVM_VIP_HVVC2VVC =        $true
 	$UVVM_VIP_I2C =             $true
-	$UVVM_VIP_Scoreboard =      $true
+	$UVVM_VIP_RGMII =           $true
 	$UVVM_VIP_SBI =             $true
+	$UVVM_VIP_Scoreboard =      $true
+	$UVVM_VIP_Spec_Cov =        $true
 	$UVVM_VIP_SPI =             $true
 	$UVVM_VIP_UART =            $true
 }
@@ -180,34 +206,17 @@ if ($Clean)
 	rm *.cf
 }
 
-$UVVM_Util_Files = @(
-	"uvvm_util\src\types_pkg.vhd",
-	"uvvm_util\src\adaptations_pkg.vhd",
-	"uvvm_util\src\string_methods_pkg.vhd",
-	"uvvm_util\src\protected_types_pkg.vhd",
-	"uvvm_util\src\global_signals_and_shared_variables_pkg.vhd",
-	"uvvm_util\src\hierarchy_linked_list_pkg.vhd",
-	"uvvm_util\src\alert_hierarchy_pkg.vhd",
-	"uvvm_util\src\license_pkg.vhd",
-	"uvvm_util\src\methods_pkg.vhd",
-	"uvvm_util\src\bfm_common_pkg.vhd",
-	"uvvm_util\src\uvvm_util_context.vhd"
-)
-$UVVM_VVC_Files = @(
-	"uvvm_vvc_framework\src\ti_vvc_framework_support_pkg.vhd",
-	"uvvm_vvc_framework\src\ti_generic_queue_pkg.vhd",
-	"uvvm_vvc_framework\src\ti_data_queue_pkg.vhd",
-	"uvvm_vvc_framework\src\ti_data_fifo_pkg.vhd",
-	"uvvm_vvc_framework\src\ti_data_stack_pkg.vhd"
-	"uvvm_vvc_framework\src\ti_uvvm_engine.vhd"
-)
-
-
 Write-Host "Reading VIP compile order files..." -ForegroundColor Cyan
-$VIP_Files = @{}
-foreach ($VIPDirectory in (Get-ChildItem -Path $SourceDirectory -Directory "*VIP*"))
-{	$VIPName =      $VIPDirectory.Name
-	$VIPVariable =  $VIPName.Substring(7).ToUpper().Replace("AXI", "AXI_")
+$VIP_Files = [ordered]@{}
+foreach ($VIPName in (Get-Content "$SourceDirectory\script\component_list.txt"))
+{	if ($VIPName.StartsWith("uvvm"))
+	{ $VIPVariable = $VIPName.Substring(5).ToUpper()
+		$VIPVariable = $VIPVariable.Replace("UTIL", "UTILITIES")
+	}
+	elseif ($VIPName.StartsWith("bitvis"))
+	{	$VIPVariable = $VIPName.Substring(7).ToUpper()
+		$VIPVariable = $VIPVariable.Replace("AXI", "AXI_")
+	}
 
 	$EnableVerbose -and (Write-Host "  Found VIP: $VIPName"    -ForegroundColor Gray                                                                ) | Out-Null
 	$EnableDebug -and   (Write-Host "    Reading compile order from '$SourceDirectory\$VIPName\script\compile_order.txt'" -ForegroundColor DarkGray ) | Out-Null
@@ -243,29 +252,10 @@ foreach ($VIPDirectory in (Get-ChildItem -Path $SourceDirectory -Directory "*VIP
 
 # UVVM packages
 # ==============================================================================
-# compile uvvm_util library
-if ((-not $StopCompiling) -and $UVVM_Utilities)
-{	$Library = "uvvm_util"
-	$SourceFiles = $UVVM_Util_Files | % { "$SourceDirectory\$_" }
-
-	$ErrorCount += Start-PackageCompilation $GHDLBinary $Analyze_Parameters $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
-	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
-}
-
-# compile uvvm_vvc_framework library
-if ((-not $StopCompiling) -and $UVVM_VCC_Framework)
-{	$Library = "uvvm_vvc_framework"
-	$SourceFiles = $UVVM_VVC_Files | % { "$SourceDirectory\$_" }
-
-	$ErrorCount += Start-PackageCompilation $GHDLBinary $Analyze_Parameters $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
-	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
-}
-
-
 foreach ($vip in $VIP_Files.Keys)
 {	if ((-not $StopCompiling) -and (Get-Variable $VIP_Files[$vip]["Variable"] -ValueOnly))
 	{	$Library =      $VIP_Files[$vip]["Library"]
-		$SourceFiles =  $VIP_Files[$vip]["Files"] #| % { "$SourceDirectory\$_" }
+		$SourceFiles =  $VIP_Files[$vip]["Files"]
 
 		$ErrorCount += Start-PackageCompilation $GHDLBinary $Analyze_Parameters $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
