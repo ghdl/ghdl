@@ -88,7 +88,7 @@ class JSONTest(TestCase):
 
 		errs = 0
 		json_res = []
-		for r in ref:
+		for i, r in enumerate(ref):
 			rep = ls.read_request()
 			if rep is None:
 				print('FAIL: number of reply does not match')
@@ -100,7 +100,8 @@ class JSONTest(TestCase):
 #			self.assertEqual(rep, r, "reply does not match for {!s}".format(requestFile))
 			if rep != r:
 				print(self.__class__.__name__)
-				show_diffs('', r, rep)
+				show_diffs("[{}]".format(i), r, rep)
+				#errs += 1
 
 		rep = ls.read_request()
 		self.assertIsNone(rep, "Too many replies.")
@@ -156,16 +157,11 @@ class Test005_Create(JSONTest):
 		self._RequestResponse("cmds.json", "replies.json")
 
 
-# FIXME: is this case 6?
-class Test005_Option_Error(JSONTest):
-	subdir = Path("005opterr")
+class Test006_Option_Error(JSONTest):
+	subdir = Path("006opterr")
 
 	def test_Request_Response(self):
 		self._RequestResponse("cmds.json", "replies.json")
-
-
-#class Test006_?????(JSONTest):
-#	_CASE = Path("006?????")
 
 
 class Test007_Error_Project(JSONTest):
