@@ -115,15 +115,17 @@ For a detailed documentation and all command line options see
 
 - OSVVM
   - switch / search directories if normal OSVVM or OsvvmLibraries is specified as source
-
 - Missing features
-  - Implement `--clean` commands
-
+  - Implement `-Clean` ```--clean` commands
 - describe usage with -P
-
 - document offered procedures and functions
-
 - don't enforce `--output` if `--source` is used.
+- UVVM (OSVVM)
+  - create a list of components as array and generate from that:
+	  - variables
+	  - cli options
+	  - help text
+	  - default values
 
 ------------------------
 Author: Patrick Lehmann  

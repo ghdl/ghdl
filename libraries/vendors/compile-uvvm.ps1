@@ -40,8 +40,8 @@ param(
 	[switch]$UVVM =               $false,
 		# Compile all UVVM Utility packages.
 		[switch]$UVVM_Utilities =           $false,
-		# Compile all UVVM VCC Framework packages.
-		[switch]$UVVM_VCC_Framework =       $false,
+		# Compile all UVVM VVC Framework packages.
+		[switch]$UVVM_VVC_Framework =       $false,
 	# Compile all UVVM Verification IPs (VIPs).
 	[switch]$UVVM_VIP =           $false,
 	  # Compile VIP: Avalon Memory Mapped
@@ -131,7 +131,7 @@ if ($All)
 }
 if ($UVVM)
 {	$UVVM_Utilities =           $true
-	$UVVM_VCC_Framework =       $true
+	$UVVM_VVC_Framework =       $true
 }
 if ($UVVM_VIP)
 {	$UVVM_VIP_Avalon_MM =       $true
@@ -211,12 +211,15 @@ $VIP_Files = [ordered]@{}
 foreach ($VIPName in (Get-Content "$SourceDirectory\script\component_list.txt"))
 {	if ($VIPName.StartsWith("uvvm"))
 	{ $VIPVariable = $VIPName.Substring(5).ToUpper()
-		$VIPVariable = $VIPVariable.Replace("UTIL", "UTILITIES")
+		$VIPVariable = $VIPVariable.Replace("UTIL", "Utilities")
 	}
 	elseif ($VIPName.StartsWith("bitvis"))
 	{	$VIPVariable = $VIPName.Substring(7).ToUpper()
-		$VIPVariable = $VIPVariable.Replace("AXI", "AXI_")
+		$VIPVariable = $VIPVariable.Replace("AXILITE", "AXI_LITE")
+		$VIPVariable = $VIPVariable.Replace("AXISTREAM", "AXI_STREAM")
+		$VIPVariable = $VIPVariable.Replace("HVVC_TO_VVC_BRIDGE", "HVVC2VVC")
 	}
+	$VIPVariable = "UVVM_$VIPVariable"
 
 	$EnableVerbose -and (Write-Host "  Found VIP: $VIPName"    -ForegroundColor Gray                                                                ) | Out-Null
 	$EnableDebug -and   (Write-Host "    Reading compile order from '$SourceDirectory\$VIPName\script\compile_order.txt'" -ForegroundColor DarkGray ) | Out-Null
@@ -243,9 +246,9 @@ foreach ($VIPName in (Get-Content "$SourceDirectory\script\component_list.txt"))
 	}
 
 	$VIP_Files[$VIPName] = @{
-	  "Variable" =  "UVVM_$VIPVariable";
-	  "Library" =    $VIPName;
-	  "Files" =      $VIPFiles
+	  "Variable" =  $VIPVariable;
+	  "Library" =   $VIPName;
+	  "Files" =     $VIPFiles
 	}
 }
 
