@@ -222,7 +222,7 @@
         "uri": "file://pyunit/lsp/003errors/tc.vhdl",
         "languageId": "vhdl",
         "version": 1,
-        "text": "library ieee;\nuse ieee.std_logic_1164.all;\nuse ieee.std_logic_unsigned.all;\n\nentity tb is\nend tb;\n\narchitecture behav of tb is\n    signal s : std_logic_vector(7 downto 0);\nbegin\n    assert s /= x\"73\";\nend behav;        \n"
+        "text": "library ieee;\nuse ieee.std_logic_1164.all;\nuse ieee.std_logic_unsigned.all;\n\nentity tb is\nend tb;\n\narchitecture behav of tb is\n    signal s : std_logic_vector(7 downto 0);\nbegin\n    s <= x\"73\";\nend behav;        \n"
       }
     }
   },
