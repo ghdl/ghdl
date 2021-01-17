@@ -1,11 +1,11 @@
 /*******************************************************************************
  * vpi_user.h
  *
- * IEEE 1364-2005 Verilog HDL Programming Language Interface (PLI)
+ * IEEE Std 1800-2017 Programming Language Interface (PLI)
  *
  * This file contains the constant definitions, structure definitions, and
- * routine declarations used by the Verilog PLI procedural interface VPI
- * access routines.
+ * routine declarations used by the SystemVerilog Verification Procedural
+ * Interface (VPI) access routines.
  *
  ******************************************************************************/
 
@@ -19,7 +19,7 @@
 
 #include <stdarg.h>
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -27,21 +27,43 @@ extern "C" {
 /*----------------------------- Portability Help -----------------------------*/
 /*----------------------------------------------------------------------------*/
 
+/* Define size-critical types on all OS platforms. */
+#if defined (_MSC_VER)
+typedef unsigned __int64 uint64_t;
+typedef unsigned __int32 uint32_t;
+typedef unsigned __int8 uint8_t;
+typedef signed __int64 int64_t;
+typedef signed __int32 int32_t;
+typedef signed __int8 int8_t;
+#elif defined(__MINGW32__)
+#include <stdint.h>
+#elif defined(__linux) || (defined(__APPLE__) && defined(__MACH__))
+#include <inttypes.h>
+#else
+#include <sys/types.h>
+#endif
+
 /* Sized variables */
+
+#ifndef SVPI_TYPES
+#define SVPI_TYPES
+typedef int64_t PLI_INT64;
+typedef uint64_t PLI_UINT64;
+#endif
 
 #ifndef PLI_TYPES
 #define PLI_TYPES
-typedef int             PLI_INT32;
-typedef unsigned int    PLI_UINT32;
-typedef short           PLI_INT16;
-typedef unsigned short  PLI_UINT16;
-typedef char            PLI_BYTE8;
-typedef unsigned char   PLI_UBYTE8;
+typedef int              PLI_INT32;
+typedef unsigned int     PLI_UINT32;
+typedef short            PLI_INT16;
+typedef unsigned short   PLI_UINT16;
+typedef char             PLI_BYTE8;
+typedef unsigned char    PLI_UBYTE8;
 #endif
 
-/* Use to export a symbol */
+/* Use to import a symbol */
 
-#if defined (_MSC_VER)
+#if (defined(_MSC_VER) || defined(__MINGW32__) || defined(__CYGWIN__))
 #ifndef PLI_DLLISPEC
 #define PLI_DLLISPEC __declspec(dllimport)
 #define VPI_USER_DEFINED_DLLISPEC 1
@@ -52,9 +74,9 @@ typedef unsigned char   PLI_UBYTE8;
 #endif
 #endif
 
-/* Use to import a symbol */
+/* Use to export a symbol */
 
-#if defined (_MSC_VER)
+#if (defined(_MSC_VER) || defined(__MINGW32__) || defined(__CYGWIN__))
 #ifndef PLI_DLLESPEC
 #define PLI_DLLESPEC __declspec(dllexport)
 #define VPI_USER_DEFINED_DLLESPEC 1
@@ -83,44 +105,45 @@ typedef unsigned char   PLI_UBYTE8;
 
 /* object is defined imported by the application */
 
+#undef XXTERN
 #define XXTERN PLI_EXTERN PLI_DLLISPEC
 
 /* object is exported by the application */
 
+#undef EETERN
 #define EETERN PLI_EXTERN PLI_DLLESPEC
 #endif
 
 /********************************** TYPEDEFS **********************************/
 
-/*typedef PLI_UINT32 *vpiHandle; */
-typedef void *vpiHandle;
+typedef PLI_UINT32 *vpiHandle;
 
 /******************************** OBJECT TYPES ********************************/
 
-#define vpiAlways              1   /* always construct */
+#define vpiAlways              1   /* always procedure */
 #define vpiAssignStmt          2   /* quasi-continuous assignment */
 #define vpiAssignment          3   /* procedural assignment */
 #define vpiBegin               4   /* block statement */
 #define vpiCase                5   /* case statement */
 #define vpiCaseItem            6   /* case statement item */
-#define vpiConstant            7   /* numerical constant or literal string */
+#define vpiConstant            7   /* numerical constant or string literal */
 #define vpiContAssign          8   /* continuous assignment */
 #define vpiDeassign            9   /* deassignment statement */
 #define vpiDefParam           10   /* defparam */
-#define vpiDelayControl       11   /* delay statement (e.g. #10) */
+#define vpiDelayControl       11   /* delay statement (e.g., #10) */
 #define vpiDisable            12   /* named block disable statement */
-#define vpiEventControl       13   /* wait on event, e.g. @e */
-#define vpiEventStmt          14   /* event trigger, e.g. ->e */
+#define vpiEventControl       13   /* wait on event, e.g., @e */
+#define vpiEventStmt          14   /* event trigger, e.g., ->e */
 #define vpiFor                15   /* for statement */
 #define vpiForce              16   /* force statement */
 #define vpiForever            17   /* forever statement */
 #define vpiFork               18   /* fork-join block */
-#define vpiFuncCall           19   /* HDL function call */
-#define vpiFunction           20   /* HDL function */
+#define vpiFuncCall           19   /* function call */
+#define vpiFunction           20   /* function */
 #define vpiGate               21   /* primitive gate */
 #define vpiIf                 22   /* if statement */
 #define vpiIfElse             23   /* if-else statement */
-#define vpiInitial            24   /* initial construct */
+#define vpiInitial            24   /* initial procedure */
 #define vpiIntegerVar         25   /* integer variable */
 #define vpiInterModPath       26   /* intermodule wire delay */
 #define vpiIterator           27   /* iterator */
@@ -155,15 +178,15 @@ typedef void *vpiHandle;
 #define vpiSysFuncCall        56   /* system function call */
 #define vpiSysTaskCall        57   /* system task call */
 #define vpiTableEntry         58   /* UDP state table entry */
-#define vpiTask               59   /* HDL task */
-#define vpiTaskCall           60   /* HDL task call */
+#define vpiTask               59   /* task */
+#define vpiTaskCall           60   /* task call */
 #define vpiTchk               61   /* timing check */
 #define vpiTchkTerm           62   /* terminal of timing check */
 #define vpiTimeVar            63   /* time variable */
 #define vpiTimeQueue          64   /* simulation event queue */
 #define vpiUdp                65   /* user-defined primitive */
 #define vpiUdpDefn            66   /* UDP definition */
-#define vpiUserSystf          67   /* user defined system task or function */
+#define vpiUserSystf          67   /* user-defined system task/function */
 #define vpiVarSelect          68   /* variable array selection */
 #define vpiWait               69   /* wait statement */
 #define vpiWhile              70   /* while statement */
@@ -228,7 +251,7 @@ typedef void *vpiHandle;
 #define vpiModPathOut         96   /* output terminal of a module path */
 #define vpiOperand            97   /* operand of expression */
 #define vpiPortInst           98   /* connected port instance */
-#define vpiProcess            99   /* process in module */
+#define vpiProcess            99   /* process in module, program or interface */
 #define vpiVariables         100   /* variables in module */
 #define vpiUse               101   /* usage */
 
@@ -248,12 +271,16 @@ typedef void *vpiHandle;
 #define vpiOutTerm           124   /* To get to a delay device's loads. */
 #define vpiPorts             125   /* Module port */
 #define vpiSimNet            126   /* simulated net after collapsing */
-#define vpiTaskFunc          127   /* HDL task or function */
+#define vpiTaskFunc          127   /* task/function */
 
 /************************ methods added with 1364-2005 ************************/
 
-#define vpiBaseExpr          131   /* Indexed part-select's base expression  */
+#define vpiBaseExpr          131   /* Indexed part-select's base expression */
 #define vpiWidthExpr         132   /* Indexed part-select's width expression */
+
+/************************ methods added with 1800-2009 ************************/
+
+#define vpiAutomatics        136   /* Automatic variables of a frame */
 
 /********************************* PROPERTIES *********************************/
 /************************** generic object properties *************************/
@@ -268,10 +295,10 @@ typedef void *vpiHandle;
 
 /***************************** module properties ******************************/
 
-#define vpiTopModule              7   /* top-level module (boolean) */
-#define vpiCellInstance           8   /* cell (boolean) */
+#define vpiTopModule              7   /* top-level module (Boolean) */
+#define vpiCellInstance           8   /* cell (Boolean) */
 #define vpiDefName                9   /* module definition name */
-#define vpiProtected             10   /* source protected module (boolean) */
+#define vpiProtected             10   /* source protected module (Boolean) */
 #define vpiTimeUnit              11   /* module time unit */
 #define vpiTimePrecision         12   /* module time precision */
 #define vpiDefNetType            13   /* default net type */
@@ -292,8 +319,8 @@ typedef void *vpiHandle;
 
 /*************************** port and net properties **************************/
 
-#define vpiScalar                17   /* scalar (boolean) */
-#define vpiVector                18   /* vector (boolean) */
+#define vpiScalar                17   /* scalar (Boolean) */
+#define vpiVector                18   /* vector (Boolean) */
 #define vpiExplicitName          19   /* port is explicitly named */
 #define vpiDirection             20   /* direction of port: */
 #define vpiInput                   1   /* input */
@@ -301,36 +328,36 @@ typedef void *vpiHandle;
 #define vpiInout                   3   /* inout */
 #define vpiMixedIO                 4   /* mixed input-output */
 #define vpiNoDirection             5   /* no direction */
-#define vpiConnByName            21   /* connected by name (boolean) */
+#define vpiConnByName            21   /* connected by name (Boolean) */
 
 #define vpiNetType               22   /* net subtypes: */
 #define vpiWire                    1   /* wire net */
 #define vpiWand                    2   /* wire-and net */
 #define vpiWor                     3   /* wire-or net */
-#define vpiTri                     4   /* three-state net */
+#define vpiTri                     4   /* tri net */
 #define vpiTri0                    5   /* pull-down net */
 #define vpiTri1                    6   /* pull-up net */
-#define vpiTriReg                  7   /* tri state reg net */
+#define vpiTriReg                  7   /* three-state reg net */
 #define vpiTriAnd                  8   /* three-state wire-and net */
 #define vpiTriOr                   9   /* three-state wire-or net */
-#define vpiSupply1                10   /* supply 1 net */
-#define vpiSupply0                11   /* supply zero net */
+#define vpiSupply1                10   /* supply-1 net */
+#define vpiSupply0                11   /* supply-0 net */
 #define vpiNone                   12   /* no default net type (1364-2001) */
 #define vpiUwire                  13   /* unresolved wire net (1364-2005) */
 
-#define vpiExplicitScalared      23   /* explicitly scalared (boolean) */
-#define vpiExplicitVectored      24   /* explicitly vectored (boolean) */
-#define vpiExpanded              25   /* expanded vector net (boolean) */
-#define vpiImplicitDecl          26   /* implicitly declared net (boolean) */
+#define vpiExplicitScalared      23   /* explicitly scalared (Boolean) */
+#define vpiExplicitVectored      24   /* explicitly vectored (Boolean) */
+#define vpiExpanded              25   /* expanded vector net (Boolean) */
+#define vpiImplicitDecl          26   /* implicitly declared net (Boolean) */
 #define vpiChargeStrength        27   /* charge decay strength of net */
 
-/*  Defined as part of strengths section.
-#define vpiLargeCharge             0x10
-#define vpiMediumCharge            0x04
-#define vpiSmallCharge             0x02
+/* Defined as part of strengths section.
+#define vpiLargeCharge            0x10
+#define vpiMediumCharge           0x04
+#define vpiSmallCharge            0x02
 */
 
-#define vpiArray                 28   /* variable array (boolean) */
+#define vpiArray                 28   /* variable array (Boolean) */
 #define vpiPortIndex             29   /* Port index */
 
 /************************ gate and terminal properties ************************/
@@ -338,7 +365,7 @@ typedef void *vpiHandle;
 #define vpiTermIndex             30   /* Index of a primitive terminal */
 #define vpiStrength0             31   /* 0-strength of net or gate */
 #define vpiStrength1             32   /* 1-strength of net or gate */
-#define vpiPrimType              33   /* prmitive subtypes: */
+#define vpiPrimType              33   /* primitive subtypes: */
 #define vpiAndPrim                 1   /* and gate */
 #define vpiNandPrim                2   /* nand gate */
 #define vpiNorPrim                 3   /* nor gate */
@@ -413,12 +440,12 @@ typedef void *vpiHandle;
 #define vpiPlusOp                  2   /* unary plus */
 #define vpiNotOp                   3   /* unary not */
 #define vpiBitNegOp                4   /* bitwise negation */
-#define vpiUnaryAndOp              5   /* bitwise reduction and */
-#define vpiUnaryNandOp             6   /* bitwise reduction nand */
-#define vpiUnaryOrOp               7   /* bitwise reduction or */
-#define vpiUnaryNorOp              8   /* bitwise reduction nor */
-#define vpiUnaryXorOp              9   /* bitwise reduction xor */
-#define vpiUnaryXNorOp            10   /* bitwise reduction xnor */
+#define vpiUnaryAndOp              5   /* bitwise reduction AND */
+#define vpiUnaryNandOp             6   /* bitwise reduction NAND */
+#define vpiUnaryOrOp               7   /* bitwise reduction OR */
+#define vpiUnaryNorOp              8   /* bitwise reduction NOR */
+#define vpiUnaryXorOp              9   /* bitwise reduction XOR */
+#define vpiUnaryXNorOp            10   /* bitwise reduction XNOR */
 #define vpiSubOp                  11   /* binary subtraction */
 #define vpiDivOp                  12   /* binary division */
 #define vpiModOp                  13   /* binary modulus */
@@ -434,17 +461,17 @@ typedef void *vpiHandle;
 #define vpiRShiftOp               23   /* binary right shift */
 #define vpiAddOp                  24   /* binary addition */
 #define vpiMultOp                 25   /* binary multiplication */
-#define vpiLogAndOp               26   /* binary logical and */
-#define vpiLogOrOp                27   /* binary logical or */
-#define vpiBitAndOp               28   /* binary bitwise and */
-#define vpiBitOrOp                29   /* binary bitwise or */
-#define vpiBitXorOp               30   /* binary bitwise xor */
-#define vpiBitXNorOp              31   /* binary bitwise xnor */
+#define vpiLogAndOp               26   /* binary logical AND */
+#define vpiLogOrOp                27   /* binary logical OR */
+#define vpiBitAndOp               28   /* binary bitwise AND */
+#define vpiBitOrOp                29   /* binary bitwise OR */
+#define vpiBitXorOp               30   /* binary bitwise XOR */
+#define vpiBitXNorOp              31   /* binary bitwise XNOR */
 #define vpiBitXnorOp              vpiBitXNorOp /* added with 1364-2001 */
 #define vpiConditionOp            32   /* ternary conditional */
 #define vpiConcatOp               33   /* n-ary concatenation */
 #define vpiMultiConcatOp          34   /* repeated concatenation */
-#define vpiEventOrOp              35   /* event or */
+#define vpiEventOrOp              35   /* event OR */
 #define vpiNullOp                 36   /* null operation */
 #define vpiListOp                 37   /* list of expressions */
 #define vpiMinTypMaxOp            38   /* min:typ:max: delay expression */
@@ -461,18 +488,18 @@ typedef void *vpiHandle;
 #define vpiOctConst                4   /* octal integer */
 #define vpiHexConst                5   /* hexadecimal integer */
 #define vpiStringConst             6   /* string literal */
-#define vpiIntConst                7   /* HDL integer constant (1364-2001) */
-
-#define vpiBlocking              41   /* blocking assignment (boolean) */
+#define vpiIntConst                7   /* integer constant (1364-2001) */
+#define vpiTimeConst               8   /* time constant */
+#define vpiBlocking              41   /* blocking assignment (Boolean) */
 #define vpiCaseType              42   /* case statement subtypes: */
 #define vpiCaseExact               1   /* exact match */
 #define vpiCaseX                   2   /* ignore X's */
 #define vpiCaseZ                   3   /* ignore Z's */
-#define vpiNetDeclAssign         43   /* assign part of decl (boolean) */
+#define vpiNetDeclAssign         43   /* assign part of decl (Boolean) */
 
 /************************** task/function properties **************************/
 
-#define vpiFuncType              44   /* HDL function & system function type */
+#define vpiFuncType              44   /* function & system function type */
 #define vpiIntFunc                 1   /* returns integer */
 #define vpiRealFunc                2   /* returns real */
 #define vpiTimeFunc                3   /* returns time */
@@ -487,52 +514,56 @@ typedef void *vpiHandle;
 #define vpiSysFuncTime             vpiTimeFunc
 #define vpiSysFuncSized            vpiSizedFunc
 
-#define vpiUserDefn              45   /*user defined system task/func(boolean)*/
-#define vpiScheduled             46   /* object still scheduled (boolean) */
+#define vpiUserDefn              45   /*user-defined system task/func(Boolean)*/
+#define vpiScheduled             46   /* object still scheduled (Boolean) */
 
 /*********************** properties added with 1364-2001 **********************/
 
-#define vpiActive                49  /* reentrant task/func frame is active */
-#define vpiAutomatic             50  /* task/func obj is automatic */
-#define vpiCell                  51  /* configuration cell */
-#define vpiConfig                52  /* configuration config file */
-#define vpiConstantSelect        53  /* (boolean) bit-select or part-select 
-                                        indices are constant expressions */
-#define vpiDecompile             54  /* decompile the object */
-#define vpiDefAttribute          55  /* Attribute defined for the obj */
-#define vpiDelayType             56  /* delay subtype */
-#define vpiModPathDelay            1  /* module path delay */
-#define vpiInterModPathDelay       2  /* intermodule path delay */
-#define vpiMIPDelay                3  /* module input port delay */
-#define vpiIteratorType          57  /* object type of an iterator */
-#define vpiLibrary               58  /* configuration library */
-#define vpiMultiArray            59  /* Object is a multidimensional array */
-#define vpiOffset                60  /* offset from LSB */
-#define vpiResolvedNetType       61  /* net subtype after resolution, returns
-                                        same subtypes as vpiNetType */
-#define vpiSaveRestartID         62  /* unique ID for save/restart data */
-#define vpiSaveRestartLocation   63  /* name of save/restart data file */
-#define vpiValid                 64  /* reentrant task/func frame is valid */
-#define vpiSigned                65  /* TRUE for vpiIODecl and any object in
-                                        the expression class if the object
-                                        has the signed attribute */
-#define vpiLocalParam            70  /* TRUE when a param is declared as a 
-                                        localparam */
-#define vpiModPathHasIfNone      71  /* Mod path has an ifnone statement */
+#define vpiActive                49   /* reentrant task/func frame is active */
+#define vpiAutomatic             50   /* task/func obj is automatic */
+#define vpiCell                  51   /* configuration cell */
+#define vpiConfig                52   /* configuration config file */
+#define vpiConstantSelect        53   /* (Boolean) bit-select or part-select
+                                         indices are constant expressions */
+#define vpiDecompile             54   /* decompile the object */
+#define vpiDefAttribute          55   /* Attribute defined for the obj */
+#define vpiDelayType             56   /* delay subtype */
+#define vpiModPathDelay            1   /* module path delay */
+#define vpiInterModPathDelay       2   /* intermodule path delay */
+#define vpiMIPDelay                3   /* module input port delay */
+#define vpiIteratorType          57   /* object type of an iterator */
+#define vpiLibrary               58   /* configuration library */
+#define vpiOffset                60   /* offset from LSB */
+#define vpiResolvedNetType       61   /* net subtype after resolution, returns
+                                         same subtypes as vpiNetType */
+#define vpiSaveRestartID         62   /* unique ID for save/restart data */
+#define vpiSaveRestartLocation   63   /* name of save/restart data file */
+/* vpiValid,vpiValidTrue,vpiValidFalse were deprecated in 1800-2009 */
+#define vpiValid                 64   /* reentrant task/func frame or automatic
+                                         variable is valid */
+#define vpiValidFalse              0
+#define vpiValidTrue               1
+#define vpiSigned                65   /* TRUE for vpiIODecl and any object in
+                                         the expression class if the object
+                                         has the signed attribute */
+#define vpiLocalParam            70   /* TRUE when a param is declared as a
+                                         localparam */
+#define vpiModPathHasIfNone      71   /* Mod path has an ifnone statement */
 
 /*********************** properties added with 1364-2005 **********************/
 
-#define vpiIndexedPartSelectType 72  /* Indexed part-select type */
-#define vpiPosIndexed              1  /* +: */
-#define vpiNegIndexed              2  /* -: */
-#define vpiIsMemory              73  /* TRUE for a one-dimensional reg array */
+#define vpiIndexedPartSelectType 72   /* Indexed part-select type */
+#define vpiPosIndexed              1   /* +: */
+#define vpiNegIndexed              2   /* -: */
+#define vpiIsMemory              73   /* TRUE for a one-dimensional reg array */
+#define vpiIsProtected           74   /* TRUE for protected design information */
 
 /*************** vpi_control() constants (added with 1364-2001) ***************/
 
-#define vpiStop                  66  /* execute simulator's $stop */
-#define vpiFinish                67  /* execute simulator's $finish */
-#define vpiReset                 68  /* execute simulator's $reset */
-#define vpiSetInteractiveScope   69  /* set simulator's interactive scope */
+#define vpiStop                  66   /* execute simulator's $stop */
+#define vpiFinish                67   /* execute simulator's $finish */
+#define vpiReset                 68   /* execute simulator's $reset */
+#define vpiSetInteractiveScope   69   /* set simulator's interactive scope */
 
 /**************************** I/O related defines *****************************/
 
@@ -560,8 +591,8 @@ typedef struct t_vpi_time
 
 typedef struct t_vpi_delay
 {
-  struct t_vpi_time *da;         /* pointer to user allocated array of
-                                    delay values */
+  struct t_vpi_time *da;         /* pointer to application-allocated
+                                    array of delay values */
   PLI_INT32 no_of_delays;        /* number of delays */
   PLI_INT32 time_type;           /* [vpiScaledRealTime, vpiSimTime,
                                      vpiSuppressTime] */
@@ -580,7 +611,7 @@ typedef struct t_vpi_delay
 typedef struct t_vpi_vecval
 {
   /* following fields are repeated enough times to contain vector */
-  PLI_INT32 aval, bval;          /* bit encoding: ab: 00=0, 10=1, 11=X, 01=Z */
+  PLI_UINT32 aval, bval;          /* bit encoding: ab: 00=0, 10=1, 11=X, 01=Z */
 } s_vpi_vecval, *p_vpi_vecval;
 
 #endif
@@ -623,6 +654,24 @@ typedef struct t_vpi_value
     } value;
 } s_vpi_value, *p_vpi_value;
 
+typedef struct t_vpi_arrayvalue
+{
+   PLI_UINT32 format; /* vpi[Int,Real,Time,ShortInt,LongInt,ShortReal,
+                           RawTwoState,RawFourState]Val */
+   PLI_UINT32 flags;  /* array bit flags- vpiUserAllocFlag */
+   union
+   {
+       PLI_INT32 *integers;               /* integer values */
+       PLI_INT16 *shortints;              /* short integer values */
+       PLI_INT64 *longints;               /* long integer values */
+       PLI_BYTE8 *rawvals;                /* 2/4-state vector elements */
+       struct t_vpi_vecval *vectors;      /* 4-state vector elements */
+       struct t_vpi_time *times;          /* time values */
+       double *reals;                     /* real values */
+       float *shortreals;                 /* short real values */
+   } value;
+} s_vpi_arrayvalue, *p_vpi_arrayvalue;
+
 /* value formats */
 
 #define vpiBinStrVal          1
@@ -638,6 +687,11 @@ typedef struct t_vpi_value
 #define vpiTimeVal           11
 #define vpiObjTypeVal        12
 #define vpiSuppressVal       13
+#define vpiShortIntVal       14
+#define vpiLongIntVal        15
+#define vpiShortRealVal      16
+#define vpiRawTwoStateVal    17
+#define vpiRawFourStateVal   18
 
 /* delay modes */
 
@@ -658,6 +712,15 @@ typedef struct t_vpi_value
 /* bit mask for the flags argument to vpi_put_value() */
 
 #define vpiReturnEvent        0x1000
+
+/* bit flags for vpi_get_value_array flags field */
+
+#define vpiUserAllocFlag      0x2000
+
+/* bit flags for vpi_put_value_array flags field */
+
+#define vpiOneValue           0x4000
+#define vpiPropagateOff       0x8000
 
 /* scalar values */
 
@@ -692,7 +755,7 @@ typedef struct t_vpi_systf_data
 
 /* the subtypes are defined under the vpiFuncType property */
 
-/****************** Verilog execution information structure *******************/
+/**************** SystemVerilog execution information structure ***************/
 
 typedef struct t_vpi_vlog_info
 {
@@ -746,6 +809,7 @@ typedef struct t_cb_data
 } s_cb_data, *p_cb_data;
 
 /****************************** CALLBACK REASONS ******************************/
+
 /***************************** Simulation related *****************************/
 
 #define cbValueChange             1
@@ -787,115 +851,134 @@ typedef struct t_cb_data
 #define cbPLIError               28
 #define cbSignal                 29
 
+/**************************** Added with 1364-2005 ****************************/
+#define cbNBASynch               30
+#define cbAtEndOfSimTime         31
+
 /**************************** FUNCTION DECLARATIONS ***************************/
+
+/* Include compatibility mode macro definitions. */
+//#include "vpi_compatibility.h"
 
 /* callback related */
 
-XXTERN vpiHandle  vpi_register_cb     PROTO_PARAMS((p_cb_data cb_data_p));
-XXTERN PLI_INT32  vpi_remove_cb       PROTO_PARAMS((vpiHandle cb_obj));
-XXTERN void       vpi_get_cb_info     PROTO_PARAMS((vpiHandle object,
-                                                    p_cb_data cb_data_p));
-XXTERN vpiHandle  vpi_register_systf  PROTO_PARAMS((p_vpi_systf_data
+XXTERN vpiHandle    vpi_register_cb     PROTO_PARAMS((p_cb_data cb_data_p));
+XXTERN PLI_INT32    vpi_remove_cb       PROTO_PARAMS((vpiHandle cb_obj));
+XXTERN void         vpi_get_cb_info     PROTO_PARAMS((vpiHandle object,
+                                                      p_cb_data cb_data_p));
+XXTERN vpiHandle    vpi_register_systf  PROTO_PARAMS((p_vpi_systf_data
                                                       systf_data_p));
-XXTERN void       vpi_get_systf_info  PROTO_PARAMS((vpiHandle object,
-                                                    p_vpi_systf_data
+XXTERN void         vpi_get_systf_info  PROTO_PARAMS((vpiHandle object,
+                                                      p_vpi_systf_data
                                                       systf_data_p));
 
 /* for obtaining handles */
 
-XXTERN vpiHandle  vpi_handle_by_name  PROTO_PARAMS((PLI_BYTE8 *name,
-                                                    vpiHandle scope));
-XXTERN vpiHandle  vpi_handle_by_index PROTO_PARAMS((vpiHandle object,
-                                                    PLI_INT32 indx));
+XXTERN vpiHandle    vpi_handle_by_name  PROTO_PARAMS((PLI_BYTE8    *name,
+                                                      vpiHandle    scope));
+XXTERN vpiHandle    vpi_handle_by_index PROTO_PARAMS((vpiHandle    object,
+                                                      PLI_INT32    indx));
 
 /* for traversing relationships */
 
-XXTERN vpiHandle  vpi_handle          PROTO_PARAMS((PLI_INT32 type,
-                                                    vpiHandle refHandle));
-XXTERN vpiHandle  vpi_handle_multi    PROTO_PARAMS((PLI_INT32 type,
-                                                    vpiHandle refHandle1,
-                                                    vpiHandle refHandle2,
-                                                    ... ));
-XXTERN vpiHandle  vpi_iterate         PROTO_PARAMS((PLI_INT32 type,
-                                                    vpiHandle refHandle));
-XXTERN vpiHandle  vpi_scan            PROTO_PARAMS((vpiHandle iterator));
+XXTERN vpiHandle    vpi_handle          PROTO_PARAMS((PLI_INT32   type,
+                                                      vpiHandle   refHandle));
+XXTERN vpiHandle    vpi_handle_multi    PROTO_PARAMS((PLI_INT32   type,
+                                                      vpiHandle   refHandle1,
+                                                      vpiHandle   refHandle2,
+                                                      ... ));
+XXTERN vpiHandle    vpi_iterate         PROTO_PARAMS((PLI_INT32   type,
+                                                      vpiHandle   refHandle));
+XXTERN vpiHandle    vpi_scan            PROTO_PARAMS((vpiHandle   iterator));
 
 /* for processing properties */
 
-XXTERN PLI_INT32  vpi_get             PROTO_PARAMS((PLI_INT32 property,
-                                                    vpiHandle object));
-XXTERN PLI_BYTE8 *vpi_get_str         PROTO_PARAMS((PLI_INT32 property,
-                                                    vpiHandle object));
+XXTERN PLI_INT32    vpi_get             PROTO_PARAMS((PLI_INT32   property,
+                                                      vpiHandle   object));
+XXTERN PLI_INT64    vpi_get64           PROTO_PARAMS((PLI_INT32   property,
+                                                      vpiHandle   object));
+XXTERN PLI_BYTE8   *vpi_get_str         PROTO_PARAMS((PLI_INT32   property,
+                                                      vpiHandle   object));
 
 /* delay processing */
 
-XXTERN void       vpi_get_delays      PROTO_PARAMS((vpiHandle object,
-                                                    p_vpi_delay delay_p));
-XXTERN void       vpi_put_delays      PROTO_PARAMS((vpiHandle object,
-                                                    p_vpi_delay delay_p));
+XXTERN void         vpi_get_delays      PROTO_PARAMS((vpiHandle object,
+                                                      p_vpi_delay delay_p));
+XXTERN void         vpi_put_delays      PROTO_PARAMS((vpiHandle object,
+                                                      p_vpi_delay delay_p));
 
 /* value processing */
 
-XXTERN void       vpi_get_value       PROTO_PARAMS((vpiHandle expr,
-                                                    p_vpi_value value_p));
-XXTERN vpiHandle  vpi_put_value       PROTO_PARAMS((vpiHandle object,
-                                                    p_vpi_value value_p,
-                                                    p_vpi_time time_p,
-                                                    PLI_INT32 flags));
+XXTERN void         vpi_get_value       PROTO_PARAMS((vpiHandle expr,
+                                                      p_vpi_value value_p));
+XXTERN vpiHandle    vpi_put_value       PROTO_PARAMS((vpiHandle object,
+                                                      p_vpi_value value_p,
+                                                      p_vpi_time time_p,
+                                                      PLI_INT32 flags));
+XXTERN void         vpi_get_value_array PROTO_PARAMS((vpiHandle object,
+                                                      p_vpi_arrayvalue arrayvalue_p,
+                                                      PLI_INT32 *index_p,
+                                                      PLI_UINT32 num));
+XXTERN void         vpi_put_value_array PROTO_PARAMS((vpiHandle object,
+                                                      p_vpi_arrayvalue arrayvalue_p,
+                                                      PLI_INT32 *index_p,
+                                                      PLI_UINT32 num));
 
 /* time processing */
 
-XXTERN void       vpi_get_time        PROTO_PARAMS((vpiHandle object,
-                                                    p_vpi_time time_p));
+XXTERN void         vpi_get_time        PROTO_PARAMS((vpiHandle object,
+                                                      p_vpi_time time_p));
 
 /* I/O routines */
 
-XXTERN PLI_UINT32 vpi_mcd_open        PROTO_PARAMS((PLI_BYTE8 *fileName));
-XXTERN PLI_UINT32 vpi_mcd_close       PROTO_PARAMS((PLI_UINT32 mcd));
-XXTERN PLI_BYTE8 *vpi_mcd_name        PROTO_PARAMS((PLI_UINT32 cd));
-XXTERN PLI_INT32  vpi_mcd_printf      PROTO_PARAMS((PLI_UINT32 mcd,
-                                                    PLI_BYTE8 *format,
-                                                    ...));
-XXTERN PLI_INT32  vpi_printf          PROTO_PARAMS((PLI_BYTE8 *format,
-                                                    ...));
+XXTERN PLI_UINT32   vpi_mcd_open        PROTO_PARAMS((PLI_BYTE8 *fileName));
+XXTERN PLI_UINT32   vpi_mcd_close       PROTO_PARAMS((PLI_UINT32 mcd));
+XXTERN PLI_BYTE8   *vpi_mcd_name        PROTO_PARAMS((PLI_UINT32 cd));
+XXTERN PLI_INT32    vpi_mcd_printf      PROTO_PARAMS((PLI_UINT32 mcd,
+                                                      PLI_BYTE8 *format,
+                                                      ...));
+XXTERN PLI_INT32    vpi_printf          PROTO_PARAMS((PLI_BYTE8 *format,
+                                                      ...));
 
 /* utility routines */
 
-XXTERN PLI_INT32  vpi_compare_objects PROTO_PARAMS((vpiHandle object1,
-                                                    vpiHandle object2));
-XXTERN PLI_INT32  vpi_chk_error       PROTO_PARAMS((p_vpi_error_info
+XXTERN PLI_INT32    vpi_compare_objects PROTO_PARAMS((vpiHandle object1,
+                                                      vpiHandle object2));
+XXTERN PLI_INT32    vpi_chk_error       PROTO_PARAMS((p_vpi_error_info
                                                       error_info_p));
-XXTERN PLI_INT32  vpi_free_object     PROTO_PARAMS((vpiHandle object));
-XXTERN PLI_INT32  vpi_get_vlog_info   PROTO_PARAMS((p_vpi_vlog_info
+/* vpi_free_object() was deprecated in 1800-2009 */
+XXTERN PLI_INT32    vpi_free_object     PROTO_PARAMS((vpiHandle object));
+XXTERN PLI_INT32    vpi_release_handle  PROTO_PARAMS((vpiHandle object));
+XXTERN PLI_INT32    vpi_get_vlog_info   PROTO_PARAMS((p_vpi_vlog_info
                                                       vlog_info_p));
 
 /* routines added with 1364-2001 */
 
-XXTERN PLI_INT32  vpi_get_data        PROTO_PARAMS((PLI_INT32 id,
-                                                    PLI_BYTE8 *dataLoc,
-                                                    PLI_INT32 numOfBytes));
-XXTERN PLI_INT32  vpi_put_data        PROTO_PARAMS((PLI_INT32 id,
-                                                    PLI_BYTE8 *dataLoc,
-                                                    PLI_INT32 numOfBytes));
-XXTERN void      *vpi_get_userdata    PROTO_PARAMS((vpiHandle obj));
-XXTERN PLI_INT32  vpi_put_userdata    PROTO_PARAMS((vpiHandle obj,
-                                                    void *userdata));
-XXTERN PLI_INT32  vpi_vprintf         PROTO_PARAMS((PLI_BYTE8 *format,
-                                                    va_list ap));
-XXTERN PLI_INT32  vpi_mcd_vprintf     PROTO_PARAMS((PLI_UINT32 mcd,
-                                                    PLI_BYTE8 *format,
-                                                    va_list ap));
-XXTERN PLI_INT32  vpi_flush           PROTO_PARAMS((void));
-XXTERN PLI_INT32  vpi_mcd_flush       PROTO_PARAMS((PLI_UINT32 mcd));
-XXTERN PLI_INT32  vpi_control         PROTO_PARAMS((PLI_INT32 operation,
-                                                    ...));
-XXTERN vpiHandle  vpi_handle_by_multi_index PROTO_PARAMS((vpiHandle obj,
-                                                    PLI_INT32 num_index,
-                                                    PLI_INT32 *index_array));
+XXTERN PLI_INT32    vpi_get_data        PROTO_PARAMS((PLI_INT32 id,
+                                                      PLI_BYTE8 *dataLoc,
+                                                      PLI_INT32 numOfBytes));
+XXTERN PLI_INT32    vpi_put_data        PROTO_PARAMS((PLI_INT32 id,
+                                                      PLI_BYTE8 *dataLoc,
+                                                      PLI_INT32 numOfBytes));
+XXTERN void        *vpi_get_userdata    PROTO_PARAMS((vpiHandle obj));
+XXTERN PLI_INT32    vpi_put_userdata    PROTO_PARAMS((vpiHandle obj,
+                                                      void *userdata));
+XXTERN PLI_INT32    vpi_vprintf         PROTO_PARAMS((PLI_BYTE8 *format,
+                                                      va_list ap));
+XXTERN PLI_INT32    vpi_mcd_vprintf     PROTO_PARAMS((PLI_UINT32 mcd,
+                                                      PLI_BYTE8 *format,
+                                                      va_list ap));
+XXTERN PLI_INT32    vpi_flush           PROTO_PARAMS((void));
+XXTERN PLI_INT32    vpi_mcd_flush       PROTO_PARAMS((PLI_UINT32 mcd));
+XXTERN PLI_INT32    vpi_control         PROTO_PARAMS((PLI_INT32 operation,
+                                                      ...));
+XXTERN vpiHandle    vpi_handle_by_multi_index PROTO_PARAMS((vpiHandle obj,
+                                                      PLI_INT32 num_index,
+                                                      PLI_INT32 *index_array));
 
 /****************************** GLOBAL VARIABLES ******************************/
 
-PLI_VEXTERN PLI_DLLESPEC void (*vlog_startup_routines[])();
+PLI_VEXTERN PLI_DLLESPEC void (*vlog_startup_routines[])( void );
 
   /* array of function pointers, last pointer should be null */
 
@@ -903,22 +986,22 @@ PLI_VEXTERN PLI_DLLESPEC void (*vlog_startup_routines[])();
 #undef PLI_VEXTERN
 
 #ifdef VPI_USER_DEFINED_DLLISPEC
-#undef VPI_USER_DEFINED_DLLISPEC
-#undef PLI_DLLISPEC
+# undef VPI_USER_DEFINED_DLLISPEC
+# undef PLI_DLLISPEC
 #endif
 #ifdef VPI_USER_DEFINED_DLLESPEC
-#undef VPI_USER_DEFINED_DLLESPEC
-#undef PLI_DLLESPEC
+# undef VPI_USER_DEFINED_DLLESPEC
+# undef PLI_DLLESPEC
 #endif
 
 #ifdef PLI_PROTOTYPES
-#undef PLI_PROTOTYPES
-#undef PROTO_PARAMS
-#undef XXTERN
-#undef EETERN
+# undef PLI_PROTOTYPES
+# undef PROTO_PARAMS
+# undef XXTERN
+# undef EETERN
 #endif
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 }
 #endif
 
