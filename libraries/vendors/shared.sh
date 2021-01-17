@@ -266,9 +266,7 @@ AnalyzeVHDL() {
 		 local PiplineStatus=("${PIPESTATUS[@]}")
 		 if [[ ${PiplineStatus[0]}  -ne 0 ]]; then
 			 echo 1>&2 -e "$Filter_Indent${COLORED_ERROR} While analyzing '$File'. ExitCode: ${PiplineStatus[0]}${ANSI_NOCOLOR}"
-			 if [[ $CONTINUE_ON_ERROR -eq 1 ]]; then
-				 exit 1;
-			 fi
+			 test $CONTINUE_ON_ERROR -eq 0 && exit 1
 		 elif [[ ${PiplineStatus[1]}  -ne 0 ]]; then
 			 case $(( ${PiplineStatus[1]} % 4 )) in
 				 # TODO: implement CONTINUE_ON_ERROR in cases ...

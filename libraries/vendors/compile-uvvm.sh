@@ -237,7 +237,7 @@ if [[ $COMMAND -le 1 ]]; then
 	echo ""
 	echo "Common Packages:"
 	echo "     --uvvm-utilities          UVVM utilities."
-	echo "     --uvvm-vvc-framework      VHDL Verification Component (VCC) framework."
+	echo "     --uvvm-vvc-framework      VHDL Verification Component (VVC) framework."
 	echo ""
 	echo "Verification IPs:"
 	echo "     --uvvm-vip-avalon_mm      Altera/Intel Avalon Memory Mapped"
@@ -250,7 +250,7 @@ if [[ $COMMAND -le 1 ]]; then
 	echo "     --uvvm-vip-ethernet       Ethernet"
 	echo "     --uvvm-vip-gmii           GMII"
 	echo "     --uvvm-vip-gpio           General Purpose Input/Output (GPIO)"
-	echo "     --uvvm-vip-hvvc2vvc       HVVC to VCC bridge"
+	echo "     --uvvm-vip-hvvc2vvc       HVVC to VVC bridge"
 	echo "     --uvvm-vip-i2c            Inter-Integrated Circuit (I²C)"
 	echo "     --uvvm-vip-rgmii          RGMII"
 	echo "     --uvvm-vip-sbi            Simple Bus Interface"
@@ -367,75 +367,49 @@ if [[ $CLEAN -eq 1 ]]; then
 fi
 
 
-# UVVM libraries
+# Read order of components
 # ==============================================================================
 test $VERBOSE -eq 1 && echo -e "  ${ANSI_GRAY}Reading compile order files...${ANSI_NOCOLOR}"
 
-# Read uvvm_util library files
-StructName="UVVM_UTIL"
-LibraryPath="uvvm_util"
-Files=()
-test $DEBUG -eq 1   && echo -e "    ${ANSI_DARK_GRAY}Reading compile order from '$SourceDirectory/$LibraryPath/script/compile_order.txt'${ANSI_NOCOLOR}"
-while IFS= read -r File; do
-	if [[ ${File:0:2} == "# " ]]; then
-		if [[ ${File:2:7} == "library" ]]; then
-			LibraryName=${File:10:-1}
-		fi
-	else
-		Files+=("${File:3:-1}")
+Components=()
+while IFS= read -r Component; do
+	Component=${Component%?}
+	if [[ ${Component:0:2} != "# " ]]; then
+		Components+=("$Component")
 	fi
-done < <(cat "$SourceDirectory/$LibraryPath/script/compile_order.txt")
-
-CreateLibraryStruct $StructName $LibraryName $LibraryPath $VHDLVersion "${Files[@]}"
-
-test $COMPILE_UVVM_UTILITIES -eq 1 && Libraries+=("$StructName")
+done < <(cat "$SourceDirectory/script/component_list.txt")
 
 
-# Reading uvvm_vvc_framework library files
-StructName="UVVM_VVC_FRAMEWORK"
-LibraryPath="uvvm_vvc_framework"
-Files=()
-test $DEBUG -eq 1   && echo -e "    ${ANSI_DARK_GRAY}Reading compile order from '$SourceDirectory/$LibraryPath/script/compile_order.txt'${ANSI_NOCOLOR}"
-while IFS= read -r File; do
-	if [[ ${File:0:2} == "# " ]]; then
-		if [[ ${File:2:7} == "library" ]]; then
-			LibraryName=${File:10:-1}
-		fi
-	else
-		Files+=("${File:3:-1}")
-	fi
-done < <(cat "$SourceDirectory/$LibraryPath/script/compile_order.txt")
-
-CreateLibraryStruct $StructName $LibraryName $LibraryPath $VHDLVersion "${Files[@]}"
-
-test $COMPILE_UVVM_VVC_FRAMEWORK -eq 1 && Libraries+=("$StructName")
-
-
-# Verification IPs
+# Read libraries and Verification IPs
 # ==============================================================================
 VIPNames=()
 
-while IFS= read -r VIPDirectory; do
-	LibraryPath=$(basename "$VIPDirectory")
-	x="${LibraryPath%%_*}"
+for ComponentName in "${Components[@]}"; do
+	x="${ComponentName%%_*}"
 	pos=${#x}+1
-	l=${LibraryPath:$pos}
+	l=${ComponentName:$pos}
 	VIPName=${l^^}
+	LibraryPath=$ComponentName
+
+	VIPName=${VIPName//UTIL/UTILITIES}
+	VIPName=${VIPName//AXILITE/AXI_LITE}
+	VIPName=${VIPName//AXISTREAM/AXI_STREAM}
 
 	test $VERBOSE -eq 1 && echo -e "  ${ANSI_GRAY}Found VIP '$VIPName' in '$LibraryPath'.${ANSI_NOCOLOR}"
 	test $DEBUG -eq 1   && echo -e "    ${ANSI_DARK_GRAY}Reading compile order from '$SourceDirectory/$LibraryPath/script/compile_order.txt'${ANSI_NOCOLOR}"
 
-	# Reading uvvm_vvc_framework library files
+	# Reading component's files
 	StructName=$VIPName
 	Files=()
 
 	while IFS= read -r File; do
+		File=${File%?}
 		if [[ ${File:0:2} == "# " ]]; then
 			if [[ ${File:2:7} == "library" ]]; then
-				LibraryName=${File:10:-1}
+				LibraryName=${File:10}
 			fi
 		else
-			Files+=("${File:3:-1}")
+			Files+=("${File:3}")
 		fi
 	done < <(cat "$SourceDirectory/$LibraryPath/script/compile_order.txt")
 
@@ -443,14 +417,9 @@ while IFS= read -r VIPDirectory; do
 
 	VarName="COMPILE_UVVM_${VIPName}"
 	test ${!VarName} -eq 1 && Libraries+=("$StructName")
-done < <(find $SourceDirectory/*vip* -type d -prune)
+done
 
-# if [[ $DEBUG -eq 1 ]]; then
-	# for StructName in ${Libraries[*]}; do
-		# PrintLibraryStruct $StructName "    "
-	# done
-# fi
-
+# Compile components
 if [[ ${#Libraries[@]} -ne 0 ]]; then
 	Compile "$SourceDirectory" "${Libraries[*]}"
 
