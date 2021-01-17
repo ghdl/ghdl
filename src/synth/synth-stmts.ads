@@ -88,6 +88,10 @@ package Synth.Stmts is
    procedure Synth_Concurrent_Statements
      (Syn_Inst : Synth_Instance_Acc; Stmts : Node);
 
+   --  Apply attributes of UNIT.
+   procedure Synth_Attribute_Values
+     (Syn_Inst : Synth_Instance_Acc; Unit : Node);
+
    procedure Synth_Verification_Unit
      (Syn_Inst : Synth_Instance_Acc; Unit : Node);
 

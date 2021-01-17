@@ -1532,11 +1532,19 @@ package body Synth.Insts is
       end if;
 
       if not Is_Error (Syn_Inst) then
+         Synth_Attribute_Values (Syn_Inst, Entity);
+      end if;
+
+      if not Is_Error (Syn_Inst) then
          Synth_Declarations (Syn_Inst, Get_Declaration_Chain (Arch));
       end if;
       if not Is_Error (Syn_Inst) then
          Synth_Concurrent_Statements
            (Syn_Inst, Get_Concurrent_Statement_Chain (Arch));
+      end if;
+
+      if not Is_Error (Syn_Inst) then
+         Synth_Attribute_Values (Syn_Inst, Arch);
       end if;
 
       if not Is_Error (Syn_Inst) then
