@@ -41,12 +41,14 @@ def show_diffs(name, ref, res):
 		if res != ref:
 			print('{}: mismatch (ref: {}, result: {})'.format(name, ref, res))
 	elif isinstance(ref, list) and isinstance(res, list):
-		for i in range(min(len(ref), len(res))):
-			show_diffs('{}[{}]'.format(name, i), ref[i], res[i])
-		if len(ref) > len(res):
-			print('{}: missing elements'.format(name))
-		elif len(ref) < len(res):
-			print('{}: extra elements'.format(name))
+		for i in range(max(len(ref), len(res))):
+			if i >= len(ref):
+				print('{}[{}]: missing element:'.format(name, i))
+				print(' {}'.format(res[i]))
+			elif i >= len(res):
+				print('{}[{}]: extra elements'.format(name, i))
+			else:
+				show_diffs('{}[{}]'.format(name, i), ref[i], res[i])
 	else:
 		print('unhandle type {} in {}'.format(type(ref), name))
 
