@@ -3670,6 +3670,7 @@ package body Synth.Stmts is
          pragma Assert (Base.Typ = Typ);
 
          N := Build_Formal_Input (Get_Build (Syn_Inst), Id, Typ.W);
+         Set_Location (N, Val);
          Add_Conc_Assign (Base.Val.W, N, 0, Val);
       end;
    end Synth_Attribute_Formal;
