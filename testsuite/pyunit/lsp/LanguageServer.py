@@ -101,7 +101,7 @@ class JSONTest(TestCase):
 			if rep != r:
 				print(self.__class__.__name__)
 				show_diffs("[{}]".format(i), r, rep)
-				#errs += 1
+				errs += 1
 
 		rep = ls.read_request()
 		self.assertIsNone(rep, "Too many replies.")

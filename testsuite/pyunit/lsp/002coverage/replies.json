@@ -260,21 +260,6 @@
           "source": "ghdl",
           "range": {
             "start": {
-              "line": 12,
-              "character": 2
-            },
-            "end": {
-              "line": 12,
-              "character": 2
-            }
-          },
-          "message": "target is not a signal name",
-          "severity": 1
-        },
-        {
-          "source": "ghdl",
-          "range": {
-            "start": {
               "line": 14,
               "character": 2
             },
@@ -384,21 +369,6 @@
           "source": "ghdl",
           "range": {
             "start": {
-              "line": 12,
-              "character": 2
-            },
-            "end": {
-              "line": 12,
-              "character": 2
-            }
-          },
-          "message": "target is not a signal name",
-          "severity": 1
-        },
-        {
-          "source": "ghdl",
-          "range": {
-            "start": {
               "line": 14,
               "character": 2
             },
@@ -462,21 +432,6 @@
             }
           },
           "message": "no declaration for \"err\"",
-          "severity": 1
-        },
-        {
-          "source": "ghdl",
-          "range": {
-            "start": {
-              "line": 12,
-              "character": 2
-            },
-            "end": {
-              "line": 12,
-              "character": 2
-            }
-          },
-          "message": "target is not a signal name",
           "severity": 1
         },
         {

@@ -26,6 +26,41 @@
   {
     "jsonrpc": "2.0",
     "id": 7,
-    "result": []
+    "result": [
+      {
+        "kind": 2,
+        "name": "hello_world",
+        "location": {
+          "uri": "file://../files/hello.vhdl",
+          "range": {
+            "start": {
+              "line": 5,
+              "character": 0
+            },
+            "end": {
+              "line": 6,
+              "character": 0
+            }
+          }
+        }
+      },
+      {
+        "kind": 2,
+        "name": "behaviour",
+        "location": {
+          "uri": "file://../files/hello.vhdl",
+          "range": {
+            "start": {
+              "line": 8,
+              "character": 0
+            },
+            "end": {
+              "line": 17,
+              "character": 0
+            }
+          }
+        }
+      }
+    ]
   }
 ]

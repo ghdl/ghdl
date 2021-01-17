@@ -41,23 +41,103 @@
               "character": 9
             }
           },
-          "message": "unit \"std_logic_unsigned\" not found in library \"ieee\"",
+          "message": "use of synopsys package \"std_logic_unsigned\" needs the -fsynopsys option",
           "severity": 1
         },
         {
           "source": "ghdl",
           "range": {
             "start": {
-              "line": 2,
-              "character": 9
+              "line": 10,
+              "character": 13
             },
             "end": {
-              "line": 2,
-              "character": 9
+              "line": 10,
+              "character": 13
             }
           },
-          "message": " (use --ieee=synopsys for non-standard synopsys packages)",
+          "message": "operator \"/=\" is overloaded",
+          "severity": 1,
+          "relatedInformation": [
+            {
+              "location": {
+                "uri": "file://pyunit/lsp/003errors/tc.vhdl",
+                "range": {
+                  "start": {
+                    "line": 10,
+                    "character": 13
+                  },
+                  "end": {
+                    "line": 10,
+                    "character": 13
+                  }
+                }
+              },
+              "message": "possible interpretations are:"
+            },
+            {
+              "location": {
+                "uri": "file:///Users/gingold/devel/ghdl/lib/ghdl/src/synopsys/std_logic_unsigned.vhdl",
+                "range": {
+                  "start": {
+                    "line": 67,
+                    "character": 13
+                  },
+                  "end": {
+                    "line": 67,
+                    "character": 13
+                  }
+                }
+              },
+              "message": "function \"/=\" [std_logic_vector, std_logic_vector return boolean]"
+            },
+            {
+              "location": {
+                "uri": "file:///Users/gingold/devel/ghdl/lib/ghdl/src/ieee/v93/std_logic_1164.vhdl",
+                "range": {
+                  "start": {
+                    "line": 89,
+                    "character": 7
+                  },
+                  "end": {
+                    "line": 89,
+                    "character": 7
+                  }
+                }
+              },
+              "message": "function \"/=\" [std_logic_vector, std_logic_vector return boolean]"
+            }
+          ]
+        },
+        {
+          "source": "ghdl",
+          "range": {
+            "start": {
+              "line": 10,
+              "character": 13
+            },
+            "end": {
+              "line": 10,
+              "character": 13
+            }
+          },
+          "message": "(you may want to use the -fexplicit option)",
           "severity": 1
+        },
+        {
+          "source": "ghdl",
+          "range": {
+            "start": {
+              "line": 8,
+              "character": 11
+            },
+            "end": {
+              "line": 8,
+              "character": 11
+            }
+          },
+          "message": "signal \"s\" is never referenced",
+          "severity": 2
         }
       ]
     }
@@ -70,7 +150,7 @@
         "kind": 2,
         "name": "tb",
         "location": {
-          "uri": "file://003errors/tc.vhdl",
+          "uri": "file://pyunit/lsp/003errors/tc.vhdl",
           "range": {
             "start": {
               "line": 4,
@@ -87,7 +167,7 @@
         "kind": 2,
         "name": "behav",
         "location": {
-          "uri": "file://003errors/tc.vhdl",
+          "uri": "file://pyunit/lsp/003errors/tc.vhdl",
           "range": {
             "start": {
               "line": 7,

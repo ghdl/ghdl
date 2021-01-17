@@ -35,7 +35,7 @@
     "jsonrpc": "2.0",
     "method": "textDocument/publishDiagnostics",
     "params": {
-      "uri": "file://files/heartbeat.vhdl",
+      "uri": "file://../files/heartbeat.vhdl",
       "diagnostics": []
     }
   },
@@ -47,7 +47,7 @@
         "kind": 2,
         "name": "heartbeat",
         "location": {
-          "uri": "file://files/heartbeat.vhdl",
+          "uri": "file://../files/heartbeat.vhdl",
           "range": {
             "start": {
               "line": 4,
@@ -64,7 +64,7 @@
         "kind": 2,
         "name": "behaviour",
         "location": {
-          "uri": "file://files/heartbeat.vhdl",
+          "uri": "file://../files/heartbeat.vhdl",
           "range": {
             "start": {
               "line": 8,
@@ -81,7 +81,7 @@
         "kind": 6,
         "name": "clk_process",
         "location": {
-          "uri": "file://files/heartbeat.vhdl",
+          "uri": "file://../files/heartbeat.vhdl",
           "range": {
             "start": {
               "line": 13,
@@ -97,7 +97,7 @@
           "kind": 2,
           "name": "behaviour",
           "location": {
-            "uri": "file://files/heartbeat.vhdl",
+            "uri": "file://../files/heartbeat.vhdl",
             "range": {
               "start": {
                 "line": 8,
