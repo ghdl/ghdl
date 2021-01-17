@@ -408,7 +408,6 @@ jobs:
       with:
         file: coverage.xml
         flags: unittests
-        env_vars: PYTHON
 
     - name: Codacy
       uses: codacy/codacy-coverage-reporter-action@master
