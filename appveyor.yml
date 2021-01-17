@@ -8,8 +8,8 @@ version: '{branch}-{build}'
 # Branches to build
 branches:
   except:
-    - nightly
     - travis
+skip_tags: true
 
 # =============================================================================
 # Build matrix configuration
