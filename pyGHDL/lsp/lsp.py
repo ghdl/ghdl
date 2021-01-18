@@ -10,6 +10,7 @@ except ImportError:
 
 log = logging.getLogger("ghdl-ls")
 
+is_windows = os.name == "nt"
 
 class ProtocolError(Exception):
     pass
@@ -39,7 +40,7 @@ def path_from_uri(uri):
         # No scheme
         return uri
     _, path = uri.split("file://", 1)
-    if os.name == "nt" and path.startswith("/"):
+    if is_windows and path.startswith("/"):
         # On windows, absolute files start like "/C:/aa/bbb".
         # Remove the first "/".
         path = path[1:]
@@ -48,7 +49,7 @@ def path_from_uri(uri):
 
 def path_to_uri(path):
     # Convert path to file uri (add html like head part)
-    if os.name == "nt":
+    if is_windows:
         return "file:///" + quote(path.replace("\\", "/"))
     else:
         return "file://" + quote(path)
