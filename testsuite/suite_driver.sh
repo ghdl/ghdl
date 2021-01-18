@@ -22,13 +22,13 @@ full=n
 for opt; do
   case "$opt" in
   -k | --keep-going)  full=y ;;
-  --dir=*) dirs=`echo $opt | sed -e 's/--dir=//'` ;;
-  --skip=*) d=`echo $opt | sed -e 's/--skip=//'`
-            dirs=`echo "" $dirs | sed -e "s/ $d//"` ;;
-  --start-at=*) d=`echo $opt | sed -e 's/--start-at=//'`
-            dirs=`echo "" $dirs | sed -e "s/^.* $d//"`
+  --dir=*) dirs="$(echo "$opt" | sed -e 's/--dir=//')" ;;
+  --skip=*) d="$(echo "$opt" | sed -e 's/--skip=//')"
+            dirs="$(echo "" "$dirs" | sed -e "s/ $d//")" ;;
+  --start-at=*) d="$(echo "$opt" | sed -e 's/--start-at=//')"
+            dirs="$(echo "" "$dirs" | sed -e "s/^.* $d//")"
             dirs="$d $dirs" ;;
-  --list-tests) echo $dirs; exit 0;;
+  --list-tests) echo "$dirs"; exit 0;;
   *) echo "Unknown option $opt"
      exit 2
      ;;
@@ -36,14 +36,14 @@ for opt; do
 done
 
 singlerun() {
-  cd $1
+  cd "$1"
   if ./testsuite.sh > test.log 2>&1 ; then
     printf "$_suite $1: ${ANSI_GREEN}ok${ANSI_NOCOLOR}\n"
     # Don't disp log
   else
     printf "$_suite $1: ${ANSI_RED}failed${ANSI_NOCOLOR}\n"
     cat test.log
-    if [ $2 = "y" ]; then
+    if [ x"$2" = x"y" ]; then
       failures="$failures $1"
     else
       exit 1;
@@ -52,7 +52,7 @@ singlerun() {
   cd ..
 }
 
-for i in $dirs; do singlerun $i $full; done
+for i in $dirs; do singlerun "$i" "$full"; done
 
 if [ x"$failures" = x"" ]; then
     echo "$_suite tests are successful" && exit 0
