@@ -2,4 +2,4 @@
 
 set -e
 
-`dirname $0`/../suite_driver.sh gna $@
+$(dirname "$0")/../suite_driver.sh gna $@

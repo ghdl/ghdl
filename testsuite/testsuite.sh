@@ -120,7 +120,7 @@ if [ "x$GHDL" = "x" ]; then
   fi
 fi
 
-cd $(dirname $0)
+cd $(dirname "$0")
 rm -f test_ok
 failures=""
 tests=
@@ -144,7 +144,7 @@ do_test() {
   case $1 in
     sanity|gna|synth|vpi)
       gstart "[GHDL - test] $1"
-      cd $1
+      cd "$1"
       ../suite_driver.sh $@
       cd ..
       gend
@@ -169,15 +169,15 @@ do_test() {
 
 gstart "GHDL is: $GHDL"
 $GHDL version
-echo "REF: `$GHDL version ref`"
-echo "HASH: `$GHDL version hash`"
+echo "REF: $($GHDL version ref)"
+echo "HASH: $($GHDL version hash)"
 gend
 
 gstart "GHDL help"
 $GHDL help
 gend
 
-for t in $tests; do do_test $t; done
+for t in $tests; do do_test "$t"; done
 
 printf "${ANSI_GREEN}[GHDL - test] SUCCESSFUL${ANSI_NOCOLOR}\n"
 touch test_ok

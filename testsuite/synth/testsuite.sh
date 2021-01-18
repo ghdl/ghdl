@@ -2,4 +2,4 @@
 
 set -e
 
-`dirname $0`/../suite_driver.sh synth $@
+$(dirname "$0")/../suite_driver.sh synth $@
