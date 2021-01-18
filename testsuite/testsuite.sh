@@ -88,65 +88,8 @@ fi
 
 #---
 
-do_sanity () {
-  gstart "[GHDL - test] sanity"
-  cd sanity
-
-  for d in [0-9]*; do
-    cd $d
-    if ./testsuite.sh > test.log 2>&1 ; then
-      printf "sanity $d: ${ANSI_GREEN}ok${ANSI_NOCOLOR}\n"
-      # Don't disp log
-    else
-      printf "sanity $d: ${ANSI_RED}failed${ANSI_NOCOLOR}\n"
-      cat test.log
-      failures="$failures $d"
-    fi
-    cd ..
-    # Stop at the first failure
-    [ "$failures" = "" ] || break
-  done
-
-  cd ..
-  gend
-  [ "$failures" = "" ] || exit 1
-}
-
-# The GNA testsuite: regression testsuite using reports/issues from gna.org and from GitHub
-do_gna () {
-  gstart "[GHDL - test] gna"
-  cd gna
-
-  dirs=`./testsuite.sh --list-tests`
-  for d in $dirs; do
-    cd $d
-    if ./testsuite.sh > test.log 2>&1 ; then
-      printf "gna $d: ${ANSI_GREEN}ok${ANSI_NOCOLOR}\n"
-      # Don't disp log
-    else
-      printf "gna $d: ${ANSI_RED}failed${ANSI_NOCOLOR}\n"
-      cat test.log
-      failures="$failures $d"
-    fi
-    cd ..
-    # Stop at the first failure
-    [ "$failures" = "" ] || break
-  done
-
-  cd ..
-  gend
-  [ "$failures" = "" ] || exit 1
-}
-
-# The Python Unit testsuite: regression testsuite for Python bindings to libghdl
-do_pyunit () {
-  gstart "[GHDL - test] pyunit"
-  PYTHONPATH=$(pwd)/.. python3 -m pytest -rA pyunit
-  gend
-}
-
 # The VESTS testsuite: compliance testsuite, from: https://github.com/nickg/vests.git 388250486a
-do_vests () {
+_vests () {
   gstart "[GHDL - test] vests"
   cd vests
 
@@ -158,50 +101,6 @@ do_vests () {
     printf "${ANSI_RED}Vests failure$ANSI_NOCOLOR\n"
     failures=vests
   fi
-
-  cd ..
-  gend
-  [ "$failures" = "" ] || exit 1
-}
-
-do_synth () {
-  gstart "[GHDL - test] synth"
-  cd synth
-
-  if ./testsuite.sh > synth.log 2>&1 ; then
-    printf "${ANSI_GREEN}Synth is OK$ANSI_NOCOLOR\n"
-    wc -l synth.log
-  else
-    cat synth.log
-    printf "${ANSI_RED}Synth failure$ANSI_NOCOLOR\n"
-    failures="synth"
-  fi
-
-  cd ..
-  gend
-  [ "$failures" = "" ] || exit 1
-}
-
-#---
-
-do_vpi () {
-  gstart "[GHDL - test] vpi"
-  cd vpi
-
-  for d in *[0-9]; do
-    cd $d
-    if ./testsuite.sh > test.log 2>&1 ; then
-      printf "vpi $d: ${ANSI_GREEN}ok${ANSI_NOCOLOR}\n"
-      # Don't disp log
-    else
-      printf "vpi $d: ${ANSI_RED}failed${ANSI_NOCOLOR}\n"
-      cat test.log
-      failures="$failures $d"
-    fi
-    cd ..
-    # Stop at the first failure
-    [ "$failures" = "" ] || break
-  done
 
   cd ..
   gend
@@ -227,25 +126,41 @@ failures=""
 tests=
 
 for opt; do
+  shift
   case "$opt" in
       [a-z]*) tests="$tests $opt" ;;
+      --) break ;;
       *) echo "$0: unknown option $opt"; exit 2 ;;
   esac
 done
 
 if [ "x$tests" = "x" ]; then tests="sanity pyunit gna vests synth vpi"; fi
 
-echo "tests: $tests"
+echo "> tests: $tests"
+echo "> args: $@"
 
 # Run a testsuite
 do_test() {
   case $1 in
-    sanity) do_sanity;;
-    pyunit) do_pyunit;;
-    gna)    do_gna;;
-    vests)  do_vests;;
-    synth)  do_synth;;
-    vpi)    do_vpi;;
+    sanity|gna|synth|vpi)
+      gstart "[GHDL - test] $1"
+      cd $1
+      ../suite_driver.sh $@
+      cd ..
+      gend
+      [ "$failures" = "" ] || exit 1
+    ;;
+
+    pyunit)
+      # The Python Unit testsuite: regression testsuite for Python bindings to libghdl
+      gstart "[GHDL - test] pyunit"
+      PYTHONPATH=$(pwd)/.. python3 -m pytest -rA pyunit
+      gend
+    ;;
+
+    vests)
+      _vests
+    ;;
     *)
       printf "${ANSI_RED}$0: test name '$1' is unknown${ANSI_NOCOLOR}\n"
       exit 1;;
