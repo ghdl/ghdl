@@ -5,8 +5,8 @@
     "method": "initialize",
     "params": {
         "processId": 2,
-        "rootPath": ".",
-        "rootUri": "file://.",
+        "rootPath": "@ROOT@/007errprj",
+        "rootUri": "file://@ROOT@/007errprj",
       "capabilities": {
         "workspace": {
           "applyEdit": true,
@@ -154,7 +154,7 @@
       "trace": "off",
       "workspaceFolders": [
         {
-            "uri": "file:///.",
+            "uri": "file://@ROOT@/007errprj",
             "name": "workspacename"
         }
       ]

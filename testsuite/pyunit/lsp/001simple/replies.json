@@ -27,7 +27,7 @@
     "jsonrpc": "2.0",
     "method": "textDocument/publishDiagnostics",
     "params": {
-      "uri": "file:///../files/hello.vhdl",
+      "uri": "file://@ROOT@/files/hello.vhdl",
       "diagnostics": []
     }
   }

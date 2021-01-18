@@ -5,8 +5,8 @@
     "method": "initialize",
     "params": {
       "processId": 27805,
-      "rootPath": "003errors",
-      "rootUri": "file://003errors",
+      "rootPath": "@ROOT@/003errors",
+      "rootUri": "file://@ROOT@/003errors",
       "capabilities": {
         "workspace": {
           "applyEdit": true,
@@ -203,7 +203,7 @@
       "trace": "off",
       "workspaceFolders": [
         {
-          "uri": "file://003errors",
+          "uri": "file://@ROOT@/003errors",
           "name": "003errors"
         }
       ]
@@ -219,7 +219,7 @@
     "method": "textDocument/didOpen",
     "params": {
       "textDocument": {
-        "uri": "file://003errors/tc.vhdl",
+        "uri": "file://@ROOT@/003errors/tc.vhdl",
         "languageId": "vhdl",
         "version": 74,
         "text": "library ieee;\nuse ieee.std_logic_1164.all;\nuse ieee.std_logic_unsigned.all;\n\nentity \n"

@@ -1,13 +1,16 @@
+import os
+import string
+from sys import executable
 from io import BytesIO
 from json import load as json_load, loads as json_loads, dumps as json_dumps
-from os import environ
-from sys import executable
 from pathlib import Path
 from subprocess import run as subprocess_run, PIPE
 from typing import Optional
 from unittest import TestCase, skip
 
 from pyGHDL.lsp.lsp import LanguageProtocolServer, LSPConn
+
+is_windows = os.name == "nt"
 
 
 class StrConn:
@@ -53,16 +56,48 @@ def show_diffs(name, ref, res):
 		print('unhandle type {} in {}'.format(type(ref), name))
 
 
+def root_subst(obj, root):
+	"""Substitute in all strings of :param obj: @ROOT@ with :param root:
+    URI in LSP are supposed to contain an absolute path.  But putting an
+    hard absolute path would make the test suite not portable.  So we use
+    the metaname @ROOT@ which should be replaced by the root path of the
+    test suite.  Also we need to deal with the windows particularity
+    about URI."""
+	if isinstance(obj, dict):
+		for k, v in obj.items():
+			if isinstance(v, str):
+				if k in ('rootUri', 'uri'):
+					assert v.startswith("file://@ROOT@/")
+					p = "file://" + ("/" if is_windows else "")
+					obj[k] = p + root + v[13:]
+				elif k in ('rootPath', 'message'):
+					obj[k] = v.replace('@ROOT@', root)
+			else:
+				obj[k] = root_subst(v, root)
+		return obj
+	elif obj is None or isinstance(obj, (str, int)):
+		return obj
+	elif isinstance(obj, list):
+		res = []
+		for v in obj:
+			res.append(root_subst(v, root))
+		return res
+	else:
+		raise AssertionError("root_subst: unhandled type {}".format(type(obj)))
+
+
 class JSONTest(TestCase):
 	_LSPTestDirectory = Path(__file__).parent.resolve()
 
 	subdir = None
 
 	def _RequestResponse(self, requestName: str, responseName: Optional[str] = None):
+		root = str(self._LSPTestDirectory)
 		requestFile = self._LSPTestDirectory / self.subdir / requestName
 		# Convert the JSON input file to an LSP string.
 		with requestFile.open('r') as file:
 			res = json_load(file)
+			res = root_subst(res, root)
 
 		conn = StrConn()
 		ls = LanguageProtocolServer(None, conn)
@@ -71,9 +106,8 @@ class JSONTest(TestCase):
 
 		# Run
 		p = subprocess_run(
-			[executable, '-m', 'pyGHDL.cli.lsp'],
+			[executable, '-m', 'pyGHDL.cli.lsp', '-v'],
 			input=conn.res.encode('utf-8'),
-			cwd=self._LSPTestDirectory / self.subdir,
 			stdout=PIPE)
 		self.assertEqual(p.returncode, 0, "Language server executable exit with a non-zero return code.")
 
@@ -87,6 +121,7 @@ class JSONTest(TestCase):
 		ls = LanguageProtocolServer(None, conn)
 		with responseFile.open('r') as file:
 			ref = json_load(file)
+			ref = root_subst(ref, root)
 
 		errs = 0
 		json_res = []

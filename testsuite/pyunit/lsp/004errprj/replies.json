@@ -4,7 +4,7 @@
     "method": "window/showMessage",
     "params": {
       "type": 1,
-      "message": "json error in project file ./hdl-prj.json:1:3"
+      "message": "json error in project file @ROOT@/004errprj/hdl-prj.json:1:3"
     }
   },
   {
@@ -35,7 +35,7 @@
     "jsonrpc": "2.0",
     "method": "textDocument/publishDiagnostics",
     "params": {
-      "uri": "file:///../files/hello.vhdl",
+      "uri": "file://@ROOT@/files/hello.vhdl",
       "diagnostics": []
     }
   }

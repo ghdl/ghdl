@@ -31,7 +31,7 @@
         "kind": 2,
         "name": "hello_world",
         "location": {
-          "uri": "file://../files/hello.vhdl",
+          "uri": "file://@ROOT@/files/hello.vhdl",
           "range": {
             "start": {
               "line": 5,
@@ -48,7 +48,7 @@
         "kind": 2,
         "name": "behaviour",
         "location": {
-          "uri": "file://../files/hello.vhdl",
+          "uri": "file://@ROOT@/files/hello.vhdl",
           "range": {
             "start": {
               "line": 8,

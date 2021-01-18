@@ -27,7 +27,7 @@
     "jsonrpc": "2.0",
     "method": "textDocument/publishDiagnostics",
     "params": {
-      "uri": "file://files/adder.vhdl",
+      "uri": "file://@ROOT@/files/adder.vhdl",
       "diagnostics": []
     }
   },
@@ -39,7 +39,7 @@
         "kind": 2,
         "name": "adder",
         "location": {
-          "uri": "file://files/adder.vhdl",
+          "uri": "file://@ROOT@/files/adder.vhdl",
           "range": {
             "start": {
               "line": 1,
@@ -56,7 +56,7 @@
         "kind": 2,
         "name": "rtl",
         "location": {
-          "uri": "file://files/adder.vhdl",
+          "uri": "file://@ROOT@/files/adder.vhdl",
           "range": {
             "start": {
               "line": 7,
@@ -75,7 +75,7 @@
     "jsonrpc": "2.0",
     "method": "textDocument/publishDiagnostics",
     "params": {
-      "uri": "file://files/adder_tb.vhdl",
+      "uri": "file://@ROOT@/files/adder_tb.vhdl",
       "diagnostics": []
     }
   },
@@ -87,7 +87,7 @@
         "kind": 2,
         "name": "adder_tb",
         "location": {
-          "uri": "file://files/adder_tb.vhdl",
+          "uri": "file://@ROOT@/files/adder_tb.vhdl",
           "range": {
             "start": {
               "line": 2,
@@ -104,7 +104,7 @@
         "kind": 2,
         "name": "behav",
         "location": {
-          "uri": "file://files/adder_tb.vhdl",
+          "uri": "file://@ROOT@/files/adder_tb.vhdl",
           "range": {
             "start": {
               "line": 5,
@@ -121,7 +121,7 @@
         "kind": 6,
         "name": "adder_0",
         "location": {
-          "uri": "file://files/adder_tb.vhdl",
+          "uri": "file://@ROOT@/files/adder_tb.vhdl",
           "range": {
             "start": {
               "line": 16,
@@ -137,7 +137,7 @@
           "kind": 2,
           "name": "behav",
           "location": {
-            "uri": "file://files/adder_tb.vhdl",
+            "uri": "file://@ROOT@/files/adder_tb.vhdl",
             "range": {
               "start": {
                 "line": 5,
@@ -158,7 +158,7 @@
     "id": 3,
     "result": [
       {
-        "uri": "file://files/adder.vhdl",
+        "uri": "file://@ROOT@/files/adder.vhdl",
         "range": {
           "start": {
             "line": 1,
@@ -176,7 +176,7 @@
     "jsonrpc": "2.0",
     "method": "textDocument/publishDiagnostics",
     "params": {
-      "uri": "file://files/adder.vhdl",
+      "uri": "file://@ROOT@/files/adder.vhdl",
       "diagnostics": []
     }
   },
@@ -188,7 +188,7 @@
         "kind": 2,
         "name": "adder",
         "location": {
-          "uri": "file://files/adder.vhdl",
+          "uri": "file://@ROOT@/files/adder.vhdl",
           "range": {
             "start": {
               "line": 1,
@@ -205,7 +205,7 @@
         "kind": 2,
         "name": "rtl",
         "location": {
-          "uri": "file://files/adder.vhdl",
+          "uri": "file://@ROOT@/files/adder.vhdl",
           "range": {
             "start": {
               "line": 7,
@@ -224,7 +224,7 @@
     "jsonrpc": "2.0",
     "method": "textDocument/publishDiagnostics",
     "params": {
-      "uri": "file://files/adder.vhdl",
+      "uri": "file://@ROOT@/files/adder.vhdl",
       "diagnostics": [
         {
           "source": "ghdl",
@@ -297,7 +297,7 @@
         "kind": 2,
         "name": "adder",
         "location": {
-          "uri": "file://files/adder.vhdl",
+          "uri": "file://@ROOT@/files/adder.vhdl",
           "range": {
             "start": {
               "line": 1,
@@ -314,7 +314,7 @@
         "kind": 2,
         "name": "rtl",
         "location": {
-          "uri": "file://files/adder.vhdl",
+          "uri": "file://@ROOT@/files/adder.vhdl",
           "range": {
             "start": {
               "line": 7,
@@ -333,7 +333,7 @@
     "jsonrpc": "2.0",
     "method": "textDocument/publishDiagnostics",
     "params": {
-      "uri": "file://files/adder.vhdl",
+      "uri": "file://@ROOT@/files/adder.vhdl",
       "diagnostics": [
         {
           "source": "ghdl",
@@ -402,7 +402,7 @@
     "jsonrpc": "2.0",
     "method": "textDocument/publishDiagnostics",
     "params": {
-      "uri": "file://files/adder.vhdl",
+      "uri": "file://@ROOT@/files/adder.vhdl",
       "diagnostics": [
         {
           "source": "ghdl",
@@ -475,7 +475,7 @@
         "kind": 2,
         "name": "adder",
         "location": {
-          "uri": "file://files/adder.vhdl",
+          "uri": "file://@ROOT@/files/adder.vhdl",
           "range": {
             "start": {
               "line": 1,
@@ -492,7 +492,7 @@
         "kind": 2,
         "name": "rtl",
         "location": {
-          "uri": "file://files/adder.vhdl",
+          "uri": "file://@ROOT@/files/adder.vhdl",
           "range": {
             "start": {
               "line": 7,
@@ -511,7 +511,7 @@
     "jsonrpc": "2.0",
     "method": "textDocument/publishDiagnostics",
     "params": {
-      "uri": "file://files/adder.vhdl",
+      "uri": "file://@ROOT@/files/adder.vhdl",
       "diagnostics": [
         {
           "source": "ghdl",
@@ -539,7 +539,7 @@
         "kind": 2,
         "name": "adder",
         "location": {
-          "uri": "file://files/adder.vhdl",
+          "uri": "file://@ROOT@/files/adder.vhdl",
           "range": {
             "start": {
               "line": 1,
@@ -556,7 +556,7 @@
         "kind": 2,
         "name": "rtl",
         "location": {
-          "uri": "file://files/adder.vhdl",
+          "uri": "file://@ROOT@/files/adder.vhdl",
           "range": {
             "start": {
               "line": 7,
@@ -575,7 +575,7 @@
     "jsonrpc": "2.0",
     "method": "textDocument/publishDiagnostics",
     "params": {
-      "uri": "file://files/adder.vhdl",
+      "uri": "file://@ROOT@/files/adder.vhdl",
       "diagnostics": []
     }
   }

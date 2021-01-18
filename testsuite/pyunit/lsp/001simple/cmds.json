@@ -5,8 +5,8 @@
     "method": "initialize",
     "params": {
         "processId": 2,
-        "rootPath": ".",
-        "rootUri": "file:///.",
+        "rootPath": "@ROOT@",
+        "rootUri": "file://@ROOT@/001simple",
       "capabilities": {
         "workspace": {
           "applyEdit": true,
@@ -203,7 +203,7 @@
       "trace": "off",
       "workspaceFolders": [
         {
-            "uri": "file:///.",
+            "uri": "file://@ROOT@/001simple",
             "name": "001simple"
         }
       ]
@@ -219,7 +219,7 @@
     "method": "textDocument/didOpen",
     "params": {
       "textDocument": {
-        "uri": "file:///../files/hello.vhdl",
+        "uri": "file://@ROOT@/files/hello.vhdl",
         "languageId": "vhdl",
         "version": 1,
         "text": "\n--  Hello world program\nuse std.textio.all; -- Imports the standard textio package.\n\n--  Defines a design entity, without any ports.\nentity hello_world is\nend hello_world;\n\narchitecture behaviour of hello_world is\nbegin\n  process\n    variable l : line;\n  begin\n    write (l, String'(\"Hello world!\"));\n    writeline (output, l);\n    wait;\n  end process;\nend behaviour;\n\n"

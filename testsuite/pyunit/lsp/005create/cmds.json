@@ -5,8 +5,8 @@
     "method": "initialize",
     "params": {
         "processId": 6576,
-        "rootPath": ".",
-        "rootUri": "file://.",
+        "rootPath": "@ROOT@/005create",
+        "rootUri": "file://@ROOT@/005create",
       "capabilities": {
         "workspace": {
           "applyEdit": true,
@@ -224,7 +224,7 @@
       "trace": "off",
       "workspaceFolders": [
         {
-            "uri": "file://.",
+            "uri": "file://@ROOT@/005create",
           "name": "folder"
         }
       ]
@@ -241,7 +241,7 @@
     "method": "textDocument/documentSymbol",
     "params": {
       "textDocument": {
-        "uri": "file://../files/hello.vhdl"
+        "uri": "file://@ROOT@/files/hello.vhdl"
       }
     }
   }

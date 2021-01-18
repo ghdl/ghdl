@@ -27,7 +27,7 @@
     "jsonrpc": "2.0",
     "method": "textDocument/publishDiagnostics",
     "params": {
-      "uri": "file://pyunit/lsp/003errors/tc.vhdl",
+      "uri": "file://@ROOT@/003errors/tc.vhdl",
       "diagnostics": [
         {
           "source": "ghdl",
@@ -55,7 +55,7 @@
         "kind": 2,
         "name": "tb",
         "location": {
-          "uri": "file://pyunit/lsp/003errors/tc.vhdl",
+          "uri": "file://@ROOT@/003errors/tc.vhdl",
           "range": {
             "start": {
               "line": 4,
@@ -72,7 +72,7 @@
         "kind": 2,
         "name": "behav",
         "location": {
-          "uri": "file://pyunit/lsp/003errors/tc.vhdl",
+          "uri": "file://@ROOT@/003errors/tc.vhdl",
           "range": {
             "start": {
               "line": 7,

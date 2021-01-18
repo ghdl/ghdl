@@ -5,8 +5,8 @@
     "method": "initialize",
     "params": {
       "processId": 19954,
-      "rootPath": ".",
-      "rootUri": "file://.",
+      "rootPath": "@ROOT@/008errnofile",
+      "rootUri": "file://@ROOT@/008errnofile",
       "capabilities": {
         "workspace": {
           "applyEdit": true,
@@ -224,7 +224,7 @@
       "trace": "off",
       "workspaceFolders": [
         {
-          "uri": "file://.",
+          "uri": "file://@ROOT@/008errnofile",
           "name": "008errnofile"
         }
       ]
