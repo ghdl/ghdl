@@ -582,7 +582,7 @@ package body Trans.Chap5 is
             --  Actual type is unconstrained, but as this is an object reads
             --  bounds from the object.
             return Chap3.Get_Composite_Bounds
-              (Chap6.Translate_Name (Actual, Mode_Signal));
+              (Chap6.Translate_Name (Actual, Mode_Value));
          end if;
       end Get_Actual_Bounds;
 
