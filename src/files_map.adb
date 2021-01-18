@@ -536,6 +536,47 @@ package body Files_Map is
       Name := Get_Identifier (Filename (Separator_Pos + 1 .. Filename'Last));
    end Normalize_Pathname;
 
+   function Find_Language (Filename : String) return Language_Type
+   is
+      P, E : Natural;
+      Ext : String (1 .. 5);
+   begin
+      P := Filename'Last;
+      E := Ext'Last;
+      loop
+         if P >= Filename'First
+           or else E < Ext'First
+         then
+            return Language_Unknown;
+         end if;
+         case Filename (P) is
+            when 'a' .. 'z' =>
+               Ext (E) := Filename (P);
+            when 'A' .. 'Z' =>
+               Ext (E) := Character'Val (Character'Pos (Filename (P))
+                                           - Character'Pos ('A')
+                                           + Character'Pos ('a'));
+            when '.' =>
+               if Ext (E + 1 .. Ext'Last) = "vhd"
+                 or else Ext (E + 1 .. Ext'Last) = "vhdl"
+               then
+                  return Language_Vhdl;
+               end if;
+               if Ext (E + 1 .. Ext'Last) = "v"
+                 or else Ext (E + 1 .. Ext'Last) = "v"
+                 or else Ext (E + 1 .. Ext'Last) = "sv"
+                 or else Ext (E + 1 .. Ext'Last) = "svh"
+               then
+                  return Language_Verilog;
+               end if;
+            when others =>
+               return Language_Unknown;
+         end case;
+         P := P - 1;
+         E := E - 1;
+      end loop;
+   end Find_Language;
+
    --  Find a source_file by DIRECTORY and NAME.
    --  Return NO_SOURCE_FILE_ENTRY if not already opened.
    function Find_Source_File (Directory : Name_Id; Name: Name_Id)

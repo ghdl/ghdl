@@ -55,6 +55,10 @@ package Files_Map is
    --  Each file in memory has two terminal EOT.
    EOT : constant Character := Character'Val (4);
 
+   --  From the extension of FILENAME, extract the language.
+   --  Return Language_Unknown is not known.
+   function Find_Language (Filename : String) return Language_Type;
+
    --  Create an empty Source_File for a virtual file name.  Used for implicit,
    --  command-line and std.standard library.
    function Create_Virtual_Source_File (Name : Name_Id)

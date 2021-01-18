@@ -171,10 +171,14 @@ package Types is
    --  Unrecoverable error.  Just exit() with an error status.
    Fatal_Error : exception;
 
-   --  In some case, a low level subprogram can't handle error
-   --  (e.g eval_pos).  In this case it is easier to raise an exception and
-   --  let upper level subprograms handle the case.
-   Node_Error : exception;
+   --  List of languages
+   type Language_Type is
+     (
+      Language_Unknown,
+      Language_Vhdl,
+      Language_Psl,
+      Language_Verilog
+     );
 
    --  Result of a comparaison of two numeric values.
    type Order_Type is (Less, Equal, Greater);
