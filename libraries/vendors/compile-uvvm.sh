@@ -373,7 +373,7 @@ test $VERBOSE -eq 1 && echo -e "  ${ANSI_GRAY}Reading compile order files...${AN
 
 Components=()
 while IFS= read -r Component; do
-	Component=${Component%?}
+	Component=${Component%\r}
 	if [[ ${Component:0:2} != "# " ]]; then
 		Components+=("$Component")
 	fi
@@ -402,8 +402,14 @@ for ComponentName in "${Components[@]}"; do
 	StructName=$VIPName
 	Files=()
 
+	CompileOrderFile="$SourceDirectory/$LibraryPath/script/compile_order.txt"
+	if [[ -f "$CompileOrderFile" ]]; then
+	  echo -e "${COLORED_ERROR} Compile order file '$CompileOrderFile' does not exist..${ANSI_NOCOLOR}"
+	  continue
+	fi
+
 	while IFS= read -r File; do
-		File=${File%?}
+		File=${File%\r}
 		if [[ ${File:0:2} == "# " ]]; then
 			if [[ ${File:2:7} == "library" ]]; then
 				LibraryName=${File:10}
@@ -411,7 +417,7 @@ for ComponentName in "${Components[@]}"; do
 		else
 			Files+=("${File:3}")
 		fi
-	done < <(cat "$SourceDirectory/$LibraryPath/script/compile_order.txt")
+	done < <(cat "$CompileOrderFile")
 
 	CreateLibraryStruct $StructName $LibraryName $LibraryPath $VHDLVersion "${Files[@]}"
 
@@ -426,5 +432,6 @@ if [[ ${#Libraries[@]} -ne 0 ]]; then
 	echo "--------------------------------------------------------------------------------"
 	echo -e "Compiling UVVM packages and VIPs $(test $ERRORCOUNT -eq 0 && echo $COLORED_SUCCESSFUL || echo $COLORED_FAILED)"
 else
-	echo -e "${ANSI_RED}Neither UVVM packages nor VIPs selected.${ANSI_NOCOLOR}"
+	echo -e "${COLORED_ERROR} Neither UVVM packages nor VIPs selected.${ANSI_NOCOLOR}"
+	exit 2
 fi
