@@ -544,7 +544,7 @@ package body Files_Map is
       P := Filename'Last;
       E := Ext'Last;
       loop
-         if P >= Filename'First
+         if P <= Filename'First
            or else E < Ext'First
          then
             return Language_Unknown;
