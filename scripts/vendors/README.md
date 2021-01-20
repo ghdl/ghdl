@@ -29,12 +29,12 @@ documentation on how to use [Precompile Scripts](https://ghdl.github.io/ghdl/get
     $ cd <MySimulationFolder>
     ```
 
- - **Step 2 - Start the compilation script(s)**  
-	 Choose one of the provided pre-compilation scripts and run: 
+ - **Step 2 - Start the compilation script(s)**
+	 Choose one of the provided pre-compilation scripts and run:
     ```Bash
     $ /usr/local/lib/ghdl/vendors/compile-osvvm.sh --all --source ../path/to/osvvm
     ```
-    
+
     In most cases GHDL is installed into `/usr/local/`. The scripts are
     installed into the `lib/ghdl/vendors` directory.
 
@@ -60,10 +60,10 @@ documentation on how to use [Precompile Scripts](https://ghdl.github.io/ghdl/get
     PS> cd <MySimulationFolder>
     ```
 
- - **Step 2 - Start the compilation script(s)**  
-	 Choose one of the provided pre-compilation scripts and run: 
+ - **Step 2 - Start the compilation script(s)**
+	 Choose one of the provided pre-compilation scripts and run:
     ```PowerShell
-    PS> <GHDL>\libraries\vendors\compile-osvvm.ps1 -All -Source ..\path\to\osvvm
+    PS> <GHDL>\lib\ghdl\vendors\compile-osvvm.ps1 -All -Source ..\path\to\osvvm
     ```
 
  - **Step 3 - Viewing the result**
@@ -128,5 +128,5 @@ For a detailed documentation and all command line options see
 	  - default values
 
 ------------------------
-Author: Patrick Lehmann  
+Author: Patrick Lehmann
 Last update: 14.01.2020

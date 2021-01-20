@@ -577,9 +577,9 @@ install.vhdllib: install.dirs
 #	Vendors scripts
 	$(MKDIR) -p $(DESTDIR)$(VHDL_LIB_DIR)/vendors
 	$(INSTALL_DATA) -p \
-	    $(LIBSRC_DIR)/vendors/* $(DESTDIR)$(VHDL_LIB_DIR)/vendors/
+	    $(srcdir)/scripts/vendors/* $(DESTDIR)$(VHDL_LIB_DIR)/vendors/
 	$(INSTALL_PROGRAM) -p \
-	    $(LIBSRC_DIR)/vendors/*.sh $(DESTDIR)$(VHDL_LIB_DIR)/vendors/
+	    $(srcdir)/scripts/vendors/*.sh $(DESTDIR)$(VHDL_LIB_DIR)/vendors/
 
 uninstall.vhdllib:
 	$(RM) -rf $(DESTDIR)$(VHDL_LIB_DIR)
