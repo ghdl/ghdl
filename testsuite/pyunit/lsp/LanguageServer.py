@@ -4,6 +4,7 @@ from sys import executable
 from io import BytesIO
 from json import load as json_load, loads as json_loads, dumps as json_dumps
 from pathlib import Path
+from urllib.parse import quote
 from subprocess import run as subprocess_run, PIPE
 from typing import Optional
 from unittest import TestCase, skip
@@ -69,7 +70,7 @@ def root_subst(obj, root):
 				if k in ('rootUri', 'uri'):
 					assert v.startswith("file://@ROOT@/")
 					p = "file://" + ("/" if is_windows else "")
-					obj[k] = p + root + v[13:]
+					obj[k] = p + quote(root + v[13:])
 				elif k in ('rootPath', 'message'):
 					obj[k] = v.replace('@ROOT@', root)
 			else:
