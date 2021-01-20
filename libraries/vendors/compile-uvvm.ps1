@@ -227,7 +227,10 @@ foreach ($VIPName in (Get-Content "$SourceDirectory\script\component_list.txt"))
 	$VIPFiles = @()
 	$CompileOrder = Get-Content "$SourceDirectory\$VIPName\script\compile_order.txt"
 	foreach ($Line in $CompileOrder)
-	{	if ($Line.StartsWith("# "))
+	{	$Line = $Line.Trim()
+		if ($Line -eq "")
+		{	continue }
+		elseif ($Line.StartsWith("#"))
 		{	if ($Line.StartsWith("# library "))
 			{	$VIPName = $Line.Substring(10) }
 			else
@@ -268,8 +271,10 @@ foreach ($vip in $VIP_Files.Keys)
 Write-Host "--------------------------------------------------------------------------------"
 Write-Host "Compiling UVVM packages " -NoNewline
 if ($ErrorCount -gt 0)
-{	Write-Host "[FAILED]" -ForegroundColor Red        }
+{	Write-Host "[FAILED]" -ForegroundColor Red
+	Exit-CompileScript 1
+}
 else
-{	Write-Host "[SUCCESSFUL]" -ForegroundColor Green  }
-
-Exit-CompileScript
+{	Write-Host "[SUCCESSFUL]" -ForegroundColor Green
+	Exit-CompileScript
+}
