@@ -1,12 +1,7 @@
 import os
 import logging
 import json
-
-try:
-    from urllib.parse import unquote, quote
-except ImportError:
-    from urllib2 import quote
-    from urlparse import unquote
+from urllib.parse import unquote, quote
 
 log = logging.getLogger("ghdl-ls")
 
@@ -36,6 +31,8 @@ class LSPConn:
 
 def path_from_uri(uri):
     # Convert file uri to path (strip html like head part)
+    # This is needed to get the root path and to load a document when the
+    # textual source is not present.
     if not uri.startswith("file://"):
         # No scheme
         return uri
