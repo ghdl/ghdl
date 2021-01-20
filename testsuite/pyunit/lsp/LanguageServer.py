@@ -106,7 +106,7 @@ class JSONTest(TestCase):
 
 		# Run
 		p = subprocess_run(
-			[executable, '-m', 'pyGHDL.cli.lsp', '-v'],
+			[executable, '-m', 'pyGHDL.cli.lsp'],
 			input=conn.res.encode('utf-8'),
 			stdout=PIPE)
 		self.assertEqual(p.returncode, 0, "Language server executable exit with a non-zero return code.")
