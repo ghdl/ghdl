@@ -50,7 +50,8 @@ def path_from_uri(uri):
 def path_to_uri(path):
     # Convert path to file uri (add html like head part)
     if is_windows:
-        return "file:///" + quote(path.replace("\\", "/"))
+        # Do not quote ':' (nor '/').
+        return "file:///" + quote(path.replace("\\", "/"), "/:")
     else:
         return "file://" + quote(path)
 
