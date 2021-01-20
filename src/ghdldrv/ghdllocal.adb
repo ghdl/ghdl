@@ -42,18 +42,23 @@ package body Ghdllocal is
    --  If TRUE, generate 32bits code on 64bits machines.
    Flag_32bit : Boolean := False;
 
+   procedure Initialize_Flags is
+   begin
+      Flag_Ieee := Lib_Standard;
+      Flag_Verbose := False;
+   end Initialize_Flags;
+
    procedure Compile_Init is
    begin
       Options.Initialize;
-      Flag_Ieee := Lib_Standard;
-      Flag_Verbose := False;
+      Initialize_Flags;
    end Compile_Init;
 
    procedure Init (Cmd : in out Command_Lib)
    is
       pragma Unreferenced (Cmd);
    begin
-      Compile_Init;
+      Initialize_Flags;
    end Init;
 
    function Is_Generic_Override_Option (Opt : String) return Boolean

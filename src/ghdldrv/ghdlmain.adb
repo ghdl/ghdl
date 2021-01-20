@@ -434,6 +434,9 @@ package body Ghdlmain is
       Errorout.Console.Set_Program_Name (Command_Name);
       Errorout.Console.Install_Handler;
 
+      --  Initialize global structures.
+      Options.Initialize;
+
       --  Handle case of no argument
       if Argument_Count = 0 then
          Error ("missing command, try " & Command_Name & " 'help'");

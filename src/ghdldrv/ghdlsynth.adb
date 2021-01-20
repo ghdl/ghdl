@@ -586,8 +586,8 @@ package body Ghdlsynth is
    procedure Init_For_Ghdl_Synth is
    begin
       Ghdlsynth.Register_Commands;
-      Options.Initialize;
       Errorout.Console.Install_Handler;
+      Options.Initialize;
       Netlists.Errors.Initialize;
    end Init_For_Ghdl_Synth;
 end Ghdlsynth;
