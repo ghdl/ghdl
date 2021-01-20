@@ -30,6 +30,10 @@ class ProjectError(Exception):
         self.msg = msg
 
 
+class InitError(Exception):
+    pass
+
+
 class Workspace(object):
     def __init__(self, root_uri, server):
         self._root_uri = root_uri
@@ -52,7 +56,9 @@ class Workspace(object):
         libghdl.errorout.Enable_Warning(errorout.Msgid.Warnid_Unused, True)
         self.read_project()
         self.set_options_from_project()
-        libghdl.analyze_init()
+        if libghdl.analyze_init_status() != 0:
+            log.error("cannot initialize libghdl")
+            raise InitError
         self._diags_set = set()  # Documents with at least one diagnostic.
         self.read_files_from_project()
         self.gather_diagnostics(None)
