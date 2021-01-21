@@ -57,7 +57,7 @@ def show_diffs(name, ref, res):
 		print('unhandle type {} in {}'.format(type(ref), name))
 
 
-def root_subst(obj, root):
+def root_subst(obj, path, uri):
 	"""Substitute in all strings of :param obj: @ROOT@ with :param root:
     URI in LSP are supposed to contain an absolute path.  But putting an
     hard absolute path would make the test suite not portable.  So we use
@@ -69,19 +69,18 @@ def root_subst(obj, root):
 			if isinstance(v, str):
 				if k in ('rootUri', 'uri'):
 					assert v.startswith("file://@ROOT@/")
-					p = "file://" + ("/" if is_windows else "")
-					obj[k] = p + quote(root + v[13:])
+					obj[k] = "file://" + quote(uri + v[13:])
 				elif k in ('rootPath', 'message'):
-					obj[k] = v.replace('@ROOT@', root)
+					obj[k] = v.replace('@ROOT@', path)
 			else:
-				obj[k] = root_subst(v, root)
+				obj[k] = root_subst(v, path, uri)
 		return obj
 	elif obj is None or isinstance(obj, (str, int)):
 		return obj
 	elif isinstance(obj, list):
 		res = []
 		for v in obj:
-			res.append(root_subst(v, root))
+			res.append(root_subst(v, path, uri))
 		return res
 	else:
 		raise AssertionError("root_subst: unhandled type {}".format(type(obj)))
@@ -94,11 +93,14 @@ class JSONTest(TestCase):
 
 	def _RequestResponse(self, requestName: str, responseName: Optional[str] = None):
 		root = str(self._LSPTestDirectory)
+		root_uri = self._LSPTestDirectory.as_uri()
+		assert(root_uri.startswith("file://"))
+		root_uri = root_uri[7:]
 		requestFile = self._LSPTestDirectory / self.subdir / requestName
 		# Convert the JSON input file to an LSP string.
 		with requestFile.open('r') as file:
 			res = json_load(file)
-			res = root_subst(res, root)
+			res = root_subst(res, root, root_uri)
 
 		conn = StrConn()
 		ls = LanguageProtocolServer(None, conn)
@@ -122,7 +124,7 @@ class JSONTest(TestCase):
 		ls = LanguageProtocolServer(None, conn)
 		with responseFile.open('r') as file:
 			ref = json_load(file)
-			ref = root_subst(ref, root)
+			ref = root_subst(ref, root, root_uri)
 
 		errs = 0
 		json_res = []
@@ -149,6 +151,9 @@ class JSONTest(TestCase):
 			print('Writing result output to result.json')
 			with open('result.json', 'w') as f:
 				f.write(json_dumps(json_res, indent=2))
+				f.write('\n')
+			with open('request.json', 'w') as f:
+				f.write(json_dumps(res, indent=2))
 				f.write('\n')
 
 			self.fail()
