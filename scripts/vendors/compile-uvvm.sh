@@ -403,7 +403,7 @@ for ComponentName in "${Components[@]}"; do
 	Files=()
 
 	CompileOrderFile="$SourceDirectory/$LibraryPath/script/compile_order.txt"
-	if [[ -f "$CompileOrderFile" ]]; then
+	if [ ! -f "$CompileOrderFile" ]; then
 	  echo -e "${COLORED_ERROR} Compile order file '$CompileOrderFile' does not exist..${ANSI_NOCOLOR}"
 	  continue
 	fi
