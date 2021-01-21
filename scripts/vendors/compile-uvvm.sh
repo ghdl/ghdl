@@ -373,7 +373,7 @@ test $VERBOSE -eq 1 && echo -e "  ${ANSI_GRAY}Reading compile order files...${AN
 
 Components=()
 while IFS= read -r Component; do
-	Component=${Component%\r}
+	Component=${Component%'\r'}
 	if [[ ${Component:0:2} != "# " ]]; then
 		Components+=("$Component")
 	fi
@@ -409,7 +409,7 @@ for ComponentName in "${Components[@]}"; do
 	fi
 
 	while IFS= read -r File; do
-		File=${File%\r}
+		File=${File%'\r'}
 		if [[ ${File:0:2} == "# " ]]; then
 			if [[ ${File:2:7} == "library" ]]; then
 				LibraryName=${File:10}
