@@ -180,10 +180,10 @@ function Get-CompileOrderedFiles
 
 	$FileSets =  [ordered]@{}
 	$Libraries = [ordered]@{}
-	$Libraries["work"] = @{
+	$Libraries.Add("work", @{
 		"Library" = "work";
 		"Files"   = @()
-	}
+	})
 	$CoverageFile = ""
 
 	$CompileOrder = Get-Content "$CurrentDirectory\$CompileOrderFile"
@@ -208,11 +208,11 @@ function Get-CompileOrderedFiles
 							default  { "OSVVM_VIP_$VIPName" }
 						}
 
-					$FileSets[$VIPName] = @{
+					$FileSets.Add($VIPName, @{
 						"Variable" =  $VariableName;
 						"Component" = $VIPName;
 						"Libraries" = $Lib
-					}
+					})
 				}
 				else
 				{	$Lib = Get-CompileOrderedFiles $Dir $File ($Level + 1)
@@ -241,10 +241,10 @@ function Get-CompileOrderedFiles
 		elseif ($Line.StartsWith("library "))
 		{	$LibraryName = $Line.Substring(8)
 			$Libraries["work"]["Library"] = $LibraryName
-			$Libraries[$LibraryName] = @{
+			$Libraries.Add($LibraryName, @{
 				"Library" = $LibraryName;
 				"Files"   = @()
-			}
+			})
 			continue
 		}
 		elseif ($Line.StartsWith("analyze "))
