@@ -51,8 +51,8 @@ COMPILE_UVVM_VIP=0
 COMPILE_UVVM_VIP_AVALON_MM=0
 COMPILE_UVVM_VIP_AVALON_ST=0
 COMPILE_UVVM_VIP_AXI=0
-COMPILE_UVVM_VIP_AXILITE=0
-COMPILE_UVVM_VIP_AXISTREAM=0
+COMPILE_UVVM_VIP_AXI_LITE=0
+COMPILE_UVVM_VIP_AXI_STREAM=0
 COMPILE_UVVM_VIP_CLOCK_GENERATOR=0
 COMPILE_UVVM_VIP_ERROR_INJECTION=0
 COMPILE_UVVM_VIP_ETHERNET=0
@@ -112,11 +112,11 @@ while [[ $# -gt 0 ]]; do
 			;;
 		--uvvm-vip-axi_lite)
 			COMMAND=3
-			COMPILE_UVVM_VIP_AXILITE=1
+			COMPILE_UVVM_VIP_AXI_LITE=1
 			;;
 		--uvvm-vip-axi_stream)
 			COMMAND=3
-			COMPILE_UVVM_VIP_AXISTREAM=1
+			COMPILE_UVVM_VIP_AXI_STREAM=1
 			;;
 		--uvvm-vip-clock)
 			COMMAND=3
@@ -288,8 +288,8 @@ if [[ $COMPILE_UVVM_VIP -eq 1 ]]; then
 	COMPILE_UVVM_VIP_AVALON_MM=1
 	COMPILE_UVVM_VIP_AVALON_ST=1
 	COMPILE_UVVM_VIP_AXI=1
-	COMPILE_UVVM_VIP_AXILITE=1
-	COMPILE_UVVM_VIP_AXISTREAM=1
+	COMPILE_UVVM_VIP_AXI_LITE=1
+	COMPILE_UVVM_VIP_AXI_STREAM=1
 	COMPILE_UVVM_VIP_CLOCK_GENERATOR=1
 	COMPILE_UVVM_VIP_ERROR_INJECTION=1
 	COMPILE_UVVM_VIP_ETHERNET=1
@@ -372,8 +372,7 @@ fi
 test $VERBOSE -eq 1 && echo -e "  ${ANSI_GRAY}Reading compile order files...${ANSI_NOCOLOR}"
 
 Components=()
-while IFS= read -r Component; do
-	Component=${Component%'\r'}
+while IFS=$'\r\n' read -r Component; do
 	if [[ ${Component:0:2} != "# " ]]; then
 		Components+=("$Component")
 	fi
@@ -408,8 +407,7 @@ for ComponentName in "${Components[@]}"; do
 	  continue
 	fi
 
-	while IFS= read -r File; do
-		File=${File%'\r'}
+	while IFS=$'\r\n' read -r File; do
 		if [[ ${File:0:2} == "# " ]]; then
 			if [[ ${File:2:7} == "library" ]]; then
 				LibraryName=${File:10}
