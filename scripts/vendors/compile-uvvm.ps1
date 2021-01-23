@@ -255,6 +255,8 @@ foreach ($VIPName in (Get-Content "$SourceDirectory\script\component_list.txt"))
 	})
 }
 
+$VIP_Files
+$VIP_Files.Keys
 
 # UVVM packages
 # ==============================================================================
@@ -266,6 +268,8 @@ foreach ($vip in $VIP_Files.Keys)
 		$ErrorCount += Start-PackageCompilation $GHDLBinary $Analyze_Parameters $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 	}
+	else
+	{	$EnableDebug -and (Write-Host "    Skipping '$vip'." -ForegroundColor DarkGray ) | Out-Null }
 }
 
 Write-Host "--------------------------------------------------------------------------------"
