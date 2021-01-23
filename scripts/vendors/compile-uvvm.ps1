@@ -248,11 +248,11 @@ foreach ($VIPName in (Get-Content "$SourceDirectory\script\component_list.txt"))
 	  {	Write-Host "      $File" -ForegroundColor DarkGray }
 	}
 
-	$VIP_Files[$VIPName] = @{
+	$VIP_Files.Add($VIPName, @{
 	  "Variable" =  $VIPVariable;
 	  "Library" =   $VIPName;
 	  "Files" =     $VIPFiles
-	}
+	})
 }
 
 
