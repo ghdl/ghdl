@@ -3,6 +3,7 @@
 #
 from pydecor import export
 from pyGHDL.libghdl import libghdl
+from pyGHDL.libghdl._types import IirKind
 
 
 # From nodes_meta

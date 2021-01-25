@@ -1,6 +1,7 @@
 # Auto generated Python source file from Ada sources
 # Call 'make' in 'src/vhdl' to regenerate:
 #
+from pydecor import export
 from pyGHDL.libghdl import libghdl
 
 Get_Start_Location = libghdl.vhdl__elocations__get_start_location

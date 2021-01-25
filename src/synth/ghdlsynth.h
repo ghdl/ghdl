@@ -72,6 +72,13 @@ namespace GhdlSynth {
     return name_table__get_address (n.id);
   }
 
+  extern "C" unsigned name_table__get_identifier_with_len(const char *s, unsigned l);
+  inline Name_Id get_identifier(const char *s) {
+    Name_Id n;
+    n.id = name_table__get_identifier_with_len(s, strlen(s));
+    return n;
+  }
+
   struct Sname { unsigned int id; };
   const Sname No_Sname = {0 };
 

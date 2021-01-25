@@ -3,11 +3,9 @@
 #
 from pydecor import export
 from pyGHDL.libghdl import libghdl
-from pyGHDL.libghdl._types import MessageIdWarnings
-
 
 @export
-def Enable_Warning(Id: MessageIdWarnings, Enable: bool) -> None:
+def Enable_Warning(Id: int, Enable: bool) -> None:
     libghdl.errorout__enable_warning(Id, Enable)
 
 

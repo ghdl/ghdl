@@ -397,6 +397,8 @@ private
    function Attribute_Build (Params : Instance) return Instance;
    function Attribute_Build_Value (Obj : Instance) return Attribute;
 
+   --  Per instance map of attribute.
+   --  The index is the sub-instance, the value is the attribute chain.
    package Attribute_Maps is new Dyn_Maps
      (Params_Type => Instance,
       Object_Type => Instance,
