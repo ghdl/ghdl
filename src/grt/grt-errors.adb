@@ -202,6 +202,13 @@ package body Grt.Errors is
       Error_E;
    end Error;
 
+   procedure Error_NF (Str : String) is
+   begin
+      Error_S (Str);
+      Newline_Err;
+      Exit_Status := 1;
+   end Error_NF;
+
    procedure Info_S (Str : String := "") is
    begin
       Put_Err (Progname);

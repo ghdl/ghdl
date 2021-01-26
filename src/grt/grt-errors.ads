@@ -80,6 +80,10 @@ package Grt.Errors is
                     Line : Ghdl_I32);
    pragma No_Return (Error);
 
+   --  Non-fatal error (for the final message in case of previous error).
+   --  Set the exit status.
+   procedure Error_NF (Str : String);
+
    --  Warning message.
    procedure Warning (Str : String);
 

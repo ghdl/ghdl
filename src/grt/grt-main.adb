@@ -180,11 +180,11 @@ package body Grt.Main is
       if Expect_Failure then
          if Status >= 0 then
             Expect_Failure := False;
-            Error ("error expected, but none occurred");
+            Error_NF ("error expected, but none occurred");
          end if;
       else
          if Status < 0 then
-            Error ("simulation failed");
+            Error_NF ("simulation failed");
          end if;
       end if;
    end Run_Finish;
