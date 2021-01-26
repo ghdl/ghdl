@@ -17,13 +17,13 @@ if [ "$OS" = "Windows_NT" ]; then
     analyze tb.vhdl
     $GHDL -e -Wl,-shared -Wl,-Wl,-u,ghdl_main -o tb.dll tb
     ./main
-    rm main.exe tb.dll *.o
+    rm main.exe tb.dll ./*.o
 elif [ "$(uname -o)" = "Darwin" ]; then
     gcc main-mac.c -o main
     analyze tb.vhdl
     $GHDL -e -Wl,-shared -Wl,-Wl,-u,_ghdl_main -o tb.dylib tb
     ./main
-    rm main tb.dylib *.o
+    rm main tb.dylib ./*.o
 else
     echo "This test is disabled on Linux (requires an -fpic libgrt)"
     exit 0
