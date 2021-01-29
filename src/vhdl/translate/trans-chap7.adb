@@ -2500,6 +2500,10 @@ package body Trans.Chap7 is
             return New_Dyadic_Op (ON_Mul_Ov,
                                   Left_Tree,
                                   New_Convert_Ov (Right_Tree, Res_Otype));
+         when Iir_Predefined_Universal_I_R_Mul =>
+            return New_Dyadic_Op (ON_Mul_Ov,
+                                  New_Convert_Ov (Left_Tree, Res_Otype),
+                                  Right_Tree);
 
          when Iir_Predefined_Floating_Exp =>
             Res := Translate_Lib_Operator
