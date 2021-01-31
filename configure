@@ -21,7 +21,7 @@
 # place.
 # Note the absence of spaces and the quotes.
 # Suffix "-dev" is used during development.
-ghdl_version="1.0.0rc1"
+ghdl_version="1.0.0rc3"
 
 backend=mcode
 CC=${CC:-gcc}
