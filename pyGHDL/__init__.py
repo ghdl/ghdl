@@ -31,4 +31,19 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-#
+
+"""
+.. _python_interface:
+
+GHDL offers two Python interfaces and a language server protocol service. All
+this is provided from a ``pyGHDL`` packages with four sub-packages:
+
+* ``pyGHDL.cli`` - Command line interface (CLI) applications.
+* ``pyGHDL.dom`` - A high-level API offering a document object model (DOM). The underlying abstract VHDL language model is
+  provided by `pyVHDLModel <https://github.com/VHDL/pyVHDLModel>`__. The DOM is using ``libghdl`` for file analysis and
+  parsing.
+* ``pyGHDL.libghdl`` - A low-level API directly interacting with the shared library ``libghdl....so``/``libghdl....dll``.
+  This is a procedural and C-like interface. It comes with some Python generators for easier iterating linked lists.
+* ``pyGHDL.lsp`` - A `language server protocol <https://en.wikipedia.org/wiki/Language_Server_Protocol>`__ (LSP)
+  written in Python. The implementation offers an HTTPS service that can be used e.g. by editors and IDEs supporting LSP.
+"""
