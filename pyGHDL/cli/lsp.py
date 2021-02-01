@@ -62,7 +62,7 @@ def __rotate_log_files(basename: str, num: int):
 
 def _generateCLIParser() -> ArgumentParser:
     """Creates an CLI argument parser based on ``argparse``."""
-    parser = ArgumentParser(description="VHDL Language Protocol Server")
+    parser = ArgumentParser(description="VHDL Language Protocol Server. Find info about clients in `ghdl/ghdl-language-server <https://github.com/ghdl/ghdl-language-server>`__.")
     parser.add_argument(
         "--version", "-V", action="version", version="%(prog)s " + version.__version__
     )
@@ -77,7 +77,7 @@ def _generateCLIParser() -> ArgumentParser:
     parser.add_argument(
         "--disp-config",
         action="store_true",
-        help="Disp installation configuration and exit",
+        help="Display installation configuration and exit",
     )
 
     return parser
