@@ -12,7 +12,7 @@
   <a title="Releases" href="https://github.com/ghdl/ghdl/releases"><img src="https://img.shields.io/github/commits-since/ghdl/ghdl/latest.svg?longCache=true&style=flat-square"></a>
   <a title="CII Best Practices" href="https://bestpractices.coreinfrastructure.org/en/projects/3157"><img src="https://img.shields.io/cii/percentage/3157??longCache=true&style=flat-square"></a><!--
   -->
-  <a title="'push' workflow Status" href="https://github.com/ghdl/ghdl/actions?query=workflow%3Apush"><img alt="'push' workflow Status" src="https://img.shields.io/github/workflow/status/ghdl/ghdl/push?longCache=true&style=flat-square&label=push&logo=github%20actions&logoColor=fff"></a><!--
+  <a title="'Test' workflow Status" href="https://github.com/ghdl/ghdl/actions?query=workflow%3ATest"><img alt="'Test' workflow Status" src="https://img.shields.io/github/workflow/status/ghdl/ghdl/Test?longCache=true&style=flat-square&label=Test&logo=github%20actions&logoColor=fff"></a><!--
   -->
   <a title="AppVeyor" href="https://ci.appveyor.com/project/tgingold/ghdl-psgys/history"><img src="https://img.shields.io/appveyor/ci/tgingold/ghdl-psgys/master.svg?logo=appveyor&logoColor=e8ecef&style=flat-square"></a>
 </p>
