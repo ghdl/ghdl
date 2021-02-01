@@ -5,6 +5,8 @@
 b~*.ad?
 
 # Generated files on windows.
+*.exe
+*.dll
 /build/
 /scripts/msys2-*/logpipe.*
 /scripts/msys2-*/*.log*
@@ -47,6 +49,7 @@ version.tmp
 *.v93
 *.v08
 *.cf
+e~*.lst
 
 # GHDLs testsuite
 testsuite/get_entities
