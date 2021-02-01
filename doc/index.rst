@@ -141,7 +141,7 @@ GHDL
    using/Simulation
    using/Synthesis
    using/CommandReference
-   using/Foreign
+   Co-Simulation <https://ghdl.github.io/ghdl-cosim>
    using/ImplementationOfVHDL
    using/ImplementationOfVITAL
 
