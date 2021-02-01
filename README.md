@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a title="Documentation" href="https://ghdl.github.io/ghdl"><img src="https://img.shields.io/website.svg?label=ghdl.github.io%2Fghdl&longCache=true&style=flat-square&url=http%3A%2F%2Fghdl.github.io%2Fghdl%2Findex.html&label=GitHub"></a><!--
+  <a title="Documentation" href="https://ghdl.github.io/ghdl"><img src="https://img.shields.io/website.svg?label=ghdl.github.io%2Fghdl&longCache=true&style=flat-square&url=http%3A%2F%2Fghdl.github.io%2Fghdl%2Findex.html&logo=GitHub"></a><!--
   -->
   <a title="Join the chat at https://gitter.im/ghdl1/Lobby" href="https://gitter.im/ghdl1/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"><img src="https://img.shields.io/badge/Chat-on%20gitter-4db797.svg?longCache=true&style=flat-square&logo=gitter&logoColor=e8ecef"></a><!--
   -->
@@ -54,7 +54,7 @@ GHDL is free software:
   - GHDL is available through the default package manager on most distributions: Debian/Ubuntu, Fedora, Arch Linux, MSYS2, etc.
   - After each succesful CI run, [nightly](https://github.com/ghdl/ghdl/releases/tag/nightly) tarballs/zipfiles for Ubuntu and Windows (MSYS2) are updated.
   - For using GHDL in CI, [setup-ghdl-ci](https://github.com/ghdl/setup-ghdl-ci) is provided. It is a GitHub Action (see [github.com/features/actions](https://github.com/features/actions)) to setup GHDL in just 3 lines.
-- You may use containers from from [ghdl/docker](https://github.com/ghdl/docker) or [hdl/containers](https://github.com/hdl/containers), in case your didn't find a suitable release.
+- You may use containers from [ghdl/docker](https://github.com/ghdl/docker) or [hdl/containers](https://github.com/hdl/containers), in case your didn't find a suitable release.
 - Build GHDL yourself! See [ghdl.github.io/ghdl: Building GHDL](https:///ghdl.github.io/ghdl/development/building/index.html).
 
 # Project structure
