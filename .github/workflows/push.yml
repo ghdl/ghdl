@@ -25,25 +25,25 @@ jobs:
 
     - name: Build ghdl/doc
       run: |
-        docker build -t ghdl/doc - <<-EOF
-        FROM ghdl/vunit:llvm
-        ENV PYTHONPATH=/src/pyGHDL
-        RUN apt update -qq && apt install -y gnat-gps graphviz \
+        docker build -t ghdl/doc . -f- <<-EOF
+        FROM ghdl/build:buster-mcode
+        ENV PYTHONPATH=/opt/ghdl/pyGHDL
+        RUN apt update -qq && apt install -y python3-pip gnat-gps graphviz \
          && ln -s /usr/bin/pip3 /usr/bin/pip
+        COPY . /opt/ghdl
+        RUN cd /opt/ghdl && ./configure && make && make install
         EOF
 
     - name: Run gnatdoc
       run: |
         cat > run.sh <<-EOF
         #!/usr/bin/env sh
-        ./configure
-        make
         gnatdoc -P./ghdl
-        mkdir public
-        mv gnatdoc public
+        mkdir /src/public
+        mv gnatdoc /src/public/gnatdoc
         EOF
         chmod +x run.sh
-        docker run --rm -v $(pwd):/src -w /src ghdl/doc ./run.sh
+        docker run --rm -v $(pwd):/src -w /opt/ghdl ghdl/doc /src/run.sh
 
     - name: '📓 BuildTheDocs (BTD)'
       if: github.event_name != 'pull_request'
