@@ -426,9 +426,6 @@ jobs:
 #---
 
 # TODO:
-# - Cache
-#  - 'gnat' directory in macOS job
-#
 # - Re-package a MINGW/MSYS2 package to provide a 'standalone' tarball/zipfile.
 #  - https://github.com/ghdl/ghdl/issues/318#issuecomment-286246287
 #
