@@ -15,7 +15,7 @@ if [ -d gnat ]; then
 fi
 
 # Download from community.adacore.com and extract
-wget -O dmgfile https://community.download.adacore.com/v1/5a7801fc686e86de838cfaf7071170152d81254d?filename=gnat-community-2019-20190517-x86_64-darwin-bin.dmg
+wget -q --show-progress --progress=bar:force:noscroll -O dmgfile https://community.download.adacore.com/v1/5a7801fc686e86de838cfaf7071170152d81254d?filename=gnat-community-2019-20190517-x86_64-darwin-bin.dmg
 7z x dmgfile
 installer="gnat-community-2019-20190517-x86_64-darwin-bin/gnat-community-2019-20190517-x86_64-darwin-bin.app/Contents/MacOS/gnat-community-2019-20190517-x86_64-darwin-bin"
 
