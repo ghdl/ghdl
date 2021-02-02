@@ -424,9 +424,10 @@ ci_run () {
   # Test
 
   if [ "x$IS_MACOS" = "xtrue" ]; then
+      pip3 install -r testsuite/requirements.txt
       CC=clang \
       prefix="$(pwd)/install-$(echo "$TASK" | cut -d+ -f2)/usr/local" \
-      ./testsuite/testsuite.sh sanity gna vests vpi synth
+      ./testsuite/testsuite.sh
   else
       # Build ghdl/ghdl:$GHDL_IMAGE_TAG image
       build_img_ghdl
