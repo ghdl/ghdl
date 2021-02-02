@@ -161,6 +161,14 @@ jobs:
     - name: '🧰 Checkout'
       uses: actions/checkout@v2
 
+    - name: '💾 Cache gnat'
+      id: cache-gnat
+      uses: actions/cache@v2
+      with:
+        path: gnat
+        key: ${{ runner.os }}-gnat
+
+    # Although we cache this, we let the script run to check if the cache is valid (without conditions)
     - name: '⚙️ Dependencies (brew)'
       run: ./scripts/macosx/install-ada.sh
 
