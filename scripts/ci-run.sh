@@ -294,11 +294,6 @@ build () {
           CXX="clang++-$llvmver"
           CONFIG_OPTS+=" --with-llvm-config=llvm-config-$llvmver CXX=$CXX"
       ;;
-      brew-llvm)
-          llvmprefix=`brew --prefix llvm`
-          CXX="clang++"
-          CONFIG_OPTS+=" --with-llvm-config=$llvmprefix/bin/llvm-config CXX=$CXX"
-      ;;
       *)
           printf "$ANSI_RED[GHDL - build] Unknown build $BACK $ANSI_NOCOLOR\n"
           exit 1;;
@@ -401,7 +396,8 @@ ci_run () {
 
   RUN="docker run --rm -t -e CI -e TRAVIS -v `pwd`:/work -w /work"
   if [ "x$IS_MACOS" = "xtrue" ]; then
-      export CPATH="$CPATH:`xcrun --show-sdk-path`/usr/include"
+      export CPATH="$CPATH:$(xcrun --show-sdk-path)/usr/include"
+      export PATH="$PATH:$(brew --prefix llvm)/bin"
       CC=clang bash -c "${scriptdir}/ci-run.sh $BUILD_CMD_OPTS build"
   else
       # Assume linux
@@ -429,8 +425,8 @@ ci_run () {
 
   if [ "x$IS_MACOS" = "xtrue" ]; then
       CC=clang \
-      prefix="`pwd`/install-$BACK/usr/local" \
-      ./testsuite/testsuite.sh sanity gna vests vpi
+      prefix="$(pwd)/install-$(echo "$TASK" | cut -d+ -f2)/usr/local" \
+      ./testsuite/testsuite.sh sanity gna vests vpi synth
   else
       # Build ghdl/ghdl:$GHDL_IMAGE_TAG image
       build_img_ghdl

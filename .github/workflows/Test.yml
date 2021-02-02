@@ -158,10 +158,9 @@ jobs:
       fail-fast: false
       max-parallel: 2
       matrix:
-        include: [
-          { backend: mcode },
-          { backend: brew-llvm }
-        ]
+        backend:
+        - mcode
+        - llvm
     runs-on: macOS-latest
     name: '🍎 macOS · ${{ matrix.backend }}'
     steps:
