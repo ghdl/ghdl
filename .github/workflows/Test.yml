@@ -139,7 +139,7 @@ jobs:
     - name: '🧰 Checkout'
       uses: actions/checkout@v2
 
-    - name: Build and test GHDL in containers
+    - name: '🛳️ Build and test GHDL in containers'
       run: |
         TASK=ubuntu${{ matrix.os }}+${{ matrix.backend }} ./scripts/ci-run.sh -c
         mv ghdl-*-ubuntu${{ matrix.os }}-*.tgz ghdl-gha-ubuntu-${{ matrix.os }}.04-$(echo ${{ matrix.backend }} | sed 's#-.*##g').tgz
@@ -179,7 +179,7 @@ jobs:
     - name: '⚙️ Dependencies (brew)'
       run: ./scripts/macosx/install-ada.sh
 
-    - name: Build and test GHDL
+    - name: '🚧 Build and test GHDL'
       run: |
         PATH=$PWD/gnat/bin:$PATH
         ./scripts/ci-run.sh -c
@@ -227,7 +227,8 @@ jobs:
           git
           mingw-w64-${{ matrix.arch }}-toolchain
 
-    - run: git config --global core.autocrlf input
+    - name: '⚙️ git config'
+      run: git config --global core.autocrlf input
       shell: bash
 
     - name: '🧰 Checkout'
@@ -236,7 +237,7 @@ jobs:
         # The command 'git describe' (used for version) needs the history.
         fetch-depth: 0
 
-    - name: Build package
+    - name: '🚧 Build package'
       run: |
         cd scripts/msys2-${{ matrix.pkg }}
         makepkg-mingw --noconfirm --noprogressbar -sCLf
@@ -293,7 +294,8 @@ jobs:
           mingw-w64-${{ matrix.sys.arch }}-gcc
           mingw-w64-${{ matrix.sys.arch }}-python-pip
 
-    - run: git config --global core.autocrlf input
+    - name: '⚙️ git config'
+      run: git config --global core.autocrlf input
       shell: bash
 
     - name: '🧰 Checkout'
@@ -302,12 +304,12 @@ jobs:
     - name: '📥 Download artifact: package'
       uses: actions/download-artifact@v2
 
-    - name: Install package and Python dependencies
+    - name: '🚧 Install package and Python dependencies'
       run: |
         pacman --noconfirm -U artifact/mingw-w64-${{ matrix.sys.arch }}-ghdl-${{ matrix.sys.pkg }}-*.zst
         pip3 install -r testsuite/requirements.txt
 
-    - name: Test package
+    - name: '🚧 Test package'
       run: GHDL=ghdl ./testsuite/testsuite.sh ${{ matrix.suite }}
 
 #
@@ -370,7 +372,8 @@ jobs:
         update: true
         install: mingw-w64-x86_64-python-pip
 
-    - run: git config --global core.autocrlf input
+    - name: '⚙️ git config'
+      run: git config --global core.autocrlf input
       shell: bash
 
     - name: '🧰 Checkout'
@@ -379,14 +382,13 @@ jobs:
     - name: '📥 Download artifact: package'
       uses: actions/download-artifact@v2
 
-    - name: Install package and Python dependencies
+    - name: '🚧 Install package and Python dependencies'
       run: |
         pacman --noconfirm -U artifact/mingw-w64-x86_64-ghdl-llvm-*.zst
         pip3 install -r testsuite/requirements.txt
 
-    - name: Run tests to generate coverage report
-      run: |
-        PYTHONPATH=$(pwd) python3 -m pytest -rA --cov=.. --cov-config=.coveragerc testsuite/pyunit
+    - name: '🚧 Run tests to generate coverage report'
+      run: PYTHONPATH=$(pwd) python3 -m pytest -rA --cov=.. --cov-config=.coveragerc testsuite/pyunit
 
     - name: Generate XML coverage report
       if: always()
