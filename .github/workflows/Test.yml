@@ -154,8 +154,16 @@ jobs:
 #
 
   osx:
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include: [
+          { backend: mcode },
+          { backend: brew-llvm }
+        ]
     runs-on: macOS-latest
-    name: '🍎 macOS · mcode'
+    name: '🍎 macOS · ${{ matrix.backend }}'
     steps:
 
     - name: '🧰 Checkout'
@@ -176,15 +184,15 @@ jobs:
       run: |
         PATH=$PWD/gnat/bin:$PATH
         ./scripts/ci-run.sh -c
-        mv ghdl-*.tgz ghdl-osx-mcode.tgz
+        mv ghdl-*.tgz ghdl-osx-${{ matrix.backend }}.tgz
       env:
-        TASK: macosx+mcode
+        TASK: macosx+${{ matrix.backend }}
         GITHUB_OS: ${{ runner.os }}
 
     - name: '📤 Upload artifact: package'
       uses: actions/upload-artifact@v2
       with:
-        path: ghdl-osx-mcode.tgz
+        path: ghdl-osx-${{ matrix.backend }}.tgz
 
 #
 # Windows Build
