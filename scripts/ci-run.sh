@@ -294,6 +294,11 @@ build () {
           CXX="clang++-$llvmver"
           CONFIG_OPTS+=" --with-llvm-config=llvm-config-$llvmver CXX=$CXX"
       ;;
+      brew-llvm)
+          llvmprefix=`brew --prefix llvm`
+          CXX="clang++"
+          CONFIG_OPTS+=" --with-llvm-config=$llvmprefix/bin/llvm-config CXX=$CXX"
+      ;;
       *)
           printf "$ANSI_RED[GHDL - build] Unknown build $BACK $ANSI_NOCOLOR\n"
           exit 1;;
@@ -424,7 +429,7 @@ ci_run () {
 
   if [ "x$IS_MACOS" = "xtrue" ]; then
       CC=clang \
-      prefix="`cd ./install-mcode; pwd`/usr/local" \
+      prefix="`pwd`/install-$BACK/usr/local" \
       ./testsuite/testsuite.sh sanity gna vests vpi
   else
       # Build ghdl/ghdl:$GHDL_IMAGE_TAG image
