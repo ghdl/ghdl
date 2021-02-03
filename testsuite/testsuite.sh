@@ -117,7 +117,7 @@ do_test() {
     pyunit)
       # The Python Unit testsuite: regression testsuite for Python bindings to libghdl
       gstart "[GHDL - test] pyunit"
-      PYTHONPATH=$(pwd)/.. python3 -m pytest -rA pyunit
+      PYTHONPATH=$(pwd)/.. ${PYTHON:-python3} -m pytest -rA pyunit
       gend
     ;;
 
