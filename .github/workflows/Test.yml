@@ -175,12 +175,15 @@ jobs:
 #
 
   osx:
-    name: '🚧🚦🍎 macOS 10.15 · ${{ matrix.backend }}'
-    runs-on: 'macOS-10.15'
+    name: '🚧🚦🍎 macOS ${{ matrix.os }} · ${{ matrix.backend }}'
+    runs-on: 'macOS-${{ matrix.os }}'
 
     strategy:
       fail-fast: false
       matrix:
+        os:
+        - '10.15'
+        - '11.0'
         backend:
           - mcode
           - llvm
@@ -205,7 +208,7 @@ jobs:
         run: |
           PATH=$PWD/gnat/bin:$PATH
           ./scripts/ci-run.sh -c
-          mv ghdl-*.tgz ghdl-macos-10.15-${{ matrix.backend }}.tgz
+          mv ghdl-*.tgz ghdl-macos-${{ matrix.os }}-${{ matrix.backend }}.tgz
         env:
           TASK: macosx+${{ matrix.backend }}
           GITHUB_OS: ${{ runner.os }}
@@ -213,8 +216,8 @@ jobs:
       - name: '📤 Upload artifact: package'
         uses: actions/upload-artifact@v2
         with:
-          name: macos10.15-${{ matrix.backend }}
-          path: ghdl-macos*${{ matrix.backend }}.tgz
+          name: macos${{ matrix.os }}-${{ matrix.backend }}
+          path: ghdl-macos-${{ matrix.os }}-${{ matrix.backend }}.tgz
           if-no-files-found: error
 
 #
