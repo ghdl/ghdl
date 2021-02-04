@@ -45,10 +45,31 @@ package body Vhdl.Ieee.Numeric_Std_Unsigned is
       end if;
    end Classify_Arg;
 
+   function Extract_Dyadic_Declaration (Decl : Iir; Arg1: Iir; Arg2: Iir)
+                                       return Iir_Predefined_Functions
+   is
+      Arg1_Kind, Arg2_Kind  : Arg_Kind;
+      Res : Iir_Predefined_Functions;
+   begin
+      Res := Iir_Predefined_None;
+      Classify_Arg (Arg1, Arg1_Kind);
+      Classify_Arg (Arg2, Arg2_Kind);
+      case Get_Identifier (Decl) is
+         when Name_To_Stdlogicvector =>
+            if Arg1_Kind = Arg_Int and Arg2_Kind = Arg_Int then
+               Res :=
+                 Iir_Predefined_Ieee_Numeric_Std_Unsigned_To_Slv_Nat_Nat_Slv;
+            end if;
+         when others =>
+            null;
+      end case;
+      return Res;
+   end Extract_Dyadic_Declaration;
+
    procedure Extract_Declaration (Decl : Iir)
    is
       Arg1, Arg2 : Iir;
-      Arg1_Kind  : Arg_Kind;
+      Arg1_Kind : Arg_Kind;
       Res : Iir_Predefined_Functions;
    begin
       Arg1 := Get_Interface_Declaration_Chain (Decl);
@@ -56,15 +77,13 @@ package body Vhdl.Ieee.Numeric_Std_Unsigned is
          raise Error;
       end if;
 
-      Res := Iir_Predefined_None;
-
-      Classify_Arg (Arg1, Arg1_Kind);
       Arg2 := Get_Chain (Arg1);
       if Is_Valid (Arg2) then
-         --  Dyadic function.
-         null;
+         Res := Extract_Dyadic_Declaration (Decl, Arg1, Arg2);
       else
          --  Monadic function.
+         Res := Iir_Predefined_None;
+         Classify_Arg (Arg1, Arg1_Kind);
          case Get_Identifier (Decl) is
             when Name_To_Integer =>
                pragma Assert (Arg1_Kind = Arg_Slv);
