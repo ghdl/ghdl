@@ -845,7 +845,8 @@ package body Synth.Static_Oper is
             end;
 
          when Iir_Predefined_Ieee_Numeric_Std_Touns_Nat_Nat_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Int =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Int
+            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_To_Slv_Nat_Nat_Slv =>
             return Eval_To_Vector
               (Uns64 (Read_Discrete (Param1)), Read_Discrete (Param2),
                Res_Typ);
