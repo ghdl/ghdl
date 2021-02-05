@@ -6060,6 +6060,8 @@ package body Vhdl.Parse is
                Set_Clock_Expression (Res, Expr);
             when Iir_Kind_Psl_Prev =>
                Set_Count_Expression (Res, Expr);
+            when others =>
+               Error_Msg_Parse ("too many parameter for PSL builtin");
          end case;
       end if;
 
@@ -6243,6 +6245,10 @@ package body Vhdl.Parse is
             return Parse_PSL_Builtin_Call (Iir_Kind_Psl_Rose);
          when Tok_Fell =>
             return Parse_PSL_Builtin_Call (Iir_Kind_Psl_Fell);
+         when Tok_Onehot =>
+            return Parse_PSL_Builtin_Call (Iir_Kind_Psl_Onehot);
+         when Tok_Onehot0 =>
+            return Parse_PSL_Builtin_Call (Iir_Kind_Psl_Onehot0);
 
          when Tok_Minus
            | Tok_Plus =>

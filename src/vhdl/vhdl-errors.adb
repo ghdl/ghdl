@@ -792,6 +792,10 @@ package body Vhdl.Errors is
             return "PSL rose function";
          when Iir_Kind_Psl_Fell =>
             return "PSL fell function";
+         when Iir_Kind_Psl_Onehot =>
+            return "PSL onehot function";
+         when Iir_Kind_Psl_Onehot0 =>
+            return "PSL onehot0 function";
 
          when Iir_Kind_If_Statement =>
             return Disp_Label (Node, "if statement");

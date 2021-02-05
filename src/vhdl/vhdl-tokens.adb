@@ -445,6 +445,10 @@ package body Vhdl.Tokens is
          --  PSL keywords
          when Tok_Psl_Clock =>
             return "clock";
+         when Tok_Onehot0 =>
+            return "onehot0";
+         when Tok_Onehot =>
+            return "onehot";
          when Tok_Fell =>
             return "fell";
          when Tok_Rose =>

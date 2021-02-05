@@ -348,6 +348,8 @@ package body Vhdl.Utils is
                | Iir_Kind_Psl_Stable
                | Iir_Kind_Psl_Rose
                | Iir_Kind_Psl_Fell
+               | Iir_Kind_Psl_Onehot
+               | Iir_Kind_Psl_Onehot0
                | Iir_Kind_If_Generate_Else_Clause
                | Iir_Kind_Elsif
                | Iir_Kind_Simultaneous_Elsif

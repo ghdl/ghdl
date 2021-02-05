@@ -831,6 +831,8 @@ package body Std_Names is
       Def ("next_event",         Name_Next_Event);
       Def ("next_event_a",       Name_Next_Event_A);
       Def ("next_event_e",       Name_Next_Event_E);
+      Def ("onehot",             Name_Onehot);
+      Def ("onehot0",            Name_Onehot0);
       Def ("property",           Name_Property);
       Def ("prev",               Name_Prev);
       Def ("rose",               Name_Rose);

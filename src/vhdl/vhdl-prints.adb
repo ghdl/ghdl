@@ -2335,6 +2335,22 @@ package body Vhdl.Prints is
       Disp_Token (Ctxt, Tok_Right_Paren);
    end Disp_Psl_Fell;
 
+   procedure Disp_Psl_Onehot (Ctxt : in out Ctxt_Class; Call : Iir) is
+   begin
+      Disp_Token (Ctxt, Tok_Onehot);
+      Disp_Token (Ctxt, Tok_Left_Paren);
+      Print (Ctxt, Get_Expression (Call));
+      Disp_Token (Ctxt, Tok_Right_Paren);
+   end Disp_Psl_Onehot;
+
+   procedure Disp_Psl_Onehot0 (Ctxt : in out Ctxt_Class; Call : Iir) is
+   begin
+      Disp_Token (Ctxt, Tok_Onehot0);
+      Disp_Token (Ctxt, Tok_Left_Paren);
+      Print (Ctxt, Get_Expression (Call));
+      Disp_Token (Ctxt, Tok_Right_Paren);
+   end Disp_Psl_Onehot0;
+
    procedure Disp_Psl_Declaration (Ctxt : in out Ctxt_Class; Stmt : Iir)
    is
       Decl : constant PSL_Node := Get_Psl_Declaration (Stmt);
@@ -4844,6 +4860,10 @@ package body Vhdl.Prints is
             Disp_Psl_Rose (Ctxt, Expr);
          when Iir_Kind_Psl_Fell =>
             Disp_Psl_Fell (Ctxt, Expr);
+         when Iir_Kind_Psl_Onehot =>
+            Disp_Psl_Onehot (Ctxt, Expr);
+         when Iir_Kind_Psl_Onehot0 =>
+            Disp_Psl_Onehot0 (Ctxt, Expr);
 
          when Iir_Kinds_Type_And_Subtype_Definition =>
             Disp_Type (Ctxt, Expr);

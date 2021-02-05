@@ -876,6 +876,15 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Expr_Staticness (State1)
 
+   -- Iir_Kind_Psl_Onehot (Short)
+   -- Iir_Kind_Psl_Onehot0 (Short)
+   --
+   --   Get/Set_Type (Field1)
+   --
+   --   Get/Set_Expression (Field5)
+   --
+   --   Get/Set_Expr_Staticness (State1)
+
    -- Iir_Kind_Signature (Medium)
    --
    --  LRM08 4.5.3 Signatures
@@ -5030,6 +5039,8 @@ package Vhdl.Nodes is
       Iir_Kind_Psl_Stable,
       Iir_Kind_Psl_Rose,
       Iir_Kind_Psl_Fell,
+      Iir_Kind_Psl_Onehot,
+      Iir_Kind_Psl_Onehot0,
       Iir_Kind_Psl_Expression,
 
    -- Concurrent statements.
@@ -6537,7 +6548,9 @@ package Vhdl.Nodes is
      Iir_Kind_Psl_Prev ..
    --Iir_Kind_Psl_Stable
    --Iir_Kind_Psl_Rose
-     Iir_Kind_Psl_Fell;
+   --Iir_Kind_Psl_Fell
+   --Iir_Kind_Psl_Onehot
+     Iir_Kind_Psl_Onehot0;
 
    subtype Iir_Kinds_Functions_And_Literals is Iir_Kind range
      Iir_Kind_Enumeration_Literal ..
