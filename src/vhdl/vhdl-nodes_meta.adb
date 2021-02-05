@@ -5515,7 +5515,7 @@ package body Vhdl.Nodes_Meta is
       Iir_Kind_Ramp_Attribute => 2176,
       Iir_Kind_Zoh_Attribute => 2184,
       Iir_Kind_Ltf_Attribute => 2192,
-      Iir_Kind_Ztf_Attribute => 2204,
+      Iir_Kind_Ztf_Attribute => 2202,
       Iir_Kind_Dot_Attribute => 2209,
       Iir_Kind_Integ_Attribute => 2216,
       Iir_Kind_Above_Attribute => 2224,
