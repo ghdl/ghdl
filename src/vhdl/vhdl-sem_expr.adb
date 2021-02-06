@@ -417,7 +417,9 @@ package body Vhdl.Sem_Expr is
            | Iir_Kind_Psl_Prev
            | Iir_Kind_Psl_Stable
            | Iir_Kind_Psl_Rose
-           | Iir_Kind_Psl_Fell =>
+           | Iir_Kind_Psl_Fell
+           | Iir_Kind_Psl_Onehot
+           | Iir_Kind_Psl_Onehot0 =>
             return Expr;
          when Iir_Kind_Simple_Name
            | Iir_Kind_Parenthesis_Name
@@ -4919,6 +4921,12 @@ package body Vhdl.Sem_Expr is
 
          when Iir_Kind_Psl_Fell =>
             return Sem_Psl.Sem_Fell_Builtin (Expr);
+
+         when Iir_Kind_Psl_Onehot =>
+            return Sem_Psl.Sem_Onehot_Builtin (Expr);
+
+         when Iir_Kind_Psl_Onehot0 =>
+            return Sem_Psl.Sem_Onehot0_Builtin (Expr);
 
          when Iir_Kind_Error =>
             --  Always ok.

@@ -2057,6 +2057,109 @@ package body Synth.Expr is
 
    end Synth_Psl_Fell;
 
+   function Synth_Psl_Onehot (Syn_Inst : Synth_Instance_Acc; Call : Node)
+                            return Valtyp
+   is
+      Ctxt             : constant Context_Acc := Get_Build (Syn_Inst);
+      Expr             : Valtyp;
+      DffCurr          : Net;
+      DffZero          : Net;
+      DffOne           : Net;
+      DffCurrIsZero    : Net;
+      DffCurrIsNotZero : Net;
+      DffSub           : Net;
+      DffSubAnd        : Net;
+      DffOneHot0       : Net;
+      Res              : Net;
+      Vlen             : Uns32;
+   begin
+      -- Get parameter & its length
+      Expr := Synth_Expression (Syn_Inst, Get_Expression (Call));
+      Vlen := Expr.Typ.W;
+
+      -- First get net of parameter
+      DffCurr := Get_Net (Ctxt, Expr);
+      Set_Location (DffCurr, Call);
+
+      -- Create a constant vector of 0 to comparation
+      DffZero := Build2_Const_Uns(Ctxt, 0,  Vlen);
+      Set_Location (DffZero, Call);
+
+      -- Get vector of value 1 for subtraction
+      DffOne := Build2_Const_Uns(Ctxt, 1,  Vlen);
+      Set_Location (DffOne, Call);
+
+      -- Compare parameter with 0 -> v = 0
+      DffCurrIsZero := Build_Compare (Ctxt, Id_Eq, DffCurr, DffZero);
+      Set_Location (DffCurrIsZero, Call);
+
+      -- Negate Compare result -> !(v = 0)
+      DffCurrIsNotZero := Build_Monadic(Ctxt, Id_Not, DffCurrIsZero);
+      Set_Location (DffCurrIsNotZero, Call);
+
+      -- Subtraction -> v - 1
+      DffSub := Build_Dyadic (Ctxt, Id_Sub, DffCurr, DffOne);
+      Set_Location (DffSub, Call);
+
+      -- Binary And -> v & (v - 1)
+      DffSubAnd := Build_Dyadic (Ctxt, Id_And, DffCurr, DffSub);
+      Set_Location (DffSubAnd, Call);
+
+      -- Compare with 0 -> (v & (v - 1)) == 0
+      DffOneHot0 := Build_Compare (Ctxt, Id_Eq, DffSubAnd, DffZero);
+      Set_Location (DffOneHot0, Call);
+
+      -- Final Binary And -> !(v = 0) & ((v & (v - 1)) == 0)
+      Res := Build_Dyadic (Ctxt, Id_And, DffOneHot0, DffCurrIsNotZero);
+      Set_Location (Res, Call);
+
+      return Create_Value_Net (Res, Boolean_Type);
+   end Synth_Psl_Onehot;
+
+   function Synth_Psl_Onehot0 (Syn_Inst : Synth_Instance_Acc; Call : Node)
+                            return Valtyp
+   is
+      Ctxt      : constant Context_Acc := Get_Build (Syn_Inst);
+      Expr      : Valtyp;
+      Vlen      : Uns32;
+      DffCurr   : Net;
+      DffZero   : Net;
+      DffOne    : Net;
+      DffSub    : Net;
+      DffSubAnd : Net;
+      Res       : Net;
+   begin
+      -- Get parameter & its length
+      Expr := Synth_Expression (Syn_Inst, Get_Expression (Call));
+      Vlen := Expr.Typ.W;
+
+      -- First get net of parameter
+      DffCurr := Get_Net (Ctxt, Expr);
+      Set_Location (DffCurr, Call);
+
+      -- Create a constant vector of 0 to comparation
+      DffZero := Build2_Const_Uns(Ctxt, 0,  Vlen);
+      Set_Location (DffZero, Call);
+
+      -- Get vector of value 1 for subtraction
+      DffOne := Build2_Const_Uns(Ctxt, 1,  Vlen);
+      Set_Location (DffOne, Call);
+
+      -- Subtraction -> v - 1
+      DffSub := Build_Dyadic (Ctxt, Id_Sub, DffCurr, DffOne);
+      Set_Location (DffSub, Call);
+
+      -- Binary And -> v & (v - 1)
+      DffSubAnd := Build_Dyadic (Ctxt, Id_And, DffCurr, DffSub);
+      Set_Location (DffSubAnd, Call);
+
+      -- Compare with 0 -> (v & (v - 1)) == 0
+      Res := Build_Compare (Ctxt, Id_Eq, DffSubAnd, DffZero);
+      Set_Location (Res, Call);
+
+      return Create_Value_Net (Res, Boolean_Type);
+   end Synth_Psl_Onehot0;
+
    subtype And_Or_Module_Id is Module_Id range Id_And .. Id_Or;
 
    function Synth_Short_Circuit (Syn_Inst : Synth_Instance_Acc;
@@ -2425,6 +2528,10 @@ package body Synth.Expr is
             return Synth_Psl_Rose(Syn_Inst, Expr);
          when Iir_Kind_Psl_Fell =>
             return Synth_Psl_Fell(Syn_Inst, Expr);
+         when Iir_Kind_Psl_Onehot =>
+            return Synth_Psl_Onehot(Syn_Inst, Expr);
+         when Iir_Kind_Psl_Onehot0 =>
+            return Synth_Psl_Onehot0(Syn_Inst, Expr);
          when Iir_Kind_Overflow_Literal =>
             Error_Msg_Synth (+Expr, "out of bound expression");
             return No_Valtyp;
