@@ -4897,9 +4897,10 @@ package body Vhdl.Sem_Expr is
             return Null_Iir;
 
          when Iir_Kind_Range_Expression =>
-            --  Can only happen in case of parse error, as a range is not an
-            --  expression.
-            pragma Assert (Flags.Flag_Force_Analysis);
+            --  That's an error.  Can happen for:
+            --    c (1 downto 0);
+            --  which is first parsed as a target of a concurrent assignment,
+            --  and then as a concurrent procedure call.
             declare
                Res : Iir;
             begin
