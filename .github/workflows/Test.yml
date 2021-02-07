@@ -26,10 +26,8 @@ jobs:
     - name: Build ghdl/doc
       run: |
         docker build -t ghdl/doc . -f- <<-EOF
-        FROM ghdl/build:buster-mcode
+        FROM ghdl/debug:base
         ENV PYTHONPATH=/opt/ghdl/pyGHDL
-        RUN apt update -qq && apt install -y python3-pip gnat-gps graphviz \
-         && ln -s /usr/bin/pip3 /usr/bin/pip
         COPY . /opt/ghdl
         RUN cd /opt/ghdl && ./configure && make && make install
         EOF
