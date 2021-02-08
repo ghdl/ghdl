@@ -2057,18 +2057,43 @@ package body Synth.Expr is
 
    end Synth_Psl_Fell;
 
+   function Synth_Onehot0 (Ctxt : Context_Acc; DffCurr : Net; Call : Node;
+                           Vlen : Uns32)
+                           return Net
+   is
+      DffZero    : Net;
+      DffOne     : Net;
+      DffOneHot0 : Net;
+      Res        : Net;
+   begin
+      -- Create a constant vector of 0 for comparing
+      DffZero := Build2_Const_Uns(Ctxt, 0,  Vlen);
+
+      -- Create vector of value 1 for subtraction
+      DffOne := Build2_Const_Uns(Ctxt, 1,  Vlen);
+
+      -- Subtraction -> v - 1
+      DffOneHot0 := Build_Dyadic (Ctxt, Id_Sub, DffCurr, DffOne);
+      Set_Location (DffOneHot0, Call);
+
+      -- Binary And -> v & (v - 1)
+      DffOneHot0 := Build_Dyadic (Ctxt, Id_And, DffCurr, DffOneHot0);
+      Set_Location (DffOneHot0, Call);
+
+      -- Compare with 0 -> (v & (v - 1)) == 0
+      Res := Build_Compare (Ctxt, Id_Eq, DffOneHot0, DffZero);
+      Set_Location (Res, Call);
+
+      return Res;
+   end Synth_Onehot0;
+
    function Synth_Psl_Onehot (Syn_Inst : Synth_Instance_Acc; Call : Node)
-                            return Valtyp
+                              return Valtyp
    is
       Ctxt             : constant Context_Acc := Get_Build (Syn_Inst);
       Expr             : Valtyp;
       DffCurr          : Net;
-      DffZero          : Net;
-      DffOne           : Net;
-      DffCurrIsZero    : Net;
       DffCurrIsNotZero : Net;
-      DffSub           : Net;
-      DffSubAnd        : Net;
       DffOneHot0       : Net;
       Res              : Net;
       Vlen             : Uns32;
@@ -2081,35 +2106,16 @@ package body Synth.Expr is
       DffCurr := Get_Net (Ctxt, Expr);
       Set_Location (DffCurr, Call);
 
-      -- Create a constant vector of 0 to comparation
-      DffZero := Build2_Const_Uns(Ctxt, 0,  Vlen);
-      Set_Location (DffZero, Call);
-
-      -- Get vector of value 1 for subtraction
-      DffOne := Build2_Const_Uns(Ctxt, 1,  Vlen);
-      Set_Location (DffOne, Call);
-
-      -- Compare parameter with 0 -> v = 0
-      DffCurrIsZero := Build_Compare (Ctxt, Id_Eq, DffCurr, DffZero);
-      Set_Location (DffCurrIsZero, Call);
-
-      -- Negate Compare result -> !(v = 0)
-      DffCurrIsNotZero := Build_Monadic(Ctxt, Id_Not, DffCurrIsZero);
+      -- Compare parameter with 0 -> v != 0
+      DffCurrIsNotZero := Build_Compare (Ctxt, Id_Ne, DffCurr,
+                                         Build2_Const_Uns(Ctxt, 0, Vlen));
       Set_Location (DffCurrIsNotZero, Call);
 
-      -- Subtraction -> v - 1
-      DffSub := Build_Dyadic (Ctxt, Id_Sub, DffCurr, DffOne);
-      Set_Location (DffSub, Call);
-
-      -- Binary And -> v & (v - 1)
-      DffSubAnd := Build_Dyadic (Ctxt, Id_And, DffCurr, DffSub);
-      Set_Location (DffSubAnd, Call);
-
-      -- Compare with 0 -> (v & (v - 1)) == 0
-      DffOneHot0 := Build_Compare (Ctxt, Id_Eq, DffSubAnd, DffZero);
+      -- Synth onehot0
+      DffOneHot0 := Synth_Onehot0 (Ctxt, DffCurr, Call, Vlen);
       Set_Location (DffOneHot0, Call);
 
-      -- Final Binary And -> !(v = 0) & ((v & (v - 1)) == 0)
+      -- Final Binary And -> (v != 0) & ((v & (v - 1)) == 0)
       Res := Build_Dyadic (Ctxt, Id_And, DffOneHot0, DffCurrIsNotZero);
       Set_Location (Res, Call);
 
@@ -2117,17 +2123,13 @@ package body Synth.Expr is
    end Synth_Psl_Onehot;
 
    function Synth_Psl_Onehot0 (Syn_Inst : Synth_Instance_Acc; Call : Node)
-                            return Valtyp
+                               return Valtyp
    is
-      Ctxt      : constant Context_Acc := Get_Build (Syn_Inst);
-      Expr      : Valtyp;
-      Vlen      : Uns32;
-      DffCurr   : Net;
-      DffZero   : Net;
-      DffOne    : Net;
-      DffSub    : Net;
-      DffSubAnd : Net;
-      Res       : Net;
+      Ctxt    : constant Context_Acc := Get_Build (Syn_Inst);
+      Expr    : Valtyp;
+      Vlen    : Uns32;
+      DffCurr : Net;
+      Res     : Net;
    begin
       -- Get parameter & its length
       Expr := Synth_Expression (Syn_Inst, Get_Expression (Call));
@@ -2137,25 +2139,8 @@ package body Synth.Expr is
       DffCurr := Get_Net (Ctxt, Expr);
       Set_Location (DffCurr, Call);
 
-      -- Create a constant vector of 0 to comparation
-      DffZero := Build2_Const_Uns(Ctxt, 0,  Vlen);
-      Set_Location (DffZero, Call);
-
-      -- Get vector of value 1 for subtraction
-      DffOne := Build2_Const_Uns(Ctxt, 1,  Vlen);
-      Set_Location (DffOne, Call);
-
-      -- Subtraction -> v - 1
-      DffSub := Build_Dyadic (Ctxt, Id_Sub, DffCurr, DffOne);
-      Set_Location (DffSub, Call);
-
-      -- Binary And -> v & (v - 1)
-      DffSubAnd := Build_Dyadic (Ctxt, Id_And, DffCurr, DffSub);
-      Set_Location (DffSubAnd, Call);
-
-      -- Compare with 0 -> (v & (v - 1)) == 0
-      Res := Build_Compare (Ctxt, Id_Eq, DffSubAnd, DffZero);
-      Set_Location (Res, Call);
+      -- Synth onehot0
+      Res := Synth_Onehot0 (Ctxt, DffCurr, Call, Vlen);
 
       return Create_Value_Net (Res, Boolean_Type);
    end Synth_Psl_Onehot0;
