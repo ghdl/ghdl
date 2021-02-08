@@ -142,7 +142,7 @@ or use a clocked expression (note the use of parentheses):
 Of course only the simple subset of PSL is allowed.
 
 Currently the built-in functions are not implemented, see `issue #662 <https://github.com/ghdl/ghdl/issues/662>`_.
-PSL functions `prev()`, `stable()`, `rose()` and `fell()` are supported with GHDL synthesis.
+PSL functions `prev()`, `stable()`, `rose()`, `fell()`, `onehot()` and `onehot0()` are supported with GHDL synthesis.
 
 PSL usage
 ---------
