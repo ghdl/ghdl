@@ -21,10 +21,14 @@ with Netlists.Builders; use Netlists.Builders;
 
 package Netlists.Folds is
    --  Build a const from VAL.  Result is either a Const_UB32 or a Const_Bit.
+   --  VAL is zero extended, so any width is allowed.
+   --  But VAL must fit in the width.
    function Build2_Const_Uns (Ctxt : Context_Acc; Val : Uns64; W : Width)
                              return Net;
 
    --  Build a const from VAL.  Result is either a Const_SB32 or a Const_Bit.
+   --  VAL is sign extended, so any width is allowed, but it must fit in the
+   --  width.
    function Build2_Const_Int (Ctxt : Context_Acc; Val : Int64; W : Width)
                              return Net;
 
