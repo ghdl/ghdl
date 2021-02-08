@@ -182,6 +182,11 @@ version.ads: version.tmp
 #	useless rebuild.
 	if [ ! -r $@ ] || ! cmp $< $@ > /dev/null; then $(CP) $< $@; fi
 
+RUST_OBJS = target/debug/libghdlinfra.a
+
+$(RUST_OBJS): force
+	cargo build
+
 #################### For mcode backend ##############################
 
 all.mcode: ghdl_mcode$(EXEEXT) libs.vhdl.mcode all.vpi
@@ -189,9 +194,9 @@ all.mcode: ghdl_mcode$(EXEEXT) libs.vhdl.mcode all.vpi
 GHDL_MCODE_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/ortho -aI$(srcdir)/src/ortho/mcode -aI$(srcdir)/src/synth
 
 ghdl_mcode$(EXEEXT): GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
-ghdl_mcode$(EXEEXT): $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) $(ORTHO_DEPS) \
-            memsegs_c.o chkstk.o version.ads force
-	$(GNATMAKE) -o $@ -gnat12 $(GHDL_MCODE_INCFLAGS) $(GNATFLAGS) -gnatw.A ghdl_jit.adb $(GNAT_BARGS) -largs memsegs_c.o chkstk.o $(GRT_ADD_OBJS) $(LDFLAGS) $(GNAT_LARGS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB) $(GRT_EXEC_OPTS))
+ghdl_mcode$(EXEEXT): $(RUST_OBJS) $(GRT_ADD_OBJS) \
+	   $(GRT_SRC_DEPS) $(ORTHO_DEPS) memsegs_c.o chkstk.o version.ads force
+	$(GNATMAKE) -o $@ -gnat12 $(GHDL_MCODE_INCFLAGS) $(GNATFLAGS) -gnatw.A ghdl_jit.adb $(GNAT_BARGS) -largs $(RUST_OBJS) memsegs_c.o chkstk.o $(GRT_ADD_OBJS) $(LDFLAGS) $(GNAT_LARGS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB) $(GRT_EXEC_OPTS))
 
 memsegs_c.o: $(srcdir)/src/ortho/mcode/memsegs_c.c
 	$(CC) -c $(OPT_FLAGS) -o $@ $<

@@ -81,9 +81,6 @@ package Name_Table is
    --  Return the latest name_id used.  This is only for debugging or stats.
    function Last_Name_Id return Name_Id;
 
-   --  Be sure all info fields have their default value.
-   procedure Assert_No_Infos;
-
    --  Initialize this package
    --  This must be called once and only once before any use.
    procedure Initialize;

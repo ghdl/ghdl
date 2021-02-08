@@ -87,3 +87,12 @@ doc/pyGHDL/**/*.*
 
 # IntelliJ project files
 /.idea/workspace.xml
+
+
+#Added by cargo
+#
+#already existing elements are commented out
+
+/target
+**/*.rs.bk
+Cargo.lock
