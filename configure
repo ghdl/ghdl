@@ -294,11 +294,23 @@ fi
 # use -fPIC or not.
 case "$build" in
   *mingw* | *cygwin* | *windows-gnu*)
-    SOEXT=".dll";   EXEEXT=".exe"; RUST_LIBS="";          PIC_FLAGS="";;
+    SOEXT=".dll"
+    EXEEXT=".exe"
+    RUST_LIBS=""
+    PIC_FLAGS=""
+    ;;
   *darwin*)
-    SOEXT=".dylib"; EXEEXT="";     RUST_LIBS="";          PIC_FLAGS="";;
+    SOEXT=".dylib"
+    EXEEXT=""
+    RUST_LIBS=""
+    PIC_FLAGS=""
+    ;;
   *)
-    SOEXT=".so";    EXEEXT="";     RUST_LIBS="-lpthread"; PIC_FLAGS="-fPIC";;
+    SOEXT=".so"
+    EXEEXT=""
+    RUST_LIBS="-lpthread -ldl"
+    PIC_FLAGS="-fPIC"
+    ;;
 esac
 
 # Define libghdl_version
