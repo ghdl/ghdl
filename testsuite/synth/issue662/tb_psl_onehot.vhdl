@@ -51,19 +51,16 @@ architecture psl of tb_psl_onehot is
   end hseq;
 
   signal a, b : std_logic_vector(3 downto 0) := x"0";
-  signal c    : natural range 0 to 15 := 0;
   signal clk  : std_logic := '1';
 
 begin
 
-  dut: entity work.psl_onehot port map (clk, a, b, c);
+  dut: entity work.psl_onehot port map (clk, a, b);
 
   clk <= not clk after 500 ps;
 
   --             012345678901234
   SEQ_A : hseq ("111222444888888", clk, a);
   SEQ_B : hseq ("111222444888999", clk, b);
-
-  c <= to_integer(unsigned(b));
 
 end architecture psl;

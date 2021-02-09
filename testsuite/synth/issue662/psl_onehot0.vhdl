@@ -3,8 +3,7 @@ use ieee.std_logic_1164.all;
 
 entity psl_onehot0 is
   port (clk  : in std_logic;
-        a, b : in std_logic_vector(3 downto 0);
-        c    : in natural range 0 to 15
+        a, b : in std_logic_vector(3 downto 0)
   );
 end entity psl_onehot0;
 
@@ -20,8 +19,5 @@ begin
 
   -- This assertion fails at cycle 15
   ONEHOT0_1_a : assert always onehot0(b);
-
-  -- This assertion fails at cycle 15
-  ONEHOT0_2_a : assert always onehot(c);
 
 end architecture psl;
