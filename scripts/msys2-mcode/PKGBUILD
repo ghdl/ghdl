@@ -11,7 +11,10 @@ depends=(
   "${MINGW_PACKAGE_PREFIX}-gcc-ada"
   'zlib-devel'
 )
-makedepends=("${MINGW_PACKAGE_PREFIX}-gcc")
+makedepends=(
+  "${MINGW_PACKAGE_PREFIX}-gcc"
+  "${MINGW_PACKAGE_PREFIX}-rust"
+)
 
 build() {
   mkdir "${srcdir}/builddir"
