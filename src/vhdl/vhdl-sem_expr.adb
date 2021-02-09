@@ -4913,20 +4913,14 @@ package body Vhdl.Sem_Expr is
          when Iir_Kind_Psl_Prev =>
             return Sem_Psl.Sem_Prev_Builtin (Expr, A_Type);
 
-         when Iir_Kind_Psl_Stable =>
-            return Sem_Psl.Sem_Stable_Builtin (Expr);
+         when Iir_Kind_Psl_Stable
+            | Iir_Kind_Psl_Rose
+            | Iir_Kind_Psl_Fell =>
+            return Sem_Psl.Sem_Clock_Builtin (Expr);
 
-         when Iir_Kind_Psl_Rose =>
-            return Sem_Psl.Sem_Rose_Builtin (Expr);
-
-         when Iir_Kind_Psl_Fell =>
-            return Sem_Psl.Sem_Fell_Builtin (Expr);
-
-         when Iir_Kind_Psl_Onehot =>
+         when Iir_Kind_Psl_Onehot
+            | Iir_Kind_Psl_Onehot0 =>
             return Sem_Psl.Sem_Onehot_Builtin (Expr);
-
-         when Iir_Kind_Psl_Onehot0 =>
-            return Sem_Psl.Sem_Onehot0_Builtin (Expr);
 
          when Iir_Kind_Error =>
             --  Always ok.

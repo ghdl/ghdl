@@ -22,11 +22,12 @@ package Vhdl.Sem_Psl is
    function Is_Psl_Bitvector_Type (Atype : Iir) return Boolean;
 
    function Sem_Prev_Builtin (Call : Iir; Atype : Iir) return Iir;
-   function Sem_Stable_Builtin (Call : Iir) return Iir;
-   function Sem_Rose_Builtin (Call : Iir) return Iir;
-   function Sem_Fell_Builtin (Call : Iir) return Iir;
+
+   --  For stable, rose and fell builtins.
+   function Sem_Clock_Builtin (Call : Iir) return Iir;
+
+   --  For onehot and onehot0.
    function Sem_Onehot_Builtin (Call : Iir) return Iir;
-   function Sem_Onehot0_Builtin (Call : Iir) return Iir;
 
    procedure Sem_Psl_Declaration (Stmt : Iir);
    procedure Sem_Psl_Endpoint_Declaration (Stmt : Iir);
