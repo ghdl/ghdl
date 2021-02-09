@@ -52,7 +52,7 @@ PIC_FLAGS=-fPIC
 show_help=no
 progname=$0
 
-subst_vars="CC CXX GNATMAKE MAKE CFLAGS LDFLAGS build srcdir abs_srcdir prefix backend libdirsuffix libdirreverse gcc_src_dir llvm_config llvm_be backtrace_lib build_mode EXEEXT SOEXT PIC_FLAGS default_pic enable_werror enable_checks enable_gplcompat enable_libghdl libghdl_version ghdl_version"
+subst_vars="CC CXX GNATMAKE MAKE CFLAGS LDFLAGS build srcdir abs_srcdir prefix backend libdirsuffix libdirreverse gcc_src_dir llvm_config llvm_be backtrace_lib build_mode EXEEXT SOEXT RUST_LIBS PIC_FLAGS default_pic enable_werror enable_checks enable_gplcompat enable_libghdl libghdl_version ghdl_version"
 
 # Find srcdir
 srcdir=`dirname $progname`
@@ -293,9 +293,12 @@ fi
 # Define default file extensions for Windows or Linux-like systems and
 # use -fPIC or not.
 case "$build" in
-  *mingw* | *cygwin* | *windows-gnu*) SOEXT=".dll";   EXEEXT=".exe"; PIC_FLAGS="";;
-  *darwin*)           SOEXT=".dylib"; EXEEXT="";     PIC_FLAGS="";;
-  *)                  SOEXT=".so";    EXEEXT="";     PIC_FLAGS="-fPIC";;
+  *mingw* | *cygwin* | *windows-gnu*)
+    SOEXT=".dll";   EXEEXT=".exe"; RUST_LIBS="";          PIC_FLAGS="";;
+  *darwin*)
+    SOEXT=".dylib"; EXEEXT="";     RUST_LIBS="";          PIC_FLAGS="";;
+  *)
+    SOEXT=".so";    EXEEXT="";     RUST_LIBS="-lpthread"; PIC_FLAGS="-fPIC";;
 esac
 
 # Define libghdl_version

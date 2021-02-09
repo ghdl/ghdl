@@ -26,6 +26,7 @@ libdirsuffix=@libdirsuffix@
 libdirreverse=@libdirreverse@
 EXEEXT=@EXEEXT@
 SOEXT=@SOEXT@
+RUST_LIBS=@RUST_LIBS@
 PIC_FLAGS=@PIC_FLAGS@
 gcc_src_dir=@gcc_src_dir@
 LLVM_CONFIG=@llvm_config@
@@ -196,7 +197,8 @@ GHDL_MCODE_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir
 ghdl_mcode$(EXEEXT): GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
 ghdl_mcode$(EXEEXT): $(RUST_OBJS) $(GRT_ADD_OBJS) \
 	   $(GRT_SRC_DEPS) $(ORTHO_DEPS) memsegs_c.o chkstk.o version.ads force
-	$(GNATMAKE) -o $@ -gnat12 $(GHDL_MCODE_INCFLAGS) $(GNATFLAGS) -gnatw.A ghdl_jit.adb $(GNAT_BARGS) -largs $(RUST_OBJS) memsegs_c.o chkstk.o $(GRT_ADD_OBJS) $(LDFLAGS) $(GNAT_LARGS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB) $(GRT_EXEC_OPTS))
+	$(GNATMAKE) -o $@ -gnat12 $(GHDL_MCODE_INCFLAGS) $(GNATFLAGS) -gnatw.A ghdl_jit.adb $(GNAT_BARGS) \
+	 -largs $(RUST_OBJS) memsegs_c.o chkstk.o $(GRT_ADD_OBJS) $(LDFLAGS) $(GNAT_LARGS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB) $(GRT_EXEC_OPTS)) $(RUST_LIBS)
 
 memsegs_c.o: $(srcdir)/src/ortho/mcode/memsegs_c.c
 	$(CC) -c $(OPT_FLAGS) -o $@ $<
@@ -302,15 +304,16 @@ test.gcc:
 
 GHDL_GCC_INCFLAGS=$(GHDL_COMMON_INCFLAGS)
 
-ghdl1-gcc$(EXEEXT): version.ads force
+ghdl1-gcc$(EXEEXT): version.ads $(RUST_OBJS) force
 	$(MAKE) -f $(srcdir)/src/ortho/gcc/Makefile \
 	 ortho_srcdir=$(srcdir)/src/ortho ortho_exec=$@ \
-	 GNATFLAGS="$(GHDL_GCC_INCFLAGS) $(GNATFLAGS)" all
+	 GNATFLAGS="$(GHDL_GCC_INCFLAGS) $(GNATFLAGS)" \
+	 LDFLAGS="$(RUST_OBJS) $(RUST_LIBS)" all
 
-ghdl_gcc$(EXEEXT): version.ads $(GRT_SYNTH_OBJS) force
+ghdl_gcc$(EXEEXT): version.ads $(RUST_OBJS) $(GRT_SYNTH_OBJS) force
 	$(GNATMAKE) $(GHDL_GCC_INCFLAGS) -aI$(srcdir)/src/ghdldrv \
 	 $(GNATFLAGS) ghdl_gcc $(GNAT_BARGS) \
-         -largs $(GRT_SYNTH_OBJS) $(GNAT_LARGS)
+         -largs $(GRT_SYNTH_OBJS) $(RUST_OBJS) $(RUST_LIBS) $(GNAT_LARGS)
 
 libs.vhdl.local_gcc: ghdl_gcc$(EXEEXT) ghdl1-gcc$(EXEEXT)
 	$(MAKE) -f $(srcdir)/libraries/Makefile.inc $(LIBVHDL_FLAGS_TO_PASS) GHDL=$(PWD)/ghdl_gcc$(EXEEXT) GHDL_FLAGS="--GHDL1=$(PWD)/ghdl1-gcc$(EXEEXT) $(LIB_CFLAGS)" vhdl.libs.all libs.vhdl.standard
@@ -355,16 +358,17 @@ libs.vhdl.llvm: ghdl_llvm$(EXEEXT) ghdl1-llvm$(EXEEXT)
 libs.vhdl.debug-llvm: ghdl_llvm$(EXEEXT) ghdl1-debug$(EXEEXT)
 	$(MAKE) -f $(srcdir)/libraries/Makefile.inc $(LIBVHDL_FLAGS_TO_PASS) GHDL=$(PWD)/ghdl_llvm$(EXEEXT) GHDL_FLAGS="--GHDL1=$(PWD)/ghdl1-debug$(EXEEXT) $(LIB_CFLAGS)" vhdl.libs.all libs.vhdl.standard
 
-ghdl_llvm$(EXEEXT): version.ads $(GRT_SYNTH_OBJS) force
+ghdl_llvm$(EXEEXT): version.ads $(RUST_OBJS) $(GRT_SYNTH_OBJS) force
 	$(GNATMAKE) $(GHDL_LLVM_INCFLAGS) \
          -aI$(srcdir)/src/ghdldrv $(GNATFLAGS) \
 	 ghdl_llvm $(GNAT_BARGS) \
-         -largs $(LDFLAGS) $(GRT_SYNTH_OBJS) $(GNAT_LARGS)
+         -largs $(LDFLAGS) $(RUST_OBJS) $(RUST_LIBS) $(GRT_SYNTH_OBJS) $(GNAT_LARGS)
 
-ghdl1-llvm$(EXEEXT): version.ads force
+ghdl1-llvm$(EXEEXT): $(RUST_OBJS) version.ads force
 	$(MAKE) -f $(srcdir)/src/ortho/$(llvm_be)/Makefile \
 	 ortho_srcdir=$(srcdir)/src/ortho ortho_exec=$@ \
-	 GNATFLAGS="$(GHDL_LLVM_INCFLAGS) $(GNATFLAGS)" LDFLAGS="$(LDFLAGS)" \
+	 GNATFLAGS="$(GHDL_LLVM_INCFLAGS) $(GNATFLAGS)" \
+	 LDFLAGS="$(LDFLAGS) $(RUST_OBJS)" \
 	 LLVM_CONFIG="$(LLVM_CONFIG)" CXX="$(CXX)" \
 	 CFLAGS="$(WARN_FLAGS) $(OPT_FLAGS)" \
 	 GNATMAKE="$(GNATMAKE)" all
