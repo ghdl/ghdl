@@ -1,0 +1,12 @@
+[package]
+name = "ghdlinfra"
+version = "0.1.0"
+authors = ["Tristan Gingold <tgingold@free.fr>"]
+edition = "2018"
+
+[dependencies]
+
+[lib]
+name = "ghdlinfra"
+path = "src/lib.rs"
+crate-type = ["staticlib"]
