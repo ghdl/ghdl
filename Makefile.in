@@ -185,7 +185,7 @@ version.ads: version.tmp
 RUST_OBJS = target/debug/libghdlinfra.a
 
 $(RUST_OBJS): force
-	cargo build
+	cargo build --target-dir target --manifest-path $(srcdir)/Cargo.toml
 
 #################### For mcode backend ##############################
 
