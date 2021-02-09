@@ -973,18 +973,20 @@ package Std_Names is
    --  Name_Not
    --  Name_Or
    --  Name_Property
-   Name_Prev :               constant Name_Id := Name_First_PSL + 26;
+   Name_Onehot :             constant Name_Id := Name_First_PSL + 26;
+   Name_Onehot0 :            constant Name_Id := Name_First_PSL + 27;
+   Name_Prev :               constant Name_Id := Name_First_PSL + 28;
    --  Name_Restrict
    --  Name_Restrict_Guarantee
-   Name_Rose :               constant Name_Id := Name_First_PSL + 27;
+   Name_Rose :               constant Name_Id := Name_First_PSL + 29;
    --   sequence
-   Name_Strong :             constant Name_Id := Name_First_PSL + 28;
+   Name_Strong :             constant Name_Id := Name_First_PSL + 30;
    --   union
    --   until
-   Name_W :                  constant Name_Id := Name_First_PSL + 29;
-   Name_Whilenot :           constant Name_Id := Name_First_PSL + 30;
-   Name_Within :             constant Name_Id := Name_First_PSL + 31;
-   Name_X :                  constant Name_Id := Name_First_PSL + 32;
+   Name_W :                  constant Name_Id := Name_First_PSL + 31;
+   Name_Whilenot :           constant Name_Id := Name_First_PSL + 32;
+   Name_Within :             constant Name_Id := Name_First_PSL + 33;
+   Name_X :                  constant Name_Id := Name_First_PSL + 34;
    Name_Last_PSL :           constant Name_Id := Name_X;
 
    subtype Name_Id_PSL_Keywords is

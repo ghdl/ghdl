@@ -113,6 +113,8 @@ package Vhdl.Elocations is
    -- Iir_Kind_Psl_Stable (None)
    -- Iir_Kind_Psl_Rose (None)
    -- Iir_Kind_Psl_Fell (None)
+   -- Iir_Kind_Psl_Onehot (None)
+   -- Iir_Kind_Psl_Onehot0 (None)
 
    -- Iir_Kind_Signature (None)
 

@@ -227,3 +227,5 @@ class Tok:
     Stable = 218
     Fell = 219
     Rose = 220
+    Onehot = 221
+    Onehot0 = 222

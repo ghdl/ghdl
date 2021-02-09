@@ -306,7 +306,9 @@ package Vhdl.Tokens is
       Tok_Prev,
       Tok_Stable,
       Tok_Fell,
-      Tok_Rose
+      Tok_Rose,
+      Tok_Onehot,
+      Tok_Onehot0
      );
 
    --  To ease interfacing

@@ -2057,6 +2057,94 @@ package body Synth.Expr is
 
    end Synth_Psl_Fell;
 
+   function Synth_Onehot0 (Ctxt : Context_Acc; DffCurr : Net; Call : Node;
+                           Vlen : Uns32)
+                           return Net
+   is
+      DffZero    : Net;
+      DffOne     : Net;
+      DffOneHot0 : Net;
+      Res        : Net;
+   begin
+      -- Create a constant vector of 0 for comparing
+      DffZero := Build2_Const_Uns(Ctxt, 0,  Vlen);
+
+      -- Create vector of value 1 for subtraction
+      DffOne := Build2_Const_Uns(Ctxt, 1,  Vlen);
+
+      -- Subtraction -> v - 1
+      DffOneHot0 := Build_Dyadic (Ctxt, Id_Sub, DffCurr, DffOne);
+      Set_Location (DffOneHot0, Call);
+
+      -- Binary And -> v & (v - 1)
+      DffOneHot0 := Build_Dyadic (Ctxt, Id_And, DffCurr, DffOneHot0);
+      Set_Location (DffOneHot0, Call);
+
+      -- Compare with 0 -> (v & (v - 1)) == 0
+      Res := Build_Compare (Ctxt, Id_Eq, DffOneHot0, DffZero);
+      Set_Location (Res, Call);
+
+      return Res;
+   end Synth_Onehot0;
+
+   function Synth_Psl_Onehot (Syn_Inst : Synth_Instance_Acc; Call : Node)
+                              return Valtyp
+   is
+      Ctxt             : constant Context_Acc := Get_Build (Syn_Inst);
+      Expr             : Valtyp;
+      DffCurr          : Net;
+      DffCurrIsNotZero : Net;
+      DffOneHot0       : Net;
+      Res              : Net;
+      Vlen             : Uns32;
+   begin
+      -- Get parameter & its length
+      Expr := Synth_Expression (Syn_Inst, Get_Expression (Call));
+      Vlen := Expr.Typ.W;
+
+      -- First get net of parameter
+      DffCurr := Get_Net (Ctxt, Expr);
+      Set_Location (DffCurr, Call);
+
+      -- Compare parameter with 0 -> v != 0
+      DffCurrIsNotZero := Build_Compare (Ctxt, Id_Ne, DffCurr,
+                                         Build2_Const_Uns(Ctxt, 0, Vlen));
+      Set_Location (DffCurrIsNotZero, Call);
+
+      -- Synth onehot0
+      DffOneHot0 := Synth_Onehot0 (Ctxt, DffCurr, Call, Vlen);
+      Set_Location (DffOneHot0, Call);
+
+      -- Final Binary And -> (v != 0) & ((v & (v - 1)) == 0)
+      Res := Build_Dyadic (Ctxt, Id_And, DffOneHot0, DffCurrIsNotZero);
+      Set_Location (Res, Call);
+
+      return Create_Value_Net (Res, Boolean_Type);
+   end Synth_Psl_Onehot;
+
+   function Synth_Psl_Onehot0 (Syn_Inst : Synth_Instance_Acc; Call : Node)
+                               return Valtyp
+   is
+      Ctxt    : constant Context_Acc := Get_Build (Syn_Inst);
+      Expr    : Valtyp;
+      Vlen    : Uns32;
+      DffCurr : Net;
+      Res     : Net;
+   begin
+      -- Get parameter & its length
+      Expr := Synth_Expression (Syn_Inst, Get_Expression (Call));
+      Vlen := Expr.Typ.W;
+
+      -- First get net of parameter
+      DffCurr := Get_Net (Ctxt, Expr);
+      Set_Location (DffCurr, Call);
+
+      -- Synth onehot0
+      Res := Synth_Onehot0 (Ctxt, DffCurr, Call, Vlen);
+
+      return Create_Value_Net (Res, Boolean_Type);
+   end Synth_Psl_Onehot0;
+
    subtype And_Or_Module_Id is Module_Id range Id_And .. Id_Or;
 
    function Synth_Short_Circuit (Syn_Inst : Synth_Instance_Acc;
@@ -2425,6 +2513,10 @@ package body Synth.Expr is
             return Synth_Psl_Rose(Syn_Inst, Expr);
          when Iir_Kind_Psl_Fell =>
             return Synth_Psl_Fell(Syn_Inst, Expr);
+         when Iir_Kind_Psl_Onehot =>
+            return Synth_Psl_Onehot(Syn_Inst, Expr);
+         when Iir_Kind_Psl_Onehot0 =>
+            return Synth_Psl_Onehot0(Syn_Inst, Expr);
          when Iir_Kind_Overflow_Literal =>
             Error_Msg_Synth (+Expr, "out of bound expression");
             return No_Valtyp;

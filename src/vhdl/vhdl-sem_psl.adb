@@ -226,6 +226,38 @@ package body Vhdl.Sem_Psl is
       return Call;
    end Sem_Fell_Builtin;
 
+   function Sem_Onehot_Builtin (Call : Iir) return Iir
+   is
+      use Vhdl.Sem_Expr;
+      use Vhdl.Std_Package;
+      Expr : Iir;
+   begin
+      Expr := Get_Expression (Call);
+      Expr := Sem_Expression (Expr, Null_Iir);
+      if Expr /= Null_Iir then
+         Set_Expression (Call, Expr);
+         Set_Type (Call, Vhdl.Std_Package.Boolean_Type_Definition);
+         Set_Expr_Staticness (Call, None);
+      end if;
+      return Call;
+   end Sem_Onehot_Builtin;
+
+   function Sem_Onehot0_Builtin (Call : Iir) return Iir
+   is
+      use Vhdl.Sem_Expr;
+      use Vhdl.Std_Package;
+      Expr : Iir;
+   begin
+      Expr := Get_Expression (Call);
+      Expr := Sem_Expression (Expr, Null_Iir);
+      if Expr /= Null_Iir then
+         Set_Expression (Call, Expr);
+         Set_Type (Call, Vhdl.Std_Package.Boolean_Type_Definition);
+         Set_Expr_Staticness (Call, None);
+      end if;
+      return Call;
+   end Sem_Onehot0_Builtin;
+
    --  Convert VHDL and/or/not nodes to PSL nodes.
    function Convert_Bool (Expr : Iir) return PSL_Node;
 

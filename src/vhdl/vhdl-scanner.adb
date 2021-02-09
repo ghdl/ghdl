@@ -1296,6 +1296,10 @@ package body Vhdl.Scanner is
                            Current_Token := Tok_Rose;
                         when Name_Fell =>
                            Current_Token := Tok_Fell;
+                        when Name_Onehot =>
+                           Current_Token := Tok_Onehot;
+                        when Name_Onehot0 =>
+                           Current_Token := Tok_Onehot0;
                         when Name_Sequence =>
                            Current_Token := Tok_Sequence;
                         when Name_Property =>
@@ -1378,6 +1382,10 @@ package body Vhdl.Scanner is
                Current_Token := Tok_Rose;
             when Name_Fell =>
                Current_Token := Tok_Fell;
+            when Name_Onehot =>
+               Current_Token := Tok_Onehot;
+            when Name_Onehot0 =>
+               Current_Token := Tok_Onehot0;
             when Name_Clock =>
                Current_Token := Tok_Psl_Clock;
             when Name_Const =>

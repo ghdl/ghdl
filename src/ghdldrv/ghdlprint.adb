@@ -447,7 +447,9 @@ package body Ghdlprint is
                | Tok_Prev
                | Tok_Stable
                | Tok_Rose
-               | Tok_Fell =>
+               | Tok_Fell
+               | Tok_Onehot
+               | Tok_Onehot0 =>
                Disp_Spaces;
                Disp_Text;
             when Tok_String
