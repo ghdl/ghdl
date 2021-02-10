@@ -79,31 +79,37 @@ vhdl-elocations_meta.adb: vhdl-elocations_meta.adb.in vhdl-elocations.ads $(DEPS
 ../../pyGHDL/libghdl/vhdl/nodes.py: $(DEPS) $(PNODESPY)
 	$(RM) $@
 	$(PNODESPY) $(NODES_FLAGS) libghdl-nodes > $@
+	python -m black $@
 	chmod -w $@
 
 ../../pyGHDL/libghdl/vhdl/nodes_meta.py: $(DEPS) $(PNODESPY)
 	$(RM) $@
 	$(PNODESPY) $(NODES_FLAGS) libghdl-meta > $@
+	python -m black $@
 	chmod -w $@
 
 ../../pyGHDL/libghdl/std_names.py: $(PNODESPY) ../std_names.ads
 	$(RM) $@
 	$(PNODESPY) $(NODES_FLAGS) libghdl-names > $@
+	python -m black $@
 	chmod -w $@
 
 ../../pyGHDL/libghdl/vhdl/tokens.py: $(PNODESPY) vhdl-tokens.ads
 	$(RM) $@
 	$(PNODESPY) $(NODES_FLAGS) libghdl-tokens > $@
+	python -m black $@
 	chmod -w $@
 
 ../../pyGHDL/libghdl/vhdl/elocations.py: $(PNODESPY) vhdl-elocations.ads
 	$(RM) $@
 	$(PNODESPY) $(ELOCATIONS_FLAGS) libghdl-elocs > $@
+	python -m black $@
 	chmod -w $@
 
 ../../pyGHDL/libghdl/errorout.py: $(PNODESPY) ../errorout.ads
 	$(RM) $@
 	$(PNODESPY) $(ELOCATIONS_FLAGS) libghdl-errorout > $@
+	python -m black $@
 	chmod -w $@
 
 clean:
