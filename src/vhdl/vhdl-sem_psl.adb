@@ -61,6 +61,8 @@ package body Vhdl.Sem_Psl is
       return Is_Psl_Boolean_Type (Get_Type (Expr));
    end Is_Psl_Boolean_Expr;
 
+   --  Return TRUE iff Atype is a PSL bit type.
+   --  See PSL1.1 5.1.1  Bit expressions
    function Is_Psl_Bit_Type (Atype : Iir) return Boolean
    is
       Btype : constant Iir := Get_Base_Type (Atype);
@@ -69,6 +71,14 @@ package body Vhdl.Sem_Psl is
         or else Btype = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type;
    end Is_Psl_Bit_Type;
 
+   --  Return TRUE iff Expr is a PSL bit type.
+   function Is_Psl_Bit_Expr (Expr : Iir) return Boolean is
+   begin
+      return Is_Psl_Bit_Type (Get_Type (Expr));
+   end Is_Psl_Bit_Expr;
+
+   --  Return TRUE iff Atype is a PSL bitvector type.
+   --  See PSL1.1 5.1.3  Bit expressions
    function Is_Psl_Bitvector_Type (Atype : Iir) return Boolean is
    begin
       if not Is_One_Dimensional_Array_Type (Atype) then
@@ -77,6 +87,14 @@ package body Vhdl.Sem_Psl is
       return Is_Psl_Bit_Type (Get_Element_Subtype (Atype));
    end Is_Psl_Bitvector_Type;
 
+   --  Return TRUE iff Expr is a PSL bitvector type.
+   function Is_Psl_Bitvector_Expr (Expr : Iir) return Boolean is
+   begin
+      return Is_Psl_Bitvector_Type (Get_Type (Expr));
+   end Is_Psl_Bitvector_Expr;
+
+   -- Semantic analysis of prev() built-in function
+   -- See PSL1.1 5.2.3.1 prev()
    function Sem_Prev_Builtin (Call : Iir; Atype : Iir) return Iir
    is
       use Vhdl.Sem_Expr;
@@ -121,6 +139,8 @@ package body Vhdl.Sem_Psl is
       return Call;
    end Sem_Prev_Builtin;
 
+   -- Semantic analysis of stable() built-in function
+   -- See PSL1.1 5.2.3.3 stable()
    function Sem_Stable_Builtin (Call : Iir) return Iir
    is
       use Vhdl.Sem_Expr;
@@ -156,6 +176,8 @@ package body Vhdl.Sem_Psl is
       return Call;
    end Sem_Stable_Builtin;
 
+   -- Semantic analysis of rose() built-in function
+   -- See PSL1.1 5.2.3.4 rose()
    function Sem_Rose_Builtin (Call : Iir) return Iir
    is
       use Vhdl.Sem_Expr;
@@ -171,6 +193,10 @@ package body Vhdl.Sem_Psl is
          Set_Expression (Call, Expr);
          Set_Type (Call, Vhdl.Std_Package.Boolean_Type_Definition);
          Set_Expr_Staticness (Call, None);
+      end if;
+
+      if not Is_Psl_Bit_Expr (Expr) then
+         Error_Msg_Sem (+Call, "type of parameter must be PSL bit");
       end if;
 
       if First then
@@ -191,6 +217,8 @@ package body Vhdl.Sem_Psl is
       return Call;
    end Sem_Rose_Builtin;
 
+   -- Semantic analysis of fell() built-in function
+   -- See PSL1.1 5.2.3.5 fell()
    function Sem_Fell_Builtin (Call : Iir) return Iir
    is
       use Vhdl.Sem_Expr;
@@ -206,6 +234,10 @@ package body Vhdl.Sem_Psl is
          Set_Expression (Call, Expr);
          Set_Type (Call, Vhdl.Std_Package.Boolean_Type_Definition);
          Set_Expr_Staticness (Call, None);
+      end if;
+
+      if not Is_Psl_Bit_Expr (Expr) then
+         Error_Msg_Sem (+Call, "type of parameter must be PSL bit");
       end if;
 
       if First then
@@ -226,6 +258,8 @@ package body Vhdl.Sem_Psl is
       return Call;
    end Sem_Fell_Builtin;
 
+   -- Semantic analysis of onehot() built-in function
+   -- See PSL1.1 5.2.3.8 onehot(), onehot0()
    function Sem_Onehot_Builtin (Call : Iir) return Iir
    is
       use Vhdl.Sem_Expr;
@@ -238,25 +272,17 @@ package body Vhdl.Sem_Psl is
          Set_Expression (Call, Expr);
          Set_Type (Call, Vhdl.Std_Package.Boolean_Type_Definition);
          Set_Expr_Staticness (Call, None);
+         if not Is_Psl_Bitvector_Expr (Expr) then
+            Error_Msg_Sem (+Call, "type of parameter must be PSL bitvector");
+         end if;
       end if;
       return Call;
    end Sem_Onehot_Builtin;
 
-   function Sem_Onehot0_Builtin (Call : Iir) return Iir
-   is
-      use Vhdl.Sem_Expr;
-      use Vhdl.Std_Package;
-      Expr : Iir;
-   begin
-      Expr := Get_Expression (Call);
-      Expr := Sem_Expression (Expr, Null_Iir);
-      if Expr /= Null_Iir then
-         Set_Expression (Call, Expr);
-         Set_Type (Call, Vhdl.Std_Package.Boolean_Type_Definition);
-         Set_Expr_Staticness (Call, None);
-      end if;
-      return Call;
-   end Sem_Onehot0_Builtin;
+   -- Semantic analysis of onehot0() built-in function
+   -- See PSL1.1 5.2.3.8 onehot(), onehot0()
+   function Sem_Onehot0_Builtin (Call : Iir) return Iir renames
+     Sem_Onehot_Builtin;
 
    --  Convert VHDL and/or/not nodes to PSL nodes.
    function Convert_Bool (Expr : Iir) return PSL_Node;

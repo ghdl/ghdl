@@ -23,6 +23,6 @@ begin
   ONEHOT_1_a : assert always onehot(b);
 
   -- This assertion fails at cycle 12
-  ONEHOT_2_a : assert always onehot(c);
+  ONEHOT_2_a : assert always onehot(to_unsigned(c, 4));
 
 end architecture psl;

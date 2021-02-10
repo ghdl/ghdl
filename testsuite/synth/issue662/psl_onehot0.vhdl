@@ -1,5 +1,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
 entity psl_onehot0 is
   port (clk  : in std_logic;
@@ -22,6 +23,6 @@ begin
   ONEHOT0_1_a : assert always onehot0(b);
 
   -- This assertion fails at cycle 15
-  ONEHOT0_2_a : assert always onehot(c);
+  ONEHOT0_2_a : assert always onehot(to_unsigned(c, 4));
 
 end architecture psl;
