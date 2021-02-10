@@ -512,6 +512,7 @@ package body Vhdl.Sem_Stmts is
       Expr: Iir;
       We: Iir_Waveform_Element;
       Time, Last_Time : Int64;
+      Last_Unit, Unit : Iir;
    begin
       if Get_Kind (Waveform_Chain) = Iir_Kind_Unaffected_Waveform then
          --  Unaffected.
@@ -520,6 +521,8 @@ package body Vhdl.Sem_Stmts is
 
       --  Start with -1 to allow after 0 ns.
       Last_Time := -1;
+      Last_Unit := Null_Iir;
+
       We := Waveform_Chain;
       while We /= Null_Iir loop
          Expr := Get_We_Value (We);
@@ -574,15 +577,22 @@ package body Vhdl.Sem_Stmts is
                         Expr := Eval_Expr (Expr);
                         Set_Time (We, Expr);
                         Time := Get_Value (Expr);
+                        Unit := Null_Iir;
                      else
                         --  The expression is a physical literal (common case).
-                        --  Extract its value.
-                        Time := Get_Physical_Value (Expr);
+                        --  Do not try to extract the physical value to avoid
+                        --  overflow, but check the integer value and compare
+                        --  if the unit is the same (common case).
+                        Time := Get_Value (Expr);
+                        Unit := Get_Named_Entity (Get_Unit_Name (Expr));
+                        if Last_Unit = Null_Iir then
+                           Last_Unit := Unit;
+                        end if;
                      end if;
                      if Time < 0 then
                         Error_Msg_Sem
                           (+Expr, "waveform time expression must be >= 0");
-                     elsif Time <= Last_Time then
+                     elsif Unit = Last_Unit and then Time <= Last_Time then
                         Error_Msg_Sem
                           (+Expr,
                            "time must be greater than previous transaction");
