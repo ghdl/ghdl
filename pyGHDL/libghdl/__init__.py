@@ -116,7 +116,7 @@ def _get_libghdl_path():
         pass
 
     # Try when running from the build directory
-    r = (r.parent / "../../lib").resolve()
+    r = (r.parent / "../..").resolve()
     try:
         return _check_libghdl_libdir(r, basename)
     except (TypeError, FileNotFoundError):
