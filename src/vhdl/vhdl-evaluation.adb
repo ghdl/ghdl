@@ -55,13 +55,11 @@ package body Vhdl.Evaluation is
             Unit := Get_Physical_Literal
               (Get_Named_Entity (Get_Unit_Name (Expr)));
             pragma Assert (Get_Kind (Unit) = Iir_Kind_Integer_Literal);
-            case Kind is
+            case Iir_Kinds_Physical_Literal (Kind) is
                when Iir_Kind_Physical_Int_Literal =>
                   return Get_Value (Expr) * Get_Value (Unit);
                when Iir_Kind_Physical_Fp_Literal =>
                   return Int64 (Get_Fp_Value (Expr) * Fp64 (Get_Value (Unit)));
-               when others =>
-                  raise Program_Error;
             end case;
          when Iir_Kind_Integer_Literal =>
             return Get_Value (Expr);
