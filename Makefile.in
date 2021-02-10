@@ -368,7 +368,7 @@ ghdl1-llvm$(EXEEXT): $(RUST_OBJS) version.ads force
 	$(MAKE) -f $(srcdir)/src/ortho/$(llvm_be)/Makefile \
 	 ortho_srcdir=$(srcdir)/src/ortho ortho_exec=$@ \
 	 GNATFLAGS="$(GHDL_LLVM_INCFLAGS) $(GNATFLAGS)" \
-	 LDFLAGS="$(LDFLAGS) $(RUST_OBJS)" \
+	 LDFLAGS="$(LDFLAGS) $(RUST_OBJS) $(RUST_LIBS)" \
 	 LLVM_CONFIG="$(LLVM_CONFIG)" CXX="$(CXX)" \
 	 CFLAGS="$(WARN_FLAGS) $(OPT_FLAGS)" \
 	 GNATMAKE="$(GNATMAKE)" all

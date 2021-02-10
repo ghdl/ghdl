@@ -296,7 +296,7 @@ case "$build" in
   *mingw* | *cygwin* | *windows-gnu*)
     SOEXT=".dll"
     EXEEXT=".exe"
-    RUST_LIBS=""
+    RUST_LIBS="-luserenv -lws2_32"
     PIC_FLAGS=""
     ;;
   *darwin*)
