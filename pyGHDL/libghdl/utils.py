@@ -52,25 +52,25 @@ def name_image(Id: NameId) -> str:
     return name_table.Get_Name_Ptr(Id)
 
 
-#@export # FIXME: see above
+# @export # FIXME: see above
 @EnumLookupTable(nodes_meta.fields)
 def fields_image(idx: int) -> str:
     """String representation of Nodes_Meta.fields :obj:`idx`."""
 
 
-#@export # FIXME: see above
+# @export # FIXME: see above
 @EnumLookupTable(nodes.Iir_Kind)
 def kind_image(k: int) -> str:
     """String representation of Nodes.Iir_Kind :obj:`k`."""
 
 
-#@export # FIXME: see above
+# @export # FIXME: see above
 @EnumLookupTable(nodes_meta.types)
 def types_image(t: int) -> str:
     """String representation of Nodes_Meta.Types :obj:`t`."""
 
 
-#@export # FIXME: see above
+# @export # FIXME: see above
 @EnumLookupTable(nodes_meta.Attr)
 def attr_image(a: int) -> str:
     """String representation of Nodes_Meta.Attr :obj:`a`."""
@@ -309,7 +309,7 @@ def concurrent_stmts_iter(n) -> Generator[Any, None, None]:
     elif k in (
         nodes.Iir_Kind.Entity_Declaration,
         nodes.Iir_Kind.Architecture_Body,
-        nodes.Iir_Kind.Block_Statement
+        nodes.Iir_Kind.Block_Statement,
     ):
         for n1 in chain_iter(nodes.Get_Concurrent_Statement_Chain(n)):
             yield n1

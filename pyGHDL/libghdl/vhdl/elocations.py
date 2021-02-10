@@ -51,4 +51,3 @@ Set_Colon_Location = libghdl.vhdl__elocations__set_colon_location
 
 Get_Assign_Location = libghdl.vhdl__elocations__get_assign_location
 Set_Assign_Location = libghdl.vhdl__elocations__set_assign_location
-

@@ -38,28 +38,29 @@ from pydecor import export
 
 @export
 def EnumLookupTable(cls) -> Callable:
-	"""
-	Decorator to precalculate a enum lookup table (LUT) for enum position to
-	enum literal name.
+    """
+    Decorator to precalculate a enum lookup table (LUT) for enum position to
+    enum literal name.
 
-	.. todo:: Make compatible to chained decorators
+    .. todo:: Make compatible to chained decorators
 
-	:param cls: Enumerator class for which a LUT shall be pre-calculated.
-	"""
-	def decorator(func) -> Callable:
-		def gen() -> List[str]:
-			d = [e for e in dir(cls) if e[0] != "_"]
-			res = [None] * len(d)
-			for e in d:
-				res[getattr(cls, e)] = e
-			return res
+    :param cls: Enumerator class for which a LUT shall be pre-calculated.
+    """
 
-		__lut = gen()
+    def decorator(func) -> Callable:
+        def gen() -> List[str]:
+            d = [e for e in dir(cls) if e[0] != "_"]
+            res = [None] * len(d)
+            for e in d:
+                res[getattr(cls, e)] = e
+            return res
 
-		def wrapper(id: int) -> str:
-			# function that replaces the placeholder function
-			return __lut[id]
+        __lut = gen()
 
-		return wrapper
+        def wrapper(id: int) -> str:
+            # function that replaces the placeholder function
+            return __lut[id]
 
-	return decorator
+        return wrapper
+
+    return decorator

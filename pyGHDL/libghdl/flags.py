@@ -37,10 +37,10 @@ from ctypes import c_bool, sizeof
 from pyGHDL.libghdl import libghdl
 
 __all__ = [
-	'Flag_Elocations',
-	'Verbose',
-	'Flag_Elaborate_With_Outdated',
-	'Flag_Force_Analysis'
+    "Flag_Elocations",
+    "Verbose",
+    "Flag_Elaborate_With_Outdated",
+    "Flag_Force_Analysis",
 ]
 
 assert sizeof(c_bool) == 1

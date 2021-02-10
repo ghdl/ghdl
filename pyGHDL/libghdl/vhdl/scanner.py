@@ -40,10 +40,7 @@ from pyGHDL.libghdl import libghdl
 from pyGHDL.libghdl._types import SourceFileEntry, NameId
 
 
-__all__ = [
-	'Current_Token',
-	'Flag_Comment'
-]
+__all__ = ["Current_Token", "Flag_Comment"]
 
 # This is a c_int, so you want to use its .value
 Current_Token = c_int.in_dll(libghdl, "vhdl__scanner__current_token")
@@ -52,76 +49,76 @@ Flag_Comment = c_bool.in_dll(libghdl, "vhdl__scanner__flag_comment")
 
 @export
 def Set_File(SourceFile: SourceFileEntry) -> None:
-	"""
-	Initialize the scanner with file :obj:`SourceFile`.
+    """
+    Initialize the scanner with file :obj:`SourceFile`.
 
-	:param SourceFile: File to scan.
-	"""
-	libghdl.vhdl__scanner__set_file(SourceFile)
+    :param SourceFile: File to scan.
+    """
+    libghdl.vhdl__scanner__set_file(SourceFile)
 
 
 @export
 def Close_File() -> None:
-	"""Finalize the scanner."""
-	libghdl.vhdl__scanner__close_file()
+    """Finalize the scanner."""
+    libghdl.vhdl__scanner__close_file()
 
 
 @export
 def Scan() -> None:
-	"""Get a new token."""
-	libghdl.vhdl__scanner__scan()
+    """Get a new token."""
+    libghdl.vhdl__scanner__scan()
 
 
 @export
 def Get_Current_Line() -> int:
-	"""
-	Get the current location, or the location of the current token.
+    """
+    Get the current location, or the location of the current token.
 
-	Since a token cannot spread over lines, file and line of the current token are
-	the same as those of the current position. The offset is the offset in the current line.
+    Since a token cannot spread over lines, file and line of the current token are
+    the same as those of the current position. The offset is the offset in the current line.
 
-	:return: Current token's line.
-	"""
-	return libghdl.vhdl__scanner__get_current_line()
+    :return: Current token's line.
+    """
+    return libghdl.vhdl__scanner__get_current_line()
 
 
 @export
 def Get_Token_Offset() -> int:
-	"""
-	Get the current token's offset in the current line.
+    """
+    Get the current token's offset in the current line.
 
-	:return: Current token's offset.
-	"""
-	return libghdl.vhdl__scanner__get_token_offset()
+    :return: Current token's offset.
+    """
+    return libghdl.vhdl__scanner__get_token_offset()
 
 
 @export
 def Get_Token_Position():
-	"""
-	Get the current token's position.
+    """
+    Get the current token's position.
 
-	:return: Current token's position. Type: ``Source_Ptr``
-	"""
-	return libghdl.vhdl__scanner__get_token_position()
+    :return: Current token's position. Type: ``Source_Ptr``
+    """
+    return libghdl.vhdl__scanner__get_token_position()
 
 
 @export
 def Get_Position():
-	"""
-	Get the current position.
+    """
+    Get the current position.
 
-	:return: Current position. Type: ``Source_Ptr``
-	"""
-	return libghdl.vhdl__scanner__get_position()
+    :return: Current position. Type: ``Source_Ptr``
+    """
+    return libghdl.vhdl__scanner__get_position()
 
 
 @export
 def Current_Identifier() -> NameId:
-	"""
-	When :attr:`~pyGHDL.libghdl.vhdl.scanner.Current_Token` is an
-	``tok_identifier``, ``tok_char`` or ``tok_string``, its name_id can be
-	retrieved via this function.
+    """
+    When :attr:`~pyGHDL.libghdl.vhdl.scanner.Current_Token` is an
+    ``tok_identifier``, ``tok_char`` or ``tok_string``, its name_id can be
+    retrieved via this function.
 
-	:return: NameId of the current token.
-	"""
-	return libghdl.vhdl__scanner__current_identifier()
+    :return: NameId of the current token.
+    """
+    return libghdl.vhdl__scanner__current_identifier()

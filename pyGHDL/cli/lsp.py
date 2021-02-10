@@ -42,9 +42,9 @@ import os
 from pydecor import export
 
 import pyGHDL.libghdl as libghdl
-from pyGHDL.libghdl     import version, errorout_console
-from pyGHDL.lsp         import LSPConnTrace
-from pyGHDL.lsp.lsp     import LSPConn, LanguageProtocolServer
+from pyGHDL.libghdl import version, errorout_console
+from pyGHDL.lsp import LSPConnTrace
+from pyGHDL.lsp.lsp import LSPConn, LanguageProtocolServer
 from pyGHDL.lsp.vhdl_ls import VhdlLanguageServer
 
 __loggerName = "ghdl-ls"
@@ -62,7 +62,9 @@ def __rotate_log_files(basename: str, num: int):
 
 def _generateCLIParser() -> ArgumentParser:
     """Creates an CLI argument parser based on ``argparse``."""
-    parser = ArgumentParser(description="VHDL Language Protocol Server. Find info about clients in `ghdl/ghdl-language-server <https://github.com/ghdl/ghdl-language-server>`__.")
+    parser = ArgumentParser(
+        description="VHDL Language Protocol Server. Find info about clients in `ghdl/ghdl-language-server <https://github.com/ghdl/ghdl-language-server>`__."
+    )
     parser.add_argument(
         "--version", "-V", action="version", version="%(prog)s " + version.__version__
     )
@@ -72,7 +74,10 @@ def _generateCLIParser() -> ArgumentParser:
     parser.add_argument(
         "--log-file", help="Redirect logs to the given file instead of stderr"
     )
-    parser.add_argument("--trace-file", help="Save RPC data to FILE.in and FILE.out (overrides :envvar:`GHDL_LS_TRACE`)")
+    parser.add_argument(
+        "--trace-file",
+        help="Save RPC data to FILE.in and FILE.out (overrides :envvar:`GHDL_LS_TRACE`)",
+    )
     parser.add_argument("--input", "-i", help="Read request from file")
     parser.add_argument(
         "--disp-config",
@@ -151,5 +156,5 @@ def main():
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
