@@ -29,16 +29,16 @@ use std::{mem, collections::HashMap};
 /// Strings are equal iff the identifiers are equal.
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 #[repr(C)]
-pub struct StrId(u32);
+pub struct NameId(u32);
 
 /// No identifier.
 /// This is in fact the identifier of length 0, which may be returned to
 /// indicate the absence of identifiers.
-const NO_ID: StrId = StrId(0);
+pub const NO_ID: NameId = NameId(0);
 
 pub struct Interner {
     //  Map strings to identifiers.
-    map: HashMap<&'static str, StrId>,
+    map: HashMap<&'static str, NameId>,
     //  Map identifiers to strings + info
     vec: Vec<(&'static str, u32)>,
     //  Current buffer where new strings are put.
@@ -63,26 +63,26 @@ impl Interner {
 
     // Return the string corresponding to [id]. Will panic if [id]
     // is not valid (eg was not returned by a method defined here).
-    pub fn lookup(&self, id: StrId) -> &str {
-        let StrId(id) = id;
+    pub fn lookup(&self, id: NameId) -> &str {
+        let NameId(id) = id;
         self.vec[id as usize].0
     }
 
     // Return the info associated to [id].
-    pub fn get_info(&self, id: StrId) -> u32 {
-        let StrId(id) = id;
+    pub fn get_info(&self, id: NameId) -> u32 {
+        let NameId(id) = id;
         self.vec[id as usize].1
     }
 
     // Set the info associated with [id]
-    pub fn set_info(&mut self, id: StrId, info: u32) {
-        let StrId(id) = id;
+    pub fn set_info(&mut self, id: NameId, info: u32) {
+        let NameId(id) = id;
         self.vec[id as usize].1 = info;
     }
 
     // Return the corresponding identifier to the string [name], or [NO_ID]
     // if the string was never interned.
-    pub fn intern_no_create(&mut self, name: &str) -> StrId {
+    pub fn intern_no_create(&mut self, name: &str) -> NameId {
         if let Some(&id) = self.map.get(name) {
             return id;
         }
@@ -90,7 +90,7 @@ impl Interner {
     }
 
     // Intern string [name] and return the corresponding identifier.
-    pub fn intern(&mut self, name: &str) -> StrId {
+    pub fn intern(&mut self, name: &str) -> NameId {
         if let Some(&id) = self.map.get(name) {
             return id;
         }
@@ -103,7 +103,7 @@ impl Interner {
     // This is a slight optimization.
     // Note: [name] should be followed by a NULL character to follow the
     // convention.
-    pub fn intern_static(&mut self, name: &'static str) -> StrId {
+    pub fn intern_static(&mut self, name: &'static str) -> NameId {
         if let Some(&id) = self.map.get(name) {
             return id;
         }
@@ -112,23 +112,23 @@ impl Interner {
 
     // Intern [name] when it is known not to be present.
     // Barely useful except for initialization.
-    pub fn intern_extra(&mut self, name: &str) -> StrId {
+    pub fn intern_extra(&mut self, name: &str) -> NameId {
         debug_assert!(self.intern_no_create(name) == NO_ID);
         let name = unsafe { self.alloc(name) };
-        let id = StrId(self.vec.len() as u32);
+        let id = NameId(self.vec.len() as u32);
         self.vec.push((name, 0));
         id
     }
 
     // Return the last known identifier.
     // Will panic if empty.
-    pub fn get_last(&self) -> StrId {
-        StrId((self.vec.len() - 1) as u32)
+    pub fn get_last(&self) -> NameId {
+     NameId((self.vec.len() - 1) as u32)
     }
 
     // Internal helper: create an identifier for [name].
-    fn create(&mut self, name: &'static str) -> StrId {
-        let id = StrId(self.vec.len() as u32);
+    fn create(&mut self, name: &'static str) -> NameId {
+        let id = NameId(self.vec.len() as u32);
         self.vec.push((name, 0));
         self.map.insert(name, id);
 
