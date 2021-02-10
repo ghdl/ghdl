@@ -40,31 +40,31 @@ from pyGHDL.libghdl._types import SourceFileEntry
 
 @export
 def Load_File(File: SourceFileEntry):
-	"""
-	Start to analyse a file (i.e. load and parse it).
+    """
+    Start to analyse a file (i.e. load and parse it).
 
-	:param File: File to analyse.
-	:return:     Return :attr:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir` in case of parse error. Type: ``Iir_Design_File``
-	"""
-	return libghdl.vhdl__sem_lib__load_file(File)
+    :param File: File to analyse.
+    :return:     Return :attr:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir` in case of parse error. Type: ``Iir_Design_File``
+    """
+    return libghdl.vhdl__sem_lib__load_file(File)
 
 
 @export
 def Finish_Compilation(Unit, Main: bool = False) -> None:
-	"""
-	Analyze :obj:`Unit`.
+    """
+    Analyze :obj:`Unit`.
 
-	:param Unit: Design unit to analyze.
-	:param Main: Is main unit.
-	"""
-	libghdl.vhdl__sem_lib__finish_compilation(Unit, Main)
+    :param Unit: Design unit to analyze.
+    :param Main: Is main unit.
+    """
+    libghdl.vhdl__sem_lib__finish_compilation(Unit, Main)
 
 
 @export
 def Free_Dependence_List(Design) -> None:
-	"""
-	Free the dependence list of :obj:`Design`.
+    """
+    Free the dependence list of :obj:`Design`.
 
-	:param Design: Design unit to free dependencies for.
-	"""
-	libghdl.vhdl__sem_lib__free_dependence_list(Design)
+    :param Design: Design unit to free dependencies for.
+    """
+    libghdl.vhdl__sem_lib__free_dependence_list(Design)

@@ -39,46 +39,46 @@ from pydecor import export
 
 from pyVHDLModel.VHDLModel import Mode
 
-from pyGHDL.libghdl        import name_table
-from pyGHDL.libghdl.vhdl   import nodes
+from pyGHDL.libghdl import name_table
+from pyGHDL.libghdl.vhdl import nodes
 
 __all__ = []
 
 
 @export
 class GHDLBaseException(Exception):
-	pass
+    pass
 
 
 @export
 class LibGHDLException(GHDLBaseException):
-	pass
+    pass
 
 
 @export
 class GHDLException(GHDLBaseException):
-	pass
+    pass
 
 
 @export
 class GHDLMixin:
-	_MODE_TRANSLATION = {
-		nodes.Iir_Mode.In_Mode:      Mode.In,
-		nodes.Iir_Mode.Out_Mode:     Mode.Out,
-		nodes.Iir_Mode.Inout_Mode:   Mode.InOut,
-		nodes.Iir_Mode.Buffer_Mode:  Mode.Buffer,
-		nodes.Iir_Mode.Linkage_Mode: Mode.Linkage
-	}
+    _MODE_TRANSLATION = {
+        nodes.Iir_Mode.In_Mode: Mode.In,
+        nodes.Iir_Mode.Out_Mode: Mode.Out,
+        nodes.Iir_Mode.Inout_Mode: Mode.InOut,
+        nodes.Iir_Mode.Buffer_Mode: Mode.Buffer,
+        nodes.Iir_Mode.Linkage_Mode: Mode.Linkage,
+    }
 
-	@classmethod
-	def _ghdlNodeToName(cls, node) -> str:
-		"""Return the python string from node :obj:`node` identifier"""
-		return name_table.Get_Name_Ptr(nodes.Get_Identifier(node))
+    @classmethod
+    def _ghdlNodeToName(cls, node) -> str:
+        """Return the python string from node :obj:`node` identifier"""
+        return name_table.Get_Name_Ptr(nodes.Get_Identifier(node))
 
-	@classmethod
-	def _ghdlPortToMode(cls, port):
-		"""Return the mode of a :obj:`port`."""
-		try:
-			return cls._MODE_TRANSLATION[nodes.Get_Mode(port)]
-		except KeyError:
-			raise LibGHDLException("Unknown mode.")
+    @classmethod
+    def _ghdlPortToMode(cls, port):
+        """Return the mode of a :obj:`port`."""
+        try:
+            return cls._MODE_TRANSLATION[nodes.Get_Mode(port)]
+        except KeyError:
+            raise LibGHDLException("Unknown mode.")

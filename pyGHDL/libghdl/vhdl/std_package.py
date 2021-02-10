@@ -36,12 +36,14 @@ from ctypes import c_int32
 
 from pyGHDL.libghdl import libghdl
 
-__all__ = [
-	'Std_Location',
-	'Standard_Package',
-	'Character_Type_Definition'
-]
+__all__ = ["Std_Location", "Standard_Package", "Character_Type_Definition"]
 
-Std_Location = c_int32.in_dll(libghdl, "vhdl__std_package__std_location")         #: Virtual location for the ``std.standard`` package. Type ``Location_Type``. Use ``.value`` to access this variable inside libghdl.
-Standard_Package = c_int32.in_dll(libghdl, "vhdl__std_package__standard_package") #: Virtual package ``std.package``. Type ``Iir_Package_Declaration``. Use ``.value`` to access this variable inside libghdl.
-Character_Type_Definition = c_int32.in_dll(libghdl, "vhdl__std_package__character_type_definition") #: Predefined character. Type ``Iir_Enumeration_Type_Definition``. Use ``.value`` to access this variable inside libghdl.
+Std_Location = c_int32.in_dll(
+    libghdl, "vhdl__std_package__std_location"
+)  #: Virtual location for the ``std.standard`` package. Type ``Location_Type``. Use ``.value`` to access this variable inside libghdl.
+Standard_Package = c_int32.in_dll(
+    libghdl, "vhdl__std_package__standard_package"
+)  #: Virtual package ``std.package``. Type ``Iir_Package_Declaration``. Use ``.value`` to access this variable inside libghdl.
+Character_Type_Definition = c_int32.in_dll(
+    libghdl, "vhdl__std_package__character_type_definition"
+)  #: Predefined character. Type ``Iir_Enumeration_Type_Definition``. Use ``.value`` to access this variable inside libghdl.

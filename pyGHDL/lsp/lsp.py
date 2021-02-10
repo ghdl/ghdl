@@ -7,6 +7,7 @@ log = logging.getLogger("ghdl-ls")
 
 is_windows = os.name == "nt"
 
+
 class ProtocolError(Exception):
     pass
 

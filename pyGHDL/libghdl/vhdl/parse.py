@@ -38,9 +38,7 @@ from pydecor import export
 
 from pyGHDL.libghdl import libghdl
 
-__all__ = [
-	'Flag_Parse_Parenthesis'
-]
+__all__ = ["Flag_Parse_Parenthesis"]
 
 
 Flag_Parse_Parenthesis = c_bool.in_dll(libghdl, "vhdl__parse__flag_parse_parenthesis")
@@ -48,11 +46,11 @@ Flag_Parse_Parenthesis = c_bool.in_dll(libghdl, "vhdl__parse__flag_parse_parenth
 
 @export
 def Parse_Design_File():
-	"""
-	Parse a file.
+    """
+    Parse a file.
 
-	..note:: The scanner must have been initialized as for parse_design_unit.
+    ..note:: The scanner must have been initialized as for parse_design_unit.
 
-	:return: Return :obj:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir` in case of error. Type: ``Iir_Design_File``
-	"""
-	return libghdl.vhdl__parse__parse_design_file()
+    :return: Return :obj:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir` in case of error. Type: ``Iir_Design_File``
+    """
+    return libghdl.vhdl__parse__parse_design_file()

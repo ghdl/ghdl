@@ -38,47 +38,45 @@ from pydecor import export
 
 from pyGHDL.libghdl import libghdl
 
-__all__ = [
-	'Flist_Type',
-	'Ffirst'
-]
+__all__ = ["Flist_Type", "Ffirst"]
 
 Flist_Type = c_int32  #: First index of a ``FList``.
 
 Ffirst = 0
 
+
 @export
 def Flast(FList) -> int:
-	"""
-	Last index of :obj:`FList`.
+    """
+    Last index of :obj:`FList`.
 
-	.. hint:: Could be used to iterate.
+    .. hint:: Could be used to iterate.
 
-	:param FList: List to query.
-	:return:      Index of the last element in the list.
-	"""
-	return libghdl.vhdl__flists__flast(FList)
+    :param FList: List to query.
+    :return:      Index of the last element in the list.
+    """
+    return libghdl.vhdl__flists__flast(FList)
 
 
 @export
 def Length(FList) -> int:
-	"""
-	Get the length of :obj:`FList`.
+    """
+    Get the length of :obj:`FList`.
 
-	:param FList: List to query.
-	:return:      Number of elements in the list.
-	"""
-	return libghdl.vhdl__flists__length(FList)
+    :param FList: List to query.
+    :return:      Number of elements in the list.
+    """
+    return libghdl.vhdl__flists__length(FList)
 
 
 @export
 def Get_Nth_Element(FList, N: int):
-	"""
-	Get the N-th element of :obj:`FList`.
+    """
+    Get the N-th element of :obj:`FList`.
 
-	First element has index 0.
+    First element has index 0.
 
-	:param FList: List to query.
-	:return:      Type: ``El_Type``
-	"""
-	return libghdl.vhdl__flists__get_nth_element(FList, N)
+    :param FList: List to query.
+    :return:      Type: ``El_Type``
+    """
+    return libghdl.vhdl__flists__get_nth_element(FList, N)

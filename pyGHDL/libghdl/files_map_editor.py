@@ -41,61 +41,73 @@ from pyGHDL.libghdl._types import SourceFileEntry
 
 
 @export
-def Replace_Text(File: SourceFileEntry, Start_Line: int, Start_Offset: int, End_Line: int, End_Offset: int, Text_Pointer, Text_Length: int) -> bool:
-	""" Replace [START; END) by TEXT.
+def Replace_Text(
+    File: SourceFileEntry,
+    Start_Line: int,
+    Start_Offset: int,
+    End_Line: int,
+    End_Offset: int,
+    Text_Pointer,
+    Text_Length: int,
+) -> bool:
+    """Replace [START; END) by TEXT.
 
-	.. todo:: Replace ``Text_Pointer`` and ``Text_Length`` with Python string
+    .. todo:: Replace ``Text_Pointer`` and ``Text_Length`` with Python string
 
-	:param File:         File where to replace a text section.
-	:param Start_Line:
-	:param Start_Offset:
-	:param End_Line:
-	:param End_Offset:
-	:param Text_Pointer: Type: ``File_Buffer_Ptr``
-	:param Text_Length:  Type: ``Source_Ptr``
-	:return:             Return True in case of success, False in case of failure (the gap is too small).
-	"""
-	func = libghdl.files_map__editor__replace_text_ptr
-	func.argstype = [c_int32, c_int32, c_int32, c_int32, c_char_p, c_int32]
-	func.restype = c_bool
+    :param File:         File where to replace a text section.
+    :param Start_Line:
+    :param Start_Offset:
+    :param End_Line:
+    :param End_Offset:
+    :param Text_Pointer: Type: ``File_Buffer_Ptr``
+    :param Text_Length:  Type: ``Source_Ptr``
+    :return:             Return True in case of success, False in case of failure (the gap is too small).
+    """
+    func = libghdl.files_map__editor__replace_text_ptr
+    func.argstype = [c_int32, c_int32, c_int32, c_int32, c_char_p, c_int32]
+    func.restype = c_bool
 
-	return func(File, Start_Line, Start_Offset, End_Line, End_Offset, Text_Pointer, Text_Length)
+    return func(
+        File, Start_Line, Start_Offset, End_Line, End_Offset, Text_Pointer, Text_Length
+    )
 
 
 @export
 def Fill_Text(File: SourceFileEntry, Text_Pointer, Text_Length: int) -> None:
-	"""Replace the content of :obj:`File` with TEXT.
+    """Replace the content of :obj:`File` with TEXT.
 
-	.. todo:: Replace ``Text_Pointer`` and ``Text_Length`` with Python string
+    .. todo:: Replace ``Text_Pointer`` and ``Text_Length`` with Python string
 
-	:param File:         File where to replace the content.
-	:param Text_Pointer: Type: ``File_Buffer_Ptr``
-	:param Text_Length:  Type: ``Source_Ptr``
-	"""
-	libghdl.files_map__editor__fill_text_ptr(File, Text_Pointer, Text_Length)
+    :param File:         File where to replace the content.
+    :param Text_Pointer: Type: ``File_Buffer_Ptr``
+    :param Text_Length:  Type: ``Source_Ptr``
+    """
+    libghdl.files_map__editor__fill_text_ptr(File, Text_Pointer, Text_Length)
 
 
 @export
-def Check_Buffer_Content(File: SourceFileEntry, String_Pointer, String_Length: int) -> None:
-	"""
-	Check that content of :obj:`File` is STR[1 .. STR_LEN].
+def Check_Buffer_Content(
+    File: SourceFileEntry, String_Pointer, String_Length: int
+) -> None:
+    """
+    Check that content of :obj:`File` is STR[1 .. STR_LEN].
 
-	.. todo:: Replace ``String_Pointer`` and ``String_Length`` with Python string
+    .. todo:: Replace ``String_Pointer`` and ``String_Length`` with Python string
 
-	:param File:           File to check the content.
-	:param String_Pointer: Type: ``File_Buffer_Ptr``
-	:param String_Length:  Type: ``Source_Ptr``
-	"""
-	libghdl.files_map__editor__check_buffer_content(File, String_Pointer, String_Length)
+    :param File:           File to check the content.
+    :param String_Pointer: Type: ``File_Buffer_Ptr``
+    :param String_Length:  Type: ``Source_Ptr``
+    """
+    libghdl.files_map__editor__check_buffer_content(File, String_Pointer, String_Length)
 
 
 @export
 def Copy_Source_File(Dest: SourceFileEntry, Src: SourceFileEntry) -> None:
-	"""
-	Copy content of :obj:`Src` to :obj:`Dest`.
+    """
+    Copy content of :obj:`Src` to :obj:`Dest`.
 
-	.. warning:: The size of :obj:`Dest` must be large enough.
+    .. warning:: The size of :obj:`Dest` must be large enough.
 
-	Clear lines table of :obj:`Dest`.
-	"""
-	return libghdl.files_map__editor__copy_source_file(Dest, Src)
+    Clear lines table of :obj:`Dest`.
+    """
+    return libghdl.files_map__editor__copy_source_file(Dest, Src)

@@ -41,60 +41,60 @@ from pyGHDL.libghdl import libghdl
 
 @export
 def Indent_String(File, Handle, FirstLine: int, LastLine: int) -> None:
-	"""
-	Reindent all lines of F between [First_Line; Last_Line] to :obj:`Handle`.
+    """
+    Reindent all lines of F between [First_Line; Last_Line] to :obj:`Handle`.
 
-	:param File:      File to indent lines within. Type: ``Iir_Design_File``
-	:param Handle:    undocumented. Type: ``Vstring_Acc``
-	:param FirstLine: undocumented.
-	:param LastLine:  undocumented.
-	"""
-	libghdl.vhdl__formatters__indent_string(File, Handle, FirstLine, LastLine)
+    :param File:      File to indent lines within. Type: ``Iir_Design_File``
+    :param Handle:    undocumented. Type: ``Vstring_Acc``
+    :param FirstLine: undocumented.
+    :param LastLine:  undocumented.
+    """
+    libghdl.vhdl__formatters__indent_string(File, Handle, FirstLine, LastLine)
 
 
 @export
 def Allocate_Handle():
-	"""
-	.. todo:: Undocumented in Ada code.
+    """
+    .. todo:: Undocumented in Ada code.
 
-	:return: undocumented. Type: ``Vstring_Acc``
-	"""
-	return libghdl.vhdl__formatters__allocate_handle()
+    :return: undocumented. Type: ``Vstring_Acc``
+    """
+    return libghdl.vhdl__formatters__allocate_handle()
 
 
 @export
 def Get_Length(Handle) -> int:
-	"""
-	.. todo:: Undocumented in Ada code.
+    """
+    .. todo:: Undocumented in Ada code.
 
-	:param Handle: undocumented. Type: ``Vstring_Acc``
-	:return:       undocumented.
-	"""
-	func = libghdl.vhdl__formatters__get_length
-	func.restype = c_int32
+    :param Handle: undocumented. Type: ``Vstring_Acc``
+    :return:       undocumented.
+    """
+    func = libghdl.vhdl__formatters__get_length
+    func.restype = c_int32
 
-	return func(Handle)
+    return func(Handle)
 
 
 @export
 def Get_C_String(Handle):
-	"""
-	.. todo:: Undocumented in Ada code.
+    """
+    .. todo:: Undocumented in Ada code.
 
-	:param Handle: undocumented. Type: ``Vstring_Acc``
-	:return:       Type: ``Grt.Types.Ghdl_C_String``
-	"""
-	func = libghdl.vhdl__formatters__get_c_string
-	func.restype = c_char_p
+    :param Handle: undocumented. Type: ``Vstring_Acc``
+    :return:       Type: ``Grt.Types.Ghdl_C_String``
+    """
+    func = libghdl.vhdl__formatters__get_c_string
+    func.restype = c_char_p
 
-	return func(Handle)
+    return func(Handle)
 
 
 @export
 def Free_Handle(Handle) -> None:
-	"""
-	.. todo:: Undocumented in Ada code.
+    """
+    .. todo:: Undocumented in Ada code.
 
-	:param Handle: undocumented. Type: ``Vstring_Acc``
-	"""
-	libghdl.vhdl__formatters__free_handle(Handle)
+    :param Handle: undocumented. Type: ``Vstring_Acc``
+    """
+    libghdl.vhdl__formatters__free_handle(Handle)

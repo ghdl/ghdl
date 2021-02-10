@@ -1039,7 +1039,6 @@ class Iir_Kinds:
     ]
 
 
-
 @export
 class Iir_Mode:
     Unknown_Mode = 0
@@ -1737,6 +1736,7 @@ class Iir_Predefined:
     Ieee_Std_Logic_Misc_Xnor_Reduce_Slv = 653
     Ieee_Std_Logic_Misc_Xnor_Reduce_Suv = 654
 
+
 Get_Kind = libghdl.vhdl__nodes__get_kind
 Get_Location = libghdl.vhdl__nodes__get_location
 
@@ -1869,8 +1869,12 @@ Set_Entity_Name_List = libghdl.vhdl__nodes__set_entity_name_list
 Get_Attribute_Designator = libghdl.vhdl__nodes__get_attribute_designator
 Set_Attribute_Designator = libghdl.vhdl__nodes__set_attribute_designator
 
-Get_Attribute_Specification_Chain = libghdl.vhdl__nodes__get_attribute_specification_chain
-Set_Attribute_Specification_Chain = libghdl.vhdl__nodes__set_attribute_specification_chain
+Get_Attribute_Specification_Chain = (
+    libghdl.vhdl__nodes__get_attribute_specification_chain
+)
+Set_Attribute_Specification_Chain = (
+    libghdl.vhdl__nodes__set_attribute_specification_chain
+)
 
 Get_Attribute_Specification = libghdl.vhdl__nodes__get_attribute_specification
 Set_Attribute_Specification = libghdl.vhdl__nodes__set_attribute_specification
@@ -2001,8 +2005,12 @@ Set_Vunit_Item_Chain = libghdl.vhdl__nodes__set_vunit_item_chain
 Get_Bound_Vunit_Chain = libghdl.vhdl__nodes__get_bound_vunit_chain
 Set_Bound_Vunit_Chain = libghdl.vhdl__nodes__set_bound_vunit_chain
 
-Get_Verification_Block_Configuration = libghdl.vhdl__nodes__get_verification_block_configuration
-Set_Verification_Block_Configuration = libghdl.vhdl__nodes__set_verification_block_configuration
+Get_Verification_Block_Configuration = (
+    libghdl.vhdl__nodes__get_verification_block_configuration
+)
+Set_Verification_Block_Configuration = (
+    libghdl.vhdl__nodes__set_verification_block_configuration
+)
 
 Get_Block_Configuration = libghdl.vhdl__nodes__get_block_configuration
 Set_Block_Configuration = libghdl.vhdl__nodes__set_block_configuration
@@ -2094,8 +2102,12 @@ Set_Return_Type = libghdl.vhdl__nodes__set_return_type
 Get_Implicit_Definition = libghdl.vhdl__nodes__get_implicit_definition
 Set_Implicit_Definition = libghdl.vhdl__nodes__set_implicit_definition
 
-Get_Uninstantiated_Subprogram_Name = libghdl.vhdl__nodes__get_uninstantiated_subprogram_name
-Set_Uninstantiated_Subprogram_Name = libghdl.vhdl__nodes__set_uninstantiated_subprogram_name
+Get_Uninstantiated_Subprogram_Name = (
+    libghdl.vhdl__nodes__get_uninstantiated_subprogram_name
+)
+Set_Uninstantiated_Subprogram_Name = (
+    libghdl.vhdl__nodes__set_uninstantiated_subprogram_name
+)
 
 Get_Default_Value = libghdl.vhdl__nodes__get_default_value
 Set_Default_Value = libghdl.vhdl__nodes__set_default_value
@@ -2205,8 +2217,12 @@ Set_Base_Nature = libghdl.vhdl__nodes__set_base_nature
 Get_Resolution_Indication = libghdl.vhdl__nodes__get_resolution_indication
 Set_Resolution_Indication = libghdl.vhdl__nodes__set_resolution_indication
 
-Get_Record_Element_Resolution_Chain = libghdl.vhdl__nodes__get_record_element_resolution_chain
-Set_Record_Element_Resolution_Chain = libghdl.vhdl__nodes__set_record_element_resolution_chain
+Get_Record_Element_Resolution_Chain = (
+    libghdl.vhdl__nodes__get_record_element_resolution_chain
+)
+Set_Record_Element_Resolution_Chain = (
+    libghdl.vhdl__nodes__set_record_element_resolution_chain
+)
 
 Get_Tolerance = libghdl.vhdl__nodes__get_tolerance
 Set_Tolerance = libghdl.vhdl__nodes__set_tolerance
@@ -2259,8 +2275,12 @@ Set_Constraint_State = libghdl.vhdl__nodes__set_constraint_state
 Get_Index_Subtype_List = libghdl.vhdl__nodes__get_index_subtype_list
 Set_Index_Subtype_List = libghdl.vhdl__nodes__set_index_subtype_list
 
-Get_Index_Subtype_Definition_List = libghdl.vhdl__nodes__get_index_subtype_definition_list
-Set_Index_Subtype_Definition_List = libghdl.vhdl__nodes__set_index_subtype_definition_list
+Get_Index_Subtype_Definition_List = (
+    libghdl.vhdl__nodes__get_index_subtype_definition_list
+)
+Set_Index_Subtype_Definition_List = (
+    libghdl.vhdl__nodes__set_index_subtype_definition_list
+)
 
 Get_Element_Subtype_Indication = libghdl.vhdl__nodes__get_element_subtype_indication
 Set_Element_Subtype_Indication = libghdl.vhdl__nodes__set_element_subtype_indication
@@ -2295,8 +2315,12 @@ Set_Owned_Elements_Chain = libghdl.vhdl__nodes__set_owned_elements_chain
 Get_Designated_Type = libghdl.vhdl__nodes__get_designated_type
 Set_Designated_Type = libghdl.vhdl__nodes__set_designated_type
 
-Get_Designated_Subtype_Indication = libghdl.vhdl__nodes__get_designated_subtype_indication
-Set_Designated_Subtype_Indication = libghdl.vhdl__nodes__set_designated_subtype_indication
+Get_Designated_Subtype_Indication = (
+    libghdl.vhdl__nodes__get_designated_subtype_indication
+)
+Set_Designated_Subtype_Indication = (
+    libghdl.vhdl__nodes__set_designated_subtype_indication
+)
 
 Get_Index_List = libghdl.vhdl__nodes__get_index_list
 Set_Index_List = libghdl.vhdl__nodes__set_index_list
@@ -2457,8 +2481,12 @@ Set_Configuration_Specification = libghdl.vhdl__nodes__set_configuration_specifi
 Get_Default_Binding_Indication = libghdl.vhdl__nodes__get_default_binding_indication
 Set_Default_Binding_Indication = libghdl.vhdl__nodes__set_default_binding_indication
 
-Get_Default_Configuration_Declaration = libghdl.vhdl__nodes__get_default_configuration_declaration
-Set_Default_Configuration_Declaration = libghdl.vhdl__nodes__set_default_configuration_declaration
+Get_Default_Configuration_Declaration = (
+    libghdl.vhdl__nodes__get_default_configuration_declaration
+)
+Set_Default_Configuration_Declaration = (
+    libghdl.vhdl__nodes__set_default_configuration_declaration
+)
 
 Get_Expression = libghdl.vhdl__nodes__get_expression
 Set_Expression = libghdl.vhdl__nodes__set_expression
@@ -2682,8 +2710,12 @@ Set_Aggregate_Expand_Flag = libghdl.vhdl__nodes__set_aggregate_expand_flag
 Get_Association_Choices_Chain = libghdl.vhdl__nodes__get_association_choices_chain
 Set_Association_Choices_Chain = libghdl.vhdl__nodes__set_association_choices_chain
 
-Get_Case_Statement_Alternative_Chain = libghdl.vhdl__nodes__get_case_statement_alternative_chain
-Set_Case_Statement_Alternative_Chain = libghdl.vhdl__nodes__set_case_statement_alternative_chain
+Get_Case_Statement_Alternative_Chain = (
+    libghdl.vhdl__nodes__get_case_statement_alternative_chain
+)
+Set_Case_Statement_Alternative_Chain = (
+    libghdl.vhdl__nodes__set_case_statement_alternative_chain
+)
 
 Get_Choice_Staticness = libghdl.vhdl__nodes__get_choice_staticness
 Set_Choice_Staticness = libghdl.vhdl__nodes__set_choice_staticness
@@ -2849,4 +2881,3 @@ Set_Clock_Expression = libghdl.vhdl__nodes__set_clock_expression
 
 Get_Default_Clock = libghdl.vhdl__nodes__get_default_clock
 Set_Default_Clock = libghdl.vhdl__nodes__set_default_clock
-
