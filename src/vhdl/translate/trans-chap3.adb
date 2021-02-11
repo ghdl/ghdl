@@ -1047,6 +1047,9 @@ package body Trans.Chap3 is
             return -1;
          end if;
          Idx_Len := Eval_Discrete_Type_Length (Index);
+         if Idx_Len < 0 then
+            return -1;
+         end if;
 
          --  Do not consider very large arrays as static, to avoid overflow at
          --  compile time.

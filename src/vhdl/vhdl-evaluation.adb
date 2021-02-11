@@ -42,11 +42,6 @@ package body Vhdl.Evaluation is
 
    function Eval_Scalar_Compare (Left, Right : Iir) return Compare_Type;
 
-   function Is_Overflow (Expr : Iir) return Boolean is
-   begin
-      return Get_Kind (Expr) = Iir_Kind_Overflow_Literal;
-   end Is_Overflow;
-
    function Get_Physical_Value (Expr : Iir) return Int64
    is
       pragma Unsuppress (Overflow_Check);
@@ -622,7 +617,7 @@ package body Vhdl.Evaluation is
 
       Func : Iir_Predefined_Functions;
    begin
-      if Is_Overflow (Operand) then
+      if Is_Overflow_Literal (Operand) then
          --  Propagate overflow.
          return Build_Overflow (Orig);
       end if;
@@ -1080,7 +1075,7 @@ package body Vhdl.Evaluation is
             El := Get_Right (Op);
          end if;
          Ops_Val (I) := Eval_Static_Expr (El);
-         if Is_Overflow (Ops_Val (I)) then
+         if Is_Overflow_Literal (Ops_Val (I)) then
             Err_Orig := El;
          else
             case Iir_Predefined_Concat_Functions (Def) is
@@ -1103,7 +1098,7 @@ package body Vhdl.Evaluation is
          Left_Op := Get_Left (Op);
       end if;
       Left_Val := Eval_Static_Expr (Left_Op);
-      if Is_Overflow (Left_Val) then
+      if Is_Overflow_Literal (Left_Val) then
          Err_Orig := Left_Op;
       else
          Left_Def := Def;
@@ -1575,7 +1570,7 @@ package body Vhdl.Evaluation is
       Func : constant Iir_Predefined_Functions :=
         Get_Implicit_Definition (Imp);
    begin
-      if Is_Overflow (Left) or else Is_Overflow (Right) then
+      if Is_Overflow_Literal (Left) or else Is_Overflow_Literal (Right) then
          return Build_Overflow (Orig);
       end if;
 
@@ -2546,7 +2541,7 @@ package body Vhdl.Evaluation is
    begin
       Prefix := Get_Prefix (Expr);
       Prefix := Eval_Static_Expr (Prefix);
-      if Is_Overflow (Prefix) then
+      if Is_Overflow_Literal (Prefix) then
          return Build_Overflow (Expr, Get_Type (Expr));
       end if;
 
@@ -3703,7 +3698,9 @@ package body Vhdl.Evaluation is
                R_Expr : constant Iir := Get_Right_Limit (Range_Constraint);
                L, R : Int64;
             begin
-               if Is_Overflow (L_Expr) or else Is_Overflow (R_Expr) then
+               if Is_Overflow_Literal (L_Expr)
+                 or else Is_Overflow_Literal (R_Expr)
+               then
                   return False;
                end if;
                --  Check for null range.
@@ -3765,11 +3762,19 @@ package body Vhdl.Evaluation is
    is
       --  We don't want to deal with very large ranges here.
       pragma Suppress (Overflow_Check);
+      Left_Expr : constant Iir := Get_Left_Limit (Constraint);
+      Right_Expr : constant Iir := Get_Right_Limit (Constraint);
       Res : Int64;
       Left, Right : Int64;
    begin
-      Left := Eval_Pos (Get_Left_Limit (Constraint));
-      Right := Eval_Pos (Get_Right_Limit (Constraint));
+      if Is_Overflow_Literal (Left_Expr)
+        or else Is_Overflow_Literal (Right_Expr)
+      then
+         return -1;
+      end if;
+
+      Left := Eval_Pos (Left_Expr);
+      Right := Eval_Pos (Right_Expr);
       case Get_Direction (Constraint) is
          when Dir_To =>
             if Right < Left then
