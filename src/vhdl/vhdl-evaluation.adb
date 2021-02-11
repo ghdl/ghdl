@@ -42,6 +42,11 @@ package body Vhdl.Evaluation is
 
    function Eval_Scalar_Compare (Left, Right : Iir) return Compare_Type;
 
+   function Is_Overflow (Expr : Iir) return Boolean is
+   begin
+      return Get_Kind (Expr) = Iir_Kind_Overflow_Literal;
+   end Is_Overflow;
+
    function Get_Physical_Value (Expr : Iir) return Int64
    is
       pragma Unsuppress (Overflow_Check);
@@ -3696,11 +3701,16 @@ package body Vhdl.Evaluation is
            | Iir_Kind_Enumeration_Subtype_Definition
            | Iir_Kind_Enumeration_Type_Definition =>
             declare
+               L_Expr : constant Iir := Get_Left_Limit (Range_Constraint);
+               R_Expr : constant Iir := Get_Right_Limit (Range_Constraint);
                L, R : Int64;
             begin
+               if Is_Overflow (L_Expr) or else Is_Overflow (R_Expr) then
+                  return False;
+               end if;
                --  Check for null range.
-               L := Eval_Pos (Get_Left_Limit (Range_Constraint));
-               R := Eval_Pos (Get_Right_Limit (Range_Constraint));
+               L := Eval_Pos (L_Expr);
+               R := Eval_Pos (R_Expr);
                case Get_Direction (Range_Constraint) is
                   when Dir_To =>
                      if L > R then
