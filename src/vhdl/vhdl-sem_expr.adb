@@ -697,10 +697,7 @@ package body Vhdl.Sem_Expr is
       case Get_Kind (Expr) is
          when Iir_Kind_Range_Expression =>
             Res := Sem_Simple_Range_Expression (Expr, A_Type, Any_Dir);
-            if Res = Null_Iir then
-               return Null_Iir;
-            end if;
-            Res_Type := Get_Type (Res);
+            return Res;
 
          when Iir_Kinds_Denoting_Name
            | Iir_Kind_Attribute_Name
