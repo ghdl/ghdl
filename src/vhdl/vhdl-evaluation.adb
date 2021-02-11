@@ -622,7 +622,7 @@ package body Vhdl.Evaluation is
 
       Func : Iir_Predefined_Functions;
    begin
-      if Get_Kind (Operand) = Iir_Kind_Overflow_Literal then
+      if Is_Overflow (Operand) then
          --  Propagate overflow.
          return Build_Overflow (Orig);
       end if;
@@ -1080,7 +1080,7 @@ package body Vhdl.Evaluation is
             El := Get_Right (Op);
          end if;
          Ops_Val (I) := Eval_Static_Expr (El);
-         if Get_Kind (Ops_Val (I)) = Iir_Kind_Overflow_Literal then
+         if Is_Overflow (Ops_Val (I)) then
             Err_Orig := El;
          else
             case Iir_Predefined_Concat_Functions (Def) is
@@ -1103,7 +1103,7 @@ package body Vhdl.Evaluation is
          Left_Op := Get_Left (Op);
       end if;
       Left_Val := Eval_Static_Expr (Left_Op);
-      if Get_Kind (Left_Val) = Iir_Kind_Overflow_Literal then
+      if Is_Overflow (Left_Val) then
          Err_Orig := Left_Op;
       else
          Left_Def := Def;
@@ -1575,9 +1575,7 @@ package body Vhdl.Evaluation is
       Func : constant Iir_Predefined_Functions :=
         Get_Implicit_Definition (Imp);
    begin
-      if Get_Kind (Left) = Iir_Kind_Overflow_Literal
-        or else Get_Kind (Right) = Iir_Kind_Overflow_Literal
-      then
+      if Is_Overflow (Left) or else Is_Overflow (Right) then
          return Build_Overflow (Orig);
       end if;
 
@@ -2548,7 +2546,7 @@ package body Vhdl.Evaluation is
    begin
       Prefix := Get_Prefix (Expr);
       Prefix := Eval_Static_Expr (Prefix);
-      if Get_Kind (Prefix) = Iir_Kind_Overflow_Literal then
+      if Is_Overflow (Prefix) then
          return Build_Overflow (Expr, Get_Type (Expr));
       end if;
 
