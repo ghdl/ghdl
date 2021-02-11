@@ -17,7 +17,7 @@ PNODES_ARGS=--field-file=edif-nodes.adb.in \
   --kind-prefix=N_ \
   --node-type=Node
 
-all: dump_edif
+all: $(GEN_SRCS)
 
 
 dump_edif$(EXEEXT): $(GEN_SRCS) force
