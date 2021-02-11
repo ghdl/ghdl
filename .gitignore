@@ -52,7 +52,19 @@ version.tmp
 e~*.lst
 
 # GHDLs testsuite
-testsuite/get_entities
+/testsuite/get_entities
+/testsuite/test_ok
+/testsuite/gna/**/*.out
+/testsuite/vpi/**/*.out
+/testsuite/synth/**/*.out
+/testsuite/synth/sns01/*.ref
+/testsuite/synth/snsuns01/*.ref
+/testsuite/gna/issue1392/char_arr_file.txt
+/testsuite/synth/issue1079/syn_test.raw
+/testsuite/synth/issue1254/simple.vhdl
+*.log
+*.err
+syn_*.vhdl
 
 # Python cache and object files
 __pycache__/
