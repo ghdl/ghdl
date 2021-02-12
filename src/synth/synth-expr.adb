@@ -425,14 +425,14 @@ package body Synth.Expr is
       N := Arr (Arr'First);
    end Concat_Array;
 
-   function Synth_Discrete_Range_Expression
+   function Build_Discrete_Range_Type
      (L : Int64; R : Int64; Dir : Direction_Type) return Discrete_Range_Type is
    begin
       return (Dir => Dir,
               Left => L,
               Right => R,
               Is_Signed => L < 0 or R < 0);
-   end Synth_Discrete_Range_Expression;
+   end Build_Discrete_Range_Type;
 
    function Synth_Discrete_Range_Expression
      (Syn_Inst : Synth_Instance_Acc; Rng : Node) return Discrete_Range_Type
@@ -457,10 +457,7 @@ package body Synth.Expr is
 
       Lval := Read_Discrete (L);
       Rval := Read_Discrete (R);
-      return (Dir => Get_Direction (Rng),
-              Left => Lval,
-              Right => Rval,
-              Is_Signed => Lval < 0 or Rval < 0);
+      return Build_Discrete_Range_Type (Lval, Rval, Get_Direction (Rng));
    end Synth_Discrete_Range_Expression;
 
    function Synth_Float_Range_Expression
@@ -595,10 +592,8 @@ package body Synth.Expr is
                B : Bound_Type;
             begin
                B := Synth_Array_Attribute (Syn_Inst, Bound);
-               Rng := Discrete_Range_Type'(Dir => B.Dir,
-                                           Is_Signed => True,
-                                           Left => Int64 (B.Left),
-                                           Right => Int64 (B.Right));
+               Rng := Build_Discrete_Range_Type
+                 (Int64 (B.Left), Int64 (B.Right), B.Dir);
             end;
          when Iir_Kind_Reverse_Range_Array_Attribute =>
             declare
@@ -617,10 +612,8 @@ package body Synth.Expr is
                B.Right := B.Left;
                B.Left := T;
 
-               Rng := Discrete_Range_Type'(Dir => B.Dir,
-                                           Is_Signed => True,
-                                           Left => Int64 (B.Left),
-                                           Right => Int64 (B.Right));
+               Rng := Build_Discrete_Range_Type
+                 (Int64 (B.Left), Int64 (B.Right), B.Dir);
             end;
          when Iir_Kinds_Denoting_Name =>
             --  A discrete subtype name.

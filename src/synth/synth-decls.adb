@@ -304,8 +304,7 @@ package body Synth.Decls is
             begin
                L := Get_Value (Get_Left_Limit (Cst));
                R := Get_Value (Get_Right_Limit (Cst));
-               Rng := Synth_Discrete_Range_Expression
-                 (L, R, Get_Direction (Cst));
+               Rng := Build_Discrete_Range_Type (L, R, Get_Direction (Cst));
                W := Discrete_Range_Width (Rng);
                Typ := Create_Discrete_Type
                  (Rng, Scalar_Size_To_Size (Def), W);

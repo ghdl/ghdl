@@ -100,7 +100,7 @@ package Synth.Expr is
                                 Atype : Node;
                                 Dim : Dim_Type) return Bound_Type;
 
-   function Synth_Discrete_Range_Expression
+   function Build_Discrete_Range_Type
      (L : Int64; R : Int64; Dir : Direction_Type) return Discrete_Range_Type;
    function Synth_Discrete_Range_Expression
      (Syn_Inst : Synth_Instance_Acc; Rng : Node) return Discrete_Range_Type;
