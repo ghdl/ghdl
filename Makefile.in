@@ -240,6 +240,9 @@ copy-sources.gcc: version.ads
 	$(MKDIR) $(gcc_vhdl_dir)
 	$(CP) -p version.ads ghdlsynth_maybe.ads $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/*.ad? $(gcc_vhdl_dir)
+	$(CP) -p $(srcdir)/src/*.rs $(gcc_vhdl_dir)
+	$(SED) -e '/^path =/s@src/@@' \
+	  < $(srcdir)/Cargo.toml > $(gcc_vhdl_dir)/Cargo.toml
 	$(CP) -p $(srcdir)/src/vhdl/*.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/vhdl/translate/*.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/synth/*.ad? $(gcc_vhdl_dir)

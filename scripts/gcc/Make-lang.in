@@ -57,18 +57,10 @@ GHDL1_OBJS = attribs.o vhdl/ortho-lang.o
 # before.
 vhdl_OBJS=vhdl/ortho-lang.o
 
-# The compiler proper.
-# It is compiled into the vhdl/ subdirectory to avoid file name clashes but
-# linked in in gcc directory to be able to access to gcc object files.
-ghdl1$(exeext): force $(GHDL1_OBJS) $(BACKEND) $(LIBDEPS)
-        # Create object file in vhdl/subdir
-	$(GNATMAKE) -c -aI$(srcdir)/vhdl --subdirs=vhdl ortho_gcc-main \
-	 -cargs $(CFLAGS) $(GHDL_ADAFLAGS)
-	$(GNATMAKE) -o $@ -aI$(srcdir)/vhdl -aOvhdl ortho_gcc-main \
-         -cargs $(CFLAGS) $(GHDL_ADAFLAGS) \
-	 -bargs -E \
-	 -largs --LINK=$(LLINKER) $(ALL_LINKERFLAGS) $(LDFLAGS) $(GHDL1_OBJS) \
-	 $(filter-out main.o,$(BACKEND)) $(LIBS) $(BACKENDLIBS)
+RUST_OBJS = target/debug/libghdlinfra.a
+
+$(RUST_OBJS): force
+	cargo build --target-dir target --manifest-path $(srcdir)/vhdl/Cargo.toml
 
 vhdl_target1:=$(subst -gnu,,$(target))
 vhdl_targ:=$(subst -, ,$(vhdl_target1))
@@ -81,11 +73,28 @@ endif
 # Set target files.
 ifeq ($(filter-out mingw32 mingw64,$(vhdl_osys)),)
   VHDL_SOEXT=.dll
+  RUST_LIBS=-luserenv -lws2_32
 else ifeq ($(filter-out darwin%,$(vhdl_osys)),)
   VHDL_SOEXT=.dylib
+  RUST_LIBS=""
 else
   VHDL_SOEXT=.so
+  RUST_LIBS=-lpthread -ldl
 endif
+
+# The compiler proper.
+# It is compiled into the vhdl/ subdirectory to avoid file name clashes but
+# linked in in gcc directory to be able to access to gcc object files.
+ghdl1$(exeext): force $(GHDL1_OBJS) $(RUST_OBJS) $(BACKEND) $(LIBDEPS)
+        # Create object file in vhdl/subdir
+	$(GNATMAKE) -c -aI$(srcdir)/vhdl --subdirs=vhdl ortho_gcc-main \
+	 -cargs $(CFLAGS) $(GHDL_ADAFLAGS)
+	$(GNATMAKE) -o $@ -aI$(srcdir)/vhdl -aOvhdl ortho_gcc-main \
+         -cargs $(CFLAGS) $(GHDL_ADAFLAGS) \
+	 -bargs -E \
+	 -largs --LINK=$(LLINKER) $(ALL_LINKERFLAGS) $(LDFLAGS) \
+	 $(GHDL1_OBJS) $(RUST_OBJS) \
+	 $(filter-out main.o,$(BACKEND)) $(RUST_LIBS) $(LIBS) $(BACKENDLIBS)
 
 vhdl/default_paths.ads: Makefile
 	echo "--  DO NOT EDIT" > tmp-dpaths.ads
@@ -114,13 +123,13 @@ vhdl/default_paths.ads: Makefile
 GHDL_GRT_OBJS=vhdl/grt-cstdio.o
 
 # The driver for ghdl.  Depends on ghdl1 to use object files in vhdl/ subdir.
-ghdl$(exeext): ghdl1$(exeext) $(GHDL_GRT_OBJS) vhdl/default_paths.ads force
+ghdl$(exeext): ghdl1$(exeext) $(RUST_OBJS) $(GHDL_GRT_OBJS) vhdl/default_paths.ads force
 	$(GNATMAKE) -o $@ -aI$(srcdir)/vhdl -aI$(srcdir)/vhdl/ghdldrv \
 	 -aIvhdl -aOvhdl ghdl_gcc \
 	 -cargs $(CFLAGS) $(GHDL_ADAFLAGS) \
 	 -bargs -E \
          -largs --LINK=$(LLINKER) $(ALL_LINKERFLAGS) $(LDFLAGS) \
-           $(GHDL_GRT_OBJS) $(LIBS)
+           $(GHDL_GRT_OBJS) $(RUST_OBJS) $(RUST_LIBS) $(LIBS)
 
 # Build hooks:
 
