@@ -88,8 +88,7 @@ package body Ghdlvpi is
          --  On linux/unix, add rpath.
          --  No such concept on windows.
          Nbr := Nbr + 1;
-         Extra_Args (Nbr) := new String'
-           ("-Wl,-rpath," & Get_Vpi_Lib_Dir);
+         Extra_Args (Nbr) := new String'("-Wl,-rpath," & Get_Vpi_Lib_Dir);
       end if;
 
       return Extra_Args (1 .. Nbr);
