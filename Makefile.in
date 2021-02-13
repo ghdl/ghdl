@@ -103,12 +103,12 @@ target=$(build)
 #target=i386-pc-mingw32
 
 ifeq ($(SOEXT),.so)
-SHLIB_FLAGS=-Wl,-soname,$@
+SHLIB_FLAGS=-Wl,-soname,$(notdir $@)
 else ifeq ($(SOEXT),.dll)
 SHLIB_FLAGS=
 else ifeq ($(SOEXT),.dylib)
 # Allow the use of -rpath in executable
-SHLIB_FLAGS=-Wl,-install_name,@rpath/$@
+SHLIB_FLAGS=-Wl,-install_name,@rpath/$(notdir $@)
 endif
 
 # Flags for libraries
@@ -415,7 +415,7 @@ libghdl_name=libghdl-$(libghdl_version)$(SOEXT)
 
 LIBGHDL_GRT_OBJS= pic/grt-cstdio.o
 
-$(libghdl_name): $(GRT_SRC_DEPS) $(LIBGHDL_GRT_OBJS) version.ads force
+lib/$(libghdl_name): $(GRT_SRC_DEPS) $(LIBGHDL_GRT_OBJS) version.ads force
 #	Use -g for gnatlink so that the binder file is not removed.  We need
 #	it for libghdl.a
 	$(GNATMAKE) -I- -aI. -D pic -z libghdl -o $@ -gnat12 $(GNATFLAGS) $(PIC_FLAGS) $(LIBGHDL_INCFLAGS) -bargs -shared -Llibghdl_ -largs -g -shared $(SHLIB_FLAGS) $(LIBGHDL_GRT_OBJS)
@@ -423,10 +423,10 @@ $(libghdl_name): $(GRT_SRC_DEPS) $(LIBGHDL_GRT_OBJS) version.ads force
 #       Adjust.  (Other solution: use gnatmake for compilation and binding,
 #       then use gnatlink directly for linking).
 ifeq ($(SOEXT),.dll)
-	-mv $(libghdl_name).exe $(libghdl_name)
+	-mv lib/$(libghdl_name).exe $@
 endif
 
-libghdl.a: $(libghdl_name)
+libghdl.a: lib/$(libghdl_name)
 #	Also create a static library
 	sed -e '1,/--  BEGIN/d' -e '/--  END/,$$d' -e 's/^   --   //' < b~libghdl.adb > libghdl.bind
 	$(RM) -f $@
@@ -444,7 +444,7 @@ $(srcdir)/src/synth/ghdlsynth_gates.h: $(srcdir)/src/synth/netlists.ads $(srcdir
 	grep '      Param_' $(srcdir)/src/synth/netlists.ads >> $@
 	echo "};" >> $@
 
-all.libghdl.true: $(libghdl_name) libghdl.a
+all.libghdl.true: lib/$(libghdl_name) libghdl.a
 all.libghdl.false:
 all.libghdl: all.libghdl.$(enable_libghdl)
 
@@ -453,7 +453,7 @@ install.libghdl.include: install.dirs $(srcdir)/src/synth/ghdlsynth_gates.h
 	$(INSTALL_DATA) -p $(srcdir)/src/synth/ghdlsynth_gates.h $(DESTDIR)$(incdir)/
 
 install.libghdl.lib:
-	$(INSTALL_PROGRAM) -p $(libghdl_name) $(DESTDIR)$(libdir)/
+	$(INSTALL_PROGRAM) -p lib/$(libghdl_name) $(DESTDIR)$(libdir)/
 	$(INSTALL_PROGRAM) -p libghdl.a $(DESTDIR)$(libdir)/
 	$(INSTALL_DATA) -p libghdl.link $(DESTDIR)$(libdir)/
 
@@ -513,13 +513,13 @@ vpi_thunk.o: $(GRTSRCDIR)/vpi_thunk.c $(GRTSRCDIR)/vpi_thunk.h
 #	Do not use OPT_FLAGS (do not enable coverage)
 	$(CC) -c -o $@ $< $(PIC_FLAGS) -O $(WARN_CFLAGS)
 
-libghdlvpi$(SOEXT): vpi_thunk.o
+lib/libghdlvpi$(SOEXT): vpi_thunk.o
 	$(CC) -o $@ $< -shared $(SHLIB_FLAGS)
 
-all.vpi: libghdlvpi$(SOEXT)
+all.vpi: lib/libghdlvpi$(SOEXT)
 
 install.vpi: all.vpi install.dirs
-	$(INSTALL_PROGRAM) -p libghdlvpi$(SOEXT) $(DESTDIR)$(libdir)/
+	$(INSTALL_PROGRAM) -p lib/libghdlvpi$(SOEXT) $(DESTDIR)$(libdir)/
 	$(INSTALL_DATA) -p $(GRTSRCDIR)/vpi_user.h $(DESTDIR)$(incdir)/
 
 uninstall.vpi:
@@ -529,7 +529,6 @@ uninstall.vpi:
 install.vpi.local: all.vpi
 	$(MKDIR) -p include lib
 	$(INSTALL_DATA) -p $(GRTSRCDIR)/vpi_user.h include/
-	$(INSTALL_PROGRAM) -p libghdlvpi$(SOEXT) lib/
 
 ################ Libraries ###############################################
 
