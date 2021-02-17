@@ -371,7 +371,9 @@ jobs:
       with:
         msystem: MINGW64
         update: true
-        install: mingw-w64-x86_64-python-pip
+        install: >
+          mingw-w64-x86_64-python-pip
+          mingw-w64-x86_64-python-setuptools
 
     - name: '⚙️ git config'
       run: git config --global core.autocrlf input
