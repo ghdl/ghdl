@@ -116,11 +116,11 @@ while [[ $# -gt 0 ]]; do
 			GHDL="$2"				# overwrite a potentially existing GHDL environment variable
 			shift						# skip argument
 			;;
-		--source)
+		--src|--source)
 			SrcDir="$2"
 			shift						# skip argument
 			;;
-		--output)
+		--out|--output)
 			DestDir="$2"
 			shift						# skip argument
 			;;
@@ -167,9 +167,9 @@ if [[ $COMMAND -le 1 ]]; then
 	echo "  -H --halt-on-error           Halt on error(s)."
 	echo ""
 	echo "Advanced options:"
-	echo "     --ghdl <GHDL binary>      Path to GHDL's executable, e.g. /usr/local/bin/ghdl"
-	echo "     --output <dir name>       Name of the output directory, e.g. vivado"
-	echo "     --source <Path to Vivado> Path to the sources."
+	echo "        --ghdl <GHDL binary>      Path to GHDL's executable, e.g. /usr/local/bin/ghdl"
+	echo "  --out --output <dir name>       Name of the output directory, e.g. vivado"
+	echo "  --src --source <Path to Vivado> Path to the sources."
 	echo ""
 	echo "Verbosity:"
 	echo "  -v --verbose                 Print verbose messages."
