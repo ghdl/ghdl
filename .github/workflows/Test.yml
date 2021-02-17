@@ -293,6 +293,7 @@ jobs:
           mingw-w64-${{ matrix.sys.arch }}-diffutils
           mingw-w64-${{ matrix.sys.arch }}-gcc
           mingw-w64-${{ matrix.sys.arch }}-python-pip
+          mingw-w64-${{ matrix.sys.arch }}-python-setuptools
 
     - name: '⚙️ git config'
       run: git config --global core.autocrlf input
