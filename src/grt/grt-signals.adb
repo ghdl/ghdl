@@ -553,7 +553,7 @@ package body Grt.Signals is
       Proc := Get_Current_Process;
       for I in 0 .. Sig.S.Nbr_Drivers - 1 loop
          if Sig.S.Drivers (I).Proc = Proc then
-            return Sig.S.Drivers (I)'Access;
+            return Sig.S.Drivers (I)'Unrestricted_Access;
          end if;
       end loop;
       return null;
