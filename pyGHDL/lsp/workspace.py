@@ -450,8 +450,7 @@ class Workspace(object):
                 res.append(
                     {
                         "name": name_table.Get_Name_Ptr(
-                            nodes.Get_Identifier(inters)
-                        ).decode("latin-1")
+                            nodes.Get_Identifier(inters))
                     }
                 )
                 inters = nodes.Get_Chain(inters)
