@@ -99,7 +99,7 @@ jobs:
         git diff --exit-code
 
     - name: Check if python follows code formatting standards
-      run: python -m black --check pyGHDL
+      run: python -m black --check --diff pyGHDL
 
 #
 # GPL
