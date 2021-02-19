@@ -448,10 +448,7 @@ class Workspace(object):
             res = []
             while inters != nodes.Null_Iir:
                 res.append(
-                    {
-                        "name": name_table.Get_Name_Ptr(
-                            nodes.Get_Identifier(inters))
-                    }
+                    {"name": name_table.Get_Name_Ptr(nodes.Get_Identifier(inters))}
                 )
                 inters = nodes.Get_Chain(inters)
             return res
