@@ -283,10 +283,15 @@ package body Ghdlsynth is
             Lib : Node;
          begin
             Lib := Libraries.Get_Library
-              (Cmd.Vendor_Libraries (I), No_Location);
+              (Cmd.Vendor_Libraries (I), Libraries.Command_Line_Location);
             Set_Vendor_Library_Flag (Lib, True);
          end;
       end loop;
+
+      --  Maybe a vendor library is unknown.
+      if Errorout.Nbr_Errors > 0 then
+         return Null_Iir;
+      end if;
 
       Flags.Flag_Elaborate_With_Outdated := E_Opt >= Args'First;
 
