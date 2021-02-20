@@ -2418,6 +2418,9 @@ package body Vhdl.Canon is
                if Is_Config and then Is_Valid (Entity) then
                   Map_Chain := Sem_Specs.Create_Default_Map_Aspect
                     (Comp, Entity, Sem_Specs.Map_Generic, Bind);
+                  --  Check all non-associated generics have a default value.
+                  Sem_Specs.Sem_Check_Missing_Generic_Association
+                    (Get_Generic_Chain (Entity), Map_Chain, Null_Iir, Bind);
                end if;
             else
                Map_Chain := Canon_Association_Chain
