@@ -2756,11 +2756,11 @@ package body Vhdl.Nodes_Meta is
       Field_Architecture,
       --  Iir_Kind_Block_Configuration
       Field_Parent,
+      Field_Block_Specification,
       Field_Declaration_Chain,
       Field_Chain,
       Field_Configuration_Item_Chain,
       Field_Prev_Block_Configuration,
-      Field_Block_Specification,
       --  Iir_Kind_Block_Header
       Field_Generic_Chain,
       Field_Port_Chain,

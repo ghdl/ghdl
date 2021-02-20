@@ -622,6 +622,12 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Parent (Field0)
    --
+   --  Note: for default block configurations of iterative generate statement,
+   --  the block specification is an indexed_name, whose index_list is others.
+   --  The name designates either a block statement or a generate statement
+   --  body.
+   --   Get/Set_Block_Specification (Field5)
+   --
    --  Only use_clause are allowed here.
    --   Get/Set_Declaration_Chain (Field1)
    --
@@ -632,12 +638,6 @@ package Vhdl.Nodes is
    --  Single linked list of block configuration that apply to the same
    --  for scheme generate block.
    --   Get/Set_Prev_Block_Configuration (Field4)
-   --
-   --  Note: for default block configurations of iterative generate statement,
-   --  the block specification is an indexed_name, whose index_list is others.
-   --  The name designates either a block statement or a generate statement
-   --  body.
-   --   Get/Set_Block_Specification (Field5)
 
    -- Iir_Kind_Binding_Indication (Medium)
    --
