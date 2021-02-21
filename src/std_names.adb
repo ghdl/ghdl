@@ -808,8 +808,8 @@ package body Std_Names is
       Def ("ag",                 Name_Ag);
       Def ("ax",                 Name_Ax);
       Def ("abort",              Name_Abort);
-      Def ("assume",             Name_Assume);
       Def ("assume_guarantee",   Name_Assume_Guarantee);
+      Def ("async_abort",        Name_Async_Abort);
       Def ("before",             Name_Before);
       Def ("clock",              Name_Clock);
       Def ("const",              Name_Const);
@@ -837,6 +837,7 @@ package body Std_Names is
       Def ("prev",               Name_Prev);
       Def ("rose",               Name_Rose);
       Def ("strong",             Name_Strong);
+      Def ("sync_abort",         Name_Sync_Abort);
       Def ("union",              Name_Union);
       Def ("w",                  Name_W);
       Def ("whilenot",           Name_Whilenot);
