@@ -3170,6 +3170,9 @@ package body Synth.Stmts is
       Synth_Declarations (Blk_Inst, Get_Declaration_Chain (Blk));
       Synth_Concurrent_Statements
         (Blk_Inst, Get_Concurrent_Statement_Chain (Blk));
+
+      Synth_Attribute_Values (Blk_Inst, Blk);
+
       Finalize_Declarations (Blk_Inst, Get_Declaration_Chain (Blk));
 
       Free_Instance (Blk_Inst);
@@ -3443,6 +3446,8 @@ package body Synth.Stmts is
 
       Synth_Concurrent_Statements
         (Bod_Inst, Get_Concurrent_Statement_Chain (Bod));
+
+      Synth_Attribute_Values (Bod_Inst, Bod);
 
       Finalize_Declarations (Bod_Inst, Decls_Chain);
 
