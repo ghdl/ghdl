@@ -308,10 +308,7 @@ build () {
   #--- make
 
   gstart "[GHDL - build] Make"
-  set +e
-  make LIB_CFLAGS="$LIB_CFLAGS" OPT_FLAGS="$OPT_FLAGS" -j`nproc` 2>make_err.log
-  tail -1000 make_err.log
-  set -e
+  make LIB_CFLAGS="$LIB_CFLAGS" OPT_FLAGS="$OPT_FLAGS" -j"$(nproc)"
   gend
 
   gstart "[GHDL - build] Install"
