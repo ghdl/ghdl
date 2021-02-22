@@ -199,7 +199,7 @@ pub fn sha1(dat: &[u8]) -> Sha1State {
     let len = dat.len();
     let mut off: usize = 0;
 
-    while off + 64 < len {
+    while off + 64 <= len {
         process_block(&mut res, to_u32x16(&dat[off..off + 64]));
         off += 64;
     }
@@ -246,6 +246,18 @@ mod tests {
 
         let r = super::sha1_str("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq");
         assert_eq!(r, Sha1State{a: 0x84983E44, b: 0x1C3BD26E, c: 0xBAAE4AA1, d: 0xF95129E5, e: 0xE54670F1});
+        println!("{:?}", r);
+
+        let r = super::sha1_str("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+        assert_eq!(r, Sha1State{a:0x0098ba82, b: 0x4b5c1642, c: 0x7bd7a112, d: 0x2a5a442a, e: 0x25ec644d});
+        println!("{:?}", r);
+
+        let r = super::sha1_str("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+        assert_eq!(r, Sha1State{a:0x95e1bd51, b: 0xa218fc01, c: 0x7dc138e5, d: 0xb214c624, e: 0xd0c8ccb});
+        println!("{:?}", r);
+
+        let r = super::sha1_str("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+        assert_eq!(r, Sha1State{a:0xb05d71c6, b :0x4979cb95, c: 0xfa74a33c, d: 0xdb31a40d, e: 0x258ae02e});
         println!("{:?}", r);
     }
 }
