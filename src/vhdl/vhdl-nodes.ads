@@ -5904,6 +5904,8 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_Math_Real_Log2,
       Iir_Predefined_Ieee_Math_Real_Sin,
       Iir_Predefined_Ieee_Math_Real_Cos,
+      Iir_Predefined_Ieee_Math_Real_Arctan,
+      Iir_Predefined_Ieee_Math_Real_Pow,
 
       --  Std_Logic_Unsigned (synopsys extension).
       Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Slv,

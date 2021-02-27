@@ -610,6 +610,15 @@ package body Synth.Static_Oper is
                end if;
             end;
 
+         when Iir_Predefined_Ieee_Math_Real_Pow =>
+            declare
+               function Pow (L, R : Fp64) return Fp64;
+               pragma Import (C, Pow);
+            begin
+               return Create_Memory_Fp64
+                 (Pow (Read_Fp64 (Left), Read_Fp64 (Right)), Res_Typ);
+            end;
+
          when others =>
             Error_Msg_Synth
               (+Expr, "synth_static_dyadic_predefined: unhandled "
@@ -1011,6 +1020,13 @@ package body Synth.Static_Oper is
                pragma Import (C, Cos);
             begin
                return Create_Memory_Fp64 (Cos (Read_Fp64 (Param1)), Res_Typ);
+            end;
+         when Iir_Predefined_Ieee_Math_Real_Arctan =>
+            declare
+               function Atan (Arg : Fp64) return Fp64;
+               pragma Import (C, Atan);
+            begin
+               return Create_Memory_Fp64 (Atan (Read_Fp64 (Param1)), Res_Typ);
             end;
          when others =>
             Error_Msg_Synth

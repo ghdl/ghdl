@@ -50,6 +50,10 @@ package body Vhdl.Ieee.Math_Real is
                      Predef := Iir_Predefined_Ieee_Math_Real_Sin;
                   when Name_Cos =>
                      Predef := Iir_Predefined_Ieee_Math_Real_Cos;
+                  when Name_Arctan =>
+                     Predef := Iir_Predefined_Ieee_Math_Real_Arctan;
+                  when Name_Op_Exp =>
+                     Predef := Iir_Predefined_Ieee_Math_Real_Pow;
                   when others =>
                      null;
                end case;

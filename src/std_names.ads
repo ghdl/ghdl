@@ -754,12 +754,13 @@ package Std_Names is
    Name_Log2               : constant Name_Id := Name_First_Ieee_Name + 042;
    Name_Sin                : constant Name_Id := Name_First_Ieee_Name + 043;
    Name_Cos                : constant Name_Id := Name_First_Ieee_Name + 044;
-   Name_Shl                : constant Name_Id := Name_First_Ieee_Name + 045;
-   Name_Shr                : constant Name_Id := Name_First_Ieee_Name + 046;
-   Name_Ext                : constant Name_Id := Name_First_Ieee_Name + 047;
-   Name_Sxt                : constant Name_Id := Name_First_Ieee_Name + 048;
-   Name_Find_Leftmost      : constant Name_Id := Name_First_Ieee_Name + 049;
-   Name_Find_Rightmost     : constant Name_Id := Name_First_Ieee_Name + 050;
+   Name_Arctan             : constant Name_Id := Name_First_Ieee_Name + 045;
+   Name_Shl                : constant Name_Id := Name_First_Ieee_Name + 046;
+   Name_Shr                : constant Name_Id := Name_First_Ieee_Name + 047;
+   Name_Ext                : constant Name_Id := Name_First_Ieee_Name + 048;
+   Name_Sxt                : constant Name_Id := Name_First_Ieee_Name + 049;
+   Name_Find_Leftmost      : constant Name_Id := Name_First_Ieee_Name + 050;
+   Name_Find_Rightmost     : constant Name_Id := Name_First_Ieee_Name + 051;
    Name_Last_Ieee_Name     : constant Name_Id := Name_Find_Rightmost;
 
    Name_First_Synthesis    : constant Name_Id := Name_Last_Ieee_Name + 1;
