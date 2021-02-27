@@ -5725,6 +5725,9 @@ package body Vhdl.Sem_Expr is
          if Res = Null_Iir then
             --  Error occurred.
             return Null_Iir;
+         elsif Get_Type (Res) = Null_Iir then
+            Error_Msg_Sem (+Res, "incorrect type for condition");
+            return Null_Iir;
          end if;
 
          return Sem_Condition_Pass2 (Res);
