@@ -5720,13 +5720,10 @@ package body Vhdl.Sem_Expr is
          --  context including the expression, then the condition operator is
          --  not applied.
 
-         Res := Sem_Expression_Ov (Cond, Null_Iir);
+         Res := Sem_Expression_Wildcard (Cond, Null_Iir);
 
          if Res = Null_Iir then
             --  Error occurred.
-            return Null_Iir;
-         elsif Get_Type (Res) = Null_Iir then
-            Error_Msg_Sem (+Res, "incorrect type for condition");
             return Null_Iir;
          end if;
 
