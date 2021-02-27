@@ -3255,6 +3255,8 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Sequential_Statement_Chain (Field4)
    --
+   --  Sensitivity list.  Must be after the statements, because signal aliases
+   --  may be referenced (in case of implicit process).
    -- Only for Iir_Kind_Sensitized_Process_Statement:
    --   Get/Set_Sensitivity_List (Field6)
    --
