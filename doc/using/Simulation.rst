@@ -146,15 +146,20 @@ Here is the list of the most useful options. For further info, see :ref:`DEV:Deb
 
 .. option:: --vpi=<FILENAME>
 
-  Load VPI module.
+  Load VPI library. This option can be used multiple times to load different libraries.
 
-  .. HINT::
-    Currently, although multiple ``--vpi=`` options can be passed, only the last one is kept/used. However, handling
-    more than one shouldn't be a difficult change.
+  Any registration functions in the ``vlog_startup_routines`` array in the library will be called:
 
-.. option:: --vpi-trace=<FILE>
+  .. code-block:: c
 
-  Trace vpi calls to FILE.
+    void (*vlog_startup_routines[]) () = {
+      my_handle_register,
+      0
+    };
+
+.. option:: --vpi-trace[=<FILENAME>]
+
+  Trace vpi calls. Trace is printed to :file:`FILENAME` if provided, otherwise to stdout.
 
 .. option:: --help
 
