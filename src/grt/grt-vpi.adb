@@ -1842,8 +1842,16 @@ package body Grt.Vpi is
 -- * * *   G H D L   h o o k s   * * * * * * * * * * * * * * * * * * * * * * *
 ------------------------------------------------------------------------------
 
-   --  VCD filename.
-   Vpi_Filename : String_Access := null;
+
+   type Lib_Cell;
+   type Lib_Access is access Lib_Cell;
+
+   type Lib_Cell is record
+      File_Name : String_Access;
+      Next : Lib_Access;
+   end record;
+
+   Vpi_Libraries : Lib_Access := null;
 
    ------------------------------------------------------------------------
    --  Return TRUE if OPT is an option for VPI.
@@ -1855,10 +1863,32 @@ package body Grt.Vpi is
          return False;
       end if;
       if Opt'Length > 6 and then Opt (F + 5) = '=' then
-         --  Add an extra NUL character.
-         Vpi_Filename := new String (1 .. Opt'Length - 6 + 1);
-         Vpi_Filename (1 .. Opt'Length - 6) := Opt (F + 6 .. Opt'Last);
-         Vpi_Filename (Vpi_Filename'Last) := NUL;
+         declare
+            Lib : Lib_Access;
+            File : String_Access;
+         begin
+            -- Store library info.
+            Lib := new Lib_Cell;
+            --  Add an extra NUL character.
+            File := new String (1 .. Opt'Length - 6 + 1);
+            File (1 .. Opt'Length - 6) := Opt (F + 6 .. Opt'Last);
+            File (File'Last) := NUL;
+            Lib.File_Name := File;
+
+            -- Add new library to the list.
+            if Vpi_Libraries = null then
+               Vpi_Libraries := Lib;
+            else
+               declare
+                  L : Lib_Access := Vpi_Libraries;
+               begin
+                  while L.Next /= null loop
+                     L := L.Next;
+                  end loop;
+                  L.Next := Lib;
+               end;
+            end if;
+         end;
          return True;
       elsif Opt'Length >= 11 and then Opt (F + 5 .. F + 10) = "-trace" then
          if Opt'Length > 11 and then Opt (F + 11) = '=' then
@@ -1894,8 +1924,9 @@ package body Grt.Vpi is
    ------------------------------------------------------------------------
    procedure Vpi_Help is
    begin
-      Put_Line (" --vpi=FILENAME     load VPI module");
-      Put_Line (" --vpi-trace[=FILE] trace vpi calls to FILE");
+      Put_Line (" --vpi=FILENAME      load VPI library");
+      Put_Line
+        (" --vpi-trace[=FILE]  trace vpi calls to stdout or provided FILE");
    end Vpi_Help;
 
    ------------------------------------------------------------------------
@@ -1907,12 +1938,19 @@ package body Grt.Vpi is
 
    procedure Vpi_Init
    is
+      Lib : Lib_Access := Vpi_Libraries;
    begin
-      if Vpi_Filename /= null then
-         if LoadVpiModule (Vpi_Filename.all'Address) /= 0 then
-            Error ("cannot load VPI module");
-         end if;
+      if Lib = null then
+         return;
       end if;
+      while Lib /= null loop
+         if LoadVpiModule (Lib.File_Name.all'Address) /= 0 then
+            Error_S ("cannot load VPI module '");
+            Diag_C (Lib.File_Name.all);
+            Error_E ("'");
+         end if;
+         Lib := Lib.Next;
+      end loop;
    end Vpi_Init;
 
    ------------------------------------------------------------------------
@@ -1922,7 +1960,7 @@ package body Grt.Vpi is
       Res : Integer;
       pragma Unreferenced (Res);
    begin
-      if Vpi_Filename = null then
+      if Vpi_Libraries = null then
          return;
       end if;
 
