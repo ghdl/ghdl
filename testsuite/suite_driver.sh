@@ -14,7 +14,7 @@ shift
 
 # This is the only place where test dirs are specified.
 #Do not duplicate this line
-dirs="*[0-9]"
+dirs="*[0-9]*"
 
 failures=""
 full=n

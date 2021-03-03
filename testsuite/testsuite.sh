@@ -97,7 +97,7 @@ for opt; do
   esac
 done
 
-if [ "x$tests" = "x" ]; then tests="sanity pyunit gna vests synth vpi"; fi
+if [ "x$tests" = "x" ]; then tests="sanity pyunit gna vests synth vpi vhpi"; fi
 
 echo "> tests: $tests"
 echo "> args: $@"
@@ -105,7 +105,7 @@ echo "> args: $@"
 # Run a testsuite
 do_test() {
   case $1 in
-    sanity|gna|synth|vpi)
+    sanity|gna|synth|vpi|vhpi)
       gstart "[GHDL - test] $1"
       cd "$1"
       ../suite_driver.sh $@

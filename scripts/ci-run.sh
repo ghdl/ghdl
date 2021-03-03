@@ -460,7 +460,7 @@ EOF
         tests+=" synth"
       fi
 
-      tests+=" vpi"
+      tests+=" vpi vhpi"
 
       # Run tests in docker container
       $RUN "$GHDL_TEST_IMAGE" bash -c "GHDL=ghdl ./testsuite/testsuite.sh $tests"
