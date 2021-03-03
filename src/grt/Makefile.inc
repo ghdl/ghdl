@@ -92,7 +92,7 @@ GRT_FST_OBJS := fstapi.o lz4.o fastlz.o
 
 # Additionnal object files (C or asm files).
 GRT_BASE_C_OBJS:=$(GRT_TARGET_OBJS) grt-cstdio.o grt-cgnatrts.o
-GRT_ADD_OBJS:=$(GRT_BASE_C_OBJS) grt-cvpi.o grt-cdynload.o $(GRT_FST_OBJS)
+GRT_ADD_OBJS:=$(GRT_BASE_C_OBJS) grt-cvpi.o grt-cvhpi.o grt-cdynload.o $(GRT_FST_OBJS)
 
 # Source files create by grt.
 GRT_SRC_DEPS:=grt-backtraces-impl.ads
@@ -193,6 +193,12 @@ grt-cvpi.o: $(GRTSRCDIR)/grt-cvpi.c
 	$(GRT_C_COMPILE)
 
 pic/grt-cvpi.o: $(GRTSRCDIR)/grt-cvpi.c
+	$(GRT_C_COMPILE_PIC)
+
+grt-cvhpi.o: $(GRTSRCDIR)/grt-cvhpi.c
+	$(GRT_C_COMPILE)
+
+pic/grt-cvhpi.o: $(GRTSRCDIR)/grt-cvhpi.c
 	$(GRT_C_COMPILE_PIC)
 
 grt-cdynload.o: $(GRTSRCDIR)/grt-cdynload.c

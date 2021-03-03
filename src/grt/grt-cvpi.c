@@ -32,15 +32,6 @@
 #include "vpi_thunk.h"
 #include "grt-cdynload.h"
 
-/* Extension of a shared library.  */
-#if defined (WINNT)
-#define DSO_EXT ".dll"
-#elif defined (__APPLE__)
-#define DSO_EXT ".dylib"
-#else
-#define DSO_EXT ".so"
-#endif
-
 extern PLI_INT32 vpi_control_np (int op, int status);
 
 static vpi_thunk __ghdl_vpi_thunk_v1 =

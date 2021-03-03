@@ -513,22 +513,29 @@ vpi_thunk.o: $(GRTSRCDIR)/vpi_thunk.c $(GRTSRCDIR)/vpi_thunk.h
 #	Do not use OPT_FLAGS (do not enable coverage)
 	$(CC) -c -o $@ $< $(PIC_FLAGS) -O $(WARN_CFLAGS)
 
-lib/libghdlvpi$(SOEXT): vpi_thunk.o
-	$(CC) -o $@ $< -shared $(SHLIB_FLAGS)
+vhpi_thunk.o: $(GRTSRCDIR)/vhpi_thunk.c $(GRTSRCDIR)/vhpi_thunk.h
+#	Do not use OPT_FLAGS (do not enable coverage)
+	$(CC) -c -o $@ $< $(PIC_FLAGS) -O $(WARN_CFLAGS)
+
+lib/libghdlvpi$(SOEXT): vpi_thunk.o vhpi_thunk.o
+	$(CC) -o $@ $^ -shared $(SHLIB_FLAGS)
 
 all.vpi: lib/libghdlvpi$(SOEXT)
 
 install.vpi: all.vpi install.dirs
 	$(INSTALL_PROGRAM) -p lib/libghdlvpi$(SOEXT) $(DESTDIR)$(libdir)/
 	$(INSTALL_DATA) -p $(GRTSRCDIR)/vpi_user.h $(DESTDIR)$(incdir)/
+	$(INSTALL_DATA) -p $(GRTSRCDIR)/vhpi_user.h $(DESTDIR)$(incdir)/
 
 uninstall.vpi:
 	$(RM) -f $(DESTDIR)$(libdir)/libghdlvpi$(SOEXT)
 	$(RM) -f $(DESTDIR)$(incdir)/vpi_user.h
+	$(RM) -f $(DESTDIR)$(incdir)/vhpi_user.h
 
 install.vpi.local: all.vpi
 	$(MKDIR) -p include lib
 	$(INSTALL_DATA) -p $(GRTSRCDIR)/vpi_user.h include/
+	$(INSTALL_DATA) -p $(GRTSRCDIR)/vhpi_user.h include/
 
 ################ Libraries ###############################################
 
@@ -602,9 +609,9 @@ distclean: clean
 clean-c: force
 	$(RM) -f memsegs_c.o chkstk.o jumps.o times.o
 	$(RM) -f grt-cstdio.o grt-cgnatrts.o grt-modules.o
-	$(RM) -f grt-cvpi.o grt-cdynload.o
+	$(RM) -f grt-cvpi.o grt-cvhpi.o grt-cdynload.o
 	$(RM) -f fstapi.o fastlz.o lz4.o
-	$(RM) -f pic/times.o pic/grt-cvpi.o pic/jumps.o
+	$(RM) -f pic/times.o pic/grt-cvpi.o pic/grt-cvhpi.o pic/jumps.o
 	$(RM) -f pic/grt-cstdio.o pic/grt-cgnatrts.o pic/grt-modules.o
 	$(RM) -f pic/grt-cdynload.o
 

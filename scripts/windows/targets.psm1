@@ -234,6 +234,7 @@ function Invoke-CompileCFiles
 	$SourceFiles = @()
 	$SourceFiles += New-Object PSObject -Property @{File="grt\grt-cstdio.c";		  	CFlags=@()}
 	$SourceFiles += New-Object PSObject -Property @{File="grt\grt-cvpi.c";					CFlags=@()}
+	$SourceFiles += New-Object PSObject -Property @{File="grt\grt-cvhpi.c";					CFlags=@()}
 	$SourceFiles += New-Object PSObject -Property @{File="grt\grt-cdynload.c";		  CFlags=@()}
 	$SourceFiles += New-Object PSObject -Property @{File="grt\config\clock.c";			CFlags=@()}
 	$SourceFiles += New-Object PSObject -Property @{File="grt\config\win32.c";			CFlags=@('-DWITH_GNAT_RUN_TIME')}
@@ -314,6 +315,7 @@ function Invoke-CompileGHDLAdaFiles
 	$Parameters += 'grt-cstdio.o'
 	$Parameters += 'clock.o'
 	$Parameters += 'grt-cvpi.o'
+	$Parameters += 'grt-cvhpi.o'
 	$Parameters += 'grt-cdynload.o'
 	$Parameters += 'memsegs_c.o'
 	$Parameters += 'win32.o'

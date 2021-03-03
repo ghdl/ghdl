@@ -661,10 +661,10 @@ Make a local copy of an existing library. This is very useful if you want to add
 
 .. _VPI_build_commands:
 
-VPI build commands
-==================
+VPI/VHPI build commands
+=======================
 
-These commands simplify the compile and the link of a user vpi module. They are all wrappers: the arguments are in fact a
+These commands simplify the compile and the link of a user VPI or VHPI module. They are all wrappers: the arguments are in fact a
 whole command line that is executed with additional switches. Currently a unix-like compiler (like `cc`, `gcc` or `clang`)
 is expected: the additional switches use their syntax. The only option is `-v` which displays the command before its
 execution.

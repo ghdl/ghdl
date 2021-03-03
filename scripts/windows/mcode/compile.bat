@@ -10,6 +10,9 @@ if errorlevel 1 goto failed
 gcc -c %CFLAGS% ../../../src/grt/grt-cvpi.c
 if errorlevel 1 goto failed
 
+gcc -c %CFLAGS% ../../../src/grt/grt-cvhpi.c
+if errorlevel 1 goto failed
+
 gcc -c %CFLAGS% ../../../src/grt/config/clock.c
 if errorlevel 1 goto failed
 
