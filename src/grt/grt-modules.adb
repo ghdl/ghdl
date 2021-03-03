@@ -25,6 +25,7 @@ pragma Unreferenced (System.Storage_Elements);
 with Grt.Vcd;
 with Grt.Vcdz;
 with Grt.Vpi;
+with Grt.Vhpi;
 with Grt.Fst;
 with Grt.Waves;
 with Grt.Vital_Annotate;
@@ -43,6 +44,7 @@ package body Grt.Modules is
       Grt.Waves.Register;
       Grt.Fst.Register;
       Grt.Vpi.Register;
+      Grt.Vhpi.Register;
       Grt.Vital_Annotate.Register;
       Grt.Disp_Rti.Register;
       Grt.Psl.Register;

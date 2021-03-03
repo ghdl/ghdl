@@ -161,6 +161,25 @@ Here is the list of the most useful options. For further info, see :ref:`DEV:Deb
 
   Trace vpi calls. Trace is printed to :file:`FILENAME` if provided, otherwise to stdout.
 
+.. option:: --vhpi=<FILENAME>[:<ENTRYPOINT>]
+
+  Load VHPI library. This option can be used multiple times to load different libraries.
+
+  If an ``ENTRYPOINT`` registration function is provided, it will be called.
+  Otherwise, any registration functions in the ``vhpi_startup_routines`` array in the library will be called:
+
+  .. code-block:: c
+
+    void (*vhpi_startup_routines[])() = {
+      register_foreign_app,
+      register_foreign_func,
+      0
+    };
+
+.. option:: --vhpi-trace[=<FILENAME>]
+
+  Trace vhpi calls. Trace is printed to :file:`FILENAME` if provided, otherwise to stdout.
+
 .. option:: --help
 
   Display a short description of the options accepted by the runtime library.

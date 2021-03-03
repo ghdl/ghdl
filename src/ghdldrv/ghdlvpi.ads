@@ -1,4 +1,4 @@
---  GHDL driver - compile and link wrappers for VPI.
+--  GHDL driver - compile and link wrappers for VPI and VHPI.
 --  Copyright (C) 2016 Tristan Gingold
 --
 --  This program is free software: you can redistribute it and/or modify

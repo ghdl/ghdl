@@ -16,6 +16,7 @@
 with System.Storage_Elements; --  Work around GNAT bug.
 with Grt.Vcd;
 with Grt.Vpi;
+with Grt.Vhpi;
 with Grt.Waves;
 with Grt.Vital_Annotate;
 with Grt.Disp_Tree;
@@ -30,6 +31,7 @@ package body Grt.Modules is
       Grt.Vcd.Register;
       Grt.Waves.Register;
       Grt.Vpi.Register;
+      Grt.Vhpi.Register;
       Grt.Vital_Annotate.Register;
       Grt.Disp_Rti.Register;
       Grt.Backtraces.Register;
