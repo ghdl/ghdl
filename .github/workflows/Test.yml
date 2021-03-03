@@ -273,7 +273,7 @@ jobs:
           {icon: '🟪', installs: 'MINGW64', arch: x86_64, pkg: 'llvm'  },
         ]
         suite: [
-          'sanity pyunit vpi',
+          'sanity pyunit vpi vhpi',
           'gna',
           'vests',
           'synth',
