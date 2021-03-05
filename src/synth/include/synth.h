@@ -95,7 +95,7 @@ namespace GhdlSynth {
   typedef unsigned int Param_Idx;
   struct Pval { unsigned int id; };
 
-#include "ghdlsynth_gates.h"
+#include "ghdl/synth_gates.h"
 
   struct Module { unsigned int id; };
   inline bool is_valid(Module m) { return m.id != 0; }
