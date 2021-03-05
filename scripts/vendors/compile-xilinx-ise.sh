@@ -121,11 +121,11 @@ while [[ $# -gt 0 ]]; do
 			GHDL="$2"				# overwrite a potentially existing GHDL environment variable
 			shift						# skip argument
 			;;
-		-src|--source)
+		--src|--source)
 			SrcDir="$2"
 			shift						# skip argument
 			;;
-		-out|--output)
+		--out|--output)
 			DestDir="$2"
 			shift						# skip argument
 			;;
