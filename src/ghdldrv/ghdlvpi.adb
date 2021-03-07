@@ -37,7 +37,9 @@ package body Ghdlvpi is
       --  Compute install path
       Ghdllocal.Set_Exec_Prefix_From_Program_Name;
 
-      return Ghdllocal.Exec_Prefix.all & Directory_Separator & "include/ghdl";
+      return Ghdllocal.Exec_Prefix.all
+        & Directory_Separator & "include"
+        & Directory_Separator & "ghdl";
    end Get_Vpi_Include_Dir;
 
    --  Return the lib directory.
