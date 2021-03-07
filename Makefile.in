@@ -47,7 +47,7 @@ PWD?=$(shell pwd)
 DESTDIR=
 bindir=$(prefix)/bin
 libdir=$(prefix)/lib
-incdir=$(prefix)/include/ghdl
+incdir=$(prefix)/include
 MKDIR=mkdir
 LN=ln -s
 CP=cp
@@ -449,8 +449,8 @@ all.libghdl.false:
 all.libghdl: all.libghdl.$(enable_libghdl)
 
 install.libghdl.include: install.dirs $(srcdir)/src/synth/include/synth_gates.h
-	$(INSTALL_DATA) -p $(srcdir)/src/synth/include/synth.h $(DESTDIR)$(incdir)
-	$(INSTALL_DATA) -p $(srcdir)/src/synth/include/synth_gates.h $(DESTDIR)$(incdir)
+	$(INSTALL_DATA) -p $(srcdir)/src/synth/include/synth.h $(DESTDIR)$(incdir)/ghdl
+	$(INSTALL_DATA) -p $(srcdir)/src/synth/include/synth_gates.h $(DESTDIR)$(incdir)/ghdl
 
 install.libghdl.lib:
 	$(INSTALL_PROGRAM) -p lib/$(libghdl_name) $(DESTDIR)$(libdir)/
@@ -524,13 +524,13 @@ all.vpi: lib/libghdlvpi$(SOEXT)
 
 install.vpi: all.vpi install.dirs
 	$(INSTALL_PROGRAM) -p lib/libghdlvpi$(SOEXT) $(DESTDIR)$(libdir)/
-	$(INSTALL_DATA) -p $(GRTSRCDIR)/vpi_user.h $(DESTDIR)$(incdir)/
-	$(INSTALL_DATA) -p $(GRTSRCDIR)/vhpi_user.h $(DESTDIR)$(incdir)/
+	$(INSTALL_DATA) -p $(GRTSRCDIR)/vpi_user.h $(DESTDIR)$(incdir)/ghdl/
+	$(INSTALL_DATA) -p $(GRTSRCDIR)/vhpi_user.h $(DESTDIR)$(incdir)/ghdl/
 
 uninstall.vpi:
 	$(RM) -f $(DESTDIR)$(libdir)/libghdlvpi$(SOEXT)
-	$(RM) -f $(DESTDIR)$(incdir)/vpi_user.h
-	$(RM) -f $(DESTDIR)$(incdir)/vhpi_user.h
+	$(RM) -f $(DESTDIR)$(incdir)/ghdl/vpi_user.h
+	$(RM) -f $(DESTDIR)$(incdir)/ghdl/vhpi_user.h
 
 install.vpi.local: all.vpi
 	$(MKDIR) -p include/ghdl lib
@@ -569,6 +569,7 @@ install.dirs:
 	$(MKDIR) -p $(DESTDIR)$(libdir)
 	$(MKDIR) -p $(DESTDIR)$(prefix)/$(libdirsuffix)
 	$(MKDIR) -p $(DESTDIR)$(incdir)
+	$(MKDIR) -p $(DESTDIR)$(incdir)/ghdl
 
 install.vhdllib: install.dirs
 #	Libraries (only if not empty)
