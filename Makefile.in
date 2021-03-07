@@ -533,9 +533,9 @@ uninstall.vpi:
 	$(RM) -f $(DESTDIR)$(incdir)/vhpi_user.h
 
 install.vpi.local: all.vpi
-	$(MKDIR) -p include lib
-	$(INSTALL_DATA) -p $(GRTSRCDIR)/vpi_user.h include/
-	$(INSTALL_DATA) -p $(GRTSRCDIR)/vhpi_user.h include/
+	$(MKDIR) -p include/ghdl lib
+	$(INSTALL_DATA) -p $(GRTSRCDIR)/vpi_user.h include/ghdl/
+	$(INSTALL_DATA) -p $(GRTSRCDIR)/vhpi_user.h include/ghdl/
 
 ################ Libraries ###############################################
 
