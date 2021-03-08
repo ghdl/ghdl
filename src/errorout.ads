@@ -93,6 +93,9 @@ package Errorout is
       --  Signal assignment creates a delta cycle in a postponed process.
       Warnid_Delta_Cycle,
 
+      --  No wait statement in a non-sensitized process.
+      Warnid_No_Wait,
+
       --  Declaration of a shared variable with a non-protected type.
       Warnid_Shared,
 
@@ -308,6 +311,7 @@ private
         | Warnid_Runtime_Error | Warnid_Pure | Warnid_Specs | Warnid_Hide
         | Warnid_Pragma | Warnid_Analyze_Assert | Warnid_Attribute
         | Warnid_Deprecated_Option | Warnid_Unexpected_Option
+        | Warnid_No_Wait
         | Msgid_Warning  => (Enabled => True, Error => False),
       Warnid_Delta_Cycle | Warnid_Body | Warnid_Static | Warnid_Nested_Comment
         | Warnid_Universal | Warnid_Port_Bounds

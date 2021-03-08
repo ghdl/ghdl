@@ -2240,13 +2240,19 @@ package body Vhdl.Sem_Stmts is
 
       Set_Is_Within_Flag (Proc, False);
 
-      if Get_Kind (Proc) = Iir_Kind_Sensitized_Process_Statement
-        and then Get_Callees_List (Proc) /= Null_Iir_List
-      then
-         --  Check there is no wait statement in subprograms called.
-         --  Also in the case of all-sensitized process, check that package
-         --  subprograms don't read signals.
-         Sem.Add_Analysis_Checks_List (Proc);
+      if Get_Kind (Proc) = Iir_Kind_Sensitized_Process_Statement then
+         if Get_Callees_List (Proc) /= Null_Iir_List then
+            --  Check there is no wait statement in subprograms called.
+            --  Also in the case of all-sensitized process, check that package
+            --  subprograms don't read signals.
+            Sem.Add_Analysis_Checks_List (Proc);
+         end if;
+      else
+         if not Get_Suspend_Flag (Proc) then
+            Warning_Msg_Sem
+              (Warnid_No_Wait, +Proc,
+               "infinite loop for this process without a wait statement");
+         end if;
       end if;
    end Sem_Process_Statement;
 
