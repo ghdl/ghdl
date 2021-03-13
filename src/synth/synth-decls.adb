@@ -93,12 +93,15 @@ package body Synth.Decls is
    function Memtyp_To_Pval (Mt : Memtyp) return Pval
    is
       Len    : constant Uns32 := (Mt.Typ.W + 31) / 32;
-      pragma Assert (Len > 0);
       Vec    : Logvec_Array_Acc;
       Off    : Uns32;
       Has_Zx : Boolean;
       Pv     : Pval;
    begin
+      if Len = 0 then
+         return Create_Pval2 (0);
+      end if;
+
       Vec := new Logvec_Array'(0 .. Digit_Index (Len - 1) => (0, 0));
       Off := 0;
       Has_Zx := False;

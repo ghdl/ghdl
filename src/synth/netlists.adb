@@ -1106,7 +1106,6 @@ package body Netlists is
 
    function Create_Pval4 (Len : Uns32) return Pval
    is
-      pragma Assert (Len > 0);
       Nwords : constant Uns32 := (Len + 31) / 32;
       Idx : constant Uns32 := Pval_Word_Table.Last + 1;
       Res : Uns32;
@@ -1121,7 +1120,6 @@ package body Netlists is
 
    function Create_Pval2 (Len : Uns32) return Pval
    is
-      pragma Assert (Len > 0);
       Nwords : constant Uns32 := (Len + 31) / 32;
       Idx : constant Uns32 := Pval_Word_Table.Last + 1;
       Res : Uns32;
@@ -1145,6 +1143,7 @@ package body Netlists is
    is
       pragma Assert (P <= Pval_Table.Last);
       Pval_Rec : Pval_Record renames Pval_Table.Table (P);
+      pragma Assert (Pval_Rec.Len > 0);
       pragma Assert (Off <= (Pval_Rec.Len - 1) / 32);
       Res : Logic_32;
    begin
@@ -1161,6 +1160,7 @@ package body Netlists is
    is
       pragma Assert (P <= Pval_Table.Last);
       Pval_Rec : Pval_Record renames Pval_Table.Table (P);
+      pragma Assert (Pval_Rec.Len > 0);
       pragma Assert (Off <= (Pval_Rec.Len - 1) / 32);
    begin
       Pval_Word_Table.Table (Pval_Rec.Va_Idx + Off) := Val.Val;
