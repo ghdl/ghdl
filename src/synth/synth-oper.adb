@@ -2054,6 +2054,7 @@ package body Synth.Oper is
                     (+Expr, "operands of std_match don't have the same size");
                   return Create_Value_Discrete (0, Boolean_Type);
                end if;
+               Strip_Const (Cst);
                Res := Synth_Match (Ctxt, Cst, Oper, Expr);
                if Res = No_Net then
                   return Create_Value_Discrete (0, Boolean_Type);
