@@ -180,6 +180,8 @@ package body Vhdl.Canon is
                        (Get_Actual (El), Sensitivity_List, False);
                   when Iir_Kind_Association_Element_Open =>
                      null;
+                  when Iir_Kind_Association_Element_By_Individual =>
+                     null;
                   when others =>
                      Error_Kind ("canon_extract_sensitivity(call)", El);
                end case;
