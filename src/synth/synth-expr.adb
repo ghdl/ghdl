@@ -1581,18 +1581,23 @@ package body Synth.Expr is
       end if;
    end Extract_Event_Expr_Prefix;
 
-   function Is_Same_Node (Left, Right : Node) return Boolean is
+   function Is_Same_Clock (Syn_Inst : Synth_Instance_Acc;
+                           Left, Right : Node;
+                           Clk_Left : Net) return Boolean
+   is
+      N : Net;
    begin
-      if Get_Kind (Left) /= Get_Kind (Right) then
-         return False;
+      --  Handle directly the common case (when clock is a simple name).
+      if Get_Kind (Left) = Iir_Kind_Simple_Name
+        and then Get_Kind (Right) = Iir_Kind_Simple_Name
+      then
+         return Get_Named_Entity (Left) = Get_Named_Entity (Right);
       end if;
-      case Get_Kind (Left) is
-         when Iir_Kind_Simple_Name =>
-            return Get_Named_Entity (Left) = Get_Named_Entity (Right);
-         when others =>
-            Error_Kind ("is_same_node", Left);
-      end case;
-   end Is_Same_Node;
+
+      N := Get_Net (Get_Build (Syn_Inst), Synth_Expression (Syn_Inst, Right));
+
+      return Same_Net (Clk_Left, N);
+   end Is_Same_Clock;
 
    --  Match: clk_signal_name = '1' | clk_signal_name = '0'
    function Extract_Clock_Level
@@ -1607,7 +1612,7 @@ package body Synth.Expr is
       Posedge     : Boolean;
       Res         : Net;
    begin
-      Clk := Get_Net (Ctxt, Synth_Name (Syn_Inst, Prefix));
+      Clk := Get_Net (Ctxt, Synth_Expression (Syn_Inst, Prefix));
       if Get_Kind (Expr) /= Iir_Kind_Equality_Operator then
          Error_Msg_Synth (+Expr, "ill-formed clock-level, '=' expected");
          Res := Build_Posedge (Ctxt, Clk);
@@ -1623,7 +1628,7 @@ package body Synth.Expr is
       end if;
 
       Left := Get_Left (Expr);
-      if not Is_Same_Node (Prefix, Left) then
+      if not Is_Same_Clock (Syn_Inst, Prefix, Left, Clk) then
          Error_Msg_Synth (+Left, "clock signal name doesn't match");
       end if;
 
