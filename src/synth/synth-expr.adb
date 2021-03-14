@@ -2168,17 +2168,20 @@ package body Synth.Expr is
 
       Left := Synth_Expression_With_Type (Syn_Inst, Left_Expr, Typ);
       if Left = No_Valtyp then
+         --  Propagate error.
          return No_Valtyp;
       end if;
       if Is_Static_Val (Left.Val)
         and then Get_Static_Discrete (Left) = Val
       then
+         --  Short-circuit when the left operand determines the result.
          return Create_Value_Discrete (Val, Boolean_Type);
       end if;
 
       Strip_Const (Left);
       Right := Synth_Expression_With_Type (Syn_Inst, Right_Expr, Typ);
       if Right = No_Valtyp then
+         --  Propagate error.
          return No_Valtyp;
       end if;
       Strip_Const (Right);
@@ -2186,6 +2189,7 @@ package body Synth.Expr is
       if Is_Static_Val (Right.Val)
         and then Get_Static_Discrete (Right) = Val
       then
+         --  If the right operand can determine the result, return it.
          return Create_Value_Discrete (Val, Boolean_Type);
       end if;
 
@@ -2196,6 +2200,7 @@ package body Synth.Expr is
          return Create_Value_Discrete (Val, Boolean_Type);
       end if;
 
+      --  Non-static result.
       N := Build_Dyadic (Ctxt, Id,
                          Get_Net (Ctxt, Left), Get_Net (Ctxt, Right));
       Set_Location (N, Expr);
