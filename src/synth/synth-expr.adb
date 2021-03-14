@@ -2183,6 +2183,12 @@ package body Synth.Expr is
       end if;
       Strip_Const (Right);
 
+      if Is_Static_Val (Right.Val)
+        and then Get_Static_Discrete (Right) = Val
+      then
+         return Create_Value_Discrete (Val, Boolean_Type);
+      end if;
+
       --  Return a static value if both operands are static.
       --  Note: we know the value of left if it is not constant.
       if Is_Static_Val (Left.Val) and then Is_Static_Val (Right.Val) then
