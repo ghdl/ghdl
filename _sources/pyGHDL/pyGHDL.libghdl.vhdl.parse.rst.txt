@@ -1,0 +1,37 @@
+pyGHDL.libghdl.vhdl.parse
+=============================
+
+.. automodule:: pyGHDL.libghdl.vhdl.parse
+
+
+.. currentmodule:: pyGHDL.libghdl.vhdl.parse
+
+
+.. #-----------------------------------
+
+**Variables**
+
+- :py:data:`Flag_Parse_Parenthesis`
+
+
+**Functions**
+
+- :py:func:`Parse_Design_File`:
+  Parse a file.
+
+
+
+.. autodata:: Flag_Parse_Parenthesis
+   :annotation:
+
+   .. code-block:: guess
+
+      c_bool(False)
+
+
+.. #-----------------------------------
+
+**Functions**
+
+
+.. autofunction:: Parse_Design_File

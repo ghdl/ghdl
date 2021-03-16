@@ -1,0 +1,45 @@
+pyGHDL.libghdl.vhdl.formatters
+==================================
+
+.. automodule:: pyGHDL.libghdl.vhdl.formatters
+
+
+.. currentmodule:: pyGHDL.libghdl.vhdl.formatters
+
+
+.. #-----------------------------------
+
+
+**Functions**
+
+- :py:func:`Indent_String`:
+  Reindent all lines of F between [First_Line; Last_Line] to :obj:`Handle`.
+
+- :py:func:`Allocate_Handle`:
+  .. todo:: Undocumented in Ada code.
+
+- :py:func:`Get_Length`:
+  .. todo:: Undocumented in Ada code.
+
+- :py:func:`Get_C_String`:
+  .. todo:: Undocumented in Ada code.
+
+- :py:func:`Free_Handle`:
+  .. todo:: Undocumented in Ada code.
+
+
+
+.. #-----------------------------------
+
+**Functions**
+
+
+.. autofunction:: Indent_String
+
+.. autofunction:: Allocate_Handle
+
+.. autofunction:: Get_Length
+
+.. autofunction:: Get_C_String
+
+.. autofunction:: Free_Handle

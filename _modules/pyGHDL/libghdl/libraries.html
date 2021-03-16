@@ -1,0 +1,377 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pyGHDL.libghdl.libraries &mdash; GHDL 2.0.0-dev documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../../../_static/icon.png"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html">
+          
+
+          
+            
+            <img src="../../../_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0-dev
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting.html">Getting | Installing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contribute.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../licenses.html">Copyrights | Licenses</a></li>
+</ul>
+<p class="caption"><span class="caption-text">GHDL usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../quick_start/index.html">Quick Start Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../using/InvokingGHDL.html">Invoking GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../using/Simulation.html">Simulation (runtime)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../using/Synthesis.html">Synthesis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../using/CommandReference.html">Additional Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../using/ImplementationOfVHDL.html">Implementation of VHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../using/ImplementationOfVITAL.html">Implementation of VITAL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../development/Directories.html">Directory structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development/building/index.html">Building GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../pyGHDL/pyGHDL.html">Python Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development/Debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development/CodingStyle.html">Coding Style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development/Scripts.html">Scripts</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../internals/Overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../internals/Frontend.html">Front-end</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../internals/AST.html">AST</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../internals/RTI.html">Run Time Information (RTI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../gnatdoc/index.html">GNATdoc</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Index</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../py-modindex.html">Python Module Index</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GHDL</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+          <li><a href="../libghdl.html">pyGHDL.libghdl</a> &raquo;</li>
+        
+      <li>pyGHDL.libghdl.libraries</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyGHDL.libghdl.libraries</h1><div class="highlight"><pre>
+<span></span><span class="c1"># =============================================================================</span>
+<span class="c1">#               ____ _   _ ____  _       _ _ _           _         _ _</span>
+<span class="c1">#  _ __  _   _ / ___| | | |  _ \| |     | (_) |__   __ _| |__   __| | |</span>
+<span class="c1"># | &#39;_ \| | | | |  _| |_| | | | | |     | | | &#39;_ \ / _` | &#39;_ \ / _` | |</span>
+<span class="c1"># | |_) | |_| | |_| |  _  | |_| | |___ _| | | |_) | (_| | | | | (_| | |</span>
+<span class="c1"># | .__/ \__, |\____|_| |_|____/|_____(_)_|_|_.__/ \__, |_| |_|\__,_|_|</span>
+<span class="c1"># |_|    |___/                                     |___/</span>
+<span class="c1"># =============================================================================</span>
+<span class="c1">#  Authors:</span>
+<span class="c1">#    Tristan Gingold</span>
+<span class="c1">#    Patrick Lehmann</span>
+<span class="c1">#</span>
+<span class="c1"># Package module:   Python binding and low-level API for shared library &#39;libghdl&#39;.</span>
+<span class="c1">#</span>
+<span class="c1"># License:</span>
+<span class="c1"># ============================================================================</span>
+<span class="c1">#  Copyright (C) 2019-2021 Tristan Gingold</span>
+<span class="c1">#</span>
+<span class="c1">#  This program is free software: you can redistribute it and/or modify</span>
+<span class="c1">#  it under the terms of the GNU General Public License as published by</span>
+<span class="c1">#  the Free Software Foundation, either version 2 of the License, or</span>
+<span class="c1">#  (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1">#  This program is distributed in the hope that it will be useful,</span>
+<span class="c1">#  but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1">#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1">#  GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1">#  You should have received a copy of the GNU General Public License</span>
+<span class="c1">#  along with this program.  If not, see &lt;gnu.org/licenses&gt;.</span>
+<span class="c1">#</span>
+<span class="c1"># SPDX-License-Identifier: GPL-2.0-or-later</span>
+<span class="c1"># ============================================================================</span>
+
+<span class="kn">from</span> <span class="nn">ctypes</span> <span class="kn">import</span> <span class="n">c_int32</span>
+
+<span class="kn">from</span> <span class="nn">pydecor</span> <span class="kn">import</span> <span class="n">export</span>
+
+<span class="kn">from</span> <span class="nn">pyGHDL.libghdl</span> <span class="kn">import</span> <span class="n">libghdl</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Library_Location&quot;</span><span class="p">,</span> <span class="s2">&quot;Work_Library&quot;</span><span class="p">]</span>
+
+<span class="kn">from</span> <span class="nn">pyGHDL.libghdl._types</span> <span class="kn">import</span> <span class="n">NameId</span>
+
+
+<span class="n">Library_Location</span> <span class="o">=</span> <span class="n">c_int32</span><span class="o">.</span><span class="n">in_dll</span><span class="p">(</span>
+    <span class="n">libghdl</span><span class="p">,</span> <span class="s2">&quot;libraries__library_location&quot;</span>
+<span class="p">)</span>  <span class="c1">#: A location for library declarations (such as library WORK). Type ``Location_Type``. Use ``.value`` to access this variable inside libghdl</span>
+<span class="n">Work_Library</span> <span class="o">=</span> <span class="n">c_int32</span><span class="o">.</span><span class="n">in_dll</span><span class="p">(</span>
+    <span class="n">libghdl</span><span class="p">,</span> <span class="s2">&quot;libraries__work_library&quot;</span>
+<span class="p">)</span>  <span class="c1">#: Library declaration for the work library. Note: the identifier of the work_library is ``work_library_name``, which may be different from &#39;WORK&#39;. Type: ``Iir_Library_Declaration``. Use ``.value`` to access this variable inside libghdl</span>
+
+
+<div class="viewcode-block" id="Get_Libraries_Chain"><a class="viewcode-back" href="../../../pyGHDL/pyGHDL.libghdl.libraries.html#pyGHDL.libghdl.libraries.Get_Libraries_Chain">[docs]</a><span class="nd">@export</span>
+<span class="k">def</span> <span class="nf">Get_Libraries_Chain</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the chain of libraries.  Can be used only to read (it mustn&#39;t be modified).</span>
+
+<span class="sd">    :return: Type ``Iir_Library_Declaration``</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">libraries__get_libraries_chain</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Add_Design_Unit_Into_Library"><a class="viewcode-back" href="../../../pyGHDL/pyGHDL.libghdl.libraries.html#pyGHDL.libghdl.libraries.Add_Design_Unit_Into_Library">[docs]</a><span class="nd">@export</span>
+<span class="k">def</span> <span class="nf">Add_Design_Unit_Into_Library</span><span class="p">(</span><span class="n">Unit</span><span class="p">,</span> <span class="n">Keep_Obsolete</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Add or replace an design unit in the work library. DECL must not have a chain</span>
+<span class="sd">    (because it may be modified).</span>
+
+<span class="sd">    If the design_file of UNIT is not already in the library, a new one is created.</span>
+
+<span class="sd">    Units are always appended to the design_file. Therefore, the order is kept.</span>
+
+<span class="sd">    :param Unit:          Type: ``Iir_Design_Unit``</span>
+<span class="sd">    :param Keep_Obsolete: If :obj:`Keep_Obsolete` is True, obsoleted units are</span>
+<span class="sd">                          kept in the library.</span>
+
+<span class="sd">                          This is used when a whole design file has to be added</span>
+<span class="sd">                          in the library and then processed (without that feature,</span>
+<span class="sd">                          redefined units would disappear).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">libghdl</span><span class="o">.</span><span class="n">libraries__add_design_unit_into_library</span><span class="p">(</span><span class="n">Unit</span><span class="p">,</span> <span class="n">Keep_Obsolete</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Purge_Design_File"><a class="viewcode-back" href="../../../pyGHDL/pyGHDL.libghdl.libraries.html#pyGHDL.libghdl.libraries.Purge_Design_File">[docs]</a><span class="nd">@export</span>
+<span class="k">def</span> <span class="nf">Purge_Design_File</span><span class="p">(</span><span class="n">Design_File</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Remove the same file as DESIGN_FILE from work library and all of its units.</span>
+
+<span class="sd">    :param Design_File: Type: ``Iir_Design_File``</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">libghdl</span><span class="o">.</span><span class="n">libraries__purge_design_file</span><span class="p">(</span><span class="n">Design_File</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Find_Entity_For_Component"><a class="viewcode-back" href="../../../pyGHDL/pyGHDL.libghdl.libraries.html#pyGHDL.libghdl.libraries.Find_Entity_For_Component">[docs]</a><span class="nd">@export</span>
+<span class="k">def</span> <span class="nf">Find_Entity_For_Component</span><span class="p">(</span><span class="n">Name</span><span class="p">:</span> <span class="n">NameId</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Find an entity whose name is :obj:`Name` in any library. |br|</span>
+<span class="sd">    If there is no such entity, return :attr:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir`. |br|</span>
+<span class="sd">    If there are several entities, return :attr:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir`;</span>
+
+<span class="sd">    :param Name: Entity name to search for.</span>
+<span class="sd">    :return:     Type: ``Iir_Design_Unit``</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">libraries__find_entity_for_component</span><span class="p">(</span><span class="n">Name</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Get_Library_No_Create"><a class="viewcode-back" href="../../../pyGHDL/pyGHDL.libghdl.libraries.html#pyGHDL.libghdl.libraries.Get_Library_No_Create">[docs]</a><span class="nd">@export</span>
+<span class="k">def</span> <span class="nf">Get_Library_No_Create</span><span class="p">(</span><span class="n">Ident</span><span class="p">:</span> <span class="n">NameId</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the library named :obj:`Ident`.</span>
+
+<span class="sd">    :param Ident: Libryr to look for.</span>
+<span class="sd">    :return:      Return :attr:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir` if it doesn&#39;t exist. Type ``Iir_Library_Declaration``</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">libraries__get_library_no_create</span><span class="p">(</span><span class="n">Ident</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Find_Primary_Unit"><a class="viewcode-back" href="../../../pyGHDL/pyGHDL.libghdl.libraries.html#pyGHDL.libghdl.libraries.Find_Primary_Unit">[docs]</a><span class="nd">@export</span>
+<span class="k">def</span> <span class="nf">Find_Primary_Unit</span><span class="p">(</span><span class="n">Library</span><span class="p">,</span> <span class="n">Name</span><span class="p">:</span> <span class="n">NameId</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Just return the design_unit for :obj:`Name`, or ``NULL`` if not found.</span>
+
+<span class="sd">    :param Library: Library to look in. Type: ``Iir_Library_Declaration``</span>
+<span class="sd">    :param Name:    Primary unit to search for.</span>
+<span class="sd">    :return:        Type: ``Iir_Design_Unit``</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">libraries__find_primary_unit</span><span class="p">(</span><span class="n">Library</span><span class="p">,</span> <span class="n">Name</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2002-2021, Tristan Gingold and contributors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/buildthedocs/sphinx.theme">theme</a>
+    
+    provided by <a href="https://buildthedocs.github.io">Build the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

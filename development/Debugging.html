@@ -1,0 +1,362 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Debugging &mdash; GHDL 2.0.0-dev documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../_static/icon.png"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Coding Style" href="CodingStyle.html" />
+    <link rel="prev" title="pyGHDL.lsp.workspace" href="../pyGHDL/pyGHDL.lsp.workspace.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html">
+          
+
+          
+            
+            <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0-dev
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting.html">Getting | Installing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contribute.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../licenses.html">Copyrights | Licenses</a></li>
+</ul>
+<p class="caption"><span class="caption-text">GHDL usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quick_start/index.html">Quick Start Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/InvokingGHDL.html">Invoking GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/Simulation.html">Simulation (runtime)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/Synthesis.html">Synthesis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/CommandReference.html">Additional Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/ImplementationOfVHDL.html">Implementation of VHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/ImplementationOfVITAL.html">Implementation of VITAL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Development</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Directories.html">Directory structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="building/index.html">Building GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pyGHDL/pyGHDL.html">Python Interfaces</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Debugging</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#simulation-and-runtime-debugging-options">Simulation and runtime debugging options</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#gnu-debugger-gdb">GNU Debugger (GDB)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="CodingStyle.html">Coding Style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Scripts.html">Scripts</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../internals/Overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../internals/Frontend.html">Front-end</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../internals/AST.html">AST</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../internals/RTI.html">Run Time Information (RTI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gnatdoc/index.html">GNATdoc</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Index</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Python Module Index</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GHDL</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Debugging</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            
+              <a href="https://github.com/ghdl/ghdl/blob/master/doc/development/Debugging.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="debugging">
+<span id="dev-debugging"></span><h1>Debugging<a class="headerlink" href="#debugging" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="simulation-and-runtime-debugging-options">
+<h2>Simulation and runtime debugging options<a class="headerlink" href="#simulation-and-runtime-debugging-options" title="Permalink to this headline">¶</a></h2>
+<p>Besides the options described in <a class="reference internal" href="../using/InvokingGHDL.html#ghdl-options"><span class="std std-ref">Options</span></a>, <cite>GHDL</cite> passes any debugging options (those that begin with
+<code class="docutils literal notranslate"><span class="pre">-g</span></code>) and optimizations options (those that begin with <code class="docutils literal notranslate"><span class="pre">-O</span></code> or <code class="docutils literal notranslate"><span class="pre">-f</span></code>) to <cite>GCC</cite>. Refer to the <cite>GCC</cite> manual for
+details. Moreover, some debugging options are also available, but not described here. The <a class="reference external" href="https://docs.python.org/3.6/using/cmdline.html#cmdoption-help" title="(in Python v3.6)"><code class="xref std std-option docutils literal notranslate"><span class="pre">--help</span></code></a> option lists
+all options available, including the debugging ones.</p>
+<dl class="std option">
+<dt id="cmdoption-trace-signals">
+<code class="sig-name descname"><span class="pre">--trace-signals</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-trace-signals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display signals after each cycle.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-trace-processes">
+<code class="sig-name descname"><span class="pre">--trace-processes</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-trace-processes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display process name before each cycle.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-stats">
+<code class="sig-name descname"><span class="pre">--stats</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-stats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display run-time statistics.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-disp-order">
+<code class="sig-name descname"><span class="pre">--disp-order</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-disp-order" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display signals order.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-disp-sources">
+<code class="sig-name descname"><span class="pre">--disp-sources</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-disp-sources" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display sources while displaying signals.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-disp-sig-types">
+<code class="sig-name descname"><span class="pre">--disp-sig-types</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-disp-sig-types" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display signal types.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-disp-signals-map">
+<code class="sig-name descname"><span class="pre">--disp-signals-map</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-disp-signals-map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display map bw declared signals and internal signals.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-disp-signals-table">
+<code class="sig-name descname"><span class="pre">--disp-signals-table</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-disp-signals-table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display internal signals.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-checks">
+<code class="sig-name descname"><span class="pre">--checks</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-checks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Do internal checks after each process run.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-activity">
+<code class="sig-name descname"><span class="pre">--activity</span></code><code class="sig-prename descclassname"><span class="pre">=&lt;LEVEL&gt;</span></code><a class="headerlink" href="#cmdoption-activity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Watch activity of LEVEL signals: LEVEL is <code class="docutils literal notranslate"><span class="pre">all</span></code>, <code class="docutils literal notranslate"><span class="pre">min</span></code> (default) or <code class="docutils literal notranslate"><span class="pre">none</span></code> (unsafe).</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-dump-rti">
+<code class="sig-name descname"><span class="pre">--dump-rti</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-dump-rti" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dump Run Time Information (RTI).</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-bootstrap">
+<code class="sig-name descname"><span class="pre">--bootstrap</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-bootstrap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Allow <code class="docutils literal notranslate"><span class="pre">--work=std</span></code></p>
+</dd></dl>
+
+<div class="section" id="gnu-debugger-gdb">
+<h3>GNU Debugger (GDB)<a class="headerlink" href="#gnu-debugger-gdb" title="Permalink to this headline">¶</a></h3>
+<div class="admonition warning" id="index-0">
+<p class="admonition-title">Warning</p>
+<p>Debugging VHDL programs using <cite>GDB</cite> is possible only with GCC/LLVM.</p>
+</div>
+<p>GDB is a general purpose debugger for programs compiled by GCC. Currently, there is no VHDL support for GDB. It may be difficult to inspect variables or signals in GDB. However, it is still able to display the stack frame in case of error or to set a breakpoint at a specified line.</p>
+<p>GDB can be useful to catch a runtime error, such as indexing an array beyond its bounds. All error check subprograms call the <code class="docutils literal notranslate"><span class="pre">__ghdl_fatal</span></code> procedure. Therefore, to a catch runtime error, set a breakpoint like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">gdb</span><span class="p">)</span> <span class="k">break</span> <span class="n">__ghdl_fatal</span>
+</pre></div>
+</div>
+<p>When the breakpoint is hit, use the <code class="docutils literal notranslate"><span class="pre">where</span></code> or <code class="docutils literal notranslate"><span class="pre">bt</span></code> command to display the stack frames.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="CodingStyle.html" class="btn btn-neutral float-right" title="Coding Style" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../pyGHDL/pyGHDL.lsp.workspace.html" class="btn btn-neutral float-left" title="pyGHDL.lsp.workspace" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2002-2021, Tristan Gingold and contributors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/buildthedocs/sphinx.theme">theme</a>
+    
+    provided by <a href="https://buildthedocs.github.io">Build the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

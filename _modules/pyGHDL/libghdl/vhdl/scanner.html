@@ -1,0 +1,373 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pyGHDL.libghdl.vhdl.scanner &mdash; GHDL 2.0.0-dev documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/graphviz.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../../../../_static/icon.png"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="author" title="About these documents" href="../../../../about.html" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html">
+          
+
+          
+            
+            <img src="../../../../_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0-dev
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting.html">Getting | Installing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../contribute.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../licenses.html">Copyrights | Licenses</a></li>
+</ul>
+<p class="caption"><span class="caption-text">GHDL usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../quick_start/index.html">Quick Start Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../using/InvokingGHDL.html">Invoking GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../using/Simulation.html">Simulation (runtime)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../using/Synthesis.html">Synthesis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../using/CommandReference.html">Additional Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../using/ImplementationOfVHDL.html">Implementation of VHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../using/ImplementationOfVITAL.html">Implementation of VITAL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../development/Directories.html">Directory structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../development/building/index.html">Building GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../pyGHDL/pyGHDL.html">Python Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../development/Debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../development/CodingStyle.html">Coding Style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../development/Scripts.html">Scripts</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../internals/Overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../internals/Frontend.html">Front-end</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../internals/AST.html">AST</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../internals/RTI.html">Run Time Information (RTI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../gnatdoc/index.html">GNATdoc</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Index</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../py-modindex.html">Python Module Index</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">GHDL</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+          <li><a href="../../libghdl.html">pyGHDL.libghdl</a> &raquo;</li>
+        
+      <li>pyGHDL.libghdl.vhdl.scanner</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyGHDL.libghdl.vhdl.scanner</h1><div class="highlight"><pre>
+<span></span><span class="c1"># =============================================================================</span>
+<span class="c1">#               ____ _   _ ____  _       _ _ _           _         _ _</span>
+<span class="c1">#  _ __  _   _ / ___| | | |  _ \| |     | (_) |__   __ _| |__   __| | |</span>
+<span class="c1"># | &#39;_ \| | | | |  _| |_| | | | | |     | | | &#39;_ \ / _` | &#39;_ \ / _` | |</span>
+<span class="c1"># | |_) | |_| | |_| |  _  | |_| | |___ _| | | |_) | (_| | | | | (_| | |</span>
+<span class="c1"># | .__/ \__, |\____|_| |_|____/|_____(_)_|_|_.__/ \__, |_| |_|\__,_|_|</span>
+<span class="c1"># |_|    |___/                                     |___/</span>
+<span class="c1"># =============================================================================</span>
+<span class="c1">#  Authors:</span>
+<span class="c1">#    Tristan Gingold</span>
+<span class="c1">#    Patrick Lehmann</span>
+<span class="c1">#</span>
+<span class="c1"># Package module:   Python binding and low-level API for shared library &#39;libghdl&#39;.</span>
+<span class="c1">#</span>
+<span class="c1"># License:</span>
+<span class="c1"># ============================================================================</span>
+<span class="c1">#  Copyright (C) 2019-2021 Tristan Gingold</span>
+<span class="c1">#</span>
+<span class="c1">#  This program is free software: you can redistribute it and/or modify</span>
+<span class="c1">#  it under the terms of the GNU General Public License as published by</span>
+<span class="c1">#  the Free Software Foundation, either version 2 of the License, or</span>
+<span class="c1">#  (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1">#  This program is distributed in the hope that it will be useful,</span>
+<span class="c1">#  but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1">#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1">#  GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1">#  You should have received a copy of the GNU General Public License</span>
+<span class="c1">#  along with this program.  If not, see &lt;gnu.org/licenses&gt;.</span>
+<span class="c1">#</span>
+<span class="c1"># SPDX-License-Identifier: GPL-2.0-or-later</span>
+<span class="c1"># ============================================================================</span>
+
+<span class="kn">from</span> <span class="nn">ctypes</span> <span class="kn">import</span> <span class="n">c_int</span><span class="p">,</span> <span class="n">c_bool</span>
+
+<span class="kn">from</span> <span class="nn">pydecor</span> <span class="kn">import</span> <span class="n">export</span>
+
+<span class="kn">from</span> <span class="nn">pyGHDL.libghdl</span> <span class="kn">import</span> <span class="n">libghdl</span>
+<span class="kn">from</span> <span class="nn">pyGHDL.libghdl._types</span> <span class="kn">import</span> <span class="n">SourceFileEntry</span><span class="p">,</span> <span class="n">NameId</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Current_Token&quot;</span><span class="p">,</span> <span class="s2">&quot;Flag_Comment&quot;</span><span class="p">]</span>
+
+<span class="c1"># This is a c_int, so you want to use its .value</span>
+<span class="n">Current_Token</span> <span class="o">=</span> <span class="n">c_int</span><span class="o">.</span><span class="n">in_dll</span><span class="p">(</span><span class="n">libghdl</span><span class="p">,</span> <span class="s2">&quot;vhdl__scanner__current_token&quot;</span><span class="p">)</span>
+<span class="n">Flag_Comment</span> <span class="o">=</span> <span class="n">c_bool</span><span class="o">.</span><span class="n">in_dll</span><span class="p">(</span><span class="n">libghdl</span><span class="p">,</span> <span class="s2">&quot;vhdl__scanner__flag_comment&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Set_File"><a class="viewcode-back" href="../../../../pyGHDL/pyGHDL.libghdl.vhdl.scanner.html#pyGHDL.libghdl.vhdl.scanner.Set_File">[docs]</a><span class="nd">@export</span>
+<span class="k">def</span> <span class="nf">Set_File</span><span class="p">(</span><span class="n">SourceFile</span><span class="p">:</span> <span class="n">SourceFileEntry</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Initialize the scanner with file :obj:`SourceFile`.</span>
+
+<span class="sd">    :param SourceFile: File to scan.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__scanner__set_file</span><span class="p">(</span><span class="n">SourceFile</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Close_File"><a class="viewcode-back" href="../../../../pyGHDL/pyGHDL.libghdl.vhdl.scanner.html#pyGHDL.libghdl.vhdl.scanner.Close_File">[docs]</a><span class="nd">@export</span>
+<span class="k">def</span> <span class="nf">Close_File</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Finalize the scanner.&quot;&quot;&quot;</span>
+    <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__scanner__close_file</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Scan"><a class="viewcode-back" href="../../../../pyGHDL/pyGHDL.libghdl.vhdl.scanner.html#pyGHDL.libghdl.vhdl.scanner.Scan">[docs]</a><span class="nd">@export</span>
+<span class="k">def</span> <span class="nf">Scan</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Get a new token.&quot;&quot;&quot;</span>
+    <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__scanner__scan</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Get_Current_Line"><a class="viewcode-back" href="../../../../pyGHDL/pyGHDL.libghdl.vhdl.scanner.html#pyGHDL.libghdl.vhdl.scanner.Get_Current_Line">[docs]</a><span class="nd">@export</span>
+<span class="k">def</span> <span class="nf">Get_Current_Line</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the current location, or the location of the current token.</span>
+
+<span class="sd">    Since a token cannot spread over lines, file and line of the current token are</span>
+<span class="sd">    the same as those of the current position. The offset is the offset in the current line.</span>
+
+<span class="sd">    :return: Current token&#39;s line.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__scanner__get_current_line</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Get_Token_Offset"><a class="viewcode-back" href="../../../../pyGHDL/pyGHDL.libghdl.vhdl.scanner.html#pyGHDL.libghdl.vhdl.scanner.Get_Token_Offset">[docs]</a><span class="nd">@export</span>
+<span class="k">def</span> <span class="nf">Get_Token_Offset</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the current token&#39;s offset in the current line.</span>
+
+<span class="sd">    :return: Current token&#39;s offset.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__scanner__get_token_offset</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Get_Token_Position"><a class="viewcode-back" href="../../../../pyGHDL/pyGHDL.libghdl.vhdl.scanner.html#pyGHDL.libghdl.vhdl.scanner.Get_Token_Position">[docs]</a><span class="nd">@export</span>
+<span class="k">def</span> <span class="nf">Get_Token_Position</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the current token&#39;s position.</span>
+
+<span class="sd">    :return: Current token&#39;s position. Type: ``Source_Ptr``</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__scanner__get_token_position</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Get_Position"><a class="viewcode-back" href="../../../../pyGHDL/pyGHDL.libghdl.vhdl.scanner.html#pyGHDL.libghdl.vhdl.scanner.Get_Position">[docs]</a><span class="nd">@export</span>
+<span class="k">def</span> <span class="nf">Get_Position</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the current position.</span>
+
+<span class="sd">    :return: Current position. Type: ``Source_Ptr``</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__scanner__get_position</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Current_Identifier"><a class="viewcode-back" href="../../../../pyGHDL/pyGHDL.libghdl.vhdl.scanner.html#pyGHDL.libghdl.vhdl.scanner.Current_Identifier">[docs]</a><span class="nd">@export</span>
+<span class="k">def</span> <span class="nf">Current_Identifier</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">NameId</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    When :attr:`~pyGHDL.libghdl.vhdl.scanner.Current_Token` is an</span>
+<span class="sd">    ``tok_identifier``, ``tok_char`` or ``tok_string``, its name_id can be</span>
+<span class="sd">    retrieved via this function.</span>
+
+<span class="sd">    :return: NameId of the current token.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__scanner__current_identifier</span><span class="p">()</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2002-2021, Tristan Gingold and contributors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/buildthedocs/sphinx.theme">theme</a>
+    
+    provided by <a href="https://buildthedocs.github.io">Build the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

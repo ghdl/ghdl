@@ -1,0 +1,130 @@
+pyGHDL.libghdl.vhdl.nodes
+=============================
+
+.. automodule:: pyGHDL.libghdl.vhdl.nodes
+
+
+.. currentmodule:: pyGHDL.libghdl.vhdl.nodes
+
+
+.. #-----------------------------------
+
+
+**Classes**
+
+- :py:class:`Iir_Kind`:
+  Undocumented.
+
+- :py:class:`Iir_Kinds`:
+  Undocumented.
+
+- :py:class:`Iir_Mode`:
+  Undocumented.
+
+- :py:class:`Iir_Staticness`:
+  Undocumented.
+
+- :py:class:`Iir_Constraint`:
+  Undocumented.
+
+- :py:class:`Iir_Delay_Mechanism`:
+  Undocumented.
+
+- :py:class:`Date_State`:
+  Undocumented.
+
+- :py:class:`Iir_Predefined`:
+  Undocumented.
+
+
+
+.. #-----------------------------------
+
+
+.. autoclass:: Iir_Kind
+   :members:
+   :private-members:
+   :undoc-members:
+   :inherited-members:
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Iir_Kind
+
+   .. rubric:: Members
+
+.. autoclass:: Iir_Kinds
+   :members:
+   :private-members:
+   :undoc-members:
+   :inherited-members:
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Iir_Kinds
+
+   .. rubric:: Members
+
+.. autoclass:: Iir_Mode
+   :members:
+   :private-members:
+   :undoc-members:
+   :inherited-members:
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Iir_Mode
+
+   .. rubric:: Members
+
+.. autoclass:: Iir_Staticness
+   :members:
+   :private-members:
+   :undoc-members:
+   :inherited-members:
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Iir_Staticness
+
+   .. rubric:: Members
+
+.. autoclass:: Iir_Constraint
+   :members:
+   :private-members:
+   :undoc-members:
+   :inherited-members:
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Iir_Constraint
+
+   .. rubric:: Members
+
+.. autoclass:: Iir_Delay_Mechanism
+   :members:
+   :private-members:
+   :undoc-members:
+   :inherited-members:
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Iir_Delay_Mechanism
+
+   .. rubric:: Members
+
+.. autoclass:: Date_State
+   :members:
+   :private-members:
+   :undoc-members:
+   :inherited-members:
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Date_State
+
+   .. rubric:: Members
+
+.. autoclass:: Iir_Predefined
+   :members:
+   :private-members:
+   :undoc-members:
+   :inherited-members:
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Iir_Predefined
+
+   .. rubric:: Members

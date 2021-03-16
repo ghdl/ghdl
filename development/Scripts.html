@@ -1,0 +1,456 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Scripts &mdash; GHDL 2.0.0-dev documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../_static/icon.png"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Overview" href="../internals/Overview.html" />
+    <link rel="prev" title="Coding Style" href="CodingStyle.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html">
+          
+
+          
+            
+            <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0-dev
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting.html">Getting | Installing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contribute.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../licenses.html">Copyrights | Licenses</a></li>
+</ul>
+<p class="caption"><span class="caption-text">GHDL usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quick_start/index.html">Quick Start Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/InvokingGHDL.html">Invoking GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/Simulation.html">Simulation (runtime)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/Synthesis.html">Synthesis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/CommandReference.html">Additional Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/ImplementationOfVHDL.html">Implementation of VHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/ImplementationOfVITAL.html">Implementation of VITAL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Development</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Directories.html">Directory structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="building/index.html">Building GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pyGHDL/pyGHDL.html">Python Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CodingStyle.html">Coding Style</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Scripts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#pnodes">pnodes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#positional-arguments">positional arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#optional-arguments">optional arguments</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#pnodespy">pnodespy</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">positional arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">optional arguments</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../internals/Overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../internals/Frontend.html">Front-end</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../internals/AST.html">AST</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../internals/RTI.html">Run Time Information (RTI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gnatdoc/index.html">GNATdoc</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Index</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Python Module Index</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GHDL</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Scripts</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            
+              <a href="https://github.com/ghdl/ghdl/blob/master/doc/development/Scripts.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="scripts">
+<span id="dev-scripts"></span><h1>Scripts<a class="headerlink" href="#scripts" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="pnodes">
+<span id="cmdref-pnodes"></span><h2>pnodes<a class="headerlink" href="#pnodes" title="Permalink to this headline">¶</a></h2>
+<p>Meta-grammar processor</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">usage: pnodes [-h] [--field-file FIELD_FILE] [--kind-file KIND_FILE]</span>
+<span class="go">              [--node-file NODE_FILE] [--template-file TEMPLATE_FILE]</span>
+<span class="go">              [--meta-basename META_BASENAME] [--kind-type KIND_TYPE]</span>
+<span class="go">              [--kind-prefix KIND_PREFIX]</span>
+<span class="go">              [--kind-range-prefix KIND_RANGE_PREFIX] [--node-type NODE_TYPE]</span>
+<span class="go">              [--keep-order]</span>
+<span class="go">              {disp-nodes,disp-kinds,disp-formats,disp-funcs,disp-types,get_format,body,meta_specs,meta_body,class-kinds,libghdl-nodes,libghdl-meta,libghdl-names,libghdl-tokens,libghdl-elocs,libghdl-errorout}</span>
+</pre></div>
+</div>
+<div class="section" id="positional-arguments">
+<h3>positional arguments<a class="headerlink" href="#positional-arguments" title="Permalink to this headline">¶</a></h3>
+<dl class="std option">
+<dt id="cmdoption-pnodes-arg-action">
+<code class="sig-name descname"><span class="pre">action</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-pnodes-arg-action" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="optional-arguments">
+<h3>optional arguments<a class="headerlink" href="#optional-arguments" title="Permalink to this headline">¶</a></h3>
+<dl class="std option">
+<dt id="cmdoption-pnodes-h">
+<span id="cmdoption-pnodes-help"></span><code class="sig-name descname"><span class="pre">-h</span></code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">--help</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-pnodes-h" title="Permalink to this definition">¶</a></dt>
+<dd><p>show this help message and exit</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-pnodes-field-file">
+<code class="sig-name descname"><span class="pre">--field-file</span></code><code class="sig-prename descclassname"> <span class="pre">&lt;field_file&gt;</span></code><a class="headerlink" href="#cmdoption-pnodes-field-file" title="Permalink to this definition">¶</a></dt>
+<dd><p>specify file which defines fields</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-pnodes-kind-file">
+<code class="sig-name descname"><span class="pre">--kind-file</span></code><code class="sig-prename descclassname"> <span class="pre">&lt;kind_file&gt;</span></code><a class="headerlink" href="#cmdoption-pnodes-kind-file" title="Permalink to this definition">¶</a></dt>
+<dd><p>specify file which defines nodes kind</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-pnodes-node-file">
+<code class="sig-name descname"><span class="pre">--node-file</span></code><code class="sig-prename descclassname"> <span class="pre">&lt;node_file&gt;</span></code><a class="headerlink" href="#cmdoption-pnodes-node-file" title="Permalink to this definition">¶</a></dt>
+<dd><p>specify file which defines nodes and methods</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-pnodes-template-file">
+<code class="sig-name descname"><span class="pre">--template-file</span></code><code class="sig-prename descclassname"> <span class="pre">&lt;template_file&gt;</span></code><a class="headerlink" href="#cmdoption-pnodes-template-file" title="Permalink to this definition">¶</a></dt>
+<dd><p>specify template body file</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-pnodes-meta-basename">
+<code class="sig-name descname"><span class="pre">--meta-basename</span></code><code class="sig-prename descclassname"> <span class="pre">&lt;meta_basename&gt;</span></code><a class="headerlink" href="#cmdoption-pnodes-meta-basename" title="Permalink to this definition">¶</a></dt>
+<dd><p>specify base name of meta files</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-pnodes-kind-type">
+<code class="sig-name descname"><span class="pre">--kind-type</span></code><code class="sig-prename descclassname"> <span class="pre">&lt;kind_type&gt;</span></code><a class="headerlink" href="#cmdoption-pnodes-kind-type" title="Permalink to this definition">¶</a></dt>
+<dd><p>name of kind type</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-pnodes-kind-prefix">
+<code class="sig-name descname"><span class="pre">--kind-prefix</span></code><code class="sig-prename descclassname"> <span class="pre">&lt;kind_prefix&gt;</span></code><a class="headerlink" href="#cmdoption-pnodes-kind-prefix" title="Permalink to this definition">¶</a></dt>
+<dd><p>prefix for kind literals</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-pnodes-kind-range-prefix">
+<code class="sig-name descname"><span class="pre">--kind-range-prefix</span></code><code class="sig-prename descclassname"> <span class="pre">&lt;kind_range_prefix&gt;</span></code><a class="headerlink" href="#cmdoption-pnodes-kind-range-prefix" title="Permalink to this definition">¶</a></dt>
+<dd><p>prefix for kind subtype (range)</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-pnodes-node-type">
+<code class="sig-name descname"><span class="pre">--node-type</span></code><code class="sig-prename descclassname"> <span class="pre">&lt;node_type&gt;</span></code><a class="headerlink" href="#cmdoption-pnodes-node-type" title="Permalink to this definition">¶</a></dt>
+<dd><p>name of the node type</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-pnodes-keep-order">
+<code class="sig-name descname"><span class="pre">--keep-order</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-pnodes-keep-order" title="Permalink to this definition">¶</a></dt>
+<dd><p>keep field order of nodes</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="pnodespy">
+<span id="cmdref-pnodespy"></span><h2>pnodespy<a class="headerlink" href="#pnodespy" title="Permalink to this headline">¶</a></h2>
+<p>Meta-grammar processor</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">usage: pnodespy [-h] [--field-file FIELD_FILE] [--kind-file KIND_FILE]</span>
+<span class="go">                [--node-file NODE_FILE] [--template-file TEMPLATE_FILE]</span>
+<span class="go">                [--meta-basename META_BASENAME] [--kind-type KIND_TYPE]</span>
+<span class="go">                [--kind-prefix KIND_PREFIX]</span>
+<span class="go">                [--kind-range-prefix KIND_RANGE_PREFIX]</span>
+<span class="go">                [--node-type NODE_TYPE] [--keep-order]</span>
+<span class="go">                {disp-nodes,disp-kinds,disp-formats,disp-funcs,disp-types,get_format,body,meta_specs,meta_body,class-kinds,libghdl-nodes,libghdl-meta,libghdl-names,libghdl-tokens,libghdl-elocs,libghdl-errorout}</span>
+</pre></div>
+</div>
+<div class="section" id="id1">
+<h3>positional arguments<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<dl class="std option">
+<dt id="cmdoption-pnodespy-arg-action">
+<code class="sig-name descname"><span class="pre">action</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-pnodespy-arg-action" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="id2">
+<h3>optional arguments<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<dl class="std option">
+<dt id="cmdoption-pnodespy-h">
+<span id="cmdoption-pnodespy-help"></span><code class="sig-name descname"><span class="pre">-h</span></code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">--help</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-pnodespy-h" title="Permalink to this definition">¶</a></dt>
+<dd><p>show this help message and exit</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-pnodespy-field-file">
+<code class="sig-name descname"><span class="pre">--field-file</span></code><code class="sig-prename descclassname"> <span class="pre">&lt;field_file&gt;</span></code><a class="headerlink" href="#cmdoption-pnodespy-field-file" title="Permalink to this definition">¶</a></dt>
+<dd><p>specify file which defines fields</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-pnodespy-kind-file">
+<code class="sig-name descname"><span class="pre">--kind-file</span></code><code class="sig-prename descclassname"> <span class="pre">&lt;kind_file&gt;</span></code><a class="headerlink" href="#cmdoption-pnodespy-kind-file" title="Permalink to this definition">¶</a></dt>
+<dd><p>specify file which defines nodes kind</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-pnodespy-node-file">
+<code class="sig-name descname"><span class="pre">--node-file</span></code><code class="sig-prename descclassname"> <span class="pre">&lt;node_file&gt;</span></code><a class="headerlink" href="#cmdoption-pnodespy-node-file" title="Permalink to this definition">¶</a></dt>
+<dd><p>specify file which defines nodes and methods</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-pnodespy-template-file">
+<code class="sig-name descname"><span class="pre">--template-file</span></code><code class="sig-prename descclassname"> <span class="pre">&lt;template_file&gt;</span></code><a class="headerlink" href="#cmdoption-pnodespy-template-file" title="Permalink to this definition">¶</a></dt>
+<dd><p>specify template body file</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-pnodespy-meta-basename">
+<code class="sig-name descname"><span class="pre">--meta-basename</span></code><code class="sig-prename descclassname"> <span class="pre">&lt;meta_basename&gt;</span></code><a class="headerlink" href="#cmdoption-pnodespy-meta-basename" title="Permalink to this definition">¶</a></dt>
+<dd><p>specify base name of meta files</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-pnodespy-kind-type">
+<code class="sig-name descname"><span class="pre">--kind-type</span></code><code class="sig-prename descclassname"> <span class="pre">&lt;kind_type&gt;</span></code><a class="headerlink" href="#cmdoption-pnodespy-kind-type" title="Permalink to this definition">¶</a></dt>
+<dd><p>name of kind type</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-pnodespy-kind-prefix">
+<code class="sig-name descname"><span class="pre">--kind-prefix</span></code><code class="sig-prename descclassname"> <span class="pre">&lt;kind_prefix&gt;</span></code><a class="headerlink" href="#cmdoption-pnodespy-kind-prefix" title="Permalink to this definition">¶</a></dt>
+<dd><p>prefix for kind literals</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-pnodespy-kind-range-prefix">
+<code class="sig-name descname"><span class="pre">--kind-range-prefix</span></code><code class="sig-prename descclassname"> <span class="pre">&lt;kind_range_prefix&gt;</span></code><a class="headerlink" href="#cmdoption-pnodespy-kind-range-prefix" title="Permalink to this definition">¶</a></dt>
+<dd><p>prefix for kind subtype (range)</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-pnodespy-node-type">
+<code class="sig-name descname"><span class="pre">--node-type</span></code><code class="sig-prename descclassname"> <span class="pre">&lt;node_type&gt;</span></code><a class="headerlink" href="#cmdoption-pnodespy-node-type" title="Permalink to this definition">¶</a></dt>
+<dd><p>name of the node type</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-pnodespy-keep-order">
+<code class="sig-name descname"><span class="pre">--keep-order</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-pnodespy-keep-order" title="Permalink to this definition">¶</a></dt>
+<dd><p>keep field order of nodes</p>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../internals/Overview.html" class="btn btn-neutral float-right" title="Overview" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="CodingStyle.html" class="btn btn-neutral float-left" title="Coding Style" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2002-2021, Tristan Gingold and contributors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/buildthedocs/sphinx.theme">theme</a>
+    
+    provided by <a href="https://buildthedocs.github.io">Build the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

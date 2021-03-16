@@ -1,0 +1,32 @@
+pyGHDL.libghdl.std_names
+============================
+
+.. automodule:: pyGHDL.libghdl.std_names
+
+
+.. currentmodule:: pyGHDL.libghdl.std_names
+
+
+.. #-----------------------------------
+
+
+**Classes**
+
+- :py:class:`Name`:
+  Undocumented.
+
+
+
+.. #-----------------------------------
+
+
+.. autoclass:: Name
+   :members:
+   :private-members:
+   :undoc-members:
+   :inherited-members:
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Name
+
+   .. rubric:: Members

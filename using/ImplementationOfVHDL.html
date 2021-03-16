@@ -1,0 +1,510 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Implementation of VHDL &mdash; GHDL 2.0.0-dev documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../_static/icon.png"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Implementation of VITAL" href="ImplementationOfVITAL.html" />
+    <link rel="prev" title="Additional Command Reference" href="CommandReference.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html">
+          
+
+          
+            
+            <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0-dev
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting.html">Getting | Installing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contribute.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../licenses.html">Copyrights | Licenses</a></li>
+</ul>
+<p class="caption"><span class="caption-text">GHDL usage</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../quick_start/index.html">Quick Start Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="InvokingGHDL.html">Invoking GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Simulation.html">Simulation (runtime)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Synthesis.html">Synthesis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CommandReference.html">Additional Command Reference</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Implementation of VHDL</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#vhdl-standards">VHDL standards</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#psl-support">PSL support</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id2">PSL implementation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#psl-usage">PSL usage</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#psl-annotations-embedded-in-comments">PSL annotations embedded in comments</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#psl-annotations-vhdl-2008-only">PSL annotations (VHDL-2008 only)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#psl-vunit-files-vhdl-2008-synthesis-only">PSL vunit files (VHDL-2008 / Synthesis only)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#source-representation">Source representation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#library-database">Library database</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#top-entity">Top entity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#using-vendor-libraries">Using vendor libraries</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ImplementationOfVITAL.html">Implementation of VITAL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/Directories.html">Directory structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/building/index.html">Building GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pyGHDL/pyGHDL.html">Python Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/Debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/CodingStyle.html">Coding Style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/Scripts.html">Scripts</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../internals/Overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../internals/Frontend.html">Front-end</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../internals/AST.html">AST</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../internals/RTI.html">Run Time Information (RTI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gnatdoc/index.html">GNATdoc</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Index</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Python Module Index</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GHDL</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Implementation of VHDL</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            
+              <a href="https://github.com/ghdl/ghdl/blob/master/doc/using/ImplementationOfVHDL.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="implementation-of-vhdl">
+<span id="ref-implvhdl"></span><h1>Implementation of VHDL<a class="headerlink" href="#implementation-of-vhdl" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="vhdl-standards">
+<span id="id1"></span><h2>VHDL standards<a class="headerlink" href="#vhdl-standards" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="index-0"></span><span class="target" id="index-1"></span><span class="target" id="index-2"></span><span class="target" id="index-3"></span><span class="target" id="index-4"></span><span class="target" id="index-5"></span><span class="target" id="index-6"></span><span class="target" id="index-7"></span><span class="target" id="index-8"></span><span class="target" id="index-9"></span><p id="index-10">Unfortunately, there are many versions of the VHDL
+language, and they aren’t backward compatible.</p>
+<p>The VHDL language was first standardized in 1987 by IEEE as IEEE 1076-1987, and
+is commonly referred as VHDL-87. This is certainly the most important version,
+since most of the VHDL tools are still based on this standard.</p>
+<p>Various problems of this first standard have been analyzed by experts groups
+to give reasonable ways of interpreting the unclear portions of the standard.</p>
+<p>VHDL was revised in 1993 by IEEE as IEEE 1076-1993. This revision is still
+well-known.</p>
+<p>Unfortunately, VHDL-93 is not fully compatible with VHDL-87, i.e. some perfectly
+valid VHDL-87 programs are invalid VHDL-93 programs. Here are some of the
+reasons:</p>
+<ul class="simple">
+<li><p>the syntax of file declaration has changed (this is the most visible source
+of incompatibility),</p></li>
+<li><p>new keywords were introduced (group, impure, inertial, literal,
+postponed, pure, reject, rol, ror, shared, sla, sll, sra, srl,
+unaffected, xnor),</p></li>
+<li><p>some dynamic behaviours have changed (the concatenation is one of them),</p></li>
+<li><p>rules have been added.</p></li>
+</ul>
+<p>Shared variables were replaced by protected types in the 2000 revision of
+the VHDL standard. This modification is also known as 1076a. Note that this
+standard is not fully backward compatible with VHDL-93, since the type of a
+shared variable must now be a protected type (there was no such restriction
+before).</p>
+<p>Minor corrections were added by the 2002 revision of the VHDL standard. This
+revision is not fully backward compatible with VHDL-00 since, for example,
+the value of the <cite>‘instance_name</cite> attribute has slightly changed.</p>
+<p>The latest version is 2008. Many features have been added, and GHDL
+doesn’t implement all of them.</p>
+<p>You can select the VHDL standard expected by GHDL with the
+<a class="reference internal" href="InvokingGHDL.html#cmdoption-ghdl-std"><code class="xref std std-option docutils literal notranslate"><span class="pre">--std=STANDARD</span></code></a> option, where <code class="docutils literal notranslate"><span class="pre">STANDARD</span></code> is one of the list below:</p>
+<dl class="simple">
+<dt>87</dt><dd><p>Select VHDL-87 standard as defined by IEEE 1076-1987. LRM bugs corrected by
+later revisions are taken into account.</p>
+</dd>
+<dt>93</dt><dd><p>Select VHDL-93; VHDL-87 file declarations are not accepted.</p>
+</dd>
+<dt>93c</dt><dd><p>Same as 93 and <a class="reference internal" href="InvokingGHDL.html#cmdoption-ghdl-frelaxed"><code class="xref std std-option docutils literal notranslate"><span class="pre">-frelaxed</span></code></a>.</p>
+</dd>
+<dt>00</dt><dd><p>Select VHDL-2000 standard, which adds protected types.</p>
+</dd>
+<dt>02</dt><dd><p>Select VHDL-2002 standard.</p>
+</dd>
+<dt>08</dt><dd><p>Select VHDL-2008 standard (partially implemented).</p>
+</dd>
+</dl>
+<p>Multiple standards can be used in a design:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 24%" />
+<col style="width: 76%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>GROUP</p></th>
+<th class="head"><p>VHDL Standard</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>87</p></td>
+<td><p>87</p></td>
+</tr>
+<tr class="row-odd"><td><p>93</p></td>
+<td><p>93, 93c, 00, 02</p></td>
+</tr>
+<tr class="row-even"><td><p>08</p></td>
+<td><p>08</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The standards in each group are considered compatible: you can elaborate a design mixing these standards. However, standards of different groups are not compatible.</p>
+</div>
+</div>
+<div class="section" id="psl-support">
+<span id="psl-implementation"></span><h2>PSL support<a class="headerlink" href="#psl-support" title="Permalink to this headline">¶</a></h2>
+<p>GHDL implements a subset of <a class="reference external" href="https://en.wikipedia.org/wiki/Property_Specification_Language">PSL</a>.</p>
+<div class="section" id="id2">
+<h3>PSL implementation<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<p>A PSL statement is considered as a process, so it’s not allowed within
+a process.</p>
+<p>All PSL directives (<cite>assert</cite>, <cite>assume</cite>, <cite>restrict</cite>, <cite>cover</cite>) must be clocked (GHDL doesn’t support unclocked directives).
+Furthermore only one clock per directive is allowed.</p>
+<p>You can either use a default clock like this:</p>
+<div class="highlight-VHDL notranslate"><div class="highlight"><pre><span></span><span class="n">default</span> <span class="n">clock</span> <span class="k">is</span> <span class="n">rising_edge</span> <span class="p">(</span><span class="n">CLK</span><span class="p">);</span>
+<span class="k">assert</span> <span class="n">always</span>
+  <span class="n">a</span> <span class="o">-&gt;</span> <span class="n">eventually</span><span class="o">!</span> <span class="n">b</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>or use a clocked expression (note the use of parentheses):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">assert</span> <span class="p">(</span><span class="n">always</span> <span class="n">a</span> <span class="o">-&gt;</span> <span class="nb">next</span><span class="p">[</span><span class="mi">3</span><span class="p">](</span><span class="n">b</span><span class="p">))</span> <span class="nd">@rising_edge</span><span class="p">(</span><span class="n">clk</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Of course only the simple subset of PSL is allowed.</p>
+<p>Currently the built-in functions are not implemented, see <a class="reference external" href="https://github.com/ghdl/ghdl/issues/662">issue #662</a>.
+PSL functions <cite>prev()</cite>, <cite>stable()</cite>, <cite>rose()</cite>, <cite>fell()</cite>, <cite>onehot()</cite> and <cite>onehot0()</cite> are supported with GHDL synthesis.</p>
+</div>
+<div class="section" id="psl-usage">
+<h3>PSL usage<a class="headerlink" href="#psl-usage" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="psl-annotations-embedded-in-comments">
+<h4>PSL annotations embedded in comments<a class="headerlink" href="#psl-annotations-embedded-in-comments" title="Permalink to this headline">¶</a></h4>
+<p>GHDL understands embedded PSL annotations in VHDL files:</p>
+<div class="highlight-VHDL notranslate"><div class="highlight"><pre><span></span>  <span class="c1">-- psl default clock is rising_edge (CLK);</span>
+  <span class="c1">-- psl assert always</span>
+  <span class="c1">--   a -&gt; eventually! b;</span>
+<span class="k">end</span> <span class="k">architecture</span> <span class="nc">rtl</span><span class="p">;</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>A PSL assertion statement must appear within a comment that starts
+with the <cite>psl</cite> keyword. The keyword must be followed (on the
+same line) by a PSL keyword such as <cite>assert</cite> or <cite>default</cite>.
+To continue a PSL statement on the next line, just start a new comment.</p></li>
+</ul>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>As PSL annotations are embedded within comments, you must analyze
+your design with option <a class="reference internal" href="InvokingGHDL.html#cmdoption-ghdl-fpsl"><code class="xref std std-option docutils literal notranslate"><span class="pre">-fpsl</span></code></a> to enable PSL annotations:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ghdl -a -fpsl vhdl_design.vhdl
+ghdl -e vhdl_design
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="psl-annotations-vhdl-2008-only">
+<h4>PSL annotations (VHDL-2008 only)<a class="headerlink" href="#psl-annotations-vhdl-2008-only" title="Permalink to this headline">¶</a></h4>
+<p>Since VHDL-2008 PSL is integrated in the VHDL language. You can use
+PSL in a VHDL(-2008) design without embedding it in comments.</p>
+<div class="highlight-VHDL notranslate"><div class="highlight"><pre><span></span>  <span class="n">default</span> <span class="n">clock</span> <span class="k">is</span> <span class="n">rising_edge</span> <span class="p">(</span><span class="n">CLK</span><span class="p">);</span>
+  <span class="k">assert</span> <span class="n">always</span>
+    <span class="n">a</span> <span class="o">-&gt;</span> <span class="n">eventually</span><span class="o">!</span> <span class="n">b</span><span class="p">;</span>
+<span class="k">end</span> <span class="k">architecture</span> <span class="nc">rtl</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>You have to use the <a class="reference internal" href="InvokingGHDL.html#cmdoption-ghdl-std"><code class="xref std std-option docutils literal notranslate"><span class="pre">--std=08</span></code></a> option:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ghdl -a --std<span class="o">=</span><span class="m">08</span> vhdl_design.vhdl
+ghdl -e --std<span class="o">=</span><span class="m">08</span> vhdl_design
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="psl-vunit-files-vhdl-2008-synthesis-only">
+<h4>PSL vunit files (VHDL-2008 / Synthesis only)<a class="headerlink" href="#psl-vunit-files-vhdl-2008-synthesis-only" title="Permalink to this headline">¶</a></h4>
+<p>GHDL supports vunit (Verification Unit) files.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">vunit</span> <span class="n">vunit_name</span> <span class="p">(</span><span class="n">entity_name</span><span class="p">(</span><span class="n">architecture_name</span><span class="p">))</span>
+<span class="p">{</span>
+  <span class="n">default</span> <span class="n">clock</span> <span class="ow">is</span> <span class="n">rising_edge</span><span class="p">(</span><span class="n">clk</span><span class="p">);</span>
+  <span class="k">assert</span> <span class="n">always</span> <span class="n">cnt</span> <span class="o">/=</span> <span class="mi">5</span> <span class="n">abort</span> <span class="n">rst</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>A vunit can contain PSL and VHDL code.</p></li>
+<li><p>It is bound to a VHDL entity or an instance of it.</p></li>
+<li><p>The PSL vunit is in the same scope as the VHDL design it is bound
+to. You have access to all objects (ports, types, signals) of the
+VHDL design.</p></li>
+</ul>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>The PSL vunit file has to be analyzed together with the VHDL design file, for example:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ghdl -a --std<span class="o">=</span><span class="m">08</span> vhdl_design.vhdl vunit.psl
+</pre></div>
+</div>
+<p>Or when using the <cite>–synth</cite> command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ghdl --synth --std<span class="o">=</span><span class="m">08</span> vhdl_design.vhdl vunit.psl -e vhdl_design
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="source-representation">
+<h2>Source representation<a class="headerlink" href="#source-representation" title="Permalink to this headline">¶</a></h2>
+<p>According to the VHDL standard, design units (i.e. entities,
+architectures, packages, package bodies, and configurations) may be
+independently analyzed.</p>
+<p>Several design units may be grouped into a design file.</p>
+<p>In GHDL, a system file represents a design file. That is, a file compiled by
+GHDL may contain one or more design units.</p>
+<p>It is common to have several design units in a design file.</p>
+<p>GHDL does not impose any restriction on the name of a design file
+(except that the filename may not contain any control character or
+spaces).</p>
+<p>GHDL does not keep a binary representation of the design units analyzed like
+other VHDL analyzers. The sources of the design units are re-read when
+needed (for example, an entity is re-read when one of its architectures is
+analyzed). Therefore, if you delete or modify a source file of a unit
+analyzed, GHDL will refuse to use it.</p>
+</div>
+<div class="section" id="library-database">
+<span id="id3"></span><h2>Library database<a class="headerlink" href="#library-database" title="Permalink to this headline">¶</a></h2>
+<p>Each design unit analyzed is placed into a design library. By default,
+the name of this design library is <code class="docutils literal notranslate"><span class="pre">work</span></code>; however, this can be
+changed with the <a class="reference internal" href="InvokingGHDL.html#cmdoption-ghdl-work"><code class="xref std std-option docutils literal notranslate"><span class="pre">--work</span></code></a> option of GHDL.</p>
+<p>To keep the list of design units in a design library, GHDL creates
+library files. The name of these files is <code class="file docutils literal notranslate"><span class="pre">&lt;LIB_NAME&gt;-obj&lt;GROUP&gt;.cf</span></code>, where
+<cite>&lt;LIB_NAME&gt;</cite> is the name of the library, and <cite>&lt;GROUP&gt;</cite> the VHDL version (87,
+93 or 08) used to analyze the design units.</p>
+<p>For details on <code class="docutils literal notranslate"><span class="pre">GROUP</span></code> values see section <a class="reference internal" href="#vhdl-standards"><span class="std std-ref">VHDL standards</span></a>.</p>
+<p>You don’t have to know how to read a library file. You can display it
+using the <em>-d</em> of <cite>ghdl</cite>. The file contains the name of the
+design units, as well as the location and the dependencies.</p>
+<p>The format may change with the next version of GHDL.</p>
+</div>
+<div class="section" id="top-entity">
+<span id="id4"></span><h2>Top entity<a class="headerlink" href="#top-entity" title="Permalink to this headline">¶</a></h2>
+<p>There are some restrictions on the entity being at the apex of a design
+hierarchy:</p>
+<ul class="simple">
+<li><p>The generic must have a default value, and the value of a generic is its
+default value.</p></li>
+<li><p>The ports type must be constrained.</p></li>
+</ul>
+</div>
+<div class="section" id="using-vendor-libraries">
+<h2>Using vendor libraries<a class="headerlink" href="#using-vendor-libraries" title="Permalink to this headline">¶</a></h2>
+<p>Many vendors libraries have been analyzed with <cite>GHDL</cite>. There are usually no problems. Be sure to use the
+<a class="reference internal" href="InvokingGHDL.html#cmdoption-ghdl-work"><code class="xref std std-option docutils literal notranslate"><span class="pre">--work</span></code></a> option. However, some problems have been encountered. <cite>GHDL</cite> follows the <cite>VHDL</cite> LRM (the manual which
+defines <cite>VHDL</cite>) more strictly than other <cite>VHDL</cite> tools. You could try to relax the restrictions by using the
+<a class="reference internal" href="InvokingGHDL.html#cmdoption-ghdl-std"><code class="xref std std-option docutils literal notranslate"><span class="pre">--std=93c</span></code></a>, <a class="reference internal" href="InvokingGHDL.html#cmdoption-ghdl-fexplicit"><code class="xref std std-option docutils literal notranslate"><span class="pre">-fexplicit</span></code></a>, <a class="reference internal" href="InvokingGHDL.html#cmdoption-ghdl-frelaxed-rules"><code class="xref std std-option docutils literal notranslate"><span class="pre">-frelaxed-rules</span></code></a> and
+<a class="reference internal" href="InvokingGHDL.html#cmdoption-ghdl-warn-vital-generic"><code class="xref std std-option docutils literal notranslate"><span class="pre">--warn-no-vital-generic</span></code></a>.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="ImplementationOfVITAL.html" class="btn btn-neutral float-right" title="Implementation of VITAL" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="CommandReference.html" class="btn btn-neutral float-left" title="Additional Command Reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2002-2021, Tristan Gingold and contributors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/buildthedocs/sphinx.theme">theme</a>
+    
+    provided by <a href="https://buildthedocs.github.io">Build the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,10 @@
+pyGHDL.lsp.version
+======================
+
+.. automodule:: pyGHDL.lsp.version
+
+
+.. currentmodule:: pyGHDL.lsp.version
+
+
+.. #-----------------------------------

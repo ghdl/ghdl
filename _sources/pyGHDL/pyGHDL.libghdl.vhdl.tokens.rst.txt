@@ -1,0 +1,32 @@
+pyGHDL.libghdl.vhdl.tokens
+==============================
+
+.. automodule:: pyGHDL.libghdl.vhdl.tokens
+
+
+.. currentmodule:: pyGHDL.libghdl.vhdl.tokens
+
+
+.. #-----------------------------------
+
+
+**Classes**
+
+- :py:class:`Tok`:
+  Undocumented.
+
+
+
+.. #-----------------------------------
+
+
+.. autoclass:: Tok
+   :members:
+   :private-members:
+   :undoc-members:
+   :inherited-members:
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Tok
+
+   .. rubric:: Members

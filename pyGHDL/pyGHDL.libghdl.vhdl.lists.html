@@ -1,0 +1,504 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pyGHDL.libghdl.vhdl.lists &mdash; GHDL 2.0.0-dev documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../_static/icon.png"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pyGHDL.libghdl.vhdl.nodes" href="pyGHDL.libghdl.vhdl.nodes.html" />
+    <link rel="prev" title="pyGHDL.libghdl.vhdl.ieee" href="pyGHDL.libghdl.vhdl.ieee.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html">
+          
+
+          
+            
+            <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0-dev
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting.html">Getting | Installing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contribute.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../licenses.html">Copyrights | Licenses</a></li>
+</ul>
+<p class="caption"><span class="caption-text">GHDL usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quick_start/index.html">Quick Start Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/InvokingGHDL.html">Invoking GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/Simulation.html">Simulation (runtime)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/Synthesis.html">Synthesis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/CommandReference.html">Additional Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/ImplementationOfVHDL.html">Implementation of VHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/ImplementationOfVITAL.html">Implementation of VITAL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Development</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../development/Directories.html">Directory structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/building/index.html">Building GHDL</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="pyGHDL.html">Python Interfaces</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="pyGHDL.cli.html">pyGHDL.cli</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyGHDL.dom.html">pyGHDL.dom</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="pyGHDL.libghdl.html">pyGHDL.libghdl</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="pyGHDL.libghdl._decorator.html">pyGHDL.libghdl._decorator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyGHDL.libghdl._types.html">pyGHDL.libghdl._types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyGHDL.libghdl.errorout.html">pyGHDL.libghdl.errorout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyGHDL.libghdl.errorout_console.html">pyGHDL.libghdl.errorout_console</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyGHDL.libghdl.errorout_memory.html">pyGHDL.libghdl.errorout_memory</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyGHDL.libghdl.files_map.html">pyGHDL.libghdl.files_map</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyGHDL.libghdl.files_map_editor.html">pyGHDL.libghdl.files_map_editor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyGHDL.libghdl.flags.html">pyGHDL.libghdl.flags</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyGHDL.libghdl.libraries.html">pyGHDL.libghdl.libraries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyGHDL.libghdl.name_table.html">pyGHDL.libghdl.name_table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyGHDL.libghdl.std_names.html">pyGHDL.libghdl.std_names</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyGHDL.libghdl.utils.html">pyGHDL.libghdl.utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyGHDL.libghdl.version.html">pyGHDL.libghdl.version</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="pyGHDL.libghdl.vhdl.html">pyGHDL.libghdl.vhdl</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="pyGHDL.libghdl.vhdl.canon.html">pyGHDL.libghdl.vhdl.canon</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyGHDL.libghdl.vhdl.elocations.html">pyGHDL.libghdl.vhdl.elocations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyGHDL.libghdl.vhdl.flists.html">pyGHDL.libghdl.vhdl.flists</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyGHDL.libghdl.vhdl.formatters.html">pyGHDL.libghdl.vhdl.formatters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyGHDL.libghdl.vhdl.ieee.html">pyGHDL.libghdl.vhdl.ieee</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">pyGHDL.libghdl.vhdl.lists</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyGHDL.libghdl.vhdl.nodes.html">pyGHDL.libghdl.vhdl.nodes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyGHDL.libghdl.vhdl.nodes_meta.html">pyGHDL.libghdl.vhdl.nodes_meta</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyGHDL.libghdl.vhdl.nodes_utils.html">pyGHDL.libghdl.vhdl.nodes_utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyGHDL.libghdl.vhdl.parse.html">pyGHDL.libghdl.vhdl.parse</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyGHDL.libghdl.vhdl.scanner.html">pyGHDL.libghdl.vhdl.scanner</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyGHDL.libghdl.vhdl.sem.html">pyGHDL.libghdl.vhdl.sem</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyGHDL.libghdl.vhdl.sem_lib.html">pyGHDL.libghdl.vhdl.sem_lib</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyGHDL.libghdl.vhdl.std_package.html">pyGHDL.libghdl.vhdl.std_package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyGHDL.libghdl.vhdl.tokens.html">pyGHDL.libghdl.vhdl.tokens</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pyGHDL.lsp.html">pyGHDL.lsp</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../development/Debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/CodingStyle.html">Coding Style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/Scripts.html">Scripts</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../internals/Overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../internals/Frontend.html">Front-end</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../internals/AST.html">AST</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../internals/RTI.html">Run Time Information (RTI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gnatdoc/index.html">GNATdoc</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Index</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Python Module Index</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GHDL</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="pyGHDL.html">pyGHDL</a> &raquo;</li>
+        
+          <li><a href="pyGHDL.libghdl.html">pyGHDL.libghdl</a> &raquo;</li>
+        
+          <li><a href="pyGHDL.libghdl.vhdl.html">pyGHDL.libghdl.vhdl</a> &raquo;</li>
+        
+      <li>pyGHDL.libghdl.vhdl.lists</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            
+              <a href="https://github.com/ghdl/ghdl/blob/master/doc/pyGHDL/pyGHDL.libghdl.vhdl.lists.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-pyGHDL.libghdl.vhdl.lists">
+<span id="pyghdl-libghdl-vhdl-lists"></span><h1>pyGHDL.libghdl.vhdl.lists<a class="headerlink" href="#module-pyGHDL.libghdl.vhdl.lists" title="Permalink to this headline">¶</a></h1>
+<p><strong>Classes</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#pyGHDL.libghdl.vhdl.lists.Iterator" title="pyGHDL.libghdl.vhdl.lists.Iterator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterator</span></code></a>:
+Structure base class</p></li>
+</ul>
+<p><strong>Functions</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#pyGHDL.libghdl.vhdl.lists.Iterate" title="pyGHDL.libghdl.vhdl.lists.Iterate"><code class="xref py py-func docutils literal notranslate"><span class="pre">Iterate()</span></code></a>:
+Create an iterator for a given list.</p></li>
+<li><p><a class="reference internal" href="#pyGHDL.libghdl.vhdl.lists.Is_Valid" title="pyGHDL.libghdl.vhdl.lists.Is_Valid"><code class="xref py py-func docutils literal notranslate"><span class="pre">Is_Valid()</span></code></a>:
+Check if iterator reached the end.</p></li>
+<li><p><a class="reference internal" href="#pyGHDL.libghdl.vhdl.lists.Next" title="pyGHDL.libghdl.vhdl.lists.Next"><code class="xref py py-func docutils literal notranslate"><span class="pre">Next()</span></code></a>:
+Move iterator to the next element.</p></li>
+<li><p><a class="reference internal" href="#pyGHDL.libghdl.vhdl.lists.Get_Element" title="pyGHDL.libghdl.vhdl.lists.Get_Element"><code class="xref py py-func docutils literal notranslate"><span class="pre">Get_Element()</span></code></a>:
+Get the current element from iterator.</p></li>
+<li><p><a class="reference internal" href="#pyGHDL.libghdl.vhdl.lists.Get_Nbr_Elements" title="pyGHDL.libghdl.vhdl.lists.Get_Nbr_Elements"><code class="xref py py-func docutils literal notranslate"><span class="pre">Get_Nbr_Elements()</span></code></a>:
+Return the number of elements in the list.</p></li>
+<li><p><a class="reference internal" href="#pyGHDL.libghdl.vhdl.lists.Create_Iir_List" title="pyGHDL.libghdl.vhdl.lists.Create_Iir_List"><code class="xref py py-func docutils literal notranslate"><span class="pre">Create_Iir_List()</span></code></a>:
+Create a list.</p></li>
+<li><p><a class="reference internal" href="#pyGHDL.libghdl.vhdl.lists.Destroy_Iir_List" title="pyGHDL.libghdl.vhdl.lists.Destroy_Iir_List"><code class="xref py py-func docutils literal notranslate"><span class="pre">Destroy_Iir_List()</span></code></a>:
+Destroy a list.</p></li>
+</ul>
+<dl class="py class">
+<dt id="pyGHDL.libghdl.vhdl.lists.Iterator">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">pyGHDL.libghdl.vhdl.lists.</span></code><code class="sig-name descname"><span class="pre">Iterator</span></code><a class="reference internal" href="../_modules/pyGHDL/libghdl/vhdl/lists.html#Iterator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyGHDL.libghdl.vhdl.lists.Iterator" title="Permalink to this definition">¶</a></dt>
+<dd><p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-7fd939fcf2304fa7ba0bc6326f5f17c47eeb2c6e.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of Iterator</p></object></div>
+<p class="rubric">Members</p>
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.lists.Iterator._fields_">
+<code class="sig-name descname"><span class="pre">_fields_</span></code><em class="property"> <span class="pre">=</span> <span class="pre">[('chunk',</span> <span class="pre">&lt;class</span> <span class="pre">'ctypes.c_int'&gt;),</span> <span class="pre">('chunk_idx',</span> <span class="pre">&lt;class</span> <span class="pre">'ctypes.c_int'&gt;),</span> <span class="pre">('remain',</span> <span class="pre">&lt;class</span> <span class="pre">'ctypes.c_int'&gt;)]</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.lists.Iterator._fields_" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.lists.Iterator._b_base_">
+<code class="sig-name descname"><span class="pre">_b_base_</span></code><a class="headerlink" href="#pyGHDL.libghdl.vhdl.lists.Iterator._b_base_" title="Permalink to this definition">¶</a></dt>
+<dd><p>the base object</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.lists.Iterator._b_needsfree_">
+<code class="sig-name descname"><span class="pre">_b_needsfree_</span></code><a class="headerlink" href="#pyGHDL.libghdl.vhdl.lists.Iterator._b_needsfree_" title="Permalink to this definition">¶</a></dt>
+<dd><p>whether the object owns the memory or not</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.lists.Iterator._objects">
+<code class="sig-name descname"><span class="pre">_objects</span></code><a class="headerlink" href="#pyGHDL.libghdl.vhdl.lists.Iterator._objects" title="Permalink to this definition">¶</a></dt>
+<dd><p>internal objects tree (NEVER CHANGE THIS OBJECT!)</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.lists.Iterator.chunk">
+<code class="sig-name descname"><span class="pre">chunk</span></code><a class="headerlink" href="#pyGHDL.libghdl.vhdl.lists.Iterator.chunk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Structure/Union member</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.lists.Iterator.chunk_idx">
+<code class="sig-name descname"><span class="pre">chunk_idx</span></code><a class="headerlink" href="#pyGHDL.libghdl.vhdl.lists.Iterator.chunk_idx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Structure/Union member</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.lists.Iterator.remain">
+<code class="sig-name descname"><span class="pre">remain</span></code><a class="headerlink" href="#pyGHDL.libghdl.vhdl.lists.Iterator.remain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Structure/Union member</p>
+</dd></dl>
+
+</dd></dl>
+
+<p><strong>Functions</strong></p>
+<dl class="py function">
+<dt id="pyGHDL.libghdl.vhdl.lists.Iterate">
+<code class="sig-prename descclassname"><span class="pre">pyGHDL.libghdl.vhdl.lists.</span></code><code class="sig-name descname"><span class="pre">Iterate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">List</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyGHDL/libghdl/vhdl/lists.html#Iterate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyGHDL.libghdl.vhdl.lists.Iterate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an iterator for a given list.</p>
+<p>The idiomatic way to iterate is:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">It</span> <span class="o">=</span> <span class="n">Iterate</span><span class="p">(</span><span class="n">List</span><span class="p">)</span>
+<span class="k">while</span> <span class="n">Is_Valid</span><span class="p">(</span><span class="n">It</span><span class="p">):</span>
+  <span class="n">El</span> <span class="o">=</span> <span class="n">Get_Element</span><span class="p">(</span><span class="n">It</span><span class="p">)</span>
+    <span class="c1"># ...</span>
+  <span class="n">Next</span><span class="p">(</span><span class="n">It</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>List</strong> – List to create an iterator from.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#pyGHDL.libghdl.vhdl.lists.Iterator" title="pyGHDL.libghdl.vhdl.lists.Iterator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterator</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Iterator structure.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pyGHDL.libghdl.vhdl.lists.Is_Valid">
+<code class="sig-prename descclassname"><span class="pre">pyGHDL.libghdl.vhdl.lists.</span></code><code class="sig-name descname"><span class="pre">Is_Valid</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">it</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyGHDL/libghdl/vhdl/lists.html#Is_Valid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyGHDL.libghdl.vhdl.lists.Is_Valid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if iterator reached the end.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>Iterator</strong> – Iterator to check.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>False, if iterator has reached the end.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pyGHDL.libghdl.vhdl.lists.Next">
+<code class="sig-prename descclassname"><span class="pre">pyGHDL.libghdl.vhdl.lists.</span></code><code class="sig-name descname"><span class="pre">Next</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">it</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyGHDL/libghdl/vhdl/lists.html#Next"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyGHDL.libghdl.vhdl.lists.Next" title="Permalink to this definition">¶</a></dt>
+<dd><p>Move iterator to the next element.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>Iterator</strong> – Iterator to increment.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>False, if iterator has reached the end.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pyGHDL.libghdl.vhdl.lists.Get_Element">
+<code class="sig-prename descclassname"><span class="pre">pyGHDL.libghdl.vhdl.lists.</span></code><code class="sig-name descname"><span class="pre">Get_Element</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">it</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyGHDL/libghdl/vhdl/lists.html#Get_Element"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyGHDL.libghdl.vhdl.lists.Get_Element" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the current element from iterator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>Iterator</strong> – Iterator the get the element from.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The current element the iterator points to. Type: <code class="docutils literal notranslate"><span class="pre">El_Type</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pyGHDL.libghdl.vhdl.lists.Get_Nbr_Elements">
+<code class="sig-prename descclassname"><span class="pre">pyGHDL.libghdl.vhdl.lists.</span></code><code class="sig-name descname"><span class="pre">Get_Nbr_Elements</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">List</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyGHDL/libghdl/vhdl/lists.html#Get_Nbr_Elements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyGHDL.libghdl.vhdl.lists.Get_Nbr_Elements" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the number of elements in the list.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>This is also 1 + the position of the last element.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>List</strong> – The list to use.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Number of list elements.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pyGHDL.libghdl.vhdl.lists.Create_Iir_List">
+<code class="sig-prename descclassname"><span class="pre">pyGHDL.libghdl.vhdl.lists.</span></code><code class="sig-name descname"><span class="pre">Create_Iir_List</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyGHDL/libghdl/vhdl/lists.html#Create_Iir_List"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyGHDL.libghdl.vhdl.lists.Create_Iir_List" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Type: <code class="docutils literal notranslate"><span class="pre">List_Type</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pyGHDL.libghdl.vhdl.lists.Destroy_Iir_List">
+<code class="sig-prename descclassname"><span class="pre">pyGHDL.libghdl.vhdl.lists.</span></code><code class="sig-name descname"><span class="pre">Destroy_Iir_List</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">List</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyGHDL/libghdl/vhdl/lists.html#Destroy_Iir_List"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyGHDL.libghdl.vhdl.lists.Destroy_Iir_List" title="Permalink to this definition">¶</a></dt>
+<dd><p>Destroy a list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>List</strong> – List to destroy.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/constants.html#None" title="(in Python v3.6)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="pyGHDL.libghdl.vhdl.nodes.html" class="btn btn-neutral float-right" title="pyGHDL.libghdl.vhdl.nodes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="pyGHDL.libghdl.vhdl.ieee.html" class="btn btn-neutral float-left" title="pyGHDL.libghdl.vhdl.ieee" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2002-2021, Tristan Gingold and contributors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/buildthedocs/sphinx.theme">theme</a>
+    
+    provided by <a href="https://buildthedocs.github.io">Build the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,80 @@
+pyGHDL.libghdl.vhdl.scanner
+===============================
+
+.. automodule:: pyGHDL.libghdl.vhdl.scanner
+
+
+.. currentmodule:: pyGHDL.libghdl.vhdl.scanner
+
+
+.. #-----------------------------------
+
+**Variables**
+
+- :py:data:`Current_Token`
+- :py:data:`Flag_Comment`
+
+
+**Functions**
+
+- :py:func:`Set_File`:
+  Initialize the scanner with file :obj:`SourceFile`.
+
+- :py:func:`Close_File`:
+  Finalize the scanner.
+
+- :py:func:`Scan`:
+  Get a new token.
+
+- :py:func:`Get_Current_Line`:
+  Get the current location, or the location of the current token.
+
+- :py:func:`Get_Token_Offset`:
+  Get the current token's offset in the current line.
+
+- :py:func:`Get_Token_Position`:
+  Get the current token's position.
+
+- :py:func:`Get_Position`:
+  Get the current position.
+
+- :py:func:`Current_Identifier`:
+  When :attr:`~pyGHDL.libghdl.vhdl.scanner.Current_Token` is an
+
+
+
+.. autodata:: Current_Token
+   :annotation:
+
+   .. code-block:: guess
+
+      c_int(0)
+
+.. autodata:: Flag_Comment
+   :annotation:
+
+   .. code-block:: guess
+
+      c_bool(False)
+
+
+.. #-----------------------------------
+
+**Functions**
+
+
+.. autofunction:: Set_File
+
+.. autofunction:: Close_File
+
+.. autofunction:: Scan
+
+.. autofunction:: Get_Current_Line
+
+.. autofunction:: Get_Token_Offset
+
+.. autofunction:: Get_Token_Position
+
+.. autofunction:: Get_Position
+
+.. autofunction:: Current_Identifier

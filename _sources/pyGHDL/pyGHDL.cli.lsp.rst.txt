@@ -1,0 +1,25 @@
+pyGHDL.cli.lsp
+==================
+
+.. automodule:: pyGHDL.cli.lsp
+
+
+.. currentmodule:: pyGHDL.cli.lsp
+
+
+.. #-----------------------------------
+
+
+**Functions**
+
+- :py:func:`main`:
+  Entrypoint of GHDL's Language Protocol Server.
+
+
+
+.. #-----------------------------------
+
+**Functions**
+
+
+.. autofunction:: main

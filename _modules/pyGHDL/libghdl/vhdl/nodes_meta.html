@@ -1,0 +1,1559 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pyGHDL.libghdl.vhdl.nodes_meta &mdash; GHDL 2.0.0-dev documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/graphviz.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../../../../_static/icon.png"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="author" title="About these documents" href="../../../../about.html" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html">
+          
+
+          
+            
+            <img src="../../../../_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0-dev
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting.html">Getting | Installing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../contribute.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../licenses.html">Copyrights | Licenses</a></li>
+</ul>
+<p class="caption"><span class="caption-text">GHDL usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../quick_start/index.html">Quick Start Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../using/InvokingGHDL.html">Invoking GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../using/Simulation.html">Simulation (runtime)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../using/Synthesis.html">Synthesis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../using/CommandReference.html">Additional Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../using/ImplementationOfVHDL.html">Implementation of VHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../using/ImplementationOfVITAL.html">Implementation of VITAL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../development/Directories.html">Directory structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../development/building/index.html">Building GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../pyGHDL/pyGHDL.html">Python Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../development/Debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../development/CodingStyle.html">Coding Style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../development/Scripts.html">Scripts</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../internals/Overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../internals/Frontend.html">Front-end</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../internals/AST.html">AST</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../internals/RTI.html">Run Time Information (RTI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../gnatdoc/index.html">GNATdoc</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Index</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../py-modindex.html">Python Module Index</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">GHDL</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+          <li><a href="../../libghdl.html">pyGHDL.libghdl</a> &raquo;</li>
+        
+      <li>pyGHDL.libghdl.vhdl.nodes_meta</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyGHDL.libghdl.vhdl.nodes_meta</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Auto generated Python source file from Ada sources</span>
+<span class="c1"># Call &#39;make&#39; in &#39;src/vhdl&#39; to regenerate:</span>
+<span class="c1">#</span>
+<span class="kn">from</span> <span class="nn">pydecor</span> <span class="kn">import</span> <span class="n">export</span>
+<span class="kn">from</span> <span class="nn">pyGHDL.libghdl</span> <span class="kn">import</span> <span class="n">libghdl</span>
+<span class="kn">from</span> <span class="nn">pyGHDL.libghdl._types</span> <span class="kn">import</span> <span class="n">IirKind</span>
+
+
+<span class="c1"># From nodes_meta</span>
+<span class="n">get_fields_first</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__get_fields_first</span>
+
+<span class="n">get_fields_last</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__get_fields_last</span>
+
+<span class="n">get_field_by_index</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__get_field_by_index</span>
+
+<span class="n">get_field_type</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__get_field_type</span>
+
+<span class="n">get_field_attribute</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__get_field_attribute</span>
+
+
+<div class="viewcode-block" id="types"><a class="viewcode-back" href="../../../../pyGHDL/pyGHDL.libghdl.vhdl.nodes_meta.html#pyGHDL.libghdl.vhdl.nodes_meta.types">[docs]</a><span class="nd">@export</span>
+<span class="k">class</span> <span class="nc">types</span><span class="p">:</span>
+    <span class="n">Boolean</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">Date_State_Type</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">Date_Type</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">Direction_Type</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">File_Checksum_Id</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">Fp64</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">Iir</span> <span class="o">=</span> <span class="mi">6</span>
+    <span class="n">Iir_All_Sensitized</span> <span class="o">=</span> <span class="mi">7</span>
+    <span class="n">Iir_Constraint</span> <span class="o">=</span> <span class="mi">8</span>
+    <span class="n">Iir_Delay_Mechanism</span> <span class="o">=</span> <span class="mi">9</span>
+    <span class="n">Iir_Flist</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">Iir_Force_Mode</span> <span class="o">=</span> <span class="mi">11</span>
+    <span class="n">Iir_Index32</span> <span class="o">=</span> <span class="mi">12</span>
+    <span class="n">Iir_Int32</span> <span class="o">=</span> <span class="mi">13</span>
+    <span class="n">Iir_List</span> <span class="o">=</span> <span class="mi">14</span>
+    <span class="n">Iir_Mode</span> <span class="o">=</span> <span class="mi">15</span>
+    <span class="n">Iir_Predefined_Functions</span> <span class="o">=</span> <span class="mi">16</span>
+    <span class="n">Iir_Pure_State</span> <span class="o">=</span> <span class="mi">17</span>
+    <span class="n">Iir_Signal_Kind</span> <span class="o">=</span> <span class="mi">18</span>
+    <span class="n">Iir_Staticness</span> <span class="o">=</span> <span class="mi">19</span>
+    <span class="n">Int32</span> <span class="o">=</span> <span class="mi">20</span>
+    <span class="n">Int64</span> <span class="o">=</span> <span class="mi">21</span>
+    <span class="n">Name_Id</span> <span class="o">=</span> <span class="mi">22</span>
+    <span class="n">Number_Base_Type</span> <span class="o">=</span> <span class="mi">23</span>
+    <span class="n">PSL_NFA</span> <span class="o">=</span> <span class="mi">24</span>
+    <span class="n">PSL_Node</span> <span class="o">=</span> <span class="mi">25</span>
+    <span class="n">Scalar_Size</span> <span class="o">=</span> <span class="mi">26</span>
+    <span class="n">Source_File_Entry</span> <span class="o">=</span> <span class="mi">27</span>
+    <span class="n">Source_Ptr</span> <span class="o">=</span> <span class="mi">28</span>
+    <span class="n">String8_Id</span> <span class="o">=</span> <span class="mi">29</span>
+    <span class="n">Time_Stamp_Id</span> <span class="o">=</span> <span class="mi">30</span>
+    <span class="n">Token_Type</span> <span class="o">=</span> <span class="mi">31</span>
+    <span class="n">Tri_State_Type</span> <span class="o">=</span> <span class="mi">32</span></div>
+
+
+<div class="viewcode-block" id="Attr"><a class="viewcode-back" href="../../../../pyGHDL/pyGHDL.libghdl.vhdl.nodes_meta.html#pyGHDL.libghdl.vhdl.nodes_meta.Attr">[docs]</a><span class="nd">@export</span>
+<span class="k">class</span> <span class="nc">Attr</span><span class="p">:</span>
+    <span class="n">ANone</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">Chain</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">Chain_Next</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">Forward_Ref</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">Maybe_Forward_Ref</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">Maybe_Ref</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">Of_Maybe_Ref</span> <span class="o">=</span> <span class="mi">6</span>
+    <span class="n">Of_Ref</span> <span class="o">=</span> <span class="mi">7</span>
+    <span class="n">Ref</span> <span class="o">=</span> <span class="mi">8</span></div>
+
+
+<div class="viewcode-block" id="fields"><a class="viewcode-back" href="../../../../pyGHDL/pyGHDL.libghdl.vhdl.nodes_meta.html#pyGHDL.libghdl.vhdl.nodes_meta.fields">[docs]</a><span class="nd">@export</span>
+<span class="k">class</span> <span class="nc">fields</span><span class="p">:</span>
+    <span class="n">First_Design_Unit</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">Last_Design_Unit</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">Library_Declaration</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">File_Checksum</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">Analysis_Time_Stamp</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">Design_File_Source</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">Library</span> <span class="o">=</span> <span class="mi">6</span>
+    <span class="n">File_Dependence_List</span> <span class="o">=</span> <span class="mi">7</span>
+    <span class="n">Design_File_Filename</span> <span class="o">=</span> <span class="mi">8</span>
+    <span class="n">Design_File_Directory</span> <span class="o">=</span> <span class="mi">9</span>
+    <span class="n">Design_File</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">Design_File_Chain</span> <span class="o">=</span> <span class="mi">11</span>
+    <span class="n">Library_Directory</span> <span class="o">=</span> <span class="mi">12</span>
+    <span class="n">Date</span> <span class="o">=</span> <span class="mi">13</span>
+    <span class="n">Context_Items</span> <span class="o">=</span> <span class="mi">14</span>
+    <span class="n">Dependence_List</span> <span class="o">=</span> <span class="mi">15</span>
+    <span class="n">Analysis_Checks_List</span> <span class="o">=</span> <span class="mi">16</span>
+    <span class="n">Date_State</span> <span class="o">=</span> <span class="mi">17</span>
+    <span class="n">Guarded_Target_State</span> <span class="o">=</span> <span class="mi">18</span>
+    <span class="n">Library_Unit</span> <span class="o">=</span> <span class="mi">19</span>
+    <span class="n">Hash_Chain</span> <span class="o">=</span> <span class="mi">20</span>
+    <span class="n">Design_Unit_Source_Pos</span> <span class="o">=</span> <span class="mi">21</span>
+    <span class="n">Design_Unit_Source_Line</span> <span class="o">=</span> <span class="mi">22</span>
+    <span class="n">Design_Unit_Source_Col</span> <span class="o">=</span> <span class="mi">23</span>
+    <span class="n">Value</span> <span class="o">=</span> <span class="mi">24</span>
+    <span class="n">Enum_Pos</span> <span class="o">=</span> <span class="mi">25</span>
+    <span class="n">Physical_Literal</span> <span class="o">=</span> <span class="mi">26</span>
+    <span class="n">Fp_Value</span> <span class="o">=</span> <span class="mi">27</span>
+    <span class="n">Simple_Aggregate_List</span> <span class="o">=</span> <span class="mi">28</span>
+    <span class="n">String8_Id</span> <span class="o">=</span> <span class="mi">29</span>
+    <span class="n">String_Length</span> <span class="o">=</span> <span class="mi">30</span>
+    <span class="n">Bit_String_Base</span> <span class="o">=</span> <span class="mi">31</span>
+    <span class="n">Has_Signed</span> <span class="o">=</span> <span class="mi">32</span>
+    <span class="n">Has_Sign</span> <span class="o">=</span> <span class="mi">33</span>
+    <span class="n">Has_Length</span> <span class="o">=</span> <span class="mi">34</span>
+    <span class="n">Literal_Length</span> <span class="o">=</span> <span class="mi">35</span>
+    <span class="n">Literal_Origin</span> <span class="o">=</span> <span class="mi">36</span>
+    <span class="n">Range_Origin</span> <span class="o">=</span> <span class="mi">37</span>
+    <span class="n">Literal_Subtype</span> <span class="o">=</span> <span class="mi">38</span>
+    <span class="n">Allocator_Subtype</span> <span class="o">=</span> <span class="mi">39</span>
+    <span class="n">Entity_Class</span> <span class="o">=</span> <span class="mi">40</span>
+    <span class="n">Entity_Name_List</span> <span class="o">=</span> <span class="mi">41</span>
+    <span class="n">Attribute_Designator</span> <span class="o">=</span> <span class="mi">42</span>
+    <span class="n">Attribute_Specification_Chain</span> <span class="o">=</span> <span class="mi">43</span>
+    <span class="n">Attribute_Specification</span> <span class="o">=</span> <span class="mi">44</span>
+    <span class="n">Static_Attribute_Flag</span> <span class="o">=</span> <span class="mi">45</span>
+    <span class="n">Signal_List</span> <span class="o">=</span> <span class="mi">46</span>
+    <span class="n">Quantity_List</span> <span class="o">=</span> <span class="mi">47</span>
+    <span class="n">Designated_Entity</span> <span class="o">=</span> <span class="mi">48</span>
+    <span class="n">Formal</span> <span class="o">=</span> <span class="mi">49</span>
+    <span class="n">Actual</span> <span class="o">=</span> <span class="mi">50</span>
+    <span class="n">Actual_Conversion</span> <span class="o">=</span> <span class="mi">51</span>
+    <span class="n">Formal_Conversion</span> <span class="o">=</span> <span class="mi">52</span>
+    <span class="n">Whole_Association_Flag</span> <span class="o">=</span> <span class="mi">53</span>
+    <span class="n">Collapse_Signal_Flag</span> <span class="o">=</span> <span class="mi">54</span>
+    <span class="n">Artificial_Flag</span> <span class="o">=</span> <span class="mi">55</span>
+    <span class="n">Open_Flag</span> <span class="o">=</span> <span class="mi">56</span>
+    <span class="n">After_Drivers_Flag</span> <span class="o">=</span> <span class="mi">57</span>
+    <span class="n">We_Value</span> <span class="o">=</span> <span class="mi">58</span>
+    <span class="n">Time</span> <span class="o">=</span> <span class="mi">59</span>
+    <span class="n">Associated_Expr</span> <span class="o">=</span> <span class="mi">60</span>
+    <span class="n">Associated_Block</span> <span class="o">=</span> <span class="mi">61</span>
+    <span class="n">Associated_Chain</span> <span class="o">=</span> <span class="mi">62</span>
+    <span class="n">Choice_Name</span> <span class="o">=</span> <span class="mi">63</span>
+    <span class="n">Choice_Expression</span> <span class="o">=</span> <span class="mi">64</span>
+    <span class="n">Choice_Range</span> <span class="o">=</span> <span class="mi">65</span>
+    <span class="n">Same_Alternative_Flag</span> <span class="o">=</span> <span class="mi">66</span>
+    <span class="n">Element_Type_Flag</span> <span class="o">=</span> <span class="mi">67</span>
+    <span class="n">Architecture</span> <span class="o">=</span> <span class="mi">68</span>
+    <span class="n">Block_Specification</span> <span class="o">=</span> <span class="mi">69</span>
+    <span class="n">Prev_Block_Configuration</span> <span class="o">=</span> <span class="mi">70</span>
+    <span class="n">Configuration_Item_Chain</span> <span class="o">=</span> <span class="mi">71</span>
+    <span class="n">Attribute_Value_Chain</span> <span class="o">=</span> <span class="mi">72</span>
+    <span class="n">Spec_Chain</span> <span class="o">=</span> <span class="mi">73</span>
+    <span class="n">Value_Chain</span> <span class="o">=</span> <span class="mi">74</span>
+    <span class="n">Attribute_Value_Spec_Chain</span> <span class="o">=</span> <span class="mi">75</span>
+    <span class="n">Entity_Name</span> <span class="o">=</span> <span class="mi">76</span>
+    <span class="n">Package</span> <span class="o">=</span> <span class="mi">77</span>
+    <span class="n">Package_Body</span> <span class="o">=</span> <span class="mi">78</span>
+    <span class="n">Instance_Package_Body</span> <span class="o">=</span> <span class="mi">79</span>
+    <span class="n">Need_Body</span> <span class="o">=</span> <span class="mi">80</span>
+    <span class="n">Macro_Expanded_Flag</span> <span class="o">=</span> <span class="mi">81</span>
+    <span class="n">Need_Instance_Bodies</span> <span class="o">=</span> <span class="mi">82</span>
+    <span class="n">Hierarchical_Name</span> <span class="o">=</span> <span class="mi">83</span>
+    <span class="n">Inherit_Spec_Chain</span> <span class="o">=</span> <span class="mi">84</span>
+    <span class="n">Vunit_Item_Chain</span> <span class="o">=</span> <span class="mi">85</span>
+    <span class="n">Bound_Vunit_Chain</span> <span class="o">=</span> <span class="mi">86</span>
+    <span class="n">Verification_Block_Configuration</span> <span class="o">=</span> <span class="mi">87</span>
+    <span class="n">Block_Configuration</span> <span class="o">=</span> <span class="mi">88</span>
+    <span class="n">Concurrent_Statement_Chain</span> <span class="o">=</span> <span class="mi">89</span>
+    <span class="n">Chain</span> <span class="o">=</span> <span class="mi">90</span>
+    <span class="n">Port_Chain</span> <span class="o">=</span> <span class="mi">91</span>
+    <span class="n">Generic_Chain</span> <span class="o">=</span> <span class="mi">92</span>
+    <span class="n">Type</span> <span class="o">=</span> <span class="mi">93</span>
+    <span class="n">Subtype_Indication</span> <span class="o">=</span> <span class="mi">94</span>
+    <span class="n">Discrete_Range</span> <span class="o">=</span> <span class="mi">95</span>
+    <span class="n">Type_Definition</span> <span class="o">=</span> <span class="mi">96</span>
+    <span class="n">Subtype_Definition</span> <span class="o">=</span> <span class="mi">97</span>
+    <span class="n">Incomplete_Type_Declaration</span> <span class="o">=</span> <span class="mi">98</span>
+    <span class="n">Interface_Type_Subprograms</span> <span class="o">=</span> <span class="mi">99</span>
+    <span class="n">Nature_Definition</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="n">Nature</span> <span class="o">=</span> <span class="mi">101</span>
+    <span class="n">Subnature_Indication</span> <span class="o">=</span> <span class="mi">102</span>
+    <span class="n">Mode</span> <span class="o">=</span> <span class="mi">103</span>
+    <span class="n">Guarded_Signal_Flag</span> <span class="o">=</span> <span class="mi">104</span>
+    <span class="n">Signal_Kind</span> <span class="o">=</span> <span class="mi">105</span>
+    <span class="n">Base_Name</span> <span class="o">=</span> <span class="mi">106</span>
+    <span class="n">Interface_Declaration_Chain</span> <span class="o">=</span> <span class="mi">107</span>
+    <span class="n">Subprogram_Specification</span> <span class="o">=</span> <span class="mi">108</span>
+    <span class="n">Sequential_Statement_Chain</span> <span class="o">=</span> <span class="mi">109</span>
+    <span class="n">Simultaneous_Statement_Chain</span> <span class="o">=</span> <span class="mi">110</span>
+    <span class="n">Subprogram_Body</span> <span class="o">=</span> <span class="mi">111</span>
+    <span class="n">Overload_Number</span> <span class="o">=</span> <span class="mi">112</span>
+    <span class="n">Subprogram_Depth</span> <span class="o">=</span> <span class="mi">113</span>
+    <span class="n">Subprogram_Hash</span> <span class="o">=</span> <span class="mi">114</span>
+    <span class="n">Impure_Depth</span> <span class="o">=</span> <span class="mi">115</span>
+    <span class="n">Return_Type</span> <span class="o">=</span> <span class="mi">116</span>
+    <span class="n">Implicit_Definition</span> <span class="o">=</span> <span class="mi">117</span>
+    <span class="n">Uninstantiated_Subprogram_Name</span> <span class="o">=</span> <span class="mi">118</span>
+    <span class="n">Default_Value</span> <span class="o">=</span> <span class="mi">119</span>
+    <span class="n">Deferred_Declaration</span> <span class="o">=</span> <span class="mi">120</span>
+    <span class="n">Deferred_Declaration_Flag</span> <span class="o">=</span> <span class="mi">121</span>
+    <span class="n">Shared_Flag</span> <span class="o">=</span> <span class="mi">122</span>
+    <span class="n">Design_Unit</span> <span class="o">=</span> <span class="mi">123</span>
+    <span class="n">Block_Statement</span> <span class="o">=</span> <span class="mi">124</span>
+    <span class="n">Signal_Driver</span> <span class="o">=</span> <span class="mi">125</span>
+    <span class="n">Declaration_Chain</span> <span class="o">=</span> <span class="mi">126</span>
+    <span class="n">File_Logical_Name</span> <span class="o">=</span> <span class="mi">127</span>
+    <span class="n">File_Open_Kind</span> <span class="o">=</span> <span class="mi">128</span>
+    <span class="n">Element_Position</span> <span class="o">=</span> <span class="mi">129</span>
+    <span class="n">Use_Clause_Chain</span> <span class="o">=</span> <span class="mi">130</span>
+    <span class="n">Context_Reference_Chain</span> <span class="o">=</span> <span class="mi">131</span>
+    <span class="n">Selected_Name</span> <span class="o">=</span> <span class="mi">132</span>
+    <span class="n">Type_Declarator</span> <span class="o">=</span> <span class="mi">133</span>
+    <span class="n">Complete_Type_Definition</span> <span class="o">=</span> <span class="mi">134</span>
+    <span class="n">Incomplete_Type_Ref_Chain</span> <span class="o">=</span> <span class="mi">135</span>
+    <span class="n">Associated_Type</span> <span class="o">=</span> <span class="mi">136</span>
+    <span class="n">Enumeration_Literal_List</span> <span class="o">=</span> <span class="mi">137</span>
+    <span class="n">Entity_Class_Entry_Chain</span> <span class="o">=</span> <span class="mi">138</span>
+    <span class="n">Group_Constituent_List</span> <span class="o">=</span> <span class="mi">139</span>
+    <span class="n">Unit_Chain</span> <span class="o">=</span> <span class="mi">140</span>
+    <span class="n">Primary_Unit</span> <span class="o">=</span> <span class="mi">141</span>
+    <span class="n">Identifier</span> <span class="o">=</span> <span class="mi">142</span>
+    <span class="n">Label</span> <span class="o">=</span> <span class="mi">143</span>
+    <span class="n">Visible_Flag</span> <span class="o">=</span> <span class="mi">144</span>
+    <span class="n">Range_Constraint</span> <span class="o">=</span> <span class="mi">145</span>
+    <span class="n">Direction</span> <span class="o">=</span> <span class="mi">146</span>
+    <span class="n">Left_Limit</span> <span class="o">=</span> <span class="mi">147</span>
+    <span class="n">Right_Limit</span> <span class="o">=</span> <span class="mi">148</span>
+    <span class="n">Left_Limit_Expr</span> <span class="o">=</span> <span class="mi">149</span>
+    <span class="n">Right_Limit_Expr</span> <span class="o">=</span> <span class="mi">150</span>
+    <span class="n">Parent_Type</span> <span class="o">=</span> <span class="mi">151</span>
+    <span class="n">Simple_Nature</span> <span class="o">=</span> <span class="mi">152</span>
+    <span class="n">Base_Nature</span> <span class="o">=</span> <span class="mi">153</span>
+    <span class="n">Resolution_Indication</span> <span class="o">=</span> <span class="mi">154</span>
+    <span class="n">Record_Element_Resolution_Chain</span> <span class="o">=</span> <span class="mi">155</span>
+    <span class="n">Tolerance</span> <span class="o">=</span> <span class="mi">156</span>
+    <span class="n">Plus_Terminal_Name</span> <span class="o">=</span> <span class="mi">157</span>
+    <span class="n">Minus_Terminal_Name</span> <span class="o">=</span> <span class="mi">158</span>
+    <span class="n">Plus_Terminal</span> <span class="o">=</span> <span class="mi">159</span>
+    <span class="n">Minus_Terminal</span> <span class="o">=</span> <span class="mi">160</span>
+    <span class="n">Magnitude_Expression</span> <span class="o">=</span> <span class="mi">161</span>
+    <span class="n">Phase_Expression</span> <span class="o">=</span> <span class="mi">162</span>
+    <span class="n">Power_Expression</span> <span class="o">=</span> <span class="mi">163</span>
+    <span class="n">Simultaneous_Left</span> <span class="o">=</span> <span class="mi">164</span>
+    <span class="n">Simultaneous_Right</span> <span class="o">=</span> <span class="mi">165</span>
+    <span class="n">Text_File_Flag</span> <span class="o">=</span> <span class="mi">166</span>
+    <span class="n">Only_Characters_Flag</span> <span class="o">=</span> <span class="mi">167</span>
+    <span class="n">Is_Character_Type</span> <span class="o">=</span> <span class="mi">168</span>
+    <span class="n">Nature_Staticness</span> <span class="o">=</span> <span class="mi">169</span>
+    <span class="n">Type_Staticness</span> <span class="o">=</span> <span class="mi">170</span>
+    <span class="n">Constraint_State</span> <span class="o">=</span> <span class="mi">171</span>
+    <span class="n">Index_Subtype_List</span> <span class="o">=</span> <span class="mi">172</span>
+    <span class="n">Index_Subtype_Definition_List</span> <span class="o">=</span> <span class="mi">173</span>
+    <span class="n">Element_Subtype_Indication</span> <span class="o">=</span> <span class="mi">174</span>
+    <span class="n">Element_Subtype</span> <span class="o">=</span> <span class="mi">175</span>
+    <span class="n">Element_Subnature_Indication</span> <span class="o">=</span> <span class="mi">176</span>
+    <span class="n">Element_Subnature</span> <span class="o">=</span> <span class="mi">177</span>
+    <span class="n">Index_Constraint_List</span> <span class="o">=</span> <span class="mi">178</span>
+    <span class="n">Array_Element_Constraint</span> <span class="o">=</span> <span class="mi">179</span>
+    <span class="n">Has_Array_Constraint_Flag</span> <span class="o">=</span> <span class="mi">180</span>
+    <span class="n">Has_Element_Constraint_Flag</span> <span class="o">=</span> <span class="mi">181</span>
+    <span class="n">Elements_Declaration_List</span> <span class="o">=</span> <span class="mi">182</span>
+    <span class="n">Owned_Elements_Chain</span> <span class="o">=</span> <span class="mi">183</span>
+    <span class="n">Designated_Type</span> <span class="o">=</span> <span class="mi">184</span>
+    <span class="n">Designated_Subtype_Indication</span> <span class="o">=</span> <span class="mi">185</span>
+    <span class="n">Index_List</span> <span class="o">=</span> <span class="mi">186</span>
+    <span class="n">Reference</span> <span class="o">=</span> <span class="mi">187</span>
+    <span class="n">Nature_Declarator</span> <span class="o">=</span> <span class="mi">188</span>
+    <span class="n">Across_Type_Mark</span> <span class="o">=</span> <span class="mi">189</span>
+    <span class="n">Through_Type_Mark</span> <span class="o">=</span> <span class="mi">190</span>
+    <span class="n">Across_Type_Definition</span> <span class="o">=</span> <span class="mi">191</span>
+    <span class="n">Through_Type_Definition</span> <span class="o">=</span> <span class="mi">192</span>
+    <span class="n">Across_Type</span> <span class="o">=</span> <span class="mi">193</span>
+    <span class="n">Through_Type</span> <span class="o">=</span> <span class="mi">194</span>
+    <span class="n">Target</span> <span class="o">=</span> <span class="mi">195</span>
+    <span class="n">Waveform_Chain</span> <span class="o">=</span> <span class="mi">196</span>
+    <span class="n">Guard</span> <span class="o">=</span> <span class="mi">197</span>
+    <span class="n">Delay_Mechanism</span> <span class="o">=</span> <span class="mi">198</span>
+    <span class="n">Reject_Time_Expression</span> <span class="o">=</span> <span class="mi">199</span>
+    <span class="n">Force_Mode</span> <span class="o">=</span> <span class="mi">200</span>
+    <span class="n">Has_Force_Mode</span> <span class="o">=</span> <span class="mi">201</span>
+    <span class="n">Sensitivity_List</span> <span class="o">=</span> <span class="mi">202</span>
+    <span class="n">Process_Origin</span> <span class="o">=</span> <span class="mi">203</span>
+    <span class="n">Package_Origin</span> <span class="o">=</span> <span class="mi">204</span>
+    <span class="n">Condition_Clause</span> <span class="o">=</span> <span class="mi">205</span>
+    <span class="n">Break_Element</span> <span class="o">=</span> <span class="mi">206</span>
+    <span class="n">Selector_Quantity</span> <span class="o">=</span> <span class="mi">207</span>
+    <span class="n">Break_Quantity</span> <span class="o">=</span> <span class="mi">208</span>
+    <span class="n">Timeout_Clause</span> <span class="o">=</span> <span class="mi">209</span>
+    <span class="n">Postponed_Flag</span> <span class="o">=</span> <span class="mi">210</span>
+    <span class="n">Callees_List</span> <span class="o">=</span> <span class="mi">211</span>
+    <span class="n">Passive_Flag</span> <span class="o">=</span> <span class="mi">212</span>
+    <span class="n">Resolution_Function_Flag</span> <span class="o">=</span> <span class="mi">213</span>
+    <span class="n">Wait_State</span> <span class="o">=</span> <span class="mi">214</span>
+    <span class="n">All_Sensitized_State</span> <span class="o">=</span> <span class="mi">215</span>
+    <span class="n">Seen_Flag</span> <span class="o">=</span> <span class="mi">216</span>
+    <span class="n">Pure_Flag</span> <span class="o">=</span> <span class="mi">217</span>
+    <span class="n">Foreign_Flag</span> <span class="o">=</span> <span class="mi">218</span>
+    <span class="n">Resolved_Flag</span> <span class="o">=</span> <span class="mi">219</span>
+    <span class="n">Signal_Type_Flag</span> <span class="o">=</span> <span class="mi">220</span>
+    <span class="n">Has_Signal_Flag</span> <span class="o">=</span> <span class="mi">221</span>
+    <span class="n">Purity_State</span> <span class="o">=</span> <span class="mi">222</span>
+    <span class="n">Elab_Flag</span> <span class="o">=</span> <span class="mi">223</span>
+    <span class="n">Vendor_Library_Flag</span> <span class="o">=</span> <span class="mi">224</span>
+    <span class="n">Configuration_Mark_Flag</span> <span class="o">=</span> <span class="mi">225</span>
+    <span class="n">Configuration_Done_Flag</span> <span class="o">=</span> <span class="mi">226</span>
+    <span class="n">Index_Constraint_Flag</span> <span class="o">=</span> <span class="mi">227</span>
+    <span class="n">Hide_Implicit_Flag</span> <span class="o">=</span> <span class="mi">228</span>
+    <span class="n">Assertion_Condition</span> <span class="o">=</span> <span class="mi">229</span>
+    <span class="n">Report_Expression</span> <span class="o">=</span> <span class="mi">230</span>
+    <span class="n">Severity_Expression</span> <span class="o">=</span> <span class="mi">231</span>
+    <span class="n">Instantiated_Unit</span> <span class="o">=</span> <span class="mi">232</span>
+    <span class="n">Generic_Map_Aspect_Chain</span> <span class="o">=</span> <span class="mi">233</span>
+    <span class="n">Port_Map_Aspect_Chain</span> <span class="o">=</span> <span class="mi">234</span>
+    <span class="n">Configuration_Name</span> <span class="o">=</span> <span class="mi">235</span>
+    <span class="n">Component_Configuration</span> <span class="o">=</span> <span class="mi">236</span>
+    <span class="n">Configuration_Specification</span> <span class="o">=</span> <span class="mi">237</span>
+    <span class="n">Default_Binding_Indication</span> <span class="o">=</span> <span class="mi">238</span>
+    <span class="n">Default_Configuration_Declaration</span> <span class="o">=</span> <span class="mi">239</span>
+    <span class="n">Expression</span> <span class="o">=</span> <span class="mi">240</span>
+    <span class="n">Conditional_Expression_Chain</span> <span class="o">=</span> <span class="mi">241</span>
+    <span class="n">Allocator_Designated_Type</span> <span class="o">=</span> <span class="mi">242</span>
+    <span class="n">Selected_Waveform_Chain</span> <span class="o">=</span> <span class="mi">243</span>
+    <span class="n">Conditional_Waveform_Chain</span> <span class="o">=</span> <span class="mi">244</span>
+    <span class="n">Guard_Expression</span> <span class="o">=</span> <span class="mi">245</span>
+    <span class="n">Guard_Decl</span> <span class="o">=</span> <span class="mi">246</span>
+    <span class="n">Guard_Sensitivity_List</span> <span class="o">=</span> <span class="mi">247</span>
+    <span class="n">Signal_Attribute_Chain</span> <span class="o">=</span> <span class="mi">248</span>
+    <span class="n">Block_Block_Configuration</span> <span class="o">=</span> <span class="mi">249</span>
+    <span class="n">Package_Header</span> <span class="o">=</span> <span class="mi">250</span>
+    <span class="n">Block_Header</span> <span class="o">=</span> <span class="mi">251</span>
+    <span class="n">Uninstantiated_Package_Name</span> <span class="o">=</span> <span class="mi">252</span>
+    <span class="n">Uninstantiated_Package_Decl</span> <span class="o">=</span> <span class="mi">253</span>
+    <span class="n">Instance_Source_File</span> <span class="o">=</span> <span class="mi">254</span>
+    <span class="n">Generate_Block_Configuration</span> <span class="o">=</span> <span class="mi">255</span>
+    <span class="n">Generate_Statement_Body</span> <span class="o">=</span> <span class="mi">256</span>
+    <span class="n">Alternative_Label</span> <span class="o">=</span> <span class="mi">257</span>
+    <span class="n">Generate_Else_Clause</span> <span class="o">=</span> <span class="mi">258</span>
+    <span class="n">Condition</span> <span class="o">=</span> <span class="mi">259</span>
+    <span class="n">Else_Clause</span> <span class="o">=</span> <span class="mi">260</span>
+    <span class="n">Parameter_Specification</span> <span class="o">=</span> <span class="mi">261</span>
+    <span class="n">Parent</span> <span class="o">=</span> <span class="mi">262</span>
+    <span class="n">Loop_Label</span> <span class="o">=</span> <span class="mi">263</span>
+    <span class="n">Exit_Flag</span> <span class="o">=</span> <span class="mi">264</span>
+    <span class="n">Next_Flag</span> <span class="o">=</span> <span class="mi">265</span>
+    <span class="n">Component_Name</span> <span class="o">=</span> <span class="mi">266</span>
+    <span class="n">Instantiation_List</span> <span class="o">=</span> <span class="mi">267</span>
+    <span class="n">Entity_Aspect</span> <span class="o">=</span> <span class="mi">268</span>
+    <span class="n">Default_Entity_Aspect</span> <span class="o">=</span> <span class="mi">269</span>
+    <span class="n">Binding_Indication</span> <span class="o">=</span> <span class="mi">270</span>
+    <span class="n">Named_Entity</span> <span class="o">=</span> <span class="mi">271</span>
+    <span class="n">Alias_Declaration</span> <span class="o">=</span> <span class="mi">272</span>
+    <span class="n">Referenced_Name</span> <span class="o">=</span> <span class="mi">273</span>
+    <span class="n">Expr_Staticness</span> <span class="o">=</span> <span class="mi">274</span>
+    <span class="n">Scalar_Size</span> <span class="o">=</span> <span class="mi">275</span>
+    <span class="n">Error_Origin</span> <span class="o">=</span> <span class="mi">276</span>
+    <span class="n">Operand</span> <span class="o">=</span> <span class="mi">277</span>
+    <span class="n">Left</span> <span class="o">=</span> <span class="mi">278</span>
+    <span class="n">Right</span> <span class="o">=</span> <span class="mi">279</span>
+    <span class="n">Unit_Name</span> <span class="o">=</span> <span class="mi">280</span>
+    <span class="n">Name</span> <span class="o">=</span> <span class="mi">281</span>
+    <span class="n">Group_Template_Name</span> <span class="o">=</span> <span class="mi">282</span>
+    <span class="n">Name_Staticness</span> <span class="o">=</span> <span class="mi">283</span>
+    <span class="n">Prefix</span> <span class="o">=</span> <span class="mi">284</span>
+    <span class="n">Signature_Prefix</span> <span class="o">=</span> <span class="mi">285</span>
+    <span class="n">External_Pathname</span> <span class="o">=</span> <span class="mi">286</span>
+    <span class="n">Pathname_Suffix</span> <span class="o">=</span> <span class="mi">287</span>
+    <span class="n">Pathname_Expression</span> <span class="o">=</span> <span class="mi">288</span>
+    <span class="n">In_Formal_Flag</span> <span class="o">=</span> <span class="mi">289</span>
+    <span class="n">Slice_Subtype</span> <span class="o">=</span> <span class="mi">290</span>
+    <span class="n">Suffix</span> <span class="o">=</span> <span class="mi">291</span>
+    <span class="n">Index_Subtype</span> <span class="o">=</span> <span class="mi">292</span>
+    <span class="n">Parameter</span> <span class="o">=</span> <span class="mi">293</span>
+    <span class="n">Parameter_2</span> <span class="o">=</span> <span class="mi">294</span>
+    <span class="n">Parameter_3</span> <span class="o">=</span> <span class="mi">295</span>
+    <span class="n">Parameter_4</span> <span class="o">=</span> <span class="mi">296</span>
+    <span class="n">Attr_Chain</span> <span class="o">=</span> <span class="mi">297</span>
+    <span class="n">Signal_Attribute_Declaration</span> <span class="o">=</span> <span class="mi">298</span>
+    <span class="n">Actual_Type</span> <span class="o">=</span> <span class="mi">299</span>
+    <span class="n">Actual_Type_Definition</span> <span class="o">=</span> <span class="mi">300</span>
+    <span class="n">Association_Chain</span> <span class="o">=</span> <span class="mi">301</span>
+    <span class="n">Individual_Association_Chain</span> <span class="o">=</span> <span class="mi">302</span>
+    <span class="n">Subprogram_Association_Chain</span> <span class="o">=</span> <span class="mi">303</span>
+    <span class="n">Aggregate_Info</span> <span class="o">=</span> <span class="mi">304</span>
+    <span class="n">Sub_Aggregate_Info</span> <span class="o">=</span> <span class="mi">305</span>
+    <span class="n">Aggr_Dynamic_Flag</span> <span class="o">=</span> <span class="mi">306</span>
+    <span class="n">Aggr_Min_Length</span> <span class="o">=</span> <span class="mi">307</span>
+    <span class="n">Aggr_Low_Limit</span> <span class="o">=</span> <span class="mi">308</span>
+    <span class="n">Aggr_High_Limit</span> <span class="o">=</span> <span class="mi">309</span>
+    <span class="n">Aggr_Others_Flag</span> <span class="o">=</span> <span class="mi">310</span>
+    <span class="n">Aggr_Named_Flag</span> <span class="o">=</span> <span class="mi">311</span>
+    <span class="n">Aggregate_Expand_Flag</span> <span class="o">=</span> <span class="mi">312</span>
+    <span class="n">Association_Choices_Chain</span> <span class="o">=</span> <span class="mi">313</span>
+    <span class="n">Case_Statement_Alternative_Chain</span> <span class="o">=</span> <span class="mi">314</span>
+    <span class="n">Choice_Staticness</span> <span class="o">=</span> <span class="mi">315</span>
+    <span class="n">Procedure_Call</span> <span class="o">=</span> <span class="mi">316</span>
+    <span class="n">Implementation</span> <span class="o">=</span> <span class="mi">317</span>
+    <span class="n">Parameter_Association_Chain</span> <span class="o">=</span> <span class="mi">318</span>
+    <span class="n">Method_Object</span> <span class="o">=</span> <span class="mi">319</span>
+    <span class="n">Subtype_Type_Mark</span> <span class="o">=</span> <span class="mi">320</span>
+    <span class="n">Subnature_Nature_Mark</span> <span class="o">=</span> <span class="mi">321</span>
+    <span class="n">Type_Conversion_Subtype</span> <span class="o">=</span> <span class="mi">322</span>
+    <span class="n">Type_Mark</span> <span class="o">=</span> <span class="mi">323</span>
+    <span class="n">File_Type_Mark</span> <span class="o">=</span> <span class="mi">324</span>
+    <span class="n">Return_Type_Mark</span> <span class="o">=</span> <span class="mi">325</span>
+    <span class="n">Has_Disconnect_Flag</span> <span class="o">=</span> <span class="mi">326</span>
+    <span class="n">Has_Active_Flag</span> <span class="o">=</span> <span class="mi">327</span>
+    <span class="n">Is_Within_Flag</span> <span class="o">=</span> <span class="mi">328</span>
+    <span class="n">Type_Marks_List</span> <span class="o">=</span> <span class="mi">329</span>
+    <span class="n">Implicit_Alias_Flag</span> <span class="o">=</span> <span class="mi">330</span>
+    <span class="n">Alias_Signature</span> <span class="o">=</span> <span class="mi">331</span>
+    <span class="n">Attribute_Signature</span> <span class="o">=</span> <span class="mi">332</span>
+    <span class="n">Overload_List</span> <span class="o">=</span> <span class="mi">333</span>
+    <span class="n">Simple_Name_Identifier</span> <span class="o">=</span> <span class="mi">334</span>
+    <span class="n">Simple_Name_Subtype</span> <span class="o">=</span> <span class="mi">335</span>
+    <span class="n">Protected_Type_Body</span> <span class="o">=</span> <span class="mi">336</span>
+    <span class="n">Protected_Type_Declaration</span> <span class="o">=</span> <span class="mi">337</span>
+    <span class="n">Use_Flag</span> <span class="o">=</span> <span class="mi">338</span>
+    <span class="n">End_Has_Reserved_Id</span> <span class="o">=</span> <span class="mi">339</span>
+    <span class="n">End_Has_Identifier</span> <span class="o">=</span> <span class="mi">340</span>
+    <span class="n">End_Has_Postponed</span> <span class="o">=</span> <span class="mi">341</span>
+    <span class="n">Has_Label</span> <span class="o">=</span> <span class="mi">342</span>
+    <span class="n">Has_Begin</span> <span class="o">=</span> <span class="mi">343</span>
+    <span class="n">Has_End</span> <span class="o">=</span> <span class="mi">344</span>
+    <span class="n">Has_Is</span> <span class="o">=</span> <span class="mi">345</span>
+    <span class="n">Has_Pure</span> <span class="o">=</span> <span class="mi">346</span>
+    <span class="n">Has_Body</span> <span class="o">=</span> <span class="mi">347</span>
+    <span class="n">Has_Parameter</span> <span class="o">=</span> <span class="mi">348</span>
+    <span class="n">Has_Component</span> <span class="o">=</span> <span class="mi">349</span>
+    <span class="n">Has_Identifier_List</span> <span class="o">=</span> <span class="mi">350</span>
+    <span class="n">Has_Mode</span> <span class="o">=</span> <span class="mi">351</span>
+    <span class="n">Has_Class</span> <span class="o">=</span> <span class="mi">352</span>
+    <span class="n">Has_Delay_Mechanism</span> <span class="o">=</span> <span class="mi">353</span>
+    <span class="n">Suspend_Flag</span> <span class="o">=</span> <span class="mi">354</span>
+    <span class="n">Is_Ref</span> <span class="o">=</span> <span class="mi">355</span>
+    <span class="n">Is_Forward_Ref</span> <span class="o">=</span> <span class="mi">356</span>
+    <span class="n">Psl_Property</span> <span class="o">=</span> <span class="mi">357</span>
+    <span class="n">Psl_Sequence</span> <span class="o">=</span> <span class="mi">358</span>
+    <span class="n">Psl_Declaration</span> <span class="o">=</span> <span class="mi">359</span>
+    <span class="n">Psl_Expression</span> <span class="o">=</span> <span class="mi">360</span>
+    <span class="n">Psl_Boolean</span> <span class="o">=</span> <span class="mi">361</span>
+    <span class="n">PSL_Clock</span> <span class="o">=</span> <span class="mi">362</span>
+    <span class="n">PSL_NFA</span> <span class="o">=</span> <span class="mi">363</span>
+    <span class="n">PSL_Nbr_States</span> <span class="o">=</span> <span class="mi">364</span>
+    <span class="n">PSL_Clock_Sensitivity</span> <span class="o">=</span> <span class="mi">365</span>
+    <span class="n">PSL_EOS_Flag</span> <span class="o">=</span> <span class="mi">366</span>
+    <span class="n">Count_Expression</span> <span class="o">=</span> <span class="mi">367</span>
+    <span class="n">Clock_Expression</span> <span class="o">=</span> <span class="mi">368</span>
+    <span class="n">Default_Clock</span> <span class="o">=</span> <span class="mi">369</span></div>
+
+
+<span class="n">Get_Boolean</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__get_boolean</span>
+
+<span class="n">Get_Date_State_Type</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__get_date_state_type</span>
+
+<span class="n">Get_Date_Type</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__get_date_type</span>
+
+<span class="n">Get_Direction_Type</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__get_direction_type</span>
+
+<span class="n">Get_File_Checksum_Id</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__get_file_checksum_id</span>
+
+<span class="n">Get_Fp64</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__get_fp64</span>
+
+<span class="n">Get_Iir</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__get_iir</span>
+
+<span class="n">Get_Iir_All_Sensitized</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__get_iir_all_sensitized</span>
+
+<span class="n">Get_Iir_Constraint</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__get_iir_constraint</span>
+
+<span class="n">Get_Iir_Delay_Mechanism</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__get_iir_delay_mechanism</span>
+
+<span class="n">Get_Iir_Flist</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__get_iir_flist</span>
+
+<span class="n">Get_Iir_Force_Mode</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__get_iir_force_mode</span>
+
+<span class="n">Get_Iir_Index32</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__get_iir_index32</span>
+
+<span class="n">Get_Iir_Int32</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__get_iir_int32</span>
+
+<span class="n">Get_Iir_List</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__get_iir_list</span>
+
+<span class="n">Get_Iir_Mode</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__get_iir_mode</span>
+
+<span class="n">Get_Iir_Predefined_Functions</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__get_iir_predefined_functions</span>
+
+<span class="n">Get_Iir_Pure_State</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__get_iir_pure_state</span>
+
+<span class="n">Get_Iir_Signal_Kind</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__get_iir_signal_kind</span>
+
+<span class="n">Get_Iir_Staticness</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__get_iir_staticness</span>
+
+<span class="n">Get_Int32</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__get_int32</span>
+
+<span class="n">Get_Int64</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__get_int64</span>
+
+<span class="n">Get_Name_Id</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__get_name_id</span>
+
+<span class="n">Get_Number_Base_Type</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__get_number_base_type</span>
+
+<span class="n">Get_PSL_NFA</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__get_psl_nfa</span>
+
+<span class="n">Get_PSL_Node</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__get_psl_node</span>
+
+<span class="n">Get_Scalar_Size</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__get_scalar_size</span>
+
+<span class="n">Get_Source_File_Entry</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__get_source_file_entry</span>
+
+<span class="n">Get_Source_Ptr</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__get_source_ptr</span>
+
+<span class="n">Get_String8_Id</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__get_string8_id</span>
+
+<span class="n">Get_Time_Stamp_Id</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__get_time_stamp_id</span>
+
+<span class="n">Get_Token_Type</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__get_token_type</span>
+
+<span class="n">Get_Tri_State_Type</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__get_tri_state_type</span>
+
+
+<span class="n">Has_First_Design_Unit</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_first_design_unit</span>
+
+<span class="n">Has_Last_Design_Unit</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_last_design_unit</span>
+
+<span class="n">Has_Library_Declaration</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_library_declaration</span>
+
+<span class="n">Has_File_Checksum</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_file_checksum</span>
+
+<span class="n">Has_Analysis_Time_Stamp</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_analysis_time_stamp</span>
+
+<span class="n">Has_Design_File_Source</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_design_file_source</span>
+
+<span class="n">Has_Library</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_library</span>
+
+<span class="n">Has_File_Dependence_List</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_file_dependence_list</span>
+
+<span class="n">Has_Design_File_Filename</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_design_file_filename</span>
+
+<span class="n">Has_Design_File_Directory</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_design_file_directory</span>
+
+<span class="n">Has_Design_File</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_design_file</span>
+
+<span class="n">Has_Design_File_Chain</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_design_file_chain</span>
+
+<span class="n">Has_Library_Directory</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_library_directory</span>
+
+<span class="n">Has_Date</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_date</span>
+
+<span class="n">Has_Context_Items</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_context_items</span>
+
+<span class="n">Has_Dependence_List</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_dependence_list</span>
+
+<span class="n">Has_Analysis_Checks_List</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_analysis_checks_list</span>
+
+<span class="n">Has_Date_State</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_date_state</span>
+
+<span class="n">Has_Guarded_Target_State</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_guarded_target_state</span>
+
+<span class="n">Has_Library_Unit</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_library_unit</span>
+
+<span class="n">Has_Hash_Chain</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_hash_chain</span>
+
+<span class="n">Has_Design_Unit_Source_Pos</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_design_unit_source_pos</span>
+
+<span class="n">Has_Design_Unit_Source_Line</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_design_unit_source_line</span>
+
+<span class="n">Has_Design_Unit_Source_Col</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_design_unit_source_col</span>
+
+<span class="n">Has_Value</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_value</span>
+
+<span class="n">Has_Enum_Pos</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_enum_pos</span>
+
+<span class="n">Has_Physical_Literal</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_physical_literal</span>
+
+<span class="n">Has_Fp_Value</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_fp_value</span>
+
+<span class="n">Has_Simple_Aggregate_List</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_simple_aggregate_list</span>
+
+<span class="n">Has_String8_Id</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_string8_id</span>
+
+<span class="n">Has_String_Length</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_string_length</span>
+
+<span class="n">Has_Bit_String_Base</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_bit_string_base</span>
+
+<span class="n">Has_Has_Signed</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_has_signed</span>
+
+<span class="n">Has_Has_Sign</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_has_sign</span>
+
+<span class="n">Has_Has_Length</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_has_length</span>
+
+<span class="n">Has_Literal_Length</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_literal_length</span>
+
+<span class="n">Has_Literal_Origin</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_literal_origin</span>
+
+<span class="n">Has_Range_Origin</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_range_origin</span>
+
+<span class="n">Has_Literal_Subtype</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_literal_subtype</span>
+
+<span class="n">Has_Allocator_Subtype</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_allocator_subtype</span>
+
+<span class="n">Has_Entity_Class</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_entity_class</span>
+
+<span class="n">Has_Entity_Name_List</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_entity_name_list</span>
+
+<span class="n">Has_Attribute_Designator</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_attribute_designator</span>
+
+<span class="n">Has_Attribute_Specification_Chain</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_attribute_specification_chain</span>
+<span class="p">)</span>
+
+<span class="n">Has_Attribute_Specification</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_attribute_specification</span>
+
+<span class="n">Has_Static_Attribute_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_static_attribute_flag</span>
+
+<span class="n">Has_Signal_List</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_signal_list</span>
+
+<span class="n">Has_Quantity_List</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_quantity_list</span>
+
+<span class="n">Has_Designated_Entity</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_designated_entity</span>
+
+<span class="n">Has_Formal</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_formal</span>
+
+<span class="n">Has_Actual</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_actual</span>
+
+<span class="n">Has_Actual_Conversion</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_actual_conversion</span>
+
+<span class="n">Has_Formal_Conversion</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_formal_conversion</span>
+
+<span class="n">Has_Whole_Association_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_whole_association_flag</span>
+
+<span class="n">Has_Collapse_Signal_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_collapse_signal_flag</span>
+
+<span class="n">Has_Artificial_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_artificial_flag</span>
+
+<span class="n">Has_Open_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_open_flag</span>
+
+<span class="n">Has_After_Drivers_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_after_drivers_flag</span>
+
+<span class="n">Has_We_Value</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_we_value</span>
+
+<span class="n">Has_Time</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_time</span>
+
+<span class="n">Has_Associated_Expr</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_associated_expr</span>
+
+<span class="n">Has_Associated_Block</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_associated_block</span>
+
+<span class="n">Has_Associated_Chain</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_associated_chain</span>
+
+<span class="n">Has_Choice_Name</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_choice_name</span>
+
+<span class="n">Has_Choice_Expression</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_choice_expression</span>
+
+<span class="n">Has_Choice_Range</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_choice_range</span>
+
+<span class="n">Has_Same_Alternative_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_same_alternative_flag</span>
+
+<span class="n">Has_Element_Type_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_element_type_flag</span>
+
+<span class="n">Has_Architecture</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_architecture</span>
+
+<span class="n">Has_Block_Specification</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_block_specification</span>
+
+<span class="n">Has_Prev_Block_Configuration</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_prev_block_configuration</span>
+
+<span class="n">Has_Configuration_Item_Chain</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_configuration_item_chain</span>
+
+<span class="n">Has_Attribute_Value_Chain</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_attribute_value_chain</span>
+
+<span class="n">Has_Spec_Chain</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_spec_chain</span>
+
+<span class="n">Has_Value_Chain</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_value_chain</span>
+
+<span class="n">Has_Attribute_Value_Spec_Chain</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_attribute_value_spec_chain</span>
+<span class="p">)</span>
+
+<span class="n">Has_Entity_Name</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_entity_name</span>
+
+<span class="n">Has_Package</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_package</span>
+
+<span class="n">Has_Package_Body</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_package_body</span>
+
+<span class="n">Has_Instance_Package_Body</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_instance_package_body</span>
+
+<span class="n">Has_Need_Body</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_need_body</span>
+
+<span class="n">Has_Macro_Expanded_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_macro_expanded_flag</span>
+
+<span class="n">Has_Need_Instance_Bodies</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_need_instance_bodies</span>
+
+<span class="n">Has_Hierarchical_Name</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_hierarchical_name</span>
+
+<span class="n">Has_Inherit_Spec_Chain</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_inherit_spec_chain</span>
+
+<span class="n">Has_Vunit_Item_Chain</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_vunit_item_chain</span>
+
+<span class="n">Has_Bound_Vunit_Chain</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_bound_vunit_chain</span>
+
+<span class="n">Has_Verification_Block_Configuration</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_verification_block_configuration</span>
+<span class="p">)</span>
+
+<span class="n">Has_Block_Configuration</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_block_configuration</span>
+
+<span class="n">Has_Concurrent_Statement_Chain</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_concurrent_statement_chain</span>
+<span class="p">)</span>
+
+<span class="n">Has_Chain</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_chain</span>
+
+<span class="n">Has_Port_Chain</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_port_chain</span>
+
+<span class="n">Has_Generic_Chain</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_generic_chain</span>
+
+<span class="n">Has_Type</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_type</span>
+
+<span class="n">Has_Subtype_Indication</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_subtype_indication</span>
+
+<span class="n">Has_Discrete_Range</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_discrete_range</span>
+
+<span class="n">Has_Type_Definition</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_type_definition</span>
+
+<span class="n">Has_Subtype_Definition</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_subtype_definition</span>
+
+<span class="n">Has_Incomplete_Type_Declaration</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_incomplete_type_declaration</span>
+<span class="p">)</span>
+
+<span class="n">Has_Interface_Type_Subprograms</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_interface_type_subprograms</span>
+<span class="p">)</span>
+
+<span class="n">Has_Nature_Definition</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_nature_definition</span>
+
+<span class="n">Has_Nature</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_nature</span>
+
+<span class="n">Has_Subnature_Indication</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_subnature_indication</span>
+
+<span class="n">Has_Mode</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_mode</span>
+
+<span class="n">Has_Guarded_Signal_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_guarded_signal_flag</span>
+
+<span class="n">Has_Signal_Kind</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_signal_kind</span>
+
+<span class="n">Has_Base_Name</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_base_name</span>
+
+<span class="n">Has_Interface_Declaration_Chain</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_interface_declaration_chain</span>
+<span class="p">)</span>
+
+<span class="n">Has_Subprogram_Specification</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_subprogram_specification</span>
+
+<span class="n">Has_Sequential_Statement_Chain</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_sequential_statement_chain</span>
+<span class="p">)</span>
+
+<span class="n">Has_Simultaneous_Statement_Chain</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_simultaneous_statement_chain</span>
+<span class="p">)</span>
+
+<span class="n">Has_Subprogram_Body</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_subprogram_body</span>
+
+<span class="n">Has_Overload_Number</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_overload_number</span>
+
+<span class="n">Has_Subprogram_Depth</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_subprogram_depth</span>
+
+<span class="n">Has_Subprogram_Hash</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_subprogram_hash</span>
+
+<span class="n">Has_Impure_Depth</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_impure_depth</span>
+
+<span class="n">Has_Return_Type</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_return_type</span>
+
+<span class="n">Has_Implicit_Definition</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_implicit_definition</span>
+
+<span class="n">Has_Uninstantiated_Subprogram_Name</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_uninstantiated_subprogram_name</span>
+<span class="p">)</span>
+
+<span class="n">Has_Default_Value</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_default_value</span>
+
+<span class="n">Has_Deferred_Declaration</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_deferred_declaration</span>
+
+<span class="n">Has_Deferred_Declaration_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_deferred_declaration_flag</span>
+
+<span class="n">Has_Shared_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_shared_flag</span>
+
+<span class="n">Has_Design_Unit</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_design_unit</span>
+
+<span class="n">Has_Block_Statement</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_block_statement</span>
+
+<span class="n">Has_Signal_Driver</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_signal_driver</span>
+
+<span class="n">Has_Declaration_Chain</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_declaration_chain</span>
+
+<span class="n">Has_File_Logical_Name</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_file_logical_name</span>
+
+<span class="n">Has_File_Open_Kind</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_file_open_kind</span>
+
+<span class="n">Has_Element_Position</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_element_position</span>
+
+<span class="n">Has_Use_Clause_Chain</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_use_clause_chain</span>
+
+<span class="n">Has_Context_Reference_Chain</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_context_reference_chain</span>
+
+<span class="n">Has_Selected_Name</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_selected_name</span>
+
+<span class="n">Has_Type_Declarator</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_type_declarator</span>
+
+<span class="n">Has_Complete_Type_Definition</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_complete_type_definition</span>
+
+<span class="n">Has_Incomplete_Type_Ref_Chain</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_incomplete_type_ref_chain</span>
+
+<span class="n">Has_Associated_Type</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_associated_type</span>
+
+<span class="n">Has_Enumeration_Literal_List</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_enumeration_literal_list</span>
+
+<span class="n">Has_Entity_Class_Entry_Chain</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_entity_class_entry_chain</span>
+
+<span class="n">Has_Group_Constituent_List</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_group_constituent_list</span>
+
+<span class="n">Has_Unit_Chain</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_unit_chain</span>
+
+<span class="n">Has_Primary_Unit</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_primary_unit</span>
+
+<span class="n">Has_Identifier</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_identifier</span>
+
+<span class="n">Has_Label</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_label</span>
+
+<span class="n">Has_Visible_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_visible_flag</span>
+
+<span class="n">Has_Range_Constraint</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_range_constraint</span>
+
+<span class="n">Has_Direction</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_direction</span>
+
+<span class="n">Has_Left_Limit</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_left_limit</span>
+
+<span class="n">Has_Right_Limit</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_right_limit</span>
+
+<span class="n">Has_Left_Limit_Expr</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_left_limit_expr</span>
+
+<span class="n">Has_Right_Limit_Expr</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_right_limit_expr</span>
+
+<span class="n">Has_Parent_Type</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_parent_type</span>
+
+<span class="n">Has_Simple_Nature</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_simple_nature</span>
+
+<span class="n">Has_Base_Nature</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_base_nature</span>
+
+<span class="n">Has_Resolution_Indication</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_resolution_indication</span>
+
+<span class="n">Has_Record_Element_Resolution_Chain</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_record_element_resolution_chain</span>
+<span class="p">)</span>
+
+<span class="n">Has_Tolerance</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_tolerance</span>
+
+<span class="n">Has_Plus_Terminal_Name</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_plus_terminal_name</span>
+
+<span class="n">Has_Minus_Terminal_Name</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_minus_terminal_name</span>
+
+<span class="n">Has_Plus_Terminal</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_plus_terminal</span>
+
+<span class="n">Has_Minus_Terminal</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_minus_terminal</span>
+
+<span class="n">Has_Magnitude_Expression</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_magnitude_expression</span>
+
+<span class="n">Has_Phase_Expression</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_phase_expression</span>
+
+<span class="n">Has_Power_Expression</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_power_expression</span>
+
+<span class="n">Has_Simultaneous_Left</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_simultaneous_left</span>
+
+<span class="n">Has_Simultaneous_Right</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_simultaneous_right</span>
+
+<span class="n">Has_Text_File_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_text_file_flag</span>
+
+<span class="n">Has_Only_Characters_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_only_characters_flag</span>
+
+<span class="n">Has_Is_Character_Type</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_is_character_type</span>
+
+<span class="n">Has_Nature_Staticness</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_nature_staticness</span>
+
+<span class="n">Has_Type_Staticness</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_type_staticness</span>
+
+<span class="n">Has_Constraint_State</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_constraint_state</span>
+
+<span class="n">Has_Index_Subtype_List</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_index_subtype_list</span>
+
+<span class="n">Has_Index_Subtype_Definition_List</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_index_subtype_definition_list</span>
+<span class="p">)</span>
+
+<span class="n">Has_Element_Subtype_Indication</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_element_subtype_indication</span>
+<span class="p">)</span>
+
+<span class="n">Has_Element_Subtype</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_element_subtype</span>
+
+<span class="n">Has_Element_Subnature_Indication</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_element_subnature_indication</span>
+<span class="p">)</span>
+
+<span class="n">Has_Element_Subnature</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_element_subnature</span>
+
+<span class="n">Has_Index_Constraint_List</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_index_constraint_list</span>
+
+<span class="n">Has_Array_Element_Constraint</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_array_element_constraint</span>
+
+<span class="n">Has_Has_Array_Constraint_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_has_array_constraint_flag</span>
+
+<span class="n">Has_Has_Element_Constraint_Flag</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_has_element_constraint_flag</span>
+<span class="p">)</span>
+
+<span class="n">Has_Elements_Declaration_List</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_elements_declaration_list</span>
+
+<span class="n">Has_Owned_Elements_Chain</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_owned_elements_chain</span>
+
+<span class="n">Has_Designated_Type</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_designated_type</span>
+
+<span class="n">Has_Designated_Subtype_Indication</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_designated_subtype_indication</span>
+<span class="p">)</span>
+
+<span class="n">Has_Index_List</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_index_list</span>
+
+<span class="n">Has_Reference</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_reference</span>
+
+<span class="n">Has_Nature_Declarator</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_nature_declarator</span>
+
+<span class="n">Has_Across_Type_Mark</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_across_type_mark</span>
+
+<span class="n">Has_Through_Type_Mark</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_through_type_mark</span>
+
+<span class="n">Has_Across_Type_Definition</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_across_type_definition</span>
+
+<span class="n">Has_Through_Type_Definition</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_through_type_definition</span>
+
+<span class="n">Has_Across_Type</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_across_type</span>
+
+<span class="n">Has_Through_Type</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_through_type</span>
+
+<span class="n">Has_Target</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_target</span>
+
+<span class="n">Has_Waveform_Chain</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_waveform_chain</span>
+
+<span class="n">Has_Guard</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_guard</span>
+
+<span class="n">Has_Delay_Mechanism</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_delay_mechanism</span>
+
+<span class="n">Has_Reject_Time_Expression</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_reject_time_expression</span>
+
+<span class="n">Has_Force_Mode</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_force_mode</span>
+
+<span class="n">Has_Has_Force_Mode</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_has_force_mode</span>
+
+<span class="n">Has_Sensitivity_List</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_sensitivity_list</span>
+
+<span class="n">Has_Process_Origin</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_process_origin</span>
+
+<span class="n">Has_Package_Origin</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_package_origin</span>
+
+<span class="n">Has_Condition_Clause</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_condition_clause</span>
+
+<span class="n">Has_Break_Element</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_break_element</span>
+
+<span class="n">Has_Selector_Quantity</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_selector_quantity</span>
+
+<span class="n">Has_Break_Quantity</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_break_quantity</span>
+
+<span class="n">Has_Timeout_Clause</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_timeout_clause</span>
+
+<span class="n">Has_Postponed_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_postponed_flag</span>
+
+<span class="n">Has_Callees_List</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_callees_list</span>
+
+<span class="n">Has_Passive_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_passive_flag</span>
+
+<span class="n">Has_Resolution_Function_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_resolution_function_flag</span>
+
+<span class="n">Has_Wait_State</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_wait_state</span>
+
+<span class="n">Has_All_Sensitized_State</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_all_sensitized_state</span>
+
+<span class="n">Has_Seen_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_seen_flag</span>
+
+<span class="n">Has_Pure_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_pure_flag</span>
+
+<span class="n">Has_Foreign_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_foreign_flag</span>
+
+<span class="n">Has_Resolved_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_resolved_flag</span>
+
+<span class="n">Has_Signal_Type_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_signal_type_flag</span>
+
+<span class="n">Has_Has_Signal_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_has_signal_flag</span>
+
+<span class="n">Has_Purity_State</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_purity_state</span>
+
+<span class="n">Has_Elab_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_elab_flag</span>
+
+<span class="n">Has_Vendor_Library_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_vendor_library_flag</span>
+
+<span class="n">Has_Configuration_Mark_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_configuration_mark_flag</span>
+
+<span class="n">Has_Configuration_Done_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_configuration_done_flag</span>
+
+<span class="n">Has_Index_Constraint_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_index_constraint_flag</span>
+
+<span class="n">Has_Hide_Implicit_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_hide_implicit_flag</span>
+
+<span class="n">Has_Assertion_Condition</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_assertion_condition</span>
+
+<span class="n">Has_Report_Expression</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_report_expression</span>
+
+<span class="n">Has_Severity_Expression</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_severity_expression</span>
+
+<span class="n">Has_Instantiated_Unit</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_instantiated_unit</span>
+
+<span class="n">Has_Generic_Map_Aspect_Chain</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_generic_map_aspect_chain</span>
+
+<span class="n">Has_Port_Map_Aspect_Chain</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_port_map_aspect_chain</span>
+
+<span class="n">Has_Configuration_Name</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_configuration_name</span>
+
+<span class="n">Has_Component_Configuration</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_component_configuration</span>
+
+<span class="n">Has_Configuration_Specification</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_configuration_specification</span>
+<span class="p">)</span>
+
+<span class="n">Has_Default_Binding_Indication</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_default_binding_indication</span>
+<span class="p">)</span>
+
+<span class="n">Has_Default_Configuration_Declaration</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_default_configuration_declaration</span>
+<span class="p">)</span>
+
+<span class="n">Has_Expression</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_expression</span>
+
+<span class="n">Has_Conditional_Expression_Chain</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_conditional_expression_chain</span>
+<span class="p">)</span>
+
+<span class="n">Has_Allocator_Designated_Type</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_allocator_designated_type</span>
+
+<span class="n">Has_Selected_Waveform_Chain</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_selected_waveform_chain</span>
+
+<span class="n">Has_Conditional_Waveform_Chain</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_conditional_waveform_chain</span>
+<span class="p">)</span>
+
+<span class="n">Has_Guard_Expression</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_guard_expression</span>
+
+<span class="n">Has_Guard_Decl</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_guard_decl</span>
+
+<span class="n">Has_Guard_Sensitivity_List</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_guard_sensitivity_list</span>
+
+<span class="n">Has_Signal_Attribute_Chain</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_signal_attribute_chain</span>
+
+<span class="n">Has_Block_Block_Configuration</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_block_block_configuration</span>
+
+<span class="n">Has_Package_Header</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_package_header</span>
+
+<span class="n">Has_Block_Header</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_block_header</span>
+
+<span class="n">Has_Uninstantiated_Package_Name</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_uninstantiated_package_name</span>
+<span class="p">)</span>
+
+<span class="n">Has_Uninstantiated_Package_Decl</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_uninstantiated_package_decl</span>
+<span class="p">)</span>
+
+<span class="n">Has_Instance_Source_File</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_instance_source_file</span>
+
+<span class="n">Has_Generate_Block_Configuration</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_generate_block_configuration</span>
+<span class="p">)</span>
+
+<span class="n">Has_Generate_Statement_Body</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_generate_statement_body</span>
+
+<span class="n">Has_Alternative_Label</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_alternative_label</span>
+
+<span class="n">Has_Generate_Else_Clause</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_generate_else_clause</span>
+
+<span class="n">Has_Condition</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_condition</span>
+
+<span class="n">Has_Else_Clause</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_else_clause</span>
+
+<span class="n">Has_Parameter_Specification</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_parameter_specification</span>
+
+<span class="n">Has_Parent</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_parent</span>
+
+<span class="n">Has_Loop_Label</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_loop_label</span>
+
+<span class="n">Has_Exit_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_exit_flag</span>
+
+<span class="n">Has_Next_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_next_flag</span>
+
+<span class="n">Has_Component_Name</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_component_name</span>
+
+<span class="n">Has_Instantiation_List</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_instantiation_list</span>
+
+<span class="n">Has_Entity_Aspect</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_entity_aspect</span>
+
+<span class="n">Has_Default_Entity_Aspect</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_default_entity_aspect</span>
+
+<span class="n">Has_Binding_Indication</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_binding_indication</span>
+
+<span class="n">Has_Named_Entity</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_named_entity</span>
+
+<span class="n">Has_Alias_Declaration</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_alias_declaration</span>
+
+<span class="n">Has_Referenced_Name</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_referenced_name</span>
+
+<span class="n">Has_Expr_Staticness</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_expr_staticness</span>
+
+<span class="n">Has_Scalar_Size</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_scalar_size</span>
+
+<span class="n">Has_Error_Origin</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_error_origin</span>
+
+<span class="n">Has_Operand</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_operand</span>
+
+<span class="n">Has_Left</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_left</span>
+
+<span class="n">Has_Right</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_right</span>
+
+<span class="n">Has_Unit_Name</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_unit_name</span>
+
+<span class="n">Has_Name</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_name</span>
+
+<span class="n">Has_Group_Template_Name</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_group_template_name</span>
+
+<span class="n">Has_Name_Staticness</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_name_staticness</span>
+
+<span class="n">Has_Prefix</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_prefix</span>
+
+<span class="n">Has_Signature_Prefix</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_signature_prefix</span>
+
+<span class="n">Has_External_Pathname</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_external_pathname</span>
+
+<span class="n">Has_Pathname_Suffix</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_pathname_suffix</span>
+
+<span class="n">Has_Pathname_Expression</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_pathname_expression</span>
+
+<span class="n">Has_In_Formal_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_in_formal_flag</span>
+
+<span class="n">Has_Slice_Subtype</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_slice_subtype</span>
+
+<span class="n">Has_Suffix</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_suffix</span>
+
+<span class="n">Has_Index_Subtype</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_index_subtype</span>
+
+<span class="n">Has_Parameter</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_parameter</span>
+
+<span class="n">Has_Parameter_2</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_parameter_2</span>
+
+<span class="n">Has_Parameter_3</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_parameter_3</span>
+
+<span class="n">Has_Parameter_4</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_parameter_4</span>
+
+<span class="n">Has_Attr_Chain</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_attr_chain</span>
+
+<span class="n">Has_Signal_Attribute_Declaration</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_signal_attribute_declaration</span>
+<span class="p">)</span>
+
+<span class="n">Has_Actual_Type</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_actual_type</span>
+
+<span class="n">Has_Actual_Type_Definition</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_actual_type_definition</span>
+
+<span class="n">Has_Association_Chain</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_association_chain</span>
+
+<span class="n">Has_Individual_Association_Chain</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_individual_association_chain</span>
+<span class="p">)</span>
+
+<span class="n">Has_Subprogram_Association_Chain</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_subprogram_association_chain</span>
+<span class="p">)</span>
+
+<span class="n">Has_Aggregate_Info</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_aggregate_info</span>
+
+<span class="n">Has_Sub_Aggregate_Info</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_sub_aggregate_info</span>
+
+<span class="n">Has_Aggr_Dynamic_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_aggr_dynamic_flag</span>
+
+<span class="n">Has_Aggr_Min_Length</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_aggr_min_length</span>
+
+<span class="n">Has_Aggr_Low_Limit</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_aggr_low_limit</span>
+
+<span class="n">Has_Aggr_High_Limit</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_aggr_high_limit</span>
+
+<span class="n">Has_Aggr_Others_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_aggr_others_flag</span>
+
+<span class="n">Has_Aggr_Named_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_aggr_named_flag</span>
+
+<span class="n">Has_Aggregate_Expand_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_aggregate_expand_flag</span>
+
+<span class="n">Has_Association_Choices_Chain</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_association_choices_chain</span>
+
+<span class="n">Has_Case_Statement_Alternative_Chain</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_case_statement_alternative_chain</span>
+<span class="p">)</span>
+
+<span class="n">Has_Choice_Staticness</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_choice_staticness</span>
+
+<span class="n">Has_Procedure_Call</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_procedure_call</span>
+
+<span class="n">Has_Implementation</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_implementation</span>
+
+<span class="n">Has_Parameter_Association_Chain</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_parameter_association_chain</span>
+<span class="p">)</span>
+
+<span class="n">Has_Method_Object</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_method_object</span>
+
+<span class="n">Has_Subtype_Type_Mark</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_subtype_type_mark</span>
+
+<span class="n">Has_Subnature_Nature_Mark</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_subnature_nature_mark</span>
+
+<span class="n">Has_Type_Conversion_Subtype</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_type_conversion_subtype</span>
+
+<span class="n">Has_Type_Mark</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_type_mark</span>
+
+<span class="n">Has_File_Type_Mark</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_file_type_mark</span>
+
+<span class="n">Has_Return_Type_Mark</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_return_type_mark</span>
+
+<span class="n">Has_Has_Disconnect_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_has_disconnect_flag</span>
+
+<span class="n">Has_Has_Active_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_has_active_flag</span>
+
+<span class="n">Has_Is_Within_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_is_within_flag</span>
+
+<span class="n">Has_Type_Marks_List</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_type_marks_list</span>
+
+<span class="n">Has_Implicit_Alias_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_implicit_alias_flag</span>
+
+<span class="n">Has_Alias_Signature</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_alias_signature</span>
+
+<span class="n">Has_Attribute_Signature</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_attribute_signature</span>
+
+<span class="n">Has_Overload_List</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_overload_list</span>
+
+<span class="n">Has_Simple_Name_Identifier</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_simple_name_identifier</span>
+
+<span class="n">Has_Simple_Name_Subtype</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_simple_name_subtype</span>
+
+<span class="n">Has_Protected_Type_Body</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_protected_type_body</span>
+
+<span class="n">Has_Protected_Type_Declaration</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_protected_type_declaration</span>
+<span class="p">)</span>
+
+<span class="n">Has_Use_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_use_flag</span>
+
+<span class="n">Has_End_Has_Reserved_Id</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_end_has_reserved_id</span>
+
+<span class="n">Has_End_Has_Identifier</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_end_has_identifier</span>
+
+<span class="n">Has_End_Has_Postponed</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_end_has_postponed</span>
+
+<span class="n">Has_Has_Label</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_has_label</span>
+
+<span class="n">Has_Has_Begin</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_has_begin</span>
+
+<span class="n">Has_Has_End</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_has_end</span>
+
+<span class="n">Has_Has_Is</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_has_is</span>
+
+<span class="n">Has_Has_Pure</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_has_pure</span>
+
+<span class="n">Has_Has_Body</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_has_body</span>
+
+<span class="n">Has_Has_Parameter</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_has_parameter</span>
+
+<span class="n">Has_Has_Component</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_has_component</span>
+
+<span class="n">Has_Has_Identifier_List</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_has_identifier_list</span>
+
+<span class="n">Has_Has_Mode</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_has_mode</span>
+
+<span class="n">Has_Has_Class</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_has_class</span>
+
+<span class="n">Has_Has_Delay_Mechanism</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_has_delay_mechanism</span>
+
+<span class="n">Has_Suspend_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_suspend_flag</span>
+
+<span class="n">Has_Is_Ref</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_is_ref</span>
+
+<span class="n">Has_Is_Forward_Ref</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_is_forward_ref</span>
+
+<span class="n">Has_Psl_Property</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_psl_property</span>
+
+<span class="n">Has_Psl_Sequence</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_psl_sequence</span>
+
+<span class="n">Has_Psl_Declaration</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_psl_declaration</span>
+
+<span class="n">Has_Psl_Expression</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_psl_expression</span>
+
+<span class="n">Has_Psl_Boolean</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_psl_boolean</span>
+
+<span class="n">Has_PSL_Clock</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_psl_clock</span>
+
+<span class="n">Has_PSL_NFA</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_psl_nfa</span>
+
+<span class="n">Has_PSL_Nbr_States</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_psl_nbr_states</span>
+
+<span class="n">Has_PSL_Clock_Sensitivity</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_psl_clock_sensitivity</span>
+
+<span class="n">Has_PSL_EOS_Flag</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_psl_eos_flag</span>
+
+<span class="n">Has_Count_Expression</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_count_expression</span>
+
+<span class="n">Has_Clock_Expression</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_clock_expression</span>
+
+<span class="n">Has_Default_Clock</span> <span class="o">=</span> <span class="n">libghdl</span><span class="o">.</span><span class="n">vhdl__nodes_meta__has_default_clock</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2002-2021, Tristan Gingold and contributors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/buildthedocs/sphinx.theme">theme</a>
+    
+    provided by <a href="https://buildthedocs.github.io">Build the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

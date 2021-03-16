@@ -1,0 +1,77 @@
+pyGHDL.libghdl
+==================
+
+.. automodule:: pyGHDL.libghdl
+
+
+
+.. #-----------------------------------
+
+**Submodules**
+
+.. toctree::
+
+   pyGHDL.libghdl._decorator
+   pyGHDL.libghdl._types
+   pyGHDL.libghdl.errorout
+   pyGHDL.libghdl.errorout_console
+   pyGHDL.libghdl.errorout_memory
+   pyGHDL.libghdl.files_map
+   pyGHDL.libghdl.files_map_editor
+   pyGHDL.libghdl.flags
+   pyGHDL.libghdl.libraries
+   pyGHDL.libghdl.name_table
+   pyGHDL.libghdl.std_names
+   pyGHDL.libghdl.utils
+   pyGHDL.libghdl.version
+   pyGHDL.libghdl.vhdl
+
+.. currentmodule:: pyGHDL.libghdl
+
+
+.. #-----------------------------------
+
+
+**Functions**
+
+- :py:func:`finalize`:
+  Free all the memory, be ready for a new initialization.
+
+- :py:func:`initialize`:
+  Initialize or re-initialize the shared library.
+
+- :py:func:`set_option`:
+  Set option :obj:`opt`.
+
+- :py:func:`analyze_init`:
+  Initialize the analyzer.
+
+- :py:func:`analyze_init_status`:
+  Initialize the analyzer.
+
+- :py:func:`analyze_file`:
+  Analyze a given filename :obj:`fname`.
+
+- :py:func:`disp_config`:
+  Display the configured prefixes for libghdl.
+
+
+
+.. #-----------------------------------
+
+**Functions**
+
+
+.. autofunction:: finalize
+
+.. autofunction:: initialize
+
+.. autofunction:: set_option
+
+.. autofunction:: analyze_init
+
+.. autofunction:: analyze_init_status
+
+.. autofunction:: analyze_file
+
+.. autofunction:: disp_config

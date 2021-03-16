@@ -1,0 +1,46 @@
+pyGHDL.dom.InterfaceItem
+============================
+
+.. automodule:: pyGHDL.dom.InterfaceItem
+
+
+.. currentmodule:: pyGHDL.dom.InterfaceItem
+
+
+.. #-----------------------------------
+
+
+**Classes**
+
+- :py:class:`GenericConstantInterfaceItem`:
+  ``ModelEntity`` is a base class for all classes in the VHDL language model,
+
+- :py:class:`PortSignalInterfaceItem`:
+  ``ModelEntity`` is a base class for all classes in the VHDL language model,
+
+
+
+.. #-----------------------------------
+
+
+.. autoclass:: GenericConstantInterfaceItem
+   :members:
+   :private-members:
+   :undoc-members:
+   :inherited-members:
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: GenericConstantInterfaceItem
+
+   .. rubric:: Members
+
+.. autoclass:: PortSignalInterfaceItem
+   :members:
+   :private-members:
+   :undoc-members:
+   :inherited-members:
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: PortSignalInterfaceItem
+
+   .. rubric:: Members

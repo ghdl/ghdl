@@ -1,0 +1,515 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Additional Command Reference &mdash; GHDL 2.0.0-dev documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../_static/icon.png"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Implementation of VHDL" href="ImplementationOfVHDL.html" />
+    <link rel="prev" title="Synthesis" href="Synthesis.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html">
+          
+
+          
+            
+            <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0-dev
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting.html">Getting | Installing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contribute.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../licenses.html">Copyrights | Licenses</a></li>
+</ul>
+<p class="caption"><span class="caption-text">GHDL usage</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../quick_start/index.html">Quick Start Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="InvokingGHDL.html">Invoking GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Simulation.html">Simulation (runtime)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Synthesis.html">Synthesis</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Additional Command Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#environment-variables">Environment variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#misc-commands">Misc commands</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#help-h">Help [<code class="docutils literal notranslate"><span class="pre">-h</span></code>]</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#display-config-disp-config">Display config [<code class="docutils literal notranslate"><span class="pre">--disp-config</span></code>]</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#display-standard-disp-standard">Display standard [<code class="docutils literal notranslate"><span class="pre">--disp-standard</span></code>]</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#version-version">Version [<code class="docutils literal notranslate"><span class="pre">--version</span></code>]</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#file-commands">File commands</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#format-fmt">Format [<code class="docutils literal notranslate"><span class="pre">fmt</span></code>]</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pretty-print-pp-html">Pretty print [<code class="docutils literal notranslate"><span class="pre">--pp-html</span></code>]</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#find-f">Find [<code class="docutils literal notranslate"><span class="pre">-f</span></code>]</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#chop-chop">Chop [<code class="docutils literal notranslate"><span class="pre">--chop</span></code>]</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#lines-lines">Lines [<code class="docutils literal notranslate"><span class="pre">--lines</span></code>]</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#xml-tree-generation-file-to-xml">XML tree generation [<code class="docutils literal notranslate"><span class="pre">--file-to-xml</span></code>]</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#gcc-llvm-only-commands">GCC/LLVM only commands</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#bind-bind">Bind [<code class="docutils literal notranslate"><span class="pre">--bind</span></code>]</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#link-link">Link [<code class="docutils literal notranslate"><span class="pre">--link</span></code>]</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#list-link-list-link">List link [<code class="docutils literal notranslate"><span class="pre">--list-link</span></code>]</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#options">Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#passing-options-to-other-programs">Passing options to other programs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ImplementationOfVHDL.html">Implementation of VHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ImplementationOfVITAL.html">Implementation of VITAL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/Directories.html">Directory structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/building/index.html">Building GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pyGHDL/pyGHDL.html">Python Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/Debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/CodingStyle.html">Coding Style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/Scripts.html">Scripts</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../internals/Overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../internals/Frontend.html">Front-end</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../internals/AST.html">AST</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../internals/RTI.html">Run Time Information (RTI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gnatdoc/index.html">GNATdoc</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Index</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Python Module Index</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GHDL</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Additional Command Reference</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            
+              <a href="https://github.com/ghdl/ghdl/blob/master/doc/using/CommandReference.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="additional-command-reference">
+<span id="ref-command"></span><h1>Additional Command Reference<a class="headerlink" href="#additional-command-reference" title="Permalink to this headline">¶</a></h1>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>The most common commands and options are shown in section <a class="reference internal" href="InvokingGHDL.html#using-invoking"><span class="std std-ref">Invoking GHDL</span></a>. Here the advanced and experimental features are described.</p>
+</div>
+<div class="section" id="environment-variables">
+<h2>Environment variables<a class="headerlink" href="#environment-variables" title="Permalink to this headline">¶</a></h2>
+<dl class="std envvar">
+<dt id="envvar-GHDL_PREFIX">
+<code class="sig-name descname"><span class="pre">GHDL_PREFIX</span></code><a class="headerlink" href="#envvar-GHDL_PREFIX" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="misc-commands">
+<h2>Misc commands<a class="headerlink" href="#misc-commands" title="Permalink to this headline">¶</a></h2>
+<p>There are a few GHDL commands which are seldom useful.</p>
+<div class="section" id="help-h">
+<span id="index-0"></span><h3>Help [<code class="docutils literal notranslate"><span class="pre">-h</span></code>]<a class="headerlink" href="#help-h" title="Permalink to this headline">¶</a></h3>
+<dl class="std option">
+<dt id="cmdoption-ghdl-help">
+<span id="cmdoption-ghdl-h"></span><code class="sig-name descname"><span class="pre">--help</span></code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">-h</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-ghdl-help" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Display (on the standard output) a short description of the all the commands
+available. If the help switch is followed by a command switch, then options
+for that second command are displayed:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ghdl</span> <span class="o">--</span><span class="n">help</span>
+<span class="n">ghdl</span> <span class="o">-</span><span class="n">h</span>
+<span class="n">ghdl</span> <span class="o">-</span><span class="n">h</span> <span class="n">command</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="display-config-disp-config">
+<span id="index-1"></span><h3>Display config [<code class="docutils literal notranslate"><span class="pre">--disp-config</span></code>]<a class="headerlink" href="#display-config-disp-config" title="Permalink to this headline">¶</a></h3>
+<dl class="std option">
+<dt id="cmdoption-ghdl-disp-config">
+<code class="sig-name descname"><span class="pre">--disp-config</span></code><code class="sig-prename descclassname"> <span class="pre">&lt;[options]&gt;</span></code><a class="headerlink" href="#cmdoption-ghdl-disp-config" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Display the program paths and options used by GHDL. This may be useful to track installation errors.</p>
+<span class="target" id="index-2"></span></div>
+<div class="section" id="display-standard-disp-standard">
+<span id="index-3"></span><h3>Display standard [<code class="docutils literal notranslate"><span class="pre">--disp-standard</span></code>]<a class="headerlink" href="#display-standard-disp-standard" title="Permalink to this headline">¶</a></h3>
+<dl class="std option">
+<dt id="cmdoption-ghdl-disp-standard">
+<code class="sig-name descname"><span class="pre">--disp-standard</span></code><code class="sig-prename descclassname"> <span class="pre">&lt;[options]&gt;</span></code><a class="headerlink" href="#cmdoption-ghdl-disp-standard" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Display the <code class="docutils literal notranslate"><span class="pre">std.standard</span></code> package.</p>
+</div>
+<div class="section" id="version-version">
+<span id="index-4"></span><h3>Version [<code class="docutils literal notranslate"><span class="pre">--version</span></code>]<a class="headerlink" href="#version-version" title="Permalink to this headline">¶</a></h3>
+<dl class="std option">
+<dt id="cmdoption-ghdl-version">
+<span id="cmdoption-ghdl-v"></span><code class="sig-name descname"><span class="pre">--version</span></code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">-v</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-ghdl-version" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Display the GHDL version.</p>
+</div>
+</div>
+<div class="section" id="file-commands">
+<h2>File commands<a class="headerlink" href="#file-commands" title="Permalink to this headline">¶</a></h2>
+<p>The following commands act on one or several files. These are not analyzed, therefore, they work even if a file has semantic errors.</p>
+<div class="section" id="format-fmt">
+<span id="index-5"></span><h3>Format [<code class="docutils literal notranslate"><span class="pre">fmt</span></code>]<a class="headerlink" href="#format-fmt" title="Permalink to this headline">¶</a></h3>
+<dl class="std option">
+<dt id="cmdoption-ghdl-arg-fmt">
+<code class="sig-name descname"><span class="pre">fmt</span></code><code class="sig-prename descclassname"> <span class="pre">&lt;file&gt;</span></code><a class="headerlink" href="#cmdoption-ghdl-arg-fmt" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Format on the standard output the input file.</p>
+</div>
+<div class="section" id="pretty-print-pp-html">
+<span id="index-6"></span><h3>Pretty print [<code class="docutils literal notranslate"><span class="pre">--pp-html</span></code>]<a class="headerlink" href="#pretty-print-pp-html" title="Permalink to this headline">¶</a></h3>
+<dl class="std option">
+<dt id="cmdoption-ghdl-pp-html">
+<code class="sig-name descname"><span class="pre">--pp-html</span></code><code class="sig-prename descclassname"> <span class="pre">&lt;[options]</span> <span class="pre">file...&gt;</span></code><a class="headerlink" href="#cmdoption-ghdl-pp-html" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>The files are just scanned and an html file with syntax highlighting is generated on standard output. Since the files
+are not even parsed, erroneous files or incomplete designs can be pretty printed. The style of the html file can be
+modified with the <a class="reference internal" href="InvokingGHDL.html#cmdoption-ghdl-format"><code class="xref std std-option docutils literal notranslate"><span class="pre">--format</span></code></a> option.</p>
+</div>
+<div class="section" id="find-f">
+<span id="index-7"></span><h3>Find [<code class="docutils literal notranslate"><span class="pre">-f</span></code>]<a class="headerlink" href="#find-f" title="Permalink to this headline">¶</a></h3>
+<dl class="std option">
+<dt id="cmdoption-ghdl-f">
+<code class="sig-name descname"><span class="pre">-f</span></code><code class="sig-prename descclassname"> <span class="pre">&lt;file...&gt;</span></code><a class="headerlink" href="#cmdoption-ghdl-f" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>The files are scanned, parsed and the names of design units are displayed. Design units marked with two stars are candidates to be at the apex of a design hierarchy.</p>
+</div>
+<div class="section" id="chop-chop">
+<span id="index-8"></span><h3>Chop [<code class="docutils literal notranslate"><span class="pre">--chop</span></code>]<a class="headerlink" href="#chop-chop" title="Permalink to this headline">¶</a></h3>
+<dl class="std option">
+<dt id="cmdoption-ghdl-chop">
+<code class="sig-name descname"><span class="pre">--chop</span></code><code class="sig-prename descclassname"> <span class="pre">&lt;files...&gt;</span></code><a class="headerlink" href="#cmdoption-ghdl-chop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>The provided files are read, and a file is written in the current directory for every design unit. Each filename is built according to the type:</p>
+<ul class="simple">
+<li><p>For an entity declaration, a package declaration, or a configuration the file name is <code class="file docutils literal notranslate"><span class="pre">NAME.vhdl</span></code>, where <cite>NAME</cite> is the name of the design unit.</p></li>
+<li><p>For a package body, the filename is <code class="file docutils literal notranslate"><span class="pre">NAME-body.vhdl</span></code>.</p></li>
+<li><p>Finally, for an architecture <cite>ARCH</cite> of an entity <cite>ENTITY</cite>, the filename is <code class="file docutils literal notranslate"><span class="pre">ENTITY-ARCH.vhdl</span></code>.</p></li>
+</ul>
+<p>Since the input files are parsed, this command aborts in case of syntax error. The command aborts too if a file to be written already exists.</p>
+<p>Comments between design units are stored into the most adequate files.</p>
+<p>This command may be useful to split big files, if your computer doesn’t have enough memory to compile such files. The size of the executable is reduced too.</p>
+</div>
+<div class="section" id="lines-lines">
+<span id="index-9"></span><h3>Lines [<code class="docutils literal notranslate"><span class="pre">--lines</span></code>]<a class="headerlink" href="#lines-lines" title="Permalink to this headline">¶</a></h3>
+<dl class="std option">
+<dt id="cmdoption-ghdl-lines">
+<code class="sig-name descname"><span class="pre">--lines</span></code><code class="sig-prename descclassname"> <span class="pre">&lt;files...&gt;</span></code><a class="headerlink" href="#cmdoption-ghdl-lines" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Display on the standard output lines of files preceded by line number.</p>
+</div>
+<div class="section" id="xml-tree-generation-file-to-xml">
+<span id="index-10"></span><h3>XML tree generation [<code class="docutils literal notranslate"><span class="pre">--file-to-xml</span></code>]<a class="headerlink" href="#xml-tree-generation-file-to-xml" title="Permalink to this headline">¶</a></h3>
+<dl class="std option">
+<dt id="cmdoption-ghdl-file-to-xml">
+<code class="sig-name descname"><span class="pre">--file-to-xml</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-ghdl-file-to-xml" title="Permalink to this definition">¶</a></dt>
+<dd><p>Outputs an XML representation of the decorated syntax tree for the input file and its dependencies. It can be used for VHDL tooling using semantic information, like style checkers, documentation extraction, complexity estimation, etc.</p>
+</dd></dl>
+
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<ul class="simple">
+<li><p>The AST slightly changes from time to time (particularly when new nodes are added for new language features), so be liberal in what is allowed by your tool. Also, the XML can be quite large so consider it only during prototyping.</p></li>
+<li><p>Note that at this time there is no XML dump of the elaborated design.</p></li>
+</ul>
+</div>
+</div>
+</div>
+<div class="section" id="gcc-llvm-only-commands">
+<span id="gccllvm-only-programs"></span><h2>GCC/LLVM only commands<a class="headerlink" href="#gcc-llvm-only-commands" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="bind-bind">
+<span id="index-11"></span><h3>Bind [<code class="docutils literal notranslate"><span class="pre">--bind</span></code>]<a class="headerlink" href="#bind-bind" title="Permalink to this headline">¶</a></h3>
+<dl class="std option">
+<dt id="cmdoption-ghdl-bind">
+<code class="sig-name descname"><span class="pre">--bind</span></code><code class="sig-prename descclassname"> <span class="pre">&lt;[options]</span> <span class="pre">primary_unit</span> <span class="pre">[secondary_unit]&gt;</span></code><a class="headerlink" href="#cmdoption-ghdl-bind" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Performs only the first stage of the elaboration command; the list of object files is created but the executable is not built. This command should be used only when the main entry point is not GHDL.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>Currently, the objects generated by <a class="reference internal" href="#cmdoption-ghdl-bind"><code class="xref std std-option docutils literal notranslate"><span class="pre">--bind</span></code></a> are created in the working directory. This behaviour is different from other object files generated with <a class="reference internal" href="InvokingGHDL.html#cmdoption-ghdl-a"><code class="xref std std-option docutils literal notranslate"><span class="pre">-a</span></code></a>, which are always placed in the same directory as the <cite>WORK</cite> library. It is possible to provide an output path with <code class="docutils literal notranslate"><span class="pre">ghdl</span> <span class="pre">--bind</span> <span class="pre">-o</span> <span class="pre">path/primary_unit</span> <span class="pre">primary_unit</span></code>. However, <code class="docutils literal notranslate"><span class="pre">ghdl</span> <span class="pre">--list-link</span></code> will only search in the current path.</p>
+</div>
+</div>
+<div class="section" id="link-link">
+<span id="index-12"></span><h3>Link [<code class="docutils literal notranslate"><span class="pre">--link</span></code>]<a class="headerlink" href="#link-link" title="Permalink to this headline">¶</a></h3>
+<dl class="std option">
+<dt id="cmdoption-ghdl-link">
+<code class="sig-name descname"><span class="pre">--link</span></code><code class="sig-prename descclassname"> <span class="pre">&lt;[options]</span> <span class="pre">primary_unit</span> <span class="pre">[secondary_unit]&gt;</span></code><a class="headerlink" href="#cmdoption-ghdl-link" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Performs only the second stage of the elaboration command: the executable is created by linking the files of the object files list. This command is available only for completeness. The elaboration command is equivalent to the bind command followed by the link command.</p>
+</div>
+<div class="section" id="list-link-list-link">
+<span id="index-13"></span><h3>List link [<code class="docutils literal notranslate"><span class="pre">--list-link</span></code>]<a class="headerlink" href="#list-link-list-link" title="Permalink to this headline">¶</a></h3>
+<dl class="std option">
+<dt id="cmdoption-ghdl-list-link">
+<code class="sig-name descname"><span class="pre">--list-link</span></code><code class="sig-prename descclassname"> <span class="pre">&lt;primary_unit</span> <span class="pre">[secondary_unit]&gt;</span></code><a class="headerlink" href="#cmdoption-ghdl-list-link" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>This command may be used only after a bind command. GHDL displays all the files which will be linked to create an executable and additional arguments for the linker. This command is intended to add object files in a link of a foreign program. This command should be used only after <code class="docutils literal notranslate"><span class="pre">ghdl</span> <span class="pre">--bind</span></code>, as some files generated by it are looked for in the current path.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>One of the arguments returned by <code class="docutils literal notranslate"><span class="pre">--list-link</span></code> is <code class="docutils literal notranslate"><span class="pre">-Wl,--version-script=PREFIX/lib/ghdl/grt.ver</span></code>, where <cite>PREFIX</cite> is the installation path of GHDL. This will hide most of the symbols when the target executable binary is built. In some contexts, where the binary is to be loaded dynamically, the user might want additional symbols to be accessible. There are two possible approaches to have it done:</p>
+<ul class="simple">
+<li><p>Filter the output of <code class="docutils literal notranslate"><span class="pre">--list-link</span></code> with e.g. <code class="docutils literal notranslate"><span class="pre">sed</span></code>.</p></li>
+<li><p>Provide an additional non-anonymous version script: <code class="docutils literal notranslate"><span class="pre">-Wl,-Wl,--version-script=file.ver</span></code>.</p></li>
+</ul>
+</div>
+</div>
+</div>
+<div class="section" id="options">
+<h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
+<dl class="std option">
+<dt id="cmdoption-ghdl-GHDL1">
+<span id="cmdoption-ghdl-ghdl1"></span><code class="sig-name descname"><span class="pre">--GHDL1</span></code><code class="sig-prename descclassname"><span class="pre">&lt;=COMMAND&gt;</span></code><a class="headerlink" href="#cmdoption-ghdl-GHDL1" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Use <code class="docutils literal notranslate"><span class="pre">COMMAND</span></code> as the command name for the compiler. If <code class="docutils literal notranslate"><span class="pre">COMMAND</span></code> is not a path, then it is searched in the path.</p>
+<dl class="std option">
+<dt id="cmdoption-ghdl-AS">
+<span id="cmdoption-ghdl-as"></span><code class="sig-name descname"><span class="pre">--AS</span></code><code class="sig-prename descclassname"><span class="pre">&lt;=COMMAND&gt;</span></code><a class="headerlink" href="#cmdoption-ghdl-AS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Use <code class="docutils literal notranslate"><span class="pre">COMMAND</span></code> as the command name for the assembler. If <code class="docutils literal notranslate"><span class="pre">COMMAND</span></code> is not a path, then it is searched in the path. The default is <code class="docutils literal notranslate"><span class="pre">as</span></code>.</p>
+<dl class="std option">
+<dt id="cmdoption-ghdl-LINK">
+<code class="sig-name descname"><span class="pre">--LINK</span></code><code class="sig-prename descclassname"><span class="pre">&lt;=COMMAND&gt;</span></code><a class="headerlink" href="#cmdoption-ghdl-LINK" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Use <code class="docutils literal notranslate"><span class="pre">COMMAND</span></code> as the linker driver. If <code class="docutils literal notranslate"><span class="pre">COMMAND</span></code> is not a path, then it is searched in the path. The default is <code class="docutils literal notranslate"><span class="pre">gcc</span></code>.</p>
+</div>
+<div class="section" id="passing-options-to-other-programs">
+<span id="id1"></span><h2>Passing options to other programs<a class="headerlink" href="#passing-options-to-other-programs" title="Permalink to this headline">¶</a></h2>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>These options are only available with GCC/LLVM.</p>
+</div>
+<p>For many commands, GHDL acts as a driver: it invokes programs to perform the command. You can pass arbitrary options to these programs.</p>
+<p>Both the compiler and the linker are in fact GCC programs. See the GCC manual for details on GCC options.</p>
+<dl class="std option">
+<dt id="cmdoption-ghdl-Wc">
+<span id="cmdoption-ghdl-wc"></span><code class="sig-name descname"><span class="pre">-Wc</span></code><code class="sig-prename descclassname"><span class="pre">,&lt;OPTION&gt;</span></code><a class="headerlink" href="#cmdoption-ghdl-Wc" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Pass <cite>OPTION</cite> as an option to the compiler.</p>
+<dl class="std option">
+<dt id="cmdoption-ghdl-Wa">
+<span id="cmdoption-ghdl-wa"></span><code class="sig-name descname"><span class="pre">-Wa</span></code><code class="sig-prename descclassname"><span class="pre">,&lt;OPTION&gt;</span></code><a class="headerlink" href="#cmdoption-ghdl-Wa" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Pass <cite>OPTION</cite> as an option to the assembler.</p>
+<dl class="std option">
+<dt id="cmdoption-ghdl-Wl">
+<span id="cmdoption-ghdl-wl"></span><code class="sig-name descname"><span class="pre">-Wl</span></code><code class="sig-prename descclassname"><span class="pre">,&lt;OPTION&gt;</span></code><a class="headerlink" href="#cmdoption-ghdl-Wl" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Pass <cite>OPTION</cite> as an option to the linker.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="ImplementationOfVHDL.html" class="btn btn-neutral float-right" title="Implementation of VHDL" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="Synthesis.html" class="btn btn-neutral float-left" title="Synthesis" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2002-2021, Tristan Gingold and contributors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/buildthedocs/sphinx.theme">theme</a>
+    
+    provided by <a href="https://buildthedocs.github.io">Build the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

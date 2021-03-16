@@ -1,0 +1,480 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pyGHDL.libghdl.vhdl.tokens &mdash; GHDL 2.0.0-dev documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/graphviz.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../../../../_static/icon.png"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="author" title="About these documents" href="../../../../about.html" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html">
+          
+
+          
+            
+            <img src="../../../../_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0-dev
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting.html">Getting | Installing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../contribute.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../licenses.html">Copyrights | Licenses</a></li>
+</ul>
+<p class="caption"><span class="caption-text">GHDL usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../quick_start/index.html">Quick Start Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../using/InvokingGHDL.html">Invoking GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../using/Simulation.html">Simulation (runtime)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../using/Synthesis.html">Synthesis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../using/CommandReference.html">Additional Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../using/ImplementationOfVHDL.html">Implementation of VHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../using/ImplementationOfVITAL.html">Implementation of VITAL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../development/Directories.html">Directory structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../development/building/index.html">Building GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../pyGHDL/pyGHDL.html">Python Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../development/Debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../development/CodingStyle.html">Coding Style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../development/Scripts.html">Scripts</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../internals/Overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../internals/Frontend.html">Front-end</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../internals/AST.html">AST</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../internals/RTI.html">Run Time Information (RTI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../gnatdoc/index.html">GNATdoc</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Index</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../py-modindex.html">Python Module Index</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">GHDL</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+          <li><a href="../../libghdl.html">pyGHDL.libghdl</a> &raquo;</li>
+        
+      <li>pyGHDL.libghdl.vhdl.tokens</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyGHDL.libghdl.vhdl.tokens</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Auto generated Python source file from Ada sources</span>
+<span class="c1"># Call &#39;make&#39; in &#39;src/vhdl&#39; to regenerate:</span>
+<span class="c1">#</span>
+<span class="kn">from</span> <span class="nn">pydecor</span> <span class="kn">import</span> <span class="n">export</span>
+
+
+<div class="viewcode-block" id="Tok"><a class="viewcode-back" href="../../../../pyGHDL/pyGHDL.libghdl.vhdl.tokens.html#pyGHDL.libghdl.vhdl.tokens.Tok">[docs]</a><span class="nd">@export</span>
+<span class="k">class</span> <span class="nc">Tok</span><span class="p">:</span>
+    <span class="n">Invalid</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">Eof</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">Newline</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">Block_Comment_Start</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">Block_Comment_End</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">Block_Comment_Text</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">Line_Comment</span> <span class="o">=</span> <span class="mi">6</span>
+    <span class="n">Character</span> <span class="o">=</span> <span class="mi">7</span>
+    <span class="n">Identifier</span> <span class="o">=</span> <span class="mi">8</span>
+    <span class="n">Integer</span> <span class="o">=</span> <span class="mi">9</span>
+    <span class="n">Real</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">String</span> <span class="o">=</span> <span class="mi">11</span>
+    <span class="n">Bit_String</span> <span class="o">=</span> <span class="mi">12</span>
+    <span class="n">Integer_Letter</span> <span class="o">=</span> <span class="mi">13</span>
+    <span class="n">Left_Paren</span> <span class="o">=</span> <span class="mi">14</span>
+    <span class="n">Right_Paren</span> <span class="o">=</span> <span class="mi">15</span>
+    <span class="n">Left_Bracket</span> <span class="o">=</span> <span class="mi">16</span>
+    <span class="n">Right_Bracket</span> <span class="o">=</span> <span class="mi">17</span>
+    <span class="n">Colon</span> <span class="o">=</span> <span class="mi">18</span>
+    <span class="n">Semi_Colon</span> <span class="o">=</span> <span class="mi">19</span>
+    <span class="n">Comma</span> <span class="o">=</span> <span class="mi">20</span>
+    <span class="n">Double_Arrow</span> <span class="o">=</span> <span class="mi">21</span>
+    <span class="n">Tick</span> <span class="o">=</span> <span class="mi">22</span>
+    <span class="n">Double_Star</span> <span class="o">=</span> <span class="mi">23</span>
+    <span class="n">Assign</span> <span class="o">=</span> <span class="mi">24</span>
+    <span class="n">Bar</span> <span class="o">=</span> <span class="mi">25</span>
+    <span class="n">Box</span> <span class="o">=</span> <span class="mi">26</span>
+    <span class="n">Dot</span> <span class="o">=</span> <span class="mi">27</span>
+    <span class="n">Equal_Equal</span> <span class="o">=</span> <span class="mi">28</span>
+    <span class="n">Equal</span> <span class="o">=</span> <span class="mi">29</span>
+    <span class="n">Not_Equal</span> <span class="o">=</span> <span class="mi">30</span>
+    <span class="n">Less</span> <span class="o">=</span> <span class="mi">31</span>
+    <span class="n">Less_Equal</span> <span class="o">=</span> <span class="mi">32</span>
+    <span class="n">Greater</span> <span class="o">=</span> <span class="mi">33</span>
+    <span class="n">Greater_Equal</span> <span class="o">=</span> <span class="mi">34</span>
+    <span class="n">Match_Equal</span> <span class="o">=</span> <span class="mi">35</span>
+    <span class="n">Match_Not_Equal</span> <span class="o">=</span> <span class="mi">36</span>
+    <span class="n">Match_Less</span> <span class="o">=</span> <span class="mi">37</span>
+    <span class="n">Match_Less_Equal</span> <span class="o">=</span> <span class="mi">38</span>
+    <span class="n">Match_Greater</span> <span class="o">=</span> <span class="mi">39</span>
+    <span class="n">Match_Greater_Equal</span> <span class="o">=</span> <span class="mi">40</span>
+    <span class="n">Plus</span> <span class="o">=</span> <span class="mi">41</span>
+    <span class="n">Minus</span> <span class="o">=</span> <span class="mi">42</span>
+    <span class="n">Ampersand</span> <span class="o">=</span> <span class="mi">43</span>
+    <span class="n">Condition</span> <span class="o">=</span> <span class="mi">44</span>
+    <span class="n">Double_Less</span> <span class="o">=</span> <span class="mi">45</span>
+    <span class="n">Double_Greater</span> <span class="o">=</span> <span class="mi">46</span>
+    <span class="n">Caret</span> <span class="o">=</span> <span class="mi">47</span>
+    <span class="n">And_And</span> <span class="o">=</span> <span class="mi">48</span>
+    <span class="n">Bar_Bar</span> <span class="o">=</span> <span class="mi">49</span>
+    <span class="n">Left_Curly</span> <span class="o">=</span> <span class="mi">50</span>
+    <span class="n">Right_Curly</span> <span class="o">=</span> <span class="mi">51</span>
+    <span class="n">Exclam_Mark</span> <span class="o">=</span> <span class="mi">52</span>
+    <span class="n">Brack_Star</span> <span class="o">=</span> <span class="mi">53</span>
+    <span class="n">Brack_Plus_Brack</span> <span class="o">=</span> <span class="mi">54</span>
+    <span class="n">Brack_Arrow</span> <span class="o">=</span> <span class="mi">55</span>
+    <span class="n">Brack_Equal</span> <span class="o">=</span> <span class="mi">56</span>
+    <span class="n">Bar_Arrow</span> <span class="o">=</span> <span class="mi">57</span>
+    <span class="n">Bar_Double_Arrow</span> <span class="o">=</span> <span class="mi">58</span>
+    <span class="n">Minus_Greater</span> <span class="o">=</span> <span class="mi">59</span>
+    <span class="n">Equiv_Arrow</span> <span class="o">=</span> <span class="mi">60</span>
+    <span class="n">Arobase</span> <span class="o">=</span> <span class="mi">61</span>
+    <span class="n">Star</span> <span class="o">=</span> <span class="mi">62</span>
+    <span class="n">Slash</span> <span class="o">=</span> <span class="mi">63</span>
+    <span class="n">Mod</span> <span class="o">=</span> <span class="mi">64</span>
+    <span class="n">Rem</span> <span class="o">=</span> <span class="mi">65</span>
+    <span class="n">Abs</span> <span class="o">=</span> <span class="mi">66</span>
+    <span class="n">Not</span> <span class="o">=</span> <span class="mi">67</span>
+    <span class="n">Access</span> <span class="o">=</span> <span class="mi">68</span>
+    <span class="n">After</span> <span class="o">=</span> <span class="mi">69</span>
+    <span class="n">Alias</span> <span class="o">=</span> <span class="mi">70</span>
+    <span class="n">All</span> <span class="o">=</span> <span class="mi">71</span>
+    <span class="n">Architecture</span> <span class="o">=</span> <span class="mi">72</span>
+    <span class="n">Array</span> <span class="o">=</span> <span class="mi">73</span>
+    <span class="n">Assert</span> <span class="o">=</span> <span class="mi">74</span>
+    <span class="n">Attribute</span> <span class="o">=</span> <span class="mi">75</span>
+    <span class="n">Begin</span> <span class="o">=</span> <span class="mi">76</span>
+    <span class="n">Block</span> <span class="o">=</span> <span class="mi">77</span>
+    <span class="n">Body</span> <span class="o">=</span> <span class="mi">78</span>
+    <span class="n">Buffer</span> <span class="o">=</span> <span class="mi">79</span>
+    <span class="n">Bus</span> <span class="o">=</span> <span class="mi">80</span>
+    <span class="n">Case</span> <span class="o">=</span> <span class="mi">81</span>
+    <span class="n">Component</span> <span class="o">=</span> <span class="mi">82</span>
+    <span class="n">Configuration</span> <span class="o">=</span> <span class="mi">83</span>
+    <span class="n">Constant</span> <span class="o">=</span> <span class="mi">84</span>
+    <span class="n">Disconnect</span> <span class="o">=</span> <span class="mi">85</span>
+    <span class="n">Downto</span> <span class="o">=</span> <span class="mi">86</span>
+    <span class="n">Else</span> <span class="o">=</span> <span class="mi">87</span>
+    <span class="n">Elsif</span> <span class="o">=</span> <span class="mi">88</span>
+    <span class="n">End</span> <span class="o">=</span> <span class="mi">89</span>
+    <span class="n">Entity</span> <span class="o">=</span> <span class="mi">90</span>
+    <span class="n">Exit</span> <span class="o">=</span> <span class="mi">91</span>
+    <span class="n">File</span> <span class="o">=</span> <span class="mi">92</span>
+    <span class="n">For</span> <span class="o">=</span> <span class="mi">93</span>
+    <span class="n">Function</span> <span class="o">=</span> <span class="mi">94</span>
+    <span class="n">Generate</span> <span class="o">=</span> <span class="mi">95</span>
+    <span class="n">Generic</span> <span class="o">=</span> <span class="mi">96</span>
+    <span class="n">Guarded</span> <span class="o">=</span> <span class="mi">97</span>
+    <span class="n">If</span> <span class="o">=</span> <span class="mi">98</span>
+    <span class="n">In</span> <span class="o">=</span> <span class="mi">99</span>
+    <span class="n">Inout</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="n">Is</span> <span class="o">=</span> <span class="mi">101</span>
+    <span class="n">Label</span> <span class="o">=</span> <span class="mi">102</span>
+    <span class="n">Library</span> <span class="o">=</span> <span class="mi">103</span>
+    <span class="n">Linkage</span> <span class="o">=</span> <span class="mi">104</span>
+    <span class="n">Loop</span> <span class="o">=</span> <span class="mi">105</span>
+    <span class="n">Map</span> <span class="o">=</span> <span class="mi">106</span>
+    <span class="n">New</span> <span class="o">=</span> <span class="mi">107</span>
+    <span class="n">Next</span> <span class="o">=</span> <span class="mi">108</span>
+    <span class="n">Null</span> <span class="o">=</span> <span class="mi">109</span>
+    <span class="n">Of</span> <span class="o">=</span> <span class="mi">110</span>
+    <span class="n">On</span> <span class="o">=</span> <span class="mi">111</span>
+    <span class="n">Open</span> <span class="o">=</span> <span class="mi">112</span>
+    <span class="n">Others</span> <span class="o">=</span> <span class="mi">113</span>
+    <span class="n">Out</span> <span class="o">=</span> <span class="mi">114</span>
+    <span class="n">Package</span> <span class="o">=</span> <span class="mi">115</span>
+    <span class="n">Port</span> <span class="o">=</span> <span class="mi">116</span>
+    <span class="n">Procedure</span> <span class="o">=</span> <span class="mi">117</span>
+    <span class="n">Process</span> <span class="o">=</span> <span class="mi">118</span>
+    <span class="n">Range</span> <span class="o">=</span> <span class="mi">119</span>
+    <span class="n">Record</span> <span class="o">=</span> <span class="mi">120</span>
+    <span class="n">Register</span> <span class="o">=</span> <span class="mi">121</span>
+    <span class="n">Report</span> <span class="o">=</span> <span class="mi">122</span>
+    <span class="n">Return</span> <span class="o">=</span> <span class="mi">123</span>
+    <span class="n">Select</span> <span class="o">=</span> <span class="mi">124</span>
+    <span class="n">Severity</span> <span class="o">=</span> <span class="mi">125</span>
+    <span class="n">Signal</span> <span class="o">=</span> <span class="mi">126</span>
+    <span class="n">Subtype</span> <span class="o">=</span> <span class="mi">127</span>
+    <span class="n">Then</span> <span class="o">=</span> <span class="mi">128</span>
+    <span class="n">To</span> <span class="o">=</span> <span class="mi">129</span>
+    <span class="n">Transport</span> <span class="o">=</span> <span class="mi">130</span>
+    <span class="n">Type</span> <span class="o">=</span> <span class="mi">131</span>
+    <span class="n">Units</span> <span class="o">=</span> <span class="mi">132</span>
+    <span class="n">Until</span> <span class="o">=</span> <span class="mi">133</span>
+    <span class="n">Use</span> <span class="o">=</span> <span class="mi">134</span>
+    <span class="n">Variable</span> <span class="o">=</span> <span class="mi">135</span>
+    <span class="n">Wait</span> <span class="o">=</span> <span class="mi">136</span>
+    <span class="n">When</span> <span class="o">=</span> <span class="mi">137</span>
+    <span class="n">While</span> <span class="o">=</span> <span class="mi">138</span>
+    <span class="n">With</span> <span class="o">=</span> <span class="mi">139</span>
+    <span class="n">And</span> <span class="o">=</span> <span class="mi">140</span>
+    <span class="n">Or</span> <span class="o">=</span> <span class="mi">141</span>
+    <span class="n">Xor</span> <span class="o">=</span> <span class="mi">142</span>
+    <span class="n">Nand</span> <span class="o">=</span> <span class="mi">143</span>
+    <span class="n">Nor</span> <span class="o">=</span> <span class="mi">144</span>
+    <span class="n">Xnor</span> <span class="o">=</span> <span class="mi">145</span>
+    <span class="n">Group</span> <span class="o">=</span> <span class="mi">146</span>
+    <span class="n">Impure</span> <span class="o">=</span> <span class="mi">147</span>
+    <span class="n">Inertial</span> <span class="o">=</span> <span class="mi">148</span>
+    <span class="n">Literal</span> <span class="o">=</span> <span class="mi">149</span>
+    <span class="n">Postponed</span> <span class="o">=</span> <span class="mi">150</span>
+    <span class="n">Pure</span> <span class="o">=</span> <span class="mi">151</span>
+    <span class="n">Reject</span> <span class="o">=</span> <span class="mi">152</span>
+    <span class="n">Shared</span> <span class="o">=</span> <span class="mi">153</span>
+    <span class="n">Unaffected</span> <span class="o">=</span> <span class="mi">154</span>
+    <span class="n">Sll</span> <span class="o">=</span> <span class="mi">155</span>
+    <span class="n">Sla</span> <span class="o">=</span> <span class="mi">156</span>
+    <span class="n">Sra</span> <span class="o">=</span> <span class="mi">157</span>
+    <span class="n">Srl</span> <span class="o">=</span> <span class="mi">158</span>
+    <span class="n">Rol</span> <span class="o">=</span> <span class="mi">159</span>
+    <span class="n">Ror</span> <span class="o">=</span> <span class="mi">160</span>
+    <span class="n">Protected</span> <span class="o">=</span> <span class="mi">161</span>
+    <span class="n">Assume</span> <span class="o">=</span> <span class="mi">162</span>
+    <span class="n">Context</span> <span class="o">=</span> <span class="mi">163</span>
+    <span class="n">Cover</span> <span class="o">=</span> <span class="mi">164</span>
+    <span class="n">Default</span> <span class="o">=</span> <span class="mi">165</span>
+    <span class="n">Force</span> <span class="o">=</span> <span class="mi">166</span>
+    <span class="n">Parameter</span> <span class="o">=</span> <span class="mi">167</span>
+    <span class="n">Property</span> <span class="o">=</span> <span class="mi">168</span>
+    <span class="n">Release</span> <span class="o">=</span> <span class="mi">169</span>
+    <span class="n">Restrict</span> <span class="o">=</span> <span class="mi">170</span>
+    <span class="n">Restrict_Guarantee</span> <span class="o">=</span> <span class="mi">171</span>
+    <span class="n">Sequence</span> <span class="o">=</span> <span class="mi">172</span>
+    <span class="n">Vmode</span> <span class="o">=</span> <span class="mi">173</span>
+    <span class="n">Vprop</span> <span class="o">=</span> <span class="mi">174</span>
+    <span class="n">Vunit</span> <span class="o">=</span> <span class="mi">175</span>
+    <span class="n">Across</span> <span class="o">=</span> <span class="mi">176</span>
+    <span class="n">Break</span> <span class="o">=</span> <span class="mi">177</span>
+    <span class="n">Limit</span> <span class="o">=</span> <span class="mi">178</span>
+    <span class="n">Nature</span> <span class="o">=</span> <span class="mi">179</span>
+    <span class="n">Noise</span> <span class="o">=</span> <span class="mi">180</span>
+    <span class="n">Procedural</span> <span class="o">=</span> <span class="mi">181</span>
+    <span class="n">Quantity</span> <span class="o">=</span> <span class="mi">182</span>
+    <span class="n">Reference</span> <span class="o">=</span> <span class="mi">183</span>
+    <span class="n">Spectrum</span> <span class="o">=</span> <span class="mi">184</span>
+    <span class="n">Subnature</span> <span class="o">=</span> <span class="mi">185</span>
+    <span class="n">Terminal</span> <span class="o">=</span> <span class="mi">186</span>
+    <span class="n">Through</span> <span class="o">=</span> <span class="mi">187</span>
+    <span class="n">Tolerance</span> <span class="o">=</span> <span class="mi">188</span>
+    <span class="n">Psl_Clock</span> <span class="o">=</span> <span class="mi">189</span>
+    <span class="n">Psl_Endpoint</span> <span class="o">=</span> <span class="mi">190</span>
+    <span class="n">Psl_Const</span> <span class="o">=</span> <span class="mi">191</span>
+    <span class="n">Psl_Boolean</span> <span class="o">=</span> <span class="mi">192</span>
+    <span class="n">Inf</span> <span class="o">=</span> <span class="mi">193</span>
+    <span class="n">Within</span> <span class="o">=</span> <span class="mi">194</span>
+    <span class="n">Abort</span> <span class="o">=</span> <span class="mi">195</span>
+    <span class="n">Before</span> <span class="o">=</span> <span class="mi">196</span>
+    <span class="n">Before_Em</span> <span class="o">=</span> <span class="mi">197</span>
+    <span class="n">Before_Un</span> <span class="o">=</span> <span class="mi">198</span>
+    <span class="n">Before_Em_Un</span> <span class="o">=</span> <span class="mi">199</span>
+    <span class="n">Always</span> <span class="o">=</span> <span class="mi">200</span>
+    <span class="n">Never</span> <span class="o">=</span> <span class="mi">201</span>
+    <span class="n">Eventually_Em</span> <span class="o">=</span> <span class="mi">202</span>
+    <span class="n">Next_Em</span> <span class="o">=</span> <span class="mi">203</span>
+    <span class="n">Next_A</span> <span class="o">=</span> <span class="mi">204</span>
+    <span class="n">Next_A_Em</span> <span class="o">=</span> <span class="mi">205</span>
+    <span class="n">Next_E</span> <span class="o">=</span> <span class="mi">206</span>
+    <span class="n">Next_E_Em</span> <span class="o">=</span> <span class="mi">207</span>
+    <span class="n">Next_Event</span> <span class="o">=</span> <span class="mi">208</span>
+    <span class="n">Next_Event_Em</span> <span class="o">=</span> <span class="mi">209</span>
+    <span class="n">Next_Event_A</span> <span class="o">=</span> <span class="mi">210</span>
+    <span class="n">Next_Event_A_Em</span> <span class="o">=</span> <span class="mi">211</span>
+    <span class="n">Next_Event_E</span> <span class="o">=</span> <span class="mi">212</span>
+    <span class="n">Next_Event_E_Em</span> <span class="o">=</span> <span class="mi">213</span>
+    <span class="n">Until_Em</span> <span class="o">=</span> <span class="mi">214</span>
+    <span class="n">Until_Un</span> <span class="o">=</span> <span class="mi">215</span>
+    <span class="n">Until_Em_Un</span> <span class="o">=</span> <span class="mi">216</span>
+    <span class="n">Prev</span> <span class="o">=</span> <span class="mi">217</span>
+    <span class="n">Stable</span> <span class="o">=</span> <span class="mi">218</span>
+    <span class="n">Fell</span> <span class="o">=</span> <span class="mi">219</span>
+    <span class="n">Rose</span> <span class="o">=</span> <span class="mi">220</span>
+    <span class="n">Onehot</span> <span class="o">=</span> <span class="mi">221</span>
+    <span class="n">Onehot0</span> <span class="o">=</span> <span class="mi">222</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2002-2021, Tristan Gingold and contributors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/buildthedocs/sphinx.theme">theme</a>
+    
+    provided by <a href="https://buildthedocs.github.io">Build the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

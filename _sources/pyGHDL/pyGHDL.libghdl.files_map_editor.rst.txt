@@ -1,0 +1,40 @@
+pyGHDL.libghdl.files_map_editor
+===================================
+
+.. automodule:: pyGHDL.libghdl.files_map_editor
+
+
+.. currentmodule:: pyGHDL.libghdl.files_map_editor
+
+
+.. #-----------------------------------
+
+
+**Functions**
+
+- :py:func:`Replace_Text`:
+  Replace [START; END) by TEXT.
+
+- :py:func:`Fill_Text`:
+  Replace the content of :obj:`File` with TEXT.
+
+- :py:func:`Check_Buffer_Content`:
+  Check that content of :obj:`File` is STR[1 .. STR_LEN].
+
+- :py:func:`Copy_Source_File`:
+  Copy content of :obj:`Src` to :obj:`Dest`.
+
+
+
+.. #-----------------------------------
+
+**Functions**
+
+
+.. autofunction:: Replace_Text
+
+.. autofunction:: Fill_Text
+
+.. autofunction:: Check_Buffer_Content
+
+.. autofunction:: Copy_Source_File

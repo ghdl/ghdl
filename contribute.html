@@ -1,0 +1,397 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Contributing &mdash; GHDL 2.0.0-dev documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="_static/icon.png"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Copyrights | Licenses" href="licenses.html" />
+    <link rel="prev" title="Getting | Installing" href="getting.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html">
+          
+
+          
+            
+            <img src="_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0-dev
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting.html">Getting | Installing</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#reporting-bugs">Reporting bugs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#requesting-enhancements">Requesting enhancements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#improving-the-documentation">Improving the documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#fork-modify-and-pull-request">Fork, modify and pull-request</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#related-interesting-projects">Related interesting projects</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="licenses.html">Copyrights | Licenses</a></li>
+</ul>
+<p class="caption"><span class="caption-text">GHDL usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quick_start/index.html">Quick Start Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="using/InvokingGHDL.html">Invoking GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="using/Simulation.html">Simulation (runtime)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="using/Synthesis.html">Synthesis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="using/CommandReference.html">Additional Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="using/ImplementationOfVHDL.html">Implementation of VHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="using/ImplementationOfVITAL.html">Implementation of VITAL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="development/Directories.html">Directory structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/building/index.html">Building GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyGHDL/pyGHDL.html">Python Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/Debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/CodingStyle.html">Coding Style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/Scripts.html">Scripts</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="internals/Overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="internals/Frontend.html">Front-end</a></li>
+<li class="toctree-l1"><a class="reference internal" href="internals/AST.html">AST</a></li>
+<li class="toctree-l1"><a class="reference internal" href="internals/RTI.html">Run Time Information (RTI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gnatdoc/index.html">GNATdoc</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Index</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="py-modindex.html">Python Module Index</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GHDL</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Contributing</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            
+              <a href="https://github.com/ghdl/ghdl/blob/master/doc/contribute.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="contributing">
+<span id="intro-contributing"></span><h1>Contributing<a class="headerlink" href="#contributing" title="Permalink to this headline">¶</a></h1>
+<p>As in many other free and open source projects, there are many areas requiring different skills where contributions to GHDL
+are welcome. The first step might be to use GHDL and explore its possibilities in your own project. If you are new to VHDL,
+see the <a class="reference internal" href="quick_start/simulation/index.html#using-quickstart-simulation"><span class="std std-ref">Simulation</span></a> for an introduction. Furthermore, we encourage you to read <a class="reference internal" href="using/InvokingGHDL.html#using-invoking"><span class="std std-ref">Invoking GHDL</span></a>,
+where the most commonly used options are explained. You can also check the complete <a class="reference internal" href="using/CommandReference.html#ref-command"><span class="std std-ref">Additional Command Reference</span></a>.</p>
+<p>If you are more familiar with GHDL, you might start asking yourself how it works internally. If so, you might find
+<a class="reference internal" href="using/ImplementationOfVHDL.html#ref-implvhdl"><span class="std std-ref">Implementation of VHDL</span></a> and <a class="reference internal" href="using/ImplementationOfVITAL.html#ref-implvital"><span class="std std-ref">Implementation of VITAL</span></a> interesting.</p>
+<p>While using GHDL, you might find flaws, such as bugs, missing features, typos in the documentation, or topics which still are
+not covered. In order to improve GHDL, we welcome bug reports, suggestions, and contributions for any aspect of
+GHDL. Whether it’s a bug or an enhancement, have a look at the <a class="reference external" href="https://github.com/ghdl/ghdl/issues"><img alt="Open issues" src="https://img.shields.io/github/issues/ghdl/ghdl.svg?logo=github&amp;style=flat-square&amp;longCache=true" style="height: 22px;" /></a> and <a class="reference external" href="https://github.com/ghdl/ghdl/issues?q=is%3Aissue+is%3Aclosed"><img alt="Closed issues" src="https://img.shields.io/github/issues-closed-raw/ghdl/ghdl.svg?logo=github&amp;style=flat-square&amp;longCache=true" style="height: 22px;" /></a> to see
+if someone already told us about it. You might find a solution there.</p>
+<p>Ideas for future work, enhancements, documentation, and internship programs are shown in the <a class="reference external" href="https://github.com/ghdl/ghdl/wiki">GitHub wiki</a>.</p>
+<p>If you found no information on your topic, please, report so that we are aware! You can reach us through various ways:
+<a class="reference external" href="https://gitter.im/ghdl1/Lobby"><img alt="Talk to us on Gitter" src="https://img.shields.io/badge/chat-on%20gitter-4db797.svg?logo=gitter&amp;logoColor=4db797&amp;style=flat-square&amp;longCache=true" style="height: 22px;" /></a> or open a <a class="reference external" href="https://github.com/ghdl/ghdl/issues/new"><img alt="Open new issue at GitHub" src="https://img.shields.io/badge/new-issue-yellowgreen.svg?logo=github&amp;style=flat-square&amp;longCache=true" style="height: 22px;" /></a>.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<ul class="simple">
+<li><p>Since the development of GHDL started in 2002, multiple platforms have been used as a support for both distribution
+and getting feedback. However, the development is now centralized in <a class="reference external" href="https://github.com/ghdl">github.com/ghdl</a>.</p></li>
+<li><p><a class="reference external" href="www.catb.org/~esr/faqs/smart-questions.html">How To Ask Questions The Smart Way</a></p></li>
+</ul>
+</div>
+<div class="section" id="reporting-bugs">
+<span id="id1"></span><h2>Reporting bugs<a class="headerlink" href="#reporting-bugs" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>If the compiler crashes, this is a bug. Reliable tools never crash.</p></li>
+<li><p>If the compiler emits an error message for a perfectly valid input or does not emit an error message for an invalid
+input, this may be a bug.</p></li>
+<li><p>If the executable created from your VHDL sources crashes, this may be a bug at runtime or the code itself may be
+wrong. Since VHDL has a notion of pointers, an erroneous VHDL program (using invalid pointers for example) may crash.</p></li>
+<li><p>If a compiler message is not clear enough, please tell us. The error messages can be improved, but we do not have
+enough experience with them.</p></li>
+<li><p>It is suggested to test synthesis features with <a class="reference internal" href="using/Synthesis.html#cmdoption-ghdl-0"><code class="xref std std-option docutils literal notranslate"><span class="pre">--synth</span></code></a>, before processing the design with <a class="reference internal" href="using/Synthesis.html#synth-plugin"><span class="std std-ref">Yosys plugin</span></a>.</p></li>
+</ul>
+<p>Please, report issues through <a class="reference external" href="https://github.com/ghdl/ghdl/issues/new?template=bug_report.md"><img alt="Open new bug report at GitHub" src="https://img.shields.io/badge/new-bug--report-yellowgreen.svg?logo=github&amp;style=flat-square&amp;longCache=true" style="height: 22px;" /></a>, as this allows us to categorize issues into groups and to assign developers
+to them. You can track the state and see how it’s getting solved.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>As suggested in the bug report template, please elaborate a <cite>Minimal (non) Working Example</cite> (<a class="reference external" href="https://en.wikipedia.org/wiki/Minimal_Working_Example">MWE</a>)
+prior to sending the report, so that the possible bug source is isolated. Should it fulfill the format requirements of
+<a class="reference external" href="https://github.com/eine/issue-runner">issue-runner</a>, you would be able to test your bug with the latest GHDL version.
+Please do so in order to ensure that the bug is not solved already.</p>
+<p>Also, please include enough information in the bug report, for the maintainers to reproduce the problem. The template
+includes:</p>
+<ul class="simple">
+<li><p>Operating system and version of GHDL (you can get it with <code class="samp docutils literal notranslate"><span class="pre">ghdl</span> <span class="pre">version</span></code> and <code class="samp docutils literal notranslate"><span class="pre">ghdl</span> <span class="pre">hash</span></code>).</p></li>
+<li><p>Whether you have built GHDL from sources (provide short SHA of the used commit) or used the binary distribution
+(note which release/tag); if you cannot compile, please report which compiler you are using and the version.</p></li>
+<li><p>Content of the input files which comprise the MWE.</p></li>
+<li><p>Description of the problem:</p>
+<ul>
+<li><p>Comment explaining whether the MWE should compile or not; if yes, whether it should run until the assertion.</p></li>
+<li><p>What you expect to happen and what you actually get. If you know the LRM well enough, please specify which paragraph
+might not be implemented well.</p></li>
+<li><p>Samples of any log.</p></li>
+<li><p>Anything else that you think would be helpful.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you don’t know the LRM, be aware that an issue claimed as a bug report may be rejected because there is no bug
+according to it. GHDL aims at implementing VHDL as defined in <a class="reference external" href="http://ieeexplore.ieee.org/document/4772740/">IEEE 1076</a>.
+However, some other tools allow constructs which do not fully follow the standard revisions. Therefore, comparisons
+with other VHDL variants is not a solid argument. Some of them are supported by GHDL (see <a class="reference internal" href="using/InvokingGHDL.html#ieee-library-pitfalls"><span class="std std-ref">IEEE library pitfalls</span></a>),
+but any such enhancement will have very low priority.</p>
+</div>
+</div>
+<div class="section" id="requesting-enhancements">
+<span id="id2"></span><h2>Requesting enhancements<a class="headerlink" href="#requesting-enhancements" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://github.com/ghdl/ghdl/issues/new?template=feature_request.md"><img alt="Open new feature request at GitHub" src="https://img.shields.io/badge/new-feature--request-yellowgreen.svg?logo=github&amp;style=flat-square&amp;longCache=true" style="height: 22px;" /></a> <a class="reference external" href="https://gitter.im/ghdl1/Lobby"><img alt="Talk to us on Gitter" src="https://img.shields.io/badge/chat-on%20gitter-4db797.svg?logo=gitter&amp;logoColor=4db797&amp;style=flat-square&amp;longCache=true" style="height: 22px;" /></a></p>
+<p>All enhancements and feature requests are welcome. Please <a class="reference external" href="https://github.com/ghdl/ghdl/issues/new">open a new issue</a>
+to report any, so you can track the status and implementation. Depending on the complexity of the request,
+you may want to <a class="reference external" href="https://gitter.im/ghdl/ghdl1">chat on Gitter</a>, for polishing it before opening an issue.</p>
+</div>
+<div class="section" id="improving-the-documentation">
+<h2>Improving the documentation<a class="headerlink" href="#improving-the-documentation" title="Permalink to this headline">¶</a></h2>
+<p>If you found a mistake in the documentation, please send a comment. If you didn’t understand some parts of this manual,
+please tell us. English is not our mother tongue, so this documentation may not be well-written.</p>
+<p>Likewise, rewriting part of the documentation or missing content (such as examples) is a good way to improve it. Since
+it is built automatically from <cite>reStructuredText</cite>, you can fork, modify and push. The documentation will be shown
+in the GitHub Pages site of your fork: <code class="docutils literal notranslate"><span class="pre">https://USERNAME.github.io/ghdl</span></code>. When you are done, request the maintainers
+to pull your copy. See <a class="reference internal" href="#pull-request"><span class="std std-ref">Fork, modify and pull-request</span></a>.</p>
+</div>
+<div class="section" id="fork-modify-and-pull-request">
+<span id="pull-request"></span><h2>Fork, modify and pull-request<a class="headerlink" href="#fork-modify-and-pull-request" title="Permalink to this headline">¶</a></h2>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<ul class="simple">
+<li><p>Before starting any modification, you might want to have a look at <a class="reference external" href="https://github.com/ghdl/ghdl/pulls"><img alt="Open pull requests" src="https://img.shields.io/github/issues-pr/ghdl/ghdl.svg?logo=github&amp;style=flat-square&amp;longCache=true" style="height: 22px;" /></a> and <a class="reference external" href="https://github.com/ghdl/ghdl/pulls"><img alt="Closed pull requests" src="https://img.shields.io/github/issues-pr-closed-raw/ghdl/ghdl.svg?logo=github&amp;style=flat-square&amp;longCache=true" style="height: 22px;" /></a>,
+to check which other contributions are being made or have been made. If you observe that the modifications you are
+about to start might conflict with any other, please <a class="reference external" href="https://gitter.im/ghdl1/Lobby"><img alt="Talk to us on Gitter" src="https://img.shields.io/badge/chat-on%20gitter-4db797.svg?logo=gitter&amp;logoColor=4db797&amp;style=flat-square&amp;longCache=true" style="height: 22px;" /></a> or open a <a class="reference external" href="https://github.com/ghdl/ghdl/compare/"><img alt="Open new Pull Request (PR) at GitHub" src="https://img.shields.io/badge/new-pull--request-yellowgreen.svg?logo=github&amp;style=flat-square&amp;longCache=true" style="height: 22px;" /></a> to coordinate.</p></li>
+<li><p>See section <a class="reference internal" href="development/Directories.html#build-dir-structure"><span class="std std-ref">Directory structure</span></a> to faster find the location of the sources you need to modify, and/or to know
+where to place new ones.</p></li>
+</ul>
+</div>
+<p>Contributing source code/documentation is done through <a class="reference external" href="https://git-scm.com/">git</a>. Although we don’t provide direct
+write access to our repositories, the project is hosted at GitHub, which follows a fork, edit and pull-request
+<a class="reference external" href="https://help.github.com/articles/github-flow/">flow</a> . That is:</p>
+<ol class="arabic simple">
+<li><p>Make a copy (<a class="reference external" href="https://help.github.com/articles/fork-a-repo/">fork</a>) of the project.</p></li>
+<li><p>Do the changes you wish (edit, add, rename, move and/or delete).</p></li>
+<li><p>When you think that the changes are ready to be merged, notify the maintainers by opening a <a class="reference external" href="https://help.github.com/articles/creating-a-pull-request/">Pull Request</a> (PR).</p></li>
+<li><p>The maintainers will review the proposed changes and will reply in the corresponding thread if any further modification
+is required. If so, you can keep adding commits to the same branch, and the PR will be automatically updated.</p></li>
+<li><p>Last, maintainers will merge your branch. You will be notified, the PR will be closed, and you’ll be allowed to
+delete the branch, if you want.</p></li>
+</ol>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<ul class="simple">
+<li><p>It is recommended to read <a class="reference external" href="http://nvie.com/posts/a-successful-git-branching-model/">A successful Git branching model</a>
+for a reference on how maintainers expect to handle multiple branches. However, our actual model is not as exhaustive
+as explained there.</p></li>
+<li><p>Some commit messages can <a class="reference external" href="https://help.github.com/articles/closing-issues-via-commit-messages/">automatically close</a>
+issues. This is a very useful feature, which you are not required to use. However beware that using <cite>fix</cite> anywhere
+in the commit message can have side effects. If you closed any issue unexpectedly, just reply to it (even if it’s
+closed) so that maintainers can check it.</p></li>
+<li><p>It is recommended to read <a class="reference internal" href="development/CodingStyle.html#dev-style"><span class="std std-ref">Coding Style</span></a> before contributing modifications to Ada sources.</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="related-interesting-projects">
+<h2>Related interesting projects<a class="headerlink" href="#related-interesting-projects" title="Permalink to this headline">¶</a></h2>
+<p>If you have an interesting project, please send us feedback or get listed on our <a class="reference internal" href="about.html#intro-who"><span class="std std-ref">Who uses GHDL?</span></a> page.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="licenses.html" class="btn btn-neutral float-right" title="Copyrights | Licenses" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="getting.html" class="btn btn-neutral float-left" title="Getting | Installing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2002-2021, Tristan Gingold and contributors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/buildthedocs/sphinx.theme">theme</a>
+    
+    provided by <a href="https://buildthedocs.github.io">Build the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

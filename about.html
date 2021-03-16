@@ -1,0 +1,362 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>About &mdash; GHDL 2.0.0-dev documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="_static/icon.png"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="author" title="About these documents" href="#" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Getting | Installing" href="getting.html" />
+    <link rel="prev" title="GHDL" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html">
+          
+
+          
+            
+            <img src="_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0-dev
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">About</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#what-is-vhdl">What is <cite>VHDL</cite>?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#what-is-ghdl">What is GHDL?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#who-uses-ghdl">Who uses GHDL?</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="getting.html">Getting | Installing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contribute.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="licenses.html">Copyrights | Licenses</a></li>
+</ul>
+<p class="caption"><span class="caption-text">GHDL usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quick_start/index.html">Quick Start Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="using/InvokingGHDL.html">Invoking GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="using/Simulation.html">Simulation (runtime)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="using/Synthesis.html">Synthesis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="using/CommandReference.html">Additional Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="using/ImplementationOfVHDL.html">Implementation of VHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="using/ImplementationOfVITAL.html">Implementation of VITAL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="development/Directories.html">Directory structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/building/index.html">Building GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyGHDL/pyGHDL.html">Python Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/Debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/CodingStyle.html">Coding Style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/Scripts.html">Scripts</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="internals/Overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="internals/Frontend.html">Front-end</a></li>
+<li class="toctree-l1"><a class="reference internal" href="internals/AST.html">AST</a></li>
+<li class="toctree-l1"><a class="reference internal" href="internals/RTI.html">Run Time Information (RTI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gnatdoc/index.html">GNATdoc</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Index</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="py-modindex.html">Python Module Index</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GHDL</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>About</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            
+              <a href="https://github.com/ghdl/ghdl/blob/master/doc/about.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="about">
+<h1>About<a class="headerlink" href="#about" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="what-is-vhdl">
+<span id="intro-vhdl"></span><h2>What is <cite>VHDL</cite>?<a class="headerlink" href="#what-is-vhdl" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://en.wikipedia.org/wiki/VHDL">VHDL</a> is an acronym for Very High Speed Integrated Circuit (<a class="reference external" href="https://en.wikipedia.org/wiki/VHSIC">VHSIC</a>) Hardware Description
+Language (<a class="reference external" href="https://en.wikipedia.org/wiki/HDL">HDL</a>), which is a programming language used to describe a logic circuit by function, data flow
+behavior, or structure.</p>
+<p>Although VHDL was not designed for writing general purpose programs, VHDL <em>is</em> a programming language, and you can write any
+algorithm with it. If you are able to write programs, you will find in VHDL features similar to those found in procedural
+languages such as <cite>C</cite>, <cite>Python</cite>, or <cite>Ada</cite>. Indeed, VHDL derives most of its syntax and semantics from Ada. Knowing <cite>Ada</cite> is
+an advantage for learning VHDL (it is an advantage in general as well).</p>
+<p>However, VHDL was not designed as a general purpose language but as an <cite>HDL</cite>. As the name implies, VHDL aims at modeling or
+documenting electronics systems. Due to the nature of hardware components which are always running, VHDL is a highly
+concurrent language, built upon an event-based timing model.</p>
+<p>Like a program written in any other language, a VHDL program can be executed. Since VHDL is used to model designs, the term
+<em class="dfn">simulation</em> is often used instead of <cite>execution</cite>, with the same meaning. At the same time, like a design written in
+another <cite>HDL</cite>, a set of VHDL sources can be transformed with a <em class="dfn">synthesis tool</em> into a netlist, that is, a detailed
+gate-level implementation.</p>
+<p>The development of VHDL started in 1983 and the standard is named <a class="reference external" href="https://www.ieee.org/">IEEE</a> <cite>1076</cite>. Five revisions
+exist: <a class="reference external" href="http://ieeexplore.ieee.org/document/26487/">1987</a>, <a class="reference external" href="http://ieeexplore.ieee.org/document/392561/">1993</a>,
+<a class="reference external" href="http://ieeexplore.ieee.org/document/1003477/">2002</a>, <a class="reference external" href="http://ieeexplore.ieee.org/document/4772740/">2008</a> and
+<a class="reference external" href="https://ieeexplore.ieee.org/document/8938196">2019</a>. The standardization is handled by the VHDL Analysis and
+Standardization Group (<a class="reference external" href="http://www.eda-twiki.org/vasg/">VASG/P1076</a>).</p>
+</div>
+<div class="section" id="what-is-ghdl">
+<span id="intro-ghdl"></span><h2>What is GHDL?<a class="headerlink" href="#what-is-ghdl" title="Permalink to this headline">¶</a></h2>
+<p><cite>GHDL</cite> is a shorthand for <cite>G Hardware Design Language</cite> (currently, <cite>G</cite> has no meaning). It is a VHDL analyzer, compiler,
+simulator and (experimental) synthesizer that can process (nearly) any VHDL design.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For almost 20 years, GHDL was <em>not</em> a synthesis tool: you could not create a netlist. Hence, most of the content in this
+documentation corresponds to the usage of GHDL as a compiler/simulator. See <a class="reference internal" href="using/Synthesis.html#using-synthesis"><span class="std std-ref">Synthesis</span></a> for further details
+regarding synthesis.</p>
+</div>
+<p>Unlike some other simulators, GHDL is a compiler: it directly translates a VHDL file to machine code, without using an
+intermediary language such as <cite>C</cite> or <cite>C++</cite>. Therefore, the compiled code should be faster and the analysis time should be
+shorter than with a compiler using an intermediary language.</p>
+<p>GHDL can use multiple back-ends, i.e. code generators, (<a class="reference external" href="http://gcc.gnu.org/">GCC</a>, <a class="reference external" href="http://llvm.org/">LLVM</a> or
+<a class="reference external" href="https://en.wikipedia.org/wiki/X86-64">x86</a>/<a class="reference external" href="https://en.wikipedia.org/wiki/Intel_80386">i386</a> only, a built-in one named <em>mcode</em>) and runs on <a class="reference external" href="https://en.wikipedia.org/wiki/Linux_distribution">GNU/Linux</a>,
+<a class="reference external" href="https://en.wikipedia.org/wiki/Microsoft_Windows">Windows</a> ™ and <a class="reference external" href="https://en.wikipedia.org/wiki/MacOS">macOS</a> ™; on x86, x86_64, armv6/armv7/aarch32/aarch64,
+ppc64, etc.</p>
+<p>The current version of GHDL does not contain any built-in graphical viewer: you cannot see signal waves. You can still check
+the behavior of your design with a test bench. Moreover, <a class="reference external" href="http://ghdl.readthedocs.io/en/latest/using/Simulation.html?highlight=GHW#cmdoption-wave">GHW</a>,
+<a class="reference external" href="https://en.wikipedia.org/wiki/Value_change_dump">VCD</a> or <cite>FST</cite> files can be produced, which can be viewed with a <a class="reference external" href="https://en.wikipedia.org/wiki/Waveform_viewer">waveform viewer</a>,
+such as <a class="reference external" href="http://gtkwave.sourceforge.net/">GtkWave</a>.</p>
+<p>GHDL aims at implementing VHDL as defined by <a class="reference external" href="http://ieeexplore.ieee.org/document/4772740/">IEEE 1076</a>. It supports the
+<a class="reference external" href="http://ieeexplore.ieee.org/document/26487/">1987</a>, <a class="reference external" href="http://ieeexplore.ieee.org/document/392561/">1993</a> and
+<a class="reference external" href="http://ieeexplore.ieee.org/document/1003477/">2002</a> revisions and, partially, <a class="reference external" href="http://ieeexplore.ieee.org/document/4772740/">2008</a>.
+<a class="reference external" href="https://en.wikipedia.org/wiki/Property_Specification_Language">Property Specification Language (PSL)</a> is also partially supported.</p>
+<p>Several third party projects are supported: <a class="reference external" href="https://github.com/YosysHQ/yosys">Yosys</a> (through the <a class="reference external" href="https://github.com/ghdl/ghdl-yosys-plugin">ghdl-yosys-plugin</a>)
+<a class="reference external" href="https://github.com/potentialventures/cocotb">cocotb</a> (through the <a class="reference external" href="https://en.wikipedia.org/wiki/Verilog_Procedural_Interface">VPI interface</a>),
+<a class="reference external" href="https://vunit.github.io/">VUnit</a>, <a class="reference external" href="http://osvvm.org/">OSVVM</a>, …</p>
+</div>
+<div class="section" id="who-uses-ghdl">
+<span id="intro-who"></span><h2>Who uses GHDL?<a class="headerlink" href="#who-uses-ghdl" title="Permalink to this headline">¶</a></h2>
+<div class="whouses docutils container">
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 12%" />
+<col style="width: 13%" />
+<col style="width: 34%" />
+<col style="width: 41%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Project hub</p></th>
+<th class="head"><p>Documentation</p></th>
+<th class="head"><p>Name</p></th>
+<th class="head"><p>Brief description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference external" href="https://github.com/VLSI-EDA/PoC"><img alt="Source Code on GitHub" src="https://img.shields.io/badge/-VLSI--EDA/PoC-323131.svg?logo=github&amp;style=flat-square&amp;longCache=true" style="height: 22px;" /></a></p></td>
+<td><p><a class="reference external" href="http://poc-library.readthedocs.io/en/latest/?badge=latest"><img alt="Documentation on ReadTheDocs" src="https://img.shields.io/badge/-poc--library-2980b9.svg?logo=read-the-docs&amp;style=flat-square&amp;longCache=true" style="height: 22px;" /></a></p></td>
+<td><p><a class="reference external" href="https://github.com/VLSI-EDA/PoC">PoC-Library</a></p></td>
+<td><p>A Vendor-Independent, Open-Source IP Core and Utility Library.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="https://github.com/VUnit/vunit"><img alt="Source Code on GitHub" src="https://img.shields.io/badge/-VUnit/vunit-323131.svg?logo=github&amp;style=flat-square&amp;longCache=true" style="height: 22px;" /></a></p></td>
+<td><p><a class="reference external" href="https://vunit.github.io/documentation"><img alt="Documentation on vunit.github.io" src="https://img.shields.io/badge/doc-vunit.github.io-blue.svg?&amp;style=flat-square&amp;longCache=true" style="height: 22px;" /></a></p></td>
+<td><p><a class="reference external" href="https://vunit.github.io/">VUnit</a></p></td>
+<td><p>A unit testing framework for VHDL/SystemVerilog</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference external" href="https://gitlab.com/IEEE-P1076"><img alt="Source Code on GitLab" src="https://img.shields.io/badge/-IEEE--P1076-323131.svg?logo=gitlab&amp;style=flat-square&amp;longCache=true" style="height: 22px;" /></a></p></td>
+<td><p><a class="reference external" href="http://www.eda-twiki.org/cgi-bin/view.cgi/P1076/WebHome"><img alt="Documentation on eda-twiki.org" src="https://img.shields.io/badge/-eda--twiki.org-critical.svg?logo=data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABmJLR0QA%2FwD%2FAP%2BgvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4QIWAhImtwMY5AAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAACwUlEQVRYw%2B1XTWgTQRT%2BZpOokURDg6GiaAwoCEX8QQpevFTQHgTBY8FrERSstKLePVSleLSH3qUFRSx48CR4CIJU8BC0WKqVULQiJsZmZ94%2BD83GJPOTDR68dGHZXYb3vu99882bWWDz%2Bs%2BXCF%2F408Au%2BD9GoaqXoIICFAQUAAWAGk%2FXTQCkAFSwhiAxD94%2BJS6vLEQiwOULp1B5Og9JGS2xbCEgDcDheOcYxQhb%2BibF2NdbTgL8%2BWQOv98sQlJaSyQ7qpeW6k0kQkWyR86Jq2%2Bf2wh4qK%2BMdgWXBnBpeaoWMpKB1dIztwKl9BL8Sl4DF6lXkMGyltT%2BruCrs%2FD9nJYre%2FCMuP3hhYlAHH5tvz5%2FAJL5B%2BL0u9leHM13My8h%2FZyWq1ot2KdAsdACFAAVxHpeUzZ%2F1Nc9BwHD3IXf%2F0og9A4Ja0jcCC4B8PfjPJuqNsfFtkUx8q3UlJvZw730eRBUI2YdvuzTTBrmdRIggwfqq%2BNQGG%2BuBtAkgBstsTHUfz1ur5j1FSEBJBBBAW2Nc8d0cKBFh4BdO6SLADk6XOs392A61YsCUcBVD6YzKeAwtOfs%2FW1O7kJAWjYtW6zmAVcFBCBwEJBdPKCimpAcVQkLARlxu3YSkBZg6pLAthWbVHWakAwHj04fmJopORSI2FXNCpBBjaBHBWQEBTf6gAdQ4PaATQFlUa6TmE9sJ4DkEmTlgBOcABD385XUMZAQUGBcP5To2v3CnIE3DOAhXxwUYq7I7QeS6d038bN8xwm%2B0QsYBO4Y89o2Hd%2BigAQwMDgl5opjeiOKZ6fBW9esFfxtRAISXgPUawO3kW7N97p4jQ%2FvfMQjw%2Fv0U%2FHM0X6U339BreZZk5gAQol9B7huygB7CvfFwseJ9v%2BCmaEMlosTUBhCfMcJqJY2TQ7DKccyNHVUBcAPgESSsDf%2FZPPXbPP6A13nhms8bYukAAAAAElFTkSuQmCC&amp;style=flat-square&amp;longCache=true" style="height: 22px;" /></a></p></td>
+<td><p><a class="reference external" href="https://www.eda-twiki.org/vasg/">IEEE P1076 WG</a></p></td>
+<td><p>IEEE P1076 Working Group [VASG]</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="https://github.com/cpc/tce"><img alt="Source Code on GitHub" src="https://img.shields.io/badge/-TCE-323131.svg?logo=github&amp;style=flat-square&amp;longCache=true" style="height: 22px;" /></a></p></td>
+<td><p><a class="reference external" href="http://openasip.org/documentation.html"><img alt="Documentation on openasip.org" src="https://img.shields.io/badge/doc-openasip.org-blue.svg?&amp;style=flat-square&amp;longCache=true" style="height: 22px;" /></a></p></td>
+<td><p><a class="reference external" href="http://openasip.org/">TCE</a></p></td>
+<td><p>TTA-Based Co-Design Environment - an open-source ASIP toolset.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="getting.html" class="btn btn-neutral float-right" title="Getting | Installing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral float-left" title="GHDL" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2002-2021, Tristan Gingold and contributors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/buildthedocs/sphinx.theme">theme</a>
+    
+    provided by <a href="https://buildthedocs.github.io">Build the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

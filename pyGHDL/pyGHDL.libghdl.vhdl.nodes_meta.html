@@ -1,0 +1,2405 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pyGHDL.libghdl.vhdl.nodes_meta &mdash; GHDL 2.0.0-dev documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../_static/icon.png"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pyGHDL.libghdl.vhdl.nodes_utils" href="pyGHDL.libghdl.vhdl.nodes_utils.html" />
+    <link rel="prev" title="pyGHDL.libghdl.vhdl.nodes" href="pyGHDL.libghdl.vhdl.nodes.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html">
+          
+
+          
+            
+            <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0-dev
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting.html">Getting | Installing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contribute.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../licenses.html">Copyrights | Licenses</a></li>
+</ul>
+<p class="caption"><span class="caption-text">GHDL usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quick_start/index.html">Quick Start Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/InvokingGHDL.html">Invoking GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/Simulation.html">Simulation (runtime)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/Synthesis.html">Synthesis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/CommandReference.html">Additional Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/ImplementationOfVHDL.html">Implementation of VHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/ImplementationOfVITAL.html">Implementation of VITAL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Development</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../development/Directories.html">Directory structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/building/index.html">Building GHDL</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="pyGHDL.html">Python Interfaces</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="pyGHDL.cli.html">pyGHDL.cli</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyGHDL.dom.html">pyGHDL.dom</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="pyGHDL.libghdl.html">pyGHDL.libghdl</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="pyGHDL.libghdl._decorator.html">pyGHDL.libghdl._decorator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyGHDL.libghdl._types.html">pyGHDL.libghdl._types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyGHDL.libghdl.errorout.html">pyGHDL.libghdl.errorout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyGHDL.libghdl.errorout_console.html">pyGHDL.libghdl.errorout_console</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyGHDL.libghdl.errorout_memory.html">pyGHDL.libghdl.errorout_memory</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyGHDL.libghdl.files_map.html">pyGHDL.libghdl.files_map</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyGHDL.libghdl.files_map_editor.html">pyGHDL.libghdl.files_map_editor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyGHDL.libghdl.flags.html">pyGHDL.libghdl.flags</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyGHDL.libghdl.libraries.html">pyGHDL.libghdl.libraries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyGHDL.libghdl.name_table.html">pyGHDL.libghdl.name_table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyGHDL.libghdl.std_names.html">pyGHDL.libghdl.std_names</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyGHDL.libghdl.utils.html">pyGHDL.libghdl.utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyGHDL.libghdl.version.html">pyGHDL.libghdl.version</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="pyGHDL.libghdl.vhdl.html">pyGHDL.libghdl.vhdl</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="pyGHDL.libghdl.vhdl.canon.html">pyGHDL.libghdl.vhdl.canon</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyGHDL.libghdl.vhdl.elocations.html">pyGHDL.libghdl.vhdl.elocations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyGHDL.libghdl.vhdl.flists.html">pyGHDL.libghdl.vhdl.flists</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyGHDL.libghdl.vhdl.formatters.html">pyGHDL.libghdl.vhdl.formatters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyGHDL.libghdl.vhdl.ieee.html">pyGHDL.libghdl.vhdl.ieee</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyGHDL.libghdl.vhdl.lists.html">pyGHDL.libghdl.vhdl.lists</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyGHDL.libghdl.vhdl.nodes.html">pyGHDL.libghdl.vhdl.nodes</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">pyGHDL.libghdl.vhdl.nodes_meta</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyGHDL.libghdl.vhdl.nodes_utils.html">pyGHDL.libghdl.vhdl.nodes_utils</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyGHDL.libghdl.vhdl.parse.html">pyGHDL.libghdl.vhdl.parse</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyGHDL.libghdl.vhdl.scanner.html">pyGHDL.libghdl.vhdl.scanner</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyGHDL.libghdl.vhdl.sem.html">pyGHDL.libghdl.vhdl.sem</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyGHDL.libghdl.vhdl.sem_lib.html">pyGHDL.libghdl.vhdl.sem_lib</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyGHDL.libghdl.vhdl.std_package.html">pyGHDL.libghdl.vhdl.std_package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pyGHDL.libghdl.vhdl.tokens.html">pyGHDL.libghdl.vhdl.tokens</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pyGHDL.lsp.html">pyGHDL.lsp</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../development/Debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/CodingStyle.html">Coding Style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/Scripts.html">Scripts</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../internals/Overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../internals/Frontend.html">Front-end</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../internals/AST.html">AST</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../internals/RTI.html">Run Time Information (RTI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gnatdoc/index.html">GNATdoc</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Index</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Python Module Index</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GHDL</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="pyGHDL.html">pyGHDL</a> &raquo;</li>
+        
+          <li><a href="pyGHDL.libghdl.html">pyGHDL.libghdl</a> &raquo;</li>
+        
+          <li><a href="pyGHDL.libghdl.vhdl.html">pyGHDL.libghdl.vhdl</a> &raquo;</li>
+        
+      <li>pyGHDL.libghdl.vhdl.nodes_meta</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            
+              <a href="https://github.com/ghdl/ghdl/blob/master/doc/pyGHDL/pyGHDL.libghdl.vhdl.nodes_meta.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-pyGHDL.libghdl.vhdl.nodes_meta">
+<span id="pyghdl-libghdl-vhdl-nodes-meta"></span><h1>pyGHDL.libghdl.vhdl.nodes_meta<a class="headerlink" href="#module-pyGHDL.libghdl.vhdl.nodes_meta" title="Permalink to this headline">¶</a></h1>
+<p><strong>Classes</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#pyGHDL.libghdl.vhdl.nodes_meta.types" title="pyGHDL.libghdl.vhdl.nodes_meta.types"><code class="xref py py-class docutils literal notranslate"><span class="pre">types</span></code></a>:
+Undocumented.</p></li>
+<li><p><a class="reference internal" href="#pyGHDL.libghdl.vhdl.nodes_meta.Attr" title="pyGHDL.libghdl.vhdl.nodes_meta.Attr"><code class="xref py py-class docutils literal notranslate"><span class="pre">Attr</span></code></a>:
+Undocumented.</p></li>
+<li><p><a class="reference internal" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields" title="pyGHDL.libghdl.vhdl.nodes_meta.fields"><code class="xref py py-class docutils literal notranslate"><span class="pre">fields</span></code></a>:
+Undocumented.</p></li>
+</ul>
+<dl class="py class">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.types">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">pyGHDL.libghdl.vhdl.nodes_meta.</span></code><code class="sig-name descname"><span class="pre">types</span></code><a class="reference internal" href="../_modules/pyGHDL/libghdl/vhdl/nodes_meta.html#types"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.types" title="Permalink to this definition">¶</a></dt>
+<dd><p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-22fb2cf358bdb8001a0363359110977020ca27dd.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of types</p></object></div>
+<p class="rubric">Members</p>
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.types.Boolean">
+<code class="sig-name descname"><span class="pre">Boolean</span></code><em class="property"> <span class="pre">=</span> <span class="pre">0</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.types.Boolean" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.types.Date_State_Type">
+<code class="sig-name descname"><span class="pre">Date_State_Type</span></code><em class="property"> <span class="pre">=</span> <span class="pre">1</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.types.Date_State_Type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.types.Date_Type">
+<code class="sig-name descname"><span class="pre">Date_Type</span></code><em class="property"> <span class="pre">=</span> <span class="pre">2</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.types.Date_Type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.types.Direction_Type">
+<code class="sig-name descname"><span class="pre">Direction_Type</span></code><em class="property"> <span class="pre">=</span> <span class="pre">3</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.types.Direction_Type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.types.File_Checksum_Id">
+<code class="sig-name descname"><span class="pre">File_Checksum_Id</span></code><em class="property"> <span class="pre">=</span> <span class="pre">4</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.types.File_Checksum_Id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.types.Fp64">
+<code class="sig-name descname"><span class="pre">Fp64</span></code><em class="property"> <span class="pre">=</span> <span class="pre">5</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.types.Fp64" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.types.Iir">
+<code class="sig-name descname"><span class="pre">Iir</span></code><em class="property"> <span class="pre">=</span> <span class="pre">6</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.types.Iir" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.types.Iir_All_Sensitized">
+<code class="sig-name descname"><span class="pre">Iir_All_Sensitized</span></code><em class="property"> <span class="pre">=</span> <span class="pre">7</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.types.Iir_All_Sensitized" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.types.Iir_Constraint">
+<code class="sig-name descname"><span class="pre">Iir_Constraint</span></code><em class="property"> <span class="pre">=</span> <span class="pre">8</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.types.Iir_Constraint" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.types.Iir_Delay_Mechanism">
+<code class="sig-name descname"><span class="pre">Iir_Delay_Mechanism</span></code><em class="property"> <span class="pre">=</span> <span class="pre">9</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.types.Iir_Delay_Mechanism" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.types.Iir_Flist">
+<code class="sig-name descname"><span class="pre">Iir_Flist</span></code><em class="property"> <span class="pre">=</span> <span class="pre">10</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.types.Iir_Flist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.types.Iir_Force_Mode">
+<code class="sig-name descname"><span class="pre">Iir_Force_Mode</span></code><em class="property"> <span class="pre">=</span> <span class="pre">11</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.types.Iir_Force_Mode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.types.Iir_Index32">
+<code class="sig-name descname"><span class="pre">Iir_Index32</span></code><em class="property"> <span class="pre">=</span> <span class="pre">12</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.types.Iir_Index32" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.types.Iir_Int32">
+<code class="sig-name descname"><span class="pre">Iir_Int32</span></code><em class="property"> <span class="pre">=</span> <span class="pre">13</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.types.Iir_Int32" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.types.Iir_List">
+<code class="sig-name descname"><span class="pre">Iir_List</span></code><em class="property"> <span class="pre">=</span> <span class="pre">14</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.types.Iir_List" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.types.Iir_Mode">
+<code class="sig-name descname"><span class="pre">Iir_Mode</span></code><em class="property"> <span class="pre">=</span> <span class="pre">15</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.types.Iir_Mode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.types.Iir_Predefined_Functions">
+<code class="sig-name descname"><span class="pre">Iir_Predefined_Functions</span></code><em class="property"> <span class="pre">=</span> <span class="pre">16</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.types.Iir_Predefined_Functions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.types.Iir_Pure_State">
+<code class="sig-name descname"><span class="pre">Iir_Pure_State</span></code><em class="property"> <span class="pre">=</span> <span class="pre">17</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.types.Iir_Pure_State" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.types.Iir_Signal_Kind">
+<code class="sig-name descname"><span class="pre">Iir_Signal_Kind</span></code><em class="property"> <span class="pre">=</span> <span class="pre">18</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.types.Iir_Signal_Kind" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.types.Iir_Staticness">
+<code class="sig-name descname"><span class="pre">Iir_Staticness</span></code><em class="property"> <span class="pre">=</span> <span class="pre">19</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.types.Iir_Staticness" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.types.Int32">
+<code class="sig-name descname"><span class="pre">Int32</span></code><em class="property"> <span class="pre">=</span> <span class="pre">20</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.types.Int32" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.types.Int64">
+<code class="sig-name descname"><span class="pre">Int64</span></code><em class="property"> <span class="pre">=</span> <span class="pre">21</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.types.Int64" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.types.Name_Id">
+<code class="sig-name descname"><span class="pre">Name_Id</span></code><em class="property"> <span class="pre">=</span> <span class="pre">22</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.types.Name_Id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.types.Number_Base_Type">
+<code class="sig-name descname"><span class="pre">Number_Base_Type</span></code><em class="property"> <span class="pre">=</span> <span class="pre">23</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.types.Number_Base_Type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.types.PSL_NFA">
+<code class="sig-name descname"><span class="pre">PSL_NFA</span></code><em class="property"> <span class="pre">=</span> <span class="pre">24</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.types.PSL_NFA" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.types.PSL_Node">
+<code class="sig-name descname"><span class="pre">PSL_Node</span></code><em class="property"> <span class="pre">=</span> <span class="pre">25</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.types.PSL_Node" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.types.Scalar_Size">
+<code class="sig-name descname"><span class="pre">Scalar_Size</span></code><em class="property"> <span class="pre">=</span> <span class="pre">26</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.types.Scalar_Size" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.types.Source_File_Entry">
+<code class="sig-name descname"><span class="pre">Source_File_Entry</span></code><em class="property"> <span class="pre">=</span> <span class="pre">27</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.types.Source_File_Entry" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.types.Source_Ptr">
+<code class="sig-name descname"><span class="pre">Source_Ptr</span></code><em class="property"> <span class="pre">=</span> <span class="pre">28</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.types.Source_Ptr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.types.String8_Id">
+<code class="sig-name descname"><span class="pre">String8_Id</span></code><em class="property"> <span class="pre">=</span> <span class="pre">29</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.types.String8_Id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.types.Time_Stamp_Id">
+<code class="sig-name descname"><span class="pre">Time_Stamp_Id</span></code><em class="property"> <span class="pre">=</span> <span class="pre">30</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.types.Time_Stamp_Id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.types.Token_Type">
+<code class="sig-name descname"><span class="pre">Token_Type</span></code><em class="property"> <span class="pre">=</span> <span class="pre">31</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.types.Token_Type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.types.Tri_State_Type">
+<code class="sig-name descname"><span class="pre">Tri_State_Type</span></code><em class="property"> <span class="pre">=</span> <span class="pre">32</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.types.Tri_State_Type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.Attr">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">pyGHDL.libghdl.vhdl.nodes_meta.</span></code><code class="sig-name descname"><span class="pre">Attr</span></code><a class="reference internal" href="../_modules/pyGHDL/libghdl/vhdl/nodes_meta.html#Attr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.Attr" title="Permalink to this definition">¶</a></dt>
+<dd><p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-b55f7f476dbcf76eb07b81a8f558764ce2a1abe4.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of Attr</p></object></div>
+<p class="rubric">Members</p>
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.Attr.ANone">
+<code class="sig-name descname"><span class="pre">ANone</span></code><em class="property"> <span class="pre">=</span> <span class="pre">0</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.Attr.ANone" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.Attr.Chain">
+<code class="sig-name descname"><span class="pre">Chain</span></code><em class="property"> <span class="pre">=</span> <span class="pre">1</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.Attr.Chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.Attr.Chain_Next">
+<code class="sig-name descname"><span class="pre">Chain_Next</span></code><em class="property"> <span class="pre">=</span> <span class="pre">2</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.Attr.Chain_Next" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.Attr.Forward_Ref">
+<code class="sig-name descname"><span class="pre">Forward_Ref</span></code><em class="property"> <span class="pre">=</span> <span class="pre">3</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.Attr.Forward_Ref" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.Attr.Maybe_Forward_Ref">
+<code class="sig-name descname"><span class="pre">Maybe_Forward_Ref</span></code><em class="property"> <span class="pre">=</span> <span class="pre">4</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.Attr.Maybe_Forward_Ref" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.Attr.Maybe_Ref">
+<code class="sig-name descname"><span class="pre">Maybe_Ref</span></code><em class="property"> <span class="pre">=</span> <span class="pre">5</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.Attr.Maybe_Ref" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.Attr.Of_Maybe_Ref">
+<code class="sig-name descname"><span class="pre">Of_Maybe_Ref</span></code><em class="property"> <span class="pre">=</span> <span class="pre">6</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.Attr.Of_Maybe_Ref" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.Attr.Of_Ref">
+<code class="sig-name descname"><span class="pre">Of_Ref</span></code><em class="property"> <span class="pre">=</span> <span class="pre">7</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.Attr.Of_Ref" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.Attr.Ref">
+<code class="sig-name descname"><span class="pre">Ref</span></code><em class="property"> <span class="pre">=</span> <span class="pre">8</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.Attr.Ref" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">pyGHDL.libghdl.vhdl.nodes_meta.</span></code><code class="sig-name descname"><span class="pre">fields</span></code><a class="reference internal" href="../_modules/pyGHDL/libghdl/vhdl/nodes_meta.html#fields"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields" title="Permalink to this definition">¶</a></dt>
+<dd><p class="rubric">Inheritance</p>
+<div class="graphviz"><object data="../_images/inheritance-02cf63a281c92115978264a1e326aa70c7fd3341.svg" type="image/svg+xml" class="inheritance graphviz">
+<p class="warning">Inheritance diagram of fields</p></object></div>
+<p class="rubric">Members</p>
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.First_Design_Unit">
+<code class="sig-name descname"><span class="pre">First_Design_Unit</span></code><em class="property"> <span class="pre">=</span> <span class="pre">0</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.First_Design_Unit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Last_Design_Unit">
+<code class="sig-name descname"><span class="pre">Last_Design_Unit</span></code><em class="property"> <span class="pre">=</span> <span class="pre">1</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Last_Design_Unit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Library_Declaration">
+<code class="sig-name descname"><span class="pre">Library_Declaration</span></code><em class="property"> <span class="pre">=</span> <span class="pre">2</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Library_Declaration" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.File_Checksum">
+<code class="sig-name descname"><span class="pre">File_Checksum</span></code><em class="property"> <span class="pre">=</span> <span class="pre">3</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.File_Checksum" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Analysis_Time_Stamp">
+<code class="sig-name descname"><span class="pre">Analysis_Time_Stamp</span></code><em class="property"> <span class="pre">=</span> <span class="pre">4</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Analysis_Time_Stamp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Design_File_Source">
+<code class="sig-name descname"><span class="pre">Design_File_Source</span></code><em class="property"> <span class="pre">=</span> <span class="pre">5</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Design_File_Source" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Library">
+<code class="sig-name descname"><span class="pre">Library</span></code><em class="property"> <span class="pre">=</span> <span class="pre">6</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Library" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.File_Dependence_List">
+<code class="sig-name descname"><span class="pre">File_Dependence_List</span></code><em class="property"> <span class="pre">=</span> <span class="pre">7</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.File_Dependence_List" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Design_File_Filename">
+<code class="sig-name descname"><span class="pre">Design_File_Filename</span></code><em class="property"> <span class="pre">=</span> <span class="pre">8</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Design_File_Filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Design_File_Directory">
+<code class="sig-name descname"><span class="pre">Design_File_Directory</span></code><em class="property"> <span class="pre">=</span> <span class="pre">9</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Design_File_Directory" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Design_File">
+<code class="sig-name descname"><span class="pre">Design_File</span></code><em class="property"> <span class="pre">=</span> <span class="pre">10</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Design_File" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Design_File_Chain">
+<code class="sig-name descname"><span class="pre">Design_File_Chain</span></code><em class="property"> <span class="pre">=</span> <span class="pre">11</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Design_File_Chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Library_Directory">
+<code class="sig-name descname"><span class="pre">Library_Directory</span></code><em class="property"> <span class="pre">=</span> <span class="pre">12</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Library_Directory" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Date">
+<code class="sig-name descname"><span class="pre">Date</span></code><em class="property"> <span class="pre">=</span> <span class="pre">13</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Date" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Context_Items">
+<code class="sig-name descname"><span class="pre">Context_Items</span></code><em class="property"> <span class="pre">=</span> <span class="pre">14</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Context_Items" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Dependence_List">
+<code class="sig-name descname"><span class="pre">Dependence_List</span></code><em class="property"> <span class="pre">=</span> <span class="pre">15</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Dependence_List" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Analysis_Checks_List">
+<code class="sig-name descname"><span class="pre">Analysis_Checks_List</span></code><em class="property"> <span class="pre">=</span> <span class="pre">16</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Analysis_Checks_List" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Date_State">
+<code class="sig-name descname"><span class="pre">Date_State</span></code><em class="property"> <span class="pre">=</span> <span class="pre">17</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Date_State" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Guarded_Target_State">
+<code class="sig-name descname"><span class="pre">Guarded_Target_State</span></code><em class="property"> <span class="pre">=</span> <span class="pre">18</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Guarded_Target_State" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Library_Unit">
+<code class="sig-name descname"><span class="pre">Library_Unit</span></code><em class="property"> <span class="pre">=</span> <span class="pre">19</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Library_Unit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Hash_Chain">
+<code class="sig-name descname"><span class="pre">Hash_Chain</span></code><em class="property"> <span class="pre">=</span> <span class="pre">20</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Hash_Chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Design_Unit_Source_Pos">
+<code class="sig-name descname"><span class="pre">Design_Unit_Source_Pos</span></code><em class="property"> <span class="pre">=</span> <span class="pre">21</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Design_Unit_Source_Pos" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Design_Unit_Source_Line">
+<code class="sig-name descname"><span class="pre">Design_Unit_Source_Line</span></code><em class="property"> <span class="pre">=</span> <span class="pre">22</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Design_Unit_Source_Line" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Design_Unit_Source_Col">
+<code class="sig-name descname"><span class="pre">Design_Unit_Source_Col</span></code><em class="property"> <span class="pre">=</span> <span class="pre">23</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Design_Unit_Source_Col" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Value">
+<code class="sig-name descname"><span class="pre">Value</span></code><em class="property"> <span class="pre">=</span> <span class="pre">24</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Value" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Enum_Pos">
+<code class="sig-name descname"><span class="pre">Enum_Pos</span></code><em class="property"> <span class="pre">=</span> <span class="pre">25</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Enum_Pos" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Physical_Literal">
+<code class="sig-name descname"><span class="pre">Physical_Literal</span></code><em class="property"> <span class="pre">=</span> <span class="pre">26</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Physical_Literal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Fp_Value">
+<code class="sig-name descname"><span class="pre">Fp_Value</span></code><em class="property"> <span class="pre">=</span> <span class="pre">27</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Fp_Value" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Simple_Aggregate_List">
+<code class="sig-name descname"><span class="pre">Simple_Aggregate_List</span></code><em class="property"> <span class="pre">=</span> <span class="pre">28</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Simple_Aggregate_List" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.String8_Id">
+<code class="sig-name descname"><span class="pre">String8_Id</span></code><em class="property"> <span class="pre">=</span> <span class="pre">29</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.String8_Id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.String_Length">
+<code class="sig-name descname"><span class="pre">String_Length</span></code><em class="property"> <span class="pre">=</span> <span class="pre">30</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.String_Length" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Bit_String_Base">
+<code class="sig-name descname"><span class="pre">Bit_String_Base</span></code><em class="property"> <span class="pre">=</span> <span class="pre">31</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Bit_String_Base" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Has_Signed">
+<code class="sig-name descname"><span class="pre">Has_Signed</span></code><em class="property"> <span class="pre">=</span> <span class="pre">32</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Has_Signed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Has_Sign">
+<code class="sig-name descname"><span class="pre">Has_Sign</span></code><em class="property"> <span class="pre">=</span> <span class="pre">33</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Has_Sign" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Has_Length">
+<code class="sig-name descname"><span class="pre">Has_Length</span></code><em class="property"> <span class="pre">=</span> <span class="pre">34</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Has_Length" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Literal_Length">
+<code class="sig-name descname"><span class="pre">Literal_Length</span></code><em class="property"> <span class="pre">=</span> <span class="pre">35</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Literal_Length" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Literal_Origin">
+<code class="sig-name descname"><span class="pre">Literal_Origin</span></code><em class="property"> <span class="pre">=</span> <span class="pre">36</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Literal_Origin" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Range_Origin">
+<code class="sig-name descname"><span class="pre">Range_Origin</span></code><em class="property"> <span class="pre">=</span> <span class="pre">37</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Range_Origin" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Literal_Subtype">
+<code class="sig-name descname"><span class="pre">Literal_Subtype</span></code><em class="property"> <span class="pre">=</span> <span class="pre">38</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Literal_Subtype" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Allocator_Subtype">
+<code class="sig-name descname"><span class="pre">Allocator_Subtype</span></code><em class="property"> <span class="pre">=</span> <span class="pre">39</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Allocator_Subtype" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Entity_Class">
+<code class="sig-name descname"><span class="pre">Entity_Class</span></code><em class="property"> <span class="pre">=</span> <span class="pre">40</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Entity_Class" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Entity_Name_List">
+<code class="sig-name descname"><span class="pre">Entity_Name_List</span></code><em class="property"> <span class="pre">=</span> <span class="pre">41</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Entity_Name_List" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Attribute_Designator">
+<code class="sig-name descname"><span class="pre">Attribute_Designator</span></code><em class="property"> <span class="pre">=</span> <span class="pre">42</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Attribute_Designator" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Attribute_Specification_Chain">
+<code class="sig-name descname"><span class="pre">Attribute_Specification_Chain</span></code><em class="property"> <span class="pre">=</span> <span class="pre">43</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Attribute_Specification_Chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Attribute_Specification">
+<code class="sig-name descname"><span class="pre">Attribute_Specification</span></code><em class="property"> <span class="pre">=</span> <span class="pre">44</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Attribute_Specification" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Static_Attribute_Flag">
+<code class="sig-name descname"><span class="pre">Static_Attribute_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">45</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Static_Attribute_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Signal_List">
+<code class="sig-name descname"><span class="pre">Signal_List</span></code><em class="property"> <span class="pre">=</span> <span class="pre">46</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Signal_List" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Quantity_List">
+<code class="sig-name descname"><span class="pre">Quantity_List</span></code><em class="property"> <span class="pre">=</span> <span class="pre">47</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Quantity_List" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Designated_Entity">
+<code class="sig-name descname"><span class="pre">Designated_Entity</span></code><em class="property"> <span class="pre">=</span> <span class="pre">48</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Designated_Entity" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Formal">
+<code class="sig-name descname"><span class="pre">Formal</span></code><em class="property"> <span class="pre">=</span> <span class="pre">49</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Formal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Actual">
+<code class="sig-name descname"><span class="pre">Actual</span></code><em class="property"> <span class="pre">=</span> <span class="pre">50</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Actual" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Actual_Conversion">
+<code class="sig-name descname"><span class="pre">Actual_Conversion</span></code><em class="property"> <span class="pre">=</span> <span class="pre">51</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Actual_Conversion" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Formal_Conversion">
+<code class="sig-name descname"><span class="pre">Formal_Conversion</span></code><em class="property"> <span class="pre">=</span> <span class="pre">52</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Formal_Conversion" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Whole_Association_Flag">
+<code class="sig-name descname"><span class="pre">Whole_Association_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">53</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Whole_Association_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Collapse_Signal_Flag">
+<code class="sig-name descname"><span class="pre">Collapse_Signal_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">54</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Collapse_Signal_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Artificial_Flag">
+<code class="sig-name descname"><span class="pre">Artificial_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">55</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Artificial_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Open_Flag">
+<code class="sig-name descname"><span class="pre">Open_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">56</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Open_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.After_Drivers_Flag">
+<code class="sig-name descname"><span class="pre">After_Drivers_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">57</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.After_Drivers_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.We_Value">
+<code class="sig-name descname"><span class="pre">We_Value</span></code><em class="property"> <span class="pre">=</span> <span class="pre">58</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.We_Value" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Time">
+<code class="sig-name descname"><span class="pre">Time</span></code><em class="property"> <span class="pre">=</span> <span class="pre">59</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Time" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Associated_Expr">
+<code class="sig-name descname"><span class="pre">Associated_Expr</span></code><em class="property"> <span class="pre">=</span> <span class="pre">60</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Associated_Expr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Associated_Block">
+<code class="sig-name descname"><span class="pre">Associated_Block</span></code><em class="property"> <span class="pre">=</span> <span class="pre">61</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Associated_Block" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Associated_Chain">
+<code class="sig-name descname"><span class="pre">Associated_Chain</span></code><em class="property"> <span class="pre">=</span> <span class="pre">62</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Associated_Chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Choice_Name">
+<code class="sig-name descname"><span class="pre">Choice_Name</span></code><em class="property"> <span class="pre">=</span> <span class="pre">63</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Choice_Name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Choice_Expression">
+<code class="sig-name descname"><span class="pre">Choice_Expression</span></code><em class="property"> <span class="pre">=</span> <span class="pre">64</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Choice_Expression" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Choice_Range">
+<code class="sig-name descname"><span class="pre">Choice_Range</span></code><em class="property"> <span class="pre">=</span> <span class="pre">65</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Choice_Range" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Same_Alternative_Flag">
+<code class="sig-name descname"><span class="pre">Same_Alternative_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">66</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Same_Alternative_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Element_Type_Flag">
+<code class="sig-name descname"><span class="pre">Element_Type_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">67</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Element_Type_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Architecture">
+<code class="sig-name descname"><span class="pre">Architecture</span></code><em class="property"> <span class="pre">=</span> <span class="pre">68</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Architecture" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Block_Specification">
+<code class="sig-name descname"><span class="pre">Block_Specification</span></code><em class="property"> <span class="pre">=</span> <span class="pre">69</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Block_Specification" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Prev_Block_Configuration">
+<code class="sig-name descname"><span class="pre">Prev_Block_Configuration</span></code><em class="property"> <span class="pre">=</span> <span class="pre">70</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Prev_Block_Configuration" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Configuration_Item_Chain">
+<code class="sig-name descname"><span class="pre">Configuration_Item_Chain</span></code><em class="property"> <span class="pre">=</span> <span class="pre">71</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Configuration_Item_Chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Attribute_Value_Chain">
+<code class="sig-name descname"><span class="pre">Attribute_Value_Chain</span></code><em class="property"> <span class="pre">=</span> <span class="pre">72</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Attribute_Value_Chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Spec_Chain">
+<code class="sig-name descname"><span class="pre">Spec_Chain</span></code><em class="property"> <span class="pre">=</span> <span class="pre">73</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Spec_Chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Value_Chain">
+<code class="sig-name descname"><span class="pre">Value_Chain</span></code><em class="property"> <span class="pre">=</span> <span class="pre">74</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Value_Chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Attribute_Value_Spec_Chain">
+<code class="sig-name descname"><span class="pre">Attribute_Value_Spec_Chain</span></code><em class="property"> <span class="pre">=</span> <span class="pre">75</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Attribute_Value_Spec_Chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Entity_Name">
+<code class="sig-name descname"><span class="pre">Entity_Name</span></code><em class="property"> <span class="pre">=</span> <span class="pre">76</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Entity_Name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Package">
+<code class="sig-name descname"><span class="pre">Package</span></code><em class="property"> <span class="pre">=</span> <span class="pre">77</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Package" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Package_Body">
+<code class="sig-name descname"><span class="pre">Package_Body</span></code><em class="property"> <span class="pre">=</span> <span class="pre">78</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Package_Body" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Instance_Package_Body">
+<code class="sig-name descname"><span class="pre">Instance_Package_Body</span></code><em class="property"> <span class="pre">=</span> <span class="pre">79</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Instance_Package_Body" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Need_Body">
+<code class="sig-name descname"><span class="pre">Need_Body</span></code><em class="property"> <span class="pre">=</span> <span class="pre">80</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Need_Body" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Macro_Expanded_Flag">
+<code class="sig-name descname"><span class="pre">Macro_Expanded_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">81</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Macro_Expanded_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Need_Instance_Bodies">
+<code class="sig-name descname"><span class="pre">Need_Instance_Bodies</span></code><em class="property"> <span class="pre">=</span> <span class="pre">82</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Need_Instance_Bodies" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Hierarchical_Name">
+<code class="sig-name descname"><span class="pre">Hierarchical_Name</span></code><em class="property"> <span class="pre">=</span> <span class="pre">83</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Hierarchical_Name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Inherit_Spec_Chain">
+<code class="sig-name descname"><span class="pre">Inherit_Spec_Chain</span></code><em class="property"> <span class="pre">=</span> <span class="pre">84</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Inherit_Spec_Chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Vunit_Item_Chain">
+<code class="sig-name descname"><span class="pre">Vunit_Item_Chain</span></code><em class="property"> <span class="pre">=</span> <span class="pre">85</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Vunit_Item_Chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Bound_Vunit_Chain">
+<code class="sig-name descname"><span class="pre">Bound_Vunit_Chain</span></code><em class="property"> <span class="pre">=</span> <span class="pre">86</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Bound_Vunit_Chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Verification_Block_Configuration">
+<code class="sig-name descname"><span class="pre">Verification_Block_Configuration</span></code><em class="property"> <span class="pre">=</span> <span class="pre">87</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Verification_Block_Configuration" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Block_Configuration">
+<code class="sig-name descname"><span class="pre">Block_Configuration</span></code><em class="property"> <span class="pre">=</span> <span class="pre">88</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Block_Configuration" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Concurrent_Statement_Chain">
+<code class="sig-name descname"><span class="pre">Concurrent_Statement_Chain</span></code><em class="property"> <span class="pre">=</span> <span class="pre">89</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Concurrent_Statement_Chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Chain">
+<code class="sig-name descname"><span class="pre">Chain</span></code><em class="property"> <span class="pre">=</span> <span class="pre">90</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Port_Chain">
+<code class="sig-name descname"><span class="pre">Port_Chain</span></code><em class="property"> <span class="pre">=</span> <span class="pre">91</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Port_Chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Generic_Chain">
+<code class="sig-name descname"><span class="pre">Generic_Chain</span></code><em class="property"> <span class="pre">=</span> <span class="pre">92</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Generic_Chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Type">
+<code class="sig-name descname"><span class="pre">Type</span></code><em class="property"> <span class="pre">=</span> <span class="pre">93</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Subtype_Indication">
+<code class="sig-name descname"><span class="pre">Subtype_Indication</span></code><em class="property"> <span class="pre">=</span> <span class="pre">94</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Subtype_Indication" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Discrete_Range">
+<code class="sig-name descname"><span class="pre">Discrete_Range</span></code><em class="property"> <span class="pre">=</span> <span class="pre">95</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Discrete_Range" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Type_Definition">
+<code class="sig-name descname"><span class="pre">Type_Definition</span></code><em class="property"> <span class="pre">=</span> <span class="pre">96</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Type_Definition" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Subtype_Definition">
+<code class="sig-name descname"><span class="pre">Subtype_Definition</span></code><em class="property"> <span class="pre">=</span> <span class="pre">97</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Subtype_Definition" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Incomplete_Type_Declaration">
+<code class="sig-name descname"><span class="pre">Incomplete_Type_Declaration</span></code><em class="property"> <span class="pre">=</span> <span class="pre">98</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Incomplete_Type_Declaration" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Interface_Type_Subprograms">
+<code class="sig-name descname"><span class="pre">Interface_Type_Subprograms</span></code><em class="property"> <span class="pre">=</span> <span class="pre">99</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Interface_Type_Subprograms" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Nature_Definition">
+<code class="sig-name descname"><span class="pre">Nature_Definition</span></code><em class="property"> <span class="pre">=</span> <span class="pre">100</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Nature_Definition" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Nature">
+<code class="sig-name descname"><span class="pre">Nature</span></code><em class="property"> <span class="pre">=</span> <span class="pre">101</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Nature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Subnature_Indication">
+<code class="sig-name descname"><span class="pre">Subnature_Indication</span></code><em class="property"> <span class="pre">=</span> <span class="pre">102</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Subnature_Indication" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Mode">
+<code class="sig-name descname"><span class="pre">Mode</span></code><em class="property"> <span class="pre">=</span> <span class="pre">103</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Mode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Guarded_Signal_Flag">
+<code class="sig-name descname"><span class="pre">Guarded_Signal_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">104</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Guarded_Signal_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Signal_Kind">
+<code class="sig-name descname"><span class="pre">Signal_Kind</span></code><em class="property"> <span class="pre">=</span> <span class="pre">105</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Signal_Kind" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Base_Name">
+<code class="sig-name descname"><span class="pre">Base_Name</span></code><em class="property"> <span class="pre">=</span> <span class="pre">106</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Base_Name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Interface_Declaration_Chain">
+<code class="sig-name descname"><span class="pre">Interface_Declaration_Chain</span></code><em class="property"> <span class="pre">=</span> <span class="pre">107</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Interface_Declaration_Chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Subprogram_Specification">
+<code class="sig-name descname"><span class="pre">Subprogram_Specification</span></code><em class="property"> <span class="pre">=</span> <span class="pre">108</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Subprogram_Specification" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Sequential_Statement_Chain">
+<code class="sig-name descname"><span class="pre">Sequential_Statement_Chain</span></code><em class="property"> <span class="pre">=</span> <span class="pre">109</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Sequential_Statement_Chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Simultaneous_Statement_Chain">
+<code class="sig-name descname"><span class="pre">Simultaneous_Statement_Chain</span></code><em class="property"> <span class="pre">=</span> <span class="pre">110</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Simultaneous_Statement_Chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Subprogram_Body">
+<code class="sig-name descname"><span class="pre">Subprogram_Body</span></code><em class="property"> <span class="pre">=</span> <span class="pre">111</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Subprogram_Body" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Overload_Number">
+<code class="sig-name descname"><span class="pre">Overload_Number</span></code><em class="property"> <span class="pre">=</span> <span class="pre">112</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Overload_Number" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Subprogram_Depth">
+<code class="sig-name descname"><span class="pre">Subprogram_Depth</span></code><em class="property"> <span class="pre">=</span> <span class="pre">113</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Subprogram_Depth" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Subprogram_Hash">
+<code class="sig-name descname"><span class="pre">Subprogram_Hash</span></code><em class="property"> <span class="pre">=</span> <span class="pre">114</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Subprogram_Hash" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Impure_Depth">
+<code class="sig-name descname"><span class="pre">Impure_Depth</span></code><em class="property"> <span class="pre">=</span> <span class="pre">115</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Impure_Depth" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Return_Type">
+<code class="sig-name descname"><span class="pre">Return_Type</span></code><em class="property"> <span class="pre">=</span> <span class="pre">116</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Return_Type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Implicit_Definition">
+<code class="sig-name descname"><span class="pre">Implicit_Definition</span></code><em class="property"> <span class="pre">=</span> <span class="pre">117</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Implicit_Definition" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Uninstantiated_Subprogram_Name">
+<code class="sig-name descname"><span class="pre">Uninstantiated_Subprogram_Name</span></code><em class="property"> <span class="pre">=</span> <span class="pre">118</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Uninstantiated_Subprogram_Name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Default_Value">
+<code class="sig-name descname"><span class="pre">Default_Value</span></code><em class="property"> <span class="pre">=</span> <span class="pre">119</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Default_Value" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Deferred_Declaration">
+<code class="sig-name descname"><span class="pre">Deferred_Declaration</span></code><em class="property"> <span class="pre">=</span> <span class="pre">120</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Deferred_Declaration" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Deferred_Declaration_Flag">
+<code class="sig-name descname"><span class="pre">Deferred_Declaration_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">121</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Deferred_Declaration_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Shared_Flag">
+<code class="sig-name descname"><span class="pre">Shared_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">122</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Shared_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Design_Unit">
+<code class="sig-name descname"><span class="pre">Design_Unit</span></code><em class="property"> <span class="pre">=</span> <span class="pre">123</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Design_Unit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Block_Statement">
+<code class="sig-name descname"><span class="pre">Block_Statement</span></code><em class="property"> <span class="pre">=</span> <span class="pre">124</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Block_Statement" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Signal_Driver">
+<code class="sig-name descname"><span class="pre">Signal_Driver</span></code><em class="property"> <span class="pre">=</span> <span class="pre">125</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Signal_Driver" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Declaration_Chain">
+<code class="sig-name descname"><span class="pre">Declaration_Chain</span></code><em class="property"> <span class="pre">=</span> <span class="pre">126</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Declaration_Chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.File_Logical_Name">
+<code class="sig-name descname"><span class="pre">File_Logical_Name</span></code><em class="property"> <span class="pre">=</span> <span class="pre">127</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.File_Logical_Name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.File_Open_Kind">
+<code class="sig-name descname"><span class="pre">File_Open_Kind</span></code><em class="property"> <span class="pre">=</span> <span class="pre">128</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.File_Open_Kind" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Element_Position">
+<code class="sig-name descname"><span class="pre">Element_Position</span></code><em class="property"> <span class="pre">=</span> <span class="pre">129</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Element_Position" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Use_Clause_Chain">
+<code class="sig-name descname"><span class="pre">Use_Clause_Chain</span></code><em class="property"> <span class="pre">=</span> <span class="pre">130</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Use_Clause_Chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Context_Reference_Chain">
+<code class="sig-name descname"><span class="pre">Context_Reference_Chain</span></code><em class="property"> <span class="pre">=</span> <span class="pre">131</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Context_Reference_Chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Selected_Name">
+<code class="sig-name descname"><span class="pre">Selected_Name</span></code><em class="property"> <span class="pre">=</span> <span class="pre">132</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Selected_Name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Type_Declarator">
+<code class="sig-name descname"><span class="pre">Type_Declarator</span></code><em class="property"> <span class="pre">=</span> <span class="pre">133</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Type_Declarator" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Complete_Type_Definition">
+<code class="sig-name descname"><span class="pre">Complete_Type_Definition</span></code><em class="property"> <span class="pre">=</span> <span class="pre">134</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Complete_Type_Definition" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Incomplete_Type_Ref_Chain">
+<code class="sig-name descname"><span class="pre">Incomplete_Type_Ref_Chain</span></code><em class="property"> <span class="pre">=</span> <span class="pre">135</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Incomplete_Type_Ref_Chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Associated_Type">
+<code class="sig-name descname"><span class="pre">Associated_Type</span></code><em class="property"> <span class="pre">=</span> <span class="pre">136</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Associated_Type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Enumeration_Literal_List">
+<code class="sig-name descname"><span class="pre">Enumeration_Literal_List</span></code><em class="property"> <span class="pre">=</span> <span class="pre">137</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Enumeration_Literal_List" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Entity_Class_Entry_Chain">
+<code class="sig-name descname"><span class="pre">Entity_Class_Entry_Chain</span></code><em class="property"> <span class="pre">=</span> <span class="pre">138</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Entity_Class_Entry_Chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Group_Constituent_List">
+<code class="sig-name descname"><span class="pre">Group_Constituent_List</span></code><em class="property"> <span class="pre">=</span> <span class="pre">139</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Group_Constituent_List" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Unit_Chain">
+<code class="sig-name descname"><span class="pre">Unit_Chain</span></code><em class="property"> <span class="pre">=</span> <span class="pre">140</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Unit_Chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Primary_Unit">
+<code class="sig-name descname"><span class="pre">Primary_Unit</span></code><em class="property"> <span class="pre">=</span> <span class="pre">141</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Primary_Unit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Identifier">
+<code class="sig-name descname"><span class="pre">Identifier</span></code><em class="property"> <span class="pre">=</span> <span class="pre">142</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Identifier" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Label">
+<code class="sig-name descname"><span class="pre">Label</span></code><em class="property"> <span class="pre">=</span> <span class="pre">143</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Label" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Visible_Flag">
+<code class="sig-name descname"><span class="pre">Visible_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">144</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Visible_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Range_Constraint">
+<code class="sig-name descname"><span class="pre">Range_Constraint</span></code><em class="property"> <span class="pre">=</span> <span class="pre">145</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Range_Constraint" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Direction">
+<code class="sig-name descname"><span class="pre">Direction</span></code><em class="property"> <span class="pre">=</span> <span class="pre">146</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Direction" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Left_Limit">
+<code class="sig-name descname"><span class="pre">Left_Limit</span></code><em class="property"> <span class="pre">=</span> <span class="pre">147</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Left_Limit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Right_Limit">
+<code class="sig-name descname"><span class="pre">Right_Limit</span></code><em class="property"> <span class="pre">=</span> <span class="pre">148</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Right_Limit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Left_Limit_Expr">
+<code class="sig-name descname"><span class="pre">Left_Limit_Expr</span></code><em class="property"> <span class="pre">=</span> <span class="pre">149</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Left_Limit_Expr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Right_Limit_Expr">
+<code class="sig-name descname"><span class="pre">Right_Limit_Expr</span></code><em class="property"> <span class="pre">=</span> <span class="pre">150</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Right_Limit_Expr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Parent_Type">
+<code class="sig-name descname"><span class="pre">Parent_Type</span></code><em class="property"> <span class="pre">=</span> <span class="pre">151</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Parent_Type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Simple_Nature">
+<code class="sig-name descname"><span class="pre">Simple_Nature</span></code><em class="property"> <span class="pre">=</span> <span class="pre">152</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Simple_Nature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Base_Nature">
+<code class="sig-name descname"><span class="pre">Base_Nature</span></code><em class="property"> <span class="pre">=</span> <span class="pre">153</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Base_Nature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Resolution_Indication">
+<code class="sig-name descname"><span class="pre">Resolution_Indication</span></code><em class="property"> <span class="pre">=</span> <span class="pre">154</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Resolution_Indication" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Record_Element_Resolution_Chain">
+<code class="sig-name descname"><span class="pre">Record_Element_Resolution_Chain</span></code><em class="property"> <span class="pre">=</span> <span class="pre">155</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Record_Element_Resolution_Chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Tolerance">
+<code class="sig-name descname"><span class="pre">Tolerance</span></code><em class="property"> <span class="pre">=</span> <span class="pre">156</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Tolerance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Plus_Terminal_Name">
+<code class="sig-name descname"><span class="pre">Plus_Terminal_Name</span></code><em class="property"> <span class="pre">=</span> <span class="pre">157</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Plus_Terminal_Name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Minus_Terminal_Name">
+<code class="sig-name descname"><span class="pre">Minus_Terminal_Name</span></code><em class="property"> <span class="pre">=</span> <span class="pre">158</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Minus_Terminal_Name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Plus_Terminal">
+<code class="sig-name descname"><span class="pre">Plus_Terminal</span></code><em class="property"> <span class="pre">=</span> <span class="pre">159</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Plus_Terminal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Minus_Terminal">
+<code class="sig-name descname"><span class="pre">Minus_Terminal</span></code><em class="property"> <span class="pre">=</span> <span class="pre">160</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Minus_Terminal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Magnitude_Expression">
+<code class="sig-name descname"><span class="pre">Magnitude_Expression</span></code><em class="property"> <span class="pre">=</span> <span class="pre">161</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Magnitude_Expression" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Phase_Expression">
+<code class="sig-name descname"><span class="pre">Phase_Expression</span></code><em class="property"> <span class="pre">=</span> <span class="pre">162</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Phase_Expression" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Power_Expression">
+<code class="sig-name descname"><span class="pre">Power_Expression</span></code><em class="property"> <span class="pre">=</span> <span class="pre">163</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Power_Expression" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Simultaneous_Left">
+<code class="sig-name descname"><span class="pre">Simultaneous_Left</span></code><em class="property"> <span class="pre">=</span> <span class="pre">164</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Simultaneous_Left" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Simultaneous_Right">
+<code class="sig-name descname"><span class="pre">Simultaneous_Right</span></code><em class="property"> <span class="pre">=</span> <span class="pre">165</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Simultaneous_Right" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Text_File_Flag">
+<code class="sig-name descname"><span class="pre">Text_File_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">166</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Text_File_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Only_Characters_Flag">
+<code class="sig-name descname"><span class="pre">Only_Characters_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">167</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Only_Characters_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Is_Character_Type">
+<code class="sig-name descname"><span class="pre">Is_Character_Type</span></code><em class="property"> <span class="pre">=</span> <span class="pre">168</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Is_Character_Type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Nature_Staticness">
+<code class="sig-name descname"><span class="pre">Nature_Staticness</span></code><em class="property"> <span class="pre">=</span> <span class="pre">169</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Nature_Staticness" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Type_Staticness">
+<code class="sig-name descname"><span class="pre">Type_Staticness</span></code><em class="property"> <span class="pre">=</span> <span class="pre">170</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Type_Staticness" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Constraint_State">
+<code class="sig-name descname"><span class="pre">Constraint_State</span></code><em class="property"> <span class="pre">=</span> <span class="pre">171</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Constraint_State" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Index_Subtype_List">
+<code class="sig-name descname"><span class="pre">Index_Subtype_List</span></code><em class="property"> <span class="pre">=</span> <span class="pre">172</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Index_Subtype_List" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Index_Subtype_Definition_List">
+<code class="sig-name descname"><span class="pre">Index_Subtype_Definition_List</span></code><em class="property"> <span class="pre">=</span> <span class="pre">173</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Index_Subtype_Definition_List" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Element_Subtype_Indication">
+<code class="sig-name descname"><span class="pre">Element_Subtype_Indication</span></code><em class="property"> <span class="pre">=</span> <span class="pre">174</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Element_Subtype_Indication" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Element_Subtype">
+<code class="sig-name descname"><span class="pre">Element_Subtype</span></code><em class="property"> <span class="pre">=</span> <span class="pre">175</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Element_Subtype" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Element_Subnature_Indication">
+<code class="sig-name descname"><span class="pre">Element_Subnature_Indication</span></code><em class="property"> <span class="pre">=</span> <span class="pre">176</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Element_Subnature_Indication" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Element_Subnature">
+<code class="sig-name descname"><span class="pre">Element_Subnature</span></code><em class="property"> <span class="pre">=</span> <span class="pre">177</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Element_Subnature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Index_Constraint_List">
+<code class="sig-name descname"><span class="pre">Index_Constraint_List</span></code><em class="property"> <span class="pre">=</span> <span class="pre">178</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Index_Constraint_List" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Array_Element_Constraint">
+<code class="sig-name descname"><span class="pre">Array_Element_Constraint</span></code><em class="property"> <span class="pre">=</span> <span class="pre">179</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Array_Element_Constraint" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Has_Array_Constraint_Flag">
+<code class="sig-name descname"><span class="pre">Has_Array_Constraint_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">180</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Has_Array_Constraint_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Has_Element_Constraint_Flag">
+<code class="sig-name descname"><span class="pre">Has_Element_Constraint_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">181</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Has_Element_Constraint_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Elements_Declaration_List">
+<code class="sig-name descname"><span class="pre">Elements_Declaration_List</span></code><em class="property"> <span class="pre">=</span> <span class="pre">182</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Elements_Declaration_List" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Owned_Elements_Chain">
+<code class="sig-name descname"><span class="pre">Owned_Elements_Chain</span></code><em class="property"> <span class="pre">=</span> <span class="pre">183</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Owned_Elements_Chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Designated_Type">
+<code class="sig-name descname"><span class="pre">Designated_Type</span></code><em class="property"> <span class="pre">=</span> <span class="pre">184</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Designated_Type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Designated_Subtype_Indication">
+<code class="sig-name descname"><span class="pre">Designated_Subtype_Indication</span></code><em class="property"> <span class="pre">=</span> <span class="pre">185</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Designated_Subtype_Indication" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Index_List">
+<code class="sig-name descname"><span class="pre">Index_List</span></code><em class="property"> <span class="pre">=</span> <span class="pre">186</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Index_List" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Reference">
+<code class="sig-name descname"><span class="pre">Reference</span></code><em class="property"> <span class="pre">=</span> <span class="pre">187</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Reference" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Nature_Declarator">
+<code class="sig-name descname"><span class="pre">Nature_Declarator</span></code><em class="property"> <span class="pre">=</span> <span class="pre">188</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Nature_Declarator" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Across_Type_Mark">
+<code class="sig-name descname"><span class="pre">Across_Type_Mark</span></code><em class="property"> <span class="pre">=</span> <span class="pre">189</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Across_Type_Mark" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Through_Type_Mark">
+<code class="sig-name descname"><span class="pre">Through_Type_Mark</span></code><em class="property"> <span class="pre">=</span> <span class="pre">190</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Through_Type_Mark" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Across_Type_Definition">
+<code class="sig-name descname"><span class="pre">Across_Type_Definition</span></code><em class="property"> <span class="pre">=</span> <span class="pre">191</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Across_Type_Definition" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Through_Type_Definition">
+<code class="sig-name descname"><span class="pre">Through_Type_Definition</span></code><em class="property"> <span class="pre">=</span> <span class="pre">192</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Through_Type_Definition" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Across_Type">
+<code class="sig-name descname"><span class="pre">Across_Type</span></code><em class="property"> <span class="pre">=</span> <span class="pre">193</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Across_Type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Through_Type">
+<code class="sig-name descname"><span class="pre">Through_Type</span></code><em class="property"> <span class="pre">=</span> <span class="pre">194</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Through_Type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Target">
+<code class="sig-name descname"><span class="pre">Target</span></code><em class="property"> <span class="pre">=</span> <span class="pre">195</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Target" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Waveform_Chain">
+<code class="sig-name descname"><span class="pre">Waveform_Chain</span></code><em class="property"> <span class="pre">=</span> <span class="pre">196</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Waveform_Chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Guard">
+<code class="sig-name descname"><span class="pre">Guard</span></code><em class="property"> <span class="pre">=</span> <span class="pre">197</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Guard" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Delay_Mechanism">
+<code class="sig-name descname"><span class="pre">Delay_Mechanism</span></code><em class="property"> <span class="pre">=</span> <span class="pre">198</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Delay_Mechanism" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Reject_Time_Expression">
+<code class="sig-name descname"><span class="pre">Reject_Time_Expression</span></code><em class="property"> <span class="pre">=</span> <span class="pre">199</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Reject_Time_Expression" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Force_Mode">
+<code class="sig-name descname"><span class="pre">Force_Mode</span></code><em class="property"> <span class="pre">=</span> <span class="pre">200</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Force_Mode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Has_Force_Mode">
+<code class="sig-name descname"><span class="pre">Has_Force_Mode</span></code><em class="property"> <span class="pre">=</span> <span class="pre">201</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Has_Force_Mode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Sensitivity_List">
+<code class="sig-name descname"><span class="pre">Sensitivity_List</span></code><em class="property"> <span class="pre">=</span> <span class="pre">202</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Sensitivity_List" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Process_Origin">
+<code class="sig-name descname"><span class="pre">Process_Origin</span></code><em class="property"> <span class="pre">=</span> <span class="pre">203</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Process_Origin" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Package_Origin">
+<code class="sig-name descname"><span class="pre">Package_Origin</span></code><em class="property"> <span class="pre">=</span> <span class="pre">204</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Package_Origin" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Condition_Clause">
+<code class="sig-name descname"><span class="pre">Condition_Clause</span></code><em class="property"> <span class="pre">=</span> <span class="pre">205</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Condition_Clause" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Break_Element">
+<code class="sig-name descname"><span class="pre">Break_Element</span></code><em class="property"> <span class="pre">=</span> <span class="pre">206</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Break_Element" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Selector_Quantity">
+<code class="sig-name descname"><span class="pre">Selector_Quantity</span></code><em class="property"> <span class="pre">=</span> <span class="pre">207</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Selector_Quantity" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Break_Quantity">
+<code class="sig-name descname"><span class="pre">Break_Quantity</span></code><em class="property"> <span class="pre">=</span> <span class="pre">208</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Break_Quantity" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Timeout_Clause">
+<code class="sig-name descname"><span class="pre">Timeout_Clause</span></code><em class="property"> <span class="pre">=</span> <span class="pre">209</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Timeout_Clause" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Postponed_Flag">
+<code class="sig-name descname"><span class="pre">Postponed_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">210</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Postponed_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Callees_List">
+<code class="sig-name descname"><span class="pre">Callees_List</span></code><em class="property"> <span class="pre">=</span> <span class="pre">211</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Callees_List" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Passive_Flag">
+<code class="sig-name descname"><span class="pre">Passive_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">212</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Passive_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Resolution_Function_Flag">
+<code class="sig-name descname"><span class="pre">Resolution_Function_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">213</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Resolution_Function_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Wait_State">
+<code class="sig-name descname"><span class="pre">Wait_State</span></code><em class="property"> <span class="pre">=</span> <span class="pre">214</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Wait_State" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.All_Sensitized_State">
+<code class="sig-name descname"><span class="pre">All_Sensitized_State</span></code><em class="property"> <span class="pre">=</span> <span class="pre">215</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.All_Sensitized_State" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Seen_Flag">
+<code class="sig-name descname"><span class="pre">Seen_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">216</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Seen_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Pure_Flag">
+<code class="sig-name descname"><span class="pre">Pure_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">217</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Pure_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Foreign_Flag">
+<code class="sig-name descname"><span class="pre">Foreign_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">218</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Foreign_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Resolved_Flag">
+<code class="sig-name descname"><span class="pre">Resolved_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">219</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Resolved_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Signal_Type_Flag">
+<code class="sig-name descname"><span class="pre">Signal_Type_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">220</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Signal_Type_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Has_Signal_Flag">
+<code class="sig-name descname"><span class="pre">Has_Signal_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">221</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Has_Signal_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Purity_State">
+<code class="sig-name descname"><span class="pre">Purity_State</span></code><em class="property"> <span class="pre">=</span> <span class="pre">222</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Purity_State" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Elab_Flag">
+<code class="sig-name descname"><span class="pre">Elab_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">223</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Elab_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Vendor_Library_Flag">
+<code class="sig-name descname"><span class="pre">Vendor_Library_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">224</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Vendor_Library_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Configuration_Mark_Flag">
+<code class="sig-name descname"><span class="pre">Configuration_Mark_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">225</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Configuration_Mark_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Configuration_Done_Flag">
+<code class="sig-name descname"><span class="pre">Configuration_Done_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">226</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Configuration_Done_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Index_Constraint_Flag">
+<code class="sig-name descname"><span class="pre">Index_Constraint_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">227</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Index_Constraint_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Hide_Implicit_Flag">
+<code class="sig-name descname"><span class="pre">Hide_Implicit_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">228</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Hide_Implicit_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Assertion_Condition">
+<code class="sig-name descname"><span class="pre">Assertion_Condition</span></code><em class="property"> <span class="pre">=</span> <span class="pre">229</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Assertion_Condition" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Report_Expression">
+<code class="sig-name descname"><span class="pre">Report_Expression</span></code><em class="property"> <span class="pre">=</span> <span class="pre">230</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Report_Expression" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Severity_Expression">
+<code class="sig-name descname"><span class="pre">Severity_Expression</span></code><em class="property"> <span class="pre">=</span> <span class="pre">231</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Severity_Expression" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Instantiated_Unit">
+<code class="sig-name descname"><span class="pre">Instantiated_Unit</span></code><em class="property"> <span class="pre">=</span> <span class="pre">232</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Instantiated_Unit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Generic_Map_Aspect_Chain">
+<code class="sig-name descname"><span class="pre">Generic_Map_Aspect_Chain</span></code><em class="property"> <span class="pre">=</span> <span class="pre">233</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Generic_Map_Aspect_Chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Port_Map_Aspect_Chain">
+<code class="sig-name descname"><span class="pre">Port_Map_Aspect_Chain</span></code><em class="property"> <span class="pre">=</span> <span class="pre">234</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Port_Map_Aspect_Chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Configuration_Name">
+<code class="sig-name descname"><span class="pre">Configuration_Name</span></code><em class="property"> <span class="pre">=</span> <span class="pre">235</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Configuration_Name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Component_Configuration">
+<code class="sig-name descname"><span class="pre">Component_Configuration</span></code><em class="property"> <span class="pre">=</span> <span class="pre">236</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Component_Configuration" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Configuration_Specification">
+<code class="sig-name descname"><span class="pre">Configuration_Specification</span></code><em class="property"> <span class="pre">=</span> <span class="pre">237</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Configuration_Specification" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Default_Binding_Indication">
+<code class="sig-name descname"><span class="pre">Default_Binding_Indication</span></code><em class="property"> <span class="pre">=</span> <span class="pre">238</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Default_Binding_Indication" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Default_Configuration_Declaration">
+<code class="sig-name descname"><span class="pre">Default_Configuration_Declaration</span></code><em class="property"> <span class="pre">=</span> <span class="pre">239</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Default_Configuration_Declaration" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Expression">
+<code class="sig-name descname"><span class="pre">Expression</span></code><em class="property"> <span class="pre">=</span> <span class="pre">240</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Expression" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Conditional_Expression_Chain">
+<code class="sig-name descname"><span class="pre">Conditional_Expression_Chain</span></code><em class="property"> <span class="pre">=</span> <span class="pre">241</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Conditional_Expression_Chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Allocator_Designated_Type">
+<code class="sig-name descname"><span class="pre">Allocator_Designated_Type</span></code><em class="property"> <span class="pre">=</span> <span class="pre">242</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Allocator_Designated_Type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Selected_Waveform_Chain">
+<code class="sig-name descname"><span class="pre">Selected_Waveform_Chain</span></code><em class="property"> <span class="pre">=</span> <span class="pre">243</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Selected_Waveform_Chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Conditional_Waveform_Chain">
+<code class="sig-name descname"><span class="pre">Conditional_Waveform_Chain</span></code><em class="property"> <span class="pre">=</span> <span class="pre">244</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Conditional_Waveform_Chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Guard_Expression">
+<code class="sig-name descname"><span class="pre">Guard_Expression</span></code><em class="property"> <span class="pre">=</span> <span class="pre">245</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Guard_Expression" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Guard_Decl">
+<code class="sig-name descname"><span class="pre">Guard_Decl</span></code><em class="property"> <span class="pre">=</span> <span class="pre">246</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Guard_Decl" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Guard_Sensitivity_List">
+<code class="sig-name descname"><span class="pre">Guard_Sensitivity_List</span></code><em class="property"> <span class="pre">=</span> <span class="pre">247</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Guard_Sensitivity_List" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Signal_Attribute_Chain">
+<code class="sig-name descname"><span class="pre">Signal_Attribute_Chain</span></code><em class="property"> <span class="pre">=</span> <span class="pre">248</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Signal_Attribute_Chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Block_Block_Configuration">
+<code class="sig-name descname"><span class="pre">Block_Block_Configuration</span></code><em class="property"> <span class="pre">=</span> <span class="pre">249</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Block_Block_Configuration" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Package_Header">
+<code class="sig-name descname"><span class="pre">Package_Header</span></code><em class="property"> <span class="pre">=</span> <span class="pre">250</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Package_Header" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Block_Header">
+<code class="sig-name descname"><span class="pre">Block_Header</span></code><em class="property"> <span class="pre">=</span> <span class="pre">251</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Block_Header" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Uninstantiated_Package_Name">
+<code class="sig-name descname"><span class="pre">Uninstantiated_Package_Name</span></code><em class="property"> <span class="pre">=</span> <span class="pre">252</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Uninstantiated_Package_Name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Uninstantiated_Package_Decl">
+<code class="sig-name descname"><span class="pre">Uninstantiated_Package_Decl</span></code><em class="property"> <span class="pre">=</span> <span class="pre">253</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Uninstantiated_Package_Decl" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Instance_Source_File">
+<code class="sig-name descname"><span class="pre">Instance_Source_File</span></code><em class="property"> <span class="pre">=</span> <span class="pre">254</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Instance_Source_File" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Generate_Block_Configuration">
+<code class="sig-name descname"><span class="pre">Generate_Block_Configuration</span></code><em class="property"> <span class="pre">=</span> <span class="pre">255</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Generate_Block_Configuration" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Generate_Statement_Body">
+<code class="sig-name descname"><span class="pre">Generate_Statement_Body</span></code><em class="property"> <span class="pre">=</span> <span class="pre">256</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Generate_Statement_Body" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Alternative_Label">
+<code class="sig-name descname"><span class="pre">Alternative_Label</span></code><em class="property"> <span class="pre">=</span> <span class="pre">257</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Alternative_Label" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Generate_Else_Clause">
+<code class="sig-name descname"><span class="pre">Generate_Else_Clause</span></code><em class="property"> <span class="pre">=</span> <span class="pre">258</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Generate_Else_Clause" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Condition">
+<code class="sig-name descname"><span class="pre">Condition</span></code><em class="property"> <span class="pre">=</span> <span class="pre">259</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Condition" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Else_Clause">
+<code class="sig-name descname"><span class="pre">Else_Clause</span></code><em class="property"> <span class="pre">=</span> <span class="pre">260</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Else_Clause" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Parameter_Specification">
+<code class="sig-name descname"><span class="pre">Parameter_Specification</span></code><em class="property"> <span class="pre">=</span> <span class="pre">261</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Parameter_Specification" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Parent">
+<code class="sig-name descname"><span class="pre">Parent</span></code><em class="property"> <span class="pre">=</span> <span class="pre">262</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Parent" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Loop_Label">
+<code class="sig-name descname"><span class="pre">Loop_Label</span></code><em class="property"> <span class="pre">=</span> <span class="pre">263</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Loop_Label" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Exit_Flag">
+<code class="sig-name descname"><span class="pre">Exit_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">264</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Exit_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Next_Flag">
+<code class="sig-name descname"><span class="pre">Next_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">265</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Next_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Component_Name">
+<code class="sig-name descname"><span class="pre">Component_Name</span></code><em class="property"> <span class="pre">=</span> <span class="pre">266</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Component_Name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Instantiation_List">
+<code class="sig-name descname"><span class="pre">Instantiation_List</span></code><em class="property"> <span class="pre">=</span> <span class="pre">267</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Instantiation_List" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Entity_Aspect">
+<code class="sig-name descname"><span class="pre">Entity_Aspect</span></code><em class="property"> <span class="pre">=</span> <span class="pre">268</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Entity_Aspect" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Default_Entity_Aspect">
+<code class="sig-name descname"><span class="pre">Default_Entity_Aspect</span></code><em class="property"> <span class="pre">=</span> <span class="pre">269</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Default_Entity_Aspect" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Binding_Indication">
+<code class="sig-name descname"><span class="pre">Binding_Indication</span></code><em class="property"> <span class="pre">=</span> <span class="pre">270</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Binding_Indication" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Named_Entity">
+<code class="sig-name descname"><span class="pre">Named_Entity</span></code><em class="property"> <span class="pre">=</span> <span class="pre">271</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Named_Entity" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Alias_Declaration">
+<code class="sig-name descname"><span class="pre">Alias_Declaration</span></code><em class="property"> <span class="pre">=</span> <span class="pre">272</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Alias_Declaration" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Referenced_Name">
+<code class="sig-name descname"><span class="pre">Referenced_Name</span></code><em class="property"> <span class="pre">=</span> <span class="pre">273</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Referenced_Name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Expr_Staticness">
+<code class="sig-name descname"><span class="pre">Expr_Staticness</span></code><em class="property"> <span class="pre">=</span> <span class="pre">274</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Expr_Staticness" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Scalar_Size">
+<code class="sig-name descname"><span class="pre">Scalar_Size</span></code><em class="property"> <span class="pre">=</span> <span class="pre">275</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Scalar_Size" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Error_Origin">
+<code class="sig-name descname"><span class="pre">Error_Origin</span></code><em class="property"> <span class="pre">=</span> <span class="pre">276</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Error_Origin" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Operand">
+<code class="sig-name descname"><span class="pre">Operand</span></code><em class="property"> <span class="pre">=</span> <span class="pre">277</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Operand" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Left">
+<code class="sig-name descname"><span class="pre">Left</span></code><em class="property"> <span class="pre">=</span> <span class="pre">278</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Left" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Right">
+<code class="sig-name descname"><span class="pre">Right</span></code><em class="property"> <span class="pre">=</span> <span class="pre">279</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Right" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Unit_Name">
+<code class="sig-name descname"><span class="pre">Unit_Name</span></code><em class="property"> <span class="pre">=</span> <span class="pre">280</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Unit_Name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Name">
+<code class="sig-name descname"><span class="pre">Name</span></code><em class="property"> <span class="pre">=</span> <span class="pre">281</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Group_Template_Name">
+<code class="sig-name descname"><span class="pre">Group_Template_Name</span></code><em class="property"> <span class="pre">=</span> <span class="pre">282</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Group_Template_Name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Name_Staticness">
+<code class="sig-name descname"><span class="pre">Name_Staticness</span></code><em class="property"> <span class="pre">=</span> <span class="pre">283</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Name_Staticness" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Prefix">
+<code class="sig-name descname"><span class="pre">Prefix</span></code><em class="property"> <span class="pre">=</span> <span class="pre">284</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Prefix" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Signature_Prefix">
+<code class="sig-name descname"><span class="pre">Signature_Prefix</span></code><em class="property"> <span class="pre">=</span> <span class="pre">285</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Signature_Prefix" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.External_Pathname">
+<code class="sig-name descname"><span class="pre">External_Pathname</span></code><em class="property"> <span class="pre">=</span> <span class="pre">286</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.External_Pathname" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Pathname_Suffix">
+<code class="sig-name descname"><span class="pre">Pathname_Suffix</span></code><em class="property"> <span class="pre">=</span> <span class="pre">287</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Pathname_Suffix" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Pathname_Expression">
+<code class="sig-name descname"><span class="pre">Pathname_Expression</span></code><em class="property"> <span class="pre">=</span> <span class="pre">288</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Pathname_Expression" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.In_Formal_Flag">
+<code class="sig-name descname"><span class="pre">In_Formal_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">289</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.In_Formal_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Slice_Subtype">
+<code class="sig-name descname"><span class="pre">Slice_Subtype</span></code><em class="property"> <span class="pre">=</span> <span class="pre">290</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Slice_Subtype" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Suffix">
+<code class="sig-name descname"><span class="pre">Suffix</span></code><em class="property"> <span class="pre">=</span> <span class="pre">291</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Suffix" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Index_Subtype">
+<code class="sig-name descname"><span class="pre">Index_Subtype</span></code><em class="property"> <span class="pre">=</span> <span class="pre">292</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Index_Subtype" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Parameter">
+<code class="sig-name descname"><span class="pre">Parameter</span></code><em class="property"> <span class="pre">=</span> <span class="pre">293</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Parameter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Parameter_2">
+<code class="sig-name descname"><span class="pre">Parameter_2</span></code><em class="property"> <span class="pre">=</span> <span class="pre">294</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Parameter_2" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Parameter_3">
+<code class="sig-name descname"><span class="pre">Parameter_3</span></code><em class="property"> <span class="pre">=</span> <span class="pre">295</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Parameter_3" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Parameter_4">
+<code class="sig-name descname"><span class="pre">Parameter_4</span></code><em class="property"> <span class="pre">=</span> <span class="pre">296</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Parameter_4" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Attr_Chain">
+<code class="sig-name descname"><span class="pre">Attr_Chain</span></code><em class="property"> <span class="pre">=</span> <span class="pre">297</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Attr_Chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Signal_Attribute_Declaration">
+<code class="sig-name descname"><span class="pre">Signal_Attribute_Declaration</span></code><em class="property"> <span class="pre">=</span> <span class="pre">298</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Signal_Attribute_Declaration" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Actual_Type">
+<code class="sig-name descname"><span class="pre">Actual_Type</span></code><em class="property"> <span class="pre">=</span> <span class="pre">299</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Actual_Type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Actual_Type_Definition">
+<code class="sig-name descname"><span class="pre">Actual_Type_Definition</span></code><em class="property"> <span class="pre">=</span> <span class="pre">300</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Actual_Type_Definition" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Association_Chain">
+<code class="sig-name descname"><span class="pre">Association_Chain</span></code><em class="property"> <span class="pre">=</span> <span class="pre">301</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Association_Chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Individual_Association_Chain">
+<code class="sig-name descname"><span class="pre">Individual_Association_Chain</span></code><em class="property"> <span class="pre">=</span> <span class="pre">302</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Individual_Association_Chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Subprogram_Association_Chain">
+<code class="sig-name descname"><span class="pre">Subprogram_Association_Chain</span></code><em class="property"> <span class="pre">=</span> <span class="pre">303</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Subprogram_Association_Chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Aggregate_Info">
+<code class="sig-name descname"><span class="pre">Aggregate_Info</span></code><em class="property"> <span class="pre">=</span> <span class="pre">304</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Aggregate_Info" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Sub_Aggregate_Info">
+<code class="sig-name descname"><span class="pre">Sub_Aggregate_Info</span></code><em class="property"> <span class="pre">=</span> <span class="pre">305</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Sub_Aggregate_Info" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Aggr_Dynamic_Flag">
+<code class="sig-name descname"><span class="pre">Aggr_Dynamic_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">306</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Aggr_Dynamic_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Aggr_Min_Length">
+<code class="sig-name descname"><span class="pre">Aggr_Min_Length</span></code><em class="property"> <span class="pre">=</span> <span class="pre">307</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Aggr_Min_Length" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Aggr_Low_Limit">
+<code class="sig-name descname"><span class="pre">Aggr_Low_Limit</span></code><em class="property"> <span class="pre">=</span> <span class="pre">308</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Aggr_Low_Limit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Aggr_High_Limit">
+<code class="sig-name descname"><span class="pre">Aggr_High_Limit</span></code><em class="property"> <span class="pre">=</span> <span class="pre">309</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Aggr_High_Limit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Aggr_Others_Flag">
+<code class="sig-name descname"><span class="pre">Aggr_Others_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">310</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Aggr_Others_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Aggr_Named_Flag">
+<code class="sig-name descname"><span class="pre">Aggr_Named_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">311</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Aggr_Named_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Aggregate_Expand_Flag">
+<code class="sig-name descname"><span class="pre">Aggregate_Expand_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">312</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Aggregate_Expand_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Association_Choices_Chain">
+<code class="sig-name descname"><span class="pre">Association_Choices_Chain</span></code><em class="property"> <span class="pre">=</span> <span class="pre">313</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Association_Choices_Chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Case_Statement_Alternative_Chain">
+<code class="sig-name descname"><span class="pre">Case_Statement_Alternative_Chain</span></code><em class="property"> <span class="pre">=</span> <span class="pre">314</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Case_Statement_Alternative_Chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Choice_Staticness">
+<code class="sig-name descname"><span class="pre">Choice_Staticness</span></code><em class="property"> <span class="pre">=</span> <span class="pre">315</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Choice_Staticness" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Procedure_Call">
+<code class="sig-name descname"><span class="pre">Procedure_Call</span></code><em class="property"> <span class="pre">=</span> <span class="pre">316</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Procedure_Call" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Implementation">
+<code class="sig-name descname"><span class="pre">Implementation</span></code><em class="property"> <span class="pre">=</span> <span class="pre">317</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Implementation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Parameter_Association_Chain">
+<code class="sig-name descname"><span class="pre">Parameter_Association_Chain</span></code><em class="property"> <span class="pre">=</span> <span class="pre">318</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Parameter_Association_Chain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Method_Object">
+<code class="sig-name descname"><span class="pre">Method_Object</span></code><em class="property"> <span class="pre">=</span> <span class="pre">319</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Method_Object" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Subtype_Type_Mark">
+<code class="sig-name descname"><span class="pre">Subtype_Type_Mark</span></code><em class="property"> <span class="pre">=</span> <span class="pre">320</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Subtype_Type_Mark" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Subnature_Nature_Mark">
+<code class="sig-name descname"><span class="pre">Subnature_Nature_Mark</span></code><em class="property"> <span class="pre">=</span> <span class="pre">321</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Subnature_Nature_Mark" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Type_Conversion_Subtype">
+<code class="sig-name descname"><span class="pre">Type_Conversion_Subtype</span></code><em class="property"> <span class="pre">=</span> <span class="pre">322</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Type_Conversion_Subtype" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Type_Mark">
+<code class="sig-name descname"><span class="pre">Type_Mark</span></code><em class="property"> <span class="pre">=</span> <span class="pre">323</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Type_Mark" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.File_Type_Mark">
+<code class="sig-name descname"><span class="pre">File_Type_Mark</span></code><em class="property"> <span class="pre">=</span> <span class="pre">324</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.File_Type_Mark" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Return_Type_Mark">
+<code class="sig-name descname"><span class="pre">Return_Type_Mark</span></code><em class="property"> <span class="pre">=</span> <span class="pre">325</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Return_Type_Mark" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Has_Disconnect_Flag">
+<code class="sig-name descname"><span class="pre">Has_Disconnect_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">326</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Has_Disconnect_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Has_Active_Flag">
+<code class="sig-name descname"><span class="pre">Has_Active_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">327</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Has_Active_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Is_Within_Flag">
+<code class="sig-name descname"><span class="pre">Is_Within_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">328</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Is_Within_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Type_Marks_List">
+<code class="sig-name descname"><span class="pre">Type_Marks_List</span></code><em class="property"> <span class="pre">=</span> <span class="pre">329</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Type_Marks_List" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Implicit_Alias_Flag">
+<code class="sig-name descname"><span class="pre">Implicit_Alias_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">330</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Implicit_Alias_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Alias_Signature">
+<code class="sig-name descname"><span class="pre">Alias_Signature</span></code><em class="property"> <span class="pre">=</span> <span class="pre">331</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Alias_Signature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Attribute_Signature">
+<code class="sig-name descname"><span class="pre">Attribute_Signature</span></code><em class="property"> <span class="pre">=</span> <span class="pre">332</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Attribute_Signature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Overload_List">
+<code class="sig-name descname"><span class="pre">Overload_List</span></code><em class="property"> <span class="pre">=</span> <span class="pre">333</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Overload_List" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Simple_Name_Identifier">
+<code class="sig-name descname"><span class="pre">Simple_Name_Identifier</span></code><em class="property"> <span class="pre">=</span> <span class="pre">334</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Simple_Name_Identifier" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Simple_Name_Subtype">
+<code class="sig-name descname"><span class="pre">Simple_Name_Subtype</span></code><em class="property"> <span class="pre">=</span> <span class="pre">335</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Simple_Name_Subtype" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Protected_Type_Body">
+<code class="sig-name descname"><span class="pre">Protected_Type_Body</span></code><em class="property"> <span class="pre">=</span> <span class="pre">336</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Protected_Type_Body" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Protected_Type_Declaration">
+<code class="sig-name descname"><span class="pre">Protected_Type_Declaration</span></code><em class="property"> <span class="pre">=</span> <span class="pre">337</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Protected_Type_Declaration" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Use_Flag">
+<code class="sig-name descname"><span class="pre">Use_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">338</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Use_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.End_Has_Reserved_Id">
+<code class="sig-name descname"><span class="pre">End_Has_Reserved_Id</span></code><em class="property"> <span class="pre">=</span> <span class="pre">339</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.End_Has_Reserved_Id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.End_Has_Identifier">
+<code class="sig-name descname"><span class="pre">End_Has_Identifier</span></code><em class="property"> <span class="pre">=</span> <span class="pre">340</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.End_Has_Identifier" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.End_Has_Postponed">
+<code class="sig-name descname"><span class="pre">End_Has_Postponed</span></code><em class="property"> <span class="pre">=</span> <span class="pre">341</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.End_Has_Postponed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Has_Label">
+<code class="sig-name descname"><span class="pre">Has_Label</span></code><em class="property"> <span class="pre">=</span> <span class="pre">342</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Has_Label" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Has_Begin">
+<code class="sig-name descname"><span class="pre">Has_Begin</span></code><em class="property"> <span class="pre">=</span> <span class="pre">343</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Has_Begin" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Has_End">
+<code class="sig-name descname"><span class="pre">Has_End</span></code><em class="property"> <span class="pre">=</span> <span class="pre">344</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Has_End" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Has_Is">
+<code class="sig-name descname"><span class="pre">Has_Is</span></code><em class="property"> <span class="pre">=</span> <span class="pre">345</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Has_Is" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Has_Pure">
+<code class="sig-name descname"><span class="pre">Has_Pure</span></code><em class="property"> <span class="pre">=</span> <span class="pre">346</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Has_Pure" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Has_Body">
+<code class="sig-name descname"><span class="pre">Has_Body</span></code><em class="property"> <span class="pre">=</span> <span class="pre">347</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Has_Body" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Has_Parameter">
+<code class="sig-name descname"><span class="pre">Has_Parameter</span></code><em class="property"> <span class="pre">=</span> <span class="pre">348</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Has_Parameter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Has_Component">
+<code class="sig-name descname"><span class="pre">Has_Component</span></code><em class="property"> <span class="pre">=</span> <span class="pre">349</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Has_Component" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Has_Identifier_List">
+<code class="sig-name descname"><span class="pre">Has_Identifier_List</span></code><em class="property"> <span class="pre">=</span> <span class="pre">350</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Has_Identifier_List" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Has_Mode">
+<code class="sig-name descname"><span class="pre">Has_Mode</span></code><em class="property"> <span class="pre">=</span> <span class="pre">351</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Has_Mode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Has_Class">
+<code class="sig-name descname"><span class="pre">Has_Class</span></code><em class="property"> <span class="pre">=</span> <span class="pre">352</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Has_Class" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Has_Delay_Mechanism">
+<code class="sig-name descname"><span class="pre">Has_Delay_Mechanism</span></code><em class="property"> <span class="pre">=</span> <span class="pre">353</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Has_Delay_Mechanism" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Suspend_Flag">
+<code class="sig-name descname"><span class="pre">Suspend_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">354</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Suspend_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Is_Ref">
+<code class="sig-name descname"><span class="pre">Is_Ref</span></code><em class="property"> <span class="pre">=</span> <span class="pre">355</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Is_Ref" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Is_Forward_Ref">
+<code class="sig-name descname"><span class="pre">Is_Forward_Ref</span></code><em class="property"> <span class="pre">=</span> <span class="pre">356</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Is_Forward_Ref" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Psl_Property">
+<code class="sig-name descname"><span class="pre">Psl_Property</span></code><em class="property"> <span class="pre">=</span> <span class="pre">357</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Psl_Property" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Psl_Sequence">
+<code class="sig-name descname"><span class="pre">Psl_Sequence</span></code><em class="property"> <span class="pre">=</span> <span class="pre">358</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Psl_Sequence" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Psl_Declaration">
+<code class="sig-name descname"><span class="pre">Psl_Declaration</span></code><em class="property"> <span class="pre">=</span> <span class="pre">359</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Psl_Declaration" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Psl_Expression">
+<code class="sig-name descname"><span class="pre">Psl_Expression</span></code><em class="property"> <span class="pre">=</span> <span class="pre">360</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Psl_Expression" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Psl_Boolean">
+<code class="sig-name descname"><span class="pre">Psl_Boolean</span></code><em class="property"> <span class="pre">=</span> <span class="pre">361</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Psl_Boolean" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.PSL_Clock">
+<code class="sig-name descname"><span class="pre">PSL_Clock</span></code><em class="property"> <span class="pre">=</span> <span class="pre">362</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.PSL_Clock" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.PSL_NFA">
+<code class="sig-name descname"><span class="pre">PSL_NFA</span></code><em class="property"> <span class="pre">=</span> <span class="pre">363</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.PSL_NFA" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.PSL_Nbr_States">
+<code class="sig-name descname"><span class="pre">PSL_Nbr_States</span></code><em class="property"> <span class="pre">=</span> <span class="pre">364</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.PSL_Nbr_States" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.PSL_Clock_Sensitivity">
+<code class="sig-name descname"><span class="pre">PSL_Clock_Sensitivity</span></code><em class="property"> <span class="pre">=</span> <span class="pre">365</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.PSL_Clock_Sensitivity" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.PSL_EOS_Flag">
+<code class="sig-name descname"><span class="pre">PSL_EOS_Flag</span></code><em class="property"> <span class="pre">=</span> <span class="pre">366</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.PSL_EOS_Flag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Count_Expression">
+<code class="sig-name descname"><span class="pre">Count_Expression</span></code><em class="property"> <span class="pre">=</span> <span class="pre">367</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Count_Expression" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Clock_Expression">
+<code class="sig-name descname"><span class="pre">Clock_Expression</span></code><em class="property"> <span class="pre">=</span> <span class="pre">368</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Clock_Expression" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="pyGHDL.libghdl.vhdl.nodes_meta.fields.Default_Clock">
+<code class="sig-name descname"><span class="pre">Default_Clock</span></code><em class="property"> <span class="pre">=</span> <span class="pre">369</span></em><a class="headerlink" href="#pyGHDL.libghdl.vhdl.nodes_meta.fields.Default_Clock" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="pyGHDL.libghdl.vhdl.nodes_utils.html" class="btn btn-neutral float-right" title="pyGHDL.libghdl.vhdl.nodes_utils" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="pyGHDL.libghdl.vhdl.nodes.html" class="btn btn-neutral float-left" title="pyGHDL.libghdl.vhdl.nodes" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2002-2021, Tristan Gingold and contributors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/buildthedocs/sphinx.theme">theme</a>
+    
+    provided by <a href="https://buildthedocs.github.io">Build the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

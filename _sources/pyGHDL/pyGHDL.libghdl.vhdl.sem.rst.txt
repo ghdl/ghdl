@@ -1,0 +1,25 @@
+pyGHDL.libghdl.vhdl.sem
+===========================
+
+.. automodule:: pyGHDL.libghdl.vhdl.sem
+
+
+.. currentmodule:: pyGHDL.libghdl.vhdl.sem
+
+
+.. #-----------------------------------
+
+
+**Functions**
+
+- :py:func:`Semantic`:
+  Do the semantic analysis of design unit :obj:`DesignUnit`.
+
+
+
+.. #-----------------------------------
+
+**Functions**
+
+
+.. autofunction:: Semantic

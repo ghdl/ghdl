@@ -1,0 +1,478 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Synthesis &mdash; GHDL 2.0.0-dev documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../_static/icon.png"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Additional Command Reference" href="CommandReference.html" />
+    <link rel="prev" title="Simulation (runtime)" href="Simulation.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html">
+          
+
+          
+            
+            <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0-dev
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting.html">Getting | Installing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contribute.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../licenses.html">Copyrights | Licenses</a></li>
+</ul>
+<p class="caption"><span class="caption-text">GHDL usage</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../quick_start/index.html">Quick Start Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="InvokingGHDL.html">Invoking GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Simulation.html">Simulation (runtime)</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Synthesis</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#synthesis-synth">Synthesis [<code class="docutils literal notranslate"><span class="pre">--synth</span></code>]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#synthesis-options">Synthesis options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#yosys-plugin">Yosys plugin</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#convert-v-hdl-to-other-formats">Convert (V)HDL to other formats</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#to-verilog">To Verilog</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#to-edif">To EDIF</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#to-smt">To SMT</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#to-btor2">To BTOR2</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#to-firrtl">To FIRRTL</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#to-vhdl">To VHDL</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="CommandReference.html">Additional Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ImplementationOfVHDL.html">Implementation of VHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ImplementationOfVITAL.html">Implementation of VITAL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/Directories.html">Directory structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/building/index.html">Building GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pyGHDL/pyGHDL.html">Python Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/Debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/CodingStyle.html">Coding Style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/Scripts.html">Scripts</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../internals/Overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../internals/Frontend.html">Front-end</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../internals/AST.html">AST</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../internals/RTI.html">Run Time Information (RTI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gnatdoc/index.html">GNATdoc</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Index</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Python Module Index</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GHDL</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Synthesis</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            
+              <a href="https://github.com/ghdl/ghdl/blob/master/doc/using/Synthesis.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="synthesis">
+<span id="using-synthesis"></span><h1>Synthesis<a class="headerlink" href="#synthesis" title="Permalink to this headline">¶</a></h1>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This is experimental and work in progress! If you find crashes or unsupported features, please <a class="reference internal" href="../contribute.html#reporting-bugs"><span class="std std-ref">report them</span></a>!</p>
+</div>
+<p>Since <code class="docutils literal notranslate"><span class="pre">v0.37</span></code>, GHDL features a built-in (experimental) synthesis kernel with two backends: <code class="docutils literal notranslate"><span class="pre">synth</span></code> and <code class="docutils literal notranslate"><span class="pre">yosys-plugin</span></code>.
+Currently, synthesis is supported as a front-end of other synthesis and technology mapping tools.
+Hence, the netlists generated by GHDL are not optimised.</p>
+<div class="section" id="synthesis-synth">
+<span id="synth-command"></span><span id="index-0"></span><h2>Synthesis [<code class="docutils literal notranslate"><span class="pre">--synth</span></code>]<a class="headerlink" href="#synthesis-synth" title="Permalink to this headline">¶</a></h2>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>This command is useful for checking that a design can be synthesized, before actually running a complete synthesis
+tool. In fact, because this is expected to be much faster, it can be used as a frequent check.</p>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Since GHDL’s front-end supports multiple versions of the standard, but the synthesised netlists are generated using
+a subset of VHDL 1993, GHDL’s synthesis features can be used as a preprocessor with tools that do support older
+versions of the standard, but which don’t provide the most recent features.</p>
+</div>
+<dl class="std option">
+<dt id="cmdoption-ghdl-synth">
+<code class="sig-name descname"><span class="pre">--synth</span></code><code class="sig-prename descclassname"> <span class="pre">&lt;[options]</span> <span class="pre">primary_unit</span> <span class="pre">[secondary_unit]&gt;</span></code><a class="headerlink" href="#cmdoption-ghdl-synth" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Elaborates for synthesis the design whose top unit is indicated by <code class="docutils literal notranslate"><span class="pre">primary_unit</span> <span class="pre">[secondary_unit]</span></code>.</p>
+<div class="admonition attention">
+<p class="admonition-title">Attention</p>
+<p>All the units must have been analyzed; that is, the artifacts of previously executed <a class="reference internal" href="InvokingGHDL.html#cmdoption-ghdl-a"><code class="xref std std-option docutils literal notranslate"><span class="pre">-a</span></code></a> calls must exist.</p>
+</div>
+<dl class="std option">
+<dt id="cmdoption-ghdl-0">
+<code class="sig-name descname"><span class="pre">--synth</span></code><code class="sig-prename descclassname"> <span class="pre">&lt;[options]</span> <span class="pre">files...</span> <span class="pre">-e</span> <span class="pre">primary_unit</span> <span class="pre">[secondary_unit]&gt;</span></code><a class="headerlink" href="#cmdoption-ghdl-0" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Analyses and elaborates for synthesis the files present on the command line only.
+Elaboration starts from the top unit indicated by <code class="docutils literal notranslate"><span class="pre">primary_unit</span> <span class="pre">[secondary_unit]</span></code>.</p>
+<p>Currently, the output is a generic netlist using a (very simple) subset of VHDL 1993.
+See <a class="reference external" href="https://github.com/ghdl/ghdl/issues/1174">#1174</a> for on-going discussion about other output formats.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Files can be provided in any order.</p>
+</div>
+</div>
+<div class="section" id="synthesis-options">
+<span id="id1"></span><h2>Synthesis options<a class="headerlink" href="#synthesis-options" title="Permalink to this headline">¶</a></h2>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>Multiple pragmas are supported for preventing blocks of code from being synthesized:</p>
+<p><code class="docutils literal notranslate"><span class="pre">--</span> <span class="pre">pragma|synopsys|synthesis</span> <span class="pre">(synthesis|translate)(</span> <span class="pre">|_)(on|off)</span></code></p>
+<p>For example:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--</span> <span class="pre">pragma</span> <span class="pre">translate</span> <span class="pre">off</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--</span> <span class="pre">synthesis</span> <span class="pre">translate_on</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--</span> <span class="pre">synopsys</span> <span class="pre">synthesis_off</span></code></p></li>
+</ul>
+</div>
+<p>Due to GHDL’s modular architecture (see <a class="reference internal" href="../internals/Overview.html#int-overview"><span class="std std-ref">Overview</span></a>), the synthesis kernel shares the VHDL parsing front-end with the
+simulation back-ends. Hence, available options for synthesis are the same as for analysis and/or simulation elaboration
+(see <a class="reference internal" href="InvokingGHDL.html#ghdl-options"><span class="std std-ref">Options</span></a>). In addition to those options, there are some synthesis specific options.</p>
+<dl class="std option">
+<dt id="cmdoption-ghdl-gNAME">
+<span id="cmdoption-ghdl-gname"></span><code class="sig-name descname"><span class="pre">-gNAME</span></code><code class="sig-prename descclassname"><span class="pre">=VALUE</span></code><a class="headerlink" href="#cmdoption-ghdl-gNAME" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override top unit generic <cite>NAME</cite> with value <cite>VALUE</cite>. Similar to the run-time option <a class="reference internal" href="Simulation.html#cmdoption-ghdl-gGENERIC"><code class="xref std std-option docutils literal notranslate"><span class="pre">-gGENERIC</span></code></a>.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ghdl --synth --std=08 -gDEPTH=12 my_unit
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-ghdl-vendor-library">
+<code class="sig-name descname"><span class="pre">--vendor-library</span></code><code class="sig-prename descclassname"><span class="pre">=NAME</span></code><a class="headerlink" href="#cmdoption-ghdl-vendor-library" title="Permalink to this definition">¶</a></dt>
+<dd><p>Any unit from library NAME is a black box.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ghdl --synth --std=08 --vendor-library=vendorlib my_unit
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-ghdl-no-formal">
+<code class="sig-name descname"><span class="pre">--no-formal</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-ghdl-no-formal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Neither synthesize assert nor PSL.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ghdl --synth --std=08 --no-formal my_unit
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-ghdl-no-assert-cover">
+<code class="sig-name descname"><span class="pre">--no-assert-cover</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-ghdl-no-assert-cover" title="Permalink to this definition">¶</a></dt>
+<dd><p>Disable automatic cover PSL assertion activation. If this option isn’t used, GHDL generates
+<cite>cover</cite> directives for each <cite>assert</cite> directive (with an implication operator) automatically during synthesis.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ghdl --synth --std=08 --no-assert-cover my_unit
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-ghdl-assert-assumes">
+<code class="sig-name descname"><span class="pre">--assert-assumes</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-ghdl-assert-assumes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Treat all PSL asserts like PSL assumes. If this option is used, GHDL generates an <cite>assume</cite> directive
+for each <cite>assert</cite> directive during synthesis. This is similar to the <cite>-assert-assumes</cite>
+option of Yosys’ <a class="reference external" href="http://www.clifford.at/yosys/cmd_read_verilog.html">read_verilog</a> command.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ghdl --synth --std=08 --assert-assumes my_unit
+</pre></div>
+</div>
+<p>As all PSL asserts are treated like PSL assumes, no <cite>cover</cite> directives are automatically generated for them,
+regardless of using the <a class="reference internal" href="#cmdoption-ghdl-no-assert-cover"><code class="xref std std-option docutils literal notranslate"><span class="pre">--no-assert-cover</span></code></a> or not.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-ghdl-assume-asserts">
+<code class="sig-name descname"><span class="pre">--assume-asserts</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-ghdl-assume-asserts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Treat all PSL assumes like PSL asserts. If this option is used, GHDL generates an <cite>assert</cite> directive
+for each <cite>assume</cite> directive during synthesis. This is similar to the <cite>-assume-asserts</cite>
+option of Yosys’ <a class="reference external" href="http://www.clifford.at/yosys/cmd_read_verilog.html">read_verilog</a> command.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ghdl --synth --std=08 --assume-asserts my_unit
+</pre></div>
+</div>
+<p><cite>cover</cite> directives are automatically generated for the resulting asserts (with an implication operator)
+if <a class="reference internal" href="#cmdoption-ghdl-no-assert-cover"><code class="xref std std-option docutils literal notranslate"><span class="pre">--no-assert-cover</span></code></a> isn’t used.</p>
+</dd></dl>
+
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Furthermore there are lot of debug options available. Beware: these debug options should only used
+for debugging purposes as they aren’t guaranteed to be stable during development of GHDL’s synthesis feature.
+You can find them in the file <a class="reference external" href="https://github.com/ghdl/ghdl/blob/master/src/ghdldrv/ghdlsynth.adb">ghdlsynth.adb</a> in the procedure <code class="docutils literal notranslate"><span class="pre">Decode_Option()</span></code>.</p>
+</div>
+</div>
+<div class="section" id="yosys-plugin">
+<span id="synth-plugin"></span><h2>Yosys plugin<a class="headerlink" href="#yosys-plugin" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://github.com/ghdl/ghdl-yosys-plugin">ghdl-yosys-plugin</a> is a module to use GHDL as a VHDL front-end for <a class="reference external" href="http://www.clifford.at/yosys/">Yosys
+Open Synthesis Suite</a>, a framework for optimised synthesis and technology mapping.
+Artifacts generated by Yosys can be used in multiple open source and vendor tools to achieve P&amp;R, formal verification,
+etc. A relevant feature of combining GHDL and Yosys is that mixed-language (VHDL-Verilog) synthesis with open source
+tools is possible.</p>
+<p>The command line syntax for this plugin is the same as for <a class="reference internal" href="#cmdoption-ghdl-0"><code class="xref std std-option docutils literal notranslate"><span class="pre">--synth</span></code></a>, except that the command name (<code class="docutils literal notranslate"><span class="pre">--synth</span></code>)
+is neither required nor supported. Instead, <code class="docutils literal notranslate"><span class="pre">yosys</span></code>, <code class="docutils literal notranslate"><span class="pre">yosys</span> <span class="pre">-m</span> <span class="pre">ghdl</span></code> or <code class="docutils literal notranslate"><span class="pre">yosys</span> <span class="pre">-m</span> <span class="pre">path/to/ghdl.so</span></code> need to be used,
+depending of how is the plugin built. See <a class="reference external" href="https://github.com/ghdl/ghdl-yosys-plugin">README</a> for building and installation
+guidelines.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>ghdl-yosys-plugin is a thin layer that converts the internal representation of <a class="reference internal" href="#cmdoption-ghdl-0"><code class="xref std std-option docutils literal notranslate"><span class="pre">--synth</span></code></a> to Yosys’ C API. Hence,
+it is suggested to check the designs with <a class="reference internal" href="#cmdoption-ghdl-0"><code class="xref std std-option docutils literal notranslate"><span class="pre">--synth</span></code></a> before running synthesis with Yosys.</p>
+</div>
+<div class="section" id="convert-v-hdl-to-other-formats">
+<h3>Convert (V)HDL to other formats<a class="headerlink" href="#convert-v-hdl-to-other-formats" title="Permalink to this headline">¶</a></h3>
+<p>Yosys provides <code class="docutils literal notranslate"><span class="pre">write_*</span></code> commands for generating output netlists in different formats. Therefore, VHDL and/or Verilog
+sources can be converted to EDIF, SMT, BTOR2, etc.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>For a comprehensive list of supported output formats (AIGER, BLIF, ILANG, JSON…), check out the
+<a class="reference external" href="http://www.clifford.at/yosys/documentation.html">Yosys documentation</a>.</p>
+</div>
+<div class="section" id="to-verilog">
+<h4>To Verilog<a class="headerlink" href="#to-verilog" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>yosys -m ghdl -p <span class="s1">&#39;ghdl filename.vhdl -e unit_name; write_verilog filename.v&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="to-edif">
+<h4>To EDIF<a class="headerlink" href="#to-edif" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>yosys -m ghdl -p <span class="s1">&#39;ghdl filename.vhdl -e unit_name; write_edif filename.edif&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="to-smt">
+<h4>To SMT<a class="headerlink" href="#to-smt" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>yosys -m ghdl -p <span class="s1">&#39;ghdl filename.vhdl -e unit_name; write_smt2 filename.smt2&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="to-btor2">
+<h4>To BTOR2<a class="headerlink" href="#to-btor2" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>yosys -m ghdl -p <span class="s1">&#39;ghdl filename.vhdl -e unit_name; write_btor filename.btor&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="to-firrtl">
+<h4>To FIRRTL<a class="headerlink" href="#to-firrtl" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>yosys -m ghdl -p <span class="s1">&#39;ghdl filename.vhdl -e unit_name; write_firrtl filename.firrtl&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="to-vhdl">
+<h4>To VHDL<a class="headerlink" href="#to-vhdl" title="Permalink to this headline">¶</a></h4>
+<p>There is work in progress in <a class="reference external" href="https://github.com/ghdl/ghdl-yosys-plugin/pull/122">ghdl/ghdl-yosys-plugin#122</a> for adding
+a <code class="docutils literal notranslate"><span class="pre">write_vhdl</span></code> command to Yosys. That is the complement of what ghdl-yosys-plugin provides.</p>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="CommandReference.html" class="btn btn-neutral float-right" title="Additional Command Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="Simulation.html" class="btn btn-neutral float-left" title="Simulation (runtime)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2002-2021, Tristan Gingold and contributors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/buildthedocs/sphinx.theme">theme</a>
+    
+    provided by <a href="https://buildthedocs.github.io">Build the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

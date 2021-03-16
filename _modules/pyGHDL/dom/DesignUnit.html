@@ -1,0 +1,390 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pyGHDL.dom.DesignUnit &mdash; GHDL 2.0.0-dev documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../../../_static/icon.png"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html">
+          
+
+          
+            
+            <img src="../../../_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0-dev
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting.html">Getting | Installing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contribute.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../licenses.html">Copyrights | Licenses</a></li>
+</ul>
+<p class="caption"><span class="caption-text">GHDL usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../quick_start/index.html">Quick Start Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../using/InvokingGHDL.html">Invoking GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../using/Simulation.html">Simulation (runtime)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../using/Synthesis.html">Synthesis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../using/CommandReference.html">Additional Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../using/ImplementationOfVHDL.html">Implementation of VHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../using/ImplementationOfVITAL.html">Implementation of VITAL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../development/Directories.html">Directory structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development/building/index.html">Building GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../pyGHDL/pyGHDL.html">Python Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development/Debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development/CodingStyle.html">Coding Style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development/Scripts.html">Scripts</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../internals/Overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../internals/Frontend.html">Front-end</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../internals/AST.html">AST</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../internals/RTI.html">Run Time Information (RTI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../gnatdoc/index.html">GNATdoc</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Index</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../py-modindex.html">Python Module Index</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GHDL</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>pyGHDL.dom.DesignUnit</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyGHDL.dom.DesignUnit</h1><div class="highlight"><pre>
+<span></span><span class="c1"># =============================================================================</span>
+<span class="c1">#                ____ _   _ ____  _          _</span>
+<span class="c1">#   _ __  _   _ / ___| | | |  _ \| |      __| | ___  _ __ ___</span>
+<span class="c1">#  | &#39;_ \| | | | |  _| |_| | | | | |     / _` |/ _ \| &#39;_ ` _ \</span>
+<span class="c1">#  | |_) | |_| | |_| |  _  | |_| | |___ | (_| | (_) | | | | | |</span>
+<span class="c1">#  | .__/ \__, |\____|_| |_|____/|_____(_)__,_|\___/|_| |_| |_|</span>
+<span class="c1">#  |_|    |___/</span>
+<span class="c1"># =============================================================================</span>
+<span class="c1">#  Authors:</span>
+<span class="c1">#    Patrick Lehmann</span>
+<span class="c1">#</span>
+<span class="c1"># Package module:   DOM: VHDL design units (e.g. entity or package).</span>
+<span class="c1">#</span>
+<span class="c1"># License:</span>
+<span class="c1"># ============================================================================</span>
+<span class="c1">#  Copyright (C) 2019-2020 Tristan Gingold</span>
+<span class="c1">#</span>
+<span class="c1">#  This program is free software: you can redistribute it and/or modify</span>
+<span class="c1">#  it under the terms of the GNU General Public License as published by</span>
+<span class="c1">#  the Free Software Foundation, either version 2 of the License, or</span>
+<span class="c1">#  (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1">#  This program is distributed in the hope that it will be useful,</span>
+<span class="c1">#  but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1">#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1">#  GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1">#  You should have received a copy of the GNU General Public License</span>
+<span class="c1">#  along with this program.  If not, see &lt;gnu.org/licenses&gt;.</span>
+<span class="c1">#</span>
+<span class="c1"># SPDX-License-Identifier: GPL-2.0-or-later</span>
+<span class="c1"># ============================================================================</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module contains all DOM classes for VHDL&#39;s design units (:class:`entity &lt;Entity&gt;`,</span>
+<span class="sd">:class:`architecture &lt;Architecture&gt;`, :class:`package &lt;Package&gt;`,</span>
+<span class="sd">:class:`package body &lt;PackageBody&gt;`, :class:`context &lt;Context&gt;` and</span>
+<span class="sd">:class:`configuration &lt;Configuration&gt;`.</span>
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">pydecor</span> <span class="kn">import</span> <span class="n">export</span>
+
+<span class="kn">from</span> <span class="nn">pyVHDLModel.VHDLModel</span> <span class="kn">import</span> <span class="n">Entity</span> <span class="k">as</span> <span class="n">VHDLModel_Entity</span>
+<span class="kn">from</span> <span class="nn">pyVHDLModel.VHDLModel</span> <span class="kn">import</span> <span class="n">Architecture</span> <span class="k">as</span> <span class="n">VHDLModel_Architecture</span>
+<span class="kn">from</span> <span class="nn">pyVHDLModel.VHDLModel</span> <span class="kn">import</span> <span class="n">Package</span> <span class="k">as</span> <span class="n">VHDLModel_Package</span>
+<span class="kn">from</span> <span class="nn">pyVHDLModel.VHDLModel</span> <span class="kn">import</span> <span class="n">PackageBody</span> <span class="k">as</span> <span class="n">VHDLModel_PackageBody</span>
+<span class="kn">from</span> <span class="nn">pyVHDLModel.VHDLModel</span> <span class="kn">import</span> <span class="n">Context</span> <span class="k">as</span> <span class="n">VHDLModel_Context</span>
+<span class="kn">from</span> <span class="nn">pyVHDLModel.VHDLModel</span> <span class="kn">import</span> <span class="n">Configuration</span> <span class="k">as</span> <span class="n">VHDLModel_Configuration</span>
+
+<span class="kn">from</span> <span class="nn">pyGHDL.libghdl.vhdl</span> <span class="kn">import</span> <span class="n">nodes</span>
+<span class="kn">import</span> <span class="nn">pyGHDL.libghdl.utils</span> <span class="k">as</span> <span class="nn">pyutils</span>
+
+<span class="kn">from</span> <span class="nn">pyGHDL.dom.Common</span> <span class="kn">import</span> <span class="n">GHDLMixin</span>
+<span class="kn">from</span> <span class="nn">pyGHDL.dom.InterfaceItem</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">GenericConstantInterfaceItem</span><span class="p">,</span>
+    <span class="n">PortSignalInterfaceItem</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[]</span>
+
+
+<div class="viewcode-block" id="Entity"><a class="viewcode-back" href="../../../pyGHDL/pyGHDL.dom.DesignUnit.html#pyGHDL.dom.DesignUnit.Entity">[docs]</a><span class="nd">@export</span>
+<span class="k">class</span> <span class="nc">Entity</span><span class="p">(</span><span class="n">VHDLModel_Entity</span><span class="p">,</span> <span class="n">GHDLMixin</span><span class="p">):</span>
+<div class="viewcode-block" id="Entity.parse"><a class="viewcode-back" href="../../../pyGHDL/pyGHDL.dom.DesignUnit.html#pyGHDL.dom.DesignUnit.Entity.parse">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">libraryUnit</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_ghdlNodeToName</span><span class="p">(</span><span class="n">libraryUnit</span><span class="p">)</span>
+        <span class="n">entity</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="bp">cls</span><span class="o">.</span><span class="n">__parseGenerics</span><span class="p">(</span><span class="n">libraryUnit</span><span class="p">,</span> <span class="n">entity</span><span class="p">)</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">__parsePorts</span><span class="p">(</span><span class="n">libraryUnit</span><span class="p">,</span> <span class="n">entity</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">entity</span></div>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">__ghdlGetGenerics</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">entity</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">pyutils</span><span class="o">.</span><span class="n">chain_iter</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">Get_Generic_Chain</span><span class="p">(</span><span class="n">entity</span><span class="p">))</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">__ghdlGetPorts</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">entity</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">pyutils</span><span class="o">.</span><span class="n">chain_iter</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">Get_Port_Chain</span><span class="p">(</span><span class="n">entity</span><span class="p">))</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">__parseGenerics</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">libraryUnit</span><span class="p">,</span> <span class="n">entity</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">generic</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__ghdlGetGenerics</span><span class="p">(</span><span class="n">libraryUnit</span><span class="p">):</span>
+            <span class="n">genericConstant</span> <span class="o">=</span> <span class="n">GenericConstantInterfaceItem</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">generic</span><span class="p">)</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">GenericItems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">genericConstant</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">__parsePorts</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">libraryUnit</span><span class="p">,</span> <span class="n">entity</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">port</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__ghdlGetPorts</span><span class="p">(</span><span class="n">libraryUnit</span><span class="p">):</span>
+            <span class="n">signalPort</span> <span class="o">=</span> <span class="n">PortSignalInterfaceItem</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">port</span><span class="p">)</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">PortItems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">signalPort</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Architecture"><a class="viewcode-back" href="../../../pyGHDL/pyGHDL.dom.DesignUnit.html#pyGHDL.dom.DesignUnit.Architecture">[docs]</a><span class="nd">@export</span>
+<span class="k">class</span> <span class="nc">Architecture</span><span class="p">(</span><span class="n">VHDLModel_Architecture</span><span class="p">,</span> <span class="n">GHDLMixin</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">entityName</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__entityName</span> <span class="o">=</span> <span class="n">entityName</span>
+
+<div class="viewcode-block" id="Architecture.parse"><a class="viewcode-back" href="../../../pyGHDL/pyGHDL.dom.DesignUnit.html#pyGHDL.dom.DesignUnit.Architecture.parse">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">libraryUnit</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_ghdlNodeToName</span><span class="p">(</span><span class="n">libraryUnit</span><span class="p">)</span>
+        <span class="n">entityName</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_ghdlNodeToName</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">Get_Entity_Name</span><span class="p">(</span><span class="n">libraryUnit</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">entityName</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Architecture.resolve"><a class="viewcode-back" href="../../../pyGHDL/pyGHDL.dom.DesignUnit.html#pyGHDL.dom.DesignUnit.Architecture.resolve">[docs]</a>    <span class="k">def</span> <span class="nf">resolve</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div></div>
+
+
+<div class="viewcode-block" id="Package"><a class="viewcode-back" href="../../../pyGHDL/pyGHDL.dom.DesignUnit.html#pyGHDL.dom.DesignUnit.Package">[docs]</a><span class="nd">@export</span>
+<span class="k">class</span> <span class="nc">Package</span><span class="p">(</span><span class="n">VHDLModel_Package</span><span class="p">,</span> <span class="n">GHDLMixin</span><span class="p">):</span>
+<div class="viewcode-block" id="Package.parse"><a class="viewcode-back" href="../../../pyGHDL/pyGHDL.dom.DesignUnit.html#pyGHDL.dom.DesignUnit.Package.parse">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">libraryUnit</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_ghdlNodeToName</span><span class="p">(</span><span class="n">libraryUnit</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">name</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="PackageBody"><a class="viewcode-back" href="../../../pyGHDL/pyGHDL.dom.DesignUnit.html#pyGHDL.dom.DesignUnit.PackageBody">[docs]</a><span class="nd">@export</span>
+<span class="k">class</span> <span class="nc">PackageBody</span><span class="p">(</span><span class="n">VHDLModel_PackageBody</span><span class="p">,</span> <span class="n">GHDLMixin</span><span class="p">):</span>
+<div class="viewcode-block" id="PackageBody.parse"><a class="viewcode-back" href="../../../pyGHDL/pyGHDL.dom.DesignUnit.html#pyGHDL.dom.DesignUnit.PackageBody.parse">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">libraryUnit</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_ghdlNodeToName</span><span class="p">(</span><span class="n">libraryUnit</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">name</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="Context"><a class="viewcode-back" href="../../../pyGHDL/pyGHDL.dom.DesignUnit.html#pyGHDL.dom.DesignUnit.Context">[docs]</a><span class="nd">@export</span>
+<span class="k">class</span> <span class="nc">Context</span><span class="p">(</span><span class="n">VHDLModel_Context</span><span class="p">,</span> <span class="n">GHDLMixin</span><span class="p">):</span>
+<div class="viewcode-block" id="Context.parse"><a class="viewcode-back" href="../../../pyGHDL/pyGHDL.dom.DesignUnit.html#pyGHDL.dom.DesignUnit.Context.parse">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">libraryUnit</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_ghdlNodeToName</span><span class="p">(</span><span class="n">libraryUnit</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">name</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="Configuration"><a class="viewcode-back" href="../../../pyGHDL/pyGHDL.dom.DesignUnit.html#pyGHDL.dom.DesignUnit.Configuration">[docs]</a><span class="nd">@export</span>
+<span class="k">class</span> <span class="nc">Configuration</span><span class="p">(</span><span class="n">VHDLModel_Configuration</span><span class="p">,</span> <span class="n">GHDLMixin</span><span class="p">):</span>
+<div class="viewcode-block" id="Configuration.parse"><a class="viewcode-back" href="../../../pyGHDL/pyGHDL.dom.DesignUnit.html#pyGHDL.dom.DesignUnit.Configuration.parse">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">libraryUnit</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_ghdlNodeToName</span><span class="p">(</span><span class="n">libraryUnit</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">name</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2002-2021, Tristan Gingold and contributors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/buildthedocs/sphinx.theme">theme</a>
+    
+    provided by <a href="https://buildthedocs.github.io">Build the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

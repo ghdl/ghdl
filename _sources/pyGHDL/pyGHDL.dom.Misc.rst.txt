@@ -1,0 +1,60 @@
+pyGHDL.dom.Misc
+===================
+
+.. automodule:: pyGHDL.dom.Misc
+
+
+.. currentmodule:: pyGHDL.dom.Misc
+
+
+.. #-----------------------------------
+
+
+**Classes**
+
+- :py:class:`Design`:
+  A ``Design`` represents all loaded files (see :class:`~pyVHDLModel.VHDLModel.Document`)
+
+- :py:class:`Library`:
+  A ``Library`` represents a VHDL library. It contains all *primary* design
+
+- :py:class:`Document`:
+  A ``Document`` represents a sourcefile. It contains primary and secondary
+
+
+
+.. #-----------------------------------
+
+
+.. autoclass:: Design
+   :members:
+   :private-members:
+   :undoc-members:
+   :inherited-members:
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Design
+
+   .. rubric:: Members
+
+.. autoclass:: Library
+   :members:
+   :private-members:
+   :undoc-members:
+   :inherited-members:
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Library
+
+   .. rubric:: Members
+
+.. autoclass:: Document
+   :members:
+   :private-members:
+   :undoc-members:
+   :inherited-members:
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Document
+
+   .. rubric:: Members

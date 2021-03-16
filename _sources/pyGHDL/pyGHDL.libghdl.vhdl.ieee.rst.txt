@@ -1,0 +1,38 @@
+pyGHDL.libghdl.vhdl.ieee
+============================
+
+.. automodule:: pyGHDL.libghdl.vhdl.ieee
+
+
+.. currentmodule:: pyGHDL.libghdl.vhdl.ieee
+
+
+.. #-----------------------------------
+
+**Variables**
+
+- :py:data:`Std_Logic_1164_Pkg`
+- :py:data:`Std_Logic_Type`
+- :py:data:`Std_Logic_Vector_Type`
+
+
+.. autodata:: Std_Logic_1164_Pkg
+   :annotation:
+
+   .. code-block:: guess
+
+      c_int(0)
+
+.. autodata:: Std_Logic_Type
+   :annotation:
+
+   .. code-block:: guess
+
+      c_int(0)
+
+.. autodata:: Std_Logic_Vector_Type
+   :annotation:
+
+   .. code-block:: guess
+
+      c_int(0)

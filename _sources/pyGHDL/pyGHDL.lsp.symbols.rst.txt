@@ -1,0 +1,10 @@
+pyGHDL.lsp.symbols
+======================
+
+.. automodule:: pyGHDL.lsp.symbols
+
+
+.. currentmodule:: pyGHDL.lsp.symbols
+
+
+.. #-----------------------------------

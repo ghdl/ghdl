@@ -1,0 +1,300 @@
+html, body {
+    height: 100%;
+    width: 100%;
+
+    margin: 0px;
+    padding: 0px;
+    border: 0px;
+
+    outline: 0px;
+
+    font-family: "open-sans", Arial, sans-serif;
+    font-size: 13px;
+}
+
+iframe {
+    border: 0;
+    overflow: auto;
+    display: block;
+}
+
+table {
+    border-spacing: 0;
+    border-collapse: collapse;
+}
+
+td {
+    margin: 0;
+    padding: 0;
+}
+
+.comment {
+    color: #999988;
+    font-style: italic;
+}
+
+.keyword {
+    font-weight: bold;
+}
+
+#toc {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+
+    width: 30%;
+
+    overflow: auto;
+    background-color: #111;
+}
+
+#toc p.projectName {
+    margin-top: 20px;
+    margin-left: 20px;
+    margin-bottom: 0;
+    color: #bbb;
+    font-size: 150%;
+}
+
+#toc p.documentationTimestamp {
+    margin-left: 20px;
+    margin-bottom: 20px;
+    color: #bbb;
+    font-size: 80%;
+}
+
+#toc table {
+    width: 100%;
+}
+
+#tocMenu {
+    position: fixed;
+    width: 90px;
+    vertical-align: top;
+}
+
+#tocMenu ul {
+    padding-left: 5px;
+}
+
+#tocMenu li {
+    list-style: none;
+    padding: 10px;
+    text-align: center;
+}
+
+#tocMenu li.current {
+    background-color: #222;
+}
+
+#tocMenu a {
+    color: white;
+    text-decoration: none;
+    outline: 0;
+}
+
+#tocViewLayout {
+/*  margin-left can't be used here due to bug in IE8, so we use padding-left instead */
+    padding-left: 90px;
+}
+
+#tocView {
+    width: 100%;
+    color: #bbb;
+    font-weight: 300;
+    display: inline-block;
+    background-color: #222;
+}
+
+#tocView ul {
+    padding-left: 10px;
+    margin: 0;
+}
+
+#tocView li {
+    list-style: none;
+    border-top: 1px #2d2d2d solid;
+}
+
+#tocView li:last-child {
+    border-bottom: 1px #2d2d2d solid;
+}
+
+#tocView li a {
+    display: block;
+    color: #bbb;
+    text-decoration: none;
+    background: transparent;
+    line-height: 22px;
+    padding-left: 10px;
+}
+
+#tocView li a:active, #tocView li a:focus {
+    color: #e3bc28;
+}
+
+#tocView li a:hover {
+    background-color: #111;
+}
+
+#tocView h1,
+#tocView h1 a {
+    font-size: 16px;
+    font-weight: 300;
+    color: white;
+}
+
+#tocView h1 {
+    margin-left: 10px;
+}
+
+#tocView h1 a {
+    text-decoration: none;
+}
+
+#tocView h1 a:hover {
+    color: #e3bc28;
+}
+
+#content {
+    border: 0px;
+
+    position: absolute;
+    top: 0;
+    right: 0;
+
+    width: 70%;
+    height: 100%;
+}
+
+#contentView {
+    width: 100%;
+    height: 100%;
+}
+
+table.code {
+    border-width: 1px;
+    border-color: #D7D7D7;
+    border-style: solid;
+}
+
+table.code tbody th {
+    font-size: 12px;
+    text-align: right;
+    font-weight: normal;
+}
+
+table.code tr {
+    padding: 3px;
+}
+
+table.code th {
+    background-color: #eee;
+    border-right: 1px solid #d7d7d7;
+}
+
+table.code td,
+table.code th {
+    padding: 2px 4px;
+}
+
+table.code td {
+    font-size: 12px;
+    font-family: Inconsolata, monospace;
+    white-space: pre;
+}
+
+table.entities tr, table.entities td, table.entities th {
+    text-align: left;
+}
+
+
+table#frameSet {
+    width: 100%;
+    height: 100%;
+
+    position: relative;
+}
+
+h1, h2, h3 {
+    margin: 0;
+}
+
+h1 {
+    font-size: 26px;
+    padding: 15px 0;
+}
+
+h2 {
+    font-size: 16px;
+    padding: 10px 0;
+}
+
+#body {
+    width: auto;
+    height: auto;
+
+    margin: 10px 10px 0 20px;
+    padding-bottom: 10px;
+}
+
+#body h2, #body h3 {
+    font-weight: 300;
+}
+
+#body h2 {
+    text-transform: uppercase;
+    padding: 20px 0 15px 0;
+}
+
+#body h3 {
+    padding: 15px 0 10px 0;
+    margin-left: 10px;
+    color: #333;
+}
+
+#body h2:first-child {
+    padding-top: 10px;
+}
+
+#body h2 + h3 {
+    padding-top: 0;
+}
+
+#body a {
+    color: #15c;
+    text-decoration: none;
+    font-weight: 300;
+}
+
+#body a:hover {
+    color: #0b2e40;
+}
+
+#body table.code, #body table.entities, #body dl, #body p {
+    margin-left: 20px;
+}
+
+#body dl {
+    color: #008800;
+    font-family: Inconsolata, monospace;
+    margin-bottom: 0;
+}
+
+#body p {
+    color: #4d4d4d;
+}
+
+#body sup.srcHref {
+    font-size: 8px;
+}
+
+#body th.target {
+    background-color: #FFFFBB;
+}
+
+p.preformatted {
+    white-space: pre;
+    font-family: monospace;
+}

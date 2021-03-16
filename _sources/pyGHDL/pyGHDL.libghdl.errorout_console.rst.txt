@@ -1,0 +1,25 @@
+pyGHDL.libghdl.errorout_console
+===================================
+
+.. automodule:: pyGHDL.libghdl.errorout_console
+
+
+.. currentmodule:: pyGHDL.libghdl.errorout_console
+
+
+.. #-----------------------------------
+
+
+**Functions**
+
+- :py:func:`Install_Handler`:
+  Install the handlers for reporting errors.
+
+
+
+.. #-----------------------------------
+
+**Functions**
+
+
+.. autofunction:: Install_Handler

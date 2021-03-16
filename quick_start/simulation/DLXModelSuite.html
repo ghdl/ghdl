@@ -1,0 +1,347 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Working with non-trivial designs &mdash; GHDL 2.0.0-dev documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../../_static/icon.png"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Python Interfaces" href="../python/index.html" />
+    <link rel="prev" title="Full adder module and testbench" href="adder/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html">
+          
+
+          
+            
+            <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0-dev
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting.html">Getting | Installing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contribute.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../licenses.html">Copyrights | Licenses</a></li>
+</ul>
+<p class="caption"><span class="caption-text">GHDL usage</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Quick Start Guide</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Simulation</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="hello/index.html"><cite>Hello world</cite> program</a></li>
+<li class="toctree-l3"><a class="reference internal" href="heartbeat/index.html"><cite>Heartbeat</cite> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="adder/index.html"><cite>Full adder</cite> module and testbench</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Working with non-trivial designs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference external" href="https://ghdl.github.io/ghdl-cosim">Co-Simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../python/index.html">Python Interfaces</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../using/InvokingGHDL.html">Invoking GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../using/Simulation.html">Simulation (runtime)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../using/Synthesis.html">Synthesis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../using/CommandReference.html">Additional Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../using/ImplementationOfVHDL.html">Implementation of VHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../using/ImplementationOfVITAL.html">Implementation of VITAL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../development/Directories.html">Directory structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/building/index.html">Building GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pyGHDL/pyGHDL.html">Python Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/Debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/CodingStyle.html">Coding Style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/Scripts.html">Scripts</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../internals/Overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../internals/Frontend.html">Front-end</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../internals/AST.html">AST</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../internals/RTI.html">Run Time Information (RTI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../gnatdoc/index.html">GNATdoc</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Index</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../py-modindex.html">Python Module Index</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GHDL</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Quick Start Guide</a> &raquo;</li>
+        
+          <li><a href="index.html">Simulation</a> &raquo;</li>
+        
+      <li>Working with non-trivial designs</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            
+              <a href="https://github.com/ghdl/ghdl/blob/master/doc/quick_start/simulation/DLXModelSuite.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="working-with-non-trivial-designs">
+<span id="quickstart-dlx"></span><h1>Working with non-trivial designs<a class="headerlink" href="#working-with-non-trivial-designs" title="Permalink to this headline">¶</a></h1>
+<p>Designs are usually more complex than the previous examples. Unless you are only studying VHDL, you will work with
+larger designs. Let’s see how to analyse a design such as the DLX model suite written by Peter Ashenden, which is
+distributed under the terms of the GNU General Public License. A copy is kept at <a class="reference external" href="http://ghdl.free.fr/dlx.tar.gz">ghdl.free.fr/dlx.tar.gz</a> .</p>
+<ul class="simple">
+<li><p>First, untar the sources: <code class="docutils literal notranslate"><span class="pre">tar</span> <span class="pre">zxvf</span> <span class="pre">dlx.tar.gz</span></code>.</p></li>
+</ul>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<blockquote>
+<div><p>In order not to pollute the sources with the artifacts (<cite>WORK</cite> library), it is a good idea to create a
+<code class="file docutils literal notranslate"><span class="pre">work/</span></code> subdirectory. To any GHDL commands, we will add the <a class="reference internal" href="../../using/InvokingGHDL.html#cmdoption-ghdl-workdir"><code class="xref std std-option docutils literal notranslate"><span class="pre">--workdir=work</span></code></a> option, so
+that all files generated by the compiler (except the executable) will be placed in this directory.</p>
+</div></blockquote>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ <span class="nb">cd</span> dlx
+$ mkdir work
+</pre></div>
+</div>
+</div>
+<ul class="simple">
+<li><p>Then, we will run the <code class="docutils literal notranslate"><span class="pre">dlx_test_behaviour</span></code> design. We need to analyse all the design units for the design
+hierarchy, in the correct order. GHDL provides an easy way to do this, by <a class="reference internal" href="../../using/InvokingGHDL.html#import-command"><span class="std std-ref">importing</span></a> the
+sources: <code class="docutils literal notranslate"><span class="pre">ghdl</span> <span class="pre">-i</span> <span class="pre">--workdir=work</span> <span class="pre">*.vhdl</span></code>.</p></li>
+<li><p>GHDL knows all the design units of the DLX, but none of them has been analysed. Run the <a class="reference internal" href="../../using/InvokingGHDL.html#make-command"><span class="std std-ref">make</span></a>
+command, <code class="docutils literal notranslate"><span class="pre">ghdl</span> <span class="pre">-m</span> <span class="pre">--workdir=work</span> <span class="pre">dlx_test_behaviour</span></code>, which analyses and elaborates a design. This creates many
+files in the <code class="file docutils literal notranslate"><span class="pre">work/</span></code> directory, and (GCC/LLVM only) the <code class="file docutils literal notranslate"><span class="pre">dlx_test_behaviour</span></code> executable in the current
+directory.</p></li>
+</ul>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>The simulation needs to have a DLX program contained in the file <code class="file docutils literal notranslate"><span class="pre">dlx.out</span></code>. This memory image will be loaded
+in the DLX memory. Just take one sample: <code class="docutils literal notranslate"><span class="pre">cp</span> <span class="pre">test_loop.out</span> <span class="pre">dlx.out</span></code>.</p>
+</div>
+<ul>
+<li><p>Now, you can <a class="reference internal" href="../../using/InvokingGHDL.html#run-command"><span class="std std-ref">run</span></a> the test suite: <code class="docutils literal notranslate"><span class="pre">ghdl</span> <span class="pre">-r</span> <span class="pre">--workdir=work</span> <span class="pre">dlx_test_behaviour</span></code>. The test bench
+monitors the bus and displays each executed instruction. It finishes with an assertion of severity level note:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dlx-behaviour.vhdl:395:11:<span class="o">(</span>assertion note<span class="o">)</span>: TRAP instruction
+ encountered, execution halted
+</pre></div>
+</div>
+</li>
+<li><p>Last, since the clock is still running, you have to manually stop the program with the <kbd class="kbd compound docutils literal notranslate"><kbd class="kbd docutils literal notranslate">C</kbd>-<kbd class="kbd docutils literal notranslate">c</kbd></kbd> key sequence. This
+behavior prevents you from running the testbench in batch mode. However, you may force the simulator to stop when an
+assertion above or equal a certain severity level occurs. To do so, call run with this option instead:
+<code class="docutils literal notranslate"><span class="pre">ghdl</span> <span class="pre">-r</span> <span class="pre">--workdir=work</span> <span class="pre">dlx_test_behaviour</span> <span class="pre">--assert-level=note`</span></code>. With <a class="reference internal" href="../../using/Simulation.html#cmdoption-ghdl-assert-level"><code class="xref std std-option docutils literal notranslate"><span class="pre">--assert-level</span></code></a>, the program stops
+just after the previous message:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dlx-behaviour.vhdl:395:11:<span class="o">(</span>assertion note<span class="o">)</span>: TRAP instruction
+ encountered, execution halted
+error: assertion failed
+</pre></div>
+</div>
+</li>
+</ul>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>If you want to make room on your hard drive, you can either:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../../using/InvokingGHDL.html#clean-command"><span class="std std-ref">Clean</span></a> the design library with <code class="docutils literal notranslate"><span class="pre">ghdl</span> <span class="pre">--clean</span> <span class="pre">--workdir=work</span></code>. This removes the executable
+and all the object files. If you want to rebuild the design at this point, just do the make command as shown above.</p></li>
+<li><p><a class="reference internal" href="../../using/InvokingGHDL.html#remove-command"><span class="std std-ref">Remove</span></a> the design library with <code class="docutils literal notranslate"><span class="pre">ghdl</span> <span class="pre">--remove</span> <span class="pre">--workdir=work</span></code>. This removes the
+executable, all the object files and the library file. If you want to rebuild the design, you have to import the
+sources again and make the design.</p></li>
+<li><p>Remove the <code class="file docutils literal notranslate"><span class="pre">work/</span></code> directory: <code class="docutils literal notranslate"><span class="pre">rm</span> <span class="pre">-rf</span> <span class="pre">work</span></code>. Only the executable is kept. If you want to rebuild the design, create the <code class="file docutils literal notranslate"><span class="pre">work/</span></code> directory, import the sources, and make the design.</p></li>
+</ul>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Sometimes, a design does not fully follow the VHDL standards. For example it might use the badly engineered <code class="docutils literal notranslate"><span class="pre">std_logic_unsigned</span></code> package. GHDL supports this VHDL dialect through some options: <a class="reference internal" href="../../using/InvokingGHDL.html#cmdoption-ghdl-ieee"><code class="xref std std-option docutils literal notranslate"><span class="pre">--ieee=synopsys</span></code></a>, <a class="reference internal" href="../../using/InvokingGHDL.html#cmdoption-ghdl-fexplicit"><code class="xref std std-option docutils literal notranslate"><span class="pre">-fexplicit</span></code></a>, etc. See section <a class="reference internal" href="../../using/InvokingGHDL.html#ieee-library-pitfalls"><span class="std std-ref">IEEE library pitfalls</span></a>, for more details.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../python/index.html" class="btn btn-neutral float-right" title="Python Interfaces" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="adder/index.html" class="btn btn-neutral float-left" title="Full adder module and testbench" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2002-2021, Tristan Gingold and contributors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/buildthedocs/sphinx.theme">theme</a>
+    
+    provided by <a href="https://buildthedocs.github.io">Build the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

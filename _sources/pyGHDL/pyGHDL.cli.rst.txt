@@ -1,0 +1,19 @@
+pyGHDL.cli
+==============
+
+.. automodule:: pyGHDL.cli
+
+
+
+.. #-----------------------------------
+
+**Submodules**
+
+.. toctree::
+
+   pyGHDL.cli.lsp
+
+.. currentmodule:: pyGHDL.cli
+
+
+.. #-----------------------------------

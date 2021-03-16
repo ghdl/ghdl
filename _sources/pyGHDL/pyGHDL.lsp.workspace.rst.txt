@@ -1,0 +1,10 @@
+pyGHDL.lsp.workspace
+========================
+
+.. automodule:: pyGHDL.lsp.workspace
+
+
+.. currentmodule:: pyGHDL.lsp.workspace
+
+
+.. #-----------------------------------

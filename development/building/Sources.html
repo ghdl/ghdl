@@ -1,0 +1,351 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Sources &mdash; GHDL 2.0.0-dev documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../../_static/icon.png"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="mcode backend" href="mcode.html" />
+    <link rel="prev" title="Building GHDL from Sources" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html">
+          
+
+          
+            
+            <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0-dev
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting.html">Getting | Installing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contribute.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../licenses.html">Copyrights | Licenses</a></li>
+</ul>
+<p class="caption"><span class="caption-text">GHDL usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../quick_start/index.html">Quick Start Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../using/InvokingGHDL.html">Invoking GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../using/Simulation.html">Simulation (runtime)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../using/Synthesis.html">Synthesis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../using/CommandReference.html">Additional Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../using/ImplementationOfVHDL.html">Implementation of VHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../using/ImplementationOfVITAL.html">Implementation of VITAL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Development</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../Directories.html">Directory structure</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Building GHDL</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Sources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mcode.html">mcode backend</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LLVM.html">LLVM backend</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GCC.html">GCC backend</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#tl-dr">TL;DR</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../pyGHDL/pyGHDL.html">Python Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CodingStyle.html">Coding Style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Scripts.html">Scripts</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../internals/Overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../internals/Frontend.html">Front-end</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../internals/AST.html">AST</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../internals/RTI.html">Run Time Information (RTI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../gnatdoc/index.html">GNATdoc</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Index</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../py-modindex.html">Python Module Index</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GHDL</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html">Building GHDL from Sources</a> &raquo;</li>
+        
+      <li>Sources</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            
+              <a href="https://github.com/ghdl/ghdl/blob/master/doc/development/building/Sources.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="sources">
+<span id="id1"></span><h1>Sources<a class="headerlink" href="#sources" title="Permalink to this headline">¶</a></h1>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>All the following procedures will retrieve the latest development version of GHDL, i.e., the <cite>master</cite> branch at
+<a class="reference external" href="https://github.com/ghdl/ghdl">github.com/ghdl/ghdl</a>. We do our best to keep it stable, but bugs can seldom be
+published. See <cite>HINT</cite> boxes below for instructions to get older releases.</p>
+</div>
+<p class="rubric" id="release-sources-zip">Tarball/zip-file</p>
+<p>GHDL can be downloaded as a zip-file or tarball from GitHub. See the following table to choose your desired format/version:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 29%" />
+<col style="width: 71%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Branch</p></th>
+<th class="head"><p>Download Link</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>master</p></td>
+<td><p><a class="reference external" href="https://github.com/ghdl/ghdl/archive/master.zip"><img alt="Source Code from GitHub - 'master' branch." src="https://img.shields.io/badge/ZIP-archive/master-323131.svg?longCache=true&amp;style=flat-square&amp;logo=data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAACE1BMVEUAAAAAAABcXFwAAACpqakAAABXV1cAAAAAAADAwMBYWFgAAACcnJxzc3MiIiKPj4%2FExMRaWlohISHo6OgbGxs5OTnMzMw9PT3AwMBWVlZkZGSGhoanp6eLi4vMzMyAgIC3t7eUlJSysrKNjY2Wlparq6uysrKlpaW1tbV6enqzs7PR0dGrq6uEhISwsLDFxcW9vb3Kysrg4OC8vLy3t7fPz8%2FDw8Ojo6OsrKzS0tLQ0NC9vb3ExMTm5ua9vb3Q0NChoaGsrKyurq7e3t7U1NSWlpaJiYmNjY3R0dG0tLSVlZXCwsK8vLzDw8Ph4eHk5OTW1tbW1tbm5ube3t7g4ODKysq3t7fOzs7f39%2FW1tbR0dHOzs7CwsLe3t7c3Nzn5%2BfW1tbq6urIyMjb29vW1tbe3t7X19fa2trb29vt7e3q6urHx8ft7e3k5OTh4eHPz8%2FV1dXT09Pm5ubh4eHg4ODm5ub9%2Ff3%2F%2F%2F%2F%2F%2F%2F%2Fk5OTp6enY2Njo6OjZ2dnn5%2Bfp6enc3Nzu7u76%2Bvr09PTk5OTw8PDn5%2Bf5%2Bfnf39%2Fq6urg4ODo6Ojk5OT4%2BPjm5ubm5ubs7Ozu7u76%2Bvrk5OTu7u739%2Ffq6urr6%2Bvx8fH6%2Bvrt7e34%2BPj6%2Bvr%2B%2Fv7s7Oz5%2Bfn%2B%2Fv7%2F%2F%2F%2Fp6enr6%2Bvt7e3v7%2B%2Fx8fHy8vLz8%2FP09PT29vb39%2Ff5%2Bfn8%2FPz9%2Ff3%2B%2Fv7%2F%2F%2F9qYR%2FuAAAAonRSTlMAAQECAgMDBAYGBwgKCwwMDQ4SEhQUGhwdHiIjIyQkJygpMDIzMzQ1NTY3OTo8PDw%2FP0ZITk9RUlNTVldXV1hYWlpaWltdYGBiY2ZpbHB1dXZ3d3t8fX5%2Ff4aHiIqKj5WXn6KjpKmssrK0t7u8vb7BwsPEyszNzc3O0dLT09fY2tvf4OXm5ufn6ers7O3w8fLy8vL09fX29%2Ff4%2Bvv7%2FP39%2Ff5qibsTAAABrElEQVR4AX2LhfcSURCFBxHBbkWxuwW7Q7AbQ7AbuwMMRQxRVAwMxRBWBRSX%2BRN%2F97y3y9ldlv3OmfPu3PkemfBsVbaQAwsrzPxnLrVh4huc65h3I8iGno9walyj6wzu9CIrVxk86YvU%2BxVS6SKZOP4D5ccxJJnxHtvnvdRk10sUlUVEJy4NFIV33d8S89P1JJj3GOfaDqQlG4%2BcX7tdlL6DKtr7UwgwuOwRdY85h08vuD1A5MFnGEgB7OlGkg0XZj5bPFXEcW91oQHj37Iu0uh%2BYNqXlZtFvKkLN%2FZ9g%2FJ7Qiep9JutjD25AiGpC0nqehZG4%2BEQaXQe%2BX3oUbNA1P8uFPWWTyqzPo2yCGDSAyj%2FT4ncZ%2F%2FzFgEs%2FwClQmDptvk2AtjJsht275C9QJqwevIxZ2ETf3UWrjBPdxR%2B7V6zykkYfY5ek0HIWIXx%2FGIQnowucC1mFmg4JlbTlngRoRw2CiBcRizGSZCoY8mHDEIoj1BPUJOUiiLr1wR%2FFo%2BaIiPeHIO0ENIMcl6yECig%2FqlNIUCtuIMKS5Sgm2xxRao4VyMuaos7qkQtvzsAWpTtdh6JoYQAAAAASUVORK5CYII%3D" /></a></p></td>
+</tr>
+<tr class="row-odd"><td><p>master</p></td>
+<td><p><a class="reference external" href="https://github.com/ghdl/ghdl/archive/master.tar.gz"><img alt="Source Code from GitHub - 'master' branch." src="https://img.shields.io/badge/TGZ-archive/master-323131.svg?longCache=true&amp;style=flat-square&amp;logo=data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAACE1BMVEUAAAAAAABcXFwAAACpqakAAABXV1cAAAAAAADAwMBYWFgAAACcnJxzc3MiIiKPj4%2FExMRaWlohISHo6OgbGxs5OTnMzMw9PT3AwMBWVlZkZGSGhoanp6eLi4vMzMyAgIC3t7eUlJSysrKNjY2Wlparq6uysrKlpaW1tbV6enqzs7PR0dGrq6uEhISwsLDFxcW9vb3Kysrg4OC8vLy3t7fPz8%2FDw8Ojo6OsrKzS0tLQ0NC9vb3ExMTm5ua9vb3Q0NChoaGsrKyurq7e3t7U1NSWlpaJiYmNjY3R0dG0tLSVlZXCwsK8vLzDw8Ph4eHk5OTW1tbW1tbm5ube3t7g4ODKysq3t7fOzs7f39%2FW1tbR0dHOzs7CwsLe3t7c3Nzn5%2BfW1tbq6urIyMjb29vW1tbe3t7X19fa2trb29vt7e3q6urHx8ft7e3k5OTh4eHPz8%2FV1dXT09Pm5ubh4eHg4ODm5ub9%2Ff3%2F%2F%2F%2F%2F%2F%2F%2Fk5OTp6enY2Njo6OjZ2dnn5%2Bfp6enc3Nzu7u76%2Bvr09PTk5OTw8PDn5%2Bf5%2Bfnf39%2Fq6urg4ODo6Ojk5OT4%2BPjm5ubm5ubs7Ozu7u76%2Bvrk5OTu7u739%2Ffq6urr6%2Bvx8fH6%2Bvrt7e34%2BPj6%2Bvr%2B%2Fv7s7Oz5%2Bfn%2B%2Fv7%2F%2F%2F%2Fp6enr6%2Bvt7e3v7%2B%2Fx8fHy8vLz8%2FP09PT29vb39%2Ff5%2Bfn8%2FPz9%2Ff3%2B%2Fv7%2F%2F%2F9qYR%2FuAAAAonRSTlMAAQECAgMDBAYGBwgKCwwMDQ4SEhQUGhwdHiIjIyQkJygpMDIzMzQ1NTY3OTo8PDw%2FP0ZITk9RUlNTVldXV1hYWlpaWltdYGBiY2ZpbHB1dXZ3d3t8fX5%2Ff4aHiIqKj5WXn6KjpKmssrK0t7u8vb7BwsPEyszNzc3O0dLT09fY2tvf4OXm5ufn6ers7O3w8fLy8vL09fX29%2Ff4%2Bvv7%2FP39%2Ff5qibsTAAABrElEQVR4AX2LhfcSURCFBxHBbkWxuwW7Q7AbQ7AbuwMMRQxRVAwMxRBWBRSX%2BRN%2F97y3y9ldlv3OmfPu3PkemfBsVbaQAwsrzPxnLrVh4huc65h3I8iGno9walyj6wzu9CIrVxk86YvU%2BxVS6SKZOP4D5ccxJJnxHtvnvdRk10sUlUVEJy4NFIV33d8S89P1JJj3GOfaDqQlG4%2BcX7tdlL6DKtr7UwgwuOwRdY85h08vuD1A5MFnGEgB7OlGkg0XZj5bPFXEcW91oQHj37Iu0uh%2BYNqXlZtFvKkLN%2FZ9g%2FJ7Qiep9JutjD25AiGpC0nqehZG4%2BEQaXQe%2BX3oUbNA1P8uFPWWTyqzPo2yCGDSAyj%2FT4ncZ%2F%2FzFgEs%2FwClQmDptvk2AtjJsht275C9QJqwevIxZ2ETf3UWrjBPdxR%2B7V6zykkYfY5ek0HIWIXx%2FGIQnowucC1mFmg4JlbTlngRoRw2CiBcRizGSZCoY8mHDEIoj1BPUJOUiiLr1wR%2FFo%2BaIiPeHIO0ENIMcl6yECig%2FqlNIUCtuIMKS5Sgm2xxRao4VyMuaos7qkQtvzsAWpTtdh6JoYQAAAAASUVORK5CYII%3D" /></a></p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>To download a specific version of GHDL, use this alternative URL, where <code class="docutils literal notranslate"><span class="pre">&lt;format&gt;</span></code> is <code class="docutils literal notranslate"><span class="pre">tar.gz</span></code> or <code class="docutils literal notranslate"><span class="pre">zip</span></code>:
+<code class="docutils literal notranslate"><span class="pre">https://codeload.github.com/ghdl/ghdl/&lt;format&gt;/&lt;tag&gt;</span></code>.</p>
+</div>
+<p class="rubric" id="release-sources-gitclone">git clone</p>
+<p>GHDL can be downloaded (cloned) with <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span></code> from GitHub. GitHub offers the transfer protocols HTTPS and SSH. You should
+use SSH if you have a GitHub account and have already uploaded an OpenSSH public key to GitHub, otherwise use HTTPS if you
+have no account or you want to use login credentials.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 80%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Protocol</p></th>
+<th class="head"><p>GitHub Repository URL</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>HTTPS</p></td>
+<td><p><a class="reference external" href="https://github.com/ghdl/ghdl.git">https://github.com/ghdl/ghdl.git</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>SSH</p></td>
+<td><p><a class="reference external" href="ssh://git&#64;github.com:ghdl/ghdl.git">ssh://git&#64;github.com:ghdl/ghdl.git</a></p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>Execute <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">checkout</span> <span class="pre">-b</span> <span class="pre">stable</span> <span class="pre">&lt;tag&gt;</span></code> after <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span></code>, to checkout a specific version of GHDL.</p>
+</div>
+<p>Command line instructions to clone GHDL with HTTPS protocol:</p>
+<div class="highlight-Bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> GitRoot
+git clone <span class="s2">&quot;https://github.com/ghdl/ghdl.git&quot;</span> ghdl
+<span class="nb">cd</span> ghdl
+git remote rename origin github
+</pre></div>
+</div>
+<p>Command line instructions to clone GHDL with SSH protocol:</p>
+<div class="highlight-Bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> GitRoot
+git clone <span class="s2">&quot;ssh://git@github.com:ghdl/ghdl.git&quot;</span> ghdl
+<span class="nb">cd</span> ghdl
+git remote rename origin github
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Executing the following instructions in Windows Command Prompt (<strong class="program">cmd.exe</strong>) won’t function or will result in
+errors! All Windows command line instructions are intended for <strong class="program">Windows PowerShell</strong>, if not marked otherwise.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="mcode.html" class="btn btn-neutral float-right" title="mcode backend" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral float-left" title="Building GHDL from Sources" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2002-2021, Tristan Gingold and contributors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/buildthedocs/sphinx.theme">theme</a>
+    
+    provided by <a href="https://buildthedocs.github.io">Build the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

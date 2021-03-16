@@ -1,0 +1,392 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>AST &mdash; GHDL 2.0.0-dev documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../_static/icon.png"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Run Time Information (RTI)" href="RTI.html" />
+    <link rel="prev" title="Front-end" href="Frontend.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html">
+          
+
+          
+            
+            <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0-dev
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting.html">Getting | Installing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contribute.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../licenses.html">Copyrights | Licenses</a></li>
+</ul>
+<p class="caption"><span class="caption-text">GHDL usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quick_start/index.html">Quick Start Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/InvokingGHDL.html">Invoking GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/Simulation.html">Simulation (runtime)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/Synthesis.html">Synthesis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/CommandReference.html">Additional Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/ImplementationOfVHDL.html">Implementation of VHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/ImplementationOfVITAL.html">Implementation of VITAL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/Directories.html">Directory structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/building/index.html">Building GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pyGHDL/pyGHDL.html">Python Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/Debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/CodingStyle.html">Coding Style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/Scripts.html">Scripts</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Internals</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Frontend.html">Front-end</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">AST</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-ast-in-ghdl">The AST in GHDL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#why-a-meta-model">Why a meta-model ?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dealing-with-ownership">Dealing with ownership</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#node-type">Node Type</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="RTI.html">Run Time Information (RTI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gnatdoc/index.html">GNATdoc</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Index</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Python Module Index</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GHDL</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>AST</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            
+              <a href="https://github.com/ghdl/ghdl/blob/master/doc/internals/AST.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="ast">
+<span id="int-ast"></span><h1>AST<a class="headerlink" href="#ast" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>The AST is the main data structure of the front-end and is created by the parser.</p>
+<p>AST stands for Abstract Syntax Tree.</p>
+<p>This is a tree because it is a graph with nodes and links between nodes.  As the graph
+is acyclic and each node but the root has only one parent (the link that points to it).
+In the front-end there is only one root which represents the set of libraries.</p>
+<p>The tree is a syntax tree because it follows the grammar of the VHDL language: there
+is, for example, a node per operation (like <cite>or</cite>, <cite>and</cite> or <cite>+</cite>), a node per declaration,
+a node per statement, and a node per design unit (like entity or architecture).  The front-end needs to represent the source file using the grammar because most of the
+VHDL rules are defined according to the grammar.</p>
+<p>Finally, the tree is abstract because it is an abstraction of the source file.  Comments and layout aren’t kept in the syntax tree.  Furthermore, if you rename a
+declaration or change the value of a literal, the tree will have exactly the same
+shape.</p>
+<p>But we can also say that the tree is neither abstract, nor syntaxic and nor a tree.</p>
+<p>It is not abstract because it contains all the information from the source file
+(except comments) are available in the AST, inclusing the location.  So the source
+file can be reprinted (the name unparsed is also used) from the AST.  If a mechanism
+is also added to deal with comments, the source file can even be pretty-printed from
+the AST.</p>
+<p>It is not purely syntactic because the semantic analysis pass decorates the tree
+with semantic information.  For example, the type of each expression and sub-expression
+is computed.  This is necessary to detect some semantic errors like assigning an array
+to an integer.</p>
+<p>Finally, it is not a tree anymore because new links are added during semantic
+analysis.  Simple names are linked to their declaration.</p>
+</div>
+<div class="section" id="the-ast-in-ghdl">
+<h2>The AST in GHDL<a class="headerlink" href="#the-ast-in-ghdl" title="Permalink to this headline">¶</a></h2>
+<p>The GHDL AST is described in file <code class="file docutils literal notranslate"><span class="pre">vhdl-nodes.ads</span></code>.</p>
+<p>An interesting particularity about the AST is the presence of a
+meta-model.</p>
+<p>The meta-model is not formally described.  What the
+meta-meta-model would be is very simple: there are elements and attributes.  An
+element is composed of attributes, and an attribute is either a value
+(a flag, an integer, an enumeration) or a link to an element.</p>
+<p>(When someone wants to be clever, they often speak about meta-model in
+order to confuse you.  Don’t let them impress you.  The trick is to
+answer them with any sentence containing ‘meta-meta-model’).</p>
+<p>In the GHDL meta-model, there are only 3 elements:</p>
+<ul class="simple">
+<li><p>variable list of nodes (<cite>List</cite>).  These are like vectors as the
+length can be changed.</p></li>
+<li><p>Fixed lists of nodes (<cite>Flist</cite>).  The length of a fixed list is defined at creation.</p></li>
+<li><p>Nodes.  A node has a kind (<cite>Iir_Kind</cite> which is also defined in the file), and fields.
+The kind is set at creation and cannot be changed, while fields can be.</p></li>
+</ul>
+<p>Or without using the word “meta-model”, the AST is composed of nodes and
+lists.</p>
+<p>The meta-model describes the types of the attributes: most of them are
+either a node reference, a boolean flag or a enumerated type (like
+<cite>Iir_Staticness</cite>).  But there are also links: a reference to another
+node or to a list.</p>
+<p>The accessors for the node are generated automatically by the python
+script <code class="file docutils literal notranslate"><span class="pre">src/scripts/pnodes.py</span></code>.</p>
+</div>
+<div class="section" id="why-a-meta-model">
+<h2>Why a meta-model ?<a class="headerlink" href="#why-a-meta-model" title="Permalink to this headline">¶</a></h2>
+<p>All ASTs could have a meta-model, because the definition of elements
+and attributes is very generic.  But there is a detail: the definition
+of an element is static.  So for each node, the list of attributes and
+their types is static and each list is a list of the same element type.
+So there is no bag, nor dynamic typing.  This is per the definition of
+the meta-meta-model.</p>
+<p>But in GHDL there is an API at the meta-model level in file
+<code class="file docutils literal notranslate"><span class="pre">vhdl-nodes_meta.ads</span></code>.  There is the list of all attribute types
+in enumeration <cite>Types_Enum</cite>.  There is the list of all possible
+attributes in enumeration <cite>Fields_Enum</cite>.  For a particular kind of
+node, you can get the list of fields with <cite>Get_Field</cite> and for every
+type, there is API to get or set any field of any node.</p>
+<p>Having a meta-model API allows to build algorithm that deals with any
+node.  The dumper (in file <code class="file docutils literal notranslate"><span class="pre">vhdl-disp_tree.ad[sb]</span></code>) is used to
+dump a node and possibly its sub-nodes.  This is very useful while
+debugging GHDL.  It is written using the meta-model, so it knows how to display
+a boolean and the various other enumerated types, and how to display a list.  To
+display a node, it just gets the kind of the type, prints the kind name and queries
+all the fields of the node.  There is nothing particular to a specific kind, so you
+don’t need to modify the dumper if you add a node.</p>
+<p>The dumper wouldn’t be a strong enough reason by itself to have a meta-model.  But
+the pass to create instances is a good one.  When a vhdl-2008 package is instantiated,
+at least the package declaration is created in the AST (this is needed because there
+are possibly new types).  And creating an instance using the meta-model is much
+simpler (and much more generic) that creating the instance using the nodes directly.
+The code to create instances is in files <code class="file docutils literal notranslate"><span class="pre">vhdl-sem_inst.ad[sb]</span></code>.</p>
+<p>The meta-model API is mostly automatically generated by the python
+script.</p>
+</div>
+<div class="section" id="dealing-with-ownership">
+<h2>Dealing with ownership<a class="headerlink" href="#dealing-with-ownership" title="Permalink to this headline">¶</a></h2>
+<p>The meta-model also structures the tree, because there is a notion of
+ownership: every element (but the root) has only one parent that owns
+it, and there are no cycle in the ownership.  So the tree is really a
+tree.</p>
+<p>That simplifies algorithms because it is easier to walk a tree than a
+graph.  It is also easier to free a sub-tree than a sub-graph.</p>
+<p>Getting a real tree from the parser might look obvious, but it is
+not.  Consider the following VHDL declaration:</p>
+<div class="highlight-vhdl notranslate"><div class="highlight"><pre><span></span><span class="k">variable</span> <span class="n">v1</span><span class="p">,</span> <span class="n">v2</span> <span class="o">:</span> <span class="kt">std_logic_vector</span> <span class="p">(</span><span class="mi">1</span> <span class="k">downto</span> <span class="mi">0</span><span class="p">)</span> <span class="o">:=</span> <span class="s">&quot;00&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Both variables <code class="docutils literal notranslate"><span class="pre">v1</span></code> and <code class="docutils literal notranslate"><span class="pre">v2</span></code> share the same type and the same
+initial value.  The GHDL AST uses two different strategies:</p>
+<ul class="simple">
+<li><p>For the type, there are two fields in the node:
+<code class="docutils literal notranslate"><span class="pre">subtype_indication</span></code> and <code class="docutils literal notranslate"><span class="pre">type</span></code>.  The <code class="docutils literal notranslate"><span class="pre">subtype_indication</span></code> is
+owned and set only on the first variable to the output of the
+parser.  The <code class="docutils literal notranslate"><span class="pre">type</span></code> field is a reference and set on all variables
+to the result of analysis of <code class="docutils literal notranslate"><span class="pre">subtype_indication</span></code>.</p></li>
+<li><p>For the initial value, there is only one field <code class="docutils literal notranslate"><span class="pre">default_value</span></code>
+that is set on all variables.  But the ownership is controlled by a
+flag in the node (an attribute) named <code class="docutils literal notranslate"><span class="pre">is_ref</span></code>.  It is set to
+false on the first variable and true for the others.</p></li>
+</ul>
+<p>The notion of ownership is highlighted by the Rust language, and
+indeed this is an important notion.  The implementation of the Rust
+AST has to be investigated.</p>
+</div>
+<div class="section" id="node-type">
+<h2>Node Type<a class="headerlink" href="#node-type" title="Permalink to this headline">¶</a></h2>
+<p>TBC: 32-bit, extensions.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="RTI.html" class="btn btn-neutral float-right" title="Run Time Information (RTI)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="Frontend.html" class="btn btn-neutral float-left" title="Front-end" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2002-2021, Tristan Gingold and contributors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/buildthedocs/sphinx.theme">theme</a>
+    
+    provided by <a href="https://buildthedocs.github.io">Build the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

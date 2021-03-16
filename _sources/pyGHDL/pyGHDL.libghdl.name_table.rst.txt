@@ -1,0 +1,47 @@
+pyGHDL.libghdl.name_table
+=============================
+
+.. automodule:: pyGHDL.libghdl.name_table
+
+
+.. currentmodule:: pyGHDL.libghdl.name_table
+
+
+.. #-----------------------------------
+
+**Variables**
+
+- :py:data:`Null_Identifier`
+
+
+**Functions**
+
+- :py:func:`Get_Name_Length`:
+  Get the length of an identifier denoted by a ``NameId``.
+
+- :py:func:`Get_Name_Ptr`:
+  Get the address of the first character of ID.  The address is valid until
+
+- :py:func:`Get_Identifier`:
+  Get or create an entry in the name table.
+
+
+
+.. autodata:: Null_Identifier
+   :annotation:
+
+   .. code-block:: guess
+
+      0
+
+
+.. #-----------------------------------
+
+**Functions**
+
+
+.. autofunction:: Get_Name_Length
+
+.. autofunction:: Get_Name_Ptr
+
+.. autofunction:: Get_Identifier

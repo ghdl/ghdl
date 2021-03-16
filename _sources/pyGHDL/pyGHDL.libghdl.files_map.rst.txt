@@ -1,0 +1,138 @@
+pyGHDL.libghdl.files_map
+============================
+
+.. automodule:: pyGHDL.libghdl.files_map
+
+
+.. currentmodule:: pyGHDL.libghdl.files_map
+
+
+.. #-----------------------------------
+
+**Variables**
+
+- :py:data:`EOT`
+- :py:data:`No_Source_File_Entry`
+- :py:data:`No_Location`
+
+
+**Functions**
+
+- :py:func:`Location_To_File`:
+  Convert :obj:`Location` to a source file.
+
+- :py:func:`Location_File_To_Pos`:
+  Convert :obj:`Location` and :obj:`File` to a position (offset) into the source file.
+
+- :py:func:`Location_File_To_Line`:
+  Convert :obj:`Location` and :obj:`File` to a line number.
+
+- :py:func:`Location_File_Line_To_Offset`:
+  Get the offset in :obj:`Line` of :obj:`Location`.
+
+- :py:func:`Location_File_Line_To_Col`:
+  Get logical column (with HT expanded) from :obj:`Location`, :obj:`File` and
+
+- :py:func:`File_To_Location`:
+  Convert a :obj:`File` into a location.
+
+- :py:func:`File_Pos_To_Location`:
+  Convert a :obj:`File` and an offset :obj:`Pos` in the file into a location.
+
+- :py:func:`File_Line_To_Position`:
+  Convert a :obj:`File` and :obj:`Line` into a position.
+
+- :py:func:`Get_File_Name`:
+  Return the name of the file.
+
+- :py:func:`Get_Directory_Name`:
+  Return the directory of the file.
+
+- :py:func:`Get_File_Buffer`:
+  Return a buffer (access to the contents of the file) for a file entry.
+
+- :py:func:`Get_File_Length`:
+  Get the position of the first EOT character.
+
+- :py:func:`Set_File_Length`:
+  Set the length of the file (which is less than the size of the file buffer).
+
+- :py:func:`Read_Source_File`:
+  Return an entry for a filename.
+
+- :py:func:`Reserve_Source_File`:
+  Reserve an entry, but do not read any file.
+
+- :py:func:`Discard_Source_File`:
+  Mark :obj:`File` as unavailable: clear the name and directory.
+
+- :py:func:`Free_Source_File`:
+  Free resources used by :obj:`File`, but keep the entry.
+
+- :py:func:`Get_Last_Source_File_Entry`:
+  Returns the entry of the last known file.
+
+
+
+.. autodata:: EOT
+   :annotation:
+
+   .. code-block:: guess
+
+      b'\x04'
+
+.. autodata:: No_Source_File_Entry
+   :annotation:
+
+   .. code-block:: guess
+
+      0
+
+.. autodata:: No_Location
+   :annotation:
+
+   .. code-block:: guess
+
+      0
+
+
+.. #-----------------------------------
+
+**Functions**
+
+
+.. autofunction:: Location_To_File
+
+.. autofunction:: Location_File_To_Pos
+
+.. autofunction:: Location_File_To_Line
+
+.. autofunction:: Location_File_Line_To_Offset
+
+.. autofunction:: Location_File_Line_To_Col
+
+.. autofunction:: File_To_Location
+
+.. autofunction:: File_Pos_To_Location
+
+.. autofunction:: File_Line_To_Position
+
+.. autofunction:: Get_File_Name
+
+.. autofunction:: Get_Directory_Name
+
+.. autofunction:: Get_File_Buffer
+
+.. autofunction:: Get_File_Length
+
+.. autofunction:: Set_File_Length
+
+.. autofunction:: Read_Source_File
+
+.. autofunction:: Reserve_Source_File
+
+.. autofunction:: Discard_Source_File
+
+.. autofunction:: Free_Source_File
+
+.. autofunction:: Get_Last_Source_File_Entry

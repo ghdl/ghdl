@@ -1,0 +1,705 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Getting | Installing &mdash; GHDL 2.0.0-dev documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="_static/icon.png"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Contributing" href="contribute.html" />
+    <link rel="prev" title="About" href="about.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html">
+          
+
+          
+            
+            <img src="_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0-dev
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Getting | Installing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#package-managers">Package managers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#nightly-packages">Nightly packages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#precompile-vendor-primitives">Precompile Vendor Primitives</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#supported-vendors-libraries">Supported Vendors Libraries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#supported-simulation-and-verification-libraries">Supported Simulation and Verification Libraries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#script-configuration">Script Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#compiling-in-bash">Compiling in Bash</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#compiling-in-powershell">Compiling in PowerShell</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#configuration-files">Configuration Files</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#for-bash-config-sh">For Bash: <cite>config.sh</cite></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#for-powershell-config-psm1">For PowerShell: <cite>config.psm1</cite></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#additional-script-parameters">Additional Script Parameters</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#for-bash-scripts">For Bash Scripts:</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#for-powershell-scripts">For PowerShell Scripts:</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contribute.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="licenses.html">Copyrights | Licenses</a></li>
+</ul>
+<p class="caption"><span class="caption-text">GHDL usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quick_start/index.html">Quick Start Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="using/InvokingGHDL.html">Invoking GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="using/Simulation.html">Simulation (runtime)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="using/Synthesis.html">Synthesis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="using/CommandReference.html">Additional Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="using/ImplementationOfVHDL.html">Implementation of VHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="using/ImplementationOfVITAL.html">Implementation of VITAL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="development/Directories.html">Directory structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/building/index.html">Building GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyGHDL/pyGHDL.html">Python Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/Debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/CodingStyle.html">Coding Style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/Scripts.html">Scripts</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="internals/Overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="internals/Frontend.html">Front-end</a></li>
+<li class="toctree-l1"><a class="reference internal" href="internals/AST.html">AST</a></li>
+<li class="toctree-l1"><a class="reference internal" href="internals/RTI.html">Run Time Information (RTI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gnatdoc/index.html">GNATdoc</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Index</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="py-modindex.html">Python Module Index</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GHDL</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Getting | Installing</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            
+              <a href="https://github.com/ghdl/ghdl/blob/master/doc/getting.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="getting-installing">
+<span id="packages"></span><h1>Getting | Installing<a class="headerlink" href="#getting-installing" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="package-managers">
+<h2>Package managers<a class="headerlink" href="#package-managers" title="Permalink to this headline">¶</a></h2>
+<p>Package managers of many popular distributions provide pre-built packages of GHDL. This is the case for <cite>apt</cite>
+(Debian/Ubuntu), <cite>dnf</cite> (Fedora), <cite>pacman</cite> (Arch Linux, MSYS2) or <cite>brew</cite> (macOS). Since GHDL supports three different backends
+and two library sets (<em>regular</em> or <em>GPL-compatible</em>), at least six packages with different features might be available in
+each package manager.</p>
+<p>As a rule of thumb, mcode backend is the fastest for analysis and synthesis. It also allows setting the base simulation time
+for speeding up execution. Therefore, it is the recommended pick if available on your platform (x86/amd64, on Windows x86
+only). On other platforms, or for using specific features for co-simulation or code coverage, LLVM or GCC need to be used.
+See further differences between backends in <a class="reference internal" href="development/building/index.html#build"><span class="std std-ref">Building GHDL from Sources</span></a>.</p>
+</div>
+<div class="section" id="nightly-packages">
+<span id="release-packages"></span><h2>Nightly packages<a class="headerlink" href="#nightly-packages" title="Permalink to this headline">¶</a></h2>
+<p>Assets from nightly GHDL builds are available at <a class="reference external" href="https://github.com/ghdl/ghdl/releases/nightly">github.com/ghdl/ghdl/releases/nightly</a>.
+These are mostly meant to be used in Continuous Integration (CI) workflows. Precisely, <a class="reference external" href="https://github.com/ghdl/setup-ghdl-ci">setup-ghdl-ci</a>
+allows to easily setup nightly assets in GitHub Actions workflows.</p>
+<p>However, users on Windows (MSYS2) or Ubuntu might want to download the tarballs/zipfiles and extract/install them locally.</p>
+</div>
+<div class="section" id="precompile-vendor-primitives">
+<span id="getting-precompvendor"></span><h2>Precompile Vendor Primitives<a class="headerlink" href="#precompile-vendor-primitives" title="Permalink to this headline">¶</a></h2>
+<p>Vendors like Lattice, Intel (Altera) and Xilinx have their own simulation libraries,
+especially for FPGA primitives, soft and hard macros. These libraries cannot
+be shipped with GHDL, but GHDL offers prepared compile scripts to pre-compile
+these vendor libraries, if the vendor tool is present in the environment. There
+are also popular simulation and verification libraries like OSVVM <a class="footnote-reference brackets" href="#f1" id="id1">1</a> or
+UVVM <a class="footnote-reference brackets" href="#f2" id="id2">2</a>, which can be pre-compiled, too.</p>
+<p>The compilation scripts are writen in the shell languages: <em>PowerShell</em> for
+<em>Windows™</em> and <em>Bash</em> for <em>GNU/Linux</em>, <em>MacOS</em> and <em>MSYS2</em>/<em>MinGW</em>. The
+compile scripts can colorize the GHDL warning and error lines with the help
+of <code class="docutils literal notranslate"><span class="pre">grc/grcat</span></code> <a class="footnote-reference brackets" href="#f4" id="id3">3</a>.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>Vendor precompile scripts for OSVVM and UVVM are tested periodically in <a class="reference external" href="https://github.com/ghdl/extended-tests">ghdl/extended-tests</a>.</p>
+</div>
+<div class="section" id="supported-vendors-libraries">
+<h3>Supported Vendors Libraries<a class="headerlink" href="#supported-vendors-libraries" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Lattice (3.6 or later):</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">ec</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ecp</span></code>, <code class="docutils literal notranslate"><span class="pre">ecp2</span></code>, <code class="docutils literal notranslate"><span class="pre">ecp3</span></code>, <code class="docutils literal notranslate"><span class="pre">ecp5u</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lptm</span></code>, <code class="docutils literal notranslate"><span class="pre">lptm2</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">machxo</span></code>, <code class="docutils literal notranslate"><span class="pre">machxo2</span></code>, <code class="docutils literal notranslate"><span class="pre">machxo3l</span></code>, <code class="docutils literal notranslate"><span class="pre">machxo3d</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sc</span></code>, <code class="docutils literal notranslate"><span class="pre">scm</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">xp</span></code>, <code class="docutils literal notranslate"><span class="pre">xp2</span></code></p></li>
+<li><p>…</p></li>
+</ul>
+</li>
+<li><p>Intel (Altera) Quartus (13.0 or later):</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">lpm</span></code>, <code class="docutils literal notranslate"><span class="pre">sgate</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">altera</span></code>, <code class="docutils literal notranslate"><span class="pre">altera_mf</span></code>, <code class="docutils literal notranslate"><span class="pre">altera_lnsim</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">arriaii</span></code>, <code class="docutils literal notranslate"><span class="pre">arriaii_pcie_hip</span></code>, <code class="docutils literal notranslate"><span class="pre">arriaiigz</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">arriav</span></code>, <code class="docutils literal notranslate"><span class="pre">arriavgz</span></code>, <code class="docutils literal notranslate"><span class="pre">arriavgz_pcie_hip</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cycloneiv</span></code>, <code class="docutils literal notranslate"><span class="pre">cycloneiv_pcie_hip</span></code>, <code class="docutils literal notranslate"><span class="pre">cycloneive</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cyclonev</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max</span></code>, <code class="docutils literal notranslate"><span class="pre">maxii</span></code>, <code class="docutils literal notranslate"><span class="pre">maxv</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stratixiv</span></code>, <code class="docutils literal notranslate"><span class="pre">stratixiv_pcie_hip</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stratixv</span></code>, <code class="docutils literal notranslate"><span class="pre">stratixv_pcie_hip</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fiftyfivenm</span></code>, <code class="docutils literal notranslate"><span class="pre">twentynm</span></code></p></li>
+<li><p>…</p></li>
+</ul>
+</li>
+<li><p>Xilinx ISE (14.0 or later):</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">unisim</span></code> (incl. <code class="docutils literal notranslate"><span class="pre">secureip</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">unimacro</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">simprim</span></code> (incl. <code class="docutils literal notranslate"><span class="pre">secureip</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">xilinxcorelib</span></code></p></li>
+</ul>
+</li>
+<li><p>Xilinx Vivado (2014.1 or later):</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">unisim</span></code> (incl. <code class="docutils literal notranslate"><span class="pre">secureip</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">unimacro</span></code></p></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="supported-simulation-and-verification-libraries">
+<h3>Supported Simulation and Verification Libraries<a class="headerlink" href="#supported-simulation-and-verification-libraries" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>OSVVM <a class="footnote-reference brackets" href="#f1" id="id4">1</a> (for VHDL-2008)</p></li>
+<li><p>UVVM <a class="footnote-reference brackets" href="#f2" id="id5">2</a> (for VHDL-2008)</p></li>
+</ul>
+</div>
+<hr class="docutils" />
+<div class="section" id="script-configuration">
+<h3>Script Configuration<a class="headerlink" href="#script-configuration" title="Permalink to this headline">¶</a></h3>
+<p>The vendor library compile scripts need to know where the used / latest vendor
+tool chain is installed. Therefore, the scripts implement a default installation
+directory search as well as environment variable checks. If a vendor tool cannot
+be detected or the script chooses the wrong vendor library source directory,
+then it’s possible to provide the path via <code class="docutils literal notranslate"><span class="pre">--source</span></code> (Bash) or <code class="docutils literal notranslate"><span class="pre">-Source</span></code>
+(PoSh).</p>
+<p>The generated output is stored relative to the current working directory. The
+scripts create a sub-directory for each vendor. The default output directory can
+be overwritten by the parameter <code class="docutils literal notranslate"><span class="pre">--output</span></code> (Bash) or <code class="docutils literal notranslate"><span class="pre">-Output</span></code> (PoSh).</p>
+<p>To compile all source files with GHDL, the simulator executable is searched in
+<code class="docutils literal notranslate"><span class="pre">PATH</span></code>. The found default GHDL executable can be overwritten by setting the
+environment variable <code class="docutils literal notranslate"><span class="pre">GHDL</span></code> or by passing the parameter <code class="docutils literal notranslate"><span class="pre">--ghdl</span></code> (Bash) or
+<code class="docutils literal notranslate"><span class="pre">-GHDL</span></code> (PoSh) to the scripts.</p>
+<p>If the vendor library compilation is used very often, it’s recommend to configure
+these parameters in <code class="docutils literal notranslate"><span class="pre">config.sh</span></code> (Bash) or <code class="docutils literal notranslate"><span class="pre">config.psm1</span></code> (PoSh), so the command
+line can be shortened to the essential parts.</p>
+</div>
+<hr class="docutils" />
+<div class="section" id="compiling-in-bash">
+<h3>Compiling in Bash<a class="headerlink" href="#compiling-in-bash" title="Permalink to this headline">¶</a></h3>
+<p>The provided Bash scripts support these environments:</p>
+<ul class="simple">
+<li><p>Linux</p></li>
+<li><p>MacOS</p></li>
+<li><p>MSYS2 / MinGW</p></li>
+<li><p>WSL (Windows Subsystem for Linux)</p></li>
+</ul>
+<p>Follow these steps:</p>
+<ul>
+<li><p><strong>Step 0 - Configure the scripts (optional)</strong></p>
+<p>See the next section for how to configure <code class="docutils literal notranslate"><span class="pre">config.sh</span></code>.</p>
+</li>
+<li><p><strong>Step 1 - Browse to your simulation working directory</strong></p>
+<div class="highlight-Bash notranslate"><div class="highlight"><pre><span></span>$ <span class="nb">cd</span> &lt;MySimulationFolder&gt;
+</pre></div>
+</div>
+</li>
+<li><p><strong>Step 2 - Start the compilation script(s)</strong></p>
+<p>Choose one or multiple of the following scripts to run the pre-compilation
+process.</p>
+<div class="highlight-Bash notranslate"><div class="highlight"><pre><span></span>$ /usr/local/lib/ghdl/vendors/compile-altera.sh --all
+$ /usr/local/lib/ghdl/vendors/compile-intel.sh --all
+$ /usr/local/lib/ghdl/vendors/compile-lattice.sh --all
+$ /usr/local/lib/ghdl/vendors/compile-osvvm.sh --all
+$ /usr/local/lib/ghdl/vendors/compile-uvvm.sh --all
+$ /usr/local/lib/ghdl/vendors/compile-xilinx-ise.sh --all
+$ /usr/local/lib/ghdl/vendors/compile-xilinx-vivado.sh --all
+</pre></div>
+</div>
+<p>In most cases GHDL is installed into <code class="docutils literal notranslate"><span class="pre">/usr/local/</span></code>. The scripts are
+installed into the <code class="docutils literal notranslate"><span class="pre">lib\ghdl\vendors</span></code> directory.</p>
+</li>
+<li><p><strong>Step 3 - Viewing the result</strong></p>
+<p>This creates vendor directories in your current working directory and
+compiles the vendor files into them.</p>
+<div class="highlight-Bash notranslate"><div class="highlight"><pre><span></span>$ ls -ahl
+...
+drwxr-xr-x  <span class="m">2</span> &lt;user&gt; &lt;group&gt;  56K Mar <span class="m">09</span> <span class="m">17</span>:41 altera
+drwxr-xr-x  <span class="m">2</span> &lt;user&gt; &lt;group&gt;  56K Mar <span class="m">09</span> <span class="m">17</span>:42 intel
+drwxr-xr-x  <span class="m">2</span> &lt;user&gt; &lt;group&gt;  56K Mar <span class="m">09</span> <span class="m">17</span>:42 lattice
+drwxr-xr-x  <span class="m">2</span> &lt;user&gt; &lt;group&gt;  56K Mar <span class="m">09</span> <span class="m">17</span>:48 osvvm
+drwxr-xr-x  <span class="m">2</span> &lt;user&gt; &lt;group&gt;  56K Mar <span class="m">09</span> <span class="m">17</span>:58 uvvm
+drwxr-xr-x  <span class="m">2</span> &lt;user&gt; &lt;group&gt;  56K Mar <span class="m">09</span> <span class="m">17</span>:58 xilinx-ise
+drwxr-xr-x  <span class="m">2</span> &lt;user&gt; &lt;group&gt;  56K Mar <span class="m">09</span> <span class="m">17</span>:48 xilinx-vivado
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+<hr class="docutils" />
+<div class="section" id="compiling-in-powershell">
+<h3>Compiling in PowerShell<a class="headerlink" href="#compiling-in-powershell" title="Permalink to this headline">¶</a></h3>
+<p>The provided PowerShell scripts support these environments:</p>
+<ul class="simple">
+<li><p>Windows™ 10 (PowerShell 5 and PowerShell 6)</p></li>
+</ul>
+<p>Follow these steps:</p>
+<ul>
+<li><p><strong>Step 0 - Configure the scripts (optional)</strong></p>
+<p>See the next section for how to configure <code class="docutils literal notranslate"><span class="pre">config.psm1</span></code>.</p>
+</li>
+<li><p><strong>Step 1 - Browse to your simulation working directory</strong></p>
+<div class="highlight-PowerShell notranslate"><div class="highlight"><pre><span></span><span class="n">PS</span><span class="p">&gt;</span> <span class="nb">cd </span><span class="p">&lt;</span><span class="n">MySimulationFolder</span><span class="p">&gt;</span>
+</pre></div>
+</div>
+</li>
+<li><p><strong>Step 2 - Start the compilation script(s)</strong></p>
+<p>Choose one or multiple of the following scripts to run the pre-compilation
+process.</p>
+<div class="highlight-PowerShell notranslate"><div class="highlight"><pre><span></span><span class="n">PS</span><span class="p">&gt;</span> <span class="p">&lt;</span><span class="n">GHDL</span><span class="p">&gt;\</span><span class="n">lib</span><span class="p">\</span><span class="n">ghdl</span><span class="p">\</span><span class="n">vendors</span><span class="p">\</span><span class="n">compile-altera</span><span class="p">.</span><span class="n">ps1</span> <span class="n">-All</span>
+<span class="n">PS</span><span class="p">&gt;</span> <span class="p">&lt;</span><span class="n">GHDL</span><span class="p">&gt;\</span><span class="n">lib</span><span class="p">\</span><span class="n">ghdl</span><span class="p">\</span><span class="n">vendors</span><span class="p">\</span><span class="n">compile-intel</span><span class="p">.</span><span class="n">ps1</span> <span class="n">-All</span>
+<span class="n">PS</span><span class="p">&gt;</span> <span class="p">&lt;</span><span class="n">GHDL</span><span class="p">&gt;\</span><span class="n">lib</span><span class="p">\</span><span class="n">ghdl</span><span class="p">\</span><span class="n">vendors</span><span class="p">\</span><span class="n">compile-lattice</span><span class="p">.</span><span class="n">ps1</span> <span class="n">-All</span>
+<span class="n">PS</span><span class="p">&gt;</span> <span class="p">&lt;</span><span class="n">GHDL</span><span class="p">&gt;\</span><span class="n">lib</span><span class="p">\</span><span class="n">ghdl</span><span class="p">\</span><span class="n">vendors</span><span class="p">\</span><span class="n">compile-osvvm</span><span class="p">.</span><span class="n">ps1</span> <span class="n">-All</span>
+<span class="n">PS</span><span class="p">&gt;</span> <span class="p">&lt;</span><span class="n">GHDL</span><span class="p">&gt;\</span><span class="n">lib</span><span class="p">\</span><span class="n">ghdl</span><span class="p">\</span><span class="n">vendors</span><span class="p">\</span><span class="n">compile-uvvm</span><span class="p">.</span><span class="n">ps1</span> <span class="n">-All</span>
+<span class="n">PS</span><span class="p">&gt;</span> <span class="p">&lt;</span><span class="n">GHDL</span><span class="p">&gt;\</span><span class="n">lib</span><span class="p">\</span><span class="n">ghdl</span><span class="p">\</span><span class="n">vendors</span><span class="p">\</span><span class="n">compile-xilinx-ise</span><span class="p">.</span><span class="n">ps1</span> <span class="n">-All</span>
+<span class="n">PS</span><span class="p">&gt;</span> <span class="p">&lt;</span><span class="n">GHDL</span><span class="p">&gt;\</span><span class="n">lib</span><span class="p">\</span><span class="n">ghdl</span><span class="p">\</span><span class="n">vendors</span><span class="p">\</span><span class="n">compile-xilinx-vivado</span><span class="p">.</span><span class="n">ps1</span> <span class="n">-All</span>
+</pre></div>
+</div>
+<p>The scripts are installed into the <code class="docutils literal notranslate"><span class="pre">lib\ghdl\vendors</span></code> directory.</p>
+</li>
+<li><p><strong>Step 3 - Viewing the result</strong></p>
+<p>This creates vendor directories in your current working directory and
+compiles the vendor files into them.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">PS</span><span class="o">&gt;</span> <span class="nb">dir</span>
+    <span class="n">Directory</span><span class="p">:</span> <span class="n">D</span><span class="p">:</span>\<span class="n">temp</span>\<span class="n">ghdl</span>
+
+<span class="n">Mode</span>           <span class="n">LastWriteTime</span>       <span class="n">Length</span> <span class="n">Name</span>
+<span class="o">----</span>           <span class="o">-------------</span>       <span class="o">------</span> <span class="o">----</span>
+<span class="n">d</span><span class="o">----</span>    <span class="mf">09.03</span><span class="o">.</span><span class="mi">2018</span>    <span class="mi">19</span><span class="p">:</span><span class="mi">33</span>        <span class="o">&lt;</span><span class="n">DIR</span><span class="o">&gt;</span> <span class="n">altera</span>
+<span class="n">d</span><span class="o">----</span>    <span class="mf">09.03</span><span class="o">.</span><span class="mi">2018</span>    <span class="mi">19</span><span class="p">:</span><span class="mi">38</span>        <span class="o">&lt;</span><span class="n">DIR</span><span class="o">&gt;</span> <span class="n">intel</span>
+<span class="n">d</span><span class="o">----</span>    <span class="mf">09.03</span><span class="o">.</span><span class="mi">2018</span>    <span class="mi">19</span><span class="p">:</span><span class="mi">38</span>        <span class="o">&lt;</span><span class="n">DIR</span><span class="o">&gt;</span> <span class="n">lattice</span>
+<span class="n">d</span><span class="o">----</span>    <span class="mf">09.03</span><span class="o">.</span><span class="mi">2018</span>    <span class="mi">19</span><span class="p">:</span><span class="mi">38</span>        <span class="o">&lt;</span><span class="n">DIR</span><span class="o">&gt;</span> <span class="n">osvvm</span>
+<span class="n">d</span><span class="o">----</span>    <span class="mf">09.03</span><span class="o">.</span><span class="mi">2018</span>    <span class="mi">19</span><span class="p">:</span><span class="mi">45</span>        <span class="o">&lt;</span><span class="n">DIR</span><span class="o">&gt;</span> <span class="n">uvvm</span>
+<span class="n">d</span><span class="o">----</span>    <span class="mf">09.03</span><span class="o">.</span><span class="mi">2018</span>    <span class="mi">19</span><span class="p">:</span><span class="mi">06</span>        <span class="o">&lt;</span><span class="n">DIR</span><span class="o">&gt;</span> <span class="n">xilinx</span><span class="o">-</span><span class="n">ise</span>
+<span class="n">d</span><span class="o">----</span>    <span class="mf">09.03</span><span class="o">.</span><span class="mi">2018</span>    <span class="mi">19</span><span class="p">:</span><span class="mi">40</span>        <span class="o">&lt;</span><span class="n">DIR</span><span class="o">&gt;</span> <span class="n">xilinx</span><span class="o">-</span><span class="n">vivado</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+<hr class="docutils" />
+<div class="section" id="configuration-files">
+<h3>Configuration Files<a class="headerlink" href="#configuration-files" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="for-bash-config-sh">
+<h4>For Bash: <cite>config.sh</cite><a class="headerlink" href="#for-bash-config-sh" title="Permalink to this headline">¶</a></h4>
+<p>Please open the <code class="docutils literal notranslate"><span class="pre">config.sh</span></code> file and set the dictionary entries for the
+installed vendor tools to your tool’s installation directories. Use an empty
+string <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code> for not installed tools.</p>
+<p><code class="docutils literal notranslate"><span class="pre">config.sh</span></code>:</p>
+<div class="highlight-Bash notranslate"><div class="highlight"><pre><span></span><span class="nb">declare</span> -A InstallationDirectory
+InstallationDirectory<span class="o">[</span>AlteraQuartus<span class="o">]=</span><span class="s2">&quot;/opt/Altera/16.0&quot;</span>
+InstallationDirectory<span class="o">[</span>IntelQuartus<span class="o">]=</span><span class="s2">&quot;/opt/intelFPGA/20.1&quot;</span>
+InstallationDirectory<span class="o">[</span>LatticeDiamond<span class="o">]=</span><span class="s2">&quot;/opt/Diamond/3.10_x64&quot;</span>
+InstallationDirectory<span class="o">[</span>OSVVM<span class="o">]=</span><span class="s2">&quot;/home/&lt;user&gt;/git/GitHub/OSVVM&quot;</span>
+InstallationDirectory<span class="o">[</span>UVVM<span class="o">]=</span><span class="s2">&quot;/home/&lt;user&gt;/git/GitHub/UVVM&quot;</span>
+InstallationDirectory<span class="o">[</span>XilinxISE<span class="o">]=</span><span class="s2">&quot;/opt/Xilinx/14.7&quot;</span>
+InstallationDirectory<span class="o">[</span>XilinxVivado<span class="o">]=</span><span class="s2">&quot;/opt/Xilinx/Vivado/2020.2&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="for-powershell-config-psm1">
+<h4>For PowerShell: <cite>config.psm1</cite><a class="headerlink" href="#for-powershell-config-psm1" title="Permalink to this headline">¶</a></h4>
+<p>Please open the <code class="docutils literal notranslate"><span class="pre">config.psm1</span></code> file and set the dictionary entries for the
+installed vendor tools to your tool’s installation
+folder. Use an empty string <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code> for not installed tools.</p>
+<p><code class="docutils literal notranslate"><span class="pre">config.psm1</span></code>:</p>
+<div class="highlight-PowerShell notranslate"><div class="highlight"><pre><span></span><span class="nv">$InstallationDirectory</span> <span class="p">=</span> <span class="p">@{</span>
+  <span class="s2">&quot;AlteraQuartus&quot;</span> <span class="p">=</span>   <span class="s2">&quot;C:\Altera\16.0&quot;</span><span class="p">;</span>
+  <span class="s2">&quot;IntelQuartus&quot;</span> <span class="p">=</span>    <span class="s2">&quot;C:\Altera\20.1&quot;</span><span class="p">;</span>
+  <span class="s2">&quot;LatticeDiamond&quot;</span> <span class="p">=</span>  <span class="s2">&quot;C:\Lattice\Diamond\3.10_x64&quot;</span><span class="p">;</span>
+  <span class="s2">&quot;XilinxISE&quot;</span> <span class="p">=</span>       <span class="s2">&quot;C:\Xilinx\14.7\ISE_DS&quot;</span><span class="p">;</span>
+  <span class="s2">&quot;XilinxVivado&quot;</span> <span class="p">=</span>    <span class="s2">&quot;C:\Xilinx\Vivado\2020.2&quot;</span><span class="p">;</span>
+  <span class="s2">&quot;OSVVM&quot;</span> <span class="p">=</span>           <span class="s2">&quot;C:\git\GitHub\OSVVM&quot;</span><span class="p">;</span>
+  <span class="s2">&quot;UVVM&quot;</span> <span class="p">=</span>            <span class="s2">&quot;C:\git\GitHub\UVVM&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="additional-script-parameters">
+<h3>Additional Script Parameters<a class="headerlink" href="#additional-script-parameters" title="Permalink to this headline">¶</a></h3>
+<p>Each script supports partial compilations e.g. of shared packages and
+individual parts. In addition, the amount of printout to the console can be
+controlled. Some scripts may offer vendor specific options.</p>
+<div class="section" id="for-bash-scripts">
+<h4>For Bash Scripts:<a class="headerlink" href="#for-bash-scripts" title="Permalink to this headline">¶</a></h4>
+<ul>
+<li><p>Common parameters to most scripts:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>--help, -h            Print the embedded help page(s).
+--clean, -c           Cleanup directory before analyzing.
+--no-warnings, -n     Don&#39;t show warnings. Report errors only.
+--skip-existing, -s   Skip already compiled files (an *.o file exists).
+--skip-largefiles, -S Don&#39;t compile large entities like DSP and PCIe primitives.
+--halt-on-error, -H   Stop compiling if an error occurred.
+</pre></div>
+</div>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">compile-altera.sh</span></code></p>
+<p>Selectable libraries:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>--all, -a             Compile all libraries, including common libraries, packages and device libraries.
+--altera              Compile base libraries like &#39;altera&#39; and &#39;altera_mf&#39;
+--max                 Compile device libraries for Max CPLDs
+--arria               Compile device libraries for Arria FPGAs
+--cyclone             Compile device libraries for Cyclone FPGAs
+--stratix             Compile device libraries for Stratix FPGAs
+</pre></div>
+</div>
+<p>Compile options:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>--vhdl93              Compile selected libraries with VHDL-93 (default).
+--vhdl2008            Compile selected libraries with VHDL-2008.
+</pre></div>
+</div>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">compile-xilinx-ise.sh</span></code></p>
+<p>Selectable libraries:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>--all, -a             Compile all libraries, including common libraries, packages and device libraries.
+--unisim              Compile the unisim primitives
+--unimacro            Compile the unimacro macros
+--simprim             Compile the simprim primitives
+--corelib             Compile the xilinxcorelib macros
+--secureip            Compile the secureip primitives
+</pre></div>
+</div>
+<p>Compile options:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>--vhdl93              Compile selected libraries with VHDL-93 (default).
+--vhdl2008            Compile selected libraries with VHDL-2008.
+</pre></div>
+</div>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">compile-xilinx-vivado.sh</span></code></p>
+<p>Selectable libraries:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>--all, -a             Compile all libraries, including common libraries, packages and device libraries.
+--unisim              Compile the unisim primitives
+--unimacro            Compile the unimacro macros
+--secureip            Compile the secureip primitives
+</pre></div>
+</div>
+<p>Compile options:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>--vhdl93              Compile selected libraries with VHDL-93 (default).
+--vhdl2008            Compile selected libraries with VHDL-2008.
+</pre></div>
+</div>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">compile-osvvm.sh</span></code></p>
+<p>Selectable libraries:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>--all, -a             Compile all.
+--osvvm               Compile the OSVVM library.
+</pre></div>
+</div>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">compile-uvvm.sh</span></code></p>
+<p>Selectable libraries:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>--all, -a             Compile all.
+--uvvm                Compile the UVVM libraries.
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+<div class="section" id="for-powershell-scripts">
+<h4>For PowerShell Scripts:<a class="headerlink" href="#for-powershell-scripts" title="Permalink to this headline">¶</a></h4>
+<ul>
+<li><p>Common parameters to all scripts:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>-Help                 Print the embedded help page(s).
+-Clean                Cleanup directory before analyzing.
+-SuppressWarnings     Don&#39;t show warnings. Report errors only.
+</pre></div>
+</div>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">compile-altera.ps1</span></code></p>
+<p>Selectable libraries:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>-All                  Compile all libraries, including common libraries, packages and device libraries.
+-Altera               Compile base libraries like &#39;altera&#39; and &#39;altera_mf&#39;
+-Max                  Compile device libraries for Max CPLDs
+-Arria                Compile device libraries for Arria FPGAs
+-Cyclone              Compile device libraries for Cyclone FPGAs
+-Stratix              Compile device libraries for Stratix FPGAs
+</pre></div>
+</div>
+<p>Compile options:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>-VHDL93               Compile selected libraries with VHDL-93 (default).
+-VHDL2008             Compile selected libraries with VHDL-2008.
+</pre></div>
+</div>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">compile-xilinx-ise.ps1</span></code></p>
+<p>Selectable libraries:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>-All                  Compile all libraries, including common libraries, packages and device libraries.
+-Unisim               Compile the unisim primitives
+-Unimacro             Compile the unimacro macros
+-Simprim              Compile the simprim primitives
+-CoreLib              Compile the xilinxcorelib macros
+-Secureip             Compile the secureip primitives
+</pre></div>
+</div>
+<p>Compile options:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>-VHDL93               Compile selected libraries with VHDL-93 (default).
+-VHDL2008             Compile selected libraries with VHDL-2008.
+</pre></div>
+</div>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">compile-xilinx-vivado.ps1</span></code></p>
+<p>Selectable libraries:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>-All                  Compile all libraries, including common libraries, packages and device libraries.
+-Unisim               Compile the unisim primitives
+-Unimacro             Compile the unimacro macros
+-Secureip             Compile the secureip primitives
+</pre></div>
+</div>
+<p>Compile options:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>-VHDL93               Compile selected libraries with VHDL-93 (default).
+-VHDL2008             Compile selected libraries with VHDL-2008.
+</pre></div>
+</div>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">compile-osvvm.ps1</span></code></p>
+<p>Selectable libraries:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>-All                  Compile all.
+-OSVVM                Compile the OSVVM library.
+</pre></div>
+</div>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">compile-uvvm.ps1</span></code></p>
+<p>Selectable libraries:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>-All                  Compile all.
+-UVVM                 Compile the UVVM libraries.
+</pre></div>
+</div>
+</li>
+</ul>
+<hr class="docutils" />
+<div class="footnotes docutils container">
+<blockquote>
+<div><p class="rubric">Footnotes</p>
+</div></blockquote>
+<dl class="footnote brackets">
+<dt class="label" id="f1"><span class="brackets">1</span><span class="fn-backref">(<a href="#id1">1</a>,<a href="#id4">2</a>)</span></dt>
+<dd><p>OSVVM <a class="reference external" href="http://github.com/OSVVM/OSVVM">http://github.com/OSVVM/OSVVM</a></p>
+</dd>
+<dt class="label" id="f2"><span class="brackets">2</span><span class="fn-backref">(<a href="#id2">1</a>,<a href="#id5">2</a>)</span></dt>
+<dd><p>UVVM <a class="reference external" href="https://github.com/UVVM/UVVM_All">https://github.com/UVVM/UVVM_All</a></p>
+</dd>
+<dt class="label" id="f4"><span class="brackets"><a class="fn-backref" href="#id3">3</a></span></dt>
+<dd><p>Generic Colourizer <a class="reference external" href="http://kassiopeia.juls.savba.sk/~garabik/software/grc.html">http://kassiopeia.juls.savba.sk/~garabik/software/grc.html</a></p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="contribute.html" class="btn btn-neutral float-right" title="Contributing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="about.html" class="btn btn-neutral float-left" title="About" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2002-2021, Tristan Gingold and contributors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/buildthedocs/sphinx.theme">theme</a>
+    
+    provided by <a href="https://buildthedocs.github.io">Build the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

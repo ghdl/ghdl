@@ -1,0 +1,327 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Heartbeat module &mdash; GHDL 2.0.0-dev documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../../../_static/icon.png"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Full adder module and testbench" href="../adder/index.html" />
+    <link rel="prev" title="Hello world program" href="../hello/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html">
+          
+
+          
+            
+            <img src="../../../_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0-dev
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting.html">Getting | Installing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contribute.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../licenses.html">Copyrights | Licenses</a></li>
+</ul>
+<p class="caption"><span class="caption-text">GHDL usage</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Quick Start Guide</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Simulation</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../hello/index.html"><cite>Hello world</cite> program</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><cite>Heartbeat</cite> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../adder/index.html"><cite>Full adder</cite> module and testbench</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../DLXModelSuite.html">Working with non-trivial designs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference external" href="https://ghdl.github.io/ghdl-cosim">Co-Simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../python/index.html">Python Interfaces</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../using/InvokingGHDL.html">Invoking GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../using/Simulation.html">Simulation (runtime)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../using/Synthesis.html">Synthesis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../using/CommandReference.html">Additional Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../using/ImplementationOfVHDL.html">Implementation of VHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../using/ImplementationOfVITAL.html">Implementation of VITAL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../development/Directories.html">Directory structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development/building/index.html">Building GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../pyGHDL/pyGHDL.html">Python Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development/Debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development/CodingStyle.html">Coding Style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development/Scripts.html">Scripts</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../internals/Overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../internals/Frontend.html">Front-end</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../internals/AST.html">AST</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../internals/RTI.html">Run Time Information (RTI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../gnatdoc/index.html">GNATdoc</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Index</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../py-modindex.html">Python Module Index</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GHDL</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Quick Start Guide</a> &raquo;</li>
+        
+          <li><a href="../index.html">Simulation</a> &raquo;</li>
+        
+      <li><cite>Heartbeat</cite> module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            
+              <a href="https://github.com/ghdl/ghdl/blob/master/doc/quick_start/simulation/heartbeat/index.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="heartbeat-module">
+<span id="quickstart-heartbeat"></span><h1><cite>Heartbeat</cite> module<a class="headerlink" href="#heartbeat-module" title="Permalink to this headline">¶</a></h1>
+<p>Although <a class="reference internal" href="../hello/index.html#quickstart-hello"><span class="std std-ref">Hello world</span></a> illustrates that <cite>VHDL</cite> is supported as a general purpose language, the main use case
+of <cite>GHDL</cite> is to simulate hardware descriptions. The following block, which is saved in a file named
+<code class="file docutils literal notranslate"><span class="pre">heartbeat.vhdl</span></code>, is an example of how to generate a 100 MHz clock signal with non-synthesisable VHDL:</p>
+<div class="highlight-vhdl notranslate"><div class="highlight"><pre><span></span><span class="k">library</span> <span class="nn">ieee</span><span class="p">;</span>
+<span class="k">use</span> <span class="nn">ieee.std_logic_1164.</span><span class="k">all</span><span class="p">;</span>
+
+<span class="k">entity</span> <span class="nc">heartbeat</span> <span class="k">is</span>
+  <span class="k">port</span> <span class="p">(</span> <span class="n">clk</span><span class="o">:</span> <span class="k">out</span> <span class="kt">std_logic</span><span class="p">);</span>
+<span class="k">end</span> <span class="nc">heartbeat</span><span class="p">;</span>
+
+<span class="k">architecture</span> <span class="nc">behaviour</span> <span class="k">of</span> <span class="nc">heartbeat</span>
+<span class="k">is</span>
+  <span class="k">constant</span> <span class="n">clk_period</span> <span class="o">:</span> <span class="kt">time</span> <span class="o">:=</span> <span class="mi">10</span> <span class="n">ns</span><span class="p">;</span>
+<span class="k">begin</span>
+  <span class="c1">-- Clock process definition</span>
+  <span class="nc">clk_process</span><span class="o">:</span> <span class="k">process</span>
+  <span class="k">begin</span>
+    <span class="n">clk</span> <span class="o">&lt;=</span> <span class="sc">&#39;0&#39;</span><span class="p">;</span>
+    <span class="k">wait</span> <span class="k">for</span> <span class="n">clk_period</span><span class="o">/</span><span class="mi">2</span><span class="p">;</span>
+    <span class="n">clk</span> <span class="o">&lt;=</span> <span class="sc">&#39;1&#39;</span><span class="p">;</span>
+    <span class="k">wait</span> <span class="k">for</span> <span class="n">clk_period</span><span class="o">/</span><span class="mi">2</span><span class="p">;</span>
+  <span class="k">end</span> <span class="k">process</span><span class="p">;</span>
+<span class="k">end</span> <span class="nc">behaviour</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>It can be <a class="reference internal" href="../../../using/InvokingGHDL.html#analysis-command"><span class="std std-ref">analysed</span></a>, <a class="reference internal" href="../../../using/InvokingGHDL.html#elaboration-command"><span class="std std-ref">elaborated</span></a> and <a class="reference internal" href="../../../using/InvokingGHDL.html#run-command"><span class="std std-ref">run</span></a>, as you already know:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>ghdl -a heartbeat.vhdl
+ghdl -e heartbeat
+ghdl -r heartbeat
+</pre></div>
+</div>
+<p>However, execution of the design does not terminate. At the same time, no output is shown on screen. This is because,
+traditionally, hardware designs are continuously running devices which do not have a screen where to print. In this
+context, inspection and verification of the behaviour is done through <a class="reference external" href="https://en.wikipedia.org/wiki/Waveform_viewer">waveforms</a>,
+which is supported by <cite>GHDL</cite> (see <a class="reference internal" href="../../../using/Simulation.html#export-waves"><span class="std std-ref">Export waveforms</span></a>). You can use either <a class="reference internal" href="../../../using/Simulation.html#cmdoption-ghdl-wave"><code class="xref std std-option docutils literal notranslate"><span class="pre">--wave</span></code></a>, <a class="reference internal" href="../../../using/Simulation.html#cmdoption-ghdl-vcd"><code class="xref std std-option docutils literal notranslate"><span class="pre">--vcd</span></code></a>,
+<a class="reference internal" href="../../../using/Simulation.html#cmdoption-ghdl-vcdgz"><code class="xref std std-option docutils literal notranslate"><span class="pre">--vcdgz</span></code></a> or <a class="reference internal" href="../../../using/Simulation.html#cmdoption-ghdl-fst"><code class="xref std std-option docutils literal notranslate"><span class="pre">--fst</span></code></a> to save the signals of the simulation to a file. Then, terminate the execution
+(<kbd class="kbd compound docutils literal notranslate"><kbd class="kbd docutils literal notranslate">C</kbd>-<kbd class="kbd docutils literal notranslate">c</kbd></kbd>) and you can inspect the wave with a viewer, such as <a class="reference external" href="http://gtkwave.sourceforge.net/">GtkWave</a>. As
+explained in the <a class="reference external" href="http://gtkwave.sourceforge.net/gtkwave.pdf">manual</a>, GtkWave <em>‘relies on a post-mortem approach
+through the use of dumpfiles’</em>. Therefore, you should first simulate your design and dump a waveform file, say GHW:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>ghdl -r heartbeat --wave<span class="o">=</span>wave.ghw
+</pre></div>
+</div>
+<p>Then, you can view the dump:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>gtkwave wave.ghw
+</pre></div>
+</div>
+<p>Of course, manually terminating the simulation is for illustration purposes only. In <a class="reference internal" href="../adder/index.html#quickstart-adder"><span class="std std-ref">Full adder</span></a> and
+<a class="reference internal" href="../DLXModelSuite.html#quickstart-dlx"><span class="std std-ref">Working with non-trivial designs</span></a>, you will see how to write a testbench to terminate the simulation programmatically.</p>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../adder/index.html" class="btn btn-neutral float-right" title="Full adder module and testbench" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../hello/index.html" class="btn btn-neutral float-left" title="Hello world program" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2002-2021, Tristan Gingold and contributors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/buildthedocs/sphinx.theme">theme</a>
+    
+    provided by <a href="https://buildthedocs.github.io">Build the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,329 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Implementation of VITAL &mdash; GHDL 2.0.0-dev documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../_static/icon.png"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Directory structure" href="../development/Directories.html" />
+    <link rel="prev" title="Implementation of VHDL" href="ImplementationOfVHDL.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html">
+          
+
+          
+            
+            <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0-dev
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting.html">Getting | Installing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contribute.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../licenses.html">Copyrights | Licenses</a></li>
+</ul>
+<p class="caption"><span class="caption-text">GHDL usage</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../quick_start/index.html">Quick Start Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="InvokingGHDL.html">Invoking GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Simulation.html">Simulation (runtime)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Synthesis.html">Synthesis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CommandReference.html">Additional Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ImplementationOfVHDL.html">Implementation of VHDL</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Implementation of VITAL</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#vital-packages">VITAL packages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#vhdl-restrictions-for-vital">VHDL restrictions for VITAL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#backannotation">Backannotation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#negative-constraint-calculation">Negative constraint calculation</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/Directories.html">Directory structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/building/index.html">Building GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pyGHDL/pyGHDL.html">Python Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/Debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/CodingStyle.html">Coding Style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/Scripts.html">Scripts</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../internals/Overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../internals/Frontend.html">Front-end</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../internals/AST.html">AST</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../internals/RTI.html">Run Time Information (RTI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gnatdoc/index.html">GNATdoc</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Index</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Python Module Index</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GHDL</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Implementation of VITAL</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            
+              <a href="https://github.com/ghdl/ghdl/blob/master/doc/using/ImplementationOfVITAL.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="implementation-of-vital">
+<span id="ref-implvital"></span><h1>Implementation of VITAL<a class="headerlink" href="#implementation-of-vital" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="index-0"></span><span class="target" id="index-1"></span><p id="index-2">This chapter describes how VITAL is implemented in GHDL. Support of VITAL is
+really in a preliminary stage. Do not expect too much of it as of right now.</p>
+<div class="section" id="vital-packages">
+<span id="id1"></span><h2>VITAL packages<a class="headerlink" href="#vital-packages" title="Permalink to this headline">¶</a></h2>
+<p>The VITAL standard or IEEE 1076.4 was first published in 1995, and revised in
+2000.</p>
+<p>The version of the VITAL packages depends on the VHDL standard. VITAL
+1995 packages are used with the VHDL 1987 standard, while VITAL 2000
+packages are used with other standards. This choice is based on the
+requirements of VITAL: VITAL 1995 requires the models follow the VHDL
+1987 standard, while VITAL 2000 requires the models follow VHDL 1993.</p>
+<p>The VITAL 2000 packages were slightly modified so that they conform to
+the VHDL 1993 standard (a few functions are made pure and a few
+impure).</p>
+</div>
+<div class="section" id="vhdl-restrictions-for-vital">
+<span id="id2"></span><h2>VHDL restrictions for VITAL<a class="headerlink" href="#vhdl-restrictions-for-vital" title="Permalink to this headline">¶</a></h2>
+<p>The VITAL standard (partially) implemented is the IEEE 1076.4 standard
+published in 1995.</p>
+<p>This standard defines restriction of the VHDL language usage on VITAL
+model. A <em class="dfn">VITAL model</em> is a design unit (entity or architecture)
+decorated by the <cite>VITAL_Level0</cite> or <cite>VITAL_Level1</cite> attribute.
+These attributes are defined in the <cite>ieee.VITAL_Timing</cite> package.</p>
+<p>Currently, only VITAL level 0 checks are implemented. VITAL level 1 models
+can be analyzed, but GHDL doesn’t check they comply with the VITAL standard.</p>
+<p>Moreover, GHDL doesn’t check (yet) that timing generics are not read inside
+a VITAL level 0 model prior the VITAL annotation.</p>
+<p>The analysis of a non-conformant VITAL model fails. You can disable the
+checks of VITAL restrictions with the <em>–no-vital-checks</em>. Even when
+restrictions are not checked, SDF annotation can be performed.</p>
+</div>
+<div class="section" id="backannotation">
+<span id="id3"></span><h2>Backannotation<a class="headerlink" href="#backannotation" title="Permalink to this headline">¶</a></h2>
+<p id="index-3"><em class="dfn">Backannotation</em> is the process of setting VITAL generics with timing
+information provided by an external files.</p>
+<p>The external files must be SDF (Standard Delay Format) files. GHDL
+supports a tiny subset of SDF version 2.1. Other version numbers can be
+used, provided no features added by later versions are used.</p>
+<p>Hierarchical instance names are not supported. However you can use a list of
+instances. If there is no instance, the top entity will be annotated and
+the celltype must be the name of the top entity. If there is at least one
+instance, the last instance name must be a component instantiation label, and
+the celltype must be the name of the component declaration instantiated.</p>
+<p>Instances being annotated are not required to be VITAL compliant. However
+generics being annotated must follow rules of VITAL (e.g., type must be a
+suitable vital delay type).</p>
+<p>Currently, only timing constraints applying on a timing generic of type
+<cite>VitalDelayType01</cite> has been implemented. This SDF annotator is
+just a proof of concept. Features will be added with the following GHDL
+release.</p>
+</div>
+<div class="section" id="negative-constraint-calculation">
+<h2>Negative constraint calculation<a class="headerlink" href="#negative-constraint-calculation" title="Permalink to this headline">¶</a></h2>
+<p>Negative constraint delay adjustments are necessary to handle negative
+constraints such as a negative setup time. This step is defined in the VITAL
+standard and should occur after backannotation.</p>
+<p>GHDL does not do negative constraint calculation. It fails to handle models
+with negative constraint. I hope to be able to add this phase soon.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../development/Directories.html" class="btn btn-neutral float-right" title="Directory structure" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="ImplementationOfVHDL.html" class="btn btn-neutral float-left" title="Implementation of VHDL" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2002-2021, Tristan Gingold and contributors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/buildthedocs/sphinx.theme">theme</a>
+    
+    provided by <a href="https://buildthedocs.github.io">Build the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

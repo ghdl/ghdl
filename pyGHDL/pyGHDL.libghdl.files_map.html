@@ -1,0 +1,732 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pyGHDL.libghdl.files_map &mdash; GHDL 2.0.0-dev documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../_static/icon.png"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pyGHDL.libghdl.files_map_editor" href="pyGHDL.libghdl.files_map_editor.html" />
+    <link rel="prev" title="pyGHDL.libghdl.errorout_memory" href="pyGHDL.libghdl.errorout_memory.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html">
+          
+
+          
+            
+            <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0-dev
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting.html">Getting | Installing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contribute.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../licenses.html">Copyrights | Licenses</a></li>
+</ul>
+<p class="caption"><span class="caption-text">GHDL usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quick_start/index.html">Quick Start Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/InvokingGHDL.html">Invoking GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/Simulation.html">Simulation (runtime)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/Synthesis.html">Synthesis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/CommandReference.html">Additional Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/ImplementationOfVHDL.html">Implementation of VHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/ImplementationOfVITAL.html">Implementation of VITAL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Development</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../development/Directories.html">Directory structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/building/index.html">Building GHDL</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="pyGHDL.html">Python Interfaces</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="pyGHDL.cli.html">pyGHDL.cli</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyGHDL.dom.html">pyGHDL.dom</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="pyGHDL.libghdl.html">pyGHDL.libghdl</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="pyGHDL.libghdl._decorator.html">pyGHDL.libghdl._decorator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyGHDL.libghdl._types.html">pyGHDL.libghdl._types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyGHDL.libghdl.errorout.html">pyGHDL.libghdl.errorout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyGHDL.libghdl.errorout_console.html">pyGHDL.libghdl.errorout_console</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyGHDL.libghdl.errorout_memory.html">pyGHDL.libghdl.errorout_memory</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">pyGHDL.libghdl.files_map</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyGHDL.libghdl.files_map_editor.html">pyGHDL.libghdl.files_map_editor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyGHDL.libghdl.flags.html">pyGHDL.libghdl.flags</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyGHDL.libghdl.libraries.html">pyGHDL.libghdl.libraries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyGHDL.libghdl.name_table.html">pyGHDL.libghdl.name_table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyGHDL.libghdl.std_names.html">pyGHDL.libghdl.std_names</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyGHDL.libghdl.utils.html">pyGHDL.libghdl.utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyGHDL.libghdl.version.html">pyGHDL.libghdl.version</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyGHDL.libghdl.vhdl.html">pyGHDL.libghdl.vhdl</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pyGHDL.lsp.html">pyGHDL.lsp</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../development/Debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/CodingStyle.html">Coding Style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/Scripts.html">Scripts</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../internals/Overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../internals/Frontend.html">Front-end</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../internals/AST.html">AST</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../internals/RTI.html">Run Time Information (RTI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gnatdoc/index.html">GNATdoc</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Index</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Python Module Index</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GHDL</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="pyGHDL.html">pyGHDL</a> &raquo;</li>
+        
+          <li><a href="pyGHDL.libghdl.html">pyGHDL.libghdl</a> &raquo;</li>
+        
+      <li>pyGHDL.libghdl.files_map</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            
+              <a href="https://github.com/ghdl/ghdl/blob/master/doc/pyGHDL/pyGHDL.libghdl.files_map.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-pyGHDL.libghdl.files_map">
+<span id="pyghdl-libghdl-files-map"></span><h1>pyGHDL.libghdl.files_map<a class="headerlink" href="#module-pyGHDL.libghdl.files_map" title="Permalink to this headline">¶</a></h1>
+<p><strong>Variables</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#pyGHDL.libghdl.files_map.EOT" title="pyGHDL.libghdl.files_map.EOT"><code class="xref py py-data docutils literal notranslate"><span class="pre">EOT</span></code></a></p></li>
+<li><p><a class="reference internal" href="#pyGHDL.libghdl.files_map.No_Source_File_Entry" title="pyGHDL.libghdl.files_map.No_Source_File_Entry"><code class="xref py py-data docutils literal notranslate"><span class="pre">No_Source_File_Entry</span></code></a></p></li>
+<li><p><a class="reference internal" href="#pyGHDL.libghdl.files_map.No_Location" title="pyGHDL.libghdl.files_map.No_Location"><code class="xref py py-data docutils literal notranslate"><span class="pre">No_Location</span></code></a></p></li>
+</ul>
+<p><strong>Functions</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#pyGHDL.libghdl.files_map.Location_To_File" title="pyGHDL.libghdl.files_map.Location_To_File"><code class="xref py py-func docutils literal notranslate"><span class="pre">Location_To_File()</span></code></a>:
+Convert <code class="xref py py-obj docutils literal notranslate"><span class="pre">Location</span></code> to a source file.</p></li>
+<li><p><a class="reference internal" href="#pyGHDL.libghdl.files_map.Location_File_To_Pos" title="pyGHDL.libghdl.files_map.Location_File_To_Pos"><code class="xref py py-func docutils literal notranslate"><span class="pre">Location_File_To_Pos()</span></code></a>:
+Convert <code class="xref py py-obj docutils literal notranslate"><span class="pre">Location</span></code> and <code class="xref py py-obj docutils literal notranslate"><span class="pre">File</span></code> to a position (offset) into the source file.</p></li>
+<li><p><a class="reference internal" href="#pyGHDL.libghdl.files_map.Location_File_To_Line" title="pyGHDL.libghdl.files_map.Location_File_To_Line"><code class="xref py py-func docutils literal notranslate"><span class="pre">Location_File_To_Line()</span></code></a>:
+Convert <code class="xref py py-obj docutils literal notranslate"><span class="pre">Location</span></code> and <code class="xref py py-obj docutils literal notranslate"><span class="pre">File</span></code> to a line number.</p></li>
+<li><p><a class="reference internal" href="#pyGHDL.libghdl.files_map.Location_File_Line_To_Offset" title="pyGHDL.libghdl.files_map.Location_File_Line_To_Offset"><code class="xref py py-func docutils literal notranslate"><span class="pre">Location_File_Line_To_Offset()</span></code></a>:
+Get the offset in <code class="xref py py-obj docutils literal notranslate"><span class="pre">Line</span></code> of <code class="xref py py-obj docutils literal notranslate"><span class="pre">Location</span></code>.</p></li>
+<li><p><a class="reference internal" href="#pyGHDL.libghdl.files_map.Location_File_Line_To_Col" title="pyGHDL.libghdl.files_map.Location_File_Line_To_Col"><code class="xref py py-func docutils literal notranslate"><span class="pre">Location_File_Line_To_Col()</span></code></a>:
+Get logical column (with HT expanded) from <code class="xref py py-obj docutils literal notranslate"><span class="pre">Location</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">File</span></code> and</p></li>
+<li><p><a class="reference internal" href="#pyGHDL.libghdl.files_map.File_To_Location" title="pyGHDL.libghdl.files_map.File_To_Location"><code class="xref py py-func docutils literal notranslate"><span class="pre">File_To_Location()</span></code></a>:
+Convert a <code class="xref py py-obj docutils literal notranslate"><span class="pre">File</span></code> into a location.</p></li>
+<li><p><a class="reference internal" href="#pyGHDL.libghdl.files_map.File_Pos_To_Location" title="pyGHDL.libghdl.files_map.File_Pos_To_Location"><code class="xref py py-func docutils literal notranslate"><span class="pre">File_Pos_To_Location()</span></code></a>:
+Convert a <code class="xref py py-obj docutils literal notranslate"><span class="pre">File</span></code> and an offset <code class="xref py py-obj docutils literal notranslate"><span class="pre">Pos</span></code> in the file into a location.</p></li>
+<li><p><a class="reference internal" href="#pyGHDL.libghdl.files_map.File_Line_To_Position" title="pyGHDL.libghdl.files_map.File_Line_To_Position"><code class="xref py py-func docutils literal notranslate"><span class="pre">File_Line_To_Position()</span></code></a>:
+Convert a <code class="xref py py-obj docutils literal notranslate"><span class="pre">File</span></code> and <code class="xref py py-obj docutils literal notranslate"><span class="pre">Line</span></code> into a position.</p></li>
+<li><p><a class="reference internal" href="#pyGHDL.libghdl.files_map.Get_File_Name" title="pyGHDL.libghdl.files_map.Get_File_Name"><code class="xref py py-func docutils literal notranslate"><span class="pre">Get_File_Name()</span></code></a>:
+Return the name of the file.</p></li>
+<li><p><a class="reference internal" href="#pyGHDL.libghdl.files_map.Get_Directory_Name" title="pyGHDL.libghdl.files_map.Get_Directory_Name"><code class="xref py py-func docutils literal notranslate"><span class="pre">Get_Directory_Name()</span></code></a>:
+Return the directory of the file.</p></li>
+<li><p><a class="reference internal" href="#pyGHDL.libghdl.files_map.Get_File_Buffer" title="pyGHDL.libghdl.files_map.Get_File_Buffer"><code class="xref py py-func docutils literal notranslate"><span class="pre">Get_File_Buffer()</span></code></a>:
+Return a buffer (access to the contents of the file) for a file entry.</p></li>
+<li><p><a class="reference internal" href="#pyGHDL.libghdl.files_map.Get_File_Length" title="pyGHDL.libghdl.files_map.Get_File_Length"><code class="xref py py-func docutils literal notranslate"><span class="pre">Get_File_Length()</span></code></a>:
+Get the position of the first EOT character.</p></li>
+<li><p><a class="reference internal" href="#pyGHDL.libghdl.files_map.Set_File_Length" title="pyGHDL.libghdl.files_map.Set_File_Length"><code class="xref py py-func docutils literal notranslate"><span class="pre">Set_File_Length()</span></code></a>:
+Set the length of the file (which is less than the size of the file buffer).</p></li>
+<li><p><a class="reference internal" href="#pyGHDL.libghdl.files_map.Read_Source_File" title="pyGHDL.libghdl.files_map.Read_Source_File"><code class="xref py py-func docutils literal notranslate"><span class="pre">Read_Source_File()</span></code></a>:
+Return an entry for a filename.</p></li>
+<li><p><a class="reference internal" href="#pyGHDL.libghdl.files_map.Reserve_Source_File" title="pyGHDL.libghdl.files_map.Reserve_Source_File"><code class="xref py py-func docutils literal notranslate"><span class="pre">Reserve_Source_File()</span></code></a>:
+Reserve an entry, but do not read any file.</p></li>
+<li><p><a class="reference internal" href="#pyGHDL.libghdl.files_map.Discard_Source_File" title="pyGHDL.libghdl.files_map.Discard_Source_File"><code class="xref py py-func docutils literal notranslate"><span class="pre">Discard_Source_File()</span></code></a>:
+Mark <code class="xref py py-obj docutils literal notranslate"><span class="pre">File</span></code> as unavailable: clear the name and directory.</p></li>
+<li><p><a class="reference internal" href="#pyGHDL.libghdl.files_map.Free_Source_File" title="pyGHDL.libghdl.files_map.Free_Source_File"><code class="xref py py-func docutils literal notranslate"><span class="pre">Free_Source_File()</span></code></a>:
+Free resources used by <code class="xref py py-obj docutils literal notranslate"><span class="pre">File</span></code>, but keep the entry.</p></li>
+<li><p><a class="reference internal" href="#pyGHDL.libghdl.files_map.Get_Last_Source_File_Entry" title="pyGHDL.libghdl.files_map.Get_Last_Source_File_Entry"><code class="xref py py-func docutils literal notranslate"><span class="pre">Get_Last_Source_File_Entry()</span></code></a>:
+Returns the entry of the last known file.</p></li>
+</ul>
+<dl class="py data">
+<dt id="pyGHDL.libghdl.files_map.EOT">
+<code class="sig-prename descclassname"><span class="pre">pyGHDL.libghdl.files_map.</span></code><code class="sig-name descname"><span class="pre">EOT</span></code><a class="headerlink" href="#pyGHDL.libghdl.files_map.EOT" title="Permalink to this definition">¶</a></dt>
+<dd><p>bytes(iterable_of_ints) -&gt; bytes
+bytes(string, encoding[, errors]) -&gt; bytes
+bytes(bytes_or_buffer) -&gt; immutable copy of bytes_or_buffer
+bytes(int) -&gt; bytes object of size given by the parameter initialized with null bytes
+bytes() -&gt; empty bytes object</p>
+<dl class="simple">
+<dt>Construct an immutable array of bytes from:</dt><dd><ul class="simple">
+<li><p>an iterable yielding integers in range(256)</p></li>
+<li><p>a text string encoded using the specified encoding</p></li>
+<li><p>any object implementing the buffer API.</p></li>
+<li><p>an integer</p></li>
+</ul>
+</dd>
+</dl>
+<div class="highlight-guess notranslate"><div class="highlight"><pre><span></span>b&#39;\x04&#39;
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py data">
+<dt id="pyGHDL.libghdl.files_map.No_Source_File_Entry">
+<code class="sig-prename descclassname"><span class="pre">pyGHDL.libghdl.files_map.</span></code><code class="sig-name descname"><span class="pre">No_Source_File_Entry</span></code><a class="headerlink" href="#pyGHDL.libghdl.files_map.No_Source_File_Entry" title="Permalink to this definition">¶</a></dt>
+<dd><p>int([x]) -&gt; integer
+int(x, base=10) -&gt; integer</p>
+<p>Convert a number or string to an integer, or return 0 if no arguments
+are given.  If x is a number, return x.__int__().  For floating point
+numbers, this truncates towards zero.</p>
+<p>If x is not a number or if base is given, then x must be a string,
+bytes, or bytearray instance representing an integer literal in the
+given base.  The literal can be preceded by ‘+’ or ‘-‘ and be surrounded
+by whitespace.  The base defaults to 10.  Valid bases are 0 and 2-36.
+Base 0 means to interpret the base from the string as an integer literal.
+&gt;&gt;&gt; int(‘0b100’, base=0)
+4</p>
+<div class="highlight-guess notranslate"><div class="highlight"><pre><span></span><span class="mf">0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py data">
+<dt id="pyGHDL.libghdl.files_map.No_Location">
+<code class="sig-prename descclassname"><span class="pre">pyGHDL.libghdl.files_map.</span></code><code class="sig-name descname"><span class="pre">No_Location</span></code><a class="headerlink" href="#pyGHDL.libghdl.files_map.No_Location" title="Permalink to this definition">¶</a></dt>
+<dd><p>int([x]) -&gt; integer
+int(x, base=10) -&gt; integer</p>
+<p>Convert a number or string to an integer, or return 0 if no arguments
+are given.  If x is a number, return x.__int__().  For floating point
+numbers, this truncates towards zero.</p>
+<p>If x is not a number or if base is given, then x must be a string,
+bytes, or bytearray instance representing an integer literal in the
+given base.  The literal can be preceded by ‘+’ or ‘-‘ and be surrounded
+by whitespace.  The base defaults to 10.  Valid bases are 0 and 2-36.
+Base 0 means to interpret the base from the string as an integer literal.
+&gt;&gt;&gt; int(‘0b100’, base=0)
+4</p>
+<div class="highlight-guess notranslate"><div class="highlight"><pre><span></span><span class="mf">0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<p><strong>Functions</strong></p>
+<dl class="py function">
+<dt id="pyGHDL.libghdl.files_map.Location_To_File">
+<code class="sig-prename descclassname"><span class="pre">pyGHDL.libghdl.files_map.</span></code><code class="sig-name descname"><span class="pre">Location_To_File</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Location</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyGHDL/libghdl/files_map.html#Location_To_File"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyGHDL.libghdl.files_map.Location_To_File" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert <code class="xref py py-obj docutils literal notranslate"><span class="pre">Location</span></code> to a source file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>Location</strong> – Location</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>~SourceFileEntry</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Source file. Return <code class="docutils literal notranslate"><span class="pre">No_Source_File_Entry</span></code> if location is incorrect.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pyGHDL.libghdl.files_map.Location_File_To_Pos">
+<code class="sig-prename descclassname"><span class="pre">pyGHDL.libghdl.files_map.</span></code><code class="sig-name descname"><span class="pre">Location_File_To_Pos</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Location</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">File</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyGHDL/libghdl/files_map.html#Location_File_To_Pos"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyGHDL.libghdl.files_map.Location_File_To_Pos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert <code class="xref py py-obj docutils literal notranslate"><span class="pre">Location</span></code> and <code class="xref py py-obj docutils literal notranslate"><span class="pre">File</span></code> to a position (offset) into the source file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Location</strong> – Location</p></li>
+<li><p><strong>File</strong> (<em>~SourceFileEntry</em>) – Source file</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Offset</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pyGHDL.libghdl.files_map.Location_File_To_Line">
+<code class="sig-prename descclassname"><span class="pre">pyGHDL.libghdl.files_map.</span></code><code class="sig-name descname"><span class="pre">Location_File_To_Line</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Location</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">File</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyGHDL/libghdl/files_map.html#Location_File_To_Line"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyGHDL.libghdl.files_map.Location_File_To_Line" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert <code class="xref py py-obj docutils literal notranslate"><span class="pre">Location</span></code> and <code class="xref py py-obj docutils literal notranslate"><span class="pre">File</span></code> to a line number.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Location</strong> – Location</p></li>
+<li><p><strong>File</strong> (<em>~SourceFileEntry</em>) – Source file</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Line number</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pyGHDL.libghdl.files_map.Location_File_Line_To_Offset">
+<code class="sig-prename descclassname"><span class="pre">pyGHDL.libghdl.files_map.</span></code><code class="sig-name descname"><span class="pre">Location_File_Line_To_Offset</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Location</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">File</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Line</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyGHDL/libghdl/files_map.html#Location_File_Line_To_Offset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyGHDL.libghdl.files_map.Location_File_Line_To_Offset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the offset in <code class="xref py py-obj docutils literal notranslate"><span class="pre">Line</span></code> of <code class="xref py py-obj docutils literal notranslate"><span class="pre">Location</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Location</strong> – Location</p></li>
+<li><p><strong>File</strong> (<em>~SourceFileEntry</em>) – Source file</p></li>
+<li><p><strong>Line</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>) – Line number</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Offset</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pyGHDL.libghdl.files_map.Location_File_Line_To_Col">
+<code class="sig-prename descclassname"><span class="pre">pyGHDL.libghdl.files_map.</span></code><code class="sig-name descname"><span class="pre">Location_File_Line_To_Col</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Location</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">File</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Line</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyGHDL/libghdl/files_map.html#Location_File_Line_To_Col"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyGHDL.libghdl.files_map.Location_File_Line_To_Col" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get logical column (with HT expanded) from <code class="xref py py-obj docutils literal notranslate"><span class="pre">Location</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">File</span></code> and
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">Line</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Location</strong> – Location</p></li>
+<li><p><strong>File</strong> (<em>~SourceFileEntry</em>) – Source file</p></li>
+<li><p><strong>Line</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>) – Line number</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>logical column (horizontal tabs are expanded)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pyGHDL.libghdl.files_map.File_To_Location">
+<code class="sig-prename descclassname"><span class="pre">pyGHDL.libghdl.files_map.</span></code><code class="sig-name descname"><span class="pre">File_To_Location</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">File</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyGHDL/libghdl/files_map.html#File_To_Location"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyGHDL.libghdl.files_map.File_To_Location" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a <code class="xref py py-obj docutils literal notranslate"><span class="pre">File</span></code> into a location.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>File</strong> (<em>~SourceFileEntry</em>) – Source file</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Location. Type: <code class="docutils literal notranslate"><span class="pre">Location_Type</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pyGHDL.libghdl.files_map.File_Pos_To_Location">
+<code class="sig-prename descclassname"><span class="pre">pyGHDL.libghdl.files_map.</span></code><code class="sig-name descname"><span class="pre">File_Pos_To_Location</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">File</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Pos</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyGHDL/libghdl/files_map.html#File_Pos_To_Location"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyGHDL.libghdl.files_map.File_Pos_To_Location" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a <code class="xref py py-obj docutils literal notranslate"><span class="pre">File</span></code> and an offset <code class="xref py py-obj docutils literal notranslate"><span class="pre">Pos</span></code> in the file into a location.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>File</strong> (<em>~SourceFileEntry</em>) – Source file</p></li>
+<li><p><strong>Pos</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>) – Offset in the file</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Location. Type: <code class="docutils literal notranslate"><span class="pre">Location_Type</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pyGHDL.libghdl.files_map.File_Line_To_Position">
+<code class="sig-prename descclassname"><span class="pre">pyGHDL.libghdl.files_map.</span></code><code class="sig-name descname"><span class="pre">File_Line_To_Position</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">File</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Line</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyGHDL/libghdl/files_map.html#File_Line_To_Position"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyGHDL.libghdl.files_map.File_Line_To_Position" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a <code class="xref py py-obj docutils literal notranslate"><span class="pre">File</span></code> and <code class="xref py py-obj docutils literal notranslate"><span class="pre">Line</span></code> into a position.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>File</strong> (<em>~SourceFileEntry</em>) – Source file</p></li>
+<li><p><strong>Line</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>) – Line number</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Return <code class="docutils literal notranslate"><span class="pre">Source_Ptr_Bad</span></code> in case of error (<code class="xref py py-obj docutils literal notranslate"><span class="pre">Line</span></code> out of bounds).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pyGHDL.libghdl.files_map.Get_File_Name">
+<code class="sig-prename descclassname"><span class="pre">pyGHDL.libghdl.files_map.</span></code><code class="sig-name descname"><span class="pre">Get_File_Name</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">File</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyGHDL/libghdl/files_map.html#Get_File_Name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyGHDL.libghdl.files_map.Get_File_Name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the name of the file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>File</strong> (<em>~SourceFileEntry</em>) – Source file to get the filename from.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>~NameId</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>NameId for the filename.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pyGHDL.libghdl.files_map.Get_Directory_Name">
+<code class="sig-prename descclassname"><span class="pre">pyGHDL.libghdl.files_map.</span></code><code class="sig-name descname"><span class="pre">Get_Directory_Name</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">File</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyGHDL/libghdl/files_map.html#Get_Directory_Name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyGHDL.libghdl.files_map.Get_Directory_Name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the directory of the file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>File</strong> (<em>~SourceFileEntry</em>) – Source file to get the directory name from.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>~NameId</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>NameId for the directory.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pyGHDL.libghdl.files_map.Get_File_Buffer">
+<code class="sig-prename descclassname"><span class="pre">pyGHDL.libghdl.files_map.</span></code><code class="sig-name descname"><span class="pre">Get_File_Buffer</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">File</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyGHDL/libghdl/files_map.html#Get_File_Buffer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyGHDL.libghdl.files_map.Get_File_Buffer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a buffer (access to the contents of the file) for a file entry.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>File</strong> (<em>~SourceFileEntry</em>) – Source file to get the buffer from.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#bytes" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Type: <code class="docutils literal notranslate"><span class="pre">File_Buffer_Ptr</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pyGHDL.libghdl.files_map.Get_File_Length">
+<code class="sig-prename descclassname"><span class="pre">pyGHDL.libghdl.files_map.</span></code><code class="sig-name descname"><span class="pre">Get_File_Length</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">File</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyGHDL/libghdl/files_map.html#Get_File_Length"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyGHDL.libghdl.files_map.Get_File_Length" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the position of the first EOT character.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>File</strong> (<em>~SourceFileEntry</em>) – Source file</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Type: <code class="docutils literal notranslate"><span class="pre">Source_Ptr</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pyGHDL.libghdl.files_map.Set_File_Length">
+<code class="sig-prename descclassname"><span class="pre">pyGHDL.libghdl.files_map.</span></code><code class="sig-name descname"><span class="pre">Set_File_Length</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">File</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Length</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyGHDL/libghdl/files_map.html#Set_File_Length"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyGHDL.libghdl.files_map.Set_File_Length" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the length of the file (which is less than the size of the file buffer).</p>
+<p>Set also append two EOT at the end of the file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>File</strong> (<em>~SourceFileEntry</em>) – Source file</p></li>
+<li><p><strong>Length</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>) – Length for the file. Type: <code class="docutils literal notranslate"><span class="pre">Source_Ptr</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/constants.html#None" title="(in Python v3.6)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pyGHDL.libghdl.files_map.Read_Source_File">
+<code class="sig-prename descclassname"><span class="pre">pyGHDL.libghdl.files_map.</span></code><code class="sig-name descname"><span class="pre">Read_Source_File</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Directory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyGHDL/libghdl/files_map.html#Read_Source_File"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyGHDL.libghdl.files_map.Read_Source_File" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return an entry for a filename.</p>
+<p>Load the filename if necessary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Directory</strong> (<em>~NameId</em>) – <code class="docutils literal notranslate"><span class="pre">Null_Identifier</span></code> for <code class="xref py py-obj docutils literal notranslate"><span class="pre">DirectoryId</span></code> means current directory.</p></li>
+<li><p><strong>Name</strong> (<em>~NameId</em>) – File name</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>~SourceFileEntry</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Return <code class="docutils literal notranslate"><span class="pre">No_Source_File_Entry</span></code>, if the file does not exist.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pyGHDL.libghdl.files_map.Reserve_Source_File">
+<code class="sig-prename descclassname"><span class="pre">pyGHDL.libghdl.files_map.</span></code><code class="sig-name descname"><span class="pre">Reserve_Source_File</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Directory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Length</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyGHDL/libghdl/files_map.html#Reserve_Source_File"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyGHDL.libghdl.files_map.Reserve_Source_File" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reserve an entry, but do not read any file.</p>
+<p>The length should includes the two terminal EOT.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Directory</strong> (<em>~NameId</em>) – Directory name</p></li>
+<li><p><strong>Name</strong> (<em>~NameId</em>) – File name</p></li>
+<li><p><strong>Length</strong> – Length to reserve. Type: <code class="docutils literal notranslate"><span class="pre">Source_Ptr</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>~SourceFileEntry</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>SourceFile</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pyGHDL.libghdl.files_map.Discard_Source_File">
+<code class="sig-prename descclassname"><span class="pre">pyGHDL.libghdl.files_map.</span></code><code class="sig-name descname"><span class="pre">Discard_Source_File</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">File</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyGHDL/libghdl/files_map.html#Discard_Source_File"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyGHDL.libghdl.files_map.Discard_Source_File" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mark <code class="xref py py-obj docutils literal notranslate"><span class="pre">File</span></code> as unavailable: clear the name and directory.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>This is needed before creating a new source file with the same name.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>File</strong> (<em>~SourceFileEntry</em>) – Source file to discard.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/constants.html#None" title="(in Python v3.6)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pyGHDL.libghdl.files_map.Free_Source_File">
+<code class="sig-prename descclassname"><span class="pre">pyGHDL.libghdl.files_map.</span></code><code class="sig-name descname"><span class="pre">Free_Source_File</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">File</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyGHDL/libghdl/files_map.html#Free_Source_File"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyGHDL.libghdl.files_map.Free_Source_File" title="Permalink to this definition">¶</a></dt>
+<dd><p>Free resources used by <code class="xref py py-obj docutils literal notranslate"><span class="pre">File</span></code>, but keep the entry.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>It could be recycled for files that could fit - not implemented.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>File</strong> (<em>~SourceFileEntry</em>) – Source file to free.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/constants.html#None" title="(in Python v3.6)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pyGHDL.libghdl.files_map.Get_Last_Source_File_Entry">
+<code class="sig-prename descclassname"><span class="pre">pyGHDL.libghdl.files_map.</span></code><code class="sig-name descname"><span class="pre">Get_Last_Source_File_Entry</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyGHDL/libghdl/files_map.html#Get_Last_Source_File_Entry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyGHDL.libghdl.files_map.Get_Last_Source_File_Entry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the entry of the last known file.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>This allows creating a table of <code class="docutils literal notranslate"><span class="pre">SourceFileEntry</span></code>.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>~SourceFileEntry</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Last SourceFileEntry. Type: <code class="docutils literal notranslate"><span class="pre">SourceFileEntry</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="pyGHDL.libghdl.files_map_editor.html" class="btn btn-neutral float-right" title="pyGHDL.libghdl.files_map_editor" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="pyGHDL.libghdl.errorout_memory.html" class="btn btn-neutral float-left" title="pyGHDL.libghdl.errorout_memory" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2002-2021, Tristan Gingold and contributors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/buildthedocs/sphinx.theme">theme</a>
+    
+    provided by <a href="https://buildthedocs.github.io">Build the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

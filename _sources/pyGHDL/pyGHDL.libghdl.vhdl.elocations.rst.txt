@@ -1,0 +1,10 @@
+pyGHDL.libghdl.vhdl.elocations
+==================================
+
+.. automodule:: pyGHDL.libghdl.vhdl.elocations
+
+
+.. currentmodule:: pyGHDL.libghdl.vhdl.elocations
+
+
+.. #-----------------------------------

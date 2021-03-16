@@ -1,0 +1,10 @@
+pyGHDL.lsp.document
+=======================
+
+.. automodule:: pyGHDL.lsp.document
+
+
+.. currentmodule:: pyGHDL.lsp.document
+
+
+.. #-----------------------------------

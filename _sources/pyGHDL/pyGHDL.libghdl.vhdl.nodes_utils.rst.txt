@@ -1,0 +1,45 @@
+pyGHDL.libghdl.vhdl.nodes_utils
+===================================
+
+.. automodule:: pyGHDL.libghdl.vhdl.nodes_utils
+
+
+.. currentmodule:: pyGHDL.libghdl.vhdl.nodes_utils
+
+
+.. #-----------------------------------
+
+
+**Functions**
+
+- :py:func:`Strip_Denoting_Name`:
+  If :obj:`Name` is a simple or an expanded name, return the denoted declaration.
+
+- :py:func:`Get_Entity`:
+  This is a wrapper around ``Get_Entity_Name`` to return the entity declaration
+
+- :py:func:`Is_Second_Subprogram_Specification`:
+  Check if :obj:`Spec` is the subprogram specification of a subprogram body
+
+- :py:func:`Get_Entity_From_Entity_Aspect`:
+  Extract the entity from :obj:`Aspect`.
+
+- :py:func:`Get_Interface_Of_Formal`:
+  Get the interface corresponding to the formal name :obj:`Formal`. This is
+
+
+
+.. #-----------------------------------
+
+**Functions**
+
+
+.. autofunction:: Strip_Denoting_Name
+
+.. autofunction:: Get_Entity
+
+.. autofunction:: Is_Second_Subprogram_Specification
+
+.. autofunction:: Get_Entity_From_Entity_Aspect
+
+.. autofunction:: Get_Interface_Of_Formal

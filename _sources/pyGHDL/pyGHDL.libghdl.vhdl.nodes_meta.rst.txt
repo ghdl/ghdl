@@ -1,0 +1,60 @@
+pyGHDL.libghdl.vhdl.nodes_meta
+==================================
+
+.. automodule:: pyGHDL.libghdl.vhdl.nodes_meta
+
+
+.. currentmodule:: pyGHDL.libghdl.vhdl.nodes_meta
+
+
+.. #-----------------------------------
+
+
+**Classes**
+
+- :py:class:`types`:
+  Undocumented.
+
+- :py:class:`Attr`:
+  Undocumented.
+
+- :py:class:`fields`:
+  Undocumented.
+
+
+
+.. #-----------------------------------
+
+
+.. autoclass:: types
+   :members:
+   :private-members:
+   :undoc-members:
+   :inherited-members:
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: types
+
+   .. rubric:: Members
+
+.. autoclass:: Attr
+   :members:
+   :private-members:
+   :undoc-members:
+   :inherited-members:
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Attr
+
+   .. rubric:: Members
+
+.. autoclass:: fields
+   :members:
+   :private-members:
+   :undoc-members:
+   :inherited-members:
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: fields
+
+   .. rubric:: Members

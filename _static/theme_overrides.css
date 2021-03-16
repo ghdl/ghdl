@@ -1,0 +1,58 @@
+/* Change font sizes*/
+html,body{font-size:98%;}
+p{font-size:95%;margin-bottom:12px}
+.wy-breadcrumbs li.wy-breadcrumbs-aside{font-size:95%}
+.rst-versions{font-size:50%}
+.rst-versions .rst-current-version {font-size: 165%}
+.rst-versions dd{font-size:175%}
+footer {font-size: 75%;}
+.rst-footer-buttons {font-size: 140%;}
+
+/*Shrink left nav to 260px*/
+.wy-nav-side,.rst-versions,.wy-side-nav-search,.wy-menu-vertical{width: 260px}
+.wy-nav-content-wrap{margin-left:260px;background:#fcfcfc;min-height:100%}
+@media screen and (max-width: 768px){
+  .wy-nav-top i {padding-top:7px}
+  .wy-nav-content-wrap{margin-left:0px}
+  .wy-nav-content-wrap.shift{margin-left:260px;position: static;}
+  .wy-nav-side.shift{width:260px;padding-bottom: 40px;}
+  .rst-versions{width:260px}
+  .wy-side-scroll{width:280px;}
+}
+
+/*Fix shields in small screens*/
+@media screen and (max-width: 768px){img{width: auto}}
+/*Fix shield sizes in WhoUsesGHDL*/
+.whouses>.wy-table-responsive img {width:auto;height:20px !important;;display:inline}
+.whouses>.wy-table-responsive td {text-align:center}
+.whouses>.wy-table-responsive>table>thead th{min-width:130px !important}
+.whouses>.wy-table-responsive td:last-child{text-align: left}
+
+/*Remove 1 indentation space in the sidemenu items*/
+.wy-menu-vertical li.current a, .wy-menu-vertical li.toctree-l2.current > a{padding:0.4045em 1.618em}
+.wy-menu-vertical li.toctree-l2.current li.toctree-l3 > a{padding: 0.4045em 1.8em}
+.wy-menu-vertical li.toctree-l3.current li.toctree-l4 > a{padding: 0.4045em 2.618em}
+
+/*Remove empty add*/
+div.wy-menu.rst-pro{display: none !important;max-width: 260px}
+
+/*Simplify 'versions' tab*/
+.rst-versions dt{display:none}
+.rst-versions dd a[href$='.rst'] {display: none}
+.rst-versions dd a[href$='/downloads/'] {display: none}
+.rst-versions .wy-form{display:none !important;}
+.rst-versions .rst-other-versions dd a{padding: 3px}
+.rst-versions .rst-other-versions strong dd a{color: #27AE60}
+.rst-versions .rst-other-versions hr{margin: 5px 0; margin-top: -14px}
+
+.rst-versions {border-top: none}
+
+/*Last doc build date*/
+.lastdocbuilddate {position:fixed;padding-top:30px;font-size:70%;color:#999}
+
+/*Reduce space between footnotes*/
+.footnotes > .wy-table-responsive {margin-top:-12px;margin-bottom:12px}
+
+/*Reduce margin below lists*/
+.rst-content .section ul, .rst-content .toctree-wrapper ul, article ul {margin-bottom: 12px}
+.rst-content blockquote {margin-bottom: 12px;}

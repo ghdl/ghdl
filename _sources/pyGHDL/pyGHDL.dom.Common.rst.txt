@@ -1,0 +1,82 @@
+pyGHDL.dom.Common
+=====================
+
+.. automodule:: pyGHDL.dom.Common
+
+
+.. currentmodule:: pyGHDL.dom.Common
+
+
+.. #-----------------------------------
+
+
+**Exceptions**
+
+- :py:exc:`GHDLBaseException`:
+  Common base class for all non-exit exceptions.
+
+- :py:exc:`LibGHDLException`:
+  Common base class for all non-exit exceptions.
+
+- :py:exc:`GHDLException`:
+  Common base class for all non-exit exceptions.
+
+
+
+**Classes**
+
+- :py:class:`GHDLMixin`:
+  Undocumented.
+
+
+
+.. #-----------------------------------
+
+
+.. autoexception:: GHDLBaseException
+   :members:
+   :private-members:
+   :inherited-members:
+   :undoc-members:
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: GHDLBaseException
+
+   .. rubric:: Members
+
+.. autoexception:: LibGHDLException
+   :members:
+   :private-members:
+   :inherited-members:
+   :undoc-members:
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: LibGHDLException
+
+   .. rubric:: Members
+
+.. autoexception:: GHDLException
+   :members:
+   :private-members:
+   :inherited-members:
+   :undoc-members:
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: GHDLException
+
+   .. rubric:: Members
+
+
+.. #-----------------------------------
+
+
+.. autoclass:: GHDLMixin
+   :members:
+   :private-members:
+   :undoc-members:
+   :inherited-members:
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: GHDLMixin
+
+   .. rubric:: Members

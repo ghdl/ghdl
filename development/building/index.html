@@ -1,0 +1,411 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Building GHDL from Sources &mdash; GHDL 2.0.0-dev documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../../_static/icon.png"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Sources" href="Sources.html" />
+    <link rel="prev" title="Directory structure" href="../Directories.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html">
+          
+
+          
+            
+            <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0-dev
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting.html">Getting | Installing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contribute.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../licenses.html">Copyrights | Licenses</a></li>
+</ul>
+<p class="caption"><span class="caption-text">GHDL usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../quick_start/index.html">Quick Start Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../using/InvokingGHDL.html">Invoking GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../using/Simulation.html">Simulation (runtime)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../using/Synthesis.html">Synthesis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../using/CommandReference.html">Additional Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../using/ImplementationOfVHDL.html">Implementation of VHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../using/ImplementationOfVITAL.html">Implementation of VITAL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Development</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../Directories.html">Directory structure</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Building GHDL</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="Sources.html">Sources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mcode.html">mcode backend</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LLVM.html">LLVM backend</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GCC.html">GCC backend</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tl-dr">TL;DR</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../pyGHDL/pyGHDL.html">Python Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CodingStyle.html">Coding Style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Scripts.html">Scripts</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../internals/Overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../internals/Frontend.html">Front-end</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../internals/AST.html">AST</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../internals/RTI.html">Run Time Information (RTI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../gnatdoc/index.html">GNATdoc</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Index</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../py-modindex.html">Python Module Index</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GHDL</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Building GHDL from Sources</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            
+              <a href="https://github.com/ghdl/ghdl/blob/master/doc/development/building/index.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="building-ghdl-from-sources">
+<span id="build"></span><h1>Building GHDL from Sources<a class="headerlink" href="#building-ghdl-from-sources" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<p>GHDL can be downloaded as a <a class="reference external" href="https://github.com/ghdl/ghdl/archive/master.tar.gz">tarball</a>/<a class="reference external" href="https://github.com/ghdl/ghdl/archive/master.zip">zipfile</a>
+or cloned with <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span></code> from GitHub. GitHub offers HTTPS and SSH as transfer protocols. See the <a class="reference internal" href="Sources.html#sources"><span class="std std-ref">Sources</span></a> page for
+further details.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Since GHDL is written in <cite>Ada</cite>, independently of the code generator you use, a compiler is required. Most GNU/Linux package
+managers provide <code class="docutils literal notranslate"><span class="pre">gcc-ada</span></code> or <code class="docutils literal notranslate"><span class="pre">gcc-gnat</span></code> (which could be outdated). Alternatively, <cite>GNU Ada compiler</cite>, <cite>GNAT GPL</cite>, can be downloaded
+without registration from <a class="reference external" href="http://libre.adacore.com/tools/gnat-gpl-edition/">libre.adacore.com</a> (2014, or later; for x86, 32 or 64 bits).</p>
+</div>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>The download page of <em>GNAT Community Edition</em> provides the latest version (x86, 64 bits), with a graphical installer
+(<code class="docutils literal notranslate"><span class="pre">chmod</span> <span class="pre">+x</span> <span class="pre">*.bin</span></code> and execute it). Alternatively, you can find a link to <em>More packages, platforms, versions and sources</em>
+at the bottom of the page, where versions previous to 2018 are available as binaries ready to be installed
+(<cite>untar</cite> and run the <cite>doinstall</cite> script). In any case, you must add <code class="docutils literal notranslate"><span class="pre">&lt;GNAT_INSTALL_DIR&gt;/bin</span></code> to your <code class="docutils literal notranslate"><span class="pre">PATH</span></code>.</p>
+</div>
+<div class="admonition attention">
+<p class="admonition-title">Attention</p>
+<p>Since <code class="docutils literal notranslate"><span class="pre">v0.37</span></code>, GHDL’s synthesis features require GCC &gt;=8.1, due to some new GNAT features which are not available in
+previous releases. Users with older versions (who don’t need synthesis) can configure GHDL with option <code class="docutils literal notranslate"><span class="pre">--disable-synth</span></code>.</p>
+</div>
+<p>GHDL currently supports three different back-ends (code generators):</p>
+<ul class="simple">
+<li><p>mcode - built-in in-memory x86 (or x86_64) code generator</p></li>
+<li><p>GCC - Gnu Compiler Collection (<a class="reference external" href="http://gcc.gnu.org/">gcc.gnu.org</a>)</p></li>
+<li><p>LLVM - Low-Level Virtual Machine (<a class="reference external" href="http://llvm.org/">llvm.org</a>)</p></li>
+</ul>
+<p>Here is a short comparison, so that you can choose the one you want to use:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 47%" />
+<col style="width: 35%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Back-end</p></th>
+<th class="head"><p>Pros</p></th>
+<th class="head"><p>Cons</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="mcode.html#build-mcode"><span class="std std-ref">mcode</span></a></p></td>
+<td><ul class="simple">
+<li><p>Very easy to build</p></li>
+<li><p>Very quick analysis</p></li>
+<li><p>Can handle very large designs</p></li>
+<li><p>Base simulation time can be modified for speeding up execution</p></li>
+</ul>
+</td>
+<td><ul class="simple">
+<li><p>Simulation is slower</p></li>
+<li><p>x86_64/i386 only</p></li>
+</ul>
+</td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="LLVM.html#build-llvm"><span class="std std-ref">LLVM</span></a></p></td>
+<td><ul class="simple">
+<li><p>Generated code is faster</p></li>
+<li><p>Generated code can be debugged (with <code class="docutils literal notranslate"><span class="pre">-g</span></code>)</p></li>
+<li><p>Easier to build than GCC</p></li>
+<li><p>Ported to many platforms (x86, x86_64, armv7/aarch64)</p></li>
+</ul>
+</td>
+<td><ul class="simple">
+<li><p>Build is more complex than mcode</p></li>
+</ul>
+</td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="GCC.html#build-gcc"><span class="std std-ref">GCC</span></a></p></td>
+<td><ul class="simple">
+<li><p>Generated code is faster (particularly with <code class="docutils literal notranslate"><span class="pre">-O</span></code> or <code class="docutils literal notranslate"><span class="pre">-O2</span></code>)</p></li>
+<li><p>Generated code can be debugged (with <code class="docutils literal notranslate"><span class="pre">-g</span></code>)</p></li>
+<li><p>Ported to many platforms (x86, x86_64, PowerPC, SPARC)</p></li>
+</ul>
+</td>
+<td><ul class="simple">
+<li><p>Build is even more complex</p></li>
+<li><p>Analysis can take time (particularly for large units)</p></li>
+<li><p>Code coverage collection (<code class="docutils literal notranslate"><span class="pre">gcov</span></code>) is unique to GCC</p></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>The output of both GCC and LLVM is an executable file, but <cite>mcode</cite> does not generate any. Therefore, if using GCC/LLVM,
+the call with argument <code class="docutils literal notranslate"><span class="pre">-r</span></code> can be replaced with direct execution of the binary. See section <a class="reference internal" href="../../quick_start/simulation/index.html#using-quickstart-simulation"><span class="std std-ref">Simulation</span></a>.</p>
+</div>
+<p>After making your choice, you can jump to the corresponding section.
+However, we suggest you to read <a class="reference internal" href="../Directories.html#build-dir-structure"><span class="std std-ref">Directory structure</span></a> first, so that you
+know where the content will be placed and which files are expected to be
+created.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>In these instructions, the configure script is executed in the source directory; but you can execute in a different
+directory too, like this:</p>
+<blockquote>
+<div><div class="highlight-Bash notranslate"><div class="highlight"><pre><span></span>$ mkdir ghdl-objs
+$ <span class="nb">cd</span> ghdl-objs
+$ ../path/to/ghdl/configure ...
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>On Windows, building GHDL with mcode backend and GNAT GPL 32 bit seems to be the only way to get a standalone native
+executable straightaway. MINGW/MSYS2 builds depend on the environment/runtime. See <a class="reference external" href="https://github.com/ghdl/ghdl/issues/1560">#1560</a>.</p>
+</div>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>For MacOS 10.15 (Catalina), see <a class="reference external" href="https://github.com/ghdl/ghdl/issues/1368">#1368</a> for workarounds to link failures.</p>
+</div>
+<div class="section" id="tl-dr">
+<h2>TL;DR<a class="headerlink" href="#tl-dr" title="Permalink to this headline">¶</a></h2>
+<p>In order to follow the traditional way to <code class="docutils literal notranslate"><span class="pre">configure</span></code> and <code class="docutils literal notranslate"><span class="pre">make</span></code>, you need an Ada compiler.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>Depending on the OS and distribution you are using, you will also need to install some toolchain dependencies, such as
+<code class="docutils literal notranslate"><span class="pre">zlib</span></code>.</p>
+</div>
+<p>To use mcode backend (easiest to build), in the GHDL base directory, configure and build:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ./configure --prefix=/usr/local
+$ make
+</pre></div>
+</div>
+<p>At that place, you can already use the <cite>ghdl_mcode</cite> built in the directory. You can also install GHDL:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ make install
+</pre></div>
+</div>
+<p>That’s all!</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>The executable is installed as ‘ghdl’ in <code class="docutils literal notranslate"><span class="pre">/usr/local</span></code>. To install it to a different path, change the <code class="docutils literal notranslate"><span class="pre">--prefix</span></code> in the
+call to <code class="docutils literal notranslate"><span class="pre">configure</span></code>. For example, on Windows, you may want to set it to <code class="docutils literal notranslate"><span class="pre">--prefix=/c/Program</span> <span class="pre">Files</span> <span class="pre">(x86)/GHDL</span></code>.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="Sources.html" class="btn btn-neutral float-right" title="Sources" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../Directories.html" class="btn btn-neutral float-left" title="Directory structure" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2002-2021, Tristan Gingold and contributors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/buildthedocs/sphinx.theme">theme</a>
+    
+    provided by <a href="https://buildthedocs.github.io">Build the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

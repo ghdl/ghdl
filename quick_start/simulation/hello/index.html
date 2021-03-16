@@ -1,0 +1,349 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Hello world program &mdash; GHDL 2.0.0-dev documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../../../_static/icon.png"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Heartbeat module" href="../heartbeat/index.html" />
+    <link rel="prev" title="Simulation" href="../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html">
+          
+
+          
+            
+            <img src="../../../_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0-dev
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting.html">Getting | Installing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contribute.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../licenses.html">Copyrights | Licenses</a></li>
+</ul>
+<p class="caption"><span class="caption-text">GHDL usage</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Quick Start Guide</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Simulation</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><cite>Hello world</cite> program</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../heartbeat/index.html"><cite>Heartbeat</cite> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../adder/index.html"><cite>Full adder</cite> module and testbench</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../DLXModelSuite.html">Working with non-trivial designs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference external" href="https://ghdl.github.io/ghdl-cosim">Co-Simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../python/index.html">Python Interfaces</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../using/InvokingGHDL.html">Invoking GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../using/Simulation.html">Simulation (runtime)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../using/Synthesis.html">Synthesis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../using/CommandReference.html">Additional Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../using/ImplementationOfVHDL.html">Implementation of VHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../using/ImplementationOfVITAL.html">Implementation of VITAL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../development/Directories.html">Directory structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development/building/index.html">Building GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../pyGHDL/pyGHDL.html">Python Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development/Debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development/CodingStyle.html">Coding Style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development/Scripts.html">Scripts</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../internals/Overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../internals/Frontend.html">Front-end</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../internals/AST.html">AST</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../internals/RTI.html">Run Time Information (RTI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../gnatdoc/index.html">GNATdoc</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Index</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../py-modindex.html">Python Module Index</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GHDL</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Quick Start Guide</a> &raquo;</li>
+        
+          <li><a href="../index.html">Simulation</a> &raquo;</li>
+        
+      <li><cite>Hello world</cite> program</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            
+              <a href="https://github.com/ghdl/ghdl/blob/master/doc/quick_start/simulation/hello/index.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="hello-world-program">
+<span id="quickstart-hello"></span><h1><cite>Hello world</cite> program<a class="headerlink" href="#hello-world-program" title="Permalink to this headline">¶</a></h1>
+<p>To illustrate the general purpose of <cite>VHDL</cite>, the following block is a commented <cite>Hello world</cite> program which is saved in
+a file named <code class="file docutils literal notranslate"><span class="pre">hello.vhdl</span></code>:</p>
+<div class="highlight-vhdl notranslate"><div class="highlight"><pre><span></span><span class="c1">--  Hello world program</span>
+<span class="k">use</span> <span class="nn">std.textio.</span><span class="k">all</span><span class="p">;</span> <span class="c1">-- Imports the standard textio package.</span>
+
+<span class="c1">--  Defines a design entity, without any ports.</span>
+<span class="k">entity</span> <span class="nc">hello_world</span> <span class="k">is</span>
+<span class="k">end</span> <span class="nc">hello_world</span><span class="p">;</span>
+
+<span class="k">architecture</span> <span class="nc">behaviour</span> <span class="k">of</span> <span class="nc">hello_world</span> <span class="k">is</span>
+<span class="k">begin</span>
+  <span class="k">process</span>
+    <span class="k">variable</span> <span class="n">l</span> <span class="o">:</span> <span class="n">line</span><span class="p">;</span>
+  <span class="k">begin</span>
+    <span class="n">write</span> <span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="kt">String</span><span class="p">&#39;(</span><span class="s">&quot;Hello world!&quot;</span><span class="p">));</span>
+    <span class="n">writeline</span> <span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">l</span><span class="p">);</span>
+    <span class="k">wait</span><span class="p">;</span>
+  <span class="k">end</span> <span class="k">process</span><span class="p">;</span>
+<span class="k">end</span> <span class="nc">behaviour</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<ul>
+<li><p>Both <code class="docutils literal notranslate"><span class="pre">.vhdl</span></code> and <code class="docutils literal notranslate"><span class="pre">.vhd</span></code> extensions are used for <cite>VHDL</cite> source files, while <code class="docutils literal notranslate"><span class="pre">.v</span></code> is used for Verilog.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Since, extension <code class="docutils literal notranslate"><span class="pre">.vhd</span></code> is also interpreted as a <a class="reference external" href="https://en.wikipedia.org/wiki/VHD_(file_format)">Virtual Hard Disk</a>
+file format, some users prefer <code class="docutils literal notranslate"><span class="pre">.vhdl</span></code>, to avoid ambiguity. This is the case with <cite>GHDL</cite>’s codebase. However, in order
+to maintain <a class="reference external" href="https://en.wikipedia.org/wiki/8.3_filename">backward-compatibility</a> with legacy DOS systems,
+other users prefer <code class="docutils literal notranslate"><span class="pre">.vhd</span></code>.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>Unless you use especial characters, either <cite>UTF-8</cite> or <cite>ISO-8859-1</cite> encodings can be used. However, if you do, the
+latter should be used. The standard defines ASCII (7-bit encoding) or ISO Latin-1 (ISO-8859-1) as default.
+However, GHDL has a relaxing option, <a class="reference internal" href="../../../using/InvokingGHDL.html#cmdoption-ghdl-mb-comments"><code class="xref std std-option docutils literal notranslate"><span class="pre">--mb-comments</span></code></a> (multi byte), to allow UTF-8 or other encodings in
+comments.</p></li>
+</ul>
+</div>
+<ul class="simple">
+<li><p>First, you have to compile the file; this is called <a class="reference internal" href="../../../using/InvokingGHDL.html#analysis-command"><span class="std std-ref">analysis</span></a> of a design file in <cite>VHDL</cite>
+terms. Run <code class="docutils literal notranslate"><span class="pre">ghdl</span> <span class="pre">-a</span> <span class="pre">hello.vhdl</span></code> in the <cite>shell</cite>. This command creates or updates a file <code class="file docutils literal notranslate"><span class="pre">work-obj93.cf</span></code>, which
+describes the library <code class="docutils literal notranslate"><span class="pre">work</span></code>.</p></li>
+<li><p>Then, run <code class="docutils literal notranslate"><span class="pre">ghdl</span> <span class="pre">-e</span> <span class="pre">hello_world</span></code> in the <cite>shell</cite>. Command <a class="reference internal" href="../../../using/InvokingGHDL.html#cmdoption-ghdl-e"><code class="xref std std-option docutils literal notranslate"><span class="pre">-e</span></code></a> means <a class="reference internal" href="../../../using/InvokingGHDL.html#elaboration-command"><span class="std std-ref">elaborate</span></a>,
+which is used to build a design, with the <code class="docutils literal notranslate"><span class="pre">hello_world</span></code> entity at the top of the hierarchy.</p></li>
+<li><p>Last, you can directly launch the simulation <a class="reference internal" href="../../../using/InvokingGHDL.html#run-command"><span class="std std-ref">running</span></a> <code class="docutils literal notranslate"><span class="pre">ghdl</span> <span class="pre">-r</span> <span class="pre">hello_world</span></code> in the <cite>shell</cite>. The
+result of the simulation will be shown on screen:</p></li>
+</ul>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>Hello world!
+</pre></div>
+</div>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>If a GCC/LLVM variant of <cite>GHDL</cite> is used:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../../../using/InvokingGHDL.html#analysis-command"><span class="std std-ref">Analysis</span></a> generates a file, <code class="file docutils literal notranslate"><span class="pre">hello.o</span></code>, which is the object file corresponding to
+your <cite>VHDL</cite> program. This is not created with <a class="reference internal" href="../../../development/building/index.html#build"><span class="std std-ref">mcode</span></a>. These kind of object files can be
+compiled into foreign programs (see <a class="reference external" href="https://ghdl.github.io/ghdl-cosim/vhpidirect/linking.html#linking-with-ada" title="(in GHDL-cosim vlatest)"><span>Linking GHDL object files to Ada/C</span></a>).</p></li>
+<li><p>The <a class="reference internal" href="../../../using/InvokingGHDL.html#elaboration-command"><span class="std std-ref">elaboration</span></a> step is mandatory after running the analysis and prior to launching the
+simulation. This will generate an executable binary named <code class="file docutils literal notranslate"><span class="pre">hello_world</span></code>.</p></li>
+<li><p>As a result, <a class="reference internal" href="../../../using/InvokingGHDL.html#cmdoption-ghdl-r"><code class="xref std std-option docutils literal notranslate"><span class="pre">-r</span></code></a> is just a passthrough to the binary generated in the <cite>elaboration</cite>. Therefore, the
+executable can be run directly: <code class="docutils literal notranslate"><span class="pre">./hello_world</span></code>. See <a class="reference internal" href="../../../using/InvokingGHDL.html#cmdoption-ghdl-r"><code class="xref std std-option docutils literal notranslate"><span class="pre">-r</span></code></a> for more informartion.</p></li>
+</ul>
+</div>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p><a class="reference internal" href="../../../using/InvokingGHDL.html#cmdoption-ghdl-e"><code class="xref std std-option docutils literal notranslate"><span class="pre">-e</span></code></a> can be bypassed with <a class="reference internal" href="../../../development/building/index.html#build"><span class="std std-ref">mcode</span></a>, since <a class="reference internal" href="../../../using/InvokingGHDL.html#cmdoption-ghdl-r"><code class="xref std std-option docutils literal notranslate"><span class="pre">-r</span></code></a> actually elaborates the design and saves
+it on memory before running the simulation. But you can still use it to check for some elaboration problems.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../heartbeat/index.html" class="btn btn-neutral float-right" title="Heartbeat module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../index.html" class="btn btn-neutral float-left" title="Simulation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2002-2021, Tristan Gingold and contributors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/buildthedocs/sphinx.theme">theme</a>
+    
+    provided by <a href="https://buildthedocs.github.io">Build the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

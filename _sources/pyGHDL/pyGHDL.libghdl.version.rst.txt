@@ -1,0 +1,10 @@
+pyGHDL.libghdl.version
+==========================
+
+.. automodule:: pyGHDL.libghdl.version
+
+
+.. currentmodule:: pyGHDL.libghdl.version
+
+
+.. #-----------------------------------

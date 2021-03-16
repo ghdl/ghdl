@@ -1,0 +1,10 @@
+pyGHDL.lsp.vhdl_ls
+======================
+
+.. automodule:: pyGHDL.lsp.vhdl_ls
+
+
+.. currentmodule:: pyGHDL.lsp.vhdl_ls
+
+
+.. #-----------------------------------

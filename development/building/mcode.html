@@ -1,0 +1,337 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>mcode backend &mdash; GHDL 2.0.0-dev documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../../_static/icon.png"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="LLVM backend" href="LLVM.html" />
+    <link rel="prev" title="Sources" href="Sources.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html">
+          
+
+          
+            
+            <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0-dev
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting.html">Getting | Installing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contribute.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../licenses.html">Copyrights | Licenses</a></li>
+</ul>
+<p class="caption"><span class="caption-text">GHDL usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../quick_start/index.html">Quick Start Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../using/InvokingGHDL.html">Invoking GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../using/Simulation.html">Simulation (runtime)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../using/Synthesis.html">Synthesis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../using/CommandReference.html">Additional Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../using/ImplementationOfVHDL.html">Implementation of VHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../using/ImplementationOfVITAL.html">Implementation of VITAL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Development</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../Directories.html">Directory structure</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Building GHDL</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Sources.html">Sources</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">mcode backend</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#gcc-gnat-gnu-linux-or-windows-mingw-msys2">GCC/GNAT: GNU/Linux or Windows (MinGW/MSYS2)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#gnat-gpl-windows">GNAT GPL: Windows</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LLVM.html">LLVM backend</a></li>
+<li class="toctree-l2"><a class="reference internal" href="GCC.html">GCC backend</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#tl-dr">TL;DR</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../pyGHDL/pyGHDL.html">Python Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CodingStyle.html">Coding Style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Scripts.html">Scripts</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../internals/Overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../internals/Frontend.html">Front-end</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../internals/AST.html">AST</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../internals/RTI.html">Run Time Information (RTI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../gnatdoc/index.html">GNATdoc</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Index</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../py-modindex.html">Python Module Index</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GHDL</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html">Building GHDL from Sources</a> &raquo;</li>
+        
+      <li>mcode backend</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            
+              <a href="https://github.com/ghdl/ghdl/blob/master/doc/development/building/mcode.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="mcode-backend">
+<span id="build-mcode"></span><h1>mcode backend<a class="headerlink" href="#mcode-backend" title="Permalink to this headline">¶</a></h1>
+<p>The mcode backend is available for all supported platforms and is also the
+simplest procedure, because it requires the fewest dependencies and configuration
+options.</p>
+<div class="section" id="gcc-gnat-gnu-linux-or-windows-mingw-msys2">
+<span id="build-mcode-gnat"></span><h2>GCC/GNAT: GNU/Linux or Windows (MinGW/MSYS2)<a class="headerlink" href="#gcc-gnat-gnu-linux-or-windows-mingw-msys2" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Requirements</p>
+<ul class="simple">
+<li><p>GCC (Gnu Compiler Collection)</p></li>
+<li><p>GNAT (Ada compiler for GCC)</p></li>
+</ul>
+<p>GHDL is configured by <code class="docutils literal notranslate"><span class="pre">configure</span></code> and built by <code class="docutils literal notranslate"><span class="pre">make</span></code>.</p>
+<ul class="simple">
+<li><p>First, GHDL needs to be configured. It is common to specify a <code class="docutils literal notranslate"><span class="pre">PREFIX</span></code>
+(installation directory like <code class="docutils literal notranslate"><span class="pre">/usr/local</span></code> or <code class="docutils literal notranslate"><span class="pre">/opt/ghdl</span></code>). Without any
+other option, <code class="docutils literal notranslate"><span class="pre">configure</span></code> selects <cite>mcode</cite> as the backend.</p></li>
+<li><p>Next, <code class="docutils literal notranslate"><span class="pre">make</span></code> starts the compilation process.</p></li>
+<li><p>Finally, <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">install</span></code> installs GHDL into the installation directory
+specified by <code class="docutils literal notranslate"><span class="pre">PREFIX</span></code>.</p></li>
+</ul>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>ON GNU/Linux, you may need super user privileges (<code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">...</span></code>).</p>
+</div>
+<p class="rubric">Example:</p>
+<div class="highlight-Bash notranslate"><div class="highlight"><pre><span></span>$ <span class="nb">cd</span> &lt;ghdl&gt;
+$ mkdir build
+$ <span class="nb">cd</span> build
+$ ../configure --prefix<span class="o">=</span>PREFIX
+$ make
+$ make install
+</pre></div>
+</div>
+</div>
+<div class="section" id="gnat-gpl-windows">
+<span id="build-mcode-gnatgpl-windows"></span><h2>GNAT GPL: Windows<a class="headerlink" href="#gnat-gpl-windows" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Requirements</p>
+<ul class="simple">
+<li><p>GNAT GPL from <a class="reference external" href="http://libre.adacore.com">http://libre.adacore.com</a></p></li>
+<li><p>PowerShell 4</p></li>
+<li><p>PowerShell Community Extensions (PSCX)</p></li>
+</ul>
+<p class="rubric"><cite>compile.ps1</cite></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Commands</span>          <span class="n">Description</span>
+<span class="o">--------------------------------------------------------------------</span>
+<span class="o">-</span><span class="n">Help</span>             <span class="n">Display</span> <span class="n">the</span> <span class="n">integrated</span> <span class="n">help</span> <span class="n">pages</span>
+<span class="o">-</span><span class="n">Clean</span>            <span class="n">Clean</span> <span class="n">up</span> <span class="nb">all</span> <span class="n">files</span> <span class="ow">and</span> <span class="n">directories</span>
+<span class="o">-</span><span class="n">Compile</span>          <span class="n">Compile</span> <span class="n">GHDL</span>
+<span class="o">-</span><span class="n">Install</span>          <span class="n">Install</span> <span class="nb">all</span> <span class="n">files</span> <span class="n">into</span> <span class="n">a</span> <span class="n">directory</span> <span class="p">(</span><span class="n">xcopy</span> <span class="n">deployment</span><span class="p">)</span>
+<span class="o">-</span><span class="n">Uninstall</span>        <span class="n">Uninstall</span> <span class="nb">all</span> <span class="n">files</span> <span class="kn">from</span> <span class="nn">a</span> <span class="n">directory</span>
+<span class="o">-</span><span class="n">Update</span>           <span class="n">Update</span> <span class="n">files</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">installation</span> <span class="n">directory</span>
+<span class="o">-</span><span class="n">CreatePackage</span>    <span class="n">create</span> <span class="n">an</span> <span class="n">installer</span> <span class="n">package</span>
+
+<span class="n">Install</span> <span class="n">options</span><span class="p">:</span>
+<span class="o">-</span><span class="n">InstallPath</span>      <span class="n">Installation</span> <span class="n">directory</span>
+
+<span class="n">CreatePackage</span> <span class="n">options</span><span class="p">:</span>
+<span class="o">-</span><span class="n">Zip</span>              <span class="n">Create</span> <span class="n">a</span> <span class="nb">zip</span><span class="o">-</span><span class="n">file</span> <span class="k">for</span> <span class="n">xcopy</span> <span class="n">deployment</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="LLVM.html" class="btn btn-neutral float-right" title="LLVM backend" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="Sources.html" class="btn btn-neutral float-left" title="Sources" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2002-2021, Tristan Gingold and contributors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/buildthedocs/sphinx.theme">theme</a>
+    
+    provided by <a href="https://buildthedocs.github.io">Build the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

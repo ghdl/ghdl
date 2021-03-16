@@ -1,0 +1,47 @@
+pyGHDL.libghdl.errorout
+===========================
+
+.. automodule:: pyGHDL.libghdl.errorout
+
+
+.. currentmodule:: pyGHDL.libghdl.errorout
+
+
+.. #-----------------------------------
+
+
+**Classes**
+
+- :py:class:`Msgid`:
+  Undocumented.
+
+
+
+**Functions**
+
+- :py:func:`Enable_Warning`:
+  Undocumented.
+
+
+
+.. #-----------------------------------
+
+
+.. autoclass:: Msgid
+   :members:
+   :private-members:
+   :undoc-members:
+   :inherited-members:
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Msgid
+
+   .. rubric:: Members
+
+
+.. #-----------------------------------
+
+**Functions**
+
+
+.. autofunction:: Enable_Warning

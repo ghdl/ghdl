@@ -1,0 +1,25 @@
+pyGHDL.libghdl._decorator
+=============================
+
+.. automodule:: pyGHDL.libghdl._decorator
+
+
+.. currentmodule:: pyGHDL.libghdl._decorator
+
+
+.. #-----------------------------------
+
+
+**Functions**
+
+- :py:func:`EnumLookupTable`:
+  Decorator to precalculate a enum lookup table (LUT) for enum position to
+
+
+
+.. #-----------------------------------
+
+**Functions**
+
+
+.. autofunction:: EnumLookupTable

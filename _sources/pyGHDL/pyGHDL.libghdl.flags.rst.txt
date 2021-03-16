@@ -1,0 +1,46 @@
+pyGHDL.libghdl.flags
+========================
+
+.. automodule:: pyGHDL.libghdl.flags
+
+
+.. currentmodule:: pyGHDL.libghdl.flags
+
+
+.. #-----------------------------------
+
+**Variables**
+
+- :py:data:`Flag_Elocations`
+- :py:data:`Verbose`
+- :py:data:`Flag_Elaborate_With_Outdated`
+- :py:data:`Flag_Force_Analysis`
+
+
+.. autodata:: Flag_Elocations
+   :annotation:
+
+   .. code-block:: guess
+
+      c_bool(False)
+
+.. autodata:: Verbose
+   :annotation:
+
+   .. code-block:: guess
+
+      c_bool(False)
+
+.. autodata:: Flag_Elaborate_With_Outdated
+   :annotation:
+
+   .. code-block:: guess
+
+      c_bool(False)
+
+.. autodata:: Flag_Force_Analysis
+   :annotation:
+
+   .. code-block:: guess
+
+      c_bool(False)

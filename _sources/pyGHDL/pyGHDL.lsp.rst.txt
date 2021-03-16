@@ -1,0 +1,26 @@
+pyGHDL.lsp
+==============
+
+.. automodule:: pyGHDL.lsp
+
+
+
+.. #-----------------------------------
+
+**Submodules**
+
+.. toctree::
+
+   pyGHDL.lsp.document
+   pyGHDL.lsp.lsp
+   pyGHDL.lsp.lsptools
+   pyGHDL.lsp.references
+   pyGHDL.lsp.symbols
+   pyGHDL.lsp.version
+   pyGHDL.lsp.vhdl_ls
+   pyGHDL.lsp.workspace
+
+.. currentmodule:: pyGHDL.lsp
+
+
+.. #-----------------------------------

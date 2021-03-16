@@ -1,0 +1,38 @@
+pyGHDL.libghdl.vhdl.canon
+=============================
+
+.. automodule:: pyGHDL.libghdl.vhdl.canon
+
+
+.. currentmodule:: pyGHDL.libghdl.vhdl.canon
+
+
+.. #-----------------------------------
+
+**Variables**
+
+- :py:data:`Flag_Concurrent_Stmts`
+- :py:data:`Flag_Configurations`
+- :py:data:`Flag_Associations`
+
+
+.. autodata:: Flag_Concurrent_Stmts
+   :annotation:
+
+   .. code-block:: guess
+
+      c_bool(True)
+
+.. autodata:: Flag_Configurations
+   :annotation:
+
+   .. code-block:: guess
+
+      c_bool(True)
+
+.. autodata:: Flag_Associations
+   :annotation:
+
+   .. code-block:: guess
+
+      c_bool(True)

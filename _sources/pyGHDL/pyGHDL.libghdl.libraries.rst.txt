@@ -1,0 +1,70 @@
+pyGHDL.libghdl.libraries
+============================
+
+.. automodule:: pyGHDL.libghdl.libraries
+
+
+.. currentmodule:: pyGHDL.libghdl.libraries
+
+
+.. #-----------------------------------
+
+**Variables**
+
+- :py:data:`Library_Location`
+- :py:data:`Work_Library`
+
+
+**Functions**
+
+- :py:func:`Get_Libraries_Chain`:
+  Get the chain of libraries.  Can be used only to read (it mustn't be modified).
+
+- :py:func:`Add_Design_Unit_Into_Library`:
+  Add or replace an design unit in the work library. DECL must not have a chain
+
+- :py:func:`Purge_Design_File`:
+  Remove the same file as DESIGN_FILE from work library and all of its units.
+
+- :py:func:`Find_Entity_For_Component`:
+  Find an entity whose name is :obj:`Name` in any library. |br|
+
+- :py:func:`Get_Library_No_Create`:
+  Get the library named :obj:`Ident`.
+
+- :py:func:`Find_Primary_Unit`:
+  Just return the design_unit for :obj:`Name`, or ``NULL`` if not found.
+
+
+
+.. autodata:: Library_Location
+   :annotation:
+
+   .. code-block:: guess
+
+      c_int(1)
+
+.. autodata:: Work_Library
+   :annotation:
+
+   .. code-block:: guess
+
+      c_int(0)
+
+
+.. #-----------------------------------
+
+**Functions**
+
+
+.. autofunction:: Get_Libraries_Chain
+
+.. autofunction:: Add_Design_Unit_Into_Library
+
+.. autofunction:: Purge_Design_File
+
+.. autofunction:: Find_Entity_For_Component
+
+.. autofunction:: Get_Library_No_Create
+
+.. autofunction:: Find_Primary_Unit

@@ -1,0 +1,80 @@
+pyGHDL.libghdl.utils
+========================
+
+.. automodule:: pyGHDL.libghdl.utils
+
+
+.. currentmodule:: pyGHDL.libghdl.utils
+
+
+.. #-----------------------------------
+
+
+**Functions**
+
+- :py:func:`name_image`:
+  Lookup a :obj:`Id` and return its string.
+
+- :py:func:`leftest_location`:
+  Undocumented.
+
+- :py:func:`fields_iter`:
+  Iterate on fields of node :obj:`n`.
+
+- :py:func:`chain_iter`:
+  Iterate of a chain headed by node :obj:`n`.
+
+- :py:func:`chain_to_list`:
+  Convert a chain headed by node :obj:`n` to a Python list.
+
+- :py:func:`nodes_iter`:
+  Iterate all nodes of :obj:`n`, including :obj:`n`.
+
+- :py:func:`list_iter`:
+  Iterate all element of Iir_List :obj:`lst`.
+
+- :py:func:`flist_iter`:
+  Iterate all element of Iir_List :obj:`lst`.
+
+- :py:func:`declarations_iter`:
+  Iterate all declarations in node :obj:`n`.
+
+- :py:func:`concurrent_stmts_iter`:
+  Iterate concurrent statements in node :obj:`n`.
+
+- :py:func:`constructs_iter`:
+  Iterate library units, concurrent statements and declarations
+
+- :py:func:`sequential_iter`:
+  Iterate sequential statements. The first node must be either
+
+
+
+.. #-----------------------------------
+
+**Functions**
+
+
+.. autofunction:: name_image
+
+.. autofunction:: leftest_location
+
+.. autofunction:: fields_iter
+
+.. autofunction:: chain_iter
+
+.. autofunction:: chain_to_list
+
+.. autofunction:: nodes_iter
+
+.. autofunction:: list_iter
+
+.. autofunction:: flist_iter
+
+.. autofunction:: declarations_iter
+
+.. autofunction:: concurrent_stmts_iter
+
+.. autofunction:: constructs_iter
+
+.. autofunction:: sequential_iter

@@ -1,0 +1,500 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Coding Style &mdash; GHDL 2.0.0-dev documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../_static/icon.png"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Scripts" href="Scripts.html" />
+    <link rel="prev" title="Debugging" href="Debugging.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html">
+          
+
+          
+            
+            <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0-dev
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting.html">Getting | Installing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contribute.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../licenses.html">Copyrights | Licenses</a></li>
+</ul>
+<p class="caption"><span class="caption-text">GHDL usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quick_start/index.html">Quick Start Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/InvokingGHDL.html">Invoking GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/Simulation.html">Simulation (runtime)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/Synthesis.html">Synthesis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/CommandReference.html">Additional Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/ImplementationOfVHDL.html">Implementation of VHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/ImplementationOfVITAL.html">Implementation of VITAL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Development</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Directories.html">Directory structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="building/index.html">Building GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pyGHDL/pyGHDL.html">Python Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Debugging.html">Debugging</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Coding Style</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#ada">Ada</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#shell">Shell</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#guidelines-to-edit-the-documentation">Guidelines to edit the documentation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#guidelines-to-edit-section-building">Guidelines to edit section ‘Building’</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#documentation-configuration">Documentation configuration</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Scripts.html">Scripts</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../internals/Overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../internals/Frontend.html">Front-end</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../internals/AST.html">AST</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../internals/RTI.html">Run Time Information (RTI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gnatdoc/index.html">GNATdoc</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Index</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Python Module Index</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GHDL</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Coding Style</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            
+              <a href="https://github.com/ghdl/ghdl/blob/master/doc/development/CodingStyle.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="coding-style">
+<span id="dev-style"></span><h1>Coding Style<a class="headerlink" href="#coding-style" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="ada">
+<h2>Ada<a class="headerlink" href="#ada" title="Permalink to this headline">¶</a></h2>
+<p>Ada subset: use only a simple (VHDL like) subset of Ada: no tasking, no
+controlled types… VHDL users should easily understand that subset.
+Allowed Ada95 features: the standard library, child packages.
+Use assertions.</p>
+<p>We try to follow the ‘GNU Coding Standards’ when possible: comments before
+declarations, one space at the end of sentences, finish sentences with a dot.
+But: 2 spaces for indentation in code blocks.</p>
+<p>No trailing spaces, no TAB (HT).</p>
+<p>Subprograms must have a comment before to describe them, like:</p>
+<div class="highlight-Ada notranslate"><div class="highlight"><pre><span></span><span class="c1">--  Analyze the concurrent statements of PARENT.</span>
+<span class="kd">procedure</span> <span class="nf">Sem_Concurrent_Statement_Chain</span> <span class="p">(</span><span class="nv">Parent</span> <span class="p">: </span><span class="nv">Iir</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The line before the comment must be a blank line (unless this is the first
+declaration). Don’t repeat the comment before the subprogram body.</p>
+<ul>
+<li><p>For subprograms:</p>
+<ol class="arabic">
+<li><p>Declare on one line when possible:</p>
+<div class="highlight-Ada notranslate"><div class="highlight"><pre><span></span><span class="kd">function</span> <span class="nf">Translate_Static_Aggregate</span> <span class="p">(</span><span class="nv">Aggr</span> <span class="p">: </span><span class="nv">Iir</span><span class="p">)</span> <span class="kr">return</span> <span class="n">O_Cnode</span>
+</pre></div>
+</div>
+</li>
+<li><p>If not possible, put the return on the next line:</p>
+<div class="highlight-Ada notranslate"><div class="highlight"><pre><span></span><span class="kd">function</span> <span class="nf">Translate_Static_String</span> <span class="p">(</span><span class="nv">Str_Type</span> <span class="p">: </span><span class="nv">Iir</span><span class="p">;</span> <span class="nv">Str_Ident</span> <span class="p">: </span><span class="nv">Name_Id</span><span class="p">)</span>
+                                 <span class="kr">return</span> <span class="n">O_Cnode</span>
+</pre></div>
+</div>
+</li>
+<li><p>If not possible, put parameters and return on the next line:</p>
+<div class="highlight-Ada notranslate"><div class="highlight"><pre><span></span><span class="kd">function</span> <span class="nf">Create_String_Literal_Var_Inner</span>
+  <span class="p">(</span><span class="nv">Str</span> <span class="p">: </span><span class="nv">Iir</span><span class="p">;</span> <span class="nv">Element_Type</span> <span class="p">: </span><span class="nv">Iir</span><span class="p">;</span> <span class="nv">Str_Type</span> <span class="p">: </span><span class="nv">O_Tnode</span><span class="p">)</span> <span class="kr">return</span> <span class="n">Var_Type</span>
+</pre></div>
+</div>
+</li>
+<li><p>If not possible, return on the next line:</p>
+<div class="highlight-Ada notranslate"><div class="highlight"><pre><span></span><span class="kd">function</span> <span class="nf">Translate_Shortcut_Operator</span>
+  <span class="p">(</span><span class="nv">Imp</span> <span class="p">: </span><span class="nv">Iir_Implicit_Function_Declaration</span><span class="p">;</span> <span class="nv">Left</span><span class="p">,</span> <span class="nv">Right</span> <span class="p">: </span><span class="nv">Iir</span><span class="p">)</span>
+  <span class="kr">return</span> <span class="n">O_Enode</span>
+</pre></div>
+</div>
+</li>
+<li><p>If not possible, one parameter per line, just after subprogram name:</p>
+<div class="highlight-Ada notranslate"><div class="highlight"><pre><span></span><span class="kd">procedure</span> <span class="nf">Translate_Static_Aggregate_1</span> <span class="p">(</span><span class="nv">List</span> <span class="p">: </span><span class="nv">in</span> <span class="nv">out</span> <span class="nv">O_Array_Aggr_List</span><span class="p">;</span>
+                                        <span class="nv">Aggr</span> <span class="p">: </span><span class="nv">Iir</span><span class="p">;</span>
+                                        <span class="nv">Info</span> <span class="p">: </span><span class="nv">Iir</span><span class="p">;</span>
+                                        <span class="nv">El_Type</span> <span class="p">: </span><span class="nv">Iir</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p>If not possible, add a return after subprogram name:</p>
+<div class="highlight-Ada notranslate"><div class="highlight"><pre><span></span><span class="kd">function</span> <span class="nf">Translate_Predefined_TF_Array_Element</span>
+  <span class="p">(</span><span class="nv">Op</span> <span class="p">: </span><span class="nv">Predefined_Boolean_Logical</span><span class="p">;</span>
+   <span class="nv">Left</span><span class="p">,</span> <span class="nv">Right</span> <span class="p">: </span><span class="nv">Iir</span><span class="p">;</span>
+   <span class="nv">Res_Type</span> <span class="p">: </span><span class="nv">Iir</span><span class="p">;</span>
+   <span class="nv">Loc</span> <span class="p">: </span><span class="nv">Iir</span><span class="p">)</span>
+  <span class="kr">return</span> <span class="n">O_Enode</span>
+</pre></div>
+</div>
+</li>
+<li><p>If not possible, ask yourself what is wrong!  Shorten a name.</p></li>
+</ol>
+</li>
+<li><p>Rule for the ‘is’: on a new line only if the declarative part is not empty:</p>
+<blockquote>
+<div><div class="highlight-Ada notranslate"><div class="highlight"><pre><span></span><span class="kd">procedure</span> <span class="nf">Translate_Assign</span> <span class="p">(</span><span class="nv">Target</span> <span class="p">: </span><span class="nv">Mnode</span><span class="p">;</span> <span class="nv">Expr</span> <span class="p">: </span><span class="nv">Iir</span><span class="p">;</span> <span class="nv">Target_Type</span> <span class="p">: </span><span class="nv">Iir</span><span class="p">)</span>
+<span class="kr">is</span>
+  <span class="n">Val</span> <span class="p">:</span> <span class="n">O_Enode</span><span class="p">;</span>
+<span class="kr">begin</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>vs.</p>
+<blockquote>
+<div><div class="highlight-Ada notranslate"><div class="highlight"><pre><span></span><span class="kd">function</span> <span class="nf">Translate_Static_Range_Dir</span> <span class="p">(</span><span class="nv">Expr</span> <span class="p">: </span><span class="nv">Iir</span><span class="p">)</span> <span class="kr">return</span> <span class="n">O_Cnode</span> <span class="kr">is</span>
+<span class="kr">begin</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>If the parameter line is too long with the ‘is’, put in on a separate line:</p>
+<blockquote>
+<div><div class="highlight-Ada notranslate"><div class="highlight"><pre><span></span><span class="kd">procedure</span> <span class="nf">Predeclare_Scope_Type</span>
+  <span class="p">(</span><span class="nv">Scope</span> <span class="p">: </span><span class="nv">in</span> <span class="nv">out</span> <span class="nv">Var_Scope_Type</span><span class="p">;</span> <span class="nv">Name</span> <span class="p">: </span><span class="nv">O_Ident</span><span class="p">)</span> <span class="kr">is</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Generic instantiation: put the generic actual part on a new line:</p>
+<blockquote>
+<div><div class="highlight-Ada notranslate"><div class="highlight"><pre><span></span><span class="kd">procedure</span> <span class="nf">Free</span> <span class="kr">is</span> <span class="kr">new</span> <span class="n">Ada</span><span class="p">.</span><span class="n">Unchecked_Deallocation</span>
+  <span class="p">(</span><span class="n">Action_List</span><span class="p">,</span> <span class="n">Action_List_Acc</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>For if/then statement:</p>
+<ol class="arabic">
+<li><p>‘then’ on the same line:</p>
+<div class="highlight-Ada notranslate"><div class="highlight"><pre><span></span><span class="kr">if</span> <span class="n">Get_Expr_Staticness</span> <span class="p">(</span><span class="n">Decl</span><span class="p">)</span> <span class="o">=</span> <span class="n">Locally</span> <span class="kr">then</span>
+</pre></div>
+</div>
+</li>
+<li><p>If not possible, ‘then’ is alone on its line aligned with the ‘if’:</p>
+<div class="highlight-Ada notranslate"><div class="highlight"><pre><span></span><span class="kr">if</span> <span class="n">Expr</span> <span class="o">=</span> <span class="n">Null_Iir</span>
+  <span class="ow">or else</span> <span class="n">Get_Kind</span> <span class="p">(</span><span class="n">Expr</span><span class="p">)</span> <span class="o">=</span> <span class="n">Iir_Kind_Overflow_Literal</span>
+<span class="kr">then</span>
+</pre></div>
+</div>
+</li>
+<li><p>For a multiline condition, ‘or else’ and ‘and then’ should start lines.</p></li>
+</ol>
+</li>
+<li><p>‘Local’ variable declaration:
+Do not initialize variables, constants must be declared before variables:</p>
+<blockquote>
+<div><div class="highlight-Ada notranslate"><div class="highlight"><pre><span></span><span class="kr">is</span>
+  <span class="no">N_Info</span> <span class="p">:</span> <span class="kr">constant</span> <span class="n">Iir</span> <span class="p">:=</span> <span class="n">Get_Sub_Aggregate_Info</span> <span class="p">(</span><span class="n">Info</span><span class="p">);</span>
+  <span class="n">Assoc</span>  <span class="p">:</span> <span class="n">Iir</span><span class="p">;</span>
+  <span class="n">Sub</span>    <span class="p">:</span> <span class="n">Iir</span><span class="p">;</span>
+<span class="kr">begin</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>If the initialization expression has a side effect (such as allocation), do
+not use a constant.</p>
+</li>
+</ul>
+</div>
+<div class="section" id="shell">
+<h2>Shell<a class="headerlink" href="#shell" title="Permalink to this headline">¶</a></h2>
+<p>Ubuntu uses <cite>dash</cite> instead of <cite>bash</cite> when a shell script is run. As a result, some functionalities, such as arrays like
+<code class="docutils literal notranslate"><span class="pre">array[1]</span></code>, are not supported. Therefore, build scripts should not use those functionalities unless
+they are sourced in a <cite>bash</cite> shell. The same applies to the scripts in <cite>testsuite</cite>.</p>
+</div>
+<div class="section" id="guidelines-to-edit-the-documentation">
+<h2>Guidelines to edit the documentation<a class="headerlink" href="#guidelines-to-edit-the-documentation" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ol class="arabic">
+<li><p>It’s better for version control systems and diff tools to break lines at a sensible number of characters. Long lines appear as one diff. Also merging is more complex because merges are line based. Long unbreakable items may be longer (links, refs, etc.). We chose to use 160 chars.</p></li>
+<li><p>Please indent all directive content by 3 spaces (not 2, and no tabs).</p></li>
+<li><p>Please use <code class="docutils literal notranslate"><span class="pre">*</span></code> as an itemize character, since <code class="docutils literal notranslate"><span class="pre">-</span></code> and <code class="docutils literal notranslate"><span class="pre">+</span></code> are supported by docutils, but not officially supported by Sphinx.</p></li>
+<li><p>Please underline all headlines with at least as many characters as the headline is long. Following the Python pattern for headlines the levels are:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>############
+************ (sometimes skipped in small documents)
+============
+-------------------
+‘’’’’’’’’’’’’’’’’’’’’’’’
+</pre></div>
+</div>
+</li>
+<li><p>It’s not required to write</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>:samp:`code`
+</pre></div>
+</div>
+<p>The default role for</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span>``code``
+</pre></div>
+</div>
+</div></blockquote>
+<p>is samp. <code class="docutils literal notranslate"><span class="pre">:samp:</span></code> is only required when you want to write italic text in code text.</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span>:samp:`print 1+{variable}`
+</pre></div>
+</div>
+</div></blockquote>
+<p>Now, variable becomes italic.</p>
+<p>Please simplify all usages of <code class="docutils literal notranslate"><span class="pre">:samp:`code`</span></code> to <code class="docutils literal notranslate"><span class="pre">``code``</span></code> for readability. Here are the regular expressions for an editor like Notepad++:</p>
+<ul class="simple">
+<li><p>Search pattern:: <code class="samp docutils literal notranslate"><span class="pre">(.+?)</span></code></p></li>
+<li><p>Replace pattern:: <code class="docutils literal notranslate"><span class="pre">\1</span></code></p></li>
+</ul>
+</li>
+<li><p>Each backend has one folder and each platform/compiler has one file. Please note that page headlines are different from ToC headline:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">..</span> <span class="n">toctree</span><span class="p">::</span>
+   <span class="p">:</span><span class="n">hidden</span><span class="p">:</span>
+
+   <span class="n">ToC</span> <span class="n">entry</span> <span class="o">&lt;</span><span class="n">file1</span><span class="o">&gt;</span>
+   <span class="n">file2</span>
+</pre></div>
+</div>
+</li>
+<li><p>Documentation should not use “you”, “we”, …, because it’s not an interactive conversation or informal letter. It’s like a thesis, everything is structured and formal. However, to make it more friendly to newcomers, we agree to allow informal language in the Quick Start Guide.</p></li>
+<li><p>Please keep errors to a minimum.</p></li>
+</ol>
+</div></blockquote>
+<div class="section" id="guidelines-to-edit-section-building">
+<h3>Guidelines to edit section ‘Building’<a class="headerlink" href="#guidelines-to-edit-section-building" title="Permalink to this headline">¶</a></h3>
+<p>We prefer a text block, which explains how a compilation works, what we can configure for that backend, etc. After that, we prefer a code block with e.g. bash instructions on how to compile a backend. A list of instructions with embedded bash lines is not helpful. An experienced, as well as novice user, would like to copy a set of instructions into the shell. But it should be stated what these instructions will do. Complex flows like for GCC, can be split into multiple shell code blocks. Moreover, we find it essential to demonstrate when and where to change directories.</p>
+<p>We would like to see a list like:</p>
+<ul class="simple">
+<li><p>gcc (Gnu Compiler Collection)</p></li>
+<li><p>gcc-gnat (Ada compiler for GCC)</p></li>
+<li><p>llvm-del (LLVM development package)</p></li>
+<li><p>…</p></li>
+</ul>
+<p>The goal is also to explain what a user is installing and what the few lines in the build description do. Now they know the name, can search for similar names if they have another package manager or distro or can ask Google/Wikipedia. We often find many build receipts with cryptic shell code and to execute this unknown stuff with sudo is not comfortable. We would like to know what it does before hitting enter.</p>
+</div>
+</div>
+<div class="section" id="documentation-configuration">
+<h2>Documentation configuration<a class="headerlink" href="#documentation-configuration" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p>Python snippet for Sphinx’s <cite>conf.py</cite> to extract the current version number from Git (latest tag name). [<a class="reference external" href="https://github.com/ghdl/ghdl/issues/200">#200</a>, <a class="reference external" href="https://github.com/ghdl/ghdl/issues/221">#221</a>]</p></li>
+<li><p>Reference <code class="docutils literal notranslate"><span class="pre">genindex.html</span></code> from the navigation bar. [<a class="reference external" href="https://github.com/ghdl/ghdl/issues/200">#200</a>]</p></li>
+<li><p>Create “parts” (LaTeX terminology / chapter headlines) in navigation bar. [<a class="reference external" href="https://github.com/ghdl/ghdl/issues/200">#200</a>]</p></li>
+<li><dl>
+<dt>Intersphinx files [<a class="reference external" href="https://github.com/ghdl/ghdl/issues/200">#200</a>]</dt><dd><ul>
+<li><p>To decompress the inventory file: <cite>curl -s http://ghdl.readthedocs.io/en/latest/objects.inv | tail -n+5 | openssl zlib -d</cite>. From <a class="reference external" href="http://unix.stackexchange.com/questions/22834/how-to-uncompress-zlib-data-in-unix">how-to-uncompress-zlib-data-in-unix</a>.</p></li>
+<li><p>External ref and link to section:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>:ref:`GHDL Roadmap &lt;ghdl:CHANGE:Roadmap&gt;`
+</pre></div>
+</div>
+</li>
+<li><p>External ref to option (no link):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>:ghdl:option:`--ieee`
+:option:`ghdl:--ieee`
+</pre></div>
+</div>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="Scripts.html" class="btn btn-neutral float-right" title="Scripts" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="Debugging.html" class="btn btn-neutral float-left" title="Debugging" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2002-2021, Tristan Gingold and contributors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/buildthedocs/sphinx.theme">theme</a>
+    
+    provided by <a href="https://buildthedocs.github.io">Build the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

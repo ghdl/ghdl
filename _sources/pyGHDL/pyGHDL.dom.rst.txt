@@ -1,0 +1,22 @@
+pyGHDL.dom
+==============
+
+.. automodule:: pyGHDL.dom
+
+
+
+.. #-----------------------------------
+
+**Submodules**
+
+.. toctree::
+
+   pyGHDL.dom.Common
+   pyGHDL.dom.DesignUnit
+   pyGHDL.dom.InterfaceItem
+   pyGHDL.dom.Misc
+
+.. currentmodule:: pyGHDL.dom
+
+
+.. #-----------------------------------

@@ -1,0 +1,38 @@
+pyGHDL.libghdl.vhdl.std_package
+===================================
+
+.. automodule:: pyGHDL.libghdl.vhdl.std_package
+
+
+.. currentmodule:: pyGHDL.libghdl.vhdl.std_package
+
+
+.. #-----------------------------------
+
+**Variables**
+
+- :py:data:`Std_Location`
+- :py:data:`Standard_Package`
+- :py:data:`Character_Type_Definition`
+
+
+.. autodata:: Std_Location
+   :annotation:
+
+   .. code-block:: guess
+
+      c_int(0)
+
+.. autodata:: Standard_Package
+   :annotation:
+
+   .. code-block:: guess
+
+      c_int(0)
+
+.. autodata:: Character_Type_Definition
+   :annotation:
+
+   .. code-block:: guess
+
+      c_int(0)

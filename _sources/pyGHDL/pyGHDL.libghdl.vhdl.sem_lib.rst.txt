@@ -1,0 +1,35 @@
+pyGHDL.libghdl.vhdl.sem_lib
+===============================
+
+.. automodule:: pyGHDL.libghdl.vhdl.sem_lib
+
+
+.. currentmodule:: pyGHDL.libghdl.vhdl.sem_lib
+
+
+.. #-----------------------------------
+
+
+**Functions**
+
+- :py:func:`Load_File`:
+  Start to analyse a file (i.e. load and parse it).
+
+- :py:func:`Finish_Compilation`:
+  Analyze :obj:`Unit`.
+
+- :py:func:`Free_Dependence_List`:
+  Free the dependence list of :obj:`Design`.
+
+
+
+.. #-----------------------------------
+
+**Functions**
+
+
+.. autofunction:: Load_File
+
+.. autofunction:: Finish_Compilation
+
+.. autofunction:: Free_Dependence_List

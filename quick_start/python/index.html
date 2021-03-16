@@ -1,0 +1,342 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Python Interfaces &mdash; GHDL 2.0.0-dev documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../../_static/icon.png"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Invoking GHDL" href="../../using/InvokingGHDL.html" />
+    <link rel="prev" title="Working with non-trivial designs" href="../simulation/DLXModelSuite.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html">
+          
+
+          
+            
+            <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0.0-dev
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting.html">Getting | Installing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contribute.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../licenses.html">Copyrights | Licenses</a></li>
+</ul>
+<p class="caption"><span class="caption-text">GHDL usage</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Quick Start Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../simulation/index.html">Simulation</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://ghdl.github.io/ghdl-cosim">Co-Simulation</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Python Interfaces</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#language-server">Language Server</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#ghdl-ls">ghdl-ls</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../using/InvokingGHDL.html">Invoking GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../using/Simulation.html">Simulation (runtime)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../using/Synthesis.html">Synthesis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../using/CommandReference.html">Additional Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../using/ImplementationOfVHDL.html">Implementation of VHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../using/ImplementationOfVITAL.html">Implementation of VITAL</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../development/Directories.html">Directory structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/building/index.html">Building GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pyGHDL/pyGHDL.html">Python Interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/Debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/CodingStyle.html">Coding Style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/Scripts.html">Scripts</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../internals/Overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../internals/Frontend.html">Front-end</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../internals/AST.html">AST</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../internals/RTI.html">Run Time Information (RTI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../gnatdoc/index.html">GNATdoc</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Index</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../py-modindex.html">Python Module Index</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GHDL</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Quick Start Guide</a> &raquo;</li>
+        
+      <li>Python Interfaces</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            
+              <a href="https://github.com/ghdl/ghdl/blob/master/doc/quick_start/python/index.rst" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="python-interfaces">
+<span id="using-quickstart-python"></span><h1>Python Interfaces<a class="headerlink" href="#python-interfaces" title="Permalink to this headline">¶</a></h1>
+<p>Currently, pyGHDL is not distributed through PyPI. Therefore, users need to install it from the git repository. However, the
+version of the sources must be compatible with the installed version of GHDL (and the shared library <code class="docutils literal notranslate"><span class="pre">libghdl</span></code>).
+Installing from <code class="docutils literal notranslate"><span class="pre">master</span></code> is discouraged, because it might contain changes to the internal AST. Instead, <code class="docutils literal notranslate"><span class="pre">ghdl</span> <span class="pre">version</span> <span class="pre">hash</span></code>
+allows getting the commit hash of the version the installed binary was built from. Since <code class="docutils literal notranslate"><span class="pre">pip</span></code> allows installing packages
+by providing the URL to the git repo, this is the recommended installation procedure:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>pip install git+https://github.com/ghdl/ghdl.git@$(ghdl version hash)
+</pre></div>
+</div>
+<div class="section" id="language-server">
+<span id="cmdref"></span><h2>Language Server<a class="headerlink" href="#language-server" title="Permalink to this headline">¶</a></h2>
+<p>When installed through <code class="docutils literal notranslate"><span class="pre">pip</span></code>, pyGHDL provides executable entrypoints registered in the search PATH, such as <code class="docutils literal notranslate"><span class="pre">ghdl-ls</span></code>.</p>
+<div class="section" id="ghdl-ls">
+<span id="cmdref-ghdlls"></span><h3>ghdl-ls<a class="headerlink" href="#ghdl-ls" title="Permalink to this headline">¶</a></h3>
+<p>VHDL Language Protocol Server. Find info about clients in <a class="reference external" href="https://github.com/ghdl/ghdl-language-server">ghdl/ghdl-language-server</a>.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">usage: ghdl-ls [-h] [--version] [--verbose] [--log-file LOG_FILE]</span>
+<span class="go">               [--trace-file TRACE_FILE] [--input INPUT] [--disp-config]</span>
+</pre></div>
+</div>
+<div class="section" id="optional-arguments">
+<h4>optional arguments<a class="headerlink" href="#optional-arguments" title="Permalink to this headline">¶</a></h4>
+<dl class="std option">
+<dt id="cmdoption-ghdl-ls-h">
+<span id="cmdoption-ghdl-ls-help"></span><code class="sig-name descname"><span class="pre">-h</span></code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">--help</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-ghdl-ls-h" title="Permalink to this definition">¶</a></dt>
+<dd><p>show this help message and exit</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-ghdl-ls-version">
+<span id="cmdoption-ghdl-ls-V"></span><span id="cmdoption-ghdl-ls-v"></span><code class="sig-name descname"><span class="pre">--version</span></code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">-V</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-ghdl-ls-version" title="Permalink to this definition">¶</a></dt>
+<dd><p>show program’s version number and exit</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-ghdl-ls-verbose">
+<span id="cmdoption-ghdl-ls-0"></span><code class="sig-name descname"><span class="pre">--verbose</span></code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">-v</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-ghdl-ls-verbose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Show debug output</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-ghdl-ls-log-file">
+<code class="sig-name descname"><span class="pre">--log-file</span></code><code class="sig-prename descclassname"> <span class="pre">&lt;log_file&gt;</span></code><a class="headerlink" href="#cmdoption-ghdl-ls-log-file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Redirect logs to the given file instead of stderr</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-ghdl-ls-trace-file">
+<code class="sig-name descname"><span class="pre">--trace-file</span></code><code class="sig-prename descclassname"> <span class="pre">&lt;trace_file&gt;</span></code><a class="headerlink" href="#cmdoption-ghdl-ls-trace-file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save RPC data to FILE.in and FILE.out (overrides <span class="target" id="index-0"></span><code class="xref std std-envvar docutils literal notranslate"><span class="pre">GHDL_LS_TRACE</span></code>)</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-ghdl-ls-input">
+<span id="cmdoption-ghdl-ls-i"></span><code class="sig-name descname"><span class="pre">--input</span></code><code class="sig-prename descclassname"> <span class="pre">&lt;input&gt;</span></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">-i</span></code><code class="sig-prename descclassname"> <span class="pre">&lt;input&gt;</span></code><a class="headerlink" href="#cmdoption-ghdl-ls-input" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read request from file</p>
+</dd></dl>
+
+<dl class="std option">
+<dt id="cmdoption-ghdl-ls-disp-config">
+<code class="sig-name descname"><span class="pre">--disp-config</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-ghdl-ls-disp-config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display installation configuration and exit</p>
+</dd></dl>
+
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../../using/InvokingGHDL.html" class="btn btn-neutral float-right" title="Invoking GHDL" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../simulation/DLXModelSuite.html" class="btn btn-neutral float-left" title="Working with non-trivial designs" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2002-2021, Tristan Gingold and contributors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/buildthedocs/sphinx.theme">theme</a>
+    
+    provided by <a href="https://buildthedocs.github.io">Build the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

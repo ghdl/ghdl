@@ -1,0 +1,102 @@
+pyGHDL.dom.DesignUnit
+=========================
+
+.. automodule:: pyGHDL.dom.DesignUnit
+
+
+.. currentmodule:: pyGHDL.dom.DesignUnit
+
+
+.. #-----------------------------------
+
+
+**Classes**
+
+- :py:class:`Entity`:
+  ``ModelEntity`` is a base class for all classes in the VHDL language model,
+
+- :py:class:`Architecture`:
+  ``ModelEntity`` is a base class for all classes in the VHDL language model,
+
+- :py:class:`Package`:
+  ``ModelEntity`` is a base class for all classes in the VHDL language model,
+
+- :py:class:`PackageBody`:
+  ``ModelEntity`` is a base class for all classes in the VHDL language model,
+
+- :py:class:`Context`:
+  ``ModelEntity`` is a base class for all classes in the VHDL language model,
+
+- :py:class:`Configuration`:
+  ``ModelEntity`` is a base class for all classes in the VHDL language model,
+
+
+
+.. #-----------------------------------
+
+
+.. autoclass:: Entity
+   :members:
+   :private-members:
+   :undoc-members:
+   :inherited-members:
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Entity
+
+   .. rubric:: Members
+
+.. autoclass:: Architecture
+   :members:
+   :private-members:
+   :undoc-members:
+   :inherited-members:
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Architecture
+
+   .. rubric:: Members
+
+.. autoclass:: Package
+   :members:
+   :private-members:
+   :undoc-members:
+   :inherited-members:
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Package
+
+   .. rubric:: Members
+
+.. autoclass:: PackageBody
+   :members:
+   :private-members:
+   :undoc-members:
+   :inherited-members:
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: PackageBody
+
+   .. rubric:: Members
+
+.. autoclass:: Context
+   :members:
+   :private-members:
+   :undoc-members:
+   :inherited-members:
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Context
+
+   .. rubric:: Members
+
+.. autoclass:: Configuration
+   :members:
+   :private-members:
+   :undoc-members:
+   :inherited-members:
+
+   .. rubric:: Inheritance
+   .. inheritance-diagram:: Configuration
+
+   .. rubric:: Members
