@@ -3700,6 +3700,9 @@ package body Synth.Stmts is
                Synth_Attribute_Formal (Syn_Inst, Val, Id_Anyconst);
             when Name_Anyseq =>
                Synth_Attribute_Formal (Syn_Inst, Val, Id_Anyseq);
+            when Name_Loc =>
+               --  Applies to nets/ports.
+               null;
             when others =>
                Warning_Msg_Synth (+Spec, "unhandled attribute %i", (1 => +Id));
          end case;

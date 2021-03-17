@@ -612,7 +612,8 @@ package body Synth.Decls is
 
       case Get_Kind (Obj) is
          when Iir_Kind_Signal_Declaration
-            | Iir_Kind_Variable_Declaration =>
+            | Iir_Kind_Variable_Declaration
+            | Iir_Kind_Interface_Signal_Declaration =>
             V := Get_Value (Syn_Inst, Obj);
             pragma Assert (V.Val.Kind = Value_Wire);
             Inst := Get_Net_Parent (Get_Wire_Gate (V.Val.W));
