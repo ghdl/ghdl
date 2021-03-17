@@ -32,6 +32,76 @@ package body Netlists.Dump is
       Put_Trim (Width'Image (W));
    end Put_Width;
 
+   procedure Put_Id (N : Name_Id) is
+   begin
+      Put (Name_Table.Image (N));
+   end Put_Id;
+
+   procedure Disp_Binary_Digit (Va : Uns32; Zx : Uns32; I : Natural) is
+   begin
+      Put (Bchar (((Va / 2**I) and 1) + ((Zx / 2**I) and 1) * 2));
+   end Disp_Binary_Digit;
+
+   procedure Disp_Binary_Digits (Va : Uns32; Zx : Uns32; W : Natural) is
+   begin
+      for I in 1 .. W loop
+         Disp_Binary_Digit (Va, Zx, W - I);
+      end loop;
+   end Disp_Binary_Digits;
+
+   procedure Disp_Pval_Binary (Pv : Pval)
+   is
+      Len : constant Uns32 := Get_Pval_Length (Pv);
+      V   : Logic_32;
+      Off : Uns32;
+   begin
+      Put ('"');
+      if Len > 0 then
+         V := Read_Pval (Pv, (Len - 1) / 32);
+         for I in reverse 0 .. Len - 1 loop
+            Off := I mod 32;
+            if Off = 31 then
+               V := Read_Pval (Pv, I / 32);
+            end if;
+            Disp_Binary_Digit (V.Val, V.Zx, Natural (Off));
+         end loop;
+      end if;
+      Put ('"');
+   end Disp_Pval_Binary;
+
+   procedure Disp_Pval_String (Pv : Pval)
+   is
+      Len : constant Uns32 := Get_Pval_Length (Pv);
+      pragma Assert (Len rem 8 = 0);
+      V   : Logic_32;
+      Off : Uns32;
+      C   : Uns32;
+   begin
+      Put ('"');
+      if Len > 0 then
+         V := Read_Pval (Pv, (Len - 1) / 32);
+         for I in reverse 0 .. (Len / 8) - 1 loop
+            Off := I mod 4;
+            if Off = 3 then
+               V := Read_Pval (Pv, I / 4);
+            end if;
+            pragma Assert (V.Zx = 0);
+            C := Shift_Right (V.Val, Natural (8 * Off)) and 16#ff#;
+            Put (Character'Val (C));
+         end loop;
+      end if;
+      Put ('"');
+   end Disp_Pval_String;
+
+   procedure Disp_Instance_Id (Inst : Instance) is
+   begin
+      if Flag_Disp_Id then
+         Put ("{i");
+         Put_Trim (Instance'Image (Inst));
+         Put ('}');
+      end if;
+   end Disp_Instance_Id;
+
    procedure Dump_Name (N : Sname)
    is
       use Name_Table;
@@ -55,7 +125,7 @@ package body Netlists.Dump is
             Put (Image (Get_Sname_Suffix (N)));
          when Sname_Artificial =>
             Put ("$");
-            Put (Image (Get_Sname_Suffix (N)));
+            Put_Id (Get_Sname_Suffix (N));
          when Sname_Version =>
             Put ("%");
             Put_Uns32 (Get_Sname_Version (N));
@@ -157,11 +227,7 @@ package body Netlists.Dump is
       Put_Indent (Indent);
       Put ("instance ");
       Dump_Name (Get_Instance_Name (Inst));
-      if Flag_Disp_Id then
-         Put (" {i");
-         Put_Trim (Instance'Image (Inst));
-         Put ('}');
-      end if;
+      Disp_Instance_Id (Inst);
       Put (": ");
       Dump_Name (Get_Module_Name (Get_Module (Inst)));
       New_Line;
@@ -236,6 +302,55 @@ package body Netlists.Dump is
       New_Line;
    end Dump_Module_Port;
 
+   procedure Dump_Attributes (M : Module; Indent : Natural := 0)
+   is
+      Attrs : constant Attribute_Map_Acc := Get_Attributes (M);
+      Attr  : Attribute;
+      Inst  : Instance;
+      Kind  : Param_Type;
+      Val   : Pval;
+   begin
+      if Attrs = null then
+         --  No attributes at all.
+         return;
+      end if;
+
+      for I in
+        Attribute_Maps.First_Index .. Attribute_Maps.Last_Index (Attrs.all)
+      loop
+         Attr := Attribute_Maps.Get_Value (Attrs.all, I);
+         Inst := Attribute_Maps.Get_By_Index (Attrs.all, I);
+         while Attr /= No_Attribute loop
+            pragma Assert (Has_Attribute (Inst));
+
+            Put_Indent (Indent);
+            Put ("attribute ");
+            Put_Id (Get_Attribute_Name (Attr));
+            Put (" of ");
+            Dump_Name (Get_Instance_Name (Inst));
+            Disp_Instance_Id (Inst);
+            Put (" := ");
+            Kind := Get_Attribute_Type (Attr);
+            Val := Get_Attribute_Pval (Attr);
+            case Kind is
+               when Param_Invalid
+                  | Param_Uns32 =>
+                  Put ("??");
+               when Param_Pval_String =>
+                  Disp_Pval_String (Val);
+               when Param_Pval_Vector
+                  | Param_Pval_Integer
+                  | Param_Pval_Boolean
+                  | Param_Pval_Real
+                  | Param_Pval_Time_Ps =>
+                  Disp_Pval_Binary (Val);
+            end case;
+            Put_Line (";");
+            Attr := Get_Attribute_Next (Attr);
+         end loop;
+      end loop;
+   end Dump_Attributes;
+
    procedure Dump_Module_Header (M : Module; Indent : Natural := 0) is
    begin
       --  Module id and name.
@@ -295,6 +410,8 @@ package body Netlists.Dump is
       for S of Sub_Modules (M) loop
          Dump_Module (S, Indent + 1);
       end loop;
+
+      Dump_Attributes (M, Indent + 1);
 
       declare
          Self : constant Instance := Get_Self_Instance (M);
@@ -404,6 +521,9 @@ package body Netlists.Dump is
       if Get_Nbr_Outputs (Inst) /= 1 then
          return False;
       end if;
+      if Has_Attribute (Inst) then
+         return False;
+      end if;
       O := Get_Output (Inst, 0);
       Inp := Get_First_Sink (O);
       if Inp = No_Input or else Get_Next_Sink (Inp) /= No_Input then
@@ -503,10 +623,40 @@ package body Netlists.Dump is
 
       Dump_Name (Get_Module_Name (M));
 
-      if Flag_Disp_Id then
-         Put ("{i");
-         Put_Trim (Instance'Image (Inst));
-         Put ('}');
+      Disp_Instance_Id (Inst);
+
+      if Has_Attribute (Inst) then
+         declare
+            Attr  : Attribute;
+            Kind  : Param_Type;
+            Val   : Pval;
+         begin
+            Attr := Get_First_Attribute (Inst);
+            Put ("(* ");
+            loop
+               Put_Id (Get_Attribute_Name (Attr));
+               Put ("=");
+               Kind := Get_Attribute_Type (Attr);
+               Val := Get_Attribute_Pval (Attr);
+               case Kind is
+                  when Param_Invalid
+                    | Param_Uns32 =>
+                     Put ("??");
+                  when Param_Pval_String =>
+                     Disp_Pval_String (Val);
+                  when Param_Pval_Vector
+                    | Param_Pval_Integer
+                    | Param_Pval_Boolean
+                    | Param_Pval_Real
+                    | Param_Pval_Time_Ps =>
+                     Disp_Pval_Binary (Val);
+               end case;
+               Attr := Get_Attribute_Next (Attr);
+               exit when Attr = No_Attribute;
+               Put (", ");
+            end loop;
+            Put (" *)");
+         end;
       end if;
 
       if Get_Nbr_Params (Inst) > 0 then

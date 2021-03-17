@@ -19,13 +19,13 @@
 with Simple_IO; use Simple_IO;
 with Utils_IO; use Utils_IO;
 with Types_Utils; use Types_Utils;
-with Name_Table; use Name_Table;
 with Files_Map;
 
 with Netlists.Utils; use Netlists.Utils;
 with Netlists.Iterators; use Netlists.Iterators;
 with Netlists.Gates; use Netlists.Gates;
 with Netlists.Locations;
+with Netlists.Dump; use Netlists.Dump;
 
 package body Netlists.Disp_Vhdl is
    Flag_Merge_Lit : constant Boolean := True;
@@ -44,11 +44,6 @@ package body Netlists.Disp_Vhdl is
          Put (" downto 0)");
       end if;
    end Put_Type;
-
-   procedure Put_Id (N : Name_Id) is
-   begin
-      Put (Name_Table.Image (N));
-   end Put_Id;
 
    procedure Put_Name_Version (N : Sname) is
    begin
@@ -151,64 +146,6 @@ package body Netlists.Disp_Vhdl is
          end if;
       end;
    end Disp_Net_Name;
-
-   Bchar : constant array (Uns32 range 0 .. 3) of Character := "01ZX";
-
-   procedure Disp_Binary_Digit (Va : Uns32; Zx : Uns32; I : Natural) is
-   begin
-      Put (Bchar (((Va / 2**I) and 1) + ((Zx / 2**I) and 1) * 2));
-   end Disp_Binary_Digit;
-
-   procedure Disp_Binary_Digits (Va : Uns32; Zx : Uns32; W : Natural) is
-   begin
-      for I in 1 .. W loop
-         Disp_Binary_Digit (Va, Zx, W - I);
-      end loop;
-   end Disp_Binary_Digits;
-
-   procedure Disp_Pval_Binary (Pv : Pval)
-   is
-      Len : constant Uns32 := Get_Pval_Length (Pv);
-      V   : Logic_32;
-      Off : Uns32;
-   begin
-      Put ('"');
-      if Len > 0 then
-         V := Read_Pval (Pv, (Len - 1) / 32);
-         for I in reverse 0 .. Len - 1 loop
-            Off := I mod 32;
-            if Off = 31 then
-               V := Read_Pval (Pv, I / 32);
-            end if;
-            Disp_Binary_Digit (V.Val, V.Zx, Natural (Off));
-         end loop;
-      end if;
-      Put ('"');
-   end Disp_Pval_Binary;
-
-   procedure Disp_Pval_String (Pv : Pval)
-   is
-      Len : constant Uns32 := Get_Pval_Length (Pv);
-      pragma Assert (Len rem 8 = 0);
-      V   : Logic_32;
-      Off : Uns32;
-      C   : Uns32;
-   begin
-      Put ('"');
-      if Len > 0 then
-         V := Read_Pval (Pv, (Len - 1) / 32);
-         for I in reverse 0 .. (Len / 8) - 1 loop
-            Off := I mod 4;
-            if Off = 3 then
-               V := Read_Pval (Pv, I / 4);
-            end if;
-            pragma Assert (V.Zx = 0);
-            C := Shift_Right (V.Val, Natural (8 * Off)) and 16#ff#;
-            Put (Character'Val (C));
-         end loop;
-      end if;
-      Put ('"');
-   end Disp_Pval_String;
 
    procedure Disp_Instance_Gate (Inst : Instance)
    is
