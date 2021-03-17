@@ -1232,11 +1232,16 @@ package body Netlists is
       return Modules_Table.Table (M).Attrs;
    end Get_Attributes;
 
+   function Has_Attribute (Inst : Instance) return Boolean is
+   begin
+      return Instances_Table.Table (Inst).Has_Attr;
+   end Has_Attribute;
+
    function Get_First_Attribute (Inst : Instance) return Attribute
    is
       pragma Assert (Is_Valid (Inst));
    begin
-      if not Instances_Table.Table (Inst).Has_Attr then
+      if not Has_Attribute (Inst) then
          return No_Attribute;
       end if;
       declare

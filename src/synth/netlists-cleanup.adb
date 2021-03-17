@@ -128,29 +128,32 @@ package body Netlists.Cleanup is
               |  Id_Port
               |  Id_Enable
               |  Id_Nop =>
-               declare
-                  Inp : Input;
-                  In_Drv : Net;
-                  O : Net;
-               begin
-                  Inp := Get_Input (Inst, 0);
-                  In_Drv := Get_Driver (Inp);
-                  O := Get_Output (Inst, 0);
-                  if In_Drv /= No_Net then
-                     --  Only when the output is driven.
-                     Disconnect (Inp);
-                     Redirect_Inputs (O, In_Drv);
-                  else
-                     Disconnect (Get_First_Sink (O));
-                  end if;
+               --  Keep gates with an attribute.
+               if not Has_Attribute (Inst) then
+                  declare
+                     Inp : Input;
+                     In_Drv : Net;
+                     O : Net;
+                  begin
+                     Inp := Get_Input (Inst, 0);
+                     In_Drv := Get_Driver (Inp);
+                     O := Get_Output (Inst, 0);
+                     if In_Drv /= No_Net then
+                        --  Only when the output is driven.
+                        Disconnect (Inp);
+                        Redirect_Inputs (O, In_Drv);
+                     else
+                        Disconnect (Get_First_Sink (O));
+                     end if;
 
-                  if Get_Id (Inst) = Id_Ioutput then
-                     --  Disconnect the initial value.
-                     Disconnect (Get_Input (Inst, 1));
-                  end if;
+                     if Get_Id (Inst) = Id_Ioutput then
+                        --  Disconnect the initial value.
+                        Disconnect (Get_Input (Inst, 1));
+                     end if;
 
-                  Remove_Instance (Inst);
-               end;
+                     Remove_Instance (Inst);
+                  end;
+               end if;
             when others =>
                null;
          end case;

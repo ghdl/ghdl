@@ -343,6 +343,9 @@ package Netlists is
    --  Get the next attribute for the same instance.
    function Get_Attribute_Next (Attr : Attribute) return Attribute;
 
+   --  Return True iff INST has at least one attribute.
+   function Has_Attribute (Inst : Instance) return Boolean;
+
    --  Display some usage stats on the standard error.
    procedure Disp_Stats;
 private
@@ -445,9 +448,9 @@ private
 
    type Instance_Record is record
       --  The instance is instantiated in Parent.
-      Parent     : Module;
-      Has_Attr  : Boolean;  --  Set when there is at least one attribute.
-      Flag4      : Boolean;
+      Parent   : Module;
+      Has_Attr : Boolean;  --  Set when there is at least one attribute.
+      Flag4    : Boolean;
 
       --  Instances are in a doubly-linked list.
       Prev_Instance : Instance;
