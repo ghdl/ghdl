@@ -338,11 +338,14 @@ rm -f config.status
     eval vval=\$$v
     echo $v=\"$vval\"
   done
-  sed_opts=`echo $subst_vars | sed -e "s/\\([a-zA-Z_]*\\)/ -e \"s%@\1@%\$\1%g\"/g"`
   subst_files="ghdl.gpr Makefile"
   echo "for f in $subst_files; do"
   echo '  echo "Creating $f"'
-  echo "  sed $sed_opts" '< $srcdir/${f}.in > $f'
+  echo "  sed \\"
+  for v in $subst_vars; do
+      echo "    -e \"s%@$v@%\$$v%g\" \\"
+  done
+  echo '  < $srcdir/${f}.in > $f'
   echo "done"
 } > config.status || \
 {
