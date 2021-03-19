@@ -549,6 +549,8 @@ package body Vhdl.Sem_Names is
    is
       Prefix : Iir;
       Obj : Iir;
+      Obj_Alias : Iir;
+      Obj_Type : Iir;
    begin
       if Get_Kind (Name) /= Iir_Kind_Selected_Name then
          return;
@@ -556,18 +558,29 @@ package body Vhdl.Sem_Names is
 
       Prefix := Get_Prefix (Name);
       Obj := Get_Named_Entity (Prefix);
-      if Obj /= Null_Iir
-        and then Kind_In (Obj, Iir_Kind_Variable_Declaration,
-                          Iir_Kind_Interface_Variable_Declaration)
-        and then Get_Type (Obj) /= Null_Iir
+      if Obj = Null_Iir then
+         return;
+      end if;
+      if Get_Kind (Obj) = Iir_Kind_Object_Alias_Declaration then
+         Obj_Alias := Get_Named_Entity (Get_Name (Obj));
+      else
+         Obj_Alias := Obj;
+      end if;
+
+      if Kind_In (Obj_Alias, Iir_Kind_Variable_Declaration,
+                  Iir_Kind_Interface_Variable_Declaration)
       then
-         if Get_Kind (Get_Type (Obj)) /= Iir_Kind_Protected_Type_Declaration
+         Obj_Type := Get_Type (Obj_Alias);
+         if Obj_Type = Null_Iir then
+            return;
+         end if;
+         if Get_Kind (Obj_Type) /= Iir_Kind_Protected_Type_Declaration
          then
             Error_Msg_Sem
               (+Prefix, "type of the prefix should be a protected type");
             return;
          end if;
-         Set_Method_Object (Call, Obj);
+         Set_Method_Object (Call, Obj_Alias);
          Set_Use_Flag (Obj, True);
       end if;
    end Name_To_Method_Object;

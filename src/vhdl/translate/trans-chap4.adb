@@ -1668,7 +1668,8 @@ package body Trans.Chap4 is
             when Type_Mode_Bounded_Arrays
               | Type_Mode_Bounded_Records
               | Type_Mode_Acc
-              | Type_Mode_Bounds_Acc =>
+              | Type_Mode_Bounds_Acc
+              | Type_Mode_Protected =>
                --  Create an object pointer.
                --  At elaboration: copy base from name.
                Atype := Tinfo.Ortho_Ptr_Type (Mode);
@@ -1762,7 +1763,8 @@ package body Trans.Chap4 is
                     (Decl_Type, T2M (Decl_Type, Mode),
                      Name_Type, N, Decl);
                when Type_Mode_Acc
-                 | Type_Mode_Bounds_Acc =>
+                 | Type_Mode_Bounds_Acc
+                 | Type_Mode_Protected =>
                   New_Assign_Stmt (Get_Var (A), M2Addr (N));
                when Type_Mode_Scalar =>
                   case Mode is
