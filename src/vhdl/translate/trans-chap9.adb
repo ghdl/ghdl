@@ -489,7 +489,7 @@ package body Trans.Chap9 is
                                             Ghdl_Location_Ptr_Node));
       New_Procedure_Call (Assocs);
 
-      if Flags.Flag_Psl_Warn_Uncovered then
+      if Flags.Flag_Psl_Report_Uncovered then
          New_Else_Stmt (Blk);
 
          Start_Association (Assocs, Ghdl_Psl_Cover_Failed);

@@ -102,7 +102,7 @@ package body Options is
 
       -- Handles -Wpsl-uncovered
       if Opt = "psl-uncovered" then
-         Flag_Psl_Warn_Uncovered := True;
+         Flag_Psl_Report_Uncovered := True;
          return Option_Ok;
       end if;
 
@@ -297,18 +297,17 @@ package body Options is
       P ("  -Werror            turns warnings into errors");
       P ("  -Wpsl-uncovered    Prints warning after simulation for each");
       P ("                     uncovered PSL cover point.");
-      P ("                     Only valid with '-fpsl'");
 --    P ("Simulation option:");
 --    P ("  --assert-level=LEVEL     set the level which stop the");
 --    P ("           simulation.  LEVEL is note, warning, error,");
 --    P ("           failure or none");
       P ("Extensions:");
-      P ("  -fexplicit        give priority to explicitly declared operator");
-      P ("  -frelaxed-rules   relax some LRM rules");
-      P ("  -C  --mb-comments allow multi-bytes chars in a comment");
-      P ("  --bootstrap       allow --work=std");
-      P ("  --syn-binding     use synthesis default binding rule");
-      P ("  -fpsl             parse psl in comments");
+      P ("  -fexplicit         give priority to explicitly declared operator");
+      P ("  -frelaxed-rules    relax some LRM rules");
+      P ("  -C  --mb-comments  allow multi-bytes chars in a comment");
+      P ("  --bootstrap        allow --work=std");
+      P ("  --syn-binding      use synthesis default binding rule");
+      P ("  -fpsl              parse psl in comments");
       P ("Compilation list:");
       P ("  -l[sca]            after semantics, canon or annotation");
       P ("  --lall             -lX options apply to all files");
