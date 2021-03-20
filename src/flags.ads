@@ -158,6 +158,10 @@ package Flags is
    --  If True, disp original source line and a caret indicating the column.
    Flag_Caret_Diagnostics : Boolean := False;
 
+   -- If True, warning is printed for each uncovered PSL cover points at the
+   -- end of simulation
+   Flag_Psl_Warn_Uncovered : Boolean := False;
+
    type On_Off_Auto_Type is (On, Off, Auto);
 
    --  -fcolor-diagnostics
