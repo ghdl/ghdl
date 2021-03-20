@@ -1045,6 +1045,7 @@ package body Vhdl.Std_Package is
       --  impure function NOW return DELAY_LENGTH.
       declare
          Function_Now : Iir_Function_Declaration;
+         Pure : Boolean;
       begin
          Function_Now := Create_Std_Decl (Iir_Kind_Function_Declaration);
          Set_Std_Identifier (Function_Now, Std_Names.Name_Now);
@@ -1053,11 +1054,16 @@ package body Vhdl.Std_Package is
          else
             Set_Return_Type (Function_Now, Delay_Length_Subtype_Definition);
          end if;
-         if Vhdl_Std = Vhdl_02 then
-            Set_Pure_Flag (Function_Now, True);
-         else
-            Set_Pure_Flag (Function_Now, False);
-         end if;
+         case Vhdl_Std is
+            when Vhdl_87
+               | Vhdl_02 =>
+               Pure := True;
+            when Vhdl_93
+               | Vhdl_00
+               | Vhdl_08 =>
+               Pure := False;
+         end case;
+         Set_Pure_Flag (Function_Now, Pure);
          Set_Implicit_Definition (Function_Now, Iir_Predefined_Now_Function);
          Vhdl.Sem_Utils.Compute_Subprogram_Hash (Function_Now);
          Add_Decl (Function_Now);
