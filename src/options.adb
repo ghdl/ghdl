@@ -100,12 +100,6 @@ package body Options is
          return Option_Ok;
       end if;
 
-      -- Handles -Wpsl-uncovered
-      if Opt = "psl-uncovered" then
-         Flag_Psl_Warn_Uncovered := True;
-         return Option_Ok;
-      end if;
-
       --  Unknown warning.
       Error_Msg_Option ("unknown warning identifier");
       return Option_Err;
@@ -295,20 +289,17 @@ package body Options is
       P ("  -Wspecs            warns if a all/others spec does not apply");
       P ("  -Wunused           warns if a subprogram is never used");
       P ("  -Werror            turns warnings into errors");
-      P ("  -Wpsl-uncovered    Prints warning after simulation for each");
-      P ("                     uncovered PSL cover point.");
-      P ("                     Only valid with '-fpsl'");
 --    P ("Simulation option:");
 --    P ("  --assert-level=LEVEL     set the level which stop the");
 --    P ("           simulation.  LEVEL is note, warning, error,");
 --    P ("           failure or none");
       P ("Extensions:");
-      P ("  -fexplicit        give priority to explicitly declared operator");
-      P ("  -frelaxed-rules   relax some LRM rules");
-      P ("  -C  --mb-comments allow multi-bytes chars in a comment");
-      P ("  --bootstrap       allow --work=std");
-      P ("  --syn-binding     use synthesis default binding rule");
-      P ("  -fpsl             parse psl in comments");
+      P ("  -fexplicit         give priority to explicitly declared operator");
+      P ("  -frelaxed-rules    relax some LRM rules");
+      P ("  -C  --mb-comments  allow multi-bytes chars in a comment");
+      P ("  --bootstrap        allow --work=std");
+      P ("  --syn-binding      use synthesis default binding rule");
+      P ("  -fpsl              parse psl in comments");
       P ("Compilation list:");
       P ("  -l[sca]            after semantics, canon or annotation");
       P ("  --lall             -lX options apply to all files");
