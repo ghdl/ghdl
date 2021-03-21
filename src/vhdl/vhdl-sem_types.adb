@@ -1685,11 +1685,10 @@ package body Vhdl.Sem_Types is
    end Sem_Array_Constraint_Indexes;
 
    --  DEF is an array_subtype_definition.
-   procedure Sem_Array_Type_Constraint_Indexes (Def : Iir; Type_Mark : Iir)
+   procedure Sem_Array_Type_Constraint_Indexes
+     (Def : Iir; Type_Mark : Iir; Index_Staticness : out Iir_Staticness)
    is
-      El_Type : constant Iir := Get_Element_Subtype (Type_Mark);
       Base_Type : constant Iir := Get_Base_Type (Type_Mark);
-      Index_Staticness : Iir_Staticness;
    begin
       -- Check each index constraint against array type.
       Set_Parent_Type (Def, Type_Mark);
@@ -1697,13 +1696,11 @@ package body Vhdl.Sem_Types is
       Sem_Array_Constraint_Indexes
         (Def, Type_Mark, Base_Type, Index_Staticness);
 
-      Set_Type_Staticness
-        (Def, Min (Get_Type_Staticness (El_Type), Index_Staticness));
       Set_Signal_Type_Flag (Def, Get_Signal_Type_Flag (Type_Mark));
    end Sem_Array_Type_Constraint_Indexes;
 
    --  DEF is an incomplete subtype_indication or array_constraint,
-   --  TYPE_MARK is the base type of the subtype_indication.
+   --  TYPE_MARK is an array type or subtype.
    function Sem_Array_Constraint
      (Def : Iir; Type_Mark : Iir; Resolution : Iir) return Iir
    is
@@ -1713,6 +1710,7 @@ package body Vhdl.Sem_Types is
       Resolv_Func : Iir := Null_Iir;
       Resolv_El : Iir := Null_Iir;
       Resolv_Ind : Iir;
+      Index_Staticness : Iir_Staticness;
    begin
       if Resolution /= Null_Iir then
          --  A resolution indication is present.
@@ -1758,13 +1756,16 @@ package body Vhdl.Sem_Types is
                   return Res;
                end if;
 
+               Index_Staticness := None;
+
                --  No element constraint.
                El_Def := Null_Iir;
 
             when Iir_Kind_Array_Subtype_Definition =>
                -- Case of a constraint for an array.
                El_Def := Get_Array_Element_Constraint (Def);
-               Sem_Array_Type_Constraint_Indexes (Def, Type_Mark);
+               Sem_Array_Type_Constraint_Indexes
+                 (Def, Type_Mark, Index_Staticness);
                Res := Def;
 
             when others =>
@@ -1801,6 +1802,8 @@ package body Vhdl.Sem_Types is
       Set_Element_Subtype (Res, El_Def);
 
       Set_Constraint_State (Res, Get_Array_Constraint (Res));
+      Set_Type_Staticness
+        (Res, Min (Get_Type_Staticness (El_Def), Index_Staticness));
 
       if Resolv_Func /= Null_Iir then
          Sem_Resolution_Function (Resolv_Func, Res);
