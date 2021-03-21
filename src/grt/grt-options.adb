@@ -83,6 +83,8 @@ package body Grt.Options is
       P ("                   files opened in write or append mode (TEXTIO).");
       P (" --read-wave-opt=FILENAME  read a wave option file.");
       P (" --write-wave-opt=FILENAME  write a wave option file.");
+      P (" --psl-report-uncovered Reports all uncovered PSL cover points as");
+      P ("                        warning at the end of simulation");
       --  P (" --threads=N       use N threads for simulation");
       P ("Additional features:");
       P (" --has-feature=X   test presence of feature X");
@@ -432,6 +434,8 @@ package body Grt.Options is
       then
          Wave_Opt.File.Start
            (Option (18 .. Option'Last), To_Be_Created => True);
+      elsif Option = "--psl-report-uncovered" then
+         Flag_Psl_Report_Uncovered := True;
       elsif not Grt.Hooks.Call_Option_Hooks (Option) then
          Error_S ("unknown run option '");
          Diag_C (Option);

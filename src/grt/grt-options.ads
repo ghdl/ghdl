@@ -165,6 +165,9 @@ package Grt.Options is
    --  Set maximum dynamic stack allocation.
    Max_Stack_Allocation : Ghdl_Index_Type := 128 * 1024;
 
+   -- Report all uncovered cover points at the end of simulation
+   Flag_Psl_Report_Uncovered : Boolean := False;
+
    --  Helper: extract time from STR (a number followed by a unit, without
    --  spaces; the number is optionnal).  In case of error, display an error
    --  message and returns -1.

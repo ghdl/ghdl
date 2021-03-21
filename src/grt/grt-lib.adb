@@ -139,8 +139,10 @@ package body Grt.Lib is
    procedure Ghdl_Psl_Cover_Failed
      (Str : Std_String_Ptr; Severity : Integer; Loc : Ghdl_Location_Ptr) is
    begin
-      Do_Report ("psl cover failure",
-                 Str, "sequence not covered", Severity, Loc);
+      if Flag_Psl_Report_Uncovered then
+         Do_Report ("psl cover failure",
+                    Str, "sequence not covered", Severity, Loc);
+      end if;
    end Ghdl_Psl_Cover_Failed;
 
    procedure Ghdl_Report (Str : Std_String_Ptr;

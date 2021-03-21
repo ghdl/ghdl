@@ -494,7 +494,7 @@ package body Trans.Chap9 is
       Start_Association (Assocs, Ghdl_Psl_Cover_Failed);
       New_Association (Assocs, New_Obj_Value (Msg_Var));
       New_Association (Assocs, New_Lit (Get_Ortho_Literal
-                                          (Severity_Level_Error)));
+                                          (Severity_Level_Warning)));
       New_Association (Assocs, New_Address (New_Obj (Loc),
                                             Ghdl_Location_Ptr_Node));
       New_Procedure_Call (Assocs);
