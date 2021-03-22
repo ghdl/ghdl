@@ -338,3 +338,7 @@ Export hierarchy and references
 .. option:: --psl-report=<FILENAME>
 
   Write a report for PSL at the end of simulation. For each PSL cover and assert statements, the name, source location and whether it passed or failed is reported. The file is written using the JSON format, but is still human readable.
+
+.. option:: --psl-report-uncovered
+
+  Reports warning for each uncovered PSL cover point when simulation ends.
