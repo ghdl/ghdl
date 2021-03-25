@@ -751,6 +751,18 @@ package body Grt.Rtis_Utils is
                   Prepend (Rstr, Sep);
                   Ctxt := Get_Parent_Context (Ctxt);
                end;
+            when Ghdl_Rtiks_Psl =>
+               declare
+                  Obj : constant Ghdl_Rtin_Object_Acc :=
+                     To_Ghdl_Rtin_Object_Acc(Ctxt.Block);
+               begin
+                  -- Ghdl_Rtin_Object does not have parents, therefore we cant
+                  -- trace back through the hierarchy. Put only assertion name
+                  -- and exit the loop
+                  Prepend (Rstr, Obj.Name);
+                  exit;
+               end;
+
             when others =>
                Internal_Error ("grt.rtis_utils.get_path_name");
          end case;
