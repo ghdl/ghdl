@@ -102,11 +102,9 @@ package body Netlists.Disp_Vhdl is
          return;
       end if;
 
-      --  Interface names are not versionned, and don't have prefix.
-      if Get_Sname_Kind (N) in Sname_User .. Sname_Artificial
-        and then Get_Sname_Prefix (N) = No_Sname
-      then
-         Put_Id (Get_Sname_Suffix (N));
+      --  Interface names are not versionned.
+      if Get_Sname_Kind (N) in Sname_User .. Sname_Artificial  then
+         Put_Name (N);
       else
          Put ("*err*");
       end if;

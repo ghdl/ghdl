@@ -248,7 +248,30 @@ package body Synth.Disp_Vhdl is
       Port_Type : constant Node := Get_Type (Port);
       Typ : constant Type_Acc := Get_Subtype_Object (Inst, Port_Type);
    begin
-      Disp_In_Converter (Port_Name, Port_Name, 0, Port_Type, Typ, True);
+      if Get_Kind (Get_Base_Type (Port_Type)) = Iir_Kind_Record_Type_Definition
+      then
+         --  Expand
+         declare
+            Els : constant Node_Flist :=
+              Get_Elements_Declaration_List (Port_Type);
+         begin
+            for I in Flist_First .. Flist_Last (Els) loop
+               declare
+                  El : constant Node := Get_Nth_Element (Els, I);
+                  El_Name : constant String :=
+                    Name_Table.Image (Get_Identifier (El));
+                  Et : Rec_El_Type renames
+                    Typ.Rec.E (Iir_Index32 (I + 1));
+               begin
+                  Disp_In_Converter
+                    (Port_Name & '_' & El_Name, Port_Name & '.' & El_Name,
+                     0, Get_Type (El), Et.Typ, True);
+               end;
+            end loop;
+         end;
+      else
+         Disp_In_Converter (Port_Name, Port_Name, 0, Port_Type, Typ, True);
+      end if;
    end Disp_Input_Port_Converter;
 
    procedure Disp_Out_Rhs
@@ -404,7 +427,30 @@ package body Synth.Disp_Vhdl is
       Port_Type : constant Node := Get_Type (Port);
       Typ : constant Type_Acc := Get_Subtype_Object (Inst, Port_Type);
    begin
-      Disp_Out_Converter (Port_Name, Port_Name, 0, Port_Type, Typ, True);
+      if Get_Kind (Get_Base_Type (Port_Type)) = Iir_Kind_Record_Type_Definition
+      then
+         --  Expand
+         declare
+            Els : constant Node_Flist :=
+              Get_Elements_Declaration_List (Port_Type);
+         begin
+            for I in Flist_First .. Flist_Last (Els) loop
+               declare
+                  El : constant Node := Get_Nth_Element (Els, I);
+                  El_Name : constant String :=
+                    Name_Table.Image (Get_Identifier (El));
+                  Et : Rec_El_Type renames
+                    Typ.Rec.E (Iir_Index32 (I + 1));
+               begin
+                  Disp_Out_Converter
+                    (Port_Name & '_' & El_Name, Port_Name & '.' & El_Name,
+                     0, Get_Type (El), Et.Typ, True);
+               end;
+            end loop;
+         end;
+      else
+         Disp_Out_Converter (Port_Name, Port_Name, 0, Port_Type, Typ, True);
+      end if;
    end Disp_Output_Port_Converter;
 
    procedure Disp_Vhdl_Wrapper
@@ -412,7 +458,6 @@ package body Synth.Disp_Vhdl is
    is
       Unit : constant Node := Get_Design_Unit (Ent);
       Main : Module;
-      Name_Wrap : Name_Id;
    begin
       --  Extract the first user submodule.
       Main := Get_First_Sub_Module (Top);
@@ -459,13 +504,28 @@ package body Synth.Disp_Vhdl is
       New_Line;
 
       --  Rename ports.
-      Name_Wrap := Name_Table.Get_Identifier ("wrap");
-      for P of Ports_Desc (Main) loop
-         pragma Assert (Get_Sname_Prefix (P.Name) = No_Sname);
-         if not P.Is_Inout then
-            Set_Sname_Prefix (P.Name, New_Sname_User (Name_Wrap, No_Sname));
-         end if;
-      end loop;
+      declare
+         Name_Wrap : Name_Id;
+         Pfx_Wrap : Sname;
+         Pfx : Sname;
+      begin
+         Name_Wrap := Name_Table.Get_Identifier ("wrap");
+         Pfx_Wrap := New_Sname_User (Name_Wrap, No_Sname);
+         for P of Ports_Desc (Main) loop
+            --  INOUT ports are handled specially.
+            if not P.Is_Inout then
+               Pfx := Get_Sname_Prefix (P.Name);
+               if Pfx = No_Sname then
+                  --  Normal port, without a prefix.
+                  Set_Sname_Prefix (P.Name, Pfx_Wrap);
+               elsif Get_Sname_Prefix (Pfx) = No_Sname then
+                  --  Prefixed port (for an expanded record).
+                  --  Add a prefix but once (prefix is shared).
+                  Set_Sname_Prefix (Pfx, Pfx_Wrap);
+               end if;
+            end if;
+         end loop;
+      end;
 
       Put_Line ("library ieee;");
       Put_Line ("use ieee.std_logic_1164.all;");
