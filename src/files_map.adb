@@ -569,6 +569,9 @@ package body Files_Map is
                then
                   return Language_Verilog;
                end if;
+               if Ext (E + 1 .. Ext'Last) = "psl" then
+                  return Language_Psl;
+               end if;
             when others =>
                return Language_Unknown;
          end case;

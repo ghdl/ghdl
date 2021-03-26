@@ -310,12 +310,16 @@ package body Ghdlsynth is
                Libraries.Work_Library_Name := Id;
                Libraries.Load_Work_Library (True);
             else
-               if Files_Map.Find_Language (Arg) /= Language_Vhdl then
-                  Errorout.Report_Msg
-                    (Warnid_Library, Option, No_Source_Coord,
-                     "unexpected extension for vhdl file %i",
-                     (1 => +Name_Table.Get_Identifier (Arg)));
-               end if;
+               case Files_Map.Find_Language (Arg) is
+                  when Language_Vhdl
+                    | Language_Psl =>
+                     null;
+                  when others =>
+                     Errorout.Report_Msg
+                       (Warnid_Library, Option, No_Source_Coord,
+                        "unexpected extension for vhdl file %i",
+                        (1 => +Name_Table.Get_Identifier (Arg)));
+               end case;
 
                Ghdlcomp.Compile_Load_File (Arg);
             end if;
