@@ -130,7 +130,8 @@ package body PSL.Subsets is
             null;
          when N_Star_Repeat_Seq
             | N_Goto_Repeat_Seq
-            | N_Equal_Repeat_Seq =>
+            | N_Equal_Repeat_Seq
+            | N_Plus_Repeat_Seq =>
             declare
                N2 : constant Node := Get_Sequence (N);
             begin
@@ -138,8 +139,6 @@ package body PSL.Subsets is
                   Check_Simple (N2);
                end if;
             end;
-         when N_Plus_Repeat_Seq =>
-            Check_Simple (Get_Sequence (N));
          when N_Match_And_Seq
             | N_And_Seq
             | N_Or_Seq =>
