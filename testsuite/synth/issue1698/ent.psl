@@ -1,0 +1,6 @@
+vunit i_ent(ent(rtl))
+{
+   default clock is rising_edge(clk);
+
+   assert always {[+]; input} |=> {output};
+}
