@@ -502,6 +502,7 @@ package body PSL.Rewrites is
       case Get_Kind (N) is
          when N_Star_Repeat_Seq
            | N_Plus_Repeat_Seq
+           | N_Equal_Repeat_Seq
            | N_Goto_Repeat_Seq
            | N_Sequence_Instance
            | N_Endpoint_Instance

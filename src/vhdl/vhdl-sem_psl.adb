@@ -505,6 +505,16 @@ package body Vhdl.Sem_Psl is
       case Get_Kind (Prop) is
          when N_Braced_SERE =>
             return Sem_Sequence (Prop);
+         when N_Star_Repeat_Seq
+            | N_Equal_Repeat_Seq
+            | N_Plus_Repeat_Seq
+            | N_Goto_Repeat_Seq =>
+            Res := Get_Sequence (Prop);
+            if Res /= Null_PSL_Node then
+               Res := Sem_Sequence (Get_Sequence (Prop));
+               Set_Sequence (Prop, Res);
+            end if;
+            return Prop;
          when N_Always
             | N_Never =>
             --  By extension, clock_event is allowed within outermost
