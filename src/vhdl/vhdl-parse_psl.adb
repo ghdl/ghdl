@@ -66,12 +66,27 @@ package body Vhdl.Parse_Psl is
       end if;
    end Parse_Number;
 
+   procedure Check_Positive_Count(N : Node) is
+      Low : Uns32;
+      High : Uns32;
+   begin
+      Low := Get_Value(Get_Low_Bound(N));
+      High := Get_Value(Get_High_Bound(N));
+      if Low >= High then
+         Error_Msg_Parse (
+            "Low bound of range must be lower than High bound," &
+            " actual range is:" &
+            Uns32'Image(Low) & " to" & Uns32'Image(High));
+      end if;
+   end Check_Positive_Count;
+
    procedure Parse_Count (N : Node) is
    begin
       Set_Low_Bound (N, Parse_Number);
       if Current_Token = Tok_To then
          Scan;
          Set_High_Bound (N, Parse_Number);
+         Check_Positive_Count (N);
       end if;
    end Parse_Count;
 
@@ -354,6 +369,7 @@ package body Vhdl.Parse_Psl is
          else
             Scan;
          end if;
+         Check_Positive_Count(N);
       end if;
    end Parse_Bracket_Range;
 
