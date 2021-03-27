@@ -435,22 +435,17 @@ package body Vhdl.Sem_Psl is
             Set_Right (Seq, R);
             return Seq;
          when N_Star_Repeat_Seq
-            | N_Equal_Repeat_Seq
+            | N_Plus_Repeat_Seq =>
+            Res := Get_Sequence (Seq);
+            if Res /= Null_PSL_Node then
+               Res := Sem_Sequence (Get_Sequence (Seq));
+               Set_Sequence (Seq, Res);
+            end if;
+            return Seq;
+         when N_Equal_Repeat_Seq
             | N_Goto_Repeat_Seq =>
-            Res := Get_Sequence (Seq);
-            if Res /= Null_PSL_Node then
-               Res := Sem_Sequence (Get_Sequence (Seq));
-               Set_Sequence (Seq, Res);
-            end if;
-            --  FIXME: range.
-            return Seq;
-         when N_Plus_Repeat_Seq =>
-            Res := Get_Sequence (Seq);
-            if Res /= Null_PSL_Node then
-               Res := Sem_Sequence (Get_Sequence (Seq));
-               Set_Sequence (Seq, Res);
-            end if;
-            return Seq;
+            -- TODO: Fix here if SERE is not of boolean type!!
+            Error_Kind ("psl.sem_sequence.hdl", Res);
          when N_And_Bool
            | N_Or_Bool
            | N_Not_Bool =>
