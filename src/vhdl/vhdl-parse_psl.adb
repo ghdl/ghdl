@@ -79,13 +79,18 @@ package body Vhdl.Parse_Psl is
       end if;
    end Check_Positive_Count;
 
-   procedure Parse_Count (N : Node) is
+   procedure Parse_Count (N : Node)
+   is
+      Hi : Node;
    begin
       Set_Low_Bound (N, Parse_Number);
       if Current_Token = Tok_To then
          Scan;
-         Set_High_Bound (N, Parse_Number);
-         Check_Positive_Count (N);
+         Hi := Parse_Number;
+         Set_High_Bound (N, Hi);
+         if Hi /= Null_Node then
+            Check_Positive_Count (N);
+         end if;
       end if;
    end Parse_Count;
 
