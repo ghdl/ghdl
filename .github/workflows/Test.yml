@@ -211,7 +211,7 @@ jobs:
         ]
     name: '${{ matrix.icon }} Build · ${{ matrix.installs }} · ${{ matrix.pkg }}'
     env:
-      MINGW_INSTALLS: ${{ matrix.installs }}
+      MINGW_ARCH: ${{ matrix.installs }}
     defaults:
       run:
         shell: msys2 {0}
