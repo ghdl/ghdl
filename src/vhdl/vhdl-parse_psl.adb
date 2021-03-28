@@ -66,17 +66,16 @@ package body Vhdl.Parse_Psl is
       end if;
    end Parse_Number;
 
-   procedure Check_Positive_Count(N : Node) is
-      Low : Uns32;
-      High : Uns32;
+   procedure Check_Positive_Count (N : Node)
+   is
+      Low  : constant Uns32 := Get_Value (Get_Low_Bound (N));
+      High : constant Uns32 := Get_Value (Get_High_Bound (N));
    begin
-      Low := Get_Value(Get_Low_Bound(N));
-      High := Get_Value(Get_High_Bound(N));
-      if Low >= High then
-         Error_Msg_Parse (
-            "Low bound of range must be lower than High bound," &
-            " actual range is:" &
-            Uns32'Image(Low) & " to" & Uns32'Image(High));
+      if Low > High then
+         Error_Msg_Parse
+           ("Low bound of range must be lower than High bound," &
+              " actual range is:" &
+              Uns32'Image (Low) & " to" & Uns32'Image (High));
       end if;
    end Check_Positive_Count;
 
