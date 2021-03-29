@@ -55,7 +55,7 @@ package body Ghdlsynth is
    type Out_Format is
      (Format_Default,
       Format_Raw, Format_Dump, Format_Dot,
-      Format_Vhdl,
+      Format_Vhdl, Format_Raw_Vhdl,
       Format_None);
 
    type Name_Id_Array is array (Natural range <>) of Name_Id;
@@ -201,6 +201,8 @@ package body Ghdlsynth is
          Cmd.Oformat := Format_None;
       elsif Option = "--out=vhdl" then
          Cmd.Oformat := Format_Vhdl;
+      elsif Option = "--out=raw-vhdl" then
+         Cmd.Oformat := Format_Raw_Vhdl;
       elsif Option = "-di" then
          Flag_Debug_Noinference := True;
       elsif Option = "-dc" then
@@ -419,12 +421,10 @@ package body Ghdlsynth is
          when Format_Dot =>
             Netlists.Disp_Dot.Disp_Dot_Top_Module (Res);
          when Format_Vhdl =>
-            if Boolean'(True) then
-               Ent := Vhdl.Utils.Get_Entity_From_Configuration (Config);
-               Synth.Disp_Vhdl.Disp_Vhdl_Wrapper (Ent, Res, Inst);
-            else
-               Netlists.Disp_Vhdl.Disp_Vhdl (Res);
-            end if;
+            Ent := Vhdl.Utils.Get_Entity_From_Configuration (Config);
+            Synth.Disp_Vhdl.Disp_Vhdl_Wrapper (Ent, Res, Inst);
+         when Format_Raw_Vhdl =>
+            Netlists.Disp_Vhdl.Disp_Vhdl (Res);
       end case;
    end Disp_Design;
 
