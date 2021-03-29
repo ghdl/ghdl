@@ -59,7 +59,6 @@ package Netlists.Utils is
                                return Instance;
 
    --  Return True iff ID describe a constant.
-   function Is_Const_Module (Id : Module_Id) return Boolean;
    function Is_Const_Net (N : Net) return Boolean;
 
    --  Assuming that N is a const net, return the value (for small values).

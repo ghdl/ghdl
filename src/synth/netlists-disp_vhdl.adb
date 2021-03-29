@@ -29,6 +29,7 @@ with Netlists.Dump; use Netlists.Dump;
 
 package body Netlists.Disp_Vhdl is
    Flag_Merge_Lit : constant Boolean := True;
+   Flag_Merge_Edge : constant Boolean := True;
 
    procedure Put_Type (W : Width) is
    begin
@@ -478,6 +479,37 @@ package body Netlists.Disp_Vhdl is
       return False;
    end Need_Signal;
 
+   --  Return TRUE if edge INST (posedge or negedge) is used outside clock
+   --  inputs.
+   function Need_Edge (Inst : Instance) return Boolean
+   is
+      I : Input;
+      Parent : Instance;
+   begin
+      I := Get_First_Sink (Get_Output (Inst, 0));
+      while I /= No_Input loop
+         Parent := Get_Input_Parent (I);
+         case Get_Id (Parent) is
+            when Id_Dff
+              | Id_Adff
+              | Id_Idff
+              | Id_Iadff =>
+               if I /= Get_Input (Parent, 0) then
+                  return True;
+               end if;
+            when Id_Mem_Rd_Sync
+              | Id_Mem_Wr_Sync =>
+               if I /= Get_Input (Parent, 2) then
+                  return True;
+               end if;
+            when others =>
+               return True;
+         end case;
+         I := Get_Next_Sink (I);
+      end loop;
+      return False;
+   end Need_Edge;
+
    type Conv_Type is
      (Conv_None, Conv_Slv, Conv_Unsigned, Conv_Signed, Conv_Edge, Conv_Clock);
 
@@ -492,7 +524,7 @@ package body Netlists.Disp_Vhdl is
 
       Net_Inst := Get_Net_Parent (N);
       if Flag_Merge_Lit
-        and then Is_Const_Module (Get_Id (Net_Inst))
+        and then Get_Id (Net_Inst) in Constant_Module_Id
         and then not Need_Name (Inst)
       then
          case Conv is
@@ -1334,6 +1366,9 @@ package body Netlists.Disp_Vhdl is
                                  and then Id in Constant_Module_Id
                                  and then Id < Id_User_None
                                  and then not Need_Signal (Inst))
+                 and then not (Flag_Merge_Edge
+                                 and then Id in Edge_Module_Id
+                                 and then not Need_Edge (Inst))
                then
                   if Locations.Get_Location (Inst) = No_Location then
                      case Get_Id (Inst) is
@@ -1406,11 +1441,18 @@ package body Netlists.Disp_Vhdl is
       end;
 
       for Inst of Instances (M) loop
-         if not (Flag_Merge_Lit
-                   and then Is_Const_Module (Get_Id (Inst)))
-         then
-            Disp_Instance_Inline (Inst);
-         end if;
+         case Get_Id (Inst) is
+            when Constant_Module_Id =>
+               if not Flag_Merge_Lit then
+                  Disp_Instance_Inline (Inst);
+               end if;
+            when Edge_Module_Id =>
+               if (not Flag_Merge_Edge) or else Need_Edge (Inst) then
+                  Disp_Instance_Inline (Inst);
+               end if;
+            when others =>
+               Disp_Instance_Inline (Inst);
+         end case;
       end loop;
    end Disp_Architecture_Statements;
 

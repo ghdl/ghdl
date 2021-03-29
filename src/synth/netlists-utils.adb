@@ -123,29 +123,12 @@ package body Netlists.Utils is
       return Get_Param_Desc (M, I).Typ;
    end Get_Param_Type;
 
-   function Is_Const_Module (Id : Module_Id) return Boolean is
-   begin
-      case Id is
-         when Id_Const_UB32
-           | Id_Const_SB32
-           | Id_Const_UL32
-           | Id_Const_X
-           | Id_Const_Z
-           | Id_Const_0
-           | Id_Const_Bit
-           | Id_Const_Log =>
-            return True;
-         when others =>
-            return False;
-      end case;
-   end Is_Const_Module;
-
    function Is_Const_Net (N : Net) return Boolean is
    begin
       if Get_Width (N) = 0 then
          return True;
       end if;
-      return Is_Const_Module (Get_Id (Get_Net_Parent (N)));
+      return Get_Id (Get_Net_Parent (N)) in Constant_Module_Id;
    end Is_Const_Net;
 
    function Get_Net_Uns64 (N : Net) return Uns64
