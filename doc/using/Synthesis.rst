@@ -39,8 +39,8 @@ Elaborates for synthesis the design whose top unit is indicated by ``primary_uni
 Analyses and elaborates for synthesis the files present on the command line only.
 Elaboration starts from the top unit indicated by ``primary_unit [secondary_unit]``.
 
-Currently, the output is a generic netlist using a (very simple) subset of VHDL 1993.
-See :ghdlsharp:`1174` for on-going discussion about other output formats.
+Currently, the default output is a generic netlist using a (very simple) subset of VHDL 1993.
+See :option:`--out` and :ghdlsharp:`1174` for on-going discussion about other output formats.
 
 .. TIP::
   Files can be provided in any order.
@@ -65,6 +65,11 @@ Due to GHDL's modular architecture (see :ref:`INT:Overview`), the synthesis kern
 simulation back-ends. Hence, available options for synthesis are the same as for analysis and/or simulation elaboration
 (see :ref:`GHDL:options`). In addition to those options, there are some synthesis specific options.
 
+.. TIP::
+  Furthermore there are lot of debug options available. Beware: these debug options should only used
+  for debugging purposes as they aren't guaranteed to be stable during development of GHDL's synthesis feature.
+  You can find them in the file :ghdlsrc:`ghdlsynth.adb <ghdldrv/ghdlsynth.adb>` in the procedure ``Decode_Option()``.
+
 .. option:: -gNAME=VALUE
 
   Override top unit generic `NAME` with value `VALUE`. Similar to the run-time option :option:`-gGENERIC`.
@@ -73,6 +78,22 @@ simulation back-ends. Hence, available options for synthesis are the same as for
 
     $ ghdl --synth --std=08 -gDEPTH=12 my_unit
 
+.. option:: --out=<vhdl|raw-vhdl|dot|none|raw|dump>
+
+  * **vhdl** *(default)*: equivalent to ``raw-vhdl``, but the original top-level unit is preserved unmodified, so the
+    synthesized design can be simulated with the same testbench.
+
+  * **raw-vhdl**: all statements are converted to a simple VHDL 1993 netlist, for allowing instantiation in other synthesis
+    tools without modern VHDL support.
+
+  * **dot**: generate a graphviz dot diagram of the netlist AST.
+
+  * **none**: perform the synthesis, but do not generate any output; useful for frequent checks.
+
+  * **raw**: print the internal representation of the design, for debugging purposes.
+
+  * **dump**: similar to ``raw``, with even more internal details for debugging.
+
 .. option:: --vendor-library=NAME
 
   Any unit from library NAME is a black box.
@@ -80,6 +101,9 @@ simulation back-ends. Hence, available options for synthesis are the same as for
   Example::
 
     $ ghdl --synth --std=08 --vendor-library=vendorlib my_unit
+
+Assertions, PSL and formal verification
+=======================================
 
 .. option:: --no-formal
 
@@ -124,11 +148,6 @@ simulation back-ends. Hence, available options for synthesis are the same as for
 
   `cover` directives are automatically generated for the resulting asserts (with an implication operator)
   if :option:`--no-assert-cover` isn't used.
-
-.. TIP::
-  Furthermore there are lot of debug options available. Beware: these debug options should only used
-  for debugging purposes as they aren't guaranteed to be stable during development of GHDL's synthesis feature.
-  You can find them in the file :ghdlsrc:`ghdlsynth.adb <ghdldrv/ghdlsynth.adb>` in the procedure ``Decode_Option()``.
 
 .. _Synth:plugin:
 
