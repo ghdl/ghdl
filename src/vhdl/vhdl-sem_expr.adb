@@ -2804,6 +2804,10 @@ package body Vhdl.Sem_Expr is
       --  True if others choice is present.
       Has_Others : Boolean;
 
+      --  True if one association doesn't have the element_type flag (ie the
+      --  expression is of the same type as an aggregate).
+      Has_Array : Boolean;
+
       Has_Error : Boolean;
 
       Pos_Max : Int64;
@@ -2935,10 +2939,14 @@ package body Vhdl.Sem_Expr is
       Nbr_Named := 0;
       Has_Others := False;
       Has_Error := False;
+      Has_Array := False;
       Staticness := Locally;
       El := Choice_Chain;
       Prev_El := Null_Iir;
       while El /= Null_Iir loop
+         if not Get_Element_Type_Flag (El) then
+            Has_Array := True;
+         end if;
          case Get_Kind (El) is
             when Iir_Kind_Choice_By_None =>
                Nbr_Pos := Nbr_Pos + 1;
@@ -3001,7 +3009,7 @@ package body Vhdl.Sem_Expr is
          if (not Has_Others and not Is_Sub_Range)
            and then Nbr_Pos < Pos_Max
            --  For aggregates, a positional association can be a vector.
-           and then (Vhdl_Std < Vhdl_08 or Is_Case_Stmt)
+           and then (Vhdl_Std < Vhdl_08 or Is_Case_Stmt or not Has_Array)
          then
             Error_Msg_Sem (+Loc, "not enough elements associated");
          elsif Nbr_Pos > Pos_Max then
