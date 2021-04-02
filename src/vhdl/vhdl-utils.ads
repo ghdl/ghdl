@@ -175,6 +175,9 @@ package Vhdl.Utils is
    --  Return TRUE iff DEF is a fully constrained type (or subtype) definition.
    function Is_Fully_Constrained_Type (Def : Iir) return Boolean;
 
+   --  Return TRUE iff DEF is an array type (or subtype) definition.
+   function Is_Array_Type (Def : Iir) return Boolean;
+
    --  Return True iff OBJ can be the target of an aggregate with an others
    --  choice (cf LRM08 9.3.3.3).
    --  Return True iff object or member of it is declared to be a fully

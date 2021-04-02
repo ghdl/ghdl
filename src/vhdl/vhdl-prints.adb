@@ -4893,6 +4893,8 @@ package body Vhdl.Prints is
             Disp_Name_Attribute (Ctxt, Expr, Name_Base);
          when Iir_Kind_Subtype_Attribute =>
             Disp_Name_Attribute (Ctxt, Expr, Name_Subtype);
+         when Iir_Kind_Element_Attribute =>
+            Disp_Name_Attribute (Ctxt, Expr, Name_Element);
          when Iir_Kind_Type_Declaration
            | Iir_Kind_Subtype_Declaration
            | Iir_Kind_Unit_Declaration

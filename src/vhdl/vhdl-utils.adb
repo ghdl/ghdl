@@ -1039,6 +1039,11 @@ package body Vhdl.Utils is
       return Get_Nature_Declarator (Def) = Null_Iir;
    end Is_Anonymous_Nature_Definition;
 
+   function Is_Array_Type (Def : Iir) return Boolean is
+   begin
+      return Get_Kind (Def) in Iir_Kinds_Array_Type_Definition;
+   end Is_Array_Type;
+
    function Is_Fully_Constrained_Type (Def : Iir) return Boolean is
    begin
       return Get_Kind (Def) not in Iir_Kinds_Composite_Type_Definition
@@ -1194,6 +1199,7 @@ package body Vhdl.Utils is
          when Iir_Kinds_Subtype_Definition =>
             return Ind;
          when Iir_Kind_Subtype_Attribute
+           | Iir_Kind_Element_Attribute
            | Iir_Kind_Across_Attribute
            | Iir_Kind_Through_Attribute =>
             return Get_Type (Ind);
