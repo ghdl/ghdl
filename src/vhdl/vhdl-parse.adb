@@ -85,6 +85,10 @@ package body Vhdl.Parse is
    --  Current number of open parenthesis (in expressions).
    Parenthesis_Depth : Natural := 0;
 
+   -- Missing parenthesis has been reported already. Flag used to
+   -- remember only first report
+   Parenthesis_Reported : Boolean := False;
+
    -- Copy the current location into an iir.
    procedure Set_Location (Node : Iir) is
    begin
@@ -512,6 +516,25 @@ package body Vhdl.Parse is
             Error_Msg_Parse (Prefix & Common & "here");
       end case;
    end Error_Variable_Location;
+
+   procedure Error_Missing_Parenthesis(Loc : Location_Type) is
+   begin
+      if not Parenthesis_Reported then
+         if Parenthesis_Depth > 1 then
+            Error_Msg_Parse
+            ("missing ')' for opening parenthesis at %l. " &
+               "Total missing parenthesis: " &
+               Integer'Image(Parenthesis_Depth), +Loc);
+            Parenthesis_Reported := True;
+         else
+            Error_Msg_Parse
+            ("missing ')' for opening parenthesis at %l. " , +Loc);
+         end if;
+      end if;
+      if Parenthesis_Depth = 1 then
+         Parenthesis_Reported := False;
+      end if;
+   end Error_Missing_Parenthesis;
 
    --  Expect and scan ';' emit an error message using MSG if not present.
    procedure Scan_Semi_Colon (Msg : String) is
@@ -5806,12 +5829,8 @@ package body Vhdl.Parse is
                | Tok_Generate
                | Tok_Loop =>
                --  Surely a missing parenthesis.
-               --  FIXME: in case of multiple missing parenthesises, several
-               --    messages will be displayed
-               Error_Msg_Parse
-                 ("missing ')' for opening parenthesis at %l", +Loc);
+               Error_Missing_Parenthesis(Loc);
                return Expr;
-
             when others =>
                --  Surely a parse error...
                null;
