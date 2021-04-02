@@ -2004,6 +2004,7 @@ package body Vhdl.Sem_Names is
             return Res;
          when Iir_Kinds_Type_Attribute
             | Iir_Kind_Subtype_Attribute
+            | Iir_Kind_Element_Attribute
             | Iir_Kind_Base_Attribute =>
             pragma Assert (Get_Kind (Name) = Iir_Kind_Attribute_Name);
             Free_Iir (Name);
@@ -3733,6 +3734,57 @@ package body Vhdl.Sem_Names is
       return Res;
    end Sem_Subtype_Attribute;
 
+   --  For 'Element
+   function Sem_Element_Attribute (Attr : Iir_Attribute_Name) return Iir
+   is
+      Prefix_Name  : Iir;
+      Attr_Type    : Iir;
+      Attr_Subtype : Iir;
+      Res          : Iir;
+   begin
+      Prefix_Name := Get_Prefix (Attr);
+      Prefix_Name := Finish_Sem_Name (Prefix_Name);
+      Set_Prefix (Attr, Prefix_Name);
+
+      --  LRM08 16.2 Predefined attributes
+      --  Prefix: Any prefix A that is appropriate for an array object, or an
+      --  alias thereof, or that denotes an array subtype
+      if (Get_Kind (Get_Base_Name (Prefix_Name))
+          in Iir_Kinds_Object_Declaration)
+      then
+         Attr_Type := Get_Type (Prefix_Name);
+      elsif (Get_Kind (Get_Base_Name (Prefix_Name))
+          in Iir_Kinds_Type_Declaration)
+      then
+         Attr_Type := Get_Type (Get_Base_Name (Prefix_Name));
+      else
+         Error_Msg_Sem (+Attr, "prefix must denote an object or a type");
+      end if;
+
+      if False and not Is_Array_Type (Attr_Type) then
+         Error_Msg_Sem (+Attr, "prefix must denote an array");
+      end if;
+
+      --  The type defined by 'element is always constrained.  Create
+      --  a subtype if it is not.
+      Attr_Subtype := Get_Element_Subtype (Attr_Type);
+      if False and not Is_Fully_Constrained_Type (Attr_Subtype) then
+         Attr_Subtype :=
+             Sem_Types.Build_Constrained_Subtype (Attr_Subtype, Attr);
+      end if;
+
+      Res := Create_Iir (Iir_Kind_Element_Attribute);
+      Location_Copy (Res, Attr);
+      Set_Prefix (Res, Prefix_Name);
+      Set_Type (Res, Attr_Subtype);
+
+      Set_Base_Name (Res, Res);
+      Set_Name_Staticness (Res, Get_Name_Staticness (Prefix_Name));
+      Set_Type_Staticness (Res, Get_Type_Staticness (Attr_Subtype));
+
+      return Res;
+   end Sem_Element_Attribute;
+
    --  For 'Across or 'Through
    function Sem_Nature_Type_Attribute (Attr : Iir_Attribute_Name) return Iir
    is
@@ -4367,6 +4419,13 @@ package body Vhdl.Sem_Names is
          when Name_Subtype =>
             if Flags.Vhdl_Std >= Vhdl_08 then
                Res := Sem_Subtype_Attribute (Attr);
+            else
+               Res := Sem_User_Attribute (Attr);
+            end if;
+
+         when Name_Element =>
+            if Flags.Vhdl_Std >= Vhdl_08 then
+               Res := Sem_Element_Attribute (Attr);
             else
                Res := Sem_User_Attribute (Attr);
             end if;
