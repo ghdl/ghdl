@@ -238,11 +238,13 @@ package Errorout is
    type Error_Start_Handler is access procedure (Err : Error_Record);
    type Message_Str_Handler is access procedure (Str : String);
    type Message_End_Handler is access procedure;
+   type Message_New_Line_Handler is access procedure;
    type Message_Group_Handler is access procedure (Start : Boolean);
 
    type Report_Msg_Handler is record
       Error_Start : Error_Start_Handler;
       Message : Message_Str_Handler;
+      Message_New_Line : Message_New_Line_Handler;
       Message_End : Message_End_Handler;
       Message_Group : Message_Group_Handler;
    end record;

@@ -241,6 +241,27 @@ package body Errorout is
       Lang_Handlers (Kind) := Handler;
    end Register_Earg_Handler;
 
+   -- Prints source line with indication of position
+   -- Indented to show where error/warning occured.
+   procedure Print_Source_Line(Loc : Source_Coord_Type) is
+      Line_Text : constant String :=
+         Extract_Expanded_Line(Loc.File, Loc.Line);
+      Marker_Col : Natural;
+   begin
+      -- Print line itself
+      Report_Handler.Message (Line_Text);
+      Report_Handler.Message_New_Line.all;
+
+      -- Marker to Loc
+      Marker_Col := Coord_To_Col(Loc.File, Loc.Line_Pos, Loc.Offset);
+      for i in 1 .. Marker_Col loop
+         Report_Handler.Message(" ");
+      end loop;
+      Report_Handler.Message("^");
+      Report_Handler.Message_New_Line.all;
+
+   end Print_Source_Line;
+
    procedure Report_Msg (Id : Msgid_Type;
                          Origin : Report_Origin;
                          Loc : Source_Coord_Type;
@@ -367,8 +388,13 @@ package body Errorout is
          --  Are all arguments displayed ?
          pragma Assert (Argn > Args'Last);
       end;
-
       Report_Handler.Message_End.all;
+
+      -- Visualize line and spot at which the error occured
+      if (Loc /= No_Source_Coord) then
+         Print_Source_Line(Loc);
+      end if;
+
    end Report_Msg;
 
    procedure Report_Start_Group is

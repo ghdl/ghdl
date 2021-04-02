@@ -247,6 +247,11 @@ package body Errorout.Console is
       end if;
    end Console_Message_End;
 
+   procedure Console_Message_New_Line is
+   begin
+      Put_Line;
+   end Console_Message_New_Line;
+
    procedure Console_Message_Group (Start : Boolean) is
    begin
       Current_Line := 0;
@@ -260,6 +265,7 @@ package body Errorout.Console is
 
       Set_Report_Handler ((Console_Error_Start'Access,
                            Console_Message'Access,
+                           Console_Message_New_Line'Access,
                            Console_Message_End'Access,
                            Console_Message_Group'Access));
    end Install_Handler;

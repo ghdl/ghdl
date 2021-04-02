@@ -99,6 +99,12 @@ package body Errorout.Memory is
       end loop;
    end Memory_Message;
 
+   procedure Memory_Message_New_Line is
+   begin
+      Messages.Append (ASCII.CR);
+      Messages.Append (ASCII.LF);
+   end Memory_Message_New_Line;
+
    procedure Memory_Message_End is
    begin
       Messages.Append (ASCII.NUL);
@@ -130,6 +136,7 @@ package body Errorout.Memory is
    begin
       Set_Report_Handler ((Memory_Error_Start'Access,
                            Memory_Message'Access,
+                           Memory_Message_New_Line'Access,
                            Memory_Message_End'Access,
                            Memory_Message_Group'Access));
       Group := Msg_Single;
