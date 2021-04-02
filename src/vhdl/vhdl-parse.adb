@@ -449,6 +449,26 @@ package body Vhdl.Parse is
       end loop;
    end Resync_To_End_Of_Interface;
 
+   -- Search for next colon (likely before subtype_indication).
+   -- Others detect when we are totally lost. Semi-colon likely
+   -- at the end of line, Double_Greater at the end of external
+   -- name.
+   procedure Resync_To_End_Of_External_Name is
+   begin
+      loop
+         case Current_Token is
+            when Tok_Colon
+               | Tok_Semi_Colon
+               | Tok_Begin
+               | Tok_Eof
+               | Tok_Double_Greater =>
+               exit;
+            when others =>
+               Scan;
+         end case;
+      end loop;
+   end Resync_To_End_Of_External_Name;
+
    procedure Error_Missing_Semi_Colon (Msg : String) is
    begin
       Error_Msg_Parse (Get_Prev_Location, "missing "";"" at end of " & Msg);
@@ -1285,7 +1305,7 @@ package body Vhdl.Parse is
       loop
          if Current_Token /= Tok_Identifier then
             Error_Msg_Parse ("pathname element expected");
-            --  FIXME: resync.
+            Resync_To_End_Of_External_Name;
             return Res;
          end if;
 
