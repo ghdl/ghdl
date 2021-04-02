@@ -4141,7 +4141,6 @@ package body Vhdl.Parse is
    --  [ LRM93 4.3.1.2 ]
    --  signal_kind ::= REGISTER | BUS
    --
-   --  FIXME: file_open_information.
    function Parse_Object_Declaration (Parent : Iir) return Iir
    is
       --  First and last element of the chain to be returned.
