@@ -454,6 +454,44 @@ package body Vhdl.Parse is
       Error_Msg_Parse (Get_Prev_Location, "missing "";"" at end of " & Msg);
    end Error_Missing_Semi_Colon;
 
+   procedure Error_Variable_Location (Kind : Iir_Kind)
+   is
+      Prefix : constant String := "non-";
+      Common : constant String := "shared variable declaration not allowed ";
+   begin
+      case Kind is
+
+      -- Non-Shared variables
+      when Iir_Kind_Entity_Declaration =>
+         Error_Msg_Parse (Prefix & Common & "in entity declaration");
+      when Iir_Kind_Architecture_Body =>
+         Error_Msg_Parse (Prefix & Common & "in architecture body");
+      when Iir_Kind_Block_Statement =>
+         Error_Msg_Parse (Prefix & Common & "in block statement");
+      when Iir_Kind_Generate_Statement_Body =>
+         Error_Msg_Parse (Prefix & Common & "in generate statement body");
+      when Iir_Kind_Package_Declaration =>
+         Error_Msg_Parse (Prefix & Common & "in package declaration");
+      when Iir_Kind_Package_Body =>
+         Error_Msg_Parse (Prefix & Common & "in entity body");
+      when Iir_Kind_Protected_Type_Declaration =>
+         Error_Msg_Parse (Prefix & Common & "in protected type declaration");
+
+      -- Shared variables
+      when Iir_Kind_Function_Body =>
+         Error_Msg_Parse (Common & "in function body");
+      when Iir_Kinds_Process_Statement =>
+         Error_Msg_Parse (Common & "in process statement");
+      when Iir_Kind_Protected_Type_Body =>
+         Error_Msg_Parse (Common & "in protected type body");
+      when Iir_Kind_Simultaneous_Procedural_Statement =>
+         Error_Msg_Parse (Common & "in procedural statement");
+
+      when others =>
+         Error_Msg_Parse (Prefix & Common & "here");
+      end case;
+   end Error_Variable_Location;
+
    --  Expect and scan ';' emit an error message using MSG if not present.
    procedure Scan_Semi_Colon (Msg : String) is
    begin
@@ -5263,16 +5301,13 @@ package body Vhdl.Parse is
             --  shared data.
             case Get_Kind (Package_Parent) is
                when Iir_Kind_Entity_Declaration
-                 | Iir_Kind_Architecture_Body
-                 | Iir_Kind_Block_Statement
-                 | Iir_Kind_Generate_Statement_Body
-                 | Iir_Kind_Package_Declaration
-                 | Iir_Kind_Package_Body
-                 | Iir_Kind_Protected_Type_Declaration =>
-                  --  FIXME: replace HERE with the kind of declaration
-                  --  ie: "not allowed in a package" rather than "here".
-                  Error_Msg_Parse
-                    ("non-shared variable declaration not allowed here");
+                  | Iir_Kind_Architecture_Body
+                  | Iir_Kind_Block_Statement
+                  | Iir_Kind_Generate_Statement_Body
+                  | Iir_Kind_Package_Declaration
+                  | Iir_Kind_Package_Body
+                  | Iir_Kind_Protected_Type_Declaration =>
+                  Error_Variable_Location(Get_Kind(Package_Parent));
                when Iir_Kind_Function_Body
                  | Iir_Kind_Procedure_Body
                  | Iir_Kinds_Process_Statement
@@ -5322,8 +5357,7 @@ package body Vhdl.Parse is
                  | Iir_Kinds_Process_Statement
                  | Iir_Kind_Protected_Type_Body
                  | Iir_Kind_Simultaneous_Procedural_Statement =>
-                  Error_Msg_Parse
-                    ("shared variable declaration not allowed here");
+                  Error_Variable_Location(Get_Kind(Package_Parent));
                when others =>
                   Error_Kind ("parse_declarative_part(3)", Package_Parent);
             end case;
