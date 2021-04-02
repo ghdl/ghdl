@@ -4416,8 +4416,12 @@ package body Vhdl.Parse is
          Set_Subtype_Indication (Res, Parse_Subtype_Indication);
       end if;
 
-      --  FIXME: nice message if token is ':=' ?
-      Expect_Scan (Tok_Is);
+      if (Current_Token = Tok_Assign) then
+         Error_Msg_Parse ("alias shall be defined with 'is', not ':='");
+         Scan;
+      else
+         Expect_Scan (Tok_Is);
+      end if;
       Set_Name (Res, Parse_Signature_Name);
 
       if Flag_Elocations then
