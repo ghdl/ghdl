@@ -510,13 +510,13 @@ package body PSL.Nodes_Meta is
       Field_Low_Bound,
       Field_High_Bound,
       --  N_Goto_Repeat_Seq
-      Field_Sequence,
+      Field_Boolean,
       Field_Low_Bound,
       Field_High_Bound,
       --  N_Plus_Repeat_Seq
       Field_Sequence,
       --  N_Equal_Repeat_Seq
-      Field_Sequence,
+      Field_Boolean,
       Field_Low_Bound,
       Field_High_Bound,
       --  N_Paren_Bool
@@ -1130,9 +1130,7 @@ package body PSL.Nodes_Meta is
            | N_Imp_Seq
            | N_Overlap_Imp_Seq
            | N_Star_Repeat_Seq
-           | N_Goto_Repeat_Seq
-           | N_Plus_Repeat_Seq
-           | N_Equal_Repeat_Seq =>
+           | N_Plus_Repeat_Seq =>
             return True;
          when others =>
             return False;
@@ -1224,6 +1222,8 @@ package body PSL.Nodes_Meta is
            | N_Next_Event_E
            | N_Abort
            | N_Clocked_SERE
+           | N_Goto_Repeat_Seq
+           | N_Equal_Repeat_Seq
            | N_Paren_Bool
            | N_Not_Bool =>
             return True;

@@ -2032,19 +2032,26 @@ package body Vhdl.Prints is
       Print_Sequence (Ctxt, Get_Right (N), Prio);
    end Print_Binary_Sequence;
 
-   procedure Print_Repeat_Sequence
-     (Ctxt : in out Ctxt_Class; Tok : Token_Type; N : PSL_Node)
+   procedure Print_Seq_Repeat_Sere (Ctxt : in out Ctxt_Class; N : PSL_Node)
    is
-      S : PSL_Node;
+      S : constant PSL_Node := Get_Sequence (N);
    begin
-      S := Get_Sequence (N);
       if S /= Null_PSL_Node then
          Print_Sequence (Ctxt, S, Prio_SERE_Repeat);
       end if;
+      Disp_Token (Ctxt, Tok_Brack_Star);
+      Print_Count (Ctxt, N);
+      Disp_Token (Ctxt, Tok_Right_Bracket);
+   end Print_Seq_Repeat_Sere;
+
+   procedure Print_Bool_Repeat_Sere
+     (Ctxt : in out Ctxt_Class; Tok : Token_Type; N : PSL_Node) is
+   begin
+      Print_Expr (Ctxt, Get_Boolean (N));
       Disp_Token (Ctxt, Tok);
       Print_Count (Ctxt, N);
       Disp_Token (Ctxt, Tok_Right_Bracket);
-   end Print_Repeat_Sequence;
+   end Print_Bool_Repeat_Sere;
 
    procedure Print_Sequence (Ctxt : in out Ctxt_Class;
                              Seq : PSL_Node;
@@ -2075,11 +2082,11 @@ package body Vhdl.Prints is
          when N_And_Seq =>
             Print_Binary_Sequence (Ctxt, Tok_Ampersand, Seq, Prio);
          when N_Star_Repeat_Seq =>
-            Print_Repeat_Sequence (Ctxt, Tok_Brack_Star, Seq);
+            Print_Seq_Repeat_Sere (Ctxt, Seq);
          when N_Goto_Repeat_Seq =>
-            Print_Repeat_Sequence (Ctxt, Tok_Brack_Arrow, Seq);
+            Print_Bool_Repeat_Sere (Ctxt, Tok_Brack_Arrow, Seq);
          when N_Equal_Repeat_Seq =>
-            Print_Repeat_Sequence (Ctxt, Tok_Brack_Equal, Seq);
+            Print_Bool_Repeat_Sere (Ctxt, Tok_Brack_Equal, Seq);
          when N_Plus_Repeat_Seq =>
             Print_Sequence (Ctxt, Get_Sequence (Seq), Prio);
             Disp_Token (Ctxt, Tok_Brack_Plus_Brack);

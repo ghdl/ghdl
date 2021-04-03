@@ -188,12 +188,12 @@ package body PSL.Rewrites is
       end if;
    end Rewrite_Star_Repeat_Seq;
 
-   function Rewrite_Goto_Repeat_Seq (Seq : Node;
-                                     Lo, Hi : Node) return Node is
+   function Rewrite_Goto_Repeat_Seq (B : Node; Lo, Hi : Node) return Node
+   is
       Res : Node;
    begin
       --  b[->]  -->  {(~b)[*];b}
-      Res := Build_Concat (Build_Star (Build_Bool_Not (Seq)), Seq);
+      Res := Build_Concat (Build_Star (Build_Bool_Not (B)), B);
 
       if Lo = Null_Node then
          return Res;
@@ -203,12 +203,12 @@ package body PSL.Rewrites is
       return Rewrite_Star_Repeat_Seq (Res, Lo, Hi);
    end Rewrite_Goto_Repeat_Seq;
 
-   function Rewrite_Goto_Repeat_Seq (Seq : Node;
-                                     Lo, Hi : Uns32) return Node is
+   function Rewrite_Goto_Repeat_Seq (B : Node; Lo, Hi : Uns32) return Node
+   is
       Res : Node;
    begin
       --  b[->]  -->  {(~b)[*];b}
-      Res := Build_Concat (Build_Star (Build_Bool_Not (Seq)), Seq);
+      Res := Build_Concat (Build_Star (Build_Bool_Not (B)), B);
 
       --  b[->l:h]  -->  {b[->]}[*l:h]
       return Rewrite_Star_Repeat_Seq (Res, Lo, Hi);
@@ -216,13 +216,13 @@ package body PSL.Rewrites is
 
    function Rewrite_Equal_Repeat_Seq (N : Node) return Node
    is
-      Seq : constant Node := Get_Sequence (N);
+      B : constant Node := Get_Boolean (N);
       Lo : constant Node := Get_Low_Bound (N);
       Hi : constant Node := Get_High_Bound (N);
    begin
       --  b[=l:h]  -->  {b[->l:h]};(~b)[*]
-      return Build_Concat (Rewrite_Goto_Repeat_Seq (Seq, Lo, Hi),
-                           Build_Star (Build_Bool_Not (Seq)));
+      return Build_Concat (Rewrite_Goto_Repeat_Seq (B, Lo, Hi),
+                           Build_Star (Build_Bool_Not (B)));
    end Rewrite_Equal_Repeat_Seq;
 
    function Rewrite_Within (N : Node) return Node is
@@ -291,10 +291,10 @@ package body PSL.Rewrites is
             return N;
          when N_Goto_Repeat_Seq =>
             return Rewrite_Goto_Repeat_Seq
-              (Rewrite_SERE (Get_Sequence (N)),
+              (Rewrite_SERE (Get_Boolean (N)),
                Get_Low_Bound (N), Get_High_Bound (N));
          when N_Equal_Repeat_Seq =>
-            Set_Sequence (N, Rewrite_SERE (Get_Sequence (N)));
+            Set_Boolean (N, Rewrite_SERE (Get_Boolean (N)));
             return Rewrite_Equal_Repeat_Seq (N);
          when N_Braced_SERE =>
             return Rewrite_SERE (Get_SERE (N));

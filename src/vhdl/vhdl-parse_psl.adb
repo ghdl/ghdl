@@ -337,23 +337,26 @@ package body Vhdl.Parse_Psl is
    end Parse_Braced_SERE;
 
    --  Parse [ Count ] ']'
-   function Parse_Maybe_Count (Kind : Nkind; Seq : Node) return Node
+   function Parse_Brack_Star (Seq : Node) return Node
    is
-      N : Node;
+      Res : Node;
    begin
-      N := Create_Node_Loc (Kind);
-      Set_Sequence (N, Seq);
+      Res := Create_Node_Loc (N_Star_Repeat_Seq);
+      Set_Sequence (Res, Seq);
+
+      --  Skip '[->'
       Scan;
+
       if Current_Token /= Tok_Right_Bracket then
-         Parse_Count (N);
+         Parse_Count (Res);
       end if;
       if Current_Token /= Tok_Right_Bracket then
          Error_Msg_Parse ("missing ']'");
       else
          Scan;
       end if;
-      return N;
-   end Parse_Maybe_Count;
+      return Res;
+   end Parse_Brack_Star;
 
    procedure Parse_Bracket_Range (N : Node) is
    begin
@@ -396,6 +399,44 @@ package body Vhdl.Parse_Psl is
       end if;
    end Parse_Bracket_Number;
 
+   function Parse_Brack_Equal (Left : Node) return Node
+   is
+      Res : Node;
+   begin
+      Res := Create_Node_Loc (N_Equal_Repeat_Seq);
+      Set_Boolean (Res, Left);
+
+      --  Skip '[='
+      Scan;
+      Parse_Count (Res);
+      if Current_Token /= Tok_Right_Bracket then
+         Error_Msg_Parse ("missing ']'");
+      else
+         Scan;
+      end if;
+      return Res;
+   end Parse_Brack_Equal;
+
+   function Parse_Brack_Arrow (Left : Node) return Node
+   is
+      Res : Node;
+   begin
+      Res := Create_Node_Loc (N_Goto_Repeat_Seq);
+      Set_Boolean (Res, Left);
+
+      --  Skip '[->'
+      Scan;
+      if Current_Token /= Tok_Right_Bracket then
+         Parse_Count (Res);
+      end if;
+      if Current_Token /= Tok_Right_Bracket then
+         Error_Msg_Parse ("missing ']'");
+      else
+         Scan;
+      end if;
+      return Res;
+   end Parse_Brack_Arrow;
+
    function Parse_Psl_Sequence_Or_SERE (Full_Hdl_Expr : Boolean) return Node
    is
       Res, N : Node;
@@ -414,7 +455,7 @@ package body Vhdl.Parse_Psl is
                Res := N;
             end if;
          when Tok_Brack_Star =>
-            return Parse_Maybe_Count (N_Star_Repeat_Seq, Null_Node);
+            return Parse_Brack_Star (Null_Node);
          when Tok_Left_Paren =>
             if Parse.Flag_Parse_Parenthesis then
                Res := Create_Node_Loc (N_Paren_Bool);
@@ -438,14 +479,24 @@ package body Vhdl.Parse_Psl is
             Res := Create_Node_Loc (N_Plus_Repeat_Seq);
             Scan;
             return Res;
+
          when others =>
             --  Repeated_SERE
             Res := Parse_Unary_Boolean (Full_Hdl_Expr);
+
+            case Current_Token is
+               when Tok_Brack_Equal =>
+                  Res := Parse_Brack_Equal (Res);
+               when Tok_Brack_Arrow =>
+                  Res := Parse_Brack_Arrow (Res);
+               when others =>
+                  null;
+            end case;
       end case;
       loop
          case Current_Token is
             when Tok_Brack_Star =>
-               Res := Parse_Maybe_Count (N_Star_Repeat_Seq, Res);
+               Res := Parse_Brack_Star (Res);
             when Tok_Brack_Plus_Brack =>
                N := Create_Node_Loc (N_Plus_Repeat_Seq);
                Set_Sequence (N, Res);
@@ -454,20 +505,11 @@ package body Vhdl.Parse_Psl is
                Scan;
                Res := N;
             when Tok_Brack_Arrow =>
-               Res := Parse_Maybe_Count (N_Goto_Repeat_Seq, Res);
+               Error_Msg_Parse ("'[->' not allowed on a SERE");
+               Res := Parse_Brack_Arrow (Res);
             when Tok_Brack_Equal =>
-               N := Create_Node_Loc (N_Equal_Repeat_Seq);
-               Set_Sequence (N, Res);
-
-               --  Skip '[='
-               Scan;
-               Parse_Count (N);
-               if Current_Token /= Tok_Right_Bracket then
-                  Error_Msg_Parse ("missing ']'");
-               else
-                  Scan;
-               end if;
-               Res := N;
+               Error_Msg_Parse ("'[=' not allowed on a SERE");
+               Res := Parse_Brack_Equal (Res);
             when others =>
                exit;
          end case;

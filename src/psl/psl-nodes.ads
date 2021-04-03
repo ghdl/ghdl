@@ -81,8 +81,8 @@ package PSL.Nodes is
 
       N_Star_Repeat_Seq,
       N_Goto_Repeat_Seq,
-      N_Plus_Repeat_Seq, -- [+]
-      N_Equal_Repeat_Seq,
+      N_Plus_Repeat_Seq,   -- [+]
+      N_Equal_Repeat_Seq,  -- [= ]
 
       --  Boolean layer.
       N_Paren_Bool,
@@ -276,11 +276,18 @@ package PSL.Nodes is
    --   Get/Set_Right (Field2)
 
    -- N_Star_Repeat_Seq (Short)
-   -- N_Goto_Repeat_Seq (Short)
-   -- N_Equal_Repeat_Seq (Short)
    --
    --  Note: can be null_node for star_repeat_seq.
    --   Get/Set_Sequence (Field3)
+   --
+   --   Get/Set_Low_Bound (Field1)
+   --
+   --   Get/Set_High_Bound (Field2)
+
+   -- N_Equal_Repeat_Seq (Short)
+   -- N_Goto_Repeat_Seq (Short)
+   --
+   --   Get/Set_Boolean (Field3)
    --
    --   Get/Set_Low_Bound (Field1)
    --
