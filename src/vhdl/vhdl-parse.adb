@@ -473,12 +473,17 @@ package body Vhdl.Parse is
       Error_Msg_Parse (Get_Prev_Location, "missing "";"" at end of " & Msg);
    end Error_Missing_Semi_Colon;
 
-   procedure Error_Variable_Location (Kind : Iir_Kind) is
-      Prefix : constant String := "non-";
-      Common : constant String := "shared variable declaration not allowed ";
+   procedure Error_Variable_Location (Kind : Iir_Kind; Shared : Boolean) is
+      Prefix : String (1 .. 11) := (others => Character'Val(0));
+      Common : constant String := "variable declaration not allowed ";
    begin
-      case Kind is
+      if Shared then
+         Prefix(1 .. 7) := "shared ";
+      else
+         Prefix := "non-shared ";
+      end if;
 
+      case Kind is
       -- Shared variables
       when Iir_Kind_Entity_Declaration =>
          Error_Msg_Parse (Prefix & Common & "in entity declaration");
@@ -497,16 +502,16 @@ package body Vhdl.Parse is
 
       -- Non-shared variables
       when Iir_Kind_Function_Body =>
-         Error_Msg_Parse (Common & "in function body");
+         Error_Msg_Parse (Prefix & Common & "in function body");
       when Iir_Kinds_Process_Statement =>
-         Error_Msg_Parse (Common & "in process statement");
+         Error_Msg_Parse (Prefix & Common & "in process statement");
       when Iir_Kind_Protected_Type_Body =>
-         Error_Msg_Parse (Common & "in protected type body");
+         Error_Msg_Parse (Prefix & Common & "in protected type body");
       when Iir_Kind_Simultaneous_Procedural_Statement =>
-         Error_Msg_Parse (Common & "in procedural statement");
+         Error_Msg_Parse (Prefix & Common & "in procedural statement");
 
       when others =>
-         Error_Msg_Parse (Prefix & Common & "here");
+         Error_Msg_Parse (Common & "here");
       end case;
    end Error_Variable_Location;
 
@@ -5347,7 +5352,7 @@ package body Vhdl.Parse is
                   | Iir_Kind_Package_Declaration
                   | Iir_Kind_Package_Body
                   | Iir_Kind_Protected_Type_Declaration =>
-                  Error_Variable_Location(Get_Kind(Package_Parent));
+                  Error_Variable_Location(Get_Kind(Package_Parent), False);
                when Iir_Kind_Function_Body
                  | Iir_Kind_Procedure_Body
                  | Iir_Kinds_Process_Statement
@@ -5397,7 +5402,7 @@ package body Vhdl.Parse is
                  | Iir_Kinds_Process_Statement
                  | Iir_Kind_Protected_Type_Body
                  | Iir_Kind_Simultaneous_Procedural_Statement =>
-                  Error_Variable_Location(Get_Kind(Package_Parent));
+                  Error_Variable_Location(Get_Kind(Package_Parent), True);
                when others =>
                   Error_Kind ("parse_declarative_part(3)", Package_Parent);
             end case;
@@ -10270,11 +10275,31 @@ package body Vhdl.Parse is
             when Tok_Eof =>
                Error_Msg_Parse ("unexpected end of file, 'END;' expected");
                return Null_Iir;
+
+            -- All errors, more detailed logs
             when others =>
-               --  FIXME: improve message:
-               --  instead of 'unexpected token 'signal' in conc stmt list'
-               --  report: 'signal declarations are not allowed in conc stmt'
-               Unexpected ("concurrent statement list");
+               if (Get_Kind(Parent) = Iir_Kind_Architecture_Body) then
+                  case Current_Token is
+                  when Tok_Signal =>
+                     Error_Msg_Parse (
+                        "Signal declaration not allowed in architecture body");
+                  when Tok_File =>
+                     Error_Msg_Parse (
+                        "File declaration not allowed in architecture body");
+                  when Tok_Shared =>
+                     Error_Variable_Location(Get_Kind(Parent), True);
+                  when Tok_Variable =>
+                     Error_Variable_Location(Get_Kind(Parent), False);
+                  when Tok_Constant =>
+                     Error_Msg_Parse ("Constant declaration " &
+                        "not allowed in architecture body");
+                  when others =>
+                     Unexpected ("concurrent statement list");
+                  end case;
+               else
+                  Unexpected ("concurrent statement list");
+               end if;
+
                Resync_To_End_Of_Statement;
                if Current_Token = Tok_Semi_Colon then
                   Scan;
