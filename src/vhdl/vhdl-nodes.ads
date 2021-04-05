@@ -203,6 +203,7 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Last_Design_Unit (Field6)
    --
+   --  Source file entry for this file.
    --   Get/Set_Design_File_Source (Field7)
    --
    --  Identifier for the design file file name and dirname.
@@ -265,6 +266,25 @@ package Vhdl.Nodes is
    --  Flags used during configuration
    --   Get/Set_Configuration_Mark_Flag (Flag4)
    --   Get/Set_Configuration_Done_Flag (Flag5)
+
+   -- Iir_Kind_Foreign_Module (Medium)
+   --
+   --   Get/Set_Design_File (Field0)
+   --   Get/Set_Parent (Alias Field0)
+   --
+   --   Get/Set_Identifier (Field3)
+   --
+   --   Get/Set_Foreign_Node (Field1)
+   --
+   --   Get/Set_Date (Field4)
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Hash_Chain (Field7)
+   --
+   --   Get/Set_Date_State (State1)
+   --
+   --   Get/Set_Elab_Flag (Flag3)
 
    -- Iir_Kind_Library_Clause (Short)
    --
@@ -4821,7 +4841,10 @@ package Vhdl.Nodes is
       Iir_Kind_Error,
 
       Iir_Kind_Design_File,
+
       Iir_Kind_Design_Unit,
+      Iir_Kind_Foreign_Module,
+
       Iir_Kind_Library_Clause,
       Iir_Kind_Use_Clause,
       Iir_Kind_Context_Reference,
@@ -6350,6 +6373,10 @@ package Vhdl.Nodes is
    --Iir_Kind_Vunit_Declaration
    --Iir_Kind_Package_Body
      Iir_Kind_Architecture_Body;
+
+   subtype Iir_Kinds_Design_Unit is Iir_Kind range
+     Iir_Kind_Design_Unit ..
+     Iir_Kind_Foreign_Module;
 
    subtype Iir_Kinds_Primary_Unit is Iir_Kind range
      Iir_Kind_Entity_Declaration ..
@@ -9252,4 +9279,8 @@ package Vhdl.Nodes is
    --  Field: Field3 Ref
    function Get_Default_Clock (N : Iir) return Iir;
    procedure Set_Default_Clock (N : Iir; Clk : Iir);
+
+   --  Field: Field1 (uc)
+   function Get_Foreign_Node (N : Iir) return Int32;
+   procedure Set_Foreign_Node (N : Iir; En : Int32);
 end Vhdl.Nodes;

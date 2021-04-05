@@ -398,6 +398,7 @@ package Vhdl.Utils is
 
    --  Return True IFF kind of N is K1 or K2.
    function Kind_In (N : Iir; K1, K2 : Iir_Kind) return Boolean;
+   function Kind_In (N : Iir; K1, K2, K3 : Iir_Kind) return Boolean;
    pragma Inline (Kind_In);
 
    subtype Parameter_Index is Natural range 1 .. 4;

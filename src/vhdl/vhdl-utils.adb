@@ -302,6 +302,7 @@ package body Vhdl.Utils is
                | Iir_Kind_Use_Clause
                | Iir_Kind_Context_Reference
                | Iir_Kind_Library_Declaration
+               | Iir_Kind_Foreign_Module
                | Iir_Kinds_Library_Unit
                | Iir_Kind_Component_Declaration
                | Iir_Kind_Function_Declaration
@@ -1839,6 +1840,13 @@ package body Vhdl.Utils is
       K : constant Iir_Kind := Get_Kind (N);
    begin
       return K = K1 or K = K2;
+   end Kind_In;
+
+   function Kind_In (N : Iir; K1, K2, K3 : Iir_Kind) return Boolean
+   is
+      K : constant Iir_Kind := Get_Kind (N);
+   begin
+      return K = K1 or K = K2 or K = K3;
    end Kind_In;
 
    procedure Set_Attribute_Parameter

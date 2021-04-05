@@ -440,6 +440,7 @@ class fields:
     Count_Expression = 367
     Clock_Expression = 368
     Default_Clock = 369
+    Foreign_Node = 370
 
 
 Get_Boolean = libghdl.vhdl__nodes_meta__get_boolean
@@ -1308,3 +1309,5 @@ Has_Count_Expression = libghdl.vhdl__nodes_meta__has_count_expression
 Has_Clock_Expression = libghdl.vhdl__nodes_meta__has_clock_expression
 
 Has_Default_Clock = libghdl.vhdl__nodes_meta__has_default_clock
+
+Has_Foreign_Node = libghdl.vhdl__nodes_meta__has_foreign_node

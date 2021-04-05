@@ -1241,6 +1241,7 @@ package body Vhdl.Nodes is
             return Format_Short;
          when Iir_Kind_Design_File
            | Iir_Kind_Design_Unit
+           | Iir_Kind_Foreign_Module
            | Iir_Kind_Block_Header
            | Iir_Kind_Binding_Indication
            | Iir_Kind_Signature
@@ -7355,5 +7356,21 @@ package body Vhdl.Nodes is
                      "no field Default_Clock");
       Set_Field3 (N, Clk);
    end Set_Default_Clock;
+
+   function Get_Foreign_Node (N : Iir) return Int32 is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Foreign_Node (Get_Kind (N)),
+                     "no field Foreign_Node");
+      return Iir_To_Int32 (Get_Field1 (N));
+   end Get_Foreign_Node;
+
+   procedure Set_Foreign_Node (N : Iir; En : Int32) is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Foreign_Node (Get_Kind (N)),
+                     "no field Foreign_Node");
+      Set_Field1 (N, Int32_To_Iir (En));
+   end Set_Foreign_Node;
 
 end Vhdl.Nodes;

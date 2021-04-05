@@ -207,6 +207,7 @@ package body Vhdl.Elocations is
            | Iir_Kind_Error
            | Iir_Kind_Design_File
            | Iir_Kind_Design_Unit
+           | Iir_Kind_Foreign_Module
            | Iir_Kind_Use_Clause
            | Iir_Kind_Context_Reference
            | Iir_Kind_Integer_Literal

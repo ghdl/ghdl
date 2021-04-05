@@ -522,6 +522,9 @@ package body Vhdl.Errors is
            | Iir_Kind_Function_Body =>
             return "subprogram body";
 
+         when Iir_Kind_Foreign_Module =>
+            return Disp_Identifier (Node, "foreign module");
+
          when Iir_Kind_Package_Declaration =>
             return Disp_Identifier (Node, "package");
          when Iir_Kind_Package_Body =>

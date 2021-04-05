@@ -124,6 +124,8 @@ package Vhdl.Elocations is
    --  Declarations --
    -------------------
 
+   -- Iir_Kind_Foreign_Module (None)
+
    -- Iir_Kind_Entity_Declaration (L6)
    --
    --   Get/Set_Start_Location (Field1)

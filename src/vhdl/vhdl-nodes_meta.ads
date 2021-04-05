@@ -430,7 +430,8 @@ package Vhdl.Nodes_Meta is
       Field_PSL_EOS_Flag,
       Field_Count_Expression,
       Field_Clock_Expression,
-      Field_Default_Clock
+      Field_Default_Clock,
+      Field_Foreign_Node
      );
    pragma Discard_Names (Fields_Enum);
 
@@ -1020,4 +1021,5 @@ package Vhdl.Nodes_Meta is
    function Has_Count_Expression (K : Iir_Kind) return Boolean;
    function Has_Clock_Expression (K : Iir_Kind) return Boolean;
    function Has_Default_Clock (K : Iir_Kind) return Boolean;
+   function Has_Foreign_Node (K : Iir_Kind) return Boolean;
 end Vhdl.Nodes_Meta;
