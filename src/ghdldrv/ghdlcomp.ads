@@ -97,11 +97,18 @@ package Ghdlcomp is
 
    --  Load and parse FILE, put library units in the work library (without
    --  analyzing them).
-   procedure Compile_Load_File (File : String);
+   procedure Compile_Load_Vhdl_File (File : String);
 
    --  Load, parse and analyze FILE.
    function Compile_Analyze_File (File : String) return Iir;
 
    procedure Compile_Elaborate (Unit_Name : String_Access);
    procedure Compile_Run;
+
+   --  Load and parse file (without analysis).  Put units in the work library.
+   type Load_File_Acc is access procedure (File : String);
+
+   --  Hook for verilog.
+   Init_Verilog_Options : Compile_Init_Acc;
+   Load_Verilog_File : Load_File_Acc;
 end Ghdlcomp;

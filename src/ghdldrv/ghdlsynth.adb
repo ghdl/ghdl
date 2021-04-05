@@ -277,6 +277,10 @@ package body Ghdlsynth is
          --  Do not create concurrent signal assignment for inertial
          --  association.  They are handled directly.
          Vhdl.Canon.Canon_Flag_Inertial_Associations := False;
+
+         if Ghdlcomp.Init_Verilog_Options /= null then
+            Ghdlcomp.Init_Verilog_Options.all (False);
+         end if;
       end if;
 
       --  Mark vendor libraries.
@@ -315,15 +319,21 @@ package body Ghdlsynth is
                case Files_Map.Find_Language (Arg) is
                   when Language_Vhdl
                     | Language_Psl =>
-                     null;
+                     Ghdlcomp.Compile_Load_Vhdl_File (Arg);
+                  when Language_Verilog =>
+                     if Ghdlcomp.Load_Verilog_File = null then
+                        Error_Msg_Option
+                          ("verilog file %i is not supported",
+                           (1 => +Name_Table.Get_Identifier (Arg)));
+                     else
+                        Ghdlcomp.Load_Verilog_File (Arg);
+                     end if;
                   when others =>
                      Errorout.Report_Msg
                        (Warnid_Library, Option, No_Source_Coord,
-                        "unexpected extension for vhdl file %i",
+                        "unexpected extension for file %i",
                         (1 => +Name_Table.Get_Identifier (Arg)));
                end case;
-
-               Ghdlcomp.Compile_Load_File (Arg);
             end if;
          end;
       end loop;

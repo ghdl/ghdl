@@ -217,7 +217,7 @@ package body Ghdlcomp is
       end if;
    end Compile_Analyze_Init;
 
-   procedure Compile_Load_File (File : String)
+   procedure Compile_Load_Vhdl_File (File : String)
    is
       Res : Iir_Design_File;
       Design : Iir;
@@ -236,7 +236,7 @@ package body Ghdlcomp is
          Libraries.Add_Design_Unit_Into_Library (Design);
          Design := Next_Design;
       end loop;
-   end Compile_Load_File;
+   end Compile_Load_Vhdl_File;
 
    function Compile_Analyze_File (File : String) return Iir
    is
@@ -390,7 +390,7 @@ package body Ghdlcomp is
                      end if;
                      Libraries.Load_Work_Library (True);
                   else
-                     Compile_Load_File (Arg);
+                     Compile_Load_Vhdl_File (Arg);
                   end if;
                end;
             end loop;

@@ -209,7 +209,7 @@ package Errorout is
    --  Disp an error, prepended with program name.
    --  This is used for errors before initialisation, such as bad option or
    --  bad filename.
-   procedure Error_Msg_Option (Msg: String);
+   procedure Error_Msg_Option (Msg: String; Args : Earg_Arr := No_Eargs);
 
    --  Warn about an option.
    procedure Warning_Msg_Option (Id : Msgid_Warnings; Msg: String);
