@@ -1,2 +1,6 @@
 tb.vhdl:23:14:warning: declaration of "din" hides signal "din" [-Whide]
+    variable din : in std_logic;
+             ^
 tb.vhdl:24:14:warning: declaration of "dout" hides port "dout" [-Whide]
+    variable dout : out std_logic
+             ^
