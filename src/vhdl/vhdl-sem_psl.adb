@@ -505,15 +505,27 @@ package body Vhdl.Sem_Psl is
          when N_Braced_SERE =>
             return Sem_Sequence (Prop);
          when N_Star_Repeat_Seq
-            | N_Equal_Repeat_Seq
-            | N_Plus_Repeat_Seq
+            | N_Plus_Repeat_Seq =>
+            declare
+               Seq : PSL_Node;
+            begin
+               Seq := Get_Sequence (Prop);
+               if Seq /= Null_PSL_Node then
+                  Seq := Sem_Sequence (Seq);
+                  Set_Sequence (Prop, Seq);
+               end if;
+               return Prop;
+            end;
+         when N_Equal_Repeat_Seq
             | N_Goto_Repeat_Seq =>
-            Res := Get_Sequence (Prop);
-            if Res /= Null_PSL_Node then
-               Res := Sem_Sequence (Get_Sequence (Prop));
-               Set_Sequence (Prop, Res);
-            end if;
-            return Prop;
+            declare
+               B : PSL_Node;
+            begin
+               B := Get_Boolean (Prop);
+               B := Sem_Boolean (B);
+               Set_Boolean (Prop, B);
+               return Prop;
+            end;
          when N_Always
             | N_Never =>
             --  By extension, clock_event is allowed within outermost
