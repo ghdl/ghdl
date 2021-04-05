@@ -6,6 +6,7 @@ import subprocess
 import select
 import os
 import os.path
+import sys
 import time
 
 NUMJOBS=4
@@ -84,6 +85,8 @@ def run(keep):
         nbr_run, nbr_tests, end_time - start_time, nbr_err))
     if failures:
         print('Failure: {}'.format(failures))
+        return False
+    return True
 
 
 if __name__ == '__main__':
@@ -91,4 +94,5 @@ if __name__ == '__main__':
     parser.add_argument("-k", "--keep",
                         help="keep running", action='store_true')
     args = parser.parse_args()
-    run(args.keep)
+    if not run(args.keep):
+        sys.exit(1)
