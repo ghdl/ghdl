@@ -152,11 +152,8 @@ package Flags is
    --  If true, allow to use synopsys packages (std_logic_arith & co).
    Flag_Synopsys : Boolean := False;
 
-   -- --warn-undriven
-   --Warn_Undriven : Boolean := False;
-
    --  If True, disp original source line and a caret indicating the column.
-   Flag_Caret_Diagnostics : Boolean := False;
+   Flag_Caret_Diagnostics : Boolean := True;
 
    type On_Off_Auto_Type is (On, Off, Auto);
 
