@@ -712,6 +712,7 @@ package body Vhdl.Utils is
       end if;
 
       pragma Assert (Kind_In (Unit, Iir_Kind_Design_Unit,
+                              Iir_Kind_Foreign_Module,
                               Iir_Kind_Entity_Aspect_Entity));
 
       Add_Element (Get_Dependence_List (Target), Unit);
@@ -1503,13 +1504,17 @@ package body Vhdl.Utils is
       Name : constant Iir := Get_Entity_Name (Decl);
       Res : constant Iir := Get_Named_Entity (Name);
    begin
-      if Res = Vhdl.Std_Package.Error_Mark then
+      if Res = Null_Iir or else Res = Vhdl.Std_Package.Error_Mark then
          return Null_Iir;
       end if;
 
-      pragma Assert (Res = Null_Iir
-                       or else Get_Kind (Res) = Iir_Kind_Entity_Declaration);
-      return Res;
+      case Get_Kind (Res) is
+         when Iir_Kind_Entity_Declaration
+            | Iir_Kind_Foreign_Module =>
+            return Res;
+         when others =>
+            raise Internal_Error;
+      end case;
    end Get_Entity;
 
    function Get_Configuration (Aspect : Iir) return Iir

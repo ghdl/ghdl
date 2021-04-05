@@ -1269,6 +1269,11 @@ package body Synth.Insts is
               ("Synth_Component_Instantiation_Statement(2)", Aspect);
       end case;
 
+      if Get_Kind (Ent) = Iir_Kind_Foreign_Module then
+         --  TODO.
+         raise Internal_Error;
+      end if;
+
       if Arch = Null_Node then
          Arch := Libraries.Get_Latest_Architecture (Ent);
       else

@@ -114,7 +114,9 @@ package body Vhdl.Configuration is
       while Is_Valid (It) loop
          El := Get_Element (It);
          El := Libraries.Find_Design_Unit (El);
-         if El /= Null_Iir then
+         if El /= Null_Iir
+           and then Get_Kind (El) = Iir_Kind_Design_Unit
+         then
             Lib_Unit := Get_Library_Unit (El);
             if Flag_Build_File_Dependence then
                Add_Design_Unit (El, Loc);
@@ -305,6 +307,9 @@ package body Vhdl.Configuration is
                --  In case of error (using -c).
                return;
             end if;
+            if Get_Kind (Entity_Lib) = Iir_Kind_Foreign_Module then
+               return;
+            end if;
             Entity := Get_Design_Unit (Entity_Lib);
             Add_Design_Unit (Entity, Loc);
 
@@ -425,7 +430,7 @@ package body Vhdl.Configuration is
       Aspect : constant Iir := Get_Entity_Aspect (Bind);
       Ent : constant Iir := Get_Entity_From_Entity_Aspect (Aspect);
       Assoc_Chain : constant Iir := Get_Port_Map_Aspect_Chain (Bind);
-      Inter_Chain : constant Iir := Get_Port_Chain (Ent);
+      Inter_Chain : Iir;
       Assoc : Iir;
       Inter : Iir;
       Inst_Assoc_Chain : Iir;
@@ -438,6 +443,11 @@ package body Vhdl.Configuration is
       Inter_1 : Iir;
       Actual : Iir;
    begin
+      if Get_Kind (Ent) = Iir_Kind_Foreign_Module then
+         return;
+      end if;
+
+      Inter_Chain := Get_Port_Chain (Ent);
       Err := False;
       --  Note: the assoc chain is already canonicalized.
 
@@ -643,6 +653,10 @@ package body Vhdl.Configuration is
                          & Name_Table.Image (Primary_Id));
          return Null_Iir;
       end if;
+      if Get_Kind (Unit) = Iir_Kind_Foreign_Module then
+         return Unit;
+      end if;
+
       Lib_Unit := Get_Library_Unit (Unit);
       case Get_Kind (Lib_Unit) is
          when Iir_Kind_Entity_Declaration =>
@@ -747,12 +761,14 @@ package body Vhdl.Configuration is
          while File /= Null_Iir loop
             Unit := Get_First_Design_Unit (File);
             while Unit /= Null_Iir loop
-               Lib := Get_Library_Unit (Unit);
-               if Get_Kind (Lib) = Iir_Kind_Vunit_Declaration then
-                  --  Load it.
-                  Load_Design_Unit (Unit, Unit);
+               if Get_Kind (Unit) = Iir_Kind_Design_Unit then
+                  Lib := Get_Library_Unit (Unit);
+                  if Get_Kind (Lib) = Iir_Kind_Vunit_Declaration then
+                     --  Load it.
+                     Load_Design_Unit (Unit, Unit);
 
-                  Add_Verification_Unit (Get_Library_Unit (Unit));
+                     Add_Verification_Unit (Get_Library_Unit (Unit));
+                  end if;
                end if;
                Unit := Get_Chain (Unit);
             end loop;
@@ -873,7 +889,7 @@ package body Vhdl.Configuration is
       --  Add entities to the name table (so that they easily could be found).
       function Add_Entity_Cb (Design : Iir) return Walk_Status
       is
-         Kind : constant Iir_Kind := Get_Kind (Get_Library_Unit (Design));
+         Lib_Unit : Iir;
       begin
          if not Flags.Flag_Elaborate_With_Outdated then
             --  Discard obsolete or non-analyzed units.
@@ -882,20 +898,29 @@ package body Vhdl.Configuration is
             end if;
          end if;
 
-         case Iir_Kinds_Library_Unit (Kind) is
-            when Iir_Kind_Architecture_Body
-              | Iir_Kind_Configuration_Declaration =>
-               Load_Design_Unit (Design, Loc_Err);
-            when Iir_Kind_Entity_Declaration =>
-               Load_Design_Unit (Design, Loc_Err);
-               Vhdl.Sem_Scopes.Add_Name (Get_Library_Unit (Design));
-            when Iir_Kind_Package_Declaration
-              | Iir_Kind_Package_Instantiation_Declaration
-              | Iir_Kind_Package_Body
-              | Iir_Kinds_Verification_Unit
-              | Iir_Kind_Context_Declaration =>
-               null;
+         case Iir_Kinds_Design_Unit (Get_Kind (Design)) is
+            when Iir_Kind_Design_Unit =>
+               Lib_Unit := Get_Library_Unit (Design);
+               case Iir_Kinds_Library_Unit (Get_Kind (Lib_Unit)) is
+                  when Iir_Kind_Architecture_Body
+                    | Iir_Kind_Configuration_Declaration =>
+                     Load_Design_Unit (Design, Loc_Err);
+                  when Iir_Kind_Entity_Declaration =>
+                     Load_Design_Unit (Design, Loc_Err);
+                     --  Library unit has changed (loaded).
+                     Lib_Unit := Get_Library_Unit (Design);
+                     Vhdl.Sem_Scopes.Add_Name (Lib_Unit);
+                  when Iir_Kind_Package_Declaration
+                    | Iir_Kind_Package_Instantiation_Declaration
+                    | Iir_Kind_Package_Body
+                    | Iir_Kinds_Verification_Unit
+                    | Iir_Kind_Context_Declaration =>
+                     null;
+               end case;
+            when Iir_Kind_Foreign_Module =>
+               Vhdl.Sem_Scopes.Add_Name (Design);
          end case;
+
          return Walk_Continue;
       end Add_Entity_Cb;
 
@@ -951,9 +976,14 @@ package body Vhdl.Configuration is
                   Interp := Get_Interpretation (Get_Identifier (Comp));
                   if Valid_Interpretation (Interp) then
                      Decl := Get_Declaration (Interp);
-                     pragma Assert
-                       (Get_Kind (Decl) = Iir_Kind_Entity_Declaration);
-                     Set_Elab_Flag (Get_Design_Unit (Decl), True);
+                     case Get_Kind (Decl) is
+                        when Iir_Kind_Entity_Declaration =>
+                           Set_Elab_Flag (Get_Design_Unit (Decl), True);
+                        when Iir_Kind_Foreign_Module =>
+                           Set_Elab_Flag (Decl, True);
+                        when others =>
+                           raise Internal_Error;
+                     end case;
                   else
                      --  If there is no corresponding entity name for the
                      --  component name, assume it belongs to a different
@@ -972,7 +1002,7 @@ package body Vhdl.Configuration is
 
       function Mark_Units_Cb (Design : Iir) return Walk_Status
       is
-         Unit : constant Iir := Get_Library_Unit (Design);
+         Unit : Iir;
          Status : Walk_Status;
       begin
          if not Flags.Flag_Elaborate_With_Outdated then
@@ -982,23 +1012,29 @@ package body Vhdl.Configuration is
             end if;
          end if;
 
-         case Iir_Kinds_Library_Unit (Get_Kind (Unit)) is
-            when Iir_Kind_Architecture_Body =>
-               Status := Walk_Concurrent_Statements_Chain
-                 (Get_Concurrent_Statement_Chain (Unit),
-                  Mark_Instantiation_Cb'Access);
-               pragma Assert (Status = Walk_Continue);
-            when Iir_Kind_Configuration_Declaration =>
-               --  Just ignored.
-               null;
-            when Iir_Kind_Package_Declaration
-              | Iir_Kind_Package_Instantiation_Declaration
-              | Iir_Kind_Package_Body
-              | Iir_Kind_Entity_Declaration
-              | Iir_Kinds_Verification_Unit
-              | Iir_Kind_Context_Declaration =>
-               null;
-         end case;
+         if Get_Kind (Design) = Iir_Kind_Design_Unit then
+            Unit := Get_Library_Unit (Design);
+            case Iir_Kinds_Library_Unit (Get_Kind (Unit)) is
+               when Iir_Kind_Architecture_Body =>
+                  Status := Walk_Concurrent_Statements_Chain
+                    (Get_Concurrent_Statement_Chain (Unit),
+                     Mark_Instantiation_Cb'Access);
+                  pragma Assert (Status = Walk_Continue);
+               when Iir_Kind_Configuration_Declaration =>
+                  --  Just ignored.
+                  null;
+               when Iir_Kind_Package_Declaration
+                 | Iir_Kind_Package_Instantiation_Declaration
+                 | Iir_Kind_Package_Body
+                 | Iir_Kind_Entity_Declaration
+                 | Iir_Kinds_Verification_Unit
+                 | Iir_Kind_Context_Declaration =>
+                  null;
+            end case;
+         else
+            --  TODO: also traverse foreign units
+            null;
+         end if;
          return Walk_Continue;
       end Mark_Units_Cb;
 
@@ -1029,21 +1065,30 @@ package body Vhdl.Configuration is
 
       function Extract_Entity_Cb (Design : Iir) return Walk_Status
       is
-         Unit : constant Iir := Get_Library_Unit (Design);
+         Unit : Iir;
       begin
-         if Get_Kind (Unit) = Iir_Kind_Entity_Declaration then
-            if Get_Elab_Flag (Design) then
-               --  Clean elab flag.
-               Set_Elab_Flag (Design, False);
-            else
-               if Flags.Verbose then
-                  Report_Msg (Msgid_Note, Elaboration, +Unit,
-                              "candidate for top entity: %n", (1 => +Unit));
+         case Iir_Kinds_Design_Unit (Get_Kind (Design)) is
+            when Iir_Kind_Foreign_Module =>
+               Unit := Design;
+            when Iir_Kind_Design_Unit =>
+               Unit := Get_Library_Unit (Design);
+
+               if Get_Kind (Unit) /= Iir_Kind_Entity_Declaration then
+                  return Walk_Continue;
                end if;
-               Nbr_Top_Entities := Nbr_Top_Entities + 1;
-               if Nbr_Top_Entities = 1 then
-                  First_Top_Entity := Unit;
-               end if;
+         end case;
+
+         if Get_Elab_Flag (Design) then
+            --  Clean elab flag.
+            Set_Elab_Flag (Design, False);
+         else
+            if Flags.Verbose then
+               Report_Msg (Msgid_Note, Elaboration, +Unit,
+                           "candidate for top entity: %n", (1 => +Unit));
+            end if;
+            Nbr_Top_Entities := Nbr_Top_Entities + 1;
+            if Nbr_Top_Entities = 1 then
+               First_Top_Entity := Unit;
             end if;
          end if;
          return Walk_Continue;

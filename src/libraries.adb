@@ -225,15 +225,19 @@ package body Libraries is
       Lib_Unit : Iir;
       Id : Name_Id;
    begin
-      Lib_Unit := Get_Library_Unit (Design_Unit);
-      case Iir_Kinds_Library_Unit (Get_Kind (Lib_Unit)) is
-         when Iir_Kinds_Primary_Unit
-           | Iir_Kind_Package_Body =>
-            Id := Get_Identifier (Lib_Unit);
-         when Iir_Kind_Architecture_Body =>
-            --  Architectures are put with the entity identifier.
-            Id := Get_Entity_Identifier_Of_Architecture (Lib_Unit);
-      end case;
+      if Get_Kind (Design_Unit) = Iir_Kind_Foreign_Module then
+         Id := Get_Identifier (Design_Unit);
+      else
+         Lib_Unit := Get_Library_Unit (Design_Unit);
+         case Iir_Kinds_Library_Unit (Get_Kind (Lib_Unit)) is
+            when Iir_Kinds_Primary_Unit
+              | Iir_Kind_Package_Body =>
+               Id := Get_Identifier (Lib_Unit);
+            when Iir_Kind_Architecture_Body =>
+               --  Architectures are put with the entity identifier.
+               Id := Get_Entity_Identifier_Of_Architecture (Lib_Unit);
+         end case;
+      end if;
       return Id mod Unit_Hash_Length;
    end Get_Hash_Id_For_Unit;
 
@@ -882,7 +886,8 @@ package body Libraries is
    function Find_Design_Unit (Unit : Iir) return Iir_Design_Unit is
    begin
       case Get_Kind (Unit) is
-         when Iir_Kind_Design_Unit =>
+         when Iir_Kind_Design_Unit
+           | Iir_Kind_Foreign_Module =>
             return Unit;
          when Iir_Kind_Selected_Name =>
             declare
@@ -1053,7 +1058,14 @@ package body Libraries is
       pragma Assert (Get_Date_State (Unit) = Date_Extern);
 
       --  Mark this design unit as being loaded.
-      New_Library_Unit := Get_Library_Unit (Unit);
+      case Get_Kind (Unit) is
+         when Iir_Kind_Design_Unit =>
+            New_Library_Unit := Get_Library_Unit (Unit);
+         when Iir_Kind_Foreign_Module =>
+            New_Library_Unit := Unit;
+         when others =>
+            raise Internal_Error;
+      end case;
       Unit_Id := Get_Identifier (New_Library_Unit);
 
       --  Set the date of the design unit as the most recently analyzed
@@ -1532,16 +1544,18 @@ package body Libraries is
       while Design_File /= Null_Iir loop
          Design_Unit := Get_First_Design_Unit (Design_File);
          while Design_Unit /= Null_Iir loop
-            Library_Unit := Get_Library_Unit (Design_Unit);
+            if Get_Kind (Design_Unit) = Iir_Kind_Design_Unit then
+               Library_Unit := Get_Library_Unit (Design_Unit);
 
-            if Get_Kind (Library_Unit) = Iir_Kind_Architecture_Body
-              and then
-              Get_Entity_Identifier_Of_Architecture (Library_Unit) = Entity_Id
-            then
-               if Res = Null_Iir then
-                  Res := Design_Unit;
-               elsif Get_Date (Design_Unit) > Get_Date (Res) then
-                  Res := Design_Unit;
+               if Get_Kind (Library_Unit) = Iir_Kind_Architecture_Body
+                 and then (Get_Entity_Identifier_Of_Architecture (Library_Unit)
+                             = Entity_Id)
+               then
+                  if Res = Null_Iir then
+                     Res := Design_Unit;
+                  elsif Get_Date (Design_Unit) > Get_Date (Res) then
+                     Res := Design_Unit;
+                  end if;
                end if;
             end if;
             Design_Unit := Get_Chain (Design_Unit);
@@ -1557,22 +1571,28 @@ package body Libraries is
 
    --  Return the declaration of primary unit NAME of LIBRARY.
    function Find_Primary_Unit
-     (Library: Iir_Library_Declaration; Name: Name_Id)
-      return Iir_Design_Unit
+     (Library: Iir_Library_Declaration; Name: Name_Id) return Iir_Design_Unit
    is
       Unit : Iir_Design_Unit;
+      Lib_Unit : Iir;
    begin
       Unit := Unit_Hash_Table (Name mod Unit_Hash_Length);
       while Unit /= Null_Iir loop
          if Get_Identifier (Unit) = Name
            and then Get_Library (Get_Design_File (Unit)) = Library
          then
-            case Iir_Kinds_Library_Unit (Get_Kind (Get_Library_Unit (Unit))) is
-               when Iir_Kinds_Primary_Unit =>
-                  --  Only return a primary unit.
+            case Iir_Kinds_Design_Unit (Get_Kind (Unit)) is
+               when Iir_Kind_Foreign_Module =>
                   return Unit;
-               when Iir_Kinds_Secondary_Unit =>
-                  null;
+               when Iir_Kind_Design_Unit =>
+                  Lib_Unit := Get_Library_Unit (Unit);
+                  case Iir_Kinds_Library_Unit (Get_Kind (Lib_Unit)) is
+                     when Iir_Kinds_Primary_Unit =>
+                        --  Only return a primary unit.
+                        return Unit;
+                     when Iir_Kinds_Secondary_Unit =>
+                        null;
+                  end case;
             end case;
          end if;
          Unit := Get_Hash_Chain (Unit);
@@ -1633,18 +1653,32 @@ package body Libraries is
    is
       Res : Iir_Design_Unit := Null_Iir;
       Unit : Iir_Design_Unit;
+      Unit1 : Iir;
+
    begin
+      Res := Null_Iir;
       Unit := Unit_Hash_Table (Name mod Unit_Hash_Length);
       while Unit /= Null_Iir loop
-         if Get_Identifier (Unit) = Name
-           and then (Get_Kind (Get_Library_Unit (Unit))
-                     = Iir_Kind_Entity_Declaration)
-         then
-            if Res = Null_Iir then
-               Res := Unit;
-            else
-               --  Many entities.
-               return Null_Iir;
+         if Get_Identifier (Unit) = Name then
+            case Iir_Kinds_Design_Unit (Get_Kind (Unit)) is
+               when Iir_Kind_Foreign_Module =>
+                  Unit1 := Unit;
+               when Iir_Kind_Design_Unit =>
+                  if Get_Kind (Get_Library_Unit (Unit))
+                    = Iir_Kind_Entity_Declaration
+                  then
+                     Unit1 := Unit;
+                  else
+                     Unit1 := Null_Iir;
+                  end if;
+            end case;
+            if Unit1 /= Null_Iir then
+               if Res = Null_Iir then
+                  Res := Unit;
+               else
+                  --  Many entities.
+                  return Null_Iir;
+               end if;
             end if;
          end if;
          Unit := Get_Hash_Chain (Unit);

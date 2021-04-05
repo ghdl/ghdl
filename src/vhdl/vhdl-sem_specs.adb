@@ -1813,16 +1813,19 @@ package body Vhdl.Sem_Specs is
          null;
       end if;
 
-      Design_Unit := Load_Primary_Unit
-        (Get_Library (Get_Design_File (Entity_Unit)),
-         Get_Identifier (Get_Library_Unit (Entity_Unit)),
-         Parent);
-      if Design_Unit = Null_Iir then
-         --  Found an entity which is not in the library.
-         raise Internal_Error;
-      end if;
+      case Iir_Kinds_Design_Unit (Get_Kind (Entity_Unit)) is
+         when Iir_Kind_Design_Unit =>
+            Design_Unit := Load_Primary_Unit
+              (Get_Library (Get_Design_File (Entity_Unit)),
+               Get_Identifier (Get_Library_Unit (Entity_Unit)),
+               Parent);
+            --  Found an entity which is not in the library.
+            pragma Assert (Design_Unit /= Null_Iir);
+            Entity := Get_Library_Unit (Design_Unit);
 
-      Entity := Get_Library_Unit (Design_Unit);
+         when Iir_Kind_Foreign_Module =>
+            Entity := Entity_Unit;
+      end case;
 
       Res := Create_Iir (Iir_Kind_Binding_Indication);
       Location_Copy (Res, Parent);
@@ -1838,7 +1841,10 @@ package body Vhdl.Sem_Specs is
       Set_Entity_Name (Aspect, Entity_Name);
       Set_Entity_Aspect (Res, Aspect);
 
-      if Create_Map_Aspect then
+      --  No aspect for foreign modules.
+      if Create_Map_Aspect
+        and then Get_Kind (Entity) = Iir_Kind_Entity_Declaration
+      then
          --  LRM 5.2.2
          --  The default binding indication includes a default generic map
          --  aspect if the design entity implied by the entity aspect contains
@@ -2085,6 +2091,9 @@ package body Vhdl.Sem_Specs is
 
          Decl := Libraries.Find_Primary_Unit (Target_Lib, Name);
          if Decl /= Null_Iir then
+            if Get_Kind (Decl) = Iir_Kind_Foreign_Module then
+               return Decl;
+            end if;
             Res := Is_Entity_Declaration (Decl);
             if Res /= Null_Iir then
                return Res;

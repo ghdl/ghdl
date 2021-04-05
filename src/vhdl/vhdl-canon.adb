@@ -2335,6 +2335,7 @@ package body Vhdl.Canon is
                                                 Binding : Iir)
    is
       Aspect : Iir;
+      Ent : Iir;
    begin
       if Binding = Null_Iir then
          return;
@@ -2348,7 +2349,12 @@ package body Vhdl.Canon is
             if Get_Architecture (Aspect) /= Null_Iir then
                Add_Dependence (Top, Aspect);
             else
-               Add_Dependence (Top, Get_Design_Unit (Get_Entity (Aspect)));
+               Ent := Get_Entity (Aspect);
+               pragma Assert (Ent /= Null_Iir);
+               if Get_Kind (Ent) = Iir_Kind_Entity_Declaration then
+                  Ent := Get_Design_Unit (Ent);
+               end if;
+               Add_Dependence (Top, Ent);
             end if;
          when Iir_Kind_Entity_Aspect_Configuration =>
             Add_Dependence (Top, Get_Design_Unit (Get_Configuration (Aspect)));
@@ -2396,11 +2402,18 @@ package body Vhdl.Canon is
          if Is_Config then
             Entity_Aspect := Get_Entity_Aspect (Bind);
             Entity := Get_Entity_From_Entity_Aspect (Entity_Aspect);
-            Sem_Specs.Sem_Check_Missing_Generic_Association
-              (Get_Generic_Chain (Entity),
-               Get_Generic_Map_Aspect_Chain (Bind),
-               Null_Iir,
-               Cfg);
+            case Get_Kind (Entity) is
+               when Iir_Kind_Entity_Declaration =>
+                  Sem_Specs.Sem_Check_Missing_Generic_Association
+                    (Get_Generic_Chain (Entity),
+                     Get_Generic_Map_Aspect_Chain (Bind),
+                     Null_Iir,
+                     Cfg);
+               when Iir_Kind_Foreign_Module =>
+                  null;
+               when others =>
+                  raise Internal_Error;
+            end case;
          end if;
          return;
       else

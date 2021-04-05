@@ -379,18 +379,20 @@ package body Ghdlsynth is
 
       Vhdl.Configuration.Add_Verification_Units;
 
-      --  Check (and possibly abandon) if entity can be at the top of the
-      --  hierarchy.
-      declare
-         Entity : constant Iir :=
-           Vhdl.Utils.Get_Entity_From_Configuration (Config);
-      begin
-         Vhdl.Configuration.Apply_Generic_Override (Entity);
-         Vhdl.Configuration.Check_Entity_Declaration_Top (Entity, False);
-         if Nbr_Errors > 0 then
-            return Null_Iir;
-         end if;
-      end;
+      if Get_Kind (Config) = Iir_Kind_Configuration_Declaration then
+         --  Check (and possibly abandon) if entity can be at the top of the
+         --  hierarchy.
+         declare
+            Entity : constant Iir :=
+              Vhdl.Utils.Get_Entity_From_Configuration (Config);
+         begin
+            Vhdl.Configuration.Apply_Generic_Override (Entity);
+            Vhdl.Configuration.Check_Entity_Declaration_Top (Entity, False);
+            if Nbr_Errors > 0 then
+               return Null_Iir;
+            end if;
+         end;
+      end if;
 
       --  Annotate all units.
       Vhdl.Annotations.Initialize_Annotate;
