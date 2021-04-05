@@ -379,7 +379,7 @@ package body Ghdlsynth is
 
       Vhdl.Configuration.Add_Verification_Units;
 
-      if Get_Kind (Config) = Iir_Kind_Configuration_Declaration then
+      if Get_Kind (Config) = Iir_Kind_Design_Unit then
          --  Check (and possibly abandon) if entity can be at the top of the
          --  hierarchy.
          declare
