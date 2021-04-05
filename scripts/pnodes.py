@@ -73,7 +73,7 @@ class ParseError(Exception):
         self.msg = msg
 
     def __str__(self):
-        return ("Parse error at {lr.filname}:{lr.lineno}: {msg}".format(lr=self.lr, msg=self.msg))
+        return ("Parse error at {lr.filename}:{lr.lineno}: {msg}".format(lr=self.lr, msg=self.msg))
 
 
 
