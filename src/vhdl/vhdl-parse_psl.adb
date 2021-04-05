@@ -437,6 +437,59 @@ package body Vhdl.Parse_Psl is
       return Res;
    end Parse_Brack_Arrow;
 
+   --  Parse:
+   --     Boolean [= Count ]
+   --   | Boolean [-> [ positive_Count ] ]
+   --   | Boolean
+   --  Where LEFT is the boolean expression
+   function Parse_Boolean_Repeated_Sequence (Left : Node) return Node is
+   begin
+      case Current_Token is
+         when Tok_Brack_Equal =>
+            return Parse_Brack_Equal (Left);
+         when Tok_Brack_Arrow =>
+            return Parse_Brack_Arrow (Left);
+         when others =>
+            return Left;
+      end case;
+   end Parse_Boolean_Repeated_Sequence;
+
+   --  Parse:
+   --     Boolean [* [ Count ] ]
+   --   | Sequence [* [ Count ] ]
+   --   | Boolean [+]
+   --   | Sequence [+]
+   --  Where LEFT is a boolean expression or a sequence
+   function Parse_Sequence_Repeated_Sequence (Left : Node) return Node
+   is
+      Res : Node;
+      N : Node;
+   begin
+      Res := Left;
+      loop
+         case Current_Token is
+            when Tok_Brack_Star =>
+               Res := Parse_Brack_Star (Res);
+            when Tok_Brack_Plus_Brack =>
+               N := Create_Node_Loc (N_Plus_Repeat_Seq);
+               Set_Sequence (N, Res);
+
+               --  Skip '[+]'
+               Scan;
+               Res := N;
+            when Tok_Brack_Arrow =>
+               Error_Msg_Parse ("'[->' not allowed on a SERE");
+               Res := Parse_Brack_Arrow (Res);
+            when Tok_Brack_Equal =>
+               Error_Msg_Parse ("'[=' not allowed on a SERE");
+               Res := Parse_Brack_Equal (Res);
+            when others =>
+               exit;
+         end case;
+      end loop;
+      return Res;
+   end Parse_Sequence_Repeated_Sequence;
+
    function Parse_Psl_Sequence_Or_SERE (Full_Hdl_Expr : Boolean) return Node
    is
       Res, N : Node;
@@ -484,36 +537,10 @@ package body Vhdl.Parse_Psl is
             --  Repeated_SERE
             Res := Parse_Unary_Boolean (Full_Hdl_Expr);
 
-            case Current_Token is
-               when Tok_Brack_Equal =>
-                  Res := Parse_Brack_Equal (Res);
-               when Tok_Brack_Arrow =>
-                  Res := Parse_Brack_Arrow (Res);
-               when others =>
-                  null;
-            end case;
+            Res := Parse_Boolean_Repeated_Sequence (Res);
       end case;
-      loop
-         case Current_Token is
-            when Tok_Brack_Star =>
-               Res := Parse_Brack_Star (Res);
-            when Tok_Brack_Plus_Brack =>
-               N := Create_Node_Loc (N_Plus_Repeat_Seq);
-               Set_Sequence (N, Res);
 
-               --  Skip '[+]'
-               Scan;
-               Res := N;
-            when Tok_Brack_Arrow =>
-               Error_Msg_Parse ("'[->' not allowed on a SERE");
-               Res := Parse_Brack_Arrow (Res);
-            when Tok_Brack_Equal =>
-               Error_Msg_Parse ("'[=' not allowed on a SERE");
-               Res := Parse_Brack_Equal (Res);
-            when others =>
-               exit;
-         end case;
-      end loop;
+      Res := Parse_Sequence_Repeated_Sequence (Res);
 
       return Res;
    end Parse_Psl_Sequence_Or_SERE;
@@ -681,7 +708,13 @@ package body Vhdl.Parse_Psl is
          when Tok_Next_Event_E_Em =>
             Res := Parse_Boolean_Range_Property (N_Next_Event_E, True);
          when Tok_Left_Paren =>
-            return Parse_Parenthesis_FL_Property;
+            Res := Parse_Parenthesis_FL_Property;
+            if Get_Kind (Res) = N_HDL_Expr then
+               --  Might be a boolean expression followed by a SERE repeatition
+               Res := Parse_Boolean_Repeated_Sequence (Res);
+               Res := Parse_Sequence_Repeated_Sequence (Res);
+               --  TODO: can be then a SERE (: ; | & && within)
+            end if;
          when Tok_Left_Curly =>
             Res := Parse_Psl_Sequence_Or_SERE (True);
             if Get_Kind (Res) = N_Braced_SERE
