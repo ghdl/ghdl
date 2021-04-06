@@ -218,6 +218,22 @@ package Grt.Rtis is
    function To_Ghdl_Rti_Access is new Ada.Unchecked_Conversion
      (Source => Ghdl_Rtin_Object_Acc, Target => Ghdl_Rti_Access);
 
+   type Ghdl_Rtin_Psl_Directive is record
+      Common : Ghdl_Rti_Common;
+      Name : Ghdl_C_String;
+      -- Location of the RTI data (count, state vector, state)
+      Loc : Ghdl_Rti_Loc;
+      Linecol : Ghdl_Index_Type;
+      -- Parent architecture containing the PSL directive
+      Parent : Ghdl_Rti_Access;
+   end record;
+   pragma Convention (C, Ghdl_Rtin_Psl_Directive);
+   type Ghdl_Rtin_Psl_Directive_Acc is access Ghdl_Rtin_Psl_Directive;
+   function To_Ghdl_Rtin_Psl_Directive_Acc is new Ada.Unchecked_Conversion
+     (Source => Ghdl_Rti_Access, Target => Ghdl_Rtin_Psl_Directive_Acc);
+   function To_Ghdl_Rti_Access is new Ada.Unchecked_Conversion
+     (Source => Ghdl_Rtin_Psl_Directive_Acc, Target => Ghdl_Rti_Access);
+
    type Ghdl_Rtin_Instance is record
       Common : Ghdl_Rti_Common;
       Name : Ghdl_C_String;

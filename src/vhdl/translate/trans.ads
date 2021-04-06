@@ -1943,6 +1943,9 @@ package Trans is
             --  State vector variable.
             Psl_Vect_Var : Var_Type;
 
+            --  Simplified Assertion state (for dumping)
+            Psl_State_Var : Var_Type;
+
             --  Counter variable (nbr of failures or coverage)
             Psl_Count_Var : Var_Type;
 

@@ -135,6 +135,14 @@ package body Trans.Rtis is
    Ghdl_Rtin_Object_Type          : O_Fnode;
    Ghdl_Rtin_Object_Linecol       : O_Fnode;
 
+   -- Node for PSL directive
+   Ghdl_Rtin_Psl_Directive        : O_Tnode;
+   Ghdl_Rtin_Psl_Directive_Common : O_Fnode;
+   Ghdl_Rtin_Psl_Directive_Name   : O_Fnode;
+   Ghdl_Rtin_Psl_Directive_Linecol: O_Fnode;
+   Ghdl_Rtin_Psl_Directive_Loc    : O_Fnode;
+   Ghdl_Rtin_Psl_Directive_Parent : O_Fnode;
+
    --  Node for an instance.
    Ghdl_Rtin_Instance         : O_Tnode;
    Ghdl_Rtin_Instance_Common  : O_Fnode;
@@ -685,6 +693,50 @@ package body Trans.Rtis is
                         Ghdl_Rtin_Object);
       end;
 
+      -- Create PSL State type: Inactive, Running, Failed, Covered
+      declare
+         Constr : O_Enum_List;
+      begin
+         Start_Enum_Type (Constr, 8);
+         New_Enum_Literal
+           (Constr, Get_Identifier ("__ghdl_psl_state_inactive"),
+            Ghdl_Rti_Psl_State_Inactive);
+         New_Enum_Literal
+           (Constr, Get_Identifier ("__ghdl_psl_state_running"),
+            Ghdl_Rti_Psl_State_Running);
+         New_Enum_Literal
+           (Constr, Get_Identifier ("__ghdl_psl_state_failed"),
+            Ghdl_Rti_Psl_State_Failed);
+         New_Enum_Literal
+           (Constr, Get_Identifier ("__ghdl_psl_state_covered"),
+            Ghdl_Rti_Psl_State_Covered);
+
+         Finish_Enum_Type (Constr, Ghdl_Rti_Psl_State);
+         New_Type_Decl (Get_Identifier ("__ghdl_psl_state"),
+                        Ghdl_Rti_Psl_State);
+      end;
+
+
+      -- PSL directive
+      declare
+         Constr : O_Element_List;
+      begin
+         Start_Record_Type (Constr);
+         New_Record_Field (Constr, Ghdl_Rtin_Psl_Directive_Common,
+                           Get_Identifier ("common"), Ghdl_Rti_Common);
+         New_Record_Field (Constr, Ghdl_Rtin_Psl_Directive_Name,
+                           Get_Identifier ("name"), Char_Ptr_Type);
+         New_Record_Field (Constr, Ghdl_Rtin_Psl_Directive_Loc,
+                           Get_Identifier ("loc"), Ghdl_Ptr_Type);
+         New_Record_Field (Constr, Ghdl_Rtin_Psl_Directive_Linecol,
+                           Get_Identifier ("linecol"), Ghdl_Index_Type);
+         New_Record_Field (Constr, Ghdl_Rtin_Psl_Directive_Parent,
+                           Wki_Parent, Ghdl_Rti_Access);
+         Finish_Record_Type (Constr, Ghdl_Rtin_Psl_Directive);
+         New_Type_Decl (Get_Identifier ("__ghdl_rtin_psl_declaration"),
+                        Ghdl_Rtin_Psl_Directive);
+      end;
+
       --  Instance.
       declare
          Constr : O_Element_List;
@@ -763,7 +815,7 @@ package body Trans.Rtis is
          --  Number of children.
          Nbr       : Integer;
 
-         --  Array for the fist children.
+         --  Array for the first children.
          List      : Rti_Array_List;
 
          --  Linked list for the following children.
@@ -2019,7 +2071,7 @@ package body Trans.Rtis is
       Pop_Identifier_Prefix (Mark);
    end Generate_Object;
 
-   procedure Generate_Psl_Directive (Decl : Iir)
+   procedure Generate_Psl_Directive (Decl : Iir; Parent : O_Dnode)
    is
       Info : constant Psl_Info_Acc := Get_Info (Decl);
       Name : O_Dnode;
@@ -2034,12 +2086,12 @@ package body Trans.Rtis is
       Push_Identifier_Prefix (Mark, Get_Identifier (Decl));
 
       New_Const_Decl (Info.Psl_Rti_Const, Create_Identifier ("RTI"),
-                      Global_Storage, Ghdl_Rtin_Object);
+                      Global_Storage, Ghdl_Rtin_Psl_Directive);
 
       Name := Generate_Name (Decl);
 
       Start_Init_Value (Info.Psl_Rti_Const);
-      Start_Record_Aggr (List, Ghdl_Rtin_Object);
+      Start_Record_Aggr (List, Ghdl_Rtin_Psl_Directive);
       case Get_Kind (Decl) is
          when Iir_Kind_Psl_Cover_Directive =>
             Kind := Ghdl_Rtik_Psl_Cover;
@@ -2057,8 +2109,8 @@ package body Trans.Rtis is
 
       Field_Off := Get_Scope_Offset (Info.Psl_Scope, Ghdl_Ptr_Type);
       New_Record_Aggr_El (List, Field_Off);
-      New_Record_Aggr_El (List, New_Null_Access (Ghdl_Rti_Access));
       New_Record_Aggr_El (List, Generate_Linecol (Decl));
+      New_Record_Aggr_El (List, New_Rti_Address (Parent));
       Finish_Record_Aggr (List, Val);
       Finish_Init_Value (Info.Psl_Rti_Const, Val);
 
@@ -2430,7 +2482,7 @@ package body Trans.Rtis is
               | Iir_Kind_Psl_Assume_Directive
               | Iir_Kind_Psl_Cover_Directive
               | Iir_Kind_Psl_Endpoint_Declaration =>
-               Generate_Psl_Directive (Stmt);
+               Generate_Psl_Directive (Stmt, Parent_Rti);
             when others =>
                Error_Kind ("rti.generate_concurrent_statement_chain", Stmt);
          end case;
