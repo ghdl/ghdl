@@ -355,6 +355,9 @@ package body Trans.Chap9 is
            (Create_Var_Identifier ("COUNT"), Ghdl_Index_Type);
       end if;
 
+      Info.Psl_State_Var := Create_Var
+         (Create_Var_Identifier ("STATE"), Trans.Rtis.Ghdl_Rti_Psl_State);
+
       Info.Psl_Vect_Var := Create_Var
         (Create_Var_Identifier ("VECT"), Info.Psl_Vect_Type);
 
@@ -599,6 +602,10 @@ package body Trans.Chap9 is
       Start_If_Stmt (Clk_Blk,
                      Translate_Psl_Expr (Get_PSL_Clock (Stmt), False));
 
+      -- Default simplified state -> Inactive
+      New_Assign_Stmt (Get_Var (Info.Psl_State_Var),
+                       New_Lit (Trans.Rtis.Ghdl_Rti_Psl_State_Inactive));
+
       --  For each state: if set, evaluate all outgoing edges.
       NFA := Get_PSL_NFA (Stmt);
       S := Get_First_State (NFA);
@@ -612,6 +619,15 @@ package body Trans.Chap9 is
               (New_Indexed_Element (Get_Var (Info.Psl_Vect_Var),
                New_Lit (New_Index_Lit
                  (Unsigned_64 (S_Num))))));
+
+         -- Get simplified state:
+         --  - If in transient state -> In progress.
+         -- Set also if in final state, will be overrided later in
+         -- failure check.
+         if S /= Get_First_State(NFA) then
+            New_Assign_Stmt (Get_Var (Info.Psl_State_Var),
+                             New_Lit (Trans.Rtis.Ghdl_Rti_Psl_State_Running));
+         end if;
 
          E := Get_First_Src_Edge (S);
          while E /= No_Edge loop
@@ -640,6 +656,7 @@ package body Trans.Chap9 is
          S := Get_Next_State (S);
       end loop;
 
+
       --  Check fail state.
       S := Get_Final_State (NFA);
       S_Num := Get_State_Label (S);
@@ -658,8 +675,14 @@ package body Trans.Chap9 is
             when Iir_Kind_Psl_Assert_Directive =>
                Chap8.Translate_Report
                  (Stmt, Ghdl_Psl_Assert_Failed, Severity_Level_Error);
+               New_Assign_Stmt (
+                  Get_Var (Info.Psl_State_Var),
+                  New_Lit (Trans.Rtis.Ghdl_Rti_Psl_State_Failed));
             when Iir_Kind_Psl_Assume_Directive =>
                Call_Psl_Fail (Stmt, Ghdl_Psl_Assume_Failed);
+               New_Assign_Stmt (
+                  Get_Var (Info.Psl_State_Var),
+                  New_Lit (Trans.Rtis.Ghdl_Rti_Psl_State_Failed));
             when Iir_Kind_Psl_Cover_Directive =>
                if Get_Report_Expression (Stmt) /= Null_Iir then
                   Start_Association (Assocs, Report_Proc);
@@ -667,6 +690,9 @@ package body Trans.Chap9 is
                   New_Association (Assocs, New_Lit (Ghdl_Bool_True_Node));
                   New_Procedure_Call (Assocs);
                end if;
+               New_Assign_Stmt (
+                  Get_Var (Info.Psl_State_Var),
+                  New_Lit (Trans.Rtis.Ghdl_Rti_Psl_State_Covered));
             when others =>
                Error_Kind ("Translate_Psl_Directive_Statement", Stmt);
          end case;

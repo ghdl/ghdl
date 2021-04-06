@@ -73,6 +73,13 @@ package Trans.Rtis is
    Ghdl_Rtik_Psl_Endpoint                : O_Cnode;
    Ghdl_Rtik_Error                       : O_Cnode;
 
+   -- PSL State types
+   Ghdl_Rti_Psl_State                    : O_Tnode;
+   Ghdl_Rti_Psl_State_Inactive           : O_Cnode;
+   Ghdl_Rti_Psl_State_Running            : O_Cnode;
+   Ghdl_Rti_Psl_State_Failed             : O_Cnode;
+   Ghdl_Rti_Psl_State_Covered            : O_Cnode;
+
    --  RTI types.
    Ghdl_Rti_Depth : O_Tnode;
    Ghdl_Rti_U8    : O_Tnode;
