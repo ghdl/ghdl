@@ -73,7 +73,7 @@ package body Grt.Psl is
                     return Traverse_Result
    is
       F : constant FILEs := Report_Stream;
-      Obj : Ghdl_Rtin_Object_Acc;
+      Psl_Dir : Ghdl_Rtin_Psl_Directive_Acc;
       Addr : System.Address;
       Val : Ghdl_Index_Type;
    begin
@@ -103,21 +103,21 @@ package body Grt.Psl is
       end case;
       Put_Line (F, ",");
       Put (F, "   ""name"": """);
-      Obj := To_Ghdl_Rtin_Object_Acc (Rti);
+      Psl_Dir := To_Ghdl_Rtin_Psl_Directive_Acc (Rti);
       Put (F, Ctxt);
       Put (F, '.');
-      Put (F, Obj.Name);
+      Put (F, Psl_Dir.Name);
       Put_Line (F, """,");
 
       Put (F, "   ""file"": """);
       Put (F, Get_Filename (Ctxt));
       Put_Line (F, """,");
       Put (F, "   ""line"": ");
-      Put_U32 (F, Get_Linecol_Line (Obj.Linecol));
+      Put_U32 (F, Get_Linecol_Line (Psl_Dir.Linecol));
       Put_Line (F, ",");
 
       Put (F, "   ""count"": ");
-      Addr := Loc_To_Addr (Obj.Common.Depth, Obj.Loc, Ctxt);
+      Addr := Loc_To_Addr (Psl_Dir.Common.Depth, Psl_Dir.Loc, Ctxt);
       Val := To_Ghdl_Index_Ptr (Addr).all;
       Put_U32 (F, Ghdl_U32 (Val));
       Put_Line (F, ",");
