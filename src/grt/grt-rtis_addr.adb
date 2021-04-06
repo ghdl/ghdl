@@ -56,7 +56,8 @@ package body Grt.Rtis_Addr is
    begin
       case Ctxt.Block.Kind is
          when Ghdl_Rtik_Process
-           | Ghdl_Rtik_Block =>
+           | Ghdl_Rtik_Block
+           | Ghdl_Rtiks_Psl =>
             return (Base => Ctxt.Base - Blk.Loc,
                     Block => Blk.Parent);
          when Ghdl_Rtik_Architecture =>
