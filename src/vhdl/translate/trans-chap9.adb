@@ -718,16 +718,16 @@ package body Trans.Chap9 is
                            New_Lit (Ghdl_Index_1)));
          Close_Temp;
          Finish_If_Stmt (S_Blk);
-      end if;
 
-      -- Check "started" flag, increment started count if set
-      Start_If_Stmt (S_Blk, New_Value (New_Obj (Var_SFlag)));
-      New_Assign_Stmt
-           (Get_Var (Info.Psl_Start_Count_Var),
-            New_Dyadic_Op (ON_Add_Ov,
-                           New_Value (Get_Var (Info.Psl_Start_Count_Var)),
-                           New_Lit (Ghdl_Index_1)));
-      Finish_If_Stmt (S_Blk);
+         -- Check "started" flag, increment started count if set
+         Start_If_Stmt (S_Blk, New_Value (New_Obj (Var_SFlag)));
+         New_Assign_Stmt
+               (Get_Var (Info.Psl_Start_Count_Var),
+               New_Dyadic_Op (ON_Add_Ov,
+                              New_Value (Get_Var (Info.Psl_Start_Count_Var)),
+                              New_Lit (Ghdl_Index_1)));
+         Finish_If_Stmt (S_Blk);
+      end if;
 
       --  Assign state vector.
       Start_Declare_Stmt;
