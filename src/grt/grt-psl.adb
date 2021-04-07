@@ -75,7 +75,8 @@ package body Grt.Psl is
       F : constant FILEs := Report_Stream;
       Psl_Dir : Ghdl_Rtin_Psl_Directive_Acc;
       Addr : System.Address;
-      Val : Ghdl_Index_Type;
+      Finished_Count : Ghdl_Index_Type;
+      Started_Count : Ghdl_Index_Type;
    begin
       case Rti.Kind is
          when Ghdl_Rtiks_Psl =>
@@ -116,16 +117,22 @@ package body Grt.Psl is
       Put_U32 (F, Get_Linecol_Line (Psl_Dir.Linecol));
       Put_Line (F, ",");
 
-      Put (F, "   ""count"": ");
+      Put (F, "   ""finished-count"": ");
       Addr := Loc_To_Addr (Psl_Dir.Common.Depth, Psl_Dir.Loc, Ctxt);
-      Val := To_Ghdl_Index_Ptr (Addr).all;
-      Put_U32 (F, Ghdl_U32 (Val));
+      Finished_Count := To_Ghdl_Index_Ptr (Addr).all;
+      Put_U32 (F, Ghdl_U32 (Finished_Count));
+      Put_Line (F, ",");
+
+      Put (F, "   ""started-count"": ");
+      Addr := Loc_To_Addr (Psl_Dir.Common.Depth, Psl_Dir.Loc + 4, Ctxt);
+      Started_Count := To_Ghdl_Index_Ptr (Addr).all;
+      Put_U32 (F, Ghdl_U32 (Started_Count));
       Put_Line (F, ",");
 
       Put (F, "   ""status"": """);
       case Rti.Kind is
          when Ghdl_Rtik_Psl_Assert =>
-            if Val = 0 then
+            if Finished_Count = 0 then
                Put (F, "passed");
                Inc (Nbr_Assert_Passed);
             else
@@ -133,7 +140,7 @@ package body Grt.Psl is
                Inc (Nbr_Assert_Failed);
             end if;
          when Ghdl_Rtik_Psl_Assume =>
-            if Val = 0 then
+            if Finished_Count = 0 then
                Put (F, "passed");
                Inc (Nbr_Assume_Passed);
             else
@@ -141,7 +148,7 @@ package body Grt.Psl is
                Inc (Nbr_Assume_Failed);
             end if;
          when Ghdl_Rtik_Psl_Cover =>
-            if Val = 0 then
+            if Finished_Count = 0 then
                Put (F, "not covered");
                Inc (Nbr_Cover_Failed);
             else

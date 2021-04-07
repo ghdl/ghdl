@@ -342,17 +342,19 @@ package body Trans.Chap9 is
          New_Index_Lit (Unsigned_64 (Get_PSL_Nbr_States (Stmt))));
       New_Type_Decl (Create_Identifier ("VECTTYPE"), Info.Psl_Vect_Type);
 
-      --  Create the variables.
+      --  Create count variables
       if Get_Kind (Stmt) = Iir_Kind_Psl_Endpoint_Declaration then
          --  FIXME: endpoint is a variable (and not a signal). This is required
          --  to have the right value for the current cycle, but as a
          --  consequence, this process must be evaluated before using the
          --  endpoint.
-         Info.Psl_Count_Var := Create_Var
+         Info.Psl_Finish_Count_Var := Create_Var
            (Create_Var_Identifier ("ENDPOINT"), Std_Boolean_Type_Node);
       else
-         Info.Psl_Count_Var := Create_Var
-           (Create_Var_Identifier ("COUNT"), Ghdl_Index_Type);
+         Info.Psl_Finish_Count_Var := Create_Var
+           (Create_Var_Identifier ("FINISH_COUNT"), Ghdl_Index_Type);
+         Info.Psl_Start_Count_Var := Create_Var
+           (Create_Var_Identifier ("START_COUNT"), Ghdl_Index_Type);
       end if;
 
       Info.Psl_State_Var := Create_Var
@@ -530,6 +532,7 @@ package body Trans.Chap9 is
       Instance   : O_Dnode;
       Var_I      : O_Dnode;
       Var_Nvec   : O_Dnode;
+      Var_SFlag  : O_Dnode;
       Report_Proc : O_Dnode;
       Label      : O_Snode;
       Clk_Blk    : O_If_Block;
@@ -595,12 +598,17 @@ package body Trans.Chap9 is
                        New_Lit (Std_Boolean_False_Node));
       Inc_Var (Var_I);
       Finish_Loop_Stmt (Label);
+      -- Flag for active edge from start state (assertion "started" flag)
+      New_Var_Decl (Var_SFlag, Wki_Flag, O_Storage_Local, Ghdl_Bool_Type);
       Finish_Declare_Stmt;
 
       --  Global 'if' statement for the clock.
       Open_Temp;
       Start_If_Stmt (Clk_Blk,
                      Translate_Psl_Expr (Get_PSL_Clock (Stmt), False));
+
+      -- Default "started" flag is not set
+      New_Assign_Stmt (New_Obj (Var_SFlag), New_Lit (Ghdl_Bool_False_Node));
 
       -- Default simplified state -> Inactive
       New_Assign_Stmt (Get_Var (Info.Psl_State_Var),
@@ -641,10 +649,17 @@ package body Trans.Chap9 is
                  New_Lit (D_Lit))));
             Cond := New_Dyadic_Op
               (ON_And, Cond, Translate_Psl_Expr (Get_Edge_Expr (E), False));
+
+            -- If NFA edge expression is valid -> Fire-up destination state.
             Start_If_Stmt (E_Blk, Cond);
             New_Assign_Stmt
               (New_Indexed_Element (New_Obj (Var_Nvec), New_Lit (D_Lit)),
                New_Lit (Std_Boolean_True_Node));
+            -- If we fire from start state -> set "started" flag.
+            if S = Get_First_State (NFA) then
+               New_Assign_Stmt (New_Obj (Var_SFlag),
+                                New_Lit (Ghdl_Bool_True_Node));
+            end if;
             Finish_If_Stmt (E_Blk);
 
             Close_Temp;
@@ -667,7 +682,7 @@ package body Trans.Chap9 is
                                          (Unsigned_64 (S_Num)))));
 
       if Get_Kind (Stmt) = Iir_Kind_Psl_Endpoint_Declaration then
-         New_Assign_Stmt (Get_Var (Info.Psl_Count_Var), Cond);
+         New_Assign_Stmt (Get_Var (Info.Psl_Finish_Count_Var), Cond);
       else
          Start_If_Stmt (S_Blk, Cond);
          Open_Temp;
@@ -697,13 +712,22 @@ package body Trans.Chap9 is
                Error_Kind ("Translate_Psl_Directive_Statement", Stmt);
          end case;
          New_Assign_Stmt
-           (Get_Var (Info.Psl_Count_Var),
+           (Get_Var (Info.Psl_Finish_Count_Var),
             New_Dyadic_Op (ON_Add_Ov,
-                           New_Value (Get_Var (Info.Psl_Count_Var)),
+                           New_Value (Get_Var (Info.Psl_Finish_Count_Var)),
                            New_Lit (Ghdl_Index_1)));
          Close_Temp;
          Finish_If_Stmt (S_Blk);
       end if;
+
+      -- Check "started" flag, increment started count if set
+      Start_If_Stmt (S_Blk, New_Value (New_Obj (Var_SFlag)));
+      New_Assign_Stmt
+           (Get_Var (Info.Psl_Start_Count_Var),
+            New_Dyadic_Op (ON_Add_Ov,
+                           New_Value (Get_Var (Info.Psl_Start_Count_Var)),
+                           New_Lit (Ghdl_Index_1)));
+      Finish_If_Stmt (S_Blk);
 
       --  Assign state vector.
       Start_Declare_Stmt;
@@ -797,7 +821,7 @@ package body Trans.Chap9 is
             Start_If_Stmt
               (S_Blk,
                New_Compare_Op (ON_Eq,
-                               New_Value (Get_Var (Info.Psl_Count_Var)),
+                               New_Value (Get_Var (Info.Psl_Finish_Count_Var)),
                                New_Lit (Ghdl_Index_0),
                                Ghdl_Bool_Type));
             Start_Association (Assocs, Report_Proc);
@@ -1900,7 +1924,7 @@ package body Trans.Chap9 is
       else
          Init := Ghdl_Index_0;
       end if;
-      New_Assign_Stmt (Get_Var (Info.Psl_Count_Var), New_Lit (Init));
+      New_Assign_Stmt (Get_Var (Info.Psl_Finish_Count_Var), New_Lit (Init));
    end Elab_Psl_Directive;
 
    procedure Elab_Implicit_Guard_Signal

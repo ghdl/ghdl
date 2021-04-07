@@ -172,6 +172,7 @@ package Trans is
    Wki_Base          : O_Ident;
    Wki_Bounds        : O_Ident;
    Wki_Locvars       : O_Ident;
+   Wki_Flag          : O_Ident;
 
    --  ALLOCATION_KIND defines the type of memory storage.
    --  ALLOC_STACK means the object is allocated on the local stack and
@@ -1946,8 +1947,13 @@ package Trans is
             --  Simplified Assertion state (for dumping)
             Psl_State_Var : Var_Type;
 
-            --  Counter variable (nbr of failures or coverage)
-            Psl_Count_Var : Var_Type;
+            --  Number of times assertion finished
+            --  For cover points: Number of coveres
+            --  For assertions: Number of failures
+            Psl_Finish_Count_Var : Var_Type;
+
+            -- Number of times assertion was started
+            Psl_Start_Count_Var : Var_Type;
 
             --  RTI for the process.
             Psl_Rti_Const : O_Dnode := O_Dnode_Null;

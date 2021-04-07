@@ -4527,7 +4527,7 @@ package body Trans.Chap7 is
             declare
                Info : constant Psl_Info_Acc := Get_Info (Expr);
             begin
-               return New_Value (Get_Var (Info.Psl_Count_Var));
+               return New_Value (Get_Var (Info.Psl_Finish_Count_Var));
             end;
 
          when others =>
