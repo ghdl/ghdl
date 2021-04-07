@@ -416,6 +416,7 @@ package body Translation is
       Wki_Base := Get_Identifier ("BASE");
       Wki_Bounds := Get_Identifier ("BOUNDS");
       Wki_Locvars := Get_Identifier ("LOCVARS");
+      Wki_Flag := Get_Identifier ("FLAG");
 
       Sizetype := New_Unsigned_Type (32);
       New_Type_Decl (Get_Identifier ("__ghdl_size_type"), Sizetype);
