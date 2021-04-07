@@ -94,6 +94,8 @@ package body Vhdl.Sem_Decls is
             --  Declarative region was completely analyzed.  Just append DECL
             --  at the end of declarations.
             Insert_Implicit_Signal (Current_Signals_Region.Last_Decl);
+            Current_Signals_Region.Last_Decl :=
+              Current_Signals_Region.Implicit_Decl;
          end if;
       else
          --  Append SIG.
