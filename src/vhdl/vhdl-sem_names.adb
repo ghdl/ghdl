@@ -3708,9 +3708,7 @@ package body Vhdl.Sem_Names is
       --  LRM08 16.2 Predefined attributes
       --  Prefix: Any prefix O that is appropriate for an object, or an alias
       --  thereof
-      if (Get_Kind (Get_Base_Name (Prefix_Name))
-          not in Iir_Kinds_Object_Declaration)
-      then
+      if not Is_Object_Name (Prefix_Name) then
          Error_Msg_Sem (+Attr, "prefix must denote an object");
          return Error_Mark;
       end if;
