@@ -10201,6 +10201,7 @@ package body Vhdl.Parse is
                Stmt := Parse_If_Generate_Statement (Label, Loc);
             when Tok_Case =>
                Postponed_Not_Allowed;
+               Check_Vhdl_At_Least_2008 ("case generate");
                Stmt := Parse_Case_Generate_Statement (Label, Loc);
             when Tok_Component
               | Tok_Entity
