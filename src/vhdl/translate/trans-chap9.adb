@@ -568,6 +568,9 @@ package body Trans.Chap9 is
       --  New state vector.
       New_Var_Decl (Var_Nvec, Wki_Res, O_Storage_Local, Info.Psl_Vect_Type);
 
+      --  Flag for active edge from start state (assertion "started" flag).
+      New_Var_Decl (Var_SFlag, Wki_Flag, O_Storage_Local, Ghdl_Bool_Type);
+
       --  Initialize the new state vector.
       Start_Declare_Stmt;
       New_Var_Decl (Var_I, Wki_I, O_Storage_Local, Ghdl_Index_Type);
@@ -598,8 +601,6 @@ package body Trans.Chap9 is
                        New_Lit (Std_Boolean_False_Node));
       Inc_Var (Var_I);
       Finish_Loop_Stmt (Label);
-      -- Flag for active edge from start state (assertion "started" flag)
-      New_Var_Decl (Var_SFlag, Wki_Flag, O_Storage_Local, Ghdl_Bool_Type);
       Finish_Declare_Stmt;
 
       --  Global 'if' statement for the clock.
