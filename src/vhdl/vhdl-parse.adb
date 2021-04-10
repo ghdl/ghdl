@@ -7393,7 +7393,8 @@ package body Vhdl.Parse is
          end if;
          Set_Waveform_Chain (Stmt, Wave_Chain);
       elsif Get_Kind (Wave_Chain) = Iir_Kind_Conditional_Waveform then
-         Check_Vhdl_At_Least_2008 ("conditional signal assignemnt");
+         Check_Vhdl_At_Least_2008
+            ("conditional signal assignment in sequential statement");
          N_Stmt :=
            Create_Iir (Iir_Kind_Conditional_Signal_Assignment_Statement);
          Location_Copy (N_Stmt, Stmt);
