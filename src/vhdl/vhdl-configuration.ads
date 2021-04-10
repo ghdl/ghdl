@@ -33,7 +33,8 @@ package Vhdl.Configuration is
    --  creates a list of design unit.
    --  and return the top configuration.
    --  Note: this set the Elab_Flag on units.
-   function Configure (Primary_Id : Name_Id; Secondary_Id : Name_Id)
+   function Configure
+     (Library_Id : Name_Id; Primary_Id : Name_Id; Secondary_Id : Name_Id)
      return Iir;
 
    --  Add design unit UNIT (with its dependences) in the design_units table.

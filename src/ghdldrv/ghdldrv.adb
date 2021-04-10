@@ -954,6 +954,7 @@ package body Ghdldrv is
 
    --  Elaboration.
 
+   Library_Id : Name_Id;
    Primary_Id : Name_Id;
    Secondary_Id : Name_Id;
    Base_Name : String_Access;
@@ -964,19 +965,39 @@ package body Ghdldrv is
    procedure Set_Elab_Units (Cmd : in out Command_Comp'Class;
                              Cmd_Name : String;
                              Args : Argument_List;
-                             Run_Arg : out Natural) is
+                             Run_Arg : out Natural)
+   is
+      function Library_Prefix_Image (Id : Name_Id) return String is
+      begin
+         if Id = Null_Identifier then
+            return "";
+         else
+            return Image (Id) & '.';
+         end if;
+      end Library_Prefix_Image;
+
+      function Arch_Suffix_Image (Id : Name_Id) return String is
+      begin
+         if Id = Null_Identifier then
+            return "";
+         else
+            return '(' & Image (Id) & ')';
+         end if;
+      end Arch_Suffix_Image;
    begin
-      Extract_Elab_Unit (Cmd_Name, Args, Run_Arg, Primary_Id, Secondary_Id);
+      Library_Id := Null_Identifier;
+      Extract_Elab_Unit (Cmd_Name, Args, Run_Arg,
+                         Library_Id, Primary_Id, Secondary_Id);
       if Secondary_Id = Null_Identifier then
          Base_Name := new String'(Image (Primary_Id));
-         Unit_Name := new String'(Image (Primary_Id));
       else
-         Base_Name :=
-           new String'(Image (Primary_Id) & '-' & Image (Secondary_Id));
-         Unit_Name :=
-           new String'(Image (Primary_Id) & '(' & Image (Secondary_Id) & ')');
+         Base_Name := new String'(Image (Primary_Id)
+                                    & '-' & Image (Secondary_Id));
       end if;
 
+      Unit_Name := new String'(Library_Prefix_Image (Library_Id)
+                                 & Image (Primary_Id)
+                                 & Arch_Suffix_Image (Secondary_Id));
       Filelist_Name := null;
 
       --  Choose a default name for the executable.
@@ -1231,11 +1252,12 @@ package body Ghdldrv is
    procedure Perform_Action (Cmd : in out Command_Run; Args : Argument_List)
    is
       Suffix : constant String_Access := Get_Executable_Suffix;
+      Lib_Id : Name_Id;
       Prim_Id : Name_Id;
       Sec_Id : Name_Id;
       Opt_Arg : Natural;
    begin
-      Extract_Elab_Unit ("-r", Args, Opt_Arg, Prim_Id, Sec_Id);
+      Extract_Elab_Unit ("-r", Args, Opt_Arg, Lib_Id, Prim_Id, Sec_Id);
       if Sec_Id = Null_Identifier then
          Base_Name := new String'
            (Image (Prim_Id) & Suffix.all);
@@ -1614,7 +1636,7 @@ package body Ghdldrv is
       Setup_Compiler (Cmd, True);
 
       --  Create list of files.
-      Files_List := Build_Dependence (Primary_Id, Secondary_Id);
+      Files_List := Build_Dependence (Library_Id, Primary_Id, Secondary_Id);
 
       if Errorout.Nbr_Errors /= 0 then
          raise Errorout.Compilation_Error;
@@ -1885,7 +1907,7 @@ package body Ghdldrv is
       if not Setup_Libraries (True) then
          raise Option_Error;
       end if;
-      Files_List := Build_Dependence (Primary_Id, Secondary_Id);
+      Files_List := Build_Dependence (Library_Id, Primary_Id, Secondary_Id);
 
       Ghdllocal.Gen_Makefile_Disp_Header;
 

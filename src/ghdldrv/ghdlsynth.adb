@@ -247,6 +247,7 @@ package body Ghdlsynth is
       Design_File : Iir;
       Config : Iir;
       Top : Iir;
+      Lib_Id : Name_Id;
       Prim_Id : Name_Id;
       Sec_Id : Name_Id;
    begin
@@ -359,18 +360,19 @@ package body Ghdlsynth is
             --  No need to configure if there are missing units.
             return Null_Iir;
          end if;
+         Lib_Id := Null_Identifier;
          Prim_Id := Get_Identifier (Top);
          Sec_Id := Null_Identifier;
       else
          Extract_Elab_Unit ("--synth", Args (E_Opt + 1 .. Args'Last), Opt_Arg,
-                            Prim_Id, Sec_Id);
+                            Lib_Id, Prim_Id, Sec_Id);
          if Opt_Arg <= Args'Last then
             Ghdlmain.Error ("extra options ignored");
             return Null_Iir;
          end if;
       end if;
 
-      Config := Vhdl.Configuration.Configure (Prim_Id, Sec_Id);
+      Config := Vhdl.Configuration.Configure (Lib_Id, Prim_Id, Sec_Id);
 
       if Nbr_Errors > 0 then
          --  No need to configure if there are missing units.

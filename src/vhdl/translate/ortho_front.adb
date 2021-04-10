@@ -58,9 +58,9 @@ package body Ortho_Front is
       );
    Action : Action_Type := Action_Compile;
 
-   --  Name of the entity to elaborate.
+   --  Name of the library/entity/architecture to elaborate.
+   Elab_Library : Name_Id;
    Elab_Entity : Name_Id;
-   --  Name of the architecture to elaborate.
    Elab_Architecture : Name_Id;
    --  Filename for the list of files to link.
    Elab_Filelist : String_Acc;
@@ -90,13 +90,16 @@ package body Ortho_Front is
       Options.Initialize;
 
       Elab_Filelist := null;
+      Elab_Library := Null_Identifier;
       Elab_Entity := Null_Identifier;
       Elab_Architecture := Null_Identifier;
       Flag_Expect_Failure := False;
    end Init;
 
    function Decode_Elab_Option (Arg : String_Acc; Cmd : String)
-                               return Natural is
+                               return Natural
+   is
+      Dot : Natural;
    begin
       Elab_Architecture := Null_Identifier;
       --  Entity (+ architecture) to elaborate
@@ -105,6 +108,19 @@ package body Ortho_Front is
            ("entity or configuration name required after " & Cmd);
          return 0;
       end if;
+
+      Dot := Arg'First - 1;
+      if Arg (Arg'First) /= '\' then
+         for I in Arg'Range loop
+            if Arg (I) = '.' then
+               Dot := I;
+               Elab_Library :=
+                 Name_Table.Get_Identifier (Arg (Arg'First .. I - 1));
+               exit;
+            end if;
+         end loop;
+      end if;
+
       if Arg (Arg.all'Last) = ')' then
          --  Name is ENTITY(ARCH).
          --  Split.
@@ -128,7 +144,7 @@ package body Ortho_Front is
                Is_Ext := False;
             end if;
             loop
-               if P = Arg.all'First then
+               if P = Dot + 1 then
                   Error_Msg_Option ("ill-formed name after " & Cmd);
                   return 0;
                end if;
@@ -150,10 +166,10 @@ package body Ortho_Front is
             Elab_Architecture :=
               Name_Table.Get_Identifier (Arg (P + 1 .. Arg'Last - 1));
             Elab_Entity :=
-              Name_Table.Get_Identifier (Arg (Arg'First .. P - 1));
+              Name_Table.Get_Identifier (Arg (Dot + 1 .. P - 1));
          end;
       else
-         Elab_Entity := Name_Table.Get_Identifier (Arg.all);
+         Elab_Entity := Name_Table.Get_Identifier (Arg (Dot + 1 .. Arg'Last));
          Elab_Architecture := Null_Identifier;
       end if;
       return 2;
@@ -567,7 +583,7 @@ package body Ortho_Front is
             Shlib_Interning.Init;
 
             Config := Vhdl.Configuration.Configure
-              (Elab_Entity, Elab_Architecture);
+              (Elab_Library, Elab_Entity, Elab_Architecture);
             if Errorout.Nbr_Errors > 0 then
                --  This may happen (bad entity for example).
                raise Compilation_Error;
@@ -626,7 +642,7 @@ package body Ortho_Front is
             Flags.Flag_Elaborate := True;
             Flags.Flag_Only_Elab_Warnings := False;
             Config := Vhdl.Configuration.Configure
-              (Elab_Entity, Elab_Architecture);
+              (Elab_Library, Elab_Entity, Elab_Architecture);
             Translation.Elaborate (Config, True);
 
             if Errorout.Nbr_Errors > 0 then

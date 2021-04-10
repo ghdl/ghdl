@@ -638,16 +638,26 @@ package body Vhdl.Configuration is
    --  corresponding configurations.
    --
    --  Return the configuration declaration for the design.
-   function Configure (Primary_Id : Name_Id; Secondary_Id : Name_Id)
+   function Configure
+     (Library_Id: Name_Id; Primary_Id : Name_Id; Secondary_Id : Name_Id)
      return Iir
    is
       use Libraries;
 
+      Library : Iir;
       Unit : Iir_Design_Unit;
       Lib_Unit : Iir;
       Top : Iir;
    begin
-      Unit := Find_Primary_Unit (Work_Library, Primary_Id);
+      if Library_Id /= Null_Identifier then
+         Library := Get_Library (Library_Id, Command_Line_Location);
+         if Library = Null_Iir then
+            return Null_Iir;
+         end if;
+      else
+         Library := Work_Library;
+      end if;
+      Unit := Find_Primary_Unit (Library, Primary_Id);
       if Unit = Null_Iir then
          Error_Msg_Elab ("cannot find entity or configuration "
                          & Name_Table.Image (Primary_Id));

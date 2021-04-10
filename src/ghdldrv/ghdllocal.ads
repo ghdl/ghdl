@@ -130,7 +130,8 @@ package Ghdllocal is
    --  Raise errorout.compilation_error in case of error (parse error).
    procedure Load_All_Libraries_And_Files;
 
-   function Build_Dependence (Prim : Name_Id; Sec : Name_Id) return Iir_List;
+   function Build_Dependence (Lib : Name_Id; Prim : Name_Id; Sec : Name_Id)
+                             return Iir_List;
 
    --  Return True iff file FILE has been modified (the file time stamp does
    --  no correspond to what was recorded in the library).
@@ -144,6 +145,7 @@ package Ghdllocal is
    procedure Extract_Elab_Unit (Cmd_Name : String;
                                 Args : Argument_List;
                                 Next_Arg : out Natural;
+                                Lib_Id : out Name_Id;
                                 Prim_Id : out Name_Id;
                                 Sec_Id : out Name_Id);
 

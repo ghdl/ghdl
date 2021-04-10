@@ -327,14 +327,15 @@ package body Ghdlcomp is
                                   Opt_Arg : out Natural;
                                   Config : out Iir)
    is
+      Lib_Id : Name_Id;
       Prim_Id : Name_Id;
       Sec_Id : Name_Id;
    begin
-      Extract_Elab_Unit (Cmd_Name, Args, Opt_Arg, Prim_Id, Sec_Id);
+      Extract_Elab_Unit (Cmd_Name, Args, Opt_Arg, Lib_Id, Prim_Id, Sec_Id);
 
       Flags.Flag_Elaborate := True;
 
-      Config := Vhdl.Configuration.Configure (Prim_Id, Sec_Id);
+      Config := Vhdl.Configuration.Configure (Lib_Id, Prim_Id, Sec_Id);
       if Config = Null_Iir
         or else Errorout.Nbr_Errors > 0
       then
@@ -730,6 +731,7 @@ package body Ghdlcomp is
    is
       pragma Unreferenced (Cmd);
 
+      Lib_Id : Name_Id;
       Prim_Id : Name_Id;
       Sec_Id : Name_Id;
       Files_List : Iir_List;
@@ -741,13 +743,13 @@ package body Ghdlcomp is
       Unit : Iir_Design_Unit;
       Lib : Iir_Library_Declaration;
    begin
-      Extract_Elab_Unit ("-m", Args, Next_Arg, Prim_Id, Sec_Id);
+      Extract_Elab_Unit ("-m", Args, Next_Arg, Lib_Id, Prim_Id, Sec_Id);
       if not Setup_Libraries (True) then
          return;
       end if;
 
       --  Create list of files.
-      Files_List := Build_Dependence (Prim_Id, Sec_Id);
+      Files_List := Build_Dependence (Lib_Id, Prim_Id, Sec_Id);
 
       --  Unmark all libraries.
       Lib := Libraries.Std_Library;
@@ -874,6 +876,7 @@ package body Ghdlcomp is
       use Name_Table;
 
       HT : constant Character := ASCII.HT;
+      Lib_Id : Name_Id;
       Prim_Id : Name_Id;
       Sec_Id : Name_Id;
       Files_List : Iir_List;
@@ -885,11 +888,12 @@ package body Ghdlcomp is
 
       Next_Arg : Natural;
    begin
-      Extract_Elab_Unit ("--gen-makefile", Args, Next_Arg, Prim_Id, Sec_Id);
+      Extract_Elab_Unit
+        ("--gen-makefile", Args, Next_Arg, Lib_Id, Prim_Id, Sec_Id);
       if not Setup_Libraries (True) then
          return;
       end if;
-      Files_List := Build_Dependence (Prim_Id, Sec_Id);
+      Files_List := Build_Dependence (Lib_Id, Prim_Id, Sec_Id);
 
       Ghdllocal.Gen_Makefile_Disp_Header;
 

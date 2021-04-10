@@ -1437,7 +1437,8 @@ package body Ghdllocal is
       end loop;
    end Check_No_Elab_Flag;
 
-   function Build_Dependence (Prim : Name_Id; Sec : Name_Id) return Iir_List
+   function Build_Dependence (Lib : Name_Id; Prim : Name_Id; Sec : Name_Id)
+                             return Iir_List
    is
       procedure Build_Dependence_List (File : Iir_Design_File; List : Iir_List)
       is
@@ -1515,7 +1516,7 @@ package body Ghdllocal is
       Flag_Load_All_Design_Units := True;
       Flag_Build_File_Dependence := True;
 
-      Top := Configure (Prim, Sec);
+      Top := Configure (Lib, Prim, Sec);
       if Top = Null_Iir then
          --  Error during configuration (primary unit not found).
          raise Option_Error;
@@ -1742,6 +1743,7 @@ package body Ghdllocal is
    procedure Extract_Elab_Unit (Cmd_Name : String;
                                 Args : Argument_List;
                                 Next_Arg : out Natural;
+                                Lib_Id : out Name_Id;
                                 Prim_Id : out Name_Id;
                                 Sec_Id : out Name_Id) is
    begin
@@ -1750,10 +1752,40 @@ package body Ghdllocal is
          raise Option_Error;
       end if;
 
-      Prim_Id := Convert_Name (Args (Args'First).all);
-      if Prim_Id = Null_Identifier then
-         raise Option_Error;
-      end if;
+      declare
+         S : constant String_Access := Args (Args'First);
+         Dot : Natural;
+      begin
+         Lib_Id := Null_Identifier;
+
+         Dot := S'First - 1;
+         if S (S'First) /= '\' then
+            for I in S'Range loop
+               if S (I) = '.' then
+                  if I = S'First then
+                     Error ("missing library name before '.'");
+                     raise Option_Error;
+                  end if;
+                  if I = S'Last then
+                     Error ("missing primary name after '.'");
+                     raise Option_Error;
+                  end if;
+                  Dot := I;
+                  Lib_Id := Convert_Name (S (S'First .. Dot - 1));
+                  if Lib_Id = Null_Identifier then
+                     raise Option_Error;
+                  end if;
+                  exit;
+               end if;
+            end loop;
+         end if;
+
+         Prim_Id := Convert_Name (S (Dot + 1 .. S'Last));
+         if Prim_Id = Null_Identifier then
+            raise Option_Error;
+         end if;
+      end;
+
       Next_Arg := Args'First + 1;
       Sec_Id := Null_Identifier;
 
@@ -1828,6 +1860,7 @@ package body Ghdllocal is
       pragma Unreferenced (Cmd);
       use Name_Table;
 
+      Lib_Id : Name_Id;
       Prim_Id : Name_Id;
       Sec_Id : Name_Id;
       Files_List : Iir_List;
@@ -1838,11 +1871,12 @@ package body Ghdllocal is
 
       Next_Arg : Natural;
    begin
-      Extract_Elab_Unit ("--elab-order", Args, Next_Arg, Prim_Id, Sec_Id);
+      Extract_Elab_Unit
+        ("--elab-order", Args, Next_Arg, Lib_Id, Prim_Id, Sec_Id);
       if not Setup_Libraries (True) then
          return;
       end if;
-      Files_List := Build_Dependence (Prim_Id, Sec_Id);
+      Files_List := Build_Dependence (Lib_Id, Prim_Id, Sec_Id);
 
       Files_It := List_Iterate (Files_List);
       while Is_Valid (Files_It) loop
