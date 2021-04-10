@@ -109,6 +109,14 @@ package body Vhdl.Parse is
       Report_Msg (Msgid_Error, Errorout.Parse, Get_Token_Coord, Msg, Args);
    end Error_Msg_Parse;
 
+   procedure Check_Vhdl_At_Least_2008 (Msg: String) is
+   begin
+      if Vhdl_Std < Vhdl_08 then
+         Report_Msg (Msgid_Error, Errorout.Parse, Get_Token_Coord, Msg &
+                     " not allowed before VHDL 2008. Compile with --std=08");
+      end if;
+   end Check_Vhdl_At_Least_2008;
+
    procedure Error_Msg_Parse (Loc : Location_Type;
                               Msg: String;
                               Args : Earg_Arr := No_Eargs) is
@@ -1065,10 +1073,7 @@ package body Vhdl.Parse is
             --  AMS reserved words.
             null;
          when Tok_Subtype =>
-            if Vhdl_Std < Vhdl_08 then
-               Error_Msg_Parse
-                 ("'subtype attribute is not allowed before vhdl08");
-            end if;
+            Check_Vhdl_At_Least_2008 ("'subtype attribute");
          when others =>
             return Null_Iir;
       end case;
@@ -1515,9 +1520,7 @@ package body Vhdl.Parse is
             --  Skip string
             Scan;
          when Tok_Double_Less =>
-            if Vhdl_Std < Vhdl_08 then
-               Error_Msg_Parse ("external name not allowed before vhdl 08");
-            end if;
+            Check_Vhdl_At_Least_2008 ("external name");
             Res := Parse_External_Name;
          when others =>
             if Current_Token = Tok_Invalid then
@@ -2263,18 +2266,16 @@ package body Vhdl.Parse is
                if Ctxt /= Generic_Interface_List then
                   Error_Msg_Parse
                     ("package interface only allowed in generic interface");
-               elsif Flags.Vhdl_Std < Vhdl_08 then
-                  Error_Msg_Parse
-                    ("package interface not allowed before vhdl 08");
+               else
+                  Check_Vhdl_At_Least_2008 ("package interface");
                end if;
                Inters := Parse_Interface_Package_Declaration;
             when Tok_Type =>
                if Ctxt /= Generic_Interface_List then
                   Error_Msg_Parse
                     ("type interface only allowed in generic interface");
-               elsif Flags.Vhdl_Std < Vhdl_08 then
-                  Error_Msg_Parse
-                    ("type interface not allowed before vhdl 08");
+               else
+                  Check_Vhdl_At_Least_2008 ("type interface");
                end if;
                Inters := Create_Iir (Iir_Kind_Interface_Type_Declaration);
 
@@ -2289,9 +2290,8 @@ package body Vhdl.Parse is
                if Ctxt /= Generic_Interface_List then
                   Error_Msg_Parse
                     ("subprogram interface only allowed in generic interface");
-               elsif Flags.Vhdl_Std < Vhdl_08 then
-                  Error_Msg_Parse
-                    ("subprogram interface not allowed before vhdl 08");
+               else
+                  Check_Vhdl_At_Least_2008 ("subprogram interface");
                end if;
                Inters := Parse_Interface_Subprogram_Declaration;
             when Tok_Right_Paren =>
@@ -3390,10 +3390,7 @@ package body Vhdl.Parse is
          end if;
       else
          if Current_Token = Tok_Left_Paren then
-            if Vhdl_Std < Vhdl_08 then
-               Error_Msg_Parse
-                 ("resolution_indication not allowed before vhdl08");
-            end if;
+            Check_Vhdl_At_Least_2008 ("resolution indication");
             Resolution_Indication := Parse_Resolution_Indication;
          end if;
          if Current_Token /= Tok_Identifier then
@@ -5505,9 +5502,7 @@ package body Vhdl.Parse is
          when Tok_Group =>
             Decl := Parse_Group;
          when Tok_Package =>
-            if Vhdl_Std < Vhdl_08 then
-               Error_Msg_Parse ("nested package not allowed before vhdl 2008");
-            end if;
+            Check_Vhdl_At_Least_2008 ("nested package");
             Decl := Parse_Package (Parent);
             if Decl /= Null_Iir
               and then Get_Kind (Decl) = Iir_Kind_Package_Body
@@ -7398,10 +7393,7 @@ package body Vhdl.Parse is
          end if;
          Set_Waveform_Chain (Stmt, Wave_Chain);
       elsif Get_Kind (Wave_Chain) = Iir_Kind_Conditional_Waveform then
-         if Flags.Vhdl_Std < Vhdl_08 then
-            Error_Msg_Parse
-              ("conditional signal assignment not allowed in before vhdl08");
-         end if;
+         Check_Vhdl_At_Least_2008 ("conditional signal assignemnt");
          N_Stmt :=
            Create_Iir (Iir_Kind_Conditional_Signal_Assignment_Statement);
          Location_Copy (N_Stmt, Stmt);
@@ -7584,10 +7576,7 @@ package body Vhdl.Parse is
       Expr := Parse_Expression;
 
       if Current_Token = Tok_When then
-         if Flags.Vhdl_Std < Vhdl_08 then
-            Error_Msg_Parse
-              ("conditional variable assignment not allowed before vhdl08");
-         end if;
+         Check_Vhdl_At_Least_2008 ("conditional variable assignment");
          Stmt :=
            Create_Iir (Iir_Kind_Conditional_Variable_Assignment_Statement);
          Set_Location (Stmt, Loc);
@@ -8436,10 +8425,7 @@ package body Vhdl.Parse is
          Scan;
 
          if Current_Token = Tok_All then
-            if Vhdl_Std < Vhdl_08 then
-               Error_Msg_Parse
-                 ("all sensitized process allowed only in vhdl 08");
-            end if;
+            Check_Vhdl_At_Least_2008 ("all sensitized process");
             Sensitivity_List := Iir_List_All;
 
             --  Skip 'all'
@@ -9216,10 +9202,7 @@ package body Vhdl.Parse is
          Alt_Label := Null_Identifier;
          if Current_Token = Tok_Colon then
             if Get_Kind (Cond) = Iir_Kind_Simple_Name then
-               if Vhdl_Std < Vhdl_08 then
-                  Error_Msg_Parse
-                    ("alternative label not allowed before vhdl08");
-               end if;
+               Check_Vhdl_At_Least_2008 ("alternative label");
 
                --  In fact the parsed condition was an alternate label.
                Alt_Label := Get_Identifier (Cond);
@@ -9288,9 +9271,7 @@ package body Vhdl.Parse is
       end loop;
 
       if Current_Token = Tok_Else then
-         if Vhdl_Std < Vhdl_08 then
-            Error_Msg_Parse ("else generate not allowed before vhdl08");
-         end if;
+         Check_Vhdl_At_Least_2008 ("else generate");
 
          Clause := Create_Iir (Iir_Kind_If_Generate_Else_Clause);
          Start_Loc := Get_Token_Location;
@@ -11041,9 +11022,7 @@ package body Vhdl.Parse is
       Set_Parent (Res, Parent);
 
       if Current_Token = Tok_Generic then
-         if Vhdl_Std < Vhdl_08 then
-            Error_Msg_Parse ("generic packages not allowed before vhdl 2008");
-         end if;
+         Check_Vhdl_At_Least_2008 ("generic packages");
          Set_Package_Header (Res, Parse_Package_Header);
       end if;
 
@@ -11575,8 +11554,7 @@ package body Vhdl.Parse is
                Parse_Verification_Unit (Res);
             when Tok_Identifier =>
                if Current_Identifier = Name_Context then
-                  Error_Msg_Parse
-                    ("context clause not allowed before vhdl 08");
+                  Check_Vhdl_At_Least_2008 ("context clause");
                else
                   Error_Empty;
                end if;
