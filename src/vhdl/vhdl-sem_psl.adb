@@ -502,7 +502,8 @@ package body Vhdl.Sem_Psl is
       Res : PSL_Node;
    begin
       case Get_Kind (Prop) is
-         when N_Braced_SERE =>
+         when N_Braced_SERE
+            | N_Clocked_SERE =>
             return Sem_Sequence (Prop);
          when N_Star_Repeat_Seq
             | N_Plus_Repeat_Seq =>
@@ -659,6 +660,9 @@ package body Vhdl.Sem_Psl is
             if Get_Kind (Child) = N_Clock_Event then
                Set_Property (Prop, Get_Property (Child));
                Clk := Get_Boolean (Child);
+            elsif Get_Kind (Child) = N_Clocked_SERE then
+               Clk := Get_Boolean (Child);
+               Set_Property (Prop, Get_SERE (Child));
             end if;
          when N_Property_Instance =>
             Child := Get_Declaration (Prop);
