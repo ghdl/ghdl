@@ -426,6 +426,27 @@ package body Trans.Chap9 is
               (ON_Or,
                Translate_Psl_Expr (Get_Left (Expr), Eos),
                Translate_Psl_Expr (Get_Right (Expr), Eos));
+         when N_Imp_Bool =>
+            --  Equivalent to (not (a) or (b)) so this is a short-cut
+            --  operation.
+            declare
+               Bool : constant O_Tnode :=
+                 Get_Ortho_Type (Boolean_Type_Definition, Mode_Value);
+               L : O_Dnode;
+               If_Blk   : O_If_Block;
+            begin
+               L := Create_Temp (Bool);
+               New_Assign_Stmt
+                 (New_Obj (L), Translate_Psl_Expr (Get_Left (Expr), Eos));
+               Start_If_Stmt (If_Blk, New_Obj_Value (L));
+               New_Assign_Stmt
+                 (New_Obj (L), Translate_Psl_Expr (Get_Right (Expr), Eos));
+               New_Else_Stmt (If_Blk);
+               New_Assign_Stmt
+                 (New_Obj (L), New_Lit (Std_Boolean_True_Node));
+               Finish_If_Stmt (If_Blk);
+               return New_Obj_Value (L);
+            end;
          when others =>
             Error_Kind ("translate_psl_expr", Expr);
       end case;
