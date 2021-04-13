@@ -9,6 +9,9 @@ elab_simulate top1
 
 analyze_failure top2.vhdl
 
+analyze top3.vhdl
+elab_simulate top3
+
 clean
 
 echo "Test successful"
