@@ -18,8 +18,7 @@ with PSL.Types; use PSL.Types;
 with PSL.Errors; use PSL.Errors;
 
 package body PSL.Subsets is
-   procedure Check_Simple (N : Node)
-   is
+   procedure Check_Simple (N : Node) is
    begin
       case Get_Kind (N) is
          when N_Not_Bool =>
