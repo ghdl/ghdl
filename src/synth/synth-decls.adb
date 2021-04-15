@@ -792,7 +792,11 @@ package body Synth.Decls is
                Val := Synth_Subtype_Conversion
                  (Ctxt, Val, Inter_Type, True, Assoc);
 
-               pragma Assert (Is_Static (Val.Val));
+               if not Is_Static (Val.Val) then
+                  Error_Msg_Synth
+                    (+Assoc, "value of generic %i must be static", +Inter);
+                  Val := No_Valtyp;
+               end if;
 
                Create_Object (Sub_Inst, Inter, Val);
 

@@ -994,9 +994,11 @@ package body Synth.Insts is
             Inter := Get_Generic_Chain (Inst_Obj.Decl);
             while Inter /= Null_Node loop
                Vt := Get_Value (Inst_Obj.Syn_Inst, Inter);
-               Pv := Memtyp_To_Pval (Get_Memtyp (Vt));
-               Set_Param_Pval (Inst, Idx, Pv);
-
+               if Vt /= No_Valtyp then
+                  --  Avoid errors
+                  Pv := Memtyp_To_Pval (Get_Memtyp (Vt));
+                  Set_Param_Pval (Inst, Idx, Pv);
+               end if;
                Inter := Get_Chain (Inter);
                Idx := Idx + 1;
             end loop;
