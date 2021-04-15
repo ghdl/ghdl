@@ -3452,6 +3452,7 @@ package body Vhdl.Canon is
             when Iir_Kind_Psl_Cover_Directive =>
                Canon_Psl_Cover_Directive (Item);
             when Iir_Kind_Signal_Declaration
+               | Iir_Kind_Constant_Declaration
                | Iir_Kind_Function_Declaration
                | Iir_Kind_Procedure_Declaration
                | Iir_Kind_Function_Body
