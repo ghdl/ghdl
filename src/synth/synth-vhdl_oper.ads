@@ -22,7 +22,7 @@ with Synth.Objtypes; use Synth.Objtypes;
 with Synth.Values; use Synth.Values;
 with Synth.Vhdl_Context; use Synth.Vhdl_Context;
 
-package Synth.Oper is
+package Synth.Vhdl_Oper is
    function Synth_Predefined_Function_Call
      (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Valtyp;
    function Synth_Operator_Function_Call
@@ -43,4 +43,4 @@ package Synth.Oper is
      (Syn_Inst : Synth_Instance_Acc; Atype : Iir; Len : Iir_Index32)
      return Bound_Type;
 
-end Synth.Oper;
+end Synth.Vhdl_Oper;

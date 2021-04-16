@@ -29,7 +29,7 @@ with Netlists; use Netlists;
 with Synth.Errors; use Synth.Errors;
 with Synth.Source; use Synth.Source;
 with Synth.Expr; use Synth.Expr;
-with Synth.Oper;
+with Synth.Vhdl_Oper;
 with Synth.Ieee.Std_Logic_1164; use Synth.Ieee.Std_Logic_1164;
 with Synth.Ieee.Numeric_Std; use Synth.Ieee.Numeric_Std;
 with Synth.Files_Operations;
@@ -299,7 +299,7 @@ package body Synth.Static_Oper is
                Res_St : Type_Acc;
                Res : Memtyp;
             begin
-               Bnd := Oper.Create_Bounds_From_Length
+               Bnd := Synth.Vhdl_Oper.Create_Bounds_From_Length
                  (Syn_Inst, Get_Index_Type (Get_Type (Expr), 0),
                   L_Len + R_Len);
                Res_St := Create_Onedimensional_Array_Subtype (Res_Typ, Bnd);
@@ -320,7 +320,7 @@ package body Synth.Static_Oper is
                Res_St : Type_Acc;
                Res : Memtyp;
             begin
-               Bnd := Oper.Create_Bounds_From_Length
+               Bnd := Synth.Vhdl_Oper.Create_Bounds_From_Length
                  (Syn_Inst, Get_Index_Type (Get_Type (Expr), 0), 1 + Rlen);
                Res_St := Create_Onedimensional_Array_Subtype (Res_Typ, Bnd);
                Res := Create_Memory (Res_St);
@@ -336,7 +336,7 @@ package body Synth.Static_Oper is
                Res_St : Type_Acc;
                Res : Memtyp;
             begin
-               Bnd := Oper.Create_Bounds_From_Length
+               Bnd := Synth.Vhdl_Oper.Create_Bounds_From_Length
                  (Syn_Inst, Get_Index_Type (Get_Type (Expr), 0), Llen + 1);
                Res_St := Create_Onedimensional_Array_Subtype (Res_Typ, Bnd);
                Res := Create_Memory (Res_St);

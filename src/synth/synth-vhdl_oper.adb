@@ -38,9 +38,9 @@ with Synth.Expr; use Synth.Expr;
 with Synth.Source;
 with Synth.Static_Oper; use Synth.Static_Oper;
 
-package body Synth.Oper is
+package body Synth.Vhdl_Oper is
    procedure Set_Location (N : Net; Loc : Node)
-     renames Synth.Source.Set_Location;
+     renames Standard.Synth.Source.Set_Location;
 
    function Synth_Uresize
      (Ctxt : Context_Acc; Val : Valtyp; W : Width; Loc : Node) return Net
@@ -1784,7 +1784,7 @@ package body Synth.Oper is
       --  which must represent all positive values in the bounds using a
       --  signed word (so that -1 is also represented).
       Max := Int32'Max (Left.Typ.Vbound.Left, Left.Typ.Vbound.Right);
-      W := Utils.Clog2 (Uns32 (Max)) + 1;
+      W := Netlists.Utils.Clog2 (Uns32 (Max)) + 1;
       Rng := (Dir => Dir_To,
               Is_Signed => True,
               Left => -1,
@@ -2148,4 +2148,4 @@ package body Synth.Oper is
          return Synth_Dyadic_Operation (Syn_Inst, Imp, Op1, Op2, Expr);
       end if;
    end Synth_Operator_Function_Call;
-end Synth.Oper;
+end Synth.Vhdl_Oper;

@@ -43,7 +43,7 @@ with Synth.Errors; use Synth.Errors;
 with Synth.Environment;
 with Synth.Decls;
 with Synth.Stmts; use Synth.Stmts;
-with Synth.Oper; use Synth.Oper;
+with Synth.Vhdl_Oper; use Synth.Vhdl_Oper;
 with Synth.Heap; use Synth.Heap;
 with Synth.Debugger;
 with Synth.Vhdl_Aggr;
