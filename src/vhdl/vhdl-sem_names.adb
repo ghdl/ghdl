@@ -3322,7 +3322,8 @@ package body Vhdl.Sem_Names is
                              & "an attribute");
             return Error_Mark;
          when Iir_Kind_Function_Call
-           | Iir_Kind_Type_Conversion =>
+           | Iir_Kind_Type_Conversion
+           | Iir_Kinds_Attribute =>
             Error_Msg_Sem (+Attr, "invalid prefix for user defined attribute");
             return Error_Mark;
          when Iir_Kinds_Object_Declaration
