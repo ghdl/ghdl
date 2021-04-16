@@ -16,7 +16,7 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with Synth.Context; use Synth.Context;
+with Synth.Vhdl_Context; use Synth.Vhdl_Context;
 with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Synth.Static_Proc is

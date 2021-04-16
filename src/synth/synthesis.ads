@@ -20,7 +20,7 @@ with Vhdl.Nodes; use Vhdl.Nodes;
 
 with Netlists; use Netlists;
 
-with Synth.Context; use Synth.Context;
+with Synth.Vhdl_Context; use Synth.Vhdl_Context;
 with Synth.Flags; use Synth.Flags;
 
 package Synthesis is

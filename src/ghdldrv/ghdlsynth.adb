@@ -48,7 +48,7 @@ with Netlists.Errors;
 
 with Synthesis;
 with Synth.Disp_Vhdl;
-with Synth.Context; use Synth.Context;
+with Synth.Vhdl_Context; use Synth.Vhdl_Context;
 with Synth.Flags; use Synth.Flags;
 
 package body Ghdlsynth is
@@ -492,7 +492,7 @@ package body Ghdlsynth is
       Set_Elab_Flag (Vhdl.Std_Package.Std_Standard_Unit, False);
 
       Vhdl.Annotations.Finalize_Annotate;
-      Synth.Context.Free_Base_Instance;
+      Synth.Vhdl_Context.Free_Base_Instance;
       return Res;
 
    exception

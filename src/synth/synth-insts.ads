@@ -18,7 +18,7 @@
 
 with Vhdl.Nodes; use Vhdl.Nodes;
 
-with Synth.Context; use Synth.Context;
+with Synth.Vhdl_Context; use Synth.Vhdl_Context;
 with Synth.Flags; use Synth.Flags;
 
 package Synth.Insts is

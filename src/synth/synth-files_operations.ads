@@ -20,7 +20,7 @@ with Vhdl.Nodes; use Vhdl.Nodes;
 
 with Synth.Source; use Synth.Source;
 with Synth.Values; use Synth.Values;
-with Synth.Context; use Synth.Context;
+with Synth.Vhdl_Context; use Synth.Vhdl_Context;
 
 package Synth.Files_Operations is
    --  Raised in case of un-recoverable error.

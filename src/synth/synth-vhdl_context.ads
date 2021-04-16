@@ -28,7 +28,7 @@ with Synth.Environment; use Synth.Environment;
 with Synth.Objtypes; use Synth.Objtypes;
 with Synth.Values; use Synth.Values;
 
-package Synth.Context is
+package Synth.Vhdl_Context is
    --  Values are stored into Synth_Instance, which is parallel to simulation
    --  Block_Instance_Type.
 
@@ -202,4 +202,4 @@ private
       --  Instance for synthesis.
       Objects : Objects_Array (1 .. Max_Objs);
    end record;
-end Synth.Context;
+end Synth.Vhdl_Context;

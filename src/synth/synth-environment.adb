@@ -31,7 +31,7 @@ with Name_Table;
 with Synth.Flags;
 with Synth.Errors; use Synth.Errors;
 with Synth.Source; use Synth.Source;
-with Synth.Context;
+with Synth.Vhdl_Context;
 
 with Vhdl.Nodes;
 with Vhdl.Utils;
@@ -397,7 +397,7 @@ package body Synth.Environment is
             raise Internal_Error;
          when True =>
             --  Create a net.  No inference to do.
-            Res := Synth.Context.Get_Memtyp_Net (Ctxt, Asgn_Rec.Val.Val);
+            Res := Synth.Vhdl_Context.Get_Memtyp_Net (Ctxt, Asgn_Rec.Val.Val);
             if Wire_Rec.Kind = Wire_Enable then
                Connect (Get_Input (Get_Net_Parent (Outport), 0), Res);
             else
@@ -1154,7 +1154,7 @@ package body Synth.Environment is
       end case;
 
       if Asgn_Rec.Val.Is_Static = True then
-         return Synth.Context.Get_Memtyp_Net (Ctxt, Asgn_Rec.Val.Val);
+         return Synth.Vhdl_Context.Get_Memtyp_Net (Ctxt, Asgn_Rec.Val.Val);
       end if;
 
       --  Cannot be empty.
@@ -1217,7 +1217,7 @@ package body Synth.Environment is
 
       --  If the current value is static, just return it.
       if Get_Assign_Is_Static (First_Seq) then
-         return Context.Get_Partial_Memtyp_Net
+         return Vhdl_Context.Get_Partial_Memtyp_Net
            (Ctxt, Get_Assign_Static_Val (First_Seq), Off, Wd);
       end if;
 
@@ -1305,7 +1305,7 @@ package body Synth.Environment is
                      end if;
                      if Get_Assign_Is_Static (Seq) then
                         --  Extract from static value.
-                        Append (Vec, Context.Get_Partial_Memtyp_Net
+                        Append (Vec, Vhdl_Context.Get_Partial_Memtyp_Net
                                   (Ctxt, Get_Assign_Static_Val (Seq),
                                    Cur_Off, Cur_Wd));
                         exit;
@@ -1418,7 +1418,7 @@ package body Synth.Environment is
             when Unknown =>
                null;
             when True =>
-               N (I) := Context.Get_Partial_Memtyp_Net
+               N (I) := Vhdl_Context.Get_Partial_Memtyp_Net
                  (Ctxt, P (I).Val, Off, Wd);
             when False =>
                if Get_Partial_Offset (P (I).Asgns) <= Off then
@@ -1995,7 +1995,7 @@ package body Synth.Environment is
                N : Net;
                Pa : Partial_Assign;
             begin
-               N := Synth.Context.Get_Memtyp_Net (Ctxt, Asgn_Rec.Val.Val);
+               N := Synth.Vhdl_Context.Get_Memtyp_Net (Ctxt, Asgn_Rec.Val.Val);
                Pa := New_Partial_Assign (N, 0);
                Asgn_Rec.Val := (Is_Static => False, Asgns => Pa);
             end;

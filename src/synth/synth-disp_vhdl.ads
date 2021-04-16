@@ -18,7 +18,7 @@
 
 with Netlists; use Netlists;
 with Vhdl.Nodes; use Vhdl.Nodes;
-with Synth.Context; use Synth.Context;
+with Synth.Vhdl_Context; use Synth.Vhdl_Context;
 
 package Synth.Disp_Vhdl is
    --  Disp ENT (like the original text) and its content as a wrapper.

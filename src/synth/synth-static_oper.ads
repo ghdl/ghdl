@@ -17,7 +17,7 @@
 --  along with this program.  If not, see <gnu.org/licenses>.
 
 with Synth.Objtypes; use Synth.Objtypes;
-with Synth.Context; use Synth.Context;
+with Synth.Vhdl_Context; use Synth.Vhdl_Context;
 
 with Vhdl.Nodes; use Vhdl.Nodes;
 

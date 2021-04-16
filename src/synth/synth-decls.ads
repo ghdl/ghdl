@@ -19,7 +19,7 @@
 with Vhdl.Nodes; use Vhdl.Nodes;
 
 with Netlists; use Netlists;
-with Synth.Context; use Synth.Context;
+with Synth.Vhdl_Context; use Synth.Vhdl_Context;
 with Synth.Objtypes; use Synth.Objtypes;
 
 package Synth.Decls is

@@ -20,7 +20,7 @@ with Vhdl.Nodes; use Vhdl.Nodes;
 
 with Synth.Objtypes; use Synth.Objtypes;
 with Synth.Values; use Synth.Values;
-with Synth.Context; use Synth.Context;
+with Synth.Vhdl_Context; use Synth.Vhdl_Context;
 
 package Synth.Oper is
    function Synth_Predefined_Function_Call

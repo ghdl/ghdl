@@ -29,7 +29,7 @@ with Netlists.Builders; use Netlists.Builders;
 with Synth.Source;
 with Synth.Objtypes; use Synth.Objtypes;
 with Synth.Values; use Synth.Values;
-with Synth.Context; use Synth.Context;
+with Synth.Vhdl_Context; use Synth.Vhdl_Context;
 
 package Synth.Expr is
    --  Perform a subtype conversion.  Check constraints.

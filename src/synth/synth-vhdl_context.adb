@@ -29,7 +29,7 @@ with Netlists.Folds; use Netlists.Folds;
 with Synth.Expr; use Synth.Expr;
 with Netlists.Locations;
 
-package body Synth.Context is
+package body Synth.Vhdl_Context is
    function Make_Base_Instance return Synth_Instance_Acc
    is
       Base : Base_Instance_Acc;
@@ -559,4 +559,4 @@ package body Synth.Context is
             raise Internal_Error;
       end case;
    end Get_Net;
-end Synth.Context;
+end Synth.Vhdl_Context;
