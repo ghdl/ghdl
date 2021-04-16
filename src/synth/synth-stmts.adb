@@ -44,7 +44,7 @@ with Synth.Decls; use Synth.Decls;
 with Synth.Expr; use Synth.Expr;
 with Synth.Insts; use Synth.Insts;
 with Synth.Source;
-with Synth.Static_Proc;
+with Synth.Vhdl_Static_Proc;
 with Synth.Heap;
 with Synth.Flags;
 with Synth.Debugger;
@@ -2167,7 +2167,7 @@ package body Synth.Stmts is
 
       Synth_Subprogram_Association (Sub_Inst, Syn_Inst, Init, Infos);
 
-      Synth.Static_Proc.Synth_Static_Procedure (Sub_Inst, Imp, Call);
+      Synth.Vhdl_Static_Proc.Synth_Static_Procedure (Sub_Inst, Imp, Call);
 
       Synth_Subprogram_Back_Association (Sub_Inst, Syn_Inst, Init, Infos);
 

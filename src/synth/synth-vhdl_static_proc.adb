@@ -23,7 +23,7 @@ with Synth.Errors; use Synth.Errors;
 with Synth.Vhdl_Files; use Synth.Vhdl_Files;
 with Synth.Heap;
 
-package body Synth.Static_Proc is
+package body Synth.Vhdl_Static_Proc is
 
    procedure Synth_Deallocate (Syn_Inst : Synth_Instance_Acc; Imp : Node)
    is
@@ -58,4 +58,4 @@ package body Synth.Static_Proc is
               (+Loc, "call to implicit %n is not supported", +Imp);
       end case;
    end Synth_Static_Procedure;
-end Synth.Static_Proc;
+end Synth.Vhdl_Static_Proc;

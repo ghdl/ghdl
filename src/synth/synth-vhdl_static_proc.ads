@@ -19,8 +19,8 @@
 with Synth.Vhdl_Context; use Synth.Vhdl_Context;
 with Vhdl.Nodes; use Vhdl.Nodes;
 
-package Synth.Static_Proc is
+package Synth.Vhdl_Static_Proc is
    procedure Synth_Static_Procedure (Syn_Inst : Synth_Instance_Acc;
                                      Imp : Node;
                                      Loc : Node);
-end Synth.Static_Proc;
+end Synth.Vhdl_Static_Proc;
