@@ -46,7 +46,7 @@ with Synth.Stmts; use Synth.Stmts;
 with Synth.Oper; use Synth.Oper;
 with Synth.Heap; use Synth.Heap;
 with Synth.Debugger;
-with Synth.Aggr;
+with Synth.Vhdl_Aggr;
 
 with Grt.Types;
 with Grt.To_Strings;
@@ -2395,7 +2395,7 @@ package body Synth.Expr is
                end case;
             end;
          when Iir_Kind_Aggregate =>
-            return Synth.Aggr.Synth_Aggregate (Syn_Inst, Expr, Expr_Type);
+            return Synth.Vhdl_Aggr.Synth_Aggregate (Syn_Inst, Expr, Expr_Type);
          when Iir_Kind_Simple_Aggregate =>
             return Synth_Simple_Aggregate (Syn_Inst, Expr);
          when Iir_Kind_Parenthesis_Expression =>

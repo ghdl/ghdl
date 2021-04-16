@@ -31,7 +31,7 @@ with Synth.Expr; use Synth.Expr;
 with Synth.Stmts; use Synth.Stmts;
 with Synth.Decls; use Synth.Decls;
 
-package body Synth.Aggr is
+package body Synth.Vhdl_Aggr is
    type Stride_Array is array (Dim_Type range <>) of Nat32;
 
    procedure Get_Index_Offset (Index : Int64;
@@ -519,7 +519,7 @@ package body Synth.Aggr is
             declare
                Res_Type : Type_Acc;
             begin
-               Res_Type := Decls.Synth_Array_Subtype_Indication
+               Res_Type := Synth_Array_Subtype_Indication
                  (Syn_Inst, Get_Type (Aggr));
                return Synth_Aggregate_Array (Syn_Inst, Aggr, Res_Type);
             end;
@@ -534,4 +534,4 @@ package body Synth.Aggr is
       end case;
    end Synth_Aggregate;
 
-end Synth.Aggr;
+end Synth.Vhdl_Aggr;

@@ -22,9 +22,9 @@ with Synth.Objtypes; use Synth.Objtypes;
 with Synth.Values; use Synth.Values;
 with Synth.Vhdl_Context; use Synth.Vhdl_Context;
 
-package Synth.Aggr is
+package Synth.Vhdl_Aggr is
    --  Aggr_Type is the type from the context.
    function Synth_Aggregate (Syn_Inst : Synth_Instance_Acc;
                              Aggr : Node;
                              Aggr_Type : Type_Acc) return Valtyp;
-end Synth.Aggr;
+end Synth.Vhdl_Aggr;
