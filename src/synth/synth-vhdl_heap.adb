@@ -20,7 +20,7 @@ with Types; use Types;
 with Tables;
 
 
-package body Synth.Heap is
+package body Synth.Vhdl_Heap is
 
    package Heap_Table is new Tables
      (Table_Component_Type => Valtyp,
@@ -89,4 +89,4 @@ package body Synth.Heap is
       Free (Heap_Table.Table (Idx));
    end Synth_Deallocate;
 
-end Synth.Heap;
+end Synth.Vhdl_Heap;

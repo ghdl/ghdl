@@ -21,7 +21,7 @@ with Vhdl.Errors; use Vhdl.Errors;
 with Synth.Values; use Synth.Values;
 with Synth.Errors; use Synth.Errors;
 with Synth.Vhdl_Files; use Synth.Vhdl_Files;
-with Synth.Heap;
+with Synth.Vhdl_Heap;
 
 package body Synth.Vhdl_Static_Proc is
 
@@ -33,7 +33,7 @@ package body Synth.Vhdl_Static_Proc is
    begin
       Val := Read_Access (Param);
       if Val /= Null_Heap_Index then
-         Synth.Heap.Synth_Deallocate (Val);
+         Synth.Vhdl_Heap.Synth_Deallocate (Val);
          Write_Access (Param.Val.Mem, Null_Heap_Index);
       end if;
    end Synth_Deallocate;

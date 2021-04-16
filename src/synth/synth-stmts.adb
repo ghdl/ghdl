@@ -45,7 +45,7 @@ with Synth.Expr; use Synth.Expr;
 with Synth.Insts; use Synth.Insts;
 with Synth.Source;
 with Synth.Vhdl_Static_Proc;
-with Synth.Heap;
+with Synth.Vhdl_Heap;
 with Synth.Flags;
 with Synth.Debugger;
 
@@ -240,7 +240,7 @@ package body Synth.Stmts is
             if Dest_Off /= (0, 0) and then Dest_Dyn.Voff /= No_Net then
                raise Internal_Error;
             end if;
-            Dest_Base := Heap.Synth_Dereference (Read_Access (Dest_Base));
+            Dest_Base := Vhdl_Heap.Synth_Dereference (Read_Access (Dest_Base));
             Dest_Typ := Dest_Base.Typ;
 
          when others =>

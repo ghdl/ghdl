@@ -44,7 +44,7 @@ with Synth.Environment;
 with Synth.Decls;
 with Synth.Stmts; use Synth.Stmts;
 with Synth.Vhdl_Oper; use Synth.Vhdl_Oper;
-with Synth.Heap; use Synth.Heap;
+with Synth.Vhdl_Heap; use Synth.Vhdl_Heap;
 with Synth.Debugger;
 with Synth.Vhdl_Aggr;
 
@@ -528,7 +528,7 @@ package body Synth.Expr is
             begin
                --  Maybe do not dereference it if its type is known ?
                Val := Synth_Expression (Syn_Inst, Get_Prefix (Expr));
-               Res := Heap.Synth_Dereference (Read_Access (Val));
+               Res := Vhdl_Heap.Synth_Dereference (Read_Access (Val));
                return Res.Typ;
             end;
 
@@ -1072,7 +1072,7 @@ package body Synth.Expr is
                Val : Valtyp;
             begin
                Val := Synth_Expression (Syn_Inst, Get_Prefix (Name));
-               return Heap.Synth_Dereference (Read_Access (Val));
+               return Vhdl_Heap.Synth_Dereference (Read_Access (Val));
             end;
          when others =>
             Error_Kind ("synth_name", Name);
