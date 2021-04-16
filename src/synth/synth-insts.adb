@@ -50,7 +50,7 @@ with Synth.Decls; use Synth.Decls;
 with Synth.Expr; use Synth.Expr;
 with Synth.Source; use Synth.Source;
 with Synth.Debugger;
-with Synth.Files_Operations;
+with Synth.Vhdl_Files;
 with Synth.Errors;
 
 package body Synth.Insts is
@@ -1647,7 +1647,7 @@ package body Synth.Insts is
 
       --  Save the current architecture, so that files can be open using a
       --  path relative to the architecture filename.
-      Synth.Files_Operations.Set_Design_Unit (Arch);
+      Synth.Vhdl_Files.Set_Design_Unit (Arch);
 
       Synth_Dependencies (Root_Instance, Get_Design_Unit (Arch));
 

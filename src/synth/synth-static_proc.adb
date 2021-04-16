@@ -20,7 +20,7 @@ with Vhdl.Errors; use Vhdl.Errors;
 
 with Synth.Values; use Synth.Values;
 with Synth.Errors; use Synth.Errors;
-with Synth.Files_Operations; use Synth.Files_Operations;
+with Synth.Vhdl_Files; use Synth.Vhdl_Files;
 with Synth.Heap;
 
 package body Synth.Static_Proc is

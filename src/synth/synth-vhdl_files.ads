@@ -22,7 +22,7 @@ with Synth.Source; use Synth.Source;
 with Synth.Values; use Synth.Values;
 with Synth.Vhdl_Context; use Synth.Vhdl_Context;
 
-package Synth.Files_Operations is
+package Synth.Vhdl_Files is
    --  Raised in case of un-recoverable error.
    File_Execution_Error : exception;
 
@@ -45,4 +45,4 @@ package Synth.Files_Operations is
 
    procedure Synth_File_Read
      (Syn_Inst : Synth_Instance_Acc; Imp : Node; Loc : Node);
-end Synth.Files_Operations;
+end Synth.Vhdl_Files;

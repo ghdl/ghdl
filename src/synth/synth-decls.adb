@@ -35,7 +35,7 @@ with Synth.Expr; use Synth.Expr;
 with Synth.Stmts;
 with Synth.Source; use Synth.Source;
 with Synth.Errors; use Synth.Errors;
-with Synth.Files_Operations;
+with Synth.Vhdl_Files;
 with Synth.Values; use Synth.Values;
 
 package body Synth.Decls is
@@ -1044,7 +1044,7 @@ package body Synth.Decls is
                Res : Valtyp;
                Obj_Typ : Type_Acc;
             begin
-               F := Synth.Files_Operations.Elaborate_File_Declaration
+               F := Synth.Vhdl_Files.Elaborate_File_Declaration
                  (Syn_Inst, Decl);
                Obj_Typ := Get_Subtype_Object (Syn_Inst, Get_Type (Decl));
                Res := Create_Value_File (Obj_Typ, F);

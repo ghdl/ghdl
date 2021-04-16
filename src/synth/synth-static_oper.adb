@@ -32,7 +32,7 @@ with Synth.Expr; use Synth.Expr;
 with Synth.Vhdl_Oper;
 with Synth.Ieee.Std_Logic_1164; use Synth.Ieee.Std_Logic_1164;
 with Synth.Ieee.Numeric_Std; use Synth.Ieee.Numeric_Std;
-with Synth.Files_Operations;
+with Synth.Vhdl_Files;
 with Synth.Values; use Synth.Values;
 
 package body Synth.Static_Oper is
@@ -847,7 +847,7 @@ package body Synth.Static_Oper is
             declare
                Res : Boolean;
             begin
-               Res := Synth.Files_Operations.Endfile (Param1.Val.File, Expr);
+               Res := Synth.Vhdl_Files.Endfile (Param1.Val.File, Expr);
                return Create_Memory_U8 (Boolean'Pos (Res), Boolean_Type);
             end;
 

@@ -28,7 +28,7 @@ with Synth.Objtypes; use Synth.Objtypes;
 with Synth.Expr; use Synth.Expr;
 with Synth.Errors; use Synth.Errors;
 
-package body Synth.Files_Operations is
+package body Synth.Vhdl_Files is
 
    --  Variables to store the search path.
    Current_Unit : Node := Null_Node;
@@ -412,4 +412,4 @@ package body Synth.Files_Operations is
       File_Read_Value (File, (Value.Typ, Value.Val.Mem), Loc);
    end Synth_File_Read;
 
-end Synth.Files_Operations;
+end Synth.Vhdl_Files;
