@@ -25,6 +25,7 @@ with Grt.Files_Operations;
 
 with Netlists; use Netlists;
 
+with Synth.Memtype; use Synth.Memtype;
 with Synth.Objtypes; use Synth.Objtypes;
 with Synth.Environment; use Synth.Environment;
 with Synth.Source; use Synth.Source;

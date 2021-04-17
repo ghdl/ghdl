@@ -39,6 +39,7 @@ with Vhdl.Ieee.Std_Logic_1164;
 with PSL.Types;
 with PSL.NFAs;
 
+with Synth.Memtype; use Synth.Memtype;
 with Synth.Errors; use Synth.Errors;
 with Synth.Decls; use Synth.Decls;
 with Synth.Expr; use Synth.Expr;

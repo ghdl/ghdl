@@ -26,6 +26,7 @@ with Vhdl.Ieee.Std_Logic_1164; use Vhdl.Ieee.Std_Logic_1164;
 
 with Netlists; use Netlists;
 
+with Synth.Memtype; use Synth.Memtype;
 with Synth.Errors; use Synth.Errors;
 with Synth.Source; use Synth.Source;
 with Synth.Expr; use Synth.Expr;

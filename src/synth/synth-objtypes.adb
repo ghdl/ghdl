@@ -18,7 +18,6 @@
 
 with Ada.Unchecked_Conversion;
 with System; use System;
-with System.Storage_Elements;
 
 with Mutils; use Mutils;
 
@@ -613,26 +612,6 @@ package body Synth.Objtypes is
       end case;
    end Is_Matching_Bounds;
 
-   --  For conversions use Address to avoidcompiler warnings about alignment.
-   function To_Address is new Ada.Unchecked_Conversion
-     (Memory_Ptr, Address);
-   function To_Memory_Ptr is new Ada.Unchecked_Conversion
-     (Address, Memory_Ptr);
-
-   type Ghdl_U8_Ptr is access all Ghdl_U8;
-   function To_U8_Ptr is
-      new Ada.Unchecked_Conversion (Address, Ghdl_U8_Ptr);
-
-   procedure Write_U8 (Mem : Memory_Ptr; Val : Ghdl_U8) is
-   begin
-      To_U8_Ptr (To_Address (Mem)).all := Val;
-   end Write_U8;
-
-   function Read_U8 (Mem : Memory_Ptr) return Ghdl_U8 is
-   begin
-      return To_U8_Ptr (To_Address (Mem)).all;
-   end Read_U8;
-
    function Read_U8 (Mt : Memtyp) return Ghdl_U8
    is
       pragma Assert (Mt.Typ.Sz = 1);
@@ -640,89 +619,11 @@ package body Synth.Objtypes is
       return Read_U8 (Mt.Mem);
    end Read_U8;
 
-   procedure Write_I32 (Mem : Memory_Ptr; Val : Ghdl_I32)
-   is
-      V : Ghdl_I32;
-      for V'Address use To_Address (Mem);
-      pragma Import (Ada, V);
-   begin
-      V := Val;
-   end Write_I32;
-
-   function Read_I32 (Mem : Memory_Ptr) return Ghdl_I32
-   is
-      V : Ghdl_I32;
-      for V'Address use To_Address (Mem);
-      pragma Import (Ada, V);
-   begin
-      return V;
-   end Read_I32;
-
-   procedure Write_U32 (Mem : Memory_Ptr; Val : Ghdl_U32)
-   is
-      V : Ghdl_U32;
-      for V'Address use To_Address (Mem);
-      pragma Import (Ada, V);
-   begin
-      V := Val;
-   end Write_U32;
-
-   function Read_U32 (Mem : Memory_Ptr) return Ghdl_U32
-   is
-      V : Ghdl_U32;
-      for V'Address use To_Address (Mem);
-      pragma Import (Ada, V);
-   begin
-      return V;
-   end Read_U32;
-
-   procedure Write_I64 (Mem : Memory_Ptr; Val : Ghdl_I64)
-   is
-      V : Ghdl_I64;
-      for V'Address use To_Address (Mem);
-      pragma Import (Ada, V);
-   begin
-      V := Val;
-   end Write_I64;
-
-   function Read_I64 (Mem : Memory_Ptr) return Ghdl_I64
-   is
-      V : Ghdl_I64;
-      for V'Address use To_Address (Mem);
-      pragma Import (Ada, V);
-   begin
-      return V;
-   end Read_I64;
-
-   procedure Write_Fp64 (Mem : Memory_Ptr; Val : Fp64)
-   is
-      V : Fp64;
-      for V'Address use To_Address (Mem);
-      pragma Import (Ada, V);
-   begin
-      V := Val;
-   end Write_Fp64;
-
-   function Read_Fp64 (Mem : Memory_Ptr) return Fp64
-   is
-      V : Fp64;
-      for V'Address use To_Address (Mem);
-      pragma Import (Ada, V);
-   begin
-      return V;
-   end Read_Fp64;
 
    function Read_Fp64 (Mt : Memtyp) return Fp64 is
    begin
       return Read_Fp64 (Mt.Mem);
    end Read_Fp64;
-
-   function "+" (Base : Memory_Ptr; Off : Size_Type) return Memory_Ptr
-   is
-      use System.Storage_Elements;
-   begin
-      return To_Memory_Ptr (To_Address (Base) + Storage_Offset (Off));
-   end "+";
 
    function Read_Discrete (Mt : Memtyp) return Int64 is
    begin
@@ -858,6 +759,9 @@ package body Synth.Objtypes is
 
    Bit0_Mem : constant Memory_Element := 0;
    Bit1_Mem : constant Memory_Element := 1;
+
+   function To_Memory_Ptr is new Ada.Unchecked_Conversion
+     (Address, Memory_Ptr);
 
    procedure Init is
    begin

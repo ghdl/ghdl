@@ -24,6 +24,7 @@ with Grt.Types; use Grt.Types;
 with Grt.Files_Operations; use Grt.Files_Operations;
 with Grt.Stdio;
 
+with Synth.Memtype; use Synth.Memtype;
 with Synth.Objtypes; use Synth.Objtypes;
 with Synth.Expr; use Synth.Expr;
 with Synth.Errors; use Synth.Errors;

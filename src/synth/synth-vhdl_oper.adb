@@ -32,6 +32,7 @@ with Netlists.Builders; use Netlists.Builders;
 with Netlists.Folds; use Netlists.Folds;
 with Netlists.Utils;
 
+with Synth.Memtype; use Synth.Memtype;
 with Synth.Errors; use Synth.Errors;
 with Synth.Stmts; use Synth.Stmts;
 with Synth.Expr; use Synth.Expr;

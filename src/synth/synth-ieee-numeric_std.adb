@@ -17,6 +17,8 @@
 --  along with this program.  If not, see <gnu.org/licenses>.
 
 with Types_Utils; use Types_Utils;
+
+with Synth.Memtype; use Synth.Memtype;
 with Synth.Errors; use Synth.Errors;
 with Synth.Ieee.Std_Logic_1164; use Synth.Ieee.Std_Logic_1164;
 

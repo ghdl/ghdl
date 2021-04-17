@@ -17,7 +17,8 @@
 --  along with this program.  If not, see <gnu.org/licenses>.
 
 with Types; use Types;
-with Synth.Objtypes; use Synth.Objtypes;
+
+with Synth.Memtype; use Synth.Memtype;
 
 package Synth.Ieee.Std_Logic_1164 is
 

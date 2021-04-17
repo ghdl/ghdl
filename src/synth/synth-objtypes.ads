@@ -23,6 +23,8 @@ with Netlists; use Netlists;
 
 with Grt.Types; use Grt.Types;
 
+with Synth.Memtype; use Synth.Memtype;
+
 with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Synth.Objtypes is
@@ -163,13 +165,6 @@ package Synth.Objtypes is
       end case;
    end record;
 
-   type Memory_Element is mod 2**8;
-   type Memory_Array is array (Size_Type range <>) of Memory_Element;
-
-   --  Thin pointer for a generic pointer.
-   type Memory_Ptr is access all Memory_Array (Size_Type);
-   pragma No_Strict_Aliasing (Memory_Ptr);
-
    type Memtyp is record
       Typ : Type_Acc;
       Mem : Memory_Ptr;
@@ -258,25 +253,9 @@ package Synth.Objtypes is
 
    function Get_Type_Width (Atype : Type_Acc) return Width;
 
-   --  Low-level functions.
+   --  Low-level functions
 
-   function "+" (Base : Memory_Ptr; Off : Size_Type) return Memory_Ptr;
-
-   procedure Write_U8 (Mem : Memory_Ptr; Val : Ghdl_U8);
-   function Read_U8 (Mem : Memory_Ptr) return Ghdl_U8;
    function Read_U8 (Mt : Memtyp) return Ghdl_U8;
-
-   procedure Write_U32 (Mem : Memory_Ptr; Val : Ghdl_U32);
-   function Read_U32 (Mem : Memory_Ptr) return Ghdl_U32;
-
-   procedure Write_I32 (Mem : Memory_Ptr; Val : Ghdl_I32);
-   function Read_I32 (Mem : Memory_Ptr) return Ghdl_I32;
-
-   procedure Write_I64 (Mem : Memory_Ptr; Val : Ghdl_I64);
-   function Read_I64 (Mem : Memory_Ptr) return Ghdl_I64;
-
-   procedure Write_Fp64 (Mem : Memory_Ptr; Val : Fp64);
-   function Read_Fp64 (Mem : Memory_Ptr) return Fp64;
    function Read_Fp64 (Mt : Memtyp) return Fp64;
 
    procedure Write_Discrete (Mem : Memory_Ptr; Typ : Type_Acc; Val : Int64);

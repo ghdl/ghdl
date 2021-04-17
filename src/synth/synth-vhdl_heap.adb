@@ -20,6 +20,8 @@ with Types; use Types;
 with Tables;
 
 
+with Synth.Memtype; use Synth.Memtype;
+
 package body Synth.Vhdl_Heap is
 
    package Heap_Table is new Tables
