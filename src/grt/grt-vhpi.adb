@@ -16,6 +16,7 @@
 
 with Ada.Unchecked_Conversion;
 with Grt.Astdio; use Grt.Astdio;
+with Grt.Astdio.Vhdl; use Grt.Astdio.Vhdl;
 with Grt.Errors; use Grt.Errors;
 with Grt.Hooks; use Grt.Hooks;
 with Grt.Stdio; use Grt.Stdio;
@@ -29,13 +30,16 @@ package body Grt.Vhpi is
    --  If true, emit traces
    Flag_Trace : Boolean := False;
    Trace_File : FILEs;
-   pragma Unreferenced (Flag_Trace);
 
    VhpiUndefined_External : constant Integer := -1;
+
 
    ----------------------------------------------------------------------------
    -- Internal helper functions
    ----------------------------------------------------------------------------
+
+   function To_Address is new Ada.Unchecked_Conversion
+     (Vhpi_External_Handle, System.Address);
 
    -- VHPI errors
 
@@ -81,194 +85,456 @@ package body Grt.Vhpi is
       Err_Occured := True;
    end Error_Unimplimented;
 
+   -- VHPI tracing
+
+   procedure Trace_Start (Msg : String) is
+   begin
+      -- TODO: Add indent when callbacks are supported
+      Put (Trace_File, Msg);
+   end Trace_Start;
+
+   procedure Trace_Newline is
+   begin
+      New_Line (Trace_File);
+   end Trace_Newline;
+
+   procedure Trace (Msg : String) is
+   begin
+      Put (Trace_File, Msg);
+   end Trace;
+
+   procedure Trace (Str : Ghdl_C_String) is
+   begin
+      if Str = null then
+         Put (Trace_File, "null");
+      else
+         Put (Trace_File, '"');
+         Put (Trace_File, Str);
+         Put (Trace_File, '"');
+      end if;
+   end Trace;
+
+   procedure Trace (V : Integer_32) is
+   begin
+      Put_I32 (Trace_File, Ghdl_I32 (V));
+   end Trace;
+
+   procedure Trace (V : Integer) is
+   begin
+      Put_I32 (Trace_File, Ghdl_I32 (V));
+   end Trace;
+
+   procedure Trace (V : Unsigned_64) is
+   begin
+      Put_U64 (Trace_File, Ghdl_U64 (V));
+   end Trace;
+
+   procedure Trace (A : System.Address)
+   is
+   begin
+      Put (Trace_File, A);
+   end Trace;
+
+   procedure Trace (H : Vhpi_External_Handle)
+   is
+   begin
+      Put (Trace_File, To_Address (H));
+   end Trace;
+
+   procedure Trace_Time (V : Std_Time) is
+   begin
+      Put_Time (Trace_File, V);
+   end Trace_Time;
+
+   function Vhpi_Time_To_Time (V : VhpiTimeT) return Std_Time is
+      Res : Std_Time;
+   begin
+      Res := Std_Time (Integer_64 (V.High) * 2 ** 32 + Integer_64 (V.Low));
+      return Res;
+   end Vhpi_Time_To_Time;
+
+
+   ----------------------------------------------------------------------------
+   -- VHPI functions
+   ----------------------------------------------------------------------------
+
    -- Internal implementations for variadic functions in grt-cvhpi.c
 
    function Vhpi_Assert_Internal (Severity: Integer; Msg : Ghdl_C_String)
-                                 return Integer
-   is
-      pragma Unreferenced (Severity);
-      pragma Unreferenced (Msg);
+                                 return Integer is
    begin
+      if Flag_Trace then
+         Trace_Start ("vhpi_assert (");
+         Trace (Severity);
+         Trace (", ");
+         Trace (Msg);
+         Trace (") return ");
+      end if;
       Reset_Error;
+
       Error_Unimplimented ("vhpi_assert");
-      return 0;
+
+      if Flag_Trace then
+         Trace ("1 [not implemented]");
+         Trace_Newline;
+      end if;
+      return 1;
    end Vhpi_Assert_Internal;
 
    function Vhpi_Control_Internal (Command : VhpiSimControlT; Status : Integer)
                                   return Integer
    is
-      pragma Unreferenced (Command);
-      pragma Unreferenced (Status);
-   begin
-      Reset_Error;
-      Error_Unimplimented ("vhpi_control");
-      return 0;
-   end Vhpi_Control_Internal;
+      function To_Integer is new Ada.Unchecked_Conversion
+        (VhpiSimControlT, Integer);
 
-   ----------------------------------------------------------------------------
-   -- VHPI functions
-   ----------------------------------------------------------------------------
+      procedure Trace (C : VhpiSimControlT) is
+      begin
+         if C'Valid then
+            case C is
+               when VhpiStop =>
+                  Trace ("vhpiStop");
+               when VhpiFinish =>
+                  Trace ("vhpiFinish");
+               when VhpiReset =>
+                  Trace ("vhpiReset");
+            end case;
+         else
+            Trace (To_Integer (C));
+            Trace (" {invalid command}");
+         end if;
+      end Trace;
+   begin
+      if Flag_Trace then
+         Trace_Start ("vhpi_control (");
+         Trace (Command);
+         Trace (", ");
+         Trace (Status);
+         Trace (") return ");
+      end if;
+      Reset_Error;
+
+      Error_Unimplimented ("vhpi_control");
+
+      if Flag_Trace then
+         Trace ("1 [not implemented]");
+         Trace_Newline;
+      end if;
+      return 1;
+   end Vhpi_Control_Internal;
 
    ----------------------------------------------------------------------------
    -- Callback related
 
    -- vhpiHandleT vhpi_register_cb (vhpiCbDataT *cb_data_p, int32_t flags)
    function vhpi_register_cb (Data : VhpiCbData_Access; Flags : Callback_Flags)
-                             return Vhpi_External_Handle
-   is
-      pragma Unreferenced (Data);
-      pragma Unreferenced (Flags);
+                             return Vhpi_External_Handle is
    begin
+      if Flag_Trace then
+         Trace_Start ("vhpi_register_cb (");
+         if Data = null then
+            Trace (System.Null_Address);
+         else
+            Trace ("{reason=");
+            -- TODO: Add callback reason string
+            Trace (Data.Reason);
+            if Data.Time /= null then
+               Trace (", time=");
+               Trace_Time (Vhpi_Time_To_Time (Data.Time.all));
+            end if;
+            Trace ("}");
+         end if;
+         Trace (", ");
+         Trace (Integer_32 (Flags));
+         Trace (") return ");
+      end if;
       Reset_Error;
+
       Error_Unimplimented ("vhpi_register_cb");
-      return null;
+
+      if Flag_Trace then
+         Trace (Null_External_Handle);
+         Trace (" [not implemented]");
+         Trace_Newline;
+      end if;
+      return Null_External_Handle;
    end vhpi_register_cb;
 
    -- int vhpi_remove_cb (vhpiHandleT cb_obj)
-   function vhpi_remove_cb (Cb : Vhpi_External_Handle) return Integer
-   is
-      pragma Unreferenced (Cb);
+   function vhpi_remove_cb (Cb : Vhpi_External_Handle) return Integer is
    begin
+      if Flag_Trace then
+         Trace_Start ("vhpi_remove_cb (");
+         Trace (Cb);
+         Trace (") return ");
+      end if;
       Reset_Error;
+
       Error_Unimplimented ("vhpi_remove_cb");
-      return 0;
+
+      if Flag_Trace then
+         Trace ("1 [not implemented]");
+         Trace_Newline;
+      end if;
+      return 1;
    end vhpi_remove_cb;
 
    -- int vhpi_disable_cb (vhpiHandleT cb_obj)
-   function vhpi_disable_cb (Cb : Vhpi_External_Handle) return Integer
-   is
-      pragma Unreferenced (Cb);
+   function vhpi_disable_cb (Cb : Vhpi_External_Handle) return Integer is
    begin
+      if Flag_Trace then
+         Trace_Start ("vhpi_disable_cb (");
+         Trace (Cb);
+         Trace (") return ");
+      end if;
       Reset_Error;
+
       Error_Unimplimented ("vhpi_disable_cb");
-      return 0;
+
+      if Flag_Trace then
+         Trace ("1 [not implemented]");
+         Trace_Newline;
+      end if;
+      return 1;
    end vhpi_disable_cb;
 
    -- int vhpi_enable_cb (vhpiHandleT cb_obj)
-   function vhpi_enable_cb (Cb : Vhpi_External_Handle) return Integer
-   is
-      pragma Unreferenced (Cb);
+   function vhpi_enable_cb (Cb : Vhpi_External_Handle) return Integer is
    begin
+      if Flag_Trace then
+         Trace_Start ("vhpi_enable_cb (");
+         Trace (Cb);
+         Trace (") return ");
+      end if;
       Reset_Error;
+
       Error_Unimplimented ("vhpi_enable_cb");
-      return 0;
+
+      if Flag_Trace then
+         Trace ("1 [not implemented]");
+         Trace_Newline;
+      end if;
+      return 1;
    end vhpi_enable_cb;
 
    -- int vhpi_get_cb_info (vhpiHandleT object, vhpiCbDataT *cb_data_p)
    function vhpi_get_cb_info
      (Obj : Vhpi_External_Handle; Data : VhpiCbData_Access) return Integer
    is
-      pragma Unreferenced (Obj);
-      pragma Unreferenced (Data);
+      function To_Address is
+         new Ada.Unchecked_Conversion (VhpiCbData_Access, System.Address);
    begin
+      if Flag_Trace then
+         Trace_Start ("vhpi_get_cb_info (");
+         Trace (Obj);
+         Trace (", ");
+         Trace (To_Address (Data));
+         Trace (") return ");
+      end if;
       Reset_Error;
+
       Error_Unimplimented ("vhpi_get_cb_info");
-      return 0;
+
+      if Flag_Trace then
+         Trace ("1 [not implemented]");
+         Trace_Newline;
+      end if;
+      return 1;
    end vhpi_get_cb_info;
 
+   ----------------------------------------------------------------------------
    -- For obtaining handles
 
    -- vhpiHandleT vhpi_handle_by_name (const char *name, vhpiHandleT scope)
    function vhpi_handle_by_name
      (Name : Ghdl_C_String; Scope : Vhpi_External_Handle)
-     return Vhpi_External_Handle
-   is
-      pragma Unreferenced (Name);
-      pragma Unreferenced (Scope);
+     return Vhpi_External_Handle is
    begin
+      if Flag_Trace then
+         Trace_Start ("vhpi_handle_by_name (");
+         Trace (Name);
+         Trace (", ");
+         Trace (Scope);
+         Trace (") return ");
+      end if;
       Reset_Error;
+
       Error_Unimplimented ("vhpi_handle_by_name");
-      return null;
+
+      if Flag_Trace then
+         Trace (Null_External_Handle);
+         Trace (" [not implemented]");
+         Trace_Newline;
+      end if;
+      return Null_External_Handle;
    end vhpi_handle_by_name;
 
    -- vhpiHandleT vhpi_handle_by_index (vhpiOneToManyT itRel,
    --                                   vhpiHandleT parent, int32_t indx)
    function vhpi_handle_by_index
      (Rel : Integer; Parent : Vhpi_External_Handle; Index: Integer)
-     return Vhpi_External_Handle
-   is
-      pragma Unreferenced (Rel);
-      pragma Unreferenced (Parent);
-      pragma Unreferenced (Index);
+     return Vhpi_External_Handle is
    begin
+      if Flag_Trace then
+         Trace_Start ("vhpi_handle_by_index (");
+         Trace (Integer_32 (Rel));
+         Trace (", ");
+         Trace (Parent);
+         Trace (", ");
+         Trace (Integer_32 (Index));
+         Trace (") return ");
+      end if;
       Reset_Error;
+
       Error_Unimplimented ("vhpi_handle_by_index");
-      return null;
+
+      if Flag_Trace then
+         Trace (Null_External_Handle);
+         Trace (" [not implemented]");
+         Trace_Newline;
+      end if;
+      return Null_External_Handle;
    end vhpi_handle_by_index;
 
+   ----------------------------------------------------------------------------
    -- For traversing relationships
 
    -- vhpiHandleT vhpi_handle (vhpiOneToOneT type, vhpiHandleT referenceHandle)
    function vhpi_handle (Rel: Integer; Ref: Vhpi_External_Handle)
-                        return Vhpi_External_Handle
-   is
-      pragma Unreferenced (Rel);
-      pragma Unreferenced (Ref);
+                        return Vhpi_External_Handle is
    begin
+      if Flag_Trace then
+         Trace_Start ("vhpi_handle (");
+         Trace (Integer_32 (Rel));
+         Trace (", ");
+         Trace (Ref);
+         Trace (") return ");
+      end if;
       Reset_Error;
+
       Error_Unimplimented ("vhpi_handle");
-      return null;
+
+      if Flag_Trace then
+         Trace (Null_External_Handle);
+         Trace (" [not implemented]");
+         Trace_Newline;
+      end if;
+      return Null_External_Handle;
    end vhpi_handle;
 
    -- vhpiHandleT vhpi_iterator (vhpiOneToManyT type,
    --                            vhpiHandleT referenceHandle)
    function vhpi_iterator (Rel: Integer; Ref: Vhpi_External_Handle)
-                          return Vhpi_External_Handle
-   is
-      pragma Unreferenced (Rel);
-      pragma Unreferenced (Ref);
+                          return Vhpi_External_Handle is
    begin
+      if Flag_Trace then
+         Trace_Start ("vhpi_iterator (");
+         Trace (Integer_32 (Rel));
+         Trace (", ");
+         Trace (Ref);
+         Trace (") return ");
+      end if;
       Reset_Error;
+
       Error_Unimplimented ("vhpi_iterator");
-      return null;
+
+      if Flag_Trace then
+         Trace (Null_External_Handle);
+         Trace (" [not implemented]");
+         Trace_Newline;
+      end if;
+      return Null_External_Handle;
    end vhpi_iterator;
 
    -- vhpiHandleT vhpi_scan (vhpiHandleT iterator)
-   function vhpi_scan (Iter : Vhpi_External_Handle) return Vhpi_External_Handle
-   is
-      pragma Unreferenced (Iter);
+   function vhpi_scan (Iter : Vhpi_External_Handle)
+                      return Vhpi_External_Handle is
    begin
+      if Flag_Trace then
+         Trace_Start ("vhpi_scan (");
+         Trace (Iter);
+         Trace (") return ");
+      end if;
       Reset_Error;
+
       Error_Unimplimented ("vhpi_scan");
-      return null;
+
+      if Flag_Trace then
+         Trace (Null_External_Handle);
+         Trace (" [not implemented]");
+         Trace_Newline;
+      end if;
+      return Null_External_Handle;
    end vhpi_scan;
 
+   ----------------------------------------------------------------------------
    -- For processing properties
 
    -- vhpiIntT vhpi_get (vhpiIntPropertyT property, vhpiHandleT object)
    function vhpi_get (Property: Integer; Ref: Vhpi_External_Handle)
-                     return VhpiIntT
-   is
-      pragma Unreferenced (Property);
-      pragma Unreferenced (Ref);
+                     return VhpiIntT is
    begin
+      if Flag_Trace then
+         Trace_Start ("vhpi_get (");
+         Trace (Integer_32 (Property));
+         Trace (", ");
+         Trace (Ref);
+         Trace (") return ");
+      end if;
       Reset_Error;
+
       Error_Unimplimented ("vhpi_get");
+
+      if Flag_Trace then
+         Trace (Integer_32 (VhpiUndefined_External));
+         Trace (" [not implemented]");
+         Trace_Newline;
+      end if;
       return VhpiIntT (VhpiUndefined_External);
    end vhpi_get;
 
    -- const vhpiCharT * vhpi_get_str (vhpiStrPropertyT property,
    --                                 vhpiHandleT object)
    function vhpi_get_str (Property : Integer; Ref : Vhpi_External_Handle)
-                         return Ghdl_C_String
-   is
-      pragma Unreferenced (Property);
-      pragma Unreferenced (Ref);
+                         return Ghdl_C_String is
    begin
+      if Flag_Trace then
+         Trace_Start ("vhpi_get_str (");
+         Trace (Integer_32 (Property));
+         Trace (", ");
+         Trace (Ref);
+         Trace (") return ");
+      end if;
       Reset_Error;
+
       Error_Unimplimented ("vhpi_get_str");
+
+      if Flag_Trace then
+         Trace (Ghdl_C_String'(null));
+         Trace (" [not implemented]");
+         Trace_Newline;
+      end if;
       return null;
    end vhpi_get_str;
 
    -- vhpiRealT vhpi_get_real (vhpiRealPropertyT property, vhpiHandleT object)
    function vhpi_get_real (Property : Integer; Ref : Vhpi_External_Handle)
-                          return Ghdl_Real
-   is
-      pragma Unreferenced (Property);
-      pragma Unreferenced (Ref);
+                          return Ghdl_Real is
    begin
+      if Flag_Trace then
+         Trace_Start ("vhpi_get_real (");
+         Trace (Integer_32 (Property));
+         Trace (", ");
+         Trace (Ref);
+         Trace (") return ");
+      end if;
       Reset_Error;
+
       Error_Unimplimented ("vhpi_get_real");
+
+      if Flag_Trace then
+         Trace ("0.0 [not implemented]");
+         Trace_Newline;
+      end if;
       return 0.0;
    end vhpi_get_real;
 
@@ -276,16 +542,37 @@ package body Grt.Vhpi is
    function vhpi_get_phys (Property : Integer; Ref : Vhpi_External_Handle)
                           return VhpiPhysT
    is
-      pragma Unreferenced (Property);
-      pragma Unreferenced (Ref);
+      procedure Trace (V : VhpiPhysT) is
+      begin
+         Put (Trace_File, "{high = ");
+         Put_I32 (Trace_File, Ghdl_I32 (V.High));
+         Put (Trace_File, ", low = ");
+         Put_I32 (Trace_File, Ghdl_I32 (V.Low));
+         Put (Trace_File, '}');
+      end Trace;
 
       Res : constant VhpiPhysT := (0, 0);
    begin
+      if Flag_Trace then
+         Trace_Start ("vhpi_get_phys (");
+         Trace (Integer_32 (Property));
+         Trace (", ");
+         Trace (Ref);
+         Trace (") return ");
+      end if;
       Reset_Error;
+
       Error_Unimplimented ("vhpi_get_phys");
+
+      if Flag_Trace then
+         Trace (Res);
+         Trace (" [not implemented]");
+         Trace_Newline;
+      end if;
       return Res;
    end vhpi_get_phys;
 
+   ----------------------------------------------------------------------------
    -- For access to protected types
 
    -- int vhpi_protected_call (vhpiHandleT varHdl,
@@ -296,27 +583,58 @@ package body Grt.Vhpi is
                                  User_Data : System.Address)
                                 return Integer
    is
-      pragma Unreferenced (Var);
-      pragma Unreferenced (User_Fun);
-      pragma Unreferenced (User_Data);
+      function To_Address is new Ada.Unchecked_Conversion
+        (VhpiUserFctT, System.Address);
    begin
+      if Flag_Trace then
+         Trace_Start ("vhpi_protected_call (");
+         Trace (Var);
+         Trace (", ");
+         Trace (To_Address (User_Fun));
+         Trace (", ");
+         Trace (User_Data);
+         Trace (") return ");
+      end if;
       Reset_Error;
+
       Error_Unimplimented ("vhpi_protected_call");
-      return 0;
+
+      if Flag_Trace then
+         Trace ("-1 [not implemented]");
+         Trace_Newline;
+      end if;
+      return -1;
    end vhpi_protected_call;
 
+   ----------------------------------------------------------------------------
    -- For value processing
+
+   function To_Address is new Ada.Unchecked_Conversion
+     (VhpiValue_Access, System.Address);
+
+   function To_Address is new Ada.Unchecked_Conversion
+     (VhpiTime_Access, System.Address);
 
    -- int vhpi_get_value (vhpiHandleT expr, vhpiValueT *value_p)
    function vhpi_get_value
-     (Expr : Vhpi_External_Handle; Value : VhpiValue_Access) return Integer
-   is
-      pragma Unreferenced (Expr);
-      pragma Unreferenced (Value);
+     (Expr : Vhpi_External_Handle; Value : VhpiValue_Access) return Integer is
    begin
+      if Flag_Trace then
+         Trace_Start ("vhpi_get_value (");
+         Trace (Expr);
+         Trace (", ");
+         Trace (To_Address (Value));
+         Trace (") return ");
+      end if;
       Reset_Error;
+
       Error_Unimplimented ("vhpi_get_value");
-      return 0;
+
+      if Flag_Trace then
+         Trace ("-1 [not implemented]");
+         Trace_Newline;
+      end if;
+      return -1;
    end vhpi_get_value;
 
    -- int vhpi_put_value (vhpiHandleT object,
@@ -327,13 +645,51 @@ package body Grt.Vhpi is
                             Mode : VhpiPutValueModeT)
                            return Integer
    is
-      pragma Unreferenced (Obj);
-      pragma Unreferenced (Value);
-      pragma Unreferenced (Mode);
+      function To_Integer is new Ada.Unchecked_Conversion
+        (VhpiPutValueModeT, Integer);
+
+      procedure Trace (M : VhpiPutValueModeT) is
+      begin
+         if M'Valid then
+            case M is
+               when VhpiDeposit =>
+                  Trace ("vhpiDeposit");
+               when VhpiDepositPropagate =>
+                  Trace ("vhpiDepositPropagate");
+               when VhpiForce =>
+                  Trace ("vhpiForce");
+               when VhpiForcePropagate =>
+                  Trace ("vhpiForcePropagate");
+               when VhpiRelease =>
+                  Trace ("vhpiRelease");
+               when VhpiSizeConstraint =>
+                  Trace ("vhpiSizeConstraint");
+            end case;
+         else
+            Trace (To_Integer (M));
+            Trace (" {invalid mode}");
+         end if;
+      end Trace;
    begin
+      if Flag_Trace then
+         Trace_Start ("vhpi_put_value (");
+         Trace (Obj);
+         Trace (", ");
+         -- TODO: Print value
+         Trace (To_Address (Value));
+         Trace (", ");
+         Trace (Mode);
+         Trace (") return ");
+      end if;
       Reset_Error;
+
       Error_Unimplimented ("vhpi_put_value");
-      return 0;
+
+      if Flag_Trace then
+         Trace ("1 [not implemented]");
+         Trace_Newline;
+      end if;
+      return 1;
    end vhpi_put_value;
 
    -- int vhpi_schedule_transaction (vhpiHandleT drivHdl,
@@ -350,83 +706,196 @@ package body Grt.Vhpi is
                                        Pulse_Rejection : VhpiTime_Access)
                                       return Integer
    is
-      pragma Unreferenced (Driver);
-      pragma Unreferenced (Value);
-      pragma Unreferenced (Num_Values);
-      pragma Unreferenced (Delay_Value);
-      pragma Unreferenced (Delay_Mode);
-      pragma Unreferenced (Pulse_Rejection);
+      procedure Trace (V : Unsigned_32) is
+      begin
+         Put_U32 (Trace_File, Ghdl_U32 (V));
+      end Trace;
+
+      function To_Integer is new Ada.Unchecked_Conversion
+        (VhpiDelayModeT, Integer);
+
+      procedure Trace (M : VhpiDelayModeT) is
+      begin
+         if M'Valid then
+            case M is
+               when VhpiInertial =>
+                  Trace ("vhpiInertial");
+               when VhpiTransport =>
+                  Trace ("vhpiTransport");
+            end case;
+         else
+            Trace (To_Integer (M));
+            Trace (" {invalid mode}");
+         end if;
+      end Trace;
    begin
+      if Flag_Trace then
+         Trace_Start ("vhpi_schedule_transaction (");
+         Trace (Driver);
+         Trace (", ");
+         -- TODO: Print value
+         Trace (To_Address (Value));
+         Trace (", ");
+         Trace (Num_Values);
+         Trace (", ");
+         if Delay_Value /= null then
+            Trace ("{");
+            Trace_Time (Vhpi_Time_To_Time (Delay_Value.all));
+            Trace ("}");
+         else
+            Trace (To_Address (Delay_Value));
+         end if;
+         Trace (", ");
+         Trace (Delay_Mode);
+         Trace (", ");
+         if Pulse_Rejection /= null then
+            Trace ("{");
+            Trace_Time (Vhpi_Time_To_Time (Pulse_Rejection.all));
+            Trace ("}");
+         else
+            Trace (To_Address (Pulse_Rejection));
+         end if;
+         Trace (") return ");
+      end if;
       Reset_Error;
+
       Error_Unimplimented ("vhpi_schedule_transaction");
-      return 0;
+
+      if Flag_Trace then
+         Trace ("1 [not implemented]");
+         Trace_Newline;
+      end if;
+      return 1;
    end vhpi_schedule_transaction;
 
    -- int vhpi_format_value (const vhpiValueT *in_value_p,
    --                        vhpiValueT *out_value_p)
    function vhpi_format_value
-     (In_Val : VhpiValue_Access; Out_Val : VhpiValue_Access) return Integer
-   is
-      pragma Unreferenced (In_Val);
-      pragma Unreferenced (Out_Val);
+     (In_Val : VhpiValue_Access; Out_Val : VhpiValue_Access) return Integer is
    begin
+      if Flag_Trace then
+         Trace_Start ("vhpi_format_value (");
+         -- TODO: Print value
+         Trace (To_Address (In_Val));
+         Trace (", ");
+         -- TODO: Print output format
+         Trace (To_Address (Out_Val));
+         Trace (") return ");
+      end if;
       Reset_Error;
+
       Error_Unimplimented ("vhpi_format_value");
-      return 0;
+
+      if Flag_Trace then
+         Trace ("-1 [not implemented]");
+         Trace_Newline;
+      end if;
+      return -1;
    end vhpi_format_value;
 
+   ----------------------------------------------------------------------------
    -- For time processing
 
    -- void vhpi_get_time (vhpiTimeT *time_p, long *cycles)
-   procedure vhpi_get_time (Time : VhpiTime_Access; Cycles : access Integer)
+   procedure vhpi_get_time (Time : VhpiTime_Access; Cycles : Long_Access)
    is
-      pragma Unreferenced (Time);
-      pragma Unreferenced (Cycles);
+      function To_Address is new Ada.Unchecked_Conversion
+        (Long_Access, System.Address);
    begin
+      if Flag_Trace then
+         Trace_Start ("vhpi_get_time (");
+         Trace (To_Address (Time));
+         Trace (", ");
+         Trace (To_Address (Cycles));
+         Trace (") ");
+      end if;
       Reset_Error;
+
       Error_Unimplimented ("vhpi_get_time");
-      null;
+
+      if Flag_Trace then
+         Trace ("[not implemented]");
+         Trace_Newline;
+      end if;
    end vhpi_get_time;
 
    -- int vhpi_get_next_time (vhpiTimeT *time_p)
-   function vhpi_get_next_time (Time : VhpiTime_Access) return Integer
-   is
-      pragma Unreferenced (Time);
+   function vhpi_get_next_time (Time : VhpiTime_Access) return Integer is
    begin
+      if Flag_Trace then
+         Trace_Start ("vhpi_get_next_time (");
+         Trace (To_Address (Time));
+         Trace (") return ");
+      end if;
       Reset_Error;
+
       Error_Unimplimented ("vhpi_get_next_time");
-      return 0;
+
+      if Flag_Trace then
+         Trace ("1 [not implemented]");
+         Trace_Newline;
+      end if;
+      return 1;
    end vhpi_get_next_time;
 
+   ----------------------------------------------------------------------------
    -- Utilities to print VHDL strings
 
    -- int vhpi_is_printable ( char ch )
    function vhpi_is_printable (Ch : Character) return Integer
    is
-      pragma Unreferenced (Ch);
+      procedure Trace (C : Character) is
+      begin
+         Put (Trace_File, C);
+      end Trace;
    begin
+      if Flag_Trace then
+         Trace_Start ("vhpi_is_printable (");
+         Trace (Ch);
+         Trace (") return ");
+      end if;
       Reset_Error;
+
       Error_Unimplimented ("vhpi_is_printable");
+
+      if Flag_Trace then
+         Trace ("0 [not implemented]");
+         Trace_Newline;
+      end if;
       return 0;
    end vhpi_is_printable;
 
+   ----------------------------------------------------------------------------
    -- Utility routines
 
    -- int vhpi_compare_handles (vhpiHandleT handle1, vhpiHandleT handle2)
    function vhpi_compare_handles (Hdl1, Hdl2 : Vhpi_External_Handle)
-                                 return Integer
-   is
-      pragma Unreferenced (Hdl1);
-      pragma Unreferenced (Hdl2);
+                                 return Integer is
    begin
+      if Flag_Trace then
+         Trace_Start ("vhpi_compare_handles (");
+         Trace (Hdl1);
+         Trace (", ");
+         Trace (Hdl2);
+         Trace (") return ");
+      end if;
       Reset_Error;
+
       Error_Unimplimented ("vhpi_compare_handles");
+
+      if Flag_Trace then
+         Trace ("0 [not implemented]");
+         Trace_Newline;
+      end if;
       return 0;
    end vhpi_compare_handles;
 
    -- int vhpi_check_error (vhpiErrorInfoT *error_info_p)
    function vhpi_check_error (Info : VhpiErrorInfo_Access) return Integer
    is
+      function To_Address is new Ada.Unchecked_Conversion
+        (VhpiErrorInfo_Access, System.Address);
+
       function To_Integer (B : Boolean) return Integer is
       begin
          if B then
@@ -435,7 +904,15 @@ package body Grt.Vhpi is
             return 0;
          end if;
       end To_Integer;
+
+      Res : Integer;
    begin
+      if Flag_Trace then
+         Trace_Start ("vhpi_check_error (");
+         Trace (To_Address (Info));
+         Trace (") return ");
+      end if;
+
       if Info /= null then
          Info.all := (Severity => Err_Severity,
                       Msg => Err_Message,
@@ -443,89 +920,166 @@ package body Grt.Vhpi is
                       File => Err_File,
                       Line => Err_Line);
       end if;
-      return To_Integer (Err_Occured);
+
+      Res := To_Integer (Err_Occured);
+
+      if Flag_Trace then
+         Trace (Res);
+         Trace_Newline;
+      end if;
+      return Res;
    end vhpi_check_error;
 
    -- int vhpi_release_handle (vhpiHandleT object)
-   function vhpi_release_handle (Obj : Vhpi_External_Handle) return Integer
-   is
-      pragma Unreferenced (Obj);
+   function vhpi_release_handle (Obj : Vhpi_External_Handle) return Integer is
    begin
+      if Flag_Trace then
+         Trace_Start ("vhpi_release_handle (");
+         Trace (To_Address (Obj));
+         Trace (") return ");
+      end if;
       Reset_Error;
+
       Error_Unimplimented ("vhpi_release_handle");
-      return 0;
+
+      if Flag_Trace then
+         Trace ("1 [not implemented]");
+         Trace_Newline;
+      end if;
+      return 1;
    end vhpi_release_handle;
 
+   ----------------------------------------------------------------------------
    -- Creation functions
    -- vhpiHandleT vhpi_create (vhpiClassKindT kind,
    --                          vhpiHandleT handle1,
    --                          vhpiHandleT handle2)
    function vhpi_create (Kind : Integer; Hdl1, Hdl2 : Vhpi_External_Handle)
-                        return Vhpi_External_Handle
-   is
-      pragma Unreferenced (Kind);
-      pragma Unreferenced (Hdl1);
-      pragma Unreferenced (Hdl2);
+                        return Vhpi_External_Handle is
    begin
+      if Flag_Trace then
+         Trace_Start ("vhpi_create (");
+         Trace (Kind);
+         Trace (", ");
+         Trace (Hdl1);
+         Trace (", ");
+         Trace (Hdl2);
+         Trace (") return ");
+      end if;
       Reset_Error;
+
       Error_Unimplimented ("vhpi_create");
-      return null;
+
+      if Flag_Trace then
+         Trace (Null_External_Handle);
+         Trace (" [not implemented]");
+         Trace_Newline;
+      end if;
+      return Null_External_Handle;
    end vhpi_create;
 
+   ----------------------------------------------------------------------------
    -- Foreign model data structures and functions
+
+   function To_Address is new Ada.Unchecked_Conversion
+     (VhpiForeignData_Access, System.Address);
 
    -- vhpiHandleT vhpi_register_foreignf (vhpiForeignDataT *foreignDatap)
    function vhpi_register_foreignf (Data : VhpiForeignData_Access)
-                                   return Vhpi_External_Handle
-   is
-      pragma Unreferenced (Data);
+                                   return Vhpi_External_Handle is
    begin
+      if Flag_Trace then
+         Trace_Start ("vhpi_register_foreignf (");
+         -- TODO: Print foreign model info
+         Trace (To_Address (Data));
+         Trace (") return ");
+      end if;
       Reset_Error;
+
       Error_Unimplimented ("vhpi_register_foreignf");
-      return null;
+
+      if Flag_Trace then
+         Trace (Null_External_Handle);
+         Trace (" [not implemented]");
+         Trace_Newline;
+      end if;
+      return Null_External_Handle;
    end vhpi_register_foreignf;
 
    -- int vhpi_get_foreignf_info (vhpiHandleT hdl,
    --                             vhpiForeignDataT *foreignDatap)
    function vhpi_get_foreignf_info
      (Hdl : Vhpi_External_Handle; Data : VhpiForeignData_Access)
-     return Integer
-   is
-      pragma Unreferenced (Hdl);
-      pragma Unreferenced (Data);
+     return Integer is
    begin
+      if Flag_Trace then
+         Trace_Start ("vhpi_get_foreignf_info (");
+         Trace (Hdl);
+         Trace (", ");
+         Trace (To_Address (Data));
+         Trace (") return ");
+      end if;
       Reset_Error;
+
       Error_Unimplimented ("vhpi_get_foreignf_info");
-      return 0;
+
+      if Flag_Trace then
+         Trace ("1 [not implemented]");
+         Trace_Newline;
+      end if;
+      return 1;
    end vhpi_get_foreignf_info;
 
+   ----------------------------------------------------------------------------
    -- For saving and restoring foreign models data
 
    -- size_t vhpi_get_data (int32_t id, void *dataLoc, size_t numBytes);
    function vhpi_get_data
      (Id : Integer_32; Data_Loc : System.Address; Num_Bytes : size_t)
-     return size_t
-   is
-      pragma Unreferenced (Id);
-      pragma Unreferenced (Data_Loc);
-      pragma Unreferenced (Num_Bytes);
+     return size_t is
    begin
+      if Flag_Trace then
+         Trace_Start ("vhpi_get_data (");
+         Trace (Id);
+         Trace (", ");
+         Trace (Data_Loc);
+         Trace (", ");
+         Trace (Unsigned_64 (Num_Bytes));
+         Trace (") return ");
+      end if;
       Reset_Error;
+
       Error_Unimplimented ("vhpi_get_data");
+
+      if Flag_Trace then
+         Trace ("0 [not implemented]");
+         Trace_Newline;
+      end if;
       return 0;
    end vhpi_get_data;
 
    -- size_t vhpi_put_data (int32_t id, void *dataLoc, size_t numBytes);
    function vhpi_put_data
      (Id : Integer_32; Data_Loc : System.Address; Num_Bytes : size_t)
-     return size_t
-   is
-      pragma Unreferenced (Id);
-      pragma Unreferenced (Data_Loc);
-      pragma Unreferenced (Num_Bytes);
+     return size_t is
    begin
+      if Flag_Trace then
+         Trace_Start ("vhpi_put_data (");
+         Trace (Id);
+         Trace (", ");
+         Trace (Data_Loc);
+         Trace (", ");
+         Trace (Unsigned_64 (Num_Bytes));
+         Trace (") return ");
+      end if;
       Reset_Error;
+
       Error_Unimplimented ("vhpi_put_data");
+
+      if Flag_Trace then
+         Trace ("0 [not implemented]");
+         Trace_Newline;
+      end if;
       return 0;
    end vhpi_put_data;
 
