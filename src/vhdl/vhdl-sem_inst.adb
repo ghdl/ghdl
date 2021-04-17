@@ -965,7 +965,29 @@ package body Vhdl.Sem_Inst is
             when Iir_Kind_Association_Element_By_Expression
               | Iir_Kind_Association_Element_By_Individual
               | Iir_Kind_Association_Element_Open =>
-               null;
+               --  If the type of the formal is an interface type also
+               --  associated by this map, change the type of the formal
+               --  to the associated type.
+               declare
+                  Assoc_Formal : constant Iir :=
+                    Get_Association_Interface (Assoc, Inter);
+                  Formal_Type : constant Iir := Get_Type (Assoc_Formal);
+                  Formal_Orig : Iir;
+               begin
+                  if Get_Kind (Formal_Type)
+                    = Iir_Kind_Interface_Type_Definition
+                  then
+                     --  Type of the formal is an interface type.
+                     --  Check if the interface type was declared in the same
+                     --  interface list: must have the same parent.
+                     Formal_Orig := Get_Origin (Assoc_Formal);
+                     if Get_Parent (Get_Type_Declarator (Formal_Type))
+                       = Get_Parent (Formal_Orig)
+                     then
+                        Set_Type (Assoc_Formal, Get_Instance (Formal_Type));
+                     end if;
+                  end if;
+               end;
             when Iir_Kind_Association_Element_Package =>
                declare
                   Sub_Inst : constant Iir :=
@@ -986,8 +1008,9 @@ package body Vhdl.Sem_Inst is
                --  Replace the incomplete interface type by the actual subtype
                --  indication.
                declare
-                  Inter_Type_Def : constant Iir :=
-                    Get_Type (Get_Association_Interface (Assoc, Inter));
+                  Assoc_Inter : constant Iir :=
+                    Get_Association_Interface (Assoc, Inter);
+                  Inter_Type_Def : constant Iir := Get_Type (Assoc_Inter);
                   Actual_Type : constant Iir := Get_Actual_Type (Assoc);
                begin
                   Set_Instance (Inter_Type_Def, Actual_Type);

@@ -1947,6 +1947,23 @@ package body Vhdl.Sem_Assocs is
          Formal_Type := Get_Type (Inter);
       end if;
 
+      --  If the formal type is an interface type of the same interface list,
+      --  use the associated type of the formal type to analyze the actual.
+      if Get_Kind (Formal_Type) = Iir_Kind_Interface_Type_Definition then
+         if Get_Parent (Get_Type_Declarator (Formal_Type)) = Get_Parent (Inter)
+         then
+            Formal_Type := Get_Associated_Type (Formal_Type);
+            if Formal_Type = Null_Iir then
+               --  Interface type are only allowed within generic map aspect,
+               --  which are analyzed in one step (so Finish is true).
+               pragma Assert (Finish);
+               Error_Msg_Sem (+Assoc, "expression associated before its type");
+               Match := Not_Compatible;
+               return;
+            end if;
+         end if;
+      end if;
+
       --  Extract conversion from actual.
       --  LRM08 6.5.7.1 Association lists
       Actual := Get_Actual (Assoc);
@@ -2095,8 +2112,14 @@ package body Vhdl.Sem_Assocs is
             --  Use the type of the formal to analyze the actual.  In
             --  particular, the formal may be constrained while the actual is
             --  not.
+            --  (but not when the formal_type is an interface type, as it
+            --  will bring nothing more and could have been substitued by
+            --  its associated type).
             Formal_Type := Get_Type (Formal);
-            if Out_Conv = Null_Iir and In_Conv = Null_Iir then
+            if (Out_Conv = Null_Iir and In_Conv = Null_Iir)
+              and then
+              Get_Kind (Formal_Type) /= Iir_Kind_Interface_Type_Definition
+            then
                Res_Type := Formal_Type;
             end if;
          end;

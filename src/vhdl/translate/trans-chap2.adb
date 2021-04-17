@@ -1563,6 +1563,12 @@ package body Trans.Chap2 is
             begin
                if Is_Valid (Bod) then
                   Translate_Package_Body (Bod);
+               else
+                  --  As an elaboration subprogram for the body is always
+                  --  needed, generate it.
+                  if not Is_Nested_Package (Inst) then
+                     Elab_Package_Body (Inst, Null_Iir);
+                  end if;
                end if;
             end;
          end if;
