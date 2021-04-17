@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <vpi_user.h>
+#include <vhpi_user.h>
 
 void my_startup()
 {
