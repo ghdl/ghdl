@@ -43,6 +43,9 @@ package Grt.Vhpi is
    type Vhpi_External_Handle is access Vhpi_Internal_Handle;
    pragma No_Strict_Aliasing (Vhpi_External_Handle);
 
+   --  A null handle.
+   Null_External_Handle : constant Vhpi_External_Handle;
+
    type VhpiFormatT is
      (
       VhpiBinStrVal,
@@ -383,6 +386,7 @@ package Grt.Vhpi is
       VhpiSizeConstraint
      );
    pragma Convention (C, VhpiPutValueModeT);
+   for VhpiPutValueModeT'Size use Integer'Size;
 
    type VhpiDelayModeT is
      (
@@ -390,6 +394,7 @@ package Grt.Vhpi is
       VhpiTransport
      );
    pragma Convention (C, VhpiDelayModeT);
+   for VhpiDelayModeT'Size use Integer'Size;
 
    -- int vhpi_get_value (vhpiHandleT expr, vhpiValueT *value_p)
    function vhpi_get_value
@@ -428,8 +433,11 @@ package Grt.Vhpi is
 
    -- For time processing
 
+   type Long_Access is access Long_Integer;
+   pragma Convention (C, Long_Access);
+
    -- void vhpi_get_time (vhpiTimeT *time_p, long *cycles)
-   procedure vhpi_get_time (Time : VhpiTime_Access; Cycles : access Integer);
+   procedure vhpi_get_time (Time : VhpiTime_Access; Cycles : Long_Access);
    pragma Export (C, vhpi_get_time, "vhpi_get_time");
 
    vhpiNoActivity : constant Integer := -1;
@@ -551,6 +559,7 @@ package Grt.Vhpi is
      );
    pragma Convention (C, VhpiSimControlT);
    for VhpiSimControlT use (VhpiStop => 0, VhpiFinish => 1, VhpiReset => 2);
+   for VhpiSimControlT'Size use Integer'Size;
 
    -- int vhpi_control (vhpiSimControlT command, ...)
    -- See grt-cvhpi.c
@@ -570,6 +579,8 @@ private
    type Callback_Flags is new Integer_32;
    VhpiReturnCb   : constant Callback_Flags :=  2#0000_0001#;
    VhpiDisableCb  : constant Callback_Flags :=  2#0000_0010#;
+
+   Null_External_Handle : constant Vhpi_External_Handle := null;
 
    -- Wrap VhpiHandleT
    -- Keep Callback objects out of Avhpi, they are allocated when registered
