@@ -863,7 +863,8 @@ package Grt.Avhpi is
       AvhpiErrorHandle,
       AvhpiErrorNotImplemented,
       AvhpiErrorIteratorEnd,
-      AvhpiErrorBadIndex
+      AvhpiErrorBadIndex,
+      AvhpiErrorBadEnumVal
      );
 
    type VhpiHandleT is private;

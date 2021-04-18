@@ -386,7 +386,6 @@ package Grt.Vhpi is
       VhpiSizeConstraint
      );
    pragma Convention (C, VhpiPutValueModeT);
-   for VhpiPutValueModeT'Size use Integer'Size;
 
    type VhpiDelayModeT is
      (
@@ -394,7 +393,6 @@ package Grt.Vhpi is
       VhpiTransport
      );
    pragma Convention (C, VhpiDelayModeT);
-   for VhpiDelayModeT'Size use Integer'Size;
 
    -- int vhpi_get_value (vhpiHandleT expr, vhpiValueT *value_p)
    function vhpi_get_value
@@ -406,7 +404,7 @@ package Grt.Vhpi is
    --                     vhpiPutValueModeT mode)
    function vhpi_put_value (Obj : Vhpi_External_Handle;
                             Value : VhpiValue_Access;
-                            Mode : VhpiPutValueModeT)
+                            ModeInt : Integer)
                            return Integer;
    pragma Export (C, vhpi_put_value, "vhpi_put_value");
 
@@ -420,7 +418,7 @@ package Grt.Vhpi is
                                        Value : VhpiValue_Access;
                                        Num_Values : Unsigned_32;
                                        Delay_Value : VhpiTime_Access;
-                                       Delay_Mode : VhpiDelayModeT;
+                                       Delay_ModeInt : Integer;
                                        Pulse_Rejection : VhpiTime_Access)
                                       return Integer;
    pragma Export (C, vhpi_schedule_transaction, "vhpi_schedule_transaction");
@@ -558,12 +556,10 @@ package Grt.Vhpi is
       VhpiReset
      );
    pragma Convention (C, VhpiSimControlT);
-   for VhpiSimControlT use (VhpiStop => 0, VhpiFinish => 1, VhpiReset => 2);
-   for VhpiSimControlT'Size use Integer'Size;
 
    -- int vhpi_control (vhpiSimControlT command, ...)
    -- See grt-cvhpi.c
-   function Vhpi_Control_Internal (Command : VhpiSimControlT; Status : Integer)
+   function Vhpi_Control_Internal (CommandInt : Integer; Status : Integer)
                                   return Integer;
    pragma Export (C, Vhpi_Control_Internal, "Vhpi_Control_Internal");
 
