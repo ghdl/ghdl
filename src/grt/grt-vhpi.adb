@@ -181,32 +181,48 @@ package body Grt.Vhpi is
       return 1;
    end Vhpi_Assert_Internal;
 
-   function Vhpi_Control_Internal (Command : VhpiSimControlT; Status : Integer)
+   function Vhpi_Control_Internal (CommandInt : Integer; Status : Integer)
                                   return Integer
    is
-      function To_Integer is new Ada.Unchecked_Conversion
-        (VhpiSimControlT, Integer);
-
       procedure Trace (C : VhpiSimControlT) is
       begin
-         if C'Valid then
-            case C is
-               when VhpiStop =>
-                  Trace ("vhpiStop");
-               when VhpiFinish =>
-                  Trace ("vhpiFinish");
-               when VhpiReset =>
-                  Trace ("vhpiReset");
-            end case;
-         else
-            Trace (To_Integer (C));
-            Trace (" {invalid command}");
-         end if;
+         case C is
+            when VhpiStop =>
+               Trace ("vhpiStop");
+            when VhpiFinish =>
+               Trace ("vhpiFinish");
+            when VhpiReset =>
+               Trace ("vhpiReset");
+         end case;
       end Trace;
+
+      procedure Get_Command
+        (C : Integer; Res : out VhpiSimControlT; Error : out AvhpiErrorT)
+      is
+         Ef : constant Integer := VhpiSimControlT'Pos (VhpiSimControlT'First);
+         El : constant Integer := VhpiSimControlT'Pos (VhpiSimControlT'Last);
+      begin
+         Error := AvhpiErrorOk;
+         if C not in Ef .. El then
+            Error := AvhpiErrorBadEnumVal;
+            Res := VhpiSimControlT'First;
+            return;
+         end if;
+         Res := VhpiSimControlT'Val(C);
+      end Get_Command;
+
+      Command : VhpiSimControlT;
+      Err : AvhpiErrorT;
    begin
+      Get_Command (CommandInt, Command, Err);
       if Flag_Trace then
          Trace_Start ("vhpi_control (");
-         Trace (Command);
+         if Err = AvhpiErrorOk then
+            Trace (Command);
+         else
+            Trace (CommandInt);
+            Trace (" {invalid command}");
+         end if;
          Trace (", ");
          Trace (Status);
          Trace (") return ");
@@ -642,35 +658,48 @@ package body Grt.Vhpi is
    --                     vhpiPutValueModeT mode)
    function vhpi_put_value (Obj : Vhpi_External_Handle;
                             Value : VhpiValue_Access;
-                            Mode : VhpiPutValueModeT)
+                            ModeInt : Integer)
                            return Integer
    is
-      function To_Integer is new Ada.Unchecked_Conversion
-        (VhpiPutValueModeT, Integer);
-
       procedure Trace (M : VhpiPutValueModeT) is
       begin
-         if M'Valid then
-            case M is
-               when VhpiDeposit =>
-                  Trace ("vhpiDeposit");
-               when VhpiDepositPropagate =>
-                  Trace ("vhpiDepositPropagate");
-               when VhpiForce =>
-                  Trace ("vhpiForce");
-               when VhpiForcePropagate =>
-                  Trace ("vhpiForcePropagate");
-               when VhpiRelease =>
-                  Trace ("vhpiRelease");
-               when VhpiSizeConstraint =>
-                  Trace ("vhpiSizeConstraint");
-            end case;
-         else
-            Trace (To_Integer (M));
-            Trace (" {invalid mode}");
-         end if;
+         case M is
+            when VhpiDeposit =>
+               Trace ("vhpiDeposit");
+            when VhpiDepositPropagate =>
+               Trace ("vhpiDepositPropagate");
+            when VhpiForce =>
+               Trace ("vhpiForce");
+            when VhpiForcePropagate =>
+               Trace ("vhpiForcePropagate");
+            when VhpiRelease =>
+               Trace ("vhpiRelease");
+            when VhpiSizeConstraint =>
+               Trace ("vhpiSizeConstraint");
+         end case;
       end Trace;
+
+      procedure Get_Mode
+        (M : Integer; Res : out VhpiPutValueModeT; Error : out AvhpiErrorT)
+      is
+         Ef : constant Integer :=
+           VhpiPutValueModeT'Pos (VhpiPutValueModeT'First);
+         El : constant Integer :=
+           VhpiPutValueModeT'Pos (VhpiPutValueModeT'Last);
+      begin
+         Error := AvhpiErrorOk;
+         if M not in Ef .. El then
+            Error := AvhpiErrorBadEnumVal;
+            Res := VhpiPutValueModeT'First;
+            return;
+         end if;
+         Res := VhpiPutValueModeT'Val(M);
+      end Get_Mode;
+
+      Mode : VhpiPutValueModeT;
+      Err : AvhpiErrorT;
    begin
+      Get_Mode (ModeInt, Mode, Err);
       if Flag_Trace then
          Trace_Start ("vhpi_put_value (");
          Trace (Obj);
@@ -678,7 +707,12 @@ package body Grt.Vhpi is
          -- TODO: Print value
          Trace (To_Address (Value));
          Trace (", ");
-         Trace (Mode);
+         if Err = AvhpiErrorOk then
+            Trace (Mode);
+         else
+            Trace (ModeInt);
+            Trace (" {invalid mode}");
+         end if;
          Trace (") return ");
       end if;
       Reset_Error;
@@ -702,7 +736,7 @@ package body Grt.Vhpi is
                                        Value : VhpiValue_Access;
                                        Num_Values : Unsigned_32;
                                        Delay_Value : VhpiTime_Access;
-                                       Delay_Mode : VhpiDelayModeT;
+                                       Delay_ModeInt : Integer;
                                        Pulse_Rejection : VhpiTime_Access)
                                       return Integer
    is
@@ -711,24 +745,35 @@ package body Grt.Vhpi is
          Put_U32 (Trace_File, Ghdl_U32 (V));
       end Trace;
 
-      function To_Integer is new Ada.Unchecked_Conversion
-        (VhpiDelayModeT, Integer);
-
       procedure Trace (M : VhpiDelayModeT) is
       begin
-         if M'Valid then
-            case M is
-               when VhpiInertial =>
-                  Trace ("vhpiInertial");
-               when VhpiTransport =>
-                  Trace ("vhpiTransport");
-            end case;
-         else
-            Trace (To_Integer (M));
-            Trace (" {invalid mode}");
-         end if;
+         case M is
+            when VhpiInertial =>
+               Trace ("vhpiInertial");
+            when VhpiTransport =>
+               Trace ("vhpiTransport");
+         end case;
       end Trace;
+
+      procedure Get_Mode
+        (M : Integer; Res : out VhpiDelayModeT; Error : out AvhpiErrorT)
+      is
+         Ef : constant Integer := VhpiDelayModeT'Pos (VhpiDelayModeT'First);
+         El : constant Integer := VhpiDelayModeT'Pos (VhpiDelayModeT'Last);
+      begin
+         Error := AvhpiErrorOk;
+         if M not in Ef .. El then
+            Error := AvhpiErrorBadEnumVal;
+            Res := VhpiDelayModeT'First;
+            return;
+         end if;
+         Res := VhpiDelayModeT'Val(M);
+      end Get_Mode;
+
+      Delay_Mode : VhpiDelayModeT;
+      Err : AvhpiErrorT;
    begin
+      Get_Mode (Delay_ModeInt, Delay_Mode, Err);
       if Flag_Trace then
          Trace_Start ("vhpi_schedule_transaction (");
          Trace (Driver);
@@ -746,7 +791,12 @@ package body Grt.Vhpi is
             Trace (To_Address (Delay_Value));
          end if;
          Trace (", ");
-         Trace (Delay_Mode);
+         if Err = AvhpiErrorOk then
+            Trace (Delay_Mode);
+         else
+            Trace (Delay_ModeInt);
+            Trace (" {invalid mode}");
+         end if;
          Trace (", ");
          if Pulse_Rejection /= null then
             Trace ("{");
