@@ -168,9 +168,11 @@ $VHDLVersion,$VHDLStandard,$VHDLFlavor = Get-VHDLVariables
 
 # define global GHDL Options
 $Analyze_Parameters = @(
+	"--std=$VHDLStandard",
+	"-fexplicit",
+	"-frelaxed-rules",
 	"--mb-comments",
 	"-Wbinding",
-	"-fexplicit",
 	"-Wno-shared"          # UVVM specific
 )
 if (-not $EnableDebug)
@@ -187,8 +189,6 @@ if (-not ($EnableVerbose -or $EnableDebug))
 $Analyze_Parameters += @(
 	"--ieee=$VHDLFlavor",
 	"--no-vital-checks",
-	"--std=$VHDLStandard",
-	"-frelaxed",
 	"-P$DestinationDirectory"
 )
 
