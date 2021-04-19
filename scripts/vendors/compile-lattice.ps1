@@ -178,6 +178,7 @@ $VHDLVersion,$VHDLStandard,$VHDLFlavor = Get-VHDLVariables $VHDL93 $VHDL2008
 
 # define global GHDL Options
 $Analyze_Parameters = @(
+	"--std=$VHDLStandard",
 	"-fexplicit",
 	"-frelaxed-rules",
 	"--mb-comments",
@@ -198,7 +199,6 @@ if (-not ($EnableVerbose -or $EnableDebug))
 $Analyze_Parameters += @(
 	"--ieee=$VHDLFlavor",
 	"--no-vital-checks",
-	"--std=$VHDLStandard",
 	"-P$DestinationDirectory"
 )
 
