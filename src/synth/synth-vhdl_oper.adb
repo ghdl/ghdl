@@ -1961,7 +1961,6 @@ package body Synth.Vhdl_Oper is
                   Create_Vec_Type_By_Length (W, Logic_Type));
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Resize_Sgn_Nat
-            | Iir_Predefined_Ieee_Numeric_Std_Resize_Sgn_Sgn
             | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Sgn
             | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Sgn
             | Iir_Predefined_Ieee_Std_Logic_Arith_Sxt =>
@@ -1973,6 +1972,18 @@ package body Synth.Vhdl_Oper is
                   return No_Valtyp;
                end if;
                W := Uns32 (Read_Discrete (R));
+               return Create_Value_Net
+                 (Build2_Sresize (Ctxt, Get_Net (Ctxt, L),
+                                  W, Get_Location (Expr)),
+                  Create_Vec_Type_By_Length (W, Logic_Type));
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Resize_Sgn_Sgn =>
+            declare
+               B : Bound_Type;
+               W : Width;
+            begin
+               B := Get_Array_Bound (R.Typ, 1);
+               W := B.Len;
                return Create_Value_Net
                  (Build2_Sresize (Ctxt, Get_Net (Ctxt, L),
                                   W, Get_Location (Expr)),
