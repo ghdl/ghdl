@@ -1944,6 +1944,7 @@ package body Synth.Vhdl_Oper is
               (Synth_Sresize (Ctxt, L, Res_Typ.W, Expr), Res_Typ);
 
          when Iir_Predefined_Ieee_Numeric_Std_Resize_Uns_Nat
+            | Iir_Predefined_Ieee_Numeric_Std_Resize_Uns_Uns
             | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Uns
             | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Uns
             | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Log
