@@ -1961,6 +1961,7 @@ package body Synth.Vhdl_Oper is
                   Create_Vec_Type_By_Length (W, Logic_Type));
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Resize_Sgn_Nat
+            | Iir_Predefined_Ieee_Numeric_Std_Resize_Sgn_Sgn
             | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Sgn
             | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Sgn
             | Iir_Predefined_Ieee_Std_Logic_Arith_Sxt =>
