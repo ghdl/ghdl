@@ -82,7 +82,7 @@ package body Options is
                return Option_Ok;
             end if;
          end loop;
-         Error_Msg_Option ("unknown warning identifier");
+         Error_Msg_Option ("unknown warning identifier: " & Opt);
          return Option_Err;
       end if;
 
@@ -101,7 +101,7 @@ package body Options is
       end if;
 
       --  Unknown warning.
-      Error_Msg_Option ("unknown warning identifier");
+      Error_Msg_Option ("unknown warning identifier: " & Opt);
       return Option_Err;
    end Option_Warning;
 
@@ -124,7 +124,8 @@ package body Options is
             elsif Opt (7 .. 8) = "08" then
                Vhdl_Std := Vhdl_08;
             else
-               Error_Msg_Option ("unknown language standard");
+               Error_Msg_Option ("unknown language standard: " & Opt (7 ..8) &
+                                 ". Should be one of: 87, 93, 02, 08");
                return Option_Err;
             end if;
          elsif Opt'Length = 9 and then Opt (7 .. 9) = "93c" then
@@ -132,7 +133,8 @@ package body Options is
             Flag_Relaxed_Rules := True;
             Flag_Relaxed_Files87 := True;
          else
-            Error_Msg_Option ("unknown language standard");
+            Error_Msg_Option ("unknown language standard. " &
+                              "Should be one of: 87, 93, 02, 08");
             return Option_Err;
          end if;
       elsif Opt'Length = 5 and then Opt (1 .. 5) = "--ams" then
