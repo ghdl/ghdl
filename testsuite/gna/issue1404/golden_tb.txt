@@ -1,0 +1,32 @@
+type bit is ('0', '1');  -- WKT:2
+type integer is range <>;
+subtype natural is integer range 0 to 2147483647;
+type bit_vector is array (natural range <>) of bit;
+subtype mytype_t is bit_vector (1 downto 0);
+type pass_through_t is record
+  texture_id: mytype_t;
+end record;
+design
+ package standard: 
+ package mylib_pkg: 
+ package types_pkg: 
+ instance design_tb: 
+  signal clk: bit: #1
+  signal input_pass_through: pass_through_t: #2-#3
+  process P0: 
+Time is 0 fs
+#1: '1' (1)
+#2: '0' (0)
+#3: '0' (0)
+Time is 0 fs
+#1: '1' (1)
+#2: '0' (0)
+#3: '0' (0)
+Time is 1000000 fs
+#1: '0' (0)
+#2: '0' (0)
+#3: '0' (0)
+Time is 2000000 fs
+#1: '1' (1)
+#2: '0' (0)
+#3: '0' (0)

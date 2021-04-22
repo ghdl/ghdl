@@ -12,6 +12,8 @@ elab tb_irqc
 
 if ghdl_has_feature tb_irqc ghw; then
   simulate tb_irqc --wave=sim.ghw
+  ghw_diff sim
+  rm -f sim.txt sim.ghw
 fi
 
 analyze repro_rec.vhdl
@@ -19,12 +21,10 @@ elab repro_rec
 
 if ghdl_has_feature repro_rec ghw; then
   simulate repro_rec --wave=rec.ghw
+  ghw_diff rec
+  rm -f rec.txt rec.ghw
 fi
 
 clean
-if [ $# -eq 0 ]; then
-  rm -f rec.ghw sim.ghw
-fi
-
 
 echo "Test successful"

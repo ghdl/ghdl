@@ -7,9 +7,9 @@ analyze repr.vhdl
 elab repr
 if ghdl_has_feature repr ghw; then
   simulate repr --wave=repr.ghw
-# TODO: check with ghwdump ?
+  ghw_diff repr
+  rm -f repr.txt repr.ghw
 fi
- 
 
 clean
 

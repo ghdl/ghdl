@@ -1,0 +1,12 @@
+type integer is range <>;
+design
+ package standard: 
+ instance repro: 
+  generate-for genf: (1)
+   block blk: 
+  generate-for genf: (2)
+   block blk: 
+  generate-if geni: 
+   block blk: 
+Time is 0 fs
+Time is 0 fs

@@ -3,11 +3,13 @@
 . ../../testenv.sh
 
 analyze repro.vhdl
+elab repro
 if ghdl_has_feature repro ghw; then
-  elab_simulate repro --wave=repro.ghw
-  # How to test the ghw ?  Use ghwdump ?
+  simulate repro --wave=repro.ghw | tee repro.out
+  ghw_diff repro
+  rm -f repro.out repro.txt repro.ghw
 fi
+
 clean
-rm -f repro.ghw
 
 echo "Test successful"
