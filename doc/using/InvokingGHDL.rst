@@ -222,6 +222,24 @@ The make command will then be able to recursively build a hierarchy from an enti
     However, since they are not analyzed, many errors are tolerated by this command.
 
 See :option:`-m`, to actually build the design.
+See also :option:`--elab-order`, for retrieving the compilation order guessed recursively.
+
+
+.. index:: cmd elaboration order
+
+Elab-order [``--elab-order``]
+-----------------------------
+
+.. option:: --elab-order <[options...] [libray.]top_unit [arch]>
+
+Print the list of sources required for elaborating a unit, in order for them to be analyzed without dependency issues.
+This is expected to be used after :option:`-i`, or for retrieving the order for some unit analyzed through third-party
+scripts.
+
+.. ATTENTION::
+  Currently, the list does not include information about the logical library names where each source needs to be
+  analyzed.
+  Hence, it is mostly useful when all sources belong to the same ``WORK`` library.
 
 
 .. index:: cmd make
