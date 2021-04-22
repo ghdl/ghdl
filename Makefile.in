@@ -479,10 +479,10 @@ ghwdump: ghwdump$(EXEEXT)
 ghwdump$(EXEEXT): $(GHWDUMP_OBJS)
 	$(CC) -o $@ $(GHWDUMP_OBJS)
 
-ghwdump.o: $(srcdir)/src/grt/ghwdump.c $(srcdir)/src/grt/ghwlib.h
+ghwdump.o: $(srcdir)/ghw/ghwdump.c $(srcdir)/ghw/ghwlib.h
 	$(CC) -c -o $@ $< $(OPT_FLAGS) $(WARN_CFLAGS)
 
-ghwlib.o: $(srcdir)/src/grt/ghwlib.c $(srcdir)/src/grt/ghwlib.h
+ghwlib.o: $(srcdir)/ghw/ghwlib.c $(srcdir)/ghw/ghwlib.h
 	$(CC) -c -o $@ $< $(OPT_FLAGS) $(WARN_CFLAGS)
 
 all.ghw: ghwdump$(EXEEXT)
