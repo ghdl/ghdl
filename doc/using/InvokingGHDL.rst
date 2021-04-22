@@ -151,7 +151,7 @@ See :option:`-e`, :option:`-r` and :ref:`USING:Simulation`.
 Check syntax [``-s``]
 ---------------------
 
-.. option:: -s <[options] files>
+.. option:: -s <[options...] files>
 
 Analyze files but do not generate code.
 This command may be used to check the syntax of files.
@@ -163,7 +163,7 @@ It does not update the library.
 Analyze and elaborate [``-c``]
 ------------------------------
 
-.. option:: -c <[options] file... -<e|r> top_unit [arch]>
+.. option:: -c <[options...] file... -<e|r> top_unit [arch]>
 
 .. HINT::
   With GCC/LLVM, :option:`-e` should be used, and :option:`-r` with mcode.
@@ -208,7 +208,7 @@ GHDL has a few commands for rebuilding a design.
 Import [``-i``]
 ---------------
 
-.. option:: -i <[options] file...>
+.. option:: -i <[options...] file...>
 
 All the files specified in the command line are scanned, parsed and added into the libraries but as not yet analyzed.
 No object files are created.
@@ -231,7 +231,7 @@ See :option:`-m`, to actually build the design.
 Make [``-m``]
 -------------
 
-.. option:: -m <[options] [library.]top_unit [arch]>
+.. option:: -m <[options...] [library.]top_unit [arch]>
 
 Analyze automatically outdated files and elaborate a design.
 The primary unit denoted by the ``[library.]top_unit`` argument must already be known by the system, either because you
@@ -276,7 +276,7 @@ If necessary, the design hierarchy is elaborated.
 Generate Makefile [``--gen-makefile``]
 --------------------------------------
 
-.. option:: --gen-makefile <[options] [library.]top_unit [arch]>
+.. option:: --gen-makefile <[options...] [library.]top_unit [arch]>
 
 This command works like the make command (see :option:`-m`), but only a makefile is generated on the standard output.
 
@@ -285,7 +285,7 @@ This command works like the make command (see :option:`-m`), but only a makefile
 Generate dependency file command [``--gen-depends``]
 ----------------------------------------------------
 
-.. option:: --gen-depends <[options] [library.]top_unit [arch]>
+.. option:: --gen-depends <[options...] [library.]top_unit [arch]>
 
 Generate a Makefile containing only dependencies to build a design unit.
 
@@ -653,7 +653,7 @@ Furthermore, GHDL provides a few commands which act on a library:
 
 .. index:: cmd library directory
 
-.. option:: --dir <[options] [libs]>
+.. option:: --dir <[options...] [libs]>
 
 Displays the content of the design libraries (by default the ``work`` library).
 All options are allowed, but only a few are meaningful: :option:`--work`, :option:`--workdir` and :option:`--std`.
@@ -663,7 +663,7 @@ All options are allowed, but only a few are meaningful: :option:`--work`, :optio
 
 .. _Clean:command:
 
-.. option:: --clean <[options]>
+.. option:: --clean <[options...]>
 
 Try to remove any object, executable or temporary file it could have created.
 Source files are not removed.
@@ -674,7 +674,7 @@ The library is kept.
 
 .. _Remove:command:
 
-.. option:: --remove <[options]>
+.. option:: --remove <[options...]>
 
 Acts like the clean command but removes the library too.
 Note that after removing a design library, the files are not known anymore by GHDL.
@@ -682,7 +682,7 @@ Note that after removing a design library, the files are not known anymore by GH
 
 .. index:: cmd library copy
 
-.. option:: --copy <--work=name [options]>
+.. option:: --copy <--work=name [options...]>
 
 Make a local copy of an existing library.
 This is very useful if you want to add units to the ``ieee`` library:
