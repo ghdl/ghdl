@@ -4,15 +4,17 @@
 Invoking GHDL
 #############
 
-The form of the :program:`ghdl` command is ``ghdl command [options...]``. There are multiple available commands, but these
-general rules apply:
+The form of the :program:`ghdl` command is ``ghdl command [options...]``.
+There are multiple available commands, but these general rules apply:
 
-* The first argument selects the command. The options are used to slightly modify the action.
-* No option is allowed before the command. Except for the run command, no option is allowed after a filename or a unit name.
+* The first argument selects the command.
+  The options are used to slightly modify the action.
+* No option is allowed before the command.
+  Except for the run command, no option is allowed after a filename or a unit name.
 
 .. HINT::
-  If the number of options is large and the command line length is beyond the system limit, you can use a response file. An
-  argument that starts with a ``@`` is considered as a response file; it is replaced by arguments read from the file
+  If the number of options is large and the command line length is beyond the system limit, you can use a response file.
+  An argument that starts with a ``@`` is considered as a response file; it is replaced by arguments read from the file
   (separated by blanks and end of line).
 
 .. HINT::
@@ -20,8 +22,8 @@ general rules apply:
   :ref:`REF:Command`.
 
 .. WARNING::
-  During analysis and elaboration GHDL may read the ``std`` and ``ieee`` files. The location of these files is based on the
-  prefix, which is (in order of priority):
+  During analysis and elaboration GHDL may read the ``std`` and ``ieee`` files.
+  The location of these files is based on the prefix, which is (in order of priority):
 
   * the :option:`--PREFIX` command line option
   * the :envvar:`GHDL_PREFIX` environment variable
@@ -45,12 +47,14 @@ Analysis [``-a``]
 
 .. option:: -a <[options...] file...>
 
-Analyzes/compiles one or more files, and creates an object file for each source file. Any argument starting with a
-dash is an option, the others are filenames. No options are allowed after a filename argument. GHDL analyzes each
-filename in the given order, and stops the analysis in case of error (remaining files are not analyzed).
+Analyzes/compiles one or more files, and creates an object file for each source file.
+Any argument starting with a dash is an option, the others are filenames.
+No options are allowed after a filename argument.
+GHDL analyzes each filename in the given order, and stops the analysis in case of error (remaining files are not
+analyzed).
 
-See :ref:`GHDL:options`, for details on the GHDL options. For example, to produce debugging information such as line
-numbers, use: ``ghdl -a -g my_design.vhdl``.
+See :ref:`GHDL:options`, for details on the GHDL options.
+For example, to produce debugging information such as line numbers, use: ``ghdl -a -g my_design.vhdl``.
 
 
 .. index:: cmd elaboration
@@ -60,35 +64,44 @@ numbers, use: ``ghdl -a -g my_design.vhdl``.
 Elaboration [``-e``]
 --------------------
 
-.. option:: -e <[options...] primary_unit [secondary_unit]>
+.. option:: -e <[options...] [library.]top_unit [arch]>
 
 Re-analyzes all the configurations, entities, architectures and package declarations, and creates the default
-configurations and the default binding indications according to the LRM rules. It also generates the list of object
-files required for the executable. Then, it links all these files with the runtime library.
+configurations and the default binding indications according to the LRM rules.
+It also generates the list of object files required for the executable.
+Then, it links all these files with the runtime library (GRT).
 
-* The elaboration command, :option:`-e`, must be followed by a name of either:
+The elaboration command, :option:`-e`, must be followed by a ``top_unit`` name denoting either of:
 
   * a configuration unit
   * an entity unit
-  * an entity unit followed by a name of an architecture unit
+  * an entity unit followed by a secondary unit (the name of an architecture unit)
 
-  Name of the units must be a simple name, without any dot. You can select the name of the `WORK` library with the
-  :option:`--work=NAME <--work>` option, as described in :ref:`GHDL:options`. See section :ref:`Top_entity`, for the
-  restrictions on the root design of a hierarchy.
+* Name of the top units can be either a simple name (without dots), or the name of a logical library followed by a dot
+  and a simple name.
+  The latter is equivalent to using :option:`--work=NAME <--work>` described in :ref:`GHDL:options`:
+  ``-e <[options...] --work=library top_unit [arch]>``.
+  It selects the name of the library to be used as ``WORK``.
+  See section :ref:`Top_entity`, for the restrictions on the root/top unit of a hierarchy.
+*  Name of the secondary units must be a simple name; they cannot contain any dot.
+
+With regard to the artifacts:
 
 * If the GCC/LLVM backend was enabled during the compilation of GHDL, the elaboration command creates an executable
-  containing the code of the VHDL sources, the elaboration code and simulation code to execute a design hierarchy. The
-  executable is created in the current directory and the the filename is the name of the primary unit, or for the latter
-  case, the concatenation of the name of the primary unit, a dash, and the name of the secondary unit (or architecture).
+  containing the code of the VHDL sources, the elaboration code and simulation code for executing a design hierarchy.
+  The executable is created in the current directory and the the filename is the name of the primary unit, or for the
+  latter case, the concatenation of the name of the primary unit, a dash, and the name of the secondary unit.
   Option ``-o`` followed by a filename can override the default executable filename.
 
-* If mcode is used, this command elaborates the design but does not generate anything. Since the run command also
-  elaborates the design, this can be skipped.
+* If mcode is used, this command elaborates the design but does not generate anything.
+  Since the run command also elaborates the design, this can be skipped.
 
-  .. WARNING::
-    This elaboration command is not a complete elaboration in terms of the VHDL standard. The actual elaboration is
-    performed at runtime. Therefore, in order to get a complete VHDL elaboration without running the simulation,
-    ``ghdl --elab-run --no-run`` is required. See :option:`--no-run`.
+.. WARNING::
+  This elaboration command is not a complete elaboration in terms of the VHDL standard.
+  The actual elaboration is performed at runtime.
+  Therefore, in order to get a complete VHDL elaboration without running the simulation, ``ghdl --elab-run --no-run``
+  is required.
+  See :option:`--no-run`.
 
 
 .. index:: cmd run
@@ -98,22 +111,25 @@ files required for the executable. Then, it links all these files with the runti
 Run [``-r``]
 ------------
 
-.. option:: -r <[options...] primary_unit [secondary_unit] [simulation_options...]>
+.. option:: -r <[options...] [library.]top_unit [arch] [simulation_options...]>
 
-Runs/simulates a design. Two sets of options are accepted, both of them being separated by ``primary_unit [secondary_unit]``.
-For the first set, ``options...``, arguments are the same as for the :ref:`elaboration command <Elaboration:command>`. For
-the second set, ``simulation_options...``, arguments are defined in :ref:`USING:Simulation`.
+Runs/simulates a design.
+Two sets of options are accepted, both of them being separated by ``[library.]top_unit [arch]``.
+For the first set, ``options...``, arguments are the same as for the :ref:`elaboration command <Elaboration:command>`.
+For the second set, ``simulation_options...``, arguments are defined in :ref:`USING:Simulation`.
 
-* GGC/LLVM: the filename of the executable is determined and it is executed. Elaboration options are ignored. You may also
-  directly execute the program. The executable must be in the current directory.
-* mcode: the design is elaborated and the simulation is launched. As a consequence, you must use the same options used during
-  analysis.
+* GGC/LLVM: the filename of the executable is determined and it is executed.
+  Elaboration options are ignored.
+  You may also directly execute the program.
+  The executable must be in the current directory.
+* mcode: the design is elaborated and the simulation is launched.
+  As a consequence, you must use the same options used during analysis.
 
 This command exists for three reasons:
 
+* It works with mcode implementation, where the executable code is generated in memory.
 * You are using GCC/LLVM, but you don't need to create the executable program name.
 * It is coherent with the :option:`-a` and :option:`-e` commands.
-* It works with mcode implementation, where the executable code is generated in memory.
 
 
 .. index:: cmd elaborate and run
@@ -123,10 +139,11 @@ This command exists for three reasons:
 Elaborate and run [``--elab-run``]
 ----------------------------------
 
-.. option:: --elab-run <[options...] primary_unit [secondary_unit] [simulation_options...]>
+.. option:: --elab-run <[options...] [library.]top_unit [arch] [simulation_options...]>
 
-Acts like the elaboration command followed by the run command. Note that this command accepts two sets of options. See
-:option:`-e`, :option:`-r` and :ref:`USING:Simulation`.
+Acts like the elaboration command followed by the run command.
+Note that this command accepts two sets of options.
+See :option:`-e`, :option:`-r` and :ref:`USING:Simulation`.
 
 
 .. index:: cmd checking syntax
@@ -136,8 +153,9 @@ Check syntax [``-s``]
 
 .. option:: -s <[options] files>
 
-Analyze files but do not generate code. This command may be used to check the syntax of files. It does not update the
-library.
+Analyze files but do not generate code.
+This command may be used to check the syntax of files.
+It does not update the library.
 
 
 .. index:: cmd analyze and elaborate
@@ -145,16 +163,18 @@ library.
 Analyze and elaborate [``-c``]
 ------------------------------
 
-.. option:: -c <[options] file... -<e|r> primary_unit [secondary_unit]>
+.. option:: -c <[options] file... -<e|r> top_unit [arch]>
 
 .. HINT::
   With GCC/LLVM, :option:`-e` should be used, and :option:`-r` with mcode.
 
-The files are first parsed, and then a elaboration is performed, which drives an analysis. Effectively, analysis and
-elaboration are combined, but there is no explicit call to :option:`-a`. With GCC/LLVM, code is generated during the
-elaboration. With mcode, the simulation is launched after the elaboration.
+The files are first parsed, and then a elaboration is performed, which drives an analysis.
+Effectively, analysis and elaboration are combined, but there is no explicit call to :option:`-a`.
+With GCC/LLVM, code is generated during the elaboration.
+With mcode, the simulation is launched after the elaboration.
 
-All the units of the files are put into the `work` library. But, the work library is neither read from disk nor saved.
+All the units of the files are put into the `work` library.
+But, the work library is neither read from disk nor saved.
 Therefore, you must give all the files of the `work` library your design needs.
 
 The advantages over the traditional approach (analyze and then elaborate) are:
@@ -166,8 +186,9 @@ The advantages over the traditional approach (analyze and then elaborate) are:
 
 .. HINT::
   However, you should know that most of the time is spent in code generation and the analyze and elaborate command
-  generates code for all units needed, even units of ``std`` and ``ieee`` libraries. Therefore, according to the design,
-  the time for this command may be higher than the time for the analyze command followed by the elaborate command.
+  generates code for all units needed, even units of ``std`` and ``ieee`` libraries.
+  Therefore, according to the design, the time for this command may be higher than the time for the analyze command
+  followed by the elaborate command.
 
 .. WARNING::
   This command is still under development. In case of problems, you should go back to the traditional way.
@@ -176,8 +197,8 @@ The advantages over the traditional approach (analyze and then elaborate) are:
 Design rebuilding commands
 ==========================
 
-Analyzing and elaborating a design consisting of several files can be tricky, due to dependencies. GHDL has a few commands
-to rebuild a design.
+Analyzing and elaborating a design consisting of several files can be tricky, due to dependencies.
+GHDL has a few commands for rebuilding a design.
 
 
 .. index:: cmd importing files
@@ -189,15 +210,16 @@ Import [``-i``]
 
 .. option:: -i <[options] file...>
 
-All the files specified in the command line are scanned, parsed and added into the libraries but as not yet analyzed. No
-object files are created. Its purpose is to localize design units in the design files. The make command will then be able to
-recursively build a hierarchy from an entity name or a configuration name.
+All the files specified in the command line are scanned, parsed and added into the libraries but as not yet analyzed.
+No object files are created.
+Its purpose is to localize design units in the design files.
+The make command will then be able to recursively build a hierarchy from an entity name or a configuration name.
 
 .. HINT::
-  * Note that all the files are added to the work library. If you have many libraries, you must use the command for each
-    library.
-  * Since the files are parsed, there must be correct files. However, since they are not analyzed, many errors are tolerated
-    by this command.
+  * Note that all the files are added to the work library.
+    If you have many libraries, you must use the command for each library.
+  * Since the files are parsed, there must be correct files.
+    However, since they are not analyzed, many errors are tolerated by this command.
 
 See :option:`-m`, to actually build the design.
 
@@ -209,36 +231,44 @@ See :option:`-m`, to actually build the design.
 Make [``-m``]
 -------------
 
-.. option:: -m <[options] primary [secondary]>
+.. option:: -m <[options] [library.]top_unit [arch]>
 
-Analyze automatically outdated files and elaborate a design. The primary unit denoted by the ``primary`` argument must already
-be known by the system, either because you have already analyzed it (even if you have modified it) or because you have imported
-it. A file may be outdated because it has been modified (e.g. you have just edited it), or because a design unit contained in
-the file depends on a unit which is outdated. This rule is of course recursive.
+Analyze automatically outdated files and elaborate a design.
+The primary unit denoted by the ``[library.]top_unit`` argument must already be known by the system, either because you
+have already analyzed it (even if you have modified it) or because you have imported it.
+A file may be outdated because it has been modified (e.g. you have just edited it), or because a design unit contained
+in the file depends on a unit which is outdated.
+This rule is recursive.
 
-* With option ``--bind``, GHDL will stop before the final linking step. This is useful when the main entry point is not GHDL
-  and you're linking GHDL object files into a foreign program.
-* With option ``-f`` (force), GHDL analyzes all the units of the work library needed to create the design hierarchy. Outdated
-  units are recompiled. This is useful if you want to compile a design hierarchy with new compilation flags (for example, to
-  add the ``-g`` debugging option).
+* With option ``--bind``, GHDL will stop before the final linking step.
+  This is useful when the main entry point is not GHDL and you're linking GHDL object files into a foreign program.
+* With option ``-f`` (force), GHDL analyzes all the units of the work library needed to create the design hierarchy.
+  Outdated units are recompiled.
+  This is useful if you want to compile a design hierarchy with new compilation flags (for example, to add the ``-g``
+  debugging option).
 
-The make command will only re-analyze design units in the work library. GHDL fails if it has to analyze an outdated unit from
-another library.
+.. IMPORTANT::
+  The make command will only re-analyze design units in the work library.
+  GHDL fails if it has to analyze an outdated unit from another library.
 
-The purpose of this command is to be able to compile a design without prior knowledge of file order. In the VHDL model, some
-units must be analyzed before others (e.g. an entity before its architecture). It might be a nightmare to analyze a full
-design of several files if you don't have the ordered list of files. This command computes an analysis order.
+The purpose of this command is to be able to compile a design without prior knowledge of file order.
+In the VHDL model, some units must be analyzed before others (e.g. an entity before its architecture).
+It might be a nightmare to analyze a full design of several files if you don't have the ordered list of files.
+This command computes an analysis order.
 
-The make command fails when a unit was not previously parsed. For example, if you split a file containing several design
-units into several files, you must either import these new files or analyze them so that GHDL knows in which file these
-units are.
+The make command fails when a unit was not previously parsed.
+For example, if you split a file containing several design units into several files, you must either import these new
+files or analyze them so that GHDL knows in which file these units are.
 
-The make command imports files which have been modified. Then, a design hierarchy is internally built as if no units are
-outdated. Then, all outdated design units, using the dependencies of the design hierarchy, are analyzed. If necessary, the
-design hierarchy is elaborated.
+The make command imports files which have been modified.
+Then, a design hierarchy is internally built as if no units are outdated.
+Then, all outdated design units, using the dependencies of the design hierarchy, are analyzed.
+If necessary, the design hierarchy is elaborated.
 
-This is not perfect, since the default architecture (the most recently analyzed one) may change while outdated design files
-are analyzed. In such a case, re-run the make command of GHDL.
+.. HINT::
+  This is not perfect, since the default architecture (the most recently analyzed one) may change while outdated design
+  files are analyzed.
+  In such a case, re-run the make command of GHDL.
 
 
 .. index:: cmd generate makefile
@@ -246,7 +276,7 @@ are analyzed. In such a case, re-run the make command of GHDL.
 Generate Makefile [``--gen-makefile``]
 --------------------------------------
 
-.. option:: --gen-makefile <[options] primary [secondary]>
+.. option:: --gen-makefile <[options] [library.]top_unit [arch]>
 
 This command works like the make command (see :option:`-m`), but only a makefile is generated on the standard output.
 
@@ -255,7 +285,7 @@ This command works like the make command (see :option:`-m`), but only a makefile
 Generate dependency file command [``--gen-depends``]
 ----------------------------------------------------
 
-.. option:: --gen-depends <[options] primary [secondary]>
+.. option:: --gen-depends <[options] [library.]top_unit [arch]>
 
 Generate a Makefile containing only dependencies to build a design unit.
 
@@ -277,42 +307,47 @@ Options
 
 .. option:: --work=<LIB_NAME>
 
-  Specify the name of the ``WORK`` library. Analyzed units are always placed in the library logically named ``WORK``. With
-  this option, you can set its name. By default, the name is ``work``.
+  Specify the name of the ``WORK`` library. Analyzed units are always placed in the library logically named ``WORK``.
+  With this option, you can set its name.
+  By default, the name is ``work``.
 
-  `GHDL` checks whether ``WORK`` is a valid identifier. Although being more or less supported, the ``WORK`` identifier
-  should not be an extended identifier, since the filesystem may prevent it from working correctly (due to case sensitivity
-  or forbidden characters in filenames).
+  `GHDL` checks whether ``WORK`` is a valid identifier.
+  Although being more or less supported, the ``WORK`` identifier should not be an extended identifier, since the
+  filesystem may prevent it from working correctly (due to case sensitivity or forbidden characters in filenames).
 
-  `VHDL` rules forbid you from adding units to the ``std`` library. Furthermore, you should not put units in the ``ieee`` library.
+  .. ATTENTION::
+    `VHDL` rules forbid you from adding units to the ``std`` library.
+    Furthermore, you should not put units in the ``ieee`` library.
+
+  .. HINT::
+    Since `849a25e0 <https://github.com/ghdl/ghdl/commit/849a25e02cfb359e3d9313060156b0643495548b>`__, this option can
+    be alternatively provided to several commands by prepending the library name to the top unit name.
+    See, for instance, :option:`-e`.
 
 .. option:: --workdir=<DIR>
 
-  Specify the directory where the ``WORK`` library is located. When this option is not present, the ``WORK`` library is in
-  the current directory. The object files created by the compiler are always placed in the same directory as the ``WORK`` library.
+  Specify the directory where the ``WORK`` library is located.
+  When this option is not present, the ``WORK`` library is in the current directory.
+  The object files created by the compiler are always placed in the same directory as the ``WORK`` library.
 
   Use option :option:`-P <-P>` to specify where libraries other than ``WORK`` are placed.
 
 .. option:: --std=<STANDARD>
 
-  Specify the standard to use. By default, the standard is ``93c``,
-  which means VHDL-93 with relaxed rules. For details on ``STANDARD``
-  values see section :ref:`VHDL_standards`.
+  Specify the standard to use. By default, the standard is ``93c``, which means VHDL-93 with relaxed rules.
+  For details on ``STANDARD`` values see section :ref:`VHDL_standards`.
 
-  .. IMPORTANT:: This option resets the effect of :option:`-frelaxed`, so it should
-    be the first option.
+  .. IMPORTANT:: This option resets the effect of :option:`-frelaxed`, so it should be the first option.
 
 .. option:: -fsynopsys
 
-  Allow the use of synopsys non-standard packages
-  (``std_logic_arith``, ``std_logic_signed``, ``std_logic_unsigned``,
-  ``std_logic_textio``).  These packages are
-  present in the ieee library but without this option it's an error to
-  use them.
+  Allow the use of synopsys non-standard packages (``std_logic_arith``, ``std_logic_signed``, ``std_logic_unsigned``,
+  ``std_logic_textio``).
+  These packages are present in the ieee library but without this option it's an error to use them.
 
-  The synopsys packages were created by some companies, and are popular. However
-  they are not standard packages, and have been placed in the `IEEE`
-  library without the permission from the ``ieee``.
+  The synopsys packages were created by some companies, and are popular.
+  However they are not standard packages, and have been placed in the `IEEE` library without the permission from the
+  ``ieee``.
 
 .. option:: --ieee=<IEEE_VAR>
 
@@ -322,63 +357,58 @@ Options
   Select the ``IEEE`` library to use. ``IEEE_VAR`` must be one of:
 
   none
-    Do not supply an `IEEE` library. Any library clause with the ``IEEE``
-    identifier will fail, unless you have created your own library with
-    the `IEEE` name.
+    Do not supply an `IEEE` library. Any library clause with the ``IEEE`` identifier will fail, unless you have created
+    your own library with the `IEEE` name.
 
   standard
-    Supply an `IEEE` library containing only packages defined by
-    ``ieee`` standards. Currently, there are the multivalue logic system
-    package ``std_logic_1164`` defined by IEEE 1164, the synthesis
-    packages ``numeric_bit`` and ``numeric_std`` defined by IEEE
-    1076.3, and the ``vital`` packages ``vital_timing`` and
-    ``vital_primitives``, defined by IEEE 1076.4. The version of these
-    packages is defined by the VHDL standard used. See section :ref:`VITAL_packages`,
-    for more details.
+    Supply an `IEEE` library containing only packages defined by ``ieee`` standards.
+    Currently, there are the multivalue logic system package ``std_logic_1164`` defined by IEEE 1164, the synthesis
+    packages ``numeric_bit`` and ``numeric_std`` defined by IEEE 1076.3, and the ``vital`` packages ``vital_timing`` and
+    ``vital_primitives``, defined by IEEE 1076.4.
+    The version of these packages is defined by the VHDL standard used.
+    See section :ref:`VITAL_packages`, for more details.
 
   synopsys
-    This option is now deprecated.  It is equivalent to
-    ``--ieee=standard`` and ``-fsynopsys``.
+    This option is now deprecated.
+    It is equivalent to ``--ieee=standard`` and ``-fsynopsys``.
 
-  To avoid errors, you must use the same `IEEE` library for all units of
-  your design, and during elaboration.
+  To avoid errors, you must use the same `IEEE` library for all units of your design, and during elaboration.
 
 .. option:: -P<DIRECTORY>
 
-  Add `DIRECTORY` to the end of the list of directories to be searched for
-  library files. A library is searched in `DIRECTORY` and also in
-  `DIRECTORY/LIB/vVV` (where `LIB` is the name of the library and `VV`
+  Add `DIRECTORY` to the end of the list of directories to be searched for library files.
+  A library is searched in `DIRECTORY` and also in `DIRECTORY/LIB/vVV` (where `LIB` is the name of the library and `VV`
   the vhdl standard).
 
-  The `WORK` library is always searched in the path specified by the
-  :option:`--workdir` option, or in the current directory if the latter
-  option is not specified.
+  The `WORK` library is always searched in the path specified by the :option:`--workdir` option, or in the current
+  directory if the latter option is not specified.
 
 .. option:: -fexplicit
 
   When two operators are overloaded, give preference to the explicit declaration.
-  This may be used to avoid the most common pitfall of the ``std_logic_arith``
-  package. See section :ref:`IEEE_library_pitfalls`, for an example.
+  This may be used to avoid the most common pitfall of the ``std_logic_arith`` package.
+  See section :ref:`IEEE_library_pitfalls`, for an example.
 
-.. WARNING:: This option is not set by default. I don't think this option is a good feature, because it breaks the
-  encapsulation rule. When set, an operator can be silently overridden in another package. You'd do better to fix your
-  design and use the ``numeric_std`` package.
+.. WARNING::
+  This option is not set by default.
+  We don't think this option is a good feature, because it breaks the encapsulation rule.
+  When set, an operator can be silently overridden in another package.
+  You'd do better to fix your design and use the ``numeric_std`` package.
 
 .. option:: -frelaxed
 .. option:: -frelaxed-rules
 
   .. IMPORTANT:: The effects of this option are reset by :option:`--std`, so it should be placed *after* that option.
 
-  Slightly relax some rules to be compatible with various other
-  simulators or synthesizers:
+  Slightly relax some rules to be compatible with various other simulators or synthesizers:
 
   * VHDL-87 file declarations are accepted;
 
-  * Default binding indication rules of VHDL-02 are used. Default binding rules
-    are often used, but they are particularly obscure before VHDL-02.
+  * Default binding indication rules of VHDL-02 are used. Default binding rules are often used, but they are
+    particularly obscure before VHDL-02.
 
-  * Within an object declaration, allow references to the name (which references the hidden declaration). This ignores the
-    error in the following code:
+  * Within an object declaration, allow references to the name (which references the hidden declaration).
+    This ignores the error in the following code:
 
     .. code-block:: VHDL
 
@@ -393,39 +423,37 @@ Options
 
     Some code (such as Xilinx packages) have such constructs, which are invalid.
 
-    (The scope of the ``state1`` constant starts at the `constant`
-    keyword. Because the constant ``state1`` and the enumeration
-    literal ``state1`` are homographs, the enumeration literal is
+    (The scope of the ``state1`` constant starts at the `constant` keyword.
+    Because the constant ``state1`` and the enumeration literal ``state1`` are homographs, the enumeration literal is
     hidden in the immediate scope of the constant).
 
-  This option also relaxes the rules about pure functions. Violations result in warnings instead of errors.
+  This option also relaxes the rules about pure functions.
+  Violations result in warnings instead of errors.
 
 .. option:: -fpsl
 
-  Enable parsing of PSL assertions within comments. See section :ref:`PSL_implementation` for more details.
+  Enable parsing of PSL assertions within comments.
+  See section :ref:`PSL_implementation` for more details.
 
 .. option:: --mb-comments, -C
 
   Allow UTF8 or multi-bytes chars in a comment.
 
-  According to the VHDL standards before 2002, the only characters
-  allowed in a source file (and that includes the comments) are the
-  graphical characters of the ISO 8859-1 character set.  This is
-  incompatible with comments using UTF-8 or some other encoding.  This
-  option lift this restriction.
+  According to the VHDL standards before 2002, the only characters allowed in a source file (and that includes the
+  comments) are the graphical characters of the ISO 8859-1 character set.
+  This is incompatible with comments using UTF-8 or some other encoding.
+  This option lift this restriction.
 
 .. option:: --syn-binding
 
-  Use synthesizer rules for component binding. During elaboration, if
-  a component is not bound to an entity using VHDL LRM rules, try to
-  find in any known library an entity whose name is the same as the
-  component name.
+  Use synthesizer rules for component binding.
+  During elaboration, if a component is not bound to an entity using VHDL LRM rules, try to find in any known library an
+  entity whose name is the same as the component name.
 
   This rule is known as the synthesizer rule.
 
-  There are two key points: normal VHDL LRM rules are tried first and
-  entities are searched only in known libraries. A known library is a
-  library which has been named in your design.
+  There are two key points: normal VHDL LRM rules are tried first and entities are searched only in known libraries.
+  A known library is a library which has been named in your design.
 
   This option is only useful during elaboration.
 
@@ -433,23 +461,26 @@ Options
 
   Define the output format of some options, such as :option:`--pp-html` or :option:`--xref-html`.
 
-  * By default or when :option:`--format=html2 <--format>` is specified, generated files follow the HTML 2.0 standard, and
-    colours are specified with `<FONT>` tags. However, colours are hard-coded.
+  * By default or when :option:`--format=html2 <--format>` is specified, generated files follow the HTML 2.0 standard,
+    and colours are specified with `<FONT>` tags.
+    However, colours are hard-coded.
 
-  * If :option:`--format=css <--format>` is specified, generated files follow the HTML 4.0 standard, and use the CSS-1 file
-    :file:`ghdl.css` to specify colours. This file is generated only if it does not already exist (it is never overwritten)
-    and can be customized by the user to change colours or appearance. Refer to a generated file and its comments for more
-    information.
+  * If :option:`--format=css <--format>` is specified, generated files follow the HTML 4.0 standard, and use the CSS-1
+    file :file:`ghdl.css` to specify colours.
+    This file is generated only if it does not already exist (it is never overwritten) and can be customized by the user
+    to change colours or appearance.
+    Refer to a generated file and its comments for more information.
 
 .. option:: --no-vital-checks
 .. option:: --vital-checks
 
   Disable or enable checks of restriction on VITAL units. Checks are enabled by default.
 
-  Checks are performed only when a design unit is decorated by a VITAL attribute. The VITAL attributes are ``VITAL_Level0``
-  and ``VITAL_Level1``, both declared in the ``ieee.VITAL_Timing`` package.
+  Checks are performed only when a design unit is decorated by a VITAL attribute.
+  The VITAL attributes are ``VITAL_Level0`` and ``VITAL_Level1``, both declared in the ``ieee.VITAL_Timing`` package.
 
-  Currently, VITAL checks are only partially implemented. See section :ref:`VHDL_restrictions_for_VITAL` for more details.
+  Currently, VITAL checks are only partially implemented.
+  See section :ref:`VHDL_restrictions_for_VITAL` for more details.
 
 .. option:: --PREFIX=<PATH>
 
@@ -461,37 +492,38 @@ Options
 
 .. option:: -o=<FNAME>
 
-  All the commands that perform a link (:option:`-e`, :option:`--elab-run`, :option:`--link`, :option:`-c`, :option:`-m`,
-  etc.) support overriding the location and name of the generated artifact.
+  All the commands that perform a link (:option:`-e`, :option:`--elab-run`, :option:`--link`, :option:`-c`,
+  :option:`-m`, etc.) support overriding the location and name of the generated artifact.
 
 .. option:: --time-resolution=<UNIT>
 
   .. ATTENTION::
-    This feature is supported with *mcode* backend only. It is not possible to support it with either LLVM or GCC backends,
-    because it needs to apply globally.
+    This feature is supported with *mcode* backend only.
+    It is not possible to support it with either LLVM or GCC backends, because it needs to apply globally.
 
-  Set the base time resolution of the simulation. This option is supported in commands :option:`-a` and :option:`-r` only.
-  Allowed values are ``auto`` (default), ``fs``, ``ps``, ``ns``, ``us``, ``ms`` or ``sec``. With LLVM/GCC, the value is fixed
-  to ``fs``.
+  Set the base time resolution of the simulation.
+  This option is supported in commands :option:`-a` and :option:`-r` only.
+  Allowed values are ``auto`` (default), ``fs``, ``ps``, ``ns``, ``us``, ``ms`` or ``sec``.
+  With LLVM/GCC, the value is fixed to ``fs``.
 
   .. HINT::
-    When overriding the time resolution, all the time units that are used in the design must be larger. Using units below
-    the resolution will produce a failure.
+    When overriding the time resolution, all the time units that are used in the design must be larger.
+    Using units below the resolution will produce a failure.
 
 
 Warnings
 ========
 
-Some constructions are not erroneous but dubious. Warnings are diagnostic messages that report such constructions. Some
-warnings are reported only during analysis, others during elaboration.
+Some constructions are not erroneous but dubious.
+Warnings are diagnostic messages that report such constructions.
+Some warnings are reported only during analysis, others during elaboration.
 
 .. HINT::
   You could disable a warning by using the ``--warn-no-XXX`` or ``-Wno-XXX`` instead of ``--warn-XXX`` or ``-WXXX``.
 
 .. HINT::
-  The warnings ``-Wbinding``, ``-Wlibrary``, ``-Wshared``,
-  ``-Wpure``, ``-Wspecs``, ``-Whide``, ``-Wport`` are enabled by
-  default.
+  The warnings ``-Wbinding``, ``-Wlibrary``, ``-Wshared``, ``-Wpure``, ``-Wspecs``, ``-Whide``, ``-Wport`` are enabled
+  by default.
 
 .. option:: --warn-library
 
@@ -499,19 +531,20 @@ warnings are reported only during analysis, others during elaboration.
 
 .. option:: --warn-default-binding
 
-  During analyze, warns if a component instantiation has neither configuration specification nor default binding. This may
-  be useful if you want to detect during analyze possibly unbound components if you don't use configuration. See section
-  :ref:`VHDL_standards` for more details about default binding rules.
+  During analyze, warns if a component instantiation has neither configuration specification nor default binding.
+  This may be useful if you want to detect during analyze possibly unbound components if you don't use configuration.
+  See section :ref:`VHDL_standards` for more details about default binding rules.
 
 .. option:: --warn-binding
 
-  During elaboration, warns if a component instantiation is not bound (and not explicitly left unbound). Also warns if a
-  port of an entity is not bound in a configuration specification or in a component configuration. This warning is enabled
-  by default, since default binding rules are somewhat complex and an unbound component is most often unexpected.
+  During elaboration, warns if a component instantiation is not bound (and not explicitly left unbound).
+  Also warns if a port of an entity is not bound in a configuration specification or in a component configuration.
+  This warning is enabled by default, since default binding rules are somewhat complex and an unbound component is most
+  often unexpected.
 
-  However, warnings are still emitted if a component instantiation is inside a generate statement. As a consequence, if you
-  use the conditional generate statement to select a component according to the implementation, you will certainly get
-  warnings.
+  However, warnings are still emitted if a component instantiation is inside a generate statement.
+  As a consequence, if you use the conditional generate statement to select a component according to the implementation,
+  you will certainly get warnings.
 
 .. option:: --warn-reserved
 
@@ -532,11 +565,12 @@ warnings are reported only during analysis, others during elaboration.
 
 .. option:: --warn-delayed-checks
 
-  Warns for checks that cannot be done during analysis time and are postponed to elaboration time. This is because not all
-  procedure bodies are available during analysis (either because a package body has not yet been analysed or because `GHDL`
-  doesn't read not required package bodies).
+  Warns for checks that cannot be done during analysis time and are postponed to elaboration time.
+  This is because not all procedure bodies are available during analysis (either because a package body has not yet been
+  analysed or because `GHDL` doesn't read not required package bodies).
 
-  These are checks for no wait statements in a procedure called in a sensitized process and checks for pure rules of a function.
+  These are checks for no wait statements in a procedure called in a sensitized process and checks for pure rules of a
+  function.
 
 .. option:: --warn-body
 
@@ -549,13 +583,11 @@ warnings are reported only during analysis, others during elaboration.
 
 .. option:: --warn-runtime-error
 
-  Emit a warning in case of runtime error that is detected during
-  analysis.
+  Emit a warning in case of runtime error that is detected during analysis.
 
 .. option:: --warn-shared
 
-  Emit a warning when a shared variable is declared and its type it
-  not a protected type.
+  Emit a warning when a shared variable is declared and its type it not a protected type.
 
 .. option:: --warn-hide
 
@@ -567,18 +599,15 @@ warnings are reported only during analysis, others during elaboration.
 
 .. option:: --warn-others
 
-  Emit a warning is an `others` choice is not required because all the
-  choices have been explicitly covered.
+  Emit a warning is an `others` choice is not required because all the choices have been explicitly covered.
 
 .. option:: --warn-pure
 
-  Emit a warning when a pure rules is violated (like declaring a pure
-  function with access parameters).
+  Emit a warning when a pure rules is violated (like declaring a pure function with access parameters).
 
 .. option:: --warn-static
 
-  Emit a warning when a non-static expression is used at a place where
-  the standard requires a static expression.
+  Emit a warning when a non-static expression is used at a place where the standard requires a static expression.
 
 .. option:: --warn-error
 
@@ -596,14 +625,13 @@ Diagnostics Control
 .. option:: -fdiagnostics-show-option
 .. option:: -fno-diagnostics-show-option
 
-  Control whether the warning option is displayed at the end of warning messages, so that the user can easily know how to
-  disable it.
+  Control whether the warning option is displayed at the end of warning messages, so that the user can easily know how
+  to disable it.
 
 .. option:: -fcaret-diagnostics
 .. option:: -fno-caret-diagnostics
 
-  Control whether the source line of the error is displayed with a
-  caret indicating the column of the error.
+  Control whether the source line of the error is displayed with a caret indicating the column of the error.
 
 
 Library commands
@@ -612,11 +640,13 @@ Library commands
 .. _Create_a_Library:
 .. index:: create your own library
 
-A new library is created implicitly, by compiling entities (packages etc.) into it: ``ghdl -a --work=my_custom_lib my_file.vhdl``.
+A new library is created implicitly, by compiling entities (packages etc.) into it:
+``ghdl -a --work=my_custom_lib my_file.vhdl``.
 
-A library's source code is usually stored and compiled into its own directory, that you specify with the :option:`--workdir`
-option: ``ghdl -a --work=my_custom_lib --workdir=my_custom_libdir my_custom_lib_srcdir/my_file.vhdl``. See also the
-:option:`-P <-P>` command line option.
+A library's source code is usually stored and compiled into its own directory, that you specify with the
+:option:`--workdir` option:
+``ghdl -a --work=my_custom_lib --workdir=my_custom_libdir my_custom_lib_srcdir/my_file.vhdl``.
+See also the :option:`-P <-P>` command line option.
 
 Furthermore, GHDL provides a few commands which act on a library:
 
@@ -625,8 +655,8 @@ Furthermore, GHDL provides a few commands which act on a library:
 
 .. option:: --dir <[options] [libs]>
 
-Displays the content of the design libraries (by default the ``work`` library). All options are allowed, but only a few are
-meaningful: :option:`--work`, :option:`--workdir` and :option:`--std`.
+Displays the content of the design libraries (by default the ``work`` library).
+All options are allowed, but only a few are meaningful: :option:`--work`, :option:`--workdir` and :option:`--std`.
 
 
 .. index:: cmd library clean
@@ -635,7 +665,9 @@ meaningful: :option:`--work`, :option:`--workdir` and :option:`--std`.
 
 .. option:: --clean <[options]>
 
-Try to remove any object, executable or temporary file it could have created. Source files are not removed. The library is kept.
+Try to remove any object, executable or temporary file it could have created.
+Source files are not removed.
+The library is kept.
 
 
 .. index:: cmd library remove
@@ -644,15 +676,16 @@ Try to remove any object, executable or temporary file it could have created. So
 
 .. option:: --remove <[options]>
 
-Acts like the clean command but removes the library too. Note that after removing a design library, the files are not
-known anymore by GHDL.
+Acts like the clean command but removes the library too.
+Note that after removing a design library, the files are not known anymore by GHDL.
 
 
 .. index:: cmd library copy
 
 .. option:: --copy <--work=name [options]>
 
-Make a local copy of an existing library. This is very useful if you want to add units to the ``ieee`` library:
+Make a local copy of an existing library.
+This is very useful if you want to add units to the ``ieee`` library:
 
 .. code-block:: shell
 
@@ -664,10 +697,10 @@ Make a local copy of an existing library. This is very useful if you want to add
 VPI/VHPI build commands
 =======================
 
-These commands simplify the compile and the link of a user VPI or VHPI module. They are all wrappers: the arguments are in fact a
-whole command line that is executed with additional switches. Currently a unix-like compiler (like `cc`, `gcc` or `clang`)
-is expected: the additional switches use their syntax. The only option is `-v` which displays the command before its
-execution.
+These commands simplify the compile and the link of a user VPI or VHPI module.
+They are all wrappers: the arguments are in fact a whole command line that is executed with additional switches.
+Currently a unix-like compiler (like `cc`, `gcc` or `clang`) is expected: the additional switches use their syntax.
+The only option is `-v` which displays the command before its execution.
 
 
 .. index:: cmd VPI compile
@@ -740,15 +773,14 @@ Display the library directory added by the link flags, forcing UNIX syntax.
 IEEE library pitfalls
 =====================
 
-When you use options :option:`--ieee=synopsys <--ieee>`, the ``ieee``
-library contains non standard packages such as
-``std_logic_arith``. These packages are not standard because there are
-not described by an IEEE standard, even if they have been put in the
-`IEEE` library. Furthermore, they are not really de-facto standard,
-because there are slight differences between the packages of Mentor
-and those of Synopsys. Furthermore, since they are not well thought
-out, their use has pitfalls. For example, this description has an
-error during compilation:
+When you use options :option:`--ieee=synopsys <--ieee>`, the ``ieee`` library contains non standard packages such as
+``std_logic_arith``.
+These packages are not standard because there are not described by an IEEE standard, even if they have been put in the
+`IEEE` library.
+Furthermore, they are not really de-facto standard, because there are slight differences between the packages of Mentor
+and those of Synopsys.
+Furthermore, since they are not well thought out, their use has pitfalls.
+For example, this description has an error during compilation:
 
 .. code-block:: VHDL
 
@@ -799,15 +831,17 @@ When you analyze this design, GHDL does not accept it (two long lines have been 
       [std_logic_vector, std_logic_vector return boolean]
   ../translate/ghdldrv/ghdl: compilation error
 
-Indeed, the `"="` operator is defined in both packages, and both are visible at the place it is used. The first declaration
-is an implicit one, which occurs when the `std_logic_vector` type is declared and is an element to element comparison. The
-second one is an explicit declared function, with the semantics of an unsigned comparison.
+Indeed, the `"="` operator is defined in both packages, and both are visible at the place it is used.
+The first declaration is an implicit one, which occurs when the `std_logic_vector` type is declared and is an element to
+element comparison.
+The second one is an explicit declared function, with the semantics of an unsigned comparison.
 
-With some analysers, the explicit declaration has priority over the implicit declaration, and this design can be analyzed
-without error. However, this is not the rule given by the VHDL LRM, and since GHDL follows these rules, it emits an error.
+With some analysers, the explicit declaration has priority over the implicit declaration, and this design can be
+analyzed without error.
+However, this is not the rule given by the VHDL LRM, and since GHDL follows these rules, it emits an error.
 
-You can force GHDL to use this rule with the *-fexplicit* option (see :ref:`GHDL:options` for further details). However it
-is easy to fix this error, by using a selected name:
+You can force GHDL to use this rule with the *-fexplicit* option (see :ref:`GHDL:options` for further details).
+However it is easy to fix this error, by using a selected name:
 
 .. code-block:: VHDL
 
@@ -866,5 +900,5 @@ It is better to only use the standard packages defined by IEEE, which provide th
 .. index:: Math_Complex
 
 .. HINT::
-  The ``ieee`` math packages (``math_real`` and ``math_complex``) provided with `GHDL` are fully compliant with the `IEEE`
-  standard.
+  The ``ieee`` math packages (``math_real`` and ``math_complex``) provided with `GHDL` are fully compliant with the
+  `IEEE` standard.
