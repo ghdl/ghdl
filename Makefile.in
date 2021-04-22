@@ -126,13 +126,13 @@ GRT_SYNTH_OBJS=grt-cstdio.o
 
 all: Makefile all.$(backend) all.libghdl
 
-install: install.$(backend)
+install: install.$(backend) install.vhdllib install.vpi install.libghdl
 #       Generate std.standard package VHDL source
 	$(DESTDIR)$(bindir)/ghdl$(EXEEXT) --disp-standard --std=87 > $(DESTDIR)$(VHDL_LIB_DIR)/src/std/v87/standard.vhdl
 	$(DESTDIR)$(bindir)/ghdl$(EXEEXT) --disp-standard --std=93 > $(DESTDIR)$(VHDL_LIB_DIR)/src/std/v93/standard.vhdl
 	$(DESTDIR)$(bindir)/ghdl$(EXEEXT) --disp-standard --std=08 > $(DESTDIR)$(VHDL_LIB_DIR)/src/std/v08/standard.vhdl
 
-uninstall: uninstall.$(backend)
+uninstall: uninstall.$(backend) uninstall.vhdllib uninstall.vpi uninstall.libghdl
 
 test: test.$(backend)
 
@@ -205,9 +205,9 @@ install.mcode.program: install.dirs ghdl_mcode$(EXEEXT)
 uninstall.mcode.program:
 	$(RM) $(DESTDIR)$(bindir)/ghdl$(EXEEXT)
 
-install.mcode: install.mcode.program install.vhdllib install.vpi install.libghdl
+install.mcode: install.mcode.program install.vhdllib
 
-uninstall.mcode: uninstall.mcode.program uninstall.vhdllib uninstall.vpi uninstall.libghdl
+uninstall.mcode: uninstall.mcode.program uninstall.vhdllib
 
 test.mcode: ghdl_mcode$(EXEEXT)
 	cd $(srcdir)/testsuite; GHDL=$(CURDIR)/ghdl_mcode$(EXEEXT) ./testsuite.sh
@@ -286,9 +286,9 @@ libs.vhdl.gcc:
 
 ghdllib: libs.vhdl.gcc $(libdirsuffix)/libgrt.a all.libghdl
 
-install.gcc: install.vhdllib install.grt install.vpi install.libghdl
+install.gcc: install.grt
 
-uninstall.gcc: uninstall.vhdllib uninstall.grt uninstall.vpi uninstall.libghdl
+uninstall.gcc: uninstall.grt
 
 test.gcc:
 	cd $(srcdir)/testsuite; GHDL=$(GHDL_GCC_BIN) ./testsuite.sh
@@ -382,9 +382,9 @@ uninstall.llvm.program:
 	$(RM) $(DESTDIR)$(bindir)/ghdl1-llvm$(EXEEXT)
 	$(RM) $(DESTDIR)$(bindir)/ghdl$(EXEEXT)
 
-install.llvm: install.llvm.program install.vhdllib install.grt install.vpi install.libghdl
+install.llvm: install.llvm.program install.grt
 
-uninstall.llvm: uninstall.llvm.program uninstall.vhdllib uninstall.grt uninstall.vpi uninstall.libghdl
+uninstall.llvm: uninstall.llvm.program uninstall.grt
 
 ################ For simul (no code generation, interpretation) ##########
 
@@ -402,9 +402,9 @@ install.simul.program: install.dirs ghdl_simul$(EXEEXT)
 uninstall.simul.program:
 	$(RM) $(DESTDIR)$(bindir)/ghdl$(EXEEXT)
 
-install.simul: install.simul.program install.vhdllib
+install.simul: install.simul.program
 
-uninstall.simul: uninstall.simul.program uninstall.vhdllib
+uninstall.simul: uninstall.simul.program
 
 
 ################ libghdl (library for the vhdl part) ####################
