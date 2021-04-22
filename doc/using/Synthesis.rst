@@ -37,7 +37,7 @@ See :option:`--out` and :ghdlsharp:`1174` for on-going discussion about other ou
   .. ATTENTION::
     All the units must have been analyzed; that is, the artifacts of previously executed :option:`-a` calls must exist.
 
-.. option:: --synth <[options...] files... -e [top_unit [arch]]>
+.. option:: --synth <[options...] file... -e [top_unit [arch]]>
 
   Analyses and elaborates for synthesis the files present on the command line only.
   Elaboration starts from the top unit indicated by ``[top_unit [arch]]``.

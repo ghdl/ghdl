@@ -151,7 +151,7 @@ See :option:`-e`, :option:`-r` and :ref:`USING:Simulation`.
 Check syntax [``-s``]
 ---------------------
 
-.. option:: -s <[options...] files>
+.. option:: -s <[options...] file...>
 
 Analyze files but do not generate code.
 This command may be used to check the syntax of files.
