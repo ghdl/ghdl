@@ -423,7 +423,7 @@ ci_run () {
   if [ "x$IS_MACOS" = "xtrue" ]; then
       pip3 install -r testsuite/requirements.txt
       CC=clang \
-      prefix="$(pwd)/install-$(echo "$TASK" | cut -d+ -f2)/usr/local" \
+      PATH="$PATH:$(pwd)/install-$(echo "$TASK" | cut -d+ -f2)/usr/local/bin" \
       ./testsuite/testsuite.sh
   else
       # Build ghdl/ghdl:$GHDL_IMAGE_TAG image

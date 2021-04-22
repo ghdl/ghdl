@@ -42,13 +42,3 @@ show_target:
 	echo "Target is $(target)"
 
 include Makefile.inc
-
-
-GRT_CFLAGS=$(GRT_FLAGS) -Wall
-ghwdump: ghwdump.o ghwlib.o
-	$(CC) $(GRT_CFLAGS) -o $@ ghwdump.o ghwlib.o
-
-ghwlib.o: ghwlib.c ghwlib.h
-	$(CC) -c $(GRT_CFLAGS) -o $@ $<
-ghwdump.o: ghwdump.c ghwlib.h
-	$(CC) -c $(GRT_CFLAGS) -o $@ $<

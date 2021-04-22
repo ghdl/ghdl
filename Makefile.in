@@ -124,15 +124,15 @@ LIBVHDL_FLAGS_TO_PASS=\
 # Object files from grt for the synthesis.
 GRT_SYNTH_OBJS=grt-cstdio.o
 
-all: Makefile all.$(backend) all.libghdl
+all: Makefile all.$(backend) all.libghdl all.ghw
 
-install: install.$(backend) install.vhdllib install.vpi install.libghdl
+install: install.$(backend) install.vhdllib install.vpi install.libghdl install.ghw
 #       Generate std.standard package VHDL source
 	$(DESTDIR)$(bindir)/ghdl$(EXEEXT) --disp-standard --std=87 > $(DESTDIR)$(VHDL_LIB_DIR)/src/std/v87/standard.vhdl
 	$(DESTDIR)$(bindir)/ghdl$(EXEEXT) --disp-standard --std=93 > $(DESTDIR)$(VHDL_LIB_DIR)/src/std/v93/standard.vhdl
 	$(DESTDIR)$(bindir)/ghdl$(EXEEXT) --disp-standard --std=08 > $(DESTDIR)$(VHDL_LIB_DIR)/src/std/v08/standard.vhdl
 
-uninstall: uninstall.$(backend) uninstall.vhdllib uninstall.vpi uninstall.libghdl
+uninstall: uninstall.$(backend) uninstall.vhdllib uninstall.vpi uninstall.libghdl uninstall.ghw
 
 test: test.$(backend)
 
@@ -284,7 +284,7 @@ GHDL1_GCC_BIN=  # --GHDL1=/path/to/ghdl1
 libs.vhdl.gcc:
 	$(MAKE) -f $(srcdir)/libraries/Makefile.inc $(LIBVHDL_FLAGS_TO_PASS) GHDL="$(GHDL_GCC_BIN)" GHDL_FLAGS="$(GHDL1_GCC_BIN) $(LIB_CFLAGS)" vhdl.libs.all libs.vhdl.standard
 
-ghdllib: libs.vhdl.gcc $(libdirsuffix)/libgrt.a all.libghdl
+ghdllib: libs.vhdl.gcc $(libdirsuffix)/libgrt.a all.libghdl all.ghw
 
 install.gcc: install.grt
 
@@ -474,7 +474,9 @@ libghdl-py.tgz:
 
 GHWDUMP_OBJS=ghwdump.o ghwlib.o
 
-ghwdump: $(GHWDUMP_OBJS)
+ghwdump: ghwdump$(EXEEXT)
+
+ghwdump$(EXEEXT): $(GHWDUMP_OBJS)
 	$(CC) -o $@ $(GHWDUMP_OBJS)
 
 ghwdump.o: $(srcdir)/src/grt/ghwdump.c $(srcdir)/src/grt/ghwlib.h
@@ -482,6 +484,14 @@ ghwdump.o: $(srcdir)/src/grt/ghwdump.c $(srcdir)/src/grt/ghwlib.h
 
 ghwlib.o: $(srcdir)/src/grt/ghwlib.c $(srcdir)/src/grt/ghwlib.h
 	$(CC) -c -o $@ $< $(OPT_FLAGS) $(WARN_CFLAGS)
+
+all.ghw: ghwdump$(EXEEXT)
+
+install.ghw:
+	$(INSTALL_PROGRAM) -p ghwdump$(EXEEXT) $(DESTDIR)$(bindir)/
+
+uninstall.ghw:
+	$(RM) $(DESTDIR)$(bindir)/ghwdump$(EXEEXT)
 
 ############### grt #####################################################
 
