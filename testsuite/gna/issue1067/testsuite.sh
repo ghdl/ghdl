@@ -11,7 +11,8 @@ for f in top; do
   if ghdl_has_feature $f ghw; then
     simulate $f --dump-rti
     simulate $f --wave=$f.ghw
-    rm -f $f.ghw
+    ghw_diff "$f"
+    rm -f "$f".txt "$f".ghw
   fi
 done
 

@@ -1,0 +1,63 @@
+type std_ulogic is ('U', 'X', '0', '1', 'Z', 'W', 'L', 'H', '-');  -- WKT:3
+type integer is range <>;
+subtype natural is integer range 0 to 2147483647;
+type std_ulogic_vector is array (natural range <>) of std_ulogic;
+subtype std_logic_vector is std_ulogic_vector;
+type t_slv_array is array (natural range <>) of std_logic_vector;
+design
+ package standard: 
+ package textio: 
+ package std_logic_1164: 
+ package numeric_std: 
+ instance top: 
+  signal test: t_slv_array (0 to 2): #1-#24
+Time is 0 fs
+#1: 'U' (0)
+#2: 'U' (0)
+#3: 'U' (0)
+#4: 'U' (0)
+#5: 'U' (0)
+#6: 'U' (0)
+#7: 'U' (0)
+#8: 'U' (0)
+#9: 'U' (0)
+#10: 'U' (0)
+#11: 'U' (0)
+#12: 'U' (0)
+#13: 'U' (0)
+#14: 'U' (0)
+#15: 'U' (0)
+#16: 'U' (0)
+#17: 'U' (0)
+#18: 'U' (0)
+#19: 'U' (0)
+#20: 'U' (0)
+#21: 'U' (0)
+#22: 'U' (0)
+#23: 'U' (0)
+#24: 'U' (0)
+Time is 0 fs
+#1: 'U' (0)
+#2: 'U' (0)
+#3: 'U' (0)
+#4: 'U' (0)
+#5: 'U' (0)
+#6: 'U' (0)
+#7: 'U' (0)
+#8: 'U' (0)
+#9: 'U' (0)
+#10: 'U' (0)
+#11: 'U' (0)
+#12: 'U' (0)
+#13: 'U' (0)
+#14: 'U' (0)
+#15: 'U' (0)
+#16: 'U' (0)
+#17: 'U' (0)
+#18: 'U' (0)
+#19: 'U' (0)
+#20: 'U' (0)
+#21: 'U' (0)
+#22: 'U' (0)
+#23: 'U' (0)
+#24: 'U' (0)
