@@ -45,7 +45,7 @@ with Grt.Ghw; use Grt.Ghw;
 with Grt.Wave_Opt; use Grt.Wave_Opt;
 with Grt.Wave_Opt.File; use Grt.Wave_Opt.File;
 with Grt.Wave_Opt.Design; use Grt.Wave_Opt.Design;
-with Ada.Containers.Generic_Array_Sort;
+with Grt.Algos; use Grt.Algos;
 
 pragma Elaborate_All (Grt.Rtis_Utils);
 pragma Elaborate_All (Grt.Table);
@@ -1782,15 +1782,26 @@ package body Grt.Waves is
 
    procedure Wave_Cycle
    is
-      type Arr_Type is array (Dump_Table_Index range <>) of Ghdl_Signal_Ptr;
-
-      function Cmp (Left, Right : Ghdl_Signal_Ptr) return Boolean is
+      function Lt (Op1, Op2 : Natural) return Boolean is
+         Left : Ghdl_Signal_Ptr;
+         Right : Ghdl_Signal_Ptr;
       begin
+         Left := Changed_Sig_Table.Table (Op1);
+         Right := Changed_Sig_Table.Table (Op2);
          return Left.Dump_Table_Idx < Right.Dump_Table_Idx;
-      end Cmp;
+      end Lt;
+      pragma Inline (Lt);
 
-      procedure Sort is new Ada.Containers.Generic_Array_Sort
-        (Dump_Table_Index, Ghdl_Signal_Ptr, Arr_Type, "<" => Cmp);
+      procedure Swap (From, To : Natural) is
+         Tmp : Ghdl_Signal_Ptr;
+      begin
+         Tmp := Changed_Sig_Table.Table (From);
+         Changed_Sig_Table.Table (From) := Changed_Sig_Table.Table (To);
+         Changed_Sig_Table.Table (To) := Tmp;
+      end Swap;
+      pragma Inline (Swap);
+
+      procedure Sort is new Grt.Algos.Heap_Sort (Lt => Lt, Swap => Swap);
 
       Diff : Std_Time;
       Sig : Ghdl_Signal_Ptr;
@@ -1809,8 +1820,7 @@ package body Grt.Waves is
       --  Dump signals.
       Last := 0;
       if Changed_Sig_Table.First <= Changed_Sig_Table.Last then
-         Sort (Arr_Type (Changed_Sig_Table.Table
-                         (Changed_Sig_Table.First .. Changed_Sig_Table.Last)));
+         Sort (Changed_Sig_Table.Last);
          for I in Changed_Sig_Table.First .. Changed_Sig_Table.Last loop
             Sig := Changed_Sig_Table.Table(I);
             if Sig.Flags.RO_Event then
