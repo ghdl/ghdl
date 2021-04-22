@@ -30,14 +30,14 @@ versions of the standard, but which don't provide the most recent features.
 Currently, the default output is a generic netlist using a (very simple) subset of VHDL 1993.
 See :option:`--out` and :ghdlsharp:`1174` for on-going discussion about other output formats.
 
-.. option:: --synth <[options] [library.]top_unit [arch]>
+.. option:: --synth <[options...] [library.]top_unit [arch]>
 
   Elaborates for synthesis the design whose top unit is indicated by ``[library.]top_unit [arch]``.
 
   .. ATTENTION::
     All the units must have been analyzed; that is, the artifacts of previously executed :option:`-a` calls must exist.
 
-.. option:: --synth <[options] files... -e [top_unit [arch]]>
+.. option:: --synth <[options...] files... -e [top_unit [arch]]>
 
   Analyses and elaborates for synthesis the files present on the command line only.
   Elaboration starts from the top unit indicated by ``[top_unit [arch]]``.
@@ -45,7 +45,7 @@ See :option:`--out` and :ghdlsharp:`1174` for on-going discussion about other ou
 
   .. IMPORTANT::
     Files can be provided in any order, but ``-e`` must be provided after them.
-    That is, ``--synth <[options] files...>`` is NOT supported.
+    That is, ``--synth <[options...] files...>`` is NOT supported.
     This is because we want to unambiguously tell files and the unit specification apart.
     We don't want to rely on parsing the items and guessing whether we are dealing with files or a top unit name.
     In corner cases, a filename might exist which matches the name of a primary unit: ``ghdl synth name``.
