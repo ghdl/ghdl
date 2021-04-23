@@ -1088,6 +1088,11 @@ package body Synth.Insts is
                                     Get_Port_Chain (Ent),
                                     Get_Port_Map_Aspect_Chain (Stmt));
 
+      if Is_Error (Sub_Inst) then
+         --  TODO: Free it?
+         return;
+      end if;
+
       if Arch /= Null_Node then
          --  For whiteboxes: append parameters or/and hash.
          Enc := Name_Hash;
