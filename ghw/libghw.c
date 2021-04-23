@@ -21,7 +21,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "ghwlib.h"
+#include "libghw.h"
 
 /* Reopen H through decompressor DECOMP.  */
 

@@ -22,7 +22,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "ghwlib.h"
+#include "libghw.h"
 
 static const char *progname;
 void

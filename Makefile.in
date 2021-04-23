@@ -472,33 +472,33 @@ libghdl-py.tgz:
 
 ################ ghwdump #################################################
 
-GHWDUMP_OBJS=ghwdump.o ghwlib.o
+GHWDUMP_OBJS=ghwdump.o libghw.o
 
 ghwdump: ghwdump$(EXEEXT)
 
 ghwdump$(EXEEXT): $(GHWDUMP_OBJS)
 	$(CC) -o $@ $(GHWDUMP_OBJS)
 
-ghwlib$(SOEXT): ghwlib.o
-	$(CC) $(PIC_FLAGS) -shared -o lib/$@ ghwlib.o
+libghw$(SOEXT): libghw.o
+	$(CC) $(PIC_FLAGS) -shared -o lib/$@ libghw.o
 
-ghwdump.o: $(srcdir)/ghw/ghwdump.c $(srcdir)/ghw/ghwlib.h
+ghwdump.o: $(srcdir)/ghw/ghwdump.c $(srcdir)/ghw/libghw.h
 	$(CC) -c -o $@ $< $(OPT_FLAGS) $(WARN_CFLAGS)
 
-ghwlib.o: $(srcdir)/ghw/ghwlib.c $(srcdir)/ghw/ghwlib.h
+libghw.o: $(srcdir)/ghw/libghw.c $(srcdir)/ghw/libghw.h
 	$(CC) $(PIC_FLAGS) -c -o $@ $< $(OPT_FLAGS) $(WARN_CFLAGS)
 
-all.ghw: ghwdump$(EXEEXT) ghwlib$(SOEXT)
+all.ghw: ghwdump$(EXEEXT) libghw$(SOEXT)
 
 install.ghw:
 	$(INSTALL_PROGRAM) -p ghwdump$(EXEEXT) $(DESTDIR)$(bindir)/
-	$(INSTALL_PROGRAM) -p lib/ghwlib$(SOEXT) $(DESTDIR)$(libdir)/
-	$(INSTALL_DATA) -p $(srcdir)/ghw/ghwlib.h $(DESTDIR)$(incdir)/ghdl/
+	$(INSTALL_PROGRAM) -p lib/libghw$(SOEXT) $(DESTDIR)$(libdir)/
+	$(INSTALL_DATA) -p $(srcdir)/ghw/libghw.h $(DESTDIR)$(incdir)/ghdl/
 
 uninstall.ghw:
 	$(RM) $(DESTDIR)$(bindir)/ghwdump$(EXEEXT)
-	$(RM) $(DESTDIR)$(libdir)/ghwlib$(EXEEXT)
-	$(RM) -f $(DESTDIR)$(incdir)/ghdl/ghwlib.h
+	$(RM) $(DESTDIR)$(libdir)/libghw$(EXEEXT)
+	$(RM) -f $(DESTDIR)$(incdir)/ghdl/libghw.h
 
 ############### grt #####################################################
 
