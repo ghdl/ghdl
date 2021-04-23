@@ -56,7 +56,8 @@ analyze_failure ()
 }
 
 # Elaborate a design (no error expected)
-# Note: somewhat deprecated, use elab_simulate instead.
+# Note: somewhat deprecated, use elab_simulate instead;
+# unless ghdl_has_feature needs to be used between elab and simulate
 elab ()
 {
   echo "elaborate $@"
@@ -64,7 +65,8 @@ elab ()
 }
 
 # Elaborate a design (failure expected)
-# Note: somewhat deprecated, use elab_simulate_failure instead.
+# Note: somewhat deprecated, use elab_simulate_failure instead;
+# unless ghdl_has_feature needs to be used between elab and simulate
 elab_failure ()
 {
   echo "elaborate (failure expected) $@"
@@ -72,7 +74,8 @@ elab_failure ()
 }
 
 # Simulate a design (no error expected)
-# Note: somewhat deprecated, use elab_simulate instead.
+# Note: somewhat deprecated, use elab_simulate instead;
+# unless ghdl_has_feature needs to be used between elab and simulate
 simulate ()
 {
   echo "simulate $@ ($GHDL_FLAGS $@)" >&2
@@ -81,7 +84,8 @@ simulate ()
 }
 
 # Simulate a design (failure expected)
-# Note: somewhat deprecated, use elab_simulate_failure instead.
+# Note: somewhat deprecated, use elab_simulate_failure instead;
+# unless ghdl_has_feature needs to be used between elab and simulate
 simulate_failure ()
 {
   echo "simulate (failure expected) $@" >&2
