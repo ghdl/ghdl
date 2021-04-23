@@ -160,6 +160,7 @@ GHDL
    development/Directories
    Building GHDL <development/building/index>
    Python Interfaces <pyGHDL/pyGHDL>
+   ghw/index
    development/Debugging
    development/CodingStyle
    development/Scripts
