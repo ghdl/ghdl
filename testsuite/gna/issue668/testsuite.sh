@@ -3,23 +3,18 @@
 . ../../testenv.sh
 
 export GHDL_STD_FLAGS=--std=08
-analyze tb.vhdl
-elab wb_demux_tb
+for item in wb_demux_tb repro2; do
+  analyze "$item".vhdl
+  elab "$item"
 
-if ghdl_has_feature wb_demux_tb ghw; then
-  simulate wb_demux_tb --dump-rti
-  simulate wb_demux_tb --wave=w.ghw
-fi
-
-analyze repro2.vhdl
-elab repro2
-if ghdl_has_feature repro2 ghw; then
-  simulate repro2 --dump-rti
-  simulate repro2 --wave=w.ghw
-fi
+  if ghdl_has_feature "$item" ghw; then
+    elab_simulate "$item" --dump-rti
+    elab_simulate "$item" --wave="$item".ghw
+    ghw_diff "$item"
+    rm -f "$item".txt "$item".ghw
+  fi
+done
 
 clean
-
-rm -f w.ghw
 
 echo "Test successful"
