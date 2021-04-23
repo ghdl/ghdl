@@ -863,6 +863,19 @@ ghw_read_type (struct ghw_handler *h)
 		      sr->nbr_scalars);
 	  }
 	  break;
+	case ghdl_rtik_subtype_unbounded_record:
+	  {
+	    struct ghw_subtype_unbounded_record *sur;
+
+	    sur = malloc (sizeof (struct ghw_subtype_unbounded_record));
+	    sur->kind = t;
+	    sur->name = ghw_read_strid (h);
+	    sur->base = (struct ghw_type_record *) ghw_read_typeid (h);
+	    h->types[i] = (union ghw_type *) sur;
+	    if (h->flag_verbose > 1)
+	      printf ("subtype unbounded record: %s\n", sur->name);
+	  }
+	  break;
 	default:
 	  fprintf (stderr, "ghw_read_type: unknown type %d\n", t);
 	  return -1;
@@ -2092,6 +2105,7 @@ ghw_disp_subtype_definition (struct ghw_handler *h, union ghw_type *t)
 	ghw_disp_record_subtype_bounds (sr);
       } break;
     case ghdl_rtik_subtype_unbounded_array:
+    case ghdl_rtik_subtype_unbounded_record:
       {
 	struct ghw_subtype_unbounded_record *sur = &t->sur;
 
@@ -2203,6 +2217,7 @@ ghw_disp_type (struct ghw_handler *h, union ghw_type *t)
     case ghdl_rtik_subtype_scalar:
     case ghdl_rtik_subtype_record:
     case ghdl_rtik_subtype_unbounded_array:
+    case ghdl_rtik_subtype_unbounded_record:
       {
 	struct ghw_type_common *c = &t->common;
 	printf ("subtype %s is ", c->name);
