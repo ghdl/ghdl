@@ -479,19 +479,26 @@ ghwdump: ghwdump$(EXEEXT)
 ghwdump$(EXEEXT): $(GHWDUMP_OBJS)
 	$(CC) -o $@ $(GHWDUMP_OBJS)
 
+ghwlib$(SOEXT): ghwlib.o
+	$(CC) $(PIC_FLAGS) -shared -o lib/$@ ghwlib.o
+
 ghwdump.o: $(srcdir)/ghw/ghwdump.c $(srcdir)/ghw/ghwlib.h
 	$(CC) -c -o $@ $< $(OPT_FLAGS) $(WARN_CFLAGS)
 
 ghwlib.o: $(srcdir)/ghw/ghwlib.c $(srcdir)/ghw/ghwlib.h
-	$(CC) -c -o $@ $< $(OPT_FLAGS) $(WARN_CFLAGS)
+	$(CC) $(PIC_FLAGS) -c -o $@ $< $(OPT_FLAGS) $(WARN_CFLAGS)
 
-all.ghw: ghwdump$(EXEEXT)
+all.ghw: ghwdump$(EXEEXT) ghwlib$(SOEXT)
 
 install.ghw:
 	$(INSTALL_PROGRAM) -p ghwdump$(EXEEXT) $(DESTDIR)$(bindir)/
+	$(INSTALL_PROGRAM) -p lib/ghwlib$(SOEXT) $(DESTDIR)$(libdir)/
+	$(INSTALL_DATA) -p $(srcdir)/ghw/ghwlib.h $(DESTDIR)$(incdir)/ghdl/
 
 uninstall.ghw:
 	$(RM) $(DESTDIR)$(bindir)/ghwdump$(EXEEXT)
+	$(RM) $(DESTDIR)$(libdir)/ghwlib$(EXEEXT)
+	$(RM) -f $(DESTDIR)$(incdir)/ghdl/ghwlib.h
 
 ############### grt #####################################################
 
