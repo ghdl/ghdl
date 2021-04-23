@@ -15,11 +15,11 @@
   along with this program.  If not, see <gnu.org/licenses>.
 */
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <unistd.h>
 #include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 #include "ghwlib.h"
 
@@ -28,12 +28,12 @@
 static int
 ghw_openz (struct ghw_handler *h, const char *decomp, const char *filename)
 {
-  int plen = strlen (decomp) + 1 + strlen(filename) + 1;
+  int plen = strlen (decomp) + 1 + strlen (filename) + 1;
   char *p = malloc (plen);
 
   snprintf (p, plen, "%s %s", decomp, filename);
   fclose (h->stream);
-  h->stream = popen(p, "r");
+  h->stream = popen (p, "r");
   free (p);
 
   if (h->stream == NULL)
@@ -80,8 +80,7 @@ ghw_open (struct ghw_handler *h, const char *filename)
   if (memcmp (hdr, "GHDLwave\n", 9) != 0)
     return -2;
   /* Check version.  */
-  if (hdr[9] != 16
-      || hdr[10] != 0)
+  if (hdr[9] != 16 || hdr[10] != 0)
     return -2;
   h->version = hdr[11];
   if (h->version > 1)
@@ -96,7 +95,11 @@ ghw_open (struct ghw_handler *h, const char *filename)
   /* Endianness.  */
   {
     int endian;
-    union { unsigned char b[4]; uint32_t i;} v;
+    union
+    {
+      unsigned char b[4];
+      uint32_t i;
+    } v;
     v.i = 0x11223344;
     if (v.b[0] == 0x11)
       endian = 2;
@@ -147,7 +150,7 @@ ghw_get_i64 (struct ghw_handler *ghw_h, unsigned char *b)
       l = (b[3] << 24) | (b[2] << 16) | (b[1] << 8) | (b[0] << 0);
       h = (b[7] << 24) | (b[6] << 16) | (b[5] << 8) | (b[4] << 0);
     }
-  return (((int64_t)h) << 32) | l;
+  return (((int64_t) h) << 32) | l;
 }
 
 int
@@ -163,7 +166,7 @@ ghw_read_byte (struct ghw_handler *h, unsigned char *res)
 }
 
 int
-ghw_read_uleb128 (struct ghw_handler *h, uint32_t *res)
+ghw_read_uleb128 (struct ghw_handler *h, uint32_t * res)
 {
   uint32_t r = 0;
   unsigned int off = 0;
@@ -183,7 +186,7 @@ ghw_read_uleb128 (struct ghw_handler *h, uint32_t *res)
 }
 
 int
-ghw_read_sleb128 (struct ghw_handler *h, int32_t *res)
+ghw_read_sleb128 (struct ghw_handler *h, int32_t * res)
 {
   int32_t r = 0;
   unsigned int off = 0;
@@ -193,7 +196,7 @@ ghw_read_sleb128 (struct ghw_handler *h, int32_t *res)
       int v = fgetc (h->stream);
       if (v == EOF)
 	return -1;
-      r |= ((int32_t)(v & 0x7f)) << off;
+      r |= ((int32_t) (v & 0x7f)) << off;
       off += 7;
       if ((v & 0x80) == 0)
 	{
@@ -207,7 +210,7 @@ ghw_read_sleb128 (struct ghw_handler *h, int32_t *res)
 }
 
 int
-ghw_read_lsleb128 (struct ghw_handler *h, int64_t *res)
+ghw_read_lsleb128 (struct ghw_handler *h, int64_t * res)
 {
   static const int64_t r_mask = -1;
   int64_t r = 0;
@@ -218,7 +221,7 @@ ghw_read_lsleb128 (struct ghw_handler *h, int64_t *res)
       int v = fgetc (h->stream);
       if (v == EOF)
 	return -1;
-      r |= ((int64_t)(v & 0x7f)) << off;
+      r |= ((int64_t) (v & 0x7f)) << off;
       off += 7;
       if ((v & 0x80) == 0)
 	{
@@ -278,7 +281,7 @@ ghw_read_range (struct ghw_handler *h)
 	  goto err_b2;
 	if (ghw_read_byte (h, &r->right) != 0)
 	  goto err_b2;
-	return (union ghw_range *)r;
+	return (union ghw_range *) r;
       err_b2:
 	free (r);
 	return NULL;
@@ -293,7 +296,7 @@ ghw_read_range (struct ghw_handler *h)
 	  goto err_e8;
 	if (ghw_read_byte (h, &r->right) != 0)
 	  goto err_e8;
-	return (union ghw_range *)r;
+	return (union ghw_range *) r;
       err_e8:
 	free (r);
 	return NULL;
@@ -309,7 +312,7 @@ ghw_read_range (struct ghw_handler *h)
 	  goto err_i32;
 	if (ghw_read_sleb128 (h, &r->right) != 0)
 	  goto err_i32;
-	return (union ghw_range *)r;
+	return (union ghw_range *) r;
       err_i32:
 	free (r);
 	return NULL;
@@ -325,7 +328,7 @@ ghw_read_range (struct ghw_handler *h)
 	  goto err_i64;
 	if (ghw_read_lsleb128 (h, &r->right) != 0)
 	  goto err_i64;
-	return (union ghw_range *)r;
+	return (union ghw_range *) r;
       err_i64:
 	free (r);
 	return NULL;
@@ -340,7 +343,7 @@ ghw_read_range (struct ghw_handler *h)
 	  goto err_f64;
 	if (ghw_read_f64 (h, &r->right) != 0)
 	  goto err_f64;
-	return (union ghw_range *)r;
+	return (union ghw_range *) r;
       err_f64:
 	free (r);
 	return NULL;
@@ -367,8 +370,8 @@ ghw_read_str (struct ghw_handler *h)
   h->nbr_str = ghw_get_i32 (h, &hdr[4]);
   h->nbr_str++;
   h->str_size = ghw_get_i32 (h, &hdr[8]);
-  h->str_table = (char **)malloc ((h->nbr_str + 1) * sizeof (char *));
-  h->str_content = (char *)malloc (h->str_size + h->nbr_str + 1);
+  h->str_table = (char **) malloc ((h->nbr_str + 1) * sizeof (char *));
+  h->str_content = (char *) malloc (h->str_size + h->nbr_str + 1);
 
   if (h->flag_verbose)
     {
@@ -396,8 +399,7 @@ ghw_read_str (struct ghw_handler *h)
 	  c = fgetc (h->stream);
 	  if (c == EOF)
 	    return -1;
-	  if ((c >= 0 && c <= 31)
-	      || (c >= 128 && c <= 159))
+	  if ((c >= 0 && c <= 31) || (c >= 128 && c <= 159))
 	    break;
 	  *p++ = c;
 	}
@@ -519,8 +521,8 @@ ghw_get_range_length (union ghw_range *rng)
   return (res <= 0) ? 0 : res;
 }
 
-static union ghw_type *
-ghw_read_type_bounds (struct ghw_handler *h, union ghw_type *base);
+static union ghw_type *ghw_read_type_bounds (struct ghw_handler *h,
+					     union ghw_type *base);
 
 /* Create an array subtype using BASE and ranges read from H.  */
 
@@ -528,7 +530,7 @@ struct ghw_subtype_array *
 ghw_read_array_subtype (struct ghw_handler *h, union ghw_type *base)
 {
   struct ghw_type_array *arr =
-    (struct ghw_type_array *)ghw_get_base_type (base);
+    (struct ghw_type_array *) ghw_get_base_type (base);
   struct ghw_subtype_array *sa;
   unsigned j;
   int nbr_scalars;
@@ -554,10 +556,10 @@ ghw_read_array_subtype (struct ghw_handler *h, union ghw_type *base)
   else
     {
       /* Read bounds for the elements.  */
-      sa->el = ghw_read_type_bounds(h, arr->el);
+      sa->el = ghw_read_type_bounds (h, arr->el);
       nbr_els = get_nbr_elements (sa->el);
     }
-    sa->nbr_scalars = nbr_scalars * nbr_els;
+  sa->nbr_scalars = nbr_scalars * nbr_els;
   return sa;
 }
 
@@ -582,7 +584,8 @@ ghw_read_record_subtype (struct ghw_handler *h, struct ghw_type_record *base)
       unsigned j;
       int nbr_scalars;
 
-      sr->els = malloc (base->nbr_fields * sizeof (struct ghw_record_element));
+      sr->els =
+	malloc (base->nbr_fields * sizeof (struct ghw_record_element));
       nbr_scalars = 0;
       for (j = 0; j < base->nbr_fields; j++)
 	{
@@ -597,7 +600,7 @@ ghw_read_record_subtype (struct ghw_handler *h, struct ghw_type_record *base)
 	    }
 	  else
 	    {
-              sr->els[j].type = ghw_read_type_bounds(h, btype);
+	      sr->els[j].type = ghw_read_type_bounds (h, btype);
 	      el_nbr_scalars = get_nbr_elements (sr->els[j].type);
 	    }
 	  nbr_scalars += el_nbr_scalars;
@@ -616,15 +619,15 @@ ghw_read_type_bounds (struct ghw_handler *h, union ghw_type *base)
     {
     case ghdl_rtik_type_array:
     case ghdl_rtik_subtype_unbounded_array:
-      return (union ghw_type *)ghw_read_array_subtype (h, base);
+      return (union ghw_type *) ghw_read_array_subtype (h, base);
       break;
     case ghdl_rtik_type_record:
     case ghdl_rtik_subtype_unbounded_record:
-      return (union ghw_type *)ghw_read_record_subtype (h, &base->rec);
+      return (union ghw_type *) ghw_read_record_subtype (h, &base->rec);
       break;
     default:
       fprintf (stderr, "ghw_read_type_bounds: unhandled kind %d\n",
-               base->kind);
+	       base->kind);
       return NULL;
     }
 }
@@ -641,8 +644,8 @@ ghw_read_type (struct ghw_handler *h)
   if (hdr[0] != 0 || hdr[1] != 0 || hdr[2] != 0 || hdr[3] != 0)
     return -1;
   h->nbr_types = ghw_get_i32 (h, &hdr[4]);
-  h->types = (union ghw_type **)
-    malloc (h->nbr_types * sizeof (union ghw_type *));
+  h->types =
+    (union ghw_type **) malloc (h->nbr_types * sizeof (union ghw_type *));
 
   for (i = 0; i < h->nbr_types; i++)
     {
@@ -652,7 +655,7 @@ ghw_read_type (struct ghw_handler *h)
       if (t == EOF)
 	return -1;
       if (h->flag_verbose > 1)
-        printf ("type[%d]= %d\n", i, t);
+	printf ("type[%d]= %d\n", i, t);
       switch (t)
 	{
 	case ghdl_rtik_type_b2:
@@ -678,7 +681,7 @@ ghw_read_type (struct ghw_handler *h)
 	      }
 	    if (h->flag_verbose > 1)
 	      printf ("\n");
-	    h->types[i] = (union ghw_type *)e;
+	    h->types[i] = (union ghw_type *) e;
 	    break;
 	  err_b2:
 	    free (e);
@@ -696,9 +699,8 @@ ghw_read_type (struct ghw_handler *h)
 	    sc->name = ghw_read_strid (h);
 	    if (h->flag_verbose > 1)
 	      printf ("scalar: %s\n", sc->name);
-	    h->types[i] = (union ghw_type *)sc;
-	  }
-	  break;
+	    h->types[i] = (union ghw_type *) sc;
+	  } break;
 	case ghdl_rtik_type_p32:
 	case ghdl_rtik_type_p64:
 	  {
@@ -726,7 +728,7 @@ ghw_read_type (struct ghw_handler *h)
 	      }
 	    if (h->flag_verbose > 1)
 	      printf ("physical: %s\n", ph->name);
-	    h->types[i] = (union ghw_type *)ph;
+	    h->types[i] = (union ghw_type *) ph;
 	    break;
 	  err_p32:
 	    free (ph->units);
@@ -745,9 +747,8 @@ ghw_read_type (struct ghw_handler *h)
 	    ss->rng = ghw_read_range (h);
 	    if (h->flag_verbose > 1)
 	      printf ("subtype scalar: %s\n", ss->name);
-	    h->types[i] = (union ghw_type *)ss;
-	  }
-	  break;
+	    h->types[i] = (union ghw_type *) ss;
+	  } break;
 	case ghdl_rtik_type_array:
 	  {
 	    struct ghw_type_array *arr;
@@ -759,14 +760,15 @@ ghw_read_type (struct ghw_handler *h)
 	    arr->el = ghw_read_typeid (h);
 	    if (ghw_read_uleb128 (h, &arr->nbr_dim) != 0)
 	      goto err_array;
-	    arr->dims = (union ghw_type **)
-	      malloc (arr->nbr_dim * sizeof (union ghw_type *));
+	    arr->dims =
+	      (union ghw_type **) malloc (arr->nbr_dim *
+					  sizeof (union ghw_type *));
 	    for (j = 0; j < arr->nbr_dim; j++)
 	      arr->dims[j] = ghw_read_typeid (h);
 	    if (h->flag_verbose > 1)
-	      printf ("array: %s (ndim=%u) of %s\n",
-                      arr->name, arr->nbr_dim, arr->el->common.name);
-	    h->types[i] = (union ghw_type *)arr;
+	      printf ("array: %s (ndim=%u) of %s\n", arr->name, arr->nbr_dim,
+		      arr->el->common.name);
+	    h->types[i] = (union ghw_type *) arr;
 	    break;
 	  err_array:
 	    free (arr);
@@ -784,21 +786,21 @@ ghw_read_type (struct ghw_handler *h)
 
 	    sa = ghw_read_array_subtype (h, base);
 	    sa->name = name;
-	    h->types[i] = (union ghw_type *)sa;
+	    h->types[i] = (union ghw_type *) sa;
 	    if (h->flag_verbose > 1)
-	      printf ("subtype array: %s (nbr_scalars=%d)\n",
-		      sa->name, sa->nbr_scalars);
+	      printf ("subtype array: %s (nbr_scalars=%d)\n", sa->name,
+		      sa->nbr_scalars);
 	  }
 	  break;
 	case ghdl_rtik_subtype_unbounded_array:
 	  {
 	    struct ghw_subtype_unbounded_array *sua;
 
-            sua = malloc (sizeof (struct ghw_subtype_unbounded_array));
-            sua->kind = t;
+	    sua = malloc (sizeof (struct ghw_subtype_unbounded_array));
+	    sua->kind = t;
 	    sua->name = ghw_read_strid (h);
 	    sua->base = ghw_read_typeid (h);
-	    h->types[i] = (union ghw_type *)sua;
+	    h->types[i] = (union ghw_type *) sua;
 	    if (h->flag_verbose > 1)
 	      printf ("subtype unbounded array: %s\n", sua->name);
 	  }
@@ -815,8 +817,8 @@ ghw_read_type (struct ghw_handler *h)
 	    rec->els = NULL;
 	    if (ghw_read_uleb128 (h, &rec->nbr_fields) != 0)
 	      goto err_record;
-	    rec->els = malloc
-	      (rec->nbr_fields * sizeof (struct ghw_record_element));
+	    rec->els =
+	      malloc (rec->nbr_fields * sizeof (struct ghw_record_element));
 	    nbr_scalars = 0;
 	    for (j = 0; j < rec->nbr_fields; j++)
 	      {
@@ -824,7 +826,8 @@ ghw_read_type (struct ghw_handler *h)
 		rec->els[j].type = ghw_read_typeid (h);
 		if (nbr_scalars != -1)
 		  {
-		    int field_nbr_scalars = get_nbr_elements (rec->els[j].type);
+		    int field_nbr_scalars =
+		      get_nbr_elements (rec->els[j].type);
 		    if (field_nbr_scalars == -1)
 		      nbr_scalars = -1;
 		    else
@@ -833,9 +836,9 @@ ghw_read_type (struct ghw_handler *h)
 	      }
 	    rec->nbr_scalars = nbr_scalars;
 	    if (h->flag_verbose > 1)
-	      printf ("record type: %s (nbr_scalars=%d)\n",
-		      rec->name, rec->nbr_scalars);
-	    h->types[i] = (union ghw_type *)rec;
+	      printf ("record type: %s (nbr_scalars=%d)\n", rec->name,
+		      rec->nbr_scalars);
+	    h->types[i] = (union ghw_type *) rec;
 	    break;
 	  err_record:
 	    free (rec->els);
@@ -850,14 +853,14 @@ ghw_read_type (struct ghw_handler *h)
 	    struct ghw_type_record *base;
 
 	    name = ghw_read_strid (h);
-	    base = (struct ghw_type_record *)ghw_read_typeid (h);
+	    base = (struct ghw_type_record *) ghw_read_typeid (h);
 
 	    sr = ghw_read_record_subtype (h, base);
 	    sr->name = name;
-	    h->types[i] = (union ghw_type *)sr;
+	    h->types[i] = (union ghw_type *) sr;
 	    if (h->flag_verbose > 1)
-	      printf ("subtype record: %s (nbr_scalars=%d)\n",
-		      sr->name, sr->nbr_scalars);
+	      printf ("subtype record: %s (nbr_scalars=%d)\n", sr->name,
+		      sr->nbr_scalars);
 	  }
 	  break;
 	default:
@@ -893,8 +896,7 @@ ghw_read_wk_types (struct ghw_handler *h)
 	break;
 
       tid = ghw_read_typeid (h);
-      if (tid->kind == ghdl_rtik_type_b2
-	  || tid->kind == ghdl_rtik_type_e8)
+      if (tid->kind == ghdl_rtik_type_b2 || tid->kind == ghdl_rtik_type_e8)
 	{
 	  if (h->flag_verbose > 0)
 	    printf ("%s: wkt=%d\n", tid->en.name, t);
@@ -907,7 +909,7 @@ ghw_read_wk_types (struct ghw_handler *h)
 void
 ghw_disp_typename (struct ghw_handler *h, union ghw_type *t)
 {
-  (void)h;
+  (void) h;
   printf ("%s", t->common.name);
 }
 
@@ -986,10 +988,9 @@ ghw_read_signal (struct ghw_handler *h, unsigned int *sigs, union ghw_type *t)
     }
 }
 
-
 int
-ghw_read_value (struct ghw_handler *h,
-		union ghw_val *val, union ghw_type *type)
+ghw_read_value (struct ghw_handler *h, union ghw_val *val,
+		union ghw_type *type)
 {
   switch (ghw_get_base_type (type)->kind)
     {
@@ -1065,10 +1066,10 @@ ghw_read_hie (struct ghw_handler *h)
   h->nbr_sigs = ghw_get_i32 (h, &hdr[12]);
 
   if (h->flag_verbose)
-    printf ("%u scopes, %u signals, %u signal elements\n",
-	    nbr_scopes, nbr_sigs, h->nbr_sigs);
+    printf ("%u scopes, %u signals, %u signal elements\n", nbr_scopes,
+	    nbr_sigs, h->nbr_sigs);
 
-  blk = (struct ghw_hie *)malloc (sizeof (struct ghw_hie));
+  blk = (struct ghw_hie *) malloc (sizeof (struct ghw_hie));
   blk->kind = ghw_hie_design;
   blk->name = NULL;
   blk->parent = NULL;
@@ -1149,8 +1150,8 @@ ghw_read_hie (struct ghw_handler *h)
 	    {
 	      el->u.blk.iter_type = ghw_read_typeid (h);
 	      el->u.blk.iter_value = malloc (sizeof (union ghw_val));
-	      if (ghw_read_value (h, el->u.blk.iter_value,
-				  el->u.blk.iter_type) < 0)
+	      if (ghw_read_value
+		  (h, el->u.blk.iter_value, el->u.blk.iter_type) < 0)
 		return -1;
 	    }
 	  blk = el;
@@ -1171,8 +1172,8 @@ ghw_read_hie (struct ghw_handler *h)
 	    nbr_el = get_nbr_elements (el->u.sig.type);
 	    if (nbr_el < 0)
 	      return -1;
-	    sigs = (unsigned int *) malloc
-	      ((nbr_el + 1) * sizeof (unsigned int));
+	    sigs =
+	      (unsigned int *) malloc ((nbr_el + 1) * sizeof (unsigned int));
 	    el->u.sig.sigs = sigs;
 	    /* Last element is NULL.  */
 	    sigs[nbr_el] = 0;
@@ -1245,8 +1246,7 @@ ghw_get_hie_name (struct ghw_hie *h)
     }
 }
 
-void
-ghw_disp_value (union ghw_val *val, union ghw_type *type);
+void ghw_disp_value (union ghw_val *val, union ghw_type *type);
 
 static void
 print_name (struct ghw_hie *hie, int full_names)
@@ -1393,7 +1393,7 @@ ghw_disp_hie (struct ghw_handler *h, struct ghw_hie *top)
 int
 ghw_read_eoh (struct ghw_handler *h)
 {
-  (void)h;
+  (void) h;
   return 0;
 }
 
@@ -1540,7 +1540,6 @@ ghw_read_cycle_next (struct ghw_handler *h)
   return 1;
 }
 
-
 int
 ghw_read_cycle_end (struct ghw_handler *h)
 {
@@ -1590,8 +1589,7 @@ ghw_disp_value (union ghw_val *val, union ghw_type *type)
       printf ("%g", val->f64);
       break;
     default:
-      fprintf (stderr, "ghw_disp_value: cannot handle type %d\n",
-	       type->kind);
+      fprintf (stderr, "ghw_disp_value: cannot handle type %d\n", type->kind);
       abort ();
     }
 }
@@ -1657,8 +1655,8 @@ is_skip_signal (int *signals_to_keep, int nb_signals_to_keep, int signal)
 }
 
 void
-ghw_filter_signals (struct ghw_handler *h,
-		    int *signals_to_keep, int nb_signals_to_keep)
+ghw_filter_signals (struct ghw_handler *h, int *signals_to_keep,
+		    int nb_signals_to_keep)
 {
   unsigned i;
 
@@ -1670,8 +1668,8 @@ ghw_filter_signals (struct ghw_handler *h,
 	}
       for (i = 0; i < h->nbr_sigs; ++i)
 	{
-	  h->skip_sigs[i] = is_skip_signal (signals_to_keep,
-					    nb_signals_to_keep, i);
+	  h->skip_sigs[i] =
+	    is_skip_signal (signals_to_keep, nb_signals_to_keep, i);
 	}
     }
   else
@@ -1700,6 +1698,7 @@ ghw_disp_values (struct ghw_handler *h)
 	}
     }
 }
+
 int
 ghw_read_directory (struct ghw_handler *h)
 {
@@ -1792,8 +1791,8 @@ ghw_read_sm_hdr (struct ghw_handler *h, int *list)
     }
   else
     {
-      fprintf (stderr, "unknown GHW section %c%c%c%c\n",
-	       hdr[0], hdr[1], hdr[2], hdr[3]);
+      fprintf (stderr, "unknown GHW section %c%c%c%c\n", hdr[0], hdr[1],
+	       hdr[2], hdr[3]);
       return -1;
     }
   if (res != 0)
@@ -1872,7 +1871,6 @@ ghw_read_cycle (struct ghw_handler *h)
       if (0)
 	ghw_disp_values (h);
 
-
       res = ghw_read_cycle_next (h);
       if (res < 0)
 	return res;
@@ -1918,8 +1916,8 @@ ghw_read_dump (struct ghw_handler *h)
 	}
       else
 	{
-	  fprintf (stderr, "unknown GHW section %c%c%c%c\n",
-		   hdr[0], hdr[1], hdr[2], hdr[3]);
+	  fprintf (stderr, "unknown GHW section %c%c%c%c\n", hdr[0], hdr[1],
+		   hdr[2], hdr[3]);
 	  return -1;
 	}
       if (res != 0)
@@ -1927,17 +1925,16 @@ ghw_read_dump (struct ghw_handler *h)
     }
 }
 
-struct ghw_section ghw_sections[] = {
-  { "\0\0\0", NULL },
-  { "STR", ghw_read_str },
-  { "HIE", ghw_read_hie },
-  { "TYP", ghw_read_type },
-  { "WKT", ghw_read_wk_types },
-  { "EOH", ghw_read_eoh },
-  { "SNP", ghw_read_snapshot },
-  { "CYC", ghw_read_cycle },
-  { "DIR", ghw_read_directory },
-  { "TAI", ghw_read_tailer }
+struct ghw_section ghw_sections[] = { {"\0\0\0", NULL},
+{"STR", ghw_read_str},
+{"HIE", ghw_read_hie},
+{"TYP", ghw_read_type},
+{"WKT", ghw_read_wk_types},
+{"EOH", ghw_read_eoh},
+{"SNP", ghw_read_snapshot},
+{"CYC", ghw_read_cycle},
+{"DIR", ghw_read_directory},
+{"TAI", ghw_read_tailer}
 };
 
 int
@@ -1958,8 +1955,8 @@ ghw_read_section (struct ghw_handler *h)
     if (memcmp (hdr, ghw_sections[i].name, 4) == 0)
       return i;
 
-  fprintf (stderr, "ghw_read_section: unknown GHW section %c%c%c%c\n",
-	   hdr[0], hdr[1], hdr[2], hdr[3]);
+  fprintf (stderr, "ghw_read_section: unknown GHW section %c%c%c%c\n", hdr[0],
+	   hdr[1], hdr[2], hdr[3]);
   return 0;
 }
 
@@ -1998,17 +1995,17 @@ ghw_disp_range (union ghw_type *type, union ghw_range *rng)
       break;
     case ghdl_rtik_type_i32:
     case ghdl_rtik_type_p32:
-      printf (GHWPRI32 " %s " GHWPRI32,
-	      rng->i32.left, ghw_get_dir (rng->i32.dir), rng->i32.right);
+      printf (GHWPRI32 " %s " GHWPRI32, rng->i32.left,
+	      ghw_get_dir (rng->i32.dir), rng->i32.right);
       break;
     case ghdl_rtik_type_i64:
     case ghdl_rtik_type_p64:
-      printf (GHWPRI64 " %s " GHWPRI64,
-	      rng->i64.left, ghw_get_dir (rng->i64.dir), rng->i64.right);
+      printf (GHWPRI64 " %s " GHWPRI64, rng->i64.left,
+	      ghw_get_dir (rng->i64.dir), rng->i64.right);
       break;
     case ghdl_rtik_type_f64:
-      printf ("%g %s %g",
-	      rng->f64.left, ghw_get_dir (rng->f64.dir), rng->f64.right);
+      printf ("%g %s %g", rng->f64.left, ghw_get_dir (rng->f64.dir),
+	      rng->f64.right);
       break;
     default:
       printf ("?(%d)", rng->kind);
@@ -2020,7 +2017,7 @@ ghw_disp_array_subtype_bounds (struct ghw_subtype_array *a)
 {
   unsigned i;
   struct ghw_type_array *base =
-    (struct ghw_type_array *)ghw_get_base_type (a->base);
+    (struct ghw_type_array *) ghw_get_base_type (a->base);
 
   printf (" (");
   for (i = 0; i < base->nbr_dim; i++)
@@ -2079,31 +2076,27 @@ ghw_disp_subtype_definition (struct ghw_handler *h, union ghw_type *t)
 	ghw_disp_typename (h, s->base);
 	printf (" range ");
 	ghw_disp_range (s->base, s->rng);
-      }
-      break;
+      } break;
     case ghdl_rtik_subtype_array:
       {
 	struct ghw_subtype_array *a = &t->sa;
 
-	ghw_disp_typename (h, (union ghw_type *)a->base);
+	ghw_disp_typename (h, (union ghw_type *) a->base);
 	ghw_disp_array_subtype_bounds (a);
-      }
-      break;
+      } break;
     case ghdl_rtik_subtype_record:
       {
 	struct ghw_subtype_record *sr = &t->sr;
 
-	ghw_disp_typename (h, (union ghw_type *)sr->base);
+	ghw_disp_typename (h, (union ghw_type *) sr->base);
 	ghw_disp_record_subtype_bounds (sr);
-      }
-      break;
+      } break;
     case ghdl_rtik_subtype_unbounded_array:
       {
 	struct ghw_subtype_unbounded_record *sur = &t->sur;
 
-	ghw_disp_typename (h, (union ghw_type *)sur->base);
-      }
-      break;
+	ghw_disp_typename (h, (union ghw_type *) sur->base);
+      } break;
     default:
       printf ("ghw_disp_subtype_definition: unhandled type kind %d\n",
 	      t->kind);
@@ -2157,8 +2150,7 @@ ghw_disp_type (struct ghw_handler *h, union ghw_type *t)
       {
 	struct ghw_type_scalar *s = &t->sc;
 	printf ("type %s is range <>;\n", s->name);
-      }
-      break;
+      } break;
     case ghdl_rtik_type_p32:
     case ghdl_rtik_type_p64:
       {
@@ -2169,12 +2161,11 @@ ghw_disp_type (struct ghw_handler *h, union ghw_type *t)
 	for (i = 0; i < p->nbr_units; i++)
 	  {
 	    struct ghw_unit *u = &p->units[i];
-	    printf ("  %s = " GHWPRI64 " %s;\n",
-		    u->name, u->val, p->units[0].name);
+	    printf ("  %s = " GHWPRI64 " %s;\n", u->name, u->val,
+		    p->units[0].name);
 	  }
 	printf ("end units\n");
-      }
-      break;
+      } break;
     case ghdl_rtik_type_array:
       {
 	struct ghw_type_array *a = &t->ar;
@@ -2217,8 +2208,7 @@ ghw_disp_type (struct ghw_handler *h, union ghw_type *t)
 	printf ("subtype %s is ", c->name);
 	ghw_disp_subtype_definition (h, t);
 	printf (";\n");
-      }
-      break;
+      } break;
     default:
       printf ("ghw_disp_type: unhandled type kind %d\n", t->kind);
     }

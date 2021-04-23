@@ -15,11 +15,11 @@
   along with this program.  If not, see <gnu.org/licenses>.
 */
 
-#include <stdio.h>
 #include <assert.h>
 #include <stdint.h>
-#include <string.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "ghwlib.h"
@@ -36,9 +36,9 @@ usage (void)
 	  " -T  display time\n"
 	  " -s  display signals (and time)\n"
 	  " -S  display strings\n"
-	  " -f  <lst> list of signals to display (default: all, example: -f 1,3,5-7,21-33)\n"
-	  " -l  display list of sections\n"
-	  " -v  verbose\n");
+	  " -f  <lst> list of signals to display (default: all, example: -f "
+	  "1,3,5-7,21-33)\n"
+	  " -l  display list of sections\n" " -v  verbose\n");
 }
 
 static void
@@ -57,8 +57,8 @@ add_single_signal (int **signalSet, int *nbSignals, int signal)
 }
 
 static void
-add_signal_range (int **signalSet,
-		  int *nbSignals, const char *s, const char *e)
+add_signal_range (int **signalSet, int *nbSignals, const char *s,
+		  const char *e)
 {
 
   int i;
@@ -67,11 +67,8 @@ add_signal_range (int **signalSet,
   int rangeStart = -1;
   int bytesMatched = -1;
   int expected = ((e - s) - 1);
-  int itemsMatched = sscanf (s,
-			     "%d-%d%n",
-			     &rangeStart,
-			     &rangeEnd,
-			     &bytesMatched);
+  int itemsMatched =
+    sscanf (s, "%d-%d%n", &rangeStart, &rangeEnd, &bytesMatched);
   if (2 == itemsMatched && expected == bytesMatched)
     {
       if (rangeEnd < rangeStart)
@@ -97,8 +94,8 @@ add_signal_range (int **signalSet,
   if (rangeEnd < 0 || rangeStart < 0 || rangeSize < 0)
     {
       fprintf (stderr,
-	       "incorrect signal range specification\"%s\" found in command line, aborting\n",
-	       s);
+	       "incorrect signal range specification\"%s\" found in "
+	       "command line, aborting\n", s);
       exit (1);
     }
 
@@ -253,7 +250,7 @@ main (int argc, char **argv)
 		}
 	      section_name = ghw_sections[section].name;
 	      printf ("Section %s\n", section_name);
-	      if ((*ghw_sections[section].handler)(hp) < 0)
+	      if ((*ghw_sections[section].handler) (hp) < 0)
 		break;
 
 	      if (flag_disp_strings && strcmp (section_name, "STR") == 0)
@@ -289,14 +286,14 @@ main (int argc, char **argv)
 		  if (flag_disp_time)
 		    printf ("Time is %lld fs\n", hp->snap_time);
 		  if (flag_disp_signals)
-                    {
-                      if (!filter_done)
-                        {
-                          ghw_filter_signals (hp, signal_set, nb_signals);
-                          filter_done = 1;
-                        }
-                      ghw_disp_values (hp);
-                    }
+		    {
+		      if (!filter_done)
+			{
+			  ghw_filter_signals (hp, signal_set, nb_signals);
+			  filter_done = 1;
+			}
+		      ghw_disp_values (hp);
+		    }
 		  break;
 		case ghw_res_eof:
 		  eof = 1;
