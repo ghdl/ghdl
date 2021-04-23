@@ -8,7 +8,7 @@ if ghdl_has_feature mytestbench ghw; then
   elab_simulate mytestbench --wave=dump.ghw | tee mytestbench.out
 
   # We're just checking that ghwdump doesn't crash on a zero length signal.
-  ghwdump -ths dump.ghw > dump.txt
+  "${GHWDUMP:-ghwdump}" -ths dump.ghw > dump.txt
 
   rm -f mytestbench.out dump.txt dump.ghw
 fi

@@ -106,7 +106,7 @@ elab_simulate_failure ()
 # Compare the dump of a GHW wave and a previous golden dump
 ghw_diff ()
 {
-  ghwdump -ths "$1".ghw > "$1".txt
+  "${GHWDUMP:-ghwdump}" -ths "$1".ghw > "$1".txt
   if diff --strip-trailing-cr "$1".txt golden_"$1".txt; then
     echo "The ghw dump matches."
   else

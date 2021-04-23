@@ -50,6 +50,7 @@ Write-Host "Run testsuites..." -ForegroundColor Yellow
 cd "$($env:APPVEYOR_BUILD_FOLDER)\testsuite"
 # Use a MinGW compatible path
 $env:GHDL="$($env:GHDL_PREFIX_DIR)/bin/ghdl.exe"
+$env:GHWDUMP="$($env:GHDL_PREFIX_DIR)/bin/ghwdump.exe"
 
 # Exit status
 $Err = 0
