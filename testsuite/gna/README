@@ -47,6 +47,7 @@ you should test if the feature is supported.  From issue158:
 --------------------------------------------------
 if ghdl_has_feature repro ghw; then
   simulate repro --wave=repro.ghw
-  # How to test the ghw ?  Use ghwdump ?
+  ghw_diff repro
+  rm -f repro.txt repro.ghw
 fi
 --------------------------------------------------
