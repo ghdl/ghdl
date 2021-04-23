@@ -2,21 +2,20 @@ type std_ulogic is ('U', 'X', '0', '1', 'Z', 'W', 'L', 'H', '-');  -- WKT:3
 type integer is range <>;
 subtype natural is integer range 0 to 2147483647;
 type std_ulogic_vector is array (natural range <>) of std_ulogic;
-subtype std_logic_vector is std_ulogic_vector;
+subtype my_vector is std_ulogic_vector;
 type t_wishbone_master_out is record
-  dat: std_logic_vector;
+  dat: my_vector;
 end record;
 subtype t_wishbone_slave_in is t_wishbone_master_out;
 design
  package standard: 
  package textio: 
  package std_logic_1164: 
- package numeric_std: 
- package wishbone_pkg: 
- instance wb_demux_tb: 
-  signal wbs_i: t_wishbone_master_out(dat (31 downto 0)): #1-#32
+ package wishbone_pkg2: 
+ instance repro2: 
+  signal wbs_s: t_wishbone_master_out(dat (31 downto 0)): #1-#32
   process stimulus: 
-  instance dut: 
+  block dut: 
    port-in wbs_i: t_wishbone_master_out(dat (31 downto 0)): #1-#32
 Time is 0 fs
 #1: 'U' (0)
