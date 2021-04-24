@@ -15,8 +15,8 @@
   along with this program.  If not, see <gnu.org/licenses>.
 */
 
-#ifndef _GHWLIB_H_
-#define _GHWLIB_H_
+#ifndef _LIBGHW_H_
+#define _LIBGHW_H_
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,7 +26,7 @@
 #include "config.h"
 #endif
 
-/* The ghwlib uses the standard c99 int32_t and int64_t.  They are declared
+/* The libghw uses the standard c99 int32_t and int64_t.  They are declared
    in stdint.h.  Header inttypes.h includes stdint.h and provides macro for
    printf and co specifiers.  Use it if known to be available.  */
 
@@ -468,4 +468,4 @@ void ghw_disp_range (union ghw_type *type, union ghw_range *rng);
 void ghw_disp_type (struct ghw_handler *h, union ghw_type *t);
 
 void ghw_disp_types (struct ghw_handler *h);
-#endif /* _GHWLIB_H_ */
+#endif /* _LIBGHW_H_ */
