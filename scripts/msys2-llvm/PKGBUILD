@@ -40,7 +40,7 @@ check() {
   cd "${srcdir}/build-${CARCH}"
   make install.vpi.local
   pip3 install -r ../../../../testsuite/requirements.txt
-  GHDL_PREFIX="${srcdir}/build-${CARCH}" make test
+  GHDL="${srcdir}/build-${CARCH}/bin/ghdl" make test
 }
 
 package() {
