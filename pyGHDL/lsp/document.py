@@ -50,7 +50,7 @@ class Document(object):
         return sfe
 
     def reload(self, source):
-        """Reload the source of a document.  """
+        """Reload the source of a document."""
         src_bytes = source.encode(Document.encoding, "replace")
         files_map_editor.Fill_Text(self._fe, ctypes.c_char_p(src_bytes), len(src_bytes))
 
