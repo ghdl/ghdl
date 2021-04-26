@@ -1254,7 +1254,7 @@ new_var_decl(ODnode *Res, OIdent Ident, OStorage Storage, OTnode Atype)
          DebugCurrentLine, Atype->Dbg, true);
       DBuilder->insertDeclare
         (unwrap(Decl), D, DBuilder->createExpression(),
-         DebugLoc::get(DebugCurrentLine, 0, DebugCurrentScope),
+         DILocation::get(DebugCurrentScope->getContext(), DebugCurrentLine, 0, DebugCurrentScope),
          unwrap(LLVMGetInsertBlock(DeclBuilder)));
     }
 #endif
@@ -1597,7 +1597,7 @@ start_subprogram_body(ODnodeSubprg *Func)
     DebugCurrentScope = DebugCurrentSubprg;
 
     unwrap(Builder)->SetCurrentDebugLocation
-      (DebugLoc::get(DebugCurrentLine, 0, DebugCurrentScope));
+      (DILocation::get(DebugCurrentScope->getContext(), DebugCurrentLine, 0, DebugCurrentScope));
   }
 
   if (FlagDebug) {
@@ -1612,7 +1612,7 @@ start_subprogram_body(ODnodeSubprg *Func)
          DebugCurrentFile, DebugCurrentLine, Inter->Dtype->Dbg, true);
       DBuilder->insertDeclare
         (unwrap(Var), D, DBuilder->createExpression(),
-         DebugLoc::get(DebugCurrentLine, 0, DebugCurrentSubprg),
+         DILocation::get(DebugCurrentSubprg->getContext(), DebugCurrentLine, 0, DebugCurrentSubprg),
          unwrap(LLVMGetInsertBlock(DeclBuilder)));
       LLVMBuildStore(DeclBuilder, Inter->Ref, Var);
       Inter->Ref = Var;
@@ -2759,7 +2759,7 @@ new_debug_line_stmt (unsigned Line)
   if (FlagDebugLines && Line != DebugCurrentLine) {
     DebugCurrentLine = Line;
     unwrap(Builder)->SetCurrentDebugLocation
-      (DebugLoc::get(DebugCurrentLine, 0, DebugCurrentScope));
+      (DILocation::get(DebugCurrentScope->getContext(), DebugCurrentLine, 0, DebugCurrentScope));
   }
 #endif
 }
