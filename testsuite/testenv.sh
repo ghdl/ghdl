@@ -107,10 +107,23 @@ elab_simulate_failure ()
   "$GHDL" --elab-run $GHDL_STD_FLAGS $GHDL_FLAGS $@ --expect-failure
 }
 
+# Call ghwdump
+ghw_dump ()
+{
+  if [ x"$GHWDUMP" = x ]; then
+    case "$GHDL" in
+      */*) export GHWDUMP=$(dirname $GHDL)/ghwdump;;
+      *) export GHWDUMP=ghwdump;;
+    esac
+  fi
+
+  "$GHWDUMP" -ths "$1".ghw > "$1".txt
+}
+
 # Compare the dump of a GHW wave and a previous golden dump
 ghw_diff ()
 {
-  "${GHWDUMP:-ghwdump}" -ths "$1".ghw > "$1".txt
+  ghw_dump "$1"
   if diff --strip-trailing-cr "$1".txt golden_"$1".txt; then
     echo "The ghw dump matches."
   else
