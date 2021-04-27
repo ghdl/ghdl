@@ -87,6 +87,15 @@ if [ "x$GHDL" = "x" ]; then
   fi
 fi
 
+if [ "$GHWDUMP" = "" ]; then
+  case "$GHDL" in
+    */*) export GHWDUMP=${GHDL%/*}/ghwdump;;
+    *) export GHWDUMP=ghwdump;;
+  esac
+fi
+
+command -v "$GHWDUMP" >/dev/null || die "ghwdump executable not found: $GHWDUMP"
+
 cd $(dirname "$0")
 rm -f test_ok
 failures=""

@@ -291,7 +291,7 @@ install.gcc: install.grt
 uninstall.gcc: uninstall.grt
 
 test.gcc:
-	cd $(srcdir)/testsuite; GHDL=$(GHDL_GCC_BIN) ./testsuite.sh
+	cd $(srcdir)/testsuite; GHDL=$(GHDL_GCC_BIN) GHWDUMP=$(CURDIR)/ghwdump$(EXEEXT) ./testsuite.sh
 
 #################### For gcc backend - development only (local build) ####
 
