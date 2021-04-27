@@ -474,8 +474,6 @@ libghdl-py.tgz:
 
 GHWDUMP_OBJS=ghwdump.o libghw.o
 
-ghwdump: ghwdump$(EXEEXT)
-
 ghwdump$(EXEEXT): $(GHWDUMP_OBJS)
 	$(CC) -o $@ $(GHWDUMP_OBJS)
 
