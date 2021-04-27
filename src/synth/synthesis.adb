@@ -22,8 +22,6 @@ with Vhdl.Errors; use Vhdl.Errors;
 with Synth.Objtypes;
 with Synth.Insts; use Synth.Insts;
 
-with Synth.Environment.Debug;
-pragma Unreferenced (Synth.Environment.Debug);
 with Synth.Values.Debug;
 pragma Unreferenced (Synth.Values.Debug);
 

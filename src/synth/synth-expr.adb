@@ -41,7 +41,7 @@ with Netlists.Locations;
 
 with Synth.Memtype; use Synth.Memtype;
 with Synth.Errors; use Synth.Errors;
-with Synth.Environment;
+with Synth.Vhdl_Environment;
 with Synth.Decls;
 with Synth.Stmts; use Synth.Stmts;
 with Synth.Vhdl_Oper; use Synth.Vhdl_Oper;
@@ -67,7 +67,7 @@ package body Synth.Expr is
          when Value_Const =>
             return Get_Memtyp (V);
          when Value_Wire =>
-            return Synth.Environment.Get_Static_Wire (V.Val.W);
+            return Synth.Vhdl_Environment.Env.Get_Static_Wire (V.Val.W);
          when Value_Alias =>
             declare
                Res : Memtyp;
@@ -88,7 +88,8 @@ package body Synth.Expr is
          when Value_Const =>
             return Read_Discrete (Get_Memtyp (V));
          when Value_Wire =>
-            return Read_Discrete (Synth.Environment.Get_Static_Wire (V.Val.W));
+            return Read_Discrete
+              (Synth.Vhdl_Environment.Env.Get_Static_Wire (V.Val.W));
          when others =>
             raise Internal_Error;
       end case;
@@ -107,9 +108,9 @@ package body Synth.Expr is
          when Value_Net =>
             N := V.Val.N;
          when Value_Wire =>
-            if Synth.Environment.Is_Static_Wire (V.Val.W) then
+            if Synth.Vhdl_Environment.Env.Is_Static_Wire (V.Val.W) then
                return Read_Discrete
-                 (Synth.Environment.Get_Static_Wire (V.Val.W)) >= 0;
+                 (Synth.Vhdl_Environment.Env.Get_Static_Wire (V.Val.W)) >= 0;
             else
                return False;
             end if;

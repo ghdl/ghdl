@@ -16,6 +16,7 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
+generic
 package Synth.Environment.Debug is
    procedure Put_Wire_Id (Wid : Wire_Id);
    procedure Debug_Wire (Wid : Wire_Id);

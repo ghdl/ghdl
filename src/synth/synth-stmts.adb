@@ -791,7 +791,7 @@ package body Synth.Stmts is
          Pop_Phi (Phi_False);
 
          Cond_Net := Get_Net (Ctxt, Cond_Val);
-         Merge_Phis (Ctxt, Cond_Net, Phi_True, Phi_False, Stmt);
+         Merge_Phis (Ctxt, Cond_Net, Phi_True, Phi_False, Get_Location (Stmt));
       end if;
    end Synth_If_Statement;
 
@@ -1058,6 +1058,51 @@ package body Synth.Stmts is
    procedure Free_Seq_Assign_Value_Array is new Ada.Unchecked_Deallocation
      (Seq_Assign_Value_Array, Seq_Assign_Value_Array_Acc);
 
+   function Is_Assign_Value_Array_Static
+     (Wid : Wire_Id; Arr : Seq_Assign_Value_Array) return Memtyp
+   is
+      Res : Memtyp;
+      Prev_Val : Memtyp;
+   begin
+      Prev_Val := Null_Memtyp;
+      for I in Arr'Range loop
+         case Arr (I).Is_Static is
+            when False =>
+               --  A value is not static.
+               return Null_Memtyp;
+            when Unknown =>
+               if Prev_Val = Null_Memtyp then
+                  --  First use of previous value.
+                  if not Is_Static_Wire (Wid) then
+                     --  The previous value is not static.
+                     return Null_Memtyp;
+                  end if;
+                  Prev_Val := Get_Static_Wire (Wid);
+                  if Res /= Null_Memtyp then
+                     --  There is already a result.
+                     if not Is_Equal (Res, Prev_Val) then
+                        --  The previous value is different from the result.
+                        return Null_Memtyp;
+                     end if;
+                  else
+                     Res := Prev_Val;
+                  end if;
+               end if;
+            when True =>
+               if Res = Null_Memtyp then
+                  --  First value.  Keep it.
+                  Res := Arr (I).Val;
+               else
+                  if not Is_Equal (Res, Arr (I).Val) then
+                     --  Value is different.
+                     return  Null_Memtyp;
+                  end if;
+               end if;
+         end case;
+      end loop;
+      return Res;
+   end Is_Assign_Value_Array_Static;
+
    procedure Synth_Case_Statement_Dynamic
      (C : in out Seq_Context; Stmt : Node; Sel : Valtyp)
    is
@@ -1190,7 +1235,7 @@ package body Synth.Stmts is
                     Get_Seq_Assign_Value (Alts (I).Asgns);
                   Alts (I).Asgns := Get_Assign_Chain (Alts (I).Asgns);
                else
-                  Pasgns (Int32 (I)) := No_Seq_Assign_Value;
+                  Pasgns (Int32 (I)) := (Is_Static => Unknown);
                end if;
             end loop;
 
@@ -1841,7 +1886,7 @@ package body Synth.Stmts is
          then
             Val := Get_Value (Subprg_Inst, Inter);
             --  Arguments are passed by copy.
-            Wire := Alloc_Wire (Wire_Variable, Val.Typ, Inter);
+            Wire := Alloc_Wire (Wire_Variable, (Inter, Val.Typ));
             Set_Wire_Gate (Wire, Get_Net (Ctxt, Val));
 
             Val := Create_Value_Wire (Wire, Val.Typ);
@@ -1931,11 +1976,11 @@ package body Synth.Stmts is
             Ret_Typ => null,
             Nbr_Ret => 0);
 
-      C.W_En := Alloc_Wire (Wire_Variable, Bit_Type, Imp);
-      C.W_Ret := Alloc_Wire (Wire_Variable, Bit_Type, Imp);
+      C.W_En := Alloc_Wire (Wire_Variable, (Imp, Bit_Type));
+      C.W_Ret := Alloc_Wire (Wire_Variable, (Imp, Bit_Type));
 
       if Is_Func then
-         C.W_Val := Alloc_Wire (Wire_Variable, null, Imp);
+         C.W_Val := Alloc_Wire (Wire_Variable, (Imp, null));
       end if;
 
       --  Create a phi so that all assignments are gathered.
@@ -2247,7 +2292,7 @@ package body Synth.Stmts is
       if Lc.Prev_Loop /= null and then Lc.Prev_Loop.Need_Quit then
          --  An exit or next statement that targets an outer loop may suspend
          --  the execution of this loop.
-         Lc.W_Quit := Alloc_Wire (Wire_Variable, Bit_Type, Lc.Loop_Stmt);
+         Lc.W_Quit := Alloc_Wire (Wire_Variable, (Lc.Loop_Stmt, Bit_Type));
          Set_Wire_Gate (Lc.W_Quit, Build_Control_Signal (C.Inst, 1, Stmt));
          Phi_Assign_Static (Lc.W_Quit, Bit1);
       end if;
@@ -2269,7 +2314,7 @@ package body Synth.Stmts is
 
       if Get_Exit_Flag (Stmt) then
          --  There is an exit statement for this loop.  Create the wire.
-         Lc.W_Exit := Alloc_Wire (Wire_Variable, Bit_Type, Lc.Loop_Stmt);
+         Lc.W_Exit := Alloc_Wire (Wire_Variable, (Lc.Loop_Stmt, Bit_Type));
          Set_Wire_Gate (Lc.W_Exit, Build_Control_Signal (C.Inst, 1, Stmt));
          Phi_Assign_Static (Lc.W_Exit, Bit1);
       end if;
@@ -2471,8 +2516,8 @@ package body Synth.Stmts is
          Push_Phi;
          Pop_Phi (Phi_False);
 
-         Merge_Phis (Ctxt,
-                     Get_Net (Ctxt, Cond_Val), Phi_True, Phi_False, Stmt);
+         Merge_Phis (Ctxt, Get_Net (Ctxt, Cond_Val), Phi_True, Phi_False,
+                     Get_Location (Stmt));
       end if;
    end Synth_Dynamic_Exit_Next_Statement;
 
@@ -2869,7 +2914,8 @@ package body Synth.Stmts is
          return;
       end if;
       N := Get_Net (Ctxt, Cond);
-      En := Phi_Enable (Ctxt, Stmt);
+      En := Phi_Enable (Ctxt, (Stmt, Bit_Type), Bit0, Bit1,
+                        Get_Location (Stmt));
       if En /= No_Net then
          --  Build: En -> Cond
          N := Build2_Imp (Ctxt, En, N, Loc);
@@ -2972,7 +3018,7 @@ package body Synth.Stmts is
                Push_Phi;
                Pop_Phi (Phi_F);
                Merge_Phis (Ctxt, Get_Current_Value (Ctxt, C.W_En),
-                           Phi_T, Phi_F, Stmt);
+                           Phi_T, Phi_F, Get_Location (Stmt));
             end if;
             if Is_Static_Bit0 (C.W_En) then
                --  Not more execution.
@@ -3022,7 +3068,8 @@ package body Synth.Stmts is
       Push_Phi;
       Pop_Phi (Phi_False);
 
-      Merge_Phis (Ctxt, Get_Net (Ctxt, Cond_Val), Phi_True, Phi_False, Stmt);
+      Merge_Phis (Ctxt, Get_Net (Ctxt, Cond_Val), Phi_True, Phi_False,
+                  Get_Location (Stmt));
    end Synth_Process_Sequential_Statements;
 
    procedure Synth_Process_Statement
@@ -3045,7 +3092,7 @@ package body Synth.Stmts is
       C := (Mode => Mode_Dynamic,
             Inst => Make_Instance (Syn_Inst, Proc, C_Sname),
             Cur_Loop => null,
-            W_En => Alloc_Wire (Wire_Variable, Bit_Type, Proc),
+            W_En => Alloc_Wire (Wire_Variable, (Proc, Bit_Type)),
             W_Ret => No_Wire_Id,
             W_Val => No_Wire_Id,
             Ret_Init => No_Net,
@@ -3074,7 +3121,7 @@ package body Synth.Stmts is
          end case;
       end if;
 
-      Pop_And_Merge_Phi (Ctxt, Proc);
+      Pop_And_Merge_Phi (Ctxt, Get_Location (Proc));
 
       Finalize_Declarations (C.Inst, Decls_Chain);
 
@@ -3551,19 +3598,19 @@ package body Synth.Stmts is
          when Iir_Kind_Concurrent_Simple_Signal_Assignment =>
             Push_Phi;
             Synth_Simple_Signal_Assignment (Syn_Inst, Stmt);
-            Pop_And_Merge_Phi (Ctxt, Stmt);
+            Pop_And_Merge_Phi (Ctxt, Get_Location (Stmt));
          when Iir_Kind_Concurrent_Conditional_Signal_Assignment =>
             Push_Phi;
             Synth_Conditional_Signal_Assignment (Syn_Inst, Stmt);
-            Pop_And_Merge_Phi (Ctxt, Stmt);
+            Pop_And_Merge_Phi (Ctxt, Get_Location (Stmt));
          when Iir_Kind_Concurrent_Selected_Signal_Assignment =>
             Push_Phi;
             Synth_Selected_Signal_Assignment (Syn_Inst, Stmt);
-            Pop_And_Merge_Phi (Ctxt, Stmt);
+            Pop_And_Merge_Phi (Ctxt, Get_Location (Stmt));
          when Iir_Kind_Concurrent_Procedure_Call_Statement =>
             Push_Phi;
             Synth_Procedure_Call (Syn_Inst, Stmt);
-            Pop_And_Merge_Phi (Ctxt, Stmt);
+            Pop_And_Merge_Phi (Ctxt, Get_Location (Stmt));
          when Iir_Kinds_Process_Statement =>
             Synth_Process_Statement (Syn_Inst, Stmt);
          when Iir_Kind_If_Generate_Statement =>
@@ -3675,7 +3722,7 @@ package body Synth.Stmts is
 
          N := Build_Formal_Input (Get_Build (Syn_Inst), Id, Typ.W);
          Set_Location (N, Val);
-         Add_Conc_Assign (Base.Val.W, N, 0, Val);
+         Add_Conc_Assign (Base.Val.W, N, 0);
       end;
    end Synth_Attribute_Formal;
 

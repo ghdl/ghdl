@@ -316,7 +316,7 @@ package body Synth.Vhdl_Context is
       if Kind = Wire_None then
          Wid := No_Wire_Id;
       else
-         Wid := Alloc_Wire (Kind, Otyp, Obj);
+         Wid := Alloc_Wire (Kind, (Obj, Otyp));
       end if;
       Val := Create_Value_Wire (Wid, Otyp);
 

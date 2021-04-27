@@ -18,7 +18,6 @@
 
 with Netlists; use Netlists;
 with Netlists.Builders; use Netlists.Builders;
-with Synth.Source;
 
 package Netlists.Inference is
    --  Walk the And-net N, and extract clock (posedge/negedge) if found.
@@ -37,12 +36,12 @@ package Netlists.Inference is
                     Val : Net;
                     Off : Uns32;
                     Prev_Val : Net;
-                    Stmt : Synth.Source.Syn_Src;
+                    Loc : Location_Type;
                     Last_Use : Boolean) return Net;
 
    --  Called when there is an assignment to a enable gate.
    function Infere_Assert (Ctxt : Context_Acc;
                            Val : Net;
                            En_Gate : Net;
-                           Stmt : Synth.Source.Syn_Src) return Net;
+                           Loc : Location_Type) return Net;
 end Netlists.Inference;

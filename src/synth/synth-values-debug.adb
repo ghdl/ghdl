@@ -21,7 +21,7 @@ with Utils_IO; use Utils_IO;
 
 with Vhdl.Nodes; use Vhdl.Nodes;
 
-with Synth.Environment.Debug; use Synth.Environment.Debug;
+with Synth.Vhdl_Environment; use Synth.Vhdl_Environment.Debug;
 
 package body Synth.Values.Debug is
    procedure Put_Dir (Dir : Direction_Type) is

@@ -24,7 +24,7 @@ with Netlists; use Netlists;
 with Synth.Objtypes; use Synth.Objtypes;
 with Synth.Values; use Synth.Values;
 with Synth.Vhdl_Context; use Synth.Vhdl_Context;
-with Synth.Environment; use Synth.Environment;
+with Synth.Vhdl_Environment; use Synth.Vhdl_Environment.Env;
 
 package Synth.Stmts is
    procedure Synth_Subprogram_Association (Subprg_Inst : Synth_Instance_Acc;

@@ -30,7 +30,7 @@ with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Std_Package;
 with Vhdl.Ieee.Std_Logic_1164;
 
-with Synth.Environment; use Synth.Environment;
+with Synth.Vhdl_Environment; use Synth.Vhdl_Environment.Env;
 with Synth.Expr; use Synth.Expr;
 with Synth.Stmts;
 with Synth.Source; use Synth.Source;

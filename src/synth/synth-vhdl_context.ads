@@ -24,7 +24,7 @@ with Netlists.Builders; use Netlists.Builders;
 with Vhdl.Annotations; use Vhdl.Annotations;
 with Vhdl.Nodes; use Vhdl.Nodes;
 
-with Synth.Environment; use Synth.Environment;
+with Synth.Vhdl_Environment; use Synth.Vhdl_Environment.Env;
 with Synth.Objtypes; use Synth.Objtypes;
 with Synth.Values; use Synth.Values;
 

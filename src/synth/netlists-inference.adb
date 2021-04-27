@@ -25,7 +25,6 @@ with Netlists.Internings;
 with Netlists.Folds; use Netlists.Folds;
 with Netlists.Memories; use Netlists.Memories;
 
-with Synth.Source; use Synth.Source;
 with Synth.Errors; use Synth.Errors;
 with Synth.Flags;
 
@@ -486,7 +485,7 @@ package body Netlists.Inference is
                        Clock_Mux : Instance;
                        Clk : Net;
                        Clk_Enable : Net;
-                       Stmt : Synth.Source.Syn_Src) return Net
+                       Loc : Location_Type) return Net
    is
       O : constant Net := Get_Output (Clock_Mux, 0);
       Mux_Loc : constant Location_Type := Get_Location (Clock_Mux);
@@ -597,16 +596,16 @@ package body Netlists.Inference is
                --  Add the negation of the condition to the enable signal.
                --  Negate the condition for the current reset.
                Mux_Not_Rst := Build_Monadic (Ctxt, Id_Not, Mux_Rst);
-               Set_Location (Mux_Not_Rst, Stmt);
+               Set_Location (Mux_Not_Rst, Loc);
                if Rst /= No_Net then
                   Rst := Build_Dyadic (Ctxt, Id_And, Rst, Mux_Not_Rst);
-                  Set_Location (Rst, Stmt);
+                  Set_Location (Rst, Loc);
                end if;
                if Enable = No_Net then
                   Enable := Mux_Not_Rst;
                else
                   Enable := Build_Dyadic (Ctxt, Id_And, Enable, Mux_Not_Rst);
-                  Set_Location (Enable, Stmt);
+                  Set_Location (Enable, Loc);
                end if;
 
                if Prev_Mux /= No_Instance then
@@ -748,7 +747,7 @@ package body Netlists.Inference is
    function Infere_Latch (Ctxt : Context_Acc;
                           Val : Net;
                           Prev_Val : Net;
-                          Stmt : Synth.Source.Syn_Src) return Net
+                          Loc : Location_Type) return Net
    is
       Name : Sname;
    begin
@@ -781,7 +780,7 @@ package body Netlists.Inference is
       else
          Name := Get_Instance_Name (Get_Net_Parent (Prev_Val));
       end if;
-      Error_Msg_Synth (+Stmt, "latch infered for net %n", +Name);
+      Error_Msg_Synth (Loc, "latch infered for net %n", +Name);
 
       return Val;
    end Infere_Latch;
@@ -792,7 +791,7 @@ package body Netlists.Inference is
                     Val : Net;
                     Off : Uns32;
                     Prev_Val : Net;
-                    Stmt : Synth.Source.Syn_Src;
+                    Loc : Location_Type;
                     Last_Use : Boolean) return Net
    is
       pragma Assert (Val /= No_Net);
@@ -859,14 +858,14 @@ package body Netlists.Inference is
       Extract_Clock (Ctxt, Get_Driver (Sel), Clk, Enable);
       if Clk = No_Net then
          --  No clock -> latch or combinational loop
-         Res := Infere_Latch (Ctxt, Val, Prev_Val, Stmt);
+         Res := Infere_Latch (Ctxt, Val, Prev_Val, Loc);
       else
          --  Clock -> FF
          First_Mux := Get_Net_Parent (Val);
          pragma Assert (Get_Id (First_Mux) = Id_Mux2);
 
          Res := Infere_FF (Ctxt, Val, Prev_Val, Off, Last_Mux,
-                           Clk, Enable, Stmt);
+                           Clk, Enable, Loc);
       end if;
 
       return Res;
@@ -913,9 +912,8 @@ package body Netlists.Inference is
    function Infere_Assert (Ctxt : Context_Acc;
                            Val : Net;
                            En_Gate : Net;
-                           Stmt : Synth.Source.Syn_Src) return Net
+                           Loc : Location_Type) return Net
    is
-      Loc        : constant Location_Type := Synth.Source."+" (Stmt);
       Inst       : Instance;
       First_Inst : Instance;
       Last_Inst  : Instance;
@@ -962,7 +960,7 @@ package body Netlists.Inference is
             --  If the next mux is in1, negate COND.
             if Next_Inst = Get_Net_Parent (Get_Input_Net (Inst, 2)) then
                Cond := Build_Monadic (Ctxt, Id_Not, Cond);
-               Synth.Source.Set_Location (Cond, Stmt);
+               Set_Location (Cond, Loc);
             end if;
 
             --  'And' COND to Areset.

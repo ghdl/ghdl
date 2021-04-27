@@ -45,7 +45,7 @@ with Vhdl.Ieee.Math_Real;
 with Synth.Memtype; use Synth.Memtype;
 with Synth.Objtypes; use Synth.Objtypes;
 with Synth.Values; use Synth.Values;
-with Synth.Environment; use Synth.Environment;
+with Synth.Vhdl_Environment; use Synth.Vhdl_Environment.Env;
 with Synth.Stmts; use Synth.Stmts;
 with Synth.Decls; use Synth.Decls;
 with Synth.Expr; use Synth.Expr;
@@ -1125,7 +1125,7 @@ package body Synth.Insts is
       Synth_Instantiate_Module
         (Syn_Inst, Inst, Inst_Obj, Get_Port_Map_Aspect_Chain (Stmt));
 
-      Pop_And_Merge_Phi (Get_Build (Syn_Inst), Stmt);
+      Pop_And_Merge_Phi (Get_Build (Syn_Inst), Get_Location (Stmt));
    end Synth_Direct_Instantiation_Statement;
 
    procedure Synth_Design_Instantiation_Statement
@@ -1182,7 +1182,7 @@ package body Synth.Insts is
       case Val.Val.Kind is
          when Value_Wire =>
             --  Create a gate for the output, so that it could be read.
-            Val.Val.W := Alloc_Wire (Wire_Output, Bit_Type, Inter);
+            Val.Val.W := Alloc_Wire (Wire_Output, (Inter, Bit_Type));
             W := Get_Type_Width (Val.Typ);
             Value := Build_Signal
               (Ctxt, New_Internal_Name (Ctxt, Pfx_Name), W);
@@ -1352,7 +1352,7 @@ package body Synth.Insts is
          end loop;
       end;
 
-      Pop_And_Merge_Phi (Ctxt, Stmt);
+      Pop_And_Merge_Phi (Ctxt, Get_Location (Stmt));
 
       Finalize_Declarations (Comp_Inst, Get_Port_Chain (Component));
    end Synth_Component_Instantiation_Statement;
@@ -1521,7 +1521,7 @@ package body Synth.Insts is
       pragma Assert (Val.Val.Kind = Value_Wire);
 
       --  Create a gate for the output, so that it could be read.
-      Val.Val.W := Alloc_Wire (Wire_Output, Val.Typ, Inter);
+      Val.Val.W := Alloc_Wire (Wire_Output, (Inter, Val.Typ));
       --  pragma Assert (Desc.W = Get_Type_Width (Val.Typ));
 
       if Default /= Null_Node then
