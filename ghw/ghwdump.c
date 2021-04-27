@@ -163,6 +163,14 @@ main (int argc, char **argv)
   signal_set = NULL;
   filter_done = 0;
 
+  /* Disp help if there is only an help option.  */
+  if (argc == 2
+      && (strcmp (argv[1], "--help") == 0 || strcmp (argv[1], "-h") == 0))
+    {
+      usage ();
+      exit (0);
+    }
+
   while (1)
     {
       int c;
