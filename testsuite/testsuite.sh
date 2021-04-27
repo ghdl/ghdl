@@ -19,6 +19,11 @@ enable_color() {
 disable_color() { unset ENABLECOLOR ANSI_RED ANSI_GREEN ANSI_YELLOW ANSI_BLUE ANSI_MAGENTA ANSI_CYAN ANSI_DARKCYAN ANSI_NOCOLOR; }
 enable_color
 
+die() {
+  printf "${ANSI_RED}%s${ANSI_NOCOLOR}\n" "$@" >&2
+  exit 1
+}
+
 print_start() {
   COL="$ANSI_YELLOW"
   if [ "x$2" != "x" ]; then
@@ -78,8 +83,7 @@ if [ "x$GHDL" = "x" ]; then
   elif [ "x$(command -v which)" != "x" ]; then
     export GHDL="$(which ghdl)"
   else
-    printf "${ANSI_RED}error: GHDL environment variable is not defined${ANSI_NOCOLOR}\n"
-    exit 1
+    die "error: GHDL environment variable is not defined"
   fi
 fi
 
@@ -125,8 +129,8 @@ do_test() {
       _vests
     ;;
     *)
-      printf "${ANSI_RED}$0: test name '$1' is unknown${ANSI_NOCOLOR}\n"
-      exit 1;;
+      die "$0: test name '$1' is unknown"
+    ;;
   esac
 }
 
