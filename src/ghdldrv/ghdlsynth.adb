@@ -439,8 +439,13 @@ package body Ghdlsynth is
          when Format_Dot =>
             Netlists.Disp_Dot.Disp_Dot_Top_Module (Res);
          when Format_Vhdl =>
-            Ent := Vhdl.Utils.Get_Entity_From_Configuration (Config);
-            Synth.Disp_Vhdl.Disp_Vhdl_Wrapper (Ent, Res, Inst);
+            if Get_Kind (Config) = Iir_Kind_Foreign_Module then
+               --  Not a VHDL design.
+               Netlists.Disp_Vhdl.Disp_Vhdl (Res);
+            else
+               Ent := Vhdl.Utils.Get_Entity_From_Configuration (Config);
+               Synth.Disp_Vhdl.Disp_Vhdl_Wrapper (Ent, Res, Inst);
+            end if;
          when Format_Raw_Vhdl =>
             Netlists.Disp_Vhdl.Disp_Vhdl (Res);
          when Format_Verilog =>
