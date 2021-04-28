@@ -46,15 +46,15 @@ with Synth.Memtype; use Synth.Memtype;
 with Synth.Objtypes; use Synth.Objtypes;
 with Synth.Values; use Synth.Values;
 with Synth.Vhdl_Environment; use Synth.Vhdl_Environment.Env;
-with Synth.Stmts; use Synth.Stmts;
-with Synth.Decls; use Synth.Decls;
-with Synth.Expr; use Synth.Expr;
+with Synth.Vhdl_Stmts; use Synth.Vhdl_Stmts;
+with Synth.Vhdl_Decls; use Synth.Vhdl_Decls;
+with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
 with Synth.Source; use Synth.Source;
 with Synth.Debugger;
 with Synth.Vhdl_Files;
 with Synth.Errors;
 
-package body Synth.Insts is
+package body Synth.Vhdl_Insts is
    Root_Instance : Synth_Instance_Acc;
 
    function Mode_To_Port_Kind (Mode : Iir_Mode) return Port_Kind is
@@ -364,7 +364,8 @@ package body Synth.Insts is
    begin
       case Get_Kind (Inter_Type) is
          when Iir_Kind_Array_Subtype_Definition =>
-            if Synth.Decls.Has_Element_Subtype_Indication (Inter_Type) then
+            if Synth.Vhdl_Decls.Has_Element_Subtype_Indication (Inter_Type)
+            then
                Copy_Object_Subtype
                  (Syn_Inst, Get_Element_Subtype (Inter_Type), Proto_Inst);
             end if;
@@ -1748,4 +1749,4 @@ package body Synth.Insts is
          Idx := Idx + 1;
       end loop;
    end Synth_All_Instances;
-end Synth.Insts;
+end Synth.Vhdl_Insts;

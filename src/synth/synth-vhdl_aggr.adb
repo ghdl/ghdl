@@ -28,9 +28,9 @@ with Vhdl.Utils; use Vhdl.Utils;
 
 with Synth.Memtype; use Synth.Memtype;
 with Synth.Errors; use Synth.Errors;
-with Synth.Expr; use Synth.Expr;
-with Synth.Stmts; use Synth.Stmts;
-with Synth.Decls; use Synth.Decls;
+with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
+with Synth.Vhdl_Stmts; use Synth.Vhdl_Stmts;
+with Synth.Vhdl_Decls; use Synth.Vhdl_Decls;
 
 package body Synth.Vhdl_Aggr is
    type Stride_Array is array (Dim_Type range <>) of Nat32;

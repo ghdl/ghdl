@@ -22,7 +22,7 @@ with Netlists; use Netlists;
 with Synth.Vhdl_Context; use Synth.Vhdl_Context;
 with Synth.Objtypes; use Synth.Objtypes;
 
-package Synth.Decls is
+package Synth.Vhdl_Decls is
    --  Return the Param_Type for ATYPE.
    function Type_To_Param_Type (Atype : Node) return Param_Type;
 
@@ -76,4 +76,4 @@ package Synth.Decls is
 
    procedure Synth_Package_Instantiation
      (Parent_Inst : Synth_Instance_Acc; Pkg : Node);
-end Synth.Decls;
+end Synth.Vhdl_Decls;

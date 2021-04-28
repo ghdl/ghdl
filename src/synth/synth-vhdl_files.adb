@@ -26,7 +26,7 @@ with Grt.Stdio;
 
 with Synth.Memtype; use Synth.Memtype;
 with Synth.Objtypes; use Synth.Objtypes;
-with Synth.Expr; use Synth.Expr;
+with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
 with Synth.Errors; use Synth.Errors;
 
 package body Synth.Vhdl_Files is

@@ -29,7 +29,7 @@ with Netlists; use Netlists;
 with Synth.Memtype; use Synth.Memtype;
 with Synth.Errors; use Synth.Errors;
 with Synth.Source; use Synth.Source;
-with Synth.Expr; use Synth.Expr;
+with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
 with Synth.Vhdl_Oper;
 with Synth.Ieee.Std_Logic_1164; use Synth.Ieee.Std_Logic_1164;
 with Synth.Ieee.Numeric_Std; use Synth.Ieee.Numeric_Std;

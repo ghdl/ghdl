@@ -31,7 +31,7 @@ with Synth.Objtypes; use Synth.Objtypes;
 with Synth.Values; use Synth.Values;
 with Synth.Vhdl_Context; use Synth.Vhdl_Context;
 
-package Synth.Expr is
+package Synth.Vhdl_Expr is
    --  Perform a subtype conversion.  Check constraints.
    function Synth_Subtype_Conversion (Ctxt : Context_Acc;
                                       Vt : Valtyp;
@@ -149,4 +149,4 @@ package Synth.Expr is
                            Vec : in out Logvec_Array;
                            Vec_Off : in out Uns32;
                            Has_Zx : in out Boolean);
-end Synth.Expr;
+end Synth.Vhdl_Expr;

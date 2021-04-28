@@ -31,14 +31,14 @@ with Vhdl.Std_Package;
 with Vhdl.Ieee.Std_Logic_1164;
 
 with Synth.Vhdl_Environment; use Synth.Vhdl_Environment.Env;
-with Synth.Expr; use Synth.Expr;
-with Synth.Stmts;
+with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
+with Synth.Vhdl_Stmts;
 with Synth.Source; use Synth.Source;
 with Synth.Errors; use Synth.Errors;
 with Synth.Vhdl_Files;
 with Synth.Values; use Synth.Values;
 
-package body Synth.Decls is
+package body Synth.Vhdl_Decls is
    procedure Create_Var_Wire
      (Syn_Inst : Synth_Instance_Acc; Decl : Iir; Init : Valtyp)
    is
@@ -962,7 +962,7 @@ package body Synth.Decls is
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Atype : constant Node := Get_Declaration_Type (Decl);
       Off : Value_Offsets;
-      Dyn : Stmts.Dyn_Name;
+      Dyn : Vhdl_Stmts.Dyn_Name;
       Res : Valtyp;
       Obj_Typ : Type_Acc;
       Base : Valtyp;
@@ -976,8 +976,8 @@ package body Synth.Decls is
          Obj_Typ := null;
       end if;
 
-      Stmts.Synth_Assignment_Prefix (Syn_Inst, Get_Name (Decl),
-                                     Base, Typ, Off, Dyn);
+      Vhdl_Stmts.Synth_Assignment_Prefix (Syn_Inst, Get_Name (Decl),
+                                          Base, Typ, Off, Dyn);
       pragma Assert (Dyn.Voff = No_Net);
       if Base.Val.Kind = Value_Net then
          --  Object is a net if it is not writable.  Extract the
@@ -1224,4 +1224,4 @@ package body Synth.Decls is
          Decl := Get_Chain (Decl);
       end loop;
    end Finalize_Declarations;
-end Synth.Decls;
+end Synth.Vhdl_Decls;

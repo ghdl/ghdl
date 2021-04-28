@@ -20,7 +20,7 @@ with Errorout; use Errorout;
 with Vhdl.Errors; use Vhdl.Errors;
 
 with Synth.Objtypes;
-with Synth.Insts; use Synth.Insts;
+with Synth.Vhdl_Insts; use Synth.Vhdl_Insts;
 
 with Synth.Values.Debug;
 pragma Unreferenced (Synth.Values.Debug);

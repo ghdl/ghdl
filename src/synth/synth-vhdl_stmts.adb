@@ -41,9 +41,9 @@ with PSL.NFAs;
 
 with Synth.Memtype; use Synth.Memtype;
 with Synth.Errors; use Synth.Errors;
-with Synth.Decls; use Synth.Decls;
-with Synth.Expr; use Synth.Expr;
-with Synth.Insts; use Synth.Insts;
+with Synth.Vhdl_Decls; use Synth.Vhdl_Decls;
+with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
+with Synth.Vhdl_Insts; use Synth.Vhdl_Insts;
 with Synth.Source;
 with Synth.Vhdl_Static_Proc;
 with Synth.Vhdl_Heap;
@@ -56,7 +56,7 @@ with Netlists.Gates; use Netlists.Gates;
 with Netlists.Utils; use Netlists.Utils;
 with Netlists.Locations; use Netlists.Locations;
 
-package body Synth.Stmts is
+package body Synth.Vhdl_Stmts is
    procedure Synth_Sequential_Statements
      (C : in out Seq_Context; Stmts : Node);
 
@@ -302,7 +302,7 @@ package body Synth.Stmts is
 
       if Is_Fully_Constrained_Type (Targ_Type) then
          --  If the aggregate subtype is known, just use it.
-         Bnd := Expr.Synth_Array_Bounds (Syn_Inst, Targ_Type, 1);
+         Bnd := Vhdl_Expr.Synth_Array_Bounds (Syn_Inst, Targ_Type, 1);
       else
          --  Ok, so the subtype of the aggregate is not known, in general
          --  because the length of an element is not known.  That's with
@@ -2006,7 +2006,8 @@ package body Synth.Stmts is
         (C.W_Ret, Build_Control_Signal (Sub_Inst, 1, Imp));
       Phi_Assign_Static (C.W_Ret, Bit1);
 
-      Decls.Synth_Declarations (C.Inst, Get_Declaration_Chain (Bod), True);
+      Vhdl_Decls.Synth_Declarations
+        (C.Inst, Get_Declaration_Chain (Bod), True);
       if not Is_Error (C.Inst) then
          Synth_Sequential_Statements (C, Get_Sequential_Statement_Chain (Bod));
       end if;
@@ -2031,7 +2032,8 @@ package body Synth.Stmts is
 
       Pop_Phi (Subprg_Phi);
 
-      Decls.Finalize_Declarations (C.Inst, Get_Declaration_Chain (Bod), True);
+      Vhdl_Decls.Finalize_Declarations
+        (C.Inst, Get_Declaration_Chain (Bod), True);
       pragma Unreferenced (Infos);
 
       --  Propagate assignments.
@@ -2106,7 +2108,8 @@ package body Synth.Stmts is
          end if;
       end if;
 
-      Decls.Finalize_Declarations (C.Inst, Get_Declaration_Chain (Bod), True);
+      Vhdl_Decls.Finalize_Declarations
+        (C.Inst, Get_Declaration_Chain (Bod), True);
       pragma Unreferenced (Infos);
 
       return Res;
@@ -3850,4 +3853,4 @@ package body Synth.Stmts is
       Release (M, Proc_Pool);
       Instance_Pool := Prev_Instance_Pool;
    end Synth_Verification_Unit;
-end Synth.Stmts;
+end Synth.Vhdl_Stmts;

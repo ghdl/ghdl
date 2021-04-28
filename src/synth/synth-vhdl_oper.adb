@@ -34,8 +34,8 @@ with Netlists.Utils;
 
 with Synth.Memtype; use Synth.Memtype;
 with Synth.Errors; use Synth.Errors;
-with Synth.Stmts; use Synth.Stmts;
-with Synth.Expr; use Synth.Expr;
+with Synth.Vhdl_Stmts; use Synth.Vhdl_Stmts;
+with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
 with Synth.Source;
 with Synth.Static_Oper; use Synth.Static_Oper;
 

@@ -21,7 +21,7 @@ with Vhdl.Nodes; use Vhdl.Nodes;
 with Synth.Vhdl_Context; use Synth.Vhdl_Context;
 with Synth.Flags; use Synth.Flags;
 
-package Synth.Insts is
+package Synth.Vhdl_Insts is
    --  Create the declaration of the top entity.
    procedure Synth_Top_Entity (Global_Instance : Synth_Instance_Acc;
                                Arch : Node;
@@ -44,4 +44,4 @@ package Synth.Insts is
 
    procedure Synth_Component_Instantiation_Statement
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node);
-end Synth.Insts;
+end Synth.Vhdl_Insts;

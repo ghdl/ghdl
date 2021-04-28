@@ -26,7 +26,7 @@ with Vhdl.Utils;
 
 with Netlists.Folds; use Netlists.Folds;
 
-with Synth.Expr; use Synth.Expr;
+with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
 with Netlists.Locations;
 
 package body Synth.Vhdl_Context is

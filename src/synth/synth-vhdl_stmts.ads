@@ -26,7 +26,7 @@ with Synth.Values; use Synth.Values;
 with Synth.Vhdl_Context; use Synth.Vhdl_Context;
 with Synth.Vhdl_Environment; use Synth.Vhdl_Environment.Env;
 
-package Synth.Stmts is
+package Synth.Vhdl_Stmts is
    procedure Synth_Subprogram_Association (Subprg_Inst : Synth_Instance_Acc;
                                            Caller_Inst : Synth_Instance_Acc;
                                            Inter_Chain : Node;
@@ -164,4 +164,4 @@ private
             S_En : Boolean;
       end case;
    end record;
-end Synth.Stmts;
+end Synth.Vhdl_Stmts;

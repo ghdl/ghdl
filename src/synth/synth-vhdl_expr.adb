@@ -42,8 +42,8 @@ with Netlists.Locations;
 with Synth.Memtype; use Synth.Memtype;
 with Synth.Errors; use Synth.Errors;
 with Synth.Vhdl_Environment;
-with Synth.Decls;
-with Synth.Stmts; use Synth.Stmts;
+with Synth.Vhdl_Decls;
+with Synth.Vhdl_Stmts; use Synth.Vhdl_Stmts;
 with Synth.Vhdl_Oper; use Synth.Vhdl_Oper;
 with Synth.Vhdl_Heap; use Synth.Vhdl_Heap;
 with Synth.Debugger;
@@ -52,7 +52,7 @@ with Synth.Vhdl_Aggr;
 with Grt.Types;
 with Grt.To_Strings;
 
-package body Synth.Expr is
+package body Synth.Vhdl_Expr is
    function Synth_Name (Syn_Inst : Synth_Instance_Acc; Name : Node)
                        return Valtyp;
 
@@ -537,7 +537,7 @@ package body Synth.Expr is
          when Iir_Kind_String_Literal8 =>
             --  TODO: the value should be computed (once) and its type
             --  returned.
-            return Synth.Decls.Synth_Subtype_Indication
+            return Synth.Vhdl_Decls.Synth_Subtype_Indication
               (Syn_Inst, Get_Type (Expr));
 
          when others =>
@@ -2498,7 +2498,7 @@ package body Synth.Expr is
                T : Type_Acc;
                Acc : Heap_Index;
             begin
-               T := Synth.Decls.Synth_Subtype_Indication
+               T := Synth.Vhdl_Decls.Synth_Subtype_Indication
                  (Syn_Inst, Get_Subtype_Indication (Expr));
                Acc := Allocate_By_Type (T);
                return Create_Value_Access (Acc, Expr_Type);
@@ -2569,4 +2569,4 @@ package body Synth.Expr is
         (Syn_Inst, Get_Base_Type (Get_Type (Expr)));
       return Synth_Expression_With_Type (Syn_Inst, Expr, Basetype);
    end Synth_Expression_With_Basetype;
-end Synth.Expr;
+end Synth.Vhdl_Expr;
