@@ -292,7 +292,7 @@ main (int argc, char **argv)
 		case ghw_res_snapshot:
 		case ghw_res_cycle:
 		  if (flag_disp_time)
-		    printf ("Time is %lld fs\n", hp->snap_time);
+		    printf ("Time is " GHWPRI64 " fs\n", hp->snap_time);
 		  if (flag_disp_signals)
 		    {
 		      if (!filter_done)

@@ -30,8 +30,9 @@
    in stdint.h.  Header inttypes.h includes stdint.h and provides macro for
    printf and co specifiers.  Use it if known to be available.  */
 
-#if defined(__cplusplus) ||                                                    \
-    (defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)) ||            \
+#if defined(__cplusplus) ||                                                   \
+    defined(__linux__) ||                                                     \
+    (defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)) ||           \
     defined(HAVE_INTTYPES_H)
 /* Use C99 standard header.  */
 #include <inttypes.h>
