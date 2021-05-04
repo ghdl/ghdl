@@ -827,23 +827,10 @@ package body Netlists.Disp_Verilog is
             Put_Line (";");
          when Id_Memidx =>
             declare
-               O : constant Net := Get_Output (Inst, 0);
-               Wd : constant Width := Get_Width (O);
                Step : constant Uns32 := Get_Param_Uns32 (Inst, 0);
             begin
-               if Step /= 1 then
-                  Disp_Template
-                    ("  \o0 <= std_logic_vector (resize (resize (", Inst);
-                  if Get_Width (Get_Input_Net (Inst, 0)) = 1 then
-                     Disp_Template ("unsigned'(0 => \i0)", Inst);
-                  else
-                     Disp_Template ("\ui0", Inst);
-                  end if;
-                  Disp_Template
-                    (", \n0) * \up0, \n0));" & NL, Inst, (0 => Wd));
-               else
-                  Disp_Template ("  \o0 <= \i0;" & NL, Inst);
-               end if;
+               Disp_Template
+                 ("  assign \o0 = \i0 * \p0;" & NL, Inst, (0 => Step));
             end;
          when Id_Addidx =>
             declare
@@ -871,76 +858,27 @@ package body Netlists.Disp_Verilog is
                Wd : constant Width := Get_Width (O);
                Off : constant Uns32 := Get_Param_Uns32 (Inst, 0);
             begin
-               Disp_Template ("  \o0 <= \i0", Inst);
-               if Wd /= 0 then
-                  Disp_Template (" (to_integer (\ui1)", Inst);
-                  if Off /= 0 then
-                     Disp_Template (" + \n0", Inst, (0 => Off));
-                  end if;
-                  if Wd > 1 then
-                     Disp_Template (" + \n0 - 1 downto to_integer (\ui1)",
-                                    Inst, (0 => Wd));
-                     if Off /= 0 then
-                        Disp_Template (" + \n0", Inst, (0 => Off));
-                     end if;
-                  end if;
-                  Put (")");
-               end if;
-               Put_Line (";");
+               Disp_Template
+                 ("  assign \o0 = \i0[\i1 + \n0 -: \n1]; //(dyn_extract)" & NL,
+                  Inst, (0 => Off, 1 => Wd));
             end;
          when Id_Dyn_Insert
            | Id_Dyn_Insert_En =>
             declare
                --  I0: Input, I1: Value, I2: position
                --  P0: offset
-               I0 : constant Net := Get_Input_Net (Inst, 0);
-               I1 : constant Net := Get_Input_Net (Inst, 1);
-               I2 : constant Net := Get_Input_Net (Inst, 2);
-               Iarr : constant Net_Array (0 .. 2) := (I0, I1, I2);
                Iw : constant Width := Get_Width (Get_Input_Net (Inst, 1));
-               First : Boolean;
             begin
-               Put ("  process (");
-               First := True;
-               for I in Iarr'Range loop
-                  if (Get_Id (Get_Net_Parent (Iarr (I)))
-                        not in Constant_Module_Id)
-                  then
-                     if First then
-                        First := False;
-                     else
-                        Put (", ");
-                     end if;
-                     Disp_Net_Name (Iarr (I));
-                  end if;
-               end loop;
-               Put (")" & NL);
-               Disp_Template
-                 ("  begin" & NL &
-                  "    \o0 <= \i0;" & NL,
-                  Inst);
+               Put ("  always @* begin // (dyn_insert)" & NL);
+               Disp_Template ("    \o0 <= \i0;" & NL, Inst);
                if Id = Id_Dyn_Insert_En then
                   --  TODO: fix indentation.
-                  Disp_Template ("    if \i3 = '1' then" & NL, Inst);
+                  Disp_Template ("    if (\i3)" & NL, Inst);
                end if;
                Disp_Template
-                 ("    \o0 (", Inst);
-               if Iw > 1 then
-                  Disp_Template
-                    ("to_integer (\ui2) + (\sp0 + \n0)" & NL &
-                       "        downto ",
-                     Inst, (0 => Iw - 1));
-               end if;
-               Disp_Template
-                 ("to_integer (\ui2) + (\sp0))" &
-                  " <= \i1;" & NL,
-                  Inst);
-               if Id = Id_Dyn_Insert_En then
-                  Disp_Template ("    end if;" & NL, Inst);
-               end if;
-               Disp_Template
-                 ("  end process;" & NL,
-                  Inst);
+                 ("    \o0 [\i2 + \p0 -: \n0] <= \i1;" & NL,
+                  Inst, (0 => Iw - 1));
+               Disp_Template ("  end" & NL, Inst);
             end;
          when Id_Const_UB32
            | Id_Const_UL32
@@ -1216,7 +1154,9 @@ package body Netlists.Disp_Verilog is
                            --  As expected
                            Put ("  reg ");
                         when Id_Mux4
-                           | Id_Pmux =>
+                           | Id_Pmux
+                           | Id_Dyn_Insert
+                           | Id_Dyn_Insert_En =>
                            --  Implemented by a process
                            Put ("  reg ");
                         when others =>
