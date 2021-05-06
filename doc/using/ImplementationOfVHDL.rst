@@ -60,7 +60,8 @@ Shared variables were replaced by protected types in the 2000 revision of
 the VHDL standard. This modification is also known as 1076a. Note that this
 standard is not fully backward compatible with VHDL-93, since the type of a
 shared variable must now be a protected type (there was no such restriction
-before).
+before).  This incompatibility can be bypassed with the
+:option:`-frelaxed` option.
 
 Minor corrections were added by the 2002 revision of the VHDL standard. This
 revision is not fully backward compatible with VHDL-00 since, for example,
