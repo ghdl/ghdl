@@ -879,6 +879,7 @@ package body Vhdl.Sem_Stmts is
       Target        : Iir;
       Target_Type   : Iir;
       Target_Object : Iir;
+      Target_Prefix : Iir;
       Expr          : Iir;
       Constrained   : Boolean;
    begin
@@ -894,6 +895,7 @@ package body Vhdl.Sem_Stmts is
 
       Target := Sem_Expression_Wildcard (Target, Wildcard_Any_Type);
       Target_Object := Null_Iir;
+      Target_Prefix := Null_Iir;
       Target_Type := Wildcard_Any_Type;
       if Target = Null_Iir then
          --  To avoid spurious errors, assume the target is fully
@@ -905,21 +907,22 @@ package body Vhdl.Sem_Stmts is
             Check_Target (Stmt, Target);
             Target_Type := Get_Type (Target);
             Target_Object := Check_Simple_Signal_Target_Object (Target);
+            Target_Prefix := Get_Object_Prefix (Target_Object);
             Constrained := Is_Object_Name_Fully_Constrained (Target_Object);
          else
             Constrained := False;
          end if;
       end if;
 
-      if Target_Object /= Null_Iir then
+      if Target_Prefix /= Null_Iir then
          --  LRM08 10.5.2 Simple signal assignments
          --  If the right-hand side of a simple force assignment or a simple
          --  release assignment does not specify a force mode, then a default
          --  force mode is used as follow:
          if not Get_Has_Force_Mode (Stmt) then
-            case Get_Kind (Target_Object) is
+            case Get_Kind (Target_Prefix) is
                when Iir_Kind_Interface_Signal_Declaration =>
-                  case Get_Mode (Target_Object) is
+                  case Get_Mode (Target_Prefix) is
                      when Iir_In_Mode =>
                         --  - If the target is a port or signal parameter of
                         --    mode IN, a force mode IN is used.
@@ -950,10 +953,10 @@ package body Vhdl.Sem_Stmts is
          else
             --  It is an error if a force mode of OUT is specified and the
             --  target is a port of mode IN.
-            case Get_Kind (Target_Object) is
+            case Get_Kind (Target_Prefix) is
                when Iir_Kind_Interface_Signal_Declaration =>
                   if Get_Force_Mode (Stmt) = Iir_Force_Out
-                    and then Get_Mode (Target_Object) = Iir_In_Mode
+                    and then Get_Mode (Target_Prefix) = Iir_In_Mode
                   then
                      Error_Msg_Sem
                        (+Stmt, "cannot use force OUT for IN port %n",
