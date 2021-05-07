@@ -1088,8 +1088,6 @@ package body Netlists.Disp_Verilog is
    is
       Id : Module_Id;
    begin
-      --  Display signal declarations.
-      --  There are as many signals as gate outputs.
       for Inst of Instances (M) loop
          Id := Get_Id (Inst);
          case Id is
@@ -1116,15 +1114,19 @@ package body Netlists.Disp_Verilog is
                   Put_Line ("; // mem_rd");
                end;
             when others =>
-               if not Is_Self_Instance (Inst)
-                 and then not (Flag_Merge_Lit
-                                 and then Id in Constant_Module_Id
-                                 and then Id < Id_User_None
-                                 and then not Need_Signal (Inst))
-                 and then not (Flag_Merge_Edge
-                                 and then Id in Edge_Module_Id
-                                 and then not Need_Edge (Inst))
+               if Is_Self_Instance (Inst)
+                 or else (Flag_Merge_Lit
+                            and then Id in Constant_Module_Id
+                            and then Id < Id_User_None
+                            and then not Need_Signal (Inst))
+                 or else (Flag_Merge_Edge
+                            and then Id in Edge_Module_Id
+                            and then not Need_Edge (Inst))
                then
+                  --  Not displayed.
+                  null;
+               else
+                  --  Check location is present.
                   if Locations.Get_Location (Inst) = No_Location then
                      case Id is
                         when Id_Const_UB32
@@ -1145,6 +1147,8 @@ package body Netlists.Disp_Verilog is
                            raise Internal_Error;
                      end case;
                   end if;
+
+                  --  Display reg/wire for each output.
                   for N of Outputs (Inst) loop
                      case Id is
                         when Id_Dff
@@ -1159,11 +1163,17 @@ package body Netlists.Disp_Verilog is
                            | Id_Dyn_Insert_En =>
                            --  Implemented by a process
                            Put ("  reg ");
+                        when Constant_Module_Id =>
+                           Put ("  localparam ");
                         when others =>
                            Put ("  wire ");
                      end case;
                      Put_Type (Get_Width (N));
                      Disp_Net_Name (N);
+                     if Id in Constant_Module_Id then
+                        Put (" = ");
+                        Disp_Constant_Inline (Inst);
+                     end if;
                      Put_Line (";");
                   end loop;
                end if;
