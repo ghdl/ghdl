@@ -112,6 +112,35 @@ package body Netlists.Cleanup is
       end loop;
    end Remove_Unconnected_Instances;
 
+   procedure Remove_Output_Gate (Inst : Instance)
+   is
+      use Netlists.Gates;
+      Inp : constant Input := Get_Input (Inst, 0);
+      In_Drv : constant Net := Get_Driver (Inp);
+      O : constant Net := Get_Output (Inst, 0);
+   begin
+      if In_Drv = O then
+         --  Connected to itself.
+         --  TODO: convert to initial value or to X.
+         return;
+      end if;
+
+      if In_Drv /= No_Net then
+         --  Only when the output is driven.
+         Disconnect (Inp);
+         Redirect_Inputs (O, In_Drv);
+      else
+         Disconnect (Get_First_Sink (O));
+      end if;
+
+      if Get_Id (Inst) = Id_Ioutput then
+         --  Disconnect the initial value.
+         Disconnect (Get_Input (Inst, 1));
+      end if;
+
+      Remove_Instance (Inst);
+   end Remove_Output_Gate;
+
    procedure Remove_Output_Gates (M : Module)
    is
       use Netlists.Gates;
@@ -130,29 +159,7 @@ package body Netlists.Cleanup is
               |  Id_Nop =>
                --  Keep gates with an attribute.
                if not Has_Attribute (Inst) then
-                  declare
-                     Inp : Input;
-                     In_Drv : Net;
-                     O : Net;
-                  begin
-                     Inp := Get_Input (Inst, 0);
-                     In_Drv := Get_Driver (Inp);
-                     O := Get_Output (Inst, 0);
-                     if In_Drv /= No_Net then
-                        --  Only when the output is driven.
-                        Disconnect (Inp);
-                        Redirect_Inputs (O, In_Drv);
-                     else
-                        Disconnect (Get_First_Sink (O));
-                     end if;
-
-                     if Get_Id (Inst) = Id_Ioutput then
-                        --  Disconnect the initial value.
-                        Disconnect (Get_Input (Inst, 1));
-                     end if;
-
-                     Remove_Instance (Inst);
-                  end;
+                  Remove_Output_Gate (Inst);
                end if;
             when others =>
                null;
