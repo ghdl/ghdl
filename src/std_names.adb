@@ -792,7 +792,7 @@ package body Std_Names is
       Def ("valueof",        Name_Valueof);
       Def ("valueOf",        Name_uValueof);
 
-      --  VHDL special comments
+      --  Special comments
       Def ("psl",                   Name_Psl);
       Def ("pragma",                Name_Pragma);
       Def ("synthesis",             Name_Synthesis);
@@ -803,6 +803,8 @@ package body Std_Names is
       Def ("synthesis_off",         Name_Synthesis_Off);
       Def ("synthesis_on",          Name_Synthesis_On);
       Def ("off",                   Name_Off);
+      Def ("full_case",             Name_Full_Case);
+      Def ("parallel_case",         Name_Parallel_Case);
 
       --  PSL keywords
       Def ("a",                  Name_A);

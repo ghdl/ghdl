@@ -920,7 +920,7 @@ package Std_Names is
    --   while
    Name_Last_BSV :          constant Name_Id := Name_First_BSV + 49;
 
-   --  VHDL special comments
+   --  Special comments
    Name_First_Comment :  constant Name_Id := Name_Last_BSV + 1;
    Name_Psl :            constant Name_Id := Name_First_Comment + 0;
    Name_Pragma :         constant Name_Id := Name_First_Comment + 1;
@@ -932,7 +932,9 @@ package Std_Names is
    Name_Synthesis_Off :  constant Name_Id := Name_First_Comment + 7;
    Name_Synthesis_On :   constant Name_Id := Name_First_Comment + 8;
    Name_Off :            constant Name_Id := Name_First_Comment + 9;
-   Name_Last_Comment :   constant Name_Id := Name_Off;
+   Name_Full_Case :      constant Name_Id := Name_First_Comment + 10;
+   Name_Parallel_Case :  constant Name_Id := Name_First_Comment + 11;
+   Name_Last_Comment :   constant Name_Id := Name_Parallel_Case;
 
    --  PSL words.
    Name_First_PSL :          constant Name_Id := Name_Last_Comment + 1;
