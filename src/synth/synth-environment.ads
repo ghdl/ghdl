@@ -78,6 +78,7 @@ package Synth.Environment is
       Wire_Variable,
       Wire_Enable,
       Wire_Signal,
+      Wire_Unset,
       Wire_Input, Wire_Output, Wire_Inout
      );
 
@@ -86,6 +87,11 @@ package Synth.Environment is
 
    --  Mark the wire as free.
    procedure Free_Wire (Wid : Wire_Id);
+
+   --  Change wire WID kind.
+   --  The only allowed transitions are Unset <-> (Variable or Signal).
+   procedure Set_Kind (Wid : Wire_Id; Kind : Wire_Kind);
+   function Get_Kind (Wid : Wire_Id) return Wire_Kind;
 
    --  Read and write the mark flag.
    function Get_Wire_Mark (Wid : Wire_Id) return Boolean;

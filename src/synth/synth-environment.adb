@@ -69,6 +69,22 @@ package body Synth.Environment is
       Wire_Rec.Kind := Wire_None;
    end Free_Wire;
 
+   procedure Set_Kind (Wid : Wire_Id; Kind : Wire_Kind)
+   is
+      Wire_Rec : Wire_Id_Record renames Wire_Id_Table.Table (Wid);
+   begin
+      pragma Assert (Kind = Wire_Unset or Wire_Rec.Kind = Wire_Unset);
+      Wire_Rec.Kind := Kind;
+   end Set_Kind;
+
+   function Get_Kind (Wid : Wire_Id) return Wire_Kind
+   is
+      Wire_Rec : Wire_Id_Record renames Wire_Id_Table.Table (Wid);
+   begin
+      pragma Assert (Wire_Rec.Kind /= Wire_None);
+      return Wire_Rec.Kind;
+   end Get_Kind;
+
    procedure Set_Wire_Gate (Wid : Wire_Id; Gate : Net) is
    begin
       --  Cannot override a gate.
@@ -974,7 +990,7 @@ package body Synth.Environment is
    begin
       case Wid_Rec.Kind is
          when Wire_Signal | Wire_Output | Wire_Inout
-           | Wire_Variable =>
+           | Wire_Variable | Wire_Unset =>
             null;
          when Wire_Input | Wire_Enable | Wire_None =>
             raise Internal_Error;
@@ -1019,6 +1035,9 @@ package body Synth.Environment is
          when Wire_Signal | Wire_Output | Wire_Inout | Wire_Input
            | Wire_Enable =>
             --  For signals, always read the previous value.
+            return Wire_Rec.Gate;
+         when Wire_Unset =>
+            pragma Assert (Wire_Rec.Cur_Assign = No_Seq_Assign);
             return Wire_Rec.Gate;
          when Wire_None =>
             raise Internal_Error;
