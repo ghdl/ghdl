@@ -312,7 +312,7 @@ ghdl1-gcc$(EXEEXT): version.ads force
 ghdl_gcc$(EXEEXT): version.ads $(GRT_SYNTH_OBJS) force
 	$(GNATMAKE) $(GHDL_GCC_INCFLAGS) -aI$(srcdir)/src/ghdldrv \
 	 $(GNATFLAGS) ghdl_gcc $(GNAT_BARGS) \
-         -largs $(GRT_SYNTH_OBJS)
+         -largs $(LDFLAGS) $(GRT_SYNTH_OBJS)
 
 libs.vhdl.local_gcc: ghdl_gcc$(EXEEXT) ghdl1-gcc$(EXEEXT)
 	$(MAKE) -f $(srcdir)/libraries/Makefile.inc $(LIBVHDL_FLAGS_TO_PASS) GHDL=$(PWD)/ghdl_gcc$(EXEEXT) GHDL_FLAGS="--GHDL1=$(PWD)/ghdl1-gcc$(EXEEXT) $(LIB_CFLAGS)" vhdl.libs.all libs.vhdl.standard
@@ -398,7 +398,7 @@ uninstall.llvm: uninstall.llvm.program uninstall.grt
 GHDL_SIMUL_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/vhdl/simulate -aI$(srcdir)/src/synth
 
 ghdl_simul$(EXEEXT): $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) version.ads force
-	$(GNATMAKE) $(GHDL_SIMUL_INCFLAGS) $(GNATFLAGS) -gnat12 ghdl_simul $(GNAT_BARGS) -largs $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
+	$(GNATMAKE) $(GHDL_SIMUL_INCFLAGS) $(GNATFLAGS) -gnat12 ghdl_simul $(GNAT_BARGS) -largs $(LDFLAGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
 
 libs.vhdl.simul: ghdl_simul$(EXEEXT)
 	$(MAKE) -f $(srcdir)/libraries/Makefile.inc $(LIBVHDL_FLAGS_TO_PASS) GHDL=$(PWD)/ghdl_simul$(EXEEXT) GHDL_FLAGS="" VHDLLIBS_COPY_OBJS=no vhdl.libs.all
@@ -425,7 +425,7 @@ LIBGHDL_GRT_OBJS= pic/grt-cstdio.o
 lib/$(libghdl_name): $(GRT_SRC_DEPS) $(LIBGHDL_GRT_OBJS) version.ads force
 #	Use -g for gnatlink so that the binder file is not removed.  We need
 #	it for libghdl.a
-	$(GNATMAKE) -I- -aI. -D pic -z libghdl -o $@ -gnat12 $(GNATFLAGS) $(PIC_FLAGS) $(LIBGHDL_INCFLAGS) -bargs -shared -Llibghdl_ -largs -g -shared $(SHLIB_FLAGS) $(LIBGHDL_GRT_OBJS)
+	$(GNATMAKE) -I- -aI. -D pic -z libghdl -o $@ -gnat12 $(GNATFLAGS) $(PIC_FLAGS) $(LIBGHDL_INCFLAGS) -bargs -shared -Llibghdl_ -largs -g -shared $(SHLIB_FLAGS) $(LDFLAGS) $(LIBGHDL_GRT_OBJS)
 #       On windows, gnatmake (via Osint.Executable_Name) always appends .exe
 #       Adjust.  (Other solution: use gnatmake for compilation and binding,
 #       then use gnatlink directly for linking).
@@ -482,10 +482,10 @@ libghdl-py.tgz:
 GHWDUMP_OBJS=ghwdump.o libghw.o
 
 ghwdump$(EXEEXT): $(GHWDUMP_OBJS)
-	$(CC) -o $@ $(GHWDUMP_OBJS)
+	$(CC) $(LDFLAGS) -o $@ $(GHWDUMP_OBJS)
 
 libghw$(SOEXT): libghw.o
-	$(CC) $(PIC_FLAGS) -shared -o lib/$@ libghw.o
+	$(CC) $(PIC_FLAGS) $(LDFLAGS) -shared -o lib/$@ libghw.o
 
 ghwdump.o: $(srcdir)/ghw/ghwdump.c $(srcdir)/ghw/libghw.h
 	$(CC) -c -o $@ $< $(COVERAGE_FLAGS) $(CFLAGS)
@@ -538,7 +538,7 @@ vhpi_thunk.o: $(GRTSRCDIR)/vhpi_thunk.c $(GRTSRCDIR)/vhpi_thunk.h
 	$(CC) -c -o $@ $< $(PIC_FLAGS) $(CFLAGS)
 
 lib/libghdlvpi$(SOEXT): vpi_thunk.o vhpi_thunk.o
-	$(CC) -o $@ $^ -shared $(SHLIB_FLAGS)
+	$(CC) $(SHLIB_FLAGS) $(LDFLAGS) -shared -o $@ $^
 
 all.vpi: lib/libghdlvpi$(SOEXT)
 
