@@ -486,8 +486,8 @@ GHWDUMP_OBJS=ghwdump.o libghw.o
 ghwdump$(EXEEXT): $(GHWDUMP_OBJS)
 	$(CC) $(LDFLAGS) -o $@ $(GHWDUMP_OBJS)
 
-libghw$(SOEXT): libghw.o
-	$(CC) $(PIC_FLAGS) $(LDFLAGS) -shared -o lib/$@ libghw.o
+lib/libghw$(SOEXT): libghw.o
+	$(CC) $(PIC_FLAGS) $(LDFLAGS) -shared -o $@ $^
 
 ghwdump.o: $(srcdir)/ghw/ghwdump.c $(srcdir)/ghw/libghw.h
 	$(CC) -c -o $@ $< $(COVERAGE_FLAGS) $(CFLAGS)
@@ -495,7 +495,7 @@ ghwdump.o: $(srcdir)/ghw/ghwdump.c $(srcdir)/ghw/libghw.h
 libghw.o: $(srcdir)/ghw/libghw.c $(srcdir)/ghw/libghw.h
 	$(CC) $(PIC_FLAGS) -c -o $@ $< $(COVERAGE_FLAGS) $(CFLAGS)
 
-all.ghw: ghwdump$(EXEEXT) libghw$(SOEXT)
+all.ghw: ghwdump$(EXEEXT) lib/libghw$(SOEXT)
 
 install.ghw:
 	$(INSTALL_PROGRAM) -p ghwdump$(EXEEXT) $(DESTDIR)$(bindir)/
