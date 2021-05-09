@@ -80,9 +80,16 @@ ifeq "$(build_mode)" "coverage"
 COVERAGE_FLAGS+=-fprofile-arcs -ftest-coverage
 endif
 
-GNATFLAGS=-gnat12 -gnaty3befhkmr -gnatwa -gnatwC -gnatf $(OPT_FLAGS) $(COVERAGE_FLAGS) $(ADA_FLAGS)
+# Warnings as errors.  Comment this line if a warning looks not valid.
+ifeq "$(enable_werror)" "true"
+WARN_ADAFLAGS+=-gnatwe
+endif
+
+WARN_ADAFLAGS+=-gnatwa -gnatwC -gnatf
+
+GNATFLAGS=-gnat12 -gnaty3befhkmr $(OPT_FLAGS) $(COVERAGE_FLAGS) $(WARN_ADAFLAGS) $(ADA_FLAGS)
 GRT_FLAGS=$(OPT_FLAGS) $(COVERAGE_FLAGS)
-GRT_ADAFLAGS:=$(filter-out -gnata,$(ADA_FLAGS))
+GRT_ADAFLAGS:=$(WARN_ADAFLAGS) -gnatw.X $(filter-out -gnata,$(ADA_FLAGS))
 
 ifeq "$(default_pic)" "true"
 GRT_FLAGS+=$(PIC_FLAGS)
@@ -91,11 +98,6 @@ endif
 WARN_CFLAGS=-Wall
 
 GNAT_BARGS=-bargs -E
-
-# Warnings as errors.  Comment this line if a warning looks not valid.
-ifeq "$(enable_werror)" "true"
-GNATFLAGS+=-gnatwe
-endif
 
 target=$(build)
 #target=i686-pc-linux-gnu
