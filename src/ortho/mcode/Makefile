@@ -10,13 +10,13 @@ all: $(ortho_exec)
 $(ortho_exec): $(ortho_srcdir)/mcode/ortho_mcode.ads memsegs_c.o force
 	$(GNATMAKE) -o $@ -g -aI$(ortho_srcdir)/mcode -aI$(ortho_srcdir) \
 	-aI$(ortho_srcdir)/.. $(GNATFLAGS) -gnatw.A ortho_code_main \
-	-bargs -E -largs memsegs_c.o #-static
+	-bargs -E -largs $(LDFLAGS) memsegs_c.o #-static
 
 memsegs_c.o: $(ortho_srcdir)/mcode/memsegs_c.c
 	$(CC) -c $(CFLAGS) -o $@ $<
 
 oread: $(ortho_srcdir)/mcode/ortho_mcode.ads force
-	$(GNATMAKE) -m -o $@ -g $(GNATFLAGS) -aI../oread ortho_code_main -aI.. -largs memsegs_c.o
+	$(GNATMAKE) -m -o $@ -g $(GNATFLAGS) -aI../oread ortho_code_main -aI.. -largs $(LDFLAGS) memsegs_c.o
 
 elfdump: force
 	$(GNATMAKE) -m -g $(GNATFLAGS) $@
