@@ -42,7 +42,7 @@ is
    function To_Argv_Type is new Ada.Unchecked_Conversion
      (Source => System.Address, Target => Grt.Options.Argv_Type);
 
-   Args : Grt.Options.Argv_Type := To_Argv_Type (Argv);
+   Args : constant Grt.Options.Argv_Type := To_Argv_Type (Argv);
    Progname : Ghdl_C_String := null;
 begin
    --  Ada elaboration.
