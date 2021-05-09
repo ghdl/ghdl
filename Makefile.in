@@ -82,6 +82,7 @@ endif
 
 GNATFLAGS=-gnat12 -gnaty3befhkmr -gnatwa -gnatwC -gnatf $(OPT_FLAGS) $(COVERAGE_FLAGS) $(ADA_FLAGS)
 GRT_FLAGS=$(OPT_FLAGS) $(COVERAGE_FLAGS)
+GRT_ADAFLAGS:=$(ADA_FLAGS)
 
 ifeq "$(default_pic)" "true"
 GRT_FLAGS+=$(PIC_FLAGS)
