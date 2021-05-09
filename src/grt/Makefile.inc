@@ -153,8 +153,8 @@ grt/run-bind.o: grt grt/run-bind.adb
 grt/main.o: grt $(GRTSRCDIR)/main.adb
 	cd grt && $(MSYS2_ARG) $(GRT_ADACOMPILE) -o main.o $(GRTSRCDIR)/main.adb -Igrt
 
-GRT_C_COMPILE = $(CC) -c $(GRT_FLAGS) -o $@ $<
-GRT_C_COMPILE_PIC = $(CC) -c $(GRT_FLAGS) $(PIC_FLAGS) -o $@ $<
+GRT_C_COMPILE = $(CC) -c $(GRT_FLAGS) $(CFLAGS) -o $@ $<
+GRT_C_COMPILE_PIC = $(CC) -c $(GRT_FLAGS) $(PIC_FLAGS) $(CFLAGS) -o $@ $<
 
 jumps.o: $(GRTSRCDIR)/config/jumps.c
 	$(GRT_C_COMPILE)
