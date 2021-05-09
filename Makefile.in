@@ -370,7 +370,7 @@ ghdl1-llvm$(EXEEXT): version.ads force
 	 ortho_srcdir=$(srcdir)/src/ortho ortho_exec=$@ \
 	 GNATFLAGS="$(GHDL_LLVM_INCFLAGS) $(GNATFLAGS)" LDFLAGS="$(LDFLAGS)" \
 	 LLVM_CONFIG="$(LLVM_CONFIG)" CXX="$(CXX)" \
-	 CFLAGS="$(COVERAGE_FLAGS) $(CFLAGS)" \
+	 CXXFLAGS="$(COVERAGE_FLAGS) $(CXXFLAGS)" \
 	 GNATMAKE="$(GNATMAKE)" all
 
 oread-llvm$(EXEEXT): force
