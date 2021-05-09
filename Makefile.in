@@ -16,6 +16,7 @@
 CC=@CC@
 CFLAGS=@CFLAGS@
 CXX=@CXX@
+CXXFLAGS=@CXXFLAGS@
 build=@build@
 srcdir=@srcdir@
 abs_srcdir=@abs_srcdir@
@@ -99,6 +100,7 @@ endif
 WARN_CFLAGS=-Wall
 
 CFLAGS:=$(OPT_FLAGS) $(WARN_CFLAGS) $(CFLAGS)
+CXXFLAGS:=$(OPT_FLAGS) $(WARN_CFLAGS) $(CXXFLAGS)
 
 GNAT_BARGS=-bargs -E
 
@@ -346,7 +348,7 @@ ghdl_llvm_jit$(EXEEXT): $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) $(ORTHO_DEPS) \
 
 llvm-cbindings.o: $(srcdir)/src/ortho/$(llvm_be)/llvm-cbindings.cpp
 	$(CXX) -c `$(LLVM_CONFIG) --includedir --cxxflags` \
-	  $(OPT_FLAGS) $(COVERAGE_FLAGS) -o $@ $<
+	  $(COVERAGE_FLAGS) $(CXXFLAGS) -o $@ $<
 
 libs.vhdl.llvmjit: ghdl_llvm_jit$(EXEEXT)
 	$(MAKE) -f $(srcdir)/libraries/Makefile.inc $(LIBVHDL_FLAGS_TO_PASS) GHDL=$(PWD)/ghdl_llvm$(EXEEXT) GHDL_FLAGS="" VHDLLIBS_COPY_OBJS=no vhdl.libs.all
