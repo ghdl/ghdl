@@ -19,6 +19,7 @@ build=@build@
 srcdir=@srcdir@
 abs_srcdir=@abs_srcdir@
 GNATMAKE=@GNATMAKE@
+ADA_FLAGS=@ADA_FLAGS@
 MAKE=@MAKE@
 prefix=@prefix@
 backend=@backend@

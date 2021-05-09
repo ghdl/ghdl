@@ -28,6 +28,7 @@ CC=${CC:-gcc}
 CXX=${CXX:-clang++}
 CFLAGS=${CFLAGS:--g}
 GNATMAKE=${GNATMAKE:-gnatmake}
+ADA_FLAGS=${ADA_FLAGS:-}
 MAKE=${MAKE:-make}
 LDFLAGS=
 prefix=/usr/local
@@ -52,7 +53,7 @@ PIC_FLAGS=-fPIC
 show_help=no
 progname=$0
 
-subst_vars="CC CXX GNATMAKE MAKE CFLAGS LDFLAGS build srcdir abs_srcdir prefix backend libdirsuffix libdirreverse gcc_src_dir llvm_config llvm_be backtrace_lib build_mode EXEEXT SOEXT PIC_FLAGS default_pic enable_werror enable_checks enable_gplcompat enable_libghdl libghdl_version ghdl_version"
+subst_vars="CC CXX GNATMAKE ADA_FLAGS MAKE CFLAGS LDFLAGS build srcdir abs_srcdir prefix backend libdirsuffix libdirreverse gcc_src_dir llvm_config llvm_be backtrace_lib build_mode EXEEXT SOEXT PIC_FLAGS default_pic enable_werror enable_checks enable_gplcompat enable_libghdl libghdl_version ghdl_version"
 
 # Find srcdir
 srcdir=`dirname $progname`
