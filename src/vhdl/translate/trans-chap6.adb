@@ -1133,7 +1133,8 @@ package body Trans.Chap6 is
             begin
                pragma Assert (Mode <= Name_Info.Alias_Kind);
                case Type_Info.Type_Mode is
-                  when Type_Mode_Unbounded_Array =>
+                  when Type_Mode_Unbounded_Array
+                     | Type_Mode_Unbounded_Record =>
                      return Get_Var (Name_Info.Alias_Var (Mode), Type_Info,
                                      Mode);
                   when Type_Mode_Bounded_Arrays
