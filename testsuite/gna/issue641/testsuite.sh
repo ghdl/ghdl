@@ -13,4 +13,13 @@ done
 
 clean
 
+# From synthworks
+
+analyze test_2b_record_subtype_alias/TestPkg.vhd
+analyze test_2b_record_subtype_alias/Test.vhd
+analyze test_2b_record_subtype_alias/TbTest.vhd
+simulate TbTest
+
+clean
+
 echo "Test successful"
