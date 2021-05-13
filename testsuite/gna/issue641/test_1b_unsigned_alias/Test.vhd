@@ -1,0 +1,25 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+use work.TestPkg.all ;
+
+entity test is
+  port(
+    input : in unsigned);
+end entity;
+
+architecture rtl of test is
+  signal copy : input'subtype;
+  
+  alias B is copy ; 
+begin
+  copy <= input ;
+  
+  process 
+  begin 
+    wait on copy ;  -- Suppress first run
+    report "Copy, B = " & to_hstring(Copy) & ", " & to_hstring(B) ; 
+  end process ; 
+  
+end architecture;
