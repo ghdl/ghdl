@@ -14,11 +14,12 @@ There is neither any equivalent in the VHDL LRM.
 So, the author of GHDL, Tristan Gingold, implemented an alternative format named GHW, for allowing all VHDL types to be
 dumped.
 He also contributed a reader to GTKWave based on libghw (see `gtkwave/gtkwave/search?q=libghw <https://github.com/gtkwave/gtkwave/search?q=libghw>`__ and `gtkwave/gtkwave: gtkwave3/src/ghw.c <https://github.com/gtkwave/gtkwave/blob/master/gtkwave3/src/ghw.c>`__),
-which allows visualizing GHW waves .
+which allows visualizing GHW waves.
 
 The GHW format is not completely fixed, and it might change slightly as new language features are implemented in GHDL
 or as a result of internal tweaks.
-Nevertheless, the GHDL codebase (:ghdlsrc:`grt/grt-waves.adb <grt/grt-waves.adb>`) is kept in sync with the utilities in subdir :ghdlsrc:`ghw <../ghw>`.
+Nevertheless, the GHDL codebase (:ghdlsrc:`grt/grt-waves.adb <grt/grt-waves.adb>`) is kept in sync with the utilities in
+subdir :ghdlsrc:`ghw <../ghw>`.
 
 .. TIP::
   In `nturley/ghw-notes <https://github.com/nturley/ghw-notes>`__, there is some work for defining the GHW format as a
