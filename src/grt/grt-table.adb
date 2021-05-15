@@ -39,7 +39,8 @@ package body Grt.Table is
    pragma Import (C, Free);
 
    --  Resize and reallocate the table according to LAST_VAL.
-   procedure Resize is
+   procedure Resize
+   is
       function Realloc (T : Table_Ptr; Size : size_t) return Table_Ptr;
       pragma Import (C, Realloc);
 
@@ -49,8 +50,10 @@ package body Grt.Table is
          Max := Max + (Max - Table_Low_Bound + 1);
       end loop;
 
-      New_Size := size_t ((Max - Table_Low_Bound + 1) *
-                            (Table_Type'Component_Size / Storage_Unit));
+      --  Do the multiplication using size_t to avoid overflow if the bounds
+      --  are a 32bit type on a 64bit machine.
+      New_Size := (size_t (Max - Table_Low_Bound + 1)
+                     * size_t (Table_Type'Component_Size / Storage_Unit));
 
       Table := Realloc (Table, New_Size);
 
@@ -113,6 +116,6 @@ begin
    Last_Val := Table_Index_Type'Pred (Table_Low_Bound);
    Max := Table_Low_Bound + Table_Index_Type (Table_Initial) - 1;
 
-   Table := Malloc (size_t (Table_Initial *
-                              (Table_Type'Component_Size / Storage_Unit)));
+   Table := Malloc (size_t (Table_Initial)
+                      * size_t (Table_Type'Component_Size / Storage_Unit));
 end Grt.Table;
