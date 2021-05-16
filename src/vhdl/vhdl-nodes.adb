@@ -5762,22 +5762,6 @@ package body Vhdl.Nodes is
       Set_Field4 (Name, Val);
    end Set_Named_Entity;
 
-   function Get_Alias_Declaration (Name : Iir) return Iir is
-   begin
-      pragma Assert (Name /= Null_Iir);
-      pragma Assert (Has_Alias_Declaration (Get_Kind (Name)),
-                     "no field Alias_Declaration");
-      return Get_Field2 (Name);
-   end Get_Alias_Declaration;
-
-   procedure Set_Alias_Declaration (Name : Iir; Val : Iir) is
-   begin
-      pragma Assert (Name /= Null_Iir);
-      pragma Assert (Has_Alias_Declaration (Get_Kind (Name)),
-                     "no field Alias_Declaration");
-      Set_Field2 (Name, Val);
-   end Set_Alias_Declaration;
-
    function Get_Referenced_Name (N : Iir) return Iir is
    begin
       pragma Assert (N /= Null_Iir);

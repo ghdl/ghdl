@@ -333,7 +333,6 @@ package Vhdl.Nodes_Meta is
       Field_Default_Entity_Aspect,
       Field_Binding_Indication,
       Field_Named_Entity,
-      Field_Alias_Declaration,
       Field_Referenced_Name,
       Field_Expr_Staticness,
       Field_Scalar_Size,
@@ -922,7 +921,6 @@ package Vhdl.Nodes_Meta is
    function Has_Default_Entity_Aspect (K : Iir_Kind) return Boolean;
    function Has_Binding_Indication (K : Iir_Kind) return Boolean;
    function Has_Named_Entity (K : Iir_Kind) return Boolean;
-   function Has_Alias_Declaration (K : Iir_Kind) return Boolean;
    function Has_Referenced_Name (K : Iir_Kind) return Boolean;
    function Has_Expr_Staticness (K : Iir_Kind) return Boolean;
    function Has_Scalar_Size (K : Iir_Kind) return Boolean;

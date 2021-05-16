@@ -4310,8 +4310,6 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Type (Field1)
    --
-   --   Get/Set_Alias_Declaration (Field2)
-   --
    --   Get/Set_Identifier (Field3)
    --
    --   Get/Set_Named_Entity (Field4)
@@ -4328,8 +4326,6 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Type (Field1)
    --
-   --   Get/Set_Alias_Declaration (Field2)
-   --
    --   Get/Set_Identifier (Field3)
    --
    --   Get/Set_Named_Entity (Field4)
@@ -4345,8 +4341,6 @@ package Vhdl.Nodes is
    -- Iir_Kind_Operator_Symbol (Short)
    --
    --   Get/Set_Type (Field1)
-   --
-   --   Get/Set_Alias_Declaration (Field2)
    --
    --   Get/Set_Identifier (Field3)
    --
@@ -4378,8 +4372,6 @@ package Vhdl.Nodes is
    --   Get/Set_Prefix (Field0)
    --
    --   Get/Set_Type (Field1)
-   --
-   --   Get/Set_Alias_Declaration (Field2)
    --
    --   Get/Set_Identifier (Field3)
    --
@@ -8787,12 +8779,6 @@ package Vhdl.Nodes is
    --  Field: Field4 Maybe_Forward_Ref
    function Get_Named_Entity (Name : Iir) return Iir;
    procedure Set_Named_Entity (Name : Iir; Val : Iir);
-
-   --  If a name designate a non-object alias, the designated alias.
-   --  Named_Entity will designate the aliased entity.
-   --  Field: Field2 Ref
-   function Get_Alias_Declaration (Name : Iir) return Iir;
-   procedure Set_Alias_Declaration (Name : Iir; Val : Iir);
 
    --  Field: Field2 Ref
    function Get_Referenced_Name (N : Iir) return Iir;

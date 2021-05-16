@@ -2152,7 +2152,6 @@ package body Vhdl.Sem_Names is
          if not Keep_Alias
            and then Get_Kind (Res) = Iir_Kind_Non_Object_Alias_Declaration
          then
-            Set_Alias_Declaration (Name, Res);
             Res := Get_Named_Entity (Get_Name (Res));
          end if;
       else

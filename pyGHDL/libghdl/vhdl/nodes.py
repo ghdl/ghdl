@@ -2592,9 +2592,6 @@ Set_Binding_Indication = libghdl.vhdl__nodes__set_binding_indication
 Get_Named_Entity = libghdl.vhdl__nodes__get_named_entity
 Set_Named_Entity = libghdl.vhdl__nodes__set_named_entity
 
-Get_Alias_Declaration = libghdl.vhdl__nodes__get_alias_declaration
-Set_Alias_Declaration = libghdl.vhdl__nodes__set_alias_declaration
-
 Get_Referenced_Name = libghdl.vhdl__nodes__get_referenced_name
 Set_Referenced_Name = libghdl.vhdl__nodes__set_referenced_name
 
