@@ -1088,11 +1088,16 @@ package body Vhdl.Utils is
             | Iir_Kind_Interface_Variable_Declaration
             | Iir_Kind_Interface_Signal_Declaration
             | Iir_Kind_Object_Alias_Declaration =>
-            if (Get_Kind (Get_Subtype_Indication (Base))
-                = Iir_Kind_Subtype_Attribute)
-            then
-               return True;
-            end if;
+            declare
+               Ind : constant Iir := Get_Subtype_Indication (Base);
+            begin
+               --  Note: an object alias may not have subtype indication.
+               if Ind /= Null_Iir
+                 and then Get_Kind (Ind) = Iir_Kind_Subtype_Attribute
+               then
+                  return True;
+               end if;
+            end;
          when Iir_Kind_Dereference
             | Iir_Kind_Implicit_Dereference =>
             null;
