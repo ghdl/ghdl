@@ -2864,6 +2864,7 @@ package body Trans.Chap4 is
         (El_List, Conv_Info.Instance_Field, Wki_Instance,
          Block_Info.Block_Decls_Ptr_Type);
 
+      --  Add instance field for the entity in case of direct instantiation.
       if Entity /= Null_Iir then
          Conv_Info.Instantiated_Entity := Entity;
          Entity_Info := Get_Info (Entity);
@@ -3137,6 +3138,9 @@ package body Trans.Chap4 is
       end loop;
    end Translate_Association_Subprograms;
 
+   --  Register conversion CONV in association between SIG_IN and SIG_OUT.
+   --  This procedure allocates a record data (described by INFO), fill it
+   --   with addresses of signals and register it to REG_SUBPRG.
    procedure Elab_Conversion (Sig_In     : Iir;
                               Sig_Out    : Iir;
                               Conv       : Iir;
