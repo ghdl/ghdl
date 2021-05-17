@@ -195,10 +195,11 @@ Here is the list of the most useful options. For further info, see :ref:`DEV:Deb
 Export waveforms
 ================
 
+.. NOTE:: All the waveform formats supported by GHDL are also supported by `GTKWave <http://gtkwave.sourceforge.net/>`__.
+
 .. option:: --read-wave-opt=<FILENAME>
 
-  Filter signals to be dumped to the wave file according to the wave option
-  file provided.
+  Filter signals to be dumped to the wave file according to the wave option file provided.
 
   Here is a description of the wave option file format currently supported ::
 
@@ -230,9 +231,8 @@ Export waveforms
 
 .. option:: --write-wave-opt=<FILENAME>
 
-  If the wave option file doesn't exist, creates it with all the signals of
-  the design. Otherwise throws an error, because it won't erase an existing
-  file.
+  If the wave option file doesn't exist, creates it with all the signals of the design.
+  Otherwise throws an error, because it won't erase an existing file.
 
 .. option:: --vcd=<FILENAME>
 
@@ -244,21 +244,18 @@ Export waveforms
 
   .. index:: dump of signals
 
-  Option :option:`--vcd` dumps into the VCD file `FILENAME` the signal
-  values before each non-delta cycle. If `FILENAME` is ``-``,
-  then the standard output is used, otherwise a file is created or
-  overwritten.
+  Option :option:`--vcd` dumps into the VCD file `FILENAME` the signal values before each non-delta cycle.
+  If `FILENAME` is ``-``, then the standard output is used, otherwise a file is created or overwritten.
 
-  The :option:`--vcdgz` option is the same as the :option:`--vcd` option,
-  but the output is compressed using the `zlib` (`gzip`
-  compression). However, you can't use the ``-`` filename.
+  The :option:`--vcdgz` option is the same as the :option:`--vcd` option, but the output is compressed using the `zlib`
+  (`gzip` compression).
+  However, you can't use the ``-`` filename.
   Furthermore, only one VCD file can be written.
 
-  :dfn:`VCD` (value change dump) is a file format defined
-  by the `verilog` standard and used by virtually any wave viewer.
-
-  Since it comes from `verilog`, only a few VHDL types can be dumped. GHDL
-  dumps only signals whose base type is of the following:
+  :dfn:`VCD` (value change dump) is a file format defined by the `verilog` standard and used by virtually any wave
+  viewer.
+  Since it comes from `verilog`, only a few VHDL types can be dumped.
+  GHDL dumps only signals whose base type is of the following:
 
   * types defined in the ``std.standard`` package:
 
@@ -274,14 +271,9 @@ Export waveforms
 
   * any integer type
 
-  I have successfully used `gtkwave` to view VCD files.
-
-  Currently, there is no way to select signals to be dumped: all signals are
-  dumped, which can generate big files.
-
-  It is very unfortunate there is no standard or well-known wave file
-  format supporting VHDL types. If you are aware of such a free format,
-  please mail me (:ref:`Reporting_bugs`).
+  .. NOTE::
+    It is very unfortunate there is no standard or well-known wave file format supporting VHDL types.
+    If you are aware of such a free format, please :ref:`let us know <Reporting_bugs>`!
 
 .. option:: --vcd-nodate
 
@@ -289,19 +281,12 @@ Export waveforms
 
 .. option:: --fst=<FILENAME>
 
-  Write the waveforms into an `fst` file that can be displayed by
-  `gtkwave`. The `fst` files are much smaller than VCD or
-  `GHW` files, but it handles only the same signals as the VCD format.
+  Write the waveforms into an `fst` file.
+  The `fst` files are much smaller than VCD or `GHW` files, but it handles only the same signals as the VCD format.
 
 .. option:: --wave=<FILENAME>
 
-  Write the waveforms into a `ghw` (GHdl Waveform) file. Currently, all
-  the signals are dumped into the waveform file, you cannot select a hierarchy
-  of signals to be dumped.
-
-  The format of this file was defined by myself and is not yet completely fixed.
-  It may change slightly. The ``gtkwave`` tool can read the GHW files.
-
+  Write the waveforms into a :ref:`GHW` file.
   Contrary to VCD files, any VHDL type can be dumped into a GHW file.
 
 Export hierarchy and references
@@ -312,8 +297,8 @@ Export hierarchy and references
   .. index:: display design hierarchy
 
   Display the design hierarchy as a tree of instantiated design entities.
-  This may be useful to understand the structure of a complex
-  design. `KIND` is optional, but if set must be one of:
+  This may be useful to understand the structure of a complex design.
+  `KIND` is optional, but if set must be one of:
 
   * ``none`` Do not display hierarchy. Same as if the option was not present.
 
@@ -322,22 +307,24 @@ Export hierarchy and references
   * ``proc`` Like ``inst`` but also display processes.
 
   * ``port`` Like ``proc`` but display ports and signals too.
-    If `KIND` is not specified, the hierarchy is displayed with the
-    ``port`` mode.
+    If `KIND` is not specified, the hierarchy is displayed with the ``port`` mode.
 
 .. option:: --xref-html [options] files...
 
-  To easily navigate through your sources, you may generate cross-references. This command generates an html file for
-  each ``file`` given in the command line, with syntax highlighting and full cross-reference: every identifier is a
-  link to its declaration. An index of the files is created too.
+  To easily navigate through your sources, you may generate cross-references.
+  This command generates an html file for each ``file`` given in the command line, with syntax highlighting and full
+  cross-reference: every identifier is a link to its declaration.
+  An index of the files is created too.
 
   The set of ``files`` are analyzed, and then, if the analysis is successful, html files are generated in the directory
-  specified by the ``-o <DIR>`` option, or :file:`html/` directory by default. The style of the html file can be
-  modified with the :option:`--format` option.
+  specified by the ``-o <DIR>`` option, or :file:`html/` directory by default.
+  The style of the html file can be modified with the :option:`--format` option.
 
 .. option:: --psl-report=<FILENAME>
 
-  Write a report for PSL at the end of simulation. For each PSL cover and assert statements, the name, source location and whether it passed or failed is reported. The file is written using the JSON format, but is still human readable.
+  Write a report for PSL at the end of simulation.
+  For each PSL cover and assert statements, the name, source location and whether it passed or failed is reported.
+  The file is written using the JSON format, but is still human readable.
 
 .. option:: --psl-report-uncovered
 
