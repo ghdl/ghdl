@@ -1367,6 +1367,21 @@ package body Vhdl.Sem is
       end loop;
    end Are_Trees_Chain_Equal;
 
+   function Are_Trees_List_Equal (Left, Right : Iir_Flist) return Boolean
+   is
+      El_Left, El_Right : Iir;
+   begin
+      pragma Assert (Flist_Last (Left) = Flist_Last (Right));
+      for I in Flist_First .. Flist_Last (Left) loop
+         El_Left := Get_Nth_Element (Left, I);
+         El_Right := Get_Nth_Element (Right, I);
+         if not Are_Trees_Equal (El_Left, El_Right) then
+            return False;
+         end if;
+      end loop;
+      return True;
+   end Are_Trees_List_Equal;
+
    --  Return TRUE iff LEFT and RIGHT are (in depth) equal.
    --  This corresponds to conformance rules, LRM93 2.7
    function Are_Trees_Equal (Left, Right : Iir) return Boolean
@@ -1489,46 +1504,21 @@ package body Vhdl.Sem is
             then
                return False;
             end if;
-            declare
-               L_Left : constant Iir_Flist := Get_Index_Subtype_List (Left);
-               L_Right : constant Iir_Flist := Get_Index_Subtype_List (Right);
-            begin
-               if Get_Nbr_Elements (L_Left) /= Get_Nbr_Elements (L_Right) then
-                  return False;
-               end if;
-               for I in Flist_First .. Flist_Last (L_Left) loop
-                  El_Left := Get_Nth_Element (L_Left, I);
-                  El_Right := Get_Nth_Element (L_Right, I);
-                  if not Are_Trees_Equal (El_Left, El_Right) then
-                     return False;
-                  end if;
-               end loop;
-            end;
+            if not Are_Trees_List_Equal (Get_Index_Subtype_List (Left),
+                                         Get_Index_Subtype_List (Right))
+            then
+               return False;
+            end if;
             return True;
          when Iir_Kind_Record_Subtype_Definition =>
             if Get_Base_Type (Left) /= Get_Base_Type (Right) then
                return False;
             end if;
-            if not Are_Trees_Equal (Get_Resolution_Indication (Left),
+            return Are_Trees_Equal (Get_Resolution_Indication (Left),
                                     Get_Resolution_Indication (Right))
-            then
-               return False;
-            end if;
-            declare
-               L_Left : constant Iir_Flist :=
-                 Get_Elements_Declaration_List (Left);
-               L_Right : constant Iir_Flist :=
-                 Get_Elements_Declaration_List (Right);
-            begin
-               for I in Flist_First .. Flist_Last (L_Left) loop
-                  El_Left := Get_Nth_Element (L_Left, I);
-                  El_Right := Get_Nth_Element (L_Right, I);
-                  if not Are_Trees_Equal (El_Left, El_Right) then
-                     return False;
-                  end if;
-               end loop;
-            end;
-            return True;
+              and then
+              Are_Trees_List_Equal (Get_Elements_Declaration_List (Left),
+                                    Get_Elements_Declaration_List (Right));
 
          when Iir_Kind_Integer_Literal =>
             if Get_Value (Left) /= Get_Value (Right) then
@@ -1596,6 +1586,18 @@ package body Vhdl.Sem is
               Are_Trees_Equal (Get_Expression (Left),
                                Get_Expression (Right));
 
+         when Iir_Kind_Indexed_Name =>
+            return Are_Trees_Equal (Get_Prefix (Left),
+                                    Get_Prefix (Right))
+              and then
+              Are_Trees_List_Equal (Get_Index_List (Left),
+                                    Get_Index_List (Right));
+         when Iir_Kind_Slice_Name =>
+            return Are_Trees_Equal (Get_Prefix (Left),
+                                    Get_Prefix (Right))
+              and then Are_Trees_Equal (Get_Suffix (Left),
+                                        Get_Suffix (Right));
+
          when Iir_Kind_Access_Type_Definition
            | Iir_Kind_Record_Type_Definition
            | Iir_Kind_Array_Type_Definition
@@ -1609,14 +1611,10 @@ package body Vhdl.Sem is
             then
                return False;
             end if;
-            if not Are_Trees_Equal (Get_Left_Limit (Left),
+            return Are_Trees_Equal (Get_Left_Limit (Left),
                                     Get_Left_Limit (Right))
-              or else not Are_Trees_Equal (Get_Right_Limit (Left),
-                                           Get_Right_Limit (Right))
-            then
-               return False;
-            end if;
-            return True;
+              and then Are_Trees_Equal (Get_Right_Limit (Left),
+                                        Get_Right_Limit (Right));
 
          when Iir_Kind_High_Type_Attribute
            | Iir_Kind_Low_Type_Attribute
@@ -1661,21 +1659,9 @@ package body Vhdl.Sem is
             if not Are_Trees_Equal (Get_Type (Left), Get_Type (Right)) then
                return False;
             end if;
-            declare
-               El_L, El_R : Iir;
-            begin
-               El_L := Get_Association_Choices_Chain (Left);
-               El_R := Get_Association_Choices_Chain (Right);
-               loop
-                  exit when El_L = Null_Iir and El_R = Null_Iir;
-                  if not Are_Trees_Equal (El_L, El_R) then
-                     return False;
-                  end if;
-                  El_L := Get_Chain (El_L);
-                  El_R := Get_Chain (El_R);
-               end loop;
-               return True;
-            end;
+            return Are_Trees_Chain_Equal
+              (Get_Association_Choices_Chain (Left),
+               Get_Association_Choices_Chain (Right));
 
          when Iir_Kind_Choice_By_None
               | Iir_Kind_Choice_By_Others =>
