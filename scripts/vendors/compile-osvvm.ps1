@@ -112,7 +112,7 @@ $GHDLBinary =           Get-GHDLBinary $GHDL
 New-DestinationDirectory $DestinationDirectory
 cd $DestinationDirectory
 
-$VHDLVersion,$VHDLStandard,$VHDLFlavor = Get-VHDLVariables -VHDL2008
+$VHDLVersion,$VHDLStandard,$VHDLFlavor = Get-VHDLVariables -VHDL2008:$true
 
 # define global GHDL Options
 $Analyze_Parameters = @(
