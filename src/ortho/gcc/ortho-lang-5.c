@@ -66,6 +66,8 @@
 #include "stor-layout.h"
 #include "varasm.h"
 
+#define TYPE_UNBOUNDED(t) TYPE_LANG_FLAG_0(t)
+
 /* Returns the number of FIELD_DECLs in TYPE.
    Copied here from expr.c in gcc4.9 as it is no longer exported by tree.h.  */
 
@@ -1125,6 +1127,13 @@ new_record_union_field (struct o_element_list *list,
 {
   tree res;
 
+  if (TYPE_UNBOUNDED(etype)) {
+    /* If the field type is unbounded, it mustn't use any space in the
+       record.  Use VOID instead.  */
+    TYPE_UNBOUNDED(list->res) = 1;
+    etype = void_type_node;
+  }
+
   res = build_decl (input_location, FIELD_DECL, ident, etype);
   DECL_CONTEXT (res) = list->res;
   chain_append (&list->chain, res);
@@ -1289,6 +1298,7 @@ new_array_type (tree el_type, tree index_type)
   /* Build an incomplete array.  */
   range_type = build_range_type (index_type, size_zero_node, NULL_TREE);
   res = build_array_type (el_type, range_type);
+  TYPE_UNBOUNDED(res) = 1;
   return res;
 }
 
@@ -1299,6 +1309,7 @@ new_array_subtype (tree atype, tree eltype, tree length)
   tree index_type;
   tree res;
 
+  gcc_assert(!TYPE_UNBOUNDED(eltype));
   index_type = TYPE_DOMAIN (atype);
 
   range_type = ortho_build_array_range(index_type, length);
