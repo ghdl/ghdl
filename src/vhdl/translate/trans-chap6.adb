@@ -302,6 +302,7 @@ package body Trans.Chap6 is
             Cond1, Cond2 : O_Enode;
             Cond         : O_Enode;
          begin
+            --  FIXME: not correct for enumerations
             Cond1 := New_Compare_Op
               (ON_Lt,
                New_Obj_Value (Off),
