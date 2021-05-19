@@ -66,6 +66,7 @@ COMPILE_UVVM_VIP_SCOREBOARD=0
 COMPILE_UVVM_VIP_SPEC_COV=0
 COMPILE_UVVM_VIP_SPI=0
 COMPILE_UVVM_VIP_UART=0
+COMPILE_UVVM_VIP_WISHBONE=0
 VERBOSE=0
 DEBUG=0
 FILTERING=1
@@ -170,6 +171,10 @@ while [[ $# -gt 0 ]]; do
 			COMMAND=3
 			COMPILE_UVVM_VIP_UART=1
 			;;
+		--uvvm-vip-wishbone)
+			COMMAND=3
+			COMPILE_UVVM_VIP_WISHBONE=1
+			;;
 		-v|--verbose)
 			VERBOSE=1
 			;;
@@ -258,6 +263,7 @@ if [[ $COMMAND -le 1 ]]; then
 	echo "     --uvvm-vip-spec           Specification Coverage"
 	echo "     --uvvm-vip-spi            Serial Peripheral Interface"
 	echo "     --uvvm-vip-uart           Universal Asynchronous Receiver Transmitter (UART)"
+	echo "     --uvvm-vip-wishbone       Wishbone"
 	echo ""
 	echo "Library compile options:"
 	echo "  -H --halt-on-error           Halt on error(s)."
@@ -303,6 +309,7 @@ if [[ $COMPILE_UVVM_VIP -eq 1 ]]; then
 	COMPILE_UVVM_VIP_SPEC_COV=1
 	COMPILE_UVVM_VIP_SPI=1
 	COMPILE_UVVM_VIP_UART=1
+	COMPILE_UVVM_VIP_WISHBONE=1
 fi
 
 

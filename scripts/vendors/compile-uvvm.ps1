@@ -80,6 +80,8 @@ param(
 	  [switch]$UVVM_VIP_SPI =             $false,
 	  # Compile VIP: UART
 	  [switch]$UVVM_VIP_UART =            $false,
+	  # Compile VIP: Wishbone
+	  [switch]$UVVM_VIP_WISHBONE =        $false,
 
 	# Clean up directory before analyzing.
 	[switch]$Clean =              $false,
@@ -119,7 +121,7 @@ if ($Help -or (-not ($All -or $Clean -or
                                      $UVVM_VIP_AXI_Stream -or $UVVM_VIP_Clock_Generator -or $UVVM_VIP_Error_Injection -or
 											               $UVVM_VIP_Ethernet -or $UVVM_VIP_GMII -or $UVVM_VIP_GPIO -or $UVVM_VIP_HVVC2VVC -or
 											               $UVVM_VIP_I2C -or $UVVM_VIP_RGMII -or $UVVM_VIP_SBI -or $UVVM_VIP_Scoreboard -or
-											               $UVVM_VIP_Spec_Cov -or $UVVM_VIP_SPI -or $UVVM_VIP_UART))
+											               $UVVM_VIP_Spec_Cov -or $UVVM_VIP_SPI -or $UVVM_VIP_UART -or $UVVM_VIP_WISHBONE))
 	)))
 {	Get-Help $MYINVOCATION.MyCommand.Path -Detailed
 	Exit-CompileScript
@@ -152,6 +154,7 @@ if ($UVVM_VIP)
 	$UVVM_VIP_Spec_Cov =        $true
 	$UVVM_VIP_SPI =             $true
 	$UVVM_VIP_UART =            $true
+	$UVVM_VIP_WISHBONE =        $true
 }
 
 
