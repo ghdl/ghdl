@@ -2114,13 +2114,16 @@ package body Ortho_Front is
                declare
                   V : O_Enode;
                   Bt : Node_Acc;
+                  El_Type : Node_Acc;
                   Res_Type : Node_Acc;
                begin
                   Next_Token;
                   if N_Type.Kind = Type_Subarray then
                      Bt := N_Type.Subarray_Base;
+                     El_Type := N_Type.Subarray_El;
                   else
                      Bt := N_Type;
+                     El_Type := N_Type.Array_Element;
                   end if;
                   if Bt.Kind /= Type_Array then
                      Parse_Error ("type of prefix is not an array");
@@ -2131,7 +2134,7 @@ package body Ortho_Front is
                      Next_Token;
                   else
                      N := New_Indexed_Element (N, V);
-                     N_Type := Bt.Array_Element;
+                     N_Type := El_Type;
                   end if;
                   Expect (Tok_Right_Brack);
                   Next_Token;
