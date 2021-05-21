@@ -338,13 +338,64 @@ package body Vhdl.Evaluation is
          Error_Msg_Sem (+A_Range, "range length is beyond subtype length");
          Right := Left;
       else
-         -- FIXME: what about nul range?
          Right := Build_Discrete (Pos, A_Range);
          Set_Literal_Origin (Right, Null_Iir);
          Set_Right_Limit_Expr (A_Range, Right);
       end if;
       Set_Right_Limit (A_Range, Right);
    end Set_Right_Limit_By_Length;
+
+   procedure Set_Enumeration_Null_Range_Limits (A_Range : Iir)
+   is
+      A_Type : constant Iir := Get_Type (A_Range);
+      Btype : constant Iir := Get_Base_Type (A_Type);
+      Enum_List : constant Iir_Flist := Get_Enumeration_Literal_List (Btype);
+      Last_Enum : constant Natural := Flist_Last (Enum_List);
+      Left : constant Iir := Get_Left_Limit (A_Range);
+      Right : Iir;
+      Pos : Int64;
+      Invert : Boolean;
+   begin
+      pragma Assert (Get_Expr_Staticness (A_Range) = Locally);
+
+      if Last_Enum = 0 then
+         Error_Msg_Sem
+           (+A_Range, "null range not supported for enumeration type %n",
+            +A_Type);
+         Right := Left;
+      else
+         Pos := Eval_Pos (Left);
+         Invert := False;
+         case Get_Direction (A_Range) is
+            when Dir_To =>
+               if Pos = 0 then
+                  Pos := Pos + 1;
+                  Invert := True;
+               else
+                  Pos := Pos - 1;
+               end if;
+            when Dir_Downto =>
+               if Pos = Int64 (Last_Enum) then
+                  Pos := Pos - 1;
+                  Invert := True;
+               else
+                  Pos := Pos + 1;
+               end if;
+         end case;
+
+         Right := Build_Discrete (Pos, A_Range);
+         Set_Literal_Origin (Right, Null_Iir);
+
+         if Invert then
+            Set_Left_Limit_Expr (A_Range, Right);
+            Set_Left_Limit (A_Range, Right);
+            Set_Right_Limit (A_Range, Left);
+         else
+            Set_Right_Limit_Expr (A_Range, Right);
+            Set_Right_Limit (A_Range, Right);
+         end if;
+      end if;
+   end Set_Enumeration_Null_Range_Limits;
 
    --  Create a range of type A_TYPE whose length is LEN.
    --  Note: only two nodes are created:
@@ -369,7 +420,14 @@ package body Vhdl.Evaluation is
       Set_Type (Constraint, A_Type);
       Set_Left_Limit (Constraint, Get_Left_Limit (Index_Constraint));
       Set_Direction (Constraint, Get_Direction (Index_Constraint));
-      Set_Right_Limit_By_Length (Constraint, Len);
+      if Len = 0
+        and then (Get_Kind (Get_Base_Type (A_Type))
+                    = Iir_Kind_Enumeration_Type_Definition)
+      then
+         Set_Enumeration_Null_Range_Limits (Constraint);
+      else
+         Set_Right_Limit_By_Length (Constraint, Len);
+      end if;
       return Constraint;
    end Create_Range_By_Length;
 
