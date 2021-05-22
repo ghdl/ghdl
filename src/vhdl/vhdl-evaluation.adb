@@ -345,6 +345,13 @@ package body Vhdl.Evaluation is
       Set_Right_Limit (A_Range, Right);
    end Set_Right_Limit_By_Length;
 
+   --  LRM08 9.3.2 Literals
+   --  If there is a value to the left of the nominal leftmost bound (given by
+   --  the 'LEFTOF) attribute, then the leftmost bound is the nominal leftmost
+   --  bound, and the rightmost bound is the value to the left of the nominal
+   --  leftmost bound.  Otherwise, the leftmost bound is the value to the
+   --  right of the nominal leftmost bound, and the rightmost bound is the
+   --  nominal leftmost bound.
    procedure Set_Enumeration_Null_Range_Limits (A_Range : Iir)
    is
       A_Type : constant Iir := Get_Type (A_Range);
