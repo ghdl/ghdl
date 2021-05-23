@@ -1,0 +1,21 @@
+tab1.vhdl:3:7: two underscores can't be consecutive
+    p__1 : bit;
+      ^
+tab1.vhdl:4:10: two underscores can't be consecutive
+    abcd__2 : bit;
+         ^
+tab1.vhdl:5:8: an identifier cannot finish with '_'
+    bad_ : bit;
+       ^
+tab1.vhdl:6:14: an identifier cannot finish with '_'
+        ontab_ : bit;
+             ^
+tab1.vhdl:7:14: an identifier cannot finish with '_'
+        notab_ : bit;
+             ^
+tab1.vhdl:8:5: an identifier can't start with '_'
+    _err : bit;
+    ^
+tab1.vhdl:9:26: underscore must be followed by a digit
+    num : integer := 1_2_);
+                         ^
