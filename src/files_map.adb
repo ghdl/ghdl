@@ -175,9 +175,8 @@ package body Files_Map is
          for I in Line_Pos .. Line_Pos + Source_Ptr (Offset) - 1 loop
             if Source_File.Source (I) = ASCII.HT then
                Res := Res + Tab_Stop - Res mod Tab_Stop;
-            else
-               Res := Res + 1;
             end if;
+            Res := Res + 1;
          end loop;
          return Res;
       end if;
