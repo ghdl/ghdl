@@ -1046,6 +1046,8 @@ package body Vhdl.Scanner is
                null;
             when '_' =>
                if Source (P + 1) = '_' then
+                  --  Need to set the current position for the error message.
+                  Pos := P + 1;
                   Error_Msg_Scan ("two underscores can't be consecutive");
                end if;
             when ' ' | ')' | '.' | ';' | ':' =>
@@ -1094,6 +1096,7 @@ package body Vhdl.Scanner is
             C := '_';
          else
             --  Eat the trailing underscore.
+            Pos := P - 1;
             Error_Msg_Scan ("an identifier cannot finish with '_'");
          end if;
       end if;
@@ -1873,7 +1876,7 @@ package body Vhdl.Scanner is
             Warning_Msg_Scan
               (Warnid_Pragma, "incomplete pragma directive ignored");
          when Name_Translate =>
-            Scan_Comment_Identifier (Id, True);
+            Scan_Comment_Identifier (Id, False);
             case Id is
                when Name_On =>
                   Scan_Translate_On;
