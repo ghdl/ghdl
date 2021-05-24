@@ -242,6 +242,15 @@ jobs:
         cd scripts/msys2-${{ matrix.pkg }}
         makepkg-mingw --noconfirm --noprogressbar -sCLf
 
+    - name: 'Prepare NSIS build'
+      run: |
+        cp scripts/installer-${{ matrix.installs }}-${{ matrix.pkg }}.nsi scripts/msys2-${{ matrix.pkg }}/pkg/mingw-w64-${{ matrix.arch }}-ghdl-${{ matrix.pkg }}
+
+    - name: 'Create NSIS installer'
+      uses: joncloud/makensis-action@v3.3
+      with:
+        script-file: scripts/msys2-${{ matrix.pkg }}/pkg/mingw-w64-${{ matrix.arch }}-ghdl-${{ matrix.pkg }}/installer-${{ matrix.installs }}-${{ matrix.pkg }}.nsi
+
     - name: '📤 Upload artifact: builddir'
       uses: actions/upload-artifact@v2
       with:
@@ -254,6 +263,11 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         path: scripts/msys2-${{ matrix.pkg }}/mingw-*ghdl*.pkg.tar.zst
+
+    - name: '📤 Upload artifact: installer'
+      uses: actions/upload-artifact@v2
+      with:
+        path: scripts/msys2-${{ matrix.pkg }}/pkg/mingw-w64-${{ matrix.arch }}-ghdl-${{ matrix.pkg }}/installer-${{ matrix.arch }}-${{ matrix.pkg }}.exe
 
 #
 # Windows Test
