@@ -2330,7 +2330,15 @@ package body Netlists.Memories is
             return True;
          when Id_Signal
            | Id_Isignal =>
-            return Is_Const_Input (Get_Input_Instance (Inst, 0));
+            declare
+               Inp : constant Net := Get_Input_Net (Inst, 0);
+            begin
+               if Inp = No_Net then
+                  return False;
+               else
+                  return Is_Const_Input (Get_Net_Parent (Inp));
+               end if;
+            end;
          when others =>
             --  FIXME: handle other consts ?
             return False;
