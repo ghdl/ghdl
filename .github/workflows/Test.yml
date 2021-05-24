@@ -267,7 +267,7 @@ jobs:
     - name: '📤 Upload artifact: installer'
       uses: actions/upload-artifact@v2
       with:
-        path: scripts/msys2-${{ matrix.pkg }}/pkg/mingw-w64-${{ matrix.arch }}-ghdl-${{ matrix.pkg }}/installer-${{ matrix.arch }}-${{ matrix.pkg }}.exe
+        path: scripts/msys2-${{ matrix.pkg }}/pkg/mingw-w64-${{ matrix.arch }}-ghdl-${{ matrix.pkg }}/ghdl-installer-${{ matrix.arch }}-${{ matrix.pkg }}.exe
 
 #
 # Windows Test
