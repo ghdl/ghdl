@@ -13,4 +13,7 @@ for t in dpram1 ram3 ram4 ram6; do
     clean
 done
 
+synth ram8.vhdl -e > syn_ram8.vhdl
+synth ram9.vhdl -e > syn_ram9.vhdl
+
 echo "Test successful"
