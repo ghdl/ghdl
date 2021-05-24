@@ -26,6 +26,13 @@ begin
     wait for 1 ns;
     assert z = eres;
     report to_bstring(z);
+
+    x := b"1101";
+    y := b"0111_000";
+    ci := '1';
+    add_carry (L => x, R => y, c_in => ci, result => z, c_out => co);
+    wait for 1 ns;
+    report "res=" & to_bstring(z) & ", co=" & to_string(co);
     wait;
   end process tt;
 end architecture testbench;
