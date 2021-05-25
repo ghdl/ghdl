@@ -1186,7 +1186,8 @@ package body Vhdl.Utils is
                   return Get_Type_Definition (Ent);
                when Iir_Kind_Subtype_Declaration
                  | Iir_Kind_Base_Attribute
-                 | Iir_Kind_Subtype_Attribute =>
+                 | Iir_Kind_Subtype_Attribute
+                 | Iir_Kind_Element_Attribute =>
                   return Get_Type (Ent);
                when others =>
                   return Null_Iir;
