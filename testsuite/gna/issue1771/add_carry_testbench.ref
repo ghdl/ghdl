@@ -1,0 +1,19 @@
+elaborate and simulate add_carry_ghdl_testbench
+sci=1
+sx_6_0=68.0
+sy_6_0=38.0
+sz_6_0=21.0
+sco_6_0=1
+
+sci=1
+sx_3_m3=D.0
+sy_3_m3=7.0
+sz_3_m3=4.2
+sco_3_m3=1
+
+sci=1
+sx_3_0=D.0
+sy_3_m3=7.0
+sz_3_0_m3=4.2
+sco_3_0_m3=1
+
