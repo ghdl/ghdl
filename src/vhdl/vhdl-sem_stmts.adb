@@ -1021,7 +1021,9 @@ package body Vhdl.Sem_Stmts is
       for S in Resolve_Stages loop
          Done := False;
 
-         Target := Sem_Expression_Wildcard (Target, Stmt_Type);
+         if Target /= Null_Iir then
+            Target := Sem_Expression_Wildcard (Target, Stmt_Type);
+         end if;
          if Target = Null_Iir then
             Target_Type := Stmt_Type;
             --  To avoid spurious errors, assume the target is fully
@@ -1073,7 +1075,9 @@ package body Vhdl.Sem_Stmts is
          exit when Done;
          if not Is_Defined_Type (Stmt_Type) then
             Error_Msg_Sem (+Stmt, "cannot resolve type");
-            if Get_Kind (Target) = Iir_Kind_Aggregate then
+            if Target /= Null_Iir
+              and then Get_Kind (Target) = Iir_Kind_Aggregate
+            then
                --  Try to give an advice.
                Error_Msg_Sem (+Stmt, "use a qualified expression for the RHS");
             end if;

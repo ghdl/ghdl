@@ -7598,26 +7598,23 @@ package body Vhdl.Parse is
    function Parse_Sequential_Assignment_Statement (Target : Iir) return Iir
    is
       Stmt : Iir;
-      Call : Iir;
    begin
-      if Current_Token = Tok_Less_Equal then
-         return Parse_Signal_Assignment_Statement (Target);
-      elsif Current_Token = Tok_Assign then
-         return Parse_Variable_Assignment_Statement (Target);
-      elsif Current_Token = Tok_Semi_Colon then
-         return Parenthesis_Name_To_Procedure_Call
-           (Target, Iir_Kind_Procedure_Call_Statement);
-      else
-         Error_Msg_Parse
-           ("""<="" or "":="" expected instead of %t", +Current_Token);
-         Stmt := Create_Iir (Iir_Kind_Procedure_Call_Statement);
-         Call := Create_Iir (Iir_Kind_Procedure_Call);
-         Set_Prefix (Call, Target);
-         Set_Procedure_Call (Stmt, Call);
-         Set_Location (Call);
-         Resync_To_End_Of_Statement;
-         return Stmt;
-      end if;
+      case Current_Token is
+         when Tok_Less_Equal =>
+            return Parse_Signal_Assignment_Statement (Target);
+         when Tok_Assign =>
+            return Parse_Variable_Assignment_Statement (Target);
+         when Tok_Semi_Colon =>
+            return Parenthesis_Name_To_Procedure_Call
+              (Target, Iir_Kind_Procedure_Call_Statement);
+         when others =>
+            Error_Msg_Parse
+              ("""<="" or "":="" expected instead of %t", +Current_Token);
+            Stmt := Create_Iir (Iir_Kind_Variable_Assignment_Statement);
+            Set_Expression (Stmt, Target);
+            Resync_To_End_Of_Statement;
+            return Stmt;
+      end case;
    end Parse_Sequential_Assignment_Statement;
 
    --  precond:  CASE
