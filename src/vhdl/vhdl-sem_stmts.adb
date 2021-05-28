@@ -1878,6 +1878,9 @@ package body Vhdl.Sem_Stmts is
          Comp_Name := Sem_Denoting_Name (Inst);
          Set_Instantiated_Unit (Stmt, Comp_Name);
          Comp := Get_Named_Entity (Comp_Name);
+         if Is_Error (Comp) then
+            return Null_Iir;
+         end if;
          if Get_Kind (Comp) /= Iir_Kind_Component_Declaration then
             Error_Class_Match (Comp_Name, "component");
             return Null_Iir;
