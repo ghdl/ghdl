@@ -433,7 +433,7 @@ package body Vhdl.Formatters is
       end Close_Lit;
    end Format_Disp_Ctxt;
 
-   procedure Reindent (Ctxt : in out Format_Disp_Ctxt.Format_Ctxt;
+   procedure Reindent (Ctxt : Format_Disp_Ctxt.Format_Ctxt;
                        Respace : Boolean := False)
    is
       use Format_Disp_Ctxt;

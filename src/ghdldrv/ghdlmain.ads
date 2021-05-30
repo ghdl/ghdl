@@ -17,7 +17,7 @@ with GNAT.OS_Lib; use GNAT.OS_Lib;
 with Options; use Options;
 
 package Ghdlmain is
-   type Command_Type;
+   type Command_Type is tagged;
 
    type Command_Acc is access all Command_Type'Class;
 
