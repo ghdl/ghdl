@@ -1049,7 +1049,7 @@ package body Grt.Vpi is
             begin
                V := 0;
                for I in reverse Vec'Range loop
-                  if Vec (I) = '1' then
+                  if Vec (I) = '1' or Vec (I) = 'H' then
                      --  Ok, handles 'X', 'Z'... like '0'.
                      V := V or Shift_Left (1, Natural (Vec'Last - I));
                   end if;
@@ -1065,8 +1065,35 @@ package body Grt.Vpi is
                      Verilog_Wire_Val (Info).E8 := V;
                end case;
             end;
-         when Vcd_Integer32
-           | Vcd_Float64 =>
+         when Vcd_Integer32 =>
+            declare
+               R : Ghdl_U32;
+               V : Ghdl_I32;
+            begin
+               R := 0;
+               --  FIXME: what about sign extension ?
+               --  FIXME: what about range checks ?
+               for I in Vec'Range loop
+                  R := Shift_Left (R, 1);
+                  if Vec (I) = '1' or Vec (I) = 'H' then
+                     --  Ok, handles 'X', 'Z'... like '0'.
+                     R := R or 1;
+                  end if;
+               end loop;
+               V := To_Ghdl_I32 (R);
+               case Info.Val is
+                  when Vcd_Effective =>
+                     Ghdl_Signal_Force_Effective_I32
+                       (To_Signal_Arr_Ptr (Info.Ptr)(0), V);
+                  when Vcd_Driving =>
+                     Ghdl_Signal_Force_Driving_I32
+                       (To_Signal_Arr_Ptr (Info.Ptr)(0), V);
+                  when Vcd_Variable =>
+                     Verilog_Wire_Val (Info).I32 := V;
+               end case;
+            end;
+
+         when Vcd_Float64 =>
             null;
       end case;
    end Ii_Vpi_Put_Value;
@@ -1194,31 +1221,30 @@ package body Grt.Vpi is
       --         call (from grt-signals)
       -- Set_Effective_Value(sig_ptr, conv_value);
 
-      -- Checks the format of aValue. Only vpiBinStrVal will be accepted
-      --  for now.
+      --  Convert LEN (number of elements) to number of bits.
+      case Info.Vtype is
+         when Vcd_Bad =>
+            null;
+         when Vcd_Bit
+           | Vcd_Bool
+           | Vcd_Bitvector
+           | Vcd_Stdlogic
+           | Vcd_Stdlogic_Vector =>
+            null;
+         when Vcd_Enum8 =>
+            Len := Len * 8;
+         when Vcd_Integer32 =>
+            Len := Len * 32;
+         when Vcd_Float64 =>
+            Len := Len * 64;
+      end case;
+
+      -- Checks the format of aValue.
       case aValue.Format is
          when vpiObjTypeVal =>
             dbgPut_Line ("vpi_put_value: vpiObjTypeVal");
          when vpiBinStrVal =>
-            --  Convert LEN (number of elements) to number of bits.
-            case Info.Vtype is
-               when Vcd_Bad =>
-                  null;
-               when Vcd_Bit
-                 | Vcd_Bool
-                 | Vcd_Bitvector
-                 | Vcd_Stdlogic
-                 | Vcd_Stdlogic_Vector =>
-                  null;
-               when Vcd_Enum8 =>
-                  Len := Len * 8;
-               when Vcd_Integer32 =>
-                  Len := Len * 32;
-               when Vcd_Float64 =>
-                  Len := Len * 64;
-            end case;
             Ii_Vpi_Put_Value_Bin_Str (Info, Len, aValue.Str);
-            -- dbgPut_Line ("vpi_put_value: vpiBinStrVal");
          when vpiOctStrVal =>
             dbgPut_Line ("vpi_put_value: vpiNet, vpiOctStrVal");
          when vpiDecStrVal =>
@@ -1230,7 +1256,6 @@ package body Grt.Vpi is
          when vpiIntVal =>
             Ii_Vpi_Put_Value_Int
               (Info, Len, To_Unsigned_32 (aValue.Integer_m));
-            -- dbgPut_Line ("vpi_put_value: vpiIntVal");
          when vpiRealVal =>
             dbgPut_Line("vpi_put_value: vpiRealVal");
          when vpiStringVal =>
