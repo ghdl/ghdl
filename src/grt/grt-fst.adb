@@ -233,7 +233,9 @@ package body Grt.Fst is
       Get_Verilog_Wire (Sig, Vcd_El);
 
       case Vcd_El.Vtype is
-         when Vcd_Bad =>
+         when Vcd_Bad
+            | Vcd_Array
+            | Vcd_Struct =>
             --  Not handled.
             return;
          when Vcd_Enum8 =>
@@ -262,11 +264,11 @@ package body Grt.Fst is
             Sdt := FST_SDT_VHDL_STD_LOGIC;
          when Vcd_Bitvector =>
             Vt := FST_VT_VCD_REG;
-            Len := Interfaces.C.unsigned (Vcd_El.Irange.I32.Len);
+            Len := Interfaces.C.unsigned (Vcd_El.Vec_Range.I32.Len);
             Sdt := FST_SDT_VHDL_BIT_VECTOR;
          when Vcd_Stdlogic_Vector =>
             Vt := FST_VT_VCD_REG;
-            Len := Interfaces.C.unsigned (Vcd_El.Irange.I32.Len);
+            Len := Interfaces.C.unsigned (Vcd_El.Vec_Range.I32.Len);
             Sdt := FST_SDT_VHDL_STD_LOGIC_VECTOR;
       end case;
 
@@ -374,13 +376,13 @@ package body Grt.Fst is
             end Append;
          begin
             Vhpi_Get_Str (VhpiNameP, Sig, Name2, Name_Len);
-            if Vcd_El.Irange /= null then
+            if Vcd_El.Vec_Range /= null then
                Name2 (Name_Len + 1) := '[';
                Name_Len := Name_Len + 1;
-               Append (Vcd_El.Irange.I32.Left);
+               Append (Vcd_El.Vec_Range.I32.Left);
                Name2 (Name_Len + 1) := ':';
                Name_Len := Name_Len + 1;
-               Append (Vcd_El.Irange.I32.Right);
+               Append (Vcd_El.Vec_Range.I32.Right);
                Name2 (Name_Len + 1) := ']';
                Name_Len := Name_Len + 1;
             end if;
@@ -610,7 +612,9 @@ package body Grt.Fst is
             null;
          when Vcd_Enum8 =>
             Fst_Put_Enum8 (Hand, Verilog_Wire_Val (V.Wire).E8, V.Wire.Rti);
-         when Vcd_Bad =>
+         when Vcd_Bad
+           | Vcd_Array
+           | Vcd_Struct =>
             null;
       end case;
    end Fst_Put_Var;

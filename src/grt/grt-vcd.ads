@@ -58,7 +58,13 @@ package Grt.Vcd is
       Vcd_Bit, Vcd_Stdlogic,
 
       --  A bit vector type
-      Vcd_Bitvector, Vcd_Stdlogic_Vector
+      Vcd_Bitvector, Vcd_Stdlogic_Vector,
+
+      --  Any array (that is not a vector)
+      Vcd_Array,
+
+      --  Any record
+      Vcd_Struct
      );
 
    subtype Vcd_Var_Vectors is Vcd_Var_Type
@@ -80,10 +86,13 @@ package Grt.Vcd is
       case Vtype is
          when Vcd_Var_Vectors =>
             --  Vector bounds.
-            Irange : Ghdl_Range_Ptr;
+            Vec_Range : Ghdl_Range_Ptr;
          when Vcd_Enum8 =>
             --  Base type.
             Rti : Rtis.Ghdl_Rti_Access;
+         when Vcd_Array =>
+            Arr_Rti : Rtis.Ghdl_Rti_Access;
+            Arr_Layout : System.Address;
          when others =>
             null;
       end case;

@@ -300,8 +300,8 @@ package body Grt.Vcd is
       end case;
    end Rti_To_Vcd_Kind;
 
-   function Rti_To_Vcd_Kind (Rti : Ghdl_Rtin_Type_Array_Acc)
-                            return Vcd_Var_Type
+   function Rti_Array_To_Vcd_Kind (Rti : Ghdl_Rtin_Type_Array_Acc)
+                                  return Vcd_Var_Type
    is
       It : Ghdl_Rti_Access;
    begin
@@ -329,9 +329,9 @@ package body Grt.Vcd is
          when Vcd_Stdlogic =>
             return Vcd_Stdlogic_Vector;
          when others =>
-            return Vcd_Bad;
+            return Vcd_Array;
       end case;
-   end Rti_To_Vcd_Kind;
+   end Rti_Array_To_Vcd_Kind;
 
    procedure Get_Verilog_Wire (Sig : VhpiHandleT; Info : out Verilog_Wire_Info)
    is
@@ -373,7 +373,7 @@ package body Grt.Vcd is
                Idx_Rti : constant Ghdl_Rti_Access :=
                  Get_Base_Type (Arr_Rti.Indexes (0));
             begin
-               Kind := Rti_To_Vcd_Kind (Arr_Rti);
+               Kind := Rti_Array_To_Vcd_Kind (Arr_Rti);
                Bounds := Loc_To_Addr (St.Common.Depth, St.Layout,
                                       Avhpi_Get_Context (Sig));
                Bounds := Array_Layout_To_Bounds (Bounds);
@@ -386,7 +386,7 @@ package body Grt.Vcd is
                Idx_Rti : constant Ghdl_Rti_Access :=
                  Get_Base_Type (Arr_Rti.Indexes (0));
             begin
-               Kind := Rti_To_Vcd_Kind (Arr_Rti);
+               Kind := Rti_Array_To_Vcd_Kind (Arr_Rti);
                Extract_Range (Bounds, Idx_Rti, Irange);
             end;
          when others =>
@@ -426,7 +426,8 @@ package body Grt.Vcd is
       end case;
 
       case Kind is
-         when Vcd_Bad =>
+         when Vcd_Bad
+           | Vcd_Struct =>
             Info := (Vcd_Bad, Vcd_Effective, Null_Address);
          when Vcd_Enum8 =>
             Info := (Vcd_Enum8, Val, Sig_Addr, Rti);
@@ -444,6 +445,8 @@ package body Grt.Vcd is
             Info := (Vcd_Bitvector, Val, Sig_Addr, Irange);
          when Vcd_Stdlogic_Vector =>
             Info := (Vcd_Stdlogic_Vector, Val, Sig_Addr, Irange);
+         when Vcd_Array =>
+            Info := (Vcd_Array, Val, Sig_Addr, Rti, Bounds);
       end case;
    end Get_Verilog_Wire;
 
@@ -451,7 +454,7 @@ package body Grt.Vcd is
                             return Ghdl_Index_Type is
    begin
       if Info.Vtype in Vcd_Var_Vectors then
-         return Info.Irange.I32.Len;
+         return Info.Vec_Range.I32.Len;
       else
          return 1;
       end if;
@@ -519,8 +522,10 @@ package body Grt.Vcd is
             when Vcd_Bitvector
               | Vcd_Stdlogic_Vector =>
                Vcd_Put ("reg ");
-               Vcd_Put_I32 (Ghdl_I32 (Vcd_El.Irange.I32.Len));
+               Vcd_Put_I32 (Ghdl_I32 (Vcd_El.Vec_Range.I32.Len));
             when Vcd_Bad
+              | Vcd_Array
+              | Vcd_Struct
               | Vcd_Enum8 =>
                null;
          end case;
@@ -530,9 +535,9 @@ package body Grt.Vcd is
          Vcd_Put_Name (Sig);
          if Vcd_El.Vtype in Vcd_Var_Vectors then
             Vcd_Putc ('[');
-            Vcd_Put_I32 (Vcd_El.Irange.I32.Left);
+            Vcd_Put_I32 (Vcd_El.Vec_Range.I32.Left);
             Vcd_Putc (':');
-            Vcd_Put_I32 (Vcd_El.Irange.I32.Right);
+            Vcd_Put_I32 (Vcd_El.Vec_Range.I32.Right);
             Vcd_Putc (']');
          end if;
          Vcd_Putc (' ');
@@ -734,6 +739,8 @@ package body Grt.Vcd is
             end loop;
             Vcd_Putc (' ');
          when Vcd_Bad
+           | Vcd_Array
+           | Vcd_Struct
            | Vcd_Enum8 =>
             null;
       end case;
@@ -758,12 +765,14 @@ package body Grt.Vcd is
                   end if;
                when Vcd_Bitvector
                  | Vcd_Stdlogic_Vector =>
-                  for J in 0 .. Info.Irange.I32.Len - 1 loop
+                  for J in 0 .. Info.Vec_Range.I32.Len - 1 loop
                      if To_Signal_Arr_Ptr (Info.Ptr)(J).Last_Event = Last then
                         return True;
                      end if;
                   end loop;
-               when Vcd_Bad =>
+               when Vcd_Bad
+                 | Vcd_Array
+                 | Vcd_Struct =>
                   null;
             end case;
          when Vcd_Driving =>
@@ -779,12 +788,14 @@ package body Grt.Vcd is
                   end if;
                when Vcd_Bitvector
                  | Vcd_Stdlogic_Vector =>
-                  for J in 0 .. Info.Irange.I32.Len - 1 loop
+                  for J in 0 .. Info.Vec_Range.I32.Len - 1 loop
                      if To_Signal_Arr_Ptr (Info.Ptr)(J).Last_Active = Last then
                         return True;
                      end if;
                   end loop;
-               when Vcd_Bad =>
+               when Vcd_Bad
+                 | Vcd_Array
+                 | Vcd_Struct =>
                   null;
             end case;
       end case;
@@ -805,12 +816,14 @@ package body Grt.Vcd is
             end if;
          when Vcd_Bitvector
            | Vcd_Stdlogic_Vector =>
-            for J in 0 .. Info.Irange.I32.Len - 1 loop
+            for J in 0 .. Info.Vec_Range.I32.Len - 1 loop
                if To_Signal_Arr_Ptr (Info.Ptr)(J).Event then
                   return True;
                end if;
             end loop;
-         when Vcd_Bad =>
+         when Vcd_Bad
+           | Vcd_Array
+           | Vcd_Struct =>
             null;
       end case;
       return False;

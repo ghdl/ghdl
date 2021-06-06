@@ -212,6 +212,8 @@ package body Grt.Vpi is
             Trace ("vpiModule");
          when vpiNet =>
             Trace ("vpiNet");
+         when vpiNetArray =>
+            Trace ("vpiNetArray");
          when vpiPort =>
             Trace ("vpiPort");
          when vpiParameter =>
@@ -224,6 +226,8 @@ package body Grt.Vpi is
             Trace ("vpiLeftRange");
          when vpiRightRange =>
             Trace ("vpiRightRange");
+         when vpiRange =>
+            Trace ("vpiRange");
 
          when vpiStop =>
             Trace ("vpiStop");
@@ -449,11 +453,12 @@ package body Grt.Vpi is
    begin
       Get_Verilog_Wire (Ref.Ref, Info);
       case Info.Vtype is
-         when Vcd_Var_Vectors =>
+         when Vcd_Var_Vectors
+            | Vcd_Array =>
             return Natural (Get_Wire_Length (Info));
          when Vcd_Bool
-           | Vcd_Bit
-           | Vcd_Stdlogic =>
+            | Vcd_Bit
+            | Vcd_Stdlogic =>
             return 1;
          when Vcd_Integer32 =>
             return 32;
@@ -461,7 +466,8 @@ package body Grt.Vpi is
             return 8;
          when Vcd_Float64 =>
             return 0;
-         when Vcd_Bad =>
+         when Vcd_Bad
+            | Vcd_Struct =>
             return 0;
       end case;
    end Vpi_Get_Size;
@@ -482,7 +488,9 @@ package body Grt.Vpi is
          when Vcd_Bitvector
            | Vcd_Stdlogic_Vector =>
             return True;
-         when Vcd_Bad =>
+         when Vcd_Bad
+           | Vcd_Struct
+           | Vcd_Array =>
             return False;
       end case;
    end Vpi_Get_Vector;
@@ -547,23 +555,27 @@ package body Grt.Vpi is
            | VhpiForGenerateK
            | VhpiCompInstStmtK =>
             return vpiModule;
-         when VhpiPortDeclK =>
+         when VhpiPortDeclK
+           | VhpiSigDeclK =>
             declare
                Info : Verilog_Wire_Info;
             begin
                Get_Verilog_Wire (Res, Info);
-               if Info.Vtype /= Vcd_Bad then
-                  return vpiNet;
-               end if;
-            end;
-         when VhpiSigDeclK =>
-            declare
-               Info : Verilog_Wire_Info;
-            begin
-               Get_Verilog_Wire (Res, Info);
-               if Info.Vtype /= Vcd_Bad then
-                  return vpiNet;
-               end if;
+               case Info.Vtype is
+                  when Vcd_Enum8
+                    | Vcd_Bool
+                    | Vcd_Var_Vectors
+                    | Vcd_Integer32
+                    | Vcd_Bit
+                    | Vcd_Stdlogic =>
+                     return vpiNet;
+                  when Vcd_Array =>
+                     return vpiNetArray;
+                  when Vcd_Bad
+                    | Vcd_Struct
+                    | Vcd_Float64 =>
+                     return vpiUndefined;
+               end case;
             end;
          when VhpiGenericDeclK =>
             declare
@@ -598,6 +610,9 @@ package body Grt.Vpi is
                                          Ref => Res);
          when vpiNet =>
             return new struct_vpiHandle'(mType => vpiNet,
+                                         Ref => Res);
+         when vpiNetArray =>
+            return new struct_vpiHandle'(mType => vpiNetArray,
                                          Ref => Res);
          when vpiPort =>
             return new struct_vpiHandle'(mType => vpiPort,
@@ -794,9 +809,11 @@ package body Grt.Vpi is
                   return null;
             end case;
          when vpiRightRange
-           | vpiLeftRange =>
+            | vpiLeftRange =>
             case Ref.mType is
-               when vpiPort| vpiNet =>
+               when vpiPort
+                  | vpiNet
+                  | vpiNetArray =>
                   Res := new struct_vpiHandle (aType);
                   Res.Ref := Ref.Ref;
                   return Res;
@@ -880,17 +897,14 @@ package body Grt.Vpi is
 
       --  Get verilog compat info.
       Get_Verilog_Wire (Obj, Info);
-      if Info.Vtype = Vcd_Bad then
-         return null;
-      end if;
-
-      Len := Get_Wire_Length (Info);
 
       Reset (Buf_Value); -- reset string buffer
 
       case Info.Vtype is
          when Vcd_Bad
-           | Vcd_Float64 =>
+           | Vcd_Float64
+           | Vcd_Array
+           | Vcd_Struct =>
             return null;
          when Vcd_Enum8 =>
             declare
@@ -910,12 +924,14 @@ package body Grt.Vpi is
            | Vcd_Bool =>
             Append (Buf_Value, Map_Std_B1 (Verilog_Wire_Val (Info).B1));
          when Vcd_Bitvector =>
+            Len := Get_Wire_Length (Info);
             for J in 0 .. Len - 1 loop
                Append (Buf_Value, Map_Std_B1 (Verilog_Wire_Val (Info, J).B1));
             end loop;
          when Vcd_Stdlogic =>
             Append (Buf_Value, E8_To_Char (Verilog_Wire_Val (Info).E8));
          when Vcd_Stdlogic_Vector =>
+            Len := Get_Wire_Length (Info);
             for J in 0 .. Len - 1 loop
                Append (Buf_Value, E8_To_Char (Verilog_Wire_Val (Info, J).E8));
             end loop;
@@ -923,6 +939,22 @@ package body Grt.Vpi is
       Append (Buf_Value, NUL);
       return Get_C_String (Buf_Value);
    end ii_vpi_get_value_bin_str;
+
+   function Vpi_Get_Value_Range (Expr : vpiHandle) return Integer
+   is
+      Info : Verilog_Wire_Info;
+   begin
+      Get_Verilog_Wire (Expr.Ref, Info);
+      if Info.Vec_Range /= null then
+         if Expr.mType = vpiLeftRange then
+            return Integer (Info.Vec_Range.I32.Left);
+         else
+            return Integer (Info.Vec_Range.I32.Right);
+         end if;
+      else
+         return 0;
+      end if;
+   end Vpi_Get_Value_Range;
 
    procedure vpi_get_value (Expr : vpiHandle; Value : p_vpi_value) is
    begin
@@ -957,21 +989,8 @@ package body Grt.Vpi is
          when vpiIntVal=>
             case Expr.mType is
                when vpiLeftRange
-                 | vpiRightRange=>
-                  declare
-                     Info : Verilog_Wire_Info;
-                  begin
-                     Get_Verilog_Wire (Expr.Ref, Info);
-                     if Info.Irange /= null then
-                        if Expr.mType = vpiLeftRange then
-                           Value.Integer_m := Integer (Info.Irange.I32.Left);
-                        else
-                           Value.Integer_m := Integer (Info.Irange.I32.Right);
-                        end if;
-                     else
-                        Value.Integer_m  := 0;
-                     end if;
-                  end;
+                  | vpiRightRange=>
+                  Value.Integer_m := Vpi_Get_Value_Range (Expr);
                when others=>
                   dbgPut_Line ("vpi_get_value: vpiIntVal, unknown mType");
             end case;
@@ -1001,7 +1020,9 @@ package body Grt.Vpi is
                                Vec : Std_Ulogic_Array) is
    begin
       case Info.Vtype is
-         when Vcd_Bad =>
+         when Vcd_Bad
+            | Vcd_Array
+            | Vcd_Struct =>
             return;
          when Vcd_Bit
            | Vcd_Bool
@@ -1223,8 +1244,11 @@ package body Grt.Vpi is
 
       --  Convert LEN (number of elements) to number of bits.
       case Info.Vtype is
-         when Vcd_Bad =>
-            null;
+         when Vcd_Bad
+            | Vcd_Array
+            | Vcd_Struct =>
+            dbgPut_Line ("vpi_put_value: bad object kind");
+            return null;
          when Vcd_Bit
            | Vcd_Bool
            | Vcd_Bitvector

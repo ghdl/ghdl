@@ -27,8 +27,7 @@ with Grt.Vcd;
 with Grt.Callbacks;
 
 package Grt.Vpi is
-
-   --  Properties, see vpi_user.h
+   --  Properties and objects, see vpi_user.h
    vpiUndefined :     constant Integer := -1;
    vpiType :          constant Integer :=  1;
    vpiName :          constant Integer :=  2;
@@ -45,11 +44,6 @@ package Grt.Vpi is
    vpiScalar :        constant Integer := 17;
    vpiVector :        constant Integer := 18;
 
-   -- object codes, see vpi_user.h
-   vpiModule :        constant Integer := 32;
-   vpiNet :           constant Integer := 36;
-   vpiPort :          constant Integer := 44;
-   --
    vpiDirection :     constant Integer := 20;
    vpiInput :         constant Integer :=  1;
    vpiOutput :        constant Integer :=  2;
@@ -57,12 +51,33 @@ package Grt.Vpi is
    vpiMixedIO :       constant Integer :=  4;
    vpiNoDirection :   constant Integer :=  5;
 
+   vpiIntegerVar :    constant Integer := 25;
+   vpiMemory :        constant Integer := 29;
+   vpiModPath :       constant Integer := 31;
+   vpiModule :        constant Integer := 32;
+   vpiNamedEvent :    constant Integer := 34;
+   vpiNet :           constant Integer := 36;
    vpiParameter :     constant Integer := 41;
+   vpiPort :          constant Integer := 44;
+   vpiRealVar :       constant Integer := 47;
+   vpiReg :           constant Integer := 48;
+   vpiTchk :          constant Integer := 61;
+
    vpiLeftRange :     constant Integer := 79;
    vpiRightRange :    constant Integer := 83;
    vpiScope :         constant Integer := 84;
    vpiInternalScope : constant Integer := 92;
+   vpiProcess :       constant Integer := 92;
 
+   vpiPrimitive :       constant Integer := 103;
+   vpiAttribute :       constant Integer := 105;
+   vpiPrimitiveArray :  constant Integer := 113;
+   vpiNetArray :        constant Integer := 114;
+   vpiRange :           constant Integer := 115;
+   vpiRegArray :        constant Integer := 116;
+   vpiNamedEventArray : constant Integer := 129;
+
+   --  vpi_control constants.
    vpiStop :          constant := 66;
    vpiFinish :        constant := 67;
    vpiReset :         constant := 68;
