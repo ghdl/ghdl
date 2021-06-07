@@ -502,6 +502,9 @@ package body Trans.Chap3 is
       end if;
    end Type_To_Last_Object_Kind;
 
+   --  A fat pointer is a struct with 2 fields:
+   --  * pointer to the object base
+   --  * pointer to the bounds (for arrays) or to the layout (for records)
    procedure Create_Unbounded_Type_Fat_Pointer (Info : Type_Info_Acc)
    is
       Constr : O_Element_List;
@@ -909,7 +912,10 @@ package body Trans.Chap3 is
    --  Array  --
    -------------
 
-   --  Declare the bounds types for DEF.
+   --  Declare the bounds types for array type definition DEF.
+   --  Bounds type is a record with:
+   --   * a range field for each dimension
+   --   * an element layout if the element is unbounded.
    procedure Translate_Array_Type_Bounds
      (Def : Iir_Array_Type_Definition; Info : Type_Info_Acc)
    is
@@ -963,7 +969,9 @@ package body Trans.Chap3 is
       Finish_Unbounded_Type_Bounds (Info);
    end Translate_Array_Type_Bounds;
 
-   --  Create the layout type.
+   --  Create the layout type.  It is a record with:
+   --  * the size field for the size of objects and signals
+   --  * the bounds
    procedure Create_Array_Type_Layout_Type (Info : Type_Info_Acc)
    is
       Constr : O_Element_List;
