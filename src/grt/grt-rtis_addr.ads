@@ -109,6 +109,10 @@ package Grt.Rtis_Addr is
    --  Get the base type of ATYPE.
    function Get_Base_Type (Atype : Ghdl_Rti_Access) return Ghdl_Rti_Access;
 
+   --  Likewise, but for an array type.
+   function Get_Base_Array_Type (Atype : Ghdl_Rti_Access)
+                                return Ghdl_Rtin_Type_Array_Acc;
+
    --  Return true iff ATYPE is anonymous.
    --  Valid only on type and subtype definitions.
    function Rti_Anonymous_Type (Atype : Ghdl_Rti_Access) return Boolean;

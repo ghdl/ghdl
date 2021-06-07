@@ -92,7 +92,7 @@ package Grt.Vcd is
             Rti : Rtis.Ghdl_Rti_Access;
          when Vcd_Array =>
             Arr_Rti : Rtis.Ghdl_Rti_Access;
-            Arr_Layout : System.Address;
+            Arr_Bounds : System.Address;
          when others =>
             null;
       end case;

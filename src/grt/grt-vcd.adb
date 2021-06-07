@@ -343,6 +343,7 @@ package body Grt.Vcd is
       Bounds : Address;
 
       Kind : Vcd_Var_Type;
+      Arr_Rti : Ghdl_Rtin_Type_Array_Acc;
       Irange : Ghdl_Range_Ptr;
       Val : Vcd_Value_Kind;
    begin
@@ -363,32 +364,21 @@ package body Grt.Vcd is
            | Ghdl_Rtik_Type_E8
            | Ghdl_Rtik_Subtype_Scalar =>
             Kind := Rti_To_Vcd_Kind (Rti);
-            Irange := null;
          when Ghdl_Rtik_Subtype_Array =>
             declare
                St : constant Ghdl_Rtin_Subtype_Composite_Acc :=
                  To_Ghdl_Rtin_Subtype_Composite_Acc (Rti);
-               Arr_Rti : constant Ghdl_Rtin_Type_Array_Acc :=
-                 To_Ghdl_Rtin_Type_Array_Acc (St.Basetype);
-               Idx_Rti : constant Ghdl_Rti_Access :=
-                 Get_Base_Type (Arr_Rti.Indexes (0));
             begin
+               Arr_Rti := To_Ghdl_Rtin_Type_Array_Acc (St.Basetype);
                Kind := Rti_Array_To_Vcd_Kind (Arr_Rti);
+               pragma Assert (Bounds = Null_Address);
                Bounds := Loc_To_Addr (St.Common.Depth, St.Layout,
                                       Avhpi_Get_Context (Sig));
                Bounds := Array_Layout_To_Bounds (Bounds);
-               Extract_Range (Bounds, Idx_Rti, Irange);
             end;
          when Ghdl_Rtik_Type_Array =>
-            declare
-               Arr_Rti : constant Ghdl_Rtin_Type_Array_Acc :=
-                 To_Ghdl_Rtin_Type_Array_Acc (Rti);
-               Idx_Rti : constant Ghdl_Rti_Access :=
-                 Get_Base_Type (Arr_Rti.Indexes (0));
-            begin
-               Kind := Rti_Array_To_Vcd_Kind (Arr_Rti);
-               Extract_Range (Bounds, Idx_Rti, Irange);
-            end;
+            Arr_Rti := To_Ghdl_Rtin_Type_Array_Acc (Rti);
+            Kind := Rti_Array_To_Vcd_Kind (Arr_Rti);
          when others =>
             Kind := Vcd_Bad;
       end case;
@@ -425,6 +415,18 @@ package body Grt.Vcd is
             return;
       end case;
 
+      --  For vectors: extract range.
+      Irange := null;
+      if Kind in Vcd_Var_Vectors then
+         declare
+            Idx_Rti : constant Ghdl_Rti_Access :=
+              Get_Base_Type (Arr_Rti.Indexes (0));
+         begin
+            Extract_Range (Bounds, Idx_Rti, Irange);
+         end;
+      end if;
+
+      --  Build the info.
       case Kind is
          when Vcd_Bad
            | Vcd_Struct =>

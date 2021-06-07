@@ -37,8 +37,7 @@
 -------------------------------------------------------------------------------
 
 with Ada.Unchecked_Deallocation;
-with System.Storage_Elements; --  Work around GNAT bug.
-pragma Unreferenced (System.Storage_Elements);
+
 with Grt.Stdio; use Grt.Stdio;
 with Grt.C; use Grt.C;
 with Grt.Signals; use Grt.Signals;
@@ -49,7 +48,9 @@ with Grt.Hooks; use Grt.Hooks;
 with Grt.Options;
 with Grt.Vcd; use Grt.Vcd;
 with Grt.Errors; use Grt.Errors;
+with Grt.Rtis; use Grt.Rtis;
 with Grt.Rtis_Types;
+with Grt.Rtis_Addr;
 with Grt.Std_Logic_1164; use Grt.Std_Logic_1164;
 with Grt.Callbacks; use Grt.Callbacks;
 with Grt.Vstrings; use Grt.Vstrings;
@@ -943,13 +944,30 @@ package body Grt.Vpi is
    function Vpi_Get_Value_Range (Expr : vpiHandle) return Integer
    is
       Info : Verilog_Wire_Info;
+      Rng : Ghdl_Range_Ptr;
    begin
       Get_Verilog_Wire (Expr.Ref, Info);
-      if Info.Vec_Range /= null then
+      case Info.Vtype is
+         when Vcd_Var_Vectors =>
+            Rng := Info.Vec_Range;
+         when Vcd_Array =>
+            declare
+               use Grt.Rtis_Addr;
+               Arr_Rti : constant Ghdl_Rtin_Type_Array_Acc :=
+                 Get_Base_Array_Type (Info.Arr_Rti);
+               Rngs : Ghdl_Range_Array (0 .. 0);
+            begin
+               Bound_To_Range (Info.Arr_Bounds, Arr_Rti, Rngs);
+               Rng := Rngs (0);
+            end;
+         when others =>
+            Rng := null;
+      end case;
+      if Rng /= null then
          if Expr.mType = vpiLeftRange then
-            return Integer (Info.Vec_Range.I32.Left);
+            return Integer (Rng.I32.Left);
          else
-            return Integer (Info.Vec_Range.I32.Right);
+            return Integer (Rng.I32.Right);
          end if;
       else
          return 0;
