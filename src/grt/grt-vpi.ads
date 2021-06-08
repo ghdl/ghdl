@@ -299,8 +299,22 @@ package Grt.Vpi is
                           return vpiHandle;
    pragma Export (C, vpi_put_value, "vpi_put_value");
 
+   type t_vpi_systf_data is record
+      mType: Integer;
+      sysfunctype : Integer;
+      tfname : Ghdl_C_String;
+      calltf : Address;
+      compiletf : Address;
+      sizetf : Address;
+      user_data : Address;
+   end record;
+   pragma Convention (C, t_vpi_systf_data);
+
+   type p_vpi_systf_data is access all t_vpi_systf_data;
+   pragma Convention (C, p_vpi_systf_data);
+
    -- vpiHandle vpi_register_systf(const struct t_vpi_systf_data*ss)
-   function vpi_register_systf (aSs : Address) return vpiHandle;
+   function vpi_register_systf (Data : p_vpi_systf_data) return vpiHandle;
    pragma Export (C, vpi_register_systf, "vpi_register_systf");
 
    -- int vpi_remove_cb(vpiHandle ref)

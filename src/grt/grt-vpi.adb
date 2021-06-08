@@ -1832,12 +1832,12 @@ package body Grt.Vpi is
       return 0;
    end vpi_mcd_open;
 
-   function vpi_register_systf (aSs: System.Address) return vpiHandle
-   is
-      pragma Unreferenced (aSs);
+   function vpi_register_systf (Data : p_vpi_systf_data) return vpiHandle is
    begin
       if Flag_Trace then
-         Trace_Start ("vpi_register_systf");
+         Trace_Start ("vpi_register_systf(");
+         Trace (Data.tfname);
+         Trace (")");
          Trace_Newline;
       end if;
       return null;
