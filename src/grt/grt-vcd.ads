@@ -71,7 +71,11 @@ package Grt.Vcd is
      range Vcd_Bitvector .. Vcd_Stdlogic_Vector;
 
    --  Which value to be displayed: effective or driving (for out signals).
-   type Vcd_Value_Kind is (Vcd_Effective, Vcd_Driving, Vcd_Variable);
+   type Vcd_Value_Kind is
+     (Vcd_Effective, Vcd_Driving, Vcd_Variable, Vcd_Value_Bad);
+
+   subtype Vcd_Value_Valid is
+     Vcd_Value_Kind range Vcd_Effective .. Vcd_Variable;
 
    --  For signals.
    subtype Vcd_Value_Signals is Vcd_Value_Kind

@@ -1050,7 +1050,7 @@ package body Grt.Vpi is
                   V : constant Ghdl_B1 :=
                     Ghdl_B1 (Vec (J) = '1' or Vec (J) = 'H');
                begin
-                  case Info.Val is
+                  case Vcd_Value_Valid (Info.Val) is
                      when Vcd_Effective =>
                         Ghdl_Signal_Force_Effective_B1
                           (To_Signal_Arr_Ptr (Info.Ptr)(J), V);
@@ -1070,7 +1070,7 @@ package body Grt.Vpi is
                declare
                   V : constant Ghdl_E8 := Std_Ulogic'Pos (Vec (J));
                begin
-                  case Info.Val is
+                  case Vcd_Value_Valid (Info.Val) is
                      when Vcd_Effective =>
                         Ghdl_Signal_Force_Effective_E8
                           (To_Signal_Arr_Ptr (Info.Ptr)(J), V);
@@ -1093,7 +1093,7 @@ package body Grt.Vpi is
                      V := V or Shift_Left (1, Natural (Vec'Last - I));
                   end if;
                end loop;
-               case Info.Val is
+               case Vcd_Value_Valid (Info.Val) is
                   when Vcd_Effective =>
                      Ghdl_Signal_Force_Effective_E8
                        (To_Signal_Arr_Ptr (Info.Ptr)(0), V);
@@ -1120,7 +1120,7 @@ package body Grt.Vpi is
                   end if;
                end loop;
                V := To_Ghdl_I32 (R);
-               case Info.Val is
+               case Vcd_Value_Valid (Info.Val) is
                   when Vcd_Effective =>
                      Ghdl_Signal_Force_Effective_I32
                        (To_Signal_Arr_Ptr (Info.Ptr)(0), V);

@@ -333,6 +333,31 @@ package body Grt.Vcd is
       end case;
    end Rti_Array_To_Vcd_Kind;
 
+   function Get_Vcd_Value_Kind (Sig : VhpiHandleT) return Vcd_Value_Kind is
+   begin
+      case Vhpi_Get_Kind (Sig) is
+         when VhpiPortDeclK =>
+            case Vhpi_Get_Mode (Sig) is
+               when VhpiInMode
+                 | VhpiInoutMode
+                 | VhpiBufferMode
+                 | VhpiLinkageMode =>
+                  return Vcd_Effective;
+               when VhpiOutMode =>
+                  return Vcd_Driving;
+               when VhpiErrorMode =>
+                  return Vcd_Value_Bad;
+            end case;
+         when VhpiSigDeclK =>
+            return Vcd_Effective;
+         when VhpiGenericDeclK
+           | VhpiConstDeclK =>
+            return Vcd_Variable;
+         when others =>
+            return Vcd_Value_Bad;
+      end case;
+   end Get_Vcd_Value_Kind;
+
    procedure Get_Verilog_Wire (Sig : VhpiHandleT; Info : out Verilog_Wire_Info)
    is
       Sig_Type : VhpiHandleT;
@@ -383,37 +408,16 @@ package body Grt.Vcd is
             Kind := Vcd_Bad;
       end case;
 
-      --  Do not allow null-array.
-      if Kind = Vcd_Bad
-        or else (Irange /= null and then Irange.I32.Len = 0)
-      then
+      if Kind = Vcd_Bad then
          Info := (Vtype => Vcd_Bad, Val => Vcd_Effective, Ptr => Null_Address);
          return;
       end if;
 
-      case Vhpi_Get_Kind (Sig) is
-         when VhpiPortDeclK =>
-            case Vhpi_Get_Mode (Sig) is
-               when VhpiInMode
-                 | VhpiInoutMode
-                 | VhpiBufferMode
-                 | VhpiLinkageMode =>
-                  Val := Vcd_Effective;
-               when VhpiOutMode =>
-                  Val := Vcd_Driving;
-               when VhpiErrorMode =>
-                  Kind := Vcd_Bad;
-            end case;
-         when VhpiSigDeclK =>
-            Val := Vcd_Effective;
-         when VhpiGenericDeclK
-           | VhpiConstDeclK =>
-            Val := Vcd_Variable;
-         when others =>
-            Info := (Vtype => Vcd_Bad,
-                     Val => Vcd_Effective, Ptr => Null_Address);
-            return;
-      end case;
+      Val := Get_Vcd_Value_Kind (Sig);
+      if Val = Vcd_Value_Bad then
+         Info := (Vtype => Vcd_Bad, Val => Vcd_Effective, Ptr => Null_Address);
+         return;
+      end if;
 
       --  For vectors: extract range.
       Irange := null;
@@ -424,6 +428,10 @@ package body Grt.Vcd is
          begin
             Extract_Range (Bounds, Idx_Rti, Irange);
          end;
+         --  Do not allow null-array.
+         if Irange.I32.Len = 0 then
+            Kind := Vcd_Bad;
+         end if;
       end if;
 
       --  Build the info.
@@ -465,7 +473,7 @@ package body Grt.Vcd is
    function Verilog_Wire_Val (Info : Verilog_Wire_Info)
                              return Ghdl_Value_Ptr is
    begin
-      case Info.Val is
+      case Vcd_Value_Valid (Info.Val) is
          when Vcd_Effective =>
             return To_Signal_Arr_Ptr (Info.Ptr)(0).Value_Ptr;
          when Vcd_Driving =>
@@ -478,7 +486,7 @@ package body Grt.Vcd is
    function Verilog_Wire_Val (Info : Verilog_Wire_Info; Idx : Ghdl_Index_Type)
                              return Ghdl_Value_Ptr is
    begin
-      case Info.Val is
+      case Vcd_Value_Valid (Info.Val) is
          when Vcd_Effective =>
             return To_Signal_Arr_Ptr (Info.Ptr)(Idx).Value_Ptr;
          when Vcd_Driving =>
@@ -548,7 +556,7 @@ package body Grt.Vcd is
             Vcd_Put ("$comment ");
             Vcd_Put_Name (Sig);
             Vcd_Put (" is ");
-            case Vcd_El.Val is
+            case Vcd_Value_Valid (Vcd_El.Val) is
                when Vcd_Effective =>
                   Vcd_Put ("effective ");
                when Vcd_Driving =>
