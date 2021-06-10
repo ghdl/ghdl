@@ -46,8 +46,9 @@ vpi_proc (void)
      //"myentity.sigarray5[0]", // Not supported
      //"myentity.portarray5[0]" // Not supported
     };
+  int name_index;
                        
-  for (int name_index=0; name_index<N_NAMES; name_index+=1) {
+  for (name_index=0; name_index<N_NAMES; name_index+=1) {
     printf ("Trying to find name %s\n", names[name_index]);
     net = vpi_handle_by_name (names[name_index], NULL);
     if (net == NULL)

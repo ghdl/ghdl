@@ -6,6 +6,7 @@ void
 vpi_proc (void)
 {
   s_vpi_vlog_info info;
+  int i;
   printf ("Trying to get vlog_info\n");
   int ret = vpi_get_vlog_info(&info);
   if (ret != 1) {
@@ -19,7 +20,7 @@ vpi_proc (void)
   }
   printf ("Argc: %d\n", info.argc);
 
-  for (int i = 0; i < info.argc; i++) {
+  for (i = 0; i < info.argc; i++) {
    printf ("Argv[%d]: %s\n", i, info.argv[i]);
   }
 
