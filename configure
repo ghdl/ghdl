@@ -228,6 +228,7 @@ if test $backend = mcode; then
   case "$build" in
     i[3-6]86*) mcode64="" ;;
     x86_64*) mcode64="64" ;;
+    amd64*)  mcode64="64" ;;
     *)
       mcode64=""
       echo "WARNING: GHDL for mcode is supported only on x86"
@@ -376,6 +377,7 @@ if test $backend = mcode; then
     *darwin*) ortho_flags="Flags_Macosx${mcode64}" ;;
     *mingw32*) ortho_flags="Flags_Windows${mcode64}" ;;
     *linux*) ortho_flags="Flags_Linux${mcode64}" ;;
+    *openbsd*) ortho_flags="Flags_Openbsd${mcode64}" ;;
     *) echo "Unsupported $build build for mcode"; exit 1;;
   esac
   echo "Generate ortho_code-x86-flags.ads"
