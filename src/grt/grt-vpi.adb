@@ -550,14 +550,14 @@ package body Grt.Vpi is
    begin
       case Vhpi_Get_Kind (Res) is
          when VhpiEntityDeclK
-           | VhpiArchBodyK
-           | VhpiBlockStmtK
-           | VhpiIfGenerateK
-           | VhpiForGenerateK
-           | VhpiCompInstStmtK =>
+            | VhpiArchBodyK
+            | VhpiBlockStmtK
+            | VhpiIfGenerateK
+            | VhpiForGenerateK
+            | VhpiCompInstStmtK =>
             return vpiModule;
          when VhpiPortDeclK
-           | VhpiSigDeclK =>
+            | VhpiSigDeclK =>
             declare
                Info : Verilog_Wire_Info;
             begin
@@ -629,6 +629,18 @@ package body Grt.Vpi is
       end case;
    end Build_vpiHandle;
 
+   function Vhpi_Handle_To_Vpi (H : VhpiHandleT) return vpiHandle
+   is
+      Prop : Integer;
+   begin
+      Prop := Vhpi_Handle_To_Vpi_Prop (H);
+      if Prop /= vpiUndefined then
+         return Build_vpiHandle (H, Prop);
+      else
+         return null;
+      end if;
+   end Vhpi_Handle_To_Vpi;
+
    ------------------------------------------------------------------------
    -- vpiHandle  vpi_scan(vpiHandle iter)
    -- Scan the Verilog HDL hierarchy for objects with a one-to-many
@@ -682,7 +694,7 @@ package body Grt.Vpi is
          Kind := Vhpi_Handle_To_Vpi_Prop (Res);
          if Kind /= vpiUndefined
            and then (Kind = Expected_Kind
-                       or(Kind = vpiPort and Expected_Kind = vpiNet))
+                       or (Kind = vpiPort and Expected_Kind = vpiNet))
          then
             return Build_vpiHandle (Res, Kind);
          end if;
@@ -868,11 +880,31 @@ package body Grt.Vpi is
    type Map_Type_E8 is array (Ghdl_E8 range 0..8) of character;
    Map_Std_E8: constant Map_Type_E8 := "UX01ZWLH-";
 
+   type Map_Type_E8_Int is array (Ghdl_E8 range 0..8) of Ghdl_I32;
+   Map_Std_E8_Int: constant Map_Type_E8_Int := (0, 0, 0, 1, 0, 0, 0, 1, 0);
+
    type Map_Type_B1 is array (Ghdl_B1) of character;
    Map_Std_B1: constant Map_Type_B1 := "01";
 
-   function ii_vpi_get_value_bin_str (Obj : VhpiHandleT)
-                                     return Ghdl_C_String
+   function Get_Value_Obj (Obj : VhpiHandleT) return Verilog_Wire_Info
+   is
+      Info : Verilog_Wire_Info;
+   begin
+      case Vhpi_Get_Kind (Obj) is
+         when VhpiPortDeclK
+            | VhpiSigDeclK
+            | VhpiGenericDeclK
+            | VhpiConstDeclK
+            | VhpiIndexedNameK =>
+            Get_Verilog_Wire (Obj, Info);
+            return Info;
+         when others =>
+            return (Vtype => Vcd_Bad,
+                    Val => Vcd_Effective, Ptr => Null_Address);
+      end case;
+   end Get_Value_Obj;
+
+   function Vpi_Get_Value_Bin (Obj : VhpiHandleT) return Ghdl_C_String
    is
       function E8_To_Char (Val : Ghdl_E8) return Character is
       begin
@@ -886,26 +918,15 @@ package body Grt.Vpi is
       Info : Verilog_Wire_Info;
       Len : Ghdl_Index_Type;
    begin
-      case Vhpi_Get_Kind (Obj) is
-         when VhpiPortDeclK
-           | VhpiSigDeclK
-           | VhpiGenericDeclK
-           | VhpiConstDeclK =>
-            null;
-         when others =>
-            return null;
-      end case;
-
-      --  Get verilog compat info.
-      Get_Verilog_Wire (Obj, Info);
+      Info := Get_Value_Obj (Obj);
 
       Reset (Buf_Value); -- reset string buffer
 
       case Info.Vtype is
          when Vcd_Bad
-           | Vcd_Float64
-           | Vcd_Array
-           | Vcd_Struct =>
+            | Vcd_Float64
+            | Vcd_Array
+            | Vcd_Struct =>
             return null;
          when Vcd_Enum8 =>
             declare
@@ -922,7 +943,7 @@ package body Grt.Vpi is
                Append_Bin (Ghdl_U64 (V), 32);
             end;
          when Vcd_Bit
-           | Vcd_Bool =>
+            | Vcd_Bool =>
             Append (Buf_Value, Map_Std_B1 (Verilog_Wire_Val (Info).B1));
          when Vcd_Bitvector =>
             Len := Get_Wire_Length (Info);
@@ -939,7 +960,71 @@ package body Grt.Vpi is
       end case;
       Append (Buf_Value, NUL);
       return Get_C_String (Buf_Value);
-   end ii_vpi_get_value_bin_str;
+   end Vpi_Get_Value_Bin;
+
+   function Vpi_Get_Value_Int (Obj : VhpiHandleT) return VhpiIntT
+   is
+      function E8_To_Int (Val : Ghdl_E8) return VhpiIntT is
+      begin
+         if Val not in Map_Type_E8_Int'range then
+            return 0;
+         else
+            return Map_Std_E8_Int (Val);
+         end if;
+      end E8_To_Int;
+
+      Info : Verilog_Wire_Info;
+      Len : Ghdl_Index_Type;
+      Res : VhpiIntT;
+   begin
+      Info := Get_Value_Obj (Obj);
+
+      Reset (Buf_Value); -- reset string buffer
+
+      case Info.Vtype is
+         when Vcd_Bad
+            | Vcd_Float64
+            | Vcd_Array
+            | Vcd_Struct =>
+            --  FIXME: is it possible to return an error ?
+            dbgPut_Line ("vpi_get_value: vpiIntVal, unknown mType");
+            return -1;
+         when Vcd_Enum8 =>
+            declare
+               V : Ghdl_E8;
+            begin
+               V := Verilog_Wire_Val (Info).E8;
+               return Ghdl_E8'Pos (V);
+            end;
+         when Vcd_Integer32 =>
+            declare
+               V : Ghdl_U32;
+            begin
+               V := Verilog_Wire_Val (Info).E32;
+               return To_Ghdl_I32 (V);
+            end;
+         when Vcd_Bit
+            | Vcd_Bool =>
+            return Ghdl_B1'Pos (Verilog_Wire_Val (Info).B1);
+         when Vcd_Bitvector =>
+            Res := 0;
+            Len := Get_Wire_Length (Info);
+            --  FIXME: handle overflow ?
+            for J in 0 .. Len - 1 loop
+               Res := Res * 2 + Ghdl_B1'Pos (Verilog_Wire_Val (Info, J).B1);
+            end loop;
+            return Res;
+         when Vcd_Stdlogic =>
+            return E8_To_Int (Verilog_Wire_Val (Info).E8);
+         when Vcd_Stdlogic_Vector =>
+            Len := Get_Wire_Length (Info);
+            Res := 0;
+            for J in 0 .. Len - 1 loop
+               Res := Res * 2 + E8_To_Int (Verilog_Wire_Val (Info, J).E8);
+            end loop;
+            return Res;
+      end case;
+   end Vpi_Get_Value_Int;
 
    function Vpi_Get_Value_Range (Expr : vpiHandle) return Integer
    is
@@ -993,31 +1078,31 @@ package body Grt.Vpi is
             -- For a time variable, vpiTimeVal with vpiSimTime
             -- For a vector, vpiVectorVal
             dbgPut_Line ("vpi_get_value: vpiObjTypeVal");
-         when vpiBinStrVal=>
-            Value.Str := ii_vpi_get_value_bin_str (Expr.Ref);
+         when vpiBinStrVal =>
+            Value.Str := Vpi_Get_Value_Bin (Expr.Ref);
             --aValue.mStr := NulTerminate2(aExpr.mRef.Name.all);
-         when vpiOctStrVal=>
-            dbgPut_Line("vpi_get_value: vpiNet, vpiOctStrVal");
-         when vpiDecStrVal=>
-            dbgPut_Line("vpi_get_value: vpiNet, vpiDecStrVal");
-         when vpiHexStrVal=>
-            dbgPut_Line("vpi_get_value: vpiNet, vpiHexStrVal");
-         when vpiScalarVal=>
-            dbgPut_Line("vpi_get_value: vpiNet, vpiScalarVal");
-         when vpiIntVal=>
+         when vpiOctStrVal =>
+            dbgPut_Line ("vpi_get_value: vpiNet, vpiOctStrVal");
+         when vpiDecStrVal =>
+            dbgPut_Line ("vpi_get_value: vpiNet, vpiDecStrVal");
+         when vpiHexStrVal =>
+            dbgPut_Line ("vpi_get_value: vpiNet, vpiHexStrVal");
+         when vpiScalarVal =>
+            dbgPut_Line ("vpi_get_value: vpiNet, vpiScalarVal");
+         when vpiIntVal =>
             case Expr.mType is
                when vpiLeftRange
-                  | vpiRightRange=>
+                  | vpiRightRange =>
                   Value.Integer_m := Vpi_Get_Value_Range (Expr);
-               when others=>
-                  dbgPut_Line ("vpi_get_value: vpiIntVal, unknown mType");
+               when others =>
+                  Value.Integer_m := Integer (Vpi_Get_Value_Int (Expr.Ref));
             end case;
-         when vpiRealVal=>     dbgPut_Line("vpi_get_value: vpiRealVal");
-         when vpiStringVal=>   dbgPut_Line("vpi_get_value: vpiStringVal");
-         when vpiTimeVal=>     dbgPut_Line("vpi_get_value: vpiTimeVal");
-         when vpiVectorVal=>   dbgPut_Line("vpi_get_value: vpiVectorVal");
-         when vpiStrengthVal=> dbgPut_Line("vpi_get_value: vpiStrengthVal");
-         when others=>         dbgPut_Line("vpi_get_value: unknown mFormat");
+         when vpiRealVal =>     dbgPut_Line ("vpi_get_value: vpiRealVal");
+         when vpiStringVal =>   dbgPut_Line ("vpi_get_value: vpiStringVal");
+         when vpiTimeVal =>     dbgPut_Line ("vpi_get_value: vpiTimeVal");
+         when vpiVectorVal =>   dbgPut_Line ("vpi_get_value: vpiVectorVal");
+         when vpiStrengthVal => dbgPut_Line ("vpi_get_value: vpiStrengthVal");
+         when others =>         dbgPut_Line ("vpi_get_value: unknown mFormat");
       end case;
 
       if Flag_Trace then
@@ -1646,19 +1731,50 @@ package body Grt.Vpi is
       return 1;
    end vpi_get_vlog_info;
 
-   -- vpiHandle vpi_handle_by_index(vpiHandle ref, int index)
-   function vpi_handle_by_index (aRef: vpiHandle; aIndex: integer)
+   function Vpi_Handle_By_Index_Internal (Ref: vpiHandle; Index: Integer)
+                                         return vpiHandle
+   is
+      Temp : VhpiHandleT;
+      Err : AvhpiErrorT;
+   begin
+      case Ref.mType is
+         when vpiNetArray =>
+            Vhpi_Handle_By_Array_Index (Ref.Ref, VhpiIntT (Index), Temp, Err);
+            if Err = AvhpiErrorOk then
+               --  FIXME: can be an array or a struct.
+               return Build_vpiHandle (Temp, vpiNet);
+            end if;
+         when others =>
+            null;
+      end case;
+      return null;
+   end Vpi_Handle_By_Index_Internal;
+
+   function vpi_handle_by_index (Ref : vpiHandle; Index : Integer)
                                 return vpiHandle
    is
-      pragma Unreferenced (aRef);
-      pragma Unreferenced (aIndex);
+      Res : vpiHandle;
    begin
       if Flag_Trace then
-         Trace_Start ("vpi_handle_by_index UNIMPLEMENTED!");
+         Trace_Start ("vpi_handle_by_index (");
+         Trace (Ref);
+         Trace (", ");
+         Trace (Index);
+         Trace (") = ");
+      end if;
+
+      if Ref = null then
+         Res := null;
+      else
+         Res := Vpi_Handle_By_Index_Internal (Ref, Index);
+      end if;
+
+      if Flag_Trace then
+         Trace (Res);
          Trace_Newline;
       end if;
 
-      return null;
+      return Res;
    end vpi_handle_by_index;
 
    --  Return True iff L and R are equal.  L must not have an element set to
@@ -1715,8 +1831,6 @@ package body Grt.Vpi is
       B, E : Natural;
       Base, El : VhpiHandleT;
       Err : AvhpiErrorT;
-      Prop : Integer;
-      Res : vpiHandle;
       Escaped : Boolean;
    begin
       --  Extract the start point.
@@ -1775,14 +1889,7 @@ package body Grt.Vpi is
          B := B + 1;
       end loop;
 
-      Prop := Vhpi_Handle_To_Vpi_Prop (Base);
-      if Prop /= vpiUndefined then
-         Res := Build_vpiHandle (Base, Prop);
-      else
-         Res := null;
-      end if;
-
-      return Res;
+      return Vhpi_Handle_To_Vpi (Base);
    end Vpi_Handle_By_Name_Internal;
 
    function vpi_handle_by_name (Name : Ghdl_C_String; Scope : vpiHandle)

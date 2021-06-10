@@ -396,7 +396,10 @@ package Grt.Avhpi is
       VhpiAliasedName,
       VhpiCompDecl,
       VhpiProtectedTypeInst,
-      VhpiGenIndex
+      VhpiGenIndex,
+
+      --  From indexedName to to base name.
+      VhpiBaseName
     );
 
    for VhpiOneToOneT use
@@ -491,7 +494,9 @@ package Grt.Avhpi is
       VhpiAliasedName => 1388,
       VhpiCompDecl => 1389,
       VhpiProtectedTypeInst => 1390,
-      VhpiGenIndex => 1391
+      VhpiGenIndex => 1391,
+
+      VhpiBaseName => 1490
      );
 
    --  Methods used to traverse 1 to many relationships.
@@ -869,6 +874,8 @@ package Grt.Avhpi is
 
    type VhpiHandleT is private;
 
+   subtype VhpiIntT is Ghdl_I32;
+
    --  A null handle.
    Null_Handle : constant VhpiHandleT;
 
@@ -892,6 +899,13 @@ package Grt.Avhpi is
                                    Res : out VhpiHandleT;
                                    Error : out AvhpiErrorT);
 
+   --  Get the sub-object using the index within the range.
+   --  The implicit relation is VhpiIndexedNames.
+   procedure Vhpi_Handle_By_Array_Index (Ref : VhpiHandleT;
+                                         Index : VhpiIntT;
+                                         Res : out VhpiHandleT;
+                                         Error : out AvhpiErrorT);
+
    procedure Vhpi_Iterator (Rel : VhpiOneToManyT;
                             Ref : VhpiHandleT;
                             Res : out VhpiHandleT;
@@ -908,8 +922,6 @@ package Grt.Avhpi is
    procedure Vhpi_Get_Str (Property : VhpiStrPropertyT;
                            Obj : VhpiHandleT;
                            Res : out Ghdl_C_String);
-
-   subtype VhpiIntT is Ghdl_I32;
 
    procedure Vhpi_Get (Property : VhpiIntPropertyT;
                        Obj : VhpiHandleT;

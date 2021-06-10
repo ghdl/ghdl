@@ -270,12 +270,12 @@ package Grt.Vpi is
 
 
    -- vpiHandle vpi_handle_by_index(vpiHandle ref, int index)
-   function vpi_handle_by_index(aRef: vpiHandle; aIndex: Integer)
-                               return vpiHandle;
+   function vpi_handle_by_index (Ref: vpiHandle; Index: Integer)
+                                return vpiHandle;
    pragma Export (C, vpi_handle_by_index, "vpi_handle_by_index");
 
-   function vpi_handle_by_name(Name : Ghdl_C_String; Scope : vpiHandle)
-                              return vpiHandle;
+   function vpi_handle_by_name (Name : Ghdl_C_String; Scope : vpiHandle)
+                               return vpiHandle;
    pragma Export (C, vpi_handle_by_name, "vpi_handle_by_name");
 
    -- unsigned int vpi_mcd_close(unsigned int mcd)

@@ -124,8 +124,8 @@ package body Grt.Avhpi is
             end case;
          when VhpiIndexedNames =>
             case Ref.Kind is
-               when VhpiGenericDeclK |
-                    VhpiConstDeclK=>
+               when VhpiGenericDeclK
+                  | VhpiConstDeclK=>
                   Res := (Kind => AvhpiNameIteratorK,
                           Ctxt => Ref.Ctxt,
                           N_Addr => Avhpi_Get_Address (Ref),
@@ -183,11 +183,13 @@ package body Grt.Avhpi is
       El_Type1 : Ghdl_Rti_Access;
    begin
       case Obj_Rti.Common.Kind is
-         when Ghdl_Rtik_Generic |
-              Ghdl_Rtik_Constant =>
+         when Ghdl_Rtik_Generic
+            | Ghdl_Rtik_Constant =>
             Is_Sig := False;
+         when Ghdl_Rtik_Signal =>
+            Is_Sig := True;
          when others =>
-            Internal_Error ("add_index");
+            Internal_Error ("add_index(1)");
       end case;
 
       if El_Type.Kind = Ghdl_Rtik_Subtype_Scalar then
@@ -219,7 +221,7 @@ package body Grt.Avhpi is
                end if;
             end;
          when others =>
-            Internal_Error ("add_index");
+            Internal_Error ("add_index(2)");
       end case;
       return Obj_Base + Off * El_Size;
    end Add_Index;
@@ -845,6 +847,7 @@ package body Grt.Avhpi is
    begin
       --  Default error.
       Error := AvhpiErrorNotImplemented;
+      Res := Null_Handle;
 
       case Rel is
          when VhpiDesignUnit =>
@@ -876,6 +879,7 @@ package body Grt.Avhpi is
                when others =>
                   return;
             end case;
+
          when VhpiPrimaryUnit =>
             case Ref.Kind is
                when VhpiArchBodyK =>
@@ -893,6 +897,7 @@ package body Grt.Avhpi is
                when others =>
                   return;
             end case;
+
          when VhpiIterScheme =>
             case Ref.Kind is
                when VhpiForGenerateK =>
@@ -910,19 +915,26 @@ package body Grt.Avhpi is
                when others =>
                   return;
             end case;
+
          when VhpiSubtype =>
             case Ref.Kind is
                when VhpiPortDeclK
-                 | VhpiSigDeclK
-                 | VhpiGenericDeclK
-                 | VhpiConstDeclK =>
+                  | VhpiSigDeclK
+                  | VhpiGenericDeclK
+                  | VhpiConstDeclK =>
                   Res := (Kind => VhpiSubtypeIndicK,
                           Ctxt => Ref.Ctxt,
                           Atype => Ref.Obj.Obj_Type);
                   Error := AvhpiErrorOk;
+               when VhpiIndexedNameK =>
+                  Res := (Kind => VhpiSubtypeIndicK,
+                          Ctxt => Ref.Ctxt,
+                          Atype => Ref.N_Type);
+                  Error := AvhpiErrorOk;
                when others =>
                   return;
             end case;
+
          when VhpiTypeMark =>
             case Ref.Kind is
                when VhpiSubtypeIndicK =>
@@ -935,17 +947,19 @@ package body Grt.Avhpi is
                when others =>
                   return;
             end case;
+
          when VhpiBaseType =>
             declare
                Atype : Ghdl_Rti_Access;
             begin
                case Ref.Kind is
                   when VhpiSubtypeIndicK
-                    | VhpiSubtypeDeclK
-                    | VhpiArrayTypeDeclK =>
+                     | VhpiSubtypeDeclK
+                     | VhpiArrayTypeDeclK =>
                      Atype := Ref.Atype;
                   when VhpiGenericDeclK
-                    | VhpiConstDeclK =>
+                     | VhpiConstDeclK
+                     | VhpiSigDeclK =>
                      Atype := Ref.Obj.Obj_Type;
                   when VhpiIndexedNameK =>
                      Atype := Ref.N_Type;
@@ -974,6 +988,7 @@ package body Grt.Avhpi is
                      return;
                end case;
             end;
+
          when VhpiElemSubtype =>
             declare
                Base_Type : Ghdl_Rti_Access;
@@ -993,14 +1008,25 @@ package body Grt.Avhpi is
                   Error := AvhpiErrorOk;
                end if;
             end;
+
+         when VhpiBaseName =>
+            case Ref.Kind is
+               when VhpiIndexedNameK =>
+                  Rti_To_Handle
+                    (To_Ghdl_Rti_Access (Ref.N_Obj), Ref.Ctxt, Res);
+                  if Res.Kind /= VhpiUndefined then
+                     Error := AvhpiErrorOk;
+                  end if;
+               when others =>
+                  null;
+            end case;
+
          when others =>
-            Res := Null_Handle;
-            Error := AvhpiErrorNotImplemented;
+            null;
       end case;
    end Vhpi_Handle;
 
-   procedure Vhpi_Handle_By_Index (Rel : VhpiOneToManyT;
-                                   Ref : VhpiHandleT;
+   procedure Constraints_By_Index (Ref : VhpiHandleT;
                                    Index : Natural;
                                    Res : out VhpiHandleT;
                                    Error : out AvhpiErrorT) is
@@ -1008,91 +1034,165 @@ package body Grt.Avhpi is
       --  Default error.
       Error := AvhpiErrorNotImplemented;
 
+      case Ref.Kind is
+         when VhpiSubtypeIndicK =>
+            if Ref.Atype.Kind = Ghdl_Rtik_Subtype_Array then
+               declare
+                  Arr_Subtype : constant Ghdl_Rtin_Subtype_Composite_Acc
+                    := To_Ghdl_Rtin_Subtype_Composite_Acc (Ref.Atype);
+                  Basetype : constant Ghdl_Rtin_Type_Array_Acc :=
+                    To_Ghdl_Rtin_Type_Array_Acc (Arr_Subtype.Basetype);
+                  Idx : constant Ghdl_Index_Type := Ghdl_Index_Type (Index);
+                  Layout : Address;
+                  Bounds : Ghdl_Range_Array (0 .. Basetype.Nbr_Dim - 1);
+                  Range_Basetype : Ghdl_Rti_Access;
+               begin
+                  if Idx not in 1 .. Basetype.Nbr_Dim then
+                     Res := Null_Handle;
+                     Error := AvhpiErrorBadIndex;
+                     return;
+                  end if;
+                  --  constraint type is basetype.indexes (idx - 1)
+                  Layout := Loc_To_Addr (Arr_Subtype.Common.Depth,
+                                         Arr_Subtype.Layout, Ref.Ctxt);
+                  Bound_To_Range
+                    (Array_Layout_To_Bounds (Layout), Basetype, Bounds);
+                  Res := (Kind => VhpiIntRangeK,
+                          Ctxt => Ref.Ctxt,
+                          Rng_Type => Basetype.Indexes (Idx - 1),
+                          Rng_Addr => Bounds (Idx - 1));
+                  Range_Basetype := Get_Base_Type (Res.Rng_Type);
+                  case Range_Basetype.Kind is
+                     when Ghdl_Rtik_Type_I32 =>
+                        null;
+                     when Ghdl_Rtik_Type_E8
+                       | Ghdl_Rtik_Type_E32 =>
+                        Res := (Kind => VhpiEnumRangeK,
+                                Ctxt => Ref.Ctxt,
+                                Rng_Type => Res.Rng_Type,
+                                Rng_Addr => Res.Rng_Addr);
+                     when others =>
+                        Internal_Error ("vhpi_handle_by_index/constraint");
+                  end case;
+                  Error := AvhpiErrorOk;
+               end;
+            end if;
+         when others =>
+            return;
+      end case;
+   end Constraints_By_Index;
+
+   procedure Indexed_Names_By_Index (Ref : VhpiHandleT;
+                                     Index : Natural;
+                                     Res : out VhpiHandleT;
+                                     Error : out AvhpiErrorT)
+   is
+      Base_Type, El_Type : VhpiHandleT;
+   begin
+      --  Default error.
+      Error := AvhpiErrorNotImplemented;
+
+      Vhpi_Handle (VhpiBaseType, Ref, Base_Type, Error);
+      if Error /= AvhpiErrorOk then
+         return;
+      end if;
+      if Vhpi_Get_Kind (Base_Type) /= VhpiArrayTypeDeclK then
+         Error := AvhpiErrorBadRel;
+         return;
+      end if;
+      Vhpi_Handle (VhpiElemSubtype, Base_Type, El_Type, Error);
+      if Error /= AvhpiErrorOk then
+         return;
+      end if;
+      Res := (Kind => VhpiIndexedNameK,
+              Ctxt => Ref.Ctxt,
+              N_Addr => Avhpi_Get_Address (Ref),
+              N_Type => El_Type.Atype,
+              N_Idx => Ghdl_Index_Type (Index),
+              N_Obj => Ref.Obj);
+      if Res.N_Addr = Null_Address then
+         Error := AvhpiErrorBadRel;
+         return;
+      end if;
+      --  Note: the index is a flat index (ie an offset).
+      --  TODO: check with length ?
+      Res.N_Addr := Add_Index (Res.Ctxt, Res.N_Addr, Res.N_Obj, Res.N_Type,
+                               Ghdl_Index_Type (Index));
+   end Indexed_Names_By_Index;
+
+   procedure Vhpi_Handle_By_Index (Rel : VhpiOneToManyT;
+                                   Ref : VhpiHandleT;
+                                   Index : Natural;
+                                   Res : out VhpiHandleT;
+                                   Error : out AvhpiErrorT) is
+   begin
       case Rel is
          when VhpiConstraints =>
-            case Ref.Kind is
-               when VhpiSubtypeIndicK =>
-                  if Ref.Atype.Kind = Ghdl_Rtik_Subtype_Array then
-                     declare
-                        Arr_Subtype : constant Ghdl_Rtin_Subtype_Composite_Acc
-                          := To_Ghdl_Rtin_Subtype_Composite_Acc (Ref.Atype);
-                        Basetype : constant Ghdl_Rtin_Type_Array_Acc :=
-                          To_Ghdl_Rtin_Type_Array_Acc (Arr_Subtype.Basetype);
-                        Idx : constant Ghdl_Index_Type :=
-                          Ghdl_Index_Type (Index);
-                        Layout : Address;
-                        Bounds : Ghdl_Range_Array (0 .. Basetype.Nbr_Dim - 1);
-                        Range_Basetype : Ghdl_Rti_Access;
-                     begin
-                        if Idx not in 1 .. Basetype.Nbr_Dim then
-                           Res := Null_Handle;
-                           Error := AvhpiErrorBadIndex;
-                           return;
-                        end if;
-                        --  constraint type is basetype.indexes (idx - 1)
-                        Layout := Loc_To_Addr (Arr_Subtype.Common.Depth,
-                                               Arr_Subtype.Layout, Ref.Ctxt);
-                        Bound_To_Range
-                          (Array_Layout_To_Bounds (Layout), Basetype, Bounds);
-                        Res := (Kind => VhpiIntRangeK,
-                                Ctxt => Ref.Ctxt,
-                                Rng_Type => Basetype.Indexes (Idx - 1),
-                                Rng_Addr => Bounds (Idx - 1));
-                        Range_Basetype := Get_Base_Type (Res.Rng_Type);
-                        case Range_Basetype.Kind is
-                           when Ghdl_Rtik_Type_I32 =>
-                              null;
-                           when Ghdl_Rtik_Type_E8
-                             | Ghdl_Rtik_Type_E32 =>
-                              Res := (Kind => VhpiEnumRangeK,
-                                      Ctxt => Ref.Ctxt,
-                                      Rng_Type => Res.Rng_Type,
-                                      Rng_Addr => Res.Rng_Addr);
-                           when others =>
-                              Internal_Error
-                                ("vhpi_handle_by_index/constraint");
-                        end case;
-                        Error := AvhpiErrorOk;
-                     end;
-                  end if;
-               when others =>
-                  return;
-            end case;
+            Constraints_By_Index (Ref, Index, Res, Error);
+
          when VhpiIndexedNames =>
-            declare
-               Base_Type, El_Type : VhpiHandleT;
-            begin
-               Vhpi_Handle (VhpiBaseType, Ref, Base_Type, Error);
-               if Error /= AvhpiErrorOk then
-                  return;
-               end if;
-               if Vhpi_Get_Kind (Base_Type) /= VhpiArrayTypeDeclK then
-                  Error := AvhpiErrorBadRel;
-                  return;
-               end if;
-               Vhpi_Handle (VhpiElemSubtype, Base_Type, El_Type, Error);
-               if Error /= AvhpiErrorOk then
-                  return;
-               end if;
-               Res := (Kind => VhpiIndexedNameK,
-                       Ctxt => Ref.Ctxt,
-                       N_Addr => Avhpi_Get_Address (Ref),
-                       N_Type => El_Type.Atype,
-                       N_Idx => Ghdl_Index_Type (Index),
-                       N_Obj => Ref.Obj);
-               if Res.N_Addr = Null_Address then
-                  Error := AvhpiErrorBadRel;
-                  return;
-               end if;
-               Res.N_Addr := Add_Index
-                 (Res.Ctxt, Res.N_Addr, Res.N_Obj, Res.N_Type,
-                  Ghdl_Index_Type (Index));
-            end;
+            Indexed_Names_By_Index (Ref, Index, Res, Error);
+
          when others =>
             Res := Null_Handle;
             Error := AvhpiErrorNotImplemented;
       end case;
    end Vhpi_Handle_By_Index;
+
+   procedure Vhpi_Handle_By_Array_Index (Ref : VhpiHandleT;
+                                         Index : VhpiIntT;
+                                         Res : out VhpiHandleT;
+                                         Error : out AvhpiErrorT)
+   is
+      Typ : VhpiHandleT;
+      Rng : VhpiHandleT;
+      Is_Up : VhpiIntT;
+      Left, Right : VhpiIntT;
+      Off : Natural;
+   begin
+      --  Get object subtype.
+      Vhpi_Handle (VhpiSubtype, Ref, Typ, Error);
+      if Error /= AvhpiErrorOk then
+         return;
+      end if;
+
+      --  Get the range
+      Vhpi_Handle_By_Index (VhpiConstraints, Typ, 1, Rng, Error);
+      if Error /= AvhpiErrorOk then
+         return;
+      end if;
+
+      --  Get the range bounds
+      Vhpi_Get (VhpiIsUpP, Rng, Is_Up, Error);
+      if Error /= AvhpiErrorOk then
+         return;
+      end if;
+      Vhpi_Get (VhpiLeftBoundP, Rng, Left, Error);
+      if Error /= AvhpiErrorOk then
+         return;
+      end if;
+      Vhpi_Get (VhpiRightBoundP, Rng, Right, Error);
+      if Error /= AvhpiErrorOk then
+         return;
+      end if;
+
+      --  Compute the offset
+      if Is_Up /= 0 then
+         if Index < Left or Index > Right then
+            Error := AvhpiErrorBadIndex;
+            return;
+         end if;
+         Off := Natural (Index - Left);
+      else
+         if Index > Left or Index < Right then
+            Error := AvhpiErrorBadIndex;
+            return;
+         end if;
+         Off := Natural (Left - Index);
+      end if;
+
+      Indexed_Names_By_Index (Ref, Off, Res, Error);
+   end Vhpi_Handle_By_Array_Index;
 
    procedure Vhpi_Get (Property : VhpiIntPropertyT;
                        Obj : VhpiHandleT;
@@ -1104,6 +1204,20 @@ package body Grt.Avhpi is
       Error := AvhpiErrorNotImplemented;
 
       case Property is
+         when VhpiIsUpP =>
+            if Obj.Kind /= VhpiIntRangeK then
+               Res := 0;
+               Error := AvhpiErrorBadRel;
+               return;
+            end if;
+            Error := AvhpiErrorOk;
+            case Get_Base_Type (Obj.Rng_Type).Kind is
+               when Ghdl_Rtik_Type_I32 =>
+                  Res := Boolean'Pos (Obj.Rng_Addr.I32.Dir = Dir_To);
+               when others =>
+                  null;
+            end case;
+
          when VhpiLeftBoundP =>
             if Obj.Kind /= VhpiIntRangeK then
                Res := 0;
@@ -1257,6 +1371,8 @@ package body Grt.Avhpi is
             return Loc_To_Addr (Obj.Ctxt.Block.Depth,
                                 Obj.Obj.Loc,
                                 Obj.Ctxt);
+         when VhpiIndexedNameK =>
+            return Obj.N_Addr;
          when others =>
             return Null_Address;
       end case;

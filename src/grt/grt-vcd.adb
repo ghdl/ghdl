@@ -353,8 +353,20 @@ package body Grt.Vcd is
          when VhpiGenericDeclK
            | VhpiConstDeclK =>
             return Vcd_Variable;
+         when VhpiIndexedNameK =>
+            declare
+               Base : VhpiHandleT;
+               Err : AvhpiErrorT;
+            begin
+               Vhpi_Handle (VhpiBaseName, Sig, Base, Err);
+               if Err /= AvhpiErrorOk then
+                  raise Program_Error;
+               end if;
+               return Get_Vcd_Value_Kind (Base);
+            end;
          when others =>
-            return Vcd_Value_Bad;
+            raise Program_Error;
+            --  return Vcd_Value_Bad;
       end case;
    end Get_Vcd_Value_Kind;
 
