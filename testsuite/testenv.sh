@@ -124,7 +124,7 @@ ghw_dump ()
 ghw_diff ()
 {
   ghw_dump "$1"
-  if diff --strip-trailing-cr "$1".txt golden_"$1".txt; then
+  if diff "$1".txt golden_"$1".txt; then
     echo "The ghw dump matches."
   else
     echo "The ghw dump does not match what is expected."

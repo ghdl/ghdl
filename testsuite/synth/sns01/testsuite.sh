@@ -14,7 +14,7 @@ for f in adds subs unaries muls cmplt cmple cmpgt cmpge cmpeq cmpne shrs exts; d
     analyze tb_$f.vhdl
     elab_simulate tb_$f > $f.out
 
-    diff --strip-trailing-cr $f.out $f.ref
+    diff $f.out $f.ref
 done
 
 for t in sns01; do
