@@ -10,7 +10,7 @@ if ! simulate --time-resolution=fs sqrtb --stop-time=1us; then
     echo "skip --time-resolution tests"
 else
     simulate --time-resolution=ns sqrtb --stop-time=1us --disp-time | sed -e 's/.*info/info/' > sqrtb.out
-    diff sqrtb.ref sqrtb.out
+    ghdl_diff_stcr sqrtb.ref sqrtb.out
 fi
 
 rm -f sqrtb.out

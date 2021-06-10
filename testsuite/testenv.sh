@@ -243,3 +243,16 @@ clean ()
     esac
   fi
 }
+
+
+# Try to call diff with --strip-trailing-cr; if the option is not
+# available resort to ignore the switch.  This is for handling UNIX
+# and DOS EOL.
+ghdl_diff_stcr ()
+{
+    if diff --strip-trailing-cr -q /dev/null /dev/null; then
+	diff --strip-trailing-cr $@
+    else
+	diff $@
+    fi
+}

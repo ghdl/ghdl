@@ -3,7 +3,7 @@
 . ../../testenv.sh
 
 analyze tb.vhdl 2> tb.out
-diff -q tb.ref tb.out
+ghdl_diff_stcr -q tb.ref tb.out
 
 rm -f tb.out
 clean

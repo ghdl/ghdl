@@ -14,7 +14,7 @@ for f in adds subs unaries muls cmplt cmple cmpgt cmpge cmpeq cmpne shrs exts; d
     analyze tb_$f.vhdl
     elab_simulate tb_$f > $f.out
 
-    diff $f.out $f.ref
+    ghdl_diff_stcr $f.out $f.ref
 done
 
 for t in sns01; do

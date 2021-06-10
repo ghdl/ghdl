@@ -8,7 +8,7 @@ elab psl
 if ghdl_has_feature psl psl; then
   simulate psl --psl-report=psl.out
 
-  if ! diff psl.out psl.ref > /dev/null; then
+  if ! ghdl_diff_stcr psl.out psl.ref > /dev/null; then
       echo "report mismatch"
       exit 1
   fi
@@ -24,7 +24,7 @@ elab -fpsl psl
 if ghdl_has_feature psl psl; then
   simulate psl --psl-report=psl.out
 
-  diff -q psl.out psl.ref
+  ghdl_diff_stcr -q psl.out psl.ref
 
   rm -f psl.out
 fi

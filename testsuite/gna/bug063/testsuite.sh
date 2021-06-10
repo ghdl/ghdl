@@ -3,7 +3,7 @@
 . ../../testenv.sh
 
 analyze_failure dff.vhdl 2> dff.out
-diff dff.out dff.expected
+ghdl_diff_stcr dff.out dff.expected
 
 rm -f dff.out
 clean

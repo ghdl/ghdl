@@ -12,7 +12,7 @@ if c_compiler_is_available && ghdl_has_feature enum_test vpi; then
   $GHDL --vpi-link -v gcc -o vpi_plugin.vpi vpi_plugin.o
 
   simulate enum_test --vpi=./vpi_plugin.vpi > enum_test.out
-  diff enum_test.ref enum_test.out
+  ghdl_diff_stcr enum_test.ref enum_test.out
 
   rm -f vpi_plugin.vpi vpi_plugin.o
 fi
