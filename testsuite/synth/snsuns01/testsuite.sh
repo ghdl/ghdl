@@ -15,7 +15,7 @@ for s in u s; do
         analyze tb_$f.vhdl
         elab_simulate tb_$f > $s$f.out
 
-        diff --strip-trailing-cr $s$f.out $s$f.ref
+        diff_nocr $s$f.out $s$f.ref
     done
 
   clean

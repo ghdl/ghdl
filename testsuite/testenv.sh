@@ -107,31 +107,6 @@ elab_simulate_failure ()
   "$GHDL" --elab-run $GHDL_STD_FLAGS $GHDL_FLAGS $@ --expect-failure
 }
 
-# Call ghwdump
-ghw_dump ()
-{
-  if [ x"$GHWDUMP" = x ]; then
-    case "$GHDL" in
-      */*) export GHWDUMP=$(dirname $GHDL)/ghwdump;;
-      *) export GHWDUMP=ghwdump;;
-    esac
-  fi
-
-  "$GHWDUMP" -ths "$1".ghw > "$1".txt
-}
-
-# Compare the dump of a GHW wave and a previous golden dump
-ghw_diff ()
-{
-  ghw_dump "$1"
-  if diff --strip-trailing-cr "$1".txt golden_"$1".txt; then
-    echo "The ghw dump matches."
-  else
-    echo "The ghw dump does not match what is expected."
-    exit 1
-  fi
-}
-
 synth()
 {
   echo "Synthesis of $@" >&2
@@ -241,5 +216,44 @@ clean ()
         echo "Remove $1 library"
         "$GHDL" --remove $GHDL_STD_FLAGS --work=$1 ;;
     esac
+  fi
+}
+
+
+# Like diff but ignore CR ('\r') end-of-line on windows (as the reference file
+# was generated on a UNIX platform).
+# The --strip-trailing-cr option is available with GNU diff but not on BSD
+# platforms.
+diff_nocr ()
+{
+    if [ "$OS" = "Windows_NT" ]; then
+	diff --strip-trailing-cr $@
+    else
+	diff $@
+    fi
+}
+
+# Call ghwdump
+ghw_dump ()
+{
+  if [ x"$GHWDUMP" = x ]; then
+    case "$GHDL" in
+      */*) export GHWDUMP=$(dirname $GHDL)/ghwdump;;
+      *) export GHWDUMP=ghwdump;;
+    esac
+  fi
+
+  "$GHWDUMP" -ths "$1".ghw > "$1".txt
+}
+
+# Compare the dump of a GHW wave and a previous golden dump
+ghw_diff ()
+{
+  ghw_dump "$1"
+  if diff_nocr "$1".txt golden_"$1".txt; then
+    echo "The ghw dump matches."
+  else
+    echo "The ghw dump does not match what is expected."
+    exit 1
   fi
 }

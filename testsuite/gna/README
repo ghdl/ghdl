@@ -24,7 +24,7 @@ Here are some tips for portability.
   they aren't (SIGPIPE doesn't exist) and reports errors.
   So avoid program that may exit before reading all the input:
   * instead of 'grep -q xxx', use 'grep xxx > /dev/null'
-- reference files use unix end of line.  Use 'diff --strip-trailing-cr' to
+- reference files use unix end of line.  Use 'diff_nocr' (from testenv.sh) to
   compare expected output with a reference file.
 - don't forget that executable files have a .exe suffix on windows, but most
   cygwin tools transparently add the suffix.
