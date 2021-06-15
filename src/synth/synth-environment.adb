@@ -415,7 +415,7 @@ package body Synth.Environment is
                     Partial_Assign_Table.Table (P);
                begin
                   if Synth.Flags.Flag_Debug_Noinference then
-                     Res := Pa.Value;
+                     Add_Conc_Assign (Wid, Pa.Value, Pa.Offset);
                   elsif Wire_Rec.Kind = Wire_Enable then
                      --  Possibly infere a idff/iadff.
                      pragma Assert (Pa.Offset = 0);
