@@ -40,7 +40,6 @@ SYMBOLS_MAP = {
     nodes.Iir_Kind.Constant_Declaration: {"kind": lsp.SymbolKind.Constant},
     nodes.Iir_Kind.Signal_Declaration: {"kind": lsp.SymbolKind.Variable},
     nodes.Iir_Kind.Signal_Attribute_Declaration: {"kind": None},
-    nodes.Iir_Kind.File_Declaration: {"kind": lsp.SymbolKind.File},
     nodes.Iir_Kind.Interface_Variable_Declaration: {"kind": lsp.SymbolKind.Variable},
     nodes.Iir_Kind.Interface_Constant_Declaration: {"kind": lsp.SymbolKind.Constant},
     nodes.Iir_Kind.Interface_Signal_Declaration: {"kind": lsp.SymbolKind.Variable},
@@ -69,7 +68,6 @@ SYMBOLS_MAP = {
     nodes.Iir_Kind.Psl_Restrict_Directive: {"kind": lsp.SymbolKind.Method},
     nodes.Iir_Kind.Psl_Endpoint_Declaration: {"kind": lsp.SymbolKind.Variable},
     nodes.Iir_Kind.Psl_Declaration: {"kind": lsp.SymbolKind.Variable},
-    nodes.Iir_Kind.Psl_Assert_Directive: {"kind": lsp.SymbolKind.Method},
     nodes.Iir_Kind.Configuration_Specification: {"kind": None},
 }
 
