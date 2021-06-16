@@ -1412,6 +1412,11 @@ package body Netlists.Memories is
          raise Internal_Error;
       end if;
 
+      --  Simple case (but important for the memories)
+      if V = Conj then
+         return True;
+      end if;
+
       N := Conj;
       Inst := Get_Net_Parent (N);
       loop
@@ -2591,6 +2596,51 @@ package body Netlists.Memories is
          N := Get_Input_Net (Tail_Out, 0);
       end loop;
 
+      --  For memories described by a single process like this:
+      --      if wen then
+      --        mem (addr) := din;
+      --      end if;
+      --      if rden then
+      --        dout := mem (addr);
+      --      end if;
+      --  the writer has just been reduced, but the reader can also be reduced.
+      --                                  _
+      --             _                   / |0-----------------------\
+      --            / |1- dyn_extract --|  |                        |
+      --   dout ---|  |                  \_|1-------\               |
+      --            \_|0-- dout           |         |               |
+      --             |                   wen        +- dyn_insert --+--- mem
+      --            rden                  _         |               |
+      --                                 / |1-------/               |
+      --   mem ----------- isignal -----|  |                        |
+      --                                 \_|0-----------------------/
+      --                                  |
+      --                              wen & +clk
+      --  Was just reduced to:
+      --  FIXME: this is not equivalent because of `+clk` on the mem mux.
+      --    However, because the `+clk` comes from outer blocks, it also
+      --    applies to dout.
+      --                                  _
+      --             _                   / |0------------------------\
+      --            / |1- dyn_extract --|  |                         |
+      --   dout ---|  |                  \_|1-----\                  |
+      --            \_|0-- dout           |       |                  |
+      --             |                   wen      +- dyn_insert_en --+--- mem
+      --            rden                          |        |
+      --                                          |     wen & +clk
+      --   mem ----------- isignal ---------------/
+      --
+      --  Now, reduce the mux to the dyn_extract:
+      --             _
+      --            / |1------- dyn_extract ------\
+      --   dout ---|  |                           |
+      --            \_|0-- dout                   |
+      --             |                            +- dyn_insert_en --+--- mem
+      --            rden                          |        |
+      --                                          |     wen & +clk
+      --   mem ----------- isignal ---------------/
+      --
+
       --  If there are muxes for dyn_extract driven by the same SEL
       --  net, between N and HEAD_IN, move them to HEAD_OUT as dyn_extract_en.
       declare
@@ -2604,9 +2654,9 @@ package body Netlists.Memories is
             Next_Inp := Get_Next_Sink (Inp);
             Inst := Get_Input_Parent (Inp);
             if Get_Id (Inst) = Id_Mux2
-              and then Get_Input_Net (Inst, 0) = Sel
               and then Get_Input_Net (Inst, 1) = Tail_Net
               and then Get_Input_Net (Inst, 2) = Head_Net
+              and then In_Conjunction (Sel, Get_Input_Net (Inst, 0), False)
             then
                Disconnect (Get_Input (Inst, 0));
                Disconnect (Get_Input (Inst, 1));

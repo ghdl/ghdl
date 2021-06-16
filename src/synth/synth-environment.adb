@@ -1369,6 +1369,7 @@ package body Synth.Environment is
          --
          --  This really helps inference as the net R0 doesn't have to be
          --  walked twice (in absence of memoization).
+         --  OTOH, it makes memory handling slightly more complex...
 
          --  Build mux.
          N1_Inst := Get_Net_Parent (N (1));
