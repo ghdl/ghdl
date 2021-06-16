@@ -32,7 +32,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
 
-from ctypes import c_char_p
+from ctypes import c_char_p, c_char
 
 from pydecor import export
 
@@ -58,7 +58,7 @@ def Get_Name_Length(Id: NameId) -> int:
 @export
 def Get_Name_Ptr(Id: NameId) -> str:
     """
-    Get the address of the first character of ID.  The address is valid until
+    Get the string corresponding to identifier ID.  The address is valid until
     the next call to Get_Identifier (which may reallocate the string table).
     The string is NUL-terminated (this is done by get_identifier).
 
@@ -70,6 +70,19 @@ def Get_Name_Ptr(Id: NameId) -> str:
 
     return func(Id).decode("utf-8")
 
+
+@export
+def Get_Character(Id: NameId) -> str:
+    """
+    Get the string corresponding to character identifier ID.
+
+    :param Id: NameId for the identifier to query.
+    :return:
+    """
+    func = libghdl.name_table__get_character
+    func.restype = c_char
+
+    return func(Id).decode("utf-8")
 
 @export
 def Get_Identifier(string: str) -> NameId:
