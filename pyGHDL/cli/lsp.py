@@ -1,20 +1,20 @@
 #!/usr/bin/env python
 # =============================================================================
-#                ____ _   _ ____  _           _ _
-#   _ __  _   _ / ___| | | |  _ \| |      ___| (_)
-#  | '_ \| | | | |  _| |_| | | | | |     / __| | |
-#  | |_) | |_| | |_| |  _  | |_| | |___ | (__| | |
-#  | .__/ \__, |\____|_| |_|____/|_____(_)___|_|_|
-#  |_|    |___/
+#               ____ _   _ ____  _           _ _
+#  _ __  _   _ / ___| | | |  _ \| |      ___| (_)
+# | '_ \| | | | |  _| |_| | | | | |     / __| | |
+# | |_) | |_| | |_| |  _  | |_| | |___ | (__| | |
+# | .__/ \__, |\____|_| |_|____/|_____(_)___|_|_|
+# |_|    |___/
 # =============================================================================
-#  Authors:
+# Authors:
 #   Tristan Gingold
 #
 # Package module:   GHDLs Language Server implementing LSP for VHDL.
 #
 # License:
 # ============================================================================
-#  Copyright (C) 2019-2020 Tristan Gingold
+#  Copyright (C) 2019-2021 Tristan Gingold
 #
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
