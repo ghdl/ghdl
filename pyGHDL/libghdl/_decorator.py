@@ -82,24 +82,30 @@ def BindToLibGHDL(subprogramName):
         typeHintCount = len(typeHints)
 
         if typeHintCount == 0:
-            raise ValueError("Function {0} is not annotated with types.".format(func.__name__))
-
-        try:
-            returnType = typeHints['return']
-        except KeyError:
-            raise ValueError("Function {0} is not annotated with a return type.".format(func.__name__))
-
-        if (typeHintCount - 1) != func.__code__.co_argcount:
-            raise ValueError("Number of type annotations ({0}) for function '{1}' does not match number of parameters ({2}).".format(
-                typeHintCount - 1,
-                func.__name__,
-                func.__code__.co_argcount)
+            raise ValueError(
+                "Function {0} is not annotated with types.".format(func.__name__)
             )
 
-        #		print(typeHints)
+        try:
+            returnType = typeHints["return"]
+        except KeyError:
+            raise ValueError(
+                "Function {0} is not annotated with a return type.".format(
+                    func.__name__
+                )
+            )
+
+        if (typeHintCount - 1) != func.__code__.co_argcount:
+            raise ValueError(
+                "Number of type annotations ({0}) for function '{1}' does not match number of parameters ({2}).".format(
+                    typeHintCount - 1, func.__name__, func.__code__.co_argcount
+                )
+            )
+
+        # 		print(typeHints)
 
         parameters = typeHints.copy()
-        del parameters['return']
+        del parameters["return"]
 
         parameterTypes = []
         for parameter in parameters.values():
@@ -117,9 +123,17 @@ def BindToLibGHDL(subprogramName):
                 if (parameter.__bound__ is int) or (parameter.__bound__ is c_int32):
                     parameterTypes.append(c_int32)
                 else:
-                    raise TypeError("Unsupported parameter type '{0!s}' in function '{1}'.".format(parameter, func.__name__))
+                    raise TypeError(
+                        "Unsupported parameter type '{0!s}' in function '{1}'.".format(
+                            parameter, func.__name__
+                        )
+                    )
             else:
-                raise TypeError("Unsupported parameter type '{0!s}' in function '{1}'.".format(parameter, func.__name__))
+                raise TypeError(
+                    "Unsupported parameter type '{0!s}' in function '{1}'.".format(
+                        parameter, func.__name__
+                    )
+                )
 
         if returnType is None:
             resultType = None
@@ -129,19 +143,27 @@ def BindToLibGHDL(subprogramName):
             resultType = c_char
         elif returnType is c_char_p:
             resultType = c_char_p
-        elif (returnType is int):
+        elif returnType is int:
             resultType = c_int32
-        elif (returnType is bool):
+        elif returnType is bool:
             resultType = c_bool
         elif isinstance(returnType, TypeVar):
             if (returnType.__bound__ is int) or (returnType.__bound__ is c_int32):
                 resultType = c_int32
             else:
-                raise Exception("Unsupported return type '{0!s}' in function '{1}'.".format(returnType, func.__name__))
+                raise Exception(
+                    "Unsupported return type '{0!s}' in function '{1}'.".format(
+                        returnType, func.__name__
+                    )
+                )
         elif issubclass(returnType, Structure):
             resultType = returnType
         else:
-            raise Exception("Unsupported return type '{0!s}' in function '{1}'.".format(returnType, func.__name__))
+            raise Exception(
+                "Unsupported return type '{0!s}' in function '{1}'.".format(
+                    returnType, func.__name__
+                )
+            )
 
         functionPointer = getattr(libghdl, subprogramName)
         functionPointer.parameterTypes = parameterTypes

@@ -41,9 +41,7 @@ from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl._decorator import BindToLibGHDL
 
 
-__all__ = [
-    "Flag_Parse_Parenthesis"
-]
+__all__ = ["Flag_Parse_Parenthesis"]
 
 
 Flag_Parse_Parenthesis = c_bool.in_dll(libghdl, "vhdl__parse__flag_parse_parenthesis")

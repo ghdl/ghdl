@@ -36,22 +36,35 @@
    Add a module documentation.
 """
 from pathlib import Path
-from typing  import Any
+from typing import Any
 
 import pyGHDL.libghdl.utils
 from pydecor import export
 
 from pyGHDL.dom._Utils import GetIirKindOfNode
-from pyVHDLModel.VHDLModel import Design        as VHDLModel_Design
-from pyVHDLModel.VHDLModel import Library       as VHDLModel_Library
-from pyVHDLModel.VHDLModel import Document      as VHDLModel_Document
+from pyVHDLModel.VHDLModel import Design as VHDLModel_Design
+from pyVHDLModel.VHDLModel import Library as VHDLModel_Library
+from pyVHDLModel.VHDLModel import Document as VHDLModel_Document
 
-import pyGHDL.libghdl       as libghdl
-from pyGHDL.libghdl import name_table, files_map, errorout_memory, LibGHDLException, utils
-from pyGHDL.libghdl.vhdl    import nodes, sem_lib
+import pyGHDL.libghdl as libghdl
+from pyGHDL.libghdl import (
+    name_table,
+    files_map,
+    errorout_memory,
+    LibGHDLException,
+    utils,
+)
+from pyGHDL.libghdl.vhdl import nodes, sem_lib
 
-from pyGHDL.dom.Common      import DOMException, GHDLMixin
-from pyGHDL.dom.DesignUnit  import Entity, Architecture, Package, PackageBody, Context, Configuration
+from pyGHDL.dom.Common import DOMException, GHDLMixin
+from pyGHDL.dom.DesignUnit import (
+    Entity,
+    Architecture,
+    Package,
+    PackageBody,
+    Context,
+    Configuration,
+)
 
 __all__ = []
 
@@ -95,13 +108,15 @@ class Document(VHDLModel_Document, GHDLMixin):
         GHDLMixin.__init__(self)
 
         self.__ghdl_init()
-        if (dontParse == False):
+        if dontParse == False:
             self.parse()
 
     def __ghdl_init(self):
         # Read input file
         self.__ghdlFileID = name_table.Get_Identifier(str(self.Path))
-        self.__ghdlSourceFileEntry = files_map.Read_Source_File(name_table.Null_Identifier, self.__ghdlFileID)
+        self.__ghdlSourceFileEntry = files_map.Read_Source_File(
+            name_table.Null_Identifier, self.__ghdlFileID
+        )
         if self.__ghdlSourceFileEntry == files_map.No_Source_File_Entry:
             raise LibGHDLException("Cannot load file '{!s}'".format(self.Path))
 
@@ -119,32 +134,33 @@ class Document(VHDLModel_Document, GHDLMixin):
             libraryUnit = nodes.Get_Library_Unit(unit)
             nodeKind = GetIirKindOfNode(libraryUnit)
 
-            if (nodeKind == nodes.Iir_Kind.Entity_Declaration):
+            if nodeKind == nodes.Iir_Kind.Entity_Declaration:
                 entity = Entity.parse(libraryUnit)
                 self.Entities.append(entity)
 
-            elif (nodeKind == nodes.Iir_Kind.Architecture_Body):
+            elif nodeKind == nodes.Iir_Kind.Architecture_Body:
                 architecture = Architecture.parse(libraryUnit)
                 self.Architectures.append(architecture)
 
-            elif (nodeKind == nodes.Iir_Kind.Package_Declaration):
+            elif nodeKind == nodes.Iir_Kind.Package_Declaration:
                 package = Package.parse(libraryUnit)
                 self.Packages.append(package)
 
-            elif (nodeKind == nodes.Iir_Kind.Package_Body):
+            elif nodeKind == nodes.Iir_Kind.Package_Body:
                 packageBody = PackageBody.parse(libraryUnit)
                 self.PackageBodies.append(packageBody)
 
-            elif (nodeKind == nodes.Iir_Kind.Context_Declaration):
+            elif nodeKind == nodes.Iir_Kind.Context_Declaration:
                 context = Context.parse(libraryUnit)
                 self.Contexts.append(context)
 
-            elif (nodeKind == nodes.Iir_Kind.Configuration_Declaration):
+            elif nodeKind == nodes.Iir_Kind.Configuration_Declaration:
                 configuration = Configuration.parse(libraryUnit)
                 self.Configurations.append(configuration)
 
             else:
                 raise DOMException(
                     "Unknown design unit kind '{kindName}'({kind}).".format(
-                        kindName=nodeKind.name, kind=nodeKind)
+                        kindName=nodeKind.name, kind=nodeKind
+                    )
                 )

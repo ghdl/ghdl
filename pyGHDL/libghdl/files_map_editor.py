@@ -41,9 +41,17 @@ from pyGHDL.libghdl._decorator import BindToLibGHDL
 from pyGHDL.libghdl._types import SourceFileEntry
 
 
-#@export
+# @export
 @BindToLibGHDL("files_map__editor__replace_text_ptr")
-def _Replace_Text(File: SourceFileEntry, Start_Line: int, Start_Offset: int, End_Line: int, End_Offset: int, Text_Pointer: c_char_p, Text_Length: int) -> bool:
+def _Replace_Text(
+    File: SourceFileEntry,
+    Start_Line: int,
+    Start_Offset: int,
+    End_Line: int,
+    End_Offset: int,
+    Text_Pointer: c_char_p,
+    Text_Length: int,
+) -> bool:
     """Replace [START; END) by TEXT.
 
     :param File:         File where to replace a text section.
@@ -58,8 +66,15 @@ def _Replace_Text(File: SourceFileEntry, Start_Line: int, Start_Offset: int, End
 
 
 @export
-def Replace_Text(File: SourceFileEntry, Start_Line: int, Start_Offset: int, End_Line: int, End_Offset: int, Text: str) -> bool:
-    """ Replace [START; END) by TEXT.
+def Replace_Text(
+    File: SourceFileEntry,
+    Start_Line: int,
+    Start_Offset: int,
+    End_Line: int,
+    End_Offset: int,
+    Text: str,
+) -> bool:
+    """Replace [START; END) by TEXT.
 
     :param File:         File where to replace a text section.
     :param Start_Line:   undocumented
@@ -70,11 +85,19 @@ def Replace_Text(File: SourceFileEntry, Start_Line: int, Start_Offset: int, End_
     :return:             Return True in case of success, False in case of failure (the gap is too small).
     """
     buffer = Text.encode("utf-8")
-    return _Replace_Text(File, Start_Line, Start_Offset, End_Line, End_Offset, c_char_p(buffer), len(buffer))
+    return _Replace_Text(
+        File,
+        Start_Line,
+        Start_Offset,
+        End_Line,
+        End_Offset,
+        c_char_p(buffer),
+        len(buffer),
+    )
 
 
 @export
-#@BindToLibGHDL("files_map__editor__fill_text_ptr")
+# @BindToLibGHDL("files_map__editor__fill_text_ptr")
 def Fill_Text(File: SourceFileEntry, Text_Pointer, Text_Length: int) -> None:
     """Replace the content of :obj:`File` with TEXT.
 
@@ -88,8 +111,10 @@ def Fill_Text(File: SourceFileEntry, Text_Pointer, Text_Length: int) -> None:
 
 
 @export
-#@BindToLibGHDL("files_map__editor__check_buffer_content")
-def Check_Buffer_Content(File: SourceFileEntry, String_Pointer, String_Length: int) -> None:
+# @BindToLibGHDL("files_map__editor__check_buffer_content")
+def Check_Buffer_Content(
+    File: SourceFileEntry, String_Pointer, String_Length: int
+) -> None:
     """
     Check that content of :obj:`File` is STR[1 .. STR_LEN].
 

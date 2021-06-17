@@ -34,7 +34,7 @@
 
 from pydecor import export
 
-from pyGHDL.libghdl._types     import SourceFileEntry, Iir_Design_File, Iir_Design_Unit
+from pyGHDL.libghdl._types import SourceFileEntry, Iir_Design_File, Iir_Design_Unit
 from pyGHDL.libghdl._decorator import BindToLibGHDL
 
 

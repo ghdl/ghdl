@@ -54,7 +54,7 @@ def Indent_String(File: int, Handle: int, FirstLine: int, LastLine: int) -> None
 
 
 @export
-#@BindToLibGHDL("vhdl__formatters__allocate_handle")
+# @BindToLibGHDL("vhdl__formatters__allocate_handle")
 def Allocate_Handle():
     """
     .. todo:: Undocumented in Ada code.
@@ -65,7 +65,7 @@ def Allocate_Handle():
 
 
 @export
-#@BindToLibGHDL("vhdl__formatters__get_length")
+# @BindToLibGHDL("vhdl__formatters__get_length")
 def Get_Length(Handle) -> int:
     """
     .. todo:: Undocumented in Ada code.
@@ -80,7 +80,7 @@ def Get_Length(Handle) -> int:
 
 
 @export
-#@BindToLibGHDL("vhdl__formatters__get_c_string")
+# @BindToLibGHDL("vhdl__formatters__get_c_string")
 def Get_C_String(Handle):
     """
     .. todo:: Undocumented in Ada code.
@@ -95,7 +95,7 @@ def Get_C_String(Handle):
 
 
 @export
-#@BindToLibGHDL("vhdl__formatters__free_handle")
+# @BindToLibGHDL("vhdl__formatters__free_handle")
 def Free_Handle(Handle) -> None:
     """
     .. todo:: Undocumented in Ada code.

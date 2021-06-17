@@ -36,13 +36,11 @@ from ctypes import c_bool
 
 from pyGHDL.libghdl import libghdl
 
-__all__ = [
-    "Flag_Concurrent_Stmts",
-    "Flag_Configurations",
-    "Flag_Associations"
-]
+__all__ = ["Flag_Concurrent_Stmts", "Flag_Configurations", "Flag_Associations"]
 
-Flag_Concurrent_Stmts = c_bool.in_dll(libghdl, "vhdl__canon__canon_flag_concurrent_stmts")
+Flag_Concurrent_Stmts = c_bool.in_dll(
+    libghdl, "vhdl__canon__canon_flag_concurrent_stmts"
+)
 
 Flag_Configurations = c_bool.in_dll(libghdl, "vhdl__canon__canon_flag_configurations")
 

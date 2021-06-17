@@ -42,8 +42,13 @@ from pydecor import export
 
 from pyGHDL import GHDLBaseException
 from pyGHDL.libghdl._types import Iir
-#from pyGHDL.libghdl._decorator import BindToLibGHDL
+
+# from pyGHDL.libghdl._decorator import BindToLibGHDL
 from pyGHDL.libghdl.version import __version__
+
+
+class LibGHDLException(GHDLBaseException):
+    pass
 
 
 def _get_libghdl_name() -> Path:
@@ -159,7 +164,7 @@ def finalize() -> None:
 
 
 @export
-#@BindToLibGHDL("options__initialize")
+# @BindToLibGHDL("options__initialize")
 def initialize() -> None:
     """Initialize or re-initialize the shared library."""
     libghdl.options__initialize()
@@ -179,7 +184,7 @@ def set_option(Opt: str) -> bool:
 
 
 @export
-#@BindToLibGHDL("libghdl__analyze_init")
+# @BindToLibGHDL("libghdl__analyze_init")
 def analyze_init() -> None:
     """
     Initialize the analyzer.
@@ -191,7 +196,7 @@ def analyze_init() -> None:
 
 
 @export
-#@BindToLibGHDL("libghdl__analyze_init_status")
+# @BindToLibGHDL("libghdl__analyze_init_status")
 def analyze_init_status() -> int:
     """
     Initialize the analyzer.
@@ -215,12 +220,7 @@ def analyze_file(fname: str) -> Iir:
 
 
 @export
-#@BindToLibGHDL("ghdllocal__disp_config_prefixes")
+# @BindToLibGHDL("ghdllocal__disp_config_prefixes")
 def disp_config() -> None:
     """Display the configured prefixes for libghdl."""
     libghdl.ghdllocal__disp_config_prefixes()
-
-
-@export
-class LibGHDLException(GHDLBaseException):
-    pass

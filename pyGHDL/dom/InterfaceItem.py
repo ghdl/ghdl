@@ -32,14 +32,17 @@
 # ============================================================================
 from pydecor import export
 
-from pyVHDLModel.VHDLModel import \
-    GenericConstantInterfaceItem as VHDLModel_GenericConstantInterfaceItem, \
-    PortSignalInterfaceItem as VHDLModel_PortSignalInterfaceItem, \
-    Mode, SubTypeOrSymbol, Expression
+from pyVHDLModel.VHDLModel import (
+    GenericConstantInterfaceItem as VHDLModel_GenericConstantInterfaceItem,
+    PortSignalInterfaceItem as VHDLModel_PortSignalInterfaceItem,
+    Mode,
+    SubTypeOrSymbol,
+    Expression,
+)
 
-from pyGHDL.dom._Utils     import NodeToName, GetModeOfNode
+from pyGHDL.dom._Utils import NodeToName, GetModeOfNode
 from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode
-from pyGHDL.dom.Common     import GHDLMixin
+from pyGHDL.dom.Common import GHDLMixin
 
 __all__ = []
 
@@ -56,9 +59,10 @@ class GenericConstantInterfaceItem(VHDLModel_GenericConstantInterfaceItem, GHDLM
 
         return generic
 
-    def __init__(self, name:str, mode: Mode, subType: SubTypeOrSymbol):
+    def __init__(self, name: str, mode: Mode, subType: SubTypeOrSymbol):
         super().__init__(name=name, mode=mode)
         self._subType = subType
+
 
 @export
 class PortSignalInterfaceItem(VHDLModel_PortSignalInterfaceItem, GHDLMixin):
@@ -72,8 +76,13 @@ class PortSignalInterfaceItem(VHDLModel_PortSignalInterfaceItem, GHDLMixin):
 
         return port
 
-    def __init__(self, name:str, mode: Mode, subType: SubTypeOrSymbol, defaultExpression: Expression = None):
+    def __init__(
+        self,
+        name: str,
+        mode: Mode,
+        subType: SubTypeOrSymbol,
+        defaultExpression: Expression = None,
+    ):
         super().__init__(name=name, mode=mode)
         self._subType = subType
         self._defaultExpression = defaultExpression
-

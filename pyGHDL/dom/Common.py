@@ -37,8 +37,8 @@
 """
 from pydecor import export
 
-from pyGHDL                import GHDLBaseException
-from pyGHDL.libghdl        import LibGHDLException, errorout_memory
+from pyGHDL import GHDLBaseException
+from pyGHDL.libghdl import LibGHDLException, errorout_memory
 
 __all__ = []
 
@@ -61,5 +61,6 @@ class GHDLMixin:
             for i in range(errorCount):
                 print(errorout_memory.Get_Error_Message(i + 1))
 
-            raise DOMException("Error in libghdl.") \
-                from LibGHDLException("libghdl: Internal error 2.")
+            raise DOMException("Error in libghdl.") from LibGHDLException(
+                "libghdl: Internal error 2."
+            )
