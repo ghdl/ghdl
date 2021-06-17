@@ -76,7 +76,6 @@ class ParseError(Exception):
         return ("Parse error at {lr.filename}:{lr.lineno}: {msg}".format(lr=self.lr, msg=self.msg))
 
 
-
 # Return fields description.
 # This is a dictionary.  The keys represent the possible format of a node.
 # The values are dictionaries representing fields.  Keys are fields name, and
@@ -201,7 +200,7 @@ def read_kinds(filename):
             name = m.group(1)
             if not name.startswith(prefix_range_name):
                 raise ParseError(lr, "incorrect prefix for subtype")
-            name = name[len(prefix_range_name) :]
+            name = name[len(prefix_range_name):]
             l = lr.get()
             mf = pat_first.match(l)
             if not mf:
@@ -235,7 +234,7 @@ def read_kinds(filename):
                             )
                         break
                     raise ParseError(lr, "unhandled line in subtype")
-            kinds_ranges[name] = kinds[first : last + 1]
+            kinds_ranges[name] = kinds[first: last + 1]
     return (kinds, kinds_ranges)
 
 

@@ -9,10 +9,9 @@ import sys
 from textwrap import dedent
 
 try:
-  import scripts.pnodes as pnodes
+    import scripts.pnodes as pnodes
 except:
-  import pnodes
-
+    import pnodes
 
 libname = "libghdl"
 
@@ -21,7 +20,8 @@ def print_enum(name, vals):
     print(dedent("""
 
         @export
-        class {0}:
+        @unique
+        class {0}(IntEnum):
         """).format(name), end=''
     )
     for n, k in enumerate(vals):
@@ -32,11 +32,13 @@ def print_enum(name, vals):
 
 def print_file_header():
     print(dedent("""\
-        # Auto generated Python source file from Ada sources
-        # Call 'make' in 'src/vhdl' to regenerate:
-        #
-        from pydecor import export
-    """), end='')
+            # Auto generated Python source file from Ada sources
+            # Call 'make' in 'src/vhdl' to regenerate:
+            #
+            from enum import IntEnum, unique
+            from pydecor import export
+        """), end=''
+    )
 
 
 def do_class_kinds():
@@ -45,8 +47,8 @@ def do_class_kinds():
 
         @export
         class Iir_Kinds:
-        """
-    ), end='')
+        """), end=''
+    )
     for k, v in pnodes.kinds_ranges.items():
         print("    {0} = [".format(k))
         for e in v:
@@ -58,14 +60,24 @@ def do_class_kinds():
 def do_iirs_subprg():
     classname = "vhdl__nodes"
     print(dedent("""
-        Get_Kind = {libname}.{classname}__get_kind
-        Get_Location = {libname}.{classname}__get_location
+
+        @export
+        def Get_Kind(node: int):
+            return {libname}.{classname}__get_kind(node)
+
+        @export
+        def Get_Location(node: Iir):
+            return {libname}.{classname}__get_location(node)
         """).format(libname=libname, classname=classname)
     )
     for k in pnodes.funcs:
-        print(dedent("""\
-            Get_{kname} = {libname}.{classname}__get_{kname_lower}
-            Set_{kname} = {libname}.{classname}__set_{kname_lower}
+        print(dedent("""
+            @export
+            def Get_{kname}(obj):
+                return {libname}.{classname}__get_{kname_lower}(obj)
+            @export
+            def Set_{kname}(obj, value) -> None:
+                {libname}.{classname}__set_{kname_lower}(obj, value)
             """).format(kname=k.name, kname_lower=k.name.lower(), libname=libname, classname=classname)
         )
 
@@ -76,9 +88,13 @@ def do_libghdl_elocations():
     print("from pyGHDL.libghdl import libghdl")
     print()
     for k in pnodes.funcs:
-        print(dedent("""\
-            Get_{kname} = {libname}.{classname}__get_{kname_lower}
-            Set_{kname} = {libname}.{classname}__set_{kname_lower}
+        print(dedent("""
+            @export
+            def Get_{kname}(obj):
+                return {libname}.{classname}__get_{kname_lower}(obj)
+            @export
+            def Set_{kname}(obj, value) -> None:
+                {libname}.{classname}__set_{kname_lower}(obj, value)
             """).format(kname=k.name, kname_lower=k.name.lower(), libname=libname, classname=classname)
         )
 
@@ -90,16 +106,21 @@ def do_class_types():
 def do_types_subprg():
     print()
     for k in pnodes.get_types():
-        print()
-        print("Get_{0} = {1}.vhdl__nodes_meta__get_{2}".format(k, libname, k.lower()))
+        print(dedent("""
+            def Get_{0}(node, field):
+                return {1}.vhdl__nodes_meta__get_{2}(node, field)
+            """).format(k, libname, k.lower())
+        )
 
 
 def do_has_subprg():
     print()
     for f in pnodes.funcs:
-        print()
-        print("Has_{0} =\\".format(f.name))
-        print("    {0}.vhdl__nodes_meta__has_{1}".format(libname, f.name.lower()))
+        print(dedent("""
+            def Has_{fname}(kind) -> bool:
+                return {libname}.vhdl__nodes_meta__has_{fname_lower}(kind)
+            """).format(fname=f.name, libname=libname, fname_lower=f.name.lower())
+        )
 
 
 def do_class_field_attributes():
@@ -155,6 +176,7 @@ def do_libghdl_nodes():
     print_file_header()
     print(dedent("""\
         from pyGHDL.libghdl import libghdl
+        from pyGHDL.libghdl._types import Iir
 
         Null_Iir = 0
 
@@ -164,7 +186,8 @@ def do_libghdl_nodes():
         Null_Iir_Flist = 0
         Iir_Flist_Others = 1
         Iir_Flist_All = 2
-        """), end='')
+        """), end=''
+    )
 
     do_class_kinds()
     read_spec_enum("Iir_Mode", "Iir_", "Iir_Mode")
@@ -184,16 +207,49 @@ def do_libghdl_meta():
 
 
         # From nodes_meta
-        get_fields_first = libghdl.vhdl__nodes_meta__get_fields_first
+        @export
+        def get_fields_first(K: IirKind) -> int:
+            '''
+            Return the list of fields for node :obj:`K`.
 
-        get_fields_last = libghdl.vhdl__nodes_meta__get_fields_last
+            In Ada ``Vhdl.Nodes_Meta.Get_Fields`` returns a ``Fields_Array``. To emulate
+            this array access, the API provides ``get_fields_first`` and :func:`get_fields_last`.
 
-        get_field_by_index = libghdl.vhdl__nodes_meta__get_field_by_index
+            The fields are sorted: first the non nodes/list of nodes, then the
+            nodes/lists that aren't reference, and then the reference.
 
-        get_field_type = libghdl.vhdl__nodes_meta__get_field_type
+            :param K: Node to get first array index from.
+            '''
+            return libghdl.vhdl__nodes_meta__get_fields_first(K)
 
-        get_field_attribute = libghdl.vhdl__nodes_meta__get_field_attribute
-        """), end='')
+        @export
+        def get_fields_last(K: IirKind) -> int:
+            '''
+            Return the list of fields for node :obj:`K`.
+
+            In Ada ``Vhdl.Nodes_Meta.Get_Fields`` returns a ``Fields_Array``. To emulate
+            this array access, the API provides :func:`get_fields_first` and ``get_fields_last``.
+
+            The fields are sorted: first the non nodes/list of nodes, then the
+            nodes/lists that aren't reference, and then the reference.
+
+            :param K: Node to get last array index from.
+            '''
+            return libghdl.vhdl__nodes_meta__get_fields_last(K)
+
+        @export
+        def get_field_by_index(K: IirKind) -> int:
+            return libghdl.vhdl__nodes_meta__get_field_by_index(K)
+
+        @export
+        def get_field_type(*args):
+            return libghdl.vhdl__nodes_meta__get_field_type(*args)
+
+        @export
+        def get_field_attribute(*args):
+            return libghdl.vhdl__nodes_meta__get_field_attribute(*args)
+        """), end=''
+    )
 
     do_class_types()
     do_class_field_attributes()
@@ -204,9 +260,7 @@ def do_libghdl_meta():
 
 def do_libghdl_names():
     pat_name_first = re.compile(r"   Name_(\w+)\s+: constant Name_Id := (\d+);")
-    pat_name_def = re.compile(
-        r"   Name_(\w+)\s+:\s+constant Name_Id :=\s+Name_(\w+)( \+ (\d+))?;"
-    )
+    pat_name_def = re.compile(r"   Name_(\w+)\s+:\s+constant Name_Id :=\s+Name_(\w+)( \+ (\d+))?;")
     dict = {}
     lr = pnodes.linereader("../std_names.ads")
     while True:
@@ -244,7 +298,8 @@ def do_libghdl_names():
 
         @export
         class Name:
-        """), end='')
+        """), end=''
+    )
 
     for n, v in res:
         # Avoid clash with Python names
@@ -261,12 +316,15 @@ def do_libghdl_tokens():
 def do_libghdl_errorout():
     print_file_header()
     print(dedent("""\
+        from enum import IntEnum, unique
+
         from pyGHDL.libghdl import libghdl
 
         @export
         def Enable_Warning(Id: int, Enable: bool) -> None:
             libghdl.errorout__enable_warning(Id, Enable)
-        """), end='')
+        """), end=''
+    )
 
     read_enum(
         "../errorout.ads",
