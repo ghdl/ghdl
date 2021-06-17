@@ -9,7 +9,7 @@
 # Authors:
 #   Patrick Lehmann
 #
-# Package module:   DOM: Common classes for package pyGHDL.dom.
+# Package module:   DOM: Interface items (e.g. generic or port)
 #
 # License:
 # ============================================================================
@@ -30,36 +30,26 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-
-"""
-.. todo::
-   Add a module documentation.
-"""
 from pydecor import export
 
-from pyGHDL                import GHDLBaseException
-from pyGHDL.libghdl        import LibGHDLException, errorout_memory
+from pyVHDLModel.VHDLModel import \
+    IntegerLiteral as VHDLModel_IntegerLiteral, \
+    FloatingPointLiteral as VHDLModel_FloatingPointLiteral, \
+    CharacterLiteral as VHDLModel_CharacterLiteral
 
 __all__ = []
 
 
 @export
-class DOMException(GHDLBaseException):
+class IntegerLiteral(VHDLModel_IntegerLiteral):
     pass
 
 
 @export
-class GHDLException(GHDLBaseException):
+class FloatingPointLiteral(VHDLModel_FloatingPointLiteral):
     pass
 
 
 @export
-class GHDLMixin:
-    def CheckForErrors(self) -> None:
-        errorCount = errorout_memory.Get_Nbr_Messages()
-        if errorCount != 0:
-            for i in range(errorCount):
-                print(errorout_memory.Get_Error_Message(i + 1))
-
-            raise DOMException("Error in libghdl.") \
-                from LibGHDLException("libghdl: Internal error 2.")
+class CharacterLiteral(VHDLModel_CharacterLiteral):
+    pass

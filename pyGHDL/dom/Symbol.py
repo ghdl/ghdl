@@ -9,7 +9,7 @@
 # Authors:
 #   Patrick Lehmann
 #
-# Package module:   DOM: Common classes for package pyGHDL.dom.
+# Package module:   DOM: Interface items (e.g. generic or port)
 #
 # License:
 # ============================================================================
@@ -30,36 +30,31 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-
-"""
-.. todo::
-   Add a module documentation.
-"""
 from pydecor import export
 
-from pyGHDL                import GHDLBaseException
-from pyGHDL.libghdl        import LibGHDLException, errorout_memory
+from typing import List
+
+from pyVHDLModel.VHDLModel import \
+    SimpleSubTypeSymbol as VHDLModel_SimpleSubTypeSymbol, \
+    ConstrainedSubTypeSymbol as VHDLModel_ConstrainedSubTypeSymbol, \
+    SimpleObjectSymbol as VHDLModel_SimpleObjectSymbol, \
+    Constraint
 
 __all__ = []
 
 
 @export
-class DOMException(GHDLBaseException):
-    pass
+class SimpleSubTypeSymbol(VHDLModel_SimpleSubTypeSymbol):
+    def __init__(self, subTypeName: str):
+        super().__init__(subTypeName=subTypeName)
 
 
 @export
-class GHDLException(GHDLBaseException):
-    pass
-
+class ConstrainedSubTypeSymbol(VHDLModel_ConstrainedSubTypeSymbol):
+    def __init__(self, subTypeName: str, constraints: List[Constraint] = None):
+        super().__init__(subTypeName=subTypeName, constraints=constraints)
 
 @export
-class GHDLMixin:
-    def CheckForErrors(self) -> None:
-        errorCount = errorout_memory.Get_Nbr_Messages()
-        if errorCount != 0:
-            for i in range(errorCount):
-                print(errorout_memory.Get_Error_Message(i + 1))
-
-            raise DOMException("Error in libghdl.") \
-                from LibGHDLException("libghdl: Internal error 2.")
+class SimpleObjectSymbol(VHDLModel_SimpleObjectSymbol):
+    def __init__(self, symbolName: str):
+        super().__init__(symbolName)

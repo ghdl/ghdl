@@ -1,19 +1,19 @@
 # =============================================================================
-#                ____ _   _ ____  _          _
-#   _ __  _   _ / ___| | | |  _ \| |      __| | ___  _ __ ___
-#  | '_ \| | | | |  _| |_| | | | | |     / _` |/ _ \| '_ ` _ \
-#  | |_) | |_| | |_| |  _  | |_| | |___ | (_| | (_) | | | | | |
-#  | .__/ \__, |\____|_| |_|____/|_____(_)__,_|\___/|_| |_| |_|
-#  |_|    |___/
+#               ____ _   _ ____  _          _
+#  _ __  _   _ / ___| | | |  _ \| |      __| | ___  _ __ ___
+# | '_ \| | | | |  _| |_| | | | | |     / _` |/ _ \| '_ ` _ \
+# | |_) | |_| | |_| |  _  | |_| | |___ | (_| | (_) | | | | | |
+# | .__/ \__, |\____|_| |_|____/|_____(_)__,_|\___/|_| |_| |_|
+# |_|    |___/
 # =============================================================================
-#  Authors:
-#    Patrick Lehmann
+# Authors:
+#   Patrick Lehmann
 #
-# Package module:   DOM: VHDL design units (e.g. entity or package).
+# Package module:   DOM: VHDL design units (e.g. context or package).
 #
 # License:
 # ============================================================================
-#  Copyright (C) 2019-2020 Tristan Gingold
+#  Copyright (C) 2019-2021 Tristan Gingold
 #
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@
 # ============================================================================
 
 """
-This module contains all DOM classes for VHDL's design units (:class:`entity <Entity>`,
+This module contains all DOM classes for VHDL's design units (:class:`context <Entity>`,
 :class:`architecture <Architecture>`, :class:`package <Package>`,
 :class:`package body <PackageBody>`, :class:`context <Context>` and
 :class:`configuration <Configuration>`.
@@ -41,56 +41,43 @@ This module contains all DOM classes for VHDL's design units (:class:`entity <En
 """
 from pydecor import export
 
-from pyVHDLModel.VHDLModel import Entity as VHDLModel_Entity
-from pyVHDLModel.VHDLModel import Architecture as VHDLModel_Architecture
-from pyVHDLModel.VHDLModel import Package as VHDLModel_Package
-from pyVHDLModel.VHDLModel import PackageBody as VHDLModel_PackageBody
-from pyVHDLModel.VHDLModel import Context as VHDLModel_Context
+from pyVHDLModel.VHDLModel import Entity        as VHDLModel_Entity
+from pyVHDLModel.VHDLModel import Architecture  as VHDLModel_Architecture
+from pyVHDLModel.VHDLModel import Package       as VHDLModel_Package
+from pyVHDLModel.VHDLModel import PackageBody   as VHDLModel_PackageBody
+from pyVHDLModel.VHDLModel import Context       as VHDLModel_Context
 from pyVHDLModel.VHDLModel import Configuration as VHDLModel_Configuration
 
+from pyGHDL.libghdl import utils
 from pyGHDL.libghdl.vhdl import nodes
-import pyGHDL.libghdl.utils as pyutils
 
-from pyGHDL.dom.Common import GHDLMixin
-from pyGHDL.dom.InterfaceItem import (
-    GenericConstantInterfaceItem,
-    PortSignalInterfaceItem,
-)
+from pyGHDL.dom._Utils import NodeToName, GetIirKindOfNode
+from pyGHDL.dom._Translate import GetExpressionFromNode, GetSubtypeIndicationFromNode, GetGenericsFromChainedNodes, GetPortsFromChainedNodes, \
+    GetDeclaredItemsFromChainedNodes
+from pyGHDL.dom.Common import GHDLMixin, DOMException
+from pyGHDL.dom.Object import Constant, Signal
 
 __all__ = []
 
 
 @export
 class Entity(VHDLModel_Entity, GHDLMixin):
+
     @classmethod
     def parse(cls, libraryUnit):
-        name = cls._ghdlNodeToName(libraryUnit)
+        name = NodeToName(libraryUnit)
         entity = cls(name)
 
-        cls.__parseGenerics(libraryUnit, entity)
-        cls.__parsePorts(libraryUnit, entity)
+        for generic in GetGenericsFromChainedNodes(nodes.Get_Generic_Chain(libraryUnit)):
+            entity.GenericItems.append(generic)
+
+        for port in GetPortsFromChainedNodes(nodes.Get_Port_Chain(libraryUnit)):
+            entity.PortItems.append(port)
+
+        for item in GetDeclaredItemsFromChainedNodes(nodes.Get_Declaration_Chain(libraryUnit), "entity", name):
+            entity.DeclaredItems.append(item)
 
         return entity
-
-    @classmethod
-    def __ghdlGetGenerics(cls, entity):
-        return pyutils.chain_iter(nodes.Get_Generic_Chain(entity))
-
-    @classmethod
-    def __ghdlGetPorts(cls, entity):
-        return pyutils.chain_iter(nodes.Get_Port_Chain(entity))
-
-    @classmethod
-    def __parseGenerics(cls, libraryUnit, entity):
-        for generic in cls.__ghdlGetGenerics(libraryUnit):
-            genericConstant = GenericConstantInterfaceItem.parse(generic)
-            entity.GenericItems.append(genericConstant)
-
-    @classmethod
-    def __parsePorts(cls, libraryUnit, entity):
-        for port in cls.__ghdlGetPorts(libraryUnit):
-            signalPort = PortSignalInterfaceItem.parse(port)
-            entity.PortItems.append(signalPort)
 
 
 @export
@@ -102,10 +89,15 @@ class Architecture(VHDLModel_Architecture, GHDLMixin):
 
     @classmethod
     def parse(cls, libraryUnit):
-        name = cls._ghdlNodeToName(libraryUnit)
-        entityName = cls._ghdlNodeToName(nodes.Get_Entity_Name(libraryUnit))
+        name = NodeToName(libraryUnit)
+        entityName = NodeToName(nodes.Get_Entity_Name(libraryUnit))
 
-        return cls(name, entityName)
+        architecture = cls(name, entityName)
+
+        for item in GetDeclaredItemsFromChainedNodes(nodes.Get_Declaration_Chain(libraryUnit), "architecture", name):
+            architecture.DeclaredItems.append(item)
+
+        return architecture
 
     def resolve(self):
         pass
@@ -113,31 +105,47 @@ class Architecture(VHDLModel_Architecture, GHDLMixin):
 
 @export
 class Package(VHDLModel_Package, GHDLMixin):
+
     @classmethod
     def parse(cls, libraryUnit):
-        name = cls._ghdlNodeToName(libraryUnit)
-        return cls(name)
+        name = NodeToName(libraryUnit)
+
+        package = cls(name)
+
+        for item in GetDeclaredItemsFromChainedNodes(nodes.Get_Declaration_Chain(libraryUnit), "package", name):
+            package.DeclaredItems.append(item)
+
+        return package
 
 
 @export
 class PackageBody(VHDLModel_PackageBody, GHDLMixin):
+
     @classmethod
     def parse(cls, libraryUnit):
-        name = cls._ghdlNodeToName(libraryUnit)
-        return cls(name)
+        name = NodeToName(libraryUnit)
+
+        packageBody = cls(name)
+
+        for item in GetDeclaredItemsFromChainedNodes(nodes.Get_Declaration_Chain(libraryUnit), "package body", name):
+            packageBody.DeclaredItems.append(item)
+
+        return packageBody
 
 
 @export
 class Context(VHDLModel_Context, GHDLMixin):
+
     @classmethod
     def parse(cls, libraryUnit):
-        name = cls._ghdlNodeToName(libraryUnit)
+        name = NodeToName(libraryUnit)
         return cls(name)
 
 
 @export
 class Configuration(VHDLModel_Configuration, GHDLMixin):
+
     @classmethod
     def parse(cls, libraryUnit):
-        name = cls._ghdlNodeToName(libraryUnit)
+        name = NodeToName(libraryUnit)
         return cls(name)

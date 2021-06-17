@@ -2,7 +2,7 @@ library ieee;
 use     ieee.std_logic_1164.all;
 use     ieee.numeric_std.all;
 
-entity e1 is
+entity entity_1 is
 	generic (
 		BITS : positive := 8
 	);
@@ -11,9 +11,9 @@ entity e1 is
 	  Reset: in  std_logic;
 	  Q:     out std_logic_vector(BITS - 1 downto 0)
 	);
-end entity e1;
+end entity entity_1;
 
-architecture behav of e1 is
+architecture behav of entity_1 is
 begin
 	process(Clock)
 	begin
