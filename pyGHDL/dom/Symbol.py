@@ -34,11 +34,12 @@ from pydecor import export
 
 from typing import List
 
-from pyVHDLModel.VHDLModel import \
-    SimpleSubTypeSymbol as VHDLModel_SimpleSubTypeSymbol, \
-    ConstrainedSubTypeSymbol as VHDLModel_ConstrainedSubTypeSymbol, \
-    SimpleObjectSymbol as VHDLModel_SimpleObjectSymbol, \
-    Constraint
+from pyVHDLModel.VHDLModel import (
+    SimpleSubTypeSymbol as VHDLModel_SimpleSubTypeSymbol,
+    ConstrainedSubTypeSymbol as VHDLModel_ConstrainedSubTypeSymbol,
+    SimpleObjectSymbol as VHDLModel_SimpleObjectSymbol,
+    Constraint,
+)
 
 __all__ = []
 
@@ -53,6 +54,7 @@ class SimpleSubTypeSymbol(VHDLModel_SimpleSubTypeSymbol):
 class ConstrainedSubTypeSymbol(VHDLModel_ConstrainedSubTypeSymbol):
     def __init__(self, subTypeName: str, constraints: List[Constraint] = None):
         super().__init__(subTypeName=subTypeName, constraints=constraints)
+
 
 @export
 class SimpleObjectSymbol(VHDLModel_SimpleObjectSymbol):

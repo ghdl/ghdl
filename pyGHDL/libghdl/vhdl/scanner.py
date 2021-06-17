@@ -41,10 +41,7 @@ from pyGHDL.libghdl._types import SourceFileEntry, NameId
 from pyGHDL.libghdl._decorator import BindToLibGHDL
 
 
-__all__ = [
-    "Current_Token",
-    "Flag_Comment"
-]
+__all__ = ["Current_Token", "Flag_Comment"]
 
 # This is a c_int, so you want to use its .value
 Current_Token = c_int.in_dll(libghdl, "vhdl__scanner__current_token")

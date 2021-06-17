@@ -37,13 +37,16 @@ from ctypes import c_int32
 from pydecor import export
 
 from pyGHDL.libghdl import libghdl
-from pyGHDL.libghdl._types import NameId, Iir_Library_Declaration, Iir_Design_Unit, Iir_Design_File, Location_Type
+from pyGHDL.libghdl._types import (
+    NameId,
+    Iir_Library_Declaration,
+    Iir_Design_Unit,
+    Iir_Design_File,
+    Location_Type,
+)
 from pyGHDL.libghdl._decorator import BindToLibGHDL
 
-__all__ = [
-    "Library_Location",
-    "Work_Library"
-]
+__all__ = ["Library_Location", "Work_Library"]
 
 Library_Location: Location_Type = c_int32.in_dll(libghdl, "libraries__library_location")
 """
@@ -51,7 +54,9 @@ A location for library declarations (such as library WORK). Use ``.value`` to
 access this variable inside libghdl.
 """
 
-Work_Library:Iir_Library_Declaration = c_int32.in_dll(libghdl, "libraries__work_library")
+Work_Library: Iir_Library_Declaration = c_int32.in_dll(
+    libghdl, "libraries__work_library"
+)
 """
 Library declaration for the work library. Note: the identifier of the work_library
 is ``work_library_name``, which may be different from 'WORK'. Use ``.value`` to
@@ -126,7 +131,9 @@ def Get_Library_No_Create(Ident: NameId) -> Iir_Library_Declaration:
 
 @export
 @BindToLibGHDL("libraries__find_primary_unit")
-def Find_Primary_Unit(Library: Iir_Library_Declaration, Name: NameId) -> Iir_Design_Unit:
+def Find_Primary_Unit(
+    Library: Iir_Library_Declaration, Name: NameId
+) -> Iir_Design_Unit:
     """
     Just return the design_unit for :obj:`Name`, or ``NULL`` if not found.
 

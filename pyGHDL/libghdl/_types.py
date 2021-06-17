@@ -39,7 +39,7 @@ __all__ = [
     "NameId",
     "SourceFileEntry",
     "Iir",
-    "IirKind"
+    "IirKind",
 ]
 
 ErrorIndex = TypeVar("ErrorIndex", bound=int)
@@ -56,4 +56,6 @@ Iir_Design_File = TypeVar("Iir_Design_File", bound=int)
 Iir_Design_Unit = TypeVar("Iir_Design_Unit", bound=int)
 Iir_Library_Declaration = TypeVar("Iir_Library_Declaration", bound=c_int32)
 Iir_Package_Declaration = TypeVar("Iir_Package_Declaration", bound=c_int32)
-Iir_Enumeration_Type_Definition = TypeVar("Iir_Enumeration_Type_Definition", bound=c_int32)
+Iir_Enumeration_Type_Definition = TypeVar(
+    "Iir_Enumeration_Type_Definition", bound=c_int32
+)

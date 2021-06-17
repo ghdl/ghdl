@@ -107,10 +107,11 @@ def Get_Error_Record(Idx: ErrorIndex) -> Error_Message:
     """
 
 
-#@export
+# @export
 @BindToLibGHDL("errorout__memory__get_error_message_addr")
 def _Get_Error_Message(Idx: ErrorIndex) -> c_char_p:
     pass
+
 
 @export
 def Get_Error_Message(Idx: ErrorIndex) -> str:

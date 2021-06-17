@@ -32,18 +32,22 @@
 # ============================================================================
 from pydecor import export
 
-from pyVHDLModel.VHDLModel import \
-    Constant as VHDLModel_Constant, \
-    Variable as VHDLModel_Variable, \
-    Signal as VHDLModel_Signal, \
-    Expression, SubTypeOrSymbol
+from pyVHDLModel.VHDLModel import (
+    Constant as VHDLModel_Constant,
+    Variable as VHDLModel_Variable,
+    Signal as VHDLModel_Signal,
+    Expression,
+    SubTypeOrSymbol,
+)
 
 __all__ = []
 
 
 @export
 class Constant(VHDLModel_Constant):
-    def __init__(self, name: str, subType: SubTypeOrSymbol, defaultExpression: Expression):
+    def __init__(
+        self, name: str, subType: SubTypeOrSymbol, defaultExpression: Expression
+    ):
         super().__init__(name)
 
         self._name = name
@@ -53,7 +57,9 @@ class Constant(VHDLModel_Constant):
 
 @export
 class Variable(VHDLModel_Variable):
-    def __init__(self, name: str, subType: SubTypeOrSymbol, defaultExpression: Expression):
+    def __init__(
+        self, name: str, subType: SubTypeOrSymbol, defaultExpression: Expression
+    ):
         super().__init__(name)
 
         self._name = name
@@ -63,10 +69,11 @@ class Variable(VHDLModel_Variable):
 
 @export
 class Signal(VHDLModel_Signal):
-    def __init__(self, name: str, subType: SubTypeOrSymbol, defaultExpression: Expression):
+    def __init__(
+        self, name: str, subType: SubTypeOrSymbol, defaultExpression: Expression
+    ):
         super().__init__(name)
 
         self._name = name
         self._subType = subType
         self._defaultExpression = defaultExpression
-

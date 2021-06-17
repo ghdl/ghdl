@@ -32,10 +32,11 @@
 # ============================================================================
 from pydecor import export
 
-from pyVHDLModel.VHDLModel import \
-    IntegerLiteral as VHDLModel_IntegerLiteral, \
-    FloatingPointLiteral as VHDLModel_FloatingPointLiteral, \
-    CharacterLiteral as VHDLModel_CharacterLiteral
+from pyVHDLModel.VHDLModel import (
+    IntegerLiteral as VHDLModel_IntegerLiteral,
+    FloatingPointLiteral as VHDLModel_FloatingPointLiteral,
+    CharacterLiteral as VHDLModel_CharacterLiteral,
+)
 
 __all__ = []
 

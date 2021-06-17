@@ -32,42 +32,44 @@
 # ============================================================================
 from pydecor import export
 
-from pyVHDLModel.VHDLModel import \
-    InverseExpression as VHDLModel_InverseExpression, \
-    IdentityExpression as VHDLModel_IdentityExpression, \
-    NegationExpression as VHDLModel_NegationExpression, \
-    AbsoluteExpression as VHDLModel_AbsoluteExpression, \
-    TypeConversion as VHDLModel_TypeConversion, \
-    FunctionCall as VHDLModel_FunctionCall, \
-    QualifiedExpression as VHDLModel_QualifiedExpression, \
-    AdditionExpression as VHDLModel_AdditionExpression, \
-    SubtractionExpression as VHDLModel_SubtractionExpression, \
-    ConcatenationExpression as VHDLModel_ConcatenationExpression, \
-    MultiplyExpression as VHDLModel_MultiplyExpression, \
-    DivisionExpression as VHDLModel_DivisionExpression, \
-    RemainderExpression as VHDLModel_RemainderExpression, \
-    ModuloExpression as VHDLModel_ModuloExpression, \
-    ExponentiationExpression as VHDLModel_ExponentiationExpression, \
-    AndExpression as VHDLModel_AndExpression, \
-    NandExpression as VHDLModel_NandExpression, \
-    OrExpression as VHDLModel_OrExpression, \
-    NorExpression as VHDLModel_NorExpression, \
-    XorExpression as VHDLModel_XorExpression, \
-    XnorExpression as VHDLModel_XnorExpression, \
-    EqualExpression as VHDLModel_EqualExpression, \
-    UnequalExpression as VHDLModel_UnequalExpression, \
-    GreaterThanExpression as VHDLModel_GreaterThanExpression, \
-    GreaterEqualExpression as VHDLModel_GreaterEqualExpression, \
-    LessThanExpression as VHDLModel_LessThanExpression, \
-    ShiftRightLogicExpression as VHDLModel_ShiftRightLogicExpression, \
-    ShiftLeftLogicExpression as VHDLModel_ShiftLeftLogicExpression, \
-    ShiftRightArithmeticExpression as VHDLModel_ShiftRightArithmeticExpression, \
-    ShiftLeftArithmeticExpression as VHDLModel_ShiftLeftArithmeticExpression, \
-    RotateRightExpression as VHDLModel_RotateRightExpression, \
-    RotateLeftExpression as VHDLModel_RotateLeftExpression, \
-    Expression
+from pyVHDLModel.VHDLModel import (
+    InverseExpression as VHDLModel_InverseExpression,
+    IdentityExpression as VHDLModel_IdentityExpression,
+    NegationExpression as VHDLModel_NegationExpression,
+    AbsoluteExpression as VHDLModel_AbsoluteExpression,
+    TypeConversion as VHDLModel_TypeConversion,
+    FunctionCall as VHDLModel_FunctionCall,
+    QualifiedExpression as VHDLModel_QualifiedExpression,
+    AdditionExpression as VHDLModel_AdditionExpression,
+    SubtractionExpression as VHDLModel_SubtractionExpression,
+    ConcatenationExpression as VHDLModel_ConcatenationExpression,
+    MultiplyExpression as VHDLModel_MultiplyExpression,
+    DivisionExpression as VHDLModel_DivisionExpression,
+    RemainderExpression as VHDLModel_RemainderExpression,
+    ModuloExpression as VHDLModel_ModuloExpression,
+    ExponentiationExpression as VHDLModel_ExponentiationExpression,
+    AndExpression as VHDLModel_AndExpression,
+    NandExpression as VHDLModel_NandExpression,
+    OrExpression as VHDLModel_OrExpression,
+    NorExpression as VHDLModel_NorExpression,
+    XorExpression as VHDLModel_XorExpression,
+    XnorExpression as VHDLModel_XnorExpression,
+    EqualExpression as VHDLModel_EqualExpression,
+    UnequalExpression as VHDLModel_UnequalExpression,
+    GreaterThanExpression as VHDLModel_GreaterThanExpression,
+    GreaterEqualExpression as VHDLModel_GreaterEqualExpression,
+    LessThanExpression as VHDLModel_LessThanExpression,
+    ShiftRightLogicExpression as VHDLModel_ShiftRightLogicExpression,
+    ShiftLeftLogicExpression as VHDLModel_ShiftLeftLogicExpression,
+    ShiftRightArithmeticExpression as VHDLModel_ShiftRightArithmeticExpression,
+    ShiftLeftArithmeticExpression as VHDLModel_ShiftLeftArithmeticExpression,
+    RotateRightExpression as VHDLModel_RotateRightExpression,
+    RotateLeftExpression as VHDLModel_RotateLeftExpression,
+    Expression,
+)
 
 __all__ = []
+
 
 @export
 class InverseExpression(VHDLModel_InverseExpression):
@@ -75,11 +77,13 @@ class InverseExpression(VHDLModel_InverseExpression):
         super().__init__()
         self._operand = operand
 
+
 @export
 class IdentityExpression(VHDLModel_IdentityExpression):
     def __init__(self, operand: Expression):
         super().__init__()
         self._operand = operand
+
 
 @export
 class NegationExpression(VHDLModel_NegationExpression):
@@ -87,11 +91,13 @@ class NegationExpression(VHDLModel_NegationExpression):
         super().__init__()
         self._operand = operand
 
+
 @export
 class AbsoluteExpression(VHDLModel_AbsoluteExpression):
     def __init__(self, operand: Expression):
         super().__init__()
         self._operand = operand
+
 
 @export
 class TypeConversion(VHDLModel_TypeConversion):
@@ -99,17 +105,20 @@ class TypeConversion(VHDLModel_TypeConversion):
         super().__init__()
         self._operand = operand
 
+
 @export
 class FunctionCall(VHDLModel_FunctionCall):
     def __init__(self, operand: Expression):
         super().__init__()
         self._operand = operand
 
+
 @export
 class QualifiedExpression(VHDLModel_QualifiedExpression):
     def __init__(self, operand: Expression):
         super().__init__()
         self._operand = operand
+
 
 @export
 class AdditionExpression(VHDLModel_AdditionExpression):
@@ -118,12 +127,14 @@ class AdditionExpression(VHDLModel_AdditionExpression):
         self._leftOperand = left
         self._rightOperand = right
 
+
 @export
 class SubtractionExpression(VHDLModel_SubtractionExpression):
     def __init__(self, left: Expression, right: Expression):
         super().__init__()
         self._leftOperand = left
         self._rightOperand = right
+
 
 @export
 class ConcatenationExpression(VHDLModel_ConcatenationExpression):
@@ -132,12 +143,14 @@ class ConcatenationExpression(VHDLModel_ConcatenationExpression):
         self._leftOperand = left
         self._rightOperand = right
 
+
 @export
 class MultiplyExpression(VHDLModel_MultiplyExpression):
     def __init__(self, left: Expression, right: Expression):
         super().__init__()
         self._leftOperand = left
         self._rightOperand = right
+
 
 @export
 class DivisionExpression(VHDLModel_DivisionExpression):
@@ -146,12 +159,14 @@ class DivisionExpression(VHDLModel_DivisionExpression):
         self._leftOperand = left
         self._rightOperand = right
 
+
 @export
 class RemainderExpression(VHDLModel_RemainderExpression):
     def __init__(self, left: Expression, right: Expression):
         super().__init__()
         self._leftOperand = left
         self._rightOperand = right
+
 
 @export
 class ModuloExpression(VHDLModel_ModuloExpression):
@@ -160,12 +175,14 @@ class ModuloExpression(VHDLModel_ModuloExpression):
         self._leftOperand = left
         self._rightOperand = right
 
+
 @export
 class ExponentiationExpression(VHDLModel_ExponentiationExpression):
     def __init__(self, left: Expression, right: Expression):
         super().__init__()
         self._leftOperand = left
         self._rightOperand = right
+
 
 @export
 class AndExpression(VHDLModel_AndExpression):
@@ -174,12 +191,14 @@ class AndExpression(VHDLModel_AndExpression):
         self._leftOperand = left
         self._rightOperand = right
 
+
 @export
 class NandExpression(VHDLModel_NandExpression):
     def __init__(self, left: Expression, right: Expression):
         super().__init__()
         self._leftOperand = left
         self._rightOperand = right
+
 
 @export
 class OrExpression(VHDLModel_OrExpression):
@@ -188,12 +207,14 @@ class OrExpression(VHDLModel_OrExpression):
         self._leftOperand = left
         self._rightOperand = right
 
+
 @export
 class NorExpression(VHDLModel_NorExpression):
     def __init__(self, left: Expression, right: Expression):
         super().__init__()
         self._leftOperand = left
         self._rightOperand = right
+
 
 @export
 class XorExpression(VHDLModel_XorExpression):
@@ -202,12 +223,14 @@ class XorExpression(VHDLModel_XorExpression):
         self._leftOperand = left
         self._rightOperand = right
 
+
 @export
 class XnorExpression(VHDLModel_XnorExpression):
     def __init__(self, left: Expression, right: Expression):
         super().__init__()
         self._leftOperand = left
         self._rightOperand = right
+
 
 @export
 class EqualExpression(VHDLModel_EqualExpression):
@@ -216,12 +239,14 @@ class EqualExpression(VHDLModel_EqualExpression):
         self._leftOperand = left
         self._rightOperand = right
 
+
 @export
 class UnequalExpression(VHDLModel_UnequalExpression):
     def __init__(self, left: Expression, right: Expression):
         super().__init__()
         self._leftOperand = left
         self._rightOperand = right
+
 
 @export
 class GreaterThanExpression(VHDLModel_GreaterThanExpression):
@@ -230,12 +255,14 @@ class GreaterThanExpression(VHDLModel_GreaterThanExpression):
         self._leftOperand = left
         self._rightOperand = right
 
+
 @export
 class GreaterEqualExpression(VHDLModel_GreaterEqualExpression):
     def __init__(self, left: Expression, right: Expression):
         super().__init__()
         self._leftOperand = left
         self._rightOperand = right
+
 
 @export
 class LessThanExpression(VHDLModel_LessThanExpression):
@@ -244,12 +271,14 @@ class LessThanExpression(VHDLModel_LessThanExpression):
         self._leftOperand = left
         self._rightOperand = right
 
+
 @export
 class ShiftRightLogicExpression(VHDLModel_ShiftRightLogicExpression):
     def __init__(self, left: Expression, right: Expression):
         super().__init__()
         self._leftOperand = left
         self._rightOperand = right
+
 
 @export
 class ShiftLeftLogicExpression(VHDLModel_ShiftLeftLogicExpression):
@@ -258,12 +287,14 @@ class ShiftLeftLogicExpression(VHDLModel_ShiftLeftLogicExpression):
         self._leftOperand = left
         self._rightOperand = right
 
+
 @export
 class ShiftRightArithmeticExpression(VHDLModel_ShiftRightArithmeticExpression):
     def __init__(self, left: Expression, right: Expression):
         super().__init__()
         self._leftOperand = left
         self._rightOperand = right
+
 
 @export
 class ShiftLeftArithmeticExpression(VHDLModel_ShiftLeftArithmeticExpression):
@@ -272,12 +303,14 @@ class ShiftLeftArithmeticExpression(VHDLModel_ShiftLeftArithmeticExpression):
         self._leftOperand = left
         self._rightOperand = right
 
+
 @export
 class RotateRightExpression(VHDLModel_RotateRightExpression):
     def __init__(self, left: Expression, right: Expression):
         super().__init__()
         self._leftOperand = left
         self._rightOperand = right
+
 
 @export
 class RotateLeftExpression(VHDLModel_RotateLeftExpression):

@@ -42,11 +42,7 @@ from pyGHDL.libghdl._decorator import BindToLibGHDL
 
 @export
 class Iterator(Structure):
-    _fields_ = [
-        ("chunk", c_int32),
-        ("chunk_idx", c_int32),
-        ("remain", c_int32)
-    ]
+    _fields_ = [("chunk", c_int32), ("chunk_idx", c_int32), ("remain", c_int32)]
 
 
 @export
@@ -71,7 +67,7 @@ def Iterate(List: int) -> Iterator:
 
 
 @export
-#@BindToLibGHDL("vhdl__lists__is_valid")
+# @BindToLibGHDL("vhdl__lists__is_valid")
 def Is_Valid(it: Iterator) -> bool:
     """
     Check if iterator reached the end.
@@ -87,7 +83,7 @@ def Is_Valid(it: Iterator) -> bool:
 
 
 @export
-#@BindToLibGHDL("vhdl__lists__next")
+# @BindToLibGHDL("vhdl__lists__next")
 def Next(it: Iterator) -> bool:
     """
     Move iterator to the next element.
@@ -103,7 +99,7 @@ def Next(it: Iterator) -> bool:
 
 
 @export
-#@BindToLibGHDL("vhdl__lists__get_element")
+# @BindToLibGHDL("vhdl__lists__get_element")
 def Get_Element(it: Iterator) -> int:
     """
     Get the current element from iterator.
