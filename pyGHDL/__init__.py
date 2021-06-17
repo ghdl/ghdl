@@ -47,3 +47,9 @@ this is provided from a ``pyGHDL`` packages with four sub-packages:
 * ``pyGHDL.lsp`` - A `language server protocol <https://en.wikipedia.org/wiki/Language_Server_Protocol>`__ (LSP)
   written in Python. The implementation offers an HTTPS service that can be used e.g. by editors and IDEs supporting LSP.
 """
+from pydecor import export
+
+
+@export
+class GHDLBaseException(Exception):
+    pass

@@ -51,7 +51,7 @@ class Instantiate(TestCase):
 
 			if nodes.Get_Kind(libraryUnit) == nodes.Iir_Kind.Entity_Declaration:
 				entityName = self.getIdentifier(libraryUnit)
-				self.assertEqual(entityName, "e1", "expected entity name 'e1', got '{}'".format(entityName))
+				self.assertEqual(entityName, "entity_1", "expected entity name 'e1', got '{}'".format(entityName))
 
 			elif nodes.Get_Kind(libraryUnit) == nodes.Iir_Kind.Architecture_Body:
 				architectureName = self.getIdentifier(libraryUnit)

@@ -1,19 +1,19 @@
 # =============================================================================
-#                ____ _   _ ____  _          _
-#   _ __  _   _ / ___| | | |  _ \| |      __| | ___  _ __ ___
-#  | '_ \| | | | |  _| |_| | | | | |     / _` |/ _ \| '_ ` _ \
-#  | |_) | |_| | |_| |  _  | |_| | |___ | (_| | (_) | | | | | |
-#  | .__/ \__, |\____|_| |_|____/|_____(_)__,_|\___/|_| |_| |_|
-#  |_|    |___/
+#               ____ _   _ ____  _          _
+#  _ __  _   _ / ___| | | |  _ \| |      __| | ___  _ __ ___
+# | '_ \| | | | |  _| |_| | | | | |     / _` |/ _ \| '_ ` _ \
+# | |_) | |_| | |_| |  _  | |_| | |___ | (_| | (_) | | | | | |
+# | .__/ \__, |\____|_| |_|____/|_____(_)__,_|\___/|_| |_| |_|
+# |_|    |___/
 # =============================================================================
-#  Authors:
-#    Patrick Lehmann
+# Authors:
+#   Patrick Lehmann
 #
 # Package module:   DOM: Interface items (e.g. generic or port)
 #
 # License:
 # ============================================================================
-#  Copyright (C) 2019-2020 Tristan Gingold
+#  Copyright (C) 2019-2021 Tristan Gingold
 #
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -30,17 +30,16 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-
 from pydecor import export
 
-from pyVHDLModel.VHDLModel import (
-    PortSignalInterfaceItem as VHDLModel_PortSignalInterfaceItem,
-)
-from pyVHDLModel.VHDLModel import (
-    GenericConstantInterfaceItem as VHDLModel_GenericConstantInterfaceItem,
-)
+from pyVHDLModel.VHDLModel import \
+    GenericConstantInterfaceItem as VHDLModel_GenericConstantInterfaceItem, \
+    PortSignalInterfaceItem as VHDLModel_PortSignalInterfaceItem, \
+    Mode, SubTypeOrSymbol, Expression
 
-from pyGHDL.dom.Common import GHDLMixin
+from pyGHDL.dom._Utils     import NodeToName, GetModeOfNode
+from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode
+from pyGHDL.dom.Common     import GHDLMixin
 
 __all__ = []
 
@@ -49,21 +48,32 @@ __all__ = []
 class GenericConstantInterfaceItem(VHDLModel_GenericConstantInterfaceItem, GHDLMixin):
     @classmethod
     def parse(cls, generic):
-        name = cls._ghdlNodeToName(generic)
-        mode = cls._ghdlPortToMode(generic)
+        name = NodeToName(generic)
+        mode = GetModeOfNode(generic)
+        subTypeIndication = GetSubtypeIndicationFromNode(generic, "generic", name)
 
-        generic = cls(name, mode)
+        generic = cls(name, mode, subTypeIndication)
 
         return generic
 
+    def __init__(self, name:str, mode: Mode, subType: SubTypeOrSymbol):
+        super().__init__(name=name, mode=mode)
+        self._subType = subType
 
 @export
 class PortSignalInterfaceItem(VHDLModel_PortSignalInterfaceItem, GHDLMixin):
     @classmethod
     def parse(cls, port):
-        name = cls._ghdlNodeToName(port)
-        mode = cls._ghdlPortToMode(port)
+        name = NodeToName(port)
+        mode = GetModeOfNode(port)
+        subTypeIndication = GetSubtypeIndicationFromNode(port, "port", name)
 
-        port = cls(name, mode)
+        port = cls(name, mode, subTypeIndication)
 
         return port
+
+    def __init__(self, name:str, mode: Mode, subType: SubTypeOrSymbol, defaultExpression: Expression = None):
+        super().__init__(name=name, mode=mode)
+        self._subType = subType
+        self._defaultExpression = defaultExpression
+

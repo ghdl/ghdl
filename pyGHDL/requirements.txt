@@ -1,2 +1,2 @@
 pydecor>=2.0.1
-pyVHDLModel>=0.7.3
+pyVHDLModel>=0.9.0

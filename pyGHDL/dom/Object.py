@@ -9,7 +9,7 @@
 # Authors:
 #   Patrick Lehmann
 #
-# Package module:   DOM: Common classes for package pyGHDL.dom.
+# Package module:   DOM: Interface items (e.g. generic or port)
 #
 # License:
 # ============================================================================
@@ -30,36 +30,43 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-
-"""
-.. todo::
-   Add a module documentation.
-"""
 from pydecor import export
 
-from pyGHDL                import GHDLBaseException
-from pyGHDL.libghdl        import LibGHDLException, errorout_memory
+from pyVHDLModel.VHDLModel import \
+    Constant as VHDLModel_Constant, \
+    Variable as VHDLModel_Variable, \
+    Signal as VHDLModel_Signal, \
+    Expression, SubTypeOrSymbol
 
 __all__ = []
 
 
 @export
-class DOMException(GHDLBaseException):
-    pass
+class Constant(VHDLModel_Constant):
+    def __init__(self, name: str, subType: SubTypeOrSymbol, defaultExpression: Expression):
+        super().__init__(name)
+
+        self._name = name
+        self._subType = subType
+        self._defaultExpression = defaultExpression
 
 
 @export
-class GHDLException(GHDLBaseException):
-    pass
+class Variable(VHDLModel_Variable):
+    def __init__(self, name: str, subType: SubTypeOrSymbol, defaultExpression: Expression):
+        super().__init__(name)
+
+        self._name = name
+        self._subType = subType
+        self._defaultExpression = defaultExpression
 
 
 @export
-class GHDLMixin:
-    def CheckForErrors(self) -> None:
-        errorCount = errorout_memory.Get_Nbr_Messages()
-        if errorCount != 0:
-            for i in range(errorCount):
-                print(errorout_memory.Get_Error_Message(i + 1))
+class Signal(VHDLModel_Signal):
+    def __init__(self, name: str, subType: SubTypeOrSymbol, defaultExpression: Expression):
+        super().__init__(name)
 
-            raise DOMException("Error in libghdl.") \
-                from LibGHDLException("libghdl: Internal error 2.")
+        self._name = name
+        self._subType = subType
+        self._defaultExpression = defaultExpression
+
