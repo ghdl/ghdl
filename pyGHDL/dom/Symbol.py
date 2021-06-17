@@ -34,6 +34,7 @@ from pydecor import export
 
 from typing import List
 
+from pyGHDL.dom._Utils import NodeToName
 from pyVHDLModel.VHDLModel import (
     SimpleSubTypeSymbol as VHDLModel_SimpleSubTypeSymbol,
     ConstrainedSubTypeSymbol as VHDLModel_ConstrainedSubTypeSymbol,
@@ -49,14 +50,27 @@ class SimpleSubTypeSymbol(VHDLModel_SimpleSubTypeSymbol):
     def __init__(self, subTypeName: str):
         super().__init__(subTypeName=subTypeName)
 
+    @classmethod
+    def parse(cls, node):
+        pass
+
 
 @export
 class ConstrainedSubTypeSymbol(VHDLModel_ConstrainedSubTypeSymbol):
     def __init__(self, subTypeName: str, constraints: List[Constraint] = None):
         super().__init__(subTypeName=subTypeName, constraints=constraints)
 
+    @classmethod
+    def parse(cls, node):
+        pass
+
 
 @export
 class SimpleObjectSymbol(VHDLModel_SimpleObjectSymbol):
     def __init__(self, symbolName: str):
         super().__init__(symbolName)
+
+    @classmethod
+    def parse(cls, node):
+        name = NodeToName(node)
+        return cls(name)

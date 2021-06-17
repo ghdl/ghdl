@@ -30,8 +30,11 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+from pyGHDL.libghdl.vhdl import nodes
 from pydecor import export
 
+from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode, GetExpressionFromNode
+from pyGHDL.dom._Utils import NodeToName
 from pyVHDLModel.VHDLModel import (
     Constant as VHDLModel_Constant,
     Variable as VHDLModel_Variable,
@@ -54,6 +57,16 @@ class Constant(VHDLModel_Constant):
         self._subType = subType
         self._defaultExpression = defaultExpression
 
+    @classmethod
+    def parse(cls, node):
+        name = NodeToName(node)
+        subTypeIndication = GetSubtypeIndicationFromNode(node, "constant", name)
+        defaultExpression = GetExpressionFromNode(nodes.Get_Default_Value(node))
+
+        constant = cls(name, subTypeIndication, defaultExpression)
+
+        return constant
+
 
 @export
 class Variable(VHDLModel_Variable):
@@ -66,6 +79,16 @@ class Variable(VHDLModel_Variable):
         self._subType = subType
         self._defaultExpression = defaultExpression
 
+    @classmethod
+    def parse(cls, node):
+        name = NodeToName(node)
+        subTypeIndication = GetSubtypeIndicationFromNode(node, "variable", name)
+        defaultExpression = GetExpressionFromNode(nodes.Get_Default_Value(node))
+
+        variable = cls(name, subTypeIndication, defaultExpression)
+
+        return variable
+
 
 @export
 class Signal(VHDLModel_Signal):
@@ -77,3 +100,13 @@ class Signal(VHDLModel_Signal):
         self._name = name
         self._subType = subType
         self._defaultExpression = defaultExpression
+
+    @classmethod
+    def parse(cls, node):
+        name = NodeToName(node)
+        subTypeIndication = GetSubtypeIndicationFromNode(node, "signal", name)
+        defaultExpression = GetExpressionFromNode(nodes.Get_Default_Value(node))
+
+        signal = cls(name, subTypeIndication, defaultExpression)
+
+        return signal

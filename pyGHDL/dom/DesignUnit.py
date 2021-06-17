@@ -48,19 +48,16 @@ from pyVHDLModel.VHDLModel import PackageBody as VHDLModel_PackageBody
 from pyVHDLModel.VHDLModel import Context as VHDLModel_Context
 from pyVHDLModel.VHDLModel import Configuration as VHDLModel_Configuration
 
-from pyGHDL.libghdl import utils
 from pyGHDL.libghdl.vhdl import nodes
 
-from pyGHDL.dom._Utils import NodeToName, GetIirKindOfNode
+from pyGHDL.dom._Utils import NodeToName
 from pyGHDL.dom._Translate import (
-    GetExpressionFromNode,
-    GetSubtypeIndicationFromNode,
     GetGenericsFromChainedNodes,
     GetPortsFromChainedNodes,
     GetDeclaredItemsFromChainedNodes,
 )
-from pyGHDL.dom.Common import GHDLMixin, DOMException
-from pyGHDL.dom.Object import Constant, Signal
+from pyGHDL.dom.Common import GHDLMixin
+
 
 __all__ = []
 

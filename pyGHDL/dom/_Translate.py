@@ -91,52 +91,35 @@ def GetArrayConstraintsFromSubtypeIndication(subTypeIndication) -> List[Constrai
     return constraints
 
 
+__EXPRESSION_TRANSLATION = {
+    nodes.Iir_Kind.Simple_Name: SimpleObjectSymbol,
+    nodes.Iir_Kind.Integer_Literal: IntegerLiteral,
+    nodes.Iir_Kind.Floating_Point_Literal: FloatingPointLiteral,
+    nodes.Iir_Kind.Character_Literal: CharacterLiteral,
+    nodes.Iir_Kind.Negation_Operator: InverseExpression,
+    nodes.Iir_Kind.Addition_Operator: AdditionExpression,
+    nodes.Iir_Kind.Substraction_Operator: SubtractionExpression,
+    nodes.Iir_Kind.Multiplication_Operator: MultiplyExpression,
+    nodes.Iir_Kind.Division_Operator: DivisionExpression,
+    nodes.Iir_Kind.Exponentiation_Operator: ExponentiationExpression,
+    #    nodes.Iir_Kind.Aggregate: Aggregate
+}
+
+
 @export
 def GetExpressionFromNode(node) -> Expression:
     kind = GetIirKindOfNode(node)
 
-    if kind == nodes.Iir_Kind.Simple_Name:
-        name = NodeToName(node)
-        return SimpleObjectSymbol(name)
-    elif kind == nodes.Iir_Kind.Integer_Literal:
-        integerLiteralValue = nodes.Get_Value(node)
-        return IntegerLiteral(integerLiteralValue)
-    elif kind == nodes.Iir_Kind.Floating_Point_Literal:
-        fpLiteralValue = nodes.Get_Fp_Value(node)
-        return FloatingPointLiteral(fpLiteralValue)
-    elif kind == nodes.Iir_Kind.Character_Literal:
-        identifier = nodes.Get_Identifier(node)
-        characterLiteralValue = name_table.Get_Character(identifier)
-        return CharacterLiteral(characterLiteralValue)
-    elif kind == nodes.Iir_Kind.Negation_Operator:
-        operand = GetExpressionFromNode(nodes.Get_Operand(node))
-        return InverseExpression(operand)
-    elif kind == nodes.Iir_Kind.Addition_Operator:
-        left = GetExpressionFromNode(nodes.Get_Left(node))
-        right = GetExpressionFromNode(nodes.Get_Right(node))
-        return AdditionExpression(left, right)
-    elif kind == nodes.Iir_Kind.Substraction_Operator:
-        left = GetExpressionFromNode(nodes.Get_Left(node))
-        right = GetExpressionFromNode(nodes.Get_Right(node))
-        return SubtractionExpression(left, right)
-    elif kind == nodes.Iir_Kind.Multiplication_Operator:
-        left = GetExpressionFromNode(nodes.Get_Left(node))
-        right = GetExpressionFromNode(nodes.Get_Right(node))
-        return MultiplyExpression(left, right)
-    elif kind == nodes.Iir_Kind.Division_Operator:
-        left = GetExpressionFromNode(nodes.Get_Left(node))
-        right = GetExpressionFromNode(nodes.Get_Right(node))
-        return DivisionExpression(left, right)
-    elif kind == nodes.Iir_Kind.Exponentiation_Operator:
-        left = GetExpressionFromNode(nodes.Get_Left(node))
-        right = GetExpressionFromNode(nodes.Get_Right(node))
-        return ExponentiationExpression(left, right)
-    else:
+    try:
+        cls = __EXPRESSION_TRANSLATION[kind]
+    except KeyError:
         raise DOMException(
             "Unknown expression kind '{kindName}'({kind}) in expression '{expr}'.".format(
                 kind=kind, kindName=kind.name, expr=node
             )
         )
+
+    return cls.parse(node)
 
 
 # FIXME: rewrite to generator
@@ -190,25 +173,11 @@ def GetDeclaredItemsFromChainedNodes(nodeChain, entity: str, name: str):
         if kind == nodes.Iir_Kind.Constant_Declaration:
             from pyGHDL.dom.Object import Constant
 
-            constantName = NodeToName(item)
-            subTypeIndication = GetSubtypeIndicationFromNode(
-                item, "constant", constantName
-            )
-            defaultExpression = GetExpressionFromNode(nodes.Get_Default_Value(item))
-
-            constant = Constant(constantName, subTypeIndication, defaultExpression)
-
-            result.append(constant)
+            result.append(Constant.parse(item))
         elif kind == nodes.Iir_Kind.Signal_Declaration:
             from pyGHDL.dom.Object import Signal
 
-            signalName = NodeToName(item)
-            subTypeIndication = GetSubtypeIndicationFromNode(item, "signal", signalName)
-            defaultExpression = GetExpressionFromNode(nodes.Get_Default_Value(item))
-
-            constant = Signal(signalName, subTypeIndication, defaultExpression)
-
-            result.append(constant)
+            result.append(Signal.parse(item))
         elif kind == nodes.Iir_Kind.Anonymous_Type_Declaration:
             typeName = NodeToName(item)
             print("found type '{name}'".format(name=typeName))
