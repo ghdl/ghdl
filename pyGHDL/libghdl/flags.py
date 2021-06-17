@@ -6,9 +6,9 @@
 # | .__/ \__, |\____|_| |_|____/|_____(_)_|_|_.__/ \__, |_| |_|\__,_|_|
 # |_|    |___/                                     |___/
 # =============================================================================
-#  Authors:
-#    Tristan Gingold
-#    Patrick Lehmann
+# Authors:
+#   Tristan Gingold
+#   Patrick Lehmann
 #
 # Package module:   Python binding and low-level API for shared library 'libghdl'.
 #
@@ -40,7 +40,7 @@ __all__ = [
     "Flag_Elocations",
     "Verbose",
     "Flag_Elaborate_With_Outdated",
-    "Flag_Force_Analysis",
+    "Flag_Force_Analysis"
 ]
 
 assert sizeof(c_bool) == 1
@@ -49,8 +49,6 @@ Flag_Elocations = c_bool.in_dll(libghdl, "flags__flag_elocations")
 
 Verbose = c_bool.in_dll(libghdl, "flags__verbose")
 
-Flag_Elaborate_With_Outdated = c_bool.in_dll(
-    libghdl, "flags__flag_elaborate_with_outdated"
-)
+Flag_Elaborate_With_Outdated = c_bool.in_dll(libghdl, "flags__flag_elaborate_with_outdated")
 
 Flag_Force_Analysis = c_bool.in_dll(libghdl, "flags__flag_force_analysis")

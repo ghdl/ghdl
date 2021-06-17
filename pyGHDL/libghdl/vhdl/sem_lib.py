@@ -6,9 +6,9 @@
 # | .__/ \__, |\____|_| |_|____/|_____(_)_|_|_.__/ \__, |_| |_|\__,_|_|
 # |_|    |___/                                     |___/
 # =============================================================================
-#  Authors:
-#    Tristan Gingold
-#    Patrick Lehmann
+# Authors:
+#   Tristan Gingold
+#   Patrick Lehmann
 #
 # Package module:   Python binding and low-level API for shared library 'libghdl'.
 #
@@ -34,37 +34,37 @@
 
 from pydecor import export
 
-from pyGHDL.libghdl import libghdl
-from pyGHDL.libghdl._types import SourceFileEntry
+from pyGHDL.libghdl._types     import SourceFileEntry, Iir_Design_File, Iir_Design_Unit
+from pyGHDL.libghdl._decorator import BindToLibGHDL
 
 
 @export
-def Load_File(File: SourceFileEntry):
+@BindToLibGHDL("vhdl__sem_lib__load_file")
+def Load_File(File: SourceFileEntry) -> Iir_Design_File:
     """
     Start to analyse a file (i.e. load and parse it).
 
     :param File: File to analyse.
     :return:     Return :attr:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir` in case of parse error. Type: ``Iir_Design_File``
     """
-    return libghdl.vhdl__sem_lib__load_file(File)
 
 
 @export
-def Finish_Compilation(Unit, Main: bool = False) -> None:
+@BindToLibGHDL("vhdl__sem_lib__finish_compilation")
+def Finish_Compilation(Unit: Iir_Design_Unit, Main: bool = False) -> None:
     """
     Analyze :obj:`Unit`.
 
     :param Unit: Design unit to analyze.
     :param Main: Is main unit.
     """
-    libghdl.vhdl__sem_lib__finish_compilation(Unit, Main)
 
 
 @export
-def Free_Dependence_List(Design) -> None:
+@BindToLibGHDL("vhdl__sem_lib__free_dependence_list")
+def Free_Dependence_List(Design: Iir_Design_Unit) -> None:
     """
     Free the dependence list of :obj:`Design`.
 
     :param Design: Design unit to free dependencies for.
     """
-    libghdl.vhdl__sem_lib__free_dependence_list(Design)

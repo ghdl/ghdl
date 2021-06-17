@@ -30,7 +30,7 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-
+from ctypes import c_int32
 from typing import TypeVar
 
 __all__ = [
@@ -39,13 +39,21 @@ __all__ = [
     "NameId",
     "SourceFileEntry",
     "Iir",
-    "IirKind",
+    "IirKind"
 ]
 
 ErrorIndex = TypeVar("ErrorIndex", bound=int)
 MessageIdWarnings = TypeVar("MessageIdWarnings", bound=int)
 NameId = TypeVar("NameId", bound=int)
+
 SourceFileEntry = TypeVar("SourceFileEntry", bound=int)
+Location_Type = TypeVar("Location_Type", bound=c_int32)
 
 Iir = TypeVar("Iir", bound=int)
 IirKind = TypeVar("IirKind", bound=int)
+
+Iir_Design_File = TypeVar("Iir_Design_File", bound=int)
+Iir_Design_Unit = TypeVar("Iir_Design_Unit", bound=int)
+Iir_Library_Declaration = TypeVar("Iir_Library_Declaration", bound=c_int32)
+Iir_Package_Declaration = TypeVar("Iir_Package_Declaration", bound=c_int32)
+Iir_Enumeration_Type_Definition = TypeVar("Iir_Enumeration_Type_Definition", bound=c_int32)

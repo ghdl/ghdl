@@ -6,9 +6,9 @@
 # | .__/ \__, |\____|_| |_|____/|_____(_)_|_|_.__/ \__, |_| |_|\__,_|_|
 # |_|    |___/                                     |___/
 # =============================================================================
-#  Authors:
-#    Tristan Gingold
-#    Patrick Lehmann
+# Authors:
+#   Tristan Gingold
+#   Patrick Lehmann
 #
 # Package package:  Python binding and low-level API for shared library 'libghdl'.
 #
@@ -31,20 +31,23 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-
-from ctypes import c_char_p, c_char
+#
+from ctypes import c_char, c_char_p
 
 from pydecor import export
 
-from pyGHDL.libghdl import libghdl
 from pyGHDL.libghdl._types import NameId
+from pyGHDL.libghdl._decorator import BindToLibGHDL
 
-__all__ = ["Null_Identifier"]
+__all__ = [
+    "Null_Identifier"
+]
 
 Null_Identifier = 0
 
 
 @export
+@BindToLibGHDL("name_table__get_name_length")
 def Get_Name_Length(Id: NameId) -> int:
     """
     Get the length of an identifier denoted by a ``NameId``.
@@ -52,23 +55,31 @@ def Get_Name_Length(Id: NameId) -> int:
     :param Id: NameId for the identifier to query.
     :return:   Length of the identifier.
     """
-    return libghdl.name_table__get_name_length(Id)
+
+
+#@export
+@BindToLibGHDL("name_table__get_name_ptr")
+def _Get_Name_Ptr(Id: NameId) -> c_char_p:
+    """"""
 
 
 @export
 def Get_Name_Ptr(Id: NameId) -> str:
     """
-    Get the string corresponding to identifier ID.  The address is valid until
+    Get the string corresponding to identifier ID. The address is valid until
     the next call to Get_Identifier (which may reallocate the string table).
     The string is NUL-terminated (this is done by get_identifier).
 
     :param Id: NameId for the identifier to query.
-    :return:
+    :return:   Identifier as string.
     """
-    func = libghdl.name_table__get_name_ptr
-    func.restype = c_char_p
+    return _Get_Name_Ptr(Id).decode("utf-8")
 
-    return func(Id).decode("utf-8")
+
+#@export
+@BindToLibGHDL("name_table__get_character")
+def _Get_Character(Id: NameId) -> c_char:
+    """"""
 
 
 @export
@@ -76,13 +87,20 @@ def Get_Character(Id: NameId) -> str:
     """
     Get the string corresponding to character identifier ID.
 
-    :param Id: NameId for the identifier to query.
-    :return:
-    """
-    func = libghdl.name_table__get_character
-    func.restype = c_char
+    .. note::
 
-    return func(Id).decode("utf-8")
+       This is used for character literals and enumeration literals.
+
+    :param Id: NameId for the identifier to query.
+    :return:   Get the character of the identifier.
+    """
+    return _Get_Character(Id).decode("utf-8")
+
+
+#@export
+@BindToLibGHDL("name_table__get_identifier_with_len")
+def _Get_Identifier(string: c_char_p, length: int) -> NameId:
+    """"""
 
 
 @export
@@ -100,4 +118,4 @@ def Get_Identifier(string: str) -> NameId:
     :return:       Id in name table.
     """
     string = string.encode("utf-8")
-    return libghdl.name_table__get_identifier_with_len(c_char_p(string), len(string))
+    return _Get_Identifier(c_char_p(string), len(string))

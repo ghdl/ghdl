@@ -6,9 +6,9 @@
 # | .__/ \__, |\____|_| |_|____/|_____(_)_|_|_.__/ \__, |_| |_|\__,_|_|
 # |_|    |___/                                     |___/
 # =============================================================================
-#  Authors:
-#    Tristan Gingold
-#    Patrick Lehmann
+# Authors:
+#   Tristan Gingold
+#   Patrick Lehmann
 #
 # Package module:   Python binding and low-level API for shared library 'libghdl'.
 #
@@ -34,11 +34,13 @@
 
 from pydecor import export
 
-from pyGHDL.libghdl import libghdl
+from pyGHDL.libghdl._types import Iir_Design_Unit
+from pyGHDL.libghdl._decorator import BindToLibGHDL
 
 
 @export
-def Semantic(DesignUnit) -> None:
+@BindToLibGHDL("vhdl__sem__semantic")
+def Semantic(DesignUnit: Iir_Design_Unit) -> None:
     """
     Do the semantic analysis of design unit :obj:`DesignUnit`.
 
@@ -47,4 +49,3 @@ def Semantic(DesignUnit) -> None:
 
     :param DesignUnit: Design unit to semantically analyze. Type: ``Iir_Design_Unit``
     """
-    libghdl.vhdl__sem__semantic(DesignUnit)

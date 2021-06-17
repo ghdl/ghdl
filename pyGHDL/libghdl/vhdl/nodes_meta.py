@@ -1,25 +1,63 @@
 # Auto generated Python source file from Ada sources
 # Call 'make' in 'src/vhdl' to regenerate:
 #
+from enum import IntEnum, unique
 from pydecor import export
 from pyGHDL.libghdl import libghdl
 from pyGHDL.libghdl._types import IirKind
 
 
 # From nodes_meta
-get_fields_first = libghdl.vhdl__nodes_meta__get_fields_first
+@export
+def get_fields_first(K: IirKind) -> int:
+    """
+    Return the list of fields for node :obj:`K`.
 
-get_fields_last = libghdl.vhdl__nodes_meta__get_fields_last
+    In Ada ``Vhdl.Nodes_Meta.Get_Fields`` returns a ``Fields_Array``. To emulate
+    this array access, the API provides ``get_fields_first`` and :func:`get_fields_last`.
 
-get_field_by_index = libghdl.vhdl__nodes_meta__get_field_by_index
+    The fields are sorted: first the non nodes/list of nodes, then the
+    nodes/lists that aren't reference, and then the reference.
 
-get_field_type = libghdl.vhdl__nodes_meta__get_field_type
-
-get_field_attribute = libghdl.vhdl__nodes_meta__get_field_attribute
+    :param K: Node to get first array index from.
+    """
+    return libghdl.vhdl__nodes_meta__get_fields_first(K)
 
 
 @export
-class types:
+def get_fields_last(K: IirKind) -> int:
+    """
+    Return the list of fields for node :obj:`K`.
+
+    In Ada ``Vhdl.Nodes_Meta.Get_Fields`` returns a ``Fields_Array``. To emulate
+    this array access, the API provides :func:`get_fields_first` and ``get_fields_last``.
+
+    The fields are sorted: first the non nodes/list of nodes, then the
+    nodes/lists that aren't reference, and then the reference.
+
+    :param K: Node to get last array index from.
+    """
+    return libghdl.vhdl__nodes_meta__get_fields_last(K)
+
+
+@export
+def get_field_by_index(K: IirKind) -> int:
+    return libghdl.vhdl__nodes_meta__get_field_by_index(K)
+
+
+@export
+def get_field_type(*args):
+    return libghdl.vhdl__nodes_meta__get_field_type(*args)
+
+
+@export
+def get_field_attribute(*args):
+    return libghdl.vhdl__nodes_meta__get_field_attribute(*args)
+
+
+@export
+@unique
+class types(IntEnum):
     Boolean = 0
     Date_State_Type = 1
     Date_Type = 2
@@ -56,7 +94,8 @@ class types:
 
 
 @export
-class Attr:
+@unique
+class Attr(IntEnum):
     ANone = 0
     Chain = 1
     Chain_Next = 2
@@ -69,7 +108,8 @@ class Attr:
 
 
 @export
-class fields:
+@unique
+class fields(IntEnum):
     First_Design_Unit = 0
     Last_Design_Unit = 1
     Library_Declaration = 2
@@ -442,869 +482,1613 @@ class fields:
     Foreign_Node = 369
 
 
-Get_Boolean = libghdl.vhdl__nodes_meta__get_boolean
+def Get_Boolean(node, field):
+    return libghdl.vhdl__nodes_meta__get_boolean(node, field)
 
-Get_Date_State_Type = libghdl.vhdl__nodes_meta__get_date_state_type
 
-Get_Date_Type = libghdl.vhdl__nodes_meta__get_date_type
+def Get_Date_State_Type(node, field):
+    return libghdl.vhdl__nodes_meta__get_date_state_type(node, field)
 
-Get_Direction_Type = libghdl.vhdl__nodes_meta__get_direction_type
 
-Get_File_Checksum_Id = libghdl.vhdl__nodes_meta__get_file_checksum_id
+def Get_Date_Type(node, field):
+    return libghdl.vhdl__nodes_meta__get_date_type(node, field)
 
-Get_Fp64 = libghdl.vhdl__nodes_meta__get_fp64
 
-Get_Iir = libghdl.vhdl__nodes_meta__get_iir
+def Get_Direction_Type(node, field):
+    return libghdl.vhdl__nodes_meta__get_direction_type(node, field)
 
-Get_Iir_All_Sensitized = libghdl.vhdl__nodes_meta__get_iir_all_sensitized
 
-Get_Iir_Constraint = libghdl.vhdl__nodes_meta__get_iir_constraint
+def Get_File_Checksum_Id(node, field):
+    return libghdl.vhdl__nodes_meta__get_file_checksum_id(node, field)
 
-Get_Iir_Delay_Mechanism = libghdl.vhdl__nodes_meta__get_iir_delay_mechanism
 
-Get_Iir_Flist = libghdl.vhdl__nodes_meta__get_iir_flist
+def Get_Fp64(node, field):
+    return libghdl.vhdl__nodes_meta__get_fp64(node, field)
 
-Get_Iir_Force_Mode = libghdl.vhdl__nodes_meta__get_iir_force_mode
 
-Get_Iir_Index32 = libghdl.vhdl__nodes_meta__get_iir_index32
+def Get_Iir(node, field):
+    return libghdl.vhdl__nodes_meta__get_iir(node, field)
 
-Get_Iir_Int32 = libghdl.vhdl__nodes_meta__get_iir_int32
 
-Get_Iir_List = libghdl.vhdl__nodes_meta__get_iir_list
+def Get_Iir_All_Sensitized(node, field):
+    return libghdl.vhdl__nodes_meta__get_iir_all_sensitized(node, field)
 
-Get_Iir_Mode = libghdl.vhdl__nodes_meta__get_iir_mode
 
-Get_Iir_Predefined_Functions = libghdl.vhdl__nodes_meta__get_iir_predefined_functions
+def Get_Iir_Constraint(node, field):
+    return libghdl.vhdl__nodes_meta__get_iir_constraint(node, field)
 
-Get_Iir_Pure_State = libghdl.vhdl__nodes_meta__get_iir_pure_state
 
-Get_Iir_Signal_Kind = libghdl.vhdl__nodes_meta__get_iir_signal_kind
+def Get_Iir_Delay_Mechanism(node, field):
+    return libghdl.vhdl__nodes_meta__get_iir_delay_mechanism(node, field)
 
-Get_Iir_Staticness = libghdl.vhdl__nodes_meta__get_iir_staticness
 
-Get_Int32 = libghdl.vhdl__nodes_meta__get_int32
+def Get_Iir_Flist(node, field):
+    return libghdl.vhdl__nodes_meta__get_iir_flist(node, field)
 
-Get_Int64 = libghdl.vhdl__nodes_meta__get_int64
 
-Get_Name_Id = libghdl.vhdl__nodes_meta__get_name_id
+def Get_Iir_Force_Mode(node, field):
+    return libghdl.vhdl__nodes_meta__get_iir_force_mode(node, field)
 
-Get_Number_Base_Type = libghdl.vhdl__nodes_meta__get_number_base_type
 
-Get_PSL_NFA = libghdl.vhdl__nodes_meta__get_psl_nfa
+def Get_Iir_Index32(node, field):
+    return libghdl.vhdl__nodes_meta__get_iir_index32(node, field)
 
-Get_PSL_Node = libghdl.vhdl__nodes_meta__get_psl_node
 
-Get_Scalar_Size = libghdl.vhdl__nodes_meta__get_scalar_size
+def Get_Iir_Int32(node, field):
+    return libghdl.vhdl__nodes_meta__get_iir_int32(node, field)
 
-Get_Source_File_Entry = libghdl.vhdl__nodes_meta__get_source_file_entry
 
-Get_Source_Ptr = libghdl.vhdl__nodes_meta__get_source_ptr
+def Get_Iir_List(node, field):
+    return libghdl.vhdl__nodes_meta__get_iir_list(node, field)
 
-Get_String8_Id = libghdl.vhdl__nodes_meta__get_string8_id
 
-Get_Time_Stamp_Id = libghdl.vhdl__nodes_meta__get_time_stamp_id
+def Get_Iir_Mode(node, field):
+    return libghdl.vhdl__nodes_meta__get_iir_mode(node, field)
 
-Get_Token_Type = libghdl.vhdl__nodes_meta__get_token_type
 
-Get_Tri_State_Type = libghdl.vhdl__nodes_meta__get_tri_state_type
+def Get_Iir_Predefined_Functions(node, field):
+    return libghdl.vhdl__nodes_meta__get_iir_predefined_functions(node, field)
 
 
-Has_First_Design_Unit = libghdl.vhdl__nodes_meta__has_first_design_unit
+def Get_Iir_Pure_State(node, field):
+    return libghdl.vhdl__nodes_meta__get_iir_pure_state(node, field)
 
-Has_Last_Design_Unit = libghdl.vhdl__nodes_meta__has_last_design_unit
 
-Has_Library_Declaration = libghdl.vhdl__nodes_meta__has_library_declaration
+def Get_Iir_Signal_Kind(node, field):
+    return libghdl.vhdl__nodes_meta__get_iir_signal_kind(node, field)
 
-Has_File_Checksum = libghdl.vhdl__nodes_meta__has_file_checksum
 
-Has_Analysis_Time_Stamp = libghdl.vhdl__nodes_meta__has_analysis_time_stamp
+def Get_Iir_Staticness(node, field):
+    return libghdl.vhdl__nodes_meta__get_iir_staticness(node, field)
 
-Has_Design_File_Source = libghdl.vhdl__nodes_meta__has_design_file_source
 
-Has_Library = libghdl.vhdl__nodes_meta__has_library
+def Get_Int32(node, field):
+    return libghdl.vhdl__nodes_meta__get_int32(node, field)
 
-Has_File_Dependence_List = libghdl.vhdl__nodes_meta__has_file_dependence_list
 
-Has_Design_File_Filename = libghdl.vhdl__nodes_meta__has_design_file_filename
+def Get_Int64(node, field):
+    return libghdl.vhdl__nodes_meta__get_int64(node, field)
 
-Has_Design_File_Directory = libghdl.vhdl__nodes_meta__has_design_file_directory
 
-Has_Design_File = libghdl.vhdl__nodes_meta__has_design_file
+def Get_Name_Id(node, field):
+    return libghdl.vhdl__nodes_meta__get_name_id(node, field)
 
-Has_Design_File_Chain = libghdl.vhdl__nodes_meta__has_design_file_chain
 
-Has_Library_Directory = libghdl.vhdl__nodes_meta__has_library_directory
+def Get_Number_Base_Type(node, field):
+    return libghdl.vhdl__nodes_meta__get_number_base_type(node, field)
 
-Has_Date = libghdl.vhdl__nodes_meta__has_date
 
-Has_Context_Items = libghdl.vhdl__nodes_meta__has_context_items
+def Get_PSL_NFA(node, field):
+    return libghdl.vhdl__nodes_meta__get_psl_nfa(node, field)
 
-Has_Dependence_List = libghdl.vhdl__nodes_meta__has_dependence_list
 
-Has_Analysis_Checks_List = libghdl.vhdl__nodes_meta__has_analysis_checks_list
+def Get_PSL_Node(node, field):
+    return libghdl.vhdl__nodes_meta__get_psl_node(node, field)
 
-Has_Date_State = libghdl.vhdl__nodes_meta__has_date_state
 
-Has_Guarded_Target_State = libghdl.vhdl__nodes_meta__has_guarded_target_state
+def Get_Scalar_Size(node, field):
+    return libghdl.vhdl__nodes_meta__get_scalar_size(node, field)
 
-Has_Library_Unit = libghdl.vhdl__nodes_meta__has_library_unit
 
-Has_Hash_Chain = libghdl.vhdl__nodes_meta__has_hash_chain
+def Get_Source_File_Entry(node, field):
+    return libghdl.vhdl__nodes_meta__get_source_file_entry(node, field)
 
-Has_Design_Unit_Source_Pos = libghdl.vhdl__nodes_meta__has_design_unit_source_pos
 
-Has_Design_Unit_Source_Line = libghdl.vhdl__nodes_meta__has_design_unit_source_line
+def Get_Source_Ptr(node, field):
+    return libghdl.vhdl__nodes_meta__get_source_ptr(node, field)
 
-Has_Design_Unit_Source_Col = libghdl.vhdl__nodes_meta__has_design_unit_source_col
 
-Has_Value = libghdl.vhdl__nodes_meta__has_value
+def Get_String8_Id(node, field):
+    return libghdl.vhdl__nodes_meta__get_string8_id(node, field)
 
-Has_Enum_Pos = libghdl.vhdl__nodes_meta__has_enum_pos
 
-Has_Physical_Literal = libghdl.vhdl__nodes_meta__has_physical_literal
+def Get_Time_Stamp_Id(node, field):
+    return libghdl.vhdl__nodes_meta__get_time_stamp_id(node, field)
 
-Has_Fp_Value = libghdl.vhdl__nodes_meta__has_fp_value
 
-Has_Simple_Aggregate_List = libghdl.vhdl__nodes_meta__has_simple_aggregate_list
+def Get_Token_Type(node, field):
+    return libghdl.vhdl__nodes_meta__get_token_type(node, field)
 
-Has_String8_Id = libghdl.vhdl__nodes_meta__has_string8_id
 
-Has_String_Length = libghdl.vhdl__nodes_meta__has_string_length
+def Get_Tri_State_Type(node, field):
+    return libghdl.vhdl__nodes_meta__get_tri_state_type(node, field)
 
-Has_Bit_String_Base = libghdl.vhdl__nodes_meta__has_bit_string_base
 
-Has_Has_Signed = libghdl.vhdl__nodes_meta__has_has_signed
+def Has_First_Design_Unit(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_first_design_unit(kind)
 
-Has_Has_Sign = libghdl.vhdl__nodes_meta__has_has_sign
 
-Has_Has_Length = libghdl.vhdl__nodes_meta__has_has_length
+def Has_Last_Design_Unit(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_last_design_unit(kind)
 
-Has_Literal_Length = libghdl.vhdl__nodes_meta__has_literal_length
 
-Has_Literal_Origin = libghdl.vhdl__nodes_meta__has_literal_origin
+def Has_Library_Declaration(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_library_declaration(kind)
 
-Has_Range_Origin = libghdl.vhdl__nodes_meta__has_range_origin
 
-Has_Literal_Subtype = libghdl.vhdl__nodes_meta__has_literal_subtype
+def Has_File_Checksum(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_file_checksum(kind)
 
-Has_Allocator_Subtype = libghdl.vhdl__nodes_meta__has_allocator_subtype
 
-Has_Entity_Class = libghdl.vhdl__nodes_meta__has_entity_class
+def Has_Analysis_Time_Stamp(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_analysis_time_stamp(kind)
 
-Has_Entity_Name_List = libghdl.vhdl__nodes_meta__has_entity_name_list
 
-Has_Attribute_Designator = libghdl.vhdl__nodes_meta__has_attribute_designator
+def Has_Design_File_Source(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_design_file_source(kind)
 
-Has_Attribute_Specification_Chain = (
-    libghdl.vhdl__nodes_meta__has_attribute_specification_chain
-)
 
-Has_Attribute_Specification = libghdl.vhdl__nodes_meta__has_attribute_specification
+def Has_Library(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_library(kind)
 
-Has_Static_Attribute_Flag = libghdl.vhdl__nodes_meta__has_static_attribute_flag
 
-Has_Signal_List = libghdl.vhdl__nodes_meta__has_signal_list
+def Has_File_Dependence_List(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_file_dependence_list(kind)
 
-Has_Quantity_List = libghdl.vhdl__nodes_meta__has_quantity_list
 
-Has_Designated_Entity = libghdl.vhdl__nodes_meta__has_designated_entity
+def Has_Design_File_Filename(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_design_file_filename(kind)
 
-Has_Formal = libghdl.vhdl__nodes_meta__has_formal
 
-Has_Actual = libghdl.vhdl__nodes_meta__has_actual
+def Has_Design_File_Directory(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_design_file_directory(kind)
 
-Has_Actual_Conversion = libghdl.vhdl__nodes_meta__has_actual_conversion
 
-Has_Formal_Conversion = libghdl.vhdl__nodes_meta__has_formal_conversion
+def Has_Design_File(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_design_file(kind)
 
-Has_Whole_Association_Flag = libghdl.vhdl__nodes_meta__has_whole_association_flag
 
-Has_Collapse_Signal_Flag = libghdl.vhdl__nodes_meta__has_collapse_signal_flag
+def Has_Design_File_Chain(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_design_file_chain(kind)
 
-Has_Artificial_Flag = libghdl.vhdl__nodes_meta__has_artificial_flag
 
-Has_Open_Flag = libghdl.vhdl__nodes_meta__has_open_flag
+def Has_Library_Directory(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_library_directory(kind)
 
-Has_After_Drivers_Flag = libghdl.vhdl__nodes_meta__has_after_drivers_flag
 
-Has_We_Value = libghdl.vhdl__nodes_meta__has_we_value
+def Has_Date(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_date(kind)
 
-Has_Time = libghdl.vhdl__nodes_meta__has_time
 
-Has_Associated_Expr = libghdl.vhdl__nodes_meta__has_associated_expr
+def Has_Context_Items(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_context_items(kind)
 
-Has_Associated_Block = libghdl.vhdl__nodes_meta__has_associated_block
 
-Has_Associated_Chain = libghdl.vhdl__nodes_meta__has_associated_chain
+def Has_Dependence_List(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_dependence_list(kind)
 
-Has_Choice_Name = libghdl.vhdl__nodes_meta__has_choice_name
 
-Has_Choice_Expression = libghdl.vhdl__nodes_meta__has_choice_expression
+def Has_Analysis_Checks_List(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_analysis_checks_list(kind)
 
-Has_Choice_Range = libghdl.vhdl__nodes_meta__has_choice_range
 
-Has_Same_Alternative_Flag = libghdl.vhdl__nodes_meta__has_same_alternative_flag
+def Has_Date_State(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_date_state(kind)
 
-Has_Element_Type_Flag = libghdl.vhdl__nodes_meta__has_element_type_flag
 
-Has_Architecture = libghdl.vhdl__nodes_meta__has_architecture
+def Has_Guarded_Target_State(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_guarded_target_state(kind)
 
-Has_Block_Specification = libghdl.vhdl__nodes_meta__has_block_specification
 
-Has_Prev_Block_Configuration = libghdl.vhdl__nodes_meta__has_prev_block_configuration
+def Has_Library_Unit(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_library_unit(kind)
 
-Has_Configuration_Item_Chain = libghdl.vhdl__nodes_meta__has_configuration_item_chain
 
-Has_Attribute_Value_Chain = libghdl.vhdl__nodes_meta__has_attribute_value_chain
+def Has_Hash_Chain(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_hash_chain(kind)
 
-Has_Spec_Chain = libghdl.vhdl__nodes_meta__has_spec_chain
 
-Has_Value_Chain = libghdl.vhdl__nodes_meta__has_value_chain
+def Has_Design_Unit_Source_Pos(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_design_unit_source_pos(kind)
 
-Has_Attribute_Value_Spec_Chain = (
-    libghdl.vhdl__nodes_meta__has_attribute_value_spec_chain
-)
 
-Has_Entity_Name = libghdl.vhdl__nodes_meta__has_entity_name
+def Has_Design_Unit_Source_Line(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_design_unit_source_line(kind)
 
-Has_Package = libghdl.vhdl__nodes_meta__has_package
 
-Has_Package_Body = libghdl.vhdl__nodes_meta__has_package_body
+def Has_Design_Unit_Source_Col(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_design_unit_source_col(kind)
 
-Has_Instance_Package_Body = libghdl.vhdl__nodes_meta__has_instance_package_body
 
-Has_Need_Body = libghdl.vhdl__nodes_meta__has_need_body
+def Has_Value(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_value(kind)
 
-Has_Macro_Expanded_Flag = libghdl.vhdl__nodes_meta__has_macro_expanded_flag
 
-Has_Need_Instance_Bodies = libghdl.vhdl__nodes_meta__has_need_instance_bodies
+def Has_Enum_Pos(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_enum_pos(kind)
 
-Has_Hierarchical_Name = libghdl.vhdl__nodes_meta__has_hierarchical_name
 
-Has_Inherit_Spec_Chain = libghdl.vhdl__nodes_meta__has_inherit_spec_chain
+def Has_Physical_Literal(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_physical_literal(kind)
 
-Has_Vunit_Item_Chain = libghdl.vhdl__nodes_meta__has_vunit_item_chain
 
-Has_Bound_Vunit_Chain = libghdl.vhdl__nodes_meta__has_bound_vunit_chain
+def Has_Fp_Value(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_fp_value(kind)
 
-Has_Verification_Block_Configuration = (
-    libghdl.vhdl__nodes_meta__has_verification_block_configuration
-)
 
-Has_Block_Configuration = libghdl.vhdl__nodes_meta__has_block_configuration
+def Has_Simple_Aggregate_List(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_simple_aggregate_list(kind)
 
-Has_Concurrent_Statement_Chain = (
-    libghdl.vhdl__nodes_meta__has_concurrent_statement_chain
-)
 
-Has_Chain = libghdl.vhdl__nodes_meta__has_chain
+def Has_String8_Id(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_string8_id(kind)
 
-Has_Port_Chain = libghdl.vhdl__nodes_meta__has_port_chain
 
-Has_Generic_Chain = libghdl.vhdl__nodes_meta__has_generic_chain
+def Has_String_Length(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_string_length(kind)
 
-Has_Type = libghdl.vhdl__nodes_meta__has_type
 
-Has_Subtype_Indication = libghdl.vhdl__nodes_meta__has_subtype_indication
+def Has_Bit_String_Base(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_bit_string_base(kind)
 
-Has_Discrete_Range = libghdl.vhdl__nodes_meta__has_discrete_range
 
-Has_Type_Definition = libghdl.vhdl__nodes_meta__has_type_definition
+def Has_Has_Signed(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_has_signed(kind)
 
-Has_Subtype_Definition = libghdl.vhdl__nodes_meta__has_subtype_definition
 
-Has_Incomplete_Type_Declaration = (
-    libghdl.vhdl__nodes_meta__has_incomplete_type_declaration
-)
+def Has_Has_Sign(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_has_sign(kind)
 
-Has_Interface_Type_Subprograms = (
-    libghdl.vhdl__nodes_meta__has_interface_type_subprograms
-)
 
-Has_Nature_Definition = libghdl.vhdl__nodes_meta__has_nature_definition
+def Has_Has_Length(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_has_length(kind)
 
-Has_Nature = libghdl.vhdl__nodes_meta__has_nature
 
-Has_Subnature_Indication = libghdl.vhdl__nodes_meta__has_subnature_indication
+def Has_Literal_Length(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_literal_length(kind)
 
-Has_Mode = libghdl.vhdl__nodes_meta__has_mode
 
-Has_Guarded_Signal_Flag = libghdl.vhdl__nodes_meta__has_guarded_signal_flag
+def Has_Literal_Origin(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_literal_origin(kind)
 
-Has_Signal_Kind = libghdl.vhdl__nodes_meta__has_signal_kind
 
-Has_Base_Name = libghdl.vhdl__nodes_meta__has_base_name
+def Has_Range_Origin(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_range_origin(kind)
 
-Has_Interface_Declaration_Chain = (
-    libghdl.vhdl__nodes_meta__has_interface_declaration_chain
-)
 
-Has_Subprogram_Specification = libghdl.vhdl__nodes_meta__has_subprogram_specification
+def Has_Literal_Subtype(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_literal_subtype(kind)
 
-Has_Sequential_Statement_Chain = (
-    libghdl.vhdl__nodes_meta__has_sequential_statement_chain
-)
 
-Has_Simultaneous_Statement_Chain = (
-    libghdl.vhdl__nodes_meta__has_simultaneous_statement_chain
-)
+def Has_Allocator_Subtype(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_allocator_subtype(kind)
 
-Has_Subprogram_Body = libghdl.vhdl__nodes_meta__has_subprogram_body
 
-Has_Overload_Number = libghdl.vhdl__nodes_meta__has_overload_number
+def Has_Entity_Class(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_entity_class(kind)
 
-Has_Subprogram_Depth = libghdl.vhdl__nodes_meta__has_subprogram_depth
 
-Has_Subprogram_Hash = libghdl.vhdl__nodes_meta__has_subprogram_hash
+def Has_Entity_Name_List(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_entity_name_list(kind)
 
-Has_Impure_Depth = libghdl.vhdl__nodes_meta__has_impure_depth
 
-Has_Return_Type = libghdl.vhdl__nodes_meta__has_return_type
+def Has_Attribute_Designator(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_attribute_designator(kind)
 
-Has_Implicit_Definition = libghdl.vhdl__nodes_meta__has_implicit_definition
 
-Has_Uninstantiated_Subprogram_Name = (
-    libghdl.vhdl__nodes_meta__has_uninstantiated_subprogram_name
-)
+def Has_Attribute_Specification_Chain(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_attribute_specification_chain(kind)
 
-Has_Default_Value = libghdl.vhdl__nodes_meta__has_default_value
 
-Has_Deferred_Declaration = libghdl.vhdl__nodes_meta__has_deferred_declaration
+def Has_Attribute_Specification(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_attribute_specification(kind)
 
-Has_Deferred_Declaration_Flag = libghdl.vhdl__nodes_meta__has_deferred_declaration_flag
 
-Has_Shared_Flag = libghdl.vhdl__nodes_meta__has_shared_flag
+def Has_Static_Attribute_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_static_attribute_flag(kind)
 
-Has_Design_Unit = libghdl.vhdl__nodes_meta__has_design_unit
 
-Has_Block_Statement = libghdl.vhdl__nodes_meta__has_block_statement
+def Has_Signal_List(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_signal_list(kind)
 
-Has_Signal_Driver = libghdl.vhdl__nodes_meta__has_signal_driver
 
-Has_Declaration_Chain = libghdl.vhdl__nodes_meta__has_declaration_chain
+def Has_Quantity_List(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_quantity_list(kind)
 
-Has_File_Logical_Name = libghdl.vhdl__nodes_meta__has_file_logical_name
 
-Has_File_Open_Kind = libghdl.vhdl__nodes_meta__has_file_open_kind
+def Has_Designated_Entity(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_designated_entity(kind)
 
-Has_Element_Position = libghdl.vhdl__nodes_meta__has_element_position
 
-Has_Use_Clause_Chain = libghdl.vhdl__nodes_meta__has_use_clause_chain
+def Has_Formal(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_formal(kind)
 
-Has_Context_Reference_Chain = libghdl.vhdl__nodes_meta__has_context_reference_chain
 
-Has_Selected_Name = libghdl.vhdl__nodes_meta__has_selected_name
+def Has_Actual(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_actual(kind)
 
-Has_Type_Declarator = libghdl.vhdl__nodes_meta__has_type_declarator
 
-Has_Complete_Type_Definition = libghdl.vhdl__nodes_meta__has_complete_type_definition
+def Has_Actual_Conversion(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_actual_conversion(kind)
 
-Has_Incomplete_Type_Ref_Chain = libghdl.vhdl__nodes_meta__has_incomplete_type_ref_chain
 
-Has_Associated_Type = libghdl.vhdl__nodes_meta__has_associated_type
+def Has_Formal_Conversion(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_formal_conversion(kind)
 
-Has_Enumeration_Literal_List = libghdl.vhdl__nodes_meta__has_enumeration_literal_list
 
-Has_Entity_Class_Entry_Chain = libghdl.vhdl__nodes_meta__has_entity_class_entry_chain
+def Has_Whole_Association_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_whole_association_flag(kind)
 
-Has_Group_Constituent_List = libghdl.vhdl__nodes_meta__has_group_constituent_list
 
-Has_Unit_Chain = libghdl.vhdl__nodes_meta__has_unit_chain
+def Has_Collapse_Signal_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_collapse_signal_flag(kind)
 
-Has_Primary_Unit = libghdl.vhdl__nodes_meta__has_primary_unit
 
-Has_Identifier = libghdl.vhdl__nodes_meta__has_identifier
+def Has_Artificial_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_artificial_flag(kind)
 
-Has_Label = libghdl.vhdl__nodes_meta__has_label
 
-Has_Visible_Flag = libghdl.vhdl__nodes_meta__has_visible_flag
+def Has_Open_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_open_flag(kind)
 
-Has_Range_Constraint = libghdl.vhdl__nodes_meta__has_range_constraint
 
-Has_Direction = libghdl.vhdl__nodes_meta__has_direction
+def Has_After_Drivers_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_after_drivers_flag(kind)
 
-Has_Left_Limit = libghdl.vhdl__nodes_meta__has_left_limit
 
-Has_Right_Limit = libghdl.vhdl__nodes_meta__has_right_limit
+def Has_We_Value(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_we_value(kind)
 
-Has_Left_Limit_Expr = libghdl.vhdl__nodes_meta__has_left_limit_expr
 
-Has_Right_Limit_Expr = libghdl.vhdl__nodes_meta__has_right_limit_expr
+def Has_Time(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_time(kind)
 
-Has_Parent_Type = libghdl.vhdl__nodes_meta__has_parent_type
 
-Has_Simple_Nature = libghdl.vhdl__nodes_meta__has_simple_nature
+def Has_Associated_Expr(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_associated_expr(kind)
 
-Has_Base_Nature = libghdl.vhdl__nodes_meta__has_base_nature
 
-Has_Resolution_Indication = libghdl.vhdl__nodes_meta__has_resolution_indication
+def Has_Associated_Block(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_associated_block(kind)
 
-Has_Record_Element_Resolution_Chain = (
-    libghdl.vhdl__nodes_meta__has_record_element_resolution_chain
-)
 
-Has_Tolerance = libghdl.vhdl__nodes_meta__has_tolerance
+def Has_Associated_Chain(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_associated_chain(kind)
 
-Has_Plus_Terminal_Name = libghdl.vhdl__nodes_meta__has_plus_terminal_name
 
-Has_Minus_Terminal_Name = libghdl.vhdl__nodes_meta__has_minus_terminal_name
+def Has_Choice_Name(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_choice_name(kind)
 
-Has_Plus_Terminal = libghdl.vhdl__nodes_meta__has_plus_terminal
 
-Has_Minus_Terminal = libghdl.vhdl__nodes_meta__has_minus_terminal
+def Has_Choice_Expression(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_choice_expression(kind)
 
-Has_Magnitude_Expression = libghdl.vhdl__nodes_meta__has_magnitude_expression
 
-Has_Phase_Expression = libghdl.vhdl__nodes_meta__has_phase_expression
+def Has_Choice_Range(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_choice_range(kind)
 
-Has_Power_Expression = libghdl.vhdl__nodes_meta__has_power_expression
 
-Has_Simultaneous_Left = libghdl.vhdl__nodes_meta__has_simultaneous_left
+def Has_Same_Alternative_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_same_alternative_flag(kind)
 
-Has_Simultaneous_Right = libghdl.vhdl__nodes_meta__has_simultaneous_right
 
-Has_Text_File_Flag = libghdl.vhdl__nodes_meta__has_text_file_flag
+def Has_Element_Type_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_element_type_flag(kind)
 
-Has_Only_Characters_Flag = libghdl.vhdl__nodes_meta__has_only_characters_flag
 
-Has_Is_Character_Type = libghdl.vhdl__nodes_meta__has_is_character_type
+def Has_Architecture(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_architecture(kind)
 
-Has_Nature_Staticness = libghdl.vhdl__nodes_meta__has_nature_staticness
 
-Has_Type_Staticness = libghdl.vhdl__nodes_meta__has_type_staticness
+def Has_Block_Specification(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_block_specification(kind)
 
-Has_Constraint_State = libghdl.vhdl__nodes_meta__has_constraint_state
 
-Has_Index_Subtype_List = libghdl.vhdl__nodes_meta__has_index_subtype_list
+def Has_Prev_Block_Configuration(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_prev_block_configuration(kind)
 
-Has_Index_Subtype_Definition_List = (
-    libghdl.vhdl__nodes_meta__has_index_subtype_definition_list
-)
 
-Has_Element_Subtype_Indication = (
-    libghdl.vhdl__nodes_meta__has_element_subtype_indication
-)
+def Has_Configuration_Item_Chain(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_configuration_item_chain(kind)
 
-Has_Element_Subtype = libghdl.vhdl__nodes_meta__has_element_subtype
 
-Has_Element_Subnature_Indication = (
-    libghdl.vhdl__nodes_meta__has_element_subnature_indication
-)
+def Has_Attribute_Value_Chain(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_attribute_value_chain(kind)
 
-Has_Element_Subnature = libghdl.vhdl__nodes_meta__has_element_subnature
 
-Has_Index_Constraint_List = libghdl.vhdl__nodes_meta__has_index_constraint_list
+def Has_Spec_Chain(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_spec_chain(kind)
 
-Has_Array_Element_Constraint = libghdl.vhdl__nodes_meta__has_array_element_constraint
 
-Has_Has_Array_Constraint_Flag = libghdl.vhdl__nodes_meta__has_has_array_constraint_flag
+def Has_Value_Chain(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_value_chain(kind)
 
-Has_Has_Element_Constraint_Flag = (
-    libghdl.vhdl__nodes_meta__has_has_element_constraint_flag
-)
 
-Has_Elements_Declaration_List = libghdl.vhdl__nodes_meta__has_elements_declaration_list
+def Has_Attribute_Value_Spec_Chain(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_attribute_value_spec_chain(kind)
 
-Has_Owned_Elements_Chain = libghdl.vhdl__nodes_meta__has_owned_elements_chain
 
-Has_Designated_Type = libghdl.vhdl__nodes_meta__has_designated_type
+def Has_Entity_Name(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_entity_name(kind)
 
-Has_Designated_Subtype_Indication = (
-    libghdl.vhdl__nodes_meta__has_designated_subtype_indication
-)
 
-Has_Index_List = libghdl.vhdl__nodes_meta__has_index_list
+def Has_Package(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_package(kind)
 
-Has_Reference = libghdl.vhdl__nodes_meta__has_reference
 
-Has_Nature_Declarator = libghdl.vhdl__nodes_meta__has_nature_declarator
+def Has_Package_Body(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_package_body(kind)
 
-Has_Across_Type_Mark = libghdl.vhdl__nodes_meta__has_across_type_mark
 
-Has_Through_Type_Mark = libghdl.vhdl__nodes_meta__has_through_type_mark
+def Has_Instance_Package_Body(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_instance_package_body(kind)
 
-Has_Across_Type_Definition = libghdl.vhdl__nodes_meta__has_across_type_definition
 
-Has_Through_Type_Definition = libghdl.vhdl__nodes_meta__has_through_type_definition
+def Has_Need_Body(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_need_body(kind)
 
-Has_Across_Type = libghdl.vhdl__nodes_meta__has_across_type
 
-Has_Through_Type = libghdl.vhdl__nodes_meta__has_through_type
+def Has_Macro_Expanded_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_macro_expanded_flag(kind)
 
-Has_Target = libghdl.vhdl__nodes_meta__has_target
 
-Has_Waveform_Chain = libghdl.vhdl__nodes_meta__has_waveform_chain
+def Has_Need_Instance_Bodies(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_need_instance_bodies(kind)
 
-Has_Guard = libghdl.vhdl__nodes_meta__has_guard
 
-Has_Delay_Mechanism = libghdl.vhdl__nodes_meta__has_delay_mechanism
+def Has_Hierarchical_Name(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_hierarchical_name(kind)
 
-Has_Reject_Time_Expression = libghdl.vhdl__nodes_meta__has_reject_time_expression
 
-Has_Force_Mode = libghdl.vhdl__nodes_meta__has_force_mode
+def Has_Inherit_Spec_Chain(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_inherit_spec_chain(kind)
 
-Has_Has_Force_Mode = libghdl.vhdl__nodes_meta__has_has_force_mode
 
-Has_Sensitivity_List = libghdl.vhdl__nodes_meta__has_sensitivity_list
+def Has_Vunit_Item_Chain(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_vunit_item_chain(kind)
 
-Has_Process_Origin = libghdl.vhdl__nodes_meta__has_process_origin
 
-Has_Package_Origin = libghdl.vhdl__nodes_meta__has_package_origin
+def Has_Bound_Vunit_Chain(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_bound_vunit_chain(kind)
 
-Has_Condition_Clause = libghdl.vhdl__nodes_meta__has_condition_clause
 
-Has_Break_Element = libghdl.vhdl__nodes_meta__has_break_element
+def Has_Verification_Block_Configuration(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_verification_block_configuration(kind)
 
-Has_Selector_Quantity = libghdl.vhdl__nodes_meta__has_selector_quantity
 
-Has_Break_Quantity = libghdl.vhdl__nodes_meta__has_break_quantity
+def Has_Block_Configuration(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_block_configuration(kind)
 
-Has_Timeout_Clause = libghdl.vhdl__nodes_meta__has_timeout_clause
 
-Has_Postponed_Flag = libghdl.vhdl__nodes_meta__has_postponed_flag
+def Has_Concurrent_Statement_Chain(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_concurrent_statement_chain(kind)
 
-Has_Callees_List = libghdl.vhdl__nodes_meta__has_callees_list
 
-Has_Passive_Flag = libghdl.vhdl__nodes_meta__has_passive_flag
+def Has_Chain(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_chain(kind)
 
-Has_Resolution_Function_Flag = libghdl.vhdl__nodes_meta__has_resolution_function_flag
 
-Has_Wait_State = libghdl.vhdl__nodes_meta__has_wait_state
+def Has_Port_Chain(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_port_chain(kind)
 
-Has_All_Sensitized_State = libghdl.vhdl__nodes_meta__has_all_sensitized_state
 
-Has_Seen_Flag = libghdl.vhdl__nodes_meta__has_seen_flag
+def Has_Generic_Chain(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_generic_chain(kind)
 
-Has_Pure_Flag = libghdl.vhdl__nodes_meta__has_pure_flag
 
-Has_Foreign_Flag = libghdl.vhdl__nodes_meta__has_foreign_flag
+def Has_Type(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_type(kind)
 
-Has_Resolved_Flag = libghdl.vhdl__nodes_meta__has_resolved_flag
 
-Has_Signal_Type_Flag = libghdl.vhdl__nodes_meta__has_signal_type_flag
+def Has_Subtype_Indication(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_subtype_indication(kind)
 
-Has_Has_Signal_Flag = libghdl.vhdl__nodes_meta__has_has_signal_flag
 
-Has_Purity_State = libghdl.vhdl__nodes_meta__has_purity_state
+def Has_Discrete_Range(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_discrete_range(kind)
 
-Has_Elab_Flag = libghdl.vhdl__nodes_meta__has_elab_flag
 
-Has_Vendor_Library_Flag = libghdl.vhdl__nodes_meta__has_vendor_library_flag
+def Has_Type_Definition(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_type_definition(kind)
 
-Has_Configuration_Mark_Flag = libghdl.vhdl__nodes_meta__has_configuration_mark_flag
 
-Has_Configuration_Done_Flag = libghdl.vhdl__nodes_meta__has_configuration_done_flag
+def Has_Subtype_Definition(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_subtype_definition(kind)
 
-Has_Index_Constraint_Flag = libghdl.vhdl__nodes_meta__has_index_constraint_flag
 
-Has_Hide_Implicit_Flag = libghdl.vhdl__nodes_meta__has_hide_implicit_flag
+def Has_Incomplete_Type_Declaration(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_incomplete_type_declaration(kind)
 
-Has_Assertion_Condition = libghdl.vhdl__nodes_meta__has_assertion_condition
 
-Has_Report_Expression = libghdl.vhdl__nodes_meta__has_report_expression
+def Has_Interface_Type_Subprograms(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_interface_type_subprograms(kind)
 
-Has_Severity_Expression = libghdl.vhdl__nodes_meta__has_severity_expression
 
-Has_Instantiated_Unit = libghdl.vhdl__nodes_meta__has_instantiated_unit
+def Has_Nature_Definition(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_nature_definition(kind)
 
-Has_Generic_Map_Aspect_Chain = libghdl.vhdl__nodes_meta__has_generic_map_aspect_chain
 
-Has_Port_Map_Aspect_Chain = libghdl.vhdl__nodes_meta__has_port_map_aspect_chain
+def Has_Nature(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_nature(kind)
 
-Has_Configuration_Name = libghdl.vhdl__nodes_meta__has_configuration_name
 
-Has_Component_Configuration = libghdl.vhdl__nodes_meta__has_component_configuration
+def Has_Subnature_Indication(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_subnature_indication(kind)
 
-Has_Configuration_Specification = (
-    libghdl.vhdl__nodes_meta__has_configuration_specification
-)
 
-Has_Default_Binding_Indication = (
-    libghdl.vhdl__nodes_meta__has_default_binding_indication
-)
+def Has_Mode(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_mode(kind)
 
-Has_Default_Configuration_Declaration = (
-    libghdl.vhdl__nodes_meta__has_default_configuration_declaration
-)
 
-Has_Expression = libghdl.vhdl__nodes_meta__has_expression
+def Has_Guarded_Signal_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_guarded_signal_flag(kind)
 
-Has_Conditional_Expression_Chain = (
-    libghdl.vhdl__nodes_meta__has_conditional_expression_chain
-)
 
-Has_Allocator_Designated_Type = libghdl.vhdl__nodes_meta__has_allocator_designated_type
+def Has_Signal_Kind(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_signal_kind(kind)
 
-Has_Selected_Waveform_Chain = libghdl.vhdl__nodes_meta__has_selected_waveform_chain
 
-Has_Conditional_Waveform_Chain = (
-    libghdl.vhdl__nodes_meta__has_conditional_waveform_chain
-)
+def Has_Base_Name(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_base_name(kind)
 
-Has_Guard_Expression = libghdl.vhdl__nodes_meta__has_guard_expression
 
-Has_Guard_Decl = libghdl.vhdl__nodes_meta__has_guard_decl
+def Has_Interface_Declaration_Chain(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_interface_declaration_chain(kind)
 
-Has_Guard_Sensitivity_List = libghdl.vhdl__nodes_meta__has_guard_sensitivity_list
 
-Has_Signal_Attribute_Chain = libghdl.vhdl__nodes_meta__has_signal_attribute_chain
+def Has_Subprogram_Specification(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_subprogram_specification(kind)
 
-Has_Block_Block_Configuration = libghdl.vhdl__nodes_meta__has_block_block_configuration
 
-Has_Package_Header = libghdl.vhdl__nodes_meta__has_package_header
+def Has_Sequential_Statement_Chain(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_sequential_statement_chain(kind)
 
-Has_Block_Header = libghdl.vhdl__nodes_meta__has_block_header
 
-Has_Uninstantiated_Package_Name = (
-    libghdl.vhdl__nodes_meta__has_uninstantiated_package_name
-)
+def Has_Simultaneous_Statement_Chain(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_simultaneous_statement_chain(kind)
 
-Has_Uninstantiated_Package_Decl = (
-    libghdl.vhdl__nodes_meta__has_uninstantiated_package_decl
-)
 
-Has_Instance_Source_File = libghdl.vhdl__nodes_meta__has_instance_source_file
+def Has_Subprogram_Body(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_subprogram_body(kind)
 
-Has_Generate_Block_Configuration = (
-    libghdl.vhdl__nodes_meta__has_generate_block_configuration
-)
 
-Has_Generate_Statement_Body = libghdl.vhdl__nodes_meta__has_generate_statement_body
+def Has_Overload_Number(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_overload_number(kind)
 
-Has_Alternative_Label = libghdl.vhdl__nodes_meta__has_alternative_label
 
-Has_Generate_Else_Clause = libghdl.vhdl__nodes_meta__has_generate_else_clause
+def Has_Subprogram_Depth(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_subprogram_depth(kind)
 
-Has_Condition = libghdl.vhdl__nodes_meta__has_condition
 
-Has_Else_Clause = libghdl.vhdl__nodes_meta__has_else_clause
+def Has_Subprogram_Hash(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_subprogram_hash(kind)
 
-Has_Parameter_Specification = libghdl.vhdl__nodes_meta__has_parameter_specification
 
-Has_Parent = libghdl.vhdl__nodes_meta__has_parent
+def Has_Impure_Depth(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_impure_depth(kind)
 
-Has_Loop_Label = libghdl.vhdl__nodes_meta__has_loop_label
 
-Has_Exit_Flag = libghdl.vhdl__nodes_meta__has_exit_flag
+def Has_Return_Type(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_return_type(kind)
 
-Has_Next_Flag = libghdl.vhdl__nodes_meta__has_next_flag
 
-Has_Component_Name = libghdl.vhdl__nodes_meta__has_component_name
+def Has_Implicit_Definition(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_implicit_definition(kind)
 
-Has_Instantiation_List = libghdl.vhdl__nodes_meta__has_instantiation_list
 
-Has_Entity_Aspect = libghdl.vhdl__nodes_meta__has_entity_aspect
+def Has_Uninstantiated_Subprogram_Name(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_uninstantiated_subprogram_name(kind)
 
-Has_Default_Entity_Aspect = libghdl.vhdl__nodes_meta__has_default_entity_aspect
 
-Has_Binding_Indication = libghdl.vhdl__nodes_meta__has_binding_indication
+def Has_Default_Value(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_default_value(kind)
 
-Has_Named_Entity = libghdl.vhdl__nodes_meta__has_named_entity
 
-Has_Referenced_Name = libghdl.vhdl__nodes_meta__has_referenced_name
+def Has_Deferred_Declaration(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_deferred_declaration(kind)
 
-Has_Expr_Staticness = libghdl.vhdl__nodes_meta__has_expr_staticness
 
-Has_Scalar_Size = libghdl.vhdl__nodes_meta__has_scalar_size
+def Has_Deferred_Declaration_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_deferred_declaration_flag(kind)
 
-Has_Error_Origin = libghdl.vhdl__nodes_meta__has_error_origin
 
-Has_Operand = libghdl.vhdl__nodes_meta__has_operand
+def Has_Shared_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_shared_flag(kind)
 
-Has_Left = libghdl.vhdl__nodes_meta__has_left
 
-Has_Right = libghdl.vhdl__nodes_meta__has_right
+def Has_Design_Unit(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_design_unit(kind)
 
-Has_Unit_Name = libghdl.vhdl__nodes_meta__has_unit_name
 
-Has_Name = libghdl.vhdl__nodes_meta__has_name
+def Has_Block_Statement(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_block_statement(kind)
 
-Has_Group_Template_Name = libghdl.vhdl__nodes_meta__has_group_template_name
 
-Has_Name_Staticness = libghdl.vhdl__nodes_meta__has_name_staticness
+def Has_Signal_Driver(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_signal_driver(kind)
 
-Has_Prefix = libghdl.vhdl__nodes_meta__has_prefix
 
-Has_Signature_Prefix = libghdl.vhdl__nodes_meta__has_signature_prefix
+def Has_Declaration_Chain(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_declaration_chain(kind)
 
-Has_External_Pathname = libghdl.vhdl__nodes_meta__has_external_pathname
 
-Has_Pathname_Suffix = libghdl.vhdl__nodes_meta__has_pathname_suffix
+def Has_File_Logical_Name(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_file_logical_name(kind)
 
-Has_Pathname_Expression = libghdl.vhdl__nodes_meta__has_pathname_expression
 
-Has_In_Formal_Flag = libghdl.vhdl__nodes_meta__has_in_formal_flag
+def Has_File_Open_Kind(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_file_open_kind(kind)
 
-Has_Slice_Subtype = libghdl.vhdl__nodes_meta__has_slice_subtype
 
-Has_Suffix = libghdl.vhdl__nodes_meta__has_suffix
+def Has_Element_Position(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_element_position(kind)
 
-Has_Index_Subtype = libghdl.vhdl__nodes_meta__has_index_subtype
 
-Has_Parameter = libghdl.vhdl__nodes_meta__has_parameter
+def Has_Use_Clause_Chain(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_use_clause_chain(kind)
 
-Has_Parameter_2 = libghdl.vhdl__nodes_meta__has_parameter_2
 
-Has_Parameter_3 = libghdl.vhdl__nodes_meta__has_parameter_3
+def Has_Context_Reference_Chain(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_context_reference_chain(kind)
 
-Has_Parameter_4 = libghdl.vhdl__nodes_meta__has_parameter_4
 
-Has_Attr_Chain = libghdl.vhdl__nodes_meta__has_attr_chain
+def Has_Selected_Name(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_selected_name(kind)
 
-Has_Signal_Attribute_Declaration = (
-    libghdl.vhdl__nodes_meta__has_signal_attribute_declaration
-)
 
-Has_Actual_Type = libghdl.vhdl__nodes_meta__has_actual_type
+def Has_Type_Declarator(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_type_declarator(kind)
 
-Has_Actual_Type_Definition = libghdl.vhdl__nodes_meta__has_actual_type_definition
 
-Has_Association_Chain = libghdl.vhdl__nodes_meta__has_association_chain
+def Has_Complete_Type_Definition(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_complete_type_definition(kind)
 
-Has_Individual_Association_Chain = (
-    libghdl.vhdl__nodes_meta__has_individual_association_chain
-)
 
-Has_Subprogram_Association_Chain = (
-    libghdl.vhdl__nodes_meta__has_subprogram_association_chain
-)
+def Has_Incomplete_Type_Ref_Chain(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_incomplete_type_ref_chain(kind)
 
-Has_Aggregate_Info = libghdl.vhdl__nodes_meta__has_aggregate_info
 
-Has_Sub_Aggregate_Info = libghdl.vhdl__nodes_meta__has_sub_aggregate_info
+def Has_Associated_Type(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_associated_type(kind)
 
-Has_Aggr_Dynamic_Flag = libghdl.vhdl__nodes_meta__has_aggr_dynamic_flag
 
-Has_Aggr_Min_Length = libghdl.vhdl__nodes_meta__has_aggr_min_length
+def Has_Enumeration_Literal_List(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_enumeration_literal_list(kind)
 
-Has_Aggr_Low_Limit = libghdl.vhdl__nodes_meta__has_aggr_low_limit
 
-Has_Aggr_High_Limit = libghdl.vhdl__nodes_meta__has_aggr_high_limit
+def Has_Entity_Class_Entry_Chain(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_entity_class_entry_chain(kind)
 
-Has_Aggr_Others_Flag = libghdl.vhdl__nodes_meta__has_aggr_others_flag
 
-Has_Aggr_Named_Flag = libghdl.vhdl__nodes_meta__has_aggr_named_flag
+def Has_Group_Constituent_List(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_group_constituent_list(kind)
 
-Has_Aggregate_Expand_Flag = libghdl.vhdl__nodes_meta__has_aggregate_expand_flag
 
-Has_Association_Choices_Chain = libghdl.vhdl__nodes_meta__has_association_choices_chain
+def Has_Unit_Chain(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_unit_chain(kind)
 
-Has_Case_Statement_Alternative_Chain = (
-    libghdl.vhdl__nodes_meta__has_case_statement_alternative_chain
-)
 
-Has_Choice_Staticness = libghdl.vhdl__nodes_meta__has_choice_staticness
+def Has_Primary_Unit(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_primary_unit(kind)
 
-Has_Procedure_Call = libghdl.vhdl__nodes_meta__has_procedure_call
 
-Has_Implementation = libghdl.vhdl__nodes_meta__has_implementation
+def Has_Identifier(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_identifier(kind)
 
-Has_Parameter_Association_Chain = (
-    libghdl.vhdl__nodes_meta__has_parameter_association_chain
-)
 
-Has_Method_Object = libghdl.vhdl__nodes_meta__has_method_object
+def Has_Label(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_label(kind)
 
-Has_Subtype_Type_Mark = libghdl.vhdl__nodes_meta__has_subtype_type_mark
 
-Has_Subnature_Nature_Mark = libghdl.vhdl__nodes_meta__has_subnature_nature_mark
+def Has_Visible_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_visible_flag(kind)
 
-Has_Type_Conversion_Subtype = libghdl.vhdl__nodes_meta__has_type_conversion_subtype
 
-Has_Type_Mark = libghdl.vhdl__nodes_meta__has_type_mark
+def Has_Range_Constraint(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_range_constraint(kind)
 
-Has_File_Type_Mark = libghdl.vhdl__nodes_meta__has_file_type_mark
 
-Has_Return_Type_Mark = libghdl.vhdl__nodes_meta__has_return_type_mark
+def Has_Direction(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_direction(kind)
 
-Has_Has_Disconnect_Flag = libghdl.vhdl__nodes_meta__has_has_disconnect_flag
 
-Has_Has_Active_Flag = libghdl.vhdl__nodes_meta__has_has_active_flag
+def Has_Left_Limit(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_left_limit(kind)
 
-Has_Is_Within_Flag = libghdl.vhdl__nodes_meta__has_is_within_flag
 
-Has_Type_Marks_List = libghdl.vhdl__nodes_meta__has_type_marks_list
+def Has_Right_Limit(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_right_limit(kind)
 
-Has_Implicit_Alias_Flag = libghdl.vhdl__nodes_meta__has_implicit_alias_flag
 
-Has_Alias_Signature = libghdl.vhdl__nodes_meta__has_alias_signature
+def Has_Left_Limit_Expr(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_left_limit_expr(kind)
 
-Has_Attribute_Signature = libghdl.vhdl__nodes_meta__has_attribute_signature
 
-Has_Overload_List = libghdl.vhdl__nodes_meta__has_overload_list
+def Has_Right_Limit_Expr(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_right_limit_expr(kind)
 
-Has_Simple_Name_Identifier = libghdl.vhdl__nodes_meta__has_simple_name_identifier
 
-Has_Simple_Name_Subtype = libghdl.vhdl__nodes_meta__has_simple_name_subtype
+def Has_Parent_Type(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_parent_type(kind)
 
-Has_Protected_Type_Body = libghdl.vhdl__nodes_meta__has_protected_type_body
 
-Has_Protected_Type_Declaration = (
-    libghdl.vhdl__nodes_meta__has_protected_type_declaration
-)
+def Has_Simple_Nature(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_simple_nature(kind)
 
-Has_Use_Flag = libghdl.vhdl__nodes_meta__has_use_flag
 
-Has_End_Has_Reserved_Id = libghdl.vhdl__nodes_meta__has_end_has_reserved_id
+def Has_Base_Nature(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_base_nature(kind)
 
-Has_End_Has_Identifier = libghdl.vhdl__nodes_meta__has_end_has_identifier
 
-Has_End_Has_Postponed = libghdl.vhdl__nodes_meta__has_end_has_postponed
+def Has_Resolution_Indication(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_resolution_indication(kind)
 
-Has_Has_Label = libghdl.vhdl__nodes_meta__has_has_label
 
-Has_Has_Begin = libghdl.vhdl__nodes_meta__has_has_begin
+def Has_Record_Element_Resolution_Chain(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_record_element_resolution_chain(kind)
 
-Has_Has_End = libghdl.vhdl__nodes_meta__has_has_end
 
-Has_Has_Is = libghdl.vhdl__nodes_meta__has_has_is
+def Has_Tolerance(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_tolerance(kind)
 
-Has_Has_Pure = libghdl.vhdl__nodes_meta__has_has_pure
 
-Has_Has_Body = libghdl.vhdl__nodes_meta__has_has_body
+def Has_Plus_Terminal_Name(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_plus_terminal_name(kind)
 
-Has_Has_Parameter = libghdl.vhdl__nodes_meta__has_has_parameter
 
-Has_Has_Component = libghdl.vhdl__nodes_meta__has_has_component
+def Has_Minus_Terminal_Name(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_minus_terminal_name(kind)
 
-Has_Has_Identifier_List = libghdl.vhdl__nodes_meta__has_has_identifier_list
 
-Has_Has_Mode = libghdl.vhdl__nodes_meta__has_has_mode
+def Has_Plus_Terminal(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_plus_terminal(kind)
 
-Has_Has_Class = libghdl.vhdl__nodes_meta__has_has_class
 
-Has_Has_Delay_Mechanism = libghdl.vhdl__nodes_meta__has_has_delay_mechanism
+def Has_Minus_Terminal(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_minus_terminal(kind)
 
-Has_Suspend_Flag = libghdl.vhdl__nodes_meta__has_suspend_flag
 
-Has_Is_Ref = libghdl.vhdl__nodes_meta__has_is_ref
+def Has_Magnitude_Expression(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_magnitude_expression(kind)
 
-Has_Is_Forward_Ref = libghdl.vhdl__nodes_meta__has_is_forward_ref
 
-Has_Psl_Property = libghdl.vhdl__nodes_meta__has_psl_property
+def Has_Phase_Expression(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_phase_expression(kind)
 
-Has_Psl_Sequence = libghdl.vhdl__nodes_meta__has_psl_sequence
 
-Has_Psl_Declaration = libghdl.vhdl__nodes_meta__has_psl_declaration
+def Has_Power_Expression(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_power_expression(kind)
 
-Has_Psl_Expression = libghdl.vhdl__nodes_meta__has_psl_expression
 
-Has_Psl_Boolean = libghdl.vhdl__nodes_meta__has_psl_boolean
+def Has_Simultaneous_Left(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_simultaneous_left(kind)
 
-Has_PSL_Clock = libghdl.vhdl__nodes_meta__has_psl_clock
 
-Has_PSL_NFA = libghdl.vhdl__nodes_meta__has_psl_nfa
+def Has_Simultaneous_Right(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_simultaneous_right(kind)
 
-Has_PSL_Nbr_States = libghdl.vhdl__nodes_meta__has_psl_nbr_states
 
-Has_PSL_Clock_Sensitivity = libghdl.vhdl__nodes_meta__has_psl_clock_sensitivity
+def Has_Text_File_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_text_file_flag(kind)
 
-Has_PSL_EOS_Flag = libghdl.vhdl__nodes_meta__has_psl_eos_flag
 
-Has_Count_Expression = libghdl.vhdl__nodes_meta__has_count_expression
+def Has_Only_Characters_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_only_characters_flag(kind)
 
-Has_Clock_Expression = libghdl.vhdl__nodes_meta__has_clock_expression
 
-Has_Default_Clock = libghdl.vhdl__nodes_meta__has_default_clock
+def Has_Is_Character_Type(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_is_character_type(kind)
 
-Has_Foreign_Node = libghdl.vhdl__nodes_meta__has_foreign_node
+
+def Has_Nature_Staticness(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_nature_staticness(kind)
+
+
+def Has_Type_Staticness(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_type_staticness(kind)
+
+
+def Has_Constraint_State(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_constraint_state(kind)
+
+
+def Has_Index_Subtype_List(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_index_subtype_list(kind)
+
+
+def Has_Index_Subtype_Definition_List(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_index_subtype_definition_list(kind)
+
+
+def Has_Element_Subtype_Indication(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_element_subtype_indication(kind)
+
+
+def Has_Element_Subtype(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_element_subtype(kind)
+
+
+def Has_Element_Subnature_Indication(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_element_subnature_indication(kind)
+
+
+def Has_Element_Subnature(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_element_subnature(kind)
+
+
+def Has_Index_Constraint_List(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_index_constraint_list(kind)
+
+
+def Has_Array_Element_Constraint(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_array_element_constraint(kind)
+
+
+def Has_Has_Array_Constraint_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_has_array_constraint_flag(kind)
+
+
+def Has_Has_Element_Constraint_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_has_element_constraint_flag(kind)
+
+
+def Has_Elements_Declaration_List(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_elements_declaration_list(kind)
+
+
+def Has_Owned_Elements_Chain(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_owned_elements_chain(kind)
+
+
+def Has_Designated_Type(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_designated_type(kind)
+
+
+def Has_Designated_Subtype_Indication(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_designated_subtype_indication(kind)
+
+
+def Has_Index_List(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_index_list(kind)
+
+
+def Has_Reference(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_reference(kind)
+
+
+def Has_Nature_Declarator(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_nature_declarator(kind)
+
+
+def Has_Across_Type_Mark(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_across_type_mark(kind)
+
+
+def Has_Through_Type_Mark(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_through_type_mark(kind)
+
+
+def Has_Across_Type_Definition(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_across_type_definition(kind)
+
+
+def Has_Through_Type_Definition(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_through_type_definition(kind)
+
+
+def Has_Across_Type(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_across_type(kind)
+
+
+def Has_Through_Type(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_through_type(kind)
+
+
+def Has_Target(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_target(kind)
+
+
+def Has_Waveform_Chain(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_waveform_chain(kind)
+
+
+def Has_Guard(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_guard(kind)
+
+
+def Has_Delay_Mechanism(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_delay_mechanism(kind)
+
+
+def Has_Reject_Time_Expression(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_reject_time_expression(kind)
+
+
+def Has_Force_Mode(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_force_mode(kind)
+
+
+def Has_Has_Force_Mode(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_has_force_mode(kind)
+
+
+def Has_Sensitivity_List(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_sensitivity_list(kind)
+
+
+def Has_Process_Origin(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_process_origin(kind)
+
+
+def Has_Package_Origin(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_package_origin(kind)
+
+
+def Has_Condition_Clause(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_condition_clause(kind)
+
+
+def Has_Break_Element(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_break_element(kind)
+
+
+def Has_Selector_Quantity(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_selector_quantity(kind)
+
+
+def Has_Break_Quantity(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_break_quantity(kind)
+
+
+def Has_Timeout_Clause(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_timeout_clause(kind)
+
+
+def Has_Postponed_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_postponed_flag(kind)
+
+
+def Has_Callees_List(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_callees_list(kind)
+
+
+def Has_Passive_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_passive_flag(kind)
+
+
+def Has_Resolution_Function_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_resolution_function_flag(kind)
+
+
+def Has_Wait_State(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_wait_state(kind)
+
+
+def Has_All_Sensitized_State(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_all_sensitized_state(kind)
+
+
+def Has_Seen_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_seen_flag(kind)
+
+
+def Has_Pure_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_pure_flag(kind)
+
+
+def Has_Foreign_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_foreign_flag(kind)
+
+
+def Has_Resolved_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_resolved_flag(kind)
+
+
+def Has_Signal_Type_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_signal_type_flag(kind)
+
+
+def Has_Has_Signal_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_has_signal_flag(kind)
+
+
+def Has_Purity_State(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_purity_state(kind)
+
+
+def Has_Elab_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_elab_flag(kind)
+
+
+def Has_Vendor_Library_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_vendor_library_flag(kind)
+
+
+def Has_Configuration_Mark_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_configuration_mark_flag(kind)
+
+
+def Has_Configuration_Done_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_configuration_done_flag(kind)
+
+
+def Has_Index_Constraint_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_index_constraint_flag(kind)
+
+
+def Has_Hide_Implicit_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_hide_implicit_flag(kind)
+
+
+def Has_Assertion_Condition(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_assertion_condition(kind)
+
+
+def Has_Report_Expression(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_report_expression(kind)
+
+
+def Has_Severity_Expression(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_severity_expression(kind)
+
+
+def Has_Instantiated_Unit(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_instantiated_unit(kind)
+
+
+def Has_Generic_Map_Aspect_Chain(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_generic_map_aspect_chain(kind)
+
+
+def Has_Port_Map_Aspect_Chain(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_port_map_aspect_chain(kind)
+
+
+def Has_Configuration_Name(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_configuration_name(kind)
+
+
+def Has_Component_Configuration(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_component_configuration(kind)
+
+
+def Has_Configuration_Specification(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_configuration_specification(kind)
+
+
+def Has_Default_Binding_Indication(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_default_binding_indication(kind)
+
+
+def Has_Default_Configuration_Declaration(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_default_configuration_declaration(kind)
+
+
+def Has_Expression(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_expression(kind)
+
+
+def Has_Conditional_Expression_Chain(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_conditional_expression_chain(kind)
+
+
+def Has_Allocator_Designated_Type(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_allocator_designated_type(kind)
+
+
+def Has_Selected_Waveform_Chain(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_selected_waveform_chain(kind)
+
+
+def Has_Conditional_Waveform_Chain(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_conditional_waveform_chain(kind)
+
+
+def Has_Guard_Expression(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_guard_expression(kind)
+
+
+def Has_Guard_Decl(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_guard_decl(kind)
+
+
+def Has_Guard_Sensitivity_List(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_guard_sensitivity_list(kind)
+
+
+def Has_Signal_Attribute_Chain(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_signal_attribute_chain(kind)
+
+
+def Has_Block_Block_Configuration(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_block_block_configuration(kind)
+
+
+def Has_Package_Header(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_package_header(kind)
+
+
+def Has_Block_Header(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_block_header(kind)
+
+
+def Has_Uninstantiated_Package_Name(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_uninstantiated_package_name(kind)
+
+
+def Has_Uninstantiated_Package_Decl(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_uninstantiated_package_decl(kind)
+
+
+def Has_Instance_Source_File(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_instance_source_file(kind)
+
+
+def Has_Generate_Block_Configuration(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_generate_block_configuration(kind)
+
+
+def Has_Generate_Statement_Body(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_generate_statement_body(kind)
+
+
+def Has_Alternative_Label(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_alternative_label(kind)
+
+
+def Has_Generate_Else_Clause(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_generate_else_clause(kind)
+
+
+def Has_Condition(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_condition(kind)
+
+
+def Has_Else_Clause(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_else_clause(kind)
+
+
+def Has_Parameter_Specification(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_parameter_specification(kind)
+
+
+def Has_Parent(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_parent(kind)
+
+
+def Has_Loop_Label(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_loop_label(kind)
+
+
+def Has_Exit_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_exit_flag(kind)
+
+
+def Has_Next_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_next_flag(kind)
+
+
+def Has_Component_Name(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_component_name(kind)
+
+
+def Has_Instantiation_List(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_instantiation_list(kind)
+
+
+def Has_Entity_Aspect(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_entity_aspect(kind)
+
+
+def Has_Default_Entity_Aspect(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_default_entity_aspect(kind)
+
+
+def Has_Binding_Indication(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_binding_indication(kind)
+
+
+def Has_Named_Entity(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_named_entity(kind)
+
+
+def Has_Referenced_Name(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_referenced_name(kind)
+
+
+def Has_Expr_Staticness(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_expr_staticness(kind)
+
+
+def Has_Scalar_Size(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_scalar_size(kind)
+
+
+def Has_Error_Origin(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_error_origin(kind)
+
+
+def Has_Operand(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_operand(kind)
+
+
+def Has_Left(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_left(kind)
+
+
+def Has_Right(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_right(kind)
+
+
+def Has_Unit_Name(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_unit_name(kind)
+
+
+def Has_Name(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_name(kind)
+
+
+def Has_Group_Template_Name(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_group_template_name(kind)
+
+
+def Has_Name_Staticness(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_name_staticness(kind)
+
+
+def Has_Prefix(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_prefix(kind)
+
+
+def Has_Signature_Prefix(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_signature_prefix(kind)
+
+
+def Has_External_Pathname(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_external_pathname(kind)
+
+
+def Has_Pathname_Suffix(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_pathname_suffix(kind)
+
+
+def Has_Pathname_Expression(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_pathname_expression(kind)
+
+
+def Has_In_Formal_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_in_formal_flag(kind)
+
+
+def Has_Slice_Subtype(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_slice_subtype(kind)
+
+
+def Has_Suffix(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_suffix(kind)
+
+
+def Has_Index_Subtype(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_index_subtype(kind)
+
+
+def Has_Parameter(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_parameter(kind)
+
+
+def Has_Parameter_2(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_parameter_2(kind)
+
+
+def Has_Parameter_3(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_parameter_3(kind)
+
+
+def Has_Parameter_4(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_parameter_4(kind)
+
+
+def Has_Attr_Chain(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_attr_chain(kind)
+
+
+def Has_Signal_Attribute_Declaration(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_signal_attribute_declaration(kind)
+
+
+def Has_Actual_Type(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_actual_type(kind)
+
+
+def Has_Actual_Type_Definition(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_actual_type_definition(kind)
+
+
+def Has_Association_Chain(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_association_chain(kind)
+
+
+def Has_Individual_Association_Chain(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_individual_association_chain(kind)
+
+
+def Has_Subprogram_Association_Chain(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_subprogram_association_chain(kind)
+
+
+def Has_Aggregate_Info(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_aggregate_info(kind)
+
+
+def Has_Sub_Aggregate_Info(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_sub_aggregate_info(kind)
+
+
+def Has_Aggr_Dynamic_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_aggr_dynamic_flag(kind)
+
+
+def Has_Aggr_Min_Length(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_aggr_min_length(kind)
+
+
+def Has_Aggr_Low_Limit(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_aggr_low_limit(kind)
+
+
+def Has_Aggr_High_Limit(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_aggr_high_limit(kind)
+
+
+def Has_Aggr_Others_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_aggr_others_flag(kind)
+
+
+def Has_Aggr_Named_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_aggr_named_flag(kind)
+
+
+def Has_Aggregate_Expand_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_aggregate_expand_flag(kind)
+
+
+def Has_Association_Choices_Chain(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_association_choices_chain(kind)
+
+
+def Has_Case_Statement_Alternative_Chain(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_case_statement_alternative_chain(kind)
+
+
+def Has_Choice_Staticness(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_choice_staticness(kind)
+
+
+def Has_Procedure_Call(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_procedure_call(kind)
+
+
+def Has_Implementation(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_implementation(kind)
+
+
+def Has_Parameter_Association_Chain(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_parameter_association_chain(kind)
+
+
+def Has_Method_Object(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_method_object(kind)
+
+
+def Has_Subtype_Type_Mark(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_subtype_type_mark(kind)
+
+
+def Has_Subnature_Nature_Mark(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_subnature_nature_mark(kind)
+
+
+def Has_Type_Conversion_Subtype(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_type_conversion_subtype(kind)
+
+
+def Has_Type_Mark(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_type_mark(kind)
+
+
+def Has_File_Type_Mark(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_file_type_mark(kind)
+
+
+def Has_Return_Type_Mark(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_return_type_mark(kind)
+
+
+def Has_Has_Disconnect_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_has_disconnect_flag(kind)
+
+
+def Has_Has_Active_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_has_active_flag(kind)
+
+
+def Has_Is_Within_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_is_within_flag(kind)
+
+
+def Has_Type_Marks_List(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_type_marks_list(kind)
+
+
+def Has_Implicit_Alias_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_implicit_alias_flag(kind)
+
+
+def Has_Alias_Signature(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_alias_signature(kind)
+
+
+def Has_Attribute_Signature(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_attribute_signature(kind)
+
+
+def Has_Overload_List(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_overload_list(kind)
+
+
+def Has_Simple_Name_Identifier(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_simple_name_identifier(kind)
+
+
+def Has_Simple_Name_Subtype(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_simple_name_subtype(kind)
+
+
+def Has_Protected_Type_Body(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_protected_type_body(kind)
+
+
+def Has_Protected_Type_Declaration(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_protected_type_declaration(kind)
+
+
+def Has_Use_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_use_flag(kind)
+
+
+def Has_End_Has_Reserved_Id(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_end_has_reserved_id(kind)
+
+
+def Has_End_Has_Identifier(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_end_has_identifier(kind)
+
+
+def Has_End_Has_Postponed(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_end_has_postponed(kind)
+
+
+def Has_Has_Label(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_has_label(kind)
+
+
+def Has_Has_Begin(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_has_begin(kind)
+
+
+def Has_Has_End(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_has_end(kind)
+
+
+def Has_Has_Is(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_has_is(kind)
+
+
+def Has_Has_Pure(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_has_pure(kind)
+
+
+def Has_Has_Body(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_has_body(kind)
+
+
+def Has_Has_Parameter(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_has_parameter(kind)
+
+
+def Has_Has_Component(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_has_component(kind)
+
+
+def Has_Has_Identifier_List(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_has_identifier_list(kind)
+
+
+def Has_Has_Mode(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_has_mode(kind)
+
+
+def Has_Has_Class(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_has_class(kind)
+
+
+def Has_Has_Delay_Mechanism(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_has_delay_mechanism(kind)
+
+
+def Has_Suspend_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_suspend_flag(kind)
+
+
+def Has_Is_Ref(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_is_ref(kind)
+
+
+def Has_Is_Forward_Ref(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_is_forward_ref(kind)
+
+
+def Has_Psl_Property(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_psl_property(kind)
+
+
+def Has_Psl_Sequence(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_psl_sequence(kind)
+
+
+def Has_Psl_Declaration(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_psl_declaration(kind)
+
+
+def Has_Psl_Expression(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_psl_expression(kind)
+
+
+def Has_Psl_Boolean(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_psl_boolean(kind)
+
+
+def Has_PSL_Clock(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_psl_clock(kind)
+
+
+def Has_PSL_NFA(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_psl_nfa(kind)
+
+
+def Has_PSL_Nbr_States(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_psl_nbr_states(kind)
+
+
+def Has_PSL_Clock_Sensitivity(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_psl_clock_sensitivity(kind)
+
+
+def Has_PSL_EOS_Flag(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_psl_eos_flag(kind)
+
+
+def Has_Count_Expression(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_count_expression(kind)
+
+
+def Has_Clock_Expression(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_clock_expression(kind)
+
+
+def Has_Default_Clock(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_default_clock(kind)
+
+
+def Has_Foreign_Node(kind) -> bool:
+    return libghdl.vhdl__nodes_meta__has_foreign_node(kind)

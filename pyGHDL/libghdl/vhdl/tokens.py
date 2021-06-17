@@ -1,11 +1,13 @@
 # Auto generated Python source file from Ada sources
 # Call 'make' in 'src/vhdl' to regenerate:
 #
+from enum import IntEnum, unique
 from pydecor import export
 
 
 @export
-class Tok:
+@unique
+class Tok(IntEnum):
     Invalid = 0
     Eof = 1
     Newline = 2

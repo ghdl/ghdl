@@ -6,9 +6,9 @@
 # | .__/ \__, |\____|_| |_|____/|_____(_)_|_|_.__/ \__, |_| |_|\__,_|_|
 # |_|    |___/                                     |___/
 # =============================================================================
-#  Authors:
-#    Tristan Gingold
-#    Patrick Lehmann
+# Authors:
+#   Tristan Gingold
+#   Patrick Lehmann
 #
 # Package module:   Python binding and low-level API for shared library 'libghdl'.
 #
@@ -37,10 +37,12 @@ from ctypes import c_int32, c_char_p
 from pydecor import export
 
 from pyGHDL.libghdl import libghdl
+from pyGHDL.libghdl._decorator import BindToLibGHDL
 
 
 @export
-def Indent_String(File, Handle, FirstLine: int, LastLine: int) -> None:
+@BindToLibGHDL("vhdl__formatters__indent_string")
+def Indent_String(File: int, Handle: int, FirstLine: int, LastLine: int) -> None:
     """
     Reindent all lines of F between [First_Line; Last_Line] to :obj:`Handle`.
 
@@ -49,10 +51,10 @@ def Indent_String(File, Handle, FirstLine: int, LastLine: int) -> None:
     :param FirstLine: undocumented.
     :param LastLine:  undocumented.
     """
-    libghdl.vhdl__formatters__indent_string(File, Handle, FirstLine, LastLine)
 
 
 @export
+#@BindToLibGHDL("vhdl__formatters__allocate_handle")
 def Allocate_Handle():
     """
     .. todo:: Undocumented in Ada code.
@@ -63,6 +65,7 @@ def Allocate_Handle():
 
 
 @export
+#@BindToLibGHDL("vhdl__formatters__get_length")
 def Get_Length(Handle) -> int:
     """
     .. todo:: Undocumented in Ada code.
@@ -77,6 +80,7 @@ def Get_Length(Handle) -> int:
 
 
 @export
+#@BindToLibGHDL("vhdl__formatters__get_c_string")
 def Get_C_String(Handle):
     """
     .. todo:: Undocumented in Ada code.
@@ -91,6 +95,7 @@ def Get_C_String(Handle):
 
 
 @export
+#@BindToLibGHDL("vhdl__formatters__free_handle")
 def Free_Handle(Handle) -> None:
     """
     .. todo:: Undocumented in Ada code.

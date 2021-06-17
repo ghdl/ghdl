@@ -1,53 +1,166 @@
 # Auto generated Python source file from Ada sources
 # Call 'make' in 'src/vhdl' to regenerate:
 #
+from enum import IntEnum, unique
 from pydecor import export
 from pyGHDL.libghdl import libghdl
 
-Get_Start_Location = libghdl.vhdl__elocations__get_start_location
-Set_Start_Location = libghdl.vhdl__elocations__set_start_location
 
-Get_Right_Paren_Location = libghdl.vhdl__elocations__get_right_paren_location
-Set_Right_Paren_Location = libghdl.vhdl__elocations__set_right_paren_location
+@export
+def Get_Start_Location(obj):
+    return libghdl.vhdl__elocations__get_start_location(obj)
 
-Get_End_Location = libghdl.vhdl__elocations__get_end_location
-Set_End_Location = libghdl.vhdl__elocations__set_end_location
 
-Get_Is_Location = libghdl.vhdl__elocations__get_is_location
-Set_Is_Location = libghdl.vhdl__elocations__set_is_location
+@export
+def Set_Start_Location(obj, value) -> None:
+    libghdl.vhdl__elocations__set_start_location(obj, value)
 
-Get_Begin_Location = libghdl.vhdl__elocations__get_begin_location
-Set_Begin_Location = libghdl.vhdl__elocations__set_begin_location
 
-Get_Then_Location = libghdl.vhdl__elocations__get_then_location
-Set_Then_Location = libghdl.vhdl__elocations__set_then_location
+@export
+def Get_Right_Paren_Location(obj):
+    return libghdl.vhdl__elocations__get_right_paren_location(obj)
 
-Get_Use_Location = libghdl.vhdl__elocations__get_use_location
-Set_Use_Location = libghdl.vhdl__elocations__set_use_location
 
-Get_Loop_Location = libghdl.vhdl__elocations__get_loop_location
-Set_Loop_Location = libghdl.vhdl__elocations__set_loop_location
+@export
+def Set_Right_Paren_Location(obj, value) -> None:
+    libghdl.vhdl__elocations__set_right_paren_location(obj, value)
 
-Get_Generate_Location = libghdl.vhdl__elocations__get_generate_location
-Set_Generate_Location = libghdl.vhdl__elocations__set_generate_location
 
-Get_Generic_Location = libghdl.vhdl__elocations__get_generic_location
-Set_Generic_Location = libghdl.vhdl__elocations__set_generic_location
+@export
+def Get_End_Location(obj):
+    return libghdl.vhdl__elocations__get_end_location(obj)
 
-Get_Port_Location = libghdl.vhdl__elocations__get_port_location
-Set_Port_Location = libghdl.vhdl__elocations__set_port_location
 
-Get_Generic_Map_Location = libghdl.vhdl__elocations__get_generic_map_location
-Set_Generic_Map_Location = libghdl.vhdl__elocations__set_generic_map_location
+@export
+def Set_End_Location(obj, value) -> None:
+    libghdl.vhdl__elocations__set_end_location(obj, value)
 
-Get_Port_Map_Location = libghdl.vhdl__elocations__get_port_map_location
-Set_Port_Map_Location = libghdl.vhdl__elocations__set_port_map_location
 
-Get_Arrow_Location = libghdl.vhdl__elocations__get_arrow_location
-Set_Arrow_Location = libghdl.vhdl__elocations__set_arrow_location
+@export
+def Get_Is_Location(obj):
+    return libghdl.vhdl__elocations__get_is_location(obj)
 
-Get_Colon_Location = libghdl.vhdl__elocations__get_colon_location
-Set_Colon_Location = libghdl.vhdl__elocations__set_colon_location
 
-Get_Assign_Location = libghdl.vhdl__elocations__get_assign_location
-Set_Assign_Location = libghdl.vhdl__elocations__set_assign_location
+@export
+def Set_Is_Location(obj, value) -> None:
+    libghdl.vhdl__elocations__set_is_location(obj, value)
+
+
+@export
+def Get_Begin_Location(obj):
+    return libghdl.vhdl__elocations__get_begin_location(obj)
+
+
+@export
+def Set_Begin_Location(obj, value) -> None:
+    libghdl.vhdl__elocations__set_begin_location(obj, value)
+
+
+@export
+def Get_Then_Location(obj):
+    return libghdl.vhdl__elocations__get_then_location(obj)
+
+
+@export
+def Set_Then_Location(obj, value) -> None:
+    libghdl.vhdl__elocations__set_then_location(obj, value)
+
+
+@export
+def Get_Use_Location(obj):
+    return libghdl.vhdl__elocations__get_use_location(obj)
+
+
+@export
+def Set_Use_Location(obj, value) -> None:
+    libghdl.vhdl__elocations__set_use_location(obj, value)
+
+
+@export
+def Get_Loop_Location(obj):
+    return libghdl.vhdl__elocations__get_loop_location(obj)
+
+
+@export
+def Set_Loop_Location(obj, value) -> None:
+    libghdl.vhdl__elocations__set_loop_location(obj, value)
+
+
+@export
+def Get_Generate_Location(obj):
+    return libghdl.vhdl__elocations__get_generate_location(obj)
+
+
+@export
+def Set_Generate_Location(obj, value) -> None:
+    libghdl.vhdl__elocations__set_generate_location(obj, value)
+
+
+@export
+def Get_Generic_Location(obj):
+    return libghdl.vhdl__elocations__get_generic_location(obj)
+
+
+@export
+def Set_Generic_Location(obj, value) -> None:
+    libghdl.vhdl__elocations__set_generic_location(obj, value)
+
+
+@export
+def Get_Port_Location(obj):
+    return libghdl.vhdl__elocations__get_port_location(obj)
+
+
+@export
+def Set_Port_Location(obj, value) -> None:
+    libghdl.vhdl__elocations__set_port_location(obj, value)
+
+
+@export
+def Get_Generic_Map_Location(obj):
+    return libghdl.vhdl__elocations__get_generic_map_location(obj)
+
+
+@export
+def Set_Generic_Map_Location(obj, value) -> None:
+    libghdl.vhdl__elocations__set_generic_map_location(obj, value)
+
+
+@export
+def Get_Port_Map_Location(obj):
+    return libghdl.vhdl__elocations__get_port_map_location(obj)
+
+
+@export
+def Set_Port_Map_Location(obj, value) -> None:
+    libghdl.vhdl__elocations__set_port_map_location(obj, value)
+
+
+@export
+def Get_Arrow_Location(obj):
+    return libghdl.vhdl__elocations__get_arrow_location(obj)
+
+
+@export
+def Set_Arrow_Location(obj, value) -> None:
+    libghdl.vhdl__elocations__set_arrow_location(obj, value)
+
+
+@export
+def Get_Colon_Location(obj):
+    return libghdl.vhdl__elocations__get_colon_location(obj)
+
+
+@export
+def Set_Colon_Location(obj, value) -> None:
+    libghdl.vhdl__elocations__set_colon_location(obj, value)
+
+
+@export
+def Get_Assign_Location(obj):
+    return libghdl.vhdl__elocations__get_assign_location(obj)
+
+
+@export
+def Set_Assign_Location(obj, value) -> None:
+    libghdl.vhdl__elocations__set_assign_location(obj, value)
