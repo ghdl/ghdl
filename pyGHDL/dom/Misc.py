@@ -38,10 +38,8 @@
 from pathlib import Path
 from typing import Any
 
-import pyGHDL.libghdl.utils
 from pydecor import export
 
-from pyGHDL.dom._Utils import GetIirKindOfNode
 from pyVHDLModel.VHDLModel import Design as VHDLModel_Design
 from pyVHDLModel.VHDLModel import Library as VHDLModel_Library
 from pyVHDLModel.VHDLModel import Document as VHDLModel_Document
@@ -56,6 +54,7 @@ from pyGHDL.libghdl import (
 )
 from pyGHDL.libghdl.vhdl import nodes, sem_lib
 
+from pyGHDL.dom._Utils import GetIirKindOfNode
 from pyGHDL.dom.Common import DOMException, GHDLMixin
 from pyGHDL.dom.DesignUnit import (
     Entity,
