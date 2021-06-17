@@ -30,6 +30,7 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+from pyGHDL.libghdl.vhdl import nodes
 from pydecor import export
 
 from pyVHDLModel.VHDLModel import (
@@ -71,29 +72,48 @@ from pyVHDLModel.VHDLModel import (
 __all__ = []
 
 
+class _ParseUnaryExpression:
+    @classmethod
+    def parse(cls, node):
+        from pyGHDL.dom._Translate import GetExpressionFromNode
+
+        operand = GetExpressionFromNode(nodes.Get_Operand(node))
+        return cls(operand)
+
+
+class _ParseBinaryExpression:
+    @classmethod
+    def parse(cls, node):
+        from pyGHDL.dom._Translate import GetExpressionFromNode
+
+        left = GetExpressionFromNode(nodes.Get_Left(node))
+        right = GetExpressionFromNode(nodes.Get_Right(node))
+        return cls(left, right)
+
+
 @export
-class InverseExpression(VHDLModel_InverseExpression):
+class InverseExpression(VHDLModel_InverseExpression, _ParseUnaryExpression):
     def __init__(self, operand: Expression):
         super().__init__()
         self._operand = operand
 
 
 @export
-class IdentityExpression(VHDLModel_IdentityExpression):
+class IdentityExpression(VHDLModel_IdentityExpression, _ParseUnaryExpression):
     def __init__(self, operand: Expression):
         super().__init__()
         self._operand = operand
 
 
 @export
-class NegationExpression(VHDLModel_NegationExpression):
+class NegationExpression(VHDLModel_NegationExpression, _ParseUnaryExpression):
     def __init__(self, operand: Expression):
         super().__init__()
         self._operand = operand
 
 
 @export
-class AbsoluteExpression(VHDLModel_AbsoluteExpression):
+class AbsoluteExpression(VHDLModel_AbsoluteExpression, _ParseUnaryExpression):
     def __init__(self, operand: Expression):
         super().__init__()
         self._operand = operand
@@ -121,7 +141,7 @@ class QualifiedExpression(VHDLModel_QualifiedExpression):
 
 
 @export
-class AdditionExpression(VHDLModel_AdditionExpression):
+class AdditionExpression(VHDLModel_AdditionExpression, _ParseBinaryExpression):
     def __init__(self, left: Expression, right: Expression):
         super().__init__()
         self._leftOperand = left
@@ -129,7 +149,7 @@ class AdditionExpression(VHDLModel_AdditionExpression):
 
 
 @export
-class SubtractionExpression(VHDLModel_SubtractionExpression):
+class SubtractionExpression(VHDLModel_SubtractionExpression, _ParseBinaryExpression):
     def __init__(self, left: Expression, right: Expression):
         super().__init__()
         self._leftOperand = left
@@ -137,7 +157,9 @@ class SubtractionExpression(VHDLModel_SubtractionExpression):
 
 
 @export
-class ConcatenationExpression(VHDLModel_ConcatenationExpression):
+class ConcatenationExpression(
+    VHDLModel_ConcatenationExpression, _ParseBinaryExpression
+):
     def __init__(self, left: Expression, right: Expression):
         super().__init__()
         self._leftOperand = left
@@ -145,7 +167,7 @@ class ConcatenationExpression(VHDLModel_ConcatenationExpression):
 
 
 @export
-class MultiplyExpression(VHDLModel_MultiplyExpression):
+class MultiplyExpression(VHDLModel_MultiplyExpression, _ParseBinaryExpression):
     def __init__(self, left: Expression, right: Expression):
         super().__init__()
         self._leftOperand = left
@@ -153,7 +175,7 @@ class MultiplyExpression(VHDLModel_MultiplyExpression):
 
 
 @export
-class DivisionExpression(VHDLModel_DivisionExpression):
+class DivisionExpression(VHDLModel_DivisionExpression, _ParseBinaryExpression):
     def __init__(self, left: Expression, right: Expression):
         super().__init__()
         self._leftOperand = left
@@ -161,7 +183,7 @@ class DivisionExpression(VHDLModel_DivisionExpression):
 
 
 @export
-class RemainderExpression(VHDLModel_RemainderExpression):
+class RemainderExpression(VHDLModel_RemainderExpression, _ParseBinaryExpression):
     def __init__(self, left: Expression, right: Expression):
         super().__init__()
         self._leftOperand = left
@@ -169,7 +191,7 @@ class RemainderExpression(VHDLModel_RemainderExpression):
 
 
 @export
-class ModuloExpression(VHDLModel_ModuloExpression):
+class ModuloExpression(VHDLModel_ModuloExpression, _ParseBinaryExpression):
     def __init__(self, left: Expression, right: Expression):
         super().__init__()
         self._leftOperand = left
@@ -177,7 +199,9 @@ class ModuloExpression(VHDLModel_ModuloExpression):
 
 
 @export
-class ExponentiationExpression(VHDLModel_ExponentiationExpression):
+class ExponentiationExpression(
+    VHDLModel_ExponentiationExpression, _ParseBinaryExpression
+):
     def __init__(self, left: Expression, right: Expression):
         super().__init__()
         self._leftOperand = left
@@ -185,7 +209,7 @@ class ExponentiationExpression(VHDLModel_ExponentiationExpression):
 
 
 @export
-class AndExpression(VHDLModel_AndExpression):
+class AndExpression(VHDLModel_AndExpression, _ParseBinaryExpression):
     def __init__(self, left: Expression, right: Expression):
         super().__init__()
         self._leftOperand = left
@@ -193,7 +217,7 @@ class AndExpression(VHDLModel_AndExpression):
 
 
 @export
-class NandExpression(VHDLModel_NandExpression):
+class NandExpression(VHDLModel_NandExpression, _ParseBinaryExpression):
     def __init__(self, left: Expression, right: Expression):
         super().__init__()
         self._leftOperand = left
@@ -201,7 +225,7 @@ class NandExpression(VHDLModel_NandExpression):
 
 
 @export
-class OrExpression(VHDLModel_OrExpression):
+class OrExpression(VHDLModel_OrExpression, _ParseBinaryExpression):
     def __init__(self, left: Expression, right: Expression):
         super().__init__()
         self._leftOperand = left
@@ -209,7 +233,7 @@ class OrExpression(VHDLModel_OrExpression):
 
 
 @export
-class NorExpression(VHDLModel_NorExpression):
+class NorExpression(VHDLModel_NorExpression, _ParseBinaryExpression):
     def __init__(self, left: Expression, right: Expression):
         super().__init__()
         self._leftOperand = left
@@ -217,7 +241,7 @@ class NorExpression(VHDLModel_NorExpression):
 
 
 @export
-class XorExpression(VHDLModel_XorExpression):
+class XorExpression(VHDLModel_XorExpression, _ParseBinaryExpression):
     def __init__(self, left: Expression, right: Expression):
         super().__init__()
         self._leftOperand = left
@@ -225,7 +249,7 @@ class XorExpression(VHDLModel_XorExpression):
 
 
 @export
-class XnorExpression(VHDLModel_XnorExpression):
+class XnorExpression(VHDLModel_XnorExpression, _ParseBinaryExpression):
     def __init__(self, left: Expression, right: Expression):
         super().__init__()
         self._leftOperand = left
@@ -233,7 +257,7 @@ class XnorExpression(VHDLModel_XnorExpression):
 
 
 @export
-class EqualExpression(VHDLModel_EqualExpression):
+class EqualExpression(VHDLModel_EqualExpression, _ParseBinaryExpression):
     def __init__(self, left: Expression, right: Expression):
         super().__init__()
         self._leftOperand = left
@@ -241,7 +265,7 @@ class EqualExpression(VHDLModel_EqualExpression):
 
 
 @export
-class UnequalExpression(VHDLModel_UnequalExpression):
+class UnequalExpression(VHDLModel_UnequalExpression, _ParseBinaryExpression):
     def __init__(self, left: Expression, right: Expression):
         super().__init__()
         self._leftOperand = left
@@ -249,7 +273,7 @@ class UnequalExpression(VHDLModel_UnequalExpression):
 
 
 @export
-class GreaterThanExpression(VHDLModel_GreaterThanExpression):
+class GreaterThanExpression(VHDLModel_GreaterThanExpression, _ParseBinaryExpression):
     def __init__(self, left: Expression, right: Expression):
         super().__init__()
         self._leftOperand = left
@@ -257,7 +281,7 @@ class GreaterThanExpression(VHDLModel_GreaterThanExpression):
 
 
 @export
-class GreaterEqualExpression(VHDLModel_GreaterEqualExpression):
+class GreaterEqualExpression(VHDLModel_GreaterEqualExpression, _ParseBinaryExpression):
     def __init__(self, left: Expression, right: Expression):
         super().__init__()
         self._leftOperand = left
@@ -265,7 +289,7 @@ class GreaterEqualExpression(VHDLModel_GreaterEqualExpression):
 
 
 @export
-class LessThanExpression(VHDLModel_LessThanExpression):
+class LessThanExpression(VHDLModel_LessThanExpression, _ParseBinaryExpression):
     def __init__(self, left: Expression, right: Expression):
         super().__init__()
         self._leftOperand = left
@@ -273,7 +297,9 @@ class LessThanExpression(VHDLModel_LessThanExpression):
 
 
 @export
-class ShiftRightLogicExpression(VHDLModel_ShiftRightLogicExpression):
+class ShiftRightLogicExpression(
+    VHDLModel_ShiftRightLogicExpression, _ParseBinaryExpression
+):
     def __init__(self, left: Expression, right: Expression):
         super().__init__()
         self._leftOperand = left
@@ -281,7 +307,9 @@ class ShiftRightLogicExpression(VHDLModel_ShiftRightLogicExpression):
 
 
 @export
-class ShiftLeftLogicExpression(VHDLModel_ShiftLeftLogicExpression):
+class ShiftLeftLogicExpression(
+    VHDLModel_ShiftLeftLogicExpression, _ParseBinaryExpression
+):
     def __init__(self, left: Expression, right: Expression):
         super().__init__()
         self._leftOperand = left
@@ -289,7 +317,9 @@ class ShiftLeftLogicExpression(VHDLModel_ShiftLeftLogicExpression):
 
 
 @export
-class ShiftRightArithmeticExpression(VHDLModel_ShiftRightArithmeticExpression):
+class ShiftRightArithmeticExpression(
+    VHDLModel_ShiftRightArithmeticExpression, _ParseBinaryExpression
+):
     def __init__(self, left: Expression, right: Expression):
         super().__init__()
         self._leftOperand = left
@@ -297,7 +327,9 @@ class ShiftRightArithmeticExpression(VHDLModel_ShiftRightArithmeticExpression):
 
 
 @export
-class ShiftLeftArithmeticExpression(VHDLModel_ShiftLeftArithmeticExpression):
+class ShiftLeftArithmeticExpression(
+    VHDLModel_ShiftLeftArithmeticExpression, _ParseBinaryExpression
+):
     def __init__(self, left: Expression, right: Expression):
         super().__init__()
         self._leftOperand = left
@@ -305,7 +337,7 @@ class ShiftLeftArithmeticExpression(VHDLModel_ShiftLeftArithmeticExpression):
 
 
 @export
-class RotateRightExpression(VHDLModel_RotateRightExpression):
+class RotateRightExpression(VHDLModel_RotateRightExpression, _ParseBinaryExpression):
     def __init__(self, left: Expression, right: Expression):
         super().__init__()
         self._leftOperand = left
@@ -313,7 +345,7 @@ class RotateRightExpression(VHDLModel_RotateRightExpression):
 
 
 @export
-class RotateLeftExpression(VHDLModel_RotateLeftExpression):
+class RotateLeftExpression(VHDLModel_RotateLeftExpression, _ParseBinaryExpression):
     def __init__(self, left: Expression, right: Expression):
         super().__init__()
         self._leftOperand = left

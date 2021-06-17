@@ -30,6 +30,9 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+from pyGHDL.libghdl import name_table
+
+from pyGHDL.libghdl.vhdl import nodes
 from pydecor import export
 
 from pyVHDLModel.VHDLModel import (
@@ -43,14 +46,24 @@ __all__ = []
 
 @export
 class IntegerLiteral(VHDLModel_IntegerLiteral):
-    pass
+    @classmethod
+    def parse(cls, node):
+        value = nodes.Get_Value(node)
+        return cls(value)
 
 
 @export
 class FloatingPointLiteral(VHDLModel_FloatingPointLiteral):
-    pass
+    @classmethod
+    def parse(cls, node):
+        value = nodes.Get_Fp_Value(node)
+        return cls(value)
 
 
 @export
 class CharacterLiteral(VHDLModel_CharacterLiteral):
-    pass
+    @classmethod
+    def parse(cls, node):
+        identifier = nodes.Get_Identifier(node)
+        value = name_table.Get_Character(identifier)
+        return cls(value)
