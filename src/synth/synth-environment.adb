@@ -1361,19 +1361,25 @@ package body Synth.Environment is
          end loop;
 
          --  Possible optimizations:
-         --  if C1 then            _          _                 _
-         --    if C2 then      R0-|0\     R0-|0\           R0 -|0\
-         --      R := V;   ==>    |  |--+    |  |- R   ==>     |  |- R
-         --    end if;          V-|_/   +----|_/             V-|_/
-         --  end if;               C1        C2                C1.C2
+         --  if C1 then            _               _                 _
+         --    if C2 then      R0-|0\          R0-|0\           R0 -|0\
+         --      R := V;   ==>    |  |-- T --+    |  |- R   ==>     |  |- R
+         --    end if;          V-|_/        +----|_/             V-|_/
+         --  end if;               C2              C1                C1.C2
+         --
+         --  Note:  N (0) ~ R0,  N (1) ~ T = first mux input
          --
          --  This really helps inference as the net R0 doesn't have to be
          --  walked twice (in absence of memoization).
-         --  OTOH, it makes memory handling slightly more complex...
+         --  This optimization is not performed if T is used.  This check is
+         --  not really necessary as if T is assigned it will also be handled
+         --  in this procedure and will be muxed by C1.  But this simplifies
+         --  memory handling.
 
          --  Build mux.
          N1_Inst := Get_Net_Parent (N (1));
          if Get_Id (N1_Inst) = Id_Mux2
+           and then not Is_Connected (N (1))
            and then Same_Net (Get_Driver (Get_Mux2_I0 (N1_Inst)), N (0))
          then
             declare

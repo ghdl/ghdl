@@ -2604,69 +2604,34 @@ package body Netlists.Memories is
       --        dout := mem (addr);
       --      end if;
       --  the writer has just been reduced, but the reader can also be reduced.
-      --                                  _
-      --             _                   / |0-----------------------\
-      --            / |1- dyn_extract --|  |                        |
-      --   dout ---|  |                  \_|1-------\               |
-      --            \_|0-- dout           |         |               |
-      --             |                   wen        +- dyn_insert --+--- mem
-      --            rden                  _         |               |
-      --                                 / |1-------/               |
-      --   mem ----------- isignal -----|  |                        |
-      --                                 \_|0-----------------------/
-      --                                  |
-      --                              wen & +clk
+      --                                         _
+      --             _                          / |0-----------------\
+      --            / |1-- dyn_extract ---+----|  |                  |
+      --   dout ---|  |                   |     \_|1--- dyn_insert --+--- mem
+      --            \_|0-- dout           |      |                   |
+      --             |                    |     wen                  |
+      --            rden            _     |                          |
+      --                           / |1---/                          |
+      --   mem ----- isignal -----|  |                               |
+      --                           \_|0------------------------------/
+      --                            |
+      --                           +clk
       --  Was just reduced to:
-      --  FIXME: this is not equivalent because of `+clk` on the mem mux.
-      --    However, because the `+clk` comes from outer blocks, it also
-      --    applies to dout.
-      --                                  _
-      --             _                   / |0------------------------\
-      --            / |1- dyn_extract --|  |                         |
-      --   dout ---|  |                  \_|1-----\                  |
-      --            \_|0-- dout           |       |                  |
-      --             |                   wen      +- dyn_insert_en --+--- mem
-      --            rden                          |        |
-      --                                          |     wen & +clk
-      --   mem ----------- isignal ---------------/
-      --
-      --  Now, reduce the mux to the dyn_extract:
       --             _
-      --            / |1------- dyn_extract ------\
-      --   dout ---|  |                           |
-      --            \_|0-- dout                   |
-      --             |                            +- dyn_insert_en --+--- mem
-      --            rden                          |        |
-      --                                          |     wen & +clk
-      --   mem ----------- isignal ---------------/
-      --
+      --            / |1-- dyn_extract ---+--- dyn_insert_en --+--- mem
+      --   dout ---|  |                   |                    |
+      --            \_|0-- dout           |                    |
+      --             |                    |                    |
+      --            rden            _     |                    |
+      --                           / |1---/                    |
+      --   mem ----- isignal -----|  |                         |
+      --                           \_|0------------------------/
+      --                            |
+      --                           +clk
 
-      --  If there are muxes for dyn_extract driven by the same SEL
-      --  net, between N and HEAD_IN, move them to HEAD_OUT as dyn_extract_en.
-      declare
-         Tail_Net : constant Net := Get_Output (Tail_Out, 0);
-         Head_Net : constant Net := Get_Output (Head_Out, 0);
-         Inp : Input;
-         Next_Inp : Input;
-      begin
-         Inp := Get_First_Sink (Tail_Net);
-         while Inp /= No_Input loop
-            Next_Inp := Get_Next_Sink (Inp);
-            Inst := Get_Input_Parent (Inp);
-            if Get_Id (Inst) = Id_Mux2
-              and then Get_Input_Net (Inst, 1) = Tail_Net
-              and then Get_Input_Net (Inst, 2) = Head_Net
-              and then In_Conjunction (Sel, Get_Input_Net (Inst, 0), False)
-            then
-               Disconnect (Get_Input (Inst, 0));
-               Disconnect (Get_Input (Inst, 1));
-               Disconnect (Get_Input (Inst, 2));
-               Redirect_Inputs (Get_Output (Inst, 0), Head_Net);
-               Remove_Instance (Inst);
-            end if;
-            Inp := Next_Inp;
-         end loop;
-      end;
+      --  Note: Previously, `+clk` and `wen` were fused to the same mux (as an
+      --  optimization), requiring extraction.  Now the optimization is not
+      --  performed when a wire is read, thus simplifying the reduction here.
    end Reduce_Muxes;
 
    --  Remove the mux2 HEAD (by adding enable to dyn_insert).
