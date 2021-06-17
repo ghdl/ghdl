@@ -1,8 +1,10 @@
 # Auto generated Python source file from Ada sources
 # Call 'make' in 'src/vhdl' to regenerate:
 #
+from enum import IntEnum, unique
 from pydecor import export
 from pyGHDL.libghdl import libghdl
+from pyGHDL.libghdl._types import Iir
 
 Null_Iir = 0
 
@@ -15,7 +17,8 @@ Iir_Flist_All = 2
 
 
 @export
-class Iir_Kind:
+@unique
+class Iir_Kind(IntEnum):
     Unused = 0
     Error = 1
     Design_File = 2
@@ -1046,7 +1049,8 @@ class Iir_Kinds:
 
 
 @export
-class Iir_Mode:
+@unique
+class Iir_Mode(IntEnum):
     Unknown_Mode = 0
     Linkage_Mode = 1
     Buffer_Mode = 2
@@ -1056,7 +1060,8 @@ class Iir_Mode:
 
 
 @export
-class Iir_Staticness:
+@unique
+class Iir_Staticness(IntEnum):
     Unknown = 0
     PNone = 1
     Globally = 2
@@ -1064,20 +1069,23 @@ class Iir_Staticness:
 
 
 @export
-class Iir_Constraint:
+@unique
+class Iir_Constraint(IntEnum):
     Unconstrained = 0
     Partially_Constrained = 1
     Fully_Constrained = 2
 
 
 @export
-class Iir_Delay_Mechanism:
+@unique
+class Iir_Delay_Mechanism(IntEnum):
     Inertial_Delay = 0
     Transport_Delay = 1
 
 
 @export
-class Date_State:
+@unique
+class Date_State(IntEnum):
     Extern = 0
     Disk = 1
     Parse = 2
@@ -1085,7 +1093,8 @@ class Date_State:
 
 
 @export
-class Iir_Predefined:
+@unique
+class Iir_Predefined(IntEnum):
     Error = 0
     Boolean_And = 1
     Boolean_Or = 2
@@ -1745,1147 +1754,3711 @@ class Iir_Predefined:
     Ieee_Std_Logic_Misc_Xnor_Reduce_Suv = 656
 
 
-Get_Kind = libghdl.vhdl__nodes__get_kind
-Get_Location = libghdl.vhdl__nodes__get_location
+@export
+def Get_Kind(node: int):
+    return libghdl.vhdl__nodes__get_kind(node)
 
-Get_First_Design_Unit = libghdl.vhdl__nodes__get_first_design_unit
-Set_First_Design_Unit = libghdl.vhdl__nodes__set_first_design_unit
 
-Get_Last_Design_Unit = libghdl.vhdl__nodes__get_last_design_unit
-Set_Last_Design_Unit = libghdl.vhdl__nodes__set_last_design_unit
+@export
+def Get_Location(node: Iir):
+    return libghdl.vhdl__nodes__get_location(node)
 
-Get_Library_Declaration = libghdl.vhdl__nodes__get_library_declaration
-Set_Library_Declaration = libghdl.vhdl__nodes__set_library_declaration
 
-Get_File_Checksum = libghdl.vhdl__nodes__get_file_checksum
-Set_File_Checksum = libghdl.vhdl__nodes__set_file_checksum
+@export
+def Get_First_Design_Unit(obj):
+    return libghdl.vhdl__nodes__get_first_design_unit(obj)
 
-Get_Analysis_Time_Stamp = libghdl.vhdl__nodes__get_analysis_time_stamp
-Set_Analysis_Time_Stamp = libghdl.vhdl__nodes__set_analysis_time_stamp
 
-Get_Design_File_Source = libghdl.vhdl__nodes__get_design_file_source
-Set_Design_File_Source = libghdl.vhdl__nodes__set_design_file_source
+@export
+def Set_First_Design_Unit(obj, value) -> None:
+    libghdl.vhdl__nodes__set_first_design_unit(obj, value)
 
-Get_Library = libghdl.vhdl__nodes__get_library
-Set_Library = libghdl.vhdl__nodes__set_library
 
-Get_File_Dependence_List = libghdl.vhdl__nodes__get_file_dependence_list
-Set_File_Dependence_List = libghdl.vhdl__nodes__set_file_dependence_list
+@export
+def Get_Last_Design_Unit(obj):
+    return libghdl.vhdl__nodes__get_last_design_unit(obj)
 
-Get_Design_File_Filename = libghdl.vhdl__nodes__get_design_file_filename
-Set_Design_File_Filename = libghdl.vhdl__nodes__set_design_file_filename
 
-Get_Design_File_Directory = libghdl.vhdl__nodes__get_design_file_directory
-Set_Design_File_Directory = libghdl.vhdl__nodes__set_design_file_directory
+@export
+def Set_Last_Design_Unit(obj, value) -> None:
+    libghdl.vhdl__nodes__set_last_design_unit(obj, value)
 
-Get_Design_File = libghdl.vhdl__nodes__get_design_file
-Set_Design_File = libghdl.vhdl__nodes__set_design_file
 
-Get_Design_File_Chain = libghdl.vhdl__nodes__get_design_file_chain
-Set_Design_File_Chain = libghdl.vhdl__nodes__set_design_file_chain
+@export
+def Get_Library_Declaration(obj):
+    return libghdl.vhdl__nodes__get_library_declaration(obj)
 
-Get_Library_Directory = libghdl.vhdl__nodes__get_library_directory
-Set_Library_Directory = libghdl.vhdl__nodes__set_library_directory
 
-Get_Date = libghdl.vhdl__nodes__get_date
-Set_Date = libghdl.vhdl__nodes__set_date
+@export
+def Set_Library_Declaration(obj, value) -> None:
+    libghdl.vhdl__nodes__set_library_declaration(obj, value)
 
-Get_Context_Items = libghdl.vhdl__nodes__get_context_items
-Set_Context_Items = libghdl.vhdl__nodes__set_context_items
 
-Get_Dependence_List = libghdl.vhdl__nodes__get_dependence_list
-Set_Dependence_List = libghdl.vhdl__nodes__set_dependence_list
+@export
+def Get_File_Checksum(obj):
+    return libghdl.vhdl__nodes__get_file_checksum(obj)
 
-Get_Analysis_Checks_List = libghdl.vhdl__nodes__get_analysis_checks_list
-Set_Analysis_Checks_List = libghdl.vhdl__nodes__set_analysis_checks_list
 
-Get_Date_State = libghdl.vhdl__nodes__get_date_state
-Set_Date_State = libghdl.vhdl__nodes__set_date_state
+@export
+def Set_File_Checksum(obj, value) -> None:
+    libghdl.vhdl__nodes__set_file_checksum(obj, value)
 
-Get_Guarded_Target_State = libghdl.vhdl__nodes__get_guarded_target_state
-Set_Guarded_Target_State = libghdl.vhdl__nodes__set_guarded_target_state
 
-Get_Library_Unit = libghdl.vhdl__nodes__get_library_unit
-Set_Library_Unit = libghdl.vhdl__nodes__set_library_unit
+@export
+def Get_Analysis_Time_Stamp(obj):
+    return libghdl.vhdl__nodes__get_analysis_time_stamp(obj)
 
-Get_Hash_Chain = libghdl.vhdl__nodes__get_hash_chain
-Set_Hash_Chain = libghdl.vhdl__nodes__set_hash_chain
 
-Get_Design_Unit_Source_Pos = libghdl.vhdl__nodes__get_design_unit_source_pos
-Set_Design_Unit_Source_Pos = libghdl.vhdl__nodes__set_design_unit_source_pos
+@export
+def Set_Analysis_Time_Stamp(obj, value) -> None:
+    libghdl.vhdl__nodes__set_analysis_time_stamp(obj, value)
 
-Get_Design_Unit_Source_Line = libghdl.vhdl__nodes__get_design_unit_source_line
-Set_Design_Unit_Source_Line = libghdl.vhdl__nodes__set_design_unit_source_line
 
-Get_Design_Unit_Source_Col = libghdl.vhdl__nodes__get_design_unit_source_col
-Set_Design_Unit_Source_Col = libghdl.vhdl__nodes__set_design_unit_source_col
+@export
+def Get_Design_File_Source(obj):
+    return libghdl.vhdl__nodes__get_design_file_source(obj)
 
-Get_Value = libghdl.vhdl__nodes__get_value
-Set_Value = libghdl.vhdl__nodes__set_value
 
-Get_Enum_Pos = libghdl.vhdl__nodes__get_enum_pos
-Set_Enum_Pos = libghdl.vhdl__nodes__set_enum_pos
+@export
+def Set_Design_File_Source(obj, value) -> None:
+    libghdl.vhdl__nodes__set_design_file_source(obj, value)
 
-Get_Physical_Literal = libghdl.vhdl__nodes__get_physical_literal
-Set_Physical_Literal = libghdl.vhdl__nodes__set_physical_literal
 
-Get_Fp_Value = libghdl.vhdl__nodes__get_fp_value
-Set_Fp_Value = libghdl.vhdl__nodes__set_fp_value
+@export
+def Get_Library(obj):
+    return libghdl.vhdl__nodes__get_library(obj)
 
-Get_Simple_Aggregate_List = libghdl.vhdl__nodes__get_simple_aggregate_list
-Set_Simple_Aggregate_List = libghdl.vhdl__nodes__set_simple_aggregate_list
 
-Get_String8_Id = libghdl.vhdl__nodes__get_string8_id
-Set_String8_Id = libghdl.vhdl__nodes__set_string8_id
+@export
+def Set_Library(obj, value) -> None:
+    libghdl.vhdl__nodes__set_library(obj, value)
 
-Get_String_Length = libghdl.vhdl__nodes__get_string_length
-Set_String_Length = libghdl.vhdl__nodes__set_string_length
 
-Get_Bit_String_Base = libghdl.vhdl__nodes__get_bit_string_base
-Set_Bit_String_Base = libghdl.vhdl__nodes__set_bit_string_base
+@export
+def Get_File_Dependence_List(obj):
+    return libghdl.vhdl__nodes__get_file_dependence_list(obj)
 
-Get_Has_Signed = libghdl.vhdl__nodes__get_has_signed
-Set_Has_Signed = libghdl.vhdl__nodes__set_has_signed
 
-Get_Has_Sign = libghdl.vhdl__nodes__get_has_sign
-Set_Has_Sign = libghdl.vhdl__nodes__set_has_sign
+@export
+def Set_File_Dependence_List(obj, value) -> None:
+    libghdl.vhdl__nodes__set_file_dependence_list(obj, value)
 
-Get_Has_Length = libghdl.vhdl__nodes__get_has_length
-Set_Has_Length = libghdl.vhdl__nodes__set_has_length
 
-Get_Literal_Length = libghdl.vhdl__nodes__get_literal_length
-Set_Literal_Length = libghdl.vhdl__nodes__set_literal_length
+@export
+def Get_Design_File_Filename(obj):
+    return libghdl.vhdl__nodes__get_design_file_filename(obj)
 
-Get_Literal_Origin = libghdl.vhdl__nodes__get_literal_origin
-Set_Literal_Origin = libghdl.vhdl__nodes__set_literal_origin
 
-Get_Range_Origin = libghdl.vhdl__nodes__get_range_origin
-Set_Range_Origin = libghdl.vhdl__nodes__set_range_origin
+@export
+def Set_Design_File_Filename(obj, value) -> None:
+    libghdl.vhdl__nodes__set_design_file_filename(obj, value)
 
-Get_Literal_Subtype = libghdl.vhdl__nodes__get_literal_subtype
-Set_Literal_Subtype = libghdl.vhdl__nodes__set_literal_subtype
 
-Get_Allocator_Subtype = libghdl.vhdl__nodes__get_allocator_subtype
-Set_Allocator_Subtype = libghdl.vhdl__nodes__set_allocator_subtype
+@export
+def Get_Design_File_Directory(obj):
+    return libghdl.vhdl__nodes__get_design_file_directory(obj)
 
-Get_Entity_Class = libghdl.vhdl__nodes__get_entity_class
-Set_Entity_Class = libghdl.vhdl__nodes__set_entity_class
 
-Get_Entity_Name_List = libghdl.vhdl__nodes__get_entity_name_list
-Set_Entity_Name_List = libghdl.vhdl__nodes__set_entity_name_list
+@export
+def Set_Design_File_Directory(obj, value) -> None:
+    libghdl.vhdl__nodes__set_design_file_directory(obj, value)
 
-Get_Attribute_Designator = libghdl.vhdl__nodes__get_attribute_designator
-Set_Attribute_Designator = libghdl.vhdl__nodes__set_attribute_designator
 
-Get_Attribute_Specification_Chain = (
-    libghdl.vhdl__nodes__get_attribute_specification_chain
-)
-Set_Attribute_Specification_Chain = (
-    libghdl.vhdl__nodes__set_attribute_specification_chain
-)
+@export
+def Get_Design_File(obj):
+    return libghdl.vhdl__nodes__get_design_file(obj)
 
-Get_Attribute_Specification = libghdl.vhdl__nodes__get_attribute_specification
-Set_Attribute_Specification = libghdl.vhdl__nodes__set_attribute_specification
 
-Get_Static_Attribute_Flag = libghdl.vhdl__nodes__get_static_attribute_flag
-Set_Static_Attribute_Flag = libghdl.vhdl__nodes__set_static_attribute_flag
+@export
+def Set_Design_File(obj, value) -> None:
+    libghdl.vhdl__nodes__set_design_file(obj, value)
 
-Get_Signal_List = libghdl.vhdl__nodes__get_signal_list
-Set_Signal_List = libghdl.vhdl__nodes__set_signal_list
 
-Get_Quantity_List = libghdl.vhdl__nodes__get_quantity_list
-Set_Quantity_List = libghdl.vhdl__nodes__set_quantity_list
+@export
+def Get_Design_File_Chain(obj):
+    return libghdl.vhdl__nodes__get_design_file_chain(obj)
 
-Get_Designated_Entity = libghdl.vhdl__nodes__get_designated_entity
-Set_Designated_Entity = libghdl.vhdl__nodes__set_designated_entity
 
-Get_Formal = libghdl.vhdl__nodes__get_formal
-Set_Formal = libghdl.vhdl__nodes__set_formal
+@export
+def Set_Design_File_Chain(obj, value) -> None:
+    libghdl.vhdl__nodes__set_design_file_chain(obj, value)
 
-Get_Actual = libghdl.vhdl__nodes__get_actual
-Set_Actual = libghdl.vhdl__nodes__set_actual
 
-Get_Actual_Conversion = libghdl.vhdl__nodes__get_actual_conversion
-Set_Actual_Conversion = libghdl.vhdl__nodes__set_actual_conversion
+@export
+def Get_Library_Directory(obj):
+    return libghdl.vhdl__nodes__get_library_directory(obj)
 
-Get_Formal_Conversion = libghdl.vhdl__nodes__get_formal_conversion
-Set_Formal_Conversion = libghdl.vhdl__nodes__set_formal_conversion
 
-Get_Whole_Association_Flag = libghdl.vhdl__nodes__get_whole_association_flag
-Set_Whole_Association_Flag = libghdl.vhdl__nodes__set_whole_association_flag
+@export
+def Set_Library_Directory(obj, value) -> None:
+    libghdl.vhdl__nodes__set_library_directory(obj, value)
 
-Get_Collapse_Signal_Flag = libghdl.vhdl__nodes__get_collapse_signal_flag
-Set_Collapse_Signal_Flag = libghdl.vhdl__nodes__set_collapse_signal_flag
 
-Get_Artificial_Flag = libghdl.vhdl__nodes__get_artificial_flag
-Set_Artificial_Flag = libghdl.vhdl__nodes__set_artificial_flag
+@export
+def Get_Date(obj):
+    return libghdl.vhdl__nodes__get_date(obj)
 
-Get_Open_Flag = libghdl.vhdl__nodes__get_open_flag
-Set_Open_Flag = libghdl.vhdl__nodes__set_open_flag
 
-Get_After_Drivers_Flag = libghdl.vhdl__nodes__get_after_drivers_flag
-Set_After_Drivers_Flag = libghdl.vhdl__nodes__set_after_drivers_flag
+@export
+def Set_Date(obj, value) -> None:
+    libghdl.vhdl__nodes__set_date(obj, value)
 
-Get_We_Value = libghdl.vhdl__nodes__get_we_value
-Set_We_Value = libghdl.vhdl__nodes__set_we_value
 
-Get_Time = libghdl.vhdl__nodes__get_time
-Set_Time = libghdl.vhdl__nodes__set_time
+@export
+def Get_Context_Items(obj):
+    return libghdl.vhdl__nodes__get_context_items(obj)
 
-Get_Associated_Expr = libghdl.vhdl__nodes__get_associated_expr
-Set_Associated_Expr = libghdl.vhdl__nodes__set_associated_expr
 
-Get_Associated_Block = libghdl.vhdl__nodes__get_associated_block
-Set_Associated_Block = libghdl.vhdl__nodes__set_associated_block
+@export
+def Set_Context_Items(obj, value) -> None:
+    libghdl.vhdl__nodes__set_context_items(obj, value)
 
-Get_Associated_Chain = libghdl.vhdl__nodes__get_associated_chain
-Set_Associated_Chain = libghdl.vhdl__nodes__set_associated_chain
 
-Get_Choice_Name = libghdl.vhdl__nodes__get_choice_name
-Set_Choice_Name = libghdl.vhdl__nodes__set_choice_name
+@export
+def Get_Dependence_List(obj):
+    return libghdl.vhdl__nodes__get_dependence_list(obj)
 
-Get_Choice_Expression = libghdl.vhdl__nodes__get_choice_expression
-Set_Choice_Expression = libghdl.vhdl__nodes__set_choice_expression
 
-Get_Choice_Range = libghdl.vhdl__nodes__get_choice_range
-Set_Choice_Range = libghdl.vhdl__nodes__set_choice_range
+@export
+def Set_Dependence_List(obj, value) -> None:
+    libghdl.vhdl__nodes__set_dependence_list(obj, value)
 
-Get_Same_Alternative_Flag = libghdl.vhdl__nodes__get_same_alternative_flag
-Set_Same_Alternative_Flag = libghdl.vhdl__nodes__set_same_alternative_flag
 
-Get_Element_Type_Flag = libghdl.vhdl__nodes__get_element_type_flag
-Set_Element_Type_Flag = libghdl.vhdl__nodes__set_element_type_flag
+@export
+def Get_Analysis_Checks_List(obj):
+    return libghdl.vhdl__nodes__get_analysis_checks_list(obj)
 
-Get_Architecture = libghdl.vhdl__nodes__get_architecture
-Set_Architecture = libghdl.vhdl__nodes__set_architecture
 
-Get_Block_Specification = libghdl.vhdl__nodes__get_block_specification
-Set_Block_Specification = libghdl.vhdl__nodes__set_block_specification
+@export
+def Set_Analysis_Checks_List(obj, value) -> None:
+    libghdl.vhdl__nodes__set_analysis_checks_list(obj, value)
 
-Get_Prev_Block_Configuration = libghdl.vhdl__nodes__get_prev_block_configuration
-Set_Prev_Block_Configuration = libghdl.vhdl__nodes__set_prev_block_configuration
 
-Get_Configuration_Item_Chain = libghdl.vhdl__nodes__get_configuration_item_chain
-Set_Configuration_Item_Chain = libghdl.vhdl__nodes__set_configuration_item_chain
+@export
+def Get_Date_State(obj):
+    return libghdl.vhdl__nodes__get_date_state(obj)
 
-Get_Attribute_Value_Chain = libghdl.vhdl__nodes__get_attribute_value_chain
-Set_Attribute_Value_Chain = libghdl.vhdl__nodes__set_attribute_value_chain
 
-Get_Spec_Chain = libghdl.vhdl__nodes__get_spec_chain
-Set_Spec_Chain = libghdl.vhdl__nodes__set_spec_chain
+@export
+def Set_Date_State(obj, value) -> None:
+    libghdl.vhdl__nodes__set_date_state(obj, value)
 
-Get_Value_Chain = libghdl.vhdl__nodes__get_value_chain
-Set_Value_Chain = libghdl.vhdl__nodes__set_value_chain
 
-Get_Attribute_Value_Spec_Chain = libghdl.vhdl__nodes__get_attribute_value_spec_chain
-Set_Attribute_Value_Spec_Chain = libghdl.vhdl__nodes__set_attribute_value_spec_chain
+@export
+def Get_Guarded_Target_State(obj):
+    return libghdl.vhdl__nodes__get_guarded_target_state(obj)
 
-Get_Entity_Name = libghdl.vhdl__nodes__get_entity_name
-Set_Entity_Name = libghdl.vhdl__nodes__set_entity_name
 
-Get_Package = libghdl.vhdl__nodes__get_package
-Set_Package = libghdl.vhdl__nodes__set_package
+@export
+def Set_Guarded_Target_State(obj, value) -> None:
+    libghdl.vhdl__nodes__set_guarded_target_state(obj, value)
 
-Get_Package_Body = libghdl.vhdl__nodes__get_package_body
-Set_Package_Body = libghdl.vhdl__nodes__set_package_body
 
-Get_Instance_Package_Body = libghdl.vhdl__nodes__get_instance_package_body
-Set_Instance_Package_Body = libghdl.vhdl__nodes__set_instance_package_body
+@export
+def Get_Library_Unit(obj):
+    return libghdl.vhdl__nodes__get_library_unit(obj)
 
-Get_Need_Body = libghdl.vhdl__nodes__get_need_body
-Set_Need_Body = libghdl.vhdl__nodes__set_need_body
 
-Get_Macro_Expanded_Flag = libghdl.vhdl__nodes__get_macro_expanded_flag
-Set_Macro_Expanded_Flag = libghdl.vhdl__nodes__set_macro_expanded_flag
+@export
+def Set_Library_Unit(obj, value) -> None:
+    libghdl.vhdl__nodes__set_library_unit(obj, value)
 
-Get_Need_Instance_Bodies = libghdl.vhdl__nodes__get_need_instance_bodies
-Set_Need_Instance_Bodies = libghdl.vhdl__nodes__set_need_instance_bodies
 
-Get_Hierarchical_Name = libghdl.vhdl__nodes__get_hierarchical_name
-Set_Hierarchical_Name = libghdl.vhdl__nodes__set_hierarchical_name
+@export
+def Get_Hash_Chain(obj):
+    return libghdl.vhdl__nodes__get_hash_chain(obj)
 
-Get_Inherit_Spec_Chain = libghdl.vhdl__nodes__get_inherit_spec_chain
-Set_Inherit_Spec_Chain = libghdl.vhdl__nodes__set_inherit_spec_chain
 
-Get_Vunit_Item_Chain = libghdl.vhdl__nodes__get_vunit_item_chain
-Set_Vunit_Item_Chain = libghdl.vhdl__nodes__set_vunit_item_chain
+@export
+def Set_Hash_Chain(obj, value) -> None:
+    libghdl.vhdl__nodes__set_hash_chain(obj, value)
 
-Get_Bound_Vunit_Chain = libghdl.vhdl__nodes__get_bound_vunit_chain
-Set_Bound_Vunit_Chain = libghdl.vhdl__nodes__set_bound_vunit_chain
 
-Get_Verification_Block_Configuration = (
-    libghdl.vhdl__nodes__get_verification_block_configuration
-)
-Set_Verification_Block_Configuration = (
-    libghdl.vhdl__nodes__set_verification_block_configuration
-)
+@export
+def Get_Design_Unit_Source_Pos(obj):
+    return libghdl.vhdl__nodes__get_design_unit_source_pos(obj)
 
-Get_Block_Configuration = libghdl.vhdl__nodes__get_block_configuration
-Set_Block_Configuration = libghdl.vhdl__nodes__set_block_configuration
 
-Get_Concurrent_Statement_Chain = libghdl.vhdl__nodes__get_concurrent_statement_chain
-Set_Concurrent_Statement_Chain = libghdl.vhdl__nodes__set_concurrent_statement_chain
+@export
+def Set_Design_Unit_Source_Pos(obj, value) -> None:
+    libghdl.vhdl__nodes__set_design_unit_source_pos(obj, value)
 
-Get_Chain = libghdl.vhdl__nodes__get_chain
-Set_Chain = libghdl.vhdl__nodes__set_chain
 
-Get_Port_Chain = libghdl.vhdl__nodes__get_port_chain
-Set_Port_Chain = libghdl.vhdl__nodes__set_port_chain
+@export
+def Get_Design_Unit_Source_Line(obj):
+    return libghdl.vhdl__nodes__get_design_unit_source_line(obj)
 
-Get_Generic_Chain = libghdl.vhdl__nodes__get_generic_chain
-Set_Generic_Chain = libghdl.vhdl__nodes__set_generic_chain
 
-Get_Type = libghdl.vhdl__nodes__get_type
-Set_Type = libghdl.vhdl__nodes__set_type
+@export
+def Set_Design_Unit_Source_Line(obj, value) -> None:
+    libghdl.vhdl__nodes__set_design_unit_source_line(obj, value)
 
-Get_Subtype_Indication = libghdl.vhdl__nodes__get_subtype_indication
-Set_Subtype_Indication = libghdl.vhdl__nodes__set_subtype_indication
 
-Get_Discrete_Range = libghdl.vhdl__nodes__get_discrete_range
-Set_Discrete_Range = libghdl.vhdl__nodes__set_discrete_range
+@export
+def Get_Design_Unit_Source_Col(obj):
+    return libghdl.vhdl__nodes__get_design_unit_source_col(obj)
 
-Get_Type_Definition = libghdl.vhdl__nodes__get_type_definition
-Set_Type_Definition = libghdl.vhdl__nodes__set_type_definition
 
-Get_Subtype_Definition = libghdl.vhdl__nodes__get_subtype_definition
-Set_Subtype_Definition = libghdl.vhdl__nodes__set_subtype_definition
+@export
+def Set_Design_Unit_Source_Col(obj, value) -> None:
+    libghdl.vhdl__nodes__set_design_unit_source_col(obj, value)
 
-Get_Incomplete_Type_Declaration = libghdl.vhdl__nodes__get_incomplete_type_declaration
-Set_Incomplete_Type_Declaration = libghdl.vhdl__nodes__set_incomplete_type_declaration
 
-Get_Interface_Type_Subprograms = libghdl.vhdl__nodes__get_interface_type_subprograms
-Set_Interface_Type_Subprograms = libghdl.vhdl__nodes__set_interface_type_subprograms
+@export
+def Get_Value(obj):
+    return libghdl.vhdl__nodes__get_value(obj)
 
-Get_Nature_Definition = libghdl.vhdl__nodes__get_nature_definition
-Set_Nature_Definition = libghdl.vhdl__nodes__set_nature_definition
 
-Get_Nature = libghdl.vhdl__nodes__get_nature
-Set_Nature = libghdl.vhdl__nodes__set_nature
+@export
+def Set_Value(obj, value) -> None:
+    libghdl.vhdl__nodes__set_value(obj, value)
 
-Get_Subnature_Indication = libghdl.vhdl__nodes__get_subnature_indication
-Set_Subnature_Indication = libghdl.vhdl__nodes__set_subnature_indication
 
-Get_Mode = libghdl.vhdl__nodes__get_mode
-Set_Mode = libghdl.vhdl__nodes__set_mode
+@export
+def Get_Enum_Pos(obj):
+    return libghdl.vhdl__nodes__get_enum_pos(obj)
 
-Get_Guarded_Signal_Flag = libghdl.vhdl__nodes__get_guarded_signal_flag
-Set_Guarded_Signal_Flag = libghdl.vhdl__nodes__set_guarded_signal_flag
 
-Get_Signal_Kind = libghdl.vhdl__nodes__get_signal_kind
-Set_Signal_Kind = libghdl.vhdl__nodes__set_signal_kind
+@export
+def Set_Enum_Pos(obj, value) -> None:
+    libghdl.vhdl__nodes__set_enum_pos(obj, value)
 
-Get_Base_Name = libghdl.vhdl__nodes__get_base_name
-Set_Base_Name = libghdl.vhdl__nodes__set_base_name
 
-Get_Interface_Declaration_Chain = libghdl.vhdl__nodes__get_interface_declaration_chain
-Set_Interface_Declaration_Chain = libghdl.vhdl__nodes__set_interface_declaration_chain
+@export
+def Get_Physical_Literal(obj):
+    return libghdl.vhdl__nodes__get_physical_literal(obj)
 
-Get_Subprogram_Specification = libghdl.vhdl__nodes__get_subprogram_specification
-Set_Subprogram_Specification = libghdl.vhdl__nodes__set_subprogram_specification
 
-Get_Sequential_Statement_Chain = libghdl.vhdl__nodes__get_sequential_statement_chain
-Set_Sequential_Statement_Chain = libghdl.vhdl__nodes__set_sequential_statement_chain
+@export
+def Set_Physical_Literal(obj, value) -> None:
+    libghdl.vhdl__nodes__set_physical_literal(obj, value)
 
-Get_Simultaneous_Statement_Chain = libghdl.vhdl__nodes__get_simultaneous_statement_chain
-Set_Simultaneous_Statement_Chain = libghdl.vhdl__nodes__set_simultaneous_statement_chain
 
-Get_Subprogram_Body = libghdl.vhdl__nodes__get_subprogram_body
-Set_Subprogram_Body = libghdl.vhdl__nodes__set_subprogram_body
+@export
+def Get_Fp_Value(obj):
+    return libghdl.vhdl__nodes__get_fp_value(obj)
 
-Get_Overload_Number = libghdl.vhdl__nodes__get_overload_number
-Set_Overload_Number = libghdl.vhdl__nodes__set_overload_number
 
-Get_Subprogram_Depth = libghdl.vhdl__nodes__get_subprogram_depth
-Set_Subprogram_Depth = libghdl.vhdl__nodes__set_subprogram_depth
+@export
+def Set_Fp_Value(obj, value) -> None:
+    libghdl.vhdl__nodes__set_fp_value(obj, value)
 
-Get_Subprogram_Hash = libghdl.vhdl__nodes__get_subprogram_hash
-Set_Subprogram_Hash = libghdl.vhdl__nodes__set_subprogram_hash
 
-Get_Impure_Depth = libghdl.vhdl__nodes__get_impure_depth
-Set_Impure_Depth = libghdl.vhdl__nodes__set_impure_depth
+@export
+def Get_Simple_Aggregate_List(obj):
+    return libghdl.vhdl__nodes__get_simple_aggregate_list(obj)
 
-Get_Return_Type = libghdl.vhdl__nodes__get_return_type
-Set_Return_Type = libghdl.vhdl__nodes__set_return_type
 
-Get_Implicit_Definition = libghdl.vhdl__nodes__get_implicit_definition
-Set_Implicit_Definition = libghdl.vhdl__nodes__set_implicit_definition
+@export
+def Set_Simple_Aggregate_List(obj, value) -> None:
+    libghdl.vhdl__nodes__set_simple_aggregate_list(obj, value)
 
-Get_Uninstantiated_Subprogram_Name = (
-    libghdl.vhdl__nodes__get_uninstantiated_subprogram_name
-)
-Set_Uninstantiated_Subprogram_Name = (
-    libghdl.vhdl__nodes__set_uninstantiated_subprogram_name
-)
 
-Get_Default_Value = libghdl.vhdl__nodes__get_default_value
-Set_Default_Value = libghdl.vhdl__nodes__set_default_value
+@export
+def Get_String8_Id(obj):
+    return libghdl.vhdl__nodes__get_string8_id(obj)
 
-Get_Deferred_Declaration = libghdl.vhdl__nodes__get_deferred_declaration
-Set_Deferred_Declaration = libghdl.vhdl__nodes__set_deferred_declaration
 
-Get_Deferred_Declaration_Flag = libghdl.vhdl__nodes__get_deferred_declaration_flag
-Set_Deferred_Declaration_Flag = libghdl.vhdl__nodes__set_deferred_declaration_flag
+@export
+def Set_String8_Id(obj, value) -> None:
+    libghdl.vhdl__nodes__set_string8_id(obj, value)
 
-Get_Shared_Flag = libghdl.vhdl__nodes__get_shared_flag
-Set_Shared_Flag = libghdl.vhdl__nodes__set_shared_flag
 
-Get_Design_Unit = libghdl.vhdl__nodes__get_design_unit
-Set_Design_Unit = libghdl.vhdl__nodes__set_design_unit
+@export
+def Get_String_Length(obj):
+    return libghdl.vhdl__nodes__get_string_length(obj)
 
-Get_Block_Statement = libghdl.vhdl__nodes__get_block_statement
-Set_Block_Statement = libghdl.vhdl__nodes__set_block_statement
 
-Get_Signal_Driver = libghdl.vhdl__nodes__get_signal_driver
-Set_Signal_Driver = libghdl.vhdl__nodes__set_signal_driver
+@export
+def Set_String_Length(obj, value) -> None:
+    libghdl.vhdl__nodes__set_string_length(obj, value)
 
-Get_Declaration_Chain = libghdl.vhdl__nodes__get_declaration_chain
-Set_Declaration_Chain = libghdl.vhdl__nodes__set_declaration_chain
 
-Get_File_Logical_Name = libghdl.vhdl__nodes__get_file_logical_name
-Set_File_Logical_Name = libghdl.vhdl__nodes__set_file_logical_name
+@export
+def Get_Bit_String_Base(obj):
+    return libghdl.vhdl__nodes__get_bit_string_base(obj)
 
-Get_File_Open_Kind = libghdl.vhdl__nodes__get_file_open_kind
-Set_File_Open_Kind = libghdl.vhdl__nodes__set_file_open_kind
 
-Get_Element_Position = libghdl.vhdl__nodes__get_element_position
-Set_Element_Position = libghdl.vhdl__nodes__set_element_position
+@export
+def Set_Bit_String_Base(obj, value) -> None:
+    libghdl.vhdl__nodes__set_bit_string_base(obj, value)
 
-Get_Use_Clause_Chain = libghdl.vhdl__nodes__get_use_clause_chain
-Set_Use_Clause_Chain = libghdl.vhdl__nodes__set_use_clause_chain
 
-Get_Context_Reference_Chain = libghdl.vhdl__nodes__get_context_reference_chain
-Set_Context_Reference_Chain = libghdl.vhdl__nodes__set_context_reference_chain
+@export
+def Get_Has_Signed(obj):
+    return libghdl.vhdl__nodes__get_has_signed(obj)
 
-Get_Selected_Name = libghdl.vhdl__nodes__get_selected_name
-Set_Selected_Name = libghdl.vhdl__nodes__set_selected_name
 
-Get_Type_Declarator = libghdl.vhdl__nodes__get_type_declarator
-Set_Type_Declarator = libghdl.vhdl__nodes__set_type_declarator
+@export
+def Set_Has_Signed(obj, value) -> None:
+    libghdl.vhdl__nodes__set_has_signed(obj, value)
 
-Get_Complete_Type_Definition = libghdl.vhdl__nodes__get_complete_type_definition
-Set_Complete_Type_Definition = libghdl.vhdl__nodes__set_complete_type_definition
 
-Get_Incomplete_Type_Ref_Chain = libghdl.vhdl__nodes__get_incomplete_type_ref_chain
-Set_Incomplete_Type_Ref_Chain = libghdl.vhdl__nodes__set_incomplete_type_ref_chain
+@export
+def Get_Has_Sign(obj):
+    return libghdl.vhdl__nodes__get_has_sign(obj)
 
-Get_Associated_Type = libghdl.vhdl__nodes__get_associated_type
-Set_Associated_Type = libghdl.vhdl__nodes__set_associated_type
 
-Get_Enumeration_Literal_List = libghdl.vhdl__nodes__get_enumeration_literal_list
-Set_Enumeration_Literal_List = libghdl.vhdl__nodes__set_enumeration_literal_list
+@export
+def Set_Has_Sign(obj, value) -> None:
+    libghdl.vhdl__nodes__set_has_sign(obj, value)
 
-Get_Entity_Class_Entry_Chain = libghdl.vhdl__nodes__get_entity_class_entry_chain
-Set_Entity_Class_Entry_Chain = libghdl.vhdl__nodes__set_entity_class_entry_chain
 
-Get_Group_Constituent_List = libghdl.vhdl__nodes__get_group_constituent_list
-Set_Group_Constituent_List = libghdl.vhdl__nodes__set_group_constituent_list
+@export
+def Get_Has_Length(obj):
+    return libghdl.vhdl__nodes__get_has_length(obj)
 
-Get_Unit_Chain = libghdl.vhdl__nodes__get_unit_chain
-Set_Unit_Chain = libghdl.vhdl__nodes__set_unit_chain
 
-Get_Primary_Unit = libghdl.vhdl__nodes__get_primary_unit
-Set_Primary_Unit = libghdl.vhdl__nodes__set_primary_unit
+@export
+def Set_Has_Length(obj, value) -> None:
+    libghdl.vhdl__nodes__set_has_length(obj, value)
 
-Get_Identifier = libghdl.vhdl__nodes__get_identifier
-Set_Identifier = libghdl.vhdl__nodes__set_identifier
 
-Get_Label = libghdl.vhdl__nodes__get_label
-Set_Label = libghdl.vhdl__nodes__set_label
+@export
+def Get_Literal_Length(obj):
+    return libghdl.vhdl__nodes__get_literal_length(obj)
 
-Get_Visible_Flag = libghdl.vhdl__nodes__get_visible_flag
-Set_Visible_Flag = libghdl.vhdl__nodes__set_visible_flag
 
-Get_Range_Constraint = libghdl.vhdl__nodes__get_range_constraint
-Set_Range_Constraint = libghdl.vhdl__nodes__set_range_constraint
+@export
+def Set_Literal_Length(obj, value) -> None:
+    libghdl.vhdl__nodes__set_literal_length(obj, value)
 
-Get_Direction = libghdl.vhdl__nodes__get_direction
-Set_Direction = libghdl.vhdl__nodes__set_direction
 
-Get_Left_Limit = libghdl.vhdl__nodes__get_left_limit
-Set_Left_Limit = libghdl.vhdl__nodes__set_left_limit
+@export
+def Get_Literal_Origin(obj):
+    return libghdl.vhdl__nodes__get_literal_origin(obj)
 
-Get_Right_Limit = libghdl.vhdl__nodes__get_right_limit
-Set_Right_Limit = libghdl.vhdl__nodes__set_right_limit
 
-Get_Left_Limit_Expr = libghdl.vhdl__nodes__get_left_limit_expr
-Set_Left_Limit_Expr = libghdl.vhdl__nodes__set_left_limit_expr
+@export
+def Set_Literal_Origin(obj, value) -> None:
+    libghdl.vhdl__nodes__set_literal_origin(obj, value)
 
-Get_Right_Limit_Expr = libghdl.vhdl__nodes__get_right_limit_expr
-Set_Right_Limit_Expr = libghdl.vhdl__nodes__set_right_limit_expr
 
-Get_Parent_Type = libghdl.vhdl__nodes__get_parent_type
-Set_Parent_Type = libghdl.vhdl__nodes__set_parent_type
+@export
+def Get_Range_Origin(obj):
+    return libghdl.vhdl__nodes__get_range_origin(obj)
 
-Get_Simple_Nature = libghdl.vhdl__nodes__get_simple_nature
-Set_Simple_Nature = libghdl.vhdl__nodes__set_simple_nature
 
-Get_Base_Nature = libghdl.vhdl__nodes__get_base_nature
-Set_Base_Nature = libghdl.vhdl__nodes__set_base_nature
+@export
+def Set_Range_Origin(obj, value) -> None:
+    libghdl.vhdl__nodes__set_range_origin(obj, value)
 
-Get_Resolution_Indication = libghdl.vhdl__nodes__get_resolution_indication
-Set_Resolution_Indication = libghdl.vhdl__nodes__set_resolution_indication
 
-Get_Record_Element_Resolution_Chain = (
-    libghdl.vhdl__nodes__get_record_element_resolution_chain
-)
-Set_Record_Element_Resolution_Chain = (
-    libghdl.vhdl__nodes__set_record_element_resolution_chain
-)
+@export
+def Get_Literal_Subtype(obj):
+    return libghdl.vhdl__nodes__get_literal_subtype(obj)
 
-Get_Tolerance = libghdl.vhdl__nodes__get_tolerance
-Set_Tolerance = libghdl.vhdl__nodes__set_tolerance
 
-Get_Plus_Terminal_Name = libghdl.vhdl__nodes__get_plus_terminal_name
-Set_Plus_Terminal_Name = libghdl.vhdl__nodes__set_plus_terminal_name
+@export
+def Set_Literal_Subtype(obj, value) -> None:
+    libghdl.vhdl__nodes__set_literal_subtype(obj, value)
 
-Get_Minus_Terminal_Name = libghdl.vhdl__nodes__get_minus_terminal_name
-Set_Minus_Terminal_Name = libghdl.vhdl__nodes__set_minus_terminal_name
 
-Get_Plus_Terminal = libghdl.vhdl__nodes__get_plus_terminal
-Set_Plus_Terminal = libghdl.vhdl__nodes__set_plus_terminal
+@export
+def Get_Allocator_Subtype(obj):
+    return libghdl.vhdl__nodes__get_allocator_subtype(obj)
 
-Get_Minus_Terminal = libghdl.vhdl__nodes__get_minus_terminal
-Set_Minus_Terminal = libghdl.vhdl__nodes__set_minus_terminal
 
-Get_Magnitude_Expression = libghdl.vhdl__nodes__get_magnitude_expression
-Set_Magnitude_Expression = libghdl.vhdl__nodes__set_magnitude_expression
+@export
+def Set_Allocator_Subtype(obj, value) -> None:
+    libghdl.vhdl__nodes__set_allocator_subtype(obj, value)
 
-Get_Phase_Expression = libghdl.vhdl__nodes__get_phase_expression
-Set_Phase_Expression = libghdl.vhdl__nodes__set_phase_expression
 
-Get_Power_Expression = libghdl.vhdl__nodes__get_power_expression
-Set_Power_Expression = libghdl.vhdl__nodes__set_power_expression
+@export
+def Get_Entity_Class(obj):
+    return libghdl.vhdl__nodes__get_entity_class(obj)
 
-Get_Simultaneous_Left = libghdl.vhdl__nodes__get_simultaneous_left
-Set_Simultaneous_Left = libghdl.vhdl__nodes__set_simultaneous_left
 
-Get_Simultaneous_Right = libghdl.vhdl__nodes__get_simultaneous_right
-Set_Simultaneous_Right = libghdl.vhdl__nodes__set_simultaneous_right
+@export
+def Set_Entity_Class(obj, value) -> None:
+    libghdl.vhdl__nodes__set_entity_class(obj, value)
 
-Get_Text_File_Flag = libghdl.vhdl__nodes__get_text_file_flag
-Set_Text_File_Flag = libghdl.vhdl__nodes__set_text_file_flag
 
-Get_Only_Characters_Flag = libghdl.vhdl__nodes__get_only_characters_flag
-Set_Only_Characters_Flag = libghdl.vhdl__nodes__set_only_characters_flag
+@export
+def Get_Entity_Name_List(obj):
+    return libghdl.vhdl__nodes__get_entity_name_list(obj)
 
-Get_Is_Character_Type = libghdl.vhdl__nodes__get_is_character_type
-Set_Is_Character_Type = libghdl.vhdl__nodes__set_is_character_type
 
-Get_Nature_Staticness = libghdl.vhdl__nodes__get_nature_staticness
-Set_Nature_Staticness = libghdl.vhdl__nodes__set_nature_staticness
+@export
+def Set_Entity_Name_List(obj, value) -> None:
+    libghdl.vhdl__nodes__set_entity_name_list(obj, value)
 
-Get_Type_Staticness = libghdl.vhdl__nodes__get_type_staticness
-Set_Type_Staticness = libghdl.vhdl__nodes__set_type_staticness
 
-Get_Constraint_State = libghdl.vhdl__nodes__get_constraint_state
-Set_Constraint_State = libghdl.vhdl__nodes__set_constraint_state
+@export
+def Get_Attribute_Designator(obj):
+    return libghdl.vhdl__nodes__get_attribute_designator(obj)
 
-Get_Index_Subtype_List = libghdl.vhdl__nodes__get_index_subtype_list
-Set_Index_Subtype_List = libghdl.vhdl__nodes__set_index_subtype_list
 
-Get_Index_Subtype_Definition_List = (
-    libghdl.vhdl__nodes__get_index_subtype_definition_list
-)
-Set_Index_Subtype_Definition_List = (
-    libghdl.vhdl__nodes__set_index_subtype_definition_list
-)
+@export
+def Set_Attribute_Designator(obj, value) -> None:
+    libghdl.vhdl__nodes__set_attribute_designator(obj, value)
 
-Get_Element_Subtype_Indication = libghdl.vhdl__nodes__get_element_subtype_indication
-Set_Element_Subtype_Indication = libghdl.vhdl__nodes__set_element_subtype_indication
 
-Get_Element_Subtype = libghdl.vhdl__nodes__get_element_subtype
-Set_Element_Subtype = libghdl.vhdl__nodes__set_element_subtype
+@export
+def Get_Attribute_Specification_Chain(obj):
+    return libghdl.vhdl__nodes__get_attribute_specification_chain(obj)
 
-Get_Element_Subnature_Indication = libghdl.vhdl__nodes__get_element_subnature_indication
-Set_Element_Subnature_Indication = libghdl.vhdl__nodes__set_element_subnature_indication
 
-Get_Element_Subnature = libghdl.vhdl__nodes__get_element_subnature
-Set_Element_Subnature = libghdl.vhdl__nodes__set_element_subnature
+@export
+def Set_Attribute_Specification_Chain(obj, value) -> None:
+    libghdl.vhdl__nodes__set_attribute_specification_chain(obj, value)
 
-Get_Index_Constraint_List = libghdl.vhdl__nodes__get_index_constraint_list
-Set_Index_Constraint_List = libghdl.vhdl__nodes__set_index_constraint_list
 
-Get_Array_Element_Constraint = libghdl.vhdl__nodes__get_array_element_constraint
-Set_Array_Element_Constraint = libghdl.vhdl__nodes__set_array_element_constraint
+@export
+def Get_Attribute_Specification(obj):
+    return libghdl.vhdl__nodes__get_attribute_specification(obj)
 
-Get_Has_Array_Constraint_Flag = libghdl.vhdl__nodes__get_has_array_constraint_flag
-Set_Has_Array_Constraint_Flag = libghdl.vhdl__nodes__set_has_array_constraint_flag
 
-Get_Has_Element_Constraint_Flag = libghdl.vhdl__nodes__get_has_element_constraint_flag
-Set_Has_Element_Constraint_Flag = libghdl.vhdl__nodes__set_has_element_constraint_flag
+@export
+def Set_Attribute_Specification(obj, value) -> None:
+    libghdl.vhdl__nodes__set_attribute_specification(obj, value)
 
-Get_Elements_Declaration_List = libghdl.vhdl__nodes__get_elements_declaration_list
-Set_Elements_Declaration_List = libghdl.vhdl__nodes__set_elements_declaration_list
 
-Get_Owned_Elements_Chain = libghdl.vhdl__nodes__get_owned_elements_chain
-Set_Owned_Elements_Chain = libghdl.vhdl__nodes__set_owned_elements_chain
+@export
+def Get_Static_Attribute_Flag(obj):
+    return libghdl.vhdl__nodes__get_static_attribute_flag(obj)
 
-Get_Designated_Type = libghdl.vhdl__nodes__get_designated_type
-Set_Designated_Type = libghdl.vhdl__nodes__set_designated_type
 
-Get_Designated_Subtype_Indication = (
-    libghdl.vhdl__nodes__get_designated_subtype_indication
-)
-Set_Designated_Subtype_Indication = (
-    libghdl.vhdl__nodes__set_designated_subtype_indication
-)
+@export
+def Set_Static_Attribute_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_static_attribute_flag(obj, value)
 
-Get_Index_List = libghdl.vhdl__nodes__get_index_list
-Set_Index_List = libghdl.vhdl__nodes__set_index_list
 
-Get_Reference = libghdl.vhdl__nodes__get_reference
-Set_Reference = libghdl.vhdl__nodes__set_reference
+@export
+def Get_Signal_List(obj):
+    return libghdl.vhdl__nodes__get_signal_list(obj)
 
-Get_Nature_Declarator = libghdl.vhdl__nodes__get_nature_declarator
-Set_Nature_Declarator = libghdl.vhdl__nodes__set_nature_declarator
 
-Get_Across_Type_Mark = libghdl.vhdl__nodes__get_across_type_mark
-Set_Across_Type_Mark = libghdl.vhdl__nodes__set_across_type_mark
+@export
+def Set_Signal_List(obj, value) -> None:
+    libghdl.vhdl__nodes__set_signal_list(obj, value)
 
-Get_Through_Type_Mark = libghdl.vhdl__nodes__get_through_type_mark
-Set_Through_Type_Mark = libghdl.vhdl__nodes__set_through_type_mark
 
-Get_Across_Type_Definition = libghdl.vhdl__nodes__get_across_type_definition
-Set_Across_Type_Definition = libghdl.vhdl__nodes__set_across_type_definition
+@export
+def Get_Quantity_List(obj):
+    return libghdl.vhdl__nodes__get_quantity_list(obj)
 
-Get_Through_Type_Definition = libghdl.vhdl__nodes__get_through_type_definition
-Set_Through_Type_Definition = libghdl.vhdl__nodes__set_through_type_definition
 
-Get_Across_Type = libghdl.vhdl__nodes__get_across_type
-Set_Across_Type = libghdl.vhdl__nodes__set_across_type
+@export
+def Set_Quantity_List(obj, value) -> None:
+    libghdl.vhdl__nodes__set_quantity_list(obj, value)
 
-Get_Through_Type = libghdl.vhdl__nodes__get_through_type
-Set_Through_Type = libghdl.vhdl__nodes__set_through_type
 
-Get_Target = libghdl.vhdl__nodes__get_target
-Set_Target = libghdl.vhdl__nodes__set_target
+@export
+def Get_Designated_Entity(obj):
+    return libghdl.vhdl__nodes__get_designated_entity(obj)
 
-Get_Waveform_Chain = libghdl.vhdl__nodes__get_waveform_chain
-Set_Waveform_Chain = libghdl.vhdl__nodes__set_waveform_chain
 
-Get_Guard = libghdl.vhdl__nodes__get_guard
-Set_Guard = libghdl.vhdl__nodes__set_guard
+@export
+def Set_Designated_Entity(obj, value) -> None:
+    libghdl.vhdl__nodes__set_designated_entity(obj, value)
 
-Get_Delay_Mechanism = libghdl.vhdl__nodes__get_delay_mechanism
-Set_Delay_Mechanism = libghdl.vhdl__nodes__set_delay_mechanism
 
-Get_Reject_Time_Expression = libghdl.vhdl__nodes__get_reject_time_expression
-Set_Reject_Time_Expression = libghdl.vhdl__nodes__set_reject_time_expression
+@export
+def Get_Formal(obj):
+    return libghdl.vhdl__nodes__get_formal(obj)
 
-Get_Force_Mode = libghdl.vhdl__nodes__get_force_mode
-Set_Force_Mode = libghdl.vhdl__nodes__set_force_mode
 
-Get_Has_Force_Mode = libghdl.vhdl__nodes__get_has_force_mode
-Set_Has_Force_Mode = libghdl.vhdl__nodes__set_has_force_mode
+@export
+def Set_Formal(obj, value) -> None:
+    libghdl.vhdl__nodes__set_formal(obj, value)
 
-Get_Sensitivity_List = libghdl.vhdl__nodes__get_sensitivity_list
-Set_Sensitivity_List = libghdl.vhdl__nodes__set_sensitivity_list
 
-Get_Process_Origin = libghdl.vhdl__nodes__get_process_origin
-Set_Process_Origin = libghdl.vhdl__nodes__set_process_origin
+@export
+def Get_Actual(obj):
+    return libghdl.vhdl__nodes__get_actual(obj)
 
-Get_Package_Origin = libghdl.vhdl__nodes__get_package_origin
-Set_Package_Origin = libghdl.vhdl__nodes__set_package_origin
 
-Get_Condition_Clause = libghdl.vhdl__nodes__get_condition_clause
-Set_Condition_Clause = libghdl.vhdl__nodes__set_condition_clause
+@export
+def Set_Actual(obj, value) -> None:
+    libghdl.vhdl__nodes__set_actual(obj, value)
 
-Get_Break_Element = libghdl.vhdl__nodes__get_break_element
-Set_Break_Element = libghdl.vhdl__nodes__set_break_element
 
-Get_Selector_Quantity = libghdl.vhdl__nodes__get_selector_quantity
-Set_Selector_Quantity = libghdl.vhdl__nodes__set_selector_quantity
+@export
+def Get_Actual_Conversion(obj):
+    return libghdl.vhdl__nodes__get_actual_conversion(obj)
 
-Get_Break_Quantity = libghdl.vhdl__nodes__get_break_quantity
-Set_Break_Quantity = libghdl.vhdl__nodes__set_break_quantity
 
-Get_Timeout_Clause = libghdl.vhdl__nodes__get_timeout_clause
-Set_Timeout_Clause = libghdl.vhdl__nodes__set_timeout_clause
+@export
+def Set_Actual_Conversion(obj, value) -> None:
+    libghdl.vhdl__nodes__set_actual_conversion(obj, value)
 
-Get_Postponed_Flag = libghdl.vhdl__nodes__get_postponed_flag
-Set_Postponed_Flag = libghdl.vhdl__nodes__set_postponed_flag
 
-Get_Callees_List = libghdl.vhdl__nodes__get_callees_list
-Set_Callees_List = libghdl.vhdl__nodes__set_callees_list
+@export
+def Get_Formal_Conversion(obj):
+    return libghdl.vhdl__nodes__get_formal_conversion(obj)
 
-Get_Passive_Flag = libghdl.vhdl__nodes__get_passive_flag
-Set_Passive_Flag = libghdl.vhdl__nodes__set_passive_flag
 
-Get_Resolution_Function_Flag = libghdl.vhdl__nodes__get_resolution_function_flag
-Set_Resolution_Function_Flag = libghdl.vhdl__nodes__set_resolution_function_flag
+@export
+def Set_Formal_Conversion(obj, value) -> None:
+    libghdl.vhdl__nodes__set_formal_conversion(obj, value)
 
-Get_Wait_State = libghdl.vhdl__nodes__get_wait_state
-Set_Wait_State = libghdl.vhdl__nodes__set_wait_state
 
-Get_All_Sensitized_State = libghdl.vhdl__nodes__get_all_sensitized_state
-Set_All_Sensitized_State = libghdl.vhdl__nodes__set_all_sensitized_state
+@export
+def Get_Whole_Association_Flag(obj):
+    return libghdl.vhdl__nodes__get_whole_association_flag(obj)
 
-Get_Seen_Flag = libghdl.vhdl__nodes__get_seen_flag
-Set_Seen_Flag = libghdl.vhdl__nodes__set_seen_flag
 
-Get_Pure_Flag = libghdl.vhdl__nodes__get_pure_flag
-Set_Pure_Flag = libghdl.vhdl__nodes__set_pure_flag
+@export
+def Set_Whole_Association_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_whole_association_flag(obj, value)
 
-Get_Foreign_Flag = libghdl.vhdl__nodes__get_foreign_flag
-Set_Foreign_Flag = libghdl.vhdl__nodes__set_foreign_flag
 
-Get_Resolved_Flag = libghdl.vhdl__nodes__get_resolved_flag
-Set_Resolved_Flag = libghdl.vhdl__nodes__set_resolved_flag
+@export
+def Get_Collapse_Signal_Flag(obj):
+    return libghdl.vhdl__nodes__get_collapse_signal_flag(obj)
 
-Get_Signal_Type_Flag = libghdl.vhdl__nodes__get_signal_type_flag
-Set_Signal_Type_Flag = libghdl.vhdl__nodes__set_signal_type_flag
 
-Get_Has_Signal_Flag = libghdl.vhdl__nodes__get_has_signal_flag
-Set_Has_Signal_Flag = libghdl.vhdl__nodes__set_has_signal_flag
+@export
+def Set_Collapse_Signal_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_collapse_signal_flag(obj, value)
 
-Get_Purity_State = libghdl.vhdl__nodes__get_purity_state
-Set_Purity_State = libghdl.vhdl__nodes__set_purity_state
 
-Get_Elab_Flag = libghdl.vhdl__nodes__get_elab_flag
-Set_Elab_Flag = libghdl.vhdl__nodes__set_elab_flag
+@export
+def Get_Artificial_Flag(obj):
+    return libghdl.vhdl__nodes__get_artificial_flag(obj)
 
-Get_Vendor_Library_Flag = libghdl.vhdl__nodes__get_vendor_library_flag
-Set_Vendor_Library_Flag = libghdl.vhdl__nodes__set_vendor_library_flag
 
-Get_Configuration_Mark_Flag = libghdl.vhdl__nodes__get_configuration_mark_flag
-Set_Configuration_Mark_Flag = libghdl.vhdl__nodes__set_configuration_mark_flag
+@export
+def Set_Artificial_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_artificial_flag(obj, value)
 
-Get_Configuration_Done_Flag = libghdl.vhdl__nodes__get_configuration_done_flag
-Set_Configuration_Done_Flag = libghdl.vhdl__nodes__set_configuration_done_flag
 
-Get_Index_Constraint_Flag = libghdl.vhdl__nodes__get_index_constraint_flag
-Set_Index_Constraint_Flag = libghdl.vhdl__nodes__set_index_constraint_flag
+@export
+def Get_Open_Flag(obj):
+    return libghdl.vhdl__nodes__get_open_flag(obj)
 
-Get_Hide_Implicit_Flag = libghdl.vhdl__nodes__get_hide_implicit_flag
-Set_Hide_Implicit_Flag = libghdl.vhdl__nodes__set_hide_implicit_flag
 
-Get_Assertion_Condition = libghdl.vhdl__nodes__get_assertion_condition
-Set_Assertion_Condition = libghdl.vhdl__nodes__set_assertion_condition
+@export
+def Set_Open_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_open_flag(obj, value)
 
-Get_Report_Expression = libghdl.vhdl__nodes__get_report_expression
-Set_Report_Expression = libghdl.vhdl__nodes__set_report_expression
 
-Get_Severity_Expression = libghdl.vhdl__nodes__get_severity_expression
-Set_Severity_Expression = libghdl.vhdl__nodes__set_severity_expression
+@export
+def Get_After_Drivers_Flag(obj):
+    return libghdl.vhdl__nodes__get_after_drivers_flag(obj)
 
-Get_Instantiated_Unit = libghdl.vhdl__nodes__get_instantiated_unit
-Set_Instantiated_Unit = libghdl.vhdl__nodes__set_instantiated_unit
 
-Get_Generic_Map_Aspect_Chain = libghdl.vhdl__nodes__get_generic_map_aspect_chain
-Set_Generic_Map_Aspect_Chain = libghdl.vhdl__nodes__set_generic_map_aspect_chain
+@export
+def Set_After_Drivers_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_after_drivers_flag(obj, value)
 
-Get_Port_Map_Aspect_Chain = libghdl.vhdl__nodes__get_port_map_aspect_chain
-Set_Port_Map_Aspect_Chain = libghdl.vhdl__nodes__set_port_map_aspect_chain
 
-Get_Configuration_Name = libghdl.vhdl__nodes__get_configuration_name
-Set_Configuration_Name = libghdl.vhdl__nodes__set_configuration_name
+@export
+def Get_We_Value(obj):
+    return libghdl.vhdl__nodes__get_we_value(obj)
 
-Get_Component_Configuration = libghdl.vhdl__nodes__get_component_configuration
-Set_Component_Configuration = libghdl.vhdl__nodes__set_component_configuration
 
-Get_Configuration_Specification = libghdl.vhdl__nodes__get_configuration_specification
-Set_Configuration_Specification = libghdl.vhdl__nodes__set_configuration_specification
+@export
+def Set_We_Value(obj, value) -> None:
+    libghdl.vhdl__nodes__set_we_value(obj, value)
 
-Get_Default_Binding_Indication = libghdl.vhdl__nodes__get_default_binding_indication
-Set_Default_Binding_Indication = libghdl.vhdl__nodes__set_default_binding_indication
 
-Get_Default_Configuration_Declaration = (
-    libghdl.vhdl__nodes__get_default_configuration_declaration
-)
-Set_Default_Configuration_Declaration = (
-    libghdl.vhdl__nodes__set_default_configuration_declaration
-)
+@export
+def Get_Time(obj):
+    return libghdl.vhdl__nodes__get_time(obj)
 
-Get_Expression = libghdl.vhdl__nodes__get_expression
-Set_Expression = libghdl.vhdl__nodes__set_expression
 
-Get_Conditional_Expression_Chain = libghdl.vhdl__nodes__get_conditional_expression_chain
-Set_Conditional_Expression_Chain = libghdl.vhdl__nodes__set_conditional_expression_chain
+@export
+def Set_Time(obj, value) -> None:
+    libghdl.vhdl__nodes__set_time(obj, value)
 
-Get_Allocator_Designated_Type = libghdl.vhdl__nodes__get_allocator_designated_type
-Set_Allocator_Designated_Type = libghdl.vhdl__nodes__set_allocator_designated_type
 
-Get_Selected_Waveform_Chain = libghdl.vhdl__nodes__get_selected_waveform_chain
-Set_Selected_Waveform_Chain = libghdl.vhdl__nodes__set_selected_waveform_chain
+@export
+def Get_Associated_Expr(obj):
+    return libghdl.vhdl__nodes__get_associated_expr(obj)
 
-Get_Conditional_Waveform_Chain = libghdl.vhdl__nodes__get_conditional_waveform_chain
-Set_Conditional_Waveform_Chain = libghdl.vhdl__nodes__set_conditional_waveform_chain
 
-Get_Guard_Expression = libghdl.vhdl__nodes__get_guard_expression
-Set_Guard_Expression = libghdl.vhdl__nodes__set_guard_expression
+@export
+def Set_Associated_Expr(obj, value) -> None:
+    libghdl.vhdl__nodes__set_associated_expr(obj, value)
 
-Get_Guard_Decl = libghdl.vhdl__nodes__get_guard_decl
-Set_Guard_Decl = libghdl.vhdl__nodes__set_guard_decl
 
-Get_Guard_Sensitivity_List = libghdl.vhdl__nodes__get_guard_sensitivity_list
-Set_Guard_Sensitivity_List = libghdl.vhdl__nodes__set_guard_sensitivity_list
+@export
+def Get_Associated_Block(obj):
+    return libghdl.vhdl__nodes__get_associated_block(obj)
 
-Get_Signal_Attribute_Chain = libghdl.vhdl__nodes__get_signal_attribute_chain
-Set_Signal_Attribute_Chain = libghdl.vhdl__nodes__set_signal_attribute_chain
 
-Get_Block_Block_Configuration = libghdl.vhdl__nodes__get_block_block_configuration
-Set_Block_Block_Configuration = libghdl.vhdl__nodes__set_block_block_configuration
+@export
+def Set_Associated_Block(obj, value) -> None:
+    libghdl.vhdl__nodes__set_associated_block(obj, value)
 
-Get_Package_Header = libghdl.vhdl__nodes__get_package_header
-Set_Package_Header = libghdl.vhdl__nodes__set_package_header
 
-Get_Block_Header = libghdl.vhdl__nodes__get_block_header
-Set_Block_Header = libghdl.vhdl__nodes__set_block_header
+@export
+def Get_Associated_Chain(obj):
+    return libghdl.vhdl__nodes__get_associated_chain(obj)
 
-Get_Uninstantiated_Package_Name = libghdl.vhdl__nodes__get_uninstantiated_package_name
-Set_Uninstantiated_Package_Name = libghdl.vhdl__nodes__set_uninstantiated_package_name
 
-Get_Uninstantiated_Package_Decl = libghdl.vhdl__nodes__get_uninstantiated_package_decl
-Set_Uninstantiated_Package_Decl = libghdl.vhdl__nodes__set_uninstantiated_package_decl
+@export
+def Set_Associated_Chain(obj, value) -> None:
+    libghdl.vhdl__nodes__set_associated_chain(obj, value)
 
-Get_Instance_Source_File = libghdl.vhdl__nodes__get_instance_source_file
-Set_Instance_Source_File = libghdl.vhdl__nodes__set_instance_source_file
 
-Get_Generate_Block_Configuration = libghdl.vhdl__nodes__get_generate_block_configuration
-Set_Generate_Block_Configuration = libghdl.vhdl__nodes__set_generate_block_configuration
+@export
+def Get_Choice_Name(obj):
+    return libghdl.vhdl__nodes__get_choice_name(obj)
 
-Get_Generate_Statement_Body = libghdl.vhdl__nodes__get_generate_statement_body
-Set_Generate_Statement_Body = libghdl.vhdl__nodes__set_generate_statement_body
 
-Get_Alternative_Label = libghdl.vhdl__nodes__get_alternative_label
-Set_Alternative_Label = libghdl.vhdl__nodes__set_alternative_label
+@export
+def Set_Choice_Name(obj, value) -> None:
+    libghdl.vhdl__nodes__set_choice_name(obj, value)
 
-Get_Generate_Else_Clause = libghdl.vhdl__nodes__get_generate_else_clause
-Set_Generate_Else_Clause = libghdl.vhdl__nodes__set_generate_else_clause
 
-Get_Condition = libghdl.vhdl__nodes__get_condition
-Set_Condition = libghdl.vhdl__nodes__set_condition
+@export
+def Get_Choice_Expression(obj):
+    return libghdl.vhdl__nodes__get_choice_expression(obj)
 
-Get_Else_Clause = libghdl.vhdl__nodes__get_else_clause
-Set_Else_Clause = libghdl.vhdl__nodes__set_else_clause
 
-Get_Parameter_Specification = libghdl.vhdl__nodes__get_parameter_specification
-Set_Parameter_Specification = libghdl.vhdl__nodes__set_parameter_specification
+@export
+def Set_Choice_Expression(obj, value) -> None:
+    libghdl.vhdl__nodes__set_choice_expression(obj, value)
 
-Get_Parent = libghdl.vhdl__nodes__get_parent
-Set_Parent = libghdl.vhdl__nodes__set_parent
 
-Get_Loop_Label = libghdl.vhdl__nodes__get_loop_label
-Set_Loop_Label = libghdl.vhdl__nodes__set_loop_label
+@export
+def Get_Choice_Range(obj):
+    return libghdl.vhdl__nodes__get_choice_range(obj)
 
-Get_Exit_Flag = libghdl.vhdl__nodes__get_exit_flag
-Set_Exit_Flag = libghdl.vhdl__nodes__set_exit_flag
 
-Get_Next_Flag = libghdl.vhdl__nodes__get_next_flag
-Set_Next_Flag = libghdl.vhdl__nodes__set_next_flag
+@export
+def Set_Choice_Range(obj, value) -> None:
+    libghdl.vhdl__nodes__set_choice_range(obj, value)
 
-Get_Component_Name = libghdl.vhdl__nodes__get_component_name
-Set_Component_Name = libghdl.vhdl__nodes__set_component_name
 
-Get_Instantiation_List = libghdl.vhdl__nodes__get_instantiation_list
-Set_Instantiation_List = libghdl.vhdl__nodes__set_instantiation_list
+@export
+def Get_Same_Alternative_Flag(obj):
+    return libghdl.vhdl__nodes__get_same_alternative_flag(obj)
 
-Get_Entity_Aspect = libghdl.vhdl__nodes__get_entity_aspect
-Set_Entity_Aspect = libghdl.vhdl__nodes__set_entity_aspect
 
-Get_Default_Entity_Aspect = libghdl.vhdl__nodes__get_default_entity_aspect
-Set_Default_Entity_Aspect = libghdl.vhdl__nodes__set_default_entity_aspect
+@export
+def Set_Same_Alternative_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_same_alternative_flag(obj, value)
 
-Get_Binding_Indication = libghdl.vhdl__nodes__get_binding_indication
-Set_Binding_Indication = libghdl.vhdl__nodes__set_binding_indication
 
-Get_Named_Entity = libghdl.vhdl__nodes__get_named_entity
-Set_Named_Entity = libghdl.vhdl__nodes__set_named_entity
+@export
+def Get_Element_Type_Flag(obj):
+    return libghdl.vhdl__nodes__get_element_type_flag(obj)
 
-Get_Referenced_Name = libghdl.vhdl__nodes__get_referenced_name
-Set_Referenced_Name = libghdl.vhdl__nodes__set_referenced_name
 
-Get_Expr_Staticness = libghdl.vhdl__nodes__get_expr_staticness
-Set_Expr_Staticness = libghdl.vhdl__nodes__set_expr_staticness
+@export
+def Set_Element_Type_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_element_type_flag(obj, value)
 
-Get_Scalar_Size = libghdl.vhdl__nodes__get_scalar_size
-Set_Scalar_Size = libghdl.vhdl__nodes__set_scalar_size
 
-Get_Error_Origin = libghdl.vhdl__nodes__get_error_origin
-Set_Error_Origin = libghdl.vhdl__nodes__set_error_origin
+@export
+def Get_Architecture(obj):
+    return libghdl.vhdl__nodes__get_architecture(obj)
 
-Get_Operand = libghdl.vhdl__nodes__get_operand
-Set_Operand = libghdl.vhdl__nodes__set_operand
 
-Get_Left = libghdl.vhdl__nodes__get_left
-Set_Left = libghdl.vhdl__nodes__set_left
+@export
+def Set_Architecture(obj, value) -> None:
+    libghdl.vhdl__nodes__set_architecture(obj, value)
 
-Get_Right = libghdl.vhdl__nodes__get_right
-Set_Right = libghdl.vhdl__nodes__set_right
 
-Get_Unit_Name = libghdl.vhdl__nodes__get_unit_name
-Set_Unit_Name = libghdl.vhdl__nodes__set_unit_name
+@export
+def Get_Block_Specification(obj):
+    return libghdl.vhdl__nodes__get_block_specification(obj)
 
-Get_Name = libghdl.vhdl__nodes__get_name
-Set_Name = libghdl.vhdl__nodes__set_name
 
-Get_Group_Template_Name = libghdl.vhdl__nodes__get_group_template_name
-Set_Group_Template_Name = libghdl.vhdl__nodes__set_group_template_name
+@export
+def Set_Block_Specification(obj, value) -> None:
+    libghdl.vhdl__nodes__set_block_specification(obj, value)
 
-Get_Name_Staticness = libghdl.vhdl__nodes__get_name_staticness
-Set_Name_Staticness = libghdl.vhdl__nodes__set_name_staticness
 
-Get_Prefix = libghdl.vhdl__nodes__get_prefix
-Set_Prefix = libghdl.vhdl__nodes__set_prefix
+@export
+def Get_Prev_Block_Configuration(obj):
+    return libghdl.vhdl__nodes__get_prev_block_configuration(obj)
 
-Get_Signature_Prefix = libghdl.vhdl__nodes__get_signature_prefix
-Set_Signature_Prefix = libghdl.vhdl__nodes__set_signature_prefix
 
-Get_External_Pathname = libghdl.vhdl__nodes__get_external_pathname
-Set_External_Pathname = libghdl.vhdl__nodes__set_external_pathname
+@export
+def Set_Prev_Block_Configuration(obj, value) -> None:
+    libghdl.vhdl__nodes__set_prev_block_configuration(obj, value)
 
-Get_Pathname_Suffix = libghdl.vhdl__nodes__get_pathname_suffix
-Set_Pathname_Suffix = libghdl.vhdl__nodes__set_pathname_suffix
 
-Get_Pathname_Expression = libghdl.vhdl__nodes__get_pathname_expression
-Set_Pathname_Expression = libghdl.vhdl__nodes__set_pathname_expression
+@export
+def Get_Configuration_Item_Chain(obj):
+    return libghdl.vhdl__nodes__get_configuration_item_chain(obj)
 
-Get_In_Formal_Flag = libghdl.vhdl__nodes__get_in_formal_flag
-Set_In_Formal_Flag = libghdl.vhdl__nodes__set_in_formal_flag
 
-Get_Slice_Subtype = libghdl.vhdl__nodes__get_slice_subtype
-Set_Slice_Subtype = libghdl.vhdl__nodes__set_slice_subtype
+@export
+def Set_Configuration_Item_Chain(obj, value) -> None:
+    libghdl.vhdl__nodes__set_configuration_item_chain(obj, value)
 
-Get_Suffix = libghdl.vhdl__nodes__get_suffix
-Set_Suffix = libghdl.vhdl__nodes__set_suffix
 
-Get_Index_Subtype = libghdl.vhdl__nodes__get_index_subtype
-Set_Index_Subtype = libghdl.vhdl__nodes__set_index_subtype
+@export
+def Get_Attribute_Value_Chain(obj):
+    return libghdl.vhdl__nodes__get_attribute_value_chain(obj)
 
-Get_Parameter = libghdl.vhdl__nodes__get_parameter
-Set_Parameter = libghdl.vhdl__nodes__set_parameter
 
-Get_Parameter_2 = libghdl.vhdl__nodes__get_parameter_2
-Set_Parameter_2 = libghdl.vhdl__nodes__set_parameter_2
+@export
+def Set_Attribute_Value_Chain(obj, value) -> None:
+    libghdl.vhdl__nodes__set_attribute_value_chain(obj, value)
 
-Get_Parameter_3 = libghdl.vhdl__nodes__get_parameter_3
-Set_Parameter_3 = libghdl.vhdl__nodes__set_parameter_3
 
-Get_Parameter_4 = libghdl.vhdl__nodes__get_parameter_4
-Set_Parameter_4 = libghdl.vhdl__nodes__set_parameter_4
+@export
+def Get_Spec_Chain(obj):
+    return libghdl.vhdl__nodes__get_spec_chain(obj)
 
-Get_Attr_Chain = libghdl.vhdl__nodes__get_attr_chain
-Set_Attr_Chain = libghdl.vhdl__nodes__set_attr_chain
 
-Get_Signal_Attribute_Declaration = libghdl.vhdl__nodes__get_signal_attribute_declaration
-Set_Signal_Attribute_Declaration = libghdl.vhdl__nodes__set_signal_attribute_declaration
+@export
+def Set_Spec_Chain(obj, value) -> None:
+    libghdl.vhdl__nodes__set_spec_chain(obj, value)
 
-Get_Actual_Type = libghdl.vhdl__nodes__get_actual_type
-Set_Actual_Type = libghdl.vhdl__nodes__set_actual_type
 
-Get_Actual_Type_Definition = libghdl.vhdl__nodes__get_actual_type_definition
-Set_Actual_Type_Definition = libghdl.vhdl__nodes__set_actual_type_definition
+@export
+def Get_Value_Chain(obj):
+    return libghdl.vhdl__nodes__get_value_chain(obj)
 
-Get_Association_Chain = libghdl.vhdl__nodes__get_association_chain
-Set_Association_Chain = libghdl.vhdl__nodes__set_association_chain
 
-Get_Individual_Association_Chain = libghdl.vhdl__nodes__get_individual_association_chain
-Set_Individual_Association_Chain = libghdl.vhdl__nodes__set_individual_association_chain
+@export
+def Set_Value_Chain(obj, value) -> None:
+    libghdl.vhdl__nodes__set_value_chain(obj, value)
 
-Get_Subprogram_Association_Chain = libghdl.vhdl__nodes__get_subprogram_association_chain
-Set_Subprogram_Association_Chain = libghdl.vhdl__nodes__set_subprogram_association_chain
 
-Get_Aggregate_Info = libghdl.vhdl__nodes__get_aggregate_info
-Set_Aggregate_Info = libghdl.vhdl__nodes__set_aggregate_info
+@export
+def Get_Attribute_Value_Spec_Chain(obj):
+    return libghdl.vhdl__nodes__get_attribute_value_spec_chain(obj)
 
-Get_Sub_Aggregate_Info = libghdl.vhdl__nodes__get_sub_aggregate_info
-Set_Sub_Aggregate_Info = libghdl.vhdl__nodes__set_sub_aggregate_info
 
-Get_Aggr_Dynamic_Flag = libghdl.vhdl__nodes__get_aggr_dynamic_flag
-Set_Aggr_Dynamic_Flag = libghdl.vhdl__nodes__set_aggr_dynamic_flag
+@export
+def Set_Attribute_Value_Spec_Chain(obj, value) -> None:
+    libghdl.vhdl__nodes__set_attribute_value_spec_chain(obj, value)
 
-Get_Aggr_Min_Length = libghdl.vhdl__nodes__get_aggr_min_length
-Set_Aggr_Min_Length = libghdl.vhdl__nodes__set_aggr_min_length
 
-Get_Aggr_Low_Limit = libghdl.vhdl__nodes__get_aggr_low_limit
-Set_Aggr_Low_Limit = libghdl.vhdl__nodes__set_aggr_low_limit
+@export
+def Get_Entity_Name(obj):
+    return libghdl.vhdl__nodes__get_entity_name(obj)
 
-Get_Aggr_High_Limit = libghdl.vhdl__nodes__get_aggr_high_limit
-Set_Aggr_High_Limit = libghdl.vhdl__nodes__set_aggr_high_limit
 
-Get_Aggr_Others_Flag = libghdl.vhdl__nodes__get_aggr_others_flag
-Set_Aggr_Others_Flag = libghdl.vhdl__nodes__set_aggr_others_flag
+@export
+def Set_Entity_Name(obj, value) -> None:
+    libghdl.vhdl__nodes__set_entity_name(obj, value)
 
-Get_Aggr_Named_Flag = libghdl.vhdl__nodes__get_aggr_named_flag
-Set_Aggr_Named_Flag = libghdl.vhdl__nodes__set_aggr_named_flag
 
-Get_Aggregate_Expand_Flag = libghdl.vhdl__nodes__get_aggregate_expand_flag
-Set_Aggregate_Expand_Flag = libghdl.vhdl__nodes__set_aggregate_expand_flag
+@export
+def Get_Package(obj):
+    return libghdl.vhdl__nodes__get_package(obj)
 
-Get_Association_Choices_Chain = libghdl.vhdl__nodes__get_association_choices_chain
-Set_Association_Choices_Chain = libghdl.vhdl__nodes__set_association_choices_chain
 
-Get_Case_Statement_Alternative_Chain = (
-    libghdl.vhdl__nodes__get_case_statement_alternative_chain
-)
-Set_Case_Statement_Alternative_Chain = (
-    libghdl.vhdl__nodes__set_case_statement_alternative_chain
-)
+@export
+def Set_Package(obj, value) -> None:
+    libghdl.vhdl__nodes__set_package(obj, value)
 
-Get_Choice_Staticness = libghdl.vhdl__nodes__get_choice_staticness
-Set_Choice_Staticness = libghdl.vhdl__nodes__set_choice_staticness
 
-Get_Procedure_Call = libghdl.vhdl__nodes__get_procedure_call
-Set_Procedure_Call = libghdl.vhdl__nodes__set_procedure_call
+@export
+def Get_Package_Body(obj):
+    return libghdl.vhdl__nodes__get_package_body(obj)
 
-Get_Implementation = libghdl.vhdl__nodes__get_implementation
-Set_Implementation = libghdl.vhdl__nodes__set_implementation
 
-Get_Parameter_Association_Chain = libghdl.vhdl__nodes__get_parameter_association_chain
-Set_Parameter_Association_Chain = libghdl.vhdl__nodes__set_parameter_association_chain
+@export
+def Set_Package_Body(obj, value) -> None:
+    libghdl.vhdl__nodes__set_package_body(obj, value)
 
-Get_Method_Object = libghdl.vhdl__nodes__get_method_object
-Set_Method_Object = libghdl.vhdl__nodes__set_method_object
 
-Get_Subtype_Type_Mark = libghdl.vhdl__nodes__get_subtype_type_mark
-Set_Subtype_Type_Mark = libghdl.vhdl__nodes__set_subtype_type_mark
+@export
+def Get_Instance_Package_Body(obj):
+    return libghdl.vhdl__nodes__get_instance_package_body(obj)
 
-Get_Subnature_Nature_Mark = libghdl.vhdl__nodes__get_subnature_nature_mark
-Set_Subnature_Nature_Mark = libghdl.vhdl__nodes__set_subnature_nature_mark
 
-Get_Type_Conversion_Subtype = libghdl.vhdl__nodes__get_type_conversion_subtype
-Set_Type_Conversion_Subtype = libghdl.vhdl__nodes__set_type_conversion_subtype
+@export
+def Set_Instance_Package_Body(obj, value) -> None:
+    libghdl.vhdl__nodes__set_instance_package_body(obj, value)
 
-Get_Type_Mark = libghdl.vhdl__nodes__get_type_mark
-Set_Type_Mark = libghdl.vhdl__nodes__set_type_mark
 
-Get_File_Type_Mark = libghdl.vhdl__nodes__get_file_type_mark
-Set_File_Type_Mark = libghdl.vhdl__nodes__set_file_type_mark
+@export
+def Get_Need_Body(obj):
+    return libghdl.vhdl__nodes__get_need_body(obj)
 
-Get_Return_Type_Mark = libghdl.vhdl__nodes__get_return_type_mark
-Set_Return_Type_Mark = libghdl.vhdl__nodes__set_return_type_mark
 
-Get_Has_Disconnect_Flag = libghdl.vhdl__nodes__get_has_disconnect_flag
-Set_Has_Disconnect_Flag = libghdl.vhdl__nodes__set_has_disconnect_flag
+@export
+def Set_Need_Body(obj, value) -> None:
+    libghdl.vhdl__nodes__set_need_body(obj, value)
 
-Get_Has_Active_Flag = libghdl.vhdl__nodes__get_has_active_flag
-Set_Has_Active_Flag = libghdl.vhdl__nodes__set_has_active_flag
 
-Get_Is_Within_Flag = libghdl.vhdl__nodes__get_is_within_flag
-Set_Is_Within_Flag = libghdl.vhdl__nodes__set_is_within_flag
+@export
+def Get_Macro_Expanded_Flag(obj):
+    return libghdl.vhdl__nodes__get_macro_expanded_flag(obj)
 
-Get_Type_Marks_List = libghdl.vhdl__nodes__get_type_marks_list
-Set_Type_Marks_List = libghdl.vhdl__nodes__set_type_marks_list
 
-Get_Implicit_Alias_Flag = libghdl.vhdl__nodes__get_implicit_alias_flag
-Set_Implicit_Alias_Flag = libghdl.vhdl__nodes__set_implicit_alias_flag
+@export
+def Set_Macro_Expanded_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_macro_expanded_flag(obj, value)
 
-Get_Alias_Signature = libghdl.vhdl__nodes__get_alias_signature
-Set_Alias_Signature = libghdl.vhdl__nodes__set_alias_signature
 
-Get_Attribute_Signature = libghdl.vhdl__nodes__get_attribute_signature
-Set_Attribute_Signature = libghdl.vhdl__nodes__set_attribute_signature
+@export
+def Get_Need_Instance_Bodies(obj):
+    return libghdl.vhdl__nodes__get_need_instance_bodies(obj)
 
-Get_Overload_List = libghdl.vhdl__nodes__get_overload_list
-Set_Overload_List = libghdl.vhdl__nodes__set_overload_list
 
-Get_Simple_Name_Identifier = libghdl.vhdl__nodes__get_simple_name_identifier
-Set_Simple_Name_Identifier = libghdl.vhdl__nodes__set_simple_name_identifier
+@export
+def Set_Need_Instance_Bodies(obj, value) -> None:
+    libghdl.vhdl__nodes__set_need_instance_bodies(obj, value)
 
-Get_Simple_Name_Subtype = libghdl.vhdl__nodes__get_simple_name_subtype
-Set_Simple_Name_Subtype = libghdl.vhdl__nodes__set_simple_name_subtype
 
-Get_Protected_Type_Body = libghdl.vhdl__nodes__get_protected_type_body
-Set_Protected_Type_Body = libghdl.vhdl__nodes__set_protected_type_body
+@export
+def Get_Hierarchical_Name(obj):
+    return libghdl.vhdl__nodes__get_hierarchical_name(obj)
 
-Get_Protected_Type_Declaration = libghdl.vhdl__nodes__get_protected_type_declaration
-Set_Protected_Type_Declaration = libghdl.vhdl__nodes__set_protected_type_declaration
 
-Get_Use_Flag = libghdl.vhdl__nodes__get_use_flag
-Set_Use_Flag = libghdl.vhdl__nodes__set_use_flag
+@export
+def Set_Hierarchical_Name(obj, value) -> None:
+    libghdl.vhdl__nodes__set_hierarchical_name(obj, value)
 
-Get_End_Has_Reserved_Id = libghdl.vhdl__nodes__get_end_has_reserved_id
-Set_End_Has_Reserved_Id = libghdl.vhdl__nodes__set_end_has_reserved_id
 
-Get_End_Has_Identifier = libghdl.vhdl__nodes__get_end_has_identifier
-Set_End_Has_Identifier = libghdl.vhdl__nodes__set_end_has_identifier
+@export
+def Get_Inherit_Spec_Chain(obj):
+    return libghdl.vhdl__nodes__get_inherit_spec_chain(obj)
 
-Get_End_Has_Postponed = libghdl.vhdl__nodes__get_end_has_postponed
-Set_End_Has_Postponed = libghdl.vhdl__nodes__set_end_has_postponed
 
-Get_Has_Label = libghdl.vhdl__nodes__get_has_label
-Set_Has_Label = libghdl.vhdl__nodes__set_has_label
+@export
+def Set_Inherit_Spec_Chain(obj, value) -> None:
+    libghdl.vhdl__nodes__set_inherit_spec_chain(obj, value)
 
-Get_Has_Begin = libghdl.vhdl__nodes__get_has_begin
-Set_Has_Begin = libghdl.vhdl__nodes__set_has_begin
 
-Get_Has_End = libghdl.vhdl__nodes__get_has_end
-Set_Has_End = libghdl.vhdl__nodes__set_has_end
+@export
+def Get_Vunit_Item_Chain(obj):
+    return libghdl.vhdl__nodes__get_vunit_item_chain(obj)
 
-Get_Has_Is = libghdl.vhdl__nodes__get_has_is
-Set_Has_Is = libghdl.vhdl__nodes__set_has_is
 
-Get_Has_Pure = libghdl.vhdl__nodes__get_has_pure
-Set_Has_Pure = libghdl.vhdl__nodes__set_has_pure
+@export
+def Set_Vunit_Item_Chain(obj, value) -> None:
+    libghdl.vhdl__nodes__set_vunit_item_chain(obj, value)
 
-Get_Has_Body = libghdl.vhdl__nodes__get_has_body
-Set_Has_Body = libghdl.vhdl__nodes__set_has_body
 
-Get_Has_Parameter = libghdl.vhdl__nodes__get_has_parameter
-Set_Has_Parameter = libghdl.vhdl__nodes__set_has_parameter
+@export
+def Get_Bound_Vunit_Chain(obj):
+    return libghdl.vhdl__nodes__get_bound_vunit_chain(obj)
 
-Get_Has_Component = libghdl.vhdl__nodes__get_has_component
-Set_Has_Component = libghdl.vhdl__nodes__set_has_component
 
-Get_Has_Identifier_List = libghdl.vhdl__nodes__get_has_identifier_list
-Set_Has_Identifier_List = libghdl.vhdl__nodes__set_has_identifier_list
+@export
+def Set_Bound_Vunit_Chain(obj, value) -> None:
+    libghdl.vhdl__nodes__set_bound_vunit_chain(obj, value)
 
-Get_Has_Mode = libghdl.vhdl__nodes__get_has_mode
-Set_Has_Mode = libghdl.vhdl__nodes__set_has_mode
 
-Get_Has_Class = libghdl.vhdl__nodes__get_has_class
-Set_Has_Class = libghdl.vhdl__nodes__set_has_class
+@export
+def Get_Verification_Block_Configuration(obj):
+    return libghdl.vhdl__nodes__get_verification_block_configuration(obj)
 
-Get_Has_Delay_Mechanism = libghdl.vhdl__nodes__get_has_delay_mechanism
-Set_Has_Delay_Mechanism = libghdl.vhdl__nodes__set_has_delay_mechanism
 
-Get_Suspend_Flag = libghdl.vhdl__nodes__get_suspend_flag
-Set_Suspend_Flag = libghdl.vhdl__nodes__set_suspend_flag
+@export
+def Set_Verification_Block_Configuration(obj, value) -> None:
+    libghdl.vhdl__nodes__set_verification_block_configuration(obj, value)
 
-Get_Is_Ref = libghdl.vhdl__nodes__get_is_ref
-Set_Is_Ref = libghdl.vhdl__nodes__set_is_ref
 
-Get_Is_Forward_Ref = libghdl.vhdl__nodes__get_is_forward_ref
-Set_Is_Forward_Ref = libghdl.vhdl__nodes__set_is_forward_ref
+@export
+def Get_Block_Configuration(obj):
+    return libghdl.vhdl__nodes__get_block_configuration(obj)
 
-Get_Psl_Property = libghdl.vhdl__nodes__get_psl_property
-Set_Psl_Property = libghdl.vhdl__nodes__set_psl_property
 
-Get_Psl_Sequence = libghdl.vhdl__nodes__get_psl_sequence
-Set_Psl_Sequence = libghdl.vhdl__nodes__set_psl_sequence
+@export
+def Set_Block_Configuration(obj, value) -> None:
+    libghdl.vhdl__nodes__set_block_configuration(obj, value)
 
-Get_Psl_Declaration = libghdl.vhdl__nodes__get_psl_declaration
-Set_Psl_Declaration = libghdl.vhdl__nodes__set_psl_declaration
 
-Get_Psl_Expression = libghdl.vhdl__nodes__get_psl_expression
-Set_Psl_Expression = libghdl.vhdl__nodes__set_psl_expression
+@export
+def Get_Concurrent_Statement_Chain(obj):
+    return libghdl.vhdl__nodes__get_concurrent_statement_chain(obj)
 
-Get_Psl_Boolean = libghdl.vhdl__nodes__get_psl_boolean
-Set_Psl_Boolean = libghdl.vhdl__nodes__set_psl_boolean
 
-Get_PSL_Clock = libghdl.vhdl__nodes__get_psl_clock
-Set_PSL_Clock = libghdl.vhdl__nodes__set_psl_clock
+@export
+def Set_Concurrent_Statement_Chain(obj, value) -> None:
+    libghdl.vhdl__nodes__set_concurrent_statement_chain(obj, value)
 
-Get_PSL_NFA = libghdl.vhdl__nodes__get_psl_nfa
-Set_PSL_NFA = libghdl.vhdl__nodes__set_psl_nfa
 
-Get_PSL_Nbr_States = libghdl.vhdl__nodes__get_psl_nbr_states
-Set_PSL_Nbr_States = libghdl.vhdl__nodes__set_psl_nbr_states
+@export
+def Get_Chain(obj):
+    return libghdl.vhdl__nodes__get_chain(obj)
 
-Get_PSL_Clock_Sensitivity = libghdl.vhdl__nodes__get_psl_clock_sensitivity
-Set_PSL_Clock_Sensitivity = libghdl.vhdl__nodes__set_psl_clock_sensitivity
 
-Get_PSL_EOS_Flag = libghdl.vhdl__nodes__get_psl_eos_flag
-Set_PSL_EOS_Flag = libghdl.vhdl__nodes__set_psl_eos_flag
+@export
+def Set_Chain(obj, value) -> None:
+    libghdl.vhdl__nodes__set_chain(obj, value)
 
-Get_Count_Expression = libghdl.vhdl__nodes__get_count_expression
-Set_Count_Expression = libghdl.vhdl__nodes__set_count_expression
 
-Get_Clock_Expression = libghdl.vhdl__nodes__get_clock_expression
-Set_Clock_Expression = libghdl.vhdl__nodes__set_clock_expression
+@export
+def Get_Port_Chain(obj):
+    return libghdl.vhdl__nodes__get_port_chain(obj)
 
-Get_Default_Clock = libghdl.vhdl__nodes__get_default_clock
-Set_Default_Clock = libghdl.vhdl__nodes__set_default_clock
 
-Get_Foreign_Node = libghdl.vhdl__nodes__get_foreign_node
-Set_Foreign_Node = libghdl.vhdl__nodes__set_foreign_node
+@export
+def Set_Port_Chain(obj, value) -> None:
+    libghdl.vhdl__nodes__set_port_chain(obj, value)
+
+
+@export
+def Get_Generic_Chain(obj):
+    return libghdl.vhdl__nodes__get_generic_chain(obj)
+
+
+@export
+def Set_Generic_Chain(obj, value) -> None:
+    libghdl.vhdl__nodes__set_generic_chain(obj, value)
+
+
+@export
+def Get_Type(obj):
+    return libghdl.vhdl__nodes__get_type(obj)
+
+
+@export
+def Set_Type(obj, value) -> None:
+    libghdl.vhdl__nodes__set_type(obj, value)
+
+
+@export
+def Get_Subtype_Indication(obj):
+    return libghdl.vhdl__nodes__get_subtype_indication(obj)
+
+
+@export
+def Set_Subtype_Indication(obj, value) -> None:
+    libghdl.vhdl__nodes__set_subtype_indication(obj, value)
+
+
+@export
+def Get_Discrete_Range(obj):
+    return libghdl.vhdl__nodes__get_discrete_range(obj)
+
+
+@export
+def Set_Discrete_Range(obj, value) -> None:
+    libghdl.vhdl__nodes__set_discrete_range(obj, value)
+
+
+@export
+def Get_Type_Definition(obj):
+    return libghdl.vhdl__nodes__get_type_definition(obj)
+
+
+@export
+def Set_Type_Definition(obj, value) -> None:
+    libghdl.vhdl__nodes__set_type_definition(obj, value)
+
+
+@export
+def Get_Subtype_Definition(obj):
+    return libghdl.vhdl__nodes__get_subtype_definition(obj)
+
+
+@export
+def Set_Subtype_Definition(obj, value) -> None:
+    libghdl.vhdl__nodes__set_subtype_definition(obj, value)
+
+
+@export
+def Get_Incomplete_Type_Declaration(obj):
+    return libghdl.vhdl__nodes__get_incomplete_type_declaration(obj)
+
+
+@export
+def Set_Incomplete_Type_Declaration(obj, value) -> None:
+    libghdl.vhdl__nodes__set_incomplete_type_declaration(obj, value)
+
+
+@export
+def Get_Interface_Type_Subprograms(obj):
+    return libghdl.vhdl__nodes__get_interface_type_subprograms(obj)
+
+
+@export
+def Set_Interface_Type_Subprograms(obj, value) -> None:
+    libghdl.vhdl__nodes__set_interface_type_subprograms(obj, value)
+
+
+@export
+def Get_Nature_Definition(obj):
+    return libghdl.vhdl__nodes__get_nature_definition(obj)
+
+
+@export
+def Set_Nature_Definition(obj, value) -> None:
+    libghdl.vhdl__nodes__set_nature_definition(obj, value)
+
+
+@export
+def Get_Nature(obj):
+    return libghdl.vhdl__nodes__get_nature(obj)
+
+
+@export
+def Set_Nature(obj, value) -> None:
+    libghdl.vhdl__nodes__set_nature(obj, value)
+
+
+@export
+def Get_Subnature_Indication(obj):
+    return libghdl.vhdl__nodes__get_subnature_indication(obj)
+
+
+@export
+def Set_Subnature_Indication(obj, value) -> None:
+    libghdl.vhdl__nodes__set_subnature_indication(obj, value)
+
+
+@export
+def Get_Mode(obj):
+    return libghdl.vhdl__nodes__get_mode(obj)
+
+
+@export
+def Set_Mode(obj, value) -> None:
+    libghdl.vhdl__nodes__set_mode(obj, value)
+
+
+@export
+def Get_Guarded_Signal_Flag(obj):
+    return libghdl.vhdl__nodes__get_guarded_signal_flag(obj)
+
+
+@export
+def Set_Guarded_Signal_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_guarded_signal_flag(obj, value)
+
+
+@export
+def Get_Signal_Kind(obj):
+    return libghdl.vhdl__nodes__get_signal_kind(obj)
+
+
+@export
+def Set_Signal_Kind(obj, value) -> None:
+    libghdl.vhdl__nodes__set_signal_kind(obj, value)
+
+
+@export
+def Get_Base_Name(obj):
+    return libghdl.vhdl__nodes__get_base_name(obj)
+
+
+@export
+def Set_Base_Name(obj, value) -> None:
+    libghdl.vhdl__nodes__set_base_name(obj, value)
+
+
+@export
+def Get_Interface_Declaration_Chain(obj):
+    return libghdl.vhdl__nodes__get_interface_declaration_chain(obj)
+
+
+@export
+def Set_Interface_Declaration_Chain(obj, value) -> None:
+    libghdl.vhdl__nodes__set_interface_declaration_chain(obj, value)
+
+
+@export
+def Get_Subprogram_Specification(obj):
+    return libghdl.vhdl__nodes__get_subprogram_specification(obj)
+
+
+@export
+def Set_Subprogram_Specification(obj, value) -> None:
+    libghdl.vhdl__nodes__set_subprogram_specification(obj, value)
+
+
+@export
+def Get_Sequential_Statement_Chain(obj):
+    return libghdl.vhdl__nodes__get_sequential_statement_chain(obj)
+
+
+@export
+def Set_Sequential_Statement_Chain(obj, value) -> None:
+    libghdl.vhdl__nodes__set_sequential_statement_chain(obj, value)
+
+
+@export
+def Get_Simultaneous_Statement_Chain(obj):
+    return libghdl.vhdl__nodes__get_simultaneous_statement_chain(obj)
+
+
+@export
+def Set_Simultaneous_Statement_Chain(obj, value) -> None:
+    libghdl.vhdl__nodes__set_simultaneous_statement_chain(obj, value)
+
+
+@export
+def Get_Subprogram_Body(obj):
+    return libghdl.vhdl__nodes__get_subprogram_body(obj)
+
+
+@export
+def Set_Subprogram_Body(obj, value) -> None:
+    libghdl.vhdl__nodes__set_subprogram_body(obj, value)
+
+
+@export
+def Get_Overload_Number(obj):
+    return libghdl.vhdl__nodes__get_overload_number(obj)
+
+
+@export
+def Set_Overload_Number(obj, value) -> None:
+    libghdl.vhdl__nodes__set_overload_number(obj, value)
+
+
+@export
+def Get_Subprogram_Depth(obj):
+    return libghdl.vhdl__nodes__get_subprogram_depth(obj)
+
+
+@export
+def Set_Subprogram_Depth(obj, value) -> None:
+    libghdl.vhdl__nodes__set_subprogram_depth(obj, value)
+
+
+@export
+def Get_Subprogram_Hash(obj):
+    return libghdl.vhdl__nodes__get_subprogram_hash(obj)
+
+
+@export
+def Set_Subprogram_Hash(obj, value) -> None:
+    libghdl.vhdl__nodes__set_subprogram_hash(obj, value)
+
+
+@export
+def Get_Impure_Depth(obj):
+    return libghdl.vhdl__nodes__get_impure_depth(obj)
+
+
+@export
+def Set_Impure_Depth(obj, value) -> None:
+    libghdl.vhdl__nodes__set_impure_depth(obj, value)
+
+
+@export
+def Get_Return_Type(obj):
+    return libghdl.vhdl__nodes__get_return_type(obj)
+
+
+@export
+def Set_Return_Type(obj, value) -> None:
+    libghdl.vhdl__nodes__set_return_type(obj, value)
+
+
+@export
+def Get_Implicit_Definition(obj):
+    return libghdl.vhdl__nodes__get_implicit_definition(obj)
+
+
+@export
+def Set_Implicit_Definition(obj, value) -> None:
+    libghdl.vhdl__nodes__set_implicit_definition(obj, value)
+
+
+@export
+def Get_Uninstantiated_Subprogram_Name(obj):
+    return libghdl.vhdl__nodes__get_uninstantiated_subprogram_name(obj)
+
+
+@export
+def Set_Uninstantiated_Subprogram_Name(obj, value) -> None:
+    libghdl.vhdl__nodes__set_uninstantiated_subprogram_name(obj, value)
+
+
+@export
+def Get_Default_Value(obj):
+    return libghdl.vhdl__nodes__get_default_value(obj)
+
+
+@export
+def Set_Default_Value(obj, value) -> None:
+    libghdl.vhdl__nodes__set_default_value(obj, value)
+
+
+@export
+def Get_Deferred_Declaration(obj):
+    return libghdl.vhdl__nodes__get_deferred_declaration(obj)
+
+
+@export
+def Set_Deferred_Declaration(obj, value) -> None:
+    libghdl.vhdl__nodes__set_deferred_declaration(obj, value)
+
+
+@export
+def Get_Deferred_Declaration_Flag(obj):
+    return libghdl.vhdl__nodes__get_deferred_declaration_flag(obj)
+
+
+@export
+def Set_Deferred_Declaration_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_deferred_declaration_flag(obj, value)
+
+
+@export
+def Get_Shared_Flag(obj):
+    return libghdl.vhdl__nodes__get_shared_flag(obj)
+
+
+@export
+def Set_Shared_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_shared_flag(obj, value)
+
+
+@export
+def Get_Design_Unit(obj):
+    return libghdl.vhdl__nodes__get_design_unit(obj)
+
+
+@export
+def Set_Design_Unit(obj, value) -> None:
+    libghdl.vhdl__nodes__set_design_unit(obj, value)
+
+
+@export
+def Get_Block_Statement(obj):
+    return libghdl.vhdl__nodes__get_block_statement(obj)
+
+
+@export
+def Set_Block_Statement(obj, value) -> None:
+    libghdl.vhdl__nodes__set_block_statement(obj, value)
+
+
+@export
+def Get_Signal_Driver(obj):
+    return libghdl.vhdl__nodes__get_signal_driver(obj)
+
+
+@export
+def Set_Signal_Driver(obj, value) -> None:
+    libghdl.vhdl__nodes__set_signal_driver(obj, value)
+
+
+@export
+def Get_Declaration_Chain(obj):
+    return libghdl.vhdl__nodes__get_declaration_chain(obj)
+
+
+@export
+def Set_Declaration_Chain(obj, value) -> None:
+    libghdl.vhdl__nodes__set_declaration_chain(obj, value)
+
+
+@export
+def Get_File_Logical_Name(obj):
+    return libghdl.vhdl__nodes__get_file_logical_name(obj)
+
+
+@export
+def Set_File_Logical_Name(obj, value) -> None:
+    libghdl.vhdl__nodes__set_file_logical_name(obj, value)
+
+
+@export
+def Get_File_Open_Kind(obj):
+    return libghdl.vhdl__nodes__get_file_open_kind(obj)
+
+
+@export
+def Set_File_Open_Kind(obj, value) -> None:
+    libghdl.vhdl__nodes__set_file_open_kind(obj, value)
+
+
+@export
+def Get_Element_Position(obj):
+    return libghdl.vhdl__nodes__get_element_position(obj)
+
+
+@export
+def Set_Element_Position(obj, value) -> None:
+    libghdl.vhdl__nodes__set_element_position(obj, value)
+
+
+@export
+def Get_Use_Clause_Chain(obj):
+    return libghdl.vhdl__nodes__get_use_clause_chain(obj)
+
+
+@export
+def Set_Use_Clause_Chain(obj, value) -> None:
+    libghdl.vhdl__nodes__set_use_clause_chain(obj, value)
+
+
+@export
+def Get_Context_Reference_Chain(obj):
+    return libghdl.vhdl__nodes__get_context_reference_chain(obj)
+
+
+@export
+def Set_Context_Reference_Chain(obj, value) -> None:
+    libghdl.vhdl__nodes__set_context_reference_chain(obj, value)
+
+
+@export
+def Get_Selected_Name(obj):
+    return libghdl.vhdl__nodes__get_selected_name(obj)
+
+
+@export
+def Set_Selected_Name(obj, value) -> None:
+    libghdl.vhdl__nodes__set_selected_name(obj, value)
+
+
+@export
+def Get_Type_Declarator(obj):
+    return libghdl.vhdl__nodes__get_type_declarator(obj)
+
+
+@export
+def Set_Type_Declarator(obj, value) -> None:
+    libghdl.vhdl__nodes__set_type_declarator(obj, value)
+
+
+@export
+def Get_Complete_Type_Definition(obj):
+    return libghdl.vhdl__nodes__get_complete_type_definition(obj)
+
+
+@export
+def Set_Complete_Type_Definition(obj, value) -> None:
+    libghdl.vhdl__nodes__set_complete_type_definition(obj, value)
+
+
+@export
+def Get_Incomplete_Type_Ref_Chain(obj):
+    return libghdl.vhdl__nodes__get_incomplete_type_ref_chain(obj)
+
+
+@export
+def Set_Incomplete_Type_Ref_Chain(obj, value) -> None:
+    libghdl.vhdl__nodes__set_incomplete_type_ref_chain(obj, value)
+
+
+@export
+def Get_Associated_Type(obj):
+    return libghdl.vhdl__nodes__get_associated_type(obj)
+
+
+@export
+def Set_Associated_Type(obj, value) -> None:
+    libghdl.vhdl__nodes__set_associated_type(obj, value)
+
+
+@export
+def Get_Enumeration_Literal_List(obj):
+    return libghdl.vhdl__nodes__get_enumeration_literal_list(obj)
+
+
+@export
+def Set_Enumeration_Literal_List(obj, value) -> None:
+    libghdl.vhdl__nodes__set_enumeration_literal_list(obj, value)
+
+
+@export
+def Get_Entity_Class_Entry_Chain(obj):
+    return libghdl.vhdl__nodes__get_entity_class_entry_chain(obj)
+
+
+@export
+def Set_Entity_Class_Entry_Chain(obj, value) -> None:
+    libghdl.vhdl__nodes__set_entity_class_entry_chain(obj, value)
+
+
+@export
+def Get_Group_Constituent_List(obj):
+    return libghdl.vhdl__nodes__get_group_constituent_list(obj)
+
+
+@export
+def Set_Group_Constituent_List(obj, value) -> None:
+    libghdl.vhdl__nodes__set_group_constituent_list(obj, value)
+
+
+@export
+def Get_Unit_Chain(obj):
+    return libghdl.vhdl__nodes__get_unit_chain(obj)
+
+
+@export
+def Set_Unit_Chain(obj, value) -> None:
+    libghdl.vhdl__nodes__set_unit_chain(obj, value)
+
+
+@export
+def Get_Primary_Unit(obj):
+    return libghdl.vhdl__nodes__get_primary_unit(obj)
+
+
+@export
+def Set_Primary_Unit(obj, value) -> None:
+    libghdl.vhdl__nodes__set_primary_unit(obj, value)
+
+
+@export
+def Get_Identifier(obj):
+    return libghdl.vhdl__nodes__get_identifier(obj)
+
+
+@export
+def Set_Identifier(obj, value) -> None:
+    libghdl.vhdl__nodes__set_identifier(obj, value)
+
+
+@export
+def Get_Label(obj):
+    return libghdl.vhdl__nodes__get_label(obj)
+
+
+@export
+def Set_Label(obj, value) -> None:
+    libghdl.vhdl__nodes__set_label(obj, value)
+
+
+@export
+def Get_Visible_Flag(obj):
+    return libghdl.vhdl__nodes__get_visible_flag(obj)
+
+
+@export
+def Set_Visible_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_visible_flag(obj, value)
+
+
+@export
+def Get_Range_Constraint(obj):
+    return libghdl.vhdl__nodes__get_range_constraint(obj)
+
+
+@export
+def Set_Range_Constraint(obj, value) -> None:
+    libghdl.vhdl__nodes__set_range_constraint(obj, value)
+
+
+@export
+def Get_Direction(obj):
+    return libghdl.vhdl__nodes__get_direction(obj)
+
+
+@export
+def Set_Direction(obj, value) -> None:
+    libghdl.vhdl__nodes__set_direction(obj, value)
+
+
+@export
+def Get_Left_Limit(obj):
+    return libghdl.vhdl__nodes__get_left_limit(obj)
+
+
+@export
+def Set_Left_Limit(obj, value) -> None:
+    libghdl.vhdl__nodes__set_left_limit(obj, value)
+
+
+@export
+def Get_Right_Limit(obj):
+    return libghdl.vhdl__nodes__get_right_limit(obj)
+
+
+@export
+def Set_Right_Limit(obj, value) -> None:
+    libghdl.vhdl__nodes__set_right_limit(obj, value)
+
+
+@export
+def Get_Left_Limit_Expr(obj):
+    return libghdl.vhdl__nodes__get_left_limit_expr(obj)
+
+
+@export
+def Set_Left_Limit_Expr(obj, value) -> None:
+    libghdl.vhdl__nodes__set_left_limit_expr(obj, value)
+
+
+@export
+def Get_Right_Limit_Expr(obj):
+    return libghdl.vhdl__nodes__get_right_limit_expr(obj)
+
+
+@export
+def Set_Right_Limit_Expr(obj, value) -> None:
+    libghdl.vhdl__nodes__set_right_limit_expr(obj, value)
+
+
+@export
+def Get_Parent_Type(obj):
+    return libghdl.vhdl__nodes__get_parent_type(obj)
+
+
+@export
+def Set_Parent_Type(obj, value) -> None:
+    libghdl.vhdl__nodes__set_parent_type(obj, value)
+
+
+@export
+def Get_Simple_Nature(obj):
+    return libghdl.vhdl__nodes__get_simple_nature(obj)
+
+
+@export
+def Set_Simple_Nature(obj, value) -> None:
+    libghdl.vhdl__nodes__set_simple_nature(obj, value)
+
+
+@export
+def Get_Base_Nature(obj):
+    return libghdl.vhdl__nodes__get_base_nature(obj)
+
+
+@export
+def Set_Base_Nature(obj, value) -> None:
+    libghdl.vhdl__nodes__set_base_nature(obj, value)
+
+
+@export
+def Get_Resolution_Indication(obj):
+    return libghdl.vhdl__nodes__get_resolution_indication(obj)
+
+
+@export
+def Set_Resolution_Indication(obj, value) -> None:
+    libghdl.vhdl__nodes__set_resolution_indication(obj, value)
+
+
+@export
+def Get_Record_Element_Resolution_Chain(obj):
+    return libghdl.vhdl__nodes__get_record_element_resolution_chain(obj)
+
+
+@export
+def Set_Record_Element_Resolution_Chain(obj, value) -> None:
+    libghdl.vhdl__nodes__set_record_element_resolution_chain(obj, value)
+
+
+@export
+def Get_Tolerance(obj):
+    return libghdl.vhdl__nodes__get_tolerance(obj)
+
+
+@export
+def Set_Tolerance(obj, value) -> None:
+    libghdl.vhdl__nodes__set_tolerance(obj, value)
+
+
+@export
+def Get_Plus_Terminal_Name(obj):
+    return libghdl.vhdl__nodes__get_plus_terminal_name(obj)
+
+
+@export
+def Set_Plus_Terminal_Name(obj, value) -> None:
+    libghdl.vhdl__nodes__set_plus_terminal_name(obj, value)
+
+
+@export
+def Get_Minus_Terminal_Name(obj):
+    return libghdl.vhdl__nodes__get_minus_terminal_name(obj)
+
+
+@export
+def Set_Minus_Terminal_Name(obj, value) -> None:
+    libghdl.vhdl__nodes__set_minus_terminal_name(obj, value)
+
+
+@export
+def Get_Plus_Terminal(obj):
+    return libghdl.vhdl__nodes__get_plus_terminal(obj)
+
+
+@export
+def Set_Plus_Terminal(obj, value) -> None:
+    libghdl.vhdl__nodes__set_plus_terminal(obj, value)
+
+
+@export
+def Get_Minus_Terminal(obj):
+    return libghdl.vhdl__nodes__get_minus_terminal(obj)
+
+
+@export
+def Set_Minus_Terminal(obj, value) -> None:
+    libghdl.vhdl__nodes__set_minus_terminal(obj, value)
+
+
+@export
+def Get_Magnitude_Expression(obj):
+    return libghdl.vhdl__nodes__get_magnitude_expression(obj)
+
+
+@export
+def Set_Magnitude_Expression(obj, value) -> None:
+    libghdl.vhdl__nodes__set_magnitude_expression(obj, value)
+
+
+@export
+def Get_Phase_Expression(obj):
+    return libghdl.vhdl__nodes__get_phase_expression(obj)
+
+
+@export
+def Set_Phase_Expression(obj, value) -> None:
+    libghdl.vhdl__nodes__set_phase_expression(obj, value)
+
+
+@export
+def Get_Power_Expression(obj):
+    return libghdl.vhdl__nodes__get_power_expression(obj)
+
+
+@export
+def Set_Power_Expression(obj, value) -> None:
+    libghdl.vhdl__nodes__set_power_expression(obj, value)
+
+
+@export
+def Get_Simultaneous_Left(obj):
+    return libghdl.vhdl__nodes__get_simultaneous_left(obj)
+
+
+@export
+def Set_Simultaneous_Left(obj, value) -> None:
+    libghdl.vhdl__nodes__set_simultaneous_left(obj, value)
+
+
+@export
+def Get_Simultaneous_Right(obj):
+    return libghdl.vhdl__nodes__get_simultaneous_right(obj)
+
+
+@export
+def Set_Simultaneous_Right(obj, value) -> None:
+    libghdl.vhdl__nodes__set_simultaneous_right(obj, value)
+
+
+@export
+def Get_Text_File_Flag(obj):
+    return libghdl.vhdl__nodes__get_text_file_flag(obj)
+
+
+@export
+def Set_Text_File_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_text_file_flag(obj, value)
+
+
+@export
+def Get_Only_Characters_Flag(obj):
+    return libghdl.vhdl__nodes__get_only_characters_flag(obj)
+
+
+@export
+def Set_Only_Characters_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_only_characters_flag(obj, value)
+
+
+@export
+def Get_Is_Character_Type(obj):
+    return libghdl.vhdl__nodes__get_is_character_type(obj)
+
+
+@export
+def Set_Is_Character_Type(obj, value) -> None:
+    libghdl.vhdl__nodes__set_is_character_type(obj, value)
+
+
+@export
+def Get_Nature_Staticness(obj):
+    return libghdl.vhdl__nodes__get_nature_staticness(obj)
+
+
+@export
+def Set_Nature_Staticness(obj, value) -> None:
+    libghdl.vhdl__nodes__set_nature_staticness(obj, value)
+
+
+@export
+def Get_Type_Staticness(obj):
+    return libghdl.vhdl__nodes__get_type_staticness(obj)
+
+
+@export
+def Set_Type_Staticness(obj, value) -> None:
+    libghdl.vhdl__nodes__set_type_staticness(obj, value)
+
+
+@export
+def Get_Constraint_State(obj):
+    return libghdl.vhdl__nodes__get_constraint_state(obj)
+
+
+@export
+def Set_Constraint_State(obj, value) -> None:
+    libghdl.vhdl__nodes__set_constraint_state(obj, value)
+
+
+@export
+def Get_Index_Subtype_List(obj):
+    return libghdl.vhdl__nodes__get_index_subtype_list(obj)
+
+
+@export
+def Set_Index_Subtype_List(obj, value) -> None:
+    libghdl.vhdl__nodes__set_index_subtype_list(obj, value)
+
+
+@export
+def Get_Index_Subtype_Definition_List(obj):
+    return libghdl.vhdl__nodes__get_index_subtype_definition_list(obj)
+
+
+@export
+def Set_Index_Subtype_Definition_List(obj, value) -> None:
+    libghdl.vhdl__nodes__set_index_subtype_definition_list(obj, value)
+
+
+@export
+def Get_Element_Subtype_Indication(obj):
+    return libghdl.vhdl__nodes__get_element_subtype_indication(obj)
+
+
+@export
+def Set_Element_Subtype_Indication(obj, value) -> None:
+    libghdl.vhdl__nodes__set_element_subtype_indication(obj, value)
+
+
+@export
+def Get_Element_Subtype(obj):
+    return libghdl.vhdl__nodes__get_element_subtype(obj)
+
+
+@export
+def Set_Element_Subtype(obj, value) -> None:
+    libghdl.vhdl__nodes__set_element_subtype(obj, value)
+
+
+@export
+def Get_Element_Subnature_Indication(obj):
+    return libghdl.vhdl__nodes__get_element_subnature_indication(obj)
+
+
+@export
+def Set_Element_Subnature_Indication(obj, value) -> None:
+    libghdl.vhdl__nodes__set_element_subnature_indication(obj, value)
+
+
+@export
+def Get_Element_Subnature(obj):
+    return libghdl.vhdl__nodes__get_element_subnature(obj)
+
+
+@export
+def Set_Element_Subnature(obj, value) -> None:
+    libghdl.vhdl__nodes__set_element_subnature(obj, value)
+
+
+@export
+def Get_Index_Constraint_List(obj):
+    return libghdl.vhdl__nodes__get_index_constraint_list(obj)
+
+
+@export
+def Set_Index_Constraint_List(obj, value) -> None:
+    libghdl.vhdl__nodes__set_index_constraint_list(obj, value)
+
+
+@export
+def Get_Array_Element_Constraint(obj):
+    return libghdl.vhdl__nodes__get_array_element_constraint(obj)
+
+
+@export
+def Set_Array_Element_Constraint(obj, value) -> None:
+    libghdl.vhdl__nodes__set_array_element_constraint(obj, value)
+
+
+@export
+def Get_Has_Array_Constraint_Flag(obj):
+    return libghdl.vhdl__nodes__get_has_array_constraint_flag(obj)
+
+
+@export
+def Set_Has_Array_Constraint_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_has_array_constraint_flag(obj, value)
+
+
+@export
+def Get_Has_Element_Constraint_Flag(obj):
+    return libghdl.vhdl__nodes__get_has_element_constraint_flag(obj)
+
+
+@export
+def Set_Has_Element_Constraint_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_has_element_constraint_flag(obj, value)
+
+
+@export
+def Get_Elements_Declaration_List(obj):
+    return libghdl.vhdl__nodes__get_elements_declaration_list(obj)
+
+
+@export
+def Set_Elements_Declaration_List(obj, value) -> None:
+    libghdl.vhdl__nodes__set_elements_declaration_list(obj, value)
+
+
+@export
+def Get_Owned_Elements_Chain(obj):
+    return libghdl.vhdl__nodes__get_owned_elements_chain(obj)
+
+
+@export
+def Set_Owned_Elements_Chain(obj, value) -> None:
+    libghdl.vhdl__nodes__set_owned_elements_chain(obj, value)
+
+
+@export
+def Get_Designated_Type(obj):
+    return libghdl.vhdl__nodes__get_designated_type(obj)
+
+
+@export
+def Set_Designated_Type(obj, value) -> None:
+    libghdl.vhdl__nodes__set_designated_type(obj, value)
+
+
+@export
+def Get_Designated_Subtype_Indication(obj):
+    return libghdl.vhdl__nodes__get_designated_subtype_indication(obj)
+
+
+@export
+def Set_Designated_Subtype_Indication(obj, value) -> None:
+    libghdl.vhdl__nodes__set_designated_subtype_indication(obj, value)
+
+
+@export
+def Get_Index_List(obj):
+    return libghdl.vhdl__nodes__get_index_list(obj)
+
+
+@export
+def Set_Index_List(obj, value) -> None:
+    libghdl.vhdl__nodes__set_index_list(obj, value)
+
+
+@export
+def Get_Reference(obj):
+    return libghdl.vhdl__nodes__get_reference(obj)
+
+
+@export
+def Set_Reference(obj, value) -> None:
+    libghdl.vhdl__nodes__set_reference(obj, value)
+
+
+@export
+def Get_Nature_Declarator(obj):
+    return libghdl.vhdl__nodes__get_nature_declarator(obj)
+
+
+@export
+def Set_Nature_Declarator(obj, value) -> None:
+    libghdl.vhdl__nodes__set_nature_declarator(obj, value)
+
+
+@export
+def Get_Across_Type_Mark(obj):
+    return libghdl.vhdl__nodes__get_across_type_mark(obj)
+
+
+@export
+def Set_Across_Type_Mark(obj, value) -> None:
+    libghdl.vhdl__nodes__set_across_type_mark(obj, value)
+
+
+@export
+def Get_Through_Type_Mark(obj):
+    return libghdl.vhdl__nodes__get_through_type_mark(obj)
+
+
+@export
+def Set_Through_Type_Mark(obj, value) -> None:
+    libghdl.vhdl__nodes__set_through_type_mark(obj, value)
+
+
+@export
+def Get_Across_Type_Definition(obj):
+    return libghdl.vhdl__nodes__get_across_type_definition(obj)
+
+
+@export
+def Set_Across_Type_Definition(obj, value) -> None:
+    libghdl.vhdl__nodes__set_across_type_definition(obj, value)
+
+
+@export
+def Get_Through_Type_Definition(obj):
+    return libghdl.vhdl__nodes__get_through_type_definition(obj)
+
+
+@export
+def Set_Through_Type_Definition(obj, value) -> None:
+    libghdl.vhdl__nodes__set_through_type_definition(obj, value)
+
+
+@export
+def Get_Across_Type(obj):
+    return libghdl.vhdl__nodes__get_across_type(obj)
+
+
+@export
+def Set_Across_Type(obj, value) -> None:
+    libghdl.vhdl__nodes__set_across_type(obj, value)
+
+
+@export
+def Get_Through_Type(obj):
+    return libghdl.vhdl__nodes__get_through_type(obj)
+
+
+@export
+def Set_Through_Type(obj, value) -> None:
+    libghdl.vhdl__nodes__set_through_type(obj, value)
+
+
+@export
+def Get_Target(obj):
+    return libghdl.vhdl__nodes__get_target(obj)
+
+
+@export
+def Set_Target(obj, value) -> None:
+    libghdl.vhdl__nodes__set_target(obj, value)
+
+
+@export
+def Get_Waveform_Chain(obj):
+    return libghdl.vhdl__nodes__get_waveform_chain(obj)
+
+
+@export
+def Set_Waveform_Chain(obj, value) -> None:
+    libghdl.vhdl__nodes__set_waveform_chain(obj, value)
+
+
+@export
+def Get_Guard(obj):
+    return libghdl.vhdl__nodes__get_guard(obj)
+
+
+@export
+def Set_Guard(obj, value) -> None:
+    libghdl.vhdl__nodes__set_guard(obj, value)
+
+
+@export
+def Get_Delay_Mechanism(obj):
+    return libghdl.vhdl__nodes__get_delay_mechanism(obj)
+
+
+@export
+def Set_Delay_Mechanism(obj, value) -> None:
+    libghdl.vhdl__nodes__set_delay_mechanism(obj, value)
+
+
+@export
+def Get_Reject_Time_Expression(obj):
+    return libghdl.vhdl__nodes__get_reject_time_expression(obj)
+
+
+@export
+def Set_Reject_Time_Expression(obj, value) -> None:
+    libghdl.vhdl__nodes__set_reject_time_expression(obj, value)
+
+
+@export
+def Get_Force_Mode(obj):
+    return libghdl.vhdl__nodes__get_force_mode(obj)
+
+
+@export
+def Set_Force_Mode(obj, value) -> None:
+    libghdl.vhdl__nodes__set_force_mode(obj, value)
+
+
+@export
+def Get_Has_Force_Mode(obj):
+    return libghdl.vhdl__nodes__get_has_force_mode(obj)
+
+
+@export
+def Set_Has_Force_Mode(obj, value) -> None:
+    libghdl.vhdl__nodes__set_has_force_mode(obj, value)
+
+
+@export
+def Get_Sensitivity_List(obj):
+    return libghdl.vhdl__nodes__get_sensitivity_list(obj)
+
+
+@export
+def Set_Sensitivity_List(obj, value) -> None:
+    libghdl.vhdl__nodes__set_sensitivity_list(obj, value)
+
+
+@export
+def Get_Process_Origin(obj):
+    return libghdl.vhdl__nodes__get_process_origin(obj)
+
+
+@export
+def Set_Process_Origin(obj, value) -> None:
+    libghdl.vhdl__nodes__set_process_origin(obj, value)
+
+
+@export
+def Get_Package_Origin(obj):
+    return libghdl.vhdl__nodes__get_package_origin(obj)
+
+
+@export
+def Set_Package_Origin(obj, value) -> None:
+    libghdl.vhdl__nodes__set_package_origin(obj, value)
+
+
+@export
+def Get_Condition_Clause(obj):
+    return libghdl.vhdl__nodes__get_condition_clause(obj)
+
+
+@export
+def Set_Condition_Clause(obj, value) -> None:
+    libghdl.vhdl__nodes__set_condition_clause(obj, value)
+
+
+@export
+def Get_Break_Element(obj):
+    return libghdl.vhdl__nodes__get_break_element(obj)
+
+
+@export
+def Set_Break_Element(obj, value) -> None:
+    libghdl.vhdl__nodes__set_break_element(obj, value)
+
+
+@export
+def Get_Selector_Quantity(obj):
+    return libghdl.vhdl__nodes__get_selector_quantity(obj)
+
+
+@export
+def Set_Selector_Quantity(obj, value) -> None:
+    libghdl.vhdl__nodes__set_selector_quantity(obj, value)
+
+
+@export
+def Get_Break_Quantity(obj):
+    return libghdl.vhdl__nodes__get_break_quantity(obj)
+
+
+@export
+def Set_Break_Quantity(obj, value) -> None:
+    libghdl.vhdl__nodes__set_break_quantity(obj, value)
+
+
+@export
+def Get_Timeout_Clause(obj):
+    return libghdl.vhdl__nodes__get_timeout_clause(obj)
+
+
+@export
+def Set_Timeout_Clause(obj, value) -> None:
+    libghdl.vhdl__nodes__set_timeout_clause(obj, value)
+
+
+@export
+def Get_Postponed_Flag(obj):
+    return libghdl.vhdl__nodes__get_postponed_flag(obj)
+
+
+@export
+def Set_Postponed_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_postponed_flag(obj, value)
+
+
+@export
+def Get_Callees_List(obj):
+    return libghdl.vhdl__nodes__get_callees_list(obj)
+
+
+@export
+def Set_Callees_List(obj, value) -> None:
+    libghdl.vhdl__nodes__set_callees_list(obj, value)
+
+
+@export
+def Get_Passive_Flag(obj):
+    return libghdl.vhdl__nodes__get_passive_flag(obj)
+
+
+@export
+def Set_Passive_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_passive_flag(obj, value)
+
+
+@export
+def Get_Resolution_Function_Flag(obj):
+    return libghdl.vhdl__nodes__get_resolution_function_flag(obj)
+
+
+@export
+def Set_Resolution_Function_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_resolution_function_flag(obj, value)
+
+
+@export
+def Get_Wait_State(obj):
+    return libghdl.vhdl__nodes__get_wait_state(obj)
+
+
+@export
+def Set_Wait_State(obj, value) -> None:
+    libghdl.vhdl__nodes__set_wait_state(obj, value)
+
+
+@export
+def Get_All_Sensitized_State(obj):
+    return libghdl.vhdl__nodes__get_all_sensitized_state(obj)
+
+
+@export
+def Set_All_Sensitized_State(obj, value) -> None:
+    libghdl.vhdl__nodes__set_all_sensitized_state(obj, value)
+
+
+@export
+def Get_Seen_Flag(obj):
+    return libghdl.vhdl__nodes__get_seen_flag(obj)
+
+
+@export
+def Set_Seen_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_seen_flag(obj, value)
+
+
+@export
+def Get_Pure_Flag(obj):
+    return libghdl.vhdl__nodes__get_pure_flag(obj)
+
+
+@export
+def Set_Pure_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_pure_flag(obj, value)
+
+
+@export
+def Get_Foreign_Flag(obj):
+    return libghdl.vhdl__nodes__get_foreign_flag(obj)
+
+
+@export
+def Set_Foreign_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_foreign_flag(obj, value)
+
+
+@export
+def Get_Resolved_Flag(obj):
+    return libghdl.vhdl__nodes__get_resolved_flag(obj)
+
+
+@export
+def Set_Resolved_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_resolved_flag(obj, value)
+
+
+@export
+def Get_Signal_Type_Flag(obj):
+    return libghdl.vhdl__nodes__get_signal_type_flag(obj)
+
+
+@export
+def Set_Signal_Type_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_signal_type_flag(obj, value)
+
+
+@export
+def Get_Has_Signal_Flag(obj):
+    return libghdl.vhdl__nodes__get_has_signal_flag(obj)
+
+
+@export
+def Set_Has_Signal_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_has_signal_flag(obj, value)
+
+
+@export
+def Get_Purity_State(obj):
+    return libghdl.vhdl__nodes__get_purity_state(obj)
+
+
+@export
+def Set_Purity_State(obj, value) -> None:
+    libghdl.vhdl__nodes__set_purity_state(obj, value)
+
+
+@export
+def Get_Elab_Flag(obj):
+    return libghdl.vhdl__nodes__get_elab_flag(obj)
+
+
+@export
+def Set_Elab_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_elab_flag(obj, value)
+
+
+@export
+def Get_Vendor_Library_Flag(obj):
+    return libghdl.vhdl__nodes__get_vendor_library_flag(obj)
+
+
+@export
+def Set_Vendor_Library_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_vendor_library_flag(obj, value)
+
+
+@export
+def Get_Configuration_Mark_Flag(obj):
+    return libghdl.vhdl__nodes__get_configuration_mark_flag(obj)
+
+
+@export
+def Set_Configuration_Mark_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_configuration_mark_flag(obj, value)
+
+
+@export
+def Get_Configuration_Done_Flag(obj):
+    return libghdl.vhdl__nodes__get_configuration_done_flag(obj)
+
+
+@export
+def Set_Configuration_Done_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_configuration_done_flag(obj, value)
+
+
+@export
+def Get_Index_Constraint_Flag(obj):
+    return libghdl.vhdl__nodes__get_index_constraint_flag(obj)
+
+
+@export
+def Set_Index_Constraint_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_index_constraint_flag(obj, value)
+
+
+@export
+def Get_Hide_Implicit_Flag(obj):
+    return libghdl.vhdl__nodes__get_hide_implicit_flag(obj)
+
+
+@export
+def Set_Hide_Implicit_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_hide_implicit_flag(obj, value)
+
+
+@export
+def Get_Assertion_Condition(obj):
+    return libghdl.vhdl__nodes__get_assertion_condition(obj)
+
+
+@export
+def Set_Assertion_Condition(obj, value) -> None:
+    libghdl.vhdl__nodes__set_assertion_condition(obj, value)
+
+
+@export
+def Get_Report_Expression(obj):
+    return libghdl.vhdl__nodes__get_report_expression(obj)
+
+
+@export
+def Set_Report_Expression(obj, value) -> None:
+    libghdl.vhdl__nodes__set_report_expression(obj, value)
+
+
+@export
+def Get_Severity_Expression(obj):
+    return libghdl.vhdl__nodes__get_severity_expression(obj)
+
+
+@export
+def Set_Severity_Expression(obj, value) -> None:
+    libghdl.vhdl__nodes__set_severity_expression(obj, value)
+
+
+@export
+def Get_Instantiated_Unit(obj):
+    return libghdl.vhdl__nodes__get_instantiated_unit(obj)
+
+
+@export
+def Set_Instantiated_Unit(obj, value) -> None:
+    libghdl.vhdl__nodes__set_instantiated_unit(obj, value)
+
+
+@export
+def Get_Generic_Map_Aspect_Chain(obj):
+    return libghdl.vhdl__nodes__get_generic_map_aspect_chain(obj)
+
+
+@export
+def Set_Generic_Map_Aspect_Chain(obj, value) -> None:
+    libghdl.vhdl__nodes__set_generic_map_aspect_chain(obj, value)
+
+
+@export
+def Get_Port_Map_Aspect_Chain(obj):
+    return libghdl.vhdl__nodes__get_port_map_aspect_chain(obj)
+
+
+@export
+def Set_Port_Map_Aspect_Chain(obj, value) -> None:
+    libghdl.vhdl__nodes__set_port_map_aspect_chain(obj, value)
+
+
+@export
+def Get_Configuration_Name(obj):
+    return libghdl.vhdl__nodes__get_configuration_name(obj)
+
+
+@export
+def Set_Configuration_Name(obj, value) -> None:
+    libghdl.vhdl__nodes__set_configuration_name(obj, value)
+
+
+@export
+def Get_Component_Configuration(obj):
+    return libghdl.vhdl__nodes__get_component_configuration(obj)
+
+
+@export
+def Set_Component_Configuration(obj, value) -> None:
+    libghdl.vhdl__nodes__set_component_configuration(obj, value)
+
+
+@export
+def Get_Configuration_Specification(obj):
+    return libghdl.vhdl__nodes__get_configuration_specification(obj)
+
+
+@export
+def Set_Configuration_Specification(obj, value) -> None:
+    libghdl.vhdl__nodes__set_configuration_specification(obj, value)
+
+
+@export
+def Get_Default_Binding_Indication(obj):
+    return libghdl.vhdl__nodes__get_default_binding_indication(obj)
+
+
+@export
+def Set_Default_Binding_Indication(obj, value) -> None:
+    libghdl.vhdl__nodes__set_default_binding_indication(obj, value)
+
+
+@export
+def Get_Default_Configuration_Declaration(obj):
+    return libghdl.vhdl__nodes__get_default_configuration_declaration(obj)
+
+
+@export
+def Set_Default_Configuration_Declaration(obj, value) -> None:
+    libghdl.vhdl__nodes__set_default_configuration_declaration(obj, value)
+
+
+@export
+def Get_Expression(obj):
+    return libghdl.vhdl__nodes__get_expression(obj)
+
+
+@export
+def Set_Expression(obj, value) -> None:
+    libghdl.vhdl__nodes__set_expression(obj, value)
+
+
+@export
+def Get_Conditional_Expression_Chain(obj):
+    return libghdl.vhdl__nodes__get_conditional_expression_chain(obj)
+
+
+@export
+def Set_Conditional_Expression_Chain(obj, value) -> None:
+    libghdl.vhdl__nodes__set_conditional_expression_chain(obj, value)
+
+
+@export
+def Get_Allocator_Designated_Type(obj):
+    return libghdl.vhdl__nodes__get_allocator_designated_type(obj)
+
+
+@export
+def Set_Allocator_Designated_Type(obj, value) -> None:
+    libghdl.vhdl__nodes__set_allocator_designated_type(obj, value)
+
+
+@export
+def Get_Selected_Waveform_Chain(obj):
+    return libghdl.vhdl__nodes__get_selected_waveform_chain(obj)
+
+
+@export
+def Set_Selected_Waveform_Chain(obj, value) -> None:
+    libghdl.vhdl__nodes__set_selected_waveform_chain(obj, value)
+
+
+@export
+def Get_Conditional_Waveform_Chain(obj):
+    return libghdl.vhdl__nodes__get_conditional_waveform_chain(obj)
+
+
+@export
+def Set_Conditional_Waveform_Chain(obj, value) -> None:
+    libghdl.vhdl__nodes__set_conditional_waveform_chain(obj, value)
+
+
+@export
+def Get_Guard_Expression(obj):
+    return libghdl.vhdl__nodes__get_guard_expression(obj)
+
+
+@export
+def Set_Guard_Expression(obj, value) -> None:
+    libghdl.vhdl__nodes__set_guard_expression(obj, value)
+
+
+@export
+def Get_Guard_Decl(obj):
+    return libghdl.vhdl__nodes__get_guard_decl(obj)
+
+
+@export
+def Set_Guard_Decl(obj, value) -> None:
+    libghdl.vhdl__nodes__set_guard_decl(obj, value)
+
+
+@export
+def Get_Guard_Sensitivity_List(obj):
+    return libghdl.vhdl__nodes__get_guard_sensitivity_list(obj)
+
+
+@export
+def Set_Guard_Sensitivity_List(obj, value) -> None:
+    libghdl.vhdl__nodes__set_guard_sensitivity_list(obj, value)
+
+
+@export
+def Get_Signal_Attribute_Chain(obj):
+    return libghdl.vhdl__nodes__get_signal_attribute_chain(obj)
+
+
+@export
+def Set_Signal_Attribute_Chain(obj, value) -> None:
+    libghdl.vhdl__nodes__set_signal_attribute_chain(obj, value)
+
+
+@export
+def Get_Block_Block_Configuration(obj):
+    return libghdl.vhdl__nodes__get_block_block_configuration(obj)
+
+
+@export
+def Set_Block_Block_Configuration(obj, value) -> None:
+    libghdl.vhdl__nodes__set_block_block_configuration(obj, value)
+
+
+@export
+def Get_Package_Header(obj):
+    return libghdl.vhdl__nodes__get_package_header(obj)
+
+
+@export
+def Set_Package_Header(obj, value) -> None:
+    libghdl.vhdl__nodes__set_package_header(obj, value)
+
+
+@export
+def Get_Block_Header(obj):
+    return libghdl.vhdl__nodes__get_block_header(obj)
+
+
+@export
+def Set_Block_Header(obj, value) -> None:
+    libghdl.vhdl__nodes__set_block_header(obj, value)
+
+
+@export
+def Get_Uninstantiated_Package_Name(obj):
+    return libghdl.vhdl__nodes__get_uninstantiated_package_name(obj)
+
+
+@export
+def Set_Uninstantiated_Package_Name(obj, value) -> None:
+    libghdl.vhdl__nodes__set_uninstantiated_package_name(obj, value)
+
+
+@export
+def Get_Uninstantiated_Package_Decl(obj):
+    return libghdl.vhdl__nodes__get_uninstantiated_package_decl(obj)
+
+
+@export
+def Set_Uninstantiated_Package_Decl(obj, value) -> None:
+    libghdl.vhdl__nodes__set_uninstantiated_package_decl(obj, value)
+
+
+@export
+def Get_Instance_Source_File(obj):
+    return libghdl.vhdl__nodes__get_instance_source_file(obj)
+
+
+@export
+def Set_Instance_Source_File(obj, value) -> None:
+    libghdl.vhdl__nodes__set_instance_source_file(obj, value)
+
+
+@export
+def Get_Generate_Block_Configuration(obj):
+    return libghdl.vhdl__nodes__get_generate_block_configuration(obj)
+
+
+@export
+def Set_Generate_Block_Configuration(obj, value) -> None:
+    libghdl.vhdl__nodes__set_generate_block_configuration(obj, value)
+
+
+@export
+def Get_Generate_Statement_Body(obj):
+    return libghdl.vhdl__nodes__get_generate_statement_body(obj)
+
+
+@export
+def Set_Generate_Statement_Body(obj, value) -> None:
+    libghdl.vhdl__nodes__set_generate_statement_body(obj, value)
+
+
+@export
+def Get_Alternative_Label(obj):
+    return libghdl.vhdl__nodes__get_alternative_label(obj)
+
+
+@export
+def Set_Alternative_Label(obj, value) -> None:
+    libghdl.vhdl__nodes__set_alternative_label(obj, value)
+
+
+@export
+def Get_Generate_Else_Clause(obj):
+    return libghdl.vhdl__nodes__get_generate_else_clause(obj)
+
+
+@export
+def Set_Generate_Else_Clause(obj, value) -> None:
+    libghdl.vhdl__nodes__set_generate_else_clause(obj, value)
+
+
+@export
+def Get_Condition(obj):
+    return libghdl.vhdl__nodes__get_condition(obj)
+
+
+@export
+def Set_Condition(obj, value) -> None:
+    libghdl.vhdl__nodes__set_condition(obj, value)
+
+
+@export
+def Get_Else_Clause(obj):
+    return libghdl.vhdl__nodes__get_else_clause(obj)
+
+
+@export
+def Set_Else_Clause(obj, value) -> None:
+    libghdl.vhdl__nodes__set_else_clause(obj, value)
+
+
+@export
+def Get_Parameter_Specification(obj):
+    return libghdl.vhdl__nodes__get_parameter_specification(obj)
+
+
+@export
+def Set_Parameter_Specification(obj, value) -> None:
+    libghdl.vhdl__nodes__set_parameter_specification(obj, value)
+
+
+@export
+def Get_Parent(obj):
+    return libghdl.vhdl__nodes__get_parent(obj)
+
+
+@export
+def Set_Parent(obj, value) -> None:
+    libghdl.vhdl__nodes__set_parent(obj, value)
+
+
+@export
+def Get_Loop_Label(obj):
+    return libghdl.vhdl__nodes__get_loop_label(obj)
+
+
+@export
+def Set_Loop_Label(obj, value) -> None:
+    libghdl.vhdl__nodes__set_loop_label(obj, value)
+
+
+@export
+def Get_Exit_Flag(obj):
+    return libghdl.vhdl__nodes__get_exit_flag(obj)
+
+
+@export
+def Set_Exit_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_exit_flag(obj, value)
+
+
+@export
+def Get_Next_Flag(obj):
+    return libghdl.vhdl__nodes__get_next_flag(obj)
+
+
+@export
+def Set_Next_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_next_flag(obj, value)
+
+
+@export
+def Get_Component_Name(obj):
+    return libghdl.vhdl__nodes__get_component_name(obj)
+
+
+@export
+def Set_Component_Name(obj, value) -> None:
+    libghdl.vhdl__nodes__set_component_name(obj, value)
+
+
+@export
+def Get_Instantiation_List(obj):
+    return libghdl.vhdl__nodes__get_instantiation_list(obj)
+
+
+@export
+def Set_Instantiation_List(obj, value) -> None:
+    libghdl.vhdl__nodes__set_instantiation_list(obj, value)
+
+
+@export
+def Get_Entity_Aspect(obj):
+    return libghdl.vhdl__nodes__get_entity_aspect(obj)
+
+
+@export
+def Set_Entity_Aspect(obj, value) -> None:
+    libghdl.vhdl__nodes__set_entity_aspect(obj, value)
+
+
+@export
+def Get_Default_Entity_Aspect(obj):
+    return libghdl.vhdl__nodes__get_default_entity_aspect(obj)
+
+
+@export
+def Set_Default_Entity_Aspect(obj, value) -> None:
+    libghdl.vhdl__nodes__set_default_entity_aspect(obj, value)
+
+
+@export
+def Get_Binding_Indication(obj):
+    return libghdl.vhdl__nodes__get_binding_indication(obj)
+
+
+@export
+def Set_Binding_Indication(obj, value) -> None:
+    libghdl.vhdl__nodes__set_binding_indication(obj, value)
+
+
+@export
+def Get_Named_Entity(obj):
+    return libghdl.vhdl__nodes__get_named_entity(obj)
+
+
+@export
+def Set_Named_Entity(obj, value) -> None:
+    libghdl.vhdl__nodes__set_named_entity(obj, value)
+
+
+@export
+def Get_Referenced_Name(obj):
+    return libghdl.vhdl__nodes__get_referenced_name(obj)
+
+
+@export
+def Set_Referenced_Name(obj, value) -> None:
+    libghdl.vhdl__nodes__set_referenced_name(obj, value)
+
+
+@export
+def Get_Expr_Staticness(obj):
+    return libghdl.vhdl__nodes__get_expr_staticness(obj)
+
+
+@export
+def Set_Expr_Staticness(obj, value) -> None:
+    libghdl.vhdl__nodes__set_expr_staticness(obj, value)
+
+
+@export
+def Get_Scalar_Size(obj):
+    return libghdl.vhdl__nodes__get_scalar_size(obj)
+
+
+@export
+def Set_Scalar_Size(obj, value) -> None:
+    libghdl.vhdl__nodes__set_scalar_size(obj, value)
+
+
+@export
+def Get_Error_Origin(obj):
+    return libghdl.vhdl__nodes__get_error_origin(obj)
+
+
+@export
+def Set_Error_Origin(obj, value) -> None:
+    libghdl.vhdl__nodes__set_error_origin(obj, value)
+
+
+@export
+def Get_Operand(obj):
+    return libghdl.vhdl__nodes__get_operand(obj)
+
+
+@export
+def Set_Operand(obj, value) -> None:
+    libghdl.vhdl__nodes__set_operand(obj, value)
+
+
+@export
+def Get_Left(obj):
+    return libghdl.vhdl__nodes__get_left(obj)
+
+
+@export
+def Set_Left(obj, value) -> None:
+    libghdl.vhdl__nodes__set_left(obj, value)
+
+
+@export
+def Get_Right(obj):
+    return libghdl.vhdl__nodes__get_right(obj)
+
+
+@export
+def Set_Right(obj, value) -> None:
+    libghdl.vhdl__nodes__set_right(obj, value)
+
+
+@export
+def Get_Unit_Name(obj):
+    return libghdl.vhdl__nodes__get_unit_name(obj)
+
+
+@export
+def Set_Unit_Name(obj, value) -> None:
+    libghdl.vhdl__nodes__set_unit_name(obj, value)
+
+
+@export
+def Get_Name(obj):
+    return libghdl.vhdl__nodes__get_name(obj)
+
+
+@export
+def Set_Name(obj, value) -> None:
+    libghdl.vhdl__nodes__set_name(obj, value)
+
+
+@export
+def Get_Group_Template_Name(obj):
+    return libghdl.vhdl__nodes__get_group_template_name(obj)
+
+
+@export
+def Set_Group_Template_Name(obj, value) -> None:
+    libghdl.vhdl__nodes__set_group_template_name(obj, value)
+
+
+@export
+def Get_Name_Staticness(obj):
+    return libghdl.vhdl__nodes__get_name_staticness(obj)
+
+
+@export
+def Set_Name_Staticness(obj, value) -> None:
+    libghdl.vhdl__nodes__set_name_staticness(obj, value)
+
+
+@export
+def Get_Prefix(obj):
+    return libghdl.vhdl__nodes__get_prefix(obj)
+
+
+@export
+def Set_Prefix(obj, value) -> None:
+    libghdl.vhdl__nodes__set_prefix(obj, value)
+
+
+@export
+def Get_Signature_Prefix(obj):
+    return libghdl.vhdl__nodes__get_signature_prefix(obj)
+
+
+@export
+def Set_Signature_Prefix(obj, value) -> None:
+    libghdl.vhdl__nodes__set_signature_prefix(obj, value)
+
+
+@export
+def Get_External_Pathname(obj):
+    return libghdl.vhdl__nodes__get_external_pathname(obj)
+
+
+@export
+def Set_External_Pathname(obj, value) -> None:
+    libghdl.vhdl__nodes__set_external_pathname(obj, value)
+
+
+@export
+def Get_Pathname_Suffix(obj):
+    return libghdl.vhdl__nodes__get_pathname_suffix(obj)
+
+
+@export
+def Set_Pathname_Suffix(obj, value) -> None:
+    libghdl.vhdl__nodes__set_pathname_suffix(obj, value)
+
+
+@export
+def Get_Pathname_Expression(obj):
+    return libghdl.vhdl__nodes__get_pathname_expression(obj)
+
+
+@export
+def Set_Pathname_Expression(obj, value) -> None:
+    libghdl.vhdl__nodes__set_pathname_expression(obj, value)
+
+
+@export
+def Get_In_Formal_Flag(obj):
+    return libghdl.vhdl__nodes__get_in_formal_flag(obj)
+
+
+@export
+def Set_In_Formal_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_in_formal_flag(obj, value)
+
+
+@export
+def Get_Slice_Subtype(obj):
+    return libghdl.vhdl__nodes__get_slice_subtype(obj)
+
+
+@export
+def Set_Slice_Subtype(obj, value) -> None:
+    libghdl.vhdl__nodes__set_slice_subtype(obj, value)
+
+
+@export
+def Get_Suffix(obj):
+    return libghdl.vhdl__nodes__get_suffix(obj)
+
+
+@export
+def Set_Suffix(obj, value) -> None:
+    libghdl.vhdl__nodes__set_suffix(obj, value)
+
+
+@export
+def Get_Index_Subtype(obj):
+    return libghdl.vhdl__nodes__get_index_subtype(obj)
+
+
+@export
+def Set_Index_Subtype(obj, value) -> None:
+    libghdl.vhdl__nodes__set_index_subtype(obj, value)
+
+
+@export
+def Get_Parameter(obj):
+    return libghdl.vhdl__nodes__get_parameter(obj)
+
+
+@export
+def Set_Parameter(obj, value) -> None:
+    libghdl.vhdl__nodes__set_parameter(obj, value)
+
+
+@export
+def Get_Parameter_2(obj):
+    return libghdl.vhdl__nodes__get_parameter_2(obj)
+
+
+@export
+def Set_Parameter_2(obj, value) -> None:
+    libghdl.vhdl__nodes__set_parameter_2(obj, value)
+
+
+@export
+def Get_Parameter_3(obj):
+    return libghdl.vhdl__nodes__get_parameter_3(obj)
+
+
+@export
+def Set_Parameter_3(obj, value) -> None:
+    libghdl.vhdl__nodes__set_parameter_3(obj, value)
+
+
+@export
+def Get_Parameter_4(obj):
+    return libghdl.vhdl__nodes__get_parameter_4(obj)
+
+
+@export
+def Set_Parameter_4(obj, value) -> None:
+    libghdl.vhdl__nodes__set_parameter_4(obj, value)
+
+
+@export
+def Get_Attr_Chain(obj):
+    return libghdl.vhdl__nodes__get_attr_chain(obj)
+
+
+@export
+def Set_Attr_Chain(obj, value) -> None:
+    libghdl.vhdl__nodes__set_attr_chain(obj, value)
+
+
+@export
+def Get_Signal_Attribute_Declaration(obj):
+    return libghdl.vhdl__nodes__get_signal_attribute_declaration(obj)
+
+
+@export
+def Set_Signal_Attribute_Declaration(obj, value) -> None:
+    libghdl.vhdl__nodes__set_signal_attribute_declaration(obj, value)
+
+
+@export
+def Get_Actual_Type(obj):
+    return libghdl.vhdl__nodes__get_actual_type(obj)
+
+
+@export
+def Set_Actual_Type(obj, value) -> None:
+    libghdl.vhdl__nodes__set_actual_type(obj, value)
+
+
+@export
+def Get_Actual_Type_Definition(obj):
+    return libghdl.vhdl__nodes__get_actual_type_definition(obj)
+
+
+@export
+def Set_Actual_Type_Definition(obj, value) -> None:
+    libghdl.vhdl__nodes__set_actual_type_definition(obj, value)
+
+
+@export
+def Get_Association_Chain(obj):
+    return libghdl.vhdl__nodes__get_association_chain(obj)
+
+
+@export
+def Set_Association_Chain(obj, value) -> None:
+    libghdl.vhdl__nodes__set_association_chain(obj, value)
+
+
+@export
+def Get_Individual_Association_Chain(obj):
+    return libghdl.vhdl__nodes__get_individual_association_chain(obj)
+
+
+@export
+def Set_Individual_Association_Chain(obj, value) -> None:
+    libghdl.vhdl__nodes__set_individual_association_chain(obj, value)
+
+
+@export
+def Get_Subprogram_Association_Chain(obj):
+    return libghdl.vhdl__nodes__get_subprogram_association_chain(obj)
+
+
+@export
+def Set_Subprogram_Association_Chain(obj, value) -> None:
+    libghdl.vhdl__nodes__set_subprogram_association_chain(obj, value)
+
+
+@export
+def Get_Aggregate_Info(obj):
+    return libghdl.vhdl__nodes__get_aggregate_info(obj)
+
+
+@export
+def Set_Aggregate_Info(obj, value) -> None:
+    libghdl.vhdl__nodes__set_aggregate_info(obj, value)
+
+
+@export
+def Get_Sub_Aggregate_Info(obj):
+    return libghdl.vhdl__nodes__get_sub_aggregate_info(obj)
+
+
+@export
+def Set_Sub_Aggregate_Info(obj, value) -> None:
+    libghdl.vhdl__nodes__set_sub_aggregate_info(obj, value)
+
+
+@export
+def Get_Aggr_Dynamic_Flag(obj):
+    return libghdl.vhdl__nodes__get_aggr_dynamic_flag(obj)
+
+
+@export
+def Set_Aggr_Dynamic_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_aggr_dynamic_flag(obj, value)
+
+
+@export
+def Get_Aggr_Min_Length(obj):
+    return libghdl.vhdl__nodes__get_aggr_min_length(obj)
+
+
+@export
+def Set_Aggr_Min_Length(obj, value) -> None:
+    libghdl.vhdl__nodes__set_aggr_min_length(obj, value)
+
+
+@export
+def Get_Aggr_Low_Limit(obj):
+    return libghdl.vhdl__nodes__get_aggr_low_limit(obj)
+
+
+@export
+def Set_Aggr_Low_Limit(obj, value) -> None:
+    libghdl.vhdl__nodes__set_aggr_low_limit(obj, value)
+
+
+@export
+def Get_Aggr_High_Limit(obj):
+    return libghdl.vhdl__nodes__get_aggr_high_limit(obj)
+
+
+@export
+def Set_Aggr_High_Limit(obj, value) -> None:
+    libghdl.vhdl__nodes__set_aggr_high_limit(obj, value)
+
+
+@export
+def Get_Aggr_Others_Flag(obj):
+    return libghdl.vhdl__nodes__get_aggr_others_flag(obj)
+
+
+@export
+def Set_Aggr_Others_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_aggr_others_flag(obj, value)
+
+
+@export
+def Get_Aggr_Named_Flag(obj):
+    return libghdl.vhdl__nodes__get_aggr_named_flag(obj)
+
+
+@export
+def Set_Aggr_Named_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_aggr_named_flag(obj, value)
+
+
+@export
+def Get_Aggregate_Expand_Flag(obj):
+    return libghdl.vhdl__nodes__get_aggregate_expand_flag(obj)
+
+
+@export
+def Set_Aggregate_Expand_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_aggregate_expand_flag(obj, value)
+
+
+@export
+def Get_Association_Choices_Chain(obj):
+    return libghdl.vhdl__nodes__get_association_choices_chain(obj)
+
+
+@export
+def Set_Association_Choices_Chain(obj, value) -> None:
+    libghdl.vhdl__nodes__set_association_choices_chain(obj, value)
+
+
+@export
+def Get_Case_Statement_Alternative_Chain(obj):
+    return libghdl.vhdl__nodes__get_case_statement_alternative_chain(obj)
+
+
+@export
+def Set_Case_Statement_Alternative_Chain(obj, value) -> None:
+    libghdl.vhdl__nodes__set_case_statement_alternative_chain(obj, value)
+
+
+@export
+def Get_Choice_Staticness(obj):
+    return libghdl.vhdl__nodes__get_choice_staticness(obj)
+
+
+@export
+def Set_Choice_Staticness(obj, value) -> None:
+    libghdl.vhdl__nodes__set_choice_staticness(obj, value)
+
+
+@export
+def Get_Procedure_Call(obj):
+    return libghdl.vhdl__nodes__get_procedure_call(obj)
+
+
+@export
+def Set_Procedure_Call(obj, value) -> None:
+    libghdl.vhdl__nodes__set_procedure_call(obj, value)
+
+
+@export
+def Get_Implementation(obj):
+    return libghdl.vhdl__nodes__get_implementation(obj)
+
+
+@export
+def Set_Implementation(obj, value) -> None:
+    libghdl.vhdl__nodes__set_implementation(obj, value)
+
+
+@export
+def Get_Parameter_Association_Chain(obj):
+    return libghdl.vhdl__nodes__get_parameter_association_chain(obj)
+
+
+@export
+def Set_Parameter_Association_Chain(obj, value) -> None:
+    libghdl.vhdl__nodes__set_parameter_association_chain(obj, value)
+
+
+@export
+def Get_Method_Object(obj):
+    return libghdl.vhdl__nodes__get_method_object(obj)
+
+
+@export
+def Set_Method_Object(obj, value) -> None:
+    libghdl.vhdl__nodes__set_method_object(obj, value)
+
+
+@export
+def Get_Subtype_Type_Mark(obj):
+    return libghdl.vhdl__nodes__get_subtype_type_mark(obj)
+
+
+@export
+def Set_Subtype_Type_Mark(obj, value) -> None:
+    libghdl.vhdl__nodes__set_subtype_type_mark(obj, value)
+
+
+@export
+def Get_Subnature_Nature_Mark(obj):
+    return libghdl.vhdl__nodes__get_subnature_nature_mark(obj)
+
+
+@export
+def Set_Subnature_Nature_Mark(obj, value) -> None:
+    libghdl.vhdl__nodes__set_subnature_nature_mark(obj, value)
+
+
+@export
+def Get_Type_Conversion_Subtype(obj):
+    return libghdl.vhdl__nodes__get_type_conversion_subtype(obj)
+
+
+@export
+def Set_Type_Conversion_Subtype(obj, value) -> None:
+    libghdl.vhdl__nodes__set_type_conversion_subtype(obj, value)
+
+
+@export
+def Get_Type_Mark(obj):
+    return libghdl.vhdl__nodes__get_type_mark(obj)
+
+
+@export
+def Set_Type_Mark(obj, value) -> None:
+    libghdl.vhdl__nodes__set_type_mark(obj, value)
+
+
+@export
+def Get_File_Type_Mark(obj):
+    return libghdl.vhdl__nodes__get_file_type_mark(obj)
+
+
+@export
+def Set_File_Type_Mark(obj, value) -> None:
+    libghdl.vhdl__nodes__set_file_type_mark(obj, value)
+
+
+@export
+def Get_Return_Type_Mark(obj):
+    return libghdl.vhdl__nodes__get_return_type_mark(obj)
+
+
+@export
+def Set_Return_Type_Mark(obj, value) -> None:
+    libghdl.vhdl__nodes__set_return_type_mark(obj, value)
+
+
+@export
+def Get_Has_Disconnect_Flag(obj):
+    return libghdl.vhdl__nodes__get_has_disconnect_flag(obj)
+
+
+@export
+def Set_Has_Disconnect_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_has_disconnect_flag(obj, value)
+
+
+@export
+def Get_Has_Active_Flag(obj):
+    return libghdl.vhdl__nodes__get_has_active_flag(obj)
+
+
+@export
+def Set_Has_Active_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_has_active_flag(obj, value)
+
+
+@export
+def Get_Is_Within_Flag(obj):
+    return libghdl.vhdl__nodes__get_is_within_flag(obj)
+
+
+@export
+def Set_Is_Within_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_is_within_flag(obj, value)
+
+
+@export
+def Get_Type_Marks_List(obj):
+    return libghdl.vhdl__nodes__get_type_marks_list(obj)
+
+
+@export
+def Set_Type_Marks_List(obj, value) -> None:
+    libghdl.vhdl__nodes__set_type_marks_list(obj, value)
+
+
+@export
+def Get_Implicit_Alias_Flag(obj):
+    return libghdl.vhdl__nodes__get_implicit_alias_flag(obj)
+
+
+@export
+def Set_Implicit_Alias_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_implicit_alias_flag(obj, value)
+
+
+@export
+def Get_Alias_Signature(obj):
+    return libghdl.vhdl__nodes__get_alias_signature(obj)
+
+
+@export
+def Set_Alias_Signature(obj, value) -> None:
+    libghdl.vhdl__nodes__set_alias_signature(obj, value)
+
+
+@export
+def Get_Attribute_Signature(obj):
+    return libghdl.vhdl__nodes__get_attribute_signature(obj)
+
+
+@export
+def Set_Attribute_Signature(obj, value) -> None:
+    libghdl.vhdl__nodes__set_attribute_signature(obj, value)
+
+
+@export
+def Get_Overload_List(obj):
+    return libghdl.vhdl__nodes__get_overload_list(obj)
+
+
+@export
+def Set_Overload_List(obj, value) -> None:
+    libghdl.vhdl__nodes__set_overload_list(obj, value)
+
+
+@export
+def Get_Simple_Name_Identifier(obj):
+    return libghdl.vhdl__nodes__get_simple_name_identifier(obj)
+
+
+@export
+def Set_Simple_Name_Identifier(obj, value) -> None:
+    libghdl.vhdl__nodes__set_simple_name_identifier(obj, value)
+
+
+@export
+def Get_Simple_Name_Subtype(obj):
+    return libghdl.vhdl__nodes__get_simple_name_subtype(obj)
+
+
+@export
+def Set_Simple_Name_Subtype(obj, value) -> None:
+    libghdl.vhdl__nodes__set_simple_name_subtype(obj, value)
+
+
+@export
+def Get_Protected_Type_Body(obj):
+    return libghdl.vhdl__nodes__get_protected_type_body(obj)
+
+
+@export
+def Set_Protected_Type_Body(obj, value) -> None:
+    libghdl.vhdl__nodes__set_protected_type_body(obj, value)
+
+
+@export
+def Get_Protected_Type_Declaration(obj):
+    return libghdl.vhdl__nodes__get_protected_type_declaration(obj)
+
+
+@export
+def Set_Protected_Type_Declaration(obj, value) -> None:
+    libghdl.vhdl__nodes__set_protected_type_declaration(obj, value)
+
+
+@export
+def Get_Use_Flag(obj):
+    return libghdl.vhdl__nodes__get_use_flag(obj)
+
+
+@export
+def Set_Use_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_use_flag(obj, value)
+
+
+@export
+def Get_End_Has_Reserved_Id(obj):
+    return libghdl.vhdl__nodes__get_end_has_reserved_id(obj)
+
+
+@export
+def Set_End_Has_Reserved_Id(obj, value) -> None:
+    libghdl.vhdl__nodes__set_end_has_reserved_id(obj, value)
+
+
+@export
+def Get_End_Has_Identifier(obj):
+    return libghdl.vhdl__nodes__get_end_has_identifier(obj)
+
+
+@export
+def Set_End_Has_Identifier(obj, value) -> None:
+    libghdl.vhdl__nodes__set_end_has_identifier(obj, value)
+
+
+@export
+def Get_End_Has_Postponed(obj):
+    return libghdl.vhdl__nodes__get_end_has_postponed(obj)
+
+
+@export
+def Set_End_Has_Postponed(obj, value) -> None:
+    libghdl.vhdl__nodes__set_end_has_postponed(obj, value)
+
+
+@export
+def Get_Has_Label(obj):
+    return libghdl.vhdl__nodes__get_has_label(obj)
+
+
+@export
+def Set_Has_Label(obj, value) -> None:
+    libghdl.vhdl__nodes__set_has_label(obj, value)
+
+
+@export
+def Get_Has_Begin(obj):
+    return libghdl.vhdl__nodes__get_has_begin(obj)
+
+
+@export
+def Set_Has_Begin(obj, value) -> None:
+    libghdl.vhdl__nodes__set_has_begin(obj, value)
+
+
+@export
+def Get_Has_End(obj):
+    return libghdl.vhdl__nodes__get_has_end(obj)
+
+
+@export
+def Set_Has_End(obj, value) -> None:
+    libghdl.vhdl__nodes__set_has_end(obj, value)
+
+
+@export
+def Get_Has_Is(obj):
+    return libghdl.vhdl__nodes__get_has_is(obj)
+
+
+@export
+def Set_Has_Is(obj, value) -> None:
+    libghdl.vhdl__nodes__set_has_is(obj, value)
+
+
+@export
+def Get_Has_Pure(obj):
+    return libghdl.vhdl__nodes__get_has_pure(obj)
+
+
+@export
+def Set_Has_Pure(obj, value) -> None:
+    libghdl.vhdl__nodes__set_has_pure(obj, value)
+
+
+@export
+def Get_Has_Body(obj):
+    return libghdl.vhdl__nodes__get_has_body(obj)
+
+
+@export
+def Set_Has_Body(obj, value) -> None:
+    libghdl.vhdl__nodes__set_has_body(obj, value)
+
+
+@export
+def Get_Has_Parameter(obj):
+    return libghdl.vhdl__nodes__get_has_parameter(obj)
+
+
+@export
+def Set_Has_Parameter(obj, value) -> None:
+    libghdl.vhdl__nodes__set_has_parameter(obj, value)
+
+
+@export
+def Get_Has_Component(obj):
+    return libghdl.vhdl__nodes__get_has_component(obj)
+
+
+@export
+def Set_Has_Component(obj, value) -> None:
+    libghdl.vhdl__nodes__set_has_component(obj, value)
+
+
+@export
+def Get_Has_Identifier_List(obj):
+    return libghdl.vhdl__nodes__get_has_identifier_list(obj)
+
+
+@export
+def Set_Has_Identifier_List(obj, value) -> None:
+    libghdl.vhdl__nodes__set_has_identifier_list(obj, value)
+
+
+@export
+def Get_Has_Mode(obj):
+    return libghdl.vhdl__nodes__get_has_mode(obj)
+
+
+@export
+def Set_Has_Mode(obj, value) -> None:
+    libghdl.vhdl__nodes__set_has_mode(obj, value)
+
+
+@export
+def Get_Has_Class(obj):
+    return libghdl.vhdl__nodes__get_has_class(obj)
+
+
+@export
+def Set_Has_Class(obj, value) -> None:
+    libghdl.vhdl__nodes__set_has_class(obj, value)
+
+
+@export
+def Get_Has_Delay_Mechanism(obj):
+    return libghdl.vhdl__nodes__get_has_delay_mechanism(obj)
+
+
+@export
+def Set_Has_Delay_Mechanism(obj, value) -> None:
+    libghdl.vhdl__nodes__set_has_delay_mechanism(obj, value)
+
+
+@export
+def Get_Suspend_Flag(obj):
+    return libghdl.vhdl__nodes__get_suspend_flag(obj)
+
+
+@export
+def Set_Suspend_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_suspend_flag(obj, value)
+
+
+@export
+def Get_Is_Ref(obj):
+    return libghdl.vhdl__nodes__get_is_ref(obj)
+
+
+@export
+def Set_Is_Ref(obj, value) -> None:
+    libghdl.vhdl__nodes__set_is_ref(obj, value)
+
+
+@export
+def Get_Is_Forward_Ref(obj):
+    return libghdl.vhdl__nodes__get_is_forward_ref(obj)
+
+
+@export
+def Set_Is_Forward_Ref(obj, value) -> None:
+    libghdl.vhdl__nodes__set_is_forward_ref(obj, value)
+
+
+@export
+def Get_Psl_Property(obj):
+    return libghdl.vhdl__nodes__get_psl_property(obj)
+
+
+@export
+def Set_Psl_Property(obj, value) -> None:
+    libghdl.vhdl__nodes__set_psl_property(obj, value)
+
+
+@export
+def Get_Psl_Sequence(obj):
+    return libghdl.vhdl__nodes__get_psl_sequence(obj)
+
+
+@export
+def Set_Psl_Sequence(obj, value) -> None:
+    libghdl.vhdl__nodes__set_psl_sequence(obj, value)
+
+
+@export
+def Get_Psl_Declaration(obj):
+    return libghdl.vhdl__nodes__get_psl_declaration(obj)
+
+
+@export
+def Set_Psl_Declaration(obj, value) -> None:
+    libghdl.vhdl__nodes__set_psl_declaration(obj, value)
+
+
+@export
+def Get_Psl_Expression(obj):
+    return libghdl.vhdl__nodes__get_psl_expression(obj)
+
+
+@export
+def Set_Psl_Expression(obj, value) -> None:
+    libghdl.vhdl__nodes__set_psl_expression(obj, value)
+
+
+@export
+def Get_Psl_Boolean(obj):
+    return libghdl.vhdl__nodes__get_psl_boolean(obj)
+
+
+@export
+def Set_Psl_Boolean(obj, value) -> None:
+    libghdl.vhdl__nodes__set_psl_boolean(obj, value)
+
+
+@export
+def Get_PSL_Clock(obj):
+    return libghdl.vhdl__nodes__get_psl_clock(obj)
+
+
+@export
+def Set_PSL_Clock(obj, value) -> None:
+    libghdl.vhdl__nodes__set_psl_clock(obj, value)
+
+
+@export
+def Get_PSL_NFA(obj):
+    return libghdl.vhdl__nodes__get_psl_nfa(obj)
+
+
+@export
+def Set_PSL_NFA(obj, value) -> None:
+    libghdl.vhdl__nodes__set_psl_nfa(obj, value)
+
+
+@export
+def Get_PSL_Nbr_States(obj):
+    return libghdl.vhdl__nodes__get_psl_nbr_states(obj)
+
+
+@export
+def Set_PSL_Nbr_States(obj, value) -> None:
+    libghdl.vhdl__nodes__set_psl_nbr_states(obj, value)
+
+
+@export
+def Get_PSL_Clock_Sensitivity(obj):
+    return libghdl.vhdl__nodes__get_psl_clock_sensitivity(obj)
+
+
+@export
+def Set_PSL_Clock_Sensitivity(obj, value) -> None:
+    libghdl.vhdl__nodes__set_psl_clock_sensitivity(obj, value)
+
+
+@export
+def Get_PSL_EOS_Flag(obj):
+    return libghdl.vhdl__nodes__get_psl_eos_flag(obj)
+
+
+@export
+def Set_PSL_EOS_Flag(obj, value) -> None:
+    libghdl.vhdl__nodes__set_psl_eos_flag(obj, value)
+
+
+@export
+def Get_Count_Expression(obj):
+    return libghdl.vhdl__nodes__get_count_expression(obj)
+
+
+@export
+def Set_Count_Expression(obj, value) -> None:
+    libghdl.vhdl__nodes__set_count_expression(obj, value)
+
+
+@export
+def Get_Clock_Expression(obj):
+    return libghdl.vhdl__nodes__get_clock_expression(obj)
+
+
+@export
+def Set_Clock_Expression(obj, value) -> None:
+    libghdl.vhdl__nodes__set_clock_expression(obj, value)
+
+
+@export
+def Get_Default_Clock(obj):
+    return libghdl.vhdl__nodes__get_default_clock(obj)
+
+
+@export
+def Set_Default_Clock(obj, value) -> None:
+    libghdl.vhdl__nodes__set_default_clock(obj, value)
+
+
+@export
+def Get_Foreign_Node(obj):
+    return libghdl.vhdl__nodes__get_foreign_node(obj)
+
+
+@export
+def Set_Foreign_Node(obj, value) -> None:
+    libghdl.vhdl__nodes__set_foreign_node(obj, value)

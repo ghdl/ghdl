@@ -6,9 +6,9 @@
 # | .__/ \__, |\____|_| |_|____/|_____(_)_|_|_.__/ \__, |_| |_|\__,_|_|
 # |_|    |___/                                     |___/
 # =============================================================================
-#  Authors:
-#    Tristan Gingold
-#    Patrick Lehmann
+# Authors:
+#   Tristan Gingold
+#   Patrick Lehmann
 #
 # Package module:   Python binding and low-level API for shared library 'libghdl'.
 #
@@ -36,16 +36,16 @@ from ctypes import c_bool
 
 from pyGHDL.libghdl import libghdl
 
-__all__ = ["Flag_Concurrent_Stmts", "Flag_Configurations", "Flag_Associations"]
+__all__ = [
+    "Flag_Concurrent_Stmts",
+    "Flag_Configurations",
+    "Flag_Associations"
+]
 
-Flag_Concurrent_Stmts = c_bool.in_dll(
-    libghdl, "vhdl__canon__canon_flag_concurrent_stmts"
-)
+Flag_Concurrent_Stmts = c_bool.in_dll(libghdl, "vhdl__canon__canon_flag_concurrent_stmts")
 
 Flag_Configurations = c_bool.in_dll(libghdl, "vhdl__canon__canon_flag_configurations")
 
 Flag_Associations = c_bool.in_dll(libghdl, "vhdl__canon__canon_flag_associations")
 
-# Extract_Sequential_Statement_Chain_Sensitivity = (
-#    libghdl.vhdl__canon__canon_extract_sequential_statement_chain_sensitivity
-# )
+# Extract_Sequential_Statement_Chain_Sensitivity = (libghdl.vhdl__canon__canon_extract_sequential_statement_chain_sensitivity)

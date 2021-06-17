@@ -79,7 +79,7 @@ class Document(object):
         end_line = change_range["end"]["line"]
         end_col = change_range["end"]["character"]
 
-        status = files_map_editor.Replace_Text(
+        status = files_map_editor._Replace_Text(
             self._fe,
             start_line + 1,
             start_col,

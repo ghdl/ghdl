@@ -6,14 +6,14 @@
 # | .__/ \__, |\____|_| |_|____/|_____(_)_|_|_.__/ \__, |_| |_|\__,_|_|
 # |_|    |___/                                     |___/
 # =============================================================================
-#  Authors:
-#    Tristan Gingold
+# Authors:
+#   Tristan Gingold
 #
 # Package module:   Generators/iterators and low-level helpers for pyGHDL.libghdl.
 #
 # License:
 # ============================================================================
-#  Copyright (C) 2019-2020 Tristan Gingold
+#  Copyright (C) 2019-2021 Tristan Gingold
 #
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -52,25 +52,25 @@ def name_image(Id: NameId) -> str:
     return name_table.Get_Name_Ptr(Id)
 
 
-# @export # FIXME: see above
+@export
 @EnumLookupTable(nodes_meta.fields)
 def fields_image(idx: int) -> str:
     """String representation of Nodes_Meta.fields :obj:`idx`."""
 
 
-# @export # FIXME: see above
+@export
 @EnumLookupTable(nodes.Iir_Kind)
 def kind_image(k: int) -> str:
     """String representation of Nodes.Iir_Kind :obj:`k`."""
 
 
-# @export # FIXME: see above
+@export
 @EnumLookupTable(nodes_meta.types)
 def types_image(t: int) -> str:
     """String representation of Nodes_Meta.Types :obj:`t`."""
 
 
-# @export # FIXME: see above
+@export
 @EnumLookupTable(nodes_meta.Attr)
 def attr_image(a: int) -> str:
     """String representation of Nodes_Meta.Attr :obj:`a`."""

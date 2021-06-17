@@ -6,9 +6,9 @@
 # | .__/ \__, |\____|_| |_|____/|_____(_)_|_|_.__/ \__, |_| |_|\__,_|_|
 # |_|    |___/                                     |___/
 # =============================================================================
-#  Authors:
-#    Tristan Gingold
-#    Patrick Lehmann
+# Authors:
+#   Tristan Gingold
+#   Patrick Lehmann
 #
 # Package module:   Python binding and low-level API for shared library 'libghdl'.
 #
@@ -34,10 +34,10 @@
 
 from pydecor import export
 
-from pyGHDL.libghdl import libghdl
+from pyGHDL.libghdl._decorator import BindToLibGHDL
 
 
 @export
+@BindToLibGHDL("errorout__console__install_handler")
 def Install_Handler() -> None:
     """Install the handlers for reporting errors."""
-    libghdl.errorout__console__install_handler()

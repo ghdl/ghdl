@@ -6,9 +6,9 @@
 # | .__/ \__, |\____|_| |_|____/|_____(_)_|_|_.__/ \__, |_| |_|\__,_|_|
 # |_|    |___/                                     |___/
 # =============================================================================
-#  Authors:
-#    Tristan Gingold
-#    Patrick Lehmann
+# Authors:
+#   Tristan Gingold
+#   Patrick Lehmann
 #
 # Package module:   Python binding and low-level API for shared library 'libghdl'.
 #
@@ -37,15 +37,21 @@ from ctypes import c_int32, c_bool, POINTER, Structure
 from pydecor import export
 
 from pyGHDL.libghdl import libghdl
+from pyGHDL.libghdl._decorator import BindToLibGHDL
 
 
 @export
 class Iterator(Structure):
-    _fields_ = [("chunk", c_int32), ("chunk_idx", c_int32), ("remain", c_int32)]
+    _fields_ = [
+        ("chunk", c_int32),
+        ("chunk_idx", c_int32),
+        ("remain", c_int32)
+    ]
 
 
 @export
-def Iterate(List) -> Iterator:
+@BindToLibGHDL("vhdl__lists__iterate")
+def Iterate(List: int) -> Iterator:
     """
     Create an iterator for a given list.
 
@@ -62,20 +68,16 @@ def Iterate(List) -> Iterator:
     :param List: List to create an iterator from.
     :return:     Iterator structure.
     """
-    func = libghdl.vhdl__lists__iterate
-    func.argstype = [c_int32]
-    func.restype = Iterator
-
-    return func(List)
 
 
 @export
+#@BindToLibGHDL("vhdl__lists__is_valid")
 def Is_Valid(it: Iterator) -> bool:
     """
     Check if iterator reached the end.
 
-    :param Iterator: Iterator to check.
-    :return:         False, if iterator has reached the end.
+    :param it: Iterator to check.
+    :return:   ``False``, if iterator has reached the end.
     """
     func = libghdl.vhdl__lists__is_valid
     func.argstype = [POINTER(Iterator)]
@@ -85,27 +87,29 @@ def Is_Valid(it: Iterator) -> bool:
 
 
 @export
-def Next(it: Iterator):
+#@BindToLibGHDL("vhdl__lists__next")
+def Next(it: Iterator) -> bool:
     """
     Move iterator to the next element.
 
-    :param Iterator: Iterator to increment.
-    :return:         False, if iterator has reached the end.
+    :param it: Iterator to increment.
+    :return:   ``False``, if iterator has reached the end.
     """
     func = libghdl.vhdl__lists__next
     func.argstype = [POINTER(Iterator)]
     func.restype = None
 
-    func(it)
+    return func(it)
 
 
 @export
+#@BindToLibGHDL("vhdl__lists__get_element")
 def Get_Element(it: Iterator) -> int:
     """
     Get the current element from iterator.
 
-    :param Iterator: Iterator the get the element from.
-    :return:         The current element the iterator points to. Type: ``El_Type``
+    :param it: Iterator the get the element from.
+    :return:   The current element the iterator points to. Type: ``El_Type``
     """
     func = libghdl.vhdl__lists__get_element
     func.argstype = [POINTER(Iterator)]
@@ -115,7 +119,8 @@ def Get_Element(it: Iterator) -> int:
 
 
 @export
-def Get_Nbr_Elements(List) -> int:
+@BindToLibGHDL("vhdl__lists__get_nbr_elements")
+def Get_Nbr_Elements(List: int) -> int:
     """
     Return the number of elements in the list.
 
@@ -124,28 +129,23 @@ def Get_Nbr_Elements(List) -> int:
     :param List: The list to use.
     :return:     Number of list elements.
     """
-    func = libghdl.vhdl__lists__get_nbr_elements
-    func.argtype = [c_int32]
-    func.restype = c_int32
-
-    return func(List)
 
 
 @export
+@BindToLibGHDL("vhdl__lists__create_list")
 def Create_Iir_List() -> int:
     """
     Create a list.
 
-    :return: Type: ``List_Type``
+    :return: undocumented; Type: ``List_Type``
     """
-    return libghdl.vhdl__lists__create_list()
 
 
 @export
-def Destroy_Iir_List(List) -> None:
+@BindToLibGHDL("vhdl__lists__destroy_list")
+def Destroy_Iir_List(List: int) -> None:
     """
     Destroy a list.
 
     :param List: List to destroy.
     """
-    libghdl.vhdl__lists__destroy_list(List)

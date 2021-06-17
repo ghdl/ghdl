@@ -6,9 +6,9 @@
 # | .__/ \__, |\____|_| |_|____/|_____(_)_|_|_.__/ \__, |_| |_|\__,_|_|
 # |_|    |___/                                     |___/
 # =============================================================================
-#  Authors:
-#    Tristan Gingold
-#    Patrick Lehmann
+# Authors:
+#   Tristan Gingold
+#   Patrick Lehmann
 #
 # Package package:  Python binding and low-level API for shared library 'libghdl'.
 #
@@ -40,7 +40,9 @@ from shutil import which
 
 from pydecor import export
 
+from pyGHDL import GHDLBaseException
 from pyGHDL.libghdl._types import Iir
+#from pyGHDL.libghdl._decorator import BindToLibGHDL
 from pyGHDL.libghdl.version import __version__
 
 
@@ -150,18 +152,21 @@ libghdl = _initialize()
 
 
 @export
+# @BindToLibGHDL("options__finalize")
 def finalize() -> None:
     """Free all the memory, be ready for a new initialization."""
     libghdl.options__finalize()
 
 
 @export
+#@BindToLibGHDL("options__initialize")
 def initialize() -> None:
     """Initialize or re-initialize the shared library."""
     libghdl.options__initialize()
 
 
 @export
+# @BindToLibGHDL("libghdl__set_option")
 def set_option(Opt: str) -> bool:
     """
     Set option :obj:`opt`.
@@ -174,6 +179,7 @@ def set_option(Opt: str) -> bool:
 
 
 @export
+#@BindToLibGHDL("libghdl__analyze_init")
 def analyze_init() -> None:
     """
     Initialize the analyzer.
@@ -185,6 +191,7 @@ def analyze_init() -> None:
 
 
 @export
+#@BindToLibGHDL("libghdl__analyze_init_status")
 def analyze_init_status() -> int:
     """
     Initialize the analyzer.
@@ -195,6 +202,7 @@ def analyze_init_status() -> int:
 
 
 @export
+# @BindToLibGHDL("libghdl__analyze_file")
 def analyze_file(fname: str) -> Iir:
     """
     Analyze a given filename :obj:`fname`.
@@ -207,6 +215,12 @@ def analyze_file(fname: str) -> Iir:
 
 
 @export
+#@BindToLibGHDL("ghdllocal__disp_config_prefixes")
 def disp_config() -> None:
     """Display the configured prefixes for libghdl."""
     libghdl.ghdllocal__disp_config_prefixes()
+
+
+@export
+class LibGHDLException(GHDLBaseException):
+    pass

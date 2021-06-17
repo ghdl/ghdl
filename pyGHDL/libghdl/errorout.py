@@ -1,7 +1,10 @@
 # Auto generated Python source file from Ada sources
 # Call 'make' in 'src/vhdl' to regenerate:
 #
+from enum import IntEnum, unique
 from pydecor import export
+from enum import IntEnum, unique
+
 from pyGHDL.libghdl import libghdl
 
 
@@ -11,7 +14,8 @@ def Enable_Warning(Id: int, Enable: bool) -> None:
 
 
 @export
-class Msgid:
+@unique
+class Msgid(IntEnum):
     Msgid_Note = 0
     Warnid_Library = 1
     Warnid_Deprecated_Option = 2
