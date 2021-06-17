@@ -84,6 +84,7 @@ def Get_Character(Id: NameId) -> str:
 
     return func(Id).decode("utf-8")
 
+
 @export
 def Get_Identifier(string: str) -> NameId:
     """
