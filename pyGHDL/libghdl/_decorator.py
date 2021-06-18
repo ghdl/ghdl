@@ -31,7 +31,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
 #
-from ctypes import c_int32, c_char_p, c_bool, Structure, c_char
+from ctypes import c_int32, c_uint32, c_char_p, c_bool, Structure, c_char
 from functools import wraps
 from typing import Callable, List, Dict, Any, TypeVar
 
@@ -77,6 +77,27 @@ def BindToLibGHDL(subprogramName):
     :param subprogramName: Name of the subprogram in *libghdl*.
     """
 
+    def PythonTypeToCtype(typ):
+        if typ is None:
+            return None
+        elif typ is int:
+            return c_int32
+        elif typ is bool:
+            return c_bool
+        elif typ is bytes:
+            return c_char_p
+        elif typ in (c_char, c_char_p):
+            return typ
+        elif isinstance(typ, TypeVar):
+            # Humm, recurse ?
+            if typ.__bound__ is int:
+                return c_int32
+            if typ.__bound__ in (c_uint32, c_int32):
+                return typ.__bound__
+        elif issubclass(typ, Structure):
+            return typ
+        raise TypeError
+
     def wrapper(func: Callable):
         typeHints: Dict[str, Any] = func.__annotations__
         typeHintCount = len(typeHints)
@@ -109,57 +130,19 @@ def BindToLibGHDL(subprogramName):
 
         parameterTypes = []
         for parameter in parameters.values():
-            if parameter is int:
-                parameterTypes.append(c_int32)
-            elif parameter is bool:
-                parameterTypes.append(c_bool)
-            elif parameter is bytes:
-                parameterTypes.append(c_char_p)
-            elif parameter is c_char:
-                parameterTypes.append(c_char)
-            elif parameter is c_char_p:
-                parameterTypes.append(c_char_p)
-            elif isinstance(parameter, TypeVar):
-                if (parameter.__bound__ is int) or (parameter.__bound__ is c_int32):
-                    parameterTypes.append(c_int32)
-                else:
-                    raise TypeError(
-                        "Unsupported parameter type '{0!s}' in function '{1}'.".format(
-                            parameter, func.__name__
-                        )
-                    )
-            else:
+            try:
+                parameterTypes.append(PythonTypeToCtype(parameter))
+            except TypeError:
                 raise TypeError(
                     "Unsupported parameter type '{0!s}' in function '{1}'.".format(
                         parameter, func.__name__
                     )
                 )
 
-        if returnType is None:
-            resultType = None
-        elif returnType is bytes:
-            resultType = c_char_p
-        elif returnType is c_char:
-            resultType = c_char
-        elif returnType is c_char_p:
-            resultType = c_char_p
-        elif returnType is int:
-            resultType = c_int32
-        elif returnType is bool:
-            resultType = c_bool
-        elif isinstance(returnType, TypeVar):
-            if (returnType.__bound__ is int) or (returnType.__bound__ is c_int32):
-                resultType = c_int32
-            else:
-                raise Exception(
-                    "Unsupported return type '{0!s}' in function '{1}'.".format(
-                        returnType, func.__name__
-                    )
-                )
-        elif issubclass(returnType, Structure):
-            resultType = returnType
-        else:
-            raise Exception(
+        try:
+            resultType = PythonTypeToCtype(returnType)
+        except TypeError:
+            raise TypeError(
                 "Unsupported return type '{0!s}' in function '{1}'.".format(
                     returnType, func.__name__
                 )
