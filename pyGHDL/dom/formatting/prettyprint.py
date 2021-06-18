@@ -2,6 +2,7 @@ from typing import List, Union
 
 from pydecor import export
 
+from pyGHDL.dom.Aggregates import SimpleAggregateElement, IndexedAggregateElement, RangedAggregateElement, NamedAggregateElement, OthersAggregateElement
 from pyGHDL.dom.Object import Constant, Signal
 from pyVHDLModel.VHDLModel import (
     GenericInterfaceItem,
@@ -14,6 +15,7 @@ from pyVHDLModel.VHDLModel import (
     IdentityExpression,
     UnaryExpression,
     WithDefaultExpression,
+    AggregateElement
 )
 
 from pyGHDL import GHDLBaseException
@@ -376,6 +378,31 @@ class PrettyPrint:
                 operator=operator,
             )
         elif isinstance(expression, Aggregate):
-            print(Aggregate.Elements[0])
+            return "({choices})".format(choices=", ".join([self.formatAggregateElement(element) for element in expression.Elements]))
         else:
             raise PrettyPrintException("Unhandled expression kind.")
+
+    def formatAggregateElement(self, aggregateElement: AggregateElement):
+        if isinstance(aggregateElement, SimpleAggregateElement):
+            return "{value}".format(
+                value=self.formatExpression(aggregateElement.Expression)
+            )
+        elif isinstance(aggregateElement, IndexedAggregateElement):
+            return "{index} => {value}".format(
+                index=self.formatExpression(aggregateElement.Index),
+                value=self.formatExpression(aggregateElement.Expression)
+            )
+        elif isinstance(aggregateElement, RangedAggregateElement):
+            return "{range} => {value}".format(
+                range=self.formatRange(aggregateElement.Range),
+                value=self.formatExpression(aggregateElement.Expression)
+            )
+        elif isinstance(aggregateElement, NamedAggregateElement):
+            return "{name} => {value}".format(
+                name=aggregateElement.Name,
+                value=self.formatExpression(aggregateElement.Expression)
+            )
+        elif isinstance(aggregateElement, OthersAggregateElement):
+            return "other => {value}".format(
+                value=self.formatExpression(aggregateElement.Expression)
+            )

@@ -401,5 +401,5 @@ class Aggregate(VHDLModel_Aggregate):
                     )
                 )
 
-        return choices
+        return cls(choices)
 
