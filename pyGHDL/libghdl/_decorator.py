@@ -31,7 +31,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
 #
-from ctypes import c_int32, c_uint32, c_char_p, c_bool, Structure, c_char
+from ctypes import c_int32, c_uint32, c_char_p, c_bool, c_double, Structure, c_char
 from functools import wraps
 from typing import Callable, List, Dict, Any, TypeVar
 
@@ -82,6 +82,8 @@ def BindToLibGHDL(subprogramName):
             return None
         elif typ is int:
             return c_int32
+        elif type is float:
+            return c_double
         elif typ is bool:
             return c_bool
         elif typ is bytes:
@@ -92,8 +94,9 @@ def BindToLibGHDL(subprogramName):
             # Humm, recurse ?
             if typ.__bound__ is int:
                 return c_int32
-            if typ.__bound__ in (c_uint32, c_int32):
+            if typ.__bound__ in (c_uint32, c_int32, c_double):
                 return typ.__bound__
+            raise TypeError("Unsupported typevar bound to {!s}".format(typ.__bound__))
         elif issubclass(typ, Structure):
             return typ
         raise TypeError
