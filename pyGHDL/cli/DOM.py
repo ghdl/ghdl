@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+
+from sys import argv
+
 from pathlib import Path
 
 from pydecor import export
@@ -35,13 +39,21 @@ class Application:
 
 
 def main():
-    try:
-        app = Application()
-        app.addFile(Path("testsuite/pyunit/SimpleEntity.vhdl"), "default_lib")
-    except GHDLBaseException as ex:
-        print(ex)
+    items = argv[1:]
+    if len(items) < 1:
+        print("Please, provide the files to be analyzed as CLI arguments.")
+        print("Using <testsuite/pyunit/SimpleEntity.vhdl> for demo purposes.\n")
+        items = ["testsuite/pyunit/SimpleEntity.vhdl"]
 
-    app.prettyPrint()
+    for item in items:
+        print("·", item)
+        try:
+            app = Application()
+            app.addFile(Path(item), "default_lib")
+        except GHDLBaseException as ex:
+            print(ex)
+
+        app.prettyPrint()
 
 
 if __name__ == "__main__":
