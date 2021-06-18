@@ -57,7 +57,7 @@ class FloatingPointLiteral(VHDLModel_FloatingPointLiteral):
     @classmethod
     def parse(cls, node):
         value = nodes.Get_Fp_Value(node)
-        return cls(value)
+        return cls(float(value))
 
 
 @export

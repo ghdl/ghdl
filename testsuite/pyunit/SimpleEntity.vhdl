@@ -4,11 +4,12 @@ use     ieee.numeric_std.all;
 
 entity entity_1 is
 	generic (
+		FREQ : real     := 100.0;
 		BITS : positive := 8
 	);
 	port (
 	  Clock: in  std_logic;
-	  Reset: in  std_logic;
+	  Reset: in  std_logic := '0';
 	  Q:     out std_logic_vector(BITS - 1 downto 0)
 	);
 end entity entity_1;
