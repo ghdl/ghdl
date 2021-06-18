@@ -167,7 +167,7 @@ class Document(object):
         unit = nodes.Get_First_Design_Unit(self._tree)
         while unit != nodes.Null_Iir:
             sem.Semantic(unit)
-            nodes.Set_Date_State(unit, nodes.Date_State.Analyze)
+            nodes.Set_Date_State(unit, nodes.DateStateType.Analyze)
             unit = nodes.Get_Chain(unit)
 
     def flatten_symbols(self, syms, parent):

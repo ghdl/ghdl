@@ -30,7 +30,9 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-from ctypes import c_int32
+from enum import IntEnum, unique
+from pydecor import export
+from ctypes import c_int32, c_uint32, c_int64, c_double, c_bool
 from typing import TypeVar
 
 __all__ = [
@@ -42,15 +44,47 @@ __all__ = [
     "IirKind",
 ]
 
+
+@export
+@unique
+class TriStateType(IntEnum):
+    Unknown = 0
+    TFalse = 1
+    TTrue = 2
+
+
+@export
+@unique
+class DirectionType(IntEnum):
+    To = 0
+    Downto = 1
+
+
+# This is an Ada standard type, which can be 1 byte.
+Boolean = TypeVar("Boolean", bound=c_bool)
+
+Int32 = TypeVar("Int32", bound=c_int32)
+Int64 = TypeVar("Int64", bound=c_int64)
+Fp64 = TypeVar("Fp64", bound=c_double)
+
 ErrorIndex = TypeVar("ErrorIndex", bound=int)
 MessageIdWarnings = TypeVar("MessageIdWarnings", bound=int)
 NameId = TypeVar("NameId", bound=int)
 
-SourceFileEntry = TypeVar("SourceFileEntry", bound=int)
-Location_Type = TypeVar("Location_Type", bound=c_int32)
+String8Id = TypeVar("String8Id", bound=c_uint32)
+FileChecksumId = TypeVar("FileChecksumId", bound=c_uint32)
+TimeStampId = TypeVar("TimeStampId", bound=c_uint32)
+
+SourceFileEntry = TypeVar("SourceFileEntry", bound=c_uint32)
+SourcePtr = TypeVar("SourcePtr", bound=c_int32)
+Location_Type = TypeVar("Location_Type", bound=c_uint32)
+LocationType = Location_Type
 
 Iir = TypeVar("Iir", bound=int)
-IirKind = TypeVar("IirKind", bound=int)
+IirKind = TypeVar("IirKind", bound=c_int32)
+
+PSLNode = TypeVar("PSLNode", bound=c_int32)
+PSLNFA = TypeVar("PSLNFA", bound=c_int32)
 
 Iir_Design_File = TypeVar("Iir_Design_File", bound=int)
 Iir_Design_Unit = TypeVar("Iir_Design_Unit", bound=int)

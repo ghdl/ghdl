@@ -3,8 +3,28 @@
 #
 from enum import IntEnum, unique
 from pydecor import export
+from typing import TypeVar
+from ctypes import c_int32
 from pyGHDL.libghdl import libghdl
-from pyGHDL.libghdl._types import Iir
+from pyGHDL.libghdl._types import (
+    Iir,
+    LocationType,
+    FileChecksumId,
+    TimeStampId,
+    SourceFileEntry,
+    NameId,
+    TriStateType,
+    SourcePtr,
+    Int32,
+    Int64,
+    Fp64,
+    String8Id,
+    Boolean,
+    DirectionType,
+    PSLNode,
+    PSLNFA,
+)
+from pyGHDL.libghdl.vhdl.tokens import Tok
 
 Null_Iir = 0
 
@@ -14,6 +34,8 @@ Iir_List_All = 1
 Null_Iir_Flist = 0
 Iir_Flist_Others = 1
 Iir_Flist_All = 2
+
+DateType = TypeVar("DateType", bound=c_int32)
 
 
 @export
@@ -1061,6 +1083,15 @@ class Iir_Mode(IntEnum):
 
 @export
 @unique
+class ScalarSize(IntEnum):
+    Scalar_8 = 0
+    Scalar_16 = 1
+    Scalar_32 = 2
+    Scalar_64 = 3
+
+
+@export
+@unique
 class Iir_Staticness(IntEnum):
     Unknown = 0
     PNone = 1
@@ -1085,11 +1116,21 @@ class Iir_Delay_Mechanism(IntEnum):
 
 @export
 @unique
-class Date_State(IntEnum):
+class DateStateType(IntEnum):
     Extern = 0
     Disk = 1
     Parse = 2
     Analyze = 3
+
+
+@export
+@unique
+class NumberBaseType(IntEnum):
+    Base_None = 0
+    Base_2 = 1
+    Base_8 = 2
+    Base_10 = 3
+    Base_16 = 4
 
 
 @export
@@ -1755,3710 +1796,3710 @@ class Iir_Predefined(IntEnum):
 
 
 @export
-def Get_Kind(node: int):
+def Get_Kind(node: Iir) -> Iir_Kind:
     return libghdl.vhdl__nodes__get_kind(node)
 
 
 @export
-def Get_Location(node: Iir):
+def Get_Location(node: Iir) -> LocationType:
     return libghdl.vhdl__nodes__get_location(node)
 
 
 @export
-def Get_First_Design_Unit(obj):
+def Get_First_Design_Unit(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_first_design_unit(obj)
 
 
 @export
-def Set_First_Design_Unit(obj, value) -> None:
+def Set_First_Design_Unit(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_first_design_unit(obj, value)
 
 
 @export
-def Get_Last_Design_Unit(obj):
+def Get_Last_Design_Unit(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_last_design_unit(obj)
 
 
 @export
-def Set_Last_Design_Unit(obj, value) -> None:
+def Set_Last_Design_Unit(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_last_design_unit(obj, value)
 
 
 @export
-def Get_Library_Declaration(obj):
+def Get_Library_Declaration(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_library_declaration(obj)
 
 
 @export
-def Set_Library_Declaration(obj, value) -> None:
+def Set_Library_Declaration(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_library_declaration(obj, value)
 
 
 @export
-def Get_File_Checksum(obj):
+def Get_File_Checksum(obj: Iir) -> FileChecksumId:
     return libghdl.vhdl__nodes__get_file_checksum(obj)
 
 
 @export
-def Set_File_Checksum(obj, value) -> None:
+def Set_File_Checksum(obj: Iir, value: FileChecksumId) -> None:
     libghdl.vhdl__nodes__set_file_checksum(obj, value)
 
 
 @export
-def Get_Analysis_Time_Stamp(obj):
+def Get_Analysis_Time_Stamp(obj: Iir) -> TimeStampId:
     return libghdl.vhdl__nodes__get_analysis_time_stamp(obj)
 
 
 @export
-def Set_Analysis_Time_Stamp(obj, value) -> None:
+def Set_Analysis_Time_Stamp(obj: Iir, value: TimeStampId) -> None:
     libghdl.vhdl__nodes__set_analysis_time_stamp(obj, value)
 
 
 @export
-def Get_Design_File_Source(obj):
+def Get_Design_File_Source(obj: Iir) -> SourceFileEntry:
     return libghdl.vhdl__nodes__get_design_file_source(obj)
 
 
 @export
-def Set_Design_File_Source(obj, value) -> None:
+def Set_Design_File_Source(obj: Iir, value: SourceFileEntry) -> None:
     libghdl.vhdl__nodes__set_design_file_source(obj, value)
 
 
 @export
-def Get_Library(obj):
+def Get_Library(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_library(obj)
 
 
 @export
-def Set_Library(obj, value) -> None:
+def Set_Library(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_library(obj, value)
 
 
 @export
-def Get_File_Dependence_List(obj):
+def Get_File_Dependence_List(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_file_dependence_list(obj)
 
 
 @export
-def Set_File_Dependence_List(obj, value) -> None:
+def Set_File_Dependence_List(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_file_dependence_list(obj, value)
 
 
 @export
-def Get_Design_File_Filename(obj):
+def Get_Design_File_Filename(obj: Iir) -> NameId:
     return libghdl.vhdl__nodes__get_design_file_filename(obj)
 
 
 @export
-def Set_Design_File_Filename(obj, value) -> None:
+def Set_Design_File_Filename(obj: Iir, value: NameId) -> None:
     libghdl.vhdl__nodes__set_design_file_filename(obj, value)
 
 
 @export
-def Get_Design_File_Directory(obj):
+def Get_Design_File_Directory(obj: Iir) -> NameId:
     return libghdl.vhdl__nodes__get_design_file_directory(obj)
 
 
 @export
-def Set_Design_File_Directory(obj, value) -> None:
+def Set_Design_File_Directory(obj: Iir, value: NameId) -> None:
     libghdl.vhdl__nodes__set_design_file_directory(obj, value)
 
 
 @export
-def Get_Design_File(obj):
+def Get_Design_File(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_design_file(obj)
 
 
 @export
-def Set_Design_File(obj, value) -> None:
+def Set_Design_File(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_design_file(obj, value)
 
 
 @export
-def Get_Design_File_Chain(obj):
+def Get_Design_File_Chain(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_design_file_chain(obj)
 
 
 @export
-def Set_Design_File_Chain(obj, value) -> None:
+def Set_Design_File_Chain(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_design_file_chain(obj, value)
 
 
 @export
-def Get_Library_Directory(obj):
+def Get_Library_Directory(obj: Iir) -> NameId:
     return libghdl.vhdl__nodes__get_library_directory(obj)
 
 
 @export
-def Set_Library_Directory(obj, value) -> None:
+def Set_Library_Directory(obj: Iir, value: NameId) -> None:
     libghdl.vhdl__nodes__set_library_directory(obj, value)
 
 
 @export
-def Get_Date(obj):
+def Get_Date(obj: Iir) -> DateType:
     return libghdl.vhdl__nodes__get_date(obj)
 
 
 @export
-def Set_Date(obj, value) -> None:
+def Set_Date(obj: Iir, value: DateType) -> None:
     libghdl.vhdl__nodes__set_date(obj, value)
 
 
 @export
-def Get_Context_Items(obj):
+def Get_Context_Items(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_context_items(obj)
 
 
 @export
-def Set_Context_Items(obj, value) -> None:
+def Set_Context_Items(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_context_items(obj, value)
 
 
 @export
-def Get_Dependence_List(obj):
+def Get_Dependence_List(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_dependence_list(obj)
 
 
 @export
-def Set_Dependence_List(obj, value) -> None:
+def Set_Dependence_List(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_dependence_list(obj, value)
 
 
 @export
-def Get_Analysis_Checks_List(obj):
+def Get_Analysis_Checks_List(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_analysis_checks_list(obj)
 
 
 @export
-def Set_Analysis_Checks_List(obj, value) -> None:
+def Set_Analysis_Checks_List(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_analysis_checks_list(obj, value)
 
 
 @export
-def Get_Date_State(obj):
+def Get_Date_State(obj: Iir) -> DateStateType:
     return libghdl.vhdl__nodes__get_date_state(obj)
 
 
 @export
-def Set_Date_State(obj, value) -> None:
+def Set_Date_State(obj: Iir, value: DateStateType) -> None:
     libghdl.vhdl__nodes__set_date_state(obj, value)
 
 
 @export
-def Get_Guarded_Target_State(obj):
+def Get_Guarded_Target_State(obj: Iir) -> TriStateType:
     return libghdl.vhdl__nodes__get_guarded_target_state(obj)
 
 
 @export
-def Set_Guarded_Target_State(obj, value) -> None:
+def Set_Guarded_Target_State(obj: Iir, value: TriStateType) -> None:
     libghdl.vhdl__nodes__set_guarded_target_state(obj, value)
 
 
 @export
-def Get_Library_Unit(obj):
+def Get_Library_Unit(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_library_unit(obj)
 
 
 @export
-def Set_Library_Unit(obj, value) -> None:
+def Set_Library_Unit(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_library_unit(obj, value)
 
 
 @export
-def Get_Hash_Chain(obj):
+def Get_Hash_Chain(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_hash_chain(obj)
 
 
 @export
-def Set_Hash_Chain(obj, value) -> None:
+def Set_Hash_Chain(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_hash_chain(obj, value)
 
 
 @export
-def Get_Design_Unit_Source_Pos(obj):
+def Get_Design_Unit_Source_Pos(obj: Iir) -> SourcePtr:
     return libghdl.vhdl__nodes__get_design_unit_source_pos(obj)
 
 
 @export
-def Set_Design_Unit_Source_Pos(obj, value) -> None:
+def Set_Design_Unit_Source_Pos(obj: Iir, value: SourcePtr) -> None:
     libghdl.vhdl__nodes__set_design_unit_source_pos(obj, value)
 
 
 @export
-def Get_Design_Unit_Source_Line(obj):
+def Get_Design_Unit_Source_Line(obj: Iir) -> Int32:
     return libghdl.vhdl__nodes__get_design_unit_source_line(obj)
 
 
 @export
-def Set_Design_Unit_Source_Line(obj, value) -> None:
+def Set_Design_Unit_Source_Line(obj: Iir, value: Int32) -> None:
     libghdl.vhdl__nodes__set_design_unit_source_line(obj, value)
 
 
 @export
-def Get_Design_Unit_Source_Col(obj):
+def Get_Design_Unit_Source_Col(obj: Iir) -> Int32:
     return libghdl.vhdl__nodes__get_design_unit_source_col(obj)
 
 
 @export
-def Set_Design_Unit_Source_Col(obj, value) -> None:
+def Set_Design_Unit_Source_Col(obj: Iir, value: Int32) -> None:
     libghdl.vhdl__nodes__set_design_unit_source_col(obj, value)
 
 
 @export
-def Get_Value(obj):
+def Get_Value(obj: Iir) -> Int64:
     return libghdl.vhdl__nodes__get_value(obj)
 
 
 @export
-def Set_Value(obj, value) -> None:
+def Set_Value(obj: Iir, value: Int64) -> None:
     libghdl.vhdl__nodes__set_value(obj, value)
 
 
 @export
-def Get_Enum_Pos(obj):
+def Get_Enum_Pos(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_enum_pos(obj)
 
 
 @export
-def Set_Enum_Pos(obj, value) -> None:
+def Set_Enum_Pos(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_enum_pos(obj, value)
 
 
 @export
-def Get_Physical_Literal(obj):
+def Get_Physical_Literal(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_physical_literal(obj)
 
 
 @export
-def Set_Physical_Literal(obj, value) -> None:
+def Set_Physical_Literal(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_physical_literal(obj, value)
 
 
 @export
-def Get_Fp_Value(obj):
+def Get_Fp_Value(obj: Iir) -> Fp64:
     return libghdl.vhdl__nodes__get_fp_value(obj)
 
 
 @export
-def Set_Fp_Value(obj, value) -> None:
+def Set_Fp_Value(obj: Iir, value: Fp64) -> None:
     libghdl.vhdl__nodes__set_fp_value(obj, value)
 
 
 @export
-def Get_Simple_Aggregate_List(obj):
+def Get_Simple_Aggregate_List(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_simple_aggregate_list(obj)
 
 
 @export
-def Set_Simple_Aggregate_List(obj, value) -> None:
+def Set_Simple_Aggregate_List(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_simple_aggregate_list(obj, value)
 
 
 @export
-def Get_String8_Id(obj):
+def Get_String8_Id(obj: Iir) -> String8Id:
     return libghdl.vhdl__nodes__get_string8_id(obj)
 
 
 @export
-def Set_String8_Id(obj, value) -> None:
+def Set_String8_Id(obj: Iir, value: String8Id) -> None:
     libghdl.vhdl__nodes__set_string8_id(obj, value)
 
 
 @export
-def Get_String_Length(obj):
+def Get_String_Length(obj: Iir) -> Int32:
     return libghdl.vhdl__nodes__get_string_length(obj)
 
 
 @export
-def Set_String_Length(obj, value) -> None:
+def Set_String_Length(obj: Iir, value: Int32) -> None:
     libghdl.vhdl__nodes__set_string_length(obj, value)
 
 
 @export
-def Get_Bit_String_Base(obj):
+def Get_Bit_String_Base(obj: Iir) -> NumberBaseType:
     return libghdl.vhdl__nodes__get_bit_string_base(obj)
 
 
 @export
-def Set_Bit_String_Base(obj, value) -> None:
+def Set_Bit_String_Base(obj: Iir, value: NumberBaseType) -> None:
     libghdl.vhdl__nodes__set_bit_string_base(obj, value)
 
 
 @export
-def Get_Has_Signed(obj):
+def Get_Has_Signed(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_has_signed(obj)
 
 
 @export
-def Set_Has_Signed(obj, value) -> None:
+def Set_Has_Signed(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_has_signed(obj, value)
 
 
 @export
-def Get_Has_Sign(obj):
+def Get_Has_Sign(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_has_sign(obj)
 
 
 @export
-def Set_Has_Sign(obj, value) -> None:
+def Set_Has_Sign(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_has_sign(obj, value)
 
 
 @export
-def Get_Has_Length(obj):
+def Get_Has_Length(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_has_length(obj)
 
 
 @export
-def Set_Has_Length(obj, value) -> None:
+def Set_Has_Length(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_has_length(obj, value)
 
 
 @export
-def Get_Literal_Length(obj):
+def Get_Literal_Length(obj: Iir) -> Int32:
     return libghdl.vhdl__nodes__get_literal_length(obj)
 
 
 @export
-def Set_Literal_Length(obj, value) -> None:
+def Set_Literal_Length(obj: Iir, value: Int32) -> None:
     libghdl.vhdl__nodes__set_literal_length(obj, value)
 
 
 @export
-def Get_Literal_Origin(obj):
+def Get_Literal_Origin(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_literal_origin(obj)
 
 
 @export
-def Set_Literal_Origin(obj, value) -> None:
+def Set_Literal_Origin(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_literal_origin(obj, value)
 
 
 @export
-def Get_Range_Origin(obj):
+def Get_Range_Origin(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_range_origin(obj)
 
 
 @export
-def Set_Range_Origin(obj, value) -> None:
+def Set_Range_Origin(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_range_origin(obj, value)
 
 
 @export
-def Get_Literal_Subtype(obj):
+def Get_Literal_Subtype(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_literal_subtype(obj)
 
 
 @export
-def Set_Literal_Subtype(obj, value) -> None:
+def Set_Literal_Subtype(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_literal_subtype(obj, value)
 
 
 @export
-def Get_Allocator_Subtype(obj):
+def Get_Allocator_Subtype(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_allocator_subtype(obj)
 
 
 @export
-def Set_Allocator_Subtype(obj, value) -> None:
+def Set_Allocator_Subtype(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_allocator_subtype(obj, value)
 
 
 @export
-def Get_Entity_Class(obj):
+def Get_Entity_Class(obj: Iir) -> Tok:
     return libghdl.vhdl__nodes__get_entity_class(obj)
 
 
 @export
-def Set_Entity_Class(obj, value) -> None:
+def Set_Entity_Class(obj: Iir, value: Tok) -> None:
     libghdl.vhdl__nodes__set_entity_class(obj, value)
 
 
 @export
-def Get_Entity_Name_List(obj):
+def Get_Entity_Name_List(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_entity_name_list(obj)
 
 
 @export
-def Set_Entity_Name_List(obj, value) -> None:
+def Set_Entity_Name_List(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_entity_name_list(obj, value)
 
 
 @export
-def Get_Attribute_Designator(obj):
+def Get_Attribute_Designator(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_attribute_designator(obj)
 
 
 @export
-def Set_Attribute_Designator(obj, value) -> None:
+def Set_Attribute_Designator(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_attribute_designator(obj, value)
 
 
 @export
-def Get_Attribute_Specification_Chain(obj):
+def Get_Attribute_Specification_Chain(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_attribute_specification_chain(obj)
 
 
 @export
-def Set_Attribute_Specification_Chain(obj, value) -> None:
+def Set_Attribute_Specification_Chain(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_attribute_specification_chain(obj, value)
 
 
 @export
-def Get_Attribute_Specification(obj):
+def Get_Attribute_Specification(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_attribute_specification(obj)
 
 
 @export
-def Set_Attribute_Specification(obj, value) -> None:
+def Set_Attribute_Specification(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_attribute_specification(obj, value)
 
 
 @export
-def Get_Static_Attribute_Flag(obj):
+def Get_Static_Attribute_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_static_attribute_flag(obj)
 
 
 @export
-def Set_Static_Attribute_Flag(obj, value) -> None:
+def Set_Static_Attribute_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_static_attribute_flag(obj, value)
 
 
 @export
-def Get_Signal_List(obj):
+def Get_Signal_List(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_signal_list(obj)
 
 
 @export
-def Set_Signal_List(obj, value) -> None:
+def Set_Signal_List(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_signal_list(obj, value)
 
 
 @export
-def Get_Quantity_List(obj):
+def Get_Quantity_List(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_quantity_list(obj)
 
 
 @export
-def Set_Quantity_List(obj, value) -> None:
+def Set_Quantity_List(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_quantity_list(obj, value)
 
 
 @export
-def Get_Designated_Entity(obj):
+def Get_Designated_Entity(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_designated_entity(obj)
 
 
 @export
-def Set_Designated_Entity(obj, value) -> None:
+def Set_Designated_Entity(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_designated_entity(obj, value)
 
 
 @export
-def Get_Formal(obj):
+def Get_Formal(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_formal(obj)
 
 
 @export
-def Set_Formal(obj, value) -> None:
+def Set_Formal(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_formal(obj, value)
 
 
 @export
-def Get_Actual(obj):
+def Get_Actual(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_actual(obj)
 
 
 @export
-def Set_Actual(obj, value) -> None:
+def Set_Actual(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_actual(obj, value)
 
 
 @export
-def Get_Actual_Conversion(obj):
+def Get_Actual_Conversion(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_actual_conversion(obj)
 
 
 @export
-def Set_Actual_Conversion(obj, value) -> None:
+def Set_Actual_Conversion(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_actual_conversion(obj, value)
 
 
 @export
-def Get_Formal_Conversion(obj):
+def Get_Formal_Conversion(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_formal_conversion(obj)
 
 
 @export
-def Set_Formal_Conversion(obj, value) -> None:
+def Set_Formal_Conversion(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_formal_conversion(obj, value)
 
 
 @export
-def Get_Whole_Association_Flag(obj):
+def Get_Whole_Association_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_whole_association_flag(obj)
 
 
 @export
-def Set_Whole_Association_Flag(obj, value) -> None:
+def Set_Whole_Association_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_whole_association_flag(obj, value)
 
 
 @export
-def Get_Collapse_Signal_Flag(obj):
+def Get_Collapse_Signal_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_collapse_signal_flag(obj)
 
 
 @export
-def Set_Collapse_Signal_Flag(obj, value) -> None:
+def Set_Collapse_Signal_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_collapse_signal_flag(obj, value)
 
 
 @export
-def Get_Artificial_Flag(obj):
+def Get_Artificial_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_artificial_flag(obj)
 
 
 @export
-def Set_Artificial_Flag(obj, value) -> None:
+def Set_Artificial_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_artificial_flag(obj, value)
 
 
 @export
-def Get_Open_Flag(obj):
+def Get_Open_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_open_flag(obj)
 
 
 @export
-def Set_Open_Flag(obj, value) -> None:
+def Set_Open_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_open_flag(obj, value)
 
 
 @export
-def Get_After_Drivers_Flag(obj):
+def Get_After_Drivers_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_after_drivers_flag(obj)
 
 
 @export
-def Set_After_Drivers_Flag(obj, value) -> None:
+def Set_After_Drivers_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_after_drivers_flag(obj, value)
 
 
 @export
-def Get_We_Value(obj):
+def Get_We_Value(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_we_value(obj)
 
 
 @export
-def Set_We_Value(obj, value) -> None:
+def Set_We_Value(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_we_value(obj, value)
 
 
 @export
-def Get_Time(obj):
+def Get_Time(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_time(obj)
 
 
 @export
-def Set_Time(obj, value) -> None:
+def Set_Time(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_time(obj, value)
 
 
 @export
-def Get_Associated_Expr(obj):
+def Get_Associated_Expr(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_associated_expr(obj)
 
 
 @export
-def Set_Associated_Expr(obj, value) -> None:
+def Set_Associated_Expr(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_associated_expr(obj, value)
 
 
 @export
-def Get_Associated_Block(obj):
+def Get_Associated_Block(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_associated_block(obj)
 
 
 @export
-def Set_Associated_Block(obj, value) -> None:
+def Set_Associated_Block(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_associated_block(obj, value)
 
 
 @export
-def Get_Associated_Chain(obj):
+def Get_Associated_Chain(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_associated_chain(obj)
 
 
 @export
-def Set_Associated_Chain(obj, value) -> None:
+def Set_Associated_Chain(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_associated_chain(obj, value)
 
 
 @export
-def Get_Choice_Name(obj):
+def Get_Choice_Name(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_choice_name(obj)
 
 
 @export
-def Set_Choice_Name(obj, value) -> None:
+def Set_Choice_Name(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_choice_name(obj, value)
 
 
 @export
-def Get_Choice_Expression(obj):
+def Get_Choice_Expression(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_choice_expression(obj)
 
 
 @export
-def Set_Choice_Expression(obj, value) -> None:
+def Set_Choice_Expression(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_choice_expression(obj, value)
 
 
 @export
-def Get_Choice_Range(obj):
+def Get_Choice_Range(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_choice_range(obj)
 
 
 @export
-def Set_Choice_Range(obj, value) -> None:
+def Set_Choice_Range(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_choice_range(obj, value)
 
 
 @export
-def Get_Same_Alternative_Flag(obj):
+def Get_Same_Alternative_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_same_alternative_flag(obj)
 
 
 @export
-def Set_Same_Alternative_Flag(obj, value) -> None:
+def Set_Same_Alternative_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_same_alternative_flag(obj, value)
 
 
 @export
-def Get_Element_Type_Flag(obj):
+def Get_Element_Type_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_element_type_flag(obj)
 
 
 @export
-def Set_Element_Type_Flag(obj, value) -> None:
+def Set_Element_Type_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_element_type_flag(obj, value)
 
 
 @export
-def Get_Architecture(obj):
+def Get_Architecture(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_architecture(obj)
 
 
 @export
-def Set_Architecture(obj, value) -> None:
+def Set_Architecture(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_architecture(obj, value)
 
 
 @export
-def Get_Block_Specification(obj):
+def Get_Block_Specification(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_block_specification(obj)
 
 
 @export
-def Set_Block_Specification(obj, value) -> None:
+def Set_Block_Specification(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_block_specification(obj, value)
 
 
 @export
-def Get_Prev_Block_Configuration(obj):
+def Get_Prev_Block_Configuration(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_prev_block_configuration(obj)
 
 
 @export
-def Set_Prev_Block_Configuration(obj, value) -> None:
+def Set_Prev_Block_Configuration(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_prev_block_configuration(obj, value)
 
 
 @export
-def Get_Configuration_Item_Chain(obj):
+def Get_Configuration_Item_Chain(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_configuration_item_chain(obj)
 
 
 @export
-def Set_Configuration_Item_Chain(obj, value) -> None:
+def Set_Configuration_Item_Chain(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_configuration_item_chain(obj, value)
 
 
 @export
-def Get_Attribute_Value_Chain(obj):
+def Get_Attribute_Value_Chain(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_attribute_value_chain(obj)
 
 
 @export
-def Set_Attribute_Value_Chain(obj, value) -> None:
+def Set_Attribute_Value_Chain(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_attribute_value_chain(obj, value)
 
 
 @export
-def Get_Spec_Chain(obj):
+def Get_Spec_Chain(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_spec_chain(obj)
 
 
 @export
-def Set_Spec_Chain(obj, value) -> None:
+def Set_Spec_Chain(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_spec_chain(obj, value)
 
 
 @export
-def Get_Value_Chain(obj):
+def Get_Value_Chain(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_value_chain(obj)
 
 
 @export
-def Set_Value_Chain(obj, value) -> None:
+def Set_Value_Chain(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_value_chain(obj, value)
 
 
 @export
-def Get_Attribute_Value_Spec_Chain(obj):
+def Get_Attribute_Value_Spec_Chain(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_attribute_value_spec_chain(obj)
 
 
 @export
-def Set_Attribute_Value_Spec_Chain(obj, value) -> None:
+def Set_Attribute_Value_Spec_Chain(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_attribute_value_spec_chain(obj, value)
 
 
 @export
-def Get_Entity_Name(obj):
+def Get_Entity_Name(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_entity_name(obj)
 
 
 @export
-def Set_Entity_Name(obj, value) -> None:
+def Set_Entity_Name(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_entity_name(obj, value)
 
 
 @export
-def Get_Package(obj):
+def Get_Package(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_package(obj)
 
 
 @export
-def Set_Package(obj, value) -> None:
+def Set_Package(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_package(obj, value)
 
 
 @export
-def Get_Package_Body(obj):
+def Get_Package_Body(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_package_body(obj)
 
 
 @export
-def Set_Package_Body(obj, value) -> None:
+def Set_Package_Body(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_package_body(obj, value)
 
 
 @export
-def Get_Instance_Package_Body(obj):
+def Get_Instance_Package_Body(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_instance_package_body(obj)
 
 
 @export
-def Set_Instance_Package_Body(obj, value) -> None:
+def Set_Instance_Package_Body(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_instance_package_body(obj, value)
 
 
 @export
-def Get_Need_Body(obj):
+def Get_Need_Body(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_need_body(obj)
 
 
 @export
-def Set_Need_Body(obj, value) -> None:
+def Set_Need_Body(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_need_body(obj, value)
 
 
 @export
-def Get_Macro_Expanded_Flag(obj):
+def Get_Macro_Expanded_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_macro_expanded_flag(obj)
 
 
 @export
-def Set_Macro_Expanded_Flag(obj, value) -> None:
+def Set_Macro_Expanded_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_macro_expanded_flag(obj, value)
 
 
 @export
-def Get_Need_Instance_Bodies(obj):
+def Get_Need_Instance_Bodies(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_need_instance_bodies(obj)
 
 
 @export
-def Set_Need_Instance_Bodies(obj, value) -> None:
+def Set_Need_Instance_Bodies(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_need_instance_bodies(obj, value)
 
 
 @export
-def Get_Hierarchical_Name(obj):
+def Get_Hierarchical_Name(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_hierarchical_name(obj)
 
 
 @export
-def Set_Hierarchical_Name(obj, value) -> None:
+def Set_Hierarchical_Name(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_hierarchical_name(obj, value)
 
 
 @export
-def Get_Inherit_Spec_Chain(obj):
+def Get_Inherit_Spec_Chain(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_inherit_spec_chain(obj)
 
 
 @export
-def Set_Inherit_Spec_Chain(obj, value) -> None:
+def Set_Inherit_Spec_Chain(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_inherit_spec_chain(obj, value)
 
 
 @export
-def Get_Vunit_Item_Chain(obj):
+def Get_Vunit_Item_Chain(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_vunit_item_chain(obj)
 
 
 @export
-def Set_Vunit_Item_Chain(obj, value) -> None:
+def Set_Vunit_Item_Chain(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_vunit_item_chain(obj, value)
 
 
 @export
-def Get_Bound_Vunit_Chain(obj):
+def Get_Bound_Vunit_Chain(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_bound_vunit_chain(obj)
 
 
 @export
-def Set_Bound_Vunit_Chain(obj, value) -> None:
+def Set_Bound_Vunit_Chain(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_bound_vunit_chain(obj, value)
 
 
 @export
-def Get_Verification_Block_Configuration(obj):
+def Get_Verification_Block_Configuration(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_verification_block_configuration(obj)
 
 
 @export
-def Set_Verification_Block_Configuration(obj, value) -> None:
+def Set_Verification_Block_Configuration(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_verification_block_configuration(obj, value)
 
 
 @export
-def Get_Block_Configuration(obj):
+def Get_Block_Configuration(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_block_configuration(obj)
 
 
 @export
-def Set_Block_Configuration(obj, value) -> None:
+def Set_Block_Configuration(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_block_configuration(obj, value)
 
 
 @export
-def Get_Concurrent_Statement_Chain(obj):
+def Get_Concurrent_Statement_Chain(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_concurrent_statement_chain(obj)
 
 
 @export
-def Set_Concurrent_Statement_Chain(obj, value) -> None:
+def Set_Concurrent_Statement_Chain(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_concurrent_statement_chain(obj, value)
 
 
 @export
-def Get_Chain(obj):
+def Get_Chain(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_chain(obj)
 
 
 @export
-def Set_Chain(obj, value) -> None:
+def Set_Chain(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_chain(obj, value)
 
 
 @export
-def Get_Port_Chain(obj):
+def Get_Port_Chain(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_port_chain(obj)
 
 
 @export
-def Set_Port_Chain(obj, value) -> None:
+def Set_Port_Chain(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_port_chain(obj, value)
 
 
 @export
-def Get_Generic_Chain(obj):
+def Get_Generic_Chain(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_generic_chain(obj)
 
 
 @export
-def Set_Generic_Chain(obj, value) -> None:
+def Set_Generic_Chain(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_generic_chain(obj, value)
 
 
 @export
-def Get_Type(obj):
+def Get_Type(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_type(obj)
 
 
 @export
-def Set_Type(obj, value) -> None:
+def Set_Type(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_type(obj, value)
 
 
 @export
-def Get_Subtype_Indication(obj):
+def Get_Subtype_Indication(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_subtype_indication(obj)
 
 
 @export
-def Set_Subtype_Indication(obj, value) -> None:
+def Set_Subtype_Indication(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_subtype_indication(obj, value)
 
 
 @export
-def Get_Discrete_Range(obj):
+def Get_Discrete_Range(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_discrete_range(obj)
 
 
 @export
-def Set_Discrete_Range(obj, value) -> None:
+def Set_Discrete_Range(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_discrete_range(obj, value)
 
 
 @export
-def Get_Type_Definition(obj):
+def Get_Type_Definition(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_type_definition(obj)
 
 
 @export
-def Set_Type_Definition(obj, value) -> None:
+def Set_Type_Definition(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_type_definition(obj, value)
 
 
 @export
-def Get_Subtype_Definition(obj):
+def Get_Subtype_Definition(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_subtype_definition(obj)
 
 
 @export
-def Set_Subtype_Definition(obj, value) -> None:
+def Set_Subtype_Definition(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_subtype_definition(obj, value)
 
 
 @export
-def Get_Incomplete_Type_Declaration(obj):
+def Get_Incomplete_Type_Declaration(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_incomplete_type_declaration(obj)
 
 
 @export
-def Set_Incomplete_Type_Declaration(obj, value) -> None:
+def Set_Incomplete_Type_Declaration(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_incomplete_type_declaration(obj, value)
 
 
 @export
-def Get_Interface_Type_Subprograms(obj):
+def Get_Interface_Type_Subprograms(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_interface_type_subprograms(obj)
 
 
 @export
-def Set_Interface_Type_Subprograms(obj, value) -> None:
+def Set_Interface_Type_Subprograms(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_interface_type_subprograms(obj, value)
 
 
 @export
-def Get_Nature_Definition(obj):
+def Get_Nature_Definition(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_nature_definition(obj)
 
 
 @export
-def Set_Nature_Definition(obj, value) -> None:
+def Set_Nature_Definition(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_nature_definition(obj, value)
 
 
 @export
-def Get_Nature(obj):
+def Get_Nature(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_nature(obj)
 
 
 @export
-def Set_Nature(obj, value) -> None:
+def Set_Nature(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_nature(obj, value)
 
 
 @export
-def Get_Subnature_Indication(obj):
+def Get_Subnature_Indication(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_subnature_indication(obj)
 
 
 @export
-def Set_Subnature_Indication(obj, value) -> None:
+def Set_Subnature_Indication(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_subnature_indication(obj, value)
 
 
 @export
-def Get_Mode(obj):
+def Get_Mode(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_mode(obj)
 
 
 @export
-def Set_Mode(obj, value) -> None:
+def Set_Mode(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_mode(obj, value)
 
 
 @export
-def Get_Guarded_Signal_Flag(obj):
+def Get_Guarded_Signal_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_guarded_signal_flag(obj)
 
 
 @export
-def Set_Guarded_Signal_Flag(obj, value) -> None:
+def Set_Guarded_Signal_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_guarded_signal_flag(obj, value)
 
 
 @export
-def Get_Signal_Kind(obj):
+def Get_Signal_Kind(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_signal_kind(obj)
 
 
 @export
-def Set_Signal_Kind(obj, value) -> None:
+def Set_Signal_Kind(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_signal_kind(obj, value)
 
 
 @export
-def Get_Base_Name(obj):
+def Get_Base_Name(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_base_name(obj)
 
 
 @export
-def Set_Base_Name(obj, value) -> None:
+def Set_Base_Name(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_base_name(obj, value)
 
 
 @export
-def Get_Interface_Declaration_Chain(obj):
+def Get_Interface_Declaration_Chain(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_interface_declaration_chain(obj)
 
 
 @export
-def Set_Interface_Declaration_Chain(obj, value) -> None:
+def Set_Interface_Declaration_Chain(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_interface_declaration_chain(obj, value)
 
 
 @export
-def Get_Subprogram_Specification(obj):
+def Get_Subprogram_Specification(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_subprogram_specification(obj)
 
 
 @export
-def Set_Subprogram_Specification(obj, value) -> None:
+def Set_Subprogram_Specification(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_subprogram_specification(obj, value)
 
 
 @export
-def Get_Sequential_Statement_Chain(obj):
+def Get_Sequential_Statement_Chain(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_sequential_statement_chain(obj)
 
 
 @export
-def Set_Sequential_Statement_Chain(obj, value) -> None:
+def Set_Sequential_Statement_Chain(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_sequential_statement_chain(obj, value)
 
 
 @export
-def Get_Simultaneous_Statement_Chain(obj):
+def Get_Simultaneous_Statement_Chain(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_simultaneous_statement_chain(obj)
 
 
 @export
-def Set_Simultaneous_Statement_Chain(obj, value) -> None:
+def Set_Simultaneous_Statement_Chain(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_simultaneous_statement_chain(obj, value)
 
 
 @export
-def Get_Subprogram_Body(obj):
+def Get_Subprogram_Body(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_subprogram_body(obj)
 
 
 @export
-def Set_Subprogram_Body(obj, value) -> None:
+def Set_Subprogram_Body(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_subprogram_body(obj, value)
 
 
 @export
-def Get_Overload_Number(obj):
+def Get_Overload_Number(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_overload_number(obj)
 
 
 @export
-def Set_Overload_Number(obj, value) -> None:
+def Set_Overload_Number(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_overload_number(obj, value)
 
 
 @export
-def Get_Subprogram_Depth(obj):
+def Get_Subprogram_Depth(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_subprogram_depth(obj)
 
 
 @export
-def Set_Subprogram_Depth(obj, value) -> None:
+def Set_Subprogram_Depth(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_subprogram_depth(obj, value)
 
 
 @export
-def Get_Subprogram_Hash(obj):
+def Get_Subprogram_Hash(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_subprogram_hash(obj)
 
 
 @export
-def Set_Subprogram_Hash(obj, value) -> None:
+def Set_Subprogram_Hash(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_subprogram_hash(obj, value)
 
 
 @export
-def Get_Impure_Depth(obj):
+def Get_Impure_Depth(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_impure_depth(obj)
 
 
 @export
-def Set_Impure_Depth(obj, value) -> None:
+def Set_Impure_Depth(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_impure_depth(obj, value)
 
 
 @export
-def Get_Return_Type(obj):
+def Get_Return_Type(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_return_type(obj)
 
 
 @export
-def Set_Return_Type(obj, value) -> None:
+def Set_Return_Type(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_return_type(obj, value)
 
 
 @export
-def Get_Implicit_Definition(obj):
+def Get_Implicit_Definition(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_implicit_definition(obj)
 
 
 @export
-def Set_Implicit_Definition(obj, value) -> None:
+def Set_Implicit_Definition(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_implicit_definition(obj, value)
 
 
 @export
-def Get_Uninstantiated_Subprogram_Name(obj):
+def Get_Uninstantiated_Subprogram_Name(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_uninstantiated_subprogram_name(obj)
 
 
 @export
-def Set_Uninstantiated_Subprogram_Name(obj, value) -> None:
+def Set_Uninstantiated_Subprogram_Name(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_uninstantiated_subprogram_name(obj, value)
 
 
 @export
-def Get_Default_Value(obj):
+def Get_Default_Value(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_default_value(obj)
 
 
 @export
-def Set_Default_Value(obj, value) -> None:
+def Set_Default_Value(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_default_value(obj, value)
 
 
 @export
-def Get_Deferred_Declaration(obj):
+def Get_Deferred_Declaration(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_deferred_declaration(obj)
 
 
 @export
-def Set_Deferred_Declaration(obj, value) -> None:
+def Set_Deferred_Declaration(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_deferred_declaration(obj, value)
 
 
 @export
-def Get_Deferred_Declaration_Flag(obj):
+def Get_Deferred_Declaration_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_deferred_declaration_flag(obj)
 
 
 @export
-def Set_Deferred_Declaration_Flag(obj, value) -> None:
+def Set_Deferred_Declaration_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_deferred_declaration_flag(obj, value)
 
 
 @export
-def Get_Shared_Flag(obj):
+def Get_Shared_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_shared_flag(obj)
 
 
 @export
-def Set_Shared_Flag(obj, value) -> None:
+def Set_Shared_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_shared_flag(obj, value)
 
 
 @export
-def Get_Design_Unit(obj):
+def Get_Design_Unit(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_design_unit(obj)
 
 
 @export
-def Set_Design_Unit(obj, value) -> None:
+def Set_Design_Unit(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_design_unit(obj, value)
 
 
 @export
-def Get_Block_Statement(obj):
+def Get_Block_Statement(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_block_statement(obj)
 
 
 @export
-def Set_Block_Statement(obj, value) -> None:
+def Set_Block_Statement(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_block_statement(obj, value)
 
 
 @export
-def Get_Signal_Driver(obj):
+def Get_Signal_Driver(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_signal_driver(obj)
 
 
 @export
-def Set_Signal_Driver(obj, value) -> None:
+def Set_Signal_Driver(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_signal_driver(obj, value)
 
 
 @export
-def Get_Declaration_Chain(obj):
+def Get_Declaration_Chain(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_declaration_chain(obj)
 
 
 @export
-def Set_Declaration_Chain(obj, value) -> None:
+def Set_Declaration_Chain(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_declaration_chain(obj, value)
 
 
 @export
-def Get_File_Logical_Name(obj):
+def Get_File_Logical_Name(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_file_logical_name(obj)
 
 
 @export
-def Set_File_Logical_Name(obj, value) -> None:
+def Set_File_Logical_Name(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_file_logical_name(obj, value)
 
 
 @export
-def Get_File_Open_Kind(obj):
+def Get_File_Open_Kind(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_file_open_kind(obj)
 
 
 @export
-def Set_File_Open_Kind(obj, value) -> None:
+def Set_File_Open_Kind(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_file_open_kind(obj, value)
 
 
 @export
-def Get_Element_Position(obj):
+def Get_Element_Position(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_element_position(obj)
 
 
 @export
-def Set_Element_Position(obj, value) -> None:
+def Set_Element_Position(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_element_position(obj, value)
 
 
 @export
-def Get_Use_Clause_Chain(obj):
+def Get_Use_Clause_Chain(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_use_clause_chain(obj)
 
 
 @export
-def Set_Use_Clause_Chain(obj, value) -> None:
+def Set_Use_Clause_Chain(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_use_clause_chain(obj, value)
 
 
 @export
-def Get_Context_Reference_Chain(obj):
+def Get_Context_Reference_Chain(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_context_reference_chain(obj)
 
 
 @export
-def Set_Context_Reference_Chain(obj, value) -> None:
+def Set_Context_Reference_Chain(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_context_reference_chain(obj, value)
 
 
 @export
-def Get_Selected_Name(obj):
+def Get_Selected_Name(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_selected_name(obj)
 
 
 @export
-def Set_Selected_Name(obj, value) -> None:
+def Set_Selected_Name(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_selected_name(obj, value)
 
 
 @export
-def Get_Type_Declarator(obj):
+def Get_Type_Declarator(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_type_declarator(obj)
 
 
 @export
-def Set_Type_Declarator(obj, value) -> None:
+def Set_Type_Declarator(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_type_declarator(obj, value)
 
 
 @export
-def Get_Complete_Type_Definition(obj):
+def Get_Complete_Type_Definition(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_complete_type_definition(obj)
 
 
 @export
-def Set_Complete_Type_Definition(obj, value) -> None:
+def Set_Complete_Type_Definition(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_complete_type_definition(obj, value)
 
 
 @export
-def Get_Incomplete_Type_Ref_Chain(obj):
+def Get_Incomplete_Type_Ref_Chain(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_incomplete_type_ref_chain(obj)
 
 
 @export
-def Set_Incomplete_Type_Ref_Chain(obj, value) -> None:
+def Set_Incomplete_Type_Ref_Chain(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_incomplete_type_ref_chain(obj, value)
 
 
 @export
-def Get_Associated_Type(obj):
+def Get_Associated_Type(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_associated_type(obj)
 
 
 @export
-def Set_Associated_Type(obj, value) -> None:
+def Set_Associated_Type(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_associated_type(obj, value)
 
 
 @export
-def Get_Enumeration_Literal_List(obj):
+def Get_Enumeration_Literal_List(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_enumeration_literal_list(obj)
 
 
 @export
-def Set_Enumeration_Literal_List(obj, value) -> None:
+def Set_Enumeration_Literal_List(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_enumeration_literal_list(obj, value)
 
 
 @export
-def Get_Entity_Class_Entry_Chain(obj):
+def Get_Entity_Class_Entry_Chain(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_entity_class_entry_chain(obj)
 
 
 @export
-def Set_Entity_Class_Entry_Chain(obj, value) -> None:
+def Set_Entity_Class_Entry_Chain(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_entity_class_entry_chain(obj, value)
 
 
 @export
-def Get_Group_Constituent_List(obj):
+def Get_Group_Constituent_List(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_group_constituent_list(obj)
 
 
 @export
-def Set_Group_Constituent_List(obj, value) -> None:
+def Set_Group_Constituent_List(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_group_constituent_list(obj, value)
 
 
 @export
-def Get_Unit_Chain(obj):
+def Get_Unit_Chain(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_unit_chain(obj)
 
 
 @export
-def Set_Unit_Chain(obj, value) -> None:
+def Set_Unit_Chain(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_unit_chain(obj, value)
 
 
 @export
-def Get_Primary_Unit(obj):
+def Get_Primary_Unit(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_primary_unit(obj)
 
 
 @export
-def Set_Primary_Unit(obj, value) -> None:
+def Set_Primary_Unit(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_primary_unit(obj, value)
 
 
 @export
-def Get_Identifier(obj):
+def Get_Identifier(obj: Iir) -> NameId:
     return libghdl.vhdl__nodes__get_identifier(obj)
 
 
 @export
-def Set_Identifier(obj, value) -> None:
+def Set_Identifier(obj: Iir, value: NameId) -> None:
     libghdl.vhdl__nodes__set_identifier(obj, value)
 
 
 @export
-def Get_Label(obj):
+def Get_Label(obj: Iir) -> NameId:
     return libghdl.vhdl__nodes__get_label(obj)
 
 
 @export
-def Set_Label(obj, value) -> None:
+def Set_Label(obj: Iir, value: NameId) -> None:
     libghdl.vhdl__nodes__set_label(obj, value)
 
 
 @export
-def Get_Visible_Flag(obj):
+def Get_Visible_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_visible_flag(obj)
 
 
 @export
-def Set_Visible_Flag(obj, value) -> None:
+def Set_Visible_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_visible_flag(obj, value)
 
 
 @export
-def Get_Range_Constraint(obj):
+def Get_Range_Constraint(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_range_constraint(obj)
 
 
 @export
-def Set_Range_Constraint(obj, value) -> None:
+def Set_Range_Constraint(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_range_constraint(obj, value)
 
 
 @export
-def Get_Direction(obj):
+def Get_Direction(obj: Iir) -> DirectionType:
     return libghdl.vhdl__nodes__get_direction(obj)
 
 
 @export
-def Set_Direction(obj, value) -> None:
+def Set_Direction(obj: Iir, value: DirectionType) -> None:
     libghdl.vhdl__nodes__set_direction(obj, value)
 
 
 @export
-def Get_Left_Limit(obj):
+def Get_Left_Limit(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_left_limit(obj)
 
 
 @export
-def Set_Left_Limit(obj, value) -> None:
+def Set_Left_Limit(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_left_limit(obj, value)
 
 
 @export
-def Get_Right_Limit(obj):
+def Get_Right_Limit(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_right_limit(obj)
 
 
 @export
-def Set_Right_Limit(obj, value) -> None:
+def Set_Right_Limit(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_right_limit(obj, value)
 
 
 @export
-def Get_Left_Limit_Expr(obj):
+def Get_Left_Limit_Expr(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_left_limit_expr(obj)
 
 
 @export
-def Set_Left_Limit_Expr(obj, value) -> None:
+def Set_Left_Limit_Expr(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_left_limit_expr(obj, value)
 
 
 @export
-def Get_Right_Limit_Expr(obj):
+def Get_Right_Limit_Expr(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_right_limit_expr(obj)
 
 
 @export
-def Set_Right_Limit_Expr(obj, value) -> None:
+def Set_Right_Limit_Expr(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_right_limit_expr(obj, value)
 
 
 @export
-def Get_Parent_Type(obj):
+def Get_Parent_Type(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_parent_type(obj)
 
 
 @export
-def Set_Parent_Type(obj, value) -> None:
+def Set_Parent_Type(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_parent_type(obj, value)
 
 
 @export
-def Get_Simple_Nature(obj):
+def Get_Simple_Nature(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_simple_nature(obj)
 
 
 @export
-def Set_Simple_Nature(obj, value) -> None:
+def Set_Simple_Nature(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_simple_nature(obj, value)
 
 
 @export
-def Get_Base_Nature(obj):
+def Get_Base_Nature(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_base_nature(obj)
 
 
 @export
-def Set_Base_Nature(obj, value) -> None:
+def Set_Base_Nature(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_base_nature(obj, value)
 
 
 @export
-def Get_Resolution_Indication(obj):
+def Get_Resolution_Indication(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_resolution_indication(obj)
 
 
 @export
-def Set_Resolution_Indication(obj, value) -> None:
+def Set_Resolution_Indication(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_resolution_indication(obj, value)
 
 
 @export
-def Get_Record_Element_Resolution_Chain(obj):
+def Get_Record_Element_Resolution_Chain(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_record_element_resolution_chain(obj)
 
 
 @export
-def Set_Record_Element_Resolution_Chain(obj, value) -> None:
+def Set_Record_Element_Resolution_Chain(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_record_element_resolution_chain(obj, value)
 
 
 @export
-def Get_Tolerance(obj):
+def Get_Tolerance(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_tolerance(obj)
 
 
 @export
-def Set_Tolerance(obj, value) -> None:
+def Set_Tolerance(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_tolerance(obj, value)
 
 
 @export
-def Get_Plus_Terminal_Name(obj):
+def Get_Plus_Terminal_Name(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_plus_terminal_name(obj)
 
 
 @export
-def Set_Plus_Terminal_Name(obj, value) -> None:
+def Set_Plus_Terminal_Name(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_plus_terminal_name(obj, value)
 
 
 @export
-def Get_Minus_Terminal_Name(obj):
+def Get_Minus_Terminal_Name(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_minus_terminal_name(obj)
 
 
 @export
-def Set_Minus_Terminal_Name(obj, value) -> None:
+def Set_Minus_Terminal_Name(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_minus_terminal_name(obj, value)
 
 
 @export
-def Get_Plus_Terminal(obj):
+def Get_Plus_Terminal(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_plus_terminal(obj)
 
 
 @export
-def Set_Plus_Terminal(obj, value) -> None:
+def Set_Plus_Terminal(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_plus_terminal(obj, value)
 
 
 @export
-def Get_Minus_Terminal(obj):
+def Get_Minus_Terminal(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_minus_terminal(obj)
 
 
 @export
-def Set_Minus_Terminal(obj, value) -> None:
+def Set_Minus_Terminal(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_minus_terminal(obj, value)
 
 
 @export
-def Get_Magnitude_Expression(obj):
+def Get_Magnitude_Expression(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_magnitude_expression(obj)
 
 
 @export
-def Set_Magnitude_Expression(obj, value) -> None:
+def Set_Magnitude_Expression(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_magnitude_expression(obj, value)
 
 
 @export
-def Get_Phase_Expression(obj):
+def Get_Phase_Expression(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_phase_expression(obj)
 
 
 @export
-def Set_Phase_Expression(obj, value) -> None:
+def Set_Phase_Expression(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_phase_expression(obj, value)
 
 
 @export
-def Get_Power_Expression(obj):
+def Get_Power_Expression(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_power_expression(obj)
 
 
 @export
-def Set_Power_Expression(obj, value) -> None:
+def Set_Power_Expression(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_power_expression(obj, value)
 
 
 @export
-def Get_Simultaneous_Left(obj):
+def Get_Simultaneous_Left(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_simultaneous_left(obj)
 
 
 @export
-def Set_Simultaneous_Left(obj, value) -> None:
+def Set_Simultaneous_Left(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_simultaneous_left(obj, value)
 
 
 @export
-def Get_Simultaneous_Right(obj):
+def Get_Simultaneous_Right(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_simultaneous_right(obj)
 
 
 @export
-def Set_Simultaneous_Right(obj, value) -> None:
+def Set_Simultaneous_Right(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_simultaneous_right(obj, value)
 
 
 @export
-def Get_Text_File_Flag(obj):
+def Get_Text_File_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_text_file_flag(obj)
 
 
 @export
-def Set_Text_File_Flag(obj, value) -> None:
+def Set_Text_File_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_text_file_flag(obj, value)
 
 
 @export
-def Get_Only_Characters_Flag(obj):
+def Get_Only_Characters_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_only_characters_flag(obj)
 
 
 @export
-def Set_Only_Characters_Flag(obj, value) -> None:
+def Set_Only_Characters_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_only_characters_flag(obj, value)
 
 
 @export
-def Get_Is_Character_Type(obj):
+def Get_Is_Character_Type(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_is_character_type(obj)
 
 
 @export
-def Set_Is_Character_Type(obj, value) -> None:
+def Set_Is_Character_Type(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_is_character_type(obj, value)
 
 
 @export
-def Get_Nature_Staticness(obj):
+def Get_Nature_Staticness(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_nature_staticness(obj)
 
 
 @export
-def Set_Nature_Staticness(obj, value) -> None:
+def Set_Nature_Staticness(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_nature_staticness(obj, value)
 
 
 @export
-def Get_Type_Staticness(obj):
+def Get_Type_Staticness(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_type_staticness(obj)
 
 
 @export
-def Set_Type_Staticness(obj, value) -> None:
+def Set_Type_Staticness(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_type_staticness(obj, value)
 
 
 @export
-def Get_Constraint_State(obj):
+def Get_Constraint_State(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_constraint_state(obj)
 
 
 @export
-def Set_Constraint_State(obj, value) -> None:
+def Set_Constraint_State(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_constraint_state(obj, value)
 
 
 @export
-def Get_Index_Subtype_List(obj):
+def Get_Index_Subtype_List(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_index_subtype_list(obj)
 
 
 @export
-def Set_Index_Subtype_List(obj, value) -> None:
+def Set_Index_Subtype_List(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_index_subtype_list(obj, value)
 
 
 @export
-def Get_Index_Subtype_Definition_List(obj):
+def Get_Index_Subtype_Definition_List(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_index_subtype_definition_list(obj)
 
 
 @export
-def Set_Index_Subtype_Definition_List(obj, value) -> None:
+def Set_Index_Subtype_Definition_List(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_index_subtype_definition_list(obj, value)
 
 
 @export
-def Get_Element_Subtype_Indication(obj):
+def Get_Element_Subtype_Indication(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_element_subtype_indication(obj)
 
 
 @export
-def Set_Element_Subtype_Indication(obj, value) -> None:
+def Set_Element_Subtype_Indication(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_element_subtype_indication(obj, value)
 
 
 @export
-def Get_Element_Subtype(obj):
+def Get_Element_Subtype(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_element_subtype(obj)
 
 
 @export
-def Set_Element_Subtype(obj, value) -> None:
+def Set_Element_Subtype(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_element_subtype(obj, value)
 
 
 @export
-def Get_Element_Subnature_Indication(obj):
+def Get_Element_Subnature_Indication(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_element_subnature_indication(obj)
 
 
 @export
-def Set_Element_Subnature_Indication(obj, value) -> None:
+def Set_Element_Subnature_Indication(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_element_subnature_indication(obj, value)
 
 
 @export
-def Get_Element_Subnature(obj):
+def Get_Element_Subnature(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_element_subnature(obj)
 
 
 @export
-def Set_Element_Subnature(obj, value) -> None:
+def Set_Element_Subnature(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_element_subnature(obj, value)
 
 
 @export
-def Get_Index_Constraint_List(obj):
+def Get_Index_Constraint_List(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_index_constraint_list(obj)
 
 
 @export
-def Set_Index_Constraint_List(obj, value) -> None:
+def Set_Index_Constraint_List(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_index_constraint_list(obj, value)
 
 
 @export
-def Get_Array_Element_Constraint(obj):
+def Get_Array_Element_Constraint(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_array_element_constraint(obj)
 
 
 @export
-def Set_Array_Element_Constraint(obj, value) -> None:
+def Set_Array_Element_Constraint(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_array_element_constraint(obj, value)
 
 
 @export
-def Get_Has_Array_Constraint_Flag(obj):
+def Get_Has_Array_Constraint_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_has_array_constraint_flag(obj)
 
 
 @export
-def Set_Has_Array_Constraint_Flag(obj, value) -> None:
+def Set_Has_Array_Constraint_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_has_array_constraint_flag(obj, value)
 
 
 @export
-def Get_Has_Element_Constraint_Flag(obj):
+def Get_Has_Element_Constraint_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_has_element_constraint_flag(obj)
 
 
 @export
-def Set_Has_Element_Constraint_Flag(obj, value) -> None:
+def Set_Has_Element_Constraint_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_has_element_constraint_flag(obj, value)
 
 
 @export
-def Get_Elements_Declaration_List(obj):
+def Get_Elements_Declaration_List(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_elements_declaration_list(obj)
 
 
 @export
-def Set_Elements_Declaration_List(obj, value) -> None:
+def Set_Elements_Declaration_List(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_elements_declaration_list(obj, value)
 
 
 @export
-def Get_Owned_Elements_Chain(obj):
+def Get_Owned_Elements_Chain(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_owned_elements_chain(obj)
 
 
 @export
-def Set_Owned_Elements_Chain(obj, value) -> None:
+def Set_Owned_Elements_Chain(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_owned_elements_chain(obj, value)
 
 
 @export
-def Get_Designated_Type(obj):
+def Get_Designated_Type(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_designated_type(obj)
 
 
 @export
-def Set_Designated_Type(obj, value) -> None:
+def Set_Designated_Type(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_designated_type(obj, value)
 
 
 @export
-def Get_Designated_Subtype_Indication(obj):
+def Get_Designated_Subtype_Indication(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_designated_subtype_indication(obj)
 
 
 @export
-def Set_Designated_Subtype_Indication(obj, value) -> None:
+def Set_Designated_Subtype_Indication(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_designated_subtype_indication(obj, value)
 
 
 @export
-def Get_Index_List(obj):
+def Get_Index_List(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_index_list(obj)
 
 
 @export
-def Set_Index_List(obj, value) -> None:
+def Set_Index_List(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_index_list(obj, value)
 
 
 @export
-def Get_Reference(obj):
+def Get_Reference(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_reference(obj)
 
 
 @export
-def Set_Reference(obj, value) -> None:
+def Set_Reference(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_reference(obj, value)
 
 
 @export
-def Get_Nature_Declarator(obj):
+def Get_Nature_Declarator(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_nature_declarator(obj)
 
 
 @export
-def Set_Nature_Declarator(obj, value) -> None:
+def Set_Nature_Declarator(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_nature_declarator(obj, value)
 
 
 @export
-def Get_Across_Type_Mark(obj):
+def Get_Across_Type_Mark(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_across_type_mark(obj)
 
 
 @export
-def Set_Across_Type_Mark(obj, value) -> None:
+def Set_Across_Type_Mark(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_across_type_mark(obj, value)
 
 
 @export
-def Get_Through_Type_Mark(obj):
+def Get_Through_Type_Mark(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_through_type_mark(obj)
 
 
 @export
-def Set_Through_Type_Mark(obj, value) -> None:
+def Set_Through_Type_Mark(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_through_type_mark(obj, value)
 
 
 @export
-def Get_Across_Type_Definition(obj):
+def Get_Across_Type_Definition(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_across_type_definition(obj)
 
 
 @export
-def Set_Across_Type_Definition(obj, value) -> None:
+def Set_Across_Type_Definition(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_across_type_definition(obj, value)
 
 
 @export
-def Get_Through_Type_Definition(obj):
+def Get_Through_Type_Definition(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_through_type_definition(obj)
 
 
 @export
-def Set_Through_Type_Definition(obj, value) -> None:
+def Set_Through_Type_Definition(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_through_type_definition(obj, value)
 
 
 @export
-def Get_Across_Type(obj):
+def Get_Across_Type(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_across_type(obj)
 
 
 @export
-def Set_Across_Type(obj, value) -> None:
+def Set_Across_Type(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_across_type(obj, value)
 
 
 @export
-def Get_Through_Type(obj):
+def Get_Through_Type(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_through_type(obj)
 
 
 @export
-def Set_Through_Type(obj, value) -> None:
+def Set_Through_Type(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_through_type(obj, value)
 
 
 @export
-def Get_Target(obj):
+def Get_Target(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_target(obj)
 
 
 @export
-def Set_Target(obj, value) -> None:
+def Set_Target(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_target(obj, value)
 
 
 @export
-def Get_Waveform_Chain(obj):
+def Get_Waveform_Chain(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_waveform_chain(obj)
 
 
 @export
-def Set_Waveform_Chain(obj, value) -> None:
+def Set_Waveform_Chain(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_waveform_chain(obj, value)
 
 
 @export
-def Get_Guard(obj):
+def Get_Guard(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_guard(obj)
 
 
 @export
-def Set_Guard(obj, value) -> None:
+def Set_Guard(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_guard(obj, value)
 
 
 @export
-def Get_Delay_Mechanism(obj):
+def Get_Delay_Mechanism(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_delay_mechanism(obj)
 
 
 @export
-def Set_Delay_Mechanism(obj, value) -> None:
+def Set_Delay_Mechanism(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_delay_mechanism(obj, value)
 
 
 @export
-def Get_Reject_Time_Expression(obj):
+def Get_Reject_Time_Expression(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_reject_time_expression(obj)
 
 
 @export
-def Set_Reject_Time_Expression(obj, value) -> None:
+def Set_Reject_Time_Expression(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_reject_time_expression(obj, value)
 
 
 @export
-def Get_Force_Mode(obj):
+def Get_Force_Mode(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_force_mode(obj)
 
 
 @export
-def Set_Force_Mode(obj, value) -> None:
+def Set_Force_Mode(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_force_mode(obj, value)
 
 
 @export
-def Get_Has_Force_Mode(obj):
+def Get_Has_Force_Mode(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_has_force_mode(obj)
 
 
 @export
-def Set_Has_Force_Mode(obj, value) -> None:
+def Set_Has_Force_Mode(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_has_force_mode(obj, value)
 
 
 @export
-def Get_Sensitivity_List(obj):
+def Get_Sensitivity_List(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_sensitivity_list(obj)
 
 
 @export
-def Set_Sensitivity_List(obj, value) -> None:
+def Set_Sensitivity_List(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_sensitivity_list(obj, value)
 
 
 @export
-def Get_Process_Origin(obj):
+def Get_Process_Origin(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_process_origin(obj)
 
 
 @export
-def Set_Process_Origin(obj, value) -> None:
+def Set_Process_Origin(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_process_origin(obj, value)
 
 
 @export
-def Get_Package_Origin(obj):
+def Get_Package_Origin(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_package_origin(obj)
 
 
 @export
-def Set_Package_Origin(obj, value) -> None:
+def Set_Package_Origin(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_package_origin(obj, value)
 
 
 @export
-def Get_Condition_Clause(obj):
+def Get_Condition_Clause(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_condition_clause(obj)
 
 
 @export
-def Set_Condition_Clause(obj, value) -> None:
+def Set_Condition_Clause(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_condition_clause(obj, value)
 
 
 @export
-def Get_Break_Element(obj):
+def Get_Break_Element(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_break_element(obj)
 
 
 @export
-def Set_Break_Element(obj, value) -> None:
+def Set_Break_Element(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_break_element(obj, value)
 
 
 @export
-def Get_Selector_Quantity(obj):
+def Get_Selector_Quantity(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_selector_quantity(obj)
 
 
 @export
-def Set_Selector_Quantity(obj, value) -> None:
+def Set_Selector_Quantity(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_selector_quantity(obj, value)
 
 
 @export
-def Get_Break_Quantity(obj):
+def Get_Break_Quantity(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_break_quantity(obj)
 
 
 @export
-def Set_Break_Quantity(obj, value) -> None:
+def Set_Break_Quantity(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_break_quantity(obj, value)
 
 
 @export
-def Get_Timeout_Clause(obj):
+def Get_Timeout_Clause(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_timeout_clause(obj)
 
 
 @export
-def Set_Timeout_Clause(obj, value) -> None:
+def Set_Timeout_Clause(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_timeout_clause(obj, value)
 
 
 @export
-def Get_Postponed_Flag(obj):
+def Get_Postponed_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_postponed_flag(obj)
 
 
 @export
-def Set_Postponed_Flag(obj, value) -> None:
+def Set_Postponed_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_postponed_flag(obj, value)
 
 
 @export
-def Get_Callees_List(obj):
+def Get_Callees_List(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_callees_list(obj)
 
 
 @export
-def Set_Callees_List(obj, value) -> None:
+def Set_Callees_List(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_callees_list(obj, value)
 
 
 @export
-def Get_Passive_Flag(obj):
+def Get_Passive_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_passive_flag(obj)
 
 
 @export
-def Set_Passive_Flag(obj, value) -> None:
+def Set_Passive_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_passive_flag(obj, value)
 
 
 @export
-def Get_Resolution_Function_Flag(obj):
+def Get_Resolution_Function_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_resolution_function_flag(obj)
 
 
 @export
-def Set_Resolution_Function_Flag(obj, value) -> None:
+def Set_Resolution_Function_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_resolution_function_flag(obj, value)
 
 
 @export
-def Get_Wait_State(obj):
+def Get_Wait_State(obj: Iir) -> TriStateType:
     return libghdl.vhdl__nodes__get_wait_state(obj)
 
 
 @export
-def Set_Wait_State(obj, value) -> None:
+def Set_Wait_State(obj: Iir, value: TriStateType) -> None:
     libghdl.vhdl__nodes__set_wait_state(obj, value)
 
 
 @export
-def Get_All_Sensitized_State(obj):
+def Get_All_Sensitized_State(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_all_sensitized_state(obj)
 
 
 @export
-def Set_All_Sensitized_State(obj, value) -> None:
+def Set_All_Sensitized_State(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_all_sensitized_state(obj, value)
 
 
 @export
-def Get_Seen_Flag(obj):
+def Get_Seen_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_seen_flag(obj)
 
 
 @export
-def Set_Seen_Flag(obj, value) -> None:
+def Set_Seen_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_seen_flag(obj, value)
 
 
 @export
-def Get_Pure_Flag(obj):
+def Get_Pure_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_pure_flag(obj)
 
 
 @export
-def Set_Pure_Flag(obj, value) -> None:
+def Set_Pure_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_pure_flag(obj, value)
 
 
 @export
-def Get_Foreign_Flag(obj):
+def Get_Foreign_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_foreign_flag(obj)
 
 
 @export
-def Set_Foreign_Flag(obj, value) -> None:
+def Set_Foreign_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_foreign_flag(obj, value)
 
 
 @export
-def Get_Resolved_Flag(obj):
+def Get_Resolved_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_resolved_flag(obj)
 
 
 @export
-def Set_Resolved_Flag(obj, value) -> None:
+def Set_Resolved_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_resolved_flag(obj, value)
 
 
 @export
-def Get_Signal_Type_Flag(obj):
+def Get_Signal_Type_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_signal_type_flag(obj)
 
 
 @export
-def Set_Signal_Type_Flag(obj, value) -> None:
+def Set_Signal_Type_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_signal_type_flag(obj, value)
 
 
 @export
-def Get_Has_Signal_Flag(obj):
+def Get_Has_Signal_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_has_signal_flag(obj)
 
 
 @export
-def Set_Has_Signal_Flag(obj, value) -> None:
+def Set_Has_Signal_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_has_signal_flag(obj, value)
 
 
 @export
-def Get_Purity_State(obj):
+def Get_Purity_State(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_purity_state(obj)
 
 
 @export
-def Set_Purity_State(obj, value) -> None:
+def Set_Purity_State(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_purity_state(obj, value)
 
 
 @export
-def Get_Elab_Flag(obj):
+def Get_Elab_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_elab_flag(obj)
 
 
 @export
-def Set_Elab_Flag(obj, value) -> None:
+def Set_Elab_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_elab_flag(obj, value)
 
 
 @export
-def Get_Vendor_Library_Flag(obj):
+def Get_Vendor_Library_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_vendor_library_flag(obj)
 
 
 @export
-def Set_Vendor_Library_Flag(obj, value) -> None:
+def Set_Vendor_Library_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_vendor_library_flag(obj, value)
 
 
 @export
-def Get_Configuration_Mark_Flag(obj):
+def Get_Configuration_Mark_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_configuration_mark_flag(obj)
 
 
 @export
-def Set_Configuration_Mark_Flag(obj, value) -> None:
+def Set_Configuration_Mark_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_configuration_mark_flag(obj, value)
 
 
 @export
-def Get_Configuration_Done_Flag(obj):
+def Get_Configuration_Done_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_configuration_done_flag(obj)
 
 
 @export
-def Set_Configuration_Done_Flag(obj, value) -> None:
+def Set_Configuration_Done_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_configuration_done_flag(obj, value)
 
 
 @export
-def Get_Index_Constraint_Flag(obj):
+def Get_Index_Constraint_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_index_constraint_flag(obj)
 
 
 @export
-def Set_Index_Constraint_Flag(obj, value) -> None:
+def Set_Index_Constraint_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_index_constraint_flag(obj, value)
 
 
 @export
-def Get_Hide_Implicit_Flag(obj):
+def Get_Hide_Implicit_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_hide_implicit_flag(obj)
 
 
 @export
-def Set_Hide_Implicit_Flag(obj, value) -> None:
+def Set_Hide_Implicit_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_hide_implicit_flag(obj, value)
 
 
 @export
-def Get_Assertion_Condition(obj):
+def Get_Assertion_Condition(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_assertion_condition(obj)
 
 
 @export
-def Set_Assertion_Condition(obj, value) -> None:
+def Set_Assertion_Condition(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_assertion_condition(obj, value)
 
 
 @export
-def Get_Report_Expression(obj):
+def Get_Report_Expression(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_report_expression(obj)
 
 
 @export
-def Set_Report_Expression(obj, value) -> None:
+def Set_Report_Expression(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_report_expression(obj, value)
 
 
 @export
-def Get_Severity_Expression(obj):
+def Get_Severity_Expression(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_severity_expression(obj)
 
 
 @export
-def Set_Severity_Expression(obj, value) -> None:
+def Set_Severity_Expression(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_severity_expression(obj, value)
 
 
 @export
-def Get_Instantiated_Unit(obj):
+def Get_Instantiated_Unit(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_instantiated_unit(obj)
 
 
 @export
-def Set_Instantiated_Unit(obj, value) -> None:
+def Set_Instantiated_Unit(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_instantiated_unit(obj, value)
 
 
 @export
-def Get_Generic_Map_Aspect_Chain(obj):
+def Get_Generic_Map_Aspect_Chain(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_generic_map_aspect_chain(obj)
 
 
 @export
-def Set_Generic_Map_Aspect_Chain(obj, value) -> None:
+def Set_Generic_Map_Aspect_Chain(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_generic_map_aspect_chain(obj, value)
 
 
 @export
-def Get_Port_Map_Aspect_Chain(obj):
+def Get_Port_Map_Aspect_Chain(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_port_map_aspect_chain(obj)
 
 
 @export
-def Set_Port_Map_Aspect_Chain(obj, value) -> None:
+def Set_Port_Map_Aspect_Chain(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_port_map_aspect_chain(obj, value)
 
 
 @export
-def Get_Configuration_Name(obj):
+def Get_Configuration_Name(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_configuration_name(obj)
 
 
 @export
-def Set_Configuration_Name(obj, value) -> None:
+def Set_Configuration_Name(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_configuration_name(obj, value)
 
 
 @export
-def Get_Component_Configuration(obj):
+def Get_Component_Configuration(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_component_configuration(obj)
 
 
 @export
-def Set_Component_Configuration(obj, value) -> None:
+def Set_Component_Configuration(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_component_configuration(obj, value)
 
 
 @export
-def Get_Configuration_Specification(obj):
+def Get_Configuration_Specification(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_configuration_specification(obj)
 
 
 @export
-def Set_Configuration_Specification(obj, value) -> None:
+def Set_Configuration_Specification(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_configuration_specification(obj, value)
 
 
 @export
-def Get_Default_Binding_Indication(obj):
+def Get_Default_Binding_Indication(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_default_binding_indication(obj)
 
 
 @export
-def Set_Default_Binding_Indication(obj, value) -> None:
+def Set_Default_Binding_Indication(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_default_binding_indication(obj, value)
 
 
 @export
-def Get_Default_Configuration_Declaration(obj):
+def Get_Default_Configuration_Declaration(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_default_configuration_declaration(obj)
 
 
 @export
-def Set_Default_Configuration_Declaration(obj, value) -> None:
+def Set_Default_Configuration_Declaration(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_default_configuration_declaration(obj, value)
 
 
 @export
-def Get_Expression(obj):
+def Get_Expression(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_expression(obj)
 
 
 @export
-def Set_Expression(obj, value) -> None:
+def Set_Expression(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_expression(obj, value)
 
 
 @export
-def Get_Conditional_Expression_Chain(obj):
+def Get_Conditional_Expression_Chain(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_conditional_expression_chain(obj)
 
 
 @export
-def Set_Conditional_Expression_Chain(obj, value) -> None:
+def Set_Conditional_Expression_Chain(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_conditional_expression_chain(obj, value)
 
 
 @export
-def Get_Allocator_Designated_Type(obj):
+def Get_Allocator_Designated_Type(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_allocator_designated_type(obj)
 
 
 @export
-def Set_Allocator_Designated_Type(obj, value) -> None:
+def Set_Allocator_Designated_Type(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_allocator_designated_type(obj, value)
 
 
 @export
-def Get_Selected_Waveform_Chain(obj):
+def Get_Selected_Waveform_Chain(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_selected_waveform_chain(obj)
 
 
 @export
-def Set_Selected_Waveform_Chain(obj, value) -> None:
+def Set_Selected_Waveform_Chain(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_selected_waveform_chain(obj, value)
 
 
 @export
-def Get_Conditional_Waveform_Chain(obj):
+def Get_Conditional_Waveform_Chain(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_conditional_waveform_chain(obj)
 
 
 @export
-def Set_Conditional_Waveform_Chain(obj, value) -> None:
+def Set_Conditional_Waveform_Chain(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_conditional_waveform_chain(obj, value)
 
 
 @export
-def Get_Guard_Expression(obj):
+def Get_Guard_Expression(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_guard_expression(obj)
 
 
 @export
-def Set_Guard_Expression(obj, value) -> None:
+def Set_Guard_Expression(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_guard_expression(obj, value)
 
 
 @export
-def Get_Guard_Decl(obj):
+def Get_Guard_Decl(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_guard_decl(obj)
 
 
 @export
-def Set_Guard_Decl(obj, value) -> None:
+def Set_Guard_Decl(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_guard_decl(obj, value)
 
 
 @export
-def Get_Guard_Sensitivity_List(obj):
+def Get_Guard_Sensitivity_List(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_guard_sensitivity_list(obj)
 
 
 @export
-def Set_Guard_Sensitivity_List(obj, value) -> None:
+def Set_Guard_Sensitivity_List(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_guard_sensitivity_list(obj, value)
 
 
 @export
-def Get_Signal_Attribute_Chain(obj):
+def Get_Signal_Attribute_Chain(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_signal_attribute_chain(obj)
 
 
 @export
-def Set_Signal_Attribute_Chain(obj, value) -> None:
+def Set_Signal_Attribute_Chain(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_signal_attribute_chain(obj, value)
 
 
 @export
-def Get_Block_Block_Configuration(obj):
+def Get_Block_Block_Configuration(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_block_block_configuration(obj)
 
 
 @export
-def Set_Block_Block_Configuration(obj, value) -> None:
+def Set_Block_Block_Configuration(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_block_block_configuration(obj, value)
 
 
 @export
-def Get_Package_Header(obj):
+def Get_Package_Header(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_package_header(obj)
 
 
 @export
-def Set_Package_Header(obj, value) -> None:
+def Set_Package_Header(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_package_header(obj, value)
 
 
 @export
-def Get_Block_Header(obj):
+def Get_Block_Header(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_block_header(obj)
 
 
 @export
-def Set_Block_Header(obj, value) -> None:
+def Set_Block_Header(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_block_header(obj, value)
 
 
 @export
-def Get_Uninstantiated_Package_Name(obj):
+def Get_Uninstantiated_Package_Name(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_uninstantiated_package_name(obj)
 
 
 @export
-def Set_Uninstantiated_Package_Name(obj, value) -> None:
+def Set_Uninstantiated_Package_Name(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_uninstantiated_package_name(obj, value)
 
 
 @export
-def Get_Uninstantiated_Package_Decl(obj):
+def Get_Uninstantiated_Package_Decl(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_uninstantiated_package_decl(obj)
 
 
 @export
-def Set_Uninstantiated_Package_Decl(obj, value) -> None:
+def Set_Uninstantiated_Package_Decl(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_uninstantiated_package_decl(obj, value)
 
 
 @export
-def Get_Instance_Source_File(obj):
+def Get_Instance_Source_File(obj: Iir) -> SourceFileEntry:
     return libghdl.vhdl__nodes__get_instance_source_file(obj)
 
 
 @export
-def Set_Instance_Source_File(obj, value) -> None:
+def Set_Instance_Source_File(obj: Iir, value: SourceFileEntry) -> None:
     libghdl.vhdl__nodes__set_instance_source_file(obj, value)
 
 
 @export
-def Get_Generate_Block_Configuration(obj):
+def Get_Generate_Block_Configuration(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_generate_block_configuration(obj)
 
 
 @export
-def Set_Generate_Block_Configuration(obj, value) -> None:
+def Set_Generate_Block_Configuration(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_generate_block_configuration(obj, value)
 
 
 @export
-def Get_Generate_Statement_Body(obj):
+def Get_Generate_Statement_Body(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_generate_statement_body(obj)
 
 
 @export
-def Set_Generate_Statement_Body(obj, value) -> None:
+def Set_Generate_Statement_Body(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_generate_statement_body(obj, value)
 
 
 @export
-def Get_Alternative_Label(obj):
+def Get_Alternative_Label(obj: Iir) -> NameId:
     return libghdl.vhdl__nodes__get_alternative_label(obj)
 
 
 @export
-def Set_Alternative_Label(obj, value) -> None:
+def Set_Alternative_Label(obj: Iir, value: NameId) -> None:
     libghdl.vhdl__nodes__set_alternative_label(obj, value)
 
 
 @export
-def Get_Generate_Else_Clause(obj):
+def Get_Generate_Else_Clause(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_generate_else_clause(obj)
 
 
 @export
-def Set_Generate_Else_Clause(obj, value) -> None:
+def Set_Generate_Else_Clause(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_generate_else_clause(obj, value)
 
 
 @export
-def Get_Condition(obj):
+def Get_Condition(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_condition(obj)
 
 
 @export
-def Set_Condition(obj, value) -> None:
+def Set_Condition(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_condition(obj, value)
 
 
 @export
-def Get_Else_Clause(obj):
+def Get_Else_Clause(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_else_clause(obj)
 
 
 @export
-def Set_Else_Clause(obj, value) -> None:
+def Set_Else_Clause(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_else_clause(obj, value)
 
 
 @export
-def Get_Parameter_Specification(obj):
+def Get_Parameter_Specification(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_parameter_specification(obj)
 
 
 @export
-def Set_Parameter_Specification(obj, value) -> None:
+def Set_Parameter_Specification(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_parameter_specification(obj, value)
 
 
 @export
-def Get_Parent(obj):
+def Get_Parent(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_parent(obj)
 
 
 @export
-def Set_Parent(obj, value) -> None:
+def Set_Parent(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_parent(obj, value)
 
 
 @export
-def Get_Loop_Label(obj):
+def Get_Loop_Label(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_loop_label(obj)
 
 
 @export
-def Set_Loop_Label(obj, value) -> None:
+def Set_Loop_Label(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_loop_label(obj, value)
 
 
 @export
-def Get_Exit_Flag(obj):
+def Get_Exit_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_exit_flag(obj)
 
 
 @export
-def Set_Exit_Flag(obj, value) -> None:
+def Set_Exit_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_exit_flag(obj, value)
 
 
 @export
-def Get_Next_Flag(obj):
+def Get_Next_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_next_flag(obj)
 
 
 @export
-def Set_Next_Flag(obj, value) -> None:
+def Set_Next_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_next_flag(obj, value)
 
 
 @export
-def Get_Component_Name(obj):
+def Get_Component_Name(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_component_name(obj)
 
 
 @export
-def Set_Component_Name(obj, value) -> None:
+def Set_Component_Name(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_component_name(obj, value)
 
 
 @export
-def Get_Instantiation_List(obj):
+def Get_Instantiation_List(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_instantiation_list(obj)
 
 
 @export
-def Set_Instantiation_List(obj, value) -> None:
+def Set_Instantiation_List(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_instantiation_list(obj, value)
 
 
 @export
-def Get_Entity_Aspect(obj):
+def Get_Entity_Aspect(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_entity_aspect(obj)
 
 
 @export
-def Set_Entity_Aspect(obj, value) -> None:
+def Set_Entity_Aspect(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_entity_aspect(obj, value)
 
 
 @export
-def Get_Default_Entity_Aspect(obj):
+def Get_Default_Entity_Aspect(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_default_entity_aspect(obj)
 
 
 @export
-def Set_Default_Entity_Aspect(obj, value) -> None:
+def Set_Default_Entity_Aspect(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_default_entity_aspect(obj, value)
 
 
 @export
-def Get_Binding_Indication(obj):
+def Get_Binding_Indication(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_binding_indication(obj)
 
 
 @export
-def Set_Binding_Indication(obj, value) -> None:
+def Set_Binding_Indication(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_binding_indication(obj, value)
 
 
 @export
-def Get_Named_Entity(obj):
+def Get_Named_Entity(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_named_entity(obj)
 
 
 @export
-def Set_Named_Entity(obj, value) -> None:
+def Set_Named_Entity(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_named_entity(obj, value)
 
 
 @export
-def Get_Referenced_Name(obj):
+def Get_Referenced_Name(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_referenced_name(obj)
 
 
 @export
-def Set_Referenced_Name(obj, value) -> None:
+def Set_Referenced_Name(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_referenced_name(obj, value)
 
 
 @export
-def Get_Expr_Staticness(obj):
+def Get_Expr_Staticness(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_expr_staticness(obj)
 
 
 @export
-def Set_Expr_Staticness(obj, value) -> None:
+def Set_Expr_Staticness(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_expr_staticness(obj, value)
 
 
 @export
-def Get_Scalar_Size(obj):
+def Get_Scalar_Size(obj: Iir) -> ScalarSize:
     return libghdl.vhdl__nodes__get_scalar_size(obj)
 
 
 @export
-def Set_Scalar_Size(obj, value) -> None:
+def Set_Scalar_Size(obj: Iir, value: ScalarSize) -> None:
     libghdl.vhdl__nodes__set_scalar_size(obj, value)
 
 
 @export
-def Get_Error_Origin(obj):
+def Get_Error_Origin(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_error_origin(obj)
 
 
 @export
-def Set_Error_Origin(obj, value) -> None:
+def Set_Error_Origin(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_error_origin(obj, value)
 
 
 @export
-def Get_Operand(obj):
+def Get_Operand(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_operand(obj)
 
 
 @export
-def Set_Operand(obj, value) -> None:
+def Set_Operand(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_operand(obj, value)
 
 
 @export
-def Get_Left(obj):
+def Get_Left(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_left(obj)
 
 
 @export
-def Set_Left(obj, value) -> None:
+def Set_Left(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_left(obj, value)
 
 
 @export
-def Get_Right(obj):
+def Get_Right(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_right(obj)
 
 
 @export
-def Set_Right(obj, value) -> None:
+def Set_Right(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_right(obj, value)
 
 
 @export
-def Get_Unit_Name(obj):
+def Get_Unit_Name(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_unit_name(obj)
 
 
 @export
-def Set_Unit_Name(obj, value) -> None:
+def Set_Unit_Name(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_unit_name(obj, value)
 
 
 @export
-def Get_Name(obj):
+def Get_Name(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_name(obj)
 
 
 @export
-def Set_Name(obj, value) -> None:
+def Set_Name(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_name(obj, value)
 
 
 @export
-def Get_Group_Template_Name(obj):
+def Get_Group_Template_Name(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_group_template_name(obj)
 
 
 @export
-def Set_Group_Template_Name(obj, value) -> None:
+def Set_Group_Template_Name(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_group_template_name(obj, value)
 
 
 @export
-def Get_Name_Staticness(obj):
+def Get_Name_Staticness(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_name_staticness(obj)
 
 
 @export
-def Set_Name_Staticness(obj, value) -> None:
+def Set_Name_Staticness(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_name_staticness(obj, value)
 
 
 @export
-def Get_Prefix(obj):
+def Get_Prefix(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_prefix(obj)
 
 
 @export
-def Set_Prefix(obj, value) -> None:
+def Set_Prefix(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_prefix(obj, value)
 
 
 @export
-def Get_Signature_Prefix(obj):
+def Get_Signature_Prefix(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_signature_prefix(obj)
 
 
 @export
-def Set_Signature_Prefix(obj, value) -> None:
+def Set_Signature_Prefix(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_signature_prefix(obj, value)
 
 
 @export
-def Get_External_Pathname(obj):
+def Get_External_Pathname(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_external_pathname(obj)
 
 
 @export
-def Set_External_Pathname(obj, value) -> None:
+def Set_External_Pathname(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_external_pathname(obj, value)
 
 
 @export
-def Get_Pathname_Suffix(obj):
+def Get_Pathname_Suffix(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_pathname_suffix(obj)
 
 
 @export
-def Set_Pathname_Suffix(obj, value) -> None:
+def Set_Pathname_Suffix(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_pathname_suffix(obj, value)
 
 
 @export
-def Get_Pathname_Expression(obj):
+def Get_Pathname_Expression(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_pathname_expression(obj)
 
 
 @export
-def Set_Pathname_Expression(obj, value) -> None:
+def Set_Pathname_Expression(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_pathname_expression(obj, value)
 
 
 @export
-def Get_In_Formal_Flag(obj):
+def Get_In_Formal_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_in_formal_flag(obj)
 
 
 @export
-def Set_In_Formal_Flag(obj, value) -> None:
+def Set_In_Formal_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_in_formal_flag(obj, value)
 
 
 @export
-def Get_Slice_Subtype(obj):
+def Get_Slice_Subtype(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_slice_subtype(obj)
 
 
 @export
-def Set_Slice_Subtype(obj, value) -> None:
+def Set_Slice_Subtype(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_slice_subtype(obj, value)
 
 
 @export
-def Get_Suffix(obj):
+def Get_Suffix(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_suffix(obj)
 
 
 @export
-def Set_Suffix(obj, value) -> None:
+def Set_Suffix(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_suffix(obj, value)
 
 
 @export
-def Get_Index_Subtype(obj):
+def Get_Index_Subtype(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_index_subtype(obj)
 
 
 @export
-def Set_Index_Subtype(obj, value) -> None:
+def Set_Index_Subtype(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_index_subtype(obj, value)
 
 
 @export
-def Get_Parameter(obj):
+def Get_Parameter(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_parameter(obj)
 
 
 @export
-def Set_Parameter(obj, value) -> None:
+def Set_Parameter(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_parameter(obj, value)
 
 
 @export
-def Get_Parameter_2(obj):
+def Get_Parameter_2(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_parameter_2(obj)
 
 
 @export
-def Set_Parameter_2(obj, value) -> None:
+def Set_Parameter_2(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_parameter_2(obj, value)
 
 
 @export
-def Get_Parameter_3(obj):
+def Get_Parameter_3(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_parameter_3(obj)
 
 
 @export
-def Set_Parameter_3(obj, value) -> None:
+def Set_Parameter_3(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_parameter_3(obj, value)
 
 
 @export
-def Get_Parameter_4(obj):
+def Get_Parameter_4(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_parameter_4(obj)
 
 
 @export
-def Set_Parameter_4(obj, value) -> None:
+def Set_Parameter_4(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_parameter_4(obj, value)
 
 
 @export
-def Get_Attr_Chain(obj):
+def Get_Attr_Chain(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_attr_chain(obj)
 
 
 @export
-def Set_Attr_Chain(obj, value) -> None:
+def Set_Attr_Chain(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_attr_chain(obj, value)
 
 
 @export
-def Get_Signal_Attribute_Declaration(obj):
+def Get_Signal_Attribute_Declaration(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_signal_attribute_declaration(obj)
 
 
 @export
-def Set_Signal_Attribute_Declaration(obj, value) -> None:
+def Set_Signal_Attribute_Declaration(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_signal_attribute_declaration(obj, value)
 
 
 @export
-def Get_Actual_Type(obj):
+def Get_Actual_Type(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_actual_type(obj)
 
 
 @export
-def Set_Actual_Type(obj, value) -> None:
+def Set_Actual_Type(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_actual_type(obj, value)
 
 
 @export
-def Get_Actual_Type_Definition(obj):
+def Get_Actual_Type_Definition(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_actual_type_definition(obj)
 
 
 @export
-def Set_Actual_Type_Definition(obj, value) -> None:
+def Set_Actual_Type_Definition(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_actual_type_definition(obj, value)
 
 
 @export
-def Get_Association_Chain(obj):
+def Get_Association_Chain(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_association_chain(obj)
 
 
 @export
-def Set_Association_Chain(obj, value) -> None:
+def Set_Association_Chain(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_association_chain(obj, value)
 
 
 @export
-def Get_Individual_Association_Chain(obj):
+def Get_Individual_Association_Chain(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_individual_association_chain(obj)
 
 
 @export
-def Set_Individual_Association_Chain(obj, value) -> None:
+def Set_Individual_Association_Chain(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_individual_association_chain(obj, value)
 
 
 @export
-def Get_Subprogram_Association_Chain(obj):
+def Get_Subprogram_Association_Chain(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_subprogram_association_chain(obj)
 
 
 @export
-def Set_Subprogram_Association_Chain(obj, value) -> None:
+def Set_Subprogram_Association_Chain(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_subprogram_association_chain(obj, value)
 
 
 @export
-def Get_Aggregate_Info(obj):
+def Get_Aggregate_Info(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_aggregate_info(obj)
 
 
 @export
-def Set_Aggregate_Info(obj, value) -> None:
+def Set_Aggregate_Info(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_aggregate_info(obj, value)
 
 
 @export
-def Get_Sub_Aggregate_Info(obj):
+def Get_Sub_Aggregate_Info(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_sub_aggregate_info(obj)
 
 
 @export
-def Set_Sub_Aggregate_Info(obj, value) -> None:
+def Set_Sub_Aggregate_Info(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_sub_aggregate_info(obj, value)
 
 
 @export
-def Get_Aggr_Dynamic_Flag(obj):
+def Get_Aggr_Dynamic_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_aggr_dynamic_flag(obj)
 
 
 @export
-def Set_Aggr_Dynamic_Flag(obj, value) -> None:
+def Set_Aggr_Dynamic_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_aggr_dynamic_flag(obj, value)
 
 
 @export
-def Get_Aggr_Min_Length(obj):
+def Get_Aggr_Min_Length(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_aggr_min_length(obj)
 
 
 @export
-def Set_Aggr_Min_Length(obj, value) -> None:
+def Set_Aggr_Min_Length(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_aggr_min_length(obj, value)
 
 
 @export
-def Get_Aggr_Low_Limit(obj):
+def Get_Aggr_Low_Limit(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_aggr_low_limit(obj)
 
 
 @export
-def Set_Aggr_Low_Limit(obj, value) -> None:
+def Set_Aggr_Low_Limit(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_aggr_low_limit(obj, value)
 
 
 @export
-def Get_Aggr_High_Limit(obj):
+def Get_Aggr_High_Limit(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_aggr_high_limit(obj)
 
 
 @export
-def Set_Aggr_High_Limit(obj, value) -> None:
+def Set_Aggr_High_Limit(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_aggr_high_limit(obj, value)
 
 
 @export
-def Get_Aggr_Others_Flag(obj):
+def Get_Aggr_Others_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_aggr_others_flag(obj)
 
 
 @export
-def Set_Aggr_Others_Flag(obj, value) -> None:
+def Set_Aggr_Others_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_aggr_others_flag(obj, value)
 
 
 @export
-def Get_Aggr_Named_Flag(obj):
+def Get_Aggr_Named_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_aggr_named_flag(obj)
 
 
 @export
-def Set_Aggr_Named_Flag(obj, value) -> None:
+def Set_Aggr_Named_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_aggr_named_flag(obj, value)
 
 
 @export
-def Get_Aggregate_Expand_Flag(obj):
+def Get_Aggregate_Expand_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_aggregate_expand_flag(obj)
 
 
 @export
-def Set_Aggregate_Expand_Flag(obj, value) -> None:
+def Set_Aggregate_Expand_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_aggregate_expand_flag(obj, value)
 
 
 @export
-def Get_Association_Choices_Chain(obj):
+def Get_Association_Choices_Chain(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_association_choices_chain(obj)
 
 
 @export
-def Set_Association_Choices_Chain(obj, value) -> None:
+def Set_Association_Choices_Chain(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_association_choices_chain(obj, value)
 
 
 @export
-def Get_Case_Statement_Alternative_Chain(obj):
+def Get_Case_Statement_Alternative_Chain(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_case_statement_alternative_chain(obj)
 
 
 @export
-def Set_Case_Statement_Alternative_Chain(obj, value) -> None:
+def Set_Case_Statement_Alternative_Chain(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_case_statement_alternative_chain(obj, value)
 
 
 @export
-def Get_Choice_Staticness(obj):
+def Get_Choice_Staticness(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_choice_staticness(obj)
 
 
 @export
-def Set_Choice_Staticness(obj, value) -> None:
+def Set_Choice_Staticness(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_choice_staticness(obj, value)
 
 
 @export
-def Get_Procedure_Call(obj):
+def Get_Procedure_Call(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_procedure_call(obj)
 
 
 @export
-def Set_Procedure_Call(obj, value) -> None:
+def Set_Procedure_Call(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_procedure_call(obj, value)
 
 
 @export
-def Get_Implementation(obj):
+def Get_Implementation(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_implementation(obj)
 
 
 @export
-def Set_Implementation(obj, value) -> None:
+def Set_Implementation(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_implementation(obj, value)
 
 
 @export
-def Get_Parameter_Association_Chain(obj):
+def Get_Parameter_Association_Chain(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_parameter_association_chain(obj)
 
 
 @export
-def Set_Parameter_Association_Chain(obj, value) -> None:
+def Set_Parameter_Association_Chain(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_parameter_association_chain(obj, value)
 
 
 @export
-def Get_Method_Object(obj):
+def Get_Method_Object(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_method_object(obj)
 
 
 @export
-def Set_Method_Object(obj, value) -> None:
+def Set_Method_Object(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_method_object(obj, value)
 
 
 @export
-def Get_Subtype_Type_Mark(obj):
+def Get_Subtype_Type_Mark(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_subtype_type_mark(obj)
 
 
 @export
-def Set_Subtype_Type_Mark(obj, value) -> None:
+def Set_Subtype_Type_Mark(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_subtype_type_mark(obj, value)
 
 
 @export
-def Get_Subnature_Nature_Mark(obj):
+def Get_Subnature_Nature_Mark(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_subnature_nature_mark(obj)
 
 
 @export
-def Set_Subnature_Nature_Mark(obj, value) -> None:
+def Set_Subnature_Nature_Mark(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_subnature_nature_mark(obj, value)
 
 
 @export
-def Get_Type_Conversion_Subtype(obj):
+def Get_Type_Conversion_Subtype(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_type_conversion_subtype(obj)
 
 
 @export
-def Set_Type_Conversion_Subtype(obj, value) -> None:
+def Set_Type_Conversion_Subtype(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_type_conversion_subtype(obj, value)
 
 
 @export
-def Get_Type_Mark(obj):
+def Get_Type_Mark(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_type_mark(obj)
 
 
 @export
-def Set_Type_Mark(obj, value) -> None:
+def Set_Type_Mark(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_type_mark(obj, value)
 
 
 @export
-def Get_File_Type_Mark(obj):
+def Get_File_Type_Mark(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_file_type_mark(obj)
 
 
 @export
-def Set_File_Type_Mark(obj, value) -> None:
+def Set_File_Type_Mark(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_file_type_mark(obj, value)
 
 
 @export
-def Get_Return_Type_Mark(obj):
+def Get_Return_Type_Mark(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_return_type_mark(obj)
 
 
 @export
-def Set_Return_Type_Mark(obj, value) -> None:
+def Set_Return_Type_Mark(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_return_type_mark(obj, value)
 
 
 @export
-def Get_Has_Disconnect_Flag(obj):
+def Get_Has_Disconnect_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_has_disconnect_flag(obj)
 
 
 @export
-def Set_Has_Disconnect_Flag(obj, value) -> None:
+def Set_Has_Disconnect_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_has_disconnect_flag(obj, value)
 
 
 @export
-def Get_Has_Active_Flag(obj):
+def Get_Has_Active_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_has_active_flag(obj)
 
 
 @export
-def Set_Has_Active_Flag(obj, value) -> None:
+def Set_Has_Active_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_has_active_flag(obj, value)
 
 
 @export
-def Get_Is_Within_Flag(obj):
+def Get_Is_Within_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_is_within_flag(obj)
 
 
 @export
-def Set_Is_Within_Flag(obj, value) -> None:
+def Set_Is_Within_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_is_within_flag(obj, value)
 
 
 @export
-def Get_Type_Marks_List(obj):
+def Get_Type_Marks_List(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_type_marks_list(obj)
 
 
 @export
-def Set_Type_Marks_List(obj, value) -> None:
+def Set_Type_Marks_List(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_type_marks_list(obj, value)
 
 
 @export
-def Get_Implicit_Alias_Flag(obj):
+def Get_Implicit_Alias_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_implicit_alias_flag(obj)
 
 
 @export
-def Set_Implicit_Alias_Flag(obj, value) -> None:
+def Set_Implicit_Alias_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_implicit_alias_flag(obj, value)
 
 
 @export
-def Get_Alias_Signature(obj):
+def Get_Alias_Signature(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_alias_signature(obj)
 
 
 @export
-def Set_Alias_Signature(obj, value) -> None:
+def Set_Alias_Signature(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_alias_signature(obj, value)
 
 
 @export
-def Get_Attribute_Signature(obj):
+def Get_Attribute_Signature(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_attribute_signature(obj)
 
 
 @export
-def Set_Attribute_Signature(obj, value) -> None:
+def Set_Attribute_Signature(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_attribute_signature(obj, value)
 
 
 @export
-def Get_Overload_List(obj):
+def Get_Overload_List(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_overload_list(obj)
 
 
 @export
-def Set_Overload_List(obj, value) -> None:
+def Set_Overload_List(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_overload_list(obj, value)
 
 
 @export
-def Get_Simple_Name_Identifier(obj):
+def Get_Simple_Name_Identifier(obj: Iir) -> NameId:
     return libghdl.vhdl__nodes__get_simple_name_identifier(obj)
 
 
 @export
-def Set_Simple_Name_Identifier(obj, value) -> None:
+def Set_Simple_Name_Identifier(obj: Iir, value: NameId) -> None:
     libghdl.vhdl__nodes__set_simple_name_identifier(obj, value)
 
 
 @export
-def Get_Simple_Name_Subtype(obj):
+def Get_Simple_Name_Subtype(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_simple_name_subtype(obj)
 
 
 @export
-def Set_Simple_Name_Subtype(obj, value) -> None:
+def Set_Simple_Name_Subtype(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_simple_name_subtype(obj, value)
 
 
 @export
-def Get_Protected_Type_Body(obj):
+def Get_Protected_Type_Body(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_protected_type_body(obj)
 
 
 @export
-def Set_Protected_Type_Body(obj, value) -> None:
+def Set_Protected_Type_Body(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_protected_type_body(obj, value)
 
 
 @export
-def Get_Protected_Type_Declaration(obj):
+def Get_Protected_Type_Declaration(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_protected_type_declaration(obj)
 
 
 @export
-def Set_Protected_Type_Declaration(obj, value) -> None:
+def Set_Protected_Type_Declaration(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_protected_type_declaration(obj, value)
 
 
 @export
-def Get_Use_Flag(obj):
+def Get_Use_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_use_flag(obj)
 
 
 @export
-def Set_Use_Flag(obj, value) -> None:
+def Set_Use_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_use_flag(obj, value)
 
 
 @export
-def Get_End_Has_Reserved_Id(obj):
+def Get_End_Has_Reserved_Id(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_end_has_reserved_id(obj)
 
 
 @export
-def Set_End_Has_Reserved_Id(obj, value) -> None:
+def Set_End_Has_Reserved_Id(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_end_has_reserved_id(obj, value)
 
 
 @export
-def Get_End_Has_Identifier(obj):
+def Get_End_Has_Identifier(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_end_has_identifier(obj)
 
 
 @export
-def Set_End_Has_Identifier(obj, value) -> None:
+def Set_End_Has_Identifier(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_end_has_identifier(obj, value)
 
 
 @export
-def Get_End_Has_Postponed(obj):
+def Get_End_Has_Postponed(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_end_has_postponed(obj)
 
 
 @export
-def Set_End_Has_Postponed(obj, value) -> None:
+def Set_End_Has_Postponed(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_end_has_postponed(obj, value)
 
 
 @export
-def Get_Has_Label(obj):
+def Get_Has_Label(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_has_label(obj)
 
 
 @export
-def Set_Has_Label(obj, value) -> None:
+def Set_Has_Label(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_has_label(obj, value)
 
 
 @export
-def Get_Has_Begin(obj):
+def Get_Has_Begin(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_has_begin(obj)
 
 
 @export
-def Set_Has_Begin(obj, value) -> None:
+def Set_Has_Begin(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_has_begin(obj, value)
 
 
 @export
-def Get_Has_End(obj):
+def Get_Has_End(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_has_end(obj)
 
 
 @export
-def Set_Has_End(obj, value) -> None:
+def Set_Has_End(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_has_end(obj, value)
 
 
 @export
-def Get_Has_Is(obj):
+def Get_Has_Is(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_has_is(obj)
 
 
 @export
-def Set_Has_Is(obj, value) -> None:
+def Set_Has_Is(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_has_is(obj, value)
 
 
 @export
-def Get_Has_Pure(obj):
+def Get_Has_Pure(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_has_pure(obj)
 
 
 @export
-def Set_Has_Pure(obj, value) -> None:
+def Set_Has_Pure(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_has_pure(obj, value)
 
 
 @export
-def Get_Has_Body(obj):
+def Get_Has_Body(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_has_body(obj)
 
 
 @export
-def Set_Has_Body(obj, value) -> None:
+def Set_Has_Body(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_has_body(obj, value)
 
 
 @export
-def Get_Has_Parameter(obj):
+def Get_Has_Parameter(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_has_parameter(obj)
 
 
 @export
-def Set_Has_Parameter(obj, value) -> None:
+def Set_Has_Parameter(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_has_parameter(obj, value)
 
 
 @export
-def Get_Has_Component(obj):
+def Get_Has_Component(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_has_component(obj)
 
 
 @export
-def Set_Has_Component(obj, value) -> None:
+def Set_Has_Component(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_has_component(obj, value)
 
 
 @export
-def Get_Has_Identifier_List(obj):
+def Get_Has_Identifier_List(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_has_identifier_list(obj)
 
 
 @export
-def Set_Has_Identifier_List(obj, value) -> None:
+def Set_Has_Identifier_List(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_has_identifier_list(obj, value)
 
 
 @export
-def Get_Has_Mode(obj):
+def Get_Has_Mode(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_has_mode(obj)
 
 
 @export
-def Set_Has_Mode(obj, value) -> None:
+def Set_Has_Mode(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_has_mode(obj, value)
 
 
 @export
-def Get_Has_Class(obj):
+def Get_Has_Class(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_has_class(obj)
 
 
 @export
-def Set_Has_Class(obj, value) -> None:
+def Set_Has_Class(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_has_class(obj, value)
 
 
 @export
-def Get_Has_Delay_Mechanism(obj):
+def Get_Has_Delay_Mechanism(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_has_delay_mechanism(obj)
 
 
 @export
-def Set_Has_Delay_Mechanism(obj, value) -> None:
+def Set_Has_Delay_Mechanism(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_has_delay_mechanism(obj, value)
 
 
 @export
-def Get_Suspend_Flag(obj):
+def Get_Suspend_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_suspend_flag(obj)
 
 
 @export
-def Set_Suspend_Flag(obj, value) -> None:
+def Set_Suspend_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_suspend_flag(obj, value)
 
 
 @export
-def Get_Is_Ref(obj):
+def Get_Is_Ref(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_is_ref(obj)
 
 
 @export
-def Set_Is_Ref(obj, value) -> None:
+def Set_Is_Ref(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_is_ref(obj, value)
 
 
 @export
-def Get_Is_Forward_Ref(obj):
+def Get_Is_Forward_Ref(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_is_forward_ref(obj)
 
 
 @export
-def Set_Is_Forward_Ref(obj, value) -> None:
+def Set_Is_Forward_Ref(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_is_forward_ref(obj, value)
 
 
 @export
-def Get_Psl_Property(obj):
+def Get_Psl_Property(obj: Iir) -> PSLNode:
     return libghdl.vhdl__nodes__get_psl_property(obj)
 
 
 @export
-def Set_Psl_Property(obj, value) -> None:
+def Set_Psl_Property(obj: Iir, value: PSLNode) -> None:
     libghdl.vhdl__nodes__set_psl_property(obj, value)
 
 
 @export
-def Get_Psl_Sequence(obj):
+def Get_Psl_Sequence(obj: Iir) -> PSLNode:
     return libghdl.vhdl__nodes__get_psl_sequence(obj)
 
 
 @export
-def Set_Psl_Sequence(obj, value) -> None:
+def Set_Psl_Sequence(obj: Iir, value: PSLNode) -> None:
     libghdl.vhdl__nodes__set_psl_sequence(obj, value)
 
 
 @export
-def Get_Psl_Declaration(obj):
+def Get_Psl_Declaration(obj: Iir) -> PSLNode:
     return libghdl.vhdl__nodes__get_psl_declaration(obj)
 
 
 @export
-def Set_Psl_Declaration(obj, value) -> None:
+def Set_Psl_Declaration(obj: Iir, value: PSLNode) -> None:
     libghdl.vhdl__nodes__set_psl_declaration(obj, value)
 
 
 @export
-def Get_Psl_Expression(obj):
+def Get_Psl_Expression(obj: Iir) -> PSLNode:
     return libghdl.vhdl__nodes__get_psl_expression(obj)
 
 
 @export
-def Set_Psl_Expression(obj, value) -> None:
+def Set_Psl_Expression(obj: Iir, value: PSLNode) -> None:
     libghdl.vhdl__nodes__set_psl_expression(obj, value)
 
 
 @export
-def Get_Psl_Boolean(obj):
+def Get_Psl_Boolean(obj: Iir) -> PSLNode:
     return libghdl.vhdl__nodes__get_psl_boolean(obj)
 
 
 @export
-def Set_Psl_Boolean(obj, value) -> None:
+def Set_Psl_Boolean(obj: Iir, value: PSLNode) -> None:
     libghdl.vhdl__nodes__set_psl_boolean(obj, value)
 
 
 @export
-def Get_PSL_Clock(obj):
+def Get_PSL_Clock(obj: Iir) -> PSLNode:
     return libghdl.vhdl__nodes__get_psl_clock(obj)
 
 
 @export
-def Set_PSL_Clock(obj, value) -> None:
+def Set_PSL_Clock(obj: Iir, value: PSLNode) -> None:
     libghdl.vhdl__nodes__set_psl_clock(obj, value)
 
 
 @export
-def Get_PSL_NFA(obj):
+def Get_PSL_NFA(obj: Iir) -> PSLNFA:
     return libghdl.vhdl__nodes__get_psl_nfa(obj)
 
 
 @export
-def Set_PSL_NFA(obj, value) -> None:
+def Set_PSL_NFA(obj: Iir, value: PSLNFA) -> None:
     libghdl.vhdl__nodes__set_psl_nfa(obj, value)
 
 
 @export
-def Get_PSL_Nbr_States(obj):
+def Get_PSL_Nbr_States(obj: Iir) -> Int32:
     return libghdl.vhdl__nodes__get_psl_nbr_states(obj)
 
 
 @export
-def Set_PSL_Nbr_States(obj, value) -> None:
+def Set_PSL_Nbr_States(obj: Iir, value: Int32) -> None:
     libghdl.vhdl__nodes__set_psl_nbr_states(obj, value)
 
 
 @export
-def Get_PSL_Clock_Sensitivity(obj):
+def Get_PSL_Clock_Sensitivity(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_psl_clock_sensitivity(obj)
 
 
 @export
-def Set_PSL_Clock_Sensitivity(obj, value) -> None:
+def Set_PSL_Clock_Sensitivity(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_psl_clock_sensitivity(obj, value)
 
 
 @export
-def Get_PSL_EOS_Flag(obj):
+def Get_PSL_EOS_Flag(obj: Iir) -> Boolean:
     return libghdl.vhdl__nodes__get_psl_eos_flag(obj)
 
 
 @export
-def Set_PSL_EOS_Flag(obj, value) -> None:
+def Set_PSL_EOS_Flag(obj: Iir, value: Boolean) -> None:
     libghdl.vhdl__nodes__set_psl_eos_flag(obj, value)
 
 
 @export
-def Get_Count_Expression(obj):
+def Get_Count_Expression(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_count_expression(obj)
 
 
 @export
-def Set_Count_Expression(obj, value) -> None:
+def Set_Count_Expression(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_count_expression(obj, value)
 
 
 @export
-def Get_Clock_Expression(obj):
+def Get_Clock_Expression(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_clock_expression(obj)
 
 
 @export
-def Set_Clock_Expression(obj, value) -> None:
+def Set_Clock_Expression(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_clock_expression(obj, value)
 
 
 @export
-def Get_Default_Clock(obj):
+def Get_Default_Clock(obj: Iir) -> Iir:
     return libghdl.vhdl__nodes__get_default_clock(obj)
 
 
 @export
-def Set_Default_Clock(obj, value) -> None:
+def Set_Default_Clock(obj: Iir, value: Iir) -> None:
     libghdl.vhdl__nodes__set_default_clock(obj, value)
 
 
 @export
-def Get_Foreign_Node(obj):
+def Get_Foreign_Node(obj: Iir) -> Int32:
     return libghdl.vhdl__nodes__get_foreign_node(obj)
 
 
 @export
-def Set_Foreign_Node(obj, value) -> None:
+def Set_Foreign_Node(obj: Iir, value: Int32) -> None:
     libghdl.vhdl__nodes__set_foreign_node(obj, value)
