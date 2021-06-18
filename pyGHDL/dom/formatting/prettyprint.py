@@ -12,7 +12,8 @@ from pyVHDLModel.VHDLModel import (
     PortInterfaceItem,
     BinaryExpression,
     IdentityExpression,
-    UnaryExpression, WithDefaultExpression,
+    UnaryExpression,
+    WithDefaultExpression,
 )
 
 from pyGHDL import GHDLBaseException

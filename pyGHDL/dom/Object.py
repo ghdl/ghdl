@@ -105,7 +105,7 @@ class Signal(VHDLModel_Signal):
     def parse(cls, node):
         name = NodeToName(node)
         subTypeIndication = GetSubtypeIndicationFromNode(node, "signal", name)
-        default = nodes.Get_Default_Value(node);
+        default = nodes.Get_Default_Value(node)
         defaultExpression = GetExpressionFromNode(default) if default else None
 
         signal = cls(name, subTypeIndication, defaultExpression)

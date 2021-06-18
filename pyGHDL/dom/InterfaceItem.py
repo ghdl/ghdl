@@ -57,14 +57,20 @@ class GenericConstantInterfaceItem(VHDLModel_GenericConstantInterfaceItem, GHDLM
         name = NodeToName(generic)
         mode = GetModeOfNode(generic)
         subTypeIndication = GetSubtypeIndicationFromNode(generic, "generic", name)
-        default = nodes.Get_Default_Value(generic);
+        default = nodes.Get_Default_Value(generic)
         value = GetExpressionFromNode(default) if default else None
 
         generic = cls(name, mode, subTypeIndication, value)
 
         return generic
 
-    def __init__(self, name: str, mode: Mode, subType: SubTypeOrSymbol, defaultExpression: Expression):
+    def __init__(
+        self,
+        name: str,
+        mode: Mode,
+        subType: SubTypeOrSymbol,
+        defaultExpression: Expression,
+    ):
         super().__init__(name=name, mode=mode)
         self._subType = subType
         self._defaultExpression = defaultExpression
@@ -79,7 +85,9 @@ class PortSignalInterfaceItem(VHDLModel_PortSignalInterfaceItem, GHDLMixin):
         subTypeIndication = GetSubtypeIndicationFromNode(port, "port", name)
 
         defaultValue = nodes.Get_Default_Value(port)
-        value = GetExpressionFromNode(defaultValue) if defaultValue != Null_Iir else None
+        value = (
+            GetExpressionFromNode(defaultValue) if defaultValue != Null_Iir else None
+        )
 
         port = cls(name, mode, subTypeIndication, value)
 
