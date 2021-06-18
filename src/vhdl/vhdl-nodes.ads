@@ -7102,7 +7102,14 @@ package Vhdl.Nodes is
    --  Purity depth of an impure subprogram.
    Iir_Depth_Impure : constant Iir_Int32 := -1;
 
-   type Number_Base_Type is (Base_None, Base_2, Base_8, Base_10, Base_16);
+   type Number_Base_Type is
+     (
+      Base_None,
+      Base_2,
+      Base_8,
+      Base_10,
+      Base_16
+     );
 
    -- design file
    subtype Iir_Design_File is Iir;
