@@ -32,7 +32,13 @@
 # ============================================================================
 from typing import List
 
-from pyGHDL.dom.Aggregates import OthersAggregateElement, SimpleAggregateElement, RangedAggregateElement, IndexedAggregateElement, NamedAggregateElement
+from pyGHDL.dom.Aggregates import (
+    OthersAggregateElement,
+    SimpleAggregateElement,
+    RangedAggregateElement,
+    IndexedAggregateElement,
+    NamedAggregateElement,
+)
 from pyGHDL.dom.Symbol import EnumerationLiteralSymbol
 from pyGHDL.libghdl import utils
 
@@ -75,7 +81,8 @@ from pyVHDLModel.VHDLModel import (
     RotateRightExpression as VHDLModel_RotateRightExpression,
     RotateLeftExpression as VHDLModel_RotateLeftExpression,
     Aggregate as VHDLModel_Aggregate,
-    Expression, AggregateElement,
+    Expression,
+    AggregateElement,
 )
 
 __all__ = []
@@ -402,4 +409,3 @@ class Aggregate(VHDLModel_Aggregate):
                 )
 
         return cls(choices)
-

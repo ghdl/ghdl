@@ -2,7 +2,13 @@ from typing import List, Union
 
 from pydecor import export
 
-from pyGHDL.dom.Aggregates import SimpleAggregateElement, IndexedAggregateElement, RangedAggregateElement, NamedAggregateElement, OthersAggregateElement
+from pyGHDL.dom.Aggregates import (
+    SimpleAggregateElement,
+    IndexedAggregateElement,
+    RangedAggregateElement,
+    NamedAggregateElement,
+    OthersAggregateElement,
+)
 from pyGHDL.dom.Object import Constant, Signal
 from pyGHDL.dom.Range import Range
 from pyVHDLModel.VHDLModel import (
@@ -16,7 +22,7 @@ from pyVHDLModel.VHDLModel import (
     IdentityExpression,
     UnaryExpression,
     WithDefaultExpression,
-    AggregateElement
+    AggregateElement,
 )
 
 from pyGHDL import GHDLBaseException
@@ -48,7 +54,8 @@ from pyGHDL.dom.Expression import (
     InverseExpression,
     AbsoluteExpression,
     NegationExpression,
-    ExponentiationExpression, Aggregate,
+    ExponentiationExpression,
+    Aggregate,
 )
 
 StringBuffer = List[str]
@@ -323,7 +330,10 @@ class PrettyPrint:
             return "{type}".format(type=subTypeIndication.SymbolName)
         elif isinstance(subTypeIndication, ConstrainedSubTypeSymbol):
             constraints = ", ".join(
-                [self.formatRange(constraint.Range) for constraint in subTypeIndication.Constraints]
+                [
+                    self.formatRange(constraint.Range)
+                    for constraint in subTypeIndication.Constraints
+                ]
             )
 
             return "{type}({constraints})".format(
@@ -379,7 +389,14 @@ class PrettyPrint:
                 operator=operator,
             )
         elif isinstance(expression, Aggregate):
-            return "({choices})".format(choices=", ".join([self.formatAggregateElement(element) for element in expression.Elements]))
+            return "({choices})".format(
+                choices=", ".join(
+                    [
+                        self.formatAggregateElement(element)
+                        for element in expression.Elements
+                    ]
+                )
+            )
         else:
             raise PrettyPrintException("Unhandled expression kind.")
 
@@ -391,17 +408,17 @@ class PrettyPrint:
         elif isinstance(aggregateElement, IndexedAggregateElement):
             return "{index} => {value}".format(
                 index=self.formatExpression(aggregateElement.Index),
-                value=self.formatExpression(aggregateElement.Expression)
+                value=self.formatExpression(aggregateElement.Expression),
             )
         elif isinstance(aggregateElement, RangedAggregateElement):
             return "{range} => {value}".format(
                 range=self.formatRange(aggregateElement.Range),
-                value=self.formatExpression(aggregateElement.Expression)
+                value=self.formatExpression(aggregateElement.Expression),
             )
         elif isinstance(aggregateElement, NamedAggregateElement):
             return "{name} => {value}".format(
                 name=aggregateElement.Name,
-                value=self.formatExpression(aggregateElement.Expression)
+                value=self.formatExpression(aggregateElement.Expression),
             )
         elif isinstance(aggregateElement, OthersAggregateElement):
             return "other => {value}".format(

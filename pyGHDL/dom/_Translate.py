@@ -53,7 +53,8 @@ from pyGHDL.dom.Expression import (
     MultiplyExpression,
     DivisionExpression,
     InverseExpression,
-    ExponentiationExpression, Aggregate,
+    ExponentiationExpression,
+    Aggregate,
 )
 
 __all__ = []

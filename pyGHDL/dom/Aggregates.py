@@ -48,12 +48,12 @@ from pyVHDLModel.VHDLModel import (
     IndexedAggregateElement as VHDLModel_IndexedAggregateElement,
     RangedAggregateElement as VHDLModel_RangedAggregateElement,
     NamedAggregateElement as VHDLModel_NamedAggregateElement,
-    OthersAggregateElement as VHDLModel_OthersAggregateElement, Expression
+    OthersAggregateElement as VHDLModel_OthersAggregateElement,
+    Expression,
 )
 
 
 __all__ = []
-
 
 
 @export
