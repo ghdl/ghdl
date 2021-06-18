@@ -12,7 +12,7 @@ from pyVHDLModel.VHDLModel import (
     PortInterfaceItem,
     BinaryExpression,
     IdentityExpression,
-    UnaryExpression,
+    UnaryExpression, WithDefaultExpression,
 )
 
 from pyGHDL import GHDLBaseException
@@ -220,16 +220,17 @@ class PrettyPrint:
         subType = generic.SubType
         if isinstance(subType, SimpleSubTypeSymbol):
             buffer.append(
-                "{prefix}  - {name} : {mode} {type}".format(
+                "{prefix}  - {name} : {mode} {type}{initialValue}".format(
                     prefix=prefix,
                     name=generic.Name,
                     mode=ModeTranslation[generic.Mode],
                     type=subType.SymbolName,
+                    initialValue=self.formatInitialValue(generic),
                 )
             )
         elif isinstance(subType, ConstrainedSubTypeSymbol):
             buffer.append(
-                "{prefix}  - {name} : {mode} {type}({constraints})".format(
+                "{prefix}  - {name} : {mode} {type}({constraints}){initialValue}".format(
                     prefix=prefix,
                     name=generic.Name,
                     mode=ModeTranslation[generic.Mode],
@@ -246,6 +247,7 @@ class PrettyPrint:
                             for constraint in subType.Constraints
                         ]
                     ),
+                    initialValue=self.formatInitialValue(generic),
                 )
             )
         else:
@@ -264,13 +266,14 @@ class PrettyPrint:
         prefix = "  " * level
 
         buffer.append(
-            "{prefix}  - {name} : {mode} {subtypeindication}".format(
+            "{prefix}  - {name} : {mode} {subtypeindication}{initialValue}".format(
                 prefix=prefix,
                 name=port.Name,
                 mode=ModeTranslation[port.Mode],
                 subtypeindication=self.formatSubtypeIndication(
                     port.SubType, "port", port.Name
                 ),
+                initialValue=self.formatInitialValue(port),
             )
         )
 
@@ -335,6 +338,12 @@ class PrettyPrint:
                     entity=entity, name=name
                 )
             )
+
+    def formatInitialValue(self, item: WithDefaultExpression) -> str:
+        if item.DefaultExpression is None:
+            return ""
+
+        return " := {expr}".format(expr=self.formatExpression(item.DefaultExpression))
 
     def formatExpression(self, expression: Expression) -> str:
         if isinstance(expression, SimpleObjectSymbol):

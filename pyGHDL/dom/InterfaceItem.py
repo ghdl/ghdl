@@ -30,6 +30,9 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+from pyGHDL.libghdl.vhdl.nodes import Null_Iir
+
+from pyGHDL.libghdl.vhdl import nodes
 from pydecor import export
 
 from pyVHDLModel.VHDLModel import (
@@ -41,7 +44,7 @@ from pyVHDLModel.VHDLModel import (
 )
 
 from pyGHDL.dom._Utils import NodeToName, GetModeOfNode
-from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode
+from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode, GetExpressionFromNode
 from pyGHDL.dom.Common import GHDLMixin
 
 __all__ = []
@@ -54,14 +57,16 @@ class GenericConstantInterfaceItem(VHDLModel_GenericConstantInterfaceItem, GHDLM
         name = NodeToName(generic)
         mode = GetModeOfNode(generic)
         subTypeIndication = GetSubtypeIndicationFromNode(generic, "generic", name)
+        value = GetExpressionFromNode(nodes.Get_Default_Value(generic))
 
-        generic = cls(name, mode, subTypeIndication)
+        generic = cls(name, mode, subTypeIndication, value)
 
         return generic
 
-    def __init__(self, name: str, mode: Mode, subType: SubTypeOrSymbol):
+    def __init__(self, name: str, mode: Mode, subType: SubTypeOrSymbol, defaultExpression: Expression):
         super().__init__(name=name, mode=mode)
         self._subType = subType
+        self._defaultExpression = defaultExpression
 
 
 @export
@@ -72,7 +77,10 @@ class PortSignalInterfaceItem(VHDLModel_PortSignalInterfaceItem, GHDLMixin):
         mode = GetModeOfNode(port)
         subTypeIndication = GetSubtypeIndicationFromNode(port, "port", name)
 
-        port = cls(name, mode, subTypeIndication)
+        defaultValue = nodes.Get_Default_Value(port)
+        value = GetExpressionFromNode(defaultValue) if defaultValue != Null_Iir else None
+
+        port = cls(name, mode, subTypeIndication, value)
 
         return port
 
