@@ -62,6 +62,8 @@ __all__ = []
 @export
 def GetSubtypeIndicationFromNode(node, entity: str, name: str) -> SubTypeOrSymbol:
     subTypeIndication = nodes.Get_Subtype_Indication(node)
+    if subTypeIndication is nodes.Null_Iir:
+        return None
     subTypeKind = GetIirKindOfNode(subTypeIndication)
 
     if subTypeKind == nodes.Iir_Kind.Simple_Name:

@@ -57,7 +57,8 @@ class GenericConstantInterfaceItem(VHDLModel_GenericConstantInterfaceItem, GHDLM
         name = NodeToName(generic)
         mode = GetModeOfNode(generic)
         subTypeIndication = GetSubtypeIndicationFromNode(generic, "generic", name)
-        value = GetExpressionFromNode(nodes.Get_Default_Value(generic))
+        default = nodes.Get_Default_Value(generic);
+        value = GetExpressionFromNode(default) if default else None
 
         generic = cls(name, mode, subTypeIndication, value)
 
