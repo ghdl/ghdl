@@ -62,23 +62,30 @@ def do_iirs_subprg():
     print(dedent("""
 
         @export
-        def Get_Kind(node: int):
+        def Get_Kind(node: Iir) -> Iir_Kind:
             return {libname}.{classname}__get_kind(node)
 
         @export
-        def Get_Location(node: Iir):
+        def Get_Location(node: Iir) -> LocationType:
             return {libname}.{classname}__get_location(node)
         """).format(libname=libname, classname=classname)
     )
     for k in pnodes.funcs:
+        # Don't use the Iir_* subtypes (as they are not described).
+        rtype = k.rtype.replace("_", "") if not k.rtype.startswith("Iir_") else "Iir"
+        # Exceptions...
+        if rtype == "TokenType":
+            rtype = "Tok"
+
         print(dedent("""
             @export
-            def Get_{kname}(obj):
+            def Get_{kname}(obj: Iir) -> {rtype}:
                 return {libname}.{classname}__get_{kname_lower}(obj)
             @export
-            def Set_{kname}(obj, value) -> None:
+            def Set_{kname}(obj: Iir, value: {rtype}) -> None:
                 {libname}.{classname}__set_{kname_lower}(obj, value)
-            """).format(kname=k.name, kname_lower=k.name.lower(), libname=libname, classname=classname)
+            """).format(kname=k.name, kname_lower=k.name.lower(), rtype=rtype,
+                         libname=libname, classname=classname)
         )
 
 
@@ -175,8 +182,28 @@ def read_spec_enum(type_name, prefix, class_name):
 def do_libghdl_nodes():
     print_file_header()
     print(dedent("""\
+        from typing import TypeVar
+        from ctypes import c_int32
         from pyGHDL.libghdl import libghdl
-        from pyGHDL.libghdl._types import Iir
+        from pyGHDL.libghdl._types import (
+            Iir,
+            LocationType,
+            FileChecksumId,
+            TimeStampId,
+            SourceFileEntry,
+            NameId,
+            TriStateType,
+            SourcePtr,
+            Int32,
+            Int64,
+            Fp64,
+            String8Id,
+            Boolean,
+            DirectionType,
+            PSLNode,
+            PSLNFA,
+        )
+        from pyGHDL.libghdl.vhdl.tokens import Tok
 
         Null_Iir = 0
 
@@ -186,15 +213,19 @@ def do_libghdl_nodes():
         Null_Iir_Flist = 0
         Iir_Flist_Others = 1
         Iir_Flist_All = 2
+
+        DateType = TypeVar("DateType", bound=c_int32)
         """), end=''
     )
 
     do_class_kinds()
     read_spec_enum("Iir_Mode", "Iir_", "Iir_Mode")
+    read_spec_enum("Scalar_Size", "", "ScalarSize")
     read_spec_enum("Iir_Staticness", "", "Iir_Staticness")
     read_spec_enum("Iir_Constraint", "", "Iir_Constraint")
     read_spec_enum("Iir_Delay_Mechanism", "Iir_", "Iir_Delay_Mechanism")
-    read_spec_enum("Date_State_Type", "Date_", "Date_State")
+    read_spec_enum("Date_State_Type", "Date_", "DateStateType")
+    read_spec_enum("Number_Base_Type", "", "NumberBaseType")
     read_spec_enum("Iir_Predefined_Functions", "Iir_Predefined_", "Iir_Predefined")
     do_iirs_subprg()
 

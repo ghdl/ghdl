@@ -301,11 +301,11 @@ class Workspace(object):
             )
             # Recurse
             self.obsolete_dependent_units(un, antideps)
-            if nodes.Get_Date_State(un) == nodes.Date_State.Disk:
+            if nodes.Get_Date_State(un) == nodes.DateStateType.Disk:
                 # Already obsolete!
                 continue
             # FIXME: just de-analyze ?
-            nodes.Set_Date_State(un, nodes.Date_State.Disk)
+            nodes.Set_Date_State(un, nodes.DateStateType.Disk)
             sem_lib.Free_Dependence_List(un)
             loc = nodes.Get_Location(un)
             fil = files_map.Location_To_File(loc)
@@ -480,7 +480,7 @@ class Workspace(object):
             while files != nodes.Null_Iir:
                 units = nodes.Get_First_Design_Unit(files)
                 while units != nodes.Null_Iir:
-                    if nodes.Get_Date_State(units) == nodes.Date_State.Analyze:
+                    if nodes.Get_Date_State(units) == nodes.DateStateType.Analyze:
                         # The unit has been analyzed, so the dependencies are know.
                         deps = nodes.Get_Dependence_List(units)
                         assert deps != nodes.Null_Iir_List
