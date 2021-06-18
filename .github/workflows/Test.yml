@@ -314,12 +314,62 @@ jobs:
       run: GHDL=ghdl ./testsuite/testsuite.sh ${{ matrix.suite }}
 
 #
+# pyGHDL DOM Test
+#
+
+  DOM-test:
+    needs: win-build
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        include: [
+          {icon: '🟦', installs: 'MINGW32', arch: i686,   pkg: 'mcode' },
+          #{icon: '🟦', installs: "MINGW32", arch: i686,   pkg: "llvm"  }, ! Not yet functional
+          #{icon: '🟪', installs: "MINGW64", arch: x86_64, pkg: "mcode" }, ! mcode is not yet supported on win64
+          {icon: '🟪', installs: 'MINGW64', arch: x86_64, pkg: 'llvm'  },
+        ]
+    name: '${{ matrix.icon }} DOM · ${{ matrix.installs }} · ${{ matrix.pkg }} · ${{ matrix.suite }}'
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+
+    - name: '${{ matrix.icon }} Setup MSYS2'
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: ${{ matrix.installs }}
+        update: true
+        install: >
+          mingw-w64-${{ matrix.arch }}-python-pip
+          mingw-w64-${{ matrix.arch }}-python-setuptools
+
+    - name: '⚙️ git config'
+      run: git config --global core.autocrlf input
+      shell: bash
+
+    - name: '🧰 Checkout'
+      uses: actions/checkout@v2
+
+    - name: '📥 Download artifact: package'
+      uses: actions/download-artifact@v2
+
+    - name: '🚧 Install package and Python dependencies'
+      run: |
+        pacman --noconfirm -U artifact/mingw-w64-${{ matrix.arch }}-ghdl-${{ matrix.pkg }}-*.zst
+        pip3 install .
+
+    - name: Test the DOM and pretty print all VHDL sources
+      run: ./testsuite/pyunit/dom/AllVHDLSources.sh
+
+#
 # Release
 #
 
   Release:
     if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/master' || contains(github.ref, 'refs/tags/'))
-    needs: [ doc, lin, osx, win-test ]
+    needs: [ doc, lin, osx, win-test, DOM-test ]
     runs-on: ubuntu-latest
     name: '📦 Release'
     steps:
