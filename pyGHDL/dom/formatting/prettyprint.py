@@ -4,6 +4,7 @@ from pydecor import export
 
 from pyGHDL.dom.Aggregates import SimpleAggregateElement, IndexedAggregateElement, RangedAggregateElement, NamedAggregateElement, OthersAggregateElement
 from pyGHDL.dom.Object import Constant, Signal
+from pyGHDL.dom.Range import Range
 from pyVHDLModel.VHDLModel import (
     GenericInterfaceItem,
     Expression,
@@ -322,14 +323,7 @@ class PrettyPrint:
             return "{type}".format(type=subTypeIndication.SymbolName)
         elif isinstance(subTypeIndication, ConstrainedSubTypeSymbol):
             constraints = ", ".join(
-                [
-                    "{left} {dir} {right}".format(
-                        left=self.formatExpression(constraint.Range.LeftBound),
-                        right=self.formatExpression(constraint.Range.RightBound),
-                        dir=DirectionTranslation[constraint.Range.Direction],
-                    )
-                    for constraint in subTypeIndication.Constraints
-                ]
+                [self.formatRange(constraint.Range) for constraint in subTypeIndication.Constraints]
             )
 
             return "{type}({constraints})".format(
@@ -347,6 +341,13 @@ class PrettyPrint:
             return ""
 
         return " := {expr}".format(expr=self.formatExpression(item.DefaultExpression))
+
+    def formatRange(self, r: Range) -> str:
+        return "{left} {dir} {right}".format(
+            left=self.formatExpression(r.LeftBound),
+            right=self.formatExpression(r.RightBound),
+            dir=DirectionTranslation[r.Direction],
+        )
 
     def formatExpression(self, expression: Expression) -> str:
         if isinstance(expression, SimpleObjectSymbol):

@@ -29,7 +29,7 @@ begin
 end architecture behav;
 
 package package_1 is
-	constant ghdl : float := (3, 5); -- 2.3;
+	constant ghdl : float := (3, 5, 0 => 5, 3 => 4, name => 10); -- 2.3;
 end package;
 
 package body package_1 is

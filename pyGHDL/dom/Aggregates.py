@@ -41,6 +41,8 @@ This module contains all DOM classes for VHDL's design units (:class:`context <E
 """
 from pydecor import export
 
+from pyGHDL.dom.Range import Range
+from pyGHDL.dom.Symbol import EnumerationLiteralSymbol
 from pyVHDLModel.VHDLModel import (
     SimpleAggregateElement as VHDLModel_SimpleAggregateElement,
     IndexedAggregateElement as VHDLModel_IndexedAggregateElement,
@@ -63,19 +65,30 @@ class SimpleAggregateElement(VHDLModel_SimpleAggregateElement):
 
 @export
 class IndexedAggregateElement(VHDLModel_IndexedAggregateElement):
-	pass
+    def __init__(self, index: Expression, expression: Expression):
+        super().__init__()
+        self._index = index
+        self._expression = expression
 
 
 @export
 class RangedAggregateElement(VHDLModel_RangedAggregateElement):
-	pass
+    def __init__(self, r: Range, expression: Expression):
+        super().__init__()
+        self._range = r
+        self._expression = expression
 
 
 @export
 class NamedAggregateElement(VHDLModel_NamedAggregateElement):
-    pass
+    def __init__(self, name: EnumerationLiteralSymbol, expression: Expression):
+        super().__init__()
+        self._name = name
+        self._expression = expression
 
 
 @export
 class OthersAggregateElement(VHDLModel_OthersAggregateElement):
-	pass
+    def __init__(self, expression: Expression):
+        super().__init__()
+        self._expression = expression
