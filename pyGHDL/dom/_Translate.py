@@ -53,7 +53,7 @@ from pyGHDL.dom.Expression import (
     MultiplyExpression,
     DivisionExpression,
     InverseExpression,
-    ExponentiationExpression,
+    ExponentiationExpression, Aggregate,
 )
 
 __all__ = []
@@ -135,7 +135,7 @@ __EXPRESSION_TRANSLATION = {
     nodes.Iir_Kind.Multiplication_Operator: MultiplyExpression,
     nodes.Iir_Kind.Division_Operator: DivisionExpression,
     nodes.Iir_Kind.Exponentiation_Operator: ExponentiationExpression,
-    #    nodes.Iir_Kind.Aggregate: Aggregate
+    nodes.Iir_Kind.Aggregate: Aggregate,
 }
 
 

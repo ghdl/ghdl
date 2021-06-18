@@ -45,7 +45,7 @@ from pyGHDL.dom.Expression import (
     InverseExpression,
     AbsoluteExpression,
     NegationExpression,
-    ExponentiationExpression,
+    ExponentiationExpression, Aggregate,
 )
 
 StringBuffer = List[str]
@@ -375,5 +375,7 @@ class PrettyPrint:
                 right=self.formatExpression(expression.RightOperand),
                 operator=operator,
             )
+        elif isinstance(expression, Aggregate):
+            print(Aggregate.Elements[0])
         else:
             raise PrettyPrintException("Unhandled expression kind.")

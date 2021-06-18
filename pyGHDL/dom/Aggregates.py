@@ -9,7 +9,7 @@
 # Authors:
 #   Patrick Lehmann
 #
-# Package module:   DOM: Interface items (e.g. generic or port)
+# Package module:   DOM: VHDL design units (e.g. context or package).
 #
 # License:
 # ============================================================================
@@ -30,54 +30,52 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+
+"""
+This module contains all DOM classes for VHDL's design units (:class:`context <Entity>`,
+:class:`architecture <Architecture>`, :class:`package <Package>`,
+:class:`package body <PackageBody>`, :class:`context <Context>` and
+:class:`configuration <Configuration>`.
+
+
+"""
 from pydecor import export
 
-from typing import List
-
-from pyGHDL.dom._Utils import NodeToName
 from pyVHDLModel.VHDLModel import (
-    SimpleSubTypeSymbol as VHDLModel_SimpleSubTypeSymbol,
-    ConstrainedSubTypeSymbol as VHDLModel_ConstrainedSubTypeSymbol,
-    EnumerationLiteralSymbol as VHDLModel_EnumerationLiteralSymbol,
-    SimpleObjectSymbol as VHDLModel_SimpleObjectSymbol,
-    Constraint,
+    SimpleAggregateElement as VHDLModel_SimpleAggregateElement,
+    IndexedAggregateElement as VHDLModel_IndexedAggregateElement,
+    RangedAggregateElement as VHDLModel_RangedAggregateElement,
+    NamedAggregateElement as VHDLModel_NamedAggregateElement,
+    OthersAggregateElement as VHDLModel_OthersAggregateElement, Expression
 )
+
 
 __all__ = []
 
 
-@export
-class EnumerationLiteralSymbol(VHDLModel_EnumerationLiteralSymbol):
-    def __init__(self, literalName: str):
-        super().__init__(symbolName=literalName)
-
 
 @export
-class SimpleSubTypeSymbol(VHDLModel_SimpleSubTypeSymbol):
-    def __init__(self, subTypeName: str):
-        super().__init__(subTypeName=subTypeName)
-
-    @classmethod
-    def parse(cls, node):
-        pass
+class SimpleAggregateElement(VHDLModel_SimpleAggregateElement):
+    def __init__(self, expression: Expression):
+        super().__init__()
+        self._expression = expression
 
 
 @export
-class ConstrainedSubTypeSymbol(VHDLModel_ConstrainedSubTypeSymbol):
-    def __init__(self, subTypeName: str, constraints: List[Constraint] = None):
-        super().__init__(subTypeName=subTypeName, constraints=constraints)
-
-    @classmethod
-    def parse(cls, node):
-        pass
+class IndexedAggregateElement(VHDLModel_IndexedAggregateElement):
+	pass
 
 
 @export
-class SimpleObjectSymbol(VHDLModel_SimpleObjectSymbol):
-    def __init__(self, symbolName: str):
-        super().__init__(symbolName)
+class RangedAggregateElement(VHDLModel_RangedAggregateElement):
+	pass
 
-    @classmethod
-    def parse(cls, node):
-        name = NodeToName(node)
-        return cls(name)
+
+@export
+class NamedAggregateElement(VHDLModel_NamedAggregateElement):
+    pass
+
+
+@export
+class OthersAggregateElement(VHDLModel_OthersAggregateElement):
+	pass

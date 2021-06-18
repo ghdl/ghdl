@@ -30,6 +30,14 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+from typing import List
+
+from pyGHDL.dom.Aggregates import OthersAggregateElement, SimpleAggregateElement, RangedAggregateElement, IndexedAggregateElement, NamedAggregateElement
+from pyGHDL.dom.Symbol import EnumerationLiteralSymbol
+from pyGHDL.libghdl import utils
+
+from pyGHDL.dom.Common import DOMException
+from pyGHDL.dom._Utils import GetIirKindOfNode
 from pyGHDL.libghdl.vhdl import nodes
 from pydecor import export
 
@@ -66,7 +74,8 @@ from pyVHDLModel.VHDLModel import (
     ShiftLeftArithmeticExpression as VHDLModel_ShiftLeftArithmeticExpression,
     RotateRightExpression as VHDLModel_RotateRightExpression,
     RotateLeftExpression as VHDLModel_RotateLeftExpression,
-    Expression,
+    Aggregate as VHDLModel_Aggregate,
+    Expression, AggregateElement,
 )
 
 __all__ = []
@@ -350,3 +359,47 @@ class RotateLeftExpression(VHDLModel_RotateLeftExpression, _ParseBinaryExpressio
         super().__init__()
         self._leftOperand = left
         self._rightOperand = right
+
+
+@export
+class Aggregate(VHDLModel_Aggregate):
+    def __init__(self, elements: List[AggregateElement]):
+        super().__init__()
+        self._elements = elements
+
+    @classmethod
+    def parse(cls, node):
+        from pyGHDL.dom._Translate import GetExpressionFromNode
+
+        choices = []
+
+        choicesChain = nodes.Get_Association_Choices_Chain(node)
+        for item in utils.chain_iter(choicesChain):
+            kind = GetIirKindOfNode(item)
+            if kind == nodes.Iir_Kind.Choice_By_None:
+                value = GetExpressionFromNode(nodes.Get_Associated_Expr(item))
+                choices.append(SimpleAggregateElement(value))
+            elif kind == nodes.Iir_Kind.Choice_By_Expression:
+                index = GetExpressionFromNode(nodes.Get_Choice_Expression(item))
+                value = GetExpressionFromNode(nodes.Get_Associated_Expr(item))
+                choices.append(IndexedAggregateElement(index, value))
+            elif kind == nodes.Iir_Kind.Choice_By_Range:
+                r = GetExpressionFromNode(nodes.Get_Choice_Range(item))
+                value = GetExpressionFromNode(nodes.Get_Associated_Expr(item))
+                choices.append(RangedAggregateElement(r, value))
+            elif kind == nodes.Iir_Kind.Choice_By_Name:
+                name = EnumerationLiteralSymbol(nodes.Get_Choice_Name(item))
+                value = GetExpressionFromNode(nodes.Get_Associated_Expr(item))
+                choices.append(NamedAggregateElement(name, value))
+            elif kind == nodes.Iir_Kind.Choice_By_Others:
+                expression = None
+                choices.append(OthersAggregateElement(expression))
+            else:
+                raise DOMException(
+                    "Unknown choice kind '{kindName}'({kind}) in aggregate '{aggr}'.".format(
+                        kind=kind, kindName=kind.name, aggr=node
+                    )
+                )
+
+        return choices
+

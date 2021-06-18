@@ -27,3 +27,11 @@ begin
 		end if;
 	end process;
 end architecture behav;
+
+package package_1 is
+	constant ghdl : float := (3, 5); -- 2.3;
+end package;
+
+package body package_1 is
+	constant ghdl : float := (1); -- => 2, 4 => 5, others => 10); -- .5;
+end package body;
