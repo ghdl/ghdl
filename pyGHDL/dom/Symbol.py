@@ -81,9 +81,6 @@ class ConstrainedSubTypeSymbol(VHDLModel_ConstrainedSubTypeSymbol):
 
 @export
 class SimpleObjectSymbol(VHDLModel_SimpleObjectSymbol):
-    def __init__(self, symbolName: str):
-        super().__init__(symbolName)
-
     @classmethod
     def parse(cls, node):
         name = NodeToName(node)

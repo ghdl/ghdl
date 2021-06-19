@@ -4,16 +4,12 @@ from pydecor import export
 
 from pyVHDLModel.VHDLModel import (
     GenericInterfaceItem,
-    Expression,
     Direction,
     Mode,
     NamedEntity,
     PortInterfaceItem,
-    BinaryExpression,
     IdentityExpression,
-    UnaryExpression,
-    AggregateElement,
-    WithDefaultExpression,
+    WithDefaultExpression
 )
 
 from pyGHDL import GHDLBaseException
@@ -35,9 +31,7 @@ from pyGHDL.dom.InterfaceItem import (
 from pyGHDL.dom.Symbol import (
     SimpleSubTypeSymbol,
     ConstrainedSubTypeSymbol,
-    SimpleObjectSymbol,
 )
-from pyGHDL.dom.Literal import IntegerLiteral, CharacterLiteral, FloatingPointLiteral
 from pyGHDL.dom.Expression import (
     SubtractionExpression,
     AdditionExpression,
@@ -47,44 +41,10 @@ from pyGHDL.dom.Expression import (
     AbsoluteExpression,
     NegationExpression,
     ExponentiationExpression,
-    Aggregate,
     ParenthesisExpression,
-)
-from pyGHDL.dom.Aggregates import (
-    SimpleAggregateElement,
-    IndexedAggregateElement,
-    RangedAggregateElement,
-    NamedAggregateElement,
-    OthersAggregateElement,
 )
 
 StringBuffer = List[str]
-
-DirectionTranslation = {Direction.To: "to", Direction.DownTo: "downto"}
-
-ModeTranslation = {
-    Mode.In: "in",
-    Mode.Out: "out",
-    Mode.InOut: "inout",
-    Mode.Buffer: "buffer",
-    Mode.Linkage: "linkage",
-}
-
-UnaryExpressionTranslation = {
-    IdentityExpression: (" +", ""),
-    NegationExpression: (" -", ""),
-    InverseExpression: ("not ", ""),
-    AbsoluteExpression: ("abs ", ""),
-    ParenthesisExpression: ("(", ")"),
-}
-
-BinaryExpressionTranslation = {
-    AdditionExpression: ("", " + ", ""),
-    SubtractionExpression: ("", " - ", ""),
-    MultiplyExpression: ("", " * ", ""),
-    DivisionExpression: ("", " / ", ""),
-    ExponentiationExpression: ("", "**", ""),
-}
 
 
 @export
@@ -286,10 +246,10 @@ class PrettyPrint:
         prefix = "  " * level
 
         buffer.append(
-            "{prefix}  - {name} : {mode} {subtypeindication}{initialValue}".format(
+            "{prefix}  - {name} : {mode!s} {subtypeindication}{initialValue}".format(
                 prefix=prefix,
                 name=generic.Name,
-                mode=ModeTranslation[generic.Mode],
+                mode=generic.Mode,
                 subtypeindication=self.formatSubtypeIndication(
                     generic.SubType, "generic", generic.Name
                 ),
@@ -306,10 +266,10 @@ class PrettyPrint:
         prefix = "  " * level
 
         buffer.append(
-            "{prefix}  - {name} : {mode} {subtypeindication}{initialValue}".format(
+            "{prefix}  - {name} : {mode!s} {subtypeindication}{initialValue}".format(
                 prefix=prefix,
                 name=port.Name,
-                mode=ModeTranslation[port.Mode],
+                mode=port.Mode,
                 subtypeindication=self.formatSubtypeIndication(
                     port.SubType, "port", port.Name
                 ),
@@ -379,81 +339,7 @@ class PrettyPrint:
         if item.DefaultExpression is None:
             return ""
 
-        return " := {expr}".format(expr=self.formatExpression(item.DefaultExpression))
+        return " := {expr!s}".format(expr=item.DefaultExpression)
 
     def formatRange(self, r: Range):
-        return "{left} {dir} {right}".format(
-            left=self.formatExpression(r.LeftBound),
-            right=self.formatExpression(r.RightBound),
-            dir=DirectionTranslation[r.Direction],
-        )
-
-    def formatExpression(self, expression: Expression) -> str:
-        if isinstance(expression, SimpleObjectSymbol):
-            return "{name}".format(name=expression.SymbolName)
-        elif isinstance(expression, IntegerLiteral):
-            return "{value}".format(value=expression.Value)
-        elif isinstance(expression, FloatingPointLiteral):
-            return "{value}".format(value=expression.Value)
-        elif isinstance(expression, CharacterLiteral):
-            return "'{value}'".format(value=expression.Value)
-        elif isinstance(expression, UnaryExpression):
-            try:
-                operator = UnaryExpressionTranslation[type(expression)]
-            except KeyError:
-                raise PrettyPrintException("Unhandled operator for unary expression.")
-
-            return "{leftOp}{operand}{rightOp}".format(
-                leftOp=operator[0],
-                rightOp=operator[1],
-                operand=self.formatExpression(expression.Operand),
-            )
-        elif isinstance(expression, BinaryExpression):
-            try:
-                operator = BinaryExpressionTranslation[type(expression)]
-            except KeyError:
-                raise PrettyPrintException("Unhandled operator for binary expression.")
-
-            return "{leftOp}{leftExpr}{middleOp}{rightExpr}{rightOp}".format(
-                leftOp=operator[0],
-                middleOp=operator[1],
-                rightOp=operator[2],
-                leftExpr=self.formatExpression(expression.LeftOperand),
-                rightExpr=self.formatExpression(expression.RightOperand),
-            )
-        elif isinstance(expression, Aggregate):
-            return "({choices})".format(
-                choices=", ".join(
-                    [
-                        self.formatAggregateElement(element)
-                        for element in expression.Elements
-                    ]
-                )
-            )
-        else:
-            raise PrettyPrintException("Unhandled expression kind.")
-
-    def formatAggregateElement(self, aggregateElement: AggregateElement):
-        if isinstance(aggregateElement, SimpleAggregateElement):
-            return "{value}".format(
-                value=self.formatExpression(aggregateElement.Expression)
-            )
-        elif isinstance(aggregateElement, IndexedAggregateElement):
-            return "{index} => {value}".format(
-                index=self.formatExpression(aggregateElement.Index),
-                value=self.formatExpression(aggregateElement.Expression),
-            )
-        elif isinstance(aggregateElement, RangedAggregateElement):
-            return "{range} => {value}".format(
-                range=self.formatRange(aggregateElement.Range),
-                value=self.formatExpression(aggregateElement.Expression),
-            )
-        elif isinstance(aggregateElement, NamedAggregateElement):
-            return "{name} => {value}".format(
-                name=aggregateElement.Name,
-                value=self.formatExpression(aggregateElement.Expression),
-            )
-        elif isinstance(aggregateElement, OthersAggregateElement):
-            return "other => {value}".format(
-                value=self.formatExpression(aggregateElement.Expression)
-            )
+        return str(r)
