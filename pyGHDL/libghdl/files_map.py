@@ -35,7 +35,7 @@
 from pydecor import export
 
 from pyGHDL.libghdl._decorator import BindToLibGHDL
-from pyGHDL.libghdl._types import NameId, SourceFileEntry, Location_Type
+from pyGHDL.libghdl._types import NameId, SourceFileEntry, LocationType
 
 __all__ = [
     "EOT",
@@ -52,7 +52,7 @@ No_Location = 0
 
 @export
 @BindToLibGHDL("files_map__location_to_file")
-def Location_To_File(Location: Location_Type) -> SourceFileEntry:
+def Location_To_File(Location: LocationType) -> SourceFileEntry:
     """
     Convert :obj:`Location` to a source file.
 
@@ -63,7 +63,7 @@ def Location_To_File(Location: Location_Type) -> SourceFileEntry:
 
 @export
 @BindToLibGHDL("files_map__location_file_to_pos")
-def Location_File_To_Pos(Location: Location_Type, File: SourceFileEntry) -> int:
+def Location_File_To_Pos(Location: LocationType, File: SourceFileEntry) -> int:
     """
     Convert :obj:`Location` and :obj:`File` to a position (offset) into the source file.
 
@@ -75,7 +75,7 @@ def Location_File_To_Pos(Location: Location_Type, File: SourceFileEntry) -> int:
 
 @export
 @BindToLibGHDL("files_map__location_file_to_line")
-def Location_File_To_Line(Location: Location_Type, File: SourceFileEntry) -> int:
+def Location_File_To_Line(Location: LocationType, File: SourceFileEntry) -> int:
     """
     Convert :obj:`Location` and :obj:`File` to a line number.
 
@@ -88,7 +88,7 @@ def Location_File_To_Line(Location: Location_Type, File: SourceFileEntry) -> int
 @export
 @BindToLibGHDL("files_map__location_file_line_to_offset")
 def Location_File_Line_To_Offset(
-    Location: Location_Type, File: SourceFileEntry, Line: int
+    Location: LocationType, File: SourceFileEntry, Line: int
 ) -> int:
     """
     Get the offset in :obj:`Line` of :obj:`Location`.
@@ -103,7 +103,7 @@ def Location_File_Line_To_Offset(
 @export
 @BindToLibGHDL("files_map__location_file_line_to_col")
 def Location_File_Line_To_Col(
-    Location: Location_Type, File: SourceFileEntry, Line: int
+    Location: LocationType, File: SourceFileEntry, Line: int
 ) -> int:
     """
     Get logical column (with HT expanded) from :obj:`Location`, :obj:`File` and
@@ -118,7 +118,7 @@ def Location_File_Line_To_Col(
 
 @export
 @BindToLibGHDL("files_map__file_to_location")
-def File_To_Location(File: SourceFileEntry) -> Location_Type:
+def File_To_Location(File: SourceFileEntry) -> LocationType:
     """Convert a :obj:`File` into a location.
 
     :param File: Source file
@@ -128,7 +128,7 @@ def File_To_Location(File: SourceFileEntry) -> Location_Type:
 
 @export
 @BindToLibGHDL("files_map__file_pos_to_location")
-def File_Pos_To_Location(File: SourceFileEntry, Pos: int) -> Location_Type:
+def File_Pos_To_Location(File: SourceFileEntry, Pos: int) -> LocationType:
     """
     Convert a :obj:`File` and an offset :obj:`Pos` in the file into a location.
 

@@ -42,13 +42,13 @@ from pyGHDL.libghdl._types import (
     Iir_Library_Declaration,
     Iir_Design_Unit,
     Iir_Design_File,
-    Location_Type,
+    LocationType,
 )
 from pyGHDL.libghdl._decorator import BindToLibGHDL
 
 __all__ = ["Library_Location", "Work_Library"]
 
-Library_Location: Location_Type = c_int32.in_dll(libghdl, "libraries__library_location")
+Library_Location: LocationType = c_int32.in_dll(libghdl, "libraries__library_location")
 """
 A location for library declarations (such as library WORK). Use ``.value`` to
 access this variable inside libghdl.

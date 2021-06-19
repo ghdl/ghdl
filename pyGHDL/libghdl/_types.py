@@ -77,8 +77,7 @@ TimeStampId = TypeVar("TimeStampId", bound=c_uint32)
 
 SourceFileEntry = TypeVar("SourceFileEntry", bound=c_uint32)
 SourcePtr = TypeVar("SourcePtr", bound=c_int32)
-Location_Type = TypeVar("Location_Type", bound=c_uint32)
-LocationType = Location_Type
+LocationType = TypeVar("LocationType", bound=c_uint32)
 
 Iir = TypeVar("Iir", bound=int)
 IirKind = TypeVar("IirKind", bound=c_int32)
