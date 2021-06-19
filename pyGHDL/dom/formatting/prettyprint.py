@@ -4,11 +4,8 @@ from pydecor import export
 
 from pyVHDLModel.VHDLModel import (
     GenericInterfaceItem,
-    Direction,
-    Mode,
     NamedEntity,
     PortInterfaceItem,
-    IdentityExpression,
     WithDefaultExpression,
 )
 
@@ -23,7 +20,6 @@ from pyGHDL.dom.DesignUnit import (
     Context,
 )
 from pyGHDL.dom.Object import Constant, Signal
-from pyGHDL.dom.Range import Range
 from pyGHDL.dom.InterfaceItem import (
     GenericConstantInterfaceItem,
     PortSignalInterfaceItem,
@@ -32,17 +28,7 @@ from pyGHDL.dom.Symbol import (
     SimpleSubTypeSymbol,
     ConstrainedSubTypeSymbol,
 )
-from pyGHDL.dom.Expression import (
-    SubtractionExpression,
-    AdditionExpression,
-    MultiplyExpression,
-    DivisionExpression,
-    InverseExpression,
-    AbsoluteExpression,
-    NegationExpression,
-    ExponentiationExpression,
-    ParenthesisExpression,
-)
+
 
 StringBuffer = List[str]
 
@@ -291,7 +277,7 @@ class PrettyPrint:
                     subtype=self.formatSubtypeIndication(
                         item.SubType, "constant", item.Name
                     ),
-                    expr=self.formatExpression(item.DefaultExpression),
+                    expr=str(item.DefaultExpression),
                 )
             )
         elif isinstance(item, Signal):
@@ -302,9 +288,7 @@ class PrettyPrint:
                     subtype=self.formatSubtypeIndication(
                         item.SubType, "signal", item.Name
                     ),
-                    initValue=" := {expr}".format(
-                        expr=self.formatExpression(item.DefaultExpression)
-                    )
+                    initValue=" := {expr}".format(expr=str(item.DefaultExpression))
                     if item.DefaultExpression is not None
                     else "",
                 )
@@ -318,12 +302,8 @@ class PrettyPrint:
         if isinstance(subTypeIndication, SimpleSubTypeSymbol):
             return "{type}".format(type=subTypeIndication.SymbolName)
         elif isinstance(subTypeIndication, ConstrainedSubTypeSymbol):
-            constraints = ", ".join(
-                [
-                    self.formatRange(constraint.Range)
-                    for constraint in subTypeIndication.Constraints
-                ]
-            )
+            ranges = [str(c.Range) for c in subTypeIndication.Constraints]
+            constraints = ", ".join(ranges)
 
             return "{type}({constraints})".format(
                 type=subTypeIndication.SymbolName, constraints=constraints
@@ -340,6 +320,3 @@ class PrettyPrint:
             return ""
 
         return " := {expr!s}".format(expr=item.DefaultExpression)
-
-    def formatRange(self, r: Range):
-        return str(r)
