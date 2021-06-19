@@ -65,7 +65,7 @@ Boolean = TypeVar("Boolean", bound=c_bool)
 
 Int32 = TypeVar("Int32", bound=c_int32)
 Int64 = TypeVar("Int64", bound=c_int64)
-Fp64 = TypeVar("Fp64", bound=c_double)
+Fp64 = TypeVar("Fp64", bound=float)
 
 ErrorIndex = TypeVar("ErrorIndex", bound=int)
 MessageIdWarnings = TypeVar("MessageIdWarnings", bound=int)
