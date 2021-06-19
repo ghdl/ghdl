@@ -48,6 +48,7 @@ from pyGHDL.dom.Expression import (
     NegationExpression,
     ExponentiationExpression,
     Aggregate,
+    ParenthesisExpression,
 )
 from pyGHDL.dom.Aggregates import (
     SimpleAggregateElement,
@@ -70,18 +71,19 @@ ModeTranslation = {
 }
 
 UnaryExpressionTranslation = {
-    IdentityExpression: " +",
-    NegationExpression: " -",
-    InverseExpression: "not ",
-    AbsoluteExpression: "abs ",
+    IdentityExpression: (" +", ""),
+    NegationExpression: (" -", ""),
+    InverseExpression: ("not ", ""),
+    AbsoluteExpression: ("abs ", ""),
+    ParenthesisExpression: ("(", ")"),
 }
 
 BinaryExpressionTranslation = {
-    AdditionExpression: " + ",
-    SubtractionExpression: " - ",
-    MultiplyExpression: " * ",
-    DivisionExpression: " / ",
-    ExponentiationExpression: "**",
+    AdditionExpression: ("", " + ", ""),
+    SubtractionExpression: ("", " - ", ""),
+    MultiplyExpression: ("", " * ", ""),
+    DivisionExpression: ("", " / ", ""),
+    ExponentiationExpression: ("", "**", ""),
 }
 
 
@@ -401,8 +403,10 @@ class PrettyPrint:
             except KeyError:
                 raise PrettyPrintException("Unhandled operator for unary expression.")
 
-            return "{operator}{operand}".format(
-                operand=self.formatExpression(expression.Operand), operator=operator
+            return "{leftOp}{operand}{rightOp}".format(
+                leftOp=operator[0],
+                rightOp=operator[1],
+                operand=self.formatExpression(expression.Operand),
             )
         elif isinstance(expression, BinaryExpression):
             try:
@@ -410,10 +414,12 @@ class PrettyPrint:
             except KeyError:
                 raise PrettyPrintException("Unhandled operator for binary expression.")
 
-            return "{left}{operator}{right}".format(
-                left=self.formatExpression(expression.LeftOperand),
-                right=self.formatExpression(expression.RightOperand),
-                operator=operator,
+            return "{leftOp}{leftExpr}{middleOp}{rightExpr}{rightOp}".format(
+                leftOp=operator[0],
+                middleOp=operator[1],
+                rightOp=operator[2],
+                leftExpr=self.formatExpression(expression.LeftOperand),
+                rightExpr=self.formatExpression(expression.RightOperand),
             )
         elif isinstance(expression, Aggregate):
             return "({choices})".format(

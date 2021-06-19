@@ -52,6 +52,7 @@ from pyVHDLModel.VHDLModel import (
     IdentityExpression as VHDLModel_IdentityExpression,
     NegationExpression as VHDLModel_NegationExpression,
     AbsoluteExpression as VHDLModel_AbsoluteExpression,
+    ParenthesisExpression as VHDLModel_ParenthesisExpression,
     TypeConversion as VHDLModel_TypeConversion,
     FunctionCall as VHDLModel_FunctionCall,
     QualifiedExpression as VHDLModel_QualifiedExpression,
@@ -133,6 +134,20 @@ class AbsoluteExpression(VHDLModel_AbsoluteExpression, _ParseUnaryExpression):
     def __init__(self, operand: Expression):
         super().__init__()
         self._operand = operand
+
+
+@export
+class ParenthesisExpression(VHDLModel_ParenthesisExpression, _ParseUnaryExpression):
+    def __init__(self, operand: Expression):
+        super().__init__()
+        self._operand = operand
+
+    @classmethod
+    def parse(cls, node):
+        from pyGHDL.dom._Translate import GetExpressionFromNode
+
+        operand = GetExpressionFromNode(nodes.Get_Expression(node))
+        return cls(operand)
 
 
 @export
