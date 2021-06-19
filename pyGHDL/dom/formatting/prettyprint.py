@@ -9,7 +9,7 @@ from pyVHDLModel.VHDLModel import (
     NamedEntity,
     PortInterfaceItem,
     IdentityExpression,
-    WithDefaultExpression
+    WithDefaultExpression,
 )
 
 from pyGHDL import GHDLBaseException
