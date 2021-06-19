@@ -15,11 +15,14 @@ entity entity_1 is
 end entity entity_1;
 
 architecture behav of entity_1 is
+	signal Reset_n : std_logic;
 begin
+	Reset_n <= not Reset;
+
 	process(Clock)
 	begin
 		if rising_edge(Clock) then
-			if Reset = '1' then
+			if Reset_n = '0' then
 				Q <= (others => '0');
 			else
 				Q <= std_logic_vector(unsigned(Q) + 1);
@@ -27,11 +30,3 @@ begin
 		end if;
 	end process;
 end architecture behav;
-
-package package_1 is
-	constant ghdl : float := (3, 5, 0 => 5, 3 => 4, name => 10); -- 2.3;
-end package;
-
-package body package_1 is
-	constant ghdl : float := (1); -- => 2, 4 => 5, others => 10); -- .5;
-end package body;
