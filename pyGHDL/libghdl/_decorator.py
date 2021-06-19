@@ -31,7 +31,18 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
 #
-from ctypes import c_int32, c_uint32, c_char_p, c_bool, c_double, Structure, c_char
+from ctypes import (
+    c_int32,
+    c_uint32,
+    c_char_p,
+    c_bool,
+    c_double,
+    Structure,
+    c_char,
+    c_uint64,
+    c_int64,
+)
+from enum import IntEnum
 from functools import wraps
 from typing import Callable, List, Dict, Any, TypeVar
 
@@ -94,9 +105,20 @@ def BindToLibGHDL(subprogramName):
             # Humm, recurse ?
             if typ.__bound__ is int:
                 return c_int32
-            if typ.__bound__ in (c_uint32, c_int32, c_double):
+            if typ.__bound__ is float:
+                return c_double
+            if typ.__bound__ in (
+                c_bool,
+                c_uint32,
+                c_int32,
+                c_uint64,
+                c_int64,
+                c_double,
+            ):
                 return typ.__bound__
             raise TypeError("Unsupported typevar bound to {!s}".format(typ.__bound__))
+        elif issubclass(typ, IntEnum):
+            return c_int32
         elif issubclass(typ, Structure):
             return typ
         raise TypeError
@@ -155,10 +177,19 @@ def BindToLibGHDL(subprogramName):
         functionPointer.parameterTypes = parameterTypes
         functionPointer.restype = resultType
 
-        @wraps(func)
-        def inner(*args):
-            return functionPointer(*args)
+        if isinstance(returnType, type) and issubclass(returnType, IntEnum):
 
-        return inner
+            @wraps(func)
+            def inner(*args):
+                return returnType(functionPointer(*args))
+
+            return inner
+        else:
+
+            @wraps(func)
+            def inner(*args):
+                return functionPointer(*args)
+
+            return inner
 
     return wrapper
