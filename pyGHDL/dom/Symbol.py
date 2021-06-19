@@ -36,6 +36,7 @@ from typing import List
 
 from pyGHDL.dom._Utils import NodeToName
 from pyVHDLModel.VHDLModel import (
+    EntitySymbol as VHDLModel_EntitySymbol,
     SimpleSubTypeSymbol as VHDLModel_SimpleSubTypeSymbol,
     ConstrainedSubTypeSymbol as VHDLModel_ConstrainedSubTypeSymbol,
     EnumerationLiteralSymbol as VHDLModel_EnumerationLiteralSymbol,
@@ -44,6 +45,12 @@ from pyVHDLModel.VHDLModel import (
 )
 
 __all__ = []
+
+
+@export
+class EntitySymbol(VHDLModel_EntitySymbol):
+    def __init__(self, entityName: str):
+        super().__init__(entityName)
 
 
 @export

@@ -4,7 +4,7 @@ use     ieee.numeric_std.all;
 
 entity entity_1 is
 	generic (
-		FREQ : real     := -25.7;
+		FREQ : real     := 100.0;
 		BITS : positive := 8
 	);
 	port (

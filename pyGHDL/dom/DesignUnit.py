@@ -41,7 +41,8 @@ This module contains all DOM classes for VHDL's design units (:class:`context <E
 """
 from pydecor import export
 
-from pyVHDLModel.VHDLModel import Entity as VHDLModel_Entity
+from pyGHDL.dom.Symbol import EntitySymbol
+from pyVHDLModel.VHDLModel import Entity as VHDLModel_Entity, EntityOrSymbol
 from pyVHDLModel.VHDLModel import Architecture as VHDLModel_Architecture
 from pyVHDLModel.VHDLModel import Package as VHDLModel_Package
 from pyVHDLModel.VHDLModel import PackageBody as VHDLModel_PackageBody
@@ -87,17 +88,18 @@ class Entity(VHDLModel_Entity, GHDLMixin):
 
 @export
 class Architecture(VHDLModel_Architecture, GHDLMixin):
-    def __init__(self, name: str, entityName: str):
+    def __init__(self, name: str, entity: EntityOrSymbol):
         super().__init__(name)
 
-        self.__entityName = entityName
+        self._entity = entity
 
     @classmethod
     def parse(cls, libraryUnit):
         name = NodeToName(libraryUnit)
         entityName = NodeToName(nodes.Get_Entity_Name(libraryUnit))
+        entity = EntitySymbol(entityName)
 
-        architecture = cls(name, entityName)
+        architecture = cls(name, entity)
 
         for item in GetDeclaredItemsFromChainedNodes(
             nodes.Get_Declaration_Chain(libraryUnit), "architecture", name

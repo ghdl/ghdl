@@ -2,15 +2,6 @@ from typing import List, Union
 
 from pydecor import export
 
-from pyGHDL.dom.Aggregates import (
-    SimpleAggregateElement,
-    IndexedAggregateElement,
-    RangedAggregateElement,
-    NamedAggregateElement,
-    OthersAggregateElement,
-)
-from pyGHDL.dom.Object import Constant, Signal
-from pyGHDL.dom.Range import Range
 from pyVHDLModel.VHDLModel import (
     GenericInterfaceItem,
     Expression,
@@ -21,12 +12,12 @@ from pyVHDLModel.VHDLModel import (
     BinaryExpression,
     IdentityExpression,
     UnaryExpression,
-    WithDefaultExpression,
     AggregateElement,
+    WithDefaultExpression,
 )
 
 from pyGHDL import GHDLBaseException
-from pyGHDL.dom.Misc import Document
+from pyGHDL.dom.Misc import Document, Design, Library
 from pyGHDL.dom.DesignUnit import (
     Entity,
     Architecture,
@@ -35,6 +26,8 @@ from pyGHDL.dom.DesignUnit import (
     Configuration,
     Context,
 )
+from pyGHDL.dom.Object import Constant, Signal
+from pyGHDL.dom.Range import Range
 from pyGHDL.dom.InterfaceItem import (
     GenericConstantInterfaceItem,
     PortSignalInterfaceItem,
@@ -45,7 +38,6 @@ from pyGHDL.dom.Symbol import (
     SimpleObjectSymbol,
 )
 from pyGHDL.dom.Literal import IntegerLiteral, CharacterLiteral, FloatingPointLiteral
-
 from pyGHDL.dom.Expression import (
     SubtractionExpression,
     AdditionExpression,
@@ -56,6 +48,13 @@ from pyGHDL.dom.Expression import (
     NegationExpression,
     ExponentiationExpression,
     Aggregate,
+)
+from pyGHDL.dom.Aggregates import (
+    SimpleAggregateElement,
+    IndexedAggregateElement,
+    RangedAggregateElement,
+    NamedAggregateElement,
+    OthersAggregateElement,
 )
 
 StringBuffer = List[str]
@@ -98,33 +97,77 @@ class PrettyPrint:
     # def __init__(self):
     #     self._buffer = []
 
+    def formatDesign(self, design: Design, level: int = 0) -> StringBuffer:
+        buffer = []
+        prefix = "  " * level
+        buffer.append("{prefix}Libraries:".format(prefix=prefix))
+        for library in design.Libraries:
+            for line in self.formatLibrary(library, level + 1):
+                buffer.append(line)
+        buffer.append("{prefix}Documents:".format(prefix=prefix))
+        for document in design.Documents:
+            buffer.append(
+                "{prefix}- Path: '{doc!s}':".format(doc=document.Path, prefix=prefix)
+            )
+            for line in self.formatDocument(document, level + 1):
+                buffer.append(line)
+
+        return buffer
+
+    def formatLibrary(self, library: Library, level: int = 0) -> StringBuffer:
+        buffer = []
+        prefix = "  " * level
+        buffer.append("{prefix}Entities:".format(prefix=prefix))
+        for entity in library.Entities:
+            for line in self.formatEntity(entity, level + 1):
+                buffer.append(line)
+        buffer.append("{prefix}Architectures:".format(prefix=prefix))
+        for architecture in library.Architectures:
+            for line in self.formatArchitecture(architecture, level + 1):
+                buffer.append(line)
+        buffer.append("{prefix}Packages:".format(prefix=prefix))
+        for package in library.Packages:
+            for line in self.formatPackage(package, level + 1):
+                buffer.append(line)
+        buffer.append("{prefix}PackageBodies:".format(prefix=prefix))
+        for packageBodies in library.PackageBodies:
+            for line in self.formatPackageBody(packageBodies, level + 1):
+                buffer.append(line)
+        buffer.append("{prefix}Configurations:".format(prefix=prefix))
+        for configuration in library.Configurations:
+            for line in self.formatConfiguration(configuration, level + 1):
+                buffer.append(line)
+        buffer.append("{prefix}Contexts:".format(prefix=prefix))
+        for context in library.Contexts:
+            for line in self.formatContext(context, level + 1):
+                buffer.append(line)
+
+        return buffer
+
     def formatDocument(self, document: Document, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
-        buffer.append(
-            "{prefix}Document '{doc!s}':".format(doc=document.Path, prefix=prefix)
-        )
-        buffer.append("{prefix}  Entities:".format(prefix=prefix))
+        buffer.append("{prefix}Entities:".format(prefix=prefix))
         for entity in document.Entities:
             for line in self.formatEntity(entity, level + 1):
                 buffer.append(line)
-        buffer.append("{prefix}  Architectures:".format(prefix=prefix))
+        buffer.append("{prefix}Architectures:".format(prefix=prefix))
         for architecture in document.Architectures:
             for line in self.formatArchitecture(architecture, level + 1):
                 buffer.append(line)
-        buffer.append("{prefix}  Packages:".format(prefix=prefix))
+        buffer.append("{prefix}Packages:".format(prefix=prefix))
         for package in document.Packages:
             for line in self.formatPackage(package, level + 1):
                 buffer.append(line)
-        buffer.append("{prefix}  PackageBodies:".format(prefix=prefix))
+        buffer.append("{prefix}PackageBodies:".format(prefix=prefix))
         for packageBodies in document.PackageBodies:
             for line in self.formatPackageBody(packageBodies, level + 1):
                 buffer.append(line)
-        buffer.append("{prefix}  Configurations:".format(prefix=prefix))
+        buffer.append("{prefix}Configurations:".format(prefix=prefix))
         for configuration in document.Configurations:
             for line in self.formatConfiguration(configuration, level + 1):
                 buffer.append(line)
-        buffer.append("{prefix}  Contexts:".format(prefix=prefix))
+        buffer.append("{prefix}Contexts:".format(prefix=prefix))
         for context in document.Contexts:
             for line in self.formatContext(context, level + 1):
                 buffer.append(line)
@@ -134,7 +177,7 @@ class PrettyPrint:
     def formatEntity(self, entity: Entity, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
-        buffer.append("{prefix}- {name}".format(name=entity.Name, prefix=prefix))
+        buffer.append("{prefix}- Name: {name}".format(name=entity.Name, prefix=prefix))
         buffer.append("{prefix}  Generics:".format(prefix=prefix))
         for generic in entity.GenericItems:
             for line in self.formatGeneric(generic, level + 1):
@@ -155,7 +198,14 @@ class PrettyPrint:
     ) -> StringBuffer:
         buffer = []
         prefix = "  " * level
-        buffer.append("{prefix}- {name}".format(name=architecture.Name, prefix=prefix))
+        buffer.append(
+            "{prefix}- Name: {name}".format(name=architecture.Name, prefix=prefix)
+        )
+        buffer.append(
+            "{prefix}  Entity: {entity}".format(
+                entity=architecture.Entity.SymbolName, prefix=prefix
+            )
+        )
         buffer.append("{prefix}  Declared:".format(prefix=prefix))
         for item in architecture.DeclaredItems:
             for line in self.formatDeclaredItems(item, level + 2):
@@ -166,7 +216,7 @@ class PrettyPrint:
     def formatPackage(self, package: Package, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
-        buffer.append("{prefix}- {name}".format(name=package.Name, prefix=prefix))
+        buffer.append("{prefix}- Name: {name}".format(name=package.Name, prefix=prefix))
         buffer.append("{prefix}  Declared:".format(prefix=prefix))
         for item in package.DeclaredItems:
             for line in self.formatDeclaredItems(item, level + 1):
@@ -179,7 +229,9 @@ class PrettyPrint:
     ) -> StringBuffer:
         buffer = []
         prefix = "  " * level
-        buffer.append("{prefix}- {name}".format(name=packageBody.Name, prefix=prefix))
+        buffer.append(
+            "{prefix}- Name: {name}".format(name=packageBody.Name, prefix=prefix)
+        )
         buffer.append("{prefix}  Declared:".format(prefix=prefix))
         for item in packageBody.DeclaredItems:
             for line in self.formatDeclaredItems(item, level + 1):
@@ -192,14 +244,16 @@ class PrettyPrint:
     ) -> StringBuffer:
         buffer = []
         prefix = "  " * level
-        buffer.append("{prefix}- {name}".format(name=configuration.Name, prefix=prefix))
+        buffer.append(
+            "{prefix}- Name: {name}".format(name=configuration.Name, prefix=prefix)
+        )
 
         return buffer
 
     def formatContext(self, context: Context, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
-        buffer.append("{prefix}- {name}".format(name=context.Name, prefix=prefix))
+        buffer.append("{prefix}- Name: {name}".format(name=context.Name, prefix=prefix))
 
         return buffer
 
@@ -228,45 +282,18 @@ class PrettyPrint:
     ) -> StringBuffer:
         buffer = []
         prefix = "  " * level
-        subType = generic.SubType
-        if isinstance(subType, SimpleSubTypeSymbol):
-            buffer.append(
-                "{prefix}  - {name} : {mode} {type}{initialValue}".format(
-                    prefix=prefix,
-                    name=generic.Name,
-                    mode=ModeTranslation[generic.Mode],
-                    type=subType.SymbolName,
-                    initialValue=self.formatInitialValue(generic),
-                )
+
+        buffer.append(
+            "{prefix}  - {name} : {mode} {subtypeindication}{initialValue}".format(
+                prefix=prefix,
+                name=generic.Name,
+                mode=ModeTranslation[generic.Mode],
+                subtypeindication=self.formatSubtypeIndication(
+                    generic.SubType, "generic", generic.Name
+                ),
+                initialValue=self.formatInitialValue(generic),
             )
-        elif isinstance(subType, ConstrainedSubTypeSymbol):
-            buffer.append(
-                "{prefix}  - {name} : {mode} {type}({constraints}){initialValue}".format(
-                    prefix=prefix,
-                    name=generic.Name,
-                    mode=ModeTranslation[generic.Mode],
-                    type=subType.SymbolName,
-                    constraints=", ".join(
-                        [
-                            "{left} {dir} {right}".format(
-                                left=self.formatExpression(constraint.Range.LeftBound),
-                                right=self.formatExpression(
-                                    constraint.Range.RightBound
-                                ),
-                                dir=DirectionTranslation[constraint.Range.Direction],
-                            )
-                            for constraint in subType.Constraints
-                        ]
-                    ),
-                    initialValue=self.formatInitialValue(generic),
-                )
-            )
-        else:
-            raise PrettyPrintException(
-                "Unhandled constraint kind for generic '{name}'.".format(
-                    name=generic.Name
-                )
-            )
+        )
 
         return buffer
 
@@ -352,7 +379,7 @@ class PrettyPrint:
 
         return " := {expr}".format(expr=self.formatExpression(item.DefaultExpression))
 
-    def formatRange(self, r: Range) -> str:
+    def formatRange(self, r: Range):
         return "{left} {dir} {right}".format(
             left=self.formatExpression(r.LeftBound),
             right=self.formatExpression(r.RightBound),
