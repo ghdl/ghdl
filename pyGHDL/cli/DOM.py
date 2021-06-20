@@ -45,7 +45,7 @@ def main(items):
     if len(items) < 1:
         print("Please, provide the files to be analyzed as CLI arguments.")
         print("Using <testsuite/pyunit/SimpleEntity.vhdl> for demo purposes.\n")
-        items = ["testsuite/pyunit/SimpleEntity.vhdl"]
+        items = ["testsuite/pyunit/Current.vhdl"]
 
     for item in items:
         try:
