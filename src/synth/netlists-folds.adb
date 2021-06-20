@@ -349,4 +349,29 @@ package body Netlists.Folds is
             return Build_Const_UB32 (Ctxt, 0, 1);
       end case;
    end Build2_Compare;
+
+   function Add_Enable_To_Dyn_Insert
+     (Ctxt : Context_Acc; Inst : Instance; Sel : Net) return Instance
+   is
+      In_Mem : constant Input := Get_Input (Inst, 0);
+      In_V : constant Input := Get_Input (Inst, 1);
+      In_Idx : constant Input := Get_Input (Inst, 2);
+      Off : constant Uns32 := Get_Param_Uns32 (Inst, 0);
+      Res : Net;
+   begin
+      Res := Build_Dyn_Insert_En
+        (Ctxt, Get_Driver (In_Mem), Get_Driver (In_V), Get_Driver (In_Idx),
+         Sel, Off);
+      Set_Location (Res, Get_Location (Inst));
+
+      Disconnect (In_Mem);
+      Disconnect (In_V);
+      Disconnect (In_Idx);
+      Redirect_Inputs (Get_Output (Inst, 0), Res);
+
+      Remove_Instance (Inst);
+
+      return Get_Net_Parent (Res);
+   end Add_Enable_To_Dyn_Insert;
+
 end Netlists.Folds;

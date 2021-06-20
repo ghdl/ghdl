@@ -1323,6 +1323,28 @@ package body Synth.Environment is
       end loop;
    end Merge_Partial_Assigns;
 
+   --  Sub-routine of Merge_Assigns when the net is a dyn_insert
+   --  Try to transform it to a dyn_insert_en
+   function Merge_Dyn_Insert (Ctxt : Builders.Context_Acc;
+                              Sel : Net;
+                              N1_Inst : Instance;
+                              N0 : Net) return Net
+   is
+      V : Net;
+      New_Inst : Instance;
+   begin
+      --  TODO: handle a serie of dyn_insert
+      --  TODO: also handle dyn_insert_en
+      --  TODO: negative SEL ?
+      V := Get_Input_Net (N1_Inst, 0);
+      if Same_Net (V, N0) then
+         New_Inst := Add_Enable_To_Dyn_Insert (Ctxt, N1_Inst, Sel);
+         return Get_Output (New_Inst, 0);
+      else
+         return Build_Mux2 (Ctxt, Sel, N0, Get_Output (N1_Inst, 0));
+      end if;
+   end Merge_Dyn_Insert;
+
    procedure Merge_Assigns (Ctxt : Builders.Context_Acc;
                             Wid : Wire_Id;
                             Sel : Net;
@@ -1404,6 +1426,11 @@ package body Synth.Environment is
                     (Ctxt, Res, N (0), Get_Driver (Get_Mux2_I1 (N1_Inst)));
                end if;
             end;
+         elsif not Flags.Flag_Debug_Nomemory1
+           and then Get_Id (N1_Inst) = Id_Dyn_Insert
+           and then not Is_Connected (N (1))
+         then
+            Res := Merge_Dyn_Insert (Ctxt, Sel, N1_Inst, N (0));
          elsif N (0) = N (1) then
             --  Minor optimization: no need to add a mux if both sides are
             --  equal.  But this is important for the control wires.

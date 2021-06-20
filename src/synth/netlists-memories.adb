@@ -2447,30 +2447,6 @@ package body Netlists.Memories is
       Instance_Tables.Free (Mems);
    end Extract_Memories2;
 
-   function Add_Enable_To_Dyn_Insert
-     (Ctxt : Context_Acc; Inst : Instance; Sel : Net) return Instance
-   is
-      In_Mem : constant Input := Get_Input (Inst, 0);
-      In_V : constant Input := Get_Input (Inst, 1);
-      In_Idx : constant Input := Get_Input (Inst, 2);
-      Off : constant Uns32 := Get_Param_Uns32 (Inst, 0);
-      Res : Net;
-   begin
-      Res := Build_Dyn_Insert_En
-        (Ctxt, Get_Driver (In_Mem), Get_Driver (In_V), Get_Driver (In_Idx),
-         Sel, Off);
-      Set_Location (Res, Get_Location (Inst));
-
-      Disconnect (In_Mem);
-      Disconnect (In_V);
-      Disconnect (In_Idx);
-      Redirect_Inputs (Get_Output (Inst, 0), Res);
-
-      Remove_Instance (Inst);
-
-      return Get_Net_Parent (Res);
-   end Add_Enable_To_Dyn_Insert;
-
    --  Return True iff O is to MUX and any number of Dyn_Extract (possibly
    --  through mux2).
    function One_Write_Connection (O : Net; Mux : Instance) return Boolean
@@ -2797,7 +2773,8 @@ package body Netlists.Memories is
                end if;
                --  But continue with the result: still need to add the SEL.
                Drv := Get_Output (Inst, 0);
-            when Id_Dyn_Insert =>
+            when Id_Dyn_Insert
+               | Id_Dyn_Insert_En =>
                --  Continue the walk with the next element.
                Drv := Get_Input_Net (Inst, 0);
             when others =>

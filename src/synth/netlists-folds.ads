@@ -94,4 +94,9 @@ package Netlists.Folds is
                             Id   : Compare_Module_Id;
                             L, R : Net) return Net;
 
+   --  INST is a dyn_insert gate that will be converted to a dyn_insert_en
+   --  by using SEL as enable input.
+   --  The old dyn_insert gate is removed.
+   function Add_Enable_To_Dyn_Insert
+     (Ctxt : Context_Acc; Inst : Instance; Sel : Net) return Instance;
 end Netlists.Folds;
