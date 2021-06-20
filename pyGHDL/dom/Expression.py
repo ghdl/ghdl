@@ -32,19 +32,6 @@
 # ============================================================================
 from typing import List
 
-from pyGHDL.dom.Aggregates import (
-    OthersAggregateElement,
-    SimpleAggregateElement,
-    RangedAggregateElement,
-    IndexedAggregateElement,
-    NamedAggregateElement,
-)
-from pyGHDL.dom.Symbol import EnumerationLiteralSymbol
-from pyGHDL.libghdl import utils
-
-from pyGHDL.dom.Common import DOMException
-from pyGHDL.dom._Utils import GetIirKindOfNode
-from pyGHDL.libghdl.vhdl import nodes
 from pydecor import export
 
 from pyVHDLModel.VHDLModel import (
@@ -85,6 +72,20 @@ from pyVHDLModel.VHDLModel import (
     Expression,
     AggregateElement,
 )
+
+from pyGHDL.libghdl import utils
+from pyGHDL.libghdl.vhdl import nodes
+from pyGHDL.dom._Utils import GetIirKindOfNode
+from pyGHDL.dom.Common import DOMException
+from pyGHDL.dom.Symbol import EnumerationLiteralSymbol
+from pyGHDL.dom.Aggregates import (
+    OthersAggregateElement,
+    SimpleAggregateElement,
+    RangedAggregateElement,
+    IndexedAggregateElement,
+    NamedAggregateElement,
+)
+
 
 __all__ = []
 
@@ -391,7 +392,7 @@ class Aggregate(VHDLModel_Aggregate):
 
     @classmethod
     def parse(cls, node):
-        from pyGHDL.dom._Translate import GetExpressionFromNode
+        from pyGHDL.dom._Translate import GetExpressionFromNode, GetRangeFromNode
 
         choices = []
 
@@ -406,7 +407,7 @@ class Aggregate(VHDLModel_Aggregate):
                 value = GetExpressionFromNode(nodes.Get_Associated_Expr(item))
                 choices.append(IndexedAggregateElement(index, value))
             elif kind == nodes.Iir_Kind.Choice_By_Range:
-                r = GetExpressionFromNode(nodes.Get_Choice_Range(item))
+                r = GetRangeFromNode(nodes.Get_Choice_Range(item))
                 value = GetExpressionFromNode(nodes.Get_Associated_Expr(item))
                 choices.append(RangedAggregateElement(r, value))
             elif kind == nodes.Iir_Kind.Choice_By_Name:

@@ -39,6 +39,7 @@ from pyVHDLModel.VHDLModel import (
     IntegerLiteral as VHDLModel_IntegerLiteral,
     FloatingPointLiteral as VHDLModel_FloatingPointLiteral,
     CharacterLiteral as VHDLModel_CharacterLiteral,
+    StringLiteral as VHDLModel_StringLiteral,
 )
 
 __all__ = []
@@ -66,4 +67,13 @@ class CharacterLiteral(VHDLModel_CharacterLiteral):
     def parse(cls, node):
         identifier = nodes.Get_Identifier(node)
         value = name_table.Get_Character(identifier)
+        return cls(value)
+
+
+@export
+class StringLiteral(VHDLModel_StringLiteral):
+    @classmethod
+    def parse(cls, node):
+        stringID = nodes.Get_String8_Id(node)
+        value = name_table.Get_Name_Ptr(stringID)
         return cls(value)
