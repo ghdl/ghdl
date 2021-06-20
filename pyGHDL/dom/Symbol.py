@@ -36,13 +36,27 @@ from typing import List
 
 from pyGHDL.dom._Utils import NodeToName
 from pyVHDLModel.VHDLModel import (
+    EntitySymbol as VHDLModel_EntitySymbol,
     SimpleSubTypeSymbol as VHDLModel_SimpleSubTypeSymbol,
     ConstrainedSubTypeSymbol as VHDLModel_ConstrainedSubTypeSymbol,
+    EnumerationLiteralSymbol as VHDLModel_EnumerationLiteralSymbol,
     SimpleObjectSymbol as VHDLModel_SimpleObjectSymbol,
     Constraint,
 )
 
 __all__ = []
+
+
+@export
+class EntitySymbol(VHDLModel_EntitySymbol):
+    def __init__(self, entityName: str):
+        super().__init__(entityName)
+
+
+@export
+class EnumerationLiteralSymbol(VHDLModel_EnumerationLiteralSymbol):
+    def __init__(self, literalName: str):
+        super().__init__(symbolName=literalName)
 
 
 @export
@@ -67,9 +81,6 @@ class ConstrainedSubTypeSymbol(VHDLModel_ConstrainedSubTypeSymbol):
 
 @export
 class SimpleObjectSymbol(VHDLModel_SimpleObjectSymbol):
-    def __init__(self, symbolName: str):
-        super().__init__(symbolName)
-
     @classmethod
     def parse(cls, node):
         name = NodeToName(node)

@@ -3,6 +3,8 @@
 #
 from enum import IntEnum, unique
 from pydecor import export
+
+from pyGHDL.libghdl._decorator import BindToLibGHDL
 from pyGHDL.libghdl import libghdl
 
 

@@ -28,13 +28,13 @@ class Application:
         self._design.Documents.append(document)
 
     def prettyPrint(self):
-        buffer = []
-
         PP = PrettyPrint()
 
-        for doc in self._design.Documents:
-            for line in PP.formatDocument(doc):
-                buffer.append(line)
+        buffer = []
+
+        buffer.append("Design:")
+        for line in PP.formatDesign(self._design, 1):
+            buffer.append(line)
 
         print("\n".join(buffer))
 

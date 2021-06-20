@@ -3,14 +3,17 @@
 #
 from enum import IntEnum, unique
 from pydecor import export
+
+from pyGHDL.libghdl._decorator import BindToLibGHDL
 from enum import IntEnum, unique
 
 from pyGHDL.libghdl import libghdl
 
 
 @export
+@BindToLibGHDL("errorout__enable_warning")
 def Enable_Warning(Id: int, Enable: bool) -> None:
-    libghdl.errorout__enable_warning(Id, Enable)
+    """"""
 
 
 @export

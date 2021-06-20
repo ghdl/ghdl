@@ -67,9 +67,9 @@ Int32 = TypeVar("Int32", bound=c_int32)
 Int64 = TypeVar("Int64", bound=c_int64)
 Fp64 = TypeVar("Fp64", bound=c_double)
 
-ErrorIndex = TypeVar("ErrorIndex", bound=int)
-MessageIdWarnings = TypeVar("MessageIdWarnings", bound=int)
-NameId = TypeVar("NameId", bound=int)
+ErrorIndex = TypeVar("ErrorIndex", bound=c_int32)
+MessageIdWarnings = TypeVar("MessageIdWarnings", bound=c_int32)
+NameId = TypeVar("NameId", bound=c_int32)
 
 String8Id = TypeVar("String8Id", bound=c_uint32)
 FileChecksumId = TypeVar("FileChecksumId", bound=c_uint32)
@@ -79,14 +79,14 @@ SourceFileEntry = TypeVar("SourceFileEntry", bound=c_uint32)
 SourcePtr = TypeVar("SourcePtr", bound=c_int32)
 LocationType = TypeVar("LocationType", bound=c_uint32)
 
-Iir = TypeVar("Iir", bound=int)
+Iir = TypeVar("Iir", bound=c_int32)
 IirKind = TypeVar("IirKind", bound=c_int32)
 
 PSLNode = TypeVar("PSLNode", bound=c_int32)
 PSLNFA = TypeVar("PSLNFA", bound=c_int32)
 
-Iir_Design_File = TypeVar("Iir_Design_File", bound=int)
-Iir_Design_Unit = TypeVar("Iir_Design_Unit", bound=int)
+Iir_Design_File = TypeVar("Iir_Design_File", bound=c_int32)
+Iir_Design_Unit = TypeVar("Iir_Design_Unit", bound=c_int32)
 Iir_Library_Declaration = TypeVar("Iir_Library_Declaration", bound=c_int32)
 Iir_Package_Declaration = TypeVar("Iir_Package_Declaration", bound=c_int32)
 Iir_Enumeration_Type_Definition = TypeVar(

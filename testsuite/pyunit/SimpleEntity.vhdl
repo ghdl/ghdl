@@ -4,7 +4,7 @@ use     ieee.numeric_std.all;
 
 entity entity_1 is
 	generic (
-		FREQ : real     := 100.0;
+		FREQ : real     := (100.0 * 1024.0 * 1024.0);
 		BITS : positive := 8
 	);
 	port (
@@ -15,11 +15,14 @@ entity entity_1 is
 end entity entity_1;
 
 architecture behav of entity_1 is
+	signal Reset_n : std_logic;
 begin
+	Reset_n <= (not Reset);
+
 	process(Clock)
 	begin
 		if rising_edge(Clock) then
-			if Reset = '1' then
+			if Reset_n = '0' then
 				Q <= (others => '0');
 			else
 				Q <= std_logic_vector(unsigned(Q) + 1);

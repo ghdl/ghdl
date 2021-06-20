@@ -37,6 +37,8 @@ def print_file_header():
             #
             from enum import IntEnum, unique
             from pydecor import export
+
+            from pyGHDL.libghdl._decorator import BindToLibGHDL
         """), end=''
     )
 
@@ -62,12 +64,14 @@ def do_iirs_subprg():
     print(dedent("""
 
         @export
-        def Get_Kind(node: Iir) -> Iir_Kind:
-            return {libname}.{classname}__get_kind(node)
+        @BindToLibGHDL("{classname}__get_kind")
+        def Get_Kind(node: Iir) -> IirKind:
+            \"\"\"\"\"\"
 
         @export
+        @BindToLibGHDL("{classname}__get_location")
         def Get_Location(node: Iir) -> LocationType:
-            return {libname}.{classname}__get_location(node)
+            \"\"\"\"\"\"
         """).format(libname=libname, classname=classname)
     )
     for k in pnodes.funcs:
@@ -79,13 +83,15 @@ def do_iirs_subprg():
 
         print(dedent("""
             @export
+            @BindToLibGHDL("{classname}__get_{kname_lower}")
             def Get_{kname}(obj: Iir) -> {rtype}:
-                return {libname}.{classname}__get_{kname_lower}(obj)
+                \"\"\"{gettercomment}\"\"\"
             @export
+            @BindToLibGHDL("{classname}__set_{kname_lower}")
             def Set_{kname}(obj: Iir, value: {rtype}) -> None:
-                {libname}.{classname}__set_{kname_lower}(obj, value)
+                \"\"\"{settercomment}\"\"\"
             """).format(kname=k.name, kname_lower=k.name.lower(), rtype=rtype,
-                         libname=libname, classname=classname)
+                         libname=libname, classname=classname, gettercomment="", settercomment="")
         )
 
 
@@ -124,8 +130,10 @@ def do_has_subprg():
     print()
     for f in pnodes.funcs:
         print(dedent("""
-            def Has_{fname}(kind) -> bool:
-                return {libname}.vhdl__nodes_meta__has_{fname_lower}(kind)
+            @export
+            @BindToLibGHDL("vhdl__nodes_meta__has_{fname_lower}")
+            def Has_{fname}(kind: IirKind) -> bool:
+                \"\"\"\"\"\"
             """).format(fname=f.name, libname=libname, fname_lower=f.name.lower())
         )
 
@@ -187,6 +195,7 @@ def do_libghdl_nodes():
         from pyGHDL.libghdl import libghdl
         from pyGHDL.libghdl._types import (
             Iir,
+            IirKind,
             LocationType,
             FileChecksumId,
             TimeStampId,
@@ -239,8 +248,9 @@ def do_libghdl_meta():
 
         # From nodes_meta
         @export
+        @BindToLibGHDL("vhdl__nodes_meta__get_fields_first")
         def get_fields_first(K: IirKind) -> int:
-            '''
+            \"\"\"
             Return the list of fields for node :obj:`K`.
 
             In Ada ``Vhdl.Nodes_Meta.Get_Fields`` returns a ``Fields_Array``. To emulate
@@ -250,12 +260,13 @@ def do_libghdl_meta():
             nodes/lists that aren't reference, and then the reference.
 
             :param K: Node to get first array index from.
-            '''
-            return libghdl.vhdl__nodes_meta__get_fields_first(K)
+            \"\"\"
+
 
         @export
+        @BindToLibGHDL("vhdl__nodes_meta__get_fields_last")
         def get_fields_last(K: IirKind) -> int:
-            '''
+            \"\"\"
             Return the list of fields for node :obj:`K`.
 
             In Ada ``Vhdl.Nodes_Meta.Get_Fields`` returns a ``Fields_Array``. To emulate
@@ -265,12 +276,12 @@ def do_libghdl_meta():
             nodes/lists that aren't reference, and then the reference.
 
             :param K: Node to get last array index from.
-            '''
-            return libghdl.vhdl__nodes_meta__get_fields_last(K)
+            \"\"\"
 
         @export
+        @BindToLibGHDL("vhdl__nodes_meta__get_field_by_index")
         def get_field_by_index(K: IirKind) -> int:
-            return libghdl.vhdl__nodes_meta__get_field_by_index(K)
+            \"\"\"\"\"\"
 
         @export
         def get_field_type(*args):
@@ -352,8 +363,9 @@ def do_libghdl_errorout():
         from pyGHDL.libghdl import libghdl
 
         @export
+        @BindToLibGHDL("errorout__enable_warning")
         def Enable_Warning(Id: int, Enable: bool) -> None:
-            libghdl.errorout__enable_warning(Id, Enable)
+            \"\"\"\"\"\"
         """), end=''
     )
 

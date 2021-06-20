@@ -54,6 +54,9 @@ from pyGHDL.dom.Expression import (
     DivisionExpression,
     InverseExpression,
     ExponentiationExpression,
+    Aggregate,
+    NegationExpression,
+    ParenthesisExpression,
 )
 
 __all__ = []
@@ -129,13 +132,15 @@ __EXPRESSION_TRANSLATION = {
     nodes.Iir_Kind.Integer_Literal: IntegerLiteral,
     nodes.Iir_Kind.Floating_Point_Literal: FloatingPointLiteral,
     nodes.Iir_Kind.Character_Literal: CharacterLiteral,
-    nodes.Iir_Kind.Negation_Operator: InverseExpression,
+    nodes.Iir_Kind.Negation_Operator: NegationExpression,
     nodes.Iir_Kind.Addition_Operator: AdditionExpression,
+    nodes.Iir_Kind.Not_Operator: InverseExpression,
+    nodes.Iir_Kind.Parenthesis_Expression: ParenthesisExpression,
     nodes.Iir_Kind.Substraction_Operator: SubtractionExpression,
     nodes.Iir_Kind.Multiplication_Operator: MultiplyExpression,
     nodes.Iir_Kind.Division_Operator: DivisionExpression,
     nodes.Iir_Kind.Exponentiation_Operator: ExponentiationExpression,
-    #    nodes.Iir_Kind.Aggregate: Aggregate
+    nodes.Iir_Kind.Aggregate: Aggregate,
 }
 
 

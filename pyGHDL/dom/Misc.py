@@ -52,7 +52,7 @@ from pyGHDL.libghdl import (
     LibGHDLException,
     utils,
 )
-from pyGHDL.libghdl.vhdl import nodes, sem_lib
+from pyGHDL.libghdl.vhdl import nodes, sem_lib, parse
 
 from pyGHDL.dom._Utils import GetIirKindOfNode
 from pyGHDL.dom.Common import DOMException, GHDLMixin
@@ -85,6 +85,8 @@ class Design(VHDLModel_Design):
         errorout_memory.Install_Handler()
 
         libghdl.set_option("--std=08")
+
+        parse.Flag_Parse_Parenthesis.value = True
 
         # Finish initialization. This will load the standard package.
         if libghdl.analyze_init_status() != 0:
