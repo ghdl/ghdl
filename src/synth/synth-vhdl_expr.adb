@@ -1231,7 +1231,7 @@ package body Synth.Vhdl_Expr is
             Ivoff := Build_Memidx
               (Get_Build (Syn_Inst), Ivoff, El_Typ.W * Stride,
                Bnd.Len - 1,
-               Width (Clog2 (Uns64 (Stride * Bnd.Len))));
+               Width (Clog2 (Uns64 (El_Typ.W * Stride * Bnd.Len))));
             Set_Location (Ivoff, Idx_Expr);
 
             if Voff = No_Net then
