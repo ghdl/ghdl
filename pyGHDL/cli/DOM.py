@@ -40,7 +40,7 @@ class Application:
         print("\n".join(buffer))
 
 
-def main(items):
+def main(items=argv[1:]):
     _exitcode = 0
 
     if len(items) < 1:
@@ -63,4 +63,4 @@ def main(items):
 
 
 if __name__ == "__main__":
-    sysexit(main(argv[1:]))
+    sysexit(main())
