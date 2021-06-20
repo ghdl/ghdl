@@ -20,7 +20,7 @@ end entity entity_1;
 
 architecture behav of entity_1 is
 	constant MAX : positive := -25;
-	signal rst : std_logic := 'U' & "test";
+	signal rst : std_logic := foo'('U');
 
 	type newInt is range -4 to 3;
 	subtype uint8 is integer range 0 to 255;
