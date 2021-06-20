@@ -399,24 +399,21 @@ class Aggregate(VHDLModel_Aggregate):
         choicesChain = nodes.Get_Association_Choices_Chain(node)
         for item in utils.chain_iter(choicesChain):
             kind = GetIirKindOfNode(item)
+            value = GetExpressionFromNode(nodes.Get_Associated_Expr(item))
+
             if kind == nodes.Iir_Kind.Choice_By_None:
-                value = GetExpressionFromNode(nodes.Get_Associated_Expr(item))
                 choices.append(SimpleAggregateElement(value))
             elif kind == nodes.Iir_Kind.Choice_By_Expression:
                 index = GetExpressionFromNode(nodes.Get_Choice_Expression(item))
-                value = GetExpressionFromNode(nodes.Get_Associated_Expr(item))
                 choices.append(IndexedAggregateElement(index, value))
             elif kind == nodes.Iir_Kind.Choice_By_Range:
                 r = GetRangeFromNode(nodes.Get_Choice_Range(item))
-                value = GetExpressionFromNode(nodes.Get_Associated_Expr(item))
                 choices.append(RangedAggregateElement(r, value))
             elif kind == nodes.Iir_Kind.Choice_By_Name:
                 name = EnumerationLiteralSymbol(nodes.Get_Choice_Name(item))
-                value = GetExpressionFromNode(nodes.Get_Associated_Expr(item))
                 choices.append(NamedAggregateElement(name, value))
             elif kind == nodes.Iir_Kind.Choice_By_Others:
-                expression = None
-                choices.append(OthersAggregateElement(expression))
+                choices.append(OthersAggregateElement(value))
             else:
                 raise DOMException(
                     "Unknown choice kind '{kindName}'({kind}) in aggregate '{aggr}'.".format(
