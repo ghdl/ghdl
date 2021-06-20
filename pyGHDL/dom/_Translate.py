@@ -46,7 +46,7 @@ from pyGHDL.dom.Symbol import (
     SimpleSubTypeSymbol,
     ConstrainedSubTypeSymbol,
 )
-from pyGHDL.dom.Literal import IntegerLiteral, CharacterLiteral, FloatingPointLiteral
+from pyGHDL.dom.Literal import IntegerLiteral, CharacterLiteral, FloatingPointLiteral, StringLiteral
 from pyGHDL.dom.Expression import (
     SubtractionExpression,
     AdditionExpression,
@@ -56,7 +56,7 @@ from pyGHDL.dom.Expression import (
     ExponentiationExpression,
     Aggregate,
     NegationExpression,
-    ParenthesisExpression,
+    ParenthesisExpression, ConcatenationExpression,
 )
 
 __all__ = []
@@ -101,16 +101,7 @@ def GetArrayConstraintsFromSubtypeIndication(subTypeIndication) -> List[Constrai
     for constraint in flist_iter(nodes.Get_Index_Constraint_List(subTypeIndication)):
         constraintKind = GetIirKindOfNode(constraint)
         if constraintKind == nodes.Iir_Kind.Range_Expression:
-            direction = nodes.Get_Direction(constraint)
-            leftBound = nodes.Get_Left_Limit_Expr(constraint)
-            rightBound = nodes.Get_Right_Limit_Expr(constraint)
-
-            r = Range(
-                GetExpressionFromNode(leftBound),
-                GetExpressionFromNode(rightBound),
-                Direction.DownTo if direction else Direction.To,
-            )
-            constraints.append(RangeExpression(r))
+            constraints.append(RangeExpression(GetRangeFromNode(constraint)))
         elif constraintKind == nodes.Iir_Kind.Attribute_Name:
             raise DOMException("[NOT IMPLEMENTED] Attribute name as range.")
         elif constraintKind == nodes.Iir_Kind.Simple_Name:
@@ -132,8 +123,10 @@ __EXPRESSION_TRANSLATION = {
     nodes.Iir_Kind.Integer_Literal: IntegerLiteral,
     nodes.Iir_Kind.Floating_Point_Literal: FloatingPointLiteral,
     nodes.Iir_Kind.Character_Literal: CharacterLiteral,
+    nodes.Iir_Kind.String_Literal8: StringLiteral,
     nodes.Iir_Kind.Negation_Operator: NegationExpression,
     nodes.Iir_Kind.Addition_Operator: AdditionExpression,
+    nodes.Iir_Kind.Concatenation_Operator: ConcatenationExpression,
     nodes.Iir_Kind.Not_Operator: InverseExpression,
     nodes.Iir_Kind.Parenthesis_Expression: ParenthesisExpression,
     nodes.Iir_Kind.Substraction_Operator: SubtractionExpression,
@@ -143,6 +136,17 @@ __EXPRESSION_TRANSLATION = {
     nodes.Iir_Kind.Aggregate: Aggregate,
 }
 
+@export
+def GetRangeFromNode(node) -> Range:
+    direction = nodes.Get_Direction(node)
+    leftBound = nodes.Get_Left_Limit_Expr(node)
+    rightBound = nodes.Get_Right_Limit_Expr(node)
+
+    return Range(
+        GetExpressionFromNode(leftBound),
+        GetExpressionFromNode(rightBound),
+        Direction.DownTo if direction else Direction.To,
+    )
 
 @export
 def GetExpressionFromNode(node) -> Expression:
