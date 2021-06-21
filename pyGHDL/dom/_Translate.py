@@ -44,9 +44,15 @@ from pyGHDL.dom.Range import Range, RangeExpression
 from pyGHDL.dom.Symbol import (
     SimpleObjectOrFunctionCallSymbol,
     SimpleSubTypeSymbol,
-    ConstrainedSubTypeSymbol, IndexedObjectOrFunctionCallSymbol,
+    ConstrainedSubTypeSymbol,
+    IndexedObjectOrFunctionCallSymbol,
 )
-from pyGHDL.dom.Literal import IntegerLiteral, CharacterLiteral, FloatingPointLiteral, StringLiteral
+from pyGHDL.dom.Literal import (
+    IntegerLiteral,
+    CharacterLiteral,
+    FloatingPointLiteral,
+    StringLiteral,
+)
 from pyGHDL.dom.Expression import (
     SubtractionExpression,
     AdditionExpression,
@@ -56,10 +62,29 @@ from pyGHDL.dom.Expression import (
     ExponentiationExpression,
     Aggregate,
     NegationExpression,
-    ParenthesisExpression, ConcatenationExpression, QualifiedExpression, ModuloExpression, RemainderExpression, AndExpression, NandExpression, OrExpression,
-    NorExpression, XorExpression, XnorExpression, EqualExpression, UnequalExpression, LessThanExpression, GreaterThanExpression, GreaterEqualExpression,
-    LessEqualExpression, ShiftLeftLogicExpression, ShiftRightLogicExpression, ShiftLeftArithmeticExpression, ShiftRightArithmeticExpression,
-    RotateLeftExpression, RotateRightExpression,
+    ParenthesisExpression,
+    ConcatenationExpression,
+    QualifiedExpression,
+    ModuloExpression,
+    RemainderExpression,
+    AndExpression,
+    NandExpression,
+    OrExpression,
+    NorExpression,
+    XorExpression,
+    XnorExpression,
+    EqualExpression,
+    UnequalExpression,
+    LessThanExpression,
+    GreaterThanExpression,
+    GreaterEqualExpression,
+    LessEqualExpression,
+    ShiftLeftLogicExpression,
+    ShiftRightLogicExpression,
+    ShiftLeftArithmeticExpression,
+    ShiftRightArithmeticExpression,
+    RotateLeftExpression,
+    RotateRightExpression,
 )
 
 __all__ = []

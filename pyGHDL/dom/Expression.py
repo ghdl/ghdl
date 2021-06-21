@@ -71,7 +71,8 @@ from pyVHDLModel.VHDLModel import (
     RotateLeftExpression as VHDLModel_RotateLeftExpression,
     Aggregate as VHDLModel_Aggregate,
     Expression,
-    AggregateElement, SubTypeOrSymbol,
+    AggregateElement,
+    SubTypeOrSymbol,
 )
 
 from pyGHDL.libghdl import utils
