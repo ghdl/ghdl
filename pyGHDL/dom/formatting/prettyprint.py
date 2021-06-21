@@ -341,9 +341,8 @@ class PrettyPrint:
             )
         elif isinstance(item, Function):
             buffer.append(
-                "{prefix}- function {name}".format(
-                    prefix=prefix,
-                    name=item.Name,
+                "{prefix}- function {name} return {returnType!s}".format(
+                    prefix=prefix, name=item.Name, returnType=item.ReturnType
                 )
             )
         elif isinstance(item, Procedure):

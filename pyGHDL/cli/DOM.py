@@ -13,7 +13,9 @@ from pyGHDL import GHDLBaseException
 __all__ = []
 __api__ = __all__
 
-from pyGHDL.dom.formatting.prettyprint import PrettyPrint
+from pyGHDL.dom.Common import DOMException
+
+from pyGHDL.dom.formatting.prettyprint import PrettyPrint, PrettyPrintException
 
 
 @export
@@ -52,8 +54,10 @@ def main(items):
             app = Application()
             app.addFile(Path(item), "default_lib")
             app.prettyPrint()
-        except GHDLBaseException as ex:
-            print(ex)
+        except DOMException as ex:
+            print("DOM:", ex)
+        except PrettyPrintException as ex:
+            print("PP:", ex)
             _exitcode = 1
 
     return _exitcode

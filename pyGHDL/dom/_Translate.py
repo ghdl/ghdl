@@ -324,6 +324,38 @@ def GetPortsFromChainedNodes(nodeChain: Iir):
     return result
 
 
+# FIXME: rewrite to generator
+@export
+def GetParameterFromChainedNodes(nodeChain: Iir):
+    result = []
+    for parameter in utils.chain_iter(nodeChain):
+        kind = GetIirKindOfNode(parameter)
+        if kind == nodes.Iir_Kind.Interface_Constant_Declaration:
+            pass
+        elif kind == nodes.Iir_Kind.Interface_Variable_Declaration:
+            pass
+        elif kind == nodes.Iir_Kind.Interface_Signal_Declaration:
+            from pyGHDL.dom.InterfaceItem import PortSignalInterfaceItem
+
+            portSignal = ParameterSignalInterfaceItem.parse(parameter)
+
+            result.append(portSignal)
+        else:
+            position = GetPositionOfNode(parameter)
+            raise DOMException(
+                "Unknown parameter kind '{kindName}'({kind}) in parameter '{param}' at {file}:{line}:{column}.".format(
+                    kind=kind,
+                    kindName=kind.name,
+                    param=parameter,
+                    file=position.Filename,
+                    line=position.Line,
+                    column=position.Column,
+                )
+            )
+
+    return result
+
+
 def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str):
     result = []
     for item in utils.chain_iter(nodeChain):

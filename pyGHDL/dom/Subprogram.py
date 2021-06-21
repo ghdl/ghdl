@@ -30,27 +30,47 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+from pyGHDL.dom.Symbol import SimpleSubTypeSymbol
+from pyGHDL.libghdl.vhdl import nodes
 from pydecor import export
 
 from pyGHDL.dom._Utils import GetNameOfNode
 from pyVHDLModel.VHDLModel import (
     Function as VHDLModel_Function,
     Procedure as VHDLModel_Procedure,
-    Expression,
+    SubTypeOrSymbol,
 )
 from pyGHDL.libghdl._types import Iir
 
 
 @export
 class Function(VHDLModel_Function):
-    def __init__(self, functionName: str):
+    def __init__(self, functionName: str, returnType: SubTypeOrSymbol):
         super().__init__(functionName)
+        self._returnType = returnType
 
     @classmethod
     def parse(cls, node: Iir):
-        functionName = GetNameOfNode(node)
+        from pyGHDL.dom._Translate import (
+            GetGenericsFromChainedNodes,
+            GetParameterFromChainedNodes,
+        )
 
-        return cls(functionName)
+        functionName = GetNameOfNode(node)
+        returnType = nodes.Get_Return_Type_Mark(node)
+        returnTypeName = GetNameOfNode(returnType)
+
+        returnTypeSymbol = SimpleSubTypeSymbol(returnTypeName)
+        function = cls(functionName, returnTypeSymbol)
+
+        for generic in GetGenericsFromChainedNodes(nodes.Get_Generic_Chain(node)):
+            function.GenericItems.append(generic)
+        for port in GetParameterFromChainedNodes(
+            nodes.Get_Interface_Declaration_Chain(node)
+        ):
+            function.ParameterItems.append(port)
+
+        return function
 
 
 @export
@@ -60,6 +80,20 @@ class Procedure(VHDLModel_Procedure):
 
     @classmethod
     def parse(cls, node: Iir):
+        from pyGHDL.dom._Translate import (
+            GetGenericsFromChainedNodes,
+            GetParameterFromChainedNodes,
+        )
+
         procedureName = GetNameOfNode(node)
 
-        return cls(procedureName)
+        procedure = cls(procedureName)
+
+        for generic in GetGenericsFromChainedNodes(nodes.Get_Generic_Chain(node)):
+            procedure.GenericItems.append(generic)
+        for port in GetParameterFromChainedNodes(
+            nodes.Get_Interface_Declaration_Chain(node)
+        ):
+            procedure.ParameterItems.append(port)
+
+        return procedure
