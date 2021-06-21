@@ -42,13 +42,16 @@ This module contains all DOM classes for VHDL's design units (:class:`context <E
 from pyGHDL.libghdl._types import Iir
 from pydecor import export
 
-from pyVHDLModel.VHDLModel import (Entity as VHDLModel_Entity, EntityOrSymbol,
- Architecture as VHDLModel_Architecture,
- Package as VHDLModel_Package,
- PackageBody as VHDLModel_PackageBody,
- Context as VHDLModel_Context,
-Configuration as VHDLModel_Configuration,
-Component as VHDLModel_Component)
+from pyVHDLModel.VHDLModel import (
+    Entity as VHDLModel_Entity,
+    EntityOrSymbol,
+    Architecture as VHDLModel_Architecture,
+    Package as VHDLModel_Package,
+    PackageBody as VHDLModel_PackageBody,
+    Context as VHDLModel_Context,
+    Configuration as VHDLModel_Configuration,
+    Component as VHDLModel_Component,
+)
 
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom._Utils import GetNameOfNode
@@ -71,9 +74,7 @@ class Entity(VHDLModel_Entity, GHDLMixin):
         name = GetNameOfNode(entityNode)
         entity = cls(name)
 
-        for generic in GetGenericsFromChainedNodes(
-            nodes.Get_Generic_Chain(entityNode)
-        ):
+        for generic in GetGenericsFromChainedNodes(nodes.Get_Generic_Chain(entityNode)):
             entity.GenericItems.append(generic)
 
         for port in GetPortsFromChainedNodes(nodes.Get_Port_Chain(entityNode)):

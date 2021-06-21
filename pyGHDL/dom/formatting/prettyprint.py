@@ -20,7 +20,8 @@ from pyGHDL.dom.DesignUnit import (
     Package,
     PackageBody,
     Configuration,
-    Context, Component,
+    Context,
+    Component,
 )
 from pyGHDL.dom.Object import Constant, Signal
 from pyGHDL.dom.InterfaceItem import (
@@ -167,7 +168,9 @@ class PrettyPrint:
     def formatComponent(self, component: Component, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
-        buffer.append("{prefix}- Component: {name}".format(name=component.Name, prefix=prefix))
+        buffer.append(
+            "{prefix}- Component: {name}".format(name=component.Name, prefix=prefix)
+        )
         buffer.append("{prefix}  Generics:".format(prefix=prefix))
         for generic in component.GenericItems:
             for line in self.formatGeneric(generic, level + 1):

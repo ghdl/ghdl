@@ -39,6 +39,8 @@ from pydecor import export
 from pyVHDLModel.VHDLModel import (
     IntegerLiteral as VHDLModel_IntegerLiteral,
     FloatingPointLiteral as VHDLModel_FloatingPointLiteral,
+    PhysicalIntegerLiteral as VHDLModel_PhysicalIntegerLiteral,
+    PhysicalFloatingLiteral as VHDLModel_PhysicalFloatingLiteral,
     CharacterLiteral as VHDLModel_CharacterLiteral,
     StringLiteral as VHDLModel_StringLiteral,
 )
@@ -60,6 +62,28 @@ class FloatingPointLiteral(VHDLModel_FloatingPointLiteral):
     def parse(cls, node):
         value = nodes.Get_Fp_Value(node)
         return cls(value)
+
+
+@export
+class PhysicalIntegerLiteral(VHDLModel_PhysicalIntegerLiteral):
+    @classmethod
+    def parse(cls, node):
+        value = nodes.Get_Value(node)
+        unit = nodes.Get_Unit_Name(node)
+        unitName = name_table.Get_Name_Ptr(unit)
+
+        return cls(value, unitName)
+
+
+@export
+class PhysicalFloatingLiteral(VHDLModel_PhysicalFloatingLiteral):
+    @classmethod
+    def parse(cls, node):
+        value = nodes.Get_Fp_Value(node)
+        unit = nodes.Get_Unit_Name(node)
+        unitName = name_table.Get_Name_Ptr(unit)
+
+        return cls(value, unitName)
 
 
 @export

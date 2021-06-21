@@ -61,6 +61,8 @@ from pyGHDL.dom.Literal import (
     CharacterLiteral,
     FloatingPointLiteral,
     StringLiteral,
+    PhysicalIntegerLiteral,
+    PhysicalFloatingLiteral,
 )
 from pyGHDL.dom.Expression import (
     SubtractionExpression,
@@ -194,6 +196,8 @@ __EXPRESSION_TRANSLATION = {
     nodes.Iir_Kind.Parenthesis_Name: IndexedObjectOrFunctionCallSymbol,
     nodes.Iir_Kind.Integer_Literal: IntegerLiteral,
     nodes.Iir_Kind.Floating_Point_Literal: FloatingPointLiteral,
+    nodes.Iir_Kind.Physical_Int_Literal: PhysicalIntegerLiteral,
+    nodes.Iir_Kind.Physical_Fp_Literal: PhysicalFloatingLiteral,
     nodes.Iir_Kind.Character_Literal: CharacterLiteral,
     nodes.Iir_Kind.String_Literal8: StringLiteral,
     nodes.Iir_Kind.Negation_Operator: NegationExpression,
@@ -302,6 +306,8 @@ def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str):
             from pyGHDL.dom.Object import Signal
 
             result.append(Signal.parse(item))
+        elif kind == nodes.Iir_Kind.Type_Declaration:
+            result.append(GetTypeFromNode(item))
         elif kind == nodes.Iir_Kind.Anonymous_Type_Declaration:
             result.append(GetTypeFromNode(item))
         elif kind == nodes.Iir_Kind.Subtype_Declaration:
