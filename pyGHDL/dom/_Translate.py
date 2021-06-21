@@ -56,7 +56,10 @@ from pyGHDL.dom.Expression import (
     ExponentiationExpression,
     Aggregate,
     NegationExpression,
-    ParenthesisExpression, ConcatenationExpression,
+    ParenthesisExpression, ConcatenationExpression, QualifiedExpression, ModuloExpression, RemainderExpression, AndExpression, NandExpression, OrExpression,
+    NorExpression, XorExpression, XnorExpression, EqualExpression, UnequalExpression, LessThanExpression, GreaterThanExpression, GreaterEqualExpression,
+    LessEqualExpression, ShiftLeftLogicExpression, ShiftRightLogicExpression, ShiftLeftArithmeticExpression, ShiftRightArithmeticExpression,
+    RotateLeftExpression, RotateRightExpression,
 )
 
 __all__ = []
@@ -118,6 +121,19 @@ def GetArrayConstraintsFromSubtypeIndication(subTypeIndication) -> List[Constrai
     return constraints
 
 
+@export
+def GetRangeFromNode(node) -> Range:
+    direction = nodes.Get_Direction(node)
+    leftBound = nodes.Get_Left_Limit_Expr(node)
+    rightBound = nodes.Get_Right_Limit_Expr(node)
+
+    return Range(
+        GetExpressionFromNode(leftBound),
+        GetExpressionFromNode(rightBound),
+        Direction.DownTo if direction else Direction.To,
+    )
+
+
 __EXPRESSION_TRANSLATION = {
     nodes.Iir_Kind.Simple_Name: SimpleObjectSymbol,
     nodes.Iir_Kind.Integer_Literal: IntegerLiteral,
@@ -132,21 +148,31 @@ __EXPRESSION_TRANSLATION = {
     nodes.Iir_Kind.Substraction_Operator: SubtractionExpression,
     nodes.Iir_Kind.Multiplication_Operator: MultiplyExpression,
     nodes.Iir_Kind.Division_Operator: DivisionExpression,
+    nodes.Iir_Kind.Modulus_Operator: ModuloExpression,
+    nodes.Iir_Kind.Remainder_Operator: RemainderExpression,
     nodes.Iir_Kind.Exponentiation_Operator: ExponentiationExpression,
+    nodes.Iir_Kind.And_Operator: AndExpression,
+    nodes.Iir_Kind.Nand_Operator: NandExpression,
+    nodes.Iir_Kind.Or_Operator: OrExpression,
+    nodes.Iir_Kind.Nor_Operator: NorExpression,
+    nodes.Iir_Kind.Xor_Operator: XorExpression,
+    nodes.Iir_Kind.Xnor_Operator: XnorExpression,
+    nodes.Iir_Kind.Equality_Operator: EqualExpression,
+    nodes.Iir_Kind.Inequality_Operator: UnequalExpression,
+    nodes.Iir_Kind.Less_Than_Operator: LessThanExpression,
+    nodes.Iir_Kind.Less_Than_Or_Equal_Operator: LessEqualExpression,
+    nodes.Iir_Kind.Greater_Than_Operator: GreaterThanExpression,
+    nodes.Iir_Kind.Greater_Than_Or_Equal_Operator: GreaterEqualExpression,
+    nodes.Iir_Kind.Sll_Operator: ShiftLeftLogicExpression,
+    nodes.Iir_Kind.Srl_Operator: ShiftRightLogicExpression,
+    nodes.Iir_Kind.Sla_Operator: ShiftLeftArithmeticExpression,
+    nodes.Iir_Kind.Sra_Operator: ShiftRightArithmeticExpression,
+    nodes.Iir_Kind.Rol_Operator: RotateLeftExpression,
+    nodes.Iir_Kind.Ror_Operator: RotateRightExpression,
+    nodes.Iir_Kind.Qualified_Expression: QualifiedExpression,
     nodes.Iir_Kind.Aggregate: Aggregate,
 }
 
-@export
-def GetRangeFromNode(node) -> Range:
-    direction = nodes.Get_Direction(node)
-    leftBound = nodes.Get_Left_Limit_Expr(node)
-    rightBound = nodes.Get_Right_Limit_Expr(node)
-
-    return Range(
-        GetExpressionFromNode(leftBound),
-        GetExpressionFromNode(rightBound),
-        Direction.DownTo if direction else Direction.To,
-    )
 
 @export
 def GetExpressionFromNode(node) -> Expression:

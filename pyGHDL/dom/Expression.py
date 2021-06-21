@@ -39,7 +39,7 @@ from pyVHDLModel.VHDLModel import (
     IdentityExpression as VHDLModel_IdentityExpression,
     NegationExpression as VHDLModel_NegationExpression,
     AbsoluteExpression as VHDLModel_AbsoluteExpression,
-    ParenthesisExpression as VHDLModel_ParenthesisExpression,
+    SubExpression as VHDLModel_ParenthesisExpression,
     TypeConversion as VHDLModel_TypeConversion,
     FunctionCall as VHDLModel_FunctionCall,
     QualifiedExpression as VHDLModel_QualifiedExpression,
@@ -59,9 +59,10 @@ from pyVHDLModel.VHDLModel import (
     XnorExpression as VHDLModel_XnorExpression,
     EqualExpression as VHDLModel_EqualExpression,
     UnequalExpression as VHDLModel_UnequalExpression,
+    LessThanExpression as VHDLModel_LessThanExpression,
+    LessEqualExpression as VHDLModel_LessEqualExpression,
     GreaterThanExpression as VHDLModel_GreaterThanExpression,
     GreaterEqualExpression as VHDLModel_GreaterEqualExpression,
-    LessThanExpression as VHDLModel_LessThanExpression,
     ShiftRightLogicExpression as VHDLModel_ShiftRightLogicExpression,
     ShiftLeftLogicExpression as VHDLModel_ShiftLeftLogicExpression,
     ShiftRightArithmeticExpression as VHDLModel_ShiftRightArithmeticExpression,
@@ -70,14 +71,14 @@ from pyVHDLModel.VHDLModel import (
     RotateLeftExpression as VHDLModel_RotateLeftExpression,
     Aggregate as VHDLModel_Aggregate,
     Expression,
-    AggregateElement,
+    AggregateElement, SubTypeOrSymbol,
 )
 
 from pyGHDL.libghdl import utils
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom._Utils import GetIirKindOfNode
 from pyGHDL.dom.Common import DOMException
-from pyGHDL.dom.Symbol import EnumerationLiteralSymbol
+from pyGHDL.dom.Symbol import EnumerationLiteralSymbol, SimpleSubTypeSymbol
 from pyGHDL.dom.Aggregates import (
     OthersAggregateElement,
     SimpleAggregateElement,
@@ -305,6 +306,22 @@ class UnequalExpression(VHDLModel_UnequalExpression, _ParseBinaryExpression):
 
 
 @export
+class LessThanExpression(VHDLModel_LessThanExpression, _ParseBinaryExpression):
+    def __init__(self, left: Expression, right: Expression):
+        super().__init__()
+        self._leftOperand = left
+        self._rightOperand = right
+
+
+@export
+class LessEqualExpression(VHDLModel_LessEqualExpression, _ParseBinaryExpression):
+    def __init__(self, left: Expression, right: Expression):
+        super().__init__()
+        self._leftOperand = left
+        self._rightOperand = right
+
+
+@export
 class GreaterThanExpression(VHDLModel_GreaterThanExpression, _ParseBinaryExpression):
     def __init__(self, left: Expression, right: Expression):
         super().__init__()
@@ -314,14 +331,6 @@ class GreaterThanExpression(VHDLModel_GreaterThanExpression, _ParseBinaryExpress
 
 @export
 class GreaterEqualExpression(VHDLModel_GreaterEqualExpression, _ParseBinaryExpression):
-    def __init__(self, left: Expression, right: Expression):
-        super().__init__()
-        self._leftOperand = left
-        self._rightOperand = right
-
-
-@export
-class LessThanExpression(VHDLModel_LessThanExpression, _ParseBinaryExpression):
     def __init__(self, left: Expression, right: Expression):
         super().__init__()
         self._leftOperand = left
@@ -382,6 +391,23 @@ class RotateLeftExpression(VHDLModel_RotateLeftExpression, _ParseBinaryExpressio
         super().__init__()
         self._leftOperand = left
         self._rightOperand = right
+
+
+@export
+class QualifiedExpression(VHDLModel_QualifiedExpression):
+    def __init__(self, subType: SubTypeOrSymbol, operand: Expression):
+        super().__init__()
+        self._subtype = subType
+        self._operand = operand
+
+    @classmethod
+    def parse(cls, node):
+        from pyGHDL.dom._Translate import GetExpressionFromNode, GetNameOfNode
+
+        typeMarkName = GetNameOfNode(nodes.Get_Type_Mark(node))
+        subType = SimpleSubTypeSymbol(typeMarkName)
+        operand = GetExpressionFromNode(nodes.Get_Expression(node))
+        return cls(subType, operand)
 
 
 @export
