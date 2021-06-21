@@ -32,11 +32,13 @@
 # ============================================================================
 from pydecor import export
 
+from pyGHDL.dom._Utils import GetNameOfNode
 from pyVHDLModel.VHDLModel import (
     Function as VHDLModel_Function,
     Procedure as VHDLModel_Procedure,
     Expression,
 )
+from pyGHDL.libghdl._types import Iir
 
 
 @export
@@ -44,8 +46,20 @@ class Function(VHDLModel_Function):
     def __init__(self, functionName: str):
         super().__init__(functionName)
 
+    @classmethod
+    def parse(cls, node: Iir):
+        functionName = GetNameOfNode(node)
+
+        return cls(functionName)
+
 
 @export
 class Procedure(VHDLModel_Procedure):
     def __init__(self, procedureName: str):
         super().__init__(procedureName)
+
+    @classmethod
+    def parse(cls, node: Iir):
+        procedureName = GetNameOfNode(node)
+
+        return cls(procedureName)

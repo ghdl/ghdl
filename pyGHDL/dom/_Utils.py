@@ -30,12 +30,14 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+from pyGHDL.libghdl._types import Iir
 from pydecor import export
 
 from pyVHDLModel.VHDLModel import Mode
 
-from pyGHDL.libghdl import LibGHDLException, name_table
+from pyGHDL.libghdl import LibGHDLException, name_table, files_map
 from pyGHDL.libghdl.vhdl import nodes
+from pyGHDL.dom.Misc import Position
 
 
 __all__ = []
@@ -50,22 +52,34 @@ __MODE_TRANSLATION = {
 
 
 @export
-def GetIirKindOfNode(node) -> nodes.Iir_Kind:
+def GetIirKindOfNode(node: Iir) -> nodes.Iir_Kind:
     kind: int = nodes.Get_Kind(node)
     return nodes.Iir_Kind(kind)
 
 
 @export
-def GetNameOfNode(node) -> str:
+def GetNameOfNode(node: Iir) -> str:
     """Return the python string from node :obj:`node` identifier"""
     identifier = nodes.Get_Identifier(node)
     return name_table.Get_Name_Ptr(identifier)
 
 
 @export
-def GetModeOfNode(node) -> Mode:
+def GetModeOfNode(node: Iir) -> Mode:
     """Return the mode of a :obj:`port`."""
     try:
         return __MODE_TRANSLATION[nodes.Get_Mode(node)]
     except KeyError:
         raise LibGHDLException("Unknown mode.")
+
+
+@export
+def GetPositionOfNode(node: Iir) -> Position:
+    location = nodes.Get_Location(node)
+    file = files_map.Location_To_File(location)
+    fileName = name_table.Get_Name_Ptr(file)
+    #    position = files_map.Location_File_To_Pos(location, file)
+    line = files_map.Location_File_To_Line(location, file)
+    column = files_map.Location_File_Line_To_Offset(location, file, line)
+
+    return Position(fileName, line, column)

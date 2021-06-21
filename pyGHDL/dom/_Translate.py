@@ -44,9 +44,8 @@ from pyVHDLModel.VHDLModel import (
 
 from pyGHDL.libghdl import utils
 from pyGHDL.libghdl._types import Iir
-from pyGHDL.libghdl.utils import flist_iter
 from pyGHDL.libghdl.vhdl import nodes
-from pyGHDL.dom._Utils import GetNameOfNode, GetIirKindOfNode
+from pyGHDL.dom._Utils import GetNameOfNode, GetIirKindOfNode, GetPositionOfNode
 from pyGHDL.dom.Common import DOMException
 from pyGHDL.dom.Symbol import (
     SimpleObjectOrFunctionCallSymbol,
@@ -128,9 +127,16 @@ def GetSubtypeIndicationFromNode(node: Iir, entity: str, name: str) -> SubTypeOr
             )
         )
     else:
+        position = GetPositionOfNode(node)
         raise DOMException(
-            "Unknown subtype kind '{kind}' of subtype indication '{indication}' while parsing {entity} '{name}'.".format(
-                kind=subTypeKind, indication=subTypeIndication, entity=entity, name=name
+            "Unknown subtype kind '{kind}' of subtype indication '{indication}' while parsing {entity} '{name}' at {file}:{line}:{column}.".format(
+                kind=subTypeKind,
+                indication=subTypeIndication,
+                entity=entity,
+                name=name,
+                file=position.Filename,
+                line=position.Line,
+                column=position.Column,
             )
         )
 
@@ -142,7 +148,9 @@ def GetArrayConstraintsFromSubtypeIndication(
     subTypeIndication: Iir,
 ) -> List[Constraint]:
     constraints = []
-    for constraint in flist_iter(nodes.Get_Index_Constraint_List(subTypeIndication)):
+    for constraint in utils.flist_iter(
+        nodes.Get_Index_Constraint_List(subTypeIndication)
+    ):
         constraintKind = GetIirKindOfNode(constraint)
         if constraintKind == nodes.Iir_Kind.Range_Expression:
             constraints.append(RangeExpression(GetRangeFromNode(constraint)))
@@ -151,11 +159,15 @@ def GetArrayConstraintsFromSubtypeIndication(
         elif constraintKind == nodes.Iir_Kind.Simple_Name:
             raise DOMException("[NOT IMPLEMENTED] Subtype as range.")
         else:
+            position = GetPositionOfNode(constraint)
             raise DOMException(
-                "Unknown constraint kind '{kind}' for constraint '{constraint}' in subtype indication '{indication}'.".format(
+                "Unknown constraint kind '{kind}' for constraint '{constraint}' in subtype indication '{indication}' at {file}:{line}:{column}.".format(
                     kind=constraintKind,
                     constraint=constraint,
                     indication=subTypeIndication,
+                    file=position.Filename,
+                    line=position.Line,
+                    column=position.Column,
                 )
             )
 
@@ -241,9 +253,15 @@ def GetExpressionFromNode(node: Iir) -> Expression:
     try:
         cls = __EXPRESSION_TRANSLATION[kind]
     except KeyError:
+        position = GetPositionOfNode(node)
         raise DOMException(
-            "Unknown expression kind '{kindName}'({kind}) in expression '{expr}'.".format(
-                kind=kind, kindName=kind.name, expr=node
+            "Unknown expression kind '{kindName}'({kind}) in expression '{expr}' at {file}:{line}:{column}.".format(
+                kind=kind,
+                kindName=kind.name,
+                expr=node,
+                file=position.Filename,
+                line=position.Line,
+                column=position.Column,
             )
         )
 
@@ -263,9 +281,15 @@ def GetGenericsFromChainedNodes(nodeChain: Iir):
 
             result.append(genericConstant)
         else:
+            position = GetPositionOfNode(generic)
             raise DOMException(
-                "Unknown generic kind '{kindName}'({kind}) in generic '{generic}'.".format(
-                    kind=kind, kindName=kind.name, generic=generic
+                "Unknown generic kind '{kindName}'({kind}) in generic '{generic}' at {file}:{line}:{column}.".format(
+                    kind=kind,
+                    kindName=kind.name,
+                    generic=generic,
+                    file=position.Filename,
+                    line=position.Line,
+                    column=position.Column,
                 )
             )
 
@@ -285,9 +309,15 @@ def GetPortsFromChainedNodes(nodeChain: Iir):
 
             result.append(portSignal)
         else:
+            position = GetPositionOfNode(port)
             raise DOMException(
-                "Unknown port kind '{kindName}'({kind}) in port '{port}'.".format(
-                    kind=kind, kindName=kind.name, port=port
+                "Unknown port kind '{kindName}'({kind}) in port '{port}' at {file}:{line}:{column}.".format(
+                    kind=kind,
+                    kindName=kind.name,
+                    port=port,
+                    file=position.Filename,
+                    line=position.Line,
+                    column=position.Column,
                 )
             )
 
@@ -313,12 +343,12 @@ def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str):
         elif kind == nodes.Iir_Kind.Subtype_Declaration:
             result.append(GetSubTypeFromNode(item))
         elif kind == nodes.Iir_Kind.Function_Declaration:
-            result.append(GetFunctionFromNode(item))
+            result.append(Function.parse(item))
         elif kind == nodes.Iir_Kind.Function_Body:
-            #                functionName = NodeToName(item)
+            #                procedureName = NodeToName(item)
             print("found function body '{name}'".format(name="????"))
         elif kind == nodes.Iir_Kind.Procedure_Declaration:
-            result.append(GetProcedureFromNode(item))
+            result.append(Procedure.parse(item))
         elif kind == nodes.Iir_Kind.Procedure_Body:
             #                procedureName = NodeToName(item)
             print("found procedure body '{name}'".format(name="????"))
@@ -329,25 +359,20 @@ def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str):
 
             result.append(Component.parse(item))
         else:
+            position = GetPositionOfNode(item)
             raise DOMException(
-                "Unknown declared item kind '{kindName}'({kind}) in {entity} '{name}'.".format(
-                    kind=kind, kindName=kind.name, entity=entity, name=name
+                "Unknown declared item kind '{kindName}'({kind}) in {entity} '{name}' at {file}:{line}:{column}.".format(
+                    kind=kind,
+                    kindName=kind.name,
+                    entity=entity,
+                    name=name,
+                    file=position.Filename,
+                    line=position.Line,
+                    column=position.Column,
                 )
             )
 
     return result
-
-
-def GetFunctionFromNode(node: Iir):
-    functionName = GetNameOfNode(node)
-
-    return Function(functionName)
-
-
-def GetProcedureFromNode(node: Iir):
-    procedureName = GetNameOfNode(node)
-
-    return Procedure(procedureName)
 
 
 def GetAliasFromNode(node: Iir):
