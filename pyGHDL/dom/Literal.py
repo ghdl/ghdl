@@ -30,6 +30,7 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+from pyGHDL.dom._Utils import GetIirKindOfNode
 from pyGHDL.libghdl import name_table
 
 from pyGHDL.libghdl.vhdl import nodes

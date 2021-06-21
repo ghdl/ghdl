@@ -34,7 +34,6 @@ from typing import List
 
 from pydecor import export
 
-from pyGHDL.dom.Misc import Alias
 from pyVHDLModel.VHDLModel import (
     Constraint,
     Direction,
@@ -97,6 +96,7 @@ from pyGHDL.dom.Expression import (
     RotateRightExpression,
 )
 from pyGHDL.dom.Subprogram import Function
+from pyGHDL.dom.Misc import Alias
 
 
 __all__ = []
@@ -313,6 +313,10 @@ def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str):
             print("found function body '{name}'".format(name="????"))
         elif kind == nodes.Iir_Kind.Object_Alias_Declaration:
             result.append(GetAliasFromNode(item))
+        elif kind == nodes.Iir_Kind.Component_Declaration:
+            from pyGHDL.dom.DesignUnit import Component
+
+            result.append(Component.parse(item))
         else:
             raise DOMException(
                 "Unknown declared item kind '{kindName}'({kind}) in {entity} '{name}'.".format(

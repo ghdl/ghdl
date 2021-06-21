@@ -8,7 +8,8 @@ from pyVHDLModel.VHDLModel import (
     GenericInterfaceItem,
     NamedEntity,
     PortInterfaceItem,
-    WithDefaultExpression, Function,
+    WithDefaultExpression,
+    Function,
 )
 
 from pyGHDL import GHDLBaseException
@@ -19,7 +20,7 @@ from pyGHDL.dom.DesignUnit import (
     Package,
     PackageBody,
     Configuration,
-    Context,
+    Context, Component,
 )
 from pyGHDL.dom.Object import Constant, Signal
 from pyGHDL.dom.InterfaceItem import (
@@ -159,6 +160,21 @@ class PrettyPrint:
         buffer.append("{prefix}  Declared:".format(prefix=prefix))
         for item in architecture.DeclaredItems:
             for line in self.formatDeclaredItems(item, level + 2):
+                buffer.append(line)
+
+        return buffer
+
+    def formatComponent(self, component: Component, level: int = 0) -> StringBuffer:
+        buffer = []
+        prefix = "  " * level
+        buffer.append("{prefix}- Component: {name}".format(name=component.Name, prefix=prefix))
+        buffer.append("{prefix}  Generics:".format(prefix=prefix))
+        for generic in component.GenericItems:
+            for line in self.formatGeneric(generic, level + 1):
+                buffer.append(line)
+        buffer.append("{prefix}  Ports:".format(prefix=prefix))
+        for port in component.PortItems:
+            for line in self.formatPort(port, level + 1):
                 buffer.append(line)
 
         return buffer
@@ -326,6 +342,9 @@ class PrettyPrint:
                     name=item.Name,
                 )
             )
+        elif isinstance(item, Component):
+            for line in self.formatComponent(item, level):
+                buffer.append(line)
         else:
             raise PrettyPrintException("Unhandled declared item kind.")
 
