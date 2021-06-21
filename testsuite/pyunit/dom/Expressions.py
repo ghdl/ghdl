@@ -6,7 +6,7 @@ from pyGHDL.dom.DesignUnit import Package
 
 from pyGHDL.dom import Expression
 from pyGHDL.dom.Misc       import Design, Document
-from pyGHDL.dom.Symbol import SimpleObjectSymbol
+from pyGHDL.dom.Symbol import SimpleObjectOrFunctionCallSymbol
 from pyGHDL.dom.Object import Constant
 from pyGHDL.dom.Expression import InverseExpression
 
@@ -39,7 +39,7 @@ class Expressions(TestCase):
         item: Constant = package.DeclaredItems[0]
         default: Expression = item.DefaultExpression
         self.assertTrue(isinstance(default, InverseExpression))
-        self.assertTrue(isinstance(default.Operand, SimpleObjectSymbol))
+        self.assertTrue(isinstance(default.Operand, SimpleObjectOrFunctionCallSymbol))
         self.assertTrue(default.Operand.SymbolName == "true")
 
     # def test_Aggregare(self):
@@ -66,5 +66,5 @@ class Expressions(TestCase):
     #     item: Constant = package.DeclaredItems[0]
     #     default: Expression = item.DefaultExpression
     #     self.assertTrue(isinstance(default, InverseExpression))
-    #     self.assertTrue(isinstance(default.Operand, SimpleObjectSymbol))
+    #     self.assertTrue(isinstance(default.Operand, SimpleObjectOrFunctionCallSymbol))
     #     self.assertTrue(default.Operand.SymbolName == "true")

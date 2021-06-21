@@ -30,6 +30,10 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+from pyGHDL.dom.Common import DOMException
+from pyGHDL.libghdl import utils
+
+from pyGHDL.libghdl.vhdl import nodes
 from pydecor import export
 
 from typing import List
@@ -40,7 +44,8 @@ from pyVHDLModel.VHDLModel import (
     SimpleSubTypeSymbol as VHDLModel_SimpleSubTypeSymbol,
     ConstrainedSubTypeSymbol as VHDLModel_ConstrainedSubTypeSymbol,
     EnumerationLiteralSymbol as VHDLModel_EnumerationLiteralSymbol,
-    SimpleObjectSymbol as VHDLModel_SimpleObjectSymbol,
+    SimpleObjectOrFunctionCallSymbol as VHDLModel_SimpleObjectOrFunctionCallSymbol,
+    IndexedObjectOrFunctionCallSymbol as VHDLModel_IndexedObjectOrFunctionCallSymbol,
     Constraint,
 )
 
@@ -80,8 +85,30 @@ class ConstrainedSubTypeSymbol(VHDLModel_ConstrainedSubTypeSymbol):
 
 
 @export
-class SimpleObjectSymbol(VHDLModel_SimpleObjectSymbol):
+class SimpleObjectOrFunctionCallSymbol(VHDLModel_SimpleObjectOrFunctionCallSymbol):
     @classmethod
     def parse(cls, node):
-        name = NodeToName(node)
+        name = GetNameOfNode(node)
+        return cls(name)
+
+
+@export
+class IndexedObjectOrFunctionCallSymbol(VHDLModel_IndexedObjectOrFunctionCallSymbol):
+    @classmethod
+    def parse(cls, node):
+        prefix = nodes.Get_Prefix(node)
+        name = GetNameOfNode(prefix)
+
+        for item in utils.chain_iter(nodes.Get_Association_Chain(node)):
+            kind = GetIirKindOfNode(item)
+
+            if kind == nodes.Iir_Kind.Association_Element_By_Expression:
+                pass
+            else:
+                raise DOMException(
+                    "Unknown association kind '{kindName}'({kind}) in array index or function call '{node}'.".format(
+                        kind=kind, kindName=kind.name, node=node
+                    )
+                )
+
         return cls(name)

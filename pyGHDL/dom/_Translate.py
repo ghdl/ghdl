@@ -42,9 +42,9 @@ from pyGHDL.dom._Utils import GetNameOfNode, GetIirKindOfNode
 from pyGHDL.dom.Common import DOMException
 from pyGHDL.dom.Range import Range, RangeExpression
 from pyGHDL.dom.Symbol import (
-    SimpleObjectSymbol,
+    SimpleObjectOrFunctionCallSymbol,
     SimpleSubTypeSymbol,
-    ConstrainedSubTypeSymbol,
+    ConstrainedSubTypeSymbol, IndexedObjectOrFunctionCallSymbol,
 )
 from pyGHDL.dom.Literal import IntegerLiteral, CharacterLiteral, FloatingPointLiteral, StringLiteral
 from pyGHDL.dom.Expression import (
@@ -135,7 +135,8 @@ def GetRangeFromNode(node) -> Range:
 
 
 __EXPRESSION_TRANSLATION = {
-    nodes.Iir_Kind.Simple_Name: SimpleObjectSymbol,
+    nodes.Iir_Kind.Simple_Name: SimpleObjectOrFunctionCallSymbol,
+    nodes.Iir_Kind.Parenthesis_Name: IndexedObjectOrFunctionCallSymbol,
     nodes.Iir_Kind.Integer_Literal: IntegerLiteral,
     nodes.Iir_Kind.Floating_Point_Literal: FloatingPointLiteral,
     nodes.Iir_Kind.Character_Literal: CharacterLiteral,
