@@ -7,7 +7,7 @@ from pathlib import Path
 
 from pydecor import export
 
-from pyGHDL.dom import Misc
+from pyGHDL.dom import NonStandard
 from pyGHDL import GHDLBaseException
 
 __all__ = []
@@ -18,13 +18,13 @@ from pyGHDL.dom.formatting.prettyprint import PrettyPrint
 
 @export
 class Application:
-    _design: Misc.Design
+    _design: NonStandard.Design
 
     def __init__(self):
-        self._design = Misc.Design()
+        self._design = NonStandard.Design()
 
     def addFile(self, filename: Path, library: str):
-        document = Misc.Document(filename)
+        document = NonStandard.Document(filename)
         self._design.Documents.append(document)
 
     def prettyPrint(self):

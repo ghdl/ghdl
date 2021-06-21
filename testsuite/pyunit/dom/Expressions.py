@@ -5,7 +5,7 @@ from unittest import TestCase
 from pyGHDL.dom.DesignUnit import Package
 
 from pyGHDL.dom import Expression
-from pyGHDL.dom.Misc       import Design, Document
+from pyGHDL.dom.NonStandard       import Design, Document
 from pyGHDL.dom.Symbol import SimpleObjectOrFunctionCallSymbol
 from pyGHDL.dom.Object import Constant
 from pyGHDL.dom.Expression import InverseExpression

@@ -2,16 +2,17 @@ from typing import List, Union
 
 from pydecor import export
 
+from pyGHDL.dom.Misc import Alias
 from pyGHDL.dom.Type import IntegerType, SubType
 from pyVHDLModel.VHDLModel import (
     GenericInterfaceItem,
     NamedEntity,
     PortInterfaceItem,
-    WithDefaultExpression,
+    WithDefaultExpression, Function,
 )
 
 from pyGHDL import GHDLBaseException
-from pyGHDL.dom.Misc import Document, Design, Library
+from pyGHDL.dom.NonStandard import Document, Design, Library
 from pyGHDL.dom.DesignUnit import (
     Entity,
     Architecture,
@@ -307,6 +308,20 @@ class PrettyPrint:
         elif isinstance(item, SubType):
             buffer.append(
                 "{prefix}- subtype {name} is ?????".format(
+                    prefix=prefix,
+                    name=item.Name,
+                )
+            )
+        elif isinstance(item, Alias):
+            buffer.append(
+                "{prefix}- alias {name} is ?????".format(
+                    prefix=prefix,
+                    name=item.Name,
+                )
+            )
+        elif isinstance(item, Function):
+            buffer.append(
+                "{prefix}- function {name}".format(
                     prefix=prefix,
                     name=item.Name,
                 )

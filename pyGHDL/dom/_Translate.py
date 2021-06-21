@@ -34,7 +34,7 @@ from typing import List
 
 from pydecor import export
 
-from pyGHDL.dom.Type import IntegerType, SubType
+from pyGHDL.dom.Misc import Alias
 from pyVHDLModel.VHDLModel import (
     Constraint,
     Direction,
@@ -49,13 +49,14 @@ from pyGHDL.libghdl.utils import flist_iter
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom._Utils import GetNameOfNode, GetIirKindOfNode
 from pyGHDL.dom.Common import DOMException
-from pyGHDL.dom.Range import Range, RangeExpression
 from pyGHDL.dom.Symbol import (
     SimpleObjectOrFunctionCallSymbol,
     SimpleSubTypeSymbol,
     ConstrainedSubTypeSymbol,
     IndexedObjectOrFunctionCallSymbol,
 )
+from pyGHDL.dom.Type import IntegerType, SubType
+from pyGHDL.dom.Range import Range, RangeExpression
 from pyGHDL.dom.Literal import (
     IntegerLiteral,
     CharacterLiteral,
@@ -95,6 +96,8 @@ from pyGHDL.dom.Expression import (
     RotateLeftExpression,
     RotateRightExpression,
 )
+from pyGHDL.dom.Subprogram import Function
+
 
 __all__ = []
 
@@ -304,14 +307,12 @@ def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str):
         elif kind == nodes.Iir_Kind.Subtype_Declaration:
             result.append(GetSubTypeFromNode(item))
         elif kind == nodes.Iir_Kind.Function_Declaration:
-            functionName = GetNameOfNode(item)
-            print("found function '{name}'".format(name=functionName))
+            result.append(GetFunctionFromNode(item))
         elif kind == nodes.Iir_Kind.Function_Body:
             #                functionName = NodeToName(item)
             print("found function body '{name}'".format(name="????"))
         elif kind == nodes.Iir_Kind.Object_Alias_Declaration:
-            aliasName = GetNameOfNode(item)
-            print("found alias '{name}'".format(name=aliasName))
+            result.append(GetAliasFromNode(item))
         else:
             raise DOMException(
                 "Unknown declared item kind '{kindName}'({kind}) in {entity} '{name}'.".format(
@@ -320,3 +321,15 @@ def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str):
             )
 
     return result
+
+
+def GetFunctionFromNode(node: Iir):
+    functionName = GetNameOfNode(node)
+
+    return Function(functionName)
+
+
+def GetAliasFromNode(node: Iir):
+    aliasName = GetNameOfNode(node)
+
+    return Alias(aliasName)

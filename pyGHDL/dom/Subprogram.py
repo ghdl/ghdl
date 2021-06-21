@@ -9,7 +9,7 @@
 # Authors:
 #   Patrick Lehmann
 #
-# Package module:   DOM: Elements not covered by the VHDL standard.
+# Package module:   DOM: Interface items (e.g. generic or port)
 #
 # License:
 # ============================================================================
@@ -30,24 +30,15 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-
-"""
-.. todo::
-   Add a module documentation.
-"""
 from pydecor import export
 
 from pyVHDLModel.VHDLModel import (
-    Alias as VHDLModel_Alias,
+    Function as VHDLModel_Function,
+    Expression,
 )
-
-from pyGHDL.dom._Utils import GetIirKindOfNode
-from pyGHDL.dom.Common import DOMException, GHDLMixin
-
-__all__ = []
 
 
 @export
-class Alias(VHDLModel_Alias):
-    def __init__(self, aliasName: str):
-        super().__init__(aliasName)
+class Function(VHDLModel_Function):
+    def __init__(self, functionName: str):
+        super().__init__(functionName)
