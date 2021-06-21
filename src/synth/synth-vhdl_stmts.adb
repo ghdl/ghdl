@@ -166,6 +166,7 @@ package body Synth.Vhdl_Stmts is
 
                      Dest_Dyn.Voff := Build_Addidx
                        (Get_Build (Syn_Inst), Dest_Dyn.Voff, Voff);
+                     Set_Location (Dest_Dyn.Voff, Pfx);
                   end if;
                end if;
 
@@ -228,6 +229,7 @@ package body Synth.Vhdl_Stmts is
 
                      Dest_Dyn.Voff := Build_Addidx
                        (Get_Build (Syn_Inst), Dest_Dyn.Voff, Sl_Voff);
+                     Set_Location (Dest_Dyn.Voff, Pfx);
                   end if;
                   Dest_Typ := Create_Slice_Type (Res_Bnd.Len, El_Typ);
                end if;
