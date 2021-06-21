@@ -30,15 +30,9 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-from pyGHDL.dom.Common import DOMException
-from pyGHDL.libghdl import utils
-
-from pyGHDL.libghdl.vhdl import nodes
+from typing import List
 from pydecor import export
 
-from typing import List
-
-from pyGHDL.dom._Utils import GetNameOfNode, GetIirKindOfNode
 from pyVHDLModel.VHDLModel import (
     EntitySymbol as VHDLModel_EntitySymbol,
     SimpleSubTypeSymbol as VHDLModel_SimpleSubTypeSymbol,
@@ -48,6 +42,11 @@ from pyVHDLModel.VHDLModel import (
     IndexedObjectOrFunctionCallSymbol as VHDLModel_IndexedObjectOrFunctionCallSymbol,
     Constraint,
 )
+
+from pyGHDL.libghdl import utils
+from pyGHDL.libghdl.vhdl import nodes
+from pyGHDL.dom._Utils import GetIirKindOfNode, GetNameOfNode
+from pyGHDL.dom.Common import DOMException
 
 __all__ = []
 
@@ -94,21 +93,29 @@ class SimpleObjectOrFunctionCallSymbol(VHDLModel_SimpleObjectOrFunctionCallSymbo
 
 @export
 class IndexedObjectOrFunctionCallSymbol(VHDLModel_IndexedObjectOrFunctionCallSymbol):
+    def __init__(self, name: str, associations: List):
+        super().__init__(objectName=name)
+
     @classmethod
     def parse(cls, node):
+        from pyGHDL.dom._Translate import GetExpressionFromNode
+
         prefix = nodes.Get_Prefix(node)
         name = GetNameOfNode(prefix)
 
+        associations = []
         for item in utils.chain_iter(nodes.Get_Association_Chain(node)):
             kind = GetIirKindOfNode(item)
 
             if kind == nodes.Iir_Kind.Association_Element_By_Expression:
-                pass
+                expr = None  # GetExpressionFromNode(nodes.Get_Associated_Expr(item))
+
+                associations.append(expr)
             else:
                 raise DOMException(
-                    "Unknown association kind '{kindName}'({kind}) in array index or function call '{node}'.".format(
+                    "Unknown association kind '{kindName}'({kind}) in array index/slice or function call '{node}'.".format(
                         kind=kind, kindName=kind.name, node=node
                     )
                 )
 
-        return cls(name)
+        return cls(name, associations)

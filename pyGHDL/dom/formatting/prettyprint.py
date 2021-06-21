@@ -2,6 +2,7 @@ from typing import List, Union
 
 from pydecor import export
 
+from pyGHDL.dom.Type import IntegerType, SubType
 from pyVHDLModel.VHDLModel import (
     GenericInterfaceItem,
     NamedEntity,
@@ -291,6 +292,23 @@ class PrettyPrint:
                     initValue=" := {expr}".format(expr=str(item.DefaultExpression))
                     if item.DefaultExpression is not None
                     else "",
+                )
+            )
+        elif isinstance(item, IntegerType):
+            buffer.append(
+                "{prefix}- type {name} is range {range}".format(
+                    prefix=prefix,
+                    name=item.Name,
+                    range="{left!s} to {right!s}".format(
+                        left=item.LeftBound, right=item.RightBound
+                    ),
+                )
+            )
+        elif isinstance(item, SubType):
+            buffer.append(
+                "{prefix}- subtype {name} is ?????".format(
+                    prefix=prefix,
+                    name=item.Name,
                 )
             )
         else:

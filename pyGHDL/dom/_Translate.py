@@ -33,9 +33,18 @@
 from typing import List
 
 from pydecor import export
-from pyVHDLModel.VHDLModel import Constraint, Direction, Expression, SubTypeOrSymbol
+
+from pyGHDL.dom.Type import IntegerType, SubType
+from pyVHDLModel.VHDLModel import (
+    Constraint,
+    Direction,
+    Expression,
+    SubTypeOrSymbol,
+    BaseType,
+)
 
 from pyGHDL.libghdl import utils
+from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.utils import flist_iter
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom._Utils import GetNameOfNode, GetIirKindOfNode
@@ -91,7 +100,7 @@ __all__ = []
 
 
 @export
-def GetSubtypeIndicationFromNode(node, entity: str, name: str) -> SubTypeOrSymbol:
+def GetSubtypeIndicationFromNode(node: Iir, entity: str, name: str) -> SubTypeOrSymbol:
     subTypeIndication = nodes.Get_Subtype_Indication(node)
     if subTypeIndication is nodes.Null_Iir:
         return None
@@ -124,7 +133,9 @@ def GetSubtypeIndicationFromNode(node, entity: str, name: str) -> SubTypeOrSymbo
 
 
 @export
-def GetArrayConstraintsFromSubtypeIndication(subTypeIndication) -> List[Constraint]:
+def GetArrayConstraintsFromSubtypeIndication(
+    subTypeIndication: Iir,
+) -> List[Constraint]:
     constraints = []
     for constraint in flist_iter(nodes.Get_Index_Constraint_List(subTypeIndication)):
         constraintKind = GetIirKindOfNode(constraint)
@@ -147,7 +158,23 @@ def GetArrayConstraintsFromSubtypeIndication(subTypeIndication) -> List[Constrai
 
 
 @export
-def GetRangeFromNode(node) -> Range:
+def GetTypeFromNode(node: Iir) -> BaseType:
+    typeName = GetNameOfNode(node)
+    leftBound = IntegerLiteral(0)
+    rightBound = IntegerLiteral(15)
+
+    return IntegerType(typeName, leftBound, rightBound)
+
+
+@export
+def GetSubTypeFromNode(node: Iir) -> BaseType:
+    subTypeName = GetNameOfNode(node)
+
+    return SubType(subTypeName)
+
+
+@export
+def GetRangeFromNode(node: Iir) -> Range:
     direction = nodes.Get_Direction(node)
     leftBound = nodes.Get_Left_Limit_Expr(node)
     rightBound = nodes.Get_Right_Limit_Expr(node)
@@ -201,7 +228,7 @@ __EXPRESSION_TRANSLATION = {
 
 
 @export
-def GetExpressionFromNode(node) -> Expression:
+def GetExpressionFromNode(node: Iir) -> Expression:
     kind = GetIirKindOfNode(node)
 
     try:
@@ -218,7 +245,7 @@ def GetExpressionFromNode(node) -> Expression:
 
 # FIXME: rewrite to generator
 @export
-def GetGenericsFromChainedNodes(nodeChain):
+def GetGenericsFromChainedNodes(nodeChain: Iir):
     result = []
     for generic in utils.chain_iter(nodeChain):
         kind = GetIirKindOfNode(generic)
@@ -240,7 +267,7 @@ def GetGenericsFromChainedNodes(nodeChain):
 
 # FIXME: rewrite to generator
 @export
-def GetPortsFromChainedNodes(nodeChain):
+def GetPortsFromChainedNodes(nodeChain: Iir):
     result = []
     for port in utils.chain_iter(nodeChain):
         kind = GetIirKindOfNode(port)
@@ -260,7 +287,7 @@ def GetPortsFromChainedNodes(nodeChain):
     return result
 
 
-def GetDeclaredItemsFromChainedNodes(nodeChain, entity: str, name: str):
+def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str):
     result = []
     for item in utils.chain_iter(nodeChain):
         kind = GetIirKindOfNode(item)
@@ -273,11 +300,9 @@ def GetDeclaredItemsFromChainedNodes(nodeChain, entity: str, name: str):
 
             result.append(Signal.parse(item))
         elif kind == nodes.Iir_Kind.Anonymous_Type_Declaration:
-            typeName = GetNameOfNode(item)
-            print("found type '{name}'".format(name=typeName))
+            result.append(GetTypeFromNode(item))
         elif kind == nodes.Iir_Kind.Subtype_Declaration:
-            subTypeName = GetNameOfNode(item)
-            print("found subtype '{name}'".format(name=subTypeName))
+            result.append(GetSubTypeFromNode(item))
         elif kind == nodes.Iir_Kind.Function_Declaration:
             functionName = GetNameOfNode(item)
             print("found function '{name}'".format(name=functionName))
