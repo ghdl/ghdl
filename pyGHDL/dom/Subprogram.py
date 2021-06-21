@@ -34,6 +34,7 @@ from pydecor import export
 
 from pyVHDLModel.VHDLModel import (
     Function as VHDLModel_Function,
+    Procedure as VHDLModel_Procedure,
     Expression,
 )
 
@@ -42,3 +43,9 @@ from pyVHDLModel.VHDLModel import (
 class Function(VHDLModel_Function):
     def __init__(self, functionName: str):
         super().__init__(functionName)
+
+
+@export
+class Procedure(VHDLModel_Procedure):
+    def __init__(self, procedureName: str):
+        super().__init__(procedureName)

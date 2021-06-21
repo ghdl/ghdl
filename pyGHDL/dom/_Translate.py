@@ -97,7 +97,7 @@ from pyGHDL.dom.Expression import (
     RotateLeftExpression,
     RotateRightExpression,
 )
-from pyGHDL.dom.Subprogram import Function
+from pyGHDL.dom.Subprogram import Function, Procedure
 from pyGHDL.dom.Misc import Alias
 
 
@@ -317,6 +317,11 @@ def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str):
         elif kind == nodes.Iir_Kind.Function_Body:
             #                functionName = NodeToName(item)
             print("found function body '{name}'".format(name="????"))
+        elif kind == nodes.Iir_Kind.Procedure_Declaration:
+            result.append(GetProcedureFromNode(item))
+        elif kind == nodes.Iir_Kind.Procedure_Body:
+            #                procedureName = NodeToName(item)
+            print("found procedure body '{name}'".format(name="????"))
         elif kind == nodes.Iir_Kind.Object_Alias_Declaration:
             result.append(GetAliasFromNode(item))
         elif kind == nodes.Iir_Kind.Component_Declaration:
@@ -337,6 +342,12 @@ def GetFunctionFromNode(node: Iir):
     functionName = GetNameOfNode(node)
 
     return Function(functionName)
+
+
+def GetProcedureFromNode(node: Iir):
+    procedureName = GetNameOfNode(node)
+
+    return Procedure(procedureName)
 
 
 def GetAliasFromNode(node: Iir):

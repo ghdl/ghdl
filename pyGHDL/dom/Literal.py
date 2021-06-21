@@ -30,7 +30,7 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-from pyGHDL.dom._Utils import GetIirKindOfNode
+from pyGHDL.dom._Utils import GetIirKindOfNode, GetNameOfNode
 from pyGHDL.libghdl import name_table
 
 from pyGHDL.libghdl.vhdl import nodes
@@ -70,7 +70,7 @@ class PhysicalIntegerLiteral(VHDLModel_PhysicalIntegerLiteral):
     def parse(cls, node):
         value = nodes.Get_Value(node)
         unit = nodes.Get_Unit_Name(node)
-        unitName = name_table.Get_Name_Ptr(unit)
+        unitName = GetNameOfNode(unit)
 
         return cls(value, unitName)
 
@@ -81,7 +81,7 @@ class PhysicalFloatingLiteral(VHDLModel_PhysicalFloatingLiteral):
     def parse(cls, node):
         value = nodes.Get_Fp_Value(node)
         unit = nodes.Get_Unit_Name(node)
-        unitName = name_table.Get_Name_Ptr(unit)
+        unitName = GetNameOfNode(unit)
 
         return cls(value, unitName)
 

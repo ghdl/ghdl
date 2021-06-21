@@ -3,6 +3,7 @@ from typing import List, Union
 from pydecor import export
 
 from pyGHDL.dom.Misc import Alias
+from pyGHDL.dom.Subprogram import Procedure
 from pyGHDL.dom.Type import IntegerType, SubType
 from pyVHDLModel.VHDLModel import (
     GenericInterfaceItem,
@@ -345,11 +346,22 @@ class PrettyPrint:
                     name=item.Name,
                 )
             )
+        elif isinstance(item, Procedure):
+            buffer.append(
+                "{prefix}- procedure {name}".format(
+                    prefix=prefix,
+                    name=item.Name,
+                )
+            )
         elif isinstance(item, Component):
             for line in self.formatComponent(item, level):
                 buffer.append(line)
         else:
-            raise PrettyPrintException("Unhandled declared item kind.")
+            raise PrettyPrintException(
+                "Unhandled declared item kind '{name}'.".format(
+                    name=item.__class__.__name__
+                )
+            )
 
         return buffer
 

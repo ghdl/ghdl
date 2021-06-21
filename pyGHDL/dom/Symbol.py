@@ -108,7 +108,8 @@ class IndexedObjectOrFunctionCallSymbol(VHDLModel_IndexedObjectOrFunctionCallSym
             kind = GetIirKindOfNode(item)
 
             if kind == nodes.Iir_Kind.Association_Element_By_Expression:
-                expr = None  # GetExpressionFromNode(nodes.Get_Associated_Expr(item))
+                actual = nodes.Get_Actual(item)
+                expr = GetExpressionFromNode(actual)
 
                 associations.append(expr)
             else:
