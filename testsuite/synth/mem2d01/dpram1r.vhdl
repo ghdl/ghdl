@@ -18,6 +18,7 @@ begin
   process (clk)
   begin
     if rising_edge (clk) then
+      --  Not a memory: uses different widths.
       rdat <= mem (raddr)(rbit);
       mem (waddr) <= wdat;
     end if;

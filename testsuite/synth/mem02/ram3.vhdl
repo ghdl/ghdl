@@ -21,5 +21,7 @@ begin
       mem(ra) <= wdat;
     end if;
   end process;
+
+  --  As MEM is read in a whole, this is not a RAM.
   val <= mem;
 end behav;

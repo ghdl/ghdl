@@ -22,6 +22,7 @@ begin
   begin
     if rising_edge (clk) then
       if rst = '1' then
+        --  As MEM is written in a whole, this is not a RAM.
         mem <= init;
       end if;
       rdat <= mem((idx.idx+1) * 2 - 1 downto idx.idx * 2);

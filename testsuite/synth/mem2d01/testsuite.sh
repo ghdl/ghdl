@@ -2,15 +2,13 @@
 
 . ../../testenv.sh
 
-for t in dpram1r dpram2r dpram2w memmux04; do
-    analyze $t.vhdl tb_$t.vhdl
-    elab_simulate tb_$t
-    clean
+for t in memmux04; do
+    synth_tb $t 2> $t.log
+    grep "found R" $t.log
+done
 
-    synth $t.vhdl -e $t > syn_$t.vhdl
-    analyze syn_$t.vhdl tb_$t.vhdl
-    elab_simulate tb_$t --ieee-asserts=disable-at-0
-    clean
+for t in dpram1r dpram2r dpram2w; do
+    synth_tb $t 2> $t.log
 done
 
 echo "Test successful"

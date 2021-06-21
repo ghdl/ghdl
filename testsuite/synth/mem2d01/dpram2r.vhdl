@@ -18,6 +18,7 @@ begin
   process (clk)
   begin
     if rising_edge (clk) then
+      --  Not a memory: different widths
       rdat <= mem (raddr)(rnib * 4 + 3 downto rnib * 4);
       mem (waddr) <= wdat;
     end if;
