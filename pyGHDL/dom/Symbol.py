@@ -34,7 +34,7 @@ from pydecor import export
 
 from typing import List
 
-from pyGHDL.dom._Utils import NodeToName
+from pyGHDL.dom._Utils import GetNameOfNode, GetIirKindOfNode
 from pyVHDLModel.VHDLModel import (
     EntitySymbol as VHDLModel_EntitySymbol,
     SimpleSubTypeSymbol as VHDLModel_SimpleSubTypeSymbol,

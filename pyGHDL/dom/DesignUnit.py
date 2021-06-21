@@ -51,7 +51,7 @@ from pyVHDLModel.VHDLModel import Configuration as VHDLModel_Configuration
 
 from pyGHDL.libghdl.vhdl import nodes
 
-from pyGHDL.dom._Utils import NodeToName
+from pyGHDL.dom._Utils import GetNameOfNode
 from pyGHDL.dom._Translate import (
     GetGenericsFromChainedNodes,
     GetPortsFromChainedNodes,
@@ -67,7 +67,7 @@ __all__ = []
 class Entity(VHDLModel_Entity, GHDLMixin):
     @classmethod
     def parse(cls, libraryUnit):
-        name = NodeToName(libraryUnit)
+        name = GetNameOfNode(libraryUnit)
         entity = cls(name)
 
         for generic in GetGenericsFromChainedNodes(
@@ -95,8 +95,8 @@ class Architecture(VHDLModel_Architecture, GHDLMixin):
 
     @classmethod
     def parse(cls, libraryUnit):
-        name = NodeToName(libraryUnit)
-        entityName = NodeToName(nodes.Get_Entity_Name(libraryUnit))
+        name = GetNameOfNode(libraryUnit)
+        entityName = GetNameOfNode(nodes.Get_Entity_Name(libraryUnit))
         entity = EntitySymbol(entityName)
 
         architecture = cls(name, entity)
@@ -116,7 +116,7 @@ class Architecture(VHDLModel_Architecture, GHDLMixin):
 class Package(VHDLModel_Package, GHDLMixin):
     @classmethod
     def parse(cls, libraryUnit):
-        name = NodeToName(libraryUnit)
+        name = GetNameOfNode(libraryUnit)
 
         package = cls(name)
 
@@ -132,7 +132,7 @@ class Package(VHDLModel_Package, GHDLMixin):
 class PackageBody(VHDLModel_PackageBody, GHDLMixin):
     @classmethod
     def parse(cls, libraryUnit):
-        name = NodeToName(libraryUnit)
+        name = GetNameOfNode(libraryUnit)
 
         packageBody = cls(name)
 
@@ -148,7 +148,7 @@ class PackageBody(VHDLModel_PackageBody, GHDLMixin):
 class Context(VHDLModel_Context, GHDLMixin):
     @classmethod
     def parse(cls, libraryUnit):
-        name = NodeToName(libraryUnit)
+        name = GetNameOfNode(libraryUnit)
         return cls(name)
 
 
@@ -156,5 +156,5 @@ class Context(VHDLModel_Context, GHDLMixin):
 class Configuration(VHDLModel_Configuration, GHDLMixin):
     @classmethod
     def parse(cls, libraryUnit):
-        name = NodeToName(libraryUnit)
+        name = GetNameOfNode(libraryUnit)
         return cls(name)

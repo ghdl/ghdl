@@ -38,7 +38,7 @@ from pyVHDLModel.VHDLModel import Constraint, Direction, Expression, SubTypeOrSy
 from pyGHDL.libghdl import utils
 from pyGHDL.libghdl.utils import flist_iter
 from pyGHDL.libghdl.vhdl import nodes
-from pyGHDL.dom._Utils import NodeToName, GetIirKindOfNode
+from pyGHDL.dom._Utils import GetNameOfNode, GetIirKindOfNode
 from pyGHDL.dom.Common import DOMException
 from pyGHDL.dom.Range import Range, RangeExpression
 from pyGHDL.dom.Symbol import (
@@ -73,12 +73,12 @@ def GetSubtypeIndicationFromNode(node, entity: str, name: str) -> SubTypeOrSymbo
     subTypeKind = GetIirKindOfNode(subTypeIndication)
 
     if subTypeKind == nodes.Iir_Kind.Simple_Name:
-        subTypeName = NodeToName(subTypeIndication)
+        subTypeName = GetNameOfNode(subTypeIndication)
 
         subType = SimpleSubTypeSymbol(subTypeName)
     elif subTypeKind == nodes.Iir_Kind.Array_Subtype_Definition:
         typeMark = nodes.Get_Subtype_Type_Mark(subTypeIndication)
-        typeMarkName = NodeToName(typeMark)
+        typeMarkName = GetNameOfNode(typeMark)
 
         constraints = GetArrayConstraintsFromSubtypeIndication(subTypeIndication)
         subType = ConstrainedSubTypeSymbol(typeMarkName, constraints)
@@ -247,19 +247,19 @@ def GetDeclaredItemsFromChainedNodes(nodeChain, entity: str, name: str):
 
             result.append(Signal.parse(item))
         elif kind == nodes.Iir_Kind.Anonymous_Type_Declaration:
-            typeName = NodeToName(item)
+            typeName = GetNameOfNode(item)
             print("found type '{name}'".format(name=typeName))
         elif kind == nodes.Iir_Kind.Subtype_Declaration:
-            subTypeName = NodeToName(item)
+            subTypeName = GetNameOfNode(item)
             print("found subtype '{name}'".format(name=subTypeName))
         elif kind == nodes.Iir_Kind.Function_Declaration:
-            functionName = NodeToName(item)
+            functionName = GetNameOfNode(item)
             print("found function '{name}'".format(name=functionName))
         elif kind == nodes.Iir_Kind.Function_Body:
             #                functionName = NodeToName(item)
             print("found function body '{name}'".format(name="????"))
         elif kind == nodes.Iir_Kind.Object_Alias_Declaration:
-            aliasName = NodeToName(item)
+            aliasName = GetNameOfNode(item)
             print("found alias '{name}'".format(name=aliasName))
         else:
             raise DOMException(

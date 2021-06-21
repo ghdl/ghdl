@@ -43,7 +43,7 @@ from pyVHDLModel.VHDLModel import (
     Expression,
 )
 
-from pyGHDL.dom._Utils import NodeToName, GetModeOfNode
+from pyGHDL.dom._Utils import GetNameOfNode, GetModeOfNode
 from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode, GetExpressionFromNode
 from pyGHDL.dom.Common import GHDLMixin
 
@@ -54,7 +54,7 @@ __all__ = []
 class GenericConstantInterfaceItem(VHDLModel_GenericConstantInterfaceItem, GHDLMixin):
     @classmethod
     def parse(cls, generic):
-        name = NodeToName(generic)
+        name = GetNameOfNode(generic)
         mode = GetModeOfNode(generic)
         subTypeIndication = GetSubtypeIndicationFromNode(generic, "generic", name)
         default = nodes.Get_Default_Value(generic)
@@ -80,7 +80,7 @@ class GenericConstantInterfaceItem(VHDLModel_GenericConstantInterfaceItem, GHDLM
 class PortSignalInterfaceItem(VHDLModel_PortSignalInterfaceItem, GHDLMixin):
     @classmethod
     def parse(cls, port):
-        name = NodeToName(port)
+        name = GetNameOfNode(port)
         mode = GetModeOfNode(port)
         subTypeIndication = GetSubtypeIndicationFromNode(port, "port", name)
 
