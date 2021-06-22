@@ -366,6 +366,14 @@ def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str):
             from pyGHDL.dom.Object import Constant
 
             result.append(Constant.parse(item))
+
+        elif kind == nodes.Iir_Kind.Variable_Declaration:
+            from pyGHDL.dom.Object import SharedVariable
+
+            if nodes.Get_Shared_Flag(item):
+                result.append(SharedVariable.parse(item))
+            else:
+                raise DOMException("Found non-shared variable.")
         elif kind == nodes.Iir_Kind.Signal_Declaration:
             from pyGHDL.dom.Object import Signal
 

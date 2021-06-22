@@ -20,15 +20,30 @@ end entity entity_1;
 
 architecture behav of entity_1 is
 	constant MAX : positive := -25;
-	signal rst : std_logic := foo'('U');
+	signal rst : std_logic := foo('U');
 
 	type newInt is range -4 to 3;
+	type arr is array(natural range <>) of integer;
+	type rec is record
+		elem1 : bit;
+		elem2 : boolean;
+	end record;
+	type enum is (e1, e2, e3);
 	subtype uint8 is integer range 0 to 255;
 
-	function foo(a : integer; b : boolean) return bit is
+--	file f : text;
+
+	function foo generic(g : int8) (a : integer; b : boolean) return bit is
 	begin
 
 	end function;
+
+  shared variable foo : bob;
+
+	procedure proc(spam : egg) is
+	begin
+
+	end procedure;
 
 	alias bar is boolean;
 begin
@@ -46,6 +61,12 @@ end architecture behav;
 
 package package_1 is
 	constant ghdl : float := (3, 5, 0 to 2 => 5, 3 => 4, name => 10); -- 2.3;
+
+	component comp is
+		port (
+			clk : std
+		);
+	end component;
 end package;
 
 package body package_1 is

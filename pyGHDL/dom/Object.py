@@ -39,6 +39,7 @@ from pyVHDLModel.VHDLModel import (
     Constant as VHDLModel_Constant,
     DeferredConstant as VHDLModel_DeferredConstant,
     Variable as VHDLModel_Variable,
+    SharedVariable as VHDLModel_SharedVariable,
     Signal as VHDLModel_Signal,
     Expression,
     SubTypeOrSymbol,
@@ -103,6 +104,22 @@ class Variable(VHDLModel_Variable):
         defaultExpression = GetExpressionFromNode(nodes.Get_Default_Value(node))
 
         return cls(name, subTypeIndication, defaultExpression)
+
+
+@export
+class SharedVariable(VHDLModel_SharedVariable):
+    def __init__(self, name: str, subType: SubTypeOrSymbol):
+        super().__init__(name)
+
+        self._name = name
+        self._subType = subType
+
+    @classmethod
+    def parse(cls, node):
+        name = GetNameOfNode(node)
+        subTypeIndication = GetSubtypeIndicationFromNode(node, "variable", name)
+
+        return cls(name, subTypeIndication)
 
 
 @export

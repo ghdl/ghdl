@@ -24,7 +24,7 @@ from pyGHDL.dom.DesignUnit import (
     Context,
     Component,
 )
-from pyGHDL.dom.Object import Constant, Signal
+from pyGHDL.dom.Object import Constant, Signal, SharedVariable
 from pyGHDL.dom.InterfaceItem import (
     GenericConstantInterfaceItem,
     PortSignalInterfaceItem,
@@ -300,6 +300,16 @@ class PrettyPrint:
                         item.SubType, "constant", item.Name
                     ),
                     expr=str(item.DefaultExpression),
+                )
+            )
+        elif isinstance(item, SharedVariable):
+            buffer.append(
+                "{prefix}- shared variable {name} : {subtype}".format(
+                    prefix=prefix,
+                    name=item.Name,
+                    subtype=self.formatSubtypeIndication(
+                        item.SubType, "shared variable", item.Name
+                    ),
                 )
             )
         elif isinstance(item, Signal):
