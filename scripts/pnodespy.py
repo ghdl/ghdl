@@ -30,7 +30,7 @@ def print_enum(name, vals):
         print("    {0} = {1}".format(k, n))
 
 
-def print_file_header(includeIntEnumunique=True,includeBindToLibGHDL=True):
+def print_file_header(includeIntEnumUnique=True, includeBindToLibGHDL=True):
     print(dedent("""\
             # Auto generated Python source file from Ada sources
             # Call 'make' in 'src/vhdl' to regenerate:
@@ -38,7 +38,7 @@ def print_file_header(includeIntEnumunique=True,includeBindToLibGHDL=True):
         """), end=''
     )
 
-    if includeIntEnumunique:
+    if includeIntEnumUnique:
         print("from enum import IntEnum, unique")
 
     print("from pydecor import export")
@@ -106,7 +106,7 @@ def do_iirs_subprg():
 
 def do_libghdl_elocations():
     classname = "vhdl__elocations"
-    print_file_header(includeIntEnumunique=False, includeBindToLibGHDL=False)
+    print_file_header(includeIntEnumUnique=False, includeBindToLibGHDL=False)
     print("from pyGHDL.libghdl import libghdl")
     print()
     for k in pnodes.funcs:
