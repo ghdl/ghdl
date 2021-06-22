@@ -77,7 +77,7 @@ def GetModeOfNode(node: Iir) -> Mode:
 def GetPositionOfNode(node: Iir) -> Position:
     location = nodes.Get_Location(node)
     file = files_map.Location_To_File(location)
-    fileName = name_table.Get_Name_Ptr(file)
+    fileName = name_table.Get_Name_Ptr(files_map.Get_File_Name(file))
     #    position = files_map.Location_File_To_Pos(location, file)
     line = files_map.Location_File_To_Line(location, file)
     column = files_map.Location_File_Line_To_Offset(location, file, line)
