@@ -8,7 +8,6 @@ from pyGHDL.libghdl._decorator import BindToLibGHDL
 
 from typing import TypeVar
 from ctypes import c_int32
-from pyGHDL.libghdl import libghdl
 from pyGHDL.libghdl._types import (
     Iir,
     IirKind,
@@ -1802,7 +1801,7 @@ class Iir_Predefined(IntEnum):
 @export
 @BindToLibGHDL("vhdl__nodes__get_kind")
 def Get_Kind(node: Iir) -> IirKind:
-    """Get node kind"""
+    """Get node kind."""
 
 
 @export

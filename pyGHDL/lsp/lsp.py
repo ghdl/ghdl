@@ -162,7 +162,7 @@ class LanguageProtocolServer(object):
         self.conn.write(output)
 
     def notify(self, method, params):
-        """Send a notification"""
+        """Send a notification."""
         body = {
             "jsonrpc": "2.0",
             "method": method,
@@ -171,7 +171,7 @@ class LanguageProtocolServer(object):
         self.write_output(body)
 
     def send_request(self, method, params):
-        """Send a request"""
+        """Send a request."""
         self._next_id += 1
         body = {
             "jsonrpc": "2.0",
@@ -182,7 +182,7 @@ class LanguageProtocolServer(object):
         self.write_output(body)
 
     def shutdown(self):
-        """Prepare to shutdown the server"""
+        """Prepare to shutdown the server."""
         self.running = False
 
     def show_message(self, typ, message):

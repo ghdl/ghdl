@@ -18,7 +18,7 @@ def find_def_chain(first, loc):
 
 
 def find_def(n, loc):
-    "Return the node at location :param loc:, or None if not under :param n:"
+    """Return the node at location :param loc:, or None if not under :param n:."""
     if n == nodes.Null_Iir:
         return None
     k = nodes.Get_Kind(n)
@@ -86,7 +86,7 @@ def find_def(n, loc):
 
 
 def goto_definition(n, loc):
-    "Return the declaration (as a node) under :param loc: or None"
+    """Return the declaration (as a node) under :param loc: or None."""
     ref = find_def(n, loc)
     log.debug("for loc %u found node %s", loc, ref)
     if ref is None:

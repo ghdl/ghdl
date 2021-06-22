@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""Like pnodes but output for Python"""
+"""Like pnodes but output for Python."""
 
 from __future__ import print_function
 
@@ -65,7 +65,7 @@ def do_iirs_subprg():
         @export
         @BindToLibGHDL("{classname}__get_kind")
         def Get_Kind(node: Iir) -> IirKind:
-            \"\"\"Get node kind\"\"\"
+            \"\"\"Get node kind.\"\"\"
 
         @export
         @BindToLibGHDL("{classname}__get_location")
@@ -84,13 +84,13 @@ def do_iirs_subprg():
             @export
             @BindToLibGHDL("{classname}__get_{kname_lower}")
             def Get_{kname}(obj: Iir) -> {rtype}:
-                \"\"\"{gettercomment}\"\"\"
+                \"\"\"\"\"\"
             @export
             @BindToLibGHDL("{classname}__set_{kname_lower}")
             def Set_{kname}(obj: Iir, value: {rtype}) -> None:
-                \"\"\"{settercomment}\"\"\"
+                \"\"\"\"\"\"
             """).format(kname=k.name, kname_lower=k.name.lower(), rtype=rtype,
-                         libname=libname, classname=classname, gettercomment="", settercomment="")
+                         libname=libname, classname=classname)
         )
 
 
@@ -191,7 +191,6 @@ def do_libghdl_nodes():
     print(dedent("""\
         from typing import TypeVar
         from ctypes import c_int32
-        from pyGHDL.libghdl import libghdl
         from pyGHDL.libghdl._types import (
             Iir,
             IirKind,
@@ -334,7 +333,7 @@ def do_libghdl_names():
             val_max = max(val_max, val)
             dict[name_def] = val
             res.append((name_def, val))
-    print_file_header(includeBindToLibGHDL=False)
+    print_file_header(includeIntEnumUnique=False, includeBindToLibGHDL=False)
     print(dedent("""
 
         @export
@@ -350,7 +349,7 @@ def do_libghdl_names():
 
 
 def do_libghdl_tokens():
-    print_file_header()
+    print_file_header(includeBindToLibGHDL=False)
     read_enum("vhdl-tokens.ads", "Token_Type", "Tok_", "Tok")
 
 

@@ -5,7 +5,7 @@ from . import lsp
 
 
 def lsp2json():
-    "Utility that transforms lsp log file to a JSON list"
+    """Utility that transforms lsp log file to a JSON list."""
     conn = lsp.LSPConn(sys.stdin.buffer, sys.stdout.buffer)
     ls = lsp.LanguageProtocolServer(None, conn)
     res = []
@@ -18,7 +18,7 @@ def lsp2json():
 
 
 def json2lsp():
-    "Utility that transform a JSON list to an lsp file"
+    """Utility that transform a JSON list to an lsp file."""
     res = json.load(sys.stdin)
     conn = lsp.LSPConn(sys.stdin.buffer, sys.stdout.buffer)
     ls = lsp.LanguageProtocolServer(None, conn)

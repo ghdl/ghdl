@@ -23,7 +23,7 @@ log = logging.getLogger(__name__)
 
 
 class ProjectError(Exception):
-    "Exception raised in case of unrecoverable error in the project file."
+    """Exception raised in case of unrecoverable error in the project file."""
 
     def __init__(self, msg):
         super().__init__()
@@ -110,8 +110,11 @@ class Workspace(object):
         return res
 
     def get_document(self, doc_uri):
-        """Get a document from :param doc_uri:  Note that the document may not exist,
-        and this function may return None."""
+        """
+        Get a document from :param doc_uri:
+
+        Note that the document may not exist, and this function may return None.
+        """
         return self._docs.get(doc_uri)
 
     def put_document(self, doc_uri, source, version=None):
@@ -126,8 +129,11 @@ class Workspace(object):
         return doc
 
     def sfe_to_document(self, sfe):
-        """Get the document correspond to :param sfe: source file.
-        Can create the document if needed."""
+        """
+        Get the document correspond to :param sfe: source file.
+
+        Can create the document if needed.
+        """
         assert sfe != 0
         doc = self._fe_map.get(sfe, None)
         if doc is None:
@@ -288,7 +294,7 @@ class Workspace(object):
             self.publish_diagnostics(doc.uri, [])
 
     def obsolete_dependent_units(self, unit, antideps):
-        """Obsolete units that depends of :param unit:"""
+        """Obsolete units that depends of :param unit:."""
         udeps = antideps.get(unit, None)
         if udeps is None:
             # There are no units.
@@ -375,7 +381,7 @@ class Workspace(object):
         )
 
     def declaration_to_location(self, decl):
-        "Convert declaration :param decl: to an LSP Location"
+        """Convert declaration :param decl: to an LSP Location."""
         decl_loc = nodes.Get_Location(decl)
         if decl_loc == std_package.Std_Location.value:
             # There is no real file for the std.standard package.
@@ -472,7 +478,7 @@ class Workspace(object):
         }
 
     def compute_anti_dependences(self):
-        """Return a dictionnary of anti dependencies for design unit"""
+        """Return a dictionnary of anti dependencies for design unit."""
         res = {}
         lib = libraries.Get_Libraries_Chain()
         while lib != nodes.Null_Iir:
