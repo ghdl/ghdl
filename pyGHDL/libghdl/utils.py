@@ -206,7 +206,6 @@ def declarations_iter(n) -> Generator[Any, None, None]:
                 yield n1
                 # Handle nested declarations: record elements, physical units,
                 # enumeration literals...
-                typ = nodes.Get_Type_Definition(n1)
                 for n2 in declarations_iter(n1):
                     yield n2
             else:

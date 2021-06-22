@@ -21,7 +21,6 @@
 #  along with GHDL; see the file COPYING.md.  If not see
 #  <http://www.gnu.org/licenses/>.
 
-import re
 import sys
 
 # My python 'style' and knowledge is basic...  Do not hesitate to comment.
@@ -43,7 +42,7 @@ v93=False
 out=sys.stdout
 
 def w(s):
-    "Write S to the output"
+    """Write S to the output."""
     out.write(s)
 
 def logic_type():
@@ -53,7 +52,7 @@ def logic_undef():
     return logic_undefs[logic]
 
 def disp_vec_binary(func, typ):
-    "Generate the body of a vector binary logic function"
+    """Generate the body of a vector binary logic function."""
     res = """
   function "{0}" (l, r : {1}) return {1}
   is
@@ -115,7 +114,7 @@ def extract_extend_bit(name,typ):
     return res.format(name)
 
 def disp_vec_vec_binary(func, typ):
-    "Generate vector binary function body"
+    """Generate vector binary function body."""
     res = """
   function "{0}" (l, r : {1}) return {1}
   is
@@ -219,7 +218,7 @@ def create_vec_int_dict(func, left, right):
     return dic
 
 def disp_vec_int_binary(func, left, right):
-    "Generate vector binary function body"
+    """Generate vector binary function body."""
     dic = create_vec_int_dict(func, left, right)
     res = """
   function "{func}" (l : {ltype}; r : {rtype}) return {vtype}
@@ -266,7 +265,7 @@ def disp_vec_int_binary(func, left, right):
     w(res.format (**dic))
 
 def disp_vec_int_gcompare(func, left, right):
-    "Generate comparison function"
+    """Generate comparison function."""
     dic = create_vec_int_dict(func, left, right)
     res = """
   function {func} (l : {ltype}; r : {rtype}) return compare_type
@@ -320,7 +319,7 @@ def disp_vec_int_gcompare(func, left, right):
     w(res.format (**dic))
 
 def disp_vec_int_compare(func, left, right):
-    "Generate comparison function"
+    """Generate comparison function."""
     dic = create_vec_int_dict(func, left, right)
     res = """
   function "{func}" (l : {ltype}; r : {rtype}) return boolean
@@ -366,7 +365,7 @@ def disp_vec_int_compare(func, left, right):
     w(res.format (**dic))
 
 def disp_vec_vec_gcompare(func, typ):
-    "Generate comparison function"
+    """Generate comparison function."""
     res = """
   function {func} (l, r : {typ}) return compare_type
   is
@@ -418,7 +417,7 @@ def disp_vec_vec_gcompare(func, typ):
     w(res.format (func=func, typ=typ, logic=logic_type()))
 
 def disp_vec_vec_compare(func, typ):
-    "Generate comparison function"
+    """Generate comparison function."""
     res = """
   function "{func}" (l, r : {typ}) return boolean
   is
@@ -451,7 +450,7 @@ def disp_vec_vec_compare(func, typ):
     w(res.format (func=func, typ=typ))
 
 def disp_vec_not(typ):
-    "Generate vector binary function body"
+    """Generate vector binary function body."""
     w("""
   function "not" (l : {0}) return {0}
   is
@@ -1010,7 +1009,7 @@ def disp_vec_int_sdiv(func):
     w(res.format(func=func))
 
 def disp_all_log_funcs():
-    "Generate all function bodies for logic operators"
+    """Generate all function bodies for logic operators."""
     for t in vec_types:
         disp_resize(t)
     for v in vec_types:
@@ -1076,7 +1075,7 @@ def disp_all_match_funcs():
     disp_match('SIGNED');
 
 def disp_all_arith_funcs():
-    "Generate all function bodies for logic operators"
+    """Generate all function bodies for logic operators."""
     for op in ['+', '-']:
         disp_vec_vec_binary(op, "UNSIGNED")
         disp_vec_vec_binary(op, "SIGNED")

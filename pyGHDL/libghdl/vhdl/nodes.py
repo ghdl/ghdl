@@ -5,6 +5,7 @@ from enum import IntEnum, unique
 from pydecor import export
 
 from pyGHDL.libghdl._decorator import BindToLibGHDL
+
 from typing import TypeVar
 from ctypes import c_int32
 from pyGHDL.libghdl import libghdl

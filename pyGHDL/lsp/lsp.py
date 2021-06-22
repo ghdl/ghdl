@@ -117,7 +117,7 @@ class LanguageProtocolServer(object):
                 params = {}
             try:
                 response = fmethod(**params)
-            except Exception as e:
+            except Exception:
                 log.exception(
                     "Caught exception while handling %s with params %s:", method, params
                 )

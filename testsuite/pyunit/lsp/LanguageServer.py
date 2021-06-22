@@ -1,5 +1,4 @@
 import os
-import string
 from sys import executable
 from io import BytesIO
 from json import load as json_load, loads as json_loads, dumps as json_dumps
@@ -7,7 +6,7 @@ from pathlib import Path
 from urllib.parse import quote
 from subprocess import run as subprocess_run, PIPE
 from typing import Optional
-from unittest import TestCase, skip
+from unittest import TestCase
 
 from pyGHDL.lsp.lsp import LanguageProtocolServer, LSPConn
 
