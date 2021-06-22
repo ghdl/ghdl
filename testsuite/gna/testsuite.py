@@ -93,6 +93,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="parallel test driver")
     parser.add_argument("-k", "--keep",
                         help="keep running", action='store_true')
+    parser.add_argument("-j", "--jobs", type=int, default=4,
+                        help="number of parallel jobs")
     args = parser.parse_args()
+    NUMJOBS = args.jobs
     if not run(args.keep):
         sys.exit(1)
