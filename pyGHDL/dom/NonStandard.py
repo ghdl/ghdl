@@ -80,9 +80,7 @@ class Design(VHDLModel_Design):
         self.__ghdl_init()
 
     def __ghdl_init(self):
-        """
-        Initialization: set options and then load libraries.
-        """
+        """Initialization: set options and then load libraries."""
         # Initialize libghdl
         libghdl_finalize()
         libghdl_initialize()
