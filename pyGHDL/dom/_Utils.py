@@ -59,10 +59,19 @@ def CheckForErrors() -> None:
     errors = []
     if errorCount != 0:
         for i in range(errorCount):
-            errors.append(errorout_memory.Get_Error_Message(i + 1))
+            rec = errorout_memory.Get_Error_Record(i + 1)
+            fileName = name_table.Get_Name_Ptr(files_map.Get_File_Name(rec.file))
+            message = errorout_memory.Get_Error_Message(i + 1)
 
-        raise DOMException("Error raised in libghdl.") \
-            from LibGHDLException("libghdl: Internal error.", errors)
+            errors.append(
+                "{file}:{line}:{column}: {msg}".format(
+                    file=fileName, line=rec.line, column=rec.offset, msg=message
+                )
+            )
+
+        raise DOMException("Error raised in libghdl.") from LibGHDLException(
+            "libghdl: Internal error.", errors
+        )
 
 
 @export
