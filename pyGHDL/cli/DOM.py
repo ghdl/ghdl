@@ -48,9 +48,15 @@ def handleException(ex):
         return 5
     elif isinstance(ex, DOMException):
         print("DOM:", ex)
+        ex2 = ex.__cause__
+        if ex2 is not None:
+            for message in ex2.InternalErrors:
+                print("libghdl: {message}".format(message=message))
         return 4
     elif isinstance(ex, LibGHDLException):
         print("LIB:", ex)
+        for message in ex.InternalErrors:
+            print("  {message}".format(message=message))
         return 3
     elif isinstance(ex, GHDLBaseException):
         print("GHDL:", ex)
