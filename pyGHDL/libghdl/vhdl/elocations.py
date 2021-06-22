@@ -2,6 +2,7 @@
 # Call 'make' in 'src/vhdl' to regenerate:
 #
 from pydecor import export
+
 from pyGHDL.libghdl import libghdl
 
 
