@@ -168,13 +168,6 @@ class FunctionCall(VHDLModel_FunctionCall):
 
 
 @export
-class QualifiedExpression(VHDLModel_QualifiedExpression):
-    def __init__(self, operand: Expression):
-        super().__init__()
-        self._operand = operand
-
-
-@export
 class AdditionExpression(VHDLModel_AdditionExpression, _ParseBinaryExpression):
     def __init__(self, left: Expression, right: Expression):
         super().__init__()

@@ -1,7 +1,7 @@
 from pathlib  import Path
 from unittest import TestCase
 
-from pyGHDL.dom.NonStandard       import Design, Library, Document
+from pyGHDL.dom.NonStandard       import Design, Document
 
 
 if __name__ == "__main__":

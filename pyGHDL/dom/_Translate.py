@@ -331,15 +331,17 @@ def GetParameterFromChainedNodes(nodeChain: Iir):
     for parameter in utils.chain_iter(nodeChain):
         kind = GetIirKindOfNode(parameter)
         if kind == nodes.Iir_Kind.Interface_Constant_Declaration:
-            pass
+            from pyGHDL.dom.InterfaceItem import ParameterConstantInterfaceItem
+
+            result.append(ParameterConstantInterfaceItem.parse(parameter))
         elif kind == nodes.Iir_Kind.Interface_Variable_Declaration:
-            pass
+            from pyGHDL.dom.InterfaceItem import ParameterVariableInterfaceItem
+
+            result.append(ParameterVariableInterfaceItem.parse(parameter))
         elif kind == nodes.Iir_Kind.Interface_Signal_Declaration:
-            from pyGHDL.dom.InterfaceItem import PortSignalInterfaceItem
+            from pyGHDL.dom.InterfaceItem import ParameterSignalInterfaceItem
 
-            portSignal = ParameterSignalInterfaceItem.parse(parameter)
-
-            result.append(portSignal)
+            result.append(ParameterSignalInterfaceItem.parse(parameter))
         else:
             position = GetPositionOfNode(parameter)
             raise DOMException(

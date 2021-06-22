@@ -8,7 +8,6 @@ from pathlib import Path
 from pydecor import export
 
 from pyGHDL.dom import NonStandard
-from pyGHDL import GHDLBaseException
 
 __all__ = []
 __api__ = __all__

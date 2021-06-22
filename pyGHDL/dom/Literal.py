@@ -30,10 +30,6 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-from pyGHDL.dom._Utils import GetIirKindOfNode, GetNameOfNode
-from pyGHDL.libghdl import name_table
-
-from pyGHDL.libghdl.vhdl import nodes
 from pydecor import export
 
 from pyVHDLModel.VHDLModel import (
@@ -44,6 +40,9 @@ from pyVHDLModel.VHDLModel import (
     CharacterLiteral as VHDLModel_CharacterLiteral,
     StringLiteral as VHDLModel_StringLiteral,
 )
+from pyGHDL.libghdl import name_table
+from pyGHDL.libghdl.vhdl import nodes
+from pyGHDL.dom._Utils import GetNameOfNode
 
 __all__ = []
 
