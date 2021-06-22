@@ -61,54 +61,39 @@ from pyGHDL.dom._Translate import (
     GetDeclaredItemsFromChainedNodes,
 )
 from pyGHDL.dom.Symbol import EntitySymbol
-from pyGHDL.dom.Common import GHDLMixin
 
 
 __all__ = []
 
 
 @export
-class Entity(VHDLModel_Entity, GHDLMixin):
+class Entity(VHDLModel_Entity):
     @classmethod
     def parse(cls, entityNode: Iir):
         name = GetNameOfNode(entityNode)
-        entity = cls(name)
-
-        for generic in GetGenericsFromChainedNodes(nodes.Get_Generic_Chain(entityNode)):
-            entity.GenericItems.append(generic)
-
-        for port in GetPortsFromChainedNodes(nodes.Get_Port_Chain(entityNode)):
-            entity.PortItems.append(port)
-
-        for item in GetDeclaredItemsFromChainedNodes(
+        generics = GetGenericsFromChainedNodes(nodes.Get_Generic_Chain(entityNode))
+        ports = GetPortsFromChainedNodes(nodes.Get_Port_Chain(entityNode))
+        declaredItems = GetDeclaredItemsFromChainedNodes(
             nodes.Get_Declaration_Chain(entityNode), "entity", name
-        ):
-            entity.DeclaredItems.append(item)
+        )
+        bodyItems = []
 
-        return entity
+        return cls(name, generics, ports, declaredItems, bodyItems)
 
 
 @export
-class Architecture(VHDLModel_Architecture, GHDLMixin):
-    def __init__(self, name: str, entity: EntityOrSymbol):
-        super().__init__(name)
-
-        self._entity = entity
-
+class Architecture(VHDLModel_Architecture):
     @classmethod
     def parse(cls, architectureNode: Iir):
         name = GetNameOfNode(architectureNode)
         entityName = GetNameOfNode(nodes.Get_Entity_Name(architectureNode))
         entity = EntitySymbol(entityName)
-
-        architecture = cls(name, entity)
-
-        for item in GetDeclaredItemsFromChainedNodes(
+        declaredItems = GetDeclaredItemsFromChainedNodes(
             nodes.Get_Declaration_Chain(architectureNode), "architecture", name
-        ):
-            architecture.DeclaredItems.append(item)
+        )
+        bodyItems = []
 
-        return architecture
+        return cls(name, entity, declaredItems, bodyItems)
 
     def resolve(self):
         pass
@@ -119,54 +104,39 @@ class Component(VHDLModel_Component):
     @classmethod
     def parse(cls, componentNode: Iir):
         name = GetNameOfNode(componentNode)
+        generics = GetGenericsFromChainedNodes(nodes.Get_Generic_Chain(componentNode))
+        ports = GetPortsFromChainedNodes(nodes.Get_Port_Chain(componentNode))
 
-        component = cls(name)
-
-        for generic in GetGenericsFromChainedNodes(
-            nodes.Get_Generic_Chain(componentNode)
-        ):
-            component.GenericItems.append(generic)
-
-        for port in GetPortsFromChainedNodes(nodes.Get_Port_Chain(componentNode)):
-            component.PortItems.append(port)
-
-        return component
+        return cls(name, generics, ports)
 
 
 @export
-class Package(VHDLModel_Package, GHDLMixin):
+class Package(VHDLModel_Package):
     @classmethod
-    def parse(cls, libraryUnit: Iir):
-        name = GetNameOfNode(libraryUnit)
+    def parse(cls, packageNode: Iir):
+        name = GetNameOfNode(packageNode)
+        generics = None # GetGenericsFromChainedNodes(nodes.Get_Generic_Chain(packageNode))
+        declaredItems = GetDeclaredItemsFromChainedNodes(
+            nodes.Get_Declaration_Chain(packageNode), "package", name
+        )
 
-        package = cls(name)
-
-        for item in GetDeclaredItemsFromChainedNodes(
-            nodes.Get_Declaration_Chain(libraryUnit), "package", name
-        ):
-            package.DeclaredItems.append(item)
-
-        return package
+        return cls(name, generics, declaredItems)
 
 
 @export
-class PackageBody(VHDLModel_PackageBody, GHDLMixin):
+class PackageBody(VHDLModel_PackageBody):
     @classmethod
-    def parse(cls, libraryUnit: Iir):
-        name = GetNameOfNode(libraryUnit)
+    def parse(cls, packageBodyNode: Iir):
+        name = GetNameOfNode(packageBodyNode)
+        declaredItems = GetDeclaredItemsFromChainedNodes(
+            nodes.Get_Declaration_Chain(packageBodyNode), "package", name
+        )
 
-        packageBody = cls(name)
-
-        for item in GetDeclaredItemsFromChainedNodes(
-            nodes.Get_Declaration_Chain(libraryUnit), "package body", name
-        ):
-            packageBody.DeclaredItems.append(item)
-
-        return packageBody
+        return cls(name, declaredItems)
 
 
 @export
-class Context(VHDLModel_Context, GHDLMixin):
+class Context(VHDLModel_Context):
     @classmethod
     def parse(cls, libraryUnit: Iir):
         name = GetNameOfNode(libraryUnit)
@@ -174,8 +144,8 @@ class Context(VHDLModel_Context, GHDLMixin):
 
 
 @export
-class Configuration(VHDLModel_Configuration, GHDLMixin):
+class Configuration(VHDLModel_Configuration):
     @classmethod
-    def parse(cls, libraryUnit: Iir):
-        name = GetNameOfNode(libraryUnit)
+    def parse(cls, configuration: Iir):
+        name = GetNameOfNode(configuration)
         return cls(name)

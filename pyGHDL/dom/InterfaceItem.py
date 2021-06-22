@@ -62,9 +62,7 @@ class GenericConstantInterfaceItem(VHDLModel_GenericConstantInterfaceItem):
         default = nodes.Get_Default_Value(generic)
         value = GetExpressionFromNode(default) if default else None
 
-        g = cls(name, mode, subTypeIndication, value)
-
-        return g
+        return cls(name, mode, subTypeIndication, value)
 
     def __init__(
         self,
@@ -91,9 +89,7 @@ class PortSignalInterfaceItem(VHDLModel_PortSignalInterfaceItem):
             GetExpressionFromNode(defaultValue) if defaultValue != Null_Iir else None
         )
 
-        p = cls(name, mode, subTypeIndication, value)
-
-        return p
+        return cls(name, mode, subTypeIndication, value)
 
     def __init__(
         self,
@@ -120,9 +116,7 @@ class ParameterConstantInterfaceItem(VHDLModel_ParameterConstantInterfaceItem):
             GetExpressionFromNode(defaultValue) if defaultValue != Null_Iir else None
         )
 
-        param = cls(name, mode, subTypeIndication, value)
-
-        return param
+        return cls(name, mode, subTypeIndication, value)
 
     def __init__(
         self,
@@ -149,9 +143,7 @@ class ParameterVariableInterfaceItem(VHDLModel_ParameterVariableInterfaceItem):
             GetExpressionFromNode(defaultValue) if defaultValue != Null_Iir else None
         )
 
-        param = cls(name, mode, subTypeIndication, value)
-
-        return param
+        return cls(name, mode, subTypeIndication, value)
 
     def __init__(
         self,
@@ -178,9 +170,7 @@ class ParameterSignalInterfaceItem(VHDLModel_ParameterSignalInterfaceItem):
             GetExpressionFromNode(defaultValue) if defaultValue != Null_Iir else None
         )
 
-        param = cls(name, mode, subTypeIndication, value)
-
-        return param
+        return cls(name, mode, subTypeIndication, value)
 
     def __init__(
         self,

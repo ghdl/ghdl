@@ -63,9 +63,7 @@ class Constant(VHDLModel_Constant):
         subTypeIndication = GetSubtypeIndicationFromNode(node, "constant", name)
         defaultExpression = GetExpressionFromNode(nodes.Get_Default_Value(node))
 
-        constant = cls(name, subTypeIndication, defaultExpression)
-
-        return constant
+        return cls(name, subTypeIndication, defaultExpression)
 
 
 @export
@@ -85,9 +83,7 @@ class Variable(VHDLModel_Variable):
         subTypeIndication = GetSubtypeIndicationFromNode(node, "variable", name)
         defaultExpression = GetExpressionFromNode(nodes.Get_Default_Value(node))
 
-        variable = cls(name, subTypeIndication, defaultExpression)
-
-        return variable
+        return cls(name, subTypeIndication, defaultExpression)
 
 
 @export
@@ -108,6 +104,4 @@ class Signal(VHDLModel_Signal):
         default = nodes.Get_Default_Value(node)
         defaultExpression = GetExpressionFromNode(default) if default else None
 
-        signal = cls(name, subTypeIndication, defaultExpression)
-
-        return signal
+        return cls(name, subTypeIndication, defaultExpression)
