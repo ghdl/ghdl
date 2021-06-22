@@ -30,16 +30,15 @@ def print_enum(name, vals):
         print("    {0} = {1}".format(k, n))
 
 
-def print_file_header():
+def print_file_header(includeIntEnumUnique=True, includeBindToLibGHDL=True):
     print(dedent("""\
             # Auto generated Python source file from Ada sources
             # Call 'make' in 'src/vhdl' to regenerate:
             #
-            from enum import IntEnum, unique
-            from pydecor import export
-
-            from pyGHDL.libghdl._decorator import BindToLibGHDL
-        """), end=''
+        """) + "{sysImports}from pydecor import export\n{moduleImports}".format(
+            sysImports = "from enum import IntEnum, unique\n" if includeIntEnumUnique else "",
+            moduleImports = "\nfrom pyGHDL.libghdl._decorator import BindToLibGHDL\n" if includeBindToLibGHDL else "",
+        )
     )
 
 
@@ -97,7 +96,7 @@ def do_iirs_subprg():
 
 def do_libghdl_elocations():
     classname = "vhdl__elocations"
-    print_file_header()
+    print_file_header(includeIntEnumUnique=False, includeBindToLibGHDL=False)
     print("from pyGHDL.libghdl import libghdl")
     print()
     for k in pnodes.funcs:
@@ -147,7 +146,7 @@ def do_class_fields():
 
 
 def read_enum(filename, type_name, prefix, class_name, g=lambda m: m.group(1)):
-    """Read an enumeration declaration from :param filename:"""
+    """Read an enumeration declaration from :param filename:."""
     pat_decl = re.compile(r"   type {0} is$".format(type_name))
     pat_enum = re.compile(r"      {0}(\w+),?( *-- .*)?$".format(prefix))
     pat_comment = re.compile(r" *-- .*$")
@@ -183,7 +182,7 @@ def read_enum(filename, type_name, prefix, class_name, g=lambda m: m.group(1)):
 
 
 def read_spec_enum(type_name, prefix, class_name):
-    """Read an enumeration declaration from iirs.ads"""
+    """Read an enumeration declaration from iirs.ads."""
     read_enum(pnodes.kind_file, type_name, prefix, class_name)
 
 
@@ -335,7 +334,7 @@ def do_libghdl_names():
             val_max = max(val_max, val)
             dict[name_def] = val
             res.append((name_def, val))
-    print_file_header()
+    print_file_header(includeBindToLibGHDL=False)
     print(dedent("""
 
         @export
@@ -358,10 +357,6 @@ def do_libghdl_tokens():
 def do_libghdl_errorout():
     print_file_header()
     print(dedent("""\
-        from enum import IntEnum, unique
-
-        from pyGHDL.libghdl import libghdl
-
         @export
         @BindToLibGHDL("errorout__enable_warning")
         def Enable_Warning(Id: int, Enable: bool) -> None:

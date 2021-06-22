@@ -4,7 +4,7 @@ import json
 from ctypes import byref
 import pyGHDL.libghdl as libghdl
 import pyGHDL.libghdl.errorout_memory as errorout_memory
-import pyGHDL.libghdl.flags
+import pyGHDL.libghdl.flags as flags
 import pyGHDL.libghdl.errorout as errorout
 import pyGHDL.libghdl.files_map as files_map
 import pyGHDL.libghdl.libraries as libraries
@@ -12,7 +12,7 @@ import pyGHDL.libghdl.name_table as name_table
 import pyGHDL.libghdl.vhdl.nodes as nodes
 import pyGHDL.libghdl.vhdl.lists as lists
 import pyGHDL.libghdl.vhdl.std_package as std_package
-import pyGHDL.libghdl.vhdl.parse
+import pyGHDL.libghdl.vhdl.parse as parse
 import pyGHDL.libghdl.vhdl.sem_lib as sem_lib
 import pyGHDL.libghdl.utils as pyutils
 
@@ -44,15 +44,15 @@ class Workspace(object):
         self._prj = {}
         self._last_linted_doc = None
         errorout_memory.Install_Handler()
-        libghdl.flags.Flag_Elocations.value = True
-        # libghdl.Flags.Verbose.value = True
+        flags.Flag_Elocations.value = True
+        # flags.Verbose.value = True
         # We do analysis even in case of errors.
-        libghdl.vhdl.parse.Flag_Parse_Parenthesis.value = True
+        parse.Flag_Parse_Parenthesis.value = True
         # Force analysis to get more feedback + navigation even in case
         # of errors.
-        libghdl.flags.Flag_Force_Analysis.value = True
+        flags.Flag_Force_Analysis.value = True
         # Do not consider analysis order issues.
-        libghdl.flags.Flag_Elaborate_With_Outdated.value = True
+        flags.Flag_Elaborate_With_Outdated.value = True
         libghdl.errorout.Enable_Warning(errorout.Msgid.Warnid_Unused, True)
         self.read_project()
         self.set_options_from_project()

@@ -61,7 +61,7 @@ def GetIirKindOfNode(node: Iir) -> nodes.Iir_Kind:
 
 @export
 def GetNameOfNode(node: Iir) -> str:
-    """Return the python string from node :obj:`node` identifier"""
+    """Return the python string from node :obj:`node` identifier."""
     identifier = nodes.Get_Identifier(node)
     return name_table.Get_Name_Ptr(identifier)
 

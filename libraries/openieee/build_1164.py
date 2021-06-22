@@ -20,123 +20,159 @@
 import sys
 
 # Supported versions
-V87=0
-V93=1
-V08=2
+V87 = 0
+V93 = 1
+V08 = 2
 
-binary_funcs = [ "and", "nand", "or", "nor", "xor" ]
+binary_funcs = ["and", "nand", "or", "nor", "xor"]
 
 # Python modelisation of std_ulogic type.
 std_logic = "UX01ZWLH-"
 
 # Normalization map.
-ux01_map = { 'U': 'U',
-             'X': 'X', 'Z': 'X', 'W': 'X', '-': 'X',
-             '0': '0', 'L': '0',
-             '1': '1', 'H': '1' }
+ux01_map = {
+    "U": "U",
+    "X": "X",
+    "Z": "X",
+    "W": "X",
+    "-": "X",
+    "0": "0",
+    "L": "0",
+    "1": "1",
+    "H": "1",
+}
 
-def sl_and(a,b):
-    """and definition"""
+
+def sl_and(a, b):
+    """'and' definition."""
     na = ux01_map[a]
     nb = ux01_map[b]
-    if na == '0' or nb == '0':
-        return '0'
-    if na == 'U' or nb == 'U':
-        return 'U'
-    if na == 'X' or nb == 'X':
-        return 'X'
-    return '1'
+    if na == "0" or nb == "0":
+        return "0"
+    if na == "U" or nb == "U":
+        return "U"
+    if na == "X" or nb == "X":
+        return "X"
+    return "1"
+
 
 def sl_not(a):
-    """not definition"""
+    """'not' definition."""
     na = ux01_map[a]
-    if na == 'U':
-        return 'U'
-    if na == 'X':
-        return 'X'
-    if na == '1':
-        return '0'
+    if na == "U":
+        return "U"
+    if na == "X":
+        return "X"
+    if na == "1":
+        return "0"
     else:
-        return '1'
+        return "1"
 
-def sl_or(a,b):
-    "or definition"
-    return sl_not(sl_and (sl_not(a), sl_not(b)))
 
-def sl_xor(a,b):
-    "xor definition"
-    return sl_or(sl_and(a, sl_not(b)),
-                 sl_and(sl_not(a), b))
+def sl_or(a, b):
+    """'or' definition."""
+    return sl_not(sl_and(sl_not(a), sl_not(b)))
+
+
+def sl_xor(a, b):
+    """'xor' definition."""
+    return sl_or(sl_and(a, sl_not(b)), sl_and(sl_not(a), b))
+
 
 # Stream to write.
-out=sys.stdout
+out = sys.stdout
+
 
 def w(s):
-    "Write S to the output"
+    """Write S to the output."""
     out.write(s)
 
+
 def gen_log_table2(name, func):
-    "Generate a logic table for binary operator NAME using its model FUNC"
-    w("""
+    """Generate a logic table for binary operator NAME using its model FUNC."""
+    w(
+        """
   constant {0}_table : table_2d :=
   --  UX01ZWLH-
-    (""".format(name))
+    (""".format(
+            name
+        )
+    )
     for a in std_logic:
         w('"')
         for b in std_logic:
-            w(func (a, b))
+            w(func(a, b))
         w('"')
-        if a != '-':
-            w(',')
+        if a != "-":
+            w(",")
         else:
-            w(' ')
-        w('   -- {}\n'.format(a))
-        w('     ')
-    w(');\n')
+            w(" ")
+        w("   -- {}\n".format(a))
+        w("     ")
+    w(");\n")
+
 
 def gen_log_table1(name, func):
-    "Generate a logic table for unary operator NAME using its model FUNC"
-    w("""
+    """Generate a logic table for unary operator NAME using its model FUNC."""
+    w(
+        """
   constant {0}_table : table_1d :=
   --  UX01ZWLH-
-     """.format(name))
+     """.format(
+            name
+        )
+    )
     w('"')
     for b in std_logic:
-        w(func (b))
+        w(func(b))
     w('";\n')
 
+
 def disp_tables(version):
-    "Generate logic tables"
+    """Generate logic tables."""
     gen_log_table2("and", sl_and)
-    gen_log_table2("nand", lambda a,b : sl_not(sl_and(a, b)))
+    gen_log_table2("nand", lambda a, b: sl_not(sl_and(a, b)))
     gen_log_table2("or", sl_or)
-    gen_log_table2("nor", lambda a,b : sl_not(sl_or(a,b)))
+    gen_log_table2("nor", lambda a, b: sl_not(sl_or(a, b)))
     gen_log_table2("xor", sl_xor)
     if version >= V93:
-        gen_log_table2("xnor", lambda a,b : sl_not(sl_xor(a,b)))
+        gen_log_table2("xnor", lambda a, b: sl_not(sl_xor(a, b)))
     gen_log_table1("not", sl_not)
 
-vec_types = ['ulogic', 'logic']
+
+vec_types = ["ulogic", "logic"]
+
 
 def disp_scalar_binary(fun):
-    "Generate scalar binary function body"
-    w("""
+    """Generate scalar binary function body."""
+    w(
+        """
   function "{0}" (l : std_ulogic; r : std_ulogic) return UX01 is
   begin
     return {0}_table (l, r);
-  end "{0}";\n""".format(fun))
+  end "{0}";\n""".format(
+            fun
+        )
+    )
+
 
 def disp_scalar_unary(fun):
-    "Generate scalar unary function body"
-    w("""
+    """Generate scalar unary function body."""
+    w(
+        """
   function "{0}" (l : std_ulogic) return UX01 is
   begin
     return {0}_table (l);
-  end "{0}";\n""".format(fun))
+  end "{0}";\n""".format(
+            fun
+        )
+    )
+
 
 def disp_vec_binary(func, typ):
-    "Generate vector binary function body"
-    w("""
+    """Generate vector binary function body."""
+    w(
+        """
   function "{0}" (l, r : std_{1}_vector) return std_{1}_vector
   is
     subtype res_type is std_{1}_vector (1 to l'length);
@@ -154,11 +190,16 @@ def disp_vec_binary(func, typ):
       end loop;
     end if;
     return res;
-  end "{0}";\n""".format(func, typ))
+  end "{0}";\n""".format(
+            func, typ
+        )
+    )
+
 
 def disp_vec_unary(func, typ):
-    "Generate vector unary function body"
-    w("""
+    """Generate vector unary function body."""
+    w(
+        """
   function "{0}" (l : std_{1}_vector) return std_{1}_vector
   is
     subtype res_type is std_{1}_vector (1 to l'length);
@@ -169,11 +210,16 @@ def disp_vec_unary(func, typ):
       res (I) := {0}_table (la (I));
     end loop;
     return res;
-  end "{0}";\n""".format(func, typ))
+  end "{0}";\n""".format(
+            func, typ
+        )
+    )
+
 
 def disp_scal_vec_binary(func, typ):
-    "Generate scalar-vector binary function body"
-    w("""
+    """Generate scalar-vector binary function body."""
+    w(
+        """
   function "{0}" (l : std_{1}_vector; r : std_{1})
     return std_{1}_vector
   is
@@ -185,11 +231,16 @@ def disp_scal_vec_binary(func, typ):
       res (I) := {0}_table (la (I), r);
     end loop;
     return res;
-  end "{0}";\n""".format(func, typ))
+  end "{0}";\n""".format(
+            func, typ
+        )
+    )
+
 
 def disp_vec_scal_binary(func, typ):
-    "Generate vector-scalar binary function body"
-    w("""
+    """Generate vector-scalar binary function body."""
+    w(
+        """
   function "{0}" (l : std_{1}; r : std_{1}_vector)
     return std_{1}_vector
   is
@@ -201,12 +252,17 @@ def disp_vec_scal_binary(func, typ):
       res (I) := {0}_table (l, ra (I));
     end loop;
     return res;
-  end "{0}";\n""".format(func, typ))
+  end "{0}";\n""".format(
+            func, typ
+        )
+    )
+
 
 def disp_vec_reduction(func, typ):
-    "Generate reduction function body"
-    init = '1' if func in ['and', 'nand'] else '0'
-    w("""
+    """Generate reduction function body."""
+    init = "1" if func in ["and", "nand"] else "0"
+    w(
+        """
   function "{0}" (l : std_{1}_vector) return std_{1}
   is
     variable res : std_{1} := '{2}';
@@ -215,7 +271,11 @@ def disp_vec_reduction(func, typ):
       res := {0}_table (l(I), res);
     end loop;
     return res;
-  end "{0}";\n""".format(func, typ, init))
+  end "{0}";\n""".format(
+            func, typ, init
+        )
+    )
+
 
 def gen_shift(is_left, plus, minus):
     if is_left:
@@ -224,9 +284,11 @@ def gen_shift(is_left, plus, minus):
         s = "res (1 {0} r to res'right) := la (1 to l'length {1} r);\n"
     w("      " + s.format(plus, minus))
 
+
 def disp_shift_funcs(func, typ):
-    "Generate shift functions"
-    w("""
+    """Generate shift functions."""
+    w(
+        """
   function "{0}" (l : std_{1}_vector; r : integer)
     return std_{1}_vector
   is
@@ -234,29 +296,43 @@ def disp_shift_funcs(func, typ):
     alias la : res_type is l;
     variable res : res_type := (others => '0');
   begin
-    if r >= 0 then\n""".format(func, typ))
-    gen_shift(func == "sll", '+', '-')
+    if r >= 0 then\n""".format(
+            func, typ
+        )
+    )
+    gen_shift(func == "sll", "+", "-")
     w("    else\n")
-    gen_shift(func != "sll", '-', '+')
-    w("""    end if;
+    gen_shift(func != "sll", "-", "+")
+    w(
+        """    end if;
     return res;
-  end "{0}";\n""".format(func))
+  end "{0}";\n""".format(
+            func
+        )
+    )
+
 
 def gen_rot(is_left, plus, minus):
     if is_left:
-        t = ["res (1 to res'right {1} rm) := la (rm {0} 1 to la'right);",
-             "res (res'right {1} rm + 1 to res'right) := la (1 to rm);"]
+        t = [
+            "res (1 to res'right {1} rm) := la (rm {0} 1 to la'right);",
+            "res (res'right {1} rm + 1 to res'right) := la (1 to rm);",
+        ]
     else:
-        t = ["res (1 {0} rm to res'right) := la (1 to la'right {1} r);",
-             "res (1 to rm) := la (la'right {1} rm + 1 to la'right);"]
+        t = [
+            "res (1 {0} rm to res'right) := la (1 to la'right {1} r);",
+            "res (1 to rm) := la (la'right {1} rm + 1 to la'right);",
+        ]
     for s in t:
         w("      ")
         w(s.format(plus, minus))
-        w('\n')
+        w("\n")
+
 
 def disp_rot_funcs(func, typ):
-    "Generate rotation functions"
-    w("""
+    """Generate rotation functions."""
+    w(
+        """
   function "{0}" (l : std_{1}_vector; r : integer)
     return std_{1}_vector
   is
@@ -265,16 +341,24 @@ def disp_rot_funcs(func, typ):
     variable res : res_type;
     constant rm : integer := r mod l'length;
   begin
-    if r >= 0 then\n""".format(func, typ))
-    gen_rot(func == "rol", '+', '-')
+    if r >= 0 then\n""".format(
+            func, typ
+        )
+    )
+    gen_rot(func == "rol", "+", "-")
     w("    else\n")
-    gen_rot(func != "rol", '-', '+')
-    w("""    end if;
+    gen_rot(func != "rol", "-", "+")
+    w(
+        """    end if;
     return res;
-  end "{0}";\n""".format(func, typ))
+  end "{0}";\n""".format(
+            func
+        )
+    )
+
 
 def disp_all_log_funcs(version):
-    "Generate all function bodies for logic operators"
+    """Generate all function bodies for logic operators."""
     for f in binary_funcs:
         disp_scalar_binary(f)
     disp_scalar_unary("not")
@@ -293,9 +377,11 @@ def disp_all_log_funcs(version):
             disp_rot_funcs("rol", v)
             disp_rot_funcs("ror", v)
 
+
 def disp_sv_to_bv_conv(typ):
-    "Generate logic vector to bit vector function body"
-    w("""
+    """Generate logic vector to bit vector function body."""
+    w(
+        """
   function to_bitvector (s : std_{0}_vector; xmap : bit := '0')
     return bit_vector
   is
@@ -317,11 +403,16 @@ def disp_sv_to_bv_conv(typ):
       res (I) := b;
     end loop;
     return res;
-  end to_bitvector;\n""".format(typ))
+  end to_bitvector;\n""".format(
+            typ
+        )
+    )
+
 
 def disp_bv_to_sv_conv(typ):
-    "Generate bit vector to logic vector function body"
-    w("""
+    """Generate bit vector to logic vector function body."""
+    w(
+        """
   function to_std{0}vector (b : bit_vector) return std_{0}_vector is
     subtype res_range is natural range b'length - 1 downto 0;
     alias ab : bit_vector (res_range) is b;
@@ -331,33 +422,44 @@ def disp_bv_to_sv_conv(typ):
       res (I) := bit_to_std (ab (I));
     end loop;
     return res;
-  end to_std{0}vector;\n""".format(typ))
+  end to_std{0}vector;\n""".format(
+            typ
+        )
+    )
 
-def disp_sv_to_sv_conv(s,d):
-    "Generate logic vector to logic vector function body"
-    w("""
+
+def disp_sv_to_sv_conv(s, d):
+    """Generate logic vector to logic vector function body."""
+    w(
+        """
   function to_std{1}vector (s : std_{0}_vector) return std_{1}_vector
   is
     subtype res_type is std_{1}_vector (s'length - 1 downto 0);
   begin
     return res_type (s);
-  end to_std{1}vector;\n""".format(s,d))
+  end to_std{1}vector;\n""".format(
+            s, d
+        )
+    )
+
 
 def disp_all_conv_funcs(version):
-    "Generate conversion function bodies"
+    """Generate conversion function bodies."""
     for v in vec_types:
         disp_sv_to_bv_conv(v)
     for v in vec_types:
         disp_bv_to_sv_conv(v)
     if version >= V08:
-        disp_bv_to_sv_conv('logic')
-    disp_sv_to_sv_conv('logic', 'ulogic')
-    disp_sv_to_sv_conv('ulogic', 'logic')
+        disp_bv_to_sv_conv("logic")
+    disp_sv_to_sv_conv("logic", "ulogic")
+    disp_sv_to_sv_conv("ulogic", "logic")
+
 
 def disp_conv_vec_vec(typ, v):
-    "Generate function body for vector conversion"
-    utyp = typ.upper();
-    w("""
+    """Generate function body for vector conversion."""
+    utyp = typ.upper()
+    w(
+        """
   function to_{1} (s : std_{2}_vector) return std_{2}_vector
   is
     subtype res_type is std_{2}_vector (1 to s'length);
@@ -368,21 +470,31 @@ def disp_conv_vec_vec(typ, v):
       res (i) := std_to_{0} (sa (i));
     end loop;
     return res;
-  end to_{1};\n""".format(typ, utyp, v))
+  end to_{1};\n""".format(
+            typ, utyp, v
+        )
+    )
+
 
 def disp_conv_std(typ):
-    "Generate function body for scalar conversion"
-    utyp = typ.upper();
-    w("""
+    """Generate function body for scalar conversion."""
+    utyp = typ.upper()
+    w(
+        """
   function to_{1} (s : std_ulogic) return {1} is
   begin
     return std_to_{0} (s);
-  end to_{1};\n""".format(typ, utyp))
+  end to_{1};\n""".format(
+            typ, utyp
+        )
+    )
+
 
 def disp_conv_bv_vec(typ, v):
-    "Generate function body for bit vector conversion"
-    utyp = typ.upper();
-    w("""
+    """Generate function body for bit vector conversion."""
+    utyp = typ.upper()
+    w(
+        """
   function to_{0} (b : bit_vector) return std_{1}_vector
   is
     subtype res_range is natural range 1 to b'length;
@@ -393,20 +505,29 @@ def disp_conv_bv_vec(typ, v):
       res (i) := bit_to_x01 (ba (i));
     end loop;
     return res;
-  end to_{0};\n""".format(utyp, v))
+  end to_{0};\n""".format(
+            utyp, v
+        )
+    )
+
 
 def disp_conv_b_t(typ):
-    "Generate function body for bit conversion"
-    utyp = typ.upper();
-    w("""
-  function to_{1} (b : bit) return {1} is
+    """Generate function body for bit conversion."""
+    w(
+        """
+  function to_{0} (b : bit) return {0} is
   begin
     return bit_to_x01 (b);
-  end to_{1};\n""".format(typ, utyp))
+  end to_{0};\n""".format(
+            typ.upper()
+        )
+    )
+
 
 def disp_conv_01():
-    "Generate to_01 bodies"
-    w("""
+    """Generate to_01 bodies."""
+    w(
+        """
   function to_01 (s : std_{0}_vector; xmap : std_ulogic := '0')
     return std_{0}_vector
   is
@@ -422,9 +543,13 @@ def disp_conv_01():
       end case;
     end loop;
     return res;
-  end to_01;\n""".format("ulogic"))
+  end to_01;\n""".format(
+            "ulogic"
+        )
+    )
     w("")
-    w("""
+    w(
+        """
   function to_01 (s : std_{0}; xmap : std_ulogic := '0')
     return std_{0} is
   begin
@@ -433,9 +558,13 @@ def disp_conv_01():
       when '1' | 'H' => return '1';
       when others    => return xmap;
     end case;
-  end to_01;\n""".format("ulogic"))
+  end to_01;\n""".format(
+            "ulogic"
+        )
+    )
     w("")
-    w("""
+    w(
+        """
   function to_01 (s : bit_vector; xmap : std_ulogic := '0')
     return std_{0}_vector
   is
@@ -446,40 +575,53 @@ def disp_conv_01():
       res (i) := bit_to_std (sa (i));
     end loop;
     return res;
-  end to_01;\n""".format("ulogic"))
+  end to_01;\n""".format(
+            "ulogic"
+        )
+    )
     w("")
-    w("""
+    w(
+        """
   function to_01 (s : bit; xmap : std_ulogic := '0')
     return std_{0} is
   begin
     return bit_to_std(s);
-  end to_01;\n""".format("ulogic"))
+  end to_01;\n""".format(
+            "ulogic"
+        )
+    )
+
 
 def disp_cond():
-    w("""
+    w(
+        """
   function "??" (l : std_ulogic) return boolean is
   begin
     return l = '1' or l = 'H';
-  end "??";\n""")
+  end "??";\n"""
+    )
+
 
 def disp_all_norm_funcs(version):
-    "Generate all function bodies for conversion"
+    """Generate all function bodies for conversion."""
     if version >= V08:
         disp_conv_01()
-    for typ in [ "x01", "x01z", "ux01" ]:
+    for typ in ["x01", "x01z", "ux01"]:
         for v in vec_types:
             disp_conv_vec_vec(typ, v)
-        disp_conv_std (typ)
+        disp_conv_std(typ)
         for v in vec_types:
             disp_conv_bv_vec(typ, v)
         disp_conv_b_t(typ)
     if version >= V08:
         disp_cond()
 
+
 def disp_all_isx_funcs(version):
-    "Generate all function bodies for isx functions"
+    """Generate all function bodies for isx functions."""
     for v in vec_types:
-        w("""
+        w(
+            """
   function is_X (s : std_{0}_vector) return boolean is
   begin
     for i in s'range loop
@@ -488,49 +630,61 @@ def disp_all_isx_funcs(version):
       end if;
     end loop;
     return false;
-  end is_X;\n""".format(v))
+  end is_X;\n""".format(
+                v
+            )
+        )
 
-    w("""
+    w(
+        """
   function is_X (s : std_ulogic) return boolean is
   begin
     return std_x (s);
-  end is_X;\n""")
+  end is_X;\n"""
+    )
 
 
 # Patterns to replace
-pats = {'  @TAB\n' : disp_tables,
-        '  @LOG\n' : disp_all_log_funcs,
-        '  @CONV\n': disp_all_conv_funcs,
-        '  @NORM\n': disp_all_norm_funcs,
-        '  @ISX\n' : disp_all_isx_funcs }
+pats = {
+    "  @TAB\n": disp_tables,
+    "  @LOG\n": disp_all_log_funcs,
+    "  @CONV\n": disp_all_conv_funcs,
+    "  @NORM\n": disp_all_norm_funcs,
+    "  @ISX\n": disp_all_isx_funcs,
+}
 
-spec_file='std_logic_1164.proto'
-proto_file='std_logic_1164-body.proto'
+spec_file = "std_logic_1164.proto"
+proto_file = "std_logic_1164-body.proto"
+
 
 def gen_body(filename, version):
     global out
-    out = open(filename, 'w')
-    w('--  This -*- vhdl -*- file was generated from ' + proto_file + '\n')
+    out = open(filename, "w")
+    w("--  This -*- vhdl -*- file was generated from " + proto_file + "\n")
     keep = True
     for line in open(proto_file):
         if line in pats:
             pats[line](version)
             continue
-        if line == '  @BEG V08\n':
-            keep = (version == V08)
+        if line == "  @BEG V08\n":
+            keep = version == V08
             continue
-        if line == '  @END V08\n':
+        if line == "  @END V08\n":
             keep = True
             continue
         if keep:
             w(line)
     out.close()
 
-VDICT={'--V87':  lambda x: x == V87,
-       '--!V87': lambda x: x != V87,
-       '--V93':  lambda x: x == V93,
-       '--V08':  lambda x: x == V08,
-       '--!V08': lambda x: x != V08}
+
+VDICT = {
+    "--V87": lambda x: x == V87,
+    "--!V87": lambda x: x != V87,
+    "--V93": lambda x: x == V93,
+    "--V08": lambda x: x == V08,
+    "--!V08": lambda x: x != V08,
+}
+
 
 def preprocess_line(line, version):
     for p in VDICT:
@@ -538,28 +692,30 @@ def preprocess_line(line, version):
         if pos >= 0:
             if not VDICT[p](version):
                 return None
-            l = line[:pos].rstrip() + '\n'
+            l = line[:pos].rstrip() + "\n"
             return l
     return line
 
+
 def copy_spec(dest, version):
-    out=open(dest, 'w')
+    out = open(dest, "w")
     for line in open(spec_file):
         l = preprocess_line(line, version)
         if l is not None:
             out.write(l)
     out.close()
 
+
 # Copy spec
-copy_spec('v87/std_logic_1164.vhdl', V87)
-copy_spec('v93/std_logic_1164.vhdl', V93)
-copy_spec('v08/std_logic_1164.vhdl', V08)
+copy_spec("v87/std_logic_1164.vhdl", V87)
+copy_spec("v93/std_logic_1164.vhdl", V93)
+copy_spec("v08/std_logic_1164.vhdl", V08)
 
 # Generate bodies
-gen_body('v87/std_logic_1164-body.vhdl', V87)
+gen_body("v87/std_logic_1164-body.vhdl", V87)
 
 binary_funcs.append("xnor")
-gen_body('v93/std_logic_1164-body.vhdl', V93)
+gen_body("v93/std_logic_1164-body.vhdl", V93)
 
-vec_types = ['ulogic']
-gen_body('v08/std_logic_1164-body.vhdl', V08)
+vec_types = ["ulogic"]
+gen_body("v08/std_logic_1164-body.vhdl", V08)

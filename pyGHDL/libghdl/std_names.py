@@ -4,8 +4,6 @@
 from enum import IntEnum, unique
 from pydecor import export
 
-from pyGHDL.libghdl._decorator import BindToLibGHDL
-
 
 @export
 class Name:
