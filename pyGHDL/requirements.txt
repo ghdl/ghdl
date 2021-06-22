@@ -1,2 +1,3 @@
 pydecor>=2.0.1
-pyVHDLModel==0.10.2
+#pyVHDLModel==0.10.2
+git+https://github.com/VHDL/pyVHDLModel.git@dev#pyVHDLModel
