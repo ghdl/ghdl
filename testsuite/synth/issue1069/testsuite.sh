@@ -2,12 +2,13 @@
 
 . ../../testenv.sh
 
-synth_tb tdp_ram
-synth_tb tdp_ram2
-synth_tb ram3
-synth_tb ram4
+for f in tdp_ram tdp_ram2 ram3 ram4 ram5; do
+    synth_tb $f 2> $f.log
+    grep "found RAM" $f.log
+done
+
 #synth_tb ram41
-synth_tb ram5
+
 clean
 
 echo "Test successful"
