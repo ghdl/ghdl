@@ -35,6 +35,8 @@
 
 from pathlib import Path
 from re import compile as re_compile
+from typing import List
+
 from setuptools import (
     setup as setuptools_setup,
     find_packages as setuptools_find_packages,

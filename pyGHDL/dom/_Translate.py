@@ -57,7 +57,7 @@ from pyGHDL.dom.Symbol import (
     ConstrainedSubTypeSymbol,
     IndexedObjectOrFunctionCallSymbol,
 )
-from pyGHDL.dom.Type import IntegerType, SubType
+from pyGHDL.dom.Type import IntegerType, SubType, ArrayType, RecordType, EnumeratedType
 from pyGHDL.dom.Range import Range, RangeExpression
 from pyGHDL.dom.Literal import (
     IntegerLiteral,
@@ -181,10 +181,37 @@ def GetArrayConstraintsFromSubtypeIndication(
 @export
 def GetTypeFromNode(node: Iir) -> BaseType:
     typeName = GetNameOfNode(node)
-    leftBound = IntegerLiteral(0)
-    rightBound = IntegerLiteral(15)
+    typeDefinition = nodes.Get_Type_Definition(node)
+    kind = GetIirKindOfNode(typeDefinition)
+    if kind == nodes.Iir_Kind.Range_Expression:
+        r = GetRangeFromNode(typeDefinition)
 
-    return IntegerType(typeName, leftBound, rightBound)
+        return IntegerType(typeName, r)
+    elif kind == nodes.Iir_Kind.Enumeration_Type_Definition:
+
+        return EnumeratedType(typeName)
+    elif kind == nodes.Iir_Kind.Array_Type_Definition:
+        indexSubTypeDefinitionList = nodes.Get_Index_Subtype_Definition_List(
+            typeDefinition
+        )
+        elementSubTypeIndication = nodes.Get_Element_Subtype_Indication(typeDefinition)
+
+        return ArrayType(typeName)
+    elif kind == nodes.Iir_Kind.Record_Type_Definition:
+
+        return RecordType(typeName)
+    else:
+        position = GetPositionOfNode(typeDefinition)
+        raise DOMException(
+            "Unknown type definition kind '{kindName}'({kind}) for type '{name}' at {file}:{line}:{column}.".format(
+                kind=kind,
+                kindName=kind.name,
+                name=typeName,
+                file=position.Filename,
+                line=position.Line,
+                column=position.Column,
+            )
+        )
 
 
 @export

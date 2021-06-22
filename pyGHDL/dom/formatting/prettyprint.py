@@ -4,13 +4,22 @@ from pydecor import export
 
 from pyGHDL.dom.Misc import Alias
 from pyGHDL.dom.Subprogram import Procedure
-from pyGHDL.dom.Type import IntegerType, SubType
+from pyGHDL.dom.Type import (
+    IntegerType,
+    SubType,
+    ArrayType,
+    RecordType,
+    AccessType,
+    EnumeratedType,
+)
 from pyVHDLModel.VHDLModel import (
     GenericInterfaceItem,
     NamedEntity,
     PortInterfaceItem,
     WithDefaultExpression,
     Function,
+    BaseType,
+    Type,
 )
 
 from pyGHDL import GHDLBaseException
@@ -325,15 +334,9 @@ class PrettyPrint:
                     else "",
                 )
             )
-        elif isinstance(item, IntegerType):
+        elif isinstance(item, Type):
             buffer.append(
-                "{prefix}- type {name} is range {range}".format(
-                    prefix=prefix,
-                    name=item.Name,
-                    range="{left!s} to {right!s}".format(
-                        left=item.LeftBound, right=item.RightBound
-                    ),
-                )
+                "{prefix}- {type}".format(prefix=prefix, type=self.formatType(item))
             )
         elif isinstance(item, SubType):
             buffer.append(
@@ -373,6 +376,27 @@ class PrettyPrint:
             )
 
         return buffer
+
+    def formatType(self, item: BaseType) -> str:
+        result = "type {name} is ".format(name=item.Name)
+        if isinstance(item, IntegerType):
+            result += "range {left!s} to {right!s}".format(
+                left=item.LeftBound, right=item.RightBound
+            )
+        elif isinstance(item, EnumeratedType):
+            result += "(........)"
+        elif isinstance(item, ArrayType):
+            result += "array(........) of ....."
+        elif isinstance(item, RecordType):
+            result += "record ..... end record"
+        elif isinstance(item, AccessType):
+            result += "access ....."
+        else:
+            raise PrettyPrintException(
+                "Unknown type '{name}'".format(name=item.__class__.__name__)
+            )
+
+        return result
 
     def formatSubtypeIndication(self, subTypeIndication, entity: str, name: str) -> str:
         if isinstance(subTypeIndication, SimpleSubTypeSymbol):

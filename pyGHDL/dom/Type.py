@@ -32,8 +32,13 @@
 # ============================================================================
 from pydecor import export
 
+from pyGHDL.dom.Range import Range
 from pyVHDLModel.VHDLModel import (
     IntegerType as VHDLModel_IntegerType,
+    EnumeratedType as VHDLModel_EnumeratedType,
+    ArrayType as VHDLModel_ArrayType,
+    RecordType as VHDLModel_RecordType,
+    AccessType as VHDLModel_AccessType,
     SubType as VHDLModel_SubType,
     Expression,
 )
@@ -41,10 +46,30 @@ from pyVHDLModel.VHDLModel import (
 
 @export
 class IntegerType(VHDLModel_IntegerType):
-    def __init__(self, typeName: str, leftBound: Expression, rightBound: Expression):
+    def __init__(self, typeName: str, range: Range):
         super().__init__(typeName)
-        self._leftBound = leftBound
-        self._rightBound = rightBound
+        self._leftBound = range.LeftBound
+        self._rightBound = range.RightBound
+
+
+@export
+class EnumeratedType(VHDLModel_EnumeratedType):
+    pass
+
+
+@export
+class ArrayType(VHDLModel_ArrayType):
+    pass
+
+
+@export
+class RecordType(VHDLModel_RecordType):
+    pass
+
+
+@export
+class AccessType(VHDLModel_AccessType):
+    pass
 
 
 @export
