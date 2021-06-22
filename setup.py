@@ -93,7 +93,8 @@ setuptools_setup(
 	packages=setuptools_find_packages(exclude=("tests",)),
 	entry_points={
 		'console_scripts': [
-			"ghdl-ls = pyGHDL.cli.lsp:main"
+			"ghdl-ls = pyGHDL.cli.lsp:main",
+			"ghdl-dom = pyGHDL.cli.DOM:main"
 		]
 	},
 
