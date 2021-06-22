@@ -66,7 +66,7 @@ def do_iirs_subprg():
         @export
         @BindToLibGHDL("{classname}__get_kind")
         def Get_Kind(node: Iir) -> IirKind:
-            assert node != 0
+            \"\"\"Get node kind\"\"\"
 
         @export
         @BindToLibGHDL("{classname}__get_location")

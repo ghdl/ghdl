@@ -53,6 +53,8 @@ __MODE_TRANSLATION = {
 
 @export
 def GetIirKindOfNode(node: Iir) -> nodes.Iir_Kind:
+    # This function is the most likely to be called on a Null_Iir node
+    assert node != 0
     kind: int = nodes.Get_Kind(node)
     return nodes.Iir_Kind(kind)
 

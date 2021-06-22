@@ -1801,7 +1801,7 @@ class Iir_Predefined(IntEnum):
 @export
 @BindToLibGHDL("vhdl__nodes__get_kind")
 def Get_Kind(node: Iir) -> IirKind:
-    assert node != 0
+    """Get node kind"""
 
 
 @export
