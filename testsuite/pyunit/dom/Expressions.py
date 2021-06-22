@@ -30,14 +30,14 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-from pathlib  import Path
+from pathlib import Path
 from textwrap import dedent
 from unittest import TestCase
 
 from pyGHDL.dom.DesignUnit import Package
 
 from pyGHDL.dom import Expression
-from pyGHDL.dom.NonStandard       import Design, Document
+from pyGHDL.dom.NonStandard import Design, Document
 from pyGHDL.dom.Symbol import SimpleObjectOrFunctionCallSymbol
 from pyGHDL.dom.Object import Constant
 from pyGHDL.dom.Expression import InverseExpression
@@ -52,13 +52,17 @@ class Expressions(TestCase):
     _root = Path(__file__).resolve().parent.parent
 
     def test_NotExpression(self):
-        self._filename: Path = self._root / "{className}.vhdl".format(className=self.__class__.__name__)
+        self._filename: Path = self._root / "{className}.vhdl".format(
+            className=self.__class__.__name__
+        )
 
-        sourceCode = dedent("""\
+        sourceCode = dedent(
+            """\
             package package_1 is
               constant c0 : boolean := not true;
             end package;
-            """)
+            """
+        )
 
         with self._filename.open(mode="w", encoding="utf-8") as file:
             file.write(sourceCode)

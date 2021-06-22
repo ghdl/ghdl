@@ -32,7 +32,7 @@
 # ============================================================================
 from sys import executable
 from subprocess import check_call, STDOUT
-from pathlib  import Path
+from pathlib import Path
 from pytest import mark
 
 if __name__ == "__main__":
@@ -43,11 +43,8 @@ if __name__ == "__main__":
 _TESTSUITE_ROOT = Path(__file__).parent.parent.parent.resolve()
 _GHDL_ROOT = _TESTSUITE_ROOT.parent
 
+
 @mark.xfail
 @mark.parametrize("file", [str(f) for f in _TESTSUITE_ROOT.glob("sanity/**/*.vhdl")])
 def test_AllVHDLSources(file):
-    check_call([
-        executable,
-        _GHDL_ROOT / "pyGHDL/cli/DOM.py",
-        file
-    ], stderr=STDOUT)
+    check_call([executable, _GHDL_ROOT / "pyGHDL/cli/DOM.py", file], stderr=STDOUT)
