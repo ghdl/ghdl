@@ -30,7 +30,7 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-from typing import List
+from typing import List, Generator
 
 from pydecor import export
 
@@ -40,6 +40,10 @@ from pyVHDLModel.VHDLModel import (
     Expression,
     SubTypeOrSymbol,
     BaseType,
+    GenericInterfaceItem,
+    PortInterfaceItem,
+    ParameterInterfaceItem,
+    ModelEntity,
 )
 
 from pyGHDL.libghdl import utils
@@ -268,10 +272,10 @@ def GetExpressionFromNode(node: Iir) -> Expression:
     return cls.parse(node)
 
 
-# FIXME: rewrite to generator
 @export
-def GetGenericsFromChainedNodes(nodeChain: Iir):
-    result = []
+def GetGenericsFromChainedNodes(
+    nodeChain: Iir,
+) -> Generator[GenericInterfaceItem, None, None]:
     for generic in utils.chain_iter(nodeChain):
         kind = GetIirKindOfNode(generic)
         if kind == nodes.Iir_Kind.Interface_Constant_Declaration:
@@ -279,7 +283,7 @@ def GetGenericsFromChainedNodes(nodeChain: Iir):
 
             genericConstant = GenericConstantInterfaceItem.parse(generic)
 
-            result.append(genericConstant)
+            yield genericConstant
         else:
             position = GetPositionOfNode(generic)
             raise DOMException(
@@ -293,13 +297,11 @@ def GetGenericsFromChainedNodes(nodeChain: Iir):
                 )
             )
 
-    return result
 
-
-# FIXME: rewrite to generator
 @export
-def GetPortsFromChainedNodes(nodeChain: Iir):
-    result = []
+def GetPortsFromChainedNodes(
+    nodeChain: Iir,
+) -> Generator[PortInterfaceItem, None, None]:
     for port in utils.chain_iter(nodeChain):
         kind = GetIirKindOfNode(port)
         if kind == nodes.Iir_Kind.Interface_Signal_Declaration:
@@ -307,7 +309,7 @@ def GetPortsFromChainedNodes(nodeChain: Iir):
 
             portSignal = PortSignalInterfaceItem.parse(port)
 
-            result.append(portSignal)
+            yield portSignal
         else:
             position = GetPositionOfNode(port)
             raise DOMException(
@@ -321,27 +323,25 @@ def GetPortsFromChainedNodes(nodeChain: Iir):
                 )
             )
 
-    return result
 
-
-# FIXME: rewrite to generator
 @export
-def GetParameterFromChainedNodes(nodeChain: Iir):
-    result = []
+def GetParameterFromChainedNodes(
+    nodeChain: Iir,
+) -> Generator[ParameterInterfaceItem, None, None]:
     for parameter in utils.chain_iter(nodeChain):
         kind = GetIirKindOfNode(parameter)
         if kind == nodes.Iir_Kind.Interface_Constant_Declaration:
             from pyGHDL.dom.InterfaceItem import ParameterConstantInterfaceItem
 
-            result.append(ParameterConstantInterfaceItem.parse(parameter))
+            yield ParameterConstantInterfaceItem.parse(parameter)
         elif kind == nodes.Iir_Kind.Interface_Variable_Declaration:
             from pyGHDL.dom.InterfaceItem import ParameterVariableInterfaceItem
 
-            result.append(ParameterVariableInterfaceItem.parse(parameter))
+            yield ParameterVariableInterfaceItem.parse(parameter)
         elif kind == nodes.Iir_Kind.Interface_Signal_Declaration:
             from pyGHDL.dom.InterfaceItem import ParameterSignalInterfaceItem
 
-            result.append(ParameterSignalInterfaceItem.parse(parameter))
+            yield ParameterSignalInterfaceItem.parse(parameter)
         else:
             position = GetPositionOfNode(parameter)
             raise DOMException(
@@ -355,51 +355,50 @@ def GetParameterFromChainedNodes(nodeChain: Iir):
                 )
             )
 
-    return result
 
-
-def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str):
-    result = []
+def GetDeclaredItemsFromChainedNodes(
+    nodeChain: Iir, entity: str, name: str
+) -> Generator[ModelEntity, None, None]:
     for item in utils.chain_iter(nodeChain):
         kind = GetIirKindOfNode(item)
         if kind == nodes.Iir_Kind.Constant_Declaration:
             from pyGHDL.dom.Object import Constant
 
-            result.append(Constant.parse(item))
+            yield Constant.parse(item)
 
         elif kind == nodes.Iir_Kind.Variable_Declaration:
             from pyGHDL.dom.Object import SharedVariable
 
             if nodes.Get_Shared_Flag(item):
-                result.append(SharedVariable.parse(item))
+                yield SharedVariable.parse(item)
             else:
                 raise DOMException("Found non-shared variable.")
         elif kind == nodes.Iir_Kind.Signal_Declaration:
             from pyGHDL.dom.Object import Signal
 
-            result.append(Signal.parse(item))
+            yield Signal.parse(item)
         elif kind == nodes.Iir_Kind.Type_Declaration:
-            result.append(GetTypeFromNode(item))
+            yield GetTypeFromNode(item)
         elif kind == nodes.Iir_Kind.Anonymous_Type_Declaration:
-            result.append(GetTypeFromNode(item))
+            yield GetTypeFromNode(item)
         elif kind == nodes.Iir_Kind.Subtype_Declaration:
-            result.append(GetSubTypeFromNode(item))
+            yield GetSubTypeFromNode(item)
         elif kind == nodes.Iir_Kind.Function_Declaration:
-            result.append(Function.parse(item))
+            yield Function.parse(item)
         elif kind == nodes.Iir_Kind.Function_Body:
             #                procedureName = NodeToName(item)
             print("found function body '{name}'".format(name="????"))
         elif kind == nodes.Iir_Kind.Procedure_Declaration:
-            result.append(Procedure.parse(item))
+            yield Procedure.parse(item)
         elif kind == nodes.Iir_Kind.Procedure_Body:
             #                procedureName = NodeToName(item)
             print("found procedure body '{name}'".format(name="????"))
         elif kind == nodes.Iir_Kind.Object_Alias_Declaration:
-            result.append(GetAliasFromNode(item))
+            yield GetAliasFromNode(item)
         elif kind == nodes.Iir_Kind.Component_Declaration:
             from pyGHDL.dom.DesignUnit import Component
 
-            result.append(Component.parse(item))
+            yield Component.parse(item)
         else:
             position = GetPositionOfNode(item)
             raise DOMException(
@@ -413,8 +412,6 @@ def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str):
                     column=position.Column,
                 )
             )
-
-    return result
 
 
 def GetAliasFromNode(node: Iir):
