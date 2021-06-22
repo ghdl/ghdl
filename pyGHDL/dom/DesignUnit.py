@@ -115,7 +115,9 @@ class Package(VHDLModel_Package):
     @classmethod
     def parse(cls, packageNode: Iir):
         name = GetNameOfNode(packageNode)
-        generics = None # GetGenericsFromChainedNodes(nodes.Get_Generic_Chain(packageNode))
+        generics = (
+            None  # GetGenericsFromChainedNodes(nodes.Get_Generic_Chain(packageNode))
+        )
         declaredItems = GetDeclaredItemsFromChainedNodes(
             nodes.Get_Declaration_Chain(packageNode), "package", name
         )

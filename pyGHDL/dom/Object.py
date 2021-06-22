@@ -37,6 +37,7 @@ from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode, GetExpressionFro
 from pyGHDL.dom._Utils import GetNameOfNode
 from pyVHDLModel.VHDLModel import (
     Constant as VHDLModel_Constant,
+    DeferredConstant as VHDLModel_DeferredConstant,
     Variable as VHDLModel_Variable,
     Signal as VHDLModel_Signal,
     Expression,
@@ -64,6 +65,24 @@ class Constant(VHDLModel_Constant):
         defaultExpression = GetExpressionFromNode(nodes.Get_Default_Value(node))
 
         return cls(name, subTypeIndication, defaultExpression)
+
+
+@export
+class DeferredConstant(VHDLModel_DeferredConstant):
+    def __init__(self, name: str, subType: SubTypeOrSymbol):
+        super().__init__(name)
+
+        self._name = name
+        self._subType = subType
+
+    @classmethod
+    def parse(cls, node):
+        name = GetNameOfNode(node)
+        subTypeIndication = GetSubtypeIndicationFromNode(
+            node, "deferred constant", name
+        )
+
+        return cls(name, subTypeIndication)
 
 
 @export

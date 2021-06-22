@@ -54,7 +54,7 @@ class PrettyPrint:
         buffer = []
         prefix = "  " * level
         buffer.append("{prefix}Libraries:".format(prefix=prefix))
-        for library in design.Libraries:
+        for library in design.Libraries.values():
             for line in self.formatLibrary(library, level + 1):
                 buffer.append(line)
         buffer.append("{prefix}Documents:".format(prefix=prefix))
@@ -74,18 +74,18 @@ class PrettyPrint:
         for entity in library.Entities:
             for line in self.formatEntity(entity, level + 1):
                 buffer.append(line)
-        buffer.append("{prefix}Architectures:".format(prefix=prefix))
-        for architecture in library.Architectures:
-            for line in self.formatArchitecture(architecture, level + 1):
-                buffer.append(line)
+        # buffer.append("{prefix}Architectures:".format(prefix=prefix))
+        # for architecture in library.Architectures:
+        #     for line in self.formatArchitecture(architecture, level + 1):
+        #         buffer.append(line)
         buffer.append("{prefix}Packages:".format(prefix=prefix))
         for package in library.Packages:
             for line in self.formatPackage(package, level + 1):
                 buffer.append(line)
-        buffer.append("{prefix}PackageBodies:".format(prefix=prefix))
-        for packageBodies in library.PackageBodies:
-            for line in self.formatPackageBody(packageBodies, level + 1):
-                buffer.append(line)
+        # buffer.append("{prefix}PackageBodies:".format(prefix=prefix))
+        # for packageBodies in library.PackageBodies:
+        #     for line in self.formatPackageBody(packageBodies, level + 1):
+        #         buffer.append(line)
         buffer.append("{prefix}Configurations:".format(prefix=prefix))
         for configuration in library.Configurations:
             for line in self.formatConfiguration(configuration, level + 1):
