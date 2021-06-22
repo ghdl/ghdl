@@ -12,7 +12,7 @@ if __name__ == "__main__":
 
 @mark.parametrize(
 	"file",
-	glob(str(Path(__file__).resolve().parent.parent.parent.parent / '**' / '*.vhdl'), recursive=True)
+	glob(str(Path(__file__).resolve().parent.parent.parent / 'sanity' / '*' / '*.vhdl'), recursive=True)
 )
 @mark.xfail
 def test_AllVHDLSources(file):
