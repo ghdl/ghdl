@@ -20,7 +20,7 @@
 
 PNODES=../../scripts/pnodes.py
 PNODESPY=../../scripts/pnodespy.py
-PYTHON=python
+PYTHON=python3
 
 DEPS=vhdl-nodes.ads vhdl-nodes.adb.in $(PNODES)
 
