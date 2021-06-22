@@ -2,15 +2,19 @@ from typing import List, Union
 
 from pydecor import export
 
+from pyGHDL.dom.Misc import Alias
+from pyGHDL.dom.Subprogram import Procedure
+from pyGHDL.dom.Type import IntegerType, SubType
 from pyVHDLModel.VHDLModel import (
     GenericInterfaceItem,
     NamedEntity,
     PortInterfaceItem,
     WithDefaultExpression,
+    Function,
 )
 
 from pyGHDL import GHDLBaseException
-from pyGHDL.dom.Misc import Document, Design, Library
+from pyGHDL.dom.NonStandard import Document, Design, Library
 from pyGHDL.dom.DesignUnit import (
     Entity,
     Architecture,
@@ -18,6 +22,7 @@ from pyGHDL.dom.DesignUnit import (
     PackageBody,
     Configuration,
     Context,
+    Component,
 )
 from pyGHDL.dom.Object import Constant, Signal
 from pyGHDL.dom.InterfaceItem import (
@@ -161,6 +166,23 @@ class PrettyPrint:
 
         return buffer
 
+    def formatComponent(self, component: Component, level: int = 0) -> StringBuffer:
+        buffer = []
+        prefix = "  " * level
+        buffer.append(
+            "{prefix}- Component: {name}".format(name=component.Name, prefix=prefix)
+        )
+        buffer.append("{prefix}  Generics:".format(prefix=prefix))
+        for generic in component.GenericItems:
+            for line in self.formatGeneric(generic, level + 1):
+                buffer.append(line)
+        buffer.append("{prefix}  Ports:".format(prefix=prefix))
+        for port in component.PortItems:
+            for line in self.formatPort(port, level + 1):
+                buffer.append(line)
+
+        return buffer
+
     def formatPackage(self, package: Package, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
@@ -293,8 +315,52 @@ class PrettyPrint:
                     else "",
                 )
             )
+        elif isinstance(item, IntegerType):
+            buffer.append(
+                "{prefix}- type {name} is range {range}".format(
+                    prefix=prefix,
+                    name=item.Name,
+                    range="{left!s} to {right!s}".format(
+                        left=item.LeftBound, right=item.RightBound
+                    ),
+                )
+            )
+        elif isinstance(item, SubType):
+            buffer.append(
+                "{prefix}- subtype {name} is ?????".format(
+                    prefix=prefix,
+                    name=item.Name,
+                )
+            )
+        elif isinstance(item, Alias):
+            buffer.append(
+                "{prefix}- alias {name} is ?????".format(
+                    prefix=prefix,
+                    name=item.Name,
+                )
+            )
+        elif isinstance(item, Function):
+            buffer.append(
+                "{prefix}- function {name} return {returnType!s}".format(
+                    prefix=prefix, name=item.Name, returnType=item.ReturnType
+                )
+            )
+        elif isinstance(item, Procedure):
+            buffer.append(
+                "{prefix}- procedure {name}".format(
+                    prefix=prefix,
+                    name=item.Name,
+                )
+            )
+        elif isinstance(item, Component):
+            for line in self.formatComponent(item, level):
+                buffer.append(line)
         else:
-            raise PrettyPrintException("Unhandled declared item kind.")
+            raise PrettyPrintException(
+                "Unhandled declared item kind '{name}'.".format(
+                    name=item.__class__.__name__
+                )
+            )
 
         return buffer
 

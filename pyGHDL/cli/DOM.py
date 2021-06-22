@@ -7,24 +7,25 @@ from pathlib import Path
 
 from pydecor import export
 
-from pyGHDL.dom import Misc
-from pyGHDL import GHDLBaseException
+from pyGHDL.dom import NonStandard
 
 __all__ = []
 __api__ = __all__
 
-from pyGHDL.dom.formatting.prettyprint import PrettyPrint
+from pyGHDL.dom.Common import DOMException
+
+from pyGHDL.dom.formatting.prettyprint import PrettyPrint, PrettyPrintException
 
 
 @export
 class Application:
-    _design: Misc.Design
+    _design: NonStandard.Design
 
     def __init__(self):
-        self._design = Misc.Design()
+        self._design = NonStandard.Design()
 
     def addFile(self, filename: Path, library: str):
-        document = Misc.Document(filename)
+        document = NonStandard.Document(filename)
         self._design.Documents.append(document)
 
     def prettyPrint(self):
@@ -45,15 +46,17 @@ def main(items):
     if len(items) < 1:
         print("Please, provide the files to be analyzed as CLI arguments.")
         print("Using <testsuite/pyunit/SimpleEntity.vhdl> for demo purposes.\n")
-        items = ["testsuite/pyunit/SimpleEntity.vhdl"]
+        items = ["testsuite/pyunit/Current.vhdl"]
 
     for item in items:
         try:
             app = Application()
             app.addFile(Path(item), "default_lib")
             app.prettyPrint()
-        except GHDLBaseException as ex:
-            print(ex)
+        except DOMException as ex:
+            print("DOM:", ex)
+        except PrettyPrintException as ex:
+            print("PP:", ex)
             _exitcode = 1
 
     return _exitcode

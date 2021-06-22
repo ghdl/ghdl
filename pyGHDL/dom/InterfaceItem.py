@@ -30,39 +30,41 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-from pyGHDL.libghdl.vhdl.nodes import Null_Iir
-
-from pyGHDL.libghdl.vhdl import nodes
 from pydecor import export
 
 from pyVHDLModel.VHDLModel import (
     GenericConstantInterfaceItem as VHDLModel_GenericConstantInterfaceItem,
     PortSignalInterfaceItem as VHDLModel_PortSignalInterfaceItem,
+    ParameterConstantInterfaceItem as VHDLModel_ParameterConstantInterfaceItem,
+    ParameterVariableInterfaceItem as VHDLModel_ParameterVariableInterfaceItem,
+    ParameterSignalInterfaceItem as VHDLModel_ParameterSignalInterfaceItem,
     Mode,
     SubTypeOrSymbol,
     Expression,
 )
 
-from pyGHDL.dom._Utils import NodeToName, GetModeOfNode
+from pyGHDL.libghdl.vhdl import nodes
+from pyGHDL.libghdl.vhdl.nodes import Null_Iir
+from pyGHDL.dom._Utils import GetNameOfNode, GetModeOfNode
 from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode, GetExpressionFromNode
-from pyGHDL.dom.Common import GHDLMixin
+
 
 __all__ = []
 
 
 @export
-class GenericConstantInterfaceItem(VHDLModel_GenericConstantInterfaceItem, GHDLMixin):
+class GenericConstantInterfaceItem(VHDLModel_GenericConstantInterfaceItem):
     @classmethod
     def parse(cls, generic):
-        name = NodeToName(generic)
+        name = GetNameOfNode(generic)
         mode = GetModeOfNode(generic)
         subTypeIndication = GetSubtypeIndicationFromNode(generic, "generic", name)
         default = nodes.Get_Default_Value(generic)
         value = GetExpressionFromNode(default) if default else None
 
-        generic = cls(name, mode, subTypeIndication, value)
+        g = cls(name, mode, subTypeIndication, value)
 
-        return generic
+        return g
 
     def __init__(
         self,
@@ -77,10 +79,10 @@ class GenericConstantInterfaceItem(VHDLModel_GenericConstantInterfaceItem, GHDLM
 
 
 @export
-class PortSignalInterfaceItem(VHDLModel_PortSignalInterfaceItem, GHDLMixin):
+class PortSignalInterfaceItem(VHDLModel_PortSignalInterfaceItem):
     @classmethod
     def parse(cls, port):
-        name = NodeToName(port)
+        name = GetNameOfNode(port)
         mode = GetModeOfNode(port)
         subTypeIndication = GetSubtypeIndicationFromNode(port, "port", name)
 
@@ -89,9 +91,96 @@ class PortSignalInterfaceItem(VHDLModel_PortSignalInterfaceItem, GHDLMixin):
             GetExpressionFromNode(defaultValue) if defaultValue != Null_Iir else None
         )
 
-        port = cls(name, mode, subTypeIndication, value)
+        p = cls(name, mode, subTypeIndication, value)
 
-        return port
+        return p
+
+    def __init__(
+        self,
+        name: str,
+        mode: Mode,
+        subType: SubTypeOrSymbol,
+        defaultExpression: Expression = None,
+    ):
+        super().__init__(name=name, mode=mode)
+        self._subType = subType
+        self._defaultExpression = defaultExpression
+
+
+@export
+class ParameterConstantInterfaceItem(VHDLModel_ParameterConstantInterfaceItem):
+    @classmethod
+    def parse(cls, parameter):
+        name = GetNameOfNode(parameter)
+        mode = GetModeOfNode(parameter)
+        subTypeIndication = GetSubtypeIndicationFromNode(parameter, "parameter", name)
+
+        defaultValue = nodes.Get_Default_Value(parameter)
+        value = (
+            GetExpressionFromNode(defaultValue) if defaultValue != Null_Iir else None
+        )
+
+        param = cls(name, mode, subTypeIndication, value)
+
+        return param
+
+    def __init__(
+        self,
+        name: str,
+        mode: Mode,
+        subType: SubTypeOrSymbol,
+        defaultExpression: Expression = None,
+    ):
+        super().__init__(name=name, mode=mode)
+        self._subType = subType
+        self._defaultExpression = defaultExpression
+
+
+@export
+class ParameterVariableInterfaceItem(VHDLModel_ParameterVariableInterfaceItem):
+    @classmethod
+    def parse(cls, parameter):
+        name = GetNameOfNode(parameter)
+        mode = GetModeOfNode(parameter)
+        subTypeIndication = GetSubtypeIndicationFromNode(parameter, "parameter", name)
+
+        defaultValue = nodes.Get_Default_Value(parameter)
+        value = (
+            GetExpressionFromNode(defaultValue) if defaultValue != Null_Iir else None
+        )
+
+        param = cls(name, mode, subTypeIndication, value)
+
+        return param
+
+    def __init__(
+        self,
+        name: str,
+        mode: Mode,
+        subType: SubTypeOrSymbol,
+        defaultExpression: Expression = None,
+    ):
+        super().__init__(name=name, mode=mode)
+        self._subType = subType
+        self._defaultExpression = defaultExpression
+
+
+@export
+class ParameterSignalInterfaceItem(VHDLModel_ParameterSignalInterfaceItem):
+    @classmethod
+    def parse(cls, parameter):
+        name = GetNameOfNode(parameter)
+        mode = GetModeOfNode(parameter)
+        subTypeIndication = GetSubtypeIndicationFromNode(parameter, "parameter", name)
+
+        defaultValue = nodes.Get_Default_Value(parameter)
+        value = (
+            GetExpressionFromNode(defaultValue) if defaultValue != Null_Iir else None
+        )
+
+        param = cls(name, mode, subTypeIndication, value)
+
+        return param
 
     def __init__(
         self,

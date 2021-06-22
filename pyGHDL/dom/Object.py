@@ -34,7 +34,7 @@ from pyGHDL.libghdl.vhdl import nodes
 from pydecor import export
 
 from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode, GetExpressionFromNode
-from pyGHDL.dom._Utils import NodeToName
+from pyGHDL.dom._Utils import GetNameOfNode
 from pyVHDLModel.VHDLModel import (
     Constant as VHDLModel_Constant,
     Variable as VHDLModel_Variable,
@@ -59,7 +59,7 @@ class Constant(VHDLModel_Constant):
 
     @classmethod
     def parse(cls, node):
-        name = NodeToName(node)
+        name = GetNameOfNode(node)
         subTypeIndication = GetSubtypeIndicationFromNode(node, "constant", name)
         defaultExpression = GetExpressionFromNode(nodes.Get_Default_Value(node))
 
@@ -81,7 +81,7 @@ class Variable(VHDLModel_Variable):
 
     @classmethod
     def parse(cls, node):
-        name = NodeToName(node)
+        name = GetNameOfNode(node)
         subTypeIndication = GetSubtypeIndicationFromNode(node, "variable", name)
         defaultExpression = GetExpressionFromNode(nodes.Get_Default_Value(node))
 
@@ -103,7 +103,7 @@ class Signal(VHDLModel_Signal):
 
     @classmethod
     def parse(cls, node):
-        name = NodeToName(node)
+        name = GetNameOfNode(node)
         subTypeIndication = GetSubtypeIndicationFromNode(node, "signal", name)
         default = nodes.Get_Default_Value(node)
         defaultExpression = GetExpressionFromNode(default) if default else None

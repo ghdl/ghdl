@@ -2,7 +2,7 @@ from pathlib  import Path
 from textwrap import dedent
 from unittest import TestCase
 
-from pyGHDL.dom.Misc       import Design, Document
+from pyGHDL.dom.NonStandard       import Design, Document
 from pyGHDL.dom.Object import Constant
 from pyGHDL.dom.Literal import IntegerLiteral
 

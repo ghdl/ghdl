@@ -20,7 +20,7 @@ end entity entity_1;
 
 architecture behav of entity_1 is
 	constant MAX : positive := -25;
-	signal rst : std_logic := 'U';
+	signal rst : std_logic := foo'('U');
 
 	type newInt is range -4 to 3;
 	subtype uint8 is integer range 0 to 255;
@@ -45,7 +45,7 @@ begin
 end architecture behav;
 
 package package_1 is
-	constant ghdl : float := (3, 5, 0 => 5, 3 => 4, name => 10); -- 2.3;
+	constant ghdl : float := (3, 5, 0 to 2 => 5, 3 => 4, name => 10); -- 2.3;
 end package;
 
 package body package_1 is

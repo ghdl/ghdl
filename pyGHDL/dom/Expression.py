@@ -32,19 +32,6 @@
 # ============================================================================
 from typing import List
 
-from pyGHDL.dom.Aggregates import (
-    OthersAggregateElement,
-    SimpleAggregateElement,
-    RangedAggregateElement,
-    IndexedAggregateElement,
-    NamedAggregateElement,
-)
-from pyGHDL.dom.Symbol import EnumerationLiteralSymbol
-from pyGHDL.libghdl import utils
-
-from pyGHDL.dom.Common import DOMException
-from pyGHDL.dom._Utils import GetIirKindOfNode
-from pyGHDL.libghdl.vhdl import nodes
 from pydecor import export
 
 from pyVHDLModel.VHDLModel import (
@@ -52,7 +39,7 @@ from pyVHDLModel.VHDLModel import (
     IdentityExpression as VHDLModel_IdentityExpression,
     NegationExpression as VHDLModel_NegationExpression,
     AbsoluteExpression as VHDLModel_AbsoluteExpression,
-    ParenthesisExpression as VHDLModel_ParenthesisExpression,
+    SubExpression as VHDLModel_ParenthesisExpression,
     TypeConversion as VHDLModel_TypeConversion,
     FunctionCall as VHDLModel_FunctionCall,
     QualifiedExpression as VHDLModel_QualifiedExpression,
@@ -72,9 +59,10 @@ from pyVHDLModel.VHDLModel import (
     XnorExpression as VHDLModel_XnorExpression,
     EqualExpression as VHDLModel_EqualExpression,
     UnequalExpression as VHDLModel_UnequalExpression,
+    LessThanExpression as VHDLModel_LessThanExpression,
+    LessEqualExpression as VHDLModel_LessEqualExpression,
     GreaterThanExpression as VHDLModel_GreaterThanExpression,
     GreaterEqualExpression as VHDLModel_GreaterEqualExpression,
-    LessThanExpression as VHDLModel_LessThanExpression,
     ShiftRightLogicExpression as VHDLModel_ShiftRightLogicExpression,
     ShiftLeftLogicExpression as VHDLModel_ShiftLeftLogicExpression,
     ShiftRightArithmeticExpression as VHDLModel_ShiftRightArithmeticExpression,
@@ -84,7 +72,22 @@ from pyVHDLModel.VHDLModel import (
     Aggregate as VHDLModel_Aggregate,
     Expression,
     AggregateElement,
+    SubTypeOrSymbol,
 )
+
+from pyGHDL.libghdl import utils
+from pyGHDL.libghdl.vhdl import nodes
+from pyGHDL.dom._Utils import GetIirKindOfNode
+from pyGHDL.dom.Common import DOMException
+from pyGHDL.dom.Symbol import EnumerationLiteralSymbol, SimpleSubTypeSymbol
+from pyGHDL.dom.Aggregates import (
+    OthersAggregateElement,
+    SimpleAggregateElement,
+    RangedAggregateElement,
+    IndexedAggregateElement,
+    NamedAggregateElement,
+)
+
 
 __all__ = []
 
@@ -159,13 +162,6 @@ class TypeConversion(VHDLModel_TypeConversion):
 
 @export
 class FunctionCall(VHDLModel_FunctionCall):
-    def __init__(self, operand: Expression):
-        super().__init__()
-        self._operand = operand
-
-
-@export
-class QualifiedExpression(VHDLModel_QualifiedExpression):
     def __init__(self, operand: Expression):
         super().__init__()
         self._operand = operand
@@ -304,6 +300,22 @@ class UnequalExpression(VHDLModel_UnequalExpression, _ParseBinaryExpression):
 
 
 @export
+class LessThanExpression(VHDLModel_LessThanExpression, _ParseBinaryExpression):
+    def __init__(self, left: Expression, right: Expression):
+        super().__init__()
+        self._leftOperand = left
+        self._rightOperand = right
+
+
+@export
+class LessEqualExpression(VHDLModel_LessEqualExpression, _ParseBinaryExpression):
+    def __init__(self, left: Expression, right: Expression):
+        super().__init__()
+        self._leftOperand = left
+        self._rightOperand = right
+
+
+@export
 class GreaterThanExpression(VHDLModel_GreaterThanExpression, _ParseBinaryExpression):
     def __init__(self, left: Expression, right: Expression):
         super().__init__()
@@ -313,14 +325,6 @@ class GreaterThanExpression(VHDLModel_GreaterThanExpression, _ParseBinaryExpress
 
 @export
 class GreaterEqualExpression(VHDLModel_GreaterEqualExpression, _ParseBinaryExpression):
-    def __init__(self, left: Expression, right: Expression):
-        super().__init__()
-        self._leftOperand = left
-        self._rightOperand = right
-
-
-@export
-class LessThanExpression(VHDLModel_LessThanExpression, _ParseBinaryExpression):
     def __init__(self, left: Expression, right: Expression):
         super().__init__()
         self._leftOperand = left
@@ -384,6 +388,23 @@ class RotateLeftExpression(VHDLModel_RotateLeftExpression, _ParseBinaryExpressio
 
 
 @export
+class QualifiedExpression(VHDLModel_QualifiedExpression):
+    def __init__(self, subType: SubTypeOrSymbol, operand: Expression):
+        super().__init__()
+        self._subtype = subType
+        self._operand = operand
+
+    @classmethod
+    def parse(cls, node):
+        from pyGHDL.dom._Translate import GetExpressionFromNode, GetNameOfNode
+
+        typeMarkName = GetNameOfNode(nodes.Get_Type_Mark(node))
+        subType = SimpleSubTypeSymbol(typeMarkName)
+        operand = GetExpressionFromNode(nodes.Get_Expression(node))
+        return cls(subType, operand)
+
+
+@export
 class Aggregate(VHDLModel_Aggregate):
     def __init__(self, elements: List[AggregateElement]):
         super().__init__()
@@ -391,31 +412,28 @@ class Aggregate(VHDLModel_Aggregate):
 
     @classmethod
     def parse(cls, node):
-        from pyGHDL.dom._Translate import GetExpressionFromNode
+        from pyGHDL.dom._Translate import GetExpressionFromNode, GetRangeFromNode
 
         choices = []
 
         choicesChain = nodes.Get_Association_Choices_Chain(node)
         for item in utils.chain_iter(choicesChain):
             kind = GetIirKindOfNode(item)
+            value = GetExpressionFromNode(nodes.Get_Associated_Expr(item))
+
             if kind == nodes.Iir_Kind.Choice_By_None:
-                value = GetExpressionFromNode(nodes.Get_Associated_Expr(item))
                 choices.append(SimpleAggregateElement(value))
             elif kind == nodes.Iir_Kind.Choice_By_Expression:
                 index = GetExpressionFromNode(nodes.Get_Choice_Expression(item))
-                value = GetExpressionFromNode(nodes.Get_Associated_Expr(item))
                 choices.append(IndexedAggregateElement(index, value))
             elif kind == nodes.Iir_Kind.Choice_By_Range:
-                r = GetExpressionFromNode(nodes.Get_Choice_Range(item))
-                value = GetExpressionFromNode(nodes.Get_Associated_Expr(item))
+                r = GetRangeFromNode(nodes.Get_Choice_Range(item))
                 choices.append(RangedAggregateElement(r, value))
             elif kind == nodes.Iir_Kind.Choice_By_Name:
                 name = EnumerationLiteralSymbol(nodes.Get_Choice_Name(item))
-                value = GetExpressionFromNode(nodes.Get_Associated_Expr(item))
                 choices.append(NamedAggregateElement(name, value))
             elif kind == nodes.Iir_Kind.Choice_By_Others:
-                expression = None
-                choices.append(OthersAggregateElement(expression))
+                choices.append(OthersAggregateElement(value))
             else:
                 raise DOMException(
                     "Unknown choice kind '{kindName}'({kind}) in aggregate '{aggr}'.".format(

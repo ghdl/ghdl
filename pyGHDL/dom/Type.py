@@ -30,56 +30,24 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-from pyGHDL.libghdl._types import Iir
 from pydecor import export
 
-from pyVHDLModel.VHDLModel import Mode
-
-from pyGHDL.libghdl import LibGHDLException, name_table, files_map
-from pyGHDL.libghdl.vhdl import nodes
-from pyGHDL.dom.Misc import Position
-
-
-__all__ = []
-
-__MODE_TRANSLATION = {
-    nodes.Iir_Mode.In_Mode: Mode.In,
-    nodes.Iir_Mode.Out_Mode: Mode.Out,
-    nodes.Iir_Mode.Inout_Mode: Mode.InOut,
-    nodes.Iir_Mode.Buffer_Mode: Mode.Buffer,
-    nodes.Iir_Mode.Linkage_Mode: Mode.Linkage,
-}
+from pyVHDLModel.VHDLModel import (
+    IntegerType as VHDLModel_IntegerType,
+    SubType as VHDLModel_SubType,
+    Expression,
+)
 
 
 @export
-def GetIirKindOfNode(node: Iir) -> nodes.Iir_Kind:
-    kind: int = nodes.Get_Kind(node)
-    return nodes.Iir_Kind(kind)
+class IntegerType(VHDLModel_IntegerType):
+    def __init__(self, typeName: str, leftBound: Expression, rightBound: Expression):
+        super().__init__(typeName)
+        self._leftBound = leftBound
+        self._rightBound = rightBound
 
 
 @export
-def GetNameOfNode(node: Iir) -> str:
-    """Return the python string from node :obj:`node` identifier"""
-    identifier = nodes.Get_Identifier(node)
-    return name_table.Get_Name_Ptr(identifier)
-
-
-@export
-def GetModeOfNode(node: Iir) -> Mode:
-    """Return the mode of a :obj:`port`."""
-    try:
-        return __MODE_TRANSLATION[nodes.Get_Mode(node)]
-    except KeyError:
-        raise LibGHDLException("Unknown mode.")
-
-
-@export
-def GetPositionOfNode(node: Iir) -> Position:
-    location = nodes.Get_Location(node)
-    file = files_map.Location_To_File(location)
-    fileName = name_table.Get_Name_Ptr(files_map.Get_File_Name(file))
-    #    position = files_map.Location_File_To_Pos(location, file)
-    line = files_map.Location_File_To_Line(location, file)
-    column = files_map.Location_File_Line_To_Offset(location, file, line)
-
-    return Position(fileName, line, column)
+class SubType(VHDLModel_SubType):
+    def __init__(self, subtypeName: str):
+        super().__init__(subtypeName)
