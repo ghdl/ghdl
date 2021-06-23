@@ -57,7 +57,14 @@ from pyGHDL.dom.Symbol import (
     ConstrainedSubTypeSymbol,
     IndexedObjectOrFunctionCallSymbol,
 )
-from pyGHDL.dom.Type import IntegerType, SubType, ArrayType, RecordType, EnumeratedType
+from pyGHDL.dom.Type import (
+    IntegerType,
+    SubType,
+    ArrayType,
+    RecordType,
+    EnumeratedType,
+    RecordTypeElement,
+)
 from pyGHDL.dom.Range import Range, RangeExpression
 from pyGHDL.dom.Literal import (
     IntegerLiteral,
@@ -198,8 +205,15 @@ def GetTypeFromNode(node: Iir) -> BaseType:
 
         return ArrayType(typeName)
     elif kind == nodes.Iir_Kind.Record_Type_Definition:
+        elements = []
+        elementDeclarations = nodes.Get_Elements_Declaration_List(typeDefinition)
+        for element in utils.flist_iter(elementDeclarations):
+            elementName = GetNameOfNode(element)
+            elementType = None  # GetSubtypeIndicationFromNode(element)
 
-        return RecordType(typeName)
+            elements.append(RecordTypeElement(elementName, elementType))
+
+        return RecordType(typeName, elements)
     else:
         position = GetPositionOfNode(typeDefinition)
         raise DOMException(

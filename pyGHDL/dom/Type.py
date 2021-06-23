@@ -37,6 +37,7 @@ from pyVHDLModel.VHDLModel import (
     IntegerType as VHDLModel_IntegerType,
     EnumeratedType as VHDLModel_EnumeratedType,
     ArrayType as VHDLModel_ArrayType,
+    RecordTypeElement as VHDLModel_RecordTypeElement,
     RecordType as VHDLModel_RecordType,
     AccessType as VHDLModel_AccessType,
     SubType as VHDLModel_SubType,
@@ -59,6 +60,11 @@ class EnumeratedType(VHDLModel_EnumeratedType):
 
 @export
 class ArrayType(VHDLModel_ArrayType):
+    pass
+
+
+@export
+class RecordTypeElement(VHDLModel_RecordTypeElement):
     pass
 
 
