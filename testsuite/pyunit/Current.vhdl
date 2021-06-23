@@ -21,6 +21,7 @@ end entity entity_1;
 architecture behav of entity_1 is
 	constant MAX : positive := -25;
 	signal rst : std_logic := foo('U');
+--	signal vec : bit_vector(pack.input'bar'range);
 
 	type newInt is range -4 to 3;
 	type newFp is range 4.3 downto -3.9;
@@ -28,6 +29,8 @@ architecture behav of entity_1 is
 	type rec is record
 		elem1 : bit;
 		elem2 : boolean;
+		elem3 : integer_vector(3 downto 0);
+		elem4 : natural range 7 to 8;
 	end record;
 	type enum is (e1, e2, e3);
 	type acc is access bar;

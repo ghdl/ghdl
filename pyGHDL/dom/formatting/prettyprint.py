@@ -40,7 +40,7 @@ from pyGHDL.dom.InterfaceItem import (
 )
 from pyGHDL.dom.Symbol import (
     SimpleSubTypeSymbol,
-    ConstrainedSubTypeSymbol,
+    ConstrainedCompositeSubTypeSymbol,
 )
 
 
@@ -401,7 +401,7 @@ class PrettyPrint:
     def formatSubtypeIndication(self, subTypeIndication, entity: str, name: str) -> str:
         if isinstance(subTypeIndication, SimpleSubTypeSymbol):
             return "{type}".format(type=subTypeIndication.SymbolName)
-        elif isinstance(subTypeIndication, ConstrainedSubTypeSymbol):
+        elif isinstance(subTypeIndication, ConstrainedCompositeSubTypeSymbol):
             ranges = [str(c.Range) for c in subTypeIndication.Constraints]
             constraints = ", ".join(ranges)
 

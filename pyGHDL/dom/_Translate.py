@@ -59,8 +59,9 @@ from pyGHDL.dom.Common import DOMException
 from pyGHDL.dom.Symbol import (
     SimpleObjectOrFunctionCallSymbol,
     SimpleSubTypeSymbol,
-    ConstrainedSubTypeSymbol,
+    ConstrainedCompositeSubTypeSymbol,
     IndexedObjectOrFunctionCallSymbol,
+    ConstrainedScalarSubTypeSymbol,
 )
 from pyGHDL.dom.Type import (
     IntegerType,
@@ -133,6 +134,12 @@ def GetArrayConstraintsFromSubtypeIndication(
         if constraintKind == nodes.Iir_Kind.Range_Expression:
             constraints.append(RangeExpression(GetRangeFromNode(constraint)))
         elif constraintKind == nodes.Iir_Kind.Attribute_Name:
+            name = GetNameOfNode(constraint)
+            prefix = nodes.Get_Prefix(constraint)
+            name2 = GetNameOfNode(prefix)
+            kind2 = GetIirKindOfNode(prefix)
+            print(name2, kind2, name)
+
             raise DOMException("[NOT IMPLEMENTED] Attribute name as range.")
         elif constraintKind == nodes.Iir_Kind.Simple_Name:
             raise DOMException("[NOT IMPLEMENTED] Subtype as range.")
@@ -205,8 +212,10 @@ def GetSubTypeIndicationFromIndicationNode(
         return GetSimpleTypeFromNode(subTypeIndicationNode)
     elif kind == nodes.Iir_Kind.Selected_Name:
         return GetSimpleTypeFromNode(subTypeIndicationNode)
+    elif kind == nodes.Iir_Kind.Subtype_Definition:
+        return GetScalarConstrainedSubTypeFromNode(subTypeIndicationNode)
     elif kind == nodes.Iir_Kind.Array_Subtype_Definition:
-        return GetConstrainedSubTypeFromNode(subTypeIndicationNode)
+        return GetCompositeConstrainedSubTypeFromNode(subTypeIndicationNode)
     else:
         raise DOMException(
             "Unknown kind '{kind}' for an subtype indication in a {entity} of `{name}`.".format(
@@ -222,14 +231,25 @@ def GetSimpleTypeFromNode(subTypeIndicationNode: Iir) -> SimpleSubTypeSymbol:
 
 
 @export
-def GetConstrainedSubTypeFromNode(
+def GetScalarConstrainedSubTypeFromNode(
     subTypeIndicationNode: Iir,
-) -> ConstrainedSubTypeSymbol:
+) -> ConstrainedScalarSubTypeSymbol:
+    typeMark = nodes.Get_Subtype_Type_Mark(subTypeIndicationNode)
+    typeMarkName = GetNameOfNode(typeMark)
+    rangeConstraint = nodes.Get_Range_Constraint(subTypeIndicationNode)
+    r = GetRangeFromNode(rangeConstraint)
+    return ConstrainedScalarSubTypeSymbol(typeMarkName, r)
+
+
+@export
+def GetCompositeConstrainedSubTypeFromNode(
+    subTypeIndicationNode: Iir,
+) -> ConstrainedCompositeSubTypeSymbol:
     typeMark = nodes.Get_Subtype_Type_Mark(subTypeIndicationNode)
     typeMarkName = GetNameOfNode(typeMark)
 
     constraints = GetArrayConstraintsFromSubtypeIndication(subTypeIndicationNode)
-    return ConstrainedSubTypeSymbol(typeMarkName, constraints)
+    return ConstrainedCompositeSubTypeSymbol(typeMarkName, constraints)
 
 
 @export
