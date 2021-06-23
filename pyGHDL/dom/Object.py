@@ -33,7 +33,7 @@
 from pyGHDL.libghdl.vhdl import nodes
 from pydecor import export
 
-from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode, GetExpressionFromNode
+from pyGHDL.dom._Translate import GetSubTypeIndicationFromNode, GetExpressionFromNode
 from pyGHDL.dom._Utils import GetNameOfNode
 from pyVHDLModel.VHDLModel import (
     Constant as VHDLModel_Constant,
@@ -62,7 +62,7 @@ class Constant(VHDLModel_Constant):
     @classmethod
     def parse(cls, node):
         name = GetNameOfNode(node)
-        subTypeIndication = GetSubtypeIndicationFromNode(node, "constant", name)
+        subTypeIndication = GetSubTypeIndicationFromNode(node, "constant", name)
         defaultExpression = GetExpressionFromNode(nodes.Get_Default_Value(node))
 
         return cls(name, subTypeIndication, defaultExpression)
@@ -79,7 +79,7 @@ class DeferredConstant(VHDLModel_DeferredConstant):
     @classmethod
     def parse(cls, node):
         name = GetNameOfNode(node)
-        subTypeIndication = GetSubtypeIndicationFromNode(
+        subTypeIndication = GetSubTypeIndicationFromNode(
             node, "deferred constant", name
         )
 
@@ -100,7 +100,7 @@ class Variable(VHDLModel_Variable):
     @classmethod
     def parse(cls, node):
         name = GetNameOfNode(node)
-        subTypeIndication = GetSubtypeIndicationFromNode(node, "variable", name)
+        subTypeIndication = GetSubTypeIndicationFromNode(node, "variable", name)
         defaultExpression = GetExpressionFromNode(nodes.Get_Default_Value(node))
 
         return cls(name, subTypeIndication, defaultExpression)
@@ -117,7 +117,7 @@ class SharedVariable(VHDLModel_SharedVariable):
     @classmethod
     def parse(cls, node):
         name = GetNameOfNode(node)
-        subTypeIndication = GetSubtypeIndicationFromNode(node, "variable", name)
+        subTypeIndication = GetSubTypeIndicationFromNode(node, "variable", name)
 
         return cls(name, subTypeIndication)
 
@@ -136,7 +136,7 @@ class Signal(VHDLModel_Signal):
     @classmethod
     def parse(cls, node):
         name = GetNameOfNode(node)
-        subTypeIndication = GetSubtypeIndicationFromNode(node, "signal", name)
+        subTypeIndication = GetSubTypeIndicationFromNode(node, "signal", name)
         default = nodes.Get_Default_Value(node)
         defaultExpression = GetExpressionFromNode(default) if default else None
 

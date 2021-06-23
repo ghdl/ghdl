@@ -117,51 +117,6 @@ __all__ = []
 
 
 @export
-def GetSubtypeIndicationFromNode(
-    node: Iir, entity: str, name: str, do=True
-) -> SubTypeOrSymbol:
-    if do:
-        subTypeIndication = nodes.Get_Subtype_Indication(node)
-    else:
-        subTypeIndication = node
-    if subTypeIndication is nodes.Null_Iir:
-        return None
-    subTypeKind = GetIirKindOfNode(subTypeIndication)
-
-    if subTypeKind == nodes.Iir_Kind.Simple_Name:
-        subTypeName = GetNameOfNode(subTypeIndication)
-
-        subType = SimpleSubTypeSymbol(subTypeName)
-    elif subTypeKind == nodes.Iir_Kind.Array_Subtype_Definition:
-        typeMark = nodes.Get_Subtype_Type_Mark(subTypeIndication)
-        typeMarkName = GetNameOfNode(typeMark)
-
-        constraints = GetArrayConstraintsFromSubtypeIndication(subTypeIndication)
-        subType = ConstrainedSubTypeSymbol(typeMarkName, constraints)
-    elif subTypeKind == nodes.Iir_Kind.Subtype_Definition:
-        raise DOMException(
-            "Unknown handling of subtype kind '{kind}' of subtype indication '{indication}' while parsing {entity} '{name}'.".format(
-                kind=subTypeKind, indication=subTypeIndication, entity=entity, name=name
-            )
-        )
-    else:
-        position = GetPositionOfNode(node)
-        raise DOMException(
-            "Unknown subtype kind '{kind}' of subtype indication '{indication}' while parsing {entity} '{name}' at {file}:{line}:{column}.".format(
-                kind=subTypeKind,
-                indication=subTypeIndication,
-                entity=entity,
-                name=name,
-                file=position.Filename,
-                line=position.Line,
-                column=position.Column,
-            )
-        )
-
-    return subType
-
-
-@export
 def GetArrayConstraintsFromSubtypeIndication(
     subTypeIndication: Iir,
 ) -> List[Constraint]:
@@ -229,7 +184,15 @@ def GetTypeFromNode(node: Iir) -> BaseType:
 
 
 @export
-def GetSubTypeIndicationFromNode(
+def GetSubTypeIndicationFromNode(node: Iir, entity: str, name: str) -> SubTypeOrSymbol:
+    subTypeIndicationNode = nodes.Get_Subtype_Indication(node)
+    #     if subTypeIndicationNode is nodes.Null_Iir:
+    #         return None
+    return GetSubTypeIndicationFromIndicationNode(subTypeIndicationNode, entity, name)
+
+
+@export
+def GetSubTypeIndicationFromIndicationNode(
     subTypeIndicationNode: Iir, entity: str, name: str
 ) -> SubTypeOrSymbol:
     kind = GetIirKindOfNode(subTypeIndicationNode)

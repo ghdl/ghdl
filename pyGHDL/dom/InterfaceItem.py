@@ -46,7 +46,7 @@ from pyVHDLModel.VHDLModel import (
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.libghdl.vhdl.nodes import Null_Iir
 from pyGHDL.dom._Utils import GetNameOfNode, GetModeOfNode
-from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode, GetExpressionFromNode
+from pyGHDL.dom._Translate import GetSubTypeIndicationFromNode, GetExpressionFromNode
 
 
 __all__ = []
@@ -58,7 +58,7 @@ class GenericConstantInterfaceItem(VHDLModel_GenericConstantInterfaceItem):
     def parse(cls, generic):
         name = GetNameOfNode(generic)
         mode = GetModeOfNode(generic)
-        subTypeIndication = GetSubtypeIndicationFromNode(generic, "generic", name)
+        subTypeIndication = GetSubTypeIndicationFromNode(generic, "generic", name)
         default = nodes.Get_Default_Value(generic)
         value = GetExpressionFromNode(default) if default else None
 
@@ -82,7 +82,7 @@ class PortSignalInterfaceItem(VHDLModel_PortSignalInterfaceItem):
     def parse(cls, port):
         name = GetNameOfNode(port)
         mode = GetModeOfNode(port)
-        subTypeIndication = GetSubtypeIndicationFromNode(port, "port", name)
+        subTypeIndication = GetSubTypeIndicationFromNode(port, "port", name)
 
         defaultValue = nodes.Get_Default_Value(port)
         value = (
@@ -109,7 +109,7 @@ class ParameterConstantInterfaceItem(VHDLModel_ParameterConstantInterfaceItem):
     def parse(cls, parameter):
         name = GetNameOfNode(parameter)
         mode = GetModeOfNode(parameter)
-        subTypeIndication = GetSubtypeIndicationFromNode(parameter, "parameter", name)
+        subTypeIndication = GetSubTypeIndicationFromNode(parameter, "parameter", name)
 
         defaultValue = nodes.Get_Default_Value(parameter)
         value = (
@@ -136,7 +136,7 @@ class ParameterVariableInterfaceItem(VHDLModel_ParameterVariableInterfaceItem):
     def parse(cls, parameter):
         name = GetNameOfNode(parameter)
         mode = GetModeOfNode(parameter)
-        subTypeIndication = GetSubtypeIndicationFromNode(parameter, "parameter", name)
+        subTypeIndication = GetSubTypeIndicationFromNode(parameter, "parameter", name)
 
         defaultValue = nodes.Get_Default_Value(parameter)
         value = (
@@ -163,7 +163,7 @@ class ParameterSignalInterfaceItem(VHDLModel_ParameterSignalInterfaceItem):
     def parse(cls, parameter):
         name = GetNameOfNode(parameter)
         mode = GetModeOfNode(parameter)
-        subTypeIndication = GetSubtypeIndicationFromNode(parameter, "parameter", name)
+        subTypeIndication = GetSubTypeIndicationFromNode(parameter, "parameter", name)
 
         defaultValue = nodes.Get_Default_Value(parameter)
         value = (

@@ -79,7 +79,7 @@ class ArrayType(VHDLModel_ArrayType):
     def parse(cls, typeName: str, typeDefinitionNode: Iir) -> "ArrayType":
         from pyGHDL.dom._Translate import (
             GetSimpleTypeFromNode,
-            GetSubTypeIndicationFromNode,
+            GetSubTypeIndicationFromIndicationNode,
         )
 
         indices = []
@@ -99,7 +99,7 @@ class ArrayType(VHDLModel_ArrayType):
         elementSubTypeIndication = nodes.Get_Element_Subtype_Indication(
             typeDefinitionNode
         )
-        elementSubType = GetSubTypeIndicationFromNode(
+        elementSubType = GetSubTypeIndicationFromIndicationNode(
             elementSubTypeIndication, "array declaration", typeName
         )
 
@@ -110,10 +110,10 @@ class ArrayType(VHDLModel_ArrayType):
 class RecordTypeElement(VHDLModel_RecordTypeElement):
     @classmethod
     def parse(cls, elementDeclarationNode: Iir) -> "RecordTypeElement":
-        from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode
+        from pyGHDL.dom._Translate import GetSubTypeIndicationFromNode
 
         elementName = GetNameOfNode(elementDeclarationNode)
-        elementType = GetSubtypeIndicationFromNode(
+        elementType = GetSubTypeIndicationFromNode(
             elementDeclarationNode, "record element", elementName
         )
 
@@ -137,13 +137,13 @@ class RecordType(VHDLModel_RecordType):
 class AccessType(VHDLModel_AccessType):
     @classmethod
     def parse(cls, typeName: str, typeDefinitionNode: Iir) -> "AccessType":
-        from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode
+        from pyGHDL.dom._Translate import GetSubTypeIndicationFromIndicationNode
 
         designatedSubtypeIndication = nodes.Get_Designated_Subtype_Indication(
             typeDefinitionNode
         )
-        designatedSubType = GetSubtypeIndicationFromNode(
-            designatedSubtypeIndication, "access type", typeName, do=False
+        designatedSubType = GetSubTypeIndicationFromIndicationNode(
+            designatedSubtypeIndication, "access type", typeName
         )
 
         return cls(typeName, designatedSubType)
