@@ -401,13 +401,17 @@ package body Synth.Vhdl_Context is
    --  Set Is_0 to True iff VEC is 000...
    --  Set Is_X to True iff VEC is XXX...
    procedure Is_Full (Vec : Logvec_Array;
+                      W : Width;
                       Is_0 : out Boolean;
                       Is_X : out Boolean;
                       Is_Z : out Boolean)
    is
       Val : Uns32;
       Zx : Uns32;
+      Mask : Uns32;
    begin
+      --  Check the first word.
+      pragma Assert (W >= 32);
       Val := Vec (0).Val;
       Zx := Vec (0).Zx;
       Is_0 := False;
@@ -427,7 +431,7 @@ package body Synth.Vhdl_Context is
          return;
       end if;
 
-      for I in 1 .. Vec'Last loop
+      for I in 1 .. Vec'Last - 1 loop
          if Vec (I).Val /= Val or else Vec (I).Zx /= Zx then
             --  Clear flags.
             Is_0 := False;
@@ -436,6 +440,16 @@ package body Synth.Vhdl_Context is
             return;
          end if;
       end loop;
+
+      pragma Assert (Vec'Last = Digit_Index ((W - 1) / 32));
+      Mask := Shift_Right (not 0, 32 - Natural (W mod 32));
+      if (Vec (Vec'Last).Val and Mask) /= (Val and Mask)
+        or else (Vec (Vec'Last).Zx and Mask) /= (Zx and Mask)
+      then
+         Is_0 := False;
+         Is_X := False;
+         Is_Z := False;
+      end if;
    end Is_Full;
 
    procedure Value2net (Ctxt : Context_Acc;
@@ -472,7 +486,7 @@ package body Synth.Vhdl_Context is
          end if;
          return;
       else
-         Is_Full (Vec, Is_0, Is_X, Is_Z);
+         Is_Full (Vec, W, Is_0, Is_X, Is_Z);
          if Is_0 then
             Res := Build_Const_UB32 (Ctxt, 0, W);
          elsif Is_X then
