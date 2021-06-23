@@ -73,7 +73,8 @@ from pyGHDL.dom.Literal import (
     FloatingPointLiteral,
     StringLiteral,
     PhysicalIntegerLiteral,
-    PhysicalFloatingLiteral, EnumerationLiteral,
+    PhysicalFloatingLiteral,
+    EnumerationLiteral,
 )
 from pyGHDL.dom.Expression import (
     SubtractionExpression,
@@ -116,8 +117,13 @@ __all__ = []
 
 
 @export
-def GetSubtypeIndicationFromNode(node: Iir, entity: str, name: str) -> SubTypeOrSymbol:
-    subTypeIndication = nodes.Get_Subtype_Indication(node)
+def GetSubtypeIndicationFromNode(
+    node: Iir, entity: str, name: str, do=True
+) -> SubTypeOrSymbol:
+    if do:
+        subTypeIndication = nodes.Get_Subtype_Indication(node)
+    else:
+        subTypeIndication = node
     if subTypeIndication is nodes.Null_Iir:
         return None
     subTypeKind = GetIirKindOfNode(subTypeIndication)
@@ -190,6 +196,7 @@ def GetArrayConstraintsFromSubtypeIndication(
 def GetTypeFromNode(node: Iir) -> BaseType:
     typeName = GetNameOfNode(node)
     typeDefinition = nodes.Get_Type_Definition(node)
+
     kind = GetIirKindOfNode(typeDefinition)
     if kind == nodes.Iir_Kind.Range_Expression:
         r = GetRangeFromNode(typeDefinition)
@@ -206,9 +213,7 @@ def GetTypeFromNode(node: Iir) -> BaseType:
     elif kind == nodes.Iir_Kind.Record_Type_Definition:
         return RecordType.parse(typeName, typeDefinition)
     elif kind == nodes.Iir_Kind.Access_Type_Definition:
-        designatedType = nodes.Get_Designated_Type(typeDefinition)
-
-        return AccessType(typeName, designatedType)
+        return AccessType.parse(typeName, typeDefinition)
     else:
         position = GetPositionOfNode(typeDefinition)
         raise DOMException(
@@ -224,7 +229,9 @@ def GetTypeFromNode(node: Iir) -> BaseType:
 
 
 @export
-def GetSubTypeIndicationFromNode(subTypeIndicationNode: Iir, entity: str, name: str) -> SubTypeOrSymbol:
+def GetSubTypeIndicationFromNode(
+    subTypeIndicationNode: Iir, entity: str, name: str
+) -> SubTypeOrSymbol:
     kind = GetIirKindOfNode(subTypeIndicationNode)
     if kind == nodes.Iir_Kind.Simple_Name:
         return GetSimpleTypeFromNode(subTypeIndicationNode)
@@ -237,24 +244,30 @@ def GetSubTypeIndicationFromNode(subTypeIndicationNode: Iir, entity: str, name: 
             )
         )
 
+
 @export
 def GetSimpleTypeFromNode(subTypeIndicationNode: Iir) -> SimpleSubTypeSymbol:
     subTypeName = GetNameOfNode(subTypeIndicationNode)
     return SimpleSubTypeSymbol(subTypeName)
 
+
 @export
-def GetConstrainedSubTypeFromNode(subTypeIndicationNode: Iir) -> ConstrainedSubTypeSymbol:
+def GetConstrainedSubTypeFromNode(
+    subTypeIndicationNode: Iir,
+) -> ConstrainedSubTypeSymbol:
     typeMark = nodes.Get_Subtype_Type_Mark(subTypeIndicationNode)
     typeMarkName = GetNameOfNode(typeMark)
 
     constraints = GetArrayConstraintsFromSubtypeIndication(subTypeIndicationNode)
     return ConstrainedSubTypeSymbol(typeMarkName, constraints)
 
+
 @export
 def GetSubTypeFromNode(node: Iir) -> SubTypeOrSymbol:
     subTypeName = GetNameOfNode(node)
 
     return SubType(subTypeName)
+
 
 @export
 def GetRangeFromNode(node: Iir) -> Range:

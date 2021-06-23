@@ -52,7 +52,7 @@ __all__ = []
 @export
 class EnumerationLiteral(VHDLModel_EnumerationLiteral):
     @classmethod
-    def parse(cls, literalNode: Iir) -> 'EnumerationLiteral':
+    def parse(cls, literalNode: Iir) -> "EnumerationLiteral":
         literalName = GetNameOfNode(literalNode)
         return cls(literalName)
 
@@ -60,7 +60,7 @@ class EnumerationLiteral(VHDLModel_EnumerationLiteral):
 @export
 class IntegerLiteral(VHDLModel_IntegerLiteral):
     @classmethod
-    def parse(cls, node: Iir) -> 'IntegerLiteral':
+    def parse(cls, node: Iir) -> "IntegerLiteral":
         value = nodes.Get_Value(node)
         return cls(value)
 
@@ -68,7 +68,7 @@ class IntegerLiteral(VHDLModel_IntegerLiteral):
 @export
 class FloatingPointLiteral(VHDLModel_FloatingPointLiteral):
     @classmethod
-    def parse(cls, node: Iir) -> 'FloatingPointLiteral':
+    def parse(cls, node: Iir) -> "FloatingPointLiteral":
         value = nodes.Get_Fp_Value(node)
         return cls(value)
 
@@ -76,7 +76,7 @@ class FloatingPointLiteral(VHDLModel_FloatingPointLiteral):
 @export
 class PhysicalIntegerLiteral(VHDLModel_PhysicalIntegerLiteral):
     @classmethod
-    def parse(cls, node: Iir) -> 'PhysicalIntegerLiteral':
+    def parse(cls, node: Iir) -> "PhysicalIntegerLiteral":
         value = nodes.Get_Value(node)
         unit = nodes.Get_Unit_Name(node)
         unitName = GetNameOfNode(unit)
@@ -87,7 +87,7 @@ class PhysicalIntegerLiteral(VHDLModel_PhysicalIntegerLiteral):
 @export
 class PhysicalFloatingLiteral(VHDLModel_PhysicalFloatingLiteral):
     @classmethod
-    def parse(cls, node: Iir) -> 'PhysicalFloatingLiteral':
+    def parse(cls, node: Iir) -> "PhysicalFloatingLiteral":
         value = nodes.Get_Fp_Value(node)
         unit = nodes.Get_Unit_Name(node)
         unitName = GetNameOfNode(unit)
@@ -98,7 +98,7 @@ class PhysicalFloatingLiteral(VHDLModel_PhysicalFloatingLiteral):
 @export
 class CharacterLiteral(VHDLModel_CharacterLiteral):
     @classmethod
-    def parse(cls, node: Iir) -> 'CharacterLiteral':
+    def parse(cls, node: Iir) -> "CharacterLiteral":
         identifier = nodes.Get_Identifier(node)
         value = name_table.Get_Character(identifier)
         return cls(value)
@@ -107,7 +107,7 @@ class CharacterLiteral(VHDLModel_CharacterLiteral):
 @export
 class StringLiteral(VHDLModel_StringLiteral):
     @classmethod
-    def parse(cls, node: Iir) -> 'StringLiteral':
+    def parse(cls, node: Iir) -> "StringLiteral":
         stringID = nodes.Get_String8_Id(node)
         value = name_table.Get_Name_Ptr(stringID)
         return cls(value)
