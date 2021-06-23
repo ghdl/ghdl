@@ -30,6 +30,14 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+from pyGHDL.dom.Common import DOMException
+from pyGHDL.dom.Literal import EnumerationLiteral
+from pyGHDL.dom._Utils import GetNameOfNode, GetIirKindOfNode
+from pyGHDL.libghdl import utils
+
+from pyGHDL.libghdl.vhdl import nodes
+
+from pyGHDL.libghdl._types import Iir
 from pydecor import export
 
 from pyGHDL.dom.Range import Range
@@ -55,12 +63,41 @@ class IntegerType(VHDLModel_IntegerType):
 
 @export
 class EnumeratedType(VHDLModel_EnumeratedType):
-    pass
+    @classmethod
+    def parse(cls, typeName: str, typeDefinitionNode: Iir):
+        literals = []
+        enumerationLiterals = nodes.Get_Enumeration_Literal_List(typeDefinitionNode)
+        for enumerationLiteral in utils.flist_iter(enumerationLiterals):
+            literal = EnumerationLiteral.parse(enumerationLiteral)
+            literals.append(literal)
+
+        return cls(typeName, literals)
 
 
 @export
 class ArrayType(VHDLModel_ArrayType):
-    pass
+    @classmethod
+    def parse(cls, typeName: str, typeDefinitionNode: Iir):
+        from pyGHDL.dom._Translate import GetSimpleTypeFromNode, GetSubTypeIndicationFromNode
+
+        indices = []
+        indexDefinitions = nodes.Get_Index_Subtype_Definition_List(typeDefinitionNode)
+        for index in utils.flist_iter(indexDefinitions):
+            indexKind = GetIirKindOfNode(index)
+            if indexKind == nodes.Iir_Kind.Simple_Name:
+                indexSubType = GetSimpleTypeFromNode(index)
+                indices.append(indexSubType)
+            else:
+                raise DOMException(
+                    "Unknown kind '{kind}' for an index in the array definition of `{typeName}`.".format(
+                        kind=indexKind.name, typeName=typeName
+                    )
+                )
+
+        elementSubTypeIndication = nodes.Get_Element_Subtype_Indication(typeDefinitionNode)
+        elementSubType = GetSubTypeIndicationFromNode(elementSubTypeIndication, "array declaration", typeName)
+
+        return cls(typeName, indices, elementSubType)
 
 
 @export
@@ -70,7 +107,20 @@ class RecordTypeElement(VHDLModel_RecordTypeElement):
 
 @export
 class RecordType(VHDLModel_RecordType):
-    pass
+    @classmethod
+    def parse(cls, typeName: str, typeDefinitionNode: Iir):
+        from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode
+
+        elements = []
+        elementDeclarations = nodes.Get_Elements_Declaration_List(typeDefinitionNode)
+        for elementDeclaration in utils.flist_iter(elementDeclarations):
+            elementName = GetNameOfNode(elementDeclaration)
+            elementType = GetSubtypeIndicationFromNode(elementDeclaration, "record element", elementName)
+
+            element = RecordTypeElement(elementName, elementType)
+            elements.append(element)
+
+        return cls(typeName, elements)
 
 
 @export

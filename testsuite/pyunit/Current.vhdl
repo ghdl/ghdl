@@ -23,12 +23,14 @@ architecture behav of entity_1 is
 	signal rst : std_logic := foo('U');
 
 	type newInt is range -4 to 3;
-	type arr is array(natural range <>) of integer;
+	type newFp is range 4.3 downto -3.9;
+	type arr is array(natural range <>, enum range <>) of integer(3 downto 0);
 	type rec is record
 		elem1 : bit;
 		elem2 : boolean;
 	end record;
 	type enum is (e1, e2, e3);
+	type acc is access bar;
 	subtype uint8 is integer range 0 to 255;
 
 --	file f : text;
