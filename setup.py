@@ -64,11 +64,9 @@ def get_requirements(file: Path) -> List[str]:
         for line in fh.readlines():
             if line.startswith("#"):
                 continue
-            elif line.startswith("git+"):
-                _splitItems = line.split("#")
-                requirements.append(
-                    "{} @ {}".format(_splitItems[1].strip(), _splitItems[0])
-                )
+            elif line.startswith("https"):
+                _splitItems = line.strip().split("#")
+                requirements.append("{} @ {}".format(_splitItems[1], _splitItems[0]))
             else:
                 requirements.append(line.strip())
     return requirements
@@ -135,7 +133,7 @@ setuptools_setup(
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Development Status :: 4 - Beta",
-        # 		"Development Status :: 5 - Production/Stable",
+        # "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
         "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)",
         "Topic :: Software Development :: Code Generators",
