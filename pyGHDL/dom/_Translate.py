@@ -49,7 +49,12 @@ from pyVHDLModel.VHDLModel import (
 from pyGHDL.libghdl import utils
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
-from pyGHDL.dom._Utils import GetNameOfNode, GetIirKindOfNode, GetPositionOfNode
+from pyGHDL.dom._Utils import (
+    GetNameOfNode,
+    GetIirKindOfNode,
+    GetPositionOfNode,
+    GetSelectedName,
+)
 from pyGHDL.dom.Common import DOMException
 from pyGHDL.dom.Symbol import (
     SimpleObjectOrFunctionCallSymbol,
@@ -198,6 +203,8 @@ def GetSubTypeIndicationFromIndicationNode(
     kind = GetIirKindOfNode(subTypeIndicationNode)
     if kind == nodes.Iir_Kind.Simple_Name:
         return GetSimpleTypeFromNode(subTypeIndicationNode)
+    elif kind == nodes.Iir_Kind.Selected_Name:
+        return GetSimpleTypeFromNode(subTypeIndicationNode)
     elif kind == nodes.Iir_Kind.Array_Subtype_Definition:
         return GetConstrainedSubTypeFromNode(subTypeIndicationNode)
     else:
@@ -210,7 +217,7 @@ def GetSubTypeIndicationFromIndicationNode(
 
 @export
 def GetSimpleTypeFromNode(subTypeIndicationNode: Iir) -> SimpleSubTypeSymbol:
-    subTypeName = GetNameOfNode(subTypeIndicationNode)
+    subTypeName = GetSelectedName(subTypeIndicationNode)
     return SimpleSubTypeSymbol(subTypeName)
 
 

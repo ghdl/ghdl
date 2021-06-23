@@ -410,8 +410,8 @@ class PrettyPrint:
             )
         else:
             raise PrettyPrintException(
-                "Unhandled constraint kind for {entity} '{name}'.".format(
-                    entity=entity, name=name
+                "Unhandled subtype kind '{type}' for {entity} '{name}'.".format(
+                    type=subTypeIndication.__class__.__name__, entity=entity, name=name
                 )
             )
 

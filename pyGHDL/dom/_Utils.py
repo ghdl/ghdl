@@ -97,6 +97,23 @@ def GetNameOfNode(node: Iir) -> str:
 
 
 @export
+def GetSelectedName(node: Iir):
+    names = []
+    kind = GetIirKindOfNode(node)
+    if kind == nodes.Iir_Kind.Simple_Name:
+        return GetNameOfNode(node)
+
+    while kind != nodes.Iir_Kind.Simple_Name:
+        names.append(GetNameOfNode(node))
+        node = nodes.Get_Prefix(node)
+        kind = GetIirKindOfNode(node)
+
+    names.append(GetNameOfNode(node))
+
+    return reversed(names)
+
+
+@export
 def GetModeOfNode(node: Iir) -> Mode:
     """Return the mode of a :obj:`node`."""
 

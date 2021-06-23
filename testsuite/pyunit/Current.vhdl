@@ -35,12 +35,12 @@ architecture behav of entity_1 is
 
 --	file f : text;
 
-	function foo generic(g : int8) (a : integer; b : boolean) return bit is
+	function func (a : integer; b : boolean) return bit is
 	begin
 
 	end function;
 
-  shared variable foo : bob;
+  shared variable pt_var : lib.pack.prot;
 
 	procedure proc(spam : egg) is
 	begin

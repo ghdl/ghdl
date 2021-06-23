@@ -30,6 +30,8 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+from typing import List
+
 from pyGHDL.dom.Symbol import SimpleSubTypeSymbol
 from pyGHDL.libghdl.vhdl import nodes
 from pydecor import export
@@ -39,14 +41,27 @@ from pyVHDLModel.VHDLModel import (
     Function as VHDLModel_Function,
     Procedure as VHDLModel_Procedure,
     SubTypeOrSymbol,
+    GenericInterfaceItem,
+    ParameterInterfaceItem,
 )
 from pyGHDL.libghdl._types import Iir
 
 
 @export
 class Function(VHDLModel_Function):
-    def __init__(self, functionName: str, returnType: SubTypeOrSymbol):
+    def __init__(
+        self,
+        functionName: str,
+        returnType: SubTypeOrSymbol,
+        genericItems: List[GenericInterfaceItem] = None,
+        parameterItems: List[ParameterInterfaceItem] = None,
+    ):
         super().__init__(functionName)
+
+        self._genericItems = [] if genericItems is None else [g for g in genericItems]
+        self._parameterItems = (
+            [] if parameterItems is None else [p for p in parameterItems]
+        )
         self._returnType = returnType
 
     @classmethod
@@ -57,26 +72,33 @@ class Function(VHDLModel_Function):
         )
 
         functionName = GetNameOfNode(node)
+
+        generics = GetGenericsFromChainedNodes(nodes.Get_Generic_Chain(node))
+        parameters = GetParameterFromChainedNodes(
+            nodes.Get_Interface_Declaration_Chain(node)
+        )
+
         returnType = nodes.Get_Return_Type_Mark(node)
         returnTypeName = GetNameOfNode(returnType)
-
         returnTypeSymbol = SimpleSubTypeSymbol(returnTypeName)
-        function = cls(functionName, returnTypeSymbol)
 
-        for generic in GetGenericsFromChainedNodes(nodes.Get_Generic_Chain(node)):
-            function.GenericItems.append(generic)
-        for port in GetParameterFromChainedNodes(
-            nodes.Get_Interface_Declaration_Chain(node)
-        ):
-            function.ParameterItems.append(port)
-
-        return function
+        return cls(functionName, returnTypeSymbol, generics, parameters)
 
 
 @export
 class Procedure(VHDLModel_Procedure):
-    def __init__(self, procedureName: str):
+    def __init__(
+        self,
+        procedureName: str,
+        genericItems: List[GenericInterfaceItem] = None,
+        parameterItems: List[ParameterInterfaceItem] = None,
+    ):
         super().__init__(procedureName)
+
+        self._genericItems = [] if genericItems is None else [g for g in genericItems]
+        self._parameterItems = (
+            [] if parameterItems is None else [p for p in parameterItems]
+        )
 
     @classmethod
     def parse(cls, node: Iir):
@@ -87,13 +109,9 @@ class Procedure(VHDLModel_Procedure):
 
         procedureName = GetNameOfNode(node)
 
-        procedure = cls(procedureName)
-
-        for generic in GetGenericsFromChainedNodes(nodes.Get_Generic_Chain(node)):
-            procedure.GenericItems.append(generic)
-        for port in GetParameterFromChainedNodes(
+        generics = GetGenericsFromChainedNodes(nodes.Get_Generic_Chain(node))
+        parameters = GetParameterFromChainedNodes(
             nodes.Get_Interface_Declaration_Chain(node)
-        ):
-            procedure.ParameterItems.append(port)
+        )
 
-        return procedure
+        return cls(procedureName, generics, parameters)

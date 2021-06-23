@@ -30,7 +30,7 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-from typing import List
+from typing import List, Iterator
 from pydecor import export
 
 from pyVHDLModel.VHDLModel import (
@@ -66,11 +66,10 @@ class EnumerationLiteralSymbol(VHDLModel_EnumerationLiteralSymbol):
 @export
 class SimpleSubTypeSymbol(VHDLModel_SimpleSubTypeSymbol):
     def __init__(self, subTypeName: str):
-        super().__init__(subTypeName=subTypeName)
+        if isinstance(subTypeName, (List, Iterator)):
+            subTypeName = ".".join(subTypeName)
 
-    @classmethod
-    def parse(cls, node):
-        pass
+        super().__init__(subTypeName=subTypeName)
 
 
 @export
