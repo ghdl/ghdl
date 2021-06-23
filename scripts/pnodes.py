@@ -473,7 +473,7 @@ def gen_choices(choices):
     print(" =>")
 
 
-def gen_get_format(formats, nodes, kinds):
+def gen_get_format(formats, nodes, kinds=None):
     """Generate the Get_Format function."""
     print("   function Get_Format (Kind : " + type_name + ") " + "return Format_Type is")
     print("   begin")

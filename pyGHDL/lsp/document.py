@@ -146,7 +146,7 @@ class Document(object):
         return tree
 
     def parse_document(self):
-        """Parse a document and put the units in the library"""
+        """Parse a document and put the units in the library."""
         assert self._tree == nodes.Null_Iir
         tree = sem_lib.Load_File(self._fe)
         if tree == nodes.Null_Iir:

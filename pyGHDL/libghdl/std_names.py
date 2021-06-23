@@ -1,7 +1,6 @@
 # Auto generated Python source file from Ada sources
 # Call 'make' in 'src/vhdl' to regenerate:
 #
-from enum import IntEnum, unique
 from pydecor import export
 
 
