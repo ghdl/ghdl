@@ -58,8 +58,8 @@ from pyGHDL.libghdl import (
     utils,
 )
 from pyGHDL.libghdl.vhdl import nodes, sem_lib, parse
-from pyGHDL.dom._Utils import GetIirKindOfNode
-from pyGHDL.dom.Common import DOMException, GHDLMixin
+from pyGHDL.dom._Utils import GetIirKindOfNode, CheckForErrors
+from pyGHDL.dom.Common import DOMException
 from pyGHDL.dom.DesignUnit import (
     Entity,
     Architecture,
@@ -103,14 +103,13 @@ class Library(VHDLModel_Library):
 
 
 @export
-class Document(VHDLModel_Document, GHDLMixin):
+class Document(VHDLModel_Document):
     __ghdlFileID: Any
     __ghdlSourceFileEntry: Any
     __ghdlFile: Any
 
     def __init__(self, path: Path = None, dontParse: bool = False):
         super().__init__(path)
-        GHDLMixin.__init__(self)
 
         self.__ghdl_init()
         if dontParse == False:
@@ -125,12 +124,11 @@ class Document(VHDLModel_Document, GHDLMixin):
         if self.__ghdlSourceFileEntry == files_map.No_Source_File_Entry:
             raise LibGHDLException("Cannot load file '{!s}'".format(self.Path))
 
-        self.CheckForErrors()
+        CheckForErrors()
 
         # Parse input file
         self.__ghdlFile = sem_lib.Load_File(self.__ghdlSourceFileEntry)
-
-        self.CheckForErrors()
+        CheckForErrors()
 
     def parse(self):
         firstUnit = nodes.Get_First_Design_Unit(self.__ghdlFile)

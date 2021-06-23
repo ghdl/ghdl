@@ -30,13 +30,15 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-from typing import List
+from typing import List, Iterator
 from pydecor import export
 
+from pyGHDL.dom.Range import Range
 from pyVHDLModel.VHDLModel import (
     EntitySymbol as VHDLModel_EntitySymbol,
     SimpleSubTypeSymbol as VHDLModel_SimpleSubTypeSymbol,
-    ConstrainedSubTypeSymbol as VHDLModel_ConstrainedSubTypeSymbol,
+    ConstrainedScalarSubTypeSymbol as VHDLModel_ConstrainedScalarSubTypeSymbol,
+    ConstrainedCompositeSubTypeSymbol as VHDLModel_ConstrainedCompositeSubTypeSymbol,
     EnumerationLiteralSymbol as VHDLModel_EnumerationLiteralSymbol,
     SimpleObjectOrFunctionCallSymbol as VHDLModel_SimpleObjectOrFunctionCallSymbol,
     IndexedObjectOrFunctionCallSymbol as VHDLModel_IndexedObjectOrFunctionCallSymbol,
@@ -66,7 +68,16 @@ class EnumerationLiteralSymbol(VHDLModel_EnumerationLiteralSymbol):
 @export
 class SimpleSubTypeSymbol(VHDLModel_SimpleSubTypeSymbol):
     def __init__(self, subTypeName: str):
+        if isinstance(subTypeName, (List, Iterator)):
+            subTypeName = ".".join(subTypeName)
+
         super().__init__(subTypeName=subTypeName)
+
+
+@export
+class ConstrainedScalarSubTypeSymbol(VHDLModel_ConstrainedScalarSubTypeSymbol):
+    def __init__(self, subTypeName: str, range: Range = None):
+        super().__init__(subTypeName=subTypeName, range=range)
 
     @classmethod
     def parse(cls, node):
@@ -74,7 +85,7 @@ class SimpleSubTypeSymbol(VHDLModel_SimpleSubTypeSymbol):
 
 
 @export
-class ConstrainedSubTypeSymbol(VHDLModel_ConstrainedSubTypeSymbol):
+class ConstrainedCompositeSubTypeSymbol(VHDLModel_ConstrainedCompositeSubTypeSymbol):
     def __init__(self, subTypeName: str, constraints: List[Constraint] = None):
         super().__init__(subTypeName=subTypeName, constraints=constraints)
 

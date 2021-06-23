@@ -30,7 +30,7 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-from typing import List
+from typing import List, Generator
 
 from pydecor import export
 
@@ -40,20 +40,38 @@ from pyVHDLModel.VHDLModel import (
     Expression,
     SubTypeOrSymbol,
     BaseType,
+    GenericInterfaceItem,
+    PortInterfaceItem,
+    ParameterInterfaceItem,
+    ModelEntity,
 )
 
 from pyGHDL.libghdl import utils
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
-from pyGHDL.dom._Utils import GetNameOfNode, GetIirKindOfNode, GetPositionOfNode
+from pyGHDL.dom._Utils import (
+    GetNameOfNode,
+    GetIirKindOfNode,
+    GetPositionOfNode,
+    GetSelectedName,
+)
 from pyGHDL.dom.Common import DOMException
 from pyGHDL.dom.Symbol import (
     SimpleObjectOrFunctionCallSymbol,
     SimpleSubTypeSymbol,
-    ConstrainedSubTypeSymbol,
+    ConstrainedCompositeSubTypeSymbol,
     IndexedObjectOrFunctionCallSymbol,
+    ConstrainedScalarSubTypeSymbol,
 )
-from pyGHDL.dom.Type import IntegerType, SubType
+from pyGHDL.dom.Type import (
+    IntegerType,
+    SubType,
+    ArrayType,
+    RecordType,
+    EnumeratedType,
+    RecordTypeElement,
+    AccessType,
+)
 from pyGHDL.dom.Range import Range, RangeExpression
 from pyGHDL.dom.Literal import (
     IntegerLiteral,
@@ -62,6 +80,7 @@ from pyGHDL.dom.Literal import (
     StringLiteral,
     PhysicalIntegerLiteral,
     PhysicalFloatingLiteral,
+    EnumerationLiteral,
 )
 from pyGHDL.dom.Expression import (
     SubtractionExpression,
@@ -104,46 +123,6 @@ __all__ = []
 
 
 @export
-def GetSubtypeIndicationFromNode(node: Iir, entity: str, name: str) -> SubTypeOrSymbol:
-    subTypeIndication = nodes.Get_Subtype_Indication(node)
-    if subTypeIndication is nodes.Null_Iir:
-        return None
-    subTypeKind = GetIirKindOfNode(subTypeIndication)
-
-    if subTypeKind == nodes.Iir_Kind.Simple_Name:
-        subTypeName = GetNameOfNode(subTypeIndication)
-
-        subType = SimpleSubTypeSymbol(subTypeName)
-    elif subTypeKind == nodes.Iir_Kind.Array_Subtype_Definition:
-        typeMark = nodes.Get_Subtype_Type_Mark(subTypeIndication)
-        typeMarkName = GetNameOfNode(typeMark)
-
-        constraints = GetArrayConstraintsFromSubtypeIndication(subTypeIndication)
-        subType = ConstrainedSubTypeSymbol(typeMarkName, constraints)
-    elif subTypeKind == nodes.Iir_Kind.Subtype_Definition:
-        raise DOMException(
-            "Unknown handling of subtype kind '{kind}' of subtype indication '{indication}' while parsing {entity} '{name}'.".format(
-                kind=subTypeKind, indication=subTypeIndication, entity=entity, name=name
-            )
-        )
-    else:
-        position = GetPositionOfNode(node)
-        raise DOMException(
-            "Unknown subtype kind '{kind}' of subtype indication '{indication}' while parsing {entity} '{name}' at {file}:{line}:{column}.".format(
-                kind=subTypeKind,
-                indication=subTypeIndication,
-                entity=entity,
-                name=name,
-                file=position.Filename,
-                line=position.Line,
-                column=position.Column,
-            )
-        )
-
-    return subType
-
-
-@export
 def GetArrayConstraintsFromSubtypeIndication(
     subTypeIndication: Iir,
 ) -> List[Constraint]:
@@ -155,6 +134,12 @@ def GetArrayConstraintsFromSubtypeIndication(
         if constraintKind == nodes.Iir_Kind.Range_Expression:
             constraints.append(RangeExpression(GetRangeFromNode(constraint)))
         elif constraintKind == nodes.Iir_Kind.Attribute_Name:
+            name = GetNameOfNode(constraint)
+            prefix = nodes.Get_Prefix(constraint)
+            name2 = GetNameOfNode(prefix)
+            kind2 = GetIirKindOfNode(prefix)
+            print(name2, kind2, name)
+
             raise DOMException("[NOT IMPLEMENTED] Attribute name as range.")
         elif constraintKind == nodes.Iir_Kind.Simple_Name:
             raise DOMException("[NOT IMPLEMENTED] Subtype as range.")
@@ -177,14 +162,98 @@ def GetArrayConstraintsFromSubtypeIndication(
 @export
 def GetTypeFromNode(node: Iir) -> BaseType:
     typeName = GetNameOfNode(node)
-    leftBound = IntegerLiteral(0)
-    rightBound = IntegerLiteral(15)
+    typeDefinition = nodes.Get_Type_Definition(node)
 
-    return IntegerType(typeName, leftBound, rightBound)
+    kind = GetIirKindOfNode(typeDefinition)
+    if kind == nodes.Iir_Kind.Range_Expression:
+        r = GetRangeFromNode(typeDefinition)
+
+        return IntegerType(typeName, r)
+    elif kind == nodes.Iir_Kind.Enumeration_Type_Definition:
+        return EnumeratedType.parse(typeName, typeDefinition)
+    elif kind == nodes.Iir_Kind.Array_Type_Definition:
+        return ArrayType.parse(typeName, typeDefinition)
+    elif kind == nodes.Iir_Kind.Array_Subtype_Definition:
+        print("Array_Subtype_Definition")
+
+        return ArrayType
+    elif kind == nodes.Iir_Kind.Record_Type_Definition:
+        return RecordType.parse(typeName, typeDefinition)
+    elif kind == nodes.Iir_Kind.Access_Type_Definition:
+        return AccessType.parse(typeName, typeDefinition)
+    else:
+        position = GetPositionOfNode(typeDefinition)
+        raise DOMException(
+            "Unknown type definition kind '{kindName}'({kind}) for type '{name}' at {file}:{line}:{column}.".format(
+                kind=kind,
+                kindName=kind.name,
+                name=typeName,
+                file=position.Filename,
+                line=position.Line,
+                column=position.Column,
+            )
+        )
 
 
 @export
-def GetSubTypeFromNode(node: Iir) -> BaseType:
+def GetSubTypeIndicationFromNode(node: Iir, entity: str, name: str) -> SubTypeOrSymbol:
+    subTypeIndicationNode = nodes.Get_Subtype_Indication(node)
+    #     if subTypeIndicationNode is nodes.Null_Iir:
+    #         return None
+    return GetSubTypeIndicationFromIndicationNode(subTypeIndicationNode, entity, name)
+
+
+@export
+def GetSubTypeIndicationFromIndicationNode(
+    subTypeIndicationNode: Iir, entity: str, name: str
+) -> SubTypeOrSymbol:
+    kind = GetIirKindOfNode(subTypeIndicationNode)
+    if kind == nodes.Iir_Kind.Simple_Name:
+        return GetSimpleTypeFromNode(subTypeIndicationNode)
+    elif kind == nodes.Iir_Kind.Selected_Name:
+        return GetSimpleTypeFromNode(subTypeIndicationNode)
+    elif kind == nodes.Iir_Kind.Subtype_Definition:
+        return GetScalarConstrainedSubTypeFromNode(subTypeIndicationNode)
+    elif kind == nodes.Iir_Kind.Array_Subtype_Definition:
+        return GetCompositeConstrainedSubTypeFromNode(subTypeIndicationNode)
+    else:
+        raise DOMException(
+            "Unknown kind '{kind}' for an subtype indication in a {entity} of `{name}`.".format(
+                kind=kind.name, entity=entity, name=name
+            )
+        )
+
+
+@export
+def GetSimpleTypeFromNode(subTypeIndicationNode: Iir) -> SimpleSubTypeSymbol:
+    subTypeName = GetSelectedName(subTypeIndicationNode)
+    return SimpleSubTypeSymbol(subTypeName)
+
+
+@export
+def GetScalarConstrainedSubTypeFromNode(
+    subTypeIndicationNode: Iir,
+) -> ConstrainedScalarSubTypeSymbol:
+    typeMark = nodes.Get_Subtype_Type_Mark(subTypeIndicationNode)
+    typeMarkName = GetNameOfNode(typeMark)
+    rangeConstraint = nodes.Get_Range_Constraint(subTypeIndicationNode)
+    r = GetRangeFromNode(rangeConstraint)
+    return ConstrainedScalarSubTypeSymbol(typeMarkName, r)
+
+
+@export
+def GetCompositeConstrainedSubTypeFromNode(
+    subTypeIndicationNode: Iir,
+) -> ConstrainedCompositeSubTypeSymbol:
+    typeMark = nodes.Get_Subtype_Type_Mark(subTypeIndicationNode)
+    typeMarkName = GetNameOfNode(typeMark)
+
+    constraints = GetArrayConstraintsFromSubtypeIndication(subTypeIndicationNode)
+    return ConstrainedCompositeSubTypeSymbol(typeMarkName, constraints)
+
+
+@export
+def GetSubTypeFromNode(node: Iir) -> SubTypeOrSymbol:
     subTypeName = GetNameOfNode(node)
 
     return SubType(subTypeName)
@@ -268,10 +337,10 @@ def GetExpressionFromNode(node: Iir) -> Expression:
     return cls.parse(node)
 
 
-# FIXME: rewrite to generator
 @export
-def GetGenericsFromChainedNodes(nodeChain: Iir):
-    result = []
+def GetGenericsFromChainedNodes(
+    nodeChain: Iir,
+) -> Generator[GenericInterfaceItem, None, None]:
     for generic in utils.chain_iter(nodeChain):
         kind = GetIirKindOfNode(generic)
         if kind == nodes.Iir_Kind.Interface_Constant_Declaration:
@@ -279,7 +348,7 @@ def GetGenericsFromChainedNodes(nodeChain: Iir):
 
             genericConstant = GenericConstantInterfaceItem.parse(generic)
 
-            result.append(genericConstant)
+            yield genericConstant
         else:
             position = GetPositionOfNode(generic)
             raise DOMException(
@@ -293,13 +362,11 @@ def GetGenericsFromChainedNodes(nodeChain: Iir):
                 )
             )
 
-    return result
 
-
-# FIXME: rewrite to generator
 @export
-def GetPortsFromChainedNodes(nodeChain: Iir):
-    result = []
+def GetPortsFromChainedNodes(
+    nodeChain: Iir,
+) -> Generator[PortInterfaceItem, None, None]:
     for port in utils.chain_iter(nodeChain):
         kind = GetIirKindOfNode(port)
         if kind == nodes.Iir_Kind.Interface_Signal_Declaration:
@@ -307,7 +374,7 @@ def GetPortsFromChainedNodes(nodeChain: Iir):
 
             portSignal = PortSignalInterfaceItem.parse(port)
 
-            result.append(portSignal)
+            yield portSignal
         else:
             position = GetPositionOfNode(port)
             raise DOMException(
@@ -321,27 +388,25 @@ def GetPortsFromChainedNodes(nodeChain: Iir):
                 )
             )
 
-    return result
 
-
-# FIXME: rewrite to generator
 @export
-def GetParameterFromChainedNodes(nodeChain: Iir):
-    result = []
+def GetParameterFromChainedNodes(
+    nodeChain: Iir,
+) -> Generator[ParameterInterfaceItem, None, None]:
     for parameter in utils.chain_iter(nodeChain):
         kind = GetIirKindOfNode(parameter)
         if kind == nodes.Iir_Kind.Interface_Constant_Declaration:
             from pyGHDL.dom.InterfaceItem import ParameterConstantInterfaceItem
 
-            result.append(ParameterConstantInterfaceItem.parse(parameter))
+            yield ParameterConstantInterfaceItem.parse(parameter)
         elif kind == nodes.Iir_Kind.Interface_Variable_Declaration:
             from pyGHDL.dom.InterfaceItem import ParameterVariableInterfaceItem
 
-            result.append(ParameterVariableInterfaceItem.parse(parameter))
+            yield ParameterVariableInterfaceItem.parse(parameter)
         elif kind == nodes.Iir_Kind.Interface_Signal_Declaration:
             from pyGHDL.dom.InterfaceItem import ParameterSignalInterfaceItem
 
-            result.append(ParameterSignalInterfaceItem.parse(parameter))
+            yield ParameterSignalInterfaceItem.parse(parameter)
         else:
             position = GetPositionOfNode(parameter)
             raise DOMException(
@@ -355,43 +420,50 @@ def GetParameterFromChainedNodes(nodeChain: Iir):
                 )
             )
 
-    return result
 
-
-def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str):
-    result = []
+def GetDeclaredItemsFromChainedNodes(
+    nodeChain: Iir, entity: str, name: str
+) -> Generator[ModelEntity, None, None]:
     for item in utils.chain_iter(nodeChain):
         kind = GetIirKindOfNode(item)
         if kind == nodes.Iir_Kind.Constant_Declaration:
             from pyGHDL.dom.Object import Constant
 
-            result.append(Constant.parse(item))
+            yield Constant.parse(item)
+
+        elif kind == nodes.Iir_Kind.Variable_Declaration:
+            from pyGHDL.dom.Object import SharedVariable
+
+            if nodes.Get_Shared_Flag(item):
+                yield SharedVariable.parse(item)
+            else:
+                raise DOMException("Found non-shared variable.")
         elif kind == nodes.Iir_Kind.Signal_Declaration:
             from pyGHDL.dom.Object import Signal
 
-            result.append(Signal.parse(item))
+            yield Signal.parse(item)
         elif kind == nodes.Iir_Kind.Type_Declaration:
-            result.append(GetTypeFromNode(item))
+            yield GetTypeFromNode(item)
         elif kind == nodes.Iir_Kind.Anonymous_Type_Declaration:
-            result.append(GetTypeFromNode(item))
+            yield GetTypeFromNode(item)
         elif kind == nodes.Iir_Kind.Subtype_Declaration:
-            result.append(GetSubTypeFromNode(item))
+            yield GetSubTypeFromNode(item)
         elif kind == nodes.Iir_Kind.Function_Declaration:
-            result.append(Function.parse(item))
+            yield Function.parse(item)
         elif kind == nodes.Iir_Kind.Function_Body:
             #                procedureName = NodeToName(item)
             print("found function body '{name}'".format(name="????"))
         elif kind == nodes.Iir_Kind.Procedure_Declaration:
-            result.append(Procedure.parse(item))
+            yield Procedure.parse(item)
         elif kind == nodes.Iir_Kind.Procedure_Body:
             #                procedureName = NodeToName(item)
             print("found procedure body '{name}'".format(name="????"))
         elif kind == nodes.Iir_Kind.Object_Alias_Declaration:
-            result.append(GetAliasFromNode(item))
+            yield GetAliasFromNode(item)
         elif kind == nodes.Iir_Kind.Component_Declaration:
             from pyGHDL.dom.DesignUnit import Component
 
-            result.append(Component.parse(item))
+            yield Component.parse(item)
         else:
             position = GetPositionOfNode(item)
             raise DOMException(
@@ -405,8 +477,6 @@ def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str):
                     column=position.Column,
                 )
             )
-
-    return result
 
 
 def GetAliasFromNode(node: Iir):

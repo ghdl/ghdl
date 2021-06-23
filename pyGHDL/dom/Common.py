@@ -51,16 +51,3 @@ class DOMException(GHDLBaseException):
 @export
 class GHDLException(GHDLBaseException):
     pass
-
-
-@export
-class GHDLMixin:
-    def CheckForErrors(self) -> None:
-        errorCount = errorout_memory.Get_Nbr_Messages()
-        if errorCount != 0:
-            for i in range(errorCount):
-                print(errorout_memory.Get_Error_Message(i + 1))
-
-            raise DOMException("Error in libghdl.") from LibGHDLException(
-                "libghdl: Internal error 2."
-            )

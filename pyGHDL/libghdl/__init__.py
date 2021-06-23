@@ -37,6 +37,7 @@ import os
 import sys
 from pathlib import Path
 from shutil import which
+from typing import List
 
 from pydecor import export
 
@@ -48,7 +49,15 @@ from pyGHDL.libghdl.version import __version__
 
 
 class LibGHDLException(GHDLBaseException):
-    pass
+    _internalErrors: List[str]
+
+    def __init__(self, message: str, errors: List[str]):
+        super().__init__(message)
+        self._internalErrors = errors
+
+    @property
+    def InternalErrors(self):
+        return self._internalErrors
 
 
 def _get_libghdl_name() -> Path:

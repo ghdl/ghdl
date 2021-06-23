@@ -9,8 +9,8 @@ from pydecor import export
 
 from pyGHDL import GHDLBaseException
 from pyGHDL.libghdl import LibGHDLException
-from pyGHDL.dom import NonStandard
 from pyGHDL.dom.Common import DOMException
+from pyGHDL.dom.NonStandard import Design, Document
 from pyGHDL.dom.formatting.prettyprint import PrettyPrint, PrettyPrintException
 
 __all__ = []
@@ -19,14 +19,16 @@ __api__ = __all__
 
 @export
 class Application:
-    _design: NonStandard.Design
+    _design: Design
 
     def __init__(self):
-        self._design = NonStandard.Design()
+        self._design = Design()
 
     def addFile(self, filename: Path, library: str):
-        document = NonStandard.Document(filename)
-        self._design.Documents.append(document)
+        lib = self._design.GetLibrary(library)
+
+        document = Document(filename)
+        self._design.AddDocument(document, lib)
 
     def prettyPrint(self):
         PP = PrettyPrint()
@@ -43,12 +45,18 @@ class Application:
 def handleException(ex):
     if isinstance(ex, PrettyPrintException):
         print("PP:", ex)
-        return 5
+        return 0
     elif isinstance(ex, DOMException):
         print("DOM:", ex)
+        ex2 = ex.__cause__
+        if ex2 is not None:
+            for message in ex2.InternalErrors:
+                print("libghdl: {message}".format(message=message))
         return 4
     elif isinstance(ex, LibGHDLException):
         print("LIB:", ex)
+        for message in ex.InternalErrors:
+            print("  {message}".format(message=message))
         return 3
     elif isinstance(ex, GHDLBaseException):
         print("GHDL:", ex)
