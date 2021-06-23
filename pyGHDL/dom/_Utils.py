@@ -97,20 +97,22 @@ def GetNameOfNode(node: Iir) -> str:
 
 
 @export
-def GetSelectedName(node: Iir):
+def GetNames(node: Iir):
     names = []
     kind = GetIirKindOfNode(node)
-    if kind == nodes.Iir_Kind.Simple_Name:
-        return GetNameOfNode(node)
-
     while kind != nodes.Iir_Kind.Simple_Name:
-        names.append(GetNameOfNode(node))
+        name = GetNameOfNode(node)
+        if kind == nodes.Iir_Kind.Selected_Name:
+            names.append(("sel", name))
+        elif kind == nodes.Iir_Kind.Attribute_Name:
+            names.append(("att", name))
+
         node = nodes.Get_Prefix(node)
         kind = GetIirKindOfNode(node)
 
-    names.append(GetNameOfNode(node))
+    names.append(("sim", GetNameOfNode(node)))
 
-    return reversed(names)
+    return names
 
 
 @export

@@ -43,6 +43,7 @@ from pyVHDLModel.VHDLModel import (
     SimpleObjectOrFunctionCallSymbol as VHDLModel_SimpleObjectOrFunctionCallSymbol,
     IndexedObjectOrFunctionCallSymbol as VHDLModel_IndexedObjectOrFunctionCallSymbol,
     Constraint,
+    Name,
 )
 
 from pyGHDL.libghdl import utils
@@ -67,7 +68,7 @@ class EnumerationLiteralSymbol(VHDLModel_EnumerationLiteralSymbol):
 
 @export
 class SimpleSubTypeSymbol(VHDLModel_SimpleSubTypeSymbol):
-    def __init__(self, subTypeName: str):
+    def __init__(self, subTypeName: Name):
         if isinstance(subTypeName, (List, Iterator)):
             subTypeName = ".".join(subTypeName)
 

@@ -34,6 +34,7 @@ from typing import List, Generator
 
 from pydecor import export
 
+from pyGHDL.dom.Names import SimpleName, SelectedName, AttributeName
 from pyVHDLModel.VHDLModel import (
     Constraint,
     Direction,
@@ -44,6 +45,7 @@ from pyVHDLModel.VHDLModel import (
     PortInterfaceItem,
     ParameterInterfaceItem,
     ModelEntity,
+    Name,
 )
 
 from pyGHDL.libghdl import utils
@@ -53,7 +55,7 @@ from pyGHDL.dom._Utils import (
     GetNameOfNode,
     GetIirKindOfNode,
     GetPositionOfNode,
-    GetSelectedName,
+    GetNames,
 )
 from pyGHDL.dom.Common import DOMException
 from pyGHDL.dom.Symbol import (
@@ -133,16 +135,11 @@ def GetArrayConstraintsFromSubtypeIndication(
         constraintKind = GetIirKindOfNode(constraint)
         if constraintKind == nodes.Iir_Kind.Range_Expression:
             constraints.append(RangeExpression(GetRangeFromNode(constraint)))
-        elif constraintKind == nodes.Iir_Kind.Attribute_Name:
-            name = GetNameOfNode(constraint)
-            prefix = nodes.Get_Prefix(constraint)
-            name2 = GetNameOfNode(prefix)
-            kind2 = GetIirKindOfNode(prefix)
-            print(name2, kind2, name)
-
-            raise DOMException("[NOT IMPLEMENTED] Attribute name as range.")
-        elif constraintKind == nodes.Iir_Kind.Simple_Name:
-            raise DOMException("[NOT IMPLEMENTED] Subtype as range.")
+        elif constraintKind in (
+            nodes.Iir_Kind.Simple_Name,
+            nodes.Iir_Kind.Attribute_Name,
+        ):
+            constraints.append(GetNameFromNode(constraint))
         else:
             position = GetPositionOfNode(constraint)
             raise DOMException(
@@ -196,6 +193,30 @@ def GetTypeFromNode(node: Iir) -> BaseType:
 
 
 @export
+def GetNameFromNode(node: Iir) -> Name:
+    names = GetNames(node)
+
+    if len(names) == 1:
+        return SimpleName(names[0][1])
+
+    ok, n = names[0]
+    if ok in ("sel", "att"):
+        name = SimpleName(n)
+    else:
+        print("Name error")
+
+    for k, n in names[1:]:
+        if ok == "sel":
+            name = SelectedName(n, name)
+        elif ok == "att":
+            name = AttributeName(n, name)
+
+        ok = k
+
+    return name
+
+
+@export
 def GetSubTypeIndicationFromNode(node: Iir, entity: str, name: str) -> SubTypeOrSymbol:
     subTypeIndicationNode = nodes.Get_Subtype_Indication(node)
     #     if subTypeIndicationNode is nodes.Null_Iir:
@@ -226,7 +247,7 @@ def GetSubTypeIndicationFromIndicationNode(
 
 @export
 def GetSimpleTypeFromNode(subTypeIndicationNode: Iir) -> SimpleSubTypeSymbol:
-    subTypeName = GetSelectedName(subTypeIndicationNode)
+    subTypeName = GetNameFromNode(subTypeIndicationNode)
     return SimpleSubTypeSymbol(subTypeName)
 
 
