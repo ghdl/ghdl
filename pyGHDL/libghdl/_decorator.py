@@ -93,7 +93,7 @@ def BindToLibGHDL(subprogramName):
             return None
         elif typ is int:
             return c_int32
-        elif type is float:
+        elif typ is float:
             return c_double
         elif typ is bool:
             return c_bool

@@ -10,7 +10,7 @@ from pydecor import export
 from pyGHDL import GHDLBaseException
 from pyGHDL.libghdl import LibGHDLException
 from pyGHDL.dom.Common import DOMException
-from pyGHDL.dom.NonStandard import Design, Document, Library
+from pyGHDL.dom.NonStandard import Design, Document
 from pyGHDL.dom.formatting.prettyprint import PrettyPrint, PrettyPrintException
 
 __all__ = []
@@ -45,7 +45,7 @@ class Application:
 def handleException(ex):
     if isinstance(ex, PrettyPrintException):
         print("PP:", ex)
-        return 5
+        return 0
     elif isinstance(ex, DOMException):
         print("DOM:", ex)
         ex2 = ex.__cause__
