@@ -74,6 +74,8 @@ from pyGHDL.dom.Type import (
     AccessType,
     ProtectedType,
     ProtectedTypeBody,
+    FileType,
+    PhysicalType,
 )
 from pyGHDL.dom.Range import Range
 from pyGHDL.dom.Literal import (
@@ -182,8 +184,9 @@ def GetArrayConstraintsFromSubtypeIndication(
             constraints.append(RangeExpression.parse(constraint))
         elif constraintKind in (
             nodes.Iir_Kind.Simple_Name,
-            nodes.Iir_Kind.Attribute_Name,
             nodes.Iir_Kind.Parenthesis_Name,
+            nodes.Iir_Kind.Selected_Name,
+            nodes.Iir_Kind.Attribute_Name,
         ):
             constraints.append(GetNameFromNode(constraint))
         else:
@@ -212,18 +215,24 @@ def GetTypeFromNode(node: Iir) -> BaseType:
         r = GetRangeFromNode(typeDefinition)
 
         return IntegerType(typeName, r)
+    elif kind == nodes.Iir_Kind.Physical_Type_Definition:
+        print("[NOT IMPLEMENTED] Physical_Type_Definition")
+
+        return PhysicalType(typeName)
     elif kind == nodes.Iir_Kind.Enumeration_Type_Definition:
         return EnumeratedType.parse(typeName, typeDefinition)
     elif kind == nodes.Iir_Kind.Array_Type_Definition:
         return ArrayType.parse(typeName, typeDefinition)
     elif kind == nodes.Iir_Kind.Array_Subtype_Definition:
-        print("Array_Subtype_Definition")
+        print("[NOT IMPLEMENTED] Array_Subtype_Definition")
 
-        return ArrayType
+        return ArrayType("????", [], None)
     elif kind == nodes.Iir_Kind.Record_Type_Definition:
         return RecordType.parse(typeName, typeDefinition)
     elif kind == nodes.Iir_Kind.Access_Type_Definition:
         return AccessType.parse(typeName, typeDefinition)
+    elif kind == nodes.Iir_Kind.File_Type_Definition:
+        return FileType.parse(typeName, typeDefinition)
     elif kind == nodes.Iir_Kind.Protected_Type_Declaration:
         return ProtectedType.parse(typeName, typeDefinition)
     # elif kind == nodes.Iir_Kind.Protected_Type_Body:
@@ -544,6 +553,8 @@ def GetDeclaredItemsFromChainedNodes(
             )
         elif kind == nodes.Iir_Kind.Use_Clause:
             print("[NOT IMPLEMENTED] Use clause in {name}".format(name=name))
+        elif kind == nodes.Iir_Kind.Package_Instantiation_Declaration:
+            print("[NOT IMPLEMENTED] Package instantiation in {name}".format(name=name))
         else:
             position = GetPositionOfNode(item)
             raise DOMException(

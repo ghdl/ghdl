@@ -30,29 +30,32 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-from pyGHDL.dom.Common import DOMException
-from pyGHDL.dom.Literal import EnumerationLiteral
-from pyGHDL.dom.Subprogram import Function, Procedure
-from pyGHDL.dom._Utils import GetNameOfNode, GetIirKindOfNode
-from pyGHDL.libghdl import utils
+from typing import List
 
-from pyGHDL.libghdl.vhdl import nodes
-
-from pyGHDL.libghdl._types import Iir
 from pydecor import export
 
-from pyGHDL.dom.Range import Range
+from pyGHDL.dom.Symbol import SimpleSubTypeSymbol
 from pyVHDLModel.VHDLModel import (
+    PhysicalType as VHDLModel_PhysicalType,
     IntegerType as VHDLModel_IntegerType,
     EnumeratedType as VHDLModel_EnumeratedType,
     ArrayType as VHDLModel_ArrayType,
     RecordTypeElement as VHDLModel_RecordTypeElement,
     RecordType as VHDLModel_RecordType,
     AccessType as VHDLModel_AccessType,
+    FileType as VHDLModel_FileType,
     ProtectedType as VHDLModel_ProtectedType,
     ProtectedTypeBody as VHDLModel_ProtectedTypeBody,
     SubType as VHDLModel_SubType,
 )
+from pyGHDL.libghdl import utils
+from pyGHDL.libghdl._types import Iir
+from pyGHDL.libghdl.vhdl import nodes
+from pyGHDL.dom._Utils import GetNameOfNode, GetIirKindOfNode
+from pyGHDL.dom.Common import DOMException
+from pyGHDL.dom.Literal import EnumerationLiteral
+from pyGHDL.dom.Range import Range
+from pyGHDL.dom.Subprogram import Function, Procedure
 
 
 @export
@@ -61,6 +64,12 @@ class IntegerType(VHDLModel_IntegerType):
         super().__init__(typeName)
         self._leftBound = range.LeftBound
         self._rightBound = range.RightBound
+
+
+@export
+class PhysicalType(VHDLModel_PhysicalType):
+    def __init__(self, typeName: str, units: List):
+        super().__init__(typeName)
 
 
 @export
@@ -148,6 +157,18 @@ class AccessType(VHDLModel_AccessType):
         designatedSubType = GetSubTypeIndicationFromIndicationNode(
             designatedSubtypeIndication, "access type", typeName
         )
+
+        return cls(typeName, designatedSubType)
+
+
+@export
+class FileType(VHDLModel_FileType):
+    @classmethod
+    def parse(cls, typeName: str, typeDefinitionNode: Iir) -> "AccessType":
+
+        designatedSubTypeMark = nodes.Get_File_Type_Mark(typeDefinitionNode)
+        designatedSubTypeName = GetNameOfNode(designatedSubTypeMark)
+        designatedSubType = SimpleSubTypeSymbol(designatedSubTypeName)
 
         return cls(typeName, designatedSubType)
 
