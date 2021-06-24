@@ -313,7 +313,7 @@ def GetRangeFromNode(node: Iir) -> Range:
 
 __EXPRESSION_TRANSLATION = {
     nodes.Iir_Kind.Simple_Name: SimpleObjectOrFunctionCallSymbol,
-    #    nodes.Iir_Kind.Attribute_Name: AttributeSymbol,
+    nodes.Iir_Kind.Attribute_Name: IndexedObjectOrFunctionCallSymbol,
     nodes.Iir_Kind.Parenthesis_Name: IndexedObjectOrFunctionCallSymbol,
     nodes.Iir_Kind.Integer_Literal: IntegerLiteral,
     nodes.Iir_Kind.Floating_Point_Literal: FloatingPointLiteral,

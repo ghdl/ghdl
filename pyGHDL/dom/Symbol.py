@@ -31,6 +31,8 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
 from typing import List, Iterator
+
+from pyGHDL.libghdl._types import Iir
 from pydecor import export
 
 from pyGHDL.dom.Range import Range
@@ -98,37 +100,19 @@ class ConstrainedCompositeSubTypeSymbol(VHDLModel_ConstrainedCompositeSubTypeSym
 @export
 class SimpleObjectOrFunctionCallSymbol(VHDLModel_SimpleObjectOrFunctionCallSymbol):
     @classmethod
-    def parse(cls, node):
+    def parse(cls, node: Iir):
         name = GetNameOfNode(node)
         return cls(name)
 
 
 @export
 class IndexedObjectOrFunctionCallSymbol(VHDLModel_IndexedObjectOrFunctionCallSymbol):
-    def __init__(self, name: str, associations: List):
+    def __init__(self, name: str):
         super().__init__(objectName=name)
 
     @classmethod
-    def parse(cls, node):
-        from pyGHDL.dom._Translate import GetExpressionFromNode
+    def parse(cls, node: Iir):
+        from pyGHDL.dom._Translate import GetExpressionFromNode, GetNameFromNode
+        name = GetNameFromNode(node)
 
-        prefix = nodes.Get_Prefix(node)
-        name = GetNameOfNode(prefix)
-
-        associations = []
-        for item in utils.chain_iter(nodes.Get_Association_Chain(node)):
-            kind = GetIirKindOfNode(item)
-
-            if kind == nodes.Iir_Kind.Association_Element_By_Expression:
-                actual = nodes.Get_Actual(item)
-                expr = GetExpressionFromNode(actual)
-
-                associations.append(expr)
-            else:
-                raise DOMException(
-                    "Unknown association kind '{kindName}'({kind}) in array index/slice or function call '{node}'.".format(
-                        kind=kind, kindName=kind.name, node=node
-                    )
-                )
-
-        return cls(name, associations)
+        return cls(name)
