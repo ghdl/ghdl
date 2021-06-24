@@ -32,6 +32,7 @@
 # ============================================================================
 from typing import List
 
+from pyGHDL.libghdl._types import Iir
 from pydecor import export
 
 from pyVHDLModel.VHDLModel import (
@@ -43,6 +44,9 @@ from pyVHDLModel.VHDLModel import (
     TypeConversion as VHDLModel_TypeConversion,
     FunctionCall as VHDLModel_FunctionCall,
     QualifiedExpression as VHDLModel_QualifiedExpression,
+    RangeExpression as VHDLModel_RangeExpression,
+    AscendingRangeExpression as VHDLModel_AscendingRangeExpression,
+    DescendingRangeExpression as VHDLModel_DescendingRangeExpression,
     AdditionExpression as VHDLModel_AdditionExpression,
     SubtractionExpression as VHDLModel_SubtractionExpression,
     ConcatenationExpression as VHDLModel_ConcatenationExpression,
@@ -165,6 +169,37 @@ class FunctionCall(VHDLModel_FunctionCall):
     def __init__(self, operand: Expression):
         super().__init__()
         self._operand = operand
+
+
+class RangeExpression(VHDLModel_RangeExpression):
+    @classmethod
+    def parse(cls, node: Iir) -> "VHDLModel_RangeExpression":
+        from pyGHDL.dom._Translate import GetExpressionFromNode
+
+        direction = nodes.Get_Direction(node)
+        leftBound = GetExpressionFromNode(nodes.Get_Left_Limit_Expr(node))
+        rightBound = GetExpressionFromNode(nodes.Get_Right_Limit_Expr(node))
+
+        if not direction:  # ascending
+            return AscendingRangeExpression(leftBound, rightBound)
+        else:
+            return DescendingRangeExpression(leftBound, rightBound)
+
+
+@export
+class AscendingRangeExpression(VHDLModel_AscendingRangeExpression):
+    def __init__(self, left: Expression, right: Expression):
+        super().__init__()
+        self._leftOperand = left
+        self._rightOperand = right
+
+
+@export
+class DescendingRangeExpression(VHDLModel_DescendingRangeExpression):
+    def __init__(self, left: Expression, right: Expression):
+        super().__init__()
+        self._leftOperand = left
+        self._rightOperand = right
 
 
 @export

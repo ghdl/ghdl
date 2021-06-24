@@ -72,7 +72,7 @@ from pyGHDL.dom.Type import (
     EnumeratedType,
     AccessType,
 )
-from pyGHDL.dom.Range import Range, RangeExpression
+from pyGHDL.dom.Range import Range
 from pyGHDL.dom.Literal import (
     IntegerLiteral,
     CharacterLiteral,
@@ -113,6 +113,7 @@ from pyGHDL.dom.Expression import (
     ShiftRightArithmeticExpression,
     RotateLeftExpression,
     RotateRightExpression,
+    RangeExpression,
 )
 from pyGHDL.dom.Subprogram import Function, Procedure
 from pyGHDL.dom.Misc import Alias
@@ -174,7 +175,7 @@ def GetArrayConstraintsFromSubtypeIndication(
     ):
         constraintKind = GetIirKindOfNode(constraint)
         if constraintKind == nodes.Iir_Kind.Range_Expression:
-            constraints.append(RangeExpression(GetRangeFromNode(constraint)))
+            constraints.append(RangeExpression.parse(constraint))
         elif constraintKind in (
             nodes.Iir_Kind.Simple_Name,
             nodes.Iir_Kind.Attribute_Name,
@@ -321,6 +322,7 @@ __EXPRESSION_TRANSLATION = {
     nodes.Iir_Kind.Character_Literal: CharacterLiteral,
     nodes.Iir_Kind.String_Literal8: StringLiteral,
     nodes.Iir_Kind.Negation_Operator: NegationExpression,
+    nodes.Iir_Kind.Range_Expression: RangeExpression,
     nodes.Iir_Kind.Addition_Operator: AdditionExpression,
     nodes.Iir_Kind.Concatenation_Operator: ConcatenationExpression,
     nodes.Iir_Kind.Not_Operator: InverseExpression,

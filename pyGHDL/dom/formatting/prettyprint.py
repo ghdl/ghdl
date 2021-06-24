@@ -3,7 +3,6 @@ from typing import List, Union
 from pydecor import export
 
 from pyGHDL.dom.Misc import Alias
-from pyGHDL.dom.Range import RangeExpression
 from pyGHDL.dom.Subprogram import Procedure
 from pyGHDL.dom.Type import (
     IntegerType,
@@ -405,10 +404,7 @@ class PrettyPrint:
         elif isinstance(subTypeIndication, ConstrainedCompositeSubTypeSymbol):
             constraints = []
             for constraint in subTypeIndication.Constraints:
-                if isinstance(constraint, RangeExpression):
-                    constraints.append(str(constraint.Range))
-                else:
-                    constraints.append(str(constraint))
+                constraints.append(str(constraint))
 
             return "{type}({constraints})".format(
                 type=subTypeIndication.SymbolName, constraints=", ".join(constraints)

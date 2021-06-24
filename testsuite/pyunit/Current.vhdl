@@ -21,7 +21,7 @@ end entity entity_1;
 architecture behav of entity_1 is
 	constant MAX : positive := -25;
 	signal rst : std_logic := foo('U');
-	signal vec : bit_vector(pack.signaal'range'value);
+	signal vec : bit_vector(pack(3 to 2).signaal'range'value);
 
 	type newInt is range -4 to 3;
 	type newFp is range 4.3 downto -3.9;
