@@ -30,10 +30,11 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+from typing import Union
+
 from pyGHDL.libghdl.vhdl import nodes
 from pydecor import export
 
-from pyGHDL.dom._Translate import GetSubTypeIndicationFromNode, GetExpressionFromNode
 from pyGHDL.dom._Utils import GetNameOfNode
 from pyVHDLModel.VHDLModel import (
     Constant as VHDLModel_Constant,
@@ -61,12 +62,21 @@ class Constant(VHDLModel_Constant):
         self._defaultExpression = defaultExpression
 
     @classmethod
-    def parse(cls, node):
+    def parse(cls, node) -> Union["Constant", "DeferredConstant"]:
+        from pyGHDL.dom._Translate import (
+            GetSubTypeIndicationFromNode,
+            GetExpressionFromNode,
+        )
+
         name = GetNameOfNode(node)
         subTypeIndication = GetSubTypeIndicationFromNode(node, "constant", name)
-        defaultExpression = GetExpressionFromNode(nodes.Get_Default_Value(node))
+        defaultValue = nodes.Get_Default_Value(node)
+        if defaultValue != nodes.Null_Iir:
+            defaultExpression = GetExpressionFromNode()
 
-        return cls(name, subTypeIndication, defaultExpression)
+            return cls(name, subTypeIndication, defaultExpression)
+        else:
+            return DeferredConstant(name, subTypeIndication)
 
 
 @export
@@ -78,7 +88,9 @@ class DeferredConstant(VHDLModel_DeferredConstant):
         self._subType = subType
 
     @classmethod
-    def parse(cls, node):
+    def parse(cls, node) -> "DeferredConstant":
+        from pyGHDL.dom._Translate import GetSubTypeIndicationFromNode
+
         name = GetNameOfNode(node)
         subTypeIndication = GetSubTypeIndicationFromNode(
             node, "deferred constant", name
@@ -99,10 +111,18 @@ class Variable(VHDLModel_Variable):
         self._defaultExpression = defaultExpression
 
     @classmethod
-    def parse(cls, node):
+    def parse(cls, node) -> "Variable":
+        from pyGHDL.dom._Translate import (
+            GetSubTypeIndicationFromNode,
+            GetExpressionFromNode,
+        )
+
         name = GetNameOfNode(node)
         subTypeIndication = GetSubTypeIndicationFromNode(node, "variable", name)
-        defaultExpression = GetExpressionFromNode(nodes.Get_Default_Value(node))
+        defaultValue = nodes.Get_Default_Value(node)
+        defaultExpression = None
+        if defaultValue != nodes.Null_Iir:
+            defaultExpression = GetExpressionFromNode(defaultValue)
 
         return cls(name, subTypeIndication, defaultExpression)
 
@@ -116,7 +136,9 @@ class SharedVariable(VHDLModel_SharedVariable):
         self._subType = subType
 
     @classmethod
-    def parse(cls, node):
+    def parse(cls, node) -> "SharedVariable":
+        from pyGHDL.dom._Translate import GetSubTypeIndicationFromNode
+
         name = GetNameOfNode(node)
         subTypeIndication = GetSubTypeIndicationFromNode(node, "variable", name)
 
@@ -135,7 +157,12 @@ class Signal(VHDLModel_Signal):
         self._defaultExpression = defaultExpression
 
     @classmethod
-    def parse(cls, node):
+    def parse(cls, node) -> "Signal":
+        from pyGHDL.dom._Translate import (
+            GetSubTypeIndicationFromNode,
+            GetExpressionFromNode,
+        )
+
         name = GetNameOfNode(node)
         subTypeIndication = GetSubTypeIndicationFromNode(node, "signal", name)
         default = nodes.Get_Default_Value(node)
@@ -153,7 +180,9 @@ class File(VHDLModel_File):
         self._subType = subType
 
     @classmethod
-    def parse(cls, node):
+    def parse(cls, node) -> "File":
+        from pyGHDL.dom._Translate import GetSubTypeIndicationFromNode
+
         name = GetNameOfNode(node)
         subTypeIndication = GetSubTypeIndicationFromNode(node, "file", name)
 

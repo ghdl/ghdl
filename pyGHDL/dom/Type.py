@@ -32,6 +32,7 @@
 # ============================================================================
 from pyGHDL.dom.Common import DOMException
 from pyGHDL.dom.Literal import EnumerationLiteral
+from pyGHDL.dom.Subprogram import Function, Procedure
 from pyGHDL.dom._Utils import GetNameOfNode, GetIirKindOfNode
 from pyGHDL.libghdl import utils
 
@@ -48,6 +49,8 @@ from pyVHDLModel.VHDLModel import (
     RecordTypeElement as VHDLModel_RecordTypeElement,
     RecordType as VHDLModel_RecordType,
     AccessType as VHDLModel_AccessType,
+    ProtectedType as VHDLModel_ProtectedType,
+    ProtectedTypeBody as VHDLModel_ProtectedTypeBody,
     SubType as VHDLModel_SubType,
 )
 
@@ -147,6 +150,38 @@ class AccessType(VHDLModel_AccessType):
         )
 
         return cls(typeName, designatedSubType)
+
+
+@export
+class ProtectedType(VHDLModel_ProtectedType):
+    @classmethod
+    def parse(cls, typeName: str, typeDefinitionNode: Iir) -> "ProtectedType":
+        from pyGHDL.dom._Translate import GetSubTypeIndicationFromIndicationNode
+
+        # FIXME: change this to a generator
+        methods = []
+        for item in utils.chain_iter(nodes.Get_Declaration_Chain(typeDefinitionNode)):
+            kind = GetIirKindOfNode(item)
+            if kind == nodes.Iir_Kind.Function_Declaration:
+                methods.append(Function.parse(item))
+            elif kind == nodes.Iir_Kind.Procedure_Declaration:
+                methods.append(Procedure.parse(item))
+
+        return cls(typeName, methods)
+
+
+@export
+class ProtectedTypeBody(VHDLModel_ProtectedTypeBody):
+    @classmethod
+    def parse(cls, node: Iir) -> "ProtectedTypeBody":
+        from pyGHDL.dom._Translate import GetDeclaredItemsFromChainedNodes
+
+        typeName = GetNameOfNode(node)
+        declaredItems = GetDeclaredItemsFromChainedNodes(
+            nodes.Get_Declaration_Chain(node), "protected type body", typeName
+        )
+
+        return cls(typeName, declaredItems)
 
 
 @export

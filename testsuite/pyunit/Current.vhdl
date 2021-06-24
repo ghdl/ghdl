@@ -50,6 +50,20 @@ architecture behav of entity_1 is
 
 	end procedure;
 
+	type prot is protected
+		function meth(a : int) return bit;
+	end protected;
+
+	type prot is protected body
+		variable var : positive;
+		constant const : boolean;
+
+		function meth(a : int) return bit is
+		begin
+
+		end function;
+	end protected body;
+
 	attribute att : boolean;
 
 	alias bar is boolean;

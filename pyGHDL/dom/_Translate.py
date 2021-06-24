@@ -34,7 +34,7 @@ from typing import List, Generator
 
 from pydecor import export
 
-from pyGHDL.dom.Names import SimpleName, SelectedName, AttributeName, ParenthesisName
+from pyGHDL.dom.Object import Variable
 from pyVHDLModel.VHDLModel import (
     Constraint,
     Direction,
@@ -57,6 +57,7 @@ from pyGHDL.dom._Utils import (
     GetPositionOfNode,
 )
 from pyGHDL.dom.Common import DOMException
+from pyGHDL.dom.Names import SimpleName, SelectedName, AttributeName, ParenthesisName
 from pyGHDL.dom.Symbol import (
     SimpleObjectOrFunctionCallSymbol,
     SimpleSubTypeSymbol,
@@ -71,6 +72,8 @@ from pyGHDL.dom.Type import (
     RecordType,
     EnumeratedType,
     AccessType,
+    ProtectedType,
+    ProtectedTypeBody,
 )
 from pyGHDL.dom.Range import Range
 from pyGHDL.dom.Literal import (
@@ -220,6 +223,10 @@ def GetTypeFromNode(node: Iir) -> BaseType:
         return RecordType.parse(typeName, typeDefinition)
     elif kind == nodes.Iir_Kind.Access_Type_Definition:
         return AccessType.parse(typeName, typeDefinition)
+    elif kind == nodes.Iir_Kind.Protected_Type_Declaration:
+        return ProtectedType.parse(typeName, typeDefinition)
+    # elif kind == nodes.Iir_Kind.Protected_Type_Body:
+    #     return ProtectedTypeBody.parse(typeName, typeDefinition)
     else:
         position = GetPositionOfNode(typeDefinition)
         raise DOMException(
@@ -247,7 +254,11 @@ def GetSubTypeIndicationFromIndicationNode(
     subTypeIndicationNode: Iir, entity: str, name: str
 ) -> SubTypeOrSymbol:
     if subTypeIndicationNode is nodes.Null_Iir:
-        print("[NOT IMPLEMENTED]: Unhandled multiple declarations for {entity} '{name}'.".format(entity=entity, name=name))
+        print(
+            "[NOT IMPLEMENTED]: Unhandled multiple declarations for {entity} '{name}'.".format(
+                entity=entity, name=name
+            )
+        )
         return None
     kind = GetIirKindOfNode(subTypeIndicationNode)
     if kind == nodes.Iir_Kind.Simple_Name:
@@ -482,7 +493,8 @@ def GetDeclaredItemsFromChainedNodes(
             if nodes.Get_Shared_Flag(item):
                 yield SharedVariable.parse(item)
             else:
-                raise DOMException("Found non-shared variable.")
+                yield Variable.parse(item)
+        #                raise DOMException("Found non-shared variable.")
         elif kind == nodes.Iir_Kind.Signal_Declaration:
             from pyGHDL.dom.Object import Signal
 
@@ -507,6 +519,8 @@ def GetDeclaredItemsFromChainedNodes(
         elif kind == nodes.Iir_Kind.Procedure_Body:
             #                procedureName = NodeToName(item)
             print("found procedure body '{name}'".format(name="????"))
+        elif kind == nodes.Iir_Kind.Protected_Type_Body:
+            yield ProtectedTypeBody.parse(item)
         elif kind == nodes.Iir_Kind.Object_Alias_Declaration:
             yield GetAliasFromNode(item)
         elif kind == nodes.Iir_Kind.Component_Declaration:
