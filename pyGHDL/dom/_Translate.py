@@ -34,7 +34,7 @@ from typing import List, Generator
 
 from pydecor import export
 
-from pyGHDL.dom.Names import SimpleName, SelectedName, AttributeName
+from pyGHDL.dom.Names import SimpleName, SelectedName, AttributeName, ParenthesisName
 from pyVHDLModel.VHDLModel import (
     Constraint,
     Direction,
@@ -55,7 +55,6 @@ from pyGHDL.dom._Utils import (
     GetNameOfNode,
     GetIirKindOfNode,
     GetPositionOfNode,
-    GetNames,
 )
 from pyGHDL.dom.Common import DOMException
 from pyGHDL.dom.Symbol import (
@@ -71,7 +70,6 @@ from pyGHDL.dom.Type import (
     ArrayType,
     RecordType,
     EnumeratedType,
-    RecordTypeElement,
     AccessType,
 )
 from pyGHDL.dom.Range import Range, RangeExpression
@@ -82,7 +80,6 @@ from pyGHDL.dom.Literal import (
     StringLiteral,
     PhysicalIntegerLiteral,
     PhysicalFloatingLiteral,
-    EnumerationLiteral,
 )
 from pyGHDL.dom.Expression import (
     SubtractionExpression,
@@ -125,6 +122,49 @@ __all__ = []
 
 
 @export
+def GetNameFromNode(node: Iir) -> Name:
+    kind = GetIirKindOfNode(node)
+    if kind == nodes.Iir_Kind.Simple_Name:
+        name = GetNameOfNode(node)
+        return SimpleName(name)
+    elif kind == nodes.Iir_Kind.Selected_Name:
+        name = GetNameOfNode(node)
+        prefixName = GetNameFromNode(nodes.Get_Prefix(node))
+        return SelectedName(name, prefixName)
+    elif kind == nodes.Iir_Kind.Attribute_Name:
+        name = GetNameOfNode(node)
+        prefixName = GetNameFromNode(nodes.Get_Prefix(node))
+        return AttributeName(name, prefixName)
+    elif kind == nodes.Iir_Kind.Parenthesis_Name:
+        prefixName = GetNameFromNode(nodes.Get_Prefix(node))
+        associations = GetAssociations(node)
+
+        return ParenthesisName(prefixName, associations)
+    else:
+        raise DOMException("Unknown name kind '{kind}'".format(kind=kind.name))
+
+
+def GetAssociations(node: Iir) -> List:
+    associations = []
+    for item in utils.chain_iter(nodes.Get_Association_Chain(node)):
+        kind = GetIirKindOfNode(item)
+
+        if kind == nodes.Iir_Kind.Association_Element_By_Expression:
+            actual = nodes.Get_Actual(item)
+            expr = GetExpressionFromNode(actual)
+
+            associations.append(expr)
+        else:
+            raise DOMException(
+                "Unknown association kind '{kindName}'({kind}) in array index/slice or function call '{node}'.".format(
+                    kind=kind, kindName=kind.name, node=node
+                )
+            )
+
+    return associations
+
+
+@export
 def GetArrayConstraintsFromSubtypeIndication(
     subTypeIndication: Iir,
 ) -> List[Constraint]:
@@ -138,13 +178,14 @@ def GetArrayConstraintsFromSubtypeIndication(
         elif constraintKind in (
             nodes.Iir_Kind.Simple_Name,
             nodes.Iir_Kind.Attribute_Name,
+            nodes.Iir_Kind.Parenthesis_Name,
         ):
             constraints.append(GetNameFromNode(constraint))
         else:
             position = GetPositionOfNode(constraint)
             raise DOMException(
                 "Unknown constraint kind '{kind}' for constraint '{constraint}' in subtype indication '{indication}' at {file}:{line}:{column}.".format(
-                    kind=constraintKind,
+                    kind=constraintKind.name,
                     constraint=constraint,
                     indication=subTypeIndication,
                     file=position.Filename,
@@ -190,30 +231,6 @@ def GetTypeFromNode(node: Iir) -> BaseType:
                 column=position.Column,
             )
         )
-
-
-@export
-def GetNameFromNode(node: Iir) -> Name:
-    names = GetNames(node)
-
-    if len(names) == 1:
-        return SimpleName(names[0][1])
-
-    ok, n = names[0]
-    if ok in ("sel", "att"):
-        name = SimpleName(n)
-    else:
-        print("Name error")
-
-    for k, n in names[1:]:
-        if ok == "sel":
-            name = SelectedName(n, name)
-        elif ok == "att":
-            name = AttributeName(n, name)
-
-        ok = k
-
-    return name
 
 
 @export
@@ -295,6 +312,7 @@ def GetRangeFromNode(node: Iir) -> Range:
 
 __EXPRESSION_TRANSLATION = {
     nodes.Iir_Kind.Simple_Name: SimpleObjectOrFunctionCallSymbol,
+    #    nodes.Iir_Kind.Attribute_Name: AttributeSymbol,
     nodes.Iir_Kind.Parenthesis_Name: IndexedObjectOrFunctionCallSymbol,
     nodes.Iir_Kind.Integer_Literal: IntegerLiteral,
     nodes.Iir_Kind.Floating_Point_Literal: FloatingPointLiteral,

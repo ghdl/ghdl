@@ -32,13 +32,13 @@
 # ============================================================================
 from pydecor import export
 
-from pyGHDL.dom.Common import DOMException
 from pyVHDLModel.VHDLModel import Mode
 
 from pyGHDL.libghdl import LibGHDLException, name_table, files_map, errorout_memory
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.libghdl.vhdl.nodes import Null_Iir
 from pyGHDL.libghdl._types import Iir
+from pyGHDL.dom.Common import DOMException
 from pyGHDL.dom.Misc import Position
 
 
@@ -94,25 +94,6 @@ def GetNameOfNode(node: Iir) -> str:
 
     identifier = nodes.Get_Identifier(node)
     return name_table.Get_Name_Ptr(identifier)
-
-
-@export
-def GetNames(node: Iir):
-    names = []
-    kind = GetIirKindOfNode(node)
-    while kind != nodes.Iir_Kind.Simple_Name:
-        name = GetNameOfNode(node)
-        if kind == nodes.Iir_Kind.Selected_Name:
-            names.append(("sel", name))
-        elif kind == nodes.Iir_Kind.Attribute_Name:
-            names.append(("att", name))
-
-        node = nodes.Get_Prefix(node)
-        kind = GetIirKindOfNode(node)
-
-    names.append(("sim", GetNameOfNode(node)))
-
-    return names
 
 
 @export

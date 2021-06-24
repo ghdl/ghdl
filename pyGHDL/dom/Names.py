@@ -34,21 +34,23 @@ from pydecor import export
 
 from pyVHDLModel.VHDLModel import (
     SimpleName as VHDLModel_SimpleName,
+    ParenthesisName as VHDLModel_ParenthesisName,
     IndexedName as VHDLModel_IndexedName,
     SlicedName as VHDLModel_SlicedName,
     SelectedName as VHDLModel_SelectedName,
     AttributeName as VHDLModel_AttributeName,
 )
 
-from pyGHDL.libghdl.vhdl import nodes
-from pyGHDL.dom._Utils import GetIirKindOfNode, GetNameOfNode
-from pyGHDL.dom.Common import DOMException
-
 __all__ = []
 
 
 @export
 class SimpleName(VHDLModel_SimpleName):
+    pass
+
+
+@export
+class ParenthesisName(VHDLModel_ParenthesisName):
     pass
 
 
