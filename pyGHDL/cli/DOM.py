@@ -4,6 +4,7 @@ from sys import argv
 from sys import exit as sysexit
 
 from pathlib import Path
+from textwrap import dedent
 
 from pydecor import export
 
@@ -84,8 +85,16 @@ def main(items=argv[1:]):
         except GHDLBaseException as ex:
             _exitcode = handleException(ex)
         except Exception as ex:
-            print("Fatal: An unhandled exception has reached to the top-most exception handler.")
-            print("Exception: {name}".format(name=ex.__class__.__name__))
+            print(
+                dedent(
+                    """\
+                    Fatal: An unhandled exception has reached to the top-most exception handler.
+                    Exception: {name}
+                    """.format(
+                        name=ex.__class__.__name__
+                    )
+                )
+            )
             if isinstance(ex, ValueError):
                 print("  Message: {msg}".format(msg=str(ex)))
             if ex.__cause__ is not None:
