@@ -50,6 +50,8 @@ architecture behav of entity_1 is
 
 	end procedure;
 
+	attribute att : boolean;
+
 	alias bar is boolean;
 begin
 	process(Clock)

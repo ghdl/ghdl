@@ -113,6 +113,7 @@ class IndexedObjectOrFunctionCallSymbol(VHDLModel_IndexedObjectOrFunctionCallSym
     @classmethod
     def parse(cls, node: Iir):
         from pyGHDL.dom._Translate import GetExpressionFromNode, GetNameFromNode
+
         name = GetNameFromNode(node)
 
         return cls(name)

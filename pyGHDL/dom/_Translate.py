@@ -313,6 +313,7 @@ def GetRangeFromNode(node: Iir) -> Range:
 
 __EXPRESSION_TRANSLATION = {
     nodes.Iir_Kind.Simple_Name: SimpleObjectOrFunctionCallSymbol,
+    nodes.Iir_Kind.Selected_Name: IndexedObjectOrFunctionCallSymbol,
     nodes.Iir_Kind.Attribute_Name: IndexedObjectOrFunctionCallSymbol,
     nodes.Iir_Kind.Parenthesis_Name: IndexedObjectOrFunctionCallSymbol,
     nodes.Iir_Kind.Integer_Literal: IntegerLiteral,
@@ -483,6 +484,10 @@ def GetDeclaredItemsFromChainedNodes(
             from pyGHDL.dom.Object import Signal
 
             yield Signal.parse(item)
+        elif kind == nodes.Iir_Kind.File_Declaration:
+            from pyGHDL.dom.Object import File
+
+            yield File.parse(item)
         elif kind == nodes.Iir_Kind.Type_Declaration:
             yield GetTypeFromNode(item)
         elif kind == nodes.Iir_Kind.Anonymous_Type_Declaration:
@@ -505,6 +510,10 @@ def GetDeclaredItemsFromChainedNodes(
             from pyGHDL.dom.DesignUnit import Component
 
             yield Component.parse(item)
+        elif kind == nodes.Iir_Kind.Attribute_Declaration:
+            from pyGHDL.dom.Attribute import Attribute
+
+            yield Attribute.parse(item)
         else:
             position = GetPositionOfNode(item)
             raise DOMException(

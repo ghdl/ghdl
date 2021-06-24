@@ -41,6 +41,7 @@ from pyVHDLModel.VHDLModel import (
     Variable as VHDLModel_Variable,
     SharedVariable as VHDLModel_SharedVariable,
     Signal as VHDLModel_Signal,
+    File as VHDLModel_File,
     Expression,
     SubTypeOrSymbol,
 )
@@ -141,3 +142,19 @@ class Signal(VHDLModel_Signal):
         defaultExpression = GetExpressionFromNode(default) if default else None
 
         return cls(name, subTypeIndication, defaultExpression)
+
+
+@export
+class File(VHDLModel_File):
+    def __init__(self, name: str, subType: SubTypeOrSymbol):
+        super().__init__(name)
+
+        self._name = name
+        self._subType = subType
+
+    @classmethod
+    def parse(cls, node):
+        name = GetNameOfNode(node)
+        subTypeIndication = GetSubTypeIndicationFromNode(node, "file", name)
+
+        return cls(name, subTypeIndication)

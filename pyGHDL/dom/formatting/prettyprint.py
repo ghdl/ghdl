@@ -2,6 +2,7 @@ from typing import List, Union
 
 from pydecor import export
 
+from pyGHDL.dom.Attribute import Attribute
 from pyGHDL.dom.Misc import Alias
 from pyGHDL.dom.Subprogram import Procedure
 from pyGHDL.dom.Type import (
@@ -33,7 +34,7 @@ from pyGHDL.dom.DesignUnit import (
     Context,
     Component,
 )
-from pyGHDL.dom.Object import Constant, Signal, SharedVariable
+from pyGHDL.dom.Object import Constant, Signal, SharedVariable, File
 from pyGHDL.dom.InterfaceItem import (
     GenericConstantInterfaceItem,
     PortSignalInterfaceItem,
@@ -334,6 +335,16 @@ class PrettyPrint:
                     else "",
                 )
             )
+        elif isinstance(item, File):
+            buffer.append(
+                "{prefix}- File {name} : {subtype}".format(
+                    prefix=prefix,
+                    name=item.Name,
+                    subtype=self.formatSubtypeIndication(
+                        item.SubType, "file", item.Name
+                    ),
+                )
+            )
         elif isinstance(item, Type):
             buffer.append(
                 "{prefix}- {type}".format(prefix=prefix, type=self.formatType(item))
@@ -368,6 +379,12 @@ class PrettyPrint:
         elif isinstance(item, Component):
             for line in self.formatComponent(item, level):
                 buffer.append(line)
+        elif isinstance(item, Attribute):
+            buffer.append(
+                "{prefix}- attribute {name} : {type!s}".format(
+                    prefix=prefix, name=item.Name, type=item.SubType
+                )
+            )
         else:
             raise PrettyPrintException(
                 "Unhandled declared item kind '{name}'.".format(
