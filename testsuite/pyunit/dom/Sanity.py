@@ -33,7 +33,11 @@
 from sys import executable
 from subprocess import check_call, STDOUT
 from pathlib import Path
+from unittest import TestCase
+
 from pytest import mark
+
+from pyGHDL.dom.NonStandard import Design, Document
 
 if __name__ == "__main__":
     print("ERROR: you called a testcase declaration file as an executable module.")
@@ -43,8 +47,11 @@ if __name__ == "__main__":
 _TESTSUITE_ROOT = Path(__file__).parent.parent.parent.resolve()
 _GHDL_ROOT = _TESTSUITE_ROOT.parent
 
+class Sanity(TestCase):
+    design = Design()
 
-@mark.xfail
-@mark.parametrize("file", [str(f) for f in _TESTSUITE_ROOT.glob("sanity/**/*.vhdl")])
-def test_AllVHDLSources(file):
-    check_call([executable, _GHDL_ROOT / "pyGHDL/cli/DOM.py", file], stderr=STDOUT)
+#    @mark.xfail
+    @mark.parametrize("file", [str(f.relative_to(_TESTSUITE_ROOT)) for f in _TESTSUITE_ROOT.glob("sanity/**/*.vhdl")])
+    def test_AllVHDLSources(self, file):
+        document = Document(Path(file))
+        self.design.Documents.append(document)

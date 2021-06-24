@@ -555,6 +555,8 @@ def GetDeclaredItemsFromChainedNodes(
             print("[NOT IMPLEMENTED] Use clause in {name}".format(name=name))
         elif kind == nodes.Iir_Kind.Package_Instantiation_Declaration:
             print("[NOT IMPLEMENTED] Package instantiation in {name}".format(name=name))
+        elif kind == nodes.Iir_Kind.Configuration_Specification:
+            print("[NOT IMPLEMENTED] Configuration specification in {name}".format(name=name))
         else:
             position = GetPositionOfNode(item)
             raise DOMException(

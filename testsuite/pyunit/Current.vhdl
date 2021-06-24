@@ -34,6 +34,7 @@ architecture behav of entity_1 is
 	end record;
 	type enum is (e1, e2, e3);
 	type acc is access bar;
+	type fil is file of string;
 	subtype uint8 is integer range 0 to 255;
 
 --	file f : text;
