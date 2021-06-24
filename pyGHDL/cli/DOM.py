@@ -81,8 +81,15 @@ def main(items=argv[1:]):
             app = Application()
             app.addFile(Path(item), "default_lib")
             app.prettyPrint()
-        except Exception as ex:
+        except GHDLBaseException as ex:
             _exitcode = handleException(ex)
+        except Exception as ex:
+            print("Fatal: An unhandled exception has reached to the top-most exception handler.")
+            print("Exception: {name}".format(name=ex.__class__.__name__))
+            if isinstance(ex, ValueError):
+                print("  Message: {msg}".format(msg=str(ex)))
+            if ex.__cause__ is not None:
+                print("Cause:     {msg}".format(msg=str(ex.__cause__)))
 
     return _exitcode
 

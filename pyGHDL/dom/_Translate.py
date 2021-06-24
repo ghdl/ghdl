@@ -246,6 +246,9 @@ def GetSubTypeIndicationFromNode(node: Iir, entity: str, name: str) -> SubTypeOr
 def GetSubTypeIndicationFromIndicationNode(
     subTypeIndicationNode: Iir, entity: str, name: str
 ) -> SubTypeOrSymbol:
+    if subTypeIndicationNode is nodes.Null_Iir:
+        print("[NOT IMPLEMENTED]: Unhandled multiple declarations for {entity} '{name}'.".format(entity=entity, name=name))
+        return None
     kind = GetIirKindOfNode(subTypeIndicationNode)
     if kind == nodes.Iir_Kind.Simple_Name:
         return GetSimpleTypeFromNode(subTypeIndicationNode)
