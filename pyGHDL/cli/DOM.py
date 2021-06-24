@@ -53,6 +53,7 @@ def handleException(ex):
         if ex2 is not None:
             for message in ex2.InternalErrors:
                 print("libghdl: {message}".format(message=message))
+            return 0
         return 4
     elif isinstance(ex, LibGHDLException):
         print("LIB:", ex)
