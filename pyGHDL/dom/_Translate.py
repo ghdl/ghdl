@@ -83,6 +83,7 @@ from pyGHDL.dom.Literal import (
     StringLiteral,
     PhysicalIntegerLiteral,
     PhysicalFloatingLiteral,
+    NullLiteral,
 )
 from pyGHDL.dom.Expression import (
     SubtractionExpression,
@@ -330,6 +331,7 @@ __EXPRESSION_TRANSLATION = {
     nodes.Iir_Kind.Selected_Name: IndexedObjectOrFunctionCallSymbol,
     nodes.Iir_Kind.Attribute_Name: IndexedObjectOrFunctionCallSymbol,
     nodes.Iir_Kind.Parenthesis_Name: IndexedObjectOrFunctionCallSymbol,
+    nodes.Iir_Kind.Null_Literal: NullLiteral,
     nodes.Iir_Kind.Integer_Literal: IntegerLiteral,
     nodes.Iir_Kind.Floating_Point_Literal: FloatingPointLiteral,
     nodes.Iir_Kind.Physical_Int_Literal: PhysicalIntegerLiteral,
@@ -463,6 +465,10 @@ def GetParameterFromChainedNodes(
             from pyGHDL.dom.InterfaceItem import ParameterSignalInterfaceItem
 
             yield ParameterSignalInterfaceItem.parse(parameter)
+        elif kind == nodes.Iir_Kind.Interface_File_Declaration:
+            from pyGHDL.dom.InterfaceItem import ParameterFileInterfaceItem
+
+            yield ParameterFileInterfaceItem.parse(parameter)
         else:
             position = GetPositionOfNode(parameter)
             raise DOMException(
@@ -531,12 +537,18 @@ def GetDeclaredItemsFromChainedNodes(
             from pyGHDL.dom.Attribute import Attribute
 
             yield Attribute.parse(item)
+        elif kind == nodes.Iir_Kind.Attribute_Specification:
+
+            print(
+                "[NOT IMPLEMENTED] Attribute specification in {name}".format(name=name)
+            )
+        elif kind == nodes.Iir_Kind.Use_Clause:
+            print("[NOT IMPLEMENTED] Use clause in {name}".format(name=name))
         else:
             position = GetPositionOfNode(item)
             raise DOMException(
-                "Unknown declared item kind '{kindName}'({kind}) in {entity} '{name}' at {file}:{line}:{column}.".format(
-                    kind=kind,
-                    kindName=kind.name,
+                "Unknown declared item kind '{kind}' in {entity} '{name}' at {file}:{line}:{column}.".format(
+                    kind=kind.name,
                     entity=entity,
                     name=name,
                     file=position.Filename,

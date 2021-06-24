@@ -153,6 +153,9 @@ class Document(VHDLModel_Document):
                 packageBody = PackageBody.parse(libraryUnit)
                 self.PackageBodies.append(packageBody)
 
+            elif nodeKind == nodes.Iir_Kind.Package_Instantiation_Declaration:
+                print("[NOT IMPLEMENTED] Package instantiation")
+
             elif nodeKind == nodes.Iir_Kind.Context_Declaration:
                 context = Context.parse(libraryUnit)
                 self.Contexts.append(context)

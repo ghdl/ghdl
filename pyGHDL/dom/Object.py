@@ -72,7 +72,7 @@ class Constant(VHDLModel_Constant):
         subTypeIndication = GetSubTypeIndicationFromNode(node, "constant", name)
         defaultValue = nodes.Get_Default_Value(node)
         if defaultValue != nodes.Null_Iir:
-            defaultExpression = GetExpressionFromNode()
+            defaultExpression = GetExpressionFromNode(defaultValue)
 
             return cls(name, subTypeIndication, defaultExpression)
         else:

@@ -34,6 +34,7 @@ from pyGHDL.libghdl._types import Iir
 from pydecor import export
 
 from pyVHDLModel.VHDLModel import (
+    NullLiteral as VHDLModel_NullLiteral,
     EnumerationLiteral as VHDLModel_EnumerationLiteral,
     IntegerLiteral as VHDLModel_IntegerLiteral,
     FloatingPointLiteral as VHDLModel_FloatingPointLiteral,
@@ -47,6 +48,13 @@ from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom._Utils import GetNameOfNode
 
 __all__ = []
+
+
+@export
+class NullLiteral(VHDLModel_NullLiteral):
+    @classmethod
+    def parse(cls) -> "NullLiteral":
+        return cls()
 
 
 @export

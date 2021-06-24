@@ -38,6 +38,7 @@ from pyVHDLModel.VHDLModel import (
     ParameterConstantInterfaceItem as VHDLModel_ParameterConstantInterfaceItem,
     ParameterVariableInterfaceItem as VHDLModel_ParameterVariableInterfaceItem,
     ParameterSignalInterfaceItem as VHDLModel_ParameterSignalInterfaceItem,
+    ParameterFileInterfaceItem as VHDLModel_ParameterFileInterfaceItem,
     Mode,
     SubTypeOrSymbol,
     Expression,
@@ -54,16 +55,6 @@ __all__ = []
 
 @export
 class GenericConstantInterfaceItem(VHDLModel_GenericConstantInterfaceItem):
-    @classmethod
-    def parse(cls, generic):
-        name = GetNameOfNode(generic)
-        mode = GetModeOfNode(generic)
-        subTypeIndication = GetSubTypeIndicationFromNode(generic, "generic", name)
-        default = nodes.Get_Default_Value(generic)
-        value = GetExpressionFromNode(default) if default else None
-
-        return cls(name, mode, subTypeIndication, value)
-
     def __init__(
         self,
         name: str,
@@ -75,9 +66,30 @@ class GenericConstantInterfaceItem(VHDLModel_GenericConstantInterfaceItem):
         self._subType = subType
         self._defaultExpression = defaultExpression
 
+    @classmethod
+    def parse(cls, generic):
+        name = GetNameOfNode(generic)
+        mode = GetModeOfNode(generic)
+        subTypeIndication = GetSubTypeIndicationFromNode(generic, "generic", name)
+        default = nodes.Get_Default_Value(generic)
+        value = GetExpressionFromNode(default) if default else None
+
+        return cls(name, mode, subTypeIndication, value)
+
 
 @export
 class PortSignalInterfaceItem(VHDLModel_PortSignalInterfaceItem):
+    def __init__(
+        self,
+        name: str,
+        mode: Mode,
+        subType: SubTypeOrSymbol,
+        defaultExpression: Expression = None,
+    ):
+        super().__init__(name=name, mode=mode)
+        self._subType = subType
+        self._defaultExpression = defaultExpression
+
     @classmethod
     def parse(cls, port):
         name = GetNameOfNode(port)
@@ -91,6 +103,9 @@ class PortSignalInterfaceItem(VHDLModel_PortSignalInterfaceItem):
 
         return cls(name, mode, subTypeIndication, value)
 
+
+@export
+class ParameterConstantInterfaceItem(VHDLModel_ParameterConstantInterfaceItem):
     def __init__(
         self,
         name: str,
@@ -102,9 +117,6 @@ class PortSignalInterfaceItem(VHDLModel_PortSignalInterfaceItem):
         self._subType = subType
         self._defaultExpression = defaultExpression
 
-
-@export
-class ParameterConstantInterfaceItem(VHDLModel_ParameterConstantInterfaceItem):
     @classmethod
     def parse(cls, parameter):
         name = GetNameOfNode(parameter)
@@ -117,21 +129,21 @@ class ParameterConstantInterfaceItem(VHDLModel_ParameterConstantInterfaceItem):
         )
 
         return cls(name, mode, subTypeIndication, value)
-
-    def __init__(
-        self,
-        name: str,
-        mode: Mode,
-        subType: SubTypeOrSymbol,
-        defaultExpression: Expression = None,
-    ):
-        super().__init__(name=name, mode=mode)
-        self._subType = subType
-        self._defaultExpression = defaultExpression
 
 
 @export
 class ParameterVariableInterfaceItem(VHDLModel_ParameterVariableInterfaceItem):
+    def __init__(
+        self,
+        name: str,
+        mode: Mode,
+        subType: SubTypeOrSymbol,
+        defaultExpression: Expression = None,
+    ):
+        super().__init__(name=name, mode=mode)
+        self._subType = subType
+        self._defaultExpression = defaultExpression
+
     @classmethod
     def parse(cls, parameter):
         name = GetNameOfNode(parameter)
@@ -144,21 +156,21 @@ class ParameterVariableInterfaceItem(VHDLModel_ParameterVariableInterfaceItem):
         )
 
         return cls(name, mode, subTypeIndication, value)
-
-    def __init__(
-        self,
-        name: str,
-        mode: Mode,
-        subType: SubTypeOrSymbol,
-        defaultExpression: Expression = None,
-    ):
-        super().__init__(name=name, mode=mode)
-        self._subType = subType
-        self._defaultExpression = defaultExpression
 
 
 @export
 class ParameterSignalInterfaceItem(VHDLModel_ParameterSignalInterfaceItem):
+    def __init__(
+        self,
+        name: str,
+        mode: Mode,
+        subType: SubTypeOrSymbol,
+        defaultExpression: Expression = None,
+    ):
+        super().__init__(name=name, mode=mode)
+        self._subType = subType
+        self._defaultExpression = defaultExpression
+
     @classmethod
     def parse(cls, parameter):
         name = GetNameOfNode(parameter)
@@ -172,13 +184,22 @@ class ParameterSignalInterfaceItem(VHDLModel_ParameterSignalInterfaceItem):
 
         return cls(name, mode, subTypeIndication, value)
 
+
+@export
+class ParameterFileInterfaceItem(VHDLModel_ParameterFileInterfaceItem):
     def __init__(
         self,
         name: str,
         mode: Mode,
         subType: SubTypeOrSymbol,
-        defaultExpression: Expression = None,
     ):
         super().__init__(name=name, mode=mode)
         self._subType = subType
-        self._defaultExpression = defaultExpression
+
+    @classmethod
+    def parse(cls, parameter):
+        name = GetNameOfNode(parameter)
+        mode = GetModeOfNode(parameter)
+        subTypeIndication = GetSubTypeIndicationFromNode(parameter, "parameter", name)
+
+        return cls(name, mode, subTypeIndication)
