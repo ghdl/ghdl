@@ -11,7 +11,11 @@ from pyGHDL.dom.Type import (
     ArrayType,
     RecordType,
     AccessType,
-    EnumeratedType, FileType, ProtectedType, ProtectedTypeBody, PhysicalType,
+    EnumeratedType,
+    FileType,
+    ProtectedType,
+    ProtectedTypeBody,
+    PhysicalType,
 )
 from pyVHDLModel.VHDLModel import (
     GenericInterfaceItem,
@@ -32,7 +36,9 @@ from pyGHDL.dom.DesignUnit import (
     PackageBody,
     Configuration,
     Context,
-    Component, UseClause, PackageInstantiation,
+    Component,
+    UseClause,
+    PackageInstantiation,
 )
 from pyGHDL.dom.Object import Constant, Signal, SharedVariable, File
 from pyGHDL.dom.InterfaceItem import (
@@ -388,14 +394,16 @@ class PrettyPrint:
         elif isinstance(item, AttributeSpecification):
             buffer.append(
                 "{prefix}- attribute {name!s} of {entity} : {entityClass} is {value}".format(
-                    prefix=prefix, name=item.Attribute, entity="????", entityClass="????", value="????"
+                    prefix=prefix,
+                    name=item.Attribute,
+                    entity="????",
+                    entityClass="????",
+                    value="????",
                 )
             )
         elif isinstance(item, UseClause):
             buffer.append(
-                "{prefix}- use {name!s}".format(
-                    prefix=prefix, name=item.Item
-                )
+                "{prefix}- use {name!s}".format(prefix=prefix, name=item.Item)
             )
         elif isinstance(item, PackageInstantiation):
             buffer.append(

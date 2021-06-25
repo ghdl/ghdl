@@ -276,9 +276,11 @@ def GetSubTypeIndicationFromIndicationNode(
         )
         return None
     kind = GetIirKindOfNode(subTypeIndicationNode)
-    if kind == nodes.Iir_Kind.Simple_Name:
-        return GetSimpleTypeFromNode(subTypeIndicationNode)
-    elif kind == nodes.Iir_Kind.Selected_Name:
+    if kind in (
+        nodes.Iir_Kind.Simple_Name,
+        nodes.Iir_Kind.Selected_Name,
+        nodes.Iir_Kind.Attribute_Name,
+    ):
         return GetSimpleTypeFromNode(subTypeIndicationNode)
     elif kind == nodes.Iir_Kind.Subtype_Definition:
         return GetScalarConstrainedSubTypeFromNode(subTypeIndicationNode)
