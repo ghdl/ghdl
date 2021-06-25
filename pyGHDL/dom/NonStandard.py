@@ -35,6 +35,7 @@
 .. todo::
    Add a module documentation.
 """
+import ctypes
 from pathlib import Path
 from typing import Any
 
@@ -55,7 +56,7 @@ from pyGHDL.libghdl import (
     files_map,
     errorout_memory,
     LibGHDLException,
-    utils,
+    utils, files_map_editor,
 )
 from pyGHDL.libghdl.vhdl import nodes, sem_lib, parse
 from pyGHDL.dom._Utils import GetIirKindOfNode, CheckForErrors
@@ -104,33 +105,55 @@ class Library(VHDLModel_Library):
 
 @export
 class Document(VHDLModel_Document):
+    _filename: Path
     __ghdlFileID: Any
     __ghdlSourceFileEntry: Any
     __ghdlFile: Any
 
-    def __init__(self, path: Path = None, dontParse: bool = False):
+    def __init__(self, path: Path, sourceCode: str = None, dontParse: bool = False, dontTranslate: bool = False):
         super().__init__(path)
 
-        self.__ghdl_init()
+        self._filename = path
+
+        if sourceCode is None:
+            self.__loadFromPath()
+        else:
+            self.__loadFromString(sourceCode)
+
         if dontParse == False:
-            self.parse()
+            # Parse input file
+            self.__ghdlFile = sem_lib.Load_File(self.__ghdlSourceFileEntry)
+            CheckForErrors()
 
-    def __ghdl_init(self):
+            if dontTranslate == False:
+                self.translate()
+
+    def __loadFromPath(self):
         # Read input file
-        self.__ghdlFileID = name_table.Get_Identifier(str(self.Path))
-        self.__ghdlSourceFileEntry = files_map.Read_Source_File(
-            name_table.Null_Identifier, self.__ghdlFileID
-        )
-        if self.__ghdlSourceFileEntry == files_map.No_Source_File_Entry:
-            raise LibGHDLException("Cannot load file '{!s}'".format(self.Path))
+        # self.__ghdlFileID = name_table.Get_Identifier(str(self._filename))
+        # self.__ghdlSourceFileEntry = files_map.Read_Source_File(
+        #     name_table.Null_Identifier, self.__ghdlFileID
+        # )
+        # if self.__ghdlSourceFileEntry == files_map.No_Source_File_Entry:
+        #     raise LibGHDLException("Cannot load file '{!s}'".format(self.Path))
+        #
+        # CheckForErrors()
+
+        with self._filename.open("r", encoding="utf-8") as file:
+            self.__loadFromString(file.read())
+
+    def __loadFromString(self, sourceCode: str):
+        sourcesBytes = sourceCode.encode("utf-8")
+        sourceLength = len(sourcesBytes)
+        bufferLength = sourceLength + 128
+        self.__ghdlFileID = name_table.Get_Identifier(str(self._filename))
+        dirId = name_table.Null_Identifier
+        self.__ghdlSourceFileEntry = files_map.Reserve_Source_File(dirId, self.__ghdlFileID, bufferLength)
+        files_map_editor.Fill_Text(self.__ghdlSourceFileEntry, ctypes.c_char_p(sourcesBytes), sourceLength)
 
         CheckForErrors()
 
-        # Parse input file
-        self.__ghdlFile = sem_lib.Load_File(self.__ghdlSourceFileEntry)
-        CheckForErrors()
-
-    def parse(self):
+    def translate(self):
         firstUnit = nodes.Get_First_Design_Unit(self.__ghdlFile)
 
         for unit in utils.chain_iter(firstUnit):

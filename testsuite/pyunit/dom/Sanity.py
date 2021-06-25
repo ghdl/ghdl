@@ -30,10 +30,8 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-from sys import executable
-from subprocess import check_call, STDOUT
 from pathlib import Path
-from unittest import TestCase
+from subprocess import check_call, STDOUT
 
 from pytest import mark
 
@@ -47,11 +45,13 @@ if __name__ == "__main__":
 _TESTSUITE_ROOT = Path(__file__).parent.parent.parent.resolve()
 _GHDL_ROOT = _TESTSUITE_ROOT.parent
 
-class Sanity(TestCase):
-    design = Design()
 
-#    @mark.xfail
-    @mark.parametrize("file", [str(f.relative_to(_TESTSUITE_ROOT)) for f in _TESTSUITE_ROOT.glob("sanity/**/*.vhdl")])
-    def test_AllVHDLSources(self, file):
-        document = Document(Path(file))
-        self.design.Documents.append(document)
+design = Design()
+
+@mark.xfail
+@mark.parametrize("file", [str(f.relative_to(_TESTSUITE_ROOT)) for f in _TESTSUITE_ROOT.glob("sanity/**/*.vhdl")])
+def test_AllVHDLSources(file):
+    check_call(["python", _GHDL_ROOT / "pyGHDL/cli/DOM.py", file], stderr=STDOUT)
+
+#    document = Document(Path(file))
+#    design.Documents.append(document)

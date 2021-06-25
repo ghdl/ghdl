@@ -60,7 +60,7 @@ def CheckForErrors() -> None:
     if errorCount != 0:
         for i in range(errorCount):
             rec = errorout_memory.Get_Error_Record(i + 1)
-            fileName = name_table.Get_Name_Ptr(files_map.Get_File_Name(rec.file))
+            fileName = "" #name_table.Get_Name_Ptr(files_map.Get_File_Name(rec.file))
             message = errorout_memory.Get_Error_Message(i + 1)
 
             errors.append(

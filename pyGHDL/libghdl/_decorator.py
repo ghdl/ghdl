@@ -186,7 +186,7 @@ def BindToLibGHDL(subprogramName):
                 except OSError as ex:
                     errors = [str(ex)]
                     raise LibGHDLException(
-                        "Caught exception when calling '{func}' into libghdl.".format(
+                        "Caught exception when calling '{func}' in libghdl.".format(
                             func=subprogramName
                         ),
                         errors,
@@ -204,7 +204,7 @@ def BindToLibGHDL(subprogramName):
                 except OSError as ex:
                     errors = [str(ex)]
                     raise LibGHDLException(
-                        "Caught exception when calling '{func}' into libghdl.".format(
+                        "Caught exception when calling '{func}' in libghdl.".format(
                             func=subprogramName
                         ),
                         errors,

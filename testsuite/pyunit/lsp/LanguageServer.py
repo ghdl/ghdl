@@ -8,6 +8,8 @@ from subprocess import run as subprocess_run, PIPE
 from typing import Optional
 from unittest import TestCase
 
+from pytest import mark
+
 from pyGHDL.lsp.lsp import LanguageProtocolServer, LSPConn
 
 is_windows = os.name == "nt"
@@ -197,6 +199,7 @@ class Test003_Errors(JSONTest):
 class Test004_Error_Project(JSONTest):
     subdir = Path("004errprj")
 
+    @mark.xfail
     def test_Request_Response(self):
         self._RequestResponse("cmds.json", "replies.json")
 
