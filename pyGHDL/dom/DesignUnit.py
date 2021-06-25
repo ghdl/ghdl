@@ -133,8 +133,9 @@ class Architecture(VHDLModel_Architecture, DOMMixin):
     @classmethod
     def parse(cls, architectureNode: Iir):
         name = GetNameOfNode(architectureNode)
-        entityName = GetNameOfNode(nodes.Get_Entity_Name(architectureNode))
-        entity = EntitySymbol(entityName)
+        entityNameNode = nodes.Get_Entity_Name(architectureNode)
+        entityName = GetNameOfNode(entityNameNode)
+        entity = EntitySymbol(entityNameNode, entityName)
         declaredItems = GetDeclaredItemsFromChainedNodes(
             nodes.Get_Declaration_Chain(architectureNode), "architecture", name
         )

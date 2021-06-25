@@ -38,8 +38,7 @@ from pyGHDL.libghdl import LibGHDLException, name_table, files_map, errorout_mem
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.libghdl.vhdl.nodes import Null_Iir
 from pyGHDL.libghdl._types import Iir
-from pyGHDL.dom.Common import DOMException
-
+from pyGHDL.dom import DOMException
 
 __all__ = []
 

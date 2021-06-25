@@ -41,8 +41,6 @@ This module contains all DOM classes for VHDL's design units (:class:`context <E
 """
 from pydecor import export
 
-from pyGHDL.dom.Range import Range
-from pyGHDL.dom.Symbol import EnumerationLiteralSymbol
 from pyVHDLModel.VHDLModel import (
     SimpleAggregateElement as VHDLModel_SimpleAggregateElement,
     IndexedAggregateElement as VHDLModel_IndexedAggregateElement,
@@ -51,44 +49,60 @@ from pyVHDLModel.VHDLModel import (
     OthersAggregateElement as VHDLModel_OthersAggregateElement,
     Expression,
 )
+from pyGHDL.libghdl._types import Iir
+from pyGHDL.dom import DOMMixin
+from pyGHDL.dom.Range import Range
+from pyGHDL.dom.Symbol import EnumerationLiteralSymbol
 
 
 __all__ = []
 
 
 @export
-class SimpleAggregateElement(VHDLModel_SimpleAggregateElement):
-    def __init__(self, expression: Expression):
+class SimpleAggregateElement(VHDLModel_SimpleAggregateElement, DOMMixin):
+    def __init__(self, node: Iir, expression: Expression):
         super().__init__()
+        DOMMixin.__init__(self, node)
+
         self._expression = expression
 
 
 @export
-class IndexedAggregateElement(VHDLModel_IndexedAggregateElement):
-    def __init__(self, index: Expression, expression: Expression):
+class IndexedAggregateElement(VHDLModel_IndexedAggregateElement, DOMMixin):
+    def __init__(self, node: Iir, index: Expression, expression: Expression):
         super().__init__()
+        DOMMixin.__init__(self, node)
+
         self._index = index
         self._expression = expression
 
 
 @export
-class RangedAggregateElement(VHDLModel_RangedAggregateElement):
-    def __init__(self, r: Range, expression: Expression):
+class RangedAggregateElement(VHDLModel_RangedAggregateElement, DOMMixin):
+    def __init__(self, node: Iir, r: Range, expression: Expression):
         super().__init__()
+        DOMMixin.__init__(self, node)
+
         self._range = r
         self._expression = expression
 
 
 @export
-class NamedAggregateElement(VHDLModel_NamedAggregateElement):
-    def __init__(self, name: EnumerationLiteralSymbol, expression: Expression):
+class NamedAggregateElement(VHDLModel_NamedAggregateElement, DOMMixin):
+    def __init__(
+        self, node: Iir, name: EnumerationLiteralSymbol, expression: Expression
+    ):
         super().__init__()
+        DOMMixin.__init__(self, node)
+
         self._name = name
         self._expression = expression
 
 
 @export
-class OthersAggregateElement(VHDLModel_OthersAggregateElement):
-    def __init__(self, expression: Expression):
+class OthersAggregateElement(VHDLModel_OthersAggregateElement, DOMMixin):
+    def __init__(self, node: Iir, expression: Expression):
         super().__init__()
+        DOMMixin.__init__(self, node)
+
         self._expression = expression

@@ -32,10 +32,8 @@
 # ============================================================================
 from typing import List, Iterator
 
-from pyGHDL.libghdl._types import Iir
 from pydecor import export
 
-from pyGHDL.dom.Range import Range
 from pyVHDLModel.VHDLModel import (
     EntitySymbol as VHDLModel_EntitySymbol,
     SimpleSubTypeSymbol as VHDLModel_SimpleSubTypeSymbol,
@@ -47,58 +45,71 @@ from pyVHDLModel.VHDLModel import (
     Constraint,
     Name,
 )
+from pyGHDL.libghdl._types import Iir
+from pyGHDL.dom import DOMMixin
+from pyGHDL.dom._Utils import GetNameOfNode
+from pyGHDL.dom.Range import Range
 
-from pyGHDL.libghdl import utils
-from pyGHDL.libghdl.vhdl import nodes
-from pyGHDL.dom._Utils import GetIirKindOfNode, GetNameOfNode
-from pyGHDL.dom.Common import DOMException
 
 __all__ = []
 
 
 @export
-class EntitySymbol(VHDLModel_EntitySymbol):
-    def __init__(self, entityName: str):
+class EntitySymbol(VHDLModel_EntitySymbol, DOMMixin):
+    def __init__(self, node: Iir, entityName: str):
         super().__init__(entityName)
+        DOMMixin.__init__(self, node)
 
 
 @export
-class EnumerationLiteralSymbol(VHDLModel_EnumerationLiteralSymbol):
-    def __init__(self, literalName: str):
+class EnumerationLiteralSymbol(VHDLModel_EnumerationLiteralSymbol, DOMMixin):
+    def __init__(self, node: Iir, literalName: str):
         super().__init__(symbolName=literalName)
+        DOMMixin.__init__(self, node)
 
 
 @export
-class SimpleSubTypeSymbol(VHDLModel_SimpleSubTypeSymbol):
-    def __init__(self, subTypeName: Name):
+class SimpleSubTypeSymbol(VHDLModel_SimpleSubTypeSymbol, DOMMixin):
+    def __init__(self, node: Iir, subTypeName: Name):
         if isinstance(subTypeName, (List, Iterator)):
             subTypeName = ".".join(subTypeName)
 
         super().__init__(subTypeName=subTypeName)
+        DOMMixin.__init__(self, node)
 
 
 @export
-class ConstrainedScalarSubTypeSymbol(VHDLModel_ConstrainedScalarSubTypeSymbol):
-    def __init__(self, subTypeName: str, range: Range = None):
+class ConstrainedScalarSubTypeSymbol(
+    VHDLModel_ConstrainedScalarSubTypeSymbol, DOMMixin
+):
+    def __init__(self, node: Iir, subTypeName: str, range: Range = None):
         super().__init__(subTypeName=subTypeName, range=range)
+        DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, node):
+    def parse(cls, node: Iir):
         pass
 
 
 @export
-class ConstrainedCompositeSubTypeSymbol(VHDLModel_ConstrainedCompositeSubTypeSymbol):
-    def __init__(self, subTypeName: str, constraints: List[Constraint] = None):
+class ConstrainedCompositeSubTypeSymbol(
+    VHDLModel_ConstrainedCompositeSubTypeSymbol, DOMMixin
+):
+    def __init__(
+        self, node: Iir, subTypeName: str, constraints: List[Constraint] = None
+    ):
         super().__init__(subTypeName=subTypeName, constraints=constraints)
+        DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, node):
+    def parse(cls, node: Iir):
         pass
 
 
 @export
-class SimpleObjectOrFunctionCallSymbol(VHDLModel_SimpleObjectOrFunctionCallSymbol):
+class SimpleObjectOrFunctionCallSymbol(
+    VHDLModel_SimpleObjectOrFunctionCallSymbol, DOMMixin
+):
     @classmethod
     def parse(cls, node: Iir):
         name = GetNameOfNode(node)
@@ -106,9 +117,12 @@ class SimpleObjectOrFunctionCallSymbol(VHDLModel_SimpleObjectOrFunctionCallSymbo
 
 
 @export
-class IndexedObjectOrFunctionCallSymbol(VHDLModel_IndexedObjectOrFunctionCallSymbol):
-    def __init__(self, name: str):
+class IndexedObjectOrFunctionCallSymbol(
+    VHDLModel_IndexedObjectOrFunctionCallSymbol, DOMMixin
+):
+    def __init__(self, node: Iir, name: str):
         super().__init__(objectName=name)
+        DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, node: Iir):
@@ -116,4 +130,4 @@ class IndexedObjectOrFunctionCallSymbol(VHDLModel_IndexedObjectOrFunctionCallSym
 
         name = GetNameFromNode(node)
 
-        return cls(name)
+        return cls(node, name)

@@ -32,11 +32,8 @@
 # ============================================================================
 from typing import List
 
-from pyGHDL.dom.Symbol import SimpleSubTypeSymbol
-from pyGHDL.libghdl.vhdl import nodes
 from pydecor import export
 
-from pyGHDL.dom._Utils import GetNameOfNode
 from pyVHDLModel.VHDLModel import (
     Function as VHDLModel_Function,
     Procedure as VHDLModel_Procedure,
@@ -45,19 +42,26 @@ from pyVHDLModel.VHDLModel import (
     ParameterInterfaceItem,
 )
 from pyGHDL.libghdl._types import Iir
+from pyGHDL.libghdl.vhdl import nodes
+from pyGHDL.dom import DOMMixin
+from pyGHDL.dom._Utils import GetNameOfNode
+from pyGHDL.dom.Symbol import SimpleSubTypeSymbol
 
 
 @export
-class Function(VHDLModel_Function):
+class Function(VHDLModel_Function, DOMMixin):
     def __init__(
         self,
+        node: Iir,
         functionName: str,
         returnType: SubTypeOrSymbol,
         genericItems: List[GenericInterfaceItem] = None,
         parameterItems: List[ParameterInterfaceItem] = None,
     ):
         super().__init__(functionName)
+        DOMMixin.__init__(self, node)
 
+        # TODO: move to model
         self._genericItems = [] if genericItems is None else [g for g in genericItems]
         self._parameterItems = (
             [] if parameterItems is None else [p for p in parameterItems]
@@ -65,53 +69,56 @@ class Function(VHDLModel_Function):
         self._returnType = returnType
 
     @classmethod
-    def parse(cls, node: Iir):
+    def parse(cls, functionNode: Iir) -> "Function":
         from pyGHDL.dom._Translate import (
             GetGenericsFromChainedNodes,
             GetParameterFromChainedNodes,
         )
 
-        functionName = GetNameOfNode(node)
+        functionName = GetNameOfNode(functionNode)
 
-        generics = GetGenericsFromChainedNodes(nodes.Get_Generic_Chain(node))
+        generics = GetGenericsFromChainedNodes(nodes.Get_Generic_Chain(functionNode))
         parameters = GetParameterFromChainedNodes(
-            nodes.Get_Interface_Declaration_Chain(node)
+            nodes.Get_Interface_Declaration_Chain(functionNode)
         )
 
-        returnType = nodes.Get_Return_Type_Mark(node)
+        returnType = nodes.Get_Return_Type_Mark(functionNode)
         returnTypeName = GetNameOfNode(returnType)
-        returnTypeSymbol = SimpleSubTypeSymbol(returnTypeName)
+        returnTypeSymbol = SimpleSubTypeSymbol(returnType, returnTypeName)
 
-        return cls(functionName, returnTypeSymbol, generics, parameters)
+        return cls(functionNode, functionName, returnTypeSymbol, generics, parameters)
 
 
 @export
-class Procedure(VHDLModel_Procedure):
+class Procedure(VHDLModel_Procedure, DOMMixin):
     def __init__(
         self,
+        node: Iir,
         procedureName: str,
         genericItems: List[GenericInterfaceItem] = None,
         parameterItems: List[ParameterInterfaceItem] = None,
     ):
         super().__init__(procedureName)
+        DOMMixin.__init__(self, node)
 
+        # TODO: move to model
         self._genericItems = [] if genericItems is None else [g for g in genericItems]
         self._parameterItems = (
             [] if parameterItems is None else [p for p in parameterItems]
         )
 
     @classmethod
-    def parse(cls, node: Iir):
+    def parse(cls, procedureNode: Iir) -> "Procedure":
         from pyGHDL.dom._Translate import (
             GetGenericsFromChainedNodes,
             GetParameterFromChainedNodes,
         )
 
-        procedureName = GetNameOfNode(node)
+        procedureName = GetNameOfNode(procedureNode)
 
-        generics = GetGenericsFromChainedNodes(nodes.Get_Generic_Chain(node))
+        generics = GetGenericsFromChainedNodes(nodes.Get_Generic_Chain(procedureNode))
         parameters = GetParameterFromChainedNodes(
-            nodes.Get_Interface_Declaration_Chain(node)
+            nodes.Get_Interface_Declaration_Chain(procedureNode)
         )
 
-        return cls(procedureName, generics, parameters)
+        return cls(procedureNode, procedureName, generics, parameters)

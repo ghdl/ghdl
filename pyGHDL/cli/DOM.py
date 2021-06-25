@@ -10,7 +10,7 @@ from pydecor import export
 
 from pyGHDL import GHDLBaseException
 from pyGHDL.libghdl import LibGHDLException
-from pyGHDL.dom.Common import DOMException
+from pyGHDL.dom import DOMException
 from pyGHDL.dom.NonStandard import Design, Document
 from pyGHDL.dom.formatting.prettyprint import PrettyPrint, PrettyPrintException
 

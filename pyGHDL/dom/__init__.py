@@ -32,6 +32,7 @@
 # ============================================================================
 from pathlib import Path
 
+from pyGHDL import GHDLBaseException
 from pyGHDL.libghdl import files_map, name_table
 
 from pyGHDL.libghdl.vhdl import nodes
@@ -100,3 +101,8 @@ class DOMMixin:
             self._position = Position.parse(self._iirNode)
 
         return self._position
+
+
+@export
+class DOMException(GHDLBaseException):
+    pass

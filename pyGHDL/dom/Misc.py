@@ -40,12 +40,24 @@ from pydecor import export
 from pyVHDLModel.VHDLModel import (
     Alias as VHDLModel_Alias,
 )
+from pyGHDL.libghdl._types import Iir
+from pyGHDL.dom._Utils import GetNameOfNode
+from pyGHDL.dom import DOMMixin
 
 
 __all__ = []
 
 
 @export
-class Alias(VHDLModel_Alias):
-    def __init__(self, aliasName: str):
+class Alias(VHDLModel_Alias, DOMMixin):
+    def __init__(self, node: Iir, aliasName: str):
         super().__init__(aliasName)
+        DOMMixin.__init__(self, node)
+
+    @classmethod
+    def parse(cls, node: Iir):
+        aliasName = GetNameOfNode(node)
+
+        # FIXME: add an implementation
+
+        return cls(node, aliasName)

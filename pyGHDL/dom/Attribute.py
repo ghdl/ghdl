@@ -30,46 +30,54 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-from pyGHDL.libghdl import utils
-
-from pyGHDL.dom.Symbol import SimpleSubTypeSymbol
-from pyGHDL.dom._Translate import GetNameFromNode
-from pyGHDL.libghdl.vhdl import nodes
-
-from pyGHDL.libghdl._types import Iir
 from pydecor import export
 
-from pyGHDL.dom._Utils import GetNameOfNode, GetIirKindOfNode
 from pyVHDLModel.VHDLModel import (
     Attribute as VHDLModel_Attribute,
     AttributeSpecification as VHDLModel_AttributeSpecification,
+    Name,
+    SubTypeOrSymbol,
 )
+from pyGHDL.libghdl._types import Iir
+from pyGHDL.libghdl.vhdl import nodes
+from pyGHDL.dom import DOMMixin
+from pyGHDL.dom._Utils import GetNameOfNode, GetIirKindOfNode
+from pyGHDL.dom._Translate import GetNameFromNode
+from pyGHDL.dom.Symbol import SimpleSubTypeSymbol
 
 
 @export
-class Attribute(VHDLModel_Attribute):
+class Attribute(VHDLModel_Attribute, DOMMixin):
+    def __init__(self, node: Iir, name: str, subType: SubTypeOrSymbol):
+        super().__init__(name, subType)
+        DOMMixin.__init__(self, node)
+
     @classmethod
-    def parse(cls, node: Iir) -> "Attribute":
-        name = GetNameOfNode(node)
-        subTypeMark = nodes.Get_Type_Mark(node)
+    def parse(cls, attributeNode: Iir) -> "Attribute":
+        name = GetNameOfNode(attributeNode)
+        subTypeMark = nodes.Get_Type_Mark(attributeNode)
         subTypeName = GetNameOfNode(subTypeMark)
 
-        subType = SimpleSubTypeSymbol(subTypeName)
-        return cls(name, subType)
+        subType = SimpleSubTypeSymbol(subTypeMark, subTypeName)
+        return cls(attributeNode, name, subType)
 
 
 @export
-class AttributeSpecification(VHDLModel_AttributeSpecification):
+class AttributeSpecification(VHDLModel_AttributeSpecification, DOMMixin):
+    def __init__(self, node: Iir, attribute: Name):
+        super().__init__(attribute)
+        DOMMixin.__init__(self, node)
+
     @classmethod
-    def parse(cls, node: Iir) -> "AttributeSpecification":
-        attributeDesignator = nodes.Get_Attribute_Designator(node)
+    def parse(cls, attributeNode: Iir) -> "AttributeSpecification":
+        attributeDesignator = nodes.Get_Attribute_Designator(attributeNode)
         attributeName = GetNameFromNode(attributeDesignator)
 
         # FIXME: needs an implementation
-        entityNameList = nodes.Get_Entity_Name_List(node)
+        entityNameList = nodes.Get_Entity_Name_List(attributeNode)
         enlk = GetIirKindOfNode(entityNameList)
 
-        entityClass = nodes.Get_Entity_Class(node)
+        entityClass = nodes.Get_Entity_Class(attributeNode)
         eck = GetIirKindOfNode(entityClass)
 
-        return cls(attributeName)
+        return cls(attributeNode, attributeName)

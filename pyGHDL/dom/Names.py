@@ -30,6 +30,9 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+from typing import List
+
+from pyGHDL.libghdl._types import Iir
 from pydecor import export
 
 from pyVHDLModel.VHDLModel import (
@@ -40,41 +43,57 @@ from pyVHDLModel.VHDLModel import (
     SelectedName as VHDLModel_SelectedName,
     AttributeName as VHDLModel_AttributeName,
     AllName as VHDLModel_AllName,
+    Name,
 )
+from pyGHDL.dom import DOMMixin
 
 __all__ = []
 
 
 @export
-class SimpleName(VHDLModel_SimpleName):
-    pass
+class SimpleName(VHDLModel_SimpleName, DOMMixin):
+    def __init__(self, node: Iir, name: str):
+        super().__init__(name)
+        DOMMixin.__init__(self, node)
 
 
 @export
-class ParenthesisName(VHDLModel_ParenthesisName):
-    pass
+class ParenthesisName(VHDLModel_ParenthesisName, DOMMixin):
+    def __init__(self, node: Iir, prefix: Name, associations: List):
+        super().__init__(prefix, associations)
+        DOMMixin.__init__(self, node)
 
 
 @export
-class IndexedName(VHDLModel_IndexedName):
-    pass
+class IndexedName(VHDLModel_IndexedName, DOMMixin):
+    def __init__(self, node: Iir, name: str):
+        super().__init__(name)
+        DOMMixin.__init__(self, node)
 
 
 @export
-class SlicedName(VHDLModel_SlicedName):
-    pass
+class SlicedName(VHDLModel_SlicedName, DOMMixin):
+    def __init__(self, node: Iir, name: str):
+        super().__init__(name)
+        DOMMixin.__init__(self, node)
 
 
 @export
-class SelectedName(VHDLModel_SelectedName):
-    pass
+class SelectedName(VHDLModel_SelectedName, DOMMixin):
+    def __init__(self, node: Iir, name: str, prefix: Name):
+        super().__init__(name, prefix)
+        DOMMixin.__init__(self, node)
 
 
 @export
-class AttributeName(VHDLModel_AttributeName):
-    pass
+class AttributeName(VHDLModel_AttributeName, DOMMixin):
+    def __init__(self, node: Iir, name: str, prefix: Name):
+        super().__init__(name, prefix)
+        DOMMixin.__init__(self, node)
 
 
 @export
-class AllName(VHDLModel_AllName):
-    pass
+class AllName(VHDLModel_AllName, DOMMixin):
+    def __init__(self, node: Iir, prefix: Name):
+        super().__init__(prefix)
+        DOMMixin.__init__(self, node)

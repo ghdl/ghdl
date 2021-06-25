@@ -34,7 +34,7 @@ from typing import List, Generator
 
 from pydecor import export
 
-from pyGHDL.dom import Position
+from pyGHDL.dom import Position, DOMException
 from pyGHDL.dom.Object import Variable
 from pyVHDLModel.VHDLModel import (
     Constraint,
@@ -56,7 +56,6 @@ from pyGHDL.dom._Utils import (
     GetNameOfNode,
     GetIirKindOfNode,
 )
-from pyGHDL.dom.Common import DOMException
 from pyGHDL.dom.Names import (
     SimpleName,
     SelectedName,
@@ -139,23 +138,23 @@ def GetNameFromNode(node: Iir) -> Name:
     kind = GetIirKindOfNode(node)
     if kind == nodes.Iir_Kind.Simple_Name:
         name = GetNameOfNode(node)
-        return SimpleName(name)
+        return SimpleName(node, name)
     elif kind == nodes.Iir_Kind.Selected_Name:
         name = GetNameOfNode(node)
         prefixName = GetNameFromNode(nodes.Get_Prefix(node))
-        return SelectedName(name, prefixName)
+        return SelectedName(node, name, prefixName)
     elif kind == nodes.Iir_Kind.Attribute_Name:
         name = GetNameOfNode(node)
         prefixName = GetNameFromNode(nodes.Get_Prefix(node))
-        return AttributeName(name, prefixName)
+        return AttributeName(node, name, prefixName)
     elif kind == nodes.Iir_Kind.Parenthesis_Name:
         prefixName = GetNameFromNode(nodes.Get_Prefix(node))
         associations = GetAssociations(node)
 
-        return ParenthesisName(prefixName, associations)
+        return ParenthesisName(node, prefixName, associations)
     elif kind == nodes.Iir_Kind.Selected_By_All_Name:
         prefixName = GetNameFromNode(nodes.Get_Prefix(node))
-        return AllName(prefixName)
+        return AllName(node, prefixName)
     else:
         raise DOMException("Unknown name kind '{kind}'".format(kind=kind.name))
 
@@ -223,7 +222,7 @@ def GetTypeFromNode(node: Iir) -> BaseType:
     if kind == nodes.Iir_Kind.Range_Expression:
         r = GetRangeFromNode(typeDefinition)
 
-        return IntegerType(typeName, r)
+        return IntegerType(node, typeName, r)
     elif kind == nodes.Iir_Kind.Physical_Type_Definition:
         return PhysicalType.parse(typeName, typeDefinition)
     elif kind == nodes.Iir_Kind.Enumeration_Type_Definition:
@@ -297,7 +296,7 @@ def GetSubTypeIndicationFromIndicationNode(
 @export
 def GetSimpleTypeFromNode(subTypeIndicationNode: Iir) -> SimpleSubTypeSymbol:
     subTypeName = GetNameFromNode(subTypeIndicationNode)
-    return SimpleSubTypeSymbol(subTypeName)
+    return SimpleSubTypeSymbol(subTypeIndicationNode, subTypeName)
 
 
 @export
@@ -308,7 +307,7 @@ def GetScalarConstrainedSubTypeFromNode(
     typeMarkName = GetNameOfNode(typeMark)
     rangeConstraint = nodes.Get_Range_Constraint(subTypeIndicationNode)
     r = GetRangeFromNode(rangeConstraint)
-    return ConstrainedScalarSubTypeSymbol(typeMarkName, r)
+    return ConstrainedScalarSubTypeSymbol(subTypeIndicationNode, typeMarkName, r)
 
 
 @export
@@ -319,14 +318,16 @@ def GetCompositeConstrainedSubTypeFromNode(
     typeMarkName = GetNameOfNode(typeMark)
 
     constraints = GetArrayConstraintsFromSubtypeIndication(subTypeIndicationNode)
-    return ConstrainedCompositeSubTypeSymbol(typeMarkName, constraints)
+    return ConstrainedCompositeSubTypeSymbol(
+        subTypeIndicationNode, typeMarkName, constraints
+    )
 
 
 @export
-def GetSubTypeFromNode(node: Iir) -> SubTypeOrSymbol:
-    subTypeName = GetNameOfNode(node)
+def GetSubTypeFromNode(subTypeNode: Iir) -> SubTypeOrSymbol:
+    subTypeName = GetNameOfNode(subTypeNode)
 
-    return SubType(subTypeName)
+    return SubType(subTypeNode, subTypeName)
 
 
 @export
@@ -585,7 +586,7 @@ def GetDeclaredItemsFromChainedNodes(
             )
 
 
-def GetAliasFromNode(node: Iir):
-    aliasName = GetNameOfNode(node)
+def GetAliasFromNode(aliasNode: Iir):
+    aliasName = GetNameOfNode(aliasNode)
 
-    return Alias(aliasName)
+    return Alias(aliasNode, aliasName)

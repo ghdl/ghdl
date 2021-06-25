@@ -61,8 +61,8 @@ from pyGHDL.libghdl import (
     files_map_editor,
 )
 from pyGHDL.libghdl.vhdl import nodes, sem_lib, parse
+from pyGHDL.dom import DOMException
 from pyGHDL.dom._Utils import GetIirKindOfNode, CheckForErrors
-from pyGHDL.dom.Common import DOMException
 from pyGHDL.dom.DesignUnit import (
     Entity,
     Architecture,
