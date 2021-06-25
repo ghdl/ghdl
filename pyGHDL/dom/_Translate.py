@@ -232,7 +232,7 @@ def GetTypeFromNode(node: Iir) -> BaseType:
     elif kind == nodes.Iir_Kind.Array_Subtype_Definition:
         print("[NOT IMPLEMENTED] Array_Subtype_Definition")
 
-        return ArrayType("????", [], None)
+        return ArrayType(typeDefinition, "????", [], None)
     elif kind == nodes.Iir_Kind.Record_Type_Definition:
         return RecordType.parse(typeName, typeDefinition)
     elif kind == nodes.Iir_Kind.Access_Type_Definition:
@@ -421,9 +421,15 @@ def GetGenericsFromChainedNodes(
         if kind == nodes.Iir_Kind.Interface_Constant_Declaration:
             from pyGHDL.dom.InterfaceItem import GenericConstantInterfaceItem
 
-            genericConstant = GenericConstantInterfaceItem.parse(generic)
-
-            yield genericConstant
+            yield GenericConstantInterfaceItem.parse(generic)
+        elif kind == nodes.Iir_Kind.Interface_Type_Declaration:
+            print("[NOT IMPLEMENTED] generic type")
+        elif kind == nodes.Iir_Kind.Interface_Package_Declaration:
+            print("[NOT IMPLEMENTED] generic package")
+        elif kind == nodes.Iir_Kind.Interface_Procedure_Declaration:
+            print("[NOT IMPLEMENTED] generic procedure")
+        elif kind == nodes.Iir_Kind.Interface_Function_Declaration:
+            print("[NOT IMPLEMENTED] generic function")
         else:
             position = Position.parse(generic)
             raise DOMException(
