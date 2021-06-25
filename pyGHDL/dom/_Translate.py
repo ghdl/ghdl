@@ -57,7 +57,13 @@ from pyGHDL.dom._Utils import (
     GetPositionOfNode,
 )
 from pyGHDL.dom.Common import DOMException
-from pyGHDL.dom.Names import SimpleName, SelectedName, AttributeName, ParenthesisName
+from pyGHDL.dom.Names import (
+    SimpleName,
+    SelectedName,
+    AttributeName,
+    ParenthesisName,
+    AllName,
+)
 from pyGHDL.dom.Symbol import (
     SimpleObjectOrFunctionCallSymbol,
     SimpleSubTypeSymbol,
@@ -147,6 +153,9 @@ def GetNameFromNode(node: Iir) -> Name:
         associations = GetAssociations(node)
 
         return ParenthesisName(prefixName, associations)
+    elif kind == nodes.Iir_Kind.Selected_By_All_Name:
+        prefixName = GetNameFromNode(nodes.Get_Prefix(node))
+        return AllName(prefixName)
     else:
         raise DOMException("Unknown name kind '{kind}'".format(kind=kind.name))
 
@@ -216,9 +225,7 @@ def GetTypeFromNode(node: Iir) -> BaseType:
 
         return IntegerType(typeName, r)
     elif kind == nodes.Iir_Kind.Physical_Type_Definition:
-        print("[NOT IMPLEMENTED] Physical_Type_Definition")
-
-        return PhysicalType(typeName)
+        return PhysicalType.parse(typeName, typeDefinition)
     elif kind == nodes.Iir_Kind.Enumeration_Type_Definition:
         return EnumeratedType.parse(typeName, typeDefinition)
     elif kind == nodes.Iir_Kind.Array_Type_Definition:
@@ -547,12 +554,13 @@ def GetDeclaredItemsFromChainedNodes(
 
             yield Attribute.parse(item)
         elif kind == nodes.Iir_Kind.Attribute_Specification:
+            from pyGHDL.dom.Attribute import AttributeSpecification
 
-            print(
-                "[NOT IMPLEMENTED] Attribute specification in {name}".format(name=name)
-            )
+            yield AttributeSpecification.parse(item)
         elif kind == nodes.Iir_Kind.Use_Clause:
-            print("[NOT IMPLEMENTED] Use clause in {name}".format(name=name))
+            from pyGHDL.dom.DesignUnit import UseClause
+
+            yield UseClause.parse(item)
         elif kind == nodes.Iir_Kind.Package_Instantiation_Declaration:
             from pyGHDL.dom.DesignUnit import PackageInstantiation
 

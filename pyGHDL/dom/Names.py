@@ -39,6 +39,7 @@ from pyVHDLModel.VHDLModel import (
     SlicedName as VHDLModel_SlicedName,
     SelectedName as VHDLModel_SelectedName,
     AttributeName as VHDLModel_AttributeName,
+    AllName as VHDLModel_AllName,
 )
 
 __all__ = []
@@ -71,4 +72,9 @@ class SelectedName(VHDLModel_SelectedName):
 
 @export
 class AttributeName(VHDLModel_AttributeName):
+    pass
+
+
+@export
+class AllName(VHDLModel_AllName):
     pass

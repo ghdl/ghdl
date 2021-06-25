@@ -43,8 +43,8 @@ from pyGHDL.libghdl._types import Iir
 from pydecor import export
 
 from pyVHDLModel.VHDLModel import (
+    UseClause as VHDLModel_UseClause,
     Entity as VHDLModel_Entity,
-    EntityOrSymbol,
     Architecture as VHDLModel_Architecture,
     Package as VHDLModel_Package,
     PackageBody as VHDLModel_PackageBody,
@@ -65,6 +65,18 @@ from pyGHDL.dom.Symbol import EntitySymbol
 
 
 __all__ = []
+
+
+@export
+class UseClause(VHDLModel_UseClause):
+    @classmethod
+    def parse(cls, useNode: Iir):
+        from pyGHDL.dom._Translate import GetNameFromNode
+
+        selectedName = nodes.Get_Selected_Name(useNode)
+        name = GetNameFromNode(selectedName)
+
+        return cls(name)
 
 
 @export

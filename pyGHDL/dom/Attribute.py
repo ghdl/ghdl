@@ -30,14 +30,20 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+from pyGHDL.libghdl import utils
+
 from pyGHDL.dom.Symbol import SimpleSubTypeSymbol
+from pyGHDL.dom._Translate import GetNameFromNode
 from pyGHDL.libghdl.vhdl import nodes
 
 from pyGHDL.libghdl._types import Iir
 from pydecor import export
 
-from pyGHDL.dom._Utils import GetNameOfNode
-from pyVHDLModel.VHDLModel import Attribute as VHDLModel_Attribute
+from pyGHDL.dom._Utils import GetNameOfNode, GetIirKindOfNode
+from pyVHDLModel.VHDLModel import (
+    Attribute as VHDLModel_Attribute,
+    AttributeSpecification as VHDLModel_AttributeSpecification,
+)
 
 
 @export
@@ -50,3 +56,20 @@ class Attribute(VHDLModel_Attribute):
 
         subType = SimpleSubTypeSymbol(subTypeName)
         return cls(name, subType)
+
+
+@export
+class AttributeSpecification(VHDLModel_AttributeSpecification):
+    @classmethod
+    def parse(cls, node: Iir) -> "AttributeSpecification":
+        attributeDesignator = nodes.Get_Attribute_Designator(node)
+        attributeName = GetNameFromNode(attributeDesignator)
+
+        # FIXME: needs an implementation
+        entityNameList = nodes.Get_Entity_Name_List(node)
+        enlk = GetIirKindOfNode(entityNameList)
+
+        entityClass = nodes.Get_Entity_Class(node)
+        eck = GetIirKindOfNode(entityClass)
+
+        return cls(attributeName)

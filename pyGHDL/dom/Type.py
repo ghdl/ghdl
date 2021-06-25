@@ -53,7 +53,7 @@ from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom._Utils import GetNameOfNode, GetIirKindOfNode
 from pyGHDL.dom.Common import DOMException
-from pyGHDL.dom.Literal import EnumerationLiteral
+from pyGHDL.dom.Literal import EnumerationLiteral, PhysicalIntegerLiteral
 from pyGHDL.dom.Range import Range
 from pyGHDL.dom.Subprogram import Function, Procedure
 
@@ -68,8 +68,27 @@ class IntegerType(VHDLModel_IntegerType):
 
 @export
 class PhysicalType(VHDLModel_PhysicalType):
-    def __init__(self, typeName: str, units: List):
+    def __init__(self, typeName: str, primaryUnit: str, units: List):
         super().__init__(typeName)
+
+    @classmethod
+    def parse(cls, typeName: str, typeDefinitionNode: Iir) -> "PhysicalType":
+        primaryUnit = nodes.Get_Primary_Unit(typeDefinitionNode)
+        primaryUnitName = GetNameOfNode(primaryUnit)
+
+        units = []
+        for secondaryUnit in utils.chain_iter(nodes.Get_Unit_Chain(typeDefinitionNode)):
+            secondaryUnitName = GetNameOfNode(secondaryUnit)
+            if secondaryUnit == primaryUnit:
+                continue
+
+            physicalLiteral = PhysicalIntegerLiteral.parse(
+                nodes.Get_Physical_Literal(secondaryUnit)
+            )
+
+            units.append((secondaryUnitName, physicalLiteral))
+
+        return cls(typeName, primaryUnitName, units)
 
 
 @export

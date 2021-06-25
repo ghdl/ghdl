@@ -90,7 +90,11 @@ package package_1 is
 	generic (
 		BITS : positive
 	);
+
+	use lib.pack.all;
+
 	constant ghdl : float := (3, 5, 0 to 2 => 5, 3 => 4, name => 10); -- 2.3;
+	attribute fixed of ghdl : constant is true;
 
 	component comp is
 		port (
@@ -101,4 +105,12 @@ end package;
 
 package body package_1 is
 	constant ghdl : float := (1); -- => 2, 4 => 5, others => 10); -- .5;
+
+	type CAPACITY is range 0 to 1E5	units
+		pF;
+		nF = 1000 pF;
+		uF = 1000 nF;
+		mF = 1000 uF;
+		F = 1000 mF;
+	end units;
 end package body;
