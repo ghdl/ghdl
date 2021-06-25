@@ -242,8 +242,6 @@ def GetTypeFromNode(node: Iir) -> BaseType:
         return FileType.parse(typeName, typeDefinition)
     elif kind == nodes.Iir_Kind.Protected_Type_Declaration:
         return ProtectedType.parse(typeName, typeDefinition)
-    # elif kind == nodes.Iir_Kind.Protected_Type_Body:
-    #     return ProtectedTypeBody.parse(typeName, typeDefinition)
     else:
         position = GetPositionOfNode(typeDefinition)
         raise DOMException(

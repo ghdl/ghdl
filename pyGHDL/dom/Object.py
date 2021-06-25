@@ -186,4 +186,6 @@ class File(VHDLModel_File):
         name = GetNameOfNode(node)
         subTypeIndication = GetSubTypeIndicationFromNode(node, "file", name)
 
+        # FIXME: handle file open stuff
+
         return cls(name, subTypeIndication)

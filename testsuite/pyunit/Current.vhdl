@@ -37,7 +37,7 @@ architecture behav of entity_1 is
 	type fil is file of string;
 	subtype uint8 is integer range 0 to 255;
 
---	file f : text;
+	file f : text;
 
 	function func (a : integer; b : boolean) return bit is
 	begin

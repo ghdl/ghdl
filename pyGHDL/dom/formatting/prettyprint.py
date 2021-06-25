@@ -2,7 +2,7 @@ from typing import List, Union
 
 from pydecor import export
 
-from pyGHDL.dom.Attribute import Attribute
+from pyGHDL.dom.Attribute import Attribute, AttributeSpecification
 from pyGHDL.dom.Misc import Alias
 from pyGHDL.dom.Subprogram import Procedure
 from pyGHDL.dom.Type import (
@@ -11,7 +11,7 @@ from pyGHDL.dom.Type import (
     ArrayType,
     RecordType,
     AccessType,
-    EnumeratedType,
+    EnumeratedType, FileType, ProtectedType, ProtectedTypeBody, PhysicalType,
 )
 from pyVHDLModel.VHDLModel import (
     GenericInterfaceItem,
@@ -32,7 +32,7 @@ from pyGHDL.dom.DesignUnit import (
     PackageBody,
     Configuration,
     Context,
-    Component,
+    Component, UseClause, PackageInstantiation,
 )
 from pyGHDL.dom.Object import Constant, Signal, SharedVariable, File
 from pyGHDL.dom.InterfaceItem import (
@@ -385,6 +385,24 @@ class PrettyPrint:
                     prefix=prefix, name=item.Name, type=item.SubType
                 )
             )
+        elif isinstance(item, AttributeSpecification):
+            buffer.append(
+                "{prefix}- attribute {name!s} of {entity} : {entityClass} is {value}".format(
+                    prefix=prefix, name=item.Attribute, entity="????", entityClass="????", value="????"
+                )
+            )
+        elif isinstance(item, UseClause):
+            buffer.append(
+                "{prefix}- use {name!s}".format(
+                    prefix=prefix, name=item.Item
+                )
+            )
+        elif isinstance(item, PackageInstantiation):
+            buffer.append(
+                "{prefix}- package {name} is new {name2!s} generic map (.....)".format(
+                    prefix=prefix, name=item.Name, name2=item.PackageReference
+                )
+            )
         else:
             raise PrettyPrintException(
                 "Unhandled declared item kind '{name}'.".format(
@@ -402,12 +420,20 @@ class PrettyPrint:
             )
         elif isinstance(item, EnumeratedType):
             result += "(........)"
+        elif isinstance(item, PhysicalType):
+            result += " is range ....... units ..... end units"
         elif isinstance(item, ArrayType):
             result += "array(........) of ....."
         elif isinstance(item, RecordType):
             result += "record ..... end record"
         elif isinstance(item, AccessType):
             result += "access ....."
+        elif isinstance(item, FileType):
+            result += "file ....."
+        elif isinstance(item, ProtectedType):
+            result += "protected ..... end protected"
+        elif isinstance(item, ProtectedTypeBody):
+            result += "protected body ..... end protected body"
         else:
             raise PrettyPrintException(
                 "Unknown type '{name}'".format(name=item.__class__.__name__)
