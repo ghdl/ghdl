@@ -554,7 +554,9 @@ def GetDeclaredItemsFromChainedNodes(
         elif kind == nodes.Iir_Kind.Use_Clause:
             print("[NOT IMPLEMENTED] Use clause in {name}".format(name=name))
         elif kind == nodes.Iir_Kind.Package_Instantiation_Declaration:
-            print("[NOT IMPLEMENTED] Package instantiation in {name}".format(name=name))
+            from pyGHDL.dom.DesignUnit import PackageInstantiation
+
+            yield PackageInstantiation.parse(item)
         elif kind == nodes.Iir_Kind.Configuration_Specification:
             print(
                 "[NOT IMPLEMENTED] Configuration specification in {name}".format(

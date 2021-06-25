@@ -48,6 +48,7 @@ from pyVHDLModel.VHDLModel import (
     Architecture as VHDLModel_Architecture,
     Package as VHDLModel_Package,
     PackageBody as VHDLModel_PackageBody,
+    PackageInstantiation as VHDLModel_PackageInstantiation,
     Context as VHDLModel_Context,
     Configuration as VHDLModel_Configuration,
     Component as VHDLModel_Component,
@@ -115,9 +116,15 @@ class Package(VHDLModel_Package):
     @classmethod
     def parse(cls, packageNode: Iir):
         name = GetNameOfNode(packageNode)
-        generics = (
-            None  # GetGenericsFromChainedNodes(nodes.Get_Generic_Chain(packageNode))
-        )
+
+        packageHeader = nodes.Get_Package_Header(packageNode)
+        if packageHeader is not nodes.Null_Iir:
+            generics = GetGenericsFromChainedNodes(
+                nodes.Get_Generic_Chain(packageHeader)
+            )
+        else:
+            generics = []
+
         declaredItems = GetDeclaredItemsFromChainedNodes(
             nodes.Get_Declaration_Chain(packageNode), "package", name
         )
@@ -138,10 +145,26 @@ class PackageBody(VHDLModel_PackageBody):
 
 
 @export
+class PackageInstantiation(VHDLModel_PackageInstantiation):
+    @classmethod
+    def parse(cls, packageNode: Iir):
+        name = GetNameOfNode(packageNode)
+        uninstantiatedPackageName = nodes.Get_Uninstantiated_Package_Name(packageNode)
+
+        # FIXME: read generics
+        # FIXME: read generic map
+
+        return cls(name, uninstantiatedPackageName)
+
+
+@export
 class Context(VHDLModel_Context):
     @classmethod
     def parse(cls, libraryUnit: Iir):
         name = GetNameOfNode(libraryUnit)
+
+        # FIXME: read use clauses
+
         return cls(name)
 
 
@@ -150,4 +173,7 @@ class Configuration(VHDLModel_Configuration):
     @classmethod
     def parse(cls, configuration: Iir):
         name = GetNameOfNode(configuration)
+
+        # FIXME: needs an implementation
+
         return cls(name)

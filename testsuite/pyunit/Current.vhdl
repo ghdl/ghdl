@@ -65,6 +65,11 @@ architecture behav of entity_1 is
 		end function;
 	end protected body;
 
+	package pack_inst is new generic_pack
+		generic map (
+			BITS => 32
+		);
+
 	attribute att : boolean;
 
 	alias bar is boolean;
@@ -82,6 +87,9 @@ begin
 end architecture behav;
 
 package package_1 is
+	generic (
+		BITS : positive
+	);
 	constant ghdl : float := (3, 5, 0 to 2 => 5, 3 => 4, name => 10); -- 2.3;
 
 	component comp is

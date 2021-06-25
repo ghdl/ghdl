@@ -56,7 +56,8 @@ from pyGHDL.libghdl import (
     files_map,
     errorout_memory,
     LibGHDLException,
-    utils, files_map_editor,
+    utils,
+    files_map_editor,
 )
 from pyGHDL.libghdl.vhdl import nodes, sem_lib, parse
 from pyGHDL.dom._Utils import GetIirKindOfNode, CheckForErrors
@@ -68,6 +69,7 @@ from pyGHDL.dom.DesignUnit import (
     PackageBody,
     Context,
     Configuration,
+    PackageInstantiation,
 )
 
 __all__ = []
@@ -110,7 +112,13 @@ class Document(VHDLModel_Document):
     __ghdlSourceFileEntry: Any
     __ghdlFile: Any
 
-    def __init__(self, path: Path, sourceCode: str = None, dontParse: bool = False, dontTranslate: bool = False):
+    def __init__(
+        self,
+        path: Path,
+        sourceCode: str = None,
+        dontParse: bool = False,
+        dontTranslate: bool = False,
+    ):
         super().__init__(path)
 
         self._filename = path
@@ -129,16 +137,6 @@ class Document(VHDLModel_Document):
                 self.translate()
 
     def __loadFromPath(self):
-        # Read input file
-        # self.__ghdlFileID = name_table.Get_Identifier(str(self._filename))
-        # self.__ghdlSourceFileEntry = files_map.Read_Source_File(
-        #     name_table.Null_Identifier, self.__ghdlFileID
-        # )
-        # if self.__ghdlSourceFileEntry == files_map.No_Source_File_Entry:
-        #     raise LibGHDLException("Cannot load file '{!s}'".format(self.Path))
-        #
-        # CheckForErrors()
-
         with self._filename.open("r", encoding="utf-8") as file:
             self.__loadFromString(file.read())
 
@@ -148,8 +146,12 @@ class Document(VHDLModel_Document):
         bufferLength = sourceLength + 128
         self.__ghdlFileID = name_table.Get_Identifier(str(self._filename))
         dirId = name_table.Null_Identifier
-        self.__ghdlSourceFileEntry = files_map.Reserve_Source_File(dirId, self.__ghdlFileID, bufferLength)
-        files_map_editor.Fill_Text(self.__ghdlSourceFileEntry, ctypes.c_char_p(sourcesBytes), sourceLength)
+        self.__ghdlSourceFileEntry = files_map.Reserve_Source_File(
+            dirId, self.__ghdlFileID, bufferLength
+        )
+        files_map_editor.Fill_Text(
+            self.__ghdlSourceFileEntry, ctypes.c_char_p(sourcesBytes), sourceLength
+        )
 
         CheckForErrors()
 
@@ -177,7 +179,8 @@ class Document(VHDLModel_Document):
                 self.PackageBodies.append(packageBody)
 
             elif nodeKind == nodes.Iir_Kind.Package_Instantiation_Declaration:
-                print("[NOT IMPLEMENTED] Package instantiation")
+                package = PackageInstantiation.parse(libraryUnit)
+                self.Packages.append(package)
 
             elif nodeKind == nodes.Iir_Kind.Context_Declaration:
                 context = Context.parse(libraryUnit)
