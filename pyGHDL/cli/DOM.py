@@ -42,6 +42,19 @@ class Application:
 
         print("\n".join(buffer))
 
+        document: Document = self._design.Documents[0]
+        print()
+        print(
+            "libghdl processing time: {: 5.3f} us".format(
+                document.LibGHDLProcessingTime * 10 ** 6
+            )
+        )
+        print(
+            "DOM translation time:    {:5.3f} us".format(
+                document.DOMTranslationTime * 10 ** 6
+            )
+        )
+
 
 def handleException(ex):
     if isinstance(ex, PrettyPrintException):

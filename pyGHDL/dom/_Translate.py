@@ -34,6 +34,7 @@ from typing import List, Generator
 
 from pydecor import export
 
+from pyGHDL.dom import Position
 from pyGHDL.dom.Object import Variable
 from pyVHDLModel.VHDLModel import (
     Constraint,
@@ -54,7 +55,6 @@ from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom._Utils import (
     GetNameOfNode,
     GetIirKindOfNode,
-    GetPositionOfNode,
 )
 from pyGHDL.dom.Common import DOMException
 from pyGHDL.dom.Names import (
@@ -199,7 +199,7 @@ def GetArrayConstraintsFromSubtypeIndication(
         ):
             constraints.append(GetNameFromNode(constraint))
         else:
-            position = GetPositionOfNode(constraint)
+            position = Position.parse(constraint)
             raise DOMException(
                 "Unknown constraint kind '{kind}' for constraint '{constraint}' in subtype indication '{indication}' at {file}:{line}:{column}.".format(
                     kind=constraintKind.name,
@@ -243,7 +243,7 @@ def GetTypeFromNode(node: Iir) -> BaseType:
     elif kind == nodes.Iir_Kind.Protected_Type_Declaration:
         return ProtectedType.parse(typeName, typeDefinition)
     else:
-        position = GetPositionOfNode(typeDefinition)
+        position = Position.parse(typeDefinition)
         raise DOMException(
             "Unknown type definition kind '{kindName}'({kind}) for type '{name}' at {file}:{line}:{column}.".format(
                 kind=kind,
@@ -396,7 +396,7 @@ def GetExpressionFromNode(node: Iir) -> Expression:
     try:
         cls = __EXPRESSION_TRANSLATION[kind]
     except KeyError:
-        position = GetPositionOfNode(node)
+        position = Position.parse(node)
         raise DOMException(
             "Unknown expression kind '{kindName}'({kind}) in expression '{expr}' at {file}:{line}:{column}.".format(
                 kind=kind,
@@ -424,7 +424,7 @@ def GetGenericsFromChainedNodes(
 
             yield genericConstant
         else:
-            position = GetPositionOfNode(generic)
+            position = Position.parse(generic)
             raise DOMException(
                 "Unknown generic kind '{kindName}'({kind}) in generic '{generic}' at {file}:{line}:{column}.".format(
                     kind=kind,
@@ -450,7 +450,7 @@ def GetPortsFromChainedNodes(
 
             yield portSignal
         else:
-            position = GetPositionOfNode(port)
+            position = Position.parse(port)
             raise DOMException(
                 "Unknown port kind '{kindName}'({kind}) in port '{port}' at {file}:{line}:{column}.".format(
                     kind=kind,
@@ -486,7 +486,7 @@ def GetParameterFromChainedNodes(
 
             yield ParameterFileInterfaceItem.parse(parameter)
         else:
-            position = GetPositionOfNode(parameter)
+            position = Position.parse(parameter)
             raise DOMException(
                 "Unknown parameter kind '{kindName}'({kind}) in parameter '{param}' at {file}:{line}:{column}.".format(
                     kind=kind,
@@ -572,7 +572,7 @@ def GetDeclaredItemsFromChainedNodes(
                 )
             )
         else:
-            position = GetPositionOfNode(item)
+            position = Position.parse(item)
             raise DOMException(
                 "Unknown declared item kind '{kind}' in {entity} '{name}' at {file}:{line}:{column}.".format(
                     kind=kind.name,

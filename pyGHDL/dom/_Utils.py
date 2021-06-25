@@ -39,7 +39,6 @@ from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.libghdl.vhdl.nodes import Null_Iir
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.dom.Common import DOMException
-from pyGHDL.dom.Misc import Position
 
 
 __all__ = []
@@ -108,20 +107,3 @@ def GetModeOfNode(node: Iir) -> Mode:
         return __MODE_TRANSLATION[nodes.Get_Mode(node)]
     except KeyError:
         raise LibGHDLException("Unknown mode.")
-
-
-@export
-def GetPositionOfNode(node: Iir) -> Position:
-    """Return the source code position of a IIR node."""
-
-    if node == Null_Iir:
-        raise ValueError("GetPositionOfNode: Parameter 'node' must not be 'Null_iir'.")
-
-    location = nodes.Get_Location(node)
-    file = files_map.Location_To_File(location)
-    fileName = name_table.Get_Name_Ptr(files_map.Get_File_Name(file))
-    #    position = files_map.Location_File_To_Pos(location, file)
-    line = files_map.Location_File_To_Line(location, file)
-    column = files_map.Location_File_Line_To_Offset(location, file, line)
-
-    return Position(fileName, line, column)

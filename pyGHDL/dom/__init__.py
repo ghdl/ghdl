@@ -30,5 +30,73 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+from pathlib import Path
+
+from pyGHDL.libghdl import files_map, name_table
+
+from pyGHDL.libghdl.vhdl import nodes
+from pydecor import export
+
+from pyGHDL.libghdl._types import Iir
 
 __all__ = []
+
+
+@export
+class Position:
+    """Represents the source code position of a IIR node in a source file."""
+
+    _filename: Path
+    _line: int
+    _column: int
+
+    def __init__(self, filename: Path, line: int, column: int):
+        self._filename = filename
+        self._line = line
+        self._column = column
+
+    @classmethod
+    def parse(cls, node: Iir) -> "Position":
+        """Return the source code position of a IIR node."""
+
+        if node == nodes.Null_Iir:
+            raise ValueError(
+                "Position.parse(): Parameter 'node' must not be 'Null_iir'."
+            )
+
+        location = nodes.Get_Location(node)
+        file = files_map.Location_To_File(location)
+        fileNameId = files_map.Get_File_Name(file)
+        fileName = name_table.Get_Name_Ptr(fileNameId)
+        line = files_map.Location_File_To_Line(location, file)
+        column = files_map.Location_File_Line_To_Offset(location, file, line)
+
+        return cls(Path(fileName), line, column)
+
+    @property
+    def Filename(self) -> Path:
+        return self._filename
+
+    @property
+    def Line(self) -> int:
+        return self._line
+
+    @property
+    def Column(self) -> int:
+        return self._column
+
+
+@export
+class DOMMixin:
+    _iirNode: Iir
+    _position: Position = None
+
+    def __init__(self, node: Iir):
+        self._iirNode = node
+
+    @property
+    def Position(self) -> Position:
+        if self._position is None:
+            self._position = Position.parse(self._iirNode)
+
+        return self._position

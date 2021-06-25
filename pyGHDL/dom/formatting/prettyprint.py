@@ -146,7 +146,15 @@ class PrettyPrint:
     def formatEntity(self, entity: Entity, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
-        buffer.append("{prefix}- Name: {name}".format(name=entity.Name, prefix=prefix))
+        buffer.append(
+            "{prefix}- Name: {name} at {file}:{line}:{column}".format(
+                name=entity.Name,
+                prefix=prefix,
+                file=entity.Position.Filename.name,
+                line=entity.Position.Line,
+                column=entity.Position.Column,
+            )
+        )
         buffer.append("{prefix}  Generics:".format(prefix=prefix))
         for generic in entity.GenericItems:
             for line in self.formatGeneric(generic, level + 1):
@@ -168,7 +176,13 @@ class PrettyPrint:
         buffer = []
         prefix = "  " * level
         buffer.append(
-            "{prefix}- Name: {name}".format(name=architecture.Name, prefix=prefix)
+            "{prefix}- Name: {name} at {file}:{line}:{column}".format(
+                name=architecture.Name,
+                prefix=prefix,
+                file=architecture.Position.Filename.name,
+                line=architecture.Position.Line,
+                column=architecture.Position.Column,
+            )
         )
         buffer.append(
             "{prefix}  Entity: {entity}".format(

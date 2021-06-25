@@ -36,6 +36,7 @@
    Add a module documentation.
 """
 import ctypes
+import time
 from pathlib import Path
 from typing import Any
 
@@ -112,6 +113,9 @@ class Document(VHDLModel_Document):
     __ghdlSourceFileEntry: Any
     __ghdlFile: Any
 
+    __ghdlProcessingTime: float
+    __domTranslateTime: float
+
     def __init__(
         self,
         path: Path,
@@ -130,11 +134,15 @@ class Document(VHDLModel_Document):
 
         if dontParse == False:
             # Parse input file
+            t1 = time.perf_counter()
             self.__ghdlFile = sem_lib.Load_File(self.__ghdlSourceFileEntry)
             CheckForErrors()
+            self.__ghdlProcessingTime = time.perf_counter() - t1
 
             if dontTranslate == False:
+                t1 = time.perf_counter()
                 self.translate()
+                self.__domTranslateTime = time.perf_counter() - t1
 
     def __loadFromPath(self):
         with self._filename.open("r", encoding="utf-8") as file:
@@ -196,3 +204,11 @@ class Document(VHDLModel_Document):
                         kindName=nodeKind.name, kind=nodeKind
                     )
                 )
+
+    @property
+    def LibGHDLProcessingTime(self) -> float:
+        return self.__ghdlProcessingTime
+
+    @property
+    def DOMTranslationTime(self) -> float:
+        return self.__domTranslateTime

@@ -46,30 +46,6 @@ __all__ = []
 
 
 @export
-class Position:
-    _filename: str
-    _line: int
-    _column: int
-
-    def __init__(self, filename: str, line: int, column: int):
-        self._filename = filename
-        self._line = line
-        self._column = column
-
-    @property
-    def Filename(self):
-        return self._filename
-
-    @property
-    def Line(self):
-        return self._line
-
-    @property
-    def Column(self):
-        return self._column
-
-
-@export
 class Alias(VHDLModel_Alias):
     def __init__(self, aliasName: str):
         super().__init__(aliasName)
