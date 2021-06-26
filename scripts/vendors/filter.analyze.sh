@@ -35,9 +35,9 @@ test greadlink --version > /dev/null 2>&1 && READLINK=greadlink || READLINK=read
 # Save working directory
 WorkingDir=$(pwd)
 ScriptDir="$($READLINK -f $(dirname $0))"
-RootDir="$($READLINK -f $ScriptDir/..)"
+RootDir="$($READLINK -f "$ScriptDir"/..)"
 
-source $ScriptDir/../ansi_color.sh
+source "$ScriptDir"/../ansi_color.sh
 if [[ $? -ne 0 ]]; then echo 1>&2 -e "${COLORED_ERROR} While loading Bash utilities.${ANSI_NOCOLOR}"    ; exit 1; fi
 
 # command line argument processing
@@ -45,7 +45,7 @@ COMMAND=2
 INDENT=""
 VERBOSE=0
 DEBUG=0
-while [[ $# > 0 ]]; do
+while [ "$#" -gt 0 ]; do
 	key="$1"
 	case $key in
 		-i|--indent)

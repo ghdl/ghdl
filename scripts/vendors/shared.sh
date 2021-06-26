@@ -56,9 +56,9 @@ VERBOSE=${VERBOSE:-0}
 DEBUG=${DEBUG:-0}
 CONTINUE_ON_ERROR=${CONTINUE_ON_ERROR:-0}
 
-test $VERBOSE -eq 1 && echo -e "  Declaring Bash procedures for GHDL..."
+test "$VERBOSE" -eq 1 && echo -e "  Declaring Bash procedures for GHDL..."
 
-test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}procedure SetupDirectories( <Index> <Name> )${ANSI_NOCOLOR}"
+test "$DEBUG" -eq 1 && echo -e "    ${ANSI_DARK_GRAY}procedure SetupDirectories( <Index> <Name> )${ANSI_NOCOLOR}"
 # SetupDirectories
 # -> $Index
 # -> $Name
@@ -108,7 +108,7 @@ SetupDirectories() {
 	fi
 }
 
-test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}procedure CreateDestinationDirectory( undocumented )${ANSI_NOCOLOR}"
+test "$DEBUG" -eq 1 && echo -e "    ${ANSI_DARK_GRAY}procedure CreateDestinationDirectory( undocumented )${ANSI_NOCOLOR}"
 # CreateDestinationDirectory
 # -> undocumented
 CreateDestinationDirectory() {
@@ -123,18 +123,18 @@ CreateDestinationDirectory() {
 	fi
 }
 
-test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}procedure GHDLSetup( <VHDLStandard> )${ANSI_NOCOLOR}"
+test "$DEBUG" -eq 1 && echo -e "    ${ANSI_DARK_GRAY}procedure GHDLSetup( <VHDLStandard> )${ANSI_NOCOLOR}"
 # GHDLSetup
 # -> $VHDLStandard
 # <= $VHDLVersion
 # <= $VHDLStandard
 # <= $VHDLFlavor
 GHDLSetup() {
-	if [ $1 -eq 93 ]; then
+	if [ "$1" -eq 93 ]; then
 		VHDLVersion="v93"
 		VHDLStandard="93c"
 		VHDLFlavor="synopsys"
-	elif [ $1 -eq 2008 ]; then
+	elif [ "$1" -eq 2008 ]; then
 		VHDLVersion="v08"
 		VHDLStandard="08"
 		VHDLFlavor="synopsys"
@@ -295,9 +295,9 @@ AnalyzeLibrary() {
 	echo -e "${ANSI_YELLOW}Analyzing files into library '$LibraryName'...${ANSI_NOCOLOR}"
 
 	for File in $Files; do
-		test $VERBOSE -eq 1 && echo -e "${ANSI_CYAN}  Analyzing '$File'${ANSI_NOCOLOR}"
+		test "$VERBOSE" -eq 1 && echo -e "${ANSI_CYAN}  Analyzing '$File'${ANSI_NOCOLOR}"
 
-		AnalyzeVHDL $LibraryName "$SourceDirectory" "$LibraryPath" "$File"
+		AnalyzeVHDL "$LibraryName" "$SourceDirectory" "$LibraryPath" "$File"
 	done
 }
 

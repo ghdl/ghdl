@@ -1,6 +1,6 @@
 #! /bin/bash
 
-scriptdir=`dirname $0`
+scriptdir=`dirname "$0"`
 
 if [ -n "$GITHUB_EVENT_PATH" ]; then
   export CI=true

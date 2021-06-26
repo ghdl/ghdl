@@ -232,7 +232,7 @@ SetupDirectories LatticeDiamond "Lattice Diamond"
 # create "lattice" directory and change to it
 # => $DestinationDirectory
 CreateDestinationDirectory
-cd $DestinationDirectory
+cd "$DestinationDirectory"
 
 
 # Extend global GHDL Options TODO: move to GHDLSetup

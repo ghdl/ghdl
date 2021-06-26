@@ -217,7 +217,7 @@ fi
 
 # Search Altera Quartus in default installation locations
 DefaultDirectories=("/opt/Altera" "/opt/altera" "/c/Altera")
-if [ ! -z $QUARTUS_ROOTDIR ]; then
+if [ -n "$QUARTUS_ROOTDIR" ]; then
 	EnvSourceDir="$QUARTUS_ROOTDIR/${Altera_Quartus_Settings[SourceDirectory]}"
 else
 	for DefaultDir in "${DefaultDirectories[@]}"; do
