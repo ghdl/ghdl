@@ -740,7 +740,6 @@ package body Vhdl.Nodes is
    procedure Initialize is
    begin
       Free_Chain := Null_Node;
-      Nbr_Free_Hooks := 0;
       Nodet.Init;
    end Initialize;
 

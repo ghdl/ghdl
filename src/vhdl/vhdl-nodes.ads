@@ -7389,6 +7389,8 @@ package Vhdl.Nodes is
    procedure Free_Iir (Target : Iir);
 
    --  Hooks called when a node is free.
+   --  Note: The register procedure must be called only during elaboration, so
+   --   the set of hooks is defined forever.
    type Free_Iir_Hook is access procedure (N : Iir);
    procedure Register_Free_Hook (Hook : Free_Iir_Hook);
 
