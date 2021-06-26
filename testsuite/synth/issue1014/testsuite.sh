@@ -2,15 +2,13 @@
 
 . ../../testenv.sh
 
-for t in record_test; do
-    analyze $t.vhdl tb_$t.vhdl
-    elab_simulate tb_$t
-    clean
+analyze record_test.vhdl tb_record_test.vhdl
+elab_simulate tb_record_test
+clean
 
-    synth $t.vhdl -e $t > syn_$t.vhdl
-    analyze syn_$t.vhdl tb_$t.vhdl
-    elab_simulate tb_$t --ieee-asserts=disable-at-0
-    clean
-done
+synth record_test.vhdl -e record_test > syn_record_test.vhdl
+analyze syn_record_test.vhdl tb_record_test.vhdl
+elab_simulate tb_record_test --ieee-asserts=disable-at-0
+clean
 
 echo "Test successful"

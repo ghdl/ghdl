@@ -2,8 +2,7 @@
 
 . ../../testenv.sh
 
-synth alu.vhdl -e $t > syn_alu.vhdl
-analyze syn_alu.vhdl
+synth_analyze alu
 clean
 
 echo "Test successful"

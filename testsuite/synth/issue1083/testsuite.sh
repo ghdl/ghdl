@@ -2,10 +2,7 @@
 
 . ../../testenv.sh
 
-for t in test; do
-    synth $t.vhdl -e $t > syn_$t.vhdl
-    analyze syn_$t.vhdl
-    clean
-done
+synth_analyze test
+clean
 
 echo "Test successful"

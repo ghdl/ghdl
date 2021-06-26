@@ -3,15 +3,13 @@
 . ../../testenv.sh
 
 GHDL_STD_FLAGS=--std=08
-for t in conv01; do
-    analyze $t.vhdl tb_$t.vhdl
-    elab_simulate tb_$t
-    clean
+analyze conv01.vhdl tb_conv01.vhdl
+elab_simulate tb_conv01
+clean
 
-    synth $t.vhdl -e $t > syn_$t.vhdl
-    analyze syn_$t.vhdl tb_$t.vhdl
-    elab_simulate tb_$t
-    clean
-done
+synth conv01.vhdl -e conv01 > syn_conv01.vhdl
+analyze syn_conv01.vhdl tb_conv01.vhdl
+elab_simulate tb_conv01
+clean
 
 echo "Test successful"

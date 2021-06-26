@@ -2,10 +2,8 @@
 
 . ../../testenv.sh
 
-for f in ent; do
-  synth $f.vhdl -e $f > syn_$f.vhdl
-#  analyze syn_$f.vhdl
-done
+synth ent.vhdl -e ent > syn_ent.vhdl
+#  analyze syn_ent.vhdl
 clean
 
 echo "Test successful"

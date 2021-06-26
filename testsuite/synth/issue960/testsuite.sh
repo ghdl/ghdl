@@ -2,16 +2,14 @@
 
 . ../../testenv.sh
 
-for t in ent2; do
-    analyze $t.vhdl tb_$t.vhdl
-    elab_simulate tb_$t
-    clean
+analyze ent2.vhdl tb_ent2.vhdl
+elab_simulate tb_ent2
+clean
 
-    synth $t.vhdl -e $t > syn_$t.vhdl
-    analyze syn_$t.vhdl tb_$t.vhdl
-    elab_simulate tb_$t --ieee-asserts=disable-at-0
-    clean
-done
+synth ent2.vhdl -e ent2 > syn_ent2.vhdl
+analyze syn_ent2.vhdl tb_ent2.vhdl
+elab_simulate tb_ent2 --ieee-asserts=disable-at-0
+clean
 
 synth ent.vhdl -e > syn_ent.vhdl
 

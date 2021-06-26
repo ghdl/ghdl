@@ -3,10 +3,7 @@
 . ../../testenv.sh
 
 GHDL_STD_FLAGS=--std=08
-for t in ent; do
-  synth $t.vhdl -e $t > syn_$t.vhdl
-done
-
+synth_analyze ent
 clean
 
 echo "Test successful"

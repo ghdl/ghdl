@@ -2,15 +2,13 @@
 
 . ../../testenv.sh
 
-for t in bram; do
-    analyze $t.vhdl tb_$t.vhdl
-    elab_simulate tb_$t
-    clean
+analyze bram.vhdl tb_bram.vhdl
+elab_simulate tb_bram
+clean
 
-    synth $t.vhdl -e $t > syn_$t.vhdl
-    analyze syn_$t.vhdl tb_$t.vhdl
-    elab_simulate tb_$t --ieee-asserts=disable-at-0
-    clean
-done
+synth bram.vhdl -e bram > syn_bram.vhdl
+analyze syn_bram.vhdl tb_bram.vhdl
+elab_simulate tb_bram --ieee-asserts=disable-at-0
+clean
 
 echo "Test successful"

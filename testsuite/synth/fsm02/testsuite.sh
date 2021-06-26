@@ -2,15 +2,13 @@
 
 . ../../testenv.sh
 
-for t in recv; do
-    analyze -fpsl $t.vhdl tb_$t.vhdl
-    elab_simulate tb_$t
-    clean
+analyze -fpsl recv.vhdl tb_recv.vhdl
+elab_simulate tb_recv
+clean
 
-    synth -fpsl $t.vhdl -e $t > syn_$t.vhdl
-    analyze syn_$t.vhdl tb_$t.vhdl
-    elab_simulate tb_$t
-    clean
-done
+synth -fpsl recv.vhdl -e recv > syn_recv.vhdl
+analyze syn_recv.vhdl tb_recv.vhdl
+elab_simulate tb_recv
+clean
 
 echo "Test successful"

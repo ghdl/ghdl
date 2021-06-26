@@ -81,7 +81,7 @@ handle_test() {
 	if [ $dry = true ]; then
 	    return
 	fi
-        if [ x$entity = "x" ]; then
+        if [ "x$entity" = "x" ]; then
             entity=`get_entity $dir/$file`
 	fi
         if [ "x$entity" = "x" ]; then
@@ -132,7 +132,7 @@ handle_test() {
   else
     echo "skip";
   fi
-  
+
   # Increment test_num
   test_num=`expr $test_num + 1`
 }

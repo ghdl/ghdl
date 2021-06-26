@@ -2,15 +2,13 @@
 
 . ../../testenv.sh
 
-for t in aggr02; do
-    analyze $t.vhdl tb_$t.vhdl
-    elab_simulate tb_$t
-    clean
+analyze aggr02.vhdl tb_aggr02.vhdl
+elab_simulate tb_aggr02
+clean
 
-    synth $t.vhdl -e $t > syn_$t.vhdl
-    analyze syn_$t.vhdl tb_$t.vhdl
-    elab_simulate tb_$t --ieee-asserts=disable-at-0
-    clean
-done
+synth aggr02.vhdl -e aggr02 > syn_aggr02.vhdl
+analyze syn_aggr02.vhdl tb_aggr02.vhdl
+elab_simulate tb_aggr02 --ieee-asserts=disable-at-0
+clean
 
 echo "Test successful"

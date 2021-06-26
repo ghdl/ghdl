@@ -4,15 +4,13 @@
 
 GHDL_STD_FLAGS=--std=08
 
-for t in testcase; do
-    analyze $t.vhdl tb_$t.vhdl
-    elab_simulate tb_$t
-    clean
+analyze testcase.vhdl tb_testcase.vhdl
+elab_simulate tb_testcase
+clean
 
-    synth $t.vhdl -e $t > syn_$t.vhdl
-    analyze syn_$t.vhdl tb_$t.vhdl
-    elab_simulate tb_$t
-    clean
-done
+synth testcase.vhdl -e testcase > syn_testcase.vhdl
+analyze syn_testcase.vhdl tb_testcase.vhdl
+elab_simulate tb_testcase
+clean
 
 echo "Test successful"
