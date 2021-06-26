@@ -8,6 +8,7 @@ from subprocess import run as subprocess_run, PIPE
 from typing import Optional
 from unittest import TestCase
 
+
 from pyGHDL.lsp.lsp import LanguageProtocolServer, LSPConn
 
 is_windows = os.name == "nt"

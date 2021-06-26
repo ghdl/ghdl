@@ -48,7 +48,7 @@ from typing import Callable, List, Dict, Any, TypeVar
 
 from pydecor import export
 
-from pyGHDL.libghdl import libghdl
+from pyGHDL.libghdl import libghdl, LibGHDLException
 
 
 @export
@@ -181,14 +181,34 @@ def BindToLibGHDL(subprogramName):
 
             @wraps(func)
             def inner(*args):
-                return returnType(functionPointer(*args))
+                try:
+                    returnValue = functionPointer(*args)
+                except OSError as ex:
+                    errors = [str(ex)]
+                    raise LibGHDLException(
+                        "Caught exception when calling '{func}' in libghdl.".format(
+                            func=subprogramName
+                        ),
+                        errors,
+                    ) from ex
+
+                return returnType(returnValue)
 
             return inner
         else:
 
             @wraps(func)
             def inner(*args):
-                return functionPointer(*args)
+                try:
+                    return functionPointer(*args)
+                except OSError as ex:
+                    errors = [str(ex)]
+                    raise LibGHDLException(
+                        "Caught exception when calling '{func}' in libghdl.".format(
+                            func=subprogramName
+                        ),
+                        errors,
+                    ) from ex
 
             return inner
 

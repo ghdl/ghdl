@@ -2,6 +2,7 @@ from typing import List, Union
 
 from pydecor import export
 
+from pyGHDL.dom.Attribute import Attribute, AttributeSpecification
 from pyGHDL.dom.Misc import Alias
 from pyGHDL.dom.Subprogram import Procedure
 from pyGHDL.dom.Type import (
@@ -11,6 +12,10 @@ from pyGHDL.dom.Type import (
     RecordType,
     AccessType,
     EnumeratedType,
+    FileType,
+    ProtectedType,
+    ProtectedTypeBody,
+    PhysicalType,
 )
 from pyVHDLModel.VHDLModel import (
     GenericInterfaceItem,
@@ -32,8 +37,10 @@ from pyGHDL.dom.DesignUnit import (
     Configuration,
     Context,
     Component,
+    UseClause,
+    PackageInstantiation,
 )
-from pyGHDL.dom.Object import Constant, Signal, SharedVariable
+from pyGHDL.dom.Object import Constant, Signal, SharedVariable, File
 from pyGHDL.dom.InterfaceItem import (
     GenericConstantInterfaceItem,
     PortSignalInterfaceItem,
@@ -139,7 +146,15 @@ class PrettyPrint:
     def formatEntity(self, entity: Entity, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
-        buffer.append("{prefix}- Name: {name}".format(name=entity.Name, prefix=prefix))
+        buffer.append(
+            "{prefix}- Name: {name} at {file}:{line}:{column}".format(
+                name=entity.Name,
+                prefix=prefix,
+                file=entity.Position.Filename.name,
+                line=entity.Position.Line,
+                column=entity.Position.Column,
+            )
+        )
         buffer.append("{prefix}  Generics:".format(prefix=prefix))
         for generic in entity.GenericItems:
             for line in self.formatGeneric(generic, level + 1):
@@ -161,7 +176,13 @@ class PrettyPrint:
         buffer = []
         prefix = "  " * level
         buffer.append(
-            "{prefix}- Name: {name}".format(name=architecture.Name, prefix=prefix)
+            "{prefix}- Name: {name} at {file}:{line}:{column}".format(
+                name=architecture.Name,
+                prefix=prefix,
+                file=architecture.Position.Filename.name,
+                line=architecture.Position.Line,
+                column=architecture.Position.Column,
+            )
         )
         buffer.append(
             "{prefix}  Entity: {entity}".format(
@@ -334,6 +355,16 @@ class PrettyPrint:
                     else "",
                 )
             )
+        elif isinstance(item, File):
+            buffer.append(
+                "{prefix}- File {name} : {subtype}".format(
+                    prefix=prefix,
+                    name=item.Name,
+                    subtype=self.formatSubtypeIndication(
+                        item.SubType, "file", item.Name
+                    ),
+                )
+            )
         elif isinstance(item, Type):
             buffer.append(
                 "{prefix}- {type}".format(prefix=prefix, type=self.formatType(item))
@@ -368,6 +399,32 @@ class PrettyPrint:
         elif isinstance(item, Component):
             for line in self.formatComponent(item, level):
                 buffer.append(line)
+        elif isinstance(item, Attribute):
+            buffer.append(
+                "{prefix}- attribute {name} : {type!s}".format(
+                    prefix=prefix, name=item.Name, type=item.SubType
+                )
+            )
+        elif isinstance(item, AttributeSpecification):
+            buffer.append(
+                "{prefix}- attribute {name!s} of {entity} : {entityClass} is {value}".format(
+                    prefix=prefix,
+                    name=item.Attribute,
+                    entity="????",
+                    entityClass="????",
+                    value="????",
+                )
+            )
+        elif isinstance(item, UseClause):
+            buffer.append(
+                "{prefix}- use {name!s}".format(prefix=prefix, name=item.Item)
+            )
+        elif isinstance(item, PackageInstantiation):
+            buffer.append(
+                "{prefix}- package {name} is new {name2!s} generic map (.....)".format(
+                    prefix=prefix, name=item.Name, name2=item.PackageReference
+                )
+            )
         else:
             raise PrettyPrintException(
                 "Unhandled declared item kind '{name}'.".format(
@@ -385,12 +442,20 @@ class PrettyPrint:
             )
         elif isinstance(item, EnumeratedType):
             result += "(........)"
+        elif isinstance(item, PhysicalType):
+            result += " is range ....... units ..... end units"
         elif isinstance(item, ArrayType):
             result += "array(........) of ....."
         elif isinstance(item, RecordType):
             result += "record ..... end record"
         elif isinstance(item, AccessType):
             result += "access ....."
+        elif isinstance(item, FileType):
+            result += "file ....."
+        elif isinstance(item, ProtectedType):
+            result += "protected ..... end protected"
+        elif isinstance(item, ProtectedTypeBody):
+            result += "protected body ..... end protected body"
         else:
             raise PrettyPrintException(
                 "Unknown type '{name}'".format(name=item.__class__.__name__)
@@ -402,11 +467,12 @@ class PrettyPrint:
         if isinstance(subTypeIndication, SimpleSubTypeSymbol):
             return "{type}".format(type=subTypeIndication.SymbolName)
         elif isinstance(subTypeIndication, ConstrainedCompositeSubTypeSymbol):
-            ranges = [str(c.Range) for c in subTypeIndication.Constraints]
-            constraints = ", ".join(ranges)
+            constraints = []
+            for constraint in subTypeIndication.Constraints:
+                constraints.append(str(constraint))
 
             return "{type}({constraints})".format(
-                type=subTypeIndication.SymbolName, constraints=constraints
+                type=subTypeIndication.SymbolName, constraints=", ".join(constraints)
             )
         else:
             raise PrettyPrintException(

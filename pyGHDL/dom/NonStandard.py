@@ -35,6 +35,8 @@
 .. todo::
    Add a module documentation.
 """
+import ctypes
+import time
 from pathlib import Path
 from typing import Any
 
@@ -56,10 +58,11 @@ from pyGHDL.libghdl import (
     errorout_memory,
     LibGHDLException,
     utils,
+    files_map_editor,
 )
 from pyGHDL.libghdl.vhdl import nodes, sem_lib, parse
+from pyGHDL.dom import DOMException
 from pyGHDL.dom._Utils import GetIirKindOfNode, CheckForErrors
-from pyGHDL.dom.Common import DOMException
 from pyGHDL.dom.DesignUnit import (
     Entity,
     Architecture,
@@ -67,6 +70,7 @@ from pyGHDL.dom.DesignUnit import (
     PackageBody,
     Context,
     Configuration,
+    PackageInstantiation,
 )
 
 __all__ = []
@@ -104,33 +108,62 @@ class Library(VHDLModel_Library):
 
 @export
 class Document(VHDLModel_Document):
+    _filename: Path
     __ghdlFileID: Any
     __ghdlSourceFileEntry: Any
     __ghdlFile: Any
 
-    def __init__(self, path: Path = None, dontParse: bool = False):
+    __ghdlProcessingTime: float
+    __domTranslateTime: float
+
+    def __init__(
+        self,
+        path: Path,
+        sourceCode: str = None,
+        dontParse: bool = False,
+        dontTranslate: bool = False,
+    ):
         super().__init__(path)
 
-        self.__ghdl_init()
+        self._filename = path
+
+        if sourceCode is None:
+            self.__loadFromPath()
+        else:
+            self.__loadFromString(sourceCode)
+
         if dontParse == False:
-            self.parse()
+            # Parse input file
+            t1 = time.perf_counter()
+            self.__ghdlFile = sem_lib.Load_File(self.__ghdlSourceFileEntry)
+            CheckForErrors()
+            self.__ghdlProcessingTime = time.perf_counter() - t1
 
-    def __ghdl_init(self):
-        # Read input file
-        self.__ghdlFileID = name_table.Get_Identifier(str(self.Path))
-        self.__ghdlSourceFileEntry = files_map.Read_Source_File(
-            name_table.Null_Identifier, self.__ghdlFileID
+            if dontTranslate == False:
+                t1 = time.perf_counter()
+                self.translate()
+                self.__domTranslateTime = time.perf_counter() - t1
+
+    def __loadFromPath(self):
+        with self._filename.open("r", encoding="utf-8") as file:
+            self.__loadFromString(file.read())
+
+    def __loadFromString(self, sourceCode: str):
+        sourcesBytes = sourceCode.encode("utf-8")
+        sourceLength = len(sourcesBytes)
+        bufferLength = sourceLength + 128
+        self.__ghdlFileID = name_table.Get_Identifier(str(self._filename))
+        dirId = name_table.Null_Identifier
+        self.__ghdlSourceFileEntry = files_map.Reserve_Source_File(
+            dirId, self.__ghdlFileID, bufferLength
         )
-        if self.__ghdlSourceFileEntry == files_map.No_Source_File_Entry:
-            raise LibGHDLException("Cannot load file '{!s}'".format(self.Path))
+        files_map_editor.Fill_Text(
+            self.__ghdlSourceFileEntry, ctypes.c_char_p(sourcesBytes), sourceLength
+        )
 
         CheckForErrors()
 
-        # Parse input file
-        self.__ghdlFile = sem_lib.Load_File(self.__ghdlSourceFileEntry)
-        CheckForErrors()
-
-    def parse(self):
+    def translate(self):
         firstUnit = nodes.Get_First_Design_Unit(self.__ghdlFile)
 
         for unit in utils.chain_iter(firstUnit):
@@ -153,6 +186,10 @@ class Document(VHDLModel_Document):
                 packageBody = PackageBody.parse(libraryUnit)
                 self.PackageBodies.append(packageBody)
 
+            elif nodeKind == nodes.Iir_Kind.Package_Instantiation_Declaration:
+                package = PackageInstantiation.parse(libraryUnit)
+                self.Packages.append(package)
+
             elif nodeKind == nodes.Iir_Kind.Context_Declaration:
                 context = Context.parse(libraryUnit)
                 self.Contexts.append(context)
@@ -167,3 +204,11 @@ class Document(VHDLModel_Document):
                         kindName=nodeKind.name, kind=nodeKind
                     )
                 )
+
+    @property
+    def LibGHDLProcessingTime(self) -> float:
+        return self.__ghdlProcessingTime
+
+    @property
+    def DOMTranslationTime(self) -> float:
+        return self.__domTranslateTime

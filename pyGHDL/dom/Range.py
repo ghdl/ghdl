@@ -50,11 +50,3 @@ class Range(VHDLModel_Range):
         self._leftBound = left
         self._rightBound = right
         self._direction = direction
-
-
-@export
-class RangeExpression(VHDLModel_RangeExpression):
-    def __init__(self, range: Range):
-        super().__init__()
-
-        self._range = range

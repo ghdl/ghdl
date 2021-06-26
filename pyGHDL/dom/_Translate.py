@@ -34,6 +34,8 @@ from typing import List, Generator
 
 from pydecor import export
 
+from pyGHDL.dom import Position, DOMException
+from pyGHDL.dom.Object import Variable
 from pyVHDLModel.VHDLModel import (
     Constraint,
     Direction,
@@ -44,6 +46,7 @@ from pyVHDLModel.VHDLModel import (
     PortInterfaceItem,
     ParameterInterfaceItem,
     ModelEntity,
+    Name,
 )
 
 from pyGHDL.libghdl import utils
@@ -52,10 +55,14 @@ from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom._Utils import (
     GetNameOfNode,
     GetIirKindOfNode,
-    GetPositionOfNode,
-    GetSelectedName,
 )
-from pyGHDL.dom.Common import DOMException
+from pyGHDL.dom.Names import (
+    SimpleName,
+    SelectedName,
+    AttributeName,
+    ParenthesisName,
+    AllName,
+)
 from pyGHDL.dom.Symbol import (
     SimpleObjectOrFunctionCallSymbol,
     SimpleSubTypeSymbol,
@@ -69,10 +76,13 @@ from pyGHDL.dom.Type import (
     ArrayType,
     RecordType,
     EnumeratedType,
-    RecordTypeElement,
     AccessType,
+    ProtectedType,
+    ProtectedTypeBody,
+    FileType,
+    PhysicalType,
 )
-from pyGHDL.dom.Range import Range, RangeExpression
+from pyGHDL.dom.Range import Range
 from pyGHDL.dom.Literal import (
     IntegerLiteral,
     CharacterLiteral,
@@ -80,7 +90,7 @@ from pyGHDL.dom.Literal import (
     StringLiteral,
     PhysicalIntegerLiteral,
     PhysicalFloatingLiteral,
-    EnumerationLiteral,
+    NullLiteral,
 )
 from pyGHDL.dom.Expression import (
     SubtractionExpression,
@@ -114,12 +124,59 @@ from pyGHDL.dom.Expression import (
     ShiftRightArithmeticExpression,
     RotateLeftExpression,
     RotateRightExpression,
+    RangeExpression,
 )
 from pyGHDL.dom.Subprogram import Function, Procedure
 from pyGHDL.dom.Misc import Alias
 
 
 __all__ = []
+
+
+@export
+def GetNameFromNode(node: Iir) -> Name:
+    kind = GetIirKindOfNode(node)
+    if kind == nodes.Iir_Kind.Simple_Name:
+        name = GetNameOfNode(node)
+        return SimpleName(node, name)
+    elif kind == nodes.Iir_Kind.Selected_Name:
+        name = GetNameOfNode(node)
+        prefixName = GetNameFromNode(nodes.Get_Prefix(node))
+        return SelectedName(node, name, prefixName)
+    elif kind == nodes.Iir_Kind.Attribute_Name:
+        name = GetNameOfNode(node)
+        prefixName = GetNameFromNode(nodes.Get_Prefix(node))
+        return AttributeName(node, name, prefixName)
+    elif kind == nodes.Iir_Kind.Parenthesis_Name:
+        prefixName = GetNameFromNode(nodes.Get_Prefix(node))
+        associations = GetAssociations(node)
+
+        return ParenthesisName(node, prefixName, associations)
+    elif kind == nodes.Iir_Kind.Selected_By_All_Name:
+        prefixName = GetNameFromNode(nodes.Get_Prefix(node))
+        return AllName(node, prefixName)
+    else:
+        raise DOMException("Unknown name kind '{kind}'".format(kind=kind.name))
+
+
+def GetAssociations(node: Iir) -> List:
+    associations = []
+    for item in utils.chain_iter(nodes.Get_Association_Chain(node)):
+        kind = GetIirKindOfNode(item)
+
+        if kind == nodes.Iir_Kind.Association_Element_By_Expression:
+            actual = nodes.Get_Actual(item)
+            expr = GetExpressionFromNode(actual)
+
+            associations.append(expr)
+        else:
+            raise DOMException(
+                "Unknown association kind '{kindName}'({kind}) in array index/slice or function call '{node}'.".format(
+                    kind=kind, kindName=kind.name, node=node
+                )
+            )
+
+    return associations
 
 
 @export
@@ -132,22 +189,19 @@ def GetArrayConstraintsFromSubtypeIndication(
     ):
         constraintKind = GetIirKindOfNode(constraint)
         if constraintKind == nodes.Iir_Kind.Range_Expression:
-            constraints.append(RangeExpression(GetRangeFromNode(constraint)))
-        elif constraintKind == nodes.Iir_Kind.Attribute_Name:
-            name = GetNameOfNode(constraint)
-            prefix = nodes.Get_Prefix(constraint)
-            name2 = GetNameOfNode(prefix)
-            kind2 = GetIirKindOfNode(prefix)
-            print(name2, kind2, name)
-
-            raise DOMException("[NOT IMPLEMENTED] Attribute name as range.")
-        elif constraintKind == nodes.Iir_Kind.Simple_Name:
-            raise DOMException("[NOT IMPLEMENTED] Subtype as range.")
+            constraints.append(RangeExpression.parse(constraint))
+        elif constraintKind in (
+            nodes.Iir_Kind.Simple_Name,
+            nodes.Iir_Kind.Parenthesis_Name,
+            nodes.Iir_Kind.Selected_Name,
+            nodes.Iir_Kind.Attribute_Name,
+        ):
+            constraints.append(GetNameFromNode(constraint))
         else:
-            position = GetPositionOfNode(constraint)
+            position = Position.parse(constraint)
             raise DOMException(
                 "Unknown constraint kind '{kind}' for constraint '{constraint}' in subtype indication '{indication}' at {file}:{line}:{column}.".format(
-                    kind=constraintKind,
+                    kind=constraintKind.name,
                     constraint=constraint,
                     indication=subTypeIndication,
                     file=position.Filename,
@@ -168,21 +222,27 @@ def GetTypeFromNode(node: Iir) -> BaseType:
     if kind == nodes.Iir_Kind.Range_Expression:
         r = GetRangeFromNode(typeDefinition)
 
-        return IntegerType(typeName, r)
+        return IntegerType(node, typeName, r)
+    elif kind == nodes.Iir_Kind.Physical_Type_Definition:
+        return PhysicalType.parse(typeName, typeDefinition)
     elif kind == nodes.Iir_Kind.Enumeration_Type_Definition:
         return EnumeratedType.parse(typeName, typeDefinition)
     elif kind == nodes.Iir_Kind.Array_Type_Definition:
         return ArrayType.parse(typeName, typeDefinition)
     elif kind == nodes.Iir_Kind.Array_Subtype_Definition:
-        print("Array_Subtype_Definition")
+        print("[NOT IMPLEMENTED] Array_Subtype_Definition")
 
-        return ArrayType
+        return ArrayType(typeDefinition, "????", [], None)
     elif kind == nodes.Iir_Kind.Record_Type_Definition:
         return RecordType.parse(typeName, typeDefinition)
     elif kind == nodes.Iir_Kind.Access_Type_Definition:
         return AccessType.parse(typeName, typeDefinition)
+    elif kind == nodes.Iir_Kind.File_Type_Definition:
+        return FileType.parse(typeName, typeDefinition)
+    elif kind == nodes.Iir_Kind.Protected_Type_Declaration:
+        return ProtectedType.parse(typeName, typeDefinition)
     else:
-        position = GetPositionOfNode(typeDefinition)
+        position = Position.parse(typeDefinition)
         raise DOMException(
             "Unknown type definition kind '{kindName}'({kind}) for type '{name}' at {file}:{line}:{column}.".format(
                 kind=kind,
@@ -207,10 +267,19 @@ def GetSubTypeIndicationFromNode(node: Iir, entity: str, name: str) -> SubTypeOr
 def GetSubTypeIndicationFromIndicationNode(
     subTypeIndicationNode: Iir, entity: str, name: str
 ) -> SubTypeOrSymbol:
+    if subTypeIndicationNode is nodes.Null_Iir:
+        print(
+            "[NOT IMPLEMENTED]: Unhandled multiple declarations for {entity} '{name}'.".format(
+                entity=entity, name=name
+            )
+        )
+        return None
     kind = GetIirKindOfNode(subTypeIndicationNode)
-    if kind == nodes.Iir_Kind.Simple_Name:
-        return GetSimpleTypeFromNode(subTypeIndicationNode)
-    elif kind == nodes.Iir_Kind.Selected_Name:
+    if kind in (
+        nodes.Iir_Kind.Simple_Name,
+        nodes.Iir_Kind.Selected_Name,
+        nodes.Iir_Kind.Attribute_Name,
+    ):
         return GetSimpleTypeFromNode(subTypeIndicationNode)
     elif kind == nodes.Iir_Kind.Subtype_Definition:
         return GetScalarConstrainedSubTypeFromNode(subTypeIndicationNode)
@@ -226,8 +295,8 @@ def GetSubTypeIndicationFromIndicationNode(
 
 @export
 def GetSimpleTypeFromNode(subTypeIndicationNode: Iir) -> SimpleSubTypeSymbol:
-    subTypeName = GetSelectedName(subTypeIndicationNode)
-    return SimpleSubTypeSymbol(subTypeName)
+    subTypeName = GetNameFromNode(subTypeIndicationNode)
+    return SimpleSubTypeSymbol(subTypeIndicationNode, subTypeName)
 
 
 @export
@@ -238,7 +307,7 @@ def GetScalarConstrainedSubTypeFromNode(
     typeMarkName = GetNameOfNode(typeMark)
     rangeConstraint = nodes.Get_Range_Constraint(subTypeIndicationNode)
     r = GetRangeFromNode(rangeConstraint)
-    return ConstrainedScalarSubTypeSymbol(typeMarkName, r)
+    return ConstrainedScalarSubTypeSymbol(subTypeIndicationNode, typeMarkName, r)
 
 
 @export
@@ -249,14 +318,16 @@ def GetCompositeConstrainedSubTypeFromNode(
     typeMarkName = GetNameOfNode(typeMark)
 
     constraints = GetArrayConstraintsFromSubtypeIndication(subTypeIndicationNode)
-    return ConstrainedCompositeSubTypeSymbol(typeMarkName, constraints)
+    return ConstrainedCompositeSubTypeSymbol(
+        subTypeIndicationNode, typeMarkName, constraints
+    )
 
 
 @export
-def GetSubTypeFromNode(node: Iir) -> SubTypeOrSymbol:
-    subTypeName = GetNameOfNode(node)
+def GetSubTypeFromNode(subTypeNode: Iir) -> SubTypeOrSymbol:
+    subTypeName = GetNameOfNode(subTypeNode)
 
-    return SubType(subTypeName)
+    return SubType(subTypeNode, subTypeName)
 
 
 @export
@@ -274,7 +345,10 @@ def GetRangeFromNode(node: Iir) -> Range:
 
 __EXPRESSION_TRANSLATION = {
     nodes.Iir_Kind.Simple_Name: SimpleObjectOrFunctionCallSymbol,
+    nodes.Iir_Kind.Selected_Name: IndexedObjectOrFunctionCallSymbol,
+    nodes.Iir_Kind.Attribute_Name: IndexedObjectOrFunctionCallSymbol,
     nodes.Iir_Kind.Parenthesis_Name: IndexedObjectOrFunctionCallSymbol,
+    nodes.Iir_Kind.Null_Literal: NullLiteral,
     nodes.Iir_Kind.Integer_Literal: IntegerLiteral,
     nodes.Iir_Kind.Floating_Point_Literal: FloatingPointLiteral,
     nodes.Iir_Kind.Physical_Int_Literal: PhysicalIntegerLiteral,
@@ -282,6 +356,7 @@ __EXPRESSION_TRANSLATION = {
     nodes.Iir_Kind.Character_Literal: CharacterLiteral,
     nodes.Iir_Kind.String_Literal8: StringLiteral,
     nodes.Iir_Kind.Negation_Operator: NegationExpression,
+    nodes.Iir_Kind.Range_Expression: RangeExpression,
     nodes.Iir_Kind.Addition_Operator: AdditionExpression,
     nodes.Iir_Kind.Concatenation_Operator: ConcatenationExpression,
     nodes.Iir_Kind.Not_Operator: InverseExpression,
@@ -322,7 +397,7 @@ def GetExpressionFromNode(node: Iir) -> Expression:
     try:
         cls = __EXPRESSION_TRANSLATION[kind]
     except KeyError:
-        position = GetPositionOfNode(node)
+        position = Position.parse(node)
         raise DOMException(
             "Unknown expression kind '{kindName}'({kind}) in expression '{expr}' at {file}:{line}:{column}.".format(
                 kind=kind,
@@ -346,11 +421,17 @@ def GetGenericsFromChainedNodes(
         if kind == nodes.Iir_Kind.Interface_Constant_Declaration:
             from pyGHDL.dom.InterfaceItem import GenericConstantInterfaceItem
 
-            genericConstant = GenericConstantInterfaceItem.parse(generic)
-
-            yield genericConstant
+            yield GenericConstantInterfaceItem.parse(generic)
+        elif kind == nodes.Iir_Kind.Interface_Type_Declaration:
+            print("[NOT IMPLEMENTED] generic type")
+        elif kind == nodes.Iir_Kind.Interface_Package_Declaration:
+            print("[NOT IMPLEMENTED] generic package")
+        elif kind == nodes.Iir_Kind.Interface_Procedure_Declaration:
+            print("[NOT IMPLEMENTED] generic procedure")
+        elif kind == nodes.Iir_Kind.Interface_Function_Declaration:
+            print("[NOT IMPLEMENTED] generic function")
         else:
-            position = GetPositionOfNode(generic)
+            position = Position.parse(generic)
             raise DOMException(
                 "Unknown generic kind '{kindName}'({kind}) in generic '{generic}' at {file}:{line}:{column}.".format(
                     kind=kind,
@@ -376,7 +457,7 @@ def GetPortsFromChainedNodes(
 
             yield portSignal
         else:
-            position = GetPositionOfNode(port)
+            position = Position.parse(port)
             raise DOMException(
                 "Unknown port kind '{kindName}'({kind}) in port '{port}' at {file}:{line}:{column}.".format(
                     kind=kind,
@@ -407,8 +488,12 @@ def GetParameterFromChainedNodes(
             from pyGHDL.dom.InterfaceItem import ParameterSignalInterfaceItem
 
             yield ParameterSignalInterfaceItem.parse(parameter)
+        elif kind == nodes.Iir_Kind.Interface_File_Declaration:
+            from pyGHDL.dom.InterfaceItem import ParameterFileInterfaceItem
+
+            yield ParameterFileInterfaceItem.parse(parameter)
         else:
-            position = GetPositionOfNode(parameter)
+            position = Position.parse(parameter)
             raise DOMException(
                 "Unknown parameter kind '{kindName}'({kind}) in parameter '{param}' at {file}:{line}:{column}.".format(
                     kind=kind,
@@ -437,11 +522,16 @@ def GetDeclaredItemsFromChainedNodes(
             if nodes.Get_Shared_Flag(item):
                 yield SharedVariable.parse(item)
             else:
-                raise DOMException("Found non-shared variable.")
+                yield Variable.parse(item)
+        #                raise DOMException("Found non-shared variable.")
         elif kind == nodes.Iir_Kind.Signal_Declaration:
             from pyGHDL.dom.Object import Signal
 
             yield Signal.parse(item)
+        elif kind == nodes.Iir_Kind.File_Declaration:
+            from pyGHDL.dom.Object import File
+
+            yield File.parse(item)
         elif kind == nodes.Iir_Kind.Type_Declaration:
             yield GetTypeFromNode(item)
         elif kind == nodes.Iir_Kind.Anonymous_Type_Declaration:
@@ -458,18 +548,41 @@ def GetDeclaredItemsFromChainedNodes(
         elif kind == nodes.Iir_Kind.Procedure_Body:
             #                procedureName = NodeToName(item)
             print("found procedure body '{name}'".format(name="????"))
+        elif kind == nodes.Iir_Kind.Protected_Type_Body:
+            yield ProtectedTypeBody.parse(item)
         elif kind == nodes.Iir_Kind.Object_Alias_Declaration:
             yield GetAliasFromNode(item)
         elif kind == nodes.Iir_Kind.Component_Declaration:
             from pyGHDL.dom.DesignUnit import Component
 
             yield Component.parse(item)
+        elif kind == nodes.Iir_Kind.Attribute_Declaration:
+            from pyGHDL.dom.Attribute import Attribute
+
+            yield Attribute.parse(item)
+        elif kind == nodes.Iir_Kind.Attribute_Specification:
+            from pyGHDL.dom.Attribute import AttributeSpecification
+
+            yield AttributeSpecification.parse(item)
+        elif kind == nodes.Iir_Kind.Use_Clause:
+            from pyGHDL.dom.DesignUnit import UseClause
+
+            yield UseClause.parse(item)
+        elif kind == nodes.Iir_Kind.Package_Instantiation_Declaration:
+            from pyGHDL.dom.DesignUnit import PackageInstantiation
+
+            yield PackageInstantiation.parse(item)
+        elif kind == nodes.Iir_Kind.Configuration_Specification:
+            print(
+                "[NOT IMPLEMENTED] Configuration specification in {name}".format(
+                    name=name
+                )
+            )
         else:
-            position = GetPositionOfNode(item)
+            position = Position.parse(item)
             raise DOMException(
-                "Unknown declared item kind '{kindName}'({kind}) in {entity} '{name}' at {file}:{line}:{column}.".format(
-                    kind=kind,
-                    kindName=kind.name,
+                "Unknown declared item kind '{kind}' in {entity} '{name}' at {file}:{line}:{column}.".format(
+                    kind=kind.name,
                     entity=entity,
                     name=name,
                     file=position.Filename,
@@ -479,7 +592,7 @@ def GetDeclaredItemsFromChainedNodes(
             )
 
 
-def GetAliasFromNode(node: Iir):
-    aliasName = GetNameOfNode(node)
+def GetAliasFromNode(aliasNode: Iir):
+    aliasName = GetNameOfNode(aliasNode)
 
-    return Alias(aliasName)
+    return Alias(aliasNode, aliasName)

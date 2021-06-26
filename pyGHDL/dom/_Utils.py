@@ -32,15 +32,13 @@
 # ============================================================================
 from pydecor import export
 
-from pyGHDL.dom.Common import DOMException
 from pyVHDLModel.VHDLModel import Mode
 
 from pyGHDL.libghdl import LibGHDLException, name_table, files_map, errorout_memory
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.libghdl.vhdl.nodes import Null_Iir
 from pyGHDL.libghdl._types import Iir
-from pyGHDL.dom.Misc import Position
-
+from pyGHDL.dom import DOMException
 
 __all__ = []
 
@@ -60,7 +58,8 @@ def CheckForErrors() -> None:
     if errorCount != 0:
         for i in range(errorCount):
             rec = errorout_memory.Get_Error_Record(i + 1)
-            fileName = name_table.Get_Name_Ptr(files_map.Get_File_Name(rec.file))
+            # FIXME: needs help from @tgingold
+            fileName = ""  # name_table.Get_Name_Ptr(files_map.Get_File_Name(rec.file))
             message = errorout_memory.Get_Error_Message(i + 1)
 
             errors.append(
@@ -77,9 +76,8 @@ def CheckForErrors() -> None:
 @export
 def GetIirKindOfNode(node: Iir) -> nodes.Iir_Kind:
     """Return the kind of a node in the IIR tree."""
-
     if node == Null_Iir:
-        raise ValueError("Parameter 'node' must not be 'Null_iir'.")
+        raise ValueError("GetIirKindOfNode: Parameter 'node' must not be 'Null_iir'.")
 
     kind: int = nodes.Get_Kind(node)
     return nodes.Iir_Kind(kind)
@@ -88,56 +86,20 @@ def GetIirKindOfNode(node: Iir) -> nodes.Iir_Kind:
 @export
 def GetNameOfNode(node: Iir) -> str:
     """Return the python string from node :obj:`node` identifier."""
-
     if node == Null_Iir:
-        raise ValueError("Parameter 'node' must not be 'Null_iir'.")
+        raise ValueError("GetNameOfNode: Parameter 'node' must not be 'Null_iir'.")
 
     identifier = nodes.Get_Identifier(node)
     return name_table.Get_Name_Ptr(identifier)
 
 
 @export
-def GetSelectedName(node: Iir):
-    names = []
-    kind = GetIirKindOfNode(node)
-    if kind == nodes.Iir_Kind.Simple_Name:
-        return GetNameOfNode(node)
-
-    while kind != nodes.Iir_Kind.Simple_Name:
-        names.append(GetNameOfNode(node))
-        node = nodes.Get_Prefix(node)
-        kind = GetIirKindOfNode(node)
-
-    names.append(GetNameOfNode(node))
-
-    return reversed(names)
-
-
-@export
 def GetModeOfNode(node: Iir) -> Mode:
     """Return the mode of a :obj:`node`."""
-
     if node == Null_Iir:
-        raise ValueError("Parameter 'node' must not be 'Null_iir'.")
+        raise ValueError("GetModeOfNode: Parameter 'node' must not be 'Null_iir'.")
 
     try:
         return __MODE_TRANSLATION[nodes.Get_Mode(node)]
     except KeyError:
         raise LibGHDLException("Unknown mode.")
-
-
-@export
-def GetPositionOfNode(node: Iir) -> Position:
-    """Return the source code position of a IIR node."""
-
-    if node == Null_Iir:
-        raise ValueError("Parameter 'node' must not be 'Null_iir'.")
-
-    location = nodes.Get_Location(node)
-    file = files_map.Location_To_File(location)
-    fileName = name_table.Get_Name_Ptr(files_map.Get_File_Name(file))
-    #    position = files_map.Location_File_To_Pos(location, file)
-    line = files_map.Location_File_To_Line(location, file)
-    column = files_map.Location_File_Line_To_Offset(location, file, line)
-
-    return Position(fileName, line, column)

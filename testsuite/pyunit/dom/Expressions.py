@@ -30,17 +30,20 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+import ctypes
+from inspect import currentframe
 from pathlib import Path
 from textwrap import dedent
 from unittest import TestCase
 
-from pyGHDL.dom.DesignUnit import Package
 
 from pyGHDL.dom import Expression
 from pyGHDL.dom.NonStandard import Design, Document
+from pyGHDL.dom.DesignUnit import Package
 from pyGHDL.dom.Symbol import SimpleObjectOrFunctionCallSymbol
 from pyGHDL.dom.Object import Constant
-from pyGHDL.dom.Expression import InverseExpression
+from pyGHDL.dom.Expression import InverseExpression, AbsoluteExpression
+
 
 if __name__ == "__main__":
     print("ERROR: you called a testcase declaration file as an executable module.")
@@ -50,33 +53,59 @@ if __name__ == "__main__":
 
 class Expressions(TestCase):
     _root = Path(__file__).resolve().parent.parent
-
-    def test_NotExpression(self):
-        self._filename: Path = self._root / "{className}.vhdl".format(
-            className=self.__class__.__name__
-        )
-
-        sourceCode = dedent(
+    _design = Design()
+    _packageTemplate = dedent(
             """\
             package package_1 is
-              constant c0 : boolean := not true;
+              {code}
             end package;
             """
         )
 
-        with self._filename.open(mode="w", encoding="utf-8") as file:
-            file.write(sourceCode)
+    def parse(self, filename: Path, code: str) -> Expression:
+        sourceCode = self._packageTemplate.format(code=code)
 
-        design = Design()
-        document = Document(self._filename)
-        design.Documents.append(document)
+        document = Document(filename, sourceCode)
+        self._design.Documents.append(document)
 
-        package: Package = design.Documents[0].Packages[0]
+        # Traverse already to default value expression
+        package: Package = document.Packages[0]
         item: Constant = package.DeclaredItems[0]
         default: Expression = item.DefaultExpression
+
+        return default
+
+    def test_NotExpression(self):
+        filename: Path = self._root / "{className}_{funcName}.vhdl".format(
+            className=self.__class__.__name__, funcName= currentframe().f_code.co_name[5:]
+        )
+
+        # Define test data
+        constantDeclartion = "constant c0 : boolean := not true;"
+
+        # Parse in-memory
+        default: Expression = self.parse(filename, constantDeclartion)
+
+        # Start checks
         self.assertTrue(isinstance(default, InverseExpression))
         self.assertTrue(isinstance(default.Operand, SimpleObjectOrFunctionCallSymbol))
         self.assertTrue(default.Operand.SymbolName == "true")
+
+    # def test_AbsExpression(self):
+    #     filename: Path = self._root / "{className}_{funcName}.vhdl".format(
+    #         className=self.__class__.__name__, funcName= currentframe().f_code.co_name[5:]
+    #     )
+    #
+    #     # Define test data
+    #     constantDeclartion = "constant c0 : integer := abs 3;"
+    #
+    #     # Parse in-memory
+    #     default: Expression = self.parse(filename, constantDeclartion)
+    #
+    #     # Start checks
+    #     self.assertTrue(isinstance(default, AbsoluteExpression))
+    #     self.assertTrue(isinstance(default.Operand, SimpleObjectOrFunctionCallSymbol))
+    #     self.assertTrue(default.Operand.SymbolName == "-3")
 
     # def test_Aggregare(self):
     #     self._filename: Path = self._root / "{className}.vhdl".format(className=self.__class__.__name__)

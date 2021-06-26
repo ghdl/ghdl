@@ -30,10 +30,10 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-from pyGHDL.libghdl._types import Iir
 from pydecor import export
 
 from pyVHDLModel.VHDLModel import (
+    NullLiteral as VHDLModel_NullLiteral,
     EnumerationLiteral as VHDLModel_EnumerationLiteral,
     IntegerLiteral as VHDLModel_IntegerLiteral,
     FloatingPointLiteral as VHDLModel_FloatingPointLiteral,
@@ -43,71 +43,112 @@ from pyVHDLModel.VHDLModel import (
     StringLiteral as VHDLModel_StringLiteral,
 )
 from pyGHDL.libghdl import name_table
+from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
+from pyGHDL.dom import DOMMixin
 from pyGHDL.dom._Utils import GetNameOfNode
 
 __all__ = []
 
 
 @export
-class EnumerationLiteral(VHDLModel_EnumerationLiteral):
+class NullLiteral(VHDLModel_NullLiteral, DOMMixin):
+    def __init__(self, node: Iir):
+        super().__init__()
+        DOMMixin.__init__(self, node)
+
+    @classmethod
+    def parse(cls, node: Iir) -> "NullLiteral":
+        return cls(node)
+
+
+@export
+class EnumerationLiteral(VHDLModel_EnumerationLiteral, DOMMixin):
+    def __init__(self, node: Iir, value: str):
+        super().__init__(value)
+        DOMMixin.__init__(self, node)
+
     @classmethod
     def parse(cls, literalNode: Iir) -> "EnumerationLiteral":
         literalName = GetNameOfNode(literalNode)
-        return cls(literalName)
+        return cls(literalNode, literalName)
 
 
 @export
-class IntegerLiteral(VHDLModel_IntegerLiteral):
+class IntegerLiteral(VHDLModel_IntegerLiteral, DOMMixin):
+    def __init__(self, node: Iir, value: int):
+        super().__init__(value)
+        DOMMixin.__init__(self, node)
+
     @classmethod
-    def parse(cls, node: Iir) -> "IntegerLiteral":
-        value = nodes.Get_Value(node)
-        return cls(value)
+    def parse(cls, literalNode: Iir) -> "IntegerLiteral":
+        value = nodes.Get_Value(literalNode)
+        return cls(literalNode, value)
 
 
 @export
-class FloatingPointLiteral(VHDLModel_FloatingPointLiteral):
+class FloatingPointLiteral(VHDLModel_FloatingPointLiteral, DOMMixin):
+    def __init__(self, node: Iir, value: float):
+        super().__init__(value)
+        DOMMixin.__init__(self, node)
+
     @classmethod
-    def parse(cls, node: Iir) -> "FloatingPointLiteral":
-        value = nodes.Get_Fp_Value(node)
-        return cls(value)
+    def parse(cls, literalNode: Iir) -> "FloatingPointLiteral":
+        value = nodes.Get_Fp_Value(literalNode)
+        return cls(literalNode, value)
 
 
 @export
-class PhysicalIntegerLiteral(VHDLModel_PhysicalIntegerLiteral):
+class PhysicalIntegerLiteral(VHDLModel_PhysicalIntegerLiteral, DOMMixin):
+    def __init__(self, node: Iir, value: int, unitName: str):
+        super().__init__(value, unitName)
+        DOMMixin.__init__(self, node)
+
     @classmethod
-    def parse(cls, node: Iir) -> "PhysicalIntegerLiteral":
-        value = nodes.Get_Value(node)
-        unit = nodes.Get_Unit_Name(node)
+    def parse(cls, literalNode: Iir) -> "PhysicalIntegerLiteral":
+        value = nodes.Get_Value(literalNode)
+        unit = nodes.Get_Unit_Name(literalNode)
         unitName = GetNameOfNode(unit)
 
-        return cls(value, unitName)
+        return cls(literalNode, value, unitName)
 
 
 @export
-class PhysicalFloatingLiteral(VHDLModel_PhysicalFloatingLiteral):
+class PhysicalFloatingLiteral(VHDLModel_PhysicalFloatingLiteral, DOMMixin):
+    def __init__(self, node: Iir, value: int, unitName: float):
+        super().__init__(value, unitName)
+        DOMMixin.__init__(self, node)
+
     @classmethod
-    def parse(cls, node: Iir) -> "PhysicalFloatingLiteral":
-        value = nodes.Get_Fp_Value(node)
-        unit = nodes.Get_Unit_Name(node)
+    def parse(cls, literalNode: Iir) -> "PhysicalFloatingLiteral":
+        value = nodes.Get_Fp_Value(literalNode)
+        unit = nodes.Get_Unit_Name(literalNode)
         unitName = GetNameOfNode(unit)
 
-        return cls(value, unitName)
+        return cls(literalNode, value, unitName)
 
 
 @export
-class CharacterLiteral(VHDLModel_CharacterLiteral):
+class CharacterLiteral(VHDLModel_CharacterLiteral, DOMMixin):
+    def __init__(self, node: Iir, value: str):
+        super().__init__(value)
+        DOMMixin.__init__(self, node)
+
     @classmethod
-    def parse(cls, node: Iir) -> "CharacterLiteral":
-        identifier = nodes.Get_Identifier(node)
+    def parse(cls, literalNode: Iir) -> "CharacterLiteral":
+        identifier = nodes.Get_Identifier(literalNode)
         value = name_table.Get_Character(identifier)
-        return cls(value)
+        return cls(literalNode, value)
 
 
 @export
-class StringLiteral(VHDLModel_StringLiteral):
+class StringLiteral(VHDLModel_StringLiteral, DOMMixin):
+    def __init__(self, node: Iir, value: str):
+        super().__init__(value)
+        DOMMixin.__init__(self, node)
+
     @classmethod
-    def parse(cls, node: Iir) -> "StringLiteral":
-        stringID = nodes.Get_String8_Id(node)
+    def parse(cls, literalNode: Iir) -> "StringLiteral":
+        stringID = nodes.Get_String8_Id(literalNode)
         value = name_table.Get_Name_Ptr(stringID)
-        return cls(value)
+        return cls(literalNode, value)

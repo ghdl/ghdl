@@ -50,6 +50,7 @@ packagePath = Path(packageName)
 readmeFile = packagePath / "README.md"
 requirementsFile = packagePath / "requirements.txt"
 
+
 # Read (local) README for upload to PyPI
 def get_description(file: Path) -> str:
     with file.open("r") as fh:
@@ -80,7 +81,7 @@ def get_version():
         match = pattern.match(line)
         if match:
             return match.group(1)
-    except:
+    except Exception:
         pass
 
     raise Exception("Cannot find version")

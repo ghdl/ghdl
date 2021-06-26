@@ -31,9 +31,9 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
 from typing import List, Iterator
+
 from pydecor import export
 
-from pyGHDL.dom.Range import Range
 from pyVHDLModel.VHDLModel import (
     EntitySymbol as VHDLModel_EntitySymbol,
     SimpleSubTypeSymbol as VHDLModel_SimpleSubTypeSymbol,
@@ -43,91 +43,91 @@ from pyVHDLModel.VHDLModel import (
     SimpleObjectOrFunctionCallSymbol as VHDLModel_SimpleObjectOrFunctionCallSymbol,
     IndexedObjectOrFunctionCallSymbol as VHDLModel_IndexedObjectOrFunctionCallSymbol,
     Constraint,
+    Name,
 )
+from pyGHDL.libghdl._types import Iir
+from pyGHDL.dom import DOMMixin
+from pyGHDL.dom._Utils import GetNameOfNode
+from pyGHDL.dom.Range import Range
 
-from pyGHDL.libghdl import utils
-from pyGHDL.libghdl.vhdl import nodes
-from pyGHDL.dom._Utils import GetIirKindOfNode, GetNameOfNode
-from pyGHDL.dom.Common import DOMException
 
 __all__ = []
 
 
 @export
-class EntitySymbol(VHDLModel_EntitySymbol):
-    def __init__(self, entityName: str):
+class EntitySymbol(VHDLModel_EntitySymbol, DOMMixin):
+    def __init__(self, node: Iir, entityName: str):
         super().__init__(entityName)
+        DOMMixin.__init__(self, node)
 
 
 @export
-class EnumerationLiteralSymbol(VHDLModel_EnumerationLiteralSymbol):
-    def __init__(self, literalName: str):
+class EnumerationLiteralSymbol(VHDLModel_EnumerationLiteralSymbol, DOMMixin):
+    def __init__(self, node: Iir, literalName: str):
         super().__init__(symbolName=literalName)
+        DOMMixin.__init__(self, node)
 
 
 @export
-class SimpleSubTypeSymbol(VHDLModel_SimpleSubTypeSymbol):
-    def __init__(self, subTypeName: str):
+class SimpleSubTypeSymbol(VHDLModel_SimpleSubTypeSymbol, DOMMixin):
+    def __init__(self, node: Iir, subTypeName: Name):
         if isinstance(subTypeName, (List, Iterator)):
             subTypeName = ".".join(subTypeName)
 
         super().__init__(subTypeName=subTypeName)
+        DOMMixin.__init__(self, node)
 
 
 @export
-class ConstrainedScalarSubTypeSymbol(VHDLModel_ConstrainedScalarSubTypeSymbol):
-    def __init__(self, subTypeName: str, range: Range = None):
+class ConstrainedScalarSubTypeSymbol(
+    VHDLModel_ConstrainedScalarSubTypeSymbol, DOMMixin
+):
+    def __init__(self, node: Iir, subTypeName: str, range: Range = None):
         super().__init__(subTypeName=subTypeName, range=range)
+        DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, node):
+    def parse(cls, node: Iir):
         pass
 
 
 @export
-class ConstrainedCompositeSubTypeSymbol(VHDLModel_ConstrainedCompositeSubTypeSymbol):
-    def __init__(self, subTypeName: str, constraints: List[Constraint] = None):
+class ConstrainedCompositeSubTypeSymbol(
+    VHDLModel_ConstrainedCompositeSubTypeSymbol, DOMMixin
+):
+    def __init__(
+        self, node: Iir, subTypeName: str, constraints: List[Constraint] = None
+    ):
         super().__init__(subTypeName=subTypeName, constraints=constraints)
+        DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, node):
+    def parse(cls, node: Iir):
         pass
 
 
 @export
-class SimpleObjectOrFunctionCallSymbol(VHDLModel_SimpleObjectOrFunctionCallSymbol):
+class SimpleObjectOrFunctionCallSymbol(
+    VHDLModel_SimpleObjectOrFunctionCallSymbol, DOMMixin
+):
     @classmethod
-    def parse(cls, node):
+    def parse(cls, node: Iir):
         name = GetNameOfNode(node)
         return cls(name)
 
 
 @export
-class IndexedObjectOrFunctionCallSymbol(VHDLModel_IndexedObjectOrFunctionCallSymbol):
-    def __init__(self, name: str, associations: List):
+class IndexedObjectOrFunctionCallSymbol(
+    VHDLModel_IndexedObjectOrFunctionCallSymbol, DOMMixin
+):
+    def __init__(self, node: Iir, name: str):
         super().__init__(objectName=name)
+        DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, node):
-        from pyGHDL.dom._Translate import GetExpressionFromNode
+    def parse(cls, node: Iir):
+        from pyGHDL.dom._Translate import GetExpressionFromNode, GetNameFromNode
 
-        prefix = nodes.Get_Prefix(node)
-        name = GetNameOfNode(prefix)
+        name = GetNameFromNode(node)
 
-        associations = []
-        for item in utils.chain_iter(nodes.Get_Association_Chain(node)):
-            kind = GetIirKindOfNode(item)
-
-            if kind == nodes.Iir_Kind.Association_Element_By_Expression:
-                actual = nodes.Get_Actual(item)
-                expr = GetExpressionFromNode(actual)
-
-                associations.append(expr)
-            else:
-                raise DOMException(
-                    "Unknown association kind '{kindName}'({kind}) in array index/slice or function call '{node}'.".format(
-                        kind=kind, kindName=kind.name, node=node
-                    )
-                )
-
-        return cls(name, associations)
+        return cls(node, name)

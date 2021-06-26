@@ -39,18 +39,26 @@ This module contains all DOM classes for VHDL's design units (:class:`context <E
 
 
 """
+from typing import List
+
+from pyGHDL.dom import DOMMixin
 from pyGHDL.libghdl._types import Iir
 from pydecor import export
 
 from pyVHDLModel.VHDLModel import (
+    UseClause as VHDLModel_UseClause,
     Entity as VHDLModel_Entity,
-    EntityOrSymbol,
     Architecture as VHDLModel_Architecture,
     Package as VHDLModel_Package,
     PackageBody as VHDLModel_PackageBody,
+    PackageInstantiation as VHDLModel_PackageInstantiation,
     Context as VHDLModel_Context,
     Configuration as VHDLModel_Configuration,
     Component as VHDLModel_Component,
+    GenericInterfaceItem,
+    PortInterfaceItem,
+    EntityOrSymbol,
+    Name,
 )
 
 from pyGHDL.libghdl.vhdl import nodes
@@ -67,7 +75,35 @@ __all__ = []
 
 
 @export
-class Entity(VHDLModel_Entity):
+class UseClause(VHDLModel_UseClause, DOMMixin):
+    def __init__(self, node: Iir, name: str):
+        super().__init__(name)
+        DOMMixin.__init__(self, node)
+
+    @classmethod
+    def parse(cls, useNode: Iir):
+        from pyGHDL.dom._Translate import GetNameFromNode
+
+        selectedName = nodes.Get_Selected_Name(useNode)
+        name = GetNameFromNode(selectedName)
+
+        return cls(useNode, name)
+
+
+@export
+class Entity(VHDLModel_Entity, DOMMixin):
+    def __init__(
+        self,
+        node: Iir,
+        name: str,
+        genericItems: List[GenericInterfaceItem] = None,
+        portItems: List[PortInterfaceItem] = None,
+        declaredItems: List = None,
+        bodyItems: List["ConcurrentStatement"] = None,
+    ):
+        super().__init__(name, genericItems, portItems, declaredItems, bodyItems)
+        DOMMixin.__init__(self, node)
+
     @classmethod
     def parse(cls, entityNode: Iir):
         name = GetNameOfNode(entityNode)
@@ -78,55 +114,102 @@ class Entity(VHDLModel_Entity):
         )
         bodyItems = []
 
-        return cls(name, generics, ports, declaredItems, bodyItems)
+        return cls(entityNode, name, generics, ports, declaredItems, bodyItems)
 
 
 @export
-class Architecture(VHDLModel_Architecture):
+class Architecture(VHDLModel_Architecture, DOMMixin):
+    def __init__(
+        self,
+        node: Iir,
+        name: str,
+        entity: EntityOrSymbol,
+        declaredItems: List = None,
+        bodyItems: List["ConcurrentStatement"] = None,
+    ):
+        super().__init__(name, entity, declaredItems, bodyItems)
+        DOMMixin.__init__(self, node)
+
     @classmethod
     def parse(cls, architectureNode: Iir):
         name = GetNameOfNode(architectureNode)
-        entityName = GetNameOfNode(nodes.Get_Entity_Name(architectureNode))
-        entity = EntitySymbol(entityName)
+        entityNameNode = nodes.Get_Entity_Name(architectureNode)
+        entityName = GetNameOfNode(entityNameNode)
+        entity = EntitySymbol(entityNameNode, entityName)
         declaredItems = GetDeclaredItemsFromChainedNodes(
             nodes.Get_Declaration_Chain(architectureNode), "architecture", name
         )
         bodyItems = []
 
-        return cls(name, entity, declaredItems, bodyItems)
+        return cls(architectureNode, name, entity, declaredItems, bodyItems)
 
     def resolve(self):
         pass
 
 
 @export
-class Component(VHDLModel_Component):
+class Component(VHDLModel_Component, DOMMixin):
+    def __init__(
+        self,
+        node: Iir,
+        name: str,
+        genericItems: List[GenericInterfaceItem] = None,
+        portItems: List[PortInterfaceItem] = None,
+    ):
+        super().__init__(name, genericItems, portItems)
+        DOMMixin.__init__(self, node)
+
     @classmethod
     def parse(cls, componentNode: Iir):
         name = GetNameOfNode(componentNode)
         generics = GetGenericsFromChainedNodes(nodes.Get_Generic_Chain(componentNode))
         ports = GetPortsFromChainedNodes(nodes.Get_Port_Chain(componentNode))
 
-        return cls(name, generics, ports)
+        return cls(componentNode, name, generics, ports)
 
 
 @export
-class Package(VHDLModel_Package):
+class Package(VHDLModel_Package, DOMMixin):
+    def __init__(
+        self,
+        node: Iir,
+        name: str,
+        genericItems: List[GenericInterfaceItem] = None,
+        declaredItems: List = None,
+    ):
+        super().__init__(name, genericItems, declaredItems)
+        DOMMixin.__init__(self, node)
+
     @classmethod
     def parse(cls, packageNode: Iir):
         name = GetNameOfNode(packageNode)
-        generics = (
-            None  # GetGenericsFromChainedNodes(nodes.Get_Generic_Chain(packageNode))
-        )
+
+        packageHeader = nodes.Get_Package_Header(packageNode)
+        if packageHeader is not nodes.Null_Iir:
+            generics = GetGenericsFromChainedNodes(
+                nodes.Get_Generic_Chain(packageHeader)
+            )
+        else:
+            generics = []
+
         declaredItems = GetDeclaredItemsFromChainedNodes(
             nodes.Get_Declaration_Chain(packageNode), "package", name
         )
 
-        return cls(name, generics, declaredItems)
+        return cls(packageNode, name, generics, declaredItems)
 
 
 @export
-class PackageBody(VHDLModel_PackageBody):
+class PackageBody(VHDLModel_PackageBody, DOMMixin):
+    def __init__(
+        self,
+        node: Iir,
+        name: str,
+        declaredItems: List = None,
+    ):
+        super().__init__(name, declaredItems)
+        DOMMixin.__init__(self, node)
+
     @classmethod
     def parse(cls, packageBodyNode: Iir):
         name = GetNameOfNode(packageBodyNode)
@@ -134,20 +217,65 @@ class PackageBody(VHDLModel_PackageBody):
             nodes.Get_Declaration_Chain(packageBodyNode), "package", name
         )
 
-        return cls(name, declaredItems)
+        return cls(packageBodyNode, name, declaredItems)
 
 
 @export
-class Context(VHDLModel_Context):
+class PackageInstantiation(VHDLModel_PackageInstantiation, DOMMixin):
+    def __init__(
+        self,
+        node: Iir,
+        name: str,
+        uninstantiatedPackageName: Name,
+        #        genericItems: List[GenericInterfaceItem] = None,
+    ):
+        super().__init__(name, uninstantiatedPackageName)
+        DOMMixin.__init__(self, node)
+
     @classmethod
-    def parse(cls, libraryUnit: Iir):
-        name = GetNameOfNode(libraryUnit)
-        return cls(name)
+    def parse(cls, packageNode: Iir):
+        name = GetNameOfNode(packageNode)
+        uninstantiatedPackageName = nodes.Get_Uninstantiated_Package_Name(packageNode)
+
+        # FIXME: read generics
+        # FIXME: read generic map
+
+        return cls(packageNode, name, uninstantiatedPackageName)
 
 
 @export
-class Configuration(VHDLModel_Configuration):
+class Context(VHDLModel_Context, DOMMixin):
+    def __init__(
+        self,
+        node: Iir,
+        name: str,
+    ):
+        super().__init__(name)
+        DOMMixin.__init__(self, node)
+
     @classmethod
-    def parse(cls, configuration: Iir):
-        name = GetNameOfNode(configuration)
-        return cls(name)
+    def parse(cls, contextNode: Iir):
+        name = GetNameOfNode(contextNode)
+
+        # FIXME: read use clauses
+
+        return cls(contextNode, name)
+
+
+@export
+class Configuration(VHDLModel_Configuration, DOMMixin):
+    def __init__(
+        self,
+        node: Iir,
+        name: str,
+    ):
+        super().__init__(name)
+        DOMMixin.__init__(self, node)
+
+    @classmethod
+    def parse(cls, configurationNode: Iir):
+        name = GetNameOfNode(configurationNode)
+
+        # FIXME: needs an implementation
+
+        return cls(configurationNode, name)

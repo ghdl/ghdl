@@ -4,12 +4,13 @@ from sys import argv
 from sys import exit as sysexit
 
 from pathlib import Path
+from textwrap import dedent
 
 from pydecor import export
 
 from pyGHDL import GHDLBaseException
 from pyGHDL.libghdl import LibGHDLException
-from pyGHDL.dom.Common import DOMException
+from pyGHDL.dom import DOMException
 from pyGHDL.dom.NonStandard import Design, Document
 from pyGHDL.dom.formatting.prettyprint import PrettyPrint, PrettyPrintException
 
@@ -41,6 +42,19 @@ class Application:
 
         print("\n".join(buffer))
 
+        document: Document = self._design.Documents[0]
+        print()
+        print(
+            "libghdl processing time: {: 5.3f} us".format(
+                document.LibGHDLProcessingTime * 10 ** 6
+            )
+        )
+        print(
+            "DOM translation time:    {:5.3f} us".format(
+                document.DOMTranslationTime * 10 ** 6
+            )
+        )
+
 
 def handleException(ex):
     if isinstance(ex, PrettyPrintException):
@@ -52,6 +66,7 @@ def handleException(ex):
         if ex2 is not None:
             for message in ex2.InternalErrors:
                 print("libghdl: {message}".format(message=message))
+            return 0
         return 4
     elif isinstance(ex, LibGHDLException):
         print("LIB:", ex)
@@ -81,8 +96,23 @@ def main(items=argv[1:]):
             app = Application()
             app.addFile(Path(item), "default_lib")
             app.prettyPrint()
-        except Exception as ex:
+        except GHDLBaseException as ex:
             _exitcode = handleException(ex)
+        except Exception as ex:
+            print(
+                dedent(
+                    """\
+                    Fatal: An unhandled exception has reached to the top-most exception handler.
+                    Exception: {name}
+                    """.format(
+                        name=ex.__class__.__name__
+                    )
+                )
+            )
+            if isinstance(ex, ValueError):
+                print("  Message: {msg}".format(msg=str(ex)))
+            if ex.__cause__ is not None:
+                print("Cause:     {msg}".format(msg=str(ex.__cause__)))
 
     return _exitcode
 

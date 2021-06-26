@@ -30,10 +30,12 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-from sys import executable
-from subprocess import check_call, STDOUT
 from pathlib import Path
+from subprocess import check_call, STDOUT
+
 from pytest import mark
+
+from pyGHDL.dom.NonStandard import Design, Document
 
 if __name__ == "__main__":
     print("ERROR: you called a testcase declaration file as an executable module.")
@@ -44,7 +46,12 @@ _TESTSUITE_ROOT = Path(__file__).parent.parent.parent.resolve()
 _GHDL_ROOT = _TESTSUITE_ROOT.parent
 
 
+design = Design()
+
 @mark.xfail
-@mark.parametrize("file", [str(f) for f in _TESTSUITE_ROOT.glob("sanity/**/*.vhdl")])
+@mark.parametrize("file", [str(f.relative_to(_TESTSUITE_ROOT)) for f in _TESTSUITE_ROOT.glob("sanity/**/*.vhdl")])
 def test_AllVHDLSources(file):
-    check_call([executable, _GHDL_ROOT / "pyGHDL/cli/DOM.py", file], stderr=STDOUT)
+    check_call(["python", _GHDL_ROOT / "pyGHDL/cli/DOM.py", file], stderr=STDOUT)
+
+#    document = Document(Path(file))
+#    design.Documents.append(document)

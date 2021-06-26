@@ -32,7 +32,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
 
-from ctypes import c_int32, c_char_p, c_bool
+from ctypes import c_int32, c_char_p, c_bool, c_uint32
 
 from pydecor import export
 
@@ -113,7 +113,7 @@ def Fill_Text(File: SourceFileEntry, Text_Pointer, Text_Length: int) -> None:
 @export
 # @BindToLibGHDL("files_map__editor__check_buffer_content")
 def Check_Buffer_Content(
-    File: SourceFileEntry, String_Pointer, String_Length: int
+    File: SourceFileEntry, String_Pointer: c_char_p, String_Length: c_uint32
 ) -> None:
     """
     Check that content of :obj:`File` is STR[1 .. STR_LEN].

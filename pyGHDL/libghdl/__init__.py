@@ -87,7 +87,7 @@ def _check_libghdl_bindir(bindir: Path, basename: Path) -> Path:
 
 
 def _get_libghdl_path():
-    """
+    """\
     Locate the directory where the shared library is installed.
 
     Search order:
@@ -182,7 +182,7 @@ def initialize() -> None:
 @export
 # @BindToLibGHDL("libghdl__set_option")
 def set_option(Opt: str) -> bool:
-    """
+    """\
     Set option :obj:`opt`.
 
     :param Opt: Option to set.
@@ -195,7 +195,7 @@ def set_option(Opt: str) -> bool:
 @export
 # @BindToLibGHDL("libghdl__analyze_init")
 def analyze_init() -> None:
-    """
+    """\
     Initialize the analyzer.
 
     .. deprecated:: 1.0.0
@@ -207,7 +207,7 @@ def analyze_init() -> None:
 @export
 # @BindToLibGHDL("libghdl__analyze_init_status")
 def analyze_init_status() -> int:
-    """
+    """\
     Initialize the analyzer.
 
     :return: Returns 0 in case of success.
@@ -218,7 +218,7 @@ def analyze_init_status() -> int:
 @export
 # @BindToLibGHDL("libghdl__analyze_file")
 def analyze_file(fname: str) -> Iir:
-    """
+    """\
     Analyze a given filename :obj:`fname`.
 
     :param fname: File name
