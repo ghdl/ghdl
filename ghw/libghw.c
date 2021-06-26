@@ -655,7 +655,7 @@ ghw_read_type (struct ghw_handler *h)
       if (t == EOF)
 	return -1;
       if (h->flag_verbose > 1)
-	printf ("type[%d]= %d\n", i, t);
+	printf ("type[%u]= %d\n", i, t);
       switch (t)
 	{
 	case ghdl_rtik_type_b2:
@@ -1004,8 +1004,8 @@ ghw_read_signal (struct ghw_handler *h, unsigned int *sigs, union ghw_type *t)
 }
 
 int
-ghw_read_value (struct ghw_handler *h, union ghw_val *val,
-		union ghw_type *type)
+ghw_read_value (struct ghw_handler *h,
+		union ghw_val *val, union ghw_type *type)
 {
   switch (ghw_get_base_type (type)->kind)
     {
@@ -1081,7 +1081,7 @@ ghw_read_hie (struct ghw_handler *h)
   h->nbr_sigs = ghw_get_i32 (h, &hdr[12]);
 
   if (h->flag_verbose)
-    printf ("%u scopes, %u signals, %u signal elements\n", nbr_scopes,
+    printf ("%d scopes, %d signals, %u signal elements\n", nbr_scopes,
 	    nbr_sigs, h->nbr_sigs);
 
   blk = (struct ghw_hie *) malloc (sizeof (struct ghw_hie));
