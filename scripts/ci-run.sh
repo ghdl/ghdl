@@ -24,56 +24,20 @@ gend () {
   :
 }
 
-if [ -n "$TRAVIS" ]; then
-  echo "INFO: set 'gstart' and 'gend' for TRAVIS"
-  # This is a trimmed down copy of https://github.com/travis-ci/travis-build/blob/master/lib/travis/build/bash/*
-  travis_time_start() {
-    # `date +%N` returns the date in nanoseconds. It is used as a replacement for $RANDOM, which is only available in bash.
-    travis_timer_id=`date +%N`
-    travis_start_time=`travis_nanoseconds`
-    echo "travis_time:start:$travis_timer_id"
-  }
-  travis_time_finish() {
-    travis_end_time=`travis_nanoseconds`
-    local duration=$(($travis_end_time-$travis_start_time))
-    echo "travis_time:end:$travis_timer_id:start=$travis_start_time,finish=$travis_end_time,duration=$duration"
-  }
 
-  if [ "$TRAVIS_OS_NAME" = "osx" ]; then
-    travis_nanoseconds() {
-      date -u '+%s000000000'
-    }
-  else
-    travis_nanoseconds() {
-      date -u '+%s%N'
-    }
-  fi
-
+if [ -n "$CI" ]; then
+  echo "INFO: set 'gstart' and 'gend' for CI"
   gstart () {
-    echo "travis_fold:start:group"
-    travis_time_start
+    printf '::group::'
     print_start "$@"
+    SECONDS=0
   }
 
   gend () {
-    travis_time_finish
-    echo "travis_fold:end:group"
+    duration=$SECONDS
+    echo '::endgroup::'
+    printf "${ANSI_GRAY}took $(($duration / 60)) min $(($duration % 60)) sec.${ANSI_NOCOLOR}\n"
   }
-else
-  if [ -n "$CI" ]; then
-    echo "INFO: set 'gstart' and 'gend' for CI"
-    gstart () {
-      printf '::group::'
-      print_start "$@"
-      SECONDS=0
-    }
-
-    gend () {
-      duration=$SECONDS
-      echo '::endgroup::'
-      printf "${ANSI_GRAY}took $(($duration / 60)) min $(($duration % 60)) sec.${ANSI_NOCOLOR}\n"
-    }
-  fi
 fi
 
 echo "cliargs: $0 $@"
@@ -143,9 +107,6 @@ buildCmdOpts () {
   BUILD_ARG="$1"
 
   # Get short commit SHA
-  if [ -n "$TRAVIS_COMMIT" ]; then
-    GIT_SHA="$TRAVIS_COMMIT"
-  fi
   if [ -n "$GITHUB_SHA" ]; then
     GIT_SHA="$GITHUB_SHA"
   fi
@@ -154,8 +115,6 @@ buildCmdOpts () {
   fi
   PKG_SHA="`printf $GIT_SHA | cut -c1-10`"
 
-  echo "TRAVIS_COMMIT: $TRAVIS_COMMIT"
-  echo "TRAVIS_TAG: $TRAVIS_TAG"
   echo "GITHUB_SHA: $GITHUB_SHA"
   echo "GITHUB_REF: $GITHUB_REF"
   echo "GIT_SHA: $GIT_SHA"
@@ -167,13 +126,6 @@ buildCmdOpts () {
     ;;
     *heads*|*pull*)
       PKG_TAG="`notag`"
-    ;;
-    "")
-      if [ -z "$TRAVIS_TAG" ]; then
-        PKG_TAG="`notag`"
-      else
-        PKG_TAG="`vertag "$TRAVIS_TAG"`"
-      fi
     ;;
     *)
       PKG_TAG="$GITHUB_REF"
@@ -391,7 +343,7 @@ ci_run () {
 
   # Build
 
-  RUN="docker run --rm -t -e CI -e TRAVIS -v `pwd`:/work -w /work"
+  RUN="docker run --rm -t -e CI -v `pwd`:/work -w /work"
   if [ "x$IS_MACOS" = "xtrue" ]; then
       export CPATH="$CPATH:$(xcrun --show-sdk-path)/usr/include"
       export PATH="$PATH:$(brew --prefix llvm)/bin"
@@ -477,7 +429,7 @@ EOF
 echo "command: $0 $@"
 
 unset IS_MACOS
-if [ "$GITHUB_OS" = "macOS" ] || [ "$TRAVIS_OS_NAME" = "osx" ]; then
+if [ "$GITHUB_OS" = "macOS" ]; then
   IS_MACOS="true"
 fi
 
