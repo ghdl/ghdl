@@ -127,7 +127,7 @@ class ParameterConstantInterfaceItem(
         subType: SubTypeOrSymbol,
         defaultExpression: Expression = None,
     ):
-        super().__init__(name=name, mode=mode)
+        super().__init__(name, mode)
         DOMMixin.__init__(self, node)
 
         # TODO: move to model
@@ -164,7 +164,7 @@ class ParameterVariableInterfaceItem(
         subType: SubTypeOrSymbol,
         defaultExpression: Expression = None,
     ):
-        super().__init__(name=name, mode=mode)
+        super().__init__(name, mode)
         DOMMixin.__init__(self, node)
 
         # TODO: move to model
@@ -199,7 +199,7 @@ class ParameterSignalInterfaceItem(VHDLModel_ParameterSignalInterfaceItem, DOMMi
         subType: SubTypeOrSymbol,
         defaultExpression: Expression = None,
     ):
-        super().__init__(name=name, mode=mode)
+        super().__init__(name, mode)
         DOMMixin.__init__(self, node)
 
         # TODO: move to model
@@ -233,7 +233,7 @@ class ParameterFileInterfaceItem(VHDLModel_ParameterFileInterfaceItem, DOMMixin)
         mode: Mode,
         subType: SubTypeOrSymbol,
     ):
-        super().__init__(name=name, mode=mode)
+        super().__init__(name, mode)
         DOMMixin.__init__(self, node)
 
         # TODO: move to model

@@ -59,7 +59,6 @@ class Position:
     @classmethod
     def parse(cls, node: Iir) -> "Position":
         """Return the source code position of a IIR node."""
-
         if node == nodes.Null_Iir:
             raise ValueError(
                 "Position.parse(): Parameter 'node' must not be 'Null_iir'."

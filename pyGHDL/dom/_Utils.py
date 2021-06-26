@@ -76,7 +76,6 @@ def CheckForErrors() -> None:
 @export
 def GetIirKindOfNode(node: Iir) -> nodes.Iir_Kind:
     """Return the kind of a node in the IIR tree."""
-
     if node == Null_Iir:
         raise ValueError("GetIirKindOfNode: Parameter 'node' must not be 'Null_iir'.")
 
@@ -87,7 +86,6 @@ def GetIirKindOfNode(node: Iir) -> nodes.Iir_Kind:
 @export
 def GetNameOfNode(node: Iir) -> str:
     """Return the python string from node :obj:`node` identifier."""
-
     if node == Null_Iir:
         raise ValueError("GetNameOfNode: Parameter 'node' must not be 'Null_iir'.")
 
@@ -98,7 +96,6 @@ def GetNameOfNode(node: Iir) -> str:
 @export
 def GetModeOfNode(node: Iir) -> Mode:
     """Return the mode of a :obj:`node`."""
-
     if node == Null_Iir:
         raise ValueError("GetModeOfNode: Parameter 'node' must not be 'Null_iir'.")
 
