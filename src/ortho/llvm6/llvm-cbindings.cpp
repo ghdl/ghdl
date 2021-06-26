@@ -1437,7 +1437,7 @@ struct ODnodeSubprg : ODnodeBase {
   OIdent Ident;
   ODKind getKind() const override { return ODKSubprg; }
   ODnodeSubprg(LLVMValueRef R, OTnode T, OStorage S, OIdent Id,
-               std::vector<ODnodeInter *> Inters) :
+               const std::vector<ODnodeInter *> &Inters) :
     ODnodeBase(R, T), Inters(Inters), Storage(S), Ident(Id) {}
 };
 
