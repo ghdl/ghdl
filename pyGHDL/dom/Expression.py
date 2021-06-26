@@ -530,7 +530,7 @@ class QualifiedExpression(VHDLModel_QualifiedExpression, DOMMixin):
         from pyGHDL.dom._Translate import GetExpressionFromNode, GetNameOfNode
 
         typeMarkName = GetNameOfNode(nodes.Get_Type_Mark(node))
-        subType = SimpleSubTypeSymbol(typeMarkName)
+        subType = SimpleSubTypeSymbol(node, typeMarkName)
         operand = GetExpressionFromNode(nodes.Get_Expression(node))
         return cls(subType, operand)
 

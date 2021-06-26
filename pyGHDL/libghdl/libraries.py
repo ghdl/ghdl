@@ -72,6 +72,7 @@ def Get_Libraries_Chain() -> Iir_Library_Declaration:
 
     :return: undocumented
     """
+    return 0
 
 
 @export
@@ -116,6 +117,7 @@ def Find_Entity_For_Component(Name: NameId) -> Iir_Design_Unit:
     :param Name: Entity name to search for.
     :return:     undocumented
     """
+    return 0
 
 
 @export
@@ -127,6 +129,7 @@ def Get_Library_No_Create(Ident: NameId) -> Iir_Library_Declaration:
     :param Ident: Library to look for.
     :return:      Return :attr:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir` if it doesn't exist.
     """
+    return 0
 
 
 @export
@@ -141,3 +144,4 @@ def Find_Primary_Unit(
     :param Name:    Primary unit to search for.
     :return:        undocumented
     """
+    return 0

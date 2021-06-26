@@ -36,7 +36,7 @@ from sys import platform as sys_platform, version_info as sys_version_info
 from os import environ as os_environ
 from pathlib import Path
 from shutil import which
-from typing import List
+from typing import List, Optional
 
 from pydecor import export
 
@@ -46,16 +46,18 @@ from pyGHDL.libghdl._types import Iir
 # from pyGHDL.libghdl._decorator import BindToLibGHDL
 from pyGHDL.libghdl.version import __version__
 
+Nullable = Optional
+
 
 class LibGHDLException(GHDLBaseException):
-    _internalErrors: List[str]
+    _internalErrors: Nullable[List[str]]
 
-    def __init__(self, message: str, errors: List[str]):
+    def __init__(self, message: str, errors: List[str] = None):
         super().__init__(message)
         self._internalErrors = errors
 
     @property
-    def InternalErrors(self):
+    def InternalErrors(self) -> Nullable[List[str]]:
         return self._internalErrors
 
 

@@ -47,6 +47,7 @@ def Load_File(File: SourceFileEntry) -> Iir_Design_File:
     :param File: File to analyse.
     :return:     Return :attr:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir` in case of parse error. Type: ``Iir_Design_File``
     """
+    return 0
 
 
 @export

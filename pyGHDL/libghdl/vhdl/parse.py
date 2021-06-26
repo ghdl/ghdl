@@ -57,3 +57,4 @@ def Parse_Design_File() -> Iir:
 
     :return: Return :obj:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir` in case of error. Type: ``Iir_Design_File``
     """
+    return 0

@@ -81,6 +81,7 @@ def Get_Current_Line() -> int:
 
     :return: Current token's line.
     """
+    return 0
 
 
 @export
@@ -91,6 +92,7 @@ def Get_Token_Offset() -> int:
 
     :return: Current token's offset.
     """
+    return 0
 
 
 @export
@@ -101,6 +103,7 @@ def Get_Token_Position():
 
     :return: Current token's position. Type: ``Source_Ptr``
     """
+    return 0
 
 
 @export
@@ -111,6 +114,7 @@ def Get_Position():
 
     :return: Current position. Type: ``Source_Ptr``
     """
+    return 0
 
 
 @export
@@ -123,3 +127,4 @@ def Current_Identifier() -> NameId:
 
     :return: NameId of the current token.
     """
+    return 0

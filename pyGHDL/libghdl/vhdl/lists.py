@@ -125,6 +125,7 @@ def Get_Nbr_Elements(List: int) -> int:
     :param List: The list to use.
     :return:     Number of list elements.
     """
+    return 0
 
 
 @export
@@ -135,6 +136,7 @@ def Create_Iir_List() -> int:
 
     :return: undocumented; Type: ``List_Type``
     """
+    return 0
 
 
 @export
