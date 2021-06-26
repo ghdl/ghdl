@@ -684,6 +684,7 @@ ghw_read_type (struct ghw_handler *h)
 	    h->types[i] = (union ghw_type *) e;
 	    break;
 	  err_b2:
+	    free (e->lits);
 	    free (e);
 	    return -1;
 	  }
@@ -771,6 +772,7 @@ ghw_read_type (struct ghw_handler *h)
 	    h->types[i] = (union ghw_type *) arr;
 	    break;
 	  err_array:
+	    free (arr->dims);
 	    free (arr);
 	    return -1;
 	  }
