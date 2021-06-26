@@ -2,10 +2,7 @@
 
 . ../../testenv.sh
 
-for t in physical_division; do
-    synth $t.vhdl -e $t > syn_$t.vhdl
-    analyze syn_$t.vhdl
-    clean
-done
+synth_analyze physical_division
+clean
 
 echo "Test successful"

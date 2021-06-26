@@ -2,11 +2,7 @@
 
 . ../../testenv.sh
 
-for t in ent; do
-  synth $t.vhdl -e $t > syn_$t.vhdl
-  analyze syn_$t.vhdl
-done
-
+synth_analyze ent
 clean
 
 echo "Test successful"

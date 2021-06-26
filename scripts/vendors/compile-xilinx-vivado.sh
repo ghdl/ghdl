@@ -38,7 +38,7 @@ ScriptDir="$(dirname $0)"
 ScriptDir="$($READLINK -f $ScriptDir)"
 
 # Source Bash utilities
-source $ScriptDir/../ansi_color.sh
+source "$ScriptDir"/../ansi_color.sh
 if [[ $? -ne 0 ]]; then echo 1>&2 -e "${COLORED_ERROR} While loading Bash utilities.${ANSI_NOCOLOR}"    ; exit 1; fi
 
 

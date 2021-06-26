@@ -12,6 +12,8 @@ ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees -T -D language=en $(PAPEROPT_$(PAPER))
 
 all: ghdl.info
 
+.PHONY: ghdl.texi
+
 #---
 
 man:

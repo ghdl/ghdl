@@ -2,8 +2,6 @@
 
 . ../../testenv.sh
 
-for t in func01; do
-    synth_tb $t
-done
+synth_tb func01
 
 echo "Test successful"

@@ -8,15 +8,6 @@ for f in ent; do
 done
 clean
 
-for t in ent1; do
-    analyze $t.vhdl tb_$t.vhdl
-    elab_simulate tb_$t
-    clean
-
-    synth $t.vhdl -e $t > syn_$t.vhdl
-    analyze syn_$t.vhdl tb_$t.vhdl
-    elab_simulate tb_$t --ieee-asserts=disable-at-0
-    clean
-done
+synth_tb ent1
 
 echo "Test successful"

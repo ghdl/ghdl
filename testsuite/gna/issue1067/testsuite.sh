@@ -4,17 +4,15 @@
 
 export GHDL_STD_FLAGS=--std=08
 
-for f in top; do
-  analyze $f.vhdl
-  elab $f
+analyze top.vhdl
+elab top
 
-  if ghdl_has_feature $f ghw; then
-    simulate $f --dump-rti
-    simulate $f --wave=$f.ghw
-    ghw_diff "$f"
-    rm -f "$f".txt "$f".ghw
-  fi
-done
+if ghdl_has_feature top ghw; then
+  simulate top --dump-rti
+  simulate top --wave=top.ghw
+  ghw_diff "top"
+  rm -f "top".txt "top".ghw
+fi
 
 clean
 

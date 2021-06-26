@@ -3,7 +3,7 @@
 . ../../testenv.sh
 
 if c_compiler_is_available; then
-  if [ -z $CC ]; then
+  if [ -z "$CC" ]; then
     CC="gcc"
   fi
 

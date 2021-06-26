@@ -35,10 +35,10 @@ test greadlink --version > /dev/null 2>&1 && READLINK=greadlink || READLINK=read
 # Save working directory
 WorkingDir=$(pwd)
 ScriptDir="$(dirname $0)"
-ScriptDir="$($READLINK -f $ScriptDir)"
+ScriptDir="$($READLINK -f "$ScriptDir")"
 
 # Source Bash utilities
-source $ScriptDir/../ansi_color.sh
+source "$ScriptDir"/../ansi_color.sh
 if [[ $? -ne 0 ]]; then echo 1>&2 -e "${COLORED_ERROR} While loading Bash utilities.${ANSI_NOCOLOR}"    ; exit 1; fi
 
 
@@ -60,7 +60,7 @@ VHDLStandard=93
 GHDLBinDir=""
 DestDir=""
 SrcDir=""
-while [[ $# -gt 0 ]]; do
+while [[ "$#" -gt 0 ]]; do
 	case "$1" in
 		-c|--clean)
 			COMMAND=3
@@ -210,14 +210,14 @@ fi
 
 # Search Xilinx ISE in default installation locations
 DefaultDirectories=("/opt/Xilinx" "/opt/xilinx" "/c/Xilinx")
-if [ ! -z $XILINX ]; then
+if [ -n "$XILINX" ]; then
 	EnvSourceDir="$XILINX/${Xilinx_ISE_Settings[SourceDirectory]}"
 else
 	for DefaultDir in "${DefaultDirectories[@]}"; do
 		for Major in 14 13; do
 			for Minor in 7 6 5 4 3 2 1 0; do
-				Dir=$DefaultDir/${Major}.${Minor}/ISE_DS
-				if [ -d $Dir ]; then
+				Dir="$DefaultDir/${Major}.${Minor}"/ISE_DS
+				if [ -d "$Dir" ]; then
 					EnvSourceDir="$Dir/${Xilinx_ISE_Settings[SourceDirectory]}"
 					break 3
 				fi

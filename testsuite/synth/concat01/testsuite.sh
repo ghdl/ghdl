@@ -2,15 +2,6 @@
 
 . ../../testenv.sh
 
-for t in concat01; do
-    analyze $t.vhdl tb_$t.vhdl
-    elab_simulate tb_$t
-    clean
-
-    synth $t.vhdl -e $t > syn_$t.vhdl
-    analyze syn_$t.vhdl tb_$t.vhdl
-    elab_simulate tb_$t
-    clean
-done
+synth_tb concat01
 
 echo "Test successful"

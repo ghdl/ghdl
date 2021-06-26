@@ -5,7 +5,7 @@ cd $(dirname "$0")
 . ../../testenv.sh
 
 if $GHDL --help | grep -q -e --link; then
-    if [ -z $CC ]; then
+    if [ -z "$CC" ]; then
         CC="gcc"
     fi
 

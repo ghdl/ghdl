@@ -2,8 +2,6 @@
 
 . ../../testenv.sh
 
-for t in slv_negation; do
-    synth $t.vhdl -e $t > syn_$t.vhdl
-done
+synth slv_negation.vhdl -e slv_negation > syn_slv_negation.vhdl
 
 echo "Test successful"

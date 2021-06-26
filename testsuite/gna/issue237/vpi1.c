@@ -82,7 +82,7 @@ vpi_clk_proc (struct t_cb_data *cb)
     return 0;
 
   cycle++;
-  printf ("clock cycle %d\n", cycle);
+  printf ("clock cycle %u\n", cycle);
 
   if (cycle == 2)
     show_value ("test_array.mem_down");
