@@ -2,15 +2,6 @@
 
 . ../../testenv.sh
 
-for t in rec01; do
-    analyze pkg_$t.vhdl $t.vhdl tb_$t.vhdl
-    elab_simulate tb_$t
-    clean
-
-    synth pkg_$t.vhdl $t.vhdl -e $t > syn_$t.vhdl
-    analyze pkg_$t.vhdl syn_$t.vhdl tb_$t.vhdl
-    elab_simulate tb_$t --ieee-asserts=disable-at-0
-    clean
-done
+synth_tb rec01 pkg_rec01.vhdl
 
 echo "Test successful"

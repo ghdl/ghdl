@@ -2,13 +2,6 @@
 
 . ../../testenv.sh
 
-analyze concat01.vhdl tb_concat01.vhdl
-elab_simulate tb_concat01
-clean
-
-synth concat01.vhdl -e concat01 > syn_concat01.vhdl
-analyze syn_concat01.vhdl tb_concat01.vhdl
-elab_simulate tb_concat01
-clean
+synth_tb concat01
 
 echo "Test successful"

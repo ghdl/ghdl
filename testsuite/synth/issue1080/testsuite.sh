@@ -8,13 +8,6 @@ for t in repro repro2 repro2_1 repro3 repro4; do
     clean
 done
 
-analyze repro3_1.vhdl tb_repro3_1.vhdl
-elab_simulate tb_repro3_1
-clean
-
-synth repro3_1.vhdl -e repro3_1 > syn_repro3_1.vhdl
-analyze syn_repro3_1.vhdl tb_repro3_1.vhdl
-elab_simulate tb_repro3_1 --ieee-asserts=disable-at-0
-clean
+synth_tb repro3_1
 
 echo "Test successful"
