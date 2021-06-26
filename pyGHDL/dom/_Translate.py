@@ -416,6 +416,13 @@ def GetExpressionFromNode(node: Iir) -> Expression:
 def GetGenericsFromChainedNodes(
     nodeChain: Iir,
 ) -> Generator[GenericInterfaceItem, None, None]:
+    from pyGHDL.dom.InterfaceItem import (
+        GenericTypeInterfaceItem,
+        GenericPackageInterfaceItem,
+        GenericProcedureInterfaceItem,
+        GenericFunctionInterfaceItem,
+    )
+
     for generic in utils.chain_iter(nodeChain):
         kind = GetIirKindOfNode(generic)
         if kind == nodes.Iir_Kind.Interface_Constant_Declaration:
@@ -423,13 +430,13 @@ def GetGenericsFromChainedNodes(
 
             yield GenericConstantInterfaceItem.parse(generic)
         elif kind == nodes.Iir_Kind.Interface_Type_Declaration:
-            print("[NOT IMPLEMENTED] generic type")
+            yield GenericTypeInterfaceItem.parse(generic)
         elif kind == nodes.Iir_Kind.Interface_Package_Declaration:
-            print("[NOT IMPLEMENTED] generic package")
+            yield GenericPackageInterfaceItem.parse(generic)
         elif kind == nodes.Iir_Kind.Interface_Procedure_Declaration:
-            print("[NOT IMPLEMENTED] generic procedure")
+            yield GenericProcedureInterfaceItem.parse(generic)
         elif kind == nodes.Iir_Kind.Interface_Function_Declaration:
-            print("[NOT IMPLEMENTED] generic function")
+            yield GenericFunctionInterfaceItem.parse(generic)
         else:
             position = Position.parse(generic)
             raise DOMException(

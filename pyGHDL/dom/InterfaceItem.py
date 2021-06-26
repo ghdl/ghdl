@@ -34,6 +34,10 @@ from pydecor import export
 
 from pyVHDLModel.VHDLModel import (
     GenericConstantInterfaceItem as VHDLModel_GenericConstantInterfaceItem,
+    GenericTypeInterfaceItem as VHDLModel_GenericTypeInterfaceItem,
+    GenericPackageInterfaceItem as VHDLModel_GenericPackageInterfaceItem,
+    GenericProcedureInterfaceItem as VHDLModel_GenericProcedureInterfaceItem,
+    GenericFunctionInterfaceItem as VHDLModel_GenericFunctionInterfaceItem,
     PortSignalInterfaceItem as VHDLModel_PortSignalInterfaceItem,
     ParameterConstantInterfaceItem as VHDLModel_ParameterConstantInterfaceItem,
     ParameterVariableInterfaceItem as VHDLModel_ParameterVariableInterfaceItem,
@@ -64,12 +68,8 @@ class GenericConstantInterfaceItem(VHDLModel_GenericConstantInterfaceItem, DOMMi
         subType: SubTypeOrSymbol,
         defaultExpression: Expression,
     ):
-        super().__init__(name=name, mode=mode)
+        super().__init__(name, mode, subType, defaultExpression)
         DOMMixin.__init__(self, node)
-
-        # TODO: move to model
-        self._subType = subType
-        self._defaultExpression = defaultExpression
 
     @classmethod
     def parse(cls, genericNode: Iir) -> "GenericConstantInterfaceItem":
@@ -83,6 +83,82 @@ class GenericConstantInterfaceItem(VHDLModel_GenericConstantInterfaceItem, DOMMi
 
 
 @export
+class GenericTypeInterfaceItem(VHDLModel_GenericTypeInterfaceItem, DOMMixin):
+    def __init__(
+        self,
+        node: Iir,
+        name: str,
+    ):
+        super().__init__(name=name)
+        DOMMixin.__init__(self, node)
+
+    @classmethod
+    def parse(cls, genericNode: Iir) -> "GenericTypeInterfaceItem":
+        name = GetNameOfNode(genericNode)
+
+        return cls(genericNode, name)
+
+
+@export
+class GenericPackageInterfaceItem(VHDLModel_GenericPackageInterfaceItem, DOMMixin):
+    def __init__(
+        self,
+        node: Iir,
+        name: str,
+    ):
+        super().__init__(name)
+        DOMMixin.__init__(self, node)
+
+    @classmethod
+    def parse(cls, genericNode: Iir) -> "GenericPackageInterfaceItem":
+        name = GetNameOfNode(genericNode)
+
+        return cls(genericNode, name)
+
+
+@export
+class GenericProcedureInterfaceItem(VHDLModel_GenericProcedureInterfaceItem, DOMMixin):
+    def __init__(
+        self,
+        node: Iir,
+        name: str,
+    ):
+        super().__init__(name)
+        DOMMixin.__init__(self, node)
+
+    @classmethod
+    def parse(cls, genericNode: Iir) -> "GenericProcedureInterfaceItem":
+        name = GetNameOfNode(genericNode)
+        mode = GetModeOfNode(genericNode)
+        subTypeIndication = GetSubTypeIndicationFromNode(genericNode, "generic", name)
+        default = nodes.Get_Default_Value(genericNode)
+        value = GetExpressionFromNode(default) if default else None
+
+        return cls(genericNode, name)
+
+
+@export
+class GenericFunctionInterfaceItem(VHDLModel_GenericFunctionInterfaceItem, DOMMixin):
+    def __init__(
+        self,
+        node: Iir,
+        name: str,
+    ):
+        super().__init__(name)
+        DOMMixin.__init__(self, node)
+
+    @classmethod
+    def parse(cls, genericNode: Iir) -> "GenericFunctionInterfaceItem":
+        name = GetNameOfNode(genericNode)
+        mode = GetModeOfNode(genericNode)
+        subTypeIndication = GetSubTypeIndicationFromNode(genericNode, "generic", name)
+        default = nodes.Get_Default_Value(genericNode)
+        value = GetExpressionFromNode(default) if default else None
+
+        return cls(genericNode, name)
+
+
+@export
 class PortSignalInterfaceItem(VHDLModel_PortSignalInterfaceItem, DOMMixin):
     def __init__(
         self,
@@ -92,12 +168,8 @@ class PortSignalInterfaceItem(VHDLModel_PortSignalInterfaceItem, DOMMixin):
         subType: SubTypeOrSymbol,
         defaultExpression: Expression = None,
     ):
-        super().__init__(name=name, mode=mode)
+        super().__init__(name, mode, subType, defaultExpression)
         DOMMixin.__init__(self, node)
-
-        # TODO: move to model
-        self._subType = subType
-        self._defaultExpression = defaultExpression
 
     @classmethod
     def parse(cls, portNode: Iir) -> "PortSignalInterfaceItem":

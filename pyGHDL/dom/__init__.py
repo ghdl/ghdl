@@ -32,13 +32,12 @@
 # ============================================================================
 from pathlib import Path
 
-from pyGHDL import GHDLBaseException
-from pyGHDL.libghdl import files_map, name_table
-
-from pyGHDL.libghdl.vhdl import nodes
 from pydecor import export
 
+from pyGHDL import GHDLBaseException
+from pyGHDL.libghdl import files_map, name_table
 from pyGHDL.libghdl._types import Iir
+from pyGHDL.libghdl.vhdl import nodes
 
 __all__ = []
 
@@ -46,6 +45,7 @@ __all__ = []
 @export
 class Position:
     """Represents the source code position of a IIR node in a source file."""
+
     _filename: Path
     _line: int
     _column: int
