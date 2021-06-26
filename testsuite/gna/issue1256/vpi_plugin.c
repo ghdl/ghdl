@@ -82,9 +82,9 @@ static PLI_INT32 rw_cb(p_cb_data data){
     if(iteration > 0) {
         vpi_get_value(enum_decoded_handle, &val);
         val.format = vpiBinStrVal;
-        printf("enum decoded = %s iteration %d \n", val.value.str, iteration);
+        printf("enum decoded = %s iteration %u \n", val.value.str, iteration);
         vpi_get_value(enum_out_handle, &val);
-        printf("enum out = %s iteration %d \n", val.value.str, iteration);
+        printf("enum out = %s iteration %u \n", val.value.str, iteration);
 
         val.format = vpiBinStrVal;
     }
@@ -92,7 +92,7 @@ static PLI_INT32 rw_cb(p_cb_data data){
     if(iteration < STOP_ITERATION) {
 
         val.value.str = (char *) input_values[iteration];
-        printf("enum in <= %s iteration %d \n", val.value.str, iteration);
+        printf("enum in <= %s iteration %u \n", val.value.str, iteration);
         vpi_put_value(enum_in_handle, &val, NULL, vpiNoDelay);
         register_cb(delay_ro_cb, cbAfterDelay, 1);
     } else {
