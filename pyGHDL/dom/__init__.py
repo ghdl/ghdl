@@ -46,7 +46,6 @@ __all__ = []
 @export
 class Position:
     """Represents the source code position of a IIR node in a source file."""
-
     _filename: Path
     _line: int
     _column: int

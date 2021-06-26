@@ -59,6 +59,7 @@ from pyVHDLModel.VHDLModel import (
     PortInterfaceItem,
     EntityOrSymbol,
     Name,
+    ConcurrentStatement,
 )
 
 from pyGHDL.libghdl.vhdl import nodes
