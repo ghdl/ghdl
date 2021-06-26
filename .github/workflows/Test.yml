@@ -314,7 +314,7 @@ jobs:
       run: GHDL=ghdl ./testsuite/testsuite.sh ${{ matrix.suite }}
 
 #
-# Windows pyGHDL pip installation
+# Windows MSYS2 pyGHDL pip installation
 #
 
   win-pip:
@@ -426,6 +426,68 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         path: ${{ matrix.installs }}-mcode-standalone.zip
+
+#
+# Windows CPython pyGHDL Test with MSYS2 installation
+#
+
+  win-cpython-msys2:
+    needs: win-build
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include: [
+          {icon: '🟪', installs: 'MINGW32', arch: i686,   pkg: 'mcode',  pyarch: x86  },
+          #{icon: '🟪', installs: "MINGW32", arch: i686,   pkg: "llvm",  pyarch: x86  }, ! Not yet functional
+          {icon: '🟦', installs: "MINGW64", arch: x86_64, pkg: "mcode", pyarch: x64 }, #! simulation with mcode is not yet supported on win64
+          {icon: '🟦', installs: 'MINGW64', arch: x86_64, pkg: 'llvm',  pyarch: x64 },
+        ]
+    name: '${{ matrix.icon }} CPython · ${{ matrix.installs }} · ${{ matrix.pkg }}'
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+
+    - name: '${{ matrix.icon }} Setup MSYS2'
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: ${{ matrix.installs }}
+        update: true
+
+    - name: '⚙️ git config'
+      run: git config --global core.autocrlf input
+
+    - name: '🧰 Checkout'
+      uses: actions/checkout@v2
+
+    - name: '📥 Download artifact: package'
+      uses: actions/download-artifact@v2
+      with:
+        name: ${{ matrix.installs }}-${{ matrix.pkg }}
+
+    - name: '⚙️ Install package'
+      shell: msys2 {0}
+      run: |
+        pacman --noconfirm -U artifact/mingw-w64-${{ matrix.arch }}-ghdl-${{ matrix.pkg }}-*.zst
+
+    - name: '🐍 Setup Python'
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+        architecture: ${{ matrix.pyarch }}
+
+    - name: '🐍 Install Python dependencies'
+      run: |
+        pip3 install -r testsuite/requirements.txt
+
+    - name: '🚧 Test package'
+      run: |
+        $env:GHDL_PREFIX = (& msys2 -c 'cygpath -w /') + '${{ matrix.installs }}\lib\ghdl\'
+        $env:PYTHONPATH = (pwd).Path
+        cd testsuite
+        python3 -m pytest -vsrA pyunit
 
 #
 # Release
