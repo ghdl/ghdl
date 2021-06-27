@@ -47,7 +47,6 @@ from pyVHDLModel.VHDLModel import (
 )
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.dom import DOMMixin
-from pyGHDL.dom._Utils import GetNameOfNode
 from pyGHDL.dom.Range import Range
 
 
@@ -56,15 +55,15 @@ __all__ = []
 
 @export
 class EntitySymbol(VHDLModel_EntitySymbol, DOMMixin):
-    def __init__(self, node: Iir, entityName: str):
+    def __init__(self, node: Iir, entityName: Name):
         super().__init__(entityName)
         DOMMixin.__init__(self, node)
 
 
 @export
 class EnumerationLiteralSymbol(VHDLModel_EnumerationLiteralSymbol, DOMMixin):
-    def __init__(self, node: Iir, literalName: str):
-        super().__init__(symbolName=literalName)
+    def __init__(self, node: Iir, literalName: Name):
+        super().__init__(literalName)
         DOMMixin.__init__(self, node)
 
 
@@ -82,8 +81,8 @@ class SimpleSubTypeSymbol(VHDLModel_SimpleSubTypeSymbol, DOMMixin):
 class ConstrainedScalarSubTypeSymbol(
     VHDLModel_ConstrainedScalarSubTypeSymbol, DOMMixin
 ):
-    def __init__(self, node: Iir, subTypeName: str, range: Range = None):
-        super().__init__(subTypeName=subTypeName, range=range)
+    def __init__(self, node: Iir, subTypeName: Name, rng: Range = None):
+        super().__init__(subTypeName, rng)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -96,9 +95,9 @@ class ConstrainedCompositeSubTypeSymbol(
     VHDLModel_ConstrainedCompositeSubTypeSymbol, DOMMixin
 ):
     def __init__(
-        self, node: Iir, subTypeName: str, constraints: List[Constraint] = None
+        self, node: Iir, subTypeName: Name, constraints: List[Constraint] = None
     ):
-        super().__init__(subTypeName=subTypeName, constraints=constraints)
+        super().__init__(subTypeName, constraints)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -112,7 +111,9 @@ class SimpleObjectOrFunctionCallSymbol(
 ):
     @classmethod
     def parse(cls, node: Iir):
-        name = GetNameOfNode(node)
+        from pyGHDL.dom._Translate import GetNameFromNode
+
+        name = GetNameFromNode(node)
         return cls(name)
 
 
@@ -120,13 +121,13 @@ class SimpleObjectOrFunctionCallSymbol(
 class IndexedObjectOrFunctionCallSymbol(
     VHDLModel_IndexedObjectOrFunctionCallSymbol, DOMMixin
 ):
-    def __init__(self, node: Iir, name: str):
-        super().__init__(objectName=name)
+    def __init__(self, node: Iir, name: Name):
+        super().__init__(name)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, node: Iir):
-        from pyGHDL.dom._Translate import GetExpressionFromNode, GetNameFromNode
+        from pyGHDL.dom._Translate import GetNameFromNode
 
         name = GetNameFromNode(node)
 

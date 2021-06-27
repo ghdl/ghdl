@@ -21,7 +21,7 @@ from pyVHDLModel.VHDLModel import (
     GenericInterfaceItem,
     NamedEntity,
     PortInterfaceItem,
-    WithDefaultExpression,
+    WithDefaultExpressionMixin,
     Function,
     BaseType,
     Type,
@@ -481,7 +481,7 @@ class PrettyPrint:
                 )
             )
 
-    def formatInitialValue(self, item: WithDefaultExpression) -> str:
+    def formatInitialValue(self, item: WithDefaultExpressionMixin) -> str:
         if item.DefaultExpression is None:
             return ""
 
