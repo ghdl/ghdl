@@ -62,12 +62,8 @@ class Constant(VHDLModel_Constant, DOMMixin):
         subType: SubTypeOrSymbol,
         defaultExpression: Expression,
     ):
-        super().__init__(name)
+        super().__init__(name, subType, defaultExpression)
         DOMMixin.__init__(self, node)
-
-        self._name = name
-        self._subType = subType
-        self._defaultExpression = defaultExpression
 
     @classmethod
     def parse(cls, constantNode: Iir) -> Union["Constant", "DeferredConstant"]:
@@ -90,11 +86,8 @@ class Constant(VHDLModel_Constant, DOMMixin):
 @export
 class DeferredConstant(VHDLModel_DeferredConstant, DOMMixin):
     def __init__(self, node: Iir, name: str, subType: SubTypeOrSymbol):
-        super().__init__(name)
+        super().__init__(name, subType)
         DOMMixin.__init__(self, node)
-
-        self._name = name
-        self._subType = subType
 
     @classmethod
     def parse(cls, constantNode: Iir) -> "DeferredConstant":
@@ -117,12 +110,8 @@ class Variable(VHDLModel_Variable, DOMMixin):
         subType: SubTypeOrSymbol,
         defaultExpression: Expression,
     ):
-        super().__init__(name)
+        super().__init__(name, subType, defaultExpression)
         DOMMixin.__init__(self, node)
-
-        self._name = name
-        self._subType = subType
-        self._defaultExpression = defaultExpression
 
     @classmethod
     def parse(cls, variableNode: Iir) -> "Variable":
@@ -144,11 +133,8 @@ class Variable(VHDLModel_Variable, DOMMixin):
 @export
 class SharedVariable(VHDLModel_SharedVariable, DOMMixin):
     def __init__(self, node: Iir, name: str, subType: SubTypeOrSymbol):
-        super().__init__(name)
+        super().__init__(name, subType)
         DOMMixin.__init__(self, node)
-
-        self._name = name
-        self._subType = subType
 
     @classmethod
     def parse(cls, variableNode: Iir) -> "SharedVariable":
@@ -169,12 +155,8 @@ class Signal(VHDLModel_Signal, DOMMixin):
         subType: SubTypeOrSymbol,
         defaultExpression: Expression,
     ):
-        super().__init__(name)
+        super().__init__(name, subType, defaultExpression)
         DOMMixin.__init__(self, node)
-
-        self._name = name
-        self._subType = subType
-        self._defaultExpression = defaultExpression
 
     @classmethod
     def parse(cls, signalNode: Iir) -> "Signal":
@@ -194,11 +176,8 @@ class Signal(VHDLModel_Signal, DOMMixin):
 @export
 class File(VHDLModel_File, DOMMixin):
     def __init__(self, node: Iir, name: str, subType: SubTypeOrSymbol):
-        super().__init__(name)
+        super().__init__(name, subType)
         DOMMixin.__init__(self, node)
-
-        self._name = name
-        self._subType = subType
 
     @classmethod
     def parse(cls, fileNode: Iir) -> "File":

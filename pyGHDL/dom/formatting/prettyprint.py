@@ -44,6 +44,7 @@ from pyGHDL.dom.Object import Constant, Signal, SharedVariable, File
 from pyGHDL.dom.InterfaceItem import (
     GenericConstantInterfaceItem,
     PortSignalInterfaceItem,
+    GenericTypeInterfaceItem,
 )
 from pyGHDL.dom.Symbol import (
     SimpleSubTypeSymbol,
@@ -262,6 +263,8 @@ class PrettyPrint:
     ) -> StringBuffer:
         if isinstance(generic, GenericConstantInterfaceItem):
             return self.formatGenericConstant(generic, level)
+        elif isinstance(generic, GenericTypeInterfaceItem):
+            return self.formatGenericType(generic, level)
         else:
             raise PrettyPrintException(
                 "Unhandled generic kind for generic '{name}'.".format(name=generic.Name)
@@ -292,6 +295,21 @@ class PrettyPrint:
                     generic.SubType, "generic", generic.Name
                 ),
                 initialValue=self.formatInitialValue(generic),
+            )
+        )
+
+        return buffer
+
+    def formatGenericType(
+        self, generic: GenericConstantInterfaceItem, level: int = 0
+    ) -> StringBuffer:
+        buffer = []
+        prefix = "  " * level
+
+        buffer.append(
+            "{prefix}  - type {name}".format(
+                prefix=prefix,
+                name=generic.Name,
             )
         )
 

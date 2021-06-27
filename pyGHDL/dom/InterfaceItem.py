@@ -199,12 +199,8 @@ class ParameterConstantInterfaceItem(
         subType: SubTypeOrSymbol,
         defaultExpression: Expression = None,
     ):
-        super().__init__(name, mode)
+        super().__init__(name, mode, subType, defaultExpression)
         DOMMixin.__init__(self, node)
-
-        # TODO: move to model
-        self._subType = subType
-        self._defaultExpression = defaultExpression
 
     @classmethod
     def parse(cls, parameterNode: Iir) -> "ParameterConstantInterfaceItem":
