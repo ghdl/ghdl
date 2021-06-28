@@ -96,7 +96,7 @@ from pyGHDL.dom.Aggregates import (
 __all__ = []
 
 
-class _ParseUnaryExpression:
+class _ParseUnaryExpressionMixin:
     @classmethod
     def parse(cls, node: Iir):
         from pyGHDL.dom._Translate import GetExpressionFromNode
@@ -105,7 +105,7 @@ class _ParseUnaryExpression:
         return cls(node, operand)
 
 
-class _ParseBinaryExpression:
+class _ParseBinaryExpressionMixin:
     @classmethod
     def parse(cls, node: Iir):
         from pyGHDL.dom._Translate import GetExpressionFromNode
@@ -116,50 +116,40 @@ class _ParseBinaryExpression:
 
 
 @export
-class InverseExpression(VHDLModel_InverseExpression, DOMMixin, _ParseUnaryExpression):
+class InverseExpression(VHDLModel_InverseExpression, DOMMixin, _ParseUnaryExpressionMixin):
     def __init__(self, node: Iir, operand: Expression):
-        super().__init__()
+        super().__init__(operand)
         DOMMixin.__init__(self, node)
-
-        self._operand = operand
 
 
 @export
-class IdentityExpression(VHDLModel_IdentityExpression, DOMMixin, _ParseUnaryExpression):
+class IdentityExpression(VHDLModel_IdentityExpression, DOMMixin, _ParseUnaryExpressionMixin):
     def __init__(self, node: Iir, operand: Expression):
-        super().__init__()
+        super().__init__(operand)
         DOMMixin.__init__(self, node)
-
-        self._operand = operand
 
 
 @export
-class NegationExpression(VHDLModel_NegationExpression, DOMMixin, _ParseUnaryExpression):
+class NegationExpression(VHDLModel_NegationExpression, DOMMixin, _ParseUnaryExpressionMixin):
     def __init__(self, node: Iir, operand: Expression):
-        super().__init__()
+        super().__init__(operand)
         DOMMixin.__init__(self, node)
-
-        self._operand = operand
 
 
 @export
-class AbsoluteExpression(VHDLModel_AbsoluteExpression, DOMMixin, _ParseUnaryExpression):
+class AbsoluteExpression(VHDLModel_AbsoluteExpression, DOMMixin, _ParseUnaryExpressionMixin):
     def __init__(self, node: Iir, operand: Expression):
-        super().__init__()
+        super().__init__(operand)
         DOMMixin.__init__(self, node)
-
-        self._operand = operand
 
 
 @export
 class ParenthesisExpression(
-    VHDLModel_ParenthesisExpression, DOMMixin, _ParseUnaryExpression
+    VHDLModel_ParenthesisExpression, DOMMixin, _ParseUnaryExpressionMixin
 ):
     def __init__(self, node: Iir, operand: Expression):
-        super().__init__()
+        super().__init__(operand)
         DOMMixin.__init__(self, node)
-
-        self._operand = operand
 
     @classmethod
     def parse(cls, node: Iir):
@@ -172,10 +162,8 @@ class ParenthesisExpression(
 @export
 class TypeConversion(VHDLModel_TypeConversion, DOMMixin):
     def __init__(self, node: Iir, operand: Expression):
-        super().__init__()
+        super().__init__(operand)
         DOMMixin.__init__(self, node)
-
-        self._operand = operand
 
 
 @export
@@ -183,8 +171,6 @@ class FunctionCall(VHDLModel_FunctionCall, DOMMixin):
     def __init__(self, node: Iir, operand: Expression):
         super().__init__()
         DOMMixin.__init__(self, node)
-
-        self._operand = operand
 
 
 class RangeExpression(VHDLModel_RangeExpression, DOMMixin):
@@ -205,325 +191,238 @@ class RangeExpression(VHDLModel_RangeExpression, DOMMixin):
 @export
 class AscendingRangeExpression(VHDLModel_AscendingRangeExpression, DOMMixin):
     def __init__(self, node: Iir, left: Expression, right: Expression):
-        super().__init__()
+        super().__init__(left, right)
         DOMMixin.__init__(self, node)
-
-        self._leftOperand = left
-        self._rightOperand = right
 
 
 @export
 class DescendingRangeExpression(VHDLModel_DescendingRangeExpression, DOMMixin):
     def __init__(self, node: Iir, left: Expression, right: Expression):
-        super().__init__()
+        super().__init__(left, right)
         DOMMixin.__init__(self, node)
-
-        self._leftOperand = left
-        self._rightOperand = right
 
 
 @export
 class AdditionExpression(
-    VHDLModel_AdditionExpression, DOMMixin, _ParseBinaryExpression
+    VHDLModel_AdditionExpression, DOMMixin, _ParseBinaryExpressionMixin
 ):
     def __init__(self, node: Iir, left: Expression, right: Expression):
-        super().__init__()
+        super().__init__(left, right)
         DOMMixin.__init__(self, node)
-
-        self._leftOperand = left
-        self._rightOperand = right
 
 
 @export
 class SubtractionExpression(
-    VHDLModel_SubtractionExpression, DOMMixin, _ParseBinaryExpression
+    VHDLModel_SubtractionExpression, DOMMixin, _ParseBinaryExpressionMixin
 ):
     def __init__(self, node: Iir, left: Expression, right: Expression):
-        super().__init__()
+        super().__init__(left, right)
         DOMMixin.__init__(self, node)
-
-        self._leftOperand = left
-        self._rightOperand = right
 
 
 @export
 class ConcatenationExpression(
-    VHDLModel_ConcatenationExpression, DOMMixin, _ParseBinaryExpression
+    VHDLModel_ConcatenationExpression, DOMMixin, _ParseBinaryExpressionMixin
 ):
     def __init__(self, node: Iir, left: Expression, right: Expression):
-        super().__init__()
+        super().__init__(left, right)
         DOMMixin.__init__(self, node)
-
-        self._leftOperand = left
-        self._rightOperand = right
 
 
 @export
 class MultiplyExpression(
-    VHDLModel_MultiplyExpression, DOMMixin, _ParseBinaryExpression
+    VHDLModel_MultiplyExpression, DOMMixin, _ParseBinaryExpressionMixin
 ):
     def __init__(self, node: Iir, left: Expression, right: Expression):
-        super().__init__()
+        super().__init__(left, right)
         DOMMixin.__init__(self, node)
-
-        self._leftOperand = left
-        self._rightOperand = right
 
 
 @export
 class DivisionExpression(
-    VHDLModel_DivisionExpression, DOMMixin, _ParseBinaryExpression
+    VHDLModel_DivisionExpression, DOMMixin, _ParseBinaryExpressionMixin
 ):
     def __init__(self, node: Iir, left: Expression, right: Expression):
-        super().__init__()
+        super().__init__(left, right)
         DOMMixin.__init__(self, node)
-
-        self._leftOperand = left
-        self._rightOperand = right
 
 
 @export
 class RemainderExpression(
-    VHDLModel_RemainderExpression, DOMMixin, _ParseBinaryExpression
+    VHDLModel_RemainderExpression, DOMMixin, _ParseBinaryExpressionMixin
 ):
     def __init__(self, node: Iir, left: Expression, right: Expression):
-        super().__init__()
+        super().__init__(left, right)
         DOMMixin.__init__(self, node)
-
-        self._leftOperand = left
-        self._rightOperand = right
 
 
 @export
-class ModuloExpression(VHDLModel_ModuloExpression, DOMMixin, _ParseBinaryExpression):
+class ModuloExpression(VHDLModel_ModuloExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: Expression, right: Expression):
-        super().__init__()
+        super().__init__(left, right)
         DOMMixin.__init__(self, node)
-
-        self._leftOperand = left
-        self._rightOperand = right
 
 
 @export
 class ExponentiationExpression(
-    VHDLModel_ExponentiationExpression, DOMMixin, _ParseBinaryExpression
+    VHDLModel_ExponentiationExpression, DOMMixin, _ParseBinaryExpressionMixin
 ):
     def __init__(self, node: Iir, left: Expression, right: Expression):
-        super().__init__()
+        super().__init__(left, right)
         DOMMixin.__init__(self, node)
-
-        self._leftOperand = left
-        self._rightOperand = right
 
 
 @export
-class AndExpression(VHDLModel_AndExpression, DOMMixin, _ParseBinaryExpression):
+class AndExpression(VHDLModel_AndExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: Expression, right: Expression):
-        super().__init__()
+        super().__init__(left, right)
         DOMMixin.__init__(self, node)
-
-        self._leftOperand = left
-        self._rightOperand = right
 
 
 @export
-class NandExpression(VHDLModel_NandExpression, DOMMixin, _ParseBinaryExpression):
+class NandExpression(VHDLModel_NandExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: Expression, right: Expression):
-        super().__init__()
+        super().__init__(left, right)
         DOMMixin.__init__(self, node)
-
-        self._leftOperand = left
-        self._rightOperand = right
 
 
 @export
-class OrExpression(VHDLModel_OrExpression, DOMMixin, _ParseBinaryExpression):
+class OrExpression(VHDLModel_OrExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: Expression, right: Expression):
-        super().__init__()
+        super().__init__(left, right)
         DOMMixin.__init__(self, node)
-
-        self._leftOperand = left
-        self._rightOperand = right
 
 
 @export
-class NorExpression(VHDLModel_NorExpression, DOMMixin, _ParseBinaryExpression):
+class NorExpression(VHDLModel_NorExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: Expression, right: Expression):
-        super().__init__()
+        super().__init__(left, right)
         DOMMixin.__init__(self, node)
-
-        self._leftOperand = left
-        self._rightOperand = right
 
 
 @export
-class XorExpression(VHDLModel_XorExpression, DOMMixin, _ParseBinaryExpression):
+class XorExpression(VHDLModel_XorExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: Expression, right: Expression):
-        super().__init__()
+        super().__init__(left, right)
         DOMMixin.__init__(self, node)
-
-        self._leftOperand = left
-        self._rightOperand = right
 
 
 @export
-class XnorExpression(VHDLModel_XnorExpression, DOMMixin, _ParseBinaryExpression):
+class XnorExpression(VHDLModel_XnorExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: Expression, right: Expression):
-        super().__init__()
+        super().__init__(left, right)
         DOMMixin.__init__(self, node)
-
-        self._leftOperand = left
-        self._rightOperand = right
 
 
 @export
-class EqualExpression(VHDLModel_EqualExpression, DOMMixin, _ParseBinaryExpression):
+class EqualExpression(VHDLModel_EqualExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: Expression, right: Expression):
-        super().__init__()
+        super().__init__(left, right)
         DOMMixin.__init__(self, node)
-
-        self._leftOperand = left
-        self._rightOperand = right
 
 
 @export
-class UnequalExpression(VHDLModel_UnequalExpression, DOMMixin, _ParseBinaryExpression):
+class UnequalExpression(VHDLModel_UnequalExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: Expression, right: Expression):
-        super().__init__()
+        super().__init__(left, right)
         DOMMixin.__init__(self, node)
-
-        self._leftOperand = left
-        self._rightOperand = right
 
 
 @export
 class LessThanExpression(
-    VHDLModel_LessThanExpression, DOMMixin, _ParseBinaryExpression
+    VHDLModel_LessThanExpression, DOMMixin, _ParseBinaryExpressionMixin
 ):
     def __init__(self, node: Iir, left: Expression, right: Expression):
-        super().__init__()
+        super().__init__(left, right)
         DOMMixin.__init__(self, node)
-
-        self._leftOperand = left
-        self._rightOperand = right
 
 
 @export
 class LessEqualExpression(
-    VHDLModel_LessEqualExpression, DOMMixin, _ParseBinaryExpression
+    VHDLModel_LessEqualExpression, DOMMixin, _ParseBinaryExpressionMixin
 ):
     def __init__(self, node: Iir, left: Expression, right: Expression):
-        super().__init__()
+        super().__init__(left, right)
         DOMMixin.__init__(self, node)
-
-        self._leftOperand = left
-        self._rightOperand = right
 
 
 @export
 class GreaterThanExpression(
-    VHDLModel_GreaterThanExpression, DOMMixin, _ParseBinaryExpression
+    VHDLModel_GreaterThanExpression, DOMMixin, _ParseBinaryExpressionMixin
 ):
     def __init__(self, node: Iir, left: Expression, right: Expression):
-        super().__init__()
+        super().__init__(left, right)
         DOMMixin.__init__(self, node)
-
-        self._leftOperand = left
-        self._rightOperand = right
 
 
 @export
 class GreaterEqualExpression(
-    VHDLModel_GreaterEqualExpression, DOMMixin, _ParseBinaryExpression
+    VHDLModel_GreaterEqualExpression, DOMMixin, _ParseBinaryExpressionMixin
 ):
     def __init__(self, node: Iir, left: Expression, right: Expression):
-        super().__init__()
+        super().__init__(left, right)
         DOMMixin.__init__(self, node)
-
-        self._leftOperand = left
-        self._rightOperand = right
 
 
 @export
 class ShiftRightLogicExpression(
-    VHDLModel_ShiftRightLogicExpression, DOMMixin, _ParseBinaryExpression
+    VHDLModel_ShiftRightLogicExpression, DOMMixin, _ParseBinaryExpressionMixin
 ):
     def __init__(self, node: Iir, left: Expression, right: Expression):
-        super().__init__()
+        super().__init__(left, right)
         DOMMixin.__init__(self, node)
-
-        self._leftOperand = left
-        self._rightOperand = right
 
 
 @export
 class ShiftLeftLogicExpression(
-    VHDLModel_ShiftLeftLogicExpression, DOMMixin, _ParseBinaryExpression
+    VHDLModel_ShiftLeftLogicExpression, DOMMixin, _ParseBinaryExpressionMixin
 ):
     def __init__(self, node: Iir, left: Expression, right: Expression):
-        super().__init__()
+        super().__init__(left, right)
         DOMMixin.__init__(self, node)
-
-        self._leftOperand = left
-        self._rightOperand = right
 
 
 @export
 class ShiftRightArithmeticExpression(
-    VHDLModel_ShiftRightArithmeticExpression, DOMMixin, _ParseBinaryExpression
+    VHDLModel_ShiftRightArithmeticExpression, DOMMixin, _ParseBinaryExpressionMixin
 ):
     def __init__(self, node: Iir, left: Expression, right: Expression):
-        super().__init__()
+        super().__init__(left, right)
         DOMMixin.__init__(self, node)
-
-        self._leftOperand = left
-        self._rightOperand = right
 
 
 @export
 class ShiftLeftArithmeticExpression(
-    VHDLModel_ShiftLeftArithmeticExpression, DOMMixin, _ParseBinaryExpression
+    VHDLModel_ShiftLeftArithmeticExpression, DOMMixin, _ParseBinaryExpressionMixin
 ):
     def __init__(self, node: Iir, left: Expression, right: Expression):
-        super().__init__()
+        super().__init__(left, right)
         DOMMixin.__init__(self, node)
-
-        self._leftOperand = left
-        self._rightOperand = right
 
 
 @export
 class RotateRightExpression(
-    VHDLModel_RotateRightExpression, DOMMixin, _ParseBinaryExpression
+    VHDLModel_RotateRightExpression, DOMMixin, _ParseBinaryExpressionMixin
 ):
     def __init__(self, node: Iir, left: Expression, right: Expression):
-        super().__init__()
+        super().__init__(left, right)
         DOMMixin.__init__(self, node)
-
-        self._leftOperand = left
-        self._rightOperand = right
 
 
 @export
 class RotateLeftExpression(
-    VHDLModel_RotateLeftExpression, DOMMixin, _ParseBinaryExpression
+    VHDLModel_RotateLeftExpression, DOMMixin, _ParseBinaryExpressionMixin
 ):
     def __init__(self, node: Iir, left: Expression, right: Expression):
-        super().__init__()
+        super().__init__(left, right)
         DOMMixin.__init__(self, node)
-
-        self._leftOperand = left
-        self._rightOperand = right
 
 
 @export
 class QualifiedExpression(VHDLModel_QualifiedExpression, DOMMixin):
     def __init__(self, node: Iir, subType: SubTypeOrSymbol, operand: Expression):
-        super().__init__()
+        super().__init__(subType, operand)
         DOMMixin.__init__(self, node)
-
-        self._subtype = subType
-        self._operand = operand
 
     @classmethod
     def parse(cls, node: Iir):
@@ -532,16 +431,14 @@ class QualifiedExpression(VHDLModel_QualifiedExpression, DOMMixin):
         typeMarkName = GetNameOfNode(nodes.Get_Type_Mark(node))
         subType = SimpleSubTypeSymbol(node, typeMarkName)
         operand = GetExpressionFromNode(nodes.Get_Expression(node))
-        return cls(subType, operand)
+        return cls(node, subType, operand)
 
 
 @export
 class Aggregate(VHDLModel_Aggregate, DOMMixin):
     def __init__(self, node: Iir, elements: List[AggregateElement]):
-        super().__init__()
+        super().__init__(elements)
         DOMMixin.__init__(self, node)
-
-        self._elements = elements
 
     @classmethod
     def parse(cls, node: Iir):
@@ -563,7 +460,7 @@ class Aggregate(VHDLModel_Aggregate, DOMMixin):
                 r = GetRangeFromNode(nodes.Get_Choice_Range(item))
                 choices.append(RangedAggregateElement(item, r, value))
             elif kind == nodes.Iir_Kind.Choice_By_Name:
-                name = EnumerationLiteralSymbol(nodes.Get_Choice_Name(item))
+                name = EnumerationLiteralSymbol(item, nodes.Get_Choice_Name(item))
                 choices.append(NamedAggregateElement(item, name, value))
             elif kind == nodes.Iir_Kind.Choice_By_Others:
                 choices.append(OthersAggregateElement(item, value))
