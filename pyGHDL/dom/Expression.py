@@ -77,13 +77,14 @@ from pyVHDLModel.VHDLModel import (
     Expression,
     AggregateElement,
     SubTypeOrSymbol,
+    Symbol,
 )
 
 from pyGHDL.libghdl import utils
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom._Utils import GetIirKindOfNode
-from pyGHDL.dom.Symbol import EnumerationLiteralSymbol, SimpleSubTypeSymbol
+from pyGHDL.dom.Symbol import SimpleSubTypeSymbol
 from pyGHDL.dom.Aggregates import (
     OthersAggregateElement,
     SimpleAggregateElement,
@@ -116,28 +117,36 @@ class _ParseBinaryExpressionMixin:
 
 
 @export
-class InverseExpression(VHDLModel_InverseExpression, DOMMixin, _ParseUnaryExpressionMixin):
+class InverseExpression(
+    VHDLModel_InverseExpression, DOMMixin, _ParseUnaryExpressionMixin
+):
     def __init__(self, node: Iir, operand: Expression):
         super().__init__(operand)
         DOMMixin.__init__(self, node)
 
 
 @export
-class IdentityExpression(VHDLModel_IdentityExpression, DOMMixin, _ParseUnaryExpressionMixin):
+class IdentityExpression(
+    VHDLModel_IdentityExpression, DOMMixin, _ParseUnaryExpressionMixin
+):
     def __init__(self, node: Iir, operand: Expression):
         super().__init__(operand)
         DOMMixin.__init__(self, node)
 
 
 @export
-class NegationExpression(VHDLModel_NegationExpression, DOMMixin, _ParseUnaryExpressionMixin):
+class NegationExpression(
+    VHDLModel_NegationExpression, DOMMixin, _ParseUnaryExpressionMixin
+):
     def __init__(self, node: Iir, operand: Expression):
         super().__init__(operand)
         DOMMixin.__init__(self, node)
 
 
 @export
-class AbsoluteExpression(VHDLModel_AbsoluteExpression, DOMMixin, _ParseUnaryExpressionMixin):
+class AbsoluteExpression(
+    VHDLModel_AbsoluteExpression, DOMMixin, _ParseUnaryExpressionMixin
+):
     def __init__(self, node: Iir, operand: Expression):
         super().__init__(operand)
         DOMMixin.__init__(self, node)
@@ -257,7 +266,9 @@ class RemainderExpression(
 
 
 @export
-class ModuloExpression(VHDLModel_ModuloExpression, DOMMixin, _ParseBinaryExpressionMixin):
+class ModuloExpression(
+    VHDLModel_ModuloExpression, DOMMixin, _ParseBinaryExpressionMixin
+):
     def __init__(self, node: Iir, left: Expression, right: Expression):
         super().__init__(left, right)
         DOMMixin.__init__(self, node)
@@ -322,7 +333,9 @@ class EqualExpression(VHDLModel_EqualExpression, DOMMixin, _ParseBinaryExpressio
 
 
 @export
-class UnequalExpression(VHDLModel_UnequalExpression, DOMMixin, _ParseBinaryExpressionMixin):
+class UnequalExpression(
+    VHDLModel_UnequalExpression, DOMMixin, _ParseBinaryExpressionMixin
+):
     def __init__(self, node: Iir, left: Expression, right: Expression):
         super().__init__(left, right)
         DOMMixin.__init__(self, node)
@@ -442,7 +455,11 @@ class Aggregate(VHDLModel_Aggregate, DOMMixin):
 
     @classmethod
     def parse(cls, node: Iir):
-        from pyGHDL.dom._Translate import GetExpressionFromNode, GetRangeFromNode
+        from pyGHDL.dom._Translate import (
+            GetExpressionFromNode,
+            GetRangeFromNode,
+            GetNameFromNode,
+        )
 
         choices = []
 
@@ -460,8 +477,9 @@ class Aggregate(VHDLModel_Aggregate, DOMMixin):
                 r = GetRangeFromNode(nodes.Get_Choice_Range(item))
                 choices.append(RangedAggregateElement(item, r, value))
             elif kind == nodes.Iir_Kind.Choice_By_Name:
-                name = EnumerationLiteralSymbol(item, nodes.Get_Choice_Name(item))
-                choices.append(NamedAggregateElement(item, name, value))
+                name = GetNameFromNode(nodes.Get_Choice_Name(item))
+                symbol = Symbol(item, name)
+                choices.append(NamedAggregateElement(item, symbol, value))
             elif kind == nodes.Iir_Kind.Choice_By_Others:
                 choices.append(OthersAggregateElement(item, value))
             else:

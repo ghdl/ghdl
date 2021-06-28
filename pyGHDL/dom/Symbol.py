@@ -39,7 +39,6 @@ from pyVHDLModel.VHDLModel import (
     SimpleSubTypeSymbol as VHDLModel_SimpleSubTypeSymbol,
     ConstrainedScalarSubTypeSymbol as VHDLModel_ConstrainedScalarSubTypeSymbol,
     ConstrainedCompositeSubTypeSymbol as VHDLModel_ConstrainedCompositeSubTypeSymbol,
-    EnumerationLiteralSymbol as VHDLModel_EnumerationLiteralSymbol,
     SimpleObjectOrFunctionCallSymbol as VHDLModel_SimpleObjectOrFunctionCallSymbol,
     IndexedObjectOrFunctionCallSymbol as VHDLModel_IndexedObjectOrFunctionCallSymbol,
     Constraint,
@@ -57,13 +56,6 @@ __all__ = []
 class EntitySymbol(VHDLModel_EntitySymbol, DOMMixin):
     def __init__(self, node: Iir, entityName: Name):
         super().__init__(entityName)
-        DOMMixin.__init__(self, node)
-
-
-@export
-class EnumerationLiteralSymbol(VHDLModel_EnumerationLiteralSymbol, DOMMixin):
-    def __init__(self, node: Iir, literalName: Name):
-        super().__init__(literalName)
         DOMMixin.__init__(self, node)
 
 

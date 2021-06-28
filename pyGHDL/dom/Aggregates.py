@@ -48,12 +48,11 @@ from pyVHDLModel.VHDLModel import (
     NamedAggregateElement as VHDLModel_NamedAggregateElement,
     OthersAggregateElement as VHDLModel_OthersAggregateElement,
     Expression,
+    Symbol,
 )
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.dom import DOMMixin
 from pyGHDL.dom.Range import Range
-from pyGHDL.dom.Symbol import EnumerationLiteralSymbol
-
 
 __all__ = []
 
@@ -61,42 +60,29 @@ __all__ = []
 @export
 class SimpleAggregateElement(VHDLModel_SimpleAggregateElement, DOMMixin):
     def __init__(self, node: Iir, expression: Expression):
-        super().__init__()
+        super().__init__(expression)
         DOMMixin.__init__(self, node)
-
-        self._expression = expression
 
 
 @export
 class IndexedAggregateElement(VHDLModel_IndexedAggregateElement, DOMMixin):
     def __init__(self, node: Iir, index: Expression, expression: Expression):
-        super().__init__()
+        super().__init__(index, expression)
         DOMMixin.__init__(self, node)
-
-        self._index = index
-        self._expression = expression
 
 
 @export
 class RangedAggregateElement(VHDLModel_RangedAggregateElement, DOMMixin):
-    def __init__(self, node: Iir, r: Range, expression: Expression):
-        super().__init__()
+    def __init__(self, node: Iir, rng: Range, expression: Expression):
+        super().__init__(rng, expression)
         DOMMixin.__init__(self, node)
-
-        self._range = r
-        self._expression = expression
 
 
 @export
 class NamedAggregateElement(VHDLModel_NamedAggregateElement, DOMMixin):
-    def __init__(
-        self, node: Iir, name: EnumerationLiteralSymbol, expression: Expression
-    ):
-        super().__init__()
+    def __init__(self, node: Iir, name: Symbol, expression: Expression):
+        super().__init__(name, expression)
         DOMMixin.__init__(self, node)
-
-        self._name = name
-        self._expression = expression
 
 
 @export
