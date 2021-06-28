@@ -81,6 +81,7 @@ from pyGHDL.dom.Type import (
     ProtectedTypeBody,
     FileType,
     PhysicalType,
+    IncompleteType,
 )
 from pyGHDL.dom.Range import Range
 from pyGHDL.dom.Literal import (
@@ -217,22 +218,14 @@ def GetArrayConstraintsFromSubtypeIndication(
 def GetTypeFromNode(node: Iir) -> BaseType:
     typeName = GetNameOfNode(node)
     typeDefinition = nodes.Get_Type_Definition(node)
+    if typeDefinition is nodes.Null_Iir:
+        return IncompleteType(node, typeName)
 
     kind = GetIirKindOfNode(typeDefinition)
-    if kind == nodes.Iir_Kind.Range_Expression:
-        r = GetRangeFromNode(typeDefinition)
-
-        return IntegerType(node, typeName, r)
-    elif kind == nodes.Iir_Kind.Physical_Type_Definition:
-        return PhysicalType.parse(typeName, typeDefinition)
-    elif kind == nodes.Iir_Kind.Enumeration_Type_Definition:
+    if kind == nodes.Iir_Kind.Enumeration_Type_Definition:
         return EnumeratedType.parse(typeName, typeDefinition)
     elif kind == nodes.Iir_Kind.Array_Type_Definition:
         return ArrayType.parse(typeName, typeDefinition)
-    elif kind == nodes.Iir_Kind.Array_Subtype_Definition:
-        print("[NOT IMPLEMENTED] Array_Subtype_Definition")
-
-        return ArrayType(typeDefinition, "????", [], None)
     elif kind == nodes.Iir_Kind.Record_Type_Definition:
         return RecordType.parse(typeName, typeDefinition)
     elif kind == nodes.Iir_Kind.Access_Type_Definition:
@@ -244,9 +237,41 @@ def GetTypeFromNode(node: Iir) -> BaseType:
     else:
         position = Position.parse(typeDefinition)
         raise DOMException(
-            "Unknown type definition kind '{kindName}'({kind}) for type '{name}' at {file}:{line}:{column}.".format(
-                kind=kind,
-                kindName=kind.name,
+            "GetTypeFromNode: Unknown type definition kind '{kind}' for type '{name}' at {file}:{line}:{column}.".format(
+                kind=kind.name,
+                name=typeName,
+                file=position.Filename,
+                line=position.Line,
+                column=position.Column,
+            )
+        )
+
+
+@export
+def GetAnonymousTypeFromNode(node: Iir) -> BaseType:
+    typeName = GetNameOfNode(node)
+    typeDefinition = nodes.Get_Type_Definition(node)
+    if typeDefinition is nodes.Null_Iir:
+        print(1, node, typeName)
+        return IncompleteType(node, typeName)
+
+    kind = GetIirKindOfNode(typeDefinition)
+    if kind == nodes.Iir_Kind.Range_Expression:
+        r = GetRangeFromNode(typeDefinition)
+        return IntegerType(node, typeName, r)
+
+    elif kind == nodes.Iir_Kind.Physical_Type_Definition:
+        return PhysicalType.parse(typeName, typeDefinition)
+
+    elif kind == nodes.Iir_Kind.Array_Subtype_Definition:
+        print("[NOT IMPLEMENTED] Array_Subtype_Definition")
+
+        return ArrayType(typeDefinition, "????", [], None)
+    else:
+        position = Position.parse(typeDefinition)
+        raise DOMException(
+            "GetAnonymousTypeFromNode: Unknown type definition kind '{kind}' for type '{name}' at {file}:{line}:{column}.".format(
+                kind=kind.name,
                 name=typeName,
                 file=position.Filename,
                 line=position.Line,
@@ -541,12 +566,16 @@ def GetDeclaredItemsFromChainedNodes(
             yield File.parse(item)
         elif kind == nodes.Iir_Kind.Type_Declaration:
             yield GetTypeFromNode(item)
+
         elif kind == nodes.Iir_Kind.Anonymous_Type_Declaration:
-            yield GetTypeFromNode(item)
+            yield GetAnonymousTypeFromNode(item)
+
         elif kind == nodes.Iir_Kind.Subtype_Declaration:
             yield GetSubTypeFromNode(item)
+
         elif kind == nodes.Iir_Kind.Function_Declaration:
             yield Function.parse(item)
+
         elif kind == nodes.Iir_Kind.Function_Body:
             #                procedureName = NodeToName(item)
             print("found function body '{name}'".format(name="????"))
@@ -582,6 +611,14 @@ def GetDeclaredItemsFromChainedNodes(
         elif kind == nodes.Iir_Kind.Configuration_Specification:
             print(
                 "[NOT IMPLEMENTED] Configuration specification in {name}".format(
+                    name=name
+                )
+            )
+        elif kind == nodes.Iir_Kind.Group_Declaration:
+            print("[NOT IMPLEMENTED] Group declaration in {name}".format(name=name))
+        elif kind == nodes.Iir_Kind.Group_Template_Declaration:
+            print(
+                "[NOT IMPLEMENTED] Group template declaration in {name}".format(
                     name=name
                 )
             )

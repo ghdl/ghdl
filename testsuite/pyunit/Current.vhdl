@@ -5,12 +5,14 @@ use     ieee.numeric_std.all;
 entity entity_1 is
 	generic (
 		FREQ : real     := 100.0;
-		BITS : positive := 8
+		BITS : positive := 8.5 ns;
+		type Typ
 	);
 	port (
-	  Clock: in  std_logic;
+	  Clock: in  std_logic := 5 ns;
 	  Reset: in  std_logic := '0';
-	  Q:     out std_logic_vector(BITS - 1 downto 0)
+	  D:     inout bit_vector(clock'range);
+	  Q:     out std_logic_vector(BITS'left - 1 downto Re.set)
 	);
 
 	constant fire : boolean := True;
@@ -20,6 +22,7 @@ end entity entity_1;
 
 architecture behav of entity_1 is
 	constant MAX : positive := -25;
+
 	signal rst : std_logic := foo('U');
 	signal vec : bit_vector(pack(3 to 2).signaal'range'value);
 	signal copy : input'subtype;
@@ -94,8 +97,10 @@ package package_1 is
 
 	use lib.pack.all;
 
+  type cell;
+
 	constant ghdl : float := (3, 5, 0 to 2 => 5, 3 => 4, name => 10); -- 2.3;
-	attribute fixed of ghdl : constant is true;
+	attribute fixed of ghdl [bar] : constant is true;
 
 	component comp is
 		port (

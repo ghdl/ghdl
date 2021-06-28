@@ -16,6 +16,7 @@ from pyGHDL.dom.Type import (
     ProtectedType,
     ProtectedTypeBody,
     PhysicalType,
+    IncompleteType,
 )
 from pyVHDLModel.VHDLModel import (
     GenericInterfaceItem,
@@ -24,7 +25,7 @@ from pyVHDLModel.VHDLModel import (
     WithDefaultExpressionMixin,
     Function,
     BaseType,
-    Type,
+    FullType,
 )
 
 from pyGHDL import GHDLBaseException
@@ -97,7 +98,12 @@ class PrettyPrint:
         #         buffer.append(line)
         buffer.append("{prefix}Packages:".format(prefix=prefix))
         for package in library.Packages:
-            for line in self.formatPackage(package, level + 1):
+            if isinstance(package, Package):
+                gen = self.formatPackage
+            else:
+                gen = self.formatPackageInstance
+
+            for line in gen(package, level + 1):
                 buffer.append(line)
         # buffer.append("{prefix}PackageBodies:".format(prefix=prefix))
         # for packageBodies in library.PackageBodies:
@@ -127,7 +133,12 @@ class PrettyPrint:
                 buffer.append(line)
         buffer.append("{prefix}Packages:".format(prefix=prefix))
         for package in document.Packages:
-            for line in self.formatPackage(package, level + 1):
+            if isinstance(package, Package):
+                gen = self.formatPackage
+            else:
+                gen = self.formatPackageInstance
+
+            for line in gen(package, level + 1):
                 buffer.append(line)
         buffer.append("{prefix}PackageBodies:".format(prefix=prefix))
         for packageBodies in document.PackageBodies:
@@ -222,6 +233,24 @@ class PrettyPrint:
         for item in package.DeclaredItems:
             for line in self.formatDeclaredItems(item, level + 1):
                 buffer.append(line)
+
+        return buffer
+
+    def formatPackageInstance(
+        self, package: PackageInstantiation, level: int = 0
+    ) -> StringBuffer:
+        buffer = []
+        prefix = "  " * level
+        buffer.append("{prefix}- Name: {name}".format(name=package.Name, prefix=prefix))
+        buffer.append(
+            "{prefix}  Package: {name!s}".format(
+                prefix=prefix, name=package.PackageReference
+            )
+        )
+        buffer.append("{prefix}  Generic Map: ...".format(prefix=prefix))
+        #        for item in package.GenericItems:
+        #            for line in self.formatGeneric(item, level + 1):
+        #                buffer.append(line)
 
         return buffer
 
@@ -383,7 +412,7 @@ class PrettyPrint:
                     ),
                 )
             )
-        elif isinstance(item, Type):
+        elif isinstance(item, (FullType, IncompleteType)):
             buffer.append(
                 "{prefix}- {type}".format(prefix=prefix, type=self.formatType(item))
             )
@@ -454,7 +483,9 @@ class PrettyPrint:
 
     def formatType(self, item: BaseType) -> str:
         result = "type {name} is ".format(name=item.Name)
-        if isinstance(item, IntegerType):
+        if isinstance(item, IncompleteType):
+            result += ""
+        elif isinstance(item, IntegerType):
             result += "range {left!s} to {right!s}".format(
                 left=item.LeftBound, right=item.RightBound
             )

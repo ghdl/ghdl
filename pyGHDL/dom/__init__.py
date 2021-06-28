@@ -84,6 +84,11 @@ class Position:
     def Column(self) -> int:
         return self._column
 
+    def __str__(self):
+        return "{file}:{line}:{column}".format(
+            file=self._filename, line=self._line, column=self._column
+        )
+
 
 @export
 class DOMMixin:

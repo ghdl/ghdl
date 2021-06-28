@@ -87,9 +87,9 @@ class Expressions(TestCase):
         default: Expression = self.parse(filename, constantDeclartion)
 
         # Start checks
-        self.assertTrue(isinstance(default, InverseExpression))
-        self.assertTrue(isinstance(default.Operand, SimpleObjectOrFunctionCallSymbol))
-        self.assertTrue(default.Operand.SymbolName == "true")
+        self.assertIsInstance(default, InverseExpression)
+        self.assertIsInstance(default.Operand, SimpleObjectOrFunctionCallSymbol)
+        self.assertTrue(str(default.Operand.SymbolName) == "true")
 
     # def test_AbsExpression(self):
     #     filename: Path = self._root / "{className}_{funcName}.vhdl".format(

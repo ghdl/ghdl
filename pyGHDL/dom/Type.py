@@ -35,6 +35,7 @@ from typing import List, Union, Iterator, Tuple
 from pydecor import export
 
 from pyVHDLModel.VHDLModel import (
+    AnonymousType as VHDLModel_AnonymousType,
     PhysicalType as VHDLModel_PhysicalType,
     IntegerType as VHDLModel_IntegerType,
     EnumeratedType as VHDLModel_EnumeratedType,
@@ -57,6 +58,19 @@ from pyGHDL.dom.Symbol import SimpleSubTypeSymbol
 from pyGHDL.dom.Literal import EnumerationLiteral, PhysicalIntegerLiteral
 from pyGHDL.dom.Range import Range
 from pyGHDL.dom.Subprogram import Function, Procedure
+
+
+@export
+class IncompleteType(VHDLModel_AnonymousType, DOMMixin):
+    def __init__(self, node: Iir, name: str):
+        super().__init__(name)
+        DOMMixin.__init__(self, node)
+
+    @classmethod
+    def parse(cls, node: Iir) -> "IncompleteType":
+        name = GetNameOfNode(node)
+
+        return cls(node, name)
 
 
 @export
