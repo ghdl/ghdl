@@ -412,6 +412,8 @@ __EXPRESSION_TRANSLATION = {
     nodes.Iir_Kind.Ror_Operator: RotateRightExpression,
     nodes.Iir_Kind.Qualified_Expression: QualifiedExpression,
     nodes.Iir_Kind.Aggregate: Aggregate,
+    nodes.Iir_Kind.Allocator_By_Subtype: SubtypeAllocation,
+    nodes.Iir_Kind.Allocator_By_Expression: QualifiedExpressionAllocation,
 }
 
 

@@ -73,6 +73,8 @@ from pyVHDLModel.VHDLModel import (
     ShiftLeftArithmeticExpression as VHDLModel_ShiftLeftArithmeticExpression,
     RotateRightExpression as VHDLModel_RotateRightExpression,
     RotateLeftExpression as VHDLModel_RotateLeftExpression,
+    SubtypeAllocation as VHDLModel_SubtypeAllocation,
+    QualifiedExpressionAllocation as VHDLModel_QualifiedExpressionAllocation,
     Aggregate as VHDLModel_Aggregate,
     Expression,
     AggregateElement,
@@ -444,7 +446,37 @@ class QualifiedExpression(VHDLModel_QualifiedExpression, DOMMixin):
         typeMarkName = GetNameOfNode(nodes.Get_Type_Mark(node))
         subType = SimpleSubTypeSymbol(node, typeMarkName)
         operand = GetExpressionFromNode(nodes.Get_Expression(node))
-        return cls(node, subType, operand)
+        return cls(node, subtype, operand)
+
+
+@export
+class SubtypeAllocation(VHDLModel_SubtypeAllocation, DOMMixin):
+    def __init__(self, node: Iir, subtype: Symbol):
+        super().__init__(subtype)
+        DOMMixin.__init__(self, node)
+
+    @classmethod
+    def parse(cls, node: Iir) -> "QualifiedExpressionAllocation":
+        from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode
+
+        subtype = GetSubtypeIndicationFromNode(node, "allocation", "?")
+
+        return cls(node, subtype)
+
+
+@export
+class QualifiedExpressionAllocation(VHDLModel_QualifiedExpressionAllocation, DOMMixin):
+    def __init__(self, node: Iir, qualifiedExpression: QualifiedExpression):
+        super().__init__(qualifiedExpression)
+        DOMMixin.__init__(self, node)
+
+    @classmethod
+    def parse(cls, node: Iir) -> "QualifiedExpressionAllocation":
+        from pyGHDL.dom._Translate import GetExpressionFromNode
+
+        expression = GetExpressionFromNode(nodes.Get_Expression(node))
+
+        return cls(node, expression)
 
 
 @export
