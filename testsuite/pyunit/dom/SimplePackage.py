@@ -52,7 +52,7 @@ class SimplePackage(TestCase):
         design.Documents.append(document)
 
         self.assertEqual(len(design.Documents[0].Packages), 1)
-        self.assertTrue(design.Documents[0].Packages[0].Identifier == "pack_1")
+        self.assertEqual(design.Documents[0].Packages[0].Identifier, "pack_1")
 
     def test_PackageBody(self):
         design = Design()
@@ -60,4 +60,4 @@ class SimplePackage(TestCase):
         design.Documents.append(document)
 
         self.assertEqual(len(design.Documents[0].PackageBodies), 1)
-        self.assertTrue(design.Documents[0].PackageBodies[0].Identifier == "pack_1")
+        self.assertEqual(design.Documents[0].PackageBodies[0].Identifier, "pack_1")

@@ -74,12 +74,12 @@ class Literals(TestCase):
 
         self.assertEqual(len(design.Documents[0].Packages), 1)
         package = design.Documents[0].Packages[0]
-        self.assertTrue(package.Identifier == "package_1")
+        self.assertEqual(package.Identifier, "package_1")
         self.assertEqual(len(package.DeclaredItems), len(expected))
         for i in range(len(expected)):
             item: Constant = package.DeclaredItems[i]
             self.assertIsInstance(item, Constant)
-            self.assertTrue(item.Identifier == "c{}".format(i))
-            self.assertTrue(str(item.SubType.SymbolName) == "integer")
+            self.assertEqual(item.Identifier, "c{}".format(i))
+            self.assertEqual(str(item.SubType.SymbolName), "integer")
             self.assertIsInstance(item.DefaultExpression, IntegerLiteral)
-            self.assertTrue(item.DefaultExpression.Value == expected[i])
+            self.assertEqual(item.DefaultExpression.Value, expected[i])
