@@ -366,12 +366,74 @@ jobs:
         ghdl-ls --help
 
 #
+# Windows Generate Standalone ZipFile
+#
+
+  win-generate-standalone-zip:
+    needs: win-build
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include: [
+          {icon: '🟪', installs: 'MINGW32', arch: i686   },
+          {icon: '🟦', installs: "MINGW64", arch: x86_64 }, #! simulation with mcode is not yet supported on win64
+        ]
+    name: '${{ matrix.icon }} Deps · ${{ matrix.installs }} · mcode'
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+
+    - name: '${{ matrix.icon }} Setup MSYS2'
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: ${{ matrix.installs }}
+        update: true
+        install: >-
+          tree
+          zstd
+          zip
+          tar
+
+    - name: '⚙️ git config'
+      run: git config --global core.autocrlf input
+      shell: bash
+
+    - name: '🧰 Checkout'
+      uses: actions/checkout@v2
+
+    - name: '📥 Download artifact: package'
+      uses: actions/download-artifact@v2
+
+    - name: '🚧 Install package'
+      run: pacman --noconfirm -U artifact/mingw-w64-${{ matrix.arch }}-ghdl-mcode-*.zst
+
+    - name: '🥡 Generate standalone zipfile'
+      run: |
+        _zipdir="${{ matrix.installs }}-mcode-standalone"
+        mkdir -p "${_zipdir}"-extract
+        tar xf artifact/mingw-w64-${{ matrix.arch }}-ghdl-mcode-*.zst -C "${_zipdir}"-extract
+        cd "${_zipdir}-extract/${{ matrix.installs }}"/bin
+        ../../../scripts/msys2-mcode/GetStandaloneDeps.sh
+        cd ../../..
+        mv "${_zipdir}"-extract/mingw${{ matrix.bits }} "${_zipdir}"
+        tree "${_zipdir}"
+        zip "${_zipdir}".zip -r "${_zipdir}"
+
+    - name: '📤 Upload artifact: zipfile'
+      uses: actions/upload-artifact@v2
+      with:
+        path: ${{ matrix.installs }}-mcode-standalone.zip
+
+#
 # Release
 #
 
   Release:
     if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/master' || contains(github.ref, 'refs/tags/'))
-    needs: [ doc, lin, osx, win-test, win-pip ]
+    needs: [ doc, lin, osx, win-test, win-pip, win-generate-standalone-zip ]
     runs-on: ubuntu-latest
     name: '📦 Release'
     steps:
