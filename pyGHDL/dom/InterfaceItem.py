@@ -63,12 +63,12 @@ class GenericConstantInterfaceItem(VHDLModel_GenericConstantInterfaceItem, DOMMi
     def __init__(
         self,
         node: Iir,
-        name: str,
+        identifier: str,
         mode: Mode,
         subType: SubTypeOrSymbol,
         defaultExpression: Expression,
     ):
-        super().__init__(name, mode, subType, defaultExpression)
+        super().__init__(identifier, mode, subType, defaultExpression)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -87,9 +87,9 @@ class GenericTypeInterfaceItem(VHDLModel_GenericTypeInterfaceItem, DOMMixin):
     def __init__(
         self,
         node: Iir,
-        name: str,
+        identifier: str,
     ):
-        super().__init__(name)
+        super().__init__(identifier)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -121,9 +121,9 @@ class GenericProcedureInterfaceItem(VHDLModel_GenericProcedureInterfaceItem, DOM
     def __init__(
         self,
         node: Iir,
-        name: str,
+        identifier: str,
     ):
-        super().__init__(name)
+        super().__init__(identifier)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -138,9 +138,9 @@ class GenericFunctionInterfaceItem(VHDLModel_GenericFunctionInterfaceItem, DOMMi
     def __init__(
         self,
         node: Iir,
-        name: str,
+        identifier: str,
     ):
-        super().__init__(name)
+        super().__init__(identifier)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -155,12 +155,12 @@ class PortSignalInterfaceItem(VHDLModel_PortSignalInterfaceItem, DOMMixin):
     def __init__(
         self,
         node: Iir,
-        name: str,
+        identifier: str,
         mode: Mode,
         subType: SubTypeOrSymbol,
         defaultExpression: Expression = None,
     ):
-        super().__init__(name, mode, subType, defaultExpression)
+        super().__init__(identifier, mode, subType, defaultExpression)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -186,12 +186,12 @@ class ParameterConstantInterfaceItem(
     def __init__(
         self,
         node: Iir,
-        name: str,
+        identifier: str,
         mode: Mode,
         subType: SubTypeOrSymbol,
         defaultExpression: Expression = None,
     ):
-        super().__init__(name, mode, subType, defaultExpression)
+        super().__init__(identifier, mode, subType, defaultExpression)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -219,12 +219,12 @@ class ParameterVariableInterfaceItem(
     def __init__(
         self,
         node: Iir,
-        name: str,
+        identifier: str,
         mode: Mode,
         subType: SubTypeOrSymbol,
         defaultExpression: Expression = None,
     ):
-        super().__init__(name, mode, subType, defaultExpression)
+        super().__init__(identifier, mode, subType, defaultExpression)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -250,12 +250,12 @@ class ParameterSignalInterfaceItem(VHDLModel_ParameterSignalInterfaceItem, DOMMi
     def __init__(
         self,
         node: Iir,
-        name: str,
+        identifier: str,
         mode: Mode,
         subType: SubTypeOrSymbol,
         defaultExpression: Expression = None,
     ):
-        super().__init__(name, mode, subType, defaultExpression)
+        super().__init__(identifier, mode, subType, defaultExpression)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -281,10 +281,10 @@ class ParameterFileInterfaceItem(VHDLModel_ParameterFileInterfaceItem, DOMMixin)
     def __init__(
         self,
         node: Iir,
-        name: str,
+        identifier: str,
         subType: SubTypeOrSymbol,
     ):
-        super().__init__(name, subType)
+        super().__init__(identifier, subType)
         DOMMixin.__init__(self, node)
 
     @classmethod

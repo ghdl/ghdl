@@ -48,8 +48,8 @@ from pyGHDL.dom.Symbol import SimpleSubTypeSymbol
 
 @export
 class Attribute(VHDLModel_Attribute, DOMMixin):
-    def __init__(self, node: Iir, name: str, subType: SubTypeOrSymbol):
-        super().__init__(name, subType)
+    def __init__(self, node: Iir, identifier: str, subType: SubTypeOrSymbol):
+        super().__init__(identifier, subType)
         DOMMixin.__init__(self, node)
 
     @classmethod

@@ -49,7 +49,6 @@ _GHDL_ROOT = _TESTSUITE_ROOT.parent
 
 design = Design()
 
-@mark.xfail
 @mark.parametrize("file", [str(f.relative_to(_TESTSUITE_ROOT)) for f in _TESTSUITE_ROOT.glob("sanity/**/*.vhdl")])
 def test_AllVHDLSources(file):
     check_call([sys_executable, _GHDL_ROOT / "pyGHDL/cli/DOM.py", file], stderr=STDOUT)

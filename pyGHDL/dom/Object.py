@@ -58,11 +58,11 @@ class Constant(VHDLModel_Constant, DOMMixin):
     def __init__(
         self,
         node: Iir,
-        name: str,
+        identifier: str,
         subType: SubTypeOrSymbol,
         defaultExpression: Expression,
     ):
-        super().__init__(name, subType, defaultExpression)
+        super().__init__(identifier, subType, defaultExpression)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -85,8 +85,8 @@ class Constant(VHDLModel_Constant, DOMMixin):
 
 @export
 class DeferredConstant(VHDLModel_DeferredConstant, DOMMixin):
-    def __init__(self, node: Iir, name: str, subType: SubTypeOrSymbol):
-        super().__init__(name, subType)
+    def __init__(self, node: Iir, identifier: str, subType: SubTypeOrSymbol):
+        super().__init__(identifier, subType)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -106,11 +106,11 @@ class Variable(VHDLModel_Variable, DOMMixin):
     def __init__(
         self,
         node: Iir,
-        name: str,
+        identifier: str,
         subType: SubTypeOrSymbol,
         defaultExpression: Expression,
     ):
-        super().__init__(name, subType, defaultExpression)
+        super().__init__(identifier, subType, defaultExpression)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -132,8 +132,8 @@ class Variable(VHDLModel_Variable, DOMMixin):
 
 @export
 class SharedVariable(VHDLModel_SharedVariable, DOMMixin):
-    def __init__(self, node: Iir, name: str, subType: SubTypeOrSymbol):
-        super().__init__(name, subType)
+    def __init__(self, node: Iir, identifier: str, subType: SubTypeOrSymbol):
+        super().__init__(identifier, subType)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -151,11 +151,11 @@ class Signal(VHDLModel_Signal, DOMMixin):
     def __init__(
         self,
         node: Iir,
-        name: str,
+        identifier: str,
         subType: SubTypeOrSymbol,
         defaultExpression: Expression,
     ):
-        super().__init__(name, subType, defaultExpression)
+        super().__init__(identifier, subType, defaultExpression)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -175,8 +175,8 @@ class Signal(VHDLModel_Signal, DOMMixin):
 
 @export
 class File(VHDLModel_File, DOMMixin):
-    def __init__(self, node: Iir, name: str, subType: SubTypeOrSymbol):
-        super().__init__(name, subType)
+    def __init__(self, node: Iir, identifier: str, subType: SubTypeOrSymbol):
+        super().__init__(identifier, subType)
         DOMMixin.__init__(self, node)
 
     @classmethod

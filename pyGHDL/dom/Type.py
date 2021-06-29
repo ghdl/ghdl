@@ -62,8 +62,8 @@ from pyGHDL.dom.Subprogram import Function, Procedure
 
 @export
 class IncompleteType(VHDLModel_AnonymousType, DOMMixin):
-    def __init__(self, node: Iir, name: str):
-        super().__init__(name)
+    def __init__(self, node: Iir, identifier: str):
+        super().__init__(identifier)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -75,8 +75,8 @@ class IncompleteType(VHDLModel_AnonymousType, DOMMixin):
 
 @export
 class EnumeratedType(VHDLModel_EnumeratedType, DOMMixin):
-    def __init__(self, node: Iir, name: str, literals: List[EnumerationLiteral]):
-        super().__init__(name, literals)
+    def __init__(self, node: Iir, identifier: str, literals: List[EnumerationLiteral]):
+        super().__init__(identifier, literals)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -135,9 +135,9 @@ class PhysicalType(VHDLModel_PhysicalType, DOMMixin):
 @export
 class ArrayType(VHDLModel_ArrayType, DOMMixin):
     def __init__(
-        self, node: Iir, name: str, indices: List, elementSubType: SubTypeOrSymbol
+        self, node: Iir, identifier: str, indices: List, elementSubType: SubTypeOrSymbol
     ):
-        super().__init__(name, indices, elementSubType)
+        super().__init__(identifier, indices, elementSubType)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -173,8 +173,8 @@ class ArrayType(VHDLModel_ArrayType, DOMMixin):
 
 @export
 class RecordTypeElement(VHDLModel_RecordTypeElement, DOMMixin):
-    def __init__(self, node: Iir, name: str, subType: SubTypeOrSymbol):
-        super().__init__(name, subType)
+    def __init__(self, node: Iir, identifier: str, subType: SubTypeOrSymbol):
+        super().__init__(identifier, subType)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -191,8 +191,8 @@ class RecordTypeElement(VHDLModel_RecordTypeElement, DOMMixin):
 
 @export
 class RecordType(VHDLModel_RecordType, DOMMixin):
-    def __init__(self, node: Iir, name: str, elements: List[RecordTypeElement] = None):
-        super().__init__(name, elements)
+    def __init__(self, node: Iir, identifier: str, elements: List[RecordTypeElement] = None):
+        super().__init__(identifier, elements)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -208,8 +208,8 @@ class RecordType(VHDLModel_RecordType, DOMMixin):
 
 @export
 class ProtectedType(VHDLModel_ProtectedType, DOMMixin):
-    def __init__(self, node: Iir, name: str, methods: Union[List, Iterator] = None):
-        super().__init__(name, methods)
+    def __init__(self, node: Iir, identifier: str, methods: Union[List, Iterator] = None):
+        super().__init__(identifier, methods)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -229,9 +229,9 @@ class ProtectedType(VHDLModel_ProtectedType, DOMMixin):
 @export
 class ProtectedTypeBody(VHDLModel_ProtectedTypeBody, DOMMixin):
     def __init__(
-        self, node: Iir, name: str, declaredItems: Union[List, Iterator] = None
+        self, node: Iir, identifier: str, declaredItems: Union[List, Iterator] = None
     ):
-        super().__init__(name, declaredItems)
+        super().__init__(identifier, declaredItems)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -250,8 +250,8 @@ class ProtectedTypeBody(VHDLModel_ProtectedTypeBody, DOMMixin):
 
 @export
 class AccessType(VHDLModel_AccessType, DOMMixin):
-    def __init__(self, node: Iir, name: str, designatedSubType: SubTypeOrSymbol):
-        super().__init__(name, designatedSubType)
+    def __init__(self, node: Iir, identifier: str, designatedSubType: SubTypeOrSymbol):
+        super().__init__(identifier, designatedSubType)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -270,8 +270,8 @@ class AccessType(VHDLModel_AccessType, DOMMixin):
 
 @export
 class FileType(VHDLModel_FileType, DOMMixin):
-    def __init__(self, node: Iir, name: str, designatedSubType: SubTypeOrSymbol):
-        super().__init__(name, designatedSubType)
+    def __init__(self, node: Iir, identifier: str, designatedSubType: SubTypeOrSymbol):
+        super().__init__(identifier, designatedSubType)
         DOMMixin.__init__(self, node)
 
     @classmethod

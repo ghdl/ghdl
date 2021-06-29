@@ -67,7 +67,7 @@ class SimpleEntity(TestCase):
         design.Documents.append(document)
 
         self.assertEqual(len(design.Documents[0].Entities), 1)
-        self.assertTrue(design.Documents[0].Entities[0].Name == "entity_1")
+        self.assertTrue(design.Documents[0].Entities[0].Identifier == "entity_1")
 
     def test_Architecture(self):
         design = Design()
@@ -75,4 +75,4 @@ class SimpleEntity(TestCase):
         design.Documents.append(document)
 
         self.assertEqual(len(design.Documents[0].Architectures), 1)
-        self.assertTrue(design.Documents[0].Architectures[0].Name == "behav")
+        self.assertTrue(design.Documents[0].Architectures[0].Identifier == "behav")
