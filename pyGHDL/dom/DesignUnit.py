@@ -41,8 +41,6 @@ This module contains all DOM classes for VHDL's design units (:class:`context <E
 """
 from typing import List
 
-from pyGHDL.dom import DOMMixin
-from pyGHDL.libghdl._types import Iir
 from pydecor import export
 
 from pyVHDLModel.VHDLModel import (
@@ -62,7 +60,9 @@ from pyVHDLModel.VHDLModel import (
     ConcurrentStatement,
 )
 
+from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
+from pyGHDL.dom import DOMMixin
 from pyGHDL.dom._Utils import GetNameOfNode
 from pyGHDL.dom._Translate import (
     GetGenericsFromChainedNodes,
