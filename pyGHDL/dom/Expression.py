@@ -30,12 +30,14 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-from typing import List
+from typing import List, Union
 
 from pydecor import export
 
 from pyGHDL.dom import DOMMixin, DOMException
 from pyVHDLModel.VHDLModel import (
+    UnaryExpression as VHDLModel_UnaryExpression,
+    BinaryExpression as VHDLModel_BinaryExpression,
     InverseExpression as VHDLModel_InverseExpression,
     IdentityExpression as VHDLModel_IdentityExpression,
     NegationExpression as VHDLModel_NegationExpression,
@@ -67,6 +69,12 @@ from pyVHDLModel.VHDLModel import (
     LessEqualExpression as VHDLModel_LessEqualExpression,
     GreaterThanExpression as VHDLModel_GreaterThanExpression,
     GreaterEqualExpression as VHDLModel_GreaterEqualExpression,
+    MatchingEqualExpression as VHDLModel_MatchingEqualExpression,
+    MatchingUnequalExpression as VHDLModel_MatchingUnequalExpression,
+    MatchingLessThanExpression as VHDLModel_MatchingLessThanExpression,
+    MatchingLessEqualExpression as VHDLModel_MatchingLessEqualExpression,
+    MatchingGreaterThanExpression as VHDLModel_MatchingGreaterThanExpression,
+    MatchingGreaterEqualExpression as VHDLModel_MatchingGreaterEqualExpression,
     ShiftRightLogicExpression as VHDLModel_ShiftRightLogicExpression,
     ShiftLeftLogicExpression as VHDLModel_ShiftLeftLogicExpression,
     ShiftRightArithmeticExpression as VHDLModel_ShiftRightArithmeticExpression,
@@ -101,7 +109,7 @@ __all__ = []
 
 class _ParseUnaryExpressionMixin:
     @classmethod
-    def parse(cls, node: Iir):
+    def parse(cls, node: Iir) -> VHDLModel_UnaryExpression:
         from pyGHDL.dom._Translate import GetExpressionFromNode
 
         operand = GetExpressionFromNode(nodes.Get_Operand(node))
@@ -110,7 +118,7 @@ class _ParseUnaryExpressionMixin:
 
 class _ParseBinaryExpressionMixin:
     @classmethod
-    def parse(cls, node: Iir):
+    def parse(cls, node: Iir) -> VHDLModel_BinaryExpression:
         from pyGHDL.dom._Translate import GetExpressionFromNode
 
         left = GetExpressionFromNode(nodes.Get_Left(node))
@@ -163,7 +171,7 @@ class ParenthesisExpression(
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, node: Iir):
+    def parse(cls, node: Iir) -> "ParenthesisExpression":
         from pyGHDL.dom._Translate import GetExpressionFromNode
 
         operand = GetExpressionFromNode(nodes.Get_Expression(node))
@@ -186,7 +194,9 @@ class FunctionCall(VHDLModel_FunctionCall, DOMMixin):
 
 class RangeExpression(VHDLModel_RangeExpression, DOMMixin):
     @classmethod
-    def parse(cls, node: Iir) -> "VHDLModel_RangeExpression":
+    def parse(
+        cls, node: Iir
+    ) -> Union["AscendingRangeExpression", "DescendingRangeExpression"]:
         from pyGHDL.dom._Translate import GetExpressionFromNode
 
         direction = nodes.Get_Direction(node)
@@ -380,6 +390,60 @@ class GreaterEqualExpression(
 
 
 @export
+class MatchingEqualExpression(
+    VHDLModel_MatchingEqualExpression, DOMMixin, _ParseBinaryExpressionMixin
+):
+    def __init__(self, node: Iir, left: Expression, right: Expression):
+        super().__init__(left, right)
+        DOMMixin.__init__(self, node)
+
+
+@export
+class MatchingUnequalExpression(
+    VHDLModel_MatchingUnequalExpression, DOMMixin, _ParseBinaryExpressionMixin
+):
+    def __init__(self, node: Iir, left: Expression, right: Expression):
+        super().__init__(left, right)
+        DOMMixin.__init__(self, node)
+
+
+@export
+class MatchingLessThanExpression(
+    VHDLModel_MatchingLessThanExpression, DOMMixin, _ParseBinaryExpressionMixin
+):
+    def __init__(self, node: Iir, left: Expression, right: Expression):
+        super().__init__(left, right)
+        DOMMixin.__init__(self, node)
+
+
+@export
+class MatchingLessEqualExpression(
+    VHDLModel_MatchingLessEqualExpression, DOMMixin, _ParseBinaryExpressionMixin
+):
+    def __init__(self, node: Iir, left: Expression, right: Expression):
+        super().__init__(left, right)
+        DOMMixin.__init__(self, node)
+
+
+@export
+class MatchingGreaterThanExpression(
+    VHDLModel_MatchingGreaterThanExpression, DOMMixin, _ParseBinaryExpressionMixin
+):
+    def __init__(self, node: Iir, left: Expression, right: Expression):
+        super().__init__(left, right)
+        DOMMixin.__init__(self, node)
+
+
+@export
+class MatchingGreaterEqualExpression(
+    VHDLModel_MatchingGreaterEqualExpression, DOMMixin, _ParseBinaryExpressionMixin
+):
+    def __init__(self, node: Iir, left: Expression, right: Expression):
+        super().__init__(left, right)
+        DOMMixin.__init__(self, node)
+
+
+@export
 class ShiftRightLogicExpression(
     VHDLModel_ShiftRightLogicExpression, DOMMixin, _ParseBinaryExpressionMixin
 ):
@@ -440,7 +504,7 @@ class QualifiedExpression(VHDLModel_QualifiedExpression, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, node: Iir):
+    def parse(cls, node: Iir) -> "QualifiedExpression":
         from pyGHDL.dom._Translate import GetExpressionFromNode, GetNameOfNode
 
         typeMarkName = GetNameOfNode(nodes.Get_Type_Mark(node))
@@ -486,7 +550,7 @@ class Aggregate(VHDLModel_Aggregate, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, node: Iir):
+    def parse(cls, node: Iir) -> "Aggregate":
         from pyGHDL.dom._Translate import (
             GetExpressionFromNode,
             GetRangeFromNode,
