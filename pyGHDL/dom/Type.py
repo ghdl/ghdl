@@ -46,8 +46,9 @@ from pyVHDLModel.VHDLModel import (
     FileType as VHDLModel_FileType,
     ProtectedType as VHDLModel_ProtectedType,
     ProtectedTypeBody as VHDLModel_ProtectedTypeBody,
-    SubType as VHDLModel_SubType,
-    SubTypeOrSymbol,
+    Subtype as VHDLModel_Subtype,
+    SubtypeOrSymbol,
+    Name,
 )
 from pyGHDL.libghdl import utils
 from pyGHDL.libghdl._types import Iir
@@ -92,12 +93,9 @@ class EnumeratedType(VHDLModel_EnumeratedType, DOMMixin):
 
 @export
 class IntegerType(VHDLModel_IntegerType, DOMMixin):
-    def __init__(self, node: Iir, typeName: str, range: Range):
-        super().__init__(typeName)
+    def __init__(self, node: Iir, typeName: str, rng: Union[Range, "Name"]):
+        super().__init__(typeName, rng)
         DOMMixin.__init__(self, node)
-
-        self._leftBound = range.LeftBound
-        self._rightBound = range.RightBound
 
 
 @export
@@ -106,14 +104,19 @@ class PhysicalType(VHDLModel_PhysicalType, DOMMixin):
         self,
         node: Iir,
         typeName: str,
+        rng: Union[Range, Name],
         primaryUnit: str,
         units: List[Tuple[str, PhysicalIntegerLiteral]],
     ):
-        super().__init__(typeName, primaryUnit, units)
+        super().__init__(typeName, rng, primaryUnit, units)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, typeName: str, typeDefinitionNode: Iir) -> "PhysicalType":
+        from pyGHDL.dom._Translate import GetRangeFromNode
+
+        rng = GetRangeFromNode(nodes.Get_Range_Constraint(typeDefinitionNode))
+
         primaryUnit = nodes.Get_Primary_Unit(typeDefinitionNode)
         primaryUnitName = GetNameOfNode(primaryUnit)
 
@@ -129,7 +132,7 @@ class PhysicalType(VHDLModel_PhysicalType, DOMMixin):
 
             units.append((secondaryUnitName, physicalLiteral))
 
-        return cls(typeDefinitionNode, typeName, primaryUnitName, units)
+        return cls(typeDefinitionNode, typeName, rng, primaryUnitName, units)
 
 
 @export

@@ -486,9 +486,7 @@ class PrettyPrint:
         if isinstance(item, IncompleteType):
             result += ""
         elif isinstance(item, IntegerType):
-            result += "range {left!s} to {right!s}".format(
-                left=item.LeftBound, right=item.RightBound
-            )
+            result += "range {range!s}".format(range=item.Range)
         elif isinstance(item, EnumeratedType):
             result += "(........)"
         elif isinstance(item, PhysicalType):

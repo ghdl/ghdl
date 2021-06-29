@@ -270,6 +270,10 @@ def GetAnonymousTypeFromNode(node: Iir) -> BaseType:
         r = GetRangeFromNode(typeDefinition)
         return IntegerType(node, typeName, r)
 
+    elif kind == nodes.Iir_Kind.Parenthesis_Name:
+        n = GetNameFromNode(typeDefinition)
+
+        return IntegerType(node, typeName, n)
     elif kind == nodes.Iir_Kind.Physical_Type_Definition:
         return PhysicalType.parse(typeName, typeDefinition)
 
