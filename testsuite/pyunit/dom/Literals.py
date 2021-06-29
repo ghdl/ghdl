@@ -78,8 +78,8 @@ class Literals(TestCase):
         self.assertEqual(len(package.DeclaredItems), len(expected))
         for i in range(len(expected)):
             item: Constant = package.DeclaredItems[i]
-            self.assertTrue(isinstance(item, Constant))
+            self.assertIsInstance(item, Constant)
             self.assertTrue(item.Identifier == "c{}".format(i))
             self.assertTrue(str(item.SubType.SymbolName) == "integer")
-            self.assertTrue(isinstance(item.DefaultExpression, IntegerLiteral))
+            self.assertIsInstance(item.DefaultExpression, IntegerLiteral)
             self.assertTrue(item.DefaultExpression.Value == expected[i])
