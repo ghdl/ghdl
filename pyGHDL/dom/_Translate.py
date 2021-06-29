@@ -40,7 +40,7 @@ from pyVHDLModel.VHDLModel import (
     Constraint,
     Direction,
     Expression,
-    SubTypeOrSymbol,
+    SubtypeOrSymbol,
     BaseType,
     GenericInterfaceItem,
     PortInterfaceItem,
@@ -65,14 +65,14 @@ from pyGHDL.dom.Names import (
 )
 from pyGHDL.dom.Symbol import (
     SimpleObjectOrFunctionCallSymbol,
-    SimpleSubTypeSymbol,
-    ConstrainedCompositeSubTypeSymbol,
+    SimpleSubtypeSymbol,
+    ConstrainedCompositeSubtypeSymbol,
     IndexedObjectOrFunctionCallSymbol,
-    ConstrainedScalarSubTypeSymbol,
+    ConstrainedScalarSubtypeSymbol,
 )
 from pyGHDL.dom.Type import (
     IntegerType,
-    SubType,
+    Subtype,
     ArrayType,
     RecordType,
     EnumeratedType,
@@ -192,11 +192,11 @@ def GetAssociations(node: Iir) -> List:
 
 @export
 def GetArrayConstraintsFromSubtypeIndication(
-    subTypeIndication: Iir,
+    subtypeIndication: Iir,
 ) -> List[Constraint]:
     constraints = []
     for constraint in utils.flist_iter(
-        nodes.Get_Index_Constraint_List(subTypeIndication)
+        nodes.Get_Index_Constraint_List(subtypeIndication)
     ):
         constraintKind = GetIirKindOfNode(constraint)
         if constraintKind == nodes.Iir_Kind.Range_Expression:
@@ -214,7 +214,7 @@ def GetArrayConstraintsFromSubtypeIndication(
                 "Unknown constraint kind '{kind}' for constraint '{constraint}' in subtype indication '{indication}' at {file}:{line}:{column}.".format(
                     kind=constraintKind.name,
                     constraint=constraint,
-                    indication=subTypeIndication,
+                    indication=subtypeIndication,
                     file=position.Filename,
                     line=position.Line,
                     column=position.Column,
@@ -295,35 +295,35 @@ def GetAnonymousTypeFromNode(node: Iir) -> BaseType:
 
 
 @export
-def GetSubTypeIndicationFromNode(node: Iir, entity: str, name: str) -> SubTypeOrSymbol:
-    subTypeIndicationNode = nodes.Get_Subtype_Indication(node)
-    #     if subTypeIndicationNode is nodes.Null_Iir:
+def GetSubtypeIndicationFromNode(node: Iir, entity: str, name: str) -> SubtypeOrSymbol:
+    subtypeIndicationNode = nodes.Get_Subtype_Indication(node)
+    #     if subtypeIndicationNode is nodes.Null_Iir:
     #         return None
-    return GetSubTypeIndicationFromIndicationNode(subTypeIndicationNode, entity, name)
+    return GetSubtypeIndicationFromIndicationNode(subtypeIndicationNode, entity, name)
 
 
 @export
-def GetSubTypeIndicationFromIndicationNode(
-    subTypeIndicationNode: Iir, entity: str, name: str
-) -> SubTypeOrSymbol:
-    if subTypeIndicationNode is nodes.Null_Iir:
+def GetSubtypeIndicationFromIndicationNode(
+    subtypeIndicationNode: Iir, entity: str, name: str
+) -> SubtypeOrSymbol:
+    if subtypeIndicationNode is nodes.Null_Iir:
         print(
             "[NOT IMPLEMENTED]: Unhandled multiple declarations for {entity} '{name}'.".format(
                 entity=entity, name=name
             )
         )
         return None
-    kind = GetIirKindOfNode(subTypeIndicationNode)
+    kind = GetIirKindOfNode(subtypeIndicationNode)
     if kind in (
         nodes.Iir_Kind.Simple_Name,
         nodes.Iir_Kind.Selected_Name,
         nodes.Iir_Kind.Attribute_Name,
     ):
-        return GetSimpleTypeFromNode(subTypeIndicationNode)
+        return GetSimpleTypeFromNode(subtypeIndicationNode)
     elif kind == nodes.Iir_Kind.Subtype_Definition:
-        return GetScalarConstrainedSubTypeFromNode(subTypeIndicationNode)
+        return GetScalarConstrainedSubtypeFromNode(subtypeIndicationNode)
     elif kind == nodes.Iir_Kind.Array_Subtype_Definition:
-        return GetCompositeConstrainedSubTypeFromNode(subTypeIndicationNode)
+        return GetCompositeConstrainedSubtypeFromNode(subtypeIndicationNode)
     else:
         raise DOMException(
             "Unknown kind '{kind}' for an subtype indication in a {entity} of `{name}`.".format(
@@ -333,40 +333,40 @@ def GetSubTypeIndicationFromIndicationNode(
 
 
 @export
-def GetSimpleTypeFromNode(subTypeIndicationNode: Iir) -> SimpleSubTypeSymbol:
-    subTypeName = GetNameFromNode(subTypeIndicationNode)
-    return SimpleSubTypeSymbol(subTypeIndicationNode, subTypeName)
+def GetSimpleTypeFromNode(subtypeIndicationNode: Iir) -> SimpleSubtypeSymbol:
+    subtypeName = GetNameFromNode(subtypeIndicationNode)
+    return SimpleSubtypeSymbol(subtypeIndicationNode, subtypeName)
 
 
 @export
-def GetScalarConstrainedSubTypeFromNode(
-    subTypeIndicationNode: Iir,
-) -> ConstrainedScalarSubTypeSymbol:
-    typeMark = nodes.Get_Subtype_Type_Mark(subTypeIndicationNode)
+def GetScalarConstrainedSubtypeFromNode(
+    subtypeIndicationNode: Iir,
+) -> ConstrainedScalarSubtypeSymbol:
+    typeMark = nodes.Get_Subtype_Type_Mark(subtypeIndicationNode)
     typeMarkName = GetNameOfNode(typeMark)
-    rangeConstraint = nodes.Get_Range_Constraint(subTypeIndicationNode)
+    rangeConstraint = nodes.Get_Range_Constraint(subtypeIndicationNode)
     r = GetRangeFromNode(rangeConstraint)
-    return ConstrainedScalarSubTypeSymbol(subTypeIndicationNode, typeMarkName, r)
+    return ConstrainedScalarSubtypeSymbol(subtypeIndicationNode, typeMarkName, r)
 
 
 @export
-def GetCompositeConstrainedSubTypeFromNode(
-    subTypeIndicationNode: Iir,
-) -> ConstrainedCompositeSubTypeSymbol:
-    typeMark = nodes.Get_Subtype_Type_Mark(subTypeIndicationNode)
+def GetCompositeConstrainedSubtypeFromNode(
+    subtypeIndicationNode: Iir,
+) -> ConstrainedCompositeSubtypeSymbol:
+    typeMark = nodes.Get_Subtype_Type_Mark(subtypeIndicationNode)
     typeMarkName = GetNameOfNode(typeMark)
 
-    constraints = GetArrayConstraintsFromSubtypeIndication(subTypeIndicationNode)
-    return ConstrainedCompositeSubTypeSymbol(
-        subTypeIndicationNode, typeMarkName, constraints
+    constraints = GetArrayConstraintsFromSubtypeIndication(subtypeIndicationNode)
+    return ConstrainedCompositeSubtypeSymbol(
+        subtypeIndicationNode, typeMarkName, constraints
     )
 
 
 @export
-def GetSubTypeFromNode(subTypeNode: Iir) -> SubTypeOrSymbol:
-    subTypeName = GetNameOfNode(subTypeNode)
+def GetSubtypeFromNode(subtypeNode: Iir) -> SubtypeOrSymbol:
+    subtypeName = GetNameOfNode(subtypeNode)
 
-    return SubType(subTypeNode, subTypeName)
+    return Subtype(subtypeNode, subtypeName)
 
 
 @export
@@ -595,7 +595,7 @@ def GetDeclaredItemsFromChainedNodes(
             yield GetAnonymousTypeFromNode(item)
 
         elif kind == nodes.Iir_Kind.Subtype_Declaration:
-            yield GetSubTypeFromNode(item)
+            yield GetSubtypeFromNode(item)
 
         elif kind == nodes.Iir_Kind.Function_Declaration:
             yield Function.parse(item)

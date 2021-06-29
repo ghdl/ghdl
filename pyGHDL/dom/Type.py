@@ -55,7 +55,7 @@ from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin, DOMException
 from pyGHDL.dom._Utils import GetNameOfNode, GetIirKindOfNode
-from pyGHDL.dom.Symbol import SimpleSubTypeSymbol
+from pyGHDL.dom.Symbol import SimpleSubtypeSymbol
 from pyGHDL.dom.Literal import EnumerationLiteral, PhysicalIntegerLiteral
 from pyGHDL.dom.Range import Range
 from pyGHDL.dom.Subprogram import Function, Procedure
@@ -138,16 +138,16 @@ class PhysicalType(VHDLModel_PhysicalType, DOMMixin):
 @export
 class ArrayType(VHDLModel_ArrayType, DOMMixin):
     def __init__(
-        self, node: Iir, identifier: str, indices: List, elementSubType: SubTypeOrSymbol
+        self, node: Iir, identifier: str, indices: List, elementSubtype: SubtypeOrSymbol
     ):
-        super().__init__(identifier, indices, elementSubType)
+        super().__init__(identifier, indices, elementSubtype)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, typeName: str, typeDefinitionNode: Iir) -> "ArrayType":
         from pyGHDL.dom._Translate import (
             GetSimpleTypeFromNode,
-            GetSubTypeIndicationFromIndicationNode,
+            GetSubtypeIndicationFromIndicationNode,
         )
 
         indices = []
@@ -155,8 +155,8 @@ class ArrayType(VHDLModel_ArrayType, DOMMixin):
         for index in utils.flist_iter(indexDefinitions):
             indexKind = GetIirKindOfNode(index)
             if indexKind == nodes.Iir_Kind.Simple_Name:
-                indexSubType = GetSimpleTypeFromNode(index)
-                indices.append(indexSubType)
+                indexSubtype = GetSimpleTypeFromNode(index)
+                indices.append(indexSubtype)
             else:
                 raise DOMException(
                     "Unknown kind '{kind}' for an index in the array definition of `{typeName}`.".format(
@@ -164,28 +164,28 @@ class ArrayType(VHDLModel_ArrayType, DOMMixin):
                     )
                 )
 
-        elementSubTypeIndication = nodes.Get_Element_Subtype_Indication(
+        elementSubtypeIndication = nodes.Get_Element_Subtype_Indication(
             typeDefinitionNode
         )
-        elementSubType = GetSubTypeIndicationFromIndicationNode(
-            elementSubTypeIndication, "array declaration", typeName
+        elementSubtype = GetSubtypeIndicationFromIndicationNode(
+            elementSubtypeIndication, "array declaration", typeName
         )
 
-        return cls(typeDefinitionNode, typeName, indices, elementSubType)
+        return cls(typeDefinitionNode, typeName, indices, elementSubtype)
 
 
 @export
 class RecordTypeElement(VHDLModel_RecordTypeElement, DOMMixin):
-    def __init__(self, node: Iir, identifier: str, subType: SubTypeOrSymbol):
-        super().__init__(identifier, subType)
+    def __init__(self, node: Iir, identifier: str, subtype: SubtypeOrSymbol):
+        super().__init__(identifier, subtype)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, elementDeclarationNode: Iir) -> "RecordTypeElement":
-        from pyGHDL.dom._Translate import GetSubTypeIndicationFromNode
+        from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode
 
         elementName = GetNameOfNode(elementDeclarationNode)
-        elementType = GetSubTypeIndicationFromNode(
+        elementType = GetSubtypeIndicationFromNode(
             elementDeclarationNode, "record element", elementName
         )
 
@@ -194,7 +194,9 @@ class RecordTypeElement(VHDLModel_RecordTypeElement, DOMMixin):
 
 @export
 class RecordType(VHDLModel_RecordType, DOMMixin):
-    def __init__(self, node: Iir, identifier: str, elements: List[RecordTypeElement] = None):
+    def __init__(
+        self, node: Iir, identifier: str, elements: List[RecordTypeElement] = None
+    ):
         super().__init__(identifier, elements)
         DOMMixin.__init__(self, node)
 
@@ -211,7 +213,9 @@ class RecordType(VHDLModel_RecordType, DOMMixin):
 
 @export
 class ProtectedType(VHDLModel_ProtectedType, DOMMixin):
-    def __init__(self, node: Iir, identifier: str, methods: Union[List, Iterator] = None):
+    def __init__(
+        self, node: Iir, identifier: str, methods: Union[List, Iterator] = None
+    ):
         super().__init__(identifier, methods)
         DOMMixin.__init__(self, node)
 
@@ -253,44 +257,44 @@ class ProtectedTypeBody(VHDLModel_ProtectedTypeBody, DOMMixin):
 
 @export
 class AccessType(VHDLModel_AccessType, DOMMixin):
-    def __init__(self, node: Iir, identifier: str, designatedSubType: SubTypeOrSymbol):
-        super().__init__(identifier, designatedSubType)
+    def __init__(self, node: Iir, identifier: str, designatedSubtype: SubtypeOrSymbol):
+        super().__init__(identifier, designatedSubtype)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, typeName: str, typeDefinitionNode: Iir) -> "AccessType":
-        from pyGHDL.dom._Translate import GetSubTypeIndicationFromIndicationNode
+        from pyGHDL.dom._Translate import GetSubtypeIndicationFromIndicationNode
 
         designatedSubtypeIndication = nodes.Get_Designated_Subtype_Indication(
             typeDefinitionNode
         )
-        designatedSubType = GetSubTypeIndicationFromIndicationNode(
+        designatedSubtype = GetSubtypeIndicationFromIndicationNode(
             designatedSubtypeIndication, "access type", typeName
         )
 
-        return cls(typeDefinitionNode, typeName, designatedSubType)
+        return cls(typeDefinitionNode, typeName, designatedSubtype)
 
 
 @export
 class FileType(VHDLModel_FileType, DOMMixin):
-    def __init__(self, node: Iir, identifier: str, designatedSubType: SubTypeOrSymbol):
-        super().__init__(identifier, designatedSubType)
+    def __init__(self, node: Iir, identifier: str, designatedSubtype: SubtypeOrSymbol):
+        super().__init__(identifier, designatedSubtype)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, typeName: str, typeDefinitionNode: Iir) -> "FileType":
 
-        designatedSubTypeMark = nodes.Get_File_Type_Mark(typeDefinitionNode)
-        designatedSubTypeName = GetNameOfNode(designatedSubTypeMark)
-        designatedSubType = SimpleSubTypeSymbol(
-            typeDefinitionNode, designatedSubTypeName
+        designatedSubtypeMark = nodes.Get_File_Type_Mark(typeDefinitionNode)
+        designatedSubtypeName = GetNameOfNode(designatedSubtypeMark)
+        designatedSubtype = SimpleSubtypeSymbol(
+            typeDefinitionNode, designatedSubtypeName
         )
 
-        return cls(typeDefinitionNode, typeName, designatedSubType)
+        return cls(typeDefinitionNode, typeName, designatedSubtype)
 
 
 @export
-class SubType(VHDLModel_SubType, DOMMixin):
+class Subtype(VHDLModel_Subtype, DOMMixin):
     def __init__(self, node: Iir, subtypeName: str):
         super().__init__(subtypeName)
         DOMMixin.__init__(self, node)

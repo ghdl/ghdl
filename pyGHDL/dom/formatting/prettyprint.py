@@ -7,7 +7,7 @@ from pyGHDL.dom.Misc import Alias
 from pyGHDL.dom.Subprogram import Procedure
 from pyGHDL.dom.Type import (
     IntegerType,
-    SubType,
+    Subtype,
     ArrayType,
     RecordType,
     AccessType,
@@ -48,8 +48,8 @@ from pyGHDL.dom.InterfaceItem import (
     GenericTypeInterfaceItem,
 )
 from pyGHDL.dom.Symbol import (
-    SimpleSubTypeSymbol,
-    ConstrainedCompositeSubTypeSymbol,
+    SimpleSubtypeSymbol,
+    ConstrainedCompositeSubtypeSymbol,
 )
 
 
@@ -212,7 +212,9 @@ class PrettyPrint:
         buffer = []
         prefix = "  " * level
         buffer.append(
-            "{prefix}- Component: {name}".format(name=component.Identifier, prefix=prefix)
+            "{prefix}- Component: {name}".format(
+                name=component.Identifier, prefix=prefix
+            )
         )
         buffer.append("{prefix}  Generics:".format(prefix=prefix))
         for generic in component.GenericItems:
@@ -228,7 +230,9 @@ class PrettyPrint:
     def formatPackage(self, package: Package, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
-        buffer.append("{prefix}- Name: {name}".format(name=package.Identifier, prefix=prefix))
+        buffer.append(
+            "{prefix}- Name: {name}".format(name=package.Identifier, prefix=prefix)
+        )
         buffer.append("{prefix}  Declared:".format(prefix=prefix))
         for item in package.DeclaredItems:
             for line in self.formatDeclaredItems(item, level + 1):
@@ -241,7 +245,9 @@ class PrettyPrint:
     ) -> StringBuffer:
         buffer = []
         prefix = "  " * level
-        buffer.append("{prefix}- Name: {name}".format(name=package.Identifier, prefix=prefix))
+        buffer.append(
+            "{prefix}- Name: {name}".format(name=package.Identifier, prefix=prefix)
+        )
         buffer.append(
             "{prefix}  Package: {name!s}".format(
                 prefix=prefix, name=package.PackageReference
@@ -275,7 +281,9 @@ class PrettyPrint:
         buffer = []
         prefix = "  " * level
         buffer.append(
-            "{prefix}- Name: {name}".format(name=configuration.Identifier, prefix=prefix)
+            "{prefix}- Name: {name}".format(
+                name=configuration.Identifier, prefix=prefix
+            )
         )
 
         return buffer
@@ -283,7 +291,9 @@ class PrettyPrint:
     def formatContext(self, context: Context, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
-        buffer.append("{prefix}- Name: {name}".format(name=context.Identifier, prefix=prefix))
+        buffer.append(
+            "{prefix}- Name: {name}".format(name=context.Identifier, prefix=prefix)
+        )
 
         return buffer
 
@@ -296,7 +306,9 @@ class PrettyPrint:
             return self.formatGenericType(generic, level)
         else:
             raise PrettyPrintException(
-                "Unhandled generic kind for generic '{name}'.".format(name=generic.Identifier)
+                "Unhandled generic kind for generic '{name}'.".format(
+                    name=generic.Identifier
+                )
             )
 
     def formatPort(
@@ -321,7 +333,7 @@ class PrettyPrint:
                 name=generic.Identifier,
                 mode=generic.Mode,
                 subtypeindication=self.formatSubtypeIndication(
-                    generic.SubType, "generic", generic.Identifier
+                    generic.Subtype, "generic", generic.Identifier
                 ),
                 initialValue=self.formatInitialValue(generic),
             )
@@ -356,7 +368,7 @@ class PrettyPrint:
                 name=port.Identifier,
                 mode=port.Mode,
                 subtypeindication=self.formatSubtypeIndication(
-                    port.SubType, "port", port.Identifier
+                    port.Subtype, "port", port.Identifier
                 ),
                 initialValue=self.formatInitialValue(port),
             )
@@ -374,7 +386,7 @@ class PrettyPrint:
                     prefix=prefix,
                     name=item.Identifier,
                     subtype=self.formatSubtypeIndication(
-                        item.SubType, "constant", item.Identifier
+                        item.Subtype, "constant", item.Identifier
                     ),
                     expr=str(item.DefaultExpression),
                 )
@@ -385,7 +397,7 @@ class PrettyPrint:
                     prefix=prefix,
                     name=item.Identifier,
                     subtype=self.formatSubtypeIndication(
-                        item.SubType, "shared variable", item.Identifier
+                        item.Subtype, "shared variable", item.Identifier
                     ),
                 )
             )
@@ -395,7 +407,7 @@ class PrettyPrint:
                     prefix=prefix,
                     name=item.Identifier,
                     subtype=self.formatSubtypeIndication(
-                        item.SubType, "signal", item.Identifier
+                        item.Subtype, "signal", item.Identifier
                     ),
                     initValue=" := {expr}".format(expr=str(item.DefaultExpression))
                     if item.DefaultExpression is not None
@@ -408,7 +420,7 @@ class PrettyPrint:
                     prefix=prefix,
                     name=item.Identifier,
                     subtype=self.formatSubtypeIndication(
-                        item.SubType, "file", item.Identifier
+                        item.Subtype, "file", item.Identifier
                     ),
                 )
             )
@@ -416,7 +428,7 @@ class PrettyPrint:
             buffer.append(
                 "{prefix}- {type}".format(prefix=prefix, type=self.formatType(item))
             )
-        elif isinstance(item, SubType):
+        elif isinstance(item, Subtype):
             buffer.append(
                 "{prefix}- subtype {name} is ?????".format(
                     prefix=prefix,
@@ -449,7 +461,7 @@ class PrettyPrint:
         elif isinstance(item, Attribute):
             buffer.append(
                 "{prefix}- attribute {name} : {type!s}".format(
-                    prefix=prefix, name=item.Identifier, type=item.SubType
+                    prefix=prefix, name=item.Identifier, type=item.Subtype
                 )
             )
         elif isinstance(item, AttributeSpecification):
@@ -510,21 +522,21 @@ class PrettyPrint:
 
         return result
 
-    def formatSubtypeIndication(self, subTypeIndication, entity: str, name: str) -> str:
-        if isinstance(subTypeIndication, SimpleSubTypeSymbol):
-            return "{type}".format(type=subTypeIndication.SymbolName)
-        elif isinstance(subTypeIndication, ConstrainedCompositeSubTypeSymbol):
+    def formatSubtypeIndication(self, subtypeIndication, entity: str, name: str) -> str:
+        if isinstance(subtypeIndication, SimpleSubtypeSymbol):
+            return "{type}".format(type=subtypeIndication.SymbolName)
+        elif isinstance(subtypeIndication, ConstrainedCompositeSubtypeSymbol):
             constraints = []
-            for constraint in subTypeIndication.Constraints:
+            for constraint in subtypeIndication.Constraints:
                 constraints.append(str(constraint))
 
             return "{type}({constraints})".format(
-                type=subTypeIndication.SymbolName, constraints=", ".join(constraints)
+                type=subtypeIndication.SymbolName, constraints=", ".join(constraints)
             )
         else:
             raise PrettyPrintException(
                 "Unhandled subtype kind '{type}' for {entity} '{name}'.".format(
-                    type=subTypeIndication.__class__.__name__, entity=entity, name=name
+                    type=subtypeIndication.__class__.__name__, entity=entity, name=name
                 )
             )
 

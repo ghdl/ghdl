@@ -43,7 +43,7 @@ from pyVHDLModel.VHDLModel import (
     Signal as VHDLModel_Signal,
     File as VHDLModel_File,
     Expression,
-    SubTypeOrSymbol,
+    SubtypeOrSymbol,
 )
 
 from pyGHDL.libghdl.vhdl import nodes
@@ -59,46 +59,46 @@ class Constant(VHDLModel_Constant, DOMMixin):
         self,
         node: Iir,
         identifier: str,
-        subType: SubTypeOrSymbol,
+        subtype: SubtypeOrSymbol,
         defaultExpression: Expression,
     ):
-        super().__init__(identifier, subType, defaultExpression)
+        super().__init__(identifier, subtype, defaultExpression)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, constantNode: Iir) -> Union["Constant", "DeferredConstant"]:
         from pyGHDL.dom._Translate import (
-            GetSubTypeIndicationFromNode,
+            GetSubtypeIndicationFromNode,
             GetExpressionFromNode,
         )
 
         name = GetNameOfNode(constantNode)
-        subTypeIndication = GetSubTypeIndicationFromNode(constantNode, "constant", name)
+        subtypeIndication = GetSubtypeIndicationFromNode(constantNode, "constant", name)
         defaultValue = nodes.Get_Default_Value(constantNode)
         if defaultValue != nodes.Null_Iir:
             defaultExpression = GetExpressionFromNode(defaultValue)
 
-            return cls(constantNode, name, subTypeIndication, defaultExpression)
+            return cls(constantNode, name, subtypeIndication, defaultExpression)
         else:
-            return DeferredConstant(constantNode, name, subTypeIndication)
+            return DeferredConstant(constantNode, name, subtypeIndication)
 
 
 @export
 class DeferredConstant(VHDLModel_DeferredConstant, DOMMixin):
-    def __init__(self, node: Iir, identifier: str, subType: SubTypeOrSymbol):
-        super().__init__(identifier, subType)
+    def __init__(self, node: Iir, identifier: str, subtype: SubtypeOrSymbol):
+        super().__init__(identifier, subtype)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, constantNode: Iir) -> "DeferredConstant":
-        from pyGHDL.dom._Translate import GetSubTypeIndicationFromNode
+        from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode
 
         name = GetNameOfNode(constantNode)
-        subTypeIndication = GetSubTypeIndicationFromNode(
+        subtypeIndication = GetSubtypeIndicationFromNode(
             constantNode, "deferred constant", name
         )
 
-        return cls(constantNode, name, subTypeIndication)
+        return cls(constantNode, name, subtypeIndication)
 
 
 @export
@@ -107,43 +107,43 @@ class Variable(VHDLModel_Variable, DOMMixin):
         self,
         node: Iir,
         identifier: str,
-        subType: SubTypeOrSymbol,
+        subtype: SubtypeOrSymbol,
         defaultExpression: Expression,
     ):
-        super().__init__(identifier, subType, defaultExpression)
+        super().__init__(identifier, subtype, defaultExpression)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, variableNode: Iir) -> "Variable":
         from pyGHDL.dom._Translate import (
-            GetSubTypeIndicationFromNode,
+            GetSubtypeIndicationFromNode,
             GetExpressionFromNode,
         )
 
         name = GetNameOfNode(variableNode)
-        subTypeIndication = GetSubTypeIndicationFromNode(variableNode, "variable", name)
+        subtypeIndication = GetSubtypeIndicationFromNode(variableNode, "variable", name)
         defaultValue = nodes.Get_Default_Value(variableNode)
         defaultExpression = None
         if defaultValue != nodes.Null_Iir:
             defaultExpression = GetExpressionFromNode(defaultValue)
 
-        return cls(variableNode, name, subTypeIndication, defaultExpression)
+        return cls(variableNode, name, subtypeIndication, defaultExpression)
 
 
 @export
 class SharedVariable(VHDLModel_SharedVariable, DOMMixin):
-    def __init__(self, node: Iir, identifier: str, subType: SubTypeOrSymbol):
-        super().__init__(identifier, subType)
+    def __init__(self, node: Iir, identifier: str, subtype: SubtypeOrSymbol):
+        super().__init__(identifier, subtype)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, variableNode: Iir) -> "SharedVariable":
-        from pyGHDL.dom._Translate import GetSubTypeIndicationFromNode
+        from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode
 
         name = GetNameOfNode(variableNode)
-        subTypeIndication = GetSubTypeIndicationFromNode(variableNode, "variable", name)
+        subtypeIndication = GetSubtypeIndicationFromNode(variableNode, "variable", name)
 
-        return cls(variableNode, name, subTypeIndication)
+        return cls(variableNode, name, subtypeIndication)
 
 
 @export
@@ -152,40 +152,40 @@ class Signal(VHDLModel_Signal, DOMMixin):
         self,
         node: Iir,
         identifier: str,
-        subType: SubTypeOrSymbol,
+        subtype: SubtypeOrSymbol,
         defaultExpression: Expression,
     ):
-        super().__init__(identifier, subType, defaultExpression)
+        super().__init__(identifier, subtype, defaultExpression)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, signalNode: Iir) -> "Signal":
         from pyGHDL.dom._Translate import (
-            GetSubTypeIndicationFromNode,
+            GetSubtypeIndicationFromNode,
             GetExpressionFromNode,
         )
 
         name = GetNameOfNode(signalNode)
-        subTypeIndication = GetSubTypeIndicationFromNode(signalNode, "signal", name)
+        subtypeIndication = GetSubtypeIndicationFromNode(signalNode, "signal", name)
         default = nodes.Get_Default_Value(signalNode)
         defaultExpression = GetExpressionFromNode(default) if default else None
 
-        return cls(signalNode, name, subTypeIndication, defaultExpression)
+        return cls(signalNode, name, subtypeIndication, defaultExpression)
 
 
 @export
 class File(VHDLModel_File, DOMMixin):
-    def __init__(self, node: Iir, identifier: str, subType: SubTypeOrSymbol):
-        super().__init__(identifier, subType)
+    def __init__(self, node: Iir, identifier: str, subtype: SubtypeOrSymbol):
+        super().__init__(identifier, subtype)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, fileNode: Iir) -> "File":
-        from pyGHDL.dom._Translate import GetSubTypeIndicationFromNode
+        from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode
 
         name = GetNameOfNode(fileNode)
-        subTypeIndication = GetSubTypeIndicationFromNode(fileNode, "file", name)
+        subtypeIndication = GetSubtypeIndicationFromNode(fileNode, "file", name)
 
         # FIXME: handle file open stuff
 
-        return cls(fileNode, name, subTypeIndication)
+        return cls(fileNode, name, subtypeIndication)

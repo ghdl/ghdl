@@ -36,9 +36,9 @@ from pydecor import export
 
 from pyVHDLModel.VHDLModel import (
     EntitySymbol as VHDLModel_EntitySymbol,
-    SimpleSubTypeSymbol as VHDLModel_SimpleSubTypeSymbol,
-    ConstrainedScalarSubTypeSymbol as VHDLModel_ConstrainedScalarSubTypeSymbol,
-    ConstrainedCompositeSubTypeSymbol as VHDLModel_ConstrainedCompositeSubTypeSymbol,
+    SimpleSubtypeSymbol as VHDLModel_SimpleSubtypeSymbol,
+    ConstrainedScalarSubtypeSymbol as VHDLModel_ConstrainedScalarSubtypeSymbol,
+    ConstrainedCompositeSubtypeSymbol as VHDLModel_ConstrainedCompositeSubtypeSymbol,
     SimpleObjectOrFunctionCallSymbol as VHDLModel_SimpleObjectOrFunctionCallSymbol,
     IndexedObjectOrFunctionCallSymbol as VHDLModel_IndexedObjectOrFunctionCallSymbol,
     Constraint,
@@ -60,21 +60,21 @@ class EntitySymbol(VHDLModel_EntitySymbol, DOMMixin):
 
 
 @export
-class SimpleSubTypeSymbol(VHDLModel_SimpleSubTypeSymbol, DOMMixin):
-    def __init__(self, node: Iir, subTypeName: Name):
-        if isinstance(subTypeName, (List, Iterator)):
-            subTypeName = ".".join(subTypeName)
+class SimpleSubtypeSymbol(VHDLModel_SimpleSubtypeSymbol, DOMMixin):
+    def __init__(self, node: Iir, subtypeName: Name):
+        if isinstance(subtypeName, (List, Iterator)):
+            subtypeName = ".".join(subtypeName)
 
-        super().__init__(subTypeName=subTypeName)
+        super().__init__(subtypeName=subtypeName)
         DOMMixin.__init__(self, node)
 
 
 @export
-class ConstrainedScalarSubTypeSymbol(
-    VHDLModel_ConstrainedScalarSubTypeSymbol, DOMMixin
+class ConstrainedScalarSubtypeSymbol(
+    VHDLModel_ConstrainedScalarSubtypeSymbol, DOMMixin
 ):
-    def __init__(self, node: Iir, subTypeName: Name, rng: Range = None):
-        super().__init__(subTypeName, rng)
+    def __init__(self, node: Iir, subtypeName: Name, rng: Range = None):
+        super().__init__(subtypeName, rng)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -83,13 +83,13 @@ class ConstrainedScalarSubTypeSymbol(
 
 
 @export
-class ConstrainedCompositeSubTypeSymbol(
-    VHDLModel_ConstrainedCompositeSubTypeSymbol, DOMMixin
+class ConstrainedCompositeSubtypeSymbol(
+    VHDLModel_ConstrainedCompositeSubtypeSymbol, DOMMixin
 ):
     def __init__(
-        self, node: Iir, subTypeName: Name, constraints: List[Constraint] = None
+        self, node: Iir, subtypeName: Name, constraints: List[Constraint] = None
     ):
-        super().__init__(subTypeName, constraints)
+        super().__init__(subtypeName, constraints)
         DOMMixin.__init__(self, node)
 
     @classmethod

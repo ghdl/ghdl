@@ -86,7 +86,7 @@ from pyVHDLModel.VHDLModel import (
     Aggregate as VHDLModel_Aggregate,
     Expression,
     AggregateElement,
-    SubTypeOrSymbol,
+    SubtypeOrSymbol,
     Symbol,
 )
 
@@ -94,7 +94,7 @@ from pyGHDL.libghdl import utils
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom._Utils import GetIirKindOfNode
-from pyGHDL.dom.Symbol import SimpleSubTypeSymbol
+from pyGHDL.dom.Symbol import SimpleSubtypeSymbol
 from pyGHDL.dom.Aggregates import (
     OthersAggregateElement,
     SimpleAggregateElement,
@@ -499,8 +499,8 @@ class RotateLeftExpression(
 
 @export
 class QualifiedExpression(VHDLModel_QualifiedExpression, DOMMixin):
-    def __init__(self, node: Iir, subType: SubTypeOrSymbol, operand: Expression):
-        super().__init__(subType, operand)
+    def __init__(self, node: Iir, subtype: SubtypeOrSymbol, operand: Expression):
+        super().__init__(subtype, operand)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -508,7 +508,7 @@ class QualifiedExpression(VHDLModel_QualifiedExpression, DOMMixin):
         from pyGHDL.dom._Translate import GetExpressionFromNode, GetNameOfNode
 
         typeMarkName = GetNameOfNode(nodes.Get_Type_Mark(node))
-        subType = SimpleSubTypeSymbol(node, typeMarkName)
+        subtype = SimpleSubtypeSymbol(node, typeMarkName)
         operand = GetExpressionFromNode(nodes.Get_Expression(node))
         return cls(node, subtype, operand)
 

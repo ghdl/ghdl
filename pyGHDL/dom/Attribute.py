@@ -36,30 +36,30 @@ from pyVHDLModel.VHDLModel import (
     Attribute as VHDLModel_Attribute,
     AttributeSpecification as VHDLModel_AttributeSpecification,
     Name,
-    SubTypeOrSymbol,
+    SubtypeOrSymbol,
 )
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin
 from pyGHDL.dom._Utils import GetNameOfNode, GetIirKindOfNode
 from pyGHDL.dom._Translate import GetNameFromNode
-from pyGHDL.dom.Symbol import SimpleSubTypeSymbol
+from pyGHDL.dom.Symbol import SimpleSubtypeSymbol
 
 
 @export
 class Attribute(VHDLModel_Attribute, DOMMixin):
-    def __init__(self, node: Iir, identifier: str, subType: SubTypeOrSymbol):
-        super().__init__(identifier, subType)
+    def __init__(self, node: Iir, identifier: str, subtype: SubtypeOrSymbol):
+        super().__init__(identifier, subtype)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, attributeNode: Iir) -> "Attribute":
         name = GetNameOfNode(attributeNode)
-        subTypeMark = nodes.Get_Type_Mark(attributeNode)
-        subTypeName = GetNameOfNode(subTypeMark)
+        subtypeMark = nodes.Get_Type_Mark(attributeNode)
+        subtypeName = GetNameOfNode(subtypeMark)
 
-        subType = SimpleSubTypeSymbol(subTypeMark, subTypeName)
-        return cls(attributeNode, name, subType)
+        subtype = SimpleSubtypeSymbol(subtypeMark, subtypeName)
+        return cls(attributeNode, name, subtype)
 
 
 @export

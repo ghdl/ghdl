@@ -44,7 +44,7 @@ from pyVHDLModel.VHDLModel import (
     ParameterSignalInterfaceItem as VHDLModel_ParameterSignalInterfaceItem,
     ParameterFileInterfaceItem as VHDLModel_ParameterFileInterfaceItem,
     Mode,
-    SubTypeOrSymbol,
+    SubtypeOrSymbol,
     Expression,
 )
 
@@ -52,7 +52,7 @@ from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin
 from pyGHDL.dom._Utils import GetNameOfNode, GetModeOfNode
-from pyGHDL.dom._Translate import GetSubTypeIndicationFromNode, GetExpressionFromNode
+from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode, GetExpressionFromNode
 
 
 __all__ = []
@@ -65,21 +65,21 @@ class GenericConstantInterfaceItem(VHDLModel_GenericConstantInterfaceItem, DOMMi
         node: Iir,
         identifier: str,
         mode: Mode,
-        subType: SubTypeOrSymbol,
+        subtype: SubtypeOrSymbol,
         defaultExpression: Expression,
     ):
-        super().__init__(identifier, mode, subType, defaultExpression)
+        super().__init__(identifier, mode, subtype, defaultExpression)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, genericNode: Iir) -> "GenericConstantInterfaceItem":
         name = GetNameOfNode(genericNode)
         mode = GetModeOfNode(genericNode)
-        subTypeIndication = GetSubTypeIndicationFromNode(genericNode, "generic", name)
+        subtypeIndication = GetSubtypeIndicationFromNode(genericNode, "generic", name)
         default = nodes.Get_Default_Value(genericNode)
         value = GetExpressionFromNode(default) if default else None
 
-        return cls(genericNode, name, mode, subTypeIndication, value)
+        return cls(genericNode, name, mode, subtypeIndication, value)
 
 
 @export
@@ -157,17 +157,17 @@ class PortSignalInterfaceItem(VHDLModel_PortSignalInterfaceItem, DOMMixin):
         node: Iir,
         identifier: str,
         mode: Mode,
-        subType: SubTypeOrSymbol,
+        subtype: SubtypeOrSymbol,
         defaultExpression: Expression = None,
     ):
-        super().__init__(identifier, mode, subType, defaultExpression)
+        super().__init__(identifier, mode, subtype, defaultExpression)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, portNode: Iir) -> "PortSignalInterfaceItem":
         name = GetNameOfNode(portNode)
         mode = GetModeOfNode(portNode)
-        subTypeIndication = GetSubTypeIndicationFromNode(portNode, "port", name)
+        subtypeIndication = GetSubtypeIndicationFromNode(portNode, "port", name)
 
         defaultValue = nodes.Get_Default_Value(portNode)
         value = (
@@ -176,7 +176,7 @@ class PortSignalInterfaceItem(VHDLModel_PortSignalInterfaceItem, DOMMixin):
             else None
         )
 
-        return cls(portNode, name, mode, subTypeIndication, value)
+        return cls(portNode, name, mode, subtypeIndication, value)
 
 
 @export
@@ -188,17 +188,17 @@ class ParameterConstantInterfaceItem(
         node: Iir,
         identifier: str,
         mode: Mode,
-        subType: SubTypeOrSymbol,
+        subtype: SubtypeOrSymbol,
         defaultExpression: Expression = None,
     ):
-        super().__init__(identifier, mode, subType, defaultExpression)
+        super().__init__(identifier, mode, subtype, defaultExpression)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, parameterNode: Iir) -> "ParameterConstantInterfaceItem":
         name = GetNameOfNode(parameterNode)
         mode = GetModeOfNode(parameterNode)
-        subTypeIndication = GetSubTypeIndicationFromNode(
+        subtypeIndication = GetSubtypeIndicationFromNode(
             parameterNode, "parameter", name
         )
 
@@ -209,7 +209,7 @@ class ParameterConstantInterfaceItem(
             else None
         )
 
-        return cls(parameterNode, name, mode, subTypeIndication, value)
+        return cls(parameterNode, name, mode, subtypeIndication, value)
 
 
 @export
@@ -221,17 +221,17 @@ class ParameterVariableInterfaceItem(
         node: Iir,
         identifier: str,
         mode: Mode,
-        subType: SubTypeOrSymbol,
+        subtype: SubtypeOrSymbol,
         defaultExpression: Expression = None,
     ):
-        super().__init__(identifier, mode, subType, defaultExpression)
+        super().__init__(identifier, mode, subtype, defaultExpression)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, parameterNode: Iir) -> "ParameterVariableInterfaceItem":
         name = GetNameOfNode(parameterNode)
         mode = GetModeOfNode(parameterNode)
-        subTypeIndication = GetSubTypeIndicationFromNode(
+        subtypeIndication = GetSubtypeIndicationFromNode(
             parameterNode, "parameter", name
         )
 
@@ -242,7 +242,7 @@ class ParameterVariableInterfaceItem(
             else None
         )
 
-        return cls(parameterNode, name, mode, subTypeIndication, value)
+        return cls(parameterNode, name, mode, subtypeIndication, value)
 
 
 @export
@@ -252,17 +252,17 @@ class ParameterSignalInterfaceItem(VHDLModel_ParameterSignalInterfaceItem, DOMMi
         node: Iir,
         identifier: str,
         mode: Mode,
-        subType: SubTypeOrSymbol,
+        subtype: SubtypeOrSymbol,
         defaultExpression: Expression = None,
     ):
-        super().__init__(identifier, mode, subType, defaultExpression)
+        super().__init__(identifier, mode, subtype, defaultExpression)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, parameterNode: Iir) -> "ParameterSignalInterfaceItem":
         name = GetNameOfNode(parameterNode)
         mode = GetModeOfNode(parameterNode)
-        subTypeIndication = GetSubTypeIndicationFromNode(
+        subtypeIndication = GetSubtypeIndicationFromNode(
             parameterNode, "parameter", name
         )
 
@@ -273,7 +273,7 @@ class ParameterSignalInterfaceItem(VHDLModel_ParameterSignalInterfaceItem, DOMMi
             else None
         )
 
-        return cls(parameterNode, name, mode, subTypeIndication, value)
+        return cls(parameterNode, name, mode, subtypeIndication, value)
 
 
 @export
@@ -282,16 +282,16 @@ class ParameterFileInterfaceItem(VHDLModel_ParameterFileInterfaceItem, DOMMixin)
         self,
         node: Iir,
         identifier: str,
-        subType: SubTypeOrSymbol,
+        subtype: SubtypeOrSymbol,
     ):
-        super().__init__(identifier, subType)
+        super().__init__(identifier, subtype)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, parameterNode: Iir) -> "ParameterFileInterfaceItem":
         name = GetNameOfNode(parameterNode)
-        subTypeIndication = GetSubTypeIndicationFromNode(
+        subtypeIndication = GetSubtypeIndicationFromNode(
             parameterNode, "parameter", name
         )
 
-        return cls(parameterNode, name, subTypeIndication)
+        return cls(parameterNode, name, subtypeIndication)

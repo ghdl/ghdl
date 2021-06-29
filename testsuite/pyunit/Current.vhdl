@@ -107,6 +107,14 @@ package package_1 is
 			clk : std
 		);
 	end component;
+
+	constant Pointer_1 : List := new List(1 to 1);
+	constant Pointer_2 : List := new List'(1 => 0);
+	signal init : std_logic_vector(abs(mssb_idx(GEN)-GEN'right)-1 downto 0);
+	constant fid : real := +val;
+	constant ceq11 : std_logic := '1' ?= '1';
+	type rt321 is range t3'reverse_range;
+	type rt321 is range t3'reverse_range(1);
 end package;
 
 package body package_1 is
@@ -120,3 +128,7 @@ package body package_1 is
 		F = 1000 mF;
 	end units;
 end package body;
+
+vunit vu (component_1) {
+
+}
