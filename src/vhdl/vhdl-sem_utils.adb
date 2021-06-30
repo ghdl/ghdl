@@ -899,6 +899,7 @@ package body Vhdl.Sem_Utils is
             Add_Unary (Name_Op_Minus, Iir_Predefined_Physical_Negation);
             Add_Unary (Name_Op_Plus, Iir_Predefined_Physical_Identity);
 
+            --  Physical OP integer, with OP is multiplication and division.
             declare
                Inter_Chain : Iir;
             begin
@@ -912,6 +913,7 @@ package body Vhdl.Sem_Utils is
                               Inter_Chain, Type_Definition);
             end;
 
+            --  Integer * physical
             declare
                Inter_Chain : Iir;
             begin
@@ -922,6 +924,7 @@ package body Vhdl.Sem_Utils is
                               Inter_Chain, Type_Definition);
             end;
 
+            --  Physical OP real, wher OP is multiplication and division.
             declare
                Inter_Chain : Iir;
             begin
@@ -934,6 +937,7 @@ package body Vhdl.Sem_Utils is
                               Inter_Chain, Type_Definition);
             end;
 
+            --  Real * physical
             declare
                Inter_Chain : Iir;
             begin
@@ -943,6 +947,8 @@ package body Vhdl.Sem_Utils is
                Add_Operation (Name_Op_Mul, Iir_Predefined_Real_Physical_Mul,
                               Inter_Chain, Type_Definition);
             end;
+
+            --  Physical / physical -> integer.
             Add_Operation (Name_Op_Div, Iir_Predefined_Physical_Physical_Div,
                            Binary_Chain,
                            Std_Package.Convertible_Integer_Type_Definition);
@@ -950,6 +956,9 @@ package body Vhdl.Sem_Utils is
             Add_Unary (Name_Abs, Iir_Predefined_Physical_Absolute);
 
             if Vhdl_Std >= Vhdl_08 then
+               Add_Binary (Name_Mod, Iir_Predefined_Physical_Mod);
+               Add_Binary (Name_Rem, Iir_Predefined_Physical_Rem);
+
                --  LRM08 5.2.6 Predefined operations on scalar types
                --  Given a type declaration that declares a scalar type T, the
                --  following operations are implicitely declared immediately

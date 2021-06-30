@@ -5424,6 +5424,8 @@ package Vhdl.Nodes is
       Iir_Predefined_Physical_Integer_Div,
       Iir_Predefined_Physical_Real_Div,
       Iir_Predefined_Physical_Physical_Div,
+      Iir_Predefined_Physical_Mod,
+      Iir_Predefined_Physical_Rem,
 
       --  LRM08 5.2.6 Predefined operations on scalar types.
       Iir_Predefined_Physical_Minimum,

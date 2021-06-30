@@ -1826,6 +1826,13 @@ package body Vhdl.Evaluation is
               (Int64 (Fp64 (Get_Physical_Value (Left))
                           / Get_Fp_Value (Right)), Orig);
 
+         when Iir_Predefined_Physical_Mod =>
+            return Build_Physical
+              (Get_Physical_Value (Left) mod Get_Value (Right), Orig);
+         when Iir_Predefined_Physical_Rem =>
+            return Build_Physical
+              (Get_Physical_Value (Left) rem Get_Value (Right), Orig);
+
          when Iir_Predefined_Physical_Minimum =>
             return Build_Physical (Int64'Min (Get_Physical_Value (Left),
                                                   Get_Physical_Value (Right)),

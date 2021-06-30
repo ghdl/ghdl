@@ -1095,6 +1095,8 @@ package body Trans.Chap7 is
       Iir_Predefined_Physical_Absolute => ON_Abs_Ov,
       Iir_Predefined_Physical_Minus => ON_Sub_Ov,
       Iir_Predefined_Physical_Plus => ON_Add_Ov,
+      Iir_Predefined_Physical_Rem => ON_Rem_Ov,
+      Iir_Predefined_Physical_Mod => ON_Mod_Ov,
 
       Iir_Predefined_Floating_Greater => ON_Gt,
       Iir_Predefined_Floating_Greater_Equal => ON_Ge,
@@ -6134,7 +6136,9 @@ package body Trans.Chap7 is
             | Iir_Predefined_Physical_Negation
             | Iir_Predefined_Physical_Absolute
             | Iir_Predefined_Physical_Plus
-            | Iir_Predefined_Physical_Minus =>
+            | Iir_Predefined_Physical_Minus
+            | Iir_Predefined_Physical_Mod
+            | Iir_Predefined_Physical_Rem =>
             pragma Assert (Predefined_To_Onop (Kind) /= ON_Nil);
             return;
 
