@@ -34,6 +34,10 @@ from pathlib import Path
 from textwrap import dedent
 from unittest import TestCase
 
+from pyVHDLModel.VHDLModel import Expression
+
+from pyGHDL.dom.DesignUnit import Package
+
 from pyGHDL.dom.NonStandard import Design, Document
 from pyGHDL.dom.Object import Constant
 from pyGHDL.dom.Literal import IntegerLiteral
@@ -47,39 +51,38 @@ if __name__ == "__main__":
 
 class Literals(TestCase):
     _root = Path(__file__).resolve().parent.parent
-
-    def test_IntegerLiteral(self):
-        self._filename: Path = self._root / "{className}.vhdl".format(
-            className=self.__class__.__name__
-        )
-
-        sourceCode = dedent(
+    _design = Design()
+    _packageTemplate = dedent(
             """\
             package package_1 is
-              constant c0 : integer := 0;
-              constant c1 : integer := 1;
-              constant c2 : integer := 1024;
-              constant c3 : integer := 1048576;
+              {code}
             end package;
             """
         )
+
+    def parse(self, filename: Path, code: str) -> Expression:
+        sourceCode = self._packageTemplate.format(code=code)
+
+        document = Document(filename, sourceCode)
+        self._design.Documents.append(document)
+
+        # Traverse already to default value expression
+        package: Package = document.Packages[0]
+        item: Constant = package.DeclaredItems[0]
+        default: Expression = item.DefaultExpression
+
+        return default
+
+    def test_IntegerLiteral(self):
+        _filename: Path = self._root / "{className}.vhdl".format(
+            className=self.__class__.__name__
+        )
+
+        constantDeclartion = "constant c0 : integer := 0;"
         expected = (0, 1, 1024, 1048576)
 
-        with self._filename.open(mode="w", encoding="utf-8") as file:
-            file.write(sourceCode)
+        # Parse in-memory
+        default: Expression = self.parse(_filename, constantDeclartion)
 
-        design = Design()
-        document = Document(self._filename)
-        design.Documents.append(document)
-
-        self.assertEqual(1, len(design.Documents[0].Packages))
-        package = design.Documents[0].Packages[0]
-        self.assertEqual("package_1", package.Identifier)
-        self.assertEqual(len(expected), len(package.DeclaredItems))
-        for i in range(len(expected)):
-            item: Constant = package.DeclaredItems[i]
-            self.assertIsInstance(item, Constant)
-            self.assertEqual("c{}".format(i), item.Identifier)
-            self.assertEqual("integer", str(item.Subtype.SymbolName))
-            self.assertIsInstance(item.DefaultExpression, IntegerLiteral)
-            self.assertEqual(expected[i], item.DefaultExpression.Value)
+        self.assertIsInstance(default, IntegerLiteral)
+        self.assertEqual(expected[0], default.Value)
