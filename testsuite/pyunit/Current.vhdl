@@ -106,7 +106,7 @@ package package_1 is
 
   type cell;
 
-	constant ghdl : float := (3, 5, 0 to 2 => 5, 3 => 4, name => 10); -- 2.3;
+	constant ghdl : float := (3, 5, 0 to 2 => 5, 3 => 4, name => 10, others => 10, 2.3);
 	attribute fixed of ghdl, gtkwave [x, y] : constant is true;
 
 	component comp is
@@ -125,7 +125,7 @@ package package_1 is
 end package;
 
 package body package_1 is
-	constant ghdl : float := (1); -- => 2, 4 => 5, others => 10); -- .5;
+	constant ghdl : float := 1.5;
 
 	type CAPACITY is range 0 to 1E5	units
 		pF;

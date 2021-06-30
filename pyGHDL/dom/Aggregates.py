@@ -88,7 +88,5 @@ class NamedAggregateElement(VHDLModel_NamedAggregateElement, DOMMixin):
 @export
 class OthersAggregateElement(VHDLModel_OthersAggregateElement, DOMMixin):
     def __init__(self, node: Iir, expression: Expression):
-        super().__init__()
+        super().__init__(expression)
         DOMMixin.__init__(self, node)
-
-        self._expression = expression
