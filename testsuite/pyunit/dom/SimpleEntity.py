@@ -59,20 +59,20 @@ class SimpleEntity(TestCase):
         document = Document(self._filename)
         design.Documents.append(document)
 
-        self.assertEqual(len(design.Documents), 1)
+        self.assertEqual(1, len(design.Documents))
 
     def test_Entity(self):
         design = Design()
         document = Document(self._filename)
         design.Documents.append(document)
 
-        self.assertEqual(len(design.Documents[0].Entities), 1)
-        self.assertEqual(design.Documents[0].Entities[0].Identifier, "entity_1")
+        self.assertEqual(1, len(design.Documents[0].Entities))
+        self.assertEqual("entity_1", design.Documents[0].Entities[0].Identifier)
 
     def test_Architecture(self):
         design = Design()
         document = Document(self._filename)
         design.Documents.append(document)
 
-        self.assertEqual(len(design.Documents[0].Architectures), 1)
-        self.assertEqual(design.Documents[0].Architectures[0].Identifier, "behav")
+        self.assertEqual(1, len(design.Documents[0].Architectures))
+        self.assertEqual("behav", design.Documents[0].Architectures[0].Identifier)

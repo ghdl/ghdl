@@ -44,9 +44,4 @@ __all__ = []
 
 @export
 class Range(VHDLModel_Range):
-    def __init__(self, left: Expression, right: Expression, direction: Direction):
-        super().__init__()
-
-        self._leftBound = left
-        self._rightBound = right
-        self._direction = direction
+    pass

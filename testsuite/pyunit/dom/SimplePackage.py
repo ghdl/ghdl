@@ -51,13 +51,13 @@ class SimplePackage(TestCase):
         document = Document(self._filename)
         design.Documents.append(document)
 
-        self.assertEqual(len(design.Documents[0].Packages), 1)
-        self.assertEqual(design.Documents[0].Packages[0].Identifier, "pack_1")
+        self.assertEqual(1, len(design.Documents[0].Packages))
+        self.assertEqual("pack_1", design.Documents[0].Packages[0].Identifier)
 
     def test_PackageBody(self):
         design = Design()
         document = Document(self._filename)
         design.Documents.append(document)
 
-        self.assertEqual(len(design.Documents[0].PackageBodies), 1)
-        self.assertEqual(design.Documents[0].PackageBodies[0].Identifier, "pack_1")
+        self.assertEqual(1, len(design.Documents[0].PackageBodies))
+        self.assertEqual("pack_1", design.Documents[0].PackageBodies[0].Identifier)

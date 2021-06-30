@@ -72,14 +72,14 @@ class Literals(TestCase):
         document = Document(self._filename)
         design.Documents.append(document)
 
-        self.assertEqual(len(design.Documents[0].Packages), 1)
+        self.assertEqual(1, len(design.Documents[0].Packages))
         package = design.Documents[0].Packages[0]
-        self.assertEqual(package.Identifier, "package_1")
-        self.assertEqual(len(package.DeclaredItems), len(expected))
+        self.assertEqual("package_1", package.Identifier)
+        self.assertEqual(len(expected), len(package.DeclaredItems))
         for i in range(len(expected)):
             item: Constant = package.DeclaredItems[i]
             self.assertIsInstance(item, Constant)
-            self.assertEqual(item.Identifier, "c{}".format(i))
-            self.assertEqual(str(item.SubType.SymbolName), "integer")
+            self.assertEqual("c{}".format(i), item.Identifier)
+            self.assertEqual("integer", str(item.Subtype.SymbolName))
             self.assertIsInstance(item.DefaultExpression, IntegerLiteral)
-            self.assertEqual(item.DefaultExpression.Value, expected[i])
+            self.assertEqual(expected[i], item.DefaultExpression.Value)
