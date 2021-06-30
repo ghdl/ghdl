@@ -1926,6 +1926,7 @@ package body Vhdl.Canon is
       if Canon_Flag_Add_Labels then
          case Get_Kind (Stmt) is
             when Iir_Kind_Psl_Declaration
+              | Iir_Kind_Psl_Default_Clock
               | Iir_Kind_Psl_Endpoint_Declaration =>
                null;
             when others =>

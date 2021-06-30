@@ -3336,9 +3336,6 @@ package Vhdl.Nodes is
    --   Get/Set_Psl_Boolean (Field1)
    --
    --   Get/Set_Chain (Field2)
-   --
-   --   Get/Set_Label (Field3)
-   --   Get/Set_Identifier (Alias Field3)
 
    -- Iir_Kind_Psl_Assert_Directive (Medium)
    -- Iir_Kind_Psl_Assume_Directive (Medium)

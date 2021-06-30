@@ -1188,14 +1188,22 @@ package body Trans.Chap9 is
       Base_Info : constant Block_Info_Acc := Get_Info (Base_Block);
       Stmt      : Iir;
       Mark      : Id_Mark_Type;
+      Kind      : Iir_Kind;
    begin
       Chap4.Translate_Declaration_Chain_Subprograms
         (Block, Subprg_Translate_Spec_And_Body);
 
       Stmt := Get_Concurrent_Statement_Chain (Block);
       while Stmt /= Null_Iir loop
-         Push_Identifier_Prefix (Mark, Get_Identifier (Stmt));
-         case Get_Kind (Stmt) is
+         Kind := Get_Kind (Stmt);
+         case Kind is
+            when Iir_Kind_Psl_Default_Clock =>
+               null;
+            when others =>
+               Push_Identifier_Prefix (Mark, Get_Identifier (Stmt));
+         end case;
+
+         case Kind is
             when Iir_Kind_Process_Statement
                | Iir_Kind_Sensitized_Process_Statement =>
                if Flag_Direct_Drivers then
@@ -1281,7 +1289,12 @@ package body Trans.Chap9 is
             when others =>
                Error_Kind ("translate_block_subprograms", Stmt);
          end case;
-         Pop_Identifier_Prefix (Mark);
+         case Kind is
+            when Iir_Kind_Psl_Default_Clock =>
+               null;
+            when others =>
+               Pop_Identifier_Prefix (Mark);
+         end case;
          Stmt := Get_Chain (Stmt);
       end loop;
    end Translate_Block_Subprograms;

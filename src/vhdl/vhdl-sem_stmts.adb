@@ -2570,6 +2570,7 @@ package body Vhdl.Sem_Stmts is
 
          case Get_Kind (Stmt) is
             when Iir_Kind_Psl_Declaration
+              | Iir_Kind_Psl_Default_Clock
               | Iir_Kind_Psl_Endpoint_Declaration =>
                --  Special case for in-lined PSL declarations.
                null;
