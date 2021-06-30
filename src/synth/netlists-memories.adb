@@ -2349,7 +2349,7 @@ package body Netlists.Memories is
       end case;
    end Is_Const_Input;
 
-   procedure Extract_Memories2 (Ctxt : Context_Acc; M : Module)
+   procedure Extract_Memories (Ctxt : Context_Acc; M : Module)
    is
       Dyns : Instance_Tables.Instance;
       Mems : Instance_Tables.Instance;
@@ -2445,7 +2445,7 @@ package body Netlists.Memories is
       end loop;
 
       Instance_Tables.Free (Mems);
-   end Extract_Memories2;
+   end Extract_Memories;
 
    --  Return True iff O is to MUX and any number of Dyn_Extract (possibly
    --  through mux2).

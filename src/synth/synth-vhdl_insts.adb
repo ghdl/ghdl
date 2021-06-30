@@ -1728,7 +1728,7 @@ package body Synth.Vhdl_Insts is
       end if;
 
       if not Synth.Flags.Flag_Debug_Nomemory2 then
-         Netlists.Memories.Extract_Memories2 (Get_Build (Syn_Inst), Inst.M);
+         Netlists.Memories.Extract_Memories (Get_Build (Syn_Inst), Inst.M);
          --  Remove remaining clock edge gates.
          Netlists.Cleanup.Mark_And_Sweep (Inst.M);
       end if;
