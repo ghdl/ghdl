@@ -31,10 +31,9 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-
 from ctypes import c_char_p, CDLL
-import os
-import sys
+from sys import platform as sys_platform, version_info as sys_version_info
+from os import environ as os_environ
 from pathlib import Path
 from shutil import which
 from typing import List
@@ -63,7 +62,7 @@ class LibGHDLException(GHDLBaseException):
 def _get_libghdl_name() -> Path:
     """Get the name of the libghdl library (with version and extension)."""
     ver = __version__.replace("-", "_").replace(".", "_")
-    ext = {"win32": "dll", "cygwin": "dll", "darwin": "dylib"}.get(sys.platform, "so")
+    ext = {"win32": "dll", "cygwin": "dll", "darwin": "dylib"}.get(sys_platform, "so")
     return Path("libghdl-{version}.{ext}".format(version=ver, ext=ext))
 
 
@@ -103,21 +102,21 @@ def _get_libghdl_path():
     # Try GHDL_PREFIX
     # GHDL_PREFIX is the prefix of the vhdl libraries, so remove the
     # last path component.
-    r = os.environ.get("GHDL_PREFIX")
+    r = os_environ.get("GHDL_PREFIX")
     try:
         return _check_libghdl_libdir(Path(r).parent, basename)
     except (TypeError, FileNotFoundError):
         pass
 
     # Try VUNIT_GHDL_PATH (path of the ghdl binary when using VUnit).
-    r = os.environ.get("VUNIT_GHDL_PATH")
+    r = os_environ.get("VUNIT_GHDL_PATH")
     try:
         return _check_libghdl_bindir(Path(r), basename)
     except (TypeError, FileNotFoundError):
         pass
 
     # Try GHDL (name/path of the ghdl binary)
-    r = os.environ.get("GHDL", "ghdl")
+    r = os_environ.get("GHDL", "ghdl")
     r = which(r)
     try:
         return _check_libghdl_bindir(Path(r).parent, basename)
@@ -145,7 +144,19 @@ def _get_libghdl_path():
 def _initialize():
     # Load the shared library
     _libghdl_path = _get_libghdl_path()
-    # print("Load {}".format(_libghdl_path))
+
+    # Add DLL search path(s)
+    if (
+        sys_platform == "win32"
+        and sys_version_info.major == 3
+        and sys_version_info.minor >= 8
+    ):
+        from os import add_dll_directory as os_add_dll_directory
+
+        p1 = _libghdl_path.parent.parent / "bin"
+        os_add_dll_directory(str(p1))
+
+    # Load libghdl shared object
     libghdl = CDLL(str(_libghdl_path))
 
     # Initialize it.
