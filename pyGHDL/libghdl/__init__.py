@@ -142,10 +142,6 @@ def _get_libghdl_path():
 
 
 def _initialize():
-    from os import environ as os_environ
-
-    print(os_environ)
-
     # Load the shared library
     _libghdl_path = _get_libghdl_path()
 
