@@ -119,7 +119,7 @@ setuptools_setup(
     entry_points={
         "console_scripts": [
             "ghdl-ls = pyGHDL.cli.lsp:main",
-            "ghdl-dom = pyGHDL.cli.DOM:main",
+            "ghdl-dom = pyGHDL.cli.dom:main",
         ]
     },
     keywords="Python3 VHDL Parser Compiler Simulator GHDL",
