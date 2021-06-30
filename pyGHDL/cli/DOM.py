@@ -43,35 +43,74 @@ from pyGHDL.libghdl import LibGHDLException
 from pydecor import export
 from pyMetaClasses import Singleton
 from pyAttributes import Attribute
-from pyAttributes.ArgParseAttributes import ArgParseMixin, CommonSwitchArgumentAttribute, DefaultAttribute, CommandAttribute, ArgumentAttribute, \
-    SwitchArgumentAttribute
+from pyAttributes.ArgParseAttributes import (
+    ArgParseMixin,
+    CommonSwitchArgumentAttribute,
+    DefaultAttribute,
+    CommandAttribute,
+    ArgumentAttribute,
+    SwitchArgumentAttribute,
+)
 from pyTerminalUI import LineTerminal, Severity
 
 from pyGHDL import GHDLBaseException
 from pyGHDL.dom.NonStandard import Design, Document
 from pyGHDL.dom.formatting.prettyprint import PrettyPrint, PrettyPrintException
 
-__author__ =      "Tristan Gingold"
-__copyright__ =   "Copyright (C) 2019-2021 Tristan Gingold"
-__maintainer__ =  "Tristan Gingold"
-__email__ =       ""
-__version__ =     "0.0.0"
-__status__ =      "Alpha"
-__license__ =     ""
+__author__ = "Tristan Gingold"
+__copyright__ = "Copyright (C) 2019-2021 Tristan Gingold"
+__maintainer__ = "Tristan Gingold"
+__email__ = ""
+__version__ = "0.0.0"
+__status__ = "Alpha"
+__license__ = ""
 __all__ = []
 __api__ = __all__
 
 
 class SourceAttribute(Attribute):
     def __call__(self, func):
-        self._AppendAttribute(func,  ArgumentAttribute("-f", "--file", action="append", metavar="file", dest="Files", type=Path, help="The filename to parse (can be used multiple times)."))
-        self._AppendAttribute(func,  ArgumentAttribute("-F", "--files", metavar="files", dest="Files", type=Path, nargs="+", help="List of filenames to parse."))
-        self._AppendAttribute(func,  ArgumentAttribute("-D", "--directory", metavar="dir", dest="Directory", type=Path, help="The directory to parse."))
+        self._AppendAttribute(
+            func,
+            ArgumentAttribute(
+                "-f",
+                "--file",
+                action="append",
+                metavar="file",
+                dest="Files",
+                type=Path,
+                help="The filename to parse (can be used multiple times).",
+            ),
+        )
+        self._AppendAttribute(
+            func,
+            ArgumentAttribute(
+                "-F",
+                "--files",
+                metavar="files",
+                dest="Files",
+                type=Path,
+                nargs="+",
+                help="List of filenames to parse.",
+            ),
+        )
+        self._AppendAttribute(
+            func,
+            ArgumentAttribute(
+                "-D",
+                "--directory",
+                metavar="dir",
+                dest="Directory",
+                type=Path,
+                help="The directory to parse.",
+            ),
+        )
         return func
+
 
 @export
 class Application(LineTerminal, ArgParseMixin):
-    HeadLine =    "pyGHDL.dom - Test Application"
+    HeadLine = "pyGHDL.dom - Test Application"
 
     # load platform information (Windows, Linux, Darwin, ...)
     __PLATFORM = platform_system()
@@ -92,17 +131,27 @@ class Application(LineTerminal, ArgParseMixin):
         # Call the constructor of the ArgParseMixin
         # --------------------------------------------------------------------------
         textWidth = min(self.Width, 160)
-        description = dedent("""\
+        description = dedent(
+            """\
     			Application to test pyGHDL's DOM API.
-    			""")
-        epilog = "\n".join(wrap(dedent("""\
+    			"""
+        )
+        epilog = "\n".join(
+            wrap(
+                dedent(
+                    """\
     		  pyGHDL is a Python binding for libghdl.
-    		  """), textWidth, replace_whitespace=False))
+    		  """
+                ),
+                textWidth,
+                replace_whitespace=False,
+            )
+        )
 
         class HelpFormatter(RawDescriptionHelpFormatter):
             def __init__(self, *args, **kwargs):
-                kwargs['max_help_position'] = 30
-                kwargs['width'] = textWidth
+                kwargs["max_help_position"] = 30
+                kwargs["width"] = textWidth
                 super().__init__(*args, **kwargs)
 
         ArgParseMixin.__init__(
@@ -110,7 +159,7 @@ class Application(LineTerminal, ArgParseMixin):
             description=description,
             epilog=epilog,
             formatter_class=HelpFormatter,
-            add_help=False
+            add_help=False,
         )
 
         # If executed in Sphinx to auto-document CLI arguments, exit now
@@ -120,9 +169,13 @@ class Application(LineTerminal, ArgParseMixin):
 
         # Change error and warning reporting
         # --------------------------------------------------------------------------
-        self._LOG_MESSAGE_FORMAT__[Severity.Fatal] = "{DARK_RED}[FATAL] {message}{NOCOLOR}"
+        self._LOG_MESSAGE_FORMAT__[
+            Severity.Fatal
+        ] = "{DARK_RED}[FATAL] {message}{NOCOLOR}"
         self._LOG_MESSAGE_FORMAT__[Severity.Error] = "{RED}[ERROR] {message}{NOCOLOR}"
-        self._LOG_MESSAGE_FORMAT__[Severity.Warning] = "{YELLOW}[WARNING] {message}{NOCOLOR}"
+        self._LOG_MESSAGE_FORMAT__[
+            Severity.Warning
+        ] = "{YELLOW}[WARNING] {message}{NOCOLOR}"
         self._LOG_MESSAGE_FORMAT__[Severity.Normal] = "{GRAY}{message}{NOCOLOR}"
 
     # class properties
@@ -132,19 +185,29 @@ class Application(LineTerminal, ArgParseMixin):
         return self.__PLATFORM
 
     def PrintHeadline(self):
-        self.WriteNormal(dedent("""\
+        self.WriteNormal(
+            dedent(
+                """\
     		{HEADLINE}{line}
     		{headline: ^80s}
-    		{line}""").format(line="=" * 80, headline=self.HeadLine, **LineTerminal.Foreground))
+    		{line}"""
+            ).format(line="=" * 80, headline=self.HeadLine, **LineTerminal.Foreground)
+        )
 
     # ============================================================================
     # Common commands
     # ============================================================================
     # common arguments valid for all commands
     # ----------------------------------------------------------------------------
-    @CommonSwitchArgumentAttribute("-d", "--debug", dest="debug", help="Enable debug mode.")
-    @CommonSwitchArgumentAttribute("-v", "--verbose", dest="verbose", help="Print out detailed messages.")
-    @CommonSwitchArgumentAttribute("-q", "--quiet", dest="quiet", help="Reduce messages to a minimum.")
+    @CommonSwitchArgumentAttribute(
+        "-d", "--debug", dest="debug", help="Enable debug mode."
+    )
+    @CommonSwitchArgumentAttribute(
+        "-v", "--verbose", dest="verbose", help="Print out detailed messages."
+    )
+    @CommonSwitchArgumentAttribute(
+        "-q", "--quiet", dest="quiet", help="Reduce messages to a minimum."
+    )
     def Run(self):
         ArgParseMixin.Run(self)
 
@@ -160,13 +223,19 @@ class Application(LineTerminal, ArgParseMixin):
     # create the sub-parser for the "help" command
     # ----------------------------------------------------------------------------
     @CommandAttribute("help", help="Display help page(s) for the given command name.")
-    @ArgumentAttribute(metavar="Command", dest="Command", type=str, nargs="?", help="Print help page(s) for a command.")
+    @ArgumentAttribute(
+        metavar="Command",
+        dest="Command",
+        type=str,
+        nargs="?",
+        help="Print help page(s) for a command.",
+    )
     def HandleHelp(self, args):
         self.PrintHeadline()
 
-        if (args.Command is None):
+        if args.Command is None:
             self.MainParser.print_help()
-        elif (args.Command == "help"):
+        elif args.Command == "help":
             self.WriteError("This is a recursion ...")
         else:
             try:
@@ -196,29 +265,34 @@ class Application(LineTerminal, ArgParseMixin):
         self.WriteNormal("Version:    {0}".format(__version__))
         self.exit()
 
-
     # ----------------------------------------------------------------------------
     # create the sub-parser for the "token-stream" command
     # ----------------------------------------------------------------------------
-    @CommandAttribute("pretty", help="Pretty-print the DOM to console.", description="Translate a source file into a DOM and pretty-print the DOM.")
+    @CommandAttribute(
+        "pretty",
+        help="Pretty-print the DOM to console.",
+        description="Translate a source file into a DOM and pretty-print the DOM.",
+    )
     @SourceAttribute()
     def HandlePretty(self, args):
         self.PrintHeadline()
 
         if args.Files is not None:
             for file in args.Files:
-                if (not file.exists()):
+                if not file.exists():
                     self.WriteError("File '{0!s}' does not exist.".format(file))
 
                 self.WriteNormal("Parsing file '{!s}'".format(file))
                 document = self.addFile(file, "pretty")
-                self.WriteInfo(dedent(
-                    """\
+                self.WriteInfo(
+                    dedent(
+                        """\
                       libghdl processing time: {: 5.3f} us
                       DOM translation time:    {:5.3f} us
-                    """).format(
-                        document.LibGHDLProcessingTime * 10**6,
-                        document.DOMTranslationTime * 10**6,
+                    """
+                    ).format(
+                        document.LibGHDLProcessingTime * 10 ** 6,
+                        document.DOMTranslationTime * 10 ** 6,
                     )
                 )
 
@@ -291,6 +365,7 @@ def main():  # mccabe:disable=MC0001
     #     printImportError(ex)
     except Exception as ex:
         LineTerminal.printException(ex)
+
 
 # entry point
 if __name__ == "__main__":

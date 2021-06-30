@@ -52,7 +52,6 @@ from pydecor import export
 
 @export
 class GHDLBaseException(Exception):
-
     @property
     def message(self) -> str:
         return str(self)
