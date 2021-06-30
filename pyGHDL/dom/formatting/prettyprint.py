@@ -4,6 +4,7 @@ from pydecor import export
 
 from pyGHDL.dom.Attribute import Attribute, AttributeSpecification
 from pyGHDL.dom.Misc import Alias
+from pyGHDL.dom.PSL import DefaultClock
 from pyGHDL.dom.Subprogram import Procedure
 from pyGHDL.dom.Type import (
     IntegerType,
@@ -478,10 +479,22 @@ class PrettyPrint:
             buffer.append(
                 "{prefix}- use {name!s}".format(prefix=prefix, name=item.Item)
             )
+        elif isinstance(item, Package):
+            buffer.append(
+                "{prefix}- package {name} is ..... end package".format(
+                    prefix=prefix, name=item.Identifier
+                )
+            )
         elif isinstance(item, PackageInstantiation):
             buffer.append(
                 "{prefix}- package {name} is new {name2!s} generic map (.....)".format(
                     prefix=prefix, name=item.Identifier, name2=item.PackageReference
+                )
+            )
+        elif isinstance(item, DefaultClock):
+            buffer.append(
+                "{prefix}- default {name} is {expr}".format(
+                    prefix=prefix, name=item.Identifier, expr="..."
                 )
             )
         else:

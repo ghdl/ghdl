@@ -77,6 +77,13 @@ architecture behav of entity_1 is
 	attribute att : boolean;
 
 	alias bar is boolean;
+
+	disconnect address_bus : resolved_word after 3 ns;
+	disconnect others : resolved_word after 2 ns;
+
+	default clock is rising_edge(clk);
+	package inner_pack is
+	end package;
 begin
 	process(Clock)
 	begin
@@ -100,7 +107,7 @@ package package_1 is
   type cell;
 
 	constant ghdl : float := (3, 5, 0 to 2 => 5, 3 => 4, name => 10); -- 2.3;
-	attribute fixed of ghdl [bar] : constant is true;
+	attribute fixed of ghdl, gtkwave [x, y] : constant is true;
 
 	component comp is
 		port (

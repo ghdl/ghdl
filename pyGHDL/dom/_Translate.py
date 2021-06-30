@@ -36,6 +36,7 @@ from pydecor import export
 
 from pyGHDL.dom import Position, DOMException
 from pyGHDL.dom.Object import Variable
+from pyGHDL.dom.PSL import DefaultClock
 from pyVHDLModel.VHDLModel import (
     Constraint,
     Direction,
@@ -627,6 +628,10 @@ def GetDeclaredItemsFromChainedNodes(
             from pyGHDL.dom.DesignUnit import UseClause
 
             yield UseClause.parse(item)
+        elif kind == nodes.Iir_Kind.Package_Declaration:
+            from pyGHDL.dom.DesignUnit import Package
+
+            yield Package.parse(item)
         elif kind == nodes.Iir_Kind.Package_Instantiation_Declaration:
             from pyGHDL.dom.DesignUnit import PackageInstantiation
 
@@ -637,6 +642,8 @@ def GetDeclaredItemsFromChainedNodes(
                     name=name
                 )
             )
+        elif kind == nodes.Iir_Kind.Psl_Default_Clock:
+            yield DefaultClock.parse(item)
         elif kind == nodes.Iir_Kind.Group_Declaration:
             print("[NOT IMPLEMENTED] Group declaration in {name}".format(name=name))
         elif kind == nodes.Iir_Kind.Group_Template_Declaration:
@@ -644,6 +651,10 @@ def GetDeclaredItemsFromChainedNodes(
                 "[NOT IMPLEMENTED] Group template declaration in {name}".format(
                     name=name
                 )
+            )
+        elif kind == nodes.Iir_Kind.Disconnection_Specification:
+            print(
+                "[NOT IMPLEMENTED] Disconnect specification in {name}".format(name=name)
             )
         else:
             position = Position.parse(item)
