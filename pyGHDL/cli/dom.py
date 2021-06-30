@@ -130,18 +130,18 @@ class Application(LineTerminal, ArgParseMixin):
 
         # Call the constructor of the ArgParseMixin
         # --------------------------------------------------------------------------
-        textWidth = min(self.Width, 160)
+        textWidth = min(max(self.Width, 80), 160)
         description = dedent(
             """\
-    			Application to test pyGHDL's DOM API.
-    			"""
+            Application to test pyGHDL's DOM API.
+            """
         )
         epilog = "\n".join(
             wrap(
                 dedent(
                     """\
-    		  pyGHDL is a Python binding for libghdl.
-    		  """
+                    pyGHDL is a Python binding for libghdl.
+                    """
                 ),
                 textWidth,
                 replace_whitespace=False,
@@ -188,9 +188,9 @@ class Application(LineTerminal, ArgParseMixin):
         self.WriteNormal(
             dedent(
                 """\
-    		{HEADLINE}{line}
-    		{headline: ^80s}
-    		{line}"""
+                {HEADLINE}{line}
+                {headline: ^80s}
+                {line}"""
             ).format(line="=" * 80, headline=self.HeadLine, **LineTerminal.Foreground)
         )
 
@@ -281,15 +281,16 @@ class Application(LineTerminal, ArgParseMixin):
             for file in args.Files:
                 if not file.exists():
                     self.WriteError("File '{0!s}' does not exist.".format(file))
+                    continue
 
                 self.WriteNormal("Parsing file '{!s}'".format(file))
                 document = self.addFile(file, "pretty")
                 self.WriteInfo(
                     dedent(
                         """\
-                      libghdl processing time: {: 5.3f} us
-                      DOM translation time:    {:5.3f} us
-                    """
+                          libghdl processing time: {: 5.3f} us
+                          DOM translation time:    {:5.3f} us
+                        """
                     ).format(
                         document.LibGHDLProcessingTime * 10 ** 6,
                         document.DOMTranslationTime * 10 ** 6,
