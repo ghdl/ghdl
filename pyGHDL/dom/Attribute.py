@@ -30,6 +30,8 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+from typing import List
+
 from pydecor import export
 
 from pyVHDLModel.VHDLModel import (
@@ -37,12 +39,16 @@ from pyVHDLModel.VHDLModel import (
     AttributeSpecification as VHDLModel_AttributeSpecification,
     Name,
     SubtypeOrSymbol,
+    EntityClass,
 )
+from pyGHDL.libghdl import utils
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
-from pyGHDL.dom import DOMMixin
+from pyGHDL.libghdl.vhdl.tokens import Tok
+from pyGHDL.dom import DOMMixin, Position, DOMException, Expression
 from pyGHDL.dom._Utils import GetNameOfNode, GetIirKindOfNode
-from pyGHDL.dom._Translate import GetNameFromNode
+from pyGHDL.dom._Translate import GetNameFromNode, GetExpressionFromNode
+from pyGHDL.dom.Names import SimpleName
 from pyGHDL.dom.Symbol import SimpleSubtypeSymbol
 
 
@@ -62,10 +68,42 @@ class Attribute(VHDLModel_Attribute, DOMMixin):
         return cls(attributeNode, name, subtype)
 
 
+_TOKEN_TRANSLATION = {
+    Tok.Entity: EntityClass.Entity,
+    Tok.Architecture: EntityClass.Architecture,
+    Tok.Configuration: EntityClass.Configuration,
+    Tok.Procedure: EntityClass.Procedure,
+    Tok.Function: EntityClass.Function,
+    Tok.Package: EntityClass.Package,
+    Tok.Type: EntityClass.Type,
+    Tok.Subtype: EntityClass.Subtype,
+    Tok.Constant: EntityClass.Constant,
+    Tok.Signal: EntityClass.Signal,
+    Tok.Variable: EntityClass.Variable,
+    Tok.Component: EntityClass.Component,
+    Tok.Label: EntityClass.Label,
+    Tok.Literal: EntityClass.Literal,
+    Tok.Units: EntityClass.Units,
+    Tok.Group: EntityClass.Group,
+    Tok.File: EntityClass.File,
+    Tok.Property: EntityClass.Property,
+    Tok.Sequence: EntityClass.Sequence,
+    #    Tok.View: EntityClass.View,
+    Tok.Others: EntityClass.Others,
+}
+
+
 @export
 class AttributeSpecification(VHDLModel_AttributeSpecification, DOMMixin):
-    def __init__(self, node: Iir, attribute: Name):
-        super().__init__(attribute)
+    def __init__(
+        self,
+        node: Iir,
+        identifiers: List[Name],
+        attribute: Name,
+        entityClass: EntityClass,
+        expression: Expression,
+    ):
+        super().__init__(identifiers, attribute, entityClass, expression)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -73,11 +111,41 @@ class AttributeSpecification(VHDLModel_AttributeSpecification, DOMMixin):
         attributeDesignator = nodes.Get_Attribute_Designator(attributeNode)
         attributeName = GetNameFromNode(attributeDesignator)
 
-        # FIXME: needs an implementation
+        names = []
         entityNameList = nodes.Get_Entity_Name_List(attributeNode)
-        enlk = GetIirKindOfNode(entityNameList)
+        for name in utils.flist_iter(entityNameList):
+            nameKind = GetIirKindOfNode(name)
+            if nameKind == nodes.Iir_Kind.Simple_Name:
+                names.append(SimpleName(name, GetNameOfNode(name)))
+            elif nameKind == nodes.Iir_Kind.Signature:
+                print("[NOT IMPLEMENTED] Signature name in attribute specifications.")
+            else:
+                position = Position.parse(name)
+                raise DOMException(
+                    "Unknown name kind '{kind}' in attribute specification '{attr}' at {file}:{line}:{column}.".format(
+                        kind=nameKind.name,
+                        attr=attributeNode,
+                        file=position.Filename,
+                        line=position.Line,
+                        column=position.Column,
+                    )
+                )
 
-        entityClass = nodes.Get_Entity_Class(attributeNode)
-        eck = GetIirKindOfNode(entityClass)
+        entityClassToken = nodes.Get_Entity_Class(attributeNode)
+        try:
+            entityClass = _TOKEN_TRANSLATION[entityClassToken]
+        except KeyError:
+            position = Position.parse(attributeNode)
+            raise DOMException(
+                "Unknown token '{token}' in attribute specification for entity class '{entityClass}' at {file}:{line}:{column}.".format(
+                    token=entityClassToken.name,
+                    entityClass=attributeNode,
+                    file=position.Filename,
+                    line=position.Line,
+                    column=position.Column,
+                )
+            )
 
-        return cls(attributeNode, attributeName)
+        expression = GetExpressionFromNode(nodes.Get_Expression(attributeNode))
+
+        return cls(attributeNode, names, attributeName, entityClass, expression)

@@ -448,9 +448,8 @@ def GetExpressionFromNode(node: Iir) -> Expression:
     except KeyError:
         position = Position.parse(node)
         raise DOMException(
-            "Unknown expression kind '{kindName}'({kind}) in expression '{expr}' at {file}:{line}:{column}.".format(
-                kind=kind,
-                kindName=kind.name,
+            "Unknown expression kind '{kind}' in expression '{expr}' at {file}:{line}:{column}.".format(
+                kind=kind.name,
                 expr=node,
                 file=position.Filename,
                 line=position.Line,
