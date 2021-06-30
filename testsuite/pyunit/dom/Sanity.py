@@ -32,10 +32,11 @@
 # ============================================================================
 from pathlib import Path
 from subprocess import check_call, STDOUT
+from sys import executable as sys_executable
 
 from pytest import mark
 
-from pyGHDL.dom.NonStandard import Design, Document
+from pyGHDL.dom.NonStandard import Design
 
 if __name__ == "__main__":
     print("ERROR: you called a testcase declaration file as an executable module.")
@@ -51,7 +52,7 @@ design = Design()
 @mark.xfail
 @mark.parametrize("file", [str(f.relative_to(_TESTSUITE_ROOT)) for f in _TESTSUITE_ROOT.glob("sanity/**/*.vhdl")])
 def test_AllVHDLSources(file):
-    check_call(["python", _GHDL_ROOT / "pyGHDL/cli/DOM.py", file], stderr=STDOUT)
+    check_call([sys_executable, _GHDL_ROOT / "pyGHDL/cli/DOM.py", file], stderr=STDOUT)
 
 #    document = Document(Path(file))
 #    design.Documents.append(document)
