@@ -1,3 +1,4 @@
-pydecor>=2.0.1
-pyVHDLModel==0.10.4
-#https://github.com/VHDL/pyVHDLModel/archive/dev.zip#pyVHDLModel
+-r libghdl/requirements.txt
+-r dom/requirements.txt
+-r lsp/requirements.txt
+-r cli/requirements.txt

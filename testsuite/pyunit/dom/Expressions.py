@@ -87,9 +87,9 @@ class Expressions(TestCase):
         default: Expression = self.parse(filename, constantDeclartion)
 
         # Start checks
-        self.assertTrue(isinstance(default, InverseExpression))
-        self.assertTrue(isinstance(default.Operand, SimpleObjectOrFunctionCallSymbol))
-        self.assertTrue(default.Operand.SymbolName == "true")
+        self.assertIsInstance(default, InverseExpression)
+        self.assertIsInstance(default.Operand, SimpleObjectOrFunctionCallSymbol)
+        self.assertEqual("true", str(default.Operand.SymbolName))
 
     # def test_AbsExpression(self):
     #     filename: Path = self._root / "{className}_{funcName}.vhdl".format(
@@ -103,8 +103,8 @@ class Expressions(TestCase):
     #     default: Expression = self.parse(filename, constantDeclartion)
     #
     #     # Start checks
-    #     self.assertTrue(isinstance(default, AbsoluteExpression))
-    #     self.assertTrue(isinstance(default.Operand, SimpleObjectOrFunctionCallSymbol))
+    #     self.assertIsInstance(default, AbsoluteExpression)
+    #     self.assertIsInstance(default.Operand, SimpleObjectOrFunctionCallSymbol)
     #     self.assertTrue(default.Operand.SymbolName == "-3")
 
     # def test_Aggregare(self):
@@ -130,6 +130,6 @@ class Expressions(TestCase):
     #     package: Package = design.Documents[0].Packages[0]
     #     item: Constant = package.DeclaredItems[0]
     #     default: Expression = item.DefaultExpression
-    #     self.assertTrue(isinstance(default, InverseExpression))
-    #     self.assertTrue(isinstance(default.Operand, SimpleObjectOrFunctionCallSymbol))
+    #     self.assertIsInstance(default, InverseExpression)
+    #     self.assertIsInstance(default.Operand, SimpleObjectOrFunctionCallSymbol)
     #     self.assertTrue(default.Operand.SymbolName == "true")

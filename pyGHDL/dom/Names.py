@@ -52,8 +52,8 @@ __all__ = []
 
 @export
 class SimpleName(VHDLModel_SimpleName, DOMMixin):
-    def __init__(self, node: Iir, name: str):
-        super().__init__(name)
+    def __init__(self, node: Iir, identifier: str):
+        super().__init__(identifier)
         DOMMixin.__init__(self, node)
 
 
@@ -66,29 +66,29 @@ class ParenthesisName(VHDLModel_ParenthesisName, DOMMixin):
 
 @export
 class IndexedName(VHDLModel_IndexedName, DOMMixin):
-    def __init__(self, node: Iir, name: str):
-        super().__init__(name)
+    def __init__(self, node: Iir, identifier: str):
+        super().__init__(identifier)
         DOMMixin.__init__(self, node)
 
 
 @export
 class SlicedName(VHDLModel_SlicedName, DOMMixin):
-    def __init__(self, node: Iir, name: str):
-        super().__init__(name)
+    def __init__(self, node: Iir, identifier: str):
+        super().__init__(identifier)
         DOMMixin.__init__(self, node)
 
 
 @export
 class SelectedName(VHDLModel_SelectedName, DOMMixin):
-    def __init__(self, node: Iir, name: str, prefix: Name):
-        super().__init__(name, prefix)
+    def __init__(self, node: Iir, identifier: str, prefix: Name):
+        super().__init__(identifier, prefix)
         DOMMixin.__init__(self, node)
 
 
 @export
 class AttributeName(VHDLModel_AttributeName, DOMMixin):
-    def __init__(self, node: Iir, name: str, prefix: Name):
-        super().__init__(name, prefix)
+    def __init__(self, node: Iir, identifier: str, prefix: Name):
+        super().__init__(identifier, prefix)
         DOMMixin.__init__(self, node)
 
 

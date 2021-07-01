@@ -66,11 +66,13 @@ def do_iirs_subprg():
         @BindToLibGHDL("{classname}__get_kind")
         def Get_Kind(node: Iir) -> IirKind:
             \"\"\"Get node kind.\"\"\"
+            return 0
 
         @export
         @BindToLibGHDL("{classname}__get_location")
         def Get_Location(node: Iir) -> LocationType:
             \"\"\"\"\"\"
+            return 0
         """).format(libname=libname, classname=classname)
     )
     for k in pnodes.funcs:
@@ -85,6 +87,7 @@ def do_iirs_subprg():
             @BindToLibGHDL("{classname}__get_{kname_lower}")
             def Get_{kname}(obj: Iir) -> {rtype}:
                 \"\"\"\"\"\"
+                return 0
             @export
             @BindToLibGHDL("{classname}__set_{kname_lower}")
             def Set_{kname}(obj: Iir, value: {rtype}) -> None:
@@ -259,6 +262,7 @@ def do_libghdl_meta():
 
             :param K: Node to get first array index from.
             \"\"\"
+            return 0
 
 
         @export
@@ -275,11 +279,13 @@ def do_libghdl_meta():
 
             :param K: Node to get last array index from.
             \"\"\"
+            return 0
 
         @export
         @BindToLibGHDL("vhdl__nodes_meta__get_field_by_index")
         def get_field_by_index(K: IirKind) -> int:
             \"\"\"\"\"\"
+            return 0
 
         @export
         def get_field_type(*args):

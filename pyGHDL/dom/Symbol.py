@@ -36,10 +36,9 @@ from pydecor import export
 
 from pyVHDLModel.VHDLModel import (
     EntitySymbol as VHDLModel_EntitySymbol,
-    SimpleSubTypeSymbol as VHDLModel_SimpleSubTypeSymbol,
-    ConstrainedScalarSubTypeSymbol as VHDLModel_ConstrainedScalarSubTypeSymbol,
-    ConstrainedCompositeSubTypeSymbol as VHDLModel_ConstrainedCompositeSubTypeSymbol,
-    EnumerationLiteralSymbol as VHDLModel_EnumerationLiteralSymbol,
+    SimpleSubtypeSymbol as VHDLModel_SimpleSubtypeSymbol,
+    ConstrainedScalarSubtypeSymbol as VHDLModel_ConstrainedScalarSubtypeSymbol,
+    ConstrainedCompositeSubtypeSymbol as VHDLModel_ConstrainedCompositeSubtypeSymbol,
     SimpleObjectOrFunctionCallSymbol as VHDLModel_SimpleObjectOrFunctionCallSymbol,
     IndexedObjectOrFunctionCallSymbol as VHDLModel_IndexedObjectOrFunctionCallSymbol,
     Constraint,
@@ -47,7 +46,6 @@ from pyVHDLModel.VHDLModel import (
 )
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.dom import DOMMixin
-from pyGHDL.dom._Utils import GetNameOfNode
 from pyGHDL.dom.Range import Range
 
 
@@ -56,34 +54,27 @@ __all__ = []
 
 @export
 class EntitySymbol(VHDLModel_EntitySymbol, DOMMixin):
-    def __init__(self, node: Iir, entityName: str):
+    def __init__(self, node: Iir, entityName: Name):
         super().__init__(entityName)
         DOMMixin.__init__(self, node)
 
 
 @export
-class EnumerationLiteralSymbol(VHDLModel_EnumerationLiteralSymbol, DOMMixin):
-    def __init__(self, node: Iir, literalName: str):
-        super().__init__(symbolName=literalName)
+class SimpleSubtypeSymbol(VHDLModel_SimpleSubtypeSymbol, DOMMixin):
+    def __init__(self, node: Iir, subtypeName: Name):
+        if isinstance(subtypeName, (List, Iterator)):
+            subtypeName = ".".join(subtypeName)
+
+        super().__init__(subtypeName=subtypeName)
         DOMMixin.__init__(self, node)
 
 
 @export
-class SimpleSubTypeSymbol(VHDLModel_SimpleSubTypeSymbol, DOMMixin):
-    def __init__(self, node: Iir, subTypeName: Name):
-        if isinstance(subTypeName, (List, Iterator)):
-            subTypeName = ".".join(subTypeName)
-
-        super().__init__(subTypeName=subTypeName)
-        DOMMixin.__init__(self, node)
-
-
-@export
-class ConstrainedScalarSubTypeSymbol(
-    VHDLModel_ConstrainedScalarSubTypeSymbol, DOMMixin
+class ConstrainedScalarSubtypeSymbol(
+    VHDLModel_ConstrainedScalarSubtypeSymbol, DOMMixin
 ):
-    def __init__(self, node: Iir, subTypeName: str, range: Range = None):
-        super().__init__(subTypeName=subTypeName, range=range)
+    def __init__(self, node: Iir, subtypeName: Name, rng: Range = None):
+        super().__init__(subtypeName, rng)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -92,13 +83,13 @@ class ConstrainedScalarSubTypeSymbol(
 
 
 @export
-class ConstrainedCompositeSubTypeSymbol(
-    VHDLModel_ConstrainedCompositeSubTypeSymbol, DOMMixin
+class ConstrainedCompositeSubtypeSymbol(
+    VHDLModel_ConstrainedCompositeSubtypeSymbol, DOMMixin
 ):
     def __init__(
-        self, node: Iir, subTypeName: str, constraints: List[Constraint] = None
+        self, node: Iir, subtypeName: Name, constraints: List[Constraint] = None
     ):
-        super().__init__(subTypeName=subTypeName, constraints=constraints)
+        super().__init__(subtypeName, constraints)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -112,7 +103,9 @@ class SimpleObjectOrFunctionCallSymbol(
 ):
     @classmethod
     def parse(cls, node: Iir):
-        name = GetNameOfNode(node)
+        from pyGHDL.dom._Translate import GetNameFromNode
+
+        name = GetNameFromNode(node)
         return cls(name)
 
 
@@ -120,13 +113,13 @@ class SimpleObjectOrFunctionCallSymbol(
 class IndexedObjectOrFunctionCallSymbol(
     VHDLModel_IndexedObjectOrFunctionCallSymbol, DOMMixin
 ):
-    def __init__(self, node: Iir, name: str):
-        super().__init__(objectName=name)
+    def __init__(self, node: Iir, name: Name):
+        super().__init__(name)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, node: Iir):
-        from pyGHDL.dom._Translate import GetExpressionFromNode, GetNameFromNode
+        from pyGHDL.dom._Translate import GetNameFromNode
 
         name = GetNameFromNode(node)
 

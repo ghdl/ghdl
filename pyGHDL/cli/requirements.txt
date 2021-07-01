@@ -1,0 +1,5 @@
+-r ../dom/requirements.txt
+
+pyAttributes==2.1.0
+pyMetaClasses==1.2.1
+pyTerminalUI==1.3.4

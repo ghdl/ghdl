@@ -53,12 +53,14 @@ def Get_Name_Length(Id: NameId) -> int:
     :param Id: NameId for the identifier to query.
     :return:   Length of the identifier.
     """
+    return 0
 
 
 # @export
 @BindToLibGHDL("name_table__get_name_ptr")
 def _Get_Name_Ptr(Id: NameId) -> c_char_p:
     """"""
+    return ""
 
 
 @export
@@ -78,6 +80,7 @@ def Get_Name_Ptr(Id: NameId) -> str:
 @BindToLibGHDL("name_table__get_character")
 def _Get_Character(Id: NameId) -> c_char:
     """"""
+    return 0
 
 
 @export
@@ -99,6 +102,7 @@ def Get_Character(Id: NameId) -> str:
 @BindToLibGHDL("name_table__get_identifier_with_len")
 def _Get_Identifier(string: c_char_p, length: int) -> NameId:
     """"""
+    return 0
 
 
 @export

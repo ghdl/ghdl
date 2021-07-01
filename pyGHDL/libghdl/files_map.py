@@ -59,6 +59,7 @@ def Location_To_File(Location: LocationType) -> SourceFileEntry:
     :param Location: Location
     :return:         Source file. Return ``No_Source_File_Entry`` if location is incorrect.
     """
+    return 0
 
 
 @export
@@ -71,6 +72,7 @@ def Location_File_To_Pos(Location: LocationType, File: SourceFileEntry) -> int:
     :param File:     Source file
     :return:         Offset
     """
+    return 0
 
 
 @export
@@ -83,6 +85,7 @@ def Location_File_To_Line(Location: LocationType, File: SourceFileEntry) -> int:
     :param File:     Source file
     :return:         Line number
     """
+    return 0
 
 
 @export
@@ -98,6 +101,7 @@ def Location_File_Line_To_Offset(
     :param Line:     Line number
     :return:         Offset
     """
+    return 0
 
 
 @export
@@ -114,6 +118,7 @@ def Location_File_Line_To_Col(
     :param Line:     Line number
     :return:         logical column (horizontal tabs are expanded)
     """
+    return 0
 
 
 @export
@@ -124,6 +129,7 @@ def File_To_Location(File: SourceFileEntry) -> LocationType:
     :param File: Source file
     :return:     Location.
     """
+    return 0
 
 
 @export
@@ -136,6 +142,7 @@ def File_Pos_To_Location(File: SourceFileEntry, Pos: int) -> LocationType:
     :param Pos:  Offset in the file
     :return:     Location.
     """
+    return 0
 
 
 @export
@@ -148,6 +155,7 @@ def File_Line_To_Position(File: SourceFileEntry, Line: int) -> int:
     :param Line: Line number
     :return:     Return ``Source_Ptr_Bad`` in case of error (:obj:`Line` out of bounds).
     """
+    return 0
 
 
 @export
@@ -159,6 +167,7 @@ def Get_File_Name(File: SourceFileEntry) -> NameId:
     :param File: Source file to get the filename from.
     :return:     NameId for the filename.
     """
+    return 0
 
 
 @export
@@ -170,6 +179,7 @@ def Get_Directory_Name(File: SourceFileEntry) -> NameId:
     :param File: Source file to get the directory name from.
     :return:     NameId for the directory.
     """
+    return 0
 
 
 @export
@@ -181,6 +191,7 @@ def Get_File_Buffer(File: SourceFileEntry) -> bytes:
     :param File: Source file to get the buffer from.
     :return:     Type: ``File_Buffer_Ptr``
     """
+    return 0
 
 
 @export
@@ -192,6 +203,7 @@ def Get_File_Length(File: SourceFileEntry) -> int:
     :param File: Source file
     :return:     Type: ``Source_Ptr``
     """
+    return 0
 
 
 @export
@@ -205,6 +217,7 @@ def Set_File_Length(File: SourceFileEntry, Length: int) -> None:
     :param File:   Source file
     :param Length: Length for the file. Type: ``Source_Ptr``
     """
+    return 0
 
 
 # @export
@@ -219,6 +232,7 @@ def Read_Source_File(Directory: NameId, Name: NameId) -> SourceFileEntry:
     :param Name:      File name
     :return:          Return ``No_Source_File_Entry``, if the file does not exist.
     """
+    return 0
 
 
 @export
@@ -236,6 +250,7 @@ def Reserve_Source_File(
     :param Length:    Length to reserve. Type: ``Source_Ptr``
     :return:          SourceFile
     """
+    return 0
 
 
 @export
@@ -272,3 +287,4 @@ def Get_Last_Source_File_Entry() -> SourceFileEntry:
 
     :return: Last SourceFileEntry. Type: ``SourceFileEntry``
     """
+    return 0

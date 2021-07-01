@@ -5,12 +5,14 @@ use     ieee.numeric_std.all;
 entity entity_1 is
 	generic (
 		FREQ : real     := 100.0;
-		BITS : positive := 8
+		BITS : positive := 8.5 ns;
+		type Typ
 	);
 	port (
-	  Clock: in  std_logic;
+	  Clock: in  std_logic := 5 ns;
 	  Reset: in  std_logic := '0';
-	  Q:     out std_logic_vector(BITS - 1 downto 0)
+	  D:     inout bit_vector(clock'range);
+	  Q:     out std_logic_vector(BITS'left - 1 downto Re.set)
 	);
 
 	constant fire : boolean := True;
@@ -20,6 +22,7 @@ end entity entity_1;
 
 architecture behav of entity_1 is
 	constant MAX : positive := -25;
+
 	signal rst : std_logic := foo('U');
 	signal vec : bit_vector(pack(3 to 2).signaal'range'value);
 	signal copy : input'subtype;
@@ -74,6 +77,13 @@ architecture behav of entity_1 is
 	attribute att : boolean;
 
 	alias bar is boolean;
+
+	disconnect address_bus : resolved_word after 3 ns;
+	disconnect others : resolved_word after 2 ns;
+
+	default clock is rising_edge(clk);
+	package inner_pack is
+	end package;
 begin
 	process(Clock)
 	begin
@@ -94,18 +104,28 @@ package package_1 is
 
 	use lib.pack.all;
 
-	constant ghdl : float := (3, 5, 0 to 2 => 5, 3 => 4, name => 10); -- 2.3;
-	attribute fixed of ghdl : constant is true;
+  type cell;
+
+	constant ghdl : float := (3, 5, 0 to 2 => 5, 3 => 4, name => 10, others => 10, 2.3);
+	attribute fixed of ghdl, gtkwave [x, y] : constant is true;
 
 	component comp is
 		port (
 			clk : std
 		);
 	end component;
+
+	constant Pointer_1 : List := new List(1 to 1);
+	constant Pointer_2 : List := new List'(1 => 0);
+	signal init : std_logic_vector(abs(mssb_idx(GEN)-GEN'right)-1 downto 0);
+	constant fid : real := +val;
+	constant ceq11 : std_logic := '1' ?= '1';
+	type rt321 is range t3'reverse_range;
+	type rt321 is range t3'reverse_range(1);
 end package;
 
 package body package_1 is
-	constant ghdl : float := (1); -- => 2, 4 => 5, others => 10); -- .5;
+	constant ghdl : float := 1.5;
 
 	type CAPACITY is range 0 to 1E5	units
 		pF;
@@ -115,3 +135,7 @@ package body package_1 is
 		F = 1000 mF;
 	end units;
 end package body;
+
+vunit vu (component_1) {
+
+}

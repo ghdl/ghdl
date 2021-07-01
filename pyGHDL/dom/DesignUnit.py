@@ -41,8 +41,6 @@ This module contains all DOM classes for VHDL's design units (:class:`context <E
 """
 from typing import List
 
-from pyGHDL.dom import DOMMixin
-from pyGHDL.libghdl._types import Iir
 from pydecor import export
 
 from pyVHDLModel.VHDLModel import (
@@ -59,9 +57,12 @@ from pyVHDLModel.VHDLModel import (
     PortInterfaceItem,
     EntityOrSymbol,
     Name,
+    ConcurrentStatement,
 )
 
+from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
+from pyGHDL.dom import DOMMixin
 from pyGHDL.dom._Utils import GetNameOfNode
 from pyGHDL.dom._Translate import (
     GetGenericsFromChainedNodes,
@@ -95,13 +96,13 @@ class Entity(VHDLModel_Entity, DOMMixin):
     def __init__(
         self,
         node: Iir,
-        name: str,
+        identifier: str,
         genericItems: List[GenericInterfaceItem] = None,
         portItems: List[PortInterfaceItem] = None,
         declaredItems: List = None,
         bodyItems: List["ConcurrentStatement"] = None,
     ):
-        super().__init__(name, genericItems, portItems, declaredItems, bodyItems)
+        super().__init__(identifier, genericItems, portItems, declaredItems, bodyItems)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -122,12 +123,12 @@ class Architecture(VHDLModel_Architecture, DOMMixin):
     def __init__(
         self,
         node: Iir,
-        name: str,
+        identifier: str,
         entity: EntityOrSymbol,
         declaredItems: List = None,
         bodyItems: List["ConcurrentStatement"] = None,
     ):
-        super().__init__(name, entity, declaredItems, bodyItems)
+        super().__init__(identifier, entity, declaredItems, bodyItems)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -152,11 +153,11 @@ class Component(VHDLModel_Component, DOMMixin):
     def __init__(
         self,
         node: Iir,
-        name: str,
+        identifier: str,
         genericItems: List[GenericInterfaceItem] = None,
         portItems: List[PortInterfaceItem] = None,
     ):
-        super().__init__(name, genericItems, portItems)
+        super().__init__(identifier, genericItems, portItems)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -173,11 +174,11 @@ class Package(VHDLModel_Package, DOMMixin):
     def __init__(
         self,
         node: Iir,
-        name: str,
+        identifier: str,
         genericItems: List[GenericInterfaceItem] = None,
         declaredItems: List = None,
     ):
-        super().__init__(name, genericItems, declaredItems)
+        super().__init__(identifier, genericItems, declaredItems)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -204,10 +205,10 @@ class PackageBody(VHDLModel_PackageBody, DOMMixin):
     def __init__(
         self,
         node: Iir,
-        name: str,
+        identifier: str,
         declaredItems: List = None,
     ):
-        super().__init__(name, declaredItems)
+        super().__init__(identifier, declaredItems)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -225,11 +226,11 @@ class PackageInstantiation(VHDLModel_PackageInstantiation, DOMMixin):
     def __init__(
         self,
         node: Iir,
-        name: str,
+        identifier: str,
         uninstantiatedPackageName: Name,
         #        genericItems: List[GenericInterfaceItem] = None,
     ):
-        super().__init__(name, uninstantiatedPackageName)
+        super().__init__(identifier, uninstantiatedPackageName)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -248,9 +249,9 @@ class Context(VHDLModel_Context, DOMMixin):
     def __init__(
         self,
         node: Iir,
-        name: str,
+        identifier: str,
     ):
-        super().__init__(name)
+        super().__init__(identifier)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -267,9 +268,9 @@ class Configuration(VHDLModel_Configuration, DOMMixin):
     def __init__(
         self,
         node: Iir,
-        name: str,
+        identifier: str,
     ):
-        super().__init__(name)
+        super().__init__(identifier)
         DOMMixin.__init__(self, node)
 
     @classmethod

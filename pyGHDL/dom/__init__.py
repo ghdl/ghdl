@@ -32,13 +32,12 @@
 # ============================================================================
 from pathlib import Path
 
-from pyGHDL import GHDLBaseException
-from pyGHDL.libghdl import files_map, name_table
-
-from pyGHDL.libghdl.vhdl import nodes
 from pydecor import export
 
+from pyGHDL import GHDLBaseException
+from pyGHDL.libghdl import files_map, name_table
 from pyGHDL.libghdl._types import Iir
+from pyGHDL.libghdl.vhdl import nodes
 
 __all__ = []
 
@@ -84,6 +83,11 @@ class Position:
     @property
     def Column(self) -> int:
         return self._column
+
+    def __str__(self):
+        return "{file}:{line}:{column}".format(
+            file=self._filename, line=self._line, column=self._column
+        )
 
 
 @export

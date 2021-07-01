@@ -37,7 +37,7 @@ from pydecor import export
 from pyVHDLModel.VHDLModel import (
     Function as VHDLModel_Function,
     Procedure as VHDLModel_Procedure,
-    SubTypeOrSymbol,
+    SubtypeOrSymbol,
     GenericInterfaceItem,
     ParameterInterfaceItem,
 )
@@ -45,7 +45,7 @@ from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin
 from pyGHDL.dom._Utils import GetNameOfNode
-from pyGHDL.dom.Symbol import SimpleSubTypeSymbol
+from pyGHDL.dom.Symbol import SimpleSubtypeSymbol
 
 
 @export
@@ -54,7 +54,7 @@ class Function(VHDLModel_Function, DOMMixin):
         self,
         node: Iir,
         functionName: str,
-        returnType: SubTypeOrSymbol,
+        returnType: SubtypeOrSymbol,
         genericItems: List[GenericInterfaceItem] = None,
         parameterItems: List[ParameterInterfaceItem] = None,
     ):
@@ -84,7 +84,7 @@ class Function(VHDLModel_Function, DOMMixin):
 
         returnType = nodes.Get_Return_Type_Mark(functionNode)
         returnTypeName = GetNameOfNode(returnType)
-        returnTypeSymbol = SimpleSubTypeSymbol(returnType, returnTypeName)
+        returnTypeSymbol = SimpleSubtypeSymbol(returnType, returnTypeName)
 
         return cls(functionNode, functionName, returnTypeSymbol, generics, parameters)
 

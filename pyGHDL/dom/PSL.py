@@ -39,54 +39,95 @@ This module contains all DOM classes for VHDL's design units (:class:`context <E
 
 
 """
+from pyGHDL.libghdl.vhdl import nodes
 from pydecor import export
 
-from pyVHDLModel.VHDLModel import (
-    SimpleAggregateElement as VHDLModel_SimpleAggregateElement,
-    IndexedAggregateElement as VHDLModel_IndexedAggregateElement,
-    RangedAggregateElement as VHDLModel_RangedAggregateElement,
-    NamedAggregateElement as VHDLModel_NamedAggregateElement,
-    OthersAggregateElement as VHDLModel_OthersAggregateElement,
-    Expression,
-    Symbol,
+from pyVHDLModel.PSLModel import (
+    VerificationUnit as VHDLModel_VerificationUnit,
+    VerificationProperty as VHDLModel_VerificationProperty,
+    VerificationMode as VHDLModel_VerificationMode,
+    DefaultClock as VHDLModel_DefaultClock,
 )
+
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.dom import DOMMixin
-from pyGHDL.dom.Range import Range
+from pyGHDL.dom._Utils import GetNameOfNode
+
 
 __all__ = []
 
 
 @export
-class SimpleAggregateElement(VHDLModel_SimpleAggregateElement, DOMMixin):
-    def __init__(self, node: Iir, expression: Expression):
-        super().__init__(expression)
+class VerificationUnit(VHDLModel_VerificationUnit, DOMMixin):
+    def __init__(
+        self,
+        node: Iir,
+        identifier: str,
+    ):
+        super().__init__(identifier)
         DOMMixin.__init__(self, node)
+
+    @classmethod
+    def parse(cls, vunitNode: Iir):
+        name = GetNameOfNode(vunitNode)
+
+        # FIXME: needs an implementation
+
+        return cls(vunitNode, name)
 
 
 @export
-class IndexedAggregateElement(VHDLModel_IndexedAggregateElement, DOMMixin):
-    def __init__(self, node: Iir, index: Expression, expression: Expression):
-        super().__init__(index, expression)
+class VerificationProperty(VHDLModel_VerificationProperty, DOMMixin):
+    def __init__(
+        self,
+        node: Iir,
+        identifier: str,
+    ):
+        super().__init__(identifier)
         DOMMixin.__init__(self, node)
+
+    @classmethod
+    def parse(cls, vpropNode: Iir):
+        name = GetNameOfNode(vpropNode)
+
+        # FIXME: needs an implementation
+
+        return cls(vpropNode, name)
 
 
 @export
-class RangedAggregateElement(VHDLModel_RangedAggregateElement, DOMMixin):
-    def __init__(self, node: Iir, rng: Range, expression: Expression):
-        super().__init__(rng, expression)
+class VerificationMode(VHDLModel_VerificationMode, DOMMixin):
+    def __init__(
+        self,
+        node: Iir,
+        identifier: str,
+    ):
+        super().__init__(identifier)
         DOMMixin.__init__(self, node)
+
+    @classmethod
+    def parse(cls, vmodeNode: Iir):
+        name = GetNameOfNode(vmodeNode)
+
+        # FIXME: needs an implementation
+
+        return cls(vmodeNode, name)
 
 
 @export
-class NamedAggregateElement(VHDLModel_NamedAggregateElement, DOMMixin):
-    def __init__(self, node: Iir, name: Symbol, expression: Expression):
-        super().__init__(name, expression)
+class DefaultClock(VHDLModel_DefaultClock, DOMMixin):
+    def __init__(
+        self,
+        node: Iir,
+        identifier: str,
+    ):
+        super().__init__(identifier)
         DOMMixin.__init__(self, node)
 
+    @classmethod
+    def parse(cls, defaultClockNode: Iir):
+        name = GetNameOfNode(defaultClockNode)
 
-@export
-class OthersAggregateElement(VHDLModel_OthersAggregateElement, DOMMixin):
-    def __init__(self, node: Iir, expression: Expression):
-        super().__init__(expression)
-        DOMMixin.__init__(self, node)
+        # FIXME: needs an implementation
+
+        return cls(defaultClockNode, name)

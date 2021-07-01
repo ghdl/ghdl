@@ -42,6 +42,7 @@ from typing import Any
 
 from pydecor import export
 
+from pyGHDL.dom.PSL import VerificationUnit, VerificationProperty, VerificationMode
 from pyVHDLModel.VHDLModel import (
     Design as VHDLModel_Design,
     Library as VHDLModel_Library,
@@ -197,6 +198,18 @@ class Document(VHDLModel_Document):
             elif nodeKind == nodes.Iir_Kind.Configuration_Declaration:
                 configuration = Configuration.parse(libraryUnit)
                 self.Configurations.append(configuration)
+
+            elif nodeKind == nodes.Iir_Kind.Vunit_Declaration:
+                vunit = VerificationUnit.parse(libraryUnit)
+                self.VerificationUnits.append(vunit)
+
+            elif nodeKind == nodes.Iir_Kind.Vprop_Declaration:
+                vprop = VerificationProperty.parse(libraryUnit)
+                self.VerificationProperties.append(vprop)
+
+            elif nodeKind == nodes.Iir_Kind.Vmode_Declaration:
+                vmod = VerificationMode.parse(libraryUnit)
+                self.VerificationModes.append(vmod)
 
             else:
                 raise DOMException(
