@@ -362,6 +362,7 @@ package body Vhdl.Utils is
                | Iir_Kind_Nature_Element_Declaration
                | Iir_Kind_Psl_Endpoint_Declaration
                | Iir_Kind_Psl_Declaration
+               | Iir_Kind_Psl_Default_Clock
                | Iir_Kind_Package_Pathname
                | Iir_Kind_Absolute_Pathname
                | Iir_Kind_Relative_Pathname

@@ -6875,8 +6875,7 @@ package Vhdl.Nodes is
    --Iir_Kind_If_Generate_Statement
    --Iir_Kind_Case_Generate_Statement
    --Iir_Kind_For_Generate_Statement
-   --Iir_Kind_Component_Instantiation_Statement
-     Iir_Kind_Psl_Default_Clock;
+     Iir_Kind_Component_Instantiation_Statement;
 
    subtype Iir_Kinds_Simple_Concurrent_Statement is Iir_Kind range
      Iir_Kind_Sensitized_Process_Statement ..

@@ -978,7 +978,6 @@ class Iir_Kinds:
         Iir_Kind.Case_Generate_Statement,
         Iir_Kind.For_Generate_Statement,
         Iir_Kind.Component_Instantiation_Statement,
-        Iir_Kind.Psl_Default_Clock,
     ]
 
     Simple_Concurrent_Statement = [
