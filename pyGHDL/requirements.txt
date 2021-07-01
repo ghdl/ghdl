@@ -1,6 +1,4 @@
-pydecor>=2.0.1
-pyAttributes==2.1.0
-pyMetaClasses==1.2.1
-pyVHDLModel==0.11.1
-#https://github.com/VHDL/pyVHDLModel/archive/dev.zip#pyVHDLModel
-pyTerminalUI==1.3.4
+-r libghdl/requirements.txt
+-r dom/requirements.txt
+-r lsp/requirements.txt
+-r cli/requirements.txt

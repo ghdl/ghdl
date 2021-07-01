@@ -266,7 +266,7 @@ class Application(LineTerminal, ArgParseMixin):
         self.exit()
 
     # ----------------------------------------------------------------------------
-    # create the sub-parser for the "token-stream" command
+    # Create the sub-parser for the "pretty" command
     # ----------------------------------------------------------------------------
     @CommandAttribute(
         "pretty",
