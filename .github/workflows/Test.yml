@@ -498,6 +498,62 @@ jobs:
         python3 -m pytest -vsrA pyunit
 
 #
+# Windows CPython pyGHDL Test with standalone zipfile
+#
+
+  win-cpython-standalone:
+    needs: win-standalone
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include: [
+          {icon: '🟪', pkg: 'MINGW32-mcode', pyarch: x86 },
+          #{icon: '🟪', pkg: 'MINGW32-llvm',  pyarch: x86 }, ! Not yet functional
+          {icon: '🟦', pkg: 'MINGW64-mcode', pyarch: x64 }, #! simulation with mcode is not yet supported on win64
+          #{icon: '🟦', pkg: 'MINGW64-llvm',  pyarch: x64  },
+        ]
+    name: '${{ matrix.icon }} CPython Test · ${{ matrix.pkg }}'
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+
+    - name: '⚙️ git config'
+      run: git config --global core.autocrlf input
+
+    - name: '🧰 Checkout'
+      uses: actions/checkout@v2
+
+    - name: '📥 Download artifact: package'
+      uses: actions/download-artifact@v2
+      with:
+        path: artifact
+        name: ${{ matrix.pkg }}-standalone
+
+    - name: '⚙️ Extract package'
+      run: |
+        unzip artifact\${{ matrix.pkg }}-standalone.zip
+        mv '${{ matrix.pkg }}-standalone\' GHDL-standalone
+
+    - name: '🐍 Setup Python'
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+        architecture: ${{ matrix.pyarch }}
+
+    - name: '🐍 Install Python dependencies'
+      run: |
+        pip3 install -r testsuite/requirements.txt
+
+    - name: '🚧 Test package'
+      run: |
+        $env:GHDL_PREFIX = (pwd).Path + '\GHDL-standalone\lib\ghdl'
+        $env:PYTHONPATH = (pwd).Path
+        cd testsuite
+        python3 -m pytest -vsrA pyunit
+
+#
 # Release
 #
 
