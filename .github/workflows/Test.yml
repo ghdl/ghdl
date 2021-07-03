@@ -65,6 +65,7 @@ jobs:
       if: github.event_name != 'pull_request'
       uses: actions/upload-artifact@v2
       with:
+        name: man
         path: doc/_build/man/ghdl.1
 
 #
@@ -146,6 +147,7 @@ jobs:
     - name: '📤 Upload artifact: package'
       uses: actions/upload-artifact@v2
       with:
+        name: ubuntu${{ matrix.os }}-${{ matrix.backend }}
         path: ghdl-gha-ubuntu-*.tgz
 
 #
@@ -189,6 +191,7 @@ jobs:
     - name: '📤 Upload artifact: package'
       uses: actions/upload-artifact@v2
       with:
+        name: macos10.15-${{ matrix.backend }}
         path: ghdl-macos*${{ matrix.backend }}.tgz
 
 #
@@ -250,6 +253,7 @@ jobs:
     - name: '📤 Upload artifact: package'
       uses: actions/upload-artifact@v2
       with:
+        name: ${{ matrix.installs }}-${{ matrix.pkg }}
         path: scripts/msys2-${{ matrix.pkg }}/mingw-*ghdl*.pkg.tar.zst
 
 #
@@ -300,6 +304,9 @@ jobs:
 
     - name: '📥 Download artifact: package'
       uses: actions/download-artifact@v2
+      with:
+        path: artifact
+        name: ${{ matrix.sys.installs }}-${{ matrix.sys.pkg }}
 
     - name: '🚧 Install package and Python dependencies'
       run: |
@@ -348,6 +355,9 @@ jobs:
 
     - name: '📥 Download artifact: package'
       uses: actions/download-artifact@v2
+      with:
+        path: artifact
+        name: ${{ matrix.installs }}-${{ matrix.pkg }}
 
     - name: '🚧 Install package'
       run: pacman --noconfirm -U artifact/mingw-w64-${{ matrix.sys.arch }}-ghdl-${{ matrix.sys.pkg }}-*.zst
@@ -400,6 +410,9 @@ jobs:
 
     - name: '📥 Download artifact: package'
       uses: actions/download-artifact@v2
+      with:
+        path: artifact
+        name: ${{ matrix.installs }}-mcode
 
     - name: '🚧 Install package'
       run: pacman --noconfirm -U artifact/mingw-w64-${{ matrix.arch }}-ghdl-mcode-*.zst
@@ -419,6 +432,7 @@ jobs:
     - name: '📤 Upload artifact: zipfile'
       uses: actions/upload-artifact@v2
       with:
+        name: ${{ matrix.installs }}-mcode-standalone
         path: ${{ matrix.installs }}-mcode-standalone.zip
 
 #
@@ -458,6 +472,7 @@ jobs:
     - name: '📥 Download artifact: package'
       uses: actions/download-artifact@v2
       with:
+        path: artifact
         name: ${{ matrix.installs }}-${{ matrix.pkg }}
 
     - name: '⚙️ Install package'
@@ -496,16 +511,18 @@ jobs:
     - name: '📥 Download artifacts'
       if: "!contains(github.ref, 'refs/tags/')"
       uses: actions/download-artifact@v2
+      with:
+        path: artifacts
 
     # Do not upload assets to tagged releases
     - name: Set list of files for uploading
       id: files
+      shell: python
       run: |
-        case '${{ github.ref }}' in
-          'refs/tags/'*) _list='none' ;;
-          *)             _list='artifact/*' ;;
-        esac
-        echo "::set-output name=list::${_list}"
+        print('None'
+            if '${{ github.ref }}'.startswith('refs/tags/')
+            else'::set-output name=list::**/*.zst **/*.tgz **/*-standalone.zip'
+        )
 
     # Tagged: create a pre-release or a release (semver)
     # Untagged: update the assets of pre-release 'nightly'
@@ -515,9 +532,10 @@ jobs:
         tag: 'nightly'
         files: ${{ steps.files.outputs.list }}
 
-    - run: |
+    - name: '🔔 Trigger ghdl/docker'
+      run: |
         curl -X POST https://api.github.com/repos/ghdl/docker/dispatches \
-        -H "Content-Type: application/json" \
+        -H 'Content-Type: application/json' \
         -H 'Accept: application/vnd.github.everest-preview+json' \
         -H "Authorization: token ${{ secrets.GHDL_BOT }}" \
         --data '{"event_type": "ghdl"}'
@@ -553,6 +571,9 @@ jobs:
 
     - name: '📥 Download artifact: package'
       uses: actions/download-artifact@v2
+      with:
+        path: artifact
+        name: MINGW64-llvm
 
     - name: '🚧 Install package and Python dependencies'
       run: |
@@ -590,6 +611,7 @@ jobs:
     - name: '📥 Download artifact: coverage report'
       uses: actions/download-artifact@v2
       with:
+        path: artifact
         name: coverage
 
     - name: CodeCov
