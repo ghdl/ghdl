@@ -314,12 +314,64 @@ jobs:
       run: GHDL=ghdl ./testsuite/testsuite.sh ${{ matrix.suite }}
 
 #
+# Windows pyGHDL
+#
+
+  win-pyGHDL:
+    needs: win-build
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        sys: [
+          {icon: '🟦', installs: 'MINGW32', arch: i686,   pkg: 'mcode' },
+          #{icon: '🟦', installs: "MINGW32", arch: i686,   pkg: "llvm"  }, ! Not yet functional
+          #{icon: '🟪', installs: "MINGW64", arch: x86_64, pkg: "mcode" }, ! mcode is not yet supported on win64
+          {icon: '🟪', installs: 'MINGW64', arch: x86_64, pkg: 'llvm'  },
+        ]
+    name: '${{ matrix.sys.icon }} pyGHDL · ${{ matrix.sys.installs }} · ${{ matrix.sys.pkg }}'
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+
+    - name: '${{ matrix.sys.icon }} Setup MSYS2'
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: ${{ matrix.sys.installs }}
+        update: true
+        install: >
+          git
+          mingw-w64-${{ matrix.sys.arch }}-gcc
+          mingw-w64-${{ matrix.sys.arch }}-python-pip
+          mingw-w64-${{ matrix.sys.arch }}-python-setuptools
+
+    - name: '⚙️ git config'
+      run: git config --global core.autocrlf input
+      shell: bash
+
+    - name: '📥 Download artifact: package'
+      uses: actions/download-artifact@v2
+
+    - name: '🚧 Install package'
+      run: pacman --noconfirm -U artifact/mingw-w64-${{ matrix.sys.arch }}-ghdl-${{ matrix.sys.pkg }}-*.zst
+
+    - name: '🚧 Test installation of pyGHDL through pip'
+      run: pip install git+https://github.com/ghdl/ghdl.git@$(ghdl version hash)
+
+    - name: '🚧 Test pyGHDL entrypoints'
+      run: |
+        ghdl-dom help
+        ghdl-ls --help
+
+#
 # Release
 #
 
   Release:
     if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/master' || contains(github.ref, 'refs/tags/'))
-    needs: [ doc, lin, osx, win-test ]
+    needs: [ doc, lin, osx, win-test, win-pyGHDL ]
     runs-on: ubuntu-latest
     name: '📦 Release'
     steps:
