@@ -52,10 +52,18 @@ __loggerName = "ghdl-ls"
 
 def __rotate_log_files(basename: str, num: int):
     """Rotate existing log files."""
+    # Remove the oldest file.  This one will be lost.
+    # Required on Windows as it is an error to rename a file to an existing
+    # one.
+    oldfile = "{}.{}".format(basename, num)
+    if os.path.isfile(oldfile):
+            os.remove(oldfile)
+    # Rotate old files
     for i in range(num, 0, -1):
         oldfile = "{}.{}".format(basename, i - 1)
         if os.path.isfile(oldfile):
             os.rename(oldfile, "{}.{}".format(basename, i))
+    # Rotate the newest log file.
     if os.path.isfile(basename):
         os.rename(basename, "{}.0".format(basename))
 
