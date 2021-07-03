@@ -36,8 +36,15 @@ from __future__ import absolute_import
 
 from argparse import ArgumentParser
 from logging import getLogger, DEBUG, INFO, ERROR, basicConfig
-import sys
-import os
+from sys import (
+    argv as sys_argv,
+    stdin as sys_stdin,
+    stdout as sys_stdout,
+    stderr as sys_stderr,
+    exit as sys_exit,
+)
+from os import environ as os_environ, getcwd as os_getcwd
+from pathlib import Path
 
 from pydecor import export
 
@@ -55,17 +62,18 @@ def __rotate_log_files(basename: str, num: int):
     # Remove the oldest file.  This one will be lost.
     # Required on Windows as it is an error to rename a file to an existing
     # one.
-    oldfile = "{}.{}".format(basename, num)
-    if os.path.isfile(oldfile):
-        os.remove(oldfile)
+    bname = Path(basename)
+    oldfile = bname.with_suffix(str(num))
+    if oldfile.is_file():
+        oldfile.unlink()
     # Rotate old files
     for i in range(num, 0, -1):
-        oldfile = "{}.{}".format(basename, i - 1)
-        if os.path.isfile(oldfile):
-            os.rename(oldfile, "{}.{}".format(basename, i))
+        oldfile = bname.with_suffix(str(i - 1))
+        if oldfile.is_file():
+            oldfile.rename(bname.with_suffix(str(i)))
     # Rotate the newest log file.
-    if os.path.isfile(basename):
-        os.rename(basename, "{}.0".format(basename))
+    if bname.is_file():
+        bname.rename(bname.with_suffix(str(0)))
 
 
 def _generateCLIParser() -> ArgumentParser:
@@ -124,7 +132,7 @@ def main():
         __rotate_log_files(args.log_file, 5)
         logstream = open(args.log_file, "w")
     else:
-        logstream = sys.stderr
+        logstream = sys_stderr
 
     basicConfig(
         format="%(asctime)-15s [%(levelname)s] %(message)s",
@@ -133,22 +141,22 @@ def main():
     )
 
     if args.verbose != 0:
-        sys.stderr.write("Args: {}\n".format(sys.argv))
-        sys.stderr.write("Current directory: {}\n".format(os.getcwd()))
+        sys_stderr.write("Args: {}\n".format(sys_argv))
+        sys_stderr.write("Current directory: {}\n".format(os_getcwd()))
 
-    logger.info("Args: %s", sys.argv)
-    logger.info("Current directory is %s", os.getcwd())
+    logger.info("Args: %s", sys_argv)
+    logger.info("Current directory is %s", os_getcwd())
 
     # Connection
-    instream = sys.stdin.buffer
+    instream = sys_stdin.buffer
     if args.input is not None:
         instream = open(args.input, "rb")
 
-    conn = LSPConn(instream, sys.stdout.buffer)
+    conn = LSPConn(instream, sys_stdout.buffer)
 
     trace_file = args.trace_file
     if trace_file is None:
-        trace_file = os.environ.get("GHDL_LS_TRACE")
+        trace_file = os_environ.get("GHDL_LS_TRACE")
     if trace_file is not None:
         if args.input is None:
             __rotate_log_files(trace_file + ".in", 5)
@@ -164,7 +172,7 @@ def main():
         server.run()
     except Exception:
         logger.exception("Uncaught error")
-        sys.exit(1)
+        sys_exit(1)
 
 
 if __name__ == "__main__":
