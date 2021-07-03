@@ -122,7 +122,6 @@ jobs:
   lin:
     strategy:
       fail-fast: false
-      max-parallel: 4
       matrix:
         include: [
           { os: 18, backend: mcode },
@@ -156,7 +155,6 @@ jobs:
   osx:
     strategy:
       fail-fast: false
-      max-parallel: 2
       matrix:
         backend:
         - mcode
@@ -201,7 +199,6 @@ jobs:
     runs-on: windows-latest
     strategy:
       fail-fast: false
-      max-parallel: 3
       matrix:
         include: [
           {icon: '🟪', installs: 'MINGW32', arch: i686,   pkg: 'mcode' },
@@ -264,7 +261,6 @@ jobs:
     runs-on: windows-latest
     strategy:
       fail-fast: false
-      max-parallel: 8
       matrix:
         sys: [
           {icon: '🟪', installs: 'MINGW32', arch: i686,   pkg: 'mcode' },
@@ -322,7 +318,6 @@ jobs:
     runs-on: windows-latest
     strategy:
       fail-fast: false
-      max-parallel: 3
       matrix:
         sys: [
           {icon: '🟪', installs: 'MINGW32', arch: i686,   pkg: 'mcode' },
@@ -374,7 +369,6 @@ jobs:
     runs-on: windows-latest
     strategy:
       fail-fast: false
-      max-parallel: 2
       matrix:
         include: [
           {icon: '🟪', installs: 'MINGW32', arch: i686   },
@@ -436,7 +430,6 @@ jobs:
     runs-on: windows-latest
     strategy:
       fail-fast: false
-      max-parallel: 2
       matrix:
         include: [
           {icon: '🟪', installs: 'MINGW32', arch: i686,   pkg: 'mcode',  pyarch: x86  },
