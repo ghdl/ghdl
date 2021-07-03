@@ -63,13 +63,17 @@ def get_requirements(file: Path) -> List[str]:
     requirements = []
     with file.open("r") as fh:
         for line in fh.readlines():
-            if line.startswith("#"):
+            line = line.strip()
+            if line.startswith("#") or line == "":
                 continue
+            elif line.startswith("-r"):
+                filename = line[3:].strip()
+                requirements += get_requirements(file.parent / filename)
             elif line.startswith("https"):
-                _splitItems = line.strip().split("#")
+                _splitItems = line.split("#")
                 requirements.append("{} @ {}".format(_splitItems[1], _splitItems[0]))
             else:
-                requirements.append(line.strip())
+                requirements.append(line)
     return requirements
 
 
@@ -96,6 +100,8 @@ documentationURL = (
         namespace=gitHubNamespace, projectName=projectName
     )
 )
+requirements = list(set(get_requirements(requirementsFile)))
+
 
 # Assemble all package information
 setuptools_setup(
@@ -114,7 +120,7 @@ setuptools_setup(
         "Issue Tracker": sourceCodeURL + "/issues",
     },
     python_requires=">=3.6",
-    install_requires=get_requirements(requirementsFile),
+    install_requires=requirements,
     packages=setuptools_find_packages(exclude=("tests",)),
     entry_points={
         "console_scripts": [
