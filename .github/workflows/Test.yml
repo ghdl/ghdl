@@ -317,7 +317,7 @@ jobs:
 # Windows pyGHDL
 #
 
-  win-pyGHDL:
+  win-pip:
     needs: win-build
     runs-on: windows-latest
     strategy:
@@ -371,7 +371,7 @@ jobs:
 
   Release:
     if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/master' || contains(github.ref, 'refs/tags/'))
-    needs: [ doc, lin, osx, win-test, win-pyGHDL ]
+    needs: [ doc, lin, osx, win-test, win-pip ]
     runs-on: ubuntu-latest
     name: '📦 Release'
     steps:
