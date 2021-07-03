@@ -57,7 +57,7 @@ def __rotate_log_files(basename: str, num: int):
     # one.
     oldfile = "{}.{}".format(basename, num)
     if os.path.isfile(oldfile):
-            os.remove(oldfile)
+        os.remove(oldfile)
     # Rotate old files
     for i in range(num, 0, -1):
         oldfile = "{}.{}".format(basename, i - 1)
