@@ -107,6 +107,9 @@ def main():
     if args.disp_config:
         errorout_console.Install_Handler()
         libghdl.disp_config()
+        print("python:")
+        print("sys.platform: {}, os.name: {}".format(sys.platform, os.name))
+        print(sys.version)
         return
 
     # Setup logging
