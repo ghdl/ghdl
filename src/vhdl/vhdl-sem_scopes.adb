@@ -1243,7 +1243,8 @@ package body Vhdl.Sem_Scopes is
          --  anonymous and there is no need to iterate.
          exit when Id = Null_Identifier;
 
-         Add_Name (El, Id, False);
+         Add_Declaration (El, False);
+
          El := Get_Chain (El);
       end loop;
    end Add_Declarations_From_Interface_Chain;
