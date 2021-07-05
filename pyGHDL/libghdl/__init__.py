@@ -64,8 +64,9 @@ class LibGHDLException(GHDLBaseException):
 def _get_libghdl_name() -> Path:
     """Get the name of the libghdl library (with version and extension)."""
     ver = __version__.replace("-", "_").replace(".", "_")
-    ext = {"win32": "dll", "cygwin": "dll", "msys": "dll",
-           "darwin": "dylib"}.get(sys_platform, "so")
+    ext = {"win32": "dll", "cygwin": "dll", "msys": "dll", "darwin": "dylib"}.get(
+        sys_platform, "so"
+    )
     return Path("libghdl-{version}.{ext}".format(version=ver, ext=ext))
 
 
