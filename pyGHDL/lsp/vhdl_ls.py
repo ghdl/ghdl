@@ -72,7 +72,7 @@ class VhdlLanguageServer(object):
         **_
     ):
         log.debug(
-            "Language server initialized with %s %s %s %s",
+            "Language server initialize: pid=%s uri=%s path=%s options=%s",
             processId,
             rootUri,
             rootPath,
