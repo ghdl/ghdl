@@ -1049,7 +1049,9 @@ package body Vhdl.Sem_Stmts is
                Expr := Sem_Expression_Wildcard
                  (Expr, Stmt_Type, Constrained);
                if Expr /= Null_Iir then
-                  if Is_Expr_Fully_Analyzed (Expr) then
+                  if Is_Expr_Fully_Analyzed (Expr)
+                    and then not Is_Error (Get_Type (Expr))
+                  then
                      Check_Read (Expr);
                      Expr := Eval_Expr_If_Static (Expr);
                   end if;
