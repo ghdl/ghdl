@@ -413,7 +413,10 @@ package body Ghdllocal is
       end if;
 
       --  Compute Exec_Prefix.
-      Set_Exec_Prefix_From_Program_Name;
+      if Exec_Prefix = null then
+         --  Only if not already set.
+         Set_Exec_Prefix_From_Program_Name;
+      end if;
 
       --  Set prefix path.
       --  If not set by command line, try environment variable.
