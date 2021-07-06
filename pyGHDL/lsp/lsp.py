@@ -47,8 +47,12 @@ def path_from_uri(uri):
 
 def path_to_uri(path):
     # Convert path to file uri (add html like head part)
+    # :param path: is an absolute path.
     if is_windows:
-        return "file:///" + quote(path.replace("\\", "/"))
+        # On windows, do not quote the colon after the driver letter, as
+        # it is not quoted in uri from the client.
+        path = path.replace("\\", "/")
+        return "file:///" + path[:2] + quote(path[2:])
     else:
         return "file://" + quote(path)
 
