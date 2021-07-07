@@ -8,11 +8,7 @@ from subprocess import run as subprocess_run, PIPE
 from typing import Optional
 from unittest import TestCase
 
-
 from pyGHDL.lsp.lsp import LanguageProtocolServer, LSPConn
-
-is_windows = os.name == "nt"
-
 
 class StrConn:
     __res: str
@@ -69,7 +65,7 @@ def root_subst(obj, path, uri):
             if isinstance(v, str):
                 if k in ("rootUri", "uri"):
                     assert v.startswith("file://@ROOT@/")
-                    obj[k] = "file://" + quote(uri + v[13:])
+                    obj[k] = "file://" + uri + v[13:]
                 elif k in ("rootPath", "message"):
                     obj[k] = v.replace("@ROOT@", path)
             else:
