@@ -69,10 +69,10 @@ jobs:
         path: doc/_build/man/ghdl.1
 
 #
-# pyGHDL Bindings and Formatting
+# pyGHDL Bindings, Formatting and Wheel
 #
 
-  fmt:
+  pyGHDL:
     runs-on: ubuntu-latest
     name: '🐍 pyGHDL'
     steps:
@@ -85,22 +85,36 @@ jobs:
       with:
         python-version: 3.8
 
-    - name: Install dependencies
+    - name: '🔧 Install dependencies'
       run: |
         sudo apt update -qq
         sudo apt install -y gnat
-        python -m pip install black
+        python -m pip install --upgrade pip
+        python -m pip install black wheel
 
-    - name: Update Python bindings
+    - name: '🚧 Update Python bindings'
       run: ./scripts/update_py_bindings.sh
 
-    - name: Check if Python bindings changed
+    - name: '🚦 Check if Python bindings changed'
       run: |
         git diff --stat
         git diff --exit-code
 
-    - name: Check if python follows code formatting standards
+    - name: '🚦 Check if python follows code formatting standards'
       run: python -m black --check pyGHDL
+
+    - name: 🔨 Build Python package (source distribution)
+      run: python setup.py sdist
+
+    - name: 🔨 Build Python package (binary distribution - wheel)
+      run: python setup.py bdist_wheel
+
+    - name: '📤 Upload artifact: pyGHDL'
+      uses: actions/upload-artifact@v2
+      with:
+        name: pyGHDL
+        path: dist/
+        if-no-files-found: error
 
 #
 # GPL
@@ -149,6 +163,7 @@ jobs:
       with:
         name: ubuntu${{ matrix.os }}-${{ matrix.backend }}
         path: ghdl-gha-ubuntu-*.tgz
+        if-no-files-found: error
 
 #
 # MacOS
@@ -193,6 +208,7 @@ jobs:
       with:
         name: macos10.15-${{ matrix.backend }}
         path: ghdl-macos*${{ matrix.backend }}.tgz
+        if-no-files-found: error
 
 #
 # Windows MSYS2 Build
@@ -255,6 +271,7 @@ jobs:
       with:
         name: MINGW${{ matrix.bits }}-${{ matrix.pkg }}
         path: scripts/msys2-${{ matrix.pkg }}/mingw-*ghdl*.pkg.tar.zst
+        if-no-files-found: error
 
 #
 # Windows MSYS2 Test
@@ -315,60 +332,6 @@ jobs:
 
     - name: '🚦 Test package'
       run: GHDL=ghdl ./testsuite/testsuite.sh ${{ matrix.suite }}
-
-#
-# Windows MSYS2 pyGHDL pip installation
-#
-
-  win-pip:
-    needs: win-msys2-build-package
-    runs-on: windows-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include: [
-          #{icon: '🟪', pkg: 'llvm',  bits: '32', arch: i686 }, ! Not yet functional
-          {icon: '🟦', pkg: 'llvm',  bits: '64', arch: x86_64  },
-          {icon: '🟪', pkg: 'mcode', bits: '32', arch: i686,   },
-          {icon: '🟦', pkg: 'mcode', bits: '64', arch: x86_64, }, #! simulation with mcode is not yet supported on win64
-        ]
-    name: '🚦${{ matrix.icon }} pip · ${{ matrix.pkg }}${{ matrix.bits }}'
-    defaults:
-      run:
-        shell: msys2 {0}
-    steps:
-
-    - name: '${{ matrix.icon }} Setup MSYS2'
-      uses: msys2/setup-msys2@v2
-      with:
-        msystem: MINGW${{ matrix.bits }}
-        update: true
-        install: >
-          git
-          mingw-w64-${{ matrix.arch }}-gcc
-          mingw-w64-${{ matrix.arch }}-python-pip
-          mingw-w64-${{ matrix.arch }}-python-setuptools
-
-    - name: '⚙️ git config'
-      run: git config --global core.autocrlf input
-      shell: bash
-
-    - name: '📥 Download artifact: package'
-      uses: actions/download-artifact@v2
-      with:
-        path: artifact
-        name: MINGW${{ matrix.bits }}-${{ matrix.pkg }}
-
-    - name: '🛠️ Install package'
-      run: pacman --noconfirm -U artifact/mingw-w64-${{ matrix.arch }}-ghdl-${{ matrix.pkg }}-*.zst
-
-    - name: '🚦 Test installation of pyGHDL through pip'
-      run: pip install git+https://github.com/ghdl/ghdl.git@$(ghdl version hash)
-
-    - name: '🚦 Test pyGHDL entrypoints'
-      run: |
-        ghdl-dom help
-        ghdl-ls --help
 
 #
 # Windows Generate Standalone ZipFile
@@ -480,6 +443,14 @@ jobs:
       run: |
         pacman --noconfirm -U artifact/mingw-w64-${{ matrix.arch }}-ghdl-${{ matrix.pkg }}-*.zst
 
+    - name: '🛠️ Set envvars'
+      run: |
+        $GHDL = (& msys2 -c 'cygpath -w /') + 'MINGW${{ matrix.bits }}\bin\ghdl.exe'
+        $GHDL_HASH = (& $GHDL version hash)
+        echo "GHDL_HASH=$GHDL_HASH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        $GHDL_PREFIX = (& msys2 -c 'cygpath -w /') + 'MINGW${{ matrix.bits }}\lib\ghdl\'
+        echo "GHDL_PREFIX=$GHDL_PREFIX" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
     - name: '🐍 Setup Python'
       uses: actions/setup-python@v2
       with:
@@ -490,19 +461,27 @@ jobs:
       run: |
         pip3 install -r testsuite/requirements.txt
 
-    - name: '🚦 Test package'
+    - name: '🚦 Test installation of pyGHDL through pip'
+      run: pip install ("git+https://github.com/ghdl/ghdl.git@" + $env:GHDL_HASH)
+
+    - name: '🚦 Test pyGHDL entrypoints'
       run: |
-        $env:GHDL_PREFIX = (& msys2 -c 'cygpath -w /') + 'MINGW${{ matrix.bits }}\lib\ghdl\'
-        $env:PYTHONPATH = (pwd).Path
+        ghdl-dom help
+        ghdl-ls --help
+
+    - name: '🚦 Test pyunit testsuite'
+      run: |
         cd testsuite
         python3 -m pytest -vsrA pyunit
 
 #
-# Windows CPython pyGHDL Test with standalone zipfile
+# Windows CPython pyGHDL Test with standalone zipfile and pyGHDL wheel
 #
 
   win-cpython-standalone:
-    needs: win-generate-standalone-zip
+    needs:
+      - win-generate-standalone-zip
+      - pyGHDL
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -535,20 +514,38 @@ jobs:
         unzip artifact\MINGW${{ matrix.pkg }}-standalone.zip
         mv 'MINGW${{ matrix.pkg }}-standalone\' GHDL-standalone
 
+    - name: '🛠️ Set envvars'
+      run: |
+        $GHDL = (pwd).Path + '\GHDL-standalone\bin\ghdl.exe'
+        $GHDL_HASH = (& $GHDL version hash)
+        echo "GHDL_HASH=$GHDL_HASH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        $GHDL_PREFIX = (pwd).Path + '\GHDL-standalone\lib\ghdl'
+        echo "GHDL_PREFIX=$GHDL_PREFIX" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
     - name: '🐍 Setup Python'
       uses: actions/setup-python@v2
       with:
         python-version: 3.8
         architecture: ${{ matrix.pyarch }}
 
-    - name: '🐍 Install Python dependencies'
-      run: |
-        pip3 install -r testsuite/requirements.txt
+    - name: '📥 Download artifact: pyGHDL'
+      uses: actions/download-artifact@v2
+      with:
+        name: pyGHDL
 
-    - name: '🚦 Test package'
+    - name: '🐍 Install pyGHDL'
       run: |
-        $env:GHDL_PREFIX = (pwd).Path + '\GHDL-standalone\lib\ghdl'
-        $env:PYTHONPATH = (pwd).Path
+        python -m pip install --upgrade pip
+        python -m pip install wheel (& ls *.whl)
+        python -m pip install -r testsuite/requirements.txt
+
+    - name: '🚦 Test pyGHDL entrypoints'
+      run: |
+        ghdl-dom help
+        ghdl-ls --help
+
+    - name: '🚦 Test pyunit testsuite'
+      run: |
         cd testsuite
         python3 -m pytest -vsrA pyunit
 
@@ -558,7 +555,14 @@ jobs:
 
   Release:
     if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/master' || contains(github.ref, 'refs/tags/'))
-    needs: [ doc, lin, osx, win-msys2-test, win-pip, win-generate-standalone-zip ]
+    needs:
+     - doc
+     - lin
+     - osx
+     - win-msys2-test
+     - win-generate-standalone-zip
+     - win-cpython-msys2
+     - win-cpython-standalone
     runs-on: ubuntu-latest
     name: '📦 Release'
     steps:
