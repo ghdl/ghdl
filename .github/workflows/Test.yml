@@ -489,7 +489,7 @@ jobs:
         include:
         #- { pkg: '32-llvm', pyarch: x86 } ! not yet functional
         #- { pkg: '64-llvm', pyarch: x64 }
-        - { pkg: '32-mcode', pyarch: x86 }
+        #- { pkg: '32-mcode', pyarch: x86 } #! the tarball generation on MINGW32 needs to be fixed
         - { pkg: '64-mcode', pyarch: x64 } #! simulation with mcode is not yet supported on win64
     name: '🚦🐍🥡 ${{ matrix.pkg }}'
     defaults:
