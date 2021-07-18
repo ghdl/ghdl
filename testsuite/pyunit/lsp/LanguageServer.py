@@ -1,5 +1,5 @@
-import os
-from sys import executable
+from os import environ
+from sys import executable, platform
 from io import BytesIO
 from json import load as json_load, loads as json_loads, dumps as json_dumps
 from pathlib import Path
@@ -7,8 +7,10 @@ from urllib.parse import quote
 from subprocess import run as subprocess_run, PIPE
 from typing import Optional
 from unittest import TestCase
+from pytest import mark
 
 from pyGHDL.lsp.lsp import LanguageProtocolServer, LSPConn
+
 
 class StrConn:
     __res: str
@@ -191,6 +193,11 @@ class Test003_Errors(JSONTest):
         self._RequestResponse("cmds.json", "replies.json")
 
 
+
+@mark.xfail(
+    platform == 'win32' and ('MINGW_PREFIX' not in environ),
+    reason="needs OpenSSL",
+)
 class Test004_Error_Project(JSONTest):
     subdir = Path("004errprj")
 
