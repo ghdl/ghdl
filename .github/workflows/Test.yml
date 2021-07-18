@@ -68,7 +68,7 @@ jobs:
         path: doc/_build/man/ghdl.1
 
 #
-# pyGHDL
+# pyGHDL Bindings and Formatting
 #
 
   fmt:
@@ -194,7 +194,7 @@ jobs:
         path: ghdl-macos*${{ matrix.backend }}.tgz
 
 #
-# Windows Build
+# Windows MSYS2 Build
 #
 
   win-build:
@@ -256,7 +256,7 @@ jobs:
         path: scripts/msys2-${{ matrix.pkg }}/mingw-*ghdl*.pkg.tar.zst
 
 #
-# Windows Test
+# Windows MSYS2 Test
 #
 
   win-test:
@@ -314,7 +314,7 @@ jobs:
       run: GHDL=ghdl ./testsuite/testsuite.sh ${{ matrix.suite }}
 
 #
-# Windows pyGHDL
+# Windows pyGHDL pip installation
 #
 
   win-pip:
