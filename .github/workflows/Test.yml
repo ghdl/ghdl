@@ -664,13 +664,10 @@ jobs:
     name: '📮 Publish coverage report'
     steps:
 
-    - name: '🧰 Checkout'
-      uses: actions/checkout@v2
-
     - name: '📥 Download artifact: coverage report'
       uses: actions/download-artifact@v2
       with:
-        path: artifact
+        path: .
         name: coverage
 
     - name: CodeCov
