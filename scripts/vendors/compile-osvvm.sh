@@ -224,7 +224,9 @@ fi
 # ==============================================================================
 StructName="OSVVM_osvvm"
 Files=(
+	ResolutionPkg.vhd
 	NamePkg.vhd
+	NameStorePkg.vhd
 	OsvvmGlobalPkg.vhd
 	VendorCovApiPkg.vhd
 	TranscriptPkg.vhd
@@ -234,12 +236,13 @@ Files=(
 	SortListPkg_int.vhd
 	RandomBasePkg.vhd
 	RandomPkg.vhd
+	RandomProcedurePkg.vhd
 	CoveragePkg.vhd
 	MemoryPkg.vhd
 	ScoreboardGenericPkg.vhd
 	ScoreboardPkg_slv.vhd
 	ScoreboardPkg_int.vhd
-	ResolutionPkg.vhd
+	ResizePkg.vhd
 	TbUtilPkg.vhd
 	OsvvmContext.vhd
 )
