@@ -264,13 +264,12 @@ copy-sources.gcc: version.ads
 	$(CP) -p $(srcdir)/src/ortho/gcc/*.opt $(gcc_vhdl_dir)
 	base_ver=`cat $(gcc_src_dir)/gcc/BASE-VER`; \
 	case $$base_ver in \
-	 4.9*)     gcc_ortho_lang=ortho-lang-49.c ;; \
-	 5.*)      gcc_ortho_lang=ortho-lang-5.c ;; \
-	 6 | 6.*)  gcc_ortho_lang=ortho-lang-6.c ;; \
-	 7.*)      gcc_ortho_lang=ortho-lang-7.c ;; \
-	 8.*)      gcc_ortho_lang=ortho-lang-8.c ;; \
-	 9.*)      gcc_ortho_lang=ortho-lang-9.c ;; \
-	 10.*)     gcc_ortho_lang=ortho-lang-9.c ;; \
+	 4.9*)     	    gcc_ortho_lang=ortho-lang-49.c ;; \
+	 5.*)      	    gcc_ortho_lang=ortho-lang-5.c ;; \
+	 6 | 6.*)  	    gcc_ortho_lang=ortho-lang-6.c ;; \
+	 7.*)      	    gcc_ortho_lang=ortho-lang-7.c ;; \
+	 8.*)      	    gcc_ortho_lang=ortho-lang-8.c ;; \
+	 9.* | 10.* | 11.*) gcc_ortho_lang=ortho-lang-9.c ;; \
 	 *) echo "Mismatch gcc version from $(gcc_src_dir)"; \
 	    echo "Need gcc version 4.9.x, 5.x, 6.x, 7.x, 8.x, 9.x or 10.x"; \
 	    exit 1 ;; \
