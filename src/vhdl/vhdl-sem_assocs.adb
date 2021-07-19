@@ -1949,18 +1949,18 @@ package body Vhdl.Sem_Assocs is
 
       --  If the formal type is an interface type of the same interface list,
       --  use the associated type of the formal type to analyze the actual.
-      if Get_Kind (Formal_Type) = Iir_Kind_Interface_Type_Definition then
-         if Get_Parent (Get_Type_Declarator (Formal_Type)) = Get_Parent (Inter)
-         then
-            Formal_Type := Get_Associated_Type (Formal_Type);
-            if Formal_Type = Null_Iir then
-               --  Interface type are only allowed within generic map aspect,
-               --  which are analyzed in one step (so Finish is true).
-               pragma Assert (Finish);
-               Error_Msg_Sem (+Assoc, "expression associated before its type");
-               Match := Not_Compatible;
-               return;
-            end if;
+      if Get_Kind (Formal_Type) = Iir_Kind_Interface_Type_Definition
+        and then (Get_Parent (Get_Type_Declarator (Formal_Type))
+                    = Get_Parent (Inter))
+      then
+         Formal_Type := Get_Associated_Type (Formal_Type);
+         if Formal_Type = Null_Iir then
+            --  Interface type are only allowed within generic map aspect,
+            --  which are analyzed in one step (so Finish is true).
+            pragma Assert (Finish);
+            Error_Msg_Sem (+Assoc, "expression associated before its type");
+            Match := Not_Compatible;
+            return;
          end if;
       end if;
 
@@ -2280,6 +2280,15 @@ package body Vhdl.Sem_Assocs is
       Match := Fully_Compatible;
       First_Named_Assoc := Null_Iir;
       Has_Individual := False;
+
+      --  Clear associated type of interface type.
+      Inter := Interface_Chain;
+      while Inter /= Null_Iir loop
+         if Get_Kind (Inter) = Iir_Kind_Interface_Type_Declaration then
+            Set_Associated_Type (Get_Type (Inter), Null_Iir);
+         end if;
+         Inter := Get_Chain (Inter);
+      end loop;
 
       --  Loop on every assoc element, try to match it.
       Inter := Interface_Chain;
@@ -2678,11 +2687,6 @@ package body Vhdl.Sem_Assocs is
                   return;
                end if;
             end if;
-         end if;
-
-         --  Clear associated type of interface type.
-         if Get_Kind (Inter) = Iir_Kind_Interface_Type_Declaration then
-            Set_Associated_Type (Get_Type (Inter), Null_Iir);
          end if;
 
          Inter := Get_Chain (Inter);
