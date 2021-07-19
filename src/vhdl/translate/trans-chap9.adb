@@ -1106,12 +1106,16 @@ package body Trans.Chap9 is
       Parent      : constant Iir := Get_Parent (Stmt);
       Parent_Info : constant Block_Info_Acc := Get_Info (Parent);
 
+      Line : constant Natural := Get_Line_Number (Stmt);
+
       Comp       : Iir;
       Comp_Info  : Comp_Info_Acc;
       Inter_List : O_Inter_List;
       Instance   : O_Dnode;
    begin
       --  Create the elaborator for the instantiation.
+      New_Debug_Line_Decl (Line);
+
       Start_Procedure_Decl (Inter_List, Create_Identifier ("COMP_ELAB"),
                             O_Storage_Private);
       New_Interface_Decl (Inter_List, Instance, Wki_Instance,
@@ -1121,8 +1125,6 @@ package body Trans.Chap9 is
       Start_Subprogram_Body (Info.Block_Elab_Subprg (Elab_Decls));
       Push_Local_Factory;
       Set_Scope_Via_Param_Ptr (Base.Block_Scope, Instance);
-
-      New_Debug_Line_Stmt (Get_Line_Number (Stmt));
 
       --  Add access to the instantiation-specific data.
       --  This is used only for anonymous subtype variables.
@@ -1161,6 +1163,7 @@ package body Trans.Chap9 is
 
       Clear_Scope (Base.Block_Scope);
       Pop_Local_Factory;
+      New_Debug_Line_Stmt (Line);
       Finish_Subprogram_Body;
    end Translate_Component_Instantiation_Subprogram;
 
