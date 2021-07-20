@@ -3075,6 +3075,13 @@ package body Ortho_Front is
             end if;
             Next_Token;
             return;
+         when Tok_Line_Number =>
+            Next_Expect (Tok_Num);
+            if Flag_Renumber = False then
+               New_Debug_Line_Decl (Natural (Token_Number));
+            end if;
+            Next_Token;
+            return;
          when others =>
             Parse_Error ("declaration expected");
       end case;
