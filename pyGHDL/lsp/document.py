@@ -108,7 +108,7 @@ class Document(object):
         # Failed to replace text.
         # Increase size
         self.__extend_source_buffer(len(text_bytes))
-        status = files_map_editor.Replace_Text(
+        status = files_map_editor._Replace_Text(
             self._fe,
             start_line + 1,
             start_col,
