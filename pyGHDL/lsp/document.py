@@ -49,10 +49,24 @@ class Document(object):
         files_map_editor.Fill_Text(sfe, ctypes.c_char_p(src_bytes), src_len)
         return sfe
 
+    def __extend_source_buffer(self, new_size):
+        self.gap_size *= 2
+        fileid = files_map.Get_File_Name(self._fe)
+        dirid = files_map.Get_Directory_Name(self._fe)
+        buf_len = files_map.Get_File_Length(self._fe) + new_size + self.gap_size
+        files_map.Discard_Source_File(self._fe)
+        new_sfe = files_map.Reserve_Source_File(dirid, fileid, buf_len)
+        files_map_editor.Copy_Source_File(new_sfe, self._fe)
+        files_map.Free_Source_File(self._fe)
+        self._fe = new_sfe
+
     def reload(self, source):
         """Reload the source of a document."""
         src_bytes = source.encode(Document.encoding, "replace")
-        files_map_editor.Fill_Text(self._fe, ctypes.c_char_p(src_bytes), len(src_bytes))
+        l = len(src_bytes)
+        if l >= files_map.Get_Buffer_Length(self._fe):
+            self.__extend_source_buffer(l)
+        files_map_editor.Fill_Text(self._fe, ctypes.c_char_p(src_bytes), l)
 
     def __str__(self):
         return str(self.uri)
@@ -93,15 +107,7 @@ class Document(object):
 
         # Failed to replace text.
         # Increase size
-        self.gap_size *= 2
-        fileid = files_map.Get_File_Name(self._fe)
-        dirid = files_map.Get_Directory_Name(self._fe)
-        buf_len = files_map.Get_File_Length(self._fe) + len(text_bytes) + self.gap_size
-        files_map.Discard_Source_File(self._fe)
-        new_sfe = files_map.Reserve_Source_File(dirid, fileid, buf_len)
-        files_map_editor.Copy_Source_File(new_sfe, self._fe)
-        files_map.Free_Source_File(self._fe)
-        self._fe = new_sfe
+        self.__extend_source_buffer(len(text_bytes))
         status = files_map_editor.Replace_Text(
             self._fe,
             start_line + 1,
