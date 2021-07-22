@@ -62,6 +62,7 @@ SYMBOLS_MAP = {
     nodes.Iir_Kind.Case_Generate_Statement: {"kind": lsp.SymbolKind.Method},
     nodes.Iir_Kind.Sensitized_Process_Statement: {"kind": lsp.SymbolKind.Method},
     nodes.Iir_Kind.Process_Statement: {"kind": lsp.SymbolKind.Method},
+    nodes.Iir_Kind.Simultaneous_Null_Statement: {"kind": lsp.SymbolKind.Method},
     nodes.Iir_Kind.Psl_Assert_Directive: {"kind": lsp.SymbolKind.Method},
     nodes.Iir_Kind.Psl_Assume_Directive: {"kind": lsp.SymbolKind.Method},
     nodes.Iir_Kind.Psl_Cover_Directive: {"kind": lsp.SymbolKind.Method},
