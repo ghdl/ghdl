@@ -946,7 +946,7 @@ package body Vhdl.Utils is
             Free_Recursive_Flist (Get_Index_List (N));
             Free_Recursive (Get_Base_Type (N));
          when Iir_Kind_Entity_Aspect_Entity =>
-            Free_Recursive (Get_Entity (N));
+            Free_Recursive (Get_Entity_Name (N));
             Free_Recursive (Get_Architecture (N));
          when others =>
             Error_Kind ("free_recursive", Node);
