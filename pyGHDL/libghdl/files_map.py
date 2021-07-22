@@ -219,6 +219,7 @@ def Set_File_Length(File: SourceFileEntry, Length: int) -> None:
     """
     return 0
 
+
 @export
 @BindToLibGHDL("files_map__get_buffer_length")
 def Get_Buffer_Length(File: SourceFileEntry) -> int:
@@ -228,6 +229,7 @@ def Get_Buffer_Length(File: SourceFileEntry) -> int:
     :param File: Source file
     :return:     Type: ``Source_Ptr``
     """
+
 
 @export
 @BindToLibGHDL("files_map__get_buffer_length")
