@@ -62,18 +62,20 @@ def __rotate_log_files(basename: str, num: int):
     # Remove the oldest file.  This one will be lost.
     # Required on Windows as it is an error to rename a file to an existing
     # one.
-    bname = Path(basename)
-    oldfile = bname.with_suffix(str(num))
+    # Note: Path.with_suffix cannot be used as there might be multiple
+    # suffixes (like in trace.out.0).
+    oldfile = Path("{}.{}".format(basename, num))
     if oldfile.is_file():
         oldfile.unlink()
     # Rotate old files
     for i in range(num, 0, -1):
-        oldfile = bname.with_suffix(str(i - 1))
+        oldfile = Path("{}.{}".format(basename, i - 1))
         if oldfile.is_file():
-            oldfile.rename(bname.with_suffix(str(i)))
+            oldfile.rename(Path("{}.{}".format(basename, i)))
     # Rotate the newest log file.
+    bname = Path(basename)
     if bname.is_file():
-        bname.rename(bname.with_suffix(str(0)))
+        bname.rename(Path("{}.{}".format(basename, 0)))
 
 
 def _generateCLIParser() -> ArgumentParser:
