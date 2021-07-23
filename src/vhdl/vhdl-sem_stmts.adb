@@ -1863,6 +1863,10 @@ package body Vhdl.Sem_Stmts is
       Comp_Name : Iir;
       Comp : Iir;
    begin
+      if Is_Error (Inst) then
+         return Null_Iir;
+      end if;
+
       if Get_Kind (Inst) in Iir_Kinds_Entity_Aspect then
          return Sem_Entity_Aspect (Inst);
       else
