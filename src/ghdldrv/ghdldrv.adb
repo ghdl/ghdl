@@ -54,6 +54,9 @@ package body Ghdldrv is
    --  "-quiet" option.
    Dash_Quiet : constant String_Access := new String'("-quiet");
 
+   --  "-auxbase" option.
+   Dash_Auxbase : constant String_Access := new String'("-auxbase");
+
    --  "-fpic" option.
    Dash_Fpic : constant String_Access := new String'("-fpic");
 
@@ -170,6 +173,7 @@ package body Ghdldrv is
    is
       Obj_File : String_Access;
       Asm_File : String_Access;
+      Aux_File : String_Access;
       Post_File : String_Access;
       Success : Boolean;
    begin
@@ -182,6 +186,7 @@ package body Ghdldrv is
       case Backend is
          when Backend_Gcc =>
             Asm_File := Append_Suffix (File, Asm_Suffix, In_Work);
+            Aux_File := new String'(Get_Base_Name (File));
          when Backend_Llvm
            | Backend_Mcode =>
             null;
@@ -194,7 +199,7 @@ package body Ghdldrv is
       declare
          P : Natural;
          Nbr_Args : constant Natural :=
-           Last (Cmd.Compiler_Args) + Options'Length + 5;
+           Last (Cmd.Compiler_Args) + Options'Length + 7;
          Args : Argument_List (1 .. Nbr_Args);
       begin
          P := 0;
@@ -215,6 +220,10 @@ package body Ghdldrv is
                      P := P + 1;
                      Args (P) := Dash_Quiet;
                   end if;
+                  P := P + 1;
+                  Args (P) := Dash_Auxbase;
+                  P := P + 1;
+                  Args (P) := Aux_File;
                when Backend_Llvm =>
                   P := P + 1;
                   Args (P) := Dash_c;
@@ -281,6 +290,10 @@ package body Ghdldrv is
                      P := P + 1;
                      Args (P) := Dash_Quiet;
                   end if;
+                  P := P + 1;
+                  Args (P) := Dash_Auxbase;
+                  P := P + 1;
+                  Args (P) := Aux_File;
                when Backend_Llvm =>
                   null;
                when Backend_Mcode =>
