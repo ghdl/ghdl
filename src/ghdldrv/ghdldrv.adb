@@ -175,6 +175,51 @@ package body Ghdldrv is
       Asm_File : String_Access;
       Aux_File : String_Access;
       Post_File : String_Access;
+
+      --  Add backend specific options.
+      procedure Add_Backend_Options
+        (P : in out Natural; Args : in out Argument_List) is
+      begin
+         --  Add -fpic for gcc/llvm.
+         if Default_Paths.Default_Pie then
+            case Backend is
+               when Backend_Gcc
+                 | Backend_Llvm =>
+                  P := P + 1;
+                  Args (P) := Dash_Fpic;
+               when Backend_Mcode =>
+                  null;
+            end case;
+         end if;
+
+         --  Add -quiet for gcc, add -c for llvm
+         case Backend is
+            when Backend_Gcc =>
+               if not Cmd.Flag_Not_Quiet then
+                  P := P + 1;
+                  Args (P) := Dash_Quiet;
+               end if;
+               P := P + 1;
+               Args (P) := Dash_Auxbase;
+               P := P + 1;
+               Args (P) := Aux_File;
+            when Backend_Llvm =>
+               P := P + 1;
+               Args (P) := Dash_c;
+            when Backend_Mcode =>
+               null;
+         end case;
+
+         Args (P + 1) := Dash_o;
+         case Backend is
+            when Backend_Gcc =>
+               Args (P + 2) := Asm_File;
+            when Backend_Llvm
+              | Backend_Mcode =>
+               Args (P + 2) := Obj_File;
+         end case;
+      end Add_Backend_Options;
+
       Success : Boolean;
    begin
       --  Create post file.
@@ -182,7 +227,7 @@ package body Ghdldrv is
          Post_File := Append_Suffix (File, Post_Suffix, In_Work);
       end if;
 
-      --  Create asm file.
+      --  Create asm file and aux file for gcc.
       case Backend is
          when Backend_Gcc =>
             Asm_File := Append_Suffix (File, Asm_Suffix, In_Work);
@@ -212,53 +257,16 @@ package body Ghdldrv is
             Args (P) := Options (I);
          end loop;
 
-         --  Add -quiet for gcc, add -c for llvm
          if not Flag_Postprocess then
-            case Backend is
-               when Backend_Gcc =>
-                  if not Cmd.Flag_Not_Quiet then
-                     P := P + 1;
-                     Args (P) := Dash_Quiet;
-                  end if;
-                  P := P + 1;
-                  Args (P) := Dash_Auxbase;
-                  P := P + 1;
-                  Args (P) := Aux_File;
-               when Backend_Llvm =>
-                  P := P + 1;
-                  Args (P) := Dash_c;
-               when Backend_Mcode =>
-                  null;
-            end case;
-         end if;
-
-         --  Add -fpic for gcc/llvm.
-         if not Flag_Postprocess
-           and then Default_Paths.Default_Pie
-         then
-            case Backend is
-               when Backend_Gcc
-                 | Backend_Llvm =>
-                  P := P + 1;
-                  Args (P) := Dash_Fpic;
-               when Backend_Mcode =>
-                  null;
-            end case;
-         end if;
-
-         --  Object file (or assembly file).
-         Args (P + 1) := Dash_o;
-         if Flag_Postprocess then
-            Args (P + 2) := Post_File;
+            --  Backend options and output
+            Add_Backend_Options (P, Args);
          else
-            case Backend is
-               when Backend_Gcc =>
-                  Args (P + 2) := Asm_File;
-               when Backend_Mcode
-                 | Backend_Llvm =>
-                  Args (P + 2) := Obj_File;
-            end case;
+            --  Postprocessor output.
+            Args (P + 1) := Dash_o;
+            Args (P + 2) := Post_File;
          end if;
+
+         --  Input file.
          Args (P + 3) := new String'(File);
 
          My_Spawn (Cmd, Cmd.Compiler_Path.all, Args (1 .. P + 3));
@@ -284,31 +292,11 @@ package body Ghdldrv is
                Args (P) := Cmd.Postproc_Args.Table (I);
             end loop;
 
-            case Backend is
-               when Backend_Gcc =>
-                  if not Cmd.Flag_Not_Quiet then
-                     P := P + 1;
-                     Args (P) := Dash_Quiet;
-                  end if;
-                  P := P + 1;
-                  Args (P) := Dash_Auxbase;
-                  P := P + 1;
-                  Args (P) := Aux_File;
-               when Backend_Llvm =>
-                  null;
-               when Backend_Mcode =>
-                  null;
-            end case;
+            Add_Backend_Options (P, Args);
 
-            Args (P + 1) := Dash_o;
-            case Backend is
-               when Backend_Gcc =>
-                  Args (P + 2) := Asm_File;
-               when Backend_Llvm
-                 | Backend_Mcode =>
-                  Args (P + 2) := Obj_File;
-            end case;
+            --  Input file.
             Args (P + 3) := Post_File;
+
             My_Spawn (Cmd, Cmd.Post_Processor_Path.all, Args (1 .. P + 3));
          end;
 
@@ -347,6 +335,7 @@ package body Ghdldrv is
 
       Free (Asm_File);
       Free (Obj_File);
+      Free (Aux_File);
    end Do_Compile;
 
    --  Table of files to be linked.
