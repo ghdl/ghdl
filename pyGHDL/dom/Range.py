@@ -32,12 +32,7 @@
 # ============================================================================
 from pydecor import export
 
-from pyVHDLModel.VHDLModel import (
-    Range as VHDLModel_Range,
-    RangeExpression as VHDLModel_RangeExpression,
-    Direction,
-    Expression,
-)
+from pyVHDLModel.SyntaxModel import Range as VHDLModel_Range
 
 __all__ = []
 

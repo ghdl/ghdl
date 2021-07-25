@@ -34,7 +34,7 @@ from typing import List, Iterator
 
 from pydecor import export
 
-from pyVHDLModel.VHDLModel import (
+from pyVHDLModel.SyntaxModel import (
     EntitySymbol as VHDLModel_EntitySymbol,
     SimpleSubtypeSymbol as VHDLModel_SimpleSubtypeSymbol,
     ConstrainedScalarSubtypeSymbol as VHDLModel_ConstrainedScalarSubtypeSymbol,

@@ -32,10 +32,9 @@
 # ============================================================================
 from typing import Union
 
-from pyGHDL.libghdl._types import Iir
 from pydecor import export
 
-from pyVHDLModel.VHDLModel import (
+from pyVHDLModel.SyntaxModel import (
     Constant as VHDLModel_Constant,
     DeferredConstant as VHDLModel_DeferredConstant,
     Variable as VHDLModel_Variable,
@@ -46,6 +45,7 @@ from pyVHDLModel.VHDLModel import (
     SubtypeOrSymbol,
 )
 
+from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin
 from pyGHDL.dom._Utils import GetNameOfNode

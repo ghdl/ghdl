@@ -9,7 +9,7 @@
 # Authors:
 #   Patrick Lehmann
 #
-# Package module:   DOM: Interface items (e.g. generic or port)
+# Package module:   DOM: IIR to *** translations.
 #
 # License:
 # ============================================================================
@@ -34,10 +34,7 @@ from typing import List, Generator
 
 from pydecor import export
 
-from pyGHDL.dom import Position, DOMException
-from pyGHDL.dom.Object import Variable
-from pyGHDL.dom.PSL import DefaultClock
-from pyVHDLModel.VHDLModel import (
+from pyVHDLModel.SyntaxModel import (
     Constraint,
     Direction,
     Expression,
@@ -53,6 +50,7 @@ from pyVHDLModel.VHDLModel import (
 from pyGHDL.libghdl import utils
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
+from pyGHDL.dom import Position, DOMException
 from pyGHDL.dom._Utils import (
     GetNameOfNode,
     GetIirKindOfNode,
@@ -94,6 +92,7 @@ from pyGHDL.dom.Literal import (
     PhysicalFloatingLiteral,
     NullLiteral,
 )
+from pyGHDL.dom.Object import Variable
 from pyGHDL.dom.Expression import (
     SubtractionExpression,
     AdditionExpression,
@@ -140,6 +139,7 @@ from pyGHDL.dom.Expression import (
 )
 from pyGHDL.dom.Subprogram import Function, Procedure
 from pyGHDL.dom.Misc import Alias
+from pyGHDL.dom.PSL import DefaultClock
 
 
 __all__ = []

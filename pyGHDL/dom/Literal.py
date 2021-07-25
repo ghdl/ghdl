@@ -9,7 +9,7 @@
 # Authors:
 #   Patrick Lehmann
 #
-# Package module:   DOM: Interface items (e.g. generic or port)
+# Package module:   DOM: Literals.
 #
 # License:
 # ============================================================================
@@ -32,7 +32,7 @@
 # ============================================================================
 from pydecor import export
 
-from pyVHDLModel.VHDLModel import (
+from pyVHDLModel.SyntaxModel import (
     NullLiteral as VHDLModel_NullLiteral,
     EnumerationLiteral as VHDLModel_EnumerationLiteral,
     IntegerLiteral as VHDLModel_IntegerLiteral,

@@ -42,8 +42,7 @@ from typing import Any
 
 from pydecor import export
 
-from pyGHDL.dom.PSL import VerificationUnit, VerificationProperty, VerificationMode
-from pyVHDLModel.VHDLModel import (
+from pyVHDLModel.SyntaxModel import (
     Design as VHDLModel_Design,
     Library as VHDLModel_Library,
     Document as VHDLModel_Document,
@@ -73,6 +72,7 @@ from pyGHDL.dom.DesignUnit import (
     Configuration,
     PackageInstantiation,
 )
+from pyGHDL.dom.PSL import VerificationUnit, VerificationProperty, VerificationMode
 
 __all__ = []
 

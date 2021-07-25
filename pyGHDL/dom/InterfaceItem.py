@@ -32,7 +32,7 @@
 # ============================================================================
 from pydecor import export
 
-from pyVHDLModel.VHDLModel import (
+from pyVHDLModel.SyntaxModel import (
     GenericConstantInterfaceItem as VHDLModel_GenericConstantInterfaceItem,
     GenericTypeInterfaceItem as VHDLModel_GenericTypeInterfaceItem,
     GenericPackageInterfaceItem as VHDLModel_GenericPackageInterfaceItem,

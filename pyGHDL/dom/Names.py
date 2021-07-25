@@ -32,10 +32,9 @@
 # ============================================================================
 from typing import List
 
-from pyGHDL.libghdl._types import Iir
 from pydecor import export
 
-from pyVHDLModel.VHDLModel import (
+from pyVHDLModel.SyntaxModel import (
     SimpleName as VHDLModel_SimpleName,
     ParenthesisName as VHDLModel_ParenthesisName,
     IndexedName as VHDLModel_IndexedName,
@@ -45,6 +44,7 @@ from pyVHDLModel.VHDLModel import (
     AllName as VHDLModel_AllName,
     Name,
 )
+from pyGHDL.libghdl._types import Iir
 from pyGHDL.dom import DOMMixin
 
 __all__ = []

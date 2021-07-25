@@ -9,7 +9,7 @@
 # Authors:
 #   Patrick Lehmann
 #
-# Package module:   DOM: VHDL design units (e.g. context or package).
+# Package module:   DOM: Aggregates.
 #
 # License:
 # ============================================================================
@@ -41,7 +41,7 @@ This module contains all DOM classes for VHDL's design units (:class:`context <E
 """
 from pydecor import export
 
-from pyVHDLModel.VHDLModel import (
+from pyVHDLModel.SyntaxModel import (
     SimpleAggregateElement as VHDLModel_SimpleAggregateElement,
     IndexedAggregateElement as VHDLModel_IndexedAggregateElement,
     RangedAggregateElement as VHDLModel_RangedAggregateElement,

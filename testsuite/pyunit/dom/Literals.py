@@ -34,7 +34,7 @@ from pathlib import Path
 from textwrap import dedent
 from unittest import TestCase
 
-from pyVHDLModel.VHDLModel import Expression
+from pyVHDLModel.SyntaxModel import Expression
 
 from pyGHDL.dom.DesignUnit import Package
 

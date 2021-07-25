@@ -1,25 +1,40 @@
+# =============================================================================
+#               ____ _   _ ____  _          _
+#  _ __  _   _ / ___| | | |  _ \| |      __| | ___  _ __ ___
+# | '_ \| | | | |  _| |_| | | | | |     / _` |/ _ \| '_ ` _ \
+# | |_) | |_| | |_| |  _  | |_| | |___ | (_| | (_) | | | | | |
+# | .__/ \__, |\____|_| |_|____/|_____(_)__,_|\___/|_| |_| |_|
+# |_|    |___/
+# =============================================================================
+# Authors:
+#   Patrick Lehmann
+#
+# Package module:   A pretty printer to format the DOM as a tree in text form.
+#
+# License:
+# ============================================================================
+#  Copyright (C) 2019-2021 Tristan Gingold
+#
+#  This program is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program.  If not, see <gnu.org/licenses>.
+#
+# SPDX-License-Identifier: GPL-2.0-or-later
+# ============================================================================
 from typing import List, Union
 
 from pydecor import export
 
-from pyGHDL.dom.Attribute import Attribute, AttributeSpecification
-from pyGHDL.dom.Misc import Alias
-from pyGHDL.dom.PSL import DefaultClock
-from pyGHDL.dom.Subprogram import Procedure
-from pyGHDL.dom.Type import (
-    IntegerType,
-    Subtype,
-    ArrayType,
-    RecordType,
-    AccessType,
-    EnumeratedType,
-    FileType,
-    ProtectedType,
-    ProtectedTypeBody,
-    PhysicalType,
-    IncompleteType,
-)
-from pyVHDLModel.VHDLModel import (
+from pyVHDLModel.SyntaxModel import (
     GenericInterfaceItem,
     NamedEntity,
     PortInterfaceItem,
@@ -42,16 +57,33 @@ from pyGHDL.dom.DesignUnit import (
     UseClause,
     PackageInstantiation,
 )
-from pyGHDL.dom.Object import Constant, Signal, SharedVariable, File
+from pyGHDL.dom.Symbol import (
+    SimpleSubtypeSymbol,
+    ConstrainedCompositeSubtypeSymbol,
+)
+from pyGHDL.dom.Type import (
+    IntegerType,
+    Subtype,
+    ArrayType,
+    RecordType,
+    AccessType,
+    EnumeratedType,
+    FileType,
+    ProtectedType,
+    ProtectedTypeBody,
+    PhysicalType,
+    IncompleteType,
+)
 from pyGHDL.dom.InterfaceItem import (
     GenericConstantInterfaceItem,
     PortSignalInterfaceItem,
     GenericTypeInterfaceItem,
 )
-from pyGHDL.dom.Symbol import (
-    SimpleSubtypeSymbol,
-    ConstrainedCompositeSubtypeSymbol,
-)
+from pyGHDL.dom.Object import Constant, Signal, SharedVariable, File
+from pyGHDL.dom.Attribute import Attribute, AttributeSpecification
+from pyGHDL.dom.Subprogram import Procedure
+from pyGHDL.dom.Misc import Alias
+from pyGHDL.dom.PSL import DefaultClock
 
 
 StringBuffer = List[str]

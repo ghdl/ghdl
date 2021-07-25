@@ -37,12 +37,12 @@
 """
 from pydecor import export
 
-from pyVHDLModel.VHDLModel import (
+from pyVHDLModel.SyntaxModel import (
     Alias as VHDLModel_Alias,
 )
 from pyGHDL.libghdl._types import Iir
-from pyGHDL.dom._Utils import GetNameOfNode
 from pyGHDL.dom import DOMMixin
+from pyGHDL.dom._Utils import GetNameOfNode
 
 
 __all__ = []

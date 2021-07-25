@@ -9,7 +9,7 @@
 # Authors:
 #   Patrick Lehmann
 #
-# Package module:   DOM: Interface items (e.g. generic or port)
+# Package module:   DOM: Expressions.
 #
 # License:
 # ============================================================================
@@ -34,8 +34,7 @@ from typing import List, Union
 
 from pydecor import export
 
-from pyGHDL.dom import DOMMixin, DOMException
-from pyVHDLModel.VHDLModel import (
+from pyVHDLModel.SyntaxModel import (
     UnaryExpression as VHDLModel_UnaryExpression,
     BinaryExpression as VHDLModel_BinaryExpression,
     InverseExpression as VHDLModel_InverseExpression,
@@ -93,6 +92,7 @@ from pyVHDLModel.VHDLModel import (
 from pyGHDL.libghdl import utils
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
+from pyGHDL.dom import DOMMixin, DOMException
 from pyGHDL.dom._Utils import GetIirKindOfNode
 from pyGHDL.dom.Symbol import SimpleSubtypeSymbol
 from pyGHDL.dom.Aggregates import (

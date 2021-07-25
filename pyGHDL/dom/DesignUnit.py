@@ -43,7 +43,7 @@ from typing import List
 
 from pydecor import export
 
-from pyVHDLModel.VHDLModel import (
+from pyVHDLModel.SyntaxModel import (
     UseClause as VHDLModel_UseClause,
     Entity as VHDLModel_Entity,
     Architecture as VHDLModel_Architecture,
