@@ -363,10 +363,10 @@ class PrettyPrint:
         buffer.append(
             "{prefix}  - {name} : {mode!s} {subtypeindication}{initialValue}".format(
                 prefix=prefix,
-                name=generic.Identifier,
+                name=", ".join(generic.Identifiers),
                 mode=generic.Mode,
                 subtypeindication=self.formatSubtypeIndication(
-                    generic.Subtype, "generic", generic.Identifier
+                    generic.Subtype, "generic", generic.Identifiers[0]
                 ),
                 initialValue=self.formatInitialValue(generic),
             )
@@ -398,10 +398,10 @@ class PrettyPrint:
         buffer.append(
             "{prefix}  - {name} : {mode!s} {subtypeindication}{initialValue}".format(
                 prefix=prefix,
-                name=port.Identifier,
+                name=", ".join(port.Identifiers),
                 mode=port.Mode,
                 subtypeindication=self.formatSubtypeIndication(
-                    port.Subtype, "port", port.Identifier
+                    port.Subtype, "port", port.Identifiers[0]
                 ),
                 initialValue=self.formatInitialValue(port),
             )
@@ -428,9 +428,9 @@ class PrettyPrint:
             buffer.append(
                 "{prefix}- shared variable {name} : {subtype}".format(
                     prefix=prefix,
-                    name=item.Identifier,
+                    name=", ".join(item.Identifiers),
                     subtype=self.formatSubtypeIndication(
-                        item.Subtype, "shared variable", item.Identifier
+                        item.Subtype, "shared variable", item.Identifiers[0]
                     ),
                 )
             )
@@ -438,9 +438,9 @@ class PrettyPrint:
             buffer.append(
                 "{prefix}- signal {name} : {subtype}{initValue}".format(
                     prefix=prefix,
-                    name=item.Identifier,
+                    name=", ".join(item.Identifiers),
                     subtype=self.formatSubtypeIndication(
-                        item.Subtype, "signal", item.Identifier
+                        item.Subtype, "signal", item.Identifiers[0]
                     ),
                     initValue=" := {expr}".format(expr=str(item.DefaultExpression))
                     if item.DefaultExpression is not None
@@ -451,9 +451,9 @@ class PrettyPrint:
             buffer.append(
                 "{prefix}- File {name} : {subtype}".format(
                     prefix=prefix,
-                    name=item.Identifier,
+                    name=", ".join(item.Identifiers),
                     subtype=self.formatSubtypeIndication(
-                        item.Subtype, "file", item.Identifier
+                        item.Subtype, "file", item.Identifiers[0]
                     ),
                 )
             )
