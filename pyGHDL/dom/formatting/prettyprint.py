@@ -340,7 +340,7 @@ class PrettyPrint:
         else:
             raise PrettyPrintException(
                 "Unhandled generic kind for generic '{name}'.".format(
-                    name=generic.Identifier
+                    name=generic.Identifiers[0]
                 )
             )
 
@@ -351,7 +351,9 @@ class PrettyPrint:
             return self.formatPortSignal(port, level)
         else:
             raise PrettyPrintException(
-                "Unhandled port kind for port '{name}'.".format(name=port.Identifier)
+                "Unhandled port kind for port '{name}'.".format(
+                    name=port.Identifiers[0]
+                )
             )
 
     def formatGenericConstant(
@@ -417,9 +419,9 @@ class PrettyPrint:
             buffer.append(
                 "{prefix}- constant {name} : {subtype} := {expr}".format(
                     prefix=prefix,
-                    name=item.Identifier,
+                    name=", ".join(item.Identifiers),
                     subtype=self.formatSubtypeIndication(
-                        item.Subtype, "constant", item.Identifier
+                        item.Subtype, "constant", item.Identifiers[0]
                     ),
                     expr=str(item.DefaultExpression),
                 )

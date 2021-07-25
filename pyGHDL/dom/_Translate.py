@@ -301,8 +301,6 @@ def GetAnonymousTypeFromNode(node: Iir) -> BaseType:
 @export
 def GetSubtypeIndicationFromNode(node: Iir, entity: str, name: str) -> SubtypeOrSymbol:
     subtypeIndicationNode = nodes.Get_Subtype_Indication(node)
-    #     if subtypeIndicationNode is nodes.Null_Iir:
-    #         return None
     return GetSubtypeIndicationFromIndicationNode(subtypeIndicationNode, entity, name)
 
 
