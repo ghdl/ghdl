@@ -425,7 +425,7 @@ __EXPRESSION_TRANSLATION = {
     nodes.Iir_Kind.Less_Than_Operator: LessThanExpression,
     nodes.Iir_Kind.Less_Than_Or_Equal_Operator: LessEqualExpression,
     nodes.Iir_Kind.Greater_Than_Operator: GreaterThanExpression,
-    nodes.Iir_Kind.Greater_Than_Or_Equal_Operator: MatchingGreaterEqualExpression,
+    nodes.Iir_Kind.Greater_Than_Or_Equal_Operator: GreaterEqualExpression,
     nodes.Iir_Kind.Match_Equality_Operator: MatchingEqualExpression,
     nodes.Iir_Kind.Match_Inequality_Operator: MatchingUnequalExpression,
     nodes.Iir_Kind.Match_Less_Than_Operator: MatchingLessThanExpression,
