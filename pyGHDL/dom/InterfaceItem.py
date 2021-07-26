@@ -81,7 +81,15 @@ class GenericConstantInterfaceItem(VHDLModel_GenericConstantInterfaceItem, DOMMi
         default = nodes.Get_Default_Value(genericNode)
         value = GetExpressionFromNode(default) if default else None
 
-        return cls(genericNode, [name, ], mode, subtypeIndication, value)
+        return cls(
+            genericNode,
+            list(
+                name,
+            ),
+            mode,
+            subtypeIndication,
+            value,
+        )
 
 
 @export
@@ -178,7 +186,15 @@ class PortSignalInterfaceItem(VHDLModel_PortSignalInterfaceItem, DOMMixin):
             else None
         )
 
-        return cls(portNode, [name, ], mode, subtypeIndication, value)
+        return cls(
+            portNode,
+            list(
+                name,
+            ),
+            mode,
+            subtypeIndication,
+            value,
+        )
 
 
 @export
@@ -211,7 +227,15 @@ class ParameterConstantInterfaceItem(
             else None
         )
 
-        return cls(parameterNode, [name, ], mode, subtypeIndication, value)
+        return cls(
+            parameterNode,
+            list(
+                name,
+            ),
+            mode,
+            subtypeIndication,
+            value,
+        )
 
 
 @export
@@ -244,7 +268,15 @@ class ParameterVariableInterfaceItem(
             else None
         )
 
-        return cls(parameterNode, [name, ], mode, subtypeIndication, value)
+        return cls(
+            parameterNode,
+            list(
+                name,
+            ),
+            mode,
+            subtypeIndication,
+            value,
+        )
 
 
 @export
@@ -275,7 +307,15 @@ class ParameterSignalInterfaceItem(VHDLModel_ParameterSignalInterfaceItem, DOMMi
             else None
         )
 
-        return cls(parameterNode, [name, ], mode, subtypeIndication, value)
+        return cls(
+            parameterNode,
+            list(
+                name,
+            ),
+            mode,
+            subtypeIndication,
+            value,
+        )
 
 
 @export
@@ -296,4 +336,10 @@ class ParameterFileInterfaceItem(VHDLModel_ParameterFileInterfaceItem, DOMMixin)
             parameterNode, "parameter", name
         )
 
-        return cls(parameterNode, [name, ], subtypeIndication)
+        return cls(
+            parameterNode,
+            list(
+                name,
+            ),
+            subtypeIndication,
+        )
