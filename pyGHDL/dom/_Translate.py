@@ -266,7 +266,6 @@ def GetAnonymousTypeFromNode(node: Iir) -> BaseType:
     typeName = GetNameOfNode(node)
     typeDefinition = nodes.Get_Type_Definition(node)
     if typeDefinition is nodes.Null_Iir:
-        print(1, node, typeName)
         return IncompleteType(node, typeName)
 
     kind = GetIirKindOfNode(typeDefinition)
@@ -309,12 +308,8 @@ def GetSubtypeIndicationFromIndicationNode(
     subtypeIndicationNode: Iir, entity: str, name: str
 ) -> SubtypeOrSymbol:
     if subtypeIndicationNode is nodes.Null_Iir:
-        print(
-            "[NOT IMPLEMENTED]: Unhandled multiple declarations for {entity} '{name}'.".format(
-                entity=entity, name=name
-            )
-        )
-        return None
+        raise ValueError("Parameter 'subtypeIndicationNode' is 'Null_Iir'.")
+
     kind = GetIirKindOfNode(subtypeIndicationNode)
     if kind in (
         nodes.Iir_Kind.Simple_Name,
@@ -475,44 +470,74 @@ def GetGenericsFromChainedNodes(
         GenericFunctionInterfaceItem,
     )
 
-    for generic in utils.chain_iter(nodeChain):
+    generic = nodeChain
+    while generic != nodes.Null_Iir:
         kind = GetIirKindOfNode(generic)
         if kind == nodes.Iir_Kind.Interface_Constant_Declaration:
             from pyGHDL.dom.InterfaceItem import GenericConstantInterfaceItem
 
-            yield GenericConstantInterfaceItem.parse(generic)
-        elif kind == nodes.Iir_Kind.Interface_Type_Declaration:
-            yield GenericTypeInterfaceItem.parse(generic)
-        elif kind == nodes.Iir_Kind.Interface_Package_Declaration:
-            yield GenericPackageInterfaceItem.parse(generic)
-        elif kind == nodes.Iir_Kind.Interface_Procedure_Declaration:
-            yield GenericProcedureInterfaceItem.parse(generic)
-        elif kind == nodes.Iir_Kind.Interface_Function_Declaration:
-            yield GenericFunctionInterfaceItem.parse(generic)
+            genericConstant = GenericConstantInterfaceItem.parse(generic)
+
+            if nodes.Get_Has_Identifier_List(generic):
+                nextNode = nodes.Get_Chain(generic)
+                for nextGeneric in utils.chain_iter(nextNode):
+                    if nodes.Get_Subtype_Indication(nextGeneric) == nodes.Null_Iir:
+                        genericConstant.Identifiers.append(GetNameOfNode(nextGeneric))
+                    else:
+                        generic = nextGeneric
+                        break
+            else:
+                generic = nodes.Get_Chain(generic)
+
+            yield genericConstant
         else:
-            position = Position.parse(generic)
-            raise DOMException(
-                "Unknown generic kind '{kindName}'({kind}) in generic '{generic}' at {file}:{line}:{column}.".format(
-                    kind=kind,
-                    kindName=kind.name,
-                    generic=generic,
-                    file=position.Filename,
-                    line=position.Line,
-                    column=position.Column,
+            if kind == nodes.Iir_Kind.Interface_Type_Declaration:
+                yield GenericTypeInterfaceItem.parse(generic)
+            elif kind == nodes.Iir_Kind.Interface_Package_Declaration:
+                yield GenericPackageInterfaceItem.parse(generic)
+            elif kind == nodes.Iir_Kind.Interface_Procedure_Declaration:
+                yield GenericProcedureInterfaceItem.parse(generic)
+            elif kind == nodes.Iir_Kind.Interface_Function_Declaration:
+                yield GenericFunctionInterfaceItem.parse(generic)
+            else:
+                position = Position.parse(generic)
+                raise DOMException(
+                    "Unknown generic kind '{kindName}'({kind}) in generic '{generic}' at {file}:{line}:{column}.".format(
+                        kind=kind,
+                        kindName=kind.name,
+                        generic=generic,
+                        file=position.Filename,
+                        line=position.Line,
+                        column=position.Column,
+                    )
                 )
-            )
+
+            generic = nodes.Get_Chain(generic)
 
 
 @export
 def GetPortsFromChainedNodes(
     nodeChain: Iir,
 ) -> Generator[PortInterfaceItem, None, None]:
-    for port in utils.chain_iter(nodeChain):
+
+    port = nodeChain
+    while port != nodes.Null_Iir:
         kind = GetIirKindOfNode(port)
         if kind == nodes.Iir_Kind.Interface_Signal_Declaration:
             from pyGHDL.dom.InterfaceItem import PortSignalInterfaceItem
 
             portSignal = PortSignalInterfaceItem.parse(port)
+
+            if nodes.Get_Has_Identifier_List(port):
+                nextNode = nodes.Get_Chain(port)
+                for nextPort in utils.chain_iter(nextNode):
+                    if nodes.Get_Subtype_Indication(nextPort) == nodes.Null_Iir:
+                        portSignal.Identifiers.append(GetNameOfNode(nextPort))
+                    else:
+                        port = nextPort
+                        break
+            else:
+                port = nodes.Get_Chain(port)
 
             yield portSignal
         else:
@@ -533,24 +558,26 @@ def GetPortsFromChainedNodes(
 def GetParameterFromChainedNodes(
     nodeChain: Iir,
 ) -> Generator[ParameterInterfaceItem, None, None]:
-    for parameter in utils.chain_iter(nodeChain):
+
+    parameter = nodeChain
+    while parameter != nodes.Null_Iir:
         kind = GetIirKindOfNode(parameter)
         if kind == nodes.Iir_Kind.Interface_Constant_Declaration:
             from pyGHDL.dom.InterfaceItem import ParameterConstantInterfaceItem
 
-            yield ParameterConstantInterfaceItem.parse(parameter)
+            param = ParameterConstantInterfaceItem.parse(parameter)
         elif kind == nodes.Iir_Kind.Interface_Variable_Declaration:
             from pyGHDL.dom.InterfaceItem import ParameterVariableInterfaceItem
 
-            yield ParameterVariableInterfaceItem.parse(parameter)
+            param = ParameterVariableInterfaceItem.parse(parameter)
         elif kind == nodes.Iir_Kind.Interface_Signal_Declaration:
             from pyGHDL.dom.InterfaceItem import ParameterSignalInterfaceItem
 
-            yield ParameterSignalInterfaceItem.parse(parameter)
+            param = ParameterSignalInterfaceItem.parse(parameter)
         elif kind == nodes.Iir_Kind.Interface_File_Declaration:
             from pyGHDL.dom.InterfaceItem import ParameterFileInterfaceItem
 
-            yield ParameterFileInterfaceItem.parse(parameter)
+            param = ParameterFileInterfaceItem.parse(parameter)
         else:
             position = Position.parse(parameter)
             raise DOMException(
@@ -563,6 +590,19 @@ def GetParameterFromChainedNodes(
                     column=position.Column,
                 )
             )
+
+        if nodes.Get_Has_Identifier_List(parameter):
+            nextNode = nodes.Get_Chain(parameter)
+            for nextParameter in utils.chain_iter(nextNode):
+                if nodes.Get_Subtype_Indication(nextParameter) == nodes.Null_Iir:
+                    param.Identifiers.append(GetNameOfNode(nextParameter))
+                else:
+                    parameter = nextParameter
+                    break
+        else:
+            parameter = nodes.Get_Chain(parameter)
+
+        yield param
 
 
 def GetDeclaredItemsFromChainedNodes(
