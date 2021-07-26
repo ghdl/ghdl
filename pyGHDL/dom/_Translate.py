@@ -478,9 +478,11 @@ def GetGenericsFromChainedNodes(
 
             genericConstant = GenericConstantInterfaceItem.parse(generic)
 
+            # Lookahead for generics with multiple identifiers at once
             if nodes.Get_Has_Identifier_List(generic):
                 nextNode = nodes.Get_Chain(generic)
                 for nextGeneric in utils.chain_iter(nextNode):
+                    # Consecutive identifiers are found, if the subtype indication is Null
                     if nodes.Get_Subtype_Indication(nextGeneric) == nodes.Null_Iir:
                         genericConstant.Identifiers.append(GetNameOfNode(nextGeneric))
                     else:
@@ -529,9 +531,11 @@ def GetPortsFromChainedNodes(
 
             portSignal = PortSignalInterfaceItem.parse(port)
 
+            # Lookahead for ports with multiple identifiers at once
             if nodes.Get_Has_Identifier_List(port):
                 nextNode = nodes.Get_Chain(port)
                 for nextPort in utils.chain_iter(nextNode):
+                    # Consecutive identifiers are found, if the subtype indication is Null
                     if nodes.Get_Subtype_Indication(nextPort) == nodes.Null_Iir:
                         portSignal.Identifiers.append(GetNameOfNode(nextPort))
                     else:
@@ -593,9 +597,11 @@ def GetParameterFromChainedNodes(
                 )
             )
 
+        # Lookahead for parameters with multiple identifiers at once
         if nodes.Get_Has_Identifier_List(parameter):
             nextNode = nodes.Get_Chain(parameter)
             for nextParameter in utils.chain_iter(nextNode):
+                # Consecutive identifiers are found, if the subtype indication is Null
                 if nodes.Get_Subtype_Indication(nextParameter) == nodes.Null_Iir:
                     param.Identifiers.append(GetNameOfNode(nextParameter))
                 else:
@@ -721,9 +727,11 @@ def GetDeclaredItemsFromChainedNodes(
             item = nodes.Get_Chain(item)
             continue
 
+        # Lookahead for objects with multiple identifiers at once
         if nodes.Get_Has_Identifier_List(item):
             nextNode = nodes.Get_Chain(item)
             for nextItem in utils.chain_iter(nextNode):
+                # Consecutive identifiers are found, if the subtype indication is Null
                 if nodes.Get_Subtype_Indication(nextItem) == nodes.Null_Iir:
                     obj.Identifiers.append(GetNameOfNode(nextItem))
                 else:

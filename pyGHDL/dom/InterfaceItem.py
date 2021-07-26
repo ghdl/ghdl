@@ -83,9 +83,9 @@ class GenericConstantInterfaceItem(VHDLModel_GenericConstantInterfaceItem, DOMMi
 
         return cls(
             genericNode,
-            list(
+            [
                 name,
-            ),
+            ],
             mode,
             subtypeIndication,
             value,
@@ -188,9 +188,9 @@ class PortSignalInterfaceItem(VHDLModel_PortSignalInterfaceItem, DOMMixin):
 
         return cls(
             portNode,
-            list(
+            [
                 name,
-            ),
+            ],
             mode,
             subtypeIndication,
             value,
@@ -229,9 +229,9 @@ class ParameterConstantInterfaceItem(
 
         return cls(
             parameterNode,
-            list(
+            [
                 name,
-            ),
+            ],
             mode,
             subtypeIndication,
             value,
@@ -270,9 +270,9 @@ class ParameterVariableInterfaceItem(
 
         return cls(
             parameterNode,
-            list(
+            [
                 name,
-            ),
+            ],
             mode,
             subtypeIndication,
             value,
@@ -309,9 +309,9 @@ class ParameterSignalInterfaceItem(VHDLModel_ParameterSignalInterfaceItem, DOMMi
 
         return cls(
             parameterNode,
-            list(
+            [
                 name,
-            ),
+            ],
             mode,
             subtypeIndication,
             value,
@@ -338,8 +338,8 @@ class ParameterFileInterfaceItem(VHDLModel_ParameterFileInterfaceItem, DOMMixin)
 
         return cls(
             parameterNode,
-            list(
+            [
                 name,
-            ),
+            ],
             subtypeIndication,
         )

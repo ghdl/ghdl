@@ -52,7 +52,7 @@ from pyVHDLModel.SyntaxModel import (
 )
 from pyGHDL.libghdl import utils
 from pyGHDL.libghdl._types import Iir
-from pyGHDL.libghdl.vhdl import nodes
+from pyGHDL.libghdl.vhdl import nodes, flists
 from pyGHDL.dom import DOMMixin, DOMException
 from pyGHDL.dom._Utils import GetNameOfNode, GetIirKindOfNode
 from pyGHDL.dom.Symbol import SimpleSubtypeSymbol
@@ -176,8 +176,8 @@ class ArrayType(VHDLModel_ArrayType, DOMMixin):
 
 @export
 class RecordTypeElement(VHDLModel_RecordTypeElement, DOMMixin):
-    def __init__(self, node: Iir, identifier: str, subtype: SubtypeOrSymbol):
-        super().__init__(identifier, subtype)
+    def __init__(self, node: Iir, identifiers: List[str], subtype: SubtypeOrSymbol):
+        super().__init__(identifiers, subtype)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -189,7 +189,13 @@ class RecordTypeElement(VHDLModel_RecordTypeElement, DOMMixin):
             elementDeclarationNode, "record element", elementName
         )
 
-        return cls(elementDeclarationNode, elementName, elementType)
+        return cls(
+            elementDeclarationNode,
+            [
+                elementName,
+            ],
+            elementType,
+        )
 
 
 @export
@@ -204,8 +210,28 @@ class RecordType(VHDLModel_RecordType, DOMMixin):
     def parse(cls, typeName: str, typeDefinitionNode: Iir) -> "RecordType":
         elements = []
         elementDeclarations = nodes.Get_Elements_Declaration_List(typeDefinitionNode)
-        for elementDeclaration in utils.flist_iter(elementDeclarations):
+
+        elementCount = flists.Flast(elementDeclarations) + 1
+        index = 0
+        while index < elementCount:
+            elementDeclaration = flists.Get_Nth_Element(elementDeclarations, index)
+
             element = RecordTypeElement.parse(elementDeclaration)
+
+            # Lookahead for elements with multiple identifiers at once
+            if nodes.Get_Has_Identifier_List(elementDeclaration):
+                index += 1
+                while index < elementCount:
+                    nextNode: Iir = flists.Get_Nth_Element(elementDeclarations, index)
+                    # Consecutive identifiers are found, if the subtype indication is Null
+                    if nodes.Get_Subtype_Indication(nextNode) == nodes.Null_Iir:
+                        element.Identifiers.append(GetNameOfNode(nextNode))
+                    else:
+                        break
+                    index += 1
+            else:
+                index += 1
+
             elements.append(element)
 
         return cls(typeDefinitionNode, typeName, elements)
