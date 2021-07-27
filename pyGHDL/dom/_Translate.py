@@ -45,9 +45,10 @@ from pyVHDLModel.SyntaxModel import (
     ParameterInterfaceItem,
     ModelEntity,
     Name,
+    ConcurrentStatement,
 )
 
-from pyGHDL.libghdl import utils
+from pyGHDL.libghdl import utils, name_table
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import Position, DOMException
@@ -137,6 +138,7 @@ from pyGHDL.dom.Expression import (
     MatchingLessEqualExpression,
     MatchingGreaterThanExpression,
 )
+from pyGHDL.dom.Concurrent import ConcurrentBlockStatement
 from pyGHDL.dom.Subprogram import Function, Procedure
 from pyGHDL.dom.Misc import Alias
 from pyGHDL.dom.PSL import DefaultClock
@@ -741,6 +743,95 @@ def GetDeclaredItemsFromChainedNodes(
             item = nodes.Get_Chain(item)
 
         yield obj
+
+
+def GetStatementsFromChainedNodes(
+    nodeChain: Iir, entity: str, name: str
+) -> Generator[ConcurrentStatement, None, None]:
+    for statement in utils.chain_iter(nodeChain):
+        label = nodes.Get_Label(statement)
+        if label != nodes.Null_Iir:
+            label = name_table.Get_Name_Ptr(label)
+
+        pos = Position.parse(statement)
+
+        kind = GetIirKindOfNode(statement)
+        if kind == nodes.Iir_Kind.Sensitized_Process_Statement:
+            print(
+                "[NOT IMPLEMENTED] Process (label: '{label}') with sensitivity list at line {line}".format(
+                    label=label, line=pos.Line
+                )
+            )
+        elif kind == nodes.Iir_Kind.Concurrent_Simple_Signal_Assignment:
+            print(
+                "[NOT IMPLEMENTED] Concurrent (simple) signal assignment (label: '{label}') at line {line}".format(
+                    label=label, line=pos.Line
+                )
+            )
+        elif kind == nodes.Iir_Kind.Component_Instantiation_Statement:
+            instantiatedUnit = nodes.Get_Instantiated_Unit(statement)
+            instantiatedUnitKind = GetIirKindOfNode(instantiatedUnit)
+            if instantiatedUnitKind == nodes.Iir_Kind.Entity_Aspect_Entity:
+                entityId = nodes.Get_Entity_Name(instantiatedUnit)
+                entityName = GetNameFromNode(entityId)
+
+                architectureName = ""
+                architectureId = nodes.Get_Architecture(instantiatedUnit)
+                if architectureId != nodes.Null_Iir:
+                    architectureName = GetNameOfNode(architectureId)
+
+                print(
+                    "Instance of '{component!s}({architecture})' with label '{label}' at line {line}".format(
+                        component=entityName,
+                        architecture=architectureName,
+                        label=label,
+                        line=pos.Line,
+                    )
+                )
+            elif instantiatedUnitKind == nodes.Iir_Kind.Entity_Aspect_Configuration:
+                configurationId = nodes.Get_Configuration_Name(instantiatedUnit)
+                configurationName = GetNameFromNode(configurationId)
+
+                print(
+                    "Instance of '{configuration}' with label '{label}' at line {line}".format(
+                        configuration=configurationName, label=label, line=pos.Line
+                    )
+                )
+            elif instantiatedUnitKind in (
+                nodes.Iir_Kind.Simple_Name,
+                nodes.Iir_Kind.Parenthesis_Name,
+            ):
+                componentName = GetNameFromNode(instantiatedUnit)
+
+                print(
+                    "Component '{component}' instantiated with label '{label}' at line {line}".format(
+                        component=componentName, label=label, line=pos.Line
+                    )
+                )
+            else:
+                raise DOMException(
+                    "Unknown instantiation kind '{kind}' in instantiation of label {label} at {file}:{line}:{column}.".format(
+                        kind=instantiatedUnitKind.name,
+                        label=label,
+                        file=pos.Filename,
+                        line=pos.Line,
+                        column=pos.Column,
+                    )
+                )
+
+        elif kind == nodes.Iir_Kind.Block_Statement:
+            yield ConcurrentBlockStatement.parse(statement, label)
+        else:
+            raise DOMException(
+                "Unknown statement of kind '{kind}' in {entity} '{name}' at {file}:{line}:{column}.".format(
+                    kind=kind.name,
+                    entity=entity,
+                    name=name,
+                    file=pos.Filename,
+                    line=pos.Line,
+                    column=pos.Column,
+                )
+            )
 
 
 def GetAliasFromNode(aliasNode: Iir):

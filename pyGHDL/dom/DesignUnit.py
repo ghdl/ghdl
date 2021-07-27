@@ -39,7 +39,7 @@ This module contains all DOM classes for VHDL's design units (:class:`context <E
 
 
 """
-from typing import List
+from typing import Iterable
 
 from pydecor import export
 
@@ -68,7 +68,9 @@ from pyGHDL.dom._Translate import (
     GetGenericsFromChainedNodes,
     GetPortsFromChainedNodes,
     GetDeclaredItemsFromChainedNodes,
+    GetStatementsFromChainedNodes,
 )
+from pyGHDL.dom.Names import SimpleName
 from pyGHDL.dom.Symbol import EntitySymbol
 
 
@@ -77,7 +79,7 @@ __all__ = []
 
 @export
 class UseClause(VHDLModel_UseClause, DOMMixin):
-    def __init__(self, node: Iir, name: str):
+    def __init__(self, node: Iir, name: Name):
         super().__init__(name)
         DOMMixin.__init__(self, node)
 
@@ -97,10 +99,10 @@ class Entity(VHDLModel_Entity, DOMMixin):
         self,
         node: Iir,
         identifier: str,
-        genericItems: List[GenericInterfaceItem] = None,
-        portItems: List[PortInterfaceItem] = None,
-        declaredItems: List = None,
-        bodyItems: List["ConcurrentStatement"] = None,
+        genericItems: Iterable[GenericInterfaceItem] = None,
+        portItems: Iterable[PortInterfaceItem] = None,
+        declaredItems: Iterable = None,
+        bodyItems: Iterable["ConcurrentStatement"] = None,
     ):
         super().__init__(identifier, genericItems, portItems, declaredItems, bodyItems)
         DOMMixin.__init__(self, node)
@@ -113,7 +115,9 @@ class Entity(VHDLModel_Entity, DOMMixin):
         declaredItems = GetDeclaredItemsFromChainedNodes(
             nodes.Get_Declaration_Chain(entityNode), "entity", name
         )
-        bodyItems = []
+        bodyItems = GetStatementsFromChainedNodes(
+            nodes.Get_Concurrent_Statement_Chain(entityNode), "entity", name
+        )
 
         return cls(entityNode, name, generics, ports, declaredItems, bodyItems)
 
@@ -125,8 +129,8 @@ class Architecture(VHDLModel_Architecture, DOMMixin):
         node: Iir,
         identifier: str,
         entity: EntityOrSymbol,
-        declaredItems: List = None,
-        bodyItems: List["ConcurrentStatement"] = None,
+        declaredItems: Iterable = None,
+        bodyItems: Iterable["ConcurrentStatement"] = None,
     ):
         super().__init__(identifier, entity, declaredItems, bodyItems)
         DOMMixin.__init__(self, node)
@@ -136,11 +140,13 @@ class Architecture(VHDLModel_Architecture, DOMMixin):
         name = GetNameOfNode(architectureNode)
         entityNameNode = nodes.Get_Entity_Name(architectureNode)
         entityName = GetNameOfNode(entityNameNode)
-        entity = EntitySymbol(entityNameNode, entityName)
+        entity = EntitySymbol(entityNameNode, SimpleName(entityNameNode, entityName))
         declaredItems = GetDeclaredItemsFromChainedNodes(
             nodes.Get_Declaration_Chain(architectureNode), "architecture", name
         )
-        bodyItems = []
+        bodyItems = GetStatementsFromChainedNodes(
+            nodes.Get_Concurrent_Statement_Chain(architectureNode), "architecture", name
+        )
 
         return cls(architectureNode, name, entity, declaredItems, bodyItems)
 
@@ -154,8 +160,8 @@ class Component(VHDLModel_Component, DOMMixin):
         self,
         node: Iir,
         identifier: str,
-        genericItems: List[GenericInterfaceItem] = None,
-        portItems: List[PortInterfaceItem] = None,
+        genericItems: Iterable[GenericInterfaceItem] = None,
+        portItems: Iterable[PortInterfaceItem] = None,
     ):
         super().__init__(identifier, genericItems, portItems)
         DOMMixin.__init__(self, node)
@@ -175,8 +181,8 @@ class Package(VHDLModel_Package, DOMMixin):
         self,
         node: Iir,
         identifier: str,
-        genericItems: List[GenericInterfaceItem] = None,
-        declaredItems: List = None,
+        genericItems: Iterable[GenericInterfaceItem] = None,
+        declaredItems: Iterable = None,
     ):
         super().__init__(identifier, genericItems, declaredItems)
         DOMMixin.__init__(self, node)
@@ -206,7 +212,7 @@ class PackageBody(VHDLModel_PackageBody, DOMMixin):
         self,
         node: Iir,
         identifier: str,
-        declaredItems: List = None,
+        declaredItems: Iterable = None,
     ):
         super().__init__(identifier, declaredItems)
         DOMMixin.__init__(self, node)
