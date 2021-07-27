@@ -762,9 +762,33 @@ def GetStatementsFromChainedNodes(
                     label=label, line=pos.Line
                 )
             )
+        elif kind == nodes.Iir_Kind.Process_Statement:
+            print(
+                "[NOT IMPLEMENTED] Process (label: '{label}') without sensitivity list at line {line}".format(
+                    label=label, line=pos.Line
+                )
+            )
         elif kind == nodes.Iir_Kind.Concurrent_Simple_Signal_Assignment:
             print(
                 "[NOT IMPLEMENTED] Concurrent (simple) signal assignment (label: '{label}') at line {line}".format(
+                    label=label, line=pos.Line
+                )
+            )
+        elif kind == nodes.Iir_Kind.Concurrent_Conditional_Signal_Assignment:
+            print(
+                "[NOT IMPLEMENTED] Concurrent (conditional) signal assignment (label: '{label}') at line {line}".format(
+                    label=label, line=pos.Line
+                )
+            )
+        elif kind == nodes.Iir_Kind.Concurrent_Selected_Signal_Assignment:
+            print(
+                "[NOT IMPLEMENTED] Concurrent (selected) signal assignment (label: '{label}') at line {line}".format(
+                    label=label, line=pos.Line
+                )
+            )
+        elif kind == nodes.Iir_Kind.Concurrent_Procedure_Call_Statement:
+            print(
+                "[NOT IMPLEMENTED] Concurrent procedure call (label: '{label}') at line {line}".format(
                     label=label, line=pos.Line
                 )
             )
@@ -818,9 +842,32 @@ def GetStatementsFromChainedNodes(
                         column=pos.Column,
                     )
                 )
-
         elif kind == nodes.Iir_Kind.Block_Statement:
             yield ConcurrentBlockStatement.parse(statement, label)
+        elif kind == nodes.Iir_Kind.If_Generate_Statement:
+            print(
+                "[NOT IMPLEMENTED] If-generate statement (label: '{label}') at line {line}".format(
+                    label=label, line=pos.Line
+                )
+            )
+        elif kind == nodes.Iir_Kind.For_Generate_Statement:
+            print(
+                "[NOT IMPLEMENTED] For-generate statement (label: '{label}') at line {line}".format(
+                    label=label, line=pos.Line
+                )
+            )
+        elif kind == nodes.Iir_Kind.Case_Generate_Statement:
+            print(
+                "[NOT IMPLEMENTED] Case-generate statement (label: '{label}') at line {line}".format(
+                    label=label, line=pos.Line
+                )
+            )
+        elif kind == nodes.Iir_Kind.Psl_Assert_Directive:
+            print(
+                "[NOT IMPLEMENTED] PSL assert directive (label: '{label}') at line {line}".format(
+                    label=label, line=pos.Line
+                )
+            )
         else:
             raise DOMException(
                 "Unknown statement of kind '{kind}' in {entity} '{name}' at {file}:{line}:{column}.".format(
