@@ -35,42 +35,63 @@ from typing import Iterable
 from pydecor import export
 
 from pyVHDLModel.SyntaxModel import (
-    ConcurrentBlockStatement as VHDLModel_ConcurrentBlockStatement,
     ComponentInstantiation as VHDLModel_ComponentInstantiation,
     EntityInstantiation as VHDLModel_EntityInstantiation,
     ConfigurationInstantiation as VHDLModel_ConfigurationInstantiation,
-    ConcurrentStatement, Name,
+    ConcurrentBlockStatement as VHDLModel_ConcurrentBlockStatement,
+    ProcessStatement as VHDLModel_ProcessStatement,
+    IfGenerateBranch as VHDLModel_IfGenerateBranch,
+    IfGenerateStatement as VHDLModel_IfGenerateStatement,
+    CaseGenerateStatement as VHDLModel_CaseGenerateStatement,
+    ForGenerateStatement as VHDLModel_ForGenerateStatement,
+    ConcurrentStatement,
+    Name,
+    SequentialStatement,
+    IfGenerateBranch,
 )
 
 from pyGHDL.libghdl import Iir
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin
-from pyGHDL.dom._Utils import GetNameOfNode
+from pyGHDL.dom._Utils import GetNameOfNode, GetIirKindOfNode
 
 
 @export
 class ComponentInstantiation(VHDLModel_ComponentInstantiation, DOMMixin):
-    def __init__(self, node: Iir, label: str, componentName: Name):
+    def __init__(self, instantiationNode: Iir, label: str, componentName: Name):
         super().__init__(label, componentName)
-        DOMMixin.__init__(self, node)
+        DOMMixin.__init__(self, instantiationNode)
 
     @classmethod
-    def parse(cls, instantiationNode: Iir, instantiatedUnit: Iir, label: str) -> "ComponentInstantiation":
+    def parse(
+        cls, instantiationNode: Iir, instantiatedUnit: Iir, label: str
+    ) -> "ComponentInstantiation":
         from pyGHDL.dom._Translate import GetNameFromNode
 
         componentName = GetNameFromNode(instantiatedUnit)
+
+        # TODO: get mapped generics
+        # TODO: get mapped ports
 
         return cls(instantiationNode, label, componentName)
 
 
 @export
 class EntityInstantiation(VHDLModel_EntityInstantiation, DOMMixin):
-    def __init__(self, node: Iir, label: str, entityName: Name, architectureName: Name = None):
+    def __init__(
+        self,
+        instantiationNode: Iir,
+        label: str,
+        entityName: Name,
+        architectureName: Name = None,
+    ):
         super().__init__(label, entityName, architectureName)
-        DOMMixin.__init__(self, node)
+        DOMMixin.__init__(self, instantiationNode)
 
     @classmethod
-    def parse(cls, instantiationNode: Iir, instantiatedUnit: Iir, label: str) -> "EntityInstantiation":
+    def parse(
+        cls, instantiationNode: Iir, instantiatedUnit: Iir, label: str
+    ) -> "EntityInstantiation":
         from pyGHDL.dom._Translate import GetNameFromNode
 
         entityId = nodes.Get_Entity_Name(instantiatedUnit)
@@ -81,21 +102,29 @@ class EntityInstantiation(VHDLModel_EntityInstantiation, DOMMixin):
         if architectureId != nodes.Null_Iir:
             architectureName = GetNameOfNode(architectureId)
 
+        # TODO: get mapped generics
+        # TODO: get mapped ports
+
         return cls(instantiationNode, label, entityName, architectureName)
 
 
 @export
 class ConfigurationInstantiation(VHDLModel_ConfigurationInstantiation, DOMMixin):
-    def __init__(self, node: Iir, label: str, configurationName: Name):
+    def __init__(self, instantiationNode: Iir, label: str, configurationName: Name):
         super().__init__(label, configurationName)
-        DOMMixin.__init__(self, node)
+        DOMMixin.__init__(self, instantiationNode)
 
     @classmethod
-    def parse(cls, instantiationNode: Iir, instantiatedUnit: Iir, label: str) -> "ConfigurationInstantiation":
+    def parse(
+        cls, instantiationNode: Iir, instantiatedUnit: Iir, label: str
+    ) -> "ConfigurationInstantiation":
         from pyGHDL.dom._Translate import GetNameFromNode
 
         configurationId = nodes.Get_Configuration_Name(instantiatedUnit)
         configurationName = GetNameFromNode(configurationId)
+
+        # TODO: get mapped generics
+        # TODO: get mapped ports
 
         return cls(instantiationNode, label, configurationName)
 
@@ -104,14 +133,13 @@ class ConfigurationInstantiation(VHDLModel_ConfigurationInstantiation, DOMMixin)
 class ConcurrentBlockStatement(VHDLModel_ConcurrentBlockStatement, DOMMixin):
     def __init__(
         self,
-        node: Iir,
+        blockNode: Iir,
         label: str,
-        #        portItems: Iterable[PortInterfaceItem] = None,
         declaredItems: Iterable = None,
         bodyItems: Iterable["ConcurrentStatement"] = None,
     ):
         super().__init__(label, None, declaredItems, bodyItems)
-        DOMMixin.__init__(self, node)
+        DOMMixin.__init__(self, blockNode)
 
     @classmethod
     def parse(cls, blockNode: Iir, label: str) -> "ConcurrentBlockStatement":
@@ -128,3 +156,116 @@ class ConcurrentBlockStatement(VHDLModel_ConcurrentBlockStatement, DOMMixin):
         )
 
         return cls(blockNode, label, declaredItems, bodyItems)
+
+
+@export
+class ProcessStatement(VHDLModel_ProcessStatement, DOMMixin):
+    def __init__(
+        self,
+        processNode: Iir,
+        label: str = None,
+        declaredItems: Iterable = None,
+        statements: Iterable[SequentialStatement] = None,
+        sensitivityList: Iterable[Name] = None,
+    ):
+        super().__init__(label, declaredItems, statements, sensitivityList)
+        DOMMixin.__init__(self, processNode)
+
+    @classmethod
+    def parse(
+        cls, processNode: Iir, label: str, hasSensitivityList: bool
+    ) -> "ProcessStatement":
+        from pyGHDL.dom._Translate import (
+            GetDeclaredItemsFromChainedNodes,
+            GetStatementsFromChainedNodes,
+        )
+
+        # TODO: get sensitivity list
+        # TODO: get declared items
+        # TODO: get sequential statements
+
+        declaredItems = None
+        statements = None
+        sensitivityList = None
+
+        if hasSensitivityList:
+            pass
+
+        return cls(processNode, label, declaredItems, statements, sensitivityList)
+
+
+@export
+class IfGenerateBranch(VHDLModel_IfGenerateBranch):
+    def __init__(
+        self,
+        branchNode: Iir,
+        alternativeLabel: str = None,
+        declaredItems: Iterable = None,
+        statements: Iterable[ConcurrentStatement] = None,
+    ):
+        super().__init__(declaredItems, statements)
+        DOMMixin.__init__(self, branchNode)
+
+
+@export
+class IfGenerateStatement(VHDLModel_IfGenerateStatement, DOMMixin):
+    def __init__(self, generateNode: Iir, label: str, ifBranch: IfGenerateBranch):
+        super().__init__(label, ifBranch)
+        DOMMixin.__init__(self, generateNode)
+
+    @classmethod
+    def parse(cls, generateNode: Iir, label: str) -> "IfGenerateStatement":
+        from pyGHDL.dom._Translate import (
+            GetDeclaredItemsFromChainedNodes,
+            GetStatementsFromChainedNodes,
+        )
+
+        # TODO: get branches
+        # TODO: get declared items
+        # TODO: get concurrent statements
+
+        body = nodes.Get_Generate_Statement_Body(generateNode)
+        alternativeLabelId = nodes.Get_Alternative_Label(body)
+        alternativeLabel = ""
+
+        declarationChain = nodes.Get_Declaration_Chain(body)
+        declaredItems = GetDeclaredItemsFromChainedNodes(
+            declarationChain, "if-generate", label
+        )
+
+        statementChain = nodes.Get_Concurrent_Statement_Chain(body)
+        statements = GetStatementsFromChainedNodes(statementChain, "if-generate", label)
+
+        ifBranch = IfGenerateBranch(body, alternativeLabel, declaredItems, statements)
+
+        return cls(generateNode, label, ifBranch)
+
+
+@export
+class CaseGenerateStatement(VHDLModel_CaseGenerateStatement, DOMMixin):
+    def __init__(self, generateNode: Iir, label: str):
+        super().__init__(label)
+        DOMMixin.__init__(self, generateNode)
+
+    @classmethod
+    def parse(cls, generateNode: Iir, label: str) -> "CaseGenerateStatement":
+        # TODO: get choices
+        # TODO: get declared items
+        # TODO: get concurrent statements
+
+        return cls(generateNode, label)
+
+
+@export
+class ForGenerateStatement(VHDLModel_ForGenerateStatement, DOMMixin):
+    def __init__(self, generateNode: Iir, label: str):
+        super().__init__(label)
+        DOMMixin.__init__(self, generateNode)
+
+    @classmethod
+    def parse(cls, generateNode: Iir, label: str) -> "ForGenerateStatement":
+        # TODO: get index and range
+        # TODO: get declared items
+        # TODO: get concurrent statements
+
+        return cls(generateNode, label)

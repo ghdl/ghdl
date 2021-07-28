@@ -138,7 +138,16 @@ from pyGHDL.dom.Expression import (
     MatchingLessEqualExpression,
     MatchingGreaterThanExpression,
 )
-from pyGHDL.dom.Concurrent import ConcurrentBlockStatement, EntityInstantiation, ConfigurationInstantiation, ComponentInstantiation
+from pyGHDL.dom.Concurrent import (
+    ConcurrentBlockStatement,
+    EntityInstantiation,
+    ConfigurationInstantiation,
+    ComponentInstantiation,
+    ProcessStatement,
+    IfGenerateStatement,
+    ForGenerateStatement,
+    CaseGenerateStatement,
+)
 from pyGHDL.dom.Subprogram import Function, Procedure
 from pyGHDL.dom.Misc import Alias
 from pyGHDL.dom.PSL import DefaultClock
@@ -757,17 +766,11 @@ def GetStatementsFromChainedNodes(
 
         kind = GetIirKindOfNode(statement)
         if kind == nodes.Iir_Kind.Sensitized_Process_Statement:
-            print(
-                "[NOT IMPLEMENTED] Process (label: '{label}') with sensitivity list at line {line}".format(
-                    label=label, line=pos.Line
-                )
-            )
+            yield ProcessStatement.parse(statement, label, True)
+
         elif kind == nodes.Iir_Kind.Process_Statement:
-            print(
-                "[NOT IMPLEMENTED] Process (label: '{label}') without sensitivity list at line {line}".format(
-                    label=label, line=pos.Line
-                )
-            )
+            yield ProcessStatement.parse(statement, label, False)
+
         elif kind == nodes.Iir_Kind.Concurrent_Simple_Signal_Assignment:
             print(
                 "[NOT IMPLEMENTED] Concurrent (simple) signal assignment (label: '{label}') at line {line}".format(
@@ -796,32 +799,13 @@ def GetStatementsFromChainedNodes(
             instantiatedUnit = nodes.Get_Instantiated_Unit(statement)
             instantiatedUnitKind = GetIirKindOfNode(instantiatedUnit)
             if instantiatedUnitKind == nodes.Iir_Kind.Entity_Aspect_Entity:
-                entityInstance = EntityInstantiation.parse(statement, instantiatedUnit, label)
-
-                print(
-                    "Entity '{entity!s}({architecture})' instantiated with label '{label}' at line {line}".format(
-                        entity=entityInstance.Entity,
-                        architecture=entityInstance.Architecture,
-                        label=entityInstance.Label,
-                        line=pos.Line,
-                    )
-                )
+                yield EntityInstantiation.parse(statement, instantiatedUnit, label)
             elif instantiatedUnitKind == nodes.Iir_Kind.Entity_Aspect_Configuration:
-                configurationInstance = ConfigurationInstantiation.parse(statement, instantiatedUnit, label)
-
-                print(
-                    "Configuration '{configuration}' instantiated with label '{label}' at line {line}".format(
-                        configuration=configurationInstance.Configuration, label=configurationInstance.Label, line=pos.Line
-                    )
+                yield ConfigurationInstantiation.parse(
+                    statement, instantiatedUnit, label
                 )
             elif instantiatedUnitKind == nodes.Iir_Kind.Simple_Name:
-                configurationInstance = ComponentInstantiation.parse(statement, instantiatedUnit, label)
-
-                print(
-                    "Component '{component}' instantiated with label '{label}' at line {line}".format(
-                        component=configurationInstance.Component, label=label, line=pos.Line
-                    )
-                )
+                yield ComponentInstantiation.parse(statement, instantiatedUnit, label)
             else:
                 raise DOMException(
                     "Unknown instantiation kind '{kind}' in instantiation of label {label} at {file}:{line}:{column}.".format(
@@ -835,23 +819,11 @@ def GetStatementsFromChainedNodes(
         elif kind == nodes.Iir_Kind.Block_Statement:
             yield ConcurrentBlockStatement.parse(statement, label)
         elif kind == nodes.Iir_Kind.If_Generate_Statement:
-            print(
-                "[NOT IMPLEMENTED] If-generate statement (label: '{label}') at line {line}".format(
-                    label=label, line=pos.Line
-                )
-            )
-        elif kind == nodes.Iir_Kind.For_Generate_Statement:
-            print(
-                "[NOT IMPLEMENTED] For-generate statement (label: '{label}') at line {line}".format(
-                    label=label, line=pos.Line
-                )
-            )
+            yield IfGenerateStatement.parse(statement, label)
         elif kind == nodes.Iir_Kind.Case_Generate_Statement:
-            print(
-                "[NOT IMPLEMENTED] Case-generate statement (label: '{label}') at line {line}".format(
-                    label=label, line=pos.Line
-                )
-            )
+            yield CaseGenerateStatement.parse(statement, label)
+        elif kind == nodes.Iir_Kind.For_Generate_Statement:
+            yield ForGenerateStatement.parse(statement, label)
         elif kind == nodes.Iir_Kind.Psl_Assert_Directive:
             print(
                 "[NOT IMPLEMENTED] PSL assert directive (label: '{label}') at line {line}".format(
