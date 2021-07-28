@@ -3407,7 +3407,14 @@ package body Vhdl.Sem_Expr is
             --  it is ambiguous.  But there is no point in using aggregates
             --  to specify a range of choices.
             --  FIXME: fix LRM ?
+
+            --  LRM08 9.3.3.3 Array aggregates
+            --  If the type of the expression of an element association is the
+            --  type of the aggregate, then either the element association
+            --  shall be positional or the choice shall be a discrete range.
             if Elements_Types = Null_Iir
+              or else not Kind_In (El, Iir_Kind_Choice_By_None,
+                                   Iir_Kind_Choice_By_Range)
               or else Get_Kind (El_Expr) = Iir_Kind_Aggregate
             then
                Expr := Sem_Expression (El_Expr, Element_Type);
@@ -3566,6 +3573,27 @@ package body Vhdl.Sem_Expr is
 
       Info : Array_Aggr_Info renames Infos (Dim);
    begin
+      if Get_Kind (Aggr) = Iir_Kind_Aggregate then
+         Assoc_Chain := Get_Association_Choices_Chain (Aggr);
+         Sem_Choices_Range (Assoc_Chain, Index_Type, Low, High,
+                            Get_Location (Aggr), not Constrained, False);
+         Set_Association_Choices_Chain (Aggr, Assoc_Chain);
+
+         --  Update infos.
+         if Low /= Null_Iir
+           and then (Info.Low = Null_Iir
+                       or else Eval_Pos (Low) < Eval_Pos (Info.Low))
+         then
+            Info.Low := Low;
+         end if;
+         if High /= Null_Iir
+           and then (Info.High = Null_Iir
+                       or else Eval_Pos (High) > Eval_Pos (Info.High))
+         then
+            Info.High := High;
+         end if;
+      end if;
+
       --  Analyze aggregate elements.
       if Constrained then
          Expr_Staticness := Get_Type_Staticness (Index_Type);
@@ -3637,25 +3665,6 @@ package body Vhdl.Sem_Expr is
       Len_Staticness := Locally;
       case Get_Kind (Aggr) is
          when Iir_Kind_Aggregate =>
-            Assoc_Chain := Get_Association_Choices_Chain (Aggr);
-            Sem_Choices_Range (Assoc_Chain, Index_Type, Low, High,
-                               Get_Location (Aggr), not Constrained, False);
-            Set_Association_Choices_Chain (Aggr, Assoc_Chain);
-
-            --  Update infos.
-            if Low /= Null_Iir
-              and then (Info.Low = Null_Iir
-                        or else Eval_Pos (Low) < Eval_Pos (Info.Low))
-            then
-               Info.Low := Low;
-            end if;
-            if High /= Null_Iir
-              and then (Info.High = Null_Iir
-                        or else Eval_Pos (High) > Eval_Pos (Info.High))
-            then
-               Info.High := High;
-            end if;
-
             --  Determine if the aggregate is positionnal or named;
             --    and compute choice staticness.
             Is_Positional := Unknown;
@@ -3669,9 +3678,8 @@ package body Vhdl.Sem_Expr is
                   when Iir_Kind_Choice_By_Range
                     | Iir_Kind_Choice_By_Expression =>
                      Is_Positional := False;
-                     Choice_Staticness :=
-                       Nodes.Min (Choice_Staticness,
-                                  Get_Choice_Staticness (Choice));
+                     Choice_Staticness := Min (Choice_Staticness,
+                                               Get_Choice_Staticness (Choice));
                      --  FIXME: not true for range.
                      Len := Len + 1;
                   when Iir_Kind_Choice_By_None =>
@@ -3777,6 +3785,15 @@ package body Vhdl.Sem_Expr is
             then
                Info.Index_Subtype := Create_Range_Subtype_By_Length
                  (Index_Type, Int64 (Len), Get_Location (Aggr));
+
+               --  In vhdl08 and later, the number of elements may also depend
+               --  from associated expressions.
+               if Vhdl_Std >= Vhdl_08
+                 and then Get_Index_Constraint_Flag (A_Type)
+                 and then Eval_Discrete_Type_Length (Index_Type) /= Int64 (Len)
+               then
+                  Error_Msg_Sem (+Aggr, "incorrect number of elements");
+               end if;
             end if;
          else
             --  Create an index subtype.
