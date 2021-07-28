@@ -9617,6 +9617,9 @@ package body Vhdl.Parse is
             return Res;
          when Tok_Generic | Tok_Port =>
             -- or a component instantiation.
+            if Get_Kind (Target) not in Iir_Kinds_Denoting_Name then
+               Error_Msg_Parse (+Target, "component name expected");
+            end if;
             return Parse_Component_Instantiation (Target);
          when others =>
             --  Catch PSL clock declaration.  Within comments, this is the

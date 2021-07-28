@@ -1880,7 +1880,7 @@ package body Vhdl.Sem_Stmts is
 
          --  Needs a denoting name
          if Get_Kind (Inst) not in Iir_Kinds_Denoting_Name then
-            Error_Msg_Sem (+Inst, "name for a component expected");
+            --  Error message already issued during parse.
             return Null_Iir;
          end if;
 
