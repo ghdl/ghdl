@@ -39,53 +39,65 @@ from pyVHDLModel.SyntaxModel import (
     ComponentInstantiation as VHDLModel_ComponentInstantiation,
     EntityInstantiation as VHDLModel_EntityInstantiation,
     ConfigurationInstantiation as VHDLModel_ConfigurationInstantiation,
-    PortInterfaceItem,
-    ConcurrentStatement,
+    ConcurrentStatement, Name,
 )
 
 from pyGHDL.libghdl import Iir
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin
-from pyGHDL.dom.Symbol import EntitySymbol
+from pyGHDL.dom._Utils import GetNameOfNode
 
 
 @export
 class ComponentInstantiation(VHDLModel_ComponentInstantiation, DOMMixin):
-    def __init__(self, node: Iir, componentName: str):
-        super().__init__(componentName)
+    def __init__(self, node: Iir, label: str, componentName: Name):
+        super().__init__(label, componentName)
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, instantiationNode: Iir) -> "ComponentInstantiation":
-        componentName = ""
+    def parse(cls, instantiationNode: Iir, instantiatedUnit: Iir, label: str) -> "ComponentInstantiation":
+        from pyGHDL.dom._Translate import GetNameFromNode
 
-        return cls(instantiationNode, componentName)
+        componentName = GetNameFromNode(instantiatedUnit)
+
+        return cls(instantiationNode, label, componentName)
 
 
 @export
 class EntityInstantiation(VHDLModel_EntityInstantiation, DOMMixin):
-    def __init__(self, node: Iir, entityName: EntitySymbol):
-        super().__init__(entityName)
+    def __init__(self, node: Iir, label: str, entityName: Name, architectureName: Name = None):
+        super().__init__(label, entityName, architectureName)
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, instantiationNode: Iir) -> "EntityInstantiation":
-        entityName = ""
+    def parse(cls, instantiationNode: Iir, instantiatedUnit: Iir, label: str) -> "EntityInstantiation":
+        from pyGHDL.dom._Translate import GetNameFromNode
 
-        return cls(instantiationNode, entityName)
+        entityId = nodes.Get_Entity_Name(instantiatedUnit)
+        entityName = GetNameFromNode(entityId)
+
+        architectureName = None
+        architectureId = nodes.Get_Architecture(instantiatedUnit)
+        if architectureId != nodes.Null_Iir:
+            architectureName = GetNameOfNode(architectureId)
+
+        return cls(instantiationNode, label, entityName, architectureName)
 
 
 @export
 class ConfigurationInstantiation(VHDLModel_ConfigurationInstantiation, DOMMixin):
-    def __init__(self, node: Iir, configurationName: str):
-        super().__init__(configurationName)
+    def __init__(self, node: Iir, label: str, configurationName: Name):
+        super().__init__(label, configurationName)
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, instantiationNode: Iir) -> "ConfigurationInstantiation":
-        configurationName = ""
+    def parse(cls, instantiationNode: Iir, instantiatedUnit: Iir, label: str) -> "ConfigurationInstantiation":
+        from pyGHDL.dom._Translate import GetNameFromNode
 
-        return cls(instantiationNode, configurationName)
+        configurationId = nodes.Get_Configuration_Name(instantiatedUnit)
+        configurationName = GetNameFromNode(configurationId)
+
+        return cls(instantiationNode, label, configurationName)
 
 
 @export

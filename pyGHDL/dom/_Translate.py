@@ -138,7 +138,7 @@ from pyGHDL.dom.Expression import (
     MatchingLessEqualExpression,
     MatchingGreaterThanExpression,
 )
-from pyGHDL.dom.Concurrent import ConcurrentBlockStatement
+from pyGHDL.dom.Concurrent import ConcurrentBlockStatement, EntityInstantiation, ConfigurationInstantiation, ComponentInstantiation
 from pyGHDL.dom.Subprogram import Function, Procedure
 from pyGHDL.dom.Misc import Alias
 from pyGHDL.dom.PSL import DefaultClock
@@ -796,40 +796,30 @@ def GetStatementsFromChainedNodes(
             instantiatedUnit = nodes.Get_Instantiated_Unit(statement)
             instantiatedUnitKind = GetIirKindOfNode(instantiatedUnit)
             if instantiatedUnitKind == nodes.Iir_Kind.Entity_Aspect_Entity:
-                entityId = nodes.Get_Entity_Name(instantiatedUnit)
-                entityName = GetNameFromNode(entityId)
-
-                architectureName = ""
-                architectureId = nodes.Get_Architecture(instantiatedUnit)
-                if architectureId != nodes.Null_Iir:
-                    architectureName = GetNameOfNode(architectureId)
+                entityInstance = EntityInstantiation.parse(statement, instantiatedUnit, label)
 
                 print(
-                    "Instance of '{component!s}({architecture})' with label '{label}' at line {line}".format(
-                        component=entityName,
-                        architecture=architectureName,
-                        label=label,
+                    "Entity '{entity!s}({architecture})' instantiated with label '{label}' at line {line}".format(
+                        entity=entityInstance.Entity,
+                        architecture=entityInstance.Architecture,
+                        label=entityInstance.Label,
                         line=pos.Line,
                     )
                 )
             elif instantiatedUnitKind == nodes.Iir_Kind.Entity_Aspect_Configuration:
-                configurationId = nodes.Get_Configuration_Name(instantiatedUnit)
-                configurationName = GetNameFromNode(configurationId)
+                configurationInstance = ConfigurationInstantiation.parse(statement, instantiatedUnit, label)
 
                 print(
-                    "Instance of '{configuration}' with label '{label}' at line {line}".format(
-                        configuration=configurationName, label=label, line=pos.Line
+                    "Configuration '{configuration}' instantiated with label '{label}' at line {line}".format(
+                        configuration=configurationInstance.Configuration, label=configurationInstance.Label, line=pos.Line
                     )
                 )
-            elif instantiatedUnitKind in (
-                nodes.Iir_Kind.Simple_Name,
-                nodes.Iir_Kind.Parenthesis_Name,
-            ):
-                componentName = GetNameFromNode(instantiatedUnit)
+            elif instantiatedUnitKind == nodes.Iir_Kind.Simple_Name:
+                configurationInstance = ComponentInstantiation.parse(statement, instantiatedUnit, label)
 
                 print(
                     "Component '{component}' instantiated with label '{label}' at line {line}".format(
-                        component=componentName, label=label, line=pos.Line
+                        component=configurationInstance.Component, label=label, line=pos.Line
                     )
                 )
             else:

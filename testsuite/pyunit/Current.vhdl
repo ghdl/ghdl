@@ -85,7 +85,7 @@ architecture behav of entity_1 is
 	package inner_pack is
 	end package;
 begin
-	process(Clock)
+	proc: process(Clock)
 	begin
 		if rising_edge(Clock) then
 			if Reset = '1' then
@@ -95,6 +95,36 @@ begin
 			end if;
 		end if;
 	end process;
+
+	a <= b;
+
+
+	inst1: entity work.counter1(rtl)
+		generic map (
+			BITS => 8
+		)
+		port map (
+			clk => Clock
+		);
+
+	inst2: component counter2
+		port map (
+			clk => Clock
+		);
+
+	inst3: configuration counter3
+		port map (
+			clk => Clock
+		);
+
+	blk: block
+	begin
+		inst4: entity work.counter4(rtl)
+			port map (
+				clk => Clock
+			);
+	end block;
+
 end architecture behav;
 
 package package_1 is
