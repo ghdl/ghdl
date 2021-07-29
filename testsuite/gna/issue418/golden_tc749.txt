@@ -18,7 +18,7 @@ type time is range <> units
   sec = 1000000000000000 fs;
   min = 60000000000000000 fs;
   hr = 3600000000000000000 fs;
-end units
+end units;
 subtype time is time range -9223372036854775808 to 9223372036854775807;
 type time_vector is array (natural range <>) of time;
 type natural_vector is array (natural range <>) of natural;

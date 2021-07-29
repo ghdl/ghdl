@@ -2180,7 +2180,7 @@ ghw_disp_type (struct ghw_handler *h, union ghw_type *t)
 	    printf ("  %s = " GHWPRI64 " %s;\n", u->name, u->val,
 		    p->units[0].name);
 	  }
-	printf ("end units\n");
+	printf ("end units;\n");
       } break;
     case ghdl_rtik_type_array:
       {
