@@ -9258,7 +9258,7 @@ package body Vhdl.Parse is
          exit when Current_Token /= Tok_Elsif;
 
          --  Create new alternative.
-         Clause := Create_Iir (Iir_Kind_If_Generate_Statement);
+         Clause := Create_Iir (Iir_Kind_If_Generate_Else_Clause);
          Set_Location (Clause, Loc);
          Start_Loc := Get_Token_Location;
 
