@@ -48,6 +48,7 @@ from pyVHDLModel.SyntaxModel import (
     Name,
     SequentialStatement,
     IfGenerateBranch,
+    Expression,
 )
 
 from pyGHDL.libghdl import Iir
@@ -199,12 +200,39 @@ class IfGenerateBranch(VHDLModel_IfGenerateBranch):
     def __init__(
         self,
         branchNode: Iir,
+        condition: Expression,
         alternativeLabel: str = None,
         declaredItems: Iterable = None,
         statements: Iterable[ConcurrentStatement] = None,
     ):
-        super().__init__(declaredItems, statements)
+        super().__init__(condition, declaredItems, statements)
         DOMMixin.__init__(self, branchNode)
+
+    @classmethod
+    def parse(cls, generateNode: Iir) -> "IfGenerateBranch":
+        from pyGHDL.dom._Translate import (
+            GetDeclaredItemsFromChainedNodes,
+            GetStatementsFromChainedNodes,
+            GetExpressionFromNode,
+        )
+
+        condition = GetExpressionFromNode(nodes.Get_Condition(generateNode))
+        body = nodes.Get_Generate_Statement_Body(generateNode)
+
+        alternativeLabelId = nodes.Get_Alternative_Label(body)
+        alternativeLabel = ""
+
+        declarationChain = nodes.Get_Declaration_Chain(body)
+        declaredItems = GetDeclaredItemsFromChainedNodes(
+            declarationChain, "if-generate branch", alternativeLabel
+        )
+
+        statementChain = nodes.Get_Concurrent_Statement_Chain(body)
+        statements = GetStatementsFromChainedNodes(
+            statementChain, "if-generate branch", alternativeLabel
+        )
+
+        return cls(body, condition, alternativeLabel, declaredItems, statements)
 
 
 @export
@@ -218,25 +246,21 @@ class IfGenerateStatement(VHDLModel_IfGenerateStatement, DOMMixin):
         from pyGHDL.dom._Translate import (
             GetDeclaredItemsFromChainedNodes,
             GetStatementsFromChainedNodes,
+            GetExpressionFromNode,
         )
 
         # TODO: get branches
         # TODO: get declared items
         # TODO: get concurrent statements
 
-        body = nodes.Get_Generate_Statement_Body(generateNode)
-        alternativeLabelId = nodes.Get_Alternative_Label(body)
-        alternativeLabel = ""
+        print(generateNode, GetIirKindOfNode(generateNode))
+        ifBranch = IfGenerateBranch.parse(generateNode)
 
-        declarationChain = nodes.Get_Declaration_Chain(body)
-        declaredItems = GetDeclaredItemsFromChainedNodes(
-            declarationChain, "if-generate", label
-        )
-
-        statementChain = nodes.Get_Concurrent_Statement_Chain(body)
-        statements = GetStatementsFromChainedNodes(statementChain, "if-generate", label)
-
-        ifBranch = IfGenerateBranch(body, alternativeLabel, declaredItems, statements)
+        elseClause = generateNode
+        while (
+            elseClause := nodes.Get_Generate_Else_Clause(elseClause)
+        ) != nodes.Null_Iir:
+            print(elseClause, GetIirKindOfNode(elseClause))
 
         return cls(generateNode, label, ifBranch)
 
