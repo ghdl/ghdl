@@ -81,7 +81,7 @@ architecture behav of entity_1 is
 	disconnect address_bus : resolved_word after 3 ns;
 	disconnect others : resolved_word after 2 ns;
 
-	default clock is rising_edge(clk);
+--	default clock is rising_edge(clk);
 	package inner_pack is
 	end package;
 begin
@@ -125,6 +125,19 @@ begin
 			);
 	end block;
 
+	genIf: if True generate
+		constant G0 : boolean := False;
+	begin
+
+	elsif False generate
+		constant G1 : boolean := False;
+	begin
+
+	else generate
+		constant G2 : boolean := False;
+	begin
+
+	end generate;
 end architecture behav;
 
 package package_1 is
