@@ -493,6 +493,13 @@ jobs:
           cd testsuite
           python3 -m pytest -vsrA pyunit
 
+      - name: Test NEORV32
+        shell: bash
+        run: |
+          set -e
+          git clone https://github.com/stnolting/neorv32
+          ghdl-dom pretty -F neorv32/rtl/core/*.vhd
+
 #
 # Windows CPython pyGHDL Test with standalone zipfile and pyGHDL wheel
 #
@@ -571,6 +578,13 @@ jobs:
         run: |
           cd testsuite
           python3 -m pytest -vsrA pyunit
+
+      - name: Test NEORV32
+        shell: bash
+        run: |
+          set -e
+          git clone https://github.com/stnolting/neorv32
+          ghdl-dom pretty -F neorv32/rtl/core/*.vhd
 
 #
 # Release
