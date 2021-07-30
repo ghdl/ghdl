@@ -41,7 +41,8 @@ from pyVHDLModel.SyntaxModel import (
     WithDefaultExpressionMixin,
     Function,
     BaseType,
-    FullType, BaseConstant,
+    FullType,
+    BaseConstant,
 )
 
 from pyGHDL import GHDLBaseException

@@ -297,7 +297,7 @@ class Application(LineTerminal, ArgParseMixin):
                     )
                 )
         elif args.Directory is not None:
-            d : Path = args.Directory
+            d: Path = args.Directory
             if not d.exists():
                 self.WriteError("Directory '{0!s}' does not exist.".format(d))
 
@@ -311,11 +311,10 @@ class Application(LineTerminal, ArgParseMixin):
                           DOM translation time:    {:5.3f} us
                         """
                     ).format(
-                        document.LibGHDLProcessingTime * 10**6,
-                        document.DOMTranslationTime * 10**6,
+                        document.LibGHDLProcessingTime * 10 ** 6,
+                        document.DOMTranslationTime * 10 ** 6,
                     )
                 )
-
 
         PP = PrettyPrint()
 

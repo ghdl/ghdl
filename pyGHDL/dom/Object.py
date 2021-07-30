@@ -80,18 +80,18 @@ class Constant(VHDLModel_Constant, DOMMixin):
 
             return cls(
                 constantNode,
-                list(
+                [
                     name,
-                ),
+                ],
                 subtypeIndication,
                 defaultExpression,
             )
         else:
             return DeferredConstant(
                 constantNode,
-                list(
+                [
                     name,
-                ),
+                ],
                 subtypeIndication,
             )
 
@@ -113,9 +113,9 @@ class DeferredConstant(VHDLModel_DeferredConstant, DOMMixin):
 
         return cls(
             constantNode,
-            list(
+            [
                 name,
-            ),
+            ],
             subtypeIndication,
         )
 
@@ -148,9 +148,9 @@ class Variable(VHDLModel_Variable, DOMMixin):
 
         return cls(
             variableNode,
-            list(
+            [
                 name,
-            ),
+            ],
             subtypeIndication,
             defaultExpression,
         )
@@ -171,9 +171,9 @@ class SharedVariable(VHDLModel_SharedVariable, DOMMixin):
 
         return cls(
             variableNode,
-            list(
+            [
                 name,
-            ),
+            ],
             subtypeIndication,
         )
 
@@ -204,9 +204,9 @@ class Signal(VHDLModel_Signal, DOMMixin):
 
         return cls(
             signalNode,
-            list(
+            [
                 name,
-            ),
+            ],
             subtypeIndication,
             defaultExpression,
         )
@@ -229,8 +229,8 @@ class File(VHDLModel_File, DOMMixin):
 
         return cls(
             fileNode,
-            list(
+            [
                 name,
-            ),
+            ],
             subtypeIndication,
         )
