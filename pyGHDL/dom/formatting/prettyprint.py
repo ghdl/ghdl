@@ -41,7 +41,7 @@ from pyVHDLModel.SyntaxModel import (
     WithDefaultExpressionMixin,
     Function,
     BaseType,
-    FullType,
+    FullType, BaseConstant,
 )
 
 from pyGHDL import GHDLBaseException
@@ -79,7 +79,7 @@ from pyGHDL.dom.InterfaceItem import (
     PortSignalInterfaceItem,
     GenericTypeInterfaceItem,
 )
-from pyGHDL.dom.Object import Constant, Signal, SharedVariable, File
+from pyGHDL.dom.Object import Constant, Signal, SharedVariable, File, DeferredConstant
 from pyGHDL.dom.Attribute import Attribute, AttributeSpecification
 from pyGHDL.dom.Subprogram import Procedure
 from pyGHDL.dom.Misc import Alias
@@ -415,15 +415,20 @@ class PrettyPrint:
         buffer = []
         prefix = "  " * level
 
-        if isinstance(item, Constant):
+        if isinstance(item, BaseConstant):
+            if isinstance(item, Constant):
+                default = " := {expr}".format(expr=str(item.DefaultExpression))
+            else:
+                default = ""
+
             buffer.append(
-                "{prefix}- constant {name} : {subtype} := {expr}".format(
+                "{prefix}- constant {name} : {subtype}{default}".format(
                     prefix=prefix,
                     name=", ".join(item.Identifiers),
                     subtype=self.formatSubtypeIndication(
                         item.Subtype, "constant", item.Identifiers[0]
                     ),
-                    expr=str(item.DefaultExpression),
+                    default=default,
                 )
             )
         elif isinstance(item, SharedVariable):
