@@ -42,7 +42,7 @@ from pyVHDLModel.SyntaxModel import (
     CharacterLiteral as VHDLModel_CharacterLiteral,
     StringLiteral as VHDLModel_StringLiteral,
 )
-from pyGHDL.libghdl import name_table
+from pyGHDL.libghdl import name_table, str_table
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin
@@ -150,5 +150,5 @@ class StringLiteral(VHDLModel_StringLiteral, DOMMixin):
     @classmethod
     def parse(cls, literalNode: Iir) -> "StringLiteral":
         stringID = nodes.Get_String8_Id(literalNode)
-        value = name_table.Get_Name_Ptr(stringID)
+        value = str_table.Get_String8_Ptr(stringID)
         return cls(literalNode, value)
