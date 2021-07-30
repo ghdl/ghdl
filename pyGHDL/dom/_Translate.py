@@ -499,6 +499,8 @@ def GetGenericsFromChainedNodes(
                     else:
                         generic = nextGeneric
                         break
+                else:
+                    generic = nodes.Null_Iir
             else:
                 generic = nodes.Get_Chain(generic)
 
@@ -552,6 +554,8 @@ def GetPortsFromChainedNodes(
                     else:
                         port = nextPort
                         break
+                else:
+                    port = nodes.Null_Iir
             else:
                 port = nodes.Get_Chain(port)
 
@@ -618,6 +622,8 @@ def GetParameterFromChainedNodes(
                 else:
                     parameter = nextParameter
                     break
+            else:
+                parameter = nodes.Null_Iir
         else:
             parameter = nodes.Get_Chain(parameter)
 
@@ -748,6 +754,8 @@ def GetDeclaredItemsFromChainedNodes(
                 else:
                     item = nextItem
                     break
+            else:
+                item = nodes.Null_Iir
         else:
             item = nodes.Get_Chain(item)
 
