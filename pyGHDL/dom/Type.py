@@ -229,6 +229,10 @@ class RecordType(VHDLModel_RecordType, DOMMixin):
                     else:
                         break
                     index += 1
+
+                    # The last consecutive identifiers has no Identifier_List flag
+                    if not nodes.Get_Has_Identifier_List(nextNode):
+                        break
             else:
                 index += 1
 

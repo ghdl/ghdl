@@ -499,6 +499,11 @@ def GetGenericsFromChainedNodes(
                     else:
                         generic = nextGeneric
                         break
+
+                    # The last consecutive identifiers has no Identifier_List flag
+                    if not nodes.Get_Has_Identifier_List(nextGeneric):
+                        generic = nodes.Get_Chain(nextGeneric)
+                        break
                 else:
                     generic = nodes.Null_Iir
             else:
@@ -553,6 +558,11 @@ def GetPortsFromChainedNodes(
                         portSignal.Identifiers.append(GetNameOfNode(nextPort))
                     else:
                         port = nextPort
+                        break
+
+                    # The last consecutive identifiers has no Identifier_List flag
+                    if not nodes.Get_Has_Identifier_List(nextPort):
+                        port = nodes.Get_Chain(nextPort)
                         break
                 else:
                     port = nodes.Null_Iir
@@ -621,6 +631,11 @@ def GetParameterFromChainedNodes(
                     param.Identifiers.append(GetNameOfNode(nextParameter))
                 else:
                     parameter = nextParameter
+                    break
+
+                # The last consecutive identifiers has no Identifier_List flag
+                if not nodes.Get_Has_Identifier_List(nextParameter):
+                    parameter = nodes.Get_Chain(nextParameter)
                     break
             else:
                 parameter = nodes.Null_Iir
@@ -753,6 +768,11 @@ def GetDeclaredItemsFromChainedNodes(
                     obj.Identifiers.append(GetNameOfNode(nextItem))
                 else:
                     item = nextItem
+                    break
+
+                # The last consecutive identifiers has no Identifier_List flag
+                if not nodes.Get_Has_Identifier_List(nextItem):
+                    item = nodes.Get_Chain(nextItem)
                     break
             else:
                 item = nodes.Null_Iir
