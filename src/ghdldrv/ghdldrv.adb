@@ -485,7 +485,7 @@ package body Ghdldrv is
          Cmd.Assembler_Cmd := new String'("as");
       end if;
       if Cmd.Linker_Cmd = null then
-         Cmd.Linker_Cmd := new String'("gcc");
+         Cmd.Linker_Cmd := new String'("cc");
       end if;
    end Set_Tools_Name;
 
