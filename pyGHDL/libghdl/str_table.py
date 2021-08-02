@@ -48,7 +48,7 @@ def _String8_Address(Id: String8Id) -> c_char_p:
 
 
 @export
-def Get_String8_Ptr(Id: String8Id) -> str:
+def Get_String8_Ptr(Id: String8Id, Length: int) -> str:
     """
     Get the address of string8 ID. Note that as soon as a character is appended
     (using Append_String8) or a string8 is resized (using Resize_String8), an
@@ -57,4 +57,4 @@ def Get_String8_Ptr(Id: String8Id) -> str:
     :param Id: String8Id for the string to query.
     :return:   String8 as string.
     """
-    return _String8_Address(Id).decode("utf-8")
+    return _String8_Address(Id)[:Length].decode("utf-8")
