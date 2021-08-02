@@ -44,6 +44,7 @@ from pyVHDLModel.SyntaxModel import (
     IfGenerateStatement as VHDLModel_IfGenerateStatement,
     CaseGenerateStatement as VHDLModel_CaseGenerateStatement,
     ForGenerateStatement as VHDLModel_ForGenerateStatement,
+    ConcurrentSignalAssignment as VHDLModel_ConcurrentSignalAssignment,
     Name,
     ConcurrentStatement,
     SequentialStatement,
@@ -255,9 +256,9 @@ class IfGenerateStatement(VHDLModel_IfGenerateStatement, DOMMixin):
         print(generateNode, GetIirKindOfNode(generateNode))
         ifBranch = IfGenerateBranch.parse(generateNode)
 
-#        Python 3.8 syntax
-#        elseClause = generateNode
-#        while (elseClause := nodes.Get_Generate_Else_Clause(elseClause)) != nodes.Null_Iir:
+        #        Python 3.8 syntax
+        #        elseClause = generateNode
+        #        while (elseClause := nodes.Get_Generate_Else_Clause(elseClause)) != nodes.Null_Iir:
         elseClause = nodes.Get_Generate_Else_Clause(generateNode)
         while elseClause != nodes.Null_Iir:
             print(elseClause, GetIirKindOfNode(elseClause))
@@ -295,3 +296,34 @@ class ForGenerateStatement(VHDLModel_ForGenerateStatement, DOMMixin):
         # TODO: get concurrent statements
 
         return cls(generateNode, label)
+
+
+@export
+class ConcurrentSimpleSignalAssignment(
+    VHDLModel_ConcurrentSimpleSignalAssignment, DOMMixin
+):
+    def __init__(
+        self,
+        assignmentNode: Iir,
+        target: Name,
+        expression: Expression,
+        label: str = None,
+    ):
+        super().__init__(target, expression, label)
+        DOMMixin.__init__(self, assignmentNode)
+
+    @classmethod
+    def parse(
+        cls, assignmentNode: Iir, label: str
+    ) -> "ConcurrentSimpleSignalAssignment":
+        from pyGHDL.dom._Translate import GetNameFromNode
+
+        target = nodes.Get_Target(assignmentNode)
+        targetName = GetNameFromNode(target)
+
+        waveform = nodes.Get_Waveform_Chain(assignmentNode)
+
+        # TODO: translate waveforms to series of "expressions".
+        expression = None
+
+        return cls(assignmentNode, targetName, expression, label)
