@@ -44,10 +44,9 @@ from pyVHDLModel.SyntaxModel import (
     IfGenerateStatement as VHDLModel_IfGenerateStatement,
     CaseGenerateStatement as VHDLModel_CaseGenerateStatement,
     ForGenerateStatement as VHDLModel_ForGenerateStatement,
-    ConcurrentStatement,
     Name,
+    ConcurrentStatement,
     SequentialStatement,
-    IfGenerateBranch,
     Expression,
 )
 
@@ -256,11 +255,14 @@ class IfGenerateStatement(VHDLModel_IfGenerateStatement, DOMMixin):
         print(generateNode, GetIirKindOfNode(generateNode))
         ifBranch = IfGenerateBranch.parse(generateNode)
 
-        elseClause = generateNode
-        while (
-            elseClause := nodes.Get_Generate_Else_Clause(elseClause)
-        ) != nodes.Null_Iir:
+#        Python 3.8 syntax
+#        elseClause = generateNode
+#        while (elseClause := nodes.Get_Generate_Else_Clause(elseClause)) != nodes.Null_Iir:
+        elseClause = nodes.Get_Generate_Else_Clause(generateNode)
+        while elseClause != nodes.Null_Iir:
             print(elseClause, GetIirKindOfNode(elseClause))
+
+            elseClause = nodes.Get_Generate_Else_Clause(elseClause)
 
         return cls(generateNode, label, ifBranch)
 
