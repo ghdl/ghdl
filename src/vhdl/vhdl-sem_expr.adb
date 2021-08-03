@@ -3540,6 +3540,92 @@ package body Vhdl.Sem_Expr is
       end case;
    end Sem_Array_Aggregate_Choice_Length;
 
+   procedure Sem_Array_Aggregate_Extract_Element_Subtype
+     (Aggr : Iir; Dim : Natural; Nbr_Dim : Natural; El_Subtype : in out Iir)
+   is
+      Assoc : Iir;
+      Sub_Aggr : Iir;
+      New_El_Subtype : Iir;
+   begin
+      Assoc := Get_Association_Choices_Chain (Aggr);
+      while Assoc /= Null_Iir loop
+         if not Get_Same_Alternative_Flag (Assoc) then
+            Sub_Aggr := Get_Associated_Expr (Assoc);
+            if Dim < Nbr_Dim then
+               case Get_Kind (Sub_Aggr) is
+                  when Iir_Kind_Aggregate =>
+                     Sem_Array_Aggregate_Extract_Element_Subtype
+                       (Sub_Aggr, Dim + 1, Nbr_Dim, El_Subtype);
+                     --  TODO: only if locally static ?
+                     if El_Subtype /= Null_Iir then
+                        return;
+                     end if;
+                  when Iir_Kind_String_Literal8 =>
+                     --  If a string is a proper subaggregate, then the element
+                     --  subtype must be fully bounded.
+                     raise Internal_Error;
+                  when others =>
+                     null;
+               end case;
+            else
+               New_El_Subtype := Get_Type (Sub_Aggr);
+               --  TODO: try to extract the 'best' element subtype: with
+               --   static indexes, with constrained sub-elements.
+               --   Possibly create an hybrid subtype (for records).
+               if Get_Index_Constraint_Flag (New_El_Subtype) then
+                  El_Subtype := New_El_Subtype;
+                  return;
+               end if;
+            end if;
+         end if;
+         Assoc := Get_Chain (Assoc);
+      end loop;
+   end Sem_Array_Aggregate_Extract_Element_Subtype;
+
+   --  Move ownership of array aggregate element subtype from the element to
+   --  the aggregate.
+   procedure Sem_Array_Aggregate_Move_Element_Subtype_Owner (Aggr_Type : Iir;
+                                                             El_Subtype : Iir;
+                                                             Aggr : Iir;
+                                                             Dim : Natural;
+                                                             Nbr_Dim : Natural)
+   is
+      Assoc : Iir;
+      Sub_Aggr : Iir;
+   begin
+      Assoc := Get_Association_Choices_Chain (Aggr);
+      while Assoc /= Null_Iir loop
+         if not Get_Same_Alternative_Flag (Assoc) then
+            Sub_Aggr := Get_Associated_Expr (Assoc);
+            if Dim < Nbr_Dim then
+               --  If a string is a proper subaggregate, then the element
+               --  subtype must be fully bounded.
+               pragma Assert (Get_Kind (Sub_Aggr) = Iir_Kind_Aggregate);
+               Sem_Array_Aggregate_Move_Element_Subtype_Owner
+                 (Aggr_Type, El_Subtype, Sub_Aggr, Dim + 1, Nbr_Dim);
+               if Get_Array_Element_Constraint (Aggr_Type) /= Null_Iir then
+                  --  Done.
+                  return;
+               end if;
+            else
+               case Get_Kind (Sub_Aggr) is
+                  when Iir_Kind_Aggregate
+                     | Iir_Kind_String_Literal8 =>
+                     if Get_Literal_Subtype (Sub_Aggr) = El_Subtype then
+                        --  Transfer ownership.
+                        Set_Array_Element_Constraint (Aggr_Type, El_Subtype);
+                        Set_Literal_Subtype (Sub_Aggr, Null_Iir);
+                        return;
+                     end if;
+                  when others =>
+                     null;
+               end case;
+            end if;
+         end if;
+         Assoc := Get_Chain (Assoc);
+      end loop;
+   end Sem_Array_Aggregate_Move_Element_Subtype_Owner;
+
    --  Analyze an array aggregate AGGR of *base type* A_TYPE.
    --  The type of the array is computed into A_SUBTYPE.
    --  DIM is the dimension index in A_TYPE.
@@ -3573,6 +3659,7 @@ package body Vhdl.Sem_Expr is
 
       Info : Array_Aggr_Info renames Infos (Dim);
    begin
+      --  Analyze choices (for aggregate but not for strings).
       if Get_Kind (Aggr) = Iir_Kind_Aggregate then
          Assoc_Chain := Get_Association_Choices_Chain (Aggr);
          Sem_Choices_Range (Assoc_Chain, Index_Type, Low, High,
@@ -3661,7 +3748,7 @@ package body Vhdl.Sem_Expr is
       Set_Expr_Staticness
         (Aggr, Min (Expr_Staticness, Get_Expr_Staticness (Aggr)));
 
-      --  Analyze choices.
+      --  Compute length.
       Len_Staticness := Locally;
       case Get_Kind (Aggr) is
          when Iir_Kind_Aggregate =>
@@ -3931,11 +4018,13 @@ package body Vhdl.Sem_Expr is
    function Sem_Array_Aggregate
      (Aggr : Iir; Aggr_Type : Iir; Constrained : Boolean) return Iir
    is
-      A_Subtype: Iir;
-      Base_Type : Iir;
       Index_List : constant Iir_Flist := Get_Index_Subtype_List (Aggr_Type);
       Nbr_Dim : constant Natural := Get_Nbr_Elements (Index_List);
+      El_Type : constant Iir := Get_Element_Subtype (Aggr_Type);
+      El_Subtype : Iir;
       Infos : Array_Aggr_Info_Arr (1 .. Nbr_Dim);
+      A_Subtype: Iir;
+      Base_Type : Iir;
       Aggr_Constrained : Boolean;
       Info, Prev_Info : Iir_Aggregate_Info;
       Type_Staticness : Iir_Staticness;
@@ -3946,6 +4035,7 @@ package body Vhdl.Sem_Expr is
       --  Analyze the aggregate.
       Sem_Array_Aggregate_1 (Aggr, Aggr_Type, Infos, Constrained, 1);
 
+      --  The aggregate is constrained if all indexes are known.
       Aggr_Constrained := True;
       for I in Infos'Range loop
          --  Return now in case of error.
@@ -3958,6 +4048,23 @@ package body Vhdl.Sem_Expr is
          end if;
       end loop;
       Base_Type := Get_Base_Type (Aggr_Type);
+
+      --  Extract element subtype (if needed and if possible).
+      if not Is_Fully_Constrained_Type (El_Type) then
+         --  Need to extract the element subtype.
+         --  First, extract it - try to find the best one.
+         El_Subtype := Null_Iir;
+         Sem_Array_Aggregate_Extract_Element_Subtype
+           (Aggr, 1, Nbr_Dim, El_Subtype);
+         if El_Subtype = Null_Iir then
+            El_Subtype := El_Type;
+         else
+            --  TODO: check constraints of elements (if El_Subtype is static)
+            null;
+         end if;
+      else
+         El_Subtype := El_Type;
+      end if;
 
       --  Reuse AGGR_TYPE iff AGGR_TYPE is fully constrained
       --  and statically match the subtype of the aggregate.
@@ -3975,14 +4082,23 @@ package body Vhdl.Sem_Expr is
             Set_Type (Aggr, Aggr_Type);
          else
             A_Subtype := Create_Array_Subtype (Base_Type, Get_Location (Aggr));
-            --  FIXME: extract element subtype ?
-            Set_Element_Subtype (A_Subtype, Get_Element_Subtype (Aggr_Type));
+            Set_Element_Subtype (A_Subtype, El_Subtype);
+            if El_Subtype /= El_Type then
+               --  If the element subtype is defined by an element of the
+               --  aggregate, move the ownership to the aggregate type.
+               Sem_Array_Aggregate_Move_Element_Subtype_Owner
+                 (A_Subtype, El_Subtype, Aggr, 1, Nbr_Dim);
+            end if;
             Type_Staticness := Min (Type_Staticness,
-                                    Get_Type_Staticness (A_Subtype));
-            for I in Infos'Range loop
-               Set_Nth_Element (Get_Index_Subtype_List (A_Subtype), I - 1,
-                                Infos (I).Index_Subtype);
-            end loop;
+                                    Get_Type_Staticness (El_Subtype));
+            declare
+               Idx_List : constant Iir_Flist :=
+                 Get_Index_Subtype_List (A_Subtype);
+            begin
+               for I in Infos'Range loop
+                  Set_Nth_Element (Idx_List, I - 1, Infos (I).Index_Subtype);
+               end loop;
+            end;
             Set_Type_Staticness (A_Subtype, Type_Staticness);
             Set_Index_Constraint_Flag (A_Subtype, True);
             --  FIXME: the element can be unconstrained.
@@ -4032,6 +4148,41 @@ package body Vhdl.Sem_Expr is
 
          --  If bounds are not known, the aggregate cannot be statically built.
          Set_Aggregate_Expand_Flag (Aggr, False);
+
+         if Get_Constraint_State (Aggr_Type) /= Fully_Constrained
+           and then El_Subtype /= El_Type
+         then
+            A_Subtype := Create_Array_Subtype (Base_Type, Get_Location (Aggr));
+            Set_Element_Subtype (A_Subtype, El_Subtype);
+            Type_Staticness := Get_Type_Staticness (El_Subtype);
+            if Get_Index_Constraint_Flag (Aggr_Type) then
+               declare
+                  Idx_Src_List : constant Iir_Flist :=
+                    Get_Index_Subtype_List (Aggr_Type);
+                  Idx_Dest_List : constant Iir_Flist :=
+                    Get_Index_Subtype_List (A_Subtype);
+                  Idx : Iir;
+               begin
+                  for I in 1 .. Nbr_Dim loop
+                     Idx := Get_Nth_Element (Idx_Src_List, I - 1);
+                     Type_Staticness := Min (Type_Staticness,
+                                             Get_Type_Staticness (Idx));
+                     Set_Nth_Element (Idx_Dest_List, I - 1, Idx);
+                  end loop;
+               end;
+               Set_Index_Constraint_Flag (A_Subtype, True);
+               Set_Constraint_State (A_Subtype,
+                                     Get_Constraint_State (El_Subtype));
+            else
+               Set_Constraint_State
+                 (A_Subtype,
+                  Iir_Constraint'Min (Partially_Constrained,
+                                      Get_Constraint_State (El_Subtype)));
+            end if;
+            Set_Type_Staticness (A_Subtype, Type_Staticness);
+            Set_Type (Aggr, A_Subtype);
+            Set_Literal_Subtype (Aggr, A_Subtype);
+         end if;
       end if;
 
       if Infos (Nbr_Dim).Has_Bound_Error then

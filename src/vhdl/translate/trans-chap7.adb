@@ -3519,7 +3519,7 @@ package body Trans.Chap7 is
    begin
       case Iir_Kinds_Composite_Type_Definition (Get_Kind (Target_Type)) is
          when Iir_Kind_Array_Subtype_Definition
-           | Iir_Kind_Array_Type_Definition =>
+            | Iir_Kind_Array_Type_Definition =>
             declare
                El : Iir;
             begin

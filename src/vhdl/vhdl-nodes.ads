@@ -2967,11 +2967,11 @@ package Vhdl.Nodes is
    --   Get/Set_Resolution_Indication (Field5)
    --
    --  The index_constraint list as it appears in the subtype indication (if
-   --  present). This is a list of subtype indication.
+   --  present). This is a list of subtype indication.  Owned by this node.
    --   Get/Set_Index_Constraint_List (Field6)
    --
    --  The type of the index.  This is either the index_constraint list or the
-   --  index subtypes of the type_mark.
+   --  index subtypes of the type_mark.  Not owned by this node.
    --   Get/Set_Index_Subtype_List (Field9)
    --
    --  Set when the element is re-constrained.
