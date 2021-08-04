@@ -3214,7 +3214,8 @@ package body Vhdl.Sem_Expr is
                Expr := Sem_Expression_Wildcard
                  (Expr, El_Type, Constrained);
                if Expr /= Null_Iir then
-                  Set_Associated_Expr (El, Eval_Expr_If_Static (Expr));
+                  Set_Associated_Expr
+                    (El, Eval_Expr_Check_If_Static (Expr, El_Type));
                   Expr_Staticness := Min (Expr_Staticness,
                                           Get_Expr_Staticness (Expr));
                   if not Add_Constraints
