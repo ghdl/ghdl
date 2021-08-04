@@ -1175,13 +1175,18 @@ package body Trans.Chap3 is
    procedure Translate_Array_Subtype_Definition (Def : Iir)
    is
       Parent_Type : constant Iir := Get_Parent_Type (Def);
-      Parent_El_Type : constant Iir := Get_Element_Subtype (Parent_Type);
       El_Type : constant Iir := Get_Element_Subtype (Def);
       El_Tinfo : Type_Info_Acc;
       Mark : Id_Mark_Type;
    begin
       --  Handle element subtype.
-      if Get_Array_Element_Constraint (Def) /= Null_Iir then
+      El_Tinfo := Get_Info (El_Type);
+      if El_Tinfo = null then
+         --  Usually, if the array element subtype was not yet translated,
+         --  it's because it is defined by the array subtype (the array
+         --  subtype adds constraints to the elements).
+         --  However, for an aggregate, the array type may not be the owner.
+
          --  Do not create vars for element subtype, but use
          --  the layout field of the array vars.
          Push_Identifier_Prefix (Mark, "ET");
@@ -1189,16 +1194,27 @@ package body Trans.Chap3 is
          Pop_Identifier_Prefix (Mark);
 
          El_Tinfo := Get_Info (El_Type);
-         if Is_Composite (El_Tinfo) then
-            pragma Assert (El_Tinfo.S.Composite_Layout = Null_Var);
-            El_Tinfo.S.Subtype_Owner := Get_Info (Def);
-         end if;
-      elsif Get_Info (El_Type) = null then
-         --  if the element subtype is created for this subtype, be sure it
-         --  has infos.
-         --  FIXME: the test should be refined.  There can be a new element
-         --  subtype because a resolver has been added.
-         Set_Info (El_Type, Get_Info (Parent_El_Type));
+         case El_Tinfo.S.Kind is
+            when Kind_Type_Array
+              | Kind_Type_Record =>
+               pragma Assert (El_Tinfo.S.Composite_Layout = Null_Var);
+               El_Tinfo.S.Subtype_Owner := Get_Info (Def);
+            when Kind_Type_Scalar =>
+               if El_Tinfo.S.Range_Var = Null_Var then
+                  --  Happen only for subtypes of enumeration type ?
+                  declare
+                     El_Parent_Type : constant Iir :=
+                       Get_Element_Subtype (Parent_Type);
+                     El_Parent_Tinfo : constant Type_Info_Acc :=
+                       Get_Info (El_Parent_Type);
+                  begin
+                     El_Tinfo.S.Range_Var := El_Parent_Tinfo.S.Range_Var;
+                  end;
+               end if;
+            when Kind_Type_File
+              | Kind_Type_Protected =>
+               raise Internal_Error;
+         end case;
       end if;
 
       if Get_Constraint_State (Def) = Fully_Constrained then

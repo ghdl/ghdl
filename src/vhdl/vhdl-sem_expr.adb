@@ -3579,7 +3579,8 @@ package body Vhdl.Sem_Expr is
                --  TODO: try to extract the 'best' element subtype: with
                --   static indexes, with constrained sub-elements.
                --   Possibly create an hybrid subtype (for records).
-               if Get_Index_Constraint_Flag (New_El_Subtype) then
+               if Get_Constraint_State (New_El_Subtype) = Fully_Constrained
+               then
                   El_Subtype := New_El_Subtype;
                   return;
                end if;
@@ -4090,7 +4091,7 @@ package body Vhdl.Sem_Expr is
          else
             A_Subtype := Create_Array_Subtype (Base_Type, Get_Location (Aggr));
             Set_Element_Subtype (A_Subtype, El_Subtype);
-            if El_Subtype /= El_Type then
+            if False and then El_Subtype /= El_Type then
                --  If the element subtype is defined by an element of the
                --  aggregate, move the ownership to the aggregate type.
                Sem_Array_Aggregate_Move_Element_Subtype_Owner
