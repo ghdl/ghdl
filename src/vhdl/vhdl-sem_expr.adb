@@ -3199,6 +3199,11 @@ package body Vhdl.Sem_Expr is
                      end if;
                   end loop;
                   if not Found then
+                     --  LRM08 9.3.3.2 Record aggregates
+                     --  If the choise OTHERS is given as a choice, it shall
+                     --  represent at least one element.
+                     --  GHDL: so that the type of the associated expression
+                     --   is known.
                      Error_Msg_Sem (+El, "no element for choice others");
                      Ok := False;
                   end if;
@@ -3249,6 +3254,7 @@ package body Vhdl.Sem_Expr is
       Set_Expr_Staticness (Aggr, Min (Get_Expr_Staticness (Aggr),
                                       Expr_Staticness));
 
+      --  Create a constrained subtype for the aggregate type
       if Ok and Add_Constraints then
          declare
             Rec_Type : Iir;
