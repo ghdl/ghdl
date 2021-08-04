@@ -418,21 +418,33 @@ package body Vhdl.Disp_Tree is
       Log (" ");
       Disp_Iir_Number (N);
 
-      --  Be nice: print type name for a type definition.
-      if K in Iir_Kinds_Type_And_Subtype_Definition
-        or K = Iir_Kind_Wildcard_Type_Definition
-      then
-         declare
-            Decl : constant Iir := Get_Type_Declarator (N);
-         begin
-            if Decl /= Null_Iir
-              and then Get_Identifier (Decl) /= Null_Identifier
-            then
-               Log (" ");
-               Log (Image_Name_Id (Get_Identifier (Decl)));
-            end if;
-         end;
-      end if;
+      --  Be nice: print additional info
+      case K is
+         when Iir_Kinds_Type_And_Subtype_Definition
+           |  Iir_Kind_Wildcard_Type_Definition =>
+            --   Print type name for a type definition.
+            declare
+               Decl : constant Iir := Get_Type_Declarator (N);
+            begin
+               if Decl /= Null_Iir
+                 and then Get_Identifier (Decl) /= Null_Identifier
+               then
+                  Log (" ");
+                  Log (Image_Name_Id (Get_Identifier (Decl)));
+               end if;
+            end;
+         when Iir_Kind_Integer_Literal =>
+            declare
+               V : constant Int64 := Get_Value (N);
+            begin
+               if V < 0 then
+                  Log (" ");
+               end if;
+               Log (Int64'Image (V));
+            end;
+         when others =>
+            null;
+      end case;
 
       Log_Line;
    end Disp_Header;
