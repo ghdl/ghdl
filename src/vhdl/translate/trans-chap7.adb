@@ -229,8 +229,8 @@ package body Trans.Chap7 is
                            Idx := Idx + 1;
                         else
                            Assoc_Len := Iir_Index32
-                             (Eval_Discrete_Range_Length
-                                (Get_Choice_Range (Assoc)));
+                             (Eval_Discrete_Type_Length
+                                (Get_Index_Type (Get_Type (Expr), 0)));
                            for I in 0 .. Assoc_Len - 1 loop
                               El := Eval_Indexed_Name_By_Offset (Expr, I);
                               New_Array_Aggr_El
