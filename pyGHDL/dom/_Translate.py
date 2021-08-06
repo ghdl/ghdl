@@ -147,7 +147,7 @@ from pyGHDL.dom.Concurrent import (
     IfGenerateStatement,
     ForGenerateStatement,
     CaseGenerateStatement,
-    ConcurrentSignalAssignment,
+    ConcurrentSimpleSignalAssignment,
 )
 from pyGHDL.dom.Subprogram import Function, Procedure
 from pyGHDL.dom.Misc import Alias
@@ -801,7 +801,7 @@ def GetStatementsFromChainedNodes(
             yield ProcessStatement.parse(statement, label, False)
 
         elif kind == nodes.Iir_Kind.Concurrent_Simple_Signal_Assignment:
-            yield ConcurrentSignalAssignment.parse(statement, label)
+            yield ConcurrentSimpleSignalAssignment.parse(statement, label)
         elif kind == nodes.Iir_Kind.Concurrent_Conditional_Signal_Assignment:
             print(
                 "[NOT IMPLEMENTED] Concurrent (conditional) signal assignment (label: '{label}') at line {line}".format(

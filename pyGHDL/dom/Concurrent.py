@@ -44,7 +44,7 @@ from pyVHDLModel.SyntaxModel import (
     IfGenerateStatement as VHDLModel_IfGenerateStatement,
     CaseGenerateStatement as VHDLModel_CaseGenerateStatement,
     ForGenerateStatement as VHDLModel_ForGenerateStatement,
-    ConcurrentSignalAssignment as VHDLModel_ConcurrentSignalAssignment,
+    ConcurrentSimpleSignalAssignment as VHDLModel_ConcurrentSimpleSignalAssignment,
     Name,
     ConcurrentStatement,
     SequentialStatement,
