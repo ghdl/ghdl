@@ -1200,17 +1200,7 @@ package body Trans.Chap3 is
                pragma Assert (El_Tinfo.S.Composite_Layout = Null_Var);
                El_Tinfo.S.Subtype_Owner := Get_Info (Def);
             when Kind_Type_Scalar =>
-               if El_Tinfo.S.Range_Var = Null_Var then
-                  --  Happen only for subtypes of enumeration type ?
-                  declare
-                     El_Parent_Type : constant Iir :=
-                       Get_Element_Subtype (Parent_Type);
-                     El_Parent_Tinfo : constant Type_Info_Acc :=
-                       Get_Info (El_Parent_Type);
-                  begin
-                     El_Tinfo.S.Range_Var := El_Parent_Tinfo.S.Range_Var;
-                  end;
-               end if;
+               pragma Assert (El_Tinfo.S.Range_Var /= Null_Var);
             when Kind_Type_File
               | Kind_Type_Protected =>
                raise Internal_Error;
@@ -2178,24 +2168,47 @@ package body Trans.Chap3 is
       --  If the range is the same as its parent (its type_mark), set
       --  Same_Range and return (so that no new range variable would be
       --  created).
-      if Get_Kind (Base) in Iir_Kinds_Scalar_Subtype_Definition then
-         declare
-            Tm_Rng : constant Iir := Get_Range_Constraint (Base);
-         begin
-            if Tm_Rng = Rng then
-               Subtype_Info.S.Same_Range := True;
-               return;
-            elsif Get_Kind (Rng) = Iir_Kind_Range_Expression
-              and then Get_Kind (Tm_Rng) = Iir_Kind_Range_Expression
-              and then Get_Left_Limit (Rng) = Get_Left_Limit (Tm_Rng)
-              and then Get_Right_Limit (Rng) = Get_Right_Limit (Tm_Rng)
-              and then Get_Direction (Rng) = Get_Direction (Tm_Rng)
+      case Get_Kind (Base) is
+         when Iir_Kinds_Scalar_Subtype_Definition =>
+            declare
+               Tm_Rng : constant Iir := Get_Range_Constraint (Base);
+            begin
+               if Tm_Rng = Rng then
+                  Subtype_Info.S.Same_Range := True;
+                  return;
+               elsif Get_Kind (Rng) = Iir_Kind_Range_Expression
+                 and then Get_Kind (Tm_Rng) = Iir_Kind_Range_Expression
+                 and then Get_Left_Limit (Rng) = Get_Left_Limit (Tm_Rng)
+                 and then Get_Right_Limit (Rng) = Get_Right_Limit (Tm_Rng)
+                 and then Get_Direction (Rng) = Get_Direction (Tm_Rng)
+               then
+                  Subtype_Info.S.Same_Range := True;
+                  return;
+               end if;
+            end;
+         when Iir_Kind_Enumeration_Type_Definition =>
+            if Get_Kind (Rng) = Iir_Kind_Range_Expression
+              and then Get_Direction (Rng) = Dir_To
             then
-               Subtype_Info.S.Same_Range := True;
-               return;
+               declare
+                  Left : constant Iir := Get_Left_Limit (Rng);
+                  Right : constant Iir := Get_Right_Limit (Rng);
+               begin
+                  if Get_Kind (Left) = Iir_Kind_Enumeration_Literal
+                    and then Get_Enum_Pos (Left) = 0
+                    and then Get_Kind (Right) = Iir_Kind_Enumeration_Literal
+                    and then Natural (Get_Enum_Pos (Right))
+                               = (Get_Nbr_Elements
+                                    (Get_Enumeration_Literal_List (Base)) - 1)
+                  then
+                     Subtype_Info.S.Same_Range := True;
+                     return;
+                  end if;
+               end;
             end if;
-         end;
-      end if;
+         when others =>
+            null;
+      end case;
 
       --  So range is not the same.
       Subtype_Info.S.Same_Range := False;
@@ -2437,6 +2450,7 @@ package body Trans.Chap3 is
       --  This is usually done in translate_type_definition, but boolean
       --  types are not handled by translate_type_definition.
       Create_Scalar_Type_Range_Type (Def, True);
+      Create_Type_Range_Var (Def);
    end Translate_Bool_Type_Definition;
 
    procedure Translate_Subtype_Definition
