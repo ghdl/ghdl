@@ -176,7 +176,8 @@ def GetAssociations(node: Iir) -> List:
     for item in utils.chain_iter(nodes.Get_Association_Chain(node)):
         kind = GetIirKindOfNode(item)
 
-        if kind == nodes.Iir_Kind.Association_Element_By_Expression:
+        if kind in (nodes.Iir_Kind.Association_Element_By_Expression,
+                    nodes.Iir_Kind.Association_Element_By_Name):
             actual = nodes.Get_Actual(item)
             expr = GetExpressionFromNode(actual)
 

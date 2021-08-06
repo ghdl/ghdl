@@ -456,6 +456,7 @@ package body Vhdl.Elocations is
             return Format_None;
          when Iir_Kind_Library_Clause
            | Iir_Kind_Association_Element_By_Expression
+           | Iir_Kind_Association_Element_By_Name
            | Iir_Kind_Association_Element_By_Individual
            | Iir_Kind_Association_Element_Open
            | Iir_Kind_Association_Element_Package

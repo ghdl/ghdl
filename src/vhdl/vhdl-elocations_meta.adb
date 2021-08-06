@@ -390,6 +390,7 @@ package body Vhdl.Elocations_Meta is
    begin
       case K is
          when Iir_Kind_Association_Element_By_Expression
+           | Iir_Kind_Association_Element_By_Name
            | Iir_Kind_Association_Element_By_Individual
            | Iir_Kind_Association_Element_Open
            | Iir_Kind_Association_Element_Package

@@ -930,10 +930,11 @@ package body Vhdl.Canon is
                Set_Chain (Assoc_El, Null_Iir);
                Chain_Append (N_Chain, Last, Assoc_El);
 
-               case Get_Kind (Assoc_El) is
+               case Iir_Kinds_Association_Element (Get_Kind (Assoc_El)) is
                   when Iir_Kind_Association_Element_Open =>
                      goto Done;
-                  when Iir_Kind_Association_Element_By_Expression =>
+                  when Iir_Kind_Association_Element_By_Expression
+                     | Iir_Kind_Association_Element_By_Name =>
                      if Get_Whole_Association_Flag (Assoc_El) then
                         goto Done;
                      end if;
@@ -944,8 +945,6 @@ package body Vhdl.Canon is
                     | Iir_Kind_Association_Element_Subprogram
                     | Iir_Kind_Association_Element_Terminal =>
                      goto Done;
-                  when others =>
-                     Error_Kind ("canon_association_chain", Assoc_El);
                end case;
             elsif Found then
                --  No more associations.
@@ -2530,7 +2529,8 @@ package body Vhdl.Canon is
                case Get_Kind (Assoc) is
                   when Iir_Kind_Association_Element_Open =>
                      null;
-                  when Iir_Kind_Association_Element_By_Expression =>
+                  when Iir_Kind_Association_Element_By_Expression
+                    | Iir_Kind_Association_Element_By_Name =>
                      Set_Actual (El, Sem_Inst.Copy_Tree (Get_Actual (Assoc)));
                      Set_Actual_Conversion
                        (El,

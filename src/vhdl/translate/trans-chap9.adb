@@ -200,8 +200,7 @@ package body Trans.Chap9 is
       Assoc := Get_Port_Map_Aspect_Chain (Inst);
       Inter := Get_Port_Chain (Ports);
       while Assoc /= Null_Iir loop
-         if Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Expression
-         then
+         if Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Name then
             declare
                Act_Conv : constant Iir := Get_Actual_Conversion (Assoc);
                Act_Type : constant Iir := Get_Type (Get_Actual (Assoc));

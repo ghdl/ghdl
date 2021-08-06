@@ -2584,7 +2584,8 @@ package body Trans.Chap8 is
                   Has_Value_Field := True;
                   Actual := Null_Iir;
                   Act_Type := Get_Actual_Type (Assoc);
-               when Iir_Kind_Association_Element_By_Expression =>
+               when Iir_Kind_Association_Element_By_Expression
+                 | Iir_Kind_Association_Element_By_Name =>
                   Actual := Get_Actual (Assoc);
                   Act_Type := Get_Type (Actual);
                when Iir_Kind_Association_Element_Open =>

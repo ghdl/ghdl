@@ -446,6 +446,7 @@ package Vhdl.Nodes is
    -------------
 
    -- Iir_Kind_Association_Element_By_Expression (Short)
+   -- Iir_Kind_Association_Element_By_Name (Short)
    -- Iir_Kind_Association_Element_Open (Short)
    -- Iir_Kind_Association_Element_By_Individual (Short)
    -- Iir_Kind_Association_Element_Package (Short)
@@ -460,6 +461,7 @@ package Vhdl.Nodes is
    --   Get/Set_Chain (Field2)
    --
    -- Only for Iir_Kind_Association_Element_By_Expression:
+   -- Only for Iir_Kind_Association_Element_By_Name:
    -- Only for Iir_Kind_Association_Element_Package:
    -- Only for Iir_Kind_Association_Element_Type:
    -- Only for Iir_Kind_Association_Element_Subprogram:
@@ -472,6 +474,7 @@ package Vhdl.Nodes is
    --  A function call or a type conversion for the actual.
    --  FIXME: should be a name ?
    -- Only for Iir_Kind_Association_Element_By_Expression:
+   -- Only for Iir_Kind_Association_Element_By_Name:
    --   Get/Set_Actual_Conversion (Field4)
    --
    -- Only for Iir_Kind_Association_Element_Type:
@@ -479,6 +482,7 @@ package Vhdl.Nodes is
    --
    --  A function call or a type conversion for the formal.
    -- Only for Iir_Kind_Association_Element_By_Expression:
+   -- Only for Iir_Kind_Association_Element_By_Name:
    --   Get/Set_Formal_Conversion (Field5)
    --
    --  Owner of Actual_Type if needed.
@@ -4855,6 +4859,7 @@ package Vhdl.Nodes is
       Iir_Kind_Conditional_Waveform,
       Iir_Kind_Conditional_Expression,
       Iir_Kind_Association_Element_By_Expression,
+      Iir_Kind_Association_Element_By_Name,
       Iir_Kind_Association_Element_By_Individual,
       Iir_Kind_Association_Element_Open,
       Iir_Kind_Association_Element_Package,
@@ -6668,11 +6673,17 @@ package Vhdl.Nodes is
    --  Association elements for parameters.
    subtype Iir_Kinds_Association_Element_Parameters is Iir_Kind range
      Iir_Kind_Association_Element_By_Expression ..
+   --Iir_Kind_Association_Element_By_Name
    --Iir_Kind_Association_Element_By_Individual
      Iir_Kind_Association_Element_Open;
 
+   subtype Iir_Kinds_Association_Element_By_Actual is Iir_Kind range
+     Iir_Kind_Association_Element_By_Expression ..
+     Iir_Kind_Association_Element_By_Name;
+
    subtype Iir_Kinds_Association_Element is Iir_Kind range
      Iir_Kind_Association_Element_By_Expression ..
+   --Iir_Kind_Association_Element_By_Name
    --Iir_Kind_Association_Element_By_Individual
    --Iir_Kind_Association_Element_Open
    --Iir_Kind_Association_Element_Package

@@ -3316,7 +3316,7 @@ package body Vhdl.Prints is
             end if;
 
             --  Formal part.
-            if Get_Kind (El) = Iir_Kind_Association_Element_By_Expression then
+            if Get_Kind (El) in Iir_Kinds_Association_Element_By_Actual then
                Conv := Get_Formal_Conversion (El);
                if Conv /= Null_Iir then
                   Disp_Conversion (Ctxt, Conv);
@@ -3342,7 +3342,8 @@ package body Vhdl.Prints is
                  | Iir_Kind_Association_Element_Subprogram
                  | Iir_Kind_Association_Element_Terminal =>
                   Print (Ctxt, Get_Actual (El));
-               when Iir_Kind_Association_Element_By_Expression =>
+               when Iir_Kind_Association_Element_By_Expression
+                 | Iir_Kind_Association_Element_By_Name =>
                   Conv := Get_Actual_Conversion (El);
                   if Conv /= Null_Iir then
                      Disp_Conversion (Ctxt, Conv);

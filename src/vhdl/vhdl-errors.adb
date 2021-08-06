@@ -293,6 +293,7 @@ package body Vhdl.Errors is
          when Iir_Kind_Association_Element_By_Individual =>
             return "individual association element";
          when Iir_Kind_Association_Element_By_Expression
+           | Iir_Kind_Association_Element_By_Name
            | Iir_Kind_Association_Element_Package
            | Iir_Kind_Association_Element_Type
            | Iir_Kind_Association_Element_Subprogram

@@ -3114,8 +3114,7 @@ package body Trans.Chap4 is
          Inter := Get_Port_Chain (Entity);
       end if;
       while Assoc /= Null_Iir loop
-         if Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Expression
-         then
+         if Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Name then
             Info := null;
             if Get_Actual_Conversion (Assoc) /= Null_Iir then
                Info := Add_Info (Assoc, Kind_Assoc);

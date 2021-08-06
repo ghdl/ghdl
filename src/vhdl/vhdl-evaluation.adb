@@ -3422,7 +3422,8 @@ package body Vhdl.Evaluation is
                   case Iir_Kinds_Association_Element_Parameters
                     (Get_Kind (Assoc))
                   is
-                     when Iir_Kind_Association_Element_By_Expression =>
+                     when Iir_Kind_Association_Element_By_Expression
+                        | Iir_Kind_Association_Element_By_Name =>
                         Assoc_Expr := Get_Actual (Assoc);
                         if not Can_Eval_Value (Assoc_Expr, False) then
                            return False;

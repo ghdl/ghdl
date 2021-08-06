@@ -386,7 +386,7 @@ package body Trans.Chap5 is
       Mode        : Connect_Mode;
    begin
       pragma Assert
-        (Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Expression);
+        (Get_Kind (Assoc) in Iir_Kinds_Association_Element_By_Actual);
 
       Open_Temp;
       if Get_Actual_Conversion (Assoc) = Null_Iir
@@ -648,7 +648,8 @@ package body Trans.Chap5 is
    begin
       Open_Temp;
       case Iir_Kinds_Association_Element_Parameters (Get_Kind (Assoc)) is
-         when Iir_Kind_Association_Element_By_Expression =>
+         when Iir_Kind_Association_Element_By_Expression
+            | Iir_Kind_Association_Element_By_Name =>
             pragma Assert (Get_Whole_Association_Flag (Assoc));
             Bounds := Get_Unconstrained_Port_Bounds (Assoc, Port);
          when Iir_Kind_Association_Element_Open =>
@@ -727,7 +728,8 @@ package body Trans.Chap5 is
                  | Iir_Kind_Association_Element_Open =>
                   pragma Assert (Get_Whole_Association_Flag (Assoc));
                   Chap4.Elab_Signal_Declaration_Storage (Formal, False);
-               when Iir_Kind_Association_Element_By_Expression =>
+               when Iir_Kind_Association_Element_By_Expression
+                  | Iir_Kind_Association_Element_By_Name =>
                   if Get_Whole_Association_Flag (Assoc) then
                      Chap4.Elab_Signal_Declaration_Storage
                        (Formal, Get_Collapse_Signal_Flag (Assoc));
@@ -738,7 +740,8 @@ package body Trans.Chap5 is
             --  Create or copy signals.
             Open_Temp;
             case Iir_Kinds_Association_Element_Parameters (Get_Kind (Assoc)) is
-               when Iir_Kind_Association_Element_By_Expression =>
+               when Iir_Kind_Association_Element_By_Expression
+                 | Iir_Kind_Association_Element_By_Name =>
                   if Get_Whole_Association_Flag (Assoc) then
                      if Get_Collapse_Signal_Flag (Assoc) then
                         Value := Get_Default_Value (Formal_Base);

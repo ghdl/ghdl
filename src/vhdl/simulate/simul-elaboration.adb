@@ -1319,7 +1319,7 @@ package body Simul.Elaboration is
          --  actual is not the reserved word OPEN.
          Inter := Get_Association_Interface (Assoc, Port);
          case Get_Kind (Assoc) is
-            when Iir_Kind_Association_Element_By_Expression =>
+            when Iir_Kinds_Association_Element_By_Actual =>
                if Get_Actual_Conversion (Assoc) = Null_Iir
                  and then Get_Formal_Conversion (Assoc) = Null_Iir
                then

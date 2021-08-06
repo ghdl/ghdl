@@ -51,6 +51,7 @@ package Vhdl.Elocations is
    -------------
 
    -- Iir_Kind_Association_Element_By_Expression (L1)
+   -- Iir_Kind_Association_Element_By_Name (L1)
    -- Iir_Kind_Association_Element_Open (L1)
    -- Iir_Kind_Association_Element_By_Individual (L1)
    -- Iir_Kind_Association_Element_Package (L1)

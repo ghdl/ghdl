@@ -772,7 +772,8 @@ package body Synth.Vhdl_Insts is
          when Iir_Kind_Association_Element_Open =>
             Actual := Get_Default_Value (Inter);
             Act_Inst := Inter_Inst;
-         when Iir_Kind_Association_Element_By_Expression =>
+         when Iir_Kind_Association_Element_By_Expression
+            | Iir_Kind_Association_Element_By_Name =>
             Actual := Get_Actual (Assoc);
             if Get_Kind (Actual) = Iir_Kind_Reference_Name then
                --  Skip inserted anonymous signal declaration.
@@ -845,7 +846,7 @@ package body Synth.Vhdl_Insts is
          when Iir_Kind_Association_Element_Open =>
             --  Not connected.
             return;
-         when Iir_Kind_Association_Element_By_Expression =>
+         when Iir_Kinds_Association_Element_By_Actual =>
             Actual := Get_Actual (Assoc);
          when others =>
             Synth_Individual_Output_Assoc
@@ -1022,7 +1023,7 @@ package body Synth.Vhdl_Insts is
             raise Internal_Error;
          end if;
          case Get_Kind (Assoc) is
-            when Iir_Kind_Association_Element_By_Expression =>
+            when Iir_Kinds_Association_Element_By_Actual =>
                return Synth_Type_Of_Object (Syn_Inst, Get_Actual (Assoc));
             when others =>
                raise Internal_Error;

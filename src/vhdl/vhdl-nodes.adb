@@ -1001,6 +1001,7 @@ package body Vhdl.Nodes is
            | Iir_Kind_Conditional_Waveform
            | Iir_Kind_Conditional_Expression
            | Iir_Kind_Association_Element_By_Expression
+           | Iir_Kind_Association_Element_By_Name
            | Iir_Kind_Association_Element_By_Individual
            | Iir_Kind_Association_Element_Open
            | Iir_Kind_Association_Element_Package
