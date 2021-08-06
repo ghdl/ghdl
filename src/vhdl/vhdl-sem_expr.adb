@@ -3590,13 +3590,63 @@ package body Vhdl.Sem_Expr is
       end loop;
    end Sem_Array_Aggregate_Extract_Element_Subtype;
 
-   --  Move ownership of array aggregate element subtype from the element to
-   --  the aggregate.
-   procedure Sem_Array_Aggregate_Move_Element_Subtype_Owner (Aggr_Type : Iir;
-                                                             El_Subtype : Iir;
-                                                             Aggr : Iir;
-                                                             Dim : Natural;
-                                                             Nbr_Dim : Natural)
+   procedure Check_Matching_Subtype (Expr : Iir; St : Iir)
+   is
+      Et : constant Iir := Get_Type (Expr);
+   begin
+      case Get_Kind (St) is
+         when Iir_Kind_Array_Subtype_Definition =>
+            if Get_Kind (Et) /= Iir_Kind_Array_Subtype_Definition then
+               return;
+            end if;
+            --  Fast check.
+            if Et = St then
+               return;
+            end if;
+
+            --  Check indexes.
+            if Get_Index_Constraint_Flag (St)
+              and then Get_Index_Constraint_Flag (Et)
+            then
+               declare
+                  Eil : constant Iir_Flist := Get_Index_Subtype_List (Et);
+                  Sil : constant Iir_Flist := Get_Index_Subtype_List (St);
+                  Ei, Si : Iir;
+               begin
+                  for I in Flist_First .. Flist_Last (Eil) loop
+                     Ei := Get_Nth_Element (Eil, I);
+                     Si := Get_Nth_Element (Sil, I);
+                     if Get_Type_Staticness (Ei) = Locally
+                       and then Get_Type_Staticness (Si) = Locally
+                       and then (Eval_Discrete_Type_Length (Si)
+                                   /= Eval_Discrete_Type_Length (Ei))
+                     then
+                        Warning_Msg_Sem
+                          (Warnid_Runtime_Error, +Expr,
+                           "expression subtype doesn't match "
+                             & "aggregate element subtype");
+                        return;
+                     end if;
+                  end loop;
+               end;
+            end if;
+
+            --  TODO: element array element ?
+         when Iir_Kind_Record_Subtype_Definition =>
+            --  TODO
+            null;
+         when others =>
+            null;
+      end case;
+   end Check_Matching_Subtype;
+
+   --  Check the subtype of all elements of AGGR match EL_SUBTYPE.
+   --  Used only if the aggregate element subtype is extracted from an
+   --  element of the aggregate.  In that case, we should check the match.
+   procedure Sem_Array_Aggregate_Check_Element_Subtype (El_Subtype : Iir;
+                                                        Aggr : Iir;
+                                                        Dim : Natural;
+                                                        Nbr_Dim : Natural)
    is
       Assoc : Iir;
       Sub_Aggr : Iir;
@@ -3609,30 +3659,16 @@ package body Vhdl.Sem_Expr is
                --  If a string is a proper subaggregate, then the element
                --  subtype must be fully bounded.
                pragma Assert (Get_Kind (Sub_Aggr) = Iir_Kind_Aggregate);
-               Sem_Array_Aggregate_Move_Element_Subtype_Owner
-                 (Aggr_Type, El_Subtype, Sub_Aggr, Dim + 1, Nbr_Dim);
-               if Get_Array_Element_Constraint (Aggr_Type) /= Null_Iir then
-                  --  Done.
-                  return;
-               end if;
+               Sem_Array_Aggregate_Check_Element_Subtype
+                 (El_Subtype, Sub_Aggr, Dim + 1, Nbr_Dim);
             else
-               case Get_Kind (Sub_Aggr) is
-                  when Iir_Kind_Aggregate
-                     | Iir_Kind_String_Literal8 =>
-                     if Get_Literal_Subtype (Sub_Aggr) = El_Subtype then
-                        --  Transfer ownership.
-                        Set_Array_Element_Constraint (Aggr_Type, El_Subtype);
-                        Set_Literal_Subtype (Sub_Aggr, Null_Iir);
-                        return;
-                     end if;
-                  when others =>
-                     null;
-               end case;
+               --  TODO: only report the first error ?
+               Check_Matching_Subtype (Sub_Aggr, El_Subtype);
             end if;
          end if;
          Assoc := Get_Chain (Assoc);
       end loop;
-   end Sem_Array_Aggregate_Move_Element_Subtype_Owner;
+   end Sem_Array_Aggregate_Check_Element_Subtype;
 
    --  Analyze an array aggregate AGGR of *base type* A_TYPE.
    --  The type of the array is computed into A_SUBTYPE.
@@ -4091,11 +4127,9 @@ package body Vhdl.Sem_Expr is
          else
             A_Subtype := Create_Array_Subtype (Base_Type, Get_Location (Aggr));
             Set_Element_Subtype (A_Subtype, El_Subtype);
-            if False and then El_Subtype /= El_Type then
-               --  If the element subtype is defined by an element of the
-               --  aggregate, move the ownership to the aggregate type.
-               Sem_Array_Aggregate_Move_Element_Subtype_Owner
-                 (A_Subtype, El_Subtype, Aggr, 1, Nbr_Dim);
+            if El_Subtype /= El_Type then
+               Sem_Array_Aggregate_Check_Element_Subtype
+                 (El_Subtype, Aggr, 1, Nbr_Dim);
             end if;
             Type_Staticness := Min (Type_Staticness,
                                     Get_Type_Staticness (El_Subtype));
@@ -4162,6 +4196,8 @@ package body Vhdl.Sem_Expr is
          then
             A_Subtype := Create_Array_Subtype (Base_Type, Get_Location (Aggr));
             Set_Element_Subtype (A_Subtype, El_Subtype);
+            Sem_Array_Aggregate_Check_Element_Subtype
+              (El_Subtype, Aggr, 1, Nbr_Dim);
             Type_Staticness := Get_Type_Staticness (El_Subtype);
             if Get_Index_Constraint_Flag (Aggr_Type) then
                declare
