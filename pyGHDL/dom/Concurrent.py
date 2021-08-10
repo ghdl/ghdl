@@ -137,9 +137,9 @@ class ConcurrentBlockStatement(VHDLModel_ConcurrentBlockStatement, DOMMixin):
         blockNode: Iir,
         label: str,
         declaredItems: Iterable = None,
-        bodyItems: Iterable["ConcurrentStatement"] = None,
+        statements: Iterable["ConcurrentStatement"] = None,
     ):
-        super().__init__(label, None, declaredItems, bodyItems)
+        super().__init__(label, None, declaredItems, statements)
         DOMMixin.__init__(self, blockNode)
 
     @classmethod
@@ -152,11 +152,11 @@ class ConcurrentBlockStatement(VHDLModel_ConcurrentBlockStatement, DOMMixin):
         declaredItems = GetDeclaredItemsFromChainedNodes(
             nodes.Get_Declaration_Chain(blockNode), "block", label
         )
-        bodyItems = GetStatementsFromChainedNodes(
+        statements = GetStatementsFromChainedNodes(
             nodes.Get_Concurrent_Statement_Chain(blockNode), "block", label
         )
 
-        return cls(blockNode, label, declaredItems, bodyItems)
+        return cls(blockNode, label, declaredItems, statements)
 
 
 @export

@@ -102,9 +102,9 @@ class Entity(VHDLModel_Entity, DOMMixin):
         genericItems: Iterable[GenericInterfaceItem] = None,
         portItems: Iterable[PortInterfaceItem] = None,
         declaredItems: Iterable = None,
-        bodyItems: Iterable["ConcurrentStatement"] = None,
+        statements: Iterable["ConcurrentStatement"] = None,
     ):
-        super().__init__(identifier, genericItems, portItems, declaredItems, bodyItems)
+        super().__init__(identifier, genericItems, portItems, declaredItems, statements)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -115,11 +115,11 @@ class Entity(VHDLModel_Entity, DOMMixin):
         declaredItems = GetDeclaredItemsFromChainedNodes(
             nodes.Get_Declaration_Chain(entityNode), "entity", name
         )
-        bodyItems = GetStatementsFromChainedNodes(
+        statements = GetStatementsFromChainedNodes(
             nodes.Get_Concurrent_Statement_Chain(entityNode), "entity", name
         )
 
-        return cls(entityNode, name, generics, ports, declaredItems, bodyItems)
+        return cls(entityNode, name, generics, ports, declaredItems, statements)
 
 
 @export
@@ -130,9 +130,9 @@ class Architecture(VHDLModel_Architecture, DOMMixin):
         identifier: str,
         entity: EntityOrSymbol,
         declaredItems: Iterable = None,
-        bodyItems: Iterable["ConcurrentStatement"] = None,
+        statements: Iterable["ConcurrentStatement"] = None,
     ):
-        super().__init__(identifier, entity, declaredItems, bodyItems)
+        super().__init__(identifier, entity, declaredItems, statements)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -144,11 +144,11 @@ class Architecture(VHDLModel_Architecture, DOMMixin):
         declaredItems = GetDeclaredItemsFromChainedNodes(
             nodes.Get_Declaration_Chain(architectureNode), "architecture", name
         )
-        bodyItems = GetStatementsFromChainedNodes(
+        statements = GetStatementsFromChainedNodes(
             nodes.Get_Concurrent_Statement_Chain(architectureNode), "architecture", name
         )
 
-        return cls(architectureNode, name, entity, declaredItems, bodyItems)
+        return cls(architectureNode, name, entity, declaredItems, statements)
 
     def resolve(self):
         pass
