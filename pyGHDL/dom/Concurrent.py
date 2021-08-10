@@ -41,6 +41,8 @@ from pyVHDLModel.SyntaxModel import (
     ConcurrentBlockStatement as VHDLModel_ConcurrentBlockStatement,
     ProcessStatement as VHDLModel_ProcessStatement,
     IfGenerateBranch as VHDLModel_IfGenerateBranch,
+    ElsifGenerateBranch as VHDLModel_ElsifGenerateBranch,
+    ElseGenerateBranch as VHDLModel_ElseGenerateBranch,
     IfGenerateStatement as VHDLModel_IfGenerateStatement,
     CaseGenerateStatement as VHDLModel_CaseGenerateStatement,
     ForGenerateStatement as VHDLModel_ForGenerateStatement,
@@ -201,11 +203,11 @@ class IfGenerateBranch(VHDLModel_IfGenerateBranch):
         self,
         branchNode: Iir,
         condition: Expression,
-        alternativeLabel: str = None,
         declaredItems: Iterable = None,
         statements: Iterable[ConcurrentStatement] = None,
+        alternativeLabel: str = None,
     ):
-        super().__init__(condition, declaredItems, statements)
+        super().__init__(condition, declaredItems, statements, alternativeLabel)
         DOMMixin.__init__(self, branchNode)
 
     @classmethod
@@ -232,7 +234,85 @@ class IfGenerateBranch(VHDLModel_IfGenerateBranch):
             statementChain, "if-generate branch", alternativeLabel
         )
 
-        return cls(body, condition, alternativeLabel, declaredItems, statements)
+        return cls(body, condition, declaredItems, statements, alternativeLabel)
+
+
+@export
+class ElsifGenerateBranch(VHDLModel_ElsifGenerateBranch):
+    def __init__(
+        self,
+        branchNode: Iir,
+        condition: Expression,
+        declaredItems: Iterable = None,
+        statements: Iterable[ConcurrentStatement] = None,
+        alternativeLabel: str = None,
+    ):
+        super().__init__(condition, declaredItems, statements, alternativeLabel)
+        DOMMixin.__init__(self, branchNode)
+
+    @classmethod
+    def parse(cls, generateNode: Iir) -> "ElsifGenerateBranch":
+        from pyGHDL.dom._Translate import (
+            GetDeclaredItemsFromChainedNodes,
+            GetStatementsFromChainedNodes,
+            GetExpressionFromNode,
+        )
+
+        condition = GetExpressionFromNode(nodes.Get_Condition(generateNode))
+        body = nodes.Get_Generate_Statement_Body(generateNode)
+
+        alternativeLabelId = nodes.Get_Alternative_Label(body)
+        alternativeLabel = ""
+
+        declarationChain = nodes.Get_Declaration_Chain(body)
+        declaredItems = GetDeclaredItemsFromChainedNodes(
+            declarationChain, "if-generate branch", alternativeLabel
+        )
+
+        statementChain = nodes.Get_Concurrent_Statement_Chain(body)
+        statements = GetStatementsFromChainedNodes(
+            statementChain, "if-generate branch", alternativeLabel
+        )
+
+        return cls(body, condition, declaredItems, statements, alternativeLabel)
+
+
+@export
+class ElseGenerateBranch(VHDLModel_ElseGenerateBranch):
+    def __init__(
+        self,
+        branchNode: Iir,
+        declaredItems: Iterable = None,
+        statements: Iterable[ConcurrentStatement] = None,
+        alternativeLabel: str = None,
+    ):
+        super().__init__(declaredItems, statements, alternativeLabel)
+        DOMMixin.__init__(self, branchNode)
+
+    @classmethod
+    def parse(cls, generateNode: Iir) -> "ElseGenerateBranch":
+        from pyGHDL.dom._Translate import (
+            GetDeclaredItemsFromChainedNodes,
+            GetStatementsFromChainedNodes,
+            GetExpressionFromNode,
+        )
+
+        body = nodes.Get_Generate_Statement_Body(generateNode)
+
+        alternativeLabelId = nodes.Get_Alternative_Label(body)
+        alternativeLabel = ""
+
+        declarationChain = nodes.Get_Declaration_Chain(body)
+        declaredItems = GetDeclaredItemsFromChainedNodes(
+            declarationChain, "if-generate branch", alternativeLabel
+        )
+
+        statementChain = nodes.Get_Concurrent_Statement_Chain(body)
+        statements = GetStatementsFromChainedNodes(
+            statementChain, "if-generate branch", alternativeLabel
+        )
+
+        return cls(body, declaredItems, statements, alternativeLabel)
 
 
 @export
@@ -253,7 +333,7 @@ class IfGenerateStatement(VHDLModel_IfGenerateStatement, DOMMixin):
         # TODO: get declared items
         # TODO: get concurrent statements
 
-        print(generateNode, GetIirKindOfNode(generateNode))
+        print("if branch", generateNode, GetIirKindOfNode(generateNode))
         ifBranch = IfGenerateBranch.parse(generateNode)
 
         #        Python 3.8 syntax
@@ -261,7 +341,8 @@ class IfGenerateStatement(VHDLModel_IfGenerateStatement, DOMMixin):
         #        while (elseClause := nodes.Get_Generate_Else_Clause(elseClause)) != nodes.Null_Iir:
         elseClause = nodes.Get_Generate_Else_Clause(generateNode)
         while elseClause != nodes.Null_Iir:
-            print(elseClause, GetIirKindOfNode(elseClause))
+            print("els(if) branch", elseClause, GetIirKindOfNode(elseClause))
+            ifBranch = ElsifGenerateBranch.parse(generateNode)
 
             elseClause = nodes.Get_Generate_Else_Clause(elseClause)
 
