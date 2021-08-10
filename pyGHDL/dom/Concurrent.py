@@ -46,6 +46,7 @@ from pyVHDLModel.SyntaxModel import (
     IfGenerateStatement as VHDLModel_IfGenerateStatement,
     CaseGenerateStatement as VHDLModel_CaseGenerateStatement,
     ForGenerateStatement as VHDLModel_ForGenerateStatement,
+    WaveformElement as VHDLModel_WaveformElement,
     ConcurrentSimpleSignalAssignment as VHDLModel_ConcurrentSimpleSignalAssignment,
     Name,
     ConcurrentStatement,
@@ -380,17 +381,30 @@ class ForGenerateStatement(VHDLModel_ForGenerateStatement, DOMMixin):
 
 
 @export
+class WaveformElement(
+    VHDLModel_WaveformElement, DOMMixin
+):
+    def __init__(
+        self,
+        waveformNode: Iir,
+        expression: Expression,
+        after: Expression
+    ):
+        super().__init__(expression, after)
+        DOMMixin.__init__(self, waveformNode)
+
+@export
 class ConcurrentSimpleSignalAssignment(
     VHDLModel_ConcurrentSimpleSignalAssignment, DOMMixin
 ):
     def __init__(
         self,
         assignmentNode: Iir,
+        label: str,
         target: Name,
-        expression: Expression,
-        label: str = None,
+        waveform: Iterable[WaveformElement],
     ):
-        super().__init__(target, expression, label)
+        super().__init__(label, target, waveform)
         DOMMixin.__init__(self, assignmentNode)
 
     @classmethod
@@ -405,6 +419,6 @@ class ConcurrentSimpleSignalAssignment(
         waveform = nodes.Get_Waveform_Chain(assignmentNode)
 
         # TODO: translate waveforms to series of "expressions".
-        expression = None
+        expression = [None]
 
-        return cls(assignmentNode, targetName, expression, label)
+        return cls(assignmentNode, label, targetName, expression)
