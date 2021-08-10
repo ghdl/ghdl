@@ -34,6 +34,7 @@ from typing import List, Union
 
 from pydecor import export
 
+from pyGHDL.dom.Concurrent import ConcurrentBlockStatement, ProcessStatement
 from pyVHDLModel.SyntaxModel import (
     GenericInterfaceItem,
     NamedEntity,
@@ -42,7 +43,7 @@ from pyVHDLModel.SyntaxModel import (
     Function,
     BaseType,
     FullType,
-    BaseConstant,
+    BaseConstant, ConcurrentStatement,
 )
 
 from pyGHDL import GHDLBaseException
@@ -107,14 +108,15 @@ class PrettyPrint:
         prefix = "  " * level
         buffer.append("{prefix}Libraries:".format(prefix=prefix))
         for library in design.Libraries.values():
-            for line in self.formatLibrary(library, level + 1):
+            buffer.append("{prefix}  - Name: {name}".format(prefix=prefix, name=library.Identifier))
+            for line in self.formatLibrary(library, level + 2):
                 buffer.append(line)
         buffer.append("{prefix}Documents:".format(prefix=prefix))
         for document in design.Documents:
             buffer.append(
-                "{prefix}- Path: '{doc!s}':".format(doc=document.Path, prefix=prefix)
+                "{prefix}  - Path: '{doc!s}':".format(doc=document.Path, prefix=prefix)
             )
-            for line in self.formatDocument(document, level + 1):
+            for line in self.formatDocument(document, level + 2):
                 buffer.append(line)
 
         return buffer
@@ -124,33 +126,19 @@ class PrettyPrint:
         prefix = "  " * level
         buffer.append("{prefix}Entities:".format(prefix=prefix))
         for entity in library.Entities:
-            for line in self.formatEntity(entity, level + 1):
-                buffer.append(line)
-        # buffer.append("{prefix}Architectures:".format(prefix=prefix))
-        # for architecture in library.Architectures:
-        #     for line in self.formatArchitecture(architecture, level + 1):
-        #         buffer.append(line)
+            buffer.append("{prefix}  - {name}({architectures})".format(prefix=prefix, name=entity.Identifier, architectures=", ".join([a.Identifier for a in entity.Architectures])))
         buffer.append("{prefix}Packages:".format(prefix=prefix))
         for package in library.Packages:
             if isinstance(package, Package):
-                gen = self.formatPackage
-            else:
-                gen = self.formatPackageInstance
-
-            for line in gen(package, level + 1):
-                buffer.append(line)
-        # buffer.append("{prefix}PackageBodies:".format(prefix=prefix))
-        # for packageBodies in library.PackageBodies:
-        #     for line in self.formatPackageBody(packageBodies, level + 1):
-        #         buffer.append(line)
+                buffer.append("{prefix}  - {name}".format(prefix=prefix, name=package.Identifier))
+            elif isinstance(package, PackageInstantiation):
+                buffer.append("{prefix}  - {name} instantiate from {package}".format(prefix=prefix, name=package.Identifier, package=package.PackageReference))
         buffer.append("{prefix}Configurations:".format(prefix=prefix))
         for configuration in library.Configurations:
-            for line in self.formatConfiguration(configuration, level + 1):
-                buffer.append(line)
+            buffer.append("{prefix}  - {name}".format(prefix=prefix, name=configuration.Identifier))
         buffer.append("{prefix}Contexts:".format(prefix=prefix))
         for context in library.Contexts:
-            for line in self.formatContext(context, level + 1):
-                buffer.append(line)
+            buffer.append("{prefix}  - {name}".format(prefix=prefix, name=context.Identifier))
 
         return buffer
 
@@ -193,7 +181,7 @@ class PrettyPrint:
         buffer = []
         prefix = "  " * level
         buffer.append(
-            "{prefix}- Name: {name} at {file}:{line}:{column}".format(
+            "{prefix}- Name: {name}\n{prefix}  File: {file}\n{prefix}  Position: {line}:{column}".format(
                 name=entity.Identifier,
                 prefix=prefix,
                 file=entity.Position.Filename.name,
@@ -213,6 +201,12 @@ class PrettyPrint:
         for item in entity.DeclaredItems:
             for line in self.formatDeclaredItems(item, level + 1):
                 buffer.append(line)
+        buffer.append("{prefix}  Statements:".format(prefix=prefix))
+        for item in entity.Statements:
+            buffer.append("{prefix}    ...".format(prefix=prefix))
+        buffer.append("{prefix}  Architecures:".format(prefix=prefix))
+        for item in entity.Architectures:
+            buffer.append("{prefix}  - {name}".format(prefix=prefix, name=item.Identifier))
 
         return buffer
 
@@ -222,7 +216,7 @@ class PrettyPrint:
         buffer = []
         prefix = "  " * level
         buffer.append(
-            "{prefix}- Name: {name} at {file}:{line}:{column}".format(
+            "{prefix}- Name: {name}\n{prefix}  File: {file}\n{prefix}  Position: {line}:{column}".format(
                 name=architecture.Identifier,
                 prefix=prefix,
                 file=architecture.Position.Filename.name,
@@ -239,6 +233,15 @@ class PrettyPrint:
         for item in architecture.DeclaredItems:
             for line in self.formatDeclaredItems(item, level + 2):
                 buffer.append(line)
+        buffer.append("{prefix}  Hierarchy:".format(prefix=prefix))
+        for item in architecture.Statements:
+            for line in self.formatHierarchy(item, level + 2):
+                buffer.append(line)
+        buffer.append("{prefix}  Statements:".format(prefix=prefix))
+        for item in architecture.Statements:
+            buffer.append("{prefix}    ...".format(prefix=prefix))
+#            for line in self.formatStatements(item, level + 2):
+#                buffer.append(line)
 
         return buffer
 
@@ -265,7 +268,10 @@ class PrettyPrint:
         buffer = []
         prefix = "  " * level
         buffer.append(
-            "{prefix}- Name: {name}".format(name=package.Identifier, prefix=prefix)
+            "{prefix}- Name: {name}\n{prefix}  File: {file}\n{prefix}  Position: {line}:{column}".format(name=package.Identifier, prefix=prefix,
+                file=package.Position.Filename.name,
+                line=package.Position.Line,
+                column=package.Position.Column,)
         )
         buffer.append("{prefix}  Declared:".format(prefix=prefix))
         for item in package.DeclaredItems:
@@ -598,3 +604,14 @@ class PrettyPrint:
             return ""
 
         return " := {expr!s}".format(expr=item.DefaultExpression)
+
+    def formatHierarchy(self, statement: ConcurrentStatement, level: int = 0) -> StringBuffer:
+        buffer = []
+        prefix = "  " * level
+
+        if isinstance(statement, ProcessStatement):
+            buffer.append("{prefix}{label}: process(...)".format(prefix=prefix, label=statement.Label))
+        elif isinstance(statement, ConcurrentBlockStatement):
+            buffer.append("{prefix}{label}: block".format(prefix=prefix, label=statement.Label))
+
+        return buffer
