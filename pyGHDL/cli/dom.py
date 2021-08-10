@@ -316,6 +316,14 @@ class Application(LineTerminal, ArgParseMixin):
                     )
                 )
 
+        for library in self._design.Libraries.values():
+            for entityName, architectures in library.Architectures.items():
+                for entity in library.Entities:
+                    if entity.Identifier == str(entityName):
+                        for architecture in architectures:
+                            entity.Architectures.append(architecture)
+
+
         PP = PrettyPrint()
 
         buffer = []
