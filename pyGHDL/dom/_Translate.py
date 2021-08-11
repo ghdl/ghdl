@@ -148,6 +148,7 @@ from pyGHDL.dom.Concurrent import (
     ForGenerateStatement,
     CaseGenerateStatement,
     ConcurrentSimpleSignalAssignment,
+    ConcurrentProcedureCall,
 )
 from pyGHDL.dom.Subprogram import Function, Procedure
 from pyGHDL.dom.Misc import Alias
@@ -815,11 +816,7 @@ def GetStatementsFromChainedNodes(
                 )
             )
         elif kind == nodes.Iir_Kind.Concurrent_Procedure_Call_Statement:
-            print(
-                "[NOT IMPLEMENTED] Concurrent procedure call (label: '{label}') at line {line}".format(
-                    label=label, line=pos.Line
-                )
-            )
+            yield ConcurrentProcedureCall.parse(statement, label)
         elif kind == nodes.Iir_Kind.Component_Instantiation_Statement:
             instantiatedUnit = nodes.Get_Instantiated_Unit(statement)
             instantiatedUnitKind = GetIirKindOfNode(instantiatedUnit)

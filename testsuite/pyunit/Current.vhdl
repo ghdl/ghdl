@@ -171,6 +171,9 @@ begin
 			begin
 				inst: component OthersDummy;
 	end generate;
+
+	call: OtherDummy;
+	ende: std.env.stop;
 end architecture behav;
 
 package package_1 is

@@ -53,6 +53,7 @@ from pyVHDLModel.SyntaxModel import (
     ForGenerateStatement as VHDLModel_ForGenerateStatement,
     WaveformElement as VHDLModel_WaveformElement,
     ConcurrentSimpleSignalAssignment as VHDLModel_ConcurrentSimpleSignalAssignment,
+    ConcurrentProcedureCall as VHDLModel_ConcurrentProcedureCall,
     Name,
     ConcurrentStatement,
     SequentialStatement,
@@ -564,3 +565,30 @@ class ConcurrentSimpleSignalAssignment(
         expression = [None]
 
         return cls(assignmentNode, label, targetName, expression)
+
+
+@export
+class ConcurrentProcedureCall(VHDLModel_ConcurrentProcedureCall, DOMMixin):
+    def __init__(
+        self,
+        callNode: Iir,
+        label: str,
+        procedureName: Name,
+        parameterMappings: Iterable,
+    ):
+        super().__init__(label, procedureName, parameterMappings)
+        DOMMixin.__init__(self, callNode)
+
+    @classmethod
+    def parse(cls, callNode: Iir, label: str) -> "ConcurrentProcedureCall":
+        from pyGHDL.dom._Translate import GetNameFromNode, GetIirKindOfNode
+
+        call = nodes.Get_Procedure_Call(callNode)
+        prefix = nodes.Get_Prefix(call)
+
+        procedureName = GetNameFromNode(prefix)
+
+        # TODO: parameter mappings
+        parameterMappings = []
+
+        return cls(callNode, label, procedureName, parameterMappings)

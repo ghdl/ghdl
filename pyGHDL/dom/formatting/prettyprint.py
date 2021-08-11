@@ -44,6 +44,7 @@ from pyGHDL.dom.Concurrent import (
     ConfigurationInstantiation,
     EntityInstantiation,
     OthersGenerateCase,
+    ConcurrentProcedureCall,
 )
 from pyVHDLModel.SyntaxModel import (
     GenericInterfaceItem,
@@ -741,5 +742,11 @@ class PrettyPrint:
             for stmt in statement.Statements:
                 for line in self.formatHierarchy(stmt, level + 2):
                     buffer.append(line)
+        elif isinstance(statement, ConcurrentProcedureCall):
+            buffer.append(
+                "{prefix}- {label}: {name!s}(...)".format(
+                    prefix=prefix, label=statement.Label, name=statement.Procedure
+                )
+            )
 
         return buffer
