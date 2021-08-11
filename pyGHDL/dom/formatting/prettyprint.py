@@ -43,6 +43,7 @@ from pyGHDL.dom.Concurrent import (
     ComponentInstantiation,
     ConfigurationInstantiation,
     EntityInstantiation,
+    OthersGenerateCase,
 )
 from pyVHDLModel.SyntaxModel import (
     GenericInterfaceItem,
@@ -716,10 +717,18 @@ class PrettyPrint:
                         buffer.append(line)
         elif isinstance(statement, CaseGenerateStatement):
             buffer.append(
-                "{prefix}- {label}: case ... generate".format(
-                    prefix=prefix, label=statement.Label
+                "{prefix}- {label}: case {expression} generate".format(
+                    prefix=prefix,
+                    label=statement.Label,
+                    expression=statement.SelectExpression,
                 )
             )
+            for case in statement.Cases:
+                buffer.append(
+                    "{prefix}    {case!s}".format(
+                        prefix=prefix, label=case.Label, case=case
+                    )
+                )
         elif isinstance(statement, ForGenerateStatement):
             buffer.append(
                 "{prefix}- {label}: for {index} in {range} generate".format(

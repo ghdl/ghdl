@@ -151,8 +151,23 @@ begin
 			begin
 				inst: component Case0Dummy;
 
-		when others =>
+		when 1 | 2 =>
 				constant G5 : boolean := False;
+			begin
+				inst: component Case12Dummy;
+
+		when 3 to 4 =>
+				constant G6 : boolean := False;
+			begin
+				inst: component Case34Dummy;
+
+		when 5 to 6 | 8 to 9 =>
+				constant G7 : boolean := False;
+			begin
+				inst: component Case5689Dummy;
+
+		when others =>
+				constant G8 : boolean := False;
 			begin
 				inst: component OthersDummy;
 	end generate;

@@ -45,6 +45,10 @@ from pyVHDLModel.SyntaxModel import (
     ElsifGenerateBranch as VHDLModel_ElsifGenerateBranch,
     ElseGenerateBranch as VHDLModel_ElseGenerateBranch,
     IfGenerateStatement as VHDLModel_IfGenerateStatement,
+    IndexedGenerateChoice as VHDLModel_IndexedGenerateChoice,
+    RangedGenerateChoice as VHDLModel_RangedGenerateChoice,
+    OthersGenerateCase as VHDLModel_OthersGenerateCase,
+    GenerateCase as VHDLModel_GenerateCase,
     CaseGenerateStatement as VHDLModel_CaseGenerateStatement,
     ForGenerateStatement as VHDLModel_ForGenerateStatement,
     WaveformElement as VHDLModel_WaveformElement,
@@ -53,9 +57,10 @@ from pyVHDLModel.SyntaxModel import (
     ConcurrentStatement,
     SequentialStatement,
     Expression,
+    ConcurrentChoice,
 )
 
-from pyGHDL.libghdl import Iir
+from pyGHDL.libghdl import Iir, utils
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin
 from pyGHDL.dom._Utils import GetNameOfNode
@@ -352,16 +357,135 @@ class IfGenerateStatement(VHDLModel_IfGenerateStatement, DOMMixin):
 
 
 @export
+class IndexedGenerateChoice(VHDLModel_IndexedGenerateChoice, DOMMixin):
+    def __init__(self, node: Iir, expression: Expression):
+        super().__init__(expression)
+        DOMMixin.__init__(self, node)
+
+
+@export
+class RangedGenerateChoice(VHDLModel_RangedGenerateChoice, DOMMixin):
+    def __init__(self, node: Iir, rng: Range):
+        super().__init__(rng)
+        DOMMixin.__init__(self, node)
+
+
+@export
+class GenerateCase(VHDLModel_GenerateCase, DOMMixin):
+    def __init__(self, node: Iir, choices: Iterable[ConcurrentChoice]):
+        super().__init__(choices)
+        DOMMixin.__init__(self, node)
+
+    @classmethod
+    def parse(cls, caseNode: Iir) -> "GenerateCase":
+        from pyGHDL.dom._Translate import (
+            GetDeclaredItemsFromChainedNodes,
+            GetStatementsFromChainedNodes,
+        )
+
+        body = nodes.Get_Generate_Statement_Body(caseNode)
+
+        alternativeLabelId = nodes.Get_Alternative_Label(body)
+        alternativeLabel = ""
+
+        declarationChain = nodes.Get_Declaration_Chain(body)
+        declaredItems = GetDeclaredItemsFromChainedNodes(
+            declarationChain, "else-generate branch", alternativeLabel
+        )
+
+        statementChain = nodes.Get_Concurrent_Statement_Chain(body)
+        statements = GetStatementsFromChainedNodes(
+            statementChain, "else-generate branch", alternativeLabel
+        )
+
+        return cls(caseNode, declaredItems, statements, alternativeLabel)
+
+
+@export
+class OthersGenerateCase(VHDLModel_OthersGenerateCase, DOMMixin):
+    def __init__(
+        self,
+        caseNode: Iir,
+        declaredItems: Iterable = None,
+        statements: Iterable[ConcurrentStatement] = None,
+        alternativeLabel: str = None,
+    ):
+        super().__init__(declaredItems, statements, alternativeLabel)
+        DOMMixin.__init__(self, caseNode)
+
+    @classmethod
+    def parse(cls, caseNode: Iir) -> "OthersGenerateCase":
+        from pyGHDL.dom._Translate import (
+            GetDeclaredItemsFromChainedNodes,
+            GetStatementsFromChainedNodes,
+        )
+
+        # body = nodes.Get_Generate_Statement_Body(caseNode)
+        #
+        # alternativeLabelId = nodes.Get_Alternative_Label(body)
+        # alternativeLabel = ""
+        #
+        # declarationChain = nodes.Get_Declaration_Chain(body)
+        # declaredItems = GetDeclaredItemsFromChainedNodes(
+        #     declarationChain, "else-generate branch", alternativeLabel
+        # )
+        #
+        # statementChain = nodes.Get_Concurrent_Statement_Chain(body)
+        # statements = GetStatementsFromChainedNodes(
+        #     statementChain, "else-generate branch", alternativeLabel
+        # )
+
+        # return cls(caseNode, declaredItems, statements, alternativeLabel)
+        return cls(caseNode, [], [], "")
+
+
+@export
 class CaseGenerateStatement(VHDLModel_CaseGenerateStatement, DOMMixin):
-    def __init__(self, generateNode: Iir, label: str):
-        super().__init__(label)
+    def __init__(
+        self, generateNode: Iir, label: str, expression: Expression, cases: Iterable
+    ):
+        super().__init__(label, expression, cases)
         DOMMixin.__init__(self, generateNode)
 
     @classmethod
     def parse(cls, generateNode: Iir, label: str) -> "CaseGenerateStatement":
+        from pyGHDL.dom._Translate import (
+            GetExpressionFromNode,
+            GetIirKindOfNode,
+            GetRangeFromNode,
+        )
+
         # TODO: get choices
 
-        return cls(generateNode, label)
+        expression = GetExpressionFromNode(nodes.Get_Expression(generateNode))
+
+        cases = []
+        choices = []
+        alternatives = nodes.Get_Case_Statement_Alternative_Chain(generateNode)
+        for alternative in utils.chain_iter(alternatives):
+            choiceKind = GetIirKindOfNode(alternative)
+
+            if choiceKind in (
+                nodes.Iir_Kind.Choice_By_Name,
+                nodes.Iir_Kind.Choice_By_Expression,
+            ):
+                choiceExpression = GetExpressionFromNode(
+                    nodes.Get_Choice_Expression(alternative)
+                )
+                choices.append(IndexedGenerateChoice(alternative, choiceExpression))
+                cases.append(GenerateCase(alternative, choices))
+                choices = []
+            elif choiceKind is nodes.Iir_Kind.Choice_By_Range:
+                rng = GetRangeFromNode(nodes.Get_Choice_Range(alternative))
+                choices.append(RangedGenerateChoice(alternative, rng))
+                cases.append(GenerateCase(alternative, choices))
+                choices = []
+            elif choiceKind is nodes.Iir_Kind.Choice_By_Others:
+                cases.append(OthersGenerateCase.parse(alternative))
+            else:
+                print(choiceKind)
+
+        return cls(generateNode, label, expression, cases)
 
 
 @export
