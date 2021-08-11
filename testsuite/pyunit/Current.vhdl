@@ -128,33 +128,33 @@ begin
 	genIf: if True generate
 		constant G0 : boolean := False;
 	begin
-		inst: IfDummy;
+		inst: component IfDummy;
 	elsif False generate
 		constant G1 : boolean := False;
 	begin
-		inst: ElsifDummy;
+		inst: component ElsifDummy;
 	else generate
 		constant G2 : boolean := False;
 	begin
-		inst: ElseDummy;
+		inst: component ElseDummy;
 	end generate;
 
 	genFor: for I in 0 to 3 generate
 		constant G3 : boolean := False;
 	begin
-		inst: ForDummy;
+		inst: component ForDummy;
 	end generate;
 
 	genCase: case selector generate
 		when 0 =>
 				constant G4 : boolean := False;
 			begin
-				inst: Case0Dummy;
+				inst: component Case0Dummy;
 
 		when others =>
 				constant G5 : boolean := False;
 			begin
-				inst: OthersDummy;
+				inst: component OthersDummy;
 	end generate;
 end architecture behav;
 

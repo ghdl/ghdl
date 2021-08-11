@@ -685,8 +685,10 @@ class PrettyPrint:
                     buffer.append(line)
         elif isinstance(statement, IfGenerateStatement):
             buffer.append(
-                "{prefix}- {label}: if ... generate".format(
-                    prefix=prefix, label=statement.Label
+                "{prefix}- {label}: if {condition} generate".format(
+                    prefix=prefix,
+                    label=statement.Label,
+                    condition=statement.IfBranch.Condition,
                 )
             )
             for stmt in statement.IfBranch.Statements:
@@ -694,8 +696,10 @@ class PrettyPrint:
                     buffer.append(line)
             for elsifBranch in statement.ElsifBranches:
                 buffer.append(
-                    "{prefix}  {label}: elsif ... generate".format(
-                        prefix=prefix, label=statement.Label
+                    "{prefix}  {label}: elsif {condition} generate".format(
+                        prefix=prefix,
+                        label=statement.Label,
+                        condition=elsifBranch.Condition,
                     )
                 )
                 for stmt in elsifBranch.Statements:
@@ -718,8 +722,11 @@ class PrettyPrint:
             )
         elif isinstance(statement, ForGenerateStatement):
             buffer.append(
-                "{prefix}- {label}: for ... generate".format(
-                    prefix=prefix, label=statement.Label
+                "{prefix}- {label}: for {index} in {range} generate".format(
+                    prefix=prefix,
+                    label=statement.Label,
+                    index=statement.LoopIndex,
+                    range=statement.Range,
                 )
             )
             for stmt in statement.Statements:
