@@ -323,7 +323,6 @@ class Application(LineTerminal, ArgParseMixin):
                         for architecture in architectures:
                             entity.Architectures.append(architecture)
 
-
         PP = PrettyPrint()
 
         buffer = []

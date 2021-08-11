@@ -318,8 +318,15 @@ class ElseGenerateBranch(VHDLModel_ElseGenerateBranch):
 
 @export
 class IfGenerateStatement(VHDLModel_IfGenerateStatement, DOMMixin):
-    def __init__(self, generateNode: Iir, label: str, ifBranch: IfGenerateBranch):
-        super().__init__(label, ifBranch)
+    def __init__(
+        self,
+        generateNode: Iir,
+        label: str,
+        ifBranch: IfGenerateBranch,
+        elsifBranches: Iterable[ElsifGenerateBranch] = None,
+        elseBranch: ElseGenerateBranch = None,
+    ):
+        super().__init__(label, ifBranch, elsifBranches, elseBranch)
         DOMMixin.__init__(self, generateNode)
 
     @classmethod
@@ -337,17 +344,18 @@ class IfGenerateStatement(VHDLModel_IfGenerateStatement, DOMMixin):
         print("if branch", generateNode, GetIirKindOfNode(generateNode))
         ifBranch = IfGenerateBranch.parse(generateNode)
 
+        elsifBranches = []
+        elseBranch = None
         #        Python 3.8 syntax
         #        elseClause = generateNode
         #        while (elseClause := nodes.Get_Generate_Else_Clause(elseClause)) != nodes.Null_Iir:
         elseClause = nodes.Get_Generate_Else_Clause(generateNode)
         while elseClause != nodes.Null_Iir:
-            print("els(if) branch", elseClause, GetIirKindOfNode(elseClause))
-            ifBranch = ElsifGenerateBranch.parse(generateNode)
+            elsifBranches.append(ElsifGenerateBranch.parse(generateNode))
 
             elseClause = nodes.Get_Generate_Else_Clause(elseClause)
 
-        return cls(generateNode, label, ifBranch)
+        return cls(generateNode, label, ifBranch, elsifBranches, elseBranch)
 
 
 @export
@@ -381,17 +389,11 @@ class ForGenerateStatement(VHDLModel_ForGenerateStatement, DOMMixin):
 
 
 @export
-class WaveformElement(
-    VHDLModel_WaveformElement, DOMMixin
-):
-    def __init__(
-        self,
-        waveformNode: Iir,
-        expression: Expression,
-        after: Expression
-    ):
+class WaveformElement(VHDLModel_WaveformElement, DOMMixin):
+    def __init__(self, waveformNode: Iir, expression: Expression, after: Expression):
         super().__init__(expression, after)
         DOMMixin.__init__(self, waveformNode)
+
 
 @export
 class ConcurrentSimpleSignalAssignment(

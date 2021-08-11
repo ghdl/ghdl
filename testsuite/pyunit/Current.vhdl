@@ -128,15 +128,33 @@ begin
 	genIf: if True generate
 		constant G0 : boolean := False;
 	begin
-
+		inst: IfDummy;
 	elsif False generate
 		constant G1 : boolean := False;
 	begin
-
+		inst: ElsifDummy;
 	else generate
 		constant G2 : boolean := False;
 	begin
+		inst: ElseDummy;
+	end generate;
 
+	genFor: for I in 0 to 3 generate
+		constant G3 : boolean := False;
+	begin
+		inst: ForDummy;
+	end generate;
+
+	genCase: case selector generate
+		when 0 =>
+				constant G4 : boolean := False;
+			begin
+				inst: Case0Dummy;
+
+		when others =>
+				constant G5 : boolean := False;
+			begin
+				inst: OthersDummy;
 	end generate;
 end architecture behav;
 
