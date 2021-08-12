@@ -68,7 +68,7 @@ from pyGHDL.dom._Translate import (
     GetGenericsFromChainedNodes,
     GetPortsFromChainedNodes,
     GetDeclaredItemsFromChainedNodes,
-    GetStatementsFromChainedNodes,
+    GetConcurrentStatementsFromChainedNodes,
 )
 from pyGHDL.dom.Names import SimpleName
 from pyGHDL.dom.Symbol import EntitySymbol
@@ -115,7 +115,7 @@ class Entity(VHDLModel_Entity, DOMMixin):
         declaredItems = GetDeclaredItemsFromChainedNodes(
             nodes.Get_Declaration_Chain(entityNode), "entity", name
         )
-        statements = GetStatementsFromChainedNodes(
+        statements = GetConcurrentStatementsFromChainedNodes(
             nodes.Get_Concurrent_Statement_Chain(entityNode), "entity", name
         )
 
@@ -144,7 +144,7 @@ class Architecture(VHDLModel_Architecture, DOMMixin):
         declaredItems = GetDeclaredItemsFromChainedNodes(
             nodes.Get_Declaration_Chain(architectureNode), "architecture", name
         )
-        statements = GetStatementsFromChainedNodes(
+        statements = GetConcurrentStatementsFromChainedNodes(
             nodes.Get_Concurrent_Statement_Chain(architectureNode), "architecture", name
         )
 

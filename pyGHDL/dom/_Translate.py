@@ -45,7 +45,7 @@ from pyVHDLModel.SyntaxModel import (
     ParameterInterfaceItem,
     ModelEntity,
     Name,
-    ConcurrentStatement,
+    ConcurrentStatement, SequentialStatement,
 )
 
 from pyGHDL.libghdl import utils, name_table
@@ -784,13 +784,12 @@ def GetDeclaredItemsFromChainedNodes(
         yield obj
 
 
-def GetStatementsFromChainedNodes(
+def GetConcurrentStatementsFromChainedNodes(
     nodeChain: Iir, entity: str, name: str
 ) -> Generator[ConcurrentStatement, None, None]:
     for statement in utils.chain_iter(nodeChain):
         label = nodes.Get_Label(statement)
-        if label != nodes.Null_Iir:
-            label = name_table.Get_Name_Ptr(label)
+        label = name_table.Get_Name_Ptr(label) if label != nodes.Null_Iir else None
 
         pos = Position.parse(statement)
 
@@ -849,6 +848,49 @@ def GetStatementsFromChainedNodes(
         elif kind == nodes.Iir_Kind.Psl_Assert_Directive:
             print(
                 "[NOT IMPLEMENTED] PSL assert directive (label: '{label}') at line {line}".format(
+                    label=label, line=pos.Line
+                )
+            )
+        else:
+            raise DOMException(
+                "Unknown statement of kind '{kind}' in {entity} '{name}' at {file}:{line}:{column}.".format(
+                    kind=kind.name,
+                    entity=entity,
+                    name=name,
+                    file=pos.Filename,
+                    line=pos.Line,
+                    column=pos.Column,
+                )
+            )
+
+
+def GetSequentialStatementsFromChainedNodes(
+    nodeChain: Iir, entity: str, name: str
+) -> Generator[SequentialStatement, None, None]:
+    for statement in utils.chain_iter(nodeChain):
+        label = nodes.Get_Label(statement)
+        label = name_table.Get_Name_Ptr(label) if label != nodes.Null_Iir else None
+
+        pos = Position.parse(statement)
+
+        kind = GetIirKindOfNode(statement)
+#        if kind == nodes.Iir_Kind.Sensitized_Process_Statement:
+#            yield ProcessStatement.parse(statement, label, True)
+        if kind == nodes.Iir_Kind.If_Statement:
+            print(
+                "[NOT IMPLEMENTED] If statement (label: '{label}') at line {line}".format(
+                    label=label, line=pos.Line
+                )
+            )
+        elif kind == nodes.Iir_Kind.For_Loop_Statement:
+            print(
+                "[NOT IMPLEMENTED] For-loop statement (label: '{label}') at line {line}".format(
+                    label=label, line=pos.Line
+                )
+            )
+        elif kind == nodes.Iir_Kind.Case_Statement:
+            print(
+                "[NOT IMPLEMENTED] For-loop statement (label: '{label}') at line {line}".format(
                     label=label, line=pos.Line
                 )
             )

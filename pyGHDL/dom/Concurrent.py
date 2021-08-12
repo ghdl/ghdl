@@ -58,7 +58,7 @@ from pyVHDLModel.SyntaxModel import (
     ConcurrentStatement,
     SequentialStatement,
     Expression,
-    ConcurrentChoice,
+    ConcurrentChoice, ConcurrentCase,
 )
 
 from pyGHDL.libghdl import Iir, utils
@@ -156,13 +156,13 @@ class ConcurrentBlockStatement(VHDLModel_ConcurrentBlockStatement, DOMMixin):
     def parse(cls, blockNode: Iir, label: str) -> "ConcurrentBlockStatement":
         from pyGHDL.dom._Translate import (
             GetDeclaredItemsFromChainedNodes,
-            GetStatementsFromChainedNodes,
+            GetConcurrentStatementsFromChainedNodes,
         )
 
         declaredItems = GetDeclaredItemsFromChainedNodes(
             nodes.Get_Declaration_Chain(blockNode), "block", label
         )
-        statements = GetStatementsFromChainedNodes(
+        statements = GetConcurrentStatementsFromChainedNodes(
             nodes.Get_Concurrent_Statement_Chain(blockNode), "block", label
         )
 
@@ -188,19 +188,17 @@ class ProcessStatement(VHDLModel_ProcessStatement, DOMMixin):
     ) -> "ProcessStatement":
         from pyGHDL.dom._Translate import (
             GetDeclaredItemsFromChainedNodes,
-            GetStatementsFromChainedNodes,
+            GetSequentialStatementsFromChainedNodes,
+            GetIirKindOfNode
         )
 
-        # TODO: get sensitivity list
-        # TODO: get declared items
-        # TODO: get sequential statements
-
-        declaredItems = None
-        statements = None
         sensitivityList = None
-
         if hasSensitivityList:
-            pass
+            sensitivityListNode = nodes.Get_Sensitivity_List(processNode)
+            print("sensi", GetIirKindOfNode(sensitivityListNode))
+
+        declaredItems = GetDeclaredItemsFromChainedNodes(nodes.Get_Declaration_Chain(processNode), "process", label)
+        statements = GetSequentialStatementsFromChainedNodes(nodes.Get_Sequential_Statement_Chain(processNode), "process", label)
 
         return cls(processNode, label, declaredItems, statements, sensitivityList)
 
@@ -222,7 +220,7 @@ class IfGenerateBranch(VHDLModel_IfGenerateBranch):
     def parse(cls, generateNode: Iir) -> "IfGenerateBranch":
         from pyGHDL.dom._Translate import (
             GetDeclaredItemsFromChainedNodes,
-            GetStatementsFromChainedNodes,
+            GetConcurrentStatementsFromChainedNodes,
             GetExpressionFromNode,
         )
 
@@ -238,7 +236,7 @@ class IfGenerateBranch(VHDLModel_IfGenerateBranch):
         )
 
         statementChain = nodes.Get_Concurrent_Statement_Chain(body)
-        statements = GetStatementsFromChainedNodes(
+        statements = GetConcurrentStatementsFromChainedNodes(
             statementChain, "if-generate branch", alternativeLabel
         )
 
@@ -262,7 +260,7 @@ class ElsifGenerateBranch(VHDLModel_ElsifGenerateBranch):
     def parse(cls, generateNode: Iir, condition: Iir) -> "ElsifGenerateBranch":
         from pyGHDL.dom._Translate import (
             GetDeclaredItemsFromChainedNodes,
-            GetStatementsFromChainedNodes,
+            GetConcurrentStatementsFromChainedNodes,
             GetExpressionFromNode,
         )
 
@@ -278,7 +276,7 @@ class ElsifGenerateBranch(VHDLModel_ElsifGenerateBranch):
         )
 
         statementChain = nodes.Get_Concurrent_Statement_Chain(body)
-        statements = GetStatementsFromChainedNodes(
+        statements = GetConcurrentStatementsFromChainedNodes(
             statementChain, "elsif-generate branch", alternativeLabel
         )
 
@@ -301,7 +299,7 @@ class ElseGenerateBranch(VHDLModel_ElseGenerateBranch):
     def parse(cls, generateNode: Iir) -> "ElseGenerateBranch":
         from pyGHDL.dom._Translate import (
             GetDeclaredItemsFromChainedNodes,
-            GetStatementsFromChainedNodes,
+            GetConcurrentStatementsFromChainedNodes,
         )
 
         body = nodes.Get_Generate_Statement_Body(generateNode)
@@ -315,7 +313,7 @@ class ElseGenerateBranch(VHDLModel_ElseGenerateBranch):
         )
 
         statementChain = nodes.Get_Concurrent_Statement_Chain(body)
-        statements = GetStatementsFromChainedNodes(
+        statements = GetConcurrentStatementsFromChainedNodes(
             statementChain, "else-generate branch", alternativeLabel
         )
 
@@ -373,7 +371,10 @@ class RangedGenerateChoice(VHDLModel_RangedGenerateChoice, DOMMixin):
 
 @export
 class GenerateCase(VHDLModel_GenerateCase, DOMMixin):
-    def __init__(self, node: Iir, choices: Iterable[ConcurrentChoice]):
+    def __init__(self, node: Iir, choices: Iterable[ConcurrentChoice],
+        declaredItems: Iterable = None,
+        statements: Iterable[ConcurrentStatement] = None,
+        alternativeLabel: str = None,):
         super().__init__(choices)
         DOMMixin.__init__(self, node)
 
@@ -381,7 +382,7 @@ class GenerateCase(VHDLModel_GenerateCase, DOMMixin):
     def parse(cls, caseNode: Iir) -> "GenerateCase":
         from pyGHDL.dom._Translate import (
             GetDeclaredItemsFromChainedNodes,
-            GetStatementsFromChainedNodes,
+            GetConcurrentStatementsFromChainedNodes,
         )
 
         body = nodes.Get_Generate_Statement_Body(caseNode)
@@ -389,17 +390,19 @@ class GenerateCase(VHDLModel_GenerateCase, DOMMixin):
         alternativeLabelId = nodes.Get_Alternative_Label(body)
         alternativeLabel = ""
 
+        choices = []
+
         declarationChain = nodes.Get_Declaration_Chain(body)
         declaredItems = GetDeclaredItemsFromChainedNodes(
-            declarationChain, "else-generate branch", alternativeLabel
+            declarationChain, "generate case", alternativeLabel
         )
 
         statementChain = nodes.Get_Concurrent_Statement_Chain(body)
-        statements = GetStatementsFromChainedNodes(
-            statementChain, "else-generate branch", alternativeLabel
+        statements = GetConcurrentStatementsFromChainedNodes(
+            statementChain, "generate case", alternativeLabel
         )
 
-        return cls(caseNode, declaredItems, statements, alternativeLabel)
+        return cls(caseNode, choices, declaredItems, statements, alternativeLabel)
 
 
 @export
@@ -418,7 +421,7 @@ class OthersGenerateCase(VHDLModel_OthersGenerateCase, DOMMixin):
     def parse(cls, caseNode: Iir) -> "OthersGenerateCase":
         from pyGHDL.dom._Translate import (
             GetDeclaredItemsFromChainedNodes,
-            GetStatementsFromChainedNodes,
+            GetConcurrentStatementsFromChainedNodes,
         )
 
         # body = nodes.Get_Generate_Statement_Body(caseNode)
@@ -443,7 +446,7 @@ class OthersGenerateCase(VHDLModel_OthersGenerateCase, DOMMixin):
 @export
 class CaseGenerateStatement(VHDLModel_CaseGenerateStatement, DOMMixin):
     def __init__(
-        self, generateNode: Iir, label: str, expression: Expression, cases: Iterable
+        self, generateNode: Iir, label: str, expression: Expression, cases: Iterable[ConcurrentCase]
     ):
         super().__init__(label, expression, cases)
         DOMMixin.__init__(self, generateNode)
@@ -507,7 +510,7 @@ class ForGenerateStatement(VHDLModel_ForGenerateStatement, DOMMixin):
     def parse(cls, generateNode: Iir, label: str) -> "ForGenerateStatement":
         from pyGHDL.dom._Translate import (
             GetDeclaredItemsFromChainedNodes,
-            GetStatementsFromChainedNodes,
+            GetConcurrentStatementsFromChainedNodes,
             GetRangeFromNode,
         )
 
@@ -522,7 +525,7 @@ class ForGenerateStatement(VHDLModel_ForGenerateStatement, DOMMixin):
         )
 
         statementChain = nodes.Get_Concurrent_Statement_Chain(body)
-        statements = GetStatementsFromChainedNodes(
+        statements = GetConcurrentStatementsFromChainedNodes(
             statementChain, "for-generate", label
         )
 

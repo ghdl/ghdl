@@ -94,6 +94,26 @@ begin
 				Q <= std_logic_vector(unsigned(Q) + 1);
 			end if;
 		end if;
+
+		for i in 7 downto 0 loop
+			loop
+				while true loop
+					next;
+					next when true;
+				end loop;
+				exit;
+				exit when true;
+			end loop;
+			return;
+		end loop;
+
+		case foo_bar is
+			when 0 =>
+			when 1 | 2 =>
+			when 3 to 4 =>
+			when 5 to 6 | 8 to 9 =>
+			when others =>
+		end case;
 	end process;
 
 	a <= b;
