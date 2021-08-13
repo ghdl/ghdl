@@ -92,7 +92,7 @@ from pyVHDLModel.SyntaxModel import (
 from pyGHDL.libghdl import utils
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
-from pyGHDL.dom import DOMMixin, DOMException
+from pyGHDL.dom import DOMMixin, DOMException, Position
 from pyGHDL.dom._Utils import GetIirKindOfNode
 from pyGHDL.dom.Symbol import SimpleSubtypeSymbol
 from pyGHDL.dom.Aggregates import (
@@ -570,25 +570,24 @@ class Aggregate(VHDLModel_Aggregate, DOMMixin):
                 index = GetExpressionFromNode(nodes.Get_Choice_Expression(item))
                 choices.append(IndexedAggregateElement(item, index, value))
             elif kind == nodes.Iir_Kind.Choice_By_Range:
-                r = GetRangeFromNode(nodes.Get_Choice_Range(item))
-
-                rangeKind = GetIirKindOfNode(discreteRange)
+                choiceRange = nodes.Get_Choice_Range(item)
+                rangeKind = GetIirKindOfNode(choiceRange)
                 if rangeKind == nodes.Iir_Kind.Range_Expression:
-                    rng = GetRangeFromNode(discreteRange)
+                    rng = GetRangeFromNode(choiceRange)
                 elif rangeKind in (
                     nodes.Iir_Kind.Attribute_Name,
                     nodes.Iir_Kind.Parenthesis_Name,
                 ):
-                    rng = GetNameFromNode(discreteRange)
+                    rng = GetNameFromNode(choiceRange)
                 else:
-                    pos = Position.parse(generateNode)
+                    pos = Position.parse(item)
                     raise DOMException(
                         "Unknown discete range kind '{kind}' in for...generate statement at line {line}.".format(
                             kind=rangeKind.name, line=pos.Line
                         )
                     )
 
-                choices.append(RangedAggregateElement(item, r, value))
+                choices.append(RangedAggregateElement(item, rng, value))
             elif kind == nodes.Iir_Kind.Choice_By_Name:
                 name = GetNameFromNode(nodes.Get_Choice_Name(item))
                 symbol = Symbol(item, name)

@@ -872,8 +872,8 @@ def GetSequentialStatementsFromChainedNodes(
         pos = Position.parse(statement)
 
         kind = GetIirKindOfNode(statement)
-#        if kind == nodes.Iir_Kind.Sensitized_Process_Statement:
-#            yield ProcessStatement.parse(statement, label, True)
+        #        if kind == nodes.Iir_Kind.Sensitized_Process_Statement:
+        #            yield ProcessStatement.parse(statement, label, True)
         if kind == nodes.Iir_Kind.If_Statement:
             print(
                 "[NOT IMPLEMENTED] If statement (label: '{label}') at line {line}".format(
