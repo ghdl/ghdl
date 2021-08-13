@@ -892,6 +892,45 @@ def GetSequentialStatementsFromChainedNodes(
                     label=label, line=pos.Line
                 )
             )
+        elif kind == nodes.Iir_Kind.Simple_Signal_Assignment_Statement:
+            print(
+                "[NOT IMPLEMENTED] (Simple) signal assignment (label: '{label}') at line {line}".format(
+                    label=label, line=pos.Line
+                )
+            )
+        elif kind in (
+            nodes.Iir_Kind.Variable_Assignment_Statement,
+            nodes.Iir_Kind.Conditional_Variable_Assignment_Statement,
+        ):
+            print(
+                "[NOT IMPLEMENTED] Variable assignment (label: '{label}') at line {line}".format(
+                    label=label, line=pos.Line
+                )
+            )
+        elif kind == nodes.Iir_Kind.Wait_Statement:
+            print(
+                "[NOT IMPLEMENTED] For-loop statement (label: '{label}') at line {line}".format(
+                    label=label, line=pos.Line
+                )
+            )
+        elif kind == nodes.Iir_Kind.Procedure_Call_Statement:
+            print(
+                "[NOT IMPLEMENTED] Procedure call (label: '{label}') at line {line}".format(
+                    label=label, line=pos.Line
+                )
+            )
+        elif kind == nodes.Iir_Kind.Report_Statement:
+            print(
+                "[NOT IMPLEMENTED] Report statement (label: '{label}') at line {line}".format(
+                    label=label, line=pos.Line
+                )
+            )
+        elif kind == nodes.Iir_Kind.Assertion_Statement:
+            print(
+                "[NOT IMPLEMENTED] Report statement (label: '{label}') at line {line}".format(
+                    label=label, line=pos.Line
+                )
+            )
         else:
             raise DOMException(
                 "Unknown statement of kind '{kind}' in {entity} '{name}' at {file}:{line}:{column}.".format(
