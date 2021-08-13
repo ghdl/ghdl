@@ -58,12 +58,13 @@ from pyVHDLModel.SyntaxModel import (
     ConcurrentStatement,
     SequentialStatement,
     Expression,
-    ConcurrentChoice, ConcurrentCase,
+    ConcurrentChoice,
+    ConcurrentCase,
 )
 
 from pyGHDL.libghdl import Iir, utils
 from pyGHDL.libghdl.vhdl import nodes
-from pyGHDL.dom import DOMMixin
+from pyGHDL.dom import DOMMixin, DOMException, Position
 from pyGHDL.dom._Utils import GetNameOfNode
 
 
@@ -186,10 +187,10 @@ class ProcessStatement(VHDLModel_ProcessStatement, DOMMixin):
     def parse(
         cls, processNode: Iir, label: str, hasSensitivityList: bool
     ) -> "ProcessStatement":
+        from pyGHDL.dom._Utils import GetIirKindOfNode
         from pyGHDL.dom._Translate import (
             GetDeclaredItemsFromChainedNodes,
             GetSequentialStatementsFromChainedNodes,
-            GetIirKindOfNode
         )
 
         sensitivityList = None
@@ -453,10 +454,11 @@ class CaseGenerateStatement(VHDLModel_CaseGenerateStatement, DOMMixin):
 
     @classmethod
     def parse(cls, generateNode: Iir, label: str) -> "CaseGenerateStatement":
+        from pyGHDL.dom._Utils import GetIirKindOfNode
         from pyGHDL.dom._Translate import (
             GetExpressionFromNode,
-            GetIirKindOfNode,
             GetRangeFromNode,
+            GetNameFromNode,
         )
 
         # TODO: get choices
@@ -480,7 +482,23 @@ class CaseGenerateStatement(VHDLModel_CaseGenerateStatement, DOMMixin):
                 cases.append(GenerateCase(alternative, choices))
                 choices = []
             elif choiceKind is nodes.Iir_Kind.Choice_By_Range:
-                rng = GetRangeFromNode(nodes.Get_Choice_Range(alternative))
+                choiceRange = nodes.Get_Choice_Range(alternative)
+                choiceRangeKind = GetIirKindOfNode(choiceRange)
+                if choiceRangeKind == nodes.Iir_Kind.Range_Expression:
+                    rng = GetRangeFromNode(choiceRange)
+                elif choiceRangeKind in (
+                    nodes.Iir_Kind.Attribute_Name,
+                    nodes.Iir_Kind.Parenthesis_Name,
+                ):
+                    rng = GetNameFromNode(choiceRange)
+                else:
+                    pos = Position.parse(generateNode)
+                    raise DOMException(
+                        "Unknown choice range kind '{kind}' in case...generate statement at line {line}.".format(
+                            kind=choiceRangeKind.name, line=pos.Line
+                        )
+                    )
+
                 choices.append(RangedGenerateChoice(alternative, rng))
                 cases.append(GenerateCase(alternative, choices))
                 choices = []
@@ -508,15 +526,33 @@ class ForGenerateStatement(VHDLModel_ForGenerateStatement, DOMMixin):
 
     @classmethod
     def parse(cls, generateNode: Iir, label: str) -> "ForGenerateStatement":
+        from pyGHDL.dom._Utils import GetIirKindOfNode
         from pyGHDL.dom._Translate import (
             GetDeclaredItemsFromChainedNodes,
             GetConcurrentStatementsFromChainedNodes,
             GetRangeFromNode,
+            GetNameFromNode,
         )
 
         spec = nodes.Get_Parameter_Specification(generateNode)
         loopIndex = GetNameOfNode(spec)
-        rng = GetRangeFromNode(nodes.Get_Discrete_Range(spec))
+
+        discreteRange = nodes.Get_Discrete_Range(spec)
+        rangeKind = GetIirKindOfNode(discreteRange)
+        if rangeKind == nodes.Iir_Kind.Range_Expression:
+            rng = GetRangeFromNode(discreteRange)
+        elif rangeKind in (
+            nodes.Iir_Kind.Attribute_Name,
+            nodes.Iir_Kind.Parenthesis_Name,
+        ):
+            rng = GetNameFromNode(discreteRange)
+        else:
+            pos = Position.parse(generateNode)
+            raise DOMException(
+                "Unknown discete range kind '{kind}' in for...generate statement at line {line}.".format(
+                    kind=rangeKind.name, line=pos.Line
+                )
+            )
 
         body = nodes.Get_Generate_Statement_Body(generateNode)
         declarationChain = nodes.Get_Declaration_Chain(body)
@@ -584,7 +620,7 @@ class ConcurrentProcedureCall(VHDLModel_ConcurrentProcedureCall, DOMMixin):
 
     @classmethod
     def parse(cls, callNode: Iir, label: str) -> "ConcurrentProcedureCall":
-        from pyGHDL.dom._Translate import GetNameFromNode, GetIirKindOfNode
+        from pyGHDL.dom._Translate import GetNameFromNode
 
         call = nodes.Get_Procedure_Call(callNode)
         prefix = nodes.Get_Prefix(call)

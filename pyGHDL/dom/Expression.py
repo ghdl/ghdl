@@ -571,6 +571,23 @@ class Aggregate(VHDLModel_Aggregate, DOMMixin):
                 choices.append(IndexedAggregateElement(item, index, value))
             elif kind == nodes.Iir_Kind.Choice_By_Range:
                 r = GetRangeFromNode(nodes.Get_Choice_Range(item))
+
+                rangeKind = GetIirKindOfNode(discreteRange)
+                if rangeKind == nodes.Iir_Kind.Range_Expression:
+                    rng = GetRangeFromNode(discreteRange)
+                elif rangeKind in (
+                    nodes.Iir_Kind.Attribute_Name,
+                    nodes.Iir_Kind.Parenthesis_Name,
+                ):
+                    rng = GetNameFromNode(discreteRange)
+                else:
+                    pos = Position.parse(generateNode)
+                    raise DOMException(
+                        "Unknown discete range kind '{kind}' in for...generate statement at line {line}.".format(
+                            kind=rangeKind.name, line=pos.Line
+                        )
+                    )
+
                 choices.append(RangedAggregateElement(item, r, value))
             elif kind == nodes.Iir_Kind.Choice_By_Name:
                 name = GetNameFromNode(nodes.Get_Choice_Name(item))

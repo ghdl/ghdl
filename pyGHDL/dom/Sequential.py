@@ -34,7 +34,7 @@ from typing import Iterable
 
 from pydecor import export
 
-from pyGHDL.dom.Concurrent import WaveformElement   # TODO: move out from concurrent?
+from pyGHDL.dom.Concurrent import WaveformElement  # TODO: move out from concurrent?
 from pyGHDL.dom.Range import Range
 from pyVHDLModel.SyntaxModel import (
     IfBranch as VHDLModel_IfBranch,
@@ -52,13 +52,14 @@ from pyVHDLModel.SyntaxModel import (
     Name,
     SequentialStatement,
     Expression,
-    SequentialChoice, SequentialCase,
+    SequentialChoice,
+    SequentialCase,
 )
 
 
 from pyGHDL.libghdl import Iir, utils
 from pyGHDL.libghdl.vhdl import nodes
-from pyGHDL.dom import DOMMixin
+from pyGHDL.dom import DOMMixin, Position, DOMException
 from pyGHDL.dom._Utils import GetNameOfNode
 
 
@@ -257,10 +258,11 @@ class CaseStatement(VHDLModel_CaseStatement, DOMMixin):
 
     @classmethod
     def parse(cls, generateNode: Iir, label: str) -> "CaseStatement":
+        from pyGHDL.dom._Utils import GetIirKindOfNode
         from pyGHDL.dom._Translate import (
             GetExpressionFromNode,
-            GetIirKindOfNode,
             GetRangeFromNode,
+            GetNameFromNode,
         )
 
         # TODO: get choices
@@ -284,7 +286,23 @@ class CaseStatement(VHDLModel_CaseStatement, DOMMixin):
                 cases.append(Case(alternative, choices))
                 choices = []
             elif choiceKind is nodes.Iir_Kind.Choice_By_Range:
-                rng = GetRangeFromNode(nodes.Get_Choice_Range(alternative))
+                choiceRange = nodes.Get_Choice_Range(alternative)
+                choiceRangeKind = GetIirKindOfNode(choiceRange)
+                if choiceRangeKind == nodes.Iir_Kind.Range_Expression:
+                    rng = GetRangeFromNode(choiceRange)
+                elif choiceRangeKind in (
+                    nodes.Iir_Kind.Attribute_Name,
+                    nodes.Iir_Kind.Parenthesis_Name,
+                ):
+                    rng = GetNameFromNode(choiceRange)
+                else:
+                    pos = Position.parse(generateNode)
+                    raise DOMException(
+                        "Unknown choice range kind '{kind}' in case statement at line {line}.".format(
+                            kind=choiceRangeKind.name, line=pos.Line
+                        )
+                    )
+
                 choices.append(RangedChoice(alternative, rng))
                 cases.append(Case(alternative, choices))
                 choices = []
@@ -311,14 +329,32 @@ class ForLoopStatement(VHDLModel_ForLoopStatement, DOMMixin):
 
     @classmethod
     def parse(cls, generateNode: Iir, label: str) -> "ForLoopStatement":
+        from pyGHDL.dom._Utils import GetIirKindOfNode
         from pyGHDL.dom._Translate import (
             GetSequentialStatementsFromChainedNodes,
             GetRangeFromNode,
+            GetNameFromNode,
         )
 
         spec = nodes.Get_Parameter_Specification(generateNode)
         loopIndex = GetNameOfNode(spec)
-        rng = GetRangeFromNode(nodes.Get_Discrete_Range(spec))
+
+        discreteRange = nodes.Get_Discrete_Range(spec)
+        rangeKind = GetIirKindOfNode(discreteRange)
+        if rangeKind == nodes.Iir_Kind.Range_Expression:
+            rng = GetRangeFromNode(discreteRange)
+        elif rangeKind in (
+            nodes.Iir_Kind.Attribute_Name,
+            nodes.Iir_Kind.Parenthesis_Name,
+        ):
+            rng = GetNameFromNode(discreteRange)
+        else:
+            pos = Position.parse(generateNode)
+            raise DOMException(
+                "Unknown discete range kind '{kind}' in for...loop statement at line {line}.".format(
+                    kind=rangeKind.name, line=pos.Line
+                )
+            )
 
         body = nodes.Get_Generate_Statement_Body(generateNode)
 
@@ -375,7 +411,8 @@ class SequentialProcedureCall(VHDLModel_SequentialProcedureCall, DOMMixin):
 
     @classmethod
     def parse(cls, callNode: Iir, label: str) -> "SequentialProcedureCall":
-        from pyGHDL.dom._Translate import GetNameFromNode, GetIirKindOfNode
+        from pyGHDL.dom._Utils import GetIirKindOfNode
+        from pyGHDL.dom._Translate import GetNameFromNode
 
         call = nodes.Get_Procedure_Call(callNode)
         prefix = nodes.Get_Prefix(call)

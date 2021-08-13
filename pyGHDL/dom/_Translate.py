@@ -45,7 +45,8 @@ from pyVHDLModel.SyntaxModel import (
     ParameterInterfaceItem,
     ModelEntity,
     Name,
-    ConcurrentStatement, SequentialStatement,
+    ConcurrentStatement,
+    SequentialStatement,
 )
 
 from pyGHDL.libghdl import utils, name_table

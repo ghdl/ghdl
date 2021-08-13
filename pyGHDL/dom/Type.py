@@ -53,8 +53,7 @@ from pyVHDLModel.SyntaxModel import (
 from pyGHDL.libghdl import utils
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes, flists
-from pyGHDL.dom import DOMMixin, DOMException
-from pyGHDL.dom._Utils import GetNameOfNode, GetIirKindOfNode
+from pyGHDL.dom import DOMMixin, DOMException, Position
 from pyGHDL.dom.Symbol import SimpleSubtypeSymbol
 from pyGHDL.dom.Literal import EnumerationLiteral, PhysicalIntegerLiteral
 from pyGHDL.dom.Range import Range
@@ -69,6 +68,8 @@ class IncompleteType(VHDLModel_AnonymousType, DOMMixin):
 
     @classmethod
     def parse(cls, node: Iir) -> "IncompleteType":
+        from pyGHDL.dom._Utils import GetNameOfNode
+
         name = GetNameOfNode(node)
 
         return cls(node, name)
@@ -113,9 +114,25 @@ class PhysicalType(VHDLModel_PhysicalType, DOMMixin):
 
     @classmethod
     def parse(cls, typeName: str, typeDefinitionNode: Iir) -> "PhysicalType":
-        from pyGHDL.dom._Translate import GetRangeFromNode
+        from pyGHDL.dom._Utils import GetIirKindOfNode, GetNameOfNode
+        from pyGHDL.dom._Translate import GetRangeFromNode, GetNameFromNode
 
-        rng = GetRangeFromNode(nodes.Get_Range_Constraint(typeDefinitionNode))
+        rangeConstraint = nodes.Get_Range_Constraint(typeDefinitionNode)
+        rangeKind = GetIirKindOfNode(rangeConstraint)
+        if rangeKind == nodes.Iir_Kind.Range_Expression:
+            rng = GetRangeFromNode(rangeConstraint)
+        elif rangeKind in (
+            nodes.Iir_Kind.Attribute_Name,
+            nodes.Iir_Kind.Parenthesis_Name,
+        ):
+            rng = GetNameFromNode(rangeConstraint)
+        else:
+            pos = Position.parse(typeDefinitionNode)
+            raise DOMException(
+                "Unknown range kind '{kind}' in physical type definition at line {line}.".format(
+                    kind=rangeKind.name, line=pos.Line
+                )
+            )
 
         primaryUnit = nodes.Get_Primary_Unit(typeDefinitionNode)
         primaryUnitName = GetNameOfNode(primaryUnit)
@@ -145,6 +162,7 @@ class ArrayType(VHDLModel_ArrayType, DOMMixin):
 
     @classmethod
     def parse(cls, typeName: str, typeDefinitionNode: Iir) -> "ArrayType":
+        from pyGHDL.dom._Utils import GetIirKindOfNode
         from pyGHDL.dom._Translate import (
             GetSimpleTypeFromNode,
             GetSubtypeIndicationFromIndicationNode,
@@ -182,6 +200,7 @@ class RecordTypeElement(VHDLModel_RecordTypeElement, DOMMixin):
 
     @classmethod
     def parse(cls, elementDeclarationNode: Iir) -> "RecordTypeElement":
+        from pyGHDL.dom._Utils import GetNameOfNode
         from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode
 
         elementName = GetNameOfNode(elementDeclarationNode)
@@ -208,6 +227,8 @@ class RecordType(VHDLModel_RecordType, DOMMixin):
 
     @classmethod
     def parse(cls, typeName: str, typeDefinitionNode: Iir) -> "RecordType":
+        from pyGHDL.dom._Utils import GetNameOfNode
+
         elements = []
         elementDeclarations = nodes.Get_Elements_Declaration_List(typeDefinitionNode)
 
@@ -251,6 +272,8 @@ class ProtectedType(VHDLModel_ProtectedType, DOMMixin):
 
     @classmethod
     def parse(cls, typeName: str, typeDefinitionNode: Iir) -> "ProtectedType":
+        from pyGHDL.dom._Utils import GetIirKindOfNode
+
         # FIXME: change this to a generator
         methods = []
         for item in utils.chain_iter(nodes.Get_Declaration_Chain(typeDefinitionNode)):
@@ -273,6 +296,7 @@ class ProtectedTypeBody(VHDLModel_ProtectedTypeBody, DOMMixin):
 
     @classmethod
     def parse(cls, protectedBodyNode: Iir) -> "ProtectedTypeBody":
+        from pyGHDL.dom._Utils import GetNameOfNode
         from pyGHDL.dom._Translate import GetDeclaredItemsFromChainedNodes
 
         typeName = GetNameOfNode(protectedBodyNode)
@@ -313,6 +337,7 @@ class FileType(VHDLModel_FileType, DOMMixin):
 
     @classmethod
     def parse(cls, typeName: str, typeDefinitionNode: Iir) -> "FileType":
+        from pyGHDL.dom._Utils import GetNameOfNode
 
         designatedSubtypeMark = nodes.Get_File_Type_Mark(typeDefinitionNode)
         designatedSubtypeName = GetNameOfNode(designatedSubtypeMark)
