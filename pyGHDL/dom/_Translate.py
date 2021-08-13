@@ -200,8 +200,8 @@ def GetAssociations(node: Iir) -> List:
             associations.append(expr)
         else:
             raise DOMException(
-                "Unknown association kind '{kindName}'({kind}) in array index/slice or function call '{node}'.".format(
-                    kind=kind, kindName=kind.name, node=node
+                "Unknown association kind '{kind}' in array index/slice or function call '{node}'.".format(
+                    kind=kind.name, node=node
                 )
             )
 
@@ -526,9 +526,8 @@ def GetGenericsFromChainedNodes(
             else:
                 position = Position.parse(generic)
                 raise DOMException(
-                    "Unknown generic kind '{kindName}'({kind}) in generic '{generic}' at {file}:{line}:{column}.".format(
-                        kind=kind,
-                        kindName=kind.name,
+                    "Unknown generic kind '{kind}' in generic '{generic}' at {file}:{line}:{column}.".format(
+                        kind=kind.name,
                         generic=generic,
                         file=position.Filename,
                         line=position.Line,
@@ -577,9 +576,8 @@ def GetPortsFromChainedNodes(
         else:
             position = Position.parse(port)
             raise DOMException(
-                "Unknown port kind '{kindName}'({kind}) in port '{port}' at {file}:{line}:{column}.".format(
-                    kind=kind,
-                    kindName=kind.name,
+                "Unknown port kind '{kind}' in port '{port}' at {file}:{line}:{column}.".format(
+                    kind=kind.name,
                     port=port,
                     file=position.Filename,
                     line=position.Line,
@@ -615,9 +613,8 @@ def GetParameterFromChainedNodes(
         else:
             position = Position.parse(parameter)
             raise DOMException(
-                "Unknown parameter kind '{kindName}'({kind}) in parameter '{param}' at {file}:{line}:{column}.".format(
-                    kind=kind,
-                    kindName=kind.name,
+                "Unknown parameter kind '{kind}' in parameter '{param}' at {file}:{line}:{column}.".format(
+                    kind=kind.name,
                     param=parameter,
                     file=position.Filename,
                     line=position.Line,

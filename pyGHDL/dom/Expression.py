@@ -597,8 +597,8 @@ class Aggregate(VHDLModel_Aggregate, DOMMixin):
                 choices.append(OthersAggregateElement(item, value))
             else:
                 raise DOMException(
-                    "Unknown choice kind '{kindName}'({kind}) in aggregate '{aggr}'.".format(
-                        kind=kind, kindName=kind.name, aggr=node
+                    "Unknown choice kind '{kind}' in aggregate '{aggr}'.".format(
+                        kind=kind.name, aggr=node
                     )
                 )
 

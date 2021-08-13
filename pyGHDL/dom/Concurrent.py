@@ -196,10 +196,14 @@ class ProcessStatement(VHDLModel_ProcessStatement, DOMMixin):
         sensitivityList = None
         if hasSensitivityList:
             sensitivityListNode = nodes.Get_Sensitivity_List(processNode)
-            print("sensi", GetIirKindOfNode(sensitivityListNode))
+        #            print("sensi", GetIirKindOfNode(sensitivityListNode))
 
-        declaredItems = GetDeclaredItemsFromChainedNodes(nodes.Get_Declaration_Chain(processNode), "process", label)
-        statements = GetSequentialStatementsFromChainedNodes(nodes.Get_Sequential_Statement_Chain(processNode), "process", label)
+        declaredItems = GetDeclaredItemsFromChainedNodes(
+            nodes.Get_Declaration_Chain(processNode), "process", label
+        )
+        statements = GetSequentialStatementsFromChainedNodes(
+            nodes.Get_Sequential_Statement_Chain(processNode), "process", label
+        )
 
         return cls(processNode, label, declaredItems, statements, sensitivityList)
 
@@ -372,10 +376,14 @@ class RangedGenerateChoice(VHDLModel_RangedGenerateChoice, DOMMixin):
 
 @export
 class GenerateCase(VHDLModel_GenerateCase, DOMMixin):
-    def __init__(self, node: Iir, choices: Iterable[ConcurrentChoice],
+    def __init__(
+        self,
+        node: Iir,
+        choices: Iterable[ConcurrentChoice],
         declaredItems: Iterable = None,
         statements: Iterable[ConcurrentStatement] = None,
-        alternativeLabel: str = None,):
+        alternativeLabel: str = None,
+    ):
         super().__init__(choices)
         DOMMixin.__init__(self, node)
 
@@ -447,7 +455,11 @@ class OthersGenerateCase(VHDLModel_OthersGenerateCase, DOMMixin):
 @export
 class CaseGenerateStatement(VHDLModel_CaseGenerateStatement, DOMMixin):
     def __init__(
-        self, generateNode: Iir, label: str, expression: Expression, cases: Iterable[ConcurrentCase]
+        self,
+        generateNode: Iir,
+        label: str,
+        expression: Expression,
+        cases: Iterable[ConcurrentCase],
     ):
         super().__init__(label, expression, cases)
         DOMMixin.__init__(self, generateNode)

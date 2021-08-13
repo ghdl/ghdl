@@ -213,9 +213,7 @@ class Document(VHDLModel_Document):
 
             else:
                 raise DOMException(
-                    "Unknown design unit kind '{kindName}'({kind}).".format(
-                        kindName=nodeKind.name, kind=nodeKind
-                    )
+                    "Unknown design unit kind '{kind}'.".format(kind=nodeKind.name)
                 )
 
     @property

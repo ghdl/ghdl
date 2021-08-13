@@ -198,7 +198,12 @@ class RangedChoice(VHDLModel_RangedChoice, DOMMixin):
 
 @export
 class Case(VHDLModel_Case, DOMMixin):
-    def __init__(self, node: Iir, choices: Iterable[SequentialChoice], statements: Iterable[SequentialStatement]):
+    def __init__(
+        self,
+        node: Iir,
+        choices: Iterable[SequentialChoice],
+        statements: Iterable[SequentialStatement],
+    ):
         super().__init__(choices, statements)
         DOMMixin.__init__(self, node)
 
@@ -251,7 +256,11 @@ class OthersCase(VHDLModel_OthersCase, DOMMixin):
 @export
 class CaseStatement(VHDLModel_CaseStatement, DOMMixin):
     def __init__(
-        self, generateNode: Iir, label: str, expression: Expression, cases: Iterable[SequentialCase]
+        self,
+        generateNode: Iir,
+        label: str,
+        expression: Expression,
+        cases: Iterable[SequentialCase],
     ):
         super().__init__(expression, cases, label)
         DOMMixin.__init__(self, generateNode)
