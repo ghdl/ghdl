@@ -75,21 +75,21 @@ class IfBranch(VHDLModel_IfBranch):
         DOMMixin.__init__(self, branchNode)
 
     @classmethod
-    def parse(cls, generateNode: Iir, label: str) -> "IfBranch":
+    def parse(cls, branchNode: Iir, label: str) -> "IfBranch":
         from pyGHDL.dom._Translate import (
             GetSequentialStatementsFromChainedNodes,
             GetExpressionFromNode,
         )
 
-        condition = GetExpressionFromNode(nodes.Get_Condition(generateNode))
-        body = nodes.Get_Generate_Statement_Body(generateNode)
+        condition = GetExpressionFromNode(nodes.Get_Condition(branchNode))
+        body = nodes.Get_Generate_Statement_Body(branchNode)
 
         statementChain = nodes.Get_Sequential_Statement_Chain(body)
         statements = GetSequentialStatementsFromChainedNodes(
             statementChain, "if branch", label
         )
 
-        return cls(generateNode, condition, statements)
+        return cls(branchNode, condition, statements)
 
 
 @export
@@ -104,21 +104,21 @@ class ElsifBranch(VHDLModel_ElsifBranch):
         DOMMixin.__init__(self, branchNode)
 
     @classmethod
-    def parse(cls, generateNode: Iir, condition: Iir, label: str) -> "ElsifBranch":
+    def parse(cls, branchNode: Iir, condition: Iir, label: str) -> "ElsifBranch":
         from pyGHDL.dom._Translate import (
             GetSequentialStatementsFromChainedNodes,
             GetExpressionFromNode,
         )
 
         condition = GetExpressionFromNode(condition)
-        body = nodes.Get_Generate_Statement_Body(generateNode)
+        body = nodes.Get_Generate_Statement_Body(branchNode)
 
         statementChain = nodes.Get_Sequential_Statement_Chain(body)
         statements = GetSequentialStatementsFromChainedNodes(
             statementChain, "elsif branch", label
         )
 
-        return cls(generateNode, condition, statements)
+        return cls(branchNode, condition, statements)
 
 
 @export
@@ -132,43 +132,43 @@ class ElseBranch(VHDLModel_ElseBranch):
         DOMMixin.__init__(self, branchNode)
 
     @classmethod
-    def parse(cls, generateNode: Iir, label: str) -> "ElseBranch":
+    def parse(cls, elseNode: Iir, label: str) -> "ElseBranch":
         from pyGHDL.dom._Translate import (
             GetSequentialStatementsFromChainedNodes,
         )
 
-        body = nodes.Get_Generate_Statement_Body(generateNode)
+        body = nodes.Get_Generate_Statement_Body(elseNode)
 
         statementChain = nodes.Get_Sequential_Statement_Chain(body)
         statements = GetSequentialStatementsFromChainedNodes(
             statementChain, "else branch", label
         )
 
-        return cls(generateNode, statements)
+        return cls(elseNode, statements)
 
 
 @export
 class IfStatement(VHDLModel_IfStatement, DOMMixin):
     def __init__(
         self,
-        generateNode: Iir,
+        ifNode: Iir,
         ifBranch: IfBranch,
         elsifBranches: Iterable[ElsifBranch] = None,
         elseBranch: ElseBranch = None,
         label: str = None,
     ):
         super().__init__(ifBranch, elsifBranches, elseBranch, label)
-        DOMMixin.__init__(self, generateNode)
+        DOMMixin.__init__(self, ifNode)
 
     @classmethod
-    def parse(cls, generateNode: Iir, label: str) -> "IfStatement":
-        ifBranch = IfBranch.parse(generateNode, label)
+    def parse(cls, ifNode: Iir, label: str) -> "IfStatement":
+        ifBranch = IfBranch.parse(ifNode, label)
         elsifBranches = []
         elseBranch = None
         # WORKAROUND: Python 3.8 syntax
         # elseClause = generateNode
         # while (elseClause := nodes.Get_Generate_Else_Clause(elseClause)) != nodes.Null_Iir:
-        elseClause = nodes.Get_Generate_Else_Clause(generateNode)
+        elseClause = nodes.Get_Generate_Else_Clause(ifNode)
         while elseClause != nodes.Null_Iir:
             condition = nodes.Get_Condition(elseClause)
             if condition != nodes.Null_Iir:
@@ -179,7 +179,7 @@ class IfStatement(VHDLModel_IfStatement, DOMMixin):
 
             elseClause = nodes.Get_Generate_Else_Clause(elseClause)
 
-        return cls(generateNode, ifBranch, elsifBranches, elseBranch, label)
+        return cls(ifNode, ifBranch, elsifBranches, elseBranch, label)
 
 
 @export
@@ -257,16 +257,16 @@ class OthersCase(VHDLModel_OthersCase, DOMMixin):
 class CaseStatement(VHDLModel_CaseStatement, DOMMixin):
     def __init__(
         self,
-        generateNode: Iir,
+        caseNode: Iir,
         label: str,
         expression: Expression,
         cases: Iterable[SequentialCase],
     ):
         super().__init__(expression, cases, label)
-        DOMMixin.__init__(self, generateNode)
+        DOMMixin.__init__(self, caseNode)
 
     @classmethod
-    def parse(cls, generateNode: Iir, label: str) -> "CaseStatement":
+    def parse(cls, caseNode: Iir, label: str) -> "CaseStatement":
         from pyGHDL.dom._Utils import GetIirKindOfNode
         from pyGHDL.dom._Translate import (
             GetExpressionFromNode,
@@ -276,11 +276,11 @@ class CaseStatement(VHDLModel_CaseStatement, DOMMixin):
 
         # TODO: get choices
 
-        expression = GetExpressionFromNode(nodes.Get_Expression(generateNode))
+        expression = GetExpressionFromNode(nodes.Get_Expression(caseNode))
 
         cases = []
         choices = []
-        alternatives = nodes.Get_Case_Statement_Alternative_Chain(generateNode)
+        alternatives = nodes.Get_Case_Statement_Alternative_Chain(caseNode)
         for alternative in utils.chain_iter(alternatives):
             choiceKind = GetIirKindOfNode(alternative)
 
@@ -305,7 +305,7 @@ class CaseStatement(VHDLModel_CaseStatement, DOMMixin):
                 ):
                     rng = GetNameFromNode(choiceRange)
                 else:
-                    pos = Position.parse(generateNode)
+                    pos = Position.parse(caseNode)
                     raise DOMException(
                         "Unknown choice range kind '{kind}' in case statement at line {line}.".format(
                             kind=choiceRangeKind.name, line=pos.Line
@@ -320,24 +320,24 @@ class CaseStatement(VHDLModel_CaseStatement, DOMMixin):
             else:
                 print(choiceKind)
 
-        return cls(generateNode, label, expression, cases)
+        return cls(caseNode, label, expression, cases)
 
 
 @export
 class ForLoopStatement(VHDLModel_ForLoopStatement, DOMMixin):
     def __init__(
         self,
-        generateNode: Iir,
+        loopNode: Iir,
         loopIndex: str,
         range: Range,
         statements: Iterable[SequentialStatement] = None,
         label: str = None,
     ):
         super().__init__(loopIndex, range, statements, label)
-        DOMMixin.__init__(self, generateNode)
+        DOMMixin.__init__(self, loopNode)
 
     @classmethod
-    def parse(cls, generateNode: Iir, label: str) -> "ForLoopStatement":
+    def parse(cls, loopNode: Iir, label: str) -> "ForLoopStatement":
         from pyGHDL.dom._Utils import GetIirKindOfNode
         from pyGHDL.dom._Translate import (
             GetSequentialStatementsFromChainedNodes,
@@ -345,7 +345,7 @@ class ForLoopStatement(VHDLModel_ForLoopStatement, DOMMixin):
             GetNameFromNode,
         )
 
-        spec = nodes.Get_Parameter_Specification(generateNode)
+        spec = nodes.Get_Parameter_Specification(loopNode)
         loopIndex = GetNameOfNode(spec)
 
         discreteRange = nodes.Get_Discrete_Range(spec)
@@ -358,21 +358,21 @@ class ForLoopStatement(VHDLModel_ForLoopStatement, DOMMixin):
         ):
             rng = GetNameFromNode(discreteRange)
         else:
-            pos = Position.parse(generateNode)
+            pos = Position.parse(loopNode)
             raise DOMException(
                 "Unknown discete range kind '{kind}' in for...loop statement at line {line}.".format(
                     kind=rangeKind.name, line=pos.Line
                 )
             )
 
-        body = nodes.Get_Generate_Statement_Body(generateNode)
+        body = nodes.Get_Generate_Statement_Body(loopNode)
 
         statementChain = nodes.Get_Sequential_Statement_Chain(body)
         statements = GetSequentialStatementsFromChainedNodes(
             statementChain, "for", label
         )
 
-        return cls(generateNode, loopIndex, rng, statements, label)
+        return cls(loopNode, loopIndex, rng, statements, label)
 
 
 @export
