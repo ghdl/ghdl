@@ -730,6 +730,9 @@ class PrettyPrint:
                         prefix=prefix, label=case.Label, case=case
                     )
                 )
+                for stmt in case.Statements:
+                    for line in self.formatHierarchy(stmt, level + 2):
+                        buffer.append(line)
         elif isinstance(statement, ForGenerateStatement):
             buffer.append(
                 "{prefix}- {label}: for {index} in {range} generate".format(
