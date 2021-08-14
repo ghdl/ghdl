@@ -189,7 +189,15 @@ begin
 		when others =>
 				constant G8 : boolean := False;
 			begin
-				inst: component OthersDummy;
+				blkOthers: block
+					constant G9 : boolean := False;
+				begin
+					ifOthers: if false generate
+						constant G10 : boolean := False;
+					begin
+						inst: component OthersDummy;
+					end generate;
+				end block;
 	end generate;
 
 	call: OtherDummy;
