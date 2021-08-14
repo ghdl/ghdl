@@ -478,10 +478,13 @@ class CaseGenerateStatement(VHDLModel_CaseGenerateStatement, DOMMixin):
         expression = GetExpressionFromNode(nodes.Get_Expression(generateNode))
 
         cases = []
-        choices = []
-        alternatives = nodes.Get_Case_Statement_Alternative_Chain(generateNode)
-        for alternative in utils.chain_iter(alternatives):
+        choices = None
+        alternative = nodes.Get_Case_Statement_Alternative_Chain(generateNode)
+
+        while alternative != nodes.Null_Iir:
             choiceKind = GetIirKindOfNode(alternative)
+            sameAlternative = nodes.Get_Same_Alternative_Flag(alternative)
+            print("sameAlternative: ", sameAlternative)
 
             if choiceKind in (
                 nodes.Iir_Kind.Choice_By_Name,
@@ -490,9 +493,12 @@ class CaseGenerateStatement(VHDLModel_CaseGenerateStatement, DOMMixin):
                 choiceExpression = GetExpressionFromNode(
                     nodes.Get_Choice_Expression(alternative)
                 )
-                choices.append(IndexedGenerateChoice(alternative, choiceExpression))
-                cases.append(GenerateCase(alternative, choices))
-                choices = []
+
+                choice = IndexedGenerateChoice(alternative, choiceExpression)
+                if sameAlternative:
+                    choices.append(choice)
+                    alternative = nodes.Get_Chain(alternative)
+                    continue
             elif choiceKind is nodes.Iir_Kind.Choice_By_Range:
                 choiceRange = nodes.Get_Choice_Range(alternative)
                 choiceRangeKind = GetIirKindOfNode(choiceRange)
@@ -504,20 +510,44 @@ class CaseGenerateStatement(VHDLModel_CaseGenerateStatement, DOMMixin):
                 ):
                     rng = GetNameFromNode(choiceRange)
                 else:
-                    pos = Position.parse(generateNode)
+                    pos = Position.parse(alternative)
                     raise DOMException(
                         "Unknown choice range kind '{kind}' in case...generate statement at line {line}.".format(
                             kind=choiceRangeKind.name, line=pos.Line
                         )
                     )
 
-                choices.append(RangedGenerateChoice(alternative, rng))
-                cases.append(GenerateCase(alternative, choices))
-                choices = []
+                choice = RangedGenerateChoice(alternative, rng)
+                if sameAlternative:
+                    choices.append(choice)
+                    alternative = nodes.Get_Chain(alternative)
+                    continue
             elif choiceKind is nodes.Iir_Kind.Choice_By_Others:
+                if choices is not None:
+                    cases.append(GenerateCase(alternative, choices))
+                    choices = None
                 cases.append(OthersGenerateCase.parse(alternative))
+                alternative = nodes.Get_Chain(alternative)
+                continue
             else:
-                print(choiceKind)
+                pos = Position.parse(alternative)
+                raise DOMException(
+                    "Unknown choice kind '{kind}' in case...generate statement at line {line}.".format(
+                        kind=choiceKind.name, line=pos.Line
+                    )
+                )
+
+            if choices is not None:
+                cases.append(GenerateCase(alternative, choices))
+
+            choices = [
+                choice,
+            ]
+
+            alternative = nodes.Get_Chain(alternative)
+
+        if choices is not None:
+            cases.append(GenerateCase(alternative, choices))
 
         return cls(generateNode, label, expression, cases)
 
