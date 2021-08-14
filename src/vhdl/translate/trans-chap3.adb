@@ -1791,7 +1791,8 @@ package body Trans.Chap3 is
                if Get_Info (El) /= null then
                   Chap2.Translate_Subprogram_Declaration (El);
                end if;
-            when Iir_Kind_Attribute_Specification =>
+            when Iir_Kind_Attribute_Specification
+               | Iir_Kind_Use_Clause =>
                null;
             when others =>
                Error_Kind ("translate_protected_type_subprograms_spec", El);
