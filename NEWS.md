@@ -1,4 +1,17 @@
-**1.0-dev** (XXXX-XX-XX)
+**2.0-dev** (XXXX-XX-XX)
+
+**1.0** (2021-02-02)
+
+- Plugin for Yosys moved from [tgingold/ghdlsynth-beta](https://github.com/tgingold/ghdlsynth-beta) to [ghdl/ghdl-yosys-plugin](https://github.com/ghdl/ghdl-yosys-plugin).
+- Python bindings overhauled and renamed to `pyGHDL`. Three modules are included: `libghdl`, `lsp` and `dom`.
+- The utility scripts in the codebase moved into subdir `scripts`: CI, binding generation, vendors, etc.
+- Repository [ghdl/ghdl-cosim](https://github.com/ghdl/ghdl-cosim) created. It contains documentation and code examples related to VHPIDIRECT, VPI and SystemC.
+- Repository [ghdl/extended-tests](https://github.com/ghdl/extended-tests) created for testing `vendors` build scripts.
+- GitHub Action [ghdl/setup-ghdl-ci](https://github.com/ghdl/setup-ghdl-ci) created, to allow easy installation of nightly GHDL assets in GitHub Actions workflows.
+- A [wiki](https://github.com/ghdl/ghdl/wiki) was created. The roadmap and ideas for documentation and internship programs were moved there.
+- Logo updated (org, ghdl/ghdl, ghdl/docker and ghdl/ghdl-cosim).
+- Assets not added to releases or pre-releases anymore. Users should use package managers or nightly assets (updated after each successful CI run of branch `master`): [nightly](https://github.com/ghdl/ghdl/releases/tag/nightly).
+- Main documentation site(s) moved to [ghdl.github.io/ghdl](https://ghdl.github.io/ghdl/) and [ghdl.github.io/ghdl-cosim](https://ghdl.github.io/ghdl-cosim/).
 
 **0.37** (2020-02-28)
 

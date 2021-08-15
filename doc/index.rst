@@ -29,6 +29,9 @@ GHDL
    News
    ****
 
+   02.02.2021 - `GHDL v1.0 was released <https://github.com/ghdl/ghdl/milestone/9?closed=1>`__
+   ============================================================================================
+
    31.01.2021 - GHDL v1.0.0rc1 was tagged
    ======================================
 
@@ -101,6 +104,8 @@ GHDL
    ===================================
 
 .. only:: latex
+
+   .. rubric:: 02.02.2021 - GHDL v1.0 was released.
 
    .. rubric:: 31.01.2021 - GHDL v1.0.0rc1 was tagged.
 
