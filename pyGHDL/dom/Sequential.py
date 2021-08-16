@@ -82,9 +82,7 @@ class IfBranch(VHDLModel_IfBranch):
         )
 
         condition = GetExpressionFromNode(nodes.Get_Condition(branchNode))
-        body = nodes.Get_Generate_Statement_Body(branchNode)
-
-        statementChain = nodes.Get_Sequential_Statement_Chain(body)
+        statementChain = nodes.Get_Sequential_Statement_Chain(branchNode)
         statements = GetSequentialStatementsFromChainedNodes(
             statementChain, "if branch", label
         )
@@ -111,9 +109,7 @@ class ElsifBranch(VHDLModel_ElsifBranch):
         )
 
         condition = GetExpressionFromNode(condition)
-        body = nodes.Get_Generate_Statement_Body(branchNode)
-
-        statementChain = nodes.Get_Sequential_Statement_Chain(body)
+        statementChain = nodes.Get_Sequential_Statement_Chain(branchNode)
         statements = GetSequentialStatementsFromChainedNodes(
             statementChain, "elsif branch", label
         )
@@ -132,19 +128,16 @@ class ElseBranch(VHDLModel_ElseBranch):
         DOMMixin.__init__(self, branchNode)
 
     @classmethod
-    def parse(cls, elseNode: Iir, label: str) -> "ElseBranch":
+    def parse(cls, branchNode: Iir, label: str) -> "ElseBranch":
         from pyGHDL.dom._Translate import (
             GetSequentialStatementsFromChainedNodes,
         )
-
-        body = nodes.Get_Generate_Statement_Body(elseNode)
-
-        statementChain = nodes.Get_Sequential_Statement_Chain(body)
+        statementChain = nodes.Get_Sequential_Statement_Chain(branchNode)
         statements = GetSequentialStatementsFromChainedNodes(
             statementChain, "else branch", label
         )
 
-        return cls(elseNode, statements)
+        return cls(branchNode, statements)
 
 
 @export
@@ -168,7 +161,7 @@ class IfStatement(VHDLModel_IfStatement, DOMMixin):
         # WORKAROUND: Python 3.8 syntax
         # elseClause = generateNode
         # while (elseClause := nodes.Get_Generate_Else_Clause(elseClause)) != nodes.Null_Iir:
-        elseClause = nodes.Get_Generate_Else_Clause(ifNode)
+        elseClause = nodes.Get_Else_Clause(ifNode)
         while elseClause != nodes.Null_Iir:
             condition = nodes.Get_Condition(elseClause)
             if condition != nodes.Null_Iir:
@@ -177,7 +170,7 @@ class IfStatement(VHDLModel_IfStatement, DOMMixin):
                 elseBranch = ElseBranch.parse(elseClause, label)
                 break
 
-            elseClause = nodes.Get_Generate_Else_Clause(elseClause)
+            elseClause = nodes.Get_Else_Clause(elseClause)
 
         return cls(ifNode, ifBranch, elsifBranches, elseBranch, label)
 

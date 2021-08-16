@@ -90,6 +90,8 @@ begin
 		if rising_edge(Clock) then
 			if Reset = '1' then
 				Q <= (others => '0');
+			elsif Load = '1' then
+				Q <= D after 10 ns;
 			else
 				Q <= std_logic_vector(unsigned(Q) + 1);
 			end if;
