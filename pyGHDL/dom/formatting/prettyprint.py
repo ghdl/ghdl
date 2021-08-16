@@ -566,7 +566,7 @@ class PrettyPrint:
             )
         elif isinstance(item, UseClause):
             buffer.append(
-                "{prefix}- use {name!s}".format(prefix=prefix, name=item.Item)
+                "{prefix}- use {names}".format(prefix=prefix, names=", ".join([str(n) for n in item.Names]))
             )
         elif isinstance(item, Package):
             buffer.append(
