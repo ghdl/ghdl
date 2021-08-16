@@ -206,6 +206,16 @@ begin
 	ende: std.env.stop;
 end architecture behav;
 
+context ctx is
+	library osvvm;
+	library axi4_lite, axi4_stream;
+	use osvvm.alert.all;
+	use osvvm.alert.alertid, osvvm.alert.priority;
+end context;
+
+
+context work.ctx;
+
 package package_1 is
 	generic (
 		BITS : positive
@@ -251,10 +261,3 @@ end package body;
 vunit vu (component_1) {
 
 }
-
-context ctx is
-	library osvvm;
-	library axi4_lite, axi4_stream;
-	use osvvm.alert.all;
-	use osvvm.alert.alertid, osvvm.alert.priority;
-end context;

@@ -47,6 +47,7 @@ from pydecor import export
 from pyVHDLModel.SyntaxModel import (
     LibraryClause as VHDLModel_LibraryClause,
     UseClause as VHDLModel_UseClause,
+    ContextReference as VHDLModel_ContextReference,
     Entity as VHDLModel_Entity,
     Architecture as VHDLModel_Architecture,
     Package as VHDLModel_Package,
@@ -82,16 +83,16 @@ __all__ = []
 
 @export
 class LibraryClause(VHDLModel_LibraryClause, DOMMixin):
-    def __init__(self, node: Iir, names: Iterable[Name]):
+    def __init__(self, libraryNode: Iir, names: Iterable[Name]):
         super().__init__(names)
-        DOMMixin.__init__(self, node)
+        DOMMixin.__init__(self, libraryNode)
 
 
 @export
 class UseClause(VHDLModel_UseClause, DOMMixin):
-    def __init__(self, node: Iir, names: Iterable[Name]):
+    def __init__(self, useNode: Iir, names: Iterable[Name]):
         super().__init__(names)
-        DOMMixin.__init__(self, node)
+        DOMMixin.__init__(self, useNode)
 
     @classmethod
     def parse(cls, useNode: Iir):
@@ -102,6 +103,23 @@ class UseClause(VHDLModel_UseClause, DOMMixin):
             uses.append(GetNameFromNode(nodes.Get_Selected_Name(use)))
 
         return cls(useNode, uses)
+
+
+@export
+class ContextReference(VHDLModel_ContextReference, DOMMixin):
+    def __init__(self, contextNode: Iir, names: Iterable[Name]):
+        super().__init__(names)
+        DOMMixin.__init__(self, contextNode)
+
+    @classmethod
+    def parse(cls, contextNode: Iir):
+        from pyGHDL.dom._Translate import GetNameFromNode
+
+        contexts = [GetNameFromNode(nodes.Get_Selected_Name(contextNode))]
+        for context in utils.chain_iter(nodes.Get_Context_Reference_Chain(contextNode)):
+            contexts.append(GetNameFromNode(nodes.Get_Selected_Name(context)))
+
+        return cls(contextNode, contexts)
 
 
 @export

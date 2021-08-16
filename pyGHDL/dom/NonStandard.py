@@ -74,6 +74,7 @@ from pyGHDL.dom.DesignUnit import (
     PackageInstantiation,
     LibraryClause,
     UseClause,
+    ContextReference,
 )
 from pyGHDL.dom.PSL import VerificationUnit, VerificationProperty, VerificationMode
 
@@ -189,6 +190,8 @@ class Document(VHDLModel_Document):
                         contextNames = []
                     elif itemKind is nodes.Iir_Kind.Use_Clause:
                         contextItems.append(UseClause.parse(item))
+                    elif itemKind is nodes.Iir_Kind.Context_Reference:
+                        contextItems.append(ContextReference.parse(item))
                     else:
                         pos = Position.parse(item)
                         raise DOMException(
