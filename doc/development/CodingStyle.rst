@@ -227,7 +227,7 @@ Documentation configuration
 * Create "parts" (LaTeX terminology / chapter headlines) in navigation bar. [:ghdlsharp:`200`]
 
 * Intersphinx files [:ghdlsharp:`200`]
-	* To decompress the inventory file: `curl -s http://ghdl.readthedocs.io/en/latest/objects.inv | tail -n+5 | openssl zlib -d`. From `how-to-uncompress-zlib-data-in-unix <http://unix.stackexchange.com/questions/22834/how-to-uncompress-zlib-data-in-unix>`_.
+	* To decompress the inventory file: ``curl -s http://ghdl.github.io/ghdl/objects.inv | tail -n+5 | openssl zlib -d``. From `how-to-uncompress-zlib-data-in-unix <http://unix.stackexchange.com/questions/22834/how-to-uncompress-zlib-data-in-unix>`_.
 	* External ref and link to section::
 
 		:ref:`GHDL Roadmap <ghdl:CHANGE:Roadmap>`
