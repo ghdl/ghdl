@@ -25,7 +25,7 @@ begin
 end;
 ```
 
-```sh :image: ghdl/ghdl:buster-mcode
+```sh :image: ghdl/ghdl:bullseye-mcode
 ghdl -a ent.vhd
 ghdl --elab-run ent
 ```

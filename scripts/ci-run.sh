@@ -384,7 +384,7 @@ ci_run () {
       tests="sanity"
 
       case "$GHDL_IMAGE_TAG" in
-        *ubuntu20*|*buster*)
+        *ubuntu20*|*buster*|*bullseye*)
           GHDL_TEST_IMAGE="test:$GHDL_IMAGE_TAG-py"
           gstart "[CI] Docker build $GHDL_TEST_IMAGE" "$ANSI_BLUE"
           docker build -t "$GHDL_TEST_IMAGE" . -f- <<-EOF
