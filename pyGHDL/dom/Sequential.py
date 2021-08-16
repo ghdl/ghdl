@@ -132,6 +132,7 @@ class ElseBranch(VHDLModel_ElseBranch):
         from pyGHDL.dom._Translate import (
             GetSequentialStatementsFromChainedNodes,
         )
+
         statementChain = nodes.Get_Sequential_Statement_Chain(branchNode)
         statements = GetSequentialStatementsFromChainedNodes(
             statementChain, "else branch", label
@@ -195,25 +196,25 @@ class Case(VHDLModel_Case, DOMMixin):
         self,
         node: Iir,
         choices: Iterable[SequentialChoice],
-        statements: Iterable[SequentialStatement],
+        statements: Iterable[SequentialStatement] = None,
     ):
         super().__init__(choices, statements)
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, caseNode: Iir, label: str) -> "Case":
-        from pyGHDL.dom._Translate import (
-            GetSequentialStatementsFromChainedNodes,
-        )
+    def parse(
+        cls, caseNode: Iir, choices: Iterable[SequentialChoice], label: str
+    ) -> "Case":
+        from pyGHDL.dom._Translate import GetSequentialStatementsFromChainedNodes
 
-        body = nodes.Get_Generate_Statement_Body(caseNode)
+        block = nodes.Get_Associated_Block(caseNode)
+        if block is nodes.Null_Iir:
+            return cls(caseNode, choices)
 
-        statementChain = nodes.Get_Sequential_Statement_Chain(body)
+        statementChain = nodes.Get_Sequential_Statement_Chain(block)
         statements = GetSequentialStatementsFromChainedNodes(
             statementChain, "case", label
         )
-
-        choices = []
 
         return cls(caseNode, choices, statements)
 
@@ -229,21 +230,19 @@ class OthersCase(VHDLModel_OthersCase, DOMMixin):
         DOMMixin.__init__(self, caseNode)
 
     @classmethod
-    def parse(cls, caseNode: Iir) -> "OthersCase":
-        from pyGHDL.dom._Translate import (
-            GetDeclaredItemsFromChainedNodes,
-            GetSequentialStatementsFromChainedNodes,
+    def parse(cls, caseNode: Iir, label: str = None) -> "OthersCase":
+        from pyGHDL.dom._Translate import GetSequentialStatementsFromChainedNodes
+
+        body = nodes.Get_Associated_Block(caseNode)
+        if body is nodes.Null_Iir:
+            return cls(caseNode)
+
+        statementChain = nodes.Get_Concurrent_Statement_Chain(body)
+        statements = GetSequentialStatementsFromChainedNodes(
+            statementChain, "case others", label
         )
 
-        # body = nodes.Get_Generate_Statement_Body(caseNode)
-        #
-        # statementChain = nodes.Get_Sequential_Statement_Chain(body)
-        # statements = GetStatementsFromChainedNodes(
-        #     statementChain, "else branch", alternativeLabel
-        # )
-
-        # return cls(caseNode, declaredItems, statements, alternativeLabel)
-        return cls(caseNode, [], [], "")
+        return cls(caseNode, statements)
 
 
 @export
@@ -267,15 +266,17 @@ class CaseStatement(VHDLModel_CaseStatement, DOMMixin):
             GetNameFromNode,
         )
 
-        # TODO: get choices
-
         expression = GetExpressionFromNode(nodes.Get_Expression(caseNode))
 
         cases = []
-        choices = []
-        alternatives = nodes.Get_Case_Statement_Alternative_Chain(caseNode)
-        for alternative in utils.chain_iter(alternatives):
+        choices = None
+        alternative = nodes.Get_Case_Statement_Alternative_Chain(caseNode)
+        caseNode = alternative
+
+        while alternative != nodes.Null_Iir:
             choiceKind = GetIirKindOfNode(alternative)
+            sameAlternative = nodes.Get_Same_Alternative_Flag(alternative)
+            print("sameAlternative: ", sameAlternative)
 
             if choiceKind in (
                 nodes.Iir_Kind.Choice_By_Name,
@@ -284,9 +285,12 @@ class CaseStatement(VHDLModel_CaseStatement, DOMMixin):
                 choiceExpression = GetExpressionFromNode(
                     nodes.Get_Choice_Expression(alternative)
                 )
-                choices.append(IndexedChoice(alternative, choiceExpression))
-                cases.append(Case(alternative, choices))
-                choices = []
+
+                choice = IndexedChoice(alternative, choiceExpression)
+                if sameAlternative:
+                    choices.append(choice)
+                    alternative = nodes.Get_Chain(alternative)
+                    continue
             elif choiceKind is nodes.Iir_Kind.Choice_By_Range:
                 choiceRange = nodes.Get_Choice_Range(alternative)
                 choiceRangeKind = GetIirKindOfNode(choiceRange)
@@ -298,20 +302,46 @@ class CaseStatement(VHDLModel_CaseStatement, DOMMixin):
                 ):
                     rng = GetNameFromNode(choiceRange)
                 else:
-                    pos = Position.parse(caseNode)
+                    pos = Position.parse(alternative)
                     raise DOMException(
                         "Unknown choice range kind '{kind}' in case statement at line {line}.".format(
                             kind=choiceRangeKind.name, line=pos.Line
                         )
                     )
 
-                choices.append(RangedChoice(alternative, rng))
-                cases.append(Case(alternative, choices))
-                choices = []
+                choice = RangedChoice(alternative, rng)
+                if sameAlternative:
+                    choices.append(choice)
+                    alternative = nodes.Get_Chain(alternative)
+                    continue
             elif choiceKind is nodes.Iir_Kind.Choice_By_Others:
-                cases.append(OthersCase.parse(alternative))
+                if choices is not None:
+                    cases.append(Case.parse(alternative, choices, label))
+                    choices = None
+                cases.append(OthersCase.parse(alternative, label))
+                alternative = nodes.Get_Chain(alternative)
+                caseNode = alternative
+                continue
             else:
-                print(choiceKind)
+                pos = Position.parse(alternative)
+                raise DOMException(
+                    "Unknown choice kind '{kind}' in case statement at line {line}.".format(
+                        kind=choiceKind.name, line=pos.Line
+                    )
+                )
+
+            if choices is not None:
+                cases.append(Case.parse(alternative, choices, label))
+
+            caseNode = alternative
+            choices = [
+                choice,
+            ]
+
+            alternative = nodes.Get_Chain(alternative)
+
+        if choices is not None:
+            cases.append(Case.parse(alternative, choices, label))
 
         return cls(caseNode, label, expression, cases)
 
@@ -358,9 +388,7 @@ class ForLoopStatement(VHDLModel_ForLoopStatement, DOMMixin):
                 )
             )
 
-        body = nodes.Get_Generate_Statement_Body(loopNode)
-
-        statementChain = nodes.Get_Sequential_Statement_Chain(body)
+        statementChain = nodes.Get_Sequential_Statement_Chain(loopNode)
         statements = GetSequentialStatementsFromChainedNodes(
             statementChain, "for", label
         )

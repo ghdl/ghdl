@@ -232,6 +232,7 @@ class IfGenerateBranch(VHDLModel_IfGenerateBranch):
         condition = GetExpressionFromNode(nodes.Get_Condition(generateNode))
         body = nodes.Get_Generate_Statement_Body(generateNode)
 
+        # TODO: alternative label
         alternativeLabelId = nodes.Get_Alternative_Label(body)
         alternativeLabel = ""
 
@@ -272,6 +273,7 @@ class ElsifGenerateBranch(VHDLModel_ElsifGenerateBranch):
         condition = GetExpressionFromNode(condition)
         body = nodes.Get_Generate_Statement_Body(generateNode)
 
+        # TODO: alternative label
         alternativeLabelId = nodes.Get_Alternative_Label(body)
         alternativeLabel = ""
 
@@ -309,6 +311,7 @@ class ElseGenerateBranch(VHDLModel_ElseGenerateBranch):
 
         body = nodes.Get_Generate_Statement_Body(generateNode)
 
+        # TODO: alternative label
         alternativeLabelId = nodes.Get_Alternative_Label(body)
         alternativeLabel = ""
 
@@ -398,6 +401,7 @@ class GenerateCase(VHDLModel_GenerateCase, DOMMixin):
 
         body = nodes.Get_Associated_Block(caseNode)
 
+        # TODO: alternative label
         alternativeLabelId = nodes.Get_Alternative_Label(body)
         alternativeLabel = ""
 
@@ -435,6 +439,7 @@ class OthersGenerateCase(VHDLModel_OthersGenerateCase, DOMMixin):
 
         body = nodes.Get_Associated_Block(caseNode)
 
+        # TODO: alternative label
         alternativeLabelId = nodes.Get_Alternative_Label(body)
         alternativeLabel = ""
 
@@ -471,8 +476,6 @@ class CaseGenerateStatement(VHDLModel_CaseGenerateStatement, DOMMixin):
             GetRangeFromNode,
             GetNameFromNode,
         )
-
-        # TODO: get choices
 
         expression = GetExpressionFromNode(nodes.Get_Expression(generateNode))
 
@@ -524,7 +527,7 @@ class CaseGenerateStatement(VHDLModel_CaseGenerateStatement, DOMMixin):
                     continue
             elif choiceKind is nodes.Iir_Kind.Choice_By_Others:
                 if choices is not None:
-                    cases.append(GenerateCase.parse(caseNode, choices))
+                    cases.append(GenerateCase.parse(alternative, choices))
                     choices = None
                 cases.append(OthersGenerateCase.parse(alternative))
                 alternative = nodes.Get_Chain(alternative)

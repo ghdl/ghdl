@@ -34,6 +34,7 @@ from typing import List, Generator
 
 from pydecor import export
 
+from pyGHDL.dom.Sequential import IfStatement, ForLoopStatement, CaseStatement
 from pyVHDLModel.SyntaxModel import (
     Constraint,
     Direction,
@@ -872,26 +873,12 @@ def GetSequentialStatementsFromChainedNodes(
         pos = Position.parse(statement)
 
         kind = GetIirKindOfNode(statement)
-        #        if kind == nodes.Iir_Kind.Sensitized_Process_Statement:
-        #            yield ProcessStatement.parse(statement, label, True)
         if kind == nodes.Iir_Kind.If_Statement:
-            print(
-                "[NOT IMPLEMENTED] If statement (label: '{label}') at line {line}".format(
-                    label=label, line=pos.Line
-                )
-            )
+            yield IfStatement.parse(statement, label)
         elif kind == nodes.Iir_Kind.For_Loop_Statement:
-            print(
-                "[NOT IMPLEMENTED] For-loop statement (label: '{label}') at line {line}".format(
-                    label=label, line=pos.Line
-                )
-            )
+            yield ForLoopStatement.parse(statement, label)
         elif kind == nodes.Iir_Kind.Case_Statement:
-            print(
-                "[NOT IMPLEMENTED] For-loop statement (label: '{label}') at line {line}".format(
-                    label=label, line=pos.Line
-                )
-            )
+            yield CaseStatement.parse(statement, label)
         elif kind == nodes.Iir_Kind.Simple_Signal_Assignment_Statement:
             print(
                 "[NOT IMPLEMENTED] (Simple) signal assignment (label: '{label}') at line {line}".format(

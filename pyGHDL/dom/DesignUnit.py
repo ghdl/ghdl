@@ -119,6 +119,8 @@ class Entity(VHDLModel_Entity, DOMMixin):
             nodes.Get_Concurrent_Statement_Chain(entityNode), "entity", name
         )
 
+        # FIXME: read use clauses
+
         return cls(entityNode, name, generics, ports, declaredItems, statements)
 
 
@@ -148,10 +150,9 @@ class Architecture(VHDLModel_Architecture, DOMMixin):
             nodes.Get_Concurrent_Statement_Chain(architectureNode), "architecture", name
         )
 
-        return cls(architectureNode, name, entity, declaredItems, statements)
+        # FIXME: read use clauses
 
-    def resolve(self):
-        pass
+        return cls(architectureNode, name, entity, declaredItems, statements)
 
 
 @export
@@ -203,6 +204,8 @@ class Package(VHDLModel_Package, DOMMixin):
             nodes.Get_Declaration_Chain(packageNode), "package", name
         )
 
+        # FIXME: read use clauses
+
         return cls(packageNode, name, generics, declaredItems)
 
 
@@ -224,6 +227,8 @@ class PackageBody(VHDLModel_PackageBody, DOMMixin):
             nodes.Get_Declaration_Chain(packageBodyNode), "package", name
         )
 
+        # FIXME: read use clauses
+
         return cls(packageBodyNode, name, declaredItems)
 
 
@@ -244,6 +249,7 @@ class PackageInstantiation(VHDLModel_PackageInstantiation, DOMMixin):
         name = GetNameOfNode(packageNode)
         uninstantiatedPackageName = nodes.Get_Uninstantiated_Package_Name(packageNode)
 
+        # FIXME: read use clauses (does it apply here too?)
         # FIXME: read generics
         # FIXME: read generic map
 
@@ -283,6 +289,7 @@ class Configuration(VHDLModel_Configuration, DOMMixin):
     def parse(cls, configurationNode: Iir):
         name = GetNameOfNode(configurationNode)
 
-        # FIXME: needs an implementation
+        # FIXME: read use clauses
+        # FIXME: read specifications
 
         return cls(configurationNode, name)
