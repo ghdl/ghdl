@@ -41,9 +41,11 @@ This module contains all DOM classes for VHDL's design units (:class:`context <E
 """
 from typing import Iterable
 
+from pyGHDL.libghdl import utils
 from pydecor import export
 
 from pyVHDLModel.SyntaxModel import (
+    LibraryClause as VHDLModel_LibraryClause,
     UseClause as VHDLModel_UseClause,
     Entity as VHDLModel_Entity,
     Architecture as VHDLModel_Architecture,
@@ -58,11 +60,12 @@ from pyVHDLModel.SyntaxModel import (
     EntityOrSymbol,
     Name,
     ConcurrentStatement,
+    Context,
 )
 
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
-from pyGHDL.dom import DOMMixin
+from pyGHDL.dom import DOMMixin, Position, DOMException
 from pyGHDL.dom._Utils import GetNameOfNode
 from pyGHDL.dom._Translate import (
     GetGenericsFromChainedNodes,
@@ -78,19 +81,27 @@ __all__ = []
 
 
 @export
+class LibraryClause(VHDLModel_LibraryClause, DOMMixin):
+    def __init__(self, node: Iir, names: Iterable[Name]):
+        super().__init__(names)
+        DOMMixin.__init__(self, node)
+
+
+@export
 class UseClause(VHDLModel_UseClause, DOMMixin):
-    def __init__(self, node: Iir, name: Name):
-        super().__init__(name)
+    def __init__(self, node: Iir, names: Iterable[Name]):
+        super().__init__(names)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, useNode: Iir):
         from pyGHDL.dom._Translate import GetNameFromNode
 
-        selectedName = nodes.Get_Selected_Name(useNode)
-        name = GetNameFromNode(selectedName)
+        uses = [GetNameFromNode(nodes.Get_Selected_Name(useNode))]
+        for use in utils.chain_iter(nodes.Get_Use_Clause_Chain(useNode)):
+            uses.append(GetNameFromNode(nodes.Get_Selected_Name(use)))
 
-        return cls(useNode, name)
+        return cls(useNode, uses)
 
 
 @export
@@ -99,16 +110,19 @@ class Entity(VHDLModel_Entity, DOMMixin):
         self,
         node: Iir,
         identifier: str,
+        contextItems: Iterable[Context] = None,
         genericItems: Iterable[GenericInterfaceItem] = None,
         portItems: Iterable[PortInterfaceItem] = None,
         declaredItems: Iterable = None,
         statements: Iterable["ConcurrentStatement"] = None,
     ):
-        super().__init__(identifier, genericItems, portItems, declaredItems, statements)
+        super().__init__(
+            identifier, contextItems, genericItems, portItems, declaredItems, statements
+        )
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, entityNode: Iir):
+    def parse(cls, entityNode: Iir, contextItems: Iterable[Context]):
         name = GetNameOfNode(entityNode)
         generics = GetGenericsFromChainedNodes(nodes.Get_Generic_Chain(entityNode))
         ports = GetPortsFromChainedNodes(nodes.Get_Port_Chain(entityNode))
@@ -121,7 +135,9 @@ class Entity(VHDLModel_Entity, DOMMixin):
 
         # FIXME: read use clauses
 
-        return cls(entityNode, name, generics, ports, declaredItems, statements)
+        return cls(
+            entityNode, name, contextItems, generics, ports, declaredItems, statements
+        )
 
 
 @export
@@ -131,14 +147,15 @@ class Architecture(VHDLModel_Architecture, DOMMixin):
         node: Iir,
         identifier: str,
         entity: EntityOrSymbol,
+        contextItems: Iterable[Context] = None,
         declaredItems: Iterable = None,
         statements: Iterable["ConcurrentStatement"] = None,
     ):
-        super().__init__(identifier, entity, declaredItems, statements)
+        super().__init__(identifier, entity, contextItems, declaredItems, statements)
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, architectureNode: Iir):
+    def parse(cls, architectureNode: Iir, contextItems: Iterable[Context]):
         name = GetNameOfNode(architectureNode)
         entityNameNode = nodes.Get_Entity_Name(architectureNode)
         entityName = GetNameOfNode(entityNameNode)
@@ -152,7 +169,9 @@ class Architecture(VHDLModel_Architecture, DOMMixin):
 
         # FIXME: read use clauses
 
-        return cls(architectureNode, name, entity, declaredItems, statements)
+        return cls(
+            architectureNode, name, entity, contextItems, declaredItems, statements
+        )
 
 
 @export
@@ -182,14 +201,15 @@ class Package(VHDLModel_Package, DOMMixin):
         self,
         node: Iir,
         identifier: str,
+        contextItems: Iterable[Context] = None,
         genericItems: Iterable[GenericInterfaceItem] = None,
         declaredItems: Iterable = None,
     ):
-        super().__init__(identifier, genericItems, declaredItems)
+        super().__init__(identifier, contextItems, genericItems, declaredItems)
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, packageNode: Iir):
+    def parse(cls, packageNode: Iir, contextItems: Iterable[Context]):
         name = GetNameOfNode(packageNode)
 
         packageHeader = nodes.Get_Package_Header(packageNode)
@@ -206,7 +226,7 @@ class Package(VHDLModel_Package, DOMMixin):
 
         # FIXME: read use clauses
 
-        return cls(packageNode, name, generics, declaredItems)
+        return cls(packageNode, name, contextItems, generics, declaredItems)
 
 
 @export
@@ -215,13 +235,14 @@ class PackageBody(VHDLModel_PackageBody, DOMMixin):
         self,
         node: Iir,
         identifier: str,
+        contextItems: Iterable[Context] = None,
         declaredItems: Iterable = None,
     ):
-        super().__init__(identifier, declaredItems)
+        super().__init__(identifier, contextItems, declaredItems)
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, packageBodyNode: Iir):
+    def parse(cls, packageBodyNode: Iir, contextItems: Iterable[Context]):
         name = GetNameOfNode(packageBodyNode)
         declaredItems = GetDeclaredItemsFromChainedNodes(
             nodes.Get_Declaration_Chain(packageBodyNode), "package", name
@@ -229,7 +250,7 @@ class PackageBody(VHDLModel_PackageBody, DOMMixin):
 
         # FIXME: read use clauses
 
-        return cls(packageBodyNode, name, declaredItems)
+        return cls(packageBodyNode, name, contextItems, declaredItems)
 
 
 @export
@@ -262,17 +283,40 @@ class Context(VHDLModel_Context, DOMMixin):
         self,
         node: Iir,
         identifier: str,
+        libraryReferences: Iterable[LibraryClause] = None,
+        packageReferences: Iterable[UseClause] = None,
     ):
-        super().__init__(identifier)
+        super().__init__(identifier, libraryReferences, packageReferences)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, contextNode: Iir):
+        from pyGHDL.dom._Utils import GetIirKindOfNode
+
         name = GetNameOfNode(contextNode)
 
-        # FIXME: read use clauses
+        items = []
+        names = []
+        for item in utils.chain_iter(nodes.Get_Context_Items(contextNode)):
+            kind = GetIirKindOfNode(item)
+            if kind is nodes.Iir_Kind.Library_Clause:
+                names.append(SimpleName(item, GetNameOfNode(item)))
+                if nodes.Get_Has_Identifier_List(item):
+                    continue
 
-        return cls(contextNode, name)
+                items.append(LibraryClause(item, names))
+                names = []
+            elif kind is nodes.Iir_Kind.Use_Clause:
+                items.append(UseClause.parse(item))
+            else:
+                pos = Position.parse(item)
+                raise DOMException(
+                    "Unknown context item kind '{kind}' in context at line {line}.".format(
+                        kind=kind.name, line=pos.Line
+                    )
+                )
+
+        return cls(contextNode, name, items)
 
 
 @export
@@ -281,15 +325,16 @@ class Configuration(VHDLModel_Configuration, DOMMixin):
         self,
         node: Iir,
         identifier: str,
+        contextItems: Iterable[Context] = None,
     ):
-        super().__init__(identifier)
+        super().__init__(identifier, contextItems)
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, configurationNode: Iir):
+    def parse(cls, configurationNode: Iir, contextItems: Iterable[Context]):
         name = GetNameOfNode(configurationNode)
 
         # FIXME: read use clauses
         # FIXME: read specifications
 
-        return cls(configurationNode, name)
+        return cls(configurationNode, name, contextItems)

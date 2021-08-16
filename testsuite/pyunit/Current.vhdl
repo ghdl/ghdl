@@ -219,6 +219,9 @@ package package_1 is
 	attribute fixed of ghdl, gtkwave [x, y] : constant is true;
 
 	component comp is
+		generic (
+			BITS : positive := 2
+		);
 		port (
 			clk : std
 		);
@@ -248,3 +251,10 @@ end package body;
 vunit vu (component_1) {
 
 }
+
+context ctx is
+	library osvvm;
+	library axi4_lite, axi4_stream;
+	use osvvm.alert.all;
+	use osvvm.alert.alertid, osvvm.alert.priority;
+end context;

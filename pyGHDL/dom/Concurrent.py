@@ -487,7 +487,6 @@ class CaseGenerateStatement(VHDLModel_CaseGenerateStatement, DOMMixin):
         while alternative != nodes.Null_Iir:
             choiceKind = GetIirKindOfNode(alternative)
             sameAlternative = nodes.Get_Same_Alternative_Flag(alternative)
-            print("sameAlternative: ", sameAlternative)
 
             if choiceKind in (
                 nodes.Iir_Kind.Choice_By_Name,

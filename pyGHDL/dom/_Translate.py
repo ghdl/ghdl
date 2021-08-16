@@ -717,7 +717,7 @@ def GetDeclaredItemsFromChainedNodes(
             elif kind == nodes.Iir_Kind.Package_Declaration:
                 from pyGHDL.dom.DesignUnit import Package
 
-                yield Package.parse(item)
+                yield Package.parse(item, None)  # TODO: Can it have a context?
             elif kind == nodes.Iir_Kind.Package_Instantiation_Declaration:
                 from pyGHDL.dom.DesignUnit import PackageInstantiation
 

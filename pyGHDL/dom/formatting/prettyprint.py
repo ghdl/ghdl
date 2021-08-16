@@ -389,8 +389,8 @@ class PrettyPrint:
             return self.formatGenericType(generic, level)
         else:
             raise PrettyPrintException(
-                "Unhandled generic kind for generic '{name}'.".format(
-                    name=generic.Identifiers[0]
+                "Unhandled generic kind '{kind}' for generic '{name}'.".format(
+                    kind=generic.__class__.__name__, name=generic.Identifiers[0]
                 )
             )
 
@@ -401,8 +401,8 @@ class PrettyPrint:
             return self.formatPortSignal(port, level)
         else:
             raise PrettyPrintException(
-                "Unhandled port kind for port '{name}'.".format(
-                    name=port.Identifiers[0]
+                "Unhandled port kind '{kind}' for port '{name}'.".format(
+                    kind=port.__class__.__name__, name=port.Identifiers[0]
                 )
             )
 
