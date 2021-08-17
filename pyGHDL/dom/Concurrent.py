@@ -616,9 +616,23 @@ class ForGenerateStatement(VHDLModel_ForGenerateStatement, DOMMixin):
 
 @export
 class WaveformElement(VHDLModel_WaveformElement, DOMMixin):
-    def __init__(self, waveformNode: Iir, expression: Expression, after: Expression):
+    def __init__(self, waveNode: Iir, expression: Expression, after: Expression):
         super().__init__(expression, after)
-        DOMMixin.__init__(self, waveformNode)
+        DOMMixin.__init__(self, waveNode)
+
+    @classmethod
+    def parse(cls, waveNode: Iir):
+        from pyGHDL.dom._Translate import GetExpressionFromNode
+
+        value = GetExpressionFromNode(nodes.Get_We_Value(waveNode))
+
+        timeNode = nodes.Get_Time(waveNode)
+        if timeNode is nodes.Null_Iir:
+            time = None
+        else:
+            time = GetExpressionFromNode(timeNode)
+
+        return cls(waveNode, value, time)
 
 
 @export
@@ -644,12 +658,11 @@ class ConcurrentSimpleSignalAssignment(
         target = nodes.Get_Target(assignmentNode)
         targetName = GetNameFromNode(target)
 
-        waveform = nodes.Get_Waveform_Chain(assignmentNode)
+        waveform = []
+        for wave in utils.chain_iter(nodes.Get_Waveform_Chain(assignmentNode)):
+            waveform.append(WaveformElement.parse(wave))
 
-        # TODO: translate waveforms to series of "expressions".
-        expression = [None]
-
-        return cls(assignmentNode, label, targetName, expression)
+        return cls(assignmentNode, label, targetName, waveform)
 
 
 @export

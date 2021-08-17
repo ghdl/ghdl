@@ -41,6 +41,7 @@ from pyGHDL.dom.Sequential import (
     SequentialReportStatement,
     SequentialAssertStatement,
     WaitStatement,
+    SequentialSimpleSignalAssignment,
 )
 from pyVHDLModel.SyntaxModel import (
     Constraint,
@@ -886,11 +887,7 @@ def GetSequentialStatementsFromChainedNodes(
         elif kind == nodes.Iir_Kind.Case_Statement:
             yield CaseStatement.parse(statement, label)
         elif kind == nodes.Iir_Kind.Simple_Signal_Assignment_Statement:
-            print(
-                "[NOT IMPLEMENTED] (Simple) signal assignment (label: '{label}') at line {line}".format(
-                    label=label, line=pos.Line
-                )
-            )
+            yield SequentialSimpleSignalAssignment.parse(statement, label)
         elif kind in (
             nodes.Iir_Kind.Variable_Assignment_Statement,
             nodes.Iir_Kind.Conditional_Variable_Assignment_Statement,

@@ -421,12 +421,11 @@ class SequentialSimpleSignalAssignment(
         target = nodes.Get_Target(assignmentNode)
         targetName = GetNameFromNode(target)
 
-        waveform = nodes.Get_Waveform_Chain(assignmentNode)
+        waveform = []
+        for wave in utils.chain_iter(nodes.Get_Waveform_Chain(assignmentNode)):
+            waveform.append(WaveformElement.parse(wave))
 
-        # TODO: translate waveforms to series of "expressions".
-        expression = [None]
-
-        return cls(assignmentNode, targetName, expression, label)
+        return cls(assignmentNode, targetName, waveform, label)
 
 
 @export
