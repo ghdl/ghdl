@@ -111,9 +111,13 @@ begin
 
 		case foo_bar is
 			when 0 =>
+				report "hello" & " " & "world";
 			when 1 | 2 =>
+				report "vhdl" severity note;
 			when 3 to 4 =>
+				assert true nor false report "nothing";
 			when 5 to 6 | 8 to 9 =>
+				assert true nor false report "nothing" severity warning or error;
 			when others =>
 		end case;
 	end process;

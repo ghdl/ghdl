@@ -34,7 +34,13 @@ from typing import List, Generator
 
 from pydecor import export
 
-from pyGHDL.dom.Sequential import IfStatement, ForLoopStatement, CaseStatement
+from pyGHDL.dom.Sequential import (
+    IfStatement,
+    ForLoopStatement,
+    CaseStatement,
+    SequentialReportStatement,
+    SequentialAssertStatement,
+)
 from pyVHDLModel.SyntaxModel import (
     Constraint,
     Direction,
@@ -907,17 +913,9 @@ def GetSequentialStatementsFromChainedNodes(
                 )
             )
         elif kind == nodes.Iir_Kind.Report_Statement:
-            print(
-                "[NOT IMPLEMENTED] Report statement (label: '{label}') at line {line}".format(
-                    label=label, line=pos.Line
-                )
-            )
+            yield SequentialReportStatement.parse(statement, label)
         elif kind == nodes.Iir_Kind.Assertion_Statement:
-            print(
-                "[NOT IMPLEMENTED] Report statement (label: '{label}') at line {line}".format(
-                    label=label, line=pos.Line
-                )
-            )
+            yield SequentialAssertStatement.parse(statement, label)
         else:
             raise DOMException(
                 "Unknown statement of kind '{kind}' in {entity} '{name}' at {file}:{line}:{column}.".format(

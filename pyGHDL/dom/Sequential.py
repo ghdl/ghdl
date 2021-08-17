@@ -49,6 +49,8 @@ from pyVHDLModel.SyntaxModel import (
     ForLoopStatement as VHDLModel_ForLoopStatement,
     SequentialSimpleSignalAssignment as VHDLModel_SequentialSimpleSignalAssignment,
     SequentialProcedureCall as VHDLModel_SequentialProcedureCall,
+    SequentialAssertStatement as VHDLModel_SequentialAssertStatement,
+    SequentialReportStatement as VHDLModel_SequentialReportStatement,
     Name,
     SequentialStatement,
     Expression,
@@ -211,7 +213,7 @@ class Case(VHDLModel_Case, DOMMixin):
         if block is nodes.Null_Iir:
             return cls(caseNode, choices)
 
-        statementChain = nodes.Get_Sequential_Statement_Chain(block)
+        statementChain = nodes.Get_Sequential_Statement_Chain(caseNode)
         statements = GetSequentialStatementsFromChainedNodes(
             statementChain, "case", label
         )
@@ -271,7 +273,7 @@ class CaseStatement(VHDLModel_CaseStatement, DOMMixin):
         cases = []
         choices = None
         alternative = nodes.Get_Case_Statement_Alternative_Chain(caseNode)
-        caseNode = alternative
+        cNode = alternative
 
         while alternative != nodes.Null_Iir:
             choiceKind = GetIirKindOfNode(alternative)
@@ -319,7 +321,7 @@ class CaseStatement(VHDLModel_CaseStatement, DOMMixin):
                     choices = None
                 cases.append(OthersCase.parse(alternative, label))
                 alternative = nodes.Get_Chain(alternative)
-                caseNode = alternative
+                cNode = alternative
                 continue
             else:
                 pos = Position.parse(alternative)
@@ -330,9 +332,9 @@ class CaseStatement(VHDLModel_CaseStatement, DOMMixin):
                 )
 
             if choices is not None:
-                cases.append(Case.parse(alternative, choices, label))
+                cases.append(Case.parse(cNode, choices, label))
 
-            caseNode = alternative
+            cNode = alternative
             choices = [
                 choice,
             ]
@@ -340,7 +342,7 @@ class CaseStatement(VHDLModel_CaseStatement, DOMMixin):
             alternative = nodes.Get_Chain(alternative)
 
         if choices is not None:
-            cases.append(Case.parse(alternative, choices, label))
+            cases.append(Case.parse(cNode, choices, label))
 
         return cls(caseNode, label, expression, cases)
 
@@ -431,11 +433,11 @@ class SequentialProcedureCall(VHDLModel_SequentialProcedureCall, DOMMixin):
     def __init__(
         self,
         callNode: Iir,
-        label: str,
         procedureName: Name,
         parameterMappings: Iterable,
+        label: str = None,
     ):
-        super().__init__(label, procedureName, parameterMappings)
+        super().__init__(procedureName, parameterMappings, label)
         DOMMixin.__init__(self, callNode)
 
     @classmethod
@@ -451,4 +453,52 @@ class SequentialProcedureCall(VHDLModel_SequentialProcedureCall, DOMMixin):
         # TODO: parameter mappings
         parameterMappings = []
 
-        return cls(callNode, label, procedureName, parameterMappings)
+        return cls(callNode, procedureName, parameterMappings, label)
+
+
+@export
+class SequentialAssertStatement(VHDLModel_SequentialAssertStatement, DOMMixin):
+    def __init__(
+        self,
+        assertNode: Iir,
+        condition: Expression,
+        message: Expression,
+        severity: Expression = None,
+        label: str = None,
+    ):
+        super().__init__(label, condition, message, severity, label)
+        DOMMixin.__init__(self, assertNode)
+
+        @classmethod
+        def parse(cls, assertNode: Iir, label: str) -> "SequentialAssertStatement":
+            from pyGHDL.dom._Utils import GetIirKindOfNode
+            from pyGHDL.dom._Translate import GetExpressionFromNode
+
+            condition = ""
+            message = ""
+            severity = ""
+
+            return cls(assertNode, condition, message, severity, label)
+
+
+@export
+class SequentialReportStatement(VHDLModel_SequentialReportStatement, DOMMixin):
+    def __init__(
+        self,
+        reportNode: Iir,
+        message: Expression,
+        severity: Expression = None,
+        label: str = None,
+    ):
+        super().__init__(label, message, severity, label)
+        DOMMixin.__init__(self, reportNode)
+
+        @classmethod
+        def parse(cls, reportNode: Iir, label: str) -> "SequentialReportStatement":
+            from pyGHDL.dom._Utils import GetIirKindOfNode
+            from pyGHDL.dom._Translate import GetExpressionFromNode
+
+            message = ""
+            severity = ""
+
+            return cls(reportNode, message, severity, label)
