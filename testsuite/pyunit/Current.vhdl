@@ -121,10 +121,14 @@ begin
 			when others =>
 		end case;
 
-		report "hello" & " " & "world";
-		report "vhdl" severity note;
-		assert true nor false report "nothing";
-		assert true nor false report "nothing" severity warning;
+		wait;
+		wait on a, b;
+		wait until rising_edge(clock);
+		wait on clock until rising_edge(clock);
+		wait for 10 ns;
+		wait on c for 50 ns;
+		wait until rising_edge(clock) for 100 ns;
+		wait on sel until rising_edge(clock) for 100 ns;
 	end process;
 
 	a <= b;

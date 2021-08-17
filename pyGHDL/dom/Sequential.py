@@ -51,6 +51,7 @@ from pyVHDLModel.SyntaxModel import (
     SequentialProcedureCall as VHDLModel_SequentialProcedureCall,
     SequentialAssertStatement as VHDLModel_SequentialAssertStatement,
     SequentialReportStatement as VHDLModel_SequentialReportStatement,
+    WaitStatement as VHDLModel_WaitStatement,
     Name,
     SequentialStatement,
     Expression,
@@ -476,7 +477,11 @@ class SequentialAssertStatement(VHDLModel_SequentialAssertStatement, DOMMixin):
         condition = GetExpressionFromNode(nodes.Get_Assertion_Condition(assertNode))
         message = GetExpressionFromNode(nodes.Get_Report_Expression(assertNode))
         severityNode = nodes.Get_Severity_Expression(assertNode)
-        severity = None if severityNode is nodes.Null_Iir else GetExpressionFromNode(severityNode)
+        severity = (
+            None
+            if severityNode is nodes.Null_Iir
+            else GetExpressionFromNode(severityNode)
+        )
 
         return cls(assertNode, condition, message, severity, label)
 
@@ -499,6 +504,50 @@ class SequentialReportStatement(VHDLModel_SequentialReportStatement, DOMMixin):
 
         message = GetExpressionFromNode(nodes.Get_Report_Expression(reportNode))
         severityNode = nodes.Get_Severity_Expression(reportNode)
-        severity = None if severityNode is nodes.Null_Iir else GetExpressionFromNode(severityNode)
+        severity = (
+            None
+            if severityNode is nodes.Null_Iir
+            else GetExpressionFromNode(severityNode)
+        )
 
         return cls(reportNode, message, severity, label)
+
+
+@export
+class WaitStatement(VHDLModel_WaitStatement, DOMMixin):
+    def __init__(
+        self,
+        waitNode: Iir,
+        sensitivityList: Iterable[Name] = None,
+        condition: Expression = None,
+        timeout: Expression = None,
+        label: str = None,
+    ):
+        super().__init__(sensitivityList, condition, timeout, label)
+        DOMMixin.__init__(self, waitNode)
+
+    @classmethod
+    def parse(cls, waitNode: Iir, label: str) -> "WaitStatement":
+        from pyGHDL.dom._Utils import GetIirKindOfNode
+        from pyGHDL.dom._Translate import GetExpressionFromNode
+
+        sensitivityList = None
+        sensitivityListNode = nodes.Get_Sensitivity_List(waitNode)
+        if sensitivityListNode is not nodes.Null_Iir:
+            print(GetIirKindOfNode(sensitivityListNode))
+
+        conditionNode = nodes.Get_Condition_Clause(waitNode)
+        condition = (
+            None
+            if conditionNode is nodes.Null_Iir
+            else GetExpressionFromNode(conditionNode)
+        )
+
+        timeoutNode = nodes.Get_Timeout_Clause(waitNode)
+        timeout = (
+            None
+            if timeoutNode is nodes.Null_Iir
+            else GetExpressionFromNode(timeoutNode)
+        )
+
+        return cls(waitNode, sensitivityList, condition, timeout, label)
