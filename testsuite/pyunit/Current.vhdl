@@ -120,6 +120,11 @@ begin
 				assert true nor false report "nothing" severity warning or error;
 			when others =>
 		end case;
+
+		report "hello" & " " & "world";
+		report "vhdl" severity note;
+		assert true nor false report "nothing";
+		assert true nor false report "nothing" severity warning;
 	end process;
 
 	a <= b;

@@ -466,19 +466,19 @@ class SequentialAssertStatement(VHDLModel_SequentialAssertStatement, DOMMixin):
         severity: Expression = None,
         label: str = None,
     ):
-        super().__init__(label, condition, message, severity, label)
+        super().__init__(condition, message, severity, label)
         DOMMixin.__init__(self, assertNode)
 
-        @classmethod
-        def parse(cls, assertNode: Iir, label: str) -> "SequentialAssertStatement":
-            from pyGHDL.dom._Utils import GetIirKindOfNode
-            from pyGHDL.dom._Translate import GetExpressionFromNode
+    @classmethod
+    def parse(cls, assertNode: Iir, label: str) -> "SequentialAssertStatement":
+        from pyGHDL.dom._Translate import GetExpressionFromNode
 
-            condition = ""
-            message = ""
-            severity = ""
+        condition = GetExpressionFromNode(nodes.Get_Assertion_Condition(assertNode))
+        message = GetExpressionFromNode(nodes.Get_Report_Expression(assertNode))
+        severityNode = nodes.Get_Severity_Expression(assertNode)
+        severity = None if severityNode is nodes.Null_Iir else GetExpressionFromNode(severityNode)
 
-            return cls(assertNode, condition, message, severity, label)
+        return cls(assertNode, condition, message, severity, label)
 
 
 @export
@@ -490,15 +490,15 @@ class SequentialReportStatement(VHDLModel_SequentialReportStatement, DOMMixin):
         severity: Expression = None,
         label: str = None,
     ):
-        super().__init__(label, message, severity, label)
+        super().__init__(message, severity, label)
         DOMMixin.__init__(self, reportNode)
 
-        @classmethod
-        def parse(cls, reportNode: Iir, label: str) -> "SequentialReportStatement":
-            from pyGHDL.dom._Utils import GetIirKindOfNode
-            from pyGHDL.dom._Translate import GetExpressionFromNode
+    @classmethod
+    def parse(cls, reportNode: Iir, label: str) -> "SequentialReportStatement":
+        from pyGHDL.dom._Translate import GetExpressionFromNode
 
-            message = ""
-            severity = ""
+        message = GetExpressionFromNode(nodes.Get_Report_Expression(reportNode))
+        severityNode = nodes.Get_Severity_Expression(reportNode)
+        severity = None if severityNode is nodes.Null_Iir else GetExpressionFromNode(severityNode)
 
-            return cls(reportNode, message, severity, label)
+        return cls(reportNode, message, severity, label)
