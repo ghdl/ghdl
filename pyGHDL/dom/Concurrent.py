@@ -36,6 +36,9 @@ from pydecor import export
 
 from pyGHDL.dom.Range import Range
 from pyVHDLModel.SyntaxModel import (
+    GenericAssociationItem as VHDLModel_GenericAssociationItem,
+    PortAssociationItem as VHDLModel_PortAssociationItem,
+    ParameterAssociationItem as VHDLModel_ParameterAssociationItem,
     ComponentInstantiation as VHDLModel_ComponentInstantiation,
     EntityInstantiation as VHDLModel_EntityInstantiation,
     ConfigurationInstantiation as VHDLModel_ConfigurationInstantiation,
@@ -60,6 +63,7 @@ from pyVHDLModel.SyntaxModel import (
     Expression,
     ConcurrentChoice,
     ConcurrentCase,
+    AssociationItem,
 )
 
 from pyGHDL.libghdl import Iir, utils
@@ -69,23 +73,64 @@ from pyGHDL.dom._Utils import GetNameOfNode
 
 
 @export
+class GenericAssociationItem(VHDLModel_GenericAssociationItem, DOMMixin):
+    def __init__(self, associationNode: Iir, actual: Expression, formal: Name = None):
+        super().__init__(actual, formal)
+        DOMMixin.__init__(self, associationNode)
+
+
+@export
+class PortAssociationItem(VHDLModel_PortAssociationItem, DOMMixin):
+    def __init__(self, associationNode: Iir, actual: Expression, formal: Name = None):
+        super().__init__(actual, formal)
+        DOMMixin.__init__(self, associationNode)
+
+
+@export
+class ParameterAssociationItem(VHDLModel_ParameterAssociationItem, DOMMixin):
+    def __init__(self, associationNode: Iir, actual: Expression, formal: Name = None):
+        super().__init__(actual, formal)
+        DOMMixin.__init__(self, associationNode)
+
+
+@export
 class ComponentInstantiation(VHDLModel_ComponentInstantiation, DOMMixin):
-    def __init__(self, instantiationNode: Iir, label: str, componentName: Name):
-        super().__init__(label, componentName)
+    def __init__(
+        self,
+        instantiationNode: Iir,
+        label: str,
+        componentName: Name,
+        genericAssociations: Iterable[AssociationItem] = None,
+        portAssociations: Iterable[AssociationItem] = None,
+    ):
+        super().__init__(label, componentName, genericAssociations, portAssociations)
         DOMMixin.__init__(self, instantiationNode)
 
     @classmethod
     def parse(
         cls, instantiationNode: Iir, instantiatedUnit: Iir, label: str
     ) -> "ComponentInstantiation":
-        from pyGHDL.dom._Translate import GetNameFromNode
+        from pyGHDL.dom._Translate import (
+            GetNameFromNode,
+            GetGenericMapAspect,
+            GetPortMapAspect,
+        )
 
         componentName = GetNameFromNode(instantiatedUnit)
+        genericAssociations = GetGenericMapAspect(
+            nodes.Get_Generic_Map_Aspect_Chain(instantiationNode)
+        )
+        portAssociations = GetPortMapAspect(
+            nodes.Get_Port_Map_Aspect_Chain(instantiationNode)
+        )
 
-        # TODO: get mapped generics
-        # TODO: get mapped ports
-
-        return cls(instantiationNode, label, componentName)
+        return cls(
+            instantiationNode,
+            label,
+            componentName,
+            genericAssociations,
+            portAssociations,
+        )
 
 
 @export
@@ -96,15 +141,23 @@ class EntityInstantiation(VHDLModel_EntityInstantiation, DOMMixin):
         label: str,
         entityName: Name,
         architectureName: Name = None,
+        genericAssociations: Iterable[AssociationItem] = None,
+        portAssociations: Iterable[AssociationItem] = None,
     ):
-        super().__init__(label, entityName, architectureName)
+        super().__init__(
+            label, entityName, architectureName, genericAssociations, portAssociations
+        )
         DOMMixin.__init__(self, instantiationNode)
 
     @classmethod
     def parse(
         cls, instantiationNode: Iir, instantiatedUnit: Iir, label: str
     ) -> "EntityInstantiation":
-        from pyGHDL.dom._Translate import GetNameFromNode
+        from pyGHDL.dom._Translate import (
+            GetNameFromNode,
+            GetGenericMapAspect,
+            GetPortMapAspect,
+        )
 
         entityId = nodes.Get_Entity_Name(instantiatedUnit)
         entityName = GetNameFromNode(entityId)
@@ -114,31 +167,65 @@ class EntityInstantiation(VHDLModel_EntityInstantiation, DOMMixin):
         if architectureId != nodes.Null_Iir:
             architectureName = GetNameOfNode(architectureId)
 
-        # TODO: get mapped generics
-        # TODO: get mapped ports
+        genericAssociations = GetGenericMapAspect(
+            nodes.Get_Generic_Map_Aspect_Chain(instantiationNode)
+        )
+        portAssociations = GetPortMapAspect(
+            nodes.Get_Port_Map_Aspect_Chain(instantiationNode)
+        )
 
-        return cls(instantiationNode, label, entityName, architectureName)
+        return cls(
+            instantiationNode,
+            label,
+            entityName,
+            architectureName,
+            genericAssociations,
+            portAssociations,
+        )
 
 
 @export
 class ConfigurationInstantiation(VHDLModel_ConfigurationInstantiation, DOMMixin):
-    def __init__(self, instantiationNode: Iir, label: str, configurationName: Name):
-        super().__init__(label, configurationName)
+    def __init__(
+        self,
+        instantiationNode: Iir,
+        label: str,
+        configurationName: Name,
+        genericAssociations: Iterable[AssociationItem] = None,
+        portAssociations: Iterable[AssociationItem] = None,
+    ):
+        super().__init__(
+            label, configurationName, genericAssociations, portAssociations
+        )
         DOMMixin.__init__(self, instantiationNode)
 
     @classmethod
     def parse(
         cls, instantiationNode: Iir, instantiatedUnit: Iir, label: str
     ) -> "ConfigurationInstantiation":
-        from pyGHDL.dom._Translate import GetNameFromNode
+        from pyGHDL.dom._Translate import (
+            GetNameFromNode,
+            GetGenericMapAspect,
+            GetPortMapAspect,
+        )
 
         configurationId = nodes.Get_Configuration_Name(instantiatedUnit)
         configurationName = GetNameFromNode(configurationId)
 
-        # TODO: get mapped generics
-        # TODO: get mapped ports
+        genericAssociations = GetGenericMapAspect(
+            nodes.Get_Generic_Map_Aspect_Chain(instantiationNode)
+        )
+        portAssociations = GetPortMapAspect(
+            nodes.Get_Port_Map_Aspect_Chain(instantiationNode)
+        )
 
-        return cls(instantiationNode, label, configurationName)
+        return cls(
+            instantiationNode,
+            label,
+            configurationName,
+            genericAssociations,
+            portAssociations,
+        )
 
 
 @export
@@ -159,6 +246,9 @@ class ConcurrentBlockStatement(VHDLModel_ConcurrentBlockStatement, DOMMixin):
             GetDeclaredItemsFromChainedNodes,
             GetConcurrentStatementsFromChainedNodes,
         )
+
+        #        genericAssociations = GetGenericMapAspect(nodes.Get_Generic_Map_Aspect_Chain(instantiationNode))
+        #        portAssociations = GetPortMapAspect(nodes.Get_Port_Map_Aspect_Chain(instantiationNode))
 
         declaredItems = GetDeclaredItemsFromChainedNodes(
             nodes.Get_Declaration_Chain(blockNode), "block", label
@@ -678,15 +768,15 @@ class ConcurrentProcedureCall(VHDLModel_ConcurrentProcedureCall, DOMMixin):
         DOMMixin.__init__(self, callNode)
 
     @classmethod
-    def parse(cls, callNode: Iir, label: str) -> "ConcurrentProcedureCall":
-        from pyGHDL.dom._Translate import GetNameFromNode
+    def parse(cls, concurrentCallNode: Iir, label: str) -> "ConcurrentProcedureCall":
+        from pyGHDL.dom._Translate import GetNameFromNode, GetParameterMapAspect
 
-        call = nodes.Get_Procedure_Call(callNode)
-        prefix = nodes.Get_Prefix(call)
+        callNode = nodes.Get_Procedure_Call(concurrentCallNode)
 
+        prefix = nodes.Get_Prefix(callNode)
         procedureName = GetNameFromNode(prefix)
+        parameterAssociations = GetParameterMapAspect(
+            nodes.Get_Parameter_Association_Chain(callNode)
+        )
 
-        # TODO: parameter mappings
-        parameterMappings = []
-
-        return cls(callNode, label, procedureName, parameterMappings)
+        return cls(concurrentCallNode, label, procedureName, parameterAssociations)

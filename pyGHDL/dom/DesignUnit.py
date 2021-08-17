@@ -291,6 +291,7 @@ class PackageInstantiation(VHDLModel_PackageInstantiation, DOMMixin):
         # FIXME: read use clauses (does it apply here too?)
         # FIXME: read generics
         # FIXME: read generic map
+        # genericAssociations = GetGenericMapAspect(nodes.Get_Generic_Map_Aspect_Chain(instantiationNode))
 
         return cls(packageNode, name, uninstantiatedPackageName)
 

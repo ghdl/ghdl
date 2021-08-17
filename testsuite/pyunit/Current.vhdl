@@ -136,20 +136,29 @@ begin
 
 	inst1: entity work.counter1(rtl)
 		generic map (
-			BITS => 8
+			BITS1 => 8
 		)
 		port map (
-			clk => Clock
+			clk1 => Clock
 		);
 
 	inst2: component counter2
+		generic map (
+			BITS2 => 8,
+			value2
+		)
 		port map (
-			clk => Clock
+			clk2 => Clock,
+			enable2
 		);
 
 	inst3: configuration counter3
+		generic map (
+			BITS3 => 8
+		)
 		port map (
-			clk => Clock
+			clk3 => Clock,
+			control(0) => battery and emergency
 		);
 
 	blk: block
@@ -215,7 +224,8 @@ begin
 				end block;
 	end generate;
 
-	call: OtherDummy;
+	call: CallDummy;
+	called: CalledDummy(25);
 	ende: std.env.stop;
 end architecture behav;
 

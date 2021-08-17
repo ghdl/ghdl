@@ -30,7 +30,7 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-from typing import List, Generator
+from typing import List, Generator, Type
 
 from pydecor import export
 
@@ -56,6 +56,7 @@ from pyVHDLModel.SyntaxModel import (
     Name,
     ConcurrentStatement,
     SequentialStatement,
+    AssociationItem,
 )
 
 from pyGHDL.libghdl import utils, name_table
@@ -159,6 +160,9 @@ from pyGHDL.dom.Concurrent import (
     CaseGenerateStatement,
     ConcurrentSimpleSignalAssignment,
     ConcurrentProcedureCall,
+    GenericAssociationItem,
+    PortAssociationItem,
+    ParameterAssociationItem,
 )
 from pyGHDL.dom.Subprogram import Function, Procedure
 from pyGHDL.dom.Misc import Alias
@@ -652,6 +656,46 @@ def GetParameterFromChainedNodes(
             parameter = nodes.Get_Chain(parameter)
 
         yield param
+
+
+def GetMapAspect(
+    mapAspect: Iir, cls: Type, entity: str
+) -> Generator[AssociationItem, None, None]:
+    for generic in utils.chain_iter(mapAspect):
+        kind = GetIirKindOfNode(generic)
+        if kind is nodes.Iir_Kind.Association_Element_By_Expression:
+            formalNode = nodes.Get_Formal(generic)
+            if formalNode is nodes.Null_Iir:
+                formal = None
+            else:
+                formal = GetNameFromNode(formalNode)
+
+            actual = GetExpressionFromNode(nodes.Get_Actual(generic))
+
+            yield cls(generic, actual, formal)
+        else:
+            pos = Position.parse(generic)
+            raise DOMException(
+                "Unknown association kind '{kind}' in {entity} map at line {line}.".format(
+                    kind=kind.name, entity=entity, line=pos.Line
+                )
+            )
+
+
+def GetGenericMapAspect(
+    genericMapAspect: Iir,
+) -> Generator[AssociationItem, None, None]:
+    return GetMapAspect(genericMapAspect, GenericAssociationItem, "generic")
+
+
+def GetPortMapAspect(portMapAspect: Iir) -> Generator[AssociationItem, None, None]:
+    return GetMapAspect(portMapAspect, PortAssociationItem, "port")
+
+
+def GetParameterMapAspect(
+    parameterMapAspect: Iir,
+) -> Generator[AssociationItem, None, None]:
+    return GetMapAspect(parameterMapAspect, ParameterAssociationItem, "parameter")
 
 
 def GetDeclaredItemsFromChainedNodes(
