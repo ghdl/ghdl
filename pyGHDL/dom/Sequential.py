@@ -461,7 +461,7 @@ class SequentialAssertStatement(VHDLModel_SequentialAssertStatement, DOMMixin):
         self,
         assertNode: Iir,
         condition: Expression,
-        message: Expression,
+        message: Expression = None,
         severity: Expression = None,
         label: str = None,
     ):
@@ -473,7 +473,12 @@ class SequentialAssertStatement(VHDLModel_SequentialAssertStatement, DOMMixin):
         from pyGHDL.dom._Translate import GetExpressionFromNode
 
         condition = GetExpressionFromNode(nodes.Get_Assertion_Condition(assertNode))
-        message = GetExpressionFromNode(nodes.Get_Report_Expression(assertNode))
+        messageNode = nodes.Get_Report_Expression(assertNode)
+        message = (
+            None
+            if messageNode is nodes.Null_Iir
+            else GetExpressionFromNode(messageNode)
+        )
         severityNode = nodes.Get_Severity_Expression(assertNode)
         severity = (
             None
