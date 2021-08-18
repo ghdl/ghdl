@@ -42,6 +42,7 @@ from pyVHDLModel.SyntaxModel import (
     SelectedName as VHDLModel_SelectedName,
     AttributeName as VHDLModel_AttributeName,
     AllName as VHDLModel_AllName,
+    OpenName as VHDLModel_OpenName,
     Name,
 )
 from pyGHDL.libghdl._types import Iir
@@ -96,4 +97,11 @@ class AttributeName(VHDLModel_AttributeName, DOMMixin):
 class AllName(VHDLModel_AllName, DOMMixin):
     def __init__(self, node: Iir, prefix: Name):
         super().__init__(prefix)
+        DOMMixin.__init__(self, node)
+
+
+@export
+class OpenName(VHDLModel_OpenName, DOMMixin):
+    def __init__(self, node: Iir):
+        super().__init__()
         DOMMixin.__init__(self, node)

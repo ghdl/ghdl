@@ -73,6 +73,7 @@ from pyGHDL.dom.Names import (
     AttributeName,
     ParenthesisName,
     AllName,
+    OpenName,
 )
 from pyGHDL.dom.Symbol import (
     SimpleObjectOrFunctionCallSymbol,
@@ -673,6 +674,15 @@ def GetMapAspect(
             actual = GetExpressionFromNode(nodes.Get_Actual(generic))
 
             yield cls(generic, actual, formal)
+        elif kind is nodes.Iir_Kind.Association_Element_Open:
+            formalNode = nodes.Get_Formal(generic)
+            if formalNode is nodes.Null_Iir:
+                formal = None
+            else:
+                formal = GetNameFromNode(formalNode)
+
+            open = OpenName(generic)
+            yield cls(generic, open, formal)
         else:
             pos = Position.parse(generic)
             raise DOMException(

@@ -165,7 +165,8 @@ begin
 	begin
 		inst4: entity work.counter4(rtl)
 			port map (
-				clk => Clock
+				clk => Clock,
+				value => open
 			);
 	end block;
 
