@@ -712,6 +712,7 @@ def GetDeclaredItemsFromChainedNodes(
     nodeChain: Iir, entity: str, name: str
 ) -> Generator[ModelEntity, None, None]:
     item = nodeChain
+    lastKind = None
     while item != nodes.Null_Iir:
         kind = GetIirKindOfNode(item)
         if kind == nodes.Iir_Kind.Constant_Declaration:
@@ -726,7 +727,6 @@ def GetDeclaredItemsFromChainedNodes(
                 obj = SharedVariable.parse(item)
             else:
                 obj = Variable.parse(item)
-        #                raise DOMException("Found non-shared variable.")
         elif kind == nodes.Iir_Kind.Signal_Declaration:
             from pyGHDL.dom.Object import Signal
 
@@ -746,16 +746,53 @@ def GetDeclaredItemsFromChainedNodes(
                 yield GetSubtypeFromNode(item)
 
             elif kind == nodes.Iir_Kind.Function_Declaration:
-                yield Function.parse(item)
+                if nodes.Get_Has_Body(item):
+                    yield Function.parse(item)
+                else:
+                    print("[NOT IMPLEMENTED] function declaration without body")
 
+                lastKind = kind
+                item = nodes.Get_Chain(item)
+                continue
             elif kind == nodes.Iir_Kind.Function_Body:
-                #                procedureName = NodeToName(item)
-                print("found function body '{name}'".format(name="????"))
+                if lastKind is nodes.Iir_Kind.Function_Declaration:
+                    pass
+                else:
+                    position = Position.parse(item)
+                    raise DOMException(
+                        "Found unexpected function body '{functionName}' in {entity} '{name}' at {file}:{line}:{column}.".format(
+                            functionName=GetNameOfNode(item),
+                            entity=entity,
+                            name=name,
+                            file=position.Filename,
+                            line=position.Line,
+                            column=position.Column,
+                        )
+                    )
             elif kind == nodes.Iir_Kind.Procedure_Declaration:
-                yield Procedure.parse(item)
+                if nodes.Get_Has_Body(item):
+                    yield Procedure.parse(item)
+                else:
+                    print("[NOT IMPLEMENTED] procedure declaration without body")
+
+                lastKind = kind
+                item = nodes.Get_Chain(item)
+                continue
             elif kind == nodes.Iir_Kind.Procedure_Body:
-                #                procedureName = NodeToName(item)
-                print("found procedure body '{name}'".format(name="????"))
+                if lastKind is nodes.Iir_Kind.Procedure_Declaration:
+                    pass
+                else:
+                    position = Position.parse(item)
+                    raise DOMException(
+                        "Found unexpected procedure body '{functionName}' in {entity} '{name}' at {file}:{line}:{column}.".format(
+                            functionName=GetNameOfNode(item),
+                            entity=entity,
+                            name=name,
+                            file=position.Filename,
+                            line=position.Line,
+                            column=position.Column,
+                        )
+                    )
             elif kind == nodes.Iir_Kind.Protected_Type_Body:
                 yield ProtectedTypeBody.parse(item)
             elif kind == nodes.Iir_Kind.Object_Alias_Declaration:
@@ -819,6 +856,7 @@ def GetDeclaredItemsFromChainedNodes(
                     )
                 )
 
+            lastKind = None
             item = nodes.Get_Chain(item)
             continue
 
