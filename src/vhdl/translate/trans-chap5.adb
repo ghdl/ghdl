@@ -760,9 +760,17 @@ package body Trans.Chap5 is
                         --  Create non-collapsed signals.
                         Chap4.Elab_Signal_Declaration_Object
                           (Formal, Block_Parent, False);
-                        --  And associate.
-                        Elab_Port_Map_Aspect_Assoc
-                          (Assoc, Formal, False, Formal_Env, Actual_Env);
+                        --  And associate (if not an inertial association).
+                        if (Get_Kind (Assoc)
+                              = Iir_Kind_Association_Element_By_Name)
+                          or else (Get_Expr_Staticness (Get_Actual (Assoc))
+                                     /= None)
+                        then
+                           Elab_Port_Map_Aspect_Assoc
+                             (Assoc, Formal, False, Formal_Env, Actual_Env);
+                        else
+                           Chap9.Elab_Inertial_Association (Assoc, Formal);
+                        end if;
                      end if;
                   else
                      --  By sub-element.

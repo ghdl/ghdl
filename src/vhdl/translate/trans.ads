@@ -739,6 +739,7 @@ package Trans is
       Kind_Package_Instance,
       Kind_Config,
       Kind_Assoc,
+      Kind_Inertial_Assoc,
       Kind_Design_File,
       Kind_Library,
       Kind_Expr_Eval
@@ -1204,6 +1205,7 @@ package Trans is
    subtype Field_Info_Acc is Ortho_Info_Acc (Kind_Field);
    subtype Config_Info_Acc is Ortho_Info_Acc (Kind_Config);
    subtype Assoc_Info_Acc is Ortho_Info_Acc (Kind_Assoc);
+   subtype Inertial_Info_Acc is Ortho_Info_Acc (Kind_Inertial_Assoc);
    subtype Inter_Info_Acc is Ortho_Info_Acc (Kind_Interface);
    subtype Design_File_Info_Acc is Ortho_Info_Acc (Kind_Design_File);
    subtype Library_Info_Acc is Ortho_Info_Acc (Kind_Library);
@@ -2116,6 +2118,11 @@ package Trans is
             --  Association informations.
             Assoc_In  : Assoc_Conv_Info;
             Assoc_Out : Assoc_Conv_Info;
+
+         when Kind_Inertial_Assoc =>
+            Inertial_Proc : O_Dnode;
+            Inertial_Inst : O_Dnode;
+            Inertial_Block : Iir;
 
          when Kind_Design_File =>
             Design_Filename : O_Dnode;

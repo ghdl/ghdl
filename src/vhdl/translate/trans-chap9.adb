@@ -172,6 +172,7 @@ package body Trans.Chap9 is
       Push_Identifier_Prefix (Mark, Get_Label (Inst));
       Num := 0;
 
+      --  Add a pointer to the instance.
       if Is_Component_Instantiation (Inst) then
          --  Via a component declaration.
          declare
@@ -979,7 +980,7 @@ package body Trans.Chap9 is
       Info.Block_Configured_Field := Add_Instance_Factory_Field
         (Get_Identifier ("CONFIGURED"), Ghdl_Bool_Type);
 
-                  --  Iterator.
+      --  Iterator.
       It_Info := Add_Info (Param, Kind_Iterator);
       It_Info.Iterator_Var := Create_Var
         (Create_Var_Identifier (Param),
@@ -1773,7 +1774,7 @@ package body Trans.Chap9 is
       New_Association
         (Constr,
          New_Lit (New_Subprogram_Address (Info.Process_Subprg,
-           Ghdl_Ptr_Type)));
+                                          Ghdl_Ptr_Type)));
       Rtis.Associate_Rti_Context (Constr, Proc);
       New_Procedure_Call (Constr);
 
@@ -1886,6 +1887,42 @@ package body Trans.Chap9 is
            (Get_Var (Info.Process_State), New_Lit (Ghdl_Index_0));
       end if;
    end Elab_Process;
+
+   procedure Elab_Inertial_Association (Assoc : Iir; Formal : Iir)
+   is
+      Info      : constant Inertial_Info_Acc := Get_Info (Assoc);
+      Constr        : O_Assoc_List;
+      List          : Iir_List;
+   begin
+      New_Debug_Line_Stmt (Get_Line_Number (Assoc));
+
+      --  Register proc.
+      Start_Association (Constr, Ghdl_Sensitized_Process_Register);
+      New_Association
+        (Constr, New_Convert_Ov (Get_Instance_Access (Info.Inertial_Block),
+                                 Ghdl_Ptr_Type));
+      New_Association
+        (Constr,
+         New_Lit (New_Subprogram_Address (Info.Inertial_Proc,
+                                          Ghdl_Ptr_Type)));
+      Rtis.Associate_Null_Rti_Context (Constr);
+      New_Procedure_Call (Constr);
+
+      --  Driver
+      Register_Signal (Chap6.Translate_Name (Formal, Mode_Signal),
+                       Get_Type (Formal),
+                       Ghdl_Process_Add_Driver);
+
+      --  Sensitivity
+      List := Create_Iir_List;
+      Vhdl.Canon.Canon_Extract_Sensitivity_Expression
+        (Get_Actual (Assoc), List, False);
+      --  For extracted sensitivity, any signal can appear in the list.
+      --  Remove transient types now.
+      Destroy_Types_In_List (List);
+      Register_Signal_List (List, Ghdl_Process_Add_Sensitivity);
+      Destroy_Iir_List (List);
+   end Elab_Inertial_Association;
 
    --  PROC: the process to be elaborated
    --  BLOCK: the block containing the process (its parent)
@@ -2148,22 +2185,22 @@ package body Trans.Chap9 is
             --  Set the ghdl_component_link_instance field.
             New_Assign_Stmt
               (New_Selected_Element
-                 (New_Selected_Element (Get_Instance_Ref (Ref_Scope),
-                  Link_Field),
+                 (New_Selected_Element
+                    (Get_Instance_Ref (Ref_Scope), Link_Field),
                   Rtis.Ghdl_Component_Link_Instance),
-               New_Address (New_Selected_Acc_Value
-                 (New_Obj (Var_Sub),
-                      Entity_Info.Block_Link_Field),
-                 Rtis.Ghdl_Entity_Link_Acc));
+               New_Address
+                 (New_Selected_Acc_Value
+                    (New_Obj (Var_Sub), Entity_Info.Block_Link_Field),
+                  Rtis.Ghdl_Entity_Link_Acc));
             --  Set the ghdl_entity_link_parent field.
             New_Assign_Stmt
               (New_Selected_Element
-                 (New_Selected_Acc_Value (New_Obj (Var_Sub),
-                  Entity_Info.Block_Link_Field),
+                 (New_Selected_Acc_Value
+                    (New_Obj (Var_Sub), Entity_Info.Block_Link_Field),
                   Rtis.Ghdl_Entity_Link_Parent),
                New_Address
-                 (New_Selected_Element (Get_Instance_Ref (Ref_Scope),
-                  Link_Field),
+                 (New_Selected_Element
+                    (Get_Instance_Ref (Ref_Scope), Link_Field),
                   Rtis.Ghdl_Component_Link_Acc));
          end Set_Links;
       begin

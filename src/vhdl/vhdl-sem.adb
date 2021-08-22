@@ -618,9 +618,11 @@ package body Vhdl.Sem is
             if Get_Expr_Staticness (Actual) < Globally then
                if Flags.Vhdl_Std >= Vhdl_08 then
                   --  LRM08 6.5.6.3 Port clauses
-                  Actual := Sem_Insert_Anonymous_Signal (Formal, Actual);
-                  Set_Actual (Assoc, Actual);
-                  Set_Collapse_Signal_Flag (Assoc, True);
+                  if False then
+                     Actual := Sem_Insert_Anonymous_Signal (Formal, Actual);
+                     Set_Actual (Assoc, Actual);
+                     Set_Collapse_Signal_Flag (Assoc, True);
+                  end if;
                else
                   Error_Msg_Sem
                     (+Actual, "actual expression must be globally static");

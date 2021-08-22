@@ -30,6 +30,9 @@ package Trans.Chap9 is
    procedure Translate_Entity_Instantiation
      (Aspect : Iir; Mapping : Iir; Parent : Iir; Config_Override : Iir);
 
+   --  Elaborate an inertial association: register the anonymous process.
+   procedure Elab_Inertial_Association (Assoc : Iir; Formal : Iir);
+
    --  Remove anonymous and implicit type definitions in a list of names.
    --  Such type definitions are created during slice translations, however
    --  variables created are defined in the translation scope.

@@ -4745,6 +4745,14 @@ package body Trans.Chap8 is
       end;
    end Translate_Waveform_Assignment;
 
+   procedure Translate_Inertial_Assignment
+     (Targ : Mnode; Targ_Type : Iir; Val : Mnode; Assoc : Iir) is
+   begin
+      Signal_Assign_Line := Get_Line_Number (Assoc);
+
+      Gen_Simple_Signal_Assign (Targ, Targ_Type, M2E (Val));
+   end Translate_Inertial_Assignment;
+
    procedure Translate_Simple_Signal_Assignment_Statement (Stmt : Iir)
    is
       Target : constant Iir := Strip_Reference_Name (Get_Target (Stmt));

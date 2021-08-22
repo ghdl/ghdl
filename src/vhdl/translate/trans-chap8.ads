@@ -90,4 +90,8 @@ package Trans.Chap8 is
 
    function Translate_Subprogram_Call
      (Call : Iir; Assoc_Chain : Iir; Obj : Iir) return O_Enode;
+
+   --  Signal assignment for an inertial association.
+   procedure Translate_Inertial_Assignment
+     (Targ : Mnode; Targ_Type : Iir; Val : Mnode; Assoc : Iir);
 end Trans.Chap8;

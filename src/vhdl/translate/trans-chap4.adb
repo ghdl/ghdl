@@ -2791,15 +2791,15 @@ package body Trans.Chap4 is
       Base_Block : Iir;
       Entity     : Iir)
    is
-      Formal : constant Iir := Get_Association_Formal (Assoc, Inter);
-      Actual : constant Iir := Get_Actual (Assoc);
+      Formal     : constant Iir := Get_Association_Formal (Assoc, Inter);
+      Actual     : constant Iir := Get_Actual (Assoc);
+      Block_Info : constant Block_Info_Acc := Get_Info (Base_Block);
 
       Mark2, Mark3      : Id_Mark_Type;
       Inter_List        : O_Inter_List;
       In_Type, Out_Type : Iir;
       In_Info, Out_Info : Type_Info_Acc;
       El_List           : O_Element_List;
-      Block_Info        : constant Block_Info_Acc := Get_Info (Base_Block);
       Stmt_Info         : Block_Info_Acc;
       Entity_Info       : Ortho_Info_Acc;
       Var_Data          : O_Dnode;
@@ -2835,10 +2835,8 @@ package body Trans.Chap4 is
             Imp := Get_Formal_Conversion (Assoc);
 
       end case;
-      --  FIXME: individual assoc -> overload.
-      Push_Identifier_Prefix
-        (Mark3, Get_Identifier (Get_Association_Interface (Assoc, Inter)),
-         Num);
+      --  Add interface name and a unique number in case of individual assoc.
+      Push_Identifier_Prefix (Mark3, Get_Identifier (Inter), Num);
 
       --  Handle anonymous subtypes.
       Chap3.Translate_Anonymous_Subtype_Definition (Out_Type, False);
@@ -2930,7 +2928,7 @@ package body Trans.Chap4 is
       V := Create_Temp_Init
         (Block_Info.Block_Decls_Ptr_Type,
          New_Value_Selected_Acc_Value (New_Obj (Var_Data),
-           Conv_Info.Instance_Field));
+                                       Conv_Info.Instance_Field));
       Set_Scope_Via_Param_Ptr (Block_Info.Block_Scope, V);
 
       --  Add an access to instantiated entity.
@@ -3097,11 +3095,114 @@ package body Trans.Chap4 is
       Pop_Identifier_Prefix (Mark2);
    end Translate_Association_Subprogram;
 
+   procedure Translate_Inertial_Subprogram
+     (Stmt       : Iir;
+      Block      : Iir;
+      Assoc      : Iir;
+      Inter      : Iir;
+      Num        : Iir_Int32;
+      Base_Block : Iir;
+      Entity     : Iir)
+   is
+      pragma Unreferenced (Num);
+      Formal     : constant Iir := Get_Association_Formal (Assoc, Inter);
+      Actual     : constant Iir := Get_Actual (Assoc);
+      Block_Info : constant Block_Info_Acc := Get_Info (Base_Block);
+      Assoc_Info  : Inertial_Info_Acc;
+      Inter_List  : O_Inter_List;
+      Entity_Info : Ortho_Info_Acc;
+      Targ : Mnode;
+      Val : Mnode;
+   begin
+      --  Declare the subprogram.
+      Assoc_Info := Add_Info (Assoc, Kind_Inertial_Assoc);
+      Start_Procedure_Decl
+        (Inter_List, Create_Identifier (Inter, "INERTIAL"),
+         O_Storage_Private);
+      New_Interface_Decl (Inter_List, Assoc_Info.Inertial_Inst,
+                          Wki_Instance, Block_Info.Block_Decls_Ptr_Type);
+      Finish_Subprogram_Decl (Inter_List, Assoc_Info.Inertial_Proc);
+
+      --  The body.
+      New_Debug_Line_Decl (Get_Line_Number (Assoc));
+      Start_Subprogram_Body (Assoc_Info.Inertial_Proc);
+      Push_Local_Factory;
+      --  Access for actual.
+      Assoc_Info.Inertial_Block := Base_Block;
+      Set_Scope_Via_Param_Ptr (Block_Info.Block_Scope,
+                               Assoc_Info.Inertial_Inst);
+
+      Open_Temp;
+
+      --  Access for formals.
+      if Entity /= Null_Iir then
+         Entity_Info := Get_Info (Entity);
+         declare
+            Inst_Info  : constant Block_Info_Acc := Get_Info (Stmt);
+            V : O_Dnode;
+         begin
+            if Entity_Info.Kind = Kind_Component then
+               Set_Scope_Via_Field (Entity_Info.Comp_Scope,
+                                    Inst_Info.Block_Link_Field,
+                                    Block_Info.Block_Scope'Access);
+            else
+               --  Get access to the directly instantiated entity through
+               --  the link.  The link is a __ghdl_component_link_type which
+               --  points to the __ghdl_entity_link_type of the entity.
+               V := Create_Temp_Init
+                 (Entity_Info.Block_Decls_Ptr_Type,
+                  New_Convert_Ov
+                    (New_Value
+                       (New_Selected_Element
+                          (New_Selected_Element
+                             (New_Access_Element (Get_Instance_Access (Block)),
+                              Inst_Info.Block_Link_Field),
+                           Rtis.Ghdl_Component_Link_Instance)),
+                     Entity_Info.Block_Decls_Ptr_Type));
+               Set_Scope_Via_Param_Ptr (Entity_Info.Block_Scope, V);
+            end if;
+
+         end;
+      end if;
+
+      --  Access for formal.
+      --  1. Translate target (translate_name)
+      Targ := Chap6.Translate_Name (Formal, Mode_Signal);
+
+      --  2. Translate expression
+      Val := Chap7.Translate_Expression (Actual, Get_Type (Formal));
+
+      --  3. Check bounds match
+      --  TODO
+
+      --  4. Call Gen_Simple_Signal_Assign
+      Chap8.Translate_Inertial_Assignment
+        (Targ, Get_Type (Formal), Val, Assoc);
+
+      --  Set_Map_Env (Formal_Env);
+
+      if Entity /= Null_Iir then
+         if Entity_Info.Kind = Kind_Component then
+            Clear_Scope (Entity_Info.Comp_Scope);
+         else
+            Clear_Scope (Entity_Info.Block_Scope);
+         end if;
+      end if;
+
+      Close_Temp;
+
+      Clear_Scope (Block_Info.Block_Scope);
+      Pop_Local_Factory;
+      Finish_Subprogram_Body;
+   end Translate_Inertial_Subprogram;
+
+   --  Create subprograms for associations: conversions and inertial assocs.
    --  ENTITY is null for block_statement.
    procedure Translate_Association_Subprograms
      (Stmt : Iir; Block : Iir; Base_Block : Iir; Entity : Iir)
    is
       Assoc : Iir;
+      Assoc_Inter : Iir;
       Inter : Iir;
       Info  : Assoc_Info_Acc;
       Num : Iir_Int32;
@@ -3109,31 +3210,43 @@ package body Trans.Chap4 is
       Assoc := Get_Port_Map_Aspect_Chain (Stmt);
       Num := 0;
       if Is_Null (Entity) then
-         Inter := Get_Port_Chain (Stmt);
+         Assoc_Inter := Get_Port_Chain (Stmt);
       else
-         Inter := Get_Port_Chain (Entity);
+         Assoc_Inter := Get_Port_Chain (Entity);
       end if;
       while Assoc /= Null_Iir loop
-         if Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Name then
-            Info := null;
-            if Get_Actual_Conversion (Assoc) /= Null_Iir then
-               Info := Add_Info (Assoc, Kind_Assoc);
-               Translate_Association_Subprogram
-                 (Stmt, Block, Assoc, Inter, Conv_Mode_In, Info.Assoc_In,
-                  Num, Base_Block, Entity);
-               Num := Num + 1;
-            end if;
-            if Get_Formal_Conversion (Assoc) /= Null_Iir then
-               if Info = null then
+         Inter := Get_Association_Interface (Assoc, Assoc_Inter);
+         case Get_Kind (Assoc) is
+            when Iir_Kind_Association_Element_By_Name =>
+               Info := null;
+               if Get_Actual_Conversion (Assoc) /= Null_Iir then
                   Info := Add_Info (Assoc, Kind_Assoc);
+                  Translate_Association_Subprogram
+                    (Stmt, Block, Assoc, Inter, Conv_Mode_In, Info.Assoc_In,
+                     Num, Base_Block, Entity);
+                  Num := Num + 1;
                end if;
-               Translate_Association_Subprogram
-                 (Stmt, Block, Assoc, Inter, Conv_Mode_Out, Info.Assoc_Out,
-                  Num, Base_Block, Entity);
-               Num := Num + 1;
-            end if;
-         end if;
-         Next_Association_Interface (Assoc, Inter);
+               if Get_Formal_Conversion (Assoc) /= Null_Iir then
+                  if Info = null then
+                     Info := Add_Info (Assoc, Kind_Assoc);
+                  end if;
+                  Translate_Association_Subprogram
+                    (Stmt, Block, Assoc, Inter, Conv_Mode_Out, Info.Assoc_Out,
+                     Num, Base_Block, Entity);
+                  Num := Num + 1;
+               end if;
+            when Iir_Kind_Association_Element_By_Expression =>
+               if Get_Expr_Staticness (Get_Actual (Assoc)) = None then
+                  Translate_Inertial_Subprogram
+                    (Stmt, Block, Assoc, Inter, Num, Base_Block, Entity);
+               end if;
+            when Iir_Kind_Association_Element_By_Individual
+              | Iir_Kind_Association_Element_Open =>
+               null;
+            when others =>
+               Error_Kind ("translate_association_subprograms", Assoc);
+         end case;
+         Next_Association_Interface (Assoc, Assoc_Inter);
       end loop;
    end Translate_Association_Subprograms;
 
