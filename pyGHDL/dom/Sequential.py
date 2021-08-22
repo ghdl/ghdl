@@ -210,11 +210,7 @@ class Case(VHDLModel_Case, DOMMixin):
     ) -> "Case":
         from pyGHDL.dom._Translate import GetSequentialStatementsFromChainedNodes
 
-        block = nodes.Get_Associated_Block(caseNode)
-        if block is nodes.Null_Iir:
-            return cls(caseNode, choices)
-
-        statementChain = nodes.Get_Sequential_Statement_Chain(caseNode)
+        statementChain = nodes.Get_Associated_Chain(caseNode)
         statements = GetSequentialStatementsFromChainedNodes(
             statementChain, "case", label
         )
