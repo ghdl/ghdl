@@ -34,7 +34,10 @@ from typing import Iterable
 
 from pydecor import export
 
-from pyGHDL.dom.Concurrent import WaveformElement  # TODO: move out from concurrent?
+from pyGHDL.dom.Concurrent import (
+    WaveformElement,
+    ParameterAssociationItem,
+)  # TODO: move out from concurrent?
 from pyGHDL.dom.Range import Range
 from pyVHDLModel.SyntaxModel import (
     IfBranch as VHDLModel_IfBranch,
@@ -350,11 +353,11 @@ class ForLoopStatement(VHDLModel_ForLoopStatement, DOMMixin):
         self,
         loopNode: Iir,
         loopIndex: str,
-        range: Range,
+        rng: Range,
         statements: Iterable[SequentialStatement] = None,
         label: str = None,
     ):
-        super().__init__(loopIndex, range, statements, label)
+        super().__init__(loopIndex, rng, statements, label)
         DOMMixin.__init__(self, loopNode)
 
     @classmethod
@@ -430,7 +433,7 @@ class SequentialProcedureCall(VHDLModel_SequentialProcedureCall, DOMMixin):
         self,
         callNode: Iir,
         procedureName: Name,
-        parameterMappings: Iterable,
+        parameterMappings: Iterable[ParameterAssociationItem],
         label: str = None,
     ):
         super().__init__(procedureName, parameterMappings, label)

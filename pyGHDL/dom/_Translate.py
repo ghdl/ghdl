@@ -681,8 +681,7 @@ def GetMapAspect(
             else:
                 formal = GetNameFromNode(formalNode)
 
-            open = OpenName(generic)
-            yield cls(generic, open, formal)
+            yield cls(generic, OpenName(generic), formal)
         else:
             pos = Position.parse(generic)
             raise DOMException(
@@ -694,17 +693,17 @@ def GetMapAspect(
 
 def GetGenericMapAspect(
     genericMapAspect: Iir,
-) -> Generator[AssociationItem, None, None]:
+) -> Generator[GenericAssociationItem, None, None]:
     return GetMapAspect(genericMapAspect, GenericAssociationItem, "generic")
 
 
-def GetPortMapAspect(portMapAspect: Iir) -> Generator[AssociationItem, None, None]:
+def GetPortMapAspect(portMapAspect: Iir) -> Generator[PortAssociationItem, None, None]:
     return GetMapAspect(portMapAspect, PortAssociationItem, "port")
 
 
 def GetParameterMapAspect(
     parameterMapAspect: Iir,
-) -> Generator[AssociationItem, None, None]:
+) -> Generator[ParameterAssociationItem, None, None]:
     return GetMapAspect(parameterMapAspect, ParameterAssociationItem, "parameter")
 
 

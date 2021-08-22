@@ -277,7 +277,6 @@ class ProcessStatement(VHDLModel_ProcessStatement, DOMMixin):
     def parse(
         cls, processNode: Iir, label: str, hasSensitivityList: bool
     ) -> "ProcessStatement":
-        from pyGHDL.dom._Utils import GetIirKindOfNode
         from pyGHDL.dom._Translate import (
             GetDeclaredItemsFromChainedNodes,
             GetSequentialStatementsFromChainedNodes,
@@ -285,6 +284,7 @@ class ProcessStatement(VHDLModel_ProcessStatement, DOMMixin):
 
         sensitivityList = None
         if hasSensitivityList:
+            # FIXME: sensitity list
             sensitivityListNode = nodes.Get_Sensitivity_List(processNode)
         #            print("sensi", GetIirKindOfNode(sensitivityListNode))
 
@@ -323,7 +323,7 @@ class IfGenerateBranch(VHDLModel_IfGenerateBranch):
         body = nodes.Get_Generate_Statement_Body(generateNode)
 
         # TODO: alternative label
-        alternativeLabelId = nodes.Get_Alternative_Label(body)
+        # alternativeLabelId = nodes.Get_Alternative_Label(body)
         alternativeLabel = ""
 
         declarationChain = nodes.Get_Declaration_Chain(body)
@@ -364,7 +364,7 @@ class ElsifGenerateBranch(VHDLModel_ElsifGenerateBranch):
         body = nodes.Get_Generate_Statement_Body(generateNode)
 
         # TODO: alternative label
-        alternativeLabelId = nodes.Get_Alternative_Label(body)
+        # alternativeLabelId = nodes.Get_Alternative_Label(body)
         alternativeLabel = ""
 
         declarationChain = nodes.Get_Declaration_Chain(body)
@@ -402,7 +402,7 @@ class ElseGenerateBranch(VHDLModel_ElseGenerateBranch):
         body = nodes.Get_Generate_Statement_Body(generateNode)
 
         # TODO: alternative label
-        alternativeLabelId = nodes.Get_Alternative_Label(body)
+        # alternativeLabelId = nodes.Get_Alternative_Label(body)
         alternativeLabel = ""
 
         declarationChain = nodes.Get_Declaration_Chain(body)
@@ -492,7 +492,7 @@ class GenerateCase(VHDLModel_GenerateCase, DOMMixin):
         body = nodes.Get_Associated_Block(caseNode)
 
         # TODO: alternative label
-        alternativeLabelId = nodes.Get_Alternative_Label(body)
+        # alternativeLabelId = nodes.Get_Alternative_Label(body)
         alternativeLabel = ""
 
         declarationChain = nodes.Get_Declaration_Chain(body)
@@ -530,7 +530,7 @@ class OthersGenerateCase(VHDLModel_OthersGenerateCase, DOMMixin):
         body = nodes.Get_Associated_Block(caseNode)
 
         # TODO: alternative label
-        alternativeLabelId = nodes.Get_Alternative_Label(body)
+        # alternativeLabelId = nodes.Get_Alternative_Label(body)
         alternativeLabel = ""
 
         declarationChain = nodes.Get_Declaration_Chain(body)
@@ -653,11 +653,11 @@ class ForGenerateStatement(VHDLModel_ForGenerateStatement, DOMMixin):
         generateNode: Iir,
         label: str,
         loopIndex: str,
-        range: Range,
+        rng: Range,
         declaredItems: Iterable = None,
         statements: Iterable[ConcurrentStatement] = None,
     ):
-        super().__init__(label, loopIndex, range, declaredItems, statements)
+        super().__init__(label, loopIndex, rng, declaredItems, statements)
         DOMMixin.__init__(self, generateNode)
 
     @classmethod

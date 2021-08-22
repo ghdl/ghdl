@@ -43,7 +43,6 @@ from pyGHDL.dom.Concurrent import (
     ComponentInstantiation,
     ConfigurationInstantiation,
     EntityInstantiation,
-    OthersGenerateCase,
     ConcurrentProcedureCall,
 )
 from pyVHDLModel.SyntaxModel import (
@@ -93,7 +92,7 @@ from pyGHDL.dom.InterfaceItem import (
     PortSignalInterfaceItem,
     GenericTypeInterfaceItem,
 )
-from pyGHDL.dom.Object import Constant, Signal, SharedVariable, File, DeferredConstant
+from pyGHDL.dom.Object import Constant, Signal, SharedVariable, File
 from pyGHDL.dom.Attribute import Attribute, AttributeSpecification
 from pyGHDL.dom.Subprogram import Procedure
 from pyGHDL.dom.Misc import Alias
