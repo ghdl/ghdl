@@ -20,6 +20,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
       - name: '🧰 Checkout'
         uses: actions/checkout@v2
 
@@ -77,6 +78,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
       - name: '🧰 Checkout'
         uses: actions/checkout@v2
 
@@ -125,6 +127,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
       - name: '🧰 Checkout'
         uses: actions/checkout@v2
 
@@ -150,6 +153,7 @@ jobs:
           - { os: 20, backend: gcc-9.3.0 }
 
     steps:
+
       - name: '🧰 Checkout'
         uses: actions/checkout@v2
 
@@ -181,6 +185,7 @@ jobs:
           - llvm
 
     steps:
+
       - name: '🧰 Checkout'
         uses: actions/checkout@v2
 
@@ -235,6 +240,7 @@ jobs:
         shell: msys2 {0}
 
     steps:
+
       - name: '${{ matrix.icon }} Setup MSYS2'
         uses: msys2/setup-msys2@v2
         with:
@@ -305,6 +311,7 @@ jobs:
         shell: msys2 {0}
 
     steps:
+
       - name: '${{ matrix.sys.icon }} Setup MSYS2'
         uses: msys2/setup-msys2@v2
         with:
@@ -360,6 +367,7 @@ jobs:
         shell: msys2 {0}
 
     steps:
+
       - name: '${{ matrix.icon }} Setup MSYS2'
         uses: msys2/setup-msys2@v2
         with:
@@ -430,6 +438,7 @@ jobs:
         shell: pwsh
 
     steps:
+
       - name: '${{ matrix.icon }} Setup MSYS2'
         uses: msys2/setup-msys2@v2
         with:
@@ -489,7 +498,7 @@ jobs:
 #
 
   win-cpython-standalone:
-    name: '🚦🐍🥡 ${{ matrix.name }}'
+    name: '🚦🐍🥡 ${{ matrix.pkg }}${{ matrix.bits }}'
     runs-on: windows-latest
 
     needs:
@@ -500,16 +509,17 @@ jobs:
       fail-fast: false
       matrix:
         include:
-#          - {name: 'llvm32', pkg: '32-llvm', pyarch: x86 } ! not yet functional
-#          - {name: 'llvm64', pkg: '64-llvm', pyarch: x64 }
-#          - {name: 'mcode32', pkg: '32-mcode', pyarch: x86 } #! the tarball generation on MINGW32 needs to be fixed
-          - {name: 'mcode64', pkg: '64-mcode', pyarch: x64 } #! simulation with mcode is not yet supported on win64
+#          - {icon: '🟪', pkg: 'llvm',  bits: '32', arch: i686 }, ! not yet functional
+#          - {icon: '🟦', pkg: 'llvm',  bits: '64', arch: x86_64, pyarch: x64 }
+#          - {icon: '🟪', pkg: 'mcode', bits: '32', arch: i686,   pyarch: x86 }
+          - {icon: '🟦', pkg: 'mcode', bits: '64', arch: x86_64, pyarch: x64 } #! simulation with mcode is not yet supported on win64
 
     defaults:
       run:
         shell: pwsh
 
     steps:
+
       - name: '⚙ git config'
         run: git config --global core.autocrlf input
 
@@ -520,12 +530,12 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           path: artifact
-          name: MINGW${{ matrix.pkg }}-standalone
+          name: MINGW${{ matrix.bits }}-${{ matrix.pkg }}-standalone
 
       - name: '⚙ Extract package'
         run: |
-          unzip artifact\MINGW${{ matrix.pkg }}-standalone.zip
-          mv 'MINGW${{ matrix.pkg }}-standalone\' GHDL-standalone
+          unzip artifact\MINGW${{ matrix.bits }}-${{ matrix.pkg }}-standalone.zip
+          mv 'MINGW${{ matrix.bits }}-${{ matrix.pkg }}-standalone\' GHDL-standalone
 
       - name: '🛠 Set envvars'
         run: |
@@ -582,6 +592,7 @@ jobs:
     if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/master' || contains(github.ref, 'refs/tags/'))
 
     steps:
+
       - name: '📥 Download artifacts'
         if: "!contains(github.ref, 'refs/tags/')"
         uses: actions/download-artifact@v2
@@ -630,6 +641,7 @@ jobs:
         shell: msys2 {0}
 
     steps:
+
       - name: '🟪 Setup MSYS2'
         uses: msys2/setup-msys2@v2
         with:
@@ -685,6 +697,7 @@ jobs:
     if: always() && github.repository == 'ghdl/ghdl' && github.event_name != 'pull_request'
 
     steps:
+
       - name: '📥 Download artifact: coverage report'
         uses: actions/download-artifact@v2
         with:
