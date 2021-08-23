@@ -1000,6 +1000,12 @@ def GetSequentialStatementsFromChainedNodes(
             yield SequentialReportStatement.parse(statement, label)
         elif kind == nodes.Iir_Kind.Assertion_Statement:
             yield SequentialAssertStatement.parse(statement, label)
+        elif kind == nodes.Iir_Kind.Null_Statement:
+            print(
+                "[NOT IMPLEMENTED] null statement (label: '{label}') at line {line}".format(
+                    label=label, line=pos.Line
+                )
+            )
         else:
             raise DOMException(
                 "Unknown statement of kind '{kind}' in {entity} '{name}' at {file}:{line}:{column}.".format(
