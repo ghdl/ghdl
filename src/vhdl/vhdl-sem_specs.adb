@@ -1980,7 +1980,10 @@ package body Vhdl.Sem_Specs is
          Set_Formal (Assoc, Name);
 
          if Get_Kind (Ent_El) in Iir_Kinds_Interface_Object_Declaration then
-            Set_Type (Name, Get_Type (Ent_El));
+            --  Do not set the type of the formal, as it can be a forward
+            --  reference.  This is a little bit unusual to not have type.
+            --  Set_Type (Name, Get_Type (Ent_El));
+            null;
          end if;
 
          if Kind = Map_Port
