@@ -1161,8 +1161,7 @@ package body Trans.Chap6 is
            | Iir_Kind_Quiet_Attribute
            | Iir_Kind_Delayed_Attribute
            | Iir_Kind_Transaction_Attribute
-           | Iir_Kind_Guard_Signal_Declaration
-           | Iir_Kind_Anonymous_Signal_Declaration =>
+           | Iir_Kind_Guard_Signal_Declaration =>
             if Mode = Mode_Signal then
                return Get_Var (Name_Info.Signal_Sig, Type_Info, Mode_Signal);
             else
@@ -1271,8 +1270,7 @@ package body Trans.Chap6 is
            | Iir_Kind_Delayed_Attribute
            | Iir_Kind_Transaction_Attribute
            | Iir_Kind_Guard_Signal_Declaration
-           | Iir_Kind_Object_Alias_Declaration
-           | Iir_Kind_Anonymous_Signal_Declaration =>
+           | Iir_Kind_Object_Alias_Declaration =>
             Translate_Signal_Base (Name, Sig, Drv);
          when Iir_Kind_Slice_Name =>
             declare
@@ -1324,8 +1322,7 @@ package body Trans.Chap6 is
    begin
       case Get_Kind (Name) is
          when Iir_Kind_Signal_Declaration
-           | Iir_Kind_Interface_Signal_Declaration
-           | Iir_Kind_Anonymous_Signal_Declaration =>
+           | Iir_Kind_Interface_Signal_Declaration =>
             declare
                Name_Type : constant Iir := Get_Type (Name);
                Name_Info : constant Ortho_Info_Acc := Get_Info (Name);
@@ -1384,8 +1381,7 @@ package body Trans.Chap6 is
            | Iir_Kind_Quiet_Attribute
            | Iir_Kind_Delayed_Attribute
            | Iir_Kind_Transaction_Attribute
-           | Iir_Kind_Guard_Signal_Declaration
-           | Iir_Kind_Anonymous_Signal_Declaration =>
+           | Iir_Kind_Guard_Signal_Declaration =>
             Sig := Get_Var (Name_Info.Signal_Sig, Type_Info, Mode_Signal);
             Val := Get_Var (Name_Info.Signal_Val, Type_Info, Mode_Value);
          when Iir_Kind_Interface_Signal_Declaration =>

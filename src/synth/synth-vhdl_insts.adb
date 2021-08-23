@@ -775,14 +775,6 @@ package body Synth.Vhdl_Insts is
          when Iir_Kind_Association_Element_By_Expression
             | Iir_Kind_Association_Element_By_Name =>
             Actual := Get_Actual (Assoc);
-            if Get_Kind (Actual) = Iir_Kind_Reference_Name then
-               --  Skip inserted anonymous signal declaration.
-               --  FIXME: simply do not insert it ?
-               Actual := Get_Named_Entity (Actual);
-               pragma Assert
-                 (Get_Kind (Actual) = Iir_Kind_Anonymous_Signal_Declaration);
-               Actual := Get_Expression (Actual);
-            end if;
             Act_Inst := Syn_Inst;
          when Iir_Kind_Association_Element_By_Individual =>
             return Synth_Individual_Input_Assoc (Syn_Inst, Assoc, Inter_Inst);

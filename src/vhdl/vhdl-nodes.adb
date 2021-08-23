@@ -1081,7 +1081,6 @@ package body Vhdl.Nodes is
            | Iir_Kind_Interface_Quantity_Declaration
            | Iir_Kind_Interface_Terminal_Declaration
            | Iir_Kind_Interface_Type_Declaration
-           | Iir_Kind_Anonymous_Signal_Declaration
            | Iir_Kind_Signal_Attribute_Declaration
            | Iir_Kind_Identity_Operator
            | Iir_Kind_Negation_Operator

@@ -193,9 +193,7 @@ package body Trans.Chap4 is
       Type_Info    : Type_Info_Acc;
       Info         : Signal_Info_Acc;
    begin
-      if Get_Kind (Decl) /= Iir_Kind_Anonymous_Signal_Declaration then
-         Chap3.Translate_Object_Subtype_Indication (Decl);
-      end if;
+      Chap3.Translate_Object_Subtype_Indication (Decl);
 
       Type_Info := Get_Info (Sig_Type_Def);
       Info := Add_Info (Decl, Kind_Signal);
@@ -227,8 +225,7 @@ package body Trans.Chap4 is
          when Iir_Kind_Signal_Declaration
             | Iir_Kind_Interface_Signal_Declaration =>
             Rtis.Generate_Signal_Rti (Decl);
-         when Iir_Kind_Guard_Signal_Declaration
-           | Iir_Kind_Anonymous_Signal_Declaration =>
+         when Iir_Kind_Guard_Signal_Declaration =>
             --  No name created for guard signal.
             null;
          when others =>
@@ -477,14 +474,9 @@ package body Trans.Chap4 is
    procedure Elab_Maybe_Subtype_Attribute
      (Decl : Iir; Name_Val : Mnode; Name_Sig : Mnode) is
    begin
-      case Get_Kind (Decl) is
-         when Iir_Kind_Anonymous_Signal_Declaration =>
-            return;
-         when others =>
-            if not Is_Object_Subtype_Attribute (Decl) then
-               return;
-            end if;
-      end case;
+      if not Is_Object_Subtype_Attribute (Decl) then
+         return;
+      end if;
 
       Elab_Subtype_Attribute (Decl, Name_Val, Name_Sig);
    end Elab_Maybe_Subtype_Attribute;
@@ -1140,9 +1132,7 @@ package body Trans.Chap4 is
 
       Open_Temp;
 
-      if Get_Kind (Decl) /= Iir_Kind_Anonymous_Signal_Declaration then
-         Chap3.Elab_Object_Subtype_Indication (Decl);
-      end if;
+      Chap3.Elab_Object_Subtype_Indication (Decl);
 
       Type_Info := Get_Info (Sig_Type);
 
@@ -1894,8 +1884,7 @@ package body Trans.Chap4 is
             | Iir_Kind_Constant_Declaration =>
             Create_Object (Decl);
 
-         when Iir_Kind_Signal_Declaration
-           | Iir_Kind_Anonymous_Signal_Declaration =>
+         when Iir_Kind_Signal_Declaration =>
             Create_Signal (Decl);
 
          when Iir_Kind_Object_Alias_Declaration =>
@@ -2659,8 +2648,7 @@ package body Trans.Chap4 is
                   Need_Final := True;
                end if;
 
-            when Iir_Kind_Signal_Declaration
-              | Iir_Kind_Anonymous_Signal_Declaration =>
+            when Iir_Kind_Signal_Declaration =>
                Elab_Signal_Declaration (Decl, Parent, False);
 
             when Iir_Kind_Object_Alias_Declaration =>

@@ -1013,10 +1013,6 @@ package body Synth.Vhdl_Decls is
             Synth_Signal_Declaration (Syn_Inst, Decl);
          when Iir_Kind_Object_Alias_Declaration =>
             Synth_Object_Alias_Declaration (Syn_Inst, Decl);
-         when Iir_Kind_Anonymous_Signal_Declaration =>
-            --  Anonymous signals created by inertial associations are
-            --  simply ignored.
-            null;
          when Iir_Kind_Procedure_Declaration
             | Iir_Kind_Function_Declaration =>
             Synth_Subprogram_Declaration (Syn_Inst, Decl);
@@ -1172,8 +1168,6 @@ package body Synth.Vhdl_Decls is
             | Iir_Kind_Interface_Signal_Declaration =>
             pragma Assert (not Is_Subprg);
             Finalize_Signal (Syn_Inst, Decl);
-         when Iir_Kind_Anonymous_Signal_Declaration =>
-            null;
          when Iir_Kind_Object_Alias_Declaration =>
             null;
          when Iir_Kind_Procedure_Declaration

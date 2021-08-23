@@ -234,7 +234,6 @@ package body Vhdl.Prints is
            | Iir_Kind_Constant_Declaration
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Guard_Signal_Declaration
-           | Iir_Kind_Anonymous_Signal_Declaration
            | Iir_Kind_Variable_Declaration
            | Iir_Kind_File_Declaration
            | Iir_Kind_Type_Declaration
@@ -2485,15 +2484,6 @@ package body Vhdl.Prints is
                Disp_Attribute_Specification (Ctxt, Decl);
             when Iir_Kind_Signal_Attribute_Declaration =>
                null;
-            when Iir_Kind_Anonymous_Signal_Declaration =>
-               if False then
-                  --  Disabled as it is not part of the sources.
-                  Start_Hbox (Ctxt);
-                  Disp_Token (Ctxt, Tok_Signal);
-                  Disp_Ident (Ctxt, Get_Identifier (Decl));
-                  Disp_Token (Ctxt, Tok_Semi_Colon);
-                  Close_Hbox (Ctxt);
-               end if;
             when Iir_Kind_Group_Template_Declaration =>
                Disp_Group_Template_Declaration (Ctxt, Decl);
             when Iir_Kind_Group_Declaration =>
@@ -4742,21 +4732,6 @@ package body Vhdl.Prints is
             Disp_Name_Of (Ctxt, Get_Named_Entity (Expr));
          when Iir_Kind_Implicit_Dereference =>
             Print (Ctxt, Get_Prefix (Expr));
-
-         when Iir_Kind_Anonymous_Signal_Declaration =>
-            declare
-               Act : constant Iir := Get_Expression (Expr);
-            begin
-               if Act /= Null_Iir then
-                  --  There is still an expression, so the anonymous signal
-                  --  was not yet declared.
-                  Print (Ctxt, Act);
-               else
-                  --  Cannot use Disp_Identifier as the identifier is not in
-                  --  the sources.
-                  Disp_Ident (Ctxt, Get_Identifier (Expr));
-               end if;
-            end;
 
          when Iir_Kind_Left_Type_Attribute =>
             Disp_Name_Attribute (Ctxt, Expr, Name_Left);

@@ -107,7 +107,6 @@ package body Synth.Vhdl_Stmts is
            | Iir_Kind_Variable_Declaration
            | Iir_Kind_Interface_Variable_Declaration
            | Iir_Kind_Signal_Declaration
-           | Iir_Kind_Anonymous_Signal_Declaration
            | Iir_Kind_Interface_Constant_Declaration
            | Iir_Kind_Constant_Declaration
            | Iir_Kind_File_Declaration
@@ -369,7 +368,6 @@ package body Synth.Vhdl_Stmts is
            | Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Variable_Declaration
            | Iir_Kind_Signal_Declaration
-           | Iir_Kind_Anonymous_Signal_Declaration
            | Iir_Kind_Indexed_Name
            | Iir_Kind_Slice_Name
            | Iir_Kind_Dereference =>

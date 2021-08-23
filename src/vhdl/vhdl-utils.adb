@@ -204,7 +204,6 @@ package body Vhdl.Utils is
                return Adecl;
             when Iir_Kind_Signal_Declaration
               | Iir_Kind_Guard_Signal_Declaration
-              | Iir_Kind_Anonymous_Signal_Declaration
               | Iir_Kind_Interface_Signal_Declaration =>
                return Adecl;
             when Iir_Kind_Object_Alias_Declaration =>
@@ -320,7 +319,6 @@ package body Vhdl.Utils is
                | Iir_Kind_Subtype_Definition
                | Iir_Kind_Group_Template_Declaration
                | Iir_Kind_Group_Declaration
-               | Iir_Kind_Anonymous_Signal_Declaration
                | Iir_Kind_Signal_Attribute_Declaration
                | Iir_Kind_Unaffected_Waveform
                | Iir_Kind_Waveform_Element
@@ -392,7 +390,6 @@ package body Vhdl.Utils is
            | Iir_Kind_Variable_Declaration
            | Iir_Kind_File_Declaration
            | Iir_Kind_Constant_Declaration
-           | Iir_Kind_Anonymous_Signal_Declaration
            | Iir_Kind_Free_Quantity_Declaration
            | Iir_Kind_Across_Quantity_Declaration
            | Iir_Kind_Through_Quantity_Declaration =>
@@ -518,7 +515,6 @@ package body Vhdl.Utils is
          when Iir_Kind_Signal_Declaration
            | Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Guard_Signal_Declaration
-           | Iir_Kind_Anonymous_Signal_Declaration
            | Iir_Kinds_Signal_Attribute =>
             return True;
          when Iir_Kind_Object_Alias_Declaration =>

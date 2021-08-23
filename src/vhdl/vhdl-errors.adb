@@ -493,9 +493,6 @@ package body Vhdl.Errors is
          when Iir_Kind_Signal_Attribute_Declaration =>
             --  Should not appear.
             return "signal attribute";
-         when Iir_Kind_Anonymous_Signal_Declaration =>
-            --  Should not appear.
-            return "anonymous signal";
          when Iir_Kind_Group_Template_Declaration =>
             return Disp_Identifier (Node, "group template");
          when Iir_Kind_Group_Declaration =>

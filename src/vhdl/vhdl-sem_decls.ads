@@ -93,10 +93,6 @@ package Vhdl.Sem_Decls is
    --  signal attribute is analyzed.
    procedure Add_Declaration_For_Implicit_Signal (Sig : Iir);
 
-   --  Append declaration SIG (for an anonymous signal) to the current
-   --  declarative part.
-   procedure Add_Implicit_Declaration (Sig : Iir);
-
 private
    type Implicit_Signal_Declaration_Type is record
       --  Declaration or statement than will contain implicit declarations.

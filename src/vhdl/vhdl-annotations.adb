@@ -677,10 +677,6 @@ package body Vhdl.Annotations is
          when Iir_Kind_Signal_Declaration =>
             Annotate_Declaration_Type (Block_Info, Decl);
             Create_Signal_Info (Block_Info, Decl);
-         when Iir_Kind_Anonymous_Signal_Declaration =>
-            if not Flag_Synthesis then
-               Create_Signal_Info (Block_Info, Decl);
-            end if;
 
          when Iir_Kind_Variable_Declaration
            | Iir_Kind_Iterator_Declaration =>

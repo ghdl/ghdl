@@ -2300,9 +2300,6 @@ package body Synth.Vhdl_Expr is
             --  Only used for anonymous signals in internal association.
             return Synth_Expression_With_Type
               (Syn_Inst, Get_Named_Entity (Expr), Expr_Type);
-         when Iir_Kind_Anonymous_Signal_Declaration =>
-            return Synth_Expression_With_Type
-              (Syn_Inst, Get_Expression (Expr), Expr_Type);
          when Iir_Kind_Indexed_Name
            | Iir_Kind_Slice_Name =>
             declare

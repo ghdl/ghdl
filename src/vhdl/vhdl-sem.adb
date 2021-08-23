@@ -478,57 +478,6 @@ package body Vhdl.Sem is
       Res := Sem_Generic_Association_Chain (Inter_Parent, Assoc_Parent);
    end Sem_Generic_Association_Chain;
 
-   --  LRM08 6.5.6.3 Port clauses
-   function Sem_Insert_Anonymous_Signal (Formal : Iir; Actual : Iir)
-                                        return Iir
-   is
-      Sig : Iir;
-      Res : Iir;
-   begin
-      --  LRM08 6.5.6.3 Port clauses
-      --  If a formal port of mode IN is associated with an expression that is
-      --  not globally static (see 9.4.1) and the formal is of an unconstrained
-      --  or partially constrained composite type requiring determination of
-      --  index ranges from the actual according to the rules of 5.3.2.2, then
-      --  the expression shall be one of the following:
-      --  - The name of an object whose subtype is globally static
-      --  - An indexed name whose prefix is one of the members of this list
-      --  - A slice name whose prefix is one of the members of this list and
-      --    whose discrete range is a globally static discrete range
-      --  - An aggregate, provided all choices are locally static and all
-      --    expressions in element associations are expressions described in
-      --    this list
-      --  - A function call whose return type mark denotes a globally static
-      --    subtype
-      --  - A qualified expression or type conversion whose type mark denotes
-      --    a globally static subtype
-      --  - An expression described in this list and enclosed in parentheses
-
-      --  GHDL: FIXME: could this be simplified simply by `subtype is globally
-      --  static` ?
-      --  FIXME: what about conversions ?
-
-      --  Create the anonymous signal.
-      Sig := Create_Iir (Iir_Kind_Anonymous_Signal_Declaration);
-      Location_Copy (Sig, Actual);
-      Set_Expression (Sig, Actual);
-      Set_Type (Sig, Get_Type (Formal));
-      Set_Expr_Staticness (Sig, None);
-
-      --  Declare it.
-      Add_Implicit_Declaration (Sig);
-
-      --  Return a reference to it.
-      --  FIXME: The referenced name is not a name.
-      Res := Create_Iir (Iir_Kind_Reference_Name);
-      Location_Copy (Res, Actual);
-      Set_Referenced_Name (Res, Sig);
-      Set_Named_Entity (Res, Sig);
-      Set_Type (Res, Get_Type (Sig));
-      Set_Expr_Staticness (Res, None);
-      return Res;
-   end Sem_Insert_Anonymous_Signal;
-
    function Sem_Signal_Port_Association
      (Assoc : Iir; Formal : Iir; Formal_Base : Iir) return Iir
    is
@@ -616,14 +565,8 @@ package body Vhdl.Sem is
             --  The actual, if an expression, must be a globally
             --  static expression.
             if Get_Expr_Staticness (Actual) < Globally then
-               if Flags.Vhdl_Std >= Vhdl_08 then
+               if Flags.Vhdl_Std < Vhdl_08 then
                   --  LRM08 6.5.6.3 Port clauses
-                  if False then
-                     Actual := Sem_Insert_Anonymous_Signal (Formal, Actual);
-                     Set_Actual (Assoc, Actual);
-                     Set_Collapse_Signal_Flag (Assoc, True);
-                  end if;
-               else
                   Error_Msg_Sem
                     (+Actual, "actual expression must be globally static");
                end if;
