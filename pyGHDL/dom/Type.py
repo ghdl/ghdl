@@ -34,7 +34,7 @@ from typing import List, Union, Iterator, Tuple
 
 from pydecor import export
 
-from pyVHDLModel.VHDLModel import (
+from pyVHDLModel.SyntaxModel import (
     AnonymousType as VHDLModel_AnonymousType,
     PhysicalType as VHDLModel_PhysicalType,
     IntegerType as VHDLModel_IntegerType,
@@ -52,9 +52,8 @@ from pyVHDLModel.VHDLModel import (
 )
 from pyGHDL.libghdl import utils
 from pyGHDL.libghdl._types import Iir
-from pyGHDL.libghdl.vhdl import nodes
-from pyGHDL.dom import DOMMixin, DOMException
-from pyGHDL.dom._Utils import GetNameOfNode, GetIirKindOfNode
+from pyGHDL.libghdl.vhdl import nodes, flists
+from pyGHDL.dom import DOMMixin, DOMException, Position
 from pyGHDL.dom.Symbol import SimpleSubtypeSymbol
 from pyGHDL.dom.Literal import EnumerationLiteral, PhysicalIntegerLiteral
 from pyGHDL.dom.Range import Range
@@ -69,6 +68,8 @@ class IncompleteType(VHDLModel_AnonymousType, DOMMixin):
 
     @classmethod
     def parse(cls, node: Iir) -> "IncompleteType":
+        from pyGHDL.dom._Utils import GetNameOfNode
+
         name = GetNameOfNode(node)
 
         return cls(node, name)
@@ -113,9 +114,25 @@ class PhysicalType(VHDLModel_PhysicalType, DOMMixin):
 
     @classmethod
     def parse(cls, typeName: str, typeDefinitionNode: Iir) -> "PhysicalType":
-        from pyGHDL.dom._Translate import GetRangeFromNode
+        from pyGHDL.dom._Utils import GetIirKindOfNode, GetNameOfNode
+        from pyGHDL.dom._Translate import GetRangeFromNode, GetNameFromNode
 
-        rng = GetRangeFromNode(nodes.Get_Range_Constraint(typeDefinitionNode))
+        rangeConstraint = nodes.Get_Range_Constraint(typeDefinitionNode)
+        rangeKind = GetIirKindOfNode(rangeConstraint)
+        if rangeKind == nodes.Iir_Kind.Range_Expression:
+            rng = GetRangeFromNode(rangeConstraint)
+        elif rangeKind in (
+            nodes.Iir_Kind.Attribute_Name,
+            nodes.Iir_Kind.Parenthesis_Name,
+        ):
+            rng = GetNameFromNode(rangeConstraint)
+        else:
+            pos = Position.parse(typeDefinitionNode)
+            raise DOMException(
+                "Unknown range kind '{kind}' in physical type definition at line {line}.".format(
+                    kind=rangeKind.name, line=pos.Line
+                )
+            )
 
         primaryUnit = nodes.Get_Primary_Unit(typeDefinitionNode)
         primaryUnitName = GetNameOfNode(primaryUnit)
@@ -145,6 +162,7 @@ class ArrayType(VHDLModel_ArrayType, DOMMixin):
 
     @classmethod
     def parse(cls, typeName: str, typeDefinitionNode: Iir) -> "ArrayType":
+        from pyGHDL.dom._Utils import GetIirKindOfNode
         from pyGHDL.dom._Translate import (
             GetSimpleTypeFromNode,
             GetSubtypeIndicationFromIndicationNode,
@@ -176,12 +194,13 @@ class ArrayType(VHDLModel_ArrayType, DOMMixin):
 
 @export
 class RecordTypeElement(VHDLModel_RecordTypeElement, DOMMixin):
-    def __init__(self, node: Iir, identifier: str, subtype: SubtypeOrSymbol):
-        super().__init__(identifier, subtype)
+    def __init__(self, node: Iir, identifiers: List[str], subtype: SubtypeOrSymbol):
+        super().__init__(identifiers, subtype)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, elementDeclarationNode: Iir) -> "RecordTypeElement":
+        from pyGHDL.dom._Utils import GetNameOfNode
         from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode
 
         elementName = GetNameOfNode(elementDeclarationNode)
@@ -189,7 +208,13 @@ class RecordTypeElement(VHDLModel_RecordTypeElement, DOMMixin):
             elementDeclarationNode, "record element", elementName
         )
 
-        return cls(elementDeclarationNode, elementName, elementType)
+        return cls(
+            elementDeclarationNode,
+            [
+                elementName,
+            ],
+            elementType,
+        )
 
 
 @export
@@ -202,10 +227,36 @@ class RecordType(VHDLModel_RecordType, DOMMixin):
 
     @classmethod
     def parse(cls, typeName: str, typeDefinitionNode: Iir) -> "RecordType":
+        from pyGHDL.dom._Utils import GetNameOfNode
+
         elements = []
         elementDeclarations = nodes.Get_Elements_Declaration_List(typeDefinitionNode)
-        for elementDeclaration in utils.flist_iter(elementDeclarations):
+
+        elementCount = flists.Flast(elementDeclarations) + 1
+        index = 0
+        while index < elementCount:
+            elementDeclaration = flists.Get_Nth_Element(elementDeclarations, index)
+
             element = RecordTypeElement.parse(elementDeclaration)
+
+            # Lookahead for elements with multiple identifiers at once
+            if nodes.Get_Has_Identifier_List(elementDeclaration):
+                index += 1
+                while index < elementCount:
+                    nextNode: Iir = flists.Get_Nth_Element(elementDeclarations, index)
+                    # Consecutive identifiers are found, if the subtype indication is Null
+                    if nodes.Get_Subtype_Indication(nextNode) == nodes.Null_Iir:
+                        element.Identifiers.append(GetNameOfNode(nextNode))
+                    else:
+                        break
+                    index += 1
+
+                    # The last consecutive identifiers has no Identifier_List flag
+                    if not nodes.Get_Has_Identifier_List(nextNode):
+                        break
+            else:
+                index += 1
+
             elements.append(element)
 
         return cls(typeDefinitionNode, typeName, elements)
@@ -221,6 +272,8 @@ class ProtectedType(VHDLModel_ProtectedType, DOMMixin):
 
     @classmethod
     def parse(cls, typeName: str, typeDefinitionNode: Iir) -> "ProtectedType":
+        from pyGHDL.dom._Utils import GetIirKindOfNode
+
         # FIXME: change this to a generator
         methods = []
         for item in utils.chain_iter(nodes.Get_Declaration_Chain(typeDefinitionNode)):
@@ -243,6 +296,7 @@ class ProtectedTypeBody(VHDLModel_ProtectedTypeBody, DOMMixin):
 
     @classmethod
     def parse(cls, protectedBodyNode: Iir) -> "ProtectedTypeBody":
+        from pyGHDL.dom._Utils import GetNameOfNode
         from pyGHDL.dom._Translate import GetDeclaredItemsFromChainedNodes
 
         typeName = GetNameOfNode(protectedBodyNode)
@@ -283,6 +337,7 @@ class FileType(VHDLModel_FileType, DOMMixin):
 
     @classmethod
     def parse(cls, typeName: str, typeDefinitionNode: Iir) -> "FileType":
+        from pyGHDL.dom._Utils import GetNameOfNode
 
         designatedSubtypeMark = nodes.Get_File_Type_Mark(typeDefinitionNode)
         designatedSubtypeName = GetNameOfNode(designatedSubtypeMark)

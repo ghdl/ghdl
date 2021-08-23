@@ -34,7 +34,7 @@ from pathlib import Path
 from textwrap import dedent
 from unittest import TestCase
 
-from pyVHDLModel.VHDLModel import Expression
+from pyVHDLModel.SyntaxModel import ExpressionUnion
 
 from pyGHDL.dom.DesignUnit import Package
 
@@ -60,7 +60,7 @@ class Literals(TestCase):
             """
         )
 
-    def parse(self, filename: Path, code: str) -> Expression:
+    def parse(self, filename: Path, code: str) -> ExpressionUnion:
         sourceCode = self._packageTemplate.format(code=code)
 
         document = Document(filename, sourceCode)
@@ -69,7 +69,7 @@ class Literals(TestCase):
         # Traverse already to default value expression
         package: Package = document.Packages[0]
         item: Constant = package.DeclaredItems[0]
-        default: Expression = item.DefaultExpression
+        default: ExpressionUnion = item.DefaultExpression
 
         return default
 
@@ -82,7 +82,7 @@ class Literals(TestCase):
         expected = (0, 1, 1024, 1048576)
 
         # Parse in-memory
-        default: Expression = self.parse(_filename, constantDeclartion)
+        default: ExpressionUnion = self.parse(_filename, constantDeclartion)
 
         self.assertIsInstance(default, IntegerLiteral)
         self.assertEqual(expected[0], default.Value)

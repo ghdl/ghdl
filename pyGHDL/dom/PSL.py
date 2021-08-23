@@ -39,7 +39,6 @@ This module contains all DOM classes for VHDL's design units (:class:`context <E
 
 
 """
-from pyGHDL.libghdl.vhdl import nodes
 from pydecor import export
 
 from pyVHDLModel.PSLModel import (

@@ -53,5 +53,9 @@ design = Design()
 def test_AllVHDLSources(file):
     check_call([sys_executable, _GHDL_ROOT / "pyGHDL/cli/dom.py", "pretty", "-f", file], stderr=STDOUT)
 
-#    document = Document(Path(file))
-#    design.Documents.append(document)
+    # try:
+    #     lib = design.GetLibrary("sanity")
+    #     document = Document(Path(file))
+    #     design.AddDocument(document, lib)
+    # except DOMException as ex:
+    #     print(ex)

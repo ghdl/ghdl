@@ -30,22 +30,22 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-from typing import Union
+from typing import Union, List
 
-from pyGHDL.libghdl._types import Iir
 from pydecor import export
 
-from pyVHDLModel.VHDLModel import (
+from pyVHDLModel.SyntaxModel import (
     Constant as VHDLModel_Constant,
     DeferredConstant as VHDLModel_DeferredConstant,
     Variable as VHDLModel_Variable,
     SharedVariable as VHDLModel_SharedVariable,
     Signal as VHDLModel_Signal,
     File as VHDLModel_File,
-    Expression,
+    ExpressionUnion,
     SubtypeOrSymbol,
 )
 
+from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin
 from pyGHDL.dom._Utils import GetNameOfNode
@@ -58,11 +58,11 @@ class Constant(VHDLModel_Constant, DOMMixin):
     def __init__(
         self,
         node: Iir,
-        identifier: str,
+        identifiers: List[str],
         subtype: SubtypeOrSymbol,
-        defaultExpression: Expression,
+        defaultExpression: ExpressionUnion,
     ):
-        super().__init__(identifier, subtype, defaultExpression)
+        super().__init__(identifiers, subtype, defaultExpression)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -78,15 +78,28 @@ class Constant(VHDLModel_Constant, DOMMixin):
         if defaultValue != nodes.Null_Iir:
             defaultExpression = GetExpressionFromNode(defaultValue)
 
-            return cls(constantNode, name, subtypeIndication, defaultExpression)
+            return cls(
+                constantNode,
+                [
+                    name,
+                ],
+                subtypeIndication,
+                defaultExpression,
+            )
         else:
-            return DeferredConstant(constantNode, name, subtypeIndication)
+            return DeferredConstant(
+                constantNode,
+                [
+                    name,
+                ],
+                subtypeIndication,
+            )
 
 
 @export
 class DeferredConstant(VHDLModel_DeferredConstant, DOMMixin):
-    def __init__(self, node: Iir, identifier: str, subtype: SubtypeOrSymbol):
-        super().__init__(identifier, subtype)
+    def __init__(self, node: Iir, identifiers: List[str], subtype: SubtypeOrSymbol):
+        super().__init__(identifiers, subtype)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -98,7 +111,13 @@ class DeferredConstant(VHDLModel_DeferredConstant, DOMMixin):
             constantNode, "deferred constant", name
         )
 
-        return cls(constantNode, name, subtypeIndication)
+        return cls(
+            constantNode,
+            [
+                name,
+            ],
+            subtypeIndication,
+        )
 
 
 @export
@@ -106,11 +125,11 @@ class Variable(VHDLModel_Variable, DOMMixin):
     def __init__(
         self,
         node: Iir,
-        identifier: str,
+        identifiers: List[str],
         subtype: SubtypeOrSymbol,
-        defaultExpression: Expression,
+        defaultExpression: ExpressionUnion,
     ):
-        super().__init__(identifier, subtype, defaultExpression)
+        super().__init__(identifiers, subtype, defaultExpression)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -127,13 +146,20 @@ class Variable(VHDLModel_Variable, DOMMixin):
         if defaultValue != nodes.Null_Iir:
             defaultExpression = GetExpressionFromNode(defaultValue)
 
-        return cls(variableNode, name, subtypeIndication, defaultExpression)
+        return cls(
+            variableNode,
+            [
+                name,
+            ],
+            subtypeIndication,
+            defaultExpression,
+        )
 
 
 @export
 class SharedVariable(VHDLModel_SharedVariable, DOMMixin):
-    def __init__(self, node: Iir, identifier: str, subtype: SubtypeOrSymbol):
-        super().__init__(identifier, subtype)
+    def __init__(self, node: Iir, identifiers: List[str], subtype: SubtypeOrSymbol):
+        super().__init__(identifiers, subtype)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -143,7 +169,13 @@ class SharedVariable(VHDLModel_SharedVariable, DOMMixin):
         name = GetNameOfNode(variableNode)
         subtypeIndication = GetSubtypeIndicationFromNode(variableNode, "variable", name)
 
-        return cls(variableNode, name, subtypeIndication)
+        return cls(
+            variableNode,
+            [
+                name,
+            ],
+            subtypeIndication,
+        )
 
 
 @export
@@ -151,11 +183,11 @@ class Signal(VHDLModel_Signal, DOMMixin):
     def __init__(
         self,
         node: Iir,
-        identifier: str,
+        identifiers: List[str],
         subtype: SubtypeOrSymbol,
-        defaultExpression: Expression,
+        defaultExpression: ExpressionUnion,
     ):
-        super().__init__(identifier, subtype, defaultExpression)
+        super().__init__(identifiers, subtype, defaultExpression)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -170,13 +202,20 @@ class Signal(VHDLModel_Signal, DOMMixin):
         default = nodes.Get_Default_Value(signalNode)
         defaultExpression = GetExpressionFromNode(default) if default else None
 
-        return cls(signalNode, name, subtypeIndication, defaultExpression)
+        return cls(
+            signalNode,
+            [
+                name,
+            ],
+            subtypeIndication,
+            defaultExpression,
+        )
 
 
 @export
 class File(VHDLModel_File, DOMMixin):
-    def __init__(self, node: Iir, identifier: str, subtype: SubtypeOrSymbol):
-        super().__init__(identifier, subtype)
+    def __init__(self, node: Iir, identifiers: List[str], subtype: SubtypeOrSymbol):
+        super().__init__(identifiers, subtype)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -188,4 +227,10 @@ class File(VHDLModel_File, DOMMixin):
 
         # FIXME: handle file open stuff
 
-        return cls(fileNode, name, subtypeIndication)
+        return cls(
+            fileNode,
+            [
+                name,
+            ],
+            subtypeIndication,
+        )

@@ -9,7 +9,7 @@
 # Authors:
 #   Patrick Lehmann
 #
-# Package module:   DOM: Interface items (e.g. generic or port)
+# Package module:   DOM: Literals.
 #
 # License:
 # ============================================================================
@@ -32,7 +32,7 @@
 # ============================================================================
 from pydecor import export
 
-from pyVHDLModel.VHDLModel import (
+from pyVHDLModel.SyntaxModel import (
     NullLiteral as VHDLModel_NullLiteral,
     EnumerationLiteral as VHDLModel_EnumerationLiteral,
     IntegerLiteral as VHDLModel_IntegerLiteral,
@@ -42,7 +42,7 @@ from pyVHDLModel.VHDLModel import (
     CharacterLiteral as VHDLModel_CharacterLiteral,
     StringLiteral as VHDLModel_StringLiteral,
 )
-from pyGHDL.libghdl import name_table
+from pyGHDL.libghdl import name_table, str_table
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin
@@ -149,6 +149,10 @@ class StringLiteral(VHDLModel_StringLiteral, DOMMixin):
 
     @classmethod
     def parse(cls, literalNode: Iir) -> "StringLiteral":
-        stringID = nodes.Get_String8_Id(literalNode)
-        value = name_table.Get_Name_Ptr(stringID)
-        return cls(literalNode, value)
+        if nodes.Get_Bit_String_Base(literalNode) is nodes.NumberBaseType.Base_None:
+            value = str_table.Get_String8_Ptr(
+                nodes.Get_String8_Id(literalNode), nodes.Get_String_Length(literalNode)
+            )
+            return cls(literalNode, value)
+        else:
+            print("[NOT IMPLEMENTED] Bit String Literal not supported yet")

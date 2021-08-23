@@ -9,7 +9,7 @@
 # Authors:
 #   Patrick Lehmann
 #
-# Package module:   DOM: Interface items (e.g. generic or port)
+# Package module:   DOM: IIR helper functions
 #
 # License:
 # ============================================================================
@@ -32,12 +32,12 @@
 # ============================================================================
 from pydecor import export
 
-from pyVHDLModel.VHDLModel import Mode
+from pyVHDLModel.SyntaxModel import Mode
 
-from pyGHDL.libghdl import LibGHDLException, name_table, files_map, errorout_memory
+from pyGHDL.libghdl import LibGHDLException, name_table, errorout_memory
+from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.libghdl.vhdl.nodes import Null_Iir
-from pyGHDL.libghdl._types import Iir
 from pyGHDL.dom import DOMException
 
 __all__ = []

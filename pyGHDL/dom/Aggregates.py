@@ -9,7 +9,7 @@
 # Authors:
 #   Patrick Lehmann
 #
-# Package module:   DOM: VHDL design units (e.g. context or package).
+# Package module:   DOM: Aggregates.
 #
 # License:
 # ============================================================================
@@ -41,13 +41,13 @@ This module contains all DOM classes for VHDL's design units (:class:`context <E
 """
 from pydecor import export
 
-from pyVHDLModel.VHDLModel import (
+from pyVHDLModel.SyntaxModel import (
     SimpleAggregateElement as VHDLModel_SimpleAggregateElement,
     IndexedAggregateElement as VHDLModel_IndexedAggregateElement,
     RangedAggregateElement as VHDLModel_RangedAggregateElement,
     NamedAggregateElement as VHDLModel_NamedAggregateElement,
     OthersAggregateElement as VHDLModel_OthersAggregateElement,
-    Expression,
+    ExpressionUnion,
     Symbol,
 )
 from pyGHDL.libghdl._types import Iir
@@ -59,34 +59,34 @@ __all__ = []
 
 @export
 class SimpleAggregateElement(VHDLModel_SimpleAggregateElement, DOMMixin):
-    def __init__(self, node: Iir, expression: Expression):
+    def __init__(self, node: Iir, expression: ExpressionUnion):
         super().__init__(expression)
         DOMMixin.__init__(self, node)
 
 
 @export
 class IndexedAggregateElement(VHDLModel_IndexedAggregateElement, DOMMixin):
-    def __init__(self, node: Iir, index: Expression, expression: Expression):
+    def __init__(self, node: Iir, index: ExpressionUnion, expression: ExpressionUnion):
         super().__init__(index, expression)
         DOMMixin.__init__(self, node)
 
 
 @export
 class RangedAggregateElement(VHDLModel_RangedAggregateElement, DOMMixin):
-    def __init__(self, node: Iir, rng: Range, expression: Expression):
+    def __init__(self, node: Iir, rng: Range, expression: ExpressionUnion):
         super().__init__(rng, expression)
         DOMMixin.__init__(self, node)
 
 
 @export
 class NamedAggregateElement(VHDLModel_NamedAggregateElement, DOMMixin):
-    def __init__(self, node: Iir, name: Symbol, expression: Expression):
+    def __init__(self, node: Iir, name: Symbol, expression: ExpressionUnion):
         super().__init__(name, expression)
         DOMMixin.__init__(self, node)
 
 
 @export
 class OthersAggregateElement(VHDLModel_OthersAggregateElement, DOMMixin):
-    def __init__(self, node: Iir, expression: Expression):
+    def __init__(self, node: Iir, expression: ExpressionUnion):
         super().__init__(expression)
         DOMMixin.__init__(self, node)

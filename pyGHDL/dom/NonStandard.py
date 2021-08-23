@@ -42,8 +42,8 @@ from typing import Any
 
 from pydecor import export
 
-from pyGHDL.dom.PSL import VerificationUnit, VerificationProperty, VerificationMode
-from pyVHDLModel.VHDLModel import (
+from pyGHDL.dom.Names import SimpleName
+from pyVHDLModel.SyntaxModel import (
     Design as VHDLModel_Design,
     Library as VHDLModel_Library,
     Document as VHDLModel_Document,
@@ -62,8 +62,8 @@ from pyGHDL.libghdl import (
     files_map_editor,
 )
 from pyGHDL.libghdl.vhdl import nodes, sem_lib, parse
-from pyGHDL.dom import DOMException
-from pyGHDL.dom._Utils import GetIirKindOfNode, CheckForErrors
+from pyGHDL.dom import DOMException, Position
+from pyGHDL.dom._Utils import GetIirKindOfNode, CheckForErrors, GetNameOfNode
 from pyGHDL.dom.DesignUnit import (
     Entity,
     Architecture,
@@ -72,7 +72,11 @@ from pyGHDL.dom.DesignUnit import (
     Context,
     Configuration,
     PackageInstantiation,
+    LibraryClause,
+    UseClause,
+    ContextReference,
 )
+from pyGHDL.dom.PSL import VerificationUnit, VerificationProperty, VerificationMode
 
 __all__ = []
 
@@ -171,20 +175,45 @@ class Document(VHDLModel_Document):
             libraryUnit = nodes.Get_Library_Unit(unit)
             nodeKind = GetIirKindOfNode(libraryUnit)
 
+            contextItems = []
+            contextNames = []
+            context = nodes.Get_Context_Items(unit)
+            if context is not nodes.Null_Iir:
+                for item in utils.chain_iter(context):
+                    itemKind = GetIirKindOfNode(item)
+                    if itemKind is nodes.Iir_Kind.Library_Clause:
+                        contextNames.append(SimpleName(item, GetNameOfNode(item)))
+                        if nodes.Get_Has_Identifier_List(item):
+                            continue
+
+                        contextItems.append(LibraryClause(item, contextNames))
+                        contextNames = []
+                    elif itemKind is nodes.Iir_Kind.Use_Clause:
+                        contextItems.append(UseClause.parse(item))
+                    elif itemKind is nodes.Iir_Kind.Context_Reference:
+                        contextItems.append(ContextReference.parse(item))
+                    else:
+                        pos = Position.parse(item)
+                        raise DOMException(
+                            "Unknown context item kind '{kind}' in context at line {line}.".format(
+                                kind=itemKind.name, line=pos.Line
+                            )
+                        )
+
             if nodeKind == nodes.Iir_Kind.Entity_Declaration:
-                entity = Entity.parse(libraryUnit)
+                entity = Entity.parse(libraryUnit, contextItems)
                 self.Entities.append(entity)
 
             elif nodeKind == nodes.Iir_Kind.Architecture_Body:
-                architecture = Architecture.parse(libraryUnit)
+                architecture = Architecture.parse(libraryUnit, contextItems)
                 self.Architectures.append(architecture)
 
             elif nodeKind == nodes.Iir_Kind.Package_Declaration:
-                package = Package.parse(libraryUnit)
+                package = Package.parse(libraryUnit, contextItems)
                 self.Packages.append(package)
 
             elif nodeKind == nodes.Iir_Kind.Package_Body:
-                packageBody = PackageBody.parse(libraryUnit)
+                packageBody = PackageBody.parse(libraryUnit, contextItems)
                 self.PackageBodies.append(packageBody)
 
             elif nodeKind == nodes.Iir_Kind.Package_Instantiation_Declaration:
@@ -196,7 +225,7 @@ class Document(VHDLModel_Document):
                 self.Contexts.append(context)
 
             elif nodeKind == nodes.Iir_Kind.Configuration_Declaration:
-                configuration = Configuration.parse(libraryUnit)
+                configuration = Configuration.parse(libraryUnit, contextItems)
                 self.Configurations.append(configuration)
 
             elif nodeKind == nodes.Iir_Kind.Vunit_Declaration:
@@ -213,9 +242,7 @@ class Document(VHDLModel_Document):
 
             else:
                 raise DOMException(
-                    "Unknown design unit kind '{kindName}'({kind}).".format(
-                        kindName=nodeKind.name, kind=nodeKind
-                    )
+                    "Unknown design unit kind '{kind}'.".format(kind=nodeKind.name)
                 )
 
     @property

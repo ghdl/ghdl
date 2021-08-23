@@ -296,6 +296,32 @@ class Application(LineTerminal, ArgParseMixin):
                         document.DOMTranslationTime * 10 ** 6,
                     )
                 )
+        elif args.Directory is not None:
+            d: Path = args.Directory
+            if not d.exists():
+                self.WriteError("Directory '{0!s}' does not exist.".format(d))
+
+            for file in d.glob("**/*.vhd?"):
+                self.WriteNormal("Parsing file '{!s}'".format(file))
+                document = self.addFile(file, "pretty")
+                self.WriteInfo(
+                    dedent(
+                        """\
+                          libghdl processing time: {: 5.3f} us
+                          DOM translation time:    {:5.3f} us
+                        """
+                    ).format(
+                        document.LibGHDLProcessingTime * 10 ** 6,
+                        document.DOMTranslationTime * 10 ** 6,
+                    )
+                )
+
+        for library in self._design.Libraries.values():
+            for entityName, architectures in library.Architectures.items():
+                for entity in library.Entities:
+                    if entity.Identifier == str(entityName):
+                        for architecture in architectures:
+                            entity.Architectures.append(architecture)
 
         PP = PrettyPrint()
 

@@ -9,7 +9,7 @@
 # Authors:
 #   Patrick Lehmann
 #
-# Package module:   DOM: Interface items (e.g. generic or port)
+# Package module:   DOM: Attributes.
 #
 # License:
 # ============================================================================
@@ -34,7 +34,7 @@ from typing import List
 
 from pydecor import export
 
-from pyVHDLModel.VHDLModel import (
+from pyVHDLModel.SyntaxModel import (
     Attribute as VHDLModel_Attribute,
     AttributeSpecification as VHDLModel_AttributeSpecification,
     Name,

@@ -81,21 +81,164 @@ architecture behav of entity_1 is
 	disconnect address_bus : resolved_word after 3 ns;
 	disconnect others : resolved_word after 2 ns;
 
-	default clock is rising_edge(clk);
+--	default clock is rising_edge(clk);
 	package inner_pack is
 	end package;
 begin
-	process(Clock)
+	proc: process(Clock)
 	begin
 		if rising_edge(Clock) then
 			if Reset = '1' then
 				Q <= (others => '0');
+			elsif Load = '1' then
+				Q <= D after 10 ns;
 			else
 				Q <= std_logic_vector(unsigned(Q) + 1);
 			end if;
 		end if;
+
+		for i in 7 downto 0 loop
+			loop
+				while true loop
+					next;
+					next when true;
+				end loop;
+				exit;
+				exit when true;
+			end loop;
+			return;
+		end loop;
+
+		case foo_bar is
+			when 0 =>
+				report "hello" & " " & "world";
+			when 1 | 2 =>
+				report "vhdl" severity note;
+			when 3 to 4 =>
+				assert true nor false report "nothing";
+			when 5 to 6 | 8 to 9 =>
+				assert true nor false report "nothing" severity warning or error;
+			when others =>
+		end case;
+
+		wait;
+		wait on a, b;
+		wait until rising_edge(clock);
+		wait on clock until rising_edge(clock);
+		wait for 10 ns;
+		wait on c for 50 ns;
+		wait until rising_edge(clock) for 100 ns;
+		wait on sel until rising_edge(clock) for 100 ns;
 	end process;
+
+	a <= b;
+
+
+	inst1: entity work.counter1(rtl)
+		generic map (
+			BITS1 => 8
+		)
+		port map (
+			clk1 => Clock
+		);
+
+	inst2: component counter2
+		generic map (
+			BITS2 => 8,
+			value2
+		)
+		port map (
+			clk2 => Clock,
+			enable2
+		);
+
+	inst3: configuration counter3
+		generic map (
+			BITS3 => 8
+		)
+		port map (
+			clk3 => Clock,
+			control(0) => battery and emergency
+		);
+
+	blk: block
+	begin
+		inst4: entity work.counter4(rtl)
+			port map (
+				clk => Clock,
+				value => open
+			);
+	end block;
+
+	genIf: if True generate
+		constant G0 : boolean := False;
+	begin
+		inst: component IfDummy;
+	elsif False generate
+		constant G1 : boolean := False;
+	begin
+		inst: component ElsifDummy;
+	else generate
+		constant G2 : boolean := False;
+	begin
+		inst: component ElseDummy;
+	end generate;
+
+	genFor: for I in 0 to 3 generate
+		constant G3 : boolean := False;
+	begin
+		inst: component ForDummy;
+	end generate;
+
+	genCase: case selector generate
+		when 0 =>
+				constant G4 : boolean := False;
+			begin
+				inst: component Case0Dummy;
+
+		when 1 | 2 =>
+				constant G5 : boolean := False;
+			begin
+				inst: component Case12Dummy;
+
+		when 3 to 4 =>
+				constant G6 : boolean := False;
+			begin
+				inst: component Case34Dummy;
+
+		when 5 to 6 | 8 to 9 =>
+				constant G7 : boolean := False;
+			begin
+				inst: component Case5689Dummy;
+
+		when others =>
+				constant G8 : boolean := False;
+			begin
+				blkOthers: block
+					constant G9 : boolean := False;
+				begin
+					ifOthers: if false generate
+						constant G10 : boolean := False;
+					begin
+						inst: component OthersDummy;
+					end generate;
+				end block;
+	end generate;
+
+	call: CallDummy;
+	called: CalledDummy(25);
+	ende: std.env.stop;
 end architecture behav;
+
+context ctx is
+	library osvvm;
+	library axi4_lite, axi4_stream;
+	use osvvm.alert.all;
+	use osvvm.alert.alertid, osvvm.alert.priority;
+end context;
+
+
+context work.ctx;
 
 package package_1 is
 	generic (
@@ -110,6 +253,9 @@ package package_1 is
 	attribute fixed of ghdl, gtkwave [x, y] : constant is true;
 
 	component comp is
+		generic (
+			BITS : positive := 2
+		);
 		port (
 			clk : std
 		);

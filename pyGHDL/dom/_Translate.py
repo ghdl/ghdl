@@ -9,7 +9,7 @@
 # Authors:
 #   Patrick Lehmann
 #
-# Package module:   DOM: Interface items (e.g. generic or port)
+# Package module:   DOM: IIR to *** translations.
 #
 # License:
 # ============================================================================
@@ -30,17 +30,23 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-from typing import List, Generator
+from typing import List, Generator, Type
 
 from pydecor import export
 
-from pyGHDL.dom import Position, DOMException
-from pyGHDL.dom.Object import Variable
-from pyGHDL.dom.PSL import DefaultClock
-from pyVHDLModel.VHDLModel import (
-    Constraint,
+from pyGHDL.dom.Sequential import (
+    IfStatement,
+    ForLoopStatement,
+    CaseStatement,
+    SequentialReportStatement,
+    SequentialAssertStatement,
+    WaitStatement,
+    SequentialSimpleSignalAssignment,
+)
+from pyVHDLModel.SyntaxModel import (
+    ConstraintUnion,
     Direction,
-    Expression,
+    ExpressionUnion,
     SubtypeOrSymbol,
     BaseType,
     GenericInterfaceItem,
@@ -48,11 +54,15 @@ from pyVHDLModel.VHDLModel import (
     ParameterInterfaceItem,
     ModelEntity,
     Name,
+    ConcurrentStatement,
+    SequentialStatement,
+    AssociationItem,
 )
 
-from pyGHDL.libghdl import utils
+from pyGHDL.libghdl import utils, name_table
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
+from pyGHDL.dom import Position, DOMException
 from pyGHDL.dom._Utils import (
     GetNameOfNode,
     GetIirKindOfNode,
@@ -63,6 +73,7 @@ from pyGHDL.dom.Names import (
     AttributeName,
     ParenthesisName,
     AllName,
+    OpenName,
 )
 from pyGHDL.dom.Symbol import (
     SimpleObjectOrFunctionCallSymbol,
@@ -94,6 +105,7 @@ from pyGHDL.dom.Literal import (
     PhysicalFloatingLiteral,
     NullLiteral,
 )
+from pyGHDL.dom.Object import Variable
 from pyGHDL.dom.Expression import (
     SubtractionExpression,
     AdditionExpression,
@@ -138,8 +150,24 @@ from pyGHDL.dom.Expression import (
     MatchingLessEqualExpression,
     MatchingGreaterThanExpression,
 )
+from pyGHDL.dom.Concurrent import (
+    ConcurrentBlockStatement,
+    EntityInstantiation,
+    ConfigurationInstantiation,
+    ComponentInstantiation,
+    ProcessStatement,
+    IfGenerateStatement,
+    ForGenerateStatement,
+    CaseGenerateStatement,
+    ConcurrentSimpleSignalAssignment,
+    ConcurrentProcedureCall,
+    GenericAssociationItem,
+    PortAssociationItem,
+    ParameterAssociationItem,
+)
 from pyGHDL.dom.Subprogram import Function, Procedure
 from pyGHDL.dom.Misc import Alias
+from pyGHDL.dom.PSL import DefaultClock
 
 
 __all__ = []
@@ -186,8 +214,8 @@ def GetAssociations(node: Iir) -> List:
             associations.append(expr)
         else:
             raise DOMException(
-                "Unknown association kind '{kindName}'({kind}) in array index/slice or function call '{node}'.".format(
-                    kind=kind, kindName=kind.name, node=node
+                "Unknown association kind '{kind}' in array index/slice or function call '{node}'.".format(
+                    kind=kind.name, node=node
                 )
             )
 
@@ -197,7 +225,7 @@ def GetAssociations(node: Iir) -> List:
 @export
 def GetArrayConstraintsFromSubtypeIndication(
     subtypeIndication: Iir,
-) -> List[Constraint]:
+) -> List[ConstraintUnion]:
     constraints = []
     for constraint in utils.flist_iter(
         nodes.Get_Index_Constraint_List(subtypeIndication)
@@ -266,7 +294,6 @@ def GetAnonymousTypeFromNode(node: Iir) -> BaseType:
     typeName = GetNameOfNode(node)
     typeDefinition = nodes.Get_Type_Definition(node)
     if typeDefinition is nodes.Null_Iir:
-        print(1, node, typeName)
         return IncompleteType(node, typeName)
 
     kind = GetIirKindOfNode(typeDefinition)
@@ -301,8 +328,6 @@ def GetAnonymousTypeFromNode(node: Iir) -> BaseType:
 @export
 def GetSubtypeIndicationFromNode(node: Iir, entity: str, name: str) -> SubtypeOrSymbol:
     subtypeIndicationNode = nodes.Get_Subtype_Indication(node)
-    #     if subtypeIndicationNode is nodes.Null_Iir:
-    #         return None
     return GetSubtypeIndicationFromIndicationNode(subtypeIndicationNode, entity, name)
 
 
@@ -311,12 +336,8 @@ def GetSubtypeIndicationFromIndicationNode(
     subtypeIndicationNode: Iir, entity: str, name: str
 ) -> SubtypeOrSymbol:
     if subtypeIndicationNode is nodes.Null_Iir:
-        print(
-            "[NOT IMPLEMENTED]: Unhandled multiple declarations for {entity} '{name}'.".format(
-                entity=entity, name=name
-            )
-        )
-        return None
+        raise ValueError("Parameter 'subtypeIndicationNode' is 'Null_Iir'.")
+
     kind = GetIirKindOfNode(subtypeIndicationNode)
     if kind in (
         nodes.Iir_Kind.Simple_Name,
@@ -348,9 +369,10 @@ def GetScalarConstrainedSubtypeFromNode(
 ) -> ConstrainedScalarSubtypeSymbol:
     typeMark = nodes.Get_Subtype_Type_Mark(subtypeIndicationNode)
     typeMarkName = GetNameOfNode(typeMark)
+    simpleTypeMark = SimpleName(typeMark, typeMarkName)
     rangeConstraint = nodes.Get_Range_Constraint(subtypeIndicationNode)
     r = GetRangeFromNode(rangeConstraint)
-    return ConstrainedScalarSubtypeSymbol(subtypeIndicationNode, typeMarkName, r)
+    return ConstrainedScalarSubtypeSymbol(subtypeIndicationNode, simpleTypeMark, r)
 
 
 @export
@@ -359,10 +381,11 @@ def GetCompositeConstrainedSubtypeFromNode(
 ) -> ConstrainedCompositeSubtypeSymbol:
     typeMark = nodes.Get_Subtype_Type_Mark(subtypeIndicationNode)
     typeMarkName = GetNameOfNode(typeMark)
+    simpleTypeMark = SimpleName(typeMark, typeMarkName)
 
     constraints = GetArrayConstraintsFromSubtypeIndication(subtypeIndicationNode)
     return ConstrainedCompositeSubtypeSymbol(
-        subtypeIndicationNode, typeMarkName, constraints
+        subtypeIndicationNode, simpleTypeMark, constraints
     )
 
 
@@ -423,7 +446,7 @@ __EXPRESSION_TRANSLATION = {
     nodes.Iir_Kind.Less_Than_Operator: LessThanExpression,
     nodes.Iir_Kind.Less_Than_Or_Equal_Operator: LessEqualExpression,
     nodes.Iir_Kind.Greater_Than_Operator: GreaterThanExpression,
-    nodes.Iir_Kind.Greater_Than_Or_Equal_Operator: MatchingGreaterEqualExpression,
+    nodes.Iir_Kind.Greater_Than_Or_Equal_Operator: GreaterEqualExpression,
     nodes.Iir_Kind.Match_Equality_Operator: MatchingEqualExpression,
     nodes.Iir_Kind.Match_Inequality_Operator: MatchingUnequalExpression,
     nodes.Iir_Kind.Match_Less_Than_Operator: MatchingLessThanExpression,
@@ -444,7 +467,7 @@ __EXPRESSION_TRANSLATION = {
 
 
 @export
-def GetExpressionFromNode(node: Iir) -> Expression:
+def GetExpressionFromNode(node: Iir) -> ExpressionUnion:
     kind = GetIirKindOfNode(node)
 
     try:
@@ -475,52 +498,100 @@ def GetGenericsFromChainedNodes(
         GenericFunctionInterfaceItem,
     )
 
-    for generic in utils.chain_iter(nodeChain):
+    generic = nodeChain
+    while generic != nodes.Null_Iir:
         kind = GetIirKindOfNode(generic)
         if kind == nodes.Iir_Kind.Interface_Constant_Declaration:
             from pyGHDL.dom.InterfaceItem import GenericConstantInterfaceItem
 
-            yield GenericConstantInterfaceItem.parse(generic)
-        elif kind == nodes.Iir_Kind.Interface_Type_Declaration:
-            yield GenericTypeInterfaceItem.parse(generic)
-        elif kind == nodes.Iir_Kind.Interface_Package_Declaration:
-            yield GenericPackageInterfaceItem.parse(generic)
-        elif kind == nodes.Iir_Kind.Interface_Procedure_Declaration:
-            yield GenericProcedureInterfaceItem.parse(generic)
-        elif kind == nodes.Iir_Kind.Interface_Function_Declaration:
-            yield GenericFunctionInterfaceItem.parse(generic)
+            genericConstant = GenericConstantInterfaceItem.parse(generic)
+
+            # Lookahead for generics with multiple identifiers at once
+            if nodes.Get_Has_Identifier_List(generic):
+                nextNode = nodes.Get_Chain(generic)
+                for nextGeneric in utils.chain_iter(nextNode):
+                    # Consecutive identifiers are found, if the subtype indication is Null
+                    if nodes.Get_Subtype_Indication(nextGeneric) == nodes.Null_Iir:
+                        genericConstant.Identifiers.append(GetNameOfNode(nextGeneric))
+                    else:
+                        generic = nextGeneric
+                        break
+
+                    # The last consecutive identifiers has no Identifier_List flag
+                    if not nodes.Get_Has_Identifier_List(nextGeneric):
+                        generic = nodes.Get_Chain(nextGeneric)
+                        break
+                else:
+                    generic = nodes.Null_Iir
+            else:
+                generic = nodes.Get_Chain(generic)
+
+            yield genericConstant
+            continue
         else:
-            position = Position.parse(generic)
-            raise DOMException(
-                "Unknown generic kind '{kindName}'({kind}) in generic '{generic}' at {file}:{line}:{column}.".format(
-                    kind=kind,
-                    kindName=kind.name,
-                    generic=generic,
-                    file=position.Filename,
-                    line=position.Line,
-                    column=position.Column,
+            if kind == nodes.Iir_Kind.Interface_Type_Declaration:
+                yield GenericTypeInterfaceItem.parse(generic)
+            elif kind == nodes.Iir_Kind.Interface_Package_Declaration:
+                yield GenericPackageInterfaceItem.parse(generic)
+            elif kind == nodes.Iir_Kind.Interface_Procedure_Declaration:
+                yield GenericProcedureInterfaceItem.parse(generic)
+            elif kind == nodes.Iir_Kind.Interface_Function_Declaration:
+                yield GenericFunctionInterfaceItem.parse(generic)
+            else:
+                position = Position.parse(generic)
+                raise DOMException(
+                    "Unknown generic kind '{kind}' in generic '{generic}' at {file}:{line}:{column}.".format(
+                        kind=kind.name,
+                        generic=generic,
+                        file=position.Filename,
+                        line=position.Line,
+                        column=position.Column,
+                    )
                 )
-            )
+
+        generic = nodes.Get_Chain(generic)
 
 
 @export
 def GetPortsFromChainedNodes(
     nodeChain: Iir,
 ) -> Generator[PortInterfaceItem, None, None]:
-    for port in utils.chain_iter(nodeChain):
+
+    port = nodeChain
+    while port != nodes.Null_Iir:
         kind = GetIirKindOfNode(port)
         if kind == nodes.Iir_Kind.Interface_Signal_Declaration:
             from pyGHDL.dom.InterfaceItem import PortSignalInterfaceItem
 
             portSignal = PortSignalInterfaceItem.parse(port)
 
+            # Lookahead for ports with multiple identifiers at once
+            if nodes.Get_Has_Identifier_List(port):
+                nextNode = nodes.Get_Chain(port)
+                for nextPort in utils.chain_iter(nextNode):
+                    # Consecutive identifiers are found, if the subtype indication is Null
+                    if nodes.Get_Subtype_Indication(nextPort) == nodes.Null_Iir:
+                        portSignal.Identifiers.append(GetNameOfNode(nextPort))
+                    else:
+                        port = nextPort
+                        break
+
+                    # The last consecutive identifiers has no Identifier_List flag
+                    if not nodes.Get_Has_Identifier_List(nextPort):
+                        port = nodes.Get_Chain(nextPort)
+                        break
+                else:
+                    port = nodes.Null_Iir
+            else:
+                port = nodes.Get_Chain(port)
+
             yield portSignal
+            continue
         else:
             position = Position.parse(port)
             raise DOMException(
-                "Unknown port kind '{kindName}'({kind}) in port '{port}' at {file}:{line}:{column}.".format(
-                    kind=kind,
-                    kindName=kind.name,
+                "Unknown port kind '{kind}' in port '{port}' at {file}:{line}:{column}.".format(
+                    kind=kind.name,
                     port=port,
                     file=position.Filename,
                     line=position.Line,
@@ -533,30 +604,31 @@ def GetPortsFromChainedNodes(
 def GetParameterFromChainedNodes(
     nodeChain: Iir,
 ) -> Generator[ParameterInterfaceItem, None, None]:
-    for parameter in utils.chain_iter(nodeChain):
+
+    parameter = nodeChain
+    while parameter != nodes.Null_Iir:
         kind = GetIirKindOfNode(parameter)
         if kind == nodes.Iir_Kind.Interface_Constant_Declaration:
             from pyGHDL.dom.InterfaceItem import ParameterConstantInterfaceItem
 
-            yield ParameterConstantInterfaceItem.parse(parameter)
+            param = ParameterConstantInterfaceItem.parse(parameter)
         elif kind == nodes.Iir_Kind.Interface_Variable_Declaration:
             from pyGHDL.dom.InterfaceItem import ParameterVariableInterfaceItem
 
-            yield ParameterVariableInterfaceItem.parse(parameter)
+            param = ParameterVariableInterfaceItem.parse(parameter)
         elif kind == nodes.Iir_Kind.Interface_Signal_Declaration:
             from pyGHDL.dom.InterfaceItem import ParameterSignalInterfaceItem
 
-            yield ParameterSignalInterfaceItem.parse(parameter)
+            param = ParameterSignalInterfaceItem.parse(parameter)
         elif kind == nodes.Iir_Kind.Interface_File_Declaration:
             from pyGHDL.dom.InterfaceItem import ParameterFileInterfaceItem
 
-            yield ParameterFileInterfaceItem.parse(parameter)
+            param = ParameterFileInterfaceItem.parse(parameter)
         else:
             position = Position.parse(parameter)
             raise DOMException(
-                "Unknown parameter kind '{kindName}'({kind}) in parameter '{param}' at {file}:{line}:{column}.".format(
-                    kind=kind,
-                    kindName=kind.name,
+                "Unknown parameter kind '{kind}' in parameter '{param}' at {file}:{line}:{column}.".format(
+                    kind=kind.name,
                     param=parameter,
                     file=position.Filename,
                     line=position.Line,
@@ -564,111 +636,385 @@ def GetParameterFromChainedNodes(
                 )
             )
 
+        # Lookahead for parameters with multiple identifiers at once
+        if nodes.Get_Has_Identifier_List(parameter):
+            nextNode = nodes.Get_Chain(parameter)
+            for nextParameter in utils.chain_iter(nextNode):
+                # Consecutive identifiers are found, if the subtype indication is Null
+                if nodes.Get_Subtype_Indication(nextParameter) == nodes.Null_Iir:
+                    param.Identifiers.append(GetNameOfNode(nextParameter))
+                else:
+                    parameter = nextParameter
+                    break
+
+                # The last consecutive identifiers has no Identifier_List flag
+                if not nodes.Get_Has_Identifier_List(nextParameter):
+                    parameter = nodes.Get_Chain(nextParameter)
+                    break
+            else:
+                parameter = nodes.Null_Iir
+        else:
+            parameter = nodes.Get_Chain(parameter)
+
+        yield param
+
+
+def GetMapAspect(
+    mapAspect: Iir, cls: Type, entity: str
+) -> Generator[AssociationItem, None, None]:
+    for generic in utils.chain_iter(mapAspect):
+        kind = GetIirKindOfNode(generic)
+        if kind is nodes.Iir_Kind.Association_Element_By_Expression:
+            formalNode = nodes.Get_Formal(generic)
+            if formalNode is nodes.Null_Iir:
+                formal = None
+            else:
+                formal = GetNameFromNode(formalNode)
+
+            actual = GetExpressionFromNode(nodes.Get_Actual(generic))
+
+            yield cls(generic, actual, formal)
+        elif kind is nodes.Iir_Kind.Association_Element_Open:
+            formalNode = nodes.Get_Formal(generic)
+            if formalNode is nodes.Null_Iir:
+                formal = None
+            else:
+                formal = GetNameFromNode(formalNode)
+
+            yield cls(generic, OpenName(generic), formal)
+        else:
+            pos = Position.parse(generic)
+            raise DOMException(
+                "Unknown association kind '{kind}' in {entity} map at line {line}.".format(
+                    kind=kind.name, entity=entity, line=pos.Line
+                )
+            )
+
+
+def GetGenericMapAspect(
+    genericMapAspect: Iir,
+) -> Generator[GenericAssociationItem, None, None]:
+    return GetMapAspect(genericMapAspect, GenericAssociationItem, "generic")
+
+
+def GetPortMapAspect(portMapAspect: Iir) -> Generator[PortAssociationItem, None, None]:
+    return GetMapAspect(portMapAspect, PortAssociationItem, "port")
+
+
+def GetParameterMapAspect(
+    parameterMapAspect: Iir,
+) -> Generator[ParameterAssociationItem, None, None]:
+    return GetMapAspect(parameterMapAspect, ParameterAssociationItem, "parameter")
+
 
 def GetDeclaredItemsFromChainedNodes(
     nodeChain: Iir, entity: str, name: str
 ) -> Generator[ModelEntity, None, None]:
-    for item in utils.chain_iter(nodeChain):
+    item = nodeChain
+    lastKind = None
+    while item != nodes.Null_Iir:
         kind = GetIirKindOfNode(item)
         if kind == nodes.Iir_Kind.Constant_Declaration:
             from pyGHDL.dom.Object import Constant
 
-            yield Constant.parse(item)
+            obj = Constant.parse(item)
 
         elif kind == nodes.Iir_Kind.Variable_Declaration:
             from pyGHDL.dom.Object import SharedVariable
 
             if nodes.Get_Shared_Flag(item):
-                yield SharedVariable.parse(item)
+                obj = SharedVariable.parse(item)
             else:
-                yield Variable.parse(item)
-        #                raise DOMException("Found non-shared variable.")
+                obj = Variable.parse(item)
         elif kind == nodes.Iir_Kind.Signal_Declaration:
             from pyGHDL.dom.Object import Signal
 
-            yield Signal.parse(item)
+            obj = Signal.parse(item)
         elif kind == nodes.Iir_Kind.File_Declaration:
             from pyGHDL.dom.Object import File
 
-            yield File.parse(item)
-        elif kind == nodes.Iir_Kind.Type_Declaration:
-            yield GetTypeFromNode(item)
+            obj = File.parse(item)
+        else:
+            if kind == nodes.Iir_Kind.Type_Declaration:
+                yield GetTypeFromNode(item)
 
-        elif kind == nodes.Iir_Kind.Anonymous_Type_Declaration:
-            yield GetAnonymousTypeFromNode(item)
+            elif kind == nodes.Iir_Kind.Anonymous_Type_Declaration:
+                yield GetAnonymousTypeFromNode(item)
 
-        elif kind == nodes.Iir_Kind.Subtype_Declaration:
-            yield GetSubtypeFromNode(item)
+            elif kind == nodes.Iir_Kind.Subtype_Declaration:
+                yield GetSubtypeFromNode(item)
 
-        elif kind == nodes.Iir_Kind.Function_Declaration:
-            yield Function.parse(item)
+            elif kind == nodes.Iir_Kind.Function_Declaration:
+                if nodes.Get_Has_Body(item):
+                    yield Function.parse(item)
+                else:
+                    print("[NOT IMPLEMENTED] function declaration without body")
 
-        elif kind == nodes.Iir_Kind.Function_Body:
-            #                procedureName = NodeToName(item)
-            print("found function body '{name}'".format(name="????"))
-        elif kind == nodes.Iir_Kind.Procedure_Declaration:
-            yield Procedure.parse(item)
-        elif kind == nodes.Iir_Kind.Procedure_Body:
-            #                procedureName = NodeToName(item)
-            print("found procedure body '{name}'".format(name="????"))
-        elif kind == nodes.Iir_Kind.Protected_Type_Body:
-            yield ProtectedTypeBody.parse(item)
-        elif kind == nodes.Iir_Kind.Object_Alias_Declaration:
-            yield GetAliasFromNode(item)
-        elif kind == nodes.Iir_Kind.Component_Declaration:
-            from pyGHDL.dom.DesignUnit import Component
+                lastKind = kind
+                item = nodes.Get_Chain(item)
+                continue
+            elif kind == nodes.Iir_Kind.Function_Body:
+                if lastKind is nodes.Iir_Kind.Function_Declaration:
+                    pass
+                else:
+                    position = Position.parse(item)
+                    raise DOMException(
+                        "Found unexpected function body '{functionName}' in {entity} '{name}' at {file}:{line}:{column}.".format(
+                            functionName=GetNameOfNode(item),
+                            entity=entity,
+                            name=name,
+                            file=position.Filename,
+                            line=position.Line,
+                            column=position.Column,
+                        )
+                    )
+            elif kind == nodes.Iir_Kind.Procedure_Declaration:
+                if nodes.Get_Has_Body(item):
+                    yield Procedure.parse(item)
+                else:
+                    print("[NOT IMPLEMENTED] procedure declaration without body")
 
-            yield Component.parse(item)
-        elif kind == nodes.Iir_Kind.Attribute_Declaration:
-            from pyGHDL.dom.Attribute import Attribute
+                lastKind = kind
+                item = nodes.Get_Chain(item)
+                continue
+            elif kind == nodes.Iir_Kind.Procedure_Body:
+                if lastKind is nodes.Iir_Kind.Procedure_Declaration:
+                    pass
+                else:
+                    position = Position.parse(item)
+                    raise DOMException(
+                        "Found unexpected procedure body '{functionName}' in {entity} '{name}' at {file}:{line}:{column}.".format(
+                            functionName=GetNameOfNode(item),
+                            entity=entity,
+                            name=name,
+                            file=position.Filename,
+                            line=position.Line,
+                            column=position.Column,
+                        )
+                    )
+            elif kind == nodes.Iir_Kind.Protected_Type_Body:
+                yield ProtectedTypeBody.parse(item)
+            elif kind == nodes.Iir_Kind.Object_Alias_Declaration:
+                yield GetAliasFromNode(item)
+            elif kind == nodes.Iir_Kind.Component_Declaration:
+                from pyGHDL.dom.DesignUnit import Component
 
-            yield Attribute.parse(item)
-        elif kind == nodes.Iir_Kind.Attribute_Specification:
-            from pyGHDL.dom.Attribute import AttributeSpecification
+                yield Component.parse(item)
+            elif kind == nodes.Iir_Kind.Attribute_Declaration:
+                from pyGHDL.dom.Attribute import Attribute
 
-            yield AttributeSpecification.parse(item)
-        elif kind == nodes.Iir_Kind.Use_Clause:
-            from pyGHDL.dom.DesignUnit import UseClause
+                yield Attribute.parse(item)
+            elif kind == nodes.Iir_Kind.Attribute_Specification:
+                from pyGHDL.dom.Attribute import AttributeSpecification
 
-            yield UseClause.parse(item)
-        elif kind == nodes.Iir_Kind.Package_Declaration:
-            from pyGHDL.dom.DesignUnit import Package
+                yield AttributeSpecification.parse(item)
+            elif kind == nodes.Iir_Kind.Use_Clause:
+                from pyGHDL.dom.DesignUnit import UseClause
 
-            yield Package.parse(item)
-        elif kind == nodes.Iir_Kind.Package_Instantiation_Declaration:
-            from pyGHDL.dom.DesignUnit import PackageInstantiation
+                yield UseClause.parse(item)
+            elif kind == nodes.Iir_Kind.Package_Declaration:
+                from pyGHDL.dom.DesignUnit import Package
 
-            yield PackageInstantiation.parse(item)
-        elif kind == nodes.Iir_Kind.Configuration_Specification:
+                yield Package.parse(item, None)  # TODO: Can it have a context?
+            elif kind == nodes.Iir_Kind.Package_Instantiation_Declaration:
+                from pyGHDL.dom.DesignUnit import PackageInstantiation
+
+                yield PackageInstantiation.parse(item)
+            elif kind == nodes.Iir_Kind.Configuration_Specification:
+                print(
+                    "[NOT IMPLEMENTED] Configuration specification in {name}".format(
+                        name=name
+                    )
+                )
+            elif kind == nodes.Iir_Kind.Psl_Default_Clock:
+                yield DefaultClock.parse(item)
+            elif kind == nodes.Iir_Kind.Group_Declaration:
+                print("[NOT IMPLEMENTED] Group declaration in {name}".format(name=name))
+            elif kind == nodes.Iir_Kind.Group_Template_Declaration:
+                print(
+                    "[NOT IMPLEMENTED] Group template declaration in {name}".format(
+                        name=name
+                    )
+                )
+            elif kind == nodes.Iir_Kind.Disconnection_Specification:
+                print(
+                    "[NOT IMPLEMENTED] Disconnect specification in {name}".format(
+                        name=name
+                    )
+                )
+            else:
+                position = Position.parse(item)
+                raise DOMException(
+                    "Unknown declared item kind '{kind}' in {entity} '{name}' at {file}:{line}:{column}.".format(
+                        kind=kind.name,
+                        entity=entity,
+                        name=name,
+                        file=position.Filename,
+                        line=position.Line,
+                        column=position.Column,
+                    )
+                )
+
+            lastKind = None
+            item = nodes.Get_Chain(item)
+            continue
+
+        # Lookahead for objects with multiple identifiers at once
+        if nodes.Get_Has_Identifier_List(item):
+            nextNode = nodes.Get_Chain(item)
+            for nextItem in utils.chain_iter(nextNode):
+                # Consecutive identifiers are found, if the subtype indication is Null
+                if nodes.Get_Subtype_Indication(nextItem) == nodes.Null_Iir:
+                    obj.Identifiers.append(GetNameOfNode(nextItem))
+                else:
+                    item = nextItem
+                    break
+
+                # The last consecutive identifiers has no Identifier_List flag
+                if not nodes.Get_Has_Identifier_List(nextItem):
+                    item = nodes.Get_Chain(nextItem)
+                    break
+            else:
+                item = nodes.Null_Iir
+        else:
+            item = nodes.Get_Chain(item)
+
+        yield obj
+
+
+def GetConcurrentStatementsFromChainedNodes(
+    nodeChain: Iir, entity: str, name: str
+) -> Generator[ConcurrentStatement, None, None]:
+    for statement in utils.chain_iter(nodeChain):
+        label = nodes.Get_Label(statement)
+        label = name_table.Get_Name_Ptr(label) if label != nodes.Null_Iir else None
+
+        pos = Position.parse(statement)
+
+        kind = GetIirKindOfNode(statement)
+        if kind == nodes.Iir_Kind.Sensitized_Process_Statement:
+            yield ProcessStatement.parse(statement, label, True)
+
+        elif kind == nodes.Iir_Kind.Process_Statement:
+            yield ProcessStatement.parse(statement, label, False)
+
+        elif kind == nodes.Iir_Kind.Concurrent_Simple_Signal_Assignment:
+            yield ConcurrentSimpleSignalAssignment.parse(statement, label)
+        elif kind == nodes.Iir_Kind.Concurrent_Conditional_Signal_Assignment:
             print(
-                "[NOT IMPLEMENTED] Configuration specification in {name}".format(
-                    name=name
+                "[NOT IMPLEMENTED] Concurrent (conditional) signal assignment (label: '{label}') at line {line}".format(
+                    label=label, line=pos.Line
                 )
             )
-        elif kind == nodes.Iir_Kind.Psl_Default_Clock:
-            yield DefaultClock.parse(item)
-        elif kind == nodes.Iir_Kind.Group_Declaration:
-            print("[NOT IMPLEMENTED] Group declaration in {name}".format(name=name))
-        elif kind == nodes.Iir_Kind.Group_Template_Declaration:
+        elif kind == nodes.Iir_Kind.Concurrent_Selected_Signal_Assignment:
             print(
-                "[NOT IMPLEMENTED] Group template declaration in {name}".format(
-                    name=name
+                "[NOT IMPLEMENTED] Concurrent (selected) signal assignment (label: '{label}') at line {line}".format(
+                    label=label, line=pos.Line
                 )
             )
-        elif kind == nodes.Iir_Kind.Disconnection_Specification:
+        elif kind == nodes.Iir_Kind.Concurrent_Procedure_Call_Statement:
+            yield ConcurrentProcedureCall.parse(statement, label)
+        elif kind == nodes.Iir_Kind.Component_Instantiation_Statement:
+            instantiatedUnit = nodes.Get_Instantiated_Unit(statement)
+            instantiatedUnitKind = GetIirKindOfNode(instantiatedUnit)
+            if instantiatedUnitKind == nodes.Iir_Kind.Entity_Aspect_Entity:
+                yield EntityInstantiation.parse(statement, instantiatedUnit, label)
+            elif instantiatedUnitKind == nodes.Iir_Kind.Entity_Aspect_Configuration:
+                yield ConfigurationInstantiation.parse(
+                    statement, instantiatedUnit, label
+                )
+            elif instantiatedUnitKind == nodes.Iir_Kind.Simple_Name:
+                yield ComponentInstantiation.parse(statement, instantiatedUnit, label)
+            else:
+                raise DOMException(
+                    "Unknown instantiation kind '{kind}' in instantiation of label {label} at {file}:{line}:{column}.".format(
+                        kind=instantiatedUnitKind.name,
+                        label=label,
+                        file=pos.Filename,
+                        line=pos.Line,
+                        column=pos.Column,
+                    )
+                )
+        elif kind == nodes.Iir_Kind.Block_Statement:
+            yield ConcurrentBlockStatement.parse(statement, label)
+        elif kind == nodes.Iir_Kind.If_Generate_Statement:
+            yield IfGenerateStatement.parse(statement, label)
+        elif kind == nodes.Iir_Kind.Case_Generate_Statement:
+            yield CaseGenerateStatement.parse(statement, label)
+        elif kind == nodes.Iir_Kind.For_Generate_Statement:
+            yield ForGenerateStatement.parse(statement, label)
+        elif kind == nodes.Iir_Kind.Psl_Assert_Directive:
             print(
-                "[NOT IMPLEMENTED] Disconnect specification in {name}".format(name=name)
+                "[NOT IMPLEMENTED] PSL assert directive (label: '{label}') at line {line}".format(
+                    label=label, line=pos.Line
+                )
             )
         else:
-            position = Position.parse(item)
             raise DOMException(
-                "Unknown declared item kind '{kind}' in {entity} '{name}' at {file}:{line}:{column}.".format(
+                "Unknown statement of kind '{kind}' in {entity} '{name}' at {file}:{line}:{column}.".format(
                     kind=kind.name,
                     entity=entity,
                     name=name,
-                    file=position.Filename,
-                    line=position.Line,
-                    column=position.Column,
+                    file=pos.Filename,
+                    line=pos.Line,
+                    column=pos.Column,
+                )
+            )
+
+
+def GetSequentialStatementsFromChainedNodes(
+    nodeChain: Iir, entity: str, name: str
+) -> Generator[SequentialStatement, None, None]:
+    for statement in utils.chain_iter(nodeChain):
+        label = nodes.Get_Label(statement)
+        label = name_table.Get_Name_Ptr(label) if label != nodes.Null_Iir else None
+
+        pos = Position.parse(statement)
+        kind = GetIirKindOfNode(statement)
+        if kind == nodes.Iir_Kind.If_Statement:
+            yield IfStatement.parse(statement, label)
+        elif kind == nodes.Iir_Kind.For_Loop_Statement:
+            yield ForLoopStatement.parse(statement, label)
+        elif kind == nodes.Iir_Kind.Case_Statement:
+            yield CaseStatement.parse(statement, label)
+        elif kind == nodes.Iir_Kind.Simple_Signal_Assignment_Statement:
+            yield SequentialSimpleSignalAssignment.parse(statement, label)
+        elif kind in (
+            nodes.Iir_Kind.Variable_Assignment_Statement,
+            nodes.Iir_Kind.Conditional_Variable_Assignment_Statement,
+        ):
+            print(
+                "[NOT IMPLEMENTED] Variable assignment (label: '{label}') at line {line}".format(
+                    label=label, line=pos.Line
+                )
+            )
+        elif kind == nodes.Iir_Kind.Wait_Statement:
+            yield WaitStatement.parse(statement, label)
+        elif kind == nodes.Iir_Kind.Procedure_Call_Statement:
+            print(
+                "[NOT IMPLEMENTED] Procedure call (label: '{label}') at line {line}".format(
+                    label=label, line=pos.Line
+                )
+            )
+        elif kind == nodes.Iir_Kind.Report_Statement:
+            yield SequentialReportStatement.parse(statement, label)
+        elif kind == nodes.Iir_Kind.Assertion_Statement:
+            yield SequentialAssertStatement.parse(statement, label)
+        elif kind == nodes.Iir_Kind.Null_Statement:
+            print(
+                "[NOT IMPLEMENTED] null statement (label: '{label}') at line {line}".format(
+                    label=label, line=pos.Line
+                )
+            )
+        else:
+            raise DOMException(
+                "Unknown statement of kind '{kind}' in {entity} '{name}' at {file}:{line}:{column}.".format(
+                    kind=kind.name,
+                    entity=entity,
+                    name=name,
+                    file=pos.Filename,
+                    line=pos.Line,
+                    column=pos.Column,
                 )
             )
 

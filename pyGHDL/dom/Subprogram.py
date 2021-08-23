@@ -34,7 +34,7 @@ from typing import List
 
 from pydecor import export
 
-from pyVHDLModel.VHDLModel import (
+from pyVHDLModel.SyntaxModel import (
     Function as VHDLModel_Function,
     Procedure as VHDLModel_Procedure,
     SubtypeOrSymbol,
