@@ -89,9 +89,7 @@ class IfBranch(VHDLModel_IfBranch):
 
         condition = GetExpressionFromNode(nodes.Get_Condition(branchNode))
         statementChain = nodes.Get_Sequential_Statement_Chain(branchNode)
-        statements = GetSequentialStatementsFromChainedNodes(
-            statementChain, "if branch", label
-        )
+        statements = GetSequentialStatementsFromChainedNodes(statementChain, "if branch", label)
 
         return cls(branchNode, condition, statements)
 
@@ -116,9 +114,7 @@ class ElsifBranch(VHDLModel_ElsifBranch):
 
         condition = GetExpressionFromNode(condition)
         statementChain = nodes.Get_Sequential_Statement_Chain(branchNode)
-        statements = GetSequentialStatementsFromChainedNodes(
-            statementChain, "elsif branch", label
-        )
+        statements = GetSequentialStatementsFromChainedNodes(statementChain, "elsif branch", label)
 
         return cls(branchNode, condition, statements)
 
@@ -140,9 +136,7 @@ class ElseBranch(VHDLModel_ElseBranch):
         )
 
         statementChain = nodes.Get_Sequential_Statement_Chain(branchNode)
-        statements = GetSequentialStatementsFromChainedNodes(
-            statementChain, "else branch", label
-        )
+        statements = GetSequentialStatementsFromChainedNodes(statementChain, "else branch", label)
 
         return cls(branchNode, statements)
 
@@ -208,15 +202,11 @@ class Case(VHDLModel_Case, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(
-        cls, caseNode: Iir, choices: Iterable[SequentialChoice], label: str
-    ) -> "Case":
+    def parse(cls, caseNode: Iir, choices: Iterable[SequentialChoice], label: str) -> "Case":
         from pyGHDL.dom._Translate import GetSequentialStatementsFromChainedNodes
 
         statementChain = nodes.Get_Associated_Chain(caseNode)
-        statements = GetSequentialStatementsFromChainedNodes(
-            statementChain, "case", label
-        )
+        statements = GetSequentialStatementsFromChainedNodes(statementChain, "case", label)
 
         return cls(caseNode, choices, statements)
 
@@ -240,9 +230,7 @@ class OthersCase(VHDLModel_OthersCase, DOMMixin):
             return cls(caseNode)
 
         statementChain = nodes.Get_Concurrent_Statement_Chain(body)
-        statements = GetSequentialStatementsFromChainedNodes(
-            statementChain, "case others", label
-        )
+        statements = GetSequentialStatementsFromChainedNodes(statementChain, "case others", label)
 
         return cls(caseNode, statements)
 
@@ -283,9 +271,7 @@ class CaseStatement(VHDLModel_CaseStatement, DOMMixin):
                 nodes.Iir_Kind.Choice_By_Name,
                 nodes.Iir_Kind.Choice_By_Expression,
             ):
-                choiceExpression = GetExpressionFromNode(
-                    nodes.Get_Choice_Expression(alternative)
-                )
+                choiceExpression = GetExpressionFromNode(nodes.Get_Choice_Expression(alternative))
 
                 choice = IndexedChoice(alternative, choiceExpression)
                 if sameAlternative:
@@ -390,17 +376,13 @@ class ForLoopStatement(VHDLModel_ForLoopStatement, DOMMixin):
             )
 
         statementChain = nodes.Get_Sequential_Statement_Chain(loopNode)
-        statements = GetSequentialStatementsFromChainedNodes(
-            statementChain, "for", label
-        )
+        statements = GetSequentialStatementsFromChainedNodes(statementChain, "for", label)
 
         return cls(loopNode, loopIndex, rng, statements, label)
 
 
 @export
-class SequentialSimpleSignalAssignment(
-    VHDLModel_SequentialSimpleSignalAssignment, DOMMixin
-):
+class SequentialSimpleSignalAssignment(VHDLModel_SequentialSimpleSignalAssignment, DOMMixin):
     def __init__(
         self,
         assignmentNode: Iir,
@@ -412,9 +394,7 @@ class SequentialSimpleSignalAssignment(
         DOMMixin.__init__(self, assignmentNode)
 
     @classmethod
-    def parse(
-        cls, assignmentNode: Iir, label: str = None
-    ) -> "SequentialSimpleSignalAssignment":
+    def parse(cls, assignmentNode: Iir, label: str = None) -> "SequentialSimpleSignalAssignment":
         from pyGHDL.dom._Translate import GetNameFromNode
 
         target = nodes.Get_Target(assignmentNode)
@@ -447,9 +427,7 @@ class SequentialProcedureCall(VHDLModel_SequentialProcedureCall, DOMMixin):
 
         prefix = nodes.Get_Prefix(call)
         procedureName = GetNameFromNode(prefix)
-        parameterAssociations = GetParameterMapAspect(
-            nodes.Get_Parameter_Association_Chain(callNode)
-        )
+        parameterAssociations = GetParameterMapAspect(nodes.Get_Parameter_Association_Chain(callNode))
 
         return cls(callNode, procedureName, parameterAssociations, label)
 
@@ -473,17 +451,9 @@ class SequentialAssertStatement(VHDLModel_SequentialAssertStatement, DOMMixin):
 
         condition = GetExpressionFromNode(nodes.Get_Assertion_Condition(assertNode))
         messageNode = nodes.Get_Report_Expression(assertNode)
-        message = (
-            None
-            if messageNode is nodes.Null_Iir
-            else GetExpressionFromNode(messageNode)
-        )
+        message = None if messageNode is nodes.Null_Iir else GetExpressionFromNode(messageNode)
         severityNode = nodes.Get_Severity_Expression(assertNode)
-        severity = (
-            None
-            if severityNode is nodes.Null_Iir
-            else GetExpressionFromNode(severityNode)
-        )
+        severity = None if severityNode is nodes.Null_Iir else GetExpressionFromNode(severityNode)
 
         return cls(assertNode, condition, message, severity, label)
 
@@ -506,11 +476,7 @@ class SequentialReportStatement(VHDLModel_SequentialReportStatement, DOMMixin):
 
         message = GetExpressionFromNode(nodes.Get_Report_Expression(reportNode))
         severityNode = nodes.Get_Severity_Expression(reportNode)
-        severity = (
-            None
-            if severityNode is nodes.Null_Iir
-            else GetExpressionFromNode(severityNode)
-        )
+        severity = None if severityNode is nodes.Null_Iir else GetExpressionFromNode(severityNode)
 
         return cls(reportNode, message, severity, label)
 
@@ -539,17 +505,9 @@ class WaitStatement(VHDLModel_WaitStatement, DOMMixin):
             print(GetIirKindOfNode(sensitivityListNode))
 
         conditionNode = nodes.Get_Condition_Clause(waitNode)
-        condition = (
-            None
-            if conditionNode is nodes.Null_Iir
-            else GetExpressionFromNode(conditionNode)
-        )
+        condition = None if conditionNode is nodes.Null_Iir else GetExpressionFromNode(conditionNode)
 
         timeoutNode = nodes.Get_Timeout_Clause(waitNode)
-        timeout = (
-            None
-            if timeoutNode is nodes.Null_Iir
-            else GetExpressionFromNode(timeoutNode)
-        )
+        timeout = None if timeoutNode is nodes.Null_Iir else GetExpressionFromNode(timeoutNode)
 
         return cls(waitNode, sensitivityList, condition, timeout, label)

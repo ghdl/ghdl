@@ -59,9 +59,7 @@ class Position:
     def parse(cls, node: Iir) -> "Position":
         """Return the source code position of a IIR node."""
         if node == nodes.Null_Iir:
-            raise ValueError(
-                "Position.parse(): Parameter 'node' must not be 'Null_iir'."
-            )
+            raise ValueError("Position.parse(): Parameter 'node' must not be 'Null_iir'.")
 
         location = nodes.Get_Location(node)
         file = files_map.Location_To_File(location)
@@ -85,9 +83,7 @@ class Position:
         return self._column
 
     def __str__(self):
-        return "{file}:{line}:{column}".format(
-            file=self._filename, line=self._line, column=self._column
-        )
+        return "{file}:{line}:{column}".format(file=self._filename, line=self._line, column=self._column)
 
 
 @export

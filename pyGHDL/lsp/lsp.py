@@ -52,9 +52,8 @@ def path_to_uri(path):
         # On windows, do not quote the colon after the driver letter, as
         # it is not quoted in uri from the client.
         path = path.replace("\\", "/")
-        return "file:///" + path[:2] + quote(path[2:])
-    else:
-        return "file://" + quote(path)
+        return "file:///{0}{1}".format(path[:2], quote(path[2:]))
+    return "file://{0}".format(quote(path))
 
 
 class LanguageProtocolServer(object):
@@ -122,15 +121,10 @@ class LanguageProtocolServer(object):
             try:
                 response = fmethod(**params)
             except Exception:
-                log.exception(
-                    "Caught exception while handling %s with params %s:", method, params
-                )
+                log.exception("Caught exception while handling %s with params %s:", method, params)
                 self.show_message(
                     MessageType.Error,
-                    (
-                        "Caught exception while handling {}, "
-                        + "see VHDL language server output for details."
-                    ).format(method),
+                    ("Caught exception while handling {}, see VHDL language server output for details.").format(method),
                 )
                 response = None
             if tid is None:

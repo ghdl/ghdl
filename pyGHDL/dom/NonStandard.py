@@ -159,12 +159,8 @@ class Document(VHDLModel_Document):
         bufferLength = sourceLength + 128
         self.__ghdlFileID = name_table.Get_Identifier(str(self._filename))
         dirId = name_table.Null_Identifier
-        self.__ghdlSourceFileEntry = files_map.Reserve_Source_File(
-            dirId, self.__ghdlFileID, bufferLength
-        )
-        files_map_editor.Fill_Text(
-            self.__ghdlSourceFileEntry, ctypes.c_char_p(sourcesBytes), sourceLength
-        )
+        self.__ghdlSourceFileEntry = files_map.Reserve_Source_File(dirId, self.__ghdlFileID, bufferLength)
+        files_map_editor.Fill_Text(self.__ghdlSourceFileEntry, ctypes.c_char_p(sourcesBytes), sourceLength)
 
         CheckForErrors()
 
@@ -241,9 +237,7 @@ class Document(VHDLModel_Document):
                 self.VerificationModes.append(vmod)
 
             else:
-                raise DOMException(
-                    "Unknown design unit kind '{kind}'.".format(kind=nodeKind.name)
-                )
+                raise DOMException("Unknown design unit kind '{kind}'.".format(kind=nodeKind.name))
 
     @property
     def LibGHDLProcessingTime(self) -> float:

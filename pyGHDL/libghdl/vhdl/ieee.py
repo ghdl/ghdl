@@ -37,17 +37,13 @@ from pyGHDL.libghdl import libghdl
 
 __all__ = ["Std_Logic_1164_Pkg", "Std_Logic_Type", "Std_Logic_Vector_Type"]
 
-Std_Logic_1164_Pkg = c_int.in_dll(
-    libghdl, "vhdl__ieee__std_logic_1164__std_logic_1164_pkg"
-)
+Std_Logic_1164_Pkg = c_int.in_dll(libghdl, "vhdl__ieee__std_logic_1164__std_logic_1164_pkg")
 
 # Get value
 Std_Logic_Type = c_int.in_dll(libghdl, "vhdl__ieee__std_logic_1164__std_logic_type")
 
 # Get value
-Std_Logic_Vector_Type = c_int.in_dll(
-    libghdl, "vhdl__ieee__std_logic_1164__std_logic_vector_type"
-)
+Std_Logic_Vector_Type = c_int.in_dll(libghdl, "vhdl__ieee__std_logic_1164__std_logic_vector_type")
 
 # Get value
 # Rising_Edge = c_int.in_dll(libghdl, "vhdl__ieee__std_logic_1164__rising_edge")

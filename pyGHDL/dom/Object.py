@@ -107,9 +107,7 @@ class DeferredConstant(VHDLModel_DeferredConstant, DOMMixin):
         from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode
 
         name = GetNameOfNode(constantNode)
-        subtypeIndication = GetSubtypeIndicationFromNode(
-            constantNode, "deferred constant", name
-        )
+        subtypeIndication = GetSubtypeIndicationFromNode(constantNode, "deferred constant", name)
 
         return cls(
             constantNode,

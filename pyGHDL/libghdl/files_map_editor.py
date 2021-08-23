@@ -113,9 +113,7 @@ def Fill_Text(File: SourceFileEntry, Text_Pointer, Text_Length: int) -> None:
 
 @export
 # @BindToLibGHDL("files_map__editor__check_buffer_content")
-def Check_Buffer_Content(
-    File: SourceFileEntry, String_Pointer: c_char_p, String_Length: c_uint32
-) -> None:
+def Check_Buffer_Content(File: SourceFileEntry, String_Pointer: c_char_p, String_Length: c_uint32) -> None:
     """
     Check that content of :obj:`File` is STR[1 .. STR_LEN].
 

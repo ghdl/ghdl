@@ -64,9 +64,7 @@ class LibGHDLException(GHDLBaseException):
 def _get_libghdl_name() -> Path:
     """Get the name of the libghdl library (with version and extension)."""
     ver = __version__.replace("-", "_").replace(".", "_")
-    ext = {"win32": "dll", "cygwin": "dll", "msys": "dll", "darwin": "dylib"}.get(
-        sys_platform, "so"
-    )
+    ext = {"win32": "dll", "cygwin": "dll", "msys": "dll", "darwin": "dylib"}.get(sys_platform, "so")
     return Path("libghdl-{version}.{ext}".format(version=ver, ext=ext))
 
 
@@ -150,11 +148,7 @@ def _initialize():
     _libghdl_path = _get_libghdl_path()
 
     # Add DLL search path(s)
-    if (
-        sys_platform == "win32"
-        and sys_version_info.major == 3
-        and sys_version_info.minor >= 8
-    ):
+    if sys_platform == "win32" and sys_version_info.major == 3 and sys_version_info.minor >= 8:
         from os import add_dll_directory as os_add_dll_directory
 
         p1 = _libghdl_path.parent.parent / "bin"

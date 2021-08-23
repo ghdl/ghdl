@@ -124,9 +124,7 @@ class Document(object):
 
         text_bytes = text.encode(Document.encoding, "replace")
 
-        files_map_editor.Check_Buffer_Content(
-            self._fe, ctypes.c_char_p(text_bytes), len(text_bytes)
-        )
+        files_map_editor.Check_Buffer_Content(self._fe, ctypes.c_char_p(text_bytes), len(text_bytes))
 
     @staticmethod
     def add_to_library(tree):
@@ -141,10 +139,7 @@ class Document(object):
             next_unit = nodes.Get_Chain(unit)
             nodes.Set_Chain(unit, nodes.Null_Iir)
             lib_unit = nodes.Get_Library_Unit(unit)
-            if (
-                lib_unit != nodes.Null_Iir
-                and nodes.Get_Identifier(unit) != name_table.Null_Identifier
-            ):
+            if lib_unit != nodes.Null_Iir and nodes.Get_Identifier(unit) != name_table.Null_Identifier:
                 # Put the unit (only if it has a library unit) in the library.
                 libraries.Add_Design_Unit_Into_Library(unit, False)
                 tree = nodes.Get_Design_File(unit)
@@ -194,9 +189,7 @@ class Document(object):
         log.debug("document_symbols")
         if self._tree == nodes.Null_Iir:
             return []
-        syms = symbols.get_symbols_chain(
-            self._fe, nodes.Get_First_Design_Unit(self._tree)
-        )
+        syms = symbols.get_symbols_chain(self._fe, nodes.Get_First_Design_Unit(self._tree))
         return self.flatten_symbols(syms, None)
 
     def position_to_location(self, position):

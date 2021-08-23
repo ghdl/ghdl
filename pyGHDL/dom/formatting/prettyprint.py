@@ -119,18 +119,12 @@ class PrettyPrint:
         prefix = "  " * level
         buffer.append("{prefix}Libraries:".format(prefix=prefix))
         for library in design.Libraries.values():
-            buffer.append(
-                "{prefix}  - Name: {name}".format(
-                    prefix=prefix, name=library.Identifier
-                )
-            )
+            buffer.append("{prefix}  - Name: {name}".format(prefix=prefix, name=library.Identifier))
             for line in self.formatLibrary(library, level + 2):
                 buffer.append(line)
         buffer.append("{prefix}Documents:".format(prefix=prefix))
         for document in design.Documents:
-            buffer.append(
-                "{prefix}  - Path: '{doc!s}':".format(doc=document.Path, prefix=prefix)
-            )
+            buffer.append("{prefix}  - Path: '{doc!s}':".format(doc=document.Path, prefix=prefix))
             for line in self.formatDocument(document, level + 2):
                 buffer.append(line)
 
@@ -145,17 +139,13 @@ class PrettyPrint:
                 "{prefix}  - {name}({architectures})".format(
                     prefix=prefix,
                     name=entity.Identifier,
-                    architectures=", ".join(
-                        [a.Identifier for a in entity.Architectures]
-                    ),
+                    architectures=", ".join([a.Identifier for a in entity.Architectures]),
                 )
             )
         buffer.append("{prefix}Packages:".format(prefix=prefix))
         for package in library.Packages:
             if isinstance(package, Package):
-                buffer.append(
-                    "{prefix}  - {name}".format(prefix=prefix, name=package.Identifier)
-                )
+                buffer.append("{prefix}  - {name}".format(prefix=prefix, name=package.Identifier))
             elif isinstance(package, PackageInstantiation):
                 buffer.append(
                     "{prefix}  - {name} instantiate from {package}".format(
@@ -166,16 +156,10 @@ class PrettyPrint:
                 )
         buffer.append("{prefix}Configurations:".format(prefix=prefix))
         for configuration in library.Configurations:
-            buffer.append(
-                "{prefix}  - {name}".format(
-                    prefix=prefix, name=configuration.Identifier
-                )
-            )
+            buffer.append("{prefix}  - {name}".format(prefix=prefix, name=configuration.Identifier))
         buffer.append("{prefix}Contexts:".format(prefix=prefix))
         for context in library.Contexts:
-            buffer.append(
-                "{prefix}  - {name}".format(prefix=prefix, name=context.Identifier)
-            )
+            buffer.append("{prefix}  - {name}".format(prefix=prefix, name=context.Identifier))
 
         return buffer
 
@@ -243,15 +227,11 @@ class PrettyPrint:
             buffer.append("{prefix}    ...".format(prefix=prefix))
         buffer.append("{prefix}  Architecures:".format(prefix=prefix))
         for item in entity.Architectures:
-            buffer.append(
-                "{prefix}  - {name}".format(prefix=prefix, name=item.Identifier)
-            )
+            buffer.append("{prefix}  - {name}".format(prefix=prefix, name=item.Identifier))
 
         return buffer
 
-    def formatArchitecture(
-        self, architecture: Architecture, level: int = 0
-    ) -> StringBuffer:
+    def formatArchitecture(self, architecture: Architecture, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
         buffer.append(
@@ -263,11 +243,7 @@ class PrettyPrint:
                 column=architecture.Position.Column,
             )
         )
-        buffer.append(
-            "{prefix}  Entity: {entity}".format(
-                entity=architecture.Entity.SymbolName, prefix=prefix
-            )
-        )
+        buffer.append("{prefix}  Entity: {entity}".format(entity=architecture.Entity.SymbolName, prefix=prefix))
         buffer.append("{prefix}  Declared:".format(prefix=prefix))
         for item in architecture.DeclaredItems:
             for line in self.formatDeclaredItems(item, level + 2):
@@ -287,11 +263,7 @@ class PrettyPrint:
     def formatComponent(self, component: Component, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
-        buffer.append(
-            "{prefix}- Component: {name}".format(
-                name=component.Identifier, prefix=prefix
-            )
-        )
+        buffer.append("{prefix}- Component: {name}".format(name=component.Identifier, prefix=prefix))
         buffer.append("{prefix}  Generics:".format(prefix=prefix))
         for generic in component.GenericItems:
             for line in self.formatGeneric(generic, level + 1):
@@ -322,19 +294,11 @@ class PrettyPrint:
 
         return buffer
 
-    def formatPackageInstance(
-        self, package: PackageInstantiation, level: int = 0
-    ) -> StringBuffer:
+    def formatPackageInstance(self, package: PackageInstantiation, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
-        buffer.append(
-            "{prefix}- Name: {name}".format(name=package.Identifier, prefix=prefix)
-        )
-        buffer.append(
-            "{prefix}  Package: {name!s}".format(
-                prefix=prefix, name=package.PackageReference
-            )
-        )
+        buffer.append("{prefix}- Name: {name}".format(name=package.Identifier, prefix=prefix))
+        buffer.append("{prefix}  Package: {name!s}".format(prefix=prefix, name=package.PackageReference))
         buffer.append("{prefix}  Generic Map: ...".format(prefix=prefix))
         #        for item in package.GenericItems:
         #            for line in self.formatGeneric(item, level + 1):
@@ -342,14 +306,10 @@ class PrettyPrint:
 
         return buffer
 
-    def formatPackageBody(
-        self, packageBody: PackageBody, level: int = 0
-    ) -> StringBuffer:
+    def formatPackageBody(self, packageBody: PackageBody, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
-        buffer.append(
-            "{prefix}- Name: {name}".format(name=packageBody.Identifier, prefix=prefix)
-        )
+        buffer.append("{prefix}- Name: {name}".format(name=packageBody.Identifier, prefix=prefix))
         buffer.append("{prefix}  Declared:".format(prefix=prefix))
         for item in packageBody.DeclaredItems:
             for line in self.formatDeclaredItems(item, level + 1):
@@ -357,31 +317,21 @@ class PrettyPrint:
 
         return buffer
 
-    def formatConfiguration(
-        self, configuration: Configuration, level: int = 0
-    ) -> StringBuffer:
+    def formatConfiguration(self, configuration: Configuration, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
-        buffer.append(
-            "{prefix}- Name: {name}".format(
-                name=configuration.Identifier, prefix=prefix
-            )
-        )
+        buffer.append("{prefix}- Name: {name}".format(name=configuration.Identifier, prefix=prefix))
 
         return buffer
 
     def formatContext(self, context: Context, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
-        buffer.append(
-            "{prefix}- Name: {name}".format(name=context.Identifier, prefix=prefix)
-        )
+        buffer.append("{prefix}- Name: {name}".format(name=context.Identifier, prefix=prefix))
 
         return buffer
 
-    def formatGeneric(
-        self, generic: Union[NamedEntity, GenericInterfaceItem], level: int = 0
-    ) -> StringBuffer:
+    def formatGeneric(self, generic: Union[NamedEntity, GenericInterfaceItem], level: int = 0) -> StringBuffer:
         if isinstance(generic, GenericConstantInterfaceItem):
             return self.formatGenericConstant(generic, level)
         elif isinstance(generic, GenericTypeInterfaceItem):
@@ -393,9 +343,7 @@ class PrettyPrint:
                 )
             )
 
-    def formatPort(
-        self, port: Union[NamedEntity, PortInterfaceItem], level: int = 0
-    ) -> StringBuffer:
+    def formatPort(self, port: Union[NamedEntity, PortInterfaceItem], level: int = 0) -> StringBuffer:
         if isinstance(port, PortSignalInterfaceItem):
             return self.formatPortSignal(port, level)
         else:
@@ -405,9 +353,7 @@ class PrettyPrint:
                 )
             )
 
-    def formatGenericConstant(
-        self, generic: GenericConstantInterfaceItem, level: int = 0
-    ) -> StringBuffer:
+    def formatGenericConstant(self, generic: GenericConstantInterfaceItem, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
 
@@ -416,18 +362,14 @@ class PrettyPrint:
                 prefix=prefix,
                 name=", ".join(generic.Identifiers),
                 mode=generic.Mode,
-                subtypeindication=self.formatSubtypeIndication(
-                    generic.Subtype, "generic", generic.Identifiers[0]
-                ),
+                subtypeindication=self.formatSubtypeIndication(generic.Subtype, "generic", generic.Identifiers[0]),
                 initialValue=self.formatInitialValue(generic),
             )
         )
 
         return buffer
 
-    def formatGenericType(
-        self, generic: GenericConstantInterfaceItem, level: int = 0
-    ) -> StringBuffer:
+    def formatGenericType(self, generic: GenericConstantInterfaceItem, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
 
@@ -440,9 +382,7 @@ class PrettyPrint:
 
         return buffer
 
-    def formatPortSignal(
-        self, port: PortSignalInterfaceItem, level: int = 0
-    ) -> StringBuffer:
+    def formatPortSignal(self, port: PortSignalInterfaceItem, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
 
@@ -451,9 +391,7 @@ class PrettyPrint:
                 prefix=prefix,
                 name=", ".join(port.Identifiers),
                 mode=port.Mode,
-                subtypeindication=self.formatSubtypeIndication(
-                    port.Subtype, "port", port.Identifiers[0]
-                ),
+                subtypeindication=self.formatSubtypeIndication(port.Subtype, "port", port.Identifiers[0]),
                 initialValue=self.formatInitialValue(port),
             )
         )
@@ -474,9 +412,7 @@ class PrettyPrint:
                 "{prefix}- constant {name} : {subtype}{default}".format(
                     prefix=prefix,
                     name=", ".join(item.Identifiers),
-                    subtype=self.formatSubtypeIndication(
-                        item.Subtype, "constant", item.Identifiers[0]
-                    ),
+                    subtype=self.formatSubtypeIndication(item.Subtype, "constant", item.Identifiers[0]),
                     default=default,
                 )
             )
@@ -485,9 +421,7 @@ class PrettyPrint:
                 "{prefix}- shared variable {name} : {subtype}".format(
                     prefix=prefix,
                     name=", ".join(item.Identifiers),
-                    subtype=self.formatSubtypeIndication(
-                        item.Subtype, "shared variable", item.Identifiers[0]
-                    ),
+                    subtype=self.formatSubtypeIndication(item.Subtype, "shared variable", item.Identifiers[0]),
                 )
             )
         elif isinstance(item, Signal):
@@ -495,9 +429,7 @@ class PrettyPrint:
                 "{prefix}- signal {name} : {subtype}{initValue}".format(
                     prefix=prefix,
                     name=", ".join(item.Identifiers),
-                    subtype=self.formatSubtypeIndication(
-                        item.Subtype, "signal", item.Identifiers[0]
-                    ),
+                    subtype=self.formatSubtypeIndication(item.Subtype, "signal", item.Identifiers[0]),
                     initValue=" := {expr}".format(expr=str(item.DefaultExpression))
                     if item.DefaultExpression is not None
                     else "",
@@ -508,15 +440,11 @@ class PrettyPrint:
                 "{prefix}- File {name} : {subtype}".format(
                     prefix=prefix,
                     name=", ".join(item.Identifiers),
-                    subtype=self.formatSubtypeIndication(
-                        item.Subtype, "file", item.Identifiers[0]
-                    ),
+                    subtype=self.formatSubtypeIndication(item.Subtype, "file", item.Identifiers[0]),
                 )
             )
         elif isinstance(item, (FullType, IncompleteType)):
-            buffer.append(
-                "{prefix}- {type}".format(prefix=prefix, type=self.formatType(item))
-            )
+            buffer.append("{prefix}- {type}".format(prefix=prefix, type=self.formatType(item)))
         elif isinstance(item, Subtype):
             buffer.append(
                 "{prefix}- subtype {name} is ?????".format(
@@ -549,9 +477,7 @@ class PrettyPrint:
                 buffer.append(line)
         elif isinstance(item, Attribute):
             buffer.append(
-                "{prefix}- attribute {name} : {type!s}".format(
-                    prefix=prefix, name=item.Identifier, type=item.Subtype
-                )
+                "{prefix}- attribute {name} : {type!s}".format(prefix=prefix, name=item.Identifier, type=item.Subtype)
             )
         elif isinstance(item, AttributeSpecification):
             buffer.append(
@@ -564,17 +490,9 @@ class PrettyPrint:
                 )
             )
         elif isinstance(item, UseClause):
-            buffer.append(
-                "{prefix}- use {names}".format(
-                    prefix=prefix, names=", ".join([str(n) for n in item.Names])
-                )
-            )
+            buffer.append("{prefix}- use {names}".format(prefix=prefix, names=", ".join([str(n) for n in item.Names])))
         elif isinstance(item, Package):
-            buffer.append(
-                "{prefix}- package {name} is ..... end package".format(
-                    prefix=prefix, name=item.Identifier
-                )
-            )
+            buffer.append("{prefix}- package {name} is ..... end package".format(prefix=prefix, name=item.Identifier))
         elif isinstance(item, PackageInstantiation):
             buffer.append(
                 "{prefix}- package {name} is new {name2!s} generic map (.....)".format(
@@ -582,17 +500,9 @@ class PrettyPrint:
                 )
             )
         elif isinstance(item, DefaultClock):
-            buffer.append(
-                "{prefix}- default {name} is {expr}".format(
-                    prefix=prefix, name=item.Identifier, expr="..."
-                )
-            )
+            buffer.append("{prefix}- default {name} is {expr}".format(prefix=prefix, name=item.Identifier, expr="..."))
         else:
-            raise PrettyPrintException(
-                "Unhandled declared item kind '{name}'.".format(
-                    name=item.__class__.__name__
-                )
-            )
+            raise PrettyPrintException("Unhandled declared item kind '{name}'.".format(name=item.__class__.__name__))
 
         return buffer
 
@@ -619,9 +529,7 @@ class PrettyPrint:
         elif isinstance(item, ProtectedTypeBody):
             result += "protected body ..... end protected body"
         else:
-            raise PrettyPrintException(
-                "Unknown type '{name}'".format(name=item.__class__.__name__)
-            )
+            raise PrettyPrintException("Unknown type '{name}'".format(name=item.__class__.__name__))
 
         return result
 
@@ -633,9 +541,7 @@ class PrettyPrint:
             for constraint in subtypeIndication.Constraints:
                 constraints.append(str(constraint))
 
-            return "{type}({constraints})".format(
-                type=subtypeIndication.SymbolName, constraints=", ".join(constraints)
-            )
+            return "{type}({constraints})".format(type=subtypeIndication.SymbolName, constraints=", ".join(constraints))
         else:
             raise PrettyPrintException(
                 "Unhandled subtype kind '{type}' for {entity} '{name}'.".format(
@@ -649,23 +555,15 @@ class PrettyPrint:
 
         return " := {expr!s}".format(expr=item.DefaultExpression)
 
-    def formatHierarchy(
-        self, statement: ConcurrentStatement, level: int = 0
-    ) -> StringBuffer:
+    def formatHierarchy(self, statement: ConcurrentStatement, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
 
         if isinstance(statement, ProcessStatement):
-            buffer.append(
-                "{prefix}- {label}: process(...)".format(
-                    prefix=prefix, label=statement.Label
-                )
-            )
+            buffer.append("{prefix}- {label}: process(...)".format(prefix=prefix, label=statement.Label))
         elif isinstance(statement, EntityInstantiation):
             buffer.append(
-                "{prefix}- {label}: entity {name}".format(
-                    prefix=prefix, label=statement.Label, name=statement.Entity
-                )
+                "{prefix}- {label}: entity {name}".format(prefix=prefix, label=statement.Label, name=statement.Entity)
             )
         elif isinstance(statement, ComponentInstantiation):
             buffer.append(
@@ -680,9 +578,7 @@ class PrettyPrint:
                 )
             )
         elif isinstance(statement, ConcurrentBlockStatement):
-            buffer.append(
-                "{prefix}- {label}: block".format(prefix=prefix, label=statement.Label)
-            )
+            buffer.append("{prefix}- {label}: block".format(prefix=prefix, label=statement.Label))
             for stmt in statement.Statements:
                 for line in self.formatHierarchy(stmt, level + 2):
                     buffer.append(line)
@@ -709,11 +605,7 @@ class PrettyPrint:
                     for line in self.formatHierarchy(stmt, level + 2):
                         buffer.append(line)
             if statement.ElseBranch is not None:
-                buffer.append(
-                    "{prefix}  {label}: else generate".format(
-                        prefix=prefix, label=statement.Label
-                    )
-                )
+                buffer.append("{prefix}  {label}: else generate".format(prefix=prefix, label=statement.Label))
                 for stmt in statement.ElseBranch.Statements:
                     for line in self.formatHierarchy(stmt, level + 2):
                         buffer.append(line)
@@ -726,11 +618,7 @@ class PrettyPrint:
                 )
             )
             for case in statement.Cases:
-                buffer.append(
-                    "{prefix}    {case!s}".format(
-                        prefix=prefix, label=case.Label, case=case
-                    )
-                )
+                buffer.append("{prefix}    {case!s}".format(prefix=prefix, label=case.Label, case=case))
                 for stmt in case.Statements:
                     for line in self.formatHierarchy(stmt, level + 2):
                         buffer.append(line)
