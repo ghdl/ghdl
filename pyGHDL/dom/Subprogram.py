@@ -63,9 +63,7 @@ class Function(VHDLModel_Function, DOMMixin):
 
         # TODO: move to model
         self._genericItems = [] if genericItems is None else [g for g in genericItems]
-        self._parameterItems = (
-            [] if parameterItems is None else [p for p in parameterItems]
-        )
+        self._parameterItems = [] if parameterItems is None else [p for p in parameterItems]
         self._returnType = returnType
 
     @classmethod
@@ -78,9 +76,7 @@ class Function(VHDLModel_Function, DOMMixin):
         functionName = GetNameOfNode(functionNode)
 
         generics = GetGenericsFromChainedNodes(nodes.Get_Generic_Chain(functionNode))
-        parameters = GetParameterFromChainedNodes(
-            nodes.Get_Interface_Declaration_Chain(functionNode)
-        )
+        parameters = GetParameterFromChainedNodes(nodes.Get_Interface_Declaration_Chain(functionNode))
 
         returnType = nodes.Get_Return_Type_Mark(functionNode)
         returnTypeName = GetNameOfNode(returnType)
@@ -103,9 +99,7 @@ class Procedure(VHDLModel_Procedure, DOMMixin):
 
         # TODO: move to model
         self._genericItems = [] if genericItems is None else [g for g in genericItems]
-        self._parameterItems = (
-            [] if parameterItems is None else [p for p in parameterItems]
-        )
+        self._parameterItems = [] if parameterItems is None else [p for p in parameterItems]
 
     @classmethod
     def parse(cls, procedureNode: Iir) -> "Procedure":
@@ -117,8 +111,6 @@ class Procedure(VHDLModel_Procedure, DOMMixin):
         procedureName = GetNameOfNode(procedureNode)
 
         generics = GetGenericsFromChainedNodes(nodes.Get_Generic_Chain(procedureNode))
-        parameters = GetParameterFromChainedNodes(
-            nodes.Get_Interface_Declaration_Chain(procedureNode)
-        )
+        parameters = GetParameterFromChainedNodes(nodes.Get_Interface_Declaration_Chain(procedureNode))
 
         return cls(procedureNode, procedureName, generics, parameters)

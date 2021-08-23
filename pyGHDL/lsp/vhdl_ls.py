@@ -62,15 +62,7 @@ class VhdlLanguageServer(object):
         }
         return server_capabilities
 
-    def initialize(
-        self,
-        processId,
-        rootPath,
-        capabilities,
-        rootUri=None,
-        initializationOptions=None,
-        **_
-    ):
+    def initialize(self, processId, rootPath, capabilities, rootUri=None, initializationOptions=None, **_):
         log.debug(
             "Language server initialize: pid=%s uri=%s path=%s options=%s",
             processId,
@@ -91,9 +83,7 @@ class VhdlLanguageServer(object):
 
     def textDocument_didOpen(self, textDocument=None):
         doc_uri = textDocument["uri"]
-        self.workspace.put_document(
-            doc_uri, textDocument["text"], version=textDocument.get("version")
-        )
+        self.workspace.put_document(doc_uri, textDocument["text"], version=textDocument.get("version"))
         self.lint(doc_uri)
 
     def textDocument_didChange(self, textDocument=None, contentChanges=None, **_kwargs):

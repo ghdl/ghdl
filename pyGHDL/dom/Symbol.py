@@ -70,9 +70,7 @@ class SimpleSubtypeSymbol(VHDLModel_SimpleSubtypeSymbol, DOMMixin):
 
 
 @export
-class ConstrainedScalarSubtypeSymbol(
-    VHDLModel_ConstrainedScalarSubtypeSymbol, DOMMixin
-):
+class ConstrainedScalarSubtypeSymbol(VHDLModel_ConstrainedScalarSubtypeSymbol, DOMMixin):
     def __init__(self, node: Iir, subtypeName: Name, rng: Range = None):
         super().__init__(subtypeName, rng)
         DOMMixin.__init__(self, node)
@@ -83,12 +81,8 @@ class ConstrainedScalarSubtypeSymbol(
 
 
 @export
-class ConstrainedCompositeSubtypeSymbol(
-    VHDLModel_ConstrainedCompositeSubtypeSymbol, DOMMixin
-):
-    def __init__(
-        self, node: Iir, subtypeName: Name, constraints: List[ConstraintUnion] = None
-    ):
+class ConstrainedCompositeSubtypeSymbol(VHDLModel_ConstrainedCompositeSubtypeSymbol, DOMMixin):
+    def __init__(self, node: Iir, subtypeName: Name, constraints: List[ConstraintUnion] = None):
         super().__init__(subtypeName, constraints)
         DOMMixin.__init__(self, node)
 
@@ -98,9 +92,7 @@ class ConstrainedCompositeSubtypeSymbol(
 
 
 @export
-class SimpleObjectOrFunctionCallSymbol(
-    VHDLModel_SimpleObjectOrFunctionCallSymbol, DOMMixin
-):
+class SimpleObjectOrFunctionCallSymbol(VHDLModel_SimpleObjectOrFunctionCallSymbol, DOMMixin):
     @classmethod
     def parse(cls, node: Iir):
         from pyGHDL.dom._Translate import GetNameFromNode
@@ -110,9 +102,7 @@ class SimpleObjectOrFunctionCallSymbol(
 
 
 @export
-class IndexedObjectOrFunctionCallSymbol(
-    VHDLModel_IndexedObjectOrFunctionCallSymbol, DOMMixin
-):
+class IndexedObjectOrFunctionCallSymbol(VHDLModel_IndexedObjectOrFunctionCallSymbol, DOMMixin):
     def __init__(self, node: Iir, name: Name):
         super().__init__(name)
         DOMMixin.__init__(self, node)

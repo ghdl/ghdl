@@ -96,9 +96,7 @@ class Workspace(object):
         path = lsp.path_from_uri(doc_uri)
         if source is None:
             source = open(path).read()
-        sfe = document.Document.load(
-            source, os.path.dirname(path), os.path.basename(path)
-        )
+        sfe = document.Document.load(source, os.path.dirname(path), os.path.basename(path))
         return self._create_document(doc_uri, sfe)
 
     def get_or_create_document(self, doc_uri):
@@ -157,9 +155,7 @@ class Workspace(object):
             sfe = document.Document.load(fd.read(), self._root_path, name)
             fd.close()
         except OSError as err:
-            self._server.show_message(
-                lsp.MessageType.Error, "cannot load {}: {}".format(name, err.strerror)
-            )
+            self._server.show_message(lsp.MessageType.Error, "cannot load {}: {}".format(name, err.strerror))
             return
         doc = self.create_document_from_sfe(sfe, absname)
         doc.parse_document()
@@ -184,9 +180,7 @@ class Workspace(object):
             log.info("error in project file")
             self._server.show_message(
                 lsp.MessageType.Error,
-                "json error in project file {}:{}:{}".format(
-                    prj_file, e.lineno, e.colno
-                ),
+                "json error in project file {}:{}:{}".format(prj_file, e.lineno, e.colno),
             )
         f.close()
 
@@ -207,13 +201,9 @@ class Workspace(object):
             log.info("Using options: %s", ghdl_opts)
             for opt in ghdl_opts:
                 if not libghdl.set_option(opt):
-                    self._server.show_message(
-                        lsp.MessageType.Error, "error with option: {}".format(opt)
-                    )
+                    self._server.show_message(lsp.MessageType.Error, "error with option: {}".format(opt))
         except ProjectError as e:
-            self._server.show_message(
-                lsp.MessageType.Error, "error in project file: {}".format(e.msg)
-            )
+            self._server.show_message(lsp.MessageType.Error, "error in project file: {}".format(e.msg))
 
     def read_files_from_project(self):
         try:
@@ -230,14 +220,10 @@ class Workspace(object):
                 if lang == "vhdl":
                     self.add_vhdl_file(name)
         except ProjectError as e:
-            self._server.show_message(
-                lsp.MessageType.Error, "error in project file: {}".format(e.msg)
-            )
+            self._server.show_message(lsp.MessageType.Error, "error in project file: {}".format(e.msg))
 
     def get_configuration(self):
-        self._server.configuration(
-            [{"scopeUri": "", "section": "vhdl.maxNumberOfProblems"}]
-        )
+        self._server.configuration([{"scopeUri": "", "section": "vhdl.maxNumberOfProblems"}])
 
     def gather_diagnostics(self, doc):
         # Gather messages (per file)
@@ -302,9 +288,7 @@ class Workspace(object):
         # Avoid infinite recursion
         antideps[unit] = None
         for un in udeps:
-            log.debug(
-                "obsolete %d %s", un, pyutils.name_image(nodes.Get_Identifier(un))
-            )
+            log.debug("obsolete %d %s", un, pyutils.name_image(nodes.Get_Identifier(un)))
             # Recurse
             self.obsolete_dependent_units(un, antideps)
             if nodes.Get_Date_State(un) == nodes.DateStateType.Disk:
@@ -376,9 +360,7 @@ class Workspace(object):
         )
 
     def show_message(self, message, msg_type=lsp.MessageType.Info):
-        self._server.notify(
-            "window/showMessage", params={"type": msg_type, "message": message}
-        )
+        self._server.notify("window/showMessage", params={"type": msg_type, "message": message})
 
     def declaration_to_location(self, decl):
         """Convert declaration :param decl: to an LSP Location."""
@@ -395,9 +377,7 @@ class Workspace(object):
         nid = nodes.Get_Identifier(decl)
         res["range"] = {
             "start": symbols.location_to_position(fe, decl_loc),
-            "end": symbols.location_to_position(
-                fe, decl_loc + name_table.Get_Name_Length(nid)
-            ),
+            "end": symbols.location_to_position(fe, decl_loc + name_table.Get_Name_Length(nid)),
         }
         return res
 
@@ -453,9 +433,7 @@ class Workspace(object):
         def create_interfaces(inters):
             res = []
             while inters != nodes.Null_Iir:
-                res.append(
-                    {"name": name_table.Get_Name_Ptr(nodes.Get_Identifier(inters))}
-                )
+                res.append({"name": name_table.Get_Name_Ptr(nodes.Get_Identifier(inters))})
                 inters = nodes.Get_Chain(inters)
             return res
 

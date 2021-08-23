@@ -143,9 +143,7 @@ class PhysicalType(VHDLModel_PhysicalType, DOMMixin):
             if secondaryUnit == primaryUnit:
                 continue
 
-            physicalLiteral = PhysicalIntegerLiteral.parse(
-                nodes.Get_Physical_Literal(secondaryUnit)
-            )
+            physicalLiteral = PhysicalIntegerLiteral.parse(nodes.Get_Physical_Literal(secondaryUnit))
 
             units.append((secondaryUnitName, physicalLiteral))
 
@@ -154,9 +152,7 @@ class PhysicalType(VHDLModel_PhysicalType, DOMMixin):
 
 @export
 class ArrayType(VHDLModel_ArrayType, DOMMixin):
-    def __init__(
-        self, node: Iir, identifier: str, indices: List, elementSubtype: SubtypeOrSymbol
-    ):
+    def __init__(self, node: Iir, identifier: str, indices: List, elementSubtype: SubtypeOrSymbol):
         super().__init__(identifier, indices, elementSubtype)
         DOMMixin.__init__(self, node)
 
@@ -182,12 +178,8 @@ class ArrayType(VHDLModel_ArrayType, DOMMixin):
                     )
                 )
 
-        elementSubtypeIndication = nodes.Get_Element_Subtype_Indication(
-            typeDefinitionNode
-        )
-        elementSubtype = GetSubtypeIndicationFromIndicationNode(
-            elementSubtypeIndication, "array declaration", typeName
-        )
+        elementSubtypeIndication = nodes.Get_Element_Subtype_Indication(typeDefinitionNode)
+        elementSubtype = GetSubtypeIndicationFromIndicationNode(elementSubtypeIndication, "array declaration", typeName)
 
         return cls(typeDefinitionNode, typeName, indices, elementSubtype)
 
@@ -204,9 +196,7 @@ class RecordTypeElement(VHDLModel_RecordTypeElement, DOMMixin):
         from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode
 
         elementName = GetNameOfNode(elementDeclarationNode)
-        elementType = GetSubtypeIndicationFromNode(
-            elementDeclarationNode, "record element", elementName
-        )
+        elementType = GetSubtypeIndicationFromNode(elementDeclarationNode, "record element", elementName)
 
         return cls(
             elementDeclarationNode,
@@ -219,9 +209,7 @@ class RecordTypeElement(VHDLModel_RecordTypeElement, DOMMixin):
 
 @export
 class RecordType(VHDLModel_RecordType, DOMMixin):
-    def __init__(
-        self, node: Iir, identifier: str, elements: List[RecordTypeElement] = None
-    ):
+    def __init__(self, node: Iir, identifier: str, elements: List[RecordTypeElement] = None):
         super().__init__(identifier, elements)
         DOMMixin.__init__(self, node)
 
@@ -264,9 +252,7 @@ class RecordType(VHDLModel_RecordType, DOMMixin):
 
 @export
 class ProtectedType(VHDLModel_ProtectedType, DOMMixin):
-    def __init__(
-        self, node: Iir, identifier: str, methods: Union[List, Iterator] = None
-    ):
+    def __init__(self, node: Iir, identifier: str, methods: Union[List, Iterator] = None):
         super().__init__(identifier, methods)
         DOMMixin.__init__(self, node)
 
@@ -288,9 +274,7 @@ class ProtectedType(VHDLModel_ProtectedType, DOMMixin):
 
 @export
 class ProtectedTypeBody(VHDLModel_ProtectedTypeBody, DOMMixin):
-    def __init__(
-        self, node: Iir, identifier: str, declaredItems: Union[List, Iterator] = None
-    ):
+    def __init__(self, node: Iir, identifier: str, declaredItems: Union[List, Iterator] = None):
         super().__init__(identifier, declaredItems)
         DOMMixin.__init__(self, node)
 
@@ -319,12 +303,8 @@ class AccessType(VHDLModel_AccessType, DOMMixin):
     def parse(cls, typeName: str, typeDefinitionNode: Iir) -> "AccessType":
         from pyGHDL.dom._Translate import GetSubtypeIndicationFromIndicationNode
 
-        designatedSubtypeIndication = nodes.Get_Designated_Subtype_Indication(
-            typeDefinitionNode
-        )
-        designatedSubtype = GetSubtypeIndicationFromIndicationNode(
-            designatedSubtypeIndication, "access type", typeName
-        )
+        designatedSubtypeIndication = nodes.Get_Designated_Subtype_Indication(typeDefinitionNode)
+        designatedSubtype = GetSubtypeIndicationFromIndicationNode(designatedSubtypeIndication, "access type", typeName)
 
         return cls(typeDefinitionNode, typeName, designatedSubtype)
 
@@ -341,9 +321,7 @@ class FileType(VHDLModel_FileType, DOMMixin):
 
         designatedSubtypeMark = nodes.Get_File_Type_Mark(typeDefinitionNode)
         designatedSubtypeName = GetNameOfNode(designatedSubtypeMark)
-        designatedSubtype = SimpleSubtypeSymbol(
-            typeDefinitionNode, designatedSubtypeName
-        )
+        designatedSubtype = SimpleSubtypeSymbol(typeDefinitionNode, designatedSubtypeName)
 
         return cls(typeDefinitionNode, typeName, designatedSubtype)
 

@@ -160,9 +160,7 @@ def get_symbols(fe, n):
         children.extend(
             get_symbols_chain(
                 fe,
-                nodes.Get_Concurrent_Statement_Chain(
-                    nodes.Get_Generate_Statement_Body(n)
-                ),
+                nodes.Get_Concurrent_Statement_Chain(nodes.Get_Generate_Statement_Body(n)),
             )
         )
 

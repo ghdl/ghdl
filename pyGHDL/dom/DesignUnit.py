@@ -133,9 +133,7 @@ class Entity(VHDLModel_Entity, DOMMixin):
         declaredItems: Iterable = None,
         statements: Iterable["ConcurrentStatement"] = None,
     ):
-        super().__init__(
-            identifier, contextItems, genericItems, portItems, declaredItems, statements
-        )
+        super().__init__(identifier, contextItems, genericItems, portItems, declaredItems, statements)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -143,18 +141,14 @@ class Entity(VHDLModel_Entity, DOMMixin):
         name = GetNameOfNode(entityNode)
         generics = GetGenericsFromChainedNodes(nodes.Get_Generic_Chain(entityNode))
         ports = GetPortsFromChainedNodes(nodes.Get_Port_Chain(entityNode))
-        declaredItems = GetDeclaredItemsFromChainedNodes(
-            nodes.Get_Declaration_Chain(entityNode), "entity", name
-        )
+        declaredItems = GetDeclaredItemsFromChainedNodes(nodes.Get_Declaration_Chain(entityNode), "entity", name)
         statements = GetConcurrentStatementsFromChainedNodes(
             nodes.Get_Concurrent_Statement_Chain(entityNode), "entity", name
         )
 
         # FIXME: read use clauses
 
-        return cls(
-            entityNode, name, contextItems, generics, ports, declaredItems, statements
-        )
+        return cls(entityNode, name, contextItems, generics, ports, declaredItems, statements)
 
 
 @export
@@ -186,9 +180,7 @@ class Architecture(VHDLModel_Architecture, DOMMixin):
 
         # FIXME: read use clauses
 
-        return cls(
-            architectureNode, name, entity, contextItems, declaredItems, statements
-        )
+        return cls(architectureNode, name, entity, contextItems, declaredItems, statements)
 
 
 @export
@@ -231,15 +223,11 @@ class Package(VHDLModel_Package, DOMMixin):
 
         packageHeader = nodes.Get_Package_Header(packageNode)
         if packageHeader is not nodes.Null_Iir:
-            generics = GetGenericsFromChainedNodes(
-                nodes.Get_Generic_Chain(packageHeader)
-            )
+            generics = GetGenericsFromChainedNodes(nodes.Get_Generic_Chain(packageHeader))
         else:
             generics = []
 
-        declaredItems = GetDeclaredItemsFromChainedNodes(
-            nodes.Get_Declaration_Chain(packageNode), "package", name
-        )
+        declaredItems = GetDeclaredItemsFromChainedNodes(nodes.Get_Declaration_Chain(packageNode), "package", name)
 
         # FIXME: read use clauses
 
@@ -261,9 +249,7 @@ class PackageBody(VHDLModel_PackageBody, DOMMixin):
     @classmethod
     def parse(cls, packageBodyNode: Iir, contextItems: Iterable[ContextUnion]):
         name = GetNameOfNode(packageBodyNode)
-        declaredItems = GetDeclaredItemsFromChainedNodes(
-            nodes.Get_Declaration_Chain(packageBodyNode), "package", name
-        )
+        declaredItems = GetDeclaredItemsFromChainedNodes(nodes.Get_Declaration_Chain(packageBodyNode), "package", name)
 
         # FIXME: read use clauses
 

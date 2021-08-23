@@ -150,9 +150,7 @@ class StringLiteral(VHDLModel_StringLiteral, DOMMixin):
     @classmethod
     def parse(cls, literalNode: Iir) -> "StringLiteral":
         if nodes.Get_Bit_String_Base(literalNode) is nodes.NumberBaseType.Base_None:
-            value = str_table.Get_String8_Ptr(
-                nodes.Get_String8_Id(literalNode), nodes.Get_String_Length(literalNode)
-            )
+            value = str_table.Get_String8_Ptr(nodes.Get_String8_Id(literalNode), nodes.Get_String_Length(literalNode))
             return cls(literalNode, value)
         else:
             print("[NOT IMPLEMENTED] Bit String Literal not supported yet")

@@ -128,18 +128,12 @@ def BindToLibGHDL(subprogramName):
         typeHintCount = len(typeHints)
 
         if typeHintCount == 0:
-            raise ValueError(
-                "Function {0} is not annotated with types.".format(func.__name__)
-            )
+            raise ValueError("Function {0} is not annotated with types.".format(func.__name__))
 
         try:
             returnType = typeHints["return"]
         except KeyError:
-            raise ValueError(
-                "Function {0} is not annotated with a return type.".format(
-                    func.__name__
-                )
-            )
+            raise ValueError("Function {0} is not annotated with a return type.".format(func.__name__))
 
         if (typeHintCount - 1) != func.__code__.co_argcount:
             raise ValueError(
@@ -159,19 +153,13 @@ def BindToLibGHDL(subprogramName):
                 parameterTypes.append(PythonTypeToCtype(parameter))
             except TypeError:
                 raise TypeError(
-                    "Unsupported parameter type '{0!s}' in function '{1}'.".format(
-                        parameter, func.__name__
-                    )
+                    "Unsupported parameter type '{0!s}' in function '{1}'.".format(parameter, func.__name__)
                 )
 
         try:
             resultType = PythonTypeToCtype(returnType)
         except TypeError:
-            raise TypeError(
-                "Unsupported return type '{0!s}' in function '{1}'.".format(
-                    returnType, func.__name__
-                )
-            )
+            raise TypeError("Unsupported return type '{0!s}' in function '{1}'.".format(returnType, func.__name__))
 
         functionPointer = getattr(libghdl, subprogramName)
         functionPointer.parameterTypes = parameterTypes
@@ -186,9 +174,7 @@ def BindToLibGHDL(subprogramName):
                 except OSError as ex:
                     errors = [str(ex)]
                     raise LibGHDLException(
-                        "Caught exception when calling '{func}' in libghdl.".format(
-                            func=subprogramName
-                        ),
+                        "Caught exception when calling '{func}' in libghdl.".format(func=subprogramName),
                         errors,
                     ) from ex
 
@@ -204,9 +190,7 @@ def BindToLibGHDL(subprogramName):
                 except OSError as ex:
                     errors = [str(ex)]
                     raise LibGHDLException(
-                        "Caught exception when calling '{func}' in libghdl.".format(
-                            func=subprogramName
-                        ),
+                        "Caught exception when calling '{func}' in libghdl.".format(func=subprogramName),
                         errors,
                     ) from ex
 

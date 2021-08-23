@@ -180,11 +180,7 @@ class PortSignalInterfaceItem(VHDLModel_PortSignalInterfaceItem, DOMMixin):
         subtypeIndication = GetSubtypeIndicationFromNode(portNode, "port", name)
 
         defaultValue = nodes.Get_Default_Value(portNode)
-        value = (
-            GetExpressionFromNode(defaultValue)
-            if defaultValue != nodes.Null_Iir
-            else None
-        )
+        value = GetExpressionFromNode(defaultValue) if defaultValue != nodes.Null_Iir else None
 
         return cls(
             portNode,
@@ -198,9 +194,7 @@ class PortSignalInterfaceItem(VHDLModel_PortSignalInterfaceItem, DOMMixin):
 
 
 @export
-class ParameterConstantInterfaceItem(
-    VHDLModel_ParameterConstantInterfaceItem, DOMMixin
-):
+class ParameterConstantInterfaceItem(VHDLModel_ParameterConstantInterfaceItem, DOMMixin):
     def __init__(
         self,
         node: Iir,
@@ -216,16 +210,10 @@ class ParameterConstantInterfaceItem(
     def parse(cls, parameterNode: Iir) -> "ParameterConstantInterfaceItem":
         name = GetNameOfNode(parameterNode)
         mode = GetModeOfNode(parameterNode)
-        subtypeIndication = GetSubtypeIndicationFromNode(
-            parameterNode, "parameter", name
-        )
+        subtypeIndication = GetSubtypeIndicationFromNode(parameterNode, "parameter", name)
 
         defaultValue = nodes.Get_Default_Value(parameterNode)
-        value = (
-            GetExpressionFromNode(defaultValue)
-            if defaultValue != nodes.Null_Iir
-            else None
-        )
+        value = GetExpressionFromNode(defaultValue) if defaultValue != nodes.Null_Iir else None
 
         return cls(
             parameterNode,
@@ -239,9 +227,7 @@ class ParameterConstantInterfaceItem(
 
 
 @export
-class ParameterVariableInterfaceItem(
-    VHDLModel_ParameterVariableInterfaceItem, DOMMixin
-):
+class ParameterVariableInterfaceItem(VHDLModel_ParameterVariableInterfaceItem, DOMMixin):
     def __init__(
         self,
         node: Iir,
@@ -257,16 +243,10 @@ class ParameterVariableInterfaceItem(
     def parse(cls, parameterNode: Iir) -> "ParameterVariableInterfaceItem":
         name = GetNameOfNode(parameterNode)
         mode = GetModeOfNode(parameterNode)
-        subtypeIndication = GetSubtypeIndicationFromNode(
-            parameterNode, "parameter", name
-        )
+        subtypeIndication = GetSubtypeIndicationFromNode(parameterNode, "parameter", name)
 
         defaultValue = nodes.Get_Default_Value(parameterNode)
-        value = (
-            GetExpressionFromNode(defaultValue)
-            if defaultValue != nodes.Null_Iir
-            else None
-        )
+        value = GetExpressionFromNode(defaultValue) if defaultValue != nodes.Null_Iir else None
 
         return cls(
             parameterNode,
@@ -296,16 +276,10 @@ class ParameterSignalInterfaceItem(VHDLModel_ParameterSignalInterfaceItem, DOMMi
     def parse(cls, parameterNode: Iir) -> "ParameterSignalInterfaceItem":
         name = GetNameOfNode(parameterNode)
         mode = GetModeOfNode(parameterNode)
-        subtypeIndication = GetSubtypeIndicationFromNode(
-            parameterNode, "parameter", name
-        )
+        subtypeIndication = GetSubtypeIndicationFromNode(parameterNode, "parameter", name)
 
         defaultValue = nodes.Get_Default_Value(parameterNode)
-        value = (
-            GetExpressionFromNode(defaultValue)
-            if defaultValue != nodes.Null_Iir
-            else None
-        )
+        value = GetExpressionFromNode(defaultValue) if defaultValue != nodes.Null_Iir else None
 
         return cls(
             parameterNode,
@@ -332,9 +306,7 @@ class ParameterFileInterfaceItem(VHDLModel_ParameterFileInterfaceItem, DOMMixin)
     @classmethod
     def parse(cls, parameterNode: Iir) -> "ParameterFileInterfaceItem":
         name = GetNameOfNode(parameterNode)
-        subtypeIndication = GetSubtypeIndicationFromNode(
-            parameterNode, "parameter", name
-        )
+        subtypeIndication = GetSubtypeIndicationFromNode(parameterNode, "parameter", name)
 
         return cls(
             parameterNode,

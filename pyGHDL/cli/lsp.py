@@ -83,15 +83,9 @@ def _generateCLIParser() -> ArgumentParser:
     parser = ArgumentParser(
         description="VHDL Language Protocol Server. Find info about clients in `ghdl/ghdl-language-server <https://github.com/ghdl/ghdl-language-server>`__."
     )
-    parser.add_argument(
-        "--version", "-V", action="version", version="%(prog)s " + version.__version__
-    )
-    parser.add_argument(
-        "--verbose", "-v", action="count", default=0, help="Show debug output"
-    )
-    parser.add_argument(
-        "--log-file", help="Redirect logs to the given file instead of stderr"
-    )
+    parser.add_argument("--version", "-V", action="version", version="%(prog)s " + version.__version__)
+    parser.add_argument("--verbose", "-v", action="count", default=0, help="Show debug output")
+    parser.add_argument("--log-file", help="Redirect logs to the given file instead of stderr")
     parser.add_argument(
         "--trace-file",
         help="Save RPC data to FILE.in and FILE.out (overrides :envvar:`GHDL_LS_TRACE`)",

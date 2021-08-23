@@ -227,9 +227,7 @@ def GetArrayConstraintsFromSubtypeIndication(
     subtypeIndication: Iir,
 ) -> List[ConstraintUnion]:
     constraints = []
-    for constraint in utils.flist_iter(
-        nodes.Get_Index_Constraint_List(subtypeIndication)
-    ):
+    for constraint in utils.flist_iter(nodes.Get_Index_Constraint_List(subtypeIndication)):
         constraintKind = GetIirKindOfNode(constraint)
         if constraintKind == nodes.Iir_Kind.Range_Expression:
             constraints.append(RangeExpression.parse(constraint))
@@ -332,9 +330,7 @@ def GetSubtypeIndicationFromNode(node: Iir, entity: str, name: str) -> SubtypeOr
 
 
 @export
-def GetSubtypeIndicationFromIndicationNode(
-    subtypeIndicationNode: Iir, entity: str, name: str
-) -> SubtypeOrSymbol:
+def GetSubtypeIndicationFromIndicationNode(subtypeIndicationNode: Iir, entity: str, name: str) -> SubtypeOrSymbol:
     if subtypeIndicationNode is nodes.Null_Iir:
         raise ValueError("Parameter 'subtypeIndicationNode' is 'Null_Iir'.")
 
@@ -384,9 +380,7 @@ def GetCompositeConstrainedSubtypeFromNode(
     simpleTypeMark = SimpleName(typeMark, typeMarkName)
 
     constraints = GetArrayConstraintsFromSubtypeIndication(subtypeIndicationNode)
-    return ConstrainedCompositeSubtypeSymbol(
-        subtypeIndicationNode, simpleTypeMark, constraints
-    )
+    return ConstrainedCompositeSubtypeSymbol(subtypeIndicationNode, simpleTypeMark, constraints)
 
 
 @export
@@ -659,9 +653,7 @@ def GetParameterFromChainedNodes(
         yield param
 
 
-def GetMapAspect(
-    mapAspect: Iir, cls: Type, entity: str
-) -> Generator[AssociationItem, None, None]:
+def GetMapAspect(mapAspect: Iir, cls: Type, entity: str) -> Generator[AssociationItem, None, None]:
     for generic in utils.chain_iter(mapAspect):
         kind = GetIirKindOfNode(generic)
         if kind is nodes.Iir_Kind.Association_Element_By_Expression:
@@ -707,9 +699,7 @@ def GetParameterMapAspect(
     return GetMapAspect(parameterMapAspect, ParameterAssociationItem, "parameter")
 
 
-def GetDeclaredItemsFromChainedNodes(
-    nodeChain: Iir, entity: str, name: str
-) -> Generator[ModelEntity, None, None]:
+def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str) -> Generator[ModelEntity, None, None]:
     item = nodeChain
     lastKind = None
     while item != nodes.Null_Iir:
@@ -821,27 +811,15 @@ def GetDeclaredItemsFromChainedNodes(
 
                 yield PackageInstantiation.parse(item)
             elif kind == nodes.Iir_Kind.Configuration_Specification:
-                print(
-                    "[NOT IMPLEMENTED] Configuration specification in {name}".format(
-                        name=name
-                    )
-                )
+                print("[NOT IMPLEMENTED] Configuration specification in {name}".format(name=name))
             elif kind == nodes.Iir_Kind.Psl_Default_Clock:
                 yield DefaultClock.parse(item)
             elif kind == nodes.Iir_Kind.Group_Declaration:
                 print("[NOT IMPLEMENTED] Group declaration in {name}".format(name=name))
             elif kind == nodes.Iir_Kind.Group_Template_Declaration:
-                print(
-                    "[NOT IMPLEMENTED] Group template declaration in {name}".format(
-                        name=name
-                    )
-                )
+                print("[NOT IMPLEMENTED] Group template declaration in {name}".format(name=name))
             elif kind == nodes.Iir_Kind.Disconnection_Specification:
-                print(
-                    "[NOT IMPLEMENTED] Disconnect specification in {name}".format(
-                        name=name
-                    )
-                )
+                print("[NOT IMPLEMENTED] Disconnect specification in {name}".format(name=name))
             else:
                 position = Position.parse(item)
                 raise DOMException(
@@ -920,9 +898,7 @@ def GetConcurrentStatementsFromChainedNodes(
             if instantiatedUnitKind == nodes.Iir_Kind.Entity_Aspect_Entity:
                 yield EntityInstantiation.parse(statement, instantiatedUnit, label)
             elif instantiatedUnitKind == nodes.Iir_Kind.Entity_Aspect_Configuration:
-                yield ConfigurationInstantiation.parse(
-                    statement, instantiatedUnit, label
-                )
+                yield ConfigurationInstantiation.parse(statement, instantiatedUnit, label)
             elif instantiatedUnitKind == nodes.Iir_Kind.Simple_Name:
                 yield ComponentInstantiation.parse(statement, instantiatedUnit, label)
             else:
@@ -992,9 +968,7 @@ def GetSequentialStatementsFromChainedNodes(
             yield WaitStatement.parse(statement, label)
         elif kind == nodes.Iir_Kind.Procedure_Call_Statement:
             print(
-                "[NOT IMPLEMENTED] Procedure call (label: '{label}') at line {line}".format(
-                    label=label, line=pos.Line
-                )
+                "[NOT IMPLEMENTED] Procedure call (label: '{label}') at line {line}".format(label=label, line=pos.Line)
             )
         elif kind == nodes.Iir_Kind.Report_Statement:
             yield SequentialReportStatement.parse(statement, label)
@@ -1002,9 +976,7 @@ def GetSequentialStatementsFromChainedNodes(
             yield SequentialAssertStatement.parse(statement, label)
         elif kind == nodes.Iir_Kind.Null_Statement:
             print(
-                "[NOT IMPLEMENTED] null statement (label: '{label}') at line {line}".format(
-                    label=label, line=pos.Line
-                )
+                "[NOT IMPLEMENTED] null statement (label: '{label}') at line {line}".format(label=label, line=pos.Line)
             )
         else:
             raise DOMException(

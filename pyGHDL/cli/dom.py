@@ -169,13 +169,9 @@ class Application(LineTerminal, ArgParseMixin):
 
         # Change error and warning reporting
         # --------------------------------------------------------------------------
-        self._LOG_MESSAGE_FORMAT__[
-            Severity.Fatal
-        ] = "{DARK_RED}[FATAL] {message}{NOCOLOR}"
+        self._LOG_MESSAGE_FORMAT__[Severity.Fatal] = "{DARK_RED}[FATAL] {message}{NOCOLOR}"
         self._LOG_MESSAGE_FORMAT__[Severity.Error] = "{RED}[ERROR] {message}{NOCOLOR}"
-        self._LOG_MESSAGE_FORMAT__[
-            Severity.Warning
-        ] = "{YELLOW}[WARNING] {message}{NOCOLOR}"
+        self._LOG_MESSAGE_FORMAT__[Severity.Warning] = "{YELLOW}[WARNING] {message}{NOCOLOR}"
         self._LOG_MESSAGE_FORMAT__[Severity.Normal] = "{GRAY}{message}{NOCOLOR}"
 
     # class properties
@@ -199,15 +195,9 @@ class Application(LineTerminal, ArgParseMixin):
     # ============================================================================
     # common arguments valid for all commands
     # ----------------------------------------------------------------------------
-    @CommonSwitchArgumentAttribute(
-        "-d", "--debug", dest="debug", help="Enable debug mode."
-    )
-    @CommonSwitchArgumentAttribute(
-        "-v", "--verbose", dest="verbose", help="Print out detailed messages."
-    )
-    @CommonSwitchArgumentAttribute(
-        "-q", "--quiet", dest="quiet", help="Reduce messages to a minimum."
-    )
+    @CommonSwitchArgumentAttribute("-d", "--debug", dest="debug", help="Enable debug mode.")
+    @CommonSwitchArgumentAttribute("-v", "--verbose", dest="verbose", help="Print out detailed messages.")
+    @CommonSwitchArgumentAttribute("-q", "--quiet", dest="quiet", help="Reduce messages to a minimum.")
     def Run(self):
         ArgParseMixin.Run(self)
 
