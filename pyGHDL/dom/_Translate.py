@@ -44,9 +44,9 @@ from pyGHDL.dom.Sequential import (
     SequentialSimpleSignalAssignment,
 )
 from pyVHDLModel.SyntaxModel import (
-    Constraint,
+    ConstraintUnion,
     Direction,
-    Expression,
+    ExpressionUnion,
     SubtypeOrSymbol,
     BaseType,
     GenericInterfaceItem,
@@ -225,7 +225,7 @@ def GetAssociations(node: Iir) -> List:
 @export
 def GetArrayConstraintsFromSubtypeIndication(
     subtypeIndication: Iir,
-) -> List[Constraint]:
+) -> List[ConstraintUnion]:
     constraints = []
     for constraint in utils.flist_iter(
         nodes.Get_Index_Constraint_List(subtypeIndication)
@@ -467,7 +467,7 @@ __EXPRESSION_TRANSLATION = {
 
 
 @export
-def GetExpressionFromNode(node: Iir) -> Expression:
+def GetExpressionFromNode(node: Iir) -> ExpressionUnion:
     kind = GetIirKindOfNode(node)
 
     try:

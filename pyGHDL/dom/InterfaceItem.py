@@ -47,7 +47,7 @@ from pyVHDLModel.SyntaxModel import (
     ParameterFileInterfaceItem as VHDLModel_ParameterFileInterfaceItem,
     Mode,
     SubtypeOrSymbol,
-    Expression,
+    ExpressionUnion,
 )
 
 from pyGHDL.libghdl._types import Iir
@@ -68,7 +68,7 @@ class GenericConstantInterfaceItem(VHDLModel_GenericConstantInterfaceItem, DOMMi
         identifiers: List[str],
         mode: Mode,
         subtype: SubtypeOrSymbol,
-        defaultExpression: Expression,
+        defaultExpression: ExpressionUnion,
     ):
         super().__init__(identifiers, mode, subtype, defaultExpression)
         DOMMixin.__init__(self, node)
@@ -168,7 +168,7 @@ class PortSignalInterfaceItem(VHDLModel_PortSignalInterfaceItem, DOMMixin):
         identifiers: List[str],
         mode: Mode,
         subtype: SubtypeOrSymbol,
-        defaultExpression: Expression = None,
+        defaultExpression: ExpressionUnion = None,
     ):
         super().__init__(identifiers, mode, subtype, defaultExpression)
         DOMMixin.__init__(self, node)
@@ -207,7 +207,7 @@ class ParameterConstantInterfaceItem(
         identifiers: List[str],
         mode: Mode,
         subtype: SubtypeOrSymbol,
-        defaultExpression: Expression = None,
+        defaultExpression: ExpressionUnion = None,
     ):
         super().__init__(identifiers, mode, subtype, defaultExpression)
         DOMMixin.__init__(self, node)
@@ -248,7 +248,7 @@ class ParameterVariableInterfaceItem(
         identifiers: List[str],
         mode: Mode,
         subtype: SubtypeOrSymbol,
-        defaultExpression: Expression = None,
+        defaultExpression: ExpressionUnion = None,
     ):
         super().__init__(identifiers, mode, subtype, defaultExpression)
         DOMMixin.__init__(self, node)
@@ -287,7 +287,7 @@ class ParameterSignalInterfaceItem(VHDLModel_ParameterSignalInterfaceItem, DOMMi
         identifiers: List[str],
         mode: Mode,
         subtype: SubtypeOrSymbol,
-        defaultExpression: Expression = None,
+        defaultExpression: ExpressionUnion = None,
     ):
         super().__init__(identifiers, mode, subtype, defaultExpression)
         DOMMixin.__init__(self, node)

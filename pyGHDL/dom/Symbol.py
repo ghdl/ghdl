@@ -41,7 +41,7 @@ from pyVHDLModel.SyntaxModel import (
     ConstrainedCompositeSubtypeSymbol as VHDLModel_ConstrainedCompositeSubtypeSymbol,
     SimpleObjectOrFunctionCallSymbol as VHDLModel_SimpleObjectOrFunctionCallSymbol,
     IndexedObjectOrFunctionCallSymbol as VHDLModel_IndexedObjectOrFunctionCallSymbol,
-    Constraint,
+    ConstraintUnion,
     Name,
 )
 from pyGHDL.libghdl._types import Iir
@@ -87,7 +87,7 @@ class ConstrainedCompositeSubtypeSymbol(
     VHDLModel_ConstrainedCompositeSubtypeSymbol, DOMMixin
 ):
     def __init__(
-        self, node: Iir, subtypeName: Name, constraints: List[Constraint] = None
+        self, node: Iir, subtypeName: Name, constraints: List[ConstraintUnion] = None
     ):
         super().__init__(subtypeName, constraints)
         DOMMixin.__init__(self, node)

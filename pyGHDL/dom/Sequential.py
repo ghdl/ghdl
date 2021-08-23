@@ -57,7 +57,7 @@ from pyVHDLModel.SyntaxModel import (
     WaitStatement as VHDLModel_WaitStatement,
     Name,
     SequentialStatement,
-    Expression,
+    ExpressionUnion,
     SequentialChoice,
     SequentialCase,
 )
@@ -74,7 +74,7 @@ class IfBranch(VHDLModel_IfBranch):
     def __init__(
         self,
         branchNode: Iir,
-        condition: Expression,
+        condition: ExpressionUnion,
         statements: Iterable[SequentialStatement] = None,
     ):
         super().__init__(condition, statements)
@@ -101,7 +101,7 @@ class ElsifBranch(VHDLModel_ElsifBranch):
     def __init__(
         self,
         branchNode: Iir,
-        condition: Expression,
+        condition: ExpressionUnion,
         statements: Iterable[SequentialStatement] = None,
     ):
         super().__init__(condition, statements)
@@ -184,7 +184,7 @@ class IfStatement(VHDLModel_IfStatement, DOMMixin):
 
 @export
 class IndexedChoice(VHDLModel_IndexedChoice, DOMMixin):
-    def __init__(self, node: Iir, expression: Expression):
+    def __init__(self, node: Iir, expression: ExpressionUnion):
         super().__init__(expression)
         DOMMixin.__init__(self, node)
 
@@ -253,7 +253,7 @@ class CaseStatement(VHDLModel_CaseStatement, DOMMixin):
         self,
         caseNode: Iir,
         label: str,
-        expression: Expression,
+        expression: ExpressionUnion,
         cases: Iterable[SequentialCase],
     ):
         super().__init__(expression, cases, label)
@@ -459,9 +459,9 @@ class SequentialAssertStatement(VHDLModel_SequentialAssertStatement, DOMMixin):
     def __init__(
         self,
         assertNode: Iir,
-        condition: Expression,
-        message: Expression = None,
-        severity: Expression = None,
+        condition: ExpressionUnion,
+        message: ExpressionUnion = None,
+        severity: ExpressionUnion = None,
         label: str = None,
     ):
         super().__init__(condition, message, severity, label)
@@ -493,8 +493,8 @@ class SequentialReportStatement(VHDLModel_SequentialReportStatement, DOMMixin):
     def __init__(
         self,
         reportNode: Iir,
-        message: Expression,
-        severity: Expression = None,
+        message: ExpressionUnion,
+        severity: ExpressionUnion = None,
         label: str = None,
     ):
         super().__init__(message, severity, label)
@@ -521,8 +521,8 @@ class WaitStatement(VHDLModel_WaitStatement, DOMMixin):
         self,
         waitNode: Iir,
         sensitivityList: Iterable[Name] = None,
-        condition: Expression = None,
-        timeout: Expression = None,
+        condition: ExpressionUnion = None,
+        timeout: ExpressionUnion = None,
         label: str = None,
     ):
         super().__init__(sensitivityList, condition, timeout, label)

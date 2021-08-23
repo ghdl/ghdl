@@ -41,7 +41,7 @@ from pyVHDLModel.SyntaxModel import (
     SharedVariable as VHDLModel_SharedVariable,
     Signal as VHDLModel_Signal,
     File as VHDLModel_File,
-    Expression,
+    ExpressionUnion,
     SubtypeOrSymbol,
 )
 
@@ -60,7 +60,7 @@ class Constant(VHDLModel_Constant, DOMMixin):
         node: Iir,
         identifiers: List[str],
         subtype: SubtypeOrSymbol,
-        defaultExpression: Expression,
+        defaultExpression: ExpressionUnion,
     ):
         super().__init__(identifiers, subtype, defaultExpression)
         DOMMixin.__init__(self, node)
@@ -127,7 +127,7 @@ class Variable(VHDLModel_Variable, DOMMixin):
         node: Iir,
         identifiers: List[str],
         subtype: SubtypeOrSymbol,
-        defaultExpression: Expression,
+        defaultExpression: ExpressionUnion,
     ):
         super().__init__(identifiers, subtype, defaultExpression)
         DOMMixin.__init__(self, node)
@@ -185,7 +185,7 @@ class Signal(VHDLModel_Signal, DOMMixin):
         node: Iir,
         identifiers: List[str],
         subtype: SubtypeOrSymbol,
-        defaultExpression: Expression,
+        defaultExpression: ExpressionUnion,
     ):
         super().__init__(identifiers, subtype, defaultExpression)
         DOMMixin.__init__(self, node)

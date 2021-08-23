@@ -43,6 +43,7 @@ from typing import Iterable
 
 from pydecor import export
 
+from pyVHDLModel import ContextUnion, EntityOrSymbol
 from pyVHDLModel.SyntaxModel import (
     LibraryClause as VHDLModel_LibraryClause,
     UseClause as VHDLModel_UseClause,
@@ -57,7 +58,6 @@ from pyVHDLModel.SyntaxModel import (
     Component as VHDLModel_Component,
     GenericInterfaceItem,
     PortInterfaceItem,
-    EntityOrSymbol,
     Name,
     ConcurrentStatement,
 )
@@ -127,7 +127,7 @@ class Entity(VHDLModel_Entity, DOMMixin):
         self,
         node: Iir,
         identifier: str,
-        contextItems: Iterable[Context] = None,
+        contextItems: Iterable[ContextUnion] = None,
         genericItems: Iterable[GenericInterfaceItem] = None,
         portItems: Iterable[PortInterfaceItem] = None,
         declaredItems: Iterable = None,
@@ -139,7 +139,7 @@ class Entity(VHDLModel_Entity, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, entityNode: Iir, contextItems: Iterable[Context]):
+    def parse(cls, entityNode: Iir, contextItems: Iterable[ContextUnion]):
         name = GetNameOfNode(entityNode)
         generics = GetGenericsFromChainedNodes(nodes.Get_Generic_Chain(entityNode))
         ports = GetPortsFromChainedNodes(nodes.Get_Port_Chain(entityNode))
@@ -164,7 +164,7 @@ class Architecture(VHDLModel_Architecture, DOMMixin):
         node: Iir,
         identifier: str,
         entity: EntityOrSymbol,
-        contextItems: Iterable[Context] = None,
+        contextItems: Iterable[ContextUnion] = None,
         declaredItems: Iterable = None,
         statements: Iterable["ConcurrentStatement"] = None,
     ):
@@ -172,7 +172,7 @@ class Architecture(VHDLModel_Architecture, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, architectureNode: Iir, contextItems: Iterable[Context]):
+    def parse(cls, architectureNode: Iir, contextItems: Iterable[ContextUnion]):
         name = GetNameOfNode(architectureNode)
         entityNameNode = nodes.Get_Entity_Name(architectureNode)
         entityName = GetNameOfNode(entityNameNode)
@@ -218,7 +218,7 @@ class Package(VHDLModel_Package, DOMMixin):
         self,
         node: Iir,
         identifier: str,
-        contextItems: Iterable[Context] = None,
+        contextItems: Iterable[ContextUnion] = None,
         genericItems: Iterable[GenericInterfaceItem] = None,
         declaredItems: Iterable = None,
     ):
@@ -226,7 +226,7 @@ class Package(VHDLModel_Package, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, packageNode: Iir, contextItems: Iterable[Context]):
+    def parse(cls, packageNode: Iir, contextItems: Iterable[ContextUnion]):
         name = GetNameOfNode(packageNode)
 
         packageHeader = nodes.Get_Package_Header(packageNode)
@@ -252,14 +252,14 @@ class PackageBody(VHDLModel_PackageBody, DOMMixin):
         self,
         node: Iir,
         identifier: str,
-        contextItems: Iterable[Context] = None,
+        contextItems: Iterable[ContextUnion] = None,
         declaredItems: Iterable = None,
     ):
         super().__init__(identifier, contextItems, declaredItems)
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, packageBodyNode: Iir, contextItems: Iterable[Context]):
+    def parse(cls, packageBodyNode: Iir, contextItems: Iterable[ContextUnion]):
         name = GetNameOfNode(packageBodyNode)
         declaredItems = GetDeclaredItemsFromChainedNodes(
             nodes.Get_Declaration_Chain(packageBodyNode), "package", name

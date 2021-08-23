@@ -1,4 +1,4 @@
 -r ../libghdl/requirements.txt
 
-pyVHDLModel==0.11.4
+pyVHDLModel==0.11.5
 #https://github.com/VHDL/pyVHDLModel/archive/dev.zip#pyVHDLModel

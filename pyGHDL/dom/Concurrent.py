@@ -60,7 +60,7 @@ from pyVHDLModel.SyntaxModel import (
     Name,
     ConcurrentStatement,
     SequentialStatement,
-    Expression,
+    ExpressionUnion,
     ConcurrentChoice,
     ConcurrentCase,
     AssociationItem,
@@ -74,21 +74,27 @@ from pyGHDL.dom._Utils import GetNameOfNode
 
 @export
 class GenericAssociationItem(VHDLModel_GenericAssociationItem, DOMMixin):
-    def __init__(self, associationNode: Iir, actual: Expression, formal: Name = None):
+    def __init__(
+        self, associationNode: Iir, actual: ExpressionUnion, formal: Name = None
+    ):
         super().__init__(actual, formal)
         DOMMixin.__init__(self, associationNode)
 
 
 @export
 class PortAssociationItem(VHDLModel_PortAssociationItem, DOMMixin):
-    def __init__(self, associationNode: Iir, actual: Expression, formal: Name = None):
+    def __init__(
+        self, associationNode: Iir, actual: ExpressionUnion, formal: Name = None
+    ):
         super().__init__(actual, formal)
         DOMMixin.__init__(self, associationNode)
 
 
 @export
 class ParameterAssociationItem(VHDLModel_ParameterAssociationItem, DOMMixin):
-    def __init__(self, associationNode: Iir, actual: Expression, formal: Name = None):
+    def __init__(
+        self, associationNode: Iir, actual: ExpressionUnion, formal: Name = None
+    ):
         super().__init__(actual, formal)
         DOMMixin.__init__(self, associationNode)
 
@@ -303,7 +309,7 @@ class IfGenerateBranch(VHDLModel_IfGenerateBranch):
     def __init__(
         self,
         branchNode: Iir,
-        condition: Expression,
+        condition: ExpressionUnion,
         declaredItems: Iterable = None,
         statements: Iterable[ConcurrentStatement] = None,
         alternativeLabel: str = None,
@@ -344,7 +350,7 @@ class ElsifGenerateBranch(VHDLModel_ElsifGenerateBranch):
     def __init__(
         self,
         branchNode: Iir,
-        condition: Expression,
+        condition: ExpressionUnion,
         declaredItems: Iterable = None,
         statements: Iterable[ConcurrentStatement] = None,
         alternativeLabel: str = None,
@@ -455,7 +461,7 @@ class IfGenerateStatement(VHDLModel_IfGenerateStatement, DOMMixin):
 
 @export
 class IndexedGenerateChoice(VHDLModel_IndexedGenerateChoice, DOMMixin):
-    def __init__(self, node: Iir, expression: Expression):
+    def __init__(self, node: Iir, expression: ExpressionUnion):
         super().__init__(expression)
         DOMMixin.__init__(self, node)
 
@@ -552,7 +558,7 @@ class CaseGenerateStatement(VHDLModel_CaseGenerateStatement, DOMMixin):
         self,
         generateNode: Iir,
         label: str,
-        expression: Expression,
+        expression: ExpressionUnion,
         cases: Iterable[ConcurrentCase],
     ):
         super().__init__(label, expression, cases)
@@ -706,7 +712,9 @@ class ForGenerateStatement(VHDLModel_ForGenerateStatement, DOMMixin):
 
 @export
 class WaveformElement(VHDLModel_WaveformElement, DOMMixin):
-    def __init__(self, waveNode: Iir, expression: Expression, after: Expression):
+    def __init__(
+        self, waveNode: Iir, expression: ExpressionUnion, after: ExpressionUnion
+    ):
         super().__init__(expression, after)
         DOMMixin.__init__(self, waveNode)
 
