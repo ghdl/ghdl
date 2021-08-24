@@ -424,11 +424,11 @@ class SequentialProcedureCall(VHDLModel_SequentialProcedureCall, DOMMixin):
     def parse(cls, callNode: Iir, label: str) -> "SequentialProcedureCall":
         from pyGHDL.dom._Translate import GetNameFromNode, GetParameterMapAspect
 
-        call = nodes.Get_Procedure_Call(callNode)
+        cNode = nodes.Get_Procedure_Call(callNode)
 
-        prefix = nodes.Get_Prefix(call)
+        prefix = nodes.Get_Prefix(cNode)
         procedureName = GetNameFromNode(prefix)
-        parameterAssociations = GetParameterMapAspect(nodes.Get_Parameter_Association_Chain(callNode))
+        parameterAssociations = GetParameterMapAspect(nodes.Get_Parameter_Association_Chain(cNode))
 
         return cls(callNode, procedureName, parameterAssociations, label)
 

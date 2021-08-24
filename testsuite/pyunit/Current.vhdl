@@ -94,6 +94,7 @@ begin
 				Q <= D after 10 ns;
 			else
 				Q <= std_logic_vector(unsigned(Q) + 1);
+				counter.increment(1);
 			end if;
 		end if;
 

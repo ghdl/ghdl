@@ -41,7 +41,9 @@ from pyGHDL.dom.Sequential import (
     SequentialReportStatement,
     SequentialAssertStatement,
     WaitStatement,
-    SequentialSimpleSignalAssignment, NullStatement,
+    SequentialSimpleSignalAssignment,
+    NullStatement,
+    SequentialProcedureCall,
 )
 from pyVHDLModel.SyntaxModel import (
     ConstraintUnion,
@@ -967,9 +969,7 @@ def GetSequentialStatementsFromChainedNodes(
         elif kind == nodes.Iir_Kind.Wait_Statement:
             yield WaitStatement.parse(statement, label)
         elif kind == nodes.Iir_Kind.Procedure_Call_Statement:
-            print(
-                "[NOT IMPLEMENTED] Procedure call (label: '{label}') at line {line}".format(label=label, line=pos.Line)
-            )
+            yield SequentialProcedureCall.parse(statement, label)
         elif kind == nodes.Iir_Kind.Report_Statement:
             yield SequentialReportStatement.parse(statement, label)
         elif kind == nodes.Iir_Kind.Assertion_Statement:
