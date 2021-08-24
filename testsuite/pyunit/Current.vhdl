@@ -210,6 +210,11 @@ begin
 				constant G7 : boolean := False;
 			begin
 				inst: component Case5689Dummy;
+				process
+				begin
+					null;
+					wait;
+				end process;
 
 		when others =>
 				constant G8 : boolean := False;

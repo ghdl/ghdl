@@ -41,7 +41,7 @@ from pyGHDL.dom.Sequential import (
     SequentialReportStatement,
     SequentialAssertStatement,
     WaitStatement,
-    SequentialSimpleSignalAssignment,
+    SequentialSimpleSignalAssignment, NullStatement,
 )
 from pyVHDLModel.SyntaxModel import (
     ConstraintUnion,
@@ -975,9 +975,7 @@ def GetSequentialStatementsFromChainedNodes(
         elif kind == nodes.Iir_Kind.Assertion_Statement:
             yield SequentialAssertStatement.parse(statement, label)
         elif kind == nodes.Iir_Kind.Null_Statement:
-            print(
-                "[NOT IMPLEMENTED] null statement (label: '{label}') at line {line}".format(label=label, line=pos.Line)
-            )
+            yield NullStatement(statement, label)
         else:
             raise DOMException(
                 "Unknown statement of kind '{kind}' in {entity} '{name}' at {file}:{line}:{column}.".format(
