@@ -359,6 +359,8 @@ package body Vhdl.Parse is
               | Tok_Context =>
                --  Possible start of a new unit.
                exit;
+            when Tok_End =>
+               Skip_Until_Semi_Colon;
             when others =>
                Scan;
          end case;
