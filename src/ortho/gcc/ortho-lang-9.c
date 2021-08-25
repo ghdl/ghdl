@@ -411,7 +411,7 @@ ortho_post_options (const char **pfilename)
     {
       /* Define auxbase.  The default mechanism in toplev.c doesn't
          handle extensions longer than 3 characters.  */
-      char *name = xstrdup (lbasename (main_input_filename));
+      char *name = xstrdup (lbasename (*pfilename));
       int len;
 
       /* Remove extension.  */

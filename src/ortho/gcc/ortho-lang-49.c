@@ -420,6 +420,22 @@ ortho_post_options (const char **pfilename)
 {
   if (*pfilename == NULL || strcmp (*pfilename, "-") == 0)
     *pfilename = "*stdin*";
+  else if (aux_base_name == NULL)
+    {
+      /* Define auxbase.  The default mechanism in toplev.c doesn't
+         handle extensions longer than 3 characters.  */
+      char *name = xstrdup (lbasename (*pfilename));
+      int len;
+
+      /* Remove extension.  */
+      for (len = strlen (name) - 1; len > 1; len--)
+        if (name[len] == '.')
+          {
+            name[len] = 0;
+            break;
+          }
+      aux_base_name = name;
+    }
 
   /* Default hook.  */
   lhd_post_options (pfilename);
