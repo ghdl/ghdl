@@ -1314,6 +1314,7 @@ package body Vhdl.Sem_Types is
       Decl: Iir;
       Decl_Type : Iir;
       Ret_Type : Iir;
+      El_Type : Iir;
    begin
       -- LRM93 2.4
       --  A resolution function must be a [pure] function;
@@ -1343,14 +1344,17 @@ package body Vhdl.Sem_Types is
       --  The type of the return value of the function must also be that of
       --  the signal.
       Ret_Type := Get_Return_Type (Func);
-      if Get_Base_Type (Get_Element_Subtype (Decl_Type))
-        /= Get_Base_Type (Ret_Type)
-      then
+      El_Type := Get_Element_Subtype (Decl_Type);
+      if Get_Base_Type (El_Type) /= Get_Base_Type (Ret_Type) then
          return False;
       end if;
       if Atype /= Null_Iir
         and then Get_Base_Type (Ret_Type) /= Get_Base_Type (Atype)
       then
+         return False;
+      end if;
+      if not Is_Fully_Constrained_Type (El_Type) then
+         --  FIXME: not yet handled: unbounded element.
          return False;
       end if;
       -- LRM93 2.4
