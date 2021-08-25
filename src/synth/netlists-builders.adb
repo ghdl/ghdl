@@ -1226,27 +1226,28 @@ package body Netlists.Builders is
       return O;
    end Build_Addidx;
 
-   function Build_Memory (Ctxt : Context_Acc; W : Width) return Instance
+   function Build_Memory
+     (Ctxt : Context_Acc; Name : Sname; W : Width) return Instance
    is
       pragma Assert (W > 0);
       Inst : Instance;
       O : Net;
    begin
-      Inst := New_Internal_Instance (Ctxt, Ctxt.M_Memory);
+      Inst := New_Instance (Ctxt.Parent, Ctxt.M_Memory, Name);
       O := Get_Output (Inst, 0);
       Set_Width (O, W);
       return Inst;
    end Build_Memory;
 
-   function Build_Memory_Init (Ctxt : Context_Acc; W : Width; Init : Net)
-                              return Instance
+   function Build_Memory_Init
+     (Ctxt : Context_Acc; Name : Sname; W : Width; Init : Net) return Instance
    is
       pragma Assert (W > 0);
       pragma Assert (Get_Width (Init) = W);
       Inst : Instance;
       O : Net;
    begin
-      Inst := New_Internal_Instance (Ctxt, Ctxt.M_Memory_Init);
+      Inst := New_Instance (Ctxt.Parent, Ctxt.M_Memory_Init, Name);
       O := Get_Output (Inst, 0);
       Set_Width (O, W);
       Connect (Get_Input (Inst, 1), Init);

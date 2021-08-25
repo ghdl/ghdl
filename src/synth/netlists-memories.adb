@@ -1141,9 +1141,10 @@ package body Netlists.Memories is
      (Ctxt : Context_Acc; Orig : Instance; Step : Width)
    is
       Orig_Net : constant Net := Get_Output (Orig, 0);
+      Name : constant Sname := New_Internal_Name (Ctxt);
       Inst : Instance;
    begin
-      Inst := Build_Memory_Init (Ctxt, Get_Width (Orig_Net), Orig_Net);
+      Inst := Build_Memory_Init (Ctxt, Name, Get_Width (Orig_Net), Orig_Net);
 
       Replace_Read_Ports (Ctxt, Orig, Inst, Step);
    end Replace_ROM_Memory;
@@ -2153,6 +2154,8 @@ package body Netlists.Memories is
       --  Size of RAM (in bits).
       Mem_Sz : constant Uns32 := Get_Width (Get_Output (Sig, 0));
 
+      Sig_Name : constant Sname := Get_Instance_Name (Sig);
+
       --  Width of the RAM, computed from the step of memidx.
       Mem_W : Width;
 
@@ -2162,6 +2165,7 @@ package body Netlists.Memories is
 
       Nbr_Ports : Int32;
       Inst : Instance;
+      Name : Sname;
 
       --  Table of offsets.
       --  The same RAM can be partially read or written: not all the bits of
@@ -2257,6 +2261,13 @@ package body Netlists.Memories is
 
       --  4. Create Memory/Memory_Init from signal/isignal.
       for I in 1 .. Nbr_Offs - 1 loop
+         --  Reuse signal name for the memory name.
+         if Nbr_Offs = 2 then
+            Name := Sig_Name;
+         else
+            Name := New_Sname_Version (Uns32 (I), Sig_Name);
+         end if;
+
          declare
             Data_Wd : constant Width := Offs (I + 1) - Offs (I);
             Mem_Wd : constant Width := Data_Wd * Mem_Depth;
@@ -2264,12 +2275,12 @@ package body Netlists.Memories is
             case Get_Id (Sig) is
                when Id_Isignal =>
                   Heads (I) := Build_Memory_Init
-                    (Ctxt, Mem_Wd,
+                    (Ctxt, Name, Mem_Wd,
                      Extract_Sub_Constant
                        (Ctxt, Get_Input_Instance (Sig, 1),
                         Mem_W, Offs (I), Data_Wd, Mem_Depth));
                when Id_Signal =>
-                  Heads (I) := Build_Memory (Ctxt, Mem_Wd);
+                  Heads (I) := Build_Memory (Ctxt, Name, Mem_Wd);
                when others =>
                   raise Internal_Error;
             end case;

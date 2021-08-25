@@ -750,7 +750,7 @@ package body Netlists.Disp_Vhdl is
       Depth := Get_Width (Ports) / Data_W;
 
       --  Declare the memory.
-      Disp_Template ("    type \o0_type is array (0 to \n0)" & NL,
+      Disp_Template ("    type \l0_type is array (0 to \n0)" & NL,
                      Mem, (0 => Depth - 1));
       if Data_W = 1 then
          Disp_Template ("      of std_logic;" & NL, Mem);
@@ -758,7 +758,7 @@ package body Netlists.Disp_Vhdl is
          Disp_Template ("      of std_logic_vector (\n0 downto 0);" & NL,
                         Mem, (0 => Data_W - 1));
       end if;
-      Disp_Template ("    variable \o0 : \o0_type", Mem);
+      Disp_Template ("    variable \l0 : \l0_type", Mem);
       if Get_Id (Mem) = Id_Memory_Init then
          declare
             Val : Net;
@@ -785,19 +785,19 @@ package body Netlists.Disp_Vhdl is
                Disp_Template
                  ("    if \ei2 and (\fi3 = '1') then" & NL,
                   Port_Inst);
-               Disp_Template ("      \o0 (", Mem);
+               Disp_Template ("      \l0 (", Mem);
                Disp_Template ("to_integer (\ui1)) := \i4;" & NL, Port_Inst);
                Put_Line ("    end if;");
             when Id_Mem_Rd =>
                Disp_Template ("    \o1 <= ", Port_Inst);
-               Disp_Template ("\o0", Mem);
+               Disp_Template ("\l0", Mem);
                Disp_Template ("(to_integer (\ui1));" & NL, Port_Inst);
             when Id_Mem_Rd_Sync =>
                Disp_Template
                  ("    if \ei2 and (\fi3 = '1') then" & NL,
                   Port_Inst);
                Disp_Template ("      \o1 <= ", Port_Inst);
-               Disp_Template ("\o0", Mem);
+               Disp_Template ("\l0", Mem);
                Disp_Template ("(to_integer (\ui1));" & NL, Port_Inst);
                Put_Line ("    end if;");
             when Id_Memory

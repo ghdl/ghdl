@@ -676,7 +676,7 @@ package body Netlists.Disp_Verilog is
       --  Declare the memory.
       Put ("  reg ");
       Put_Type (Data_W);
-      Disp_Net_Name (Ports);
+      Put_Name (Get_Instance_Name (Mem));
       Put_Type (Depth);
       Put_Line("; // memory");
 
@@ -704,18 +704,18 @@ package body Netlists.Disp_Verilog is
                  ("  always @(\ei2)" & NL &
                   "    if (\i3)" & NL, Port_Inst);
                Disp_Template
-                 ("      \o0", Mem);
+                 ("      \l0", Mem);
                Disp_Template ("[\i1] <= \i4;" & NL, Port_Inst);
             when Id_Mem_Rd =>
                Disp_Template ("  assign \o1 = ", Port_Inst);
-               Disp_Template ("\o0", Mem);
+               Disp_Template ("\l0", Mem);
                Disp_Template ("[\i1];" & NL, Port_Inst);
             when Id_Mem_Rd_Sync =>
                Disp_Template
                  ("  always @(\ei2)" & NL &
                   "    if (\i3)" & NL &
                   "      \o1 <= ", Port_Inst);
-               Disp_Template ("\o0", Mem);
+               Disp_Template ("\l0", Mem);
                Disp_Template ("[\i1];" & NL, Port_Inst);
             when Id_Memory
               | Id_Memory_Init =>
