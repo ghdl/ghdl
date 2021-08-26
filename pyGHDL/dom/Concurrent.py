@@ -57,6 +57,7 @@ from pyVHDLModel.SyntaxModel import (
     WaveformElement as VHDLModel_WaveformElement,
     ConcurrentSimpleSignalAssignment as VHDLModel_ConcurrentSimpleSignalAssignment,
     ConcurrentProcedureCall as VHDLModel_ConcurrentProcedureCall,
+    ConcurrentAssertStatement as VHDLModel_ConcurrentAssertStatement,
     Name,
     ConcurrentStatement,
     SequentialStatement,
@@ -719,3 +720,31 @@ class ConcurrentProcedureCall(VHDLModel_ConcurrentProcedureCall, DOMMixin):
         parameterAssociations = GetParameterMapAspect(nodes.Get_Parameter_Association_Chain(callNode))
 
         return cls(concurrentCallNode, label, procedureName, parameterAssociations)
+
+
+@export
+class ConcurrentAssertStatement(VHDLModel_ConcurrentAssertStatement, DOMMixin):
+    def __init__(
+        self,
+        assertNode: Iir,
+        condition: ExpressionUnion,
+        message: ExpressionUnion = None,
+        severity: ExpressionUnion = None,
+        label: str = None,
+    ):
+        super().__init__(condition, message, severity, label)
+        DOMMixin.__init__(self, assertNode)
+
+    @classmethod
+    def parse(cls, assertNode: Iir, label: str) -> "ConcurrentAssertStatement":
+        from pyGHDL.dom._Translate import GetExpressionFromNode
+
+        # FIXME: how to get the condition?
+        # assertNode is a Psl_Assert_Directive
+        condition = None  # GetExpressionFromNode(nodes.Get_Assertion_Condition(assertNode))
+        messageNode = nodes.Get_Report_Expression(assertNode)
+        message = None if messageNode is nodes.Null_Iir else GetExpressionFromNode(messageNode)
+        severityNode = nodes.Get_Severity_Expression(assertNode)
+        severity = None if severityNode is nodes.Null_Iir else GetExpressionFromNode(severityNode)
+
+        return cls(assertNode, condition, message, severity, label)

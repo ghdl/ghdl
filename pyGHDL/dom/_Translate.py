@@ -166,6 +166,7 @@ from pyGHDL.dom.Concurrent import (
     GenericAssociationItem,
     PortAssociationItem,
     ParameterAssociationItem,
+    ConcurrentAssertStatement,
 )
 from pyGHDL.dom.Subprogram import Function, Procedure
 from pyGHDL.dom.Misc import Alias
@@ -922,11 +923,7 @@ def GetConcurrentStatementsFromChainedNodes(
         elif kind == nodes.Iir_Kind.For_Generate_Statement:
             yield ForGenerateStatement.parse(statement, label)
         elif kind == nodes.Iir_Kind.Psl_Assert_Directive:
-            print(
-                "[NOT IMPLEMENTED] PSL assert directive (label: '{label}') at line {line}".format(
-                    label=label, line=pos.Line
-                )
-            )
+            yield ConcurrentAssertStatement.parse(statement, label)
         else:
             raise DOMException(
                 "Unknown statement of kind '{kind}' in {entity} '{name}' at {file}:{line}:{column}.".format(

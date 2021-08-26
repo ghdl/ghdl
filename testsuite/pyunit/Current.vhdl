@@ -134,6 +134,10 @@ begin
 
 	a <= b;
 
+	assert false;
+	assert false report "some error";
+	assert false severity warning;
+	assert false report "some note" severity note;
 
 	inst1: entity work.counter1(rtl)
 		generic map (
