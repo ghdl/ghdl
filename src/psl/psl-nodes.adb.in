@@ -391,7 +391,8 @@ package body PSL.Nodes is
             | N_HDL_Bool =>
             return Type_Boolean;
          when N_Number
-            | N_Const_Parameter =>
+            | N_Const_Parameter
+            | N_Inf =>
             return Type_Numeric;
          when N_Vmode
             | N_Vunit

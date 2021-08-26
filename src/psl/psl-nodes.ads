@@ -99,6 +99,7 @@ package PSL.Nodes is
 
       N_Name,
       N_Name_Decl,
+      N_Inf,
       N_Number
      );
    for Nkind'Size use 8;
@@ -252,6 +253,8 @@ package PSL.Nodes is
    --   Get/Set_Identifier (Field1)
    --
    --   Get/Set_Chain (Field2)
+
+   -- N_Inf (Short)
 
    -- N_Number (Short)
    --

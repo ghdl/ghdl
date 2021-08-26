@@ -1958,6 +1958,10 @@ package body Vhdl.Prints is
                Disp_Str (Ctxt, Str);
                Close_Lit (Ctxt);
             end;
+         when N_Inf =>
+            Start_Lit (Ctxt, Tok_Identifier);
+            Disp_Str (Ctxt, "INF");
+            Close_Lit (Ctxt);
          when N_Name_Decl =>
             Disp_Ident (Ctxt, Get_Identifier (N));
          when N_HDL_Expr

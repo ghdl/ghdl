@@ -24,7 +24,8 @@ package body PSL.Prints is
    function Get_Priority (N : Node) return Priority is
    begin
       case Get_Kind (N) is
-         when N_Never | N_Always =>
+         when N_Never
+            | N_Always =>
             return Prio_FL_Invariance;
          when N_Eventually
            | N_Next
@@ -65,6 +66,7 @@ package body PSL.Prints is
             return Prio_Bool_Imp;
          when N_Name_Decl
            | N_Number
+           | N_Inf
            | N_True
            | N_False
            | N_EOS
@@ -149,6 +151,8 @@ package body PSL.Prints is
             begin
                Put (Str (2 .. Str'Last));
             end;
+         when N_Inf =>
+            Put ("inf");
          when N_Name_Decl =>
             Put (Image (Get_Identifier (N)));
          when N_HDL_Expr

@@ -57,9 +57,9 @@ package body Vhdl.Parse_Psl is
          Scan;
          return Res;
       elsif Current_Token = Tok_Inf then
-         --  FIXME: create node
+         Res := Create_Node_Loc (N_Inf);
          Scan;
-         return Null_Node;
+         return Res;
       else
          Error_Msg_Parse ("number expected");
          return Null_Node;
@@ -68,9 +68,16 @@ package body Vhdl.Parse_Psl is
 
    procedure Check_Positive_Count (N : Node)
    is
-      Low  : constant Uns32 := Get_Value (Get_Low_Bound (N));
-      High : constant Uns32 := Get_Value (Get_High_Bound (N));
+      Low_B : constant Node := Get_Low_Bound (N);
+      High_B : constant Node := Get_High_Bound (N);
+      Low  : constant Uns32 := Get_Value (Low_B);
+      High : Uns32;
    begin
+      if Get_Kind (High_B) = N_Inf then
+         return;
+      end if;
+
+      High := Get_Value (High_B);
       if Low > High then
          Error_Msg_Parse
            ("Low bound of range must be lower than High bound," &
@@ -840,6 +847,7 @@ package body Vhdl.Parse_Psl is
             | N_False
             | N_True
             | N_Number
+            | N_Inf
             | N_Name_Decl
             | N_Name
             | N_EOS

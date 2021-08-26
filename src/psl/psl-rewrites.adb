@@ -161,14 +161,20 @@ package body PSL.Rewrites is
       Cnt_Lo : Uns32;
       Cnt_Hi : Uns32;
    begin
-      if Lo = Null_Node then
-         --  r[*]
-         raise Program_Error;
-      end if;
+      --  r[*]  must have been handled.
+      pragma Assert (Lo /= Null_Node);
 
       Cnt_Lo := Get_Value (Lo);
       if Hi = Null_Node then
          Cnt_Hi := Cnt_Lo;
+      elsif Get_Kind (Hi) = N_Inf then
+         --  r[*N to inf]  -->  r[*N] ; r[*]
+         if Cnt_Lo = 0 then
+            return Build_Star (Seq);
+         else
+            return Build_Concat (Rewrite_Star_Repeat_Seq (Seq, Cnt_Lo, Cnt_Lo),
+                                 Build_Star (Seq));
+         end if;
       else
          Cnt_Hi := Get_Value (Hi);
       end if;

@@ -391,7 +391,8 @@ package body PSL.Nodes is
             | N_HDL_Bool =>
             return Type_Boolean;
          when N_Number
-            | N_Const_Parameter =>
+            | N_Const_Parameter
+            | N_Inf =>
             return Type_Numeric;
          when N_Vmode
             | N_Vunit
@@ -482,6 +483,7 @@ package body PSL.Nodes is
            | N_EOS
            | N_Name
            | N_Name_Decl
+           | N_Inf
            | N_Number =>
             return Format_Short;
       end case;

@@ -188,6 +188,7 @@ package body PSL.Subsets is
          when N_True
            | N_False
            | N_Number
+           | N_Inf
            | N_EOS
            | N_HDL_Expr
            | N_HDL_Bool =>

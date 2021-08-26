@@ -258,6 +258,8 @@ package body PSL.Nodes_Meta is
             return "name";
          when N_Name_Decl =>
             return "name_decl";
+         when N_Inf =>
+            return "inf";
          when N_Number =>
             return "number";
       end case;
@@ -574,6 +576,7 @@ package body PSL.Nodes_Meta is
       --  N_Name_Decl
       Field_Identifier,
       Field_Chain,
+      --  N_Inf
       --  N_Number
       Field_Value
      );
@@ -643,6 +646,7 @@ package body PSL.Nodes_Meta is
       N_EOS => 169,
       N_Name => 171,
       N_Name_Decl => 173,
+      N_Inf => 173,
       N_Number => 174
      );
 
