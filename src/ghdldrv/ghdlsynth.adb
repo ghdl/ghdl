@@ -124,7 +124,7 @@ package body Ghdlsynth is
       P ("  -gNAME=VALUE");
       P ("    Override the generic NAME of the top unit");
       P ("  --vendor-library=NAME");
-      P ("    Any unit from library NAME is a black boxe");
+      P ("    Any unit from library NAME is a black box");
       P ("  --no-formal");
       P ("    Neither synthesize assert nor PSL");
       P ("  --no-assert-cover");
