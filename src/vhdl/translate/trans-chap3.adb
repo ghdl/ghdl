@@ -2223,10 +2223,15 @@ package body Trans.Chap3 is
       else
          --  Bounds are locally static.
          Get_Low_High_Limit (Rng, Lo, Hi);
-         Subtype_Info.S.Nocheck_Hi :=
-           Is_Equal_Limit (Hi, True, Def, Base_Info.Type_Mode);
-         Subtype_Info.S.Nocheck_Low :=
-           Is_Equal_Limit (Lo, False, Def, Base_Info.Type_Mode);
+         if Is_Overflow_Literal (Hi) or else Is_Overflow_Literal (Lo) then
+            Subtype_Info.S.Nocheck_Hi := True;
+            Subtype_Info.S.Nocheck_Low := True;
+         else
+            Subtype_Info.S.Nocheck_Hi :=
+              Is_Equal_Limit (Hi, True, Def, Base_Info.Type_Mode);
+            Subtype_Info.S.Nocheck_Low :=
+              Is_Equal_Limit (Lo, False, Def, Base_Info.Type_Mode);
+         end if;
       end if;
    end Create_Subtype_Info_From_Type;
 

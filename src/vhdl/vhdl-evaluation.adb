@@ -312,6 +312,24 @@ package body Vhdl.Evaluation is
       end case;
    end Build_Extreme_Value;
 
+   --  Check VAL fits in the base type.
+   function Build_Integer_Check (Val : Int64; Origin : Iir)
+     return Iir_Integer_Literal
+   is
+      Atype : constant Iir := Get_Base_Type (Get_Type (Origin));
+      subtype Rng_32 is Int64 range Int64 (Int32'First) .. Int64 (Int32'Last);
+   begin
+      if Get_Scalar_Size (Atype) = Scalar_32
+        and then Val not in Rng_32
+      then
+         Warning_Msg_Sem (Warnid_Runtime_Error, +Origin,
+                          "arithmetic overflow in static expression");
+         return Build_Overflow (Origin);
+      end if;
+
+      return Build_Integer (Val, Origin);
+   end Build_Integer_Check;
+
    --  A_RANGE is a range expression, whose type, location, expr_staticness,
    --  left_limit and direction are set.
    --  Type of A_RANGE must have a range_constraint.
@@ -1641,34 +1659,37 @@ package body Vhdl.Evaluation is
 
       case Func is
          when Iir_Predefined_Integer_Plus =>
-            return Build_Integer (Get_Value (Left) + Get_Value (Right), Orig);
+            return Build_Integer_Check
+              (Get_Value (Left) + Get_Value (Right), Orig);
          when Iir_Predefined_Integer_Minus =>
-            return Build_Integer (Get_Value (Left) - Get_Value (Right), Orig);
+            return Build_Integer_Check
+              (Get_Value (Left) - Get_Value (Right), Orig);
          when Iir_Predefined_Integer_Mul =>
-            return Build_Integer (Get_Value (Left) * Get_Value (Right), Orig);
+            return Build_Integer_Check
+              (Get_Value (Left) * Get_Value (Right), Orig);
          when Iir_Predefined_Integer_Div =>
             if Check_Integer_Division_By_Zero (Orig, Right) then
-               return Build_Integer
+               return Build_Integer_Check
                  (Get_Value (Left) / Get_Value (Right), Orig);
             else
                return Build_Overflow (Orig);
             end if;
          when Iir_Predefined_Integer_Mod =>
             if Check_Integer_Division_By_Zero (Orig, Right) then
-               return Build_Integer
+               return Build_Integer_Check
                  (Get_Value (Left) mod Get_Value (Right), Orig);
             else
                return Build_Overflow (Orig);
             end if;
          when Iir_Predefined_Integer_Rem =>
             if Check_Integer_Division_By_Zero (Orig, Right) then
-               return Build_Integer
+               return Build_Integer_Check
                  (Get_Value (Left) rem Get_Value (Right), Orig);
             else
                return Build_Overflow (Orig);
             end if;
          when Iir_Predefined_Integer_Exp =>
-            return Build_Integer
+            return Build_Integer_Check
               (Get_Value (Left) ** Integer (Get_Value (Right)), Orig);
 
          when Iir_Predefined_Integer_Equality =>
