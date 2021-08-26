@@ -236,9 +236,7 @@ package body Netlists.Disp_Verilog is
             I : Input;
          begin
             I := Get_First_Sink (O);
-            if I = No_Input then
-               Put ("open");
-            else
+            if I /= No_Input then
                Disp_Net_Name (O);
             end if;
          end;
