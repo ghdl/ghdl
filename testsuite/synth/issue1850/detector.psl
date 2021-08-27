@@ -1,0 +1,31 @@
+vunit i_rising_pulse_detector(rising_pulse_detector(rising_pulse_detector_1))
+{
+
+    default clock is rising_edge(clk);
+
+    -- reset is true at beginning
+    f_reset_initial : assume {rst};
+    -- no reset after begining
+    f_reset_disable : assume always {not rst} |=> {not rst};
+
+
+    --working cover without generate
+    fc_output_4 : cover {output_pulse(4) = '1'};
+
+    -- generate cover pulse
+    g1: for I in 0 to 15 generate
+        cover {output_pulse(I) = '1'};
+    end generate;
+
+    --working bmc witout generate:
+    f_ouptut_7 : assert always {(not rst) and output_pulse(7) = '1'}
+        |=> {output_pulse(7) = '0'};
+
+    -- generate pulse one cycle assertion
+    g2: for J in 0 to 15 generate
+        assert always {(not rst) and output_pulse(J) = '1'} |=> {output_pulse(J) = '0'};
+    end generate;
+
+
+} -- vunit i_rising_pulse_detector(rising_pulse_detector(rising_pulse_detector_1))
+
