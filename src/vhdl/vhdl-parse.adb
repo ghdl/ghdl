@@ -5457,7 +5457,8 @@ package body Vhdl.Parse is
                  | Iir_Kind_Package_Body
                  | Iir_Kind_Protected_Type_Body
                  | Iir_Kind_Protected_Type_Declaration
-                 | Iir_Kind_Simultaneous_Procedural_Statement =>
+                 | Iir_Kind_Simultaneous_Procedural_Statement
+                 | Iir_Kind_Vunit_Declaration =>
                   Error_Msg_Parse
                     ("configuration specification not allowed here");
                when Iir_Kind_Architecture_Body
@@ -11301,7 +11302,6 @@ package body Vhdl.Parse is
                | Tok_Impure
                | Tok_Procedure
                | Tok_Alias
-               | Tok_For
                | Tok_Attribute
                | Tok_Disconnect
                | Tok_Use
@@ -11317,6 +11317,14 @@ package body Vhdl.Parse is
                --  'boolean' which is a PSL keyword.
                Vhdl.Scanner.Flag_Psl := False;
                Item := Parse_Declaration (Res, Res);
+
+            when Tok_For =>
+               Vhdl.Scanner.Flag_Psl := False;
+               if Label = Null_Identifier then
+                  Item := Parse_Declaration (Res, Res);
+               else
+                  Item := Parse_Concurrent_Statement (Res, Label);
+               end if;
 
             when Tok_End
                | Tok_Eof
