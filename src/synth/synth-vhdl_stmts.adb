@@ -3749,7 +3749,8 @@ package body Synth.Vhdl_Stmts is
                Synth_Attribute_Formal (Syn_Inst, Val, Id_Anyconst);
             when Name_Anyseq =>
                Synth_Attribute_Formal (Syn_Inst, Val, Id_Anyseq);
-            when Name_Loc =>
+            when Name_Loc
+               | Name_Keep =>
                --  Applies to nets/ports.
                null;
             when others =>

@@ -16,6 +16,8 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
+with Std_Names;
+
 with Netlists.Utils; use Netlists.Utils;
 with Netlists.Gates;
 
@@ -169,6 +171,28 @@ package body Netlists.Cleanup is
       end loop;
    end Remove_Output_Gates;
 
+   function Has_Keep (Inst : Instance) return Boolean
+   is
+      Attr : Attribute;
+      Val : Pval;
+   begin
+      if not Has_Attribute (Inst) then
+         return False;
+      end if;
+
+      Attr := Get_First_Attribute (Inst);
+      while Attr /= No_Attribute loop
+         if Get_Attribute_Name (Attr) = Std_Names.Name_Keep then
+            Val := Get_Attribute_Pval (Attr);
+            pragma Assert (Get_Pval_Length (Val) = 1);
+            return Read_Pval (Val, 0) = (1, 0);
+         end if;
+         Attr := Get_Attribute_Next (Attr);
+      end loop;
+
+      return False;
+   end Has_Keep;
+
    procedure Insert_Mark_And_Sweep (Inspect : in out Instance_Tables.Instance;
                                     Inst : Instance) is
    begin
@@ -205,6 +229,11 @@ package body Netlists.Cleanup is
                | Id_User_Parameters =>
                --  Always keep user modules.
                Insert_Mark_And_Sweep (Inspect, Inst);
+            when Id_Signal
+              | Id_Isignal =>
+               if Has_Keep (Inst) then
+                  Insert_Mark_And_Sweep (Inspect, Inst);
+               end if;
             when others =>
                null;
          end case;
