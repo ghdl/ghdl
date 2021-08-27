@@ -259,10 +259,9 @@ class ProcessStatement(VHDLModel_ProcessStatement, DOMMixin):
 
         sensitivityList = None
         if hasSensitivityList:
-            pass
-            # FIXME: sensitity list
-            # sensitivityListNode = nodes.Get_Sensitivity_List(processNode)
-        #            print("sensi", GetIirKindOfNode(sensitivityListNode))
+            sensitivityList = []
+            for item in utils.list_iter(nodes.Get_Sensitivity_List(processNode)):
+                sensitivityList.append(GetNameOfNode(item))
 
         declaredItems = GetDeclaredItemsFromChainedNodes(nodes.Get_Declaration_Chain(processNode), "process", label)
         statements = GetSequentialStatementsFromChainedNodes(
