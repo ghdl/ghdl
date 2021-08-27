@@ -770,7 +770,8 @@ package Std_Names is
    Name_Anyseq             : constant Name_Id := Name_First_Synthesis + 003;
    Name_Gclk               : constant Name_Id := Name_First_Synthesis + 004;
    Name_Loc                : constant Name_Id := Name_First_Synthesis + 005;
-   Name_Last_Synthesis     : constant Name_Id := Name_Loc;
+   Name_Keep               : constant Name_Id := Name_First_Synthesis + 006;
+   Name_Last_Synthesis     : constant Name_Id := Name_Keep;
 
    --  Verilog Directives.
    Name_First_Directive : constant Name_Id := Name_Last_Synthesis + 1;
