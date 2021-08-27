@@ -94,6 +94,7 @@ begin
 				Q <= D after 10 ns;
 			else
 				Q <= std_logic_vector(unsigned(Q) + 1);
+				counter.increment(1);
 			end if;
 		end if;
 
@@ -133,6 +134,10 @@ begin
 
 	a <= b;
 
+	assert false;
+	assert false report "some error";
+	assert false severity warning;
+	assert false report "some note" severity note;
 
 	inst1: entity work.counter1(rtl)
 		generic map (
@@ -210,6 +215,11 @@ begin
 				constant G7 : boolean := False;
 			begin
 				inst: component Case5689Dummy;
+				process
+				begin
+					null;
+					wait;
+				end process;
 
 		when others =>
 				constant G8 : boolean := False;

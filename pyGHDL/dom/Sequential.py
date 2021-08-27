@@ -54,6 +54,7 @@ from pyVHDLModel.SyntaxModel import (
     SequentialProcedureCall as VHDLModel_SequentialProcedureCall,
     SequentialAssertStatement as VHDLModel_SequentialAssertStatement,
     SequentialReportStatement as VHDLModel_SequentialReportStatement,
+    NullStatement as VHDLModel_NullStatement,
     WaitStatement as VHDLModel_WaitStatement,
     Name,
     SequentialStatement,
@@ -423,11 +424,11 @@ class SequentialProcedureCall(VHDLModel_SequentialProcedureCall, DOMMixin):
     def parse(cls, callNode: Iir, label: str) -> "SequentialProcedureCall":
         from pyGHDL.dom._Translate import GetNameFromNode, GetParameterMapAspect
 
-        call = nodes.Get_Procedure_Call(callNode)
+        cNode = nodes.Get_Procedure_Call(callNode)
 
-        prefix = nodes.Get_Prefix(call)
+        prefix = nodes.Get_Prefix(cNode)
         procedureName = GetNameFromNode(prefix)
-        parameterAssociations = GetParameterMapAspect(nodes.Get_Parameter_Association_Chain(callNode))
+        parameterAssociations = GetParameterMapAspect(nodes.Get_Parameter_Association_Chain(cNode))
 
         return cls(callNode, procedureName, parameterAssociations, label)
 
@@ -479,6 +480,17 @@ class SequentialReportStatement(VHDLModel_SequentialReportStatement, DOMMixin):
         severity = None if severityNode is nodes.Null_Iir else GetExpressionFromNode(severityNode)
 
         return cls(reportNode, message, severity, label)
+
+
+@export
+class NullStatement(VHDLModel_NullStatement, DOMMixin):
+    def __init__(
+        self,
+        waitNode: Iir,
+        label: str = None,
+    ):
+        super().__init__(label)
+        DOMMixin.__init__(self, waitNode)
 
 
 @export

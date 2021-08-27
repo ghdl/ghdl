@@ -42,6 +42,8 @@ from pyGHDL.dom.Sequential import (
     SequentialAssertStatement,
     WaitStatement,
     SequentialSimpleSignalAssignment,
+    NullStatement,
+    SequentialProcedureCall,
 )
 from pyVHDLModel.SyntaxModel import (
     ConstraintUnion,
@@ -164,6 +166,7 @@ from pyGHDL.dom.Concurrent import (
     GenericAssociationItem,
     PortAssociationItem,
     ParameterAssociationItem,
+    ConcurrentAssertStatement,
 )
 from pyGHDL.dom.Subprogram import Function, Procedure
 from pyGHDL.dom.Misc import Alias
@@ -920,11 +923,7 @@ def GetConcurrentStatementsFromChainedNodes(
         elif kind == nodes.Iir_Kind.For_Generate_Statement:
             yield ForGenerateStatement.parse(statement, label)
         elif kind == nodes.Iir_Kind.Psl_Assert_Directive:
-            print(
-                "[NOT IMPLEMENTED] PSL assert directive (label: '{label}') at line {line}".format(
-                    label=label, line=pos.Line
-                )
-            )
+            yield ConcurrentAssertStatement.parse(statement, label)
         else:
             raise DOMException(
                 "Unknown statement of kind '{kind}' in {entity} '{name}' at {file}:{line}:{column}.".format(
@@ -967,17 +966,13 @@ def GetSequentialStatementsFromChainedNodes(
         elif kind == nodes.Iir_Kind.Wait_Statement:
             yield WaitStatement.parse(statement, label)
         elif kind == nodes.Iir_Kind.Procedure_Call_Statement:
-            print(
-                "[NOT IMPLEMENTED] Procedure call (label: '{label}') at line {line}".format(label=label, line=pos.Line)
-            )
+            yield SequentialProcedureCall.parse(statement, label)
         elif kind == nodes.Iir_Kind.Report_Statement:
             yield SequentialReportStatement.parse(statement, label)
         elif kind == nodes.Iir_Kind.Assertion_Statement:
             yield SequentialAssertStatement.parse(statement, label)
         elif kind == nodes.Iir_Kind.Null_Statement:
-            print(
-                "[NOT IMPLEMENTED] null statement (label: '{label}') at line {line}".format(label=label, line=pos.Line)
-            )
+            yield NullStatement(statement, label)
         else:
             raise DOMException(
                 "Unknown statement of kind '{kind}' in {entity} '{name}' at {file}:{line}:{column}.".format(
