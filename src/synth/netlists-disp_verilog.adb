@@ -802,11 +802,16 @@ package body Netlists.Disp_Verilog is
          when Id_Signal =>
             Disp_Template ("  assign \o0 = \i0; // (signal)" & NL, Inst);
          when Id_Isignal =>
-            if Get_Driver (Get_Input (Inst, 0)) /= No_Net then
-               --  It is possible (and meaningful) to have unassigned
-               --  isignal.
-               Disp_Template ("  assign \o0 = \i0; // (isignal)" & NL, Inst);
-            end if;
+            declare
+               Inet : constant Net := Get_Input_Net (Inst, 0);
+            begin
+               if Inet /= No_Net then
+                  Disp_Template ("  always @*" & NL &
+                                 "    \o0 = \i0; // (isignal)" & NL, Inst);
+               end if;
+               Disp_Template ("  initial" & NL &
+                              "    \o0 <= \i1;" & NL, Inst);
+            end;
          when Id_Port =>
             Disp_Template ("  \o0 <= \i0; -- (port)" & NL, Inst);
          when Id_Nop =>
@@ -895,9 +900,13 @@ package body Netlists.Disp_Verilog is
                            "    else" & NL &
                            "      \o0 <= \i1;" & NL, Inst);
          when Id_Dff
-           | Id_Idff =>
+            | Id_Idff =>
             Disp_Template ("  always @(\ei0)" & NL &
-                           "    \o0 <= \i1;" & NL, Inst);
+                             "    \o0 <= \i1;" & NL, Inst);
+            if Id = Id_Idff then
+               Disp_Template ("  initial" & NL &
+                              "    \o0 <= \i2;" & NL, Inst);
+            end if;
          when Id_Mux2 =>
             Disp_Template ("  assign \o0 = \i0 ? \i2 : \i1;" & NL, Inst);
          when Id_Mux4 =>
@@ -1152,7 +1161,8 @@ package body Netlists.Disp_Verilog is
                         when Id_Dff
                           | Id_Idff
                           | Id_Adff
-                          | Id_Iadff =>
+                          | Id_Iadff
+                          | Id_Isignal =>
                            --  As expected
                            Put ("  reg ");
                         when Id_Mux4
