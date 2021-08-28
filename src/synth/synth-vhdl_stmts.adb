@@ -1071,7 +1071,9 @@ package body Synth.Vhdl_Stmts is
             when Unknown =>
                if Prev_Val = Null_Memtyp then
                   --  First use of previous value.
-                  if not Is_Static_Wire (Wid) then
+                  if Get_Kind (Wid) /= Wire_Variable
+                    or else not Is_Static_Wire (Wid)
+                  then
                      --  The previous value is not static.
                      return Null_Memtyp;
                   end if;
@@ -2262,6 +2264,7 @@ package body Synth.Vhdl_Stmts is
    is
       M : Memtyp;
    begin
+      pragma Assert (Get_Kind (Wid) = Wire_Variable);
       if not Is_Static_Wire (Wid) then
          return False;
       end if;

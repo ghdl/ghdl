@@ -52,7 +52,12 @@ package body Synth.Values is
          when Value_Net =>
             return False;
          when Value_Wire =>
-            return Is_Static_Wire (Val.W);
+            if Get_Kind (Val.W) = Wire_Variable then
+               return Is_Static_Wire (Val.W);
+            else
+               --  A signal does not have static values.
+               return False;
+            end if;
          when Value_File =>
             return True;
          when Value_Const =>

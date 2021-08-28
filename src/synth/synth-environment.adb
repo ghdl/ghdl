@@ -1972,15 +1972,10 @@ package body Synth.Environment is
       end if;
    end Phi_Assign_Static;
 
-   --  Return the net driving WID when it is known to be possibly constant.
-   --  Return No_Net is not constant.
    function Is_Static_Wire (Wid : Wire_Id) return Boolean
    is
       Wire_Rec : Wire_Id_Record renames Wire_Id_Table.Table (Wid);
    begin
-      if Wire_Rec.Kind /= Wire_Variable then
-         return False;
-      end if;
       if Wire_Rec.Cur_Assign = No_Seq_Assign then
          return False;
       end if;

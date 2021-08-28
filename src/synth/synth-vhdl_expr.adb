@@ -97,6 +97,7 @@ package body Synth.Vhdl_Expr is
 
    function Is_Positive (V : Valtyp) return Boolean
    is
+      use Synth.Vhdl_Environment.Env;
       N : Net;
       Inst : Instance;
    begin
@@ -108,9 +109,10 @@ package body Synth.Vhdl_Expr is
          when Value_Net =>
             N := V.Val.N;
          when Value_Wire =>
-            if Synth.Vhdl_Environment.Env.Is_Static_Wire (V.Val.W) then
-               return Read_Discrete
-                 (Synth.Vhdl_Environment.Env.Get_Static_Wire (V.Val.W)) >= 0;
+            if Get_Kind (V.Val.W) = Wire_Variable
+              and then Is_Static_Wire (V.Val.W)
+            then
+               return Read_Discrete (Get_Static_Wire (V.Val.W)) >= 0;
             else
                return False;
             end if;
