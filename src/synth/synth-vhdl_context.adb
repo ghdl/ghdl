@@ -18,7 +18,6 @@
 
 with Ada.Unchecked_Deallocation;
 
-with Name_Table; use Name_Table;
 with Types_Utils; use Types_Utils;
 
 with Vhdl.Errors; use Vhdl.Errors;
@@ -30,21 +29,11 @@ with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
 with Netlists.Locations;
 
 package body Synth.Vhdl_Context is
-   function Make_Base_Instance return Synth_Instance_Acc
+   function Make_Base_Instance (Base : Base_Instance_Acc)
+                               return Synth_Instance_Acc
    is
-      Base : Base_Instance_Acc;
-      Top_Module : Module;
       Res : Synth_Instance_Acc;
-      Ctxt : Context_Acc;
    begin
-      Top_Module :=
-        New_Design (New_Sname_Artificial (Get_Identifier ("top"), No_Sname));
-      Ctxt := Build_Builders (Top_Module);
-
-      Base := new Base_Instance_Type'(Builder => Ctxt,
-                                      Top_Module => Top_Module,
-                                      Cur_Module => No_Module);
-
       Res := new Synth_Instance_Type'(Max_Objs => Global_Info.Nbr_Objects,
                                       Is_Const => False,
                                       Is_Error => False,

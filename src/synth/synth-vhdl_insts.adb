@@ -1402,20 +1402,37 @@ package body Synth.Vhdl_Insts is
       end loop;
    end Synth_Dependencies;
 
-   procedure Synth_Top_Entity (Global_Instance : Synth_Instance_Acc;
-                               Arch : Node;
-                               Config : Node;
+   procedure Synth_Top_Entity (Base : Base_Instance_Acc;
+                               Design_Unit : Node;
                                Encoding : Name_Encoding;
                                Inst : out Synth_Instance_Acc)
    is
-      Entity : constant Node := Get_Entity (Arch);
+      Lib_Unit : constant Node := Get_Library_Unit (Design_Unit);
+      Arch : Node;
+      Entity : Node;
+      Config : Node;
       Syn_Inst : Synth_Instance_Acc;
       Inter : Node;
       Inter_Typ : Type_Acc;
       Inst_Obj : Inst_Object;
       Val : Valtyp;
    begin
-      Root_Instance := Global_Instance;
+      --  Extract architecture from design.
+      case Get_Kind (Lib_Unit) is
+         when Iir_Kind_Architecture_Body =>
+            Arch := Lib_Unit;
+            Config := Get_Library_Unit
+              (Get_Default_Configuration_Declaration (Arch));
+         when Iir_Kind_Configuration_Declaration =>
+            Config := Lib_Unit;
+            Arch := Get_Named_Entity
+              (Get_Block_Specification (Get_Block_Configuration (Lib_Unit)));
+         when others =>
+            raise Internal_Error;
+      end case;
+      Entity := Get_Entity (Arch);
+
+      Root_Instance := Make_Base_Instance (Base);
 
       Insts_Interning.Init;
 
@@ -1424,11 +1441,11 @@ package body Synth.Vhdl_Insts is
       end if;
 
       --  Dependencies first.
-      Synth_Dependencies (Global_Instance, Get_Design_Unit (Entity));
-      Synth_Dependencies (Global_Instance, Get_Design_Unit (Arch));
+      Synth_Dependencies (Root_Instance, Get_Design_Unit (Entity));
+      Synth_Dependencies (Root_Instance, Get_Design_Unit (Arch));
 
       Syn_Inst := Make_Instance
-        (Global_Instance, Arch,
+        (Root_Instance, Arch,
          New_Sname_User (Get_Identifier (Entity), No_Sname));
 
       --  Compute generics.

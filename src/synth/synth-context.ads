@@ -1,4 +1,4 @@
---  Synthesis.
+--  Synthesis context.
 --  Copyright (C) 2017 Tristan Gingold
 --
 --  This file is part of GHDL.
@@ -16,29 +16,16 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with Types; use Types;
-with Vhdl.Nodes; use Vhdl.Nodes;
-
 with Netlists; use Netlists;
 with Netlists.Builders; use Netlists.Builders;
 
-with Synth.Context; use Synth.Context;
-with Synth.Vhdl_Context; use Synth.Vhdl_Context;
-with Synth.Flags; use Synth.Flags;
+package Synth.Context is
+   type Base_Instance_Type is limited record
+      Builder : Context_Acc;
+      Top_Module : Module;
 
-package Synthesis is
-   procedure Synth_Design (Design : Iir;
-                           Encoding : Name_Encoding;
-                           M : out Module;
-                           Inst : out Synth_Instance_Acc);
+      Cur_Module : Module;
+   end record;
 
-   --  Run cleanup/memory extraction/expand passes on M.
-   procedure Instance_Passes (Ctxt : Context_Acc; M : Module);
-
-   --  Function to be called for a foreign top-level module.
-   type Synth_Top_Acc is access procedure
-     (Base : Base_Instance_Acc; Unit : Int32; Encoding : Name_Encoding);
-   Synth_Top_Foreign : Synth_Top_Acc;
-
-   Synth_Error : exception;
-end Synthesis;
+   type Base_Instance_Acc is access Base_Instance_Type;
+end Synth.Context;

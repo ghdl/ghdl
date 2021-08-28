@@ -16,8 +16,8 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with Types; use Types;
 with Errorout; use Errorout;
+with Name_Table; use Name_Table;
 
 with Netlists.Cleanup;
 with Netlists.Memories;
@@ -26,46 +26,56 @@ with Netlists.Expands;
 with Synth.Objtypes;
 with Synth.Vhdl_Insts; use Synth.Vhdl_Insts;
 
+
 with Synth.Values.Debug;
 pragma Unreferenced (Synth.Values.Debug);
 
 package body Synthesis is
+   function Make_Base_Instance return Base_Instance_Acc
+   is
+      Base : Base_Instance_Acc;
+      Top_Module : Module;
+      Ctxt : Context_Acc;
+   begin
+      Top_Module :=
+        New_Design (New_Sname_Artificial (Get_Identifier ("top"), No_Sname));
+      Ctxt := Build_Builders (Top_Module);
+
+      Base := new Base_Instance_Type'(Builder => Ctxt,
+                                      Top_Module => Top_Module,
+                                      Cur_Module => No_Module);
+      return Base;
+   end Make_Base_Instance;
+
    procedure Synth_Design (Design : Node;
                            Encoding : Name_Encoding;
                            M : out Module;
                            Inst : out Synth_Instance_Acc)
    is
-      Unit : constant Node := Get_Library_Unit (Design);
-      Arch : Node;
-      Config : Node;
-      Global_Instance : Synth_Instance_Acc;
+      Base : Base_Instance_Acc;
    begin
-      --  Extract architecture from design.
-      case Get_Kind (Unit) is
-         when Iir_Kind_Architecture_Body =>
-            Arch := Unit;
-            Config := Get_Library_Unit
-              (Get_Default_Configuration_Declaration (Arch));
-         when Iir_Kind_Configuration_Declaration =>
-            Config := Unit;
-            Arch := Get_Named_Entity
-              (Get_Block_Specification (Get_Block_Configuration (Unit)));
-         when others =>
-            raise Internal_Error;
-      end case;
-
-      Global_Instance := Make_Base_Instance;
+      Base := Make_Base_Instance;
 
       Synth.Objtypes.Init;
 
-      Synth_Top_Entity (Global_Instance, Arch, Config, Encoding, Inst);
-      Synth_All_Instances;
+      case Iir_Kinds_Design_Unit (Get_Kind (Design)) is
+         when Iir_Kind_Foreign_Module =>
+            if Synth_Top_Foreign = null then
+               raise Internal_Error;
+            end if;
+            Synth_Top_Foreign (Base, Get_Foreign_Node (Design), Encoding);
+         when Iir_Kind_Design_Unit =>
+            Synth_Top_Entity (Base, Design, Encoding, Inst);
+      end case;
+
+      Synth.Vhdl_Insts.Synth_All_Instances;
+
       if Errorout.Nbr_Errors > 0 then
          M := No_Module;
          return;
       end if;
 
-      M := Get_Top_Module (Global_Instance);
+      M := Base.Top_Module;
    end Synth_Design;
 
    procedure Instance_Passes (Ctxt : Context_Acc; M : Module) is

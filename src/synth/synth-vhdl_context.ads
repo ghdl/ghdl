@@ -24,6 +24,7 @@ with Netlists.Builders; use Netlists.Builders;
 with Vhdl.Annotations; use Vhdl.Annotations;
 with Vhdl.Nodes; use Vhdl.Nodes;
 
+with Synth.Context; use Synth.Context;
 with Synth.Vhdl_Environment; use Synth.Vhdl_Environment.Env;
 with Synth.Objtypes; use Synth.Objtypes;
 with Synth.Values; use Synth.Values;
@@ -40,7 +41,8 @@ package Synth.Vhdl_Context is
      return Synth_Instance_Acc;
 
    --  Create the first instance.
-   function Make_Base_Instance return Synth_Instance_Acc;
+   function Make_Base_Instance (Base : Base_Instance_Acc)
+                               return Synth_Instance_Acc;
 
    --  Free the first instance.
    procedure Free_Base_Instance;
@@ -158,15 +160,6 @@ private
    end record;
 
    type Objects_Array is array (Object_Slot_Type range <>) of Obj_Type;
-
-   type Base_Instance_Type is limited record
-      Builder : Context_Acc;
-      Top_Module : Module;
-
-      Cur_Module : Module;
-   end record;
-
-   type Base_Instance_Acc is access Base_Instance_Type;
 
    type Synth_Instance_Type (Max_Objs : Object_Slot_Type) is limited record
       Is_Const : Boolean;
