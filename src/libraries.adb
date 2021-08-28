@@ -1114,7 +1114,14 @@ package body Libraries is
          while Design_Unit /= Null_Iir loop
             Next_Design_Unit := Get_Hash_Chain (Design_Unit);
             Design_File := Get_Design_File (Design_Unit);
-            Library_Unit := Get_Library_Unit (Design_Unit);
+            case Get_Kind (Design_Unit) is
+               when Iir_Kind_Foreign_Module =>
+                  Library_Unit := Design_Unit;
+               when Iir_Kind_Design_Unit =>
+                  Library_Unit := Get_Library_Unit (Design_Unit);
+               when others =>
+                  raise Internal_Error;
+            end case;
             if Get_Identifier (Design_Unit) = Unit_Id
               and then Get_Library (Design_File) = Work_Library
               and then Is_Same_Library_Unit (New_Library_Unit, Library_Unit)

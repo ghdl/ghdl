@@ -62,6 +62,13 @@ package Vhdl.Configuration is
    --  LOC is used to report errors.
    function Find_Top_Entity (From : Iir; Loc : Location_Type) return Iir;
 
+   --  Hook for Find_Top_Entity to deal with foreign units.
+   --  When called for a foreign module N, the procedure must walk N to find
+   --  all the module instantiations.  For each instantiation, it must look
+   --  for the definition in the VHDL scope table and set the Elab flag.
+   type Mark_Instantiated_Units_Access is access procedure (N : Int32);
+   Mark_Foreign_Module : Mark_Instantiated_Units_Access;
+
    --  Add an override for generic ID.
    procedure Add_Generic_Override (Id : Name_Id; Value : String);
 

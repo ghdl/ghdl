@@ -1022,29 +1022,36 @@ package body Vhdl.Configuration is
             end if;
          end if;
 
-         if Get_Kind (Design) = Iir_Kind_Design_Unit then
-            Unit := Get_Library_Unit (Design);
-            case Iir_Kinds_Library_Unit (Get_Kind (Unit)) is
-               when Iir_Kind_Architecture_Body =>
-                  Status := Walk_Concurrent_Statements_Chain
-                    (Get_Concurrent_Statement_Chain (Unit),
-                     Mark_Instantiation_Cb'Access);
-                  pragma Assert (Status = Walk_Continue);
-               when Iir_Kind_Configuration_Declaration =>
-                  --  Just ignored.
-                  null;
-               when Iir_Kind_Package_Declaration
-                 | Iir_Kind_Package_Instantiation_Declaration
-                 | Iir_Kind_Package_Body
-                 | Iir_Kind_Entity_Declaration
-                 | Iir_Kinds_Verification_Unit
-                 | Iir_Kind_Context_Declaration =>
-                  null;
-            end case;
-         else
-            --  TODO: also traverse foreign units
-            null;
-         end if;
+         case Get_Kind (Design) is
+            when Iir_Kind_Design_Unit =>
+               Unit := Get_Library_Unit (Design);
+               case Iir_Kinds_Library_Unit (Get_Kind (Unit)) is
+                  when Iir_Kind_Architecture_Body =>
+                     Status := Walk_Concurrent_Statements_Chain
+                       (Get_Concurrent_Statement_Chain (Unit),
+                        Mark_Instantiation_Cb'Access);
+                     pragma Assert (Status = Walk_Continue);
+                  when Iir_Kind_Configuration_Declaration =>
+                     --  Just ignored.
+                     null;
+                  when Iir_Kind_Package_Declaration
+                    | Iir_Kind_Package_Instantiation_Declaration
+                    | Iir_Kind_Package_Body
+                    | Iir_Kind_Entity_Declaration
+                    | Iir_Kinds_Verification_Unit
+                    | Iir_Kind_Context_Declaration =>
+                     null;
+               end case;
+
+            when Iir_Kind_Foreign_Module =>
+               if Mark_Foreign_Module = null then
+                  raise Internal_Error;
+               end if;
+               Mark_Foreign_Module.all (Get_Foreign_Node (Design));
+
+            when others =>
+               raise Internal_Error;
+         end case;
          return Walk_Continue;
       end Mark_Units_Cb;
 
