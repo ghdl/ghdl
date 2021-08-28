@@ -18,15 +18,8 @@
 
 with System; use System;
 with System.Storage_Elements;
-with Ada.Unchecked_Conversion;
 
 package body Synth.Memtype is
-
-   --  For conversions use Address to avoidcompiler warnings about alignment.
-   function To_Address is new Ada.Unchecked_Conversion
-     (Memory_Ptr, Address);
-   function To_Memory_Ptr is new Ada.Unchecked_Conversion
-     (Address, Memory_Ptr);
 
    function "+" (Base : Memory_Ptr; Off : Size_Type) return Memory_Ptr
    is

@@ -16,6 +16,9 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
+with System;
+with Ada.Unchecked_Conversion;
+
 with Types; use Types;
 
 with Grt.Types; use Grt.Types;
@@ -27,6 +30,12 @@ package Synth.Memtype is
    --  Thin pointer for a generic pointer.
    type Memory_Ptr is access all Memory_Array (Size_Type);
    pragma No_Strict_Aliasing (Memory_Ptr);
+
+   --  For conversions use Address to avoid compiler warnings about alignment.
+   function To_Address is new Ada.Unchecked_Conversion
+     (Memory_Ptr, System.Address);
+   function To_Memory_Ptr is new Ada.Unchecked_Conversion
+     (System.Address, Memory_Ptr);
 
    --  Low-level functions.
 
