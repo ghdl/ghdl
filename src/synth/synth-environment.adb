@@ -571,6 +571,80 @@ package body Synth.Environment is
       end loop;
    end Propagate_Phi_Until_Mark;
 
+   --  Adjust connections to NEW_OUTPORT, the new output of a wire gate.
+   --  OUTPORT is the old outport.
+   --  Used just below when an initialization is found.
+   procedure Add_Init_Input (Outport : Net; New_Outport : Net)
+   is
+      Gate : constant Instance := Get_Net_Parent (Outport);
+      Inp : constant Input := Get_Input (Gate, 0);
+      New_Gate : constant Instance := Get_Net_Parent (New_Outport);
+      Drv : Net;
+   begin
+      Set_Location (New_Gate, Get_Location (Gate));
+      Redirect_Inputs (Outport, New_Outport);
+      Drv := Get_Driver (Inp);
+      if Drv /= No_Net then
+         Disconnect (Inp);
+         Connect (Get_Input (New_Gate, 0), Drv);
+      end if;
+   end Add_Init_Input;
+
+   procedure Pop_And_Merge_Initial_Phi (Ctxt : Builders.Context_Acc;
+                                        Loc : Location_Type)
+   is
+      pragma Unreferenced (Loc);
+      Phi : Phi_Type;
+      Asgn : Seq_Assign;
+   begin
+      Pop_Phi (Phi);
+      --  Must be the last phi.
+      pragma Assert (Phis_Table.Last = No_Phi_Id);
+
+      Asgn := Phi.First;
+      while Asgn /= No_Seq_Assign loop
+         declare
+            use Netlists.Gates;
+            Asgn_Rec : Seq_Assign_Record renames Assign_Table.Table (Asgn);
+            pragma Assert (Asgn_Rec.Val.Is_Static = True);
+
+            Wid : constant Wire_Id := Asgn_Rec.Id;
+            Wire_Rec : Wire_Id_Record renames Wire_Id_Table.Table (Wid);
+            Outport : constant Net := Wire_Rec.Gate;
+            --  Must be connected to an Id_Output or Id_Signal
+            pragma Assert (Outport /= No_Net);
+            Gate : constant Instance := Get_Net_Parent (Outport);
+            New_Outport : Net;
+            Val : Net;
+         begin
+            Val := Static_To_Net (Ctxt, Asgn_Rec.Val.Val);
+            case Get_Id (Gate) is
+               when Id_Output =>
+                  --  Transform to Id_Ioutput.
+                  New_Outport := Build_Ioutput (Ctxt, Val);
+                  Add_Init_Input (Outport, New_Outport);
+                  Wire_Rec.Gate := New_Outport;
+
+                  --  Unset kind so that it can be set in normal processes.
+                  Wire_Rec.Kind := Wire_Unset;
+               when Id_Signal =>
+                  --  Transform to Id_Isignal
+                  New_Outport := Build_Isignal
+                    (Ctxt, Get_Instance_Name (Gate), Val);
+                  Add_Init_Input (Outport, New_Outport);
+                  Wire_Rec.Gate := New_Outport;
+
+                  --  Unset kind so that it can be set in normal processes.
+                  Wire_Rec.Kind := Wire_Unset;
+
+               when others =>
+                  raise Internal_Error;
+            end case;
+            Asgn := Asgn_Rec.Chain;
+         end;
+      end loop;
+   end Pop_And_Merge_Initial_Phi;
+
    --  Merge sort of conc_assign by offset.
    function Le_Conc_Assign (Left, Right : Conc_Assign) return Boolean is
    begin
@@ -1015,6 +1089,30 @@ package body Synth.Environment is
 
       return Get_Current_Assign_Value (Ctxt, Asgn_Rec.Id, 0, W);
    end Get_Assign_Value;
+
+   function Get_Gate_Value (Wid : Wire_Id) return Net
+   is
+      Wire_Rec : Wire_Id_Record renames Wire_Id_Table.Table (Wid);
+      pragma Assert (Wire_Rec.Kind /= Wire_None);
+   begin
+      return Wire_Rec.Gate;
+   end Get_Gate_Value;
+
+   function Get_Assigned_Value (Ctxt : Builders.Context_Acc; Wid : Wire_Id)
+                               return Net
+   is
+      Wire_Rec : Wire_Id_Record renames Wire_Id_Table.Table (Wid);
+      pragma Assert (Wire_Rec.Kind /= Wire_None);
+   begin
+      if Wire_Rec.Cur_Assign = No_Seq_Assign then
+         --  The variable was never assigned, so the variable value is
+         --  the initial value.
+         --  FIXME: use initial value directly ?
+         return Wire_Rec.Gate;
+      else
+         return Get_Assign_Value (Ctxt, Wire_Rec.Cur_Assign);
+      end if;
+   end Get_Assigned_Value;
 
    function Get_Current_Value (Ctxt : Builders.Context_Acc; Wid : Wire_Id)
                               return Net

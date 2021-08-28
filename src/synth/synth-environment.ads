@@ -160,6 +160,11 @@ package Synth.Environment is
                                        Phi : Phi_Type;
                                        Mark : Wire_Id);
 
+   --  Merge current Phi for an initialization.  All the assignments must
+   --  be static values.  May upgrade Output gates to Ioutput.
+   procedure Pop_And_Merge_Initial_Phi (Ctxt : Builders.Context_Acc;
+                                        Loc : Location_Type);
+
    --  Handle if statement.  According to SEL, the value of the wires are
    --  those from T or from F.
    procedure Merge_Phis (Ctxt : Builders.Context_Acc;
@@ -194,6 +199,13 @@ package Synth.Environment is
    function Get_Assign_Value (Ctxt : Builders.Context_Acc; Asgn : Seq_Assign)
                              return Net;
 
+   --  Return the value from the gate.
+   function Get_Gate_Value (Wid : Wire_Id) return Net;
+
+   --  Return the current assigned value.
+   function Get_Assigned_Value (Ctxt : Builders.Context_Acc; Wid : Wire_Id)
+                               return Net;
+
    --  For low-level phi merge.
    --  A sequential assignment is a linked list of partial assignment.
    type Partial_Assign is private;
@@ -215,11 +227,6 @@ package Synth.Environment is
       end case;
    end record;
 
---
---   type Seq_Assign_Value is private;
---   No_Seq_Assign_Value : constant Seq_Assign_Value;
-
-   function Get_Assign_Partial (Asgn : Seq_Assign) return Partial_Assign;
    function Get_Seq_Assign_Value (Asgn : Seq_Assign) return Seq_Assign_Value;
 
    function New_Partial_Assign (Val : Net; Offset : Uns32)
