@@ -240,6 +240,7 @@ package body Errorout.Console is
         and then Flag_Caret_Diagnostics
         and then (Current_Error.File /= No_Source_File_Entry
                     and Current_Error.Line /= 0)
+        and then Get_File_Length (Current_Error.File) > 0
       then
          Put_Line (Extract_Expanded_Line (Current_Error.File,
                                           Current_Error.Line));

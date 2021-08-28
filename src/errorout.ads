@@ -254,6 +254,7 @@ package Errorout is
       Earg_Location, Earg_Id,
       Earg_Char, Earg_String8, Earg_Uns32, Earg_Int32,
       Earg_Vhdl_Node, Earg_Vhdl_Token,
+      Earg_Verilog_Node, Earg_Verilog_Token,
       Earg_Synth_Instance, Earg_Synth_Net, Earg_Synth_Name);
 
    subtype Earg_Lang_Kind is Earg_Kind range Earg_Vhdl_Node .. Earg_Kind'Last;
@@ -271,11 +272,12 @@ package Errorout is
 
    function Make_Earg_Vhdl_Node (V : Uns32) return Earg_Type;
    function Make_Earg_Vhdl_Token (V : Uns32) return Earg_Type;
+   function Make_Earg_Verilog_Node (V : Uns32) return Earg_Type;
+   function Make_Earg_Verilog_Token (V : Uns32) return Earg_Type;
    function Make_Earg_Synth_Instance (V : Uns32) return Earg_Type;
    function Make_Earg_Synth_Net (V : Uns32) return Earg_Type;
    function Make_Earg_Synth_Name (V : Uns32) return Earg_Type;
 private
-
    type Earg_Type (Kind : Earg_Kind := Earg_None) is record
       case Kind is
          when Earg_None =>

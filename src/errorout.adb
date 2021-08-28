@@ -419,4 +419,14 @@ package body Errorout is
    begin
       return (Kind => Earg_Synth_Name, Val_Lang => V);
    end Make_Earg_Synth_Name;
+
+   function Make_Earg_Verilog_Node (V : Uns32) return Earg_Type is
+   begin
+      return (Kind => Earg_Verilog_Node, Val_Lang => V);
+   end Make_Earg_Verilog_Node;
+
+   function Make_Earg_Verilog_Token (V : Uns32) return Earg_Type is
+   begin
+      return (Kind => Earg_Verilog_Token, Val_Lang => V);
+   end Make_Earg_Verilog_Token;
 end Errorout;
