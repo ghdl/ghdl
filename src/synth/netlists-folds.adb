@@ -86,6 +86,17 @@ package body Netlists.Folds is
       end if;
    end Build2_Const_Int;
 
+   function Build2_Concat2 (Ctxt : Context_Acc; L, R : Net) return Net is
+   begin
+      if Get_Width (L) = 0 then
+         return R;
+      elsif Get_Width (R) = 0 then
+         return L;
+      else
+         return Build_Concat2 (Ctxt, L, R);
+      end if;
+   end Build2_Concat2;
+
    function Build2_Concat (Ctxt : Context_Acc; Els : Net_Array) return Net
    is
       F : constant Int32 := Els'First;

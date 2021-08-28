@@ -975,7 +975,7 @@ package body Synth.Vhdl_Oper is
                Bnd : Bound_Type;
                N : Net;
             begin
-               N := Build_Concat2 (Ctxt, L, Get_Net (Ctxt, Right));
+               N := Build2_Concat2 (Ctxt, L, Get_Net (Ctxt, Right));
                Set_Location (N, Expr);
                Bnd := Create_Bounds_From_Length
                  (Syn_Inst,
@@ -991,7 +991,7 @@ package body Synth.Vhdl_Oper is
                Bnd : Bound_Type;
                N : Net;
             begin
-               N := Build_Concat2 (Ctxt, Get_Net (Ctxt, Left), R);
+               N := Build2_Concat2 (Ctxt, Get_Net (Ctxt, Left), R);
                Set_Location (N, Expr);
                Bnd := Create_Bounds_From_Length
                  (Syn_Inst,
@@ -1006,7 +1006,7 @@ package body Synth.Vhdl_Oper is
                N : Net;
                Bnd : Bound_Type;
             begin
-               N := Build_Concat2
+               N := Build2_Concat2
                  (Ctxt, Get_Net (Ctxt, Left), Get_Net (Ctxt, Right));
                Set_Location (N, Expr);
                Bnd := Create_Bounds_From_Length
@@ -1021,7 +1021,7 @@ package body Synth.Vhdl_Oper is
                Bnd : Bound_Type;
                N : Net;
             begin
-               N := Build_Concat2 (Ctxt, L, R);
+               N := Build2_Concat2 (Ctxt, L, R);
                Set_Location (N, Expr);
                Bnd := Create_Bounds_From_Length
                  (Syn_Inst,
