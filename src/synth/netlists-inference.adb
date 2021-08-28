@@ -355,7 +355,7 @@ package body Netlists.Inference is
                Prev := Build2_Extract (Ctxt, Prev_Val, Off, Get_Width (Data));
 
                Ndata := Build_Mux2 (Ctxt, Clk_Enable, Prev, Data);
-               Copy_Location (Ndata, Clk_Enable);
+               Set_Location (Ndata, Loc);
             end;
          else
             Ndata := Data;
