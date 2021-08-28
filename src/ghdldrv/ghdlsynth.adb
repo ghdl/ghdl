@@ -217,6 +217,8 @@ package body Ghdlsynth is
       elsif Option = "-dm2" then
          --  Reduce muxes, but do not create memories.
          Flag_Debug_Nomemory2 := True;
+      elsif Option = "-le" then
+         Flag_Debug_Elaborate := True;
       elsif Option = "-de" then
          Flag_Debug_Noexpand := True;
       elsif Option = "-t" then
@@ -351,7 +353,9 @@ package body Ghdlsynth is
 
       --  Elaborate
       if E_Opt = Args'Last then
-         --  No unit.
+         --  No unit on the command line.
+
+         --  Find the top-level unit.
          Top := Vhdl.Configuration.Find_Top_Entity
            (Libraries.Work_Library, Libraries.Command_Line_Location);
          if Top = Null_Node then

@@ -55,6 +55,9 @@ package Synth.Flags is
 
    Flag_Trace_Statements : Boolean := False;
 
+   --  Display source of elaborated design.
+   Flag_Debug_Elaborate : Boolean := False;
+
    --  True to start debugger at elaboration.
    Flag_Debug_Init : Boolean := False;
 
