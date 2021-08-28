@@ -1123,6 +1123,7 @@ package body Synth.Vhdl_Decls is
             raise Internal_Error;
       end case;
       if Drv = No_Net then
+         --  Undriven signals.
          if Is_Connected (Get_Output (Gate, 0)) then
             --  No warning if the signal is not used.
             --  TODO: maybe simply remove it.
@@ -1135,9 +1136,12 @@ package body Synth.Vhdl_Decls is
             end if;
          end if;
          if Def_Val = No_Net then
+            --  The initial value of an undriven signal is X.
             Def_Val := Build_Const_X (Get_Build (Syn_Inst),
                                       Get_Width (Gate_Net));
          end if;
+
+         --  The value of an undriven signal is its initial value.
          Connect (Get_Input (Gate, 0), Def_Val);
       end if;
 
