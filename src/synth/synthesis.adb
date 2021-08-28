@@ -16,8 +16,12 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
+with Types; use Types;
 with Errorout; use Errorout;
-with Vhdl.Errors; use Vhdl.Errors;
+
+with Netlists.Cleanup;
+with Netlists.Memories;
+with Netlists.Expands;
 
 with Synth.Objtypes;
 with Synth.Vhdl_Insts; use Synth.Vhdl_Insts;
@@ -47,7 +51,7 @@ package body Synthesis is
             Arch := Get_Named_Entity
               (Get_Block_Specification (Get_Block_Configuration (Unit)));
          when others =>
-            Error_Kind ("synth_design", Unit);
+            raise Internal_Error;
       end case;
 
       Global_Instance := Make_Base_Instance;
@@ -63,4 +67,27 @@ package body Synthesis is
 
       M := Get_Top_Module (Global_Instance);
    end Synth_Design;
+
+   procedure Instance_Passes (Ctxt : Context_Acc; M : Module) is
+   begin
+      --  Remove unused gates.  This is not only an optimization but also
+      --  a correctness point: there might be some unsynthesizable gates, like
+      --  the one created for 'rising_egde (clk) and not rst'.
+      if not Synth.Flags.Flag_Debug_Nocleanup then
+         --  Netlists.Cleanup.Remove_Unconnected_Instances (Inst.M);
+         Netlists.Cleanup.Mark_And_Sweep (M);
+         Netlists.Cleanup.Remove_Output_Gates (M);
+      end if;
+
+      if not Synth.Flags.Flag_Debug_Nomemory2 then
+         Netlists.Memories.Extract_Memories (Ctxt, M);
+         --  Remove remaining clock edge gates.
+         Netlists.Cleanup.Mark_And_Sweep (M);
+      end if;
+
+      if not Synth.Flags.Flag_Debug_Noexpand then
+         Netlists.Expands.Expand_Gates (Ctxt, M);
+      end if;
+   end Instance_Passes;
+
 end Synthesis;

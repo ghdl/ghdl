@@ -32,9 +32,6 @@ with Grt.Algos;
 
 with Netlists; use Netlists;
 with Netlists.Builders; use Netlists.Builders;
-with Netlists.Cleanup;
-with Netlists.Memories;
-with Netlists.Expands;
 with Netlists.Concats;
 with Netlists.Folds;
 
@@ -1711,24 +1708,7 @@ package body Synth.Vhdl_Insts is
 
       Finalize_Wires;
 
-      --  Remove unused gates.  This is not only an optimization but also
-      --  a correctness point: there might be some unsynthesizable gates, like
-      --  the one created for 'rising_egde (clk) and not rst'.
-      if not Synth.Flags.Flag_Debug_Nocleanup then
-         --  Netlists.Cleanup.Remove_Unconnected_Instances (Inst.M);
-         Netlists.Cleanup.Mark_And_Sweep (Inst.M);
-         Netlists.Cleanup.Remove_Output_Gates (Inst.M);
-      end if;
-
-      if not Synth.Flags.Flag_Debug_Nomemory2 then
-         Netlists.Memories.Extract_Memories (Get_Build (Syn_Inst), Inst.M);
-         --  Remove remaining clock edge gates.
-         Netlists.Cleanup.Mark_And_Sweep (Inst.M);
-      end if;
-
-      if not Synth.Flags.Flag_Debug_Noexpand then
-         Netlists.Expands.Expand_Gates (Get_Build (Syn_Inst), Inst.M);
-      end if;
+      Synthesis.Instance_Passes (Get_Build (Syn_Inst), Inst.M);
    end Synth_Instance;
 
    procedure Synth_All_Instances

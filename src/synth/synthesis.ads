@@ -19,6 +19,7 @@
 with Vhdl.Nodes; use Vhdl.Nodes;
 
 with Netlists; use Netlists;
+with Netlists.Builders; use Netlists.Builders;
 
 with Synth.Vhdl_Context; use Synth.Vhdl_Context;
 with Synth.Flags; use Synth.Flags;
@@ -28,6 +29,9 @@ package Synthesis is
                            Encoding : Name_Encoding;
                            M : out Module;
                            Inst : out Synth_Instance_Acc);
+
+   --  Run cleanup/memory extraction/expand passes on M.
+   procedure Instance_Passes (Ctxt : Context_Acc; M : Module);
 
    Synth_Error : exception;
 end Synthesis;
