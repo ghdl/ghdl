@@ -374,6 +374,8 @@ package body Options is
                P ("non-vital generic names");
             when Warnid_Delayed_Checks =>
                P ("checks performed at elaboration");
+            when Warnid_Sensitivity =>
+               P ("incomplete sensitivity list");
             when Warnid_Body =>
                P ("unnecessary package body");
             when Warnid_Specs =>

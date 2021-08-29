@@ -70,6 +70,9 @@ package Errorout is
       --  Delayed checks (checks performed at elaboration time).
       Warnid_Delayed_Checks,
 
+      -- Synthesis coding style checks - Sensitivity lists
+      Warnid_Sensitivity,
+
       --  Package body is not required but is analyzed.
       Warnid_Body,
 
@@ -353,6 +356,7 @@ private
         | Warnid_Parenthesis | Warnid_Delayed_Checks | Warnid_Default_Binding
         | Warnid_Vital_Generic | Warnid_Missing_Xref
         | Warnid_Missing_Assoc
+        | Warnid_Sensitivity
         | Warnid_Unused => (Enabled => False, Error => False));
 
    --  Compute the column from Error_Record E.

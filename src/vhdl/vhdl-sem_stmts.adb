@@ -13,9 +13,12 @@
 --
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
+
 with Errorout; use Errorout;
 with Types; use Types;
 with Flags; use Flags;
+with Std_Names;
+
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Sem_Specs; use Vhdl.Sem_Specs;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
@@ -27,10 +30,10 @@ with Vhdl.Sem_Scopes; use Vhdl.Sem_Scopes;
 with Vhdl.Sem_Types;
 with Vhdl.Sem_Inst;
 with Vhdl.Sem_Psl;
-with Std_Names;
 with Vhdl.Evaluation; use Vhdl.Evaluation;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Xrefs; use Vhdl.Xrefs;
+with Vhdl.Sensitivity_Checks;
 
 package body Vhdl.Sem_Stmts is
    -- Process is the scope, this is also the process for which drivers can
@@ -2621,10 +2624,28 @@ package body Vhdl.Sem_Stmts is
    end Sem_Process_Statement;
 
    procedure Sem_Sensitized_Process_Statement
-     (Proc: Iir_Sensitized_Process_Statement) is
+     (Proc: Iir_Sensitized_Process_Statement)
+   is
+      List : constant Iir_List := Get_Sensitivity_List (Proc);
+      Prev_Nbr_Errors : constant Natural := Errorout.Nbr_Errors;
    begin
-      Sem_Sensitivity_List (Get_Sensitivity_List (Proc));
+      Sem_Sensitivity_List (List);
       Sem_Process_Statement (Proc);
+
+      if Is_Warning_Enabled (Warnid_Sensitivity)
+        and then List /= Iir_List_All
+        and then Nbr_Errors = Prev_Nbr_Errors
+      then
+         --  Reports sensitivity warnings, but only if no errors in the
+         --  process (as canon don't deal with errors).
+         if Get_Nbr_Elements (List) > 256 then
+            Warning_Msg_Sem
+              (Warnid_Sensitivity, +Proc,
+               "sensitivity list is too long to be checked");
+         else
+            Vhdl.Sensitivity_Checks.Check_Sensitivity_List (Proc);
+         end if;
+      end if;
    end Sem_Sensitized_Process_Statement;
 
    procedure Sem_Concurrent_Break_Statement (Stmt : Iir)

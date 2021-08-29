@@ -353,12 +353,6 @@ package body Vhdl.Canon is
                end case;
             end;
 
-         when Iir_Kind_Simple_Name
-           | Iir_Kind_Selected_Name
-           | Iir_Kind_Reference_Name =>
-            Canon_Extract_Sensitivity_Expression
-              (Get_Named_Entity (Expr), Sensitivity_List, Is_Target);
-
          when others =>
             Error_Kind ("canon_extract_sensitivity", Expr);
       end case;
