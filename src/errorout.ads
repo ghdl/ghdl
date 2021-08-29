@@ -118,6 +118,10 @@ package Errorout is
       --  Incorrect use of attributes (like non-object prefix).
       Warnid_Attribute,
 
+      --  Useless code (condition is always false or true), assertion cannot
+      --  be triggered.
+      Warnid_Useless,
+
       --  Violation of staticness rules
       Warnid_Static,
 
@@ -313,7 +317,7 @@ private
         | Warnid_Runtime_Error | Warnid_Pure | Warnid_Specs | Warnid_Hide
         | Warnid_Pragma | Warnid_Analyze_Assert | Warnid_Attribute
         | Warnid_Deprecated_Option | Warnid_Unexpected_Option
-        | Warnid_No_Wait
+        | Warnid_No_Wait | Warnid_Useless
         | Msgid_Warning  => (Enabled => True, Error => False),
       Warnid_Delta_Cycle | Warnid_Body | Warnid_Static | Warnid_Nested_Comment
         | Warnid_Universal | Warnid_Port_Bounds

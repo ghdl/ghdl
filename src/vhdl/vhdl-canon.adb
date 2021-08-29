@@ -14,11 +14,13 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with Vhdl.Errors; use Vhdl.Errors;
-with Vhdl.Utils; use Vhdl.Utils;
 with Types; use Types;
 with Flags; use Flags;
 with Name_Table;
+with Errorout; use Errorout;
+
+with Vhdl.Errors; use Vhdl.Errors;
+with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Sem;
 with Vhdl.Sem_Inst;
 with Vhdl.Sem_Specs;
@@ -1728,9 +1730,12 @@ package body Vhdl.Canon is
 
    procedure Canon_Psl_Property_Directive (Stmt : Iir)
    is
+      use PSL.NFAs;
       Prop : PSL_Node;
       Fa : PSL_NFA;
+      Final : NFA_State;
    begin
+      --  Rewrite (simplify) the property.
       Prop := Get_Psl_Property (Stmt);
       Prop := PSL.Rewrites.Rewrite_Property (Prop);
       Set_Psl_Property (Stmt, Prop);
@@ -1738,6 +1743,11 @@ package body Vhdl.Canon is
       --  Generate the NFA.
       Fa := PSL.Build.Build_FA (Prop);
       Set_PSL_NFA (Stmt, Fa);
+
+      Final := Get_Final_State (Fa);
+      if Get_First_Dest_Edge (Final) = No_Edge then
+         Warning_Msg_Sem (Warnid_Useless, +Stmt, "property cannot fail");
+      end if;
 
       Canon_Psl_Clocked_NFA (Stmt);
       if Canon_Flag_Expressions then
