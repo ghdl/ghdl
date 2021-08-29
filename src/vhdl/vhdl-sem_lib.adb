@@ -28,6 +28,7 @@ with Vhdl.Sem;
 with Vhdl.Post_Sems;
 with Vhdl.Canon;
 with Vhdl.Nodes_GC;
+with Vhdl.Synthesis_Checks;
 
 package body Vhdl.Sem_Lib is
    procedure Error_Lib_Msg (Msg : String; Arg1 : Earg_Type) is
@@ -127,6 +128,21 @@ package body Vhdl.Sem_Lib is
       end if;
 
       Vhdl.Canon.Canonicalize (Unit);
+
+      -- Synthesis checks
+      --------------------
+
+      -- Note: Calling Synthesis checks after Canon is more computationally
+      --       demanding than before. This is because, concurent assignments
+      --       has been converted to processes and are therefore checked too!
+      --       We stick with this solution because Canon pass fixes possibly
+      --       broken chain of concurent statements for us!
+      if Flags.Flag_Check_Synthesis then
+         Vhdl.Synthesis_Checks.DoSynthesisChecks (Unit);
+      end if;
+
+      -- Tree Dump
+      ---------------------
 
       if (Main or Flags.Dump_All) and then Flags.Dump_Canon then
          Vhdl.Disp_Tree.Disp_Tree (Unit);

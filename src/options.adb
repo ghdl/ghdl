@@ -225,6 +225,8 @@ package body Options is
          Flag_Vital_Checks := False;
       elsif Opt = "--vital-checks" then
          Flag_Vital_Checks := True;
+      elsif Opt = "--check-synthesis" then
+         Flag_Check_Synthesis := True;
       elsif Opt = "-fpsl" then
          Vhdl.Scanner.Flag_Psl_Comment := True;
          Vhdl.Scanner.Flag_Comment_Keyword := True;
@@ -302,6 +304,7 @@ package body Options is
       P ("  --bootstrap        allow --work=std");
       P ("  --syn-binding      use synthesis default binding rule");
       P ("  -fpsl              parse psl in comments");
+      P ("  --check-synthesis  perform checks for synthesizable code");
       P ("Compilation list:");
       P ("  -l[sca]            after semantics, canon or annotation");
       P ("  --lall             -lX options apply to all files");
