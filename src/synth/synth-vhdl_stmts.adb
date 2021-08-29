@@ -3283,8 +3283,14 @@ package body Synth.Vhdl_Stmts is
          S := Get_Next_State (S);
       end loop;
 
+      --  Maybe there is no edge to the first state (common for restrict).
       if D_Arr (Nbr_States - 1) = No_Net then
          D_Arr (Nbr_States - 1) := Build_Const_UB32 (Ctxt, 0, 1);
+      end if;
+
+      --  Maybe there is no edge to the final state.
+      if D_Arr (0) = No_Net then
+         D_Arr (0) := Build_Const_UB32 (Ctxt, 0, 1);
       end if;
 
       Concat_Array (Ctxt, D_Arr.all, Res);
