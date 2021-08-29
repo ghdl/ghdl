@@ -33,7 +33,7 @@ ADA_FLAGS=${ADA_FLAGS:-}
 MAKE=${MAKE:-make}
 LDFLAGS=${LDFLAGS:-}
 prefix=/usr/local
-libdirsuffix=lib/ghdl
+libdirsuffix=ghdl
 libdirreverse=../..
 gcc_src_dir=
 llvm_config=
@@ -50,11 +50,20 @@ default_pic=false
 EXEEXT=
 SOEXT=.so
 PIC_FLAGS=-fPIC
+ac_tool_prefix=
+libdir=
+# Unused parameters
+mandir=
+infodir=
+datadir=
+sysconfdir=
+localstatedir=
+
 
 show_help=no
 progname=$0
 
-subst_vars="CC CXX GNATMAKE ADA_FLAGS MAKE CFLAGS CXXFLAGS LDFLAGS build srcdir abs_srcdir prefix backend libdirsuffix libdirreverse gcc_src_dir llvm_config llvm_be backtrace_lib build_mode EXEEXT SOEXT PIC_FLAGS default_pic enable_werror enable_checks enable_gplcompat enable_libghdl libghdl_version ghdl_version"
+subst_vars="CC CXX GNATMAKE ADA_FLAGS MAKE CFLAGS CXXFLAGS LDFLAGS build srcdir abs_srcdir prefix backend libdirsuffix libdirreverse gcc_src_dir llvm_config llvm_be backtrace_lib build_mode EXEEXT SOEXT PIC_FLAGS default_pic enable_werror enable_checks enable_gplcompat enable_libghdl libghdl_version ghdl_version ac_tool_prefix libdir mandir infodir datadir sysconfdir localstatedir"
 
 # Find srcdir
 srcdir=`dirname $progname`
@@ -113,12 +122,30 @@ for opt do
     --default-pic)          default_pic=true;;
     --enable-coverage)      build_mode="coverage";;
     -h|-help|--help)        show_help=yes;;
+    --build=*)              build="$optarg";;
+    --host=*)               host="$optarg";;
+    --libdir=*)             libdir="$optarg";;
+    # Unused parameters
+    --mandir=*)             mandir="$optarg";;
+    --infodir=*)            infodir="$optarg";;
+    --datadir=*)            datadir="$optarg";;
+    --sysconfdir=*)         sysconfdir="$optarg";;
+    --localstatedir=*)      localstatedir="$optarg";;
+
     *)
       echo "$0: unknown option $opt; try $0 --help"
       exit 1
       ;;
   esac
 done
+
+ac_tool_prefix=
+test -n "$host_alias" && ac_tool_prefix=$host_alias-
+
+if test "x$libdir" = "x"; then
+    libdir=$prefix/lib
+fi
+
 
 # Help
 if test $show_help != no; then
@@ -342,7 +369,7 @@ rm -f config.status
     eval vval=\$$v
     echo $v=\"$vval\"
   done
-  subst_files="ghdl.gpr Makefile"
+  subst_files="ghdl.gpr Makefile scripts/gcc/Make-lang.in"
   echo "for f in $subst_files; do"
   echo '  echo "Creating $f"'
   echo "  sed \\"
@@ -412,7 +439,7 @@ sed -e "s%@COMPILER_GCC@%ghdl1-gcc$EXEEXT%" \
     -e "s%@COMPILER_LLVM@%ghdl1-llvm$EXEEXT%" \
     -e "s%@POST_PROCESSOR@%oread-$backend%" \
     -e "s%@INSTALL_PREFIX@%$prefix%" \
-    -e "s%@LIB_PREFIX@%$libdirsuffix%" \
+    -e "s%@LIB_PREFIX@%$libdir/$libdirsuffix%" \
     -e "s%@SOEXT@%$SOEXT%" \
     -e "s%@default_pic@%$default_pic%" \
     < $srcdir/src/ghdldrv/default_paths.ads.in > default_paths.ads

@@ -13,14 +13,14 @@
 #
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <gnu.org/licenses>.
-CC=@CC@
+CC=@ac_tool_prefix@@CC@
 CFLAGS=@CFLAGS@
-CXX=@CXX@
+CXX=@ac_tool_prefix@@CXX@
 CXXFLAGS=@CXXFLAGS@
 build=@build@
 srcdir=@srcdir@
 abs_srcdir=@abs_srcdir@
-GNATMAKE=@GNATMAKE@
+GNATMAKE=@ac_tool_prefix@@GNATMAKE@
 ADA_FLAGS=@ADA_FLAGS@
 MAKE=@MAKE@
 prefix=@prefix@
@@ -49,7 +49,7 @@ INSTALL_DATA=install -m 644
 PWD?=$(shell pwd)
 DESTDIR=
 bindir=$(prefix)/bin
-libdir=$(prefix)/lib
+libdir=@libdir@
 incdir=$(prefix)/include
 MKDIR=mkdir
 LN=ln -s
@@ -59,7 +59,7 @@ SED=sed
 GRT_RANLIB=ranlib
 GHDL_DESC?=tarball
 
-VHDL_LIB_DIR=$(prefix)/$(libdirsuffix)
+VHDL_LIB_DIR=$(libdir)/$(libdirsuffix)
 
 ifeq "$(enable_checks)" "true"
  # Debug + checks
