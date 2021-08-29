@@ -73,6 +73,9 @@ package Errorout is
       --  Delayed checks (checks performed at elaboration time).
       Warnid_Delayed_Checks,
 
+      -- Synthesis coding style checks - Sensitivity lists
+      Warnid_Synth_Sensitivity_Lists,
+
       --  Package body is not required but is analyzed.
       Warnid_Body,
 
@@ -318,6 +321,7 @@ private
         | Warnid_Pragma | Warnid_Analyze_Assert | Warnid_Attribute
         | Warnid_Deprecated_Option | Warnid_Unexpected_Option
         | Warnid_No_Wait | Warnid_Useless
+        | Warnid_Synth_Sensitivity_Lists
         | Msgid_Warning  => (Enabled => True, Error => False),
       Warnid_Delta_Cycle | Warnid_Body | Warnid_Static | Warnid_Nested_Comment
         | Warnid_Universal | Warnid_Port_Bounds
