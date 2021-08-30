@@ -6579,6 +6579,19 @@ def Set_PSL_EOS_Flag(obj: Iir, value: Boolean) -> None:
 
 
 @export
+@BindToLibGHDL("vhdl__nodes__get_psl_abort_flag")
+def Get_PSL_Abort_Flag(obj: Iir) -> Boolean:
+    """"""
+    return 0
+
+
+@export
+@BindToLibGHDL("vhdl__nodes__set_psl_abort_flag")
+def Set_PSL_Abort_Flag(obj: Iir, value: Boolean) -> None:
+    """"""
+
+
+@export
 @BindToLibGHDL("vhdl__nodes__get_count_expression")
 def Get_Count_Expression(obj: Iir) -> Iir:
     """"""

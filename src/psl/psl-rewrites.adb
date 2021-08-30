@@ -589,7 +589,9 @@ package body PSL.Rewrites is
          when N_Or_Prop =>
             return Rewrite_Or (Rewrite_Property (Get_Left (N)),
                                Rewrite_Property (Get_Right (N)));
-         when N_Abort =>
+         when N_Abort
+            | N_Async_Abort
+            | N_Sync_Abort =>
             Set_Boolean (N, Rewrite_Boolean (Get_Boolean (N)));
             Set_Property (N, Rewrite_Property (Get_Property (N)));
             return N;

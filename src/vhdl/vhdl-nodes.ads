@@ -3356,6 +3356,9 @@ package Vhdl.Nodes is
    --  True if at least one of the NFA edge has the EOS flag.
    --   Get/Set_PSL_EOS_Flag (Flag1)
    --
+   --  True if there is an outer abort is present (but not in the NFA)
+   --   Get/Set_PSL_Abort_Flag (Flag2)
+   --
    --   Get/Set_Postponed_Flag (Flag3)
    --
    --   Get/Set_Visible_Flag (Flag4)
@@ -9244,6 +9247,10 @@ package Vhdl.Nodes is
    --  Field: Flag1
    function Get_PSL_EOS_Flag (N : Iir) return Boolean;
    procedure Set_PSL_EOS_Flag (N : Iir; Flag : Boolean);
+
+   --  Field: Flag2
+   function Get_PSL_Abort_Flag (N : Iir) return Boolean;
+   procedure Set_PSL_Abort_Flag (N : Iir; Flag : Boolean);
 
    --  Field: Field2
    function Get_Count_Expression (N : Iir) return Iir;

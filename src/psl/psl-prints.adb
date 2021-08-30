@@ -51,7 +51,9 @@ package body PSL.Prints is
          when N_Until
            | N_Before =>
             return Prio_FL_Bounding;
-         when N_Abort =>
+         when N_Abort
+           | N_Sync_Abort
+           | N_Async_Abort =>
             return Prio_FL_Abort;
          when N_Or_Prop =>
             return Prio_Seq_Or;
@@ -323,6 +325,16 @@ package body PSL.Prints is
       Put (")");
    end Print_Boolean_Range_Property;
 
+   procedure Print_Abort_Property
+     (Tok : String; Prop : Node; Prio : Priority) is
+   begin
+      Print_Property (Get_Property (Prop), Prio);
+      Put (' ');
+      Put (Tok);
+      Put (' ');
+      Print_Expr (Get_Boolean (Prop));
+   end Print_Abort_Property;
+
    procedure Print_Property (Prop : Node;
                              Parent_Prio : Priority := Prio_Lowest)
    is
@@ -372,9 +384,11 @@ package body PSL.Prints is
          when N_Until =>
             Print_Binary_Property_SI (" until", Prop, Prio);
          when N_Abort =>
-            Print_Property (Get_Property (Prop), Prio);
-            Put (" abort ");
-            Print_Expr (Get_Boolean (Prop));
+            Print_Abort_Property ("abort", Prop, Prio);
+         when N_Sync_Abort =>
+            Print_Abort_Property ("sync_abort", Prop, Prio);
+         when N_Async_Abort =>
+            Print_Abort_Property ("async_abort", Prop, Prio);
          when N_Before =>
             Print_Binary_Property_SI (" before", Prop, Prio);
          when N_Or_Prop =>

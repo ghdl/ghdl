@@ -483,10 +483,11 @@ class fields(IntEnum):
     PSL_Nbr_States = 363
     PSL_Clock_Sensitivity = 364
     PSL_EOS_Flag = 365
-    Count_Expression = 366
-    Clock_Expression = 367
-    Default_Clock = 368
-    Foreign_Node = 369
+    PSL_Abort_Flag = 366
+    Count_Expression = 367
+    Clock_Expression = 368
+    Default_Clock = 369
+    Foreign_Node = 370
 
 
 def Get_Boolean(node, field):
@@ -2814,6 +2815,12 @@ def Has_PSL_Clock_Sensitivity(kind: IirKind) -> bool:
 @export
 @BindToLibGHDL("vhdl__nodes_meta__has_psl_eos_flag")
 def Has_PSL_EOS_Flag(kind: IirKind) -> bool:
+    """"""
+
+
+@export
+@BindToLibGHDL("vhdl__nodes_meta__has_psl_abort_flag")
+def Has_PSL_Abort_Flag(kind: IirKind) -> bool:
     """"""
 
 

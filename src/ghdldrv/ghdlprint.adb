@@ -423,6 +423,8 @@ package body Ghdlprint is
                | Tok_Inf
                | Tok_Within
                | Tok_Abort
+               | Tok_Async_Abort
+               | Tok_Sync_Abort
                | Tok_Before
                | Tok_Before_Em
                | Tok_Before_Un

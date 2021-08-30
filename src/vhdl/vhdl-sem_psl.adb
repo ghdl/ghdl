@@ -543,7 +543,9 @@ package body Vhdl.Sem_Psl is
                Error_Msg_Sem (+Prop, "inner clock event not supported");
             end if;
             return Prop;
-         when N_Abort =>
+         when N_Abort
+            | N_Async_Abort
+            | N_Sync_Abort =>
             Sem_Property (Prop);
             Sem_Boolean (Prop);
             return Prop;

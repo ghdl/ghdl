@@ -7294,6 +7294,22 @@ package body Vhdl.Nodes is
       Set_Flag1 (N, Flag);
    end Set_PSL_EOS_Flag;
 
+   function Get_PSL_Abort_Flag (N : Iir) return Boolean is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_PSL_Abort_Flag (Get_Kind (N)),
+                     "no field PSL_Abort_Flag");
+      return Get_Flag2 (N);
+   end Get_PSL_Abort_Flag;
+
+   procedure Set_PSL_Abort_Flag (N : Iir; Flag : Boolean) is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_PSL_Abort_Flag (Get_Kind (N)),
+                     "no field PSL_Abort_Flag");
+      Set_Flag2 (N, Flag);
+   end Set_PSL_Abort_Flag;
+
    function Get_Count_Expression (N : Iir) return Iir is
    begin
       pragma Assert (N /= Null_Iir);

@@ -353,6 +353,8 @@ package body PSL.Nodes is
             | N_Before
             | N_Until
             | N_Abort
+            | N_Async_Abort
+            | N_Sync_Abort
             | N_Strong
             | N_Property_Parameter
             | N_Property_Instance =>
@@ -453,6 +455,8 @@ package body PSL.Nodes is
            | N_Next_Event_A
            | N_Next_Event_E
            | N_Abort
+           | N_Async_Abort
+           | N_Sync_Abort
            | N_Until
            | N_Before
            | N_Or_Prop

@@ -1417,6 +1417,10 @@ package body Vhdl.Scanner is
                Current_Token := Tok_Within;
             when Name_Abort =>
                Current_Token := Tok_Abort;
+            when Name_Async_Abort =>
+               Current_Token := Tok_Async_Abort;
+            when Name_Sync_Abort =>
+               Current_Token := Tok_Sync_Abort;
             when Name_Before =>
                Scan_Psl_Keyword_Em_Un (Tok_Before, Tok_Before_Em,
                                        Tok_Before_Un, Tok_Before_Em_Un);

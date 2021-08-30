@@ -168,7 +168,9 @@ package body PSL.Subsets is
          when N_Next_Event
            | N_Next_Event_A
            | N_Next_Event_E
-           | N_Abort =>
+           | N_Abort
+           | N_Async_Abort
+           | N_Sync_Abort =>
             Check_Simple (Get_Boolean (N));
             Check_Simple (Get_Property (N));
          when N_Not_Bool

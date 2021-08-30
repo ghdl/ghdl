@@ -62,6 +62,8 @@ package PSL.Nodes is
       N_Next_Event_A,
       N_Next_Event_E,
       N_Abort,
+      N_Async_Abort,
+      N_Sync_Abort,
       N_Until,
       N_Before,
       N_Or_Prop,
@@ -380,6 +382,8 @@ package PSL.Nodes is
    --   Get/Set_Boolean (Field3)
 
    -- N_Abort (Short)
+   -- N_Async_Abort (Short)
+   -- N_Sync_Abort (Short)
    --
    --   Get/Set_Property (Field4)
    --

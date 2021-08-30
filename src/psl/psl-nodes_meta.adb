@@ -198,6 +198,10 @@ package body PSL.Nodes_Meta is
             return "next_event_e";
          when N_Abort =>
             return "abort";
+         when N_Async_Abort =>
+            return "async_abort";
+         when N_Sync_Abort =>
+            return "sync_abort";
          when N_Until =>
             return "until";
          when N_Before =>
@@ -466,6 +470,12 @@ package body PSL.Nodes_Meta is
       --  N_Abort
       Field_Property,
       Field_Boolean,
+      --  N_Async_Abort
+      Field_Property,
+      Field_Boolean,
+      --  N_Sync_Abort
+      Field_Property,
+      Field_Boolean,
       --  N_Until
       Field_Strong_Flag,
       Field_Inclusive_Flag,
@@ -616,38 +626,40 @@ package body PSL.Nodes_Meta is
       N_Next_Event_A => 86,
       N_Next_Event_E => 91,
       N_Abort => 93,
-      N_Until => 97,
-      N_Before => 101,
-      N_Or_Prop => 103,
-      N_And_Prop => 105,
-      N_Paren_Prop => 106,
-      N_Braced_SERE => 107,
-      N_Concat_SERE => 109,
-      N_Fusion_SERE => 111,
-      N_Within_SERE => 113,
-      N_Clocked_SERE => 115,
-      N_Match_And_Seq => 117,
-      N_And_Seq => 119,
-      N_Or_Seq => 121,
-      N_Star_Repeat_Seq => 124,
-      N_Goto_Repeat_Seq => 127,
-      N_Plus_Repeat_Seq => 128,
-      N_Equal_Repeat_Seq => 131,
-      N_Paren_Bool => 135,
-      N_Not_Bool => 139,
-      N_And_Bool => 144,
-      N_Or_Bool => 149,
-      N_Imp_Bool => 154,
-      N_Equiv_Bool => 159,
-      N_HDL_Expr => 161,
-      N_HDL_Bool => 166,
-      N_False => 166,
-      N_True => 166,
-      N_EOS => 169,
-      N_Name => 171,
-      N_Name_Decl => 173,
-      N_Inf => 173,
-      N_Number => 174
+      N_Async_Abort => 95,
+      N_Sync_Abort => 97,
+      N_Until => 101,
+      N_Before => 105,
+      N_Or_Prop => 107,
+      N_And_Prop => 109,
+      N_Paren_Prop => 110,
+      N_Braced_SERE => 111,
+      N_Concat_SERE => 113,
+      N_Fusion_SERE => 115,
+      N_Within_SERE => 117,
+      N_Clocked_SERE => 119,
+      N_Match_And_Seq => 121,
+      N_And_Seq => 123,
+      N_Or_Seq => 125,
+      N_Star_Repeat_Seq => 128,
+      N_Goto_Repeat_Seq => 131,
+      N_Plus_Repeat_Seq => 132,
+      N_Equal_Repeat_Seq => 135,
+      N_Paren_Bool => 139,
+      N_Not_Bool => 143,
+      N_And_Bool => 148,
+      N_Or_Bool => 153,
+      N_Imp_Bool => 158,
+      N_Equiv_Bool => 163,
+      N_HDL_Expr => 165,
+      N_HDL_Bool => 170,
+      N_False => 170,
+      N_True => 170,
+      N_EOS => 173,
+      N_Name => 175,
+      N_Name_Decl => 177,
+      N_Inf => 177,
+      N_Number => 178
      );
 
    function Get_Fields (K : Nkind) return Fields_Array
@@ -1053,6 +1065,8 @@ package body PSL.Nodes_Meta is
            | N_Next_Event_A
            | N_Next_Event_E
            | N_Abort
+           | N_Async_Abort
+           | N_Sync_Abort
            | N_Paren_Prop =>
             return True;
          when others =>
@@ -1225,6 +1239,8 @@ package body PSL.Nodes_Meta is
            | N_Next_Event_A
            | N_Next_Event_E
            | N_Abort
+           | N_Async_Abort
+           | N_Sync_Abort
            | N_Clocked_SERE
            | N_Goto_Repeat_Seq
            | N_Equal_Repeat_Seq

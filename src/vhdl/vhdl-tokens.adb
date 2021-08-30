@@ -469,6 +469,10 @@ package body Vhdl.Tokens is
             return "within";
          when Tok_Abort =>
             return "abort";
+         when Tok_Async_Abort =>
+            return "async_abort";
+         when Tok_Sync_Abort =>
+            return "sync_abort";
          when Tok_Before =>
             return "before";
          when Tok_Before_Em =>

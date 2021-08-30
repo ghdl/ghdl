@@ -812,6 +812,8 @@ package body Vhdl.Parse_Psl is
             | N_Endpoint_Instance
             | N_Strong
             | N_Abort
+            | N_Async_Abort
+            | N_Sync_Abort
             | N_Next_Event_E
             | N_Next_Event_A
             | N_Next_Event
@@ -863,6 +865,18 @@ package body Vhdl.Parse_Psl is
             raise Internal_Error;
       end case;
    end Property_To_Sequence;
+
+   function Parse_Abort (Kind : Nkind; Left : Node) return Node
+   is
+      N : Node;
+   begin
+      N := Create_Node_Loc (Kind);
+      Set_Property (N, Left);
+      Scan;
+      Set_Boolean (N, Parse_Boolean (Prio_Lowest));
+      --  Left associative.
+      return N;
+   end Parse_Abort;
 
    --  A.4.4 PSL properties
    --  FL_Property::=
@@ -959,12 +973,17 @@ package body Vhdl.Parse_Psl is
                if Prio > Prio_FL_Abort then
                   return Res;
                end if;
-               N := Create_Node_Loc (N_Abort);
-               Set_Property (N, Res);
-               Scan;
-               Set_Boolean (N, Parse_Boolean (Prio_Lowest));
-               --  Left associative.
-               return N;
+               return Parse_Abort (N_Abort, Res);
+            when Tok_Sync_Abort =>
+               if Prio > Prio_FL_Abort then
+                  return Res;
+               end if;
+               return Parse_Abort (N_Sync_Abort, Res);
+            when Tok_Async_Abort =>
+               if Prio > Prio_FL_Abort then
+                  return Res;
+               end if;
+               return Parse_Abort (N_Async_Abort, Res);
             when Tok_Exclam_Mark =>
                N := Create_Node_Loc (N_Strong);
                Set_Property (N, Res);

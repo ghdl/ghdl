@@ -2163,6 +2163,16 @@ package body Vhdl.Prints is
       Disp_Token (Ctxt, Tok_Right_Paren);
    end Print_Boolean_Range_Property;
 
+   procedure Print_Abort_Property (Ctxt : in out Ctxt_Class;
+                                   Tok : Token_Type;
+                                   N : PSL_Node;
+                                   Prio : Priority) is
+   begin
+      Print_Property (Ctxt, Get_Property (N), Prio);
+      Disp_Token (Ctxt, Tok);
+      Print_Expr (Ctxt, Get_Boolean (N));
+   end Print_Abort_Property;
+
    procedure Print_Property (Ctxt : in out Ctxt_Class;
                              Prop : PSL_Node;
                              Parent_Prio : Priority := Prio_Lowest)
@@ -2215,9 +2225,11 @@ package body Vhdl.Prints is
                Tok_Until, Tok_Until_Em, Tok_Until_Un, Tok_Until_Em_Un,
                Prop, Prio);
          when N_Abort =>
-            Print_Property (Ctxt, Get_Property (Prop), Prio);
-            Disp_Token (Ctxt, Tok_Abort);
-            Print_Expr (Ctxt, Get_Boolean (Prop));
+            Print_Abort_Property (Ctxt, Tok_Abort, Prop, Prio);
+         when N_Sync_Abort =>
+            Print_Abort_Property (Ctxt, Tok_Sync_Abort, Prop, Prio);
+         when N_Async_Abort =>
+            Print_Abort_Property (Ctxt, Tok_Async_Abort, Prop, Prio);
          when N_Before =>
             Print_Binary_Property_SI
               (Ctxt,
