@@ -588,7 +588,7 @@ install.dirs:
 	$(MKDIR) -p $(DESTDIR)$(prefix)
 	$(MKDIR) -p $(DESTDIR)$(bindir)
 	$(MKDIR) -p $(DESTDIR)$(libdir)
-	$(MKDIR) -p $(DESTDIR)$(prefix)/$(libdirsuffix)
+	$(MKDIR) -p $(DESTDIR)$(libdir)/$(libdirsuffix)
 	$(MKDIR) -p $(DESTDIR)$(incdir)
 	$(MKDIR) -p $(DESTDIR)$(incdir)/ghdl
 
@@ -641,6 +641,7 @@ create-dirs: force
 	for d in $(VHDLLIB_SUBDIRS); do \
 	  $(MKDIR) -p $(LIBDST_DIR)/$$d; \
 	done
+	$(MKDIR) -p lib
 
 # Remove non GPL compatible source files
 clean-pure-gpl:
