@@ -369,7 +369,7 @@ rm -f config.status
     eval vval=\$$v
     echo $v=\"$vval\"
   done
-  subst_files="ghdl.gpr Makefile scripts/gcc/Make-lang.in"
+  subst_files="ghdl.gpr Makefile Make-lang.in"
   echo "for f in $subst_files; do"
   echo '  echo "Creating $f"'
   echo "  sed \\"
