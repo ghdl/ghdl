@@ -52,6 +52,7 @@ SOEXT=.so
 PIC_FLAGS=-fPIC
 ac_tool_prefix=
 libdir=
+lib_prefix=$libdir/$libdirsuffix
 # Unused parameters
 mandir=
 infodir=
@@ -144,6 +145,7 @@ test -n "$host_alias" && ac_tool_prefix=$host_alias-
 
 if test "x$libdir" = "x"; then
     libdir=$prefix/lib
+    lib_prefix=lib/$libdirsuffix
 fi
 
 
@@ -439,7 +441,7 @@ sed -e "s%@COMPILER_GCC@%ghdl1-gcc$EXEEXT%" \
     -e "s%@COMPILER_LLVM@%ghdl1-llvm$EXEEXT%" \
     -e "s%@POST_PROCESSOR@%oread-$backend%" \
     -e "s%@INSTALL_PREFIX@%$prefix%" \
-    -e "s%@LIB_PREFIX@%$libdir/$libdirsuffix%" \
+    -e "s%@LIB_PREFIX@%$lib_prefix%" \
     -e "s%@SOEXT@%$SOEXT%" \
     -e "s%@default_pic@%$default_pic%" \
     < $srcdir/src/ghdldrv/default_paths.ads.in > default_paths.ads
