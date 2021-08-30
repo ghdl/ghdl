@@ -3357,6 +3357,8 @@ package Vhdl.Nodes is
    --   Get/Set_PSL_EOS_Flag (Flag1)
    --
    --  True if there is an outer abort is present (but not in the NFA)
+   -- Only for Iir_Kind_Psl_Assert_Directive:
+   -- Only for Iir_Kind_Psl_Assume_Directive:
    --   Get/Set_PSL_Abort_Flag (Flag2)
    --
    --   Get/Set_Postponed_Flag (Flag3)
@@ -6875,6 +6877,20 @@ package Vhdl.Nodes is
    --Iir_Kind_Concurrent_Procedure_Call_Statement
    --Iir_Kind_Concurrent_Break_Statement
    --Iir_Kind_Psl_Assert_Directive
+   --Iir_Kind_Psl_Assume_Directive
+   --Iir_Kind_Psl_Cover_Directive
+     Iir_Kind_Psl_Restrict_Directive;
+
+   subtype Iir_Kinds_Psl_Property_Directive is Iir_Kind range
+     Iir_Kind_Psl_Assert_Directive ..
+     Iir_Kind_Psl_Assume_Directive;
+
+   subtype Iir_Kinds_Psl_Sequence_Directive is Iir_Kind range
+     Iir_Kind_Psl_Cover_Directive ..
+     Iir_Kind_Psl_Restrict_Directive;
+
+   subtype Iir_Kinds_Psl_Directive is Iir_Kind range
+     Iir_Kind_Psl_Assert_Directive ..
    --Iir_Kind_Psl_Assume_Directive
    --Iir_Kind_Psl_Cover_Directive
      Iir_Kind_Psl_Restrict_Directive;

@@ -36,4 +36,9 @@ package PSL.Subsets is
    --  All other operators not mentioned above are supported in the simple
    --  subset without restriction.
    procedure Check_Simple (N : Node);
+
+   --  Return True iff N is an async abort.
+   --  True for N_Async_Abort, False for N_Sync_Abort.
+   --  Here we also decide for N_Abort.
+   function Is_Async_Abort (N : Node) return Boolean;
 end PSL.Subsets;

@@ -1002,6 +1002,23 @@ class Iir_Kinds:
         Iir_Kind.Psl_Restrict_Directive,
     ]
 
+    Psl_Property_Directive = [
+        Iir_Kind.Psl_Assert_Directive,
+        Iir_Kind.Psl_Assume_Directive,
+    ]
+
+    Psl_Sequence_Directive = [
+        Iir_Kind.Psl_Cover_Directive,
+        Iir_Kind.Psl_Restrict_Directive,
+    ]
+
+    Psl_Directive = [
+        Iir_Kind.Psl_Assert_Directive,
+        Iir_Kind.Psl_Assume_Directive,
+        Iir_Kind.Psl_Cover_Directive,
+        Iir_Kind.Psl_Restrict_Directive,
+    ]
+
     Generate_Statement = [
         Iir_Kind.If_Generate_Statement,
         Iir_Kind.Case_Generate_Statement,

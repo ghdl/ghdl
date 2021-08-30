@@ -14,6 +14,8 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
+with Types; use Types;
+
 with PSL.Types; use PSL.Types;
 with PSL.Errors; use PSL.Errors;
 
@@ -197,4 +199,19 @@ package body PSL.Subsets is
             null;
       end case;
    end Check_Simple;
+
+   function Is_Async_Abort (N : Node) return Boolean is
+   begin
+      case Get_Kind (N) is
+         when N_Async_Abort =>
+            return True;
+         when N_Sync_Abort =>
+            return False;
+         when N_Abort =>
+            return False;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Is_Async_Abort;
+
 end PSL.Subsets;
