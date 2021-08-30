@@ -374,9 +374,12 @@ ci_run () {
 
   if [ "x$IS_MACOS" = "xtrue" ]; then
       pip3 install -r testsuite/requirements.txt
+      gstart "[CI] ghdl dispconfig"
       CC=clang \
       PATH="$PATH:$(pwd)/install-$(echo "$TASK" | cut -d+ -f2)/usr/local/bin" \
       ghdl dispconfig
+      gend
+      CC=clang \
       PATH="$PATH:$(pwd)/install-$(echo "$TASK" | cut -d+ -f2)/usr/local/bin" \
       ./testsuite/testsuite.sh
   else
@@ -417,7 +420,9 @@ EOF
       tests+=" vpi vhpi"
 
       # Run tests in docker container
+      gstart "[CI] ghdl dispconfig"
       $RUN "$GHDL_TEST_IMAGE" bash -c "ghdl dispconfig"
+      gend
       $RUN "$GHDL_TEST_IMAGE" bash -c "GHDL=ghdl ./testsuite/testsuite.sh $tests"
   fi
 

@@ -341,6 +341,9 @@ jobs:
           pacman --noconfirm -U artifact/mingw-w64-${{ matrix.sys.arch }}-ghdl-${{ matrix.sys.pkg }}-*.zst
           pip3 install -r testsuite/requirements.txt
 
+      - name: '🛠 ghdl dispconfig'
+        run: ghdl dispconfig
+
       - name: '🚦 Test package'
         run: GHDL=ghdl ./testsuite/testsuite.sh ${{ matrix.suite }}
 
