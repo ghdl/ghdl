@@ -276,7 +276,7 @@ if test $backend = gcc; then
   fi
   if test "x$backtrace_lib" = x ; then
     # Automatically use libbacktrace from gcc.
-    backtrace_lib="$prefix/$libdirsuffix/libbacktrace.a"
+    backtrace_lib="lib/$libdirsuffix/libbacktrace.a"
   fi
 fi
 
@@ -369,7 +369,7 @@ rm -f config.status
     eval vval=\$$v
     echo $v=\"$vval\"
   done
-  subst_files="ghdl.gpr Makefile Make-lang.in"
+  subst_files="ghdl.gpr Makefile"
   echo "for f in $subst_files; do"
   echo '  echo "Creating $f"'
   echo "  sed \\"

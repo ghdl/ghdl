@@ -104,7 +104,7 @@ vhdl/default_paths.ads: Makefile
 	echo "   Compiler_Llvm  : constant String := \"\";" >> tmp-dpaths.ads
 	echo "   Post_Processor : constant String := \"\";" >> tmp-dpaths.ads
 	echo "   Lib_Prefix     : constant String :=">> tmp-dpaths.ads
-	echo "     \"@libdir@/ghdl\";" >> tmp-dpaths.ads
+	echo "     \"lib/ghdl\";" >> tmp-dpaths.ads
 	echo "   Shared_Library_Extension : constant String :=">> tmp-dpaths.ads
 	echo "     \"$(VHDL_SOEXT)\";" >> tmp-dpaths.ads
 	echo "   Default_Pie : constant Boolean := False;" >> tmp-dpaths.ads
