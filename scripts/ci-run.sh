@@ -376,6 +376,8 @@ ci_run () {
       pip3 install -r testsuite/requirements.txt
       CC=clang \
       PATH="$PATH:$(pwd)/install-$(echo "$TASK" | cut -d+ -f2)/usr/local/bin" \
+      ghdl dispconfig
+      PATH="$PATH:$(pwd)/install-$(echo "$TASK" | cut -d+ -f2)/usr/local/bin" \
       ./testsuite/testsuite.sh
   else
       # Build ghdl/ghdl:$GHDL_IMAGE_TAG image
@@ -415,6 +417,7 @@ EOF
       tests+=" vpi vhpi"
 
       # Run tests in docker container
+      $RUN "$GHDL_TEST_IMAGE" bash -c "ghdl dispconfig"
       $RUN "$GHDL_TEST_IMAGE" bash -c "GHDL=ghdl ./testsuite/testsuite.sh $tests"
   fi
 
