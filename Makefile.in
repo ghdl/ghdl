@@ -122,7 +122,7 @@ endif
 
 # Flags for libraries
 LIBSRC_DIR:=$(srcdir)/libraries
-LIBDST_DIR:=$(libdirsuffix)
+LIBDST_DIR:=lib/$(libdirsuffix)
 
 LIBVHDL_FLAGS_TO_PASS=\
  LIBSRC_DIR="$(LIBSRC_DIR)" \
@@ -292,7 +292,7 @@ GHDL1_GCC_BIN=  # --GHDL1=/path/to/ghdl1
 libs.vhdl.gcc:
 	$(MAKE) -f $(srcdir)/libraries/Makefile.inc $(LIBVHDL_FLAGS_TO_PASS) GHDL="$(GHDL_GCC_BIN)" GHDL_FLAGS="$(GHDL1_GCC_BIN) $(LIB_CFLAGS)" vhdl.libs.all libs.vhdl.standard
 
-ghdllib: libs.vhdl.gcc $(libdirsuffix)/libgrt.a all.libghdl all.ghw
+ghdllib: libs.vhdl.gcc lib/$(libdirsuffix)/libgrt.a all.libghdl all.ghw
 
 install.gcc: install.grt
 
@@ -509,15 +509,15 @@ uninstall.ghw:
 ############### grt #####################################################
 
 install.grt: \
-  $(libdirsuffix)/libgrt.a \
-  $(libdirsuffix)/grt.lst \
-  $(libdirsuffix)/grt-exec.lst \
-  $(libdirsuffix)/grt-shared.lst \
+  lib/$(libdirsuffix)/libgrt.a \
+  lib/$(libdirsuffix)/grt.lst \
+  lib/$(libdirsuffix)/grt-exec.lst \
+  lib/$(libdirsuffix)/grt-shared.lst \
   install.dirs
-	$(INSTALL_DATA) $(libdirsuffix)/libgrt.a $(DESTDIR)$(VHDL_LIB_DIR)/libgrt.a
-	$(INSTALL_DATA) $(libdirsuffix)/grt.lst $(DESTDIR)$(VHDL_LIB_DIR)/grt.lst
-	$(INSTALL_DATA) $(libdirsuffix)/grt-exec.lst $(DESTDIR)$(VHDL_LIB_DIR)/grt-exec.lst
-	$(INSTALL_DATA) $(libdirsuffix)/grt-shared.lst $(DESTDIR)$(VHDL_LIB_DIR)/grt-shared.lst
+	$(INSTALL_DATA) lib/$(libdirsuffix)/libgrt.a $(DESTDIR)$(VHDL_LIB_DIR)/libgrt.a
+	$(INSTALL_DATA) lib/$(libdirsuffix)/grt.lst $(DESTDIR)$(VHDL_LIB_DIR)/grt.lst
+	$(INSTALL_DATA) lib/$(libdirsuffix)/grt-exec.lst $(DESTDIR)$(VHDL_LIB_DIR)/grt-exec.lst
+	$(INSTALL_DATA) lib/$(libdirsuffix)/grt-shared.lst $(DESTDIR)$(VHDL_LIB_DIR)/grt-shared.lst
 	$(INSTALL_DATA) $(GRTSRCDIR)/grt.ver $(DESTDIR)$(VHDL_LIB_DIR)/grt.ver
 	test "x$(LIBBACKTRACE)" = x || test "x$(backend)" = xgcc || \
 	  $(INSTALL_DATA) $(LIBBACKTRACE) $(DESTDIR)$(VHDL_LIB_DIR)/libbacktrace.a
