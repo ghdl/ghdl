@@ -500,6 +500,19 @@ Options
   Currently, VITAL checks are only partially implemented.
   See section :ref:`VHDL_restrictions_for_VITAL` for more details.
 
+.. option:: --check-synthesis
+
+  Checks analyzed unit for good synthesizable code practices.
+
+  Currently, following checks are executed:
+    - Incomplete sensitivity lists (Missing signals)
+    - Over-specified sensitivity lists (Redundant signals)
+
+  .. ATTENTION::
+    Sensitivity lists of clocked processes (``rising_edge`` / ``falling_edge`` / ``'event``)
+    are not checked! ``--check-synthesis`` checks only sensitivity lists of combinatorial
+    processes and latches!
+
 .. option:: --PREFIX=<PATH>
 
   Use :file:`PATH` as the prefix path to find commands and pre-installed (``std`` and ``ieee``) libraries.
