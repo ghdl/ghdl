@@ -37,6 +37,9 @@ with Vhdl.Canon_PSL;
 package body Vhdl.Canon is
    Canon_Flag_Set_Assoc_Formals : constant Boolean := False;
 
+   -- Process whose sensitivity list is currently being extracted.
+   Current_Process : Iir := Null_Iir;
+
    --  Canonicalize the chain of declarations in Declaration_Chain of
    --  DECL_PARENT. PARENT must be the parent of the current statements chain,
    --  or NULL_IIR if DECL_PARENT has no corresponding current statments.
@@ -79,6 +82,26 @@ package body Vhdl.Canon is
    function Canon_Conditional_Signal_Assignment
      (Conc_Stmt : Iir; Proc : Iir; Parent : Iir; Clear : Boolean) return Iir;
    procedure Canon_Conditional_Signal_Assignment_Expression (Stmt : Iir);
+
+   procedure Canon_Check_Edge_Func(Node : Iir) is
+      Func_Identifier : Name_Id;
+   begin
+      case Get_Kind (Node) is
+      when Iir_Kind_Function_Call =>
+         Func_Identifier := Get_Identifier (Get_Implementation (Node));
+         if Name_Table.Image (Func_Identifier) = "rising_edge" or
+            Name_Table.Image (Func_Identifier) = "falling_edge"
+         then
+            Set_Is_Clocked_Process (Current_Process, True);
+         end if;
+
+      when Iir_Kind_Event_Attribute =>
+         Set_Is_Clocked_Process (Current_Process, True);
+
+      when others =>
+         Error_Kind ("canon_check_edge_func", Node);
+      end case;
+   end Canon_Check_Edge_Func;
 
    procedure Canon_Extract_Sensitivity_Aggregate
      (Aggr : Iir;
@@ -175,6 +198,9 @@ package body Vhdl.Canon is
 
          when Iir_Kind_Function_Call =>
             El := Get_Parameter_Association_Chain (Expr);
+
+            Canon_Check_Edge_Func (Expr);
+
             while El /= Null_Iir loop
                case Get_Kind (El) is
                   when Iir_Kind_Association_Element_By_Expression =>
@@ -226,7 +252,21 @@ package body Vhdl.Canon is
 
          when Iir_Kinds_Type_Attribute =>
             null;
-         when Iir_Kinds_Signal_Value_Attribute =>
+
+         when Iir_Kind_Event_Attribute =>
+            Canon_Check_Edge_Func (Expr);
+            --  LRM 8.1
+            --  An attribute name: [...]; otherwise, apply this rule to the
+            --  prefix of the attribute name.
+            Canon_Extract_Sensitivity_Expression
+              (Get_Prefix (Expr), Sensitivity_List, False);
+
+         when Iir_Kind_Active_Attribute
+            | Iir_Kind_Last_Event_Attribute
+            | Iir_Kind_Last_Active_Attribute
+            | Iir_Kind_Last_Value_Attribute
+            | Iir_Kind_Driving_Attribute
+            | Iir_Kind_Driving_Value_Attribute =>
             --  LRM 8.1
             --  An attribute name: [...]; otherwise, apply this rule to the
             --  prefix of the attribute name.
@@ -598,6 +638,7 @@ package body Vhdl.Canon is
       Res : Iir_List;
    begin
       Res := Create_Iir_List;
+      Current_Process := Proc;
 
       --  Signals read by statements.
       --  FIXME: justify why signals read in declarations don't care.
@@ -743,6 +784,7 @@ package body Vhdl.Canon is
            | Iir_Kind_Transaction_Attribute =>
             --  FIXME: add the default parameter ?
             Canon_Expression (Get_Prefix (Expr));
+
          when Iir_Kind_Event_Attribute
            | Iir_Kind_Last_Value_Attribute
            | Iir_Kind_Active_Attribute

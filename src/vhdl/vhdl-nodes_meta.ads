@@ -992,6 +992,7 @@ package Vhdl.Nodes_Meta is
    function Has_End_Has_Reserved_Id (K : Iir_Kind) return Boolean;
    function Has_End_Has_Identifier (K : Iir_Kind) return Boolean;
    function Has_End_Has_Postponed (K : Iir_Kind) return Boolean;
+   function Has_Is_Clocked_Process (K : Iir_Kind) return Boolean;
    function Has_Has_Label (K : Iir_Kind) return Boolean;
    function Has_Has_Begin (K : Iir_Kind) return Boolean;
    function Has_Has_End (K : Iir_Kind) return Boolean;

@@ -6894,6 +6894,22 @@ package body Vhdl.Nodes is
       Set_Flag10 (Decl, Flag);
    end Set_End_Has_Postponed;
 
+   function Get_Is_Clocked_Process (Decl : Iir) return Boolean is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Is_Clocked_Process (Get_Kind (Decl)),
+                     "no field Is_Clocked_Process");
+      return Get_Flag13 (Decl);
+   end Get_Is_Clocked_Process;
+
+   procedure Set_Is_Clocked_Process (Decl : Iir; Flag : Boolean) is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Is_Clocked_Process (Get_Kind (Decl)),
+                     "no field Is_Clocked_Process");
+      Set_Flag13 (Decl, Flag);
+   end Set_Is_Clocked_Process;
+
    function Get_Has_Label (Decl : Iir) return Boolean is
    begin
       pragma Assert (Decl /= Null_Iir);
