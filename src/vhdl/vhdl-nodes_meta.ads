@@ -402,6 +402,7 @@ package Vhdl.Nodes_Meta is
       Field_End_Has_Reserved_Id,
       Field_End_Has_Identifier,
       Field_End_Has_Postponed,
+      Field_Is_Clocked_Process,
       Field_Has_Label,
       Field_Has_Begin,
       Field_Has_End,
