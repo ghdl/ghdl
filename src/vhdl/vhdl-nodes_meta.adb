@@ -12287,6 +12287,17 @@ package body Vhdl.Nodes_Meta is
       end case;
    end Has_End_Has_Postponed;
 
+   function Has_Is_Clocked_Process (K : Iir_Kind) return Boolean is
+   begin
+      case K is
+         when Iir_Kind_Sensitized_Process_Statement
+           | Iir_Kind_Process_Statement =>
+            return True;
+         when others =>
+            return False;
+      end case;
+   end Has_Is_Clocked_Process;
+
    function Has_Has_Label (K : Iir_Kind) return Boolean is
    begin
       case K is

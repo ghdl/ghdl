@@ -133,15 +133,21 @@ package body Vhdl.Synthesis_Checks is
          Stmt := Get_Concurrent_Statement_Chain (El);
          while Stmt /= Null_Iir loop
             Kind := Get_Kind(Stmt);
-            -- FIXME: We have to ignore processes if we have "pragma
+
+            -- FIXME: We should to ignore processes if we have "pragma
             --        synthesis off" defined! Such processes will not be
             --        synthesized, therefore shall not be checked!
             if Kind = Iir_Kind_Sensitized_Process_Statement then
                Gold_List := Get_Golden_Sensitivity_List (Stmt);
                Real_List := Get_Sensitivity_List (Stmt);
-               Check_Incomplete_Sensitivity_List (Stmt, Gold_List, Real_List);
-               Check_Overspecified_Sensitivity_List (Stmt, Gold_List,
+
+               -- Skip clocked processes when checking !
+               if Get_Is_Clocked_Process (Stmt) = False then
+                  Check_Incomplete_Sensitivity_List (Stmt, Gold_List,
                                                      Real_List);
+                  Check_Overspecified_Sensitivity_List (Stmt, Gold_List,
+                                                        Real_List);
+               end if;
                Destroy_Iir_List (Gold_List);
             end if;
             Stmt := Get_Chain (Stmt);
