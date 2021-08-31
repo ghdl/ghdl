@@ -551,8 +551,8 @@ Some warnings are reported only during analysis, others during elaboration.
   You could disable a warning by using the ``--warn-no-XXX`` or ``-Wno-XXX`` instead of ``--warn-XXX`` or ``-WXXX``.
 
 .. HINT::
-  The warnings ``-Wbinding``, ``-Wlibrary``, ``-Wshared``, ``-Wpure``, ``-Wspecs``, ``-Whide``, ``-Wport`` are enabled
-  by default.
+  Some warnings are enabled by default, you can see the list by using
+  ``ghdl --help-warnings``.
 
 .. option:: --warn-library
 .. option:: -Wlibrary
@@ -626,6 +626,19 @@ Some warnings are reported only during analysis, others during elaboration.
 
   These are checks for no wait statements in a procedure called in a
   sensitized process and checks for pure rules of a function.
+
+.. option:: --warn-sensitivity
+.. option:: -Wsensitivity
+
+  Check analyzed unit for good synthesizable code practices and emit warnings if bad practices are detected
+
+  Currently, the following checks are executed:
+    - Incomplete sensitivity lists (Missing signals)
+    - Over-specified sensitivity lists (Redundant signals)
+
+  .. ATTENTION::
+    Sensitity lists with indexed, selected or sliced names might generate
+    incorrect warnings.
 
 .. option:: --warn-body
 .. option:: -Wbody
