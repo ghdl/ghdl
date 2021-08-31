@@ -39,6 +39,7 @@ package body Vhdl.Canon is
 
    -- Process whose sensitivity list is currently being extracted.
    Current_Process : Iir := Null_Iir;
+   Canoning_Process : Boolean := False;
 
    --  Canonicalize the chain of declarations in Declaration_Chain of
    --  DECL_PARENT. PARENT must be the parent of the current statements chain,
@@ -86,6 +87,10 @@ package body Vhdl.Canon is
    procedure Canon_Check_Edge_Func(Node : Iir) is
       Func_Identifier : Name_Id;
    begin
+      if not Canoning_Process then
+         return;
+      end if;
+
       case Get_Kind (Node) is
       when Iir_Kind_Function_Call =>
          Func_Identifier := Get_Identifier (Get_Implementation (Node));
@@ -639,6 +644,7 @@ package body Vhdl.Canon is
    begin
       Res := Create_Iir_List;
       Current_Process := Proc;
+      Canoning_Process := True;
 
       --  Signals read by statements.
       --  FIXME: justify why signals read in declarations don't care.
@@ -647,6 +653,8 @@ package body Vhdl.Canon is
 
       --  Signals read indirectly by subprograms called.
       Canon_Extract_Sensitivity_From_Callees (Get_Callees_List (Proc), Res);
+
+      Canoning_Process := False;
 
       Set_Seen_Flag (Proc, True);
       Clear_Seen_Flag (Proc);

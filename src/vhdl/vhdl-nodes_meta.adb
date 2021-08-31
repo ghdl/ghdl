@@ -358,6 +358,7 @@ package body Vhdl.Nodes_Meta is
       Field_End_Has_Reserved_Id => Type_Boolean,
       Field_End_Has_Identifier => Type_Boolean,
       Field_End_Has_Postponed => Type_Boolean,
+      Field_Is_Clocked_Process => Type_Boolean,
       Field_Has_Label => Type_Boolean,
       Field_Has_Begin => Type_Boolean,
       Field_Has_End => Type_Boolean,
@@ -1080,6 +1081,8 @@ package body Vhdl.Nodes_Meta is
             return "end_has_identifier";
          when Field_End_Has_Postponed =>
             return "end_has_postponed";
+         when Field_Is_Clocked_Process =>
+            return "is_clocked_process";
          when Field_Has_Label =>
             return "has_label";
          when Field_Has_Begin =>
@@ -2469,6 +2472,8 @@ package body Vhdl.Nodes_Meta is
          when Field_End_Has_Identifier =>
             return Attr_None;
          when Field_End_Has_Postponed =>
+            return Attr_None;
+         when Field_Is_Clocked_Process =>
             return Attr_None;
          when Field_Has_Label =>
             return Attr_None;
@@ -4275,6 +4280,7 @@ package body Vhdl.Nodes_Meta is
       Field_Seen_Flag,
       Field_End_Has_Postponed,
       Field_Is_Ref,
+      Field_Is_Clocked_Process,
       Field_Passive_Flag,
       Field_Postponed_Flag,
       Field_Visible_Flag,
@@ -4297,6 +4303,7 @@ package body Vhdl.Nodes_Meta is
       Field_Seen_Flag,
       Field_End_Has_Postponed,
       Field_Suspend_Flag,
+      Field_Is_Clocked_Process,
       Field_Passive_Flag,
       Field_Postponed_Flag,
       Field_Visible_Flag,
@@ -5443,6 +5450,7 @@ package body Vhdl.Nodes_Meta is
       Iir_Kind_Psl_Onehot => 1526,
       Iir_Kind_Psl_Onehot0 => 1529,
       Iir_Kind_Psl_Expression => 1531,
+<<<<<<< HEAD
       Iir_Kind_Sensitized_Process_Statement => 1552,
       Iir_Kind_Process_Statement => 1572,
       Iir_Kind_Concurrent_Simple_Signal_Assignment => 1585,
@@ -5452,6 +5460,17 @@ package body Vhdl.Nodes_Meta is
       Iir_Kind_Concurrent_Procedure_Call_Statement => 1627,
       Iir_Kind_Concurrent_Break_Statement => 1635,
       Iir_Kind_Psl_Assert_Directive => 1649,
+=======
+      Iir_Kind_Sensitized_Process_Statement => 1553,
+      Iir_Kind_Process_Statement => 1574,
+      Iir_Kind_Concurrent_Simple_Signal_Assignment => 1587,
+      Iir_Kind_Concurrent_Conditional_Signal_Assignment => 1600,
+      Iir_Kind_Concurrent_Selected_Signal_Assignment => 1614,
+      Iir_Kind_Concurrent_Assertion_Statement => 1622,
+      Iir_Kind_Concurrent_Procedure_Call_Statement => 1629,
+      Iir_Kind_Concurrent_Break_Statement => 1637,
+      Iir_Kind_Psl_Assert_Directive => 1650,
+>>>>>>> src: Handle canoning seq-statements which are not in process.
       Iir_Kind_Psl_Assume_Directive => 1661,
       Iir_Kind_Psl_Cover_Directive => 1673,
       Iir_Kind_Psl_Restrict_Directive => 1684,
@@ -5700,6 +5719,8 @@ package body Vhdl.Nodes_Meta is
             return Get_End_Has_Identifier (N);
          when Field_End_Has_Postponed =>
             return Get_End_Has_Postponed (N);
+         when Field_Is_Clocked_Process =>
+            return Get_Is_Clocked_Process (N);
          when Field_Has_Label =>
             return Get_Has_Label (N);
          when Field_Has_Begin =>
@@ -5852,6 +5873,8 @@ package body Vhdl.Nodes_Meta is
             Set_End_Has_Identifier (N, V);
          when Field_End_Has_Postponed =>
             Set_End_Has_Postponed (N, V);
+         when Field_Is_Clocked_Process =>
+            Set_Is_Clocked_Process (N, V);
          when Field_Has_Label =>
             Set_Has_Label (N, V);
          when Field_Has_Begin =>

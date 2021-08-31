@@ -142,7 +142,9 @@ package body Vhdl.Synthesis_Checks is
                Real_List := Get_Sensitivity_List (Stmt);
 
                -- Skip clocked processes when checking !
-               if Get_Is_Clocked_Process (Stmt) = False then
+               if Get_Is_Clocked_Process (Stmt) = False and
+                  Real_List /= Iir_List_All
+               then
                   Check_Incomplete_Sensitivity_List (Stmt, Gold_List,
                                                      Real_List);
                   Check_Overspecified_Sensitivity_List (Stmt, Gold_List,
