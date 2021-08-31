@@ -37,6 +37,8 @@ with Vhdl.Evaluation;
 with Vhdl.Ieee.Std_Logic_1164;
 
 with PSL.Types;
+with PSL.Nodes;
+with PSL.Subsets;
 with PSL.NFAs;
 
 with Synth.Memtype; use Synth.Memtype;
@@ -3305,8 +3307,10 @@ package body Synth.Vhdl_Stmts is
    is
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Nbr_States : constant Int32 := Get_PSL_Nbr_States (Stmt);
+      Has_Async_Abort : Boolean;
       States : Net;
       Init : Net;
+      Rst  : Net;
       Clk : Net;
       Clk_Inst : Instance;
    begin
@@ -3323,14 +3327,42 @@ package body Synth.Vhdl_Stmts is
          return;
       end if;
 
+      Rst := No_Net;
+      Has_Async_Abort := False;
+      if Get_Kind (Stmt) in Iir_Kinds_Psl_Property_Directive
+        and then Get_PSL_Abort_Flag (Stmt)
+      then
+         declare
+            use PSL.Types;
+            use PSL.Subsets;
+            use PSL.Nodes;
+            Abort_Prop : constant PSL_Node := Get_Psl_Property (Stmt);
+         begin
+            Rst := Synth_PSL_Expression (Syn_Inst, Get_Boolean (Abort_Prop));
+            Has_Async_Abort := Is_Async_Abort (Abort_Prop);
+         end;
+      end if;
+
       --  build idff
-      States := Build_Idff (Ctxt, Clk, No_Net, Init);
+      if Rst /= No_Net and then Has_Async_Abort then
+         --  In case of async_abort.
+         States := Build_Iadff (Ctxt, Clk, No_Net, Rst, Init, Init);
+      else
+         States := Build_Idff (Ctxt, Clk, No_Net, Init);
+      end if;
       Set_Location (States, Stmt);
 
       --  create update nets
       --  For each state: if set, evaluate all outgoing edges.
       Next_States :=
         Synth_Psl_NFA (Syn_Inst, Get_PSL_NFA (Stmt), Nbr_States, States, Stmt);
+
+      --  Handle sync_abort.
+      if Rst /= No_Net and then not Has_Async_Abort then
+         Next_States := Build_Mux2 (Ctxt, Rst, Next_States, Init);
+         Set_Location (Next_States, Stmt);
+      end if;
+
       Connect (Get_Input (Get_Net_Parent (States), 1), Next_States);
    end Synth_Psl_Dff;
 

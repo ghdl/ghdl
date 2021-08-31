@@ -196,9 +196,9 @@ package Netlists.Builders is
                         Clk : Net;
                         D : Net; Rst : Net; Rst_Val : Net) return Net;
    function Build_Iadff (Ctxt : Context_Acc;
-                        Clk : Net;
-                        D : Net; Rst : Net; Rst_Val : Net;
-                                            Init : Net) return Net;
+                         Clk : Net;
+                         D : Net; Rst : Net; Rst_Val : Net;
+                                             Init : Net) return Net;
 
    function Build_Mdff (Ctxt : Context_Acc;
                         Clk : Net;

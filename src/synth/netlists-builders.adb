@@ -537,10 +537,10 @@ package body Netlists.Builders is
          Id_Iadff, 5, 1, 0);
       Outputs := (0 => Create_Output ("q"));
       Set_Ports_Desc (Ctxt.M_Iadff, (0 => Create_Input ("clk", 1),
-                                    1 => Create_Input ("d"),
-                                    2 => Create_Input ("rst"),
-                                    3 => Create_Input ("rst_val"),
-                                    4 => Create_Input ("init")),
+                                     1 => Create_Input ("d"),
+                                     2 => Create_Input ("rst"),
+                                     3 => Create_Input ("rst_val"),
+                                     4 => Create_Input ("init")),
                       Outputs);
 
       Ctxt.M_Mdff := New_User_Module
@@ -1524,7 +1524,7 @@ package body Netlists.Builders is
                          D : Net;
                          Rst : Net; Rst_Val : Net; Init : Net) return Net
    is
-      Wd : constant Width := Get_Width (D);
+      Wd : constant Width := Get_Width (Init);
       pragma Assert (Get_Width (Clk) = 1);
       Inst : Instance;
       O : Net;
@@ -1533,7 +1533,9 @@ package body Netlists.Builders is
       O := Get_Output (Inst, 0);
       Set_Width (O, Wd);
       Connect (Get_Input (Inst, 0), Clk);
-      Connect (Get_Input (Inst, 1), D);
+      if D /= No_Net then
+         Connect (Get_Input (Inst, 1), D);
+      end if;
       Connect (Get_Input (Inst, 2), Rst);
       Connect (Get_Input (Inst, 3), Rst_Val);
       Connect (Get_Input (Inst, 4), Init);
