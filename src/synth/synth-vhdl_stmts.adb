@@ -3617,10 +3617,10 @@ package body Synth.Vhdl_Stmts is
                end case;
                Config := Get_Prev_Block_Configuration (Config);
             end loop;
-            if Config = Null_Node then
-               raise Internal_Error;
+            --  There is no block configuration in vunits (yet).
+            if Config /= Null_Node then
+               Apply_Block_Configuration (Config, Bod);
             end if;
-            Apply_Block_Configuration (Config, Bod);
          end;
 
          --  FIXME: get position ?
