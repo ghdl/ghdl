@@ -458,32 +458,32 @@ class fields(IntEnum):
     End_Has_Reserved_Id = 338
     End_Has_Identifier = 339
     End_Has_Postponed = 340
-    Has_Label = 341
-    Has_Begin = 342
-    Has_End = 343
-    Has_Is = 344
-    Has_Pure = 345
-    Has_Body = 346
-    Has_Parameter = 347
-    Has_Component = 348
-    Has_Identifier_List = 349
-    Has_Mode = 350
-    Has_Class = 351
-    Has_Delay_Mechanism = 352
-    Suspend_Flag = 353
-    Is_Ref = 354
-    Is_Forward_Ref = 355
-    Psl_Property = 356
-    Psl_Sequence = 357
-    Psl_Declaration = 358
-    Psl_Expression = 359
-    Psl_Boolean = 360
-    PSL_Clock = 361
-    PSL_NFA = 362
-    PSL_Nbr_States = 363
-    PSL_Clock_Sensitivity = 364
-    PSL_EOS_Flag = 365
-    PSL_Abort_Flag = 366
+    Is_Clocked_Process = 341
+    Has_Label = 342
+    Has_Begin = 343
+    Has_End = 344
+    Has_Is = 345
+    Has_Pure = 346
+    Has_Body = 347
+    Has_Parameter = 348
+    Has_Component = 349
+    Has_Identifier_List = 350
+    Has_Mode = 351
+    Has_Class = 352
+    Has_Delay_Mechanism = 353
+    Suspend_Flag = 354
+    Is_Ref = 355
+    Is_Forward_Ref = 356
+    Psl_Property = 357
+    Psl_Sequence = 358
+    Psl_Declaration = 359
+    Psl_Expression = 360
+    Psl_Boolean = 361
+    PSL_Clock = 362
+    PSL_NFA = 363
+    PSL_Nbr_States = 364
+    PSL_Clock_Sensitivity = 365
+    PSL_EOS_Flag = 366
     Count_Expression = 367
     Clock_Expression = 368
     Default_Clock = 369
@@ -2665,6 +2665,12 @@ def Has_End_Has_Identifier(kind: IirKind) -> bool:
 @export
 @BindToLibGHDL("vhdl__nodes_meta__has_end_has_postponed")
 def Has_End_Has_Postponed(kind: IirKind) -> bool:
+    """"""
+
+
+@export
+@BindToLibGHDL("vhdl__nodes_meta__has_is_clocked_process")
+def Has_Is_Clocked_Process(kind: IirKind) -> bool:
     """"""
 
 

@@ -6271,6 +6271,19 @@ def Set_End_Has_Postponed(obj: Iir, value: Boolean) -> None:
 
 
 @export
+@BindToLibGHDL("vhdl__nodes__get_is_clocked_process")
+def Get_Is_Clocked_Process(obj: Iir) -> Boolean:
+    """"""
+    return 0
+
+
+@export
+@BindToLibGHDL("vhdl__nodes__set_is_clocked_process")
+def Set_Is_Clocked_Process(obj: Iir, value: Boolean) -> None:
+    """"""
+
+
+@export
 @BindToLibGHDL("vhdl__nodes__get_has_label")
 def Get_Has_Label(obj: Iir) -> Boolean:
     """"""
