@@ -81,6 +81,8 @@ begin
   -- See 1850-2010 6.2.1.5.1 abort, async_abort, and sync_abort
   WITH_async_ABORT_a : assert (always a -> next (b before a)) async_abort d;
 
+  --  According to IEEE 1850-2010 6.2.1.5.1, abort is identical to async_abort
+  WITH_ABORT_a : assert (always a -> next (b before a)) abort d;
 
 end architecture psl;
 
