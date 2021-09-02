@@ -203,11 +203,10 @@ package body PSL.Subsets is
    function Is_Async_Abort (N : Node) return Boolean is
    begin
       case Get_Kind (N) is
-         when N_Async_Abort =>
+         when N_Async_Abort
+            | N_Abort =>
             return True;
          when N_Sync_Abort =>
-            return False;
-         when N_Abort =>
             return False;
          when others =>
             raise Internal_Error;

@@ -1744,11 +1744,10 @@ package body Vhdl.Canon is
       --  Generate the NFA.
       case Get_Kind (Prop) is
          when N_Async_Abort
-            | N_Sync_Abort =>
+            | N_Sync_Abort
+            | N_Abort =>
             Prop := Get_Property (Prop);
             Set_PSL_Abort_Flag (Stmt, True);
-         when N_Abort =>
-            null;
          when others =>
             null;
       end case;
