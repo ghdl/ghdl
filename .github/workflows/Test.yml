@@ -100,7 +100,7 @@ jobs:
       - name: '🚦 Check if Python bindings changed'
         run: |
           git diff --stat
-          echo "Binding can be updated with: make -C src/vhdl"
+          echo "NOTE: Bindings can be updated by executing ./scripts/update_py_bindings.sh (see previous step)"
           git diff --exit-code
 
       - name: '🚦 Check if python follows code formatting standards'
