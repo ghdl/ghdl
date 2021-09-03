@@ -1172,6 +1172,19 @@ package body Trans.Chap3 is
       Finish_Subprogram_Body;
    end Create_Array_Type_Builder;
 
+   function Get_Element_Subtype_For_Info (Arr_Def : Iir) return Iir
+   is
+      Info : constant Type_Info_Acc := Get_Info (Arr_Def);
+      Arr : Iir;
+   begin
+      if Info.Type_Locally_Constrained then
+         Arr := Arr_Def;
+      else
+         Arr := Get_Base_Type (Arr_Def);
+      end if;
+      return Get_Element_Subtype (Arr);
+   end Get_Element_Subtype_For_Info;
+
    procedure Translate_Array_Subtype_Definition (Def : Iir)
    is
       Parent_Type : constant Iir := Get_Parent_Type (Def);
@@ -3162,7 +3175,7 @@ package body Trans.Chap3 is
      return Mnode
    is
       T_Info   : constant Type_Info_Acc := Get_Info (Atype);
-      El_Type  : constant Iir := Get_Element_Subtype (Atype);
+      El_Type  : constant Iir := Get_Element_Subtype_For_Info (Atype);
       El_Tinfo : constant Type_Info_Acc := Get_Info (El_Type);
       Kind     : constant Object_Kind_Type := Get_Object_Kind (Base);
    begin

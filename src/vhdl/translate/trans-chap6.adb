@@ -559,7 +559,8 @@ package body Trans.Chap6 is
       Index_Type : constant Iir := Get_Index_Type (Prefix_Type, 0);
 
       --  Element type.
-      El_Type    : constant Iir := Get_Element_Subtype (Prefix_Type);
+      El_Type    : constant Iir :=
+        Chap3.Get_Element_Subtype_For_Info (Prefix_Type);
       El_Tinfo   : constant Type_Info_Acc := Get_Info (El_Type);
 
       --  Type of the slice.
@@ -598,7 +599,7 @@ package body Trans.Chap6 is
 
       if Is_Unbounded_Type (El_Tinfo) then
          --  Copy layout of element before building the bounds
-         pragma Assert (Is_Unbounded_Type (Prefix_Info));
+--         pragma Assert (Is_Unbounded_Type (Prefix_Info));
          Stabilize (Prefix_Var);
          Gen_Memcpy
            (M2Addr (Chap3.Array_Bounds_To_Element_Layout
@@ -814,7 +815,8 @@ package body Trans.Chap6 is
       Slice_Type  : constant Iir := Get_Type (Expr);
       Slice_Tinfo : constant Type_Info_Acc := Get_Info (Slice_Type);
 
-      El_Type  : constant Iir := Get_Element_Subtype (Slice_Type);
+      El_Type  : constant Iir :=
+        Chap3.Get_Element_Subtype_For_Info (Slice_Type);
       El_Tinfo : constant Type_Info_Acc := Get_Info (El_Type);
 
       --  Object kind of the prefix.

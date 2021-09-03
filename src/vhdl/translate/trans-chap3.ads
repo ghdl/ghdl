@@ -307,6 +307,12 @@ package Trans.Chap3 is
    procedure Translate_Array_Subtype (Arr_Type : Iir);
    procedure Elab_Array_Subtype (Arr_Type : Iir);
 
+   --  Return the element subtype to be used for getting type info.
+   --  Follow the translation for array subtypes, as a type for the element is
+   --  not created if the array is not also constrained with locally static
+   --  indexes.
+   function Get_Element_Subtype_For_Info (Arr_Def : Iir) return Iir;
+
    --  Create the bounds for SUB_TYPE.
    --  SUB_TYPE is expected to be a non-static, anonymous array or record
    --  subtype.
