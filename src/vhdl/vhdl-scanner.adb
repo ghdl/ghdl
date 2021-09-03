@@ -2011,6 +2011,8 @@ package body Vhdl.Scanner is
             when '*' =>
                if Source (Pos + 1) = '/' then
                   if Pos > Current_Context.Token_Pos then
+                     --  There are characters before the end of comment, so
+                     --  first return them.
                      Current_Token := Tok_Block_Comment_Text;
                   else
                      Pos := Pos + 2;
@@ -2022,6 +2024,8 @@ package body Vhdl.Scanner is
                end if;
             when CR =>
                if Pos > Current_Context.Token_Pos then
+                  --  There are characters before the CR, so
+                  --  first return them.
                   Current_Token := Tok_Block_Comment_Text;
                else
                   Scan_CR_Newline;
@@ -2030,6 +2034,8 @@ package body Vhdl.Scanner is
                return;
             when LF =>
                if Pos > Current_Context.Token_Pos then
+                  --  There are characters before the LF, so
+                  --  first return them.
                   Current_Token := Tok_Block_Comment_Text;
                else
                   Scan_LF_Newline;
