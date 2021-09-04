@@ -6,4 +6,4 @@ formats: [ html, pdf, man ]
 images:
   base: ghdl/doc
   latex: btdi/latex
-theme: https://codeload.github.com/buildthedocs/sphinx.theme/tar.gz/v0
+theme: https://codeload.github.com/buildthedocs/sphinx.theme/tar.gz/v1
