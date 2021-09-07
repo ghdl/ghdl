@@ -1682,7 +1682,7 @@ package body Vhdl.Parse is
             end if;
             if Ctxt not in Parameter_Interface_List then
                Error_Msg_Parse
-                 ("variable interface not allowed in generic or port clause");
+                 ("file interface not allowed in generic or port clause");
             end if;
             Kind := Iir_Kind_Interface_File_Declaration;
          when Tok_Quantity =>
