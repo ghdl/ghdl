@@ -20,6 +20,9 @@ with Std_Names;
 
 with Netlists.Utils; use Netlists.Utils;
 with Netlists.Gates;
+with Netlists.Locations; use Netlists.Locations;
+
+with Synth.Errors; use Synth.Errors;
 
 package body Netlists.Cleanup is
    --  Return False iff INST has no outputs (and INST is not Id_Free).
@@ -175,6 +178,7 @@ package body Netlists.Cleanup is
    is
       Attr : Attribute;
       Val : Pval;
+      V, V1 : Logic_32;
    begin
       if not Has_Attribute (Inst) then
          return False;
@@ -184,8 +188,41 @@ package body Netlists.Cleanup is
       while Attr /= No_Attribute loop
          if Get_Attribute_Name (Attr) = Std_Names.Name_Keep then
             Val := Get_Attribute_Pval (Attr);
-            pragma Assert (Get_Pval_Length (Val) = 1);
-            return Read_Pval (Val, 0) = (1, 0);
+            case Get_Attribute_Type (Attr) is
+               when Param_Pval_Boolean
+                  | Param_Pval_Vector =>
+                  pragma Assert (Get_Pval_Length (Val) = 1);
+                  return Read_Pval (Val, 0) = (1, 0);
+               when Param_Pval_String =>
+                  if Get_Pval_Length (Val) = 4 * 8 then
+                     --  Compare with "true" (case insensitive).
+                     V := Read_Pval (Val, 0);
+                     V.Val := V.Val and 16#df_df_df_df#;
+                     if V = (16#54_52_55_45#, 0) then
+                        return True;
+                     end if;
+                  elsif Get_Pval_Length (Val) = 5 * 8 then
+                     --  Compare with "false" (case insensitive).
+                     V := Read_Pval (Val, 0);
+                     V.Val := V.Val and 16#df_df_df_df#;
+                     V1 := Read_Pval (Val, 1);
+                     V1.Val := V1.Val and 16#df#;
+                     if V = (16#41_4c_53_45#, 0) and then V1 = (16#46#, 0) then
+                        return False;
+                     end if;
+                  end if;
+                  Warning_Msg_Synth
+                    (Get_Location (Inst),
+                     "keep attribute must be 'true' or 'false'");
+                  return False;
+               when Param_Invalid =>
+                  raise Internal_Error;
+               when Param_Uns32
+                  | Param_Pval_Integer
+                  | Param_Pval_Real
+                  | Param_Pval_Time_Ps =>
+                  raise Internal_Error;
+            end case;
          end if;
          Attr := Get_Attribute_Next (Attr);
       end loop;
