@@ -66,6 +66,7 @@ package body Options is
    begin
       --  Handle -Werror.
       if Opt = "error" then
+         Warning_Error (Msgid_Warning, Val);
          for I in Msgid_Warnings loop
             Warning_Error (I, Val);
          end loop;
