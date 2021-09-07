@@ -1246,11 +1246,14 @@ package body Trans.Chap7 is
    is
       Expr_Type  : constant Iir := Get_Return_Type (Concat_Imp);
       Index_Type : constant Iir := Get_Index_Type (Expr_Type, 0);
-      Info : constant Type_Info_Acc := Get_Info (Expr_Type);
+      El_Type    : constant Iir := Get_Element_Subtype (Expr_Type);
+      Info       : constant Type_Info_Acc := Get_Info (Expr_Type);
+      Is_Unbounded_El : constant Boolean :=
+        not Is_Fully_Constrained_Type (El_Type);
       Static_Length : Int64 := 0;
       Nbr_Dyn_Expr : Natural := 0;
 
-      type Handle_Acc is access procedure (E : Iir);
+      type Handle_Acc is access procedure (E : Iir; Is_First : Boolean);
       type Handlers_Type is record
          Handle_El : Handle_Acc;
          Handle_Arr : Handle_Acc;
@@ -1262,6 +1265,7 @@ package body Trans.Chap7 is
       procedure Walk (Handlers : Handlers_Type)
       is
          Walk_Handlers : Handlers_Type;
+         Is_First : Boolean;
 
          --  Call handlers for each leaf of L IMP R.
          procedure Walk_Concat (Imp : Iir; L, R : Iir);
@@ -1299,7 +1303,8 @@ package body Trans.Chap7 is
                end if;
             end if;
 
-            Walk_Handlers.Handle_Arr (E);
+            Walk_Handlers.Handle_Arr (E, Is_First);
+            Is_First := False;
          end Walk_Arr;
 
          procedure Walk_Concat (Imp : Iir; L, R : Iir) is
@@ -1310,19 +1315,22 @@ package body Trans.Chap7 is
                   Walk_Arr (R);
                when Iir_Predefined_Array_Element_Concat =>
                   Walk_Arr (L);
-                  Walk_Handlers.Handle_El (R);
+                  Walk_Handlers.Handle_El (R, False);
                when Iir_Predefined_Element_Array_Concat =>
-                  Walk_Handlers.Handle_El (L);
+                  Walk_Handlers.Handle_El (L, Is_First);
+                  Is_First := False;
                   Walk_Arr (R);
                when Iir_Predefined_Element_Element_Concat =>
-                  Walk_Handlers.Handle_El (L);
-                  Walk_Handlers.Handle_El (R);
+                  Walk_Handlers.Handle_El (L, Is_First);
+                  Is_First := False;
+                  Walk_Handlers.Handle_El (R, False);
                when others =>
                   raise Internal_Error;
             end case;
          end Walk_Concat;
       begin
          Walk_Handlers := Handlers;
+         Is_First := True;
          Walk_Concat (Concat_Imp, Left, Right);
       end Walk;
 
@@ -1337,14 +1345,15 @@ package body Trans.Chap7 is
       end Is_Static_Arr;
 
       --  Pre_Walk: compute known static length and number of dynamic arrays.
-      procedure Pre_Walk_El (E : Iir)
+      procedure Pre_Walk_El (E : Iir; Is_First : Boolean)
       is
+         pragma Unreferenced (Is_First);
          pragma Unreferenced (E);
       begin
          Static_Length := Static_Length + 1;
       end Pre_Walk_El;
 
-      procedure Pre_Walk_Arr (E : Iir)
+      procedure Pre_Walk_Arr (E : Iir; Is_First : Boolean)
       is
          Idx_Type : Iir;
       begin
@@ -1352,7 +1361,9 @@ package body Trans.Chap7 is
          --  * type is fully constrained, range is static, length is known
          --  * type is fully constrained, range is not static, length isn't
          --  * type is not constrained
-         if Is_Static_Arr (E) then
+         if Is_Static_Arr (E)
+           and then not (Is_First and Is_Unbounded_El)
+         then
             Idx_Type := Get_Index_Type (Get_Type (E), 0);
             Static_Length := Static_Length
               + Eval_Discrete_Range_Length (Get_Range_Constraint (Idx_Type));
@@ -1392,17 +1403,28 @@ package body Trans.Chap7 is
       Dyn_I : Natural;
       E_Length : O_Enode;
 
-      procedure Nil_El (E : Iir) is
+      procedure Nil_El (E : Iir; Is_First : Boolean) is
       begin
          null;
       end Nil_El;
 
+      procedure Eval_First_El (E : Iir; Is_First : Boolean)
+      is
+         pragma Unreferenced (E);
+      begin
+         if Is_First and then Is_Unbounded_El then
+            raise Internal_Error;
+         end if;
+      end Eval_First_El;
+
       --  Evaluate a dynamic parameter.
-      procedure Eval_Dyn_Arr (E : Iir)
+      procedure Eval_Dyn_Arr (E : Iir; Is_First : Boolean)
       is
          E_Val : O_Enode;
       begin
-         if not Is_Static_Arr (E) then
+         if (Is_First and Is_Unbounded_El)
+           or else not Is_Static_Arr (E)
+         then
             Dyn_I := Dyn_I + 1;
             --  First, translate expression.
             E_Val := Translate_Expression (E, Expr_Type);
@@ -1410,15 +1432,30 @@ package body Trans.Chap7 is
             --  translate_expression).
             Dyn_Mnodes (Dyn_I) :=
               Stabilize (E2M (E_Val, Get_Info (Expr_Type), Mode_Value));
+
+            if Is_First and then Is_Unbounded_El then
+               --  Copy layout.
+               pragma Assert (Dyn_I = 1);
+               Gen_Memcpy
+                 (M2Addr (Chap3.Array_Bounds_To_Element_Layout
+                            (Var_Bounds, Expr_Type)),
+                  M2Addr (Chap3.Array_Bounds_To_Element_Layout
+                            (Chap3.Get_Composite_Bounds
+                               (Dyn_Mnodes (1)), Expr_Type)),
+                  New_Lit (New_Sizeof (Get_Info (El_Type).B.Layout_Type,
+                                       Ghdl_Index_Type)));
+            end if;
          end if;
       end Eval_Dyn_Arr;
 
       --  Add contribution to length of result from a dynamic parameter.
-      procedure Len_Dyn_Arr (E : Iir)
+      procedure Len_Dyn_Arr (E : Iir; Is_First : Boolean)
       is
          Elen : O_Enode;
       begin
-         if not Is_Static_Arr (E) then
+         if not Is_Static_Arr (E)
+           or else (Is_First and Is_Unbounded_El)
+         then
             Dyn_I := Dyn_I + 1;
             Elen := Chap3.Get_Array_Length (Dyn_Mnodes (Dyn_I), Get_Type (E));
             if E_Length = O_Enode_Null then
@@ -1432,18 +1469,46 @@ package body Trans.Chap7 is
       --  Offset in the result.
       Var_Off : O_Dnode;
 
-      --  Assign: write values to the result array.
-      procedure Assign_El (E : Iir)
-      is
-         El_Type : constant Iir := Get_Element_Subtype (Expr_Type);
+      --  Return the stride of the result array, if the element subtype is
+      --  unbounded.
+      function Get_Stride return O_Enode is
       begin
-         Chap3.Translate_Object_Copy
-           (Chap3.Index_Base (Var_Arr, Expr_Type, New_Obj_Value (Var_Off)),
-            Translate_Expression (E, El_Type), El_Type);
+         if Is_Unbounded_El then
+            return New_Value
+              (Chap3.Layout_To_Size
+                 (Chap3.Array_Bounds_To_Element_Layout (Var_Bounds, Expr_Type),
+                  Mode_Value));
+         else
+            return O_Enode_Null;
+         end if;
+      end Get_Stride;
+
+      --  Assign: write values to the result array.
+      procedure Assign_El (E : Iir; Is_First : Boolean)
+      is
+         pragma Unreferenced (Is_First);
+         Dest : Mnode;
+         Src : Mnode;
+      begin
+         Dest := Chap3.Index_Base
+           (Var_Arr, Expr_Type, New_Obj_Value (Var_Off), Get_Stride);
+
+         Src := Translate_Expression (E, El_Type);
+         if Is_Unbounded_El then
+            Gen_Memcpy (M2Addr (Dest),
+                        M2Addr (Chap3.Get_Composite_Base (Src)),
+                        New_Value (Chap3.Layout_To_Size
+                                     (Chap3.Array_Bounds_To_Element_Layout
+                                        (Var_Bounds, Expr_Type),
+                                      Mode_Value)));
+         else
+            Chap3.Translate_Object_Copy (Dest, Src, El_Type);
+         end if;
+
          Inc_Var (Var_Off);
       end Assign_El;
 
-      procedure Assign_Arr (E : Iir)
+      procedure Assign_Arr (E : Iir; Is_First : Boolean)
       is
          E_Val : O_Enode;
          M : Mnode;
@@ -1451,7 +1516,9 @@ package body Trans.Chap7 is
          Var_Sub_Arr : Mnode;
       begin
          Open_Temp;
-         if Is_Static_Arr (E) then
+         if Is_Static_Arr (E)
+           and then not (Is_First and Is_Unbounded_El)
+         then
             --  First, translate expression.
             E_Val := Translate_Expression (E, Expr_Type);
             --  Then create Mnode (type info may be computed by
@@ -1475,7 +1542,7 @@ package body Trans.Chap7 is
               (M2Addr (Chap3.Slice_Base (Var_Arr,
                                          Expr_Type,
                                          New_Obj_Value (Var_Off),
-                                         O_Enode_Null)),
+                                         Get_Stride)),
                Info.B.Base_Ptr_Type (Mode_Value)));
 
          --  Copy
@@ -1495,7 +1562,9 @@ package body Trans.Chap7 is
       Last_Expr : Iir;
       Last_Dyn_Expr : Natural;
 
-      procedure Find_Last_Arr (E : Iir) is
+      procedure Find_Last_Arr (E : Iir; Is_First : Boolean)
+      is
+         pragma Unreferenced (Is_First);
       begin
          Last_Expr := E;
          if Is_Static_Arr (E) then
@@ -1528,8 +1597,9 @@ package body Trans.Chap7 is
         of O_If_Block;
       Assign_Bounds_Ifs : O_If_Block_Array;
 
-      procedure Assign_Bounds_El_V87 (E : Iir)
+      procedure Assign_Bounds_El_V87 (E : Iir; Is_First : Boolean)
       is
+         pragma Unreferenced (Is_First);
          pragma Unreferenced (E);
       begin
          if Assign_Bounds_V87_Done then
@@ -1540,8 +1610,9 @@ package body Trans.Chap7 is
          Assign_Bounds_V87_Done := True;
       end Assign_Bounds_El_V87;
 
-      procedure Assign_Bounds_Arr_V87 (E : Iir)
+      procedure Assign_Bounds_Arr_V87 (E : Iir; Is_First : Boolean)
       is
+         pragma Unreferenced (Is_First);
          Idx_Rng : Iir;
       begin
          if Assign_Bounds_V87_Done then
@@ -1599,7 +1670,7 @@ package body Trans.Chap7 is
 
       --  Evaluate all dynamic expressions
       Dyn_I := 0;
-      Walk ((Nil_El'Access, Eval_Dyn_Arr'Access));
+      Walk ((Eval_First_El'Access, Eval_Dyn_Arr'Access));
       --  Check that all dynamic expressions have been handled.
       pragma Assert (Dyn_I = Dyn_Mnodes'Last);
 
