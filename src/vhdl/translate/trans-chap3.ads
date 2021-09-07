@@ -143,8 +143,10 @@ package Trans.Chap3 is
    --  Index array BASE of type ATYPE with INDEX.
    --  INDEX must be of type ghdl_index_type, thus no bounds checks are
    --  performed.
-   function Index_Base (Base : Mnode; Atype : Iir; Index : O_Enode)
-                       return Mnode;
+   function Index_Base (Base : Mnode;
+                        Atype : Iir;
+                        Index : O_Enode;
+                        Stride : O_Enode := O_Enode_Null) return Mnode;
 
    --  Index array ARR of type ATYPE with INDEX.
    --  Return the base.

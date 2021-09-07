@@ -3104,8 +3104,10 @@ package body Trans.Chap3 is
       return E2M (Res, Res_Info, Kind);
    end Reindex_Complex_Array;
 
-   function Index_Base (Base : Mnode; Atype : Iir; Index : O_Enode)
-                        return Mnode
+   function Index_Base (Base : Mnode;
+                        Atype : Iir;
+                        Index : O_Enode;
+                        Stride : O_Enode := O_Enode_Null) return Mnode
    is
       Arr_Tinfo : constant Type_Info_Acc := Get_Type_Info (Base);
       Kind      : constant Object_Kind_Type := Get_Object_Kind (Base);
@@ -3119,6 +3121,13 @@ package body Trans.Chap3 is
          --  If the array is fully constrained it can be indexed.
          return Lv2M (New_Indexed_Element (M2Lv (Base), Index),
                       El_Tinfo, Kind);
+      elsif Is_Unbounded_Type (El_Tinfo) then
+         return E2M (Add_Pointer (M2E (Base),
+                                  New_Dyadic_Op (ON_Mul_Ov, Index, Stride),
+                                  El_Tinfo.B.Base_Ptr_Type (Kind)),
+                     El_Tinfo, Kind,
+                     El_Tinfo.B.Base_Type (Kind),
+                     El_Tinfo.B.Base_Ptr_Type (Kind));
       end if;
 
       --  If the element type of the base type is static, the array
@@ -3148,26 +3157,18 @@ package body Trans.Chap3 is
       El_Tinfo : constant Type_Info_Acc := Get_Info (El_Type);
       Kind     : constant Object_Kind_Type := Get_Object_Kind (Arr);
       Base     : Mnode;
+      Stride   : O_Enode;
    begin
       Base := Get_Composite_Base (Arr);
       --  For indexing, we need to consider the size of elements.
       if Is_Unbounded_Type (El_Tinfo) then
-         return E2M
-           (Add_Pointer
-              (M2E (Base),
-               New_Dyadic_Op
-                 (ON_Mul_Ov,
-                  Index,
-                  New_Value (Array_Bounds_To_Element_Size
-                               (Get_Composite_Bounds (Arr), Atype,
-                                Get_Object_Kind (Arr)))),
-               El_Tinfo.B.Base_Ptr_Type (Kind)),
-            El_Tinfo, Kind,
-            El_Tinfo.B.Base_Type (Kind),
-            El_Tinfo.B.Base_Ptr_Type (Kind));
+         Stride := New_Value
+           (Array_Bounds_To_Element_Size
+              (Get_Composite_Bounds (Arr), Atype, Kind));
       else
-         return Index_Base (Base, Atype, Index);
+         Stride := O_Enode_Null;
       end if;
+      return Index_Base (Base, Atype, Index, Stride);
    end Index_Array;
 
    function Slice_Base
