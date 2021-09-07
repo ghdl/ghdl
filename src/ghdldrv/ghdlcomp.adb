@@ -331,7 +331,11 @@ package body Ghdlcomp is
       Prim_Id : Name_Id;
       Sec_Id : Name_Id;
    begin
-      Extract_Elab_Unit (Cmd_Name, Args, Opt_Arg, Lib_Id, Prim_Id, Sec_Id);
+      Extract_Elab_Unit
+        (Cmd_Name, True, Args, Opt_Arg, Lib_Id, Prim_Id, Sec_Id);
+      if Prim_Id = Null_Identifier then
+         raise Option_Error;
+      end if;
 
       Flags.Flag_Elaborate := True;
 
@@ -743,7 +747,7 @@ package body Ghdlcomp is
       Unit : Iir_Design_Unit;
       Lib : Iir_Library_Declaration;
    begin
-      Extract_Elab_Unit ("-m", Args, Next_Arg, Lib_Id, Prim_Id, Sec_Id);
+      Extract_Elab_Unit ("-m", False, Args, Next_Arg, Lib_Id, Prim_Id, Sec_Id);
       if not Setup_Libraries (True) then
          return;
       end if;
@@ -889,7 +893,7 @@ package body Ghdlcomp is
       Next_Arg : Natural;
    begin
       Extract_Elab_Unit
-        ("--gen-makefile", Args, Next_Arg, Lib_Id, Prim_Id, Sec_Id);
+        ("--gen-makefile", False, Args, Next_Arg, Lib_Id, Prim_Id, Sec_Id);
       if not Setup_Libraries (True) then
          return;
       end if;

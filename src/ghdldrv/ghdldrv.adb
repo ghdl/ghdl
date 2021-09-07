@@ -978,7 +978,7 @@ package body Ghdldrv is
       end Arch_Suffix_Image;
    begin
       Library_Id := Null_Identifier;
-      Extract_Elab_Unit (Cmd_Name, Args, Run_Arg,
+      Extract_Elab_Unit (Cmd_Name, False, Args, Run_Arg,
                          Library_Id, Primary_Id, Secondary_Id);
       if Secondary_Id = Null_Identifier then
          Base_Name := new String'(Image (Primary_Id));
@@ -1249,7 +1249,7 @@ package body Ghdldrv is
       Sec_Id : Name_Id;
       Opt_Arg : Natural;
    begin
-      Extract_Elab_Unit ("-r", Args, Opt_Arg, Lib_Id, Prim_Id, Sec_Id);
+      Extract_Elab_Unit ("-r", False, Args, Opt_Arg, Lib_Id, Prim_Id, Sec_Id);
       if Sec_Id = Null_Identifier then
          Base_Name := new String'
            (Image (Prim_Id) & Suffix.all);

@@ -33,7 +33,6 @@ with Simple_IO;
 with Libraries;
 with Flags;
 with Vhdl.Nodes; use Vhdl.Nodes;
-with Vhdl.Errors;
 with Vhdl.Scanner;
 with Vhdl.Std_Package;
 with Vhdl.Canon;
@@ -245,14 +244,12 @@ package body Ghdlsynth is
    function Ghdl_Synth_Configure
      (Init : Boolean; Cmd : Command_Synth; Args : Argument_List) return Node
    is
-      use Vhdl.Errors;
       use Vhdl.Configuration;
       use Errorout;
       E_Opt : Integer;
       Opt_Arg : Natural;
       Design_File : Iir;
       Config : Iir;
-      Top : Iir;
       Lib_Id : Name_Id;
       Prim_Id : Name_Id;
       Sec_Id : Name_Id;
@@ -352,32 +349,15 @@ package body Ghdlsynth is
       end if;
 
       --  Elaborate
-      if E_Opt = Args'Last then
-         --  No unit on the command line.
-
-         --  Find the top-level unit.
-         Top := Vhdl.Configuration.Find_Top_Entity
-           (Libraries.Work_Library, Libraries.Command_Line_Location);
-         if Top = Null_Node then
-            Ghdlmain.Error ("no top unit found");
-            return Null_Iir;
-         end if;
-         Errorout.Report_Msg (Msgid_Note, Option, No_Source_Coord,
-                              "top entity is %i", (1 => +Top));
-         if Nbr_Errors > 0 then
-            --  No need to configure if there are missing units.
-            return Null_Iir;
-         end if;
-         Lib_Id := Null_Identifier;
-         Prim_Id := Get_Identifier (Top);
-         Sec_Id := Null_Identifier;
-      else
-         Extract_Elab_Unit ("--synth", Args (E_Opt + 1 .. Args'Last), Opt_Arg,
-                            Lib_Id, Prim_Id, Sec_Id);
-         if Opt_Arg <= Args'Last then
-            Ghdlmain.Error ("extra options ignored");
-            return Null_Iir;
-         end if;
+      Extract_Elab_Unit
+        ("--synth", True, Args (E_Opt + 1 .. Args'Last), Opt_Arg,
+         Lib_Id, Prim_Id, Sec_Id);
+      if Prim_Id = Null_Identifier then
+         return Null_Iir;
+      end if;
+      if Opt_Arg <= Args'Last then
+         Ghdlmain.Error ("extra options ignored");
+         return Null_Iir;
       end if;
 
       Config := Vhdl.Configuration.Configure (Lib_Id, Prim_Id, Sec_Id);

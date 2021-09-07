@@ -33,6 +33,7 @@ with Vhdl.Scanner;
 with Vhdl.Configuration;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Prints;
+with Vhdl.Errors;
 
 package body Ghdllocal is
    --  Version of the IEEE library to use.  This just change paths.
@@ -1744,15 +1745,46 @@ package body Ghdllocal is
    end Convert_Name;
 
    procedure Extract_Elab_Unit (Cmd_Name : String;
+                                Auto : Boolean;
                                 Args : Argument_List;
                                 Next_Arg : out Natural;
                                 Lib_Id : out Name_Id;
                                 Prim_Id : out Name_Id;
                                 Sec_Id : out Name_Id) is
    begin
+      Next_Arg := Args'First;
+      Lib_Id := Null_Identifier;
+      Prim_Id := Null_Identifier;
+      Sec_Id := Null_Identifier;
+
       if Args'Length = 0 then
-         Error ("command '" & Cmd_Name & "' requires an unit name");
-         raise Option_Error;
+         --  No unit on the command line.
+         if not Auto then
+            Error ("command '" & Cmd_Name & "' requires an unit name");
+            raise Option_Error;
+         end if;
+
+         --  Find the top-level unit.
+         declare
+            use Errorout;
+            use Vhdl.Errors;
+            Top : Iir;
+         begin
+            Top := Vhdl.Configuration.Find_Top_Entity
+              (Libraries.Work_Library, Libraries.Command_Line_Location);
+            if Top = Null_Node then
+               Ghdlmain.Error ("no top unit found");
+               return;
+            end if;
+            Errorout.Report_Msg (Msgid_Note, Option, No_Source_Coord,
+                                 "top entity is %i", (1 => +Top));
+            if Nbr_Errors > 0 then
+               --  No need to configure if there are missing units.
+               return;
+            end if;
+            Prim_Id := Get_Identifier (Top);
+         end;
+         return;
       end if;
 
       declare
@@ -1875,8 +1907,10 @@ package body Ghdllocal is
       Next_Arg : Natural;
    begin
       Extract_Elab_Unit
-        ("--elab-order", Args, Next_Arg, Lib_Id, Prim_Id, Sec_Id);
-      if not Setup_Libraries (True) then
+        ("--elab-order", True, Args, Next_Arg, Lib_Id, Prim_Id, Sec_Id);
+      if Prim_Id = Null_Identifier
+        or else not Setup_Libraries (True)
+      then
          return;
       end if;
       Files_List := Build_Dependence (Lib_Id, Prim_Id, Sec_Id);

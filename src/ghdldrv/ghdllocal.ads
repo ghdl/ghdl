@@ -142,7 +142,10 @@ package Ghdllocal is
    function Is_File_Outdated (File : Iir_Design_File) return Boolean;
 
    --  Extract PRIM_ID and SEC_ID from ARGS.
+   --  If AUTO is true, the top unit is deduced from the existing one,
+   --   otherwise it must be present.
    procedure Extract_Elab_Unit (Cmd_Name : String;
+                                Auto : Boolean;
                                 Args : Argument_List;
                                 Next_Arg : out Natural;
                                 Lib_Id : out Name_Id;
