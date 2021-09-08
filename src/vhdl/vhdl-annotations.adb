@@ -1146,6 +1146,7 @@ package body Vhdl.Annotations is
                | Iir_Kind_Psl_Restrict_Directive =>
                null;
             when Iir_Kind_Signal_Declaration
+              | Iir_Kind_Constant_Declaration
               | Iir_Kind_Function_Declaration
               | Iir_Kind_Procedure_Declaration
               | Iir_Kind_Function_Body

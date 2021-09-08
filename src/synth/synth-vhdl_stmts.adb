@@ -3836,6 +3836,7 @@ package body Synth.Vhdl_Stmts is
             when Iir_Kind_Psl_Cover_Directive =>
                Synth_Psl_Cover_Directive (Unit_Inst, Item);
             when Iir_Kind_Signal_Declaration
+              | Iir_Kind_Constant_Declaration
               | Iir_Kind_Function_Declaration
               | Iir_Kind_Procedure_Declaration
               | Iir_Kind_Function_Body
@@ -3876,6 +3877,7 @@ package body Synth.Vhdl_Stmts is
                | Iir_Kind_Component_Instantiation_Statement =>
                null;
             when Iir_Kind_Signal_Declaration
+              | Iir_Kind_Constant_Declaration
               | Iir_Kind_Function_Declaration
               | Iir_Kind_Procedure_Declaration
               | Iir_Kind_Function_Body
