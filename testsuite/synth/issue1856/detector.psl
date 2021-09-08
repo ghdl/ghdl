@@ -1,0 +1,12 @@
+vunit i_rising_pulse_detector(rising_pulse_detector(rising_pulse_detector_1))
+{
+
+    default clock is rising_edge(clk);
+
+    constant idx : natural := 4;
+
+    --working cover without generate
+    fc_output_4 : cover {output_pulse(idx) = '1'};
+
+}
+
