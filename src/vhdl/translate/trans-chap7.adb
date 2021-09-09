@@ -3047,7 +3047,7 @@ package body Trans.Chap7 is
                                             Var_Index  : O_Dnode)
    is
       Index_List : Iir_Flist;
-      Expr_Type  : Iir;
+      Aggr_El_Type  : Iir;
       Final      : Boolean;
 
       --  Assign EXPR to current position (defined by index VAR_INDEX), and
@@ -3055,29 +3055,46 @@ package body Trans.Chap7 is
       procedure Do_Assign (Assoc : Iir; Expr : Iir; Assoc_Len : out Int64)
       is
          Dest : Mnode;
+         Src : Mnode;
+         Expr_Type : Iir;
+         Idx_Type : Iir;
+         El_Len : O_Enode;
+         Bnd : Mnode;
       begin
          if Final then
             if Get_Element_Type_Flag (Assoc) then
                Dest := Chap3.Index_Base (Base_Ptr, Aggr_Type,
                                          New_Obj_Value (Var_Index));
-               Translate_Assign (Dest, Expr, Expr_Type);
+               Translate_Assign (Dest, Expr, Aggr_El_Type);
                Assoc_Len := 1;
                Inc_Var (Var_Index);
             else
+               Expr_Type := Get_Type (Expr);
                Dest := Chap3.Slice_Base (Base_Ptr, Aggr_Type,
                                          New_Obj_Value (Var_Index),
                                          O_Enode_Null);
-               Translate_Assign (Dest, Expr, Get_Type (Expr));
+               Src := Translate_Expression (Expr, Expr_Type);
+               --  FIXME: check bounds ?
+               Gen_Memcpy (M2Addr (Dest),
+                           M2Addr (Chap3.Get_Composite_Base (Src)),
+                           Chap3.Get_Object_Size (Src, Expr_Type));
                --  FIXME: handle non-static expression type (at least for
                --  choice by range).
-               Assoc_Len := Eval_Discrete_Type_Length
-                 (Get_Index_Type (Get_Type (Expr), 0));
+               Idx_Type := Get_Index_Type (Expr_Type, 0);
+               if Get_Type_Staticness (Idx_Type) = Locally then
+                  Assoc_Len := Eval_Discrete_Type_Length (Idx_Type);
+                  El_Len := New_Lit (New_Index_Lit (Unsigned_64 (Assoc_Len)));
+               else
+                  Bnd := Chap3.Get_Composite_Type_Bounds (Expr_Type);
+                  El_Len := M2E
+                    (Chap3.Range_To_Length
+                       (Chap3.Bounds_To_Range (Bnd, Expr_Type, 1)));
+                  Assoc_Len := 0;
+               end if;
                New_Assign_Stmt
                  (New_Obj (Var_Index),
-                  New_Dyadic_Op
-                    (ON_Add_Ov,
-                     New_Obj_Value (Var_Index),
-                     New_Lit (New_Index_Lit (Unsigned_64 (Assoc_Len)))));
+                  New_Dyadic_Op (ON_Add_Ov,
+                                 New_Obj_Value (Var_Index), El_Len));
             end if;
          else
             Translate_Array_Aggregate_Gen
@@ -3306,7 +3323,7 @@ package body Trans.Chap7 is
       --  FINAL is true if the elements of the aggregate are elements of
       --  the array.
       if Get_Nbr_Elements (Index_List) = Dim then
-         Expr_Type := Get_Element_Subtype (Aggr_Type);
+         Aggr_El_Type := Get_Element_Subtype (Aggr_Type);
          Final:= True;
       else
          Final := False;
@@ -3636,6 +3653,7 @@ package body Trans.Chap7 is
                     Static_Len + Eval_Discrete_Type_Length (Range_Type);
                end if;
             else
+               --  TODO
                raise Internal_Error;
             end if;
          end if;
@@ -3669,6 +3687,7 @@ package body Trans.Chap7 is
                   end;
                end if;
             else
+               --  TODO
                raise Internal_Error;
             end if;
          end if;
