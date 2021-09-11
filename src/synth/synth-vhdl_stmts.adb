@@ -3554,6 +3554,7 @@ package body Synth.Vhdl_Stmts is
       Icond : Node;
       Cond : Valtyp;
       Name : Sname;
+      Config : Node;
    begin
       Gen := Stmt;
       Name := New_Sname_User (Get_Identifier (Stmt), Get_Sname (Syn_Inst));
@@ -3568,8 +3569,10 @@ package body Synth.Vhdl_Stmts is
          end if;
          if Cond = No_Valtyp or else Read_Discrete (Cond) = 1 then
             Bod := Get_Generate_Statement_Body (Gen);
-            Apply_Block_Configuration
-              (Get_Generate_Block_Configuration (Bod), Bod);
+            Config := Get_Generate_Block_Configuration (Bod);
+            if Config /= Null_Node then
+               Apply_Block_Configuration (Config, Bod);
+            end if;
             Synth_Generate_Statement_Body (Syn_Inst, Bod, Name);
             exit;
          end if;
