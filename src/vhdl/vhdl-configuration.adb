@@ -30,6 +30,7 @@ with Vhdl.Evaluation;
 
 package body Vhdl.Configuration is
    procedure Add_Design_Concurrent_Stmts (Parent : Iir);
+   procedure Add_Verification_Unit_Items (Unit : Iir);
    procedure Add_Design_Block_Configuration (Blk : Iir_Block_Configuration);
    procedure Add_Design_Aspect (Aspect : Iir; Add_Default : Boolean);
 
@@ -171,10 +172,11 @@ package body Vhdl.Configuration is
             --  find all entity/architecture/configuration instantiation
             Add_Design_Unit (Get_Design_Unit (Get_Entity (Lib_Unit)), Loc);
             Add_Design_Concurrent_Stmts (Lib_Unit);
+         when Iir_Kinds_Verification_Unit =>
+            Add_Verification_Unit_Items (Lib_Unit);
          when Iir_Kind_Entity_Declaration
            | Iir_Kind_Package_Body
-           | Iir_Kind_Context_Declaration
-           | Iir_Kinds_Verification_Unit =>
+           | Iir_Kind_Context_Declaration =>
             null;
       end case;
 
@@ -228,59 +230,75 @@ package body Vhdl.Configuration is
       end if;
    end Add_Design_Unit;
 
+   procedure Add_Design_Concurrent_Stmt (Stmt : Iir) is
+   begin
+      case Get_Kind (Stmt) is
+         when Iir_Kind_Component_Instantiation_Statement =>
+            if Is_Entity_Instantiation (Stmt) then
+               --  Entity or configuration instantiation.
+               Add_Design_Aspect (Get_Instantiated_Unit (Stmt), True);
+            end if;
+         when Iir_Kind_Block_Statement =>
+            Add_Design_Concurrent_Stmts (Stmt);
+         when Iir_Kind_For_Generate_Statement =>
+            Add_Design_Concurrent_Stmts (Get_Generate_Statement_Body (Stmt));
+         when Iir_Kind_If_Generate_Statement =>
+            declare
+               Clause : Iir;
+            begin
+               Clause := Stmt;
+               while Clause /= Null_Iir loop
+                  Add_Design_Concurrent_Stmts
+                    (Get_Generate_Statement_Body (Clause));
+                  Clause := Get_Generate_Else_Clause (Clause);
+               end loop;
+            end;
+         when Iir_Kind_Case_Generate_Statement =>
+            declare
+               Alt : Iir;
+            begin
+               Alt := Get_Case_Statement_Alternative_Chain (Stmt);
+               while Alt /= Null_Iir loop
+                  if not Get_Same_Alternative_Flag (Alt) then
+                     Add_Design_Concurrent_Stmts (Get_Associated_Block (Alt));
+                  end if;
+                  Alt := Get_Chain (Alt);
+               end loop;
+            end;
+         when Iir_Kinds_Simple_Concurrent_Statement
+           | Iir_Kind_Psl_Default_Clock
+           | Iir_Kind_Psl_Declaration
+           | Iir_Kind_Psl_Endpoint_Declaration
+           | Iir_Kind_Simple_Simultaneous_Statement =>
+            null;
+         when others =>
+            Error_Kind ("add_design_concurrent_stmts(2)", Stmt);
+      end case;
+   end Add_Design_Concurrent_Stmt;
+
    procedure Add_Design_Concurrent_Stmts (Parent : Iir)
    is
       Stmt : Iir;
    begin
       Stmt := Get_Concurrent_Statement_Chain (Parent);
       while Stmt /= Null_Iir loop
-         case Get_Kind (Stmt) is
-            when Iir_Kind_Component_Instantiation_Statement =>
-               if Is_Entity_Instantiation (Stmt) then
-                  --  Entity or configuration instantiation.
-                  Add_Design_Aspect (Get_Instantiated_Unit (Stmt), True);
-               end if;
-            when Iir_Kind_Block_Statement =>
-               Add_Design_Concurrent_Stmts (Stmt);
-            when Iir_Kind_For_Generate_Statement =>
-               Add_Design_Concurrent_Stmts
-                 (Get_Generate_Statement_Body (Stmt));
-            when Iir_Kind_If_Generate_Statement =>
-               declare
-                  Clause : Iir;
-               begin
-                  Clause := Stmt;
-                  while Clause /= Null_Iir loop
-                     Add_Design_Concurrent_Stmts
-                       (Get_Generate_Statement_Body (Clause));
-                     Clause := Get_Generate_Else_Clause (Clause);
-                  end loop;
-               end;
-            when Iir_Kind_Case_Generate_Statement =>
-               declare
-                  Alt : Iir;
-               begin
-                  Alt := Get_Case_Statement_Alternative_Chain (Stmt);
-                  while Alt /= Null_Iir loop
-                     if not Get_Same_Alternative_Flag (Alt) then
-                        Add_Design_Concurrent_Stmts
-                          (Get_Associated_Block (Alt));
-                     end if;
-                     Alt := Get_Chain (Alt);
-                  end loop;
-               end;
-            when Iir_Kinds_Simple_Concurrent_Statement
-              | Iir_Kind_Psl_Default_Clock
-              | Iir_Kind_Psl_Declaration
-              | Iir_Kind_Psl_Endpoint_Declaration
-              | Iir_Kind_Simple_Simultaneous_Statement =>
-               null;
-            when others =>
-               Error_Kind ("add_design_concurrent_stmts(2)", Stmt);
-         end case;
+         Add_Design_Concurrent_Stmt (Stmt);
          Stmt := Get_Chain (Stmt);
       end loop;
    end Add_Design_Concurrent_Stmts;
+
+   procedure Add_Verification_Unit_Items (Unit : Iir)
+   is
+      Item : Iir;
+   begin
+      Item := Get_Vunit_Item_Chain (Unit);
+      while Item /= Null_Iir loop
+         if Get_Kind (Item) in Iir_Kinds_Concurrent_Statement then
+            Add_Design_Concurrent_Stmt (Item);
+         end if;
+         Item := Get_Chain (Item);
+      end loop;
+   end Add_Verification_Unit_Items;
 
    procedure Add_Design_Aspect (Aspect : Iir; Add_Default : Boolean)
    is
