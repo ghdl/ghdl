@@ -931,7 +931,8 @@ package body Vhdl.Configuration is
                Lib_Unit := Get_Library_Unit (Design);
                case Iir_Kinds_Library_Unit (Get_Kind (Lib_Unit)) is
                   when Iir_Kind_Architecture_Body
-                    | Iir_Kind_Configuration_Declaration =>
+                    | Iir_Kind_Configuration_Declaration
+                    | Iir_Kinds_Verification_Unit =>
                      Load_Design_Unit (Design, Loc_Err);
                   when Iir_Kind_Entity_Declaration =>
                      Load_Design_Unit (Design, Loc_Err);
@@ -941,7 +942,6 @@ package body Vhdl.Configuration is
                   when Iir_Kind_Package_Declaration
                     | Iir_Kind_Package_Instantiation_Declaration
                     | Iir_Kind_Package_Body
-                    | Iir_Kinds_Verification_Unit
                     | Iir_Kind_Context_Declaration =>
                      null;
                end case;
@@ -1052,11 +1052,25 @@ package body Vhdl.Configuration is
                   when Iir_Kind_Configuration_Declaration =>
                      --  Just ignored.
                      null;
+                  when Iir_Kinds_Verification_Unit =>
+                     declare
+                        Item : Iir;
+                     begin
+                        Item := Get_Vunit_Item_Chain (Unit);
+                        while Item /= Null_Iir loop
+                           if Get_Kind (Item) in Iir_Kinds_Concurrent_Statement
+                           then
+                              Status := Walk_Concurrent_Statement
+                                (Item, Mark_Instantiation_Cb'Access);
+                              pragma Assert (Status = Walk_Continue);
+                           end if;
+                           Item := Get_Chain (Item);
+                        end loop;
+                     end;
                   when Iir_Kind_Package_Declaration
                     | Iir_Kind_Package_Instantiation_Declaration
                     | Iir_Kind_Package_Body
                     | Iir_Kind_Entity_Declaration
-                    | Iir_Kinds_Verification_Unit
                     | Iir_Kind_Context_Declaration =>
                      null;
                end case;

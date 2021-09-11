@@ -148,6 +148,48 @@ package body Vhdl.Nodes_Walk is
       end case;
    end Walk_Design_Units;
 
+   function Walk_Concurrent_Statement (Stmt : Iir; Cb : Walk_Cb)
+                                      return Walk_Status
+   is
+      Status : Walk_Status;
+   begin
+      case Get_Kind (Stmt) is
+         when Iir_Kinds_Simple_Concurrent_Statement
+           | Iir_Kind_Component_Instantiation_Statement
+           | Iir_Kind_Psl_Default_Clock =>
+            Status := Cb.all (Stmt);
+         when Iir_Kind_Block_Statement =>
+            Status := Cb.all (Stmt);
+            if Status = Walk_Continue then
+               Status := Walk_Concurrent_Statements_Chain
+                 (Get_Concurrent_Statement_Chain (Stmt), Cb);
+            end if;
+         when Iir_Kind_For_Generate_Statement =>
+            Status := Cb.all (Stmt);
+            if Status = Walk_Continue then
+               Status := Walk_Concurrent_Statements_Chain
+                 (Get_Concurrent_Statement_Chain
+                    (Get_Generate_Statement_Body (Stmt)), Cb);
+            end if;
+         when Iir_Kind_If_Generate_Statement =>
+            declare
+               Cl : Node;
+            begin
+               Status := Cb.all (Stmt);
+               Cl := Stmt;
+               while Status = Walk_Continue and then Cl /= Null_Node loop
+                  Status := Walk_Concurrent_Statements_Chain
+                    (Get_Concurrent_Statement_Chain
+                       (Get_Generate_Statement_Body (Cl)), Cb);
+                  Cl := Get_Generate_Else_Clause (Cl);
+               end loop;
+            end;
+         when others =>
+            Error_Kind ("walk_concurrent_statement", Stmt);
+      end case;
+      return Status;
+   end Walk_Concurrent_Statement;
+
    function Walk_Concurrent_Statements_Chain (Chain : Iir; Cb : Walk_Cb)
                                        return Walk_Status
    is
@@ -156,40 +198,7 @@ package body Vhdl.Nodes_Walk is
    begin
       El := Chain;
       while Is_Valid (El) loop
-         case Get_Kind (El) is
-            when Iir_Kinds_Simple_Concurrent_Statement
-              | Iir_Kind_Component_Instantiation_Statement
-              | Iir_Kind_Psl_Default_Clock =>
-               Status := Cb.all (El);
-            when Iir_Kind_Block_Statement =>
-               Status := Cb.all (El);
-               if Status = Walk_Continue then
-                  Status := Walk_Concurrent_Statements_Chain
-                    (Get_Concurrent_Statement_Chain (El), Cb);
-               end if;
-            when Iir_Kind_For_Generate_Statement =>
-               Status := Cb.all (El);
-               if Status = Walk_Continue then
-                  Status := Walk_Concurrent_Statements_Chain
-                    (Get_Concurrent_Statement_Chain
-                       (Get_Generate_Statement_Body (El)), Cb);
-               end if;
-            when Iir_Kind_If_Generate_Statement =>
-               declare
-                  Cl : Node;
-               begin
-                  Status := Cb.all (El);
-                  Cl := El;
-                  while Status = Walk_Continue and then Cl /= Null_Node loop
-                     Status := Walk_Concurrent_Statements_Chain
-                       (Get_Concurrent_Statement_Chain
-                          (Get_Generate_Statement_Body (Cl)), Cb);
-                     Cl := Get_Generate_Else_Clause (Cl);
-                  end loop;
-               end;
-            when others =>
-               Error_Kind ("walk_concurrent_statements_chain", El);
-         end case;
+         Status := Walk_Concurrent_Statement (El, Cb);
          if Status /= Walk_Continue then
             return Status;
          end if;
