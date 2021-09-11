@@ -1,0 +1,6 @@
+VUNIT test_formal (test) {
+    gen_test1: IF (true) GENERATE
+        gen_test2: IF (true) GENERATE
+        END GENERATE;
+    END GENERATE;
+}
