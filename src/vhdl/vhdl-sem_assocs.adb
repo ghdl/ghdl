@@ -534,6 +534,10 @@ package body Vhdl.Sem_Assocs is
          then
             return True;
          end if;
+         if Get_Kind (Dest) not in Iir_Kinds_Scalar_Type_And_Subtype_Definition
+         then
+            return True;
+         end if;
 
          Src_Range := Get_Range_Constraint (Src);
          Dst_Range := Get_Range_Constraint (Dest);
