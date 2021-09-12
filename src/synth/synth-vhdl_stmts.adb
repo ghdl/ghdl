@@ -3570,9 +3570,7 @@ package body Synth.Vhdl_Stmts is
          if Cond = No_Valtyp or else Read_Discrete (Cond) = 1 then
             Bod := Get_Generate_Statement_Body (Gen);
             Config := Get_Generate_Block_Configuration (Bod);
-            if Config /= Null_Node then
-               Apply_Block_Configuration (Config, Bod);
-            end if;
+            Apply_Block_Configuration (Config, Bod);
             Synth_Generate_Statement_Body (Syn_Inst, Bod, Name);
             exit;
          end if;
@@ -3620,10 +3618,7 @@ package body Synth.Vhdl_Stmts is
                end case;
                Config := Get_Prev_Block_Configuration (Config);
             end loop;
-            --  There is no block configuration in vunits (yet).
-            if Config /= Null_Node then
-               Apply_Block_Configuration (Config, Bod);
-            end if;
+            Apply_Block_Configuration (Config, Bod);
          end;
 
          --  FIXME: get position ?

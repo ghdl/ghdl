@@ -3269,6 +3269,27 @@ package body Vhdl.Canon is
       end case;
    end Canon_Block_Configuration_Statement;
 
+   --  Recursion for Canon_Block_Configuration: canonicalize each item of a
+   --  block configuration (starting with FIRST_ITEM).
+   procedure Canon_Block_Configuration_Recurse (Top : Iir_Design_Unit;
+                                                First_Item : Iir)
+   is
+      El : Iir;
+   begin
+      El := First_Item;
+      while El /= Null_Iir loop
+         case Get_Kind (El) is
+            when Iir_Kind_Block_Configuration =>
+               Canon_Block_Configuration (Top, El);
+            when Iir_Kind_Component_Configuration =>
+               Canon_Component_Configuration (Top, El);
+            when others =>
+               Error_Kind ("canon_block_configuration_recurse", El);
+         end case;
+         El := Get_Chain (El);
+      end loop;
+   end Canon_Block_Configuration_Recurse;
+
    procedure Canon_Block_Configuration (Top : Iir_Design_Unit;
                                         Conf : Iir_Block_Configuration)
    is
@@ -3351,18 +3372,7 @@ package body Vhdl.Canon is
       Set_Configuration_Item_Chain (Conf, First_Item);
 
       --  4) Canon component configuration and block configuration (recursion).
-      El := First_Item;
-      while El /= Null_Iir loop
-         case Get_Kind (El) is
-            when Iir_Kind_Block_Configuration =>
-               Canon_Block_Configuration (Top, El);
-            when Iir_Kind_Component_Configuration =>
-               Canon_Component_Configuration (Top, El);
-            when others =>
-               Error_Kind ("canon_block_configuration", El);
-         end case;
-         El := Get_Chain (El);
-      end loop;
+      Canon_Block_Configuration_Recurse (Top, First_Item);
    end Canon_Block_Configuration;
 
    procedure Canon_Interface_List (Chain : Iir)
@@ -3447,6 +3457,7 @@ package body Vhdl.Canon is
       end loop;
 
       Set_Configuration_Item_Chain (Blk_Cfg, First_Conf);
+      Canon_Block_Configuration_Recurse (Unit, First_Conf);
    end Canon_Psl_Verification_Unit;
 
    procedure Canonicalize (Unit: Iir_Design_Unit)
