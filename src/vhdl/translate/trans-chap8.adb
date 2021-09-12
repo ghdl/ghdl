@@ -4240,6 +4240,9 @@ package body Trans.Chap8 is
                   Sub_Type := Get_Element_Subtype (Target_Type);
                else
                   Sub_Type := Get_Type (Expr);
+                  if Get_Kind (Expr) = Iir_Kind_Slice_Name then
+                     Chap3.Create_Composite_Subtype (Sub_Type, False);
+                  end if;
                   Sub_Aggr := Chap3.Slice_Base
                     (Aggr, Sub_Type, New_Obj_Value (Idx), O_Enode_Null);
                end if;
@@ -4260,6 +4263,7 @@ package body Trans.Chap8 is
                         Chap3.Get_Array_Length (Sub_Aggr, Sub_Type)));
                end if;
             else
+               --  TODO
                raise Internal_Error;
             end if;
          else
