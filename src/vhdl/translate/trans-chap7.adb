@@ -3187,30 +3187,34 @@ package body Trans.Chap7 is
                   Do_Assign (El, Get_Associated_Expr (El), Assoc_Len);
                   return;
                when Iir_Kind_Choice_By_Range =>
-                  --  FIXME: todo.
-                  pragma Assert (Get_Element_Type_Flag (El));
-                  declare
-                     Var_Length : O_Dnode;
-                     Var_I      : O_Dnode;
-                     Label      : O_Snode;
-                  begin
-                     Open_Temp;
-                     Var_Length := Create_Temp_Init
-                       (Ghdl_Index_Type,
-                        Chap7.Translate_Range_Length (Get_Choice_Range (El)));
-                     Var_I := Create_Temp (Ghdl_Index_Type);
-                     Init_Var (Var_I);
-                     Start_Loop_Stmt (Label);
-                     Gen_Exit_When (Label,
-                                    New_Compare_Op (ON_Eq,
-                                                    New_Obj_Value (Var_I),
-                                                    New_Obj_Value (Var_Length),
-                                                    Ghdl_Bool_Type));
+                  if Get_Element_Type_Flag (El) then
+                     declare
+                        Var_Length : O_Dnode;
+                        Var_I      : O_Dnode;
+                        Label      : O_Snode;
+                     begin
+                        Open_Temp;
+                        Var_Length := Create_Temp_Init
+                          (Ghdl_Index_Type,
+                           Chap7.Translate_Range_Length
+                             (Get_Choice_Range (El)));
+                        Var_I := Create_Temp (Ghdl_Index_Type);
+                        Init_Var (Var_I);
+                        Start_Loop_Stmt (Label);
+                        Gen_Exit_When
+                          (Label,
+                           New_Compare_Op (ON_Eq,
+                                           New_Obj_Value (Var_I),
+                                           New_Obj_Value (Var_Length),
+                                           Ghdl_Bool_Type));
+                        Do_Assign (El, Get_Associated_Expr (El), Assoc_Len);
+                        Inc_Var (Var_I);
+                        Finish_Loop_Stmt (Label);
+                        Close_Temp;
+                     end;
+                  else
                      Do_Assign (El, Get_Associated_Expr (El), Assoc_Len);
-                     Inc_Var (Var_I);
-                     Finish_Loop_Stmt (Label);
-                     Close_Temp;
-                  end;
+                  end if;
                   return;
                when others =>
                   Error_Kind ("translate_array_aggregate_gen", El);
