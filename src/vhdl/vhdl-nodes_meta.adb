@@ -5450,7 +5450,6 @@ package body Vhdl.Nodes_Meta is
       Iir_Kind_Psl_Onehot => 1526,
       Iir_Kind_Psl_Onehot0 => 1529,
       Iir_Kind_Psl_Expression => 1531,
-<<<<<<< HEAD
       Iir_Kind_Sensitized_Process_Statement => 1552,
       Iir_Kind_Process_Statement => 1572,
       Iir_Kind_Concurrent_Simple_Signal_Assignment => 1585,
@@ -5460,17 +5459,6 @@ package body Vhdl.Nodes_Meta is
       Iir_Kind_Concurrent_Procedure_Call_Statement => 1627,
       Iir_Kind_Concurrent_Break_Statement => 1635,
       Iir_Kind_Psl_Assert_Directive => 1649,
-=======
-      Iir_Kind_Sensitized_Process_Statement => 1553,
-      Iir_Kind_Process_Statement => 1574,
-      Iir_Kind_Concurrent_Simple_Signal_Assignment => 1587,
-      Iir_Kind_Concurrent_Conditional_Signal_Assignment => 1600,
-      Iir_Kind_Concurrent_Selected_Signal_Assignment => 1614,
-      Iir_Kind_Concurrent_Assertion_Statement => 1622,
-      Iir_Kind_Concurrent_Procedure_Call_Statement => 1629,
-      Iir_Kind_Concurrent_Break_Statement => 1637,
-      Iir_Kind_Psl_Assert_Directive => 1650,
->>>>>>> src: Handle canoning seq-statements which are not in process.
       Iir_Kind_Psl_Assume_Directive => 1661,
       Iir_Kind_Psl_Cover_Directive => 1673,
       Iir_Kind_Psl_Restrict_Directive => 1684,
