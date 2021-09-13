@@ -1180,10 +1180,10 @@ package body Trans.Chap3 is
       if Info.Type_Locally_Constrained then
          Arr := Arr_Def;
       else
-         --  If the element has been constrained, there is no ortho array
-         --  with the constrained element.  So use the base type as a fall
-         --  back (if the element cannot be constrained, it is the same as the
-         --  base type element).
+         --  When an element is constrained, no ortho array is created with
+         --  the constrained element (unless it is statically constrained).
+         --  So use the base type as a fall back (if the element cannot be
+         --  constrained, it is the same as the base type element).
          Arr := Get_Base_Type (Arr_Def);
       end if;
       return Get_Element_Subtype (Arr);
