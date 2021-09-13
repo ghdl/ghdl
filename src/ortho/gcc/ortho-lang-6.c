@@ -1486,8 +1486,17 @@ new_slice (tree arr, tree res_type, tree index)
                                    TREE_TYPE (TYPE_DOMAIN (res_type)));
     }
 
+  /* Take the element size from RES_TYPE (and not from ARR, which is the
+     default.  */
+  tree elmt_type = TREE_TYPE (res_type);
+  tree elmt_size = TYPE_SIZE_UNIT (elmt_type);
+  tree factor = size_int (TYPE_ALIGN_UNIT (elmt_type));
+
+  /* Divide the element size by the alignment of the element type (above).  */
+  elmt_size = size_binop (EXACT_DIV_EXPR, elmt_size, factor);
+
   ortho_mark_addressable (arr);
-  return build4 (ARRAY_RANGE_REF, res_type, arr, index, NULL_TREE, NULL_TREE);
+  return build4 (ARRAY_RANGE_REF, res_type, arr, index, NULL_TREE, elmt_size);
 }
 
 tree

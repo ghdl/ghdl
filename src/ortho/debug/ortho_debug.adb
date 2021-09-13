@@ -1122,7 +1122,7 @@ package body Ortho_Debug is
          raise Type_Error;
       end if;
       --  The element type of ARR must be constrained.
-      Check_Constrained_Type (Get_Array_El_Type (Arr.Rtype));
+      Check_Constrained_Type (Get_Array_El_Type (Res_Type));
       --  The result is an array.
       if Res_Type.Kind not in ON_Array_Kinds then
          raise Type_Error;

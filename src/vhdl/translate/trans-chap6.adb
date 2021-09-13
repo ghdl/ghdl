@@ -558,14 +558,13 @@ package body Trans.Chap6 is
       --  Type of the first (and only) index of the prefix array type.
       Index_Type : constant Iir := Get_Index_Type (Prefix_Type, 0);
 
-      --  Element type.
-      El_Type    : constant Iir :=
-        Chap3.Get_Element_Subtype_For_Info (Prefix_Type);
-      El_Tinfo   : constant Type_Info_Acc := Get_Info (El_Type);
-
       --  Type of the slice.
       Slice_Type : constant Iir := Get_Type (Expr);
       Slice_Info : Type_Info_Acc;
+
+      --  Element type.
+      El_Type    : Iir;
+      El_Tinfo   : Type_Info_Acc;
 
       --  Suffix of the slice (discrete range).
       Expr_Range : constant Iir := Get_Suffix (Expr);
@@ -596,6 +595,9 @@ package body Trans.Chap6 is
       Prefix_Info := Get_Info (Prefix_Type);
 
       Prefix_Var := Prefix;
+
+      El_Type := Chap3.Get_Element_Subtype_For_Info (Slice_Type);
+      El_Tinfo := Get_Info (El_Type);
 
       if Is_Unbounded_Type (El_Tinfo) then
          --  Copy layout of element before building the bounds

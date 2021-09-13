@@ -893,15 +893,13 @@ package body Ortho_Code.Exprs is
    end Extract_Pow2;
 
    function New_Index_Slice_Element
-     (Arr : O_Lnode; Index : O_Enode; Res_Type : O_Tnode)
+     (Arr : O_Lnode; Index : O_Enode; Res_Type : O_Tnode; El_Type : O_Tnode)
      return O_Lnode
    is
-      El_Type : O_Tnode;
       In_Type : O_Tnode;
       Sz : O_Enode;
       El_Size : Uns32;
    begin
-      El_Type := Get_Type_Array_Element (Get_Enode_Type (O_Enode (Arr)));
       In_Type := Get_Enode_Type (Index);
 
       if Flag_Debug_Assert then
@@ -953,7 +951,7 @@ package body Ortho_Code.Exprs is
       if Flag_Debug_Hli then
          return New_Hli_Index_Slice (OE_Index_Ref, El_Type, Arr, Index);
       else
-         return New_Index_Slice_Element (Arr, Index, El_Type);
+         return New_Index_Slice_Element (Arr, Index, El_Type, El_Type);
       end if;
    end New_Indexed_Element;
 
@@ -969,7 +967,8 @@ package body Ortho_Code.Exprs is
       if Flag_Debug_Hli then
          return New_Hli_Index_Slice (OE_Slice_Ref, Res_Type, Arr, Index);
       else
-         return New_Index_Slice_Element (Arr, Index, Res_Type);
+         return New_Index_Slice_Element
+           (Arr, Index, Res_Type, Get_Type_Array_Element (Res_Type));
       end if;
    end New_Slice;
 
