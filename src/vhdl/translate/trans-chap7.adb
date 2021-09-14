@@ -3052,7 +3052,18 @@ package body Trans.Chap7 is
 
       --  Assign EXPR to current position (defined by index VAR_INDEX), and
       --  update VAR_INDEX.  Handles sub-aggregates.
-      procedure Do_Assign (Assoc : Iir; Expr : Iir; Assoc_Len : out Int64)
+      procedure Do_Assign_El (Expr : Iir; Assoc_Len : out Int64)
+      is
+         Dest : Mnode;
+      begin
+         Dest := Chap3.Index_Base (Base_Ptr, Aggr_Type,
+                                   New_Obj_Value (Var_Index));
+         Translate_Assign (Dest, Expr, Aggr_El_Type);
+         Assoc_Len := 1;
+         Inc_Var (Var_Index);
+      end Do_Assign_El;
+
+      procedure Do_Assign_Vec (Assoc : Iir; Expr : Iir; Assoc_Len : out Int64)
       is
          Dest : Mnode;
          Src : Mnode;
@@ -3061,40 +3072,55 @@ package body Trans.Chap7 is
          El_Len : O_Enode;
          Bnd : Mnode;
       begin
+         Expr_Type := Get_Type (Expr);
+         Dest := Chap3.Slice_Base (Base_Ptr, Aggr_Type,
+                                   New_Obj_Value (Var_Index),
+                                   O_Enode_Null);
+         Src := Translate_Expression (Expr, Expr_Type);
+         Stabilize (Src);
+         --  FIXME: check bounds ?
+         Gen_Memcpy (M2Addr (Dest),
+                     M2Addr (Chap3.Get_Composite_Base (Src)),
+                     Chap3.Get_Object_Size (Src, Expr_Type));
+         --  FIXME: handle non-static expression type (at least for
+         --  choice by range).
+         if Get_Kind (Assoc) = Iir_Kind_Choice_By_Range then
+            --  If there is a choice by range, then the range is static
+            --  (dynamic aggregate are not handled here).
+            pragma Assert (Get_Choice_Staticness (Assoc) = Locally);
+            Idx_Type := Get_Choice_Range (Assoc);
+         else
+            --  Try to get the range from the expression (if it is static).
+            pragma Assert (Get_Kind (Assoc) = Iir_Kind_Choice_By_None);
+            Idx_Type := Get_Index_Type (Expr_Type, 0);
+            if Get_Type_Staticness (Idx_Type) /= Locally then
+               Idx_Type := Null_Iir;
+            end if;
+         end if;
+         if Idx_Type /= Null_Iir then
+            Idx_Type := Get_Range_From_Discrete_Range (Idx_Type);
+            Assoc_Len := Eval_Discrete_Range_Length (Idx_Type);
+            El_Len := New_Lit (New_Index_Lit (Unsigned_64 (Assoc_Len)));
+         else
+            Bnd := Chap3.Get_Composite_Type_Bounds (Expr_Type);
+            El_Len := M2E
+              (Chap3.Range_To_Length
+                 (Chap3.Bounds_To_Range (Bnd, Expr_Type, 1)));
+            Assoc_Len := 0;
+         end if;
+         New_Assign_Stmt
+           (New_Obj (Var_Index),
+            New_Dyadic_Op (ON_Add_Ov,
+                           New_Obj_Value (Var_Index), El_Len));
+      end Do_Assign_Vec;
+
+      procedure Do_Assign (Assoc : Iir; Expr : Iir; Assoc_Len : out Int64) is
+      begin
          if Final then
             if Get_Element_Type_Flag (Assoc) then
-               Dest := Chap3.Index_Base (Base_Ptr, Aggr_Type,
-                                         New_Obj_Value (Var_Index));
-               Translate_Assign (Dest, Expr, Aggr_El_Type);
-               Assoc_Len := 1;
-               Inc_Var (Var_Index);
+               Do_Assign_El (Expr, Assoc_Len);
             else
-               Expr_Type := Get_Type (Expr);
-               Dest := Chap3.Slice_Base (Base_Ptr, Aggr_Type,
-                                         New_Obj_Value (Var_Index),
-                                         O_Enode_Null);
-               Src := Translate_Expression (Expr, Expr_Type);
-               --  FIXME: check bounds ?
-               Gen_Memcpy (M2Addr (Dest),
-                           M2Addr (Chap3.Get_Composite_Base (Src)),
-                           Chap3.Get_Object_Size (Src, Expr_Type));
-               --  FIXME: handle non-static expression type (at least for
-               --  choice by range).
-               Idx_Type := Get_Index_Type (Expr_Type, 0);
-               if Get_Type_Staticness (Idx_Type) = Locally then
-                  Assoc_Len := Eval_Discrete_Type_Length (Idx_Type);
-                  El_Len := New_Lit (New_Index_Lit (Unsigned_64 (Assoc_Len)));
-               else
-                  Bnd := Chap3.Get_Composite_Type_Bounds (Expr_Type);
-                  El_Len := M2E
-                    (Chap3.Range_To_Length
-                       (Chap3.Bounds_To_Range (Bnd, Expr_Type, 1)));
-                  Assoc_Len := 0;
-               end if;
-               New_Assign_Stmt
-                 (New_Obj (Var_Index),
-                  New_Dyadic_Op (ON_Add_Ov,
-                                 New_Obj_Value (Var_Index), El_Len));
+               Do_Assign_Vec (Assoc, Expr, Assoc_Len);
             end if;
          else
             Translate_Array_Aggregate_Gen
