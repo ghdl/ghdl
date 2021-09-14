@@ -788,6 +788,7 @@ package body Synth.Vhdl_Oper is
            | Iir_Predefined_Ieee_1164_Scalar_Or =>
             return Synth_Bit_Dyadic (Id_Or);
          when Iir_Predefined_Bit_Nor
+           | Iir_Predefined_Boolean_Nor
            | Iir_Predefined_Ieee_1164_Scalar_Nor =>
             return Synth_Bit_Dyadic (Id_Nor);
          when Iir_Predefined_Bit_Nand
