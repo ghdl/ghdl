@@ -14,7 +14,8 @@ elab_simulate ent1
 analyze ent2.vhdl
 elab_simulate ent2
 
-#TODO: ent3
+analyze ent3.vhdl
+elab_simulate ent3
 
 analyze ent4.vhdl
 elab_simulate ent4
