@@ -1767,6 +1767,13 @@ package body Ortho_Code.X86.Insns is
                           | R_Any64
                           | Regs_R64 =>
                            Set_Expr_Reg (Stmt, R_Sib);
+                        when R_I =>
+                           Num := Get_Insn_Num;
+                           Free_Insn_Regs (Right);
+                           Set_Expr_Reg
+                             (Right, Alloc_Reg (R_Any32, Right, Num));
+                           Link_Stmt (Right);
+                           Set_Expr_Reg (Stmt, R_Sib);
                         when others =>
                            Error_Gen_Insn (Stmt, R_R);
                      end case;
