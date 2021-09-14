@@ -3576,6 +3576,9 @@ package body Vhdl.Sem_Expr is
                end case;
             else
                New_El_Subtype := Get_Type (Sub_Aggr);
+               if not Get_Element_Type_Flag (Assoc) then
+                  New_El_Subtype := Get_Element_Subtype (New_El_Subtype);
+               end if;
                --  TODO: try to extract the 'best' element subtype: with
                --   static indexes, with constrained sub-elements.
                --   Possibly create an hybrid subtype (for records).
@@ -3662,8 +3665,10 @@ package body Vhdl.Sem_Expr is
                Sem_Array_Aggregate_Check_Element_Subtype
                  (El_Subtype, Sub_Aggr, Dim + 1, Nbr_Dim);
             else
-               --  TODO: only report the first error ?
-               Check_Matching_Subtype (Sub_Aggr, El_Subtype);
+               if Get_Element_Type_Flag (Assoc) then
+                  --  TODO: only report the first error ?
+                  Check_Matching_Subtype (Sub_Aggr, El_Subtype);
+               end if;
             end if;
          end if;
          Assoc := Get_Chain (Assoc);
