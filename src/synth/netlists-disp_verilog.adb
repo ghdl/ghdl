@@ -186,7 +186,19 @@ package body Netlists.Disp_Verilog is
                when Param_Uns32 =>
                   Put_Uns32 (Get_Param_Uns32 (Inst, P - 1));
                when Param_Types_Pval =>
-                  Disp_Pval_Binary (Get_Param_Pval (Inst, P - 1));
+                  declare
+                     Pv : constant Pval := Get_Param_Pval (Inst, P - 1);
+                     Pvlen : constant Uns32 := Get_Pval_Length (Pv);
+                  begin
+                     if Pvlen = 0 then
+                        Put ('"');
+                        Put ('"');
+                     else
+                        Put_Uns32 (Pvlen);
+                        Put ("'b");
+                        Disp_Pval_Binary_Digits (Pv);
+                     end if;
+                  end;
                when Param_Invalid =>
                   Put ("*invalid*");
             end case;

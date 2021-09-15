@@ -27,7 +27,13 @@ package Netlists.Dump is
 
    procedure Put_Id (N : Name_Id);
    procedure Disp_Binary_Digits (Va : Uns32; Zx : Uns32; W : Natural);
+
+   --  Display the digits of binary value PV.
+   procedure Disp_Pval_Binary_Digits (Pv : Pval);
+
+   --  Display PV within double quotes.
    procedure Disp_Pval_Binary (Pv : Pval);
+
    procedure Disp_Pval_String (Pv : Pval);
 
    procedure Dump_Name (N : Sname);

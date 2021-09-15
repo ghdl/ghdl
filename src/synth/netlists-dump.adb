@@ -49,23 +49,30 @@ package body Netlists.Dump is
       end loop;
    end Disp_Binary_Digits;
 
-   procedure Disp_Pval_Binary (Pv : Pval)
+   procedure Disp_Pval_Binary_Digits (Pv : Pval)
    is
       Len : constant Uns32 := Get_Pval_Length (Pv);
       V   : Logic_32;
       Off : Uns32;
    begin
-      Put ('"');
-      if Len > 0 then
-         V := Read_Pval (Pv, (Len - 1) / 32);
-         for I in reverse 0 .. Len - 1 loop
-            Off := I mod 32;
-            if Off = 31 then
-               V := Read_Pval (Pv, I / 32);
-            end if;
-            Disp_Binary_Digit (V.Val, V.Zx, Natural (Off));
-         end loop;
+      if Len = 0 then
+         return;
       end if;
+
+      V := Read_Pval (Pv, (Len - 1) / 32);
+      for I in reverse 0 .. Len - 1 loop
+         Off := I mod 32;
+         if Off = 31 then
+            V := Read_Pval (Pv, I / 32);
+         end if;
+         Disp_Binary_Digit (V.Val, V.Zx, Natural (Off));
+      end loop;
+   end Disp_Pval_Binary_Digits;
+
+   procedure Disp_Pval_Binary (Pv : Pval) is
+   begin
+      Put ('"');
+      Disp_Pval_Binary_Digits (Pv);
       Put ('"');
    end Disp_Pval_Binary;
 
