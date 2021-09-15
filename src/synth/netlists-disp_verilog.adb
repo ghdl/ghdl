@@ -162,16 +162,6 @@ package body Netlists.Disp_Verilog is
          Put_Name (Name);
       end if;
 
-      --  Instance name
-      Put (" ");
-      Name := Get_Instance_Name (Inst);
-      if Get_Sname_Kind (Name) = Sname_Version then
-         Put ("inst_");
-         Put_Name_Version (Name);
-      else
-         Put_Name (Name);
-      end if;
-
       if Get_Nbr_Params (Imod) /= 0 then
          Put_Line (" #(");
          for P in 1 .. Get_Nbr_Params (Inst) loop
@@ -205,10 +195,20 @@ package body Netlists.Disp_Verilog is
             Put (")");
          end loop;
          Put_Line (")");
-         Put_Line ("    (");
+         Put ("    ");
       else
-         Put_Line (" (");
+         Put (" ");
       end if;
+
+      --  Instance name
+      Name := Get_Instance_Name (Inst);
+      if Get_Sname_Kind (Name) = Sname_Version then
+         Put ("inst_");
+         Put_Name_Version (Name);
+      else
+         Put_Name (Name);
+      end if;
+      Put_Line (" (");
 
       First := True;
       --  Inputs
