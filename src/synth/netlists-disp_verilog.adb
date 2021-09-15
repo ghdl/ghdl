@@ -1291,7 +1291,7 @@ package body Netlists.Disp_Verilog is
       end if;
       for I in 1 .. Nbr loop
          if I = 1 then
-            Put_Line ("  #(");
+            Put_Line ("  #(parameter");
          else
             Put_Line (",");
          end if;
