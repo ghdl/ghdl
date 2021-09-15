@@ -18,6 +18,8 @@ with Name_Table;
 with Str_Table;
 with Std_Names; use Std_Names;
 with Flags;
+with Files_Map;
+
 with Vhdl.Std_Package;
 with Vhdl.Errors; use Vhdl.Errors;
 with PSL.Nodes;
@@ -1987,6 +1989,23 @@ package body Vhdl.Utils is
             Error_Kind ("get_file_signature", Def);
       end case;
    end Get_File_Signature;
+
+   function Get_Source_Identifier (Decl : Node) return Name_Id
+   is
+      use Files_Map;
+      use Name_Table;
+      Loc : constant Location_Type := Get_Location (Decl);
+      Len : constant Natural := Get_Name_Length (Get_Identifier (Decl));
+      subtype Ident_Str is String (1 .. Len);
+      File : Source_File_Entry;
+      Pos : Source_Ptr;
+      Buf : File_Buffer_Acc;
+   begin
+      Location_To_File_Pos (Loc, File, Pos);
+      Buf := Get_File_Source (File);
+      return Get_Identifier
+        (Ident_Str (Buf (Pos .. Pos + Source_Ptr (Len - 1))));
+   end Get_Source_Identifier;
 
    function Get_HDL_Node (N : PSL_Node) return Iir is
    begin

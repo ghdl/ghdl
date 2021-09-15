@@ -421,6 +421,12 @@ package Vhdl.Utils is
                                  Res : in out String;
                                  Off : in out Natural);
 
+   --  Like Get_Identifier but return a Name_Id for the same casing as it
+   --  appears in the source file.
+   --  Not useful for analysis as VHDL is case insentive, but could be
+   --  useful for error messages or tooling.
+   function Get_Source_Identifier (Decl : Node) return Name_Id;
+
    --  IIR wrapper around Get_HDL_Node/Set_HDL_Node.
    function Get_HDL_Node (N : PSL_Node) return Iir;
    procedure Set_HDL_Node (N : PSL_Node; Expr : Iir);

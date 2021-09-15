@@ -20,7 +20,6 @@ with GNAT.SHA1;
 
 with Types; use Types;
 with Types_Utils; use Types_Utils;
-with Files_Map;
 with Name_Table;
 with Libraries;
 with Hash; use Hash;
@@ -207,23 +206,6 @@ package body Synth.Vhdl_Insts is
             raise Internal_Error;
       end case;
    end Hash_Const;
-
-   function Get_Source_Identifier (Decl : Node) return Name_Id
-   is
-      use Files_Map;
-      use Name_Table;
-      Loc : constant Location_Type := Get_Location (Decl);
-      Len : constant Natural := Get_Name_Length (Get_Identifier (Decl));
-      subtype Ident_Str is String (1 .. Len);
-      File : Source_File_Entry;
-      Pos : Source_Ptr;
-      Buf : File_Buffer_Acc;
-   begin
-      Location_To_File_Pos (Loc, File, Pos);
-      Buf := Get_File_Source (File);
-      return Get_Identifier
-        (Ident_Str (Buf (Pos .. Pos + Source_Ptr (Len - 1))));
-   end Get_Source_Identifier;
 
    function Create_Module_Name (Params : Inst_Params) return Sname
    is
