@@ -1990,7 +1990,7 @@ package body Vhdl.Utils is
       end case;
    end Get_File_Signature;
 
-   function Get_Source_Identifier (Decl : Node) return Name_Id
+   function Get_Source_Identifier (Decl : Iir) return Name_Id
    is
       use Files_Map;
       use Name_Table;

@@ -425,7 +425,7 @@ package Vhdl.Utils is
    --  appears in the source file.
    --  Not useful for analysis as VHDL is case insensitive, but could be
    --  useful for error messages or tooling.
-   function Get_Source_Identifier (Decl : Node) return Name_Id;
+   function Get_Source_Identifier (Decl : Iir) return Name_Id;
 
    --  IIR wrapper around Get_HDL_Node/Set_HDL_Node.
    function Get_HDL_Node (N : PSL_Node) return Iir;
