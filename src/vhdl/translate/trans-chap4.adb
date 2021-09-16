@@ -1243,6 +1243,7 @@ package body Trans.Chap4 is
       Decl      : constant Iir := Strip_Denoting_Name (Sig);
       Sig_Type  : constant Iir := Get_Type (Sig);
       Base_Decl : constant Iir := Get_Object_Prefix (Sig);
+      Val_Type  : Iir;
       Name_Sig  : Mnode;
       Name_Val  : Mnode;
       Value     : Iir;
@@ -1278,7 +1279,35 @@ package body Trans.Chap4 is
             Data.Has_Val := False;
          else
             Data.Has_Val := True;
-            Data.Init_Val := Chap7.Translate_Expression (Value, Sig_Type);
+            Val_Type := Get_Type (Value);
+
+            if Get_Kind (Value) = Iir_Kind_Aggregate
+              and then Get_Constraint_State (Sig_Type) /= Fully_Constrained
+              and then Get_Constraint_State (Val_Type) /= Fully_Constrained
+            then
+               --  Both the signal type and the value type are not fully
+               --  constrained.  This can happend when the signal subtype
+               --  indication is 'subtype and the default value is an
+               --  aggregate.  The signal was created with bounds, so use
+               --  those bounds.
+               declare
+                  Tinfo : constant Type_Info_Acc := Get_Info (Sig_Type);
+                  V : Mnode;
+               begin
+                  Stabilize (Data.Value);
+                  V := Create_Temp (Tinfo);
+                  New_Assign_Stmt
+                    (M2Lp (Chap3.Get_Composite_Bounds (V)),
+                     M2Addr (Chap3.Get_Composite_Bounds (Data.Value)));
+                  pragma Assert (Val_Type = Sig_Type);
+                  Chap3.Allocate_Unbounded_Composite_Base
+                    (Alloc_Stack, V, Sig_Type);
+                  Chap7.Translate_Aggregate (V, Val_Type, Value);
+                  Data.Init_Val := V;
+               end;
+            else
+               Data.Init_Val := Chap7.Translate_Expression (Value, Sig_Type);
+            end if;
          end if;
       else
          --  Sub signal.
