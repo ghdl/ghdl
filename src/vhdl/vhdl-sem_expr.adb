@@ -1600,7 +1600,7 @@ package body Vhdl.Sem_Expr is
                   case Get_Kind (Get_Object_Prefix (Prefix)) is
                      when Iir_Kind_Signal_Declaration
                        | Iir_Kind_Interface_Signal_Declaration =>
-                        Prefix := Get_Longuest_Static_Prefix (Prefix);
+                        Prefix := Get_Longest_Static_Prefix (Prefix);
                         Sem_Stmts.Sem_Add_Driver (Prefix, Stmt);
                      when others =>
                         null;
@@ -4048,7 +4048,7 @@ package body Vhdl.Sem_Expr is
                if Eval_Pos (L) /= Eval_Pos (Low)
                  or else Eval_Pos (H) /= Eval_Pos (H)
                then
-                  Error_Msg_Sem (+Aggr, "subagregate bounds mismatch");
+                  Error_Msg_Sem (+Aggr, "subaggregate bounds mismatch");
                end if;
             end;
          end if;

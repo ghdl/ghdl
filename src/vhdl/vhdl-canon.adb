@@ -240,11 +240,11 @@ package body Vhdl.Canon is
            | Iir_Kind_Above_Attribute
            | Iir_Kind_External_Signal_Name =>
             --  LRM 8.1
-            --  A simple name that denotes a signal, add the longuest static
+            --  A simple name that denotes a signal, add the longest static
             --  prefix of the name to the sensitivity set;
             --
             --  An attribute name: if the designator denotes a signal
-            --  attribute, add the longuest static prefix of the name of the
+            --  attribute, add the longest static prefix of the name of the
             --  implicit signal denoted by the attribute name to the
             --  sensitivity set; [...]
             if not Is_Target then

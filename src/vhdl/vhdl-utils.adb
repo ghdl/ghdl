@@ -191,7 +191,7 @@ package body Vhdl.Utils is
       end case;
    end Get_Operator_Name;
 
-   function Get_Longuest_Static_Prefix (Expr: Iir) return Iir
+   function Get_Longest_Static_Prefix (Expr: Iir) return Iir
    is
       Adecl: Iir;
    begin
@@ -226,10 +226,10 @@ package body Vhdl.Utils is
             when Iir_Kind_Type_Conversion =>
                return Null_Iir;
             when others =>
-               Error_Kind ("get_longuest_static_prefix", Adecl);
+               Error_Kind ("get_longest_static_prefix", Adecl);
          end case;
       end loop;
-   end Get_Longuest_Static_Prefix;
+   end Get_Longest_Static_Prefix;
 
    function Get_Object_Prefix (Name: Iir; With_Alias : Boolean := True)
                               return Iir
