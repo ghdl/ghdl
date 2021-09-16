@@ -2082,7 +2082,7 @@ package body Trans is
          end if;
 
          if Temp_Level.No_Stack2_Mark then
-            --  Stack2 mark and release was explicitely disabled.
+            --  Stack2 mark and release was explicitly disabled.
             return;
          end if;
 

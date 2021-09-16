@@ -2394,7 +2394,7 @@ package body Ortho_Code.X86.Insns is
       case Kind is
          when OE_Beg
            | OE_End =>
-            --  Stack offset has been explicitely changed for local variables.
+            --  Stack offset has been explicitly changed for local variables.
             null;
          when others =>
             Stack_Offset := Prev_Stack_Offset;

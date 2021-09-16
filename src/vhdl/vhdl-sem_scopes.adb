@@ -1422,9 +1422,9 @@ package body Vhdl.Sem_Scopes is
 
       --  LRM08 12.4 Use clauses
       --  - The implicit declarations of predefined operations for the type
-      --    that are not hidden by homographs explicitely declared immediately
+      --    that are not hidden by homographs explicitly declared immediately
       --    within the package denoted by the prefix of the selected name
-      --  - The declarations of homographs, explicitely declared immediately
+      --  - The declarations of homographs, explicitly declared immediately
       --    within the package denotes by the prefix of the selected name,
       --    that hide implicit declarations of predefined operations for the
       --    type
@@ -1452,7 +1452,7 @@ package body Vhdl.Sem_Scopes is
             end if;
          end loop;
 
-         --  Explicitely declared homograph.
+         --  Explicitly declared homograph.
          if Has_Override then
             while El /= Null_Iir loop
                if Get_Kind (El) in Iir_Kinds_Subprogram_Declaration

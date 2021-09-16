@@ -266,12 +266,12 @@ package body Vhdl.Sem_Inst is
                   when Attr_Maybe_Ref =>
                      R := Instantiate_Iir (S, Get_Is_Ref (N));
                   when Attr_Forward_Ref =>
-                     --  Must be explicitely handled in Instantiate_Iir, as it
+                     --  Must be explicitly handled in Instantiate_Iir, as it
                      --  requires special handling.
                      raise Internal_Error;
                   when Attr_Maybe_Forward_Ref =>
                      if Get_Is_Forward_Ref (N) then
-                        --  Likewise: must be explicitely handled.
+                        --  Likewise: must be explicitly handled.
                         raise Internal_Error;
                      else
                         R := Instantiate_Iir (S, True);

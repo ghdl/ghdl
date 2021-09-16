@@ -52,9 +52,9 @@ package Vhdl.Utils is
    --  Convert an operator node to a name.
    function Get_Operator_Name (Op : Iir) return Name_Id;
 
-   -- Get the longuest static prefix of EXPR.
+   -- Get the longest static prefix of EXPR.
    -- See LRM93 8.1
-   function Get_Longuest_Static_Prefix (Expr: Iir) return Iir;
+   function Get_Longest_Static_Prefix (Expr: Iir) return Iir;
 
    --  Get the prefix of NAME, ie the declaration at the base of NAME.
    --  Return NAME itself if NAME is not an object or a subelement of
@@ -118,7 +118,7 @@ package Vhdl.Utils is
    --  True if EXPR can be built statically.  This is the case of literals
    --  (except overflow), and the case of some aggregates.
    --  This is different from locally static expression, particularly for
-   --  agregate: the analyzer may choose to dynamically create a locally
+   --  aggregate: the analyzer may choose to dynamically create a locally
    --  static aggregate if it is sparse.
    function Is_Static_Construct (Expr : Iir) return Boolean;
 
@@ -283,7 +283,7 @@ package Vhdl.Utils is
    --  Return true iff FUNC is an operation for ATYPE.
    --
    --  LRM08 5.1 Types
-   --  The set of operations of a type includes the explicitely declared
+   --  The set of operations of a type includes the explicitly declared
    --  subprograms that have a parameter or result of the type. The remaining
    --  operations of a type are the base operations and the predefined
    --  operations.
@@ -423,7 +423,7 @@ package Vhdl.Utils is
 
    --  Like Get_Identifier but return a Name_Id for the same casing as it
    --  appears in the source file.
-   --  Not useful for analysis as VHDL is case insentive, but could be
+   --  Not useful for analysis as VHDL is case insensitive, but could be
    --  useful for error messages or tooling.
    function Get_Source_Identifier (Decl : Node) return Name_Id;
 

@@ -345,7 +345,7 @@ package body Trans.Chap2 is
       return True;
    end Is_Subprogram_Ortho_Function;
 
-   --  Return TRUE iif SUBPRG_BODY declares explicitely or implicitely
+   --  Return TRUE iif SUBPRG_BODY declares explicitly or implicitely
    --  (or even implicitely by translation) a subprogram.
    function Has_Nested_Subprograms (Subprg_Body : Iir) return Boolean
    is

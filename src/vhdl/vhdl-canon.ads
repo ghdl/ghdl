@@ -77,7 +77,7 @@ package Vhdl.Canon is
                                                           return Iir;
 
    --  Compute the sensivity list of EXPR and add it to SENSIVITY_LIST.
-   --  If IS_TARGET is true, the longuest static prefix of the signal name
+   --  If IS_TARGET is true, the longest static prefix of the signal name
    --  is not added to the sensitivity list, but other static prefix (such
    --  as indexes of an indexed name) are added.
    procedure Canon_Extract_Sensitivity_Expression

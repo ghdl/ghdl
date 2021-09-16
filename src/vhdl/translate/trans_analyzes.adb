@@ -39,7 +39,7 @@ package body Trans_Analyzes is
          return Walk_Continue;
       end if;
 
-      Prefix := Get_Longuest_Static_Prefix (Target);
+      Prefix := Get_Longest_Static_Prefix (Target);
       Add_Element (Driver_List, Prefix);
       if Has_After then
          Set_After_Drivers_Flag (Base, True);
