@@ -36,7 +36,7 @@ from pyVHDLModel.SyntaxModel import Mode
 
 from pyGHDL.libghdl import LibGHDLException, name_table, errorout_memory
 from pyGHDL.libghdl._types import Iir
-from pyGHDL.libghdl.vhdl import nodes
+from pyGHDL.libghdl.vhdl import nodes, utils
 from pyGHDL.libghdl.vhdl.nodes import Null_Iir
 from pyGHDL.dom import DOMException
 
@@ -85,7 +85,7 @@ def GetNameOfNode(node: Iir) -> str:
     if node == Null_Iir:
         raise ValueError("GetNameOfNode: Parameter 'node' must not be 'Null_iir'.")
 
-    identifier = nodes.Get_Identifier(node)
+    identifier = utils.Get_Source_Identifier(node)
     return name_table.Get_Name_Ptr(identifier)
 
 
