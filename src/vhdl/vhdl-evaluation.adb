@@ -2178,7 +2178,6 @@ package body Vhdl.Evaluation is
 
    function Eval_Integer_Image (Val : Int64; Orig : Iir) return Iir
    is
-      use Str_Table;
       Img : String (1 .. 24); --  23 is enough, 24 is rounded.
       L : Natural;
       V : Int64;
@@ -2200,8 +2199,6 @@ package body Vhdl.Evaluation is
 
    function Eval_Floating_Image (Val : Fp64; Orig : Iir) return Iir
    is
-      use Str_Table;
-
       --  Sign (1) + digit (1) + dot (1) + digits (15) + 'e' (1) + sign (1)
       --  + exp_digits (4) -> 24.
       Str : String (1 .. 25);
