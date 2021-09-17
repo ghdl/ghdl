@@ -23,12 +23,16 @@ with Str_Table;
 with Flags; use Flags;
 with Std_Names;
 with Errorout; use Errorout;
+
 with Vhdl.Scanner;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Vhdl.Ieee.Std_Logic_1164;
+
+with Grt.Types;
 with Grt.Fcvt;
+with Grt.To_Strings;
 
 package body Vhdl.Evaluation is
    --  If FORCE is true, always return a literal.
@@ -39,6 +43,8 @@ package body Vhdl.Evaluation is
    function Eval_Enum_To_String (Lit : Iir; Orig : Iir) return Iir;
    function Eval_Integer_Image (Val : Int64; Orig : Iir) return Iir;
    function Eval_Floating_Image (Val : Fp64; Orig : Iir) return Iir;
+   function Eval_Floating_To_String_Format (Val : Fp64; Fmt : Iir; Orig : Iir)
+                                           return Iir;
 
    function Eval_Scalar_Compare (Left, Right : Iir) return Compare_Type;
 
@@ -156,6 +162,19 @@ package body Vhdl.Evaluation is
       Set_Expr_Staticness (Res, Locally);
       return Res;
    end Build_String;
+
+   function Build_String (Str : String; Orig : Iir) return Iir
+   is
+      use Str_Table;
+      Id : String8_Id;
+   begin
+      Id := Create_String8;
+      for I in Str'Range loop
+         Append_String8_Char (Str (I));
+      end loop;
+      return Build_String (Id, Int32 (Str'Length), Orig);
+   end Build_String;
+
 
    --  Build a simple aggregate composed of EL_LIST from ORIGIN.  STYPE is the
    --  type of the aggregate.  DEF_TYPE should be either Null_Iir or STYPE.  It
@@ -1989,6 +2008,10 @@ package body Vhdl.Evaluation is
          when Iir_Predefined_Record_Inequality =>
             return Build_Boolean (not Eval_Record_Equality (Left, Right));
 
+         when Iir_Predefined_Real_To_String_Format =>
+            return Eval_Floating_To_String_Format
+              (Get_Fp_Value (Left), Right, Orig);
+
          when Iir_Predefined_Boolean_Not
            | Iir_Predefined_Boolean_Rising_Edge
            | Iir_Predefined_Boolean_Falling_Edge
@@ -2049,14 +2072,9 @@ package body Vhdl.Evaluation is
             -- TODO
             raise Internal_Error;
 
-         when Iir_Predefined_Enum_To_String
-           | Iir_Predefined_Integer_To_String
-           | Iir_Predefined_Floating_To_String
-           | Iir_Predefined_Real_To_String_Digits
-           | Iir_Predefined_Real_To_String_Format
-           | Iir_Predefined_Physical_To_String
+         when Iir_Predefined_Real_To_String_Digits
            | Iir_Predefined_Time_To_String_Unit =>
-            --  TODO
+            --  TODO: to_string with a format parameter
             raise Internal_Error;
 
          when Iir_Predefined_TF_Array_Element_And
@@ -2091,7 +2109,15 @@ package body Vhdl.Evaluation is
             --  TODO
             raise Internal_Error;
 
+         when Iir_Predefined_Enum_To_String
+           | Iir_Predefined_Integer_To_String
+           | Iir_Predefined_Floating_To_String
+           | Iir_Predefined_Physical_To_String =>
+            --  Not dyadic
+            raise Internal_Error;
+
          when Iir_Predefined_Explicit =>
+            --  Not static
             raise Internal_Error;
       end case;
    exception
@@ -2156,7 +2182,6 @@ package body Vhdl.Evaluation is
       Img : String (1 .. 24); --  23 is enough, 24 is rounded.
       L : Natural;
       V : Int64;
-      Id : String8_Id;
    begin
       V := Val;
       L := Img'Last;
@@ -2170,17 +2195,12 @@ package body Vhdl.Evaluation is
          Img (L) := '-';
          L := L - 1;
       end if;
-      Id := Create_String8;
-      for I in L + 1 .. Img'Last loop
-         Append_String8_Char (Img (I));
-      end loop;
-      return Build_String (Id, Nat32 (Img'Last - L), Orig);
+      return Build_String (Img (L + 1 .. Img'Last), Orig);
    end Eval_Integer_Image;
 
    function Eval_Floating_Image (Val : Fp64; Orig : Iir) return Iir
    is
       use Str_Table;
-      Id : String8_Id;
 
       --  Sign (1) + digit (1) + dot (1) + digits (15) + 'e' (1) + sign (1)
       --  + exp_digits (4) -> 24.
@@ -2193,25 +2213,51 @@ package body Vhdl.Evaluation is
 
       Grt.Fcvt.Format_Image (Str, P, Interfaces.IEEE_Float_64 (Val));
 
-      Id := Create_String8;
-      for I in 1 .. P loop
-         Append_String8_Char (Str (I));
-      end loop;
-      Res := Build_String (Id, Int32 (P), Orig);
+      Res := Build_String (Str (1 .. P), Orig);
       --  FIXME: this is not correct since the type is *not* constrained.
       Set_Type (Res, Create_Unidim_Array_By_Length
                 (Get_Type (Orig), Int64 (P), Orig));
       return Res;
    end Eval_Floating_Image;
 
+   function Eval_Floating_To_String_Format (Val : Fp64; Fmt : Iir; Orig : Iir)
+                                           return Iir
+   is
+      pragma Assert (Get_Kind (Fmt) = Iir_Kind_String_Literal8);
+      Fmt_Len : constant Int32 := Get_String_Length (Fmt);
+   begin
+      if Fmt_Len > 32 then
+         Warning_Msg_Sem (Warnid_Runtime_Error, +Orig,
+                          "format parameter too long");
+         return Build_Overflow (Orig);
+      end if;
+      declare
+         use Str_Table;
+         use Grt.Types;
+         use Grt.To_Strings;
+         Fmt_Id : constant String8_Id := Get_String8_Id (Fmt);
+         Fmt_Str : String (1 .. Natural (Fmt_Len) + 1);
+
+         Res : String_Real_Format;
+         Last : Natural;
+      begin
+         for I in 1 .. Fmt_Len loop
+            Fmt_Str (Positive (I)) := Char_String8 (Fmt_Id, I);
+         end loop;
+         Fmt_Str (Fmt_Str'Last) := ASCII.NUL;
+
+         Grt.To_Strings.To_String
+           (Res, Last, Ghdl_F64 (Val), To_Ghdl_C_String (Fmt_Str'Address));
+
+         return Build_String (Res (1 .. Last), Orig);
+      end;
+   end Eval_Floating_To_String_Format;
+
    function Eval_Enumeration_Image (Lit : Iir; Orig : Iir) return Iir
    is
-      use Str_Table;
       Name : constant String := Image_Identifier (Lit);
-      Image_Id : constant String8_Id := Str_Table.Create_String8;
    begin
-      Append_String8_String (Name);
-      return Build_String (Image_Id, Name'Length, Orig);
+      return Build_String (Name, Orig);
    end Eval_Enumeration_Image;
 
    function Build_Enumeration_Value (Val : String; Enum, Expr : Iir) return Iir
