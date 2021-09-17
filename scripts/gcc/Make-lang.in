@@ -51,7 +51,7 @@ vhdl VHDL: ghdl1$(exeext) ghdl$(exeext)
 # Tell GNU Make to ignore these, if they exist.
 .PHONY: vhdl VHDL
 
-GHDL1_OBJS = attribs.o vhdl/ortho-lang.o
+GHDL1_OBJS = attribs.o vhdl/ortho-lang.o vhdl/grt-cstdio.o
 
 # To be put in ALL_HOST_FRONTEND_OBJS, so that generated files are created
 # before.

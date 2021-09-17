@@ -29,7 +29,8 @@ all: $(ortho_exec)
 
 
 $(ortho_exec): force $(ortho_srcdir)/$(BE)/ortho_debug.ads
-	$(GNATMAKE) -o $@ $(GNATMAKE_FLAGS) ortho_debug-main -bargs -E -largs $(LDFLAGS)
+	$(GNATMAKE) -o $@ $(GNATMAKE_FLAGS) ortho_debug-main \
+	 -bargs -E -largs $(LDFLAGS) $(GNATLFLAGS)
 
 clean:
 	$(RM) -f *.o *.ali *~ b~*.ad? ortho_nodes-main

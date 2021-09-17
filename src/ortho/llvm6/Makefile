@@ -13,7 +13,7 @@ all: $(ortho_exec)
 $(ortho_exec): $(ortho_srcdir)/llvm6/ortho_llvm.ads force llvm-cbindings.o
 	$(GNATMAKE) -o $@ -aI$(ortho_srcdir)/llvm6 -aI$(ortho_srcdir) \
 	$(GNATFLAGS) ortho_code_main -bargs -E \
-	-largs llvm-cbindings.o --LINK=$(CXX) \
+	-largs llvm-cbindings.o $(GNATLFLAGS) --LINK=$(CXX) \
 	`$(LLVM_LDFLAGS)` $(LDFLAGS)
 
 llvm-cbindings.o: $(ortho_srcdir)/llvm6/llvm-cbindings.cpp
