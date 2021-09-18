@@ -248,6 +248,17 @@ package body Vhdl.Evaluation is
             Res := Create_Iir (Iir_Kind_Simple_Aggregate);
             Set_Simple_Aggregate_List (Res, Get_Simple_Aggregate_List (Val));
 
+         when Iir_Kind_Aggregate =>
+            --  FIXME: ownership violation: both RES and VAL are parents of
+            --   association_choices_chain and aggregate_info.
+            --  But this aggregate is always temporary.
+            --  TODO: add maybe_ref_chain.
+            Res := Create_Iir (Iir_Kind_Aggregate);
+            Set_Association_Choices_Chain
+              (Res, Get_Association_Choices_Chain (Val));
+            Set_Aggregate_Info (Res, Get_Aggregate_Info (Val));
+            Set_Aggregate_Expand_Flag (Res, Get_Aggregate_Expand_Flag (Val));
+
          when Iir_Kind_Overflow_Literal =>
             Res := Create_Iir (Iir_Kind_Overflow_Literal);
 
