@@ -6232,7 +6232,8 @@ package body Vhdl.Parse is
            | Tok_Double_Less =>
             Res := Parse_Name (Allow_Indexes => True);
             if Res /= Null_Iir
-              and then Get_Kind (Res) = Iir_Kind_Signature then
+              and then Get_Kind (Res) = Iir_Kind_Signature
+            then
                Error_Msg_Parse (+Res, "signature not allowed in expression");
                return Get_Signature_Prefix (Res);
             else
