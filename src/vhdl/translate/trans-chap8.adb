@@ -418,12 +418,18 @@ package body Trans.Chap8 is
             declare
                List : constant Iir_Flist :=
                  Get_Enumeration_Literal_List (Base_Type);
+               Num : Natural;
             begin
-               --  FIXME: what about type E is ('T') ??
                if Get_Nbr_Elements (List) = 1 then
-                  raise Internal_Error;
+                  --  In the case of:
+                  --    type E is ('T')
+                  --  the iterator must have already finished.  So it doesn't
+                  --  matter if not incremented.
+                  Num := 0;
+               else
+                  Num := 1;
                end if;
-               V := New_Lit (Get_Ortho_Literal (Get_Nth_Element (List, 1)));
+               V := New_Lit (Get_Ortho_Literal (Get_Nth_Element (List, Num)));
             end;
 
          when others =>
