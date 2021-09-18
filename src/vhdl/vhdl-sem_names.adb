@@ -3066,6 +3066,11 @@ package body Vhdl.Sem_Names is
             end if;
             return;
 
+         when Iir_Kind_Type_Declaration
+           | Iir_Kind_Subtype_Declaration =>
+            Error_Msg_Sem
+              (+Name, "subprogram name is a type mark (missing apostrophe)");
+
          when Iir_Kinds_Scalar_Type_Attribute
             | Iir_Kind_Image_Attribute
             | Iir_Kind_Value_Attribute =>
@@ -3076,18 +3081,11 @@ package body Vhdl.Sem_Names is
                  (Res, Sem_As_Indexed_Or_Slice_Name (Prefix, True));
             elsif Actual /= Null_Iir then
                Finish_Sem_Scalar_Type_Attribute (Prefix_Name, Prefix, Actual);
-               Set_Named_Entity (Name, Prefix);
-               return;
+               Res := Prefix;
             else
                Error_Msg_Sem (+Name, "bad attribute parameter");
-               Set_Named_Entity (Name, Error_Mark);
-               return;
+               Res := Error_Mark;
             end if;
-
-         when Iir_Kind_Type_Declaration
-           | Iir_Kind_Subtype_Declaration =>
-            Error_Msg_Sem
-              (+Name, "subprogram name is a type mark (missing apostrophe)");
 
          when Iir_Kind_Stable_Attribute
            | Iir_Kind_Quiet_Attribute
@@ -3097,12 +3095,10 @@ package body Vhdl.Sem_Names is
                Add_Result (Res, Sem_As_Indexed_Or_Slice_Name (Prefix, True));
             elsif Actual /= Null_Iir then
                Finish_Sem_Signal_Attribute_Signal (Prefix, Actual);
-               Set_Named_Entity (Name, Prefix);
-               return;
+               Res := Prefix;
             else
                Error_Msg_Sem (+Name, "bad attribute parameter");
-               Set_Named_Entity (Name, Error_Mark);
-               return;
+               Res := Error_Mark;
             end if;
 
          when Iir_Kind_Ramp_Attribute
