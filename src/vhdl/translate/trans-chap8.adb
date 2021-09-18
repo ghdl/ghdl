@@ -401,69 +401,42 @@ package body Trans.Chap8 is
    end Translate_If_Statement;
 
    --  Inc or dec ITERATOR according to DIR.
-   procedure Gen_Update_Iterator_Common (Val      : Unsigned_64;
-                                         Itype    : Iir;
-                                         V : out O_Enode)
+   procedure Gen_Update_Iterator (Iterator : Var_Type;
+                                  Dir      : Direction_Type;
+                                  Itype    : Iir)
    is
       Base_Type : constant Iir := Get_Base_Type (Itype);
+      Op        : ON_Op_Kind;
+      V         : O_Enode;
    begin
       case Get_Kind (Base_Type) is
          when Iir_Kind_Integer_Type_Definition =>
             V := New_Lit
               (New_Signed_Literal
-                 (Get_Ortho_Type (Base_Type, Mode_Value), Integer_64 (Val)));
+                 (Get_Ortho_Type (Base_Type, Mode_Value), 1));
          when Iir_Kind_Enumeration_Type_Definition =>
             declare
                List : constant Iir_Flist :=
                  Get_Enumeration_Literal_List (Base_Type);
             begin
                --  FIXME: what about type E is ('T') ??
-               if Natural (Val) > Get_Nbr_Elements (List) then
+               if Get_Nbr_Elements (List) = 1 then
                   raise Internal_Error;
                end if;
-               V := New_Lit
-                 (Get_Ortho_Literal (Get_Nth_Element (List, Natural (Val))));
+               V := New_Lit (Get_Ortho_Literal (Get_Nth_Element (List, 1)));
             end;
 
          when others =>
             Error_Kind ("gen_update_iterator", Base_Type);
       end case;
-   end Gen_Update_Iterator_Common;
 
-   procedure Gen_Update_Iterator (Iterator : O_Dnode;
-                                  Dir      : Direction_Type;
-                                  Val      : Unsigned_64;
-                                  Itype    : Iir)
-   is
-      Op        : ON_Op_Kind;
-      V         : O_Enode;
-   begin
       case Dir is
          when Dir_To =>
             Op := ON_Add_Ov;
          when Dir_Downto =>
             Op := ON_Sub_Ov;
       end case;
-      Gen_Update_Iterator_Common (Val, Itype, V);
-      New_Assign_Stmt (New_Obj (Iterator),
-                       New_Dyadic_Op (Op, New_Obj_Value (Iterator), V));
-   end Gen_Update_Iterator;
 
-   procedure Gen_Update_Iterator (Iterator : Var_Type;
-                                  Dir      : Direction_Type;
-                                  Val      : Unsigned_64;
-                                  Itype    : Iir)
-   is
-      Op        : ON_Op_Kind;
-      V         : O_Enode;
-   begin
-      case Dir is
-         when Dir_To =>
-            Op := ON_Add_Ov;
-         when Dir_Downto =>
-            Op := ON_Sub_Ov;
-      end case;
-      Gen_Update_Iterator_Common (Val, Itype, V);
       New_Assign_Stmt (Get_Var (Iterator),
                        New_Dyadic_Op (Op, New_Value (Get_Var (Iterator)), V));
    end Gen_Update_Iterator;
@@ -658,10 +631,10 @@ package body Trans.Chap8 is
       if Deep_Rng /= Null_Iir then
          if Get_Direction (Deep_Rng) = Dir_To xor Deep_Reverse then
             Gen_Update_Iterator (It_Info.Iterator_Var,
-                                 Dir_To, 1, Iter_Base_Type);
+                                 Dir_To, Iter_Base_Type);
          else
             Gen_Update_Iterator (It_Info.Iterator_Var,
-                                 Dir_Downto, 1, Iter_Base_Type);
+                                 Dir_Downto, Iter_Base_Type);
          end if;
       else
          Start_If_Stmt
@@ -671,10 +644,10 @@ package body Trans.Chap8 is
                New_Lit (Ghdl_Dir_To_Node),
                Ghdl_Bool_Type));
          Gen_Update_Iterator (It_Info.Iterator_Var,
-                              Dir_To, 1, Iter_Base_Type);
+                              Dir_To, Iter_Base_Type);
          New_Else_Stmt (If_Blk1);
          Gen_Update_Iterator (It_Info.Iterator_Var,
-                              Dir_Downto, 1, Iter_Base_Type);
+                              Dir_Downto, Iter_Base_Type);
          Finish_If_Stmt (If_Blk1);
       end if;
    end Update_For_Loop;

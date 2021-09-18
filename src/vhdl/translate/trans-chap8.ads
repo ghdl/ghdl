@@ -73,13 +73,6 @@ package Trans.Chap8 is
    --  Translate a case statement or a selected signal assignment.
    procedure Translate_Case (N : Iir; Handler : in out Case_Handler'Class);
 
-   --  Inc or dec by VAL ITERATOR according to DIR.
-   --  Used for loop statements.
-   procedure Gen_Update_Iterator (Iterator : O_Dnode;
-                                  Dir      : Direction_Type;
-                                  Val      : Unsigned_64;
-                                  Itype    : Iir);
-
    --  Create declarations for a for-loop statement.
    procedure Translate_For_Loop_Statement_Declaration (Stmt : Iir);
 
