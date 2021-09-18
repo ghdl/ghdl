@@ -3092,14 +3092,18 @@ package body Vhdl.Sem_Names is
          when Iir_Kind_Stable_Attribute
            | Iir_Kind_Quiet_Attribute
            | Iir_Kind_Delayed_Attribute =>
-            if Actual /= Null_Iir then
+            if Get_Parameter (Prefix) /= Null_Iir then
+               --  Attribute is complete, so it is now index or slice.
+               Add_Result (Res, Sem_As_Indexed_Or_Slice_Name (Prefix, True));
+            elsif Actual /= Null_Iir then
                Finish_Sem_Signal_Attribute_Signal (Prefix, Actual);
                Set_Named_Entity (Name, Prefix);
+               return;
             else
                Error_Msg_Sem (+Name, "bad attribute parameter");
                Set_Named_Entity (Name, Error_Mark);
+               return;
             end if;
-            return;
 
          when Iir_Kind_Ramp_Attribute
            | Iir_Kind_Quantity_Slew_Attribute
