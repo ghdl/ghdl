@@ -532,10 +532,12 @@ package body Vhdl.Sem_Assocs is
       begin
          if Get_Kind (Src) not in Iir_Kinds_Scalar_Type_And_Subtype_Definition
          then
+            --  It's only for scalar types.
             return True;
          end if;
          if Get_Kind (Dest) not in Iir_Kinds_Scalar_Type_And_Subtype_Definition
          then
+            --  Avoid a crash in case of errors.
             return True;
          end if;
 
@@ -879,6 +881,7 @@ package body Vhdl.Sem_Assocs is
 
       Prev := Get_Associated_Expr (Res_Iass);
       if Prev = Null_Iir then
+         --  It is the first one, add it.
          Set_Associated_Expr (Res_Iass, Assoc);
       end if;
    end Add_Individual_Association;
@@ -910,8 +913,7 @@ package body Vhdl.Sem_Assocs is
          El_Type := Get_Element_Subtype (Atype);
          El := Chain;
          while El /= Null_Iir loop
-            Finish_Individual_Association1
-              (Get_Associated_Expr (El), El_Type);
+            Finish_Individual_Association1 (Get_Associated_Expr (El), El_Type);
             El := Get_Chain (El);
          end loop;
       end if;
@@ -1215,10 +1217,12 @@ package body Vhdl.Sem_Assocs is
       Clean_Individual_Association (Assoc);
    end Finish_Individual_Association;
 
-   --  Sem individual associations of ASSOCS:
-   --  Add an Iir_Kind_Association_Element_By_Individual before each
-   --  group of individual association for the same formal, and call
-   --  Finish_Individual_Association with each of these added nodes.
+   --  Analyze all individual associations of ASSOCS:
+   --  Create an Iir_Kind_Association_Element_By_Individual node before each
+   --  group of individual association for the same formal, call
+   --  and call Add_Individual_Association for each individual association for
+   --  the same formal, and finally call Finish_Individual_Association at the
+   --  end of each group.
    --
    --  The purpose of By_Individual association is to have the type of the
    --  actual (might be an array subtype), and also to be sure that all
@@ -1226,10 +1230,37 @@ package body Vhdl.Sem_Assocs is
    --  rooted by the top Association_Element_By_Individual, which contains a
    --  chain of choices (like the aggregate).  The child of a choice is either
    --  an Association_Element written by the user, or a new subtree rooted
-   --  by another Association_Element_By_Individual.  The tree doesn't
-   --  follow all the ownership rules: the formal of sub association_element
-   --  are directly set to the association, and the associated_expr of the
-   --  choices are directly set to formals.
+   --  by another Association_Element_By_Individual.
+   --
+   --  Eg:
+   --    formal (1, 0).ela => act1,
+   --    formal (1, 0).elb => act2,
+   --    formal (1, 1)     => act3,
+   --    formal (2, 0)     => act4,
+   --    formal (2, 1)     => act5,
+   --
+   --  Association_Element_By_Individual (Root)
+   --  +- Choice_By_Expression (1)
+   --  |  +- Association_Element_By_Individual
+   --  |     +- Choice_By_Expression (0)
+   --  |     |  +- Association_Element_By_Individual
+   --  |     |     +- Choice_By_Name (ela)
+   --  |     |        +- Association_Element_By_Expression (act1)
+   --  |     |     +- Choice_By_Name (elb)
+   --  |     |        +- Association_Element_By_Expression (act2)
+   --  |     +- Choice_By_Expression (1)
+   --  |        +- Association_Element_By_Expression (act3)
+   --  +- Choice_By_Expression (2)
+   --     +- Association_Element_By_Individual
+   --        +- Choice_By_Expression (0)
+   --        |  +- Association_Element_By_Expression (act4)
+   --        +- Choice_By_Expression (1)
+   --           +- Association_Element_By_Expression (act5)
+   --
+   --  The tree doesn't follow all the ownership rules: the formal of
+   --  sub association_element are directly set to the association,
+   --  and the associated_expr of the choices are directly set to
+   --  formals.
    --
    --  This tree is temporary (used only during analysis of the individual
    --  association) and removed once the check is done.
