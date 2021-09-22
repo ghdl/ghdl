@@ -140,7 +140,7 @@ if ($VHDL2008)
 {	Write-Host "Not all Xilinx primitives are VHDL-2008 compatible! Setting HaltOnError to FALSE." -ForegroundColor Red
 	$HaltOnError =      $false
 }
-$VHDLVersion,$VHDLStandard,$VHDLFlavor = Get-VHDLVariables $VHDL93 $VHDL2008
+$VHDLVersion,$VHDLStandard,$VHDLFlavor = Get-VHDLVariables -VHDL93:$VHDL93 -VHDL2008:$VHDL2008
 
 # define global GHDL Options
 $Analyze_Parameters = @(

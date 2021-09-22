@@ -285,16 +285,16 @@ function Start-PackageCompilation
 
 	Write-Host "Compiling library '$Library' ..." -ForegroundColor Yellow
 	$LibraryDirectory=  "$DestinationDirectory/$Library/$VHDLVersion"
-	$EnableVerbose -and (Write-Host "  Creating library $Library ..."  -ForegroundColor Gray      ) | Out-Null
-	$EnableDebug -and   (Write-Host "    mkdir $LibraryDirectory"      -ForegroundColor DarkGray  ) | Out-Null
+	$EnableVerbose -and (Write-Host "  Creating library $Library ..."  -ForegroundColor Gray       ) | Out-Null
+	$EnableDebug -and   (Write-Host "    mkdir $LibraryDirectory"      -ForegroundColor DarkGray   ) | Out-Null
 	mkdir $LibraryDirectory -ErrorAction SilentlyContinue | Out-Null
-	$EnableDebug -and   (Write-Host "    cd $LibraryDirectory"         -ForegroundColor DarkGray  ) | Out-Null
+	$EnableDebug -and   (Write-Host "    cd $LibraryDirectory"         -ForegroundColor DarkGray   ) | Out-Null
 	cd $LibraryDirectory
 	$ErrorCount = 0
 	foreach ($File in $SourceFiles)
-	{	Write-Host "  Analyzing package file '$File'" -ForegroundColor DarkCyan
+	{	$EnableVerbose -and (Write-Host "  Analyzing package file '$File'" -ForegroundColor DarkCyan ) | Out-Null
 		$InvokeExpr = "& '$GHDLBinary' -a " + ($Parameters -join " ") + " --work=$Library " + $File + " 2>&1"
-		$EnableDebug -and (Write-Host "    $InvokeExpr"                  -ForegroundColor DarkGray  ) | Out-Null
+		$EnableDebug -and (Write-Host "    $InvokeExpr"                    -ForegroundColor DarkGray ) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings -Indent:"$Indent"
 		if (($LastExitCode -ne 0) -or $ErrorRecordFound)
 		{	$ErrorCount += 1
