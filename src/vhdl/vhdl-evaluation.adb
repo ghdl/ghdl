@@ -1556,47 +1556,48 @@ package body Vhdl.Evaluation is
       end if;
    end Eval_Logic_Match_Equality;
 
-   function Eval_Logic_Or(L, R : Iir_Index32)
-                          return Iir_Index32
+   function Eval_Logic_Or (L, R : Iir_Index32) return Iir_Index32
    is
       use Vhdl.Ieee.Std_Logic_1164;
    begin
-      if L = Std_Logic_1_Pos or L = Std_Logic_H_Pos or
-         R = Std_Logic_1_Pos or R = Std_Logic_H_Pos then
-         return Std_Logic_1_Pos ;
-      elsif (L = Std_Logic_0_Pos or L = Std_Logic_L_Pos) and
-            (R = Std_Logic_0_Pos or R = Std_Logic_L_Pos) then
-         return Std_Logic_0_Pos ;
+      if L = Std_Logic_1_Pos or L = Std_Logic_H_Pos
+        or R = Std_Logic_1_Pos or R = Std_Logic_H_Pos
+      then
+         return Std_Logic_1_Pos;
+      elsif (L = Std_Logic_0_Pos or L = Std_Logic_L_Pos)
+        and (R = Std_Logic_0_Pos or R = Std_Logic_L_Pos)
+      then
+         return Std_Logic_0_Pos;
       elsif L = Std_Logic_U_Pos or R = Std_Logic_U_Pos then
-         return Std_Logic_U_Pos ;
+         return Std_Logic_U_Pos;
       else
-         return Std_Logic_X_Pos ;
-      end if ;
-   end Eval_Logic_Or ;
+         return Std_Logic_X_Pos;
+      end if;
+   end Eval_Logic_Or;
 
-   function Eval_Logic_Not(X : Iir_Index32) return Iir_Index32
+   function Eval_Logic_Not (X : Iir_Index32) return Iir_Index32
    is
       use Vhdl.Ieee.Std_Logic_1164;
    begin
       if X = Std_Logic_0_Pos or X = Std_Logic_L_Pos then
-         return Std_Logic_1_Pos ;
+         return Std_Logic_1_Pos;
       elsif X = Std_Logic_1_Pos or X = Std_Logic_H_Pos then
-         return Std_Logic_0_Pos ;
+         return Std_Logic_0_Pos;
       elsif X = Std_Logic_U_Pos then
-         return Std_Logic_U_Pos ;
+         return Std_Logic_U_Pos;
       else
-         return Std_Logic_X_Pos ;
-      end if ;
-   end Eval_Logic_Not ;
+         return Std_Logic_X_Pos;
+      end if;
+   end Eval_Logic_Not;
 
    function Eval_Logic_Match_Inequality (L, R : Iir_Int32; Loc : Iir)
                                          return Iir_Index32
    is
       E : Iir_Index32;
    begin
-      -- Defined as the not operator applied to the equal operator
-      E := Eval_Logic_Match_Equality(L, R, Loc) ;
-      return Eval_Logic_Not(E) ;
+      --  Defined as the not operator applied to the equal operator
+      E := Eval_Logic_Match_Equality (L, R, Loc);
+      return Eval_Logic_Not (E);
    end Eval_Logic_Match_Inequality;
 
    function Eval_Logic_Match_Less (L, R : Iir_Int32; Loc : Iir)
@@ -1604,8 +1605,8 @@ package body Vhdl.Evaluation is
    is
       use Vhdl.Ieee.Std_Logic_1164;
    begin
-      -- LRM19 9.2.3 table
-      -- '-' always returns 'X'
+      --  LRM19 9.2.3 table
+      --  '-' always returns 'X'
       if L = Std_Logic_D_Pos or R = Std_Logic_D_Pos then
          Warning_Msg_Sem
            (Warnid_Analyze_Assert, +Loc,
@@ -1613,66 +1614,66 @@ package body Vhdl.Evaluation is
          return Std_Logic_X_Pos;
       end if;
 
-      -- 'U' always returns 'U'
+      --  'U' always returns 'U'
       if L = Std_Logic_U_Pos or R = Std_Logic_U_Pos then
-         return Std_Logic_U_Pos ;
-      end if ;
+         return Std_Logic_U_Pos;
+      end if;
 
-      -- Only when R is '1' or 'H' will we ever return '1'
+      --  Only when R is '1' or 'H' will we ever return '1'
       if R = Std_Logic_1_Pos or R = Std_Logic_H_Pos then
          if L = Std_Logic_0_Pos or L = Std_Logic_L_Pos then
-            -- L = [0,L] R = [1,H]
-            return Std_Logic_1_Pos ;
+            --  L = [0,L] R = [1,H]
+            return Std_Logic_1_Pos;
          elsif L = Std_Logic_1_Pos or L = Std_Logic_H_Pos then
-            -- L = [1,H] R = [1,H]
-            return Std_Logic_0_Pos ;
+            --  L = [1,H] R = [1,H]
+            return Std_Logic_0_Pos;
          else
-            -- Everything else is 'X'
-            return Std_Logic_X_Pos ;
-         end if ;
+            --  Everything else is 'X'
+            return Std_Logic_X_Pos;
+         end if;
       elsif R = Std_Logic_0_Pos or R = Std_Logic_L_Pos then
-         -- R = [0,1]
-         return Std_Logic_0_Pos ;
+         --  R = [0,1]
+         return Std_Logic_0_Pos;
       else
-         -- Everything else is 'X'
-         return Std_Logic_X_Pos ;
-      end if ;
-   end Eval_Logic_Match_Less ;
+         --  Everything else is 'X'
+         return Std_Logic_X_Pos;
+      end if;
+   end Eval_Logic_Match_Less;
 
    function Eval_Logic_Match_Less_Equal (L, R : Iir_Int32; Loc : Iir)
                                          return Iir_Index32
    is
-      Less : Iir_Index32 ;
-      Equal : Iir_Index32 ;
+      Less : Iir_Index32;
+      Equal : Iir_Index32;
    begin
-      -- LRM19 9.2.3
-      -- ?<= is defined as (< or =)
-      Less := Eval_Logic_Match_Less(L, R, Loc) ;
-      Equal := Eval_Logic_Match_Equality(L, R, Loc) ;
-      return Eval_Logic_Or(Less, Equal) ;
-   end Eval_Logic_Match_Less_Equal ;
+      --  LRM19 9.2.3
+      --  ?<= is defined as (< or =)
+      Less := Eval_Logic_Match_Less (L, R, Loc);
+      Equal := Eval_Logic_Match_Equality (L, R, Loc);
+      return Eval_Logic_Or (Less, Equal);
+   end Eval_Logic_Match_Less_Equal;
 
    function Eval_Logic_Match_Greater (L, R : Iir_Int32; Loc : Iir)
                                       return Iir_Index32
    is
       Le : Iir_Index32;
    begin
-      -- LRM19 9.2.3
-      -- ?> is defined as not(?<=)
-      Le := Eval_Logic_Match_Less_Equal(L, R, Loc);
-      return Eval_Logic_Not(Le);
-   end Eval_Logic_Match_Greater ;
+      --  LRM19 9.2.3
+      --  ?> is defined as not(?<=)
+      Le := Eval_Logic_Match_Less_Equal (L, R, Loc);
+      return Eval_Logic_Not (Le);
+   end Eval_Logic_Match_Greater;
 
    function Eval_Logic_Match_Greater_Equal (L, R : Iir_Int32; Loc : Iir)
                                             return Iir_Index32
    is
-      Less : Iir_Index32 ;
+      Less : Iir_Index32;
    begin
-      -- LRM19 9.2.3
-      -- ?>= is defined as not(?<)
-      Less := Eval_Logic_Match_Less(L, R, Loc) ;
-      return Eval_Logic_Not(Less) ;
-   end Eval_Logic_Match_Greater_Equal ;
+      --  LRM19 9.2.3
+      --  ?>= is defined as not(?<)
+      Less := Eval_Logic_Match_Less (L, R, Loc);
+      return Eval_Logic_Not (Less);
+   end Eval_Logic_Match_Greater_Equal;
 
    function Eval_Equality (Left, Right : Iir) return Boolean;
 
