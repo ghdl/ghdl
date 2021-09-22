@@ -1943,6 +1943,8 @@ package body Translation is
       Create_Std_Ulogic_Match_Subprogram ("ne", Ghdl_Std_Ulogic_Match_Ne);
       Create_Std_Ulogic_Match_Subprogram ("lt", Ghdl_Std_Ulogic_Match_Lt);
       Create_Std_Ulogic_Match_Subprogram ("le", Ghdl_Std_Ulogic_Match_Le);
+      Create_Std_Ulogic_Match_Subprogram ("ge", Ghdl_Std_Ulogic_Match_Ge);
+      Create_Std_Ulogic_Match_Subprogram ("gt", Ghdl_Std_Ulogic_Match_Gt);
 
       Create_Std_Ulogic_Array_Match_Subprogram
         ("eq", Ghdl_Std_Ulogic_Array_Match_Eq);

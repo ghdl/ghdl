@@ -690,6 +690,10 @@ package body Ghdlrun is
            Grt.Std_Logic_1164.Ghdl_Std_Ulogic_Match_Lt'Address);
       Def (Trans_Decls.Ghdl_Std_Ulogic_Match_Le,
            Grt.Std_Logic_1164.Ghdl_Std_Ulogic_Match_Le'Address);
+      Def (Trans_Decls.Ghdl_Std_Ulogic_Match_Ge,
+           Grt.Std_Logic_1164.Ghdl_Std_Ulogic_Match_Ge'Address);
+      Def (Trans_Decls.Ghdl_Std_Ulogic_Match_Gt,
+           Grt.Std_Logic_1164.Ghdl_Std_Ulogic_Match_Gt'Address);
 
       Def (Trans_Decls.Ghdl_Std_Ulogic_Array_Match_Eq,
            Grt.Std_Logic_1164.Ghdl_Std_Ulogic_Array_Match_Eq'Address);

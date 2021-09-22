@@ -91,6 +91,20 @@ package body Grt.Std_Logic_1164 is
                                        Match_Eq_Table (Left, Right)));
    end Ghdl_Std_Ulogic_Match_Le;
 
+   function Ghdl_Std_Ulogic_Match_Ge (L, R : Ghdl_E8) return Ghdl_E8
+   is
+      Lt : constant Ghdl_E8 := Ghdl_Std_Ulogic_Match_Lt(L, R);
+   begin
+      return Std_Ulogic'Pos (Not_Table (Std_Ulogic'Val(Lt))) ;
+   end Ghdl_Std_Ulogic_Match_Ge;
+
+   function Ghdl_Std_Ulogic_Match_Gt (L, R : Ghdl_E8) return Ghdl_E8
+   is
+      Le : constant Ghdl_E8 := Ghdl_Std_Ulogic_Match_Le(L, R);
+   begin
+      return Std_Ulogic'Pos (Not_Table (Std_Ulogic'Val(Le))) ;
+   end Ghdl_Std_Ulogic_Match_Gt;
+
    Assert_Arr_Msg : constant String :=
      "parameters of '?=' array operator are not of the same length";
 
