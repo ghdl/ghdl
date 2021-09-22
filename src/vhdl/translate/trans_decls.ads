@@ -255,6 +255,8 @@ package Trans_Decls is
    Ghdl_Std_Ulogic_Match_Ne : O_Dnode;
    Ghdl_Std_Ulogic_Match_Lt : O_Dnode;
    Ghdl_Std_Ulogic_Match_Le : O_Dnode;
+   Ghdl_Std_Ulogic_Match_Ge : O_Dnode;
+   Ghdl_Std_Ulogic_Match_Gt : O_Dnode;
    Ghdl_Std_Ulogic_Array_Match_Eq : O_Dnode;
    Ghdl_Std_Ulogic_Array_Match_Ne : O_Dnode;
 

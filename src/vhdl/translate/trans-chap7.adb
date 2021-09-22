@@ -2693,12 +2693,12 @@ package body Trans.Chap7 is
                Left_Tree, Right_Tree, Res_Otype);
          when Iir_Predefined_Std_Ulogic_Match_Greater =>
             return Translate_Std_Ulogic_Match
-              (Ghdl_Std_Ulogic_Match_Lt,
-               Right_Tree, Left_Tree, Res_Otype);
+              (Ghdl_Std_Ulogic_Match_Gt,
+               Left_Tree, Right_Tree, Res_Otype);
          when Iir_Predefined_Std_Ulogic_Match_Greater_Equal =>
             return Translate_Std_Ulogic_Match
-              (Ghdl_Std_Ulogic_Match_Le,
-               Right_Tree, Left_Tree, Res_Otype);
+              (Ghdl_Std_Ulogic_Match_Ge,
+               Left_Tree, Right_Tree, Res_Otype);
 
          when Iir_Predefined_Bit_Array_Match_Equality =>
             return New_Compare_Op
