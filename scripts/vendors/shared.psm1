@@ -188,8 +188,8 @@ function Get-VHDLVariables
 	#>
 	[CmdletBinding()]
 	param(
-		[bool]$VHDL93 =   $false,
-		[bool]$VHDL2008 = $true
+		[switch]$VHDL93 =   $false,
+		[switch]$VHDL2008 = $true
 	)
 
 	if ($VHDL93)

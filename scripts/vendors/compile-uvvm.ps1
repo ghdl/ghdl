@@ -167,7 +167,7 @@ New-DestinationDirectory $DestinationDirectory
 cd $DestinationDirectory
 
 
-$VHDLVersion,$VHDLStandard,$VHDLFlavor = Get-VHDLVariables
+$VHDLVersion,$VHDLStandard,$VHDLFlavor = Get-VHDLVariables -VHDL2008
 
 # define global GHDL Options
 $Analyze_Parameters = @(
