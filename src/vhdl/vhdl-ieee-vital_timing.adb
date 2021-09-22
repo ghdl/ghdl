@@ -13,13 +13,16 @@
 --
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
+
 with Types; use Types;
 with Std_Names;
+with Flags; use Flags;
 with Errorout; use Errorout;
+with Name_Table;
+
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Vhdl.Tokens; use Vhdl.Tokens;
-with Name_Table;
 with Vhdl.Ieee.Std_Logic_1164; use Vhdl.Ieee.Std_Logic_1164;
 with Vhdl.Sem_Scopes;
 with Vhdl.Sem_Specs;
@@ -218,6 +221,15 @@ package body Vhdl.Ieee.Vital_Timing is
       end case;
    end Check_Level0_Attribute_Specification;
 
+   function Is_Slv_Subtype (Base_Type : Iir) return Boolean is
+   begin
+      if Vhdl_Std >= Vhdl_08 then
+         return Base_Type = Std_Ulogic_Vector_Type;
+      else
+         return Base_Type = Std_Logic_Vector_Type;
+      end if;
+   end Is_Slv_Subtype;
+
    procedure Check_Entity_Port_Declaration
      (Decl : Iir_Interface_Signal_Declaration)
    is
@@ -260,7 +272,7 @@ package body Vhdl.Ieee.Vital_Timing is
       Atype := Get_Type (Decl);
       Base_Type := Get_Base_Type (Atype);
       Type_Decl := Get_Type_Declarator (Atype);
-      if Base_Type = Std_Logic_Vector_Type then
+      if Is_Slv_Subtype (Base_Type) then
          if Get_Resolution_Indication (Atype) /= Null_Iir then
             Error_Vital
               (+Decl,
@@ -562,7 +574,7 @@ package body Vhdl.Ieee.Vital_Timing is
          if Get_Base_Type (Ptype) = Std_Ulogic_Type then
             return Port_Length_Scalar;
          elsif Get_Kind (Ptype) = Iir_Kind_Array_Subtype_Definition
-           and then Get_Base_Type (Ptype) = Std_Logic_Vector_Type
+           and then Is_Slv_Subtype (Get_Base_Type (Ptype))
          then
             Itype := Get_Nth_Element (Get_Index_Subtype_List (Ptype), 0);
             if Get_Type_Staticness (Itype) /= Locally then
