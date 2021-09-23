@@ -475,7 +475,10 @@ package body Ghdldrv is
          Cmd.Assembler_Cmd := new String'("as");
       end if;
       if Cmd.Linker_Cmd = null then
-         Cmd.Linker_Cmd := new String'("cc");
+         Cmd.Linker_Cmd := GNAT.OS_Lib.Getenv ("CC");
+         if Cmd.Linker_Cmd = null or else Cmd.Linker_Cmd.all = "" then
+            Cmd.Linker_Cmd := new String'("cc");
+         end if;
       end if;
    end Set_Tools_Name;
 
@@ -815,13 +818,13 @@ package body Ghdldrv is
       end if;
       case Backend is
          when Backend_Gcc =>
-            Put ("assembler command: ");
+            Put ("assembler command (--AS= or as): ");
             Put_Line (Cmd.Assembler_Cmd.all);
          when Backend_Llvm
            | Backend_Mcode =>
             null;
       end case;
-      Put ("linker command: ");
+      Put ("linker command (--LINKER=, CC, or cc): ");
       Put_Line (Cmd.Linker_Cmd.all);
       Put_Line ("default lib prefix: " & Default_Paths.Lib_Prefix);
 
