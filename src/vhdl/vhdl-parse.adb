@@ -7624,15 +7624,15 @@ package body Vhdl.Parse is
    --  precond:  CASE
    --  postcond: ';'
    --
-   --  [ LRM93 8.8 ]
+   --  [ LRM08 10.9 ]
    --  case_statement ::=
    --      [ CASE_label : ]
-   --          CASE expression IS
+   --          CASE [?] expression IS
    --              case_statement_alternative
    --              { case_statement_alternative }
-   --          END CASE [ CASE_label ] ;
+   --          END CASE [?] [ CASE_label ] ;
    --
-   --  [ LRM93 8.8 ]
+   --  [ LRM08 10.9]
    --  case_statement_alternative ::= WHEN choices => sequence_of_statements
    function Parse_Case_Statement (Label : Name_Id) return Iir
    is
@@ -7648,6 +7648,17 @@ package body Vhdl.Parse is
       --  Skip 'case'.
       Scan;
 
+      if Flags.Vhdl_Std >= Vhdl_08 then
+         --  Check ? for matching case
+         if Current_Token = Tok_Question_Mark then
+            --  Skip ?
+            Scan;
+            --  Mark the case as matching case statement
+            Set_Matching_Flag (Stmt, True);
+         end if;
+      end if;
+
+      --  Parse the Expression
       Set_Expression (Stmt, Parse_Case_Expression);
 
       --  Skip 'is'.
@@ -7682,6 +7693,11 @@ package body Vhdl.Parse is
       --  Skip 'end', 'case'.
       Expect_Scan (Tok_End);
       Expect_Scan (Tok_Case);
+
+      if Get_Matching_Flag (Stmt) then
+         --  Matching case statement must match the ?
+         Expect_Scan (Tok_Question_Mark);
+      end if ;
 
       if Flags.Vhdl_Std >= Vhdl_93 then
          Check_End_Name (Stmt);

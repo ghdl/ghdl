@@ -5920,6 +5920,19 @@ def Set_Case_Statement_Alternative_Chain(obj: Iir, value: Iir) -> None:
 
 
 @export
+@BindToLibGHDL("vhdl__nodes__get_matching_flag")
+def Get_Matching_Flag(obj: Iir) -> Boolean:
+    """"""
+    return 0
+
+
+@export
+@BindToLibGHDL("vhdl__nodes__set_matching_flag")
+def Set_Matching_Flag(obj: Iir, value: Boolean) -> None:
+    """"""
+
+
+@export
 @BindToLibGHDL("vhdl__nodes__get_choice_staticness")
 def Get_Choice_Staticness(obj: Iir) -> Iir:
     """"""

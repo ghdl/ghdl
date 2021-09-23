@@ -331,6 +331,7 @@ package body Vhdl.Nodes_Meta is
       Field_Aggregate_Expand_Flag => Type_Boolean,
       Field_Association_Choices_Chain => Type_Iir,
       Field_Case_Statement_Alternative_Chain => Type_Iir,
+      Field_Matching_Flag => Type_Boolean,
       Field_Choice_Staticness => Type_Iir_Staticness,
       Field_Procedure_Call => Type_Iir,
       Field_Implementation => Type_Iir,
@@ -1026,6 +1027,8 @@ package body Vhdl.Nodes_Meta is
             return "association_choices_chain";
          when Field_Case_Statement_Alternative_Chain =>
             return "case_statement_alternative_chain";
+         when Field_Matching_Flag =>
+            return "matching_flag";
          when Field_Choice_Staticness =>
             return "choice_staticness";
          when Field_Procedure_Call =>
@@ -2416,6 +2419,8 @@ package body Vhdl.Nodes_Meta is
             return Attr_Chain;
          when Field_Case_Statement_Alternative_Chain =>
             return Attr_Chain;
+         when Field_Matching_Flag =>
+            return Attr_None;
          when Field_Choice_Staticness =>
             return Attr_None;
          when Field_Procedure_Call =>
@@ -4721,6 +4726,7 @@ package body Vhdl.Nodes_Meta is
       Field_Loop_Label,
       --  Iir_Kind_Case_Statement
       Field_Label,
+      Field_Matching_Flag,
       Field_Suspend_Flag,
       Field_Visible_Flag,
       Field_End_Has_Identifier,
@@ -5485,79 +5491,79 @@ package body Vhdl.Nodes_Meta is
       Iir_Kind_While_Loop_Statement => 1924,
       Iir_Kind_Next_Statement => 1931,
       Iir_Kind_Exit_Statement => 1938,
-      Iir_Kind_Case_Statement => 1946,
-      Iir_Kind_Procedure_Call_Statement => 1952,
-      Iir_Kind_Break_Statement => 1959,
-      Iir_Kind_If_Statement => 1969,
-      Iir_Kind_Elsif => 1975,
-      Iir_Kind_Character_Literal => 1982,
-      Iir_Kind_Simple_Name => 1989,
-      Iir_Kind_Selected_Name => 1997,
-      Iir_Kind_Operator_Symbol => 2002,
-      Iir_Kind_Reference_Name => 2007,
-      Iir_Kind_External_Constant_Name => 2016,
-      Iir_Kind_External_Signal_Name => 2025,
-      Iir_Kind_External_Variable_Name => 2035,
-      Iir_Kind_Selected_By_All_Name => 2041,
-      Iir_Kind_Parenthesis_Name => 2046,
-      Iir_Kind_Package_Pathname => 2050,
-      Iir_Kind_Absolute_Pathname => 2051,
-      Iir_Kind_Relative_Pathname => 2052,
-      Iir_Kind_Pathname_Element => 2057,
-      Iir_Kind_Base_Attribute => 2059,
-      Iir_Kind_Subtype_Attribute => 2064,
-      Iir_Kind_Element_Attribute => 2069,
-      Iir_Kind_Across_Attribute => 2074,
-      Iir_Kind_Through_Attribute => 2079,
-      Iir_Kind_Nature_Reference_Attribute => 2083,
-      Iir_Kind_Left_Type_Attribute => 2088,
-      Iir_Kind_Right_Type_Attribute => 2093,
-      Iir_Kind_High_Type_Attribute => 2098,
-      Iir_Kind_Low_Type_Attribute => 2103,
-      Iir_Kind_Ascending_Type_Attribute => 2108,
-      Iir_Kind_Image_Attribute => 2114,
-      Iir_Kind_Value_Attribute => 2120,
-      Iir_Kind_Pos_Attribute => 2126,
-      Iir_Kind_Val_Attribute => 2132,
-      Iir_Kind_Succ_Attribute => 2138,
-      Iir_Kind_Pred_Attribute => 2144,
-      Iir_Kind_Leftof_Attribute => 2150,
-      Iir_Kind_Rightof_Attribute => 2156,
-      Iir_Kind_Signal_Slew_Attribute => 2164,
-      Iir_Kind_Quantity_Slew_Attribute => 2172,
-      Iir_Kind_Ramp_Attribute => 2180,
-      Iir_Kind_Zoh_Attribute => 2188,
-      Iir_Kind_Ltf_Attribute => 2196,
-      Iir_Kind_Ztf_Attribute => 2206,
-      Iir_Kind_Dot_Attribute => 2213,
-      Iir_Kind_Integ_Attribute => 2220,
-      Iir_Kind_Above_Attribute => 2228,
-      Iir_Kind_Quantity_Delayed_Attribute => 2236,
-      Iir_Kind_Delayed_Attribute => 2245,
-      Iir_Kind_Stable_Attribute => 2254,
-      Iir_Kind_Quiet_Attribute => 2263,
-      Iir_Kind_Transaction_Attribute => 2272,
-      Iir_Kind_Event_Attribute => 2276,
-      Iir_Kind_Active_Attribute => 2280,
-      Iir_Kind_Last_Event_Attribute => 2284,
-      Iir_Kind_Last_Active_Attribute => 2288,
-      Iir_Kind_Last_Value_Attribute => 2292,
-      Iir_Kind_Driving_Attribute => 2296,
-      Iir_Kind_Driving_Value_Attribute => 2300,
-      Iir_Kind_Behavior_Attribute => 2300,
-      Iir_Kind_Structure_Attribute => 2300,
-      Iir_Kind_Simple_Name_Attribute => 2307,
-      Iir_Kind_Instance_Name_Attribute => 2312,
-      Iir_Kind_Path_Name_Attribute => 2317,
-      Iir_Kind_Left_Array_Attribute => 2324,
-      Iir_Kind_Right_Array_Attribute => 2331,
-      Iir_Kind_High_Array_Attribute => 2338,
-      Iir_Kind_Low_Array_Attribute => 2345,
-      Iir_Kind_Length_Array_Attribute => 2352,
-      Iir_Kind_Ascending_Array_Attribute => 2359,
-      Iir_Kind_Range_Array_Attribute => 2366,
-      Iir_Kind_Reverse_Range_Array_Attribute => 2373,
-      Iir_Kind_Attribute_Name => 2382
+      Iir_Kind_Case_Statement => 1947,
+      Iir_Kind_Procedure_Call_Statement => 1953,
+      Iir_Kind_Break_Statement => 1960,
+      Iir_Kind_If_Statement => 1970,
+      Iir_Kind_Elsif => 1976,
+      Iir_Kind_Character_Literal => 1983,
+      Iir_Kind_Simple_Name => 1990,
+      Iir_Kind_Selected_Name => 1998,
+      Iir_Kind_Operator_Symbol => 2003,
+      Iir_Kind_Reference_Name => 2008,
+      Iir_Kind_External_Constant_Name => 2017,
+      Iir_Kind_External_Signal_Name => 2026,
+      Iir_Kind_External_Variable_Name => 2036,
+      Iir_Kind_Selected_By_All_Name => 2042,
+      Iir_Kind_Parenthesis_Name => 2047,
+      Iir_Kind_Package_Pathname => 2051,
+      Iir_Kind_Absolute_Pathname => 2052,
+      Iir_Kind_Relative_Pathname => 2053,
+      Iir_Kind_Pathname_Element => 2058,
+      Iir_Kind_Base_Attribute => 2060,
+      Iir_Kind_Subtype_Attribute => 2065,
+      Iir_Kind_Element_Attribute => 2070,
+      Iir_Kind_Across_Attribute => 2075,
+      Iir_Kind_Through_Attribute => 2080,
+      Iir_Kind_Nature_Reference_Attribute => 2084,
+      Iir_Kind_Left_Type_Attribute => 2089,
+      Iir_Kind_Right_Type_Attribute => 2094,
+      Iir_Kind_High_Type_Attribute => 2099,
+      Iir_Kind_Low_Type_Attribute => 2104,
+      Iir_Kind_Ascending_Type_Attribute => 2109,
+      Iir_Kind_Image_Attribute => 2115,
+      Iir_Kind_Value_Attribute => 2121,
+      Iir_Kind_Pos_Attribute => 2127,
+      Iir_Kind_Val_Attribute => 2133,
+      Iir_Kind_Succ_Attribute => 2139,
+      Iir_Kind_Pred_Attribute => 2145,
+      Iir_Kind_Leftof_Attribute => 2151,
+      Iir_Kind_Rightof_Attribute => 2157,
+      Iir_Kind_Signal_Slew_Attribute => 2165,
+      Iir_Kind_Quantity_Slew_Attribute => 2173,
+      Iir_Kind_Ramp_Attribute => 2181,
+      Iir_Kind_Zoh_Attribute => 2189,
+      Iir_Kind_Ltf_Attribute => 2197,
+      Iir_Kind_Ztf_Attribute => 2207,
+      Iir_Kind_Dot_Attribute => 2214,
+      Iir_Kind_Integ_Attribute => 2221,
+      Iir_Kind_Above_Attribute => 2229,
+      Iir_Kind_Quantity_Delayed_Attribute => 2237,
+      Iir_Kind_Delayed_Attribute => 2246,
+      Iir_Kind_Stable_Attribute => 2255,
+      Iir_Kind_Quiet_Attribute => 2264,
+      Iir_Kind_Transaction_Attribute => 2273,
+      Iir_Kind_Event_Attribute => 2277,
+      Iir_Kind_Active_Attribute => 2281,
+      Iir_Kind_Last_Event_Attribute => 2285,
+      Iir_Kind_Last_Active_Attribute => 2289,
+      Iir_Kind_Last_Value_Attribute => 2293,
+      Iir_Kind_Driving_Attribute => 2297,
+      Iir_Kind_Driving_Value_Attribute => 2301,
+      Iir_Kind_Behavior_Attribute => 2301,
+      Iir_Kind_Structure_Attribute => 2301,
+      Iir_Kind_Simple_Name_Attribute => 2308,
+      Iir_Kind_Instance_Name_Attribute => 2313,
+      Iir_Kind_Path_Name_Attribute => 2318,
+      Iir_Kind_Left_Array_Attribute => 2325,
+      Iir_Kind_Right_Array_Attribute => 2332,
+      Iir_Kind_High_Array_Attribute => 2339,
+      Iir_Kind_Low_Array_Attribute => 2346,
+      Iir_Kind_Length_Array_Attribute => 2353,
+      Iir_Kind_Ascending_Array_Attribute => 2360,
+      Iir_Kind_Range_Array_Attribute => 2367,
+      Iir_Kind_Reverse_Range_Array_Attribute => 2374,
+      Iir_Kind_Attribute_Name => 2383
      );
 
    function Get_Fields_First (K : Iir_Kind) return Fields_Index is
@@ -5684,6 +5690,8 @@ package body Vhdl.Nodes_Meta is
             return Get_Aggr_Named_Flag (N);
          when Field_Aggregate_Expand_Flag =>
             return Get_Aggregate_Expand_Flag (N);
+         when Field_Matching_Flag =>
+            return Get_Matching_Flag (N);
          when Field_Has_Disconnect_Flag =>
             return Get_Has_Disconnect_Flag (N);
          when Field_Has_Active_Flag =>
@@ -5836,6 +5844,8 @@ package body Vhdl.Nodes_Meta is
             Set_Aggr_Named_Flag (N, V);
          when Field_Aggregate_Expand_Flag =>
             Set_Aggregate_Expand_Flag (N, V);
+         when Field_Matching_Flag =>
+            Set_Matching_Flag (N, V);
          when Field_Has_Disconnect_Flag =>
             Set_Has_Disconnect_Flag (N, V);
          when Field_Has_Active_Flag =>
@@ -11890,6 +11900,11 @@ package body Vhdl.Nodes_Meta is
             return False;
       end case;
    end Has_Case_Statement_Alternative_Chain;
+
+   function Has_Matching_Flag (K : Iir_Kind) return Boolean is
+   begin
+      return K = Iir_Kind_Case_Statement;
+   end Has_Matching_Flag;
 
    function Has_Choice_Staticness (K : Iir_Kind) return Boolean is
    begin

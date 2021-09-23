@@ -4016,6 +4016,8 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Expression (Field5)
    --
+   --   Get/Set_Matching_Flag (Flag1)
+   --
    --  Chain is composed of Iir_Kind_Choice_By_XXX.
    --   Get/Set_Case_Statement_Alternative_Chain (Field1)
    --
@@ -9001,6 +9003,11 @@ package Vhdl.Nodes is
    --  Field: Field1 Chain
    function Get_Case_Statement_Alternative_Chain (Target : Iir) return Iir;
    procedure Set_Case_Statement_Alternative_Chain (Target : Iir; Chain : Iir);
+
+   --  Matching condition for case statement.
+   --  Field: Flag1
+   function Get_Matching_Flag (Target : Iir) return Boolean;
+   procedure Set_Matching_Flag (Target : Iir; Flag : Boolean);
 
    --  Staticness of the choice.
    --  Field: State1 (pos)

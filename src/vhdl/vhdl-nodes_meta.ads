@@ -375,6 +375,7 @@ package Vhdl.Nodes_Meta is
       Field_Aggregate_Expand_Flag,
       Field_Association_Choices_Chain,
       Field_Case_Statement_Alternative_Chain,
+      Field_Matching_Flag,
       Field_Choice_Staticness,
       Field_Procedure_Call,
       Field_Implementation,
@@ -965,6 +966,7 @@ package Vhdl.Nodes_Meta is
    function Has_Association_Choices_Chain (K : Iir_Kind) return Boolean;
    function Has_Case_Statement_Alternative_Chain (K : Iir_Kind)
       return Boolean;
+   function Has_Matching_Flag (K : Iir_Kind) return Boolean;
    function Has_Choice_Staticness (K : Iir_Kind) return Boolean;
    function Has_Procedure_Call (K : Iir_Kind) return Boolean;
    function Has_Implementation (K : Iir_Kind) return Boolean;

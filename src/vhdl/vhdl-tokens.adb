@@ -116,6 +116,9 @@ package body Vhdl.Tokens is
          when Tok_Ampersand =>
             return "&";
 
+         when Tok_Question_Mark =>
+            return "?";
+
          when Tok_Condition =>
             return "??";
 
