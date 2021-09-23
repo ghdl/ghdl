@@ -431,63 +431,64 @@ class fields(IntEnum):
     Aggregate_Expand_Flag = 311
     Association_Choices_Chain = 312
     Case_Statement_Alternative_Chain = 313
-    Choice_Staticness = 314
-    Procedure_Call = 315
-    Implementation = 316
-    Parameter_Association_Chain = 317
-    Method_Object = 318
-    Subtype_Type_Mark = 319
-    Subnature_Nature_Mark = 320
-    Type_Conversion_Subtype = 321
-    Type_Mark = 322
-    File_Type_Mark = 323
-    Return_Type_Mark = 324
-    Has_Disconnect_Flag = 325
-    Has_Active_Flag = 326
-    Is_Within_Flag = 327
-    Type_Marks_List = 328
-    Implicit_Alias_Flag = 329
-    Alias_Signature = 330
-    Attribute_Signature = 331
-    Overload_List = 332
-    Simple_Name_Identifier = 333
-    Simple_Name_Subtype = 334
-    Protected_Type_Body = 335
-    Protected_Type_Declaration = 336
-    Use_Flag = 337
-    End_Has_Reserved_Id = 338
-    End_Has_Identifier = 339
-    End_Has_Postponed = 340
-    Has_Label = 341
-    Has_Begin = 342
-    Has_End = 343
-    Has_Is = 344
-    Has_Pure = 345
-    Has_Body = 346
-    Has_Parameter = 347
-    Has_Component = 348
-    Has_Identifier_List = 349
-    Has_Mode = 350
-    Has_Class = 351
-    Has_Delay_Mechanism = 352
-    Suspend_Flag = 353
-    Is_Ref = 354
-    Is_Forward_Ref = 355
-    Psl_Property = 356
-    Psl_Sequence = 357
-    Psl_Declaration = 358
-    Psl_Expression = 359
-    Psl_Boolean = 360
-    PSL_Clock = 361
-    PSL_NFA = 362
-    PSL_Nbr_States = 363
-    PSL_Clock_Sensitivity = 364
-    PSL_EOS_Flag = 365
-    PSL_Abort_Flag = 366
-    Count_Expression = 367
-    Clock_Expression = 368
-    Default_Clock = 369
-    Foreign_Node = 370
+    Matching_Flag = 314
+    Choice_Staticness = 315
+    Procedure_Call = 316
+    Implementation = 317
+    Parameter_Association_Chain = 318
+    Method_Object = 319
+    Subtype_Type_Mark = 320
+    Subnature_Nature_Mark = 321
+    Type_Conversion_Subtype = 322
+    Type_Mark = 323
+    File_Type_Mark = 324
+    Return_Type_Mark = 325
+    Has_Disconnect_Flag = 326
+    Has_Active_Flag = 327
+    Is_Within_Flag = 328
+    Type_Marks_List = 329
+    Implicit_Alias_Flag = 330
+    Alias_Signature = 331
+    Attribute_Signature = 332
+    Overload_List = 333
+    Simple_Name_Identifier = 334
+    Simple_Name_Subtype = 335
+    Protected_Type_Body = 336
+    Protected_Type_Declaration = 337
+    Use_Flag = 338
+    End_Has_Reserved_Id = 339
+    End_Has_Identifier = 340
+    End_Has_Postponed = 341
+    Has_Label = 342
+    Has_Begin = 343
+    Has_End = 344
+    Has_Is = 345
+    Has_Pure = 346
+    Has_Body = 347
+    Has_Parameter = 348
+    Has_Component = 349
+    Has_Identifier_List = 350
+    Has_Mode = 351
+    Has_Class = 352
+    Has_Delay_Mechanism = 353
+    Suspend_Flag = 354
+    Is_Ref = 355
+    Is_Forward_Ref = 356
+    Psl_Property = 357
+    Psl_Sequence = 358
+    Psl_Declaration = 359
+    Psl_Expression = 360
+    Psl_Boolean = 361
+    PSL_Clock = 362
+    PSL_NFA = 363
+    PSL_Nbr_States = 364
+    PSL_Clock_Sensitivity = 365
+    PSL_EOS_Flag = 366
+    PSL_Abort_Flag = 367
+    Count_Expression = 368
+    Clock_Expression = 369
+    Default_Clock = 370
+    Foreign_Node = 371
 
 
 def Get_Boolean(node, field):
@@ -2503,6 +2504,12 @@ def Has_Association_Choices_Chain(kind: IirKind) -> bool:
 @export
 @BindToLibGHDL("vhdl__nodes_meta__has_case_statement_alternative_chain")
 def Has_Case_Statement_Alternative_Chain(kind: IirKind) -> bool:
+    """"""
+
+
+@export
+@BindToLibGHDL("vhdl__nodes_meta__has_matching_flag")
+def Has_Matching_Flag(kind: IirKind) -> bool:
     """"""
 
 

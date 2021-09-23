@@ -2559,9 +2559,8 @@ package body Vhdl.Scanner is
                   Current_Token := Tok_Match_Not_Equal;
                   Pos := Pos + 3;
                else
-                  Error_Msg_Scan ("unknown matching operator");
+                  Current_Token := Tok_Question_Mark;
                   Pos := Pos + 1;
-                  goto Again;
                end if;
             end if;
             return;
