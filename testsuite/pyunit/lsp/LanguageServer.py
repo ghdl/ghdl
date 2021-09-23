@@ -150,11 +150,7 @@ class JSONTest(TestCase):
         self.assertIsNone(rep, "Too many replies.")
 
         if errs != 0:
-            print(
-                "FAILURE between output and {!s} (for {!s})".format(
-                    responseFile, requestFile
-                )
-            )
+            print("FAILURE between output and {!s} (for {!s})".format(responseFile, requestFile))
             print("Writing result output to result.json")
             with open("result.json", "w") as f:
                 f.write(json_dumps(json_res, indent=2))
@@ -193,11 +189,7 @@ class Test003_Errors(JSONTest):
         self._RequestResponse("cmds.json", "replies.json")
 
 
-
-@mark.xfail(
-    platform == 'win32' and ('MINGW_PREFIX' not in environ),
-    reason="needs OpenSSL",
-)
+@mark.xfail(platform == "win32" and ("MINGW_PREFIX" not in environ), reason="FIXME")
 class Test004_Error_Project(JSONTest):
     subdir = Path("004errprj")
 
