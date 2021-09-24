@@ -70,13 +70,12 @@ package body Grt.Change_Generics is
 
    --  Override for unconstrained array generic.
    procedure Override_Generic_Array (Obj_Rti : Ghdl_Rtin_Object_Acc;
+                                     Arr_Rti : Ghdl_Rtin_Type_Array_Acc;
                                      Ctxt : Rti_Context;
                                      Over : Generic_Override_Acc)
    is
-      Type_Rti : constant Ghdl_Rtin_Type_Array_Acc :=
-        To_Ghdl_Rtin_Type_Array_Acc (Obj_Rti.Obj_Type);
-      El_Rti : constant Ghdl_Rti_Access := Type_Rti.Element;
-      Idx_Rti : constant Ghdl_Rti_Access := Type_Rti.Indexes (0);
+      El_Rti : constant Ghdl_Rti_Access := Arr_Rti.Element;
+      Idx_Rti : constant Ghdl_Rti_Access := Arr_Rti.Indexes (0);
       Idx_Base_Rti : Ghdl_Rti_Access;
       St_Rng, Rng : Ghdl_Range_Ptr;
       Arr : Ghdl_E8_Array_Base_Ptr;
@@ -86,7 +85,7 @@ package body Grt.Change_Generics is
    begin
       --  Check array type:
       --  - Must be one dimension
-      if Type_Rti.Nbr_Dim /= 1 then
+      if Arr_Rti.Nbr_Dim /= 1 then
          Error_Override ("multi-dimension array not supported for "
                            & "override of generic", Over);
          return;
@@ -252,7 +251,22 @@ package body Grt.Change_Generics is
       pragma Assert (Rti.Kind = Ghdl_Rtik_Generic);
       case Type_Rti.Kind is
          when Ghdl_Rtik_Type_Array =>
-            Override_Generic_Array (Obj_Rti, Ctxt, Over);
+            Override_Generic_Array
+              (Obj_Rti, To_Ghdl_Rtin_Type_Array_Acc (Type_Rti), Ctxt, Over);
+         when Ghdl_Rtik_Subtype_Unbounded_Array =>
+            declare
+               St : constant Ghdl_Rtin_Subtype_Composite_Acc :=
+                 To_Ghdl_Rtin_Subtype_Composite_Acc (Type_Rti);
+               Bt : constant Ghdl_Rtin_Type_Array_Acc :=
+                 To_Ghdl_Rtin_Type_Array_Acc (St.Basetype);
+            begin
+               if Bt.Common.Kind /= Ghdl_Rtik_Type_Array then
+                  Error_Override
+                    ("unhandled array subtype for generic override of", Over);
+               else
+                  Override_Generic_Array (Obj_Rti, Bt, Ctxt, Over);
+               end if;
+            end;
          when Ghdl_Rtik_Type_B1
            | Ghdl_Rtik_Type_E8 =>
             Override_Generic_Enum (Obj_Rti, Ctxt, Over, Type_Rti);
