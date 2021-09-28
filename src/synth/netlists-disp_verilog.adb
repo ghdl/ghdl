@@ -381,7 +381,8 @@ package body Netlists.Disp_Verilog is
       Put (Bchar (Zx * 2 + Val));
    end Disp_Const_Bit;
 
-   procedure Disp_Memory_Init (Port : Net; Val : Net; W : Width; Depth : Width)
+   procedure Disp_Memory_Init
+     (Mem : Instance; Val : Net; W : Width; Depth : Width)
    is
       Inst : constant Instance := Get_Net_Parent (Val);
    begin
@@ -395,7 +396,7 @@ package body Netlists.Disp_Verilog is
       Put_Line ("  initial begin");
       for I in reverse 0 .. Depth - 1 loop
          Put ("    ");
-         Disp_Net_Name (Port);
+         Put_Name (Get_Instance_Name (Mem));
          Put ("[");
          Put_Uns32 (I);
          Put ("] = ");
@@ -701,7 +702,7 @@ package body Netlists.Disp_Verilog is
             if Get_Id (Val_Inst) = Id_Isignal then
                Val := Get_Input_Net (Val_Inst, 1);
             end if;
-            Disp_Memory_Init (Ports, Val, Data_W, Depth);
+            Disp_Memory_Init (Mem, Val, Data_W, Depth);
          end;
       end if;
 
