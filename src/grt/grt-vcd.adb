@@ -268,7 +268,6 @@ package body Grt.Vcd is
       pragma Unreferenced (Err);
    begin
       Put_Line ("Vcd.Avhpi_Error!");
-      null;
    end Avhpi_Error;
 
    function Rti_To_Vcd_Kind (Rti : Ghdl_Rti_Access) return Vcd_Var_Type is
@@ -516,68 +515,77 @@ package body Grt.Vcd is
    begin
       Get_Verilog_Wire (Sig, Vcd_El);
 
-      if Vcd_El.Vtype = Vcd_Bad
-        or else Vcd_El.Vtype = Vcd_Enum8
-      then
-         Vcd_Put ("$comment ");
-         Vcd_Put_Name (Sig);
-         Vcd_Put (" is not handled");
-         --Vcd_Put (Ghdl_Type_Kind'Image (Desc.Kind));
-         Vcd_Putc (' ');
-         Vcd_Put_End;
-         return;
-      else
-         Vcd_Table.Increment_Last;
-         N := Vcd_Table.Last;
-
-         Vcd_Table.Table (N) := Vcd_El;
-         Vcd_Put ("$var ");
-         case Vcd_El.Vtype is
-            when Vcd_Integer32 =>
-               Vcd_Put ("integer 32");
-            when Vcd_Float64 =>
-               Vcd_Put ("real 64");
-            when Vcd_Bool
-              | Vcd_Bit
-              | Vcd_Stdlogic =>
-               Vcd_Put ("reg 1");
-            when Vcd_Bitvector
-              | Vcd_Stdlogic_Vector =>
-               Vcd_Put ("reg ");
-               Vcd_Put_I32 (Ghdl_I32 (Vcd_El.Vec_Range.I32.Len));
-            when Vcd_Bad
-              | Vcd_Array
-              | Vcd_Struct
-              | Vcd_Enum8 =>
-               null;
-         end case;
-         Vcd_Putc (' ');
-         Vcd_Put_Idcode (N);
-         Vcd_Putc (' ');
-         Vcd_Put_Name (Sig);
-         if Vcd_El.Vtype in Vcd_Var_Vectors then
-            Vcd_Putc ('[');
-            Vcd_Put_I32 (Vcd_El.Vec_Range.I32.Left);
-            Vcd_Putc (':');
-            Vcd_Put_I32 (Vcd_El.Vec_Range.I32.Right);
-            Vcd_Putc (']');
-         end if;
-         Vcd_Putc (' ');
-         Vcd_Put_End;
-         if Boolean'(False) then
+      case Vcd_El.Vtype is
+         when Vcd_Integer32
+           | Vcd_Float64
+           | Vcd_Bool
+           | Vcd_Bit
+           | Vcd_Stdlogic
+           | Vcd_Bitvector
+           | Vcd_Stdlogic_Vector =>
+            --  Handled below.
+            null;
+         when others =>
+            --  Not handled.
             Vcd_Put ("$comment ");
             Vcd_Put_Name (Sig);
-            Vcd_Put (" is ");
-            case Vcd_Value_Valid (Vcd_El.Val) is
-               when Vcd_Effective =>
-                  Vcd_Put ("effective ");
-               when Vcd_Driving =>
-                  Vcd_Put ("driving ");
-               when Vcd_Variable =>
-                  Vcd_Put ("variable ");
-            end case;
+            Vcd_Put (" is not handled");
+            --Vcd_Put (Ghdl_Type_Kind'Image (Desc.Kind));
+            Vcd_Putc (' ');
             Vcd_Put_End;
-         end if;
+            return;
+      end case;
+
+      Vcd_Table.Increment_Last;
+      N := Vcd_Table.Last;
+
+      Vcd_Table.Table (N) := Vcd_El;
+      Vcd_Put ("$var ");
+      case Vcd_El.Vtype is
+         when Vcd_Integer32 =>
+            Vcd_Put ("integer 32");
+         when Vcd_Float64 =>
+            Vcd_Put ("real 64");
+         when Vcd_Bool
+           | Vcd_Bit
+           | Vcd_Stdlogic =>
+            Vcd_Put ("reg 1");
+         when Vcd_Bitvector
+           | Vcd_Stdlogic_Vector =>
+            Vcd_Put ("reg ");
+            Vcd_Put_I32 (Ghdl_I32 (Vcd_El.Vec_Range.I32.Len));
+         when Vcd_Bad
+           | Vcd_Array
+           | Vcd_Struct
+           | Vcd_Enum8 =>
+            raise Program_Error;
+      end case;
+      Vcd_Putc (' ');
+      Vcd_Put_Idcode (N);
+      Vcd_Putc (' ');
+      Vcd_Put_Name (Sig);
+      if Vcd_El.Vtype in Vcd_Var_Vectors then
+         Vcd_Putc ('[');
+         Vcd_Put_I32 (Vcd_El.Vec_Range.I32.Left);
+         Vcd_Putc (':');
+         Vcd_Put_I32 (Vcd_El.Vec_Range.I32.Right);
+         Vcd_Putc (']');
+      end if;
+      Vcd_Putc (' ');
+      Vcd_Put_End;
+      if Boolean'(False) then
+         Vcd_Put ("$comment ");
+         Vcd_Put_Name (Sig);
+         Vcd_Put (" is ");
+         case Vcd_Value_Valid (Vcd_El.Val) is
+            when Vcd_Effective =>
+               Vcd_Put ("effective ");
+            when Vcd_Driving =>
+               Vcd_Put ("driving ");
+            when Vcd_Variable =>
+               Vcd_Put ("variable ");
+         end case;
+         Vcd_Put_End;
       end if;
    end Add_Signal;
 
