@@ -1875,6 +1875,7 @@ package body Vhdl.Sem_Stmts is
             --  Already analyzed before, while trying to separate
             --  concurrent procedure calls from instantiation stmts.
             pragma Assert (Get_Kind (Comp) = Iir_Kind_Component_Declaration);
+            Set_Use_Flag (Comp, True);
             return Comp;
          end if;
 
@@ -1895,6 +1896,8 @@ package body Vhdl.Sem_Stmts is
             Error_Class_Match (Comp_Name, "component");
             return Null_Iir;
          end if;
+
+         Set_Use_Flag (Comp, True);
 
          return Comp;
       end if;

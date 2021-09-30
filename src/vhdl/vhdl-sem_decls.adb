@@ -2528,7 +2528,8 @@ package body Vhdl.Sem_Decls is
                                       "%n is never referenced", +El);
                   end if;
                when Iir_Kind_Signal_Declaration
-                 | Iir_Kind_Variable_Declaration =>
+                 | Iir_Kind_Variable_Declaration
+                 | Iir_Kind_Component_Declaration =>
                   if not Get_Use_Flag (El) then
                      Warning_Msg_Sem (Warnid_Unused, +El,
                                       "%n is never referenced", +El);
