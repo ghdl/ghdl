@@ -59,6 +59,9 @@ package body Grt.Vcd is
    --  Can be set to FALSE to make vcd comparaison easier.
    Flag_Vcd_Date : Boolean := True;
 
+   --  Only use 4 states (01zx) for std_ulogic.
+   Flag_Vcd_4states : Boolean := False;
+
    Stream : FILEs;
 
    procedure My_Vcd_Put (Str : String)
@@ -83,10 +86,6 @@ package body Grt.Vcd is
       Stream := NULL_Stream;
    end My_Vcd_Close;
 
-   --  VCD filename.
-   --  Stream corresponding to the VCD filename.
-   --Vcd_Stream : FILEs;
-
    --  Index type of the table of vcd variables to dump.
    type Vcd_Index_Type is new Integer;
 
@@ -102,6 +101,10 @@ package body Grt.Vcd is
       end if;
       if Opt'Length = 12 and then Opt (F + 5 .. F + 11) = "-nodate" then
          Flag_Vcd_Date := False;
+         return True;
+      end if;
+      if Opt'Length = 13 and then Opt (F + 5 .. F + 12) = "-4states" then
+         Flag_Vcd_4states := True;
          return True;
       end if;
       if Opt'Length > 6 and then Opt (F + 5) = '=' then
@@ -139,6 +142,7 @@ package body Grt.Vcd is
    begin
       Put_Line (" --vcd=FILENAME     dump signal values into a VCD file");
       Put_Line (" --vcd-nodate       do not write date in VCD file");
+      Put_Line (" --vcd-4states      reduce std_logic to verilog 0/1/x/z");
    end Vcd_Help;
 
    procedure Vcd_Newline is
@@ -681,14 +685,20 @@ package body Grt.Vcd is
    is
       type Map_Type is array (Ghdl_E8 range 0 .. 8) of Character;
       --                             "UX01ZWLH-"
-   -- Map_Vlg : constant Map_Type := "xx01zz01x";
+      Map_Vlg : constant Map_Type := "xx01zz01x";
       Map_Std : constant Map_Type := "UX01ZWLH-";
+      C : Character;
    begin
       if V not in Map_Type'Range then
-         Vcd_Putc ('?');
+         C := '?';
       else
-         Vcd_Putc (Map_Std (V));
+         if Flag_Vcd_4states then
+            C := Map_Vlg (V);
+         else
+            C := Map_Std (V);
+         end if;
       end if;
+      Vcd_Putc (C);
    end Vcd_Put_Stdlogic;
 
    procedure Vcd_Put_Integer32 (V : Ghdl_U32)

@@ -279,6 +279,13 @@ Export waveforms
 
   Do not write date in the VCD file.
 
+.. option:: --vcd-4states
+
+  Only use the verilog states ``0/1/x/z`` to represent ``std_ulogic``
+  values.  The VCD file produced should be fully compatible with any
+  VCD reader.  The default is to write ``std_ulogic`` as they are (so
+  keeping states ``U/W/L/H/-``), which is supported by several VCD readers.
+
 .. option:: --fst=<FILENAME>
 
   Write the waveforms into an `fst` file.
