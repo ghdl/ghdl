@@ -6,7 +6,9 @@ architecture behav of repro4 is
   is
     variable n : natural := 2;
     subtype st is natural range 1 to n;
+    constant b : st := 5;
   begin
+    assert b /= 0;
     return a;
   end f;
 begin
