@@ -592,6 +592,7 @@ package body Vhdl.Formatters is
       Vpos := (others => 0);
       Vdone := (others => False);
       Diff_Col := 0;
+      Prev_Col := 0;
 
       --  First pass: compute the positions
       loop
