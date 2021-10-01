@@ -919,6 +919,7 @@ package body Vhdl.Sem_Names is
    is
       Atype : Iir;
       Res : Iir;
+      Decl : Iir;
    begin
       --  The name must not have been analyzed.
       pragma Assert (Get_Type (Name) = Null_Iir);
@@ -964,6 +965,15 @@ package body Vhdl.Sem_Names is
       end if;
 
       Set_Type (Res, Atype);
+
+      if Get_Kind (Res) in Iir_Kinds_Denoting_Name then
+         Decl := Get_Named_Entity (Res);
+         if Kind_In (Decl,
+                     Iir_Kind_Type_Declaration, Iir_Kind_Subtype_Declaration)
+         then
+            Set_Use_Flag (Decl, True);
+         end if;
+      end if;
 
       return Res;
    end Sem_Type_Mark;
