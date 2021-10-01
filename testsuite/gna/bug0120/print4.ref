@@ -1,0 +1,1 @@
+  signal bwe : bit_vector (3 downto 0);
