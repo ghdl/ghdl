@@ -629,6 +629,7 @@ clean: force
 
 distclean: clean
 	$(RM) -f default_paths.ads ortho_code-x86-flags.ads
+	$(RM) -f elf_arch.ads ghdlsynth_maybe.ads
 	$(RM) -f grt/grt-backtrace-impl.ads
 	$(RM) -f Makefile config.status ghdl.gpr
 
