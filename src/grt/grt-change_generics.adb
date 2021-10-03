@@ -76,6 +76,7 @@ package body Grt.Change_Generics is
    is
       El_Rti : constant Ghdl_Rti_Access := Arr_Rti.Element;
       Idx_Rti : constant Ghdl_Rti_Access := Arr_Rti.Indexes (0);
+      El_Base_Rti : Ghdl_Rti_Access;
       Idx_Base_Rti : Ghdl_Rti_Access;
       St_Rng, Rng : Ghdl_Range_Ptr;
       Arr : Ghdl_E8_Array_Base_Ptr;
@@ -101,7 +102,12 @@ package body Grt.Change_Generics is
          return;
       end if;
       --  - Element must be E8 enum.
-      if El_Rti.Kind /= Ghdl_Rtik_Type_E8 then
+      if El_Rti.Kind = Ghdl_Rtik_Subtype_Scalar then
+         El_Base_Rti := To_Ghdl_Rtin_Subtype_Scalar_Acc (El_Rti).Basetype;
+      else
+         El_Base_Rti := El_Rti;
+      end if;
+      if El_Base_Rti.Kind /= Ghdl_Rtik_Type_E8 then
          Error_Override ("non enumerated element type not supported for "
                            & "override of generic", Over);
          return;
@@ -118,7 +124,7 @@ package body Grt.Change_Generics is
       Arr := To_Ghdl_E8_Array_Base_Ptr (Ghdl_Malloc (Len));
       for I in Over.Value'range loop
          Ghdl_Value_E8_Char (Arr (Ghdl_Index_Type (I - Over.Value'First)), Err,
-                             Over.Value (I), El_Rti);
+                             Over.Value (I), El_Base_Rti);
          if Err then
             Error_Override ("invalid character for override of generic", Over);
             return;
