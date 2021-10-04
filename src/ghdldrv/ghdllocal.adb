@@ -1856,9 +1856,15 @@ package body Ghdllocal is
    end Expect_Filenames;
 
    --  Command Elab_Order.
-   type Command_Elab_Order is new Command_Lib with null record;
+   type Command_Elab_Order is new Command_Lib with record
+      Flag_Libraries : Boolean := False;
+   end record;
    function Decode_Command (Cmd : Command_Elab_Order; Name : String)
                            return Boolean;
+   procedure Decode_Option (Cmd : in out Command_Elab_Order;
+                            Option : String;
+                            Arg : String;
+                            Res : out Option_State);
    function Get_Short_Help (Cmd : Command_Elab_Order) return String;
    procedure Perform_Action (Cmd : in out Command_Elab_Order;
                              Args : Argument_List);
@@ -1876,10 +1882,25 @@ package body Ghdllocal is
    is
       pragma Unreferenced (Cmd);
    begin
-      return "elab-order [OPTS] UNIT [ARCH]"
+      return "elab-order [--libraries] [OPTS] UNIT [ARCH]"
         & ASCII.LF & "  Display ordered source files"
         & ASCII.LF & "  alias: --elab-order";
    end Get_Short_Help;
+
+   procedure Decode_Option (Cmd : in out Command_Elab_Order;
+                            Option : String;
+                            Arg : String;
+                            Res : out Option_State)
+   is
+      pragma Assert (Option'First = 1);
+   begin
+      if Option = "--libraries" then
+         Cmd.Flag_Libraries := True;
+         Res := Option_Ok;
+      else
+         Decode_Option (Command_Lib (Cmd), Option, Arg, Res);
+      end if;
+   end Decode_Option;
 
    function Is_Makeable_File (File : Iir_Design_File) return Boolean is
    begin
@@ -1892,7 +1913,6 @@ package body Ghdllocal is
    procedure Perform_Action (Cmd : in out Command_Elab_Order;
                              Args : Argument_List)
    is
-      pragma Unreferenced (Cmd);
       use Name_Table;
 
       Lib_Id : Name_Id;
@@ -1925,7 +1945,10 @@ package body Ghdllocal is
             --  Builtin file.
             null;
          else
-            --  Lib := Get_Library (File);
+            if Cmd.Flag_Libraries then
+               Put (Image (Get_Identifier (Get_Library (File))));
+               Put (' ');
+            end if;
             Put (Image (Get_Design_File_Filename (File)));
             New_Line;
          end if;
