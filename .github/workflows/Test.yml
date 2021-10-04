@@ -52,7 +52,7 @@ jobs:
 
       #- run: nroff -man doc/_build/man/ghdl.1
 
-      - name: '📤 Upload artifact: HTML and LaTeX'
+      - name: '📤 Upload artifact: HTML, LaTeX and man'
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v2
         with:
@@ -61,13 +61,6 @@ jobs:
             doc/_build/html
             doc/_build/latex
             doc/_build/man
-
-      - name: '📤 Upload artifact: ghdl.1'
-        if: github.event_name != 'pull_request'
-        uses: actions/upload-artifact@v2
-        with:
-          name: man
-          path: doc/_build/man/ghdl.1
 
 #
 # pyGHDL Bindings, Formatting and Wheel
@@ -610,7 +603,7 @@ jobs:
         run: |
           print('None'
               if '${{ github.ref }}'.startswith('refs/tags/')
-              else'::set-output name=list::**/*.zst **/*.tgz **/*-standalone.zip'
+              else'::set-output name=list::**/*.zst **/*.tgz **/*-standalone.zip **/man/ghdl.1'
           )
 
       # Tagged: create a pre-release or a release (semver)
