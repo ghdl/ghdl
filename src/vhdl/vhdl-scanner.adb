@@ -2155,7 +2155,8 @@ package body Vhdl.Scanner is
                           or Vhdl_Std >= Vhdl_02)
                     and then Characters_Kind (Source (Pos)) = Invalid
                   then
-                     Error_Msg_Scan ("invalid character, even in a comment");
+                     Error_Msg_Scan ("invalid character, even in a comment "
+                                       & "(turn off with -C)");
                   end if;
                   Pos := Pos + 1;
                end loop;
