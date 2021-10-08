@@ -172,19 +172,19 @@ include $(srcdir)/src/grt/Makefile.inc
 version.tmp: $(srcdir)/src/version.in force
 #	Create version.tmp from version.in, using git date/hash, or envvars.
 #	The user is allowed to set GHDL_VER_DESC to override description.
-	DEF_VER_DESC=tarball; \
+	VER_DESC=tarball; \
 	VER_REF=unknown; \
 	VER_HASH=unknown; \
 	if test -d $(srcdir)/.git && desc=`cd $(srcdir); git describe --dirty --long`; then \
-	  DEF_VER_DESC=`echo $$desc | sed -e 's/\([^-]*-g\)/r\1/' -e 's/-/./g' -e 's/^v//g'`; \
+	  VER_DESC=`echo $$desc | sed -e 's/\([^-]*-g\)/r\1/' -e 's/-/./g' -e 's/^v//g'`; \
 	  VER_REF=`cd $(srcdir); git rev-parse --abbrev-ref HEAD`; \
 	  VER_HASH=`cd $(srcdir); git rev-parse HEAD`; \
 	fi; \
 	sed \
 	  -e "s#@VER@#$(ghdl_version)#" \
-	  -e "s#@DESC@#$${GHDL_VER_DESC:-$$DEF_VER_DESC}#" \
-	  -e "s#@REF@#$${VER_REF}#" \
-	  -e "s#@HASH@#$${VER_HASH}#" \
+	  -e "s#@DESC@#$${GHDL_VER_DESC:-$$VER_DESC}#" \
+	  -e "s#@REF@#$${GHDL_VER_REF:-$$VER_REF}#" \
+	  -e "s#@HASH@#$${GHDL_VER_HASH:-$$VER_HASH}#" \
 	  < $< > $@;
 
 version.ads: version.tmp
