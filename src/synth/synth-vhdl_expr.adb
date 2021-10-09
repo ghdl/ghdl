@@ -1381,38 +1381,74 @@ package body Synth.Vhdl_Expr is
            (+Loc, "cannot extract same constant factor for dynamic slice");
          return;
       end if;
-      if L_Fac < 0 then
-         Step := Uns32 (-L_Fac);
-         Inp := Build_Monadic (Ctxt, Id_Neg, Inp);
-         Set_Location (Inp, Loc);
-      else
-         Step := Uns32 (L_Fac);
-      end if;
 
+      --  Compute step and width.
+      Step := Uns32 (abs L_Fac);
       case Pfx_Bnd.Dir is
          when Dir_To =>
-            Width := Uns32 (R_Add - L_Add + 1);
-            Off := Uns32 (L_Add - Pfx_Bnd.Left);
-         when Dir_Downto =>
-            Width := Uns32 (L_Add - R_Add + 1);
-            if R_Add >= Pfx_Bnd.Right then
-               Off := Uns32 (R_Add - Pfx_Bnd.Right);
+            if R_Add < L_Add then
+               Width := 0;
             else
-               --  Handle biased values.
-               declare
-                  Bias : constant Uns32 :=
-                    (Uns32 (Pfx_Bnd.Right - R_Add) + Step - 1) / Step;
-                  Bias_Net : Net;
-               begin
-                  --  Add bias to INP and adjust the offset.
-                  Bias_Net := Build2_Const_Uns
-                    (Ctxt, Uns64 (Bias), Get_Width (Inp));
-                  Inp := Build_Dyadic (Ctxt, Id_Add, Inp, Bias_Net);
-                  Set_Location (Inp, Loc);
-                  Off := Uns32 (Int32 (Bias * Step) + R_Add - Pfx_Bnd.Right);
-               end;
+               Width := Uns32 (R_Add - L_Add + 1);
+            end if;
+         when Dir_Downto =>
+            if L_Add < R_Add then
+               Width := 0;
+            else
+               Width := Uns32 (L_Add - R_Add + 1);
             end if;
       end case;
+
+      --  TODO: degenerated dynamic slice.
+      pragma Assert (L_Fac /= 0);
+
+      --  Assume input width large enough to cover all the values of the
+      --  bounds.
+      if (Pfx_Bnd.Dir = Dir_Downto and then L_Fac < 0)
+        or else (Pfx_Bnd.Dir = Dir_To and then L_Fac > 0)
+      then
+         --  TODO: Assume in range.
+         case Pfx_Bnd.Dir is
+            when Dir_To =>
+               Off := Uns32 (L_Add - Pfx_Bnd.Left);
+            when Dir_Downto =>
+               Off := Uns32 (R_Add - Pfx_Bnd.Right);
+         end case;
+         declare
+            Bias : constant Uns32 := Off / Step;
+            Bias_Net : Net;
+         begin
+            Bias_Net := Build2_Const_Uns
+              (Ctxt, Uns64 (Bias), Get_Width (Inp));
+            Inp := Build_Dyadic (Ctxt, Id_Sub, Bias_Net, Inp);
+            Set_Location (Inp, Loc);
+            Off := Off - Bias * Step;
+         end;
+      else
+         case Pfx_Bnd.Dir is
+            when Dir_To =>
+               Off := Uns32 (L_Add - Pfx_Bnd.Left);
+            when Dir_Downto =>
+               if R_Add >= Pfx_Bnd.Right then
+                  Off := Uns32 (R_Add - Pfx_Bnd.Right);
+               else
+                  --  Handle biased values.
+                  declare
+                     Bias : constant Uns32 :=
+                       (Uns32 (Pfx_Bnd.Right - R_Add) + Step - 1) / Step;
+                     Bias_Net : Net;
+                  begin
+                     --  Add bias to INP and adjust the offset.
+                     Bias_Net := Build2_Const_Uns
+                       (Ctxt, Uns64 (Bias), Get_Width (Inp));
+                     Inp := Build_Dyadic (Ctxt, Id_Add, Inp, Bias_Net);
+                     Set_Location (Inp, Loc);
+                     Off :=
+                       Uns32 (Int32 (Bias * Step) + R_Add - Pfx_Bnd.Right);
+                  end;
+               end if;
+         end case;
+      end if;
    end Synth_Extract_Dyn_Suffix;
 
    procedure Synth_Slice_Const_Suffix (Syn_Inst: Synth_Instance_Acc;
