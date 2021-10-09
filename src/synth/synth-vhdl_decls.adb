@@ -1084,6 +1084,7 @@ package body Synth.Vhdl_Decls is
       end loop;
    end Synth_Declarations;
 
+   --  Finalize a variable or a signal.
    procedure Finalize_Signal (Syn_Inst : Synth_Instance_Acc; Decl : Node)
    is
       use Netlists.Gates;
@@ -1098,8 +1099,9 @@ package body Synth.Vhdl_Decls is
          pragma Assert (Is_Error (Syn_Inst));
          return;
       end if;
-      if Vt.Val.Kind = Value_Net then
+      if Vt.Val.Kind /= Value_Wire then
          --  Could be a net for in ports.
+         --  Could be a static value for a variable of type file.
          return;
       end if;
 
@@ -1155,16 +1157,7 @@ package body Synth.Vhdl_Decls is
          when Iir_Kind_Variable_Declaration
            | Iir_Kind_Interface_Variable_Declaration =>
             if not Get_Instance_Const (Syn_Inst) then
-               declare
-                  Vt : constant Valtyp := Get_Value (Syn_Inst, Decl);
-               begin
-                  if Vt /= No_Valtyp
-                    and then Vt.Val.Kind = Value_Wire
-                  then
-                     Finalize_Assignment (Get_Build (Syn_Inst), Vt.Val.W);
-                     Free_Wire (Vt.Val.W);
-                  end if;
-               end;
+               Finalize_Signal (Syn_Inst, Decl);
             end if;
          when Iir_Kind_Constant_Declaration =>
             null;
