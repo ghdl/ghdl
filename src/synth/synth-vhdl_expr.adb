@@ -1351,6 +1351,10 @@ package body Synth.Vhdl_Expr is
       L_Inp, R_Inp : Net;
       L_Fac, R_Fac : Int32;
       L_Add, R_Add : Int32;
+      Sstep : Int32;
+      Soff : Int32;
+      Bias : Int32;
+      Bias_Net : Net;
    begin
       Inp := No_Net;
       Step := 0;
@@ -1383,7 +1387,8 @@ package body Synth.Vhdl_Expr is
       end if;
 
       --  Compute step and width.
-      Step := Uns32 (abs L_Fac);
+      Sstep := abs L_Fac;
+      Step := Uns32 (Sstep);
       case Pfx_Bnd.Dir is
          when Dir_To =>
             if R_Add < L_Add then
@@ -1399,55 +1404,82 @@ package body Synth.Vhdl_Expr is
             end if;
       end case;
 
+      if Width = 0 then
+         Inp := No_Net;
+         Off := 0;
+         return;
+      end if;
+
       --  TODO: degenerated dynamic slice.
       pragma Assert (L_Fac /= 0);
 
+      case Pfx_Bnd.Dir is
+         when Dir_To =>
+            --  Transformations:
+            --
+            --  Bounds:       l to r
+            --  Slice:  L+fac*i to L+(W-1)+fac*i
+            --
+            --  Bounds:       0 to len-1
+            --  Slice:  (L-l)+fac*i to (L-l)+(W-1)+fac*i
+            --
+            --  Bounds:       len-1 downto 0
+            --  Slice:  xxx         downto (len-1)-(L-l)-(W-1)-fac*i
+            --          xxx         downto (r-l-L+l-W+1)-fac*i
+            --                      downto (r-L-W+1)-fac*i
+            Soff := Pfx_Bnd.Right - L_Add - Int32 (Width) + 1;
+         when Dir_Downto =>
+            --  Transformations:
+            --
+            --  Bounds:              l downto r
+            --  Slice:   R+(W-1)+fac*i downto R+fac*i
+            --
+            --  Bounds:            len-1 downto 0
+            --  Slice:   R-r+(W-1)+fac*i downto R-r+fac*i
+            Soff := R_Add - Pfx_Bnd.Right;
+      end case;
+
+      --  So IDX = SOFF + INP * FAC
+      --         = SOFF +/- INP * STEP
+      --  We need to adjust for memidx:
+      --     IDX = OFF + STEP * (B +/- INP)
+      --     with OFF > 0, STEP > 0
+
+      --  Ensure Off is between 0 and Step - 1
+      if Soff >= 0 then
+         Bias := Soff / Sstep;
+         Off := Uns32 (Soff - Bias * Sstep);  --  mod
+      else
+         Bias := -((-Soff) / Sstep);
+         --  Note: SOFF < 0, BIAS < 0.
+         Soff := Soff - Bias * Sstep;
+         if Soff < 0 then
+            Soff := Soff + Sstep;
+            Bias := Bias - 1;
+         end if;
+         Off := Uns32 (Soff);
+      end if;
+      pragma Assert (Off < Step);
+
       --  Assume input width large enough to cover all the values of the
       --  bounds.
-      if (Pfx_Bnd.Dir = Dir_Downto and then L_Fac < 0)
-        or else (Pfx_Bnd.Dir = Dir_To and then L_Fac > 0)
+      if (Pfx_Bnd.Dir = Dir_Downto and then L_Fac > 0)
+        or else (Pfx_Bnd.Dir = Dir_To and then L_Fac < 0)
       then
-         --  TODO: Assume in range.
-         case Pfx_Bnd.Dir is
-            when Dir_To =>
-               Off := Uns32 (L_Add - Pfx_Bnd.Left);
-            when Dir_Downto =>
-               Off := Uns32 (R_Add - Pfx_Bnd.Right);
-         end case;
-         declare
-            Bias : constant Uns32 := Off / Step;
-            Bias_Net : Net;
-         begin
-            Bias_Net := Build2_Const_Uns
-              (Ctxt, Uns64 (Bias), Get_Width (Inp));
-            Inp := Build_Dyadic (Ctxt, Id_Sub, Bias_Net, Inp);
+         --  Same direction.
+         if Bias /= 0 then
+            Bias_Net := Build2_Const_Int (Ctxt, Int64 (Bias), Get_Width (Inp));
+            Inp := Build_Dyadic (Ctxt, Id_Add, Inp, Bias_Net);
             Set_Location (Inp, Loc);
-            Off := Off - Bias * Step;
-         end;
+         end if;
       else
-         case Pfx_Bnd.Dir is
-            when Dir_To =>
-               Off := Uns32 (L_Add - Pfx_Bnd.Left);
-            when Dir_Downto =>
-               if R_Add >= Pfx_Bnd.Right then
-                  Off := Uns32 (R_Add - Pfx_Bnd.Right);
-               else
-                  --  Handle biased values.
-                  declare
-                     Bias : constant Uns32 :=
-                       (Uns32 (Pfx_Bnd.Right - R_Add) + Step - 1) / Step;
-                     Bias_Net : Net;
-                  begin
-                     --  Add bias to INP and adjust the offset.
-                     Bias_Net := Build2_Const_Uns
-                       (Ctxt, Uns64 (Bias), Get_Width (Inp));
-                     Inp := Build_Dyadic (Ctxt, Id_Add, Inp, Bias_Net);
-                     Set_Location (Inp, Loc);
-                     Off :=
-                       Uns32 (Int32 (Bias * Step) + R_Add - Pfx_Bnd.Right);
-                  end;
-               end if;
-         end case;
+         if Bias /= 0 then
+            Bias_Net := Build2_Const_Int (Ctxt, Int64 (Bias), Get_Width (Inp));
+            Inp := Build_Dyadic (Ctxt, Id_Sub, Bias_Net, Inp);
+         else
+            Inp := Build_Monadic (Ctxt, Id_Neg, Inp);
+         end if;
+         Set_Location (Inp, Loc);
       end if;
    end Synth_Extract_Dyn_Suffix;
 
