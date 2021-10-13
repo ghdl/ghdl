@@ -1,0 +1,12 @@
+vunit i_t1(shiftMux2(rtl))
+{
+   -- set all declarations to run on clk
+   default clock is rising_edge(clk);
+
+   --it breaks on this line:
+   sequence s1 is {inputA }; 
+   sequence s2 is {outputB };
+   assert always (s1) |=> (s2);
+   --this works:
+   --assert always {inputA } |=> {outputB};
+}
