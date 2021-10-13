@@ -973,7 +973,8 @@ package body PSL.Build is
    begin
       case Get_Kind (N) is
          when N_Sequences
-           | N_Booleans =>
+           | N_Booleans
+           | N_Sequence_Instance =>
             --  Build A(S) or A(B)
             R := Build_SERE_FA (N);
             return Determinize.Determinize (R);

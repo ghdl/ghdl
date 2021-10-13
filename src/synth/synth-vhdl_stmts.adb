@@ -3823,7 +3823,8 @@ package body Synth.Vhdl_Stmts is
       Item := Get_Vunit_Item_Chain (Unit);
       while Item /= Null_Node loop
          case Get_Kind (Item) is
-            when Iir_Kind_Psl_Default_Clock =>
+            when Iir_Kind_Psl_Default_Clock
+              | Iir_Kind_Psl_Declaration =>
                null;
             when Iir_Kind_Psl_Assert_Directive =>
                Synth_Psl_Assert_Directive (Unit_Inst, Item);
@@ -3865,7 +3866,8 @@ package body Synth.Vhdl_Stmts is
               | Iir_Kind_Psl_Assert_Directive
               | Iir_Kind_Psl_Assume_Directive
               | Iir_Kind_Psl_Restrict_Directive
-              | Iir_Kind_Psl_Cover_Directive =>
+              | Iir_Kind_Psl_Cover_Directive
+              | Iir_Kind_Psl_Declaration =>
                null;
             when Iir_Kinds_Concurrent_Signal_Assignment
                | Iir_Kinds_Process_Statement

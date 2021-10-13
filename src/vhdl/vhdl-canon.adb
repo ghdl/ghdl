@@ -3422,6 +3422,8 @@ package body Vhdl.Canon is
                Canon_Psl_Sequence_Directive (Item);
             when Iir_Kind_Psl_Cover_Directive =>
                Canon_Psl_Cover_Directive (Item);
+            when Iir_Kind_Psl_Declaration =>
+               Canon_Concurrent_Statement (Item, Unit);
             when Iir_Kind_Signal_Declaration
                | Iir_Kind_Constant_Declaration
                | Iir_Kind_Type_Declaration

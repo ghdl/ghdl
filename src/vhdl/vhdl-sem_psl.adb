@@ -1179,6 +1179,8 @@ package body Vhdl.Sem_Psl is
                Sem_Psl_Restrict_Directive (Item);
             when Iir_Kind_Psl_Cover_Directive =>
                Sem_Psl_Cover_Directive (Item);
+            when Iir_Kind_Psl_Declaration =>
+               Sem_Psl_Declaration (Item);
             when Iir_Kind_Signal_Declaration
                | Iir_Kind_Constant_Declaration
                | Iir_Kind_Type_Declaration

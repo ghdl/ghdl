@@ -1138,7 +1138,8 @@ package body Vhdl.Annotations is
       Item := Get_Vunit_Item_Chain (Decl);
       while Item /= Null_Iir loop
          case Get_Kind (Item) is
-            when Iir_Kind_Psl_Default_Clock =>
+            when Iir_Kind_Psl_Default_Clock
+              | Iir_Kind_Psl_Declaration =>
                null;
             when Iir_Kind_Psl_Assert_Directive
                | Iir_Kind_Psl_Assume_Directive
