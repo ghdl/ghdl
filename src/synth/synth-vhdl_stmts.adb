@@ -3677,7 +3677,8 @@ package body Synth.Vhdl_Stmts is
             end if;
          when Iir_Kind_Block_Statement =>
             Synth_Block_Statement (Syn_Inst, Stmt);
-         when Iir_Kind_Psl_Default_Clock =>
+         when Iir_Kind_Psl_Default_Clock
+           | Iir_Kind_Psl_Declaration =>
             null;
          when Iir_Kind_Psl_Restrict_Directive =>
             Synth_Psl_Restrict_Directive (Syn_Inst, Stmt);
