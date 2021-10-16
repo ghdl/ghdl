@@ -182,7 +182,7 @@ package body Trans is
    package body Chap10 is
       --  Identifiers.
       --  The following functions are helpers to create ortho identifiers.
-      Identifier_Buffer : String (1 .. 512);
+      Identifier_Buffer : String (1 .. 4096);
       Identifier_Len    : Natural := 0;
       Identifier_Start  : Natural := 1;
 
