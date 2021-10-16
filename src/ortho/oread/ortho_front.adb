@@ -219,7 +219,7 @@ package body Ortho_Front is
 
    Token_Number : Unsigned_64;
    Token_Float : IEEE_Float_64;
-   Token_Ident : String (1 .. 256);
+   Token_Ident : String (1 .. 2048);
    Token_Idlen : Natural;
    Token_Hash : Hash_Type;
    Token_Sym : Syment_Acc;

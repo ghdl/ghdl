@@ -70,7 +70,7 @@ package body Ortho_Debug.Disp is
          --  Line number of the line to be written.
          Lineno : Natural;
          --  Buffer for the current line.
-         Line : String (1 .. 256);
+         Line : String (1 .. 2048);
          --  Number of characters currently in the line.
          Line_Len : Natural;
 
