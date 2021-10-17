@@ -117,7 +117,7 @@ jobs:
 #
 
   gpl:
-    name: '🚧🚦🐧 GPL · mcode'
+    name: '🚧🚦🐧 GPL mcode'
     runs-on: ubuntu-latest
 
     steps:
@@ -132,7 +132,7 @@ jobs:
 #
 
   lin:
-    name: '🚧🚦🐧 Ubuntu ${{ matrix.os }} · ${{ matrix.backend }}'
+    name: '🚧🚦🐧 Ubuntu ${{ matrix.os }} ${{ matrix.backend }}'
     runs-on: ubuntu-${{ matrix.os }}.04
 
     strategy:
@@ -168,7 +168,7 @@ jobs:
 #
 
   osx:
-    name: '🚧🚦🍎 macOS ${{ matrix.os }} · ${{ matrix.backend }}'
+    name: '🚧🚦🍎 macOS ${{ matrix.os }} ${{ matrix.backend }}'
     runs-on: 'macOS-${{ matrix.os }}'
 
     strategy:
@@ -218,7 +218,7 @@ jobs:
 #
 
   win-msys2-build-package:
-    name: '🚧${{ matrix.icon }} ${{ matrix.sys }} · ${{ matrix.pkg }}'
+    name: '🚧${{ matrix.icon }} ${{ matrix.sys }} ${{ matrix.pkg }}'
     runs-on: windows-latest
 
     strategy:
@@ -285,7 +285,7 @@ jobs:
 #
 
   win-msys2-test:
-    name: '🚦${{ matrix.sys.icon }} ${{ matrix.sys.sys }} ${{ matrix.sys.pkg }} · ${{ matrix.suite }}'
+    name: '🚦${{ matrix.sys.icon }} ${{ matrix.sys.sys }} ${{ matrix.sys.pkg }} ${{ matrix.suite }}'
     runs-on: windows-latest
 
     needs:
@@ -351,7 +351,7 @@ jobs:
 #
 
   win-generate-standalone-zip:
-    name: '🚧🥡${{ matrix.icon }} · ${{ matrix.sys }} mcode'
+    name: '🚧🥡${{ matrix.icon }} ${{ matrix.sys }} mcode'
     runs-on: windows-latest
 
     needs:
@@ -421,7 +421,7 @@ jobs:
 #
 
   win-cpython-msys2:
-    name: '🚦🐍${{ matrix.icon }} · ${{ matrix.sys }} ${{ matrix.pkg }}'
+    name: '🚦🐍${{ matrix.icon }} ${{ matrix.sys }} ${{ matrix.pkg }}'
     runs-on: windows-latest
 
     needs:
