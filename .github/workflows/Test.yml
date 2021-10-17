@@ -117,7 +117,7 @@ jobs:
 #
 
   gpl:
-    name: '🚧🚦🐧 GPL · mcode'
+    name: '🚧🚦🐧 GPL mcode'
     runs-on: ubuntu-latest
 
     steps:
@@ -132,7 +132,7 @@ jobs:
 #
 
   lin:
-    name: '🚧🚦🐧 Ubuntu ${{ matrix.os }} · ${{ matrix.backend }}'
+    name: '🚧🚦🐧 Ubuntu ${{ matrix.os }} ${{ matrix.backend }}'
     runs-on: ubuntu-${{ matrix.os }}.04
 
     strategy:
@@ -168,7 +168,7 @@ jobs:
 #
 
   osx:
-    name: '🚧🚦🍎 macOS ${{ matrix.os }} · ${{ matrix.backend }}'
+    name: '🚧🚦🍎 macOS ${{ matrix.os }} ${{ matrix.backend }}'
     runs-on: 'macOS-${{ matrix.os }}'
 
     strategy:
@@ -218,20 +218,22 @@ jobs:
 #
 
   win-msys2-build-package:
-    name: '🚧${{ matrix.icon }} · ${{ matrix.pkg }}${{ matrix.bits }}'
+    name: '🚧${{ matrix.icon }} ${{ matrix.sys }} ${{ matrix.pkg }}'
     runs-on: windows-latest
 
     strategy:
       fail-fast: false
       matrix:
         include:
-#          - {icon: '🟪', pkg: 'llvm',  bits: '32', arch: i686   } ! not yet functional
-          - {icon: '🟦', pkg: 'llvm',  bits: '64', arch: x86_64 }
-          - {icon: '🟪', pkg: 'mcode', bits: '32', arch: i686   }
-          - {icon: '🟦', pkg: 'mcode', bits: '64', arch: x86_64 } #! simulation with mcode is not yet supported on win64
+#          - {icon: '🟪', pkg: 'llvm',  sys: 'MINGW32', arch: i686 } ! not yet functional
+          - {icon: '🟦', pkg: 'llvm',  sys: 'MINGW64', arch: x86_64 }
+          - {icon: '🟨', pkg: 'llvm',  sys: 'UCRT64',  arch: ucrt-x86_64 } #! experimental
+          - {icon: '🟪', pkg: 'mcode', sys: 'MINGW32', arch: i686 }
+          - {icon: '🟦', pkg: 'mcode', sys: 'MINGW64', arch: x86_64 }      #! simulation with mcode is not yet supported on win64
+          - {icon: '🟨', pkg: 'mcode', sys: 'UCRT64',  arch: ucrt-x86_64 } #! experimental; simulation with mcode is not yet supported on win64
 
     env:
-      MINGW_ARCH: MINGW${{ matrix.bits }}
+      MINGW_ARCH: ${{ matrix.sys }}
     defaults:
       run:
         shell: msys2 {0}
@@ -241,7 +243,7 @@ jobs:
       - name: '${{ matrix.icon }} Setup MSYS2'
         uses: msys2/setup-msys2@v2
         with:
-          msystem: MSYS
+          msystem: ${{ matrix.sys }}
           update: true
           install: >
             base-devel
@@ -266,7 +268,7 @@ jobs:
       - name: '📤 Upload artifact: builddir'
         uses: actions/upload-artifact@v2
         with:
-          name: MINGW${{ matrix.bits }}-${{ matrix.pkg }}-builddir
+          name: ${{ matrix.sys }}-${{ matrix.pkg }}-builddir
           path: |
             scripts/msys2-${{ matrix.pkg }}/src/
             scripts/msys2-${{ matrix.pkg }}/pkg/
@@ -274,7 +276,7 @@ jobs:
       - name: '📤 Upload artifact: package'
         uses: actions/upload-artifact@v2
         with:
-          name: MINGW${{ matrix.bits }}-${{ matrix.pkg }}
+          name: ${{ matrix.sys }}-${{ matrix.pkg }}
           path: scripts/msys2-${{ matrix.pkg }}/mingw-*ghdl*.pkg.tar.zst
           if-no-files-found: error
 
@@ -283,7 +285,7 @@ jobs:
 #
 
   win-msys2-test:
-    name: '🚦${{ matrix.sys.icon }} ${{ matrix.sys.pkg }}${{ matrix.sys.bits }} · ${{ matrix.suite }}'
+    name: '🚦${{ matrix.sys.icon }} ${{ matrix.sys.sys }} ${{ matrix.sys.pkg }} ${{ matrix.suite }}'
     runs-on: windows-latest
 
     needs:
@@ -293,10 +295,13 @@ jobs:
       fail-fast: false
       matrix:
         sys:
-#          - {icon: '🟪', pkg: 'llvm',  bits: '32', arch: i686 } ! not yet functional
-          - {icon: '🟦', pkg: 'llvm',  bits: '64', arch: x86_64 }
-          - {icon: '🟪', pkg: 'mcode', bits: '32', arch: i686,   }
-#          - {icon: '🟦', pkg: 'mcode', bits: '64', arch: x86_64, } ! simulation with mcode is not yet supported on win64
+#          - {icon: '🟪', pkg: 'llvm',  sys: 'MINGW32', arch: i686 } ! not yet functional
+          - {icon: '🟦', pkg: 'llvm',  sys: 'MINGW64', arch: x86_64 }
+          - {icon: '🟨', pkg: 'llvm',  sys: 'UCRT64',  arch: ucrt-x86_64 } #! experimental
+          - {icon: '🟪', pkg: 'mcode', sys: 'MINGW32', arch: i686 }
+#          - {icon: '🟦', pkg: 'mcode', sys: 'MINGW64', arch: x86_64 }      ! simulation with mcode is not yet supported on win64
+#          - {icon: '🟨', pkg: 'mcode', sys: 'UCRT64',  arch: ucrt-x86_64 } ! experimental; simulation with mcode is not yet supported on win64
+
         suite:
           - 'sanity pyunit vpi vhpi'
           - 'gna'
@@ -312,7 +317,7 @@ jobs:
       - name: '${{ matrix.sys.icon }} Setup MSYS2'
         uses: msys2/setup-msys2@v2
         with:
-          msystem: MINGW${{ matrix.sys.bits }}
+          msystem: ${{ matrix.sys.sys }}
           update: true
           install: >
             mingw-w64-${{ matrix.sys.arch }}-diffutils
@@ -331,7 +336,7 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           path: artifact
-          name: MINGW${{ matrix.sys.bits }}-${{ matrix.sys.pkg }}
+          name: ${{ matrix.sys.sys }}-${{ matrix.sys.pkg }}
 
       - name: '🛠 Install package and 🐍 Python dependencies'
         run: |
@@ -346,7 +351,7 @@ jobs:
 #
 
   win-generate-standalone-zip:
-    name: '🚧🥡${{ matrix.icon }} · mcode${{ matrix.bits }}'
+    name: '🚧🥡${{ matrix.icon }} ${{ matrix.sys }} mcode'
     runs-on: windows-latest
 
     needs:
@@ -356,8 +361,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {icon: '🟪', bits: '32', arch: i686,   }
-          - {icon: '🟦', bits: '64', arch: x86_64, } #! simulation with mcode is not yet supported on win64
+          - {icon: '🟪', sys: 'MINGW32', arch: i686 }
+          - {icon: '🟦', sys: 'MINGW64', arch: x86_64 }      #! simulation with mcode is not yet supported on win64
+          - {icon: '🟨', sys: 'UCRT64',  arch: ucrt-x86_64 } #! experimental; simulation with mcode is not yet supported on win64
 
     defaults:
       run:
@@ -368,7 +374,7 @@ jobs:
       - name: '${{ matrix.icon }} Setup MSYS2'
         uses: msys2/setup-msys2@v2
         with:
-          msystem: MINGW${{ matrix.bits }}
+          msystem: ${{ matrix.sys }}
           update: true
           install: >-
             tree
@@ -387,35 +393,35 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           path: artifact
-          name: MINGW${{ matrix.bits }}-mcode
+          name: ${{ matrix.sys }}-mcode
 
       - name: '🛠 Install package'
         run: pacman --noconfirm -U artifact/mingw-w64-${{ matrix.arch }}-ghdl-mcode-*.zst
 
       - name: '🥡 Generate standalone zipfile'
         run: |
-          _zipdir='MINGW${{ matrix.bits }}-mcode-standalone'
+          _zipdir='${{ matrix.sys }}-mcode-standalone'
           mkdir -p "${_zipdir}"-extract
           tar xf artifact/mingw-w64-${{ matrix.arch }}-ghdl-mcode-*.zst -C "${_zipdir}"-extract
-          cd "${_zipdir}-extract/MINGW${{ matrix.bits }}"/bin
+          cd "${_zipdir}-extract/${{ matrix.sys }}"/bin
           ../../../scripts/msys2-mcode/GetStandaloneDeps.sh
           cd ../../..
-          mv "${_zipdir}"-extract/mingw${{ matrix.bits }} "${_zipdir}"
+          mv "${_zipdir}"-extract/${{ matrix.sys }} "${_zipdir}"
           tree "${_zipdir}"
           zip "${_zipdir}".zip -r "${_zipdir}"
 
       - name: '📤 Upload artifact: zipfile'
         uses: actions/upload-artifact@v2
         with:
-          name: MINGW${{ matrix.bits }}-mcode-standalone
-          path: MINGW${{ matrix.bits }}-mcode-standalone.zip
+          name: ${{ matrix.sys }}-mcode-standalone
+          path: ${{ matrix.sys }}-mcode-standalone.zip
 
 #
 # Windows CPython pyGHDL Test with MSYS2 installation
 #
 
   win-cpython-msys2:
-    name: '🚦🐍${{ matrix.icon }} · ${{ matrix.pkg }}${{ matrix.bits }}'
+    name: '🚦🐍${{ matrix.icon }} ${{ matrix.sys }} ${{ matrix.pkg }}'
     runs-on: windows-latest
 
     needs:
@@ -425,10 +431,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-#          - {icon: '🟪', pkg: 'llvm',  bits: '32', arch: i686 }, ! not yet functional
-          - {icon: '🟦', pkg: 'llvm',  bits: '64', arch: x86_64, pyarch: x64 }
-          - {icon: '🟪', pkg: 'mcode', bits: '32', arch: i686,   pyarch: x86 }
-          - {icon: '🟦', pkg: 'mcode', bits: '64', arch: x86_64, pyarch: x64 } #! simulation with mcode is not yet supported on win64
+#          - {icon: '🟪', pkg: 'llvm',  sys: 'MINGW32', arch: i686 }, ! not yet functional
+          - {icon: '🟦', pkg: 'llvm',  sys: 'MINGW64', arch: x86_64,      pyarch: x64 }
+          - {icon: '🟨', pkg: 'llvm',  sys: 'UCRT64',  arch: ucrt-x86_64, pyarch: x64 } #! experimental
+          - {icon: '🟪', pkg: 'mcode', sys: 'MINGW32', arch: i686,        pyarch: x86 }
+          - {icon: '🟦', pkg: 'mcode', sys: 'MINGW64', arch: x86_64,      pyarch: x64 } #! simulation with mcode is not yet supported on win64
+          - {icon: '🟨', pkg: 'mcode', sys: 'UCRT64',  arch: ucrt-x86_64, pyarch: x64 } #! experimental; simulation with mcode is not yet supported on win64
 
     defaults:
       run:
@@ -439,7 +447,7 @@ jobs:
       - name: '${{ matrix.icon }} Setup MSYS2'
         uses: msys2/setup-msys2@v2
         with:
-          msystem: MINGW${{ matrix.bits }}
+          msystem: ${{ matrix.sys }}
           update: true
 
       - name: '⚙ git config'
@@ -452,7 +460,7 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           path: artifact
-          name: MINGW${{ matrix.bits }}-${{ matrix.pkg }}
+          name: ${{ matrix.sys }}-${{ matrix.pkg }}
 
       - name: '🛠 Install package'
         shell: msys2 {0}
@@ -461,10 +469,10 @@ jobs:
 
       - name: '🛠 Set envvars'
         run: |
-          $GHDL = (& msys2 -c 'cygpath -w /') + 'MINGW${{ matrix.bits }}\bin\ghdl.exe'
+          $GHDL = (& msys2 -c 'cygpath -w /') + '${{ matrix.sys }}\bin\ghdl.exe'
           $GHDL_HASH = (& $GHDL version hash)
           echo "GHDL_HASH=$GHDL_HASH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          $GHDL_PREFIX = (& msys2 -c 'cygpath -w /') + 'MINGW${{ matrix.bits }}\lib\ghdl\'
+          $GHDL_PREFIX = (& msys2 -c 'cygpath -w /') + '${{ matrix.sys }}\lib\ghdl\'
           echo "GHDL_PREFIX=$GHDL_PREFIX" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: '🐍 Setup Python'
@@ -495,7 +503,7 @@ jobs:
 #
 
   win-cpython-standalone:
-    name: '🚦🐍🥡 ${{ matrix.pkg }}${{ matrix.bits }}'
+    name: '🚦🐍🥡${{ matrix.icon }} ${{ matrix.sys }} ${{ matrix.pkg }}'
     runs-on: windows-latest
 
     needs:
@@ -506,10 +514,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-#          - {icon: '🟪', pkg: 'llvm',  bits: '32', arch: i686 }, ! not yet functional
-#          - {icon: '🟦', pkg: 'llvm',  bits: '64', arch: x86_64, pyarch: x64 }
-#          - {icon: '🟪', pkg: 'mcode', bits: '32', arch: i686,   pyarch: x86 }
-          - {icon: '🟦', pkg: 'mcode', bits: '64', arch: x86_64, pyarch: x64 } #! simulation with mcode is not yet supported on win64
+#          - {icon: '🟪', pkg: 'llvm',  sys: 'MINGW32', arch: i686 }, ! not yet functional
+#          - {icon: '🟦', pkg: 'llvm',  sys: 'MINGW64', arch: x86_64,      pyarch: x64 }
+#          - {icon: '🟨', pkg: 'llvm',  sys: 'UCRT64',  arch: ucrt-x86_64, pyarch: x64 } #! experimental
+#          - {icon: '🟪', pkg: 'mcode', sys: 'MINGW32', arch: i686,        pyarch: x86 }
+          - {icon: '🟦', pkg: 'mcode', sys: 'MINGW64', arch: x86_64,      pyarch: x64 } #! simulation with mcode is not yet supported on win64
+          - {icon: '🟨', pkg: 'mcode', sys: 'UCRT64',  arch: ucrt-x86_64, pyarch: x64 } #! experimental; simulation with mcode is not yet supported on win64
 
     defaults:
       run:
@@ -527,12 +537,12 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           path: artifact
-          name: MINGW${{ matrix.bits }}-${{ matrix.pkg }}-standalone
+          name: ${{ matrix.sys }}-${{ matrix.pkg }}-standalone
 
       - name: '⚙ Extract package'
         run: |
-          unzip artifact\MINGW${{ matrix.bits }}-${{ matrix.pkg }}-standalone.zip
-          mv 'MINGW${{ matrix.bits }}-${{ matrix.pkg }}-standalone\' GHDL-standalone
+          unzip artifact\${{ matrix.sys }}-${{ matrix.pkg }}-standalone.zip
+          mv '${{ matrix.sys }}-${{ matrix.pkg }}-standalone\' GHDL-standalone
 
       - name: '🛠 Set envvars'
         run: |
