@@ -78,7 +78,7 @@ jobs:
       - name: '🐍 Setup Python'
         uses: actions/setup-python@v2
         with:
-          python-version: 3.8
+          python-version: '3.10'
 
       - name: '🔧 Install dependencies'
         run: |
@@ -470,7 +470,7 @@ jobs:
       - name: '🐍 Setup Python'
         uses: actions/setup-python@v2
         with:
-          python-version: 3.8
+          python-version: '3.10'
           architecture: ${{ matrix.pyarch }}
 
       - name: '🐍 Install Python dependencies'
@@ -545,7 +545,7 @@ jobs:
       - name: '🐍 Setup Python'
         uses: actions/setup-python@v2
         with:
-          python-version: 3.8
+          python-version: '3.10'
           architecture: ${{ matrix.pyarch }}
 
       - name: '📥 Download artifact: pyGHDL'
