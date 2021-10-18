@@ -102,7 +102,9 @@ package body Vhdl.Configuration is
       end if;
 
       if Flag_Load_All_Design_Units then
+         --  Load and analyze UNIT.
          Load_Design_Unit (Unit, From);
+         --  TODO: exit now in case of error ?
       end if;
 
       --  Add packages from depend list.
@@ -170,8 +172,15 @@ package body Vhdl.Configuration is
          when Iir_Kind_Architecture_Body =>
             --  Add entity
             --  find all entity/architecture/configuration instantiation
-            Add_Design_Unit (Get_Design_Unit (Get_Entity (Lib_Unit)), Loc);
-            Add_Design_Concurrent_Stmts (Lib_Unit);
+            declare
+               Ent : constant Iir := Get_Entity (Lib_Unit);
+            begin
+               if Ent /= Null_Iir then
+                  --  In case of errors.
+                  Add_Design_Unit (Get_Design_Unit (Ent), Loc);
+               end if;
+               Add_Design_Concurrent_Stmts (Lib_Unit);
+            end;
          when Iir_Kinds_Verification_Unit =>
             Add_Verification_Unit_Items (Lib_Unit);
          when Iir_Kind_Entity_Declaration
