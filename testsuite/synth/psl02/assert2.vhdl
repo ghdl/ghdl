@@ -9,6 +9,10 @@ end assert2;
 
 architecture behav of assert2 is
  signal val : unsigned (3 downto 0);
+ function incr (a : integer) return integer is
+ begin
+   return a + 1;
+ end function incr;
 begin
  process(clk)
  begin

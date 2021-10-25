@@ -858,6 +858,7 @@ package body Synth.Vhdl_Expr is
            | Iir_Kind_Constant_Declaration
            | Iir_Kind_Iterator_Declaration
            | Iir_Kind_Object_Alias_Declaration
+           | Iir_Kind_Non_Object_Alias_Declaration
            | Iir_Kind_File_Declaration
            | Iir_Kind_Interface_File_Declaration =>
             return Get_Value (Syn_Inst, Name);
@@ -2162,7 +2163,8 @@ package body Synth.Vhdl_Expr is
             | Iir_Kind_Selected_Name
             | Iir_Kind_Interface_Signal_Declaration --  For PSL.
             | Iir_Kind_Signal_Declaration   -- For PSL.
-            | Iir_Kind_Object_Alias_Declaration
+            | Iir_Kind_Object_Alias_Declaration   -- For PSL
+            | Iir_Kind_Non_Object_Alias_Declaration   -- For PSL
             | Iir_Kind_Implicit_Dereference
             | Iir_Kind_Dereference =>
             declare

@@ -374,7 +374,9 @@ package body Elab.Vhdl_Insts is
               | Iir_Kind_Function_Body
               | Iir_Kind_Procedure_Body
               | Iir_Kind_Attribute_Declaration
-              | Iir_Kind_Attribute_Specification =>
+              | Iir_Kind_Attribute_Specification
+              | Iir_Kind_Object_Alias_Declaration
+              | Iir_Kind_Non_Object_Alias_Declaration =>
                Elab_Declaration (Unit_Inst, Item, Last_Type);
             when Iir_Kinds_Concurrent_Signal_Assignment
                | Iir_Kinds_Process_Statement
@@ -384,7 +386,7 @@ package body Elab.Vhdl_Insts is
                | Iir_Kind_Component_Instantiation_Statement =>
                Elab_Concurrent_Statement (Unit_Inst, Item);
             when others =>
-               Error_Kind ("elab_vunit_declaration", Item);
+               Error_Kind ("elab_verification_unit", Item);
          end case;
          Item := Get_Chain (Item);
       end loop;
