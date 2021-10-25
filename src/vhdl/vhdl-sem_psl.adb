@@ -1190,7 +1190,9 @@ package body Vhdl.Sem_Psl is
                | Iir_Kind_Function_Body
                | Iir_Kind_Procedure_Body
                | Iir_Kind_Attribute_Declaration
-               | Iir_Kind_Attribute_Specification =>
+               | Iir_Kind_Attribute_Specification
+               | Iir_Kind_Object_Alias_Declaration
+               | Iir_Kind_Non_Object_Alias_Declaration =>
                Sem_Decls.Sem_Declaration
                  (Item, Prev_Item, False, Attr_Spec_Chain);
             when Iir_Kinds_Concurrent_Signal_Assignment

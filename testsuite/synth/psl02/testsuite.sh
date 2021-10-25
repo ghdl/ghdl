@@ -27,4 +27,9 @@ analyze syn_assert23.vhdl
 
 clean
 
+synth assert2.vhdl verif5.vhdl -e assert2 > syn_assert25.vhdl
+analyze syn_assert25.vhdl
+
+clean
+
 echo "Test successful"
