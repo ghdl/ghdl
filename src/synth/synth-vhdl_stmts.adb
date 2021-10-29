@@ -3015,6 +3015,9 @@ package body Synth.Vhdl_Stmts is
                else
                   Synth_Static_Exit_Next_Statement (C, Stmt);
                end if;
+            when Iir_Kind_Wait_Statement =>
+               Error_Msg_Synth
+                 (+Stmt, "wait statement not allowed for synthesis");
             when others =>
                Error_Kind ("synth_sequential_statements", Stmt);
          end case;
