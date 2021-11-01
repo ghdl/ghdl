@@ -43,7 +43,9 @@ from sys import (
     stderr as sys_stderr,
     exit as sys_exit,
 )
+import sys
 from os import environ as os_environ, getcwd as os_getcwd
+import os
 from pathlib import Path
 
 from pydecor import export
