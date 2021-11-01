@@ -2436,6 +2436,8 @@ package Vhdl.Nodes is
    --  name in a overloaded subprogram.
    --   Get/Set_Is_Within_Flag (Flag5)
    --
+   --   Get/Set_Use_Flag (Flag6)
+   --
    --   Get/Set_Expr_Staticness (State1)
    --
    --   Get/Set_Name_Staticness (State2)

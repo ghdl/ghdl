@@ -2403,6 +2403,11 @@ package body Vhdl.Sem_Decls is
 
    procedure Check_Full_Declaration (Decls_Parent : Iir; Decl: Iir)
    is
+      procedure Warn_Unused (E : Iir) is
+      begin
+         Warning_Msg_Sem (Warnid_Unused, +E, "%n is never referenced", +E);
+      end Warn_Unused;
+
       El: Iir;
 
       --  If set, emit a warning if a declaration is not used.
@@ -2524,17 +2529,36 @@ package body Vhdl.Sem_Decls is
                     and then not Is_Implicit_Subprogram (El)
                     and then not Is_Second_Subprogram_Specification (El)
                   then
-                     Warning_Msg_Sem (Warnid_Unused, +El,
-                                      "%n is never referenced", +El);
+                     Warn_Unused (El);
                   end if;
                when Iir_Kind_Signal_Declaration
                  | Iir_Kind_Variable_Declaration
                  | Iir_Kind_Component_Declaration
-                 | Iir_Kind_Type_Declaration
                  | Iir_Kind_Subtype_Declaration =>
                   if not Get_Use_Flag (El) then
-                     Warning_Msg_Sem (Warnid_Unused, +El,
-                                      "%n is never referenced", +El);
+                     Warn_Unused (El);
+                  end if;
+               when Iir_Kind_Type_Declaration =>
+                  if not Get_Use_Flag (El) then
+                     Warn_Unused (El);
+                  else
+                     declare
+                        Def : constant Iir := Get_Type_Definition (El);
+                        Lits : Iir_Flist;
+                        Lit : Iir;
+                     begin
+                        if Get_Kind (Def)
+                          = Iir_Kind_Enumeration_Type_Definition
+                        then
+                           Lits := Get_Enumeration_Literal_List (Def);
+                           for I in Flist_First .. Flist_Last (Lits) loop
+                              Lit := Get_Nth_Element (Lits, I);
+                              if not Get_Use_Flag (Lit) then
+                                 Warn_Unused (Lit);
+                              end if;
+                           end loop;
+                        end if;
+                     end;
                   end if;
                when others =>
                   null;
