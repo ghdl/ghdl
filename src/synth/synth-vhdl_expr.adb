@@ -39,15 +39,17 @@ with Netlists.Folds; use Netlists.Folds;
 with Netlists.Utils; use Netlists.Utils;
 with Netlists.Locations;
 
-with Synth.Memtype; use Synth.Memtype;
+with Elab.Memtype; use Elab.Memtype;
+with Elab.Vhdl_Heap; use Elab.Vhdl_Heap;
+with Elab.Vhdl_Types; use Elab.Vhdl_Types;
+with Elab.Debugger;
+
 with Synth.Errors; use Synth.Errors;
 with Synth.Vhdl_Environment;
-with Synth.Vhdl_Decls;
 with Synth.Vhdl_Stmts; use Synth.Vhdl_Stmts;
 with Synth.Vhdl_Oper; use Synth.Vhdl_Oper;
-with Synth.Vhdl_Heap; use Synth.Vhdl_Heap;
-with Synth.Debugger;
 with Synth.Vhdl_Aggr;
+with Synth.Vhdl_Context; use Synth.Vhdl_Context;
 
 with Grt.Types;
 with Grt.To_Strings;
@@ -67,7 +69,8 @@ package body Synth.Vhdl_Expr is
          when Value_Const =>
             return Get_Memtyp (V);
          when Value_Wire =>
-            return Synth.Vhdl_Environment.Env.Get_Static_Wire (V.Val.W);
+            return Synth.Vhdl_Environment.Env.Get_Static_Wire
+              (Get_Value_Wire (V.Val));
          when Value_Alias =>
             declare
                Res : Memtyp;
@@ -89,7 +92,8 @@ package body Synth.Vhdl_Expr is
             return Read_Discrete (Get_Memtyp (V));
          when Value_Wire =>
             return Read_Discrete
-              (Synth.Vhdl_Environment.Env.Get_Static_Wire (V.Val.W));
+              (Synth.Vhdl_Environment.Env.Get_Static_Wire
+                 (Get_Value_Wire (V.Val)));
          when others =>
             raise Internal_Error;
       end case;
@@ -107,15 +111,19 @@ package body Synth.Vhdl_Expr is
            | Value_Memory =>
             return Read_Discrete (Get_Memtyp (V)) >= 0;
          when Value_Net =>
-            N := V.Val.N;
+            N := Get_Value_Net (V.Val);
          when Value_Wire =>
-            if Get_Kind (V.Val.W) = Wire_Variable
-              and then Is_Static_Wire (V.Val.W)
-            then
-               return Read_Discrete (Get_Static_Wire (V.Val.W)) >= 0;
-            else
-               return False;
-            end if;
+            declare
+               W : constant Wire_Id := Get_Value_Wire (V.Val);
+            begin
+               if Get_Kind (W) = Wire_Variable
+                 and then Is_Static_Wire (W)
+               then
+                  return Read_Discrete (Get_Static_Wire (W)) >= 0;
+               else
+                  return False;
+               end if;
+            end;
          when others =>
             raise Internal_Error;
       end case;
@@ -429,206 +437,6 @@ package body Synth.Vhdl_Expr is
       N := Arr (Arr'First);
    end Concat_Array;
 
-   function Build_Discrete_Range_Type
-     (L : Int64; R : Int64; Dir : Direction_Type) return Discrete_Range_Type is
-   begin
-      return (Dir => Dir,
-              Left => L,
-              Right => R,
-              Is_Signed => L < 0 or R < 0);
-   end Build_Discrete_Range_Type;
-
-   function Synth_Discrete_Range_Expression
-     (Syn_Inst : Synth_Instance_Acc; Rng : Node) return Discrete_Range_Type
-   is
-      L, R : Valtyp;
-      Lval, Rval : Int64;
-   begin
-      --  Static values.
-      L := Synth_Expression_With_Basetype (Syn_Inst, Get_Left_Limit (Rng));
-      R := Synth_Expression_With_Basetype (Syn_Inst, Get_Right_Limit (Rng));
-      Strip_Const (L);
-      Strip_Const (R);
-
-      if not (Is_Static (L.Val) and Is_Static (R.Val)) then
-         Error_Msg_Synth (+Rng, "limits of range are not constant");
-         Set_Error (Syn_Inst);
-         return (Dir => Get_Direction (Rng),
-                 Left => 0,
-                 Right => 0,
-                 Is_Signed => False);
-      end if;
-
-      Lval := Read_Discrete (L);
-      Rval := Read_Discrete (R);
-      return Build_Discrete_Range_Type (Lval, Rval, Get_Direction (Rng));
-   end Synth_Discrete_Range_Expression;
-
-   function Synth_Float_Range_Expression
-     (Syn_Inst : Synth_Instance_Acc; Rng : Node) return Float_Range_Type
-   is
-      L, R : Valtyp;
-   begin
-      --  Static values (so no enable).
-      L := Synth_Expression (Syn_Inst, Get_Left_Limit (Rng));
-      R := Synth_Expression (Syn_Inst, Get_Right_Limit (Rng));
-      return (Get_Direction (Rng), Read_Fp64 (L), Read_Fp64 (R));
-   end Synth_Float_Range_Expression;
-
-   --  Return the type of EXPR without evaluating it.
-   function Synth_Type_Of_Object (Syn_Inst : Synth_Instance_Acc; Expr : Node)
-                                 return Type_Acc is
-   begin
-      case Get_Kind (Expr) is
-         when Iir_Kinds_Object_Declaration =>
-            declare
-               Val : constant Valtyp := Get_Value (Syn_Inst, Expr);
-            begin
-               return Val.Typ;
-            end;
-         when Iir_Kind_Simple_Name =>
-            return Synth_Type_Of_Object (Syn_Inst, Get_Named_Entity (Expr));
-         when Iir_Kind_Slice_Name =>
-            declare
-               Pfx_Typ : Type_Acc;
-               Pfx_Bnd : Bound_Type;
-               El_Typ : Type_Acc;
-               Res_Bnd : Bound_Type;
-               Sl_Voff : Net;
-               Sl_Off : Value_Offsets;
-            begin
-               Pfx_Typ := Synth_Type_Of_Object (Syn_Inst, Get_Prefix (Expr));
-               Get_Onedimensional_Array_Bounds (Pfx_Typ, Pfx_Bnd, El_Typ);
-               Synth_Slice_Suffix (Syn_Inst, Expr, Pfx_Bnd, El_Typ,
-                                   Res_Bnd, Sl_Voff, Sl_Off);
-
-               if Sl_Voff /= No_Net then
-                  raise Internal_Error;
-               end if;
-               return Create_Onedimensional_Array_Subtype (Pfx_Typ, Res_Bnd);
-            end;
-         when Iir_Kind_Indexed_Name =>
-            declare
-               Pfx_Typ : Type_Acc;
-            begin
-               Pfx_Typ := Synth_Type_Of_Object (Syn_Inst, Get_Prefix (Expr));
-               return Get_Array_Element (Pfx_Typ);
-            end;
-         when Iir_Kind_Selected_Element =>
-            declare
-               Idx : constant Iir_Index32 :=
-                 Get_Element_Position (Get_Named_Entity (Expr));
-               Pfx_Typ : Type_Acc;
-            begin
-               Pfx_Typ := Synth_Type_Of_Object (Syn_Inst, Get_Prefix (Expr));
-               return Pfx_Typ.Rec.E (Idx + 1).Typ;
-            end;
-
-         when Iir_Kind_Implicit_Dereference
-           | Iir_Kind_Dereference =>
-            declare
-               Val : Valtyp;
-               Res : Valtyp;
-            begin
-               --  Maybe do not dereference it if its type is known ?
-               Val := Synth_Expression (Syn_Inst, Get_Prefix (Expr));
-               Res := Vhdl_Heap.Synth_Dereference (Read_Access (Val));
-               return Res.Typ;
-            end;
-
-         when Iir_Kind_String_Literal8 =>
-            --  TODO: the value should be computed (once) and its type
-            --  returned.
-            return Synth.Vhdl_Decls.Synth_Subtype_Indication
-              (Syn_Inst, Get_Type (Expr));
-
-         when others =>
-            Vhdl.Errors.Error_Kind ("synth_type_of_object", Expr);
-      end case;
-      return null;
-   end Synth_Type_Of_Object;
-
-   function Synth_Array_Attribute (Syn_Inst : Synth_Instance_Acc; Attr : Node)
-                                  return Bound_Type
-   is
-      Prefix_Name : constant Iir := Get_Prefix (Attr);
-      Prefix : constant Iir := Strip_Denoting_Name (Prefix_Name);
-      Dim    : constant Natural :=
-        Vhdl.Evaluation.Eval_Attribute_Parameter_Or_1 (Attr);
-      Typ    : Type_Acc;
-      Val    : Valtyp;
-   begin
-      --  Prefix is an array object or an array subtype.
-      if Get_Kind (Prefix) = Iir_Kind_Subtype_Declaration then
-         --  TODO: does this cover all the cases ?
-         Typ := Get_Subtype_Object (Syn_Inst, Get_Subtype_Indication (Prefix));
-      else
-         Val := Synth_Expression_With_Basetype (Syn_Inst, Prefix_Name);
-         Typ := Val.Typ;
-      end if;
-
-      return Get_Array_Bound (Typ, Dim_Type (Dim));
-   end Synth_Array_Attribute;
-
-   procedure Synth_Discrete_Range (Syn_Inst : Synth_Instance_Acc;
-                                   Bound : Node;
-                                   Rng : out Discrete_Range_Type) is
-   begin
-      case Get_Kind (Bound) is
-         when Iir_Kind_Range_Expression =>
-            Rng := Synth_Discrete_Range_Expression (Syn_Inst, Bound);
-         when Iir_Kind_Integer_Subtype_Definition
-           | Iir_Kind_Enumeration_Subtype_Definition =>
-            if Get_Type_Declarator (Bound) /= Null_Node then
-               declare
-                  Typ : Type_Acc;
-               begin
-                  --  This is a named subtype, so it has been evaluated.
-                  Typ := Get_Subtype_Object (Syn_Inst, Bound);
-                  Rng := Typ.Drange;
-               end;
-            else
-               Synth_Discrete_Range
-                 (Syn_Inst, Get_Range_Constraint (Bound), Rng);
-            end if;
-         when Iir_Kind_Range_Array_Attribute =>
-            declare
-               B : Bound_Type;
-            begin
-               B := Synth_Array_Attribute (Syn_Inst, Bound);
-               Rng := Build_Discrete_Range_Type
-                 (Int64 (B.Left), Int64 (B.Right), B.Dir);
-            end;
-         when Iir_Kind_Reverse_Range_Array_Attribute =>
-            declare
-               B : Bound_Type;
-               T : Int32;
-            begin
-               B := Synth_Array_Attribute (Syn_Inst, Bound);
-               --  Reverse
-               case B.Dir is
-                  when Dir_To =>
-                     B.Dir := Dir_Downto;
-                  when Dir_Downto =>
-                     B.Dir := Dir_To;
-               end case;
-               T := B.Right;
-               B.Right := B.Left;
-               B.Left := T;
-
-               Rng := Build_Discrete_Range_Type
-                 (Int64 (B.Left), Int64 (B.Right), B.Dir);
-            end;
-         when Iir_Kinds_Denoting_Name =>
-            --  A discrete subtype name.
-            Synth_Discrete_Range
-              (Syn_Inst, Get_Subtype_Indication (Get_Named_Entity (Bound)),
-               Rng);
-         when others =>
-            Error_Kind ("synth_discrete_range", Bound);
-      end case;
-   end Synth_Discrete_Range;
-
    function Synth_Array_Bounds (Syn_Inst : Synth_Instance_Acc;
                                 Atype : Node;
                                 Dim : Dim_Type) return Bound_Type
@@ -659,17 +467,6 @@ package body Synth.Vhdl_Expr is
          end;
       end if;
    end Synth_Array_Bounds;
-
-   function Synth_Bounds_From_Range (Syn_Inst : Synth_Instance_Acc;
-                                     Atype : Node) return Bound_Type
-   is
-      Rng : Discrete_Range_Type;
-   begin
-      Synth_Discrete_Range (Syn_Inst, Atype, Rng);
-      return (Dir => Rng.Dir,
-              Left => Int32 (Rng.Left), Right => Int32 (Rng.Right),
-              Len => Get_Range_Length (Rng));
-   end Synth_Bounds_From_Range;
 
    function Synth_Bounds_From_Length (Atype : Node; Len : Int32)
                                      return Bound_Type
@@ -737,9 +534,9 @@ package body Synth.Vhdl_Expr is
    begin
       case Val.Val.Kind is
          when Value_Wire =>
-            return Create_Value_Wire (Val.Val.W, Ntype);
+            return Create_Value_Wire (Get_Value_Wire (Val.Val), Ntype);
          when Value_Net =>
-            return Create_Value_Net (Val.Val.N, Ntype);
+            return Create_Value_Net (Get_Value_Net (Val.Val), Ntype);
          when Value_Alias =>
             return Create_Value_Alias
               ((Val.Val.A_Typ, Val.Val.A_Obj), Val.Val.A_Off, Ntype);
@@ -882,6 +679,18 @@ package body Synth.Vhdl_Expr is
             --  above check.
             raise Internal_Error;
       end case;
+   end Synth_Subtype_Conversion;
+
+   function Synth_Subtype_Conversion (Syn_Inst : Synth_Instance_Acc;
+                                      Vt : Valtyp;
+                                      Dtype : Type_Acc;
+                                      Bounds : Boolean;
+                                      Loc : Source.Syn_Src)
+                                     return Valtyp
+   is
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
+   begin
+      return Synth_Subtype_Conversion (Ctxt, Vt, Dtype, Bounds, Loc);
    end Synth_Subtype_Conversion;
 
    function Synth_Value_Attribute (Syn_Inst : Synth_Instance_Acc; Attr : Node)
@@ -1076,7 +885,7 @@ package body Synth.Vhdl_Expr is
                Val : Valtyp;
             begin
                Val := Synth_Expression (Syn_Inst, Get_Prefix (Name));
-               return Vhdl_Heap.Synth_Dereference (Read_Access (Val));
+               return Elab.Vhdl_Heap.Synth_Dereference (Read_Access (Val));
             end;
          when others =>
             Error_Kind ("synth_name", Name);
@@ -1093,7 +902,7 @@ package body Synth.Vhdl_Expr is
    begin
       if not In_Bounds (Bnd, Int32 (Idx)) then
          Error_Msg_Synth (+Loc, "index not within bounds");
-         Synth.Debugger.Debug_Error (Syn_Inst, Loc);
+         Elab.Debugger.Debug_Error (Syn_Inst, Loc);
          return (0, 0);
       end if;
 
@@ -1522,7 +1331,7 @@ package body Synth.Vhdl_Expr is
            or else not In_Bounds (Pfx_Bnd, Int32 (R))
          then
             Error_Msg_Synth (+Name, "index not within bounds");
-            Synth.Debugger.Debug_Error (Syn_Inst, Expr);
+            Elab.Debugger.Debug_Error (Syn_Inst, Expr);
             Off := (0, 0);
             return;
          end if;
@@ -2247,7 +2056,7 @@ package body Synth.Vhdl_Expr is
         and then Get_Static_Discrete (Left) = Val
       then
          --  Short-circuit when the left operand determines the result.
-         return Create_Value_Discrete (Val, Boolean_Type);
+         return Create_Value_Discrete (Val, Typ);
       end if;
 
       Strip_Const (Left);
@@ -2262,21 +2071,21 @@ package body Synth.Vhdl_Expr is
         and then Get_Static_Discrete (Right) = Val
       then
          --  If the right operand can determine the result, return it.
-         return Create_Value_Discrete (Val, Boolean_Type);
+         return Create_Value_Discrete (Val, Typ);
       end if;
 
       --  Return a static value if both operands are static.
       --  Note: we know the value of left if it is not constant.
       if Is_Static_Val (Left.Val) and then Is_Static_Val (Right.Val) then
          Val := Get_Static_Discrete (Right);
-         return Create_Value_Discrete (Val, Boolean_Type);
+         return Create_Value_Discrete (Val, Typ);
       end if;
 
       --  Non-static result.
       N := Build_Dyadic (Ctxt, Id,
                          Get_Net (Ctxt, Left), Get_Net (Ctxt, Right));
       Set_Location (N, Expr);
-      return Create_Value_Net (N, Boolean_Type);
+      return Create_Value_Net (N, Typ);
    end Synth_Short_Circuit;
 
    function Synth_Expression_With_Type (Syn_Inst : Synth_Instance_Acc;
@@ -2353,13 +2162,16 @@ package body Synth.Vhdl_Expr is
             | Iir_Kind_Selected_Name
             | Iir_Kind_Interface_Signal_Declaration --  For PSL.
             | Iir_Kind_Signal_Declaration   -- For PSL.
+            | Iir_Kind_Object_Alias_Declaration
             | Iir_Kind_Implicit_Dereference
             | Iir_Kind_Dereference =>
             declare
                Res : Valtyp;
             begin
                Res := Synth_Name (Syn_Inst, Expr);
-               if Res.Typ.W = 0 and then Res.Val.Kind /= Value_Memory then
+               if Res.Typ /= null
+                 and then Res.Typ.W = 0 and then Res.Val.Kind /= Value_Memory
+               then
                   --  This is a null object.  As nothing can be done about it,
                   --  returns 0.
                   return Create_Value_Memtyp (Create_Memory_Zero (Res.Typ));
@@ -2565,7 +2377,7 @@ package body Synth.Vhdl_Expr is
                T : Type_Acc;
                Acc : Heap_Index;
             begin
-               T := Synth.Vhdl_Decls.Synth_Subtype_Indication
+               T := Synth_Subtype_Indication
                  (Syn_Inst, Get_Subtype_Indication (Expr));
                Acc := Allocate_By_Type (T);
                return Create_Value_Access (Acc, Expr_Type);

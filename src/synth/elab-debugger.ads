@@ -1,4 +1,4 @@
---  Debugging during synthesis (not enabled).
+--  Debugging during synthesis.
 --  Copyright (C) 2019 Tristan Gingold
 --
 --  This file is part of GHDL.
@@ -16,26 +16,22 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with Types; use Types;
+with Vhdl.Nodes; use Vhdl.Nodes;
 
-package body Synth.Debugger is
-   procedure Debug_Init (Top : Node) is
-   begin
-      null;
-   end Debug_Init;
+with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 
-   procedure Debug_Break (Inst : Synth_Instance_Acc; Stmt : Node) is
-   begin
-      raise Internal_Error;
-   end Debug_Break;
+package Elab.Debugger is
+   --  If true, debugging is enabled:
+   --  * call Debug_Break() before executing the next sequential statement
+   --  * call Debug_Leave when a frame is destroyed.
+   Flag_Need_Debug : Boolean := False;
 
-   procedure Debug_Leave (Inst : Synth_Instance_Acc) is
-   begin
-      raise Internal_Error;
-   end Debug_Leave;
+   procedure Debug_Init (Top : Node);
+   procedure Debug_Break (Inst : Synth_Instance_Acc; Stmt : Node);
 
-   procedure Debug_Error (Inst : Synth_Instance_Acc; Expr : Node) is
-   begin
-      null;
-   end Debug_Error;
-end Synth.Debugger;
+   procedure Debug_Leave (Inst : Synth_Instance_Acc);
+
+   --  To be called in case of execution error, like:
+   --  * index out of bounds.
+   procedure Debug_Error (Inst : Synth_Instance_Acc; Expr : Node);
+end Elab.Debugger;

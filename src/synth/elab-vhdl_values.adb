@@ -21,9 +21,7 @@ with System;
 
 with Grt.Types; use Grt.Types;
 
-with Vhdl.Nodes; use Vhdl.Nodes;
-
-package body Synth.Values is
+package body Elab.Vhdl_Values is
    function To_Value_Acc is new Ada.Unchecked_Conversion
      (System.Address, Value_Acc);
 
@@ -33,7 +31,8 @@ package body Synth.Values is
          when Value_Memory =>
             return True;
          when Value_Net
-           | Value_Wire =>
+           | Value_Wire
+           | Value_Signal =>
             return False;
          when Value_File =>
             return True;
@@ -43,29 +42,6 @@ package body Synth.Values is
             return True;
       end case;
    end Is_Static;
-
-   function Is_Static_Val (Val : Value_Acc) return Boolean is
-   begin
-      case Val.Kind is
-         when Value_Memory =>
-            return True;
-         when Value_Net =>
-            return False;
-         when Value_Wire =>
-            if Get_Kind (Val.W) = Wire_Variable then
-               return Is_Static_Wire (Val.W);
-            else
-               --  A signal does not have static values.
-               return False;
-            end if;
-         when Value_File =>
-            return True;
-         when Value_Const =>
-            return True;
-         when Value_Alias =>
-            return Is_Static_Val (Val.A_Obj);
-      end case;
-   end Is_Static_Val;
 
    function Strip_Alias_Const (V : Value_Acc) return Value_Acc
    is
@@ -108,38 +84,34 @@ package body Synth.Values is
       return (Mt.Typ, Res);
    end Create_Value_Memtyp;
 
-   function Create_Value_Wire (W : Wire_Id) return Value_Acc
+   function Create_Value_Wire (S : Uns32) return Value_Acc
    is
-      subtype Value_Type_Wire is Value_Type (Values.Value_Wire);
+      subtype Value_Type_Wire is Value_Type (Value_Wire);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Wire);
    begin
-      return To_Value_Acc (Alloc (Current_Pool,
-                                  (Kind => Value_Wire,
-                                   W => W)));
+      return To_Value_Acc
+        (Alloc (Current_Pool, (Kind => Value_Wire, N => S)));
    end Create_Value_Wire;
 
-   function Create_Value_Wire (W : Wire_Id; Wtype : Type_Acc) return Valtyp
-   is
-      pragma Assert (Wtype /= null);
-   begin
-      return (Wtype, Create_Value_Wire (W));
-   end Create_Value_Wire;
-
-   function Create_Value_Net (N : Net) return Value_Acc
+   function Create_Value_Net (S : Uns32) return Value_Acc
    is
       subtype Value_Type_Net is Value_Type (Value_Net);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Net);
    begin
       return To_Value_Acc
-        (Alloc (Current_Pool, Value_Type_Net'(Kind => Value_Net, N => N)));
+        (Alloc (Current_Pool, Value_Type_Net'(Kind => Value_Net, N => S)));
    end Create_Value_Net;
 
-   function Create_Value_Net (N : Net; Ntype : Type_Acc) return Valtyp
+   function Create_Value_Signal (S : Uns32; Init : Value_Acc) return Value_Acc
    is
-      pragma Assert (Ntype /= null);
+      subtype Value_Type_Signal is Value_Type (Value_Signal);
+      function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Signal);
    begin
-      return (Ntype, Create_Value_Net (N));
-   end Create_Value_Net;
+      return To_Value_Acc
+        (Alloc (Current_Pool, Value_Type_Signal'(Kind => Value_Signal,
+                                                 S => S,
+                                                 Init => Init)));
+   end Create_Value_Signal;
 
    function Create_Value_Memory (Vtype : Type_Acc) return Valtyp
    is
@@ -201,7 +173,7 @@ package body Synth.Values is
             return Iir_Index32 (Typ.Vbound.Len);
          when Type_Array =>
             declare
-               Len : Width;
+               Len : Uns32;
             begin
                Len := 1;
                for I in Typ.Abounds.D'Range loop
@@ -230,8 +202,7 @@ package body Synth.Values is
       return (Typ, Val);
    end Create_Value_Alias;
 
-   function Create_Value_Const (Val : Value_Acc; Loc : Syn_Src)
-                               return Value_Acc
+   function Create_Value_Const (Val : Value_Acc; Loc : Node) return Value_Acc
    is
       subtype Value_Type_Const is Value_Type (Value_Const);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Const);
@@ -241,11 +212,10 @@ package body Synth.Values is
                                   (Kind => Value_Const,
                                    C_Val => Val,
                                    C_Loc => Loc,
-                                   C_Net => No_Net)));
+                                   C_Net => 0)));
    end Create_Value_Const;
 
-   function Create_Value_Const (Val : Valtyp; Loc : Syn_Src)
-                               return Valtyp is
+   function Create_Value_Const (Val : Valtyp; Loc : Node) return Valtyp is
    begin
       return (Val.Typ, Create_Value_Const (Val.Val, Loc));
    end Create_Value_Const;
@@ -276,11 +246,13 @@ package body Synth.Values is
                Res.Val.Mem (I - 1) := Src.Val.Mem (I - 1);
             end loop;
          when Value_Net =>
-            Res := Create_Value_Net (Src.Val.N, Src.Typ);
+            Res := (Src.Typ, Create_Value_Net (Src.Val.S));
          when Value_Wire =>
-            Res := Create_Value_Wire (Src.Val.W, Src.Typ);
+            Res := (Src.Typ, Create_Value_Wire (Src.Val.S));
          when Value_File =>
             Res := Create_Value_File (Src.Typ, Src.Val.File);
+         when Value_Signal =>
+            raise Internal_Error;
          when Value_Const =>
             raise Internal_Error;
          when Value_Alias =>
@@ -493,7 +465,8 @@ package body Synth.Values is
    begin
       case V.Val.Kind is
          when Value_Net
-           | Value_Wire =>
+           | Value_Wire
+           | Value_Signal =>
             raise Internal_Error;
          when Value_Memory =>
             return (V.Typ, V.Val.Mem);
@@ -510,4 +483,18 @@ package body Synth.Values is
             raise Internal_Error;
       end case;
    end Get_Memtyp;
-end Synth.Values;
+
+   procedure Update_Index (Rng : Discrete_Range_Type; V : in out Valtyp)
+   is
+      T : Int64;
+   begin
+      T := Read_Discrete (V);
+      case Rng.Dir is
+         when Dir_To =>
+            T := T + 1;
+         when Dir_Downto =>
+            T := T - 1;
+      end case;
+      Write_Discrete (V, T);
+   end Update_Index;
+end Elab.Vhdl_Values;

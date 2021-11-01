@@ -41,16 +41,20 @@ with PSL.Nodes;
 with PSL.Subsets;
 with PSL.NFAs;
 
-with Synth.Memtype; use Synth.Memtype;
+with Elab.Memtype; use Elab.Memtype;
+with Elab.Vhdl_Heap;
+with Elab.Vhdl_Types; use Elab.Vhdl_Types;
+with Elab.Vhdl_Expr;
+with Elab.Debugger;
+
 with Synth.Errors; use Synth.Errors;
 with Synth.Vhdl_Decls; use Synth.Vhdl_Decls;
 with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
 with Synth.Vhdl_Insts; use Synth.Vhdl_Insts;
 with Synth.Source;
 with Synth.Vhdl_Static_Proc;
-with Synth.Vhdl_Heap;
 with Synth.Flags;
-with Synth.Debugger;
+with Synth.Vhdl_Context; use Synth.Vhdl_Context;
 
 with Netlists.Builders; use Netlists.Builders;
 with Netlists.Folds; use Netlists.Folds;
@@ -244,7 +248,8 @@ package body Synth.Vhdl_Stmts is
             if Dest_Off /= (0, 0) and then Dest_Dyn.Voff /= No_Net then
                raise Internal_Error;
             end if;
-            Dest_Base := Vhdl_Heap.Synth_Dereference (Read_Access (Dest_Base));
+            Dest_Base := Elab.Vhdl_Heap.Synth_Dereference
+              (Read_Access (Dest_Base));
             Dest_Typ := Dest_Base.Typ;
 
          when others =>
@@ -320,7 +325,7 @@ package body Synth.Vhdl_Stmts is
             while Choice /= Null_Node loop
                pragma Assert (Get_Kind (Choice) = Iir_Kind_Choice_By_None);
                El := Get_Associated_Expr (Choice);
-               El_Typ := Synth_Type_Of_Object (Syn_Inst, El);
+               El_Typ := Elab.Vhdl_Expr.Exec_Type_Of_Object (Syn_Inst, El);
                Bnd := Get_Array_Bound (El_Typ, 1);
                Len := Len + Bnd.Len;
                Choice := Get_Chain (Choice);
@@ -487,6 +492,7 @@ package body Synth.Vhdl_Stmts is
    is
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       V : Valtyp;
+      W : Wire_Id;
    begin
       V := Synth_Subtype_Conversion (Ctxt, Val, Target.Targ_Type, False, Loc);
       pragma Unreferenced (Val);
@@ -507,19 +513,19 @@ package body Synth.Vhdl_Stmts is
             end if;
 
             if Target.Obj.Val.Kind = Value_Wire then
+               W := Get_Value_Wire (Target.Obj.Val);
                if Is_Static (V.Val)
                  and then V.Typ.Sz = Target.Obj.Typ.Sz
                then
                   pragma Assert (Target.Off = (0, 0));
-                  Phi_Assign_Static
-                    (Target.Obj.Val.W, Unshare (Get_Memtyp (V)));
+                  Phi_Assign_Static (W, Unshare (Get_Memtyp (V)));
                else
                   if V.Typ.W = 0 then
                      --  Forget about null wires.
                      return;
                   end if;
-                  Phi_Assign_Net (Ctxt, Target.Obj.Val.W,
-                                  Get_Net (Ctxt, V), Target.Off.Net_Off);
+                  Phi_Assign_Net
+                    (Ctxt, W, Get_Net (Ctxt, V), Target.Off.Net_Off);
                end if;
             else
                if not Is_Static (V.Val) then
@@ -535,16 +541,16 @@ package body Synth.Vhdl_Stmts is
          when Target_Memory =>
             declare
                Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
+               W : constant Wire_Id := Get_Value_Wire (Target.Mem_Obj.Val);
                N : Net;
             begin
                N := Get_Current_Assign_Value
-                 (Ctxt, Target.Mem_Obj.Val.W,
+                 (Ctxt, W,
                   Target.Mem_Dyn.Pfx_Off.Net_Off, Target.Mem_Dyn.Pfx_Typ.W);
                N := Build_Dyn_Insert (Ctxt, N, Get_Net (Ctxt, V),
                                       Target.Mem_Dyn.Voff, Target.Mem_Doff);
                Set_Location (N, Loc);
-               Phi_Assign_Net (Ctxt, Target.Mem_Obj.Val.W, N,
-                               Target.Mem_Dyn.Pfx_Off.Net_Off);
+               Phi_Assign_Net (Ctxt, W, N, Target.Mem_Dyn.Pfx_Off.Net_Off);
             end;
       end case;
    end Synth_Assignment;
@@ -1910,6 +1916,7 @@ package body Synth.Vhdl_Stmts is
       Assoc_Inter : Node;
       Val : Valtyp;
       Nbr_Inout : Natural;
+      W : Wire_Id;
    begin
       Nbr_Inout := 0;
       pragma Assert (Init.Kind = Association_Function);
@@ -1928,8 +1935,9 @@ package body Synth.Vhdl_Stmts is
 
             --  Free wire used for out/inout interface variables.
             if Val.Val.Kind = Value_Wire then
-               Phi_Discard_Wires (Val.Val.W, No_Wire_Id);
-               Free_Wire (Val.Val.W);
+               W := Get_Value_Wire (Val.Val);
+               Phi_Discard_Wires (W, No_Wire_Id);
+               Free_Wire (W);
             end if;
          end if;
 
@@ -2136,8 +2144,10 @@ package body Synth.Vhdl_Stmts is
       Areapools.Mark (Area_Mark, Instance_Pool.all);
 
       Up_Inst := Get_Instance_By_Scope (Syn_Inst, Get_Parent_Scope (Imp));
-      Sub_Inst := Make_Instance (Up_Inst, Bod, New_Internal_Name (Ctxt));
-      Set_Instance_Base (Sub_Inst, Syn_Inst);
+      Sub_Inst := Make_Elab_Instance (Up_Inst, Bod, Config => Null_Node);
+      if Ctxt /= null then
+         Set_Extra (Sub_Inst, Syn_Inst, New_Internal_Name (Ctxt));
+      end if;
 
       Synth_Subprogram_Association (Sub_Inst, Syn_Inst, Init, Infos);
 
@@ -2145,7 +2155,7 @@ package body Synth.Vhdl_Stmts is
          Res := No_Valtyp;
       else
          if not Is_Func then
-            if Get_Purity_State (Imp) /= Pure then
+            if Ctxt /= null and then Get_Purity_State (Imp) /= Pure then
                Set_Instance_Const (Sub_Inst, False);
             end if;
          end if;
@@ -2164,8 +2174,8 @@ package body Synth.Vhdl_Stmts is
          Set_Error (Syn_Inst);
       end if;
 
-      if Debugger.Flag_Need_Debug then
-         Debugger.Debug_Leave (Sub_Inst);
+      if Elab.Debugger.Flag_Need_Debug then
+         Elab.Debugger.Debug_Leave (Sub_Inst);
       end if;
 
       Free_Instance (Sub_Inst);
@@ -2214,7 +2224,11 @@ package body Synth.Vhdl_Stmts is
       Sub_Inst : Synth_Instance_Acc;
    begin
       Areapools.Mark (Area_Mark, Instance_Pool.all);
-      Sub_Inst := Make_Instance (Syn_Inst, Imp, New_Internal_Name (Ctxt));
+      Sub_Inst := Make_Elab_Instance (Syn_Inst, Imp, Null_Node);
+
+      if Ctxt /= null then
+         Set_Extra (Sub_Inst, Syn_Inst, New_Internal_Name (Ctxt));
+      end if;
 
       Synth_Subprogram_Association (Sub_Inst, Syn_Inst, Init, Infos);
 
@@ -2246,20 +2260,6 @@ package body Synth.Vhdl_Stmts is
             Synth_Implicit_Procedure_Call (Syn_Inst, Call);
       end case;
    end Synth_Procedure_Call;
-
-   procedure Update_Index (Rng : Discrete_Range_Type; V : in out Valtyp)
-   is
-      T : Int64;
-   begin
-      T := Read_Discrete (V);
-      case Rng.Dir is
-         when Dir_To =>
-            T := T + 1;
-         when Dir_Downto =>
-            T := T - 1;
-      end case;
-      Write_Discrete (V, T);
-   end Update_Index;
 
    --  Return True iff WID is a static wire and its value is V.
    function Is_Static_Bit (Wid : Wire_Id; V : Ghdl_U8) return Boolean
@@ -2876,6 +2876,7 @@ package body Synth.Vhdl_Stmts is
 
       if Sev_V >= Flags.Severity_Level then
          Error_Msg_Synth (+Stmt, "error due to assertion failure");
+         Elab.Debugger.Debug_Error (Syn_Inst, Stmt);
       end if;
    end Synth_Static_Report;
 
@@ -2962,8 +2963,8 @@ package body Synth.Vhdl_Stmts is
                                      & Natural'Image (Line));
             end;
          end if;
-         if Synth.Debugger.Flag_Need_Debug then
-            Synth.Debugger.Debug_Break (C.Inst, Stmt);
+         if Elab.Debugger.Flag_Need_Debug then
+            Elab.Debugger.Debug_Break (C.Inst, Stmt);
          end if;
 
          case Get_Kind (Stmt) is
@@ -3205,34 +3206,25 @@ package body Synth.Vhdl_Stmts is
    is
       use Areapools;
       Prev_Instance_Pool : constant Areapool_Acc := Instance_Pool;
-      Blk_Inst : Synth_Instance_Acc;
+      Blk_Inst : constant Synth_Instance_Acc :=
+        Get_Sub_Instance (Syn_Inst, Blk);
+      Decls_Chain : constant Node := Get_Declaration_Chain (Blk);
       Blk_Sname : Sname;
       M : Areapools.Mark_Type;
    begin
-      --  No support for guard or header.
-      if Get_Block_Header (Blk) /= Null_Node
-        or else Get_Guard_Decl (Blk) /= Null_Node
-      then
-         raise Internal_Error;
-      end if;
-
-      Apply_Block_Configuration
-        (Get_Block_Block_Configuration (Blk), Blk);
-
       Blk_Sname := New_Sname_User (Get_Identifier (Blk), Get_Sname (Syn_Inst));
-      Blk_Inst := Make_Instance (Syn_Inst, Blk, Blk_Sname);
+      Set_Extra (Blk_Inst, Syn_Inst, Blk_Sname);
       Mark (M, Proc_Pool);
       Instance_Pool := Proc_Pool'Access;
 
-      Synth_Declarations (Blk_Inst, Get_Declaration_Chain (Blk));
+      Synth_Concurrent_Declarations (Blk_Inst, Decls_Chain);
       Synth_Concurrent_Statements
         (Blk_Inst, Get_Concurrent_Statement_Chain (Blk));
 
       Synth_Attribute_Values (Blk_Inst, Blk);
 
-      Finalize_Declarations (Blk_Inst, Get_Declaration_Chain (Blk));
+      Finalize_Declarations (Blk_Inst, Decls_Chain);
 
-      Free_Instance (Blk_Inst);
       Release (M, Proc_Pool);
       Instance_Pool := Prev_Instance_Pool;
    end Synth_Block_Statement;
@@ -3514,37 +3506,25 @@ package body Synth.Vhdl_Stmts is
    end Synth_Psl_Assert_Directive;
 
    procedure Synth_Generate_Statement_Body
-     (Syn_Inst : Synth_Instance_Acc;
-      Bod : Node;
-      Name : Sname;
-      Iterator : Node := Null_Node;
-      Iterator_Val : Valtyp := No_Valtyp)
+     (Syn_Inst : Synth_Instance_Acc; Bod : Node)
    is
       use Areapools;
       Decls_Chain : constant Node := Get_Declaration_Chain (Bod);
       Prev_Instance_Pool : constant Areapool_Acc := Instance_Pool;
-      Bod_Inst : Synth_Instance_Acc;
       M : Areapools.Mark_Type;
    begin
-      Bod_Inst := Make_Instance (Syn_Inst, Bod, Name);
       Mark (M, Proc_Pool);
       Instance_Pool := Proc_Pool'Access;
 
-      if Iterator /= Null_Node then
-         --  Add the iterator (for for-generate).
-         Create_Object (Bod_Inst, Iterator, Iterator_Val);
-      end if;
-
-      Synth_Declarations (Bod_Inst, Decls_Chain);
+      Synth_Concurrent_Declarations (Syn_Inst, Decls_Chain);
 
       Synth_Concurrent_Statements
-        (Bod_Inst, Get_Concurrent_Statement_Chain (Bod));
+        (Syn_Inst, Get_Concurrent_Statement_Chain (Bod));
 
-      Synth_Attribute_Values (Bod_Inst, Bod);
+      Synth_Attribute_Values (Syn_Inst, Bod);
 
-      Finalize_Declarations (Bod_Inst, Decls_Chain);
+      Finalize_Declarations (Syn_Inst, Decls_Chain);
 
-      Free_Instance (Bod_Inst);
       Release (M, Proc_Pool);
       Instance_Pool := Prev_Instance_Pool;
    end Synth_Generate_Statement_Body;
@@ -3552,34 +3532,17 @@ package body Synth.Vhdl_Stmts is
    procedure Synth_If_Generate_Statement
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
-      Gen : Node;
-      Bod : Node;
-      Icond : Node;
-      Cond : Valtyp;
+      Sub_Inst : Synth_Instance_Acc;
       Name : Sname;
-      Config : Node;
    begin
-      Gen := Stmt;
+      Sub_Inst := Get_Sub_Instance (Syn_Inst, Stmt);
+      if Sub_Inst = null then
+         return;
+      end if;
+
       Name := New_Sname_User (Get_Identifier (Stmt), Get_Sname (Syn_Inst));
-      loop
-         Icond := Get_Condition (Gen);
-         if Icond /= Null_Node then
-            Cond := Synth_Expression (Syn_Inst, Icond);
-            Strip_Const (Cond);
-         else
-            --  It is the else generate.
-            Cond := No_Valtyp;
-         end if;
-         if Cond = No_Valtyp or else Read_Discrete (Cond) = 1 then
-            Bod := Get_Generate_Statement_Body (Gen);
-            Config := Get_Generate_Block_Configuration (Bod);
-            Apply_Block_Configuration (Config, Bod);
-            Synth_Generate_Statement_Body (Syn_Inst, Bod, Name);
-            exit;
-         end if;
-         Gen := Get_Generate_Else_Clause (Gen);
-         exit when Gen = Null_Node;
-      end loop;
+      Set_Extra (Sub_Inst, Syn_Inst, Name);
+      Synth_Generate_Statement_Body (Sub_Inst, Get_Source_Scope (Sub_Inst));
    end Synth_If_Generate_Statement;
 
    procedure Synth_For_Generate_Statement
@@ -3587,48 +3550,26 @@ package body Synth.Vhdl_Stmts is
    is
       Iterator : constant Node := Get_Parameter_Specification (Stmt);
       Bod : constant Node := Get_Generate_Statement_Body (Stmt);
-      Configs : constant Node := Get_Generate_Block_Configuration (Bod);
-      It_Type : constant Node := Get_Declaration_Type (Iterator);
-      Config : Node;
       It_Rng : Type_Acc;
-      Val : Valtyp;
+      Sub_Inst : Synth_Instance_Acc;
+      Gen_Inst : Synth_Instance_Acc;
       Name : Sname;
       Lname : Sname;
    begin
-      if It_Type /= Null_Node then
-         Synth_Subtype_Indication (Syn_Inst, It_Type);
-      end if;
-
-      --  Initial value.
       It_Rng := Get_Subtype_Object (Syn_Inst, Get_Type (Iterator));
-      Val := Create_Value_Discrete (It_Rng.Drange.Left, It_Rng);
+      Gen_Inst := Get_Sub_Instance (Syn_Inst, Stmt);
 
       Name := New_Sname_User (Get_Identifier (Stmt), Get_Sname (Syn_Inst));
+      Set_Extra (Gen_Inst, Syn_Inst, Name);
 
-      while In_Range (It_Rng.Drange, Read_Discrete (Val)) loop
-         --  Find and apply the config block.
-         declare
-            Spec : Node;
-         begin
-            Config := Configs;
-            while Config /= Null_Node loop
-               Spec := Get_Block_Specification (Config);
-               case Get_Kind (Spec) is
-                  when Iir_Kind_Simple_Name =>
-                     exit;
-                  when others =>
-                     Error_Kind ("synth_for_generate_statement", Spec);
-               end case;
-               Config := Get_Prev_Block_Configuration (Config);
-            end loop;
-            Apply_Block_Configuration (Config, Bod);
-         end;
-
+      for I in 1 .. Get_Range_Length (It_Rng.Drange) loop
          --  FIXME: get position ?
-         Lname := New_Sname_Version (Uns32 (Read_Discrete (Val)), Name);
+         Lname := New_Sname_Version (Uns32 (I), Name);
 
-         Synth_Generate_Statement_Body (Syn_Inst, Bod, Lname, Iterator, Val);
-         Update_Index (It_Rng.Drange, Val);
+         Sub_Inst := Get_Generate_Sub_Instance (Gen_Inst, Positive (I));
+         Set_Extra (Sub_Inst, Gen_Inst, Lname);
+
+         Synth_Generate_Statement_Body (Sub_Inst, Bod);
       end loop;
    end Synth_For_Generate_Statement;
 
@@ -3663,10 +3604,14 @@ package body Synth.Vhdl_Stmts is
          when Iir_Kind_Component_Instantiation_Statement =>
             if Is_Component_Instantiation (Stmt) then
                declare
+                  Comp_Inst : constant Synth_Instance_Acc :=
+                    Get_Sub_Instance (Syn_Inst, Stmt);
                   Comp_Config : constant Node :=
-                    Get_Component_Configuration (Stmt);
+                    Get_Instance_Config (Comp_Inst);
                begin
-                  if Get_Binding_Indication (Comp_Config) = Null_Node then
+                  if Comp_Config = Null_Node
+                    or else Get_Binding_Indication (Comp_Config) = Null_Node
+                  then
                      --  Not bound.
                      Synth_Blackbox_Instantiation_Statement (Syn_Inst, Stmt);
                   else
@@ -3766,7 +3711,7 @@ package body Synth.Vhdl_Stmts is
 
          N := Build_Formal_Input (Get_Build (Syn_Inst), Id, Typ.W);
          Set_Location (N, Val);
-         Add_Conc_Assign (Base.Val.W, N, 0);
+         Add_Conc_Assign (Get_Value_Wire (Base.Val), N, 0);
       end;
    end Synth_Attribute_Formal;
 
@@ -3803,27 +3748,22 @@ package body Synth.Vhdl_Stmts is
       end loop;
    end Synth_Attribute_Values;
 
-   procedure Synth_Verification_Unit
-     (Syn_Inst : Synth_Instance_Acc; Unit : Node)
+   procedure Synth_Verification_Unit (Syn_Inst : Synth_Instance_Acc;
+                                      Unit : Node;
+                                      Parent_Inst : Synth_Instance_Acc)
    is
       use Areapools;
       Prev_Instance_Pool : constant Areapool_Acc := Instance_Pool;
-      Unit_Inst : Synth_Instance_Acc;
       Unit_Sname : Sname;
       M : Areapools.Mark_Type;
       Item : Node;
-      Last_Type : Node;
    begin
       Unit_Sname := New_Sname_User (Get_Identifier (Unit),
                                     Get_Sname (Syn_Inst));
-      Unit_Inst := Make_Instance (Syn_Inst, Unit, Unit_Sname);
+      Set_Extra (Syn_Inst, Parent_Inst, Unit_Sname);
       Mark (M, Proc_Pool);
       Instance_Pool := Proc_Pool'Access;
 
-      Apply_Block_Configuration
-        (Get_Verification_Block_Configuration (Unit), Unit);
-
-      Last_Type := Null_Node;
       Item := Get_Vunit_Item_Chain (Unit);
       while Item /= Null_Node loop
          case Get_Kind (Item) is
@@ -3831,13 +3771,13 @@ package body Synth.Vhdl_Stmts is
               | Iir_Kind_Psl_Declaration =>
                null;
             when Iir_Kind_Psl_Assert_Directive =>
-               Synth_Psl_Assert_Directive (Unit_Inst, Item);
+               Synth_Psl_Assert_Directive (Syn_Inst, Item);
             when Iir_Kind_Psl_Assume_Directive =>
-               Synth_Psl_Assume_Directive (Unit_Inst, Item);
+               Synth_Psl_Assume_Directive (Syn_Inst, Item);
             when Iir_Kind_Psl_Restrict_Directive =>
-               Synth_Psl_Restrict_Directive (Unit_Inst, Item);
+               Synth_Psl_Restrict_Directive (Syn_Inst, Item);
             when Iir_Kind_Psl_Cover_Directive =>
-               Synth_Psl_Cover_Directive (Unit_Inst, Item);
+               Synth_Psl_Cover_Directive (Syn_Inst, Item);
             when Iir_Kind_Signal_Declaration
               | Iir_Kind_Constant_Declaration
               | Iir_Kind_Function_Declaration
@@ -3846,21 +3786,21 @@ package body Synth.Vhdl_Stmts is
               | Iir_Kind_Procedure_Body
               | Iir_Kind_Attribute_Declaration
               | Iir_Kind_Attribute_Specification =>
-               Synth_Declaration (Unit_Inst, Item, False, Last_Type);
+               Synth_Concurrent_Declaration (Syn_Inst, Item);
             when Iir_Kinds_Concurrent_Signal_Assignment
                | Iir_Kinds_Process_Statement
                | Iir_Kinds_Generate_Statement
                | Iir_Kind_Block_Statement
                | Iir_Kind_Concurrent_Procedure_Call_Statement
                | Iir_Kind_Component_Instantiation_Statement =>
-               Synth_Concurrent_Statement (Unit_Inst, Item);
+               Synth_Concurrent_Statement (Syn_Inst, Item);
             when others =>
                Error_Kind ("synth_verification_unit", Item);
          end case;
          Item := Get_Chain (Item);
       end loop;
 
-      Synth_Attribute_Values (Unit_Inst, Unit);
+      Synth_Attribute_Values (Syn_Inst, Unit);
 
       --  Finalize
       Item := Get_Vunit_Item_Chain (Unit);
@@ -3888,14 +3828,13 @@ package body Synth.Vhdl_Stmts is
               | Iir_Kind_Procedure_Body
               | Iir_Kind_Attribute_Declaration
               | Iir_Kind_Attribute_Specification =>
-               Finalize_Declaration (Unit_Inst, Item, False);
+               Finalize_Declaration (Syn_Inst, Item, False);
             when others =>
                Error_Kind ("synth_verification_unit(2)", Item);
          end case;
          Item := Get_Chain (Item);
       end loop;
 
-      Free_Instance (Unit_Inst);
       Release (M, Proc_Pool);
       Instance_Pool := Prev_Instance_Pool;
    end Synth_Verification_Unit;

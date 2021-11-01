@@ -1,5 +1,5 @@
---  Disp a netlist in vhdl using the original entity.
---  Copyright (C) 2019 Tristan Gingold
+--  Synthesis context.
+--  Copyright (C) 2021 Tristan Gingold
 --
 --  This file is part of GHDL.
 --
@@ -16,12 +16,7 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with Netlists; use Netlists;
-with Elab.Vhdl_Context; use Elab.Vhdl_Context;
-with Vhdl.Nodes; use Vhdl.Nodes;
-
-package Synth.Disp_Vhdl is
-   --  Disp ENT (like the original text) and its content as a wrapper.
-   procedure Disp_Vhdl_Wrapper
-     (Ent : Node; Top : Module; Inst : Synth_Instance_Acc);
-end Synth.Disp_Vhdl;
+package Elab.Vhdl_Context.Debug is
+   procedure Debug_Synth_Instance (Inst : Synth_Instance_Acc);
+   procedure Debug_Elab_Tree (Inst : Synth_Instance_Acc);
+end Elab.Vhdl_Context.Debug;

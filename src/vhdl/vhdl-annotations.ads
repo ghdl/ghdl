@@ -92,7 +92,7 @@ package Vhdl.Annotations is
             case Kind is
                when Kind_Block =>
                   --  Slot number in the parent (for blocks).
-                  Inst_Slot : Instance_Slot_Type;
+                  Inst_Slot : Object_Slot_Type;
 
                   --  Number of children (blocks, generate, instantiation).
                   Nbr_Instances : Instance_Slot_Type;

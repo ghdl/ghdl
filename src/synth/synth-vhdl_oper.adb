@@ -32,12 +32,15 @@ with Netlists.Builders; use Netlists.Builders;
 with Netlists.Folds; use Netlists.Folds;
 with Netlists.Utils;
 
-with Synth.Memtype; use Synth.Memtype;
+with Elab.Memtype; use Elab.Memtype;
+with Elab.Vhdl_Types; use Elab.Vhdl_Types;
+
 with Synth.Errors; use Synth.Errors;
 with Synth.Vhdl_Stmts; use Synth.Vhdl_Stmts;
 with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
 with Synth.Source;
 with Synth.Static_Oper; use Synth.Static_Oper;
+with Synth.Vhdl_Context; use Synth.Vhdl_Context;
 
 package body Synth.Vhdl_Oper is
    procedure Set_Location (N : Net; Loc : Node)

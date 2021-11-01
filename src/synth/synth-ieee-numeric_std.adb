@@ -18,7 +18,8 @@
 
 with Types_Utils; use Types_Utils;
 
-with Synth.Memtype; use Synth.Memtype;
+with Elab.Memtype; use Elab.Memtype;
+
 with Synth.Errors; use Synth.Errors;
 with Synth.Ieee.Std_Logic_1164; use Synth.Ieee.Std_Logic_1164;
 

@@ -18,9 +18,10 @@
 
 with Vhdl.Nodes; use Vhdl.Nodes;
 
+with Elab.Vhdl_Context; use Elab.Vhdl_Context;
+with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
+
 with Netlists; use Netlists;
-with Synth.Vhdl_Context; use Synth.Vhdl_Context;
-with Synth.Objtypes; use Synth.Objtypes;
 
 package Synth.Vhdl_Decls is
    --  Return the Param_Type for ATYPE.
@@ -29,23 +30,7 @@ package Synth.Vhdl_Decls is
    --  Convert MT to a Pval.
    function Memtyp_To_Pval (Mt : Memtyp) return Pval;
 
-   --  Get the type of DECL iff it is standalone (not an already existing
-   --  subtype).
-   function Get_Declaration_Type (Decl : Node) return Node;
-
-   --  True if the element subtype indication of ATYPE needs to be created.
-   function Has_Element_Subtype_Indication (Atype : Node) return Boolean;
-
-   function Synth_Array_Subtype_Indication
-     (Syn_Inst : Synth_Instance_Acc; Atype : Node) return Type_Acc;
-
-   procedure Synth_Subtype_Indication
-     (Syn_Inst : Synth_Instance_Acc; Atype : Node);
-   function Synth_Subtype_Indication
-     (Syn_Inst : Synth_Instance_Acc; Atype : Node) return Type_Acc;
-
-   --  Elaborate the type of DECL.
-   procedure Synth_Declaration_Type
+   procedure Synth_Object_Alias_Declaration
      (Syn_Inst : Synth_Instance_Acc; Decl : Node);
 
    procedure Synth_Declaration (Syn_Inst : Synth_Instance_Acc;
@@ -54,25 +39,25 @@ package Synth.Vhdl_Decls is
                                 Last_Type : in out Node);
 
    procedure Synth_Declarations (Syn_Inst : Synth_Instance_Acc;
-                                 Decls : Iir;
+                                 Decls : Node;
                                  Is_Subprg : Boolean := False);
 
+   procedure Synth_Concurrent_Declaration (Syn_Inst : Synth_Instance_Acc;
+                                           Decl : Node);
+   procedure Synth_Concurrent_Declarations (Syn_Inst : Synth_Instance_Acc;
+                                            Decls : Node);
+
    procedure Finalize_Declaration (Syn_Inst : Synth_Instance_Acc;
-                                   Decl : Iir;
+                                   Decl : Node;
                                    Is_Subprg : Boolean);
    procedure Finalize_Declarations (Syn_Inst : Synth_Instance_Acc;
-                                    Decls : Iir;
+                                    Decls : Node;
                                     Is_Subprg : Boolean := False);
 
    procedure Synth_Package_Declaration
      (Parent_Inst : Synth_Instance_Acc; Pkg : Node);
    procedure Synth_Package_Body
      (Parent_Inst : Synth_Instance_Acc; Pkg : Node; Bod : Node);
-
-   procedure Synth_Generics_Association (Sub_Inst : Synth_Instance_Acc;
-                                         Syn_Inst : Synth_Instance_Acc;
-                                         Inter_Chain : Node;
-                                         Assoc_Chain : Node);
 
    procedure Synth_Package_Instantiation
      (Parent_Inst : Synth_Instance_Acc; Pkg : Node);

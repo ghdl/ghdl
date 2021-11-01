@@ -1,4 +1,4 @@
---  Disp a netlist in vhdl using the original entity.
+--  Debugging during synthesis (not enabled).
 --  Copyright (C) 2019 Tristan Gingold
 --
 --  This file is part of GHDL.
@@ -16,12 +16,26 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with Netlists; use Netlists;
-with Elab.Vhdl_Context; use Elab.Vhdl_Context;
-with Vhdl.Nodes; use Vhdl.Nodes;
+with Types; use Types;
 
-package Synth.Disp_Vhdl is
-   --  Disp ENT (like the original text) and its content as a wrapper.
-   procedure Disp_Vhdl_Wrapper
-     (Ent : Node; Top : Module; Inst : Synth_Instance_Acc);
-end Synth.Disp_Vhdl;
+package body Elab.Debugger is
+   procedure Debug_Init (Top : Node) is
+   begin
+      null;
+   end Debug_Init;
+
+   procedure Debug_Break (Inst : Synth_Instance_Acc; Stmt : Node) is
+   begin
+      raise Internal_Error;
+   end Debug_Break;
+
+   procedure Debug_Leave (Inst : Synth_Instance_Acc) is
+   begin
+      raise Internal_Error;
+   end Debug_Leave;
+
+   procedure Debug_Error (Inst : Synth_Instance_Acc; Expr : Node) is
+   begin
+      null;
+   end Debug_Error;
+end Elab.Debugger;

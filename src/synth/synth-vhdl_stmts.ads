@@ -19,11 +19,12 @@
 with Types; use Types;
 with Vhdl.Nodes; use Vhdl.Nodes;
 
+with Elab.Vhdl_Context; use Elab.Vhdl_Context;
+with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
+with Elab.Vhdl_Values; use Elab.Vhdl_Values;
+
 with Netlists; use Netlists;
 
-with Synth.Objtypes; use Synth.Objtypes;
-with Synth.Values; use Synth.Values;
-with Synth.Vhdl_Context; use Synth.Vhdl_Context;
 with Synth.Vhdl_Environment; use Synth.Vhdl_Environment.Env;
 
 package Synth.Vhdl_Stmts is
@@ -90,12 +91,9 @@ package Synth.Vhdl_Stmts is
    procedure Synth_Attribute_Values
      (Syn_Inst : Synth_Instance_Acc; Unit : Node);
 
-   procedure Synth_Verification_Unit
-     (Syn_Inst : Synth_Instance_Acc; Unit : Node);
-
-   --  For iterators.
-   procedure Update_Index (Rng : Discrete_Range_Type; V : in out Valtyp);
-
+   procedure Synth_Verification_Unit (Syn_Inst : Synth_Instance_Acc;
+                                      Unit : Node;
+                                      Parent_Inst : Synth_Instance_Acc);
 private
    --  There are 2 execution mode:
    --  * static: it is like simulation, all the inputs are known, neither

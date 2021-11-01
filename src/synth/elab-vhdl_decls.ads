@@ -1,4 +1,4 @@
---  Synthesis.
+--  Create declarations for synthesis.
 --  Copyright (C) 2017 Tristan Gingold
 --
 --  This file is part of GHDL.
@@ -16,29 +16,25 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with Types; use Types;
 with Vhdl.Nodes; use Vhdl.Nodes;
-
-with Netlists; use Netlists;
-with Netlists.Builders; use Netlists.Builders;
 
 with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 
-with Synth.Context; use Synth.Context;
-with Synth.Flags; use Synth.Flags;
+package Elab.Vhdl_Decls is
+   procedure Elab_Subprogram_Declaration
+     (Syn_Inst : Synth_Instance_Acc; Subprg : Node);
 
-package Synthesis is
-   function Synth_Design (Design : Iir;
-                          Inst : Synth_Instance_Acc;
-                          Encoding : Name_Encoding) return Module;
+   procedure Elab_Declaration (Syn_Inst : Synth_Instance_Acc;
+                               Decl : Node;
+                               Last_Type : in out Node);
 
-   --  Run cleanup/memory extraction/expand passes on M.
-   procedure Instance_Passes (Ctxt : Context_Acc; M : Module);
+   procedure Elab_Declarations (Syn_Inst : Synth_Instance_Acc; Decls : Iir);
 
-   --  Function to be called for a foreign top-level module.
-   type Synth_Top_Acc is access procedure
-     (Base : Base_Instance_Acc; Unit : Int32; Encoding : Name_Encoding);
-   Synth_Top_Foreign : Synth_Top_Acc;
+   procedure Finalize_Declaration (Syn_Inst : Synth_Instance_Acc;
+                                   Decl : Iir;
+                                   Is_Subprg : Boolean);
+   procedure Finalize_Declarations (Syn_Inst : Synth_Instance_Acc;
+                                    Decls : Iir;
+                                    Is_Subprg : Boolean := False);
 
-   Synth_Error : exception;
-end Synthesis;
+end Elab.Vhdl_Decls;

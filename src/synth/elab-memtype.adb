@@ -19,7 +19,7 @@
 with System; use System;
 with System.Storage_Elements;
 
-package body Synth.Memtype is
+package body Elab.Memtype is
 
    function "+" (Base : Memory_Ptr; Off : Size_Type) return Memory_Ptr
    is
@@ -114,4 +114,4 @@ package body Synth.Memtype is
       return V;
    end Read_Fp64;
 
-end Synth.Memtype;
+end Elab.Memtype;

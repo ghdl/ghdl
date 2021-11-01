@@ -23,12 +23,10 @@ with Netlists.Cleanup;
 with Netlists.Memories;
 with Netlists.Expands;
 
-with Synth.Objtypes;
+with Elab.Vhdl_Values.Debug;
+pragma Unreferenced (Elab.Vhdl_Values.Debug);
+
 with Synth.Vhdl_Insts; use Synth.Vhdl_Insts;
-
-
-with Synth.Values.Debug;
-pragma Unreferenced (Synth.Values.Debug);
 
 package body Synthesis is
    function Make_Base_Instance return Base_Instance_Acc
@@ -47,16 +45,13 @@ package body Synthesis is
       return Base;
    end Make_Base_Instance;
 
-   procedure Synth_Design (Design : Node;
-                           Encoding : Name_Encoding;
-                           M : out Module;
-                           Inst : out Synth_Instance_Acc)
+   function Synth_Design (Design : Iir;
+                          Inst : Synth_Instance_Acc;
+                          Encoding : Name_Encoding) return Module
    is
       Base : Base_Instance_Acc;
    begin
       Base := Make_Base_Instance;
-
-      Synth.Objtypes.Init;
 
       case Iir_Kinds_Design_Unit (Get_Kind (Design)) is
          when Iir_Kind_Foreign_Module =>
@@ -71,11 +66,10 @@ package body Synthesis is
       Synth.Vhdl_Insts.Synth_All_Instances;
 
       if Errorout.Nbr_Errors > 0 then
-         M := No_Module;
-         return;
+         return No_Module;
       end if;
 
-      M := Base.Top_Module;
+      return Base.Top_Module;
    end Synth_Design;
 
    procedure Instance_Passes (Ctxt : Context_Acc; M : Module) is

@@ -20,16 +20,18 @@ with Types; use Types;
 with Files_Map;
 with Name_Table;
 
+with Vhdl.Errors; use Vhdl.Errors;
+
 with Grt.Types; use Grt.Types;
 with Grt.Files_Operations; use Grt.Files_Operations;
 with Grt.Stdio;
 
-with Synth.Memtype; use Synth.Memtype;
-with Synth.Objtypes; use Synth.Objtypes;
-with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
-with Synth.Errors; use Synth.Errors;
+with Elab.Memtype; use Elab.Memtype;
+with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
+with Elab.Vhdl_Expr; use Elab.Vhdl_Expr;
+with Elab.Vhdl_Errors; use Elab.Vhdl_Errors;
 
-package body Synth.Vhdl_Files is
+package body Elab.Vhdl_Files is
 
    --  Variables to store the search path.
    Current_Unit : Node := Null_Node;
@@ -45,7 +47,7 @@ package body Synth.Vhdl_Files is
    procedure File_Error (Loc : Node; Status : Op_Status) is
    begin
       pragma Assert (Status /= Op_Ok);
-      Error_Msg_Synth (+Loc, "file operation failed");
+      Error_Msg_Elab (+Loc, "file operation failed");
       raise File_Execution_Error;
    end File_Error;
 
@@ -211,10 +213,10 @@ package body Synth.Vhdl_Files is
          return F;
       end if;
 
-      File_Name := Synth_Expression_With_Basetype (Syn_Inst, External_Name);
+      File_Name := Exec_Expression_With_Basetype (Syn_Inst, External_Name);
 
       if Open_Kind /= Null_Node then
-         Mode := Synth_Expression (Syn_Inst, Open_Kind);
+         Mode := Exec_Expression (Syn_Inst, Open_Kind);
          File_Mode := Ghdl_I32 (Read_Discrete (Mode));
       else
          case Get_Mode (Decl) is
@@ -240,7 +242,7 @@ package body Synth.Vhdl_Files is
 
       if Status /= Op_Ok then
          if Status = Op_Name_Error then
-            Error_Msg_Synth
+            Error_Msg_Elab
               (+Decl, "cannot open file: " & C_Name (1 .. C_Name_Len));
             Set_Error (Syn_Inst);
          else
@@ -251,7 +253,7 @@ package body Synth.Vhdl_Files is
       return F;
    end Elaborate_File_Declaration;
 
-   function Endfile (F : File_Index; Loc : Syn_Src) return Boolean
+   function Endfile (F : File_Index; Loc : Node) return Boolean
    is
       Status : Op_Status;
    begin
@@ -298,7 +300,7 @@ package body Synth.Vhdl_Files is
 
       if Status /= Op_Ok then
          if Status = Op_Name_Error then
-            Error_Msg_Synth
+            Error_Msg_Elab
               (+Loc, "cannot open file: " & C_Name (1 .. C_Name_Len));
             raise File_Execution_Error;
          else
@@ -413,4 +415,4 @@ package body Synth.Vhdl_Files is
       File_Read_Value (File, (Value.Typ, Value.Val.Mem), Loc);
    end Synth_File_Read;
 
-end Synth.Vhdl_Files;
+end Elab.Vhdl_Files;

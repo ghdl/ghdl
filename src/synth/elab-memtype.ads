@@ -23,7 +23,7 @@ with Types; use Types;
 
 with Grt.Types; use Grt.Types;
 
-package Synth.Memtype is
+package Elab.Memtype is
    type Memory_Element is mod 2**8;
    type Memory_Array is array (Size_Type range <>) of Memory_Element;
 
@@ -55,4 +55,4 @@ package Synth.Memtype is
 
    procedure Write_Fp64 (Mem : Memory_Ptr; Val : Fp64);
    function Read_Fp64 (Mem : Memory_Ptr) return Fp64;
-end Synth.Memtype;
+end Elab.Memtype;

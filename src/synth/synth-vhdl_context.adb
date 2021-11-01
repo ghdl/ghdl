@@ -16,12 +16,9 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with Ada.Unchecked_Deallocation;
-
+with Ada.Unchecked_Conversion;
+with Tables;
 with Types_Utils; use Types_Utils;
-
-with Vhdl.Errors; use Vhdl.Errors;
-with Vhdl.Utils;
 
 with Netlists.Folds; use Netlists.Folds;
 
@@ -29,24 +26,26 @@ with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
 with Netlists.Locations;
 
 package body Synth.Vhdl_Context is
-   function Make_Base_Instance (Base : Base_Instance_Acc)
-                               return Synth_Instance_Acc
+   package Extra_Tables is new Tables
+     (Table_Component_Type => Extra_Vhdl_Instance_Type,
+      Table_Index_Type => Instance_Id_Type,
+      Table_Low_Bound => First_Instance_Id,
+      Table_Initial => 16);
+
+   procedure Set_Extra (Inst : Synth_Instance_Acc;
+                        Extra : Extra_Vhdl_Instance_Type)
    is
-      Res : Synth_Instance_Acc;
+      Id : constant Instance_Id_Type := Get_Instance_Id (Inst);
    begin
-      Res := new Synth_Instance_Type'(Max_Objs => Global_Info.Nbr_Objects,
-                                      Is_Const => False,
-                                      Is_Error => False,
-                                      Base => Base,
-                                      Name => No_Sname,
-                                      Block_Scope => Global_Info,
-                                      Up_Block => null,
-                                      Uninst_Scope => null,
-                                      Source_Scope => Null_Node,
-                                      Elab_Objects => 0,
-                                      Objects => (others =>
-                                                    (Kind => Obj_None)));
-      return Res;
+      while Id > Extra_Tables.Last loop
+         Extra_Tables.Append ((Base => null, Name => No_Sname));
+      end loop;
+      Extra_Tables.Table (Id) := Extra;
+   end Set_Extra;
+
+   procedure Make_Base_Instance (Base : Base_Instance_Acc) is
+   begin
+      Set_Extra (Root_Instance, (Base => Base, Name => No_Sname));
    end Make_Base_Instance;
 
    procedure Free_Base_Instance is
@@ -55,54 +54,62 @@ package body Synth.Vhdl_Context is
       null;
    end Free_Base_Instance;
 
+   function Get_Instance_Extra (Inst : Synth_Instance_Acc)
+                               return Extra_Vhdl_Instance_Type is
+   begin
+      return Extra_Tables.Table (Get_Instance_Id (Inst));
+   end Get_Instance_Extra;
+
+   procedure Set_Extra (Inst : Synth_Instance_Acc;
+                        Base : Base_Instance_Acc;
+                        Name : Sname := No_Sname) is
+   begin
+      Set_Extra (Inst, (Base => Base, Name => Name));
+   end Set_Extra;
+
+   procedure Set_Extra (Inst : Synth_Instance_Acc;
+                        Parent : Synth_Instance_Acc;
+                        Name : Sname := No_Sname) is
+   begin
+      Set_Extra (Inst, (Base => Get_Instance_Extra (Parent).Base,
+                        Name => Name));
+   end Set_Extra;
+
    function Make_Instance (Parent : Synth_Instance_Acc;
                            Blk : Node;
                            Name : Sname := No_Sname)
                           return Synth_Instance_Acc
    is
-      Info : constant Sim_Info_Acc := Get_Info (Blk);
-      Scope : Sim_Info_Acc;
       Res : Synth_Instance_Acc;
    begin
-      if Get_Kind (Blk) = Iir_Kind_Architecture_Body then
-         --  Architectures are extensions of entities.
-         Scope := Get_Info (Vhdl.Utils.Get_Entity (Blk));
-      else
-         Scope := Info;
-      end if;
-
-      Res := new Synth_Instance_Type'(Max_Objs => Info.Nbr_Objects,
-                                      Is_Const => False,
-                                      Is_Error => False,
-                                      Base => Parent.Base,
-                                      Name => Name,
-                                      Block_Scope => Scope,
-                                      Up_Block => Parent,
-                                      Uninst_Scope => null,
-                                      Source_Scope => Blk,
-                                      Elab_Objects => 0,
-                                      Objects => (others =>
-                                                    (Kind => Obj_None)));
+      Res := Make_Elab_Instance (Parent, Blk, Null_Node);
+      Set_Extra (Res, Parent, Name);
       return Res;
    end Make_Instance;
 
    procedure Set_Instance_Base (Inst : Synth_Instance_Acc;
-                                Base : Synth_Instance_Acc) is
+                                Base : Base_Instance_Acc) is
    begin
-      Inst.Base := Base.Base;
+      Extra_Tables.Table (Get_Instance_Id (Inst)).Base := Base;
    end Set_Instance_Base;
 
-   procedure Free_Instance (Synth_Inst : in out Synth_Instance_Acc)
-   is
-      procedure Deallocate is new Ada.Unchecked_Deallocation
-        (Synth_Instance_Type, Synth_Instance_Acc);
+   procedure Set_Instance_Base (Inst : Synth_Instance_Acc;
+                                Base : Synth_Instance_Acc) is
    begin
-      Deallocate (Synth_Inst);
+      Set_Instance_Base (Inst, Get_Instance_Extra (Base).Base);
+   end Set_Instance_Base;
+
+   procedure Free_Instance (Synth_Inst : in out Synth_Instance_Acc) is
+   begin
+      if Get_Instance_Id (Synth_Inst) = Extra_Tables.Last then
+         Extra_Tables.Decrement_Last;
+      end if;
+      Free_Elab_Instance (Synth_Inst);
    end Free_Instance;
 
    procedure Set_Instance_Module (Inst : Synth_Instance_Acc; M : Module)
    is
-      Prev_Base : constant Base_Instance_Acc := Inst.Base;
+      Prev_Base : constant Base_Instance_Acc := Get_Instance_Extra (Inst).Base;
       Base : Base_Instance_Acc;
       Self_Inst : Instance;
    begin
@@ -114,184 +121,42 @@ package body Synth.Vhdl_Context is
       Self_Inst := Create_Self_Instance (M);
       pragma Unreferenced (Self_Inst);
 
-      Inst.Base := Base;
+      Set_Instance_Base (Inst, Base);
    end Set_Instance_Module;
-
-   function Is_Error (Inst : Synth_Instance_Acc) return Boolean is
-   begin
-      return Inst.Is_Error;
-   end Is_Error;
-
-   procedure Set_Error (Inst : Synth_Instance_Acc) is
-   begin
-      Inst.Is_Error := True;
-   end Set_Error;
 
    function Get_Instance_Module (Inst : Synth_Instance_Acc) return Module is
    begin
-      return Inst.Base.Cur_Module;
+      return Extra_Tables.Table (Get_Instance_Id (Inst)).Base.Cur_Module;
    end Get_Instance_Module;
-
-   function Get_Source_Scope (Inst : Synth_Instance_Acc) return Node is
-   begin
-      return Inst.Source_Scope;
-   end Get_Source_Scope;
 
    function Get_Top_Module (Inst : Synth_Instance_Acc) return Module is
    begin
-      return Inst.Base.Top_Module;
+      return Extra_Tables.Table (Get_Instance_Id (Inst)).Base.Top_Module;
    end Get_Top_Module;
 
    function Get_Sname (Inst : Synth_Instance_Acc) return Sname is
    begin
-      return Inst.Name;
+      return Extra_Tables.Table (Get_Instance_Id (Inst)).Name;
    end Get_Sname;
 
    function Get_Build (Inst : Synth_Instance_Acc)
-                      return Netlists.Builders.Context_Acc is
+                      return Netlists.Builders.Context_Acc
+   is
+      Id : constant Instance_Id_Type := Get_Instance_Id (Inst);
+      Base : Base_Instance_Acc;
    begin
-      return Inst.Base.Builder;
+      if Id > Extra_Tables.Last then
+         --  Not yet built.
+         return null;
+      end if;
+
+      Base := Extra_Tables.Table (Id).Base;
+      if Base = null then
+         return null;
+      end if;
+
+      return Base.Builder;
    end Get_Build;
-
-   function Get_Instance_Const (Inst : Synth_Instance_Acc) return Boolean is
-   begin
-      return Inst.Is_Const;
-   end Get_Instance_Const;
-
-   function Check_Set_Instance_Const (Inst : Synth_Instance_Acc)
-                                     return Boolean is
-   begin
-      for I in 1 .. Inst.Elab_Objects loop
-         if Inst.Objects (I).Kind /= Obj_Subtype then
-            return False;
-         end if;
-      end loop;
-      return True;
-   end Check_Set_Instance_Const;
-
-   procedure Set_Instance_Const (Inst : Synth_Instance_Acc; Val : Boolean) is
-   begin
-      pragma Assert (not Val or else Check_Set_Instance_Const (Inst));
-      Inst.Is_Const := Val;
-   end Set_Instance_Const;
-
-   procedure Create_Object (Syn_Inst : Synth_Instance_Acc;
-                            Slot : Object_Slot_Type;
-                            Num : Object_Slot_Type := 1) is
-   begin
-      --  Check elaboration order.
-      --  Note: this is not done for package since objects from package are
-      --  commons (same scope), and package annotation order can be different
-      --  from package elaboration order (eg: body).
-      if Slot /= Syn_Inst.Elab_Objects + 1
-        or else Syn_Inst.Objects (Slot).Kind /= Obj_None
-      then
-         Error_Msg_Elab ("synth: bad elaboration order of objects");
-         raise Internal_Error;
-      end if;
-      Syn_Inst.Elab_Objects := Slot + Num - 1;
-   end Create_Object;
-
-   procedure Create_Object_Force
-     (Syn_Inst : Synth_Instance_Acc; Decl : Node; Vt : Valtyp)
-   is
-      Info : constant Sim_Info_Acc := Get_Info (Decl);
-   begin
-      pragma Assert
-        (Syn_Inst.Objects (Info.Slot).Kind = Obj_None
-           or else Vt = (null, null)
-           or else Syn_Inst.Objects (Info.Slot) = (Kind => Obj_Object,
-                                                   Obj => No_Valtyp));
-      Syn_Inst.Objects (Info.Slot) := (Kind => Obj_Object, Obj => Vt);
-   end Create_Object_Force;
-
-   procedure Create_Object
-     (Syn_Inst : Synth_Instance_Acc; Decl : Node; Vt : Valtyp)
-   is
-      Info : constant Sim_Info_Acc := Get_Info (Decl);
-   begin
-      Create_Object (Syn_Inst, Info.Slot, 1);
-      Create_Object_Force (Syn_Inst, Decl, Vt);
-   end Create_Object;
-
-   procedure Create_Subtype_Object
-     (Syn_Inst : Synth_Instance_Acc; Decl : Node; Typ : Type_Acc)
-   is
-      pragma Assert (Typ /= null);
-      Info : constant Sim_Info_Acc := Get_Info (Decl);
-   begin
-      Create_Object (Syn_Inst, Info.Slot, 1);
-      pragma Assert (Syn_Inst.Objects (Info.Slot).Kind = Obj_None);
-      Syn_Inst.Objects (Info.Slot) := (Kind => Obj_Subtype, T_Typ => Typ);
-   end Create_Subtype_Object;
-
-   procedure Create_Package_Object (Syn_Inst : Synth_Instance_Acc;
-                                    Decl : Node;
-                                    Inst : Synth_Instance_Acc;
-                                    Is_Global : Boolean)
-   is
-      Info : constant Sim_Info_Acc := Get_Info (Decl);
-   begin
-      if Is_Global then
-         pragma Assert (Syn_Inst.Objects (Info.Pkg_Slot).Kind = Obj_None);
-         pragma Assert (Syn_Inst.Up_Block = null);
-         null;
-      else
-         pragma Assert (Syn_Inst.Up_Block /= null);
-         Create_Object (Syn_Inst, Info.Slot, 1);
-      end if;
-      Syn_Inst.Objects (Info.Pkg_Slot) := (Kind => Obj_Instance,
-                                           I_Inst => Inst);
-   end Create_Package_Object;
-
-   procedure Create_Package_Interface (Syn_Inst : Synth_Instance_Acc;
-                                       Decl     : Node;
-                                       Inst     : Synth_Instance_Acc)
-   is
-      Info : constant Sim_Info_Acc := Get_Info (Decl);
-   begin
-      pragma Assert (Syn_Inst.Up_Block /= null);
-      Create_Object (Syn_Inst, Info.Pkg_Slot, 1);
-      Syn_Inst.Objects (Info.Pkg_Slot) := (Kind => Obj_Instance,
-                                           I_Inst => Inst);
-   end Create_Package_Interface;
-
-   function Get_Package_Object
-     (Syn_Inst : Synth_Instance_Acc; Info : Sim_Info_Acc)
-     return Synth_Instance_Acc
-   is
-      Parent : Synth_Instance_Acc;
-   begin
-      Parent := Get_Instance_By_Scope (Syn_Inst, Info.Pkg_Parent);
-      return Parent.Objects (Info.Pkg_Slot).I_Inst;
-   end Get_Package_Object;
-
-   function Get_Package_Object
-     (Syn_Inst : Synth_Instance_Acc; Pkg : Node) return Synth_Instance_Acc is
-   begin
-      return Get_Package_Object (Syn_Inst, Get_Info (Pkg));
-   end Get_Package_Object;
-
-   procedure Set_Uninstantiated_Scope
-     (Syn_Inst : Synth_Instance_Acc; Bod : Node) is
-   begin
-      Syn_Inst.Uninst_Scope := Get_Info (Bod);
-   end Set_Uninstantiated_Scope;
-
-   procedure Destroy_Object
-     (Syn_Inst : Synth_Instance_Acc; Decl : Node)
-   is
-      Info : constant Sim_Info_Acc := Get_Info (Decl);
-      Slot : constant Object_Slot_Type := Info.Slot;
-   begin
-      if Slot /= Syn_Inst.Elab_Objects
-        or else Info.Obj_Scope /= Syn_Inst.Block_Scope
-      then
-         Error_Msg_Elab ("synth: bad destroy order");
-      end if;
-      Syn_Inst.Objects (Slot) := (Kind => Obj_None);
-      Syn_Inst.Elab_Objects := Slot - 1;
-   end Destroy_Object;
 
    procedure Create_Wire_Object (Syn_Inst : Synth_Instance_Acc;
                                  Kind : Wire_Kind;
@@ -311,81 +176,6 @@ package body Synth.Vhdl_Context is
 
       Create_Object (Syn_Inst, Obj, Val);
    end Create_Wire_Object;
-
-   function Get_Instance_By_Scope
-     (Syn_Inst: Synth_Instance_Acc; Scope: Sim_Info_Acc)
-     return Synth_Instance_Acc is
-   begin
-      case Scope.Kind is
-         when Kind_Block
-           | Kind_Frame
-           | Kind_Process =>
-            declare
-               Current : Synth_Instance_Acc;
-            begin
-               Current := Syn_Inst;
-               while Current /= null loop
-                  if Current.Block_Scope = Scope then
-                     return Current;
-                  end if;
-                  Current := Current.Up_Block;
-               end loop;
-               raise Internal_Error;
-            end;
-         when Kind_Package =>
-            if Scope.Pkg_Parent = null then
-               --  This is a scope for an uninstantiated package.
-               declare
-                  Current : Synth_Instance_Acc;
-               begin
-                  Current := Syn_Inst;
-                  while Current /= null loop
-                     if Current.Uninst_Scope = Scope then
-                        return Current;
-                     end if;
-                  Current := Current.Up_Block;
-                  end loop;
-                  raise Internal_Error;
-               end;
-            else
-               --  Instantiated package.
-               return Get_Package_Object (Syn_Inst, Scope);
-            end if;
-         when others =>
-            raise Internal_Error;
-      end case;
-   end Get_Instance_By_Scope;
-
-   function Get_Parent_Scope (Blk : Node) return Sim_Info_Acc
-   is
-      Parent : Node;
-   begin
-      Parent := Get_Parent (Blk);
-      if Get_Kind (Parent) = Iir_Kind_Architecture_Body then
-         Parent := Vhdl.Utils.Get_Entity (Parent);
-      end if;
-      return Get_Info (Parent);
-   end Get_Parent_Scope;
-
-   function Get_Value (Syn_Inst: Synth_Instance_Acc; Obj : Node)
-                      return Valtyp
-   is
-      Info : constant Sim_Info_Acc := Get_Info (Obj);
-      Obj_Inst : Synth_Instance_Acc;
-   begin
-      Obj_Inst := Get_Instance_By_Scope (Syn_Inst, Info.Obj_Scope);
-      return Obj_Inst.Objects (Info.Slot).Obj;
-   end Get_Value;
-
-   function Get_Subtype_Object
-     (Syn_Inst : Synth_Instance_Acc; Decl : Node) return Type_Acc
-   is
-      Info : constant Sim_Info_Acc := Get_Info (Decl);
-      Obj_Inst : Synth_Instance_Acc;
-   begin
-      Obj_Inst := Get_Instance_By_Scope (Syn_Inst, Info.Obj_Scope);
-      return Obj_Inst.Objects (Info.Slot).T_Typ;
-   end Get_Subtype_Object;
 
    --  Set Is_0 to True iff VEC is 000...
    --  Set Is_X to True iff VEC is XXX...
@@ -529,19 +319,75 @@ package body Synth.Vhdl_Context is
       return Get_Partial_Memtyp_Net (Ctxt, Val, 0, Val.Typ.W);
    end Get_Memtyp_Net;
 
+   function To_Net is new Ada.Unchecked_Conversion (Uns32, Net);
+   function To_Uns32 is new Ada.Unchecked_Conversion (Net, Uns32);
+
+   function Get_Value_Net (Val : Value_Acc) return Net is
+   begin
+      return To_Net (Val.N);
+   end Get_Value_Net;
+
+   procedure Set_Value_Net (Val : Value_Acc; N : Net) is
+   begin
+      Val.N := To_Uns32 (N);
+   end Set_Value_Net;
+
+   function Get_Value_Wire (Val : Value_Acc) return Wire_Id
+   is
+      function To_Wire_Id is new Ada.Unchecked_Conversion (Uns32, Wire_Id);
+   begin
+      return To_Wire_Id (Val.N);
+   end Get_Value_Wire;
+
+   procedure Set_Value_Wire (Val : Value_Acc; W : Wire_Id)
+   is
+      function To_Uns32 is new Ada.Unchecked_Conversion (Wire_Id, Uns32);
+   begin
+      Val.N := To_Uns32 (W);
+   end Set_Value_Wire;
+
+   function Create_Value_Wire (W : Wire_Id) return Value_Acc
+   is
+      function To_Uns32 is new Ada.Unchecked_Conversion (Wire_Id, Uns32);
+   begin
+      return Create_Value_Wire (To_Uns32 (W));
+   end Create_Value_Wire;
+
+   function Create_Value_Wire (W : Wire_Id; Wtype : Type_Acc) return Valtyp
+   is
+      pragma Assert (Wtype /= null);
+   begin
+      return (Wtype, Create_Value_Wire (W));
+   end Create_Value_Wire;
+
+   function Create_Value_Net (N : Net) return Value_Acc
+   is
+      function To_Uns32 is new Ada.Unchecked_Conversion (Net, Uns32);
+   begin
+      return Create_Value_Net (To_Uns32 (N));
+   end Create_Value_Net;
+
+   function Create_Value_Net (N : Net; Ntype : Type_Acc) return Valtyp
+   is
+      pragma Assert (Ntype /= null);
+   begin
+      return (Ntype, Create_Value_Net (N));
+   end Create_Value_Net;
+
    function Get_Net (Ctxt : Context_Acc; Val : Valtyp) return Net is
    begin
       case Val.Val.Kind is
          when Value_Wire =>
-            return Get_Current_Value (Ctxt, Val.Val.W);
+            return Get_Current_Value (Ctxt, Get_Value_Wire (Val.Val));
          when Value_Net =>
-            return Val.Val.N;
+            return Get_Value_Net (Val.Val);
          when Value_Alias =>
             declare
                Res : Net;
             begin
                if Val.Val.A_Obj.Kind = Value_Wire then
-                  Res := Get_Current_Value (Ctxt, Val.Val.A_Obj.W);
+                  Res := Get_Current_Value
+                    (Ctxt, Get_Value_Wire (Val.Val.A_Obj));
                   return Build2_Extract
                     (Ctxt, Res, Val.Val.A_Off.Net_Off, Val.Typ.W);
                else
@@ -550,16 +396,51 @@ package body Synth.Vhdl_Context is
                end if;
             end;
          when Value_Const =>
-            if Val.Val.C_Net = No_Net then
-               Val.Val.C_Net := Get_Net (Ctxt, (Val.Typ, Val.Val.C_Val));
-               Locations.Set_Location (Get_Net_Parent (Val.Val.C_Net),
-                                       Get_Location (Val.Val.C_Loc));
-            end if;
-            return Val.Val.C_Net;
+            declare
+               N : Net;
+            begin
+               N := To_Net (Val.Val.C_Net);
+               if N = No_Net then
+                  N := Get_Net (Ctxt, (Val.Typ, Val.Val.C_Val));
+                  Val.Val.C_Net := To_Uns32 (N);
+                  Locations.Set_Location (Get_Net_Parent (N),
+                                          Get_Location (Val.Val.C_Loc));
+               end if;
+               return N;
+            end;
          when Value_Memory =>
             return Get_Memtyp_Net (Ctxt, Get_Memtyp (Val));
          when others =>
             raise Internal_Error;
       end case;
    end Get_Net;
+
+   function Is_Static_Val (Val : Value_Acc) return Boolean is
+   begin
+      case Val.Kind is
+         when Value_Memory =>
+            return True;
+         when Value_Net
+           | Value_Signal =>
+            return False;
+         when Value_Wire =>
+            declare
+               W : constant Wire_Id := Get_Value_Wire (Val);
+            begin
+               if Get_Kind (W) = Wire_Variable then
+                  return Is_Static_Wire (W);
+               else
+                  --  A signal does not have static values.
+                  return False;
+               end if;
+            end;
+         when Value_File =>
+            return True;
+         when Value_Const =>
+            return True;
+         when Value_Alias =>
+            return Is_Static_Val (Val.A_Obj);
+      end case;
+   end Is_Static_Val;
+
 end Synth.Vhdl_Context;

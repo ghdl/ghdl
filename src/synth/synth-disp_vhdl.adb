@@ -27,10 +27,10 @@ with Vhdl.Ieee.Std_Logic_1164;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
 
+with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
+
 with Netlists.Iterators; use Netlists.Iterators;
 with Netlists.Disp_Vhdl; use Netlists.Disp_Vhdl;
-
-with Synth.Objtypes; use Synth.Objtypes;
 
 package body Synth.Disp_Vhdl is
    procedure Disp_Signal (Desc : Port_Desc) is

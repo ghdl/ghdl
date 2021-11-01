@@ -18,11 +18,10 @@
 
 with Vhdl.Nodes; use Vhdl.Nodes;
 
-with Synth.Source; use Synth.Source;
-with Synth.Values; use Synth.Values;
-with Synth.Vhdl_Context; use Synth.Vhdl_Context;
+with Elab.Vhdl_Context; use Elab.Vhdl_Context;
+with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 
-package Synth.Vhdl_Files is
+package Elab.Vhdl_Files is
    --  Raised in case of un-recoverable error.
    File_Execution_Error : exception;
 
@@ -33,7 +32,7 @@ package Synth.Vhdl_Files is
    function Elaborate_File_Declaration
      (Syn_Inst : Synth_Instance_Acc; Decl : Node) return File_Index;
 
-   function Endfile (F : File_Index; Loc : Syn_Src) return Boolean;
+   function Endfile (F : File_Index; Loc : Node) return Boolean;
 
    procedure Synth_File_Open
      (Syn_Inst : Synth_Instance_Acc; Imp : Node; Loc : Node);
@@ -45,4 +44,4 @@ package Synth.Vhdl_Files is
 
    procedure Synth_File_Read
      (Syn_Inst : Synth_Instance_Acc; Imp : Node; Loc : Node);
-end Synth.Vhdl_Files;
+end Elab.Vhdl_Files;

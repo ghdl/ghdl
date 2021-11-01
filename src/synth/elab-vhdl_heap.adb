@@ -19,10 +19,9 @@
 with Types; use Types;
 with Tables;
 
+with Elab.Memtype; use Elab.Memtype;
 
-with Synth.Memtype; use Synth.Memtype;
-
-package body Synth.Vhdl_Heap is
+package body Elab.Vhdl_Heap is
 
    package Heap_Table is new Tables
      (Table_Component_Type => Valtyp,
@@ -91,4 +90,4 @@ package body Synth.Vhdl_Heap is
       Free (Heap_Table.Table (Idx));
    end Synth_Deallocate;
 
-end Synth.Vhdl_Heap;
+end Elab.Vhdl_Heap;

@@ -23,10 +23,10 @@ with Netlists.Builders;
 
 with Vhdl.Nodes;
 
+with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
+
 with Synth.Environment;
 with Synth.Environment.Debug;
-with Synth.Objtypes; use Synth.Objtypes;
--- with Synth_Vhdl.Context;
 
 package Synth.Vhdl_Environment is
 
@@ -52,7 +52,7 @@ package Synth.Vhdl_Environment is
 
    package Env is new Synth.Environment
      (Decl_Type => Decl_Type,
-      Static_Type => Standard.Synth.Objtypes.Memtyp,
+      Static_Type => Elab.Vhdl_Objtypes.Memtyp,
       Get_Width => Get_Bitwidth,
       Is_Equal => Is_Equal,
       Static_To_Net => Memtyp_To_Net,

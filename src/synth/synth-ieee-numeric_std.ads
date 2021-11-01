@@ -18,7 +18,7 @@
 
 with Types; use Types;
 
-with Synth.Objtypes; use Synth.Objtypes;
+with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
 with Synth.Source; use Synth.Source;
 
 package Synth.Ieee.Numeric_Std is

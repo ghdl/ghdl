@@ -21,7 +21,7 @@ with System; use System;
 
 with Mutils; use Mutils;
 
-package body Synth.Objtypes is
+package body Elab.Vhdl_Objtypes is
    function To_Bound_Array_Acc is new Ada.Unchecked_Conversion
      (System.Address, Bound_Array_Acc);
 
@@ -117,10 +117,10 @@ package body Synth.Objtypes is
       end case;
    end Are_Types_Equal;
 
-   function Discrete_Range_Width (Rng : Discrete_Range_Type) return Width
+   function Discrete_Range_Width (Rng : Discrete_Range_Type) return Uns32
    is
       Lo, Hi : Int64;
-      W : Width;
+      W : Uns32;
    begin
       case Rng.Dir is
          when Dir_To =>
@@ -135,19 +135,19 @@ package body Synth.Objtypes is
          W := 0;
       elsif Lo >= 0 then
          --  Positive.
-         W := Width (Clog2 (Uns64 (Hi) + 1));
+         W := Uns32 (Clog2 (Uns64 (Hi) + 1));
       elsif Lo = Int64'First then
          --  Handle possible overflow.
          W := 64;
       elsif Hi < 0 then
          --  Negative only.
-         W := Width (Clog2 (Uns64 (-Lo))) + 1;
+         W := Uns32 (Clog2 (Uns64 (-Lo))) + 1;
       else
          declare
-            Wl : constant Width := Width (Clog2 (Uns64 (-Lo)));
-            Wh : constant Width := Width (Clog2 (Uns64 (Hi) + 1));
+            Wl : constant Uns32 := Uns32 (Clog2 (Uns64 (-Lo)));
+            Wh : constant Uns32 := Uns32 (Clog2 (Uns64 (Hi) + 1));
          begin
-            W := Width'Max (Wl, Wh) + 1;
+            W := Uns32'Max (Wl, Wh) + 1;
          end;
       end if;
       return W;
@@ -172,6 +172,15 @@ package body Synth.Objtypes is
             return V <= Rng.Left and then V >= Rng.Right;
       end case;
    end In_Range;
+
+   function Build_Discrete_Range_Type
+     (L : Int64; R : Int64; Dir : Direction_Type) return Discrete_Range_Type is
+   begin
+      return (Dir => Dir,
+              Left => L,
+              Right => R,
+              Is_Signed => L < 0 or R < 0);
+   end Build_Discrete_Range_Type;
 
    function Create_Bit_Type return Type_Acc
    is
@@ -199,7 +208,7 @@ package body Synth.Objtypes is
 
    function Create_Discrete_Type (Rng : Discrete_Range_Type;
                                   Sz : Size_Type;
-                                  W : Width)
+                                  W : Uns32)
                                  return Type_Acc
    is
       subtype Discrete_Type_Type is Type_Type (Type_Discrete);
@@ -266,7 +275,7 @@ package body Synth.Objtypes is
                                   Slice_El => El_Type)));
    end Create_Slice_Type;
 
-   function Create_Vec_Type_By_Length (Len : Width; El : Type_Acc)
+   function Create_Vec_Type_By_Length (Len : Uns32; El : Type_Acc)
                                       return Type_Acc is
    begin
       return Create_Vector_Type ((Dir => Dir_Downto,
@@ -433,13 +442,12 @@ package body Synth.Objtypes is
       return (Off + Mask) and not Mask;
    end Align;
 
-   function Create_Record_Type (Els : Rec_El_Array_Acc)
-                               return Type_Acc
+   function Create_Record_Type (Els : Rec_El_Array_Acc) return Type_Acc
    is
       subtype Record_Type_Type is Type_Type (Type_Record);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Record_Type_Type);
       Is_Synth : Boolean;
-      W : Width;
+      W : Uns32;
       Al : Palign_Type;
       Sz : Size_Type;
    begin
@@ -539,7 +547,7 @@ package body Synth.Objtypes is
             return Iir_Index32 (Typ.Vbound.Len);
          when Type_Array =>
             declare
-               Len : Width;
+               Len : Uns32;
             begin
                Len := 1;
                for I in Typ.Abounds.D'Range loop
@@ -552,13 +560,13 @@ package body Synth.Objtypes is
       end case;
    end Get_Array_Flat_Length;
 
-   function Get_Type_Width (Atype : Type_Acc) return Width is
+   function Get_Type_Width (Atype : Type_Acc) return Uns32 is
    begin
       pragma Assert (Atype.Kind /= Type_Unbounded_Array);
       return Atype.W;
    end Get_Type_Width;
 
-   function Get_Bound_Length (T : Type_Acc; Dim : Dim_Type) return Width is
+   function Get_Bound_Length (T : Type_Acc; Dim : Dim_Type) return Uns32 is
    begin
       case T.Kind is
          when Type_Vector =>
@@ -773,4 +781,4 @@ package body Synth.Objtypes is
       Bit0 := (Bit_Type, To_Memory_Ptr (Bit0_Mem'Address));
       Bit1 := (Bit_Type, To_Memory_Ptr (Bit1_Mem'Address));
    end Init;
-end Synth.Objtypes;
+end Elab.Vhdl_Objtypes;

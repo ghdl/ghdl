@@ -16,8 +16,8 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-package Synth.Values.Debug is
+package Elab.Vhdl_Values.Debug is
    procedure Debug_Valtyp (V : Valtyp);
    procedure Debug_Memtyp (M : Memtyp);
    procedure Debug_Typ (T : Type_Acc);
-end Synth.Values.Debug;
+end Elab.Vhdl_Values.Debug;
