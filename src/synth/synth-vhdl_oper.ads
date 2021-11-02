@@ -18,9 +18,9 @@
 
 with Vhdl.Nodes; use Vhdl.Nodes;
 
-with Synth.Objtypes; use Synth.Objtypes;
-with Synth.Values; use Synth.Values;
-with Synth.Vhdl_Context; use Synth.Vhdl_Context;
+with Elab.Vhdl_Context; use Elab.Vhdl_Context;
+with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
+with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 
 package Synth.Vhdl_Oper is
    function Synth_Predefined_Function_Call

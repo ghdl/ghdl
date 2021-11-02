@@ -24,17 +24,18 @@ with Grt.Types; use Grt.Types;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Ieee.Std_Logic_1164; use Vhdl.Ieee.Std_Logic_1164;
 
+with Elab.Vhdl_Values; use Elab.Vhdl_Values;
+with Elab.Memtype; use Elab.Memtype;
+with Elab.Vhdl_Files;
+
 with Netlists; use Netlists;
 
-with Synth.Memtype; use Synth.Memtype;
 with Synth.Errors; use Synth.Errors;
 with Synth.Source; use Synth.Source;
 with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
 with Synth.Vhdl_Oper;
 with Synth.Ieee.Std_Logic_1164; use Synth.Ieee.Std_Logic_1164;
 with Synth.Ieee.Numeric_Std; use Synth.Ieee.Numeric_Std;
-with Synth.Vhdl_Files;
-with Synth.Values; use Synth.Values;
 
 package body Synth.Static_Oper is
    --  As log2(3m) is directly referenced, the program must be linked with -lm
@@ -852,7 +853,7 @@ package body Synth.Static_Oper is
             declare
                Res : Boolean;
             begin
-               Res := Synth.Vhdl_Files.Endfile (Param1.Val.File, Expr);
+               Res := Elab.Vhdl_Files.Endfile (Param1.Val.File, Expr);
                return Create_Memory_U8 (Boolean'Pos (Res), Boolean_Type);
             end;
 

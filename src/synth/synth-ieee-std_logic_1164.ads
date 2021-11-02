@@ -18,7 +18,7 @@
 
 with Types; use Types;
 
-with Synth.Memtype; use Synth.Memtype;
+with Elab.Memtype; use Elab.Memtype;
 
 package Synth.Ieee.Std_Logic_1164 is
 

@@ -16,8 +16,8 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with Synth.Objtypes; use Synth.Objtypes;
-with Synth.Vhdl_Context; use Synth.Vhdl_Context;
+with Elab.Vhdl_Context; use Elab.Vhdl_Context;
+with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
 
 with Vhdl.Nodes; use Vhdl.Nodes;
 

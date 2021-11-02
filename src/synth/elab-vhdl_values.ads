@@ -23,14 +23,12 @@ with Areapools; use Areapools;
 
 with Grt.Files_Operations;
 
-with Netlists; use Netlists;
+with Vhdl.Nodes; use Vhdl.Nodes;
 
-with Synth.Memtype; use Synth.Memtype;
-with Synth.Objtypes; use Synth.Objtypes;
-with Synth.Vhdl_Environment; use Synth.Vhdl_Environment.Env;
-with Synth.Source; use Synth.Source;
+with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
+with Elab.Memtype; use Elab.Memtype;
 
-package Synth.Values is
+package Elab.Vhdl_Values is
    --  Values is how signals and variables are decomposed.  This is similar to
    --  values in simulation, but simplified (no need to handle files,
    --  accesses...)
@@ -43,6 +41,8 @@ package Synth.Values is
       --  Also a vector or a bit, but from an object.  Has to be transformed
       --  into a net.
       Value_Wire,
+
+      Value_Signal,
 
       --  Any kind of constant value, raw stored in memory.
       Value_Memory,
@@ -69,18 +69,20 @@ package Synth.Values is
 
    type Value_Type (Kind : Value_Kind) is record
       case Kind is
-         when Value_Net =>
-            N : Net;
-         when Value_Wire =>
-            W : Wire_Id;
+         when Value_Net
+           | Value_Wire =>
+            N : Uns32;
+         when Value_Signal =>
+            S : Uns32;
+            Init : Value_Acc;
          when Value_Memory =>
             Mem : Memory_Ptr;
          when Value_File =>
             File : File_Index;
          when Value_Const =>
             C_Val : Value_Acc;
-            C_Loc : Syn_Src;
-            C_Net : Net;
+            C_Loc : Node;
+            C_Net : Uns32;
          when Value_Alias =>
             A_Obj : Value_Acc;
             A_Typ : Type_Acc;  --  The type of A_Obj.
@@ -105,19 +107,17 @@ package Synth.Values is
    --  True if VAL is static, ie contains neither nets nor wires.
    function Is_Static (Val : Value_Acc) return Boolean;
 
-   --  Can also return true for nets and wires.
-   --  Use Get_Static_Discrete to get the value.
-   function Is_Static_Val (Val : Value_Acc) return Boolean;
-
    function Is_Equal (L, R : Valtyp) return Boolean;
 
    function Create_Value_Memtyp (Mt : Memtyp) return Valtyp;
 
    --  Create a Value_Net.
-   function Create_Value_Net (N : Net; Ntype : Type_Acc) return Valtyp;
+   function Create_Value_Net (S : Uns32) return Value_Acc;
 
-   --  Create a Value_Wire.  For a bit wire, RNG must be null.
-   function Create_Value_Wire (W : Wire_Id; Wtype : Type_Acc) return Valtyp;
+   --  Create a Value_Wire.
+   function Create_Value_Wire (S : Uns32) return Value_Acc;
+
+   function Create_Value_Signal (S : Uns32; Init : Value_Acc) return Value_Acc;
 
    function Create_Value_Memory (Vtype : Type_Acc) return Valtyp;
    function Create_Value_Memory (Mt : Memtyp) return Valtyp;
@@ -138,8 +138,7 @@ package Synth.Values is
    function Create_Value_Alias
      (Obj : Valtyp; Off : Value_Offsets; Typ : Type_Acc) return Valtyp;
 
-   function Create_Value_Const (Val : Valtyp; Loc : Syn_Src)
-                               return Valtyp;
+   function Create_Value_Const (Val : Valtyp; Loc : Node) return Valtyp;
 
    --  If VAL is a const, replace it by its value.
    procedure Strip_Const (Vt : in out Valtyp);
@@ -173,4 +172,7 @@ package Synth.Values is
    function Read_Fp64 (Vt : Valtyp) return Fp64;
 
    procedure Write_Value (Dest : Memory_Ptr; Vt : Valtyp);
-end Synth.Values;
+
+   procedure Update_Index (Rng : Discrete_Range_Type; V : in out Valtyp);
+
+end Elab.Vhdl_Values;

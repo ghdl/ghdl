@@ -18,52 +18,49 @@
 
 with Types; use Types;
 
+with Elab.Vhdl_Context; use Elab.Vhdl_Context;
+with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
+with Elab.Vhdl_Values; use Elab.Vhdl_Values;
+
 with Netlists; use Netlists;
 with Netlists.Builders; use Netlists.Builders;
 
-with Vhdl.Annotations; use Vhdl.Annotations;
 with Vhdl.Nodes; use Vhdl.Nodes;
 
 with Synth.Context; use Synth.Context;
 with Synth.Vhdl_Environment; use Synth.Vhdl_Environment.Env;
-with Synth.Objtypes; use Synth.Objtypes;
-with Synth.Values; use Synth.Values;
 
 package Synth.Vhdl_Context is
    --  Values are stored into Synth_Instance, which is parallel to simulation
    --  Block_Instance_Type.
 
-   type Synth_Instance_Type (<>) is limited private;
-   type Synth_Instance_Acc is access Synth_Instance_Type;
-
-   function Get_Instance_By_Scope
-     (Syn_Inst: Synth_Instance_Acc; Scope: Sim_Info_Acc)
-     return Synth_Instance_Acc;
-
-   --  Create the first instance.
-   function Make_Base_Instance (Base : Base_Instance_Acc)
-                               return Synth_Instance_Acc;
+   --  Create the root instance.
+   procedure Make_Base_Instance (Base : Base_Instance_Acc);
 
    --  Free the first instance.
    procedure Free_Base_Instance;
 
-   --  Create and free the corresponding synth instance.
+   --  Create a synth instance.
+   procedure Set_Extra (Inst : Synth_Instance_Acc;
+                        Base : Base_Instance_Acc;
+                        Name : Sname := No_Sname);
+
+   procedure Set_Extra (Inst :Synth_Instance_Acc;
+                        Parent : Synth_Instance_Acc;
+                        Name : Sname := No_Sname);
+
    function Make_Instance (Parent : Synth_Instance_Acc;
                            Blk : Node;
                            Name : Sname := No_Sname)
                           return Synth_Instance_Acc;
+
+   procedure Free_Instance (Synth_Inst : in out Synth_Instance_Acc);
 
    --  Only useful for subprograms: set the base (which can be different from
    --  the parent).  Ideally it should be part of Make_Instance, but in most
    --  cases they are the same (except sometimes for subprograms).
    procedure Set_Instance_Base (Inst : Synth_Instance_Acc;
                                 Base : Synth_Instance_Acc);
-   procedure Free_Instance (Synth_Inst : in out Synth_Instance_Acc);
-
-   function Is_Error (Inst : Synth_Instance_Acc) return Boolean;
-   pragma Inline (Is_Error);
-
-   procedure Set_Error (Inst : Synth_Instance_Acc);
 
    function Get_Sname (Inst : Synth_Instance_Acc) return Sname;
    pragma Inline (Get_Sname);
@@ -79,44 +76,11 @@ package Synth.Vhdl_Context is
    --  Start the definition of module M (using INST).
    procedure Set_Instance_Module (Inst : Synth_Instance_Acc; M : Module);
 
-   function Get_Instance_Const (Inst : Synth_Instance_Acc) return Boolean;
-   procedure Set_Instance_Const (Inst : Synth_Instance_Acc; Val : Boolean);
-
-   --  Get the corresponding source for the scope of the instance.
-   function Get_Source_Scope (Inst : Synth_Instance_Acc) return Node;
-
-   procedure Create_Object
-     (Syn_Inst : Synth_Instance_Acc; Decl : Node; Vt : Valtyp);
-
-   procedure Create_Package_Object (Syn_Inst : Synth_Instance_Acc;
-                                    Decl : Node;
-                                    Inst : Synth_Instance_Acc;
-                                    Is_Global : Boolean);
-
-   procedure Create_Package_Interface (Syn_Inst : Synth_Instance_Acc;
-                                       Decl     : Node;
-                                       Inst     : Synth_Instance_Acc);
-
-   procedure Create_Subtype_Object
-     (Syn_Inst : Synth_Instance_Acc; Decl : Node; Typ : Type_Acc);
-
-   --  Force the value of DECL, without checking for elaboration order.
-   --  It is for deferred constants.
-   procedure Create_Object_Force
-     (Syn_Inst : Synth_Instance_Acc; Decl : Node; Vt : Valtyp);
-
-   procedure Destroy_Object
-     (Syn_Inst : Synth_Instance_Acc; Decl : Node);
-
    --  Build the value for object OBJ.
    --  KIND must be Wire_Variable or Wire_Signal.
    procedure Create_Wire_Object (Syn_Inst : Synth_Instance_Acc;
                                  Kind : Wire_Kind;
                                  Obj : Node);
-
-   --  Get the value of OBJ.
-   function Get_Value (Syn_Inst : Synth_Instance_Acc; Obj : Node)
-                      return Valtyp;
 
    --  Get a net from a scalar/vector value.  This will automatically create
    --  a net for literals.
@@ -125,74 +89,29 @@ package Synth.Vhdl_Context is
      (Ctxt : Context_Acc; Val : Memtyp; Off : Uns32; Wd : Width) return Net;
    function Get_Memtyp_Net (Ctxt : Context_Acc; Val : Memtyp) return Net;
 
-   function Get_Package_Object
-     (Syn_Inst : Synth_Instance_Acc; Pkg : Node) return Synth_Instance_Acc;
+   --  Can also return true for nets and wires.
+   --  Use Get_Static_Discrete to get the value.
+   function Is_Static_Val (Val : Value_Acc) return Boolean;
 
-   --  Return the type for DECL (a subtype indication).
-   function Get_Subtype_Object
-     (Syn_Inst : Synth_Instance_Acc; Decl : Node) return Type_Acc;
+   function Get_Value_Net (Val : Value_Acc) return Net;
+   pragma Inline (Get_Value_Net);
+   procedure Set_Value_Net (Val : Value_Acc; N : Net);
+   pragma Inline (Set_Value_Net);
+   function Get_Value_Wire (Val : Value_Acc) return Wire_Id;
+   pragma Inline (Get_Value_Wire);
+   procedure Set_Value_Wire (Val : Value_Acc; W : Wire_Id);
+   pragma Inline (Set_Value_Wire);
 
-   --  Return the scope of the parent of BLK.  Deals with architecture bodies.
-   function Get_Parent_Scope (Blk : Node) return Sim_Info_Acc;
+   --  Create a Value_Net.
+   function Create_Value_Net (N : Net; Ntype : Type_Acc) return Valtyp;
 
-   procedure Set_Uninstantiated_Scope
-     (Syn_Inst : Synth_Instance_Acc; Bod : Node);
+   --  Create a Value_Wire.  For a bit wire, RNG must be null.
+   function Create_Value_Wire (W : Wire_Id; Wtype : Type_Acc) return Valtyp;
 private
-   type Obj_Kind is
-     (
-      Obj_None,
-      Obj_Object,
-      Obj_Subtype,
-      Obj_Instance
-     );
-
-   type Obj_Type (Kind : Obj_Kind := Obj_None) is record
-      case Kind is
-         when Obj_None =>
-            null;
-         when Obj_Object =>
-            Obj : Valtyp;
-         when Obj_Subtype =>
-            T_Typ : Type_Acc;
-         when Obj_Instance =>
-            I_Inst : Synth_Instance_Acc;
-      end case;
-   end record;
-
-   type Objects_Array is array (Object_Slot_Type range <>) of Obj_Type;
-
-   type Synth_Instance_Type (Max_Objs : Object_Slot_Type) is limited record
-      Is_Const : Boolean;
-
-      --  True if a fatal error has been detected that aborts the synthesis
-      --  of this instance.
-      Is_Error : Boolean;
-
+   type Extra_Vhdl_Instance_Type is record
       Base : Base_Instance_Acc;
 
       --  Name prefix for declarations.
       Name : Sname;
-
-      --  The corresponding info for this instance.
-      --  This is used for lookup.
-      Block_Scope : Sim_Info_Acc;
-
-      --  The corresponding info the the uninstantiated specification of
-      --  an instantiated package.  When an object is looked for from the
-      --  uninstantiated body, the scope of the uninstantiated specification
-      --  is used.  And it is different from Block_Scope.
-      --  This is used for lookup of uninstantiated specification.
-      Uninst_Scope : Sim_Info_Acc;
-
-      --  Instance of the parent scope.
-      Up_Block : Synth_Instance_Acc;
-
-      --  Source construct corresponding to this instance/
-      Source_Scope : Node;
-
-      Elab_Objects : Object_Slot_Type;
-
-      --  Instance for synthesis.
-      Objects : Objects_Array (1 .. Max_Objs);
    end record;
 end Synth.Vhdl_Context;

@@ -26,11 +26,12 @@ with Netlists.Builders; use Netlists.Builders;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
 
-with Synth.Memtype; use Synth.Memtype;
+with Elab.Memtype; use Elab.Memtype;
+with Elab.Vhdl_Types; use Elab.Vhdl_Types;
+
 with Synth.Errors; use Synth.Errors;
 with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
-with Synth.Vhdl_Stmts; use Synth.Vhdl_Stmts;
-with Synth.Vhdl_Decls; use Synth.Vhdl_Decls;
+with Synth.Vhdl_Context; use Synth.Vhdl_Context;
 
 package body Synth.Vhdl_Aggr is
    type Stride_Array is array (Dim_Type range <>) of Nat32;

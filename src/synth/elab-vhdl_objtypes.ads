@@ -19,15 +19,13 @@
 with Types; use Types;
 with Areapools; use Areapools;
 
-with Netlists; use Netlists;
-
 with Grt.Types; use Grt.Types;
 
-with Synth.Memtype; use Synth.Memtype;
+with Elab.Memtype; use Elab.Memtype;
 
 with Vhdl.Nodes; use Vhdl.Nodes;
 
-package Synth.Objtypes is
+package Elab.Vhdl_Objtypes is
    type Discrete_Range_Type is record
       --  An integer range.
       Dir : Direction_Type;
@@ -40,7 +38,10 @@ package Synth.Objtypes is
    end record;
 
    --  Return the width of RNG.
-   function Discrete_Range_Width (Rng : Discrete_Range_Type) return Width;
+   function Discrete_Range_Width (Rng : Discrete_Range_Type) return Uns32;
+
+   function Build_Discrete_Range_Type
+     (L : Int64; R : Int64; Dir : Direction_Type) return Discrete_Range_Type;
 
    type Float_Range_Type is record
       Dir : Direction_Type;
@@ -52,7 +53,7 @@ package Synth.Objtypes is
       Dir : Direction_Type;
       Left : Int32;
       Right : Int32;
-      Len : Width;
+      Len : Uns32;
    end record;
 
    type Bound_Array_Type is array (Dim_Type range <>) of Bound_Type;
@@ -129,7 +130,7 @@ package Synth.Objtypes is
       --  type with 1 element, a null vector, or a null array).
       --  For non synthesizable types (like files or protected type), just
       --  use 32.
-      W : Width;
+      W : Uns32;
 
       case Kind is
          when Type_Bit
@@ -194,11 +195,11 @@ package Synth.Objtypes is
    --  Types.
    function Create_Discrete_Type (Rng : Discrete_Range_Type;
                                   Sz : Size_Type;
-                                  W : Width)
+                                  W : Uns32)
                                  return Type_Acc;
 
    function Create_Float_Type (Rng : Float_Range_Type) return Type_Acc;
-   function Create_Vec_Type_By_Length (Len : Width; El : Type_Acc)
+   function Create_Vec_Type_By_Length (Len : Uns32; El : Type_Acc)
                                       return Type_Acc;
    function Create_Vector_Type (Bnd : Bound_Type; El_Type : Type_Acc)
                                return Type_Acc;
@@ -247,11 +248,11 @@ package Synth.Objtypes is
    function Get_Array_Flat_Length (Typ : Type_Acc) return Iir_Index32;
 
    --  Return length of dimension DIM of type T.
-   function Get_Bound_Length (T : Type_Acc; Dim : Dim_Type) return Width;
+   function Get_Bound_Length (T : Type_Acc; Dim : Dim_Type) return Uns32;
 
    function Is_Matching_Bounds (L, R : Type_Acc) return Boolean;
 
-   function Get_Type_Width (Atype : Type_Acc) return Width;
+   function Get_Type_Width (Atype : Type_Acc) return Uns32;
 
    --  Low-level functions
 
@@ -293,4 +294,4 @@ package Synth.Objtypes is
    --  Also set by init.
    Bit0 : Memtyp;
    Bit1 : Memtyp;
-end Synth.Objtypes;
+end Elab.Vhdl_Objtypes;

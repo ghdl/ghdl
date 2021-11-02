@@ -1,5 +1,5 @@
---  Disp a netlist in vhdl using the original entity.
---  Copyright (C) 2019 Tristan Gingold
+--  Heap for synthesis.
+--  Copyright (C) 2017 Tristan Gingold
 --
 --  This file is part of GHDL.
 --
@@ -16,12 +16,15 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with Netlists; use Netlists;
-with Elab.Vhdl_Context; use Elab.Vhdl_Context;
-with Vhdl.Nodes; use Vhdl.Nodes;
+with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
+with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 
-package Synth.Disp_Vhdl is
-   --  Disp ENT (like the original text) and its content as a wrapper.
-   procedure Disp_Vhdl_Wrapper
-     (Ent : Node; Top : Module; Inst : Synth_Instance_Acc);
-end Synth.Disp_Vhdl;
+package Elab.Vhdl_Heap is
+   --  Allocate a value.
+   function Allocate_By_Type (T : Type_Acc) return Heap_Index;
+   function Allocate_By_Value (V : Valtyp) return Heap_Index;
+
+   function Synth_Dereference (Idx : Heap_Index) return Valtyp;
+
+   procedure Synth_Deallocate (Idx : Heap_Index);
+end Elab.Vhdl_Heap;

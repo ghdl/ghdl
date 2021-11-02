@@ -1,5 +1,5 @@
---  Heap for synthesis.
---  Copyright (C) 2017 Tristan Gingold
+--  Design elaboration
+--  Copyright (C) 2021 Tristan Gingold
 --
 --  This file is part of GHDL.
 --
@@ -16,15 +16,21 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with Synth.Objtypes; use Synth.Objtypes;
-with Synth.Values; use Synth.Values;
+with Vhdl.Nodes; use Vhdl.Nodes;
 
-package Synth.Vhdl_Heap is
-   --  Allocate a value.
-   function Allocate_By_Type (T : Type_Acc) return Heap_Index;
-   function Allocate_By_Value (V : Valtyp) return Heap_Index;
+with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 
-   function Synth_Dereference (Idx : Heap_Index) return Valtyp;
+package Elab.Vhdl_Insts is
+   function Elab_Top_Unit (Config : Node) return Synth_Instance_Acc;
 
-   procedure Synth_Deallocate (Idx : Heap_Index);
-end Synth.Vhdl_Heap;
+   procedure Elab_Component_Instantiation_Statement
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node);
+   procedure Elab_Design_Instantiation_Statement
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node);
+
+   --  Apply block configuration CFG to BLK.
+   --  Must be done before synthesis of BLK.
+   --  The synthesis of BLK will clear all configuration of it.
+   procedure Apply_Block_Configuration (Cfg : Node; Blk : Node);
+
+end Elab.Vhdl_Insts;

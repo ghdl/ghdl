@@ -4983,11 +4983,16 @@ package body Vhdl.Sem_Expr is
                if E = Error_Mark then
                   return Null_Iir;
                end if;
-               if Get_Kind (E) = Iir_Kind_Constant_Declaration
-                 and then not Deferred_Constant_Allowed
-               then
-                  Check_Constant_Restriction (E, Expr);
-               end if;
+               case Get_Kind (E) is
+                  when Iir_Kind_Constant_Declaration =>
+                     if not Deferred_Constant_Allowed then
+                        Check_Constant_Restriction (E, Expr);
+                     end if;
+                  when Iir_Kind_Enumeration_Literal =>
+                     Set_Use_Flag (E, True);
+                  when others =>
+                     null;
+               end case;
                E := Name_To_Expression (Expr, A_Type);
                return E;
             end;

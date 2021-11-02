@@ -21,9 +21,7 @@ with Utils_IO; use Utils_IO;
 
 with Vhdl.Nodes; use Vhdl.Nodes;
 
-with Synth.Vhdl_Environment; use Synth.Vhdl_Environment.Debug;
-
-package body Synth.Values.Debug is
+package body Elab.Vhdl_Values.Debug is
    procedure Put_Dir (Dir : Direction_Type) is
    begin
       case Dir is
@@ -41,7 +39,7 @@ package body Synth.Values.Debug is
       Put_Dir (Bnd.Dir);
       Put (' ');
       Put_Int32 (Bnd.Right);
-      Put (" [");
+      Put (" [l=");
       Put_Uns32 (Bnd.Len);
       Put (']');
    end Debug_Bound;
@@ -55,8 +53,9 @@ package body Synth.Values.Debug is
          when Type_Vector =>
             Put ("vector (");
             Debug_Bound (T.Vbound);
-            Put (") of ");
+            Put (") of [");
             Debug_Typ1 (T.Vec_El);
+            Put ("]");
          when Type_Array =>
             Put ("arr (");
             for I in 1 .. T.Abounds.Ndim loop
@@ -105,7 +104,7 @@ package body Synth.Values.Debug is
       Put (" sz=");
       Put_Uns32 (Uns32 (T.Sz));
       Put (" w=");
-      Put_Uns32 (Uns32 (T.W));
+      Put_Uns32 (T.W);
    end Debug_Typ1;
 
    procedure Debug_Typ (T : Type_Acc) is
@@ -183,16 +182,27 @@ package body Synth.Values.Debug is
            | Value_Const =>
             Debug_Memtyp (Get_Memtyp (V));
          when Value_Net =>
-            Put_Line (" net");
+            Put ("net ");
+            Put_Uns32 (V.Val.N);
+            Put (' ');
+            Debug_Typ1 (V.Typ);
+            New_Line;
+         when Value_Signal =>
+            Put ("signal ");
+            Debug_Typ1 (V.Typ);
+            New_Line;
          when Value_Wire =>
-            Put (" wire");
-            Put_Wire_Id (V.Val.W);
+            Put ("wire ");
+            Put_Uns32 (V.Val.N);
             New_Line;
          when Value_File =>
             Put_Line ("a file");
          when Value_Alias =>
-            Put_Line ("an alias");
+            Put ("an alias: ");
+            Debug_Typ1 (V.Typ);
+            Put (" of ");
+            Debug_Valtyp ((V.Typ, V.Val.A_Obj));
       end case;
    end Debug_Valtyp;
 
-end Synth.Values.Debug;
+end Elab.Vhdl_Values.Debug;

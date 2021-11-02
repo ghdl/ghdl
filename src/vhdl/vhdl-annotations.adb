@@ -122,6 +122,22 @@ package body Vhdl.Annotations is
       Create_Object_Info (Block_Info, Quantity, Kind_Quantity);
    end Add_Quantity_Info;
 
+   function Create_Block_Info (Block_Info : Sim_Info_Acc; Blk : Iir)
+                              return Sim_Info_Acc
+   is
+      Info : Sim_Info_Acc;
+   begin
+      Block_Info.Nbr_Objects := Block_Info.Nbr_Objects + 1;
+
+      Info := new Sim_Info_Type'(Kind => Kind_Block,
+                                 Ref => Blk,
+                                 Inst_Slot => Block_Info.Nbr_Objects,
+                                 Nbr_Objects => 0,
+                                 Nbr_Instances => 0);
+      Set_Info (Blk, Info);
+      return Info;
+   end Create_Block_Info;
+
    -- If EXPR has not a literal value, create one.
    -- This is necessary for subtype bounds.
    procedure Annotate_Range_Expression
@@ -244,10 +260,8 @@ package body Vhdl.Annotations is
                      end if;
                   end if;
                   Set_Info (Def, Info);
-                  if not Flag_Synthesis then
-                     Annotate_Range_Expression
-                       (Block_Info, Get_Range_Constraint (Def));
-                  end if;
+                  Annotate_Range_Expression
+                    (Block_Info, Get_Range_Constraint (Def));
                end;
             end if;
 
@@ -556,15 +570,19 @@ package body Vhdl.Annotations is
    is
       Info : Sim_Info_Acc;
    begin
+
       Info := new Sim_Info_Type'(Kind => Kind_Block,
                                  Ref => Comp,
-                                 Inst_Slot => Invalid_Instance_Slot,
+                                 Inst_Slot => Invalid_Object_Slot,
                                  Nbr_Objects => 0,
                                  Nbr_Instances => 1); --  For the instance.
       Set_Info (Comp, Info);
 
       Annotate_Interface_List (Info, Get_Generic_Chain (Comp), True);
       Annotate_Interface_List (Info, Get_Port_Chain (Comp), True);
+
+      --  Last slot is used for the instance.
+      Info.Nbr_Objects := Info.Nbr_Objects + 1;
    end Annotate_Component_Declaration;
 
    --  For package declaration or package instantiation declaration.
@@ -905,14 +923,7 @@ package body Vhdl.Annotations is
       Header : Iir_Block_Header;
       Guard : Iir;
    begin
-      Info := new Sim_Info_Type'(Kind => Kind_Block,
-                                 Ref => Block,
-                                 Inst_Slot => Block_Info.Nbr_Instances,
-                                 Nbr_Objects => 0,
-                                 Nbr_Instances => 0);
-      Set_Info (Block, Info);
-
-      Block_Info.Nbr_Instances := Block_Info.Nbr_Instances + 1;
+      Info := Create_Block_Info (Block_Info, Block);
 
       Guard := Get_Guard_Decl (Block);
       if Guard /= Null_Iir then
@@ -933,14 +944,7 @@ package body Vhdl.Annotations is
    is
       Info : Sim_Info_Acc;
    begin
-      Info := new Sim_Info_Type'(Kind => Kind_Block,
-                                 Ref => Bod,
-                                 Inst_Slot => Block_Info.Nbr_Instances,
-                                 Nbr_Objects => 0,
-                                 Nbr_Instances => 0);
-      Set_Info (Bod, Info);
-
-      Block_Info.Nbr_Instances := Block_Info.Nbr_Instances + 1;
+      Info := Create_Block_Info (Block_Info, Bod);
 
       if It /= Null_Iir then
          Create_Object_Info (Info, It);
@@ -953,10 +957,17 @@ package body Vhdl.Annotations is
    procedure Annotate_If_Generate_Statement
      (Block_Info : Sim_Info_Acc; Stmt : Iir)
    is
+      Info : Sim_Info_Acc;
       Clause : Iir;
    begin
+      Info := Create_Block_Info (Block_Info, Stmt);
+      pragma Unreferenced (Info);
+
       Clause := Stmt;
       while Clause /= Null_Iir loop
+         --  Use the same slot as the if-generate statement.
+         Block_Info.Nbr_Objects := Block_Info.Nbr_Objects - 1;
+
          Annotate_Generate_Statement_Body
            (Block_Info, Get_Generate_Statement_Body (Clause), Null_Iir);
          Clause := Get_Generate_Else_Clause (Clause);
@@ -967,12 +978,15 @@ package body Vhdl.Annotations is
      (Block_Info : Sim_Info_Acc; Stmt : Iir)
    is
       Param : constant Iir := Get_Parameter_Specification (Stmt);
+      Info : Sim_Info_Acc;
    begin
       --  Elaborate the subtype in the current block.
       Annotate_Declaration_Type (Block_Info, Param);
 
+      Info := Create_Block_Info (Block_Info, Stmt);
+
       Annotate_Generate_Statement_Body
-        (Block_Info, Get_Generate_Statement_Body (Stmt), Param);
+        (Info, Get_Generate_Statement_Body (Stmt), Param);
    end Annotate_For_Generate_Statement;
 
    procedure Annotate_Case_Generate_Statement
@@ -996,13 +1010,13 @@ package body Vhdl.Annotations is
       Info: Sim_Info_Acc;
    begin
       --  Add a slot just to put the instance.
+      Block_Info.Nbr_Objects := Block_Info.Nbr_Objects + 1;
       Info := new Sim_Info_Type'(Kind => Kind_Block,
                                  Ref => Stmt,
-                                 Inst_Slot => Block_Info.Nbr_Instances,
+                                 Inst_Slot => Block_Info.Nbr_Objects,
                                  Nbr_Objects => 0,
                                  Nbr_Instances => 1);
       Set_Info (Stmt, Info);
-      Block_Info.Nbr_Instances := Block_Info.Nbr_Instances + 1;
    end Annotate_Component_Instantiation_Statement;
 
    procedure Annotate_Process_Statement (Block_Info : Sim_Info_Acc; Stmt : Iir)
@@ -1089,7 +1103,7 @@ package body Vhdl.Annotations is
    begin
       Entity_Info := new Sim_Info_Type'(Kind => Kind_Block,
                                         Ref => Decl,
-                                        Inst_Slot => Invalid_Instance_Slot,
+                                        Inst_Slot => Invalid_Object_Slot,
                                         Nbr_Objects => 0,
                                         Nbr_Instances => 0);
       Set_Info (Decl, Entity_Info);
@@ -1130,7 +1144,7 @@ package body Vhdl.Annotations is
    begin
       Vunit_Info := new Sim_Info_Type'(Kind => Kind_Block,
                                        Ref => Decl,
-                                       Inst_Slot => Invalid_Instance_Slot,
+                                       Inst_Slot => Invalid_Object_Slot,
                                        Nbr_Objects => 0,
                                        Nbr_Instances => 0);
       Set_Info (Decl, Vunit_Info);
@@ -1261,7 +1275,7 @@ package body Vhdl.Annotations is
                     new Sim_Info_Type'(Kind => Kind_Block,
                                        Ref => El,
                                        Nbr_Objects => 0,
-                                       Inst_Slot => Invalid_Instance_Slot,
+                                       Inst_Slot => Invalid_Object_Slot,
                                        Nbr_Instances => 0);
                   Annotate_Package_Declaration (Global_Info, El);
                   --  These types are not in std.standard!
@@ -1368,7 +1382,7 @@ package body Vhdl.Annotations is
             case Info.Kind is
                when Kind_Block =>
                   Put ("inst_slot:"
-                              & Instance_Slot_Type'Image (Info.Inst_Slot));
+                         & Object_Slot_Type'Image (Info.Inst_Slot));
                   Put_Line (", nbr instance:"
                               & Instance_Slot_Type'Image (Info.Nbr_Instances));
                when others =>

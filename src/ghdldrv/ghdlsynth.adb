@@ -46,9 +46,12 @@ with Netlists.Disp_Verilog;
 with Netlists.Disp_Dot;
 with Netlists.Errors;
 
+with Elab.Vhdl_Context; use Elab.Vhdl_Context;
+with Elab.Vhdl_Insts;
+
 with Synthesis;
 with Synth.Disp_Vhdl;
-with Synth.Vhdl_Context; use Synth.Vhdl_Context;
+with Synth.Vhdl_Context;
 with Synth.Flags; use Synth.Flags;
 
 package body Ghdlsynth is
@@ -244,7 +247,6 @@ package body Ghdlsynth is
    function Ghdl_Synth_Configure
      (Init : Boolean; Cmd : Command_Synth; Args : Argument_List) return Node
    is
-      use Vhdl.Configuration;
       use Errorout;
       E_Opt : Integer;
       Opt_Arg : Natural;
@@ -383,14 +385,6 @@ package body Ghdlsynth is
             end if;
          end;
       end if;
-
-      --  Annotate all units.
-      Vhdl.Annotations.Initialize_Annotate;
-      Vhdl.Annotations.Annotate (Vhdl.Std_Package.Std_Standard_Unit);
-      for I in Design_Units.First .. Design_Units.Last loop
-         Vhdl.Annotations.Annotate (Design_Units.Table (I));
-      end loop;
-
       return Config;
    end Ghdl_Synth_Configure;
 
@@ -471,7 +465,9 @@ package body Ghdlsynth is
          return No_Module;
       end if;
 
-      Synthesis.Synth_Design (Config, Cmd.Top_Encoding, Res, Inst);
+      Inst := Elab.Vhdl_Insts.Elab_Top_Unit (Get_Library_Unit (Config));
+
+      Res := Synthesis.Synth_Design (Config, Inst, Cmd.Top_Encoding);
       if Res = No_Module then
          return No_Module;
       end if;
@@ -517,9 +513,15 @@ package body Ghdlsynth is
          end if;
       end if;
 
-      Netlists.Errors.Initialize;
+      Inst := Elab.Vhdl_Insts.Elab_Top_Unit (Get_Library_Unit (Config));
 
-      Synthesis.Synth_Design (Config, Cmd.Top_Encoding, Res, Inst);
+      if Errorout.Nbr_Errors > 0 then
+         Res := No_Module;
+      else
+         Netlists.Errors.Initialize;
+         Res := Synthesis.Synth_Design (Config, Inst, Cmd.Top_Encoding);
+      end if;
+
       if Res = No_Module then
          if Cmd.Expect_Failure then
             return;

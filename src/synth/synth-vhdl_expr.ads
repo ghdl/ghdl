@@ -23,17 +23,25 @@ with Types; use Types;
 with PSL.Types;
 with Vhdl.Nodes; use Vhdl.Nodes;
 
+with Elab.Vhdl_Context; use Elab.Vhdl_Context;
+with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
+with Elab.Vhdl_Values; use Elab.Vhdl_Values;
+
 with Netlists; use Netlists;
 with Netlists.Builders; use Netlists.Builders;
 
 with Synth.Source;
-with Synth.Objtypes; use Synth.Objtypes;
-with Synth.Values; use Synth.Values;
-with Synth.Vhdl_Context; use Synth.Vhdl_Context;
 
 package Synth.Vhdl_Expr is
    --  Perform a subtype conversion.  Check constraints.
    function Synth_Subtype_Conversion (Ctxt : Context_Acc;
+                                      Vt : Valtyp;
+                                      Dtype : Type_Acc;
+                                      Bounds : Boolean;
+                                      Loc : Source.Syn_Src)
+                                     return Valtyp;
+
+   function Synth_Subtype_Conversion (Syn_Inst : Synth_Instance_Acc;
                                       Vt : Valtyp;
                                       Dtype : Type_Acc;
                                       Bounds : Boolean;
@@ -93,23 +101,9 @@ package Synth.Vhdl_Expr is
    function Synth_PSL_Expression
      (Syn_Inst : Synth_Instance_Acc; Expr : PSL.Types.PSL_Node) return Net;
 
-   function Synth_Bounds_From_Range (Syn_Inst : Synth_Instance_Acc;
-                                     Atype : Node) return Bound_Type;
-
    function Synth_Array_Bounds (Syn_Inst : Synth_Instance_Acc;
                                 Atype : Node;
                                 Dim : Dim_Type) return Bound_Type;
-
-   function Build_Discrete_Range_Type
-     (L : Int64; R : Int64; Dir : Direction_Type) return Discrete_Range_Type;
-   function Synth_Discrete_Range_Expression
-     (Syn_Inst : Synth_Instance_Acc; Rng : Node) return Discrete_Range_Type;
-   function Synth_Float_Range_Expression
-     (Syn_Inst : Synth_Instance_Acc; Rng : Node) return Float_Range_Type;
-
-   procedure Synth_Discrete_Range (Syn_Inst : Synth_Instance_Acc;
-                                   Bound : Node;
-                                   Rng : out Discrete_Range_Type);
 
    procedure Synth_Slice_Suffix (Syn_Inst : Synth_Instance_Acc;
                                  Name : Node;
@@ -127,13 +121,7 @@ package Synth.Vhdl_Expr is
                                  Voff : out Net;
                                  Off : out Value_Offsets);
 
-   --  Return the type of EXPR (an object) without evaluating it (except when
-   --  needed, like bounds of a slice).
-   function Synth_Type_Of_Object (Syn_Inst : Synth_Instance_Acc; Expr : Node)
-                                 return Type_Acc;
-
    --  Conversion to logic vector.
-
    type Digit_Index is new Natural;
    type Logvec_Array is array (Digit_Index range <>) of Logic_32;
    type Logvec_Array_Acc is access Logvec_Array;

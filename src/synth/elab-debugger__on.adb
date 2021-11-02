@@ -34,12 +34,14 @@ with Vhdl.Nodes_Walk; use Vhdl.Nodes_Walk;
 with Vhdl.Parse;
 with Vhdl.Utils; use Vhdl.Utils;
 
-with Synth. Objtypes; use Synth.Objtypes;
-with Synth.Values; use Synth.Values;
--- with Synth.Environment; use Synth.Environment;
-with Synth.Flags;
+with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
+with Elab.Memtype; use Elab.Memtype;
+with Elab.Vhdl_Values; use Elab.Vhdl_Values;
+with Elab.Vhdl_Context.Debug; use Elab.Vhdl_Context.Debug;
 
-package body Synth.Debugger is
+package body Elab.Debugger is
+   Flag_Enabled : Boolean := False;
+
    Current_Instance : Synth_Instance_Acc;
    Current_Loc : Node;
 
@@ -440,6 +442,8 @@ package body Synth.Debugger is
             Put ("net");
          when Value_Wire =>
             Put ("wire");
+         when Value_Signal =>
+            Put ("signal");
          when Value_File =>
             Put ("file");
          when Value_Const =>
@@ -600,13 +604,12 @@ package body Synth.Debugger is
       loop
          case Get_Kind (Decl) is
             when Iir_Kind_Procedure_Body
-              | Iir_Kind_Function_Body =>
+               | Iir_Kind_Function_Body
+               | Iir_Kind_Process_Statement
+               | Iir_Kind_Sensitized_Process_Statement
+               | Iir_Kind_Generate_Statement_Body =>
                Decls := Get_Declaration_Chain (Decl);
                exit;
-            when Iir_Kind_Process_Statement
-              | Iir_Kind_Sensitized_Process_Statement =>
-               Put_Line ("processes have no parameters");
-               return;
             when Iir_Kind_While_Loop_Statement
               | Iir_Kind_If_Statement
               | Iir_Kind_For_Loop_Statement
@@ -618,6 +621,13 @@ package body Synth.Debugger is
       end loop;
       Disp_Declaration_Objects (Current_Instance, Decls);
    end Info_Locals_Proc;
+
+   procedure Info_Instance_Proc (Line : String)
+   is
+      pragma Unreferenced (Line);
+   begin
+      Debug_Synth_Instance (Current_Instance);
+   end Info_Instance_Proc;
 
    function Walk_Files (Cb : Walk_Cb) return Walk_Status
    is
@@ -939,10 +949,16 @@ package body Synth.Debugger is
       Disp_Current_Lines;
    end List_Proc;
 
+   Menu_Info_Instance : aliased Menu_Entry :=
+     (Kind => Menu_Command,
+      Name => new String'("inst*ance"),
+      Next => null, -- Menu_Info_Tree'Access,
+      Proc => Info_Instance_Proc'Access);
+
    Menu_Info_Locals : aliased Menu_Entry :=
      (Kind => Menu_Command,
       Name => new String'("locals"),
-      Next => null, -- Menu_Info_Tree'Access,
+      Next => Menu_Info_Instance'Access,
       Proc => Info_Locals_Proc'Access);
 
    Menu_Info_Params : aliased Menu_Entry :=
@@ -1230,6 +1246,8 @@ package body Synth.Debugger is
 
    procedure Debug_Init (Top : Node) is
    begin
+      Flag_Enabled := True;
+
       Current_Instance := null;
       Current_Loc := Top;
 
@@ -1269,10 +1287,10 @@ package body Synth.Debugger is
 
    procedure Debug_Error (Inst : Synth_Instance_Acc; Expr : Node) is
    begin
-      if Flags.Flag_Debug_Enable then
+      if Flag_Enabled then
          Current_Instance := Inst;
          Current_Loc := Expr;
          Debug (Reason_Error);
       end if;
    end Debug_Error;
-end Synth.Debugger;
+end Elab.Debugger;

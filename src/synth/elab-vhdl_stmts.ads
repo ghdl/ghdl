@@ -1,5 +1,5 @@
---  Debugging during synthesis.
---  Copyright (C) 2019 Tristan Gingold
+--  Elaborate statements
+--  Copyright (C) 2021 Tristan Gingold
 --
 --  This file is part of GHDL.
 --
@@ -18,20 +18,12 @@
 
 with Vhdl.Nodes; use Vhdl.Nodes;
 
-with Synth.Vhdl_Context; use Synth.Vhdl_Context;
+with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 
-package Synth.Debugger is
-   --  If true, debugging is enabled:
-   --  * call Debug_Break() before executing the next sequential statement
-   --  * call Debug_Leave when a frame is destroyed.
-   Flag_Need_Debug : Boolean := False;
+package Elab.Vhdl_Stmts is
+   procedure Elab_Concurrent_Statement
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node);
 
-   procedure Debug_Init (Top : Node);
-   procedure Debug_Break (Inst : Synth_Instance_Acc; Stmt : Node);
-
-   procedure Debug_Leave (Inst : Synth_Instance_Acc);
-
-   --  To be called in case of execution error, like:
-   --  * index out of bounds.
-   procedure Debug_Error (Inst : Synth_Instance_Acc; Expr : Node);
-end Synth.Debugger;
+   procedure Elab_Concurrent_Statements
+     (Syn_Inst : Synth_Instance_Acc; Chain : Node);
+end Elab.Vhdl_Stmts;

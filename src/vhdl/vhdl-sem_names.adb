@@ -4830,6 +4830,10 @@ package body Vhdl.Sem_Names is
                   end if;
                end if;
 
+               if Get_Kind (Expr) = Iir_Kind_Enumeration_Literal then
+                  Set_Use_Flag (Expr, True);
+               end if;
+
                return Res;
             end if;
          when Iir_Kind_Function_Call

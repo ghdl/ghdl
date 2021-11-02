@@ -16,10 +16,11 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
+with Elab.Vhdl_Context; use Elab.Vhdl_Context;
+
 with Vhdl.Nodes; use Vhdl.Nodes;
 
 with Synth.Context; use Synth.Context;
-with Synth.Vhdl_Context; use Synth.Vhdl_Context;
 with Synth.Flags; use Synth.Flags;
 
 package Synth.Vhdl_Insts is
@@ -27,15 +28,10 @@ package Synth.Vhdl_Insts is
    procedure Synth_Top_Entity (Base : Base_Instance_Acc;
                                Design_Unit : Node;
                                Encoding : Name_Encoding;
-                               Inst : out Synth_Instance_Acc);
+                               Syn_Inst : Synth_Instance_Acc);
 
    --  Synthesize the top entity and all the sub-modules.
    procedure Synth_All_Instances;
-
-   --  Apply block configuration CFG to BLK.
-   --  Must be done before synthesis of BLK.
-   --  The synthesis of BLK will clear all configuration of it.
-   procedure Apply_Block_Configuration (Cfg : Node; Blk : Node);
 
    procedure Synth_Design_Instantiation_Statement
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node);
