@@ -2014,7 +2014,7 @@ package body Trans.Chap7 is
       Loc : Iir)
      return O_Enode
    is
-      Arr_Type      : constant Iir := Get_Type (Left);
+      Arr_Type      : constant Iir := Get_Base_Type (Get_Type (Left));
       Res_Btype     : constant Iir := Get_Base_Type (Res_Type);
       Res_Info      : constant Type_Info_Acc := Get_Info (Res_Btype);
       Base_Ptr_Type : constant O_Tnode :=
@@ -2027,8 +2027,10 @@ package body Trans.Chap7 is
       Res           : Mnode;
    begin
       --  Translate the array.
-      Arr := Stabilize (E2M (Translate_Expression (Left),
-                        Get_Info (Arr_Type), Mode_Value));
+      --  Need to convert to the base type as the subtype may not be
+      --  translated (for strings).
+      Arr := Stabilize (E2M (Translate_Expression (Left, Arr_Type),
+                             Get_Info (Arr_Type), Mode_Value));
 
       --  Extract its length.
       Len := Create_Temp_Init
