@@ -380,6 +380,8 @@ package body Vhdl.Tokens is
             return "restrict_guarantee";
          when Tok_Sequence =>
             return "sequence";
+         when Tok_Inherit =>
+            return "inherit";
          when Tok_Vmode =>
             return "vmode";
          when Tok_Vprop =>

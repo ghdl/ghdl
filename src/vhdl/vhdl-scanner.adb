@@ -1323,6 +1323,8 @@ package body Vhdl.Scanner is
                            Current_Token := Tok_Vprop;
                         when Name_Vunit =>
                            Current_Token := Tok_Vunit;
+                        when Name_Inherit =>
+                           Current_Token := Tok_Inherit;
                         when others =>
                            Current_Token := Tok_Identifier;
                      end case;

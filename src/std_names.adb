@@ -162,6 +162,7 @@ package body Std_Names is
       Def ("restrict",           Name_Restrict);
       Def ("restrict_guarantee", Name_Restrict_Guarantee);
       Def ("sequence",           Name_Sequence);
+      Def ("inherit",            Name_Inherit);
       Def ("vmode",              Name_Vmode);
       Def ("vprop",              Name_Vprop);
       Def ("vunit",              Name_Vunit);
@@ -829,7 +830,6 @@ package body Std_Names is
       Def ("forall",             Name_Forall);
       Def ("g",                  Name_G);
       Def ("inf",                Name_Inf);
-      Def ("inherit",            Name_Inherit);
       Def ("never",              Name_Never);
       Def ("next_a",             Name_Next_A);
       Def ("next_e",             Name_Next_E);
