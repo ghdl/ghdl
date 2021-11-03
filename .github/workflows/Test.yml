@@ -225,12 +225,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-#          - {icon: '🟪', pkg: 'llvm',  sys: 'MINGW32', arch: i686 } ! not yet functional
-          - {icon: '🟦', pkg: 'llvm',  sys: 'MINGW64', arch: x86_64 }
-          - {icon: '🟨', pkg: 'llvm',  sys: 'UCRT64',  arch: ucrt-x86_64 } #! experimental
-          - {icon: '🟪', pkg: 'mcode', sys: 'MINGW32', arch: i686 }
-          - {icon: '🟦', pkg: 'mcode', sys: 'MINGW64', arch: x86_64 }      #! simulation with mcode is not yet supported on win64
-          - {icon: '🟨', pkg: 'mcode', sys: 'UCRT64',  arch: ucrt-x86_64 } #! experimental; simulation with mcode is not yet supported on win64
+#          - {icon: '🟪', pkg: 'llvm',  sys: 'MINGW32' } ! not yet functional
+          - {icon: '🟦', pkg: 'llvm',  sys: 'MINGW64' }
+          - {icon: '🟨', pkg: 'llvm',  sys: 'UCRT64'  } #! experimental
+          - {icon: '🟪', pkg: 'mcode', sys: 'MINGW32' }
+          - {icon: '🟦', pkg: 'mcode', sys: 'MINGW64' } #! simulation with mcode is not yet supported on win64
+          - {icon: '🟨', pkg: 'mcode', sys: 'UCRT64'  } #! experimental; simulation with mcode is not yet supported on win64
 
     env:
       MINGW_ARCH: ${{ matrix.sys }}
@@ -245,10 +245,8 @@ jobs:
         with:
           msystem: ${{ matrix.sys }}
           update: true
-          install: >
-            base-devel
-            git
-            mingw-w64-${{ matrix.arch }}-toolchain
+          install: base-devel git
+          pacboy: toolchain:p
 
       - name: '⚙ git config'
         run: git config --global core.autocrlf input
@@ -295,12 +293,12 @@ jobs:
       fail-fast: false
       matrix:
         sys:
-#          - {icon: '🟪', pkg: 'llvm',  sys: 'MINGW32', arch: i686 } ! not yet functional
-          - {icon: '🟦', pkg: 'llvm',  sys: 'MINGW64', arch: x86_64 }
-          - {icon: '🟨', pkg: 'llvm',  sys: 'UCRT64',  arch: ucrt-x86_64 } #! experimental
-          - {icon: '🟪', pkg: 'mcode', sys: 'MINGW32', arch: i686 }
-#          - {icon: '🟦', pkg: 'mcode', sys: 'MINGW64', arch: x86_64 }      ! simulation with mcode is not yet supported on win64
-#          - {icon: '🟨', pkg: 'mcode', sys: 'UCRT64',  arch: ucrt-x86_64 } ! experimental; simulation with mcode is not yet supported on win64
+#          - {icon: '🟪', pkg: 'llvm',  sys: 'MINGW32' } ! not yet functional
+          - {icon: '🟦', pkg: 'llvm',  sys: 'MINGW64' }
+          - {icon: '🟨', pkg: 'llvm',  sys: 'UCRT64'  } #! experimental
+          - {icon: '🟪', pkg: 'mcode', sys: 'MINGW32' }
+#          - {icon: '🟦', pkg: 'mcode', sys: 'MINGW64' } ! simulation with mcode is not yet supported on win64
+#          - {icon: '🟨', pkg: 'mcode', sys: 'UCRT64'  } ! experimental; simulation with mcode is not yet supported on win64
 
         suite:
           - 'sanity pyunit vpi vhpi'
@@ -319,11 +317,11 @@ jobs:
         with:
           msystem: ${{ matrix.sys.sys }}
           update: true
-          install: >
-            mingw-w64-${{ matrix.sys.arch }}-diffutils
-            mingw-w64-${{ matrix.sys.arch }}-gcc
-            mingw-w64-${{ matrix.sys.arch }}-python-pip
-            mingw-w64-${{ matrix.sys.arch }}-python-setuptools
+          pacboy: >
+            diffutils:p
+            gcc:p
+            python-pip:p
+            python-setuptools:p
 
       - name: '⚙ git config'
         run: git config --global core.autocrlf input
@@ -340,7 +338,7 @@ jobs:
 
       - name: '🛠 Install package and 🐍 Python dependencies'
         run: |
-          pacman --noconfirm -U artifact/mingw-w64-${{ matrix.sys.arch }}-ghdl-${{ matrix.sys.pkg }}-*.zst
+          pacman --noconfirm -U artifact/mingw-w64-*-ghdl-${{ matrix.sys.pkg }}-*.zst
           pip3 install -r testsuite/requirements.txt
 
       - name: '🚦 Test package'
@@ -361,9 +359,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {icon: '🟪', sys: 'MINGW32', arch: i686 }
-          - {icon: '🟦', sys: 'MINGW64', arch: x86_64 }      #! simulation with mcode is not yet supported on win64
-          - {icon: '🟨', sys: 'UCRT64',  arch: ucrt-x86_64 } #! experimental; simulation with mcode is not yet supported on win64
+          - {icon: '🟪', sys: 'MINGW32' }
+          - {icon: '🟦', sys: 'MINGW64' } #! simulation with mcode is not yet supported on win64
+          - {icon: '🟨', sys: 'UCRT64'  } #! experimental; simulation with mcode is not yet supported on win64
 
     defaults:
       run:
@@ -396,13 +394,13 @@ jobs:
           name: ${{ matrix.sys }}-mcode
 
       - name: '🛠 Install package'
-        run: pacman --noconfirm -U artifact/mingw-w64-${{ matrix.arch }}-ghdl-mcode-*.zst
+        run: pacman --noconfirm -U artifact/mingw-w64-*-ghdl-mcode-*.zst
 
       - name: '🥡 Generate standalone zipfile'
         run: |
           _zipdir='${{ matrix.sys }}-mcode-standalone'
           mkdir -p "${_zipdir}"-extract
-          tar xf artifact/mingw-w64-${{ matrix.arch }}-ghdl-mcode-*.zst -C "${_zipdir}"-extract
+          tar xf artifact/mingw-w64-*-ghdl-mcode-*.zst -C "${_zipdir}"-extract
           cd "${_zipdir}-extract/${{ matrix.sys }}"/bin
           ../../../scripts/msys2-mcode/GetStandaloneDeps.sh
           cd ../../..
@@ -431,12 +429,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-#          - {icon: '🟪', pkg: 'llvm',  sys: 'MINGW32', arch: i686 }, ! not yet functional
-          - {icon: '🟦', pkg: 'llvm',  sys: 'MINGW64', arch: x86_64,      pyarch: x64 }
-          - {icon: '🟨', pkg: 'llvm',  sys: 'UCRT64',  arch: ucrt-x86_64, pyarch: x64 } #! experimental
-          - {icon: '🟪', pkg: 'mcode', sys: 'MINGW32', arch: i686,        pyarch: x86 }
-          - {icon: '🟦', pkg: 'mcode', sys: 'MINGW64', arch: x86_64,      pyarch: x64 } #! simulation with mcode is not yet supported on win64
-          - {icon: '🟨', pkg: 'mcode', sys: 'UCRT64',  arch: ucrt-x86_64, pyarch: x64 } #! experimental; simulation with mcode is not yet supported on win64
+#          - {icon: '🟪', pkg: 'llvm',  sys: 'MINGW32', pyarch: x86 }, ! not yet functional
+          - {icon: '🟦', pkg: 'llvm',  sys: 'MINGW64', pyarch: x64 }
+          - {icon: '🟨', pkg: 'llvm',  sys: 'UCRT64',  pyarch: x64 } #! experimental
+          - {icon: '🟪', pkg: 'mcode', sys: 'MINGW32', pyarch: x86 }
+          - {icon: '🟦', pkg: 'mcode', sys: 'MINGW64', pyarch: x64 } #! simulation with mcode is not yet supported on win64
+          - {icon: '🟨', pkg: 'mcode', sys: 'UCRT64',  pyarch: x64 } #! experimental; simulation with mcode is not yet supported on win64
 
     defaults:
       run:
@@ -465,7 +463,7 @@ jobs:
       - name: '🛠 Install package'
         shell: msys2 {0}
         run: |
-          pacman --noconfirm -U artifact/mingw-w64-${{ matrix.arch }}-ghdl-${{ matrix.pkg }}-*.zst
+          pacman --noconfirm -U artifact/mingw-w64-*-ghdl-${{ matrix.pkg }}-*.zst
 
       - name: '🛠 Set envvars'
         run: |
@@ -514,12 +512,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-#          - {icon: '🟪', pkg: 'llvm',  sys: 'MINGW32', arch: i686 }, ! not yet functional
-#          - {icon: '🟦', pkg: 'llvm',  sys: 'MINGW64', arch: x86_64,      pyarch: x64 }
-#          - {icon: '🟨', pkg: 'llvm',  sys: 'UCRT64',  arch: ucrt-x86_64, pyarch: x64 } #! experimental
-#          - {icon: '🟪', pkg: 'mcode', sys: 'MINGW32', arch: i686,        pyarch: x86 }
-          - {icon: '🟦', pkg: 'mcode', sys: 'MINGW64', arch: x86_64,      pyarch: x64 } #! simulation with mcode is not yet supported on win64
-          - {icon: '🟨', pkg: 'mcode', sys: 'UCRT64',  arch: ucrt-x86_64, pyarch: x64 } #! experimental; simulation with mcode is not yet supported on win64
+#          - {icon: '🟪', pkg: 'llvm',  sys: 'MINGW32', pyarch: x86 }, ! not yet functional
+#          - {icon: '🟦', pkg: 'llvm',  sys: 'MINGW64', pyarch: x64 }
+#          - {icon: '🟨', pkg: 'llvm',  sys: 'UCRT64',  pyarch: x64 } #! experimental
+#          - {icon: '🟪', pkg: 'mcode', sys: 'MINGW32', pyarch: x86 }
+          - {icon: '🟦', pkg: 'mcode', sys: 'MINGW64', pyarch: x64 } #! simulation with mcode is not yet supported on win64
+          - {icon: '🟨', pkg: 'mcode', sys: 'UCRT64',  pyarch: x64 } #! experimental; simulation with mcode is not yet supported on win64
 
     defaults:
       run:
@@ -654,9 +652,9 @@ jobs:
         with:
           msystem: MINGW64
           update: true
-          install: >
-            mingw-w64-x86_64-python-pip
-            mingw-w64-x86_64-python-setuptools
+          pacboy: >
+            python-pip:p
+            python-setuptools:p
 
       - name: '⚙ git config'
         run: git config --global core.autocrlf input
@@ -673,7 +671,7 @@ jobs:
 
       - name: '🛠 Install package and 🐍 Python dependencies'
         run: |
-          pacman --noconfirm -U artifact/mingw-w64-x86_64-ghdl-llvm-*.zst
+          pacman --noconfirm -U artifact/mingw-w64-*-ghdl-llvm-*.zst
           pip3 install -r testsuite/requirements.txt
 
       - name: '🚦 Run tests to generate coverage report'
