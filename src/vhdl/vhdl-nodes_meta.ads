@@ -145,7 +145,6 @@ package Vhdl.Nodes_Meta is
       Field_Macro_Expanded_Flag,
       Field_Need_Instance_Bodies,
       Field_Hierarchical_Name,
-      Field_Inherit_Spec_Chain,
       Field_Vunit_Item_Chain,
       Field_Bound_Vunit_Chain,
       Field_Verification_Block_Configuration,
@@ -193,6 +192,7 @@ package Vhdl.Nodes_Meta is
       Field_Element_Position,
       Field_Use_Clause_Chain,
       Field_Context_Reference_Chain,
+      Field_Inherit_Spec_Chain,
       Field_Selected_Name,
       Field_Type_Declarator,
       Field_Complete_Type_Definition,
@@ -729,7 +729,6 @@ package Vhdl.Nodes_Meta is
    function Has_Macro_Expanded_Flag (K : Iir_Kind) return Boolean;
    function Has_Need_Instance_Bodies (K : Iir_Kind) return Boolean;
    function Has_Hierarchical_Name (K : Iir_Kind) return Boolean;
-   function Has_Inherit_Spec_Chain (K : Iir_Kind) return Boolean;
    function Has_Vunit_Item_Chain (K : Iir_Kind) return Boolean;
    function Has_Bound_Vunit_Chain (K : Iir_Kind) return Boolean;
    function Has_Verification_Block_Configuration (K : Iir_Kind)
@@ -779,6 +778,7 @@ package Vhdl.Nodes_Meta is
    function Has_Element_Position (K : Iir_Kind) return Boolean;
    function Has_Use_Clause_Chain (K : Iir_Kind) return Boolean;
    function Has_Context_Reference_Chain (K : Iir_Kind) return Boolean;
+   function Has_Inherit_Spec_Chain (K : Iir_Kind) return Boolean;
    function Has_Selected_Name (K : Iir_Kind) return Boolean;
    function Has_Type_Declarator (K : Iir_Kind) return Boolean;
    function Has_Complete_Type_Definition (K : Iir_Kind) return Boolean;

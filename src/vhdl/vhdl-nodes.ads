@@ -1149,8 +1149,6 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Hierarchical_Name (Field1)
    --
-   --   Get/Set_Inherit_Spec_Chain (Field2)
-   --
    --   Get/Set_Attribute_Value_Chain (Field5)
    --
    --   Get/Set_Vunit_Item_Chain (Field6)
@@ -2324,6 +2322,16 @@ package Vhdl.Nodes is
    --   Get/Set_Chain (Field2)
    --
    --   Get/Set_Use_Clause_Chain (Field3)
+
+   -- Iir_Kind_PSL_Inherit_Spec (Short)
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   --   Get/Set_Name (Field4)
+   --
+   --   Get/Set_Inherit_Spec_Chain (Field3)
+   --
+   --   Get/Set_Chain (Field2)
 
    -- Iir_Kind_Context_Reference (Short)
    --
@@ -4825,6 +4833,8 @@ package Vhdl.Nodes is
       Iir_Kind_Library_Clause,
       Iir_Kind_Use_Clause,
       Iir_Kind_Context_Reference,
+
+      Iir_Kind_PSL_Inherit_Spec,
 
    -- Literals.
       Iir_Kind_Integer_Literal,
@@ -7847,10 +7857,6 @@ package Vhdl.Nodes is
    function Get_Hierarchical_Name (Vunit : Iir) return Iir;
    procedure Set_Hierarchical_Name (Vunit : Iir; Name : Iir);
 
-   --  Field: Field2 Chain
-   function Get_Inherit_Spec_Chain (Vunit : Iir) return Iir;
-   procedure Set_Inherit_Spec_Chain (Vunit : Iir; Chain : Iir);
-
    --  Field: Field6 Chain
    function Get_Vunit_Item_Chain (Vunit : Iir) return Iir;
    procedure Set_Vunit_Item_Chain (Vunit : Iir; Chain : Iir);
@@ -8108,6 +8114,10 @@ package Vhdl.Nodes is
    --  Field: Field3
    function Get_Context_Reference_Chain (Target : Iir) return Iir;
    procedure Set_Context_Reference_Chain (Target : Iir; Chain : Iir);
+
+   --  Field: Field3 Chain
+   function Get_Inherit_Spec_Chain (Target : Iir) return Iir;
+   procedure Set_Inherit_Spec_Chain (Target : Iir; Chain : Iir);
 
    --  Selected name of an use_clause or context_reference
    --  Field: Field1

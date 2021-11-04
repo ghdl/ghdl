@@ -210,6 +210,7 @@ package body Vhdl.Elocations is
            | Iir_Kind_Foreign_Module
            | Iir_Kind_Use_Clause
            | Iir_Kind_Context_Reference
+           | Iir_Kind_PSL_Inherit_Spec
            | Iir_Kind_Integer_Literal
            | Iir_Kind_Floating_Point_Literal
            | Iir_Kind_Null_Literal

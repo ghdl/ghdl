@@ -327,6 +327,8 @@ package Vhdl.Elocations is
 
    -- Iir_Kind_Context_Reference (None)
 
+   -- Iir_Kind_PSL_Inherit_Spec (None)
+
    -----------------------
    --  type definitions --
    -----------------------

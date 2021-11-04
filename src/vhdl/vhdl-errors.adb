@@ -573,6 +573,8 @@ package body Vhdl.Errors is
             return "use clause";
          when Iir_Kind_Context_Reference =>
             return "context reference";
+         when Iir_Kind_PSL_Inherit_Spec =>
+            return "PSL inherit";
          when Iir_Kind_Disconnection_Specification =>
             return "disconnection specification";
          when Iir_Kind_Step_Limit_Specification =>

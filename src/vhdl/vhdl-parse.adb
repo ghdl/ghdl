@@ -11225,6 +11225,36 @@ package body Vhdl.Parse is
    end Parse_Package;
 
    --  1850-2005 7.2 Verification units
+   --  inherit_spec ::=
+   --    [ NONTRANSITIVE ] INHERIT vunit_Name { , vunit_name } ;
+   function Parse_PSL_Inherit_Spec return Iir
+   is
+      N : Iir;
+      First, Last : Iir;
+      Name : Iir;
+   begin
+      Chain_Init (First, Last);
+      loop
+         N := Create_Iir (Iir_Kind_PSL_Inherit_Spec);
+         Set_Location (N);
+         Chain_Append (First, Last, N);
+
+         -- Skip 'inherit' or ','.
+         Scan;
+
+         Name := Parse_Name;
+         Set_Name (N, Name);
+
+         exit when Current_Token /= Tok_Comma;
+      end loop;
+
+      Expect_Scan (Tok_Semi_Colon,
+                   "';' expected at the end of an inherit spec");
+
+      return First;
+   end Parse_PSL_Inherit_Spec;
+
+   --  1850-2005 7.2 Verification units
    --  verification_unit ::=
    --    vunit_type PSL_Identifier [ ( hierachical_hdl_name ) ] {
    --      { inherit_spec }
@@ -11280,8 +11310,6 @@ package body Vhdl.Parse is
       --  Skip '{'.
       Expect_Scan (Tok_Left_Curly);
 
-      --  TODO: inherit spec.
-
       --  Vunit items.
       Last_Item := Null_Iir;
       loop
@@ -11326,7 +11354,7 @@ package body Vhdl.Parse is
                | Tok_Package
                | Tok_Default =>
                if Label /= Null_Identifier then
-                  Error_Msg_Sem
+                  Error_Msg_Parse
                     (+Loc, "label not allowed before a declaration");
                   Label := Null_Identifier;
                end if;
@@ -11347,6 +11375,20 @@ package body Vhdl.Parse is
                | Tok_Eof
                | Tok_Right_Curly =>
                exit;
+
+            when Tok_Inherit =>
+               if Label /= Null_Identifier then
+                  Error_Msg_Parse
+                    (+Loc, "label not allowed for inherit spec");
+                  Label := Null_Identifier;
+               end if;
+               if Last_Item /= Null_Iir
+                 and then Get_Kind (Last_Item) /= Iir_Kind_PSL_Inherit_Spec
+               then
+                  Error_Msg_Parse
+                    ("inherit spec must be placed at the beginning");
+               end if;
+               Item := Parse_PSL_Inherit_Spec;
 
             when others =>
                --  Do not recognize PSL keywords.  This is required for

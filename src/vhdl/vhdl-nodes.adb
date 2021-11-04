@@ -988,6 +988,7 @@ package body Vhdl.Nodes is
            | Iir_Kind_Library_Clause
            | Iir_Kind_Use_Clause
            | Iir_Kind_Context_Reference
+           | Iir_Kind_PSL_Inherit_Spec
            | Iir_Kind_Integer_Literal
            | Iir_Kind_Floating_Point_Literal
            | Iir_Kind_Null_Literal
@@ -2722,22 +2723,6 @@ package body Vhdl.Nodes is
       Set_Field1 (Vunit, Name);
    end Set_Hierarchical_Name;
 
-   function Get_Inherit_Spec_Chain (Vunit : Iir) return Iir is
-   begin
-      pragma Assert (Vunit /= Null_Iir);
-      pragma Assert (Has_Inherit_Spec_Chain (Get_Kind (Vunit)),
-                     "no field Inherit_Spec_Chain");
-      return Get_Field2 (Vunit);
-   end Get_Inherit_Spec_Chain;
-
-   procedure Set_Inherit_Spec_Chain (Vunit : Iir; Chain : Iir) is
-   begin
-      pragma Assert (Vunit /= Null_Iir);
-      pragma Assert (Has_Inherit_Spec_Chain (Get_Kind (Vunit)),
-                     "no field Inherit_Spec_Chain");
-      Set_Field2 (Vunit, Chain);
-   end Set_Inherit_Spec_Chain;
-
    function Get_Vunit_Item_Chain (Vunit : Iir) return Iir is
    begin
       pragma Assert (Vunit /= Null_Iir);
@@ -3516,6 +3501,22 @@ package body Vhdl.Nodes is
                      "no field Context_Reference_Chain");
       Set_Field3 (Target, Chain);
    end Set_Context_Reference_Chain;
+
+   function Get_Inherit_Spec_Chain (Target : Iir) return Iir is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Inherit_Spec_Chain (Get_Kind (Target)),
+                     "no field Inherit_Spec_Chain");
+      return Get_Field3 (Target);
+   end Get_Inherit_Spec_Chain;
+
+   procedure Set_Inherit_Spec_Chain (Target : Iir; Chain : Iir) is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Inherit_Spec_Chain (Get_Kind (Target)),
+                     "no field Inherit_Spec_Chain");
+      Set_Field3 (Target, Chain);
+   end Set_Inherit_Spec_Chain;
 
    function Get_Selected_Name (Target : Iir) return Iir is
    begin

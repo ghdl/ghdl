@@ -302,6 +302,7 @@ package body Vhdl.Utils is
                | Iir_Kind_Library_Clause
                | Iir_Kind_Use_Clause
                | Iir_Kind_Context_Reference
+               | Iir_Kind_PSL_Inherit_Spec
                | Iir_Kind_Library_Declaration
                | Iir_Kind_Foreign_Module
                | Iir_Kinds_Library_Unit

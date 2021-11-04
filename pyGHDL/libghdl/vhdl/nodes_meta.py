@@ -201,54 +201,54 @@ class fields(IntEnum):
     Macro_Expanded_Flag = 81
     Need_Instance_Bodies = 82
     Hierarchical_Name = 83
-    Inherit_Spec_Chain = 84
-    Vunit_Item_Chain = 85
-    Bound_Vunit_Chain = 86
-    Verification_Block_Configuration = 87
-    Block_Configuration = 88
-    Concurrent_Statement_Chain = 89
-    Chain = 90
-    Port_Chain = 91
-    Generic_Chain = 92
-    Type = 93
-    Subtype_Indication = 94
-    Discrete_Range = 95
-    Type_Definition = 96
-    Subtype_Definition = 97
-    Incomplete_Type_Declaration = 98
-    Interface_Type_Subprograms = 99
-    Nature_Definition = 100
-    Nature = 101
-    Subnature_Indication = 102
-    Mode = 103
-    Guarded_Signal_Flag = 104
-    Signal_Kind = 105
-    Base_Name = 106
-    Interface_Declaration_Chain = 107
-    Subprogram_Specification = 108
-    Sequential_Statement_Chain = 109
-    Simultaneous_Statement_Chain = 110
-    Subprogram_Body = 111
-    Overload_Number = 112
-    Subprogram_Depth = 113
-    Subprogram_Hash = 114
-    Impure_Depth = 115
-    Return_Type = 116
-    Implicit_Definition = 117
-    Uninstantiated_Subprogram_Name = 118
-    Default_Value = 119
-    Deferred_Declaration = 120
-    Deferred_Declaration_Flag = 121
-    Shared_Flag = 122
-    Design_Unit = 123
-    Block_Statement = 124
-    Signal_Driver = 125
-    Declaration_Chain = 126
-    File_Logical_Name = 127
-    File_Open_Kind = 128
-    Element_Position = 129
-    Use_Clause_Chain = 130
-    Context_Reference_Chain = 131
+    Vunit_Item_Chain = 84
+    Bound_Vunit_Chain = 85
+    Verification_Block_Configuration = 86
+    Block_Configuration = 87
+    Concurrent_Statement_Chain = 88
+    Chain = 89
+    Port_Chain = 90
+    Generic_Chain = 91
+    Type = 92
+    Subtype_Indication = 93
+    Discrete_Range = 94
+    Type_Definition = 95
+    Subtype_Definition = 96
+    Incomplete_Type_Declaration = 97
+    Interface_Type_Subprograms = 98
+    Nature_Definition = 99
+    Nature = 100
+    Subnature_Indication = 101
+    Mode = 102
+    Guarded_Signal_Flag = 103
+    Signal_Kind = 104
+    Base_Name = 105
+    Interface_Declaration_Chain = 106
+    Subprogram_Specification = 107
+    Sequential_Statement_Chain = 108
+    Simultaneous_Statement_Chain = 109
+    Subprogram_Body = 110
+    Overload_Number = 111
+    Subprogram_Depth = 112
+    Subprogram_Hash = 113
+    Impure_Depth = 114
+    Return_Type = 115
+    Implicit_Definition = 116
+    Uninstantiated_Subprogram_Name = 117
+    Default_Value = 118
+    Deferred_Declaration = 119
+    Deferred_Declaration_Flag = 120
+    Shared_Flag = 121
+    Design_Unit = 122
+    Block_Statement = 123
+    Signal_Driver = 124
+    Declaration_Chain = 125
+    File_Logical_Name = 126
+    File_Open_Kind = 127
+    Element_Position = 128
+    Use_Clause_Chain = 129
+    Context_Reference_Chain = 130
+    Inherit_Spec_Chain = 131
     Selected_Name = 132
     Type_Declarator = 133
     Complete_Type_Definition = 134
@@ -1128,12 +1128,6 @@ def Has_Hierarchical_Name(kind: IirKind) -> bool:
 
 
 @export
-@BindToLibGHDL("vhdl__nodes_meta__has_inherit_spec_chain")
-def Has_Inherit_Spec_Chain(kind: IirKind) -> bool:
-    """"""
-
-
-@export
 @BindToLibGHDL("vhdl__nodes_meta__has_vunit_item_chain")
 def Has_Vunit_Item_Chain(kind: IirKind) -> bool:
     """"""
@@ -1412,6 +1406,12 @@ def Has_Use_Clause_Chain(kind: IirKind) -> bool:
 @export
 @BindToLibGHDL("vhdl__nodes_meta__has_context_reference_chain")
 def Has_Context_Reference_Chain(kind: IirKind) -> bool:
+    """"""
+
+
+@export
+@BindToLibGHDL("vhdl__nodes_meta__has_inherit_spec_chain")
+def Has_Inherit_Spec_Chain(kind: IirKind) -> bool:
     """"""
 
 
