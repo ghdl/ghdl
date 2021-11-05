@@ -152,23 +152,25 @@ package body Vhdl.Configuration is
             --  Add entity and architecture.
             --  find all sub-configuration
             Load_Design_Unit (Unit, From);
-            Lib_Unit := Get_Library_Unit (Unit);
-            Add_Design_Unit (Get_Design_Unit (Get_Entity (Lib_Unit)), Loc);
-            declare
-               Blk : Iir_Block_Configuration;
-               Prev_Configuration : Iir_Configuration_Declaration;
-               Arch : Iir;
-            begin
-               Prev_Configuration := Current_Configuration;
-               Current_Configuration := Lib_Unit;
-               Blk := Get_Block_Configuration (Lib_Unit);
-               Add_Design_Block_Configuration (Blk);
-               Current_Configuration := Prev_Configuration;
-               Arch := Strip_Denoting_Name (Get_Block_Specification (Blk));
-               if Arch /= Null_Iir then
-                  Add_Design_Unit (Get_Design_Unit (Arch), Loc);
-               end if;
-            end;
+            if Nbr_Errors = 0 then
+               Lib_Unit := Get_Library_Unit (Unit);
+               Add_Design_Unit (Get_Design_Unit (Get_Entity (Lib_Unit)), Loc);
+               declare
+                  Blk : Iir_Block_Configuration;
+                  Prev_Configuration : Iir_Configuration_Declaration;
+                  Arch : Iir;
+               begin
+                  Prev_Configuration := Current_Configuration;
+                  Current_Configuration := Lib_Unit;
+                  Blk := Get_Block_Configuration (Lib_Unit);
+                  Add_Design_Block_Configuration (Blk);
+                  Current_Configuration := Prev_Configuration;
+                  Arch := Strip_Denoting_Name (Get_Block_Specification (Blk));
+                  if Arch /= Null_Iir then
+                     Add_Design_Unit (Get_Design_Unit (Arch), Loc);
+                  end if;
+               end;
+            end if;
          when Iir_Kind_Architecture_Body =>
             --  Add entity
             --  find all entity/architecture/configuration instantiation
