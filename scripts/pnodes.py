@@ -241,6 +241,9 @@ def read_kinds(filename):
 # Read functions
 def read_methods(filename):
     lr = linereader(filename)
+    # Note: this is a list so that the output is deterministic.
+    # Duplicates are not detected, but they will be by the Ada compiler.
+    # TODO: use an ordered dict ?
     funcs = []
     pat_field = re.compile(r"   --  Field: ([\w,]+)( \w+)?( \(\w+\))?\n")
     pat_conv = re.compile(r"^ \((\w+)\)$")
