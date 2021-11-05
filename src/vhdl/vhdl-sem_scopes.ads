@@ -136,6 +136,9 @@ package Vhdl.Sem_Scopes is
    --  regions.
    procedure Add_Context_Clauses (Unit : Iir_Design_Unit);
 
+   --  Handle PSL inherit spec.
+   procedure Add_Inherit_Spec (Spec : Iir);
+
    -- Add declarations from an entity into the current declarative region.
    -- This is needed when an architecture is analysed.
    procedure Add_Entity_Declarations (Entity : Iir_Entity_Declaration);

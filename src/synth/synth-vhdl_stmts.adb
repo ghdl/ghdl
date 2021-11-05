@@ -3769,7 +3769,8 @@ package body Synth.Vhdl_Stmts is
       while Item /= Null_Node loop
          case Get_Kind (Item) is
             when Iir_Kind_Psl_Default_Clock
-              | Iir_Kind_Psl_Declaration =>
+               | Iir_Kind_Psl_Declaration
+               | Iir_Kind_PSL_Inherit_Spec =>
                null;
             when Iir_Kind_Psl_Assert_Directive =>
                Synth_Psl_Assert_Directive (Syn_Inst, Item);
@@ -3810,11 +3811,12 @@ package body Synth.Vhdl_Stmts is
       while Item /= Null_Node loop
          case Get_Kind (Item) is
             when Iir_Kind_Psl_Default_Clock
-              | Iir_Kind_Psl_Assert_Directive
-              | Iir_Kind_Psl_Assume_Directive
-              | Iir_Kind_Psl_Restrict_Directive
-              | Iir_Kind_Psl_Cover_Directive
-              | Iir_Kind_Psl_Declaration =>
+               | Iir_Kind_Psl_Assert_Directive
+               | Iir_Kind_Psl_Assume_Directive
+               | Iir_Kind_Psl_Restrict_Directive
+               | Iir_Kind_Psl_Cover_Directive
+               | Iir_Kind_Psl_Declaration
+               | Iir_Kind_PSL_Inherit_Spec =>
                null;
             when Iir_Kinds_Concurrent_Signal_Assignment
                | Iir_Kinds_Process_Statement
@@ -3824,15 +3826,15 @@ package body Synth.Vhdl_Stmts is
                | Iir_Kind_Component_Instantiation_Statement =>
                null;
             when Iir_Kind_Signal_Declaration
-              | Iir_Kind_Constant_Declaration
-              | Iir_Kind_Function_Declaration
-              | Iir_Kind_Procedure_Declaration
-              | Iir_Kind_Function_Body
-              | Iir_Kind_Procedure_Body
-              | Iir_Kind_Attribute_Declaration
-              | Iir_Kind_Attribute_Specification
-              | Iir_Kind_Object_Alias_Declaration
-              | Iir_Kind_Non_Object_Alias_Declaration =>
+               | Iir_Kind_Constant_Declaration
+               | Iir_Kind_Function_Declaration
+               | Iir_Kind_Procedure_Declaration
+               | Iir_Kind_Function_Body
+               | Iir_Kind_Procedure_Body
+               | Iir_Kind_Attribute_Declaration
+               | Iir_Kind_Attribute_Specification
+               | Iir_Kind_Object_Alias_Declaration
+               | Iir_Kind_Non_Object_Alias_Declaration =>
                Finalize_Declaration (Syn_Inst, Item, False);
             when others =>
                Error_Kind ("synth_verification_unit(2)", Item);

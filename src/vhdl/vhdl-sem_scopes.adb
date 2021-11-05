@@ -1560,6 +1560,28 @@ package body Vhdl.Sem_Scopes is
       end loop;
    end Add_Use_Clause;
 
+   procedure Add_Inherit_Spec (Spec : Iir)
+   is
+      Name : constant Iir := Get_Name (Spec);
+      Unit : Iir;
+      Item : Iir;
+   begin
+      if Name = Null_Iir then
+         return;
+      end if;
+      Unit := Get_Named_Entity (Name);
+      Item := Get_Vunit_Item_Chain (Unit);
+      while Item /= Null_Iir loop
+         case Get_Kind (Item) is
+            when Iir_Kind_Psl_Declaration =>
+               Potentially_Add_Name (Item);
+            when others =>
+               Error_Kind ("add_inherit_spec", Item);
+         end case;
+         Item := Get_Chain (Item);
+      end loop;
+   end Add_Inherit_Spec;
+
    --  Debugging subprograms.
    procedure Disp_All_Names;
    pragma Unreferenced (Disp_All_Names);

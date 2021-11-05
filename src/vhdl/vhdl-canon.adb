@@ -3412,7 +3412,8 @@ package body Vhdl.Canon is
       Item := Get_Vunit_Item_Chain (Decl);
       while Item /= Null_Iir loop
          case Get_Kind (Item) is
-            when Iir_Kind_Psl_Default_Clock =>
+            when Iir_Kind_Psl_Default_Clock
+               | Iir_Kind_PSL_Inherit_Spec =>
                null;
             when Iir_Kind_Psl_Assert_Directive =>
                Canon_Psl_Assert_Directive (Item);

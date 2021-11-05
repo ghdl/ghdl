@@ -11233,11 +11233,19 @@ package body Vhdl.Parse is
       First, Last : Iir;
       Name : Iir;
    begin
-      Chain_Init (First, Last);
+      First := Null_Iir;
+      Last := Null_Iir;
       loop
          N := Create_Iir (Iir_Kind_PSL_Inherit_Spec);
          Set_Location (N);
-         Chain_Append (First, Last, N);
+
+         --  Append.
+         if First = Null_Iir then
+            First := N;
+         else
+            Set_Inherit_Spec_Chain (Last, N);
+         end if;
+         Last := N;
 
          -- Skip 'inherit' or ','.
          Scan;

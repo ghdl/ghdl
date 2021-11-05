@@ -16,6 +16,7 @@
 
 with Types; use Types;
 with Errorout; use Errorout;
+with Libraries;
 
 with PSL.Types; use PSL.Types;
 with PSL.Nodes; use PSL.Nodes;
@@ -988,6 +989,37 @@ package body Vhdl.Sem_Psl is
       Current_Psl_Default_Clock := Stmt;
    end Sem_Psl_Default_Clock;
 
+   procedure Sem_Psl_Inherit_Spec (Item : Iir)
+   is
+      Name : Iir;
+      Unit : Iir;
+   begin
+      --  Resolve name
+      Name := Get_Name (Item);
+      if Get_Kind (Name) = Iir_Kind_Simple_Name then
+         Unit := Sem_Lib.Load_Primary_Unit
+           (Libraries.Work_Library, Get_Identifier (Name), Item);
+         if Unit = Null_Iir then
+            Error_Msg_Sem (+Name, "unit %n was not analyzed", +Name);
+            return;
+         end if;
+         Unit := Get_Library_Unit (Unit);
+         Set_Named_Entity (Name, Unit);
+      else
+         Name := Sem_Names.Sem_Denoting_Name (Name);
+         Unit := Get_Named_Entity (Name);
+      end if;
+
+      if Get_Kind (Unit) not in Iir_Kinds_Verification_Unit then
+         Error_Msg_Sem (+Name, "%n must denote a verification unit", +Name);
+         Set_Named_Entity (Name, Null_Iir);
+         return;
+      end if;
+
+      --  Add items.
+      Sem_Scopes.Add_Inherit_Spec (Item);
+   end Sem_Psl_Inherit_Spec;
+
    function Sem_Psl_Instance_Name (Name : Iir) return Iir
    is
       Prefix : constant Iir := Get_Prefix (Name);
@@ -1128,40 +1160,45 @@ package body Vhdl.Sem_Psl is
       Prev_Item : Iir;
       Attr_Spec_Chain : Iir;
    begin
-      if Hier_Name = Null_Iir then
+      if Hier_Name /= Null_Iir then
          --  Hierarchical name is optional.
          --  If the unit is not bound, the names are not bound too.
-         return;
-      end if;
-      Sem_Hierarchical_Name (Hier_Name, Unit);
+         Sem_Hierarchical_Name (Hier_Name, Unit);
 
-      --  Import declarations.
-      Entity := Get_Entity_Name (Hier_Name);
-      if Entity = Null_Iir then
-         return;
-      end if;
-      Entity := Get_Named_Entity (Entity);
-      if Entity = Null_Iir then
-         return;
-      end if;
-
-      Arch := Get_Architecture (Hier_Name);
-      if Arch /= Null_Iir then
-         Arch := Get_Named_Entity (Arch);
-         if Arch = Null_Iir then
+         --  Import declarations.
+         Entity := Get_Entity_Name (Hier_Name);
+         if Entity = Null_Iir then
             return;
          end if;
+         Entity := Get_Named_Entity (Entity);
+         if Entity = Null_Iir then
+            return;
+         end if;
+
+         Arch := Get_Architecture (Hier_Name);
+         if Arch /= Null_Iir then
+            Arch := Get_Named_Entity (Arch);
+            if Arch = Null_Iir then
+               return;
+            end if;
+         end if;
+
+         Sem_Scopes.Add_Context_Clauses (Get_Design_Unit (Entity));
+      else
+         Entity := Null_Iir;
+         Arch := Null_Iir;
       end if;
 
-      Sem_Scopes.Add_Context_Clauses (Get_Design_Unit (Entity));
-
       Sem_Scopes.Open_Declarative_Region;
-      Set_Is_Within_Flag (Entity, True);
-      Sem_Scopes.Add_Entity_Declarations (Entity);
 
-      if Arch /= Null_Iir then
-         Sem_Scopes.Open_Scope_Extension;
-         Sem_Scopes.Extend_Scope_Of_Block_Declarations (Arch);
+      if Entity /= Null_Iir then
+         Set_Is_Within_Flag (Entity, True);
+         Sem_Scopes.Add_Entity_Declarations (Entity);
+
+         if Arch /= Null_Iir then
+            Sem_Scopes.Open_Scope_Extension;
+            Sem_Scopes.Extend_Scope_Of_Block_Declarations (Arch);
+         end if;
       end if;
 
       Attr_Spec_Chain := Null_Iir;
@@ -1169,6 +1206,8 @@ package body Vhdl.Sem_Psl is
       Item := Get_Vunit_Item_Chain (Unit);
       while Item /= Null_Iir loop
          case Get_Kind (Item) is
+            when Iir_Kind_PSL_Inherit_Spec =>
+               Sem_Psl_Inherit_Spec (Item);
             when Iir_Kind_Psl_Default_Clock =>
                Sem_Psl_Default_Clock (Item);
             when Iir_Kind_Psl_Assert_Directive =>
@@ -1220,7 +1259,9 @@ package body Vhdl.Sem_Psl is
       end if;
 
       Sem_Scopes.Close_Declarative_Region;
-      Set_Is_Within_Flag (Entity, False);
+      if Entity /= Null_Iir then
+         Set_Is_Within_Flag (Entity, False);
+      end if;
    end Sem_Psl_Verification_Unit;
 
 end Vhdl.Sem_Psl;
