@@ -755,6 +755,10 @@ package body Ghdlcomp is
       --  Create list of files.
       Files_List := Build_Dependence (Lib_Id, Prim_Id, Sec_Id);
 
+      if Errorout.Nbr_Errors /= 0 then
+         raise Errorout.Compilation_Error;
+      end if;
+
       --  Unmark all libraries.
       Lib := Libraries.Std_Library;
       while Lib /= Null_Iir loop
