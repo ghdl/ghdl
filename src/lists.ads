@@ -24,6 +24,8 @@ package Lists is
    Null_List : constant List_Type := 0;
    List_All : constant List_Type := 1;
 
+   subtype List_Valid_Type is List_Type range List_All + 1 .. List_Type'Last;
+
    -----------
    -- Lists --
    -----------
@@ -99,7 +101,7 @@ package Lists is
    --  end loop;
    type Iterator is private;
 
-   function Iterate (List : List_Type) return Iterator;
+   function Iterate (List : List_Valid_Type) return Iterator;
    function Is_Valid (It : Iterator) return Boolean;
    procedure Next (It : in out Iterator);
    function Get_Element (It : Iterator) return El_Type;

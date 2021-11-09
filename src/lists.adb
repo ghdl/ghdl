@@ -169,7 +169,7 @@ package body Lists is
       Chunk_Free_List := No_Chunk_Index;
    end Initialize;
 
-   function Iterate (List : List_Type) return Iterator
+   function Iterate (List : List_Valid_Type) return Iterator
    is
       L : List_Record renames Listt.Table (List);
    begin
