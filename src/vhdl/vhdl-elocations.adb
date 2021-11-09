@@ -207,7 +207,6 @@ package body Vhdl.Elocations is
            | Iir_Kind_Error
            | Iir_Kind_Design_File
            | Iir_Kind_Design_Unit
-           | Iir_Kind_Foreign_Module
            | Iir_Kind_Use_Clause
            | Iir_Kind_Context_Reference
            | Iir_Kind_PSL_Inherit_Spec
@@ -266,11 +265,13 @@ package body Vhdl.Elocations is
            | Iir_Kind_Physical_Type_Definition
            | Iir_Kind_Range_Expression
            | Iir_Kind_Wildcard_Type_Definition
+           | Iir_Kind_Foreign_Vector_Type_Definition
            | Iir_Kind_Subtype_Definition
            | Iir_Kind_Scalar_Nature_Definition
            | Iir_Kind_Array_Nature_Definition
            | Iir_Kind_Array_Subnature_Definition
            | Iir_Kind_Overload_List
+           | Iir_Kind_Foreign_Module
            | Iir_Kind_Vmode_Declaration
            | Iir_Kind_Vprop_Declaration
            | Iir_Kind_Vunit_Declaration

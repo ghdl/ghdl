@@ -50,18 +50,19 @@ package body Synthesis is
                           Encoding : Name_Encoding) return Module
    is
       Base : Base_Instance_Acc;
+      Unit : Iir;
    begin
       Base := Make_Base_Instance;
 
-      case Iir_Kinds_Design_Unit (Get_Kind (Design)) is
-         when Iir_Kind_Foreign_Module =>
-            if Synth_Top_Foreign = null then
-               raise Internal_Error;
-            end if;
-            Synth_Top_Foreign (Base, Get_Foreign_Node (Design), Encoding);
-         when Iir_Kind_Design_Unit =>
-            Synth_Top_Entity (Base, Design, Encoding, Inst);
-      end case;
+      Unit := Get_Library_Unit (Design);
+      if Get_Kind (Unit) = Iir_Kind_Foreign_Module then
+         if Synth_Top_Foreign = null then
+            raise Internal_Error;
+         end if;
+         Synth_Top_Foreign (Base, Get_Foreign_Node (Unit), Encoding);
+      else
+         Synth_Top_Entity (Base, Design, Encoding, Inst);
+      end if;
 
       Synth.Vhdl_Insts.Synth_All_Instances;
 

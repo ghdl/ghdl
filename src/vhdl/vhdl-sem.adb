@@ -3497,6 +3497,8 @@ package body Vhdl.Sem is
                Sem_Context_Declaration (Library_Unit);
             when Iir_Kinds_Verification_Unit =>
                Sem_Psl.Sem_Psl_Verification_Unit (Library_Unit);
+            when Iir_Kind_Foreign_Module =>
+               raise Internal_Error;
          end case;
       end if;
 

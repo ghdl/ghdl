@@ -231,7 +231,8 @@ package body Libraries is
          Lib_Unit := Get_Library_Unit (Design_Unit);
          case Iir_Kinds_Library_Unit (Get_Kind (Lib_Unit)) is
             when Iir_Kinds_Primary_Unit
-              | Iir_Kind_Package_Body =>
+               | Iir_Kind_Package_Body
+               | Iir_Kind_Foreign_Module =>
                Id := Get_Identifier (Lib_Unit);
             when Iir_Kind_Architecture_Body =>
                --  Architectures are put with the entity identifier.
@@ -856,7 +857,8 @@ package body Libraries is
             Lib_Unit := Get_Library_Unit (Unit);
             case Iir_Kinds_Library_Unit (Get_Kind (Lib_Unit)) is
                when Iir_Kinds_Primary_Unit
-                 | Iir_Kind_Package_Body =>
+                  | Iir_Kind_Package_Body
+                  | Iir_Kind_Foreign_Module =>
                   return Get_Identifier (Dep) = Get_Identifier (Lib_Unit);
                when Iir_Kind_Architecture_Body =>
                   return False;
@@ -938,7 +940,11 @@ package body Libraries is
          while Is_Valid (File) loop
             Un := Get_First_Design_Unit (File);
             while Is_Valid (Un) loop
-               List := Get_Dependence_List (Un);
+               if Get_Kind (Un) /= Iir_Kind_Foreign_Module then
+                  List := Get_Dependence_List (Un);
+               else
+                  List := Null_Iir_List;
+               end if;
 
                if List /= Null_Iir_List
                  and then Get_Date (Un) /= Date_Obsolete
@@ -1588,18 +1594,14 @@ package body Libraries is
          if Get_Identifier (Unit) = Name
            and then Get_Library (Get_Design_File (Unit)) = Library
          then
-            case Iir_Kinds_Design_Unit (Get_Kind (Unit)) is
-               when Iir_Kind_Foreign_Module =>
+            Lib_Unit := Get_Library_Unit (Unit);
+            case Iir_Kinds_Library_Unit (Get_Kind (Lib_Unit)) is
+               when Iir_Kinds_Primary_Unit
+                  | Iir_Kind_Foreign_Module =>
+                  --  Only return a primary unit.
                   return Unit;
-               when Iir_Kind_Design_Unit =>
-                  Lib_Unit := Get_Library_Unit (Unit);
-                  case Iir_Kinds_Library_Unit (Get_Kind (Lib_Unit)) is
-                     when Iir_Kinds_Primary_Unit =>
-                        --  Only return a primary unit.
-                        return Unit;
-                     when Iir_Kinds_Secondary_Unit =>
-                        null;
-                  end case;
+               when Iir_Kinds_Secondary_Unit =>
+                  null;
             end case;
          end if;
          Unit := Get_Hash_Chain (Unit);
@@ -1622,10 +1624,12 @@ package body Libraries is
    begin
       Design_Unit := Unit_Hash_Table (Primary_Ident mod Unit_Hash_Length);
       while Design_Unit /= Null_Iir loop
-         Library_Unit := Get_Library_Unit (Design_Unit);
 
          --  The secondary is always in the same library as the primary.
-         if Get_Library (Get_Design_File (Design_Unit)) = Lib_Prim then
+         if Get_Kind (Design_Unit) /= Iir_Kind_Foreign_Module
+           and then Get_Library (Get_Design_File (Design_Unit)) = Lib_Prim
+         then
+            Library_Unit := Get_Library_Unit (Design_Unit);
             -- Set design_unit to null iff this is not the correct
             -- design unit.
             case Get_Kind (Library_Unit) is
@@ -1660,33 +1664,23 @@ package body Libraries is
    is
       Res : Iir_Design_Unit := Null_Iir;
       Unit : Iir_Design_Unit;
-      Unit1 : Iir;
-
    begin
       Res := Null_Iir;
       Unit := Unit_Hash_Table (Name mod Unit_Hash_Length);
       while Unit /= Null_Iir loop
          if Get_Identifier (Unit) = Name then
-            case Iir_Kinds_Design_Unit (Get_Kind (Unit)) is
-               when Iir_Kind_Foreign_Module =>
-                  Unit1 := Unit;
-               when Iir_Kind_Design_Unit =>
-                  if Get_Kind (Get_Library_Unit (Unit))
-                    = Iir_Kind_Entity_Declaration
-                  then
-                     Unit1 := Unit;
+            case Get_Kind (Get_Library_Unit (Unit)) is
+               when Iir_Kind_Entity_Declaration
+                 | Iir_Kind_Foreign_Module =>
+                  if Res /= Null_Iir then
+                     --  Many entities.
+                     return Null_Iir;
                   else
-                     Unit1 := Null_Iir;
+                     Res := Unit;
                   end if;
+               when others =>
+                  null;
             end case;
-            if Unit1 /= Null_Iir then
-               if Res = Null_Iir then
-                  Res := Unit;
-               else
-                  --  Many entities.
-                  return Null_Iir;
-               end if;
-            end if;
          end if;
          Unit := Get_Hash_Chain (Unit);
       end loop;

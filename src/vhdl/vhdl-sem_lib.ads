@@ -59,4 +59,11 @@ package Vhdl.Sem_Lib is
 
    --  Free the dependence list of DESIGN.  For libghdl.
    procedure Free_Dependence_List (Design : Iir_Design_Unit);
+
+   type Convert_Foreign_Unit_Acc is access
+     function (Unit : Iir) return Boolean;
+
+   --  Function to convert a foreign unit.
+   --  Return True in case of success.
+   Convert_Foreign_Unit : Convert_Foreign_Unit_Acc;
 end Vhdl.Sem_Lib;

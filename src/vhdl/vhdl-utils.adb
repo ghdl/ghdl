@@ -304,7 +304,6 @@ package body Vhdl.Utils is
                | Iir_Kind_Context_Reference
                | Iir_Kind_PSL_Inherit_Spec
                | Iir_Kind_Library_Declaration
-               | Iir_Kind_Foreign_Module
                | Iir_Kinds_Library_Unit
                | Iir_Kind_Component_Declaration
                | Iir_Kind_Function_Declaration
@@ -316,6 +315,7 @@ package body Vhdl.Utils is
                | Iir_Kind_Subnature_Declaration
                | Iir_Kinds_Type_Declaration
                | Iir_Kinds_Type_And_Subtype_Definition
+               | Iir_Kind_Foreign_Vector_Type_Definition
                | Iir_Kinds_Nature_Definition
                | Iir_Kinds_Subnature_Definition
                | Iir_Kind_Wildcard_Type_Definition
@@ -1015,6 +1015,7 @@ package body Vhdl.Utils is
                | Iir_Kind_Incomplete_Type_Definition
                | Iir_Kind_Interface_Type_Definition
                | Iir_Kind_Wildcard_Type_Definition
+               | Iir_Kind_Foreign_Vector_Type_Definition
                | Iir_Kind_Error =>
                return Res;
             when Iir_Kind_Access_Subtype_Definition

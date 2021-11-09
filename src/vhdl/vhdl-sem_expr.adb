@@ -34,6 +34,7 @@ with Vhdl.Sem_Assocs; use Vhdl.Sem_Assocs;
 with Vhdl.Sem_Decls;
 with Vhdl.Sem_Psl;
 with Vhdl.Xrefs; use Vhdl.Xrefs;
+with Vhdl.Ieee.Std_Logic_1164;
 
 package body Vhdl.Sem_Expr is
 
@@ -148,6 +149,29 @@ package body Vhdl.Sem_Expr is
                   return Via_Conversion;
                end if;
             end if;
+         when Iir_Kind_Foreign_Vector_Type_Definition =>
+            declare
+               use Vhdl.Ieee.Std_Logic_1164;
+               El_Type : Iir;
+            begin
+               if Right = Bit_Type_Definition
+                 or else Right = Boolean_Type_Definition
+                 or else Right = Bit_Vector_Type_Definition
+                 or else Right = Std_Logic_Type
+                 or else Right = Std_Ulogic_Type
+               then
+                  return Fully_Compatible;
+               end if;
+               if Get_Kind (Right) = Iir_Kind_Array_Type_Definition then
+                  El_Type := Get_Base_Type (Get_Element_Subtype (Right));
+                  if El_Type = Std_Logic_Type
+                    or else El_Type = Std_Ulogic_Type
+                    or else El_Type = Bit_Type_Definition
+                  then
+                     return Fully_Compatible;
+                  end if;
+               end if;
+            end;
          when others =>
             null;
       end case;
@@ -5597,7 +5621,7 @@ package body Vhdl.Sem_Expr is
          --  with A_TYPE set to NULL_IIR and results in setting the type of
          --  EXPR.
          if A_Type /= Null_Iir
-           and then Are_Types_Compatible (Expr_Type, A_Type) = Not_Compatible
+           and then Are_Types_Compatible (A_Type, Expr_Type) = Not_Compatible
          then
             if not Is_Error (Expr_Type) then
                Error_Not_Match (Expr, A_Type);

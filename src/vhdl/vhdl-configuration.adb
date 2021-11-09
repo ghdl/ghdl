@@ -113,7 +113,7 @@ package body Vhdl.Configuration is
       --  Note: a design unit may be referenced but unused.
       --  (eg: component specification which does not apply).
       List := Get_Dependence_List (Unit);
-      It := List_Iterate (List);
+      It := List_Iterate_Safe (List);
       while Is_Valid (It) loop
          El := Get_Element (It);
          El := Libraries.Find_Design_Unit (El);
@@ -186,6 +186,7 @@ package body Vhdl.Configuration is
          when Iir_Kinds_Verification_Unit =>
             Add_Verification_Unit_Items (Lib_Unit);
          when Iir_Kind_Entity_Declaration
+           | Iir_Kind_Foreign_Module
            | Iir_Kind_Package_Body
            | Iir_Kind_Context_Declaration =>
             null;
@@ -311,98 +312,101 @@ package body Vhdl.Configuration is
       end loop;
    end Add_Verification_Unit_Items;
 
-   procedure Add_Design_Aspect (Aspect : Iir; Add_Default : Boolean)
+   --  ASPECT is an entity_aspect_entity.
+   procedure Add_Design_Aspect_Entity (Aspect : Iir; Add_Default : Boolean)
    is
-      use Libraries;
-
-      Loc : Location_Type;
+      Loc : constant Location_Type := Get_Location (Aspect);
+      Entity_Lib : constant Iir := Get_Entity (Aspect);
       Entity : Iir;
       Arch_Name : Iir;
       Arch : Iir;
       Config : Iir;
       Arch_Lib : Iir;
       Id : Name_Id;
-      Entity_Lib : Iir;
+   begin
+      if Entity_Lib = Null_Iir then
+         --  In case of error (using -c).
+         return;
+      end if;
+
+      --  Add the entity.
+      Entity := Get_Design_Unit (Entity_Lib);
+      Add_Design_Unit (Entity, Loc);
+
+      if Get_Kind (Entity_Lib) = Iir_Kind_Foreign_Module then
+         return;
+      end if;
+
+      --  Extract and add the architecture.
+      Arch_Name := Get_Architecture (Aspect);
+      if Arch_Name /= Null_Iir then
+         case Get_Kind (Arch_Name) is
+            when Iir_Kind_Simple_Name =>
+               Id := Get_Identifier (Arch_Name);
+               Arch := Load_Secondary_Unit (Entity, Id, Aspect);
+               if Arch = Null_Iir then
+                  Error_Msg_Elab ("cannot find architecture %i of %n",
+                                  (+Id, +Entity_Lib));
+                  return;
+               else
+                  Set_Named_Entity (Arch_Name, Get_Library_Unit (Arch));
+               end if;
+            when Iir_Kind_Reference_Name =>
+               Arch := Get_Design_Unit (Get_Named_Entity (Arch_Name));
+            when others =>
+               Error_Kind ("add_design_aspect", Arch_Name);
+         end case;
+      else
+         Arch := Libraries.Get_Latest_Architecture (Entity_Lib);
+         if Arch = Null_Iir then
+            Error_Msg_Elab
+              (Aspect, "no architecture in library for %n", +Entity_Lib);
+            return;
+         end if;
+         Arch := Get_Design_Unit (Arch);
+      end if;
+      Load_Design_Unit (Arch, Aspect);
+
+      --  Add the default configuration if required.  Must be done
+      --  before the architecture in case of recursive instantiation:
+      --  the configuration depends on the architecture.
+      if Add_Default then
+         Arch_Lib := Get_Library_Unit (Arch);
+
+         --  The default configuration may already exist due to a
+         --  previous instantiation.  Create it if it doesn't exist.
+         Config := Get_Default_Configuration_Declaration (Arch_Lib);
+         if Is_Null (Config) then
+            Config := Vhdl.Canon.Create_Default_Configuration_Declaration
+              (Arch_Lib);
+            Set_Default_Configuration_Declaration (Arch_Lib, Config);
+         end if;
+
+         if Get_Configuration_Mark_Flag (Config)
+           and then not Get_Configuration_Done_Flag (Config)
+         then
+            --  Recursive instantiation.
+            return;
+         else
+            Add_Design_Unit (Config, Loc);
+         end if;
+      end if;
+
+      --  Otherwise, simply the architecture.
+      Add_Design_Unit (Arch, Loc);
+   end Add_Design_Aspect_Entity;
+
+   procedure Add_Design_Aspect (Aspect : Iir; Add_Default : Boolean) is
    begin
       if Aspect = Null_Iir then
          return;
       end if;
-      Loc := Get_Location (Aspect);
       case Get_Kind (Aspect) is
          when Iir_Kind_Entity_Aspect_Entity =>
-            --  Add the entity.
-            Entity_Lib := Get_Entity (Aspect);
-            if Entity_Lib = Null_Iir then
-               --  In case of error (using -c).
-               return;
-            end if;
-            if Get_Kind (Entity_Lib) = Iir_Kind_Foreign_Module then
-               return;
-            end if;
-            Entity := Get_Design_Unit (Entity_Lib);
-            Add_Design_Unit (Entity, Loc);
-
-            --  Extract and add the architecture.
-            Arch_Name := Get_Architecture (Aspect);
-            if Arch_Name /= Null_Iir then
-               case Get_Kind (Arch_Name) is
-                  when Iir_Kind_Simple_Name =>
-                     Id := Get_Identifier (Arch_Name);
-                     Arch := Load_Secondary_Unit (Entity, Id, Aspect);
-                     if Arch = Null_Iir then
-                        Error_Msg_Elab ("cannot find architecture %i of %n",
-                                        (+Id, +Entity_Lib));
-                        return;
-                     else
-                        Set_Named_Entity (Arch_Name, Get_Library_Unit (Arch));
-                     end if;
-                  when Iir_Kind_Reference_Name =>
-                     Arch := Get_Design_Unit (Get_Named_Entity (Arch_Name));
-                  when others =>
-                     Error_Kind ("add_design_aspect", Arch_Name);
-               end case;
-            else
-               Arch := Get_Latest_Architecture (Entity_Lib);
-               if Arch = Null_Iir then
-                  Error_Msg_Elab (Aspect, "no architecture in library for %n",
-                                  +Entity_Lib);
-                  return;
-               end if;
-               Arch := Get_Design_Unit (Arch);
-            end if;
-            Load_Design_Unit (Arch, Aspect);
-
-            --  Add the default configuration if required.  Must be done
-            --  before the architecture in case of recursive instantiation:
-            --  the configuration depends on the architecture.
-            if Add_Default then
-               Arch_Lib := Get_Library_Unit (Arch);
-
-               --  The default configuration may already exist due to a
-               --  previous instantiation.  Create it if it doesn't exist.
-               Config := Get_Default_Configuration_Declaration (Arch_Lib);
-               if Is_Null (Config) then
-                  Config := Vhdl.Canon.Create_Default_Configuration_Declaration
-                    (Arch_Lib);
-                  Set_Default_Configuration_Declaration (Arch_Lib, Config);
-               end if;
-
-               if Get_Configuration_Mark_Flag (Config)
-                 and then not Get_Configuration_Done_Flag (Config)
-               then
-                  --  Recursive instantiation.
-                  return;
-               else
-                  Add_Design_Unit (Config, Loc);
-               end if;
-            end if;
-
-            --  Otherwise, simply the architecture.
-            Add_Design_Unit (Arch, Loc);
-
+            Add_Design_Aspect_Entity (Aspect, Add_Default);
          when Iir_Kind_Entity_Aspect_Configuration =>
-            Add_Design_Unit
-              (Get_Design_Unit (Get_Configuration (Aspect)), Loc);
+            Add_Design_Unit (Get_Design_Unit (Get_Configuration (Aspect)),
+                             Get_Location (Aspect));
          when Iir_Kind_Entity_Aspect_Open =>
             null;
          when others =>
@@ -937,27 +941,24 @@ package body Vhdl.Configuration is
             end if;
          end if;
 
-         case Iir_Kinds_Design_Unit (Get_Kind (Design)) is
-            when Iir_Kind_Design_Unit =>
+         Lib_Unit := Get_Library_Unit (Design);
+         case Iir_Kinds_Library_Unit (Get_Kind (Lib_Unit)) is
+            when Iir_Kind_Architecture_Body
+              | Iir_Kind_Configuration_Declaration
+              | Iir_Kinds_Verification_Unit =>
+               Load_Design_Unit (Design, Loc_Err);
+            when Iir_Kind_Entity_Declaration =>
+               Load_Design_Unit (Design, Loc_Err);
+               --  Library unit has changed (loaded).
                Lib_Unit := Get_Library_Unit (Design);
-               case Iir_Kinds_Library_Unit (Get_Kind (Lib_Unit)) is
-                  when Iir_Kind_Architecture_Body
-                    | Iir_Kind_Configuration_Declaration
-                    | Iir_Kinds_Verification_Unit =>
-                     Load_Design_Unit (Design, Loc_Err);
-                  when Iir_Kind_Entity_Declaration =>
-                     Load_Design_Unit (Design, Loc_Err);
-                     --  Library unit has changed (loaded).
-                     Lib_Unit := Get_Library_Unit (Design);
-                     Vhdl.Sem_Scopes.Add_Name (Lib_Unit);
-                  when Iir_Kind_Package_Declaration
-                    | Iir_Kind_Package_Instantiation_Declaration
-                    | Iir_Kind_Package_Body
-                    | Iir_Kind_Context_Declaration =>
-                     null;
-               end case;
+               Vhdl.Sem_Scopes.Add_Name (Lib_Unit);
             when Iir_Kind_Foreign_Module =>
-               Vhdl.Sem_Scopes.Add_Name (Design);
+               Vhdl.Sem_Scopes.Add_Name (Lib_Unit);
+            when Iir_Kind_Package_Declaration
+              | Iir_Kind_Package_Instantiation_Declaration
+              | Iir_Kind_Package_Body
+              | Iir_Kind_Context_Declaration =>
+               null;
          end case;
 
          return Walk_Continue;
@@ -1015,14 +1016,7 @@ package body Vhdl.Configuration is
                   Interp := Get_Interpretation (Get_Identifier (Comp));
                   if Valid_Interpretation (Interp) then
                      Decl := Get_Declaration (Interp);
-                     case Get_Kind (Decl) is
-                        when Iir_Kind_Entity_Declaration =>
-                           Set_Elab_Flag (Get_Design_Unit (Decl), True);
-                        when Iir_Kind_Foreign_Module =>
-                           Set_Elab_Flag (Decl, True);
-                        when others =>
-                           raise Internal_Error;
-                     end case;
+                     Set_Elab_Flag (Get_Design_Unit (Decl), True);
                   else
                      --  If there is no corresponding entity name for the
                      --  component name, assume it belongs to a different
@@ -1051,49 +1045,42 @@ package body Vhdl.Configuration is
             end if;
          end if;
 
-         case Get_Kind (Design) is
-            when Iir_Kind_Design_Unit =>
-               Unit := Get_Library_Unit (Design);
-               case Iir_Kinds_Library_Unit (Get_Kind (Unit)) is
-                  when Iir_Kind_Architecture_Body =>
-                     Status := Walk_Concurrent_Statements_Chain
-                       (Get_Concurrent_Statement_Chain (Unit),
-                        Mark_Instantiation_Cb'Access);
-                     pragma Assert (Status = Walk_Continue);
-                  when Iir_Kind_Configuration_Declaration =>
-                     --  Just ignored.
-                     null;
-                  when Iir_Kinds_Verification_Unit =>
-                     declare
-                        Item : Iir;
-                     begin
-                        Item := Get_Vunit_Item_Chain (Unit);
-                        while Item /= Null_Iir loop
-                           if Get_Kind (Item) in Iir_Kinds_Concurrent_Statement
-                           then
-                              Status := Walk_Concurrent_Statement
-                                (Item, Mark_Instantiation_Cb'Access);
-                              pragma Assert (Status = Walk_Continue);
-                           end if;
-                           Item := Get_Chain (Item);
-                        end loop;
-                     end;
-                  when Iir_Kind_Package_Declaration
-                    | Iir_Kind_Package_Instantiation_Declaration
-                    | Iir_Kind_Package_Body
-                    | Iir_Kind_Entity_Declaration
-                    | Iir_Kind_Context_Declaration =>
-                     null;
-               end case;
-
+         Unit := Get_Library_Unit (Design);
+         case Iir_Kinds_Library_Unit (Get_Kind (Unit)) is
+            when Iir_Kind_Architecture_Body =>
+               Status := Walk_Concurrent_Statements_Chain
+                 (Get_Concurrent_Statement_Chain (Unit),
+                  Mark_Instantiation_Cb'Access);
+               pragma Assert (Status = Walk_Continue);
+            when Iir_Kind_Configuration_Declaration =>
+               --  Just ignored.
+               null;
+            when Iir_Kinds_Verification_Unit =>
+               declare
+                  Item : Iir;
+               begin
+                  Item := Get_Vunit_Item_Chain (Unit);
+                  while Item /= Null_Iir loop
+                     if Get_Kind (Item) in Iir_Kinds_Concurrent_Statement
+                     then
+                        Status := Walk_Concurrent_Statement
+                          (Item, Mark_Instantiation_Cb'Access);
+                        pragma Assert (Status = Walk_Continue);
+                     end if;
+                     Item := Get_Chain (Item);
+                  end loop;
+               end;
             when Iir_Kind_Foreign_Module =>
                if Mark_Foreign_Module = null then
                   raise Internal_Error;
                end if;
-               Mark_Foreign_Module.all (Get_Foreign_Node (Design));
-
-            when others =>
-               raise Internal_Error;
+               Mark_Foreign_Module.all (Get_Foreign_Node (Unit));
+            when Iir_Kind_Package_Declaration
+              | Iir_Kind_Package_Instantiation_Declaration
+              | Iir_Kind_Package_Body
+              | Iir_Kind_Entity_Declaration
+              | Iir_Kind_Context_Declaration =>
+               null;
          end case;
          return Walk_Continue;
       end Mark_Units_Cb;
@@ -1127,16 +1114,13 @@ package body Vhdl.Configuration is
       is
          Unit : Iir;
       begin
-         case Iir_Kinds_Design_Unit (Get_Kind (Design)) is
-            when Iir_Kind_Foreign_Module =>
-               Unit := Design;
-            when Iir_Kind_Design_Unit =>
-               Unit := Get_Library_Unit (Design);
+         Unit := Get_Library_Unit (Design);
 
-               if Get_Kind (Unit) /= Iir_Kind_Entity_Declaration then
-                  return Walk_Continue;
-               end if;
-         end case;
+         if not Kind_In (Unit,
+                         Iir_Kind_Entity_Declaration, Iir_Kind_Foreign_Module)
+         then
+            return Walk_Continue;
+         end if;
 
          if Get_Elab_Flag (Design) then
             --  Clean elab flag.

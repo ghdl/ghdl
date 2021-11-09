@@ -4530,6 +4530,8 @@ package body Vhdl.Prints is
             Disp_Verification_Unit (Ctxt, Decl, Tok_Vmode);
          when Iir_Kind_Vprop_Declaration =>
             Disp_Verification_Unit (Ctxt, Decl, Tok_Vprop);
+         when Iir_Kind_Foreign_Module =>
+            raise Internal_Error;
       end case;
    end Disp_Design_Unit;
 

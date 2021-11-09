@@ -434,6 +434,12 @@ package body Vhdl.Annotations is
          when Iir_Kind_Incomplete_Type_Definition =>
             null;
 
+         when Iir_Kind_Foreign_Vector_Type_Definition =>
+            if Flag_Synthesis then
+               --  For the bounds.
+               Create_Object_Info (Block_Info, Def, Kind_Type);
+            end if;
+
          when others =>
             Error_Kind ("annotate_type_definition", Def);
       end case;
@@ -1186,6 +1192,21 @@ package body Vhdl.Annotations is
       end loop;
    end Annotate_Vunit_Declaration;
 
+   procedure Annotate_Foreign_Module (Decl : Iir)
+   is
+      Info: Sim_Info_Acc;
+   begin
+      Info := new Sim_Info_Type'(Kind => Kind_Block,
+                                 Ref => Decl,
+                                 Inst_Slot => Invalid_Object_Slot,
+                                 Nbr_Objects => 0,
+                                 Nbr_Instances => 0);
+      Set_Info (Decl, Info);
+
+      Annotate_Interface_List (Info, Get_Generic_Chain (Decl), True);
+      Annotate_Interface_List (Info, Get_Port_Chain (Decl), True);
+   end Annotate_Foreign_Module;
+
    procedure Annotate_Component_Configuration
      (Conf : Iir_Component_Configuration)
    is
@@ -1299,6 +1320,8 @@ package body Vhdl.Annotations is
             null;
          when Iir_Kind_Vunit_Declaration =>
             Annotate_Vunit_Declaration (El);
+         when Iir_Kind_Foreign_Module =>
+            Annotate_Foreign_Module (El);
          when others =>
             Error_Kind ("annotate2", El);
       end case;

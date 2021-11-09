@@ -374,6 +374,8 @@ package Vhdl.Elocations is
 
    -- Iir_Kind_Wildcard_Type_Definition (None)
 
+   -- Iir_Kind_Foreign_Vector_Type_Definition (None)
+
    --------------------------
    --  subtype definitions --
    --------------------------

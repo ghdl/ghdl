@@ -339,6 +339,7 @@ package body Vhdl.Sem_Lib is
       Prev_Nbr_Errors : Natural;
       Warnings : Warnings_Setting;
       Error : Boolean;
+      Lib_Unit : Iir;
    begin
       if Get_Date (Design_Unit) = Date_Replacing then
          Error_Msg_Sem (+Loc, "circular reference of %n", +Design_Unit);
@@ -374,7 +375,21 @@ package body Vhdl.Sem_Lib is
          Set_Date_State (Design_Unit, Date_Analyze);
 
          --  Analyze unit.
-         Finish_Compilation (Design_Unit);
+         Lib_Unit := Get_Library_Unit (Design_Unit);
+         if Get_Kind (Lib_Unit) /= Iir_Kind_Foreign_Module then
+            Finish_Compilation (Design_Unit);
+         else
+            if Convert_Foreign_Unit = null then
+               Error_Msg_Sem (Loc, "cannot handle %n", +Design_Unit);
+               Error := True;
+            else
+               --  Try to import the foreign unit.
+               if not Convert_Foreign_Unit (Lib_Unit) then
+                  Error := True;
+               end if;
+            end if;
+            Set_Date (Design_Unit, Date_Analyzed);
+         end if;
 
          --  Check if one of its dependency makes this unit obsolete.
          --  FIXME: to do when the dependency is added ?

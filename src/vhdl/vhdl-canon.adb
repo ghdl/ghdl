@@ -3516,6 +3516,8 @@ package body Vhdl.Canon is
          when Iir_Kind_Vmode_Declaration
            | Iir_Kind_Vprop_Declaration =>
             null;
+         when Iir_Kind_Foreign_Module =>
+            raise Internal_Error;
       end case;
    end Canonicalize;
 

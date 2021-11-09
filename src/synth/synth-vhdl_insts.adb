@@ -1208,6 +1208,8 @@ package body Synth.Vhdl_Insts is
                   null;
                when Iir_Kinds_Verification_Unit =>
                   null;
+               when Iir_Kind_Foreign_Module =>
+                  raise Internal_Error;
             end case;
          end if;
          Next (Dep_It);

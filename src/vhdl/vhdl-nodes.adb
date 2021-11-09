@@ -1243,7 +1243,6 @@ package body Vhdl.Nodes is
             return Format_Short;
          when Iir_Kind_Design_File
            | Iir_Kind_Design_Unit
-           | Iir_Kind_Foreign_Module
            | Iir_Kind_Block_Header
            | Iir_Kind_Binding_Indication
            | Iir_Kind_Signature
@@ -1252,11 +1251,13 @@ package body Vhdl.Nodes is
            | Iir_Kind_Array_Subtype_Definition
            | Iir_Kind_Record_Subtype_Definition
            | Iir_Kind_Floating_Subtype_Definition
+           | Iir_Kind_Foreign_Vector_Type_Definition
            | Iir_Kind_Subtype_Definition
            | Iir_Kind_Scalar_Nature_Definition
            | Iir_Kind_Record_Nature_Definition
            | Iir_Kind_Array_Nature_Definition
            | Iir_Kind_Array_Subnature_Definition
+           | Iir_Kind_Foreign_Module
            | Iir_Kind_Entity_Declaration
            | Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Instantiation_Declaration
@@ -1623,7 +1624,7 @@ package body Vhdl.Nodes is
       pragma Assert (Design_Unit /= Null_Iir);
       pragma Assert (Has_Library_Unit (Get_Kind (Design_Unit)),
                      "no field Library_Unit");
-      return Get_Field5 (Design_Unit);
+      return Get_Field7 (Design_Unit);
    end Get_Library_Unit;
 
    procedure Set_Library_Unit (Design_Unit : Iir_Design_Unit; Lib_Unit : Iir)
@@ -1632,7 +1633,7 @@ package body Vhdl.Nodes is
       pragma Assert (Design_Unit /= Null_Iir);
       pragma Assert (Has_Library_Unit (Get_Kind (Design_Unit)),
                      "no field Library_Unit");
-      Set_Field5 (Design_Unit, Lib_Unit);
+      Set_Field7 (Design_Unit, Lib_Unit);
    end Set_Library_Unit;
 
    function Get_Hash_Chain (Design_Unit : Iir_Design_Unit) return Iir is
@@ -1640,7 +1641,7 @@ package body Vhdl.Nodes is
       pragma Assert (Design_Unit /= Null_Iir);
       pragma Assert (Has_Hash_Chain (Get_Kind (Design_Unit)),
                      "no field Hash_Chain");
-      return Get_Field7 (Design_Unit);
+      return Get_Field5 (Design_Unit);
    end Get_Hash_Chain;
 
    procedure Set_Hash_Chain (Design_Unit : Iir_Design_Unit; Chain : Iir) is
@@ -1648,7 +1649,7 @@ package body Vhdl.Nodes is
       pragma Assert (Design_Unit /= Null_Iir);
       pragma Assert (Has_Hash_Chain (Get_Kind (Design_Unit)),
                      "no field Hash_Chain");
-      Set_Field7 (Design_Unit, Chain);
+      Set_Field5 (Design_Unit, Chain);
    end Set_Hash_Chain;
 
    function Get_Design_Unit_Source_Pos (Design_Unit : Iir) return Source_Ptr

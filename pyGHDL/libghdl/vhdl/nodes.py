@@ -380,11 +380,6 @@ class Iir_Kinds:
         Iir_Kind.Architecture_Body,
     ]
 
-    Design_Unit = [
-        Iir_Kind.Design_Unit,
-        Iir_Kind.Foreign_Module,
-    ]
-
     Primary_Unit = [
         Iir_Kind.Entity_Declaration,
         Iir_Kind.Configuration_Declaration,

@@ -234,10 +234,10 @@ package Vhdl.Nodes is
    --
    --  Get/Set the library unit, which can be an entity, an architecture,
    --  a package, a package body or a configuration.
-   --   Get/Set_Library_Unit (Field5)
+   --   Get/Set_Library_Unit (Field7)
    --
    --  Collision chain for units.
-   --   Get/Set_Hash_Chain (Field7)
+   --   Get/Set_Hash_Chain (Field5)
    --
    --  Get the list of design units that must be analysed before this unit.
    --  See LRM93 11.4 for the rules defining the order of analysis.
@@ -266,25 +266,6 @@ package Vhdl.Nodes is
    --  Flags used during configuration
    --   Get/Set_Configuration_Mark_Flag (Flag4)
    --   Get/Set_Configuration_Done_Flag (Flag5)
-
-   -- Iir_Kind_Foreign_Module (Medium)
-   --
-   --   Get/Set_Design_File (Field0)
-   --   Get/Set_Parent (Alias Field0)
-   --
-   --   Get/Set_Identifier (Field3)
-   --
-   --   Get/Set_Foreign_Node (Field1)
-   --
-   --   Get/Set_Date (Field4)
-   --
-   --   Get/Set_Chain (Field2)
-   --
-   --   Get/Set_Hash_Chain (Field7)
-   --
-   --   Get/Set_Date_State (State1)
-   --
-   --   Get/Set_Elab_Flag (Flag3)
 
    -- Iir_Kind_Library_Clause (Short)
    --
@@ -928,6 +909,19 @@ package Vhdl.Nodes is
    -------------------
    --  Declarations --
    -------------------
+
+   -- Iir_Kind_Foreign_Module (Medium)
+   --
+   --   Get/Set_Design_Unit (Field0)
+   --   Get/Set_Parent (Alias Field0)
+   --
+   --   Get/Set_Identifier (Field3)
+   --
+   --   Get/Set_Foreign_Node (Field1)
+   --
+   --   Get/Set_Generic_Chain (Field6)
+   --
+   --   Get/Set_Port_Chain (Field7)
 
    -- Iir_Kind_Entity_Declaration (Medium)
    --
@@ -2747,6 +2741,15 @@ package Vhdl.Nodes is
    --   Get/Set_Signal_Type_Flag (Flag2)
    --
    --   Get/Set_Type_Staticness (State1)
+
+   -- Iir_Kind_Foreign_Vector_Type_Definition (Medium)
+   --
+   --  A one dimensional array representing a vector defined in a foreign
+   --  language.
+   --
+   --  FIXME: add constraint state, add length
+   --
+   --   Get/Set_Type_Declarator (Field3)
 
    --------------------------
    --  subtype definitions --
@@ -4828,7 +4831,6 @@ package Vhdl.Nodes is
       Iir_Kind_Design_File,
 
       Iir_Kind_Design_Unit,
-      Iir_Kind_Foreign_Module,
 
       Iir_Kind_Library_Clause,
       Iir_Kind_Use_Clause,
@@ -4913,6 +4915,7 @@ package Vhdl.Nodes is
       Iir_Kind_Range_Expression,
       Iir_Kind_Protected_Type_Body,
       Iir_Kind_Wildcard_Type_Definition,
+      Iir_Kind_Foreign_Vector_Type_Definition,
       Iir_Kind_Subtype_Definition,  -- temporary (must not appear after sem).
 
    -- Nature definition
@@ -4925,6 +4928,7 @@ package Vhdl.Nodes is
       Iir_Kind_Overload_List,  -- used internally by sem_expr.
 
    -- Declarations.
+      Iir_Kind_Foreign_Module,
       Iir_Kind_Entity_Declaration,
       Iir_Kind_Configuration_Declaration,
       Iir_Kind_Context_Declaration,
@@ -6352,7 +6356,8 @@ package Vhdl.Nodes is
    -- * the last line must be the highest bound of the range, followed by ";"
 
    subtype Iir_Kinds_Library_Unit is Iir_Kind range
-     Iir_Kind_Entity_Declaration ..
+     Iir_Kind_Foreign_Module ..
+   --Iir_Kind_Entity_Declaration
    --Iir_Kind_Configuration_Declaration
    --Iir_Kind_Context_Declaration
    --Iir_Kind_Package_Declaration
@@ -6362,10 +6367,6 @@ package Vhdl.Nodes is
    --Iir_Kind_Vunit_Declaration
    --Iir_Kind_Package_Body
      Iir_Kind_Architecture_Body;
-
-   subtype Iir_Kinds_Design_Unit is Iir_Kind range
-     Iir_Kind_Design_Unit ..
-     Iir_Kind_Foreign_Module;
 
    subtype Iir_Kinds_Primary_Unit is Iir_Kind range
      Iir_Kind_Entity_Declaration ..
@@ -7526,14 +7527,14 @@ package Vhdl.Nodes is
    procedure Set_Guarded_Target_State (Stmt : Iir; State : Tri_State_Type);
 
    --  Library unit of a design unit.
-   --  Field: Field5
+   --  Field: Field7
    function Get_Library_Unit (Design_Unit : Iir_Design_Unit) return Iir;
    procedure Set_Library_Unit (Design_Unit : Iir_Design_Unit; Lib_Unit : Iir);
    pragma Inline (Get_Library_Unit);
 
    --  Every design unit is put in an hash table to find quickly found by its
    --  name.  This field is a single chain for collisions.
-   --  Field: Field7 Forward_Ref
+   --  Field: Field5 Forward_Ref
    function Get_Hash_Chain (Design_Unit : Iir_Design_Unit) return Iir;
    procedure Set_Hash_Chain (Design_Unit : Iir_Design_Unit; Chain : Iir);
 

@@ -3936,6 +3936,9 @@ package body Vhdl.Evaluation is
            | Iir_Kind_Protected_Type_Declaration =>
             return True;
 
+         when Iir_Kind_Foreign_Vector_Type_Definition =>
+            return True;
+
          when Iir_Kind_Error =>
             return True;
 

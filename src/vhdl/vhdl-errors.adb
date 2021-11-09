@@ -342,6 +342,8 @@ package body Vhdl.Errors is
             return Disp_Type (Node, "protected type body");
          when Iir_Kind_Subtype_Definition =>
             return "subtype definition";
+         when Iir_Kind_Foreign_Vector_Type_Definition =>
+            return "foreign vector type definition";
 
          when Iir_Kind_Scalar_Nature_Definition =>
             return Disp_Nature (Node, "scalar nature");

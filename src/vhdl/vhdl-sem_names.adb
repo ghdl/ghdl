@@ -2456,7 +2456,9 @@ package body Vhdl.Sem_Names is
                   Check_Synopsys_Package (Prefix);
                end if;
                Sem.Add_Dependence (Res);
-               Res := Get_Library_Unit (Res);
+               if Get_Kind (Res) = Iir_Kind_Design_Unit then
+                  Res := Get_Library_Unit (Res);
+               end if;
             elsif not Soft then
                Error_Msg_Sem
                  (+Name, "unit %i not found in %n", (+Suffix, +Prefix));
@@ -4993,6 +4995,7 @@ package body Vhdl.Sem_Names is
            | Iir_Kind_Package_Instantiation_Declaration
            | Iir_Kind_Interface_Package_Declaration
            | Iir_Kind_Library_Declaration
+           | Iir_Kind_Foreign_Module
            | Iir_Kinds_Subprogram_Declaration
            | Iir_Kind_Component_Declaration =>
             Res := Finish_Sem_Name (Name, Res);

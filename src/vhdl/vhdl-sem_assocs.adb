@@ -540,6 +540,11 @@ package body Vhdl.Sem_Assocs is
             --  Avoid a crash in case of errors.
             return True;
          end if;
+         if Get_Kind (Src) = Iir_Kind_Foreign_Vector_Type_Definition
+           or else Get_Kind (Dest) = Iir_Kind_Foreign_Vector_Type_Definition
+         then
+            return True;
+         end if;
 
          Src_Range := Get_Range_Constraint (Src);
          Dst_Range := Get_Range_Constraint (Dest);
