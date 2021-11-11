@@ -542,11 +542,11 @@ package body Vhdl.Ieee.Numeric is
      (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Shf_Right_Sgn_Nat,
       Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Shf_Right_Uns_Nat);
 
-   Rol_Patterns : constant Shift_Pattern_Type :=
+   Rotate_Left_Patterns : constant Shift_Pattern_Type :=
      (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Rot_Left_Sgn_Nat,
       Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Rot_Left_Uns_Nat);
 
-   Ror_Patterns : constant Shift_Pattern_Type :=
+   Rotate_Right_Patterns : constant Shift_Pattern_Type :=
      (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Rot_Right_Sgn_Nat,
       Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Rot_Right_Uns_Nat);
 
@@ -565,6 +565,14 @@ package body Vhdl.Ieee.Numeric is
    Sra_Patterns : constant Shift_Pattern_Type :=
      (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Sra_Sgn_Int,
       Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Sra_Uns_Int);
+
+   Rol_Patterns : constant Shift_Pattern_Type :=
+     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Rol_Sgn_Int,
+      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Rol_Uns_Int);
+
+   Ror_Patterns : constant Shift_Pattern_Type :=
+     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Ror_Sgn_Int,
+      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Ror_Uns_Int);
 
    Leftmost_Patterns : constant Shift_Pattern_Type :=
      (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Find_Leftmost_Sgn,
@@ -971,10 +979,14 @@ package body Vhdl.Ieee.Numeric is
                         Handle_Shift (Sla_Patterns, Type_Signed);
                      when Name_Sra =>
                         Handle_Shift (Sra_Patterns, Type_Signed);
+                     when Name_Rol =>
+                        Handle_Shift (Rol_Patterns, Type_Signed);
+                     when Name_Ror =>
+                        Handle_Shift (Ror_Patterns, Type_Signed);
                      when Name_Rotate_Left =>
-                        Handle_Shift (Rol_Patterns, Type_Unsigned);
+                        Handle_Shift (Rotate_Left_Patterns, Type_Unsigned);
                      when Name_Rotate_Right =>
-                        Handle_Shift (Ror_Patterns, Type_Unsigned);
+                        Handle_Shift (Rotate_Right_Patterns, Type_Unsigned);
                      when Name_Find_Leftmost =>
                         Handle_Find (Leftmost_Patterns);
                      when Name_Find_Rightmost =>
