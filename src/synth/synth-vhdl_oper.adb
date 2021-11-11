@@ -1587,6 +1587,7 @@ package body Synth.Vhdl_Oper is
          when Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Sgn_Uns =>
             --  ">=" (Signed, Unsigned)
             return Synth_Compare_Sgn_Uns (Id_Sge, Expr_Typ);
+
          when Iir_Predefined_Ieee_Numeric_Std_Sra_Sgn_Int =>
             return Synth_Shift (Id_Asr, Id_Lsl);
 
@@ -1600,7 +1601,9 @@ package body Synth.Vhdl_Oper is
             | Iir_Predefined_Ieee_1164_Vector_Srl =>
             return Synth_Shift (Id_Lsr, Id_Lsl);
 
-         when Iir_Predefined_Ieee_1164_Vector_Ror =>
+         when Iir_Predefined_Ieee_Numeric_Std_Ror_Uns_Int
+            | Iir_Predefined_Ieee_Numeric_Std_Ror_Sgn_Int
+            | Iir_Predefined_Ieee_1164_Vector_Ror =>
             return Synth_Rotation (Id_Ror);
 
          when others =>
