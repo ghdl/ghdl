@@ -1606,6 +1606,11 @@ package body Synth.Vhdl_Oper is
             | Iir_Predefined_Ieee_1164_Vector_Ror =>
             return Synth_Rotation (Id_Ror);
 
+         when Iir_Predefined_Ieee_Numeric_Std_Rol_Uns_Int
+            | Iir_Predefined_Ieee_Numeric_Std_Rol_Sgn_Int
+            | Iir_Predefined_Ieee_1164_Vector_Rol =>
+            return Synth_Rotation (Id_Rol);
+
          when others =>
             Error_Msg_Synth (+Expr, "synth_dyadic_operation: unhandled "
                                & Iir_Predefined_Functions'Image (Def));
