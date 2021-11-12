@@ -473,6 +473,7 @@ package body Synth.Disp_Vhdl is
          M : Module;
          Num : Natural;
       begin
+         --  Count number of modules.
          Num := 0;
          M := Get_Next_Sub_Module (Main);
          while M /= No_Module loop
@@ -482,6 +483,7 @@ package body Synth.Disp_Vhdl is
             M := Get_Next_Sub_Module (M);
          end loop;
 
+         --  Fill array of modules, display.
          declare
             type Module_Array is array (1 .. Num) of Module;
             Modules : Module_Array;
@@ -497,7 +499,10 @@ package body Synth.Disp_Vhdl is
             end loop;
 
             for I in reverse Modules'Range loop
-               Netlists.Disp_Vhdl.Disp_Vhdl (Modules (I), False);
+               --  Skip blackboxes.
+               if Get_Self_Instance (Modules (I)) /= No_Instance then
+                  Netlists.Disp_Vhdl.Disp_Vhdl (Modules (I), False);
+               end if;
             end loop;
          end;
       end;
