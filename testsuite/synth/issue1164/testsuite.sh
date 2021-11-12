@@ -2,7 +2,8 @@
 
 . ../../testenv.sh
 
-synth_analyze bug
+synth bug.vhdl -e > syn_bug.vhdl
+analyze comp.vhdl syn_bug.vhdl
 
 clean
 
