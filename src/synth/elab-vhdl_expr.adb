@@ -709,9 +709,55 @@ package body Elab.Vhdl_Expr is
                return Elab.Vhdl_Heap.Synth_Dereference (Read_Access (Val));
             end;
          when others =>
-            Error_Kind ("synth_name", Name);
+            Error_Kind ("exec_name", Name);
       end case;
    end Exec_Name;
+
+   function Exec_Name_Subtype (Syn_Inst : Synth_Instance_Acc; Name : Node)
+                              return Type_Acc is
+   begin
+      case Get_Kind (Name) is
+         when Iir_Kind_Simple_Name
+           | Iir_Kind_Selected_Name =>
+            return Exec_Name_Subtype (Syn_Inst, Get_Named_Entity (Name));
+         when Iir_Kind_Interface_Signal_Declaration
+           | Iir_Kind_Variable_Declaration
+           | Iir_Kind_Interface_Variable_Declaration
+           | Iir_Kind_Signal_Declaration
+           | Iir_Kind_Interface_Constant_Declaration
+           | Iir_Kind_Constant_Declaration
+           | Iir_Kind_Iterator_Declaration
+           | Iir_Kind_Object_Alias_Declaration
+           | Iir_Kind_File_Declaration
+           | Iir_Kind_Interface_File_Declaration =>
+            return Get_Value (Syn_Inst, Name).Typ;
+         when Iir_Kind_Selected_Element =>
+            declare
+               Idx : constant Iir_Index32 :=
+                 Get_Element_Position (Get_Named_Entity (Name));
+               Pfx : constant Node := Get_Prefix (Name);
+               Res : Type_Acc;
+            begin
+               Res := Exec_Name_Subtype (Syn_Inst, Pfx);
+               Res := Res.Rec.E (Idx + 1).Typ;
+               return Res;
+            end;
+         when Iir_Kind_Enumeration_Literal
+            | Iir_Kind_Unit_Declaration =>
+            return Get_Subtype_Object (Syn_Inst, Get_Type (Name));
+         when Iir_Kind_Implicit_Dereference
+           | Iir_Kind_Dereference =>
+            declare
+               Val : Valtyp;
+            begin
+               Val := Exec_Expression (Syn_Inst, Get_Prefix (Name));
+               Val := Elab.Vhdl_Heap.Synth_Dereference (Read_Access (Val));
+               return Val.Typ;
+            end;
+         when others =>
+            Error_Kind ("exec_name_subtype", Name);
+      end case;
+   end Exec_Name_Subtype;
 
    procedure Exec_Assignment_Prefix (Syn_Inst : Synth_Instance_Acc;
                                      Pfx : Node;

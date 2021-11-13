@@ -76,15 +76,13 @@ package body Elab.Vhdl_Types is
       Dim    : constant Natural :=
         Vhdl.Evaluation.Eval_Attribute_Parameter_Or_1 (Attr);
       Typ    : Type_Acc;
-      Val    : Valtyp;
    begin
       --  Prefix is an array object or an array subtype.
       if Get_Kind (Prefix) = Iir_Kind_Subtype_Declaration then
          --  TODO: does this cover all the cases ?
          Typ := Get_Subtype_Object (Syn_Inst, Get_Subtype_Indication (Prefix));
       else
-         Val := Exec_Name (Syn_Inst, Prefix_Name);
-         Typ := Val.Typ;
+         Typ := Exec_Name_Subtype (Syn_Inst, Prefix_Name);
       end if;
 
       return Get_Array_Bound (Typ, Dim_Type (Dim));

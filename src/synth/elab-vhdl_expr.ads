@@ -53,6 +53,10 @@ package Elab.Vhdl_Expr is
    function Exec_Name (Syn_Inst : Synth_Instance_Acc; Name : Node)
                       return Valtyp;
 
+   --  Get the type of NAME.  No expressions are expected to be evaluated.
+   function Exec_Name_Subtype (Syn_Inst : Synth_Instance_Acc; Name : Node)
+                              return Type_Acc;
+
    --  Synthesize EXPR.  The expression must be self-constrained.
    --  If EN is not No_Net, the execution is controlled by EN.  This is used
    --  for assertions and checks.
