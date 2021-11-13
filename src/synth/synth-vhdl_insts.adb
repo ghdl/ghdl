@@ -21,6 +21,7 @@ with GNAT.SHA1;
 with Types; use Types;
 with Types_Utils; use Types_Utils;
 with Name_Table;
+with Std_Names;
 with Hash; use Hash;
 with Dyn_Tables;
 with Interning;
@@ -38,11 +39,14 @@ with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Errors;
+with Vhdl.Evaluation;
 with Vhdl.Ieee.Math_Real;
+with Vhdl.Std_Package;
 
 with Elab.Memtype; use Elab.Memtype;
 with Elab.Vhdl_Files;
 with Elab.Debugger;
+with Elab.Vhdl_Errors;
 
 with Synth.Vhdl_Environment; use Synth.Vhdl_Environment.Env;
 with Synth.Vhdl_Stmts; use Synth.Vhdl_Stmts;
@@ -537,6 +541,67 @@ package body Synth.Vhdl_Insts is
       Build => Build,
       Equal => Equal);
 
+   function Is_Arch_Black_Box (Arch : Node) return Boolean
+   is
+      use Vhdl.Std_Package;
+      use Elab.Vhdl_Errors;
+      Value : Node;
+      Spec : Node;
+      Attr_Decl : Node;
+      Val : Node;
+   begin
+      if Arch = Null_Node then
+         return True;
+      end if;
+
+      --  A little bit like Find_Attribute_Value, but recoded to handle
+      --  many attributes.
+      Value := Get_Attribute_Value_Chain (Arch);
+      while Value /= Null_Node loop
+         if Get_Designated_Entity (Value) = Arch then
+            Spec := Get_Attribute_Specification (Value);
+            Attr_Decl := Get_Named_Entity (Get_Attribute_Designator (Spec));
+            case Get_Identifier (Attr_Decl) is
+               when Std_Names.Name_Syn_Black_Box =>
+                  if Get_Type (Attr_Decl) /= Boolean_Type_Definition then
+                     Error_Msg_Elab
+                       (+Attr_Decl,
+                        "type of syn_black_box attribute must be boolean");
+                     return True;
+                  end if;
+                  Val := Get_Expression (Spec);
+                  if Get_Expr_Staticness (Val) /= Locally then
+                     --  Do we really require the value to be static if the
+                     --  architecture has been elaborated ?
+                     Error_Msg_Elab
+                       (+Spec, "value of syn_black_box must be static");
+                     return True;
+                  end if;
+                  if Vhdl.Evaluation.Eval_Pos (Val) /= 0 then
+                     return True;
+                  end if;
+               when others =>
+                  null;
+            end case;
+         end if;
+         Value := Get_Value_Chain (Value);
+      end loop;
+      return False;
+   end Is_Arch_Black_Box;
+
+   function Interning_Get (Param : Inst_Params) return Inst_Object is
+   begin
+      if Is_Arch_Black_Box (Param.Arch) then
+         return Insts_Interning.Get ((Decl => Param.Decl,
+                                      Arch => Null_Node,
+                                      Config => Null_Node,
+                                      Syn_Inst => Param.Syn_Inst,
+                                      Encoding => Name_Parameters));
+      else
+         return Insts_Interning.Get (Param);
+      end if;
+   end Interning_Get;
+
    procedure Synth_Individual_Prefix (Syn_Inst : Synth_Instance_Acc;
                                       Inter_Inst : Synth_Instance_Acc;
                                       Formal : Node;
@@ -955,11 +1020,11 @@ package body Synth.Vhdl_Insts is
       --   * create a name from the generics and the library
       --   * create inputs/outputs
       --   * add it to the list of module to be synthesized.
-      Inst_Obj := Insts_Interning.Get ((Decl => Ent,
-                                        Arch => Arch,
-                                        Config => Config,
-                                        Syn_Inst => Sub_Inst,
-                                        Encoding => Enc));
+      Inst_Obj := Interning_Get ((Decl => Ent,
+                                  Arch => Arch,
+                                  Config => Config,
+                                  Syn_Inst => Sub_Inst,
+                                  Encoding => Enc));
 
 
       --  Do the instantiation.
@@ -1110,11 +1175,11 @@ package body Synth.Vhdl_Insts is
       --   * create a name from the generics and the library
       --   * create inputs/outputs
       --   * add it to the list of module to be synthesized.
-      Inst_Obj := Insts_Interning.Get ((Decl => Ent,
-                                        Arch => Arch,
-                                        Config => Sub_Config,
-                                        Syn_Inst => Sub_Inst,
-                                        Encoding => Name_Hash));
+      Inst_Obj := Interning_Get ((Decl => Ent,
+                                  Arch => Arch,
+                                  Config => Sub_Config,
+                                  Syn_Inst => Sub_Inst,
+                                  Encoding => Name_Hash));
 
       --  TODO: free sub_inst.
 
