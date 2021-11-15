@@ -3734,6 +3734,9 @@ package body Vhdl.Sem_Expr is
    begin
       --  Analyze choices (for aggregate but not for strings).
       if Get_Kind (Aggr) = Iir_Kind_Aggregate then
+         --  By default, consider the aggregate can be statically built.
+         Set_Aggregate_Expand_Flag (Aggr, True);
+
          Assoc_Chain := Get_Association_Choices_Chain (Aggr);
          Sem_Choices_Range (Assoc_Chain, Index_Type, Low, High,
                             Get_Location (Aggr), not Constrained, False);
@@ -4102,9 +4105,6 @@ package body Vhdl.Sem_Expr is
       Info, Prev_Info : Iir_Aggregate_Info;
       Type_Staticness : Iir_Staticness;
    begin
-      --  By default, consider the aggregate can be statically built.
-      Set_Aggregate_Expand_Flag (Aggr, True);
-
       --  Analyze the aggregate.
       Sem_Array_Aggregate_1 (Aggr, Aggr_Type, Infos, Constrained, 1);
 
