@@ -2768,6 +2768,7 @@ package body Vhdl.Evaluation is
          Last := Last - 1;
       end loop;
 
+      --  TODO: do not use 'value, use the same function as the scanner.
       declare
          Value1 : String renames Value (First .. Last);
       begin
@@ -2777,12 +2778,17 @@ package body Vhdl.Evaluation is
             when Iir_Kind_Enumeration_Type_Definition =>
                return Build_Enumeration_Value (Value1, Base_Type, Orig);
             when Iir_Kind_Floating_Type_Definition =>
-               return Build_Floating (Fp64'value (Value1), Orig);
+               return Build_Floating (Fp64'Value (Value1), Orig);
             when Iir_Kind_Physical_Type_Definition =>
                return Build_Physical_Value (Value1, Base_Type, Orig);
             when others =>
                Error_Kind ("eval_value_attribute", Base_Type);
          end case;
+      exception
+         when Constraint_Error =>
+            Warning_Msg_Sem (Warnid_Runtime_Error, +Orig,
+                             "incorrect parameter for value attribute");
+            return Build_Overflow (Orig);
       end;
    end Eval_Value_Attribute;
 
