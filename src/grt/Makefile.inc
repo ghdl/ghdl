@@ -183,10 +183,11 @@ grt-cstdio.o: $(GRTSRCDIR)/grt-cstdio.c
 pic/grt-cstdio.o: $(GRTSRCDIR)/grt-cstdio.c
 	$(GRT_C_COMPILE_PIC)
 
-grt-cgnatrts.o: $(GRTSRCDIR)/grt-cgnatrts.c
+# Note: grt-cgnatrts.o depends on the config.
+grt-cgnatrts.o: $(GRTSRCDIR)/grt-cgnatrts.c Makefile
 	$(GRT_C_COMPILE)
 
-pic/grt-cgnatrts.o: $(GRTSRCDIR)/grt-cgnatrts.c
+pic/grt-cgnatrts.o: $(GRTSRCDIR)/grt-cgnatrts.c Makefile
 	$(GRT_C_COMPILE_PIC)
 
 grt-cvpi.o: $(GRTSRCDIR)/grt-cvpi.c
