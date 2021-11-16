@@ -346,7 +346,7 @@ package body Netlists.Cleanup is
          while Inst /= No_Instance loop
             Next_Inst := Get_Next_Instance (Inst);
             if Get_Mark_Flag (Inst) then
-               --  Instance was marked, keept it.
+               --  Instance was marked, keep it.
                Set_Mark_Flag (Inst, False);
                Append_Instance (M, Inst);
             else

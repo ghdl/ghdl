@@ -35,6 +35,8 @@ with Elab.Vhdl_Errors; use Elab.Vhdl_Errors;
 with Elab.Vhdl_Expr; use Elab.Vhdl_Expr;
 
 package body Elab.Vhdl_Insts is
+   procedure Elab_Instance_Body (Syn_Inst : Synth_Instance_Acc);
+
    procedure Elab_Convertible_Declarations (Syn_Inst : Synth_Instance_Acc)
    is
       use Vhdl.Std_Package;
@@ -407,10 +409,107 @@ package body Elab.Vhdl_Insts is
       end loop;
    end Elab_Verification_Units;
 
-   procedure Elab_Instance_Body (Syn_Inst : Synth_Instance_Acc;
-                                 Entity : Node;
-                                 Arch : Node;
-                                 Config : Node) is
+   --  Elaborate instantiations.
+   --  This cannot be done immediately like the other statements due to a
+   --  possible conflict with configurations.
+   --  Configurations are applied by Apply_Block_Configuration to the vhdl
+   --  nodes.  If instantiations are handled immediately, in case of recursion,
+   --  the configuration may have already been applied to an instantiation and
+   --  therefore cannot be applied again.
+   --  To avoid this issue, statements are first elaborated and instances for
+   --  instantiations are created.  The configuration is saved in the
+   --  instances.  Then, instances are elaborated using the configuration
+   --  saved.
+   procedure Elab_Recurse_Instantiations
+     (Syn_Inst : Synth_Instance_Acc; Head : Node)
+   is
+      Stmt : Node;
+   begin
+      Stmt := Get_Concurrent_Statement_Chain (Head);
+      while Stmt /= Null_Node loop
+         case Get_Kind (Stmt) is
+            when Iir_Kind_Concurrent_Simple_Signal_Assignment
+              | Iir_Kind_Concurrent_Conditional_Signal_Assignment
+              | Iir_Kind_Concurrent_Selected_Signal_Assignment
+              | Iir_Kind_Concurrent_Procedure_Call_Statement
+              | Iir_Kinds_Process_Statement =>
+               null;
+            when Iir_Kind_If_Generate_Statement =>
+               declare
+                  Sub_Inst : constant Synth_Instance_Acc :=
+                    Get_Sub_Instance (Syn_Inst, Stmt);
+               begin
+                  if Sub_Inst /= null then
+                     Elab_Recurse_Instantiations
+                       (Sub_Inst, Get_Source_Scope (Sub_Inst));
+                  end if;
+               end;
+            when Iir_Kind_For_Generate_Statement =>
+               declare
+                  Iterator : constant Node :=
+                    Get_Parameter_Specification (Stmt);
+                  Bod : constant Node :=
+                    Get_Generate_Statement_Body (Stmt);
+                  It_Rng : constant Type_Acc :=
+                    Get_Subtype_Object (Syn_Inst, Get_Type (Iterator));
+                  Gen_Inst : constant Synth_Instance_Acc :=
+                    Get_Sub_Instance (Syn_Inst, Stmt);
+                  Sub_Inst : Synth_Instance_Acc;
+               begin
+                  for I in 1 .. Get_Range_Length (It_Rng.Drange) loop
+                     Sub_Inst := Get_Generate_Sub_Instance
+                       (Gen_Inst, Positive (I));
+                     Elab_Recurse_Instantiations (Sub_Inst, Bod);
+                  end loop;
+               end;
+            when Iir_Kind_Component_Instantiation_Statement =>
+               if Is_Component_Instantiation (Stmt) then
+                  declare
+                     Comp_Inst : constant Synth_Instance_Acc :=
+                       Get_Sub_Instance (Syn_Inst, Stmt);
+                     Sub_Inst : constant Synth_Instance_Acc :=
+                       Get_Component_Instance (Comp_Inst);
+                  begin
+                     if Sub_Inst /= null then
+                        --  Nothing to do if the component is not bound.
+                        Elab_Instance_Body (Sub_Inst);
+                     end if;
+                  end;
+               else
+                  declare
+                     Sub_Inst : constant Synth_Instance_Acc :=
+                       Get_Sub_Instance (Syn_Inst, Stmt);
+                  begin
+                     Elab_Instance_Body (Sub_Inst);
+                  end;
+               end if;
+            when Iir_Kind_Block_Statement =>
+               declare
+                  Blk_Inst : constant Synth_Instance_Acc :=
+                    Get_Sub_Instance (Syn_Inst, Stmt);
+               begin
+                  Elab_Recurse_Instantiations (Blk_Inst, Stmt);
+               end;
+            when Iir_Kind_Psl_Default_Clock
+              | Iir_Kind_Psl_Declaration
+              | Iir_Kind_Psl_Restrict_Directive
+              | Iir_Kind_Psl_Assume_Directive
+              | Iir_Kind_Psl_Cover_Directive
+              | Iir_Kind_Psl_Assert_Directive
+              | Iir_Kind_Concurrent_Assertion_Statement =>
+               null;
+            when others =>
+               Error_Kind ("elab_recurse_instantiations", Stmt);
+         end case;
+         Stmt := Get_Chain (Stmt);
+      end loop;
+   end Elab_Recurse_Instantiations;
+
+   procedure Elab_Instance_Body (Syn_Inst : Synth_Instance_Acc)
+   is
+      Arch : constant Node := Get_Source_Scope (Syn_Inst);
+      Config : constant Node := Get_Instance_Config (Syn_Inst);
+      Entity : constant Node := Get_Entity (Arch);
    begin
       Apply_Block_Configuration (Config, Arch);
 
@@ -423,6 +522,8 @@ package body Elab.Vhdl_Insts is
       Elab_Declarations (Syn_Inst, Get_Declaration_Chain (Arch));
       Elab_Concurrent_Statements
         (Syn_Inst, Get_Concurrent_Statement_Chain (Arch));
+
+      Elab_Recurse_Instantiations (Syn_Inst, Arch);
 
       Elab_Verification_Units (Syn_Inst, Arch);
    end Elab_Instance_Body;
@@ -458,9 +559,6 @@ package body Elab.Vhdl_Insts is
          --  TODO: Free it?
          return;
       end if;
-
-      --  Recurse.
-      Elab_Instance_Body (Sub_Inst, Entity, Arch, Config);
    end Elab_Direct_Instantiation_Statement;
 
    procedure Elab_Component_Instantiation_Statement
@@ -514,6 +612,7 @@ package body Elab.Vhdl_Insts is
 
       if Bind = Null_Iir then
          --  No association.
+         Create_Component_Instance (Comp_Inst, null);
          return;
       end if;
 
@@ -557,10 +656,6 @@ package body Elab.Vhdl_Insts is
       Elab_Ports_Association_Type (Sub_Inst, Comp_Inst,
                                    Get_Port_Chain (Ent),
                                    Get_Port_Map_Aspect_Chain (Bind));
-
-      --  Recurse.
-      --  TODO: factorize with direct instantiation
-      Elab_Instance_Body (Sub_Inst, Ent, Arch, Sub_Config);
    end Elab_Component_Instantiation_Statement;
 
    procedure Elab_Design_Instantiation_Statement
@@ -619,7 +714,8 @@ package body Elab.Vhdl_Insts is
       --  Start elaboration.
       Make_Root_Instance;
 
-      Top_Inst := Make_Elab_Instance (Root_Instance, Arch, Null_Node);
+      Top_Inst := Make_Elab_Instance
+        (Root_Instance, Arch, Get_Block_Configuration (Config));
 
       --  Save the current architecture, so that files can be open using a
       --  path relative to the architecture filename.
@@ -664,8 +760,7 @@ package body Elab.Vhdl_Insts is
          Inter := Get_Chain (Inter);
       end loop;
 
-      Elab_Instance_Body
-        (Top_Inst, Entity, Arch, Get_Block_Configuration (Config));
+      Elab_Instance_Body (Top_Inst);
 
       --  Clear elab_flag
       for I in Design_Units.First .. Design_Units.Last loop
