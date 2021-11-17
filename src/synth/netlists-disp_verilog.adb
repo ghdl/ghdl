@@ -140,6 +140,20 @@ package body Netlists.Disp_Verilog is
       end;
    end Disp_Net_Name;
 
+   procedure Disp_Pval (Pv : Pval)
+   is
+      Pvlen : constant Uns32 := Get_Pval_Length (Pv);
+   begin
+      if Pvlen = 0 then
+         Put ('"');
+         Put ('"');
+      else
+         Put_Uns32 (Pvlen);
+         Put ("'b");
+         Disp_Pval_Binary_Digits (Pv);
+      end if;
+   end Disp_Pval;
+
    procedure Disp_Instance_Gate (Inst : Instance)
    is
       Imod : constant Module := Get_Module (Inst);
@@ -176,19 +190,7 @@ package body Netlists.Disp_Verilog is
                when Param_Uns32 =>
                   Put_Uns32 (Get_Param_Uns32 (Inst, P - 1));
                when Param_Types_Pval =>
-                  declare
-                     Pv : constant Pval := Get_Param_Pval (Inst, P - 1);
-                     Pvlen : constant Uns32 := Get_Pval_Length (Pv);
-                  begin
-                     if Pvlen = 0 then
-                        Put ('"');
-                        Put ('"');
-                     else
-                        Put_Uns32 (Pvlen);
-                        Put ("'b");
-                        Disp_Pval_Binary_Digits (Pv);
-                     end if;
-                  end;
+                  Disp_Pval (Get_Param_Pval (Inst, P - 1));
                when Param_Invalid =>
                   Put ("*invalid*");
             end case;
@@ -1237,8 +1239,12 @@ package body Netlists.Disp_Verilog is
       end loop;
    end Disp_Module_Statements;
 
-   procedure Disp_Module_Port
-     (Desc : Port_Desc; Dir : Port_Kind; First : in out Boolean) is
+   procedure Disp_Module_Port (Desc : Port_Desc;
+                               Dir : Port_Kind;
+                               Attrs : Attribute;
+                               First : in out Boolean)
+   is
+      Attr : Attribute;
    begin
       if First then
          Put ("  (");
@@ -1247,6 +1253,21 @@ package body Netlists.Disp_Verilog is
          Put_Line (",");
          Put ("   ");
       end if;
+
+      if Attrs /= No_Attribute then
+         Put ("(* ");
+         Attr := Attrs;
+         loop
+            Put_Id (Get_Attribute_Name (Attr));
+            Put ('=');
+            Disp_Pval (Get_Attribute_Pval (Attr));
+            Attr := Get_Attribute_Next (Attr);
+            exit when Attr = No_Attribute;
+            Put (", ");
+         end loop;
+         Put (" *) ");
+      end if;
+
       case Dir is
          when Port_In =>
             Put ("input  ");
@@ -1263,17 +1284,20 @@ package body Netlists.Disp_Verilog is
    is
       First : Boolean;
       Desc : Port_Desc;
+      Attr : Attribute;
    begin
       First := True;
       for I in 1 .. Get_Nbr_Inputs (M) loop
-         Disp_Module_Port (Get_Input_Desc (M, I - 1), Port_In, First);
+         Attr := Get_First_Input_Port_Attribute (M, I - 1);
+         Disp_Module_Port (Get_Input_Desc (M, I - 1), Port_In, Attr, First);
       end loop;
       for I in 1 .. Get_Nbr_Outputs (M) loop
          Desc := Get_Output_Desc (M, I - 1);
+         Attr := Get_First_Output_Port_Attribute (M, I - 1);
          if Desc.Is_Inout then
-            Disp_Module_Port (Desc, Port_Inout, First);
+            Disp_Module_Port (Desc, Port_Inout, Attr, First);
          else
-            Disp_Module_Port (Desc, Port_Out, First);
+            Disp_Module_Port (Desc, Port_Out, Attr, First);
          end if;
       end loop;
       if not First then
