@@ -33,7 +33,6 @@ with Vhdl.Ieee.Std_Logic_1164;
 with Grt.Types;
 with Grt.Fcvt;
 with Grt.To_Strings;
-with Grt.Values;
 
 package body Vhdl.Evaluation is
    --  If FORCE is true, always return a literal.
@@ -2776,7 +2775,7 @@ package body Vhdl.Evaluation is
          case Get_Kind (Base_Type) is
             when Iir_Kind_Integer_Type_Definition =>
                declare
-                  use Grt.Values;
+                  use Grt.To_Strings;
                   use Grt.Types;
                   Res : Value_I64_Result;
                begin

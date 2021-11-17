@@ -55,32 +55,6 @@ package Grt.Values is
      (S : Std_String_Basep; Len : Ghdl_Index_Type; Rti : Ghdl_Rti_Access)
      return Ghdl_Index_Type;
 
-   type Value_Status is
-     (
-      Value_Ok,
-      Value_Err_No_Digit,  -- After sign, at start, after exponent...
-      Value_Err_Bad_Digit,
-      Value_Err_Underscore,
-      Value_Err_Bad_Base,
-      Value_Err_Bad_End_Sign,  --  Missing or mismatch
-      Value_Err_Bad_Exponent,
-      Value_Err_Trailing_Chars
-     );
-
-   type Value_I64_Result (Status : Value_Status := Value_Ok) is record
-      case Status is
-         when Value_Ok =>
-            Val : Ghdl_I64;
-         when others =>
-            Pos : Ghdl_Index_Type;
-      end case;
-   end record;
-
-   --  Convert S (INIT_POS .. LEN) to a signed integer.
-   function Value_I64 (S : Std_String_Basep;
-                       Len : Ghdl_Index_Type;
-                       Init_Pos : Ghdl_Index_Type) return Value_I64_Result;
-
    --  Likewise but report any error.
    function Value_I64
      (S : Std_String_Basep; Len : Ghdl_Index_Type; Init_Pos : Ghdl_Index_Type)

@@ -63,4 +63,46 @@ package Grt.To_Strings is
                         First : out Natural;
                         Value : Ghdl_I64;
                         Unit : Ghdl_I64);
+
+   type Value_Status is
+     (
+      Value_Ok,
+      Value_Err_No_Digit,  -- After sign, at start, after exponent...
+      Value_Err_Bad_Digit,
+      Value_Err_Underscore,
+      Value_Err_Bad_Base,
+      Value_Err_Bad_End_Sign,  --  Missing or mismatch
+      Value_Err_Bad_Exponent,
+      Value_Err_Trailing_Chars
+     );
+   subtype Value_Status_Error is Value_Status range
+     Value_Status'Succ (Value_Ok) .. Value_Status'Last;
+
+   type Value_I64_Result (Status : Value_Status := Value_Ok) is record
+      case Status is
+         when Value_Ok =>
+            Val : Ghdl_I64;
+         when others =>
+            Pos : Ghdl_Index_Type;
+      end case;
+   end record;
+
+   --  Convert S (INIT_POS .. LEN) to a signed integer.
+   function Value_I64 (S : Std_String_Basep;
+                       Len : Ghdl_Index_Type;
+                       Init_Pos : Ghdl_Index_Type) return Value_I64_Result;
+
+   type Value_F64_Result (Status : Value_Status := Value_Ok) is record
+      case Status is
+         when Value_Ok =>
+            Val : Ghdl_F64;
+         when others =>
+            Pos : Ghdl_Index_Type;
+      end case;
+   end record;
+
+   --  Convert S (INIT_POS .. LEN) to a floating point number.
+   function Value_F64 (S : Std_String_Basep;
+                       Len : Ghdl_Index_Type;
+                       Init_Pos : Ghdl_Index_Type) return Value_F64_Result;
 end Grt.To_Strings;
