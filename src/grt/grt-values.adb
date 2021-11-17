@@ -135,9 +135,9 @@ package body Grt.Values is
    end Ghdl_Value_E32;
 
    --  Convert S (INIT_POS .. LEN) to a signed integer.
-   function Value_I64
-     (S : Std_String_Basep; Len : Ghdl_Index_Type; Init_Pos : Ghdl_Index_Type)
-     return Ghdl_I64
+   function Value_I64 (S : Std_String_Basep;
+                       Len : Ghdl_Index_Type;
+                       Init_Pos : Ghdl_Index_Type) return Value_I64_Result
    is
       Pos : Ghdl_Index_Type := Init_Pos;
       C : Character;
@@ -147,6 +147,7 @@ package body Grt.Values is
       Is_Neg : Boolean;
    begin
       C := S (Pos);
+      Val := 0;
 
       --  LRM02 14.1 Predefined attributes
       --  Restrictions: It is an error is the parameter is not a valid string
@@ -160,14 +161,13 @@ package body Grt.Values is
       Is_Neg := False;
       if C = '+' or C = '-' then
          if Pos = Len then
-            Error_E ("'value: missing digit after +/-");
+            return (Status => Value_Err_No_Digit, Pos => Pos);
          end if;
          Pos := Pos + 1;
          Is_Neg := C = '-';
          C := S (Pos);
       end if;
 
-      Val := 0;
       loop
          if C in '0' .. '9' then
             Val := Val * 10 - (Character'Pos (C) - Character'Pos ('0'));
@@ -175,13 +175,13 @@ package body Grt.Values is
             exit when Pos >= Len;
             C := S (Pos);
          else
-            Error_E ("'value: decimal digit expected");
+            return (Status => Value_Err_No_Digit, Pos => Pos);
          end if;
          case C is
             when '_' =>
                Pos := Pos + 1;
                if Pos >= Len then
-                  Error_E ("'value: trailing underscore");
+                  return (Status => Value_Err_Underscore, Pos => Pos);
                end if;
                C := S (Pos);
             when '#'
@@ -203,7 +203,7 @@ package body Grt.Values is
          if not Is_Neg then
             Val := -Val;
          end if;
-         return Val;
+         return (Status => Value_Ok, Val => Val);
       end if;
 
       if C = '#' or C = ':' then
@@ -212,10 +212,10 @@ package body Grt.Values is
          Sep := C;
          Pos := Pos + 1;
          if Base < 2 or Base > 16 then
-            Error_E ("'value: bad base");
+            return (Status => Value_Err_Bad_Base, Pos => Pos);
          end if;
          if Pos >= Len then
-            Error_E ("'value: missing based integer");
+            return (Status => Value_Err_No_Digit, Pos => Pos);
          end if;
          C := S (Pos);
          loop
@@ -227,27 +227,27 @@ package body Grt.Values is
                when 'A' .. 'F' =>
                   D := Character'Pos (C) - Character'Pos ('A') + 10;
                when others =>
-                  Error_E ("'value: digit expected");
+                  return (Status => Value_Err_Bad_Digit, Pos => Pos);
             end case;
             if D >= Base then
-               Error_E ("'value: digit >= base");
+               return (Status => Value_Err_Bad_Digit, Pos => Pos);
             end if;
             Val := Val * Base - D;
             Pos := Pos + 1;
             if Pos >= Len then
-               Error_E ("'value: missing end sign number");
+               return (Status => Value_Err_Bad_End_Sign, Pos => Pos);
             end if;
             C := S (Pos);
             if C = '#' or C = ':' then
                if C /= Sep then
-                  Error_E ("'value: sign number mismatch");
+                  return (Status => Value_Err_Bad_End_Sign, Pos => Pos);
                end if;
                Pos := Pos + 1;
                exit;
             elsif C = '_' then
                Pos := Pos + 1;
                if Pos >= Len then
-                  Error_E ("'value: no character after underscore");
+                  return (Status => Value_Err_Underscore, Pos => Pos);
                end if;
                C := S (Pos);
             end if;
@@ -260,17 +260,17 @@ package body Grt.Values is
       if C = 'e' or C = 'E' then
          Pos := Pos + 1;
          if Pos >= Len then
-            Error_E ("'value: no character after exponent");
+            return (Status => Value_Err_No_Digit, Pos => Pos);
          end if;
          C := S (Pos);
          if C = '+' then
             Pos := Pos + 1;
             if Pos >= Len then
-               Error_E ("'value: no character after sign");
+               return (Status => Value_Err_No_Digit, Pos => Pos);
             end if;
             C := S (Pos);
          elsif C = '-' then
-            Error_E ("'value: negativ exponent not allowed");
+            return (Status => Value_Err_Bad_Exponent, Pos => Pos);
          end if;
          Exp := 0;
          loop
@@ -280,13 +280,13 @@ package body Grt.Values is
                exit when Pos >= Len;
                C := S (Pos);
             else
-               Error_E ("'value: decimal digit expected");
+               return (Status => Value_Err_Bad_Digit, Pos => Pos);
             end if;
             case C is
                when '_' =>
                   Pos := Pos + 1;
                   if Pos >= Len then
-                     Error_E ("'value: trailing underscore");
+                     return (Status => Value_Err_Underscore, Pos => Pos);
                   end if;
                   C := S (Pos);
                when ' '
@@ -308,14 +308,41 @@ package body Grt.Values is
       end if;
 
       if Pos /= Len then
-         Error_E ("'value: trailing characters after blank");
+         return (Status => Value_Err_Trailing_Chars, Pos => Pos);
       end if;
 
       if not Is_Neg then
          Val := -Val;
       end if;
 
-      return Val;
+      return (Status => Value_Ok, Val => Val);
+   end Value_I64;
+
+   function Value_I64
+     (S : Std_String_Basep; Len : Ghdl_Index_Type; Init_Pos : Ghdl_Index_Type)
+     return Ghdl_I64
+   is
+      Res : Value_I64_Result;
+   begin
+      Res := Value_I64 (S, Len, Init_Pos);
+      case Res.Status is
+         when Value_Ok =>
+            return Res.Val;
+         when Value_Err_No_Digit =>
+            Error_E ("'value: missing digit");
+         when Value_Err_Underscore =>
+            Error_E ("'value: incorrect underscore");
+         when Value_Err_Bad_Base =>
+            Error_E ("'value: bad base");
+         when Value_Err_Bad_Digit =>
+            Error_E ("'value: digit expected");
+         when Value_Err_Bad_End_Sign =>
+            Error_E ("'value: incorrect or missing sign number");
+         when Value_Err_Bad_Exponent =>
+            Error_E ("'value: negativ exponent not allowed");
+         when Value_Err_Trailing_Chars =>
+            Error_E ("'value: trailing characters after blank");
+      end case;
    end Value_I64;
 
    function Ghdl_Value_I64 (Str : Std_String_Ptr) return Ghdl_I64

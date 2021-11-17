@@ -33,6 +33,7 @@ with Vhdl.Ieee.Std_Logic_1164;
 with Grt.Types;
 with Grt.Fcvt;
 with Grt.To_Strings;
+with Grt.Values;
 
 package body Vhdl.Evaluation is
    --  If FORCE is true, always return a literal.
@@ -2774,7 +2775,22 @@ package body Vhdl.Evaluation is
       begin
          case Get_Kind (Base_Type) is
             when Iir_Kind_Integer_Type_Definition =>
-               return Build_Discrete (Int64'Value (Value1), Orig);
+               declare
+                  use Grt.Values;
+                  use Grt.Types;
+                  Res : Value_I64_Result;
+               begin
+                  Res := Value_I64 (To_Std_String_Basep (Value1'Address),
+                                    Value1'Length, 0);
+                  if Res.Status = Value_Ok then
+                     return Build_Discrete (Int64 (Res.Val), Orig);
+                  else
+                     Warning_Msg_Sem
+                       (Warnid_Runtime_Error, +Get_Parameter (Orig),
+                        "incorrect parameter for value attribute");
+                     return Build_Overflow (Orig);
+                  end if;
+               end;
             when Iir_Kind_Enumeration_Type_Definition =>
                return Build_Enumeration_Value (Value1, Base_Type, Orig);
             when Iir_Kind_Floating_Type_Definition =>
@@ -2784,11 +2800,6 @@ package body Vhdl.Evaluation is
             when others =>
                Error_Kind ("eval_value_attribute", Base_Type);
          end case;
-      exception
-         when Constraint_Error =>
-            Warning_Msg_Sem (Warnid_Runtime_Error, +Orig,
-                             "incorrect parameter for value attribute");
-            return Build_Overflow (Orig);
       end;
    end Eval_Value_Attribute;
 
