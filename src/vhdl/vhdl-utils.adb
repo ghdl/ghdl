@@ -1515,13 +1515,9 @@ package body Vhdl.Utils is
          return Null_Iir;
       end if;
 
-      case Get_Kind (Res) is
-         when Iir_Kind_Entity_Declaration
-            | Iir_Kind_Foreign_Module =>
-            return Res;
-         when others =>
-            raise Internal_Error;
-      end case;
+      pragma Assert (Kind_In (Res, Iir_Kind_Entity_Declaration,
+                              Iir_Kind_Foreign_Module));
+      return Res;
    end Get_Entity;
 
    function Get_Configuration (Aspect : Iir) return Iir
