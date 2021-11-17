@@ -1292,6 +1292,107 @@ package body Netlists is
       return Attributes_Table.Table (Attr).Chain;
    end Get_Attribute_Next;
 
+   function Port_Attribute_Hash (Params : Port_Desc_Idx)
+                                return Hash_Value_Type is
+   begin
+      return Hash_Value_Type (Params);
+   end Port_Attribute_Hash;
+
+   function Port_Attribute_Build (Params : Port_Desc_Idx)
+                                 return Port_Desc_Idx is
+   begin
+      return Params;
+   end Port_Attribute_Build;
+
+   function Port_Attribute_Build_Value (Obj : Port_Desc_Idx) return Attribute
+   is
+      pragma Unreferenced (Obj);
+   begin
+      return No_Attribute;
+   end Port_Attribute_Build_Value;
+
+   package Ports_Attribute_Maps is new Dyn_Maps
+     (Params_Type => Port_Desc_Idx,
+      Object_Type => Port_Desc_Idx,
+      Value_Type => Attribute,
+      Hash => Port_Attribute_Hash,
+      Build => Port_Attribute_Build,
+      Build_Value => Port_Attribute_Build_Value,
+      Equal => "=");
+
+   Ports_Attribute_Map : Ports_Attribute_Maps.Instance;
+
+   procedure Set_Port_Attribute
+     (Port : Port_Desc_Idx; Id : Name_Id; Ptype : Param_Type; Pv : Pval)
+   is
+      Attr       : Attribute;
+      Idx        : Ports_Attribute_Maps.Index_Type;
+      Prev       : Attribute;
+   begin
+      Ports_Attribute_Maps.Get_Index (Ports_Attribute_Map, Port, Idx);
+
+      Prev := Ports_Attribute_Maps.Get_Value (Ports_Attribute_Map, Idx);
+      Attributes_Table.Append ((Name => Id,
+                                Typ => Ptype,
+                                Val => Pv,
+                                Chain => Prev));
+      Attr := Attributes_Table.Last;
+
+      Ports_Attribute_Maps.Set_Value (Ports_Attribute_Map, Idx, Attr);
+   end Set_Port_Attribute;
+
+   procedure Set_Input_Port_Attribute (M : Module;
+                                       Port : Port_Idx;
+                                       Id : Name_Id;
+                                       Ptype : Param_Type;
+                                       Pv : Pval)
+   is
+      Idx  : constant Port_Desc_Idx :=
+        Get_Input_First_Desc (M) + Port_Desc_Idx (Port);
+   begin
+      Set_Port_Attribute (Idx, Id, Ptype, Pv);
+   end Set_Input_Port_Attribute;
+
+   procedure Set_Output_Port_Attribute (M : Module;
+                                        Port : Port_Idx;
+                                        Id : Name_Id;
+                                        Ptype : Param_Type;
+                                        Pv : Pval)
+   is
+      Idx  : constant Port_Desc_Idx :=
+        Get_Output_First_Desc (M) + Port_Desc_Idx (Port);
+   begin
+      Set_Port_Attribute (Idx, Id, Ptype, Pv);
+   end Set_Output_Port_Attribute;
+
+   function Get_Port_First_Attribute (Port : Port_Desc_Idx) return Attribute
+   is
+      Idx        : Ports_Attribute_Maps.Index_Type;
+      Res        : Attribute;
+   begin
+      Ports_Attribute_Maps.Get_Index (Ports_Attribute_Map, Port, Idx);
+      Res := Ports_Attribute_Maps.Get_Value (Ports_Attribute_Map, Idx);
+      return Res;
+   end Get_Port_First_Attribute;
+
+   function Get_First_Input_Port_Attribute (M : Module; Port : Port_Idx)
+                                           return Attribute
+   is
+      Idx  : constant Port_Desc_Idx :=
+        Get_Input_First_Desc (M) + Port_Desc_Idx (Port);
+   begin
+      return Get_Port_First_Attribute (Idx);
+   end Get_First_Input_Port_Attribute;
+
+   function Get_First_Output_Port_Attribute (M : Module; Port : Port_Idx)
+                                            return Attribute
+   is
+      Idx  : constant Port_Desc_Idx :=
+        Get_Output_First_Desc (M) + Port_Desc_Idx (Port);
+   begin
+      return Get_Port_First_Attribute (Idx);
+   end Get_First_Output_Port_Attribute;
+
    --  Statistics
 
    function Count_Free_Inputs (Head : Input) return Natural
@@ -1499,4 +1600,6 @@ begin
                              Val => No_Pval,
                              Chain => No_Attribute));
    pragma Assert (Attributes_Table.Last = No_Attribute);
+
+   Ports_Attribute_Maps.Init (Ports_Attribute_Map);
 end Netlists;

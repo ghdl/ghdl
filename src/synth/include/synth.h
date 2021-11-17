@@ -134,6 +134,8 @@ namespace GhdlSynth {
 
   struct Attribute { unsigned int id; };
   GHDLSYNTH_ADA_WRAPPER_WW(get_first_attribute, Attribute, Instance);
+  GHDLSYNTH_ADA_WRAPPER_WWD(get_first_input_port_attribute, Attribute, Module, Port_Idx);
+  GHDLSYNTH_ADA_WRAPPER_WWD(get_first_output_port_attribute, Attribute, Module, Port_Idx);
   GHDLSYNTH_ADA_WRAPPER_WW(get_attribute_name, Name_Id, Attribute);
   GHDLSYNTH_ADA_WRAPPER_DW(get_attribute_type, Param_Type, Attribute);
   GHDLSYNTH_ADA_WRAPPER_WW(get_attribute_pval, Pval, Attribute);

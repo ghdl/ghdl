@@ -332,8 +332,23 @@ package Netlists is
    procedure Set_Attribute
      (Inst : Instance; Id : Name_Id; Ptype : Param_Type; Pv : Pval);
 
+   procedure Set_Input_Port_Attribute (M : Module;
+                                       Port : Port_Idx;
+                                       Id : Name_Id;
+                                       Ptype : Param_Type;
+                                       Pv : Pval);
+   procedure Set_Output_Port_Attribute (M : Module;
+                                        Port : Port_Idx;
+                                        Id : Name_Id;
+                                        Ptype : Param_Type;
+                                        Pv : Pval);
+
    --  Return the first attribute for INST.  Returns No_Attribute if none.
    function Get_First_Attribute (Inst : Instance) return Attribute;
+   function Get_First_Input_Port_Attribute (M : Module; Port : Port_Idx)
+                                           return Attribute;
+   function Get_First_Output_Port_Attribute (M : Module; Port : Port_Idx)
+                                            return Attribute;
 
    --  Get name/type/value of an attribute.
    function Get_Attribute_Name (Attr : Attribute) return Name_Id;
