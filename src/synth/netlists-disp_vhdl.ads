@@ -20,7 +20,6 @@ package Netlists.Disp_Vhdl is
    procedure Disp_Vhdl (M : Module);
 
    procedure Disp_Architecture_Declarations (M : Module);
-   procedure Disp_Architecture_Attributes (M : Module);
    procedure Disp_Architecture_Statements (M : Module);
 
    procedure Put_Type (W : Width);

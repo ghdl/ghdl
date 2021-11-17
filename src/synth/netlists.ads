@@ -18,7 +18,6 @@
 
 with Types; use Types;
 with Hash; use Hash;
-with Dyn_Maps;
 
 package Netlists is
    --  Netlists.
@@ -409,24 +408,6 @@ private
       Chain : Attribute;
    end record;
 
-   function Attribute_Hash (Params : Instance) return Hash_Value_Type;
-   function Attribute_Build (Params : Instance) return Instance;
-   function Attribute_Build_Value (Obj : Instance) return Attribute;
-
-   --  Per instance map of attribute.
-   --  The index is the sub-instance, the value is the attribute chain.
-   package Instances_Attribute_Maps is new Dyn_Maps
-     (Params_Type => Instance,
-      Object_Type => Instance,
-      Value_Type => Attribute,
-      Hash => Attribute_Hash,
-      Build => Attribute_Build,
-      Build_Value => Attribute_Build_Value,
-      Equal => "=");
-
-   type Instances_Attribute_Map_Acc is
-     access Instances_Attribute_Maps.Instance;
-
    type Module_Record is record
       Parent           : Module;
       Name             : Sname;
@@ -449,17 +430,11 @@ private
       --  FIXME: use an array instead ?
       First_Instance : Instance;
       Last_Instance  : Instance;
-
-      --  Map of instance (of this module) to its attributes.
-      Attrs          : Instances_Attribute_Map_Acc;
    end record;
 
    function Get_First_Port_Desc (M : Module) return Port_Desc_Idx;
    function Get_First_Output (Inst : Instance) return Net;
    function Get_Port_Desc (Idx : Port_Desc_Idx) return Port_Desc;
-
-   function Get_Instance_Attributes (M : Module)
-                                    return Instances_Attribute_Map_Acc;
 
    function Is_Valid (I : Instance) return Boolean;
 

@@ -1332,6 +1332,40 @@ package body Netlists.Disp_Vhdl is
       end case;
    end Disp_Instance_Inline;
 
+   procedure Disp_Architecture_Attributes (Inst : Instance)
+   is
+      Attrs : constant Attribute := Get_Instance_First_Attribute (Inst);
+      Attr  : Attribute;
+      Kind  : Param_Type;
+      Val   : Pval;
+   begin
+      Attr := Attrs;
+      while Attr /= No_Attribute loop
+         Put ("  -- attribute ");
+         Put_Id (Get_Attribute_Name (Attr));
+         Put (" of ");
+         Put_Name (Get_Instance_Name (Inst));
+         Put (" is ");
+         Kind := Get_Attribute_Type (Attr);
+         Val := Get_Attribute_Pval (Attr);
+         case Kind is
+            when Param_Invalid
+              | Param_Uns32 =>
+               Put ("??");
+            when Param_Pval_String =>
+               Disp_Pval_String (Val);
+            when Param_Pval_Vector
+              | Param_Pval_Integer
+              | Param_Pval_Boolean
+              | Param_Pval_Real
+              | Param_Pval_Time_Ps =>
+               Disp_Pval_Binary (Val);
+         end case;
+         Put_Line (";");
+         Attr := Get_Attribute_Next (Attr);
+      end loop;
+   end Disp_Architecture_Attributes;
+
    procedure Disp_Architecture_Declarations (M : Module)
    is
       Id : Module_Id;
@@ -1418,6 +1452,10 @@ package body Netlists.Disp_Vhdl is
                   end loop;
                end if;
          end case;
+
+         if Has_Instance_Attribute (Inst) then
+            Disp_Architecture_Attributes (Inst);
+         end if;
       end loop;
    end Disp_Architecture_Declarations;
 
@@ -1456,52 +1494,6 @@ package body Netlists.Disp_Vhdl is
       end loop;
    end Disp_Architecture_Statements;
 
-   procedure Disp_Architecture_Attributes (M : Module)
-   is
-      Attrs : constant Instances_Attribute_Map_Acc :=
-        Get_Instance_Attributes (M);
-      Attr  : Attribute;
-      Inst  : Instance;
-      Kind  : Param_Type;
-      Val   : Pval;
-   begin
-      if Attrs = null then
-         --  No attributes at all.
-         return;
-      end if;
-
-      for I in Instances_Attribute_Maps.First_Index
-        .. Instances_Attribute_Maps.Last_Index (Attrs.all)
-      loop
-         Attr := Instances_Attribute_Maps.Get_Value (Attrs.all, I);
-         Inst := Instances_Attribute_Maps.Get_By_Index (Attrs.all, I);
-         while Attr /= No_Attribute loop
-            Put ("  -- attribute ");
-            Put_Id (Get_Attribute_Name (Attr));
-            Put (" of ");
-            Put_Name (Get_Instance_Name (Inst));
-            Put (" is ");
-            Kind := Get_Attribute_Type (Attr);
-            Val := Get_Attribute_Pval (Attr);
-            case Kind is
-               when Param_Invalid
-                  | Param_Uns32 =>
-                  Put ("??");
-               when Param_Pval_String =>
-                  Disp_Pval_String (Val);
-               when Param_Pval_Vector
-                  | Param_Pval_Integer
-                  | Param_Pval_Boolean
-                  | Param_Pval_Real
-                  | Param_Pval_Time_Ps =>
-                  Disp_Pval_Binary (Val);
-            end case;
-            Put_Line (";");
-            Attr := Get_Attribute_Next (Attr);
-         end loop;
-      end loop;
-   end Disp_Architecture_Attributes;
-
    procedure Disp_Architecture (M : Module)
    is
       Self_Inst : constant Instance := Get_Self_Instance (M);
@@ -1520,8 +1512,6 @@ package body Netlists.Disp_Vhdl is
       --  * generate instances
 
       Disp_Architecture_Declarations (M);
-
-      Disp_Architecture_Attributes (M);
 
       Put_Line ("begin");
 

@@ -541,7 +541,6 @@ package body Synth.Disp_Vhdl is
       Put_Line (" is");
       Disp_Ports_As_Signals (Main);
       Disp_Architecture_Declarations (Main);
-      Disp_Architecture_Attributes (Main);
 
       Put_Line ("begin");
       if Inst /= null then

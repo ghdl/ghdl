@@ -209,6 +209,44 @@ package body Netlists.Dump is
       end case;
    end Dump_Parameter;
 
+   procedure Dump_Attributes (Inst : Instance; Indent : Natural := 0)
+   is
+      Attrs : constant Attribute := Get_Instance_First_Attribute (Inst);
+      Attr  : Attribute;
+      Kind  : Param_Type;
+      Val   : Pval;
+   begin
+      Attr := Attrs;
+      while Attr /= No_Attribute loop
+         pragma Assert (Has_Instance_Attribute (Inst));
+
+         Put_Indent (Indent);
+         Put ("attribute ");
+         Put_Id (Get_Attribute_Name (Attr));
+         Put (" of ");
+         Dump_Name (Get_Instance_Name (Inst));
+         Disp_Instance_Id (Inst);
+         Put (" := ");
+         Kind := Get_Attribute_Type (Attr);
+         Val := Get_Attribute_Pval (Attr);
+         case Kind is
+            when Param_Invalid
+              | Param_Uns32 =>
+               Put ("??");
+            when Param_Pval_String =>
+               Disp_Pval_String (Val);
+            when Param_Pval_Vector
+              | Param_Pval_Integer
+              | Param_Pval_Boolean
+              | Param_Pval_Real
+              | Param_Pval_Time_Ps =>
+               Disp_Pval_Binary (Val);
+         end case;
+         Put_Line (";");
+         Attr := Get_Attribute_Next (Attr);
+      end loop;
+   end Dump_Attributes;
+
    procedure Dump_Instance (Inst : Instance; Indent : Natural := 0)
    is
       Loc : constant Location_Type := Locations.Get_Location (Inst);
@@ -230,6 +268,8 @@ package body Netlists.Dump is
             New_Line;
          end;
       end if;
+
+      Dump_Attributes (Inst, Indent);
 
       Put_Indent (Indent);
       Put ("instance ");
@@ -309,56 +349,6 @@ package body Netlists.Dump is
       New_Line;
    end Dump_Module_Port;
 
-   procedure Dump_Attributes (M : Module; Indent : Natural := 0)
-   is
-      Attrs : constant Instances_Attribute_Map_Acc :=
-        Get_Instance_Attributes (M);
-      Attr  : Attribute;
-      Inst  : Instance;
-      Kind  : Param_Type;
-      Val   : Pval;
-   begin
-      if Attrs = null then
-         --  No attributes at all.
-         return;
-      end if;
-
-      for I in Instances_Attribute_Maps.First_Index
-        .. Instances_Attribute_Maps.Last_Index (Attrs.all)
-      loop
-         Attr := Instances_Attribute_Maps.Get_Value (Attrs.all, I);
-         Inst := Instances_Attribute_Maps.Get_By_Index (Attrs.all, I);
-         while Attr /= No_Attribute loop
-            pragma Assert (Has_Instance_Attribute (Inst));
-
-            Put_Indent (Indent);
-            Put ("attribute ");
-            Put_Id (Get_Attribute_Name (Attr));
-            Put (" of ");
-            Dump_Name (Get_Instance_Name (Inst));
-            Disp_Instance_Id (Inst);
-            Put (" := ");
-            Kind := Get_Attribute_Type (Attr);
-            Val := Get_Attribute_Pval (Attr);
-            case Kind is
-               when Param_Invalid
-                  | Param_Uns32 =>
-                  Put ("??");
-               when Param_Pval_String =>
-                  Disp_Pval_String (Val);
-               when Param_Pval_Vector
-                  | Param_Pval_Integer
-                  | Param_Pval_Boolean
-                  | Param_Pval_Real
-                  | Param_Pval_Time_Ps =>
-                  Disp_Pval_Binary (Val);
-            end case;
-            Put_Line (";");
-            Attr := Get_Attribute_Next (Attr);
-         end loop;
-      end loop;
-   end Dump_Attributes;
-
    procedure Dump_Module_Header (M : Module; Indent : Natural := 0) is
    begin
       --  Module id and name.
@@ -418,8 +408,6 @@ package body Netlists.Dump is
       for S of Sub_Modules (M) loop
          Dump_Module (S, Indent + 1);
       end loop;
-
-      Dump_Attributes (M, Indent + 1);
 
       declare
          Self : constant Instance := Get_Self_Instance (M);

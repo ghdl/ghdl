@@ -20,6 +20,7 @@ with Std_Names;
 with Name_Table;
 with Tables;
 with Simple_IO;
+with Dyn_Maps;
 
 with Netlists.Utils; use Netlists.Utils;
 with Netlists.Gates;
@@ -129,8 +130,7 @@ package body Netlists is
                              Last_Sub_Module => No_Module,
                              Next_Sub_Module => No_Module,
                              First_Instance => No_Instance,
-                             Last_Instance => No_Instance,
-                             Attrs => null));
+                             Last_Instance => No_Instance));
       Res := Modules_Table.Last;
       Self := Create_Self_Instance (Res);
       pragma Unreferenced (Self);
@@ -175,8 +175,7 @@ package body Netlists is
           Last_Sub_Module => No_Module,
           Next_Sub_Module => No_Module,
           First_Instance => No_Instance,
-          Last_Instance => No_Instance,
-          Attrs => null));
+          Last_Instance => No_Instance));
       Res := Modules_Table.Last;
 
       --  Append
@@ -313,6 +312,7 @@ package body Netlists is
       Table_Low_Bound => No_Param_Idx,
       Table_Initial => 256);
 
+   --  Hash INST (simply return its index).
    function Hash (Inst : Instance) return Hash_Value_Type is
    begin
       return Hash_Value_Type (Inst);
@@ -1174,66 +1174,66 @@ package body Netlists is
 
    --  Attributes
 
-   function Attribute_Hash (Params : Instance) return Hash_Value_Type is
-   begin
-      return Hash_Value_Type (Params);
-   end Attribute_Hash;
-
-   function Attribute_Build (Params : Instance) return Instance is
-   begin
-      return Params;
-   end Attribute_Build;
-
-   function Attribute_Build_Value (Obj : Instance) return Attribute
-   is
-      pragma Unreferenced (Obj);
-   begin
-      return No_Attribute;
-   end Attribute_Build_Value;
-
    package Attributes_Table is new Tables
      (Table_Component_Type => Attribute_Record,
       Table_Index_Type     => Attribute,
       Table_Low_Bound      => 0,
       Table_Initial        => 64);
 
+   function Instance_Attribute_Hash (Params : Instance)
+                                    return Hash_Value_Type is
+   begin
+      return Hash_Value_Type (Params);
+   end Instance_Attribute_Hash;
+
+   function Instance_Attribute_Build (Params : Instance) return Instance is
+   begin
+      return Params;
+   end Instance_Attribute_Build;
+
+   function Instance_Attribute_Build_Value (Obj : Instance) return Attribute
+   is
+      pragma Unreferenced (Obj);
+   begin
+      return No_Attribute;
+   end Instance_Attribute_Build_Value;
+
+   package Instances_Attribute_Maps is new Dyn_Maps
+     (Params_Type => Instance,
+      Object_Type => Instance,
+      Value_Type => Attribute,
+      Hash => Instance_Attribute_Hash,
+      Build => Instance_Attribute_Build,
+      Build_Value => Instance_Attribute_Build_Value,
+      Equal => "=");
+
+   Instances_Attribute_Map : Instances_Attribute_Maps.Instance;
+
    procedure Set_Instance_Attribute
      (Inst : Instance; Id : Name_Id; Ptype : Param_Type; Pv : Pval)
    is
       pragma Assert (Is_Valid (Inst));
-      M          : constant Module := Get_Instance_Parent (Inst);
-      Module_Rec : Module_Record renames Modules_Table.Table (M);
       Attr       : Attribute;
       Idx        : Instances_Attribute_Maps.Index_Type;
       Prev       : Attribute;
    begin
-      if Module_Rec.Attrs = null then
-         Module_Rec.Attrs := new Instances_Attribute_Maps.Instance;
-         Instances_Attribute_Maps.Init (Module_Rec.Attrs.all);
-      end if;
-
       --  There is now at least one attribute for INST.
       Instances_Table.Table (Inst).Has_Attr := True;
 
       --  Get (or create and get) an entry for INST.  If created, it will be
       --  No_Attribute (returned by attribute_build_value).
-      Instances_Attribute_Maps.Get_Index (Module_Rec.Attrs.all, Inst, Idx);
+      Instances_Attribute_Maps.Get_Index (Instances_Attribute_Map, Inst, Idx);
 
-      Prev := Instances_Attribute_Maps.Get_Value (Module_Rec.Attrs.all, Idx);
+      Prev := Instances_Attribute_Maps.Get_Value
+        (Instances_Attribute_Map, Idx);
       Attributes_Table.Append ((Name => Id,
                                 Typ => Ptype,
                                 Val => Pv,
                                 Chain => Prev));
       Attr := Attributes_Table.Last;
 
-      Instances_Attribute_Maps.Set_Value (Module_Rec.Attrs.all, Idx, Attr);
+      Instances_Attribute_Maps.Set_Value (Instances_Attribute_Map, Idx, Attr);
    end Set_Instance_Attribute;
-
-   function Get_Instance_Attributes (M : Module)
-                                    return Instances_Attribute_Map_Acc is
-   begin
-      return Modules_Table.Table (M).Attrs;
-   end Get_Instance_Attributes;
 
    function Has_Instance_Attribute (Inst : Instance) return Boolean is
    begin
@@ -1248,15 +1248,13 @@ package body Netlists is
          return No_Attribute;
       end if;
       declare
-         M     : constant Module := Get_Instance_Parent (Inst);
-         Attrs : constant Instances_Attribute_Map_Acc :=
-           Get_Instance_Attributes (M);
          Idx   : Instances_Attribute_Maps.Index_Type;
          Res   : Attribute;
       begin
-         pragma Assert (Attrs /= null);
-         Instances_Attribute_Maps.Get_Index (Attrs.all, Inst, Idx);
-         Res := Instances_Attribute_Maps.Get_Value (Attrs.all, Idx);
+         Instances_Attribute_Maps.Get_Index
+           (Instances_Attribute_Map, Inst, Idx);
+         Res := Instances_Attribute_Maps.Get_Value
+           (Instances_Attribute_Map, Idx);
          return Res;
       end;
    end Get_Instance_First_Attribute;
@@ -1532,8 +1530,7 @@ begin
                           Last_Sub_Module => No_Module,
                           Next_Sub_Module => No_Module,
                           First_Instance => No_Instance,
-                          Last_Instance => No_Instance,
-                          Attrs => null));
+                          Last_Instance => No_Instance));
    pragma Assert (Modules_Table.Last = No_Module);
 
    Modules_Table.Append ((Parent => No_Module,
@@ -1549,8 +1546,7 @@ begin
                           Last_Sub_Module => No_Module,
                           Next_Sub_Module => No_Module,
                           First_Instance => No_Instance,
-                          Last_Instance => No_Instance,
-                          Attrs => null));
+                          Last_Instance => No_Instance));
    pragma Assert (Modules_Table.Last = Free_Module);
 
    Instances_Table.Append ((Parent => No_Module,
@@ -1604,4 +1600,6 @@ begin
    pragma Assert (Attributes_Table.Last = No_Attribute);
 
    Ports_Attribute_Maps.Init (Ports_Attribute_Map);
+
+   Instances_Attribute_Maps.Init (Instances_Attribute_Map);
 end Netlists;
