@@ -1240,7 +1240,6 @@ package body Netlists.Disp_Verilog is
    end Disp_Module_Statements;
 
    procedure Disp_Module_Port (Desc : Port_Desc;
-                               Dir : Port_Kind;
                                Attrs : Attribute;
                                First : in out Boolean)
    is
@@ -1268,7 +1267,7 @@ package body Netlists.Disp_Verilog is
          Put (" *) ");
       end if;
 
-      case Dir is
+      case Desc.Dir is
          when Port_In =>
             Put ("input  ");
          when Port_Out =>
@@ -1288,17 +1287,14 @@ package body Netlists.Disp_Verilog is
    begin
       First := True;
       for I in 1 .. Get_Nbr_Inputs (M) loop
+         Desc := Get_Input_Desc (M, I - 1);
          Attr := Get_Input_Port_First_Attribute (M, I - 1);
-         Disp_Module_Port (Get_Input_Desc (M, I - 1), Port_In, Attr, First);
+         Disp_Module_Port (Desc, Attr, First);
       end loop;
       for I in 1 .. Get_Nbr_Outputs (M) loop
          Desc := Get_Output_Desc (M, I - 1);
          Attr := Get_Output_Port_First_Attribute (M, I - 1);
-         if Desc.Is_Inout then
-            Disp_Module_Port (Desc, Port_Inout, Attr, First);
-         else
-            Disp_Module_Port (Desc, Port_Out, Attr, First);
-         end if;
+         Disp_Module_Port (Desc, Attr, First);
       end loop;
       if not First then
          Put (")");

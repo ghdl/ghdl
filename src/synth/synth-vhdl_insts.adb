@@ -389,7 +389,7 @@ package body Synth.Vhdl_Insts is
            | Type_Unbounded_Array =>
             Idx := Idx + 1;
             Descs (Idx) := (Name => Port_Sname,
-                            Is_Inout => Pkind = Port_Inout,
+                            Dir => Pkind,
                             W => Get_Type_Width (Typ));
          when Type_Record
            | Type_Unbounded_Record =>
@@ -404,7 +404,7 @@ package body Synth.Vhdl_Insts is
                   Descs (Idx) :=
                     (Name => New_Sname_User
                        (Get_Encoded_Name_Id (El, Encoding), Port_Sname),
-                     Is_Inout => Pkind = Port_Inout,
+                     Dir => Pkind,
                      W => Get_Type_Width (Typ.Rec.E (I).Typ));
                end loop;
             end;
@@ -1383,7 +1383,7 @@ package body Synth.Vhdl_Insts is
          Init_Net := No_Net;
       end if;
 
-      if Desc.Is_Inout then
+      if Desc.Dir = Port_Inout then
          declare
             Io_Inst : Instance;
          begin

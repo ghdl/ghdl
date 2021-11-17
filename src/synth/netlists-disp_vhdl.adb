@@ -1521,8 +1521,7 @@ package body Netlists.Disp_Vhdl is
       New_Line;
    end Disp_Architecture;
 
-   procedure Disp_Entity_Port
-     (Desc : Port_Desc; Dir : Port_Kind; First : in out Boolean) is
+   procedure Disp_Entity_Port (Desc : Port_Desc; First : in out Boolean) is
    begin
       if First then
          Put_Line ("  port (");
@@ -1533,7 +1532,7 @@ package body Netlists.Disp_Vhdl is
       Put ("    ");
       Put_Name (Desc.Name);
       Put (" : ");
-      case Dir is
+      case Desc.Dir is
          when Port_In =>
             Put ("in");
          when Port_Out =>
@@ -1552,15 +1551,12 @@ package body Netlists.Disp_Vhdl is
    begin
       First := True;
       for I in 1 .. Get_Nbr_Inputs (M) loop
-         Disp_Entity_Port (Get_Input_Desc (M, I - 1), Port_In, First);
+         Desc := Get_Input_Desc (M, I - 1);
+         Disp_Entity_Port (Desc, First);
       end loop;
       for I in 1 .. Get_Nbr_Outputs (M) loop
          Desc := Get_Output_Desc (M, I - 1);
-         if Desc.Is_Inout then
-            Disp_Entity_Port (Desc, Port_Inout, First);
-         else
-            Disp_Entity_Port (Desc, Port_Out, First);
-         end if;
+         Disp_Entity_Port (Desc, First);
       end loop;
       if not First then
          Put_Line (");");

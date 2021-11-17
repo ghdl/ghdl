@@ -21,18 +21,22 @@ with Name_Table; use Name_Table;
 with Std_Names; use Std_Names;
 
 package body Netlists.Builders is
-   function Create_Input (Id : String; W : Width := 0) return Port_Desc is
+   function Create_Port (Id : String; Dir : Port_Kind; W : Width := 0)
+                        return Port_Desc is
    begin
       return (Name => New_Sname_Artificial (Get_Identifier (Id), No_Sname),
-              Is_Inout => False,
+              Dir => Dir,
               W => W);
+   end Create_Port;
+
+   function Create_Input (Id : String; W : Width := 0) return Port_Desc is
+   begin
+      return Create_Port (Id, Port_In, W);
    end Create_Input;
 
    function Create_Output (Id : String; W : Width := 0) return Port_Desc is
    begin
-      return (Name => New_Sname_Artificial (Get_Identifier (Id), No_Sname),
-              Is_Inout => False,
-              W => W);
+      return Create_Port (Id, Port_Out, W);
    end Create_Output;
 
    procedure Create_Dyadic_Module (Design : Module;

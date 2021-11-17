@@ -152,7 +152,7 @@ package Netlists is
       --  Name of the port.
       Name : Sname;
 
-      Is_Inout : Boolean;
+      Dir : Port_Kind;
 
       --  Port width (number of bits).
       W : Width;
@@ -365,6 +365,9 @@ package Netlists is
 private
    type Sname is new Uns32 range 0 .. 2**30 - 1;
    No_Sname : constant Sname := 0;
+
+   --  Just to confirm.
+   for Port_Desc'Size use 64;
 
    --  We don't care about C compatible representation of Sname_Record.
    pragma Warnings (Off, "*convention*");

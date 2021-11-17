@@ -63,7 +63,7 @@ package body Synth.Disp_Vhdl is
       end loop;
       for I in 1 .. Get_Nbr_Outputs (M) loop
          Desc := Get_Output_Desc (M, I - 1);
-         if not Desc.Is_Inout then
+         if Desc.Dir /= Port_Inout then
             --  inout ports are not prefixed, so they must not be declared
             --  as signals.
             Disp_Signal (Desc);
@@ -518,7 +518,7 @@ package body Synth.Disp_Vhdl is
          Pfx_Wrap := New_Sname_User (Name_Wrap, No_Sname);
          for P of Ports_Desc (Main) loop
             --  INOUT ports are handled specially.
-            if not P.Is_Inout then
+            if P.Dir /= Port_Inout then
                Pfx := Get_Sname_Prefix (P.Name);
                if Pfx = No_Sname then
                   --  Normal port, without a prefix.

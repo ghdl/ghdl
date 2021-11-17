@@ -99,7 +99,7 @@ package body Netlists.Utils is
 
    function Get_Inout_Flag (M : Module; I : Port_Idx) return Boolean is
    begin
-      return Get_Output_Desc (M, I).Is_Inout;
+      return Get_Output_Desc (M, I).Dir = Port_Inout;
    end Get_Inout_Flag;
 
    function Get_Input_Net (Inst : Instance; Idx : Port_Idx) return Net is
