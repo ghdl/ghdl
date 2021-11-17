@@ -1458,7 +1458,8 @@ package body Netlists.Disp_Vhdl is
 
    procedure Disp_Architecture_Attributes (M : Module)
    is
-      Attrs : constant Attribute_Map_Acc := Get_Attributes (M);
+      Attrs : constant Instances_Attribute_Map_Acc :=
+        Get_Instance_Attributes (M);
       Attr  : Attribute;
       Inst  : Instance;
       Kind  : Param_Type;
@@ -1469,11 +1470,11 @@ package body Netlists.Disp_Vhdl is
          return;
       end if;
 
-      for I in
-        Attribute_Maps.First_Index .. Attribute_Maps.Last_Index (Attrs.all)
+      for I in Instances_Attribute_Maps.First_Index
+        .. Instances_Attribute_Maps.Last_Index (Attrs.all)
       loop
-         Attr := Attribute_Maps.Get_Value (Attrs.all, I);
-         Inst := Attribute_Maps.Get_By_Index (Attrs.all, I);
+         Attr := Instances_Attribute_Maps.Get_Value (Attrs.all, I);
+         Inst := Instances_Attribute_Maps.Get_By_Index (Attrs.all, I);
          while Attr /= No_Attribute loop
             Put ("  -- attribute ");
             Put_Id (Get_Attribute_Name (Attr));

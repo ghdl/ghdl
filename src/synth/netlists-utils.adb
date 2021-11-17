@@ -283,19 +283,19 @@ package body Netlists.Utils is
                        Get_Input_Net (Rinst, 0));
    end Same_Clock;
 
-   procedure Copy_Attributes (Dest : Instance; Src : Instance)
+   procedure Copy_Instance_Attributes (Dest : Instance; Src : Instance)
    is
       Attr : Attribute;
    begin
-      Attr := Get_First_Attribute (Src);
+      Attr := Get_Instance_First_Attribute (Src);
       while Attr /= No_Attribute loop
-         Set_Attribute (Dest,
-                        Get_Attribute_Name (Attr),
-                        Get_Attribute_Type (Attr),
-                        Get_Attribute_Pval (Attr));
+         Set_Instance_Attribute (Dest,
+                                 Get_Attribute_Name (Attr),
+                                 Get_Attribute_Type (Attr),
+                                 Get_Attribute_Pval (Attr));
          Attr := Get_Attribute_Next (Attr);
       end loop;
-   end Copy_Attributes;
+   end Copy_Instance_Attributes;
 
    function Clog2 (W : Width) return Width is
    begin

@@ -1288,12 +1288,12 @@ package body Netlists.Disp_Verilog is
    begin
       First := True;
       for I in 1 .. Get_Nbr_Inputs (M) loop
-         Attr := Get_First_Input_Port_Attribute (M, I - 1);
+         Attr := Get_Input_Port_First_Attribute (M, I - 1);
          Disp_Module_Port (Get_Input_Desc (M, I - 1), Port_In, Attr, First);
       end loop;
       for I in 1 .. Get_Nbr_Outputs (M) loop
          Desc := Get_Output_Desc (M, I - 1);
-         Attr := Get_First_Output_Port_Attribute (M, I - 1);
+         Attr := Get_Output_Port_First_Attribute (M, I - 1);
          if Desc.Is_Inout then
             Disp_Module_Port (Desc, Port_Inout, Attr, First);
          else

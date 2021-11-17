@@ -238,7 +238,7 @@ package body Synth.Vhdl_Decls is
       Ptype := Type_To_Param_Type (Get_Type (Attr_Decl));
       Pv := Memtyp_To_Pval (Get_Memtyp (Val));
 
-      Set_Attribute (Inst, Id, Ptype, Pv);
+      Set_Instance_Attribute (Inst, Id, Ptype, Pv);
    end Synth_Attribute_Object;
 
    procedure Synth_Attribute_Specification

@@ -1197,19 +1197,19 @@ package body Netlists is
       Table_Low_Bound      => 0,
       Table_Initial        => 64);
 
-   procedure Set_Attribute
+   procedure Set_Instance_Attribute
      (Inst : Instance; Id : Name_Id; Ptype : Param_Type; Pv : Pval)
    is
       pragma Assert (Is_Valid (Inst));
       M          : constant Module := Get_Instance_Parent (Inst);
       Module_Rec : Module_Record renames Modules_Table.Table (M);
       Attr       : Attribute;
-      Idx        : Attribute_Maps.Index_Type;
+      Idx        : Instances_Attribute_Maps.Index_Type;
       Prev       : Attribute;
    begin
       if Module_Rec.Attrs = null then
-         Module_Rec.Attrs := new Attribute_Maps.Instance;
-         Attribute_Maps.Init (Module_Rec.Attrs.all);
+         Module_Rec.Attrs := new Instances_Attribute_Maps.Instance;
+         Instances_Attribute_Maps.Init (Module_Rec.Attrs.all);
       end if;
 
       --  There is now at least one attribute for INST.
@@ -1217,47 +1217,49 @@ package body Netlists is
 
       --  Get (or create and get) an entry for INST.  If created, it will be
       --  No_Attribute (returned by attribute_build_value).
-      Attribute_Maps.Get_Index (Module_Rec.Attrs.all, Inst, Idx);
+      Instances_Attribute_Maps.Get_Index (Module_Rec.Attrs.all, Inst, Idx);
 
-      Prev := Attribute_Maps.Get_Value (Module_Rec.Attrs.all, Idx);
+      Prev := Instances_Attribute_Maps.Get_Value (Module_Rec.Attrs.all, Idx);
       Attributes_Table.Append ((Name => Id,
                                 Typ => Ptype,
                                 Val => Pv,
                                 Chain => Prev));
       Attr := Attributes_Table.Last;
 
-      Attribute_Maps.Set_Value (Module_Rec.Attrs.all, Idx, Attr);
-   end Set_Attribute;
+      Instances_Attribute_Maps.Set_Value (Module_Rec.Attrs.all, Idx, Attr);
+   end Set_Instance_Attribute;
 
-   function Get_Attributes (M : Module) return Attribute_Map_Acc is
+   function Get_Instance_Attributes (M : Module)
+                                    return Instances_Attribute_Map_Acc is
    begin
       return Modules_Table.Table (M).Attrs;
-   end Get_Attributes;
+   end Get_Instance_Attributes;
 
-   function Has_Attribute (Inst : Instance) return Boolean is
+   function Has_Instance_Attribute (Inst : Instance) return Boolean is
    begin
       return Instances_Table.Table (Inst).Has_Attr;
-   end Has_Attribute;
+   end Has_Instance_Attribute;
 
-   function Get_First_Attribute (Inst : Instance) return Attribute
+   function Get_Instance_First_Attribute (Inst : Instance) return Attribute
    is
       pragma Assert (Is_Valid (Inst));
    begin
-      if not Has_Attribute (Inst) then
+      if not Has_Instance_Attribute (Inst) then
          return No_Attribute;
       end if;
       declare
-         M          : constant Module := Get_Instance_Parent (Inst);
-         Attrs      : constant Attribute_Map_Acc := Get_Attributes (M);
-         Idx        : Attribute_Maps.Index_Type;
-         Res        : Attribute;
+         M     : constant Module := Get_Instance_Parent (Inst);
+         Attrs : constant Instances_Attribute_Map_Acc :=
+           Get_Instance_Attributes (M);
+         Idx   : Instances_Attribute_Maps.Index_Type;
+         Res   : Attribute;
       begin
          pragma Assert (Attrs /= null);
-         Attribute_Maps.Get_Index (Attrs.all, Inst, Idx);
-         Res := Attribute_Maps.Get_Value (Attrs.all, Idx);
+         Instances_Attribute_Maps.Get_Index (Attrs.all, Inst, Idx);
+         Res := Instances_Attribute_Maps.Get_Value (Attrs.all, Idx);
          return Res;
       end;
-   end Get_First_Attribute;
+   end Get_Instance_First_Attribute;
 
    function Is_Valid (Attr : Attribute) return Boolean is
    begin
@@ -1375,23 +1377,23 @@ package body Netlists is
       return Res;
    end Get_Port_First_Attribute;
 
-   function Get_First_Input_Port_Attribute (M : Module; Port : Port_Idx)
+   function Get_Input_Port_First_Attribute (M : Module; Port : Port_Idx)
                                            return Attribute
    is
       Idx  : constant Port_Desc_Idx :=
         Get_Input_First_Desc (M) + Port_Desc_Idx (Port);
    begin
       return Get_Port_First_Attribute (Idx);
-   end Get_First_Input_Port_Attribute;
+   end Get_Input_Port_First_Attribute;
 
-   function Get_First_Output_Port_Attribute (M : Module; Port : Port_Idx)
+   function Get_Output_Port_First_Attribute (M : Module; Port : Port_Idx)
                                             return Attribute
    is
       Idx  : constant Port_Desc_Idx :=
         Get_Output_First_Desc (M) + Port_Desc_Idx (Port);
    begin
       return Get_Port_First_Attribute (Idx);
-   end Get_First_Output_Port_Attribute;
+   end Get_Output_Port_First_Attribute;
 
    --  Statistics
 

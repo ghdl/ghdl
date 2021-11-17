@@ -311,7 +311,8 @@ package body Netlists.Dump is
 
    procedure Dump_Attributes (M : Module; Indent : Natural := 0)
    is
-      Attrs : constant Attribute_Map_Acc := Get_Attributes (M);
+      Attrs : constant Instances_Attribute_Map_Acc :=
+        Get_Instance_Attributes (M);
       Attr  : Attribute;
       Inst  : Instance;
       Kind  : Param_Type;
@@ -322,13 +323,13 @@ package body Netlists.Dump is
          return;
       end if;
 
-      for I in
-        Attribute_Maps.First_Index .. Attribute_Maps.Last_Index (Attrs.all)
+      for I in Instances_Attribute_Maps.First_Index
+        .. Instances_Attribute_Maps.Last_Index (Attrs.all)
       loop
-         Attr := Attribute_Maps.Get_Value (Attrs.all, I);
-         Inst := Attribute_Maps.Get_By_Index (Attrs.all, I);
+         Attr := Instances_Attribute_Maps.Get_Value (Attrs.all, I);
+         Inst := Instances_Attribute_Maps.Get_By_Index (Attrs.all, I);
          while Attr /= No_Attribute loop
-            pragma Assert (Has_Attribute (Inst));
+            pragma Assert (Has_Instance_Attribute (Inst));
 
             Put_Indent (Indent);
             Put ("attribute ");
@@ -528,7 +529,7 @@ package body Netlists.Dump is
       if Get_Nbr_Outputs (Inst) /= 1 then
          return False;
       end if;
-      if Has_Attribute (Inst) then
+      if Has_Instance_Attribute (Inst) then
          return False;
       end if;
       O := Get_Output (Inst, 0);
@@ -632,13 +633,13 @@ package body Netlists.Dump is
 
       Disp_Instance_Id (Inst);
 
-      if Has_Attribute (Inst) then
+      if Has_Instance_Attribute (Inst) then
          declare
             Attr  : Attribute;
             Kind  : Param_Type;
             Val   : Pval;
          begin
-            Attr := Get_First_Attribute (Inst);
+            Attr := Get_Instance_First_Attribute (Inst);
             Put ("(* ");
             loop
                Put_Id (Get_Attribute_Name (Attr));

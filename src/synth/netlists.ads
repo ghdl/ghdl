@@ -329,7 +329,7 @@ package Netlists is
    procedure Write_Pval (P : Pval; Off : Uns32; Val : Logic_32);
 
    --  Add an attribute to INST.
-   procedure Set_Attribute
+   procedure Set_Instance_Attribute
      (Inst : Instance; Id : Name_Id; Ptype : Param_Type; Pv : Pval);
 
    procedure Set_Input_Port_Attribute (M : Module;
@@ -344,10 +344,10 @@ package Netlists is
                                         Pv : Pval);
 
    --  Return the first attribute for INST.  Returns No_Attribute if none.
-   function Get_First_Attribute (Inst : Instance) return Attribute;
-   function Get_First_Input_Port_Attribute (M : Module; Port : Port_Idx)
+   function Get_Instance_First_Attribute (Inst : Instance) return Attribute;
+   function Get_Input_Port_First_Attribute (M : Module; Port : Port_Idx)
                                            return Attribute;
-   function Get_First_Output_Port_Attribute (M : Module; Port : Port_Idx)
+   function Get_Output_Port_First_Attribute (M : Module; Port : Port_Idx)
                                             return Attribute;
 
    --  Get name/type/value of an attribute.
@@ -359,7 +359,7 @@ package Netlists is
    function Get_Attribute_Next (Attr : Attribute) return Attribute;
 
    --  Return True iff INST has at least one attribute.
-   function Has_Attribute (Inst : Instance) return Boolean;
+   function Has_Instance_Attribute (Inst : Instance) return Boolean;
 
    --  Display some usage stats on the standard error.
    procedure Disp_Stats;
@@ -415,7 +415,7 @@ private
 
    --  Per instance map of attribute.
    --  The index is the sub-instance, the value is the attribute chain.
-   package Attribute_Maps is new Dyn_Maps
+   package Instances_Attribute_Maps is new Dyn_Maps
      (Params_Type => Instance,
       Object_Type => Instance,
       Value_Type => Attribute,
@@ -424,7 +424,8 @@ private
       Build_Value => Attribute_Build_Value,
       Equal => "=");
 
-   type Attribute_Map_Acc is access Attribute_Maps.Instance;
+   type Instances_Attribute_Map_Acc is
+     access Instances_Attribute_Maps.Instance;
 
    type Module_Record is record
       Parent           : Module;
@@ -450,14 +451,15 @@ private
       Last_Instance  : Instance;
 
       --  Map of instance (of this module) to its attributes.
-      Attrs          : Attribute_Map_Acc;
+      Attrs          : Instances_Attribute_Map_Acc;
    end record;
 
    function Get_First_Port_Desc (M : Module) return Port_Desc_Idx;
    function Get_First_Output (Inst : Instance) return Net;
    function Get_Port_Desc (Idx : Port_Desc_Idx) return Port_Desc;
 
-   function Get_Attributes (M : Module) return Attribute_Map_Acc;
+   function Get_Instance_Attributes (M : Module)
+                                    return Instances_Attribute_Map_Acc;
 
    function Is_Valid (I : Instance) return Boolean;
 

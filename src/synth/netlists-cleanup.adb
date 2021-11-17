@@ -163,7 +163,7 @@ package body Netlists.Cleanup is
               |  Id_Enable
               |  Id_Nop =>
                --  Keep gates with an attribute.
-               if not Has_Attribute (Inst) then
+               if not Has_Instance_Attribute (Inst) then
                   Remove_Output_Gate (Inst);
                end if;
             when others =>
@@ -180,11 +180,11 @@ package body Netlists.Cleanup is
       Val : Pval;
       V, V1 : Logic_32;
    begin
-      if not Has_Attribute (Inst) then
+      if not Has_Instance_Attribute (Inst) then
          return False;
       end if;
 
-      Attr := Get_First_Attribute (Inst);
+      Attr := Get_Instance_First_Attribute (Inst);
       while Attr /= No_Attribute loop
          if Get_Attribute_Name (Attr) = Std_Names.Name_Keep then
             Val := Get_Attribute_Pval (Attr);

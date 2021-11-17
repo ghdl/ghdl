@@ -2284,7 +2284,7 @@ package body Netlists.Memories is
                when others =>
                   raise Internal_Error;
             end case;
-            Copy_Attributes (Heads (I), Sig);
+            Copy_Instance_Attributes (Heads (I), Sig);
             Tails (I) := Get_Output (Heads (I), 0);
          end;
       end loop;
