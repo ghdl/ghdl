@@ -1215,6 +1215,8 @@ package body Netlists is
       --  There is now at least one attribute for INST.
       Instances_Table.Table (Inst).Has_Attr := True;
 
+      --  Get (or create and get) an entry for INST.  If created, it will be
+      --  No_Attribute (returned by attribute_build_value).
       Attribute_Maps.Get_Index (Module_Rec.Attrs.all, Inst, Idx);
 
       Prev := Attribute_Maps.Get_Value (Module_Rec.Attrs.all, Idx);

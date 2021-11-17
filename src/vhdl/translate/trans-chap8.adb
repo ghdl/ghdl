@@ -4544,10 +4544,12 @@ package body Trans.Chap8 is
       Bounds : Mnode;
    begin
       if Get_Kind (Target) = Iir_Kind_Aggregate then
+         --  The target is an aggregate.
          Chap3.Translate_Anonymous_Subtype_Definition (Target_Type, False);
          Target_Tinfo := Get_Info (Target_Type);
          Targ := Create_Temp (Target_Tinfo, Mode_Signal);
          if Target_Tinfo.Type_Mode in Type_Mode_Unbounded then
+            --  Unbounded array, allocate bounds.
             Bounds := Dv2M (Create_Temp (Target_Tinfo.B.Bounds_Type),
                             Target_Tinfo,
                             Mode_Value,
