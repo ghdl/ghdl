@@ -2171,6 +2171,13 @@ package body Synth.Vhdl_Expr is
                Res : Valtyp;
             begin
                Res := Synth_Name (Syn_Inst, Expr);
+               if Res.Val /= null
+                 and then Res.Val.Kind = Value_Signal
+               then
+                  Error_Msg_Synth
+                    (+Expr, "cannot use signal value during elaboration");
+                  return No_Valtyp;
+               end if;
                if Res.Typ /= null
                  and then Res.Typ.W = 0 and then Res.Val.Kind /= Value_Memory
                then
