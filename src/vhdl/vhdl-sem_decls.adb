@@ -1839,6 +1839,16 @@ package body Vhdl.Sem_Decls is
             Name := Get_Signature_Prefix (Sig);
             Sem_Name (Name);
             Set_Signature_Prefix (Sig, Name);
+         when Iir_Kind_String_Literal8 =>
+            --  Try to have a good error message.
+            if Get_Subtype_Indication (Alias) = Null_Iir then
+               Error_Msg_Sem (+Name, "signature required for operature name");
+            else
+               Error_Msg_Sem (+Name, "object name required");
+            end if;
+            Name := Create_Error_Name (Name);
+            Set_Name (Alias, Name);
+            return Alias;
          when Iir_Kind_Error =>
             pragma Assert (Flags.Flag_Force_Analysis);
             return Alias;
