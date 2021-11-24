@@ -4311,6 +4311,9 @@ package body Trans.Chap8 is
          end;
       else
          Src := Chap6.Translate_Name (Target, Mode_Signal);
+         if Get_Type_Info (Src).Type_Mode in Type_Mode_Unbounded then
+            Src := Chap3.Get_Composite_Base (Src);
+         end if;
          Chap3.Translate_Object_Copy (Aggr, Src, Target_Type);
       end if;
    end Translate_Signal_Target_Aggr;
@@ -4555,11 +4558,10 @@ package body Trans.Chap8 is
                             Mode_Value,
                             Target_Tinfo.B.Bounds_Type,
                             Target_Tinfo.B.Bounds_Ptr_Type);
-            New_Assign_Stmt
-              (M2Lp (Chap3.Get_Composite_Bounds (Targ)),
-               M2Addr (Bounds));
+            New_Assign_Stmt (M2Lp (Chap3.Get_Composite_Bounds (Targ)),
+                             M2Addr (Bounds));
             --  Build bounds from aggregate.
-            Chap7.Translate_Aggregate_Bounds (Bounds, Target);
+            Chap7.Translate_Aggregate_Bounds (Bounds, Target, Mode_Signal);
             Chap3.Allocate_Unbounded_Composite_Base
               (Alloc_Stack, Targ, Target_Type);
             Translate_Signal_Target_Aggr

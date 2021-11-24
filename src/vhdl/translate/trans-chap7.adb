@@ -3656,18 +3656,27 @@ package body Trans.Chap7 is
       end case;
    end Translate_Aggregate;
 
-   procedure Translate_Aggregate_Sub_Bounds (Bounds : Mnode; Aggr : Iir);
+   procedure Translate_Aggregate_Sub_Bounds
+     (Bounds : Mnode; Aggr : Iir; Mode : Object_Kind_Type);
 
-   procedure Translate_Array_Aggregate_Bounds (Bounds : Mnode; Aggr : Iir)
+   procedure Translate_Array_Aggregate_Bounds
+     (Bounds : Mnode; Aggr : Iir; Mode : Object_Kind_Type)
    is
-      Aggr_Type : constant Iir := Get_Type (Aggr);
+      Aggr_Type : constant Iir := Get_Base_Type (Get_Type (Aggr));
+      El_Type : constant Iir := Get_Element_Subtype (Aggr_Type);
       Assoc : Iir;
       Static_Len : Int64;
       Var_Len : O_Dnode;
       Expr_Type : Iir;
       Range_Type : Iir;
+      El_Bounds_Copied : Boolean;
    begin
+      pragma Assert (Is_Stable (Bounds));
       Static_Len := 0;
+
+      --  If the element subtype is fully constrained, there is no bounds to
+      --  be copied.
+      El_Bounds_Copied := Is_Fully_Constrained_Type (El_Type);
 
       --  First pass: static length.
       Assoc := Get_Association_Choices_Chain (Aggr);
@@ -3675,6 +3684,41 @@ package body Trans.Chap7 is
          pragma Assert (Get_Kind (Assoc) = Iir_Kind_Choice_By_None);
          if Get_Element_Type_Flag (Assoc) then
             Static_Len := Static_Len + 1;
+            if not El_Bounds_Copied then
+               declare
+                  Expr : constant Iir := Get_Associated_Expr (Assoc);
+                  Expr_Bnd : Mnode;
+                  El_Layout : Mnode;
+                  Info : Ortho_Info_Acc;
+                  Obj : Mnode;
+               begin
+                  Expr_Type := Get_Type (Expr);
+                  if Is_Fully_Constrained_Type (Expr_Type) then
+                     Expr_Bnd := Chap3.Get_Composite_Type_Bounds (Expr_Type);
+                  else
+                     Obj := Chap6.Translate_Name (Expr, Mode);
+                     Stabilize (Obj);
+                     Info := Add_Info (Assoc, Kind_Expr_Eval);
+                     Info.Expr_Eval := Obj;
+                     Expr_Bnd := Chap3.Get_Composite_Bounds (Obj);
+                  end if;
+                  El_Layout := Chap3.Array_Bounds_To_Element_Bounds
+                    (Bounds, Aggr_Type);
+                  Chap3.Copy_Bounds (El_Layout, Expr_Bnd, El_Type);
+                  --  Compute size.
+                  --  TODO: this is just a multiplication, could be done
+                  --  inline.
+                  Chap3.Gen_Call_Type_Builder
+                    (Chap3.Array_Bounds_To_Element_Layout (Bounds, Aggr_Type),
+                     Expr_Type, Mode);
+                  if Mode = Mode_Signal then
+                     Chap3.Gen_Call_Type_Builder
+                       (Chap3.Array_Bounds_To_Element_Layout (Bounds,
+                                                              Aggr_Type),
+                        Expr_Type, Mode_Value);
+                  end if;
+               end;
+            end if;
          else
             Expr_Type := Get_Type (Get_Associated_Expr (Assoc));
             pragma Assert (Is_One_Dimensional_Array_Type (Expr_Type));
@@ -3726,12 +3770,15 @@ package body Trans.Chap7 is
          Assoc := Get_Chain (Assoc);
       end loop;
 
+      --  FIXME: what about the other ranges: no need to compute, but extract
+      --   and check match.
       Chap3.Create_Range_From_Length
         (Get_Index_Type (Aggr_Type, 0), Var_Len,
          Chap3.Bounds_To_Range (Bounds, Aggr_Type, 1), Aggr);
    end Translate_Array_Aggregate_Bounds;
 
-   procedure Translate_Record_Aggregate_Bounds (Bounds : Mnode; Aggr : Iir)
+   procedure Translate_Record_Aggregate_Bounds
+     (Bounds : Mnode; Aggr : Iir; Mode : Object_Kind_Type)
    is
       Stable_Bounds : Mnode;
       Aggr_Type : constant Iir := Get_Type (Aggr);
@@ -3785,9 +3832,9 @@ package body Trans.Chap7 is
                if Get_Kind (Expr) = Iir_Kind_Aggregate then
                   --  Just translate bounds.
                   Translate_Aggregate_Sub_Bounds
-                    (Chap3.Record_Bounds_To_Element_Bounds
-                       (Stable_Bounds, Base_El),
-                     Expr);
+                    (Chap3.Record_Bounds_To_Element_Bounds (Stable_Bounds,
+                                                            Base_El),
+                     Expr, Mode);
                else
                   --  Eval expr
                   Val := Translate_Expression (Expr);
@@ -3811,29 +3858,31 @@ package body Trans.Chap7 is
    end Translate_Record_Aggregate_Bounds;
 
    --  Just create the bounds from AGGR.
-   procedure Translate_Aggregate_Sub_Bounds (Bounds : Mnode; Aggr : Iir)
+   procedure Translate_Aggregate_Sub_Bounds
+     (Bounds : Mnode; Aggr : Iir; Mode : Object_Kind_Type)
    is
       Aggr_Type : constant Iir := Get_Type (Aggr);
    begin
       case Iir_Kinds_Composite_Type_Definition (Get_Kind (Aggr_Type)) is
          when Iir_Kind_Array_Type_Definition
            | Iir_Kind_Array_Subtype_Definition =>
-            Translate_Array_Aggregate_Bounds (Bounds, Aggr);
+            Translate_Array_Aggregate_Bounds (Bounds, Aggr, Mode);
          when Iir_Kind_Record_Type_Definition
            | Iir_Kind_Record_Subtype_Definition =>
-            Translate_Record_Aggregate_Bounds (Bounds, Aggr);
+            Translate_Record_Aggregate_Bounds (Bounds, Aggr, Mode);
       end case;
    end Translate_Aggregate_Sub_Bounds;
 
    --  Create the bounds and build the type (set size).
-   procedure Translate_Aggregate_Bounds (Bounds : Mnode; Aggr : Iir)
+   procedure Translate_Aggregate_Bounds
+     (Bounds : Mnode; Aggr : Iir; Mode : Object_Kind_Type)
    is
       Aggr_Type : constant Iir := Get_Type (Aggr);
    begin
       case Iir_Kinds_Composite_Type_Definition (Get_Kind (Aggr_Type)) is
          when Iir_Kind_Array_Type_Definition
            | Iir_Kind_Array_Subtype_Definition =>
-            Translate_Array_Aggregate_Bounds (Bounds, Aggr);
+            Translate_Array_Aggregate_Bounds (Bounds, Aggr, Mode);
             declare
                El_Type : constant Iir := Get_Element_Subtype (Aggr_Type);
             begin
@@ -3842,13 +3891,13 @@ package body Trans.Chap7 is
                if Is_Unbounded_Type (Get_Info (El_Type)) then
                   Chap3.Gen_Call_Type_Builder
                     (Chap3.Array_Bounds_To_Element_Layout (Bounds, Aggr_Type),
-                     El_Type, Mode_Value);
+                     El_Type, Mode);
                end if;
             end;
          when Iir_Kind_Record_Type_Definition
            | Iir_Kind_Record_Subtype_Definition =>
-            Translate_Record_Aggregate_Bounds (Bounds, Aggr);
-            Chap3.Gen_Call_Type_Builder (Bounds, Aggr_Type, Mode_Value);
+            Translate_Record_Aggregate_Bounds (Bounds, Aggr, Mode);
+            Chap3.Gen_Call_Type_Builder (Bounds, Aggr_Type, Mode);
       end case;
    end Translate_Aggregate_Bounds;
 
@@ -4354,7 +4403,7 @@ package body Trans.Chap7 is
          New_Assign_Stmt (M2Lp (Chap3.Get_Composite_Bounds (Mres)),
                           M2Addr (Bounds));
          --  Build bounds from aggregate.
-         Chap7.Translate_Aggregate_Bounds (Bounds, Expr);
+         Chap7.Translate_Aggregate_Bounds (Bounds, Expr, Mode_Value);
          Chap3.Allocate_Unbounded_Composite_Base
            (Alloc_Stack, Mres, Aggr_Type);
       else

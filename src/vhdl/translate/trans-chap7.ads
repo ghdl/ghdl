@@ -120,7 +120,8 @@ package Trans.Chap7 is
      (Target : Mnode; Target_Type : Iir; Aggr : Iir);
 
    --  Fill BOUNDS from aggregate AGGR.
-   procedure Translate_Aggregate_Bounds (Bounds : Mnode; Aggr : Iir);
+   procedure Translate_Aggregate_Bounds
+     (Bounds : Mnode; Aggr : Iir; Mode : Object_Kind_Type);
 
    --  Convert bounds access PTR to a fat pointer.
    function Bounds_Acc_To_Fat_Pointer (Ptr : O_Dnode; Acc_Type : Iir)

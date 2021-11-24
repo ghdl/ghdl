@@ -607,6 +607,7 @@ package body Trans.Chap4 is
                Aggr_Base_Type : constant Iir := Get_Base_Type (Aggr_Type);
             begin
                Name_Node := Stabilize (Name);
+               pragma Assert (Get_Object_Kind (Name_Node) = Mode_Value);
                if Get_Constraint_State (Aggr_Type) /= Fully_Constrained then
                   --  Allocate bounds
                   Chap3.Allocate_Unbounded_Composite_Bounds
@@ -614,7 +615,7 @@ package body Trans.Chap4 is
                   --  Translate bounds
                   Chap7.Translate_Aggregate_Bounds
                     (Stabilize (Chap3.Get_Composite_Bounds (Name_Node)),
-                     Value);
+                     Value, Mode_Value);
                   --  Allocate base
                   Chap3.Allocate_Unbounded_Composite_Base
                     (Alloc_Kind, Name_Node, Aggr_Base_Type);
