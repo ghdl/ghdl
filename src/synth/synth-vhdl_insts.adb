@@ -925,10 +925,11 @@ package body Synth.Vhdl_Insts is
 
    --  Subprogram used for instantiation (direct or by component).
    --  PORTS_ASSOC belong to SYN_INST.
-   procedure Synth_Instantiate_Module (Syn_Inst : Synth_Instance_Acc;
-                                       Inst : Instance;
-                                       Inst_Obj : Inst_Object;
-                                       Ports_Assoc : Node)
+   procedure Synth_Instantiate_Module_Ports (Syn_Inst : Synth_Instance_Acc;
+                                             Inst : Instance;
+                                             Ent_Inst : Synth_Instance_Acc;
+                                             Ent : Node;
+                                             Ports_Assoc : Node)
    is
       --  Instantiate the module
       --  Elaborate ports + map aspect for the inputs (component then entity)
@@ -943,20 +944,19 @@ package body Synth.Vhdl_Insts is
       N : Net;
    begin
       Assoc := Ports_Assoc;
-      Assoc_Inter := Get_Port_Chain (Inst_Obj.Decl);
+      Assoc_Inter := Get_Port_Chain (Ent);
       Nbr_Inputs := 0;
       Nbr_Outputs := 0;
       while Is_Valid (Assoc) loop
          if Get_Whole_Association_Flag (Assoc) then
             Inter := Get_Association_Interface (Assoc, Assoc_Inter);
-            Inter_Typ := Get_Subtype_Object
-              (Inst_Obj.Syn_Inst, Get_Type (Inter));
+            Inter_Typ := Get_Subtype_Object (Ent_Inst, Get_Type (Inter));
 
             case Mode_To_Port_Kind (Get_Mode (Inter)) is
                when Port_In =>
                   --  Connect the net to the input.
                   N := Synth_Input_Assoc
-                    (Syn_Inst, Assoc, Inst_Obj.Syn_Inst, Inter, Inter_Typ);
+                    (Syn_Inst, Assoc, Ent_Inst, Inter, Inter_Typ);
                   Inst_Input_Connect
                     (Syn_Inst, Inst, Nbr_Inputs, Inter_Typ, N);
                when Port_Out
@@ -964,12 +964,16 @@ package body Synth.Vhdl_Insts is
                   Inst_Output_Connect
                     (Syn_Inst, Inst, Nbr_Outputs, Inter_Typ, N);
                   Synth_Output_Assoc
-                    (N, Syn_Inst, Assoc, Inst_Obj.Syn_Inst, Inter);
+                    (N, Syn_Inst, Assoc, Ent_Inst, Inter);
             end case;
          end if;
          Next_Association_Interface (Assoc, Assoc_Inter);
       end loop;
+   end Synth_Instantiate_Module_Ports;
 
+   procedure Synth_Instantiate_Module_Generics (Inst : Instance;
+                                                Inst_Obj : Inst_Object) is
+   begin
       if Inst_Obj.Encoding = Name_Parameters then
          --  Copy values of the generics to module parameters.
          declare
@@ -992,7 +996,7 @@ package body Synth.Vhdl_Insts is
             end loop;
          end;
       end if;
-   end Synth_Instantiate_Module;
+   end Synth_Instantiate_Module_Generics;
 
    procedure Synth_Direct_Instantiation_Statement
      (Syn_Inst : Synth_Instance_Acc;
@@ -1035,8 +1039,10 @@ package body Synth.Vhdl_Insts is
 
       Push_Phi;
 
-      Synth_Instantiate_Module
-        (Syn_Inst, Inst, Inst_Obj, Get_Port_Map_Aspect_Chain (Stmt));
+      Synth_Instantiate_Module_Ports
+        (Syn_Inst, Inst, Inst_Obj.Syn_Inst, Inst_Obj.Decl,
+         Get_Port_Map_Aspect_Chain (Stmt));
+      Synth_Instantiate_Module_Generics (Inst, Inst_Obj);
 
       Pop_And_Merge_Phi (Get_Build (Syn_Inst), Get_Location (Stmt));
    end Synth_Direct_Instantiation_Statement;
@@ -1167,6 +1173,10 @@ package body Synth.Vhdl_Insts is
 
          Inst := New_Instance (Get_Instance_Module (Syn_Inst), M, Inst_Name);
          Set_Location (Inst, Stmt);
+
+         Synth_Instantiate_Module_Ports
+           (Comp_Inst, Inst, Sub_Inst, Arch,
+            Get_Port_Map_Aspect_Chain (Bind));
       else
          Ent := Get_Entity (Arch);
 
@@ -1191,8 +1201,10 @@ package body Synth.Vhdl_Insts is
                                Inst_Obj.M, Inst_Name);
          Set_Location (Inst, Stmt);
 
-         Synth_Instantiate_Module
-           (Comp_Inst, Inst, Inst_Obj, Get_Port_Map_Aspect_Chain (Bind));
+         Synth_Instantiate_Module_Ports
+           (Comp_Inst, Inst, Inst_Obj.Syn_Inst, Inst_Obj.Decl,
+            Get_Port_Map_Aspect_Chain (Bind));
+         Synth_Instantiate_Module_Generics (Inst, Inst_Obj);
       end if;
 
       pragma Unreferenced (M);
