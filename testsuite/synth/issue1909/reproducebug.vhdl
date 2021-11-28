@@ -5,8 +5,8 @@ library ieee;
 entity ReproduceBug is
   port(
     clk      : in std_logic;
-    input    : in unsigned(7 downto 0);
-    output   : out unsigned(7 downto 0)
+    inp    : in unsigned(7 downto 0);
+    outp   : out unsigned(7 downto 0)
   );
 end ReproduceBug;
 
@@ -18,7 +18,7 @@ begin
   Main: process(clk)
   begin
     if rising_edge(Clk) then
-      output <= input ror 1; -- can also be 'rol'
+      outp <= inp ror 1; -- can also be 'rol'
     end if;
   end process;
 

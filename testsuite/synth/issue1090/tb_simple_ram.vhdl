@@ -15,8 +15,8 @@ architecture behav of tb_simple_ram is
 begin
   dut: entity work.simple_ram
     port map (clk => clk,
-              en => en, raddr => raddr, do => rdat,
-              we => we, waddr => waddr, di => wdat);
+              en => en, raddr => raddr, dout => rdat,
+              we => we, waddr => waddr, din => wdat);
 
   process
     procedure pulse is
