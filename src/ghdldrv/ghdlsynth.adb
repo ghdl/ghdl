@@ -371,6 +371,10 @@ package body Ghdlsynth is
 
       Vhdl.Configuration.Add_Verification_Units;
 
+      if Foreign_Resolve_Instances /= null then
+         Foreign_Resolve_Instances.all;
+      end if;
+
       if Get_Kind (Config) = Iir_Kind_Design_Unit then
          --  Check (and possibly abandon) if entity can be at the top of the
          --  hierarchy.

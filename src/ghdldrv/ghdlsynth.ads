@@ -29,4 +29,8 @@ package Ghdlsynth is
    function Ghdl_Synth
      (Init : Natural; Argc : Natural; Argv : C_String_Array_Acc)
      return Module;
+
+   type Foreign_Resolve_Instances_Acc is access procedure;
+
+   Foreign_Resolve_Instances : Foreign_Resolve_Instances_Acc;
 end Ghdlsynth;
