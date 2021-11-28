@@ -509,8 +509,13 @@ package body Elab.Vhdl_Insts is
    is
       Arch : constant Node := Get_Source_Scope (Syn_Inst);
       Config : constant Node := Get_Instance_Config (Syn_Inst);
-      Entity : constant Node := Get_Entity (Arch);
+      Entity : Node;
    begin
+      if Get_Kind (Arch) = Iir_Kind_Foreign_Module then
+         return;
+      end if;
+
+      Entity := Get_Entity (Arch);
       Apply_Block_Configuration (Config, Arch);
 
       Elab_Declarations (Syn_Inst, Get_Declaration_Chain (Entity));
