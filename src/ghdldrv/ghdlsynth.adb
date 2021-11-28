@@ -375,7 +375,7 @@ package body Ghdlsynth is
          Foreign_Resolve_Instances.all;
       end if;
 
-      if Get_Kind (Config) = Iir_Kind_Design_Unit then
+      if Get_Kind (Get_Library_Unit (Config)) /= Iir_Kind_Foreign_Module then
          --  Check (and possibly abandon) if entity can be at the top of the
          --  hierarchy.
          declare
@@ -421,7 +421,8 @@ package body Ghdlsynth is
          when Format_Dot =>
             Netlists.Disp_Dot.Disp_Dot_Top_Module (Res);
          when Format_Vhdl =>
-            if Get_Kind (Config) = Iir_Kind_Foreign_Module then
+            if Get_Kind (Get_Library_Unit (Config)) = Iir_Kind_Foreign_Module
+            then
                --  Not a VHDL design.
                Netlists.Disp_Vhdl.Disp_Vhdl (Res);
             else
@@ -506,6 +507,7 @@ package body Ghdlsynth is
       Res : Module;
       Inst : Synth_Instance_Acc;
       Config : Iir;
+      Lib_Unit : Iir;
    begin
       Config := Ghdl_Synth_Configure (True, Cmd, Args);
 
@@ -517,7 +519,12 @@ package body Ghdlsynth is
          end if;
       end if;
 
-      Inst := Elab.Vhdl_Insts.Elab_Top_Unit (Get_Library_Unit (Config));
+      Lib_Unit := Get_Library_Unit (Config);
+      if Get_Kind (Lib_Unit) /= Iir_Kind_Foreign_Module then
+         Inst := Elab.Vhdl_Insts.Elab_Top_Unit (Lib_Unit);
+      else
+         Inst := null;
+      end if;
 
       if Errorout.Nbr_Errors > 0 then
          Res := No_Module;

@@ -747,6 +747,8 @@ package body Vhdl.Configuration is
                return Null_Iir;
             end if;
             Top := Unit;
+         when Iir_Kind_Foreign_Module =>
+            Top := Unit;
          when others =>
             Error_Msg_Elab ("%i is neither an entity nor a configuration",
                            +Primary_Id);
