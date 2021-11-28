@@ -773,6 +773,8 @@ package body Elab.Vhdl_Objtypes is
 
    procedure Init is
    begin
+      pragma Assert (Boolean_Type = null);
+
       Instance_Pool := Global_Pool'Access;
       Boolean_Type := Create_Bit_Type;
       Logic_Type := Create_Logic_Type;
