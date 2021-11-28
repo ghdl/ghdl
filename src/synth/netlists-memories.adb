@@ -2341,7 +2341,7 @@ package body Netlists.Memories is
    function Is_Const_Input (Inst : Instance) return Boolean is
    begin
       case Get_Id (Inst) is
-         when Id_Const_Bit =>
+         when Constant_Module_Id =>
             return True;
          when Id_Signal
            | Id_Isignal =>
