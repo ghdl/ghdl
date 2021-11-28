@@ -2825,45 +2825,49 @@ package body Vhdl.Parse is
       --  Skip 'record'
       Scan;
 
-      Pos := 0;
-      First := Null_Iir;
-      loop
-         pragma Assert (First = Null_Iir);
-         --  Parse identifier_list
+      if Current_Token = Tok_End then
+         Error_Msg_Parse ("empty records are not allowed");
+      else
+         Pos := 0;
+         First := Null_Iir;
          loop
-            El := Create_Iir (Iir_Kind_Element_Declaration);
-            Scan_Identifier (El);
+            pragma Assert (First = Null_Iir);
+            --  Parse identifier_list
+            loop
+               El := Create_Iir (Iir_Kind_Element_Declaration);
+               Scan_Identifier (El);
 
-            Set_Parent (El, Res);
-            if First = Null_Iir then
-               First := El;
-            end if;
+               Set_Parent (El, Res);
+               if First = Null_Iir then
+                  First := El;
+               end if;
 
-            Append_Element (El_List, El);
-            Set_Element_Position (El, Pos);
-            Pos := Pos + 1;
+               Append_Element (El_List, El);
+               Set_Element_Position (El, Pos);
+               Pos := Pos + 1;
 
-            exit when Current_Token /= Tok_Comma;
+               exit when Current_Token /= Tok_Comma;
 
-            Set_Has_Identifier_List (El, True);
+               Set_Has_Identifier_List (El, True);
 
-            --  Skip ','
-            Scan;
+               --  Skip ','
+               Scan;
+            end loop;
+
+            --  Scan ':'.
+            Expect_Scan (Tok_Colon);
+
+            --  Parse element subtype indication.
+            Subtype_Indication := Parse_Subtype_Indication;
+            Set_Subtype_Indication (First, Subtype_Indication);
+
+            First := Null_Iir;
+            Scan_Semi_Colon_Declaration ("element declaration");
+            exit when Current_Token /= Tok_Identifier;
          end loop;
 
-         --  Scan ':'.
-         Expect_Scan (Tok_Colon);
-
-         --  Parse element subtype indication.
-         Subtype_Indication := Parse_Subtype_Indication;
-         Set_Subtype_Indication (First, Subtype_Indication);
-
-         First := Null_Iir;
-         Scan_Semi_Colon_Declaration ("element declaration");
-         exit when Current_Token /= Tok_Identifier;
-      end loop;
-
-      Set_Elements_Declaration_List (Res, List_To_Flist (El_List));
+         Set_Elements_Declaration_List (Res, List_To_Flist (El_List));
+      end if;
 
       if Flag_Elocations then
          Create_Elocations (Res);
