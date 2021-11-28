@@ -93,6 +93,18 @@ package body Synth.Environment is
       Wire_Id_Table.Table (Wid).Gate := Gate;
    end Set_Wire_Gate;
 
+   procedure Replace_Wire_Gate (Wid : Wire_Id; Gate : Net)
+   is
+      Old : constant Net := Wire_Id_Table.Table (Wid).Gate;
+      Inst : constant Instance := Get_Net_Parent (Old);
+   begin
+      Redirect_Inputs (Old, Gate);
+      Remove_Instance (Inst);
+      Set_Location (Get_Net_Parent (Gate), Get_Location (Inst));
+      --  FIXME: attributes ?
+      Wire_Id_Table.Table (Wid).Gate := Gate;
+   end Replace_Wire_Gate;
+
    function Get_Wire_Gate (Wid : Wire_Id) return Net is
    begin
       return Wire_Id_Table.Table (Wid).Gate;

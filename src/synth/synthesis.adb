@@ -54,6 +54,10 @@ package body Synthesis is
    begin
       Base := Make_Base_Instance;
 
+      if Synth_Initialize_Foreign /= null then
+         Synth_Initialize_Foreign.all;
+      end if;
+
       Unit := Get_Library_Unit (Design);
       if Get_Kind (Unit) = Iir_Kind_Foreign_Module then
          if Synth_Top_Foreign = null then

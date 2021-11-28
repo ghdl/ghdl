@@ -18,7 +18,6 @@
 
 with Ada.Unchecked_Deallocation;
 
-with Types; use Types;
 with Tables;
 
 with Vhdl.Errors; use Vhdl.Errors;
@@ -55,6 +54,7 @@ package body Elab.Vhdl_Context is
                                  Uninst_Scope => null,
                                  Source_Scope => Null_Node,
                                  Config       => Null_Node,
+                                 Foreign      => 0,
                                  Extra_Units  => null,
                                  Extra_Link   => null,
                                  Elab_Objects => 0,
@@ -74,6 +74,7 @@ package body Elab.Vhdl_Context is
    is
       Info : constant Sim_Info_Acc := Get_Info (Blk);
       Scope : Sim_Info_Acc;
+      Nbr_Objs : Object_Slot_Type;
       Res : Synth_Instance_Acc;
    begin
       if Get_Kind (Blk) = Iir_Kind_Architecture_Body then
@@ -83,7 +84,15 @@ package body Elab.Vhdl_Context is
          Scope := Info;
       end if;
 
-      Res := new Synth_Instance_Type'(Max_Objs => Info.Nbr_Objects,
+      if Scope = null then
+         --  Foreign modules are not annotated.
+         pragma Assert (Get_Kind (Blk) = Iir_Kind_Foreign_Module);
+         Nbr_Objs := 0;
+      else
+         Nbr_Objs := Info.Nbr_Objects;
+      end if;
+
+      Res := new Synth_Instance_Type'(Max_Objs => Nbr_Objs,
                                       Is_Const => False,
                                       Is_Error => False,
                                       Id => Inst_Tables.Last + 1,
@@ -92,6 +101,7 @@ package body Elab.Vhdl_Context is
                                       Uninst_Scope => null,
                                       Source_Scope => Blk,
                                       Config       => Config,
+                                      Foreign      => 0,
                                       Extra_Units  => null,
                                       Extra_Link   => null,
                                       Elab_Objects => 0,
@@ -131,6 +141,7 @@ package body Elab.Vhdl_Context is
                                       Uninst_Scope => null,
                                       Source_Scope => Blk,
                                       Config       => Config,
+                                      Foreign      => 0,
                                       Extra_Units  => null,
                                       Extra_Link   => null,
                                       Elab_Objects => 0,
@@ -200,6 +211,17 @@ package body Elab.Vhdl_Context is
    begin
       return Inst.Config;
    end Get_Instance_Config;
+
+   procedure Set_Instance_Foreign (Inst : Synth_Instance_Acc; N : Int32) is
+   begin
+      pragma Assert (Inst.Foreign = 0);
+      Inst.Foreign := N;
+   end Set_Instance_Foreign;
+
+   function Get_Instance_Foreign (Inst : Synth_Instance_Acc) return Int32 is
+   begin
+      return Inst.Foreign;
+   end Get_Instance_Foreign;
 
    procedure Add_Extra_Instance (Inst : Synth_Instance_Acc;
                                  Extra : Synth_Instance_Acc) is

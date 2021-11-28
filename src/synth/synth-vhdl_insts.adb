@@ -18,7 +18,6 @@
 
 with GNAT.SHA1;
 
-with Types; use Types;
 with Types_Utils; use Types_Utils;
 with Name_Table;
 with Std_Names;
@@ -1110,6 +1109,8 @@ package body Synth.Vhdl_Insts is
       Inst_Obj : Inst_Object;
       Inst : Instance;
       Inst_Name : Sname;
+
+      M : Module;
    begin
       pragma Assert (Get_Kind (Aspect) = Iir_Kind_Entity_Aspect_Entity);
 
@@ -1158,37 +1159,43 @@ package body Synth.Vhdl_Insts is
 
       Sub_Inst := Get_Component_Instance (Comp_Inst);
       Arch := Get_Source_Scope (Sub_Inst);
-      Ent := Get_Entity (Arch);
       Sub_Config := Get_Instance_Config (Sub_Inst);
+      if Get_Kind (Arch) = Iir_Kind_Foreign_Module then
+         M := Synth_Foreign_Module
+           (Global_Base_Instance, Get_Instance_Foreign (Sub_Inst),
+            Sub_Inst, Arch);
 
-      if Get_Kind (Ent) = Iir_Kind_Foreign_Module then
-         --  TODO.
-         raise Internal_Error;
+         Inst := New_Instance (Get_Instance_Module (Syn_Inst), M, Inst_Name);
+         Set_Location (Inst, Stmt);
+      else
+         Ent := Get_Entity (Arch);
+
+         --  Elaborate generic + map aspect for the entity instance.
+         Set_Extra (Sub_Inst, Comp_Inst,
+                    New_Sname_User (Get_Identifier (Ent), No_Sname));
+
+         --  Search if corresponding module has already been used.
+         --  If not create a new module
+         --   * create a name from the generics and the library
+         --   * create inputs/outputs
+         --   * add it to the list of module to be synthesized.
+         Inst_Obj := Interning_Get ((Decl => Ent,
+                                     Arch => Arch,
+                                     Config => Sub_Config,
+                                     Syn_Inst => Sub_Inst,
+                                     Encoding => Name_Hash));
+
+         --  TODO: free sub_inst.
+
+         Inst := New_Instance (Get_Instance_Module (Syn_Inst),
+                               Inst_Obj.M, Inst_Name);
+         Set_Location (Inst, Stmt);
+
+         Synth_Instantiate_Module
+           (Comp_Inst, Inst, Inst_Obj, Get_Port_Map_Aspect_Chain (Bind));
       end if;
 
-      --  Elaborate generic + map aspect for the entity instance.
-      Set_Extra (Sub_Inst,
-                 Comp_Inst, New_Sname_User (Get_Identifier (Ent), No_Sname));
-
-      --  Search if corresponding module has already been used.
-      --  If not create a new module
-      --   * create a name from the generics and the library
-      --   * create inputs/outputs
-      --   * add it to the list of module to be synthesized.
-      Inst_Obj := Interning_Get ((Decl => Ent,
-                                  Arch => Arch,
-                                  Config => Sub_Config,
-                                  Syn_Inst => Sub_Inst,
-                                  Encoding => Name_Hash));
-
-      --  TODO: free sub_inst.
-
-      Inst := New_Instance (Get_Instance_Module (Syn_Inst),
-                            Inst_Obj.M, Inst_Name);
-      Set_Location (Inst, Stmt);
-
-      Synth_Instantiate_Module
-        (Comp_Inst, Inst, Inst_Obj, Get_Port_Map_Aspect_Chain (Bind));
+      pragma Unreferenced (M);
 
       --  Connect out from component to instance.
       --  Instantiate the module

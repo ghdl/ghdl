@@ -120,6 +120,7 @@ package Synth.Environment is
    --  Set the gate for a wire.
    procedure Set_Wire_Gate (Wid : Wire_Id; Gate : Net);
    function Get_Wire_Gate (Wid : Wire_Id) return Net;
+   procedure Replace_Wire_Gate (Wid : Wire_Id; Gate : Net);
 
    --  The current value of WID.  For variables, this is the last assigned
    --  value.  For signals, this is the gate.

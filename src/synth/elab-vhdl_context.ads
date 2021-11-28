@@ -16,6 +16,8 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
+with Types; use Types;
+
 with Vhdl.Annotations; use Vhdl.Annotations;
 with Vhdl.Nodes; use Vhdl.Nodes;
 
@@ -79,6 +81,9 @@ package Elab.Vhdl_Context is
 
    procedure Set_Instance_Config (Inst : Synth_Instance_Acc; Config : Node);
    function Get_Instance_Config (Inst : Synth_Instance_Acc) return Node;
+
+   procedure Set_Instance_Foreign (Inst : Synth_Instance_Acc; N : Int32);
+   function Get_Instance_Foreign (Inst : Synth_Instance_Acc) return Int32;
 
    --  Add/Get extra instances.
    --  Those instances are verification units.
@@ -209,6 +214,7 @@ private
 
       --  Block configuration (unless the instance is for a package).
       Config : Node;
+      Foreign : Int32;
 
       --  Chain of verification units that applies to this one.
       Extra_Units : Synth_Instance_Acc;

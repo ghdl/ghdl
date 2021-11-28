@@ -16,6 +16,9 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
+with Types; use Types;
+with Netlists;
+
 with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 
 with Vhdl.Nodes; use Vhdl.Nodes;
@@ -40,4 +43,12 @@ package Synth.Vhdl_Insts is
 
    procedure Synth_Component_Instantiation_Statement
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node);
+
+   type Synth_Foreign_Module_Acc is access
+     function (Base : Base_Instance_Acc;
+               M : Int32;
+               Vhdl_Inst : Synth_Instance_Acc;
+               Vhdl_Decl : Node) return Netlists.Module;
+
+   Synth_Foreign_Module : Synth_Foreign_Module_Acc;
 end Synth.Vhdl_Insts;

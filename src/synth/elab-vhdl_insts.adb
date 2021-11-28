@@ -629,8 +629,11 @@ package body Elab.Vhdl_Insts is
       end case;
 
       if Get_Kind (Ent) = Iir_Kind_Foreign_Module then
-         --  TODO.
-         raise Internal_Error;
+         Sub_Inst := Make_Elab_Instance (Comp_Inst, Ent, Null_Node);
+         Create_Component_Instance (Comp_Inst, Sub_Inst);
+
+         Elab_Foreign_Instance (Sub_Inst, Comp_Inst, Bind, Ent);
+         return;
       end if;
 
       if Arch = Null_Node then

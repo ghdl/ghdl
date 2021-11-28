@@ -40,5 +40,8 @@ package Synthesis is
      (Base : Base_Instance_Acc; Unit : Int32; Encoding : Name_Encoding);
    Synth_Top_Foreign : Synth_Top_Acc;
 
+   type Synth_Initialize_Acc is access procedure;
+   Synth_Initialize_Foreign : Synth_Initialize_Acc;
+
    Synth_Error : exception;
 end Synthesis;
