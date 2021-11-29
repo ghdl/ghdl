@@ -1201,25 +1201,17 @@ package body Elab.Vhdl_Expr is
               (Syn_Inst, Get_Named_Entity (Expr), Expr_Type);
          when Iir_Kind_Indexed_Name
            | Iir_Kind_Slice_Name =>
-            raise Internal_Error;
-          --  declare
-          --     Base : Valtyp;
-          --     Typ : Type_Acc;
-          --     Off : Value_Offsets;
-          --     Res : Valtyp;
-
-          --     Dyn : Dyn_Name;
-          --  begin
-          --     Synth_Assignment_Prefix (Syn_Inst, Expr, Base, Typ, Off, Dyn);
-          --     if Dyn.Voff = No_Net and then Is_Static (Base.Val) then
-          --        Res := Create_Value_Memory (Typ);
-          --        Copy_Memory
-          --          (Res.Val.Mem, Base.Val.Mem + Off.Mem_Off, Typ.Sz);
-          --        return Res;
-          --     end if;
-          --     return Synth_Read_Memory
-          --       (Syn_Inst, Base, Typ, Off.Net_Off, Dyn, Expr);
-          --  end;
+            declare
+               Base : Valtyp;
+               Typ : Type_Acc;
+               Off : Value_Offsets;
+               Res : Valtyp;
+            begin
+               Exec_Assignment_Prefix (Syn_Inst, Expr, Base, Typ, Off);
+               Res := Create_Value_Memory (Typ);
+               Copy_Memory (Res.Val.Mem, Base.Val.Mem + Off.Mem_Off, Typ.Sz);
+               return Res;
+            end;
          when Iir_Kind_Selected_Element =>
             declare
                Idx : constant Iir_Index32 :=
