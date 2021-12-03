@@ -1443,7 +1443,9 @@ package body Vhdl.Sem is
             then
                return False;
             end if;
-            if not Are_Trees_Equal (Get_Type (Left), Get_Type (Right)) then
+            if not Are_Trees_Equal (Get_Subtype_Indication (Left),
+                                    Get_Subtype_Indication (Right))
+            then
                return False;
             end if;
             El_Left := Get_Default_Value (Left);
