@@ -9,6 +9,10 @@ indent_style = tab
 indent_size = 2
 tab_width = 2
 
+[*.{adb,ads,gpr}]
+indent_style = space
+indent_size = 3
+
 [*.py]
 indent_style = space
 indent_size = 4
