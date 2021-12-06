@@ -20,6 +20,9 @@ with Netlists; use Netlists;
 with Netlists.Builders; use Netlists.Builders;
 
 package Netlists.Inference is
+   --  If True, latches are allowed.
+   Flag_Latches : Boolean := False;
+
    --  Walk the And-net N, and extract clock (posedge/negedge) if found.
    --  ENABLE is N without the clock.
    --  If not found, CLK and ENABLE are set to No_Net.

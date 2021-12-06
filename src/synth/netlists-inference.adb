@@ -780,7 +780,11 @@ package body Netlists.Inference is
       else
          Name := Get_Instance_Name (Get_Net_Parent (Prev_Val));
       end if;
-      Error_Msg_Synth (Loc, "latch infered for net %n", +Name);
+
+      if not Flag_Latches then
+         Error_Msg_Synth
+           (Loc, "latch infered for net %n (use --latches)", +Name);
+      end if;
 
       return Val;
    end Infere_Latch;

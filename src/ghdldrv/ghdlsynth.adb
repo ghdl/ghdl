@@ -45,6 +45,7 @@ with Netlists.Disp_Vhdl;
 with Netlists.Disp_Verilog;
 with Netlists.Disp_Dot;
 with Netlists.Errors;
+with Netlists.Inference;
 
 with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 with Elab.Vhdl_Insts;
@@ -155,6 +156,8 @@ package body Ghdlsynth is
          Synth.Flags.Flag_Formal := False;
       elsif Option = "--formal" then
          Synth.Flags.Flag_Formal := True;
+      elsif Option = "--latches" then
+         Netlists.Inference.Flag_Latches := True;
       elsif Option = "--no-assert-cover" then
          Synth.Flags.Flag_Assert_Cover := False;
       elsif Option = "--assert-cover" then
