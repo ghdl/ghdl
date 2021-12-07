@@ -513,6 +513,8 @@ package body Elab.Vhdl_Insts is
    begin
       Apply_Block_Configuration (Config, Arch);
 
+      Elab.Vhdl_Files.Set_Design_Unit (Arch);
+
       Elab_Declarations (Syn_Inst, Get_Declaration_Chain (Entity));
       Elab_Concurrent_Statements
         (Syn_Inst, Get_Concurrent_Statement_Chain (Entity));
