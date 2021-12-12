@@ -1,6 +1,6 @@
 -r ../pyGHDL/requirements.txt
 
-pyTooling.Packaging>=0.3.1
+pyTooling.Packaging>=0.3.2
 
 sphinx>=3.4.2
 #recommonmark>=0.7.1
