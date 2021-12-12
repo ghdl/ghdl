@@ -32,121 +32,32 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+#
+from pathlib             import Path
+from pyTooling.Packaging import DescribePythonPackageHostedOnGitHub
 
-from pathlib import Path
-from re import compile as re_compile
-from typing import List
+gitHubNamespace =        "ghdl"
+packageName =            "pyGHDL"
+packageDirectory =       packageName
+packageInformationFile = Path(f"{packageDirectory}/__init__.py")
 
-from setuptools import (
-    setup as setuptools_setup,
-    find_packages as setuptools_find_packages,
-)
-
-gitHubNamespace = "ghdl"
-projectName = "ghdl"
-packageName = "pyGHDL"
-packagePath = Path(packageName)
-
-readmeFile = packagePath / "README.md"
-requirementsFile = packagePath / "requirements.txt"
-
-
-# Read (local) README for upload to PyPI
-def get_description(file: Path) -> str:
-    with file.open("r") as fh:
-        description = fh.read()
-    return description
-
-
-# Read requirements file and add them to package dependency list
-def get_requirements(file: Path) -> List[str]:
-    requirements = []
-    with file.open("r") as fh:
-        for line in fh.read().splitlines():
-            if line.startswith("#") or line == "":
-                continue
-            elif line.startswith("-r"):
-                # Remove the first word/argument (-r)
-                filename = " ".join(line.split(" ")[1:])
-                requirements += get_requirements(file.parent / filename)
-            elif line.startswith("https"):
-                # Convert 'URL#NAME' to 'NAME @ URL'
-                splitItems = line.split("#")
-                requirements.append("{} @ {}".format(splitItems[1], splitItems[0]))
-            else:
-                requirements.append(line)
-    return requirements
-
-
-def get_version():
-    # Try from version.py.  Reads it to avoid loading the shared library.
-    pattern = re_compile('^__version__ = "(.*)"\n')
-    try:
-        line = open("pyGHDL/libghdl/version.py").read()
-        match = pattern.match(line)
-        if match:
-            return match.group(1)
-    except Exception:
-        pass
-
-    raise Exception("Cannot find version")
-
-
-# Derive URLs
-sourceCodeURL = "https://github.com/{namespace}/{projectName}".format(
-    namespace=gitHubNamespace, projectName=projectName
-)
-documentationURL = (
-    "https://{namespace}.github.io/{projectName}/using/py/index.html".format(
-        namespace=gitHubNamespace, projectName=projectName
-    )
-)
-requirements = list(set(get_requirements(requirementsFile)))
-
-
-# Assemble all package information
-setuptools_setup(
-    name=packageName,
-    version=get_version(),
-    author="Tristan Gingold",
-    author_email="tgingold@free.fr",
-    license="GPL-2.0-or-later",
+DescribePythonPackageHostedOnGitHub(
+    packageName=packageName,
     description="Python binding for GHDL and high-level APIs (incl. LSP).",
-    long_description=get_description(readmeFile),
-    long_description_content_type="text/markdown",
-    url=sourceCodeURL,
-    project_urls={
-        "Documentation": documentationURL,
-        "Source Code": sourceCodeURL,
-        "Issue Tracker": sourceCodeURL + "/issues",
-    },
-    python_requires=">=3.6",
-    install_requires=requirements,
-    packages=setuptools_find_packages(exclude=("tests",)),
-    entry_points={
-        "console_scripts": [
-            "ghdl-ls = pyGHDL.cli.lsp:main",
-            "ghdl-dom = pyGHDL.cli.dom:main",
-        ]
-    },
+    license="GPL-2.0-or-later",
+    gitHubNamespace=gitHubNamespace,
     keywords="Python3 VHDL Parser Compiler Simulator GHDL",
+    sourceFileWithVersion=packageInformationFile,
+    developmentStatus="beta",
     classifiers=[
-        "License :: OSI Approved :: GNU General Public License v2 or later (GPLv2+)",
         "Operating System :: MacOS",
         "Operating System :: Microsoft :: Windows :: Windows 10",
         "Operating System :: POSIX :: Linux",
-        "Programming Language :: Python :: 3 :: Only",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
-        "Development Status :: 4 - Beta",
-        # "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
         "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)",
         "Topic :: Software Development :: Code Generators",
         "Topic :: Software Development :: Compilers",
         "Topic :: Software Development :: Testing",
         "Topic :: Utilities",
-    ],
+    ]
 )
