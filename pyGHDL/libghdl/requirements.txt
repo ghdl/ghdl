@@ -1,1 +1,1 @@
-pydecor>=2.0.1
+pyTooling>=1.5.1

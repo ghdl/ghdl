@@ -2,7 +2,7 @@
 # Call 'make' in 'src/vhdl' to regenerate:
 #
 from enum import IntEnum, unique
-from pydecor import export
+from pyTooling.Decorators import export
 
 from pyGHDL.libghdl._decorator import BindToLibGHDL
 

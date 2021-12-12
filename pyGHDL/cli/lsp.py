@@ -48,10 +48,11 @@ from os import environ as os_environ, getcwd as os_getcwd
 import os
 from pathlib import Path
 
-from pydecor import export
+from pyTooling.Decorators import export
 
+from pyGHDL import __version__ as ghdlVersion
 import pyGHDL.libghdl as libghdl
-from pyGHDL.libghdl import version, errorout_console
+from pyGHDL.libghdl import errorout_console
 from pyGHDL.lsp import LSPConnTrace
 from pyGHDL.lsp.lsp import LSPConn, LanguageProtocolServer
 from pyGHDL.lsp.vhdl_ls import VhdlLanguageServer
@@ -85,7 +86,7 @@ def _generateCLIParser() -> ArgumentParser:
     parser = ArgumentParser(
         description="VHDL Language Protocol Server. Find info about clients in `ghdl/ghdl-language-server <https://github.com/ghdl/ghdl-language-server>`__."
     )
-    parser.add_argument("--version", "-V", action="version", version="%(prog)s " + version.__version__)
+    parser.add_argument("--version", "-V", action="version", version="%(prog)s " + ghdlVersion)
     parser.add_argument("--verbose", "-v", action="count", default=0, help="Show debug output")
     parser.add_argument("--log-file", help="Redirect logs to the given file instead of stderr")
     parser.add_argument(

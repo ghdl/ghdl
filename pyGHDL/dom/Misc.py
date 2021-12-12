@@ -35,7 +35,7 @@
 .. todo::
    Add a module documentation.
 """
-from pydecor import export
+from pyTooling.Decorators import export
 
 from pyVHDLModel.SyntaxModel import (
     Alias as VHDLModel_Alias,

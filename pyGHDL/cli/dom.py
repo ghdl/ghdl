@@ -40,8 +40,9 @@ from textwrap import wrap, dedent
 from pyGHDL.dom import DOMException
 
 from pyGHDL.libghdl import LibGHDLException
-from pydecor import export
-from pyMetaClasses import Singleton
+from pyTooling.Decorators import export
+from pyTooling.MetaClasses import Singleton
+from pyTooling.TerminalUI import LineTerminal, Severity
 from pyAttributes import Attribute
 from pyAttributes.ArgParseAttributes import (
     ArgParseMixin,
@@ -51,7 +52,6 @@ from pyAttributes.ArgParseAttributes import (
     ArgumentAttribute,
     SwitchArgumentAttribute,
 )
-from pyTerminalUI import LineTerminal, Severity
 
 from pyGHDL import GHDLBaseException
 from pyGHDL.dom.NonStandard import Design, Document
@@ -64,8 +64,7 @@ __email__ = ""
 __version__ = "0.0.0"
 __status__ = "Alpha"
 __license__ = ""
-__all__ = []
-__api__ = __all__
+
 
 
 class SourceAttribute(Attribute):

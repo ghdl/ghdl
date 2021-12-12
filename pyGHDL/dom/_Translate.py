@@ -32,7 +32,7 @@
 # ============================================================================
 from typing import List, Generator, Type
 
-from pydecor import export
+from pyTooling.Decorators import export
 
 from pyGHDL.dom.Sequential import (
     IfStatement,

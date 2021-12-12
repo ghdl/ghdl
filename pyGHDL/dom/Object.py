@@ -32,7 +32,7 @@
 # ============================================================================
 from typing import Union, List
 
-from pydecor import export
+from pyTooling.Decorators import export
 
 from pyVHDLModel.SyntaxModel import (
     Constant as VHDLModel_Constant,

@@ -35,7 +35,7 @@ def print_file_header(includeIntEnumUnique=True, includeBindToLibGHDL=True):
             # Auto generated Python source file from Ada sources
             # Call 'make' in 'src/vhdl' to regenerate:
             #
-        """) + "{sysImports}from pydecor import export\n{moduleImports}".format(
+        """) + "{sysImports}from pyTooling.Decorators import export\n{moduleImports}".format(
             sysImports = "from enum import IntEnum, unique\n" if includeIntEnumUnique else "",
             moduleImports = "\nfrom pyGHDL.libghdl._decorator import BindToLibGHDL\n" if includeBindToLibGHDL else "",
         )

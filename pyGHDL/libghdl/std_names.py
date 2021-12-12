@@ -1,7 +1,7 @@
 # Auto generated Python source file from Ada sources
 # Call 'make' in 'src/vhdl' to regenerate:
 #
-from pydecor import export
+from pyTooling.Decorators import export
 
 
 @export

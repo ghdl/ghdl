@@ -32,7 +32,7 @@
 # ============================================================================
 from typing import Iterable
 
-from pydecor import export
+from pyTooling.Decorators import export
 
 from pyGHDL.dom.Concurrent import (
     WaveformElement,

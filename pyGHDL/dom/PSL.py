@@ -39,7 +39,7 @@ This module contains all DOM classes for VHDL's design units (:class:`context <E
 
 
 """
-from pydecor import export
+from pyTooling.Decorators import export
 
 from pyVHDLModel.PSLModel import (
     VerificationUnit as VHDLModel_VerificationUnit,

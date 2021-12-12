@@ -41,7 +41,7 @@ This module contains all DOM classes for VHDL's design units (:class:`context <E
 """
 from typing import Iterable
 
-from pydecor import export
+from pyTooling.Decorators import export
 
 from pyVHDLModel import ContextUnion, EntityOrSymbol
 from pyVHDLModel.SyntaxModel import (

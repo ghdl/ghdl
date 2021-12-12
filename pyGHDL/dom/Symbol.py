@@ -32,7 +32,7 @@
 # ============================================================================
 from typing import List, Iterator
 
-from pydecor import export
+from pyTooling.Decorators import export
 
 from pyVHDLModel.SyntaxModel import (
     EntitySymbol as VHDLModel_EntitySymbol,

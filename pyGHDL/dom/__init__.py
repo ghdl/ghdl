@@ -32,7 +32,7 @@
 # ============================================================================
 from pathlib import Path
 
-from pydecor import export
+from pyTooling.Decorators import export
 
 from pyGHDL import GHDLBaseException
 from pyGHDL.libghdl import files_map, name_table

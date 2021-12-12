@@ -32,7 +32,7 @@
 # ============================================================================
 from typing import List
 
-from pydecor import export
+from pyTooling.Decorators import export
 
 from pyVHDLModel.SyntaxModel import (
     GenericConstantInterfaceItem as VHDLModel_GenericConstantInterfaceItem,

@@ -38,13 +38,13 @@ from pathlib import Path
 from shutil import which
 from typing import List, Optional
 
-from pydecor import export
+from pyTooling.Decorators import export
 
 from pyGHDL import GHDLBaseException
 from pyGHDL.libghdl._types import Iir
 
 # from pyGHDL.libghdl._decorator import BindToLibGHDL
-from pyGHDL.libghdl.version import __version__
+from pyGHDL import __version__ as ghdlVersion
 
 Nullable = Optional
 
@@ -63,9 +63,9 @@ class LibGHDLException(GHDLBaseException):
 
 def _get_libghdl_name() -> Path:
     """Get the name of the libghdl library (with version and extension)."""
-    ver = __version__.replace("-", "_").replace(".", "_")
+    version = ghdlVersion.replace("-", "_").replace(".", "_")
     ext = {"win32": "dll", "cygwin": "dll", "msys": "dll", "darwin": "dylib"}.get(sys_platform, "so")
-    return Path("libghdl-{version}.{ext}".format(version=ver, ext=ext))
+    return Path(f"libghdl-{version}.{ext}")
 
 
 def _check_libghdl_libdir(libdir: Path, basename: Path) -> Path:
@@ -140,7 +140,7 @@ def _get_libghdl_path():
         pass
 
     # Failed.
-    raise Exception("Cannot find libghdl {}".format(basename))
+    raise Exception(f"Cannot find libghdl {basename}")
 
 
 def _initialize():

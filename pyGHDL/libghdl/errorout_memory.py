@@ -34,7 +34,7 @@
 
 from ctypes import c_int8, c_int32, c_char_p, Structure
 
-from pydecor import export
+from pyTooling.Decorators import export
 
 from pyGHDL.libghdl._types import ErrorIndex
 from pyGHDL.libghdl._decorator import BindToLibGHDL
