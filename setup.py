@@ -36,10 +36,11 @@
 from pathlib             import Path
 from pyTooling.Packaging import DescribePythonPackageHostedOnGitHub
 
-gitHubNamespace =        "ghdl"
-packageName =            "pyGHDL"
-packageDirectory =       packageName
+gitHubNamespace = "ghdl"
+packageName =  "pyGHDL"
+packageDirectory = packageName
 packageInformationFile = Path(f"{packageDirectory}/__init__.py")
+requirementsFile = Path(f"{packageDirectory}/requirements.txt")
 
 DescribePythonPackageHostedOnGitHub(
     packageName=packageName,
@@ -48,6 +49,7 @@ DescribePythonPackageHostedOnGitHub(
     gitHubNamespace=gitHubNamespace,
     keywords="Python3 VHDL Parser Compiler Simulator GHDL",
     sourceFileWithVersion=packageInformationFile,
+    requirementsFile=requirementsFile,
     developmentStatus="beta",
     classifiers=[
         "Operating System :: MacOS",

@@ -66,7 +66,6 @@ __status__ = "Alpha"
 __license__ = ""
 
 
-
 class SourceAttribute(Attribute):
     def __call__(self, func):
         self._AppendAttribute(
