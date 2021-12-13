@@ -34,6 +34,7 @@
 # ============================================================================
 #
 from pathlib             import Path
+from pyTooling.Licensing import GPL_2_0_or_later
 from pyTooling.Packaging import DescribePythonPackageHostedOnGitHub
 
 gitHubNamespace = "ghdl"
@@ -45,9 +46,8 @@ requirementsFile = Path(f"{packageDirectory}/requirements.txt")
 DescribePythonPackageHostedOnGitHub(
     packageName=packageName,
     description="Python binding for GHDL and high-level APIs (incl. LSP).",
-    license="GPL-2.0-or-later",
+    license=GPL_2_0_or_later,
     gitHubNamespace=gitHubNamespace,
-    keywords="Python3 VHDL Parser Compiler Simulator GHDL",
     sourceFileWithVersion=packageInformationFile,
     requirementsFile=requirementsFile,
     developmentStatus="beta",
