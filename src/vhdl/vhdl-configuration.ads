@@ -69,8 +69,12 @@ package Vhdl.Configuration is
    type Mark_Instantiated_Units_Access is access procedure (N : Int32);
    Mark_Foreign_Module : Mark_Instantiated_Units_Access;
 
+   type Apply_Foreign_Override_Access is access procedure
+     (Top : Int32; Gen : String; Value : String);
+   Apply_Foreign_Override : Apply_Foreign_Override_Access;
+
    --  Add an override for generic ID.
-   procedure Add_Generic_Override (Id : Name_Id; Value : String);
+   procedure Add_Generic_Override (Name : String; Value : String);
 
    --  Apply generic overrides to entity ENT.
    procedure Apply_Generic_Override (Ent : Iir);
