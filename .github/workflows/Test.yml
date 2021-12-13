@@ -484,7 +484,9 @@ jobs:
           pip3 install -r testsuite/requirements.txt
 
       - name: '🚦 Test installation of pyGHDL through pip'
-        run: pip install ("git+https://github.com/ghdl/ghdl.git@" + $env:GHDL_HASH)
+        run: |
+          pip install pyTooling.Packaging wheel
+          pip install ("git+https://github.com/ghdl/ghdl.git@" + $env:GHDL_HASH)
 
       - name: '🚦 Test pyGHDL entrypoints'
         run: |
