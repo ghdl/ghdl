@@ -4767,7 +4767,8 @@ package body Vhdl.Sem_Expr is
                Obj := Get_Named_Entity (Obj);
             when Iir_Kinds_Psl_Builtin =>
                return;
-            when Iir_Kind_Error =>
+            when Iir_Kind_Parenthesis_Name
+              | Iir_Kind_Error =>
                return;
             when others =>
                Error_Kind ("check_read", Obj);
