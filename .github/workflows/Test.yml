@@ -485,7 +485,7 @@ jobs:
 
       - name: '🚦 Test installation of pyGHDL through pip'
         run: |
-          pip install pyTooling.Packaging wheel
+          pip install pyTooling pyTooling.Packaging wheel
           pip install ("git+https://github.com/ghdl/ghdl.git@" + $env:GHDL_HASH)
 
       - name: '🚦 Test pyGHDL entrypoints'
