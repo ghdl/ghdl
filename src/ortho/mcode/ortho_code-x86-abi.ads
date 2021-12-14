@@ -79,6 +79,10 @@ package Ortho_Code.X86.Abi is
    --  Link in memory intrinsics symbols.
    procedure Link_Intrinsics;
 
+   --  Register unwinding info for JIT.
+   procedure Register_Unwind;
+   procedure Unregister_Unwind;
+
    --  Target specific data for subprograms.
    type Target_Subprg is record
       Fp_Slot : Uns32 := 0;

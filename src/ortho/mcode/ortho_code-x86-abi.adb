@@ -13,6 +13,9 @@
 --
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
+with System;
+
+with Ada.Text_IO;
 with Ortho_Code.Decls; use Ortho_Code.Decls;
 with Ortho_Code.Exprs; use Ortho_Code.Exprs;
 with Ortho_Code.Consts;
@@ -25,7 +28,6 @@ with Ortho_Code.X86.Insns;
 with Ortho_Code.X86.Emits;
 with Binary_File;
 with Binary_File.Memory;
-with Ada.Text_IO;
 
 package body Ortho_Code.X86.Abi is
    --  First argument is at %ebp + 8 / %rbp + 16
@@ -861,4 +863,62 @@ package body Ortho_Code.X86.Abi is
            (Ortho_Code.X86.Emits.Chkstk_Symbol, Chkstk'Address);
       end if;
    end Link_Intrinsics;
+
+   type Void is null record;
+   type Void_Ptr is access Void;
+
+   --  From GCC unwind-dw2-fde.h
+   type Frame_Info_Object is record
+      pc_begin : Void_Ptr;
+      tbase : Void_Ptr;
+      dbase : Void_Ptr;
+      U : Void_Ptr;
+      S : Void_Ptr;
+      fde_end : Void_Ptr; --  Maybe optional
+      next : Void_Ptr;
+   end record;
+   pragma Convention (C, Frame_Info_Object);
+
+   --  Object for the generated code.
+   This_Object : Frame_Info_Object;
+
+   procedure Register_Unwind
+   is
+      use Binary_File.Memory;
+      use System;
+
+      --  From GCC unwind-dw2-fde.h
+      procedure Register_Frame_Info_Bases
+        (Eh_Frame : Address;
+         Object : Address;
+         Tbase : Address;
+         Dbase : Address);
+      pragma Import (C, Register_Frame_Info_Bases,
+                     "__register_frame_info_bases");
+   begin
+      if X86.Flags.Eh_Frame then
+         Register_Frame_Info_Bases
+           (Get_Section_Addr (X86.Emits.Sect_Eh_Frame),
+            This_Object'Address,
+            Get_Section_Addr (X86.Emits.Sect_Text),
+            Get_Section_Addr (X86.Emits.Sect_Bss));
+      end if;
+   end Register_Unwind;
+
+   procedure Unregister_Unwind
+   is
+      use Binary_File.Memory;
+      use System;
+
+      --  From GCC unwind-dw2-fde.h
+      procedure Deregister_Frame_Info_Bases (Eh_Frame : Address);
+      pragma Import (C, Deregister_Frame_Info_Bases,
+                     "__deregister_frame_info_bases");
+   begin
+      if X86.Flags.Eh_Frame then
+         Deregister_Frame_Info_Bases
+           (Get_Section_Addr (X86.Emits.Sect_Eh_Frame));
+      end if;
+   end Unregister_Unwind;
+
 end Ortho_Code.X86.Abi;

@@ -46,11 +46,6 @@ package body Ortho_Code.X86.Emits is
       Mode_U32 | Mode_I32 => Sz_32,
       Mode_U64 | Mode_I64 => Sz_64);
 
-   --  Well known sections.
-   Sect_Text : Binary_File.Section_Acc;
-   Sect_Rodata : Binary_File.Section_Acc;
-   Sect_Bss : Binary_File.Section_Acc;
-
    --  For 64 bit to 32 bit conversion, we need an extra register.  Just before
    --  the conversion, there is an OE_Reg instruction containing the extra
    --  register.  Its value is saved here.
@@ -2936,7 +2931,7 @@ package body Ortho_Code.X86.Emits is
       --  Emit prolog.
       --  push %ebp / push %rbp
       Push_Reg (R_Bp);
-      --  movl %esp, %ebp / movl %rsp, %rbp
+      --  movl %esp, %ebp / movq %rsp, %rbp
       Start_Insn;
       Gen_Rex (16#48#);
       Gen_8 (Opc_Mov_Rm_Reg + 1);
@@ -2971,7 +2966,7 @@ package body Ortho_Code.X86.Emits is
          end;
       end if;
 
-      --  subl XXX, %esp / subl XXX, %rsp
+      --  subl XXX, %esp / subq XXX, %rsp
       if Frame_Size /= 0 then
          if not X86.Flags.Flag_Alloca_Call
             or else Frame_Size <= 4096
@@ -3090,6 +3085,24 @@ package body Ortho_Code.X86.Emits is
       end if;
    end Emit_Epilogue;
 
+   procedure Gen_FDE
+   is
+      Subprg_Size : Unsigned_32;
+   begin
+      Subprg_Size := Unsigned_32 (Get_Current_Pc - Subprg_Pc);
+
+      Set_Current_Section (Sect_Eh_Frame);
+      Prealloc (20);
+      Gen_32 (16);            --  Length
+      Gen_32 (Unsigned_32 (Get_Current_Pc));  --  CIE pointer
+      Gen_32 (Unsigned_32 (Subprg_Pc));       --  Initial location (.text rel)
+      Gen_32 (Subprg_Size);                   --  Function size
+      Gen_8 (0);                              --  Length
+      Gen_8 (0);
+      Gen_8 (0);
+      Gen_8 (0);
+   end Gen_FDE;
+
    procedure Emit_Subprg (Subprg : Subprogram_Data_Acc)
    is
       pragma Assert (Subprg = Cur_Subprg);
@@ -3114,6 +3127,10 @@ package body Ortho_Code.X86.Emits is
       end loop;
 
       Emit_Epilogue (Subprg);
+
+      if Flags.Eh_Frame then
+         Gen_FDE;
+      end if;
    end Emit_Subprg;
 
    procedure Emit_Var_Decl (Decl : O_Dnode)
@@ -3295,6 +3312,51 @@ package body Ortho_Code.X86.Emits is
          Debug_Hex := True;
       end if;
 
+      if Flags.Eh_Frame then
+         Create_Section (Sect_Eh_Frame, ".eh_frame", 0);
+         Set_Current_Section (Sect_Eh_Frame);
+         Prealloc (32);
+
+         --  Generate CIE
+         Gen_32 (28);  --  Length
+         Gen_32 (0);  --  CIE id = 0
+         Gen_8 (1);   --  Version = 1
+         Gen_8 (Character'Pos ('z'));  --  Augmentation
+         Gen_8 (Character'Pos ('R'));  --  Augmentation
+         Gen_8 (0);                    --  End of Augmentation
+         Gen_8 (1);   --  Code align factor
+         if Flags.M64 then
+            Dwarf.Gen_Sleb128 (-8); --  Data align factor
+            Dwarf.Gen_Uleb128 (16); --  Return address (16 = rip)
+         else
+            Dwarf.Gen_Sleb128 (-4);
+            Dwarf.Gen_Uleb128 (0);  --  TODO
+         end if;
+         Dwarf.Gen_Uleb128 (1); --  z: length of the remainder of augmentation
+         Gen_8 (16#23#);        --  R: pointer encoding: .text relative, udata4
+
+         --  CFIs (call frame instructions)
+         --  Initial state: cfa = rsp + 8, rip = -8@cfa
+         Gen_8 (16#0c#);  --  DW_CFA_def_cfa
+         Gen_8 (16#07#);  --    reg 7 (rsp)
+         Gen_8 (16#08#);  --    offset 8
+         Gen_8 (16#80# or 16#10#); --  DW_CFA_def_offset reg 16 (rip)
+         Gen_8 (16#01#);           --   offset 1 * (-8) = -8
+         --  push %rbp, cfa = rsp + 16
+         Gen_8 (16#40# or 16#01#); --  DW_CFA_advance_loc +1
+         Gen_8 (16#0e#);           --  DW_CFA_def_cfa_offset
+         Gen_8 (16#10#);           --   offset 16
+         Gen_8 (16#80# or 16#06#); --  DW_CFA_def_offset reg 6 (rbp)
+         Gen_8 (16#02#);           --   offset 2 * (-8) = -16
+         --  movq %rsp, %rbp, cfa = rbp + 16
+         Gen_8 (16#40# or 16#03#); --  DW_CFA_advance_loc +3
+         Gen_8 (16#0d#);           --  DW_CFA_def_cfa_register
+         Gen_8 (16#06#);           --   reg 6 (rbp)
+         Gen_8 (0);                --  nop
+         Gen_8 (0);                --  nop
+         Set_Current_Section (Sect_Text);
+      end if;
+
       if Flag_Debug /= Debug_None then
          Dwarf.Init;
          Set_Current_Section (Sect_Text);
@@ -3308,6 +3370,12 @@ package body Ortho_Code.X86.Emits is
       if Flag_Debug /= Debug_None then
          Set_Current_Section (Sect_Text);
          Dwarf.Finish;
+      end if;
+
+      if Flags.Eh_Frame then
+         Set_Current_Section (Sect_Eh_Frame);
+         Prealloc (4);
+         Gen_32 (0);  --  Size = 0 -> end.
       end if;
    end Finish;
 

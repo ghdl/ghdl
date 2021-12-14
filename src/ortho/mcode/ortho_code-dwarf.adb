@@ -13,11 +13,13 @@
 --
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
-with GNAT.Directory_Operations;
-with Tables;
-with Interfaces; use Interfaces;
-with Dwarf; use Dwarf;
+
 with Ada.Text_IO;
+with GNAT.Directory_Operations;
+
+with Tables;
+
+with Dwarf; use Dwarf;
 with Ortho_Code.Flags; use Ortho_Code.Flags;
 with Ortho_Code.Decls;
 with Ortho_Code.Types;

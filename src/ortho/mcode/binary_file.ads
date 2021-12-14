@@ -128,6 +128,7 @@ package Binary_File is
    procedure Prealloc (L : Pc_Type);
 
    --  Add bits in the current section.
+   --  Space must be pre-allocated.
    procedure Gen_8 (B : Byte);
    procedure Gen_8 (B0, B1 : Byte);
 
@@ -136,6 +137,7 @@ package Binary_File is
    procedure Gen_64 (B : Unsigned_64);
 
    --  Add bits in the current section, but as stand-alone data.
+   --  Displayed if Dump_Asm.
    procedure Gen_Data_8 (B : Unsigned_8);
    procedure Gen_Data_16 (B : Unsigned_32);
    procedure Gen_Data_32 (Sym : Symbol; Offset : Integer_32);

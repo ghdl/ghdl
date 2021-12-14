@@ -66,6 +66,8 @@ package body Ortho_Jit is
          return;
       end if;
 
+      Ortho_Code.Abi.Register_Unwind;
+
       if Snap_Filename /= null then
          declare
             use Ada.Text_IO;
