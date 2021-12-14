@@ -61,5 +61,9 @@ DescribePythonPackageHostedOnGitHub(
         "Topic :: Software Development :: Compilers",
         "Topic :: Software Development :: Testing",
         "Topic :: Utilities",
-    ]
+    ],
+    consoleScripts={
+        "ghdl-ls": "pyGHDL.cli.lsp:main",
+        "ghdl-dom": "pyGHDL.cli.dom:main"
+    }
 )
