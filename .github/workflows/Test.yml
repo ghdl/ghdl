@@ -480,13 +480,10 @@ jobs:
           architecture: ${{ matrix.pyarch }}
 
       - name: '🐍 Install Python dependencies'
-        run: |
-          pip3 install -r testsuite/requirements.txt
+        run: pip3 install -r testsuite/requirements.txt
 
       - name: '🚦 Test installation of pyGHDL through pip'
-        run: |
-          pip install pyTooling pyTooling.Packaging wheel
-          pip install ("git+https://github.com/ghdl/ghdl.git@" + $env:GHDL_HASH)
+        run: pip install ("git+https://github.com/ghdl/ghdl.git@" + $env:GHDL_HASH)
 
       - name: '🚦 Test pyGHDL entrypoints'
         run: |
