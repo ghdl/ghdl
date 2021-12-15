@@ -20,7 +20,7 @@ sys.path.insert(0, abspath('../pyGHDL'))
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
-project =     "GHDL"
+project = "GHDL"
 
 # Read __version__ from source file
 packageInformationFile = Path(f"../py{project}/__init__.py")
