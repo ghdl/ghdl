@@ -254,28 +254,34 @@ package body Synth.Vhdl_Insts is
 
             Gen_Decl := Generics;
             while Gen_Decl /= Null_Node loop
-               Gen := Get_Value (Params.Syn_Inst, Gen_Decl);
-               Strip_Const (Gen);
-               case Gen.Typ.Kind is
-                  when Type_Discrete =>
-                     declare
-                        S : constant String :=
-                          Uns64'Image (To_Uns64 (Read_Discrete (Gen)));
-                     begin
-                        if Len + S'Length > Str_Len then
-                           Has_Hash := True;
-                           Hash_Const (Ctxt, Gen.Val, Gen.Typ);
-                        else
-                           Str (Len + 1 .. Len + S'Length) := S;
-                           pragma Assert (Str (Len + 1) = ' ');
-                           Str (Len + 1) := '_';  --  Overwrite the space.
-                           Len := Len + S'Length;
-                        end if;
-                     end;
-                  when others =>
-                     Has_Hash := True;
-                     Hash_Const (Ctxt, Gen.Val, Gen.Typ);
-               end case;
+               if Get_Kind (Gen_Decl) = Iir_Kind_Interface_Constant_Declaration
+               then
+                  Gen := Get_Value (Params.Syn_Inst, Gen_Decl);
+                  Strip_Const (Gen);
+                  case Gen.Typ.Kind is
+                     when Type_Discrete =>
+                        declare
+                           S : constant String :=
+                             Uns64'Image (To_Uns64 (Read_Discrete (Gen)));
+                        begin
+                           if Len + S'Length > Str_Len then
+                              Has_Hash := True;
+                              Hash_Const (Ctxt, Gen.Val, Gen.Typ);
+                           else
+                              Str (Len + 1 .. Len + S'Length) := S;
+                              pragma Assert (Str (Len + 1) = ' ');
+                              Str (Len + 1) := '_';  --  Overwrite the space.
+                              Len := Len + S'Length;
+                           end if;
+                        end;
+                     when others =>
+                        Has_Hash := True;
+                        Hash_Const (Ctxt, Gen.Val, Gen.Typ);
+                  end case;
+               else
+                  --  TODO: add a unique number (index)
+                  null;
+               end if;
                Gen_Decl := Get_Chain (Gen_Decl);
             end loop;
 

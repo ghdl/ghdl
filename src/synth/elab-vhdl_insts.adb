@@ -106,6 +106,15 @@ package body Elab.Vhdl_Insts is
                   Create_Package_Interface (Sub_Inst, Inter, Pkg_Inst);
                end;
 
+            when Iir_Kind_Interface_Type_Declaration =>
+               declare
+                  Act_Typ : Type_Acc;
+               begin
+                  Act_Typ := Synth_Subtype_Indication
+                    (Syn_Inst, Get_Actual (Assoc));
+                  Create_Subtype_Object (Sub_Inst, Get_Type (Inter), Act_Typ);
+               end;
+
             when Iir_Kind_Interface_Variable_Declaration
                | Iir_Kind_Interface_File_Declaration
                | Iir_Kind_Interface_Signal_Declaration
@@ -113,8 +122,7 @@ package body Elab.Vhdl_Insts is
                | Iir_Kind_Interface_Terminal_Declaration =>
                raise Internal_Error;
 
-            when Iir_Kinds_Interface_Subprogram_Declaration
-               | Iir_Kind_Interface_Type_Declaration =>
+            when Iir_Kinds_Interface_Subprogram_Declaration =>
                raise Internal_Error;
          end case;
 

@@ -431,7 +431,8 @@ package body Vhdl.Annotations is
          when Iir_Kind_Protected_Type_Declaration =>
             Annotate_Protected_Type_Declaration (Block_Info, Def);
 
-         when Iir_Kind_Incomplete_Type_Definition =>
+         when Iir_Kind_Incomplete_Type_Definition
+            | Iir_Kind_Subtype_Attribute =>
             null;
 
          when Iir_Kind_Foreign_Vector_Type_Definition =>
@@ -509,8 +510,12 @@ package body Vhdl.Annotations is
                Create_Object_Info (Block_Info, Decl);
             when Iir_Kind_Interface_Package_Declaration =>
                Annotate_Interface_Package_Declaration (Block_Info, Decl);
-            when Iir_Kinds_Interface_Subprogram_Declaration
-              | Iir_Kind_Interface_Type_Declaration =>
+            when Iir_Kind_Interface_Type_Declaration =>
+               if Flag_Synthesis then
+                  --  Create an info on the interface_type_definition
+                  Create_Object_Info (Block_Info, Get_Type (Decl));
+               end if;
+            when Iir_Kinds_Interface_Subprogram_Declaration =>
                --  Macro-expanded
                null;
             when others =>
