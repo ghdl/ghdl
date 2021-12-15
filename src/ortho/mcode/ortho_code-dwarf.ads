@@ -13,6 +13,8 @@
 --
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
+with Interfaces; use Interfaces;
+
 with Binary_File; use Binary_File;
 
 package Ortho_Code.Dwarf is
@@ -28,6 +30,10 @@ package Ortho_Code.Dwarf is
    --  For a line in a subprogram.
    procedure Set_Line_Stmt (Line : Int32);
    procedure Set_Filename (Dir : String; File : String);
+
+   --  Low-level procedure (also used to generate .eh_frame)
+   procedure Gen_Uleb128 (V : Unsigned_32);
+   procedure Gen_Sleb128 (V : Int32);
 
    type Mark_Type is limited private;
    procedure Mark (M : out Mark_Type);

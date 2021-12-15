@@ -27,6 +27,7 @@ with Vhdl.Sem_Scopes;
 with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
 with Vhdl.Canon;
 with Vhdl.Evaluation;
+with Vhdl.Scanner;
 
 package body Vhdl.Configuration is
    procedure Add_Design_Concurrent_Stmts (Parent : Iir);
@@ -1167,7 +1168,7 @@ package body Vhdl.Configuration is
    end Find_Top_Entity;
 
    type Override_Entry is record
-      Gen : Name_Id;
+      Gen : String_Acc;
       Value : String_Acc;
    end record;
 
@@ -1177,9 +1178,9 @@ package body Vhdl.Configuration is
       Table_Low_Bound => 1,
       Table_Initial => 16);
 
-   procedure Add_Generic_Override (Id : Name_Id; Value : String) is
+   procedure Add_Generic_Override (Name : String; Value : String) is
    begin
-      Override_Table.Append (Override_Entry'(Gen => Id,
+      Override_Table.Append (Override_Entry'(Gen => new String'(Name),
                                              Value => new String'(Value)));
    end Add_Generic_Override;
 
@@ -1325,29 +1326,57 @@ package body Vhdl.Configuration is
 
    procedure Apply_Generic_Override (Ent : Iir)
    is
-      Inter_Chain : constant Iir := Get_Generic_Chain (Ent);
-      Inter : Iir;
    begin
       for I in Override_Table.First .. Override_Table.Last loop
          declare
             Over : constant Override_Entry := Override_Table.Table (I);
          begin
-            Inter := Inter_Chain;
-            while Inter /= Null_Iir loop
-               exit when Get_Identifier (Inter) = Over.Gen;
-               Inter := Get_Chain (Inter);
-            end loop;
+            case Get_Kind (Ent) is
+               when Iir_Kind_Entity_Declaration =>
+                  declare
+                     Inter_Chain : constant Iir := Get_Generic_Chain (Ent);
+                     Gen_Name : String := Over.Gen.all;
+                     Gen_Id : Name_Id;
+                     Inter : Iir;
+                     Err : Boolean;
+                  begin
+                     Vhdl.Scanner.Convert_Identifier (Gen_Name, Err);
+                     if Err then
+                        Error_Msg_Option
+                          ("incorrect name in generic override option");
+                        Gen_Id := Null_Identifier;
+                     else
+                        Gen_Id := Name_Table.Get_Identifier (Gen_Name);
 
-            if Inter = Null_Iir then
-               Error_Msg_Elab ("no generic %i for -g", +Over.Gen);
-            elsif Get_Kind (Inter) /= Iir_Kind_Interface_Constant_Declaration
-            then
-               Error_Msg_Elab
-                 ("generic %n cannot be overriden (not a constant)",
-                  +Over.Gen);
-            else
-               Override_Generic (Inter, Over.Value);
-            end if;
+                        Inter := Inter_Chain;
+                        while Inter /= Null_Iir loop
+                           exit when Get_Identifier (Inter) = Gen_Id;
+                           Inter := Get_Chain (Inter);
+                        end loop;
+                     end if;
+
+                     if Gen_Id = Null_Identifier then
+                        --  Skip it
+                        null;
+                     elsif Inter = Null_Iir then
+                        Error_Msg_Elab ("no generic %i for -g", +Gen_Id);
+                     elsif (Get_Kind (Inter)
+                              /= Iir_Kind_Interface_Constant_Declaration)
+                     then
+                        --  Could be a generic package, a generic type...
+                        Error_Msg_Elab
+                          ("generic %n cannot be overriden (not a constant)",
+                           +Gen_Id);
+                     else
+                        Override_Generic (Inter, Over.Value);
+                     end if;
+                  end;
+               when Iir_Kind_Foreign_Module =>
+                  Apply_Foreign_Override
+                    (Get_Foreign_Node (Ent), Over.Gen.all, Over.Value.all);
+               when others =>
+                  raise Internal_Error;
+            end case;
          end;
       end loop;
    end Apply_Generic_Override;

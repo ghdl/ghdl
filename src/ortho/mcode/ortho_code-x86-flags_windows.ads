@@ -30,6 +30,9 @@ package Ortho_Code.X86.Flags_Windows is
    --  32 bits.
    M64 : constant Boolean := False;
 
+   --  Generate eh_frame for unwinding.
+   Eh_Frame : constant Boolean := False;
+
    --  Not Windows x64 calling convention.
    Win64 : constant Boolean := False;
 end Ortho_Code.X86.Flags_Windows;

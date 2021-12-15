@@ -31,6 +31,12 @@ package Ortho_Code.X86.Emits is
    type Intrinsic_Symbols_Map is array (Intrinsics_X86) of Symbol;
    Intrinsics_Symbol : Intrinsic_Symbols_Map;
 
+   --  Well known sections.
+   Sect_Text : Section_Acc;
+   Sect_Rodata : Section_Acc;
+   Sect_Bss : Section_Acc;
+   Sect_Eh_Frame : Section_Acc;
+
    Mcount_Symbol : Symbol;
    Chkstk_Symbol : Symbol;
 end Ortho_Code.X86.Emits;

@@ -378,20 +378,25 @@ package body Ghdlsynth is
          Foreign_Resolve_Instances.all;
       end if;
 
-      if Get_Kind (Get_Library_Unit (Config)) /= Iir_Kind_Foreign_Module then
-         --  Check (and possibly abandon) if entity can be at the top of the
-         --  hierarchy.
-         declare
-            Entity : constant Iir :=
-              Vhdl.Utils.Get_Entity_From_Configuration (Config);
-         begin
-            Vhdl.Configuration.Apply_Generic_Override (Entity);
-            Vhdl.Configuration.Check_Entity_Declaration_Top (Entity, False);
-            if Nbr_Errors > 0 then
-               return Null_Iir;
-            end if;
-         end;
-      end if;
+      --  Check (and possibly abandon) if entity can be at the top of the
+      --  hierarchy.
+      declare
+         Config_Unit : constant Iir := Get_Library_Unit (Config);
+         Top : Iir;
+      begin
+         if Get_Kind (Config_Unit) = Iir_Kind_Foreign_Module then
+            Top := Config_Unit;
+            Vhdl.Configuration.Apply_Generic_Override (Top);
+            --  No Check_Entity_Declaration (yet).
+         else
+            Top := Vhdl.Utils.Get_Entity_From_Configuration (Config);
+            Vhdl.Configuration.Apply_Generic_Override (Top);
+            Vhdl.Configuration.Check_Entity_Declaration_Top (Top, False);
+         end if;
+         if Nbr_Errors > 0 then
+            return Null_Iir;
+         end if;
+      end;
       return Config;
    end Ghdl_Synth_Configure;
 
