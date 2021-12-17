@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
-import sys, re
+import sys
 from os.path import abspath
 from pathlib import Path
 from json import loads
 
+from pyTooling.Packaging import extractVersionInformation
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -14,31 +15,22 @@ sys.path.insert(0, abspath('../pyGHDL'))
 
 
 # ==============================================================================
-# Project information
-# ==============================================================================
-project = u'GHDL'
-copyright = u'2002-2021, Tristan Gingold and contributors'
-author = u'Tristan Gingold and contributors'
-
-# ==============================================================================
-# Versioning
+# Project information and versioning
 # ==============================================================================
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
-try:
-    with open('../configure') as verin:
-        for line in verin:
-            line = re.findall(r'ghdl_version=\"([0-9].+)\"', line)
-            if line:
-                version = line[0]
-                break
-except Exception as e:
-    print('cannot extract version: %s' % e)
-    version = "latest"
-    pass
+project = "GHDL"
 
-release = version  # The full version, including alpha/beta/rc tags.
+# Read __version__ from source file
+packageInformationFile = Path(f"../py{project}/__init__.py")
+versionInformation = extractVersionInformation(packageInformationFile)
+
+author =    versionInformation.Author
+copyright = versionInformation.Copyright
+version =   ".".join(versionInformation.Version.split(".")[:2])  # e.g. 2.3    The short X.Y version.
+release =   versionInformation.Version
+
 
 # ==============================================================================
 # Miscellaneous settings

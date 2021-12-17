@@ -46,7 +46,7 @@ from enum import IntEnum
 from functools import wraps
 from typing import Callable, List, Dict, Any, TypeVar
 
-from pydecor import export
+from pyTooling.Decorators import export
 
 from pyGHDL.libghdl import libghdl, LibGHDLException
 

@@ -85,7 +85,7 @@ jobs:
           sudo apt update -qq
           sudo apt install -y gnat
           python -m pip install --upgrade pip
-          python -m pip install black wheel
+          python -m pip install black wheel pyTooling
 
       - name: '🚧 Update Python bindings'
         run: ./scripts/update_py_bindings.sh
@@ -480,8 +480,7 @@ jobs:
           architecture: ${{ matrix.pyarch }}
 
       - name: '🐍 Install Python dependencies'
-        run: |
-          pip3 install -r testsuite/requirements.txt
+        run: pip3 install -r testsuite/requirements.txt
 
       - name: '🚦 Test installation of pyGHDL through pip'
         run: pip install ("git+https://github.com/ghdl/ghdl.git@" + $env:GHDL_HASH)

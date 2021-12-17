@@ -34,7 +34,7 @@
 #
 from ctypes import c_char_p
 
-from pydecor import export
+from pyTooling.Decorators import export
 
 from pyGHDL.libghdl._types import String8Id
 from pyGHDL.libghdl._decorator import BindToLibGHDL

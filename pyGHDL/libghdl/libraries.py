@@ -34,7 +34,7 @@
 
 from ctypes import c_int32
 
-from pydecor import export
+from pyTooling.Decorators import export
 
 from pyGHDL.libghdl import libghdl
 from pyGHDL.libghdl._types import (

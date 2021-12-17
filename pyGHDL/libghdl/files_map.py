@@ -32,7 +32,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
 
-from pydecor import export
+from pyTooling.Decorators import export
 
 from pyGHDL.libghdl._decorator import BindToLibGHDL
 from pyGHDL.libghdl._types import NameId, SourceFileEntry, LocationType

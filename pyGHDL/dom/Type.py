@@ -32,7 +32,7 @@
 # ============================================================================
 from typing import List, Union, Iterator, Tuple
 
-from pydecor import export
+from pyTooling.Decorators import export
 
 from pyVHDLModel.SyntaxModel import (
     AnonymousType as VHDLModel_AnonymousType,

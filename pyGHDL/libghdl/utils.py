@@ -34,7 +34,7 @@
 from ctypes import byref
 from typing import List, Any, Generator
 
-from pydecor import export
+from pyTooling.Decorators import export
 
 from pyGHDL.libghdl._decorator import EnumLookupTable
 from pyGHDL.libghdl._types import NameId
