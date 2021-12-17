@@ -1,6 +1,6 @@
 [build-system]
 requires = [
-    "pyTooling.Packaging >= 0.5.0",
+    "pyTooling >= 1.7.0",
     "setuptools >= 35.0.2",
     "wheel >= 0.29.0"
 ]
