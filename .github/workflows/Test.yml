@@ -279,14 +279,17 @@ jobs:
         run: |
           cd scripts/msys2-${{ matrix.pkg }}
           makepkg-mingw --noconfirm --noprogressbar -sCLf
+          for item in src pkg; do
+            tar czf msys2-${{ matrix.pkg }}."$item".tar.gz "$item"
+          done
 
       - name: '📤 Upload artifact: builddir'
         uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.sys }}-${{ matrix.pkg }}-builddir
           path: |
-            scripts/msys2-${{ matrix.pkg }}/src/
-            scripts/msys2-${{ matrix.pkg }}/pkg/
+            scripts/msys2-${{ matrix.pkg }}.src.tar.gz
+            scripts/msys2-${{ matrix.pkg }}.pkg.tar.gz
 
       - name: '📤 Upload artifact: package'
         uses: actions/upload-artifact@v2
