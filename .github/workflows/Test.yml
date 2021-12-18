@@ -51,8 +51,7 @@ jobs:
       - name: '⛴ Build ghdl/doc'
         run: |
           docker build -t ghdl/doc . -f- <<-EOF
-          FROM ghdl/build:bullseye-mcode
-          RUN apt update -qq && apt install -y python3-pip graphviz
+          FROM ghdl/build:doc
           COPY . /opt/ghdl
           RUN cd /opt/ghdl && ./configure && make && make install
           EOF
