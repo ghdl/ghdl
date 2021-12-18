@@ -45,15 +45,14 @@ jobs:
           docker run --rm -v $(pwd):/src -w /opt/ghdl ghdl/doc /src/run.sh
 
       - name: '📓 BuildTheDocs (BTD)'
-        if: github.event_name != 'pull_request'
         uses: buildthedocs/btd@v0
         with:
           token: ${{ github.token }}
+          skip-deploy: github.event_name == 'pull_request'
 
       #- run: nroff -man doc/_build/man/ghdl.1
 
       - name: '📤 Upload artifact: HTML, LaTeX and man'
-        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v2
         with:
           name: doc
