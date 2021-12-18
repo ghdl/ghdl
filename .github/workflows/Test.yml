@@ -615,7 +615,7 @@ jobs:
 
       # Tagged: create a pre-release or a release (semver)
       # Untagged: update the assets of pre-release 'nightly'
-      - uses: eine/tip@master
+      - uses: pyTooling/Actions/releaser@r0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: 'nightly'
