@@ -1,7 +1,5 @@
 -r ../pyGHDL/requirements.txt
 
-pyTooling>=1.7.0
-
 sphinx>=3.4.2
 #recommonmark>=0.7.1
 python-dateutil>=2.8.1
