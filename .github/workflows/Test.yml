@@ -15,7 +15,31 @@ jobs:
 # Doc
 #
 
+  gnatdoc:
+    name: '📚 gnatdoc'
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: '🧰 Checkout'
+        uses: actions/checkout@v2
+
+      - name: '📚 Run gnatdoc'
+        run: |
+          docker run --rm -i -v $(pwd):/src -w /src ghdl/debug:base <<'EOF'
+          #!/usr/bin/env sh
+          ./configure && make && make install
+          gnatdoc -P./ghdl
+          EOF
+
+      - name: '📤 Upload artifact: gnatdoc'
+        uses: actions/upload-artifact@v2
+        with:
+          name: gnatdoc
+          path: gnatdoc
+
   doc:
+    needs: gnatdoc
     name: '📓 Docs'
     runs-on: ubuntu-latest
 
@@ -27,22 +51,17 @@ jobs:
       - name: '⛴ Build ghdl/doc'
         run: |
           docker build -t ghdl/doc . -f- <<-EOF
-          FROM ghdl/debug:base
-          ENV PYTHONPATH=/opt/ghdl/pyGHDL
+          FROM ghdl/build:bullseye-mcode
+          RUN apt update -qq && apt install -y python3-pip graphviz
           COPY . /opt/ghdl
           RUN cd /opt/ghdl && ./configure && make && make install
           EOF
 
-      - name: '📚 Run gnatdoc'
-        run: |
-          cat > run.sh <<-EOF
-          #!/usr/bin/env sh
-          gnatdoc -P./ghdl
-          mkdir /src/public
-          mv gnatdoc /src/public/gnatdoc
-          EOF
-          chmod +x run.sh
-          docker run --rm -v $(pwd):/src -w /opt/ghdl ghdl/doc /src/run.sh
+      - name: '📥 Download artifact: gnatdoc'
+        uses: actions/download-artifact@v2
+        with:
+          name: gnatdoc
+          path: public/gnatdoc
 
       - name: '📓 BuildTheDocs (BTD)'
         uses: buildthedocs/btd@v0
