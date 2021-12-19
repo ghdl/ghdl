@@ -727,8 +727,6 @@ package body Elab.Vhdl_Insts is
          Vhdl.Annotations.Annotate (Design_Units.Table (I));
       end loop;
 
-      Elab.Vhdl_Objtypes.Init;
-
       --  Start elaboration.
       Make_Root_Instance;
 
