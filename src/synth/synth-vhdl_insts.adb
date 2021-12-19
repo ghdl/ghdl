@@ -121,6 +121,8 @@ package body Synth.Vhdl_Insts is
       end if;
       Inter := Get_Generic_Chain (Params.Decl);
       while Inter /= Null_Node loop
+         pragma Assert (Get_Kind (Inter)
+                          = Iir_Kind_Interface_Constant_Declaration);
          if not Is_Equal (Get_Value (Obj.Syn_Inst, Inter),
                           Get_Value (Params.Syn_Inst, Inter))
          then
@@ -131,6 +133,8 @@ package body Synth.Vhdl_Insts is
 
       Inter := Get_Port_Chain (Params.Decl);
       while Inter /= Null_Node loop
+         pragma Assert (Get_Kind (Inter)
+                          = Iir_Kind_Interface_Signal_Declaration);
          if not Is_Fully_Constrained_Type (Get_Type (Inter)) then
             if not Are_Types_Equal (Get_Value (Obj.Syn_Inst, Inter).Typ,
                                     Get_Value (Params.Syn_Inst, Inter).Typ)
