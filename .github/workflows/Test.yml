@@ -288,8 +288,8 @@ jobs:
         with:
           name: ${{ matrix.sys }}-${{ matrix.pkg }}-builddir
           path: |
-            scripts/msys2-${{ matrix.pkg }}.src.tar.gz
-            scripts/msys2-${{ matrix.pkg }}.pkg.tar.gz
+            scripts/msys2-${{ matrix.pkg }}/msys2-${{ matrix.pkg }}.src.tar.gz
+            scripts/msys2-${{ matrix.pkg }}/msys2-${{ matrix.pkg }}.pkg.tar.gz
 
       - name: '📤 Upload artifact: package'
         uses: actions/upload-artifact@v2
