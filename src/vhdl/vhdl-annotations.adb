@@ -674,7 +674,9 @@ package body Vhdl.Annotations is
          return;
       end if;
       Ind := Get_Subtype_Indication (Decl);
-      if Get_Kind (Ind) in Iir_Kinds_Denoting_Name then
+      if Ind = Null_Iir then
+         return;
+      elsif Get_Kind (Ind) in Iir_Kinds_Denoting_Name then
          return;
       end if;
       Annotate_Type_Definition (Block_Info, Ind);
