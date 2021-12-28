@@ -19,7 +19,16 @@ with Hash; use Hash;
 with Dyn_Tables;
 
 --  This generic package provides a factory to build unique objects.
---  Get will return an existing object or create a new one.
+--  The container is iterable through the index.
+--  PARAMS_TYPE is the type used to find the key, and if the key does not
+--   exists, it is also used to build the new object.
+--  The key is of type OBJECT_TYPE.
+--  VALUE_TYPE is the value associated to the key.
+--
+--  FIXME: this is too confusing.
+--  Use the usual names KEY_TYPE and VALUE_TYPE.
+--  Use BUILD_TYPE instead of PARAMS_TYPE.
+
 generic
    --  Parameters of the object to be created.
    type Params_Type (<>) is private;
@@ -61,6 +70,10 @@ package Dyn_Maps is
    --  The index is doesn't change over the lifetime of the map.
    procedure Get_Index
      (Inst : in out Instance; Params : Params_Type; Idx : out Index_Type);
+
+   --  Return No_Index if not found.
+   function Get_Index_Soft (Inst : Instance; Params : Params_Type)
+                           return Index_Type;
 
    --  Get the number of elements in the table.
    function Last_Index (Inst : Instance) return Index_Type;

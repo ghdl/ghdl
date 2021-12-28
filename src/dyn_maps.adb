@@ -66,16 +66,13 @@ package body Dyn_Maps is
       Deallocate (Old_Hash_Table);
    end Expand;
 
-   procedure Get_Index
-     (Inst : in out Instance; Params : Params_Type; Idx : out Index_Type)
+   function Get_Index_With_Hash
+     (Inst : Instance; Params : Params_Type; Hash_Value : Hash_Value_Type)
+     return Index_Type
    is
-      Hash_Value : Hash_Value_Type;
       Hash_Index : Hash_Value_Type;
+      Idx : Index_Type;
    begin
-      --  Check if the package was initialized.
-      pragma Assert (Inst.Hash_Table /= null);
-
-      Hash_Value := Hash (Params);
       Hash_Index := Hash_Value and (Inst.Size - 1);
 
       Idx := Inst.Hash_Table (Hash_Index);
@@ -84,19 +81,47 @@ package body Dyn_Maps is
             E : Element_Wrapper renames Inst.Els.Table (Idx);
          begin
             if E.Hash = Hash_Value and then Equal (E.Obj, Params) then
-               return;
+               return Idx;
             end if;
             Idx := E.Next;
          end;
       end loop;
 
+      return No_Index;
+   end Get_Index_With_Hash;
+
+   function Get_Index_Soft (Inst : Instance; Params : Params_Type)
+                           return Index_Type is
+   begin
+      --  Check if the package was initialized.
+      pragma Assert (Inst.Hash_Table /= null);
+
+      return Get_Index_With_Hash (Inst, Params, Hash (Params));
+   end Get_Index_Soft;
+
+   procedure Get_Index
+     (Inst : in out Instance; Params : Params_Type; Idx : out Index_Type)
+   is
+      Hash_Value : constant Hash_Value_Type := Hash (Params);
+      Hash_Index : Hash_Value_Type;
+   begin
+      --  Check if the package was initialized.
+      pragma Assert (Inst.Hash_Table /= null);
+
+      Idx := Get_Index_With_Hash (Inst, Params, Hash_Value);
+      if Idx /= No_Index then
+         return;
+      end if;
+
+      --  Insert.
+
       --  Maybe expand the table.
       if Hash_Value_Type (Wrapper_Tables.Last (Inst.Els)) > 2 * Inst.Size then
          Expand (Inst);
-
-         --  Recompute hash index.
-         Hash_Index := Hash_Value and (Inst.Size - 1);
       end if;
+
+      --  Compute hash index.
+      Hash_Index := Hash_Value and (Inst.Size - 1);
 
       declare
          Res : Object_Type;
