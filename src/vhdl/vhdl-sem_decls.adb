@@ -1167,6 +1167,9 @@ package body Vhdl.Sem_Decls is
             Atype := Create_Error_Type (Get_Type (Decl));
          end if;
       else
+         Set_Is_Ref (Decl, True);
+         Atype := Get_Subtype_Indication (Last_Decl);
+         Set_Subtype_Indication (Decl, Atype);
          Atype := Get_Type (Last_Decl);
       end if;
       Set_Type (Decl, Atype);
