@@ -738,6 +738,9 @@ package body Synth.Vhdl_Decls is
          when Iir_Kind_Signal_Attribute_Declaration =>
             --  Not supported by synthesis.
             null;
+         when Iir_Kind_Package_Instantiation_Declaration =>
+            --  TODO: also finalize ?
+            null;
          when others =>
             Vhdl.Errors.Error_Kind ("finalize_declaration", Decl);
       end case;
@@ -786,6 +789,8 @@ package body Synth.Vhdl_Decls is
             Synth_Concurrent_Object_Alias_Declaration (Syn_Inst, Decl);
          when Iir_Kind_Attribute_Specification =>
             Synth_Concurrent_Attribute_Specification (Syn_Inst, Decl);
+         when Iir_Kind_Package_Instantiation_Declaration =>
+            Synth_Package_Instantiation (Syn_Inst, Decl);
          when others =>
             Vhdl.Errors.Error_Kind ("synth_concurrent_declaration", Decl);
       end case;

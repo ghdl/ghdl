@@ -371,7 +371,7 @@ package body Elab.Vhdl_Context is
          null;
       else
          pragma Assert (Syn_Inst.Up_Block /= null);
-         Create_Object (Syn_Inst, Info.Slot, 1);
+         Create_Object (Syn_Inst, Info.Pkg_Slot, 1);
       end if;
       Syn_Inst.Objects (Info.Pkg_Slot) := (Kind => Obj_Instance,
                                            I_Inst => Inst);

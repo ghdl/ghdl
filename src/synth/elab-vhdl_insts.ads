@@ -23,6 +23,9 @@ with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 package Elab.Vhdl_Insts is
    function Elab_Top_Unit (Config : Node) return Synth_Instance_Acc;
 
+   procedure Elab_Package_Instantiation
+     (Parent_Inst : Synth_Instance_Acc; Pkg : Node);
+
    procedure Elab_Component_Instantiation_Statement
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node);
    procedure Elab_Design_Instantiation_Statement

@@ -25,6 +25,7 @@ with Elab.Vhdl_Types; use Elab.Vhdl_Types;
 with Elab.Vhdl_Files;
 with Elab.Vhdl_Errors; use Elab.Vhdl_Errors;
 with Elab.Vhdl_Expr; use Elab.Vhdl_Expr;
+with Elab.Vhdl_Insts;
 
 package body Elab.Vhdl_Decls is
    procedure Elab_Subprogram_Declaration
@@ -260,6 +261,8 @@ package body Elab.Vhdl_Decls is
             null;
          when Iir_Kind_File_Declaration =>
             Elab_File_Declaration (Syn_Inst, Decl);
+         when Iir_Kind_Package_Instantiation_Declaration =>
+            Vhdl_Insts.Elab_Package_Instantiation (Syn_Inst, Decl);
          when Iir_Kind_Protected_Type_Body =>
             null;
          when Iir_Kind_Psl_Default_Clock =>
