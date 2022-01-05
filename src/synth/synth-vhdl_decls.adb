@@ -741,6 +741,8 @@ package body Synth.Vhdl_Decls is
          when Iir_Kind_Package_Instantiation_Declaration =>
             --  TODO: also finalize ?
             null;
+         when Iir_Kind_Use_Clause =>
+            null;
          when others =>
             Vhdl.Errors.Error_Kind ("finalize_declaration", Decl);
       end case;
