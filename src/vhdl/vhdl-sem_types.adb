@@ -1957,6 +1957,9 @@ package body Vhdl.Sem_Types is
                Set_Array_Element_Constraint
                  (Res, Reparse_As_Array_Constraint (Def, Def_El_Type));
                Set_Has_Element_Constraint_Flag (Res, True);
+            when Iir_Kind_Record_Type_Definition =>
+               Set_Array_Element_Constraint
+                 (Res, Reparse_As_Record_Constraint (Def));
             when others =>
                Error_Kind ("reparse_as_array_constraint", Def_El_Type);
          end case;
