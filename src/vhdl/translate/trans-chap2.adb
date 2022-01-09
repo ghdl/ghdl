@@ -1316,7 +1316,14 @@ package body Trans.Chap2 is
                          Mark => False,
                          Field_Node => Src.Field_Node,
                          Field_Bound => Src.Field_Bound);
-
+         when Kind_Component =>
+            Dest.all :=
+              (Kind => Kind_Component,
+               Mark => False,
+               Comp_Scope => Instantiate_Var_Scope (Src.Comp_Scope),
+               Comp_Ptr_Type => Src.Comp_Ptr_Type,
+               Comp_Link => Src.Comp_Link,
+               Comp_Rti_Const => Src.Comp_Rti_Const);
          when Kind_Package =>
             Dest.all :=
               (Kind => Kind_Package,
