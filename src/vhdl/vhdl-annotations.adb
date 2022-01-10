@@ -600,18 +600,25 @@ package body Vhdl.Annotations is
    procedure Annotate_Package_Declaration
      (Block_Info : Sim_Info_Acc; Decl: Iir)
    is
+      Is_Inst : constant Boolean :=
+        Get_Kind (Decl) = Iir_Kind_Package_Instantiation_Declaration;
       Package_Info : Sim_Info_Acc;
       Header : Iir;
    begin
+      if not Is_Inst
+        and then Is_Uninstantiated_Package (Decl)
+        and then Get_Macro_Expanded_Flag (Decl)
+      then
+         return;
+      end if;
+
       Package_Info := new Sim_Info_Type'
         (Kind => Kind_Package,
          Ref => Decl,
          Nbr_Objects => 0,
          Pkg_Slot => Invalid_Object_Slot,
          Pkg_Parent => null);
-      if Get_Kind (Decl) = Iir_Kind_Package_Instantiation_Declaration
-        or else not Is_Uninstantiated_Package (Decl)
-      then
+      if Is_Inst or else not Is_Uninstantiated_Package (Decl) then
          Block_Info.Nbr_Objects := Block_Info.Nbr_Objects + 1;
          Package_Info.Pkg_Slot := Block_Info.Nbr_Objects;
          Package_Info.Pkg_Parent := Block_Info;
@@ -619,7 +626,7 @@ package body Vhdl.Annotations is
 
       Set_Info (Decl, Package_Info);
 
-      if Get_Kind (Decl) = Iir_Kind_Package_Instantiation_Declaration then
+      if Is_Inst then
          Annotate_Interface_List
            (Package_Info, Get_Generic_Chain (Decl), True);
       else
@@ -629,10 +636,11 @@ package body Vhdl.Annotations is
               (Package_Info, Get_Generic_Chain (Header), True);
          end if;
       end if;
+
       -- declarations
       Annotate_Declaration_List (Package_Info, Get_Declaration_Chain (Decl));
 
-      if Get_Kind (Decl) = Iir_Kind_Package_Instantiation_Declaration then
+      if Is_Inst then
          declare
             Bod : constant Iir := Get_Instance_Package_Body (Decl);
          begin
@@ -648,7 +656,9 @@ package body Vhdl.Annotations is
                begin
                   --  There is not corresponding body for an instantiation, so
                   --  also add objects for the shared body.
-                  Package_Info.Nbr_Objects := Uninst_Info.Nbr_Objects;
+                  if not Get_Macro_Expanded_Flag (Uninst) then
+                     Package_Info.Nbr_Objects := Uninst_Info.Nbr_Objects;
+                  end if;
                end;
             end if;
          end;
