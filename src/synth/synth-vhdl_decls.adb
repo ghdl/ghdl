@@ -502,6 +502,7 @@ package body Synth.Vhdl_Decls is
       Aval : Valtyp;
       Obj : Value_Acc;
       Base : Node;
+      Off : Uns32;
    begin
       Val := Get_Value (Syn_Inst, Decl);
       pragma Assert (Val.Val.Kind = Value_Alias);
@@ -509,15 +510,27 @@ package body Synth.Vhdl_Decls is
       if Obj.Kind = Value_Signal then
          --  A signal must have been changed to a wire or a net, but the
          --  aliases have not been updated.  Update here.
-         Base := Get_Base_Name (Get_Name (Decl));
+         Base := Decl;
+         loop
+            Base := Get_Base_Name (Get_Name (Base));
+            exit when Get_Kind (Base) /= Iir_Kind_Object_Alias_Declaration;
+         end loop;
+
          Aval := Synth_Expression (Syn_Inst, Base);
+
+         Off := Val.Val.A_Off.Net_Off;
+
+         --  Handle alias of alias here.
+         if Aval.Val.Kind = Value_Alias then
+            Aval := (Aval.Val.A_Typ, Aval.Val.A_Obj);
+         end if;
 
          if Aval.Val.Kind = Value_Net then
             --  Object is a net if it is not writable.  Extract the
             --  bits for the alias.
             Aval := Create_Value_Net
               (Build2_Extract (Get_Build (Syn_Inst), Get_Value_Net (Aval.Val),
-                               Val.Val.A_Off.Net_Off, Val.Typ.W),
+                               Off, Val.Typ.W),
                Val.Typ);
             Val.Val.A_Off := (0, 0);
          end if;
