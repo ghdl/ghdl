@@ -341,7 +341,8 @@ package body Synth.Vhdl_Decls is
 
       if Bod /= Null_Node then
          --  Macro expanded package instantiation.
-         raise Internal_Error;
+         Synth_Concurrent_Declarations
+           (Sub_Inst, Get_Declaration_Chain (Bod));
       else
          --  Shared body
          declare

@@ -665,15 +665,23 @@ package body Vhdl.Annotations is
       end if;
    end Annotate_Package_Declaration;
 
-   procedure Annotate_Package_Body (Decl: Iir)
+   procedure Annotate_Package_Body (Bod: Iir)
    is
-      Package_Info : constant Sim_Info_Acc := Get_Info (Get_Package (Decl));
+      Pkg : constant Node := Get_Package (Bod);
+      Package_Info : constant Sim_Info_Acc := Get_Info (Pkg);
    begin
+      if Is_Uninstantiated_Package (Pkg)
+        and then Get_Macro_Expanded_Flag (Pkg)
+      then
+         --  The body of a macro-expanded flag.
+         return;
+      end if;
+
       --  Set info field of package body declaration.
-      Set_Info (Decl, Package_Info);
+      Set_Info (Bod, Package_Info);
 
       -- declarations
-      Annotate_Declaration_List (Package_Info, Get_Declaration_Chain (Decl));
+      Annotate_Declaration_List (Package_Info, Get_Declaration_Chain (Bod));
    end Annotate_Package_Body;
 
    procedure Annotate_Declaration_Type (Block_Info: Sim_Info_Acc; Decl: Iir)

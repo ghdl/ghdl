@@ -183,7 +183,8 @@ package body Elab.Vhdl_Insts is
 
       if Bod /= Null_Node then
          --  Macro expanded package instantiation.
-         raise Internal_Error;
+         Elab_Declarations
+           (Sub_Inst, Get_Declaration_Chain (Bod));
       else
          --  Shared body
          declare
