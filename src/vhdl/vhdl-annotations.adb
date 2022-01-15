@@ -512,7 +512,9 @@ package body Vhdl.Annotations is
                Annotate_Interface_Package_Declaration (Block_Info, Decl);
             when Iir_Kind_Interface_Type_Declaration =>
                if Flag_Synthesis then
-                  --  Create an info on the interface_type_definition
+                  --  Create an info on the interface_type_definition.
+                  --  This is needed for a generic type in an entity, as the
+                  --  nodes are not instantiated.
                   Create_Object_Info (Block_Info, Get_Type (Decl));
                end if;
             when Iir_Kinds_Interface_Subprogram_Declaration =>
@@ -609,6 +611,8 @@ package body Vhdl.Annotations is
         and then Is_Uninstantiated_Package (Decl)
         and then Get_Macro_Expanded_Flag (Decl)
       then
+         --  Macro-expanded packages are ignored.  Only their instances are
+         --  annotated.
          return;
       end if;
 
@@ -618,6 +622,7 @@ package body Vhdl.Annotations is
          Nbr_Objects => 0,
          Pkg_Slot => Invalid_Object_Slot,
          Pkg_Parent => null);
+
       if Is_Inst or else not Is_Uninstantiated_Package (Decl) then
          Block_Info.Nbr_Objects := Block_Info.Nbr_Objects + 1;
          Package_Info.Pkg_Slot := Block_Info.Nbr_Objects;
