@@ -511,7 +511,10 @@ package body Vhdl.Annotations is
             when Iir_Kind_Interface_Package_Declaration =>
                Annotate_Interface_Package_Declaration (Block_Info, Decl);
             when Iir_Kind_Interface_Type_Declaration =>
-               if Flag_Synthesis then
+               if Flag_Synthesis
+                 and then (Get_Kind (Get_Parent (Decl))
+                             = Iir_Kind_Entity_Declaration)
+               then
                   --  Create an info on the interface_type_definition.
                   --  This is needed for a generic type in an entity, as the
                   --  nodes are not instantiated.

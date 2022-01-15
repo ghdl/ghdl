@@ -107,17 +107,25 @@ package body Elab.Vhdl_Insts is
                end;
 
             when Iir_Kind_Interface_Type_Declaration =>
-               declare
-                  Act : Node;
-                  Act_Typ : Type_Acc;
-               begin
-                  Act := Get_Actual (Assoc);
-                  if Get_Kind (Act) in Iir_Kinds_Denoting_Name then
-                     Act := Get_Type (Act);
-                  end if;
-                  Act_Typ := Synth_Subtype_Indication (Syn_Inst, Act);
-                  Create_Subtype_Object (Sub_Inst, Get_Type (Inter), Act_Typ);
-               end;
+               if Get_Kind (Get_Parent (Inter)) = Iir_Kind_Entity_Declaration
+               then
+                  declare
+                     Act : Node;
+                     Act_Typ : Type_Acc;
+                  begin
+                     Act := Get_Actual (Assoc);
+                     if Get_Kind (Act) in Iir_Kinds_Denoting_Name then
+                        Act := Get_Type (Act);
+                     end if;
+                     if Get_Kind (Act) in Iir_Kinds_Subtype_Definition then
+                        Act_Typ := Synth_Subtype_Indication (Syn_Inst, Act);
+                     else
+                        Act_Typ := Get_Subtype_Object (Syn_Inst, Act);
+                     end if;
+                     Create_Subtype_Object
+                       (Sub_Inst, Get_Type (Inter), Act_Typ);
+                  end;
+               end if;
 
             when Iir_Kind_Interface_Variable_Declaration
                | Iir_Kind_Interface_File_Declaration
