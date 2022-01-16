@@ -1766,7 +1766,7 @@ package body Synth.Vhdl_Stmts is
          Association_Iterate_Next (Iterator, Inter, Assoc);
          exit when Inter = Null_Node;
 
-         Inter_Type := Get_Subtype_Object (Caller_Inst, Get_Type (Inter));
+         Inter_Type := Get_Subtype_Object (Subprg_Inst, Get_Type (Inter));
 
          case Iir_Parameter_Modes (Get_Mode (Inter)) is
             when Iir_In_Mode =>
@@ -2188,9 +2188,20 @@ package body Synth.Vhdl_Stmts is
    function Synth_Subprogram_Call
      (Syn_Inst : Synth_Instance_Acc; Call : Node) return Valtyp
    is
-      Imp  : constant Node := Get_Implementation (Call);
+      Imp : constant Node := Get_Implementation (Call);
+
+      --  The corresponding body (for a package instantiation, this could be
+      --  the shared body of the uninstantiated package).
+      Bod : constant Node := Vhdl.Sem_Inst.Get_Subprogram_Body_Origin (Imp);
+
+      --  Get the subprogram declaration of the subprogram body.
+      --  Usually, IMP = IMP2, unless of shared generic packages.
+      Imp2 : constant Node := Get_Subprogram_Specification (Bod);
+
       Assoc_Chain : constant Node := Get_Parameter_Association_Chain (Call);
-      Inter_Chain : constant Node := Get_Interface_Declaration_Chain (Imp);
+
+      --  Use the interfaces corresponding to the body.
+      Inter_Chain : constant Node := Get_Interface_Declaration_Chain (Imp2);
       Init : Association_Iterator_Init;
    begin
       Init := Association_Iterator_Build (Inter_Chain, Assoc_Chain);
