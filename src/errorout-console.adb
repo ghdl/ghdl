@@ -29,6 +29,8 @@ package body Errorout.Console is
    --  Set Flag_Color_Diagnostics to On or Off if is was Auto.
    procedure Detect_Terminal
    is
+      use GNAT.OS_Lib;
+
       --  Import isatty.
       function isatty (Fd : Integer) return Integer;
       pragma Import (C, isatty);
@@ -36,22 +38,36 @@ package body Errorout.Console is
       --  Awful way to detect if the host is Windows.  Should be replaced by
       --  a host-specific package.
       Is_Windows : constant Boolean := GNAT.OS_Lib.Directory_Separator = '\';
+
+      V : String_Access;
    begin
-      if Flag_Color_Diagnostics = Auto then
-         if Is_Windows then
-            --  Off by default on Windows, as the consoles may not support
-            --  ANSI control sequences.  Should be replaced by calls to the
-            --  Win32 API.
-            Flag_Color_Diagnostics := Off;
-         else
-            --  On Linux/Unix/Mac OS X: use color only when the output is to a
-            --  tty.
-            if isatty (2) /= 0 then
-               Flag_Color_Diagnostics := On;
-            else
-               Flag_Color_Diagnostics := Off;
-            end if;
+      if Flag_Color_Diagnostics /= Auto then
+         return;
+      end if;
+
+      --  Default is off.
+      Flag_Color_Diagnostics := Off;
+
+      if Is_Windows then
+         --  Off by default on Windows, as the consoles may not support
+         --  ANSI control sequences.  Should be replaced by calls to the
+         --  Win32 API.
+         return;
+      else
+         --  On Linux/Unix/Mac OS X: use color only when the output is to a
+         --  tty.
+         if isatty (2) = 0 then
+            return;
          end if;
+
+         V := GNAT.OS_Lib.Getenv ("TERM");
+         if V = null or else V.all = "dumb" then
+            --  No color if TERM=dumb
+            --  Should we use a black list, or a white list or terminfo ?
+            return;
+         end if;
+
+         Flag_Color_Diagnostics := On;
       end if;
    end Detect_Terminal;
 
