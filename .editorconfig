@@ -9,6 +9,9 @@ indent_style = tab
 indent_size = 2
 tab_width = 2
 
+[*.{vhd,vhdl}]
+charset = latin1
+
 [*.{adb,ads,gpr}]
 indent_style = space
 indent_size = 3
