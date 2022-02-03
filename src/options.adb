@@ -124,9 +124,11 @@ package body Options is
                Vhdl_Std := Vhdl_02;
             elsif Opt (7 .. 8) = "08" then
                Vhdl_Std := Vhdl_08;
+            elsif Opt (7 .. 8) = "19" then
+               Vhdl_Std := Vhdl_19;
             else
                Error_Msg_Option ("unknown language standard: " & Opt (7 ..8) &
-                                 ". Should be one of: 87, 93, 02, 08");
+                                 ". Should be one of: 87, 93, 02, 08, 19");
                return Option_Err;
             end if;
          elsif Opt'Length = 9 and then Opt (7 .. 9) = "93c" then
@@ -135,7 +137,7 @@ package body Options is
             Flag_Relaxed_Files87 := True;
          else
             Error_Msg_Option ("unknown language standard. " &
-                              "Should be one of: 87, 93, 02, 08");
+                              "Should be one of: 87, 93, 02, 08, 19");
             return Option_Err;
          end if;
       elsif Opt'Length = 5 and then Opt (1 .. 5) = "--ams" then

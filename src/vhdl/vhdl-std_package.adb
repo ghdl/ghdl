@@ -1060,7 +1060,8 @@ package body Vhdl.Std_Package is
                Pure := True;
             when Vhdl_93
                | Vhdl_00
-               | Vhdl_08 =>
+               | Vhdl_08
+               | Vhdl_19 =>
                Pure := False;
          end case;
          Set_Pure_Flag (Function_Now, Pure);

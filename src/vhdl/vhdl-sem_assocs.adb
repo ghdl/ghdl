@@ -503,7 +503,7 @@ package body Vhdl.Sem_Assocs is
             if Vhdl02_Assocs_Map (Fmode, Amode) then
                return True;
             end if;
-         when Vhdl_08 =>
+         when Vhdl_08 | Vhdl_19 =>
             if Vhdl08_Assocs_Map (Fmode, Amode) then
                return True;
             end if;

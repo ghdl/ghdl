@@ -139,6 +139,8 @@ package body Libraries is
             return Image_Identifier (Library) & "-obj93.cf";
          when Vhdl_08 =>
             return Image_Identifier (Library) & "-obj08.cf";
+         when Vhdl_19 =>
+            return Image_Identifier (Library) & "-obj19.cf";
       end case;
    end Library_To_File_Name;
 
@@ -181,6 +183,8 @@ package body Libraries is
                   Path (L + 2 .. L + 4) := "v93";
                when Vhdl_08 =>
                   Path (L + 2 .. L + 4) := "v08";
+               when Vhdl_19 =>
+                  Path (L + 2 .. L + 4) := "v19";
             end case;
             L := L + 5;
             Path (L) := GNAT.OS_Lib.Directory_Separator;
