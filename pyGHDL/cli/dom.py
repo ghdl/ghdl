@@ -280,8 +280,8 @@ class Application(LineTerminal, ArgParseMixin):
                           DOM translation time:    {:5.3f} us
                         """
                     ).format(
-                        document.LibGHDLProcessingTime * 10 ** 6,
-                        document.DOMTranslationTime * 10 ** 6,
+                        document.LibGHDLProcessingTime * 10**6,
+                        document.DOMTranslationTime * 10**6,
                     )
                 )
         elif args.Directory is not None:
@@ -299,8 +299,8 @@ class Application(LineTerminal, ArgParseMixin):
                           DOM translation time:    {:5.3f} us
                         """
                     ).format(
-                        document.LibGHDLProcessingTime * 10 ** 6,
-                        document.DOMTranslationTime * 10 ** 6,
+                        document.LibGHDLProcessingTime * 10**6,
+                        document.DOMTranslationTime * 10**6,
                     )
                 )
 
