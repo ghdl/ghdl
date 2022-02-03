@@ -26,6 +26,8 @@ package body Flags is
             Flag_String (1 .. 2) := "93";
          when Vhdl_08 =>
             Flag_String (1 .. 2) := "08";
+         when Vhdl_19 =>
+            Flag_String (1 .. 2) := "19";
       end case;
       if Flag_Integer_64 then
          Flag_String (3) := 'I';
