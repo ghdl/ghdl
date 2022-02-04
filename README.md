@@ -25,7 +25,7 @@ This directory contains the sources of GHDL, the open-source analyzer, compiler,
 
 # Main features
 
-Full support for the [1987](https://ieeexplore.ieee.org/document/26487/), [1993](https://ieeexplore.ieee.org/document/392561/), [2002](https://ieeexplore.ieee.org/document/1003477/) versions of the [IEEE](https://www.ieee.org) [1076](https://standards.ieee.org/develop/wg/P1076.html) VHDL standard, and partial for the latest [2008](https://ieeexplore.ieee.org/document/4772740/) revision.
+Full support for the [1987](https://ieeexplore.ieee.org/document/26487/), [1993](https://ieeexplore.ieee.org/document/392561/), [2002](https://ieeexplore.ieee.org/document/1003477/) versions of the [IEEE](https://www.ieee.org) [1076](https://standards.ieee.org/develop/wg/P1076.html) VHDL standard, and partial for the [2008](https://ieeexplore.ieee.org/document/4772740/) and [2019](https://ieeexplore.ieee.org/document/8938196/) revisions.
 
 Partial support of [PSL](https://en.wikipedia.org/wiki/Property_Specification_Language).
 

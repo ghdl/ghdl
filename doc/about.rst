@@ -42,7 +42,7 @@ At the same time, like a design written in another `HDL`, a set of VHDL sources 
 :dfn:`synthesis tool` into a netlist, that is, a detailed gate-level implementation.
 
 The development of VHDL started in 1983 and the standard is named `IEEE <https://www.ieee.org/>`__ `1076`.
-Five revisions exist:
+Six revisions exist:
 `1987 <http://ieeexplore.ieee.org/document/26487/>`__,
 `1993 <http://ieeexplore.ieee.org/document/392561/>`__,
 `2002 <http://ieeexplore.ieee.org/document/1003477/>`__,
@@ -91,7 +91,8 @@ It supports the
 `1987 <http://ieeexplore.ieee.org/document/26487/>`__,
 `1993 <http://ieeexplore.ieee.org/document/392561/>`__ and
 `2002 <http://ieeexplore.ieee.org/document/1003477/>`__ revisions and, partially,
-`2008 <http://ieeexplore.ieee.org/document/4772740/>`__.
+`2008 <http://ieeexplore.ieee.org/document/4772740/>`__ and
+`2019 <https://ieeexplore.ieee.org/document/8938196/>`__.
 :wikipedia:`Property Specification Language (PSL) <Property_Specification_Language>` is also partially supported.
 
 Several third party projects are supported:
