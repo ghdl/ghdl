@@ -31,6 +31,8 @@ VHDL standards
 
 .. index:: v08
 
+.. index:: v19
+
 Unfortunately, there are many versions of the VHDL
 language, and they aren't backward compatible.
 
@@ -67,7 +69,7 @@ Minor corrections were added by the 2002 revision of the VHDL standard. This
 revision is not fully backward compatible with VHDL-00 since, for example,
 the value of the `'instance_name` attribute has slightly changed.
 
-The latest version is 2008. Many features have been added, and GHDL
+The latest version is 2019. Many features have been added, and GHDL
 doesn't implement all of them.
 
 You can select the VHDL standard expected by GHDL with the
@@ -93,6 +95,9 @@ You can select the VHDL standard expected by GHDL with the
 08
   Select VHDL-2008 standard (partially implemented).
 
+19
+  Select VHDL-2019 standard (partially implemented).
+
 Multiple standards can be used in a design:
 
 +-----+----------------+
@@ -103,6 +108,8 @@ Multiple standards can be used in a design:
 |  93 | 93, 93c, 00, 02|
 +-----+----------------+
 |  08 |       08       |
++-----+----------------+
+|  19 |       19       |
 +-----+----------------+
 
 .. note::
@@ -175,7 +182,7 @@ GHDL understands embedded PSL annotations in VHDL files:
        ghdl -a -fpsl vhdl_design.vhdl
        ghdl -e vhdl_design
 
-PSL annotations (VHDL-2008 only)
+PSL annotations (VHDL-2008 and later)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Since VHDL-2008 PSL is integrated in the VHDL language. You can use
@@ -197,7 +204,7 @@ PSL in a VHDL(-2008) design without embedding it in comments.
        ghdl -a --std=08 vhdl_design.vhdl
        ghdl -e --std=08 vhdl_design
 
-PSL vunit files (VHDL-2008 / Synthesis only)
+PSL vunit files (VHDL-2008 and later, synthesis only)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 GHDL supports vunit (Verification Unit) files.
@@ -269,7 +276,7 @@ changed with the :option:`--work` option of GHDL.
 To keep the list of design units in a design library, GHDL creates
 library files. The name of these files is :file:`<LIB_NAME>-obj<GROUP>.cf`, where
 `<LIB_NAME>` is the name of the library, and `<GROUP>` the VHDL version (87,
-93 or 08) used to analyze the design units.
+93, 08, or 19) used to analyze the design units.
 
 For details on ``GROUP`` values see section :ref:`VHDL_standards`.
 
