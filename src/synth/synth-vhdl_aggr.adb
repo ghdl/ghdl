@@ -486,7 +486,10 @@ package body Synth.Vhdl_Aggr is
                begin
                   Els_Typ := Create_Rec_El_Array (Aggr_Type.Rec.Len);
                   for I in Els_Typ.E'Range loop
-                     Els_Typ.E (I).Typ := Tab_Res (Nat32 (I)).Typ;
+                     --  Note: elements are put in reverse order in Tab_Res,
+                     --  so reverse again...
+                     Els_Typ.E (I).Typ :=
+                       Tab_Res (Tab_Res'Last - Nat32 (I) + 1).Typ;
                   end loop;
                   Res_Typ := Create_Record_Type (Els_Typ);
                end;
@@ -497,6 +500,8 @@ package body Synth.Vhdl_Aggr is
          if Const_P then
             Res := Create_Value_Memory (Res_Typ);
             for I in Aggr_Type.Rec.E'Range loop
+               --  Note: elements are put in reverse order in Tab_Res,
+               --  so reverse again...
                Write_Value (Res.Val.Mem + Res_Typ.Rec.E (I).Moff,
                             Tab_Res (Tab_Res'Last - Nat32 (I) + 1));
             end loop;
