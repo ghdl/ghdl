@@ -5,8 +5,8 @@
 =================================
 
 Unlike :ref:`Heartbeat <QuickStart:heartbeat>`, the target hardware design in this example is written using the
-synthesisable subset of `VHDL`. It is a `full adder <https://en.wikipedia.org/wiki/Adder_(electronics)#Full_adder>`_
-described in a file named :file:`adder.vhdl`:
+synthesisable subset of `VHDL`. It is a :wikipedia:`full adder <Adder_(electronics)#Full_adder>` described in a file
+named :file:`adder.vhdl`:
 
 .. literalinclude:: adder.vhdl
    :language: vhdl

@@ -99,7 +99,7 @@ Several third party projects are supported:
 `Yosys <https://github.com/YosysHQ/yosys>`__
 (through the `ghdl-yosys-plugin <https://github.com/ghdl/ghdl-yosys-plugin>`__)
 `cocotb <https://github.com/potentialventures/cocotb>`__,
-(through the `VPI interface <https://en.wikipedia.org/wiki/Verilog_Procedural_Interface>`__),
+(through the :wikipedia:`VPI interface <Verilog_Procedural_Interface>`),
 `VUnit <https://vunit.github.io/>`__,
 `OSVVM <http://osvvm.org/>`__,
 :doc:`vhdlmodel:index`,

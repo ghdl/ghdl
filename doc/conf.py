@@ -241,11 +241,11 @@ todo_link_only = True
 # Sphinx.Ext.ExtLinks
 # ==============================================================================
 extlinks = {
-   'wikipedia': ('https://en.wikipedia.org/wiki/%s', None),
+   'wikipedia': ('https://en.wikipedia.org/wiki/%s', ''),
    'ghdlsharp': ('https://github.com/ghdl/ghdl/issues/%s', '#'),
    'ghdlissue': ('https://github.com/ghdl/ghdl/issues/%s', 'issue #'),
    'ghdlpull':  ('https://github.com/ghdl/ghdl/pull/%s', 'pull request #'),
-   'ghdlsrc':   ('https://github.com/ghdl/ghdl/blob/master/src/%s', None)
+   'ghdlsrc':   ('https://github.com/ghdl/ghdl/blob/master/src/%s', '')
 }
 
 
