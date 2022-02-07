@@ -191,10 +191,11 @@ extensions = [
 # Sphinx.Ext.InterSphinx
 # ==============================================================================
 intersphinx_mapping = {
-   'python': ('https://docs.python.org/3.6/', None),
-   'cosim': ('https://ghdl.github.io/ghdl-cosim', None),
-   'poc': ('https://poc-library.readthedocs.io/en/release', None),
+   'python':    ('https://docs.python.org/3.6/', None),
+   'cosim':     ('https://ghdl.github.io/ghdl-cosim', None),
+   'poc':       ('https://poc-library.readthedocs.io/en/release', None),
    'vhdlmodel': ('https://vhdl.github.io/pyVHDLModel', None),
+   'vasg':      ('https://ieee-p1076.gitlab.io', None)
 }
 
 
