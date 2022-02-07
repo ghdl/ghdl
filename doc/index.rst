@@ -178,7 +178,7 @@ GHDL
    :caption: Internals
    :hidden:
 
-   internals/Overview
+   internals/index
    internals/Frontend
    internals/AST
    internals/RTI
