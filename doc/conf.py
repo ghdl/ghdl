@@ -2,9 +2,13 @@
 import sys
 from os.path import abspath
 from pathlib import Path
-from json import loads
+from json import loads as json_loads
 
 from pyTooling.Packaging import extractVersionInformation
+
+
+ROOT = Path(__file__).resolve().parent
+
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -79,16 +83,24 @@ except Exception as ex:
 # ==============================================================================
 # Options for HTML output
 # ==============================================================================
-html_theme = "_theme"
-html_theme_path = ["."]
-html_theme_options = {
-    'logo_only': True,
-    'home_breadcrumbs': False,
-    'vcs_pageview_mode': 'blob',
-}
-html_css_files = [
-    "theme_overrides.css",
-]
+html_context = {}
+ctx = ROOT / "context.json"
+if ctx.is_file():
+    html_context.update(json_loads(ctx.open("r").read()))
+
+if (ROOT / "_theme").is_dir():
+    html_theme_path = ["."]
+    html_theme = "_theme"
+    html_theme_options = {
+        "logo_only": True,
+        "home_breadcrumbs": False,
+        "vcs_pageview_mode": "blob",
+    }
+    html_css_files = [
+        "theme_overrides.css",
+    ]
+else:
+    html_theme = "alabaster"
 
 html_static_path = ['_static']
 # '/public' will contain the output from gnatdoc
@@ -97,10 +109,6 @@ html_extra_path = [str(Path(__file__).resolve().parent.parent / 'public')]   # F
 html_logo = str(Path(html_static_path[0]) / 'logo.png')
 html_favicon = str(Path(html_static_path[0]) / 'icon.png')
 
-html_context = {}
-ctx = Path(__file__).resolve().parent / 'context.json'
-if ctx.is_file():
-    html_context.update(loads(ctx.open('r').read()))
 
 # ==============================================================================
 # Options for manual page output
