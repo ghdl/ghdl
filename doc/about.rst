@@ -12,20 +12,27 @@ About
 What is `VHDL`?
 ===============
 
-:wikipedia:`VHDL <VHDL>` is an acronym for Very High Speed Integrated Circuit (:wikipedia:`VHSIC <VHSIC>`) Hardware
-Description Language (:wikipedia:`HDL <HDL>`), which is a programming language used to describe a logic circuit by
-function, data flow behavior, or structure.
+:wikipedia:`VHDL <VHDL>` is an acronym for *Verification and Hardware Description Language* (:wikipedia:`HDL <HDL>`),
+which is a programming language used to describe a logic circuit by function, data flow behavior, or structure.
 
-Although VHDL was not designed for writing general purpose programs, VHDL *is* a programming language, and you can write
-any algorithm with it.
+.. NOTE::
+  Historically the 'V' in the language's acronym came from the Very High Speed Integrated Circuit (:wikipedia:`VHSIC <VHSIC>`),
+  which was the U.S. government program that funded the early work on the standard.
+  Changing the 'V' to mean verification reflects the language's increasing usage for verification as well as design.
+  See `VHDL 202X PAR <http://www.eda-twiki.org/twiki/pub/P1076/PrivateDocuments/Par1076_202X.pdf>`__ via :ref:`vasg:VHDL202X`.
+
+Although VHDL was not designed for writing general purpose programs, VHDL *is* a programming language: you can write any
+algorithm with it, you can interact with files, with the environment, etc.
 If you are able to write programs, you will find in VHDL features similar to those found in procedural languages such as
-`C`, `Python`, or `Ada`.
+:wikipedia:`C <C_(programming_language)>`,
+:wikipedia:`Python <Python_(programming_language)>`,
+or :wikipedia:`Ada <Ada_(programming_language)>`.
 Indeed, VHDL derives most of its syntax and semantics from Ada. Knowing `Ada` is an advantage for learning VHDL (it is
 an advantage in general as well).
 
 However, VHDL was not designed as a general purpose language but as an `HDL`.
 As the name implies, VHDL aims at modeling or documenting electronics systems.
-Due to the nature of hardware components which are always running, VHDL is a highly concurrent language, built upon an
+Due to the nature of hardware components --which are always running--, VHDL is a highly concurrent language, built upon an
 event-based timing model.
 
 Like a program written in any other language, a VHDL program can be executed.
@@ -41,12 +48,20 @@ Five revisions exist:
 `2002 <http://ieeexplore.ieee.org/document/1003477/>`__,
 `2008 <http://ieeexplore.ieee.org/document/4772740/>`__ and
 `2019 <https://ieeexplore.ieee.org/document/8938196>`__.
-The standardization is handled by the VHDL Analysis and Standardization Group (`VASG/P1076 <http://www.eda-twiki.org/vasg/>`__).
+The standardization is handled by the :doc:`vasg:index`.
+Find on-going work towards *VHDL 202X* in `gitlab.com/IEEE-P1076/VHDL-Issues <https://gitlab.com/IEEE-P1076/VHDL-Issues/-/issues>`__.
 
 .. _INTRO:GHDL:
 
 What is GHDL?
 =============
+
+.. figure:: _static/internals.png
+   :width: 100%
+   :align: center
+   :target: internals/index.html
+
+   Architecture overview of the GHDL toolkit (CLI, libghdl, pyGHDL and ghdl-yosys-plugin).
 
 `GHDL` is a shorthand for `G Hardware Design Language` (currently, `G` has no meaning).
 It is a VHDL analyzer, compiler, simulator and (experimental) synthesizer that can process (nearly) any VHDL design.
@@ -83,9 +98,12 @@ It supports the
 Several third party projects are supported:
 `Yosys <https://github.com/YosysHQ/yosys>`__
 (through the `ghdl-yosys-plugin <https://github.com/ghdl/ghdl-yosys-plugin>`__)
-`cocotb <https://github.com/potentialventures/cocotb>`__
+`cocotb <https://github.com/potentialventures/cocotb>`__,
 (through the `VPI interface <https://en.wikipedia.org/wiki/Verilog_Procedural_Interface>`__),
-`VUnit <https://vunit.github.io/>`__, `OSVVM <http://osvvm.org/>`__, ...
+`VUnit <https://vunit.github.io/>`__,
+`OSVVM <http://osvvm.org/>`__,
+:doc:`vhdlmodel:index`,
+...
 
 .. _INTRO:WHO:
 
