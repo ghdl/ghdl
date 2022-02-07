@@ -86,6 +86,9 @@ html_theme_options = {
     'home_breadcrumbs': False,
     'vcs_pageview_mode': 'blob',
 }
+html_css_files = [
+    "theme_overrides.css",
+]
 
 html_static_path = ['_static']
 # '/public' will contain the output from gnatdoc

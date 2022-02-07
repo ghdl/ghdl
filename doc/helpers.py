@@ -26,13 +26,19 @@ def printShieldSrc(label, alt, img, target, latex=False):
    if latex:
       if label[-6:] == '/total':
          label = label[:-6]
-      print('.. |l' + re.compile('[\W_]+').sub('', label) + '| replace:: `' + label + '`_')
-      print('.. _' + label + ': ' + target + '\n')
+      idx = re.compile('[\W_]+').sub('', label)
+      print(f"""
+.. |l{idx}| replace:: `{label}`_
+.. _{label}: {target}
+""")
    else:
-      print('.. |' + label + '| image:: '+ img + '\n',
-            '   :target: ' + target + '\n',
-            '   :height: 22\n',
-            '   :alt: ' + alt + '\n')
+      print(f'''
+.. |{label}| image:: {img}
+   :target: {target}
+   :height: 22
+   :alt: {alt}
+   :class: shield
+''')
 
 #
 # Create shields/badges from JSON file
