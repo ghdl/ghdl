@@ -33,7 +33,7 @@ an advantage in general as well).
 However, VHDL was not designed as a general purpose language but as an `HDL`.
 As the name implies, VHDL aims at modeling or documenting electronics systems.
 Due to the nature of hardware components --which are always running--, VHDL is a highly concurrent language, built upon an
-event-based timing model.
+event-driven execution model.
 
 Like a program written in any other language, a VHDL program can be executed.
 Since VHDL is used to model designs, the term :dfn:`simulation` is often used instead of `execution`, with the same
