@@ -21,9 +21,9 @@ which is a computer language used to describe a logic circuit by function, data 
   Changing the 'V' to mean *verification* reflects the language's increasing usage for verification as well as design.
   See `VHDL 202X PAR <http://www.eda-twiki.org/twiki/pub/P1076/PrivateDocuments/Par1076_202X.pdf>`__ via :ref:`vasg:VHDL202X`.
 
-Although VHDL was not designed for writing general purpose programs, VHDL *is* a programming language: you can write any
-algorithm with it, you can interact with files, with the environment, etc.
-If you are able to write programs, you will find in VHDL features similar to those found in procedural languages such as
+Although VHDL was not designed for writing general purpose programs, VHDL *is* a programming language: any algorithm can
+be written with it, it can interact with files, the environment, stdin and stdout, etc.
+VHDL has features similar to those found in procedural languages such as
 :wikipedia:`C <C_(programming_language)>`,
 :wikipedia:`Python <Python_(programming_language)>`,
 or :wikipedia:`Ada <Ada_(programming_language)>`.
@@ -32,8 +32,8 @@ an advantage in general as well).
 
 However, VHDL was not designed as a general purpose language but as an `HDL`.
 As the name implies, VHDL aims at modeling or documenting electronics systems.
-Due to the nature of hardware components --which are always running--, VHDL is a highly concurrent language, built upon an
-event-driven execution model.
+Due to the nature of hardware components --which are always running--, VHDL is a highly concurrent language, built upon
+an event-driven execution model.
 
 Like a program written in any other language, a VHDL program can be executed.
 Since VHDL is used to model designs, the term :dfn:`simulation` is often used instead of `execution`, with the same
@@ -67,7 +67,7 @@ What is GHDL?
 It is a VHDL analyzer, compiler, simulator and (experimental) synthesizer that can process (nearly) any VHDL design.
 
 .. NOTE::
-  For almost 20 years, GHDL was *not* a synthesis tool: you could not create a netlist.
+  For almost 20 years, GHDL was *not* a synthesis tool: a netlist could not be created.
   Hence, most of the content in this documentation corresponds to the usage of GHDL as a compiler/simulator.
   See :ref:`USING:Synthesis` for further details regarding synthesis.
 
@@ -81,11 +81,10 @@ GHDL can use multiple back-ends, i.e. code generators, (`GCC <http://gcc.gnu.org
 :wikipedia:`GNU/Linux <Linux_distribution>`, :wikipedia:`Windows <Microsoft_Windows>` |trade| and
 :wikipedia:`macOS <MacOS>` |trade|; on x86, x86_64, armv6/armv7/aarch32/aarch64, ppc64, etc.
 
-The current version of GHDL does not contain any built-in graphical viewer: you cannot see signal waves.
-You can still check the behavior of your design with a test bench.
-Moreover, :ref:`GHW`, :wikipedia:`VCD <Value_change_dump>` or `FST` files can be produced, which can be viewed with a
-:wikipedia:`waveform viewer <Waveform_viewer>`,
-such as `GtkWave <http://gtkwave.sourceforge.net/>`__.
+The current version of GHDL does not contain any built-in graphical viewer: signal waves cannot be seen through GHDL.
+However, the behavior of the designs can still be checked through test benches and verification frameworks.
+Moreover, :ref:`GHW`, :wikipedia:`VCD <Value_change_dump>` or `FST` files can be produced, which can be viewed with an
+external :wikipedia:`waveform viewer <Waveform_viewer>`, such as `GtkWave <http://gtkwave.sourceforge.net/>`__.
 
 GHDL aims at implementing VHDL as defined by `IEEE 1076 <http://ieeexplore.ieee.org/document/4772740/>`__.
 It supports the
