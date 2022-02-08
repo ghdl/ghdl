@@ -13,7 +13,7 @@ What is `VHDL`?
 ===============
 
 :wikipedia:`VHDL <VHDL>` is an acronym for *Verification and Hardware Description Language* (:wikipedia:`HDL <HDL>`),
-which is a programming language used to describe a logic circuit by function, data flow behavior, or structure.
+which is a computer language used to describe a logic circuit by function, data flow behavior, or structure.
 
 .. NOTE::
   Historically the 'V' in the language's acronym came from the Very High Speed Integrated Circuit (:wikipedia:`VHSIC <VHSIC>`),
