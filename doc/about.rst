@@ -18,7 +18,7 @@ which is a computer language used to describe a logic circuit by function, data 
 .. NOTE::
   Historically the 'V' in the language's acronym came from the Very High Speed Integrated Circuit (:wikipedia:`VHSIC <VHSIC>`),
   which was the U.S. government program that funded the early work on the standard.
-  Changing the 'V' to mean verification reflects the language's increasing usage for verification as well as design.
+  Changing the 'V' to mean *verification* reflects the language's increasing usage for verification as well as design.
   See `VHDL 202X PAR <http://www.eda-twiki.org/twiki/pub/P1076/PrivateDocuments/Par1076_202X.pdf>`__ via :ref:`vasg:VHDL202X`.
 
 Although VHDL was not designed for writing general purpose programs, VHDL *is* a programming language: you can write any
