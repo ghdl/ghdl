@@ -108,7 +108,7 @@ if ($All)
 
 function Get-XilinxISEDirectory
 {	if (Test-Path env:XILINX)
-	{	return $XILINX + "\" + (Get-VendorToolSourceDirectory)    }
+	{	return $env:XILINX + "\" + (Get-VendorToolSourceDirectory)    }
 	else
 	{	$EnvSourceDir = ""
 		foreach ($Drive in Get-PSDrive -PSProvider 'FileSystem')

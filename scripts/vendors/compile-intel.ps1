@@ -118,7 +118,7 @@ if ($All)
 
 function Get-AlteraQuartusDirectory
 {	if (Test-Path env:QUARTUS_ROOTDIR)
-	{	return $QUARTUS_ROOTDIR + "\" + (Get-VendorToolSourceDirectory)    }
+	{	return $env:QUARTUS_ROOTDIR + "\" + (Get-VendorToolSourceDirectory)    }
 	else
 	{	$EnvSourceDir = ""
 		foreach ($Drive in Get-PSDrive -PSProvider 'FileSystem')
