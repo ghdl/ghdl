@@ -146,7 +146,7 @@ if ($All)
 
 function Get-LatticeDiamondDirectory
 {	if (Test-Path env:FOUNDRY)
-	{	return $FOUNDRY + "\..\" + (Get-VendorToolSourceDirectory)    }
+	{	return $env:FOUNDRY + "\..\" + (Get-VendorToolSourceDirectory)    }
 	else
 	{	$EnvSourceDir = ""
 		foreach ($Drive in Get-PSDrive -PSProvider 'FileSystem')

@@ -99,7 +99,7 @@ if ($All)
 
 function Get-XilinxVivadoDirectory
 {	if (Test-Path env:XILINX_VIVADO)
-	{	return $XILINX_VIVADO + "\" + (Get-VendorToolSourceDirectory)    }
+	{	return $env:XILINX_VIVADO + "\" + (Get-VendorToolSourceDirectory)    }
 	else
 	{	$EnvSourceDir = ""
 		foreach ($Drive in Get-PSDrive -PSProvider 'FileSystem')
