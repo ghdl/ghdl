@@ -13,14 +13,14 @@
 #
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <gnu.org/licenses>.
-CC=@CC@
+CC=@ac_tool_prefix@@CC@
 CFLAGS=@CFLAGS@
-CXX=@CXX@
+CXX=@ac_tool_prefix@@CXX@
 CXXFLAGS=@CXXFLAGS@
 build=@build@
 srcdir=@srcdir@
 abs_srcdir=@abs_srcdir@
-GNATMAKE=@GNATMAKE@
+GNATMAKE=@ac_tool_prefix@@GNATMAKE@
 ADA_FLAGS=@ADA_FLAGS@
 MAKE=@MAKE@
 prefix=@prefix@
@@ -49,7 +49,7 @@ INSTALL_DATA=install -m 644
 PWD=$(CURDIR)
 DESTDIR=
 bindir=$(prefix)/bin
-libdir=$(prefix)/lib
+libdir=@libdir@
 incdir=$(prefix)/include
 MKDIR=mkdir
 LN=ln -s
@@ -59,7 +59,7 @@ SED=sed
 GRT_RANLIB=ranlib
 GHDL_DESC?=tarball
 
-VHDL_LIB_DIR=$(prefix)/$(libdirsuffix)
+VHDL_LIB_DIR=$(libdir)/$(libdirsuffix)
 
 ifeq "$(enable_checks)" "true"
  # Debug + checks
@@ -122,7 +122,7 @@ endif
 
 # Flags for libraries
 LIBSRC_DIR:=$(srcdir)/libraries
-LIBDST_DIR:=$(libdirsuffix)
+LIBDST_DIR:=lib/$(libdirsuffix)
 
 LIBVHDL_FLAGS_TO_PASS=\
  LIBSRC_DIR="$(LIBSRC_DIR)" \
@@ -293,7 +293,7 @@ GHDL1_GCC_BIN=  # --GHDL1=/path/to/ghdl1
 libs.vhdl.gcc:
 	$(MAKE) -f $(srcdir)/libraries/Makefile.inc $(LIBVHDL_FLAGS_TO_PASS) GHDL="$(GHDL_GCC_BIN)" GHDL_FLAGS="$(GHDL1_GCC_BIN) $(LIB_CFLAGS)" vhdl.libs.all libs.vhdl.standard
 
-ghdllib: libs.vhdl.gcc $(libdirsuffix)/libgrt.a all.libghdl all.ghw
+ghdllib: libs.vhdl.gcc lib/$(libdirsuffix)/libgrt.a all.libghdl all.ghw
 
 install.gcc: install.grt
 
@@ -514,15 +514,15 @@ uninstall.ghw:
 ############### grt #####################################################
 
 install.grt: \
-  $(libdirsuffix)/libgrt.a \
-  $(libdirsuffix)/grt.lst \
-  $(libdirsuffix)/grt-exec.lst \
-  $(libdirsuffix)/grt-shared.lst \
+  lib/$(libdirsuffix)/libgrt.a \
+  lib/$(libdirsuffix)/grt.lst \
+  lib/$(libdirsuffix)/grt-exec.lst \
+  lib/$(libdirsuffix)/grt-shared.lst \
   install.dirs
-	$(INSTALL_DATA) $(libdirsuffix)/libgrt.a $(DESTDIR)$(VHDL_LIB_DIR)/libgrt.a
-	$(INSTALL_DATA) $(libdirsuffix)/grt.lst $(DESTDIR)$(VHDL_LIB_DIR)/grt.lst
-	$(INSTALL_DATA) $(libdirsuffix)/grt-exec.lst $(DESTDIR)$(VHDL_LIB_DIR)/grt-exec.lst
-	$(INSTALL_DATA) $(libdirsuffix)/grt-shared.lst $(DESTDIR)$(VHDL_LIB_DIR)/grt-shared.lst
+	$(INSTALL_DATA) lib/$(libdirsuffix)/libgrt.a $(DESTDIR)$(VHDL_LIB_DIR)/libgrt.a
+	$(INSTALL_DATA) lib/$(libdirsuffix)/grt.lst $(DESTDIR)$(VHDL_LIB_DIR)/grt.lst
+	$(INSTALL_DATA) lib/$(libdirsuffix)/grt-exec.lst $(DESTDIR)$(VHDL_LIB_DIR)/grt-exec.lst
+	$(INSTALL_DATA) lib/$(libdirsuffix)/grt-shared.lst $(DESTDIR)$(VHDL_LIB_DIR)/grt-shared.lst
 	$(INSTALL_DATA) $(GRTSRCDIR)/grt.ver $(DESTDIR)$(VHDL_LIB_DIR)/grt.ver
 	test "x$(LIBBACKTRACE)" = x || test "x$(backend)" = xgcc || \
 	  $(INSTALL_DATA) $(LIBBACKTRACE) $(DESTDIR)$(VHDL_LIB_DIR)/libbacktrace.a
@@ -593,7 +593,7 @@ install.dirs:
 	$(MKDIR) -p $(DESTDIR)$(prefix)
 	$(MKDIR) -p $(DESTDIR)$(bindir)
 	$(MKDIR) -p $(DESTDIR)$(libdir)
-	$(MKDIR) -p $(DESTDIR)$(prefix)/$(libdirsuffix)
+	$(MKDIR) -p $(DESTDIR)$(libdir)/$(libdirsuffix)
 	$(MKDIR) -p $(DESTDIR)$(incdir)
 	$(MKDIR) -p $(DESTDIR)$(incdir)/ghdl
 
@@ -647,6 +647,7 @@ create-dirs: force
 	for d in $(VHDLLIB_SUBDIRS); do \
 	  $(MKDIR) -p $(LIBDST_DIR)/$$d; \
 	done
+	$(MKDIR) -p lib
 
 # Remove non GPL compatible source files
 clean-pure-gpl:

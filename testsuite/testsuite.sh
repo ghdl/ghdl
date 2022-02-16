@@ -94,6 +94,12 @@ if [ "$GHWDUMP" = "" ]; then
   esac
 fi
 
+if [ "$GHDL_PREFIX" = "" ]; then
+  case "$GHDL" in
+    */*) export GHDL_PREFIX=${GHDL%/*}/../lib/ghdl;;
+  esac
+fi
+
 command -v "$GHWDUMP" >/dev/null || die "ghwdump executable not found: $GHWDUMP"
 
 cd $(dirname "$0")
