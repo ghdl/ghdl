@@ -1743,7 +1743,8 @@ package body Synth.Vhdl_Oper is
             return Create_Value_Net (Get_Net (Ctxt, Operand),
                                      Create_Res_Bound (Operand));
 
-         when Iir_Predefined_Ieee_1164_Condition_Operator =>
+         when Iir_Predefined_Ieee_1164_Condition_Operator
+            | Iir_Predefined_Bit_Condition =>
             return Create_Value_Net
               (Get_Net (Ctxt, Operand),
                Get_Subtype_Object (Syn_Inst, Get_Type (Imp)));
