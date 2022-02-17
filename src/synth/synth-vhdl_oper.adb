@@ -1847,6 +1847,21 @@ package body Synth.Vhdl_Oper is
                                        Res_Typ, False, Expr);
    end Synth_Find_Bit;
 
+   --  Resize ARG to SIZE bits according to IS_SIGNED.
+   function Synth_Resize (Ctxt : Context_Acc;
+                          Arg : Valtyp;
+                          Size : Width;
+                          Is_Signed : Boolean;
+                          Loc : Node) return Valtyp
+   is
+      N : Net;
+   begin
+      N := Get_Net (Ctxt, Arg);
+      N := Build2_Resize (Ctxt, N, Size, Is_Signed, Get_Location (Loc));
+      return Create_Value_Net
+        (N, Create_Vec_Type_By_Length (Size, Logic_Type));
+   end Synth_Resize;
+
    function Synth_Dynamic_Predefined_Function_Call
      (Subprg_Inst : Synth_Instance_Acc; Expr : Node) return Valtyp
    is
@@ -1866,7 +1881,6 @@ package body Synth.Vhdl_Oper is
          Arg : constant Valtyp := Get_Value (Subprg_Inst, Param1);
          Size_Vt : Valtyp;
          Size : Width;
-         Arg_Net : Net;
       begin
          Size_Vt := Get_Value (Subprg_Inst, Param2);
          Strip_Const (Size_Vt);
@@ -1875,11 +1889,7 @@ package body Synth.Vhdl_Oper is
             return No_Valtyp;
          end if;
          Size := Uns32 (Read_Discrete (Size_Vt));
-         Arg_Net := Get_Net (Ctxt, Arg);
-         Arg_Net := Build2_Resize (Ctxt, Arg_Net, Size, Is_Signed,
-                                   Get_Location (Expr));
-         return Create_Value_Net
-           (Arg_Net, Create_Vec_Type_By_Length (Size, Logic_Type));
+         return Synth_Resize (Ctxt, Arg, Size, Is_Signed, Expr);
       end Synth_Conv_Vector;
 
       L : Valtyp;
@@ -1942,6 +1952,12 @@ package body Synth.Vhdl_Oper is
          when Iir_Predefined_Ieee_Numeric_Std_Touns_Nat_Nat_Uns
             | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Int =>
             return Synth_Conv_Vector (False);
+         when Iir_Predefined_Ieee_Numeric_Std_Touns_Nat_Uns_Uns =>
+            declare
+               B : constant Bound_Type := Get_Array_Bound (R.Typ, 1);
+            begin
+               return Synth_Resize (Ctxt, L, B.Len, False, Expr);
+            end;
          when Iir_Predefined_Ieee_Numeric_Std_Tosgn_Int_Nat_Sgn
             | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Int =>
             return Synth_Conv_Vector (True);
@@ -1993,30 +2009,17 @@ package body Synth.Vhdl_Oper is
             | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Sgn
             | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Sgn
             | Iir_Predefined_Ieee_Std_Logic_Arith_Sxt =>
-            declare
-               W : Width;
-            begin
-               if not Is_Static (R.Val) then
-                  Error_Msg_Synth (+Expr, "size must be constant");
-                  return No_Valtyp;
-               end if;
-               W := Uns32 (Read_Discrete (R));
-               return Create_Value_Net
-                 (Build2_Sresize (Ctxt, Get_Net (Ctxt, L),
-                                  W, Get_Location (Expr)),
-                  Create_Vec_Type_By_Length (W, Logic_Type));
-            end;
+            if not Is_Static (R.Val) then
+               Error_Msg_Synth (+Expr, "size must be constant");
+               return No_Valtyp;
+            end if;
+            return Synth_Resize
+              (Ctxt, L, Uns32 (Read_Discrete (R)), True, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Resize_Sgn_Sgn =>
             declare
-               B : Bound_Type;
-               W : Width;
+               B : constant Bound_Type := Get_Array_Bound (R.Typ, 1);
             begin
-               B := Get_Array_Bound (R.Typ, 1);
-               W := B.Len;
-               return Create_Value_Net
-                 (Build2_Sresize (Ctxt, Get_Net (Ctxt, L),
-                                  W, Get_Location (Expr)),
-                  Create_Vec_Type_By_Length (W, Logic_Type));
+               return Synth_Resize (Ctxt, L, B.Len, True, Expr);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Shf_Left_Uns_Nat
             | Iir_Predefined_Ieee_Numeric_Std_Shf_Left_Sgn_Nat
