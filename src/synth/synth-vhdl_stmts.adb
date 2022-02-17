@@ -144,14 +144,17 @@ package body Synth.Vhdl_Stmts is
             declare
                Voff : Net;
                Off : Value_Offsets;
+               Err : Boolean;
             begin
                Synth_Assignment_Prefix
                  (Syn_Inst, Get_Prefix (Pfx),
                   Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
                Strip_Const (Dest_Base);
-               Synth_Indexed_Name (Syn_Inst, Pfx, Dest_Typ, Voff, Off);
+               Synth_Indexed_Name (Syn_Inst, Pfx, Dest_Typ, Voff, Off, Err);
 
-               if Voff = No_Net then
+               if Err then
+                  Dest_Base := No_Valtyp;
+               elsif Voff = No_Net then
                   --  Static index.
                   Dest_Off := Dest_Off + Off;
                else

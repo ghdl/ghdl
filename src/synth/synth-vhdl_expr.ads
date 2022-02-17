@@ -119,7 +119,8 @@ package Synth.Vhdl_Expr is
                                  Name : Node;
                                  Pfx_Type : Type_Acc;
                                  Voff : out Net;
-                                 Off : out Value_Offsets);
+                                 Off : out Value_Offsets;
+                                 Error : out Boolean);
 
    --  Conversion to logic vector.
    type Digit_Index is new Natural;

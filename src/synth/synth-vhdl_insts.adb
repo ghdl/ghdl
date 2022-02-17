@@ -638,11 +638,12 @@ package body Synth.Vhdl_Insts is
             declare
                Voff : Net;
                Arr_Off : Value_Offsets;
+               Err : Boolean;
             begin
                Synth_Individual_Prefix
                  (Syn_Inst, Inter_Inst, Get_Prefix (Formal), Off, Typ);
-               Synth_Indexed_Name (Syn_Inst, Formal, Typ, Voff, Arr_Off);
-               if Voff /= No_Net then
+               Synth_Indexed_Name (Syn_Inst, Formal, Typ, Voff, Arr_Off, Err);
+               if Voff /= No_Net or Err then
                   raise Internal_Error;
                end if;
                Off := Off + Arr_Off.Net_Off;

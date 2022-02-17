@@ -893,6 +893,12 @@ package body Synth.Vhdl_Expr is
       end case;
    end Synth_Name;
 
+   procedure Bound_Error (Syn_Inst : Synth_Instance_Acc; Loc : Node) is
+   begin
+      Error_Msg_Synth (+Loc, "index not within bounds");
+      Elab.Debugger.Debug_Error (Syn_Inst, Loc);
+   end Bound_Error;
+
    --  Convert index IDX in PFX to an offset.
    --  SYN_INST and LOC are used in case of error.
    function Index_To_Offset
@@ -902,8 +908,7 @@ package body Synth.Vhdl_Expr is
       Res : Value_Offsets;
    begin
       if not In_Bounds (Bnd, Int32 (Idx)) then
-         Error_Msg_Synth (+Loc, "index not within bounds");
-         Elab.Debugger.Debug_Error (Syn_Inst, Loc);
+         Bound_Error (Syn_Inst, Loc);
          return (0, 0);
       end if;
 
@@ -1000,13 +1005,15 @@ package body Synth.Vhdl_Expr is
                                  Name : Node;
                                  Pfx_Type : Type_Acc;
                                  Voff : out Net;
-                                 Off : out Value_Offsets)
+                                 Off : out Value_Offsets;
+                                 Error : out Boolean)
    is
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Indexes : constant Iir_Flist := Get_Index_List (Name);
       El_Typ : constant Type_Acc := Get_Array_Element (Pfx_Type);
       Idx_Expr : Node;
       Idx_Val : Valtyp;
+      Idx : Int64;
       Bnd : Bound_Type;
       Stride : Uns32;
       Ivoff : Net;
@@ -1014,6 +1021,7 @@ package body Synth.Vhdl_Expr is
    begin
       Voff := No_Net;
       Off := (0, 0);
+      Error := False;
 
       Stride := 1;
       for I in reverse Flist_First .. Flist_Last (Indexes) loop
@@ -1022,9 +1030,8 @@ package body Synth.Vhdl_Expr is
          --  Use the base type as the subtype of the index is not synth-ed.
          Idx_Val := Synth_Expression_With_Basetype (Syn_Inst, Idx_Expr);
          if Idx_Val = No_Valtyp then
-            --  Propagate errorc
-            Voff := No_Net;
-            Off := (0, 0);
+            --  Propagate error.
+            Error := True;
             return;
          end if;
 
@@ -1033,11 +1040,17 @@ package body Synth.Vhdl_Expr is
          Bnd := Get_Array_Bound (Pfx_Type, Dim_Type (I + 1));
 
          if Is_Static_Val (Idx_Val.Val) then
-            Idx_Off := Index_To_Offset (Syn_Inst, Bnd,
-                                        Get_Static_Discrete (Idx_Val), Name);
-            Off.Net_Off := Off.Net_Off + Idx_Off.Net_Off * Stride * El_Typ.W;
-            Off.Mem_Off := Off.Mem_Off
-              + Idx_Off.Mem_Off * Size_Type (Stride) * El_Typ.Sz;
+            Idx := Get_Static_Discrete (Idx_Val);
+            if not In_Bounds (Bnd, Int32 (Idx)) then
+               Bound_Error (Syn_Inst, Name);
+               Error := True;
+            else
+               Idx_Off := Index_To_Offset (Syn_Inst, Bnd, Idx, Name);
+               Off.Net_Off := Off.Net_Off
+                 + Idx_Off.Net_Off * Stride * El_Typ.W;
+               Off.Mem_Off := Off.Mem_Off
+                 + Idx_Off.Mem_Off * Size_Type (Stride) * El_Typ.Sz;
+            end if;
          else
             Ivoff := Dyn_Index_To_Offset (Ctxt, Bnd, Idx_Val, Name);
             Ivoff := Build_Memidx
@@ -2202,6 +2215,10 @@ package body Synth.Vhdl_Expr is
                Dyn : Dyn_Name;
             begin
                Synth_Assignment_Prefix (Syn_Inst, Expr, Base, Typ, Off, Dyn);
+               if Base = No_Valtyp then
+                  --  Propagate error.
+                  return No_Valtyp;
+               end if;
                if Dyn.Voff = No_Net and then Is_Static (Base.Val) then
                   Res := Create_Value_Memory (Typ);
                   Copy_Memory
