@@ -246,9 +246,9 @@ package body Elab.Vhdl_Values is
                Res.Val.Mem (I - 1) := Src.Val.Mem (I - 1);
             end loop;
          when Value_Net =>
-            Res := (Src.Typ, Create_Value_Net (Src.Val.S));
+            Res := (Src.Typ, Create_Value_Net (Src.Val.N));
          when Value_Wire =>
-            Res := (Src.Typ, Create_Value_Wire (Src.Val.S));
+            Res := (Src.Typ, Create_Value_Wire (Src.Val.N));
          when Value_File =>
             Res := Create_Value_File (Src.Typ, Src.Val.File);
          when Value_Signal =>
