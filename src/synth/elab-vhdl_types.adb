@@ -198,6 +198,8 @@ package body Elab.Vhdl_Types is
    function Synth_Record_Type_Definition
      (Syn_Inst : Synth_Instance_Acc; Def : Node) return Type_Acc
    is
+      Is_Subtype : constant Boolean :=
+        Get_Kind (Def) = Iir_Kind_Record_Subtype_Definition;
       El_List : constant Node_Flist := Get_Elements_Declaration_List (Def);
       Rec_Els : Rec_El_Array_Acc;
       El      : Node;
@@ -210,7 +212,13 @@ package body Elab.Vhdl_Types is
       for I in Flist_First .. Flist_Last (El_List) loop
          El := Get_Nth_Element (El_List, I);
          El_Type := Get_Type (El);
-         El_Typ := Synth_Subtype_Indication_If_Anonymous (Syn_Inst, El_Type);
+         if Is_Subtype then
+            Synth_Subtype_Indication_If_Anonymous (Syn_Inst, El_Type);
+            El_Typ := Get_Subtype_Object (Syn_Inst, El_Type);
+         else
+            El_Typ := Synth_Subtype_Indication_If_Anonymous
+              (Syn_Inst, El_Type);
+         end if;
          Rec_Els.E (Iir_Index32 (I + 1)).Typ := El_Typ;
       end loop;
 
