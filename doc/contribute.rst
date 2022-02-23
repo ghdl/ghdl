@@ -52,9 +52,9 @@ Please, report issues through |SHIELD:bug-report|, as this allows us to categori
 to them. You can track the state and see how it's getting solved.
 
 .. IMPORTANT::
-   As suggested in the bug report template, please elaborate a `Minimal (non) Working Example` (`MWE <https://en.wikipedia.org/wiki/Minimal_Working_Example>`_)
+   As suggested in the bug report template, please elaborate a `Minimal (non) Working Example` (:wikipedia:`MWE <Minimal_Working_Example>`)
    prior to sending the report, so that the possible bug source is isolated. Should it fulfill the format requirements of
-   `issue-runner <https://github.com/eine/issue-runner>`_, you would be able to test your bug with the latest GHDL version.
+   `issue-runner <https://github.com/umarcor/issue-runner>`_, you would be able to test your bug with the latest GHDL version.
    Please do so in order to ensure that the bug is not solved already.
 
    Also, please include enough information in the bug report, for the maintainers to reproduce the problem. The template

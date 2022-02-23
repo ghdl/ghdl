@@ -2,9 +2,13 @@
 import sys
 from os.path import abspath
 from pathlib import Path
-from json import loads
+from json import loads as json_loads
 
 from pyTooling.Packaging import extractVersionInformation
+
+
+ROOT = Path(__file__).resolve().parent
+
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -79,13 +83,24 @@ except Exception as ex:
 # ==============================================================================
 # Options for HTML output
 # ==============================================================================
-html_theme = "_theme"
-html_theme_path = ["."]
-html_theme_options = {
-    'logo_only': True,
-    'home_breadcrumbs': False,
-    'vcs_pageview_mode': 'blob',
-}
+html_context = {}
+ctx = ROOT / "context.json"
+if ctx.is_file():
+    html_context.update(json_loads(ctx.open("r").read()))
+
+if (ROOT / "_theme").is_dir():
+    html_theme_path = ["."]
+    html_theme = "_theme"
+    html_theme_options = {
+        "logo_only": True,
+        "home_breadcrumbs": False,
+        "vcs_pageview_mode": "blob",
+    }
+    html_css_files = [
+        "theme_overrides.css",
+    ]
+else:
+    html_theme = "alabaster"
 
 html_static_path = ['_static']
 # '/public' will contain the output from gnatdoc
@@ -94,10 +109,6 @@ html_extra_path = [str(Path(__file__).resolve().parent.parent / 'public')]   # F
 html_logo = str(Path(html_static_path[0]) / 'logo.png')
 html_favicon = str(Path(html_static_path[0]) / 'icon.png')
 
-html_context = {}
-ctx = Path(__file__).resolve().parent / 'context.json'
-if ctx.is_file():
-    html_context.update(loads(ctx.open('r').read()))
 
 # ==============================================================================
 # Options for manual page output
@@ -191,10 +202,11 @@ extensions = [
 # Sphinx.Ext.InterSphinx
 # ==============================================================================
 intersphinx_mapping = {
-   'python': ('https://docs.python.org/3.6/', None),
-   'cosim': ('https://ghdl.github.io/ghdl-cosim', None),
-   'poc': ('https://poc-library.readthedocs.io/en/release', None),
+   'python':    ('https://docs.python.org/3.6/', None),
+   'cosim':     ('https://ghdl.github.io/ghdl-cosim', None),
+   'poc':       ('https://poc-library.readthedocs.io/en/release', None),
    'vhdlmodel': ('https://vhdl.github.io/pyVHDLModel', None),
+   'vasg':      ('https://ieee-p1076.gitlab.io', None)
 }
 
 
@@ -229,11 +241,11 @@ todo_link_only = True
 # Sphinx.Ext.ExtLinks
 # ==============================================================================
 extlinks = {
-   'wikipedia': ('https://en.wikipedia.org/wiki/%s', None),
+   'wikipedia': ('https://en.wikipedia.org/wiki/%s', ''),
    'ghdlsharp': ('https://github.com/ghdl/ghdl/issues/%s', '#'),
    'ghdlissue': ('https://github.com/ghdl/ghdl/issues/%s', 'issue #'),
    'ghdlpull':  ('https://github.com/ghdl/ghdl/pull/%s', 'pull request #'),
-   'ghdlsrc':   ('https://github.com/ghdl/ghdl/blob/master/src/%s', None)
+   'ghdlsrc':   ('https://github.com/ghdl/ghdl/blob/master/src/%s', '')
 }
 
 
