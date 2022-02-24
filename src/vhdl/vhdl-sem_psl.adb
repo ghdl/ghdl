@@ -57,9 +57,19 @@ package body Vhdl.Sem_Psl is
    end Is_Psl_Boolean_Type;
 
    --  Return TRUE if EXPR type is a PSL boolean type.
-   function Is_Psl_Boolean_Expr (Expr : Iir) return Boolean is
+   function Is_Psl_Boolean_Expr (Expr : Iir) return Boolean
+   is
+      Etype : constant Iir := Get_Type (Expr);
    begin
-      return Is_Psl_Boolean_Type (Get_Type (Expr));
+      --  In case of overload, consider the expression not as a PSL boolean.
+      --  It couldn't be resolved, so there will be an error, unless the whole
+      --  property is used in an assertion and the assertion is not considered
+      --  as a PSL assertion.
+      if Sem_Names.Is_Overload_List (Etype) then
+         return False;
+      end if;
+
+      return Is_Psl_Boolean_Type (Etype);
    end Is_Psl_Boolean_Expr;
 
    function Is_Psl_Bit_Type (Atype : Iir) return Boolean
