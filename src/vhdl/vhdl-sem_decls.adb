@@ -415,6 +415,10 @@ package body Vhdl.Sem_Decls is
          when Parameter_Interface_List =>
             if Get_Kind (Inter) = Iir_Kind_Interface_Variable_Declaration
               and then Interface_Kind = Function_Parameter_Interface_List
+              and then (
+                Vhdl_Std < Vhdl_19
+                or else Get_Pure_Flag (Get_Parent (Inter))
+              )
             then
                Error_Msg_Sem (+Inter, "variable interface parameter are not "
                                 & "allowed for a function (use a constant)");
@@ -440,9 +444,17 @@ package body Vhdl.Sem_Decls is
                     and then
                     Get_Kind (Inter) /= Iir_Kind_Interface_File_Declaration
                   then
-                     Error_Msg_Sem
-                       (+Inter,
-                        "mode of a function parameter cannot be inout or out");
+                     if Vhdl_Std < Vhdl_19 then
+                        Error_Msg_Sem
+                          (+Inter,
+                           "mode of a function parameter cannot " &
+                           "be inout or out");
+                     elsif Get_Pure_Flag (Get_Parent (Inter)) then
+                        Error_Msg_Sem
+                          (+Inter,
+                           "mode of a pure function's parameter cannot " &
+                           "be inout or out");
+                     end if;
                   end if;
                when Iir_Buffer_Mode
                  | Iir_Linkage_Mode =>
