@@ -1716,7 +1716,7 @@ package body Ortho_Code.X86.Emits is
    begin
       case Get_Expr_Mode (Stmt) is
          when Mode_I32 =>
-            pragma Assert (Reg_Res in Regs_R32);
+            pragma Assert (Reg_Res in Regs_R64);
             if Reg_Op /= Reg_Res then
                Emit_Load (Reg_Res, Op, Sz_32);
             end if;

@@ -325,7 +325,7 @@ package body Ortho_Code.X86.Abi is
                when others =>
                   raise Program_Error;
             end case;
-         when Regs_R32
+         when Regs_R64
            | R_Any32
            | R_Any8
            | Regs_Pair
@@ -551,6 +551,10 @@ package body Ortho_Code.X86.Abi is
             --Disp_Decl_Name (Get_Call_Subprg (Stmt));
             New_Line;
          when OE_Conv_Ov =>
+            Disp_Reg_Op_Name ("conv_ov");
+            Disp_Irm_Code (Get_Expr_Operand (Stmt));
+            New_Line;
+         when OE_Conv =>
             Disp_Reg_Op_Name ("conv");
             Disp_Irm_Code (Get_Expr_Operand (Stmt));
             New_Line;
