@@ -301,12 +301,21 @@ package body Trans.Chap6 is
          declare
             Cond1, Cond2 : O_Enode;
             Cond         : O_Enode;
+            Lo           : O_Cnode;
          begin
-            --  FIXME: not correct for enumerations
+            --  Special case for enumerations
+            if Get_Kind (Range_Btype) = Iir_Kind_Enumeration_Type_Definition
+            then
+               Lo := Chap7.Translate_Static_Range_Left
+                 (Get_Range_Constraint (Range_Btype));
+            else
+               Lo := New_Signed_Literal (Index_Tnode, 0);
+            end if;
+
             Cond1 := New_Compare_Op
               (ON_Lt,
                New_Obj_Value (Off),
-               New_Lit (New_Signed_Literal (Index_Tnode, 0)),
+               New_Lit (Lo),
                Ghdl_Bool_Type);
 
             Cond2 := New_Compare_Op
