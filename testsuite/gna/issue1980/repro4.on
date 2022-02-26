@@ -1,0 +1,290 @@
+-- internal declarations, part 1
+
+TYPE __ghdl_size_type IS UNSIGNED (32);
+
+TYPE __ghdl_index_type IS UNSIGNED (32);
+
+TYPE __ghdl_i32 IS SIGNED (32);
+
+TYPE __ghdl_real IS FLOAT;
+
+TYPE __ghdl_i64 IS SIGNED (64);
+
+TYPE __ghdl_file_index IS UNSIGNED (32);
+
+TYPE __ghdl_file_index_ptr IS ACCESS __ghdl_file_index;
+
+TYPE __ghdl_char IS UNSIGNED (8);
+
+TYPE __ghdl_chararray IS ARRAY [__ghdl_index_type] OF __ghdl_char;
+
+TYPE __ghdl_char_ptr IS ACCESS __ghdl_chararray;
+
+TYPE __ghdl_char_ptr_array IS ARRAY [__ghdl_index_type] OF __ghdl_char_ptr;
+
+TYPE __ghdl_char_ptr_array_ptr IS ACCESS __ghdl_char_ptr_array;
+
+TYPE __ghdl_ptr IS ACCESS __ghdl_char;
+
+TYPE __ghdl_str_len IS RECORD
+  len: __ghdl_index_type;
+  str: __ghdl_char_ptr;
+END RECORD;
+
+TYPE __ghdl_str_len_array IS ARRAY [__ghdl_index_type] OF __ghdl_str_len;
+
+TYPE __ghdl_str_len_ptr IS ACCESS __ghdl_str_len;
+
+TYPE __ghdl_bool_type IS BOOLEAN {false, true};
+
+TYPE __ghdl_bool_array_type IS ARRAY [__ghdl_index_type] OF __ghdl_bool_type;
+
+TYPE __ghdl_bool_array_ptr IS ACCESS __ghdl_bool_array_type;
+
+TYPE __ghdl_sizes_type IS RECORD
+  size_val: __ghdl_index_type;
+  size_sig: __ghdl_index_type;
+END RECORD;
+
+TYPE __ghdl_sizes_ptr IS ACCESS __ghdl_sizes_type;
+
+TYPE __ghdl_compare_type IS ENUM {lt, eq, gt};
+
+TYPE __ghdl_location IS RECORD
+  filename: __ghdl_char_ptr;
+  line: __ghdl_i32;
+  col: __ghdl_i32;
+END RECORD;
+
+TYPE __ghdl_location_ptr IS ACCESS __ghdl_location;
+
+TYPE __ghdl_dir_type IS ENUM {dir_to, dir_downto};
+
+TYPE __ghdl_signal IS RECORD;
+
+TYPE __ghdl_signal_ptr IS ACCESS __ghdl_signal;
+
+-- package std.standard
+
+TYPE std__standard__boolean IS BOOLEAN {false, true};
+
+
+TYPE std__standard__character IS ENUM {nul, soh, stx, etx, eot, enq, ack, bel,
+   bs, ht, lf, vt, ff, cr, so, si, dle, dc1, dc2, dc3, dc4, nak, syn, etb,
+   can, em, sub, esc, fsp, gsp, rsp, usp, C20, C21, C22, C23, C24, C25, C26,
+   C27, C28, C29, C2a, C2b, C2c, C2d, C2e, C2f, C_0, C_1, C_2, C_3, C_4, C_5,
+   C_6, C_7, C_8, C_9, C3a, C3b, C3c, C3d, C3e, C3f, C40, C_A, C_B, C_C, C_D,
+   C_E, C_F, C_G, C_H, C_I, C_J, C_K, C_L, C_M, C_N, C_O, C_P, C_Q, C_R, C_S,
+   C_T, C_U, C_V, C_W, C_X, C_Y, C_Z, C5b, C5c, C5d, C5e, C5f, C60, C_a, C_b,
+   C_c, C_d, C_e, C_f, C_g, C_h, C_i, C_j, C_k, C_l, C_m, C_n, C_o, C_p, C_q,
+   C_r, C_s, C_t, C_u, C_v, C_w, C_x, C_y, C_z, C7b, C7c, C7d, C7e, del, c128,
+   c129, c130, c131, c132, c133, c134, c135, c136, c137, c138, c139, c140,
+   c141, c142, c143, c144, c145, c146, c147, c148, c149, c150, c151, c152,
+   c153, c154, c155, c156, c157, c158, c159, Ca0, Ca1, Ca2, Ca3, Ca4, Ca5,
+   Ca6, Ca7, Ca8, Ca9, Caa, Cab, Cac, Cad, Cae, Caf, Cb0, Cb1, Cb2, Cb3, Cb4,
+   Cb5, Cb6, Cb7, Cb8, Cb9, Cba, Cbb, Cbc, Cbd, Cbe, Cbf, Cc0, Cc1, Cc2, Cc3,
+   Cc4, Cc5, Cc6, Cc7, Cc8, Cc9, Cca, Ccb, Ccc, Ccd, Cce, Ccf, Cd0, Cd1, Cd2,
+   Cd3, Cd4, Cd5, Cd6, Cd7, Cd8, Cd9, Cda, Cdb, Cdc, Cdd, Cde, Cdf, Ce0, Ce1,
+   Ce2, Ce3, Ce4, Ce5, Ce6, Ce7, Ce8, Ce9, Cea, Ceb, Cec, Ced, Cee, Cef, Cf0,
+   Cf1, Cf2, Cf3, Cf4, Cf5, Cf6, Cf7, Cf8, Cf9, Cfa, Cfb, Cfc, Cfd, Cfe, Cff};
+
+TYPE std__standard__character__PTR IS ACCESS std__standard__character;
+
+TYPE std__standard__character__TRT IS RECORD
+  left: std__standard__character;
+  right: std__standard__character;
+  dir: __ghdl_dir_type;
+  length: __ghdl_index_type;
+END RECORD;
+
+TYPE std__standard__character__TRPTR IS ACCESS std__standard__character__TRT;
+
+EXTERNAL CONSTANT std__standard__character__BTR : std__standard__character__TRT
+  ;
+
+TYPE std__standard__UNIVERSAL_INTEGER__BT IS SIGNED (64);
+
+TYPE std__standard__UNIVERSAL_INTEGER__BT__PTR IS ACCESS 
+  std__standard__UNIVERSAL_INTEGER__BT;
+
+TYPE std__standard__UNIVERSAL_INTEGER__BT__TRT IS RECORD
+  left: std__standard__UNIVERSAL_INTEGER__BT;
+  right: std__standard__UNIVERSAL_INTEGER__BT;
+  dir: __ghdl_dir_type;
+  length: __ghdl_index_type;
+END RECORD;
+
+TYPE std__standard__UNIVERSAL_INTEGER__BT__TRPTR IS ACCESS 
+  std__standard__UNIVERSAL_INTEGER__BT__TRT;
+
+EXTERNAL CONSTANT std__standard__UNIVERSAL_INTEGER__STR : 
+  std__standard__UNIVERSAL_INTEGER__BT__TRT;
+
+TYPE std__standard__UNIVERSAL_REAL__BT IS FLOAT;
+
+TYPE std__standard__UNIVERSAL_REAL__BT__PTR IS ACCESS 
+  std__standard__UNIVERSAL_REAL__BT;
+
+TYPE std__standard__UNIVERSAL_REAL__BT__TRT IS RECORD
+  left: std__standard__UNIVERSAL_REAL__BT;
+  right: std__standard__UNIVERSAL_REAL__BT;
+  dir: __ghdl_dir_type;
+END RECORD;
+
+TYPE std__standard__UNIVERSAL_REAL__BT__TRPTR IS ACCESS 
+  std__standard__UNIVERSAL_REAL__BT__TRT;
+
+EXTERNAL CONSTANT std__standard__UNIVERSAL_REAL__STR : 
+  std__standard__UNIVERSAL_REAL__BT__TRT;
+
+TYPE std__standard__integer__BT IS SIGNED (32);
+
+TYPE std__standard__integer__BT__PTR IS ACCESS std__standard__integer__BT;
+
+TYPE std__standard__integer__BT__TRT IS RECORD
+  left: std__standard__integer__BT;
+  right: std__standard__integer__BT;
+  dir: __ghdl_dir_type;
+  length: __ghdl_index_type;
+END RECORD;
+
+TYPE std__standard__integer__BT__TRPTR IS ACCESS 
+  std__standard__integer__BT__TRT;
+
+EXTERNAL CONSTANT std__standard__integer__STR : std__standard__integer__BT__TRT
+  ;
+
+TYPE std__standard__real__BT IS FLOAT;
+
+TYPE std__standard__real__BT__PTR IS ACCESS std__standard__real__BT;
+
+TYPE std__standard__real__BT__TRT IS RECORD
+  left: std__standard__real__BT;
+  right: std__standard__real__BT;
+  dir: __ghdl_dir_type;
+END RECORD;
+
+TYPE std__standard__real__BT__TRPTR IS ACCESS std__standard__real__BT__TRT;
+
+EXTERNAL CONSTANT std__standard__real__STR : std__standard__real__BT__TRT;
+
+TYPE std__standard__time__BT IS SIGNED (64);
+
+TYPE std__standard__time__BT__PTR IS ACCESS std__standard__time__BT;
+
+TYPE std__standard__time__BT__TRT IS RECORD
+  left: std__standard__time__BT;
+  right: std__standard__time__BT;
+  dir: __ghdl_dir_type;
+END RECORD;
+
+TYPE std__standard__time__BT__TRPTR IS ACCESS std__standard__time__BT__TRT;
+
+EXTERNAL CONSTANT std__standard__time__STR : std__standard__time__BT__TRT;
+
+EXTERNAL CONSTANT std__standard__delay_length__STR : 
+  std__standard__time__BT__TRT;
+
+EXTERNAL CONSTANT std__standard__natural__STR : std__standard__integer__BT__TRT
+  ;
+
+EXTERNAL CONSTANT std__standard__positive__STR : 
+  std__standard__integer__BT__TRT;
+
+TYPE std__standard__string__BASE IS ARRAY [__ghdl_index_type] OF 
+  std__standard__character;
+
+TYPE std__standard__string__BASEP IS ACCESS std__standard__string__BASE;
+
+TYPE std__standard__string__SIGBASE IS ARRAY [__ghdl_index_type] OF 
+  __ghdl_signal_ptr;
+
+TYPE std__standard__string__SIGBASEP IS ACCESS std__standard__string__SIGBASE;
+
+TYPE std__standard__string__BOUND IS RECORD
+  dim_1: std__standard__integer__BT__TRT;
+END RECORD;
+
+TYPE std__standard__string__BOUNDP IS ACCESS std__standard__string__BOUND;
+
+TYPE std__standard__string IS RECORD
+  BASE: std__standard__string__BASEP;
+  BOUNDS: std__standard__string__BOUNDP;
+END RECORD;
+
+TYPE std__standard__string__PTR IS ACCESS std__standard__string;
+
+--F /Users/gingold/devel/ghdl/testsuite/gna/issue1980/OsvvmLibraries/osvvm/AlertLogPkg.vhd
+
+-- package body alertlogpkg
+
+
+TYPE osvvm__alertlogpkg__alertlogstructptype IS RECORD;
+
+TYPE osvvm__alertlogpkg__alertlogstructptype__PTR IS ACCESS 
+  osvvm__alertlogpkg__alertlogstructptype;
+
+
+TYPE 
+  osvvm__alertlogpkg__alertlogstructptype__alertlogstructptype__setjustify__PARAMSTYPE
+   IS RECORD
+  alertlogid: std__standard__integer__BT;
+  STATE: __ghdl_index_type;
+  FRAME: __ghdl_ptr;
+END RECORD;
+
+TYPE 
+  osvvm__alertlogpkg__alertlogstructptype__alertlogstructptype__setjustify__PARAMSPTR
+   IS ACCESS 
+  osvvm__alertlogpkg__alertlogstructptype__alertlogstructptype__setjustify__PARAMSTYPE
+  ;
+
+PRIVATE PROCEDURE osvvm__alertlogpkg__alertlogstructptype__calcjustify (
+  OBJ: osvvm__alertlogpkg__alertlogstructptype__PTR;
+  alertlogid: std__standard__integer__BT;
+  currentlength: std__standard__integer__BT;
+  indentamount: std__standard__integer__BT;
+  idseparatorlength: std__standard__integer__BT)
+DECLARE
+BEGIN
+END;
+
+
+TYPE osvvm__alertlogpkg__alertlogstructptype__setjustify___FRAMETYPE IS RECORD
+  OBJ: osvvm__alertlogpkg__alertlogstructptype__PTR;
+  PARAMS: 
+    osvvm__alertlogpkg__alertlogstructptype__alertlogstructptype__setjustify__PARAMSPTR
+    ;
+  separator: std__standard__string;
+END RECORD;
+
+TYPE osvvm__alertlogpkg__alertlogstructptype__setjustify___FRAMEPTR IS ACCESS 
+  osvvm__alertlogpkg__alertlogstructptype__setjustify___FRAMETYPE;
+
+PRIVATE PROCEDURE osvvm__alertlogpkg__alertlogstructptype__setjustify (
+  PARAMS: 
+    osvvm__alertlogpkg__alertlogstructptype__alertlogstructptype__setjustify__PARAMSPTR
+    ;
+  OBJ: osvvm__alertlogpkg__alertlogstructptype__PTR)
+DECLARE
+  LOCAL VAR FRAMEPTR : 
+    osvvm__alertlogpkg__alertlogstructptype__setjustify___FRAMEPTR;
+BEGIN
+  --# 1172
+  FRAMEPTR := osvvm__alertlogpkg__alertlogstructptype__setjustify___FRAMEPTR
+    'conv# (PARAMS.ALL.FRAME);
+  PARAMS.ALL.FRAME := __ghdl_ptr'conv# (FRAMEPTR);
+  FRAMEPTR.ALL.OBJ := OBJ;
+  FRAMEPTR.ALL.PARAMS := PARAMS;
+  --# 1180
+  osvvm__alertlogpkg__alertlogstructptype__calcjustify (
+    osvvm__alertlogpkg__alertlogstructptype__PTR'address (OBJ.ALL), 
+    PARAMS.ALL.alertlogid, 0, 0, std__standard__integer__BT'conv# (
+    FRAMEPTR.ALL.separator.BOUNDS.ALL.dim_1.length));
+END;
+
+PUBLIC FUNCTION main (a : __ghdl_index_type) RETURN __ghdl_index_type
+DECLARE
+BEGIN
+  RETURN a;
+END;
