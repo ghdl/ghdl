@@ -1131,14 +1131,19 @@ package body Vhdl.Sem_Types is
                  (Def, Get_Incomplete_Type_Ref_Chain (D_Type));
                Set_Incomplete_Type_Ref_Chain (D_Type, Def);
             when Iir_Kind_File_Type_Definition =>
-               --  LRM 3.3
-               --  The designated type must not be a file type.
-               Error_Msg_Sem (+Def, "designated type must not be a file type");
+               if Vhdl_Std < Vhdl_19 then
+                  --  LRM 3.3
+                  --  The designated type must not be a file type.
+                  Error_Msg_Sem
+                     (+Def, "designated type must not be a file type");
+               end if;
             when Iir_Kind_Protected_Type_Declaration =>
-               --  LRM02 3.3
-               --  [..] or a protected type.
-               Error_Msg_Sem
-                 (+Def, "designated type must not be a protected type");
+               if Vhdl_Std < Vhdl_19 then
+                  --  LRM02 3.3
+                  --  [..] or a protected type.
+                  Error_Msg_Sem
+                    (+Def, "designated type must not be a protected type");
+               end if;
             when others =>
                null;
          end case;
