@@ -627,7 +627,9 @@ package body Vhdl.Sem_Types is
                   --  return type of the function must not be of an access type
                   --  or file type; moreover, it must not have a subelement
                   --  that is an access type of a file type.
-                  if Get_Kind (El) = Iir_Kind_Function_Declaration then
+                  if Vhdl_Std < Vhdl_19
+                     and then Get_Kind (El) = Iir_Kind_Function_Declaration
+                  then
                      Inter_Type := Get_Return_Type (El);
                      if Inter_Type /= Null_Iir
                        and then Get_Signal_Type_Flag (Inter_Type) = False
