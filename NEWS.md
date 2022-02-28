@@ -1,4 +1,8 @@
-**2.0-dev** (XXXX-XX-XX)
+**3.0-dev** (XXXX-XX-XX)
+
+**2.0** (2022-02-28)
+
+- Improvements to VHDL 2008 supports and synthesis.
 
 **1.0** (2021-02-02)
 
