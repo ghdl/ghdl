@@ -42,7 +42,7 @@ At the same time, like a design written in another `HDL`, a set of VHDL sources 
 :dfn:`synthesis tool` into a netlist, that is, a detailed gate-level implementation.
 
 The development of VHDL started in 1983 and the standard is named `IEEE <https://www.ieee.org/>`__ `1076`.
-Six revisions exist:
+Five revisions exist:
 `1987 <http://ieeexplore.ieee.org/document/26487/>`__,
 `1993 <http://ieeexplore.ieee.org/document/392561/>`__,
 `2002 <http://ieeexplore.ieee.org/document/1003477/>`__,
