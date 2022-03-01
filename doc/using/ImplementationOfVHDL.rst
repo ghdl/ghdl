@@ -183,7 +183,7 @@ GHDL understands embedded PSL annotations in VHDL files:
        ghdl -e vhdl_design
 
 PSL annotations (VHDL-2008 and later)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Since VHDL-2008 PSL is integrated in the VHDL language. You can use
 PSL in a VHDL(-2008) design without embedding it in comments.
@@ -205,7 +205,7 @@ PSL in a VHDL(-2008) design without embedding it in comments.
        ghdl -e --std=08 vhdl_design
 
 PSL vunit files (VHDL-2008 and later, synthesis only)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 GHDL supports vunit (Verification Unit) files.
 
