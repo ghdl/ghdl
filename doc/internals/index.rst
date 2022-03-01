@@ -9,7 +9,7 @@ Overview
 
    Architecture overview of the GHDL toolkit (CLI, libghdl, pyGHDL and ghdl-yosys-plugin).
 
-`GHDL` is architectured like a traditionnal compiler. It has:
+`GHDL` is architectured like a traditional compiler. It has:
 
 * a driver (sources in :ghdlsrc:`src/ghdldrv <ghdldrv>`) to call the programs (compiler, assembler, linker) if needed.
 
