@@ -5,7 +5,7 @@ Run Time Information (RTI)
 .. WARNING::
    This section was written while trying to understand how the RTI is
    organized. It almost certainly contains errors, and it likely
-   won't be updated with the codebase, so don't belive any of the
+   won't be updated with the codebase, so don't believe any of the
    information here. Nevertheless, it may be helpful for a developer new
    to GHDL trying to understand the organization of the RTI.
 
@@ -29,7 +29,7 @@ Context
  The context of a node is the position in the elaborated design. For
  example a architecture might be instantiated 4 times in a design, but
  will have a single RTI node. The data related to that node but
- specfic to particular instantiation has an address in memory. A
+ specific to particular instantiation has an address in memory. A
  context object (`Rti_Context`) bundles an RTI node with an address for
  it's instantiation data.  If this RTI node references another RTI node we
  can find the relevant instantiation data for that node by considering the
@@ -154,7 +154,7 @@ Child \: Ghdl_Rti_Access
 
 Size \: Ghdl_Index_Type
 
- The amount of memory requrired for the context of their child.
+ The amount of memory required for the context of their child.
 
 The Child element is a generate body. There is only a single RTI-node
 structure which Child points to, however a different context is used
@@ -235,7 +235,7 @@ Indexes \: Ghdl_Rti_Arr_Acc
 
 Functions acting on types don't seem to use context in the same way.
 The functions are often pass the RTI object, a context (of a object
-higher in the hierarcy, and a pointer to a local context (often called
+higher in the hierarchy, and a pointer to a local context (often called
 layout)).
 
 The context of an Array Type has a defined structure which is `Ghdl_Uc_Array`.
@@ -330,7 +330,7 @@ Nbrel \: Ghdl_Index_Type
 
 Elements \: Ghdl_Rti_Arr_Acc;
 
- The RTI nodes of the element defintions.
+ The RTI nodes of the element definitions.
 
 Layout \: Ghdl_Rti_Loc
 

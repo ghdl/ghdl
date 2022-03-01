@@ -230,7 +230,7 @@ See also :option:`--elab-order`, for retrieving the compilation order guessed re
 Elab-order [``--elab-order``]
 -----------------------------
 
-.. option:: --elab-order <[options...] [libray.]top_unit [arch]>
+.. option:: --elab-order <[options...] [library.]top_unit [arch]>
 
 Print the list of sources required for elaborating a unit, in order
 for them to be analyzed without dependency issues.  This is expected
@@ -313,7 +313,7 @@ Generate a Makefile containing only dependencies to build a design unit.
 
 This command works like the make and gen-makefile commands (see :option:`-m`), but instead of a full makefile only
 dependencies without rules are generated on the standard output.
-Theses rules can then be integrated in another Makefile.
+These rules can then be integrated in another Makefile.
 
 .. _GHDL:options:
 
