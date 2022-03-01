@@ -11,7 +11,7 @@ GetMinGWLibraries() {
   done
 }
 
-for dep in $(GetMinGWLibraries "lib/libghdl-2_0_0_dev.dll"); do
+for dep in $(GetMinGWLibraries "lib/libghdl-3_0_0_dev.dll"); do
   echo "$dep"
   cp "$dep" ./
 done
