@@ -742,6 +742,14 @@ package body Elab.Vhdl_Expr is
                Res := Res.Rec.E (Idx + 1).Typ;
                return Res;
             end;
+         when Iir_Kind_Indexed_Name =>
+            declare
+               Pfx : constant Node := Get_Prefix (Name);
+               Res : Type_Acc;
+            begin
+               Res := Exec_Name_Subtype (Syn_Inst, Pfx);
+               return Res.Arr_El;
+            end;
          when Iir_Kind_Enumeration_Literal
             | Iir_Kind_Unit_Declaration =>
             return Get_Subtype_Object (Syn_Inst, Get_Type (Name));
