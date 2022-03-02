@@ -501,23 +501,31 @@ package body Synth.Vhdl_Oper is
       function Synth_Compare_Array (Id : Compare_Module_Id;
                                     Res_Type : Type_Acc) return Valtyp
       is
-         N : Net;
+         Ln, Rn, N : Net;
       begin
          if Left.Typ.Kind = Type_Vector then
+            Ln := Get_Net (Ctxt, Left);
+            Rn := Get_Net (Ctxt, Right);
             Warning_Msg_Synth
               (+Expr, "comparing non-numeric vector is unexpected");
             if Left.Typ.W = Right.Typ.W then
-               N := Build2_Compare
-                 (Ctxt, Id, Get_Net (Ctxt, Left), Get_Net (Ctxt, Right));
-               Set_Location (N, Expr);
-               return Create_Value_Net (N, Res_Type);
+               N := Build2_Compare (Ctxt, Id, Ln, Rn);
             elsif Left.Typ.W < Right.Typ.W then
-               --  TODO: truncate right, compare using id_eq.
-               raise Internal_Error;
+               --  Truncate right.
+               Rn := Build_Extract
+                 (Ctxt, Rn, Right.Typ.W - Left.Typ.W, Left.Typ.W);
+               --  Because it has been truncated, it cannot be equal.
+               if Id = Id_Ule then
+                  N := Build2_Compare (Ctxt, Id_Ult, Ln, Rn);
+               else
+                  raise Internal_Error;
+               end if;
             else
                --  TODO: truncate left, compare using id.
                raise Internal_Error;
             end if;
+            Set_Location (N, Expr);
+            return Create_Value_Net (N, Res_Type);
          else
             raise Internal_Error;
          end if;
@@ -972,6 +980,8 @@ package body Synth.Vhdl_Oper is
             return Synth_Compare_Array (Id_Uge, Boolean_Type);
          when Iir_Predefined_Array_Less =>
             return Synth_Compare_Array (Id_Ult, Boolean_Type);
+         when Iir_Predefined_Array_Less_Equal =>
+            return Synth_Compare_Array (Id_Ule, Boolean_Type);
 
          when Iir_Predefined_Array_Element_Concat =>
             declare

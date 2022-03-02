@@ -115,6 +115,8 @@ package Netlists.Builders is
    function Build_Extend
      (Ctxt : Context_Acc; Id : Module_Id; I : Net; W : Width) return Net;
 
+   --  Note: OFF is the offset, 0 is LSB.
+
    function Build_Extract
      (Ctxt : Context_Acc; I : Net; Off, W : Width) return Net;
 
