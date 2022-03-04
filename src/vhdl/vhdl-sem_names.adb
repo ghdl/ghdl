@@ -2568,7 +2568,8 @@ package body Vhdl.Sem_Names is
            | Iir_Kind_Slice_Name
            | Iir_Kind_Procedure_Call_Statement
            | Iir_Kind_Attribute_Declaration
-           | Iir_Kind_Type_Conversion =>
+           | Iir_Kind_Type_Conversion
+           | Iir_Kind_Element_Attribute =>
             if not Soft then
                Error_Msg_Sem
                  (+Prefix_Loc, "%n cannot be selected by name", +Prefix);
