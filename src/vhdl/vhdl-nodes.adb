@@ -3711,6 +3711,22 @@ package body Vhdl.Nodes is
       Set_Field3 (Target, Name_Id_To_Iir (Label));
    end Set_Label;
 
+   function Get_Return_Identifier (Target : Iir) return Iir is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Return_Identifier (Get_Kind (Target)),
+                     "no field Return_Identifier");
+      return Get_Field11 (Target);
+   end Get_Return_Identifier;
+
+   procedure Set_Return_Identifier (Target : Iir; Decl : Iir) is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Return_Identifier (Get_Kind (Target)),
+                     "no field Return_Identifier");
+      Set_Field11 (Target, Decl);
+   end Set_Return_Identifier;
+
    function Get_Visible_Flag (Target : Iir) return Boolean is
    begin
       pragma Assert (Target /= Null_Iir);

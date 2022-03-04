@@ -205,6 +205,7 @@ package Vhdl.Nodes_Meta is
       Field_Primary_Unit,
       Field_Identifier,
       Field_Label,
+      Field_Return_Identifier,
       Field_Visible_Flag,
       Field_Range_Constraint,
       Field_Direction,
@@ -791,6 +792,7 @@ package Vhdl.Nodes_Meta is
    function Has_Primary_Unit (K : Iir_Kind) return Boolean;
    function Has_Identifier (K : Iir_Kind) return Boolean;
    function Has_Label (K : Iir_Kind) return Boolean;
+   function Has_Return_Identifier (K : Iir_Kind) return Boolean;
    function Has_Visible_Flag (K : Iir_Kind) return Boolean;
    function Has_Range_Constraint (K : Iir_Kind) return Boolean;
    function Has_Direction (K : Iir_Kind) return Boolean;

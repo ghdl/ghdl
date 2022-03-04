@@ -2100,6 +2100,8 @@ package body Vhdl.Parse is
    is
       Old : Iir;
       pragma Unreferenced (Old);
+      Tm : Iir;
+      Ret : Iir;
       Inters : Iir;
    begin
       if Current_Token = Tok_Parameter then
@@ -2141,8 +2143,27 @@ package body Vhdl.Parse is
             --  Skip 'return'
             Scan;
 
-            Set_Return_Type_Mark
-              (Subprg, Parse_Type_Mark (Check_Paren => True));
+            Tm := Parse_Type_Mark (Check_Paren => True);
+
+            if Current_Token = Tok_Of then
+               if Vhdl_Std < Vhdl_19 then
+                  Error_Msg_Parse
+                    ("return identifier not allowed before vhdl 2019");
+               end if;
+               pragma Assert (Get_Kind (Tm) = Iir_Kind_Simple_Name);
+               Ret := Create_Iir (Iir_Kind_Subtype_Declaration);
+               Location_Copy (Ret, Tm);
+               Set_Identifier (Ret, Get_Identifier (Tm));
+               Set_Return_Identifier (Subprg, Ret);
+               Free_Iir (Tm);
+
+               --  Skip 'of'
+               Scan;
+
+               Tm := Parse_Type_Mark (Check_Paren => True);
+            end if;
+
+            Set_Return_Type_Mark (Subprg, Tm);
          end if;
       else
          if Is_Func and Required then
@@ -8297,6 +8318,12 @@ package body Vhdl.Parse is
    --      PROCEDURE designator [ ( formal_parameter_list ) ]
    --    | [ PURE | IMPURE ] FUNCTION designator [ ( formal_parameter_list ) ]
    --          RETURN type_mark
+   --
+   --  [ LRM19 4.2 Subprogram declarations ]
+   --  function_specification ::=
+   --    [ PURE | IMPURE ] FUNCTION designator
+   --      subprogram_header [ [ PARAMETER ] ( formal_parameter_list) ]
+   --      RETURN [ return_identifier OF ] type_mark
    --
    --  [ LRM93 2.2 ]
    --  subprogram_body ::=

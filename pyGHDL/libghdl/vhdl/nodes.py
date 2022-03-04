@@ -3712,6 +3712,19 @@ def Set_Label(obj: Iir, value: NameId) -> None:
 
 
 @export
+@BindToLibGHDL("vhdl__nodes__get_return_identifier")
+def Get_Return_Identifier(obj: Iir) -> Iir:
+    """"""
+    return 0
+
+
+@export
+@BindToLibGHDL("vhdl__nodes__set_return_identifier")
+def Set_Return_Identifier(obj: Iir, value: Iir) -> None:
+    """"""
+
+
+@export
 @BindToLibGHDL("vhdl__nodes__get_visible_flag")
 def Get_Visible_Flag(obj: Iir) -> Boolean:
     """"""

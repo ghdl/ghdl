@@ -1606,6 +1606,8 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Subprogram_Depth (Field10)
    --
+   --   Get/Set_Return_Identifier (Field11)
+   --
    --   Get/Set_Overload_Number (Field12)
    --
    --   Get/Set_Seen_Flag (Flag1)
@@ -8182,6 +8184,11 @@ package Vhdl.Nodes is
    --  Field: Field3 (uc)
    function Get_Label (Target : Iir) return Name_Id;
    procedure Set_Label (Target : Iir; Label : Name_Id);
+
+   --  Return a subtype declaration for the return subtype (vhdl-19)
+   --  Field: Field11
+   function Get_Return_Identifier (Target : Iir) return Iir;
+   procedure Set_Return_Identifier (Target : Iir; Decl : Iir);
 
    --  Get/Set the visible flag of a declaration.
    --  The visible flag is true to make invalid the use of the identifier
