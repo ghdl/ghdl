@@ -720,12 +720,17 @@ package body Grt.Signals is
          Insert_Future_List (Sign);
       end if;
 
-      Assign_Time := Current_Time + After;
-      if Assign_Time < 0 then
-         --  Beyond the future
-         Free_In (Trans);
-         return;
-      end if;
+      declare
+         --  We don't want an overflow check, it's done manually.
+         pragma Suppress (Overflow_Check);
+      begin
+         Assign_Time := Current_Time + After;
+         if Assign_Time < 0 then
+            --  Beyond the future
+            Free_In (Trans);
+            return;
+         end if;
+      end;
 
       --  Handle sign as direct driver.
       if Driver.Last_Trans.Kind = Trans_Direct then
