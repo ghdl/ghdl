@@ -27,7 +27,6 @@ prefix=@prefix@
 backend=@backend@
 libdirsuffix=@libdirsuffix@
 libghdldirsuffix=@libghdldirsuffix@
-libdirreverse=@libdirreverse@
 incdirsuffix=@incdirsuffix@
 EXEEXT=@EXEEXT@
 SOEXT=@SOEXT@
