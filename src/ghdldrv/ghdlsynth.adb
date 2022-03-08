@@ -581,7 +581,8 @@ package body Ghdlsynth is
          Ghdllocal.Set_Exec_Prefix_From_Program_Name;
       end if;
 
-      return Ghdllocal.Exec_Prefix.all & Directory_Separator & "lib"
+      return Ghdllocal.Exec_Prefix.all & Directory_Separator
+        & Default_Paths.LibDir_Suffix
         & Directory_Separator & Get_Libghdl_Name;
    end Get_Libghdl_Path;
 
@@ -590,9 +591,8 @@ package body Ghdlsynth is
       --  Compute install path
       Ghdllocal.Set_Exec_Prefix_From_Program_Name;
 
-      return Ghdllocal.Exec_Prefix.all
-        & Directory_Separator & "include"
-        & Directory_Separator & "ghdl";
+      return Ghdllocal.Exec_Prefix.all & Directory_Separator
+        & Default_Paths.IncDir_Suffix;
    end Get_Libghdl_Include_Dir;
 
    procedure Register_Commands is

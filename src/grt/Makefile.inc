@@ -123,14 +123,14 @@ GRT_PRAGMA_FLAG=-gnatec$(GRTSRCDIR)/grt.adc -gnatdY
 # Rule to compile an Ada file.
 GRT_ADACOMPILE=$(GNATMAKE) -u -c $(GRT_FLAGS) $(GRT_PRAGMA_FLAG)
 
-grt-all: $(libdirsuffix)/libgrt.a \
-  $(libdirsuffix)/$(GRT_LIBBACKTRACE) \
-  $(libdirsuffix)/grt.lst \
-  $(libdirsuffix)/grt-exec.lst \
-  $(libdirsuffix)/grt-shared.lst \
-  $(libdirsuffix)/grt.ver
+grt-all: $(libghdldirsuffix)/libgrt.a \
+  $(libghdldirsuffix)/$(GRT_LIBBACKTRACE) \
+  $(libghdldirsuffix)/grt.lst \
+  $(libghdldirsuffix)/grt-exec.lst \
+  $(libghdldirsuffix)/grt-shared.lst \
+  $(libghdldirsuffix)/grt.ver
 
-$(libdirsuffix)/libgrt.a: $(GRT_ADD_OBJS) grt/run-bind.o grt/main.o grt/grt-files
+$(libghdldirsuffix)/libgrt.a: $(GRT_ADD_OBJS) grt/run-bind.o grt/main.o grt/grt-files
 	$(RM) -f $@
 	$(AR) rcv $@ `sed -e "/^-/d" -e "s!^!grt/!" < grt/grt-files` \
 	 $(GRT_ADD_OBJS) grt/run-bind.o grt/main.o
@@ -260,7 +260,7 @@ grt/grt-files.in: grt/grt-files
 	sed -e "\!^.[/\\]!d" -e "/-shared/d" -e "/-static/d" -e "/-lgnat/d" \
 	  -e "\X-L/Xd" < $< > $@
 
-$(libdirsuffix)/grt.lst: grt/grt-files.in
+$(libghdldirsuffix)/grt.lst: grt/grt-files.in
 	echo "@/libgrt.a" > $@
 	for i in $(GRT_EXTRA_LIB); do echo $$i >> $@; done
 ifneq ($(LIBBACKTRACE),)
@@ -268,19 +268,19 @@ ifneq ($(LIBBACKTRACE),)
 endif
 	cat $< >> $@
 
-$(libdirsuffix)/grt-exec.lst:
+$(libghdldirsuffix)/grt-exec.lst:
 	echo "# link options for executables" > $@
 	for i in $(GRT_EXEC_OPTS); do echo $$i >> $@; done
 
-$(libdirsuffix)/grt-shared.lst:
+$(libghdldirsuffix)/grt-shared.lst:
 	echo "# link options for shared libraries" > $@
 	for i in $(GRT_SHARED_OPTS); do echo $$i >> $@; done
 
-$(libdirsuffix)/grt.ver: $(GRTSRCDIR)/grt.ver
+$(libghdldirsuffix)/grt.ver: $(GRTSRCDIR)/grt.ver
 	cp $< $@
 
 ifneq ($(GRT_LIBBACKTRACE),)
-$(libdirsuffix)/$(GRT_LIBBACKTRACE): $(LIBBACKTRACE)
+$(libghdldirsuffix)/$(GRT_LIBBACKTRACE): $(LIBBACKTRACE)
 	cp $< $@
 endif
 

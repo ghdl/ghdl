@@ -417,13 +417,13 @@ package body Ghdllocal is
       end if;
       --  Else try default path.
       if Lib_Prefix_Path = null then
-         if Is_Absolute_Path (Default_Paths.Lib_Prefix) then
-            Lib_Prefix_Path := new String'(Default_Paths.Lib_Prefix);
+         if Is_Absolute_Path (Default_Paths.LibGhdlDir_Suffix) then
+            Lib_Prefix_Path := new String'(Default_Paths.LibGhdlDir_Suffix);
          else
             if Exec_Prefix /= null then
                Lib_Prefix_Path := new
                  String'(Exec_Prefix.all & Directory_Separator
-                           & Default_Paths.Lib_Prefix);
+                           & Default_Paths.LibGhdlDir_Suffix);
             end if;
             if Lib_Prefix_Path = null
               or else not Is_Directory (Lib_Prefix_Path.all)
@@ -432,7 +432,7 @@ package body Ghdllocal is
                Lib_Prefix_Path := new
                  String'(Default_Paths.Install_Prefix
                            & Directory_Separator
-                           & Default_Paths.Lib_Prefix);
+                           & Default_Paths.LibGhdlDir_Suffix);
             end if;
          end if;
       else
