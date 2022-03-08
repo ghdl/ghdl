@@ -162,6 +162,12 @@ package Elab.Vhdl_Context is
 
    procedure Set_Uninstantiated_Scope
      (Syn_Inst : Synth_Instance_Acc; Bod : Node);
+
+   --  For debugging purpose: update the caller of an instance.
+   procedure Set_Caller_Instance (Syn_Inst : Synth_Instance_Acc;
+                                  Caller : Synth_Instance_Acc);
+   function Get_Caller_Instance (Syn_Inst : Synth_Instance_Acc)
+                                return Synth_Instance_Acc;
 private
    type Obj_Kind is
      (
@@ -208,6 +214,10 @@ private
 
       --  Instance of the parent scope.
       Up_Block : Synth_Instance_Acc;
+
+      --  For a subprogram instance, the instance of the caller.
+      --  Used only fo debugging purpose.
+      Caller : Synth_Instance_Acc;
 
       --  Source construct corresponding to this instance.
       Source_Scope : Node;

@@ -2149,6 +2149,7 @@ package body Synth.Vhdl_Stmts is
 
       Up_Inst := Get_Instance_By_Scope (Syn_Inst, Get_Parent_Scope (Imp));
       Sub_Inst := Make_Elab_Instance (Up_Inst, Bod, Config => Null_Node);
+      Set_Caller_Instance (Sub_Inst, Syn_Inst);
       if Ctxt /= null then
          Set_Extra (Sub_Inst, Syn_Inst, New_Internal_Name (Ctxt));
       end if;

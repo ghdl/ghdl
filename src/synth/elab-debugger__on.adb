@@ -1293,4 +1293,32 @@ package body Elab.Debugger is
          Debug (Reason_Error);
       end if;
    end Debug_Error;
+
+   procedure Disp_A_Frame (Inst: Synth_Instance_Acc) is
+   begin
+      if Inst = Root_Instance then
+         Put_Line ("root instance");
+         return;
+      end if;
+
+      Put (Vhdl.Errors.Disp_Node (Get_Source_Scope (Inst)));
+--      if Inst.Stmt /= Null_Iir then
+--         Put (" at ");
+--         Put (Files_Map.Image (Get_Location (Inst.Stmt)));
+--      end if;
+      New_Line;
+   end Disp_A_Frame;
+
+   procedure Debug_Bt (Instance : Synth_Instance_Acc)
+   is
+      Inst : Synth_Instance_Acc;
+   begin
+      Inst := Instance;
+      while Inst /= null loop
+         Disp_A_Frame (Inst);
+         Inst := Get_Caller_Instance (Inst);
+      end loop;
+   end Debug_Bt;
+   pragma Unreferenced (Debug_Bt);
+
 end Elab.Debugger;

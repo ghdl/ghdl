@@ -53,6 +53,7 @@ package body Elab.Vhdl_Context is
                                  Up_Block => null,
                                  Uninst_Scope => null,
                                  Source_Scope => Null_Node,
+                                 Caller       => null,
                                  Config       => Null_Node,
                                  Foreign      => 0,
                                  Extra_Units  => null,
@@ -100,6 +101,7 @@ package body Elab.Vhdl_Context is
                                       Up_Block => Parent,
                                       Uninst_Scope => null,
                                       Source_Scope => Blk,
+                                      Caller       => null,
                                       Config       => Config,
                                       Foreign      => 0,
                                       Extra_Units  => null,
@@ -140,6 +142,7 @@ package body Elab.Vhdl_Context is
                                       Up_Block => Parent,
                                       Uninst_Scope => null,
                                       Source_Scope => Blk,
+                                      Caller       => null,
                                       Config       => Config,
                                       Foreign      => 0,
                                       Extra_Units  => null,
@@ -533,4 +536,18 @@ package body Elab.Vhdl_Context is
       Obj_Inst := Get_Instance_By_Scope (Syn_Inst, Info.Obj_Scope);
       return Obj_Inst.Objects (Info.Slot).T_Typ;
    end Get_Subtype_Object;
+
+   procedure Set_Caller_Instance (Syn_Inst : Synth_Instance_Acc;
+                                  Caller : Synth_Instance_Acc) is
+   begin
+      pragma Assert (Syn_Inst.Caller = null);
+      Syn_Inst.Caller := Caller;
+   end Set_Caller_Instance;
+
+   function Get_Caller_Instance (Syn_Inst : Synth_Instance_Acc)
+                                return Synth_Instance_Acc is
+   begin
+      return Syn_Inst.Caller;
+   end Get_Caller_Instance;
+
 end Elab.Vhdl_Context;
