@@ -16,6 +16,7 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
+with Types; use Types;
 with Name_Table;
 with Std_Names;
 with Str_Table;
@@ -35,42 +36,12 @@ with Elab.Debugger;
 with Synth.Vhdl_Stmts; use Synth.Vhdl_Stmts;
 with Synth.Vhdl_Oper; use Synth.Vhdl_Oper;
 with Synth.Vhdl_Aggr;
+with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
 
 with Grt.Types;
 with Grt.To_Strings;
 
 package body Elab.Vhdl_Expr is
-   function Get_Value_Memtyp (V : Valtyp) return Memtyp is
-   begin
-      case V.Val.Kind is
-         when Value_Memory =>
-            return (V.Typ, V.Val.Mem);
-         when Value_Const =>
-            return Get_Memtyp (V);
-         when Value_Alias =>
-            declare
-               Res : Memtyp;
-            begin
-               Res := Get_Value_Memtyp ((V.Val.A_Typ, V.Val.A_Obj));
-               return (V.Typ, Res.Mem + V.Val.A_Off.Mem_Off);
-            end;
-         when others =>
-            raise Internal_Error;
-      end case;
-   end Get_Value_Memtyp;
-
-   function Get_Static_Discrete (V : Valtyp) return Int64 is
-   begin
-      case V.Val.Kind is
-         when Value_Memory =>
-            return Read_Discrete (V);
-         when Value_Const =>
-            return Read_Discrete (Get_Memtyp (V));
-         when others =>
-            raise Internal_Error;
-      end case;
-   end Get_Static_Discrete;
-
    function Synth_Array_Bounds (Syn_Inst : Synth_Instance_Acc;
                                 Atype : Node;
                                 Dim : Dim_Type) return Bound_Type
@@ -464,6 +435,11 @@ package body Elab.Vhdl_Expr is
       return Res;
    end Index_To_Offset;
 
+   procedure Check_Matching_Bounds (L, R : Type_Acc; Loc : Node) is
+   begin
+      null;
+   end Check_Matching_Bounds;
+
    --  Return the bounds of a one dimensional array/vector type and the
    --  width of the element.
    procedure Get_Onedimensional_Array_Bounds
@@ -482,26 +458,30 @@ package body Elab.Vhdl_Expr is
    end Get_Onedimensional_Array_Bounds;
 
    function Create_Onedimensional_Array_Subtype
-     (Btyp : Type_Acc; Bnd : Bound_Type) return Type_Acc
+     (Btyp : Type_Acc; Bnd : Bound_Type; El_Typ : Type_Acc) return Type_Acc
    is
       Res : Type_Acc;
       Bnds : Bound_Array_Acc;
    begin
       case Btyp.Kind is
          when Type_Vector =>
+            pragma Assert (El_Typ.Kind in Type_Nets);
             Res := Create_Vector_Type (Bnd, Btyp.Vec_El);
          when Type_Unbounded_Vector =>
+            pragma Assert (El_Typ.Kind in Type_Nets);
             Res := Create_Vector_Type (Bnd, Btyp.Uvec_El);
          when Type_Array =>
             pragma Assert (Btyp.Abounds.Ndim = 1);
+            pragma Assert (Is_Bounded_Type (Btyp.Arr_El));
             Bnds := Create_Bound_Array (1);
             Bnds.D (1) := Bnd;
             Res := Create_Array_Type (Bnds, Btyp.Arr_El);
          when Type_Unbounded_Array =>
             pragma Assert (Btyp.Uarr_Ndim = 1);
+            pragma Assert (Is_Bounded_Type (El_Typ));
             Bnds := Create_Bound_Array (1);
             Bnds.D (1) := Bnd;
-            Res := Create_Array_Type (Bnds, Btyp.Uarr_El);
+            Res := Create_Array_Type (Bnds, El_Typ);
          when others =>
             raise Internal_Error;
       end case;
@@ -846,7 +826,7 @@ package body Elab.Vhdl_Expr is
 
                --  Fixed slice.
                Dest_Typ := Create_Onedimensional_Array_Subtype
-                 (Dest_Typ, Res_Bnd);
+                 (Dest_Typ, Res_Bnd, El_Typ);
                Dest_Off.Net_Off := Dest_Off.Net_Off + Sl_Off.Net_Off;
                Dest_Off.Mem_Off := Dest_Off.Mem_Off + Sl_Off.Mem_Off;
             end;
@@ -881,7 +861,8 @@ package body Elab.Vhdl_Expr is
                Get_Onedimensional_Array_Bounds (Pfx_Typ, Pfx_Bnd, El_Typ);
                Exec_Slice_Suffix (Syn_Inst, Expr, Pfx_Bnd, El_Typ,
                                    Res_Bnd, Sl_Off);
-               return Create_Onedimensional_Array_Subtype (Pfx_Typ, Res_Bnd);
+               return Create_Onedimensional_Array_Subtype
+                 (Pfx_Typ, Res_Bnd, El_Typ);
             end;
          when Iir_Kind_Indexed_Name =>
             declare

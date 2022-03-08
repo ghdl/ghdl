@@ -34,6 +34,7 @@ with Netlists.Utils;
 
 with Elab.Memtype; use Elab.Memtype;
 with Elab.Vhdl_Types; use Elab.Vhdl_Types;
+with Elab.Vhdl_Expr; use Elab.Vhdl_Expr;
 
 with Synth.Errors; use Synth.Errors;
 with Synth.Vhdl_Stmts; use Synth.Vhdl_Stmts;
@@ -986,9 +987,12 @@ package body Synth.Vhdl_Oper is
          when Iir_Predefined_Array_Element_Concat =>
             declare
                L : constant Net := Get_Net (Ctxt, Left);
+               Le_Typ : constant Type_Acc := Get_Array_Element (Left.Typ);
                Bnd : Bound_Type;
+               Res_Typ : Type_Acc;
                N : Net;
             begin
+               Check_Matching_Bounds (Le_Typ, Right.Typ, Expr);
                N := Build2_Concat2 (Ctxt, L, Get_Net (Ctxt, Right));
                Set_Location (N, Expr);
                Bnd := Create_Bounds_From_Length
@@ -996,15 +1000,19 @@ package body Synth.Vhdl_Oper is
                   Get_Index_Type (Get_Type (Expr), 0),
                   Iir_Index32 (Get_Bound_Length (Left.Typ, 1) + 1));
 
-               return Create_Value_Net
-                 (N, Create_Onedimensional_Array_Subtype (Left_Typ, Bnd));
+               Res_Typ := Create_Onedimensional_Array_Subtype
+                 (Left_Typ, Bnd, Le_Typ);
+               return Create_Value_Net (N, Res_Typ);
             end;
          when Iir_Predefined_Element_Array_Concat =>
             declare
                R : constant Net := Get_Net (Ctxt, Right);
+               Re_Typ : constant Type_Acc := Get_Array_Element (Right.Typ);
                Bnd : Bound_Type;
+               Res_Typ : Type_Acc;
                N : Net;
             begin
+               Check_Matching_Bounds (Left.Typ, Re_Typ, Expr);
                N := Build2_Concat2 (Ctxt, Get_Net (Ctxt, Left), R);
                Set_Location (N, Expr);
                Bnd := Create_Bounds_From_Length
@@ -1012,29 +1020,37 @@ package body Synth.Vhdl_Oper is
                   Get_Index_Type (Get_Type (Expr), 0),
                   Iir_Index32 (Get_Bound_Length (Right.Typ, 1) + 1));
 
-               return Create_Value_Net
-                 (N, Create_Onedimensional_Array_Subtype (Right_Typ, Bnd));
+               Res_Typ := Create_Onedimensional_Array_Subtype
+                 (Right_Typ, Bnd, Re_Typ);
+               return Create_Value_Net (N, Res_Typ);
             end;
          when Iir_Predefined_Element_Element_Concat =>
             declare
                N : Net;
                Bnd : Bound_Type;
+               Res_Typ : Type_Acc;
             begin
+               Check_Matching_Bounds (Left.Typ, Right.Typ, Expr);
                N := Build2_Concat2
                  (Ctxt, Get_Net (Ctxt, Left), Get_Net (Ctxt, Right));
                Set_Location (N, Expr);
                Bnd := Create_Bounds_From_Length
                  (Syn_Inst, Get_Index_Type (Get_Type (Expr), 0), 2);
-               return Create_Value_Net
-                 (N, Create_Onedimensional_Array_Subtype (Expr_Typ, Bnd));
+               Res_Typ := Create_Onedimensional_Array_Subtype
+                 (Expr_Typ, Bnd, Left.Typ);
+               return Create_Value_Net (N, Res_Typ);
             end;
          when Iir_Predefined_Array_Array_Concat =>
             declare
+               Le_Typ : constant Type_Acc := Get_Array_Element (Left.Typ);
+               Re_Typ : constant Type_Acc := Get_Array_Element (Right.Typ);
                L : constant Net := Get_Net (Ctxt, Left);
                R : constant Net := Get_Net (Ctxt, Right);
                Bnd : Bound_Type;
+               Res_Typ : Type_Acc;
                N : Net;
             begin
+               Check_Matching_Bounds (Le_Typ, Re_Typ, Expr);
                N := Build2_Concat2 (Ctxt, L, R);
                Set_Location (N, Expr);
                Bnd := Create_Bounds_From_Length
@@ -1043,8 +1059,9 @@ package body Synth.Vhdl_Oper is
                   Iir_Index32 (Get_Bound_Length (Left.Typ, 1)
                                  + Get_Bound_Length (Right.Typ, 1)));
 
-               return Create_Value_Net
-                 (N, Create_Onedimensional_Array_Subtype (Expr_Typ, Bnd));
+               Res_Typ := Create_Onedimensional_Array_Subtype
+                 (Expr_Typ, Bnd, Le_Typ);
+               return Create_Value_Net (N, Res_Typ);
             end;
          when Iir_Predefined_Integer_Plus =>
             return Synth_Int_Dyadic (Id_Add);

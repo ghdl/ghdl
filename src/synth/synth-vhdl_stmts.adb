@@ -44,7 +44,7 @@ with PSL.NFAs;
 with Elab.Memtype; use Elab.Memtype;
 with Elab.Vhdl_Heap;
 with Elab.Vhdl_Types; use Elab.Vhdl_Types;
-with Elab.Vhdl_Expr;
+with Elab.Vhdl_Expr; use Elab.Vhdl_Expr;
 with Elab.Debugger;
 
 with Synth.Errors; use Synth.Errors;
@@ -219,7 +219,7 @@ package body Synth.Vhdl_Stmts is
                if Sl_Voff = No_Net then
                   --  Fixed slice.
                   Dest_Typ := Create_Onedimensional_Array_Subtype
-                    (Dest_Typ, Res_Bnd);
+                    (Dest_Typ, Res_Bnd, El_Typ);
                   Dest_Off.Net_Off := Dest_Off.Net_Off + Sl_Off.Net_Off;
                   Dest_Off.Mem_Off := Dest_Off.Mem_Off + Sl_Off.Mem_Off;
                else

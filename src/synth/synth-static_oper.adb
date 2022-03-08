@@ -27,6 +27,7 @@ with Vhdl.Ieee.Std_Logic_1164; use Vhdl.Ieee.Std_Logic_1164;
 with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 with Elab.Memtype; use Elab.Memtype;
 with Elab.Vhdl_Files;
+with Elab.Vhdl_Expr; use Elab.Vhdl_Expr;
 
 with Netlists; use Netlists;
 
@@ -297,14 +298,18 @@ package body Synth.Static_Oper is
                  Iir_Index32 (Get_Bound_Length (Left.Typ, 1));
                R_Len : constant Iir_Index32 :=
                  Iir_Index32 (Get_Bound_Length (Right.Typ, 1));
+               Le_Typ : constant Type_Acc := Get_Array_Element (Left.Typ);
+               Re_Typ : constant Type_Acc := Get_Array_Element (Right.Typ);
                Bnd : Bound_Type;
                Res_St : Type_Acc;
                Res : Memtyp;
             begin
+               Check_Matching_Bounds (Le_Typ, Re_Typ, Expr);
                Bnd := Synth.Vhdl_Oper.Create_Bounds_From_Length
                  (Syn_Inst, Get_Index_Type (Get_Type (Expr), 0),
                   L_Len + R_Len);
-               Res_St := Create_Onedimensional_Array_Subtype (Res_Typ, Bnd);
+               Res_St := Create_Onedimensional_Array_Subtype
+                 (Res_Typ, Bnd, Le_Typ);
                Res := Create_Memory (Res_St);
                if Left.Typ.Sz > 0 then
                   Copy_Memory (Res.Mem, Left.Mem, Left.Typ.Sz);
@@ -318,13 +323,16 @@ package body Synth.Static_Oper is
             declare
                Rlen : constant Iir_Index32 :=
                  Get_Array_Flat_Length (Right.Typ);
+               Re_Typ : constant Type_Acc := Get_Array_Element (Right.Typ);
                Bnd : Bound_Type;
                Res_St : Type_Acc;
                Res : Memtyp;
             begin
+               Check_Matching_Bounds (Left.Typ, Right.Typ, Expr);
                Bnd := Synth.Vhdl_Oper.Create_Bounds_From_Length
                  (Syn_Inst, Get_Index_Type (Get_Type (Expr), 0), 1 + Rlen);
-               Res_St := Create_Onedimensional_Array_Subtype (Res_Typ, Bnd);
+               Res_St := Create_Onedimensional_Array_Subtype
+                 (Res_Typ, Bnd, Re_Typ);
                Res := Create_Memory (Res_St);
                Copy_Memory (Res.Mem, Left.Mem, Left.Typ.Sz);
                Copy_Memory (Res.Mem + Left.Typ.Sz,
@@ -334,13 +342,16 @@ package body Synth.Static_Oper is
          when Iir_Predefined_Array_Element_Concat =>
             declare
                Llen : constant Iir_Index32 := Get_Array_Flat_Length (Left.Typ);
+               Le_Typ : constant Type_Acc := Get_Array_Element (Left.Typ);
                Bnd : Bound_Type;
                Res_St : Type_Acc;
                Res : Memtyp;
             begin
+               Check_Matching_Bounds (Le_Typ, Right.Typ, Expr);
                Bnd := Synth.Vhdl_Oper.Create_Bounds_From_Length
                  (Syn_Inst, Get_Index_Type (Get_Type (Expr), 0), Llen + 1);
-               Res_St := Create_Onedimensional_Array_Subtype (Res_Typ, Bnd);
+               Res_St := Create_Onedimensional_Array_Subtype
+                 (Res_Typ, Bnd, Le_Typ);
                Res := Create_Memory (Res_St);
                Copy_Memory (Res.Mem, Left.Mem, Left.Typ.Sz);
                Copy_Memory (Res.Mem + Left.Typ.Sz,

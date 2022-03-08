@@ -46,6 +46,7 @@ with Elab.Memtype; use Elab.Memtype;
 with Elab.Vhdl_Files;
 with Elab.Debugger;
 with Elab.Vhdl_Errors;
+with Elab.Vhdl_Expr; use Elab.Vhdl_Expr;
 
 with Synth.Vhdl_Environment; use Synth.Vhdl_Environment.Env;
 with Synth.Vhdl_Stmts; use Synth.Vhdl_Stmts;
@@ -667,7 +668,8 @@ package body Synth.Vhdl_Insts is
                   raise Internal_Error;
                end if;
                Off := Off + Sl_Off.Net_Off;
-               Typ := Create_Onedimensional_Array_Subtype (Typ, Res_Bnd);
+               Typ := Create_Onedimensional_Array_Subtype
+                 (Typ, Res_Bnd, El_Typ);
             end;
          when others =>
             Vhdl.Errors.Error_Kind ("synth_individual_prefix", Formal);

@@ -16,8 +16,6 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with Types; use Types;
-
 with Vhdl.Nodes; use Vhdl.Nodes;
 
 with Elab.Vhdl_Context; use Elab.Vhdl_Context;
@@ -25,12 +23,6 @@ with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
 with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 
 package Elab.Vhdl_Expr is
-   --  For a static value V, return the value.
-   function Get_Static_Discrete (V : Valtyp) return Int64;
-
-   --  Return the memory (as a memtyp) of static value V.
-   function Get_Value_Memtyp (V : Valtyp) return Memtyp;
-
    --  Return the bounds of a one dimensional array/vector type and the
    --  width of the element.
    procedure Get_Onedimensional_Array_Bounds
@@ -38,7 +30,9 @@ package Elab.Vhdl_Expr is
 
    --  Create an array subtype from bound BND.
    function Create_Onedimensional_Array_Subtype
-     (Btyp : Type_Acc; Bnd : Bound_Type) return Type_Acc;
+     (Btyp : Type_Acc; Bnd : Bound_Type; El_Typ : Type_Acc) return Type_Acc;
+
+   procedure Check_Matching_Bounds (L, R : Type_Acc; Loc : Node);
 
    --  Return the type of EXPR without evaluating it.
    function Exec_Type_Of_Object (Syn_Inst : Synth_Instance_Acc; Expr : Node)

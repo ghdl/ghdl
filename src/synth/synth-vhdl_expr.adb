@@ -957,50 +957,6 @@ package body Synth.Vhdl_Expr is
       return Off;
    end Dyn_Index_To_Offset;
 
-   --  Return the bounds of a one dimensional array/vector type and the
-   --  width of the element.
-   procedure Get_Onedimensional_Array_Bounds
-     (Typ : Type_Acc; Bnd : out Bound_Type; El_Typ : out Type_Acc) is
-   begin
-      case Typ.Kind is
-         when Type_Vector =>
-            El_Typ := Typ.Vec_El;
-            Bnd := Typ.Vbound;
-         when Type_Array =>
-            El_Typ := Typ.Arr_El;
-            Bnd := Typ.Abounds.D (1);
-         when others =>
-            raise Internal_Error;
-      end case;
-   end Get_Onedimensional_Array_Bounds;
-
-   function Create_Onedimensional_Array_Subtype
-     (Btyp : Type_Acc; Bnd : Bound_Type) return Type_Acc
-   is
-      Res : Type_Acc;
-      Bnds : Bound_Array_Acc;
-   begin
-      case Btyp.Kind is
-         when Type_Vector =>
-            Res := Create_Vector_Type (Bnd, Btyp.Vec_El);
-         when Type_Unbounded_Vector =>
-            Res := Create_Vector_Type (Bnd, Btyp.Uvec_El);
-         when Type_Array =>
-            pragma Assert (Btyp.Abounds.Ndim = 1);
-            Bnds := Create_Bound_Array (1);
-            Bnds.D (1) := Bnd;
-            Res := Create_Array_Type (Bnds, Btyp.Arr_El);
-         when Type_Unbounded_Array =>
-            pragma Assert (Btyp.Uarr_Ndim = 1);
-            Bnds := Create_Bound_Array (1);
-            Bnds.D (1) := Bnd;
-            Res := Create_Array_Type (Bnds, Btyp.Uarr_El);
-         when others =>
-            raise Internal_Error;
-      end case;
-      return Res;
-   end Create_Onedimensional_Array_Subtype;
-
    procedure Synth_Indexed_Name (Syn_Inst : Synth_Instance_Acc;
                                  Name : Node;
                                  Pfx_Type : Type_Acc;

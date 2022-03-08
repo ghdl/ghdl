@@ -58,15 +58,6 @@ package Synth.Vhdl_Expr is
    --  False means either not positive or unknown.
    function Is_Positive (V : Valtyp) return Boolean;
 
-   --  Return the bounds of a one dimensional array/vector type and the
-   --  width of the element.
-   procedure Get_Onedimensional_Array_Bounds
-     (Typ : Type_Acc; Bnd : out Bound_Type; El_Typ : out Type_Acc);
-
-   --  Create an array subtype from bound BND.
-   function Create_Onedimensional_Array_Subtype
-     (Btyp : Type_Acc; Bnd : Bound_Type) return Type_Acc;
-
    procedure From_Std_Logic (Enum : Int64; Val : out Uns32; Zx : out Uns32);
    procedure From_Bit (Enum : Int64; Val : out Uns32);
    procedure To_Logic
