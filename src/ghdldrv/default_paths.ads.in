@@ -21,8 +21,12 @@ package Default_Paths is
 
    Install_Prefix : constant String :=
      "@INSTALL_PREFIX@";
-   Lib_Prefix : constant String :=
-     "@LIB_PREFIX@";
+   LibDir_Suffix : constant String :=
+     "@LIBDIR_SUFFIX@";
+   LibGhdlDir_Suffix : constant String :=
+     "@LIBGHDLDIR_SUFFIX@";
+   IncDir_Suffix : constant String :=
+     "@INCDIR_SUFFIX@";
 
    Compiler_Gcc : constant String :=
      "@COMPILER_GCC@";

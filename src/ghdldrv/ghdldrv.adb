@@ -826,7 +826,7 @@ package body Ghdldrv is
       end case;
       Put ("linker command (--LINKER=, CC, or cc): ");
       Put_Line (Cmd.Linker_Cmd.all);
-      Put_Line ("default lib prefix: " & Default_Paths.Lib_Prefix);
+      Put_Line ("default lib prefix: " & Default_Paths.LibDir_Suffix);
 
       New_Line;
 

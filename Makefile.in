@@ -26,7 +26,9 @@ MAKE=@MAKE@
 prefix=@prefix@
 backend=@backend@
 libdirsuffix=@libdirsuffix@
+libghdldirsuffix=@libghdldirsuffix@
 libdirreverse=@libdirreverse@
+incdirsuffix=@incdirsuffix@
 EXEEXT=@EXEEXT@
 SOEXT=@SOEXT@
 PIC_FLAGS=@PIC_FLAGS@
@@ -49,8 +51,9 @@ INSTALL_DATA=install -m 644
 PWD=$(CURDIR)
 DESTDIR=
 bindir=$(prefix)/bin
-libdir=$(prefix)/lib
-incdir=$(prefix)/include
+libdir=$(prefix)/$(libdirsuffix)
+libghdldir=$(prefix)/$(libghdldirsuffix)
+incdir=$(prefix)/$(incdirsuffix)
 MKDIR=mkdir
 LN=ln -s
 CP=cp
@@ -59,7 +62,7 @@ SED=sed
 GRT_RANLIB=ranlib
 GHDL_DESC?=tarball
 
-VHDL_LIB_DIR=$(prefix)/$(libdirsuffix)
+VHDL_LIB_DIR=$(prefix)/$(libghdldirsuffix)
 
 ifeq "$(enable_checks)" "true"
  # Debug + checks
@@ -122,7 +125,7 @@ endif
 
 # Flags for libraries
 LIBSRC_DIR:=$(srcdir)/libraries
-LIBDST_DIR:=$(libdirsuffix)
+LIBDST_DIR:=$(libghdldirsuffix)
 
 LIBVHDL_FLAGS_TO_PASS=\
  LIBSRC_DIR="$(LIBSRC_DIR)" \
@@ -293,7 +296,7 @@ GHDL1_GCC_BIN=  # --GHDL1=/path/to/ghdl1
 libs.vhdl.gcc:
 	$(MAKE) -f $(srcdir)/libraries/Makefile.inc $(LIBVHDL_FLAGS_TO_PASS) GHDL="$(GHDL_GCC_BIN)" GHDL_FLAGS="$(GHDL1_GCC_BIN) $(LIB_CFLAGS)" vhdl.libs.all libs.vhdl.standard
 
-ghdllib: libs.vhdl.gcc $(libdirsuffix)/libgrt.a all.libghdl all.ghw
+ghdllib: libs.vhdl.gcc $(libghdldirsuffix)/libgrt.a all.libghdl all.ghw
 
 install.gcc: install.grt
 
@@ -462,8 +465,8 @@ all.libghdl.false:
 all.libghdl: all.libghdl.$(enable_libghdl)
 
 install.libghdl.include: install.dirs $(srcdir)/src/synth/include/synth_gates.h
-	$(INSTALL_DATA) -p $(srcdir)/src/synth/include/synth.h $(DESTDIR)$(incdir)/ghdl
-	$(INSTALL_DATA) -p $(srcdir)/src/synth/include/synth_gates.h $(DESTDIR)$(incdir)/ghdl
+	$(INSTALL_DATA) -p $(srcdir)/src/synth/include/synth.h $(DESTDIR)$(incdir)/
+	$(INSTALL_DATA) -p $(srcdir)/src/synth/include/synth_gates.h $(DESTDIR)$(incdir)/
 
 install.libghdl.lib:
 	$(INSTALL_PROGRAM) -p lib/$(libghdl_name) $(DESTDIR)$(libdir)/
@@ -504,25 +507,25 @@ all.ghw: ghwdump$(EXEEXT) lib/libghw$(SOEXT)
 install.ghw:
 	$(INSTALL_PROGRAM) -p ghwdump$(EXEEXT) $(DESTDIR)$(bindir)/
 	$(INSTALL_PROGRAM) -p lib/libghw$(SOEXT) $(DESTDIR)$(libdir)/
-	$(INSTALL_DATA) -p $(srcdir)/ghw/libghw.h $(DESTDIR)$(incdir)/ghdl/
+	$(INSTALL_DATA) -p $(srcdir)/ghw/libghw.h $(DESTDIR)$(incdir)/
 
 uninstall.ghw:
 	$(RM) $(DESTDIR)$(bindir)/ghwdump$(EXEEXT)
 	$(RM) $(DESTDIR)$(libdir)/libghw$(EXEEXT)
-	$(RM) -f $(DESTDIR)$(incdir)/ghdl/libghw.h
+	$(RM) -f $(DESTDIR)$(incdir)/libghw.h
 
 ############### grt #####################################################
 
 install.grt: \
-  $(libdirsuffix)/libgrt.a \
-  $(libdirsuffix)/grt.lst \
-  $(libdirsuffix)/grt-exec.lst \
-  $(libdirsuffix)/grt-shared.lst \
+  $(libghdldirsuffix)/libgrt.a \
+  $(libghdldirsuffix)/grt.lst \
+  $(libghdldirsuffix)/grt-exec.lst \
+  $(libghdldirsuffix)/grt-shared.lst \
   install.dirs
-	$(INSTALL_DATA) $(libdirsuffix)/libgrt.a $(DESTDIR)$(VHDL_LIB_DIR)/libgrt.a
-	$(INSTALL_DATA) $(libdirsuffix)/grt.lst $(DESTDIR)$(VHDL_LIB_DIR)/grt.lst
-	$(INSTALL_DATA) $(libdirsuffix)/grt-exec.lst $(DESTDIR)$(VHDL_LIB_DIR)/grt-exec.lst
-	$(INSTALL_DATA) $(libdirsuffix)/grt-shared.lst $(DESTDIR)$(VHDL_LIB_DIR)/grt-shared.lst
+	$(INSTALL_DATA) $(libghdldirsuffix)/libgrt.a $(DESTDIR)$(VHDL_LIB_DIR)/libgrt.a
+	$(INSTALL_DATA) $(libghdldirsuffix)/grt.lst $(DESTDIR)$(VHDL_LIB_DIR)/grt.lst
+	$(INSTALL_DATA) $(libghdldirsuffix)/grt-exec.lst $(DESTDIR)$(VHDL_LIB_DIR)/grt-exec.lst
+	$(INSTALL_DATA) $(libghdldirsuffix)/grt-shared.lst $(DESTDIR)$(VHDL_LIB_DIR)/grt-shared.lst
 	$(INSTALL_DATA) $(GRTSRCDIR)/grt.ver $(DESTDIR)$(VHDL_LIB_DIR)/grt.ver
 	test "x$(LIBBACKTRACE)" = x || test "x$(backend)" = xgcc || \
 	  $(INSTALL_DATA) $(LIBBACKTRACE) $(DESTDIR)$(VHDL_LIB_DIR)/libbacktrace.a
@@ -543,25 +546,26 @@ vpi_thunk.o: $(GRTSRCDIR)/vpi_thunk.c $(GRTSRCDIR)/vpi_thunk.h
 vhpi_thunk.o: $(GRTSRCDIR)/vhpi_thunk.c $(GRTSRCDIR)/vhpi_thunk.h
 	$(CC) -c -o $@ $< $(PIC_FLAGS) $(CFLAGS)
 
-lib/libghdlvpi$(SOEXT): vpi_thunk.o vhpi_thunk.o
+$(libdirsuffix)/libghdlvpi$(SOEXT): vpi_thunk.o vhpi_thunk.o
+	$(MKDIR) -p $(libdirsuffix)
 	$(CC) $(SHLIB_FLAGS) $(LDFLAGS) -shared -o $@ $^
 
-all.vpi: lib/libghdlvpi$(SOEXT)
+all.vpi: $(libdirsuffix)/libghdlvpi$(SOEXT)
 
 install.vpi: all.vpi install.dirs
-	$(INSTALL_PROGRAM) -p lib/libghdlvpi$(SOEXT) $(DESTDIR)$(libdir)/
-	$(INSTALL_DATA) -p $(GRTSRCDIR)/vpi_user.h $(DESTDIR)$(incdir)/ghdl/
-	$(INSTALL_DATA) -p $(GRTSRCDIR)/vhpi_user.h $(DESTDIR)$(incdir)/ghdl/
+	$(INSTALL_PROGRAM) -p $(libdirsuffix)/libghdlvpi$(SOEXT) $(DESTDIR)$(libdir)/
+	$(INSTALL_DATA) -p $(GRTSRCDIR)/vpi_user.h $(DESTDIR)$(incdir)/
+	$(INSTALL_DATA) -p $(GRTSRCDIR)/vhpi_user.h $(DESTDIR)$(incdir)/
 
 uninstall.vpi:
 	$(RM) -f $(DESTDIR)$(libdir)/libghdlvpi$(SOEXT)
-	$(RM) -f $(DESTDIR)$(incdir)/ghdl/vpi_user.h
-	$(RM) -f $(DESTDIR)$(incdir)/ghdl/vhpi_user.h
+	$(RM) -f $(DESTDIR)$(incdir)/vpi_user.h
+	$(RM) -f $(DESTDIR)$(incdir)/vhpi_user.h
 
 install.vpi.local: all.vpi
-	$(MKDIR) -p include/ghdl lib
-	$(INSTALL_DATA) -p $(GRTSRCDIR)/vpi_user.h include/ghdl/
-	$(INSTALL_DATA) -p $(GRTSRCDIR)/vhpi_user.h include/ghdl/
+	$(MKDIR) -p $(incdirsuffix) lib
+	$(INSTALL_DATA) -p $(GRTSRCDIR)/vpi_user.h $(incdirsuffix)
+	$(INSTALL_DATA) -p $(GRTSRCDIR)/vhpi_user.h $(incdirsuffix)
 
 ################ Libraries ###############################################
 
@@ -593,9 +597,8 @@ install.dirs:
 	$(MKDIR) -p $(DESTDIR)$(prefix)
 	$(MKDIR) -p $(DESTDIR)$(bindir)
 	$(MKDIR) -p $(DESTDIR)$(libdir)
-	$(MKDIR) -p $(DESTDIR)$(prefix)/$(libdirsuffix)
+	$(MKDIR) -p $(DESTDIR)$(libghdldir)
 	$(MKDIR) -p $(DESTDIR)$(incdir)
-	$(MKDIR) -p $(DESTDIR)$(incdir)/ghdl
 
 install.vhdllib: install.dirs
 #	Libraries (only if not empty)
