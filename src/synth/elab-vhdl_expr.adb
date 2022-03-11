@@ -437,7 +437,9 @@ package body Elab.Vhdl_Expr is
 
    procedure Check_Matching_Bounds (L, R : Type_Acc; Loc : Node) is
    begin
-      null;
+      if not Are_Types_Equal (L, R) then
+         Error_Msg_Elab (+Loc, "non matching bounds");
+      end if;
    end Check_Matching_Bounds;
 
    --  Return the bounds of a one dimensional array/vector type and the

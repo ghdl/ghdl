@@ -328,7 +328,7 @@ package body Synth.Static_Oper is
                Res_St : Type_Acc;
                Res : Memtyp;
             begin
-               Check_Matching_Bounds (Left.Typ, Right.Typ, Expr);
+               Check_Matching_Bounds (Left.Typ, Re_Typ, Expr);
                Bnd := Synth.Vhdl_Oper.Create_Bounds_From_Length
                  (Syn_Inst, Get_Index_Type (Get_Type (Expr), 0), 1 + Rlen);
                Res_St := Create_Onedimensional_Array_Subtype
