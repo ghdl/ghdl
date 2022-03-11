@@ -239,14 +239,167 @@ package body Vhdl.Sem_Assocs is
          +Inter);
    end Check_Parameter_Association_Restriction;
 
+   procedure Check_Subprogram_Association_Expression
+     (Formal : Iir; Actual : Iir; Assoc : Iir; Loc : Iir)
+   is
+      Prefix : Iir;
+      Object : Iir;
+   begin
+      Object := Name_To_Object (Actual);
+      if Object /= Null_Iir then
+         Prefix := Get_Object_Prefix (Object);
+      else
+         Prefix := Actual;
+      end if;
+
+      case Get_Kind (Formal) is
+         when Iir_Kind_Interface_Signal_Declaration =>
+            --  LRM93 2.1.1
+            --  In a subprogram call, the actual designator
+            --  associated with a formal parameter of class
+            --  signal must be a signal.
+            case Get_Kind (Prefix) is
+               when Iir_Kind_Interface_Signal_Declaration
+                 | Iir_Kind_Signal_Declaration
+                 | Iir_Kind_Guard_Signal_Declaration
+                 | Iir_Kinds_Signal_Attribute =>
+                  --  LRM93 2.1.1.2
+                  --  If an actual signal is associated with
+                  --  a signal parameter of any mode, the actual
+                  --  must be denoted by a static signal name.
+                  if Get_Name_Staticness (Object) < Globally then
+                     Error_Msg_Sem
+                       (+Actual, "actual signal must be a static name");
+                  else
+                     --  Inherit has_active_flag.
+                     Set_Has_Active_Flag
+                       (Prefix, Get_Has_Active_Flag (Formal));
+                  end if;
+               when others =>
+                  Error_Msg_Sem
+                    (+Loc, "signal parameter requires a signal expression");
+            end case;
+
+            case Get_Kind (Prefix) is
+               when Iir_Kind_Interface_Signal_Declaration =>
+                  Check_Parameter_Association_Restriction
+                    (Formal, Prefix, Loc);
+               when Iir_Kind_Guard_Signal_Declaration =>
+                  if Get_Mode (Formal) /= Iir_In_Mode then
+                     Error_Msg_Sem
+                       (+Loc, "cannot associate a guard signal with "
+                          & Get_Mode_Name (Get_Mode (Formal))
+                          & " %n", +Formal);
+                  end if;
+               when Iir_Kinds_Signal_Attribute =>
+                  if Get_Mode (Formal) /= Iir_In_Mode then
+                     Error_Msg_Sem
+                       (+Loc, "cannot associate a signal attribute with "
+                          & Get_Mode_Name (Get_Mode (Formal))
+                          & " %n", +Formal);
+                  end if;
+               when others =>
+                  null;
+            end case;
+
+            --  LRM 2.1.1.2  Signal parameters
+            --  It is an error if a conversion function or type
+            --  conversion appears in either the formal part or the
+            --  actual part of an association element that associates
+            --  an actual signal with a formal signal parameter.
+            if Assoc /= Null_Iir
+              and then (Get_Actual_Conversion (Assoc) /= Null_Iir
+                          or Get_Formal_Conversion (Assoc) /= Null_Iir)
+            then
+               Error_Msg_Sem
+                 (+Assoc, "conversion are not allowed for signal parameters");
+            end if;
+         when Iir_Kind_Interface_Variable_Declaration =>
+            --  LRM93 2.1.1
+            --  The actual designator associated with a formal of
+            --  class variable must be a variable.
+            case Get_Kind (Prefix) is
+               when Iir_Kind_Interface_Variable_Declaration =>
+                  Check_Parameter_Association_Restriction
+                    (Formal, Prefix, Loc);
+               when Iir_Kind_Variable_Declaration
+                 | Iir_Kind_Dereference
+                 | Iir_Kind_Implicit_Dereference =>
+                  null;
+               when Iir_Kind_Interface_File_Declaration
+                 | Iir_Kind_File_Declaration =>
+                  --  LRM87 4.3.1.4
+                  --  Such an object is a member of the variable
+                  --  class of objects;
+                  if Flags.Vhdl_Std >= Vhdl_93
+                    and then not Flags.Flag_Relaxed_Files87
+                  then
+                     Error_Msg_Sem
+                       (+Loc, "variable parameter cannot be a file (vhdl93)");
+                  end if;
+               when others =>
+                  Error_Msg_Sem
+                    (+Loc, "variable parameter must be a variable");
+            end case;
+         when Iir_Kind_Interface_File_Declaration =>
+            --  LRM93 2.1.1
+            --  The actual designator associated with a formal
+            --  of class file must be a file.
+            case Get_Kind (Prefix) is
+               when Iir_Kind_Interface_File_Declaration
+                 | Iir_Kind_File_Declaration =>
+                  null;
+               when Iir_Kind_Variable_Declaration
+                 | Iir_Kind_Interface_Variable_Declaration =>
+                  if Flags.Vhdl_Std >= Vhdl_93
+                    and then not Flags.Flag_Relaxed_Files87
+                  then
+                     Error_Msg_Sem
+                       (+Loc, "file parameter must be a file (vhdl93)");
+                  end if;
+               when others =>
+                  Error_Msg_Sem (+Loc, "file parameter must be a file");
+            end case;
+
+            --  LRM 2.1.1.3  File parameters
+            --  It is an error if an association element associates
+            --  an actual with a formal parameter of a file type and
+            --  that association element contains a conversion
+            --  function or type conversion.
+            if Assoc /= Null_Iir
+              and then (Get_Actual_Conversion (Assoc) /= Null_Iir
+                          or Get_Formal_Conversion (Assoc) /= Null_Iir)
+            then
+               Error_Msg_Sem (+Assoc, "conversion are not allowed "
+                                & "for file parameters");
+            end if;
+         when Iir_Kind_Interface_Constant_Declaration =>
+            --  LRM93 2.1.1
+            --  The actual designator associated with a formal of
+            --  class constant must be an expression.
+            --  GHDL: unless this is in a formal_part.
+            if Assoc = Null_Iir or else not Get_In_Formal_Flag (Assoc) then
+               Check_Read (Actual);
+            end if;
+         when others =>
+            Error_Kind ("check_subprogram_association_expression", Formal);
+      end case;
+
+      case Get_Kind (Prefix) is
+         when Iir_Kind_Signal_Declaration
+           | Iir_Kind_Variable_Declaration =>
+            Set_Use_Flag (Prefix, True);
+         when others =>
+            null;
+      end case;
+   end Check_Subprogram_Association_Expression;
+
    procedure Check_Subprogram_Associations
      (Inter_Chain : Iir; Assoc_Chain : Iir)
    is
       Assoc : Iir;
       Formal_Inter : Iir;
       Actual : Iir;
-      Prefix : Iir;
-      Object : Iir;
       Inter : Iir;
    begin
       Assoc := Assoc_Chain;
@@ -256,166 +409,12 @@ package body Vhdl.Sem_Assocs is
          case Get_Kind (Assoc) is
             when Iir_Kind_Association_Element_Open =>
                if Get_Default_Value (Formal_Inter) = Null_Iir then
-                  Error_Msg_Sem
-                    (+Assoc, "no parameter for %n", +Formal_Inter);
+                  Error_Msg_Sem (+Assoc, "no parameter for %n", +Formal_Inter);
                end if;
             when Iir_Kind_Association_Element_By_Expression =>
                Actual := Get_Actual (Assoc);
-               Object := Name_To_Object (Actual);
-               if Object /= Null_Iir then
-                  Prefix := Get_Object_Prefix (Object);
-               else
-                  Prefix := Actual;
-               end if;
-
-               case Get_Kind (Formal_Inter) is
-                  when Iir_Kind_Interface_Signal_Declaration =>
-                     --  LRM93 2.1.1
-                     --  In a subprogram call, the actual designator
-                     --  associated with a formal parameter of class
-                     --  signal must be a signal.
-                     case Get_Kind (Prefix) is
-                        when Iir_Kind_Interface_Signal_Declaration
-                          | Iir_Kind_Signal_Declaration
-                          | Iir_Kind_Guard_Signal_Declaration
-                          | Iir_Kinds_Signal_Attribute =>
-                           --  LRM93 2.1.1.2
-                           --  If an actual signal is associated with
-                           --  a signal parameter of any mode, the actual
-                           --  must be denoted by a static signal name.
-                           if Get_Name_Staticness (Object) < Globally then
-                              Error_Msg_Sem
-                                (+Actual,
-                                 "actual signal must be a static name");
-                           else
-                              --  Inherit has_active_flag.
-                              Set_Has_Active_Flag
-                                (Prefix, Get_Has_Active_Flag (Formal_Inter));
-                           end if;
-                        when others =>
-                           Error_Msg_Sem
-                             (+Assoc,
-                              "signal parameter requires a signal expression");
-                     end case;
-
-                     case Get_Kind (Prefix) is
-                        when Iir_Kind_Interface_Signal_Declaration =>
-                           Check_Parameter_Association_Restriction
-                             (Formal_Inter, Prefix, Assoc);
-                        when Iir_Kind_Guard_Signal_Declaration =>
-                           if Get_Mode (Formal_Inter) /= Iir_In_Mode then
-                              Error_Msg_Sem
-                                (+Assoc,
-                                 "cannot associate a guard signal with "
-                                 & Get_Mode_Name (Get_Mode (Formal_Inter))
-                                 & " %n", +Formal_Inter);
-                           end if;
-                        when Iir_Kinds_Signal_Attribute =>
-                           if Get_Mode (Formal_Inter) /= Iir_In_Mode then
-                              Error_Msg_Sem
-                                (+Assoc,
-                                 "cannot associate a signal attribute with "
-                                 & Get_Mode_Name (Get_Mode (Formal_Inter))
-                                 & " %n", +Formal_Inter);
-                           end if;
-                        when others =>
-                           null;
-                     end case;
-
-                     --  LRM 2.1.1.2  Signal parameters
-                     --  It is an error if a conversion function or type
-                     --  conversion appears in either the formal part or the
-                     --  actual part of an association element that associates
-                     --  an actual signal with a formal signal parameter.
-                     if Get_Actual_Conversion (Assoc) /= Null_Iir
-                       or Get_Formal_Conversion (Assoc) /= Null_Iir
-                     then
-                        Error_Msg_Sem
-                          (+Assoc,
-                           "conversion are not allowed for signal parameters");
-                     end if;
-                  when Iir_Kind_Interface_Variable_Declaration =>
-                     --  LRM93 2.1.1
-                     --  The actual designator associated with a formal of
-                     --  class variable must be a variable.
-                     case Get_Kind (Prefix) is
-                        when Iir_Kind_Interface_Variable_Declaration =>
-                           Check_Parameter_Association_Restriction
-                             (Formal_Inter, Prefix, Assoc);
-                        when Iir_Kind_Variable_Declaration
-                          | Iir_Kind_Dereference
-                          | Iir_Kind_Implicit_Dereference =>
-                           null;
-                        when Iir_Kind_Interface_File_Declaration
-                          | Iir_Kind_File_Declaration =>
-                           --  LRM87 4.3.1.4
-                           --  Such an object is a member of the variable
-                           --  class of objects;
-                           if Flags.Vhdl_Std >= Vhdl_93
-                             and then not Flags.Flag_Relaxed_Files87
-                           then
-                              Error_Msg_Sem
-                                (+Assoc, "variable parameter cannot be a "
-                                   & "file (vhdl93)");
-                           end if;
-                        when others =>
-                           Error_Msg_Sem
-                             (+Assoc, "variable parameter must be a variable");
-                     end case;
-                  when Iir_Kind_Interface_File_Declaration =>
-                     --  LRM93 2.1.1
-                     --  The actual designator associated with a formal
-                     --  of class file must be a file.
-                     case Get_Kind (Prefix) is
-                        when Iir_Kind_Interface_File_Declaration
-                          | Iir_Kind_File_Declaration =>
-                           null;
-                        when Iir_Kind_Variable_Declaration
-                          | Iir_Kind_Interface_Variable_Declaration =>
-                           if Flags.Vhdl_Std >= Vhdl_93
-                             and then not Flags.Flag_Relaxed_Files87
-                           then
-                              Error_Msg_Sem
-                                (+Assoc,
-                                 "file parameter must be a file (vhdl93)");
-                           end if;
-                        when others =>
-                           Error_Msg_Sem
-                             (+Assoc, "file parameter must be a file");
-                     end case;
-
-                     --  LRM 2.1.1.3  File parameters
-                     --  It is an error if an association element associates
-                     --  an actual with a formal parameter of a file type and
-                     --  that association element contains a conversion
-                     --  function or type conversion.
-                     if Get_Actual_Conversion (Assoc) /= Null_Iir
-                       or Get_Formal_Conversion (Assoc) /= Null_Iir
-                     then
-                        Error_Msg_Sem (+Assoc, "conversion are not allowed "
-                                         & "for file parameters");
-                     end if;
-                  when Iir_Kind_Interface_Constant_Declaration =>
-                     --  LRM93 2.1.1
-                     --  The actual designator associated with a formal of
-                     --  class constant must be an expression.
-                     --  GHDL: unless this is in a formal_part.
-                     if not Get_In_Formal_Flag (Assoc) then
-                        Check_Read (Actual);
-                     end if;
-                  when others =>
-                     Error_Kind
-                       ("check_subprogram_association(3)", Formal_Inter);
-               end case;
-
-               case Get_Kind (Prefix) is
-                  when Iir_Kind_Signal_Declaration
-                    | Iir_Kind_Variable_Declaration =>
-                     Set_Use_Flag (Prefix, True);
-                  when others =>
-                     null;
-               end case;
-
+               Check_Subprogram_Association_Expression
+                 (Formal_Inter, Actual, Assoc, Assoc);
             when Iir_Kind_Association_Element_By_Individual =>
                null;
             when others =>

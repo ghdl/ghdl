@@ -1747,38 +1747,45 @@ package body Vhdl.Sem_Expr is
    is
       Is_Dyadic : constant Boolean :=
         Get_Kind (Expr) in Iir_Kinds_Dyadic_Operator;
-      Interface_Chain : Iir;
-      Err             : Boolean;
-      Left            : Iir;
-      Left_Type       : Iir;
-      Right           : Iir;
-      Right_Type      : Iir;
+      Inter : Iir;
+      Err        : Boolean;
+      Left       : Iir;
+      Left_Type  : Iir;
+      Right      : Iir;
+      Right_Type : Iir;
    begin
       Set_Type (Expr, Get_Return_Type (Decl));
-      Interface_Chain := Get_Interface_Declaration_Chain (Decl);
+      Inter := Get_Interface_Declaration_Chain (Decl);
       Err := False;
+
+      --  Left operand (or single operand)
       Left := Get_Left (Expr);
-      Left_Type := Get_Type (Interface_Chain);
+      Left_Type := Get_Type (Inter);
       if Is_Overloaded (Left) then
          Left := Sem_Expression_Ov (Left, Get_Base_Type (Left_Type));
          if Left = Null_Iir then
             Err := True;
          end if;
       end if;
-      Check_Read (Left);
+      Check_Subprogram_Association_Expression (Inter, Left, Null_Iir, Left);
       Set_Left (Expr, Left);
+
+      --  Right operand
       if Is_Dyadic then
          Right := Get_Right (Expr);
-         Right_Type := Get_Type (Get_Chain (Interface_Chain));
+         Inter := Get_Chain (Inter);
+         Right_Type := Get_Type (Inter);
          if Is_Overloaded (Right) then
             Right := Sem_Expression_Ov (Right, Get_Base_Type (Right_Type));
             if Right = Null_Iir then
                Err := True;
             end if;
          end if;
-         Check_Read (Right);
+         Check_Subprogram_Association_Expression
+           (Inter, Right, Null_Iir, Right);
          Set_Right (Expr, Right);
       end if;
+
       if not Err then
          Set_Implementation (Expr, Decl);
          Sem_Subprogram_Call_Finish (Expr, Decl);

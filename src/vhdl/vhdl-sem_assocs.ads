@@ -47,6 +47,11 @@ package Vhdl.Sem_Assocs is
       Loc : Iir;
       Match : out Compatibility_Level);
 
+   --  Check association for expression ACTUAL to interface FORMAL.
+   --  ASSOC may be null for operator.
+   procedure Check_Subprogram_Association_Expression
+     (Formal : Iir; Actual : Iir; Assoc : Iir; Loc : Iir);
+
    --  Do port Sem_Association_Chain checks for subprograms.
    procedure Check_Subprogram_Associations
      (Inter_Chain : Iir; Assoc_Chain : Iir);
