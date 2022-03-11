@@ -137,7 +137,7 @@ Options [defaults in brackets]:
   --prefix=PREFIX             install in PREFIX [$prefix]
   --srcdir=SRCDIR             source code path [$srcdir]
   --libdir=LIBDIR             lib dir path relative to PREFIX [$libdirsuffix]
-  --libghdldir=LIBDIR         ghdl lib dir path relative to PREFIX [$libdirsuffix]
+  --libghdldir=LIBGHDLDIR     ghdl lib dir path relative to PREFIX [$libdirsuffix]
   --incdir=INCDIR             C include dir path relative to PREFIX [$incdirsuffix]
   --with-gcc=DIR              use gcc backend from DIR
   --with-llvm-config[=LLVM-CONFIG]  use llvm backend [llvm-config]
@@ -149,6 +149,11 @@ Options [defaults in brackets]:
   --enable-gplcompat          use GPL-compatible sources for ieee library
   --enable-libghdl            also build the libghdl shared library
   --disable-synth             do not build with synthesis feature
+
+Binaries are installed in PREFIX/bin
+Shared libraries are installed in PREFIX/LIBDIRSUFFIX
+C header files are installed in PREFIX/INCDIR
+GHDL libraries are installed in PREFIX/LIBGHDLDIR
 EOF
   exit 0
 fi
