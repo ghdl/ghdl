@@ -1,0 +1,6 @@
+module bug
+  (output [33:0] o);
+  localparam [33:0] n1_o = 34'b0000000000000000000000000001111100;
+  assign o = n1_o;
+endmodule
+
