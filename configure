@@ -59,7 +59,10 @@ subst_vars="CC CXX GNATMAKE ADA_FLAGS MAKE CFLAGS CXXFLAGS LDFLAGS build
 srcdir abs_srcdir prefix backend libdirsuffix libghdldirsuffix
 incdirsuffix gcc_src_dir llvm_config llvm_be backtrace_lib
 build_mode EXEEXT SOEXT PIC_FLAGS default_pic enable_werror enable_checks
-enable_gplcompat enable_libghdl libghdl_version ghdl_version"
+enable_gplcompat enable_libghdl libghdl_version ghdl_version
+COMPILER_GCC COMPILER_DEBUG COMPILER_MCODE COMPILER_LLVM POST_PROCESSOR
+INSTALL_PREFIX LIBDIR_SUFFIX LIBGHDLDIR_SUFFIX INCDIR_SUFFIX
+"
 
 # Find srcdir
 srcdir=`dirname $progname`
@@ -337,6 +340,20 @@ if [ ! -d pic ]; then
   fi
 fi
 
+# Define variables derrived from configuration
+#
+# Note most of these are used to generate default_paths.ads, you should
+# also update scripts/windows/mcode/default_paths.ads if you change them.
+COMPILER_GCC=ghdl1-gcc$EXEEXT
+COMPILER_DEBUG=ghdl1-debug$EXEEXT
+COMPILER_MCODE=ghdl1-mcode$EXEEXT
+COMPILER_LLVM=ghdl1-llvm$EXEEXT
+POST_PROCESSOR=oread-$backend
+INSTALL_PREFIX=$prefix
+LIBDIR_SUFFIX=$libdirsuffix
+LIBGHDLDIR_SUFFIX=$libghdldirsuffix
+INCDIR_SUFFIX=$incdirsuffix
+
 # Generate config.status
 rm -f config.status
 {
@@ -359,9 +376,10 @@ rm -f config.status
     eval vval=\$$v
     echo $v=\"$vval\"
   done
-  subst_files="ghdl.gpr Makefile"
+  subst_files="Makefile default_paths.ads ghdl.gpr scripts/gcc/Make-lang.in"
   echo "for f in $subst_files; do"
   echo '  echo "Creating $f"'
+  echo '  mkdir -p "$(dirname "$f")"'
   echo "  sed \\"
   for v in $subst_vars; do
       echo "    -e \"s%@$v@%\$$v%g\" \\"
@@ -418,22 +436,5 @@ else
 fi
 echo "with $pkg_synth;" > ghdlsynth_maybe.ads
 echo "package Ghdlsynth_Maybe renames $pkg_synth;" >> ghdlsynth_maybe.ads
-
-# Generate default_paths.ads
-# Also update scripts/windows/mcode/default_paths.ads if you change this
-# template.
-echo "Generate default_paths.ads"
-sed -e "s%@COMPILER_GCC@%ghdl1-gcc$EXEEXT%" \
-    -e "s%@COMPILER_DEBUG@%ghdl1-debug$EXEEXT%" \
-    -e "s%@COMPILER_MCODE@%ghdl1-mcode$EXEEXT%" \
-    -e "s%@COMPILER_LLVM@%ghdl1-llvm$EXEEXT%" \
-    -e "s%@POST_PROCESSOR@%oread-$backend%" \
-    -e "s%@INSTALL_PREFIX@%$prefix%" \
-    -e "s%@LIBDIR_SUFFIX@%$libdirsuffix%" \
-    -e "s%@LIBGHDLDIR_SUFFIX@%$libghdldirsuffix%" \
-    -e "s%@INCDIR_SUFFIX@%$incdirsuffix%" \
-    -e "s%@SOEXT@%$SOEXT%" \
-    -e "s%@default_pic@%$default_pic%" \
-    < $srcdir/src/ghdldrv/default_paths.ads.in > default_paths.ads
 
 exit 0

@@ -166,6 +166,9 @@ Makefile: $(srcdir)/Makefile.in ./config.status
 setup.py: $(srcdir)/setup.py.in ./config.status
 	./config.status
 
+scripts/gcc/Make-lang.in: $(srcdir)/scripts/gcc/Make-lang.in.in ./config.status
+	./config.status
+
 GHDL_COMMON_INCFLAGS=-aI$(srcdir)/src -aI$(srcdir)/src/vhdl -aI$(srcdir)/src/synth -aI$(srcdir)/src/grt -aI$(srcdir)/src/psl -aI$(srcdir)/src/vhdl/translate
 
 GRTSRCDIR=$(abs_srcdir)/src/grt
@@ -240,7 +243,7 @@ all.gcc:
 	@echo "3) $(MAKE) ghdllib"
 	@echo "4) $(MAKE) install"
 
-copy-sources.gcc: version.ads
+copy-sources.gcc: version.ads scripts/gcc/Make-lang.in
 	$(RM) -rf $(gcc_vhdl_dir)
 	$(MKDIR) $(gcc_vhdl_dir)
 	$(CP) -p version.ads ghdlsynth_maybe.ads $(gcc_vhdl_dir)
@@ -282,7 +285,7 @@ copy-sources.gcc: version.ads
 	$(CP) -p $(srcdir)/doc/ghdl.texi $(srcdir)/doc/ghdl.1 $(gcc_vhdl_dir)
 	$(MKDIR) $(gcc_vhdl_dir)/ghdldrv
 	$(CP) -pR $(srcdir)/src/ghdldrv/*.ad? $(gcc_vhdl_dir)/ghdldrv
-	$(CP) -p $(srcdir)/scripts/gcc/Make-lang.in $(gcc_vhdl_dir)
+	$(CP) -p scripts/gcc/Make-lang.in $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/scripts/gcc/config-lang.in $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/scripts/gcc/lang-options.h $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/scripts/gcc/lang-specs.h $(gcc_vhdl_dir)

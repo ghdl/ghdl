@@ -103,12 +103,14 @@ vhdl/default_paths.ads: Makefile
 	echo "   Compiler_Mcode : constant String := \"\";" >> tmp-dpaths.ads
 	echo "   Compiler_Llvm  : constant String := \"\";" >> tmp-dpaths.ads
 	echo "   Post_Processor : constant String := \"\";" >> tmp-dpaths.ads
+        # Note: the @VARs@ below are replaced by ghdl's configure script
+        # not gcc's.
 	echo "   LibDir_Suffix  : constant String :=">> tmp-dpaths.ads
-	echo "     \"lib\";" >> tmp-dpaths.ads
+	echo "     \"@LIBDIR_SUFFIX@\";" >> tmp-dpaths.ads
 	echo "   LibGhdlDir_Suffix  : constant String :=">> tmp-dpaths.ads
-	echo "     \"lib/ghdl\";" >> tmp-dpaths.ads
+	echo "     \"@LIBGHDLDIR_SUFFIX@\";" >> tmp-dpaths.ads
 	echo "   IncDir_Suffix  : constant String :=" >> tmp-dpaths.ads
-	echo "     \"include/ghdl\";" >> tmp-dpaths.ads
+	echo "     \"@INCDIR_SUFFIX@\";" >> tmp-dpaths.ads
 	echo "   Shared_Library_Extension : constant String :=">> tmp-dpaths.ads
 	echo "     \"$(VHDL_SOEXT)\";" >> tmp-dpaths.ads
 	echo "   Default_Pie : constant Boolean := False;" >> tmp-dpaths.ads
