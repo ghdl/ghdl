@@ -272,7 +272,8 @@ package body Netlists.Disp_Verilog is
       Nd : constant Width := W / 32;
       Ld : constant Natural := Natural (W mod 32);
    begin
-      Put ('"');
+      Put_Uns32 (W);
+      Put ("'b");
       if Ld > 0 then
          Disp_Binary_Digits (Get_Param_Uns32 (Inst, Param_Idx (Nd)), 0, Ld);
       end if;
@@ -280,7 +281,6 @@ package body Netlists.Disp_Verilog is
          Disp_Binary_Digits
            (Get_Param_Uns32 (Inst, Param_Idx (I - 1)), 0, 32);
       end loop;
-      Put ('"');
    end Disp_Const_Bit;
 
    procedure Disp_Const_Log (Inst : Instance)
