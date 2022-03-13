@@ -561,6 +561,7 @@ uninstall.vpi:
 	$(RM) -f $(DESTDIR)$(incdir)/vpi_user.h
 	$(RM) -f $(DESTDIR)$(incdir)/vhpi_user.h
 
+test: install.vpi.local
 install.vpi.local: all.vpi
 	$(MKDIR) -p $(incdirsuffix) lib
 	$(INSTALL_DATA) -p $(GRTSRCDIR)/vpi_user.h $(incdirsuffix)
