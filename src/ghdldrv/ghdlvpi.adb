@@ -38,7 +38,8 @@ package body Ghdlvpi is
       Ghdllocal.Set_Exec_Prefix_From_Program_Name;
 
       return Ghdllocal.Exec_Prefix.all & Directory_Separator
-        & Default_Paths.IncDir_Suffix;
+        & Default_Paths.IncDir_Suffix & Directory_Separator
+        & "ghdl";
    end Get_Vpi_Include_Dir;
 
    --  Return the lib directory.

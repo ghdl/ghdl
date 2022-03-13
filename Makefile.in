@@ -52,7 +52,7 @@ DESTDIR=
 bindir=$(prefix)/bin
 libdir=$(prefix)/$(libdirsuffix)
 libghdldir=$(prefix)/$(libghdldirsuffix)
-incdir=$(prefix)/$(incdirsuffix)
+incdir=$(prefix)/$(incdirsuffix)/ghdl
 MKDIR=mkdir
 LN=ln -s
 CP=cp
@@ -470,6 +470,11 @@ install.libghdl.include: install.dirs $(srcdir)/src/synth/include/synth_gates.h
 	$(INSTALL_DATA) -p $(srcdir)/src/synth/include/synth.h $(DESTDIR)$(incdir)/
 	$(INSTALL_DATA) -p $(srcdir)/src/synth/include/synth_gates.h $(DESTDIR)$(incdir)/
 
+test: install.libghdl.local
+install.libghdl.local: all.libghdl
+	$(INSTALL_DATA) -p $(srcdir)/src/synth/include/synth.h $(DESTDIR)$(incdirsuffix)/ghdl
+	$(INSTALL_DATA) -p $(srcdir)/src/synth/include/synth_gates.h $(DESTDIR)$(incdirsuffix)/ghdl
+
 install.libghdl.lib:
 	$(INSTALL_PROGRAM) -p lib/$(libghdl_name) $(DESTDIR)$(libdir)/
 	$(INSTALL_PROGRAM) -p libghdl.a $(DESTDIR)$(libdir)/
@@ -567,8 +572,8 @@ uninstall.vpi:
 test: install.vpi.local
 install.vpi.local: all.vpi
 	$(MKDIR) -p $(incdirsuffix) lib
-	$(INSTALL_DATA) -p $(GRTSRCDIR)/vpi_user.h $(incdirsuffix)
-	$(INSTALL_DATA) -p $(GRTSRCDIR)/vhpi_user.h $(incdirsuffix)
+	$(INSTALL_DATA) -p $(GRTSRCDIR)/vpi_user.h $(incdirsuffix)/ghdl/
+	$(INSTALL_DATA) -p $(GRTSRCDIR)/vhpi_user.h $(incdirsuffix)/ghdl/
 
 ################ Libraries ###############################################
 
