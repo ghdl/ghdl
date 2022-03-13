@@ -1116,6 +1116,33 @@ package body Vhdl.Sem_Types is
       return Def;
    end Sem_Constrained_Array_Type_Definition;
 
+   procedure Check_Access_Type_Restrictions (Def : Iir; D_Type : Iir) is
+   begin
+      case Get_Kind (D_Type) is
+         when Iir_Kind_Incomplete_Type_Definition =>
+            --  Append on the chain of incomplete type ref
+            Set_Incomplete_Type_Ref_Chain
+              (Def, Get_Incomplete_Type_Ref_Chain (D_Type));
+            Set_Incomplete_Type_Ref_Chain (D_Type, Def);
+         when Iir_Kind_File_Type_Definition =>
+            if Vhdl_Std < Vhdl_19 then
+               --  LRM 3.3
+               --  The designated type must not be a file type.
+               Error_Msg_Sem (+Def, "designated type must not be a file type");
+            end if;
+         when Iir_Kind_Protected_Type_Declaration =>
+            if Vhdl_Std < Vhdl_19 then
+               --  LRM02 3.3
+               --  [..] or a protected type.
+               Error_Msg_Sem
+                 (+Def, "designated type must not be a protected type");
+            end if;
+         when others =>
+            null;
+      end case;
+      Set_Designated_Type (Def, D_Type);
+   end Check_Access_Type_Restrictions;
+
    function Sem_Access_Type_Definition (Def: Iir) return Iir
    is
       D_Type : Iir;
@@ -1126,30 +1153,7 @@ package body Vhdl.Sem_Types is
 
       D_Type := Get_Type_Of_Subtype_Indication (D_Type);
       if D_Type /= Null_Iir then
-         case Get_Kind (D_Type) is
-            when Iir_Kind_Incomplete_Type_Definition =>
-               --  Append on the chain of incomplete type ref
-               Set_Incomplete_Type_Ref_Chain
-                 (Def, Get_Incomplete_Type_Ref_Chain (D_Type));
-               Set_Incomplete_Type_Ref_Chain (D_Type, Def);
-            when Iir_Kind_File_Type_Definition =>
-               if Vhdl_Std < Vhdl_19 then
-                  --  LRM 3.3
-                  --  The designated type must not be a file type.
-                  Error_Msg_Sem
-                     (+Def, "designated type must not be a file type");
-               end if;
-            when Iir_Kind_Protected_Type_Declaration =>
-               if Vhdl_Std < Vhdl_19 then
-                  --  LRM02 3.3
-                  --  [..] or a protected type.
-                  Error_Msg_Sem
-                    (+Def, "designated type must not be a protected type");
-               end if;
-            when others =>
-               null;
-         end case;
-         Set_Designated_Type (Def, D_Type);
+         Check_Access_Type_Restrictions (Def, D_Type);
       end if;
       Set_Type_Staticness (Def, None);
       Set_Resolved_Flag (Def, False);

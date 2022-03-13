@@ -29,6 +29,9 @@ package Vhdl.Sem_Types is
 
    function Sem_Type_Definition (Def: Iir; Decl: Iir) return Iir;
 
+   --  Check restrictions on access type DEF.
+   procedure Check_Access_Type_Restrictions (Def : Iir; D_Type : Iir);
+
    --  If A_RANGE is a range (range expression or range attribute), convert it
    --  to a subtype definition.  Otherwise return A_RANGE.
    --  The result is a subtype indication: either a type name or a subtype

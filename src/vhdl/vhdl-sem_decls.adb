@@ -786,7 +786,7 @@ package body Vhdl.Sem_Decls is
             while Is_Valid (Ref) loop
                pragma Assert
                  (Get_Kind (Ref) = Iir_Kind_Access_Type_Definition);
-               Set_Designated_Type (Ref, Def);
+               Check_Access_Type_Restrictions (Ref, Def);
                Ref := Get_Incomplete_Type_Ref_Chain (Ref);
             end loop;
             Set_Complete_Type_Definition (Old_Def, Def);
