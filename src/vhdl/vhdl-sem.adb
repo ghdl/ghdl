@@ -29,6 +29,7 @@ with Vhdl.Sem_Names; use Vhdl.Sem_Names;
 with Vhdl.Sem_Specs; use Vhdl.Sem_Specs;
 with Vhdl.Sem_Decls; use Vhdl.Sem_Decls;
 with Vhdl.Sem_Assocs; use Vhdl.Sem_Assocs;
+with Vhdl.Sem_Types;
 with Vhdl.Sem_Inst;
 with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
 with Vhdl.Sem_Psl;
@@ -2108,6 +2109,23 @@ package body Vhdl.Sem is
          El := Get_Chain (El);
       end loop;
       Enable_Warning (Warnid_Hide, Warn_Hide_Enabled);
+
+      --  For vhdl-19, handle return identifier.
+      if Get_Kind (Spec) = Iir_Kind_Function_Declaration then
+         declare
+            Ret : constant Iir := Get_Return_Identifier (Spec);
+            Ret_Type : Iir;
+         begin
+            if Ret /= Null_Iir then
+               Xrefs.Xref_Decl (Ret);
+               Set_Visible_Flag (Ret, True);
+               Ret_Type := Get_Type (Spec);
+               Ret_Type := Sem_Types.Build_Constrained_Subtype (Ret_Type, Ret);
+               Set_Type (Ret, Ret_Type);
+               Add_Name (Ret, Get_Identifier (Ret), False);
+            end if;
+         end;
+      end if;
 
       Sem_Sequential_Statements (Spec, Subprg);
 
