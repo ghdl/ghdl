@@ -472,6 +472,7 @@ install.libghdl.include: install.dirs $(srcdir)/src/synth/include/synth_gates.h
 
 test: install.libghdl.local
 install.libghdl.local: all.libghdl
+	$(MKDIR) -p $(incdirsuffix)/ghdl/
 	$(INSTALL_DATA) -p $(srcdir)/src/synth/include/synth.h $(incdirsuffix)/ghdl/
 	$(INSTALL_DATA) -p $(srcdir)/src/synth/include/synth_gates.h $(incdirsuffix)/ghdl/
 
@@ -571,7 +572,7 @@ uninstall.vpi:
 
 test: install.vpi.local
 install.vpi.local: all.vpi
-	$(MKDIR) -p $(incdirsuffix) lib
+	$(MKDIR) -p $(incdirsuffix)/ghdl/
 	$(INSTALL_DATA) -p $(GRTSRCDIR)/vpi_user.h $(incdirsuffix)/ghdl/
 	$(INSTALL_DATA) -p $(GRTSRCDIR)/vhpi_user.h $(incdirsuffix)/ghdl/
 
