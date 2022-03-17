@@ -470,7 +470,7 @@ install.libghdl.include: install.dirs $(srcdir)/src/synth/include/synth_gates.h
 	$(INSTALL_DATA) -p $(srcdir)/src/synth/include/synth.h $(DESTDIR)$(incdir)/
 	$(INSTALL_DATA) -p $(srcdir)/src/synth/include/synth_gates.h $(DESTDIR)$(incdir)/
 
-test: install.libghdl.local
+test.$(backend): install.libghdl.local
 install.libghdl.local: all.libghdl
 	$(MKDIR) -p $(incdirsuffix)/ghdl/
 	$(INSTALL_DATA) -p $(srcdir)/src/synth/include/synth.h $(incdirsuffix)/ghdl/
@@ -570,7 +570,7 @@ uninstall.vpi:
 	$(RM) -f $(DESTDIR)$(incdir)/vpi_user.h
 	$(RM) -f $(DESTDIR)$(incdir)/vhpi_user.h
 
-test: install.vpi.local
+test.$(backend): install.vpi.local
 install.vpi.local: all.vpi
 	$(MKDIR) -p $(incdirsuffix)/ghdl/
 	$(INSTALL_DATA) -p $(GRTSRCDIR)/vpi_user.h $(incdirsuffix)/ghdl/
