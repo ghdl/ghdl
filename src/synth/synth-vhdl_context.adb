@@ -221,7 +221,7 @@ package body Synth.Vhdl_Context is
       end loop;
 
       pragma Assert (Vec'Last = Digit_Index ((W - 1) / 32));
-      Mask := Shift_Right (not 0, 32 - Natural (W mod 32));
+      Mask := Shift_Right (not 0, (32 - Natural (W mod 32)) mod 32);
       if (Vec (Vec'Last).Val and Mask) /= (Val and Mask)
         or else (Vec (Vec'Last).Zx and Mask) /= (Zx and Mask)
       then
