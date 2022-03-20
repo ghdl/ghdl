@@ -211,10 +211,10 @@ package body Synth.Vhdl_Expr is
       end loop;
    end Uns2logvec;
 
-   --  Insert bit from VAL into VEC at offset OFF.  Increment OFF.
+   --  Insert bit from VAL into VEC at offset OFF.
    procedure Bit2logvec (Val : Uns32;
-                         Vec : in out Logvec_Array;
-                         Off : in out Uns32)
+                         Off : Uns32;
+                         Vec : in out Logvec_Array)
    is
       pragma Assert (Val <= 1);
       Idx : constant Digit_Index := Digit_Index (Off / 32);
@@ -224,13 +224,12 @@ package body Synth.Vhdl_Expr is
       Va := Shift_Left (Val, Pos);
       Vec (Idx).Val := Vec (Idx).Val or Va;
       Vec (Idx).Zx := 0;
-      Off := Off + 1;
    end Bit2logvec;
 
    --  Likewise for std_logic
    procedure Logic2logvec (Val : Int64;
+                           Off : Uns32;
                            Vec : in out Logvec_Array;
-                           Off : in out Uns32;
                            Has_Zx : in out Boolean)
    is
       pragma Assert (Val <= 8);
@@ -245,9 +244,13 @@ package body Synth.Vhdl_Expr is
       Zx := Shift_Left (Zx, Pos);
       Vec (Idx).Val := Vec (Idx).Val or Va;
       Vec (Idx).Zx := Vec (Idx).Zx or Zx;
-      Off := Off + 1;
    end Logic2logvec;
 
+   --  Read W bits at offset OFF from MEM+TYP and write to VEC at VEC_OFF.
+   --  Set HAS_ZX if one bit read is Z or X.
+   --  OFF may be greather than the size of MEM.
+   --  Update OFF, W, VEC_OFF according to the number of bits
+   --  read (or skipped).
    procedure Value2logvec (Mem : Memory_Ptr;
                            Typ : Type_Acc;
                            Off : in out Uns32;
@@ -262,20 +265,27 @@ package body Synth.Vhdl_Expr is
          return;
       end if;
       if W = 0 then
+         --  Nothing to read.
          return;
       end if;
 
       case Typ.Kind is
          when Type_Bit =>
             --  Scalar bits cannot be cut.
-            pragma Assert (Off = 0 and W >= Typ.W);
-            Bit2logvec (Uns32 (Read_U8 (Mem)), Vec, Vec_Off);
-            W := W - Typ.W;
+            pragma Assert (Typ.W = 1);
+            pragma Assert (Off = 0 and W >= 1);
+            Bit2logvec (Uns32 (Read_U8 (Mem)), Vec_Off, Vec);
+            --  One bit read and written.
+            Vec_Off := Vec_Off + 1;
+            W := W - 1;
          when Type_Logic =>
             --  Scalar bits cannot be cut.
-            pragma Assert (Off = 0 and W >= Typ.W);
-            Logic2logvec (Int64 (Read_U8 (Mem)), Vec, Vec_Off, Has_Zx);
-            W := W - Typ.W;
+            pragma Assert (Typ.W = 1);
+            pragma Assert (Off = 0 and W >= 1);
+            Logic2logvec (Int64 (Read_U8 (Mem)), Vec_Off, Vec, Has_Zx);
+            --  One bit read and written.
+            Vec_Off := Vec_Off + 1;
+            W := W - 1;
          when Type_Discrete =>
             --  Scalar bits cannot be cut.
             pragma Assert (Off = 0 and W >= Typ.W);
@@ -291,31 +301,39 @@ package body Synth.Vhdl_Expr is
             W := W - Typ.W;
          when Type_Vector =>
             declare
-               Vlen : Uns32;
+               Vlen : constant Uns32 := Uns32 (Vec_Length (Typ));
                Len : Uns32;
             begin
-               Vlen := Uns32 (Vec_Length (Typ));
                pragma Assert (Off < Vlen);
                pragma Assert (Vlen > 0);
 
                if Vlen > Off + W then
+                  --  The vector is longer than the number of bits to read.
+                  --  Read less.
                   Len := Off + W;
                else
+                  --  Read the whole vector.
                   Len := Vlen;
                end if;
+
+               --  In memory MEM, bits are stored from left to right, so in
+               --  big endian (MSB is written at offset 0, LSB at
+               --  offset VLEN - 1).  Need to reverse: LSB is read first.
                case Typ.Vec_El.Kind is
                   when Type_Bit =>
                      --  TODO: optimize off mod 32 = 0.
                      for I in Off .. Len - 1 loop
                         Bit2logvec
                           (Uns32 (Read_U8 (Mem + Size_Type (Vlen - 1 - I))),
-                           Vec, Vec_Off);
+                           Vec_Off, Vec);
+                        Vec_Off := Vec_Off + 1;
                      end loop;
                   when Type_Logic =>
                      for I in Off .. Len - 1 loop
                         Logic2logvec
                           (Int64 (Read_U8 (Mem + Size_Type (Vlen - 1 - I))),
-                           Vec, Vec_Off, Has_Zx);
+                           Vec_Off, Vec, Has_Zx);
+                        Vec_Off := Vec_Off + 1;
                      end loop;
                   when others =>
                      raise Internal_Error;
