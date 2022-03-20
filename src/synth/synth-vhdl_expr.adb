@@ -211,6 +211,7 @@ package body Synth.Vhdl_Expr is
       end loop;
    end Uns2logvec;
 
+   --  Insert bit from VAL into VEC at offset OFF.  Increment OFF.
    procedure Bit2logvec (Val : Uns32;
                          Vec : in out Logvec_Array;
                          Off : in out Uns32)
@@ -226,6 +227,7 @@ package body Synth.Vhdl_Expr is
       Off := Off + 1;
    end Bit2logvec;
 
+   --  Likewise for std_logic
    procedure Logic2logvec (Val : Int64;
                            Vec : in out Logvec_Array;
                            Off : in out Uns32;
@@ -290,31 +292,35 @@ package body Synth.Vhdl_Expr is
          when Type_Vector =>
             declare
                Vlen : Uns32;
+               Len : Uns32;
             begin
                Vlen := Uns32 (Vec_Length (Typ));
                pragma Assert (Off < Vlen);
                pragma Assert (Vlen > 0);
 
                if Vlen > Off + W then
-                  Vlen := Off + W;
+                  Len := Off + W;
+               else
+                  Len := Vlen;
                end if;
                case Typ.Vec_El.Kind is
                   when Type_Bit =>
                      --  TODO: optimize off mod 32 = 0.
-                     for I in reverse Off + 1 .. Vlen loop
-                        Bit2logvec (Uns32 (Read_U8 (Mem + Size_Type (I - 1))),
-                                    Vec, Vec_Off);
+                     for I in Off .. Len - 1 loop
+                        Bit2logvec
+                          (Uns32 (Read_U8 (Mem + Size_Type (Vlen - 1 - I))),
+                           Vec, Vec_Off);
                      end loop;
                   when Type_Logic =>
-                     for I in reverse Off + 1 .. Vlen loop
+                     for I in Off .. Len - 1 loop
                         Logic2logvec
-                          (Int64 (Read_U8 (Mem + Size_Type (I - 1))),
+                          (Int64 (Read_U8 (Mem + Size_Type (Vlen - 1 - I))),
                            Vec, Vec_Off, Has_Zx);
                      end loop;
                   when others =>
                      raise Internal_Error;
                end case;
-               W := W - (Vlen - Off);
+               W := W - (Len - Off);
                Off := 0;
             end;
          when Type_Array =>
