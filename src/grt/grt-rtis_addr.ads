@@ -23,6 +23,7 @@
 with System; use System;
 with Ada.Unchecked_Conversion;
 with Grt.Types; use Grt.Types;
+with Grt.Vhdl_Types; use Grt.Vhdl_Types;
 with Grt.Rtis; use Grt.Rtis;
 
 --  Addresses handling.

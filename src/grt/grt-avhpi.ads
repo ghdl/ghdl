@@ -28,6 +28,7 @@
 --  * this implementation never allocates memory.
 with System; use System;
 with Grt.Types; use Grt.Types;
+with Grt.Vhdl_Types; use Grt.Vhdl_Types;
 with Grt.Rtis; use Grt.Rtis;
 with Grt.Rtis_Addr; use Grt.Rtis_Addr;
 

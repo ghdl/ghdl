@@ -126,7 +126,7 @@ package body Grt.Errors is
 
    procedure Diag_C_Now is
    begin
-      Put_Time (Error_Stream, Grt.Types.Current_Time);
+      Put_Time (Error_Stream, Grt.Vhdl_Types.Current_Time);
    end Diag_C_Now;
 
    procedure Newline_Err is

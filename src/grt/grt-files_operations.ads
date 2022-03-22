@@ -24,6 +24,7 @@
 with Interfaces;
 
 with Grt.Types; use Grt.Types;
+with Grt.Vhdl_Types; use Grt.Vhdl_Types;
 with Grt.Stdio;
 
 package Grt.Files_Operations is

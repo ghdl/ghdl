@@ -20,6 +20,7 @@
 --  covered by the GNU General Public License. This exception does not
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
+with Grt.Vhdl_Types; use Grt.Vhdl_Types;
 
 package Grt.Astdio.Vhdl is
    pragma Preelaborate (Grt.Astdio.Vhdl);

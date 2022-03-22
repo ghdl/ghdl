@@ -31,6 +31,7 @@ with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Vhdl.Ieee.Std_Logic_1164;
 
 with Grt.Types;
+with Grt.Vhdl_Types;
 with Grt.Fcvt;
 with Grt.To_Strings;
 
@@ -2777,6 +2778,7 @@ package body Vhdl.Evaluation is
                declare
                   use Grt.To_Strings;
                   use Grt.Types;
+                  use Grt.Vhdl_Types;
                   Res : Value_I64_Result;
                begin
                   Res := Value_I64 (To_Std_String_Basep (Value1'Address),

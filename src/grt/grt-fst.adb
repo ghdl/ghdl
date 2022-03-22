@@ -40,6 +40,7 @@ with Ada.Unchecked_Deallocation;
 with Interfaces; use Interfaces;
 with Interfaces.C;
 with Grt.Types; use Grt.Types;
+with Grt.Vhdl_Types; use Grt.Vhdl_Types;
 with Grt.Fst_Api; use Grt.Fst_Api;
 with Grt.Vcd; use Grt.Vcd;
 with Grt.Avhpi; use Grt.Avhpi;

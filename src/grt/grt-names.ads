@@ -22,6 +22,7 @@
 --  covered by the GNU Public License.
 with System; use System;
 with Grt.Types; use Grt.Types;
+with Grt.Vhdl_Types; use Grt.Vhdl_Types;
 with Grt.Rtis; use Grt.Rtis;
 
 package Grt.Names is

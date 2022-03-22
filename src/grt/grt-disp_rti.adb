@@ -21,6 +21,7 @@
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
 
+with Grt.Vhdl_Types; use Grt.Vhdl_Types;
 with Grt.Astdio; use Grt.Astdio;
 with Grt.Astdio.Vhdl; use Grt.Astdio.Vhdl;
 with Grt.Errors; use Grt.Errors;

@@ -21,6 +21,7 @@
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
 with Grt.Types; use Grt.Types;
+with Grt.Vhdl_Types; use Grt.Vhdl_Types;
 
 package Grt.To_Strings is
    --  Write the image of N into STR padded to the right.  FIRST is the index

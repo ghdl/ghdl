@@ -20,12 +20,10 @@
 --  covered by the GNU General Public License. This exception does not
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
-with System.Storage_Elements; --  Work around GNAT bug.
-pragma Unreferenced (System.Storage_Elements);
+with Grt.Vhdl_Types; use Grt.Vhdl_Types;
 with Grt.Astdio; use Grt.Astdio;
 with Grt.Astdio.Vhdl; use Grt.Astdio.Vhdl;
 with Grt.Stdio; use Grt.Stdio;
---with Grt.Errors; use Grt.Errors;
 
 package body Grt.Disp is
 

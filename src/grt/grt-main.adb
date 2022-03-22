@@ -20,6 +20,7 @@
 --  covered by the GNU General Public License. This exception does not
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
+with Grt.Vhdl_Types; use Grt.Vhdl_Types;
 with Grt.Stdio;
 with Grt.Errors; use Grt.Errors;
 with Grt.Processes;

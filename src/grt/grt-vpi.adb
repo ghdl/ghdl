@@ -38,6 +38,7 @@
 
 with Ada.Unchecked_Deallocation;
 
+with Grt.Vhdl_Types; use Grt.Vhdl_Types;
 with Grt.Stdio; use Grt.Stdio;
 with Grt.C; use Grt.C;
 with Grt.Signals; use Grt.Signals;

@@ -24,6 +24,7 @@ with System;
 with Ada.Unchecked_Conversion;
 with Grt.Stack2; use Grt.Stack2;
 with Grt.Types; use Grt.Types;
+with Grt.Vhdl_Types; use Grt.Vhdl_Types;
 with Grt.Signals; use Grt.Signals;
 with Grt.Rtis; use Grt.Rtis;
 with Grt.Rtis_Addr;

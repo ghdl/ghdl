@@ -24,6 +24,7 @@ with System;
 with Ada.Unchecked_Conversion;
 with Grt.Table;
 with Grt.Types; use Grt.Types;
+with Grt.Vhdl_Types; use Grt.Vhdl_Types;
 with Grt.Rtis; use Grt.Rtis;
 limited with Grt.Processes;
 pragma Elaborate_All (Grt.Table);

@@ -23,6 +23,7 @@
 
 with System;
 with Grt.Types; use Grt.Types;
+with Grt.Vhdl_Types; use Grt.Vhdl_Types;
 with Grt.Lib; use Grt.Lib;
 with Grt.Options; use Grt.Options;
 with Grt.Avhpi; use Grt.Avhpi;

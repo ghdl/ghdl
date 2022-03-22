@@ -23,6 +23,7 @@ with Name_Table;
 with Vhdl.Errors; use Vhdl.Errors;
 
 with Grt.Types; use Grt.Types;
+with Grt.Vhdl_Types; use Grt.Vhdl_Types;
 with Grt.Files_Operations; use Grt.Files_Operations;
 with Grt.Stdio;
 

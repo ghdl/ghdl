@@ -21,7 +21,7 @@
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
 with System;
-with Grt.Types; use Grt.Types;
+with Grt.Vhdl_Types; use Grt.Vhdl_Types;
 
 --  Callbacks are user registered procedures that are called during simulation.
 --  They are used to implement vpi/vhpi callbacks, but also some features like

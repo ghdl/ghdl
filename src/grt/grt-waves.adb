@@ -26,6 +26,7 @@ with Ada.Unchecked_Conversion;
 with Ada.Unchecked_Deallocation;
 with Interfaces; use Interfaces;
 with Grt.Types; use Grt.Types;
+with Grt.Vhdl_Types; use Grt.Vhdl_Types;
 with Grt.Avhpi; use Grt.Avhpi;
 with Grt.Stdio; use Grt.Stdio;
 with Grt.C; use Grt.C;

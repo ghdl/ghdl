@@ -54,6 +54,7 @@ with Grt.Files;
 with Grt.Signals;
 with Grt.Options;
 with Grt.Types;
+with Grt.Vhdl_Types; use Grt.Vhdl_Types;
 with Grt.Images;
 with Grt.Values;
 with Grt.Names;
@@ -397,7 +398,7 @@ package body Ghdlrun is
            Grt.Processes.Ghdl_Process_Add_Sensitivity'Address);
 
       Def (Trans_Decls.Ghdl_Now,
-           Grt.Types.Current_Time'Address);
+           Grt.Vhdl_Types.Current_Time'Address);
 
       Def (Trans_Decls.Ghdl_Process_Add_Driver,
            Grt.Signals.Ghdl_Process_Add_Driver'Address);

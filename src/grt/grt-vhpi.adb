@@ -15,6 +15,7 @@
 --  along with this program.  If not, see <gnu.org/licenses>.
 
 with Ada.Unchecked_Conversion;
+with Grt.Vhdl_Types; use Grt.Vhdl_Types;
 with Grt.Astdio; use Grt.Astdio;
 with Grt.Astdio.Vhdl; use Grt.Astdio.Vhdl;
 with Grt.Errors; use Grt.Errors;
