@@ -227,7 +227,7 @@ GHDLSetup $VHDLStandard
 # -> $DestDir
 # <= $SourceDirectory
 # <= $DestinationDirectory
-SetupDirectories LatticeDiamond "Lattice Diamond"
+SetupDirectories Lattice_Diamond "Lattice Diamond"
 
 # create "lattice" directory and change to it
 # => $DestinationDirectory
