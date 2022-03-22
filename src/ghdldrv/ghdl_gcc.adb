@@ -19,6 +19,7 @@ with Ghdldrv;
 with Ghdlprint;
 with Ghdlvpi;
 with Ghdlxml;
+with Ghdllib;
 with Ghdlsynth_Maybe;
 
 procedure Ghdl_Gcc is
@@ -33,6 +34,7 @@ begin
    Ghdlprint.Register_Commands;
    Ghdlvpi.Register_Commands;
    Ghdlxml.Register_Commands;
+   Ghdllib.Register_Commands;
    Ghdlmain.Register_Commands;
    Ghdlmain.Main;
 end Ghdl_Gcc;

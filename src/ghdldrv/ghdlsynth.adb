@@ -25,8 +25,6 @@ with Ghdlmain; use Ghdlmain;
 with Options; use Options;
 with Errorout;
 with Errorout.Console;
-with Version;
-with Default_Paths;
 with Bug;
 with Simple_IO;
 
@@ -561,70 +559,9 @@ package body Ghdlsynth is
       end if;
    end Perform_Action;
 
-   function Get_Libghdl_Name return String
-   is
-      Libghdl_Version : String := Version.Ghdl_Ver;
-   begin
-      for I in Libghdl_Version'Range loop
-         if Libghdl_Version (I) = '.' or Libghdl_Version (I) = '-' then
-            Libghdl_Version (I) := '_';
-         end if;
-      end loop;
-      return "libghdl-" & Libghdl_Version
-        & Default_Paths.Shared_Library_Extension;
-   end Get_Libghdl_Name;
-
-   function Get_Libghdl_Path return String is
-   begin
-      if Ghdllocal.Exec_Prefix = null then
-         --  Compute install path (only once).
-         Ghdllocal.Set_Exec_Prefix_From_Program_Name;
-      end if;
-
-      return Ghdllocal.Exec_Prefix.all & Directory_Separator
-        & Default_Paths.LibDir_Suffix
-        & Directory_Separator & Get_Libghdl_Name;
-   end Get_Libghdl_Path;
-
-   function Get_Libghdl_Include_Dir return String is
-   begin
-      --  Compute install path
-      Ghdllocal.Set_Exec_Prefix_From_Program_Name;
-
-      return Ghdllocal.Exec_Prefix.all & Directory_Separator
-        & Default_Paths.IncDir_Suffix;
-   end Get_Libghdl_Include_Dir;
-
    procedure Register_Commands is
    begin
       Ghdlmain.Register_Command (new Command_Synth);
-      Register_Command
-        (new Command_Str_Disp'
-           (Command_Type with
-            Cmd_Str => new String'
-              ("--libghdl-name"),
-            Help_Str => new String'
-              ("--libghdl-name"
-              & ASCII.LF & "  Display libghdl name"),
-            Disp => Get_Libghdl_Name'Access));
-      Register_Command
-        (new Command_Str_Disp'
-           (Command_Type with
-            Cmd_Str => new String'
-              ("--libghdl-library-path"),
-            Help_Str => new String'
-              ("--libghdl-library-path"
-              & ASCII.LF & "  Display libghdl library path"),
-            Disp => Get_Libghdl_Path'Access));
-      Register_Command
-        (new Command_Str_Disp'
-           (Command_Type with
-            Cmd_Str => new String'
-              ("--libghdl-include-dir"),
-            Help_Str => new String'
-              ("--libghdl-include-dir"
-              & ASCII.LF & "  Display libghdl include directory"),
-            Disp => Get_Libghdl_Include_Dir'Access));
    end Register_Commands;
 
    procedure Init_For_Ghdl_Synth is

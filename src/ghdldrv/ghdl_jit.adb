@@ -19,6 +19,7 @@ with Ghdlprint;
 with Ghdlrun;
 with Ghdlvpi;
 with Ghdlxml;
+with Ghdllib;
 with Ghdlsynth_Maybe;
 with Ortho_Jit;
 
@@ -34,6 +35,7 @@ begin
    Ghdlvpi.Register_Commands;
    Ghdlxml.Register_Commands;
    Ghdlsynth_Maybe.Register_Commands;
+   Ghdllib.Register_Commands;
    Ghdlmain.Register_Commands;
    Ghdlmain.Main;
 end Ghdl_Jit;

@@ -19,6 +19,7 @@ with Ghdlprint;
 with Ghdldrv;
 with Ghdlvpi;
 with Ghdlxml;
+with Ghdllib;
 with Ghdlsynth_Maybe;
 
 procedure Ghdl_Llvm is
@@ -33,6 +34,7 @@ begin
    Ghdlprint.Register_Commands;
    Ghdlvpi.Register_Commands;
    Ghdlxml.Register_Commands;
+   Ghdllib.Register_Commands;
    Ghdlmain.Register_Commands;
    Ghdlmain.Main;
 end Ghdl_Llvm;
