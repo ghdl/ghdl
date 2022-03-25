@@ -1207,11 +1207,21 @@ package body Trans.Chap6 is
                Pt_Info : constant Type_Info_Acc := Get_Info (Prefix_Type);
                Pfx : O_Enode;
                Pfx_Var : O_Dnode;
+               Chk_Null : O_Dnode;
             begin
                Pfx := Chap7.Translate_Expression (Prefix);
                if Pt_Info.Type_Mode = Type_Mode_Bounds_Acc then
                   Pfx_Var := Create_Temp_Init
                     (Pt_Info.Ortho_Type (Mode_Value), Pfx);
+
+                  --  Do a dummy memory access to catch null access.
+                  Chk_Null := Create_Temp_Init
+                    (Char_Type_Node,
+                     New_Value (New_Access_Element
+                                  (New_Convert_Ov (New_Obj_Value (Pfx_Var),
+                                                   Ghdl_Ptr_Type))));
+                  pragma Unreferenced (Chk_Null);
+
                   return Chap7.Bounds_Acc_To_Fat_Pointer
                     (Pfx_Var, Prefix_Type);
                else
