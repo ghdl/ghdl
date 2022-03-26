@@ -188,6 +188,7 @@ package Trans_Decls is
    Ghdl_Bound_Check_Failed : O_Dnode;
    Ghdl_Integer_Index_Check_Failed : O_Dnode;
    Ghdl_Direction_Check_Failed : O_Dnode;
+   Ghdl_Access_Check_Failed : O_Dnode;
 
    --  Stack 2.
    Ghdl_Stack2_Allocate : O_Dnode;

@@ -636,6 +636,12 @@ package body Translation is
       New_Interface_Decl (Interfaces, Param, Wki_Line, Ghdl_I32_Type);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Direction_Check_Failed);
 
+      --  procedure __ghdl_access_check_failed ();
+      Start_Procedure_Decl
+        (Interfaces, Get_Identifier ("__ghdl_access_check_failed"),
+         O_Storage_External);
+      Finish_Subprogram_Decl (Interfaces, Ghdl_Access_Check_Failed);
+
       --  Secondary stack subprograms.
       --  function __ghdl_stack2_allocate (size : ghdl_index_type)
       --    return ghdl_ptr_type;

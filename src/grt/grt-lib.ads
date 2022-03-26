@@ -52,6 +52,7 @@ package Grt.Lib is
                                       Line: Ghdl_I32);
    procedure Ghdl_Direction_Check_Failed (Filename : Ghdl_C_String;
                                           Line: Ghdl_I32);
+   procedure Ghdl_Access_Check_Failed;
 
    procedure Ghdl_Integer_Index_Check_Failed
      (Filename : Ghdl_C_String;
@@ -124,6 +125,8 @@ private
                   "__ghdl_direction_check_failed");
    pragma Export (C, Ghdl_Integer_Index_Check_Failed,
                   "__ghdl_integer_index_check_failed");
+   pragma Export (C, Ghdl_Access_Check_Failed,
+                  "__ghdl_access_check_failed");
 
    pragma Export (C, Ghdl_Program_Error, "__ghdl_program_error");
 

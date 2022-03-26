@@ -205,6 +205,15 @@ package body Grt.Lib is
       Error_E_Call_Stack (Bt);
    end Ghdl_Direction_Check_Failed;
 
+   procedure Ghdl_Access_Check_Failed
+   is
+      Bt : Backtrace_Addrs;
+   begin
+      Save_Backtrace (Bt, 1);
+      Error_S ("NULL access dereferenced");
+      Error_E_Call_Stack (Bt);
+   end Ghdl_Access_Check_Failed;
+
    procedure Diag_C_Range (Rng : Std_Integer_Range_Ptr) is
    begin
       Diag_C (Rng.Left);

@@ -1107,6 +1107,50 @@ package body Trans.Chap6 is
       end case;
    end Translate_Object_Alias_Name;
 
+   function Translate_Dereferenced_Name (Name : Iir) return Mnode
+   is
+      Name_Type : constant Iir := Get_Type (Name);
+      Type_Info : constant Type_Info_Acc := Get_Info (Name_Type);
+      Prefix : constant Iir := Get_Prefix (Name);
+      Prefix_Type : constant Iir := Get_Type (Prefix);
+      Pt_Info : constant Type_Info_Acc := Get_Info (Prefix_Type);
+      Pfx : O_Enode;
+      Pfx_Var : O_Dnode;
+      If_Blk : O_If_Block;
+      Constr    : O_Assoc_List;
+   begin
+      Pfx := Chap7.Translate_Expression (Prefix);
+      if Pt_Info.Type_Mode = Type_Mode_Bounds_Acc then
+         Pfx_Var := Create_Temp_Init (Pt_Info.Ortho_Type (Mode_Value), Pfx);
+
+         --  Check null access
+         --  There is no dereference (so no SEGV) for unbounded access, so
+         --  we need to add an explicit check.
+         --  Also, an implicit dereference is immediately followed by an
+         --  access, so check only in case of explicit dereference.
+         --  We could try to do a manual dereference but some backends (llvm)
+         --  optimize this check.
+         if Get_Kind (Name) = Iir_Kind_Dereference then
+            Start_If_Stmt
+              (If_Blk,
+               New_Compare_Op
+                 (ON_Eq, New_Obj_Value (Pfx_Var),
+                  New_Lit (New_Null_Access (Pt_Info.Ortho_Type (Mode_Value))),
+                  Ghdl_Bool_Type));
+            Start_Association (Constr, Ghdl_Access_Check_Failed);
+            New_Procedure_Call (Constr);
+            Finish_If_Stmt (If_Blk);
+         end if;
+
+         return Chap7.Bounds_Acc_To_Fat_Pointer (Pfx_Var, Prefix_Type);
+      else
+         return Lv2M (New_Access_Element
+                        (New_Convert_Ov
+                           (Pfx, Type_Info.Ortho_Ptr_Type (Mode_Value))),
+                      Type_Info, Mode_Value);
+      end if;
+   end Translate_Dereferenced_Name;
+
    function Translate_Name (Name : Iir; Mode : Object_Kind_Type) return Mnode
    is
       Name_Type : constant Iir := Get_Type (Name);
@@ -1201,37 +1245,7 @@ package body Trans.Chap6 is
          when Iir_Kind_Dereference
            | Iir_Kind_Implicit_Dereference =>
             pragma Assert (Mode = Mode_Value);
-            declare
-               Prefix : constant Iir := Get_Prefix (Name);
-               Prefix_Type : constant Iir := Get_Type (Prefix);
-               Pt_Info : constant Type_Info_Acc := Get_Info (Prefix_Type);
-               Pfx : O_Enode;
-               Pfx_Var : O_Dnode;
-               Chk_Null : O_Dnode;
-            begin
-               Pfx := Chap7.Translate_Expression (Prefix);
-               if Pt_Info.Type_Mode = Type_Mode_Bounds_Acc then
-                  Pfx_Var := Create_Temp_Init
-                    (Pt_Info.Ortho_Type (Mode_Value), Pfx);
-
-                  --  Do a dummy memory access to catch null access.
-                  Chk_Null := Create_Temp_Init
-                    (Char_Type_Node,
-                     New_Value (New_Access_Element
-                                  (New_Convert_Ov (New_Obj_Value (Pfx_Var),
-                                                   Ghdl_Ptr_Type))));
-                  pragma Unreferenced (Chk_Null);
-
-                  return Chap7.Bounds_Acc_To_Fat_Pointer
-                    (Pfx_Var, Prefix_Type);
-               else
-                  return Lv2M
-                    (New_Access_Element
-                       (New_Convert_Ov
-                          (Pfx, Type_Info.Ortho_Ptr_Type (Mode_Value))),
-                     Type_Info, Mode_Value);
-               end if;
-            end;
+            return Translate_Dereferenced_Name (Name);
 
          when Iir_Kind_Selected_Element =>
             return Translate_Selected_Element
