@@ -1231,12 +1231,16 @@ package body Ortho_Code.X86.Insns is
       use Interfaces;
       Subprg : constant O_Dnode := Get_Call_Subprg (Stmt);
       Push_Size : constant Uns32 := Uns32 (Get_Subprg_Stack (Subprg));
+      Push_Home : Uns32;
       Reg_Res : O_Reg;
       Pad : Uns32;
       Res_Stmt : O_Enode;
    begin
+      --  Note: Push_Offset may not be 0 if an argument contains a call.
+      --  In that case, the stack may not be aligned.
+
       --  Emit Setup_Frame (to align stack).
-      --  Pad the stack if necessary (this may be a nested call).
+      --  Pad the stack if necessary.
       Pad := (Push_Size + Push_Offset) and Uns32 (Flags.Stack_Boundary - 1);
       if Pad /= 0 then
          Pad := Uns32 (Flags.Stack_Boundary) - Pad;
@@ -1256,14 +1260,22 @@ package body Ortho_Code.X86.Insns is
          Clobber_Caller_Saved_Registers_32;
       end if;
 
+      if Flags.M64 and Flags.Win64 then
+         --  Need to reserve 4*8 bytes to home registers
+         Push_Home := 4*8;
+         Gen_Stack_Adjust (Int32 (Push_Home));
+      else
+         Push_Home := 0;
+      end if;
+
       --  Add the call.
       Reg_Res := Get_Return_Register (Get_Expr_Mode (Stmt));
       Set_Expr_Reg (Stmt, Reg_Res);
       Link_Stmt (Stmt);
       Res_Stmt := Stmt;
 
-      if Push_Size + Pad /= 0 then
-         Gen_Stack_Adjust (-Int32 (Push_Size + Pad));
+      if Push_Size + Push_Home + Pad /= 0 then
+         Gen_Stack_Adjust (-Int32 (Push_Size + Push_Home + Pad));
 
          --  The stack has been restored (just after the call).
          Push_Offset := Push_Offset - (Push_Size + Pad);

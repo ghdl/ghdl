@@ -1641,9 +1641,13 @@ package body Ortho_Code.X86.Emits is
       Gen_8 (Opc2_Grp1_And or 2#11_000_000# or To_Reg32 (Reg));
       Gen_32 (not (X86.Flags.Stack_Boundary - 1));
       End_Insn;
+      --  Call chkstk if needed.
+      --  On windows x32, chkstk probes the stack and allocate stack.
+      --  On windows x64, chkstk only probes the stack.
       if X86.Flags.Flag_Alloca_Call then
          Gen_Call (Chkstk_Symbol);
-      else
+      end if;
+      if (not X86.Flags.Flag_Alloca_Call) or X86.Flags.Win64 then
          --  subl esp, reg
          Start_Insn;
          Gen_Rex_B (Reg, Sz_Ptr);

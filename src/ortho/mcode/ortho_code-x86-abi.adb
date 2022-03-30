@@ -44,8 +44,8 @@ package body Ortho_Code.X86.Abi is
 
    type Regs_List is array (Boolean range <>, Natural range <>) of O_Reg;
    Int_Regs : constant Regs_List :=
-     (False => (R_Di, R_Si, R_Dx, R_Cx, R_R8, R_R9),
-      True  => (R_Cx, R_Dx, R_R8, R_R9, R_None, R_None));
+     (False => (R_Di, R_Si, R_Dx, R_Cx, R_R8, R_R9),       --  SysV x86-64
+      True  => (R_Cx, R_Dx, R_R8, R_R9, R_None, R_None));  --  Win X64
    Sse_Regs : constant Regs_List :=
      (False => (R_Xmm0, R_Xmm1, R_Xmm2, R_Xmm3,
                 R_Xmm4, R_Xmm5, R_Xmm6, R_Xmm7),
