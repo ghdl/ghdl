@@ -846,7 +846,12 @@ package body Ortho_Code.X86.Abi is
    procedure Chkstk (Sz : Integer);
    pragma Import (C, Chkstk, "__chkstk");
 
-   procedure Link_Intrinsics is
+   procedure Chkstk_Ms (Sz : Integer);
+   pragma Import (C, Chkstk_Ms, "__chkstk_ms");
+
+   procedure Link_Intrinsics
+   is
+      Addr : System.Address;
    begin
       if not Flags.M64 then
          Binary_File.Memory.Set_Symbol_Address
@@ -863,8 +868,13 @@ package body Ortho_Code.X86.Abi is
             Moddi3'Address);
       end if;
       if X86.Flags.Flag_Alloca_Call then
+         if Flags.Win64 then
+            Addr := Chkstk_Ms'Address;
+         else
+            Addr := Chkstk'Address;
+         end if;
          Binary_File.Memory.Set_Symbol_Address
-           (Ortho_Code.X86.Emits.Chkstk_Symbol, Chkstk'Address);
+           (Ortho_Code.X86.Emits.Chkstk_Symbol, Addr);
       end if;
    end Link_Intrinsics;
 

@@ -205,8 +205,8 @@ GHDL_MCODE_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir
 
 ghdl_mcode$(EXEEXT): GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
 ghdl_mcode$(EXEEXT): $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) $(ORTHO_DEPS) \
-            memsegs_c.o chkstk.o version.ads force
-	$(GNATMAKE) -o $@ -gnat12 $(GHDL_MCODE_INCFLAGS) $(GNATFLAGS) -gnatw.A ghdl_jit.adb $(GNAT_BARGS) -largs memsegs_c.o chkstk.o $(GRT_ADD_OBJS) $(LDFLAGS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB) $(GRT_EXEC_OPTS))
+            memsegs_c.o version.ads force
+	$(GNATMAKE) -o $@ -gnat12 $(GHDL_MCODE_INCFLAGS) $(GNATFLAGS) -gnatw.A ghdl_jit.adb $(GNAT_BARGS) -largs memsegs_c.o $(GRT_ADD_OBJS) $(LDFLAGS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB) $(GRT_EXEC_OPTS))
 
 memsegs_c.o: $(srcdir)/src/ortho/mcode/memsegs_c.c
 	$(CC) -c $(COVERAGE_FLAGS) $(CFLAGS) -o $@ $<
@@ -648,7 +648,7 @@ distclean: clean
 	$(RM) -f Makefile config.status ghdl.gpr
 
 clean-c: force
-	$(RM) -f memsegs_c.o chkstk.o jumps.o times.o
+	$(RM) -f memsegs_c.o chkstk.o chkstk-x64.o jumps.o times.o
 	$(RM) -f grt-cstdio.o grt-cgnatrts.o grt-modules.o
 	$(RM) -f grt-cvpi.o grt-cvhpi.o grt-cdynload.o
 	$(RM) -f fstapi.o fastlz.o lz4.o

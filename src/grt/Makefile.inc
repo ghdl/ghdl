@@ -61,6 +61,12 @@ ifeq ($(filter-out mingw32 mingw64 windows,$(osys)),)
   GRT_EXTRA_LIB=-ldbghelp
   GRT_EXEC_OPTS=
   GRT_SHARED_OPTS=-Wl,-u,_ghdl_main
+
+  ifeq ($(filter-out x86_64,$(arch)),)
+    GRT_TARGET_OBJS+=chkstk-x64.o
+  else
+    GRT_TARGET_OBJS+=chkstk.o
+  endif
 else
   # For unix variants.
   # Usually needs -dl (for dlopen) and -lm (for math functions).
@@ -230,6 +236,9 @@ pic/fastlz.o: $(GRTSRCDIR)/fst/fastlz.c
 	$(GRT_C_COMPILE_PIC)
 
 chkstk.o: $(GRTSRCDIR)/config/chkstk.S
+	$(GRT_C_COMPILE)
+
+chkstk-x64.o: $(GRTSRCDIR)/config/chkstk-x64.S
 	$(GRT_C_COMPILE)
 
 grt-backtraces-impl.ads:
