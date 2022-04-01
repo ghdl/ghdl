@@ -1231,7 +1231,6 @@ package body Ortho_Code.X86.Insns is
       use Interfaces;
       Subprg : constant O_Dnode := Get_Call_Subprg (Stmt);
       Push_Size : constant Uns32 := Uns32 (Get_Subprg_Stack (Subprg));
-      Push_Home : Uns32;
       Reg_Res : O_Reg;
       Pad : Uns32;
       Res_Stmt : O_Enode;
@@ -1262,10 +1261,8 @@ package body Ortho_Code.X86.Insns is
 
       if Flags.M64 and Flags.Win64 then
          --  Need to reserve 4*8 bytes to home registers
-         Push_Home := 4*8;
-         Gen_Stack_Adjust (Int32 (Push_Home));
-      else
-         Push_Home := 0;
+         Gen_Stack_Adjust (4*8);
+         Push_Offset := Push_Offset + 32;
       end if;
 
       --  Add the call.
@@ -1274,8 +1271,8 @@ package body Ortho_Code.X86.Insns is
       Link_Stmt (Stmt);
       Res_Stmt := Stmt;
 
-      if Push_Size + Push_Home + Pad /= 0 then
-         Gen_Stack_Adjust (-Int32 (Push_Size + Push_Home + Pad));
+      if Push_Size + Pad /= 0 then
+         Gen_Stack_Adjust (-Int32 (Push_Size + Pad));
 
          --  The stack has been restored (just after the call).
          Push_Offset := Push_Offset - (Push_Size + Pad);

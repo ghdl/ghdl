@@ -40,6 +40,10 @@ package body Ortho_Code.X86.Abi is
       pragma Unreferenced (Subprg);
    begin
       Abi := (Offset => Subprg_Stack_Init, Inum => 0, Fnum => 0);
+      if Flags.Win64 then
+         --  On Win64, 32B are always reserved for home registers.
+         Abi.Offset := Abi.Offset + 32;
+      end if;
    end Start_Subprogram;
 
    type Regs_List is array (Boolean range <>, Natural range <>) of O_Reg;
@@ -90,8 +94,13 @@ package body Ortho_Code.X86.Abi is
          Size := (Size + 3) and not 3;
       end if;
       Set_Decl_Reg (Inter, Reg);
-      Set_Local_Offset (Inter, Abi.Offset);
-      Abi.Offset := Abi.Offset + Int32 (Size);
+      if Flags.Win64 and Reg in Regs_R64 then
+         --  Use the normal home location (first reg at offset 8).
+         Set_Local_Offset (Inter, Int32 (8 * Abi.Inum));
+      else
+         Set_Local_Offset (Inter, Abi.Offset);
+         Abi.Offset := Abi.Offset + Int32 (Size);
+      end if;
    end New_Interface;
 
    procedure Finish_Subprogram (Subprg : O_Dnode; Abi : in out O_Abi_Subprg)

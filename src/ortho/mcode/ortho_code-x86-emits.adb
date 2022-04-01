@@ -1243,6 +1243,24 @@ package body Ortho_Code.X86.Emits is
       End_Insn;
    end Emit_Addl_Sp_Imm;
 
+   procedure Gen_Sub_Sp_Imm (Imm : Int32) is
+   begin
+      Start_Insn;
+      Init_Modrm_Reg (R_Sp, Sz_Ptr);
+      Gen_Insn_Grp1 (Opc2_Grp1_Sub, Imm);
+      End_Insn;
+   end Gen_Sub_Sp_Imm;
+
+   procedure Gen_Sub_Sp_Reg (Reg : O_Reg) is
+   begin
+      --  subl esp, reg
+      Start_Insn;
+      Gen_Rex_B (Reg, Sz_Ptr);
+      Gen_8 (Opc_Subl_Reg_Rm);
+      Gen_8 (2#11_100_000# + To_Reg32 (Reg));
+      End_Insn;
+   end Gen_Sub_Sp_Reg;
+
    procedure Emit_Push_Fp (Op : O_Enode; Mode : Mode_Fp)
    is
       Reg : constant O_Reg := Get_Expr_Reg (Op);
@@ -1648,12 +1666,7 @@ package body Ortho_Code.X86.Emits is
          Gen_Call (Chkstk_Symbol);
       end if;
       if (not X86.Flags.Flag_Alloca_Call) or X86.Flags.Win64 then
-         --  subl esp, reg
-         Start_Insn;
-         Gen_Rex_B (Reg, Sz_Ptr);
-         Gen_8 (Opc_Subl_Reg_Rm);
-         Gen_8 (2#11_100_000# + To_Reg32 (Reg));
-         End_Insn;
+         Gen_Sub_Sp_Reg (Reg);
       end if;
       --  movl reg, esp
       Start_Insn;
@@ -2870,14 +2883,6 @@ package body Ortho_Code.X86.Emits is
       Gen_Push_Pop_Reg (Opc_Pop_Reg, Reg, Sz_Ptr);
    end Pop_Reg;
 
-   procedure Gen_Sub_Sp (Imm : Int32) is
-   begin
-      Start_Insn;
-      Init_Modrm_Reg (R_Sp, Sz_Ptr);
-      Gen_Insn_Grp1 (Opc2_Grp1_Sub, Imm);
-      End_Insn;
-   end Gen_Sub_Sp;
-
    procedure Emit_Prologue (Subprg : Subprogram_Data_Acc)
    is
       use Ortho_Code.Decls;
@@ -2972,12 +2977,7 @@ package body Ortho_Code.X86.Emits is
 
       --  subl XXX, %esp / subq XXX, %rsp
       if Frame_Size /= 0 then
-         if not X86.Flags.Flag_Alloca_Call
-            or else Frame_Size <= 4096
-         then
-            Gen_Sub_Sp (Int32 (Frame_Size));
-         else
-            pragma Assert (not Flags.M64);
+         if X86.Flags.Flag_Alloca_Call and then Frame_Size >= 4096 then
             --  mov stack_size,%eax
             Start_Insn;
             Gen_8 (Opc_Movl_Imm_Reg + To_Reg32 (R_Ax));
@@ -2985,6 +2985,12 @@ package body Ortho_Code.X86.Emits is
             End_Insn;
 
             Gen_Call (Chkstk_Symbol);
+
+            if Flags.Win64 then
+               Gen_Sub_Sp_Reg (R_Ax);
+            end if;
+         else
+            Gen_Sub_Sp_Imm (Int32 (Frame_Size));
          end if;
       end if;
 
