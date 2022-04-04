@@ -53,6 +53,11 @@ package body Ortho_Code.X86.Emits is
 
    Subprg_Pc : Pc_Type;
 
+   --  First byte in .xdata (for Win64)
+   Xdata_Sym : Symbol;
+   --  Last entry in .xdata (for Win64)
+   Last_Unwind_Off : Pc_Type;
+
    --  x86 opcodes.
    Opc_Data16 : constant := 16#66#;
 --   Opc_Rex    : constant := 16#40#;
@@ -2894,6 +2899,7 @@ package body Ortho_Code.X86.Emits is
       Frame_Size : Unsigned_32;
       Saved_Regs_Size : Unsigned_32;
       Has_Fp_Inter : Boolean;
+      Alloc_Pc : Pc_Type;
    begin
       --  Switch to .text section and align the function (to avoid the nested
       --  function trick and for performance).
@@ -2993,6 +2999,7 @@ package body Ortho_Code.X86.Emits is
             Gen_Sub_Sp_Imm (Int32 (Frame_Size));
          end if;
       end if;
+      Alloc_Pc := Get_Current_Pc;
 
       --  Save XMM arguments.
       if Flags.M64 and Has_Fp_Inter then
@@ -3027,6 +3034,52 @@ package body Ortho_Code.X86.Emits is
             Push_Reg (R);
          end if;
       end loop;
+
+      if Flags.Win64 then
+         declare
+            End_Pc : constant Pc_Type := Get_Current_Pc;
+            Nbr_Unw_Code : Unsigned_8;
+         begin
+            Set_Current_Section (Sect_Xdata);
+            Last_Unwind_Off := Get_Current_Pc;
+            Prealloc (7*2);
+            --  UNWIND_INFO
+            Gen_8 (16#01#);            --  Version(3)=1, Flags(5)=0
+            pragma Assert (End_Pc - Subprg_Pc < 256);
+            Gen_8 (Byte (End_Pc - Subprg_Pc));  --  Size of prolog
+            Gen_8 (2);                 --  Nbr unwind opcodes
+            Gen_8 (16#05#);            --  FrameReg(4)=ebp, FrameRegOff(4)=0*16
+            --  0: push ebp
+            Gen_8 (1);       --  Offset: +1
+            Gen_8 (16#50#);  --  Op: SAVE_NONVOL, Reg: 5 (ebp)
+            --  1: set fp
+            Gen_8 (4);       --  Offset: +3
+            Gen_8 (16#03#);  --  Op: SET_FP_REG
+            Nbr_Unw_Code := 2;
+            --  x: alloc frame
+            if Frame_Size > 0 then
+               Gen_8 (Byte (Alloc_Pc - Subprg_Pc));    --  Offset
+               if Frame_Size <= 128 then
+                  Gen_8 (16#02# + Byte (Frame_Size - 8) / 8 * 16);
+                  Nbr_Unw_Code := Nbr_Unw_Code + 1;
+               elsif Frame_Size < 512 * 1024 - 8 then
+                  Gen_8 (16#02#);
+                  Gen_16 (Frame_Size / 8);
+                  Nbr_Unw_Code := Nbr_Unw_Code + 2;
+               else
+                  Gen_8 (16#12#);
+                  Gen_16 ((Frame_Size / 8) mod 16#1_0000#);
+                  Gen_16 ((Frame_Size / 8) / 16#1_0000#);
+                  Nbr_Unw_Code := Nbr_Unw_Code + 3;
+               end if;
+            end if;
+            --  y: save preserved
+            --  TODO
+
+            Patch_8 (Last_Unwind_Off + 2, Nbr_Unw_Code);
+            Set_Current_Section (Sect_Text);
+         end;
+      end if;
    end Emit_Prologue;
 
    procedure Emit_Epilogue (Subprg : Subprogram_Data_Acc)
@@ -3113,6 +3166,21 @@ package body Ortho_Code.X86.Emits is
       Gen_8 (0);
    end Gen_FDE;
 
+   procedure Gen_Win64_Unwind (Subprg : Subprogram_Data_Acc)
+   is
+      Start : constant Symbol := Get_Decl_Symbol (Subprg.D_Decl);
+      Subprg_Size : constant Unsigned_32 :=
+         Unsigned_32 (Get_Current_Pc - Subprg_Pc);
+   begin
+      Set_Current_Section (Sect_Pdata);
+      Prealloc (3 * 4);
+      --  RUNTIME_FUNCTION
+      --   start, end, info
+      Gen_X86_Img_32 (Start, 0);
+      Gen_X86_Img_32 (Start, Subprg_Size);
+      Gen_X86_Img_32 (Xdata_Sym, Unsigned_32 (Last_Unwind_Off));
+   end Gen_Win64_Unwind;
+
    procedure Emit_Subprg (Subprg : Subprogram_Data_Acc)
    is
       pragma Assert (Subprg = Cur_Subprg);
@@ -3140,6 +3208,9 @@ package body Ortho_Code.X86.Emits is
 
       if Flags.Eh_Frame then
          Gen_FDE;
+      end if;
+      if Flags.Win64 then
+         Gen_Win64_Unwind (Subprg);
       end if;
    end Emit_Subprg;
 
@@ -3364,13 +3435,20 @@ package body Ortho_Code.X86.Emits is
          Gen_8 (16#06#);           --   reg 6 (rbp)
          Gen_8 (0);                --  nop
          Gen_8 (0);                --  nop
-         Set_Current_Section (Sect_Text);
+      end if;
+
+      if Flags.Win64 then
+         Create_Section (Sect_Pdata, ".pdata", Section_Read);
+         Create_Section (Sect_Xdata, ".xdata", Section_Read);
+         Set_Current_Section (Sect_Xdata);
+         Xdata_Sym := Create_Local_Symbol;
       end if;
 
       if Flag_Debug /= Debug_None then
          Dwarf.Init;
-         Set_Current_Section (Sect_Text);
       end if;
+
+      Set_Current_Section (Sect_Text);
    end Init;
 
    procedure Finish

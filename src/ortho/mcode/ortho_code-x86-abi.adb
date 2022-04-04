@@ -14,6 +14,7 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 with System;
+with Interfaces; use Interfaces;
 
 with Ada.Text_IO;
 with Ortho_Code.Decls; use Ortho_Code.Decls;
@@ -918,6 +919,13 @@ package body Ortho_Code.X86.Abi is
          Dbase : Address);
       pragma Import (C, Register_Frame_Info_Bases,
                      "__register_frame_info_bases");
+
+      procedure RtlAddFunctionTable
+        (Function_Table : Address;
+         Entry_Count : Unsigned_32;
+         Base_Address : Address);
+      pragma Import (C, RtlAddFunctionTable,
+                     "RtlAddFunctionTable");
    begin
       if X86.Flags.Eh_Frame then
          Register_Frame_Info_Bases
@@ -925,6 +933,12 @@ package body Ortho_Code.X86.Abi is
             This_Object'Address,
             Get_Section_Addr (X86.Emits.Sect_Text),
             Get_Section_Addr (X86.Emits.Sect_Bss));
+      end if;
+      if X86.Flags.Win64 then
+         RtlAddFunctionTable
+            (Get_Section_Addr (X86.Emits.Sect_Pdata),
+             Unsigned_32 (Get_Section_Size (X86.Emits.Sect_Pdata)) / 12,
+             Get_Section_Addr (X86.Emits.Sect_Text));
       end if;
    end Register_Unwind;
 

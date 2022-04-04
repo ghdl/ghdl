@@ -35,7 +35,13 @@ package Ortho_Code.X86.Emits is
    Sect_Text : Section_Acc;
    Sect_Rodata : Section_Acc;
    Sect_Bss : Section_Acc;
+
+   --  For SysV unwinding.
    Sect_Eh_Frame : Section_Acc;
+
+   --  For Win64 unwinding.
+   Sect_Pdata : Section_Acc;
+   Sect_Xdata : Section_Acc;
 
    Mcount_Symbol : Symbol;
    Chkstk_Symbol : Symbol;
