@@ -181,7 +181,11 @@ package body Binary_File.Coff is
       declare
          Hdr : Filehdr;
       begin
-         Hdr.F_Magic := I386magic;
+         if Arch = Arch_X86_64 then
+            Hdr.F_Magic := X8664magic;
+         else
+            Hdr.F_Magic := I386magic;
+         end if;
          Hdr.F_Nscns := Unsigned_16 (Nbr_Sect);
          Hdr.F_Timdat := 0;
          Hdr.F_Symptr := Unsigned_32 (Symtab_Offset);
@@ -207,6 +211,7 @@ package body Binary_File.Coff is
                   Hdr.S_Flags := 0;
                   L := Sections (I).Sect.Name'Length;
                   if L > Hdr.S_Name'Length then
+                     --  Truncate long sectio names
                      Hdr.S_Name := Sections (I).Sect.Name
                        (Sections (I).Sect.Name'First ..
                         Sections (I).Sect.Name'First + Hdr.S_Name'Length - 1);
@@ -324,7 +329,8 @@ package body Binary_File.Coff is
             Sym : Syment;
          begin
             Sym := (E => Gen_String (Get_Symbol_Name (S)),
-                    E_Value => Unsigned_32 (Get_Symbol_Value (S)),
+                    E_Value => Unsigned_32
+                       (Get_Symbol_Value (S) and 16#ffff_ffff#),
                     E_Scnum => 0,
                     E_Type => 0,
                     E_Sclass => C_EXT,

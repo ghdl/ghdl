@@ -18,20 +18,21 @@ with System; use System;
 
 package Coff is
    type Filehdr is record
-      F_Magic : Unsigned_16;    --  Magic number.
-      F_Nscns : Unsigned_16;    --  Number of sections.
-      F_Timdat : Unsigned_32;   --  Time and date stamp.
-      F_Symptr : Unsigned_32;   --  File pointer to symtab.
-      F_Nsyms : Unsigned_32;    --  Number of symtab entries.
-      F_Opthdr : Unsigned_16;   --  Size of optionnal header.
-      F_Flags : Unsigned_16;    --  Flags;
+      F_Magic  : Unsigned_16;    --  Magic number.
+      F_Nscns  : Unsigned_16;    --  Number of sections.
+      F_Timdat : Unsigned_32;    --  Time and date stamp.
+      F_Symptr : Unsigned_32;    --  File pointer to symtab.
+      F_Nsyms  : Unsigned_32;    --  Number of symtab entries.
+      F_Opthdr : Unsigned_16;    --  Size of optionnal header.
+      F_Flags  : Unsigned_16;    --  Flags;
    end record;
 
    --  Size of Filehdr.
    Filehdr_Size : constant Natural := Filehdr'Size / Storage_Unit;
 
    --  Magic numbers.
-   I386magic : constant Unsigned_16 := 16#014c#;
+   I386magic  : constant Unsigned_16 := 16#014c#;
+   X8664magic : constant Unsigned_16 := 16#8664#;
 
    --  Flags of file header.
    --  Relocation info stripped from file.
@@ -47,16 +48,16 @@ package Coff is
    F_Lsyms : constant Unsigned_16 := 16#0008#;
 
    type Scnhdr is record
-      S_Name : String (1 .. 8); --  Section name.
-      S_Paddr : Unsigned_32;    --  Physical address.
-      S_Vaddr : Unsigned_32;    --  Virtual address.
-      S_Size : Unsigned_32;     --  Section size.
-      S_Scnptr : Unsigned_32;   --  File pointer to raw section data.
-      S_Relptr : Unsigned_32;   --  File pointer to relocation data.
+      S_Name    : String (1 .. 8); --  Section name.
+      S_Paddr   : Unsigned_32;    --  Physical address.
+      S_Vaddr   : Unsigned_32;    --  Virtual address.
+      S_Size    : Unsigned_32;     --  Section size.
+      S_Scnptr  : Unsigned_32;   --  File pointer to raw section data.
+      S_Relptr  : Unsigned_32;   --  File pointer to relocation data.
       S_Lnnoptr : Unsigned_32;  --  File pointer to line number data.
-      S_Nreloc : Unsigned_16;   --  Number of relocation entries.
-      S_Nlnno : Unsigned_16;    --  Number of line number entries.
-      S_Flags : Unsigned_32;    --  Flags.
+      S_Nreloc  : Unsigned_16;   --  Number of relocation entries.
+      S_Nlnno   : Unsigned_16;    --  Number of line number entries.
+      S_Flags   : Unsigned_32;    --  Flags.
    end record;
    Scnhdr_Size : constant Natural := Scnhdr'Size / Storage_Unit;
 
@@ -84,10 +85,10 @@ package Coff is
    for Sym_Name'Size use 64;
 
    type Syment is record
-      E : Sym_Name;             --  Name of the symbol
-      E_Value : Unsigned_32;    --  Value
-      E_Scnum : Unsigned_16;    --  Section
-      E_Type : Unsigned_16;
+      E        : Sym_Name;       --  Name of the symbol
+      E_Value  : Unsigned_32;    --  Value
+      E_Scnum  : Unsigned_16;    --  Section
+      E_Type   : Unsigned_16;
       E_Sclass : Unsigned_8;
       E_Numaux : Unsigned_8;
    end record;

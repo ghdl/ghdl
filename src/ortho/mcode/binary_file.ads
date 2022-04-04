@@ -67,7 +67,7 @@ package Binary_File is
    --  Set the current section.
    procedure Set_Current_Section (Sect : Section_Acc);
 
-   --  Create an undefined local (anonymous) symbol in the  current section.
+   --  Create an undefined local (anonymous) symbol in the current section.
    function Create_Local_Symbol return Symbol;
    function Create_Symbol (Name : O_Ident; Code : Boolean) return Symbol;
 
