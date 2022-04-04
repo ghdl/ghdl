@@ -22,7 +22,7 @@ package Ortho_Code.X86.Flags_Windows64 is
 
    --  Prefered stack alignment.
    --  Must be a power of 2.
-   Stack_Boundary : constant Unsigned_32 := 2 ** 3;
+   Stack_Boundary : constant Unsigned_32 := 2 ** 4;
 
    --  Alignment for double (64 bit float).
    Mode_F64_Align : constant Natural := 3;
