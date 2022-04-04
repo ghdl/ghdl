@@ -132,7 +132,8 @@ package body Binary_File is
                                 Nbr_Relocs => 0,
                                 Number => 0,
                                 Seg => Memsegs.Create,
-                                Vaddr => 0);
+                                Vaddr => 0,
+                                Img_Off => 0);
       if (Flags and Section_Zero) = 0 then
          --  Allocate memory for the segment, unless BSS.
          Resize (Sect, 8192);
@@ -792,6 +793,15 @@ package body Binary_File is
       Gen_32 (Conv (Offset));
    end Gen_X86_32;
 
+   procedure Gen_X86_Img_32 (Sym : Symbol; Offset : Unsigned_32) is
+   begin
+      pragma Assert (Arch = Arch_X86_64 or Arch = Arch_X86);
+      if Sym /= Null_Symbol then
+         Add_Reloc (Sym, Reloc_Img_32);
+      end if;
+      Gen_32 (Offset);
+   end Gen_X86_Img_32;
+
    procedure Gen_Sparc_32 (Sym : Symbol; Offset : Integer_32) is
    begin
       if Sym /= Null_Symbol then
@@ -886,6 +896,11 @@ package body Binary_File is
                     To_Unsigned_32 (Get_Symbol_Vaddr (Sym)
                                       - (Sect.Vaddr + Addr)
                                         - Reloc.Neg_Addend));
+         when Reloc_Img_32 =>
+            Add_32 (Sect, Addr,
+                    To_Unsigned_32 (Get_Symbol_Value (Sym)
+                                      + Get_Section (Sym).Img_Off));
+
          when Reloc_Disp22 =>
             Set_Wdisp (Sect, Addr, Sym, 22);
          when Reloc_Disp30 =>

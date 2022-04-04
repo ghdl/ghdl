@@ -113,8 +113,9 @@ package body Binary_File.Memory is
          declare
             Seg : constant Segment_Kind := Get_Segment (Sect);
          begin
-            Seg_Size (Seg) :=
-              Pow_Align (Seg_Size (Seg), Sect.Align) + Sect.Pc;
+            --  Currently, offset in the segment.
+            Sect.Img_Off := Pow_Align (Seg_Size (Seg), Sect.Align);
+            Seg_Size (Seg) := Sect.Img_Off + Sect.Pc;
          end;
          Sect := Sect.Next;
       end loop;
@@ -145,6 +146,9 @@ package body Binary_File.Memory is
             Off : Pc_Type renames Seg_Offs (Seg);
          begin
             if Seg /= Seg_None then
+               --  From segment offset to image offset.
+               Sect.Img_Off := Sect.Img_Off + Seg_Offs (Seg);
+
                if Sect.Pc > 0 then
                   Off := Pow_Align (Off, Sect.Align);
                   if Sect.Data = null then

@@ -116,6 +116,10 @@ package Binary_File is
    procedure Gen_X86_32 (Sym : Symbol; Offset : Integer_32);
    procedure Gen_Sparc_32 (Sym : Symbol; Offset : Integer_32);
 
+   --  Image based address (for Win64 unwind info)
+   --  The result is a 32b offset from the image base to SYM + OFFSET
+   procedure Gen_X86_Img_32 (Sym : Symbol; Offset : Unsigned_32);
+
    procedure Gen_Ppc_24 (V : Unsigned_32; Sym : Symbol);
 
    procedure Gen_Ua_Addr (Sym : Symbol; Offset : Integer_32);
@@ -172,7 +176,7 @@ private
 
    --  Relocations.
    type Reloc_Kind is (Reloc_32, Reloc_Pc32,
-                       Reloc_Abs,
+                       Reloc_Abs, Reloc_Img_32,
                        Reloc_Ua_32, Reloc_Ua_Addr,
                        Reloc_Disp22, Reloc_Disp30,
                        Reloc_Hi22, Reloc_Lo10,
@@ -226,6 +230,8 @@ private
       Number : Natural;
       --  Virtual address, if set.
       Vaddr : Pc_Type; -- SSE.Integer_Address;
+      --  Offset relative to the image start
+      Img_Off : Pc_Type;
       --  Memory for this segment.
       Seg : Memsegs.Memseg_Type;
    end record;
