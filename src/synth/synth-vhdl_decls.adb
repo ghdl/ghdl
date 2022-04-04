@@ -429,6 +429,9 @@ package body Synth.Vhdl_Decls is
       Val : Valtyp;
    begin
       Init := Get_Value (Syn_Inst, Decl);
+      if Init.Val = null then
+         Init := Create_Value_Default (Init.Typ);
+      end if;
 
       Val := Create_Var_Wire (Syn_Inst, Decl, Wire_Variable, Init);
       Mutate_Object (Syn_Inst, Decl, Val);

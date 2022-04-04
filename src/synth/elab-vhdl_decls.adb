@@ -138,7 +138,7 @@ package body Elab.Vhdl_Decls is
          Init := Exec_Expression_With_Type (Syn_Inst, Def, Obj_Typ);
          Init := Exec_Subtype_Conversion (Init, Obj_Typ, False, Decl);
       else
-         Init := No_Valtyp;
+         Init := (Typ => Obj_Typ, Val => null);
       end if;
       Create_Object (Syn_Inst, Decl, Init);
    end Elab_Variable_Declaration;
