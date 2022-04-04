@@ -621,7 +621,7 @@ package body Synth.Vhdl_Insts is
       case Get_Kind (Formal) is
          when Iir_Kind_Interface_Signal_Declaration =>
             Off := 0;
-            Typ := Get_Subtype_Object (Inter_Inst, Get_Type (Formal));
+            Typ := Get_Value (Inter_Inst, Formal).Typ;
          when Iir_Kind_Simple_Name =>
             Synth_Individual_Prefix
               (Syn_Inst, Inter_Inst, Get_Named_Entity (Formal), Off, Typ);

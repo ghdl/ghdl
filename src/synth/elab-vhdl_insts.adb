@@ -335,6 +335,9 @@ package body Elab.Vhdl_Insts is
          case Get_Kind (Assoc) is
             when Iir_Kinds_Association_Element_By_Actual =>
                return Exec_Type_Of_Object (Syn_Inst, Get_Actual (Assoc));
+            when Iir_Kind_Association_Element_By_Individual =>
+               return Synth_Subtype_Indication
+                 (Syn_Inst, Get_Actual_Type (Assoc));
             when others =>
                raise Internal_Error;
          end case;
