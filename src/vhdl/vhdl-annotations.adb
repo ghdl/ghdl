@@ -324,29 +324,34 @@ package body Vhdl.Annotations is
             end if;
 
          when Iir_Kind_Array_Type_Definition =>
-            El := Get_Element_Subtype (Def);
-            Annotate_Anonymous_Type_Definition (Block_Info, El);
             if Flag_Synthesis then
+               --  Create an annotation for the element type, as it can be
+               --  referenced by the implicit concat function definition for
+               --  concatenation with element.
+               El := Get_Element_Subtype (Def);
+               Annotate_Anonymous_Type_Definition (Block_Info, El);
+
+               --  Then for the array.
                Create_Object_Info (Block_Info, Def, Kind_Type);
             end if;
 
          when Iir_Kind_Array_Subtype_Definition =>
-            if Get_Array_Element_Constraint (Def) /= Null_Node
-              or else
-              (Get_Resolution_Indication (Def) /= Null_Node
-                 and then
-                 (Get_Kind (Get_Resolution_Indication (Def))
-                    = Iir_Kind_Array_Element_Resolution))
-            then
-               --  This subtype has created a new anonymous subtype for the
-               --  element.
-               El := Get_Element_Subtype (Def);
-               Annotate_Type_Definition (Block_Info, El);
-            end if;
             if Flag_Synthesis then
                --  For the bounds.
                Create_Object_Info (Block_Info, Def, Kind_Type);
             else
+               if Get_Array_Element_Constraint (Def) /= Null_Node
+                 or else
+                 (Get_Resolution_Indication (Def) /= Null_Node
+                    and then
+                    (Get_Kind (Get_Resolution_Indication (Def))
+                       = Iir_Kind_Array_Element_Resolution))
+               then
+                  --  This subtype has created a new anonymous subtype for the
+                  --  element.
+                  El := Get_Element_Subtype (Def);
+                  Annotate_Type_Definition (Block_Info, El);
+               end if;
                declare
                   List : constant Iir_Flist := Get_Index_Subtype_List (Def);
                begin
@@ -378,23 +383,8 @@ package body Vhdl.Annotations is
 
          when Iir_Kind_Record_Subtype_Definition =>
             if Flag_Synthesis then
-               declare
-                  List : constant Iir_Flist :=
-                    Get_Elements_Declaration_List (Def);
-                  El : Iir;
-                  El_Type : Iir;
-               begin
-                  for I in Flist_First .. Flist_Last (List) loop
-                     El := Get_Nth_Element (List, I);
-                     if Get_Subtype_Indication (El) /= Null_Iir then
-                        El_Type := Get_Type (El);
-                        Annotate_Anonymous_Type_Definition
-                          (Block_Info, El_Type);
-                     end if;
-                  end loop;
-                  --  For the offsets.
-                  Create_Object_Info (Block_Info, Def, Kind_Type);
-               end;
+               --  For the offsets.
+               Create_Object_Info (Block_Info, Def, Kind_Type);
             end if;
 
          when Iir_Kind_Access_Type_Definition =>

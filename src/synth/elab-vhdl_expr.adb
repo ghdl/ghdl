@@ -998,6 +998,7 @@ package body Elab.Vhdl_Expr is
      (Syn_Inst : Synth_Instance_Acc; Str : Node; Str_Typ : Type_Acc)
      return Valtyp
    is
+      pragma Unreferenced (Syn_Inst);
       pragma Assert (Get_Kind (Str) = Iir_Kind_String_Literal8);
       Id : constant String8_Id := Get_String8_Id (Str);
 
@@ -1022,7 +1023,7 @@ package body Elab.Vhdl_Expr is
             raise Internal_Error;
       end case;
 
-      El_Type := Get_Subtype_Object (Syn_Inst, Get_Element_Subtype (Str_Type));
+      El_Type := Get_Array_Element (Str_Typ);
       if El_Type.Kind in Type_Nets then
          Res_Type := Create_Vector_Type (Bounds, El_Type);
       else

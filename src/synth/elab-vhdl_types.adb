@@ -205,16 +205,28 @@ package body Elab.Vhdl_Types is
       El      : Node;
       El_Type : Node;
       El_Typ  : Type_Acc;
+
+      Parent_Typ : Type_Acc;
+      Parent_Els : Rec_El_Array_Acc;
    begin
       Rec_Els := Create_Rec_El_Array
         (Iir_Index32 (Get_Nbr_Elements (El_List)));
+
+      if Is_Subtype then
+         Parent_Typ := Get_Subtype_Object (Syn_Inst, Get_Parent_Type (Def));
+         Parent_Els := Parent_Typ.Rec;
+      end if;
 
       for I in Flist_First .. Flist_Last (El_List) loop
          El := Get_Nth_Element (El_List, I);
          El_Type := Get_Type (El);
          if Is_Subtype then
-            Synth_Subtype_Indication_If_Anonymous (Syn_Inst, El_Type);
-            El_Typ := Get_Subtype_Object (Syn_Inst, El_Type);
+            if Get_Kind (El) = Iir_Kind_Record_Element_Constraint then
+               El_Typ := Synth_Subtype_Indication_If_Anonymous
+                 (Syn_Inst, El_Type);
+            else
+               El_Typ := Parent_Els.E (Iir_Index32 (I + 1)).Typ;
+            end if;
          else
             El_Typ := Synth_Subtype_Indication_If_Anonymous
               (Syn_Inst, El_Type);
@@ -414,47 +426,49 @@ package body Elab.Vhdl_Types is
    function Synth_Array_Subtype_Indication
      (Syn_Inst : Synth_Instance_Acc; Atype : Node) return Type_Acc
    is
+      Parent_Type : constant Node := Get_Parent_Type (Atype);
       El_Type : constant Node := Get_Element_Subtype (Atype);
       St_Indexes : constant Node_Flist := Get_Index_Subtype_List (Atype);
-      Ptype : Node;
+      Parent_Typ : constant Type_Acc :=
+        Get_Subtype_Object (Syn_Inst, Parent_Type);
       St_El : Node;
-      Btyp : Type_Acc;
-      Etyp : Type_Acc;
+      El_Typ : Type_Acc;
       Bnds : Bound_Array_Acc;
    begin
       --  VHDL08
       if Has_Element_Subtype_Indication (Atype) then
          --  This subtype has created a new anonymous subtype for the
          --  element.
-         Synth_Subtype_Indication (Syn_Inst, El_Type);
+         El_Typ := Synth_Subtype_Indication_If_Anonymous (Syn_Inst, El_Type);
+      else
+         El_Typ := Get_Array_Element (Parent_Typ);
       end if;
 
       if not Get_Index_Constraint_Flag (Atype) then
-         Ptype := Get_Type (Get_Subtype_Type_Mark (Atype));
-         if Get_Element_Subtype (Ptype) = Get_Element_Subtype (Atype) then
+         if Get_Element_Subtype (Parent_Type)
+           = Get_Element_Subtype (Atype)
+         then
             --  That's an alias.
             --  FIXME: maybe a resolution function was added?
             --  FIXME: also handle resolution added in element subtype.
-            return Get_Subtype_Object (Syn_Inst, Ptype);
+            return Parent_Typ;
          end if;
       end if;
 
-      Btyp := Get_Subtype_Object (Syn_Inst, Get_Base_Type (Atype));
-      case Btyp.Kind is
+      case Parent_Typ.Kind is
          when Type_Unbounded_Vector =>
             if Get_Index_Constraint_Flag (Atype) then
                St_El := Get_Index_Type (St_Indexes, 0);
                return Create_Vector_Type
-                 (Synth_Bounds_From_Range (Syn_Inst, St_El), Btyp.Uvec_El);
+                 (Synth_Bounds_From_Range (Syn_Inst, St_El), El_Typ);
             else
                --  An alias.
                --  Handle vhdl08 definition of std_logic_vector from
                --  std_ulogic_vector.
-               return Btyp;
+               return Parent_Typ;
             end if;
          when Type_Unbounded_Array =>
             --  FIXME: partially constrained arrays, subtype in indexes...
-            Etyp := Get_Subtype_Object (Syn_Inst, El_Type);
             if Get_Index_Constraint_Flag (Atype) then
                Bnds := Create_Bound_Array
                  (Dim_Type (Get_Nbr_Elements (St_Indexes)));
@@ -463,7 +477,7 @@ package body Elab.Vhdl_Types is
                   Bnds.D (Dim_Type (I + 1)) :=
                     Synth_Bounds_From_Range (Syn_Inst, St_El);
                end loop;
-               return Create_Array_Type (Bnds, Etyp);
+               return Create_Array_Type (Bnds, El_Typ);
             else
                raise Internal_Error;
             end if;

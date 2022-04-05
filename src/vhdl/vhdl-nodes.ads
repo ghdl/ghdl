@@ -2928,6 +2928,7 @@ package Vhdl.Nodes is
    --  of the tree (ownership).
    --   Get/Set_Owned_Elements_Chain (Field6)
    --
+   --  Chain of either element_declaration or record_element_constraint.
    --   Get/Set_Elements_Declaration_List (Field1)
    --
    --   Get/Set_Subtype_Type_Mark (Field2)
