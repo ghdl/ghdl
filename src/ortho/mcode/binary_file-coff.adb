@@ -84,6 +84,28 @@ package body Binary_File.Coff is
       Flag_Reloc : constant Boolean := True;
       --  If true, discard local symbols;
       Flag_Discard_Local : Boolean := True;
+
+      --  Handle every symbol in the right order: first external, then local.
+      generic
+         with procedure Handle_Symbol (S : Symbol);
+      procedure For_Each_Symbol;
+
+      procedure For_Each_Symbol is
+      begin
+         for I in Symbols.First .. Symbols.Last loop
+            if Get_Scope (I) in Symbol_Scope_External then
+               Handle_Symbol (I);
+            end if;
+         end loop;
+         --  Then the local symbols (2).
+         if not Flag_Discard_Local then
+            for I in Symbols.First .. Symbols.Last loop
+               if Get_Scope (I) not in Symbol_Scope_External then
+                  Handle_Symbol (I);
+               end if;
+            end loop;
+         end if;
+      end For_Each_Symbol;
    begin
       --  If relocations are not performs, then local symbols cannot be
       --  discarded.
@@ -168,14 +190,26 @@ package body Binary_File.Coff is
       end;
 
       Symtab_Offset := Offset;
-      Nbr_Symbols := 2 + Nbr_Sect * 2; --  2 for file.
-      for I in Symbols.First .. Symbols.Last loop
-         Set_Number (I, Nbr_Symbols);
-         Nbr_Symbols := Nbr_Symbols + 1;
-      end loop;
-      Offset := Offset + Nbr_Symbols * Symesz;
-      Strtab_Offset := Offset;
-      Offset := Offset + 4;
+
+      --  Add symbol table length.
+      declare
+         procedure Number_Symbol (S : Symbol) is
+         begin
+            Set_Number (S, Nbr_Symbols);
+            Nbr_Symbols := Nbr_Symbols + 1;
+         end Number_Symbol;
+
+         procedure Number_Each_Symbol is
+            new For_Each_Symbol (Number_Symbol);
+      begin
+         Nbr_Symbols := 2 + Nbr_Sect * 2; --  2 for file.
+         Number_Each_Symbol;
+         Offset := Offset + Nbr_Symbols * Symesz;
+         Strtab_Offset := Offset;
+
+         --  4 for strtab length.
+         Offset := Offset + 4;
+      end;
 
       --  Write file header.
       declare
@@ -348,21 +382,11 @@ package body Binary_File.Coff is
             end if;
             Xwrite (Sym'Address, Symesz);
          end Write_Symbol;
+
+         procedure Write_Each_Symbol is
+            new For_Each_Symbol (Write_Symbol);
       begin
-         --  First the non-local symbols (1).
-         for I in Symbols.First .. Symbols.Last loop
-            if Get_Scope (I) in Symbol_Scope_External then
-               Write_Symbol (I);
-            end if;
-         end loop;
-         --  Then the local symbols (2).
-         if not Flag_Discard_Local then
-            for I in Symbols.First .. Symbols.Last loop
-               if Get_Scope (I) not in Symbol_Scope_External then
-                  Write_Symbol (I);
-               end if;
-            end loop;
-         end if;
+         Write_Each_Symbol;
       end;
 
       --  Write strtab.
@@ -381,6 +405,16 @@ package body Binary_File.Coff is
             Xwrite (Str'Address, Str'Length);
             Strtab_Offset := Strtab_Offset + Str'Length;
          end Write_String;
+
+         procedure Write_Symbol_String (S : Symbol)
+         is
+            Str : constant String := Get_Symbol_Name (S);
+         begin
+            Write_String (Str & NUL);
+         end Write_Symbol_String;
+
+         procedure Write_Each_Symbol_String is
+            new For_Each_Symbol (Write_Symbol_String);
       begin
          L := Unsigned_32 (Offset - Strtab_Offset);
          Xwrite (L'Address, 4);
@@ -394,13 +428,8 @@ package body Binary_File.Coff is
             end if;
          end loop;
 
-         for I in Symbols.First .. Symbols.Last loop
-            declare
-               Str : constant String := Get_Symbol_Name (I);
-            begin
-               Write_String (Str & NUL);
-            end;
-         end loop;
+         Write_Each_Symbol_String;
+
          if Strtab_Offset + 4 /= Offset then
             raise Program_Error;
          end if;
