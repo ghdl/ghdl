@@ -1540,6 +1540,7 @@ package body Synth.Vhdl_Insts is
 
       --  Finalize
       Finalize_Declarations (Syn_Inst, Get_Declaration_Chain (Arch));
+      Finalize_Declarations (Syn_Inst, Get_Declaration_Chain (Entity));
       Finalize_Declarations (Syn_Inst, Get_Port_Chain (Entity));
 
       Finalize_Wires;
