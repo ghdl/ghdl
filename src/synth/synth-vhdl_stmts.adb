@@ -2031,7 +2031,9 @@ package body Synth.Vhdl_Stmts is
       else
          if Is_Func then
             if C.Nbr_Ret = 0 then
-               raise Internal_Error;
+               Error_Msg_Synth
+                 (+Bod, "missing return statement at end of function");
+               Res := No_Valtyp;
             elsif C.Nbr_Ret = 1 and then Is_Static (C.Ret_Value.Val) then
                Res := C.Ret_Value;
             else
