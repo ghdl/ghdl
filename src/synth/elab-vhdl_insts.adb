@@ -36,6 +36,10 @@ with Elab.Vhdl_Expr; use Elab.Vhdl_Expr;
 
 package body Elab.Vhdl_Insts is
    procedure Elab_Instance_Body (Syn_Inst : Synth_Instance_Acc);
+   procedure Elab_Recurse_Instantiations
+     (Syn_Inst : Synth_Instance_Acc; Head : Node);
+   procedure Elab_Recurse_Instantiations_Statement
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node);
 
    procedure Elab_Convertible_Declarations (Syn_Inst : Synth_Instance_Acc)
    is
@@ -419,6 +423,15 @@ package body Elab.Vhdl_Insts is
          end case;
          Item := Get_Chain (Item);
       end loop;
+
+      --  Recurse now.
+      Item := Get_Vunit_Item_Chain (Unit);
+      while Item /= Null_Node loop
+         if Get_Kind (Item) in Iir_Kinds_Concurrent_Statement then
+            Elab_Recurse_Instantiations_Statement (Unit_Inst, Item);
+         end if;
+         Item := Get_Chain (Item);
+      end loop;
    end Elab_Verification_Unit;
 
    procedure Elab_Verification_Units
@@ -432,6 +445,85 @@ package body Elab.Vhdl_Insts is
          Unit := Get_Bound_Vunit_Chain (Unit);
       end loop;
    end Elab_Verification_Units;
+
+   procedure Elab_Recurse_Instantiations_Statement
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node) is
+   begin
+      case Get_Kind (Stmt) is
+         when Iir_Kind_Concurrent_Simple_Signal_Assignment
+           | Iir_Kind_Concurrent_Conditional_Signal_Assignment
+           | Iir_Kind_Concurrent_Selected_Signal_Assignment
+           | Iir_Kind_Concurrent_Procedure_Call_Statement
+           | Iir_Kinds_Process_Statement =>
+            null;
+         when Iir_Kind_If_Generate_Statement =>
+            declare
+               Sub_Inst : constant Synth_Instance_Acc :=
+                 Get_Sub_Instance (Syn_Inst, Stmt);
+            begin
+               if Sub_Inst /= null then
+                  Elab_Recurse_Instantiations
+                    (Sub_Inst, Get_Source_Scope (Sub_Inst));
+               end if;
+            end;
+         when Iir_Kind_For_Generate_Statement =>
+            declare
+               Iterator : constant Node :=
+                 Get_Parameter_Specification (Stmt);
+               Bod : constant Node :=
+                 Get_Generate_Statement_Body (Stmt);
+               It_Rng : constant Type_Acc :=
+                 Get_Subtype_Object (Syn_Inst, Get_Type (Iterator));
+               Gen_Inst : constant Synth_Instance_Acc :=
+                 Get_Sub_Instance (Syn_Inst, Stmt);
+               Sub_Inst : Synth_Instance_Acc;
+            begin
+               for I in 1 .. Get_Range_Length (It_Rng.Drange) loop
+                  Sub_Inst := Get_Generate_Sub_Instance
+                    (Gen_Inst, Positive (I));
+                  Elab_Recurse_Instantiations (Sub_Inst, Bod);
+               end loop;
+            end;
+         when Iir_Kind_Component_Instantiation_Statement =>
+            if Is_Component_Instantiation (Stmt) then
+               declare
+                  Comp_Inst : constant Synth_Instance_Acc :=
+                    Get_Sub_Instance (Syn_Inst, Stmt);
+                  Sub_Inst : constant Synth_Instance_Acc :=
+                    Get_Component_Instance (Comp_Inst);
+               begin
+                  if Sub_Inst /= null then
+                     --  Nothing to do if the component is not bound.
+                     Elab_Instance_Body (Sub_Inst);
+                  end if;
+               end;
+            else
+               declare
+                  Sub_Inst : constant Synth_Instance_Acc :=
+                    Get_Sub_Instance (Syn_Inst, Stmt);
+               begin
+                  Elab_Instance_Body (Sub_Inst);
+               end;
+            end if;
+         when Iir_Kind_Block_Statement =>
+            declare
+               Blk_Inst : constant Synth_Instance_Acc :=
+                 Get_Sub_Instance (Syn_Inst, Stmt);
+            begin
+               Elab_Recurse_Instantiations (Blk_Inst, Stmt);
+            end;
+         when Iir_Kind_Psl_Default_Clock
+           | Iir_Kind_Psl_Declaration
+           | Iir_Kind_Psl_Restrict_Directive
+           | Iir_Kind_Psl_Assume_Directive
+           | Iir_Kind_Psl_Cover_Directive
+           | Iir_Kind_Psl_Assert_Directive
+           | Iir_Kind_Concurrent_Assertion_Statement =>
+            null;
+         when others =>
+            Error_Kind ("elab_recurse_instantiations_Statement", Stmt);
+      end case;
+   end Elab_Recurse_Instantiations_Statement;
 
    --  Elaborate instantiations.
    --  This cannot be done immediately like the other statements due to a
@@ -451,80 +543,7 @@ package body Elab.Vhdl_Insts is
    begin
       Stmt := Get_Concurrent_Statement_Chain (Head);
       while Stmt /= Null_Node loop
-         case Get_Kind (Stmt) is
-            when Iir_Kind_Concurrent_Simple_Signal_Assignment
-              | Iir_Kind_Concurrent_Conditional_Signal_Assignment
-              | Iir_Kind_Concurrent_Selected_Signal_Assignment
-              | Iir_Kind_Concurrent_Procedure_Call_Statement
-              | Iir_Kinds_Process_Statement =>
-               null;
-            when Iir_Kind_If_Generate_Statement =>
-               declare
-                  Sub_Inst : constant Synth_Instance_Acc :=
-                    Get_Sub_Instance (Syn_Inst, Stmt);
-               begin
-                  if Sub_Inst /= null then
-                     Elab_Recurse_Instantiations
-                       (Sub_Inst, Get_Source_Scope (Sub_Inst));
-                  end if;
-               end;
-            when Iir_Kind_For_Generate_Statement =>
-               declare
-                  Iterator : constant Node :=
-                    Get_Parameter_Specification (Stmt);
-                  Bod : constant Node :=
-                    Get_Generate_Statement_Body (Stmt);
-                  It_Rng : constant Type_Acc :=
-                    Get_Subtype_Object (Syn_Inst, Get_Type (Iterator));
-                  Gen_Inst : constant Synth_Instance_Acc :=
-                    Get_Sub_Instance (Syn_Inst, Stmt);
-                  Sub_Inst : Synth_Instance_Acc;
-               begin
-                  for I in 1 .. Get_Range_Length (It_Rng.Drange) loop
-                     Sub_Inst := Get_Generate_Sub_Instance
-                       (Gen_Inst, Positive (I));
-                     Elab_Recurse_Instantiations (Sub_Inst, Bod);
-                  end loop;
-               end;
-            when Iir_Kind_Component_Instantiation_Statement =>
-               if Is_Component_Instantiation (Stmt) then
-                  declare
-                     Comp_Inst : constant Synth_Instance_Acc :=
-                       Get_Sub_Instance (Syn_Inst, Stmt);
-                     Sub_Inst : constant Synth_Instance_Acc :=
-                       Get_Component_Instance (Comp_Inst);
-                  begin
-                     if Sub_Inst /= null then
-                        --  Nothing to do if the component is not bound.
-                        Elab_Instance_Body (Sub_Inst);
-                     end if;
-                  end;
-               else
-                  declare
-                     Sub_Inst : constant Synth_Instance_Acc :=
-                       Get_Sub_Instance (Syn_Inst, Stmt);
-                  begin
-                     Elab_Instance_Body (Sub_Inst);
-                  end;
-               end if;
-            when Iir_Kind_Block_Statement =>
-               declare
-                  Blk_Inst : constant Synth_Instance_Acc :=
-                    Get_Sub_Instance (Syn_Inst, Stmt);
-               begin
-                  Elab_Recurse_Instantiations (Blk_Inst, Stmt);
-               end;
-            when Iir_Kind_Psl_Default_Clock
-              | Iir_Kind_Psl_Declaration
-              | Iir_Kind_Psl_Restrict_Directive
-              | Iir_Kind_Psl_Assume_Directive
-              | Iir_Kind_Psl_Cover_Directive
-              | Iir_Kind_Psl_Assert_Directive
-              | Iir_Kind_Concurrent_Assertion_Statement =>
-               null;
-            when others =>
-               Error_Kind ("elab_recurse_instantiations", Stmt);
-         end case;
+         Elab_Recurse_Instantiations_Statement (Syn_Inst, Stmt);
          Stmt := Get_Chain (Stmt);
       end loop;
    end Elab_Recurse_Instantiations;
