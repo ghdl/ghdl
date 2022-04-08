@@ -1,0 +1,4 @@
+
+VUNIT wb_standard_axi4_lite_bridge_formal (wb_standard_axi4_lite_bridge) {
+    u_wb3_classic_formal: ENTITY work.wb_standard_formal(psl);
+}
