@@ -3186,7 +3186,7 @@ package body Vhdl.Sem is
             end if;
          when others =>
             Error_Msg_Sem
-              (+Prefix, "prefix must designate a package or a library");
+              (+Name, "prefix must designate a package or a library");
             Set_Prefix (Name, Create_Error_Name (Name_Prefix));
             return;
       end case;
