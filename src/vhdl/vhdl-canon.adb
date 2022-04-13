@@ -3429,6 +3429,7 @@ package body Vhdl.Canon is
                | Iir_Kind_Constant_Declaration
                | Iir_Kind_Type_Declaration
                | Iir_Kind_Subtype_Declaration
+               | Iir_Kind_Anonymous_Type_Declaration
                | Iir_Kind_Function_Declaration
                | Iir_Kind_Procedure_Declaration
                | Iir_Kind_Function_Body

@@ -412,7 +412,9 @@ package body Elab.Vhdl_Insts is
                | Iir_Kind_Attribute_Specification
                | Iir_Kind_Object_Alias_Declaration
                | Iir_Kind_Non_Object_Alias_Declaration
-               | Iir_Kind_Subtype_Declaration =>
+               | Iir_Kind_Subtype_Declaration
+               | Iir_Kind_Type_Declaration
+               | Iir_Kind_Anonymous_Type_Declaration =>
                Elab_Declaration (Unit_Inst, Item, Last_Type);
             when Iir_Kinds_Concurrent_Signal_Assignment
                | Iir_Kinds_Process_Statement
