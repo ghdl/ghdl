@@ -1139,6 +1139,8 @@ package Vhdl.Nodes is
    --   Get/Set_Parent (Field0)
    --   Get/Set_Design_Unit (Alias Field0)
    --
+   --   Get/Set_Chain (Field2)
+   --
    --   Get/Set_Identifier (Field3)
    --
    --   Get/Set_Hierarchical_Name (Field1)

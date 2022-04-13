@@ -3806,7 +3806,8 @@ package body Synth.Vhdl_Stmts is
               | Iir_Kind_Attribute_Declaration
               | Iir_Kind_Attribute_Specification
               | Iir_Kind_Object_Alias_Declaration
-              | Iir_Kind_Non_Object_Alias_Declaration =>
+              | Iir_Kind_Non_Object_Alias_Declaration
+              | Iir_Kind_Subtype_Declaration =>
                Synth_Concurrent_Declaration (Syn_Inst, Item);
             when Iir_Kinds_Concurrent_Signal_Assignment
                | Iir_Kinds_Process_Statement
@@ -3851,7 +3852,8 @@ package body Synth.Vhdl_Stmts is
                | Iir_Kind_Attribute_Declaration
                | Iir_Kind_Attribute_Specification
                | Iir_Kind_Object_Alias_Declaration
-               | Iir_Kind_Non_Object_Alias_Declaration =>
+               | Iir_Kind_Non_Object_Alias_Declaration
+               | Iir_Kind_Subtype_Declaration =>
                Finalize_Declaration (Syn_Inst, Item, False);
             when others =>
                Error_Kind ("synth_verification_unit(2)", Item);
