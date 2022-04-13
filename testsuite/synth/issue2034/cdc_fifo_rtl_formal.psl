@@ -1,0 +1,7 @@
+
+library ieee;
+use ieee.std_logic_1164.all;
+
+vunit cdc_fifo_rtl_formal (cdc_fifo(rtl)) {
+    TYPE f_array IS ARRAY (1 DOWNTO 0) OF std_logic;
+}
