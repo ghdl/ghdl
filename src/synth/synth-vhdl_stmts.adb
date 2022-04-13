@@ -3756,7 +3756,8 @@ package body Synth.Vhdl_Stmts is
             when Name_Anyseq =>
                Synth_Attribute_Formal (Syn_Inst, Val, Id_Anyseq);
             when Name_Loc
-               | Name_Keep =>
+               | Name_Keep
+               | Name_Gclk =>
                --  Applies to nets/ports.
                null;
             when others =>
