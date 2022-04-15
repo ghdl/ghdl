@@ -1765,13 +1765,22 @@ package body Vhdl.Sem_Names is
       Subprg : Iir;
    begin
       --  We cares only of signals.
-      if Get_Kind (Obj) /= Iir_Kind_Signal_Declaration then
-         return;
-      end if;
+      case Get_Kind (Obj) is
+         when Iir_Kind_Signal_Declaration
+           | Iir_Kind_Interface_Signal_Declaration =>
+            null;
+         when others =>
+            return;
+      end case;
       --  We cares only of subprograms.  Give up if we are in a process.
       Subprg := Sem_Stmts.Get_Current_Subprogram;
       if Subprg = Null_Iir
         or else Get_Kind (Subprg) not in Iir_Kinds_Subprogram_Declaration
+      then
+         return;
+      end if;
+      if Get_Kind (Obj) = Iir_Kind_Interface_Signal_Declaration
+        and then Get_Parent (Obj) = Subprg
       then
          return;
       end if;

@@ -607,8 +607,10 @@ package body Vhdl.Canon is
       --  Signals read indirectly by subprograms called.
       Canon_Extract_Sensitivity_From_Callees (Get_Callees_List (Proc), Res);
 
+      --  Reset Seen_Flag of proc and its callees.
       Set_Seen_Flag (Proc, True);
       Clear_Seen_Flag (Proc);
+
       return Res;
    end Canon_Extract_Sensitivity_Process;
 
