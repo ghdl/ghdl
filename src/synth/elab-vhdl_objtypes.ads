@@ -240,6 +240,10 @@ package Elab.Vhdl_Objtypes is
 
    function Are_Types_Equal (L, R : Type_Acc) return Boolean;
 
+   --  Return True iff L is within R.
+   --  See LRM08 5.2.1 (Scalar types) for definition of compatible.
+   function Is_Scalar_Subtype_Compatible (L, R : Type_Acc) return Boolean;
+
    --  Return the length of a vector type.
    function Vec_Length (Typ : Type_Acc) return Iir_Index32;
 

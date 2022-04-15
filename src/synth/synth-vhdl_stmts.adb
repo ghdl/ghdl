@@ -1832,7 +1832,64 @@ package body Synth.Vhdl_Stmts is
          end if;
 
          --  FIXME: conversion only for constants, reshape for all.
-         Val := Synth_Subtype_Conversion (Ctxt, Val, Inter_Type, True, Assoc);
+         case Iir_Kinds_Interface_Object_Declaration (Get_Kind (Inter)) is
+            when Iir_Kind_Interface_Constant_Declaration
+              | Iir_Kind_Interface_Variable_Declaration =>
+               --  Always passed by value
+               Val := Synth_Subtype_Conversion
+                 (Ctxt, Val, Inter_Type, True, Assoc);
+            when Iir_Kind_Interface_Signal_Declaration =>
+               --  LRM08 4.2.2.3 Signal parameters
+               --  If an actual signal is associated with a signal parameter
+               --  of mode IN or INOUT, and if the type of the formal is a
+               --  scalar type, then it is an error if the subtype of the
+               --  actual is not compatible with the subtype of the formal.
+               --  Similarly, if an actual signal is associated with a signal
+               --  parameter of mode OUT or INOUT, and if the type of the
+               --  actual is a scalar type, then it is an error if the subtype
+               --  of the formal is not compatible with the subtype of the
+               --  actual.
+               if Get_Kind (Get_Type (Inter)) in
+                 Iir_Kinds_Scalar_Type_And_Subtype_Definition
+               then
+                  if Get_Mode (Inter) in Iir_In_Modes then
+                     if not Is_Scalar_Subtype_Compatible (Val.Typ, Inter_Type)
+                     then
+                        Error_Msg_Synth
+                          (+Actual,
+                           "scalar subtype of actual is not compatible with "
+                             & "signal formal interface");
+                        Val := No_Valtyp;
+                     end if;
+                  end if;
+                  if Get_Mode (Inter) in Iir_Out_Modes then
+                     if not Is_Scalar_Subtype_Compatible (Inter_Type, Val.Typ)
+                     then
+                        Error_Msg_Synth
+                          (+Actual,
+                           "signal formal interface scalar subtype is not "
+                             & "compatible with of actual subtype");
+                        Val := No_Valtyp;
+                     end if;
+                  end if;
+               else
+                  --  Check matching.
+                  --  This is equivalent to subtype conversion for non-scalar
+                  --  types.
+                  Val := Synth_Subtype_Conversion
+                    (Ctxt, Val, Inter_Type, True, Assoc);
+               end if;
+            when Iir_Kind_Interface_File_Declaration =>
+               null;
+            when Iir_Kind_Interface_Quantity_Declaration =>
+               raise Internal_Error;
+         end case;
+
+         if Val = No_Valtyp then
+            --  Error after conversion.
+            Set_Error (Subprg_Inst);
+            return;
+         end if;
 
          if Get_Instance_Const (Subprg_Inst) and then not Is_Static (Val.Val)
          then

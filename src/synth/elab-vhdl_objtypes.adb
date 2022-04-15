@@ -117,6 +117,37 @@ package body Elab.Vhdl_Objtypes is
       end case;
    end Are_Types_Equal;
 
+   function Is_Null_Range (Rng : Discrete_Range_Type) return Boolean is
+   begin
+      case Rng.Dir is
+         when Dir_To =>
+            return Rng.Left > Rng.Right;
+         when Dir_Downto =>
+            return Rng.Left < Rng.Right;
+      end case;
+   end Is_Null_Range;
+
+   function Is_Scalar_Subtype_Compatible (L, R : Type_Acc) return Boolean is
+   begin
+      pragma Assert (L.Kind = R.Kind);
+      case L.Kind is
+         when Type_Bit
+           | Type_Logic =>
+            --  We have no bounds for that...
+            return True;
+         when Type_Discrete =>
+            if Is_Null_Range (L.Drange) then
+               return True;
+            end if;
+            return In_Range (R.Drange, L.Drange.Left)
+              and then In_Range (R.Drange, L.Drange.Right);
+         when Type_Float =>
+            return L.Frange = R.Frange;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Is_Scalar_Subtype_Compatible;
+
    function Discrete_Range_Width (Rng : Discrete_Range_Type) return Uns32
    is
       Lo, Hi : Int64;
