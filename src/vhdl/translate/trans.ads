@@ -1373,6 +1373,8 @@ package Trans is
             --  Variable containing the layout for a constrained type.
             Composite_Layout : Var_Type;
 
+            --  Subtype definition that owns this subtype (as an element).
+            --  Used to refere to the layout.
             Subtype_Owner : Type_Info_Acc := null;
             Owner_Field : Field_Info_Acc := null;
 

@@ -1491,6 +1491,43 @@ package body Trans.Chap2 is
          if Info /= null then
             Clean_Copy_Info (Info);
          end if;
+
+         --  Adjust Subtype_Owner.
+         case Get_Kind (N) is
+            when Iir_Kind_Array_Subtype_Definition =>
+               declare
+                  El_Type : constant Iir := Get_Element_Subtype (N);
+                  El_Tinfo : constant Type_Info_Acc := Get_Info (El_Type);
+               begin
+                  if El_Tinfo.S.Kind in Kind_Type_Array .. Kind_Type_Record
+                    and then El_Tinfo.S.Subtype_Owner = Orig_Info
+                  then
+                     pragma Assert (Info /= null);
+                     El_Tinfo.S.Subtype_Owner := Info;
+                  end if;
+               end;
+            when Iir_Kind_Record_Subtype_Definition =>
+               declare
+                  El : Iir;
+                  El_Type : Iir;
+                  El_Tinfo : Type_Info_Acc;
+               begin
+                  El := Get_Owned_Elements_Chain (N);
+                  while El /= Null_Iir loop
+                     El_Type := Get_Type (El);
+                     El_Tinfo := Get_Info (El_Type);
+                     if El_Tinfo.S.Kind in Kind_Type_Array .. Kind_Type_Record
+                       and then El_Tinfo.S.Subtype_Owner = Orig_Info
+                     then
+                        pragma Assert (Info /= null);
+                        El_Tinfo.S.Subtype_Owner := Info;
+                     end if;
+                     El := Get_Chain (El);
+                  end loop;
+               end;
+            when others =>
+               null;
+         end case;
       end;
    end Instantiate_Iir_Info;
 
