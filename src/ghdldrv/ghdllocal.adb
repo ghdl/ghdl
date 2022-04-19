@@ -15,6 +15,7 @@
 --  along with this program.  If not, see <gnu.org/licenses>.
 
 with Ada.Command_Line;
+with Ada.Directories;
 with GNAT.Directory_Operations;
 
 with Simple_IO; use Simple_IO;
@@ -611,8 +612,15 @@ package body Ghdllocal is
 
 
    --  Command Dir.
-   type Command_Dir is new Command_Lib with null record;
+   type Command_Dir is new Command_Lib with record
+      Flag_All : Boolean := False;
+   end record;
    function Decode_Command (Cmd : Command_Dir; Name : String) return Boolean;
+   procedure Decode_Option (Cmd : in out Command_Dir;
+                            Option : String;
+                            Arg : String;
+                            Res : out Option_State);
+   procedure Disp_Long_Help (Cmd : Command_Dir);
    function Get_Short_Help (Cmd : Command_Dir) return String;
    procedure Perform_Action (Cmd : in out Command_Dir; Args : Argument_List);
 
@@ -625,6 +633,28 @@ package body Ghdllocal is
         or else Name = "-d";  --  '-d' is for compatibility.
    end Decode_Command;
 
+   procedure Decode_Option (Cmd : in out Command_Dir;
+                            Option : String;
+                            Arg : String;
+                            Res : out Option_State)
+   is
+      pragma Assert (Option'First = 1);
+   begin
+      if Option = "--all" then
+         Cmd.Flag_All := True;
+         Res := Option_Ok;
+      else
+         Decode_Option (Command_Lib (Cmd), Option, Arg, Res);
+      end if;
+   end Decode_Option;
+
+   procedure Disp_Long_Help (Cmd : Command_Dir) is
+   begin
+      Disp_Long_Help (Command_Lib (Cmd));
+      Put_Line (" --all");
+      Put_Line ("   Display contents of all libraries");
+   end Disp_Long_Help;
+
    function Get_Short_Help (Cmd : Command_Dir) return String
    is
       pragma Unreferenced (Cmd);
@@ -636,13 +666,41 @@ package body Ghdllocal is
 
    procedure Perform_Action (Cmd : in out Command_Dir; Args : Argument_List)
    is
-      pragma Unreferenced (Cmd);
+      use Ada.Directories;
+      use Flags;
+
+      procedure Disp_Library_By_File(Search_Item : in Directory_Entry_Type) is
+         File_Name : constant String :=
+            Simple_Name (Directory_Entry => Search_Item);
+         Name : constant String := File_Name (1 .. (File_Name'Last - 9));
+      begin
+         Disp_Library (Name_Table.Get_Identifier (Name));
+      end Disp_Library_By_File;
+
+      Pattern : String (1 .. 10);
+      Filter : constant Filter_Type := (Ordinary_File => True,
+                                        others => False);
    begin
       if not Setup_Libraries (True) then
          return;
       end if;
 
-      if Args'Length = 0 then
+      if Cmd.Flag_All then
+         case Vhdl_Std is
+            when Vhdl_87 =>
+               Pattern := "*-obj87.cf";
+            when Vhdl_93 | Vhdl_00 | Vhdl_02 =>
+               Pattern := "*-obj93.cf";
+            when Vhdl_08 =>
+               Pattern := "*-obj08.cf";
+            when Vhdl_19 =>
+               Pattern := "*-obj19.cf";
+         end case;
+         Search (Directory => Current_Directory,
+                 Pattern => Pattern,
+                 Filter => Filter,
+                 Process => Disp_Library_By_File'Access);
+      elsif Args'Length = 0 then
          Disp_Library (Std_Names.Name_Work);
       else
          for I in Args'Range loop
