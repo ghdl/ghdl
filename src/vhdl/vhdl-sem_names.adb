@@ -929,6 +929,15 @@ package body Vhdl.Sem_Names is
          return Name;
       end if;
 
+      case Get_Kind (Name) is
+         when Iir_Kinds_Name
+           | Iir_Kind_Attribute_Name =>
+            null;
+         when others =>
+            Error_Msg_Sem (+Name, "name expected for a type mark");
+            return Create_Error_Type (Name);
+      end case;
+
       --  Analyze the name (if not already done).
       Res := Get_Named_Entity (Name);
       if Res = Null_Iir then

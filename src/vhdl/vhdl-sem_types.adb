@@ -953,7 +953,9 @@ package body Vhdl.Sem_Types is
          Set_Nth_Element (Index_List, I, Index_Type);
 
          Index_Type := Get_Type (Index_Type);
-         if Get_Kind (Index_Type) not in Iir_Kinds_Discrete_Type_Definition
+         if Index_Type = Null_Node then
+            null;
+         elsif Get_Kind (Index_Type) not in Iir_Kinds_Discrete_Type_Definition
          then
             Error_Msg_Sem
               (+Index_Type,
