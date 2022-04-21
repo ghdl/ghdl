@@ -764,6 +764,7 @@ package body Netlists.Disp_Verilog is
            (Get_Input_Net (Inst, Port_Idx (2 + W - I)), Inst, Conv_None);
          Put_Line (";");
       end loop;
+      Disp_Template ("      default: \o0 <= \i1;" & NL, Inst);
       Disp_Template ("    endcase" & NL, Inst);
    end Disp_Pmux;
 
