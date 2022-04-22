@@ -597,17 +597,27 @@ package body Vhdl.Utils is
    procedure Next_Association_Interface
      (Assoc : in out Iir; Inter : in out Iir)
    is
-      Formal : constant Iir := Get_Formal (Assoc);
+      Formal : Iir;
    begin
       --  In canon, open association can be inserted after an association by
       --  name.  So do not assume there is no association by position after
       --  association by name.
+      Assoc := Get_Chain (Assoc);
+      if Assoc = Null_Iir then
+         --  End of the chain
+         Inter := Null_Iir;
+         return;
+      end if;
+
+      Formal := Get_Formal (Assoc);
       if Is_Valid (Formal) then
-         Inter := Get_Chain (Get_Interface_Of_Formal (Formal));
+         Inter := Get_Interface_Of_Formal (Formal);
       else
          Inter := Get_Chain (Inter);
       end if;
-      Assoc := Get_Chain (Assoc);
+
+      --  If INTER is null, this is an extra association.  Should it be
+      --  skipped here ?  Or add a _Safe variant ?
    end Next_Association_Interface;
 
    function Get_Association_Formal (Assoc : Iir; Inter : Iir) return Iir

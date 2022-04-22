@@ -501,7 +501,7 @@ package body Vhdl.Sem_Decls is
       --  the uninstantiated_package_name shall denote an uninstantiated
       --  package declared in a package declaration.
       Pkg := Sem_Uninstantiated_Package_Name (Inter);
-      if Pkg = Null_Iir then
+      if Pkg = Null_Iir or else Is_Error (Pkg) then
          return;
       end if;
 

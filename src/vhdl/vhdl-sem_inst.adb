@@ -927,6 +927,106 @@ package body Vhdl.Sem_Inst is
 
    --  In the instance, replace references (and inner references) to interface
    --  package declaration to the associated package.
+   procedure Instantiate_Generic_Map (Assoc : Iir; Inter: Iir) is
+   begin
+      --  Replace formal reference to the instance.
+      --  Cf Get_association_Interface
+      declare
+         Formal : Iir;
+      begin
+         Formal := Get_Formal (Assoc);
+         if Is_Valid (Formal) then
+            loop
+               case Get_Kind (Formal) is
+                  when Iir_Kind_Simple_Name
+                    | Iir_Kind_Operator_Symbol =>
+                     Set_Named_Entity
+                       (Formal, Get_Instance (Get_Named_Entity (Formal)));
+                     exit;
+                  when Iir_Kind_Slice_Name
+                    | Iir_Kind_Indexed_Name
+                    | Iir_Kind_Selected_Element =>
+                     Formal := Get_Prefix (Formal);
+                  when others =>
+                     Error_Kind ("instantiate_generic_map_chain", Formal);
+               end case;
+            end loop;
+         end if;
+      end;
+
+      case Get_Kind (Assoc) is
+         when Iir_Kind_Association_Element_By_Expression
+           | Iir_Kind_Association_Element_By_Individual
+           | Iir_Kind_Association_Element_Open =>
+            --  If the type of the formal is an interface type also
+            --  associated by this map, change the type of the formal
+            --  to the associated type.
+            declare
+               Assoc_Formal : constant Iir :=
+                 Get_Association_Interface (Assoc, Inter);
+               Formal_Type : Iir;
+               Formal_Orig : Iir;
+            begin
+               if Assoc_Formal = Null_Iir then
+                  return;
+               end if;
+               Formal_Type := Get_Type (Assoc_Formal);
+               if Get_Kind (Formal_Type)
+                 = Iir_Kind_Interface_Type_Definition
+               then
+                  --  Type of the formal is an interface type.
+                  --  Check if the interface type was declared in the same
+                  --  interface list: must have the same parent.
+                  Formal_Orig := Get_Origin (Assoc_Formal);
+                  if Get_Parent (Get_Type_Declarator (Formal_Type))
+                    = Get_Parent (Formal_Orig)
+                  then
+                     Set_Type (Assoc_Formal, Get_Instance (Formal_Type));
+                  end if;
+               end if;
+            end;
+         when Iir_Kind_Association_Element_Package =>
+            declare
+               Sub_Inst : constant Iir :=
+                 Get_Named_Entity (Get_Actual (Assoc));
+               Sub_Pkg_Inter : constant Iir :=
+                 Get_Association_Interface (Assoc, Inter);
+               Sub_Pkg : constant Iir := Get_Origin (Sub_Pkg_Inter);
+            begin
+               --  Replace references of interface package to references
+               --  to the actual package.
+               Set_Instance (Sub_Pkg, Sub_Inst);
+               Set_Instance_On_Chain (Get_Generic_Chain (Sub_Pkg),
+                                      Get_Generic_Chain (Sub_Inst));
+               Set_Instance_On_Chain (Get_Declaration_Chain (Sub_Pkg),
+                                      Get_Declaration_Chain (Sub_Inst));
+            end;
+         when Iir_Kind_Association_Element_Type =>
+            --  Replace the incomplete interface type by the actual subtype
+            --  indication.
+            declare
+               Assoc_Inter : constant Iir :=
+                 Get_Association_Interface (Assoc, Inter);
+               Inter_Type_Def : constant Iir := Get_Type (Assoc_Inter);
+               Actual_Type : constant Iir := Get_Actual_Type (Assoc);
+            begin
+               Set_Instance (Inter_Type_Def, Actual_Type);
+            end;
+         when Iir_Kind_Association_Element_Subprogram =>
+            --  Replace the interface subprogram by the subprogram.
+            declare
+               Inter_Subprg : constant Iir :=
+                 Get_Association_Interface (Assoc, Inter);
+               Actual_Subprg : constant Iir :=
+                 Get_Named_Entity (Get_Actual (Assoc));
+            begin
+               Set_Instance (Get_Origin (Inter_Subprg), Actual_Subprg);
+            end;
+         when others =>
+            Error_Kind ("instantiate_generic_map", Assoc);
+      end case;
+   end Instantiate_Generic_Map;
+
    procedure Instantiate_Generic_Map_Chain (Inst : Iir; Pkg : Iir)
    is
       pragma Unreferenced (Pkg);
@@ -936,98 +1036,7 @@ package body Vhdl.Sem_Inst is
       Assoc := Get_Generic_Map_Aspect_Chain (Inst);
       Inter := Get_Generic_Chain (Inst);
       while Is_Valid (Assoc) loop
-         --  Replace formal reference to the instance.
-         --  Cf Get_association_Interface
-         declare
-            Formal : Iir;
-         begin
-            Formal := Get_Formal (Assoc);
-            if Is_Valid (Formal) then
-               loop
-                  case Get_Kind (Formal) is
-                     when Iir_Kind_Simple_Name
-                       | Iir_Kind_Operator_Symbol =>
-                        Set_Named_Entity
-                          (Formal, Get_Instance (Get_Named_Entity (Formal)));
-                        exit;
-                     when Iir_Kind_Slice_Name
-                       | Iir_Kind_Indexed_Name
-                       | Iir_Kind_Selected_Element =>
-                        Formal := Get_Prefix (Formal);
-                     when others =>
-                        Error_Kind ("instantiate_generic_map_chain", Formal);
-                  end case;
-               end loop;
-            end if;
-         end;
-
-         case Get_Kind (Assoc) is
-            when Iir_Kind_Association_Element_By_Expression
-              | Iir_Kind_Association_Element_By_Individual
-              | Iir_Kind_Association_Element_Open =>
-               --  If the type of the formal is an interface type also
-               --  associated by this map, change the type of the formal
-               --  to the associated type.
-               declare
-                  Assoc_Formal : constant Iir :=
-                    Get_Association_Interface (Assoc, Inter);
-                  Formal_Type : constant Iir := Get_Type (Assoc_Formal);
-                  Formal_Orig : Iir;
-               begin
-                  if Get_Kind (Formal_Type)
-                    = Iir_Kind_Interface_Type_Definition
-                  then
-                     --  Type of the formal is an interface type.
-                     --  Check if the interface type was declared in the same
-                     --  interface list: must have the same parent.
-                     Formal_Orig := Get_Origin (Assoc_Formal);
-                     if Get_Parent (Get_Type_Declarator (Formal_Type))
-                       = Get_Parent (Formal_Orig)
-                     then
-                        Set_Type (Assoc_Formal, Get_Instance (Formal_Type));
-                     end if;
-                  end if;
-               end;
-            when Iir_Kind_Association_Element_Package =>
-               declare
-                  Sub_Inst : constant Iir :=
-                    Get_Named_Entity (Get_Actual (Assoc));
-                  Sub_Pkg_Inter : constant Iir :=
-                    Get_Association_Interface (Assoc, Inter);
-                  Sub_Pkg : constant Iir := Get_Origin (Sub_Pkg_Inter);
-               begin
-                  --  Replace references of interface package to references
-                  --  to the actual package.
-                  Set_Instance (Sub_Pkg, Sub_Inst);
-                  Set_Instance_On_Chain (Get_Generic_Chain (Sub_Pkg),
-                                         Get_Generic_Chain (Sub_Inst));
-                  Set_Instance_On_Chain (Get_Declaration_Chain (Sub_Pkg),
-                                        Get_Declaration_Chain (Sub_Inst));
-               end;
-            when Iir_Kind_Association_Element_Type =>
-               --  Replace the incomplete interface type by the actual subtype
-               --  indication.
-               declare
-                  Assoc_Inter : constant Iir :=
-                    Get_Association_Interface (Assoc, Inter);
-                  Inter_Type_Def : constant Iir := Get_Type (Assoc_Inter);
-                  Actual_Type : constant Iir := Get_Actual_Type (Assoc);
-               begin
-                  Set_Instance (Inter_Type_Def, Actual_Type);
-               end;
-            when Iir_Kind_Association_Element_Subprogram =>
-               --  Replace the interface subprogram by the subprogram.
-               declare
-                  Inter_Subprg : constant Iir :=
-                    Get_Association_Interface (Assoc, Inter);
-                  Actual_Subprg : constant Iir :=
-                    Get_Named_Entity (Get_Actual (Assoc));
-               begin
-                  Set_Instance (Get_Origin (Inter_Subprg), Actual_Subprg);
-               end;
-            when others =>
-               Error_Kind ("instantiate_generic_map_chain", Assoc);
-         end case;
+         Instantiate_Generic_Map (Assoc, Inter);
          Next_Association_Interface (Assoc, Inter);
       end loop;
    end Instantiate_Generic_Map_Chain;
