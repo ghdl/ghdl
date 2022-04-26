@@ -23,7 +23,6 @@ with Grt.Types; use Grt.Types;
 
 with Vhdl.Ieee.Std_Logic_1164; use Vhdl.Ieee.Std_Logic_1164;
 
-with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 with Elab.Memtype; use Elab.Memtype;
 with Elab.Vhdl_Files;
 with Elab.Vhdl_Expr; use Elab.Vhdl_Expr;
@@ -821,36 +820,15 @@ package body Synth.Static_Oper is
       return To_Int64 (Res);
    end Eval_Signed_To_Integer;
 
-   function Synth_Static_Predefined_Function_Call
-     (Subprg_Inst : Synth_Instance_Acc; Expr : Node) return Memtyp
+   function Synth_Static_Predefined_Function_Call (Param1 : Valtyp;
+                                                   Param2 : Valtyp;
+                                                   Res_Typ : Type_Acc;
+                                                   Expr : Node) return Memtyp
    is
       Imp  : constant Node := Get_Implementation (Expr);
       Def : constant Iir_Predefined_Functions :=
         Get_Implicit_Definition (Imp);
-      Inter_Chain : constant Node := Get_Interface_Declaration_Chain (Imp);
-      Param1 : Valtyp;
-      Param2 : Valtyp;
-      Res_Typ : Type_Acc;
-      Inter : Node;
    begin
-      Inter := Inter_Chain;
-      if Inter /= Null_Node then
-         Param1 := Get_Value (Subprg_Inst, Inter);
-         Strip_Const (Param1);
-         Inter := Get_Chain (Inter);
-      else
-         Param1 := No_Valtyp;
-      end if;
-      if Inter /= Null_Node then
-         Param2 := Get_Value (Subprg_Inst, Inter);
-         Strip_Const (Param2);
-         Inter := Get_Chain (Inter);
-      else
-         Param2 := No_Valtyp;
-      end if;
-
-      Res_Typ := Get_Subtype_Object (Subprg_Inst, Get_Type (Imp));
-
       case Def is
          when Iir_Predefined_Endfile =>
             declare
@@ -1044,5 +1022,4 @@ package body Synth.Static_Oper is
             return Null_Memtyp;
       end case;
    end Synth_Static_Predefined_Function_Call;
-
 end Synth.Static_Oper;

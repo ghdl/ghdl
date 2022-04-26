@@ -2136,8 +2136,8 @@ package body Synth.Vhdl_Oper is
       Subprg_Inst : Synth_Instance_Acc;
       M : Areapools.Mark_Type;
       Static : Boolean;
+      Param : Valtyp;
       Res : Valtyp;
-      Mt : Memtyp;
    begin
       Areapools.Mark (M, Instance_Pool.all);
       Subprg_Inst := Make_Instance (Syn_Inst, Imp);
@@ -2152,7 +2152,8 @@ package body Synth.Vhdl_Oper is
          Static := True;
          Inter := Inter_Chain;
          while Inter /= Null_Node loop
-            if not Is_Static (Get_Value (Subprg_Inst, Inter).Val) then
+            Param := Get_Value (Subprg_Inst, Inter);
+            if not Is_Static (Param.Val) then
                Static := False;
                exit;
             end if;
@@ -2160,12 +2161,38 @@ package body Synth.Vhdl_Oper is
          end loop;
 
          if Static then
-            Mt := Synth_Static_Predefined_Function_Call (Subprg_Inst, Expr);
-            if Mt /= Null_Memtyp then
-               Res := Create_Value_Memtyp (Mt);
-            else
-               Res := No_Valtyp;
-            end if;
+            declare
+               Param1 : Valtyp;
+               Param2 : Valtyp;
+               Res_Typ : Type_Acc;
+               Mt : Memtyp;
+            begin
+               Inter := Inter_Chain;
+               if Inter /= Null_Node then
+                  Param1 := Get_Value (Subprg_Inst, Inter);
+                  Strip_Const (Param1);
+                  Inter := Get_Chain (Inter);
+               else
+                  Param1 := No_Valtyp;
+               end if;
+               if Inter /= Null_Node then
+                  Param2 := Get_Value (Subprg_Inst, Inter);
+                  Strip_Const (Param2);
+                  Inter := Get_Chain (Inter);
+               else
+                  Param2 := No_Valtyp;
+               end if;
+
+               Res_Typ := Get_Subtype_Object (Subprg_Inst, Get_Type (Imp));
+
+               Mt := Synth_Static_Predefined_Function_Call
+                 (Param1, Param2, Res_Typ, Expr);
+               if Mt /= Null_Memtyp then
+                  Res := Create_Value_Memtyp (Mt);
+               else
+                  Res := No_Valtyp;
+               end if;
+            end;
          else
             Res := Synth_Dynamic_Predefined_Function_Call (Subprg_Inst, Expr);
          end if;

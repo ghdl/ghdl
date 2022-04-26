@@ -16,8 +16,8 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
+with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 
 with Vhdl.Nodes; use Vhdl.Nodes;
 
@@ -32,7 +32,8 @@ package Synth.Static_Oper is
                                              Oper_Typ : Type_Acc;
                                              Expr : Node) return Memtyp;
 
-   function Synth_Static_Predefined_Function_Call
-     (Subprg_Inst : Synth_Instance_Acc; Expr : Node) return Memtyp;
-
+   function Synth_Static_Predefined_Function_Call (Param1 : Valtyp;
+                                                   Param2 : Valtyp;
+                                                   Res_Typ : Type_Acc;
+                                                   Expr : Node) return Memtyp;
 end Synth.Static_Oper;
