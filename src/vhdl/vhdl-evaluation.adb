@@ -23,12 +23,18 @@ with Str_Table;
 with Flags; use Flags;
 with Std_Names;
 with Errorout; use Errorout;
+with Areapools;
 
 with Vhdl.Scanner;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Vhdl.Ieee.Std_Logic_1164;
+
+with Elab.Vhdl_Objtypes;
+with Elab.Vhdl_Types;
+with Elab.Memtype;
+with Synth.Static_Oper;
 
 with Grt.Types;
 with Grt.Vhdl_Types;
@@ -77,17 +83,24 @@ package body Vhdl.Evaluation is
       end case;
    end Get_Physical_Value;
 
-   function Build_Integer (Val : Int64; Origin : Iir)
-     return Iir_Integer_Literal
+   function Build_Integer (Val : Int64; Lit_Type : Iir; Orig : Iir) return Iir
    is
       Res : Iir_Integer_Literal;
    begin
       Res := Create_Iir (Iir_Kind_Integer_Literal);
-      Location_Copy (Res, Origin);
+      Location_Copy (Res, Orig);
       Set_Value (Res, Val);
-      Set_Type (Res, Get_Type (Origin));
-      Set_Literal_Origin (Res, Origin);
+      Set_Type (Res, Lit_Type);
       Set_Expr_Staticness (Res, Locally);
+      return Res;
+   end Build_Integer;
+
+   function Build_Integer (Val : Int64; Origin : Iir) return Iir
+   is
+      Res : Iir_Integer_Literal;
+   begin
+      Res := Build_Integer (Val, Get_Type (Origin), Origin);
+      Set_Literal_Origin (Res, Origin);
       return Res;
    end Build_Integer;
 
@@ -105,10 +118,10 @@ package body Vhdl.Evaluation is
       return Res;
    end Build_Floating;
 
-   function Build_Enumeration_Constant (Val : Iir_Index32; Origin : Iir)
-     return Iir_Enumeration_Literal
+   function Build_Enumeration_Constant
+     (Val : Iir_Index32; Lit_Type : Iir; Orig : Iir) return Iir
    is
-      Enum_Type : constant Iir := Get_Base_Type (Get_Type (Origin));
+      Enum_Type : constant Iir := Get_Base_Type (Lit_Type);
       Enum_List : constant Iir_Flist :=
         Get_Enumeration_Literal_List (Enum_Type);
       Lit : constant Iir_Enumeration_Literal :=
@@ -116,7 +129,16 @@ package body Vhdl.Evaluation is
       Res : Iir_Enumeration_Literal;
    begin
       Res := Copy_Enumeration_Literal (Lit);
-      Location_Copy (Res, Origin);
+      Location_Copy (Res, Orig);
+      return Res;
+   end Build_Enumeration_Constant;
+
+   function Build_Enumeration_Constant (Val : Iir_Index32; Origin : Iir)
+     return Iir_Enumeration_Literal
+   is
+      Res : Iir_Enumeration_Literal;
+   begin
+      Res := Build_Enumeration_Constant (Val, Get_Type (Origin), Origin);
       Set_Literal_Origin (Res, Origin);
       return Res;
    end Build_Enumeration_Constant;
@@ -723,12 +745,314 @@ package body Vhdl.Evaluation is
       end case;
    end Eval_String_Literal;
 
+   package Synth_Helpers is
+      use Elab.Vhdl_Objtypes;
+      use Elab.Memtype;
+
+      function Convert_Node_To_Typ (N : Iir) return Type_Acc;
+      function Convert_Node_To_Memtyp (N : Iir) return Memtyp;
+      function Convert_Memtyp_To_Node (Mt : Memtyp; Btype : Iir; Orig : Iir)
+                                      return Iir;
+   end Synth_Helpers;
+
+   package body Synth_Helpers is
+      use Elab.Vhdl_Types;
+
+      function Convert_Discrete_Range (Rng : Iir) return Discrete_Range_Type is
+      begin
+         return Build_Discrete_Range_Type
+           (Eval_Pos (Get_Left_Limit (Rng)),
+            Eval_Pos (Get_Right_Limit (Rng)),
+            Get_Direction (Rng));
+      end Convert_Discrete_Range;
+
+      function Convert_Node_To_Typ (N : Iir) return Type_Acc is
+      begin
+         case Get_Kind (N) is
+            when Iir_Kind_Enumeration_Type_Definition =>
+               return Elab_Enumeration_Type_Definition (N);
+            when Iir_Kind_Integer_Type_Definition =>
+               declare
+                  Decl : constant Iir := Get_Type_Declarator (N);
+                  St : constant Iir := Get_Subtype_Definition (Decl);
+                  pragma Assert
+                    (Get_Kind (St) = Iir_Kind_Integer_Subtype_Definition);
+               begin
+                  return Elab_Scalar_Type_Definition (N, St);
+               end;
+            when Iir_Kind_Integer_Subtype_Definition
+              | Iir_Kind_Enumeration_Subtype_Definition =>
+               declare
+                  Rng : constant Iir := Get_Range_Constraint (N);
+                  Base_Typ : Type_Acc;
+                  Res_Rng : Discrete_Range_Type;
+                  W : Uns32;
+               begin
+                  Base_Typ := Convert_Node_To_Typ (Get_Base_Type (N));
+                  if Base_Typ.Kind in Type_Nets then
+                     --  A subtype of a bit/logic type is still a bit/logic.
+                     --  FIXME: bounds.
+                     return Base_Typ;
+                  end if;
+                  Res_Rng := Convert_Discrete_Range (Rng);
+                  W := Discrete_Range_Width (Res_Rng);
+                  return Create_Discrete_Type (Res_Rng, Base_Typ.Sz, W);
+               end;
+            when Iir_Kind_Array_Type_Definition =>
+               declare
+                  El : Type_Acc;
+                  Idx : Type_Acc;
+               begin
+                  El := Convert_Node_To_Typ (Get_Element_Subtype (N));
+                  Idx := Convert_Node_To_Typ (Get_Index_Type (N, 0));
+                  if El.Kind in Type_Nets then
+                     return Create_Unbounded_Vector (El, Idx);
+                  else
+                     raise Internal_Error;
+                     --  return Create_Unbounded_Array (Xx, El, Idx);
+                  end if;
+               end;
+            when Iir_Kind_Array_Subtype_Definition =>
+               declare
+                  Idx : constant Iir := Get_Index_Type (N, 0);
+                  El_Typ : Type_Acc;
+                  Res_Rng : Discrete_Range_Type;
+               begin
+                  El_Typ := Convert_Node_To_Typ (Get_Element_Subtype (N));
+                  pragma Assert (El_Typ.Kind in Type_Nets);
+                  Res_Rng := Convert_Discrete_Range
+                    (Get_Range_Constraint (Idx));
+                  return Create_Vector_Type
+                    (Synth_Bounds_From_Range (Res_Rng), El_Typ);
+               end;
+
+            when others =>
+               Error_Kind ("convert_node_to_typ", N);
+         end case;
+         return null;
+      end Convert_Node_To_Typ;
+
+      function Convert_Node_To_Memtyp (N : Iir; Typ : Type_Acc) return Memtyp
+      is
+         Res : Memtyp;
+      begin
+         case Get_Kind (N) is
+            when Iir_Kind_Aggregate =>
+               declare
+                  Sa : Iir;
+               begin
+                  Sa := Array_Aggregate_To_Simple_Aggregate (N);
+                  Res := Convert_Node_To_Memtyp (Sa, Typ);
+                  --  TODO: destroy SA
+                  return Res;
+               end;
+            when Iir_Kind_Simple_Aggregate =>
+               declare
+                  Els : constant Iir_Flist := Get_Simple_Aggregate_List (N);
+                  Last : constant Natural := Flist_Last (Els);
+                  Val : Iir;
+               begin
+                  pragma Assert (Typ.Kind = Type_Vector);
+                  Res := Create_Memory (Typ);
+
+                  for I in Flist_First .. Last loop
+                     --  Elements are static.
+                     Val := Get_Nth_Element (Els, I);
+                     Write_Discrete (Res.Mem + Size_Type (I) * Typ.Vec_El.Sz,
+                                     Typ.Vec_El, Eval_Pos (Val));
+                  end loop;
+               end;
+            when Iir_Kind_String_Literal8 =>
+               declare
+                  Element_Type : constant Iir := Get_Base_Type
+                    (Get_Element_Subtype (Get_Base_Type (Get_Type (N))));
+                  Literal_List : constant Iir_Flist :=
+                    Get_Enumeration_Literal_List (Element_Type);
+
+                  Len : constant Nat32 := Get_String_Length (N);
+                  Id : constant String8_Id := Get_String8_Id (N);
+
+                  Lit : Iir;
+               begin
+                  Res := Create_Memory (Typ);
+
+                  for I in 1 .. Len loop
+                     Lit := Get_Nth_Element
+                       (Literal_List,
+                        Natural (Str_Table.Element_String8 (Id, I)));
+                     Write_Discrete (Res.Mem + Size_Type (I - 1), Typ.Vec_El,
+                                     Int64 (Get_Enum_Pos (Lit)));
+                  end loop;
+               end;
+            when Iir_Kind_Integer_Literal
+              | Iir_Kind_Enumeration_Literal =>
+               Res := Create_Memory (Typ);
+               Write_Discrete (Res.Mem, Typ, Eval_Pos (N));
+
+            when others =>
+               Error_Kind ("convert_node_to_memtyp", N);
+         end case;
+         return Res;
+      end Convert_Node_To_Memtyp;
+
+      function Convert_Node_To_Memtyp (N : Iir) return Memtyp
+      is
+         Typ : Type_Acc;
+      begin
+         Typ := Convert_Node_To_Typ (Get_Type (N));
+         return Convert_Node_To_Memtyp (N, Typ);
+      end Convert_Node_To_Memtyp;
+
+      function Convert_Discrete_To_Node (V : Int64; Vtype : Iir; Orig : Iir)
+                                        return Iir is
+      begin
+         case Get_Kind (Vtype) is
+            when Iir_Kind_Integer_Subtype_Definition =>
+               return Build_Integer (V, Vtype, Orig);
+            when Iir_Kind_Enumeration_Subtype_Definition
+              | Iir_Kind_Enumeration_Type_Definition =>
+               return Build_Enumeration_Constant
+                 (Iir_Index32 (V), Vtype, Orig);
+            when others =>
+               Error_Kind ("convert_discrete_to_node", Vtype);
+         end case;
+      end Convert_Discrete_To_Node;
+
+      function Convert_Bound_To_Node
+        (Bnd : Bound_Type; Btype : Iir; Orig : Iir) return Iir
+      is
+         Rng : Iir;
+         Limit : Iir;
+      begin
+         Rng := Create_Iir (Iir_Kind_Range_Expression);
+         Location_Copy (Rng, Orig);
+         Set_Expr_Staticness (Rng, Locally);
+         Set_Type (Rng, Btype);
+         Set_Direction (Rng, Bnd.Dir);
+         Limit := Convert_Discrete_To_Node (Int64 (Bnd.Left), Btype, Orig);
+         Set_Left_Limit_Expr (Rng, Limit);
+         Set_Left_Limit (Rng, Limit);
+         Limit := Convert_Discrete_To_Node (Int64 (Bnd.Right), Btype, Orig);
+         Set_Right_Limit_Expr (Rng, Limit);
+         Set_Right_Limit (Rng, Limit);
+         return Rng;
+      end Convert_Bound_To_Node;
+
+      function Convert_Typ_To_Node (Typ : Type_Acc; Btype : Iir; Orig : Iir)
+                                   return Iir
+      is
+         Res : Iir;
+      begin
+         case Get_Kind (Btype) is
+            when Iir_Kind_Array_Type_Definition =>
+               declare
+                  Loc : constant Location_Type := Get_Location (Orig);
+                  Base_Idx : constant Iir := Get_Index_Type (Btype, 0);
+                  Rng : Iir;
+                  Idx_Type : Iir;
+               begin
+                  Idx_Type := Create_Range_Subtype_From_Type (Base_Idx, Loc);
+                  Rng := Convert_Bound_To_Node (Typ.Vbound, Base_Idx, Orig);
+                  Set_Range_Constraint (Idx_Type, Rng);
+
+                  Res := Create_Array_Subtype (Btype, Loc);
+                  Set_Nth_Element (Get_Index_Subtype_List (Res), 0, Idx_Type);
+                  Set_Type_Staticness (Res, Locally);
+                  Set_Constraint_State (Res, Fully_Constrained);
+                  Set_Index_Constraint_Flag (Res, True);
+                  return Res;
+               end;
+            when others =>
+               Error_Kind ("convert_typ_to_node", Btype);
+               return Null_Iir;
+         end case;
+      end Convert_Typ_To_Node;
+
+      function Convert_Vect_To_Simple_Aggregate
+        (Mt : Memtyp; Res_Type : Iir; Orig : Iir) return Iir
+      is
+         Element_Type : constant Iir := Get_Base_Type
+           (Get_Element_Subtype (Get_Base_Type (Res_Type)));
+         Literal_List : constant Iir_Flist :=
+           Get_Enumeration_Literal_List (Element_Type);
+
+         Len : constant Nat32 := Nat32 (Mt.Typ.Vbound.Len);
+
+         List : Iir_Flist;
+         El : Int64;
+         Lit : Iir;
+      begin
+         List := Create_Iir_Flist (Natural (Len));
+
+         for I in 1 .. Len loop
+            El := Read_Discrete (Mt.Mem + Size_Type (I - 1),
+                                 Mt.Typ.Vec_El);
+            Lit := Get_Nth_Element (Literal_List, Natural (El));
+            Set_Nth_Element (List, Natural (I - 1), Lit);
+         end loop;
+         return Build_Simple_Aggregate (List, Orig, Res_Type, Res_Type);
+      end Convert_Vect_To_Simple_Aggregate;
+
+      function Convert_Memtyp_To_Node (Mt : Memtyp; Btype : Iir; Orig : Iir)
+                                      return Iir
+      is
+         Res_Type : Iir;
+      begin
+         case Mt.Typ.Kind is
+            when Type_Vector =>
+               Res_Type := Convert_Typ_To_Node (Mt.Typ, Btype, Orig);
+               return Convert_Vect_To_Simple_Aggregate
+                 (Mt, Res_Type, Orig);
+            when Type_Logic =>
+               return Convert_Discrete_To_Node
+                 (Read_Discrete (Mt), Btype, Orig);
+            when others =>
+               raise Internal_Error;
+         end case;
+      end Convert_Memtyp_To_Node;
+   end Synth_Helpers;
+
+   function Eval_Ieee_Operator (Orig : Iir; Imp : Iir; Left : Iir; Right : Iir)
+                               return Iir
+   is
+      use Areapools;
+      use Elab.Vhdl_Objtypes;
+--      use Elab.Vhdl_Values;
+      use Synth.Static_Oper;
+      use Synth_Helpers;
+
+      Res_Type : constant Iir := Get_Return_Type (Imp);
+      Marker : Mark_Type;
+      Left_Mt, Right_Mt : Memtyp;
+      Res_Typ : Type_Acc;
+      Res_Mt : Memtyp;
+      Res : Iir;
+   begin
+      Mark (Marker, Expr_Pool);
+
+      Res_Typ := Convert_Node_To_Typ (Res_Type);
+      Left_Mt := Convert_Node_To_Memtyp (Left);
+      if Right /= Null_Iir then
+         Right_Mt := Convert_Node_To_Memtyp (Right);
+         Res_Mt := Synth_Static_Dyadic_Predefined
+           (Imp, Res_Typ, Left_Mt, Right_Mt, Orig);
+      else
+         Res_Mt := Synth_Static_Monadic_Predefined
+           (Imp, Left_Mt, Orig);
+      end if;
+      Res := Convert_Memtyp_To_Node (Res_Mt, Res_Type, Orig);
+      Release (Marker, Expr_Pool);
+
+      return Res;
+   end Eval_Ieee_Operator;
+
    function Eval_Monadic_Operator (Orig : Iir; Operand : Iir) return Iir
    is
       pragma Unsuppress (Overflow_Check);
       subtype Iir_Predefined_Vector_Minmax is Iir_Predefined_Functions range
         Iir_Predefined_Vector_Minimum .. Iir_Predefined_Vector_Maximum;
 
+      Imp : constant Iir := Get_Implementation (Orig);
       Func : Iir_Predefined_Functions;
    begin
       if Is_Overflow_Literal (Operand) then
@@ -736,7 +1060,7 @@ package body Vhdl.Evaluation is
          return Build_Overflow (Orig);
       end if;
 
-      Func := Get_Implicit_Definition (Get_Implementation (Orig));
+      Func := Get_Implicit_Definition (Imp);
       case Func is
          when Iir_Predefined_Integer_Negation =>
             return Build_Integer (-Get_Value (Operand), Orig);
@@ -879,6 +1203,9 @@ package body Vhdl.Evaluation is
                Free_Eval_String_Literal (Saggr, Operand);
                return Res;
             end;
+
+         when Iir_Predefined_IEEE_Explicit =>
+            return Eval_Ieee_Operator (Orig, Imp, Operand, Null_Iir);
 
          when others =>
             Error_Internal (Orig, "eval_monadic_operator: " &
@@ -2269,7 +2596,10 @@ package body Vhdl.Evaluation is
             --  Not dyadic
             raise Internal_Error;
 
-         when Iir_Predefined_Explicit =>
+         when Iir_Predefined_IEEE_Explicit =>
+            return Eval_Ieee_Operator (Orig, Imp, Left, Right);
+
+         when Iir_Predefined_None =>
             --  Not static
             raise Internal_Error;
       end case;
