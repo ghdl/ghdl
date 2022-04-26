@@ -22,14 +22,14 @@ with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
 with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Synth.Static_Oper is
-   function Synth_Static_Dyadic_Predefined (Syn_Inst : Synth_Instance_Acc;
-                                            Imp : Node;
+   function Synth_Static_Dyadic_Predefined (Imp : Node;
+                                            Res_Typ : Type_Acc;
                                             Left : Memtyp;
                                             Right : Memtyp;
                                             Expr : Node) return Memtyp;
-   function Synth_Static_Monadic_Predefined (Syn_Inst : Synth_Instance_Acc;
-                                             Imp : Node;
+   function Synth_Static_Monadic_Predefined (Imp : Node;
                                              Operand : Memtyp;
+                                             Oper_Typ : Type_Acc;
                                              Expr : Node) return Memtyp;
 
    function Synth_Static_Predefined_Function_Call

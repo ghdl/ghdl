@@ -21,20 +21,19 @@ with Types_Utils; use Types_Utils;
 
 with Grt.Types; use Grt.Types;
 
-with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Ieee.Std_Logic_1164; use Vhdl.Ieee.Std_Logic_1164;
 
 with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 with Elab.Memtype; use Elab.Memtype;
 with Elab.Vhdl_Files;
 with Elab.Vhdl_Expr; use Elab.Vhdl_Expr;
+with Elab.Vhdl_Types;
 
 with Netlists; use Netlists;
 
 with Synth.Errors; use Synth.Errors;
 with Synth.Source; use Synth.Source;
 with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
-with Synth.Vhdl_Oper;
 with Synth.Ieee.Std_Logic_1164; use Synth.Ieee.Std_Logic_1164;
 with Synth.Ieee.Numeric_Std; use Synth.Ieee.Numeric_Std;
 
@@ -105,16 +104,14 @@ package body Synth.Static_Oper is
       end case;
    end Check_Integer_Overflow;
 
-   function Synth_Static_Dyadic_Predefined (Syn_Inst : Synth_Instance_Acc;
-                                            Imp : Node;
+   function Synth_Static_Dyadic_Predefined (Imp : Node;
+                                            Res_Typ : Type_Acc;
                                             Left : Memtyp;
                                             Right : Memtyp;
                                             Expr : Node) return Memtyp
    is
       Def : constant Iir_Predefined_Functions :=
         Get_Implicit_Definition (Imp);
-      Res_Typ : constant Type_Acc :=
-        Get_Subtype_Object (Syn_Inst, Get_Type (Expr));
    begin
       case Def is
          when Iir_Predefined_Error =>
@@ -305,9 +302,8 @@ package body Synth.Static_Oper is
                Res : Memtyp;
             begin
                Check_Matching_Bounds (Le_Typ, Re_Typ, Expr);
-               Bnd := Synth.Vhdl_Oper.Create_Bounds_From_Length
-                 (Syn_Inst, Get_Index_Type (Get_Type (Expr), 0),
-                  L_Len + R_Len);
+               Bnd := Elab.Vhdl_Types.Create_Bounds_From_Length
+                 (Get_Uarray_First_Index (Res_Typ).Drange, L_Len + R_Len);
                Res_St := Create_Onedimensional_Array_Subtype
                  (Res_Typ, Bnd, Le_Typ);
                Res := Create_Memory (Res_St);
@@ -329,8 +325,8 @@ package body Synth.Static_Oper is
                Res : Memtyp;
             begin
                Check_Matching_Bounds (Left.Typ, Re_Typ, Expr);
-               Bnd := Synth.Vhdl_Oper.Create_Bounds_From_Length
-                 (Syn_Inst, Get_Index_Type (Get_Type (Expr), 0), 1 + Rlen);
+               Bnd := Elab.Vhdl_Types.Create_Bounds_From_Length
+                 (Get_Uarray_First_Index (Res_Typ).Drange, 1 + Rlen);
                Res_St := Create_Onedimensional_Array_Subtype
                  (Res_Typ, Bnd, Re_Typ);
                Res := Create_Memory (Res_St);
@@ -348,8 +344,8 @@ package body Synth.Static_Oper is
                Res : Memtyp;
             begin
                Check_Matching_Bounds (Le_Typ, Right.Typ, Expr);
-               Bnd := Synth.Vhdl_Oper.Create_Bounds_From_Length
-                 (Syn_Inst, Get_Index_Type (Get_Type (Expr), 0), Llen + 1);
+               Bnd := Elab.Vhdl_Types.Create_Bounds_From_Length
+                 (Get_Uarray_First_Index (Res_Typ).Drange, Llen + 1);
                Res_St := Create_Onedimensional_Array_Subtype
                  (Res_Typ, Bnd, Le_Typ);
                Res := Create_Memory (Res_St);
@@ -674,17 +670,13 @@ package body Synth.Static_Oper is
       return Create_Memory_U8 (Std_Ulogic'Pos (Res), El_Typ);
    end Synth_Vector_Reduce;
 
-   function Synth_Static_Monadic_Predefined (Syn_Inst : Synth_Instance_Acc;
-                                             Imp : Node;
+   function Synth_Static_Monadic_Predefined (Imp : Node;
                                              Operand : Memtyp;
+                                             Oper_Typ : Type_Acc;
                                              Expr : Node) return Memtyp
    is
       Def : constant Iir_Predefined_Functions :=
         Get_Implicit_Definition (Imp);
-      Inter_Chain : constant Node :=
-        Get_Interface_Declaration_Chain (Imp);
-      Oper_Type : constant Node := Get_Type (Inter_Chain);
-      Oper_Typ : constant Type_Acc := Get_Subtype_Object (Syn_Inst, Oper_Type);
    begin
       case Def is
          when Iir_Predefined_Boolean_Not

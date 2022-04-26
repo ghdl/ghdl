@@ -158,6 +158,36 @@ package body Elab.Vhdl_Types is
               Len => Get_Range_Length (Rng));
    end Synth_Bounds_From_Range;
 
+   function Create_Bounds_From_Length
+     (Bounds : Discrete_Range_Type; Len : Iir_Index32) return Bound_Type
+   is
+      Res : Bound_Type;
+   begin
+      Res := (Left => Int32 (Bounds.Left),
+              Right => 0,
+              Dir => Bounds.Dir,
+              Len => Uns32 (Len));
+
+      if Len = 0 then
+         --  Special case.
+         Res.Right := Res.Left;
+         case Bounds.Dir is
+            when Dir_To =>
+               Res.Left := Res.Right + 1;
+            when Dir_Downto =>
+               Res.Left := Res.Right - 1;
+         end case;
+      else
+         case Bounds.Dir is
+            when Dir_To =>
+               Res.Right := Res.Left + Int32 (Len - 1);
+            when Dir_Downto =>
+               Res.Right := Res.Left - Int32 (Len - 1);
+         end case;
+      end if;
+      return Res;
+   end Create_Bounds_From_Length;
+
    procedure Synth_Subtype_Indication_If_Anonymous
      (Syn_Inst : Synth_Instance_Acc; Atype : Node) is
    begin
@@ -181,16 +211,21 @@ package body Elab.Vhdl_Types is
    is
       El_Type : constant Node := Get_Element_Subtype (Def);
       Ndims : constant Natural := Get_Nbr_Dimensions (Def);
+      Idx : Node;
       El_Typ : Type_Acc;
+      Idx_Typ : Type_Acc;
       Typ : Type_Acc;
    begin
       Synth_Subtype_Indication_If_Anonymous (Syn_Inst, El_Type);
       El_Typ := Get_Subtype_Object (Syn_Inst, El_Type);
 
+      Idx := Get_Index_Type (Def, 0);
+      Idx_Typ := Get_Subtype_Object (Syn_Inst, Idx);
+
       if El_Typ.Kind in Type_Nets and then Ndims = 1 then
-         Typ := Create_Unbounded_Vector (El_Typ);
+         Typ := Create_Unbounded_Vector (El_Typ, Idx_Typ);
       else
-         Typ := Create_Unbounded_Array (Dim_Type (Ndims), El_Typ);
+         Typ := Create_Unbounded_Array (Dim_Type (Ndims), El_Typ, Idx_Typ);
       end if;
       return Typ;
    end Synth_Array_Type_Definition;

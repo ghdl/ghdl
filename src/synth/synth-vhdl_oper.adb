@@ -166,34 +166,10 @@ package body Synth.Vhdl_Oper is
      (Syn_Inst : Synth_Instance_Acc; Atype : Iir; Len : Iir_Index32)
      return Bound_Type
    is
-      Res : Bound_Type;
       Index_Bounds : Discrete_Range_Type;
    begin
       Synth_Discrete_Range (Syn_Inst, Atype, Index_Bounds);
-
-      Res := (Left => Int32 (Index_Bounds.Left),
-              Right => 0,
-              Dir => Index_Bounds.Dir,
-              Len => Uns32 (Len));
-
-      if Len = 0 then
-         --  Special case.
-         Res.Right := Res.Left;
-         case Index_Bounds.Dir is
-            when Dir_To =>
-               Res.Left := Res.Right + 1;
-            when Dir_Downto =>
-               Res.Left := Res.Right - 1;
-         end case;
-      else
-         case Index_Bounds.Dir is
-            when Dir_To =>
-               Res.Right := Res.Left + Int32 (Len - 1);
-            when Dir_Downto =>
-               Res.Right := Res.Left - Int32 (Len - 1);
-         end case;
-      end if;
-      return Res;
+      return Create_Bounds_From_Length (Index_Bounds, Len);
    end Create_Bounds_From_Length;
 
    --  Do a match comparison between CST and OPER.
@@ -772,7 +748,7 @@ package body Synth.Vhdl_Oper is
 
       if Is_Static_Val (Left.Val) and Is_Static_Val (Right.Val) then
          Srec := Synth_Static_Dyadic_Predefined
-           (Syn_Inst, Imp,
+           (Imp, Expr_Typ,
             Get_Value_Memtyp (Left), Get_Value_Memtyp (Right), Expr);
          if Srec = Null_Memtyp then
             return No_Valtyp;
@@ -1706,9 +1682,9 @@ package body Synth.Vhdl_Oper is
       Strip_Const (Operand);
 
       if Is_Static_Val (Operand.Val) then
-         return Create_Value_Memtyp (Synth_Static_Monadic_Predefined
-                                       (Syn_Inst, Imp,
-                                        Get_Value_Memtyp (Operand), Loc));
+         return Create_Value_Memtyp
+           (Synth_Static_Monadic_Predefined
+              (Imp, Get_Value_Memtyp (Operand), Oper_Typ, Loc));
       end if;
 
       case Def is

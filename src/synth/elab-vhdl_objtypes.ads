@@ -145,6 +145,7 @@ package Elab.Vhdl_Objtypes is
             Vec_El : Type_Acc;
          when Type_Unbounded_Vector =>
             Uvec_El : Type_Acc;
+            Uvec_Idx1 : Type_Acc;
          when Type_Slice =>
             Slice_El : Type_Acc;
          when Type_Array =>
@@ -153,6 +154,9 @@ package Elab.Vhdl_Objtypes is
          when Type_Unbounded_Array =>
             Uarr_Ndim : Dim_Type;
             Uarr_El : Type_Acc;
+            --  Type of the first index.  The only place we need the index is
+            --  for concatenation.
+            Uarr_Idx1 : Type_Acc;
          when Type_Record
            | Type_Unbounded_Record =>
             Rec : Rec_El_Array_Acc;
@@ -203,14 +207,15 @@ package Elab.Vhdl_Objtypes is
                                       return Type_Acc;
    function Create_Vector_Type (Bnd : Bound_Type; El_Type : Type_Acc)
                                return Type_Acc;
-   function Create_Unbounded_Vector (El_Type : Type_Acc) return Type_Acc;
+   function Create_Unbounded_Vector (El_Type : Type_Acc; Idx1 : Type_Acc)
+                                    return Type_Acc;
    function Create_Slice_Type (Len : Uns32; El_Type : Type_Acc)
                               return Type_Acc;
    function Create_Bound_Array (Ndims : Dim_Type) return Bound_Array_Acc;
    function Create_Array_Type (Bnd : Bound_Array_Acc; El_Type : Type_Acc)
                               return Type_Acc;
-   function Create_Unbounded_Array (Ndim : Dim_Type; El_Type : Type_Acc)
-                                   return Type_Acc;
+   function Create_Unbounded_Array
+     (Ndim : Dim_Type; El_Type : Type_Acc; Idx1 : Type_Acc) return Type_Acc;
    function Create_Rec_El_Array (Nels : Iir_Index32) return Rec_El_Array_Acc;
 
    function Create_Record_Type (Els : Rec_El_Array_Acc) return Type_Acc;
@@ -224,6 +229,9 @@ package Elab.Vhdl_Objtypes is
 
    function In_Bounds (Bnd : Bound_Type; V : Int32) return Boolean;
    function In_Range (Rng : Discrete_Range_Type; V : Int64) return Boolean;
+
+   --  Return the first index of an unbounded array or vector.
+   function Get_Uarray_First_Index (Typ : Type_Acc) return Type_Acc;
 
    --  Return the bounds of dimension DIM of a vector/array.  For a vector,
    --  DIM must be 1.

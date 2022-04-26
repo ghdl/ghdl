@@ -363,8 +363,8 @@ package body Elab.Vhdl_Objtypes is
                                   Arr_El => El_Type)));
    end Create_Array_Type;
 
-   function Create_Unbounded_Array (Ndim : Dim_Type; El_Type : Type_Acc)
-                                   return Type_Acc
+   function Create_Unbounded_Array
+     (Ndim : Dim_Type; El_Type : Type_Acc; Idx1 : Type_Acc) return Type_Acc
    is
       subtype Unbounded_Type_Type is Type_Type (Type_Unbounded_Array);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Unbounded_Type_Type);
@@ -375,10 +375,12 @@ package body Elab.Vhdl_Objtypes is
                                                 Sz => 0,
                                                 W => 0,
                                                 Uarr_Ndim => Ndim,
-                                                Uarr_El => El_Type)));
+                                                Uarr_El => El_Type,
+                                                Uarr_Idx1 => Idx1)));
    end Create_Unbounded_Array;
 
-   function Create_Unbounded_Vector (El_Type : Type_Acc) return Type_Acc
+   function Create_Unbounded_Vector (El_Type : Type_Acc; Idx1 : Type_Acc)
+                                    return Type_Acc
    is
       subtype Unbounded_Type_Type is Type_Type (Type_Unbounded_Vector);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Unbounded_Type_Type);
@@ -388,7 +390,8 @@ package body Elab.Vhdl_Objtypes is
                                                 Al => El_Type.Al,
                                                 Sz => 0,
                                                 W => 0,
-                                                Uvec_El => El_Type)));
+                                                Uvec_El => El_Type,
+                                                Uvec_Idx1 => Idx1)));
    end Create_Unbounded_Vector;
 
    function Get_Array_Element (Arr_Type : Type_Acc) return Type_Acc is
@@ -422,6 +425,18 @@ package body Elab.Vhdl_Objtypes is
             raise Internal_Error;
       end case;
    end Get_Array_Bound;
+
+   function Get_Uarray_First_Index (Typ : Type_Acc) return Type_Acc is
+   begin
+      case Typ.Kind is
+         when Type_Unbounded_Vector =>
+            return Typ.Uvec_Idx1;
+         when Type_Unbounded_Array =>
+            return Typ.Uarr_Idx1;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Get_Uarray_First_Index;
 
    function Get_Range_Length (Rng : Discrete_Range_Type) return Uns32
    is
