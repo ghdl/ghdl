@@ -34,6 +34,8 @@ with Vhdl.Parse;
 with Vhdl.Errors;
 with Vhdl.Back_End; use Vhdl.Back_End;
 
+with Elab.Vhdl_Objtypes;
+
 package body Options is
    procedure Initialize is
    begin
@@ -42,6 +44,7 @@ package body Options is
       Str_Table.Initialize;
       Vhdl.Lists.Initialize;
       Vhdl.Nodes.Initialize;
+      Elab.Vhdl_Objtypes.Init;
       Files_Map.Initialize;
       Libraries.Initialize;
       PSL.Nodes.Init (Libraries.Library_Location);

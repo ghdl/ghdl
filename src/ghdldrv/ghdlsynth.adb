@@ -47,7 +47,6 @@ with Netlists.Inference;
 
 with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 with Elab.Vhdl_Insts;
-with Elab.Vhdl_Objtypes;
 
 with Synthesis;
 with Synth.Disp_Vhdl;
@@ -285,8 +284,6 @@ package body Ghdlsynth is
          --  Do not create concurrent signal assignment for inertial
          --  association.  They are handled directly.
          Vhdl.Canon.Canon_Flag_Inertial_Associations := False;
-
-         Elab.Vhdl_Objtypes.Init;
 
          if Ghdlcomp.Init_Verilog_Options /= null then
             Ghdlcomp.Init_Verilog_Options.all (False);
