@@ -271,7 +271,9 @@ package Elab.Vhdl_Objtypes is
    function Read_U8 (Mt : Memtyp) return Ghdl_U8;
    function Read_Fp64 (Mt : Memtyp) return Fp64;
 
+   --  TYP is the type of the element.
    procedure Write_Discrete (Mem : Memory_Ptr; Typ : Type_Acc; Val : Int64);
+   function Read_Discrete (Mem : Memory_Ptr; Typ : Type_Acc) return Int64;
    function Read_Discrete (Mt : Memtyp) return Int64;
 
    --  Memory allocation.

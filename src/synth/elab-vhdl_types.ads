@@ -40,7 +40,8 @@ package Elab.Vhdl_Types is
    procedure Synth_Discrete_Range (Syn_Inst : Synth_Instance_Acc;
                                    Bound : Node;
                                    Rng : out Discrete_Range_Type);
-
+   function Synth_Bounds_From_Range (Rng : Discrete_Range_Type)
+                                    return Bound_Type;
    function Synth_Bounds_From_Range (Syn_Inst : Synth_Instance_Acc;
                                      Atype : Node) return Bound_Type;
 
@@ -58,6 +59,11 @@ package Elab.Vhdl_Types is
    procedure Elab_Type_Definition (Syn_Inst : Synth_Instance_Acc; Def : Node);
    procedure Elab_Anonymous_Type_Definition
      (Syn_Inst : Synth_Instance_Acc; Def : Node; St : Node);
+
+   --  Exported only for Vhdl.Evaluation to create temporary types.
+   function Elab_Enumeration_Type_Definition (Def : Node) return Type_Acc;
+   function Elab_Scalar_Type_Definition (Def : Node; St : Node)
+                                        return Type_Acc;
 
    --  Elaborate the type of DECL.
    procedure Elab_Declaration_Type

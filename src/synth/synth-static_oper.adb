@@ -671,7 +671,6 @@ package body Synth.Static_Oper is
 
    function Synth_Static_Monadic_Predefined (Imp : Node;
                                              Operand : Memtyp;
-                                             Oper_Typ : Type_Acc;
                                              Expr : Node) return Memtyp
    is
       Def : constant Iir_Predefined_Functions :=
@@ -680,25 +679,26 @@ package body Synth.Static_Oper is
       case Def is
          when Iir_Predefined_Boolean_Not
            | Iir_Predefined_Bit_Not =>
-            return Create_Memory_U8 (1 - Read_U8 (Operand), Oper_Typ);
+            return Create_Memory_U8 (1 - Read_U8 (Operand), Operand.Typ);
 
          when Iir_Predefined_Integer_Negation
            | Iir_Predefined_Physical_Negation =>
-            return Create_Memory_Discrete (-Read_Discrete (Operand), Oper_Typ);
+            return Create_Memory_Discrete
+              (-Read_Discrete (Operand), Operand.Typ);
          when Iir_Predefined_Integer_Absolute
            | Iir_Predefined_Physical_Absolute =>
             return Create_Memory_Discrete
-              (abs Read_Discrete(Operand), Oper_Typ);
+              (abs Read_Discrete(Operand), Operand.Typ);
          when Iir_Predefined_Integer_Identity
            | Iir_Predefined_Physical_Identity =>
             return Operand;
 
          when Iir_Predefined_Floating_Negation =>
-            return Create_Memory_Fp64 (-Read_Fp64 (Operand), Oper_Typ);
+            return Create_Memory_Fp64 (-Read_Fp64 (Operand), Operand.Typ);
          when Iir_Predefined_Floating_Identity =>
             return Operand;
          when Iir_Predefined_Floating_Absolute =>
-            return Create_Memory_Fp64 (abs Read_Fp64 (Operand), Oper_Typ);
+            return Create_Memory_Fp64 (abs Read_Fp64 (Operand), Operand.Typ);
 
          when Iir_Predefined_Ieee_1164_Condition_Operator =>
             --  Constant std_logic: need to convert.
@@ -722,7 +722,7 @@ package body Synth.Static_Oper is
          when Iir_Predefined_Ieee_1164_Scalar_Not =>
             return Create_Memory_U8
               (Std_Ulogic'Pos (Not_Table (Read_Std_Logic (Operand.Mem, 0))),
-               Oper_Typ);
+               Operand.Typ);
 
          when Iir_Predefined_Ieee_Numeric_Std_And_Uns =>
             return Synth_Vector_Reduce ('1', Operand, And_Table);

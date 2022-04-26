@@ -679,18 +679,23 @@ package body Elab.Vhdl_Objtypes is
       return Read_Fp64 (Mt.Mem);
    end Read_Fp64;
 
-   function Read_Discrete (Mt : Memtyp) return Int64 is
+   function Read_Discrete (Mem : Memory_Ptr; Typ : Type_Acc) return Int64 is
    begin
-      case Mt.Typ.Sz is
+      case Typ.Sz is
          when 1 =>
-            return Int64 (Read_U8 (Mt.Mem));
+            return Int64 (Read_U8 (Mem));
          when 4 =>
-            return Int64 (Read_I32 (Mt.Mem));
+            return Int64 (Read_I32 (Mem));
          when 8 =>
-            return Int64 (Read_I64 (Mt.Mem));
+            return Int64 (Read_I64 (Mem));
          when others =>
             raise Internal_Error;
       end case;
+   end Read_Discrete;
+
+   function Read_Discrete (Mt : Memtyp) return Int64 is
+   begin
+      return Read_Discrete (Mt.Mem, Mt.Typ);
    end Read_Discrete;
 
    procedure Write_Discrete (Mem : Memory_Ptr; Typ : Type_Acc; Val : Int64) is

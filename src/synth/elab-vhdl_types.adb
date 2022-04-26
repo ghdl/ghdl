@@ -147,6 +147,14 @@ package body Elab.Vhdl_Types is
       end case;
    end Synth_Discrete_Range;
 
+   function Synth_Bounds_From_Range (Rng : Discrete_Range_Type)
+                                    return Bound_Type is
+   begin
+      return (Dir => Rng.Dir,
+              Left => Int32 (Rng.Left), Right => Int32 (Rng.Right),
+              Len => Get_Range_Length (Rng));
+   end Synth_Bounds_From_Range;
+
    function Synth_Bounds_From_Range (Syn_Inst : Synth_Instance_Acc;
                                      Atype : Node) return Bound_Type
    is
@@ -337,36 +345,40 @@ package body Elab.Vhdl_Types is
       end case;
    end Scalar_Size_To_Size;
 
+   function Elab_Enumeration_Type_Definition (Def : Node) return Type_Acc is
+   begin
+      if Def = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type
+        or else Def = Vhdl.Ieee.Std_Logic_1164.Std_Logic_Type
+      then
+         return Logic_Type;
+      elsif Def = Vhdl.Std_Package.Boolean_Type_Definition then
+         return Boolean_Type;
+      elsif Def = Vhdl.Std_Package.Bit_Type_Definition then
+         return Bit_Type;
+      else
+         declare
+            Nbr_El : constant Natural :=
+              Get_Nbr_Elements (Get_Enumeration_Literal_List (Def));
+            Rng : Discrete_Range_Type;
+            W : Uns32;
+         begin
+            W := Uns32 (Clog2 (Uns64 (Nbr_El)));
+            Rng := (Dir => Dir_To,
+                    Is_Signed => False,
+                    Left => 0,
+                    Right => Int64 (Nbr_El - 1));
+            return Create_Discrete_Type (Rng, Scalar_Size_To_Size (Def), W);
+         end;
+      end if;
+   end Elab_Enumeration_Type_Definition;
+
    procedure Elab_Type_Definition (Syn_Inst : Synth_Instance_Acc; Def : Node)
    is
       Typ : Type_Acc;
    begin
       case Get_Kind (Def) is
          when Iir_Kind_Enumeration_Type_Definition =>
-            if Def = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type
-              or else Def = Vhdl.Ieee.Std_Logic_1164.Std_Logic_Type
-            then
-               Typ := Logic_Type;
-            elsif Def = Vhdl.Std_Package.Boolean_Type_Definition then
-               Typ := Boolean_Type;
-            elsif Def = Vhdl.Std_Package.Bit_Type_Definition then
-               Typ := Bit_Type;
-            else
-               declare
-                  Nbr_El : constant Natural :=
-                    Get_Nbr_Elements (Get_Enumeration_Literal_List (Def));
-                  Rng : Discrete_Range_Type;
-                  W : Uns32;
-               begin
-                  W := Uns32 (Clog2 (Uns64 (Nbr_El)));
-                  Rng := (Dir => Dir_To,
-                          Is_Signed => False,
-                          Left => 0,
-                          Right => Int64 (Nbr_El - 1));
-                  Typ := Create_Discrete_Type
-                    (Rng, Scalar_Size_To_Size (Def), W);
-               end;
-            end if;
+            Typ := Elab_Enumeration_Type_Definition (Def);
          when Iir_Kind_Array_Type_Definition =>
             Typ := Synth_Array_Type_Definition (Syn_Inst, Def);
          when Iir_Kind_Access_Type_Definition =>
@@ -387,6 +399,20 @@ package body Elab.Vhdl_Types is
       end if;
    end Elab_Type_Definition;
 
+   function Elab_Scalar_Type_Definition (Def : Node; St : Node) return Type_Acc
+   is
+      Cst : constant Node := Get_Range_Constraint (St);
+      L, R : Int64;
+      Rng : Discrete_Range_Type;
+      W : Uns32;
+   begin
+      L := Get_Value (Get_Left_Limit (Cst));
+      R := Get_Value (Get_Right_Limit (Cst));
+      Rng := Build_Discrete_Range_Type (L, R, Get_Direction (Cst));
+      W := Discrete_Range_Width (Rng);
+      return Create_Discrete_Type (Rng, Scalar_Size_To_Size (Def), W);
+   end Elab_Scalar_Type_Definition;
+
    procedure Elab_Anonymous_Type_Definition
      (Syn_Inst : Synth_Instance_Acc; Def : Node; St : Node)
    is
@@ -395,19 +421,7 @@ package body Elab.Vhdl_Types is
       case Get_Kind (Def) is
          when Iir_Kind_Integer_Type_Definition
            | Iir_Kind_Physical_Type_Definition =>
-            declare
-               Cst : constant Node := Get_Range_Constraint (St);
-               L, R : Int64;
-               Rng : Discrete_Range_Type;
-               W : Uns32;
-            begin
-               L := Get_Value (Get_Left_Limit (Cst));
-               R := Get_Value (Get_Right_Limit (Cst));
-               Rng := Build_Discrete_Range_Type (L, R, Get_Direction (Cst));
-               W := Discrete_Range_Width (Rng);
-               Typ := Create_Discrete_Type
-                 (Rng, Scalar_Size_To_Size (Def), W);
-            end;
+            Typ := Elab_Scalar_Type_Definition (Def, St);
          when Iir_Kind_Floating_Type_Definition =>
             declare
                Cst : constant Node := Get_Range_Constraint (St);

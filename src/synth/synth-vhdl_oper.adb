@@ -1684,7 +1684,7 @@ package body Synth.Vhdl_Oper is
       if Is_Static_Val (Operand.Val) then
          return Create_Value_Memtyp
            (Synth_Static_Monadic_Predefined
-              (Imp, Get_Value_Memtyp (Operand), Oper_Typ, Loc));
+              (Imp, Get_Value_Memtyp (Operand), Loc));
       end if;
 
       case Def is
