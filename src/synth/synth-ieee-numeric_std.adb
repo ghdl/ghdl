@@ -65,7 +65,7 @@ package body Synth.Ieee.Numeric_Std is
       end loop;
    end Fill;
 
-      procedure Warn_Compare_Null (Loc : Syn_Src) is
+   procedure Warn_Compare_Null (Loc : Syn_Src) is
    begin
       Warning_Msg_Synth (+Loc, "null argument detected, returning false");
    end Warn_Compare_Null;
@@ -742,36 +742,34 @@ package body Synth.Ieee.Numeric_Std is
       return Mul_Sgn_Sgn (L, Rv, Loc);
    end Mul_Sgn_Int;
 
+   --  Note: SRC = DST is allowed.
+   procedure Neg_Vec (Src : Memory_Ptr; Dst : Memory_Ptr; Typ : Type_Acc)
+   is
+      Len : constant Uns32 := Typ.Vbound.Len;
+      Vb, Carry : Sl_X01;
+   begin
+      Carry := '1';
+      for I in 1 .. Len loop
+         Vb := Sl_To_X01 (Read_Std_Logic (Src, Len - I));
+         Vb := Not_Table (Vb);
+         Write_Std_Logic (Dst, Len - I, Xor_Table (Carry, Vb));
+         Carry := And_Table (Carry, Vb);
+      end loop;
+   end Neg_Vec;
+
    function Neg_Vec_Notyp (V : Memtyp) return Memory_Ptr
    is
-      Len : constant Uns32 := V.Typ.Vbound.Len;
-      Vb, Carry : Sl_X01;
-      Res       : Memory_Ptr;
+      Res : Memory_Ptr;
    begin
       Res := Alloc_Memory (V.Typ);
 
-      Carry := '1';
-      for I in 1 .. Len loop
-         Vb := Sl_To_X01 (Read_Std_Logic (V.Mem, Len - I));
-         Vb := Not_Table (Vb);
-         Write_Std_Logic (Res, Len - I, Xor_Table (Carry, Vb));
-         Carry := And_Table (Carry, Vb);
-      end loop;
+      Neg_Vec (V.Mem, Res, V.Typ);
       return Res;
    end Neg_Vec_Notyp;
 
-   procedure Neg_Vec (V : Memtyp)
-   is
-      Len : constant Uns32 := V.Typ.Vbound.Len;
-      Vb, Carry : Sl_X01;
+   procedure Neg_Vec (V : Memtyp) is
    begin
-      Carry := '1';
-      for I in 1 .. Len loop
-         Vb := Sl_To_X01 (Read_Std_Logic (V.Mem, Len - I));
-         Vb := Not_Table (Vb);
-         Write_Std_Logic (V.Mem, Len - I, Xor_Table (Carry, Vb));
-         Carry := And_Table (Carry, Vb);
-      end loop;
+      Neg_Vec (V.Mem, V.Mem, V.Typ);
    end Neg_Vec;
 
    function Neg_Vec (V : Memtyp; Loc : Syn_Src) return Memtyp
@@ -802,6 +800,45 @@ package body Synth.Ieee.Numeric_Std is
       end loop;
       return Res;
    end Neg_Vec;
+
+   procedure To_01X (Src : Memory_Ptr; Dst : Memory_Ptr; Len : Uns32)
+   is
+      V : Sl_X01;
+   begin
+      for I in 1 .. Len loop
+         V := Sl_To_X01 (Read_Std_Logic (Src, Len - I));
+         if V = 'X' then
+            for J in 1 .. Len loop
+               Write_Std_Logic (Dst, J - 1, 'X');
+            end loop;
+            return;
+         end if;
+         Write_Std_Logic (Dst, Len - I, V);
+      end loop;
+   end To_01X;
+
+   function Abs_Vec (V : Memtyp; Loc : Syn_Src) return Memtyp
+   is
+      pragma Unreferenced (Loc);
+      Len : constant Uns32 := V.Typ.Vbound.Len;
+      Res : Memtyp;
+      Msb : Sl_X01;
+   begin
+      Res.Typ := Create_Res_Type (V.Typ, Len);
+      Res := Create_Memory (Res.Typ);
+
+      if Len = 0 then
+         return Res;
+      end if;
+
+      --  Convert to 01, check for X.
+      To_01X (V.Mem, Res.Mem, Len);
+      Msb := Read_Std_Logic (Res.Mem, 0);
+      if Msb = '1' then
+         Neg_Vec (Res);
+      end if;
+      return Res;
+   end Abs_Vec;
 
    function Shift_Vec (Val : Memtyp;
                        Amt : Uns32;

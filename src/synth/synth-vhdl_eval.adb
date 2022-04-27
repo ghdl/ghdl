@@ -748,6 +748,8 @@ package body Synth.Vhdl_Eval is
 
          when Iir_Predefined_Ieee_Numeric_Std_Neg_Sgn =>
             return Neg_Vec (Operand, Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Abs_Sgn =>
+            return Abs_Vec (Operand, Expr);
 
          when Iir_Predefined_Ieee_1164_Vector_Not
            | Iir_Predefined_Ieee_Numeric_Std_Not_Uns

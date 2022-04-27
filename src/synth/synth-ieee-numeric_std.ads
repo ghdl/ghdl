@@ -38,6 +38,9 @@ package Synth.Ieee.Numeric_Std is
    --  Unary "-"
    function Neg_Vec (V : Memtyp; Loc : Syn_Src) return Memtyp;
 
+   --  "abs"
+   function Abs_Vec (V : Memtyp; Loc : Syn_Src) return Memtyp;
+
    --  "+"
    function Add_Uns_Uns (L, R : Memtyp; Loc : Syn_Src) return Memtyp;
    function Add_Sgn_Sgn (L, R : Memtyp; Loc : Syn_Src) return Memtyp;
