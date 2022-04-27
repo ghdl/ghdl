@@ -888,12 +888,15 @@ package body Vhdl.Sem_Expr is
       return Res;
    end Sem_Discrete_Range_Integer;
 
-   function Is_Ieee_Operator (Imp : Iir) return Boolean
+   function Is_Ieee_Operation (Imp : Iir) return Boolean
    is
       use Std_Names;
       Parent : Iir;
    begin
       pragma Assert (Get_Kind (Imp) = Iir_Kind_Function_Declaration);
+
+      --  TODO: remove this code so that all operations are allowed (and not
+      --   only operators).
       case Get_Identifier (Imp) is
          when Name_Id_Operators
            | Name_Word_Operators
@@ -908,7 +911,7 @@ package body Vhdl.Sem_Expr is
       Parent := Get_Parent (Imp);
       return Parent = Vhdl.Ieee.Numeric.Numeric_Std_Pkg
         or Parent = Vhdl.Ieee.Std_Logic_1164.Std_Logic_1164_Pkg;
-   end Is_Ieee_Operator;
+   end Is_Ieee_Operation;
 
    procedure Set_Function_Call_Staticness (Expr : Iir; Imp : Iir)
    is
@@ -986,7 +989,7 @@ package body Vhdl.Sem_Expr is
                   Staticness := None;
                when Iir_Predefined_Explicit =>
                   if Vhdl_Std >= Vhdl_08
-                    and then Is_Ieee_Operator (Imp)
+                    and then Is_Ieee_Operation (Imp)
                   then
                      null;
                   elsif Get_Pure_Flag (Imp) then
