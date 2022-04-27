@@ -1003,7 +1003,8 @@ package body Vhdl.Evaluation is
                Res_Type := Convert_Typ_To_Node (Mt.Typ, Btype, Orig);
                return Convert_Vect_To_Simple_Aggregate
                  (Mt, Res_Type, Orig);
-            when Type_Logic =>
+            when Type_Logic
+              | Type_Bit =>
                return Convert_Discrete_To_Node
                  (Read_Discrete (Mt), Btype, Orig);
             when others =>
@@ -2569,8 +2570,7 @@ package body Vhdl.Evaluation is
            | Iir_Predefined_TF_Element_Array_Xor
            | Iir_Predefined_TF_Array_Element_Xnor
            | Iir_Predefined_TF_Element_Array_Xnor =>
-            --  TODO
-            raise Internal_Error;
+            return Eval_Ieee_Operator (Orig, Imp, Left, Right);
 
          when Iir_Predefined_TF_Reduction_And
            | Iir_Predefined_TF_Reduction_Or

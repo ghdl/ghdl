@@ -41,6 +41,12 @@ package body Synth.Static_Oper is
    --  (math library) on unix systems.
    pragma Linker_Options ("-lm");
 
+   type Tf_Table_2d is array (Boolean, Boolean) of Boolean;
+
+   Tf_2d_And : constant Tf_Table_2d :=
+     (False => (others => False),
+      True => (True => True, False => False));
+
    function Create_Res_Bound (Prev : Type_Acc) return Type_Acc is
    begin
       if Prev.Vbound.Dir = Dir_Downto
@@ -77,6 +83,21 @@ package body Synth.Static_Oper is
 
       return Res;
    end Synth_Vector_Dyadic;
+
+   function Synth_Tf_Array_Element (El, Arr : Memtyp;
+                                    Op : Tf_Table_2d) return Memtyp
+   is
+      Res : Memtyp;
+      Ve, Va : Boolean;
+   begin
+      Res := Create_Memory (Arr.Typ);
+      Ve := Boolean'Val (Read_U8 (El.Mem));
+      for I in 1 .. Arr.Typ.Sz loop
+         Va := Boolean'Val (Read_U8 (Arr.Mem + (I - 1)));
+         Write_U8 (Res.Mem + (I - 1), Boolean'Pos (Op (Ve, Va)));
+      end loop;
+      return Res;
+   end Synth_Tf_Array_Element;
 
    function Get_Static_Ulogic (Op : Memtyp) return Std_Ulogic is
    begin
@@ -390,6 +411,11 @@ package body Synth.Static_Oper is
                   return Res;
                end;
             end if;
+
+         when Iir_Predefined_TF_Element_Array_And =>
+            return Synth_Tf_Array_Element (Left, Right, Tf_2d_And);
+         when Iir_Predefined_TF_Array_Element_And =>
+            return Synth_Tf_Array_Element (Right, Left, Tf_2d_And);
 
          when Iir_Predefined_Ieee_1164_Vector_And
            | Iir_Predefined_Ieee_Numeric_Std_And_Uns_Uns
