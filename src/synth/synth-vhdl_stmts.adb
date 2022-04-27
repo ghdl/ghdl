@@ -723,10 +723,15 @@ package body Synth.Vhdl_Stmts is
       while Ce /= Null_Node loop
          Val := Synth_Expression_With_Type
            (C.Inst, Get_Expression (Ce), Targ_Type);
+         --  Convert to the target subtype so that all the conditional
+         --  expressions have the same width.
+         Val := Synth_Subtype_Conversion (Ctxt, Val, Targ_Type, False, Ce);
          V := Get_Net (Ctxt, Val);
          Cond := Get_Condition (Ce);
          if Cond /= Null_Node then
             Cond_Val := Synth_Expression (C.Inst, Cond);
+            --  Note: as one input of the mux2 is not connected, there is no
+            --  check on inputs width.
             V := Build_Mux2 (Ctxt, Get_Net (Ctxt, Cond_Val), No_Net, V);
             Set_Location (V, Ce);
          end if;
