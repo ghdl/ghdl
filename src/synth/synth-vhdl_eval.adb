@@ -36,7 +36,7 @@ with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
 with Synth.Ieee.Std_Logic_1164; use Synth.Ieee.Std_Logic_1164;
 with Synth.Ieee.Numeric_Std; use Synth.Ieee.Numeric_Std;
 
-package body Synth.Static_Oper is
+package body Synth.Vhdl_Eval is
    --  As log2(3m) is directly referenced, the program must be linked with -lm
    --  (math library) on unix systems.
    pragma Linker_Options ("-lm");
@@ -63,9 +63,9 @@ package body Synth.Static_Oper is
       return Create_Vec_Type_By_Length (Prev.W, Prev.Vec_El);
    end Create_Res_Bound;
 
-   function Synth_Vector_Dyadic (Left, Right : Memtyp;
-                                 Op : Table_2d;
-                                 Loc : Syn_Src) return Memtyp
+   function Eval_Vector_Dyadic (Left, Right : Memtyp;
+                                Op : Table_2d;
+                                Loc : Syn_Src) return Memtyp
    is
       Res : Memtyp;
    begin
@@ -86,11 +86,11 @@ package body Synth.Static_Oper is
       end loop;
 
       return Res;
-   end Synth_Vector_Dyadic;
+   end Eval_Vector_Dyadic;
 
-   function Synth_TF_Vector_Dyadic (Left, Right : Memtyp;
-                                    Op : Tf_Table_2d;
-                                    Loc : Syn_Src) return Memtyp
+   function Eval_TF_Vector_Dyadic (Left, Right : Memtyp;
+                                   Op : Tf_Table_2d;
+                                   Loc : Syn_Src) return Memtyp
    is
       Res : Memtyp;
       L, R : Boolean;
@@ -107,10 +107,10 @@ package body Synth.Static_Oper is
          Write_U8 (Res.Mem + (I - 1), Boolean'Pos (Op (L, R)));
       end loop;
       return Res;
-   end Synth_TF_Vector_Dyadic;
+   end Eval_TF_Vector_Dyadic;
 
-   function Synth_TF_Array_Element (El, Arr : Memtyp;
-                                    Op : Tf_Table_2d) return Memtyp
+   function Eval_TF_Array_Element (El, Arr : Memtyp;
+                                   Op : Tf_Table_2d) return Memtyp
    is
       Res : Memtyp;
       Ve, Va : Boolean;
@@ -122,7 +122,7 @@ package body Synth.Static_Oper is
          Write_U8 (Res.Mem + (I - 1), Boolean'Pos (Op (Ve, Va)));
       end loop;
       return Res;
-   end Synth_TF_Array_Element;
+   end Eval_TF_Array_Element;
 
    function Get_Static_Ulogic (Op : Memtyp) return Std_Ulogic is
    begin
@@ -149,11 +149,11 @@ package body Synth.Static_Oper is
       end case;
    end Check_Integer_Overflow;
 
-   function Synth_Static_Dyadic_Predefined (Imp : Node;
-                                            Res_Typ : Type_Acc;
-                                            Left : Memtyp;
-                                            Right : Memtyp;
-                                            Expr : Node) return Memtyp
+   function Eval_Static_Dyadic_Predefined (Imp : Node;
+                                           Res_Typ : Type_Acc;
+                                           Left : Memtyp;
+                                           Right : Memtyp;
+                                           Expr : Node) return Memtyp
    is
       Def : constant Iir_Predefined_Functions :=
         Get_Implicit_Definition (Imp);
@@ -419,27 +419,27 @@ package body Synth.Static_Oper is
                Boolean_Type);
 
          when Iir_Predefined_TF_Array_Xor =>
-            return Synth_TF_Vector_Dyadic (Left, Right, Tf_2d_Xor, Expr);
+            return Eval_TF_Vector_Dyadic (Left, Right, Tf_2d_Xor, Expr);
 
          when Iir_Predefined_TF_Element_Array_And =>
-            return Synth_TF_Array_Element (Left, Right, Tf_2d_And);
+            return Eval_TF_Array_Element (Left, Right, Tf_2d_And);
          when Iir_Predefined_TF_Array_Element_And =>
-            return Synth_TF_Array_Element (Right, Left, Tf_2d_And);
+            return Eval_TF_Array_Element (Right, Left, Tf_2d_And);
 
          when Iir_Predefined_Ieee_1164_Vector_And
            | Iir_Predefined_Ieee_Numeric_Std_And_Uns_Uns
            | Iir_Predefined_Ieee_Numeric_Std_And_Sgn_Sgn =>
-            return Synth_Vector_Dyadic (Left, Right, And_Table, Expr);
+            return Eval_Vector_Dyadic (Left, Right, And_Table, Expr);
 
          when Iir_Predefined_Ieee_1164_Vector_Or
            | Iir_Predefined_Ieee_Numeric_Std_Or_Uns_Uns
            | Iir_Predefined_Ieee_Numeric_Std_Or_Sgn_Sgn =>
-            return Synth_Vector_Dyadic (Left, Right, Or_Table, Expr);
+            return Eval_Vector_Dyadic (Left, Right, Or_Table, Expr);
 
          when Iir_Predefined_Ieee_1164_Vector_Xor
            | Iir_Predefined_Ieee_Numeric_Std_Xor_Uns_Uns
            | Iir_Predefined_Ieee_Numeric_Std_Xor_Sgn_Sgn =>
-            return Synth_Vector_Dyadic (Left, Right, Xor_Table, Expr);
+            return Eval_Vector_Dyadic (Left, Right, Xor_Table, Expr);
 
          when Iir_Predefined_Ieee_1164_Scalar_Or =>
             return Create_Memory_U8
@@ -668,9 +668,9 @@ package body Synth.Static_Oper is
                  & Iir_Predefined_Functions'Image (Def));
             return Null_Memtyp;
       end case;
-   end Synth_Static_Dyadic_Predefined;
+   end Eval_Static_Dyadic_Predefined;
 
-   function Synth_Vector_Monadic (Vec : Memtyp; Op : Table_1d) return Memtyp
+   function Eval_Vector_Monadic (Vec : Memtyp; Op : Table_1d) return Memtyp
    is
       Len : constant Iir_Index32 := Vec_Length (Vec.Typ);
       Res : Memtyp;
@@ -684,9 +684,9 @@ package body Synth.Static_Oper is
          end;
       end loop;
       return Res;
-   end Synth_Vector_Monadic;
+   end Eval_Vector_Monadic;
 
-   function Synth_Vector_Reduce
+   function Eval_Vector_Reduce
      (Init : Std_Ulogic; Vec : Memtyp; Op : Table_2d) return Memtyp
    is
       El_Typ : constant Type_Acc := Vec.Typ.Vec_El;
@@ -702,9 +702,9 @@ package body Synth.Static_Oper is
       end loop;
 
       return Create_Memory_U8 (Std_Ulogic'Pos (Res), El_Typ);
-   end Synth_Vector_Reduce;
+   end Eval_Vector_Reduce;
 
-   function Synth_Static_Monadic_Predefined (Imp : Node;
+   function Eval_Static_Monadic_Predefined (Imp : Node;
                                              Operand : Memtyp;
                                              Expr : Node) return Memtyp
    is
@@ -752,7 +752,7 @@ package body Synth.Static_Oper is
          when Iir_Predefined_Ieee_1164_Vector_Not
            | Iir_Predefined_Ieee_Numeric_Std_Not_Uns
            | Iir_Predefined_Ieee_Numeric_Std_Not_Sgn =>
-            return Synth_Vector_Monadic (Operand, Not_Table);
+            return Eval_Vector_Monadic (Operand, Not_Table);
 
          when Iir_Predefined_Ieee_1164_Scalar_Not =>
             return Create_Memory_U8
@@ -760,13 +760,13 @@ package body Synth.Static_Oper is
                Operand.Typ);
 
          when Iir_Predefined_Ieee_Numeric_Std_And_Uns =>
-            return Synth_Vector_Reduce ('1', Operand, And_Table);
+            return Eval_Vector_Reduce ('1', Operand, And_Table);
 
          when Iir_Predefined_Ieee_1164_Or_Suv
            | Iir_Predefined_Ieee_Numeric_Std_Or_Uns =>
-            return Synth_Vector_Reduce ('0', Operand, Or_Table);
+            return Eval_Vector_Reduce ('0', Operand, Or_Table);
          when Iir_Predefined_Ieee_1164_Xor_Suv =>
-            return Synth_Vector_Reduce ('0', Operand, Xor_Table);
+            return Eval_Vector_Reduce ('0', Operand, Xor_Table);
 
          when others =>
             Error_Msg_Synth
@@ -774,7 +774,7 @@ package body Synth.Static_Oper is
                  & Iir_Predefined_Functions'Image (Def));
             raise Internal_Error;
       end case;
-   end Synth_Static_Monadic_Predefined;
+   end Eval_Static_Monadic_Predefined;
 
    function Eval_To_Vector (Arg : Uns64; Sz : Int64; Res_Type : Type_Acc)
                            return Memtyp
@@ -855,10 +855,10 @@ package body Synth.Static_Oper is
       return To_Int64 (Res);
    end Eval_Signed_To_Integer;
 
-   function Synth_Static_Predefined_Function_Call (Param1 : Valtyp;
-                                                   Param2 : Valtyp;
-                                                   Res_Typ : Type_Acc;
-                                                   Expr : Node) return Memtyp
+   function Eval_Static_Predefined_Function_Call (Param1 : Valtyp;
+                                                  Param2 : Valtyp;
+                                                  Res_Typ : Type_Acc;
+                                                  Expr : Node) return Memtyp
    is
       Imp  : constant Node := Get_Implementation (Expr);
       Def : constant Iir_Predefined_Functions :=
@@ -1056,5 +1056,5 @@ package body Synth.Static_Oper is
                  & Iir_Predefined_Functions'Image (Def));
             return Null_Memtyp;
       end case;
-   end Synth_Static_Predefined_Function_Call;
-end Synth.Static_Oper;
+   end Eval_Static_Predefined_Function_Call;
+end Synth.Vhdl_Eval;

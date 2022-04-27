@@ -34,7 +34,7 @@ with Vhdl.Ieee.Std_Logic_1164;
 with Elab.Vhdl_Objtypes;
 with Elab.Vhdl_Types;
 with Elab.Memtype;
-with Synth.Static_Oper;
+with Synth.Vhdl_Eval;
 
 with Grt.Types;
 with Grt.Vhdl_Types;
@@ -1018,8 +1018,7 @@ package body Vhdl.Evaluation is
    is
       use Areapools;
       use Elab.Vhdl_Objtypes;
---      use Elab.Vhdl_Values;
-      use Synth.Static_Oper;
+      use Synth.Vhdl_Eval;
       use Synth_Helpers;
 
       Res_Type : constant Iir := Get_Return_Type (Imp);
@@ -1035,10 +1034,10 @@ package body Vhdl.Evaluation is
       Left_Mt := Convert_Node_To_Memtyp (Left);
       if Right /= Null_Iir then
          Right_Mt := Convert_Node_To_Memtyp (Right);
-         Res_Mt := Synth_Static_Dyadic_Predefined
+         Res_Mt := Eval_Static_Dyadic_Predefined
            (Imp, Res_Typ, Left_Mt, Right_Mt, Orig);
       else
-         Res_Mt := Synth_Static_Monadic_Predefined
+         Res_Mt := Eval_Static_Monadic_Predefined
            (Imp, Left_Mt, Orig);
       end if;
       Res := Convert_Memtyp_To_Node (Res_Mt, Res_Type, Orig);

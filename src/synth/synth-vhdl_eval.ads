@@ -21,18 +21,18 @@ with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 
 with Vhdl.Nodes; use Vhdl.Nodes;
 
-package Synth.Static_Oper is
-   function Synth_Static_Dyadic_Predefined (Imp : Node;
-                                            Res_Typ : Type_Acc;
-                                            Left : Memtyp;
-                                            Right : Memtyp;
+package Synth.Vhdl_Eval is
+   function Eval_Static_Dyadic_Predefined (Imp : Node;
+                                           Res_Typ : Type_Acc;
+                                           Left : Memtyp;
+                                           Right : Memtyp;
+                                           Expr : Node) return Memtyp;
+   function Eval_Static_Monadic_Predefined (Imp : Node;
+                                            Operand : Memtyp;
                                             Expr : Node) return Memtyp;
-   function Synth_Static_Monadic_Predefined (Imp : Node;
-                                             Operand : Memtyp;
-                                             Expr : Node) return Memtyp;
 
-   function Synth_Static_Predefined_Function_Call (Param1 : Valtyp;
-                                                   Param2 : Valtyp;
-                                                   Res_Typ : Type_Acc;
-                                                   Expr : Node) return Memtyp;
-end Synth.Static_Oper;
+   function Eval_Static_Predefined_Function_Call (Param1 : Valtyp;
+                                                  Param2 : Valtyp;
+                                                  Res_Typ : Type_Acc;
+                                                  Expr : Node) return Memtyp;
+end Synth.Vhdl_Eval;

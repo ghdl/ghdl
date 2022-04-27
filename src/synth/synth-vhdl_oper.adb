@@ -40,7 +40,7 @@ with Synth.Errors; use Synth.Errors;
 with Synth.Vhdl_Stmts; use Synth.Vhdl_Stmts;
 with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
 with Synth.Source;
-with Synth.Static_Oper; use Synth.Static_Oper;
+with Synth.Vhdl_Eval; use Synth.Vhdl_Eval;
 with Synth.Vhdl_Context; use Synth.Vhdl_Context;
 
 package body Synth.Vhdl_Oper is
@@ -747,7 +747,7 @@ package body Synth.Vhdl_Oper is
       Right := Synth_Subtype_Conversion (Ctxt, Right, Right_Typ, False, Expr);
 
       if Is_Static_Val (Left.Val) and Is_Static_Val (Right.Val) then
-         Srec := Synth_Static_Dyadic_Predefined
+         Srec := Eval_Static_Dyadic_Predefined
            (Imp, Expr_Typ,
             Get_Value_Memtyp (Left), Get_Value_Memtyp (Right), Expr);
          if Srec = Null_Memtyp then
@@ -1683,7 +1683,7 @@ package body Synth.Vhdl_Oper is
 
       if Is_Static_Val (Operand.Val) then
          return Create_Value_Memtyp
-           (Synth_Static_Monadic_Predefined
+           (Eval_Static_Monadic_Predefined
               (Imp, Get_Value_Memtyp (Operand), Loc));
       end if;
 
@@ -2185,7 +2185,7 @@ package body Synth.Vhdl_Oper is
 
                Res_Typ := Get_Subtype_Object (Subprg_Inst, Get_Type (Imp));
 
-               Mt := Synth_Static_Predefined_Function_Call
+               Mt := Eval_Static_Predefined_Function_Call
                  (Param1, Param2, Res_Typ, Expr);
                if Mt /= Null_Memtyp then
                   Res := Create_Value_Memtyp (Mt);
