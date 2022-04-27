@@ -47,6 +47,10 @@ package body Synth.Static_Oper is
      (False => (others => False),
       True => (True => True, False => False));
 
+   Tf_2d_Xor : constant Tf_Table_2d :=
+     (False => (False => False, True => True),
+      True  => (False => True,  True => False));
+
    function Create_Res_Bound (Prev : Type_Acc) return Type_Acc is
    begin
       if Prev.Vbound.Dir = Dir_Downto
@@ -84,7 +88,28 @@ package body Synth.Static_Oper is
       return Res;
    end Synth_Vector_Dyadic;
 
-   function Synth_Tf_Array_Element (El, Arr : Memtyp;
+   function Synth_TF_Vector_Dyadic (Left, Right : Memtyp;
+                                    Op : Tf_Table_2d;
+                                    Loc : Syn_Src) return Memtyp
+   is
+      Res : Memtyp;
+      L, R : Boolean;
+   begin
+      if Left.Typ.Sz /= Right.Typ.Sz then
+         Error_Msg_Synth (+Loc, "length mismatch");
+         return Null_Memtyp;
+      end if;
+
+      Res := Create_Memory (Left.Typ);
+      for I in 1 .. Left.Typ.Sz loop
+         L := Boolean'Val (Read_U8 (Left.Mem + (I - 1)));
+         R := Boolean'Val (Read_U8 (Right.Mem + (I - 1)));
+         Write_U8 (Res.Mem + (I - 1), Boolean'Pos (Op (L, R)));
+      end loop;
+      return Res;
+   end Synth_TF_Vector_Dyadic;
+
+   function Synth_TF_Array_Element (El, Arr : Memtyp;
                                     Op : Tf_Table_2d) return Memtyp
    is
       Res : Memtyp;
@@ -97,7 +122,7 @@ package body Synth.Static_Oper is
          Write_U8 (Res.Mem + (I - 1), Boolean'Pos (Op (Ve, Va)));
       end loop;
       return Res;
-   end Synth_Tf_Array_Element;
+   end Synth_TF_Array_Element;
 
    function Get_Static_Ulogic (Op : Memtyp) return Std_Ulogic is
    begin
@@ -394,28 +419,12 @@ package body Synth.Static_Oper is
                Boolean_Type);
 
          when Iir_Predefined_TF_Array_Xor =>
-            if Left.Typ.Sz /= Right.Typ.Sz then
-               Error_Msg_Synth (+Expr, "length mismatch");
-               return Left;
-            else
-               declare
-                  Res : Memtyp;
-                  L, R : Boolean;
-               begin
-                  Res := Create_Memory (Left.Typ);
-                  for I in 1 .. Left.Typ.Sz loop
-                     L := Boolean'Val (Read_U8 (Left.Mem + (I - 1)));
-                     R := Boolean'Val (Read_U8 (Right.Mem + (I - 1)));
-                     Write_U8 (Res.Mem + (I - 1), Boolean'Pos (L xor R));
-                  end loop;
-                  return Res;
-               end;
-            end if;
+            return Synth_TF_Vector_Dyadic (Left, Right, Tf_2d_Xor, Expr);
 
          when Iir_Predefined_TF_Element_Array_And =>
-            return Synth_Tf_Array_Element (Left, Right, Tf_2d_And);
+            return Synth_TF_Array_Element (Left, Right, Tf_2d_And);
          when Iir_Predefined_TF_Array_Element_And =>
-            return Synth_Tf_Array_Element (Right, Left, Tf_2d_And);
+            return Synth_TF_Array_Element (Right, Left, Tf_2d_And);
 
          when Iir_Predefined_Ieee_1164_Vector_And
            | Iir_Predefined_Ieee_Numeric_Std_And_Uns_Uns
