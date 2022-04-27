@@ -923,6 +923,27 @@ package body Vhdl.Sem_Expr is
       --  9. a function call whose function name denotes a pure function,
       --     and whose actual parameters are each globally static
       --     expressions.
+      --
+      --  LRM08 9.4.2 Locally statuc primaries
+      --  [...] if every operator in the expression denotes [...] an operator
+      --  defined in one of the packages STD_LOGIC_1164, NUMERIC_BIT,
+      --  NUMERIC_STD, NUMERIC_BIT_UNSIGNED or NUMERIC_STD_UNSIGNED in library
+      --  IEEE, and if every primary in the expression is a locally static
+      --  primary, where a locally static primary is defined to be one of the
+      --  following:
+      --  [...]
+      --  e) A function call whose function name denotes an implicitely
+      --    defined operation or an operation defined in one of the packages
+      --    STD_LOGIC_1164, NUMERIC_BIT, NUMERIC_STD, NUMERIC_BIT_UNSIGNED,
+      --    or NUMERIC_STD_UNSIGNED in library IEEE and whose actual
+      --    parameters are each locally static expressions.
+      --
+      --  GHDL note: operation is defined in:
+      --  LRM08 5 Types
+      --  The set of operations of a type includes the explicitly declared
+      --  subprograms that have a parameter of result of the type.  The
+      --  remaining operations of a type are the basic operations and the
+      --  predefined operations.
       case Get_Kind (Expr) is
          when Iir_Kinds_Monadic_Operator =>
             Staticness := Get_Expr_Staticness (Get_Operand (Expr));
