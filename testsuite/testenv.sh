@@ -110,7 +110,7 @@ elab_simulate_failure ()
 synth()
 {
   echo "Synthesis of $@" >&2
-  "$GHDL" --synth $GHDL_STD_FLAGS $GHDL_FLAGS $@
+  "$GHDL" --synth $GHDL_STD_FLAGS $GHDL_SYNTH_FLAGS $GHDL_FLAGS $@
 }
 
 synth_failure ()
