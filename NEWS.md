@@ -1,5 +1,7 @@
 **3.0-dev** (XXXX-XX-XX)
 
+- Handle ieee operators for static expressions.
+
 **2.0** (2022-02-28)
 
 - Improvements to VHDL 2008 supports and synthesis.
