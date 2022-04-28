@@ -1,4 +1,4 @@
---  GHDL driver for synthesis
+--  GHDL driver for libraries commands
 --  Copyright (C) 2016 Tristan Gingold
 --
 --  This program is free software: you can redistribute it and/or modify
