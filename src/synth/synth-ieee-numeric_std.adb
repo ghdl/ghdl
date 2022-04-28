@@ -776,7 +776,6 @@ package body Synth.Ieee.Numeric_Std is
    is
       Len : constant Uns32 := V.Typ.Vbound.Len;
       Res : Memtyp;
-      Vb, Carry : Sl_X01;
    begin
       Res.Typ := Create_Res_Type (V.Typ, Len);
       Res := Create_Memory (Res.Typ);
@@ -785,19 +784,11 @@ package body Synth.Ieee.Numeric_Std is
          return Res;
       end if;
 
-      Carry := '1';
-      for I in 1 .. Len loop
-         Vb := Sl_To_X01 (Read_Std_Logic (V.Mem, Len - I));
-         if Vb = 'X' then
-            Warning_Msg_Synth
-              (+Loc, "NUMERIC_STD.""-"": non logical value detected");
-            Fill (Res, 'X');
-            exit;
-         end if;
-         Vb := Not_Table (Vb);
-         Write_Std_Logic (Res.Mem, Len - I, Xor_Table (Carry, Vb));
-         Carry := And_Table (Carry, Vb);
-      end loop;
+      Neg_Vec (V.Mem, Res.Mem, V.Typ);
+      if Read_Std_Logic (Res.Mem, 0) = 'X' then
+         Warning_Msg_Synth
+           (+Loc, "NUMERIC_STD.""-"": non logical value detected");
+      end if;
       return Res;
    end Neg_Vec;
 
