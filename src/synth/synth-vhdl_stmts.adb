@@ -714,38 +714,73 @@ package body Synth.Vhdl_Stmts is
       Cond : Node;
       Ce : Node;
       Val, Cond_Val : Valtyp;
-      V : Net;
-      First, Last : Net;
+      V, Last : Net;
+      First : Valtyp;
+      Cond_Tri : Tri_State_Type;
    begin
       Targ_Type := Get_Subtype_Object (C.Inst, Get_Type (Target));
+      First := No_Valtyp;
       Last := No_Net;
       Ce := Get_Conditional_Expression_Chain (Stmt);
       while Ce /= Null_Node loop
-         Val := Synth_Expression_With_Type
-           (C.Inst, Get_Expression (Ce), Targ_Type);
-         --  Convert to the target subtype so that all the conditional
-         --  expressions have the same width.
-         Val := Synth_Subtype_Conversion (Ctxt, Val, Targ_Type, False, Ce);
-         V := Get_Net (Ctxt, Val);
+         --  First, evaluate the condition.
          Cond := Get_Condition (Ce);
          if Cond /= Null_Node then
             Cond_Val := Synth_Expression (C.Inst, Cond);
-            --  Note: as one input of the mux2 is not connected, there is no
-            --  check on inputs width.
-            V := Build_Mux2 (Ctxt, Get_Net (Ctxt, Cond_Val), No_Net, V);
-            Set_Location (V, Ce);
+            if Is_Static_Val (Cond_Val.Val) then
+               Strip_Const (Cond_Val);
+               if Read_Discrete (Get_Value_Memtyp (Cond_Val)) = 1 then
+                  Cond_Tri := True;
+               else
+                  Cond_Tri := False;
+               end if;
+            else
+               Cond_Tri := Unknown;
+            end if;
+         else
+            Cond_Tri := True;
          end if;
 
-         if Last /= No_Net then
-            Connect (Get_Input (Get_Net_Parent (Last), 1), V);
+         if Cond_Tri /= False then
+            Val := Synth_Expression_With_Type
+              (C.Inst, Get_Expression (Ce), Targ_Type);
+            --  Convert to the target subtype so that all the conditional
+            --  expressions have the same width.
+            Val := Synth_Subtype_Conversion (Ctxt, Val, Targ_Type, False, Ce);
+
+            if Cond_Tri = True and then First = No_Valtyp then
+               --  This is the first and only value.
+               --  If the value is static, it stays static.
+               First := Val;
+               exit;
+            else
+               V := Get_Net (Ctxt, Val);
+               if Cond_Tri = Unknown then
+                  --  Note: as one input of the mux2 is not connected, there
+                  --  is no check on inputs width.
+                  V := Build_Mux2 (Ctxt, Get_Net (Ctxt, Cond_Val), No_Net, V);
+                  Set_Location (V, Ce);
+               end if;
+
+               if First = No_Valtyp then
+                  First := Create_Value_Net (V, Targ_Type);
+               else
+                  Connect (Get_Input (Get_Net_Parent (Last), 1), V);
+               end if;
+               Last := V;
+            end if;
          else
-            First := V;
+            --  The condition is true, so do not evaluate the value.
+            pragma Assert (Cond /= Null_Node);
+            null;
          end if;
-         Last := V;
+
+         --  No need to go farther if the condition is true.
+         exit when Cond_Tri = True;
+
          Ce := Get_Chain (Ce);
       end loop;
-      Val := Create_Value_Net (First, Targ_Type);
-      Synth_Assignment (C.Inst, Target, Val, Stmt);
+      Synth_Assignment (C.Inst, Target, First, Stmt);
    end Synth_Conditional_Variable_Assignment;
 
    procedure Synth_If_Statement (C : in out Seq_Context; Stmt : Node)
