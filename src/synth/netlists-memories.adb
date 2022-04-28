@@ -1185,11 +1185,17 @@ package body Netlists.Memories is
                   --  It is OK to have mux2, provided it is connected to
                   --  a dyn_extract.
                   declare
+                     Mux_Out : constant Net := Get_Output (Pinst, 0);
                      Sub_Status : Get_Next_Status;
                      Sub_Res : Instance;
                   begin
-                     Get_Next_Non_Extract
-                       (Get_Output (Pinst, 0), Sub_Status, Sub_Res);
+                     if Mux_Out = O then
+                        --  Avoid simple infinite recursion
+                        Status := Status_None;
+                        Res := No_Instance;
+                        return;
+                     end if;
+                     Get_Next_Non_Extract (Mux_Out, Sub_Status, Sub_Res);
                      --  Expect Dyn_Extract, so no next.
                      if Sub_Status /= Status_None then
                         Status := Status_Multiple;
@@ -2392,7 +2398,8 @@ package body Netlists.Memories is
 
       Instance_Tables.Init (Mems, 16);
 
-      --  Extract memories (isignal/signal/const) from dyn gates.
+      --  Extract memories from dyn gates:
+      --   get the isignal/signal/const gate at the origin of the dyn gate.
       for I in Instance_Tables.First .. Instance_Tables.Last (Dyns) loop
          Inst := Dyns.Table (I);
          if not Get_Mark_Flag (Inst) then
