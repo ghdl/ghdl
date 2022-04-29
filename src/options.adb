@@ -234,6 +234,9 @@ package body Options is
       elsif Opt = "-fpsl" then
          Vhdl.Scanner.Flag_Psl_Comment := True;
          Vhdl.Scanner.Flag_Comment_Keyword := True;
+      elsif Opt = "-fpragma-translate" then
+         Vhdl.Scanner.Flag_Comment_Keyword := True;
+         Vhdl.Scanner.Flag_Pragma_Comment := True;
       elsif Opt = "-dp" then
          Dump_Parse := True;
       elsif Opt = "-ds" then
