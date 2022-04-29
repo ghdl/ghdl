@@ -822,6 +822,8 @@ package body Ghdllocal is
       pragma Unreferenced (Cmd);
       use Errorout;
 
+      First_Work_Library : Iir;
+
       Id : Name_Id;
       Design_File : Iir_Design_File;
       Unit : Iir;
@@ -832,30 +834,46 @@ package body Ghdllocal is
          return;
       end if;
 
+      First_Work_Library := Libraries.Work_Library;
+
       --  Parse all files.
       for I in Args'Range loop
-         Id := Name_Table.Get_Identifier (Args (I).all);
-         Design_File := Vhdl.Sem_Lib.Load_File_Name (Id);
-
-         if Nbr_Errors > 0 then
-            raise Compilation_Error;
-         end if;
-
-         Unit := Get_First_Design_Unit (Design_File);
-         while Unit /= Null_Iir loop
-            if Flag_Verbose then
-               Lib := Get_Library_Unit (Unit);
-               Disp_Library_Unit (Lib);
-               if Is_Top_Entity (Lib) then
-                  Put (" **");
+         declare
+            Arg : String renames Args (I).all;
+            pragma Assert (Arg'First = 1);
+         begin
+            if Arg'Last > 7 and then Arg (1 .. 7) = "--work=" then
+               Id := Libraries.Decode_Work_Option (Arg);
+               if Id = Null_Identifier then
+                  return;
                end if;
-               New_Line;
+               Libraries.Work_Library_Name := Id;
+               Libraries.Load_Work_Library (True);
+            else
+               Id := Name_Table.Get_Identifier (Arg);
+               Design_File := Vhdl.Sem_Lib.Load_File_Name (Id);
+
+               if Nbr_Errors > 0 then
+                  raise Compilation_Error;
+               end if;
+
+               Unit := Get_First_Design_Unit (Design_File);
+               while Unit /= Null_Iir loop
+                  if Flag_Verbose then
+                     Lib := Get_Library_Unit (Unit);
+                     Disp_Library_Unit (Lib);
+                     if Is_Top_Entity (Lib) then
+                        Put (" **");
+                     end if;
+                     New_Line;
+                  end if;
+                  Next_Unit := Get_Chain (Unit);
+                  Set_Chain (Unit, Null_Iir);
+                  Libraries.Add_Design_Unit_Into_Library (Unit);
+                  Unit := Next_Unit;
+               end loop;
             end if;
-            Next_Unit := Get_Chain (Unit);
-            Set_Chain (Unit, Null_Iir);
-            Libraries.Add_Design_Unit_Into_Library (Unit);
-            Unit := Next_Unit;
-         end loop;
+         end;
       end loop;
 
       --  Analyze all files.
@@ -879,7 +897,30 @@ package body Ghdllocal is
          end loop;
       end if;
 
+      Libraries.Work_Library_Name := Get_Identifier (First_Work_Library);
+      Libraries.Load_Work_Library (True);
       Libraries.Save_Work_Library;
+      Set_Elab_Flag (First_Work_Library, True);
+
+      --  Save all libraries referenced.
+      for I in Args'Range loop
+         declare
+            Arg : String renames Args (I).all;
+            pragma Assert (Arg'First = 1);
+         begin
+            if Arg'Last > 7 and then Arg (1 .. 7) = "--work=" then
+               Id := Libraries.Decode_Work_Option (Arg);
+               pragma Assert (Id /= Null_Identifier);
+               Libraries.Work_Library_Name := Id;
+               Libraries.Load_Work_Library (True);
+               if not Get_Elab_Flag (Libraries.Work_Library) then
+                  --  Save once.
+                  Set_Elab_Flag (Libraries.Work_Library, True);
+                  Libraries.Save_Work_Library;
+               end if;
+            end if;
+         end;
+      end loop;
    exception
       when Compilation_Error =>
          Error ("importation has failed due to compilation error");
