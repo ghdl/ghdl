@@ -32,6 +32,10 @@ package body Synth.Vhdl_Static_Proc is
       Param : constant Valtyp := Get_Value (Syn_Inst, Inter);
       Val : Heap_Index;
    begin
+      if not Is_Static (Param.Val) then
+         --  Certainly an error (and certainly already reported).
+         return;
+      end if;
       Val := Read_Access (Param);
       if Val /= Null_Heap_Index then
          Elab.Vhdl_Heap.Synth_Deallocate (Val);

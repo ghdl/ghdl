@@ -358,6 +358,21 @@ package body Synth.Vhdl_Expr is
                              Off, W, Vec, Vec_Off, Has_Zx);
                exit when W = 0;
             end loop;
+         when Type_Access =>
+            --  Accesses cannot be indexed or sliced.
+            --  Just fill with 'X'.
+            pragma Assert (Off = 0 and W >= Typ.W);
+            for I in 0 .. Typ.W - 1 loop
+               declare
+                  Idx : constant Digit_Index := Digit_Index (Vec_Off / 32);
+                  Pos : constant Natural := Natural (Vec_Off mod 32);
+               begin
+                  Vec (Idx).Val := Vec (Idx).Val or Shift_Left (1, Pos);
+                  Vec (Idx).Zx := Vec (Idx).Zx or Shift_Left (1, Pos);
+               end;
+               Vec_Off := Vec_Off + 1;
+            end loop;
+            W := W - Typ.W;
          when others =>
             raise Internal_Error;
       end case;
