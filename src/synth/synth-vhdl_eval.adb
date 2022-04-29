@@ -149,6 +149,11 @@ package body Synth.Vhdl_Eval is
       end case;
    end Check_Integer_Overflow;
 
+   function Create_Memory_Boolean (V : Boolean) return Memtyp is
+   begin
+      return Create_Memory_U8 (Boolean'Pos (V), Boolean_Type);
+   end Create_Memory_Boolean;
+
    function Eval_Static_Dyadic_Predefined (Imp : Node;
                                            Res_Typ : Type_Acc;
                                            Left : Memtyp;
@@ -168,15 +173,6 @@ package body Synth.Vhdl_Eval is
               (Boolean'Pos (Boolean'Val (Read_Discrete (Left))
                               xor Boolean'Val (Read_Discrete (Right))),
                Res_Typ);
-
-         when Iir_Predefined_Enum_Equality =>
-            return Create_Memory_U8
-              (Boolean'Pos (Read_Discrete (Left) = Read_Discrete (Right)),
-               Boolean_Type);
-         when Iir_Predefined_Enum_Inequality =>
-            return Create_Memory_U8
-              (Boolean'Pos (Read_Discrete (Left) /= Read_Discrete (Right)),
-               Boolean_Type);
 
          when Iir_Predefined_Integer_Plus
            | Iir_Predefined_Physical_Plus =>
@@ -250,35 +246,35 @@ package body Synth.Vhdl_Eval is
                Res_Typ);
 
          when Iir_Predefined_Integer_Less_Equal
-           | Iir_Predefined_Physical_Less_Equal =>
-            return Create_Memory_U8
-              (Boolean'Pos (Read_Discrete (Left) <= Read_Discrete (Right)),
-               Boolean_Type);
+            | Iir_Predefined_Physical_Less_Equal
+            | Iir_Predefined_Enum_Less_Equal =>
+            return Create_Memory_Boolean
+              (Read_Discrete (Left) <= Read_Discrete (Right));
          when Iir_Predefined_Integer_Less
-           | Iir_Predefined_Physical_Less =>
-            return Create_Memory_U8
-              (Boolean'Pos (Read_Discrete (Left) < Read_Discrete (Right)),
-               Boolean_Type);
+            | Iir_Predefined_Physical_Less
+            | Iir_Predefined_Enum_Less =>
+            return Create_Memory_Boolean
+              (Read_Discrete (Left) < Read_Discrete (Right));
          when Iir_Predefined_Integer_Greater_Equal
-           | Iir_Predefined_Physical_Greater_Equal =>
-            return Create_Memory_U8
-              (Boolean'Pos (Read_Discrete (Left) >= Read_Discrete (Right)),
-               Boolean_Type);
+            | Iir_Predefined_Physical_Greater_Equal
+            | Iir_Predefined_Enum_Greater_Equal =>
+            return Create_Memory_Boolean
+              (Read_Discrete (Left) >= Read_Discrete (Right));
          when Iir_Predefined_Integer_Greater
-           | Iir_Predefined_Physical_Greater =>
-            return Create_Memory_U8
-              (Boolean'Pos (Read_Discrete (Left) > Read_Discrete (Right)),
-               Boolean_Type);
+            | Iir_Predefined_Physical_Greater
+            | Iir_Predefined_Enum_Greater =>
+            return Create_Memory_Boolean
+              (Read_Discrete (Left) > Read_Discrete (Right));
          when Iir_Predefined_Integer_Equality
-           | Iir_Predefined_Physical_Equality =>
-            return Create_Memory_U8
-              (Boolean'Pos (Read_Discrete (Left) = Read_Discrete (Right)),
-               Boolean_Type);
+            | Iir_Predefined_Physical_Equality
+            | Iir_Predefined_Enum_Equality =>
+            return Create_Memory_Boolean
+              (Read_Discrete (Left) = Read_Discrete (Right));
          when Iir_Predefined_Integer_Inequality
-           | Iir_Predefined_Physical_Inequality =>
-            return Create_Memory_U8
-              (Boolean'Pos (Read_Discrete (Left) /= Read_Discrete (Right)),
-               Boolean_Type);
+            | Iir_Predefined_Physical_Inequality
+            | Iir_Predefined_Enum_Inequality =>
+            return Create_Memory_Boolean
+              (Read_Discrete (Left) /= Read_Discrete (Right));
 
          when Iir_Predefined_Physical_Real_Mul =>
             return Create_Memory_Discrete
