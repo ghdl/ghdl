@@ -6594,10 +6594,6 @@ package Vhdl.Nodes is
      Iir_Kind_Function_Body ..
      Iir_Kind_Procedure_Body;
 
-   subtype Iir_Kinds_Process_Statement is Iir_Kind range
-     Iir_Kind_Sensitized_Process_Statement ..
-     Iir_Kind_Process_Statement;
-
    subtype Iir_Kinds_Interface_Object_Declaration is Iir_Kind range
      Iir_Kind_Interface_Constant_Declaration ..
    --Iir_Kind_Interface_Variable_Declaration
@@ -6891,6 +6887,14 @@ package Vhdl.Nodes is
    --Iir_Kind_For_Generate_Statement
      Iir_Kind_Component_Instantiation_Statement;
 
+   --  Nice classification from AMS vhdl.
+   subtype Iir_Kinds_Structural_Statement is Iir_Kind range
+     Iir_Kind_Block_Statement ..
+   --Iir_Kind_If_Generate_Statement
+   --Iir_Kind_Case_Generate_Statement
+   --Iir_Kind_For_Generate_Statement
+     Iir_Kind_Component_Instantiation_Statement;
+
    subtype Iir_Kinds_Simple_Concurrent_Statement is Iir_Kind range
      Iir_Kind_Sensitized_Process_Statement ..
    --Iir_Kind_Process_Statement
@@ -6904,6 +6908,15 @@ package Vhdl.Nodes is
    --Iir_Kind_Psl_Assume_Directive
    --Iir_Kind_Psl_Cover_Directive
      Iir_Kind_Psl_Restrict_Directive;
+
+   subtype Iir_Kinds_Process_Statement is Iir_Kind range
+     Iir_Kind_Sensitized_Process_Statement ..
+     Iir_Kind_Process_Statement;
+
+   subtype Iir_Kinds_Concurrent_Signal_Assignment is Iir_Kind range
+     Iir_Kind_Concurrent_Simple_Signal_Assignment ..
+   --Iir_Kind_Concurrent_Conditional_Signal_Assignment
+     Iir_Kind_Concurrent_Selected_Signal_Assignment;
 
    subtype Iir_Kinds_Psl_Property_Directive is Iir_Kind range
      Iir_Kind_Psl_Assert_Directive ..
@@ -6923,11 +6936,6 @@ package Vhdl.Nodes is
      Iir_Kind_If_Generate_Statement ..
    --Iir_Kind_Case_Generate_Statement
      Iir_Kind_For_Generate_Statement;
-
-   subtype Iir_Kinds_Concurrent_Signal_Assignment is Iir_Kind range
-     Iir_Kind_Concurrent_Simple_Signal_Assignment ..
-   --Iir_Kind_Concurrent_Conditional_Signal_Assignment
-     Iir_Kind_Concurrent_Selected_Signal_Assignment;
 
    subtype Iir_Kinds_If_Case_Generate_Statement is Iir_Kind range
      Iir_Kind_If_Generate_Statement ..

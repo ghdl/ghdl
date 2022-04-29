@@ -618,11 +618,6 @@ class Iir_Kinds:
         Iir_Kind.Procedure_Body,
     ]
 
-    Process_Statement = [
-        Iir_Kind.Sensitized_Process_Statement,
-        Iir_Kind.Process_Statement,
-    ]
-
     Interface_Object_Declaration = [
         Iir_Kind.Interface_Constant_Declaration,
         Iir_Kind.Interface_Variable_Declaration,
@@ -985,6 +980,14 @@ class Iir_Kinds:
         Iir_Kind.Component_Instantiation_Statement,
     ]
 
+    Structural_Statement = [
+        Iir_Kind.Block_Statement,
+        Iir_Kind.If_Generate_Statement,
+        Iir_Kind.Case_Generate_Statement,
+        Iir_Kind.For_Generate_Statement,
+        Iir_Kind.Component_Instantiation_Statement,
+    ]
+
     Simple_Concurrent_Statement = [
         Iir_Kind.Sensitized_Process_Statement,
         Iir_Kind.Process_Statement,
@@ -998,6 +1001,17 @@ class Iir_Kinds:
         Iir_Kind.Psl_Assume_Directive,
         Iir_Kind.Psl_Cover_Directive,
         Iir_Kind.Psl_Restrict_Directive,
+    ]
+
+    Process_Statement = [
+        Iir_Kind.Sensitized_Process_Statement,
+        Iir_Kind.Process_Statement,
+    ]
+
+    Concurrent_Signal_Assignment = [
+        Iir_Kind.Concurrent_Simple_Signal_Assignment,
+        Iir_Kind.Concurrent_Conditional_Signal_Assignment,
+        Iir_Kind.Concurrent_Selected_Signal_Assignment,
     ]
 
     Psl_Property_Directive = [
@@ -1021,12 +1035,6 @@ class Iir_Kinds:
         Iir_Kind.If_Generate_Statement,
         Iir_Kind.Case_Generate_Statement,
         Iir_Kind.For_Generate_Statement,
-    ]
-
-    Concurrent_Signal_Assignment = [
-        Iir_Kind.Concurrent_Simple_Signal_Assignment,
-        Iir_Kind.Concurrent_Conditional_Signal_Assignment,
-        Iir_Kind.Concurrent_Selected_Signal_Assignment,
     ]
 
     If_Case_Generate_Statement = [
