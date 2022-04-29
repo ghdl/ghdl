@@ -530,6 +530,9 @@ package body Elab.Vhdl_Types is
             else
                raise Internal_Error;
             end if;
+         when Type_Vector =>
+            --  An alias with just a different resolver ?
+            return Parent_Typ;
          when others =>
             raise Internal_Error;
       end case;
