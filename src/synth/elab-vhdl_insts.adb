@@ -699,9 +699,12 @@ package body Elab.Vhdl_Insts is
       else
          Arch := Get_Named_Entity (Arch);
       end if;
-      Sub_Config := Get_Library_Unit
-        (Get_Default_Configuration_Declaration (Arch));
-      Sub_Config := Get_Block_Configuration (Sub_Config);
+      Sub_Config := Get_Block_Configuration (Config);
+      if Sub_Config = Null_Node then
+         Sub_Config := Get_Library_Unit
+           (Get_Default_Configuration_Declaration (Arch));
+         Sub_Config := Get_Block_Configuration (Sub_Config);
+      end if;
 
       Elab_Dependencies (Root_Instance, Get_Design_Unit (Ent));
       Elab_Dependencies (Root_Instance, Get_Design_Unit (Arch));
