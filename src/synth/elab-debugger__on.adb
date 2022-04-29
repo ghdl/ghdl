@@ -22,22 +22,18 @@ with Types; use Types;
 with Files_Map;
 with Tables;
 with Simple_IO; use Simple_IO;
-with Utils_IO; use Utils_IO;
 with Name_Table;
 with Str_Table;
-with Libraries;
 
+with Grt.Types; use Grt.Types;
 with Grt.Readline;
 
 with Vhdl.Errors;
 with Vhdl.Nodes_Walk; use Vhdl.Nodes_Walk;
 with Vhdl.Parse;
-with Vhdl.Utils; use Vhdl.Utils;
 
-with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
-with Elab.Memtype; use Elab.Memtype;
-with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 with Elab.Vhdl_Context.Debug; use Elab.Vhdl_Context.Debug;
+with Elab.Vhdl_Debug; use Elab.Vhdl_Debug;
 
 package body Elab.Debugger is
    Flag_Enabled : Boolean := False;
@@ -664,7 +660,7 @@ package body Elab.Debugger is
    procedure Debug (Reason: Debug_Reason)
    is
       use Grt.Readline;
-      Raw_Line : Char_Ptr;
+      Raw_Line : Ghdl_C_String;
       Prompt : System.Address;
    begin
       Prompt := Prompt_Debug'Address;
@@ -736,7 +732,7 @@ package body Elab.Debugger is
             end if;
          end loop;
          declare
-            Line_Last : constant Natural := Strlen (Raw_Line);
+            Line_Last : constant Natural := strlen (Raw_Line);
             Line : String renames Raw_Line (1 .. Line_Last);
             P, E : Positive;
             Cmd : Menu_Entry_Acc := Menu_Top'Access;
