@@ -47,6 +47,7 @@ with Netlists.Inference;
 
 with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 with Elab.Vhdl_Insts;
+with Elab.Vhdl_Debug;
 
 with Synthesis;
 with Synth.Disp_Vhdl;
@@ -81,6 +82,7 @@ package body Ghdlsynth is
       Nbr_Vendor_Libraries : Natural := 0;
       Vendor_Libraries : Name_Id_Array (1 .. 8) := (others => No_Name_Id);
    end record;
+
    function Decode_Command (Cmd : Command_Synth; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Synth) return String;
@@ -245,8 +247,10 @@ package body Ghdlsynth is
 
    --  Init, analyze and configure.
    --  Return the top configuration.
-   function Ghdl_Synth_Configure
-     (Init : Boolean; Cmd : Command_Synth; Args : Argument_List) return Node
+   function Ghdl_Synth_Configure (Init : Boolean;
+                                  Vendor_Libraries : Name_Id_Array;
+                                  Args : Argument_List;
+                                  Enable_Translate_Off : Boolean) return Node
    is
       use Errorout;
       E_Opt : Integer;
@@ -268,8 +272,10 @@ package body Ghdlsynth is
 
       if Init then
          Vhdl.Annotations.Flag_Synthesis := True;
-         Vhdl.Scanner.Flag_Comment_Keyword := True;
-         Vhdl.Scanner.Flag_Pragma_Comment := True;
+         if Enable_Translate_Off then
+            Vhdl.Scanner.Flag_Comment_Keyword := True;
+            Vhdl.Scanner.Flag_Pragma_Comment := True;
+         end if;
 
          Common_Compile_Init (False);
          --  Will elaborate.
@@ -291,12 +297,12 @@ package body Ghdlsynth is
       end if;
 
       --  Mark vendor libraries.
-      for I in 1 .. Cmd.Nbr_Vendor_Libraries loop
+      for I in Vendor_Libraries'Range loop
          declare
             Lib : Node;
          begin
             Lib := Libraries.Get_Library
-              (Cmd.Vendor_Libraries (I), Libraries.Command_Line_Location);
+              (Vendor_Libraries (I), Libraries.Command_Line_Location);
             Set_Vendor_Library_Flag (Lib, True);
          end;
       end loop;
@@ -471,7 +477,10 @@ package body Ghdlsynth is
 
       --  Do the real work!
       Config := Ghdl_Synth_Configure
-        (Init /= 0, Cmd, Args (First_Arg .. Args'Last));
+        (Init /= 0,
+         Cmd.Vendor_Libraries (1 .. Cmd.Nbr_Vendor_Libraries),
+         Args (First_Arg .. Args'Last),
+         True);
       if Config = Null_Iir then
          return No_Module;
       end if;
@@ -515,7 +524,9 @@ package body Ghdlsynth is
       Config : Iir;
       Lib_Unit : Iir;
    begin
-      Config := Ghdl_Synth_Configure (True, Cmd, Args);
+      Config := Ghdl_Synth_Configure
+        (True, Cmd.Vendor_Libraries (1 .. Cmd.Nbr_Vendor_Libraries),
+         Args, True);
 
       if Config = Null_Iir then
          if Cmd.Expect_Failure then
@@ -556,9 +567,123 @@ package body Ghdlsynth is
       end if;
    end Perform_Action;
 
+   --  Command -E
+   type Command_Elab is new Command_Lib with record
+      --  If True, a failure is expected.  For tests.
+      Expect_Failure : Boolean := False;
+   end record;
+   function Decode_Command (Cmd : Command_Elab; Name : String)
+                           return Boolean;
+   function Get_Short_Help (Cmd : Command_Elab) return String;
+   procedure Disp_Long_Help (Cmd : Command_Elab);
+   procedure Decode_Option (Cmd : in out Command_Elab;
+                            Option : String;
+                            Arg : String;
+                            Res : out Option_State);
+   procedure Perform_Action (Cmd : in out Command_Elab;
+                             Args : Argument_List);
+
+   function Decode_Command (Cmd : Command_Elab; Name : String)
+                           return Boolean
+   is
+      pragma Unreferenced (Cmd);
+   begin
+      return Name = "-E";
+   end Decode_Command;
+
+   function Get_Short_Help (Cmd : Command_Elab) return String
+   is
+      pragma Unreferenced (Cmd);
+   begin
+      return "-E [FILES... -e] UNIT [ARCH]"
+        & ASCII.LF & "  Static elaboration of UNIT (experimental feature)";
+   end Get_Short_Help;
+
+   procedure Disp_Long_Help (Cmd : Command_Elab)
+   is
+      pragma Unreferenced (Cmd);
+      procedure P (Str : String) renames Simple_IO.Put_Line;
+   begin
+      P ("You can directly pass the list of files to synthesize:");
+      P ("   -E [OPTIONS] { [--work=NAME] FILE } -e [UNIT]");
+      P (" If UNIT is not present, the top unit is automatically found");
+      P (" You can use --work=NAME to change the library between files");
+      P ("Or use already analysed files:");
+      P ("   -E [OPTIONS] -e UNIT");
+      P ("In addition to analyze options, you can use:");
+      P ("  -gNAME=VALUE");
+      P ("    Override the generic NAME of the top unit");
+   end Disp_Long_Help;
+
+   procedure Decode_Option (Cmd : in out Command_Elab;
+                            Option : String;
+                            Arg : String;
+                            Res : out Option_State)
+   is
+      pragma Assert (Option'First = 1);
+   begin
+      Res := Option_Ok;
+
+      if Option'Last > 3
+        and then Option (2) = 'g'
+        and then Is_Generic_Override_Option (Option)
+      then
+         Res := Decode_Generic_Override_Option (Option);
+      elsif Option = "--expect-failure" then
+         Cmd.Expect_Failure := True;
+      elsif Option = "-le" then
+         Flag_Debug_Elaborate := True;
+      elsif Option = "-t" then
+         Flag_Trace_Statements := True;
+      elsif Option = "-i" then
+         Flag_Debug_Init := True;
+      elsif Option = "-g" then
+         Flag_Debug_Enable := True;
+      else
+         Decode_Option (Command_Lib (Cmd), Option, Arg, Res);
+      end if;
+   end Decode_Option;
+
+   procedure Perform_Action (Cmd : in out Command_Elab;
+                             Args : Argument_List)
+   is
+      No_Vendor_Libraries : constant Name_Id_Array (1 .. 0) :=
+        (others => No_Name_Id);
+      Inst : Synth_Instance_Acc;
+      Config : Iir;
+      Lib_Unit : Iir;
+   begin
+      Config := Ghdl_Synth_Configure (True, No_Vendor_Libraries, Args, False);
+
+      if Config = Null_Iir then
+         if Cmd.Expect_Failure then
+            return;
+         else
+            raise Errorout.Compilation_Error;
+         end if;
+      end if;
+
+      Lib_Unit := Get_Library_Unit (Config);
+      pragma Assert (Get_Kind (Lib_Unit) /= Iir_Kind_Foreign_Module);
+      Inst := Elab.Vhdl_Insts.Elab_Top_Unit (Lib_Unit);
+
+      if Errorout.Nbr_Errors > 0 then
+         if Cmd.Expect_Failure then
+            return;
+         else
+            raise Errorout.Compilation_Error;
+         end if;
+      elsif Cmd.Expect_Failure then
+         raise Errorout.Compilation_Error;
+      end if;
+
+      Elab.Vhdl_Debug.Disp_Hierarchy (Inst, 0, True);
+   end Perform_Action;
+
    procedure Register_Commands is
    begin
       Ghdlmain.Register_Command (new Command_Synth);
+      Ghdlmain.Register_Command (new Command_Elab);
    end Register_Commands;
 
    procedure Init_For_Ghdl_Synth is
