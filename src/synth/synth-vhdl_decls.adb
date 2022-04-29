@@ -206,6 +206,7 @@ package body Synth.Vhdl_Decls is
    is
       Obj   : constant Node := Get_Designated_Entity (Attr_Value);
       Id    : constant Name_Id := Get_Identifier (Attr_Decl);
+      N     : Net;
       Inst  : Instance;
       V     : Valtyp;
       Ptype : Param_Type;
@@ -221,8 +222,15 @@ package body Synth.Vhdl_Decls is
             | Iir_Kind_Variable_Declaration
             | Iir_Kind_Interface_Signal_Declaration =>
             V := Get_Value (Syn_Inst, Obj);
-            pragma Assert (V.Val.Kind = Value_Wire);
-            Inst := Get_Net_Parent (Get_Wire_Gate (Get_Value_Wire (V.Val)));
+            case V.Val.Kind is
+               when Value_Wire =>
+                  N := Get_Wire_Gate (Get_Value_Wire (V.Val));
+               when Value_Net =>
+                  N := Get_Value_Net (V.Val);
+               when others =>
+                  raise Internal_Error;
+            end case;
+            Inst := Get_Net_Parent (N);
          when Iir_Kind_Component_Instantiation_Statement =>
             --  TODO
             return;
