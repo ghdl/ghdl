@@ -727,8 +727,6 @@ package body Vhdl.Annotations is
             begin
                Attr := Get_Signal_Attribute_Chain (Decl);
                while Is_Valid (Attr) loop
-                  Annotate_Anonymous_Type_Definition
-                    (Block_Info, Get_Type (Attr));
                   Create_Signal_Info (Block_Info, Attr);
                   Attr := Get_Attr_Chain (Attr);
                end loop;
