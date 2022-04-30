@@ -822,9 +822,11 @@ package body Elab.Vhdl_Objtypes is
    function To_Memory_Ptr is new Ada.Unchecked_Conversion
      (Address, Memory_Ptr);
 
-   procedure Init is
+   procedure Initialize is
    begin
-      pragma Assert (Boolean_Type = null);
+      if Boolean_Type /= null then
+         Release (Empty_Marker, Global_Pool);
+      end if;
 
       Instance_Pool := Global_Pool'Access;
       Boolean_Type := Create_Bit_Type;
@@ -833,5 +835,19 @@ package body Elab.Vhdl_Objtypes is
 
       Bit0 := (Bit_Type, To_Memory_Ptr (Bit0_Mem'Address));
       Bit1 := (Bit_Type, To_Memory_Ptr (Bit1_Mem'Address));
-   end Init;
+   end Initialize;
+
+   procedure Finalize is
+   begin
+      pragma Assert (Boolean_Type /= null);
+      Release (Empty_Marker, Global_Pool);
+
+      Instance_Pool := null;
+      Boolean_Type := null;
+      Logic_Type := null;
+      Bit_Type := null;
+
+      Bit0 := Null_Memtyp;
+      Bit1 := Null_Memtyp;
+   end Finalize;
 end Elab.Vhdl_Objtypes;

@@ -298,14 +298,15 @@ package Elab.Vhdl_Objtypes is
 
    function Unshare (Src : Memtyp) return Memtyp;
 
-   procedure Init;
+   procedure Initialize;
+   procedure Finalize;
 
-   --  Set by Init.
+   --  Set by Initialize.
    Boolean_Type : Type_Acc := null;
    Logic_Type : Type_Acc := null;
    Bit_Type : Type_Acc := null;
 
-   --  Also set by init.
+   --  Also set by initialize.
    Bit0 : Memtyp;
    Bit1 : Memtyp;
 end Elab.Vhdl_Objtypes;

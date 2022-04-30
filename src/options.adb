@@ -44,7 +44,7 @@ package body Options is
       Str_Table.Initialize;
       Vhdl.Lists.Initialize;
       Vhdl.Nodes.Initialize;
-      Elab.Vhdl_Objtypes.Init;
+      Elab.Vhdl_Objtypes.Initialize;
       Files_Map.Initialize;
       Libraries.Initialize;
       PSL.Nodes.Init (Libraries.Library_Location);
@@ -58,6 +58,7 @@ package body Options is
       Str_Table.Finalize;
       Vhdl.Lists.Finalize;
       Vhdl.Nodes.Finalize;
+      Elab.Vhdl_Objtypes.Finalize;
       Files_Map.Finalize;
       Libraries.Finalize;
       --  TODO: finalize errors (reset counters, handlers...)
