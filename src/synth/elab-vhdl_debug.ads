@@ -26,8 +26,7 @@ package Elab.Vhdl_Debug is
    function Walk_Declarations (Cb : Walk_Cb) return Walk_Status;
 
    procedure Disp_Declaration_Objects
-     (Instance : Synth_Instance_Acc; Decl_Chain : Iir);
+     (Instance : Synth_Instance_Acc; Decl_Chain : Iir; Indent : Natural := 0);
 
-   procedure Disp_Hierarchy
-     (Inst : Synth_Instance_Acc; Indent : Natural; With_Objs : Boolean);
+   procedure Disp_Hierarchy (Inst : Synth_Instance_Acc; With_Objs : Boolean);
 end Elab.Vhdl_Debug;

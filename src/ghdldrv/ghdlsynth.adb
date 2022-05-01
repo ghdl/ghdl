@@ -677,7 +677,7 @@ package body Ghdlsynth is
          raise Errorout.Compilation_Error;
       end if;
 
-      Elab.Vhdl_Debug.Disp_Hierarchy (Inst, 0, True);
+      Elab.Vhdl_Debug.Disp_Hierarchy (Inst, True);
    end Perform_Action;
 
    procedure Register_Commands is

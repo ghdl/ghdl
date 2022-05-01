@@ -105,7 +105,7 @@ package body Elab.Vhdl_Debug is
             if I /= 1 then
                Put (", ");
             end if;
-            Disp_Memtyp ((El_Typ, Mem.Mem + Size_Type (I - 1) * Mem.Typ.Sz),
+            Disp_Memtyp ((El_Typ, Mem.Mem + Size_Type (I - 1) * El_Typ.Sz),
                          El_Type);
          end loop;
          Put (")");
@@ -185,6 +185,8 @@ package body Elab.Vhdl_Debug is
             Put ("wire");
          when Value_Signal =>
             Put ("signal");
+            Put (' ');
+            Put_Uns32 (Vt.Val.S);
          when Value_File =>
             Put ("file");
          when Value_Const =>
@@ -251,7 +253,7 @@ package body Elab.Vhdl_Debug is
    end Disp_Type;
 
    procedure Disp_Declaration_Object
-     (Instance : Synth_Instance_Acc; Decl : Iir) is
+     (Instance : Synth_Instance_Acc; Decl : Iir; Indent : Natural) is
    begin
       case Get_Kind (Decl) is
          when Iir_Kind_Constant_Declaration
@@ -267,6 +269,7 @@ package body Elab.Vhdl_Debug is
                Val : constant Valtyp := Get_Value (Instance, Decl);
                Dtype : constant Node := Get_Type (Decl);
             begin
+               Put_Indent (Indent);
                Put (Vhdl.Errors.Disp_Node (Decl));
                Put (": ");
                Disp_Type (Val.Typ, Dtype);
@@ -274,7 +277,9 @@ package body Elab.Vhdl_Debug is
                Disp_Value (Val, Dtype);
                New_Line;
             end;
-         when Iir_Kinds_Signal_Attribute =>
+         when Iir_Kinds_Signal_Attribute
+           | Iir_Kind_Attribute_Declaration
+           | Iir_Kind_Attribute_Specification =>
             --  FIXME: todo ?
             null;
          when Iir_Kind_Type_Declaration
@@ -285,7 +290,8 @@ package body Elab.Vhdl_Debug is
          when Iir_Kind_Function_Declaration
            | Iir_Kind_Function_Body
            | Iir_Kind_Procedure_Declaration
-           | Iir_Kind_Procedure_Body =>
+           | Iir_Kind_Procedure_Body
+           | Iir_Kind_Component_Declaration =>
             null;
          when others =>
             Vhdl.Errors.Error_Kind ("disp_declaration_object", Decl);
@@ -293,24 +299,42 @@ package body Elab.Vhdl_Debug is
    end Disp_Declaration_Object;
 
    procedure Disp_Declaration_Objects
-     (Instance : Synth_Instance_Acc; Decl_Chain : Iir)
+     (Instance : Synth_Instance_Acc; Decl_Chain : Iir; Indent : Natural := 0)
    is
       El : Iir;
    begin
       El := Decl_Chain;
       while El /= Null_Iir loop
-         Disp_Declaration_Object (Instance, El);
+         Disp_Declaration_Object (Instance, El, Indent);
          El := Get_Chain (El);
       end loop;
    end Disp_Declaration_Objects;
 
-   procedure Disp_Hierarchy_Statements
-     (Inst : Synth_Instance_Acc; Stmts : Node; Indent : Natural)
-   is
-      Stmt : Node;
-   begin
-      Stmt := Stmts;
-      while Stmt /= Null_Node loop
+   package Hierarchy_Pkg is
+      type Config_Type is record
+         With_Objs : Boolean;
+         Indent : Natural;
+      end record;
+
+      procedure Disp_Hierarchy (Inst : Synth_Instance_Acc; Cfg : Config_Type);
+
+      procedure Disp_Hierarchy_Statements
+        (Inst : Synth_Instance_Acc; Stmts : Node; Cfg : Config_Type);
+   end Hierarchy_Pkg;
+
+   package body Hierarchy_Pkg is
+      function Inc_Indent (Cfg : Config_Type) return Config_Type
+      is
+         Res : Config_Type;
+      begin
+         Res := Cfg;
+         Res.Indent := Res.Indent + 1;
+         return Res;
+      end Inc_Indent;
+
+      procedure Disp_Hierarchy_Statement
+        (Inst : Synth_Instance_Acc; Stmt : Node; Cfg : Config_Type) is
+      begin
          case Get_Kind (Stmt) is
             when Iir_Kind_Component_Instantiation_Statement =>
                declare
@@ -319,7 +343,7 @@ package body Elab.Vhdl_Debug is
                   Sub_Node : constant Node := Get_Source_Scope (Sub);
                   Comp_Inst : Synth_Instance_Acc;
                begin
-                  Put_Indent (Indent);
+                  Put_Indent (Cfg.Indent);
                   Put (Image (Get_Label (Stmt)));
                   case Get_Kind (Sub_Node) is
                      when Iir_Kind_Component_Declaration =>
@@ -330,11 +354,22 @@ package body Elab.Vhdl_Debug is
                            Put_Line (" [not bound]");
                         else
                            New_Line;
-                           Disp_Hierarchy (Comp_Inst, Indent + 1, False);
+                        end if;
+                        if Cfg.With_Objs then
+                           Disp_Declaration_Objects
+                             (Sub, Get_Generic_Chain (Sub_Node),
+                              Cfg.Indent);
+                           Disp_Declaration_Objects
+                             (Sub, Get_Port_Chain (Sub_Node),
+                              Cfg.Indent);
+                        end if;
+                        if Comp_Inst /= null then
+                           Disp_Hierarchy (Comp_Inst, Inc_Indent (Cfg));
                         end if;
                      when Iir_Kind_Architecture_Body =>
                         Put (": entity ");
-                        Put (Image (Get_Identifier (Get_Entity (Sub_Node))));
+                        Put (Image (Get_Identifier
+                                      (Get_Entity (Sub_Node))));
                         Put ('(');
                         Put (Image (Get_Identifier (Sub_Node)));
                         Put (')');
@@ -342,7 +377,7 @@ package body Elab.Vhdl_Debug is
                         Disp_Hierarchy_Statements
                           (Sub,
                            Get_Concurrent_Statement_Chain (Sub_Node),
-                           Indent + 1);
+                           Inc_Indent (Cfg));
                      when others =>
                         raise Internal_Error;
                   end case;
@@ -355,14 +390,14 @@ package body Elab.Vhdl_Debug is
                   if Sub = null then
                      return;
                   end if;
-                  Put_Indent (Indent);
+                  Put_Indent (Cfg.Indent);
                   Put (Image (Get_Label (Stmt)));
                   Put (": if-generate");
                   if Sub = null then
                      Put_Line (" [false]");
                   else
                      Put_Line (" [true]");
-                     Disp_Hierarchy (Sub, Indent + 1, False);
+                     Disp_Hierarchy (Sub, Inc_Indent (Cfg));
                   end if;
                end;
             when Iir_Kind_For_Generate_Statement =>
@@ -372,7 +407,7 @@ package body Elab.Vhdl_Debug is
                   It_Len : Natural;
                   Gen_Inst : Synth_Instance_Acc;
                begin
-                  Put_Indent (Indent);
+                  Put_Indent (Cfg.Indent);
                   Put (Image (Get_Label (Stmt)));
                   Put (": for-generate");
                   New_Line;
@@ -381,8 +416,9 @@ package body Elab.Vhdl_Debug is
                   It_Len := Natural (Get_Range_Length (It_Rng.Drange));
                   Gen_Inst := Get_Sub_Instance (Inst, Stmt);
                   for I in 1 .. It_Len loop
-                     Disp_Hierarchy (Get_Generate_Sub_Instance (Gen_Inst, I),
-                                     Indent + 1, False);
+                     Disp_Hierarchy
+                       (Get_Generate_Sub_Instance (Gen_Inst, I),
+                        Inc_Indent (Cfg));
                   end loop;
                end;
             when Iir_Kind_Block_Statement =>
@@ -390,53 +426,99 @@ package body Elab.Vhdl_Debug is
                   Sub : constant Synth_Instance_Acc :=
                     Get_Sub_Instance (Inst, Stmt);
                begin
-                  Put_Indent (Indent);
+                  Put_Indent (Cfg.Indent);
                   Put (Image (Get_Label (Stmt)));
                   Put_Line (": block");
                   Disp_Hierarchy_Statements
-                    (Sub, Get_Concurrent_Statement_Chain (Stmt), Indent + 1);
+                    (Sub, Get_Concurrent_Statement_Chain (Stmt),
+                     Inc_Indent (Cfg));
                end;
             when Iir_Kinds_Concurrent_Signal_Assignment
               | Iir_Kind_Concurrent_Assertion_Statement
               | Iir_Kind_Concurrent_Procedure_Call_Statement =>
                null;
             when Iir_Kinds_Process_Statement =>
-               null;
+               --  Note: processes are not elaborated.
+               if Cfg.With_Objs then
+                  Put_Indent (Cfg.Indent);
+                  Put (Image (Get_Label (Stmt)));
+                  Put_Line (": process");
+               end if;
             when others =>
-               Vhdl.Errors.Error_Kind ("disp_hierarchy_statements", Stmt);
+               Vhdl.Errors.Error_Kind ("disp_hierarchy_statement", Stmt);
          end case;
-         Stmt := Get_Chain (Stmt);
-      end loop;
-   end Disp_Hierarchy_Statements;
+      end Disp_Hierarchy_Statement;
 
-   procedure Disp_Hierarchy
-     (Inst : Synth_Instance_Acc; Indent : Natural; With_Objs : Boolean)
+      procedure Disp_Hierarchy_Statements
+        (Inst : Synth_Instance_Acc; Stmts : Node; Cfg : Config_Type)
+      is
+         Stmt : Node;
+      begin
+         Stmt := Stmts;
+         while Stmt /= Null_Node loop
+            Disp_Hierarchy_Statement (Inst, Stmt, Cfg);
+            Stmt := Get_Chain (Stmt);
+         end loop;
+      end Disp_Hierarchy_Statements;
+
+      procedure Disp_Hierarchy
+        (Inst : Synth_Instance_Acc; Cfg : Config_Type)
+      is
+         N : constant Node := Get_Source_Scope (Inst);
+      begin
+         case Get_Kind (N) is
+            when Iir_Kind_Architecture_Body =>
+               declare
+                  Ent : constant Node := Get_Entity (N);
+               begin
+                  Put_Indent (Cfg.Indent);
+                  Put ("architecture ");
+                  Put (Image (Get_Identifier (N)));
+                  Put (" of ");
+                  Put (Image (Get_Identifier (Ent)));
+                  New_Line;
+                  if Cfg.With_Objs then
+                     Put_Indent (Cfg.Indent);
+                     Put_Line ("[entity]");
+                     Disp_Declaration_Objects
+                       (Inst, Get_Generic_Chain (Ent), Cfg.Indent);
+                     Disp_Declaration_Objects
+                       (Inst, Get_Port_Chain (Ent), Cfg.Indent);
+                     Put_Indent (Cfg.Indent);
+                     Put_Line ("[architecture]");
+                     Disp_Declaration_Objects
+                       (Inst, Get_Declaration_Chain (Ent), Cfg.Indent);
+                     Disp_Declaration_Objects
+                       (Inst, Get_Declaration_Chain (N), Cfg.Indent);
+                  end if;
+                  Disp_Hierarchy_Statements
+                    (Inst, Get_Concurrent_Statement_Chain (N),
+                     Inc_Indent (Cfg));
+               end;
+            when Iir_Kind_Component_Declaration =>
+               Put_Indent (Cfg.Indent);
+               Put ("component ");
+               Put (Image (Get_Identifier (N)));
+               New_Line;
+               Disp_Hierarchy
+                 (Get_Component_Instance (Inst), Inc_Indent (Cfg));
+            when Iir_Kind_Generate_Statement_Body =>
+               Disp_Hierarchy_Statements
+                 (Inst, Get_Concurrent_Statement_Chain (N), Cfg);
+            when others =>
+               Vhdl.Errors.Error_Kind ("disp_hierarchy", N);
+         end case;
+      end Disp_Hierarchy;
+   end Hierarchy_Pkg;
+
+   procedure Disp_Hierarchy (Inst : Synth_Instance_Acc; With_Objs : Boolean)
    is
-      N : constant Node := Get_Source_Scope (Inst);
+      use Hierarchy_Pkg;
+      Cfg : Config_Type;
    begin
-      case Get_Kind (N) is
-         when Iir_Kind_Architecture_Body =>
-            Put_Indent (Indent);
-            Put ("architecture ");
-            Put (Image (Get_Identifier (N)));
-            Put (" of ");
-            Put (Image (Get_Identifier (Get_Entity (N))));
-            New_Line;
-            Disp_Hierarchy_Statements
-              (Inst, Get_Concurrent_Statement_Chain (N), Indent + 1);
-         when Iir_Kind_Component_Declaration =>
-            Put_Indent (Indent);
-            Put ("component ");
-            Put (Image (Get_Identifier (N)));
-            New_Line;
-            Disp_Hierarchy
-              (Get_Component_Instance (Inst), Indent + 1, With_Objs);
-         when Iir_Kind_Generate_Statement_Body =>
-            Disp_Hierarchy_Statements
-              (Inst, Get_Concurrent_Statement_Chain (N), Indent);
-         when others =>
-            Vhdl.Errors.Error_Kind ("disp_hierarchy", N);
-      end case;
+      Cfg := (With_Objs => With_Objs,
+              Indent => 0);
+      Hierarchy_Pkg.Disp_Hierarchy (Inst, Cfg);
    end Disp_Hierarchy;
 
    function Walk_Files (Cb : Walk_Cb) return Walk_Status
