@@ -245,6 +245,11 @@ package body Vhdl.Sem_Assocs is
       Prefix : Iir;
       Object : Iir;
    begin
+      if Actual = Null_Iir then
+         --  Skip in case of errors.
+         return;
+      end if;
+
       Object := Name_To_Object (Actual);
       if Object /= Null_Iir then
          Prefix := Get_Object_Prefix (Object);
