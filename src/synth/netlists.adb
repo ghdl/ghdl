@@ -152,7 +152,6 @@ package body Netlists is
                             return Module
    is
       pragma Assert (Is_Valid (Parent));
-      Parent_Rec : Module_Record renames Modules_Table.Table (Parent);
       Ports_Desc : Port_Desc_Idx;
       Res : Module;
    begin
@@ -179,13 +178,17 @@ package body Netlists is
       Res := Modules_Table.Last;
 
       --  Append
-      if Parent_Rec.First_Sub_Module = No_Module then
-         Parent_Rec.First_Sub_Module := Res;
-      else
-         Modules_Table.Table (Parent_Rec.Last_Sub_Module).Next_Sub_Module :=
-           Res;
-      end if;
-      Parent_Rec.Last_Sub_Module := Res;
+      declare
+         Parent_Rec : Module_Record renames Modules_Table.Table (Parent);
+      begin
+         if Parent_Rec.First_Sub_Module = No_Module then
+            Parent_Rec.First_Sub_Module := Res;
+         else
+            Modules_Table.Table (Parent_Rec.Last_Sub_Module).Next_Sub_Module
+              := Res;
+         end if;
+         Parent_Rec.Last_Sub_Module := Res;
+      end;
 
       return Res;
    end New_User_Module;
