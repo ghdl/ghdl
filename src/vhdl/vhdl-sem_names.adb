@@ -3272,7 +3272,8 @@ package body Vhdl.Sem_Names is
                                             Spec => Prefix,
                                             Assoc_Chain => Null_Iir);
             Sem_As_Selected_By_All_Name (Prefix);
-         when Iir_Kind_Library_Declaration =>
+         when Iir_Kind_Library_Declaration
+            | Iir_Kind_Package_Declaration =>
             Error_Msg_Sem (+Name, "%n cannot be selected by all", +Prefix);
             Set_Named_Entity (Name, Error_Mark);
             return;
