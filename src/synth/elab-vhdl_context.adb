@@ -25,7 +25,12 @@ with Vhdl.Utils;
 
 package body Elab.Vhdl_Context is
 
-   Sig_Nbr : Uns32 := 0;
+   Sig_Nbr : Signal_Index := 0;
+
+   function Get_Nbr_Signal return Signal_Index is
+   begin
+      return Sig_Nbr;
+   end Get_Nbr_Signal;
 
    package Inst_Tables is new Tables
      (Table_Component_Type => Synth_Instance_Acc,

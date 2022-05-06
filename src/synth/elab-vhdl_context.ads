@@ -102,6 +102,9 @@ package Elab.Vhdl_Context is
                             Typ : Type_Acc;
                             Init : Value_Acc);
 
+   --  Number of created signals.
+   function Get_Nbr_Signal return Signal_Index;
+
    --  Create a sub instance: either a direct entity instantiation, or
    --  a component instantiation.
    procedure Create_Sub_Instance (Syn_Inst : Synth_Instance_Acc;
