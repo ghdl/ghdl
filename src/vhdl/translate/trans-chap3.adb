@@ -3574,9 +3574,6 @@ package body Trans.Chap3 is
       end if;
    end Maybe_Insert_Scalar_Check;
 
-   function Locally_Types_Match (L_Type : Iir; R_Type : Iir)
-                                return Tri_State_Type;
-
    function Locally_Array_Match (L_Type, R_Type : Iir) return Tri_State_Type
    is
       L_Indexes : constant Iir_Flist := Get_Index_Subtype_List (L_Type);

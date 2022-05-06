@@ -345,7 +345,8 @@ package Trans.Chap3 is
 
    --  Return True iff all indexes of L_TYPE and R_TYPE have the same
    --  length.  They must be constrained.
-   function Locally_Array_Match (L_Type, R_Type : Iir) return Tri_State_Type;
+   function Locally_Types_Match (L_Type : Iir; R_Type : Iir)
+                                return Tri_State_Type;
 
    --  Check bounds of L match bounds of R.
    --  If L_TYPE (resp. R_TYPE) is not a thin composite type, then L_NODE

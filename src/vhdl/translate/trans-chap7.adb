@@ -71,12 +71,10 @@ package body Trans.Chap7 is
       end if;
 
       --  EXPR must be already constrained.
-      pragma Assert (Get_Kind (Expr_Type) = Iir_Kind_Array_Subtype_Definition);
-      if Get_Kind (Res_Type) = Iir_Kind_Array_Subtype_Definition
-        and then Get_Constraint_State (Res_Type) = Fully_Constrained
-      then
+      pragma Assert (Get_Constraint_State (Expr_Type) = Fully_Constrained);
+      if Get_Constraint_State (Res_Type) = Fully_Constrained then
          --  constrained to constrained.
-         if Chap3.Locally_Array_Match (Expr_Type, Res_Type) /= True then
+         if Chap3.Locally_Types_Match (Expr_Type, Res_Type) /= True then
             --  Sem should have replaced the expression by an overflow.
             raise Internal_Error;
             --  Chap6.Gen_Bound_Error (Loc);
@@ -260,16 +258,58 @@ package body Trans.Chap7 is
    function Translate_Static_Aggregate (Aggr : Iir) return O_Cnode
    is
       Aggr_Type : constant Iir := Get_Type (Aggr);
-      List      : O_Array_Aggr_List;
       Res       : O_Cnode;
    begin
       Chap3.Translate_Anonymous_Subtype_Definition (Aggr_Type, False);
-      Start_Array_Aggr
-        (List, Get_Ortho_Type (Aggr_Type, Mode_Value),
-         Unsigned_32 (Chap3.Get_Static_Array_Length (Aggr_Type)));
+      case Get_Kind (Aggr_Type) is
+         when Iir_Kind_Array_Subtype_Definition =>
+            declare
+               List : O_Array_Aggr_List;
+            begin
+               Start_Array_Aggr
+                 (List, Get_Ortho_Type (Aggr_Type, Mode_Value),
+                  Unsigned_32 (Chap3.Get_Static_Array_Length (Aggr_Type)));
 
-      Translate_Static_Array_Aggregate_1 (List, Aggr, Aggr_Type, 1);
-      Finish_Array_Aggr (List, Res);
+               Translate_Static_Array_Aggregate_1 (List, Aggr, Aggr_Type, 1);
+               Finish_Array_Aggr (List, Res);
+            end;
+         when Iir_Kind_Record_Type_Definition
+           | Iir_Kind_Record_Subtype_Definition =>
+            declare
+               Btype : constant Iir := Get_Base_Type (Aggr_Type);
+               Bels : constant Iir_Flist :=
+                 Get_Elements_Declaration_List (Btype);
+               Assocs : constant Iir := Get_Association_Choices_Chain (Aggr);
+               List : O_Record_Aggr_List;
+               Assoc : Iir;
+               El : Iir;
+               Bel : Iir;
+            begin
+               Start_Record_Aggr
+                 (List, Get_Ortho_Type (Aggr_Type, Mode_Value));
+               --  First elements declared with a fully-bounded subtype,
+               --  then unbounded elements.
+               for Static in reverse Boolean loop
+                  Assoc := Assocs;
+                  for I in Flist_First .. Flist_Last (Bels) loop
+                     pragma Assert
+                       (Get_Kind (Assoc) = Iir_Kind_Choice_By_None);
+                     Bel := Get_Nth_Element (Bels, I);
+                     if Is_Static_Type (Get_Info (Get_Type (Bel))) = Static
+                     then
+                        El := Get_Associated_Expr (Assoc);
+                        New_Record_Aggr_El
+                          (List,
+                           Translate_Static_Expression (El, Get_Type (El)));
+                     end if;
+                     Assoc := Get_Chain (Assoc);
+                  end loop;
+               end loop;
+               Finish_Record_Aggr (List, Res);
+            end;
+         when others =>
+            raise Internal_Error;
+      end case;
       return Res;
    end Translate_Static_Aggregate;
 
@@ -467,6 +507,8 @@ package body Trans.Chap7 is
                                         return O_Enode
    is
       Str_Type : constant Iir := Get_Type (Str);
+      Is_Array : constant Boolean :=
+        Get_Kind (Str_Type) = Iir_Kind_Array_Subtype_Definition;
       Is_Static : Boolean;
       Vtype : Iir;
       Var      : Var_Type;
@@ -475,7 +517,8 @@ package body Trans.Chap7 is
       R        : O_Enode;
    begin
       if Get_Constraint_State (Str_Type) = Fully_Constrained
-        and then Are_Array_Indexes_Locally_Static (Str_Type)
+        and then (not Is_Array
+                    or else Are_Array_Indexes_Locally_Static (Str_Type))
       then
          Chap3.Create_Composite_Subtype (Str_Type);
          case Get_Kind (Str) is
@@ -491,7 +534,8 @@ package body Trans.Chap7 is
             when others =>
                raise Internal_Error;
          end case;
-         Is_Static := Are_Array_Indexes_Locally_Static (Res_Type);
+         Is_Static := not Is_Array
+           or else Are_Array_Indexes_Locally_Static (Res_Type);
 
          if Is_Static then
             Res := Translate_Static_Implicit_Conv (Res, Str_Type, Res_Type);
@@ -580,12 +624,25 @@ package body Trans.Chap7 is
       return Translate_Numeric_Literal (Expr, Expr_Otype);
    end Translate_Numeric_Literal;
 
+   function Translate_Null_Literal (Expr : Iir; Res_Type : Iir)
+                                   return O_Cnode
+   is
+      pragma Unreferenced (Expr);
+      Tinfo : constant Type_Info_Acc := Get_Info (Res_Type);
+      Otype : constant O_Tnode := Tinfo.Ortho_Type (Mode_Value);
+   begin
+      return New_Null_Access (Otype);
+   end Translate_Null_Literal;
+
    function Translate_Static_Expression (Expr : Iir; Res_Type : Iir)
                                         return O_Cnode
    is
       Expr_Type : constant Iir := Get_Type (Expr);
    begin
       case Get_Kind (Expr) is
+         when Iir_Kind_Null_Literal =>
+            return Translate_Null_Literal (Expr, Res_Type);
+
          when Iir_Kind_Integer_Literal
             | Iir_Kind_Enumeration_Literal
             | Iir_Kind_Floating_Point_Literal
@@ -958,7 +1015,7 @@ package body Trans.Chap7 is
             if Einfo.Type_Mode = Type_Mode_Static_Array then
                --  FIXME: optimize static vs non-static
                --  constrained to constrained.
-               if Chap3.Locally_Array_Match (Expr_Type, Res_Type) /= True then
+               if Chap3.Locally_Types_Match (Expr_Type, Res_Type) /= True then
                   --  FIXME: generate a bound error ?
                   --  Even if this is caught at compile-time,
                   --  the code is not required to run.
@@ -4499,12 +4556,7 @@ package body Trans.Chap7 is
             end if;
 
          when Iir_Kind_Null_Literal =>
-            declare
-               Tinfo : constant Type_Info_Acc := Get_Info (Expr_Type);
-               Otype : constant O_Tnode := Tinfo.Ortho_Type (Mode_Value);
-            begin
-               return New_Lit (New_Null_Access (Otype));
-            end;
+            return New_Lit (Translate_Null_Literal (Expr, Res_Type));
 
          when Iir_Kind_Overflow_Literal =>
             return Translate_Overflow_Literal (Expr);

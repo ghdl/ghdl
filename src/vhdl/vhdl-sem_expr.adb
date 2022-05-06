@@ -3219,8 +3219,7 @@ package body Vhdl.Sem_Expr is
       --  records.
       Add_Constraints : Boolean;
    begin
-      --  Not yet handled.
-      Set_Aggregate_Expand_Flag (Aggr, False);
+      Set_Aggregate_Expand_Flag (Aggr, True);
 
       Ok := True;
       Assoc_Chain := Get_Association_Choices_Chain (Aggr);
@@ -3312,6 +3311,9 @@ package body Vhdl.Sem_Expr is
                   then
                      Add_Constraints := True;
                   end if;
+                  if not Is_Static_Construct (Expr) then
+                     Set_Aggregate_Expand_Flag (Aggr, False);
+                  end if;
                else
                   Ok := False;
                end if;
@@ -3325,6 +3327,11 @@ package body Vhdl.Sem_Expr is
          Prev_El := El;
          El := Get_Chain (El);
       end loop;
+
+      if Has_Named then
+         --  TODO: support named element on expanded aggregate
+         Set_Aggregate_Expand_Flag (Aggr, False);
+      end if;
 
       --  Check for missing associations.
       for I in Matches'Range loop
