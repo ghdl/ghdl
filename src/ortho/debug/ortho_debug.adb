@@ -269,6 +269,11 @@ package body Ortho_Debug is
       then
          return;
       end if;
+      if T1.Kind = ON_Record_Subtype and then T2.Kind = ON_Record_Subtype
+      then
+         --  TODO: check elements.
+         return;
+      end if;
       if not Disable_Checks then
          raise Type_Error;
       end if;
@@ -919,18 +924,29 @@ package body Ortho_Debug is
          when ON_Array_Type =>
             return Atype.El_Type;
          when others =>
-               raise Syntax_Error;
+            raise Syntax_Error;
       end case;
    end Get_Array_El_Type;
+
+   function Get_Record_Elements (Atype : O_Tnode) return O_Fnode is
+   begin
+      case Atype.Kind is
+         when ON_Record_Subtype =>
+            return Atype.Subrec_Elements;
+         when ON_Record_Type =>
+            return Atype.Rec_Elements;
+         when others =>
+            raise Syntax_Error;
+      end case;
+   end Get_Record_Elements;
 
    procedure Start_Record_Aggr (List : out O_Record_Aggr_List; Atype : O_Tnode)
    is
       subtype O_Cnode_Aggregate is O_Cnode_Type (OC_Record_Aggregate);
       Res : O_Cnode;
+      Els : O_Fnode;
    begin
-      if Atype.Kind /= ON_Record_Type then
-         raise Type_Error;
-      end if;
+      Els := Get_Record_Elements (Atype);
       Check_Complete_Type (Atype);
       Res := new O_Cnode_Aggregate'(Kind => OC_Record_Aggregate,
                                     Ctype => Atype,
@@ -938,7 +954,7 @@ package body Ortho_Debug is
                                     Rec_Els => null);
       List.Res := Res;
       List.Last := null;
-      List.Field := Atype.Rec_Elements;
+      List.Field := Els;
    end Start_Record_Aggr;
 
    procedure New_Record_Aggr_El (List : in out O_Record_Aggr_List;

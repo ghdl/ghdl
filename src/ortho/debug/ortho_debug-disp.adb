@@ -617,8 +617,7 @@ package body Ortho_Debug.Disp is
             begin
                Put ('{');
                El := C.Rec_Els;
-               pragma Assert (C.Ctype.Kind = ON_Record_Type);
-               Field := C.Ctype.Rec_Elements;
+               Field := Get_Record_Elements (C.Ctype);
                if El /= null then
                   loop
                      Set_Mark;

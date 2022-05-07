@@ -30,6 +30,9 @@ private
    --  Return the type of elements of array type/subtype ATYPE.
    function Get_Array_El_Type (Atype : O_Tnode) return O_Tnode;
 
+   --  Return the elements of a record or sub-record.
+   function Get_Record_Elements (Atype : O_Tnode) return O_Fnode;
+
    --  Return the base type of T.
    --  function Get_Base_Type (T : O_Tnode) return O_Tnode;
 
