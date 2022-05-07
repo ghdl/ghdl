@@ -377,6 +377,17 @@ package body Synth.Vhdl_Insts is
       end case;
    end Count_Nbr_Ports;
 
+   function Get_Type2 (N : Node) return Node
+   is
+      Res : Node;
+   begin
+      Res := Get_Type (N);
+      if Get_Kind (Res) = Iir_Kind_Interface_Type_Definition then
+         Res := Get_Associated_Type (Res);
+      end if;
+      return Res;
+   end Get_Type2;
+
    procedure Build_Ports_Desc (Descs : in out Port_Desc_Array;
                                Idx : in out Port_Nbr;
                                Pkind : Port_Kind;
@@ -405,7 +416,7 @@ package body Synth.Vhdl_Insts is
            | Type_Unbounded_Record =>
             declare
                Els : constant Node_Flist := Get_Elements_Declaration_List
-                 (Get_Type (Inter));
+                 (Get_Type2 (Inter));
                El : Node;
             begin
                for I in Typ.Rec.E'Range loop
