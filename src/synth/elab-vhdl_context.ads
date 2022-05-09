@@ -94,6 +94,10 @@ package Elab.Vhdl_Context is
    function Get_Next_Extra_Instance (Inst : Synth_Instance_Acc)
                                      return Synth_Instance_Acc;
 
+   --  Current statement (for execution).
+   function Get_Current_Stmt (Inst : Synth_Instance_Acc) return Node;
+   procedure Set_Current_Stmt (Inst : Synth_Instance_Acc; Stmt : Node);
+
    procedure Create_Object
      (Syn_Inst : Synth_Instance_Acc; Decl : Node; Vt : Valtyp);
 
@@ -233,6 +237,10 @@ private
       Extra_Units : Synth_Instance_Acc;
       Extra_Link : Synth_Instance_Acc;
 
+      --  For processes and subprograms.
+      Cur_Stmt : Node;
+
+      --  Last elaborated object.  Detect elaboration issues.
       Elab_Objects : Object_Slot_Type;
 
       --  Instance for synthesis.

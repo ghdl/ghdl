@@ -690,25 +690,25 @@ package body Synth.Vhdl_Stmts is
       Synth_Assignment (Syn_Inst, Targ, Val, Stmt);
    end Synth_Conditional_Signal_Assignment;
 
-   procedure Synth_Variable_Assignment (C : Seq_Context; Stmt : Node)
+   procedure Synth_Variable_Assignment (Inst : Synth_Instance_Acc; Stmt : Node)
    is
       Targ : Target_Info;
       Val : Valtyp;
    begin
-      Targ := Synth_Target (C.Inst, Get_Target (Stmt));
+      Targ := Synth_Target (Inst, Get_Target (Stmt));
       Val := Synth_Expression_With_Type
-        (C.Inst, Get_Expression (Stmt), Targ.Targ_Type);
+        (Inst, Get_Expression (Stmt), Targ.Targ_Type);
       if Val = No_Valtyp then
-         Set_Error (C.Inst);
+         Set_Error (Inst);
          return;
       end if;
-      Synth_Assignment (C.Inst, Targ, Val, Stmt);
+      Synth_Assignment (Inst, Targ, Val, Stmt);
    end Synth_Variable_Assignment;
 
    procedure Synth_Conditional_Variable_Assignment
-     (C : Seq_Context; Stmt : Node)
+     (Inst : Synth_Instance_Acc; Stmt : Node)
    is
-      Ctxt : constant Context_Acc := Get_Build (C.Inst);
+      Ctxt : constant Context_Acc := Get_Build (Inst);
       Target : constant Node := Get_Target (Stmt);
       Targ_Type : Type_Acc;
       Cond : Node;
@@ -718,7 +718,7 @@ package body Synth.Vhdl_Stmts is
       First : Valtyp;
       Cond_Tri : Tri_State_Type;
    begin
-      Targ_Type := Get_Subtype_Object (C.Inst, Get_Type (Target));
+      Targ_Type := Get_Subtype_Object (Inst, Get_Type (Target));
       First := No_Valtyp;
       Last := No_Net;
       Ce := Get_Conditional_Expression_Chain (Stmt);
@@ -726,7 +726,7 @@ package body Synth.Vhdl_Stmts is
          --  First, evaluate the condition.
          Cond := Get_Condition (Ce);
          if Cond /= Null_Node then
-            Cond_Val := Synth_Expression (C.Inst, Cond);
+            Cond_Val := Synth_Expression (Inst, Cond);
             if Is_Static_Val (Cond_Val.Val) then
                Strip_Const (Cond_Val);
                if Read_Discrete (Get_Value_Memtyp (Cond_Val)) = 1 then
@@ -743,7 +743,7 @@ package body Synth.Vhdl_Stmts is
 
          if Cond_Tri /= False then
             Val := Synth_Expression_With_Type
-              (C.Inst, Get_Expression (Ce), Targ_Type);
+              (Inst, Get_Expression (Ce), Targ_Type);
             --  Convert to the target subtype so that all the conditional
             --  expressions have the same width.
             Val := Synth_Subtype_Conversion (Ctxt, Val, Targ_Type, False, Ce);
@@ -780,7 +780,7 @@ package body Synth.Vhdl_Stmts is
 
          Ce := Get_Chain (Ce);
       end loop;
-      Synth_Assignment (C.Inst, Target, First, Stmt);
+      Synth_Assignment (Inst, Target, First, Stmt);
    end Synth_Conditional_Variable_Assignment;
 
    procedure Synth_If_Statement (C : in out Seq_Context; Stmt : Node)
@@ -1364,8 +1364,8 @@ package body Synth.Vhdl_Stmts is
       Free_Net_Array (Nets);
    end Synth_Case_Statement_Dynamic;
 
-   procedure Synth_Case_Statement_Static_Array
-     (C : in out Seq_Context; Stmt : Node; Sel : Valtyp)
+   function Execute_Static_Case_Statement_Array
+     (Inst : Synth_Instance_Acc; Stmt : Node; Sel : Valtyp) return Node
    is
       Choices : constant Node := Get_Case_Statement_Alternative_Chain (Stmt);
       Choice : Node;
@@ -1385,23 +1385,21 @@ package body Synth.Vhdl_Stmts is
          case Get_Kind (Choice) is
             when Iir_Kind_Choice_By_Expression =>
                Sel_Expr := Get_Choice_Expression (Choice);
-               Sel_Val := Synth_Expression_With_Basetype (C.Inst, Sel_Expr);
+               Sel_Val := Synth_Expression_With_Basetype (Inst, Sel_Expr);
                if Is_Equal (Sel_Val, Sel) then
-                  Synth_Sequential_Statements (C, Stmts);
-                  exit;
+                  return Stmts;
                end if;
             when Iir_Kind_Choice_By_Others =>
-               Synth_Sequential_Statements (C, Stmts);
-               exit;
+               return Stmts;
             when others =>
                raise Internal_Error;
          end case;
          Choice := Get_Chain (Choice);
       end loop;
-   end Synth_Case_Statement_Static_Array;
+   end Execute_Static_Case_Statement_Array;
 
-   procedure Synth_Case_Statement_Static_Scalar
-     (C : in out Seq_Context; Stmt : Node; Sel : Int64)
+   function Execute_Static_Case_Statement_Scalar
+     (Inst : Synth_Instance_Acc; Stmt : Node; Sel : Int64) return Node
    is
       Choices : constant Node := Get_Case_Statement_Alternative_Chain (Stmt);
       Choice : Node;
@@ -1421,19 +1419,16 @@ package body Synth.Vhdl_Stmts is
             when Iir_Kind_Choice_By_Expression =>
                Sel_Expr := Get_Choice_Expression (Choice);
                if Vhdl.Evaluation.Eval_Pos (Sel_Expr) = Sel then
-                  Synth_Sequential_Statements (C, Stmts);
-                  exit;
+                  return Stmts;
                end if;
             when Iir_Kind_Choice_By_Others =>
-               Synth_Sequential_Statements (C, Stmts);
-               exit;
+               return Stmts;
             when Iir_Kind_Choice_By_Range =>
                declare
                   Bnd : Discrete_Range_Type;
                   Is_In : Boolean;
                begin
-                  Synth_Discrete_Range
-                    (C.Inst, Get_Choice_Range (Choice), Bnd);
+                  Synth_Discrete_Range (Inst, Get_Choice_Range (Choice), Bnd);
                   case Bnd.Dir is
                      when Dir_To =>
                         Is_In := Sel >= Bnd.Left and Sel <= Bnd.Right;
@@ -1441,8 +1436,7 @@ package body Synth.Vhdl_Stmts is
                         Is_In := Sel <= Bnd.Left and Sel >= Bnd.Right;
                   end case;
                   if Is_In then
-                     Synth_Sequential_Statements (C, Stmts);
-                     exit;
+                     return Stmts;
                   end if;
                end;
             when others =>
@@ -1450,28 +1444,36 @@ package body Synth.Vhdl_Stmts is
          end case;
          Choice := Get_Chain (Choice);
       end loop;
-   end Synth_Case_Statement_Static_Scalar;
+   end Execute_Static_Case_Statement_Scalar;
+
+   function Execute_Static_Case_Statement
+     (Inst : Synth_Instance_Acc; Stmt : Node; Sel : Valtyp) return Node is
+   begin
+      case Sel.Typ.Kind is
+         when Type_Bit
+           | Type_Logic
+           | Type_Discrete =>
+            return Execute_Static_Case_Statement_Scalar
+              (Inst, Stmt, Read_Discrete (Sel));
+         when Type_Vector
+           | Type_Array =>
+            return Execute_Static_Case_Statement_Array (Inst, Stmt, Sel);
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Execute_Static_Case_Statement;
 
    procedure Synth_Case_Statement (C : in out Seq_Context; Stmt : Node)
    is
       Expr : constant Node := Get_Expression (Stmt);
       Sel : Valtyp;
+      Stmts : Node;
    begin
       Sel := Synth_Expression_With_Basetype (C.Inst, Expr);
       Strip_Const (Sel);
       if Is_Static (Sel.Val) then
-         case Sel.Typ.Kind is
-            when Type_Bit
-              | Type_Logic
-              | Type_Discrete =>
-               Synth_Case_Statement_Static_Scalar (C, Stmt,
-                                                   Read_Discrete (Sel));
-            when Type_Vector
-              | Type_Array =>
-               Synth_Case_Statement_Static_Array (C, Stmt, Sel);
-            when others =>
-               raise Internal_Error;
-         end case;
+         Stmts := Execute_Static_Case_Statement (C.Inst, Stmt, Sel);
+         Synth_Sequential_Statements (C, Stmts);
       else
          Synth_Case_Statement_Dynamic (C, Stmt, Sel);
       end if;
@@ -2689,7 +2691,7 @@ package body Synth.Vhdl_Stmts is
       end loop;
    end Synth_Static_Exit_Next_Statement;
 
-   procedure Init_For_Loop_Statement (C : in out Seq_Context;
+   procedure Init_For_Loop_Statement (Inst : Synth_Instance_Acc;
                                       Stmt : Node;
                                       Val : out Valtyp)
    is
@@ -2698,24 +2700,24 @@ package body Synth.Vhdl_Stmts is
       It_Rng : Type_Acc;
    begin
       if It_Type /= Null_Node then
-         Synth_Subtype_Indication (C.Inst, It_Type);
+         Synth_Subtype_Indication (Inst, It_Type);
       end if;
 
       --  Initial value.
-      It_Rng := Get_Subtype_Object (C.Inst, Get_Type (Iterator));
+      It_Rng := Get_Subtype_Object (Inst, Get_Type (Iterator));
       Val := Create_Value_Discrete (It_Rng.Drange.Left, It_Rng);
-      Create_Object (C.Inst, Iterator, Val);
+      Create_Object (Inst, Iterator, Val);
    end Init_For_Loop_Statement;
 
-   procedure Finish_For_Loop_Statement (C : in out Seq_Context;
+   procedure Finish_For_Loop_Statement (Inst : Synth_Instance_Acc;
                                         Stmt : Node)
    is
       Iterator : constant Node := Get_Parameter_Specification (Stmt);
       It_Type : constant Node := Get_Declaration_Type (Iterator);
    begin
-      Destroy_Object (C.Inst, Iterator);
+      Destroy_Object (Inst, Iterator);
       if It_Type /= Null_Node then
-         Destroy_Object (C.Inst, It_Type);
+         Destroy_Object (Inst, It_Type);
       end if;
    end Finish_For_Loop_Statement;
 
@@ -2738,7 +2740,7 @@ package body Synth.Vhdl_Stmts is
 
       Loop_Control_Init (C, Stmt);
 
-      Init_For_Loop_Statement (C, Stmt, Val);
+      Init_For_Loop_Statement (C.Inst, Stmt, Val);
 
       while In_Range (Val.Typ.Drange, Read_Discrete (Val)) loop
          Synth_Sequential_Statements (C, Stmts);
@@ -2753,7 +2755,7 @@ package body Synth.Vhdl_Stmts is
       end loop;
       Loop_Control_Finish (C);
 
-      Finish_For_Loop_Statement (C, Stmt);
+      Finish_For_Loop_Statement (C.Inst, Stmt);
 
       C.Cur_Loop := Lc.Prev_Loop;
    end Synth_Dynamic_For_Loop_Statement;
@@ -2772,7 +2774,7 @@ package body Synth.Vhdl_Stmts is
              S_Quit => False);
       C.Cur_Loop := Lc'Unrestricted_Access;
 
-      Init_For_Loop_Statement (C, Stmt, Val);
+      Init_For_Loop_Statement (C.Inst, Stmt, Val);
 
       while In_Range (Val.Typ.Drange, Read_Discrete (Val)) loop
          Synth_Sequential_Statements (C, Stmts);
@@ -2783,7 +2785,7 @@ package body Synth.Vhdl_Stmts is
          exit when Lc.S_Exit or Lc.S_Quit or C.Nbr_Ret > 0;
       end loop;
 
-      Finish_For_Loop_Statement (C, Stmt);
+      Finish_For_Loop_Statement (C.Inst, Stmt);
 
       C.Cur_Loop := Lc.Prev_Loop;
    end Synth_Static_For_Loop_Statement;
@@ -3000,13 +3002,14 @@ package body Synth.Vhdl_Stmts is
       Synth_Static_Report (C.Inst, Stmt);
    end Synth_Static_Report_Statement;
 
-   procedure Synth_Static_Assertion_Statement (C : Seq_Context; Stmt : Node)
+   procedure Execute_Assertion_Statement (Inst : Synth_Instance_Acc;
+                                          Stmt : Node)
    is
       Cond : Valtyp;
    begin
-      Cond := Synth_Expression (C.Inst, Get_Assertion_Condition (Stmt));
+      Cond := Synth_Expression (Inst, Get_Assertion_Condition (Stmt));
       if Cond = No_Valtyp then
-         Set_Error (C.Inst);
+         Set_Error (Inst);
          return;
       end if;
       pragma Assert (Is_Static (Cond.Val));
@@ -3014,8 +3017,8 @@ package body Synth.Vhdl_Stmts is
       if Read_Discrete (Cond) = 1 then
          return;
       end if;
-      Synth_Static_Report (C.Inst, Stmt);
-   end Synth_Static_Assertion_Statement;
+      Synth_Static_Report (Inst, Stmt);
+   end Execute_Assertion_Statement;
 
    procedure Synth_Dynamic_Assertion_Statement (C : Seq_Context; Stmt : Node)
    is
@@ -3090,9 +3093,9 @@ package body Synth.Vhdl_Stmts is
             when Iir_Kind_Conditional_Signal_Assignment_Statement =>
                Synth_Conditional_Signal_Assignment (C.Inst, Stmt);
             when Iir_Kind_Variable_Assignment_Statement =>
-               Synth_Variable_Assignment (C, Stmt);
+               Synth_Variable_Assignment (C.Inst, Stmt);
             when Iir_Kind_Conditional_Variable_Assignment_Statement =>
-               Synth_Conditional_Variable_Assignment (C, Stmt);
+               Synth_Conditional_Variable_Assignment (C.Inst, Stmt);
             when Iir_Kind_Case_Statement =>
                Synth_Case_Statement (C, Stmt);
             when Iir_Kind_For_Loop_Statement =>
@@ -3120,7 +3123,7 @@ package body Synth.Vhdl_Stmts is
                end if;
             when Iir_Kind_Assertion_Statement =>
                if not Is_Dyn then
-                  Synth_Static_Assertion_Statement (C, Stmt);
+                  Execute_Assertion_Statement (C.Inst, Stmt);
                else
                   Synth_Dynamic_Assertion_Statement (C, Stmt);
                end if;

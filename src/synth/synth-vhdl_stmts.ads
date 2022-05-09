@@ -94,6 +94,20 @@ package Synth.Vhdl_Stmts is
    procedure Synth_Verification_Unit (Syn_Inst : Synth_Instance_Acc;
                                       Unit : Node;
                                       Parent_Inst : Synth_Instance_Acc);
+
+   procedure Execute_Assertion_Statement (Inst : Synth_Instance_Acc;
+                                          Stmt : Node);
+   procedure Init_For_Loop_Statement (Inst : Synth_Instance_Acc;
+                                      Stmt : Node;
+                                      Val : out Valtyp);
+   procedure Finish_For_Loop_Statement (Inst : Synth_Instance_Acc;
+                                        Stmt : Node);
+   procedure Synth_Variable_Assignment (Inst : Synth_Instance_Acc;
+                                        Stmt : Node);
+
+   --  Return the statements chain to be executed.
+   function Execute_Static_Case_Statement
+     (Inst : Synth_Instance_Acc; Stmt : Node; Sel : Valtyp) return Node;
 private
    --  There are 2 execution mode:
    --  * static: it is like simulation, all the inputs are known, neither
