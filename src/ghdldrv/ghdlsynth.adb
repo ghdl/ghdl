@@ -47,7 +47,6 @@ with Netlists.Inference;
 
 with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 with Elab.Vhdl_Insts;
-with Elab.Vhdl_Debug;
 
 with Synthesis;
 with Synth.Disp_Vhdl;
@@ -245,6 +244,46 @@ package body Ghdlsynth is
       end if;
    end Decode_Option;
 
+   --  Return the position of "-e", or ARGS'FIRST -1 if none.
+   function Find_Dash_E (Args : Argument_List) return Integer is
+   begin
+      for I in Args'Range loop
+         if Args (I).all = "-e" then
+            return I;
+         end if;
+      end loop;
+      return Args'First - 1;
+   end Find_Dash_E;
+
+   --  Set flags, load libraries.
+   procedure Synth_Compile_Init (Enable_Translate_Off : Boolean;
+                                 Load_Work : Boolean) is
+   begin
+      Vhdl.Annotations.Flag_Synthesis := True;
+      if Enable_Translate_Off then
+         Vhdl.Scanner.Flag_Comment_Keyword := True;
+         Vhdl.Scanner.Flag_Pragma_Comment := True;
+      end if;
+
+      Common_Compile_Init (False);
+      --  Will elaborate.
+      Flags.Flag_Elaborate := True;
+
+      --  Load content only if there are no files.
+      Libraries.Load_Work_Library (Load_Work);
+
+      --  Do not canon concurrent statements.
+      Vhdl.Canon.Canon_Flag_Concurrent_Stmts := False;
+
+      --  Do not create concurrent signal assignment for inertial
+      --  association.  They are handled directly.
+      Vhdl.Canon.Canon_Flag_Inertial_Associations := False;
+
+      if Ghdlcomp.Init_Verilog_Options /= null then
+         Ghdlcomp.Init_Verilog_Options.all (False);
+      end if;
+   end Synth_Compile_Init;
+
    --  Init, analyze and configure.
    --  Return the top configuration.
    function Ghdl_Synth_Configure (Init : Boolean;
@@ -262,38 +301,10 @@ package body Ghdlsynth is
       Sec_Id : Name_Id;
    begin
       --  If the '-e' switch is present, there is a list of files.
-      E_Opt := Args'First - 1;
-      for I in Args'Range loop
-         if Args (I).all = "-e" then
-            E_Opt := I;
-            exit;
-         end if;
-      end loop;
+      E_Opt := Find_Dash_E (Args);
 
       if Init then
-         Vhdl.Annotations.Flag_Synthesis := True;
-         if Enable_Translate_Off then
-            Vhdl.Scanner.Flag_Comment_Keyword := True;
-            Vhdl.Scanner.Flag_Pragma_Comment := True;
-         end if;
-
-         Common_Compile_Init (False);
-         --  Will elaborate.
-         Flags.Flag_Elaborate := True;
-
-         --  Load content only if there are no files.
-         Libraries.Load_Work_Library (E_Opt >= Args'First);
-
-         --  Do not canon concurrent statements.
-         Vhdl.Canon.Canon_Flag_Concurrent_Stmts := False;
-
-         --  Do not create concurrent signal assignment for inertial
-         --  association.  They are handled directly.
-         Vhdl.Canon.Canon_Flag_Inertial_Associations := False;
-
-         if Ghdlcomp.Init_Verilog_Options /= null then
-            Ghdlcomp.Init_Verilog_Options.all (False);
-         end if;
+         Synth_Compile_Init (Enable_Translate_Off, E_Opt >= Args'First);
       end if;
 
       --  Mark vendor libraries.
@@ -567,123 +578,9 @@ package body Ghdlsynth is
       end if;
    end Perform_Action;
 
-   --  Command -E
-   type Command_Elab is new Command_Lib with record
-      --  If True, a failure is expected.  For tests.
-      Expect_Failure : Boolean := False;
-   end record;
-   function Decode_Command (Cmd : Command_Elab; Name : String)
-                           return Boolean;
-   function Get_Short_Help (Cmd : Command_Elab) return String;
-   procedure Disp_Long_Help (Cmd : Command_Elab);
-   procedure Decode_Option (Cmd : in out Command_Elab;
-                            Option : String;
-                            Arg : String;
-                            Res : out Option_State);
-   procedure Perform_Action (Cmd : in out Command_Elab;
-                             Args : Argument_List);
-
-   function Decode_Command (Cmd : Command_Elab; Name : String)
-                           return Boolean
-   is
-      pragma Unreferenced (Cmd);
-   begin
-      return Name = "-E";
-   end Decode_Command;
-
-   function Get_Short_Help (Cmd : Command_Elab) return String
-   is
-      pragma Unreferenced (Cmd);
-   begin
-      return "-E [FILES... -e] UNIT [ARCH]"
-        & ASCII.LF & "  Static elaboration of UNIT (experimental feature)";
-   end Get_Short_Help;
-
-   procedure Disp_Long_Help (Cmd : Command_Elab)
-   is
-      pragma Unreferenced (Cmd);
-      procedure P (Str : String) renames Simple_IO.Put_Line;
-   begin
-      P ("You can directly pass the list of files to synthesize:");
-      P ("   -E [OPTIONS] { [--work=NAME] FILE } -e [UNIT]");
-      P (" If UNIT is not present, the top unit is automatically found");
-      P (" You can use --work=NAME to change the library between files");
-      P ("Or use already analysed files:");
-      P ("   -E [OPTIONS] -e UNIT");
-      P ("In addition to analyze options, you can use:");
-      P ("  -gNAME=VALUE");
-      P ("    Override the generic NAME of the top unit");
-   end Disp_Long_Help;
-
-   procedure Decode_Option (Cmd : in out Command_Elab;
-                            Option : String;
-                            Arg : String;
-                            Res : out Option_State)
-   is
-      pragma Assert (Option'First = 1);
-   begin
-      Res := Option_Ok;
-
-      if Option'Last > 3
-        and then Option (2) = 'g'
-        and then Is_Generic_Override_Option (Option)
-      then
-         Res := Decode_Generic_Override_Option (Option);
-      elsif Option = "--expect-failure" then
-         Cmd.Expect_Failure := True;
-      elsif Option = "-le" then
-         Flag_Debug_Elaborate := True;
-      elsif Option = "-t" then
-         Flag_Trace_Statements := True;
-      elsif Option = "-i" then
-         Flag_Debug_Init := True;
-      elsif Option = "-g" then
-         Flag_Debug_Enable := True;
-      else
-         Decode_Option (Command_Lib (Cmd), Option, Arg, Res);
-      end if;
-   end Decode_Option;
-
-   procedure Perform_Action (Cmd : in out Command_Elab;
-                             Args : Argument_List)
-   is
-      No_Vendor_Libraries : constant Name_Id_Array (1 .. 0) :=
-        (others => No_Name_Id);
-      Inst : Synth_Instance_Acc;
-      Config : Iir;
-      Lib_Unit : Iir;
-   begin
-      Config := Ghdl_Synth_Configure (True, No_Vendor_Libraries, Args, False);
-
-      if Config = Null_Iir then
-         if Cmd.Expect_Failure then
-            return;
-         else
-            raise Errorout.Compilation_Error;
-         end if;
-      end if;
-
-      Lib_Unit := Get_Library_Unit (Config);
-      pragma Assert (Get_Kind (Lib_Unit) /= Iir_Kind_Foreign_Module);
-      Inst := Elab.Vhdl_Insts.Elab_Top_Unit (Lib_Unit);
-
-      if Errorout.Nbr_Errors > 0 then
-         if Cmd.Expect_Failure then
-            return;
-         else
-            raise Errorout.Compilation_Error;
-         end if;
-      elsif Cmd.Expect_Failure then
-         raise Errorout.Compilation_Error;
-      end if;
-
-      Elab.Vhdl_Debug.Disp_Hierarchy (Inst, True);
-   end Perform_Action;
-
    procedure Register_Commands is
    begin
       Ghdlmain.Register_Command (new Command_Synth);
-      Ghdlmain.Register_Command (new Command_Elab);
    end Register_Commands;
 
    procedure Init_For_Ghdl_Synth is
