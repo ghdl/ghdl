@@ -58,6 +58,8 @@ package body Synth.Vhdl_Static_Proc is
             Synth_Deallocate (Syn_Inst, Imp);
          when Iir_Predefined_Read =>
             Synth_File_Read (Syn_Inst, Imp, Loc);
+         when Iir_Predefined_Write =>
+            Synth_File_Write (Syn_Inst, Imp, Loc);
          when others =>
             Error_Msg_Synth
               (+Loc, "call to implicit %n is not supported", +Imp);

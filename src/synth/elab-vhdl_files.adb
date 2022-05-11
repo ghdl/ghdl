@@ -416,4 +416,93 @@ package body Elab.Vhdl_Files is
       File_Read_Value (File, (Value.Typ, Value.Val.Mem), Loc);
    end Synth_File_Read;
 
+   procedure File_Write_Value (File : File_Index; Val : Memtyp; Loc : Node)
+   is
+      Status : Op_Status;
+   begin
+      case Val.Typ.Kind is
+         when Type_Discrete
+            | Type_Bit
+            | Type_Logic
+            | Type_Float =>
+            Ghdl_Write_Scalar (File, Ghdl_Ptr (Val.Mem.all'Address),
+                              Ghdl_Index_Type (Val.Typ.Sz), Status);
+            if Status /= Op_Ok then
+               File_Error (Loc, Status);
+            end if;
+         when Type_Vector
+            | Type_Array =>
+            declare
+               El_Typ : constant Type_Acc := Get_Array_Element (Val.Typ);
+               Off    : Size_Type;
+            begin
+               Off := 0;
+               for I in 1 .. Get_Array_Flat_Length (Val.Typ) loop
+                  File_Write_Value (File, (El_Typ, Val.Mem + Off), Loc);
+                  Off := Off + El_Typ.Sz;
+               end loop;
+            end;
+         when Type_Record =>
+            for I in Val.Typ.Rec.E'Range loop
+               File_Write_Value
+                 (File,
+                  (Val.Typ.Rec.E (I).Typ, Val.Mem + Val.Typ.Rec.E (I).Moff),
+                  Loc);
+            end loop;
+         when Type_Unbounded_Record
+            | Type_Unbounded_Array
+            | Type_Unbounded_Vector
+            | Type_Protected
+            | Type_Slice
+            | Type_File
+            | Type_Access =>
+            raise Internal_Error;
+      end case;
+   end File_Write_Value;
+
+   function Dir_To_Dir (Dir : Direction_Type) return Ghdl_Dir_Type is
+   begin
+      case Dir is
+         when Dir_To =>
+            return Grt.Vhdl_Types.Dir_To;
+         when Dir_Downto =>
+            return Grt.Vhdl_Types.Dir_Downto;
+      end case;
+   end Dir_To_Dir;
+
+   procedure File_Write_Text (File : File_Index; Val : Memtyp; Loc : Node)
+   is
+      B : Bound_Type;
+      Status : Op_Status;
+      Str : Std_String;
+      Bnd : Std_String_Bound;
+   begin
+      B := Val.Typ.Abounds.D (1);
+      Bnd.Dim_1 := (Left => Ghdl_I32 (B.Left),
+                    Right => Ghdl_I32 (B.Right),
+                    Dir => Dir_To_Dir (B.Dir),
+                    Length => Ghdl_Index_Type (B.Len));
+      Str := (Base => To_Std_String_Basep (Val.Mem.all'Address),
+              Bounds => To_Std_String_Boundp (Bnd'Address));
+      Ghdl_Text_Write (File, To_Std_String_Ptr (Str'Address), Status);
+      if Status /= Op_Ok then
+         File_Error (Loc, Status);
+      end if;
+   end File_Write_Text;
+
+   procedure Synth_File_Write
+     (Syn_Inst : Synth_Instance_Acc; Imp : Node; Loc : Node)
+   is
+      Inters : constant Node := Get_Interface_Declaration_Chain (Imp);
+      Is_Text : constant Boolean := Get_Text_File_Flag (Get_Type (Inters));
+      File : constant File_Index := Get_Value (Syn_Inst, Inters).Val.File;
+      Param2 : constant Node := Get_Chain (Inters);
+      Value : constant Valtyp := Get_Value (Syn_Inst, Param2);
+   begin
+      if Is_Text then
+         File_Write_Text (File, (Value.Typ, Value.Val.Mem), Loc);
+      else
+         File_Write_Value (File, (Value.Typ, Value.Val.Mem), Loc);
+      end if;
+   end Synth_File_Write;
 end Elab.Vhdl_Files;
