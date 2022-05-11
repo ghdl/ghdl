@@ -120,7 +120,8 @@ package body Elab.Vhdl_Decls is
    end Elab_Signal_Declaration;
 
    procedure Elab_Variable_Declaration (Syn_Inst : Synth_Instance_Acc;
-                                        Decl : Node)
+                                        Decl : Node;
+                                        Force_Init : Boolean)
    is
       Def : constant Node := Get_Default_Value (Decl);
       Decl_Type : constant Node := Get_Type (Decl);
@@ -138,7 +139,11 @@ package body Elab.Vhdl_Decls is
          Init := Exec_Expression_With_Type (Syn_Inst, Def, Obj_Typ);
          Init := Exec_Subtype_Conversion (Init, Obj_Typ, False, Decl);
       else
-         Init := (Typ => Obj_Typ, Val => null);
+         if Force_Init then
+            Init := Create_Value_Default (Obj_Typ);
+         else
+            Init := (Typ => Obj_Typ, Val => null);
+         end if;
       end if;
       Create_Object (Syn_Inst, Decl, Init);
    end Elab_Variable_Declaration;
@@ -220,11 +225,12 @@ package body Elab.Vhdl_Decls is
 
    procedure Elab_Declaration (Syn_Inst : Synth_Instance_Acc;
                                Decl : Node;
+                               Force_Init : Boolean;
                                Last_Type : in out Node) is
    begin
       case Get_Kind (Decl) is
          when Iir_Kind_Variable_Declaration =>
-            Elab_Variable_Declaration (Syn_Inst, Decl);
+            Elab_Variable_Declaration (Syn_Inst, Decl, Force_Init);
          --  when Iir_Kind_Interface_Variable_Declaration =>
          --     --  Ignore default value.
          --     Create_Wire_Object (Syn_Inst, Wire_Variable, Decl);
@@ -280,7 +286,9 @@ package body Elab.Vhdl_Decls is
       end case;
    end Elab_Declaration;
 
-   procedure Elab_Declarations (Syn_Inst : Synth_Instance_Acc; Decls : Iir)
+   procedure Elab_Declarations (Syn_Inst : Synth_Instance_Acc;
+                                Decls : Iir;
+                                Force_Init : Boolean := False)
    is
       Decl : Node;
       Last_Type : Node;
@@ -288,7 +296,7 @@ package body Elab.Vhdl_Decls is
       Last_Type := Null_Node;
       Decl := Decls;
       while Is_Valid (Decl) loop
-         Elab_Declaration (Syn_Inst, Decl, Last_Type);
+         Elab_Declaration (Syn_Inst, Decl, Force_Init, Last_Type);
 
          exit when Is_Error (Syn_Inst);
 

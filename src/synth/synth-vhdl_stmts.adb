@@ -2357,8 +2357,7 @@ package body Synth.Vhdl_Stmts is
       Areapools.Release (Area_Mark, Instance_Pool.all);
    end Synth_Implicit_Procedure_Call;
 
-   procedure Synth_Procedure_Call
-     (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
+   procedure Synth_Procedure_Call (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
       Call : constant Node := Get_Procedure_Call (Stmt);
       Imp  : constant Node := Get_Implementation (Call);

@@ -105,6 +105,8 @@ package Synth.Vhdl_Stmts is
    procedure Synth_Variable_Assignment (Inst : Synth_Instance_Acc;
                                         Stmt : Node);
 
+   procedure Synth_Procedure_Call (Syn_Inst : Synth_Instance_Acc; Stmt : Node);
+
    --  Return the statements chain to be executed.
    function Execute_Static_Case_Statement
      (Inst : Synth_Instance_Acc; Stmt : Node; Sel : Valtyp) return Node;
