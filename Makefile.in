@@ -407,7 +407,7 @@ uninstall.llvm: uninstall.llvm.program uninstall.grt
 
 ################ For simul (no code generation, interpretation) ##########
 
-GHDL_SIMUL_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/vhdl/simulate -aI$(srcdir)/src/synth
+GHDL_SIMUL_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/simul -aI$(srcdir)/src/synth
 
 ghdl_simul$(EXEEXT): $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) version.ads force
 	$(GNATMAKE) $(GHDL_SIMUL_INCFLAGS) $(GNATFLAGS) -gnat12 ghdl_simul $(GNAT_BARGS) -largs $(LDFLAGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))

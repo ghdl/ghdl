@@ -1,4 +1,4 @@
---  GHDL driver - simulator commands.
+--  GHDL driver - Simulation commands.
 --  Copyright (C) 2002, 2003, 2004, 2005 Tristan Gingold
 --
 --  This program is free software: you can redistribute it and/or modify
@@ -13,37 +13,42 @@
 --
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
+with System; use System;
 
+with Ada.Unchecked_Conversion;
 with Ada.Command_Line;
-
-with Ghdllocal;
 with GNAT.OS_Lib; use GNAT.OS_Lib;
 
-with Simple_IO;
-with Types;
+with Interfaces;
+with Interfaces.C;
+
+with Ghdllocal; use Ghdllocal;
+with Simple_IO; use Simple_IO;
+
 with Flags;
+with Errorout;
+
+with Vhdl.Nodes; use Vhdl.Nodes;
 with Vhdl.Std_Package;
 with Vhdl.Canon;
-with Vhdl.Configuration;
 with Vhdl.Annotations;
-with Simul.Elaboration;
-with Simul.Simulation.Main;
-with Simul.Debugger;
-with Simul.Execution;
+
+with Grt.Options;
+with Grt.Types;
+with Grt.Errors;
 
 with Ghdlcomp; use Ghdlcomp;
-
-with Grt.Types;
-with Grt.Options;
-with Grt.Errors;
-with Grt.Stdio;
 with Grtlink;
 
+--  For Elaborate.
+with Elab.Vhdl_Context;
+with Elab.Vhdl_Debug;
+with Elab.Vhdl_Insts;
+with Synth.Flags;
+with Simul.Vhdl_Elab;
+with Simul.Vhdl_Simul;
+
 package body Ghdlsimul is
-
-   --  FIXME: reuse simulation.top_config
-   Top_Conf : Iir;
-
    procedure Compile_Init (Analyze_Only : Boolean) is
    begin
       Common_Compile_Init (Analyze_Only);
@@ -51,78 +56,94 @@ package body Ghdlsimul is
          return;
       end if;
 
+      --  FIXME: add a flag to force unnesting.
+      --  Translation.Flag_Unnest_Subprograms := True;
+
+      --  The design is always analyzed in whole.
+      Flags.Flag_Whole_Analyze := True;
       Vhdl.Canon.Canon_Flag_Add_Labels := True;
-      Vhdl.Canon.Canon_Flag_Sequentials_Stmts := True;
-      Vhdl.Canon.Canon_Flag_Expressions := True;
-      Vhdl.Canon.Canon_Flag_All_Sensitivity := True;
+
+      Vhdl.Annotations.Flag_Synthesis := True;
+
+      --  Do not canon concurrent statements.
+      Vhdl.Canon.Canon_Flag_Concurrent_Stmts := False;
    end Compile_Init;
 
    procedure Compile_Elab
      (Cmd_Name : String; Args : Argument_List; Opt_Arg : out Natural)
    is
-      use Vhdl.Configuration;
+      use Elab.Vhdl_Context;
+      Config : Node;
+      Lib_Unit : Node;
+      Inst : Synth_Instance_Acc;
    begin
-      Common_Compile_Elab (Cmd_Name, Args, Opt_Arg, Top_Conf);
+      Common_Compile_Elab (Cmd_Name, Args, Opt_Arg, Config);
 
-      --  Annotate all units.
-      Vhdl.Annotations.Annotate (Vhdl.Std_Package.Std_Standard_Unit);
-      for I in Design_Units.First .. Design_Units.Last loop
-         Vhdl.Annotations.Annotate (Design_Units.Table (I));
-      end loop;
+      Lib_Unit := Get_Library_Unit (Config);
+      pragma Assert (Get_Kind (Lib_Unit) /= Iir_Kind_Foreign_Module);
+      Inst := Elab.Vhdl_Insts.Elab_Top_Unit (Lib_Unit);
+
+      if Errorout.Nbr_Errors > 0 then
+         raise Errorout.Compilation_Error;
+      end if;
+
+--      if Inst = null then
+--         if Cmd.Expect_Failure then
+--            return;
+--         else
+--            raise Errorout.Compilation_Error;
+--         end if;
+--      end if;
+
+      Simul.Vhdl_Elab.Gather_Processes (Inst);
+      Simul.Vhdl_Elab.Elab_Processes;
+
+      if False then
+         Elab.Vhdl_Debug.Disp_Hierarchy (Inst, True);
+      end if;
    end Compile_Elab;
 
    --  Set options.
+   --  This is a little bit over-kill: from C to Ada and then again to C...
    procedure Set_Run_Options (Args : Argument_List)
    is
+      use Interfaces.C;
       use Grt.Options;
-      use Types;
-      Arg : String_Access;
-      Status : Decode_Option_Status;
-      Argv0 : String_Acc;
+      use Grt.Types;
+
+      function Malloc (Size : size_t) return Argv_Type;
+      pragma Import (C, Malloc);
+
+      function Strdup (Str : String) return Ghdl_C_String;
+      pragma Import (C, Strdup);
+--        is
+--           T : Grt.Types.String_Access;
+--        begin
+--           T := new String'(Str & Ghdllocal.Nul);
+--           return To_Ghdl_C_String (T.all'Address);
+--        end Strdup;
    begin
-      --  Set progname (used for grt error messages)
-      Argv0 := new String'(Ada.Command_Line.Command_Name & ASCII.Nul);
-      Grt.Options.Progname := Grt.Types.To_Ghdl_C_String (Argv0.all'Address);
-      Grt.Errors.Set_Error_Stream (Grt.Stdio.stdout);
-
-      Grtlink.Flag_String := Flags.Flag_String;
-      Grt.Options.Set_Time_Resolution;
-
+      Argc := 1 + Args'Length;
+      Argv := Malloc
+        (size_t (Argc * (Ghdl_C_String'Size / System.Storage_Unit)));
+      Argv (0) := Strdup (Ada.Command_Line.Command_Name & Ghdllocal.Nul);
+      Progname := Argv (0);
       for I in Args'Range loop
-         Arg := Args (I);
-         if Arg.all = "--disp-tree" then
-            Simul.Simulation.Disp_Tree := True;
-         elsif Arg.all = "--expect-failure" then
-            Decode_Option (Arg.all, Status);
-            pragma Assert (Status = Decode_Option_Ok);
-         elsif Arg.all = "--trace-elab" then
-            Simul.Elaboration.Trace_Elaboration := True;
-         elsif Arg.all = "--trace-drivers" then
-            Simul.Elaboration.Trace_Drivers := True;
-         elsif Arg.all = "--trace-simu" then
-            Simul.Simulation.Trace_Simulation := True;
-         elsif Arg.all = "--trace-stmt" then
-            Simul.Execution.Trace_Statements := True;
-         elsif Arg.all = "--stats" then
-            Simul.Simulation.Disp_Stats := True;
-         elsif Arg.all = "-i" then
-            Simul.Debugger.Flag_Debugger := True;
-            Simul.Debugger.Flag_Interractive := True;
-         else
-            Decode_Option (Arg.all, Status);
-            case Status is
-               when Decode_Option_Last =>
-                  exit;
-               when Decode_Option_Stop =>
-                  Grt.Options.Flag_No_Run := True;
-               when Decode_Option_Ok =>
-                  null;
-            end case;
-            --  Ghdlmain.Error ("unknown run options '" & Arg.all & "'");
-            --  raise Option_Error;
-         end if;
+         Argv (1 + I - Args'First) := Strdup (Args (I).all & Ghdllocal.Nul);
       end loop;
    end Set_Run_Options;
+
+   procedure Ghdl_Elaborate;
+   pragma Export (C, Ghdl_Elaborate, "__ghdl_ELABORATE");
+
+   type Elaborate_Acc is access procedure;
+   pragma Convention (C, Elaborate_Acc);
+   Elaborate_Proc : Elaborate_Acc := null;
+
+   procedure Ghdl_Elaborate is
+   begin
+      Elaborate_Proc.all;
+   end Ghdl_Elaborate;
 
    procedure Run
    is
@@ -134,7 +155,25 @@ package body Ghdlsimul is
          return;
       end if;
 
-      Simul.Simulation.Main.Simulation_Entity (Top_Conf);
+      if Time_Resolution = 'a' then
+         Time_Resolution := Vhdl.Std_Package.Get_Minimal_Time_Resolution;
+         if Time_Resolution = '?' then
+            Time_Resolution := 'f';
+         end if;
+      end if;
+      Vhdl.Std_Package.Set_Time_Resolution (Time_Resolution);
+
+      --  Overwrite time resolution in flag string.
+      Flags.Flag_String (5) := Time_Resolution;
+      Grtlink.Flag_String := Flags.Flag_String;
+
+      Elaborate_Proc := Simul.Vhdl_Simul.Runtime_Elaborate'Access;
+      Simul.Vhdl_Simul.Simulation;
+
+      --  Simul uses report_msg.
+      if Errorout.Nbr_Errors > 0 then
+         Grt.Errors.Exit_Status := 1;
+      end if;
 
       Set_Exit_Status (Exit_Status (Grt.Errors.Exit_Status));
    end Run;
@@ -143,42 +182,27 @@ package body Ghdlsimul is
    is
    begin
       if Option = "--debug" or Option = "-g" then
-         Simul.Debugger.Flag_Debugger := True;
+         Synth.Flags.Flag_Debug_Enable := True;
       else
          return False;
       end if;
       return True;
    end Decode_Option;
 
-   procedure Disp_Long_Help is
+   procedure Disp_Help is
    begin
       Simple_IO.Put_Line (" --debug        Run with debugger");
-   end Disp_Long_Help;
+   end Disp_Help;
 
-   function Get_Top_Config return Iir is
-   begin
-      return Top_Conf;
-   end Get_Top_Config;
-
-   procedure Set_Hooks is
+   procedure Register_Commands
+   is
    begin
       Ghdlcomp.Hooks := (Compile_Init'Access,
                          Compile_Elab'Access,
                          Set_Run_Options'Access,
                          Run'Access,
                          Decode_Option'Access,
-                         Disp_Long_Help'Access);
-   end Set_Hooks;
-
-   procedure Register_Commands is
-   begin
-      Set_Hooks;
+                         Disp_Help'Access);
       Ghdlcomp.Register_Commands;
    end Register_Commands;
-
-   procedure Compile_Init is
-   begin
-      Ghdllocal.Compile_Init;
-      Set_Hooks;
-   end Compile_Init;
 end Ghdlsimul;

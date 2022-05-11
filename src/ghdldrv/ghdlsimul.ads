@@ -14,13 +14,6 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with Vhdl.Nodes; use Vhdl.Nodes;
-
 package Ghdlsimul is
    procedure Register_Commands;
-
-   --  Functional interface.
-   procedure Compile_Init;
-
-   function Get_Top_Config return Iir;
 end Ghdlsimul;
