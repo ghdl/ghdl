@@ -83,6 +83,10 @@ package Vhdl.Canon is
    procedure Canon_Extract_Sensitivity_Expression
      (Expr: Iir; Sensitivity_List: Iir_List; Is_Target: Boolean := False);
 
+   --  Extract sensitivity of WAVEFORM.
+   procedure Extract_Waveform_Sensitivity
+     (Waveform : Iir; Sensitivity_List: Iir_List);
+
    --  Likewise, but for all expressions appearing in statements CHAIN.
    procedure Canon_Extract_Sensitivity_Sequential_Statement_Chain
      (Chain : Iir; List : Iir_List);
@@ -90,6 +94,5 @@ package Vhdl.Canon is
    --  Compute the sensitivity list of all-sensitized process PROC.
    --  Used for vhdl 08.
    function Canon_Extract_Sensitivity_Process
-     (Proc : Iir_Sensitized_Process_Statement)
-     return Iir_List;
+     (Proc : Iir_Sensitized_Process_Statement) return Iir_List;
 end Vhdl.Canon;
