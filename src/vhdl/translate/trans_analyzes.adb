@@ -207,13 +207,12 @@ package body Trans_Analyzes is
       end loop;
    end Extract_Drivers_Declaration_Chain;
 
-   function Extract_Drivers (Proc : Iir) return Iir_List
-   is
+   function Extract_Drivers (Proc : Iir) return Iir_List is
    begin
       Driver_List := Create_Iir_List;
       Extract_Drivers_Declaration_Chain (Get_Declaration_Chain (Proc));
       Extract_Drivers_Sequential_Stmt_Chain
-              (Get_Sequential_Statement_Chain (Proc));
+        (Get_Sequential_Statement_Chain (Proc));
 
       return Driver_List;
    end Extract_Drivers;
