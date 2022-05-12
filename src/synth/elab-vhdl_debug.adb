@@ -374,10 +374,7 @@ package body Elab.Vhdl_Debug is
                         Put (Image (Get_Identifier (Sub_Node)));
                         Put (')');
                         New_Line;
-                        Disp_Hierarchy_Statements
-                          (Sub,
-                           Get_Concurrent_Statement_Chain (Sub_Node),
-                           Inc_Indent (Cfg));
+                        Disp_Hierarchy (Sub, Inc_Indent (Cfg));
                      when others =>
                         raise Internal_Error;
                   end case;
