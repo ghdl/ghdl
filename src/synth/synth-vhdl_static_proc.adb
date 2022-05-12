@@ -50,6 +50,8 @@ package body Synth.Vhdl_Static_Proc is
       case Get_Implicit_Definition (Imp) is
          when Iir_Predefined_File_Open =>
             Synth_File_Open (Syn_Inst, Imp, Loc);
+         when Iir_Predefined_File_Open_Status =>
+            Synth_File_Open_Status (Syn_Inst, Imp);
          when Iir_Predefined_File_Close =>
             Synth_File_Close (Syn_Inst, Imp, Loc);
          when Iir_Predefined_Foreign_Untruncated_Text_Read =>

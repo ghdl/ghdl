@@ -36,6 +36,8 @@ package Elab.Vhdl_Files is
 
    procedure Synth_File_Open
      (Syn_Inst : Synth_Instance_Acc; Imp : Node; Loc : Node);
+   procedure Synth_File_Open_Status
+     (Syn_Inst : Synth_Instance_Acc; Imp : Node);
    procedure Synth_File_Close
      (Syn_Inst : Synth_Instance_Acc; Imp : Node; Loc : Node);
 

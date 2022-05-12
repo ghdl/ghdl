@@ -311,6 +311,71 @@ package body Elab.Vhdl_Files is
    end Synth_File_Open;
 
    --  Declaration
+   --  procedure FILE_OPEN (Status : out FILE_OPEN_STATUS;
+   --                       file F : FT;
+   --                       External_Name : String;
+   --                       Open_Kind : File_Open_Kind);
+   procedure Synth_File_Open_Status
+     (Syn_Inst : Synth_Instance_Acc; Imp : Node)
+   is
+      Inters : constant Node := Get_Interface_Declaration_Chain (Imp);
+      Ostatus : constant Valtyp := Get_Value (Syn_Inst, Inters);
+      Param2 : constant Node := Get_Chain (Inters);
+      F : constant File_Index := Get_Value (Syn_Inst, Param2).Val.File;
+      Param3 : constant Node := Get_Chain (Param2);
+      File_Name : constant Valtyp := Get_Value (Syn_Inst, Param3);
+      Param4 : constant Node := Get_Chain (Param3);
+      Open_Kind : constant Valtyp := Get_Value (Syn_Inst, Param4);
+      C_Name : C_File_Name;
+      C_Name_Len : Natural;
+      File_Mode : Ghdl_I32;
+      Status : Op_Status;
+      Vstatus : Ghdl_I32;
+   begin
+      Convert_File_Name (File_Name, C_Name, C_Name_Len, Status);
+      if Status = Op_Ok then
+         File_Mode := Ghdl_I32 (Read_Discrete (Open_Kind));
+         if Get_Text_File_Flag (Get_Type (Param2)) then
+            Ghdl_Text_File_Open
+              (F, File_Mode, To_Ghdl_C_String (C_Name'Address), Status);
+         else
+            Ghdl_File_Open
+              (F, File_Mode, To_Ghdl_C_String (C_Name'Address), Status);
+         end if;
+      end if;
+
+      case Status is
+         when Op_Ok =>
+            Vstatus := Open_Ok;
+         when Op_Status_Error =>
+            Vstatus := Status_Error;
+         when Op_Mode_Error =>
+            Vstatus := Mode_Error;
+         when Op_Name_Error
+           | Op_Signature_Error
+           | Op_Filename_Error =>
+            Vstatus := Name_Error;
+         when Op_End_Of_File
+           | Op_Ungetc_Error
+           | Op_Not_Open
+           | Op_Close_Error
+           | Op_Read_Write_File
+           | Op_Write_Read_File
+           | Op_Read_Error
+           | Op_Write_Error
+           | Op_Bad_Index
+           | Op_Bad_Mode
+           | Op_Not_Closed =>
+            raise File_Execution_Error;
+      end case;
+
+      if Is_Static (Ostatus.Val) then
+         --  Avoid error storm.
+         Write_Discrete (Ostatus, Int64 (Vstatus));
+      end if;
+   end Synth_File_Open_Status;
+
+   --  Declaration
    --  procedure FILE_CLOSE (file F : FT);
    procedure Synth_File_Close
      (Syn_Inst : Synth_Instance_Acc; Imp : Node; Loc : Node)
