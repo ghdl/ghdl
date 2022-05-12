@@ -183,6 +183,8 @@ package body Ghdlsimul is
    begin
       if Option = "--debug" or Option = "-g" then
          Synth.Flags.Flag_Debug_Enable := True;
+      elsif Option = "-t" then
+         Synth.Flags.Flag_Trace_Statements := True;
       else
          return False;
       end if;
