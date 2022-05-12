@@ -2183,6 +2183,9 @@ package body Synth.Vhdl_Expr is
                if Res.Val /= null
                  and then Res.Val.Kind = Value_Signal
                then
+                  if Hook_Signal_Expr /= null then
+                     return Hook_Signal_Expr (Res);
+                  end if;
                   Error_Msg_Synth
                     (+Expr, "cannot use signal value during elaboration");
                   return No_Valtyp;

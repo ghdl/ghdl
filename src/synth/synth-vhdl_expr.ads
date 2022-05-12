@@ -72,6 +72,12 @@ package Synth.Vhdl_Expr is
    procedure Concat_Array
      (Ctxt : Context_Acc; Arr : in out Net_Array; N : out Net);
 
+   --  Hook to convert a signal to a value.
+   --  If not defined, the signal are not allowed (like in expressions during
+   --  elaboration).
+   type Hook_Signal_Expr_Acc is access function (Val : Valtyp) return Valtyp;
+   Hook_Signal_Expr : Hook_Signal_Expr_Acc;
+
    --  Synthesize EXPR.  The expression must be self-constrained.
    --  If EN is not No_Net, the execution is controlled by EN.  This is used
    --  for assertions and checks.
