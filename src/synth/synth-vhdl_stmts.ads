@@ -110,6 +110,45 @@ package Synth.Vhdl_Stmts is
    --  Return the statements chain to be executed.
    function Execute_Static_Case_Statement
      (Inst : Synth_Instance_Acc; Stmt : Node; Sel : Valtyp) return Node;
+
+   type Target_Kind is
+     (
+      --  The target is an object or a static part of it.
+      Target_Simple,
+
+      --  The target is an aggregate.
+      Target_Aggregate,
+
+      --  The assignment is dynamically indexed.
+      Target_Memory
+     );
+
+   type Target_Info (Kind : Target_Kind := Target_Simple) is record
+      --  In all cases, the type of the target is known or computed.
+      Targ_Type : Type_Acc;
+
+      case Kind is
+         when Target_Simple =>
+            --  For a simple target, the destination is known.
+            Obj : Valtyp;
+            Off : Value_Offsets;
+         when Target_Aggregate =>
+            --  For an aggregate: the type is computed and the details will
+            --  be handled at the assignment.
+            Aggr : Node;
+         when Target_Memory =>
+            --  For a memory: the destination is known.
+            Mem_Obj : Valtyp;
+            --  The dynamic offset.
+            Mem_Dyn : Dyn_Name;
+            --  Offset of the data to be accessed from the memory.
+            Mem_Doff : Uns32;
+      end case;
+   end record;
+
+   function Synth_Target (Syn_Inst : Synth_Instance_Acc;
+                          Target : Node) return Target_Info;
+
 private
    --  There are 2 execution mode:
    --  * static: it is like simulation, all the inputs are known, neither
