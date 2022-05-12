@@ -42,7 +42,7 @@ package body Elab.Memtype is
       return To_U8_Ptr (To_Address (Mem)).all;
    end Read_U8;
 
-      procedure Write_I32 (Mem : Memory_Ptr; Val : Ghdl_I32)
+   procedure Write_I32 (Mem : Memory_Ptr; Val : Ghdl_I32)
    is
       V : Ghdl_I32;
       for V'Address use To_Address (Mem);
