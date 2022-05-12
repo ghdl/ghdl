@@ -1259,11 +1259,11 @@ package body Ghdllocal is
             Src : String_Access;
             Dst : String_Access;
             Success : Boolean;
-            pragma Unreferenced (Success);
          begin
             Src := new String'(Image (Dir) & Basename & Get_Object_Suffix.all);
             Dst := new String'(Basename & Get_Object_Suffix.all);
             Copy_File (Src.all, Dst.all, Success, Overwrite, Full);
+            pragma Unreferenced (Success);
             --  Be silent in case of error.
             Free (Src);
             Free (Dst);
