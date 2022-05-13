@@ -224,26 +224,29 @@ fi
 # ==============================================================================
 StructName="OSVVM_osvvm"
 Files=(
-	ResolutionPkg.vhd
 	NamePkg.vhd
-	NameStorePkg.vhd
+	ResolutionPkg.vhd
 	OsvvmGlobalPkg.vhd
 	VendorCovApiPkg.vhd
 	TranscriptPkg.vhd
 	TextUtilPkg.vhd
 	AlertLogPkg.vhd
-	MessagePkg.vhd
 	SortListPkg_int.vhd
+	MessagePkg.vhd
+	NameStorePkg.vhd
 	RandomBasePkg.vhd
 	RandomPkg.vhd
 	RandomProcedurePkg.vhd
-	CoveragePkg.vhd
 	MemoryPkg.vhd
 	ScoreboardGenericPkg.vhd
 	ScoreboardPkg_slv.vhd
 	ScoreboardPkg_int.vhd
 	ResizePkg.vhd
 	TbUtilPkg.vhd
+	MessageListPkg.vhd
+	CoveragePkg.vhd
+	ReportPkg.vhd
+	OsvvmTypesPkg.vhd
 	OsvvmContext.vhd
 )
 CreateLibraryStruct $StructName "osvvm" "." $VHDLVersion "${Files[@]}"
