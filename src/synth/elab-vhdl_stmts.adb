@@ -107,7 +107,7 @@ package body Elab.Vhdl_Stmts is
          Ival := Create_Value_Discrete (Read_Discrete (Val), It_Rng);
 
          Sub_Inst := Elab_Generate_Statement_Body
-           (Syn_Inst, Bod, Config, Iterator, Ival);
+           (Gen_Inst, Bod, Config, Iterator, Ival);
          Set_Generate_Sub_Instance (Gen_Inst, Positive (I), Sub_Inst);
 
          Update_Index (It_Rng.Drange, Val);
