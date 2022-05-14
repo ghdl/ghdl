@@ -9,7 +9,8 @@ GCC backend
 
 * GCC (Gnu Compiler Collection)
 * GNAT (Ada compiler for GCC)
-* GCC source files. Download and untar the sources of version 4.9.x, 5.x, 6.x, 7.x, 8.x, 9.x, 10.x or 11.x (`GCC mirror sites <https://gcc.gnu.org/mirrors.html>`__).
+* GCC source files. Download and untar the sources of version 4.9.x, 5.x, 6.x, 7.x, 8.x, 9.x, 10.x, 11.x or 12.x
+  (`GCC mirror sites <https://gcc.gnu.org/mirrors.html>`__).
 
 .. HINT :: There are some dependencies for building GCC (``gmp``, ``mpfr`` and ``mpc``). If you have not installed them on your system, you can either build them manually or use the ``download_prerequisites`` script provided in the GCC source tree (recommended): ``cd /path/to/gcc/source/dir && ./contrib/download_prerequisites``.
 
