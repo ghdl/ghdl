@@ -292,8 +292,7 @@ copy-sources.gcc: version.ads scripts/gcc/Make-lang.in
 	 6 | 6.*)  	    gcc_ortho_lang=ortho-lang-6.c ;; \
 	 7.*)      	    gcc_ortho_lang=ortho-lang-7.c ;; \
 	 8.*)      	    gcc_ortho_lang=ortho-lang-8.c ;; \
-	 9.* | 10.* | 11.*) gcc_ortho_lang=ortho-lang-9.c ;; \
-	 12.*)              gcc_ortho_lang=ortho-lang-9.c ;; \
+	 9.* | 10.* | 11.* | 12.*) gcc_ortho_lang=ortho-lang-9.c ;; \
 	 *) echo "Mismatch gcc version from $(gcc_src_dir)"; \
 	    echo "Need gcc version 4.9.x, 5.x to 12.x"; \
 	    exit 1 ;; \
