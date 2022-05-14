@@ -615,7 +615,7 @@ package body Vhdl.Errors is
          when Iir_Kind_Case_Generate_Statement =>
             return "case generate statement";
          when Iir_Kind_Generate_Statement_Body =>
-            return "generate statement";
+            return "generate statement body";
 
          when Iir_Kind_Simple_Simultaneous_Statement =>
             return "simple simultaneous statement";
