@@ -161,7 +161,7 @@ jobs:
           - { os: 18, backend: llvm-5.0 }
           - { os: 20, backend: llvm-10 }
           - { os: 18, backend: gcc-8.3.0 }
-          - { os: 20, backend: gcc-9.3.0 }
+          - { os: 20, backend: gcc-12.1.0 }
 
     steps:
 
