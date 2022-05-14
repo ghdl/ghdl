@@ -24,7 +24,6 @@ with Ortho_Code.Debug;
 with Ortho_Code.Disps;
 with Ortho_Code.Flags;
 with Ortho_Code.Dwarf;
-with Ortho_Code.X86; use Ortho_Code.X86;
 with Ortho_Code.X86.Insns;
 with Ortho_Code.X86.Emits;
 with Binary_File;

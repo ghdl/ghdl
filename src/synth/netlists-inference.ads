@@ -16,7 +16,6 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with Netlists; use Netlists;
 with Netlists.Builders; use Netlists.Builders;
 
 package Netlists.Inference is

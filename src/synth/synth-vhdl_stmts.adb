@@ -1933,11 +1933,11 @@ package body Synth.Vhdl_Stmts is
                                            Assoc_Chain : Node)
    is
       Infos : Target_Info_Array (1 .. 0);
-      pragma Unreferenced (Infos);
       Init : Association_Iterator_Init;
    begin
       Init := Association_Iterator_Build (Inter_Chain, Assoc_Chain);
       Synth_Subprogram_Association (Subprg_Inst, Caller_Inst, Init, Infos);
+      pragma Unreferenced (Infos);
    end Synth_Subprogram_Association;
 
    --  Create wires for out and inout interface variables.
