@@ -44,11 +44,14 @@ with Grtlink;
 with Elab.Vhdl_Context;
 with Elab.Vhdl_Debug;
 with Elab.Vhdl_Insts;
+with Elab.Debugger;
 with Synth.Flags;
 with Simul.Vhdl_Elab;
 with Simul.Vhdl_Simul;
 
 package body Ghdlsimul is
+   Flag_Interractive : Boolean := False;
+
    procedure Compile_Init (Analyze_Only : Boolean) is
    begin
       Common_Compile_Init (Analyze_Only);
@@ -98,8 +101,12 @@ package body Ghdlsimul is
       Simul.Vhdl_Elab.Gather_Processes (Inst);
       Simul.Vhdl_Elab.Elab_Processes;
 
+      if Flag_Interractive then
+         Elab.Debugger.Debug_Elab (Inst);
+      end if;
+
       if False then
-         Elab.Vhdl_Debug.Disp_Hierarchy (Inst, True);
+         Elab.Vhdl_Debug.Disp_Hierarchy (Inst, False, True);
       end if;
    end Compile_Elab;
 
@@ -185,6 +192,8 @@ package body Ghdlsimul is
          Synth.Flags.Flag_Debug_Enable := True;
       elsif Option = "-t" then
          Synth.Flags.Flag_Trace_Statements := True;
+      elsif Option = "-i" then
+         Flag_Interractive := True;
       else
          return False;
       end if;

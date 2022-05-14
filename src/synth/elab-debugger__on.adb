@@ -244,6 +244,7 @@ package body Elab.Debugger is
 
    type Menu_Entry (Kind : Menu_Kind) is record
       Name : Cst_String_Acc;
+      Help : Cst_String_Acc;
       Next : Menu_Entry_Acc;
 
       case Kind is
@@ -269,6 +270,11 @@ package body Elab.Debugger is
       return P;
    end Skip_Blanks;
 
+   function Skip_Blanks (S : String; F : Positive) return Positive is
+   begin
+      return Skip_Blanks (S (F .. S'Last));
+   end Skip_Blanks;
+
    --  Return the position of the last character of the word (the last
    --  non-blank character).
    function Get_Word (S : String) return Positive
@@ -279,6 +285,11 @@ package body Elab.Debugger is
          P := P + 1;
       end loop;
       return P - 1;
+   end Get_Word;
+
+   function Get_Word (S : String; F : Positive) return Positive is
+   begin
+      return Get_Word (S (F .. S'Last));
    end Get_Word;
 
    procedure Info_Params_Proc (Line : String)
@@ -480,80 +491,172 @@ package body Elab.Debugger is
       Disp_Current_Lines;
    end List_Proc;
 
+   procedure List_Hierarchy (Line : String)
+   is
+      With_Objs : Boolean;
+      Recurse : Boolean;
+      F, L : Natural;
+   begin
+      With_Objs := False;
+      Recurse := False;
+      F := Line'First;
+      loop
+         F := Skip_Blanks (Line, F);
+         exit when F > Line'Last;
+         L := Get_Word (Line, F);
+         if Line (F .. L) = "-v" then
+            With_Objs := True;
+         elsif Line (F .. L) = "-R" then
+            Recurse := True;
+         else
+            Put_Line ("unknown option: " & Line (F .. L));
+            return;
+         end if;
+         F := L + 1;
+      end loop;
+
+      Disp_Hierarchy (Current_Instance, Recurse, With_Objs);
+   end List_Hierarchy;
+
+   procedure Change_Hierarchy (Line : String)
+   is
+      F : Natural;
+      Res : Synth_Instance_Acc;
+   begin
+      F := Skip_Blanks (Line);
+      if Line (F .. Line'Last) = ".." then
+         Res := Get_Instance_Path_Parent (Current_Instance);
+         if Res = null then
+            Put_Line ("already at top");
+            return;
+         end if;
+      else
+         Res := Get_Sub_Instance_By_Name (Current_Instance,
+                                          Line (F .. Line'Last));
+         if Res = null then
+            Put_Line ("no such sub-instance");
+            return;
+         end if;
+      end if;
+      Current_Instance := Res;
+   end Change_Hierarchy;
+
+   procedure Print_Hierarchy_Path (Line : String)
+   is
+      pragma Unreferenced (Line);
+   begin
+      Disp_Instance_Path (Current_Instance);
+      New_Line;
+   end Print_Hierarchy_Path;
+
    Menu_Info_Instance : aliased Menu_Entry :=
      (Kind => Menu_Command,
       Name => new String'("inst*ance"),
+      Help => new String'("display instance info"),
       Next => null, -- Menu_Info_Tree'Access,
       Proc => Info_Instance_Proc'Access);
 
    Menu_Info_Locals : aliased Menu_Entry :=
      (Kind => Menu_Command,
       Name => new String'("locals"),
+      Help => new String'("display local objects"),
       Next => Menu_Info_Instance'Access,
       Proc => Info_Locals_Proc'Access);
 
    Menu_Info_Params : aliased Menu_Entry :=
      (Kind => Menu_Command,
       Name => new String'("param*eters"),
+      Help => new String'("display parameters"),
       Next => Menu_Info_Locals'Access, -- Menu_Info_Tree'Access,
       Proc => Info_Params_Proc'Access);
 
    Menu_Info : aliased Menu_Entry :=
      (Kind => Menu_Submenu,
       Name => new String'("i*nfo"),
+      Help => null,
       Next => null, -- Menu_Ps'Access,
       First | Last => Menu_Info_Params'Access); --  Menu_Info_Proc'Access);
+
+   Menu_Pwh : aliased Menu_Entry :=
+     (Kind => Menu_Command,
+      Name => new String'("pwh"),
+      Help => new String'("display current hierarchy path"),
+      Next => Menu_Info'Access,
+      Proc => Print_Hierarchy_Path'Access);
+
+   Menu_Ch : aliased Menu_Entry :=
+     (Kind => Menu_Command,
+      Name => new String'("ch"),
+      Help => new String'("change hierarchy path"),
+      Next => Menu_Pwh'Access,
+      Proc => Change_Hierarchy'Access);
+
+   Menu_Lh : aliased Menu_Entry :=
+     (Kind => Menu_Command,
+      Name => new String'("lh"),
+      Help => new String'("list hierarchy"),
+      Next => Menu_Ch'Access,
+      Proc => List_Hierarchy'Access);
 
    Menu_List : aliased Menu_Entry :=
      (Kind => Menu_Command,
       Name => new String'("l*list"),
-      Next => Menu_Info'Access, -- null,
+      Help => new String'("list source around current line"),
+      Next => Menu_Lh'Access,
       Proc => List_Proc'Access);
 
    Menu_Cont : aliased Menu_Entry :=
      (Kind => Menu_Command,
       Name => new String'("c*ont"),
+      Help => new String'("continue simulation"),
       Next => Menu_List'Access, --Menu_Print'Access,
       Proc => Cont_Proc'Access);
 
    Menu_Nstmt : aliased Menu_Entry :=
      (Kind => Menu_Command,
       Name => new String'("ns*tmt"),
+      Help => new String'("execute statement (next statement)"),
       Next => Menu_Cont'Access, -- Menu_Up'Access,
       Proc => Next_Stmt_Proc'Access);
 
    Menu_Fstmt : aliased Menu_Entry :=
      (Kind => Menu_Command,
       Name => new String'("fs*tmt"),
+      Help => new String'("execute until end of subprogram"),
       Next => Menu_Nstmt'Access,
       Proc => Finish_Stmt_Proc'Access);
 
    Menu_Next : aliased Menu_Entry :=
      (Kind => Menu_Command,
       Name => new String'("n*ext"),
+      Help => new String'("execute to next statement"),
       Next => Menu_Fstmt'Access,
       Proc => Next_Proc'Access);
 
    Menu_Step : aliased Menu_Entry :=
      (Kind => Menu_Command,
       Name => new String'("s*tep"),
+      Help => new String'("execute one statement"),
       Next => Menu_Next'Access,
       Proc => Step_Proc'Access);
 
    Menu_Break : aliased Menu_Entry :=
      (Kind => Menu_Command,
       Name => new String'("b*reak"),
+      Help => new String'("set a breakpoint (or list then)"),
       Next => Menu_Step'Access,
       Proc => Break_Proc'Access);
 
    Menu_Help2 : aliased Menu_Entry :=
      (Kind => Menu_Command,
       Name => new String'("?"),
+      Help => new String'("print help"),
       Next => Menu_Break'Access, --  Menu_Help1'Access,
       Proc => Help_Proc'Access);
 
    Menu_Top : aliased Menu_Entry :=
      (Kind => Menu_Submenu,
+      Help => null,
       Name => null,
       Next => null,
       First | Last => Menu_Help2'Access);
@@ -788,6 +891,19 @@ package body Elab.Debugger is
 
       Debug (Reason_Init);
    end Debug_Init;
+
+   procedure Debug_Elab (Top : Synth_Instance_Acc) is
+   begin
+      Current_Instance := Top;
+      Current_Loc := Get_Source_Scope (Top);
+      Flag_Enabled := True;
+
+      --  To avoid warnings.
+      Exec_Statement := Null_Node;
+      Exec_Instance := null;
+
+      Debug (Reason_Init);
+   end Debug_Elab;
 
    procedure Debug_Break (Inst : Synth_Instance_Acc; Stmt : Node) is
    begin

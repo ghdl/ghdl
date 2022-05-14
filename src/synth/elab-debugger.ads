@@ -27,6 +27,10 @@ package Elab.Debugger is
    Flag_Need_Debug : Boolean := False;
 
    procedure Debug_Init (Top : Node);
+
+   --  Debug after elaboration.  TOP is the top-level unit.
+   procedure Debug_Elab (Top : Synth_Instance_Acc);
+
    procedure Debug_Break (Inst : Synth_Instance_Acc; Stmt : Node);
 
    procedure Debug_Leave (Inst : Synth_Instance_Acc);

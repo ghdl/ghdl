@@ -28,5 +28,17 @@ package Elab.Vhdl_Debug is
    procedure Disp_Declaration_Objects
      (Instance : Synth_Instance_Acc; Decl_Chain : Iir; Indent : Natural := 0);
 
-   procedure Disp_Hierarchy (Inst : Synth_Instance_Acc; With_Objs : Boolean);
+   procedure Disp_Hierarchy (Inst : Synth_Instance_Acc;
+                             Recurse : Boolean;
+                             With_Objs : Boolean);
+
+   --  Get sub-instance NAME of INST.  Return null if not found.
+   function Get_Sub_Instance_By_Name (Inst : Synth_Instance_Acc; Name : String)
+                                     return Synth_Instance_Acc;
+
+   function Get_Instance_Path_Parent (Inst : Synth_Instance_Acc)
+                                     return Synth_Instance_Acc;
+
+   --  Disp full path name of INST.
+   procedure Disp_Instance_Path (Inst : Synth_Instance_Acc);
 end Elab.Vhdl_Debug;

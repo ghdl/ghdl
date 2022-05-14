@@ -31,9 +31,11 @@ package body Elab.Vhdl_Debug is
    procedure Disp_Discrete_Value (Val : Int64; Btype : Node) is
    begin
       case Get_Kind (Btype) is
-         when Iir_Kind_Integer_Type_Definition =>
+         when Iir_Kind_Integer_Type_Definition
+           | Iir_Kind_Integer_Subtype_Definition =>
             Put_Int64 (Val);
-         when Iir_Kind_Enumeration_Type_Definition =>
+         when Iir_Kind_Enumeration_Type_Definition
+           | Iir_Kind_Enumeration_Subtype_Definition =>
             declare
                Pos : constant Natural := Natural (Val);
                Enums : constant Node_Flist :=
@@ -200,19 +202,33 @@ package body Elab.Vhdl_Debug is
       end case;
    end Disp_Value;
 
-   procedure Disp_Bound_Type (Bound : Bound_Type) is
+   procedure Disp_Direction (Dir : Direction_Type) is
    begin
-      Put_Int32 (Bound.Left);
-      Put (' ');
-      case Bound.Dir is
+      case Dir is
          when Dir_To =>
             Put ("to");
          when Dir_Downto =>
             Put ("downto");
       end case;
+   end Disp_Direction;
+
+   procedure Disp_Bound_Type (Bound : Bound_Type) is
+   begin
+      Put_Int32 (Bound.Left);
+      Put (' ');
+      Disp_Direction (Bound.Dir);
       Put (' ');
       Put_Int32 (Bound.Right);
    end Disp_Bound_Type;
+
+   procedure Disp_Discrete_Range (Rng : Discrete_Range_Type; Vtype : Node) is
+   begin
+      Disp_Discrete_Value (Rng.Left, Vtype);
+      Put (' ');
+      Disp_Direction (Rng.Dir);
+      Put (' ');
+      Disp_Discrete_Value (Rng.Right, Vtype);
+   end Disp_Discrete_Range;
 
    procedure Disp_Type (Typ : Type_Acc; Vtype : Node)
    is
@@ -313,6 +329,7 @@ package body Elab.Vhdl_Debug is
    package Hierarchy_Pkg is
       type Config_Type is record
          With_Objs : Boolean;
+         Recurse : Boolean;
          Indent : Natural;
       end record;
 
@@ -363,7 +380,7 @@ package body Elab.Vhdl_Debug is
                              (Sub, Get_Port_Chain (Sub_Node),
                               Cfg.Indent);
                         end if;
-                        if Comp_Inst /= null then
+                        if Cfg.Recurse and then Comp_Inst /= null then
                            Disp_Hierarchy (Comp_Inst, Inc_Indent (Cfg));
                         end if;
                      when Iir_Kind_Architecture_Body =>
@@ -374,7 +391,9 @@ package body Elab.Vhdl_Debug is
                         Put (Image (Get_Identifier (Sub_Node)));
                         Put (')');
                         New_Line;
-                        Disp_Hierarchy (Sub, Inc_Indent (Cfg));
+                        if Cfg.Recurse then
+                           Disp_Hierarchy (Sub, Inc_Indent (Cfg));
+                        end if;
                      when others =>
                         raise Internal_Error;
                   end case;
@@ -394,12 +413,15 @@ package body Elab.Vhdl_Debug is
                      Put_Line (" [false]");
                   else
                      Put_Line (" [true]");
-                     Disp_Hierarchy (Sub, Inc_Indent (Cfg));
+                     if Cfg.Recurse then
+                        Disp_Hierarchy (Sub, Inc_Indent (Cfg));
+                     end if;
                   end if;
                end;
             when Iir_Kind_For_Generate_Statement =>
                declare
                   It : constant Node := Get_Parameter_Specification (Stmt);
+                  It_Type : constant Node := Get_Type (It);
                   It_Rng : Type_Acc;
                   It_Len : Natural;
                   Gen_Inst : Synth_Instance_Acc;
@@ -407,16 +429,20 @@ package body Elab.Vhdl_Debug is
                   Put_Indent (Cfg.Indent);
                   Put (Image (Get_Label (Stmt)));
                   Put (": for-generate");
-                  New_Line;
+                  Put (" (");
+                  It_Rng := Get_Subtype_Object (Inst, It_Type);
+                  Disp_Discrete_Range (It_Rng.Drange, It_Type);
+                  Put_Line (")");
 
-                  It_Rng := Get_Subtype_Object (Inst, Get_Type (It));
-                  It_Len := Natural (Get_Range_Length (It_Rng.Drange));
-                  Gen_Inst := Get_Sub_Instance (Inst, Stmt);
-                  for I in 1 .. It_Len loop
-                     Disp_Hierarchy
-                       (Get_Generate_Sub_Instance (Gen_Inst, I),
-                        Inc_Indent (Cfg));
-                  end loop;
+                  if Cfg.Recurse then
+                     It_Len := Natural (Get_Range_Length (It_Rng.Drange));
+                     Gen_Inst := Get_Sub_Instance (Inst, Stmt);
+                     for I in 1 .. It_Len loop
+                        Disp_Hierarchy
+                          (Get_Generate_Sub_Instance (Gen_Inst, I),
+                           Inc_Indent (Cfg));
+                     end loop;
+                  end if;
                end;
             when Iir_Kind_Block_Statement =>
                declare
@@ -426,9 +452,11 @@ package body Elab.Vhdl_Debug is
                   Put_Indent (Cfg.Indent);
                   Put (Image (Get_Label (Stmt)));
                   Put_Line (": block");
-                  Disp_Hierarchy_Statements
-                    (Sub, Get_Concurrent_Statement_Chain (Stmt),
-                     Inc_Indent (Cfg));
+                  if Cfg.Recurse then
+                     Disp_Hierarchy_Statements
+                       (Sub, Get_Concurrent_Statement_Chain (Stmt),
+                        Inc_Indent (Cfg));
+                  end if;
                end;
             when Iir_Kinds_Concurrent_Signal_Assignment
               | Iir_Kind_Concurrent_Assertion_Statement
@@ -500,6 +528,17 @@ package body Elab.Vhdl_Debug is
                Disp_Hierarchy
                  (Get_Component_Instance (Inst), Inc_Indent (Cfg));
             when Iir_Kind_Generate_Statement_Body =>
+               Put_Indent (Cfg.Indent);
+               Put ("generate statement body");
+               --  TODO: disp label or index ?
+               New_Line;
+               Disp_Hierarchy_Statements
+                 (Inst, Get_Concurrent_Statement_Chain (N), Cfg);
+            when Iir_Kind_Block_Statement =>
+               Put_Indent (Cfg.Indent);
+               Put ("block statement ");
+               Put (Image (Get_Identifier (N)));
+               New_Line;
                Disp_Hierarchy_Statements
                  (Inst, Get_Concurrent_Statement_Chain (N), Cfg);
             when others =>
@@ -508,12 +547,15 @@ package body Elab.Vhdl_Debug is
       end Disp_Hierarchy;
    end Hierarchy_Pkg;
 
-   procedure Disp_Hierarchy (Inst : Synth_Instance_Acc; With_Objs : Boolean)
+   procedure Disp_Hierarchy (Inst : Synth_Instance_Acc;
+                             Recurse : Boolean;
+                             With_Objs : Boolean)
    is
       use Hierarchy_Pkg;
       Cfg : Config_Type;
    begin
       Cfg := (With_Objs => With_Objs,
+              Recurse => Recurse,
               Indent => 0);
       Hierarchy_Pkg.Disp_Hierarchy (Inst, Cfg);
    end Disp_Hierarchy;
@@ -705,4 +747,261 @@ package body Elab.Vhdl_Debug is
       return Walk_Units (Cb_Walk_Declarations'Access);
    end Walk_Declarations;
 
+   function Find_Concurrent_Statement_By_Name (Stmts : Node; Id : Name_Id)
+                                              return Node
+   is
+      Stmt : Node;
+   begin
+      Stmt := Stmts;
+      while Stmt /= Null_Node loop
+         if Get_Label (Stmt) = Id then
+            return Stmt;
+         end if;
+         Stmt := Get_Chain (Stmt);
+      end loop;
+      return Null_Node;
+   end Find_Concurrent_Statement_By_Name;
+
+   function Get_Sub_Instance_By_Name (Inst : Synth_Instance_Acc; Name : String)
+                                     return Synth_Instance_Acc
+   is
+      Scope : constant Node := Get_Source_Scope (Inst);
+      Has_Index : Boolean;
+      End_Id : Natural;
+      Index : Int64;
+      Stmt : Node;
+      Id : Name_Id;
+   begin
+      End_Id := Name'Last;
+      Has_Index := Name (End_Id) = ')';
+      Index := 0;
+      if Has_Index then
+         --  There is a loop-generate index.
+         --  Search for '('.
+         for I in Name'Range loop
+            if Name (I) = '(' then
+               End_Id := I - 1;
+               exit;
+            end if;
+         end loop;
+         if End_Id = Name'Last or End_Id = Name'First then
+            return null;
+         end if;
+         --  Decode index (assume int).
+         for P in End_Id + 2 .. Name'Last - 1 loop
+            if Name (P) in '0' .. '9' then
+               Index := Index * 10
+                 + Character'Pos (Name (P)) - Character'Pos ('0');
+            else
+               return null;
+            end if;
+         end loop;
+      end if;
+
+      Id := Get_Identifier_No_Create (Name (Name'First .. End_Id));
+      if Id = Null_Identifier then
+         --  All the identifiers are known, so this name cannot exist.
+         return null;
+      end if;
+      case Get_Kind (Scope) is
+         when Iir_Kind_Architecture_Body
+           | Iir_Kind_Generate_Statement_Body
+           | Iir_Kind_Block_Statement =>
+            Stmt := Find_Concurrent_Statement_By_Name
+              (Get_Concurrent_Statement_Chain (Scope), Id);
+         when others =>
+            Vhdl.Errors.Error_Kind ("get_sub_instance(1)", Scope);
+      end case;
+
+      if Stmt = Null_Node then
+         return null;
+      end if;
+
+      case Get_Kind (Stmt) is
+         when Iir_Kind_Component_Instantiation_Statement =>
+            if Has_Index then
+               return null;
+            end if;
+            declare
+               Sub_Inst : constant Synth_Instance_Acc :=
+                 Get_Sub_Instance (Inst, Stmt);
+               Sub_Node : constant Node := Get_Source_Scope (Sub_Inst);
+            begin
+               case Get_Kind (Sub_Node) is
+                  when Iir_Kind_Component_Declaration =>
+                     return Get_Component_Instance (Sub_Inst);
+                  when Iir_Kind_Architecture_Body =>
+                     return Sub_Inst;
+                  when others =>
+                     raise Internal_Error;
+               end case;
+            end;
+         when Iir_Kind_If_Generate_Statement
+           | Iir_Kind_Block_Statement =>
+            if Has_Index then
+               return null;
+            end if;
+            return Get_Sub_Instance (Inst, Stmt);
+         when Iir_Kind_For_Generate_Statement =>
+            if not Has_Index then
+               return null;
+            end if;
+            declare
+               Iterator : constant Node :=
+                 Get_Parameter_Specification (Stmt);
+               It_Rng : constant Type_Acc :=
+                 Get_Subtype_Object (Inst, Get_Type (Iterator));
+               Gen_Inst : constant Synth_Instance_Acc :=
+                 Get_Sub_Instance (Inst, Stmt);
+               Off : Int64;
+            begin
+               case It_Rng.Drange.Dir is
+                  when Dir_To =>
+                     if Index < It_Rng.Drange.Left
+                       or else Index > It_Rng.Drange.Right
+                     then
+                        return null;
+                     end if;
+                     Off := Index - It_Rng.Drange.Left + 1;
+                  when Dir_Downto =>
+                     if Index > It_Rng.Drange.Left
+                       or else Index < It_Rng.Drange.Right
+                     then
+                        return null;
+                     end if;
+                     Off := Index - It_Rng.Drange.Right + 1;
+               end case;
+               return Get_Generate_Sub_Instance (Gen_Inst, Positive (Off));
+            end;
+         when Iir_Kinds_Concurrent_Signal_Assignment
+           | Iir_Kind_Concurrent_Assertion_Statement
+           | Iir_Kind_Concurrent_Procedure_Call_Statement =>
+            return null;
+         when others =>
+            Vhdl.Errors.Error_Kind ("get_sub_instance(2)", Stmt);
+      end case;
+   end Get_Sub_Instance_By_Name;
+
+   function Find_Concurrent_Statement_By_Instance
+     (Inst : Synth_Instance_Acc;
+      Stmts : Node;
+      Sub_Inst : Synth_Instance_Acc) return Node
+   is
+      Stmt : Node;
+   begin
+      Stmt := Stmts;
+      while Stmt /= Null_Node loop
+         case Get_Kind (Stmt) is
+            when Iir_Kind_Component_Instantiation_Statement
+              | Iir_Kind_If_Generate_Statement
+              | Iir_Kind_Block_Statement =>
+               declare
+                  Sub : constant Synth_Instance_Acc :=
+                    Get_Sub_Instance (Inst, Stmt);
+               begin
+                  if Sub = Sub_Inst then
+                     return Stmt;
+                  end if;
+               end;
+            when Iir_Kind_For_Generate_Statement =>
+               declare
+                  Sub : constant Synth_Instance_Acc :=
+                    Get_Sub_Instance (Inst, Stmt);
+               begin
+                  if Sub = Sub_Inst then -- Get_Instance_Parent (Sub_Inst) then
+                     return Stmt;
+                  end if;
+               end;
+            when others =>
+               null;
+         end case;
+         Stmt := Get_Chain (Stmt);
+      end loop;
+      raise Internal_Error;
+   end Find_Concurrent_Statement_By_Instance;
+
+   function Skip_Instance_Parent (Inst : Synth_Instance_Acc)
+                                 return Synth_Instance_Acc
+   is
+      Parent : constant Synth_Instance_Acc := Get_Instance_Parent (Inst);
+      Parent_Scope : constant Node := Get_Source_Scope (Parent);
+   begin
+      if Parent_Scope = Null_Node then
+         --  The root.
+         return null;
+      end if;
+
+      case Get_Kind (Parent_Scope) is
+         when Iir_Kind_Architecture_Body
+           | Iir_Kind_Block_Statement =>
+            return Inst;
+         when Iir_Kind_Component_Declaration =>
+            return Parent;
+         when Iir_Kind_For_Generate_Statement =>
+            return Parent;
+         when Iir_Kind_Generate_Statement_Body =>
+            --  For an if-generate, the parent is really the parent.
+            return Inst;
+         when others =>
+            Vhdl.Errors.Error_Kind ("skip_instance_parent", Parent_Scope);
+      end case;
+   end Skip_Instance_Parent;
+
+   function Get_Instance_Path_Parent (Inst : Synth_Instance_Acc)
+                                     return Synth_Instance_Acc
+   is
+      Pre_Parent : constant Synth_Instance_Acc := Skip_Instance_Parent (Inst);
+   begin
+      if Pre_Parent = null then
+         --  The root.
+         return null;
+      end if;
+      return Get_Instance_Parent (Pre_Parent);
+   end Get_Instance_Path_Parent;
+
+   procedure Disp_Instance_Path_1 (Inst : Synth_Instance_Acc)
+   is
+      Pre_Parent_Inst : constant Synth_Instance_Acc :=
+        Skip_Instance_Parent (Inst);
+      Parent_Inst : Synth_Instance_Acc;
+      Parent_Scope : Node;
+      Stmt : Node;
+   begin
+      if Pre_Parent_Inst = null then
+         return;
+      end if;
+
+      Parent_Inst := Get_Instance_Parent (Pre_Parent_Inst);
+      Parent_Scope := Get_Source_Scope (Parent_Inst);
+      Disp_Instance_Path (Parent_Inst);
+      Put ('/');
+
+      Stmt := Find_Concurrent_Statement_By_Instance
+        (Parent_Inst, Get_Concurrent_Statement_Chain (Parent_Scope),
+         Pre_Parent_Inst);
+      Put (Image (Get_Identifier (Stmt)));
+      if Get_Kind (Stmt) = Iir_Kind_For_Generate_Statement then
+         declare
+            It : constant Node := Get_Parameter_Specification (Stmt);
+            It_Type : constant Node := Get_Type (It);
+            Val : constant Valtyp := Get_Value (Inst, It);
+         begin
+            Put ("(");
+            Disp_Discrete_Value (Read_Discrete (Val), It_Type);
+            Put (")");
+         end;
+      end if;
+   end Disp_Instance_Path_1;
+
+   procedure Disp_Instance_Path (Inst : Synth_Instance_Acc)
+   is
+      Parent : constant Synth_Instance_Acc := Get_Instance_Parent (Inst);
+   begin
+      if Parent = null then
+         --  The root.
+         Put ('/');
+      else
+         Disp_Instance_Path_1 (Inst);
+      end if;
+   end Disp_Instance_Path;
 end Elab.Vhdl_Debug;

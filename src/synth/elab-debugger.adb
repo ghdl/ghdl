@@ -24,6 +24,11 @@ package body Elab.Debugger is
       null;
    end Debug_Init;
 
+   procedure Debug_Elab (Top : Synth_Instance_Acc) is
+   begin
+      null;
+   end Debug_Elab;
+
    procedure Debug_Break (Inst : Synth_Instance_Acc; Stmt : Node) is
    begin
       raise Internal_Error;
