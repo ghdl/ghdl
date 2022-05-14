@@ -1006,7 +1006,6 @@ package body Trans.Chap2 is
       Info   : constant Ortho_Info_Acc := Get_Info (Spec);
       Final  : Boolean;
       Constr : O_Assoc_List;
-      pragma Unreferenced (Final);
    begin
       if not Is_Nested then
          Start_Subprogram_Body (Info.Package_Elab_Spec_Subprg);
@@ -1039,6 +1038,7 @@ package body Trans.Chap2 is
             (Info.Package_Spec_Scope'Access, Info.Package_Spec_Scope));
       end if;
       Chap4.Elab_Declaration_Chain (Spec, Final);
+      pragma Unreferenced (Final);
 
       if not Is_Nested then
          Close_Temp;

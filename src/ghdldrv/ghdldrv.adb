@@ -1192,7 +1192,6 @@ package body Ghdldrv is
    procedure Perform_Action (Cmd : in out Command_Elab; Args : Argument_List)
    is
       Success : Boolean;
-      pragma Unreferenced (Success);
    begin
       Set_Elab_Units (Cmd, "-e", Args);
       Setup_Compiler (Cmd, False);
@@ -1202,6 +1201,7 @@ package body Ghdldrv is
          Link (Cmd, Add_Std => True, Disp_Only => False);
       end if;
       Delete_File (Filelist_Name.all, Success);
+      pragma Unreferenced (Success);
    end Perform_Action;
 
    --  Command Run.
