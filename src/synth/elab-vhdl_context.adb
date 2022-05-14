@@ -190,6 +190,12 @@ package body Elab.Vhdl_Context is
       return Inst.Source_Scope;
    end Get_Source_Scope;
 
+   function Get_Instance_Parent (Inst : Synth_Instance_Acc)
+                                return Synth_Instance_Acc is
+   begin
+      return Inst.Up_Block;
+   end Get_Instance_Parent;
+
    function Get_Instance_Const (Inst : Synth_Instance_Acc) return Boolean is
    begin
       return Inst.Is_Const;

@@ -79,6 +79,10 @@ package Elab.Vhdl_Context is
    --  Get the corresponding source for the scope of the instance.
    function Get_Source_Scope (Inst : Synth_Instance_Acc) return Node;
 
+   --  Get parent_instance.
+   function Get_Instance_Parent (Inst : Synth_Instance_Acc)
+                                return Synth_Instance_Acc;
+
    procedure Set_Instance_Config (Inst : Synth_Instance_Acc; Config : Node);
    function Get_Instance_Config (Inst : Synth_Instance_Acc) return Node;
 
