@@ -16,8 +16,6 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with Netlists;
-
 package Netlists.Disp_Dot is
    procedure Disp_Dot_Top_Module (M : Module);
 end Netlists.Disp_Dot;

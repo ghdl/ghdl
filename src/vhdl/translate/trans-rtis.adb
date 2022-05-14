@@ -21,7 +21,7 @@ with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Configuration;
 with Libraries;
 with Trans.Chap7;
-with Trans; use Trans.Helpers;
+use Trans.Helpers;
 with Trans.Helpers2; use Trans.Helpers2;
 
 package body Trans.Rtis is
