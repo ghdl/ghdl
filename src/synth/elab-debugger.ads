@@ -38,4 +38,12 @@ package Elab.Debugger is
    --  To be called in case of execution error, like:
    --  * index out of bounds.
    procedure Debug_Error (Inst : Synth_Instance_Acc; Expr : Node);
+
+   type Menu_Procedure is access procedure (Line : String);
+   type Cst_String_Acc is access constant String;
+
+   --  Append a command to the main menu.
+   procedure Append_Menu_Command (Name : Cst_String_Acc;
+                                  Help : Cst_String_Acc;
+                                  Proc : Menu_Procedure);
 end Elab.Debugger;

@@ -228,8 +228,6 @@ package body Elab.Debugger is
    --  to the prompt.
    Command_Error : exception;
 
-   type Menu_Procedure is access procedure (Line : String);
-
    --  If set (by commands), call this procedure on empty line to repeat
    --  last command.
    Cmd_Repeat : Menu_Procedure;
@@ -237,8 +235,6 @@ package body Elab.Debugger is
    type Menu_Kind is (Menu_Command, Menu_Submenu);
    type Menu_Entry (Kind : Menu_Kind);
    type Menu_Entry_Acc is access all Menu_Entry;
-
-   type Cst_String_Acc is access constant String;
 
    type Menu_Entry (Kind : Menu_Kind) is record
       Name : Cst_String_Acc;
@@ -249,7 +245,7 @@ package body Elab.Debugger is
          when Menu_Command =>
             Proc : Menu_Procedure;
          when Menu_Submenu =>
-            First, Last : Menu_Entry_Acc := null;
+            First : Menu_Entry_Acc := null;
       end case;
    end record;
 
@@ -573,7 +569,7 @@ package body Elab.Debugger is
       Name => new String'("i*nfo"),
       Help => null,
       Next => null, -- Menu_Ps'Access,
-      First | Last => Menu_Info_Params'Access); --  Menu_Info_Proc'Access);
+      First => Menu_Info_Params'Access); --  Menu_Info_Proc'Access);
 
    Menu_Pwh : aliased Menu_Entry :=
      (Kind => Menu_Command,
@@ -657,8 +653,26 @@ package body Elab.Debugger is
       Help => null,
       Name => null,
       Next => null,
-      First | Last => Menu_Help2'Access);
+      First => Menu_Help2'Access);
 
+   procedure Append_Menu_Command (Name : Cst_String_Acc;
+                                  Help : Cst_String_Acc;
+                                  Proc : Menu_Procedure)
+   is
+      M, L : Menu_Entry_Acc;
+   begin
+      M := new Menu_Entry'(Kind => Menu_Command,
+                           Name => Name,
+                           Help => Help,
+                           Next => null,
+                           Proc => Proc);
+
+      L := Menu_Top.First;
+      while L.Next /= null loop
+         L := L.Next;
+      end loop;
+      L.Next := M;
+   end Append_Menu_Command;
 
    function Find_Menu (Menu : Menu_Entry_Acc; Cmd : String)
                       return Menu_Entry_Acc
