@@ -959,7 +959,7 @@ package body Elab.Vhdl_Debug is
       return Get_Instance_Parent (Pre_Parent);
    end Get_Instance_Path_Parent;
 
-   procedure Disp_Instance_Path_1 (Inst : Synth_Instance_Acc)
+   procedure Disp_Instance_Path (Inst : Synth_Instance_Acc)
    is
       Pre_Parent_Inst : constant Synth_Instance_Acc :=
         Skip_Instance_Parent (Inst);
@@ -968,6 +968,10 @@ package body Elab.Vhdl_Debug is
       Stmt : Node;
    begin
       if Pre_Parent_Inst = null then
+         --  The top unit
+         Put ('/');
+         Parent_Scope := Get_Source_Scope (Inst);
+         Put (Image (Get_Identifier (Get_Entity (Parent_Scope))));
          return;
       end if;
 
@@ -990,18 +994,6 @@ package body Elab.Vhdl_Debug is
             Disp_Discrete_Value (Read_Discrete (Val), It_Type);
             Put (")");
          end;
-      end if;
-   end Disp_Instance_Path_1;
-
-   procedure Disp_Instance_Path (Inst : Synth_Instance_Acc)
-   is
-      Parent : constant Synth_Instance_Acc := Get_Instance_Parent (Inst);
-   begin
-      if Parent = null then
-         --  The root.
-         Put ('/');
-      else
-         Disp_Instance_Path_1 (Inst);
       end if;
    end Disp_Instance_Path;
 end Elab.Vhdl_Debug;
