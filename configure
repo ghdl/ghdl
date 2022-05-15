@@ -47,6 +47,7 @@ enable_checks=true
 enable_gplcompat=unknown
 enable_libghdl=true
 enable_synth=true
+with_readline=None
 default_pic=false
 EXEEXT=
 SOEXT=.so
@@ -111,6 +112,7 @@ for opt do
     --with-llvm-config)     llvm_config="llvm-config"; backend=llvm;;
     --with-llvm-config=*)   llvm_config="$optarg";     backend=llvm;;
     --with-backtrace-lib=*) backtrace_lib="$optarg";;
+    --with-readline)        with_readline="Gnu";;
     --enable-werror)        enable_werror=true;;
     --disable-werror)       enable_werror=false;;
     --enable-checks)        enable_checks=true;;
@@ -437,5 +439,10 @@ else
 fi
 echo "with $pkg_synth;" > ghdlsynth_maybe.ads
 echo "package Ghdlsynth_Maybe renames $pkg_synth;" >> ghdlsynth_maybe.ads
+
+# Generate grt-readline.ads
+echo "Generate grt-readline.ads"
+echo "with Grt.Readline_${with_readline};" > grt-readline.ads
+echo "package Grt.Readline renames Grt.Readline_${with_readline};" >> grt-readline.ads
 
 exit 0
