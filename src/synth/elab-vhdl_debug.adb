@@ -21,6 +21,7 @@ with Simple_IO; use Simple_IO;
 with Utils_IO; use Utils_IO;
 with Libraries;
 
+with Elab.Debugger;
 with Elab.Memtype; use Elab.Memtype;
 with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 
@@ -768,7 +769,9 @@ package body Elab.Vhdl_Debug is
       Scope : constant Node := Get_Source_Scope (Inst);
       Has_Index : Boolean;
       End_Id : Natural;
+      Index32 : Uns32;
       Index : Int64;
+      Valid : Boolean;
       Stmt : Node;
       Id : Name_Id;
    begin
@@ -788,14 +791,12 @@ package body Elab.Vhdl_Debug is
             return null;
          end if;
          --  Decode index (assume int).
-         for P in End_Id + 2 .. Name'Last - 1 loop
-            if Name (P) in '0' .. '9' then
-               Index := Index * 10
-                 + Character'Pos (Name (P)) - Character'Pos ('0');
-            else
-               return null;
-            end if;
-         end loop;
+         Elab.Debugger.To_Num
+           (Name (End_Id + 2 .. Name'Last - 1), Index32, Valid);
+         Index := Int64 (Index32);
+         if not Valid then
+            return null;
+         end if;
       end if;
 
       Id := Get_Identifier_No_Create (Name (Name'First .. End_Id));
@@ -894,21 +895,13 @@ package body Elab.Vhdl_Debug is
          case Get_Kind (Stmt) is
             when Iir_Kind_Component_Instantiation_Statement
               | Iir_Kind_If_Generate_Statement
+              | Iir_Kind_For_Generate_Statement
               | Iir_Kind_Block_Statement =>
                declare
                   Sub : constant Synth_Instance_Acc :=
                     Get_Sub_Instance (Inst, Stmt);
                begin
                   if Sub = Sub_Inst then
-                     return Stmt;
-                  end if;
-               end;
-            when Iir_Kind_For_Generate_Statement =>
-               declare
-                  Sub : constant Synth_Instance_Acc :=
-                    Get_Sub_Instance (Inst, Stmt);
-               begin
-                  if Sub = Sub_Inst then -- Get_Instance_Parent (Sub_Inst) then
                      return Stmt;
                   end if;
                end;
@@ -965,6 +958,7 @@ package body Elab.Vhdl_Debug is
         Skip_Instance_Parent (Inst);
       Parent_Inst : Synth_Instance_Acc;
       Parent_Scope : Node;
+      Scope : Node;
       Stmt : Node;
    begin
       if Pre_Parent_Inst = null then
@@ -980,9 +974,14 @@ package body Elab.Vhdl_Debug is
       Disp_Instance_Path (Parent_Inst);
       Put ('/');
 
-      Stmt := Find_Concurrent_Statement_By_Instance
-        (Parent_Inst, Get_Concurrent_Statement_Chain (Parent_Scope),
-         Pre_Parent_Inst);
+      Scope := Get_Source_Scope (Inst);
+      if Get_Kind (Scope) in Iir_Kinds_Process_Statement then
+         Stmt := Scope;
+      else
+         Stmt := Find_Concurrent_Statement_By_Instance
+           (Parent_Inst, Get_Concurrent_Statement_Chain (Parent_Scope),
+            Pre_Parent_Inst);
+      end if;
       Put (Image (Get_Identifier (Stmt)));
       if Get_Kind (Stmt) = Iir_Kind_For_Generate_Statement then
          declare
