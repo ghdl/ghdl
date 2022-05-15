@@ -41,7 +41,7 @@ from pyGHDL.dom import DOMException
 
 from pyGHDL.libghdl import LibGHDLException
 from pyTooling.Decorators import export
-from pyTooling.MetaClasses import Singleton
+# from pyTooling.MetaClasses import Singleton
 from pyTooling.TerminalUI import LineTerminal, Severity
 from pyAttributes import Attribute
 from pyAttributes.ArgParseAttributes import (
@@ -120,7 +120,7 @@ class Application(LineTerminal, ArgParseMixin):
 
         # Initialize the Terminal class
         # --------------------------------------------------------------------------
-        Singleton.Register(LineTerminal, self)
+        # Singleton.Register(LineTerminal, self)
 
         # Initialize DOM with an empty design
         # --------------------------------------------------------------------------
