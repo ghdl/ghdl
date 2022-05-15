@@ -111,7 +111,7 @@ package Elab.Vhdl_Context is
                             Init : Value_Acc);
 
    --  Number of created signals.
-   function Get_Nbr_Signal return Signal_Index;
+   function Get_Nbr_Signal return Signal_Index_Type;
 
    --  Create a sub instance: either a direct entity instantiation, or
    --  a component instantiation.

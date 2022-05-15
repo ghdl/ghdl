@@ -67,7 +67,7 @@ package Elab.Vhdl_Values is
 
    subtype File_Index is Grt.Files_Operations.Ghdl_File_Index;
 
-   subtype Signal_Index is Uns32;
+   subtype Signal_Index_Type is Uns32;
 
    type Value_Type (Kind : Value_Kind) is record
       case Kind is
@@ -75,7 +75,7 @@ package Elab.Vhdl_Values is
            | Value_Wire =>
             N : Uns32;
          when Value_Signal =>
-            S : Signal_Index;
+            S : Signal_Index_Type;
             Init : Value_Acc;
          when Value_Memory =>
             Mem : Memory_Ptr;

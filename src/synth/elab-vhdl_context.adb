@@ -25,9 +25,9 @@ with Vhdl.Utils;
 
 package body Elab.Vhdl_Context is
 
-   Sig_Nbr : Signal_Index := 0;
+   Sig_Nbr : Signal_Index_Type := 0;
 
-   function Get_Nbr_Signal return Signal_Index is
+   function Get_Nbr_Signal return Signal_Index_Type is
    begin
       return Sig_Nbr;
    end Get_Nbr_Signal;
