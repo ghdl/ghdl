@@ -77,8 +77,11 @@ package Grt.Types is
    function strlen (Str : Ghdl_C_String) return Natural;
    pragma Import (C, strlen);
 
-   function Strcmp (L , R : Ghdl_C_String) return Integer;
-   pragma Import (C, Strcmp);
+   function strcmp (L , R : Ghdl_C_String) return Integer;
+   pragma Import (C, strcmp);
+
+   procedure free (Buf : Ghdl_C_String);
+   pragma Import (C, free);
 
    function To_Ghdl_C_String is new Ada.Unchecked_Conversion
      (Source => Address, Target => Ghdl_C_String);

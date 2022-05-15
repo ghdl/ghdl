@@ -365,7 +365,7 @@ package body Grt.Waves is
       if L = R then
          return 0;
       end if;
-      return Strcmp (Ls, Rs);
+      return strcmp (Ls, Rs);
    end Str_Compare;
 
    procedure Disp_Str_Avl (N : AVL_Nid) is
@@ -442,7 +442,7 @@ package body Grt.Waves is
       H := Str_Table.Last;
       loop
          M := (L + H) / 2;
-         Diff := Strcmp (Str, Str_Table.Table (M));
+         Diff := strcmp (Str, Str_Table.Table (M));
          if Diff = 0 then
             return M;
          elsif Diff < 0 then

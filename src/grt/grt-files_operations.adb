@@ -293,13 +293,13 @@ package body Grt.Files_Operations is
             return;
       end case;
 
-      if Strcmp (Name, To_Ghdl_C_String (Std_Input_Name'Address)) = 0 then
+      if strcmp (Name, To_Ghdl_C_String (Std_Input_Name'Address)) = 0 then
          if Mode /= Read_Mode then
             Status := Op_Mode_Error;
             return;
          end if;
          F := stdin;
-      elsif Strcmp (Name, To_Ghdl_C_String (Std_Output_Name'Address)) = 0 then
+      elsif strcmp (Name, To_Ghdl_C_String (Std_Output_Name'Address)) = 0 then
          if Mode /= Write_Mode then
             Status := Op_Mode_Error;
             return;

@@ -16,8 +16,6 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with System;
-
 with Types; use Types;
 with Files_Map;
 with Tables;
@@ -764,15 +762,15 @@ package body Elab.Debugger is
    is
       use Grt.Readline;
       Raw_Line : Ghdl_C_String;
-      Prompt : System.Address;
+      Prompt : Ghdl_C_String;
    begin
-      Prompt := Prompt_Debug'Address;
+      Prompt := To_Ghdl_C_String (Prompt_Debug'Address);
 
       case Reason is
          when Reason_Init =>
-            Prompt := Prompt_Init'Address;
+            Prompt := To_Ghdl_C_String (Prompt_Init'Address);
          when Reason_Error =>
-            Prompt := Prompt_Error'Address;
+            Prompt := To_Ghdl_C_String (Prompt_Error'Address);
          when Reason_Break =>
             case Exec_State is
                when Exec_Run =>
