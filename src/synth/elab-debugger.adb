@@ -16,7 +16,6 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with Types; use Types;
 with Files_Map;
 with Tables;
 with Simple_IO; use Simple_IO;
@@ -285,6 +284,20 @@ package body Elab.Debugger is
    begin
       return Get_Word (S (F .. S'Last));
    end Get_Word;
+
+   procedure To_Num (Str : String; Res : out Uns32; Valid : out Boolean) is
+   begin
+      Res := 0;
+      Valid := True;
+      for P in Str'Range loop
+         if Str (P) in '0' .. '9' then
+            Res := Res * 10 + Character'Pos (Str (P)) - Character'Pos ('0');
+         else
+            Valid := False;
+            return;
+         end if;
+      end loop;
+   end To_Num;
 
    procedure Info_Params_Proc (Line : String)
    is
@@ -655,9 +668,11 @@ package body Elab.Debugger is
       Next => null,
       First => Menu_Help2'Access);
 
-   procedure Append_Menu_Command (Name : Cst_String_Acc;
-                                  Help : Cst_String_Acc;
-                                  Proc : Menu_Procedure)
+   --  Append command to MENU.
+   procedure Append_Menu (Menu : Menu_Entry;
+                          Name : Cst_String_Acc;
+                          Help : Cst_String_Acc;
+                          Proc : Menu_Procedure)
    is
       M, L : Menu_Entry_Acc;
    begin
@@ -667,12 +682,26 @@ package body Elab.Debugger is
                            Next => null,
                            Proc => Proc);
 
-      L := Menu_Top.First;
+      L := Menu.First;
       while L.Next /= null loop
          L := L.Next;
       end loop;
       L.Next := M;
+   end Append_Menu;
+
+   procedure Append_Menu_Command (Name : Cst_String_Acc;
+                                  Help : Cst_String_Acc;
+                                  Proc : Menu_Procedure) is
+   begin
+      Append_Menu (Menu_Top, Name, Help, Proc);
    end Append_Menu_Command;
+
+   procedure Append_Info_Command (Name : Cst_String_Acc;
+                                  Help : Cst_String_Acc;
+                                  Proc : Menu_Procedure) is
+   begin
+      Append_Menu (Menu_Info, Name, Help, Proc);
+   end Append_Info_Command;
 
    function Find_Menu (Menu : Menu_Entry_Acc; Cmd : String)
                       return Menu_Entry_Acc

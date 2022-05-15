@@ -16,6 +16,8 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
+with Types; use Types;
+
 with Vhdl.Nodes; use Vhdl.Nodes;
 
 with Elab.Vhdl_Context; use Elab.Vhdl_Context;
@@ -46,4 +48,18 @@ package Elab.Debugger is
    procedure Append_Menu_Command (Name : Cst_String_Acc;
                                   Help : Cst_String_Acc;
                                   Proc : Menu_Procedure);
+
+   --  Append a command to the info menu.
+   procedure Append_Info_Command (Name : Cst_String_Acc;
+                                  Help : Cst_String_Acc;
+                                  Proc : Menu_Procedure);
+
+
+   --  Utilities for menu commands.
+
+   --  Return the position of the first non-blank character.
+   function Skip_Blanks (S : String) return Positive;
+
+   --  Convert STR to number RES, set VALID to true iff the conversion is ok.
+   procedure To_Num (Str : String; Res : out Uns32; Valid : out Boolean);
 end Elab.Debugger;
