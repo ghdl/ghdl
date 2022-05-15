@@ -32,16 +32,18 @@ package body Elab.Vhdl_Values.Debug is
       end case;
    end Put_Dir;
 
-   procedure Debug_Bound (Bnd : Bound_Type) is
+   procedure Debug_Bound (Bnd : Bound_Type; Verbose : Boolean) is
    begin
       Put_Int32 (Bnd.Left);
       Put (' ');
       Put_Dir (Bnd.Dir);
       Put (' ');
       Put_Int32 (Bnd.Right);
-      Put (" [l=");
-      Put_Uns32 (Bnd.Len);
-      Put (']');
+      if Verbose then
+         Put (" [l=");
+         Put_Uns32 (Bnd.Len);
+         Put (']');
+      end if;
    end Debug_Bound;
 
    procedure Debug_Typ1 (T : Type_Acc) is
@@ -52,7 +54,7 @@ package body Elab.Vhdl_Values.Debug is
             Put ("bit/logic");
          when Type_Vector =>
             Put ("vector (");
-            Debug_Bound (T.Vbound);
+            Debug_Bound (T.Vbound, True);
             Put (") of [");
             Debug_Typ1 (T.Vec_El);
             Put ("]");
@@ -62,7 +64,7 @@ package body Elab.Vhdl_Values.Debug is
                if I > 1 then
                   Put (", ");
                end if;
-               Debug_Bound (T.Abounds.D (I));
+               Debug_Bound (T.Abounds.D (I), True);
             end loop;
             Put (") of ");
             Debug_Typ1 (T.Arr_El);
@@ -113,6 +115,51 @@ package body Elab.Vhdl_Values.Debug is
       New_Line;
    end Debug_Typ;
 
+   procedure Debug_Type_Short (T : Type_Acc) is
+   begin
+      case T.Kind is
+         when Type_Bit =>
+            Put ("bit");
+         when Type_Logic =>
+            Put ("logic");
+         when Type_Vector =>
+            Debug_Type_Short (T.Vec_El);
+            Put ("_vec(");
+            Debug_Bound (T.Vbound, False);
+            Put (")");
+         when Type_Array =>
+            Put ("arr (");
+            for I in 1 .. T.Abounds.Ndim loop
+               if I > 1 then
+                  Put (", ");
+               end if;
+               Debug_Bound (T.Abounds.D (I), False);
+            end loop;
+            Put (")");
+         when Type_Record =>
+            Put ("rec: (");
+            Put (")");
+         when Type_Unbounded_Record =>
+            Put ("unbounded record");
+         when Type_Discrete =>
+            Put ("discrete");
+         when Type_Access =>
+            Put ("access");
+         when Type_File =>
+            Put ("file");
+         when Type_Float =>
+            Put ("float");
+         when Type_Slice =>
+            Put ("slice");
+         when Type_Unbounded_Vector =>
+            Put ("unbounded vector");
+         when Type_Unbounded_Array =>
+            Put ("unbounded array");
+         when Type_Protected =>
+            Put ("protected");
+      end case;
+   end Debug_Type_Short;
+
    procedure Debug_Memtyp (M : Memtyp) is
    begin
       case M.Typ.Kind is
@@ -121,7 +168,7 @@ package body Elab.Vhdl_Values.Debug is
             Put ("bit/logic");
          when Type_Vector =>
             Put ("vector (");
-            Debug_Bound (M.Typ.Vbound);
+            Debug_Bound (M.Typ.Vbound, True);
             Put ("): ");
             for I in 1 .. M.Typ.Vbound.Len loop
                Put_Uns32 (Uns32 (Read_U8 (M.Mem + Size_Type (I - 1))));
@@ -132,7 +179,7 @@ package body Elab.Vhdl_Values.Debug is
                if I > 1 then
                   Put (", ");
                end if;
-               Debug_Bound (M.Typ.Abounds.D (I));
+               Debug_Bound (M.Typ.Abounds.D (I), True);
             end loop;
             Put ("): ");
             for I in 1 .. Get_Array_Flat_Length (M.Typ) loop

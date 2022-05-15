@@ -20,4 +20,7 @@ package Elab.Vhdl_Values.Debug is
    procedure Debug_Valtyp (V : Valtyp);
    procedure Debug_Memtyp (M : Memtyp);
    procedure Debug_Typ (T : Type_Acc);
+
+   --  Short description, no newline.
+   procedure Debug_Type_Short (T : Type_Acc);
 end Elab.Vhdl_Values.Debug;
