@@ -1,5 +1,5 @@
---  GHDL Run Time (GRT) - C interface.
---  Copyright (C) 2005 - 2014 Tristan Gingold
+--  GHDL Run Time (GRT) - Stupid emulation of readline using stdio
+--  Copyright (C) 2022 Tristan Gingold
 --
 --  This program is free software: you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -20,36 +20,10 @@
 --  covered by the GNU General Public License. This exception does not
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
+with Grt.Types; use Grt.Types;
 
---  This package declares C types.
---  It is a really stripped down version of interfaces.C!
-with System;
+package Grt.Readline_None is
+   function Readline (Prompt : Ghdl_C_String) return Ghdl_C_String;
 
-package Grt.C is
-   pragma Preelaborate (Grt.C);
-
-   --  Type void * and char *.
-   subtype voids is System.Address;
-   subtype chars is System.Address;
-
-   --  Type size_t.
-   type size_t is mod 2 ** Standard'Address_Size;
-   type ssize_t is range
-     -2 ** (Standard'Address_Size - 1) .. 2 ** (Standard'Address_Size - 1) - 1;
-
-   --  Type int.  It is an alias on Integer for simplicity.
-   subtype int is Integer;
-   subtype long is Long_Integer;
-   type unsigned is mod 2 ** Integer'Size;
-
-   --  Low level memory management.
-   procedure Free (Addr : System.Address);
-   function Malloc (Size : size_t) return System.Address;
-   function Realloc (Ptr : System.Address; Size : size_t)
-                    return System.Address;
-
-private
-   pragma Import (C, Free);
-   pragma Import (C, Malloc);
-   pragma Import (C, Realloc);
-end Grt.C;
+   procedure Add_History (Line : Ghdl_C_String);
+end Grt.Readline_None;
