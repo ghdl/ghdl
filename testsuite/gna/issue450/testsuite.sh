@@ -12,7 +12,7 @@ if c_compiler_is_available && ghdl_has_feature disptree vpi; then
   $GHDL --vpi-link -v gcc -o vpi2.vpi vpi2.o
 
   simulate disptree --vpi=./vpi2.vpi | tee disptree.out
-  diff_nocr -q disptree.ref disptree.out
+  diff_nocr disptree.ref disptree.out
 
   rm -f vpi2.o vpi2.vpi disptree.out
 fi
