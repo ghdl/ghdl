@@ -1918,14 +1918,17 @@ package body Vhdl.Sem_Specs is
       Found : Natural;
       Comp_Chain : Iir;
       Ent_Chain : Iir;
+      Assoc_Kind : Iir_Kind;
    begin
       case Kind is
          when Map_Generic =>
             Ent_Chain := Get_Generic_Chain (Entity);
             Comp_Chain := Get_Generic_Chain (Comp);
+            Assoc_Kind := Iir_Kind_Association_Element_By_Expression;
          when Map_Port =>
             Ent_Chain := Get_Port_Chain (Entity);
             Comp_Chain := Get_Port_Chain (Comp);
+            Assoc_Kind := Iir_Kind_Association_Element_By_Name;
       end case;
 
       --  No error found yet.
@@ -1965,7 +1968,8 @@ package body Vhdl.Sem_Specs is
                                 & " declared at %l", +Comp_El);
                Report_End_Group;
             end if;
-            Assoc := Create_Iir (Iir_Kind_Association_Element_By_Expression);
+
+            Assoc := Create_Iir (Assoc_Kind);
             Location_Copy (Assoc, Parent);
             Name := Build_Simple_Name (Comp_El, Comp_El);
             Set_Type (Name, Get_Type (Comp_El));
