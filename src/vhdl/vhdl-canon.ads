@@ -95,4 +95,25 @@ package Vhdl.Canon is
    --  Used for vhdl 08.
    function Canon_Extract_Sensitivity_Process
      (Proc : Iir_Sensitized_Process_Statement) return Iir_List;
+
+   --  For a concurrent or sequential conditional signal assignment.
+   procedure Canon_Extract_Sensitivity_Conditional_Signal_Assignment
+     (Stmt : Iir; List : Iir_List);
+
+   --  For a concurrent or sequential simple signal assignment.
+   procedure Canon_Extract_Sensitivity_Simple_Signal_Assignment
+     (Stmt : Iir; List : Iir_List);
+
+   --  For a concurrent selected signal statement.
+   procedure Canon_Extract_Sensitivity_Selected_Signal_Assignment
+     (Stmt : Iir; List : Iir_List);
+
+   --  For a concurrent or sequential simple assertion statement.
+   procedure Canon_Extract_Sensitivity_Assertion_Statement
+     (Stmt : Iir; List : Iir_List);
+
+   --  For a procedure call.
+   procedure Canon_Extract_Sensitivity_Procedure_Call
+     (Call : Iir; Sensitivity_List : Iir_List);
+
 end Vhdl.Canon;
