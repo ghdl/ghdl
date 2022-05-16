@@ -24,6 +24,7 @@ build() {
   ../../../../configure \
     --prefix=${MINGW_PREFIX} \
     LDFLAGS="-static -Wl,--stack=8388608" \
+    --enable-werror \
     --enable-libghdl \
     --enable-synth
   make GNATMAKE="gnatmake -j$(nproc)"

@@ -28,7 +28,7 @@ jobs:
         run: |
           docker run --rm -i -v $(pwd):/src -w /src ghdl/debug:base <<'EOF'
           #!/usr/bin/env sh
-          ./configure && make && make install
+          ./configure --enable-werror && make && make install
           gnatdoc -P./ghdl
           EOF
 
@@ -53,7 +53,7 @@ jobs:
           docker build -t ghdl/doc . -f- <<-EOF
           FROM ghdl/build:doc
           COPY . /opt/ghdl
-          RUN cd /opt/ghdl && ./configure && make && make install
+          RUN cd /opt/ghdl && ./configure --enable-werror && make && make install
           EOF
 
       - name: '📥 Download artifact: gnatdoc'

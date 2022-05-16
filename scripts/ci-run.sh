@@ -202,6 +202,8 @@ build () {
   mkdir "build-$BACK"
   cd "build-$BACK"
 
+  CONFIG_OPTS+=" --enable-werror"
+
   if [ "x$ISSYNTH" = "xfalse" ]; then
     CONFIG_OPTS+=" --disable-synth"
   fi
