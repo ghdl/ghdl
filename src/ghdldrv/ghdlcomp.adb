@@ -324,6 +324,7 @@ package body Ghdlcomp is
 
    procedure Common_Compile_Elab (Cmd_Name : String;
                                   Args : Argument_List;
+                                  Allow_Undef_Generic : Boolean;
                                   Opt_Arg : out Natural;
                                   Config : out Iir)
    is
@@ -354,7 +355,8 @@ package body Ghdlcomp is
            (Get_Block_Specification (Get_Block_Configuration (Conf_Unit)));
          Entity : constant Iir := Vhdl.Utils.Get_Entity (Arch);
       begin
-         Vhdl.Configuration.Check_Entity_Declaration_Top (Entity, True);
+         Vhdl.Configuration.Check_Entity_Declaration_Top
+           (Entity, Allow_Undef_Generic);
          if Nbr_Errors > 0 then
             raise Compilation_Error;
          end if;

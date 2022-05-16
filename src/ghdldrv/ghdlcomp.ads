@@ -85,9 +85,11 @@ package Ghdlcomp is
    --  Common action to perform before elaboration:
    --  * extract PRIM_NAME and SEC_NAME from ARGS.
    --  * configure
-   --  * Check top entity.
+   --  * Check top entity
+   --  If ALLOW_UNDEF_GENERIC is False, the generics must have a default value.
    procedure Common_Compile_Elab (Cmd_Name : String;
                                   Args : Argument_List;
+                                  Allow_Undef_Generic : Boolean;
                                   Opt_Arg : out Natural;
                                   Config : out Iir);
 

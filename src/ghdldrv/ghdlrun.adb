@@ -144,7 +144,7 @@ package body Ghdlrun is
    is
       Config : Iir;
    begin
-      Common_Compile_Elab (Cmd_Name, Args, Opt_Arg, Config);
+      Common_Compile_Elab (Cmd_Name, Args, True, Opt_Arg, Config);
 
       if Time_Resolution = 'a' then
          Time_Resolution := Vhdl.Std_Package.Get_Minimal_Time_Resolution;

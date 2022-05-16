@@ -80,7 +80,7 @@ package body Ghdlsimul is
       Lib_Unit : Node;
       Inst : Synth_Instance_Acc;
    begin
-      Common_Compile_Elab (Cmd_Name, Args, Opt_Arg, Config);
+      Common_Compile_Elab (Cmd_Name, Args, False, Opt_Arg, Config);
 
       Lib_Unit := Get_Library_Unit (Config);
       pragma Assert (Get_Kind (Lib_Unit) /= Iir_Kind_Foreign_Module);
