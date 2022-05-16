@@ -904,7 +904,8 @@ package body Elab.Vhdl_Debug is
       raise Internal_Error;
    end Find_Concurrent_Statement_By_Instance;
 
-   function Skip_Instance_Parent (Inst : Synth_Instance_Acc)
+   function Skip_Instance_Parent (Inst : Synth_Instance_Acc;
+                                  Components : Boolean)
                                  return Synth_Instance_Acc
    is
       Parent : constant Synth_Instance_Acc := Get_Instance_Parent (Inst);
@@ -920,8 +921,13 @@ package body Elab.Vhdl_Debug is
            | Iir_Kind_Block_Statement =>
             return Inst;
          when Iir_Kind_Component_Declaration =>
-            return Parent;
+            if Components then
+               return Inst;
+            else
+               return Parent;
+            end if;
          when Iir_Kind_For_Generate_Statement =>
+            --  Skip the instance used as array.
             return Parent;
          when Iir_Kind_Generate_Statement_Body =>
             --  For an if-generate, the parent is really the parent.
@@ -934,7 +940,8 @@ package body Elab.Vhdl_Debug is
    function Get_Instance_Path_Parent (Inst : Synth_Instance_Acc)
                                      return Synth_Instance_Acc
    is
-      Pre_Parent : constant Synth_Instance_Acc := Skip_Instance_Parent (Inst);
+      Pre_Parent : constant Synth_Instance_Acc :=
+        Skip_Instance_Parent (Inst, False);
    begin
       if Pre_Parent = null then
          --  The root.
@@ -943,10 +950,11 @@ package body Elab.Vhdl_Debug is
       return Get_Instance_Parent (Pre_Parent);
    end Get_Instance_Path_Parent;
 
-   procedure Disp_Instance_Path (Inst : Synth_Instance_Acc)
+   procedure Disp_Instance_Path (Inst : Synth_Instance_Acc;
+                                 Components : Boolean := False)
    is
       Pre_Parent_Inst : constant Synth_Instance_Acc :=
-        Skip_Instance_Parent (Inst);
+        Skip_Instance_Parent (Inst, Components);
       Parent_Inst : Synth_Instance_Acc;
       Parent_Scope : Node;
       Scope : Node;
@@ -962,13 +970,19 @@ package body Elab.Vhdl_Debug is
 
       Parent_Inst := Get_Instance_Parent (Pre_Parent_Inst);
       Parent_Scope := Get_Source_Scope (Parent_Inst);
-      Disp_Instance_Path (Parent_Inst);
+      Disp_Instance_Path (Parent_Inst, Components);
       Put ('/');
 
       Scope := Get_Source_Scope (Inst);
       if Get_Kind (Scope) in Iir_Kinds_Process_Statement then
+         --  The name to display is the name of the process.
          Stmt := Scope;
+      elsif Get_Kind (Parent_Scope) = Iir_Kind_Component_Declaration then
+         --  Display the name of then entity.
+         Stmt := Get_Entity (Scope);
       else
+         --  The scope is an architecture or a generate.
+         --  Find the corresponding statements in the parent to get the label.
          Stmt := Find_Concurrent_Statement_By_Instance
            (Parent_Inst, Get_Concurrent_Statement_Chain (Parent_Scope),
             Pre_Parent_Inst);

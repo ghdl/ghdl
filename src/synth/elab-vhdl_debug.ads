@@ -40,5 +40,7 @@ package Elab.Vhdl_Debug is
                                      return Synth_Instance_Acc;
 
    --  Disp full path name of INST.
-   procedure Disp_Instance_Path (Inst : Synth_Instance_Acc);
+   --  If COMPONENTS is true, also display components
+   procedure Disp_Instance_Path (Inst : Synth_Instance_Acc;
+                                 Components : Boolean := False);
 end Elab.Vhdl_Debug;
