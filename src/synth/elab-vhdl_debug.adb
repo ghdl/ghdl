@@ -24,6 +24,7 @@ with Libraries;
 with Elab.Debugger;
 with Elab.Memtype; use Elab.Memtype;
 with Elab.Vhdl_Values; use Elab.Vhdl_Values;
+with Elab.Vhdl_Values.Debug; use Elab.Vhdl_Values.Debug;
 
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Errors;
@@ -203,21 +204,11 @@ package body Elab.Vhdl_Debug is
       end case;
    end Disp_Value;
 
-   procedure Disp_Direction (Dir : Direction_Type) is
-   begin
-      case Dir is
-         when Dir_To =>
-            Put ("to");
-         when Dir_Downto =>
-            Put ("downto");
-      end case;
-   end Disp_Direction;
-
    procedure Disp_Bound_Type (Bound : Bound_Type) is
    begin
       Put_Int32 (Bound.Left);
       Put (' ');
-      Disp_Direction (Bound.Dir);
+      Put_Dir (Bound.Dir);
       Put (' ');
       Put_Int32 (Bound.Right);
    end Disp_Bound_Type;
@@ -226,7 +217,7 @@ package body Elab.Vhdl_Debug is
    begin
       Disp_Discrete_Value (Rng.Left, Vtype);
       Put (' ');
-      Disp_Direction (Rng.Dir);
+      Put_Dir (Rng.Dir);
       Put (' ');
       Disp_Discrete_Value (Rng.Right, Vtype);
    end Disp_Discrete_Range;

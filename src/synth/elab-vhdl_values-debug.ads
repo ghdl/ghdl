@@ -23,4 +23,7 @@ package Elab.Vhdl_Values.Debug is
 
    --  Short description, no newline.
    procedure Debug_Type_Short (T : Type_Acc);
+
+   --  Display 'to' or 'downto'.
+   procedure Put_Dir (Dir : Direction_Type);
 end Elab.Vhdl_Values.Debug;
