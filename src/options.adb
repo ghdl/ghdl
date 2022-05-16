@@ -90,6 +90,14 @@ package body Options is
          Error_Msg_Option ("unknown warning identifier: " & Opt);
          return Option_Err;
       end if;
+      
+      -- Handle -Wall
+      if Opt = "all" then
+	 for I in Msgid_Warnings loop
+	    Enable_Warning(I, True);
+	 end loop;
+	 return Option_Ok;
+      end if;
 
       --  Normal warnings.
       for I in Msgid_Warnings loop
@@ -300,6 +308,7 @@ package body Options is
       P ("  -Wbody             warns for not necessary package body");
       P ("  -Wspecs            warns if a all/others spec does not apply");
       P ("  -Wunused           warns if a subprogram is never used");
+      P ("  -Wall              enables all warnings.");
       P ("  -Werror            turns warnings into errors");
 --    P ("Simulation option:");
 --    P ("  --assert-level=LEVEL     set the level which stop the");
