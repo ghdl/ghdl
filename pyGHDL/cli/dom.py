@@ -307,6 +307,9 @@ class Application(LineTerminal, ArgParseMixin):
                         for architecture in architectures:
                             entity.Architectures.append(architecture)
 
+        if not self._design.Documents:
+            self.WriteFatal(f"No files processed at all.")
+
         PP = PrettyPrint()
 
         buffer = []
