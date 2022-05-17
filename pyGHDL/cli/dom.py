@@ -343,7 +343,7 @@ def main():  # mccabe:disable=MC0001
 
     try:
         # handover to a class instance
-        app = Application()  #debug, verbose, quiet)
+        app = Application()  # debug, verbose, quiet)
         app.Run()
         app.exit()
     except PrettyPrintException as ex:
