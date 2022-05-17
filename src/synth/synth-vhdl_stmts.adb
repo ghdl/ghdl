@@ -3082,6 +3082,8 @@ package body Synth.Vhdl_Stmts is
             when Iir_Kind_Procedure_Call_Statement =>
                Synth_Procedure_Call (C.Inst, Stmt);
             when Iir_Kind_Report_Statement =>
+               --  TODO: handle report statements from ieee library (at least
+               --  fixed pkg).  They are known to be OK (tbc) and useful.
                if not Is_Dyn then
                   Synth_Static_Report_Statement (C, Stmt);
                end if;
