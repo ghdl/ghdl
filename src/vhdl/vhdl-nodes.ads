@@ -1602,12 +1602,14 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Implicit_Definition (Field7)
    --
+   -- Only for Iir_Kind_Function_Declaration:
    --   Get/Set_Return_Type_Mark (Field8)
    --
    --   Get/Set_Subprogram_Body (Field9)
    --
    --   Get/Set_Subprogram_Depth (Field10)
    --
+   -- Only for Iir_Kind_Function_Declaration:
    --   Get/Set_Return_Identifier (Field11)
    --
    --   Get/Set_Overload_Number (Field12)
