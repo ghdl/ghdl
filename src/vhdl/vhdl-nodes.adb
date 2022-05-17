@@ -1083,6 +1083,7 @@ package body Vhdl.Nodes is
            | Iir_Kind_Interface_Terminal_Declaration
            | Iir_Kind_Interface_Type_Declaration
            | Iir_Kind_Signal_Attribute_Declaration
+           | Iir_Kind_Suspend_State_Declaration
            | Iir_Kind_Identity_Operator
            | Iir_Kind_Negation_Operator
            | Iir_Kind_Absolute_Operator
@@ -1178,6 +1179,7 @@ package body Vhdl.Nodes is
            | Iir_Kind_Break_Statement
            | Iir_Kind_If_Statement
            | Iir_Kind_Elsif
+           | Iir_Kind_Suspend_State_Statement
            | Iir_Kind_Character_Literal
            | Iir_Kind_Simple_Name
            | Iir_Kind_Selected_Name

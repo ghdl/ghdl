@@ -1872,6 +1872,15 @@ package Vhdl.Nodes is
    --  Chain of signals
    --   Get/Set_Signal_Attribute_Chain (Field3)
 
+   -- Iir_Kind_Suspend_State_Declaration (Short)
+   --
+   --  Implicit state variable to handle suspension.  Added after semantic
+   --  analysis.
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   --   Get/Set_Chain (Field2)
+
    -- Iir_Kind_Constant_Declaration (Medium)
    -- Iir_Kind_Iterator_Declaration (Short)
    --
@@ -4122,6 +4131,14 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Expression (Field5)
 
+   -- Iir_Kind_Suspend_State_Statement (Short)
+   --
+   --  Implicit statement added to mark a suspend point.
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   --   Get/Set_Chain (Field2)
+
    ----------------
    --  operators --
    ----------------
@@ -4998,6 +5015,7 @@ package Vhdl.Nodes is
       Iir_Kind_Interface_Procedure_Declaration, --        interface
 
       Iir_Kind_Signal_Attribute_Declaration,
+      Iir_Kind_Suspend_State_Declaration,
 
    -- Expressions.
       Iir_Kind_Identity_Operator,
@@ -5118,6 +5136,7 @@ package Vhdl.Nodes is
       Iir_Kind_Break_Statement,
       Iir_Kind_If_Statement,
       Iir_Kind_Elsif,
+      Iir_Kind_Suspend_State_Statement,
 
    -- Names
       Iir_Kind_Character_Literal,              --  denoting_name

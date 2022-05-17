@@ -495,6 +495,9 @@ package body Vhdl.Errors is
          when Iir_Kind_Signal_Attribute_Declaration =>
             --  Should not appear.
             return "signal attribute";
+         when Iir_Kind_Suspend_State_Declaration =>
+            --  Should not appear.
+            return "suspend state variable";
          when Iir_Kind_Group_Template_Declaration =>
             return Disp_Identifier (Node, "group template");
          when Iir_Kind_Group_Declaration =>
@@ -841,6 +844,9 @@ package body Vhdl.Errors is
             return Disp_Label (Node, "report statement");
          when Iir_Kind_Break_Statement =>
             return Disp_Label (Node, "break statement");
+         when Iir_Kind_Suspend_State_Statement =>
+            --  Should not appear.
+            return "suspend state statement";
 
          when Iir_Kind_Block_Configuration =>
             return "block configuration";

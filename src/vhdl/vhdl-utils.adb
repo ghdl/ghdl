@@ -240,17 +240,17 @@ package body Vhdl.Utils is
       loop
          case Get_Kind (Adecl) is
             when Iir_Kinds_Non_Alias_Object_Declaration
-              | Iir_Kinds_Quantity_Declaration
-              | Iir_Kind_Terminal_Declaration
-              | Iir_Kind_Interface_Quantity_Declaration
-              | Iir_Kind_Interface_Terminal_Declaration
-              | Iir_Kind_Interface_Type_Declaration
-              | Iir_Kind_Interface_Package_Declaration
-              | Iir_Kind_Interface_Function_Declaration
-              | Iir_Kind_Interface_Procedure_Declaration
-              | Iir_Kind_External_Signal_Name
-              | Iir_Kind_External_Constant_Name
-              | Iir_Kind_External_Variable_Name =>
+               | Iir_Kinds_Quantity_Declaration
+               | Iir_Kind_Terminal_Declaration
+               | Iir_Kind_Interface_Quantity_Declaration
+               | Iir_Kind_Interface_Terminal_Declaration
+               | Iir_Kind_Interface_Type_Declaration
+               | Iir_Kind_Interface_Package_Declaration
+               | Iir_Kind_Interface_Function_Declaration
+               | Iir_Kind_Interface_Procedure_Declaration
+               | Iir_Kind_External_Signal_Name
+               | Iir_Kind_External_Constant_Name
+               | Iir_Kind_External_Variable_Name =>
                return Adecl;
             when Iir_Kind_Object_Alias_Declaration =>
                if With_Alias then
@@ -259,35 +259,36 @@ package body Vhdl.Utils is
                   return Adecl;
                end if;
             when Iir_Kind_Indexed_Name
-              | Iir_Kind_Slice_Name
-              | Iir_Kind_Selected_Element
-              | Iir_Kind_Selected_By_All_Name =>
+               | Iir_Kind_Slice_Name
+               | Iir_Kind_Selected_Element
+               | Iir_Kind_Selected_By_All_Name =>
                Adecl := Get_Base_Name (Adecl);
             when Iir_Kinds_Literal
-              | Iir_Kind_Overflow_Literal
-              | Iir_Kind_Enumeration_Literal
-              | Iir_Kinds_Monadic_Operator
-              | Iir_Kinds_Dyadic_Operator
-              | Iir_Kind_Function_Call
-              | Iir_Kind_Qualified_Expression
-              | Iir_Kind_Type_Conversion
-              | Iir_Kind_Allocator_By_Expression
-              | Iir_Kind_Allocator_By_Subtype
-              | Iir_Kind_Parenthesis_Expression
-              | Iir_Kinds_Attribute
-              | Iir_Kind_Attribute_Value
-              | Iir_Kind_Aggregate
-              | Iir_Kind_Simple_Aggregate
-              | Iir_Kind_Dereference
-              | Iir_Kind_Implicit_Dereference
-              | Iir_Kind_Unit_Declaration
-              | Iir_Kind_Psl_Expression
-              | Iir_Kinds_Concurrent_Statement
-              | Iir_Kinds_Sequential_Statement
-              | Iir_Kinds_Simultaneous_Statement =>
+               | Iir_Kind_Overflow_Literal
+               | Iir_Kind_Enumeration_Literal
+               | Iir_Kinds_Monadic_Operator
+               | Iir_Kinds_Dyadic_Operator
+               | Iir_Kind_Function_Call
+               | Iir_Kind_Qualified_Expression
+               | Iir_Kind_Type_Conversion
+               | Iir_Kind_Allocator_By_Expression
+               | Iir_Kind_Allocator_By_Subtype
+               | Iir_Kind_Parenthesis_Expression
+               | Iir_Kinds_Attribute
+               | Iir_Kind_Attribute_Value
+               | Iir_Kind_Aggregate
+               | Iir_Kind_Simple_Aggregate
+               | Iir_Kind_Dereference
+               | Iir_Kind_Implicit_Dereference
+               | Iir_Kind_Unit_Declaration
+               | Iir_Kind_Psl_Expression
+               | Iir_Kinds_Concurrent_Statement
+               | Iir_Kinds_Sequential_Statement
+               | Iir_Kinds_Simultaneous_Statement
+               | Iir_Kind_Suspend_State_Statement =>
                return Adecl;
             when Iir_Kind_Simple_Name
-              | Iir_Kind_Selected_Name =>
+               | Iir_Kind_Selected_Name =>
                Adecl := Get_Named_Entity (Adecl);
             when Iir_Kind_Attribute_Name =>
                return Get_Named_Entity (Adecl);
@@ -323,6 +324,7 @@ package body Vhdl.Utils is
                | Iir_Kind_Group_Template_Declaration
                | Iir_Kind_Group_Declaration
                | Iir_Kind_Signal_Attribute_Declaration
+               | Iir_Kind_Suspend_State_Declaration
                | Iir_Kind_Unaffected_Waveform
                | Iir_Kind_Waveform_Element
                | Iir_Kind_Conditional_Waveform
