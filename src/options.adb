@@ -90,13 +90,13 @@ package body Options is
          Error_Msg_Option ("unknown warning identifier: " & Opt);
          return Option_Err;
       end if;
-      
+
       -- Handle -Wall
       if Opt = "all" then
-	 for I in Msgid_Warnings loop
-	    Enable_Warning(I, True);
-	 end loop;
-	 return Option_Ok;
+         for I in Msgid_Warnings loop
+            Enable_Warning(I, True);
+         end loop;
+         return Option_Ok;
       end if;
 
       --  Normal warnings.
