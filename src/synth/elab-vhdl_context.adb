@@ -63,7 +63,6 @@ package body Elab.Vhdl_Context is
                                  Foreign      => 0,
                                  Extra_Units  => null,
                                  Extra_Link   => null,
-                                 Cur_Stmt     => Null_Node,
                                  Elab_Objects => 0,
                                  Objects => (others => (Kind => Obj_None)));
       Inst_Tables.Append (Root_Instance);
@@ -112,7 +111,6 @@ package body Elab.Vhdl_Context is
                                       Foreign      => 0,
                                       Extra_Units  => null,
                                       Extra_Link   => null,
-                                      Cur_Stmt     => Null_Node,
                                       Elab_Objects => 0,
                                       Objects => (others =>
                                                     (Kind => Obj_None)));
@@ -154,7 +152,6 @@ package body Elab.Vhdl_Context is
                                       Foreign      => 0,
                                       Extra_Units  => null,
                                       Extra_Link   => null,
-                                      Cur_Stmt     => Null_Node,
                                       Elab_Objects => 0,
                                       Objects => (others =>
                                                     (Kind => Obj_None)));
@@ -563,15 +560,4 @@ package body Elab.Vhdl_Context is
    begin
       return Syn_Inst.Caller;
    end Get_Caller_Instance;
-
-   function Get_Current_Stmt (Inst : Synth_Instance_Acc) return Node is
-   begin
-      return Inst.Cur_Stmt;
-   end Get_Current_Stmt;
-
-   procedure Set_Current_Stmt (Inst : Synth_Instance_Acc; Stmt : Node) is
-   begin
-      Inst.Cur_Stmt := Stmt;
-   end Set_Current_Stmt;
-
 end Elab.Vhdl_Context;
