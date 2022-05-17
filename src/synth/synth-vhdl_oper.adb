@@ -1937,6 +1937,7 @@ package body Synth.Vhdl_Oper is
          when Iir_Predefined_Ieee_1164_To_Bitvector
             | Iir_Predefined_Ieee_1164_To_Stdlogicvector_Suv
             | Iir_Predefined_Ieee_1164_To_Stdlogicvector_Bv
+            | Iir_Predefined_Ieee_1164_To_Stdulogicvector_Slv
             | Iir_Predefined_Ieee_1164_To_Stdulogicvector_Bv
             | Iir_Predefined_Ieee_Numeric_Std_To_01_Uns
             | Iir_Predefined_Ieee_Numeric_Std_To_01_Sgn
