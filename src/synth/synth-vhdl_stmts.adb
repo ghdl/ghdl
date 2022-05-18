@@ -2961,10 +2961,53 @@ package body Synth.Vhdl_Stmts is
       end if;
    end Synth_Static_Report;
 
-   procedure Synth_Static_Report_Statement (C : Seq_Context; Stmt : Node) is
+   procedure Synth_Static_Report_Statement (Inst : Synth_Instance_Acc;
+                                            Stmt : Node) is
    begin
-      Synth_Static_Report (C.Inst, Stmt);
+      Synth_Static_Report (Inst, Stmt);
    end Synth_Static_Report_Statement;
+
+   --  Return True if EXPR can be evaluated with static values.
+   --  Does not need to be fully accurate, used for report/assert messages.
+   function Is_Static_Expr (Inst : Synth_Instance_Acc;
+                            Expr : Node) return Boolean is
+   begin
+      case Get_Kind (Expr) is
+         when Iir_Kinds_Dyadic_Operator =>
+            return Is_Static_Expr (Inst, Get_Left (Expr))
+              and then Is_Static_Expr (Inst, Get_Right (Expr));
+         when Iir_Kind_Image_Attribute =>
+            return Is_Static_Expr (Inst, Get_Parameter (Expr));
+         when Iir_Kind_Instance_Name_Attribute
+            | Iir_Kinds_Literal
+            | Iir_Kind_Enumeration_Literal =>
+            return True;
+         when Iir_Kind_Length_Array_Attribute =>
+            --  Attributes on types can be evaluated.
+            return True;
+         when Iir_Kind_Simple_Name =>
+            return Is_Static_Expr (Inst, Get_Named_Entity (Expr));
+         when others =>
+            Error_Kind ("is_static_expr", Expr);
+            return False;
+      end case;
+   end Is_Static_Expr;
+
+   procedure Synth_Dynamic_Report_Statement (Inst : Synth_Instance_Acc;
+                                             Stmt : Node;
+                                             Is_Cond : Boolean)
+   is
+      Rep_Expr : constant Node := Get_Report_Expression (Stmt);
+      Sev_Expr : constant Node := Get_Severity_Expression (Stmt);
+   begin
+      if not Is_Cond
+        and then Is_Static_Expr (Inst, Rep_Expr)
+        and then (Sev_Expr = Null_Node
+                    or else Is_Static_Expr (Inst, Sev_Expr))
+      then
+         Synth_Static_Report (Inst, Stmt);
+      end if;
+   end Synth_Dynamic_Report_Statement;
 
    procedure Execute_Assertion_Statement (Inst : Synth_Instance_Acc;
                                           Stmt : Node)
@@ -3082,10 +3125,13 @@ package body Synth.Vhdl_Stmts is
             when Iir_Kind_Procedure_Call_Statement =>
                Synth_Procedure_Call (C.Inst, Stmt);
             when Iir_Kind_Report_Statement =>
-               --  TODO: handle report statements from ieee library (at least
-               --  fixed pkg).  They are known to be OK (tbc) and useful.
                if not Is_Dyn then
-                  Synth_Static_Report_Statement (C, Stmt);
+                  Synth_Static_Report_Statement (C.Inst, Stmt);
+               else
+                  --  Not executed.
+                  --  Depends on the execution path: the report statement may
+                  --  be conditionally executed.
+                  Synth_Dynamic_Report_Statement (C.Inst, Stmt, True);
                end if;
             when Iir_Kind_Assertion_Statement =>
                if not Is_Dyn then
