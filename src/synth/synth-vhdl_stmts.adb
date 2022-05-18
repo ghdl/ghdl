@@ -481,7 +481,10 @@ package body Synth.Vhdl_Stmts is
                return;
             end if;
 
-            if Target.Obj.Val.Kind = Value_Wire then
+            if Target.Obj = No_Valtyp then
+               --  There was an error.
+               null;
+            elsif Target.Obj.Val.Kind = Value_Wire then
                W := Get_Value_Wire (Target.Obj.Val);
                if Is_Static (V.Val)
                  and then V.Typ.Sz = Target.Obj.Typ.Sz
