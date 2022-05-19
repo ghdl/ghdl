@@ -165,7 +165,8 @@ package body Elab.Vhdl_Values.Debug is
       case M.Typ.Kind is
          when Type_Bit
            | Type_Logic =>
-            Put ("bit/logic");
+            Put ("bit/logic: ");
+            Put_Uns32 (Uns32 (Read_U8 (M.Mem)));
          when Type_Vector =>
             Put ("vector (");
             Debug_Bound (M.Typ.Vbound, True);

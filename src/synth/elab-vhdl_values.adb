@@ -102,7 +102,8 @@ package body Elab.Vhdl_Values is
         (Alloc (Current_Pool, Value_Type_Net'(Kind => Value_Net, N => S)));
    end Create_Value_Net;
 
-   function Create_Value_Signal (S : Uns32; Init : Value_Acc) return Value_Acc
+   function Create_Value_Signal (S : Signal_Index_Type; Init : Value_Acc)
+                                return Value_Acc
    is
       subtype Value_Type_Signal is Value_Type (Value_Signal);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Signal);

@@ -25,7 +25,7 @@ with Vhdl.Utils;
 
 package body Elab.Vhdl_Context is
 
-   Sig_Nbr : Signal_Index_Type := 0;
+   Sig_Nbr : Signal_Index_Type := No_Signal_Index;
 
    function Get_Nbr_Signal return Signal_Index_Type is
    begin
@@ -305,8 +305,8 @@ package body Elab.Vhdl_Context is
       Vt : Valtyp;
    begin
       Create_Object (Syn_Inst, Info.Slot, 1);
-      Vt := (Typ, Create_Value_Signal (Sig_Nbr, Init));
       Sig_Nbr := Sig_Nbr + 1;
+      Vt := (Typ, Create_Value_Signal (Sig_Nbr, Init));
       Syn_Inst.Objects (Info.Slot) := (Kind => Obj_Object, Obj => Vt);
    end Create_Signal;
 

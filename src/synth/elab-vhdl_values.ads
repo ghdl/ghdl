@@ -67,7 +67,8 @@ package Elab.Vhdl_Values is
 
    subtype File_Index is Grt.Files_Operations.Ghdl_File_Index;
 
-   subtype Signal_Index_Type is Uns32;
+   type Signal_Index_Type is new Uns32;
+   No_Signal_Index : constant Signal_Index_Type := 0;
 
    type Value_Type (Kind : Value_Kind) is record
       case Kind is
@@ -119,7 +120,8 @@ package Elab.Vhdl_Values is
    --  Create a Value_Wire.
    function Create_Value_Wire (S : Uns32) return Value_Acc;
 
-   function Create_Value_Signal (S : Uns32; Init : Value_Acc) return Value_Acc;
+   function Create_Value_Signal (S : Signal_Index_Type; Init : Value_Acc)
+                                return Value_Acc;
 
    function Create_Value_Memory (Vtype : Type_Acc) return Valtyp;
    function Create_Value_Memory (Mt : Memtyp) return Valtyp;

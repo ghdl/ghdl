@@ -190,7 +190,7 @@ package body Elab.Vhdl_Debug is
          when Value_Signal =>
             Put ("signal");
             Put (' ');
-            Put_Uns32 (Vt.Val.S);
+            Put_Uns32 (Uns32 (Vt.Val.S));
          when Value_File =>
             Put ("file");
          when Value_Const =>
