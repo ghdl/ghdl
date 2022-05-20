@@ -1110,7 +1110,6 @@ package body Ghdlprint is
       Vhdl.Canon.Canon_Flag_Configurations := False;
       Vhdl.Canon.Canon_Flag_Specification_Lists := False;
       Vhdl.Canon.Canon_Flag_Associations := False;
-      Vhdl.Canon.Canon_Flag_Inertial_Associations := False;
 
       --  Parse all files.
       for I in Args'Range loop
