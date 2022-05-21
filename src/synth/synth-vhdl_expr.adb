@@ -2218,10 +2218,14 @@ package body Synth.Vhdl_Expr is
                   --  Propagate error.
                   return No_Valtyp;
                end if;
+               if Base.Val.Kind = Value_Signal
+                 and then Hook_Signal_Expr /= null
+               then
+                  Base := Hook_Signal_Expr (Base);
+               end if;
                if Dyn.Voff = No_Net and then Is_Static (Base.Val) then
-                  Res := Create_Value_Memory (Typ);
-                  Copy_Memory
-                    (Res.Val.Mem, Base.Val.Mem + Off.Mem_Off, Typ.Sz);
+                  Res := Create_Value_Memtyp
+                    ((Typ, Base.Val.Mem + Off.Mem_Off));
                   return Res;
                end if;
                return Synth_Read_Memory
