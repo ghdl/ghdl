@@ -17,9 +17,7 @@
 --  along with this program.  If not, see <gnu.org/licenses>.
 
 with Types_Utils; use Types_Utils;
-with Name_Table;
 with Std_Names;
-with Str_Table;
 with Mutils; use Mutils;
 with Errorout; use Errorout;
 
@@ -42,6 +40,7 @@ with Netlists.Locations;
 with Elab.Memtype; use Elab.Memtype;
 with Elab.Vhdl_Heap; use Elab.Vhdl_Heap;
 with Elab.Vhdl_Types; use Elab.Vhdl_Types;
+with Elab.Vhdl_Expr;
 with Elab.Debugger;
 
 with Synth.Errors; use Synth.Errors;
@@ -50,9 +49,6 @@ with Synth.Vhdl_Stmts; use Synth.Vhdl_Stmts;
 with Synth.Vhdl_Oper; use Synth.Vhdl_Oper;
 with Synth.Vhdl_Aggr;
 with Synth.Vhdl_Context; use Synth.Vhdl_Context;
-
-with Grt.Types;
-with Grt.To_Strings;
 
 package body Synth.Vhdl_Expr is
    function Synth_Name (Syn_Inst : Synth_Instance_Acc; Name : Node)
@@ -343,7 +339,7 @@ package body Synth.Vhdl_Expr is
             end;
          when Type_Array =>
             declare
-               Alen : constant Iir_Index32 := Get_Array_Flat_Length (Typ);
+               Alen : constant Uns32 := Get_Bound_Length (Typ);
                El_Typ : constant Type_Acc := Typ.Arr_El;
             begin
                for I in reverse 1 .. Alen loop
@@ -494,79 +490,10 @@ package body Synth.Vhdl_Expr is
          declare
             Bnds : constant Type_Acc := Get_Subtype_Object (Syn_Inst, Atype);
          begin
-            case Bnds.Kind is
-               when Type_Vector =>
-                  pragma Assert (Dim = 1);
-                  return Bnds.Vbound;
-               when Type_Array =>
-                  return Bnds.Abounds.D (Dim);
-               when others =>
-                  raise Internal_Error;
-            end case;
+            return Get_Array_Bound (Bnds, Dim);
          end;
       end if;
    end Synth_Array_Bounds;
-
-   function Synth_Bounds_From_Length (Atype : Node; Len : Int32)
-                                     return Bound_Type
-   is
-      Rng : constant Node := Get_Range_Constraint (Atype);
-      Limit : Int32;
-   begin
-      Limit := Int32 (Eval_Pos (Get_Left_Limit (Rng)));
-      case Get_Direction (Rng) is
-         when Dir_To =>
-            return (Dir => Dir_To,
-                    Left => Limit,
-                    Right => Limit + Len - 1,
-                    Len => Uns32 (Len));
-         when Dir_Downto =>
-            return (Dir => Dir_Downto,
-                    Left => Limit,
-                    Right => Limit - Len + 1,
-                    Len => Uns32 (Len));
-      end case;
-   end Synth_Bounds_From_Length;
-
-   function Synth_Simple_Aggregate (Syn_Inst : Synth_Instance_Acc;
-                                    Aggr : Node) return Valtyp
-   is
-      Aggr_Type : constant Node := Get_Type (Aggr);
-      pragma Assert (Get_Nbr_Dimensions (Aggr_Type) = 1);
-      El_Type : constant Node := Get_Element_Subtype (Aggr_Type);
-      El_Typ : constant Type_Acc := Get_Subtype_Object (Syn_Inst, El_Type);
-      Els : constant Iir_Flist := Get_Simple_Aggregate_List (Aggr);
-      Last : constant Natural := Flist_Last (Els);
-      Bnd : Bound_Type;
-      Bnds : Bound_Array_Acc;
-      Res_Type : Type_Acc;
-      Val : Valtyp;
-      Res : Valtyp;
-   begin
-      --  Allocate the result.
-      Bnd := Synth_Array_Bounds (Syn_Inst, Aggr_Type, 1);
-      pragma Assert (Bnd.Len = Uns32 (Last + 1));
-
-      if El_Typ.Kind in Type_Nets then
-         Res_Type := Create_Vector_Type (Bnd, El_Typ);
-      else
-         Bnds := Create_Bound_Array (1);
-         Bnds.D (1) := Bnd;
-         Res_Type := Create_Array_Type (Bnds, El_Typ);
-      end if;
-
-      Res := Create_Value_Memory (Res_Type);
-
-      for I in Flist_First .. Last loop
-         --  Elements are supposed to be static, so no need for enable.
-         Val := Synth_Expression_With_Type
-           (Syn_Inst, Get_Nth_Element (Els, I), El_Typ);
-         pragma Assert (Is_Static (Val.Val));
-         Write_Value (Res.Val.Mem + Size_Type (I) * El_Typ.Sz, Val);
-      end loop;
-
-      return Res;
-   end Synth_Simple_Aggregate;
 
    --  Change the bounds of VAL.
    function Reshape_Value (Val : Valtyp; Ntype : Type_Acc) return Valtyp is
@@ -683,18 +610,28 @@ package body Synth.Vhdl_Expr is
          when Type_Array =>
             pragma Assert (Vtype.Kind = Type_Array);
             --  Check bounds.
-            for I in Vtype.Abounds.D'Range loop
-               if Vtype.Abounds.D (I).Len /= Dtype.Abounds.D (I).Len then
-                  Error_Msg_Synth (+Loc, "mismatching array bounds");
-                  return No_Valtyp;
+            declare
+               Src_Typ, Dst_Typ : Type_Acc;
+            begin
+               Src_Typ := Vtype;
+               Dst_Typ := Dtype;
+               loop
+                  pragma Assert (Src_Typ.Alast = Dst_Typ.Alast);
+                  if Src_Typ.Abound.Len /= Dst_Typ.Abound.Len then
+                     Error_Msg_Synth (+Loc, "mismatching array bounds");
+                     return No_Valtyp;
+                  end if;
+                  exit when Src_Typ.Alast;
+                  Src_Typ := Src_Typ.Arr_El;
+                  Dst_Typ := Dst_Typ.Arr_El;
+               end loop;
+               --  TODO: check element.
+               if Bounds then
+                  return Reshape_Value (Vt, Dtype);
+               else
+                  return Vt;
                end if;
-            end loop;
-            --  TODO: check element.
-            if Bounds then
-               return Reshape_Value (Vt, Dtype);
-            else
-               return Vt;
-            end if;
+            end;
          when Type_Unbounded_Array =>
             pragma Assert (Vtype.Kind = Type_Array);
             return Vt;
@@ -731,156 +668,6 @@ package body Synth.Vhdl_Expr is
    begin
       return Synth_Subtype_Conversion (Ctxt, Vt, Dtype, Bounds, Loc);
    end Synth_Subtype_Conversion;
-
-   function Synth_Value_Attribute (Syn_Inst : Synth_Instance_Acc; Attr : Node)
-                                  return Valtyp
-   is
-      Param : constant Node := Get_Parameter (Attr);
-      Etype : constant Node := Get_Type (Attr);
-      Btype : constant Node := Get_Base_Type (Etype);
-      V : Valtyp;
-      Dtype : Type_Acc;
-   begin
-      --  The value is supposed to be static.
-      V := Synth_Expression (Syn_Inst, Param);
-      if V = No_Valtyp then
-         return No_Valtyp;
-      end if;
-
-      Dtype := Get_Subtype_Object (Syn_Inst, Etype);
-      if not Is_Static (V.Val) then
-         Error_Msg_Synth (+Attr, "parameter of 'value must be static");
-         return No_Valtyp;
-      end if;
-
-      declare
-         Str : constant String := Value_To_String (V);
-         Res_N : Node;
-         Val : Int64;
-      begin
-         case Get_Kind (Btype) is
-            when Iir_Kind_Enumeration_Type_Definition =>
-               Res_N := Eval_Value_Attribute (Str, Etype, Attr);
-               Val := Int64 (Get_Enum_Pos (Res_N));
-               Free_Iir (Res_N);
-            when Iir_Kind_Integer_Type_Definition =>
-               Val := Int64'Value (Str);
-            when others =>
-               Error_Msg_Synth (+Attr, "unhandled type for 'value");
-               return No_Valtyp;
-         end case;
-         return Create_Value_Discrete (Val, Dtype);
-      end;
-   end Synth_Value_Attribute;
-
-   function Synth_Image_Attribute_Str (Val : Valtyp; Expr_Type : Iir)
-                                      return String
-   is
-      use Grt.Types;
-   begin
-      case Get_Kind (Expr_Type) is
-         when Iir_Kind_Floating_Type_Definition
-           | Iir_Kind_Floating_Subtype_Definition =>
-            declare
-               Str : String (1 .. 24);
-               Last : Natural;
-            begin
-               Grt.To_Strings.To_String
-                 (Str, Last, Ghdl_F64 (Read_Fp64 (Val)));
-               return Str (Str'First .. Last);
-            end;
-         when Iir_Kind_Integer_Type_Definition
-           | Iir_Kind_Integer_Subtype_Definition =>
-            declare
-               Str : String (1 .. 21);
-               First : Natural;
-            begin
-               Grt.To_Strings.To_String
-                 (Str, First, Ghdl_I64 (Read_Discrete (Val)));
-               return Str (First .. Str'Last);
-            end;
-         when Iir_Kind_Enumeration_Type_Definition
-           | Iir_Kind_Enumeration_Subtype_Definition =>
-            declare
-               Lits : constant Iir_Flist :=
-                 Get_Enumeration_Literal_List (Get_Base_Type (Expr_Type));
-            begin
-               return Name_Table.Image
-                 (Get_Identifier
-                    (Get_Nth_Element (Lits, Natural (Read_Discrete (Val)))));
-            end;
-         when Iir_Kind_Physical_Type_Definition
-           | Iir_Kind_Physical_Subtype_Definition =>
-            declare
-               Str : String (1 .. 21);
-               First : Natural;
-               Id : constant Name_Id :=
-                 Get_Identifier (Get_Primary_Unit (Get_Base_Type (Expr_Type)));
-            begin
-               Grt.To_Strings.To_String
-                 (Str, First, Ghdl_I64 (Read_Discrete (Val)));
-               return Str (First .. Str'Last) & ' ' & Name_Table.Image (Id);
-            end;
-         when others =>
-            Error_Kind ("execute_image_attribute", Expr_Type);
-      end case;
-   end Synth_Image_Attribute_Str;
-
-   function String_To_Valtyp (Str : String; Styp : Type_Acc) return Valtyp
-   is
-      Len : constant Natural := Str'Length;
-      Bnd : Bound_Array_Acc;
-      Typ : Type_Acc;
-      Res : Valtyp;
-   begin
-      Bnd := Create_Bound_Array (1);
-      Bnd.D (1) := (Dir => Dir_To, Left => 1, Right => Int32 (Len),
-                    Len => Width (Len));
-      Typ := Create_Array_Type (Bnd, Styp.Uarr_El);
-
-      Res := Create_Value_Memory (Typ);
-      for I in Str'Range loop
-         Write_U8 (Res.Val.Mem + Size_Type (I - Str'First),
-                   Character'Pos (Str (I)));
-      end loop;
-      return Res;
-   end String_To_Valtyp;
-
-   function Synth_Image_Attribute (Syn_Inst : Synth_Instance_Acc; Attr : Node)
-                                  return Valtyp
-   is
-      Param : constant Node := Get_Parameter (Attr);
-      Etype : constant Node := Get_Type (Attr);
-      V : Valtyp;
-      Dtype : Type_Acc;
-   begin
-      --  The parameter is expected to be static.
-      V := Synth_Expression (Syn_Inst, Param);
-      if V = No_Valtyp then
-         return No_Valtyp;
-      end if;
-      Dtype := Get_Subtype_Object (Syn_Inst, Etype);
-      if not Is_Static (V.Val) then
-         Error_Msg_Synth (+Attr, "parameter of 'image must be static");
-         return No_Valtyp;
-      end if;
-
-      Strip_Const (V);
-      return String_To_Valtyp
-        (Synth_Image_Attribute_Str (V, Get_Type (Param)), Dtype);
-   end Synth_Image_Attribute;
-
-   function Synth_Instance_Name_Attribute
-     (Syn_Inst : Synth_Instance_Acc; Attr : Node) return Valtyp
-   is
-      Atype : constant Node := Get_Type (Attr);
-      Atyp  : constant Type_Acc := Get_Subtype_Object (Syn_Inst, Atype);
-      Name  : constant Path_Instance_Name_Type :=
-        Get_Path_Instance_Name_Suffix (Attr);
-   begin
-      --  Return a truncated name, as the prefix is not completly known.
-      return String_To_Valtyp (Name.Suffix, Atyp);
-   end Synth_Instance_Name_Attribute;
 
    function Synth_Name (Syn_Inst : Synth_Instance_Acc; Name : Node)
                        return Valtyp is
@@ -996,74 +783,95 @@ package body Synth.Vhdl_Expr is
       return Off;
    end Dyn_Index_To_Offset;
 
-   procedure Synth_Indexed_Name (Syn_Inst : Synth_Instance_Acc;
-                                 Name : Node;
-                                 Pfx_Type : Type_Acc;
-                                 Voff : out Net;
-                                 Off : out Value_Offsets;
-                                 Error : out Boolean)
+   procedure Synth_Indexes (Syn_Inst : Synth_Instance_Acc;
+                            Indexes : Iir_Flist;
+                            Dim : Natural;
+                            Arr_Typ : Type_Acc;
+                            El_Typ : out Type_Acc;
+                            Voff : out Net;
+                            Off : out Value_Offsets;
+                            Stride : out Uns32;
+                            Error : out Boolean)
    is
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
-      Indexes : constant Iir_Flist := Get_Index_List (Name);
-      El_Typ : constant Type_Acc := Get_Array_Element (Pfx_Type);
       Idx_Expr : Node;
       Idx_Val : Valtyp;
       Idx : Int64;
       Bnd : Bound_Type;
-      Stride : Uns32;
       Ivoff : Net;
       Idx_Off : Value_Offsets;
    begin
-      Voff := No_Net;
-      Off := (0, 0);
-      Error := False;
+      if Dim > Flist_Last (Indexes) then
+         Voff := No_Net;
+         Off := (0, 0);
+         Error := False;
+         Stride := 1;
+         El_Typ := Arr_Typ;
+         return;
+      else
+         Synth_Indexes
+           (Syn_Inst, Indexes, Dim + 1, Get_Array_Element (Arr_Typ),
+            El_Typ, Voff, Off, Stride, Error);
+      end if;
 
-      Stride := 1;
-      for I in reverse Flist_First .. Flist_Last (Indexes) loop
-         Idx_Expr := Get_Nth_Element (Indexes, I);
+      Idx_Expr := Get_Nth_Element (Indexes, Dim);
 
-         --  Use the base type as the subtype of the index is not synth-ed.
-         Idx_Val := Synth_Expression_With_Basetype (Syn_Inst, Idx_Expr);
-         if Idx_Val = No_Valtyp then
-            --  Propagate error.
+      --  Use the base type as the subtype of the index is not synth-ed.
+      Idx_Val := Synth_Expression_With_Basetype (Syn_Inst, Idx_Expr);
+      if Idx_Val = No_Valtyp then
+         --  Propagate error.
+         Error := True;
+         return;
+      end if;
+
+      Strip_Const (Idx_Val);
+
+      Bnd := Get_Array_Bound (Arr_Typ, 1);
+
+      if Is_Static_Val (Idx_Val.Val) then
+         Idx := Get_Static_Discrete (Idx_Val);
+         if not In_Bounds (Bnd, Int32 (Idx)) then
+            Bound_Error (Syn_Inst, Idx_Expr);
             Error := True;
-            return;
-         end if;
-
-         Strip_Const (Idx_Val);
-
-         Bnd := Get_Array_Bound (Pfx_Type, Dim_Type (I + 1));
-
-         if Is_Static_Val (Idx_Val.Val) then
-            Idx := Get_Static_Discrete (Idx_Val);
-            if not In_Bounds (Bnd, Int32 (Idx)) then
-               Bound_Error (Syn_Inst, Name);
-               Error := True;
-            else
-               Idx_Off := Index_To_Offset (Syn_Inst, Bnd, Idx, Name);
-               Off.Net_Off := Off.Net_Off
-                 + Idx_Off.Net_Off * Stride * El_Typ.W;
-               Off.Mem_Off := Off.Mem_Off
-                 + Idx_Off.Mem_Off * Size_Type (Stride) * El_Typ.Sz;
-            end if;
          else
-            Ivoff := Dyn_Index_To_Offset (Ctxt, Bnd, Idx_Val, Name);
-            Ivoff := Build_Memidx
-              (Get_Build (Syn_Inst), Ivoff, El_Typ.W * Stride,
-               Bnd.Len - 1,
-               Width (Clog2 (Uns64 (El_Typ.W * Stride * Bnd.Len))));
-            Set_Location (Ivoff, Idx_Expr);
-
-            if Voff = No_Net then
-               Voff := Ivoff;
-            else
-               Voff := Build_Addidx (Get_Build (Syn_Inst), Ivoff, Voff);
-               Set_Location (Voff, Idx_Expr);
-            end if;
+            Idx_Off := Index_To_Offset (Syn_Inst, Bnd, Idx, Idx_Expr);
+            Off.Net_Off := Off.Net_Off
+              + Idx_Off.Net_Off * Stride * El_Typ.W;
+            Off.Mem_Off := Off.Mem_Off
+              + Idx_Off.Mem_Off * Size_Type (Stride) * El_Typ.Sz;
          end if;
+      else
+         Ivoff := Dyn_Index_To_Offset (Ctxt, Bnd, Idx_Val, Idx_Expr);
+         Ivoff := Build_Memidx
+           (Get_Build (Syn_Inst), Ivoff, El_Typ.W * Stride,
+            Bnd.Len - 1,
+            Width (Clog2 (Uns64 (El_Typ.W * Stride * Bnd.Len))));
+         Set_Location (Ivoff, Idx_Expr);
 
-         Stride := Stride * Bnd.Len;
-      end loop;
+         if Voff = No_Net then
+            Voff := Ivoff;
+         else
+            Voff := Build_Addidx (Get_Build (Syn_Inst), Ivoff, Voff);
+            Set_Location (Voff, Idx_Expr);
+         end if;
+      end if;
+
+      Stride := Stride * Bnd.Len;
+   end Synth_Indexes;
+
+   procedure Synth_Indexed_Name (Syn_Inst : Synth_Instance_Acc;
+                                 Name : Node;
+                                 Pfx_Type : Type_Acc;
+                                 El_Typ : out Type_Acc;
+                                 Voff : out Net;
+                                 Off : out Value_Offsets;
+                                 Error : out Boolean)
+   is
+      Indexes : constant Iir_Flist := Get_Index_List (Name);
+      Stride : Uns32;
+   begin
+      Synth_Indexes (Syn_Inst, Indexes, Flist_First, Pfx_Type,
+                     El_Typ, Voff, Off, Stride, Error);
    end Synth_Indexed_Name;
 
    function Is_Static (N : Net) return Boolean is
@@ -1672,58 +1480,6 @@ package body Synth.Vhdl_Expr is
       return False;
    end Error_Ieee_Operator;
 
-   function Synth_String_Literal
-     (Syn_Inst : Synth_Instance_Acc; Str : Node; Str_Typ : Type_Acc)
-     return Valtyp
-   is
-      pragma Unreferenced (Syn_Inst);
-      pragma Assert (Get_Kind (Str) = Iir_Kind_String_Literal8);
-      Id : constant String8_Id := Get_String8_Id (Str);
-
-      Str_Type : constant Node := Get_Type (Str);
-      El_Type : Type_Acc;
-      Bounds : Bound_Type;
-      Bnds : Bound_Array_Acc;
-      Res_Type : Type_Acc;
-      Res : Valtyp;
-      Pos : Nat8;
-   begin
-      case Str_Typ.Kind is
-         when Type_Vector =>
-            Bounds := Str_Typ.Vbound;
-         when Type_Array =>
-            Bounds := Str_Typ.Abounds.D (1);
-         when Type_Unbounded_Vector
-            | Type_Unbounded_Array =>
-            Bounds := Synth_Bounds_From_Length
-              (Get_Index_Type (Str_Type, 0), Get_String_Length (Str));
-         when others =>
-            raise Internal_Error;
-      end case;
-
-      El_Type := Get_Array_Element (Str_Typ);
-      if El_Type.Kind in Type_Nets then
-         Res_Type := Create_Vector_Type (Bounds, El_Type);
-      else
-         Bnds := Create_Bound_Array (1);
-         Bnds.D (1) := Bounds;
-         Res_Type := Create_Array_Type (Bnds, El_Type);
-      end if;
-      Res := Create_Value_Memory (Res_Type);
-
-      --  Only U8 are handled.
-      pragma Assert (El_Type.Sz = 1);
-
-      --  From left to right.
-      for I in 1 .. Bounds.Len loop
-         -- FIXME: use literal from type ??
-         Pos := Str_Table.Element_String8 (Id, Pos32 (I));
-         Write_U8 (Res.Val.Mem + Size_Type (I - 1), Nat8'Pos (Pos));
-      end loop;
-
-      return Res;
-   end Synth_String_Literal;
-
    --  Return the left bound if the direction of the range is LEFT_DIR.
    function Synth_Low_High_Type_Attribute
      (Syn_Inst : Synth_Instance_Acc; Expr : Node; Left_Dir : Direction_Type)
@@ -2281,7 +2037,8 @@ package body Synth.Vhdl_Expr is
             return Create_Value_Discrete
               (Get_Physical_Value (Expr), Expr_Type);
          when Iir_Kind_String_Literal8 =>
-            return Synth_String_Literal (Syn_Inst, Expr, Expr_Type);
+            return Elab.Vhdl_Expr.Exec_String_Literal
+              (Syn_Inst, Expr, Expr_Type);
          when Iir_Kind_Enumeration_Literal =>
             return Synth_Name (Syn_Inst, Expr);
          when Iir_Kind_Type_Conversion =>
@@ -2307,7 +2064,7 @@ package body Synth.Vhdl_Expr is
          when Iir_Kind_Aggregate =>
             return Synth.Vhdl_Aggr.Synth_Aggregate (Syn_Inst, Expr, Expr_Type);
          when Iir_Kind_Simple_Aggregate =>
-            return Synth_Simple_Aggregate (Syn_Inst, Expr);
+            return Elab.Vhdl_Expr.Exec_Simple_Aggregate (Syn_Inst, Expr);
          when Iir_Kind_Parenthesis_Expression =>
             return Synth_Expression_With_Type
               (Syn_Inst, Get_Expression (Expr), Expr_Type);
@@ -2394,11 +2151,12 @@ package body Synth.Vhdl_Expr is
          when Iir_Kind_High_Type_Attribute =>
             return Synth_Low_High_Type_Attribute (Syn_Inst, Expr, Dir_Downto);
          when Iir_Kind_Value_Attribute =>
-            return Synth_Value_Attribute (Syn_Inst, Expr);
+            return Elab.Vhdl_Expr.Exec_Value_Attribute (Syn_Inst, Expr);
          when Iir_Kind_Image_Attribute =>
-            return Synth_Image_Attribute (Syn_Inst, Expr);
+            return Elab.Vhdl_Expr.Exec_Image_Attribute (Syn_Inst, Expr);
          when Iir_Kind_Instance_Name_Attribute =>
-            return Synth_Instance_Name_Attribute (Syn_Inst, Expr);
+            return Elab.Vhdl_Expr.Exec_Instance_Name_Attribute
+              (Syn_Inst, Expr);
          when Iir_Kind_Null_Literal =>
             return Create_Value_Access (Null_Heap_Index, Expr_Type);
          when Iir_Kind_Allocator_By_Subtype =>

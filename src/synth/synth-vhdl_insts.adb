@@ -188,9 +188,16 @@ package body Synth.Vhdl_Insts is
          when Type_Vector =>
             Hash_Bound (C, Typ.Vbound);
          when Type_Array =>
-            for I in Typ.Abounds.D'Range loop
-               Hash_Bound (C, Typ.Abounds.D (I));
-            end loop;
+            declare
+               T : Type_Acc;
+            begin
+               T := Typ;
+               loop
+                  Hash_Bound (C, T.Abound);
+                  exit when T.Alast;
+                  T := T.Arr_El;
+               end loop;
+            end;
          when others =>
             raise Internal_Error;
       end case;
@@ -648,18 +655,20 @@ package body Synth.Vhdl_Insts is
             end;
          when Iir_Kind_Indexed_Name =>
             declare
+               El_Typ : Type_Acc;
                Voff : Net;
                Arr_Off : Value_Offsets;
                Err : Boolean;
             begin
                Synth_Individual_Prefix
                  (Syn_Inst, Inter_Inst, Get_Prefix (Formal), Off, Typ);
-               Synth_Indexed_Name (Syn_Inst, Formal, Typ, Voff, Arr_Off, Err);
+               Synth_Indexed_Name (Syn_Inst, Formal, Typ,
+                                   El_Typ, Voff, Arr_Off, Err);
                if Voff /= No_Net or Err then
                   raise Internal_Error;
                end if;
                Off := Off + Arr_Off.Net_Off;
-               Typ := Get_Array_Element (Typ);
+               Typ := El_Typ;
             end;
          when Iir_Kind_Slice_Name =>
             declare

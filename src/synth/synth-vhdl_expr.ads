@@ -115,6 +115,7 @@ package Synth.Vhdl_Expr is
    procedure Synth_Indexed_Name (Syn_Inst : Synth_Instance_Acc;
                                  Name : Node;
                                  Pfx_Type : Type_Acc;
+                                 El_Typ : out Type_Acc;
                                  Voff : out Net;
                                  Off : out Value_Offsets;
                                  Error : out Boolean);

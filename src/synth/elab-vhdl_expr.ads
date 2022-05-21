@@ -75,4 +75,18 @@ package Elab.Vhdl_Expr is
                                      Loc : Node)
                                     return Valtyp;
 
+   function Exec_String_Literal (Syn_Inst : Synth_Instance_Acc;
+                                 Str : Node;
+                                 Str_Typ : Type_Acc) return Valtyp;
+
+   function Exec_Value_Attribute (Syn_Inst : Synth_Instance_Acc; Attr : Node)
+                                 return Valtyp;
+   function Exec_Image_Attribute (Syn_Inst : Synth_Instance_Acc; Attr : Node)
+                                 return Valtyp;
+   function Exec_Instance_Name_Attribute
+     (Syn_Inst : Synth_Instance_Acc; Attr : Node) return Valtyp;
+
+   function Exec_Simple_Aggregate (Syn_Inst : Synth_Instance_Acc;
+                                   Aggr : Node) return Valtyp;
+
 end Elab.Vhdl_Expr;

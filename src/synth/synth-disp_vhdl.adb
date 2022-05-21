@@ -196,7 +196,7 @@ package body Synth.Disp_Vhdl is
             else
                --  Any array.
                declare
-                  Bnd : Bound_Type renames Typ.Abounds.D (1);
+                  Bnd : Bound_Type renames Typ.Abound;
                   El_Type : constant Node := Get_Element_Subtype (Ptype);
                   El_W : constant Width := Get_Type_Width (Typ.Arr_El);
                   Idx : Int32;
@@ -375,7 +375,7 @@ package body Synth.Disp_Vhdl is
                Put_Line (");");
             else
                declare
-                  Bnd : Bound_Type renames Typ.Abounds.D (1);
+                  Bnd : Bound_Type renames Typ.Abound;
                   El_Type : constant Node := Get_Element_Subtype (Ptype);
                   El_W : constant Width := Get_Type_Width (Typ.Arr_El);
                   Idx : Int32;

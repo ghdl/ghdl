@@ -167,26 +167,6 @@ package body Elab.Vhdl_Values is
       return Iir_Index32 (Typ.Vbound.Len);
    end Vec_Length;
 
-   function Get_Array_Flat_Length (Typ : Type_Acc) return Iir_Index32 is
-   begin
-      case Typ.Kind is
-         when Type_Vector =>
-            return Iir_Index32 (Typ.Vbound.Len);
-         when Type_Array =>
-            declare
-               Len : Uns32;
-            begin
-               Len := 1;
-               for I in Typ.Abounds.D'Range loop
-                  Len := Len * Typ.Abounds.D (I).Len;
-               end loop;
-               return Iir_Index32 (Len);
-            end;
-         when others =>
-            raise Internal_Error;
-      end case;
-   end Get_Array_Flat_Length;
-
    function Create_Value_Alias
      (Obj : Valtyp; Off : Value_Offsets; Typ : Type_Acc) return Valtyp
    is
@@ -413,10 +393,10 @@ package body Elab.Vhdl_Values is
             raise Internal_Error;
          when Type_Array =>
             declare
-               Len : constant Iir_Index32 := Get_Array_Flat_Length (Typ);
+               Len : constant Uns32 := Get_Bound_Length (Typ);
                El_Typ : constant Type_Acc := Typ.Arr_El;
             begin
-               for I in 1 .. Len loop
+               for I in 1 .. Iir_Index32 (Len) loop
                   Write_Value_Default (Arr_Index (M, I - 1, El_Typ), El_Typ);
                end loop;
             end;
@@ -453,7 +433,7 @@ package body Elab.Vhdl_Values is
 
    function Value_To_String (Val : Valtyp) return String
    is
-      Str : String (1 .. Natural (Val.Typ.Abounds.D (1).Len));
+      Str : String (1 .. Natural (Val.Typ.Abound.Len));
    begin
       for I in Str'Range loop
          Str (Natural (I)) := Character'Val

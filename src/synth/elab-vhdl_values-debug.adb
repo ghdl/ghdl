@@ -59,15 +59,20 @@ package body Elab.Vhdl_Values.Debug is
             Debug_Typ1 (T.Vec_El);
             Put ("]");
          when Type_Array =>
-            Put ("arr (");
-            for I in 1 .. T.Abounds.Ndim loop
-               if I > 1 then
+            declare
+               It : Type_Acc;
+            begin
+               Put ("arr (");
+               It := T;
+               loop
+                  Debug_Bound (It.Abound, True);
+                  exit when It.Alast;
                   Put (", ");
-               end if;
-               Debug_Bound (T.Abounds.D (I), True);
-            end loop;
-            Put (") of ");
-            Debug_Typ1 (T.Arr_El);
+                  It := It.Arr_El;
+               end loop;
+               Put (") of ");
+               Debug_Typ1 (T.Arr_El);
+            end;
          when Type_Record =>
             Put ("rec: (");
             Put (")");
@@ -128,14 +133,19 @@ package body Elab.Vhdl_Values.Debug is
             Debug_Bound (T.Vbound, False);
             Put (")");
          when Type_Array =>
-            Put ("arr (");
-            for I in 1 .. T.Abounds.Ndim loop
-               if I > 1 then
+            declare
+               It : Type_Acc;
+            begin
+               Put ("arr (");
+               It := T;
+               loop
+                  Debug_Bound (It.Abound, False);
+                  exit when It.Alast;
+                  It := It.Arr_El;
                   Put (", ");
-               end if;
-               Debug_Bound (T.Abounds.D (I), False);
-            end loop;
-            Put (")");
+               end loop;
+               Put (")");
+            end;
          when Type_Record =>
             Put ("rec: (");
             Put (")");
@@ -175,21 +185,30 @@ package body Elab.Vhdl_Values.Debug is
                Put_Uns32 (Uns32 (Read_U8 (M.Mem + Size_Type (I - 1))));
             end loop;
          when Type_Array =>
-            Put ("arr (");
-            for I in 1 .. M.Typ.Abounds.Ndim loop
-               if I > 1 then
+            declare
+               T : Type_Acc;
+               El : Type_Acc;
+               Len : Uns32;
+            begin
+               Put ("arr (");
+               T := M.Typ;
+               Len := 1;
+               loop
+                  Debug_Bound (T.Abound, True);
+                  Len := Len * T.Abound.Len;
+                  El := T.Arr_El;
+                  exit when T.Alast;
+                  T := El;
                   Put (", ");
-               end if;
-               Debug_Bound (M.Typ.Abounds.D (I), True);
-            end loop;
-            Put ("): ");
-            for I in 1 .. Get_Array_Flat_Length (M.Typ) loop
-               if I > 1 then
-                  Put (", ");
-               end if;
-               Debug_Memtyp
-                 ((M.Typ.Arr_El, M.Mem + Size_Type (I - 1) * M.Typ.Arr_El.Sz));
-            end loop;
+               end loop;
+               Put ("): ");
+               for I in 1 .. Len loop
+                  if I > 1 then
+                     Put (", ");
+                  end if;
+                  Debug_Memtyp ((El, M.Mem + Size_Type (I - 1) * El.Sz));
+               end loop;
+            end;
          when Type_Record =>
             Put ("rec: (");
             for I in M.Typ.Rec.E'Range loop

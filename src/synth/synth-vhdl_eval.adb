@@ -333,9 +333,9 @@ package body Synth.Vhdl_Eval is
          when Iir_Predefined_Array_Array_Concat =>
             declare
                L_Len : constant Iir_Index32 :=
-                 Iir_Index32 (Get_Bound_Length (Left.Typ, 1));
+                 Iir_Index32 (Get_Bound_Length (Left.Typ));
                R_Len : constant Iir_Index32 :=
-                 Iir_Index32 (Get_Bound_Length (Right.Typ, 1));
+                 Iir_Index32 (Get_Bound_Length (Right.Typ));
                Le_Typ : constant Type_Acc := Get_Array_Element (Left.Typ);
                Re_Typ : constant Type_Acc := Get_Array_Element (Right.Typ);
                Bnd : Bound_Type;
@@ -359,7 +359,7 @@ package body Synth.Vhdl_Eval is
          when Iir_Predefined_Element_Array_Concat =>
             declare
                Rlen : constant Iir_Index32 :=
-                 Get_Array_Flat_Length (Right.Typ);
+                 Iir_Index32 (Get_Bound_Length (Right.Typ));
                Re_Typ : constant Type_Acc := Get_Array_Element (Right.Typ);
                Bnd : Bound_Type;
                Res_St : Type_Acc;
@@ -378,7 +378,8 @@ package body Synth.Vhdl_Eval is
             end;
          when Iir_Predefined_Array_Element_Concat =>
             declare
-               Llen : constant Iir_Index32 := Get_Array_Flat_Length (Left.Typ);
+               Llen : constant Iir_Index32 :=
+                 Iir_Index32 (Get_Bound_Length (Left.Typ));
                Le_Typ : constant Type_Acc := Get_Array_Element (Left.Typ);
                Bnd : Bound_Type;
                Res_St : Type_Acc;

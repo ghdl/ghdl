@@ -82,17 +82,29 @@ package body Synth.Vhdl_Aggr is
             return (1 => 1);
          when Type_Array =>
             declare
-               Bnds : constant Bound_Array_Acc := Typ.Abounds;
-               Res : Stride_Array (1 .. Bnds.Ndim);
+               T : Type_Acc;
+               Ndim : Dim_Type;
+               Res : Stride_Array (1 .. 16);
+               type Type_Acc_Array is array (Dim_Type range <>) of Type_Acc;
+               Arr_Typ : Type_Acc_Array (1 .. 16);
                Stride : Nat32;
             begin
+               T := Typ;
+               --  Compute number of dimensions.
+               Ndim := 1;
+               Arr_Typ (Ndim) := T;
+               while not T.Alast loop
+                  Ndim := Ndim + 1;
+                  T := T.Arr_El;
+                  Arr_Typ (Ndim) := T;
+               end loop;
                Stride := 1;
-               for I in reverse 2 .. Bnds.Ndim loop
-                  Res (Dim_Type (I)) := Stride;
-                  Stride := Stride * Nat32 (Bnds.D (I).Len);
+               for I in reverse 2 .. Ndim loop
+                  Res (I) := Stride;
+                  Stride := Stride * Nat32 (Arr_Typ (I).Abound.Len);
                end loop;
                Res (1) := Stride;
-               return Res;
+               return Res (1 .. Ndim);
             end;
          when others =>
             raise Internal_Error;
@@ -110,7 +122,7 @@ package body Synth.Vhdl_Aggr is
                                    Err_P : out boolean)
    is
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
-      Bound : constant Bound_Type := Get_Array_Bound (Typ, Dim);
+      Bound : constant Bound_Type := Get_Array_Bound (Typ, 1);
       El_Typ : constant Type_Acc := Get_Array_Element (Typ);
       Stride : constant Nat32 := Strides (Dim);
       Value : Node;
@@ -126,7 +138,8 @@ package body Synth.Vhdl_Aggr is
       begin
          Nbr_Els := Nbr_Els + 1;
 
-         if Dim = Strides'Last then
+         if Typ.Kind = Type_Vector or else Typ.Alast then
+            pragma Assert (Dim = Strides'Last);
             Val := Synth_Expression_With_Type (Syn_Inst, Value, El_Typ);
             Val := Synth_Subtype_Conversion (Ctxt, Val, El_Typ, False, Value);
             pragma Assert (Res (Pos) = No_Valtyp);
@@ -140,7 +153,7 @@ package body Synth.Vhdl_Aggr is
             end if;
          else
             Fill_Array_Aggregate
-              (Syn_Inst, Value, Res, Typ, Pos, Strides, Dim + 1,
+              (Syn_Inst, Value, Res, El_Typ, Pos, Strides, Dim + 1,
                Sub_Const, Sub_Err);
             Const_P := Const_P and Sub_Const;
             Err_P := Err_P or Sub_Err;
@@ -219,7 +232,7 @@ package body Synth.Vhdl_Aggr is
                      begin
                         Val := Synth_Expression_With_Basetype
                           (Syn_Inst, Value);
-                        Val_Len := Get_Bound_Length (Val.Typ, 1);
+                        Val_Len := Get_Bound_Length (Val.Typ);
                         pragma Assert (Stride = 1);
                         if Pos - First_Pos > Nat32 (Bound.Len - Val_Len) then
                            Error_Msg_Synth
@@ -296,7 +309,7 @@ package body Synth.Vhdl_Aggr is
                           (Syn_Inst, Value);
                         --  The length must match the range.
                         Rng_Len := Get_Range_Length (Rng);
-                        if Get_Bound_Length (Val.Typ, 1) /= Rng_Len then
+                        if Get_Bound_Length (Val.Typ) /= Rng_Len then
                            Error_Msg_Synth
                              (+Value, "length doesn't match range");
                         end if;

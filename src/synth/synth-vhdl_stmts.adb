@@ -142,6 +142,7 @@ package body Synth.Vhdl_Stmts is
 
          when Iir_Kind_Indexed_Name =>
             declare
+               El_Typ : Type_Acc;
                Voff : Net;
                Off : Value_Offsets;
                Err : Boolean;
@@ -150,7 +151,8 @@ package body Synth.Vhdl_Stmts is
                  (Syn_Inst, Get_Prefix (Pfx),
                   Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
                Strip_Const (Dest_Base);
-               Synth_Indexed_Name (Syn_Inst, Pfx, Dest_Typ, Voff, Off, Err);
+               Synth_Indexed_Name (Syn_Inst, Pfx, Dest_Typ,
+                                   El_Typ, Voff, Off, Err);
 
                if Err then
                   Dest_Base := No_Valtyp;
@@ -179,7 +181,7 @@ package body Synth.Vhdl_Stmts is
                   end if;
                end if;
 
-               Dest_Typ := Get_Array_Element (Dest_Typ);
+               Dest_Typ := El_Typ;
             end;
 
          when Iir_Kind_Selected_Element =>

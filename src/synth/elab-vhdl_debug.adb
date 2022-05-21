@@ -116,25 +116,22 @@ package body Elab.Vhdl_Debug is
       end if;
    end Disp_Value_Vector;
 
-   procedure Disp_Value_Array (Mem : Memtyp; A_Type: Node; Dim: Dim_Type)
+   procedure Disp_Value_Array (Mem : Memtyp; A_Type: Node)
    is
       Stride : Size_Type;
    begin
-      if Dim = Mem.Typ.Abounds.Ndim then
+      if Mem.Typ.Alast then
          --  Last dimension
-         Disp_Value_Vector (Mem, A_Type, Mem.Typ.Abounds.D (Dim));
+         Disp_Value_Vector (Mem, A_Type, Mem.Typ.Abound);
       else
          Stride := Mem.Typ.Arr_El.Sz;
-         for I in Dim + 1 .. Mem.Typ.Abounds.Ndim loop
-            Stride := Stride * Size_Type (Mem.Typ.Abounds.D (I).Len);
-         end loop;
 
          Put ("(");
-         for I in 1 .. Mem.Typ.Abounds.D (Dim).Len loop
+         for I in 1 .. Mem.Typ.Abound.Len loop
             if I /= 1 then
                Put (", ");
             end if;
-            Disp_Value_Array ((Mem.Typ, Mem.Mem + Stride), A_Type, Dim + 1);
+            Disp_Value_Array ((Mem.Typ, Mem.Mem + Stride), A_Type);
          end loop;
          Put (")");
       end if;
@@ -155,7 +152,7 @@ package body Elab.Vhdl_Debug is
          when Type_Vector =>
             Disp_Value_Vector (M, Vtype, M.Typ.Vbound);
          when Type_Array =>
-            Disp_Value_Array (M, Vtype, 1);
+            Disp_Value_Array (M, Vtype);
          when Type_Float =>
             Put ("*float*");
          when Type_Slice =>

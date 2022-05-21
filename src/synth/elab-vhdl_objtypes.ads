@@ -149,7 +149,8 @@ package Elab.Vhdl_Objtypes is
          when Type_Slice =>
             Slice_El : Type_Acc;
          when Type_Array =>
-            Abounds : Bound_Array_Acc;
+            Abound : Bound_Type;
+            Alast : Boolean;  --  True for the last dimension
             Arr_El : Type_Acc;
          when Type_Unbounded_Array =>
             Uarr_Ndim : Dim_Type;
@@ -212,8 +213,8 @@ package Elab.Vhdl_Objtypes is
    function Create_Slice_Type (Len : Uns32; El_Type : Type_Acc)
                               return Type_Acc;
    function Create_Bound_Array (Ndims : Dim_Type) return Bound_Array_Acc;
-   function Create_Array_Type (Bnd : Bound_Array_Acc; El_Type : Type_Acc)
-                              return Type_Acc;
+   function Create_Array_Type
+     (Bnd : Bound_Type; Last : Boolean; El_Type : Type_Acc) return Type_Acc;
    function Create_Unbounded_Array
      (Ndim : Dim_Type; El_Type : Type_Acc; Idx1 : Type_Acc) return Type_Acc;
    function Create_Rec_El_Array (Nels : Iir_Index32) return Rec_El_Array_Acc;
@@ -260,7 +261,8 @@ package Elab.Vhdl_Objtypes is
    function Get_Array_Flat_Length (Typ : Type_Acc) return Iir_Index32;
 
    --  Return length of dimension DIM of type T.
-   function Get_Bound_Length (T : Type_Acc; Dim : Dim_Type) return Uns32;
+--   function Get_Bound_Length (T : Type_Acc; Dim : Dim_Type) return Uns32;
+   function Get_Bound_Length (T : Type_Acc) return Uns32;
 
    function Is_Matching_Bounds (L, R : Type_Acc) return Boolean;
 

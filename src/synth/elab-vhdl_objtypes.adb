@@ -85,14 +85,12 @@ package body Elab.Vhdl_Objtypes is
          when Type_Slice =>
             return Are_Types_Equal (L.Slice_El, R.Slice_El);
          when Type_Array =>
-            if L.Abounds.Ndim /= R.Abounds.Ndim then
+            if L.Alast /= R.Alast then
                return False;
             end if;
-            for I in L.Abounds.D'Range loop
-               if L.Abounds.D (I) /= R.Abounds.D (I) then
-                  return False;
-               end if;
-            end loop;
+            if L.Abound /= R.Abound then
+               return False;
+            end if;
             return Are_Types_Equal (L.Arr_El, R.Arr_El);
          when Type_Unbounded_Array =>
             return L.Uarr_Ndim = R.Uarr_Ndim
@@ -342,24 +340,20 @@ package body Elab.Vhdl_Objtypes is
       return To_Bound_Array_Acc (Res);
    end Create_Bound_Array;
 
-   function Create_Array_Type (Bnd : Bound_Array_Acc; El_Type : Type_Acc)
-                              return Type_Acc
+   function Create_Array_Type
+     (Bnd : Bound_Type; Last : Boolean; El_Type : Type_Acc) return Type_Acc
    is
       subtype Array_Type_Type is Type_Type (Type_Array);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Array_Type_Type);
-      L : Uns32;
    begin
-      L := 1;
-      for I in Bnd.D'Range loop
-         L := L * Bnd.D (I).Len;
-      end loop;
       return To_Type_Acc (Alloc (Current_Pool,
                                  (Kind => Type_Array,
                                   Is_Synth => El_Type.Is_Synth,
                                   Al => El_Type.Al,
-                                  Sz => El_Type.Sz * Size_Type (L),
-                                  W => El_Type.W * L,
-                                  Abounds => Bnd,
+                                  Sz => El_Type.Sz * Size_Type (Bnd.Len),
+                                  W => El_Type.W * Bnd.Len,
+                                  Abound => Bnd,
+                                  Alast => Last,
                                   Arr_El => El_Type)));
    end Create_Array_Type;
 
@@ -420,7 +414,10 @@ package body Elab.Vhdl_Objtypes is
             end if;
             return Typ.Vbound;
          when Type_Array =>
-            return Typ.Abounds.D (Dim);
+            if Dim /= 1 then
+               raise Internal_Error;
+            end if;
+            return Typ.Abound;
          when others =>
             raise Internal_Error;
       end case;
@@ -594,10 +591,14 @@ package body Elab.Vhdl_Objtypes is
          when Type_Array =>
             declare
                Len : Uns32;
+               T : Type_Acc;
             begin
                Len := 1;
-               for I in Typ.Abounds.D'Range loop
-                  Len := Len * Typ.Abounds.D (I).Len;
+               T := Typ;
+               loop
+                  Len := Len * T.Abound.Len;
+                  exit when T.Alast;
+                  T := T.Arr_El;
                end loop;
                return Iir_Index32 (Len);
             end;
@@ -612,21 +613,15 @@ package body Elab.Vhdl_Objtypes is
       return Atype.W;
    end Get_Type_Width;
 
-   function Get_Bound_Length (T : Type_Acc; Dim : Dim_Type) return Uns32 is
+   function Get_Bound_Length (T : Type_Acc) return Uns32 is
    begin
       case T.Kind is
          when Type_Vector =>
-            if Dim /= 1 then
-               raise Internal_Error;
-            end if;
             return T.Vbound.Len;
          when Type_Slice =>
-            if Dim /= 1 then
-               raise Internal_Error;
-            end if;
             return T.W;
          when Type_Array =>
-            return T.Abounds.D (Dim).Len;
+            return T.Abound.Len;
          when others =>
             raise Internal_Error;
       end case;
@@ -643,14 +638,16 @@ package body Elab.Vhdl_Objtypes is
             return True;
          when Type_Vector
            | Type_Slice =>
-            return Get_Bound_Length (L, 1) = Get_Bound_Length (R, 1);
+            return Get_Bound_Length (L) = Get_Bound_Length (R);
          when Type_Array =>
-            for I in L.Abounds.D'Range loop
-               if Get_Bound_Length (L, I) /= Get_Bound_Length (R, I) then
-                  return False;
-               end if;
-            end loop;
-            return True;
+            pragma Assert (L.Alast = R.Alast);
+            if Get_Bound_Length (L) /= Get_Bound_Length (R) then
+               return False;
+            end if;
+            if L.Alast then
+               return True;
+            end if;
+            return Get_Bound_Length (L.Arr_El) = Get_Bound_Length (R.Arr_El);
          when Type_Unbounded_Array
            | Type_Unbounded_Vector
            | Type_Unbounded_Record =>

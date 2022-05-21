@@ -974,7 +974,7 @@ package body Synth.Vhdl_Oper is
                Bnd := Create_Bounds_From_Length
                  (Syn_Inst,
                   Get_Index_Type (Get_Type (Expr), 0),
-                  Iir_Index32 (Get_Bound_Length (Left.Typ, 1) + 1));
+                  Iir_Index32 (Get_Bound_Length (Left.Typ) + 1));
 
                Res_Typ := Create_Onedimensional_Array_Subtype
                  (Left_Typ, Bnd, Le_Typ);
@@ -994,7 +994,7 @@ package body Synth.Vhdl_Oper is
                Bnd := Create_Bounds_From_Length
                  (Syn_Inst,
                   Get_Index_Type (Get_Type (Expr), 0),
-                  Iir_Index32 (Get_Bound_Length (Right.Typ, 1) + 1));
+                  Iir_Index32 (Get_Bound_Length (Right.Typ) + 1));
 
                Res_Typ := Create_Onedimensional_Array_Subtype
                  (Right_Typ, Bnd, Re_Typ);
@@ -1032,8 +1032,8 @@ package body Synth.Vhdl_Oper is
                Bnd := Create_Bounds_From_Length
                  (Syn_Inst,
                   Get_Index_Type (Get_Type (Expr), 0),
-                  Iir_Index32 (Get_Bound_Length (Left.Typ, 1)
-                                 + Get_Bound_Length (Right.Typ, 1)));
+                  Iir_Index32 (Get_Bound_Length (Left.Typ)
+                                 + Get_Bound_Length (Right.Typ)));
 
                Res_Typ := Create_Onedimensional_Array_Subtype
                  (Expr_Typ, Bnd, Le_Typ);

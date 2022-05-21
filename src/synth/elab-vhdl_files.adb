@@ -56,13 +56,13 @@ package body Elab.Vhdl_Files is
    procedure Convert_String (Val : Valtyp; Res : out String)
    is
       Vtyp : constant Type_Acc := Val.Typ;
-      Vlen : constant Uns32 := Vtyp.Abounds.D (1).Len;
+      Vlen : constant Uns32 := Vtyp.Abound.Len;
    begin
       pragma Assert (Vtyp.Kind = Type_Array);
       pragma Assert (Vtyp.Arr_El.Kind = Type_Discrete);
       pragma Assert (Vtyp.Arr_El.W in 7 .. 8); --  Could be 7 in vhdl87
-      pragma Assert (Vtyp.Abounds.Ndim = 1);
-      pragma Assert (Vtyp.Abounds.D (1).Len = Res'Length);
+      pragma Assert (Vtyp.Alast);
+      pragma Assert (Vtyp.Abound.Len = Res'Length);
 
       for I in 1 .. Vlen loop
          Res (Res'First + Natural (I - 1)) :=
@@ -79,7 +79,7 @@ package body Elab.Vhdl_Files is
       Name : constant Valtyp := Strip_Alias_Const (Val);
       pragma Unreferenced (Val);
    begin
-      Len := Natural (Name.Typ.Abounds.D (1).Len);
+      Len := Natural (Name.Typ.Abound.Len);
 
       if Len >= Res'Length - 1 then
          Status := Op_Filename_Error;
@@ -408,7 +408,7 @@ package body Elab.Vhdl_Files is
       Str : constant Valtyp := Get_Value (Syn_Inst, Param2);
       Param3 : constant Node := Get_Chain (Param2);
       Param_Len : constant Valtyp := Get_Value (Syn_Inst, Param3);
-      Buf : String (1 .. Natural (Str.Typ.Abounds.D (1).Len));
+      Buf : String (1 .. Natural (Str.Typ.Abound.Len));
       Len : Std_Integer;
       Status : Op_Status;
    begin
@@ -447,7 +447,7 @@ package body Elab.Vhdl_Files is
                Off    : Size_Type;
             begin
                Off := 0;
-               for I in 1 .. Get_Array_Flat_Length (Val.Typ) loop
+               for I in 1 .. Get_Bound_Length (Val.Typ) loop
                   File_Read_Value (File, (El_Typ, Val.Mem + Off), Loc);
                   Off := Off + El_Typ.Sz;
                end loop;
@@ -502,7 +502,7 @@ package body Elab.Vhdl_Files is
                Off    : Size_Type;
             begin
                Off := 0;
-               for I in 1 .. Get_Array_Flat_Length (Val.Typ) loop
+               for I in 1 .. Get_Bound_Length (Val.Typ) loop
                   File_Write_Value (File, (El_Typ, Val.Mem + Off), Loc);
                   Off := Off + El_Typ.Sz;
                end loop;
@@ -542,7 +542,7 @@ package body Elab.Vhdl_Files is
       Str : Std_String;
       Bnd : Std_String_Bound;
    begin
-      B := Val.Typ.Abounds.D (1);
+      B := Val.Typ.Abound;
       Bnd.Dim_1 := (Left => Ghdl_I32 (B.Left),
                     Right => Ghdl_I32 (B.Right),
                     Dir => Dir_To_Dir (B.Dir),

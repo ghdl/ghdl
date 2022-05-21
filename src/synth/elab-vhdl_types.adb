@@ -482,7 +482,6 @@ package body Elab.Vhdl_Types is
         Get_Subtype_Object (Syn_Inst, Parent_Type);
       St_El : Node;
       El_Typ : Type_Acc;
-      Bnds : Bound_Array_Acc;
    begin
       --  VHDL08
       if Has_Element_Subtype_Indication (Atype) then
@@ -519,14 +518,19 @@ package body Elab.Vhdl_Types is
          when Type_Unbounded_Array =>
             --  FIXME: partially constrained arrays, subtype in indexes...
             if Get_Index_Constraint_Flag (Atype) then
-               Bnds := Create_Bound_Array
-                 (Dim_Type (Get_Nbr_Elements (St_Indexes)));
-               for I in Flist_First .. Flist_Last (St_Indexes) loop
-                  St_El := Get_Index_Type (St_Indexes, I);
-                  Bnds.D (Dim_Type (I + 1)) :=
-                    Synth_Bounds_From_Range (Syn_Inst, St_El);
-               end loop;
-               return Create_Array_Type (Bnds, El_Typ);
+               declare
+                  Res_Typ : Type_Acc;
+                  Bnd : Bound_Type;
+               begin
+                  Res_Typ := El_Typ;
+                  for I in reverse Flist_First .. Flist_Last (St_Indexes) loop
+                     St_El := Get_Index_Type (St_Indexes, I);
+                     Bnd := Synth_Bounds_From_Range (Syn_Inst, St_El);
+                     Res_Typ := Create_Array_Type
+                       (Bnd, Res_Typ = El_Typ, Res_Typ);
+                  end loop;
+                  return Res_Typ;
+               end;
             else
                raise Internal_Error;
             end if;
