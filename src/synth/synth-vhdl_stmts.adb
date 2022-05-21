@@ -417,13 +417,13 @@ package body Synth.Vhdl_Stmts is
       end case;
    end Aggregate_Extract;
 
-   procedure Synth_Assignment_Aggregate (Syn_Inst : Synth_Instance_Acc;
-                                         Target : Node;
-                                         Target_Typ : Type_Acc;
-                                         Val : Valtyp;
-                                         Loc : Node)
+   procedure Assign_Aggregate (Inst : Synth_Instance_Acc;
+                               Target : Node;
+                               Target_Typ : Type_Acc;
+                               Val : Valtyp;
+                               Loc : Node)
    is
-      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
+      Ctxt : constant Context_Acc := Get_Build (Inst);
       Targ_Bnd : constant Bound_Type := Get_Array_Bound (Target_Typ, 1);
       Choice : Node;
       Assoc : Node;
@@ -436,23 +436,25 @@ package body Synth.Vhdl_Stmts is
          Assoc := Get_Associated_Expr (Choice);
          case Get_Kind (Choice) is
             when Iir_Kind_Choice_By_None =>
-               Targ_Info := Synth_Target (Syn_Inst, Assoc);
+               Targ_Info := Synth_Target (Inst, Assoc);
                if Get_Element_Type_Flag (Choice) then
                   Pos := Pos - 1;
                else
                   Pos := Pos - Get_Array_Bound (Targ_Info.Targ_Type, 1).Len;
                end if;
-               Synth_Assignment
-                 (Syn_Inst, Targ_Info,
-                  Aggregate_Extract (Ctxt, Val, Pos,
-                                     Targ_Info.Targ_Type, Assoc),
-                  Loc);
+               Assign (Inst, Targ_Info,
+                       Aggregate_Extract (Ctxt, Val, Pos,
+                                          Targ_Info.Targ_Type, Assoc),
+                       Loc);
             when others =>
-               Error_Kind ("synth_assignment_aggregate", Choice);
+               Error_Kind ("assign_aggregate", Choice);
          end case;
          Choice := Get_Chain (Choice);
       end loop;
-   end Synth_Assignment_Aggregate;
+   end Assign_Aggregate;
+
+   procedure Synth_Assignment_Aggregate is
+      new Assign_Aggregate (Assign => Synth_Assignment);
 
    procedure Synth_Assignment (Syn_Inst : Synth_Instance_Acc;
                                Target : Target_Info;

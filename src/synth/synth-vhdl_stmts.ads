@@ -149,6 +149,19 @@ package Synth.Vhdl_Stmts is
    function Synth_Target (Syn_Inst : Synth_Instance_Acc;
                           Target : Node) return Target_Info;
 
+   --  Split aggregate assignment into smaller parts.
+   generic
+      with procedure Assign (Inst : Synth_Instance_Acc;
+                             Targ_Info : Target_Info;
+                             Val : Valtyp;
+                             Loc : Node);
+   procedure Assign_Aggregate (Inst : Synth_Instance_Acc;
+                               Target : Node;
+                               Target_Typ : Type_Acc;
+                               Val : Valtyp;
+                               Loc : Node);
+
+
 private
    --  There are 2 execution mode:
    --  * static: it is like simulation, all the inputs are known, neither
