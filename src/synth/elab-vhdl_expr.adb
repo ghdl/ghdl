@@ -25,7 +25,6 @@ with Errorout; use Errorout;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Evaluation; use Vhdl.Evaluation;
-with Vhdl.Annotations; use Vhdl.Annotations;
 
 with Elab.Memtype; use Elab.Memtype;
 with Elab.Vhdl_Heap; use Elab.Vhdl_Heap;
@@ -42,29 +41,6 @@ with Grt.Types;
 with Grt.To_Strings;
 
 package body Elab.Vhdl_Expr is
-   function Synth_Array_Bounds (Syn_Inst : Synth_Instance_Acc;
-                                Atype : Node;
-                                Dim : Dim_Type) return Bound_Type
-   is
-      Info : constant Sim_Info_Acc := Get_Info (Atype);
-   begin
-      if Info = null then
-         pragma Assert (Get_Type_Declarator (Atype) = Null_Node);
-         declare
-            Index_Type : constant Node :=
-              Get_Index_Type (Atype, Natural (Dim - 1));
-         begin
-            return Synth_Bounds_From_Range (Syn_Inst, Index_Type);
-         end;
-      else
-         declare
-            Bnds : constant Type_Acc := Get_Subtype_Object (Syn_Inst, Atype);
-         begin
-            return Get_Array_Bound (Bnds, Dim);
-         end;
-      end if;
-   end Synth_Array_Bounds;
-
    function Synth_Bounds_From_Length (Atype : Node; Len : Int32)
                                      return Bound_Type
    is
@@ -467,7 +443,7 @@ package body Elab.Vhdl_Expr is
             Res := Create_Vector_Type (Bnd, Btyp.Arr_El);
          when Type_Unbounded_Vector =>
             pragma Assert (El_Typ.Kind in Type_Nets);
-            Res := Create_Vector_Type (Bnd, Btyp.Uvec_El);
+            Res := Create_Vector_Type (Bnd, Btyp.Uarr_El);
          when Type_Array =>
             pragma Assert (Btyp.Alast);
             pragma Assert (Is_Bounded_Type (Btyp.Arr_El));
@@ -511,7 +487,7 @@ package body Elab.Vhdl_Expr is
 
          Strip_Const (Idx_Val);
 
-         Bnd := Get_Array_Bound (Pfx_Type, Dim_Type (I + 1));
+         Bnd := Get_Array_Bound (Pfx_Type);
 
          pragma Assert (Is_Static (Idx_Val.Val));
 

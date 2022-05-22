@@ -1958,7 +1958,7 @@ package body Synth.Vhdl_Oper is
             return Synth_Conv_Vector (False);
          when Iir_Predefined_Ieee_Numeric_Std_Touns_Nat_Uns_Uns =>
             declare
-               B : constant Bound_Type := Get_Array_Bound (R.Typ, 1);
+               B : constant Bound_Type := Get_Array_Bound (R.Typ);
             begin
                return Synth_Resize (Ctxt, L, B.Len, False, Expr);
             end;
@@ -2002,7 +2002,7 @@ package body Synth.Vhdl_Oper is
                B : Bound_Type;
                W : Width;
             begin
-               B := Get_Array_Bound (R.Typ, 1);
+               B := Get_Array_Bound (R.Typ);
                W := B.Len;
                return Create_Value_Net
                  (Build2_Uresize (Ctxt, Get_Net (Ctxt, L),
@@ -2021,7 +2021,7 @@ package body Synth.Vhdl_Oper is
               (Ctxt, L, Uns32 (Read_Discrete (R)), True, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Resize_Sgn_Sgn =>
             declare
-               B : constant Bound_Type := Get_Array_Bound (R.Typ, 1);
+               B : constant Bound_Type := Get_Array_Bound (R.Typ);
             begin
                return Synth_Resize (Ctxt, L, B.Len, True, Expr);
             end;

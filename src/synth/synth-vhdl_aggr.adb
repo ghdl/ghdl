@@ -122,7 +122,7 @@ package body Synth.Vhdl_Aggr is
                                    Err_P : out boolean)
    is
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
-      Bound : constant Bound_Type := Get_Array_Bound (Typ, 1);
+      Bound : constant Bound_Type := Get_Array_Bound (Typ);
       El_Typ : constant Type_Acc := Get_Array_Element (Typ);
       Stride : constant Nat32 := Strides (Dim);
       Value : Node;

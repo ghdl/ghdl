@@ -139,14 +139,10 @@ package Elab.Vhdl_Objtypes is
             Abound : Bound_Type;
             Alast : Boolean;  --  True for the last dimension
             Arr_El : Type_Acc;
-         when Type_Unbounded_Vector =>
-            Uvec_El : Type_Acc;
-            Uvec_Idx1 : Type_Acc;
-         when Type_Unbounded_Array =>
+         when Type_Unbounded_Array
+           | Type_Unbounded_Vector =>
             Uarr_El : Type_Acc;
             Ulast : Boolean;
-            --  Type of the first index.  The only place we need the index is
-            --  for concatenation.
             Uarr_Idx : Type_Acc;
          when Type_Record
            | Type_Unbounded_Record =>
@@ -220,16 +216,14 @@ package Elab.Vhdl_Objtypes is
    function In_Bounds (Bnd : Bound_Type; V : Int32) return Boolean;
    function In_Range (Rng : Discrete_Range_Type; V : Int64) return Boolean;
 
-   --  Return the first index of an unbounded array or vector.
-   function Get_Uarray_First_Index (Typ : Type_Acc) return Type_Acc;
+   --  Index type of unbounded array or unbounded vector.
+   function Get_Uarray_Index (Typ : Type_Acc) return Type_Acc;
 
    --  Return True iff ARR is the last dimension of a multidimensional array.
    function Is_Last_Dimension (Arr : Type_Acc) return Boolean;
 
-   --  Return the bounds of dimension DIM of a vector/array.  For a vector,
-   --  DIM must be 1.
-   function Get_Array_Bound (Typ : Type_Acc; Dim : Dim_Type)
-                            return Bound_Type;
+   --  Return the bounds of a vector/array.
+   function Get_Array_Bound (Typ : Type_Acc) return Bound_Type;
 
    --  Return the length of RNG.
    function Get_Range_Length (Rng : Discrete_Range_Type) return Uns32;

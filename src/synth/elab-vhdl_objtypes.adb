@@ -83,14 +83,13 @@ package body Elab.Vhdl_Objtypes is
                return False;
             end if;
             return Are_Types_Equal (L.Arr_El, R.Arr_El);
-         when Type_Unbounded_Array =>
+         when Type_Unbounded_Array
+           | Type_Unbounded_Vector =>
             if L.Ulast /= R.Ulast then
                return False;
             end if;
             --  Also check index ?
             return Are_Types_Equal (L.Uarr_El, R.Uarr_El);
-         when Type_Unbounded_Vector =>
-            return Are_Types_Equal (L.Uvec_El, R.Uvec_El);
          when Type_Slice =>
             return Are_Types_Equal (L.Slice_El, R.Slice_El);
          when Type_Record
@@ -373,8 +372,9 @@ package body Elab.Vhdl_Objtypes is
                                                 Al => El_Type.Al,
                                                 Sz => 0,
                                                 W => 0,
-                                                Uvec_El => El_Type,
-                                                Uvec_Idx1 => Idx)));
+                                                Ulast => True,
+                                                Uarr_El => El_Type,
+                                                Uarr_Idx => Idx)));
    end Create_Unbounded_Vector;
 
    function Get_Array_Element (Arr_Type : Type_Acc) return Type_Acc is
@@ -383,41 +383,35 @@ package body Elab.Vhdl_Objtypes is
          when Type_Vector
            | Type_Array =>
             return Arr_Type.Arr_El;
-         when Type_Unbounded_Array =>
+         when Type_Unbounded_Array
+           | Type_Unbounded_Vector =>
             return Arr_Type.Uarr_El;
-         when Type_Unbounded_Vector =>
-            return Arr_Type.Uvec_El;
          when others =>
             raise Internal_Error;
       end case;
    end Get_Array_Element;
 
-   function Get_Array_Bound (Typ : Type_Acc; Dim : Dim_Type)
-                            return Bound_Type is
+   function Get_Array_Bound (Typ : Type_Acc) return Bound_Type is
    begin
       case Typ.Kind is
          when Type_Vector
            | Type_Array =>
-            if Dim /= 1 then
-               raise Internal_Error;
-            end if;
             return Typ.Abound;
          when others =>
             raise Internal_Error;
       end case;
    end Get_Array_Bound;
 
-   function Get_Uarray_First_Index (Typ : Type_Acc) return Type_Acc is
+   function Get_Uarray_Index (Typ : Type_Acc) return Type_Acc is
    begin
       case Typ.Kind is
-         when Type_Unbounded_Vector =>
-            return Typ.Uvec_Idx1;
-         when Type_Unbounded_Array =>
+         when Type_Unbounded_Vector
+           | Type_Unbounded_Array =>
             return Typ.Uarr_Idx;
          when others =>
             raise Internal_Error;
       end case;
-   end Get_Uarray_First_Index;
+   end Get_Uarray_Index;
 
    function Get_Range_Length (Rng : Discrete_Range_Type) return Uns32
    is

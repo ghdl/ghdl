@@ -490,7 +490,8 @@ package body Synth.Vhdl_Expr is
          declare
             Bnds : constant Type_Acc := Get_Subtype_Object (Syn_Inst, Atype);
          begin
-            return Get_Array_Bound (Bnds, Dim);
+            pragma Assert (Dim = 1);
+            return Get_Array_Bound (Bnds);
          end;
       end if;
    end Synth_Array_Bounds;
@@ -826,7 +827,7 @@ package body Synth.Vhdl_Expr is
 
       Strip_Const (Idx_Val);
 
-      Bnd := Get_Array_Bound (Arr_Typ, 1);
+      Bnd := Get_Array_Bound (Arr_Typ);
 
       if Is_Static_Val (Idx_Val.Val) then
          Idx := Get_Static_Discrete (Idx_Val);

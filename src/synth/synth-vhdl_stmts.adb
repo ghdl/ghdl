@@ -297,7 +297,7 @@ package body Synth.Vhdl_Stmts is
                pragma Assert (Get_Kind (Choice) = Iir_Kind_Choice_By_None);
                El := Get_Associated_Expr (Choice);
                El_Typ := Elab.Vhdl_Expr.Exec_Type_Of_Object (Syn_Inst, El);
-               Bnd := Get_Array_Bound (El_Typ, 1);
+               Bnd := Get_Array_Bound (El_Typ);
                Len := Len + Bnd.Len;
                Choice := Get_Chain (Choice);
             end loop;
@@ -325,7 +325,7 @@ package body Synth.Vhdl_Stmts is
       --  Compute the type.
       case Base_Typ.Kind is
          when Type_Unbounded_Vector =>
-            Res := Create_Vector_Type (Bnd, Base_Typ.Uvec_El);
+            Res := Create_Vector_Type (Bnd, Base_Typ.Uarr_El);
          when others =>
             raise Internal_Error;
       end case;
@@ -426,7 +426,7 @@ package body Synth.Vhdl_Stmts is
                                Loc : Node)
    is
       Ctxt : constant Context_Acc := Get_Build (Inst);
-      Targ_Bnd : constant Bound_Type := Get_Array_Bound (Target_Typ, 1);
+      Targ_Bnd : constant Bound_Type := Get_Array_Bound (Target_Typ);
       Choice : Node;
       Assoc : Node;
       Pos : Uns32;
@@ -442,7 +442,7 @@ package body Synth.Vhdl_Stmts is
                if Get_Element_Type_Flag (Choice) then
                   Pos := Pos - 1;
                else
-                  Pos := Pos - Get_Array_Bound (Targ_Info.Targ_Type, 1).Len;
+                  Pos := Pos - Get_Array_Bound (Targ_Info.Targ_Type).Len;
                end if;
                Assign (Inst, Targ_Info,
                        Aggregate_Extract (Ctxt, Val, Pos,

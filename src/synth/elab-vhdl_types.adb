@@ -85,7 +85,8 @@ package body Elab.Vhdl_Types is
          Typ := Exec_Name_Subtype (Syn_Inst, Prefix_Name);
       end if;
 
-      return Get_Array_Bound (Typ, Dim_Type (Dim));
+      pragma Assert (Dim = 1);
+      return Get_Array_Bound (Typ);
    end Synth_Array_Attribute;
 
    procedure Synth_Discrete_Range (Syn_Inst : Synth_Instance_Acc;

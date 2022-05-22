@@ -344,7 +344,7 @@ package body Synth.Vhdl_Eval is
             begin
                Check_Matching_Bounds (Le_Typ, Re_Typ, Expr);
                Bnd := Elab.Vhdl_Types.Create_Bounds_From_Length
-                 (Get_Uarray_First_Index (Res_Typ).Drange, L_Len + R_Len);
+                 (Get_Uarray_Index (Res_Typ).Drange, L_Len + R_Len);
                Res_St := Create_Onedimensional_Array_Subtype
                  (Res_Typ, Bnd, Le_Typ);
                Res := Create_Memory (Res_St);
@@ -367,7 +367,7 @@ package body Synth.Vhdl_Eval is
             begin
                Check_Matching_Bounds (Left.Typ, Re_Typ, Expr);
                Bnd := Elab.Vhdl_Types.Create_Bounds_From_Length
-                 (Get_Uarray_First_Index (Res_Typ).Drange, 1 + Rlen);
+                 (Get_Uarray_Index (Res_Typ).Drange, 1 + Rlen);
                Res_St := Create_Onedimensional_Array_Subtype
                  (Res_Typ, Bnd, Re_Typ);
                Res := Create_Memory (Res_St);
@@ -387,7 +387,7 @@ package body Synth.Vhdl_Eval is
             begin
                Check_Matching_Bounds (Le_Typ, Right.Typ, Expr);
                Bnd := Elab.Vhdl_Types.Create_Bounds_From_Length
-                 (Get_Uarray_First_Index (Res_Typ).Drange, Llen + 1);
+                 (Get_Uarray_Index (Res_Typ).Drange, Llen + 1);
                Res_St := Create_Onedimensional_Array_Subtype
                  (Res_Typ, Bnd, Le_Typ);
                Res := Create_Memory (Res_St);
