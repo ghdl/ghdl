@@ -107,9 +107,24 @@ package Elab.Vhdl_Objtypes is
    --  Power of 2 alignment.
    type Palign_Type is range 0 .. 3;
 
+   --  What does the width (W) represent in Type_Type.
+   type Wkind_Type is
+     (
+      --  Not defined.
+      Wkind_Undef,
+
+      --  Number of net (or number of bits used to represent the type).
+      --  Valid only if the type can be synthesized.
+      Wkind_Net,
+
+      --  Number of scalar elements.
+      --  For simulation or non-synthesizable types.
+      Wkind_Sim
+     );
+
    type Type_Type (Kind : Type_Kind) is record
-      --  False if the type is not synthesisable: is or contains access/file.
-      Is_Synth : Boolean;
+      --  Representation of W.
+      Wkind : Wkind_Type;
 
       --  Alignment (in bytes) for this type.
       Al : Palign_Type;

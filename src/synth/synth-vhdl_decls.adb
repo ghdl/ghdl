@@ -389,7 +389,7 @@ package body Synth.Vhdl_Decls is
       end if;
 
       Obj_Typ := Get_Subtype_Object (Syn_Inst, Decl_Type);
-      if not Obj_Typ.Is_Synth
+      if Obj_Typ.Wkind /= Wkind_Net
         and then not Get_Instance_Const (Syn_Inst)
       then
          Error_Msg_Synth

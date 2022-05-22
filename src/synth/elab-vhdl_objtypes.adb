@@ -229,7 +229,7 @@ package body Elab.Vhdl_Objtypes is
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Bit_Type_Type);
    begin
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Bit,
-                                                Is_Synth => True,
+                                                Wkind => Wkind_Net,
                                                 Al => 0,
                                                 Sz => 1,
                                                 W => 1)));
@@ -241,7 +241,7 @@ package body Elab.Vhdl_Objtypes is
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Logic_Type_Type);
    begin
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Logic,
-                                                Is_Synth => True,
+                                                Wkind => Wkind_Net,
                                                 Al => 0,
                                                 Sz => 1,
                                                 W => 1)));
@@ -265,7 +265,7 @@ package body Elab.Vhdl_Objtypes is
          Al := 3;
       end if;
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Discrete,
-                                                Is_Synth => True,
+                                                Wkind => Wkind_Net,
                                                 Al => Al,
                                                 Sz => Sz,
                                                 W => W,
@@ -278,7 +278,7 @@ package body Elab.Vhdl_Objtypes is
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Float_Type_Type);
    begin
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Float,
-                                                Is_Synth => True,
+                                                Wkind => Wkind_Net,
                                                 Al => 3,
                                                 Sz => 8,
                                                 W => 64,
@@ -294,7 +294,7 @@ package body Elab.Vhdl_Objtypes is
       pragma Assert (El_Type.Kind in Type_Nets);
       return To_Type_Acc
         (Alloc (Current_Pool, (Kind => Type_Vector,
-                               Is_Synth => True,
+                               Wkind => Wkind_Net,
                                Al => El_Type.Al,
                                Sz => El_Type.Sz * Size_Type (Bnd.Len),
                                W => Bnd.Len,
@@ -311,7 +311,7 @@ package body Elab.Vhdl_Objtypes is
    begin
       return To_Type_Acc (Alloc (Current_Pool,
                                  (Kind => Type_Slice,
-                                  Is_Synth => El_Type.Is_Synth,
+                                  Wkind => El_Type.Wkind,
                                   Al => El_Type.Al,
                                   Sz => Size_Type (Len) * El_Type.Sz,
                                   W => Len * El_Type.W,
@@ -336,7 +336,7 @@ package body Elab.Vhdl_Objtypes is
    begin
       return To_Type_Acc (Alloc (Current_Pool,
                                  (Kind => Type_Array,
-                                  Is_Synth => El_Type.Is_Synth,
+                                  Wkind => El_Type.Wkind,
                                   Al => El_Type.Al,
                                   Sz => El_Type.Sz * Size_Type (Bnd.Len),
                                   W => El_Type.W * Bnd.Len,
@@ -352,7 +352,7 @@ package body Elab.Vhdl_Objtypes is
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Unbounded_Type_Type);
    begin
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Unbounded_Array,
-                                                Is_Synth => El_Type.Is_Synth,
+                                                Wkind => El_Type.Wkind,
                                                 Al => El_Type.Al,
                                                 Sz => 0,
                                                 W => 0,
@@ -368,7 +368,7 @@ package body Elab.Vhdl_Objtypes is
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Unbounded_Type_Type);
    begin
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Unbounded_Vector,
-                                                Is_Synth => El_Type.Is_Synth,
+                                                Wkind => El_Type.Wkind,
                                                 Al => El_Type.Al,
                                                 Sz => 0,
                                                 W => 0,
@@ -467,13 +467,13 @@ package body Elab.Vhdl_Objtypes is
    is
       subtype Record_Type_Type is Type_Type (Type_Record);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Record_Type_Type);
-      Is_Synth : Boolean;
+      Wkind : Wkind_Type;
       W : Uns32;
       Al : Palign_Type;
       Sz : Size_Type;
    begin
       --  Layout the record.
-      Is_Synth := True;
+      Wkind := Wkind_Net;
       Al := 0;
       Sz := 0;
       W := 0;
@@ -483,7 +483,9 @@ package body Elab.Vhdl_Objtypes is
          begin
             --  For nets.
             E.Boff := W;
-            Is_Synth := Is_Synth and E.Typ.Is_Synth;
+            if E.Typ.Wkind /= Wkind_Net then
+               Wkind := Wkind_Undef;
+            end if;
             W := W + E.Typ.W;
 
             --  For memory.
@@ -496,7 +498,7 @@ package body Elab.Vhdl_Objtypes is
       Sz := Align (Sz, Al);
 
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Record,
-                                                Is_Synth => Is_Synth,
+                                                Wkind => Wkind,
                                                 Al => Al,
                                                 Sz => Sz,
                                                 W => W,
@@ -510,7 +512,7 @@ package body Elab.Vhdl_Objtypes is
          new Areapools.Alloc_On_Pool_Addr (Unbounded_Record_Type_Type);
    begin
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Unbounded_Record,
-                                                Is_Synth => True,
+                                                Wkind => Wkind_Net,
                                                 Al => 0,
                                                 Sz => 0,
                                                 W => 0,
@@ -523,10 +525,10 @@ package body Elab.Vhdl_Objtypes is
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Access_Type_Type);
    begin
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Access,
-                                                Is_Synth => False,
+                                                Wkind => Wkind_Sim,
                                                 Al => 2,
                                                 Sz => 4,
-                                                W => 32,
+                                                W => 1,
                                                 Acc_Acc => Acc_Type)));
    end Create_Access_Type;
 
@@ -536,10 +538,10 @@ package body Elab.Vhdl_Objtypes is
       function Alloc is new Areapools.Alloc_On_Pool_Addr (File_Type_Type);
    begin
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_File,
-                                                Is_Synth => False,
+                                                Wkind => Wkind_Sim,
                                                 Al => 2,
                                                 Sz => 4,
-                                                W => 32,
+                                                W => 1,
                                                 File_Typ => File_Type,
                                                 File_Signature => null)));
    end Create_File_Type;
@@ -550,10 +552,10 @@ package body Elab.Vhdl_Objtypes is
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Protected_Type_Type);
    begin
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Protected,
-                                                Is_Synth => False,
+                                                Wkind => Wkind_Sim,
                                                 Al => 2,
                                                 Sz => 4,
-                                                W => 32)));
+                                                W => 1)));
    end Create_Protected_Type;
 
    function Vec_Length (Typ : Type_Acc) return Iir_Index32 is
