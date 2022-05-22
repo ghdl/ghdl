@@ -46,23 +46,38 @@ package body Elab.Vhdl_Values.Debug is
       end if;
    end Debug_Bound;
 
+   procedure Debug_Typ_Phys (T : Type_Acc) is
+   begin
+      Put ("[al=");
+      Put_Int32 (Int32 (T.Al));
+      Put (" sz=");
+      Put_Uns32 (Uns32 (T.Sz));
+      Put (" w=");
+      Put_Uns32 (T.W);
+      Put (']');
+   end Debug_Typ_Phys;
+
    procedure Debug_Typ1 (T : Type_Acc) is
    begin
       case T.Kind is
          when Type_Bit
            | Type_Logic =>
             Put ("bit/logic");
+            Debug_Typ_Phys (T);
          when Type_Vector =>
-            Put ("vector (");
+            Put ("vector ");
+            Debug_Typ_Phys (T);
+            Put (" (");
             Debug_Bound (T.Vbound, True);
-            Put (") of [");
+            Put (") of ");
             Debug_Typ1 (T.Vec_El);
-            Put ("]");
          when Type_Array =>
+            Put ("arr ");
+            Debug_Typ_Phys (T);
+            Put (" (");
             declare
                It : Type_Acc;
             begin
-               Put ("arr (");
                It := T;
                loop
                   Debug_Bound (It.Abound, True);
@@ -71,15 +86,30 @@ package body Elab.Vhdl_Values.Debug is
                   It := It.Arr_El;
                end loop;
                Put (") of ");
-               Debug_Typ1 (T.Arr_El);
+               Debug_Typ1 (It.Arr_El);
             end;
          when Type_Record =>
-            Put ("rec: (");
+            Put ("rec ");
+            Debug_Typ_Phys (T);
+            Put (" (");
+            for I in T.Rec.E'Range loop
+               if I /= 1 then
+                  Put (", ");
+               end if;
+               Put ("[boff=");
+               Put_Uns32 (T.Rec.E (I).Boff);
+               Put (", moff=");
+               Put_Uns32 (Uns32 (T.Rec.E (I).Moff));
+               Put ("] ");
+               Debug_Typ1 (T.Rec.E (I).Typ);
+            end loop;
             Put (")");
          when Type_Unbounded_Record =>
             Put ("unbounded record");
          when Type_Discrete =>
-            Put ("discrete: ");
+            Put ("discrete ");
+            Debug_Typ_Phys (T);
+            Put (": ");
             Put_Int64 (T.Drange.Left);
             Put (' ');
             Put_Dir (T.Drange.Dir);
@@ -105,13 +135,6 @@ package body Elab.Vhdl_Values.Debug is
          when Type_Protected =>
             Put ("protected");
       end case;
-      Put (' ');
-      Put (" al=");
-      Put_Int32 (Int32 (T.Al));
-      Put (" sz=");
-      Put_Uns32 (Uns32 (T.Sz));
-      Put (" w=");
-      Put_Uns32 (T.W);
    end Debug_Typ1;
 
    procedure Debug_Typ (T : Type_Acc) is
