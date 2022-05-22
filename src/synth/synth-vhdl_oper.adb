@@ -143,13 +143,13 @@ package body Synth.Vhdl_Oper is
 
       case Res.Kind is
          when Type_Vector =>
-            if Res.Vbound.Dir = Dir_Downto
-              and then Res.Vbound.Right = 0
+            if Res.Abound.Dir = Dir_Downto
+              and then Res.Abound.Right = 0
             then
                --  Normalized range
                return Res;
             end if;
-            return Create_Vec_Type_By_Length (Res.W, Res.Vec_El);
+            return Create_Vec_Type_By_Length (Res.W, Res.Arr_El);
 
          when Type_Slice =>
             return Create_Vec_Type_By_Length (Res.W, Res.Slice_El);
@@ -263,9 +263,9 @@ package body Synth.Vhdl_Oper is
    begin
       --  Note: LEFT or RIGHT can be a single bit.
       if Left.Typ.Kind = Type_Vector then
-         El_Typ := Left.Typ.Vec_El;
+         El_Typ := Left.Typ.Arr_El;
       elsif Right.Typ.Kind = Type_Vector then
-         El_Typ := Right.Typ.Vec_El;
+         El_Typ := Right.Typ.Arr_El;
       else
          raise Internal_Error;
       end if;
@@ -635,7 +635,7 @@ package body Synth.Vhdl_Oper is
             when Oper_Right =>
                Res_Typ := Right.Typ;
          end case;
-         Res_Typ := Create_Vec_Type_By_Length (Res_Typ.W, Res_Typ.Vec_El);
+         Res_Typ := Create_Vec_Type_By_Length (Res_Typ.W, Res_Typ.Arr_El);
          N := Build_Dyadic (Ctxt, Id, L1, R1);
          Set_Location (N, Expr);
          N := Build2_Uresize (Ctxt, N, Res_Typ.W, Get_Location (Expr));
@@ -658,7 +658,7 @@ package body Synth.Vhdl_Oper is
             when Oper_Right =>
                Res_Typ := Right.Typ;
          end case;
-         Res_Typ := Create_Vec_Type_By_Length (Res_Typ.W, Res_Typ.Vec_El);
+         Res_Typ := Create_Vec_Type_By_Length (Res_Typ.W, Res_Typ.Arr_El);
          N := Build_Dyadic (Ctxt, Id, L1, R1);
          Set_Location (N, Expr);
          N := Build2_Sresize (Ctxt, N, Res_Typ.W, Get_Location (Expr));
@@ -1670,7 +1670,7 @@ package body Synth.Vhdl_Oper is
             N := Build_Monadic (Ctxt, Id_Not, N);
             Set_Location (N, Loc);
          end if;
-         return Create_Value_Net (N, Operand.Typ.Vec_El);
+         return Create_Value_Net (N, Operand.Typ.Arr_El);
       end Synth_Vec_Reduce_Monadic;
    begin
       Operand := Synth_Expression_With_Type (Syn_Inst, Operand_Expr, Oper_Typ);
@@ -1788,7 +1788,7 @@ package body Synth.Vhdl_Oper is
                             Expr        : Node) return Valtyp
    is
       pragma Assert (Left.Typ.Kind = Type_Vector);
-      Len : constant Uns32 := Left.Typ.Vbound.Len;
+      Len : constant Uns32 := Left.Typ.Abound.Len;
       Max : Int32;
       Rng : Discrete_Range_Type;
       W   : Uns32;
@@ -1804,7 +1804,7 @@ package body Synth.Vhdl_Oper is
       --  The intermediate result is computed using the least number of bits,
       --  which must represent all positive values in the bounds using a
       --  signed word (so that -1 is also represented).
-      Max := Int32'Max (Left.Typ.Vbound.Left, Left.Typ.Vbound.Right);
+      Max := Int32'Max (Left.Typ.Abound.Left, Left.Typ.Abound.Right);
       W := Netlists.Utils.Clog2 (Uns32 (Max)) + 1;
       Rng := (Dir => Dir_To,
               Is_Signed => True,
@@ -1824,17 +1824,17 @@ package body Synth.Vhdl_Oper is
             if Leftmost then
                --  Iterate from the right to the left.
                Pos := I;
-               if Left.Typ.Vbound.Dir = Dir_To then
-                  V := Int64 (Left.Typ.Vbound.Right) - Int64 (I);
+               if Left.Typ.Abound.Dir = Dir_To then
+                  V := Int64 (Left.Typ.Abound.Right) - Int64 (I);
                else
-                  V := Int64 (Left.Typ.Vbound.Right) + Int64 (I);
+                  V := Int64 (Left.Typ.Abound.Right) + Int64 (I);
                end if;
             else
                Pos := Len - I - 1;
-               if Left.Typ.Vbound.Dir = Dir_To then
-                  V := Int64 (Left.Typ.Vbound.Left) + Int64 (I);
+               if Left.Typ.Abound.Dir = Dir_To then
+                  V := Int64 (Left.Typ.Abound.Left) + Int64 (I);
                else
-                  V := Int64 (Left.Typ.Vbound.Left) - Int64 (I);
+                  V := Int64 (Left.Typ.Abound.Left) - Int64 (I);
                end if;
             end if;
             Sel := Build2_Compare (Ctxt, Id_Eq,

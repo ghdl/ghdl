@@ -315,7 +315,7 @@ package body Synth.Vhdl_Expr is
                --  In memory MEM, bits are stored from left to right, so in
                --  big endian (MSB is written at offset 0, LSB at
                --  offset VLEN - 1).  Need to reverse: LSB is read first.
-               case Typ.Vec_El.Kind is
+               case Typ.Arr_El.Kind is
                   when Type_Bit =>
                      --  TODO: optimize off mod 32 = 0.
                      for I in Off .. Len - 1 loop

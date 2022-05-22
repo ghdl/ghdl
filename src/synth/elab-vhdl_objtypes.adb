@@ -77,14 +77,8 @@ package body Elab.Vhdl_Objtypes is
             return L.Drange = R.Drange;
          when Type_Float =>
             return L.Frange = R.Frange;
-         when Type_Vector =>
-            return L.Vbound = R.Vbound
-              and then Are_Types_Equal (L.Vec_El, R.Vec_El);
-         when Type_Unbounded_Vector =>
-            return Are_Types_Equal (L.Uvec_El, R.Uvec_El);
-         when Type_Slice =>
-            return Are_Types_Equal (L.Slice_El, R.Slice_El);
-         when Type_Array =>
+         when Type_Array
+           | Type_Vector =>
             if L.Alast /= R.Alast then
                return False;
             end if;
@@ -95,6 +89,10 @@ package body Elab.Vhdl_Objtypes is
          when Type_Unbounded_Array =>
             return L.Uarr_Ndim = R.Uarr_Ndim
               and then Are_Types_Equal (L.Uarr_El, R.Uarr_El);
+         when Type_Unbounded_Vector =>
+            return Are_Types_Equal (L.Uvec_El, R.Uvec_El);
+         when Type_Slice =>
+            return Are_Types_Equal (L.Slice_El, R.Slice_El);
          when Type_Record
            | Type_Unbounded_Record =>
             if L.Rec.Len /= R.Rec.Len then
@@ -279,14 +277,16 @@ package body Elab.Vhdl_Objtypes is
       subtype Vector_Type_Type is Type_Type (Type_Vector);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Vector_Type_Type);
    begin
+      pragma Assert (El_Type.Kind in Type_Nets);
       return To_Type_Acc
         (Alloc (Current_Pool, (Kind => Type_Vector,
                                Is_Synth => True,
                                Al => El_Type.Al,
                                Sz => El_Type.Sz * Size_Type (Bnd.Len),
                                W => Bnd.Len,
-                               Vbound => Bnd,
-                               Vec_El => El_Type)));
+                               Alast => True,
+                               Abound => Bnd,
+                               Arr_El => El_Type)));
    end Create_Vector_Type;
 
    function Create_Slice_Type (Len : Uns32; El_Type : Type_Acc)
@@ -391,9 +391,8 @@ package body Elab.Vhdl_Objtypes is
    function Get_Array_Element (Arr_Type : Type_Acc) return Type_Acc is
    begin
       case Arr_Type.Kind is
-         when Type_Vector =>
-            return Arr_Type.Vec_El;
-         when Type_Array =>
+         when Type_Vector
+           | Type_Array =>
             return Arr_Type.Arr_El;
          when Type_Unbounded_Array =>
             return Arr_Type.Uarr_El;
@@ -408,12 +407,8 @@ package body Elab.Vhdl_Objtypes is
                             return Bound_Type is
    begin
       case Typ.Kind is
-         when Type_Vector =>
-            if Dim /= 1 then
-               raise Internal_Error;
-            end if;
-            return Typ.Vbound;
-         when Type_Array =>
+         when Type_Vector
+           | Type_Array =>
             if Dim /= 1 then
                raise Internal_Error;
             end if;
@@ -580,14 +575,14 @@ package body Elab.Vhdl_Objtypes is
 
    function Vec_Length (Typ : Type_Acc) return Iir_Index32 is
    begin
-      return Iir_Index32 (Typ.Vbound.Len);
+      return Iir_Index32 (Typ.Abound.Len);
    end Vec_Length;
 
    function Get_Array_Flat_Length (Typ : Type_Acc) return Iir_Index32 is
    begin
       case Typ.Kind is
          when Type_Vector =>
-            return Iir_Index32 (Typ.Vbound.Len);
+            return Iir_Index32 (Typ.Abound.Len);
          when Type_Array =>
             declare
                Len : Uns32;
@@ -616,12 +611,11 @@ package body Elab.Vhdl_Objtypes is
    function Get_Bound_Length (T : Type_Acc) return Uns32 is
    begin
       case T.Kind is
-         when Type_Vector =>
-            return T.Vbound.Len;
+         when Type_Vector
+           | Type_Array =>
+            return T.Abound.Len;
          when Type_Slice =>
             return T.W;
-         when Type_Array =>
-            return T.Abound.Len;
          when others =>
             raise Internal_Error;
       end case;

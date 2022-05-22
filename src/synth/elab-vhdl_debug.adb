@@ -150,7 +150,7 @@ package body Elab.Vhdl_Debug is
            | Type_Logic =>
             Disp_Discrete_Value (Read_Discrete (M), Get_Base_Type (Vtype));
          when Type_Vector =>
-            Disp_Value_Vector (M, Vtype, M.Typ.Vbound);
+            Disp_Value_Vector (M, Vtype, M.Typ.Abound);
          when Type_Array =>
             Disp_Value_Array (M, Vtype);
          when Type_Float =>
@@ -234,7 +234,7 @@ package body Elab.Vhdl_Debug is
             Put ("float");
          when Type_Vector =>
             Put ("vector (");
-            Disp_Bound_Type (Typ.Vbound);
+            Disp_Bound_Type (Typ.Abound);
             Put (')');
          when Type_Unbounded_Vector =>
             Put ("unbounded_vector");

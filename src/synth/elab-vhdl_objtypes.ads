@@ -140,18 +140,16 @@ package Elab.Vhdl_Objtypes is
             Drange : Discrete_Range_Type;
          when Type_Float =>
             Frange : Float_Range_Type;
-         when Type_Vector =>
-            Vbound : Bound_Type;
-            Vec_El : Type_Acc;
-         when Type_Unbounded_Vector =>
-            Uvec_El : Type_Acc;
-            Uvec_Idx1 : Type_Acc;
          when Type_Slice =>
             Slice_El : Type_Acc;
-         when Type_Array =>
+         when Type_Array
+           | Type_Vector =>
             Abound : Bound_Type;
             Alast : Boolean;  --  True for the last dimension
             Arr_El : Type_Acc;
+         when Type_Unbounded_Vector =>
+            Uvec_El : Type_Acc;
+            Uvec_Idx1 : Type_Acc;
          when Type_Unbounded_Array =>
             Uarr_Ndim : Dim_Type;
             Uarr_El : Type_Acc;

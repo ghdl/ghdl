@@ -53,14 +53,14 @@ package body Synth.Vhdl_Eval is
 
    function Create_Res_Bound (Prev : Type_Acc) return Type_Acc is
    begin
-      if Prev.Vbound.Dir = Dir_Downto
-        and then Prev.Vbound.Right = 0
+      if Prev.Abound.Dir = Dir_Downto
+        and then Prev.Abound.Right = 0
       then
          --  Normalized range
          return Prev;
       end if;
 
-      return Create_Vec_Type_By_Length (Prev.W, Prev.Vec_El);
+      return Create_Vec_Type_By_Length (Prev.W, Prev.Arr_El);
    end Create_Res_Bound;
 
    function Eval_Vector_Dyadic (Left, Right : Memtyp;
@@ -686,7 +686,7 @@ package body Synth.Vhdl_Eval is
    function Eval_Vector_Reduce
      (Init : Std_Ulogic; Vec : Memtyp; Op : Table_2d) return Memtyp
    is
-      El_Typ : constant Type_Acc := Vec.Typ.Vec_El;
+      El_Typ : constant Type_Acc := Vec.Typ.Arr_El;
       Res : Std_Ulogic;
    begin
       Res := Init;

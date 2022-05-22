@@ -48,19 +48,19 @@ package body Synth.Ieee.Numeric_Std is
 
    function Create_Res_Type (Otyp : Type_Acc; Len : Uns32) return Type_Acc is
    begin
-      if Otyp.Vbound.Len = Len
-        and then Otyp.Vbound.Right = 0
-        and then Otyp.Vbound.Dir = Dir_Downto
+      if Otyp.Abound.Len = Len
+        and then Otyp.Abound.Right = 0
+        and then Otyp.Abound.Dir = Dir_Downto
       then
-         pragma Assert (Otyp.Vbound.Left = Int32 (Len) - 1);
+         pragma Assert (Otyp.Abound.Left = Int32 (Len) - 1);
          return Otyp;
       end if;
-      return Create_Vec_Type_By_Length (Len, Otyp.Vec_El);
+      return Create_Vec_Type_By_Length (Len, Otyp.Arr_El);
    end Create_Res_Type;
 
    procedure Fill (Res : Memtyp; V : Std_Ulogic) is
    begin
-      for I in 1 .. Res.Typ.Vbound.Len loop
+      for I in 1 .. Res.Typ.Abound.Len loop
          Write_Std_Logic (Res.Mem, I - 1, V);
       end loop;
    end Fill;
@@ -344,8 +344,8 @@ package body Synth.Ieee.Numeric_Std is
    function Add_Vec_Vec (L, R : Memtyp; Signed : Boolean; Loc : Syn_Src)
                          return Memtyp
    is
-      Llen : constant Uns32 := L.Typ.Vbound.Len;
-      Rlen : constant Uns32 := R.Typ.Vbound.Len;
+      Llen : constant Uns32 := L.Typ.Abound.Len;
+      Rlen : constant Uns32 := R.Typ.Abound.Len;
       Len : constant Uns32 := Uns32'Max (Llen, Rlen);
       Res : Memtyp;
       Lb, Rb, Carry : Sl_X01;
@@ -405,7 +405,7 @@ package body Synth.Ieee.Numeric_Std is
    function Add_Vec_Int
      (L : Memtyp; R : Uns64; Signed : Boolean; Loc : Syn_Src) return Memtyp
    is
-      Len          : constant Uns32 := L.Typ.Vbound.Len;
+      Len          : constant Uns32 := L.Typ.Abound.Len;
       Res : Memtyp;
       V : Uns64;
       Lb, Rb, Carry : Sl_X01;
@@ -450,8 +450,8 @@ package body Synth.Ieee.Numeric_Std is
    function Sub_Vec_Vec (L, R : Memtyp; Signed : Boolean; Loc : Syn_Src)
                          return Memtyp
    is
-      Llen          : constant Uns32 := L.Typ.Vbound.Len;
-      Rlen          : constant Uns32 := R.Typ.Vbound.Len;
+      Llen          : constant Uns32 := L.Typ.Abound.Len;
+      Rlen          : constant Uns32 := R.Typ.Abound.Len;
       Len           : constant Uns32 := Uns32'Max (Llen, Rlen);
       Res           : Memtyp;
       Lb, Rb, Carry : Sl_X01;
@@ -512,7 +512,7 @@ package body Synth.Ieee.Numeric_Std is
    function Sub_Vec_Int
      (L : Memtyp; R : Uns64; Signed : Boolean; Loc : Syn_Src) return Memtyp
    is
-      Len           : constant Uns32 := L.Typ.Vbound.Len;
+      Len           : constant Uns32 := L.Typ.Abound.Len;
       Res           : Memtyp;
       V             : Uns64;
       Lb, Rb, Carry : Sl_X01;
@@ -557,8 +557,8 @@ package body Synth.Ieee.Numeric_Std is
 
    function Mul_Uns_Uns (L, R : Memtyp; Loc : Syn_Src) return Memtyp
    is
-      Llen          : constant Uns32 := L.Typ.Vbound.Len;
-      Rlen          : constant Uns32 := R.Typ.Vbound.Len;
+      Llen          : constant Uns32 := L.Typ.Abound.Len;
+      Rlen          : constant Uns32 := R.Typ.Abound.Len;
       Len           : constant Uns32 := Llen + Rlen;
       Res           : Memtyp;
       Lb, Rb, Vb, Carry : Sl_X01;
@@ -601,7 +601,7 @@ package body Synth.Ieee.Numeric_Std is
 
    function To_Unsigned (Val : Uns64; Vtyp : Type_Acc) return Memtyp
    is
-      Vlen : constant Uns32 := Vtyp.Vbound.Len;
+      Vlen : constant Uns32 := Vtyp.Abound.Len;
       Res  : Memtyp;
       E    : Std_Ulogic;
    begin
@@ -621,7 +621,7 @@ package body Synth.Ieee.Numeric_Std is
    is
       Lv : Memtyp;
    begin
-      if R.Typ.Vbound.Len = 0 then
+      if R.Typ.Abound.Len = 0 then
          return Create_Memory (R.Typ); --  FIXME: typ
       end if;
       Lv := To_Unsigned (L, R.Typ);
@@ -632,7 +632,7 @@ package body Synth.Ieee.Numeric_Std is
    is
       Rv : Memtyp;
    begin
-      if L.Typ.Vbound.Len = 0 then
+      if L.Typ.Abound.Len = 0 then
          return Create_Memory (L.Typ); --  FIXME: typ
       end if;
       Rv := To_Unsigned (R, L.Typ);
@@ -641,8 +641,8 @@ package body Synth.Ieee.Numeric_Std is
 
    function Mul_Sgn_Sgn (L, R : Memtyp; Loc : Syn_Src) return Memtyp
    is
-      Llen          : constant Uns32 := L.Typ.Vbound.Len;
-      Rlen          : constant Uns32 := R.Typ.Vbound.Len;
+      Llen          : constant Uns32 := L.Typ.Abound.Len;
+      Rlen          : constant Uns32 := R.Typ.Abound.Len;
       Len           : constant Uns32 := Llen + Rlen;
       Res           : Memtyp;
       Lb, Rb, Vb, Carry : Sl_X01;
@@ -703,7 +703,7 @@ package body Synth.Ieee.Numeric_Std is
 
    function To_Signed (Val : Int64; Vtyp : Type_Acc) return Memtyp
    is
-      Vlen : constant Uns32 := Vtyp.Vbound.Len;
+      Vlen : constant Uns32 := Vtyp.Abound.Len;
       Uval : constant Uns64 := To_Uns64 (Val);
       Res  : Memtyp;
       E    : Std_Ulogic;
@@ -724,7 +724,7 @@ package body Synth.Ieee.Numeric_Std is
    is
       Lv : Memtyp;
    begin
-      if R.Typ.Vbound.Len = 0 then
+      if R.Typ.Abound.Len = 0 then
          return Create_Memory (R.Typ); --  FIXME: typ
       end if;
       Lv := To_Signed (L, R.Typ);
@@ -735,7 +735,7 @@ package body Synth.Ieee.Numeric_Std is
    is
       Rv : Memtyp;
    begin
-      if L.Typ.Vbound.Len = 0 then
+      if L.Typ.Abound.Len = 0 then
          return Create_Memory (L.Typ); --  FIXME: typ
       end if;
       Rv := To_Signed (R, L.Typ);
@@ -745,7 +745,7 @@ package body Synth.Ieee.Numeric_Std is
    --  Note: SRC = DST is allowed.
    procedure Neg_Vec (Src : Memory_Ptr; Dst : Memory_Ptr; Typ : Type_Acc)
    is
-      Len : constant Uns32 := Typ.Vbound.Len;
+      Len : constant Uns32 := Typ.Abound.Len;
       Vb, Carry : Sl_X01;
    begin
       Carry := '1';
@@ -774,7 +774,7 @@ package body Synth.Ieee.Numeric_Std is
 
    function Neg_Vec (V : Memtyp; Loc : Syn_Src) return Memtyp
    is
-      Len : constant Uns32 := V.Typ.Vbound.Len;
+      Len : constant Uns32 := V.Typ.Abound.Len;
       Res : Memtyp;
    begin
       Res.Typ := Create_Res_Type (V.Typ, Len);
@@ -811,7 +811,7 @@ package body Synth.Ieee.Numeric_Std is
    function Abs_Vec (V : Memtyp; Loc : Syn_Src) return Memtyp
    is
       pragma Unreferenced (Loc);
-      Len : constant Uns32 := V.Typ.Vbound.Len;
+      Len : constant Uns32 := V.Typ.Abound.Len;
       Res : Memtyp;
       Msb : Sl_X01;
    begin
@@ -916,11 +916,11 @@ package body Synth.Ieee.Numeric_Std is
 
    procedure Divmod (Num, Dem : Memtyp; Quot, Remain : Memtyp)
    is
-      Nlen  : constant Uns32 := Num.Typ.Vbound.Len;
-      Dlen  : constant Uns32 := Dem.Typ.Vbound.Len;
+      Nlen  : constant Uns32 := Num.Typ.Abound.Len;
+      Dlen  : constant Uns32 := Dem.Typ.Abound.Len;
       pragma Assert (Nlen > 0);
       pragma Assert (Dlen > 0);
-      pragma Assert (Quot.Typ.Vbound.Len = Nlen);
+      pragma Assert (Quot.Typ.Abound.Len = Nlen);
       Reg   : Std_Logic_Vector_Type (0 .. Dlen);
       Sub   : Std_Logic_Vector_Type (0 .. Dlen - 1);
       Carry : Sl_X01;
@@ -951,7 +951,7 @@ package body Synth.Ieee.Numeric_Std is
          end if;
       end loop;
       if Remain /= Null_Memtyp then
-         pragma Assert (Remain.Typ.Vbound.Len = Dlen);
+         pragma Assert (Remain.Typ.Abound.Len = Dlen);
          for I in 0 .. Dlen - 1 loop
             Write_Std_Logic (Remain.Mem, I, Reg (I + 1));
          end loop;
@@ -963,7 +963,7 @@ package body Synth.Ieee.Numeric_Std is
       Res : Sl_X01 := '0';
       E : Sl_X01;
    begin
-      for I in 0 .. V.Typ.Vbound.Len - 1 loop
+      for I in 0 .. V.Typ.Abound.Len - 1 loop
          E := To_X01 (Read_Std_Logic (V.Mem, I));
          if E = 'X' then
             return 'X';
@@ -976,8 +976,8 @@ package body Synth.Ieee.Numeric_Std is
 
    function Div_Uns_Uns (L, R : Memtyp; Loc : Syn_Src) return Memtyp
    is
-      Nlen  : constant Uns32 := L.Typ.Vbound.Len;
-      Dlen  : constant Uns32 := R.Typ.Vbound.Len;
+      Nlen  : constant Uns32 := L.Typ.Abound.Len;
+      Dlen  : constant Uns32 := R.Typ.Abound.Len;
       Quot  : Memtyp;
       R0    : Sl_X01;
    begin
@@ -1005,8 +1005,8 @@ package body Synth.Ieee.Numeric_Std is
 
    function Div_Sgn_Sgn (L, R : Memtyp; Loc : Syn_Src) return Memtyp
    is
-      Nlen  : constant Uns32 := L.Typ.Vbound.Len;
-      Dlen  : constant Uns32 := R.Typ.Vbound.Len;
+      Nlen  : constant Uns32 := L.Typ.Abound.Len;
+      Dlen  : constant Uns32 := R.Typ.Abound.Len;
       Quot  : Memtyp;
       R0    : Sl_X01;
       Lu    : Memtyp;

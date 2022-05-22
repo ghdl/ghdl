@@ -157,7 +157,7 @@ package body Synth.Disp_Vhdl is
          when Iir_Kind_Array_Type_Definition =>
             if Btype = Vhdl.Ieee.Std_Logic_1164.Std_Logic_Vector_Type then
                --  Nothing to do.
-               W := Typ.Vbound.Len;
+               W := Typ.Abound.Len;
                Disp_In_Lhs (Mname, Off, W, Full);
                Put (Pfx);
                if W = 1 then
@@ -167,7 +167,7 @@ package body Synth.Disp_Vhdl is
                end if;
                Put_Line (";");
             elsif Is_Std_Logic_Array (Btype) then
-               W := Typ.Vbound.Len;
+               W := Typ.Abound.Len;
                Disp_In_Lhs (Mname, Off, W, Full);
                if W > 1 then
                   if Full then
@@ -189,7 +189,7 @@ package body Synth.Disp_Vhdl is
                end if;
                Put_Line (";");
             elsif Btype = Vhdl.Std_Package.Bit_Vector_Type_Definition then
-               W := Typ.Vbound.Len;
+               W := Typ.Abound.Len;
                Disp_In_Lhs (Mname, Off, W, Full);
                Put ("to_stdlogicvector (" & Pfx & ")");
                Put_Line (";");
@@ -340,7 +340,7 @@ package body Synth.Disp_Vhdl is
          when Iir_Kind_Array_Type_Definition =>
             if Btype = Vhdl.Ieee.Std_Logic_1164.Std_Logic_Vector_Type then
                --  Nothing to do.
-               W := Typ.Vbound.Len;
+               W := Typ.Abound.Len;
                Put ("  " & Pfx);
                if W = 1 then
                   Put (" (" & Pfx & "'left)");
@@ -350,7 +350,7 @@ package body Synth.Disp_Vhdl is
                Put_Line (";");
             elsif Btype = Vhdl.Std_Package.Bit_Vector_Type_Definition then
                --  Nothing to do.
-               W := Typ.Vbound.Len;
+               W := Typ.Abound.Len;
                Put ("  " & Pfx & " <= ");
                if W = 1 then
                   --  This is an array of length 1.  A scalar is used in the
@@ -366,7 +366,7 @@ package body Synth.Disp_Vhdl is
                Put_Line (");");
             elsif Is_Std_Logic_Array (Btype) then
                --  unsigned, signed or a compatible array.
-               W := Typ.Vbound.Len;
+               W := Typ.Abound.Len;
                Put ("  " & Pfx & " <= ");
                Put (Name_Table.Image (Get_Identifier
                                         (Get_Type_Declarator (Btype))));

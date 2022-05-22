@@ -858,8 +858,8 @@ package body Vhdl.Evaluation is
                   for I in Flist_First .. Last loop
                      --  Elements are static.
                      Val := Get_Nth_Element (Els, I);
-                     Write_Discrete (Res.Mem + Size_Type (I) * Typ.Vec_El.Sz,
-                                     Typ.Vec_El, Eval_Pos (Val));
+                     Write_Discrete (Res.Mem + Size_Type (I) * Typ.Arr_El.Sz,
+                                     Typ.Arr_El, Eval_Pos (Val));
                   end loop;
                end;
             when Iir_Kind_String_Literal8 =>
@@ -880,7 +880,7 @@ package body Vhdl.Evaluation is
                      Lit := Get_Nth_Element
                        (Literal_List,
                         Natural (Str_Table.Element_String8 (Id, I)));
-                     Write_Discrete (Res.Mem + Size_Type (I - 1), Typ.Vec_El,
+                     Write_Discrete (Res.Mem + Size_Type (I - 1), Typ.Arr_El,
                                      Int64 (Get_Enum_Pos (Lit)));
                   end loop;
                end;
@@ -952,7 +952,7 @@ package body Vhdl.Evaluation is
                   Idx_Type : Iir;
                begin
                   Idx_Type := Create_Range_Subtype_From_Type (Base_Idx, Loc);
-                  Rng := Convert_Bound_To_Node (Typ.Vbound, Base_Idx, Orig);
+                  Rng := Convert_Bound_To_Node (Typ.Abound, Base_Idx, Orig);
                   Set_Range_Constraint (Idx_Type, Rng);
 
                   Res := Create_Array_Subtype (Btype, Loc);
@@ -976,7 +976,7 @@ package body Vhdl.Evaluation is
          Literal_List : constant Iir_Flist :=
            Get_Enumeration_Literal_List (Element_Type);
 
-         Len : constant Nat32 := Nat32 (Mt.Typ.Vbound.Len);
+         Len : constant Nat32 := Nat32 (Mt.Typ.Abound.Len);
 
          List : Iir_Flist;
          El : Int64;
@@ -986,7 +986,7 @@ package body Vhdl.Evaluation is
 
          for I in 1 .. Len loop
             El := Read_Discrete (Mt.Mem + Size_Type (I - 1),
-                                 Mt.Typ.Vec_El);
+                                 Mt.Typ.Arr_El);
             Lit := Get_Nth_Element (Literal_List, Natural (El));
             Set_Nth_Element (List, Natural (I - 1), Lit);
          end loop;

@@ -124,7 +124,7 @@ package body Synth.Vhdl_Environment is
                Info_Msg_Synth
                  (+Loc,
                   "  " & Prefix
-                    & "(" & Info_Subrange_Vhdl (Off, Wd, Typ.Vbound) & ")");
+                    & "(" & Info_Subrange_Vhdl (Off, Wd, Typ.Abound) & ")");
             end if;
          when Type_Slice
             | Type_Array =>

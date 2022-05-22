@@ -68,9 +68,9 @@ package body Elab.Vhdl_Values.Debug is
             Put ("vector ");
             Debug_Typ_Phys (T);
             Put (" (");
-            Debug_Bound (T.Vbound, True);
+            Debug_Bound (T.Abound, True);
             Put (") of ");
-            Debug_Typ1 (T.Vec_El);
+            Debug_Typ1 (T.Arr_El);
          when Type_Array =>
             Put ("arr ");
             Debug_Typ_Phys (T);
@@ -151,9 +151,9 @@ package body Elab.Vhdl_Values.Debug is
          when Type_Logic =>
             Put ("logic");
          when Type_Vector =>
-            Debug_Type_Short (T.Vec_El);
+            Debug_Type_Short (T.Arr_El);
             Put ("_vec(");
-            Debug_Bound (T.Vbound, False);
+            Debug_Bound (T.Abound, False);
             Put (")");
          when Type_Array =>
             declare
@@ -202,9 +202,9 @@ package body Elab.Vhdl_Values.Debug is
             Put_Uns32 (Uns32 (Read_U8 (M.Mem)));
          when Type_Vector =>
             Put ("vector (");
-            Debug_Bound (M.Typ.Vbound, True);
+            Debug_Bound (M.Typ.Abound, True);
             Put ("): ");
-            for I in 1 .. M.Typ.Vbound.Len loop
+            for I in 1 .. M.Typ.Abound.Len loop
                Put_Uns32 (Uns32 (Read_U8 (M.Mem + Size_Type (I - 1))));
             end loop;
          when Type_Array =>

@@ -446,10 +446,8 @@ package body Elab.Vhdl_Expr is
      (Typ : Type_Acc; Bnd : out Bound_Type; El_Typ : out Type_Acc) is
    begin
       case Typ.Kind is
-         when Type_Vector =>
-            El_Typ := Typ.Vec_El;
-            Bnd := Typ.Vbound;
-         when Type_Array =>
+         when Type_Array
+           | Type_Vector =>
             pragma Assert (Typ.Alast);
             El_Typ := Typ.Arr_El;
             Bnd := Typ.Abound;
@@ -466,7 +464,7 @@ package body Elab.Vhdl_Expr is
       case Btyp.Kind is
          when Type_Vector =>
             pragma Assert (El_Typ.Kind in Type_Nets);
-            Res := Create_Vector_Type (Bnd, Btyp.Vec_El);
+            Res := Create_Vector_Type (Bnd, Btyp.Arr_El);
          when Type_Unbounded_Vector =>
             pragma Assert (El_Typ.Kind in Type_Nets);
             Res := Create_Vector_Type (Bnd, Btyp.Uvec_El);
@@ -1004,9 +1002,8 @@ package body Elab.Vhdl_Expr is
       Pos : Nat8;
    begin
       case Str_Typ.Kind is
-         when Type_Vector =>
-            Bounds := Str_Typ.Vbound;
-         when Type_Array =>
+         when Type_Vector
+           | Type_Array =>
             Bounds := Str_Typ.Abound;
          when Type_Unbounded_Vector
             | Type_Unbounded_Array =>

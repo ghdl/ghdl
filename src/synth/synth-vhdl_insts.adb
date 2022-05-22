@@ -186,7 +186,7 @@ package body Synth.Vhdl_Insts is
    begin
       case Typ.Kind is
          when Type_Vector =>
-            Hash_Bound (C, Typ.Vbound);
+            Hash_Bound (C, Typ.Abound);
          when Type_Array =>
             declare
                T : Type_Acc;

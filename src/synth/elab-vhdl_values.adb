@@ -162,11 +162,6 @@ package body Elab.Vhdl_Values is
       return (Vtype, Create_Value_File (File));
    end Create_Value_File;
 
-   function Vec_Length (Typ : Type_Acc) return Iir_Index32 is
-   begin
-      return Iir_Index32 (Typ.Vbound.Len);
-   end Vec_Length;
-
    function Create_Value_Alias
      (Obj : Valtyp; Off : Value_Offsets; Typ : Type_Acc) return Valtyp
    is
@@ -376,12 +371,13 @@ package body Elab.Vhdl_Values is
             Write_Discrete (M, Typ, Typ.Drange.Left);
          when Type_Float =>
             Write_Fp64 (M, Typ.Frange.Left);
-         when Type_Vector =>
+         when Type_Array
+           | Type_Vector =>
             declare
-               Len : constant Iir_Index32 := Vec_Length (Typ);
-               El_Typ : constant Type_Acc := Typ.Vec_El;
+               Len : constant Uns32 := Get_Bound_Length (Typ);
+               El_Typ : constant Type_Acc := Typ.Arr_El;
             begin
-               for I in 1 .. Len loop
+               for I in 1 .. Iir_Index32 (Len) loop
                   Write_Value_Default (Arr_Index (M, I - 1, El_Typ), El_Typ);
                end loop;
             end;
@@ -391,15 +387,6 @@ package body Elab.Vhdl_Values is
             raise Internal_Error;
          when Type_Slice =>
             raise Internal_Error;
-         when Type_Array =>
-            declare
-               Len : constant Uns32 := Get_Bound_Length (Typ);
-               El_Typ : constant Type_Acc := Typ.Arr_El;
-            begin
-               for I in 1 .. Iir_Index32 (Len) loop
-                  Write_Value_Default (Arr_Index (M, I - 1, El_Typ), El_Typ);
-               end loop;
-            end;
          when Type_Record =>
             for I in Typ.Rec.E'Range loop
                Write_Value_Default (M + Typ.Rec.E (I).Moff, Typ.Rec.E (I).Typ);

@@ -858,8 +858,8 @@ package body Synth.Vhdl_Stmts is
          when Type_Discrete =>
             return False;
          when Type_Vector =>
-            if V.Typ.Vec_El = Logic_Type then
-               for I in 1 .. Size_Type (V.Typ.Vbound.Len) loop
+            if V.Typ.Arr_El = Logic_Type then
+               for I in 1 .. Size_Type (V.Typ.Abound.Len) loop
                   if Ignore_Choice_Logic (Read_U8 (V.Val.Mem + (I - 1)), Loc)
                   then
                      return True;
