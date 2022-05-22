@@ -43,4 +43,9 @@ package Synth.Vhdl_Oper is
      (Syn_Inst : Synth_Instance_Acc; Atype : Iir; Len : Iir_Index32)
      return Bound_Type;
 
+
+   type Eval_Predefined_Acc is access
+     function (Param : Valtyp; Res_Typ : Type_Acc) return Memtyp;
+
+   Hook_Std_Rising_Edge : Eval_Predefined_Acc;
 end Synth.Vhdl_Oper;

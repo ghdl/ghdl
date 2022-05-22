@@ -1050,10 +1050,10 @@ package body Synth.Vhdl_Eval is
                return Create_Memory_Fp64 (Atan (Read_Fp64 (Param1)), Res_Typ);
             end;
          when others =>
-            Error_Msg_Synth
-              (+Expr, "unhandled (static) function: "
-                 & Iir_Predefined_Functions'Image (Def));
-            return Null_Memtyp;
+            null;
       end case;
+      Error_Msg_Synth (+Expr, "unhandled (static) function: "
+                         & Iir_Predefined_Functions'Image (Def));
+      return Null_Memtyp;
    end Eval_Static_Predefined_Function_Call;
 end Synth.Vhdl_Eval;

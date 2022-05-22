@@ -1915,6 +1915,10 @@ package body Synth.Vhdl_Oper is
 
       case Def is
          when Iir_Predefined_Ieee_1164_Rising_Edge =>
+            if Hook_Std_Rising_Edge /= null then
+               return Create_Value_Memtyp
+                 (Hook_Std_Rising_Edge.all (L, Res_Typ));
+            end if;
             declare
                Edge : Net;
             begin
