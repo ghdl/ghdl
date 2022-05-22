@@ -131,7 +131,20 @@ package body Elab.Vhdl_Values.Debug is
          when Type_Unbounded_Vector =>
             Put ("unbounded vector");
          when Type_Unbounded_Array =>
-            Put ("unbounded array");
+            Put ("unbounded arr (");
+            declare
+               It : Type_Acc;
+            begin
+               It := T;
+               loop
+                  Put ("<>");
+                  exit when It.Ulast;
+                  Put (", ");
+                  It := It.Uarr_El;
+               end loop;
+               Put (") of ");
+               Debug_Typ1 (It.Uarr_El);
+            end;
          when Type_Protected =>
             Put ("protected");
       end case;

@@ -227,13 +227,17 @@ package body Elab.Vhdl_Types is
       Synth_Subtype_Indication_If_Anonymous (Syn_Inst, El_Type);
       El_Typ := Get_Subtype_Object (Syn_Inst, El_Type);
 
-      Idx := Get_Index_Type (Def, 0);
-      Idx_Typ := Get_Subtype_Object (Syn_Inst, Idx);
-
       if El_Typ.Kind in Type_Nets and then Ndims = 1 then
+         Idx := Get_Index_Type (Def, 0);
+         Idx_Typ := Get_Subtype_Object (Syn_Inst, Idx);
          Typ := Create_Unbounded_Vector (El_Typ, Idx_Typ);
       else
-         Typ := Create_Unbounded_Array (Dim_Type (Ndims), El_Typ, Idx_Typ);
+         Typ := El_Typ;
+         for I in reverse 1 .. Ndims loop
+            Idx := Get_Index_Type (Def, 0);
+            Idx_Typ := Get_Subtype_Object (Syn_Inst, Idx);
+            Typ := Create_Unbounded_Array (Idx_Typ, I = Ndims, Typ);
+         end loop;
       end if;
       return Typ;
    end Synth_Array_Type_Definition;
@@ -489,7 +493,15 @@ package body Elab.Vhdl_Types is
          --  element.
          El_Typ := Synth_Subtype_Indication_If_Anonymous (Syn_Inst, El_Type);
       else
-         El_Typ := Get_Array_Element (Parent_Typ);
+         El_Typ := Parent_Typ;
+         loop
+            if Is_Last_Dimension (El_Typ) then
+               El_Typ := Get_Array_Element (El_Typ);
+               exit;
+            else
+               El_Typ := Get_Array_Element (El_Typ);
+            end if;
+         end loop;
       end if;
 
       if not Get_Index_Constraint_Flag (Atype) then

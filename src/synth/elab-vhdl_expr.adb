@@ -473,7 +473,7 @@ package body Elab.Vhdl_Expr is
             pragma Assert (Is_Bounded_Type (Btyp.Arr_El));
             Res := Create_Array_Type (Bnd, True, Btyp.Arr_El);
          when Type_Unbounded_Array =>
-            pragma Assert (Btyp.Uarr_Ndim = 1);
+            pragma Assert (Btyp.Ulast);
             pragma Assert (Is_Bounded_Type (El_Typ));
             Res := Create_Array_Type (Bnd, True, El_Typ);
          when others =>

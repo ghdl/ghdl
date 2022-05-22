@@ -22,9 +22,6 @@ with System; use System;
 with Mutils; use Mutils;
 
 package body Elab.Vhdl_Objtypes is
-   function To_Bound_Array_Acc is new Ada.Unchecked_Conversion
-     (System.Address, Bound_Array_Acc);
-
    function To_Rec_El_Array_Acc is new Ada.Unchecked_Conversion
      (System.Address, Rec_El_Array_Acc);
 
@@ -87,8 +84,11 @@ package body Elab.Vhdl_Objtypes is
             end if;
             return Are_Types_Equal (L.Arr_El, R.Arr_El);
          when Type_Unbounded_Array =>
-            return L.Uarr_Ndim = R.Uarr_Ndim
-              and then Are_Types_Equal (L.Uarr_El, R.Uarr_El);
+            if L.Ulast /= R.Ulast then
+               return False;
+            end if;
+            --  Also check index ?
+            return Are_Types_Equal (L.Uarr_El, R.Uarr_El);
          when Type_Unbounded_Vector =>
             return Are_Types_Equal (L.Uvec_El, R.Uvec_El);
          when Type_Slice =>
@@ -112,6 +112,21 @@ package body Elab.Vhdl_Objtypes is
             return False;
       end case;
    end Are_Types_Equal;
+
+   function Is_Last_Dimension (Arr : Type_Acc) return Boolean is
+   begin
+      case Arr.Kind is
+         when Type_Vector
+           | Type_Array =>
+            return Arr.Alast;
+         when Type_Unbounded_Vector =>
+            return True;
+         when Type_Unbounded_Array =>
+            return Arr.Ulast;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Is_Last_Dimension;
 
    function Is_Null_Range (Rng : Discrete_Range_Type) return Boolean is
    begin
@@ -314,32 +329,6 @@ package body Elab.Vhdl_Objtypes is
                                  El);
    end Create_Vec_Type_By_Length;
 
-   function Create_Bound_Array (Ndims : Dim_Type) return Bound_Array_Acc
-   is
-      subtype Data_Type is Bound_Array (Ndims);
-      Res : Address;
-   begin
-      --  Manually allocate the array to handle large arrays without
-      --  creating a large temporary value.
-      Areapools.Allocate
-        (Current_Pool.all, Res,
-         Data_Type'Size / Storage_Unit, Data_Type'Alignment);
-
-      declare
-         --  Discard the warnings for no pragma Import as we really want
-         --  to use the default initialization.
-         pragma Warnings (Off);
-         Addr1 : constant Address := Res;
-         Init : Data_Type;
-         for Init'Address use Addr1;
-         pragma Warnings (On);
-      begin
-         null;
-      end;
-
-      return To_Bound_Array_Acc (Res);
-   end Create_Bound_Array;
-
    function Create_Array_Type
      (Bnd : Bound_Type; Last : Boolean; El_Type : Type_Acc) return Type_Acc
    is
@@ -358,7 +347,7 @@ package body Elab.Vhdl_Objtypes is
    end Create_Array_Type;
 
    function Create_Unbounded_Array
-     (Ndim : Dim_Type; El_Type : Type_Acc; Idx1 : Type_Acc) return Type_Acc
+     (Idx : Type_Acc; Last : Boolean; El_Type : Type_Acc) return Type_Acc
    is
       subtype Unbounded_Type_Type is Type_Type (Type_Unbounded_Array);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Unbounded_Type_Type);
@@ -368,12 +357,12 @@ package body Elab.Vhdl_Objtypes is
                                                 Al => El_Type.Al,
                                                 Sz => 0,
                                                 W => 0,
-                                                Uarr_Ndim => Ndim,
+                                                Ulast => Last,
                                                 Uarr_El => El_Type,
-                                                Uarr_Idx1 => Idx1)));
+                                                Uarr_Idx => Idx)));
    end Create_Unbounded_Array;
 
-   function Create_Unbounded_Vector (El_Type : Type_Acc; Idx1 : Type_Acc)
+   function Create_Unbounded_Vector (El_Type : Type_Acc; Idx : Type_Acc)
                                     return Type_Acc
    is
       subtype Unbounded_Type_Type is Type_Type (Type_Unbounded_Vector);
@@ -385,7 +374,7 @@ package body Elab.Vhdl_Objtypes is
                                                 Sz => 0,
                                                 W => 0,
                                                 Uvec_El => El_Type,
-                                                Uvec_Idx1 => Idx1)));
+                                                Uvec_Idx1 => Idx)));
    end Create_Unbounded_Vector;
 
    function Get_Array_Element (Arr_Type : Type_Acc) return Type_Acc is
@@ -424,7 +413,7 @@ package body Elab.Vhdl_Objtypes is
          when Type_Unbounded_Vector =>
             return Typ.Uvec_Idx1;
          when Type_Unbounded_Array =>
-            return Typ.Uarr_Idx1;
+            return Typ.Uarr_Idx;
          when others =>
             raise Internal_Error;
       end case;

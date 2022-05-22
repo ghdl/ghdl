@@ -138,7 +138,7 @@ package body Synth.Vhdl_Aggr is
       begin
          Nbr_Els := Nbr_Els + 1;
 
-         if Typ.Kind = Type_Vector or else Typ.Alast then
+         if Typ.Alast then
             pragma Assert (Dim = Strides'Last);
             Val := Synth_Expression_With_Type (Syn_Inst, Value, El_Typ);
             Val := Synth_Subtype_Conversion (Ctxt, Val, El_Typ, False, Value);
