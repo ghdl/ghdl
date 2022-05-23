@@ -21,6 +21,8 @@ begin
     constant sov : std_logic_vector := b"0101";
     constant v_v : std_logic_vector := b"0011";
     constant r_v : std_logic_vector := b"0001";
+    --  reg0                             0001
+    --  reg1                             0011
   begin
     clk <= '0';
     rst <= '1';
