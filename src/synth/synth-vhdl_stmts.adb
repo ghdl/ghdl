@@ -1785,8 +1785,9 @@ package body Synth.Vhdl_Stmts is
 
          Inter_Type := Get_Subtype_Object (Subprg_Inst, Get_Type (Inter));
 
-         case Iir_Parameter_Modes (Get_Mode (Inter)) is
-            when Iir_In_Mode =>
+         case Iir_Kinds_Interface_Object_Declaration (Get_Kind (Inter)) is
+            when Iir_Kind_Interface_Constant_Declaration =>
+               pragma Assert (Get_Mode (Inter) = Iir_In_Mode);
                if Assoc = Null_Node
                  or else Get_Kind (Assoc) = Iir_Kind_Association_Element_Open
                then
@@ -1804,40 +1805,39 @@ package body Synth.Vhdl_Stmts is
                   Val := Synth_Expression_With_Type
                     (Caller_Inst, Actual, Inter_Type);
                end if;
-            when Iir_Out_Mode | Iir_Inout_Mode =>
+            when Iir_Kind_Interface_Variable_Declaration =>
+               --  Always pass by value.
                Actual := Get_Actual (Assoc);
                Info := Synth_Target (Caller_Inst, Actual);
-
-               case Iir_Kinds_Interface_Object_Declaration (Get_Kind (Inter))
-                  is
-                  when Iir_Kind_Interface_Constant_Declaration =>
-                     raise Internal_Error;
-                  when Iir_Kind_Interface_Variable_Declaration =>
-                     --  Always pass by value.
-                     Nbr_Inout := Nbr_Inout + 1;
-                     Infos (Nbr_Inout) := Info;
-                     if Info.Kind /= Target_Memory
-                       and then Is_Static (Info.Obj.Val)
-                     then
-                        Val := Create_Value_Memory (Info.Targ_Type);
-                        Copy_Memory (Val.Val.Mem,
-                                     Info.Obj.Val.Mem + Info.Off.Mem_Off,
-                                     Info.Targ_Type.Sz);
-                     else
-                        Val := Synth_Read (Caller_Inst, Info, Assoc);
-                     end if;
-                  when Iir_Kind_Interface_Signal_Declaration =>
-                     --  Always pass by reference (use an alias).
-                     if Info.Kind = Target_Memory then
-                        raise Internal_Error;
-                     end if;
-                     Val := Create_Value_Alias
-                       (Info.Obj, Info.Off, Info.Targ_Type);
-                  when Iir_Kind_Interface_File_Declaration =>
-                     Val := Info.Obj;
-                  when Iir_Kind_Interface_Quantity_Declaration =>
-                     raise Internal_Error;
-               end case;
+               if Get_Mode (Inter) /= Iir_In_Mode then
+                  Nbr_Inout := Nbr_Inout + 1;
+                  Infos (Nbr_Inout) := Info;
+               end if;
+               if Info.Kind /= Target_Memory
+                 and then Is_Static (Info.Obj.Val)
+               then
+                  Val := Create_Value_Memory (Info.Targ_Type);
+                  Copy_Memory (Val.Val.Mem,
+                               Info.Obj.Val.Mem + Info.Off.Mem_Off,
+                               Info.Targ_Type.Sz);
+               else
+                  Val := Synth_Read (Caller_Inst, Info, Assoc);
+               end if;
+            when Iir_Kind_Interface_Signal_Declaration =>
+               --  Always pass by reference (use an alias).
+               Actual := Get_Actual (Assoc);
+               Info := Synth_Target (Caller_Inst, Actual);
+               if Info.Kind = Target_Memory then
+                  raise Internal_Error;
+               end if;
+               Val := Create_Value_Alias
+                 (Info.Obj, Info.Off, Info.Targ_Type);
+            when Iir_Kind_Interface_File_Declaration =>
+               Actual := Get_Actual (Assoc);
+               Info := Synth_Target (Caller_Inst, Actual);
+               Val := Info.Obj;
+            when Iir_Kind_Interface_Quantity_Declaration =>
+               raise Internal_Error;
          end case;
 
          if Val = No_Valtyp then
@@ -1912,7 +1912,7 @@ package body Synth.Vhdl_Stmts is
 
          case Iir_Kinds_Interface_Object_Declaration (Get_Kind (Inter)) is
             when Iir_Kind_Interface_Constant_Declaration =>
-               --  Pass by reference.
+               --  Pass by copy.
                Create_Object (Subprg_Inst, Inter, Val);
             when Iir_Kind_Interface_Variable_Declaration =>
                --  Arguments are passed by copy.
