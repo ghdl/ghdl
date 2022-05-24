@@ -1757,10 +1757,10 @@ package body Synth.Vhdl_Stmts is
       end case;
    end Association_Iterate_Next;
 
-   procedure Synth_Subprogram_Association (Subprg_Inst : Synth_Instance_Acc;
-                                           Caller_Inst : Synth_Instance_Acc;
-                                           Init : Association_Iterator_Init;
-                                           Infos : out Target_Info_Array)
+   procedure Synth_Subprogram_Associations (Subprg_Inst : Synth_Instance_Acc;
+                                            Caller_Inst : Synth_Instance_Acc;
+                                            Init : Association_Iterator_Init;
+                                            Infos : out Target_Info_Array)
    is
       pragma Assert (Infos'First = 1);
       Ctxt : constant Context_Acc := Get_Build (Caller_Inst);
@@ -1932,7 +1932,7 @@ package body Synth.Vhdl_Stmts is
                raise Internal_Error;
          end case;
       end loop;
-   end Synth_Subprogram_Association;
+   end Synth_Subprogram_Associations;
 
    procedure Synth_Subprogram_Association (Subprg_Inst : Synth_Instance_Acc;
                                            Caller_Inst : Synth_Instance_Acc;
@@ -1943,7 +1943,7 @@ package body Synth.Vhdl_Stmts is
       Init : Association_Iterator_Init;
    begin
       Init := Association_Iterator_Build (Inter_Chain, Assoc_Chain);
-      Synth_Subprogram_Association (Subprg_Inst, Caller_Inst, Init, Infos);
+      Synth_Subprogram_Associations (Subprg_Inst, Caller_Inst, Init, Infos);
       pragma Unreferenced (Infos);
    end Synth_Subprogram_Association;
 
@@ -2202,6 +2202,20 @@ package body Synth.Vhdl_Stmts is
       return Res;
    end Synth_Static_Subprogram_Call;
 
+   function Synth_Subprogram_Call_Instance (Inst : Synth_Instance_Acc;
+                                            Imp : Node;
+                                            Bod : Node)
+                                           return Synth_Instance_Acc
+   is
+      Res : Synth_Instance_Acc;
+      Up_Inst : Synth_Instance_Acc;
+   begin
+      Up_Inst := Get_Instance_By_Scope (Inst, Get_Parent_Scope (Imp));
+      Res := Make_Elab_Instance (Up_Inst, Bod, Config => Null_Node);
+      Set_Caller_Instance (Res, Inst);
+      return Res;
+   end Synth_Subprogram_Call_Instance;
+
    function Synth_Subprogram_Call (Syn_Inst : Synth_Instance_Acc;
                                    Call : Node;
                                    Init : Association_Iterator_Init)
@@ -2216,18 +2230,15 @@ package body Synth.Vhdl_Stmts is
       Area_Mark : Areapools.Mark_Type;
       Res : Valtyp;
       Sub_Inst : Synth_Instance_Acc;
-      Up_Inst : Synth_Instance_Acc;
    begin
       Areapools.Mark (Area_Mark, Instance_Pool.all);
 
-      Up_Inst := Get_Instance_By_Scope (Syn_Inst, Get_Parent_Scope (Imp));
-      Sub_Inst := Make_Elab_Instance (Up_Inst, Bod, Config => Null_Node);
-      Set_Caller_Instance (Sub_Inst, Syn_Inst);
+      Sub_Inst := Synth_Subprogram_Call_Instance (Syn_Inst, Imp, Bod);
       if Ctxt /= null then
          Set_Extra (Sub_Inst, Syn_Inst, New_Internal_Name (Ctxt));
       end if;
 
-      Synth_Subprogram_Association (Sub_Inst, Syn_Inst, Init, Infos);
+      Synth_Subprogram_Associations (Sub_Inst, Syn_Inst, Init, Infos);
 
       if Is_Error (Sub_Inst) then
          Res := No_Valtyp;
@@ -2319,7 +2330,7 @@ package body Synth.Vhdl_Stmts is
          Set_Extra (Sub_Inst, Syn_Inst, New_Internal_Name (Ctxt));
       end if;
 
-      Synth_Subprogram_Association (Sub_Inst, Syn_Inst, Init, Infos);
+      Synth_Subprogram_Associations (Sub_Inst, Syn_Inst, Init, Infos);
 
       Synth.Vhdl_Static_Proc.Synth_Static_Procedure (Sub_Inst, Imp, Call);
 
