@@ -396,6 +396,24 @@ package body Synth.Vhdl_Eval is
                             Right.Mem, Right.Typ.Sz);
                return Res;
             end;
+         when Iir_Predefined_Element_Element_Concat =>
+            declare
+               El_Typ : constant Type_Acc := Left.Typ;
+               Bnd : Bound_Type;
+               Res_St : Type_Acc;
+               Res : Memtyp;
+            begin
+               Check_Matching_Bounds (Left.Typ, Right.Typ, Expr);
+               Bnd := Elab.Vhdl_Types.Create_Bounds_From_Length
+                 (Get_Uarray_Index (Res_Typ).Drange, 2);
+               Res_St := Create_Onedimensional_Array_Subtype
+                 (Res_Typ, Bnd, El_Typ);
+               Res := Create_Memory (Res_St);
+               Copy_Memory (Res.Mem, Left.Mem, El_Typ.Sz);
+               Copy_Memory (Res.Mem + El_Typ.Sz,
+                            Right.Mem, El_Typ.Sz);
+               return Res;
+            end;
 
          when Iir_Predefined_Array_Equality
            | Iir_Predefined_Record_Equality =>
