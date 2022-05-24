@@ -455,8 +455,8 @@ package body Elab.Vhdl_Files is
          when Type_Record =>
             for I in Val.Typ.Rec.E'Range loop
                File_Read_Value
-                 (File,
-                  (Val.Typ.Rec.E (I).Typ, Val.Mem + Val.Typ.Rec.E (I).Moff),
+                 (File, (Val.Typ.Rec.E (I).Typ,
+                         Val.Mem + Val.Typ.Rec.E (I).Offs.Mem_Off),
                   Loc);
             end loop;
          when Type_Unbounded_Record
@@ -509,10 +509,10 @@ package body Elab.Vhdl_Files is
             end;
          when Type_Record =>
             for I in Val.Typ.Rec.E'Range loop
-               File_Write_Value
-                 (File,
-                  (Val.Typ.Rec.E (I).Typ, Val.Mem + Val.Typ.Rec.E (I).Moff),
-                  Loc);
+               File_Write_Value (File,
+                                 (Val.Typ.Rec.E (I).Typ,
+                                  Val.Mem + Val.Typ.Rec.E (I).Offs.Mem_Off),
+                                 Loc);
             end loop;
          when Type_Unbounded_Record
             | Type_Unbounded_Array

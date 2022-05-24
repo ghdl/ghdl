@@ -98,10 +98,10 @@ package body Elab.Vhdl_Values.Debug is
                if I /= 1 then
                   Put (", ");
                end if;
-               Put ("[boff=");
-               Put_Uns32 (T.Rec.E (I).Boff);
+               Put ("[noff=");
+               Put_Uns32 (T.Rec.E (I).Offs.Net_Off);
                Put (", moff=");
-               Put_Uns32 (Uns32 (T.Rec.E (I).Moff));
+               Put_Uns32 (Uns32 (T.Rec.E (I).Offs.Mem_Off));
                Put ("] ");
                Debug_Typ1 (T.Rec.E (I).Typ);
             end loop;
@@ -254,7 +254,7 @@ package body Elab.Vhdl_Values.Debug is
                   Put (", ");
                end if;
                Debug_Memtyp
-                 ((M.Typ.Rec.E (I).Typ, M.Mem + M.Typ.Rec.E (I).Moff));
+                 ((M.Typ.Rec.E (I).Typ, M.Mem + M.Typ.Rec.E (I).Offs.Mem_Off));
             end loop;
             Put (")");
          when Type_Discrete =>

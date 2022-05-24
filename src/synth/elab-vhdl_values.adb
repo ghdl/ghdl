@@ -389,7 +389,8 @@ package body Elab.Vhdl_Values is
             raise Internal_Error;
          when Type_Record =>
             for I in Typ.Rec.E'Range loop
-               Write_Value_Default (M + Typ.Rec.E (I).Moff, Typ.Rec.E (I).Typ);
+               Write_Value_Default (M + Typ.Rec.E (I).Offs.Mem_Off,
+                                    Typ.Rec.E (I).Typ);
             end loop;
          when Type_Access =>
             Write_Access (M, Null_Heap_Index);

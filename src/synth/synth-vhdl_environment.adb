@@ -142,14 +142,14 @@ package body Synth.Vhdl_Environment is
                      Sub_Off : Uns32;
                      Sub_Wd : Width;
                   begin
-                     if Off + Wd <= El.Boff then
+                     if Off + Wd <= El.Offs.Net_Off then
                         --  Not covered anymore.
                         exit;
-                     elsif Off >= El.Boff + El.Typ.W then
+                     elsif Off >= El.Offs.Net_Off + El.Typ.W then
                         --  Not yet covered.
                         null;
-                     elsif Off <= El.Boff
-                       and then Off + Wd >= El.Boff + El.Typ.W
+                     elsif Off <= El.Offs.Net_Off
+                       and then Off + Wd >= El.Offs.Net_Off + El.Typ.W
                      then
                         --  Fully covered.
                         Info_Msg_Synth
@@ -158,13 +158,13 @@ package body Synth.Vhdl_Environment is
                              & Vhdl.Utils.Image_Identifier (Field));
                      else
                         --  Partially covered.
-                        if Off < El.Boff then
+                        if Off < El.Offs.Net_Off then
                            Sub_Off := 0;
-                           Sub_Wd := Wd - (El.Boff - Off);
+                           Sub_Wd := Wd - (El.Offs.Net_Off - Off);
                            Sub_Wd := Width'Min (Sub_Wd, El.Typ.W);
                         else
-                           Sub_Off := Off - El.Boff;
-                           Sub_Wd := El.Typ.W - (Off - El.Boff);
+                           Sub_Off := Off - El.Offs.Net_Off;
+                           Sub_Wd := El.Typ.W - (Off - El.Offs.Net_Off);
                            Sub_Wd := Width'Min (Sub_Wd, Wd);
                         end if;
                         Info_Subnet_Vhdl

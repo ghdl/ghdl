@@ -515,7 +515,7 @@ package body Synth.Vhdl_Aggr is
             for I in Aggr_Type.Rec.E'Range loop
                --  Note: elements are put in reverse order in Tab_Res,
                --  so reverse again...
-               Write_Value (Res.Val.Mem + Res_Typ.Rec.E (I).Moff,
+               Write_Value (Res.Val.Mem + Res_Typ.Rec.E (I).Offs.Mem_Off,
                             Tab_Res (Tab_Res'Last - Nat32 (I) + 1));
             end loop;
          else

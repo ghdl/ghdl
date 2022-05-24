@@ -482,7 +482,7 @@ package body Elab.Vhdl_Objtypes is
             E : Rec_El_Type renames Els.E (I);
          begin
             --  For nets.
-            E.Boff := W;
+            E.Offs.Net_Off := W;
             if E.Typ.Wkind /= Wkind_Net then
                Wkind := Wkind_Undef;
             end if;
@@ -491,7 +491,7 @@ package body Elab.Vhdl_Objtypes is
             --  For memory.
             Al := Palign_Type'Max (Al, E.Typ.Al);
             Sz := Align (Sz, E.Typ.Al);
-            E.Moff := Sz;
+            E.Offs.Mem_Off := Sz;
             Sz := Sz + E.Typ.Sz;
          end;
       end loop;

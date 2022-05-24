@@ -56,6 +56,16 @@ package Elab.Vhdl_Objtypes is
       Len : Uns32;
    end record;
 
+   --  Offsets for a value.
+   type Value_Offsets is record
+      Net_Off : Uns32;
+      Mem_Off : Size_Type;
+   end record;
+
+   No_Value_Offsets : constant Value_Offsets := (0, 0);
+
+   function "+" (L, R : Value_Offsets) return Value_Offsets;
+
    type Type_Kind is
      (
       Type_Bit,
@@ -87,11 +97,8 @@ package Elab.Vhdl_Objtypes is
    type Type_Acc is access Type_Type;
 
    type Rec_El_Type is record
-      --  Bit offset: offset of the element in a net.
-      Boff : Uns32;
-
-      --  Memory offset: offset of the element in memory.
-      Moff : Size_Type;
+      --  Offset of the element.
+      Offs : Value_Offsets;
 
       --  Type of the element.
       Typ : Type_Acc;
@@ -178,16 +185,6 @@ package Elab.Vhdl_Objtypes is
    end record;
 
    Null_Memtyp : constant Memtyp := (null, null);
-
-   --  Offsets for a value.
-   type Value_Offsets is record
-      Net_Off : Uns32;
-      Mem_Off : Size_Type;
-   end record;
-
-   No_Value_Offsets : constant Value_Offsets := (0, 0);
-
-   function "+" (L, R : Value_Offsets) return Value_Offsets;
 
    Global_Pool : aliased Areapool;
    Expr_Pool : aliased Areapool;

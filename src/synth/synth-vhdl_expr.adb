@@ -350,8 +350,8 @@ package body Synth.Vhdl_Expr is
             end;
          when Type_Record =>
             for I in Typ.Rec.E'Range loop
-               Value2logvec (Mem + Typ.Rec.E (I).Moff, Typ.Rec.E (I).Typ,
-                             Off, W, Vec, Vec_Off, Has_Zx);
+               Value2logvec (Mem + Typ.Rec.E (I).Offs.Mem_Off,
+                             Typ.Rec.E (I).Typ, Off, W, Vec, Vec_Off, Has_Zx);
                exit when W = 0;
             end loop;
          when Type_Access =>
@@ -2009,13 +2009,14 @@ package body Synth.Vhdl_Expr is
                elsif Is_Static (Val.Val) then
                   Res := Create_Value_Memory (Res_Typ);
                   Copy_Memory
-                    (Res.Val.Mem, Val.Val.Mem + Val.Typ.Rec.E (Idx + 1).Moff,
+                    (Res.Val.Mem,
+                     Val.Val.Mem + Val.Typ.Rec.E (Idx + 1).Offs.Mem_Off,
                      Res_Typ.Sz);
                   return Res;
                else
-                  N := Build_Extract
-                    (Ctxt, Get_Net (Ctxt, Val),
-                     Val.Typ.Rec.E (Idx + 1).Boff, Get_Type_Width (Res_Typ));
+                  N := Build_Extract (Ctxt, Get_Net (Ctxt, Val),
+                                      Val.Typ.Rec.E (Idx + 1).Offs.Net_Off,
+                                      Get_Type_Width (Res_Typ));
                   Set_Location (N, Expr);
                   return Create_Value_Net (N, Res_Typ);
                end if;

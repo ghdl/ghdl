@@ -192,10 +192,7 @@ package body Synth.Vhdl_Stmts is
                Synth_Assignment_Prefix
                  (Syn_Inst, Get_Prefix (Pfx),
                   Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
-               Dest_Off.Net_Off :=
-                 Dest_Off.Net_Off + Dest_Typ.Rec.E (Idx + 1).Boff;
-               Dest_Off.Mem_Off :=
-                 Dest_Off.Mem_Off + Dest_Typ.Rec.E (Idx + 1).Moff;
+               Dest_Off := Dest_Off + Dest_Typ.Rec.E (Idx + 1).Offs;
 
                Dest_Typ := Dest_Typ.Rec.E (Idx + 1).Typ;
             end;

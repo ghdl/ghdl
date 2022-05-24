@@ -650,7 +650,7 @@ package body Synth.Vhdl_Insts is
             begin
                Synth_Individual_Prefix
                  (Syn_Inst, Inter_Inst, Get_Prefix (Formal), Off, Typ);
-               Off := Off + Typ.Rec.E (Idx + 1).Boff;
+               Off := Off + Typ.Rec.E (Idx + 1).Offs.Net_Off;
                Typ := Typ.Rec.E (Idx + 1).Typ;
             end;
          when Iir_Kind_Indexed_Name =>
@@ -907,7 +907,7 @@ package body Synth.Vhdl_Insts is
                if N /= No_Net then
                   Connect (Get_Input (Inst, Port),
                            Build_Extract (Get_Build (Syn_Inst), N,
-                                          Inter_Typ.Rec.E (I).Boff,
+                                          Inter_Typ.Rec.E (I).Offs.Net_Off,
                                           Inter_Typ.Rec.E (I).Typ.W));
                end if;
                Port := Port + 1;

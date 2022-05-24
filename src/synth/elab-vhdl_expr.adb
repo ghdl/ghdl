@@ -771,10 +771,7 @@ package body Elab.Vhdl_Expr is
             begin
                Exec_Assignment_Prefix
                  (Syn_Inst, Get_Prefix (Pfx), Dest_Base, Dest_Typ, Dest_Off);
-               Dest_Off.Net_Off :=
-                 Dest_Off.Net_Off + Dest_Typ.Rec.E (Idx + 1).Boff;
-               Dest_Off.Mem_Off :=
-                 Dest_Off.Mem_Off + Dest_Typ.Rec.E (Idx + 1).Moff;
+               Dest_Off := Dest_Off + Dest_Typ.Rec.E (Idx + 1).Offs;
 
                Dest_Typ := Dest_Typ.Rec.E (Idx + 1).Typ;
             end;
@@ -1188,7 +1185,8 @@ package body Elab.Vhdl_Expr is
                pragma Assert (Is_Static (Val.Val));
                Res := Create_Value_Memory (Res_Typ);
                Copy_Memory
-                 (Res.Val.Mem, Val.Val.Mem + Val.Typ.Rec.E (Idx + 1).Moff,
+                 (Res.Val.Mem,
+                  Val.Val.Mem + Val.Typ.Rec.E (Idx + 1).Offs.Mem_Off,
                   Res_Typ.Sz);
                return Res;
             end;

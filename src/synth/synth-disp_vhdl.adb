@@ -230,7 +230,8 @@ package body Synth.Disp_Vhdl is
                      Disp_In_Converter
                        (Mname,
                         Pfx & '.' & Name_Table.Image (Get_Identifier (El)),
-                        Off + Et.Boff, Get_Type (El), Et.Typ, Rec_Full);
+                        Off + Et.Offs.Net_Off,
+                        Get_Type (El), Et.Typ, Rec_Full);
                   end;
                end loop;
             end;
@@ -409,7 +410,8 @@ package body Synth.Disp_Vhdl is
                      Disp_Out_Converter
                        (Mname,
                         Pfx & '.' & Name_Table.Image (Get_Identifier (El)),
-                        Off + Et.Boff, Get_Type (El), Et.Typ, Rec_Full);
+                        Off + Et.Offs.Net_Off,
+                        Get_Type (El), Et.Typ, Rec_Full);
                   end;
                end loop;
             end;
