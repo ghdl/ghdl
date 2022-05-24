@@ -60,8 +60,10 @@ package body Elab.Vhdl_Values.Debug is
    procedure Debug_Typ1 (T : Type_Acc) is
    begin
       case T.Kind is
-         when Type_Bit
-           | Type_Logic =>
+         when Type_Bit =>
+            Put ("bit");
+            Debug_Typ_Phys (T);
+         when Type_Logic =>
             Put ("bit/logic");
             Debug_Typ_Phys (T);
          when Type_Vector =>
@@ -292,6 +294,8 @@ package body Elab.Vhdl_Values.Debug is
             New_Line;
          when Value_Signal =>
             Put ("signal ");
+            Put_Uns32 (Uns32 (V.Val.S));
+            Put (": ");
             Debug_Typ1 (V.Typ);
             New_Line;
          when Value_Wire =>
