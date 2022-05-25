@@ -107,6 +107,16 @@ package Synth.Vhdl_Context is
 
    --  Create a Value_Wire.  For a bit wire, RNG must be null.
    function Create_Value_Wire (W : Wire_Id; Wtype : Type_Acc) return Valtyp;
+
+   --  Create a Value_Dyn_Alias
+   function Create_Value_Dyn_Alias (Obj : Value_Acc;
+                                    Poff : Uns32;
+                                    Ptyp : Type_Acc;
+                                    Voff : Net;
+                                    Eoff : Uns32;
+                                    Typ : Type_Acc) return Valtyp;
+
+   function Get_Value_Dyn_Alias_Voff (Val : Value_Acc) return Net;
 private
    type Extra_Vhdl_Instance_Type is record
       Base : Base_Instance_Acc;

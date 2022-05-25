@@ -220,7 +220,8 @@ package body Synth.Vhdl_Insts is
          when Value_Net
            | Value_Wire
            | Value_Signal
-           | Value_File =>
+           | Value_File
+           | Value_Dyn_Alias =>
             raise Internal_Error;
       end case;
    end Hash_Const;

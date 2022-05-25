@@ -260,8 +260,6 @@ package body Synth.Vhdl_Stmts is
       end case;
    end Synth_Assignment_Prefix;
 
-   type Target_Info_Array is array (Natural range <>) of Target_Info;
-
    function Synth_Aggregate_Target_Type (Syn_Inst : Synth_Instance_Acc;
                                          Target : Node) return Type_Acc
    is
@@ -455,6 +453,78 @@ package body Synth.Vhdl_Stmts is
    procedure Synth_Assignment_Aggregate is
       new Assign_Aggregate (Assign => Synth_Assignment);
 
+   procedure Synth_Assignment_Simple (Syn_Inst : Synth_Instance_Acc;
+                                      Targ : Valtyp;
+                                      Off : Value_Offsets;
+                                      Val : Valtyp;
+                                      Loc : Node)
+   is
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
+      W : Wire_Id;
+      V : Valtyp;
+   begin
+      if Targ = No_Valtyp then
+         --  There was an error.
+         return;
+      end if;
+
+      if Targ.Val.Kind = Value_Alias then
+         Synth_Assignment_Simple (Syn_Inst, (Targ.Val.A_Typ, Targ.Val.A_Obj),
+                                  Off + Targ.Val.A_Off, Val, Loc);
+         return;
+      end if;
+
+      V := Val;
+
+      if Targ.Val.Kind = Value_Wire then
+         W := Get_Value_Wire (Targ.Val);
+         if Is_Static (V.Val)
+           and then V.Typ.Sz = Targ.Typ.Sz
+         then
+            pragma Assert (Off = No_Value_Offsets);
+            Phi_Assign_Static (W, Unshare (Get_Memtyp (V)));
+         else
+            if V.Typ.W = 0 then
+               --  Forget about null wires.
+               return;
+            end if;
+            Phi_Assign_Net (Ctxt, W, Get_Net (Ctxt, V), Off.Net_Off);
+         end if;
+      else
+         if not Is_Static (V.Val) then
+            --  Maybe the error message is too cryptic ?
+            Error_Msg_Synth
+              (+Loc, "cannot assign a net to a static value");
+         else
+            Strip_Const (V);
+            Copy_Memory (Targ.Val.Mem + Off.Mem_Off, V.Val.Mem, V.Typ.Sz);
+         end if;
+      end if;
+   end Synth_Assignment_Simple;
+
+   procedure Synth_Assignment_Memory (Syn_Inst : Synth_Instance_Acc;
+                                      Targ_Base : Value_Acc;
+                                      Targ_Poff : Uns32;
+                                      Targ_Ptyp : Type_Acc;
+                                      Targ_Voff : Net;
+                                      Targ_Eoff : Uns32;
+                                      Val : Valtyp;
+                                      Loc : Node)
+   is
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
+      W : constant Wire_Id := Get_Value_Wire (Targ_Base);
+      N : Net;
+   begin
+      --  Get the whole memory.
+      N := Get_Current_Assign_Value (Ctxt, W, Targ_Poff, Targ_Ptyp.W);
+      --  Insert the new value.
+      N := Build_Dyn_Insert
+        (Ctxt, N, Get_Net (Ctxt, Val), Targ_Voff, Targ_Eoff);
+      Set_Location (N, Loc);
+      --  Write.
+      Phi_Assign_Net (Ctxt, W, N, Targ_Poff);
+   end Synth_Assignment_Memory;
+
    procedure Synth_Assignment (Syn_Inst : Synth_Instance_Acc;
                                Target : Target_Info;
                                Val : Valtyp;
@@ -462,7 +532,6 @@ package body Synth.Vhdl_Stmts is
    is
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       V : Valtyp;
-      W : Wire_Id;
    begin
       V := Synth_Subtype_Conversion (Ctxt, Val, Target.Targ_Type, False, Loc);
       pragma Unreferenced (Val);
@@ -476,55 +545,13 @@ package body Synth.Vhdl_Stmts is
             Synth_Assignment_Aggregate
               (Syn_Inst, Target.Aggr, Target.Targ_Type, V, Loc);
          when Target_Simple =>
-            if V.Typ.Sz = 0 then
-               --  If there is nothing to assign (like a null slice),
-               --  return now.
-               return;
-            end if;
-
-            if Target.Obj = No_Valtyp then
-               --  There was an error.
-               null;
-            elsif Target.Obj.Val.Kind = Value_Wire then
-               W := Get_Value_Wire (Target.Obj.Val);
-               if Is_Static (V.Val)
-                 and then V.Typ.Sz = Target.Obj.Typ.Sz
-               then
-                  pragma Assert (Target.Off = (0, 0));
-                  Phi_Assign_Static (W, Unshare (Get_Memtyp (V)));
-               else
-                  if V.Typ.W = 0 then
-                     --  Forget about null wires.
-                     return;
-                  end if;
-                  Phi_Assign_Net
-                    (Ctxt, W, Get_Net (Ctxt, V), Target.Off.Net_Off);
-               end if;
-            else
-               if not Is_Static (V.Val) then
-                  --  Maybe the error message is too cryptic ?
-                  Error_Msg_Synth
-                    (+Loc, "cannot assign a net to a static value");
-               else
-                  Strip_Const (V);
-                  Copy_Memory (Target.Obj.Val.Mem + Target.Off.Mem_Off,
-                               V.Val.Mem, V.Typ.Sz);
-               end if;
-            end if;
+            Synth_Assignment_Simple (Syn_Inst, Target.Obj, Target.Off, V, Loc);
          when Target_Memory =>
-            declare
-               Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
-               W : constant Wire_Id := Get_Value_Wire (Target.Mem_Obj.Val);
-               N : Net;
-            begin
-               N := Get_Current_Assign_Value
-                 (Ctxt, W,
-                  Target.Mem_Dyn.Pfx_Off.Net_Off, Target.Mem_Dyn.Pfx_Typ.W);
-               N := Build_Dyn_Insert (Ctxt, N, Get_Net (Ctxt, V),
-                                      Target.Mem_Dyn.Voff, Target.Mem_Doff);
-               Set_Location (N, Loc);
-               Phi_Assign_Net (Ctxt, W, N, Target.Mem_Dyn.Pfx_Off.Net_Off);
-            end;
+            Synth_Assignment_Memory
+              (Syn_Inst, Target.Mem_Obj.Val,
+               Target.Mem_Dyn.Pfx_Off.Net_Off, Target.Mem_Dyn.Pfx_Typ,
+               Target.Mem_Dyn.Voff, Target.Mem_Doff,
+               V, Loc);
       end case;
    end Synth_Assignment;
 
@@ -1628,12 +1655,12 @@ package body Synth.Vhdl_Stmts is
    end Association_Iterator_Build;
 
    function Count_Associations (Init : Association_Iterator_Init)
-                               return Natural
+                               return Nat32
    is
       Assoc : Node;
       Assoc_Inter : Node;
       Inter : Node;
-      Nbr_Inout : Natural;
+      Nbr_Inout : Nat32;
    begin
       case Init.Kind is
          when Association_Function =>
@@ -1754,10 +1781,31 @@ package body Synth.Vhdl_Stmts is
       end case;
    end Association_Iterate_Next;
 
+   function Info_To_Valtyp (Info : Target_Info) return Valtyp is
+   begin
+      case Info.Kind is
+         when Target_Simple =>
+            if Info.Off = No_Value_Offsets then
+               return Info.Obj;
+            else
+               return Create_Value_Alias (Info.Obj, Info.Off, Info.Targ_Type);
+            end if;
+         when Target_Aggregate =>
+            raise Internal_Error;
+         when Target_Memory =>
+            return Create_Value_Dyn_Alias (Info.Mem_Obj.Val,
+                                           Info.Mem_Dyn.Pfx_Off.Net_Off,
+                                           Info.Mem_Dyn.Pfx_Typ,
+                                           Info.Mem_Dyn.Voff,
+                                           Info.Mem_Doff,
+                                           Info.Targ_Type);
+      end case;
+   end Info_To_Valtyp;
+
    procedure Synth_Subprogram_Associations (Subprg_Inst : Synth_Instance_Acc;
                                             Caller_Inst : Synth_Instance_Acc;
                                             Init : Association_Iterator_Init;
-                                            Infos : out Target_Info_Array)
+                                            Infos : out Valtyp_Array)
    is
       pragma Assert (Infos'First = 1);
       Ctxt : constant Context_Acc := Get_Build (Caller_Inst);
@@ -1766,7 +1814,7 @@ package body Synth.Vhdl_Stmts is
       Assoc : Node;
       Actual : Node;
       Val : Valtyp;
-      Nbr_Inout : Natural;
+      Nbr_Inout : Nat32;
       Iterator : Association_Iterator;
       Info : Target_Info;
    begin
@@ -1808,7 +1856,7 @@ package body Synth.Vhdl_Stmts is
                Info := Synth_Target (Caller_Inst, Actual);
                if Get_Mode (Inter) /= Iir_In_Mode then
                   Nbr_Inout := Nbr_Inout + 1;
-                  Infos (Nbr_Inout) := Info;
+                  Infos (Nbr_Inout) := Info_To_Valtyp (Info);
                end if;
                if Info.Kind /= Target_Memory
                  and then Is_Static (Info.Obj.Val)
@@ -1936,7 +1984,7 @@ package body Synth.Vhdl_Stmts is
                                            Inter_Chain : Node;
                                            Assoc_Chain : Node)
    is
-      Infos : Target_Info_Array (1 .. 0);
+      Infos : Valtyp_Array (1 .. 0);
       Init : Association_Iterator_Init;
    begin
       Init := Association_Iterator_Build (Inter_Chain, Assoc_Chain);
@@ -1980,14 +2028,15 @@ package body Synth.Vhdl_Stmts is
      (Subprg_Inst : Synth_Instance_Acc;
       Caller_Inst : Synth_Instance_Acc;
       Init : Association_Iterator_Init;
-      Infos : Target_Info_Array)
+      Infos : Valtyp_Array)
    is
       pragma Assert (Infos'First = 1);
       Inter : Node;
       Assoc : Node;
       Assoc_Inter : Node;
       Val : Valtyp;
-      Nbr_Inout : Natural;
+      Targ : Valtyp;
+      Nbr_Inout : Nat32;
       W : Wire_Id;
    begin
       Nbr_Inout := 0;
@@ -2002,8 +2051,18 @@ package body Synth.Vhdl_Stmts is
                raise Internal_Error;
             end if;
             Nbr_Inout := Nbr_Inout + 1;
+            Targ := Infos (Nbr_Inout);
             Val := Get_Value (Subprg_Inst, Inter);
-            Synth_Assignment (Caller_Inst, Infos (Nbr_Inout), Val, Assoc);
+            if Targ.Val.Kind = Value_Dyn_Alias then
+               Synth_Assignment_Memory
+                 (Caller_Inst, Targ.Val.D_Obj,
+                  Targ.Val.D_Poff, Targ.Val.D_Ptyp,
+                  Get_Value_Dyn_Alias_Voff (Targ.Val), Targ.Val.D_Eoff,
+                  Val, Assoc);
+            else
+               Synth_Assignment_Simple
+                 (Caller_Inst, Targ, No_Value_Offsets, Val, Assoc);
+            end if;
 
             --  Free wire used for out/inout interface variables.
             if Val.Val.Kind = Value_Wire then
@@ -2034,7 +2093,7 @@ package body Synth.Vhdl_Stmts is
                                            Sub_Inst : Synth_Instance_Acc;
                                            Call : Node;
                                            Init : Association_Iterator_Init;
-                                           Infos : Target_Info_Array)
+                                           Infos : Valtyp_Array)
                                           return Valtyp
    is
       Imp  : constant Node := Get_Implementation (Call);
@@ -2146,7 +2205,7 @@ package body Synth.Vhdl_Stmts is
                                           Call     : Node;
                                           Bod      : Node;
                                           Init : Association_Iterator_Init;
-                                          Infos : Target_Info_Array)
+                                          Infos : Valtyp_Array)
                                          return Valtyp
    is
       Imp  : constant Node := Get_Implementation (Call);
@@ -2222,8 +2281,8 @@ package body Synth.Vhdl_Stmts is
       Imp  : constant Node := Get_Implementation (Call);
       Is_Func : constant Boolean := Is_Function_Declaration (Imp);
       Bod : constant Node := Vhdl.Sem_Inst.Get_Subprogram_Body_Origin (Imp);
-      Nbr_Inout : constant Natural := Count_Associations (Init);
-      Infos : Target_Info_Array (1 .. Nbr_Inout);
+      Nbr_Inout : constant Nat32 := Count_Associations (Init);
+      Infos : Valtyp_Array (1 .. Nbr_Inout);
       Area_Mark : Areapools.Mark_Type;
       Res : Valtyp;
       Sub_Inst : Synth_Instance_Acc;
@@ -2315,8 +2374,8 @@ package body Synth.Vhdl_Stmts is
       Inter_Chain : constant Node := Get_Interface_Declaration_Chain (Imp);
       Init : constant Association_Iterator_Init :=
         Association_Iterator_Build (Inter_Chain, Assoc_Chain);
-      Nbr_Inout : constant Natural := Count_Associations (Init);
-      Infos : Target_Info_Array (1 .. Nbr_Inout);
+      Nbr_Inout : constant Nat32 := Count_Associations (Init);
+      Infos : Valtyp_Array (1 .. Nbr_Inout);
       Area_Mark : Areapools.Mark_Type;
       Sub_Inst : Synth_Instance_Acc;
    begin

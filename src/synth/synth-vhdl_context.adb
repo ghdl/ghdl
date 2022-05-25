@@ -382,6 +382,22 @@ package body Synth.Vhdl_Context is
       return (Ntype, Create_Value_Net (N));
    end Create_Value_Net;
 
+   function Create_Value_Dyn_Alias (Obj : Value_Acc;
+                                    Poff : Uns32;
+                                    Ptyp : Type_Acc;
+                                    Voff : Net;
+                                    Eoff : Uns32;
+                                    Typ : Type_Acc) return Valtyp is
+   begin
+      return (Typ,
+              Create_Value_Dyn_Alias (Obj, Poff, Ptyp, To_Uns32 (Voff), Eoff));
+   end Create_Value_Dyn_Alias;
+
+   function Get_Value_Dyn_Alias_Voff (Val : Value_Acc) return Net is
+   begin
+      return To_Net (Val.D_Voff);
+   end Get_Value_Dyn_Alias_Voff;
+
    function Get_Net (Ctxt : Context_Acc; Val : Valtyp) return Net is
    begin
       case Val.Val.Kind is
@@ -429,7 +445,8 @@ package body Synth.Vhdl_Context is
          when Value_Memory =>
             return True;
          when Value_Net
-           | Value_Signal =>
+           | Value_Signal
+           | Value_Dyn_Alias =>
             return False;
          when Value_Wire =>
             declare

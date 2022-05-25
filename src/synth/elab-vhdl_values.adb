@@ -32,7 +32,8 @@ package body Elab.Vhdl_Values is
             return True;
          when Value_Net
            | Value_Wire
-           | Value_Signal =>
+           | Value_Signal
+           | Value_Dyn_Alias =>
             return False;
          when Value_File =>
             return True;
@@ -178,6 +179,27 @@ package body Elab.Vhdl_Values is
       return (Typ, Val);
    end Create_Value_Alias;
 
+   function Create_Value_Dyn_Alias (Obj : Value_Acc;
+                                    Poff : Uns32;
+                                    Ptyp : Type_Acc;
+                                    Voff : Uns32;
+                                    Eoff : Uns32) return Value_Acc
+   is
+      subtype Value_Type_Dyn_Alias is Value_Type (Value_Dyn_Alias);
+      function Alloc is new Areapools.Alloc_On_Pool_Addr
+        (Value_Type_Dyn_Alias);
+      Val : Value_Acc;
+   begin
+      Val := To_Value_Acc (Alloc (Current_Pool,
+                                  (Kind => Value_Dyn_Alias,
+                                   D_Obj => Obj,
+                                   D_Poff => Poff,
+                                   D_Ptyp => Ptyp,
+                                   D_Voff => Voff,
+                                   D_Eoff => Eoff)));
+      return Val;
+   end Create_Value_Dyn_Alias;
+
    function Create_Value_Const (Val : Value_Acc; Loc : Node) return Value_Acc
    is
       subtype Value_Type_Const is Value_Type (Value_Const);
@@ -231,7 +253,8 @@ package body Elab.Vhdl_Values is
             raise Internal_Error;
          when Value_Const =>
             raise Internal_Error;
-         when Value_Alias =>
+         when Value_Alias
+           | Value_Dyn_Alias =>
             raise Internal_Error;
       end case;
       return Res;
@@ -435,7 +458,8 @@ package body Elab.Vhdl_Values is
       case V.Val.Kind is
          when Value_Net
            | Value_Wire
-           | Value_Signal =>
+           | Value_Signal
+           | Value_Dyn_Alias =>
             raise Internal_Error;
          when Value_Memory =>
             return (V.Typ, V.Val.Mem);

@@ -55,7 +55,10 @@ package Elab.Vhdl_Values is
 
       --  An alias.  This is a reference to another value with a different
       --  (but compatible) type.
-      Value_Alias
+      Value_Alias,
+
+      --  Used only for associations.
+      Value_Dyn_Alias
      );
 
    type Value_Type (Kind : Value_Kind);
@@ -90,6 +93,12 @@ package Elab.Vhdl_Values is
             A_Obj : Value_Acc;
             A_Typ : Type_Acc;  --  The type of A_Obj.
             A_Off : Value_Offsets;
+         when Value_Dyn_Alias =>
+            D_Obj : Value_Acc;
+            D_Poff : Uns32;     --  Offset from D_Obj
+            D_Ptyp : Type_Acc;  --  Type of the prefix (after offset).
+            D_Voff : Uns32;     --  Variable offset
+            D_Eoff : Uns32;     --  Fixed offset.
       end case;
    end record;
 
@@ -141,6 +150,12 @@ package Elab.Vhdl_Values is
 
    function Create_Value_Alias
      (Obj : Valtyp; Off : Value_Offsets; Typ : Type_Acc) return Valtyp;
+
+   function Create_Value_Dyn_Alias (Obj : Value_Acc;
+                                    Poff : Uns32;
+                                    Ptyp : Type_Acc;
+                                    Voff : Uns32;
+                                    Eoff : Uns32) return Value_Acc;
 
    function Create_Value_Const (Val : Valtyp; Loc : Node) return Valtyp;
 

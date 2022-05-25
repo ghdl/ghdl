@@ -309,6 +309,9 @@ package body Elab.Vhdl_Values.Debug is
             Debug_Typ1 (V.Typ);
             Put (" of ");
             Debug_Valtyp ((V.Typ, V.Val.A_Obj));
+         when Value_Dyn_Alias =>
+            Put ("dyn alias: ");
+            Debug_Typ1 (V.Typ);
       end case;
    end Debug_Valtyp;
 
