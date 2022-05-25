@@ -458,20 +458,58 @@ package body Elab.Vhdl_Context is
       Syn_Inst.Uninst_Scope := Get_Info (Bod);
    end Set_Uninstantiated_Scope;
 
-   procedure Destroy_Object
-     (Syn_Inst : Synth_Instance_Acc; Decl : Node)
+   procedure Destroy_Init (D : out Destroy_Type;
+                           Syn_Inst : Synth_Instance_Acc) is
+   begin
+      D := (Inst => Syn_Inst,
+            First => Object_Slot_Type'Last,
+            Last => Syn_Inst.Elab_Objects);
+   end Destroy_Init;
+
+   procedure Destroy_Object (D : in out Destroy_Type; Decl : Node)
    is
       Info : constant Sim_Info_Acc := Get_Info (Decl);
       Slot : constant Object_Slot_Type := Info.Slot;
    begin
-      if Slot /= Syn_Inst.Elab_Objects
-        or else Info.Obj_Scope /= Syn_Inst.Block_Scope
-      then
-         Error_Msg_Elab ("synth: bad destroy order");
+      if Info.Obj_Scope /= D.Inst.Block_Scope then
+         --  Bad context.
+         raise Internal_Error;
       end if;
-      Syn_Inst.Objects (Slot) := (Kind => Obj_None);
-      Syn_Inst.Elab_Objects := Slot - 1;
+      if Slot > D.Last then
+         --  Not elaborated object ?
+         raise Internal_Error;
+      end if;
+      if D.Inst.Objects (Slot).Kind = Obj_None then
+         --  Already destroyed.
+         raise Internal_Error;
+      end if;
+      if Slot < D.First then
+         D.First := Slot;
+      end if;
+      D.Inst.Objects (Slot) := (Kind => Obj_None);
    end Destroy_Object;
+
+   procedure Destroy_Finish (D : in out Destroy_Type) is
+   begin
+      if D.First = Object_Slot_Type'Last then
+         --  No object destroyed.
+         return;
+      end if;
+
+      if D.Last /= D.Inst.Elab_Objects then
+         --  Two destroys at the same time.
+         raise Internal_Error;
+      end if;
+
+      --  Check all objects have been destroyed.
+      for I in D.First .. D.Last loop
+         if D.Inst.Objects (I).Kind /= Obj_None then
+            raise Internal_Error;
+         end if;
+      end loop;
+
+      D.Inst.Elab_Objects := D.First - 1;
+   end Destroy_Finish;
 
    function Get_Instance_By_Scope
      (Syn_Inst: Synth_Instance_Acc; Scope: Sim_Info_Acc)

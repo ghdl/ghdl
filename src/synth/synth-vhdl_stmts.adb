@@ -1644,36 +1644,6 @@ package body Synth.Vhdl_Stmts is
                                         Right => Right);
    end Association_Iterator_Build;
 
-   function Count_Associations (Init : Association_Iterator_Init)
-                               return Nat32
-   is
-      Assoc : Node;
-      Assoc_Inter : Node;
-      Inter : Node;
-      Nbr_Inout : Nat32;
-   begin
-      case Init.Kind is
-         when Association_Function =>
-            Nbr_Inout := 0;
-
-            Assoc := Init.Assoc_Chain;
-            Assoc_Inter := Init.Inter_Chain;
-            while Is_Valid (Assoc) loop
-               Inter := Get_Association_Interface (Assoc, Assoc_Inter);
-
-               if Is_Copyback_Parameter (Inter) then
-                  Nbr_Inout := Nbr_Inout + 1;
-               end if;
-
-               Next_Association_Interface (Assoc, Assoc_Inter);
-            end loop;
-
-            return Nbr_Inout;
-         when Association_Operator =>
-            return 0;
-      end case;
-   end Count_Associations;
-
    type Association_Iterator
      (Kind : Association_Iterator_Kind := Association_Function) is
    record
@@ -1794,23 +1764,18 @@ package body Synth.Vhdl_Stmts is
 
    procedure Synth_Subprogram_Associations (Subprg_Inst : Synth_Instance_Acc;
                                             Caller_Inst : Synth_Instance_Acc;
-                                            Init : Association_Iterator_Init;
-                                            Infos : out Valtyp_Array)
+                                            Init : Association_Iterator_Init)
    is
-      pragma Assert (Infos'First = 1);
       Ctxt : constant Context_Acc := Get_Build (Caller_Inst);
       Inter : Node;
       Inter_Type : Type_Acc;
       Assoc : Node;
       Actual : Node;
       Val : Valtyp;
-      Nbr_Inout : Nat32;
       Iterator : Association_Iterator;
       Info : Target_Info;
    begin
       Set_Instance_Const (Subprg_Inst, True);
-
-      Nbr_Inout := 0;
 
       --  Process in INTER order.
       Association_Iterate_Init (Iterator, Init);
@@ -1844,9 +1809,8 @@ package body Synth.Vhdl_Stmts is
                --  Always pass by value.
                Actual := Get_Actual (Assoc);
                Info := Synth_Target (Caller_Inst, Actual);
-               if Get_Mode (Inter) /= Iir_In_Mode then
-                  Nbr_Inout := Nbr_Inout + 1;
-                  Infos (Nbr_Inout) := Info_To_Valtyp (Info);
+               if Is_Copyback_Parameter (Inter) then
+                  Create_Object (Caller_Inst, Assoc, Info_To_Valtyp (Info));
                end if;
                if Info.Kind /= Target_Memory
                  and then Is_Static (Info.Obj.Val)
@@ -1974,12 +1938,10 @@ package body Synth.Vhdl_Stmts is
                                            Inter_Chain : Node;
                                            Assoc_Chain : Node)
    is
-      Infos : Valtyp_Array (1 .. 0);
       Init : Association_Iterator_Init;
    begin
       Init := Association_Iterator_Build (Inter_Chain, Assoc_Chain);
-      Synth_Subprogram_Associations (Subprg_Inst, Caller_Inst, Init, Infos);
-      pragma Unreferenced (Infos);
+      Synth_Subprogram_Associations (Subprg_Inst, Caller_Inst, Init);
    end Synth_Subprogram_Association;
 
    --  Create wires for out and inout interface variables.
@@ -2017,20 +1979,18 @@ package body Synth.Vhdl_Stmts is
    procedure Synth_Subprogram_Back_Association
      (Subprg_Inst : Synth_Instance_Acc;
       Caller_Inst : Synth_Instance_Acc;
-      Init : Association_Iterator_Init;
-      Infos : Valtyp_Array)
+      Init : Association_Iterator_Init)
    is
-      pragma Assert (Infos'First = 1);
       Inter : Node;
       Assoc : Node;
       Assoc_Inter : Node;
       Val : Valtyp;
       Targ : Valtyp;
-      Nbr_Inout : Nat32;
       W : Wire_Id;
+      D : Destroy_Type;
    begin
-      Nbr_Inout := 0;
       pragma Assert (Init.Kind = Association_Function);
+      Destroy_Init (D, Caller_Inst);
       Assoc := Init.Assoc_Chain;
       Assoc_Inter := Init.Inter_Chain;
       while Is_Valid (Assoc) loop
@@ -2040,8 +2000,7 @@ package body Synth.Vhdl_Stmts is
             if not Get_Whole_Association_Flag (Assoc) then
                raise Internal_Error;
             end if;
-            Nbr_Inout := Nbr_Inout + 1;
-            Targ := Infos (Nbr_Inout);
+            Targ := Get_Value (Caller_Inst, Assoc);
             Val := Get_Value (Subprg_Inst, Inter);
             if Targ.Val.Kind = Value_Dyn_Alias then
                Synth_Assignment_Memory
@@ -2060,11 +2019,13 @@ package body Synth.Vhdl_Stmts is
                Phi_Discard_Wires (W, No_Wire_Id);
                Free_Wire (W);
             end if;
+
+            Destroy_Object (D, Assoc);
          end if;
 
          Next_Association_Interface (Assoc, Assoc_Inter);
       end loop;
-      pragma Assert (Nbr_Inout = Infos'Last);
+      Destroy_Finish (D);
    end Synth_Subprogram_Back_Association;
 
    function Build_Control_Signal (Syn_Inst : Synth_Instance_Acc;
@@ -2082,8 +2043,7 @@ package body Synth.Vhdl_Stmts is
    function Synth_Dynamic_Subprogram_Call (Syn_Inst : Synth_Instance_Acc;
                                            Sub_Inst : Synth_Instance_Acc;
                                            Call : Node;
-                                           Init : Association_Iterator_Init;
-                                           Infos : Valtyp_Array)
+                                           Init : Association_Iterator_Init)
                                           return Valtyp
    is
       Imp  : constant Node := Get_Implementation (Call);
@@ -2159,7 +2119,7 @@ package body Synth.Vhdl_Stmts is
             end if;
          else
             Res := No_Valtyp;
-            Synth_Subprogram_Back_Association (C.Inst, Syn_Inst, Init, Infos);
+            Synth_Subprogram_Back_Association (C.Inst, Syn_Inst, Init);
          end if;
       end if;
 
@@ -2167,7 +2127,6 @@ package body Synth.Vhdl_Stmts is
 
       Vhdl_Decls.Finalize_Declarations
         (C.Inst, Get_Declaration_Chain (Bod), True);
-      pragma Unreferenced (Infos);
 
       --  Propagate assignments.
       --  Wires that have been created for this subprogram will be destroyed.
@@ -2194,8 +2153,7 @@ package body Synth.Vhdl_Stmts is
                                           Sub_Inst : Synth_Instance_Acc;
                                           Call     : Node;
                                           Bod      : Node;
-                                          Init : Association_Iterator_Init;
-                                          Infos : Valtyp_Array)
+                                          Init : Association_Iterator_Init)
                                          return Valtyp
    is
       Imp  : constant Node := Get_Implementation (Call);
@@ -2237,13 +2195,12 @@ package body Synth.Vhdl_Stmts is
             end if;
          else
             Res := No_Valtyp;
-            Synth_Subprogram_Back_Association (C.Inst, Syn_Inst, Init, Infos);
+            Synth_Subprogram_Back_Association (C.Inst, Syn_Inst, Init);
          end if;
       end if;
 
       Vhdl_Decls.Finalize_Declarations
         (C.Inst, Get_Declaration_Chain (Bod), True);
-      pragma Unreferenced (Infos);
 
       return Res;
    end Synth_Static_Subprogram_Call;
@@ -2271,8 +2228,6 @@ package body Synth.Vhdl_Stmts is
       Imp  : constant Node := Get_Implementation (Call);
       Is_Func : constant Boolean := Is_Function_Declaration (Imp);
       Bod : constant Node := Vhdl.Sem_Inst.Get_Subprogram_Body_Origin (Imp);
-      Nbr_Inout : constant Nat32 := Count_Associations (Init);
-      Infos : Valtyp_Array (1 .. Nbr_Inout);
       Area_Mark : Areapools.Mark_Type;
       Res : Valtyp;
       Sub_Inst : Synth_Instance_Acc;
@@ -2284,7 +2239,7 @@ package body Synth.Vhdl_Stmts is
          Set_Extra (Sub_Inst, Syn_Inst, New_Internal_Name (Ctxt));
       end if;
 
-      Synth_Subprogram_Associations (Sub_Inst, Syn_Inst, Init, Infos);
+      Synth_Subprogram_Associations (Sub_Inst, Syn_Inst, Init);
 
       if Is_Error (Sub_Inst) then
          Res := No_Valtyp;
@@ -2297,10 +2252,10 @@ package body Synth.Vhdl_Stmts is
 
          if Get_Instance_Const (Sub_Inst) then
             Res := Synth_Static_Subprogram_Call
-              (Syn_Inst, Sub_Inst, Call, Bod, Init, Infos);
+              (Syn_Inst, Sub_Inst, Call, Bod, Init);
          else
             Res := Synth_Dynamic_Subprogram_Call
-              (Syn_Inst, Sub_Inst, Call, Init, Infos);
+              (Syn_Inst, Sub_Inst, Call, Init);
          end if;
       end if;
 
@@ -2364,8 +2319,6 @@ package body Synth.Vhdl_Stmts is
       Inter_Chain : constant Node := Get_Interface_Declaration_Chain (Imp);
       Init : constant Association_Iterator_Init :=
         Association_Iterator_Build (Inter_Chain, Assoc_Chain);
-      Nbr_Inout : constant Nat32 := Count_Associations (Init);
-      Infos : Valtyp_Array (1 .. Nbr_Inout);
       Area_Mark : Areapools.Mark_Type;
       Sub_Inst : Synth_Instance_Acc;
    begin
@@ -2376,11 +2329,11 @@ package body Synth.Vhdl_Stmts is
          Set_Extra (Sub_Inst, Syn_Inst, New_Internal_Name (Ctxt));
       end if;
 
-      Synth_Subprogram_Associations (Sub_Inst, Syn_Inst, Init, Infos);
+      Synth_Subprogram_Associations (Sub_Inst, Syn_Inst, Init);
 
       Synth.Vhdl_Static_Proc.Synth_Static_Procedure (Sub_Inst, Imp, Call);
 
-      Synth_Subprogram_Back_Association (Sub_Inst, Syn_Inst, Init, Infos);
+      Synth_Subprogram_Back_Association (Sub_Inst, Syn_Inst, Init);
 
       Free_Instance (Sub_Inst);
       Areapools.Release (Area_Mark, Instance_Pool.all);
@@ -2742,11 +2695,14 @@ package body Synth.Vhdl_Stmts is
    is
       Iterator : constant Node := Get_Parameter_Specification (Stmt);
       It_Type : constant Node := Get_Declaration_Type (Iterator);
+      D : Destroy_Type;
    begin
-      Destroy_Object (Inst, Iterator);
+      Destroy_Init (D, Inst);
+      Destroy_Object (D, Iterator);
       if It_Type /= Null_Node then
-         Destroy_Object (Inst, It_Type);
+         Destroy_Object (D, It_Type);
       end if;
+      Destroy_Finish (D);
    end Finish_For_Loop_Statement;
 
    procedure Synth_Dynamic_For_Loop_Statement

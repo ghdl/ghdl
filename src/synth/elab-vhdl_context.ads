@@ -145,8 +145,11 @@ package Elab.Vhdl_Context is
    procedure Mutate_Object
      (Syn_Inst : Synth_Instance_Acc; Decl : Node; Vt : Valtyp);
 
-   procedure Destroy_Object
-     (Syn_Inst : Synth_Instance_Acc; Decl : Node);
+   type Destroy_Type is limited private;
+   procedure Destroy_Init (D : out Destroy_Type;
+                           Syn_Inst : Synth_Instance_Acc);
+   procedure Destroy_Object (D : in out Destroy_Type; Decl : Node);
+   procedure Destroy_Finish (D : in out Destroy_Type);
 
    --  Get the value of OBJ.
    function Get_Value (Syn_Inst : Synth_Instance_Acc; Obj : Node)
@@ -176,6 +179,12 @@ package Elab.Vhdl_Context is
    function Get_Caller_Instance (Syn_Inst : Synth_Instance_Acc)
                                 return Synth_Instance_Acc;
 private
+   type Destroy_Type is record
+      Inst : Synth_Instance_Acc;
+      First : Object_Slot_Type;
+      Last : Object_Slot_Type;
+   end record;
+
    type Obj_Kind is
      (
       Obj_None,
