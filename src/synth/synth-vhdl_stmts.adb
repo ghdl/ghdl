@@ -1609,16 +1609,6 @@ package body Synth.Vhdl_Stmts is
       end if;
    end Synth_Label;
 
-   function Is_Copyback_Interface (Inter : Node) return Boolean is
-   begin
-      case Iir_Parameter_Modes (Get_Mode (Inter)) is
-         when Iir_In_Mode =>
-            return False;
-         when Iir_Out_Mode | Iir_Inout_Mode =>
-            return Get_Kind (Inter) = Iir_Kind_Interface_Variable_Declaration;
-      end case;
-   end Is_Copyback_Interface;
-
    type Association_Iterator_Kind is
      (Association_Function,
       Association_Operator);
@@ -1671,7 +1661,7 @@ package body Synth.Vhdl_Stmts is
             while Is_Valid (Assoc) loop
                Inter := Get_Association_Interface (Assoc, Assoc_Inter);
 
-               if Is_Copyback_Interface (Inter) then
+               if Is_Copyback_Parameter (Inter) then
                   Nbr_Inout := Nbr_Inout + 1;
                end if;
 
@@ -2046,7 +2036,7 @@ package body Synth.Vhdl_Stmts is
       while Is_Valid (Assoc) loop
          Inter := Get_Association_Interface (Assoc, Assoc_Inter);
 
-         if Is_Copyback_Interface (Inter) then
+         if Is_Copyback_Parameter (Inter) then
             if not Get_Whole_Association_Flag (Assoc) then
                raise Internal_Error;
             end if;

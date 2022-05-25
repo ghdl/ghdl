@@ -112,6 +112,10 @@ package Vhdl.Utils is
    --  Return True iff interface INTER is a (subprogram) parameter.
    function Is_Parameter (Inter : Iir) return Boolean;
 
+   --  Return True iff parameter INTER should be copied back (for out/inout
+   --  variable).
+   function Is_Copyback_Parameter (Inter : Iir) return Boolean;
+
    --  Duplicate enumeration literal LIT.
    function Copy_Enumeration_Literal (Lit : Iir) return Iir;
 

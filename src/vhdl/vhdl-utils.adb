@@ -676,6 +676,16 @@ package body Vhdl.Utils is
       end case;
    end Is_Parameter;
 
+   function Is_Copyback_Parameter (Inter : Iir) return Boolean is
+   begin
+      case Iir_Parameter_Modes (Get_Mode (Inter)) is
+         when Iir_In_Mode =>
+            return False;
+         when Iir_Out_Mode | Iir_Inout_Mode =>
+            return Get_Kind (Inter) = Iir_Kind_Interface_Variable_Declaration;
+      end case;
+   end Is_Copyback_Parameter;
+
    function Find_Name_In_Flist (List : Iir_Flist; Lit : Name_Id) return Iir
    is
       El : Iir;
