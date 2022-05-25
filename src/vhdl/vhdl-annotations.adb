@@ -863,10 +863,32 @@ package body Vhdl.Annotations is
       end loop;
    end Annotate_Declaration_List;
 
+   procedure Annotate_Procedure_Call_Statement
+     (Block_Info : Sim_Info_Acc; Stmt : Iir)
+   is
+      Call : constant Iir := Get_Procedure_Call (Stmt);
+      Imp  : constant Iir := Get_Implementation (Call);
+      Assoc_Chain : constant Iir := Get_Parameter_Association_Chain (Call);
+      Inter_Chain : constant Iir := Get_Interface_Declaration_Chain (Imp);
+      Assoc : Iir;
+      Assoc_Inter : Iir;
+      Inter : Iir;
+   begin
+      Assoc := Assoc_Chain;
+      Assoc_Inter := Inter_Chain;
+      while Assoc /= Null_Iir loop
+         Inter := Get_Association_Interface (Assoc, Assoc_Inter);
+         if Is_Copyback_Parameter (Inter) then
+            Create_Object_Info (Block_Info, Assoc, Kind_Object);
+         end if;
+         Next_Association_Interface (Assoc, Assoc_Inter);
+      end loop;
+   end Annotate_Procedure_Call_Statement;
+
    procedure Annotate_Sequential_Statement_Chain
      (Block_Info: Sim_Info_Acc; Stmt_Chain: Iir)
    is
-      El: Iir;
+      Stmt : Iir;
       Max_Nbr_Objects : Object_Slot_Type;
       Current_Nbr_Objects : Object_Slot_Type;
 
@@ -884,9 +906,9 @@ package body Vhdl.Annotations is
       Current_Nbr_Objects := Block_Info.Nbr_Objects;
       Max_Nbr_Objects := Current_Nbr_Objects;
 
-      El := Stmt_Chain;
-      while El /= Null_Iir loop
-         case Get_Kind (El) is
+      Stmt := Stmt_Chain;
+      while Stmt /= Null_Iir loop
+         case Get_Kind (Stmt) is
             when Iir_Kind_Null_Statement =>
                null;
             when Iir_Kind_Assertion_Statement
@@ -901,7 +923,8 @@ package body Vhdl.Annotations is
               | Iir_Kind_Conditional_Variable_Assignment_Statement =>
                null;
             when Iir_Kind_Procedure_Call_Statement =>
-               null;
+               Annotate_Procedure_Call_Statement (Block_Info, Stmt);
+               Save_Nbr_Objects;
             when Iir_Kind_Exit_Statement
               | Iir_Kind_Next_Statement =>
                null;
@@ -910,7 +933,7 @@ package body Vhdl.Annotations is
 
             when Iir_Kind_If_Statement =>
                declare
-                  Clause: Iir := El;
+                  Clause: Iir := Stmt;
                begin
                   loop
                      Annotate_Sequential_Statement_Chain
@@ -925,7 +948,7 @@ package body Vhdl.Annotations is
                declare
                   Assoc: Iir;
                begin
-                  Assoc := Get_Case_Statement_Alternative_Chain (El);
+                  Assoc := Get_Case_Statement_Alternative_Chain (Stmt);
                   loop
                      Annotate_Sequential_Statement_Chain
                        (Block_Info, Get_Associated_Chain (Assoc));
@@ -937,21 +960,21 @@ package body Vhdl.Annotations is
 
             when Iir_Kind_For_Loop_Statement =>
                Annotate_Declaration
-                 (Block_Info, Get_Parameter_Specification (El));
+                 (Block_Info, Get_Parameter_Specification (Stmt));
                Annotate_Sequential_Statement_Chain
-                 (Block_Info, Get_Sequential_Statement_Chain (El));
+                 (Block_Info, Get_Sequential_Statement_Chain (Stmt));
 
             when Iir_Kind_While_Loop_Statement =>
                Annotate_Sequential_Statement_Chain
-                 (Block_Info, Get_Sequential_Statement_Chain (El));
+                 (Block_Info, Get_Sequential_Statement_Chain (Stmt));
 
             when others =>
-               Error_Kind ("annotate_sequential_statement_chain", El);
+               Error_Kind ("annotate_sequential_statement_chain", Stmt);
          end case;
 
          Save_Nbr_Objects;
 
-         El := Get_Chain (El);
+         Stmt := Get_Chain (Stmt);
       end loop;
       Block_Info.Nbr_Objects := Max_Nbr_Objects;
    end Annotate_Sequential_Statement_Chain;
@@ -1114,11 +1137,21 @@ package body Vhdl.Annotations is
          when Iir_Kind_Concurrent_Simple_Signal_Assignment
            | Iir_Kind_Concurrent_Selected_Signal_Assignment
            | Iir_Kind_Concurrent_Conditional_Signal_Assignment
-           | Iir_Kind_Concurrent_Assertion_Statement
-           | Iir_Kind_Concurrent_Procedure_Call_Statement =>
+           | Iir_Kind_Concurrent_Assertion_Statement =>
             --  In case concurrent signal assignemnts were not
             --  canonicalized (for synthesis).
             null;
+
+         when Iir_Kind_Concurrent_Procedure_Call_Statement =>
+            declare
+               Info : Sim_Info_Acc;
+            begin
+               Info := new Sim_Info_Type'(Kind => Kind_Process,
+                                          Ref => Stmt,
+                                          Nbr_Objects => 0);
+               Set_Info (Stmt, Info);
+               Annotate_Procedure_Call_Statement (Info, Stmt);
+            end;
 
          when others =>
             Error_Kind ("annotate_concurrent_statement", Stmt);
