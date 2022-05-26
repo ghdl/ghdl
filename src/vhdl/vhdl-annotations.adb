@@ -846,6 +846,9 @@ package body Vhdl.Annotations is
          when Iir_Kind_Psl_Default_Clock =>
             null;
 
+         when Iir_Kind_Suspend_State_Declaration =>
+            Create_Object_Info (Block_Info, Decl);
+
          when others =>
             Error_Kind ("annotate_declaration", Decl);
       end case;
@@ -967,6 +970,9 @@ package body Vhdl.Annotations is
             when Iir_Kind_While_Loop_Statement =>
                Annotate_Sequential_Statement_Chain
                  (Block_Info, Get_Sequential_Statement_Chain (Stmt));
+
+            when Iir_Kind_Suspend_State_Statement =>
+               null;
 
             when others =>
                Error_Kind ("annotate_sequential_statement_chain", Stmt);

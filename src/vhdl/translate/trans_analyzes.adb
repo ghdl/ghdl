@@ -164,7 +164,7 @@ package body Trans_Analyzes is
       --  (It is cleared for any statement, just to factorize code).
       Has_After := False;
 
-      case Iir_Kinds_Sequential_Statement (Get_Kind (Stmt)) is
+      case Iir_Kinds_Sequential_Statement_Ext (Get_Kind (Stmt)) is
          when Iir_Kind_Simple_Signal_Assignment_Statement =>
             Extract_Driver_Simple_Signal_Assignment (Stmt);
          when Iir_Kind_Signal_Force_Assignment_Statement
@@ -190,6 +190,8 @@ package body Trans_Analyzes is
            | Iir_Kind_Case_Statement
            | Iir_Kind_If_Statement
            | Iir_Kind_Break_Statement =>
+            null;
+         when Iir_Kind_Suspend_State_Statement =>
             null;
       end case;
       return Walk_Continue;

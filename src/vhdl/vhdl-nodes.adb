@@ -1178,8 +1178,8 @@ package body Vhdl.Nodes is
            | Iir_Kind_Procedure_Call_Statement
            | Iir_Kind_Break_Statement
            | Iir_Kind_If_Statement
-           | Iir_Kind_Elsif
            | Iir_Kind_Suspend_State_Statement
+           | Iir_Kind_Elsif
            | Iir_Kind_Character_Literal
            | Iir_Kind_Simple_Name
            | Iir_Kind_Selected_Name
@@ -7409,5 +7409,37 @@ package body Vhdl.Nodes is
                      "no field Foreign_Node");
       Set_Field1 (N, Int32_To_Iir (En));
    end Set_Foreign_Node;
+
+   function Get_Suspend_State_Index (N : Iir) return Int32 is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Suspend_State_Index (Get_Kind (N)),
+                     "no field Suspend_State_Index");
+      return Iir_To_Int32 (Get_Field3 (N));
+   end Get_Suspend_State_Index;
+
+   procedure Set_Suspend_State_Index (N : Iir; Num : Int32) is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Suspend_State_Index (Get_Kind (N)),
+                     "no field Suspend_State_Index");
+      Set_Field3 (N, Int32_To_Iir (Num));
+   end Set_Suspend_State_Index;
+
+   function Get_Suspend_State_Chain (N : Iir) return Iir is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Suspend_State_Chain (Get_Kind (N)),
+                     "no field Suspend_State_Chain");
+      return Get_Field4 (N);
+   end Get_Suspend_State_Chain;
+
+   procedure Set_Suspend_State_Chain (N : Iir; Chain : Iir) is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Suspend_State_Chain (Get_Kind (N)),
+                     "no field Suspend_State_Chain");
+      Set_Field4 (N, Chain);
+   end Set_Suspend_State_Chain;
 
 end Vhdl.Nodes;

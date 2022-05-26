@@ -57,7 +57,7 @@ package body Vhdl.Nodes_Walk is
       Status : Walk_Status := Walk_Continue;
       Chain : Iir;
    begin
-      case Iir_Kinds_Sequential_Statement (Get_Kind (Stmt)) is
+      case Iir_Kinds_Sequential_Statement_Ext (Get_Kind (Stmt)) is
          when Iir_Kind_Simple_Signal_Assignment_Statement
            | Iir_Kind_Conditional_Signal_Assignment_Statement
            | Iir_Kind_Selected_Waveform_Assignment_Statement
@@ -73,7 +73,8 @@ package body Vhdl.Nodes_Walk is
            | Iir_Kind_Exit_Statement
            | Iir_Kind_Variable_Assignment_Statement
            | Iir_Kind_Conditional_Variable_Assignment_Statement
-           | Iir_Kind_Break_Statement =>
+           | Iir_Kind_Break_Statement
+           | Iir_Kind_Suspend_State_Statement =>
             null;
          when Iir_Kind_For_Loop_Statement
            | Iir_Kind_While_Loop_Statement =>

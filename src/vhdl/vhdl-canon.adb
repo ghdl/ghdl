@@ -427,7 +427,7 @@ package body Vhdl.Canon is
    procedure Canon_Extract_Sensitivity_Statement
      (Stmt : Iir; List : Iir_List) is
    begin
-      case Get_Kind (Stmt) is
+      case Iir_Kinds_Sequential_Statement_Ext (Get_Kind (Stmt)) is
          when Iir_Kind_Assertion_Statement =>
             --  LRM08 11.3
             --  * For each assertion, report, next, exit or return
@@ -545,7 +545,13 @@ package body Vhdl.Canon is
             --    construct the union of the resulting sets.
             Canon_Extract_Sensitivity_Procedure_Call
               (Get_Procedure_Call (Stmt), List);
-         when others =>
+         when Iir_Kind_Selected_Waveform_Assignment_Statement
+           | Iir_Kind_Conditional_Variable_Assignment_Statement
+           | Iir_Kind_Signal_Force_Assignment_Statement
+           | Iir_Kind_Signal_Release_Assignment_Statement
+           | Iir_Kind_Break_Statement
+           | Iir_Kind_Wait_Statement
+           | Iir_Kind_Suspend_State_Statement =>
             Error_Kind ("canon_extract_sensitivity_statement", Stmt);
       end case;
    end Canon_Extract_Sensitivity_Statement;
@@ -1164,7 +1170,7 @@ package body Vhdl.Canon is
          --  Keep the same statement by default.
          N_Stmt := Stmt;
 
-         case Get_Kind (Stmt) is
+         case Iir_Kinds_Sequential_Statement_Ext (Get_Kind (Stmt)) is
             when Iir_Kind_If_Statement =>
                declare
                   Cond: Iir;
@@ -1290,7 +1296,11 @@ package body Vhdl.Canon is
             when Iir_Kind_Return_Statement =>
                Canon_Expression (Get_Expression (Stmt));
 
-            when others =>
+            when Iir_Kind_Selected_Waveform_Assignment_Statement
+              | Iir_Kind_Signal_Force_Assignment_Statement
+              | Iir_Kind_Signal_Release_Assignment_Statement
+              | Iir_Kind_Break_Statement
+              | Iir_Kind_Suspend_State_Statement =>
                Error_Kind ("canon_sequential_stmts", Stmt);
          end case;
 
@@ -1301,6 +1311,162 @@ package body Vhdl.Canon is
 
       return Res;
    end Canon_Sequential_Stmts;
+
+   function Canon_Insert_Suspend_State_Statement (Stmt : Iir; Var : Iir)
+                                                  return Iir
+   is
+      Last : Iir;
+      Num : Int32;
+      Res : Iir;
+   begin
+      Res := Create_Iir (Iir_Kind_Suspend_State_Statement);
+      Location_Copy (Res, Stmt);
+      Set_Parent (Res, Get_Parent (Stmt));
+      Set_Chain (Res, Stmt);
+
+      Last := Get_Suspend_State_Chain (Var);
+      if Last = Null_Iir then
+         Num := 0;
+      else
+         Num := Get_Suspend_State_Index (Last);
+      end if;
+
+      Set_Suspend_State_Index (Res, Num + 1);
+      Set_Suspend_State_Chain (Res, Last);
+      Set_Suspend_State_Chain (Var, Res);
+      return Res;
+   end Canon_Insert_Suspend_State_Statement;
+
+   function Canon_Add_Suspend_State_Statement (First : Iir; Var : Iir)
+                                              return Iir
+   is
+      Stmt: Iir;
+      S_Stmt : Iir;
+      Res, Last : Iir;
+   begin
+      Chain_Init (Res, Last);
+
+      Stmt := First;
+      while Stmt /= Null_Iir loop
+
+         S_Stmt := Null_Iir;
+
+         case Get_Kind (Stmt) is
+            when Iir_Kind_Simple_Signal_Assignment_Statement
+               | Iir_Kind_Conditional_Signal_Assignment_Statement =>
+               null;
+
+            when Iir_Kind_Variable_Assignment_Statement
+              | Iir_Kind_Conditional_Variable_Assignment_Statement =>
+               null;
+
+            when Iir_Kind_If_Statement =>
+               if Get_Suspend_Flag (Stmt) then
+                  declare
+                     Clause: Iir;
+                     Stmts : Iir;
+                  begin
+                     Clause := Stmt;
+                     while Clause /= Null_Iir loop
+                        Stmts := Get_Sequential_Statement_Chain (Clause);
+                        Stmts := Canon_Add_Suspend_State_Statement
+                          (Stmts, Var);
+                        Set_Sequential_Statement_Chain (Clause, Stmts);
+                        Clause := Get_Else_Clause (Clause);
+                     end loop;
+                  end;
+               end if;
+
+            when Iir_Kind_Wait_Statement =>
+               S_Stmt := Canon_Insert_Suspend_State_Statement (Stmt, Var);
+
+            when Iir_Kind_Case_Statement =>
+               if Get_Suspend_Flag (Stmt) then
+                  declare
+                     Choice: Iir;
+                     Stmts : Iir;
+                  begin
+                     Choice := Get_Case_Statement_Alternative_Chain (Stmt);
+                     while Choice /= Null_Iir loop
+                        -- FIXME: canon choice expr.
+                        Stmts := Get_Associated_Chain (Choice);
+                        Stmts := Canon_Add_Suspend_State_Statement
+                          (Stmts, Var);
+                        Set_Associated_Chain (Choice, Stmts);
+                        Choice := Get_Chain (Choice);
+                     end loop;
+                  end;
+               end if;
+
+            when Iir_Kind_Assertion_Statement
+              | Iir_Kind_Report_Statement =>
+               null;
+
+            when Iir_Kind_For_Loop_Statement
+              | Iir_Kind_While_Loop_Statement =>
+               if Get_Suspend_Flag (Stmt) then
+                  declare
+                     Stmts : Iir;
+                  begin
+                     Stmts := Get_Sequential_Statement_Chain (Stmt);
+                     Stmts := Canon_Add_Suspend_State_Statement
+                       (Stmts, Var);
+                     Set_Sequential_Statement_Chain (Stmt, Stmts);
+                  end;
+               end if;
+
+            when Iir_Kind_Next_Statement
+              | Iir_Kind_Exit_Statement =>
+               null;
+
+            when Iir_Kind_Procedure_Call_Statement =>
+               if Get_Suspend_Flag (Stmt) then
+                  S_Stmt := Canon_Insert_Suspend_State_Statement (Stmt, Var);
+               end if;
+
+            when Iir_Kind_Null_Statement =>
+               null;
+
+            when Iir_Kind_Return_Statement =>
+               null;
+
+            when others =>
+               Error_Kind ("canon_add_suspend_state_statement", Stmt);
+         end case;
+
+         if S_Stmt /= Null_Iir then
+            Chain_Append (Res, Last, S_Stmt);
+         end if;
+         Chain_Append (Res, Last, Stmt);
+
+         Stmt := Get_Chain (Stmt);
+      end loop;
+
+      return Res;
+   end Canon_Add_Suspend_State_Statement;
+
+   procedure Canon_Add_Suspend_State (Proc : Iir)
+   is
+      Var : Iir;
+      Stmts : Iir;
+   begin
+      pragma Assert (Kind_In (Proc, Iir_Kind_Process_Statement,
+                              Iir_Kind_Procedure_Body));
+
+      --  Create suspend state variable.
+      Var := Create_Iir (Iir_Kind_Suspend_State_Declaration);
+      Set_Location (Var, Get_Location (Proc));
+      Set_Parent (Var, Proc);
+
+      --  Insert it.
+      Set_Chain (Var, Get_Declaration_Chain (Proc));
+      Set_Declaration_Chain (Proc, Var);
+
+      --  Add suspend state statements.
+      Stmts := Get_Sequential_Statement_Chain (Proc);
+      Stmts := Canon_Add_Suspend_State_Statement (Stmts, Var);
+      Set_Sequential_Statement_Chain (Proc, Stmts);
+   end Canon_Add_Suspend_State;
 
    --  Create a statement transform from concurrent_signal_assignment
    --  statement STMT (either selected or conditional).
@@ -2085,6 +2251,11 @@ package body Vhdl.Canon is
 
          when Iir_Kind_Sensitized_Process_Statement
            | Iir_Kind_Process_Statement =>
+            if Canon_Flag_Add_Suspend_State
+              and then Get_Kind (Stmt) = Iir_Kind_Process_Statement
+            then
+               Canon_Add_Suspend_State (Stmt);
+            end if;
             Canon_Declarations (Top, Stmt, Null_Iir);
             if Canon_Flag_Sequentials_Stmts then
                declare
@@ -2988,6 +3159,12 @@ package body Vhdl.Canon is
          when Iir_Kind_Procedure_Body
             | Iir_Kind_Function_Body =>
             Canon_Declarations (Top, Decl, Null_Iir);
+            if Canon_Flag_Add_Suspend_State
+              and then Get_Kind (Decl) = Iir_Kind_Procedure_Body
+              and then Get_Suspend_Flag (Decl)
+            then
+               Canon_Add_Suspend_State (Decl);
+            end if;
             if Canon_Flag_Sequentials_Stmts then
                Stmts := Get_Sequential_Statement_Chain (Decl);
                Stmts := Canon_Sequential_Stmts (Stmts);
@@ -3091,6 +3268,9 @@ package body Vhdl.Canon is
             null;
 
          when Iir_Kind_Psl_Default_Clock =>
+            null;
+
+         when Iir_Kind_Suspend_State_Declaration =>
             null;
 
          when others =>

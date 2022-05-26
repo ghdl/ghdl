@@ -65,6 +65,7 @@ package body Ghdlsimul is
       --  The design is always analyzed in whole.
       Flags.Flag_Whole_Analyze := True;
       Vhdl.Canon.Canon_Flag_Add_Labels := True;
+      Vhdl.Canon.Canon_Flag_Add_Suspend_State := True;
 
       Vhdl.Annotations.Flag_Synthesis := True;
 

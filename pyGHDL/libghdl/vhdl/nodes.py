@@ -296,8 +296,8 @@ class Iir_Kind(IntEnum):
     Procedure_Call_Statement = 249
     Break_Statement = 250
     If_Statement = 251
-    Elsif = 252
-    Suspend_State_Statement = 253
+    Suspend_State_Statement = 252
+    Elsif = 253
     Character_Literal = 254
     Simple_Name = 255
     Selected_Name = 256
@@ -1073,6 +1073,30 @@ class Iir_Kinds:
         Iir_Kind.Procedure_Call_Statement,
         Iir_Kind.Break_Statement,
         Iir_Kind.If_Statement,
+    ]
+
+    Sequential_Statement_Ext = [
+        Iir_Kind.Simple_Signal_Assignment_Statement,
+        Iir_Kind.Conditional_Signal_Assignment_Statement,
+        Iir_Kind.Selected_Waveform_Assignment_Statement,
+        Iir_Kind.Signal_Force_Assignment_Statement,
+        Iir_Kind.Signal_Release_Assignment_Statement,
+        Iir_Kind.Null_Statement,
+        Iir_Kind.Assertion_Statement,
+        Iir_Kind.Report_Statement,
+        Iir_Kind.Wait_Statement,
+        Iir_Kind.Variable_Assignment_Statement,
+        Iir_Kind.Conditional_Variable_Assignment_Statement,
+        Iir_Kind.Return_Statement,
+        Iir_Kind.For_Loop_Statement,
+        Iir_Kind.While_Loop_Statement,
+        Iir_Kind.Next_Statement,
+        Iir_Kind.Exit_Statement,
+        Iir_Kind.Case_Statement,
+        Iir_Kind.Procedure_Call_Statement,
+        Iir_Kind.Break_Statement,
+        Iir_Kind.If_Statement,
+        Iir_Kind.Suspend_State_Statement,
     ]
 
     Next_Exit_Statement = [
@@ -6695,4 +6719,30 @@ def Get_Foreign_Node(obj: Iir) -> Int32:
 @export
 @BindToLibGHDL("vhdl__nodes__set_foreign_node")
 def Set_Foreign_Node(obj: Iir, value: Int32) -> None:
+    """"""
+
+
+@export
+@BindToLibGHDL("vhdl__nodes__get_suspend_state_index")
+def Get_Suspend_State_Index(obj: Iir) -> Int32:
+    """"""
+    return 0
+
+
+@export
+@BindToLibGHDL("vhdl__nodes__set_suspend_state_index")
+def Set_Suspend_State_Index(obj: Iir, value: Int32) -> None:
+    """"""
+
+
+@export
+@BindToLibGHDL("vhdl__nodes__get_suspend_state_chain")
+def Get_Suspend_State_Chain(obj: Iir) -> Iir:
+    """"""
+    return 0
+
+
+@export
+@BindToLibGHDL("vhdl__nodes__set_suspend_state_chain")
+def Set_Suspend_State_Chain(obj: Iir, value: Iir) -> None:
     """"""

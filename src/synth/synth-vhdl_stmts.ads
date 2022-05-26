@@ -28,6 +28,12 @@ with Netlists; use Netlists;
 with Synth.Vhdl_Environment; use Synth.Vhdl_Environment.Env;
 
 package Synth.Vhdl_Stmts is
+   --  Create a new Synth_Instance for calling subprogram IMP/BOD.
+   function Synth_Subprogram_Call_Instance (Inst : Synth_Instance_Acc;
+                                            Imp : Node;
+                                            Bod : Node)
+                                           return Synth_Instance_Acc;
+
    procedure Synth_Subprogram_Association (Subprg_Inst : Synth_Instance_Acc;
                                            Caller_Inst : Synth_Instance_Acc;
                                            Inter_Chain : Node;

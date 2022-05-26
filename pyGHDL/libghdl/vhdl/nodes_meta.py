@@ -490,6 +490,8 @@ class fields(IntEnum):
     Clock_Expression = 370
     Default_Clock = 371
     Foreign_Node = 372
+    Suspend_State_Index = 373
+    Suspend_State_Chain = 374
 
 
 def Get_Boolean(node, field):
@@ -2859,4 +2861,16 @@ def Has_Default_Clock(kind: IirKind) -> bool:
 @export
 @BindToLibGHDL("vhdl__nodes_meta__has_foreign_node")
 def Has_Foreign_Node(kind: IirKind) -> bool:
+    """"""
+
+
+@export
+@BindToLibGHDL("vhdl__nodes_meta__has_suspend_state_index")
+def Has_Suspend_State_Index(kind: IirKind) -> bool:
+    """"""
+
+
+@export
+@BindToLibGHDL("vhdl__nodes_meta__has_suspend_state_chain")
+def Has_Suspend_State_Chain(kind: IirKind) -> bool:
     """"""
