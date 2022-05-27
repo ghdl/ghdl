@@ -14,6 +14,8 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
+with Ada.Unchecked_Conversion;
+
 with Simple_IO; use Simple_IO;
 
 package body Utils_IO is
@@ -46,4 +48,22 @@ package body Utils_IO is
    begin
       Put_Trim (Int64'Image (V));
    end Put_Int64;
+
+   Hex_Map : constant array (0 .. 15) of Character := "0123456789ABCDEF";
+
+   procedure Put_Addr (V : System.Address)
+   is
+      type Integer_Address is mod System.Memory_Size;
+      function To_Integer is new Ada.Unchecked_Conversion
+        (Source => System.Address, Target => Integer_Address);
+      Res : String (1 .. System.Word_Size / 4);
+      Val : Integer_Address := To_Integer (V);
+   begin
+      for I in reverse Res'Range loop
+         Res (I) := Hex_Map (Natural (Val and 15));
+         Val := Val / 16;
+      end loop;
+      Put (Res);
+   end Put_Addr;
+
 end Utils_IO;

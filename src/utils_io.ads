@@ -14,6 +14,8 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
+with System;
+
 with Types; use Types;
 
 package Utils_IO is
@@ -27,4 +29,6 @@ package Utils_IO is
    procedure Put_Uns32 (V : Uns32);
    procedure Put_Int32 (V : Int32);
    procedure Put_Int64 (V : Int64);
+
+   procedure Put_Addr (V : System.Address);
 end Utils_IO;
