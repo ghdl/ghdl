@@ -688,15 +688,19 @@ package body Elab.Vhdl_Objtypes is
       end case;
    end Write_Discrete;
 
-   function Alloc_Memory (Vtype : Type_Acc) return Memory_Ptr
+   function Alloc_Memory (Sz : Size_Type; Align2 : Natural) return Memory_Ptr
    is
       function To_Memory_Ptr is new Ada.Unchecked_Conversion
         (System.Address, Memory_Ptr);
       M : System.Address;
    begin
-      Areapools.Allocate (Current_Pool.all, M,
-                          Vtype.Sz, Size_Type (2 ** Natural (Vtype.Al)));
+      Areapools.Allocate (Current_Pool.all, M, Sz, Size_Type (2 ** Align2));
       return To_Memory_Ptr (M);
+   end Alloc_Memory;
+
+   function Alloc_Memory (Vtype : Type_Acc) return Memory_Ptr is
+   begin
+      return Alloc_Memory (Vtype.Sz, Natural (Vtype.Al));
    end Alloc_Memory;
 
    function Create_Memory (Vtype : Type_Acc) return Memtyp is
@@ -755,6 +759,15 @@ package body Elab.Vhdl_Objtypes is
       end case;
       return (Vtype, Res);
    end Create_Memory_Discrete;
+
+   function Create_Memory_U32 (Val : Uns32) return Memtyp
+   is
+      Res : Memory_Ptr;
+   begin
+      Res := Alloc_Memory (4, 2);
+      Write_U32 (Res, Ghdl_U32 (Val));
+      return (null, Res);
+   end Create_Memory_U32;
 
    function Is_Equal (L, R : Memtyp) return Boolean is
    begin
