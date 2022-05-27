@@ -15,7 +15,6 @@
 --
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
-with Types; use Types;
 with Name_Table; use Name_Table;
 with Simple_IO; use Simple_IO;
 with Utils_IO; use Utils_IO;
@@ -119,23 +118,48 @@ package body Elab.Vhdl_Debug is
    procedure Disp_Value_Array (Mem : Memtyp; A_Type: Node)
    is
       Stride : Size_Type;
+      Len : Uns32;
    begin
       if Mem.Typ.Alast then
          --  Last dimension
          Disp_Value_Vector (Mem, A_Type, Mem.Typ.Abound);
       else
          Stride := Mem.Typ.Arr_El.Sz;
+         Len := Mem.Typ.Abound.Len;
 
          Put ("(");
-         for I in 1 .. Mem.Typ.Abound.Len loop
+         for I in 1 ..  Len loop
             if I /= 1 then
                Put (", ");
             end if;
-            Disp_Value_Array ((Mem.Typ, Mem.Mem + Stride), A_Type);
+            Disp_Value_Array ((Mem.Typ,
+                               Mem.Mem + Size_Type (Len - I) * Stride),
+                              A_Type);
          end loop;
          Put (")");
       end if;
    end Disp_Value_Array;
+
+   procedure Disp_Value_Record (M : Memtyp; Vtype: Node)
+   is
+      El_List : Iir_Flist;
+      El : Node;
+   begin
+      Put ("(");
+      El_List := Get_Elements_Declaration_List (Vtype);
+      for I in M.Typ.Rec.E'Range loop
+         El := Get_Nth_Element (El_List, Natural (I - 1));
+         if I /= 1 then
+            Put (", ");
+         end if;
+         Put (Image (Get_Identifier (El)));
+         Put (": ");
+         Disp_Memtyp ((M.Typ.Rec.E (I).Typ,
+                       M.Mem + M.Typ.Rec.E (I).Offs.Mem_Off),
+                      Get_Type (El));
+      end loop;
+      Put (")");
+   end Disp_Value_Record;
 
    procedure Disp_Memtyp (M : Memtyp; Vtype : Node) is
    begin
@@ -160,7 +184,7 @@ package body Elab.Vhdl_Debug is
          when Type_File =>
             Put ("*file*");
          when Type_Record =>
-            Put ("*record*");
+            Disp_Value_Record (M, Vtype);
          when Type_Access =>
             Put ("*access*");
          when Type_Protected =>

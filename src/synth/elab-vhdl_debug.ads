@@ -15,6 +15,8 @@
 --
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
+with Types; use Types;
+
 with Vhdl.Nodes; use Vhdl.Nodes;
 with Vhdl.Nodes_Walk; use Vhdl.Nodes_Walk;
 
@@ -24,6 +26,8 @@ with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 package Elab.Vhdl_Debug is
    procedure Disp_Memtyp (M : Memtyp; Vtype : Node);
    function Walk_Declarations (Cb : Walk_Cb) return Walk_Status;
+
+   procedure Disp_Discrete_Value (Val : Int64; Btype : Node);
 
    procedure Disp_Declaration_Objects
      (Instance : Synth_Instance_Acc; Decl_Chain : Iir; Indent : Natural := 0);
