@@ -42,6 +42,7 @@ package body Elab.Debugger is
      (
       Reason_Init,
       Reason_Break,
+      Reason_Time,
       Reason_Error
      );
 
@@ -836,7 +837,8 @@ package body Elab.Debugger is
             end case;
             --  Default state.
             Exec_State := Exec_Run;
-
+         when Reason_Time =>
+            Exec_State := Exec_Run;
       end case;
 
       case Reason is
@@ -953,6 +955,14 @@ package body Elab.Debugger is
 
       Debug (Reason_Break);
    end Debug_Break;
+
+   procedure Debug_Time is
+   begin
+      Current_Instance := Root_Instance;
+      Current_Loc := Null_Node;
+
+      Debug (Reason_Time);
+   end Debug_Time;
 
    procedure Debug_Leave (Inst : Synth_Instance_Acc) is
    begin
