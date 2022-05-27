@@ -324,6 +324,15 @@ package body Elab.Vhdl_Debug is
            | Iir_Kind_Procedure_Body
            | Iir_Kind_Component_Declaration =>
             null;
+         when Iir_Kind_Suspend_State_Declaration =>
+            declare
+               Val : constant Valtyp := Get_Value (Instance, Decl);
+            begin
+               Put_Indent (Indent);
+               Put ("STATE: ");
+               Put_Int32 (Int32 (Read_I32 (Val.Val.Mem)));
+               New_Line;
+            end;
          when others =>
             Vhdl.Errors.Error_Kind ("disp_declaration_object", Decl);
       end case;

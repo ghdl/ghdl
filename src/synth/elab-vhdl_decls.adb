@@ -281,6 +281,13 @@ package body Elab.Vhdl_Decls is
          when Iir_Kind_Signal_Attribute_Declaration =>
             --  Not supported by synthesis.
             null;
+         when Iir_Kind_Suspend_State_Declaration =>
+            declare
+               Val : Valtyp;
+            begin
+               Val := Create_Value_Memory (Create_Memory_U32 (0));
+               Create_Object (Syn_Inst, Decl, Val);
+            end;
          when others =>
             Vhdl.Errors.Error_Kind ("elab_declaration", Decl);
       end case;
