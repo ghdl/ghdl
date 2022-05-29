@@ -5547,11 +5547,6 @@ package Vhdl.Nodes is
       Iir_Predefined_Bit_Array_Match_Equality,
       Iir_Predefined_Bit_Array_Match_Inequality,
 
-      --  LRM08 5.3.2.4 Predefined operations on array types
-      Iir_Predefined_Array_Char_To_String,
-      Iir_Predefined_Bit_Vector_To_Ostring,
-      Iir_Predefined_Bit_Vector_To_Hstring,
-
       --  LRM08 9.2.3 Relational Operators
       --  IEEE.Std_Logic_1164.Std_Ulogic
       Iir_Predefined_Std_Ulogic_Match_Equality,
@@ -5564,6 +5559,11 @@ package Vhdl.Nodes is
       --  LRM08 9.2.3 Relational Operators
       Iir_Predefined_Std_Ulogic_Array_Match_Equality,
       Iir_Predefined_Std_Ulogic_Array_Match_Inequality,
+
+      --  LRM08 5.3.2.4 Predefined operations on array types
+      Iir_Predefined_Array_Char_To_String,
+      Iir_Predefined_Bit_Vector_To_Ostring,
+      Iir_Predefined_Bit_Vector_To_Hstring,
 
       --  --  Predefined attribute functions.
       --  Iir_Predefined_Attribute_Image,
@@ -6234,6 +6234,9 @@ package Vhdl.Nodes is
    subtype Iir_Predefined_Pure_Functions is Iir_Predefined_Functions range
      Iir_Predefined_Boolean_And ..
      Iir_Predefined_Functions'Pred (Iir_Predefined_Deallocate);
+   subtype Iir_Predefined_Operators is Iir_Predefined_Functions range
+     Iir_Predefined_Boolean_And ..
+     Iir_Predefined_Std_Ulogic_Array_Match_Inequality;
    subtype Iir_Predefined_Impure_Functions is Iir_Predefined_Functions range
      Iir_Predefined_Deallocate ..
      Iir_Predefined_Functions'Pred (Iir_Predefined_None);

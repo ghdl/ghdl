@@ -779,7 +779,7 @@ package body Vhdl.Annotations is
          when Iir_Kind_Function_Declaration
            | Iir_Kind_Procedure_Declaration =>
             if (Get_Implicit_Definition (Decl)
-                  not in Iir_Predefined_Pure_Functions)
+                  not in Iir_Predefined_Operators)
               and then not Is_Second_Subprogram_Specification (Decl)
             then
                Annotate_Subprogram_Interfaces_Type (Block_Info, Decl);

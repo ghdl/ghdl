@@ -18,9 +18,11 @@
 
 with Types; use Types;
 with Types_Utils; use Types_Utils;
+with Name_Table;
 
 with Grt.Types; use Grt.Types;
 
+with Vhdl.Utils;
 with Vhdl.Ieee.Std_Logic_1164; use Vhdl.Ieee.Std_Logic_1164;
 
 with Elab.Memtype; use Elab.Memtype;
@@ -47,9 +49,25 @@ package body Synth.Vhdl_Eval is
      (False => (others => False),
       True => (True => True, False => False));
 
+   Tf_2d_Nand : constant Tf_Table_2d :=
+     (False => (others => True),
+      True => (True => False, False => True));
+
+   Tf_2d_Or : constant Tf_Table_2d :=
+     (False => (True => True, False => False),
+      True => (True => True, False => True));
+
+   Tf_2d_Nor : constant Tf_Table_2d :=
+     (False => (True => False, False => True),
+      True => (True => False, False => False));
+
    Tf_2d_Xor : constant Tf_Table_2d :=
      (False => (False => False, True => True),
       True  => (False => True,  True => False));
+
+   Tf_2d_Xnor : constant Tf_Table_2d :=
+     (False => (False => True, True => False),
+      True  => (False => False,  True => True));
 
    function Create_Res_Bound (Prev : Type_Acc) return Type_Acc is
    begin
@@ -123,6 +141,82 @@ package body Synth.Vhdl_Eval is
       end loop;
       return Res;
    end Eval_TF_Array_Element;
+
+   function Compare (L, R : Memtyp) return Order_Type is
+   begin
+      case L.Typ.Kind is
+         when Type_Bit
+           | Type_Logic =>
+            declare
+               Lv : constant Ghdl_U8 := Read_U8 (L.Mem);
+               Rv : constant Ghdl_U8 := Read_U8 (R.Mem);
+            begin
+               if Lv < Rv then
+                  return Less;
+               elsif Lv > Rv then
+                  return Greater;
+               else
+                  return Equal;
+               end if;
+            end;
+         when Type_Discrete =>
+            pragma Assert (L.Typ.Sz = R.Typ.Sz);
+            if L.Typ.Sz = 1 then
+               declare
+                  Lv : constant Ghdl_U8 := Read_U8 (L.Mem);
+                  Rv : constant Ghdl_U8 := Read_U8 (R.Mem);
+               begin
+                  if Lv < Rv then
+                     return Less;
+                  elsif Lv > Rv then
+                     return Greater;
+                  else
+                     return Equal;
+                  end if;
+               end;
+            elsif L.Typ.Sz = 4 then
+               declare
+                  Lv : constant Ghdl_I32 := Read_I32 (L.Mem);
+                  Rv : constant Ghdl_I32 := Read_I32 (R.Mem);
+               begin
+                  if Lv < Rv then
+                     return Less;
+                  elsif Lv > Rv then
+                     return Greater;
+                  else
+                     return Equal;
+                  end if;
+               end;
+            else
+               raise Internal_Error;
+            end if;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Compare;
+
+   function Compare_Array (L, R : Memtyp) return Order_Type
+   is
+      Len : Uns32;
+      Res : Order_Type;
+   begin
+      Len := Uns32'Min (L.Typ.Abound.Len, R.Typ.Abound.Len);
+      for I in 1 .. Size_Type (Len) loop
+         Res := Compare
+           ((L.Typ.Arr_El, L.Mem + (I - 1) * L.Typ.Arr_El.Sz),
+            (R.Typ.Arr_El, R.Mem + (I - 1) * R.Typ.Arr_El.Sz));
+         if Res /= Equal then
+            return Res;
+         end if;
+      end loop;
+      if L.Typ.Abound.Len > Len then
+         return Greater;
+      end if;
+      if R.Typ.Abound.Len > Len then
+         return Less;
+      end if;
+      return Equal;
+   end Compare_Array;
 
    function Get_Static_Ulogic (Op : Memtyp) return Std_Ulogic is
    begin
@@ -235,15 +329,23 @@ package body Synth.Vhdl_Eval is
                Res_Typ);
 
          when Iir_Predefined_Physical_Minimum
-           | Iir_Predefined_Integer_Minimum =>
+           | Iir_Predefined_Integer_Minimum
+           | Iir_Predefined_Enum_Minimum =>
             return Create_Memory_Discrete
               (Int64'Min (Read_Discrete (Left), Read_Discrete (Right)),
                Res_Typ);
+         when Iir_Predefined_Floating_Maximum =>
+            return Create_Memory_Fp64
+              (Fp64'Max (Read_Fp64 (Left), Read_Fp64 (Right)), Res_Typ);
          when Iir_Predefined_Physical_Maximum
-           | Iir_Predefined_Integer_Maximum =>
+           | Iir_Predefined_Integer_Maximum
+           | Iir_Predefined_Enum_Maximum =>
             return Create_Memory_Discrete
               (Int64'Max (Read_Discrete (Left), Read_Discrete (Right)),
                Res_Typ);
+         when Iir_Predefined_Floating_Minimum =>
+            return Create_Memory_Fp64
+              (Fp64'Min (Read_Fp64 (Left), Read_Fp64 (Right)), Res_Typ);
 
          when Iir_Predefined_Integer_Less_Equal
             | Iir_Predefined_Physical_Less_Equal
@@ -417,29 +519,78 @@ package body Synth.Vhdl_Eval is
 
          when Iir_Predefined_Array_Equality
            | Iir_Predefined_Record_Equality =>
-            return Create_Memory_U8
-              (Boolean'Pos (Is_Equal (Left, Right)), Boolean_Type);
+            return Create_Memory_Boolean (Is_Equal (Left, Right));
          when Iir_Predefined_Array_Inequality
             | Iir_Predefined_Record_Inequality =>
-            return Create_Memory_U8
-              (Boolean'Pos (not Is_Equal (Left, Right)), Boolean_Type);
+            return Create_Memory_Boolean (not Is_Equal (Left, Right));
 
          when Iir_Predefined_Access_Equality =>
-            return Create_Memory_U8
-              (Boolean'Pos (Read_Access (Left) = Read_Access (Right)),
-               Boolean_Type);
+            return Create_Memory_Boolean
+              (Read_Access (Left) = Read_Access (Right));
          when Iir_Predefined_Access_Inequality =>
-            return Create_Memory_U8
-              (Boolean'Pos (Read_Access (Left) /= Read_Access (Right)),
-               Boolean_Type);
+            return Create_Memory_Boolean
+              (Read_Access (Left) /= Read_Access (Right));
+
+         when Iir_Predefined_Array_Less =>
+            return Create_Memory_Boolean
+              (Compare_Array (Left, Right) = Less);
+         when Iir_Predefined_Array_Less_Equal =>
+            return Create_Memory_Boolean
+              (Compare_Array (Left, Right) <= Equal);
+         when Iir_Predefined_Array_Greater =>
+            return Create_Memory_Boolean
+              (Compare_Array (Left, Right) = Greater);
+         when Iir_Predefined_Array_Greater_Equal =>
+            return Create_Memory_Boolean
+              (Compare_Array (Left, Right) >= Equal);
+
+         when Iir_Predefined_Array_Maximum =>
+            --  IEEE 1076-2008 5.3.2.4 Predefined operations on array types
+            if Compare_Array (Left, Right) = Less then
+               return Right;
+            else
+               return Left;
+            end if;
+         when Iir_Predefined_Array_Minimum =>
+            --  IEEE 1076-2008 5.3.2.4 Predefined operations on array types
+            if Compare_Array (Left, Right) = Less then
+               return Left;
+            else
+               return Right;
+            end if;
 
          when Iir_Predefined_TF_Array_Xor =>
             return Eval_TF_Vector_Dyadic (Left, Right, Tf_2d_Xor, Expr);
+
+         when Iir_Predefined_TF_Element_Array_Or =>
+            return Eval_TF_Array_Element (Left, Right, Tf_2d_Or);
+         when Iir_Predefined_TF_Array_Element_Or =>
+            return Eval_TF_Array_Element (Right, Left, Tf_2d_Or);
+
+         when Iir_Predefined_TF_Element_Array_Nor =>
+            return Eval_TF_Array_Element (Left, Right, Tf_2d_Nor);
+         when Iir_Predefined_TF_Array_Element_Nor =>
+            return Eval_TF_Array_Element (Right, Left, Tf_2d_Nor);
 
          when Iir_Predefined_TF_Element_Array_And =>
             return Eval_TF_Array_Element (Left, Right, Tf_2d_And);
          when Iir_Predefined_TF_Array_Element_And =>
             return Eval_TF_Array_Element (Right, Left, Tf_2d_And);
+
+         when Iir_Predefined_TF_Element_Array_Nand =>
+            return Eval_TF_Array_Element (Left, Right, Tf_2d_Nand);
+         when Iir_Predefined_TF_Array_Element_Nand =>
+            return Eval_TF_Array_Element (Right, Left, Tf_2d_Nand);
+
+         when Iir_Predefined_TF_Element_Array_Xor =>
+            return Eval_TF_Array_Element (Left, Right, Tf_2d_Xor);
+         when Iir_Predefined_TF_Array_Element_Xor =>
+            return Eval_TF_Array_Element (Right, Left, Tf_2d_Xor);
+
+         when Iir_Predefined_TF_Element_Array_Xnor =>
+            return Eval_TF_Array_Element (Left, Right, Tf_2d_Xnor);
+         when Iir_Predefined_TF_Array_Element_Xnor =>
+            return Eval_TF_Array_Element (Right, Left, Tf_2d_Xnor);
 
          when Iir_Predefined_Ieee_1164_Vector_And
            | Iir_Predefined_Ieee_Numeric_Std_And_Uns_Uns
@@ -700,7 +851,7 @@ package body Synth.Vhdl_Eval is
 
          when others =>
             Error_Msg_Synth
-              (+Expr, "synth_static_dyadic_predefined: unhandled "
+              (+Expr, "eval_static_dyadic_predefined: unhandled "
                  & Iir_Predefined_Functions'Image (Def));
             return Null_Memtyp;
       end case;
@@ -752,6 +903,9 @@ package body Synth.Vhdl_Eval is
            | Iir_Predefined_Bit_Not =>
             return Create_Memory_U8 (1 - Read_U8 (Operand), Operand.Typ);
 
+         when Iir_Predefined_Bit_Condition =>
+            return Create_Memory_U8 (Read_U8 (Operand), Operand.Typ);
+
          when Iir_Predefined_Integer_Negation
            | Iir_Predefined_Physical_Negation =>
             return Create_Memory_Discrete
@@ -759,7 +913,7 @@ package body Synth.Vhdl_Eval is
          when Iir_Predefined_Integer_Absolute
            | Iir_Predefined_Physical_Absolute =>
             return Create_Memory_Discrete
-              (abs Read_Discrete(Operand), Operand.Typ);
+              (abs Read_Discrete (Operand), Operand.Typ);
          when Iir_Predefined_Integer_Identity
            | Iir_Predefined_Physical_Identity =>
             return Operand;
@@ -808,7 +962,7 @@ package body Synth.Vhdl_Eval is
 
          when others =>
             Error_Msg_Synth
-              (+Expr, "synth_static_monadic_predefined: unhandled "
+              (+Expr, "eval_static_monadic_predefined: unhandled "
                  & Iir_Predefined_Functions'Image (Def));
             raise Internal_Error;
       end case;
@@ -893,6 +1047,41 @@ package body Synth.Vhdl_Eval is
       return To_Int64 (Res);
    end Eval_Signed_To_Integer;
 
+   function Eval_Array_Char_To_String (Param : Memtyp;
+                                       Res_Typ : Type_Acc;
+                                       Imp : Node) return Memtyp
+   is
+      use Vhdl.Utils;
+      use Name_Table;
+      Len : constant Uns32 := Param.Typ.Abound.Len;
+      Elt : constant Type_Acc := Param.Typ.Arr_El;
+      Etype : constant Node := Get_Base_Type
+        (Get_Element_Subtype
+           (Get_Type (Get_Interface_Declaration_Chain (Imp))));
+      pragma Assert (Get_Kind (Etype) = Iir_Kind_Enumeration_Type_Definition);
+      Enums : constant Iir_Flist := Get_Enumeration_Literal_List (Etype);
+      Lit : Node;
+      Lit_Id : Name_Id;
+      Bnd : Bound_Type;
+      Res_St : Type_Acc;
+      Res : Memtyp;
+      V : Int64;
+   begin
+      Bnd := Elab.Vhdl_Types.Create_Bounds_From_Length
+        (Res_Typ.Uarr_Idx.Drange, Iir_Index32 (Len));
+      Res_St := Create_Onedimensional_Array_Subtype (Res_Typ, Bnd, Elt);
+      Res := Create_Memory (Res_St);
+      for I in 1 .. Len loop
+         V := Read_Discrete (Param.Mem + Size_Type (I - 1) * Elt.Sz, Elt);
+         Lit := Get_Nth_Element (Enums, Natural (V));
+         Lit_Id := Get_Identifier (Lit);
+         pragma Assert (Is_Character (Lit_Id));
+         Write_U8 (Res.Mem + Size_Type (I - 1),
+                   Character'Pos (Get_Character (Lit_Id)));
+      end loop;
+      return Res;
+   end Eval_Array_Char_To_String;
+
    function Eval_Static_Predefined_Function_Call (Param1 : Valtyp;
                                                   Param2 : Valtyp;
                                                   Res_Typ : Type_Acc;
@@ -910,6 +1099,10 @@ package body Synth.Vhdl_Eval is
                Res := Elab.Vhdl_Files.Endfile (Param1.Val.File, Expr);
                return Create_Memory_U8 (Boolean'Pos (Res), Boolean_Type);
             end;
+
+         when Iir_Predefined_Array_Char_To_String =>
+            return Eval_Array_Char_To_String
+              (Get_Memtyp (Param1), Res_Typ, Imp);
 
          when Iir_Predefined_Std_Env_Resolution_Limit =>
             return Create_Memory_Discrete (1, Res_Typ);
