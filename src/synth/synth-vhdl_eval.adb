@@ -911,6 +911,9 @@ package body Synth.Vhdl_Eval is
                return Create_Memory_U8 (Boolean'Pos (Res), Boolean_Type);
             end;
 
+         when Iir_Predefined_Std_Env_Resolution_Limit =>
+            return Create_Memory_Discrete (1, Res_Typ);
+
          when Iir_Predefined_Ieee_Numeric_Std_Touns_Nat_Nat_Uns
             | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Int
             | Iir_Predefined_Ieee_Numeric_Std_Unsigned_To_Slv_Nat_Nat_Slv =>
