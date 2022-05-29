@@ -16,6 +16,7 @@
 with Types; use Types;
 with Std_Names; use Std_Names;
 with Vhdl.Sem_Specs;
+with Vhdl.Std_Env;
 with Vhdl.Ieee.Std_Logic_1164;
 with Vhdl.Ieee.Vital_Timing;
 with Vhdl.Ieee.Numeric;
@@ -79,6 +80,13 @@ package body Vhdl.Post_Sems is
                when others =>
                   null;
             end case;
+         end if;
+      elsif Get_Identifier (Lib) = Name_Std then
+         --  This is a unit of Std.
+         if Get_Kind (Lib_Unit) = Iir_Kind_Package_Declaration
+           and then Id = Name_Env
+         then
+            Vhdl.Std_Env.Extract_Declarations (Lib_Unit);
          end if;
       end if;
 

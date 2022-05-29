@@ -5612,6 +5612,13 @@ package Vhdl.Nodes is
       Iir_Predefined_Foreign_Textio_Read_Real,
       Iir_Predefined_Foreign_Textio_Write_Real,
 
+      --  Defined in package std.env
+      Iir_Predefined_Std_Env_Stop_Status,
+      Iir_Predefined_Std_Env_Stop,
+      Iir_Predefined_Std_Env_Finish_Status,
+      Iir_Predefined_Std_Env_Finish,
+      Iir_Predefined_Std_Env_Resolution_Limit,
+
       --  Defined in package ieee.std_logic_1164
 
       --  Std_Ulogic operations.
