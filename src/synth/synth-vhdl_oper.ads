@@ -48,4 +48,5 @@ package Synth.Vhdl_Oper is
      function (Param : Valtyp; Res_Typ : Type_Acc) return Memtyp;
 
    Hook_Std_Rising_Edge : Eval_Predefined_Acc;
+   Hook_Std_Falling_Edge : Eval_Predefined_Acc;
 end Synth.Vhdl_Oper;

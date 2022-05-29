@@ -1867,8 +1867,10 @@ package body Synth.Vhdl_Expr is
                  Get_Implicit_Definition (Imp);
                Edge : Net;
             begin
-               --  Match clock-edge
-               if Def = Iir_Predefined_Boolean_And then
+               --  Match clock-edge (only for synthesis)
+               if Def = Iir_Predefined_Boolean_And
+                 and then Hook_Signal_Expr = null
+               then
                   Edge := Synth_Clock_Edge (Syn_Inst,
                                             Get_Left (Expr), Get_Right (Expr));
                   if Edge /= No_Net then
@@ -1938,7 +1940,10 @@ package body Synth.Vhdl_Expr is
             begin
                Res := Synth_Name (Syn_Inst, Expr);
                if Res.Val /= null
-                 and then Res.Val.Kind = Value_Signal
+                 and then
+                 (Res.Val.Kind = Value_Signal
+                    or else (Res.Val.Kind = Value_Alias
+                               and then Res.Val.A_Obj.Kind = Value_Signal))
                then
                   if Hook_Signal_Expr /= null then
                      return Hook_Signal_Expr (Res);

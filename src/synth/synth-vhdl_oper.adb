@@ -1927,6 +1927,10 @@ package body Synth.Vhdl_Oper is
                return Create_Value_Net (Edge, Res_Typ);
             end;
          when Iir_Predefined_Ieee_1164_Falling_Edge =>
+            if Hook_Std_Falling_Edge /= null then
+               return Create_Value_Memtyp
+                 (Hook_Std_Falling_Edge.all (L, Res_Typ));
+            end if;
             declare
                Edge : Net;
             begin
