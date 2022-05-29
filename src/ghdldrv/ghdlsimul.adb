@@ -168,6 +168,8 @@ package body Ghdlsimul is
       Flags.Flag_String (5) := Time_Resolution;
       Grtlink.Flag_String := Flags.Flag_String;
 
+      Synth.Flags.Severity_Level := Grt.Options.Severity_Level;
+
       Elaborate_Proc := Simul.Vhdl_Simul.Runtime_Elaborate'Access;
       Simul.Vhdl_Simul.Simulation;
 
