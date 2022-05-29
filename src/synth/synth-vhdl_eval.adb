@@ -481,6 +481,20 @@ package body Synth.Vhdl_Eval is
                Res := Compare_Uns_Uns (Left, Right, Greater, Expr) = Equal;
                return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
             end;
+         when Iir_Predefined_Ieee_Numeric_Std_Ne_Uns_Uns =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Compare_Uns_Uns (Left, Right, Greater, Expr) /= Equal;
+               return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Ne_Uns_Nat =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Compare_Uns_Nat (Left, Right, Greater, Expr) /= Equal;
+               return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
+            end;
          when Iir_Predefined_Ieee_Numeric_Std_Eq_Sgn_Sgn =>
             declare
                Res : Boolean;
@@ -544,6 +558,13 @@ package body Synth.Vhdl_Eval is
                Res : Boolean;
             begin
                Res := Compare_Sgn_Sgn (Left, Right, Less, Expr) >= Equal;
+               return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Ge_Uns_Nat =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Compare_Uns_Nat (Left, Right, Less, Expr) >= Equal;
                return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
             end;
 
@@ -1016,6 +1037,15 @@ package body Synth.Vhdl_Eval is
                   Write_Bit (Res.Mem, I - 1, R);
                end loop;
                return Res;
+            end;
+
+         when Iir_Predefined_Ieee_1164_Scalar_Is_X =>
+            declare
+               B : Std_Ulogic;
+            begin
+               B := Read_Std_Logic (Param1.Val.Mem, 0);
+               B := To_X01 (B);
+               return Create_Memory_U8 (Boolean'Pos (B = 'X'), Res_Typ);
             end;
 
          when Iir_Predefined_Ieee_Math_Real_Log2 =>
