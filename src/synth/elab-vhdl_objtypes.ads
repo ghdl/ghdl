@@ -300,6 +300,7 @@ package Elab.Vhdl_Objtypes is
    procedure Copy_Memory (Dest : Memory_Ptr; Src : Memory_Ptr; Sz : Size_Type);
 
    function Unshare (Src : Memtyp) return Memtyp;
+   function Unshare (Src : Memtyp; Pool : Areapool_Acc) return Memtyp;
 
    procedure Initialize;
    procedure Finalize;

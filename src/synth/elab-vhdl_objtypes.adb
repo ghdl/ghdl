@@ -796,6 +796,18 @@ package body Elab.Vhdl_Objtypes is
       end loop;
    end Copy_Memory;
 
+   function Unshare (Src : Memtyp; Pool : Areapool_Acc) return Memtyp
+   is
+      Prev_Pool : constant Areapool_Acc := Current_Pool;
+      Res : Memory_Ptr;
+   begin
+      Current_Pool := Pool;
+      Res := Alloc_Memory (Src.Typ);
+      Copy_Memory (Res, Src.Mem, Src.Typ.Sz);
+      Current_Pool := Prev_Pool;
+      return (Src.Typ, Res);
+   end Unshare;
+
    function Unshare (Src : Memtyp) return Memtyp
    is
       Res : Memory_Ptr;
