@@ -341,6 +341,7 @@ package body Synth.Vhdl_Stmts is
            | Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Variable_Declaration
            | Iir_Kind_Signal_Declaration
+           | Iir_Kind_Object_Alias_Declaration
            | Iir_Kind_Indexed_Name
            | Iir_Kind_Slice_Name
            | Iir_Kind_Dereference =>
@@ -2970,7 +2971,7 @@ package body Synth.Vhdl_Stmts is
       Put_Err ("): ");
 
       if Rep = No_Valtyp then
-         Put_Line_Err ("assertion failure");
+         Put_Line_Err ("Assertion violation");
       else
          Put_Line_Err (Value_To_String (Rep));
       end if;
@@ -2981,11 +2982,11 @@ package body Synth.Vhdl_Stmts is
       end if;
    end Synth_Static_Report;
 
-   procedure Synth_Static_Report_Statement (Inst : Synth_Instance_Acc;
-                                            Stmt : Node) is
+   procedure Execute_Report_Statement (Inst : Synth_Instance_Acc;
+                                       Stmt : Node) is
    begin
       Synth_Static_Report (Inst, Stmt);
-   end Synth_Static_Report_Statement;
+   end Execute_Report_Statement;
 
    --  Return True if EXPR can be evaluated with static values.
    --  Does not need to be fully accurate, used for report/assert messages.
@@ -3146,7 +3147,7 @@ package body Synth.Vhdl_Stmts is
                Synth_Procedure_Call (C.Inst, Stmt);
             when Iir_Kind_Report_Statement =>
                if not Is_Dyn then
-                  Synth_Static_Report_Statement (C.Inst, Stmt);
+                  Execute_Report_Statement (C.Inst, Stmt);
                else
                   --  Not executed.
                   --  Depends on the execution path: the report statement may

@@ -103,6 +103,8 @@ package Synth.Vhdl_Stmts is
 
    procedure Execute_Assertion_Statement (Inst : Synth_Instance_Acc;
                                           Stmt : Node);
+   procedure Execute_Report_Statement (Inst : Synth_Instance_Acc;
+                                       Stmt : Node);
    procedure Init_For_Loop_Statement (Inst : Synth_Instance_Acc;
                                       Stmt : Node;
                                       Val : out Valtyp);
@@ -110,6 +112,8 @@ package Synth.Vhdl_Stmts is
                                         Stmt : Node);
    procedure Synth_Variable_Assignment (Inst : Synth_Instance_Acc;
                                         Stmt : Node);
+   procedure Synth_Conditional_Variable_Assignment
+     (Inst : Synth_Instance_Acc; Stmt : Node);
 
    procedure Synth_Procedure_Call (Syn_Inst : Synth_Instance_Acc; Stmt : Node);
 
