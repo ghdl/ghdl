@@ -501,7 +501,11 @@ package body Std_Names is
       Def ("frequency_domain",    Name_Frequency_Domain);
       Def ("domain",              Name_Domain);
       Def ("frequency",           Name_Frequency);
-      Def ("real_vector",         Name_Real_Vector);
+
+      Def ("env",                 Name_Env);
+      Def ("stop",                Name_Stop);
+      Def ("finish",              Name_Finish);
+      Def ("resolution_limit",    Name_Resolution_Limit);
 
       Def ("nul", Name_Nul);
       Def ("soh", Name_Soh);

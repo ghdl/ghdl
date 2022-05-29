@@ -577,9 +577,14 @@ package Std_Names is
    Name_Domain :           constant Name_Id := Name_First_Standard + 059;
    Name_Frequency :        constant Name_Id := Name_First_Standard + 060;
 
-   Name_Last_Standard :    constant Name_Id := Name_Frequency;
+   --  For Std.Env
+   Name_First_Env :        constant Name_Id := Name_Frequency + 1;
+   Name_Env :              constant Name_Id := Name_First_Env + 0;
+   Name_Stop :             constant Name_Id := Name_First_Env + 1;
+   Name_Finish :           constant Name_Id := Name_First_Env + 2;
+   Name_Resolution_Limit : constant Name_Id := Name_First_Env + 3;
 
-   Name_First_Charname : constant Name_Id := Name_Last_Standard + 1;
+   Name_First_Charname : constant Name_Id := Name_Resolution_Limit + 1;
    Name_Nul :            constant Name_Id := Name_First_Charname + 00;
    Name_Soh :            constant Name_Id := Name_First_Charname + 01;
    Name_Stx :            constant Name_Id := Name_First_Charname + 02;
