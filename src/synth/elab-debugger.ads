@@ -64,6 +64,12 @@ package Elab.Debugger is
 
    --  Return the position of the first non-blank character.
    function Skip_Blanks (S : String) return Positive;
+   function Skip_Blanks (S : String; F : Positive) return Positive;
+
+   --  Return the position of the last character of the word (the last
+   --  non-blank character).
+   function Get_Word (S : String) return Positive;
+   function Get_Word (S : String; F : Positive) return Positive;
 
    --  Convert STR to number RES, set VALID to true iff the conversion is ok.
    procedure To_Num (Str : String; Res : out Uns32; Valid : out Boolean);
