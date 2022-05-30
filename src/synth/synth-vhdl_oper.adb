@@ -461,20 +461,6 @@ package body Synth.Vhdl_Oper is
          return Create_Value_Net (N, Res_Type);
       end Synth_Compare;
 
-      function Synth_Minmax (Id : Compare_Module_Id) return Valtyp
-      is
-         L : constant Net := Get_Net (Ctxt, Left);
-         R : constant Net := Get_Net (Ctxt, Right);
-         Sel, N : Net;
-      begin
-         pragma Assert (Left_Type = Right_Type);
-         Sel := Build2_Compare (Ctxt, Id, L, R);
-         Set_Location (Sel, Expr);
-         N := Build_Mux2 (Ctxt, Sel, R, L);
-         Set_Location (N, Expr);
-         return Create_Value_Net (N, Expr_Typ);
-      end Synth_Minmax;
-
       function Synth_Compare_Array (Id : Compare_Module_Id;
                                     Res_Type : Type_Acc) return Valtyp
       is
@@ -1088,10 +1074,6 @@ package body Synth.Vhdl_Oper is
             return Synth_Compare (Id_Eq, Boolean_Type);
          when Iir_Predefined_Integer_Inequality =>
             return Synth_Compare (Id_Ne, Boolean_Type);
-         when Iir_Predefined_Integer_Minimum =>
-            return Synth_Minmax (Id_Slt);
-         when Iir_Predefined_Integer_Maximum =>
-            return Synth_Minmax (Id_Sgt);
          when Iir_Predefined_Physical_Physical_Div =>
             Error_Msg_Synth (+Expr, "non-constant division not supported");
             return No_Valtyp;
@@ -1865,6 +1847,23 @@ package body Synth.Vhdl_Oper is
         (N, Create_Vec_Type_By_Length (Size, Logic_Type));
    end Synth_Resize;
 
+   function Synth_Minmax (Ctxt : Context_Acc;
+                          Left, Right : Valtyp;
+                          Res_Typ : Type_Acc;
+                          Id : Compare_Module_Id;
+                          Expr : Node) return Valtyp
+   is
+      L : constant Net := Get_Net (Ctxt, Left);
+      R : constant Net := Get_Net (Ctxt, Right);
+      Sel, N : Net;
+   begin
+      Sel := Build2_Compare (Ctxt, Id, L, R);
+      Set_Location (Sel, Expr);
+      N := Build_Mux2 (Ctxt, Sel, R, L);
+      Set_Location (N, Expr);
+      return Create_Value_Net (N, Res_Typ);
+   end Synth_Minmax;
+
    function Synth_Dynamic_Predefined_Function_Call
      (Subprg_Inst : Synth_Instance_Acc; Expr : Node) return Valtyp
    is
@@ -1914,6 +1913,10 @@ package body Synth.Vhdl_Oper is
       end if;
 
       case Def is
+         when Iir_Predefined_Integer_Minimum =>
+            return Synth_Minmax (Ctxt, L, R, Res_Typ, Id_Slt, Expr);
+         when Iir_Predefined_Integer_Maximum =>
+            return Synth_Minmax (Ctxt, L, R, Res_Typ, Id_Sgt, Expr);
          when Iir_Predefined_Ieee_1164_Rising_Edge =>
             if Hook_Std_Rising_Edge /= null then
                return Create_Value_Memtyp

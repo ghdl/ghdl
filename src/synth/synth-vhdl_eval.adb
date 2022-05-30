@@ -328,25 +328,6 @@ package body Synth.Vhdl_Eval is
               (Read_Discrete (Left) ** Natural (Read_Discrete (Right)),
                Res_Typ);
 
-         when Iir_Predefined_Physical_Minimum
-           | Iir_Predefined_Integer_Minimum
-           | Iir_Predefined_Enum_Minimum =>
-            return Create_Memory_Discrete
-              (Int64'Min (Read_Discrete (Left), Read_Discrete (Right)),
-               Res_Typ);
-         when Iir_Predefined_Floating_Maximum =>
-            return Create_Memory_Fp64
-              (Fp64'Max (Read_Fp64 (Left), Read_Fp64 (Right)), Res_Typ);
-         when Iir_Predefined_Physical_Maximum
-           | Iir_Predefined_Integer_Maximum
-           | Iir_Predefined_Enum_Maximum =>
-            return Create_Memory_Discrete
-              (Int64'Max (Read_Discrete (Left), Read_Discrete (Right)),
-               Res_Typ);
-         when Iir_Predefined_Floating_Minimum =>
-            return Create_Memory_Fp64
-              (Fp64'Min (Read_Fp64 (Left), Read_Fp64 (Right)), Res_Typ);
-
          when Iir_Predefined_Integer_Less_Equal
             | Iir_Predefined_Physical_Less_Equal
             | Iir_Predefined_Enum_Less_Equal =>
@@ -1092,6 +1073,25 @@ package body Synth.Vhdl_Eval is
         Get_Implicit_Definition (Imp);
    begin
       case Def is
+         when Iir_Predefined_Physical_Minimum
+           | Iir_Predefined_Integer_Minimum
+           | Iir_Predefined_Enum_Minimum =>
+            return Create_Memory_Discrete
+              (Int64'Min (Read_Discrete (Param1), Read_Discrete (Param2)),
+               Res_Typ);
+         when Iir_Predefined_Floating_Maximum =>
+            return Create_Memory_Fp64
+              (Fp64'Max (Read_Fp64 (Param1), Read_Fp64 (Param2)), Res_Typ);
+         when Iir_Predefined_Physical_Maximum
+           | Iir_Predefined_Integer_Maximum
+           | Iir_Predefined_Enum_Maximum =>
+            return Create_Memory_Discrete
+              (Int64'Max (Read_Discrete (Param1), Read_Discrete (Param2)),
+               Res_Typ);
+         when Iir_Predefined_Floating_Minimum =>
+            return Create_Memory_Fp64
+              (Fp64'Min (Read_Fp64 (Param1), Read_Fp64 (Param2)), Res_Typ);
+
          when Iir_Predefined_Endfile =>
             declare
                Res : Boolean;

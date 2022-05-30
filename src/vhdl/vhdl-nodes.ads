@@ -5319,11 +5319,6 @@ package Vhdl.Nodes is
       Iir_Predefined_Enum_Greater,
       Iir_Predefined_Enum_Greater_Equal,
 
-      --  LRM08 5.2.6 Predefined operations on scalar types.
-      Iir_Predefined_Enum_Minimum,
-      Iir_Predefined_Enum_Maximum,
-      Iir_Predefined_Enum_To_String,
-
       --  Predefined operators for BIT type.
 
       --  LRM08 9.2.2 Logical Operators
@@ -5345,10 +5340,6 @@ package Vhdl.Nodes is
 
       --  LRM08 9.2.9 Condition operator
       Iir_Predefined_Bit_Condition,
-
-      --  LRM08 5.2.6 Predefined operations on scalar types.
-      Iir_Predefined_Bit_Rising_Edge,
-      Iir_Predefined_Bit_Falling_Edge,
 
       --  Predefined operators for any integer type.
 
@@ -5380,11 +5371,6 @@ package Vhdl.Nodes is
       --  LRM08 9.2.8 Miscellaneous operators
       Iir_Predefined_Integer_Exp,
 
-      --  LRM08 5.2.6 Predefined operations on scalar types.
-      Iir_Predefined_Integer_Minimum,
-      Iir_Predefined_Integer_Maximum,
-      Iir_Predefined_Integer_To_String,
-
       --  Predefined operators for any floating type.
 
       --  LRM08 9.2.3 Relational Operators
@@ -5412,13 +5398,6 @@ package Vhdl.Nodes is
 
       --  LRM08 9.2.8 Miscellaneous operators
       Iir_Predefined_Floating_Exp,
-
-      --  LRM08 5.2.6 Predefined operations on scalar types.
-      Iir_Predefined_Floating_Minimum,
-      Iir_Predefined_Floating_Maximum,
-      Iir_Predefined_Floating_To_String,
-      Iir_Predefined_Real_To_String_Digits,
-      Iir_Predefined_Real_To_String_Format,
 
       --  Predefined operator for universal types.
 
@@ -5458,12 +5437,6 @@ package Vhdl.Nodes is
       Iir_Predefined_Physical_Physical_Div,
       Iir_Predefined_Physical_Mod,
       Iir_Predefined_Physical_Rem,
-
-      --  LRM08 5.2.6 Predefined operations on scalar types.
-      Iir_Predefined_Physical_Minimum,
-      Iir_Predefined_Physical_Maximum,
-      Iir_Predefined_Physical_To_String,
-      Iir_Predefined_Time_To_String_Unit,
 
       --  Predefined operators for access.
 
@@ -5559,6 +5532,33 @@ package Vhdl.Nodes is
       --  LRM08 9.2.3 Relational Operators
       Iir_Predefined_Std_Ulogic_Array_Match_Equality,
       Iir_Predefined_Std_Ulogic_Array_Match_Inequality,
+
+      --  LRM08 5.2.6 Predefined operations on scalar types.
+      Iir_Predefined_Enum_Minimum,
+      Iir_Predefined_Enum_Maximum,
+      Iir_Predefined_Enum_To_String,
+
+      --  LRM08 5.2.6 Predefined operations on scalar types.
+      Iir_Predefined_Integer_Minimum,
+      Iir_Predefined_Integer_Maximum,
+      Iir_Predefined_Integer_To_String,
+
+      --  LRM08 5.2.6 Predefined operations on scalar types.
+      Iir_Predefined_Bit_Rising_Edge,
+      Iir_Predefined_Bit_Falling_Edge,
+
+      --  LRM08 5.2.6 Predefined operations on scalar types.
+      Iir_Predefined_Floating_Minimum,
+      Iir_Predefined_Floating_Maximum,
+      Iir_Predefined_Floating_To_String,
+      Iir_Predefined_Real_To_String_Digits,
+      Iir_Predefined_Real_To_String_Format,
+
+      --  LRM08 5.2.6 Predefined operations on scalar types.
+      Iir_Predefined_Physical_Minimum,
+      Iir_Predefined_Physical_Maximum,
+      Iir_Predefined_Physical_To_String,
+      Iir_Predefined_Time_To_String_Unit,
 
       --  LRM08 5.3.2.4 Predefined operations on array types
       Iir_Predefined_Array_Char_To_String,
