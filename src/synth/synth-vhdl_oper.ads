@@ -47,6 +47,9 @@ package Synth.Vhdl_Oper is
    type Eval_Predefined_Acc is access
      function (Param : Valtyp; Res_Typ : Type_Acc) return Memtyp;
 
+   Hook_Bit_Rising_Edge : Eval_Predefined_Acc;
+   Hook_Bit_Falling_Edge : Eval_Predefined_Acc;
+
    Hook_Std_Rising_Edge : Eval_Predefined_Acc;
    Hook_Std_Falling_Edge : Eval_Predefined_Acc;
 end Synth.Vhdl_Oper;

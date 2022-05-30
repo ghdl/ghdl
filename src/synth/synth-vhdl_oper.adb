@@ -1917,6 +1917,18 @@ package body Synth.Vhdl_Oper is
             return Synth_Minmax (Ctxt, L, R, Res_Typ, Id_Slt, Expr);
          when Iir_Predefined_Integer_Maximum =>
             return Synth_Minmax (Ctxt, L, R, Res_Typ, Id_Sgt, Expr);
+         when Iir_Predefined_Bit_Rising_Edge =>
+            if Hook_Bit_Rising_Edge /= null then
+               return Create_Value_Memtyp
+                 (Hook_Bit_Rising_Edge.all (L, Res_Typ));
+            end if;
+            raise Internal_Error;
+         when Iir_Predefined_Bit_Falling_Edge =>
+            if Hook_Bit_Falling_Edge /= null then
+               return Create_Value_Memtyp
+                 (Hook_Bit_Falling_Edge.all (L, Res_Typ));
+            end if;
+            raise Internal_Error;
          when Iir_Predefined_Ieee_1164_Rising_Edge =>
             if Hook_Std_Rising_Edge /= null then
                return Create_Value_Memtyp
