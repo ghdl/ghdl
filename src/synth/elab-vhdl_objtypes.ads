@@ -148,26 +148,25 @@ package Elab.Vhdl_Objtypes is
 
       case Kind is
          when Type_Bit
-           | Type_Logic =>
-            null;
-         when Type_Discrete =>
+            | Type_Logic
+            | Type_Discrete =>
             Drange : Discrete_Range_Type;
          when Type_Float =>
             Frange : Float_Range_Type;
          when Type_Slice =>
             Slice_El : Type_Acc;
          when Type_Array
-           | Type_Vector =>
+            | Type_Vector =>
             Abound : Bound_Type;
             Alast : Boolean;  --  True for the last dimension
             Arr_El : Type_Acc;
          when Type_Unbounded_Array
-           | Type_Unbounded_Vector =>
+            | Type_Unbounded_Vector =>
             Uarr_El : Type_Acc;
             Ulast : Boolean;
             Uarr_Idx : Type_Acc;
          when Type_Record
-           | Type_Unbounded_Record =>
+            | Type_Unbounded_Record =>
             Rec : Rec_El_Array_Acc;
          when Type_Access =>
             Acc_Acc : Type_Acc;

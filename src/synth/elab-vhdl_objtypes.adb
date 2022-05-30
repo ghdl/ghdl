@@ -230,6 +230,10 @@ package body Elab.Vhdl_Objtypes is
    begin
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Bit,
                                                 Wkind => Wkind_Net,
+                                                Drange => (Left => 0,
+                                                           Right => 1,
+                                                           Dir => Dir_To,
+                                                           Is_Signed => False),
                                                 Al => 0,
                                                 Sz => 1,
                                                 W => 1)));
@@ -242,6 +246,10 @@ package body Elab.Vhdl_Objtypes is
    begin
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Logic,
                                                 Wkind => Wkind_Net,
+                                                Drange => (Left => 0,
+                                                           Right => 8,
+                                                           Dir => Dir_To,
+                                                           Is_Signed => False),
                                                 Al => 0,
                                                 Sz => 1,
                                                 W => 1)));
