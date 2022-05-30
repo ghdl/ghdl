@@ -21,6 +21,8 @@ with Types_Utils; use Types_Utils;
 with Name_Table;
 
 with Grt.Types; use Grt.Types;
+with Grt.Vhdl_Types; use Grt.Vhdl_Types;
+with Grt.To_Strings;
 
 with Vhdl.Utils;
 with Vhdl.Ieee.Std_Logic_1164; use Vhdl.Ieee.Std_Logic_1164;
@@ -218,6 +220,111 @@ package body Synth.Vhdl_Eval is
       return Equal;
    end Compare_Array;
 
+   function Execute_Shift_Operator (Left : Memtyp;
+                                    Count : Int64;
+                                    Op : Iir_Predefined_Shift_Functions)
+                                   return Memtyp
+   is
+      Cnt : Uns32;
+      Len : constant Uns32 := Left.Typ.Abound.Len;
+      Dir_Left : Boolean;
+      P : Size_Type;
+      Res : Memtyp;
+      E : Ghdl_U8;
+   begin
+      --  LRM93 7.2.3
+      --  That is, if R is 0 or if L is a null array, the return value is L.
+      if Count = 0 or else Len = 0 then
+         return Left;
+      end if;
+
+      case Op is
+         when Iir_Predefined_Array_Sll
+           | Iir_Predefined_Array_Sla
+           | Iir_Predefined_Array_Rol =>
+            Dir_Left := True;
+         when Iir_Predefined_Array_Srl
+           | Iir_Predefined_Array_Sra
+           | Iir_Predefined_Array_Ror =>
+            Dir_Left := False;
+      end case;
+      if Count < 0 then
+         Cnt := Uns32 (-Count);
+         Dir_Left := not Dir_Left;
+      else
+         Cnt := Uns32 (Count);
+      end if;
+
+      case Op is
+         when Iir_Predefined_Array_Sll
+           | Iir_Predefined_Array_Srl =>
+            E := 0;
+         when Iir_Predefined_Array_Sla
+           | Iir_Predefined_Array_Sra =>
+            if Dir_Left then
+               E := Read_U8 (Left.Mem + Size_Type (Len - 1));
+            else
+               E := Read_U8 (Left.Mem);
+            end if;
+         when Iir_Predefined_Array_Rol
+           | Iir_Predefined_Array_Ror =>
+            Cnt := Cnt mod Len;
+            if not Dir_Left then
+               Cnt := (Len - Cnt) mod Len;
+            end if;
+      end case;
+
+      Res := Create_Memory (Left.Typ);
+      P := 0;
+
+      case Op is
+         when Iir_Predefined_Array_Sll
+           | Iir_Predefined_Array_Srl
+           | Iir_Predefined_Array_Sla
+           | Iir_Predefined_Array_Sra =>
+            if Dir_Left then
+               if Cnt < Len then
+                  for I in Cnt .. Len - 1 loop
+                     Write_U8 (Res.Mem + P,
+                               Read_U8 (Left.Mem + Size_Type (I + 1)));
+                     P := P + 1;
+                  end loop;
+               else
+                  Cnt := Len;
+               end if;
+               for I in 0 .. Cnt - 1 loop
+                  Write_U8 (Res.Mem + P, E);
+                  P := P + 1;
+               end loop;
+            else
+               if Cnt > Len then
+                  Cnt := Len;
+               end if;
+               for I in 0 .. Cnt - 1 loop
+                  Write_U8 (Res.Mem + P, E);
+                  P := P + 1;
+               end loop;
+               for I in Cnt .. Len - 1 loop
+                  Write_U8 (Res.Mem + P,
+                            Read_U8 (Left.Mem + Size_Type (I - Cnt + 1)));
+                  P := P + 1;
+               end loop;
+            end if;
+         when Iir_Predefined_Array_Rol
+           | Iir_Predefined_Array_Ror =>
+            for I in 1 .. Len loop
+               Write_U8 (Res.Mem + P,
+                         Read_U8 (Left.Mem + Size_Type (Cnt + 1)));
+               P := P + 1;
+               Cnt := Cnt + 1;
+               if Cnt = Len then
+                  Cnt := 0;
+               end if;
+            end loop;
+      end case;
+      return Res;
+   end Execute_Shift_Operator;
+
    function Get_Static_Ulogic (Op : Memtyp) return Std_Ulogic is
    begin
       pragma Assert (Op.Typ.Kind = Type_Logic);
@@ -350,12 +457,14 @@ package body Synth.Vhdl_Eval is
               (Read_Discrete (Left) > Read_Discrete (Right));
          when Iir_Predefined_Integer_Equality
             | Iir_Predefined_Physical_Equality
-            | Iir_Predefined_Enum_Equality =>
+            | Iir_Predefined_Enum_Equality
+            | Iir_Predefined_Bit_Match_Equality =>
             return Create_Memory_Boolean
               (Read_Discrete (Left) = Read_Discrete (Right));
          when Iir_Predefined_Integer_Inequality
             | Iir_Predefined_Physical_Inequality
-            | Iir_Predefined_Enum_Inequality =>
+            | Iir_Predefined_Enum_Inequality
+            | Iir_Predefined_Bit_Match_Inequality =>
             return Create_Memory_Boolean
               (Read_Discrete (Left) /= Read_Discrete (Right));
 
@@ -499,10 +608,12 @@ package body Synth.Vhdl_Eval is
             end;
 
          when Iir_Predefined_Array_Equality
-           | Iir_Predefined_Record_Equality =>
+            | Iir_Predefined_Record_Equality
+            | Iir_Predefined_Bit_Array_Match_Equality =>
             return Create_Memory_Boolean (Is_Equal (Left, Right));
          when Iir_Predefined_Array_Inequality
-            | Iir_Predefined_Record_Inequality =>
+            | Iir_Predefined_Record_Inequality
+            | Iir_Predefined_Bit_Array_Match_Inequality =>
             return Create_Memory_Boolean (not Is_Equal (Left, Right));
 
          when Iir_Predefined_Access_Equality =>
@@ -540,8 +651,21 @@ package body Synth.Vhdl_Eval is
                return Right;
             end if;
 
+         when Iir_Predefined_Array_Sll =>
+            return Execute_Shift_Operator (Left, Read_Discrete (Right), Def);
+
+         when Iir_Predefined_TF_Array_And =>
+            return Eval_TF_Vector_Dyadic (Left, Right, Tf_2d_And, Expr);
+         when Iir_Predefined_TF_Array_Or =>
+            return Eval_TF_Vector_Dyadic (Left, Right, Tf_2d_Or, Expr);
          when Iir_Predefined_TF_Array_Xor =>
             return Eval_TF_Vector_Dyadic (Left, Right, Tf_2d_Xor, Expr);
+         when Iir_Predefined_TF_Array_Nand =>
+            return Eval_TF_Vector_Dyadic (Left, Right, Tf_2d_Nand, Expr);
+         when Iir_Predefined_TF_Array_Nor =>
+            return Eval_TF_Vector_Dyadic (Left, Right, Tf_2d_Nor, Expr);
+         when Iir_Predefined_TF_Array_Xnor =>
+            return Eval_TF_Vector_Dyadic (Left, Right, Tf_2d_Xnor, Expr);
 
          when Iir_Predefined_TF_Element_Array_Or =>
             return Eval_TF_Array_Element (Left, Right, Tf_2d_Or);
@@ -872,6 +996,153 @@ package body Synth.Vhdl_Eval is
       return Create_Memory_U8 (Std_Ulogic'Pos (Res), El_Typ);
    end Eval_Vector_Reduce;
 
+   function Eval_TF_Vector_Monadic (Vec : Memtyp) return Memtyp
+   is
+      Len : constant Iir_Index32 := Vec_Length (Vec.Typ);
+      Res : Memtyp;
+   begin
+      Res := Create_Memory (Create_Res_Bound (Vec.Typ));
+      for I in 1 .. Uns32 (Len) loop
+         declare
+            V : constant Boolean :=
+              Boolean'Val (Read_U8 (Vec.Mem + Size_Type (I - 1)));
+         begin
+            Write_U8 (Res.Mem + Size_Type (I - 1), Boolean'Pos (not V));
+         end;
+      end loop;
+      return Res;
+   end Eval_TF_Vector_Monadic;
+
+   function Eval_TF_Vector_Reduce (Init : Boolean;
+                                   Neg : Boolean;
+                                   Vec : Memtyp;
+                                   Op : Tf_Table_2d) return Memtyp
+   is
+      El_Typ : constant Type_Acc := Vec.Typ.Arr_El;
+      Res : Boolean;
+   begin
+      Res := Init;
+      for I in 1 .. Size_Type (Vec.Typ.Abound.Len) loop
+         declare
+            V : constant Boolean := Boolean'Val (Read_U8 (Vec.Mem + (I - 1)));
+         begin
+            Res := Op (Res, V);
+         end;
+      end loop;
+
+      return Create_Memory_U8 (Boolean'Pos (Res xor Neg), El_Typ);
+   end Eval_TF_Vector_Reduce;
+
+   function Eval_Vector_Maximum (Vec : Memtyp) return Memtyp
+   is
+      Etyp : constant Type_Acc := Vec.Typ.Arr_El;
+      Len : constant Uns32 := Vec.Typ.Abound.Len;
+   begin
+      case Etyp.Kind is
+         when Type_Logic
+           | Type_Bit
+           | Type_Discrete =>
+            declare
+               Res : Int64;
+               V : Int64;
+            begin
+               case Etyp.Drange.Dir is
+                  when Dir_To =>
+                     Res := Etyp.Drange.Left;
+                  when Dir_Downto =>
+                     Res := Etyp.Drange.Right;
+               end case;
+
+               for I in 1 .. Len loop
+                  V := Read_Discrete
+                    (Vec.Mem + Size_Type (I - 1) * Etyp.Sz, Etyp);
+                  if V > Res then
+                     Res := V;
+                  end if;
+               end loop;
+               return Create_Memory_Discrete (Res, Etyp);
+            end;
+         when Type_Float =>
+            declare
+               Res : Fp64;
+               V : Fp64;
+            begin
+               case Etyp.Frange.Dir is
+                  when Dir_To =>
+                     Res := Etyp.Frange.Left;
+                  when Dir_Downto =>
+                     Res := Etyp.Frange.Right;
+               end case;
+
+               for I in 1 .. Len loop
+                  V := Read_Fp64
+                    (Vec.Mem + Size_Type (I - 1) * Etyp.Sz);
+                  if V > Res then
+                     Res := V;
+                  end if;
+               end loop;
+               return Create_Memory_Fp64 (Res, Etyp);
+            end;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Eval_Vector_Maximum;
+
+   function Eval_Vector_Minimum (Vec : Memtyp) return Memtyp
+   is
+      Etyp : constant Type_Acc := Vec.Typ.Arr_El;
+      Len : constant Uns32 := Vec.Typ.Abound.Len;
+   begin
+      case Etyp.Kind is
+         when Type_Logic
+           | Type_Bit
+           | Type_Discrete =>
+            declare
+               Res : Int64;
+               V : Int64;
+            begin
+               case Etyp.Drange.Dir is
+                  when Dir_To =>
+                     Res := Etyp.Drange.Right;
+                  when Dir_Downto =>
+                     Res := Etyp.Drange.Left;
+               end case;
+
+               for I in 1 .. Len loop
+                  V := Read_Discrete
+                    (Vec.Mem + Size_Type (I - 1) * Etyp.Sz, Etyp);
+                  if V < Res then
+                     Res := V;
+                  end if;
+               end loop;
+               return Create_Memory_Discrete (Res, Etyp);
+            end;
+         when Type_Float =>
+            declare
+               Res : Fp64;
+               V : Fp64;
+            begin
+               case Etyp.Frange.Dir is
+                  when Dir_To =>
+                     Res := Etyp.Frange.Right;
+                  when Dir_Downto =>
+                     Res := Etyp.Frange.Left;
+               end case;
+
+               for I in 1 .. Len loop
+                  V := Read_Fp64
+                    (Vec.Mem + Size_Type (I - 1) * Etyp.Sz);
+                  if V < Res then
+                     Res := V;
+                  end if;
+               end loop;
+               return Create_Memory_Fp64 (Res, Etyp);
+            end;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Eval_Vector_Minimum;
+
    function Eval_Static_Monadic_Predefined (Imp : Node;
                                              Operand : Memtyp;
                                              Expr : Node) return Memtyp
@@ -905,6 +1176,27 @@ package body Synth.Vhdl_Eval is
             return Operand;
          when Iir_Predefined_Floating_Absolute =>
             return Create_Memory_Fp64 (abs Read_Fp64 (Operand), Operand.Typ);
+
+         when Iir_Predefined_Vector_Maximum =>
+            return Eval_Vector_Maximum (Operand);
+         when Iir_Predefined_Vector_Minimum =>
+            return Eval_Vector_Minimum (Operand);
+
+         when Iir_Predefined_TF_Array_Not =>
+            return Eval_TF_Vector_Monadic (Operand);
+
+         when Iir_Predefined_TF_Reduction_Or =>
+            return Eval_TF_Vector_Reduce (False, False, Operand, Tf_2d_Or);
+         when Iir_Predefined_TF_Reduction_And =>
+            return Eval_TF_Vector_Reduce (True, False, Operand, Tf_2d_And);
+         when Iir_Predefined_TF_Reduction_Xor =>
+            return Eval_TF_Vector_Reduce (False, False, Operand, Tf_2d_Xor);
+         when Iir_Predefined_TF_Reduction_Nor =>
+            return Eval_TF_Vector_Reduce (False, True, Operand, Tf_2d_Or);
+         when Iir_Predefined_TF_Reduction_Nand =>
+            return Eval_TF_Vector_Reduce (True, True, Operand, Tf_2d_And);
+         when Iir_Predefined_TF_Reduction_Xnor =>
+            return Eval_TF_Vector_Reduce (False, True, Operand, Tf_2d_Xor);
 
          when Iir_Predefined_Ieee_1164_Condition_Operator =>
             --  Constant std_logic: need to convert.
@@ -1063,6 +1355,81 @@ package body Synth.Vhdl_Eval is
       return Res;
    end Eval_Array_Char_To_String;
 
+   function String_To_Memtyp (Str : String; Styp : Type_Acc) return Memtyp
+   is
+      Len : constant Natural := Str'Length;
+      Bnd : Bound_Type;
+      Typ : Type_Acc;
+      Res : Memtyp;
+   begin
+      Bnd := (Dir => Dir_To, Left => 1, Right => Int32 (Len),
+              Len => Uns32 (Len));
+      Typ := Create_Array_Type (Bnd, True, Styp.Uarr_El);
+
+      Res := Create_Memory (Typ);
+      for I in Str'Range loop
+         Write_U8 (Res.Mem + Size_Type (I - Str'First),
+                   Character'Pos (Str (I)));
+      end loop;
+      return Res;
+   end String_To_Memtyp;
+
+   function Eval_Enum_To_String (Param : Memtyp;
+                                 Res_Typ : Type_Acc;
+                                 Imp : Node) return Memtyp
+   is
+      use Vhdl.Utils;
+      use Name_Table;
+      Etype : constant Node := Get_Base_Type
+        (Get_Type (Get_Interface_Declaration_Chain (Imp)));
+      pragma Assert (Get_Kind (Etype) = Iir_Kind_Enumeration_Type_Definition);
+      Enums : constant Iir_Flist := Get_Enumeration_Literal_List (Etype);
+      Lit : Node;
+      Lit_Id : Name_Id;
+      V : Int64;
+      C : String (1 .. 1);
+   begin
+      V := Read_Discrete (Param.Mem, Param.Typ);
+      Lit := Get_Nth_Element (Enums, Natural (V));
+      Lit_Id := Get_Identifier (Lit);
+      if Is_Character (Lit_Id) then
+         C (1) := Get_Character (Lit_Id);
+         return String_To_Memtyp (C, Res_Typ);
+      else
+         return String_To_Memtyp (Image (Lit_Id), Res_Typ);
+      end if;
+   end Eval_Enum_To_String;
+
+   Hex_Chars : constant array (Natural range 0 .. 15) of Character :=
+     "0123456789ABCDEF";
+
+   function Eval_Bit_Vector_To_String (Val : Memtyp;
+                                       Res_Typ : Type_Acc;
+                                       Log_Base : Natural) return Memtyp
+   is
+      Base : constant Natural := 2 ** Log_Base;
+      Blen : constant Natural := Natural (Val.Typ.Abound.Len);
+      Str : String (1 .. (Blen + Log_Base - 1) / Log_Base);
+      Pos : Natural;
+      V : Natural;
+      N : Natural;
+   begin
+      V := 0;
+      N := 1;
+      Pos := Str'Last;
+      for I in 1 .. Blen loop
+         V := V + Natural (Read_U8 (Val.Mem + Size_Type (Blen - I))) * N;
+         N := N * 2;
+         if N = Base or else I = Blen then
+            Str (Pos) := Hex_Chars (V);
+            Pos := Pos - 1;
+            N := 1;
+            V := 0;
+         end if;
+      end loop;
+      return String_To_Memtyp (Str, Res_Typ);
+   end Eval_Bit_Vector_To_String;
+
    function Eval_Static_Predefined_Function_Call (Param1 : Valtyp;
                                                   Param2 : Valtyp;
                                                   Res_Typ : Type_Acc;
@@ -1092,6 +1459,10 @@ package body Synth.Vhdl_Eval is
             return Create_Memory_Fp64
               (Fp64'Min (Read_Fp64 (Param1), Read_Fp64 (Param2)), Res_Typ);
 
+         when Iir_Predefined_Now_Function =>
+            return Create_Memory_Discrete
+              (Int64 (Grt.Vhdl_Types.Current_Time), Res_Typ);
+
          when Iir_Predefined_Endfile =>
             declare
                Res : Boolean;
@@ -1100,9 +1471,25 @@ package body Synth.Vhdl_Eval is
                return Create_Memory_U8 (Boolean'Pos (Res), Boolean_Type);
             end;
 
+         when Iir_Predefined_Integer_To_String =>
+            declare
+               Str : String (1 .. 21);
+               First : Natural;
+            begin
+               Grt.To_Strings.To_String
+                 (Str, First, Ghdl_I64 (Read_Discrete (Param1)));
+               return String_To_Memtyp (Str (First .. Str'Last), Res_Typ);
+            end;
          when Iir_Predefined_Array_Char_To_String =>
             return Eval_Array_Char_To_String
               (Get_Memtyp (Param1), Res_Typ, Imp);
+         when Iir_Predefined_Enum_To_String =>
+            return Eval_Enum_To_String (Get_Memtyp (Param1), Res_Typ, Imp);
+
+         when Iir_Predefined_Bit_Vector_To_Hstring =>
+            return Eval_Bit_Vector_To_String (Get_Memtyp (Param1), Res_Typ, 4);
+         when Iir_Predefined_Bit_Vector_To_Ostring =>
+            return Eval_Bit_Vector_To_String (Get_Memtyp (Param1), Res_Typ, 3);
 
          when Iir_Predefined_Std_Env_Resolution_Limit =>
             return Create_Memory_Discrete (1, Res_Typ);

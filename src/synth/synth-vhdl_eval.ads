@@ -35,4 +35,7 @@ package Synth.Vhdl_Eval is
                                                   Param2 : Valtyp;
                                                   Res_Typ : Type_Acc;
                                                   Expr : Node) return Memtyp;
+
+   --  STYP is the string type.
+   function String_To_Memtyp (Str : String; Styp : Type_Acc) return Memtyp;
 end Synth.Vhdl_Eval;

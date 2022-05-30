@@ -36,6 +36,7 @@ with Synth.Vhdl_Stmts; use Synth.Vhdl_Stmts;
 with Synth.Vhdl_Oper; use Synth.Vhdl_Oper;
 with Synth.Vhdl_Aggr;
 with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
+with Synth.Vhdl_Eval; use Synth.Vhdl_Eval;
 
 with Grt.Types;
 with Grt.To_Strings;
@@ -323,28 +324,9 @@ package body Elab.Vhdl_Expr is
                return Str (First .. Str'Last) & ' ' & Name_Table.Image (Id);
             end;
          when others =>
-            Error_Kind ("execute_image_attribute", Expr_Type);
+            Error_Kind ("synth_image_attribute_str", Expr_Type);
       end case;
    end Synth_Image_Attribute_Str;
-
-   function String_To_Valtyp (Str : String; Styp : Type_Acc) return Valtyp
-   is
-      Len : constant Natural := Str'Length;
-      Bnd : Bound_Type;
-      Typ : Type_Acc;
-      Res : Valtyp;
-   begin
-      Bnd := (Dir => Dir_To, Left => 1, Right => Int32 (Len),
-              Len => Uns32 (Len));
-      Typ := Create_Array_Type (Bnd, True, Styp.Uarr_El);
-
-      Res := Create_Value_Memory (Typ);
-      for I in Str'Range loop
-         Write_U8 (Res.Val.Mem + Size_Type (I - Str'First),
-                   Character'Pos (Str (I)));
-      end loop;
-      return Res;
-   end String_To_Valtyp;
 
    function Exec_Image_Attribute (Syn_Inst : Synth_Instance_Acc; Attr : Node)
                                  return Valtyp
@@ -353,6 +335,7 @@ package body Elab.Vhdl_Expr is
       Etype : constant Node := Get_Type (Attr);
       V : Valtyp;
       Dtype : Type_Acc;
+      Res : Memtyp;
    begin
       --  The parameter is expected to be static.
       V := Exec_Expression (Syn_Inst, Param);
@@ -366,8 +349,9 @@ package body Elab.Vhdl_Expr is
       end if;
 
       Strip_Const (V);
-      return String_To_Valtyp
+      Res := String_To_Memtyp
         (Synth_Image_Attribute_Str (V, Get_Type (Param)), Dtype);
+      return Create_Value_Memtyp (Res);
    end Exec_Image_Attribute;
 
    function Exec_Instance_Name_Attribute
@@ -377,9 +361,11 @@ package body Elab.Vhdl_Expr is
       Atyp  : constant Type_Acc := Get_Subtype_Object (Syn_Inst, Atype);
       Name  : constant Path_Instance_Name_Type :=
         Get_Path_Instance_Name_Suffix (Attr);
+      Res : Memtyp;
    begin
       --  Return a truncated name, as the prefix is not completly known.
-      return String_To_Valtyp (Name.Suffix, Atyp);
+      Res := String_To_Memtyp (Name.Suffix, Atyp);
+      return Create_Value_Memtyp (Res);
    end Exec_Instance_Name_Attribute;
 
    --  Convert index IDX in PFX to an offset.
