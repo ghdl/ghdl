@@ -24,4 +24,8 @@ package Synth.Vhdl_Static_Proc is
    procedure Synth_Static_Procedure (Syn_Inst : Synth_Instance_Acc;
                                      Imp : Node;
                                      Loc : Node);
+
+   type Hook_Simulation_Acc is access
+     procedure (Inst : Synth_Instance_Acc; Imp : Node);
+   Hook_Finish : Hook_Simulation_Acc;
 end Synth.Vhdl_Static_Proc;

@@ -16,6 +16,8 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
+with Types; use Types;
+
 with Vhdl.Errors; use Vhdl.Errors;
 
 with Elab.Vhdl_Values; use Elab.Vhdl_Values;
@@ -62,6 +64,12 @@ package body Synth.Vhdl_Static_Proc is
             Synth_File_Read (Syn_Inst, Imp, Loc);
          when Iir_Predefined_Write =>
             Synth_File_Write (Syn_Inst, Imp, Loc);
+         when Iir_Predefined_Std_Env_Finish_Status =>
+            if Hook_Finish /= null then
+               Hook_Finish.all (Syn_Inst, Imp);
+            else
+               raise Internal_Error;
+            end if;
          when others =>
             Error_Msg_Synth
               (+Loc, "call to implicit %n is not supported", +Imp);
