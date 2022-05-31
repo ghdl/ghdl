@@ -5953,6 +5953,16 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_Numeric_Std_To_01_Uns,
       Iir_Predefined_Ieee_Numeric_Std_To_01_Sgn,
 
+      --  numeric_bit
+
+      --  To_Integer, To_Unsigned, to_Signed
+      Iir_Predefined_Ieee_Numeric_Bit_Toint_Uns_Nat,
+      Iir_Predefined_Ieee_Numeric_Bit_Toint_Sgn_Int,
+      Iir_Predefined_Ieee_Numeric_Bit_Touns_Nat_Nat_Uns,
+      Iir_Predefined_Ieee_Numeric_Bit_Touns_Nat_Uns_Uns,
+      Iir_Predefined_Ieee_Numeric_Bit_Tosgn_Int_Nat_Sgn,
+      Iir_Predefined_Ieee_Numeric_Bit_Tosgn_Int_Sgn_Sgn,
+
       --  Numeric_Std_Unsigned (ieee2008)
       Iir_Predefined_Ieee_Numeric_Std_Unsigned_To_Integer_Slv_Nat,
       Iir_Predefined_Ieee_Numeric_Std_Unsigned_To_Slv_Nat_Nat_Slv,

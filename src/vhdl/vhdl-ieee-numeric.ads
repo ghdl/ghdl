@@ -19,6 +19,13 @@ package Vhdl.Ieee.Numeric is
    Numeric_Std_Unsigned_Type : Iir_Array_Type_Definition := Null_Iir;
    Numeric_Std_Signed_Type : Iir_Array_Type_Definition := Null_Iir;
 
+   Numeric_Bit_Pkg : Iir_Package_Declaration := Null_Iir;
+   Numeric_Bit_Unsigned_Type : Iir_Array_Type_Definition := Null_Iir;
+   Numeric_Bit_Signed_Type : Iir_Array_Type_Definition := Null_Iir;
+
    --  Extract declarations from PKG (ieee.numeric_std).
    procedure Extract_Std_Declarations (Pkg : Iir_Package_Declaration);
+
+   --  Extract declarations from PKG (ieee.numeric_bit).
+   procedure Extract_Bit_Declarations (Pkg : Iir_Package_Declaration);
 end Vhdl.Ieee.Numeric;

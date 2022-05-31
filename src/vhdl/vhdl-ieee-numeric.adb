@@ -618,6 +618,9 @@ package body Vhdl.Ieee.Numeric is
          elsif Arg_Type = Ieee.Std_Logic_1164.Std_Logic_Vector_Type then
             Sign := Type_Slv;
             Kind := Arg_Vect;
+         elsif Arg_Type = Vhdl.Std_Package.Bit_Type_Definition then
+            Sign := Type_Log;
+            Kind := Arg_Scal;
          else
             raise Error;
          end if;
@@ -667,21 +670,36 @@ package body Vhdl.Ieee.Numeric is
          Set_Implicit_Definition (Decl, Pats (Pkg, Arg1_Sign));
       end Handle_Unary;
 
-      procedure Handle_To_Unsigned is
+      procedure Handle_To_Unsigned
+      is
+         Predefined : Iir_Predefined_Functions;
       begin
          if Arg1_Kind = Arg_Scal and Arg1_Sign = Type_Unsigned then
             if Arg2_Kind = Arg_Scal and Arg2_Sign = Type_Unsigned then
-               Set_Implicit_Definition
-                 (Decl, Iir_Predefined_Ieee_Numeric_Std_Touns_Nat_Nat_Uns);
+               case Pkg is
+                  when Pkg_Std =>
+                     Predefined :=
+                       Iir_Predefined_Ieee_Numeric_Std_Touns_Nat_Nat_Uns;
+                  when Pkg_Bit =>
+                     Predefined :=
+                       Iir_Predefined_Ieee_Numeric_Bit_Touns_Nat_Nat_Uns;
+               end case;
             elsif Arg2_Kind = Arg_Vect and Arg2_Sign = Type_Unsigned then
-               Set_Implicit_Definition
-                 (Decl, Iir_Predefined_Ieee_Numeric_Std_Touns_Nat_Uns_Uns);
+               case Pkg is
+                  when Pkg_Std =>
+                     Predefined :=
+                       Iir_Predefined_Ieee_Numeric_Std_Touns_Nat_Uns_Uns;
+                  when Pkg_Bit =>
+                     Predefined :=
+                       Iir_Predefined_Ieee_Numeric_Bit_Touns_Nat_Uns_Uns;
+               end case;
             else
                raise Error;
             end if;
          else
             raise Error;
          end if;
+         Set_Implicit_Definition (Decl, Predefined);
       end Handle_To_Unsigned;
 
       procedure Handle_To_Signed is
@@ -1048,4 +1066,18 @@ package body Vhdl.Ieee.Numeric is
          Numeric_Std_Unsigned_Type := Null_Iir;
          Numeric_Std_Signed_Type := Null_Iir;
    end Extract_Std_Declarations;
+
+   procedure Extract_Bit_Declarations (Pkg : Iir_Package_Declaration) is
+   begin
+      Numeric_Bit_Pkg := Pkg;
+
+      Extract_Declarations
+        (Pkg, Pkg_Bit, Numeric_Bit_Unsigned_Type, Numeric_Bit_Signed_Type);
+   exception
+      when Error =>
+         Error_Msg_Sem (+Pkg, "package ieee.numeric_bit is ill-formed");
+         Numeric_Bit_Pkg := Null_Iir;
+         Numeric_Bit_Unsigned_Type := Null_Iir;
+         Numeric_Bit_Signed_Type := Null_Iir;
+   end Extract_Bit_Declarations;
 end Vhdl.Ieee.Numeric;

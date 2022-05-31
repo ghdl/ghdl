@@ -59,6 +59,9 @@ package body Vhdl.Post_Sems is
                   Vhdl.Ieee.Std_Logic_1164.Extract_Declarations (Lib_Unit);
                when Name_VITAL_Timing =>
                   Vhdl.Ieee.Vital_Timing.Extract_Declarations (Lib_Unit);
+               when Name_Numeric_Bit =>
+                  Vhdl.Ieee.Numeric.Extract_Bit_Declarations
+                    (Lib_Unit);
                when Name_Numeric_Std =>
                   Vhdl.Ieee.Numeric.Extract_Std_Declarations
                     (Lib_Unit);
