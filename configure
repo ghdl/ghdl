@@ -204,7 +204,7 @@ if ! $GNATMAKE --version >/dev/null 2>&1; then
 fi
 
 # Check that compiler exists
-if ! $CC -v 2> /dev/null; then
+if ! $CC --version 2> /dev/null; then
   echo "Sorry, you need a C compiler to build GHDL.  See the README"
   exit 1
 fi
