@@ -1849,9 +1849,14 @@ package body Synth.Vhdl_Stmts is
          case Iir_Kinds_Interface_Object_Declaration (Get_Kind (Inter)) is
             when Iir_Kind_Interface_Constant_Declaration
               | Iir_Kind_Interface_Variable_Declaration =>
-               --  Always passed by value
-               Val := Synth_Subtype_Conversion
-                 (Ctxt, Val, Inter_Type, True, Assoc);
+               if Get_Mode (Inter) /= Iir_Out_Mode then
+                  --  Always passed by value
+                  Val := Synth_Subtype_Conversion
+                    (Ctxt, Val, Inter_Type, True, Assoc);
+               else
+                  --  Use default value ?
+                  null;
+               end if;
             when Iir_Kind_Interface_Signal_Declaration =>
                --  LRM08 4.2.2.3 Signal parameters
                --  If an actual signal is associated with a signal parameter
