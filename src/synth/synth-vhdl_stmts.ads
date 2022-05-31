@@ -116,6 +116,11 @@ package Synth.Vhdl_Stmts is
      (Inst : Synth_Instance_Acc; Stmt : Node);
 
    procedure Synth_Procedure_Call (Syn_Inst : Synth_Instance_Acc; Stmt : Node);
+   procedure Synth_Subprogram_Back_Association
+     (Subprg_Inst : Synth_Instance_Acc;
+      Caller_Inst : Synth_Instance_Acc;
+      Inter_Chain : Node;
+      Assoc_Chain : Node);
 
    --  Return the statements chain to be executed.
    function Execute_Static_Case_Statement

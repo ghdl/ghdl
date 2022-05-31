@@ -1980,7 +1980,8 @@ package body Synth.Vhdl_Stmts is
    procedure Synth_Subprogram_Back_Association
      (Subprg_Inst : Synth_Instance_Acc;
       Caller_Inst : Synth_Instance_Acc;
-      Init : Association_Iterator_Init)
+      Inter_Chain : Node;
+      Assoc_Chain : Node)
    is
       Inter : Node;
       Assoc : Node;
@@ -1990,10 +1991,9 @@ package body Synth.Vhdl_Stmts is
       W : Wire_Id;
       D : Destroy_Type;
    begin
-      pragma Assert (Init.Kind = Association_Function);
       Destroy_Init (D, Caller_Inst);
-      Assoc := Init.Assoc_Chain;
-      Assoc_Inter := Init.Inter_Chain;
+      Assoc := Assoc_Chain;
+      Assoc_Inter := Inter_Chain;
       while Is_Valid (Assoc) loop
          Inter := Get_Association_Interface (Assoc, Assoc_Inter);
 
@@ -2120,7 +2120,8 @@ package body Synth.Vhdl_Stmts is
             end if;
          else
             Res := No_Valtyp;
-            Synth_Subprogram_Back_Association (C.Inst, Syn_Inst, Init);
+            Synth_Subprogram_Back_Association
+              (C.Inst, Syn_Inst, Init.Inter_Chain, Init.Assoc_Chain);
          end if;
       end if;
 
@@ -2196,7 +2197,8 @@ package body Synth.Vhdl_Stmts is
             end if;
          else
             Res := No_Valtyp;
-            Synth_Subprogram_Back_Association (C.Inst, Syn_Inst, Init);
+            Synth_Subprogram_Back_Association
+              (C.Inst, Syn_Inst, Init.Inter_Chain, Init.Assoc_Chain);
          end if;
       end if;
 
@@ -2334,7 +2336,8 @@ package body Synth.Vhdl_Stmts is
 
       Synth.Vhdl_Static_Proc.Synth_Static_Procedure (Sub_Inst, Imp, Call);
 
-      Synth_Subprogram_Back_Association (Sub_Inst, Syn_Inst, Init);
+      Synth_Subprogram_Back_Association
+        (Sub_Inst, Syn_Inst, Init.Inter_Chain, Init.Assoc_Chain);
 
       Free_Instance (Sub_Inst);
       Areapools.Release (Area_Mark, Instance_Pool.all);
