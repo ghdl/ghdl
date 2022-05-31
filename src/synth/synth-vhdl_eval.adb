@@ -25,6 +25,7 @@ with Grt.Vhdl_Types; use Grt.Vhdl_Types;
 with Grt.To_Strings;
 
 with Vhdl.Utils;
+with Vhdl.Evaluation;
 with Vhdl.Ieee.Std_Logic_1164; use Vhdl.Ieee.Std_Logic_1164;
 
 with Elab.Memtype; use Elab.Memtype;
@@ -107,6 +108,39 @@ package body Synth.Vhdl_Eval is
 
       return Res;
    end Eval_Vector_Dyadic;
+
+   function Eval_Logic_Vector_Scalar (Vect, Scal : Memtyp;
+                                      Op : Table_2d;
+                                      Neg : Boolean := False) return Memtyp
+   is
+      Res : Memtyp;
+      Vs, Vv, Vr : Std_Ulogic;
+   begin
+      Res := Create_Memory (Create_Res_Bound (Vect.Typ));
+      Vs := Read_Std_Logic (Scal.Mem, 0);
+      for I in 1 .. Vect.Typ.Abound.Len loop
+         Vv := Read_Std_Logic (Vect.Mem, I - 1);
+         Vr := Op (Vs, Vv);
+         if Neg then
+            Vr := Not_Table (Vr);
+         end if;
+         Write_Std_Logic (Res.Mem, I - 1, Vr);
+      end loop;
+      return Res;
+   end Eval_Logic_Vector_Scalar;
+
+   function Eval_Logic_Scalar (Left, Right : Memtyp;
+                               Op : Table_2d;
+                               Neg : Boolean := False) return Memtyp
+   is
+      Res : Std_Ulogic;
+   begin
+      Res := Op (Read_Std_Logic (Left.Mem, 0), Read_Std_Logic (Right.Mem, 0));
+      if Neg then
+         Res := Not_Table (Res);
+      end if;
+      return Create_Memory_U8 (Std_Ulogic'Pos (Res), Left.Typ);
+   end Eval_Logic_Scalar;
 
    function Eval_TF_Vector_Dyadic (Left, Right : Memtyp;
                                    Op : Tf_Table_2d;
@@ -324,12 +358,6 @@ package body Synth.Vhdl_Eval is
       end case;
       return Res;
    end Execute_Shift_Operator;
-
-   function Get_Static_Ulogic (Op : Memtyp) return Std_Ulogic is
-   begin
-      pragma Assert (Op.Typ.Kind = Type_Logic);
-      return Std_Ulogic'Val (Read_U8 (Op.Mem));
-   end Get_Static_Ulogic;
 
    procedure Check_Integer_Overflow
      (Val : in out Int64; Typ : Type_Acc; Loc : Syn_Src) is
@@ -712,23 +740,54 @@ package body Synth.Vhdl_Eval is
            | Iir_Predefined_Ieee_Numeric_Std_Xor_Sgn_Sgn =>
             return Eval_Vector_Dyadic (Left, Right, Xor_Table, Expr);
 
-         when Iir_Predefined_Ieee_1164_Scalar_Or =>
-            return Create_Memory_U8
-              (Std_Ulogic'Pos (Or_Table (Get_Static_Ulogic (Left),
-                                         Get_Static_Ulogic (Right))),
-               Res_Typ);
-
          when Iir_Predefined_Ieee_1164_Scalar_And =>
-            return Create_Memory_U8
-              (Std_Ulogic'Pos (And_Table (Get_Static_Ulogic (Left),
-                                          Get_Static_Ulogic (Right))),
-               Res_Typ);
-
+            return Eval_Logic_Scalar (Left, Right, And_Table);
+         when Iir_Predefined_Ieee_1164_Scalar_Or =>
+            return Eval_Logic_Scalar (Left, Right, Or_Table);
          when Iir_Predefined_Ieee_1164_Scalar_Xor =>
-            return Create_Memory_U8
-              (Std_Ulogic'Pos (Xor_Table (Get_Static_Ulogic (Left),
-                                          Get_Static_Ulogic (Right))),
-               Res_Typ);
+            return Eval_Logic_Scalar (Left, Right, Xor_Table);
+
+         when Iir_Predefined_Std_Ulogic_Match_Equality =>
+            return Eval_Logic_Scalar (Left, Right, Match_Eq_Table);
+         when Iir_Predefined_Std_Ulogic_Match_Inequality =>
+            return Eval_Logic_Scalar (Left, Right, Match_Eq_Table, True);
+         when Iir_Predefined_Std_Ulogic_Match_Greater =>
+            return Eval_Logic_Scalar (Left, Right, Match_Gt_Table);
+         when Iir_Predefined_Std_Ulogic_Match_Greater_Equal =>
+            return Eval_Logic_Scalar (Left, Right, Match_Ge_Table);
+         when Iir_Predefined_Std_Ulogic_Match_Less_Equal =>
+            return Eval_Logic_Scalar (Left, Right, Match_Le_Table);
+         when Iir_Predefined_Std_Ulogic_Match_Less =>
+            return Eval_Logic_Scalar (Left, Right, Match_Lt_Table);
+
+         when Iir_Predefined_Std_Ulogic_Array_Match_Equality =>
+            return Eval_Vector_Dyadic (Left, Right, Match_Eq_Table, Expr);
+
+         when Iir_Predefined_Ieee_1164_And_Suv_Log =>
+            return Eval_Logic_Vector_Scalar (Left, Right, And_Table);
+         when Iir_Predefined_Ieee_1164_Or_Suv_Log =>
+            return Eval_Logic_Vector_Scalar (Left, Right, Or_Table);
+         when Iir_Predefined_Ieee_1164_Xor_Suv_Log =>
+            return Eval_Logic_Vector_Scalar (Left, Right, Xor_Table);
+         when Iir_Predefined_Ieee_1164_Nand_Suv_Log =>
+            return Eval_Logic_Vector_Scalar (Left, Right, And_Table, True);
+         when Iir_Predefined_Ieee_1164_Nor_Suv_Log =>
+            return Eval_Logic_Vector_Scalar (Left, Right, Or_Table, True);
+         when Iir_Predefined_Ieee_1164_Xnor_Suv_Log =>
+            return Eval_Logic_Vector_Scalar (Left, Right, Xor_Table, True);
+
+         when Iir_Predefined_Ieee_1164_And_Log_Suv =>
+            return Eval_Logic_Vector_Scalar (Right, Left, And_Table);
+         when Iir_Predefined_Ieee_1164_Or_Log_Suv =>
+            return Eval_Logic_Vector_Scalar (Right, Left, Or_Table);
+         when Iir_Predefined_Ieee_1164_Xor_Log_Suv =>
+            return Eval_Logic_Vector_Scalar (Right, Left, Xor_Table);
+         when Iir_Predefined_Ieee_1164_Nand_Log_Suv =>
+            return Eval_Logic_Vector_Scalar (Right, Left, And_Table, True);
+         when Iir_Predefined_Ieee_1164_Nor_Log_Suv =>
+            return Eval_Logic_Vector_Scalar (Right, Left, Or_Table, True);
+         when Iir_Predefined_Ieee_1164_Xnor_Log_Suv =>
+            return Eval_Logic_Vector_Scalar (Right, Left, Xor_Table, True);
 
          when Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Uns =>
             declare
@@ -1480,11 +1539,93 @@ package body Synth.Vhdl_Eval is
                  (Str, First, Ghdl_I64 (Read_Discrete (Param1)));
                return String_To_Memtyp (Str (First .. Str'Last), Res_Typ);
             end;
+         when Iir_Predefined_Enum_To_String =>
+            return Eval_Enum_To_String (Get_Memtyp (Param1), Res_Typ, Imp);
+         when Iir_Predefined_Floating_To_String =>
+            declare
+               Str : String (1 .. 24);
+               Last : Natural;
+            begin
+               Grt.To_Strings.To_String
+                 (Str, Last, Ghdl_F64 (Read_Fp64 (Param1)));
+               return String_To_Memtyp (Str (Str'First .. Last), Res_Typ);
+            end;
+         when Iir_Predefined_Real_To_String_Digits =>
+            declare
+               Str : Grt.To_Strings.String_Real_Format;
+               Last : Natural;
+               Val : Ghdl_F64;
+               Dig : Ghdl_I32;
+            begin
+               Val := Ghdl_F64 (Read_Fp64 (Param1));
+               Dig := Ghdl_I32 (Read_Discrete (Param2));
+               Grt.To_Strings.To_String (Str, Last, Val, Dig);
+               return String_To_Memtyp (Str (Str'First .. Last), Res_Typ);
+            end;
+         when Iir_Predefined_Real_To_String_Format =>
+            declare
+               Format : String (1 .. Natural (Param2.Typ.Abound.Len) + 1);
+               Str : Grt.To_Strings.String_Real_Format;
+               Last : Natural;
+            begin
+               --  Copy format
+               for I in 1 .. Param2.Typ.Abound.Len loop
+                  Format (Positive (I)) := Character'Val
+                    (Read_U8 (Param2.Val.Mem + Size_Type (I - 1)));
+               end loop;
+               Format (Format'Last) := ASCII.NUL;
+               Grt.To_Strings.To_String
+                 (Str, Last, Ghdl_F64 (Read_Fp64 (Param1)),
+                  To_Ghdl_C_String (Format'Address));
+               return String_To_Memtyp (Str (Str'First .. Last), Res_Typ);
+            end;
+
+         when Iir_Predefined_Physical_To_String =>
+            declare
+               Phys_Type : constant Node :=
+                 Get_Type (Get_Interface_Declaration_Chain (Imp));
+               Id : constant Name_Id :=
+                 Get_Identifier (Get_Primary_Unit (Phys_Type));
+               Str : String (1 .. 21);
+               First : Natural;
+            begin
+               Grt.To_Strings.To_String
+                 (Str, First, Ghdl_I64 (Read_Discrete (Param1)));
+               return String_To_Memtyp
+                 (Str (First .. Str'Last) & ' ' & Name_Table.Image (Id),
+                  Res_Typ);
+            end;
+         when Iir_Predefined_Time_To_String_Unit =>
+            declare
+               Time_Type : constant Node :=
+                 Get_Type (Get_Interface_Declaration_Chain (Imp));
+               Str : Grt.To_Strings.String_Time_Unit;
+               First : Natural;
+               Unit : Iir;
+               Uval : Int64;
+            begin
+               Uval := Read_Discrete (Param2);
+               Unit := Get_Unit_Chain (Time_Type);
+               while Unit /= Null_Iir loop
+                  exit when Vhdl.Evaluation.Get_Physical_Value (Unit) = Uval;
+                  Unit := Get_Chain (Unit);
+               end loop;
+               if Unit = Null_Iir then
+                  Error_Msg_Synth
+                    (+Expr, "to_string for time called with wrong unit");
+               end if;
+               Grt.To_Strings.To_String (Str, First,
+                                         Ghdl_I64 (Read_Discrete (Param1)),
+                                         Ghdl_I64 (Uval));
+               return String_To_Memtyp
+                 (Str (First .. Str'Last) & ' '
+                    & Name_Table.Image (Get_Identifier (Unit)),
+                 Res_Typ);
+            end;
+
          when Iir_Predefined_Array_Char_To_String =>
             return Eval_Array_Char_To_String
               (Get_Memtyp (Param1), Res_Typ, Imp);
-         when Iir_Predefined_Enum_To_String =>
-            return Eval_Enum_To_String (Get_Memtyp (Param1), Res_Typ, Imp);
 
          when Iir_Predefined_Bit_Vector_To_Hstring =>
             return Eval_Bit_Vector_To_String (Get_Memtyp (Param1), Res_Typ, 4);
