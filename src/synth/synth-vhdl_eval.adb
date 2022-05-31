@@ -283,6 +283,7 @@ package body Synth.Vhdl_Eval is
 
    function Execute_Shift_Operator (Left : Memtyp;
                                     Count : Int64;
+                                    Zero : Ghdl_U8;
                                     Op : Iir_Predefined_Shift_Functions)
                                    return Memtyp
    is
@@ -319,7 +320,7 @@ package body Synth.Vhdl_Eval is
       case Op is
          when Iir_Predefined_Array_Sll
            | Iir_Predefined_Array_Srl =>
-            E := 0;
+            E := Zero;
          when Iir_Predefined_Array_Sla
            | Iir_Predefined_Array_Sra =>
             if Dir_Left then
@@ -347,7 +348,7 @@ package body Synth.Vhdl_Eval is
                if Cnt < Len then
                   for I in Cnt .. Len - 1 loop
                      Write_U8 (Res.Mem + P,
-                               Read_U8 (Left.Mem + Size_Type (I + 1)));
+                               Read_U8 (Left.Mem + Size_Type (I)));
                      P := P + 1;
                   end loop;
                else
@@ -367,7 +368,7 @@ package body Synth.Vhdl_Eval is
                end loop;
                for I in Cnt .. Len - 1 loop
                   Write_U8 (Res.Mem + P,
-                            Read_U8 (Left.Mem + Size_Type (I - Cnt + 1)));
+                            Read_U8 (Left.Mem + Size_Type (I - Cnt)));
                   P := P + 1;
                end loop;
             end if;
@@ -375,7 +376,7 @@ package body Synth.Vhdl_Eval is
            | Iir_Predefined_Array_Ror =>
             for I in 1 .. Len loop
                Write_U8 (Res.Mem + P,
-                         Read_U8 (Left.Mem + Size_Type (Cnt + 1)));
+                         Read_U8 (Left.Mem + Size_Type (Cnt)));
                P := P + 1;
                Cnt := Cnt + 1;
                if Cnt = Len then
@@ -706,8 +707,12 @@ package body Synth.Vhdl_Eval is
                return Right;
             end if;
 
-         when Iir_Predefined_Array_Sll =>
-            return Execute_Shift_Operator (Left, Read_Discrete (Right), Def);
+         when Iir_Predefined_Array_Sll
+           | Iir_Predefined_Array_Srl
+           | Iir_Predefined_Array_Rol
+           | Iir_Predefined_Array_Ror =>
+            return Execute_Shift_Operator
+              (Left, Read_Discrete (Right), 0, Def);
 
          when Iir_Predefined_TF_Array_And =>
             return Eval_TF_Vector_Dyadic (Left, Right, Tf_2d_And, Expr);
@@ -817,6 +822,24 @@ package body Synth.Vhdl_Eval is
             return Eval_Logic_Vector_Scalar (Right, Left, Or_Table, True);
          when Iir_Predefined_Ieee_1164_Xnor_Log_Suv =>
             return Eval_Logic_Vector_Scalar (Right, Left, Xor_Table, True);
+
+         when Iir_Predefined_Ieee_1164_Vector_Sll =>
+            return Execute_Shift_Operator
+              (Left, Read_Discrete (Right), Std_Ulogic'Pos('0'),
+               Iir_Predefined_Array_Sll);
+         when Iir_Predefined_Ieee_1164_Vector_Srl =>
+            return Execute_Shift_Operator
+              (Left, Read_Discrete (Right), Std_Ulogic'Pos('0'),
+               Iir_Predefined_Array_Srl);
+
+         when Iir_Predefined_Ieee_1164_Vector_Rol =>
+            return Execute_Shift_Operator
+              (Left, Read_Discrete (Right), Std_Ulogic'Pos('0'),
+               Iir_Predefined_Array_Rol);
+         when Iir_Predefined_Ieee_1164_Vector_Ror =>
+            return Execute_Shift_Operator
+              (Left, Read_Discrete (Right),  Std_Ulogic'Pos('0'),
+               Iir_Predefined_Array_Ror);
 
          when Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Uns =>
             declare
