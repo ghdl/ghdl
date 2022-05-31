@@ -63,7 +63,7 @@ GHDL is free software:
 
 - The CLI tool allows analysis, compilation, simulation and (experimental) synthesis for generating VHDL 1993 netlists. It is written in Ada and C, and three different backends are supported, which are sometimes named `ghdl_mcode`, `ghdl_gcc` and `ghdl_llvm`. This is the entrypoint for most users.
 
-- **[experimental]** [ghdl-yosys-plugin](https://github.com/ghdl/ghdl-yosys-plugin) is the integration of GHDL as a frontend plugin module for [Yosys Open SYnthesis Suite](http://www.clifford.at/yosys/), which uses the `libghdl` library (built with `--enable-synth`).
+- **[experimental]** [ghdl-yosys-plugin](https://github.com/ghdl/ghdl-yosys-plugin) is the integration of GHDL as a frontend plugin module for [Yosys Open SYnthesis Suite](https://yosyshq.net/yosys/), which uses the `libghdl` library (built with `--enable-synth`).
 
 - `ghdl-ls` (part of pyGHDL, see below) implements Language Server Protocol (LSP) in Python. VHDL analysis features provided by GHDL are accessed through `libghdl`. This can be integrated in text editors or IDES, such as, Vim, Emacs, Atom or Visual Studio Code. See [ghdl/ghdl-language-server](https://github.com/ghdl/ghdl-language-server).
   - [vscode-client](https://github.com/ghdl/ghdl-language-server/tree/master/vscode-client) is an extension for [Visual Studio Code (VSC)](https://code.visualstudio.com/) to provide language support for VHDL by interfacing `ghdl-ls`.
