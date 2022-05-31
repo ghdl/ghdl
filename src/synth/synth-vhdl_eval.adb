@@ -142,6 +142,33 @@ package body Synth.Vhdl_Eval is
       return Create_Memory_U8 (Std_Ulogic'Pos (Res), Left.Typ);
    end Eval_Logic_Scalar;
 
+   function Eval_Vector_Match (Left, Right : Memtyp;
+                               Neg : Boolean;
+                               Loc : Syn_Src) return Memtyp
+   is
+      Res : Std_Ulogic;
+   begin
+      if Left.Typ.W /= Right.Typ.W then
+         Error_Msg_Synth (+Loc, "length of operands mismatch");
+         return Null_Memtyp;
+      end if;
+
+      Res := '1';
+      for I in 1 .. Left.Typ.Abound.Len loop
+         declare
+            Ls : constant Std_Ulogic := Read_Std_Logic (Left.Mem, I - 1);
+            Rs : constant Std_Ulogic := Read_Std_Logic (Right.Mem, I - 1);
+         begin
+            Res := And_Table (Res, Match_Eq_Table (Ls, Rs));
+         end;
+      end loop;
+
+      if Neg then
+         Res := Not_Table (Res);
+      end if;
+      return Create_Memory_U8 (Std_Ulogic'Pos (Res), Left.Typ.Arr_El);
+   end Eval_Vector_Match;
+
    function Eval_TF_Vector_Dyadic (Left, Right : Memtyp;
                                    Op : Tf_Table_2d;
                                    Loc : Syn_Src) return Memtyp
@@ -761,7 +788,9 @@ package body Synth.Vhdl_Eval is
             return Eval_Logic_Scalar (Left, Right, Match_Lt_Table);
 
          when Iir_Predefined_Std_Ulogic_Array_Match_Equality =>
-            return Eval_Vector_Dyadic (Left, Right, Match_Eq_Table, Expr);
+            return Eval_Vector_Match (Left, Right, False, Expr);
+         when Iir_Predefined_Std_Ulogic_Array_Match_Inequality =>
+            return Eval_Vector_Match (Left, Right, True, Expr);
 
          when Iir_Predefined_Ieee_1164_And_Suv_Log =>
             return Eval_Logic_Vector_Scalar (Left, Right, And_Table);
@@ -1300,8 +1329,8 @@ package body Synth.Vhdl_Eval is
       end case;
    end Eval_Static_Monadic_Predefined;
 
-   function Eval_To_Vector (Arg : Uns64; Sz : Int64; Res_Type : Type_Acc)
-                           return Memtyp
+   function Eval_To_Log_Vector (Arg : Uns64; Sz : Int64; Res_Type : Type_Acc)
+                               return Memtyp
    is
       Len : constant Iir_Index32 := Iir_Index32 (Sz);
       El_Type : constant Type_Acc := Get_Array_Element (Res_Type);
@@ -1317,7 +1346,25 @@ package body Synth.Vhdl_Eval is
                           Std_Ulogic'Val (Std_Logic_0_Pos + B));
       end loop;
       return Res;
-   end Eval_To_Vector;
+   end Eval_To_Log_Vector;
+
+   function Eval_To_Bit_Vector (Arg : Uns64; Sz : Int64; Res_Type : Type_Acc)
+                               return Memtyp
+   is
+      Len : constant Size_Type := Size_Type (Sz);
+      El_Type : constant Type_Acc := Get_Array_Element (Res_Type);
+      Res : Memtyp;
+      Bnd : Type_Acc;
+      B : Uns64;
+   begin
+      Bnd := Create_Vec_Type_By_Length (Width (Sz), El_Type);
+      Res := Create_Memory (Bnd);
+      for I in 1 .. Len loop
+         B := Shift_Right_Arithmetic (Arg, Natural (I - 1)) and 1;
+         Write_U8 (Res.Mem + (Len - I), Ghdl_U8 (B));
+      end loop;
+      return Res;
+   end Eval_To_Bit_Vector;
 
    function Eval_Unsigned_To_Integer (Arg : Memtyp; Loc : Node) return Int64
    is
@@ -1401,7 +1448,8 @@ package body Synth.Vhdl_Eval is
    begin
       Bnd := Elab.Vhdl_Types.Create_Bounds_From_Length
         (Res_Typ.Uarr_Idx.Drange, Iir_Index32 (Len));
-      Res_St := Create_Onedimensional_Array_Subtype (Res_Typ, Bnd, Elt);
+      Res_St := Create_Onedimensional_Array_Subtype
+        (Res_Typ, Bnd, Res_Typ.Uarr_El);
       Res := Create_Memory (Res_St);
       for I in 1 .. Len loop
          V := Read_Discrete (Param.Mem + Size_Type (I - 1) * Elt.Sz, Elt);
@@ -1635,15 +1683,20 @@ package body Synth.Vhdl_Eval is
          when Iir_Predefined_Std_Env_Resolution_Limit =>
             return Create_Memory_Discrete (1, Res_Typ);
 
+         when Iir_Predefined_Ieee_Numeric_Bit_Touns_Nat_Nat_Uns =>
+            return Eval_To_Bit_Vector
+              (Uns64 (Read_Discrete (Param1)), Read_Discrete (Param2),
+               Res_Typ);
+
          when Iir_Predefined_Ieee_Numeric_Std_Touns_Nat_Nat_Uns
             | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Int
             | Iir_Predefined_Ieee_Numeric_Std_Unsigned_To_Slv_Nat_Nat_Slv =>
-            return Eval_To_Vector
+            return Eval_To_Log_Vector
               (Uns64 (Read_Discrete (Param1)), Read_Discrete (Param2),
                Res_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Tosgn_Int_Nat_Sgn
             | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Int =>
-            return Eval_To_Vector
+            return Eval_To_Log_Vector
               (To_Uns64 (Read_Discrete (Param1)), Read_Discrete (Param2),
                Res_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Toint_Uns_Nat

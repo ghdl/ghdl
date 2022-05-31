@@ -118,6 +118,19 @@ package Synth.Ieee.Std_Logic_1164 is
       "111111111"    -- -
      );
 
+   Match_Ne_Table : constant Table_2d :=
+   --  UX01ZWLH-
+     ("UUUUUUUU1",   -- U
+      "UXXXXXXX1",   -- X
+      "UX01XX011",   -- 0
+      "UX10XX101",   -- 1
+      "UXXXXXXX1",   -- Z
+      "UXXXXXXX1",   -- W
+      "UX01XX011",   -- L
+      "UX10XX101",   -- H
+      "111111111"    -- -
+     );
+
    Match_Le_Table : constant Table_2d :=
    --  UX01ZWLH-
      ("UUUUUUUU1",   -- U
