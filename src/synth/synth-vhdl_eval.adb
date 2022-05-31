@@ -1089,8 +1089,10 @@ package body Synth.Vhdl_Eval is
       return Res;
    end Eval_Vector_Monadic;
 
-   function Eval_Vector_Reduce
-     (Init : Std_Ulogic; Vec : Memtyp; Op : Table_2d) return Memtyp
+   function Eval_Vector_Reduce (Init : Std_Ulogic;
+                                Vec : Memtyp;
+                                Op : Table_2d;
+                                Neg : Boolean) return Memtyp
    is
       El_Typ : constant Type_Acc := Vec.Typ.Arr_El;
       Res : Std_Ulogic;
@@ -1103,6 +1105,10 @@ package body Synth.Vhdl_Eval is
             Res := Op (Res, V);
          end;
       end loop;
+
+      if Neg then
+         Res := Not_Table (Res);
+      end if;
 
       return Create_Memory_U8 (Std_Ulogic'Pos (Res), El_Typ);
    end Eval_Vector_Reduce;
@@ -1335,14 +1341,22 @@ package body Synth.Vhdl_Eval is
               (Std_Ulogic'Pos (Not_Table (Read_Std_Logic (Operand.Mem, 0))),
                Operand.Typ);
 
-         when Iir_Predefined_Ieee_Numeric_Std_And_Uns =>
-            return Eval_Vector_Reduce ('1', Operand, And_Table);
+         when Iir_Predefined_Ieee_1164_And_Suv
+            | Iir_Predefined_Ieee_Numeric_Std_And_Uns =>
+            return Eval_Vector_Reduce ('1', Operand, And_Table, False);
+         when Iir_Predefined_Ieee_1164_Nand_Suv =>
+            return Eval_Vector_Reduce ('1', Operand, And_Table, True);
 
          when Iir_Predefined_Ieee_1164_Or_Suv
-           | Iir_Predefined_Ieee_Numeric_Std_Or_Uns =>
-            return Eval_Vector_Reduce ('0', Operand, Or_Table);
+            | Iir_Predefined_Ieee_Numeric_Std_Or_Uns =>
+            return Eval_Vector_Reduce ('0', Operand, Or_Table, False);
+         when Iir_Predefined_Ieee_1164_Nor_Suv =>
+            return Eval_Vector_Reduce ('0', Operand, Or_Table, True);
+
          when Iir_Predefined_Ieee_1164_Xor_Suv =>
-            return Eval_Vector_Reduce ('0', Operand, Xor_Table);
+            return Eval_Vector_Reduce ('0', Operand, Xor_Table, False);
+         when Iir_Predefined_Ieee_1164_Xnor_Suv =>
+            return Eval_Vector_Reduce ('0', Operand, Xor_Table, True);
 
          when others =>
             Error_Msg_Synth
