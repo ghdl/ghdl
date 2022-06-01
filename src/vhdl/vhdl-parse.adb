@@ -6320,7 +6320,14 @@ package body Vhdl.Parse is
                Scan;
 
                --  Resize.
-               Resize_Bit_String (Res, Nat32 (Int));
+               if Int > 2048 then
+                  --  What is a reasonable limit ?
+                  Error_Msg_Parse
+                    (Get_Token_Location,
+                     "bit string size is too large (> 2048)");
+               else
+                  Resize_Bit_String (Res, Nat32 (Int));
+               end if;
             else
                Error_Msg_Parse
                  (Get_Token_Location,

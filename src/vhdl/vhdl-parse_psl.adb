@@ -48,12 +48,18 @@ package body Vhdl.Parse_Psl is
 
    function Parse_Number return Node
    is
+      V : Int64;
       Res : Node;
    begin
       if Current_Token = Tok_Integer then
          Res := Create_Node_Loc (N_Number);
          --  FIXME: handle overflow.
-         Set_Value (Res, Uns32 (Current_Iir_Int64));
+         V := Current_Iir_Int64;
+         if V > Int64 (Uns32'Last) then
+            Error_Msg_Parse ("number if too large");
+            V := Int64 (Uns32'Last);
+         end if;
+         Set_Value (Res, Uns32 (V));
          Scan;
          return Res;
       elsif Current_Token = Tok_Inf then
