@@ -1234,6 +1234,8 @@ package body Vhdl.Utils is
            | Iir_Kind_Across_Attribute
            | Iir_Kind_Through_Attribute =>
             return Get_Type (Ind);
+         when Iir_Kind_Interface_Type_Definition =>
+            return Ind;
          when Iir_Kind_Error =>
             return Ind;
          when others =>

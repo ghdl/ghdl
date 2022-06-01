@@ -2401,6 +2401,10 @@ package body Vhdl.Sem_Types is
             Free_Name (Def);
             return Type_Mark;
 
+         when Iir_Kind_Interface_Type_Definition =>
+            Error_Msg_Sem (+Def, "interface types can't be constrained");
+            return Type_Mark;
+
          when Iir_Kind_Error =>
             return Type_Mark;
 
