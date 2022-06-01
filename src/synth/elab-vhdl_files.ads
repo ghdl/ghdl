@@ -40,6 +40,8 @@ package Elab.Vhdl_Files is
      (Syn_Inst : Synth_Instance_Acc; Imp : Node);
    procedure Synth_File_Close
      (Syn_Inst : Synth_Instance_Acc; Imp : Node; Loc : Node);
+   procedure Synth_File_Flush
+     (Syn_Inst : Synth_Instance_Acc; Imp : Node; Loc : Node);
 
    procedure Synth_Untruncated_Text_Read
      (Syn_Inst : Synth_Instance_Acc; Imp : Node; Loc : Node);

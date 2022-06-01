@@ -395,6 +395,20 @@ package body Elab.Vhdl_Files is
       end if;
    end Synth_File_Close;
 
+   procedure Synth_File_Flush
+     (Syn_Inst : Synth_Instance_Acc; Imp : Node; Loc : Node)
+   is
+      Inters : constant Node := Get_Interface_Declaration_Chain (Imp);
+      F : constant File_Index := Get_Value (Syn_Inst, Inters).Val.File;
+      Status : Op_Status;
+   begin
+      Ghdl_File_Flush (F, Status);
+
+      if Status /= Op_Ok then
+         File_Error (Loc, Status);
+      end if;
+   end Synth_File_Flush;
+
    --  Declaration:
    --  procedure untruncated_text_read                              --!V87
    --    (file f : text; str : out string; len : out natural);      --!V87
