@@ -11533,7 +11533,11 @@ package body Vhdl.Parse is
    is
       End_Loc : Location_Type;
    begin
-      Set_Library_Unit (Unit, Decl);
+      if Get_Kind (Unit) = Iir_Kind_Context_Declaration then
+         Error_Msg_Parse ("nested context declaration not allowed");
+      else
+         Set_Library_Unit (Unit, Decl);
+      end if;
 
       --  Skip 'is'
       Scan;
