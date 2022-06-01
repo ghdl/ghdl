@@ -88,13 +88,6 @@ package body Vhdl.Errors is
       Report_Msg (Id, Elaboration, +Loc, Msg, Args);
    end Warning_Msg_Elab;
 
-   -- Disp a message during semantic analysis.
-   -- LOC is used for location and current token.
-   procedure Error_Msg_Sem (Msg: String; Loc: Iir) is
-   begin
-      Report_Msg (Msgid_Error, Semantic, +Get_Location_Safe (Loc), Msg);
-   end Error_Msg_Sem;
-
    procedure Error_Msg_Sem (Loc: Location_Type;
                             Msg: String;
                             Args : Earg_Arr := No_Eargs) is
@@ -1086,8 +1079,7 @@ package body Vhdl.Errors is
          --  Cascade error message.
          return;
       end if;
-      Error_Msg_Sem ("can't match " & Disp_Node (Expr) & " with type "
-                     & Disp_Node (A_Type), Expr);
+      Error_Msg_Sem (+Expr, "can't match %n with type %n", (+Expr, +A_Type));
    end Error_Not_Match;
 
    function Get_Mode_Name (Mode : Iir_Mode) return String is
