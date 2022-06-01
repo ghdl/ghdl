@@ -771,7 +771,7 @@ package body Vhdl.Scanner is
          end loop;
       end Add_One_To_Carries;
    begin
-      pragma Assert (Source (Pos) = '"');
+      pragma Assert (Source (Pos) = '"' or Source (Pos) = '%');
       Pos := Pos + 1;
       Length := 0;
       Id := Create_String8;
