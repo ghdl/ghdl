@@ -1,0 +1,2 @@
+architecture function is
+0package
