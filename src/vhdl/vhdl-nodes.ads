@@ -5704,6 +5704,9 @@ package Vhdl.Nodes is
 
       Iir_Predefined_Ieee_1164_Condition_Operator,
 
+      Iir_Predefined_Ieee_1164_To_Hstring,
+      Iir_Predefined_Ieee_1164_To_Ostring,
+
       --  Numeric_Std.
       --  Abbreviations:
       --  Uns: Unsigned, Sgn: Signed, Nat: Natural, Int: Integer.

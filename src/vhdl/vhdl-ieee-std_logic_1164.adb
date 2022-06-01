@@ -376,6 +376,10 @@ package body Vhdl.Ieee.Std_Logic_1164 is
                   elsif Is_Scalar_Function (Decl) then
                      Predefined := Iir_Predefined_Ieee_1164_To_X01_Log;
                   end if;
+               when Name_To_Hstring =>
+                  Predefined := Iir_Predefined_Ieee_1164_To_Hstring;
+               when Name_To_Ostring =>
+                  Predefined := Iir_Predefined_Ieee_1164_To_Ostring;
                when others =>
                   if Is_Scalar_Scalar_Function (Decl) then
                      case Get_Identifier (Decl) is
