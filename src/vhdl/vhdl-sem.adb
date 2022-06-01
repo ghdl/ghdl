@@ -2844,7 +2844,10 @@ package body Vhdl.Sem is
                   Pkg : constant Iir :=
                     Get_Uninstantiated_Package_Decl (Inter);
                begin
-                  if Get_Macro_Expanded_Flag (Pkg) then
+                  --  Could be an error.
+                  if Get_Kind (Pkg) = Iir_Kind_Package_Declaration
+                    and then Get_Macro_Expanded_Flag (Pkg)
+                  then
                      return True;
                   end if;
                end;

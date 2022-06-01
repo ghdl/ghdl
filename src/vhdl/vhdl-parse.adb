@@ -2145,7 +2145,7 @@ package body Vhdl.Parse is
 
             Tm := Parse_Type_Mark (Check_Paren => True);
 
-            if Current_Token = Tok_Of then
+            if Tm /= Null_Iir and then Current_Token = Tok_Of then
                if Vhdl_Std < Vhdl_19 then
                   Error_Msg_Parse
                     ("return identifier not allowed before vhdl 2019");
@@ -7358,6 +7358,8 @@ package body Vhdl.Parse is
            | Iir_Kind_Signature =>
             Error_Msg_Parse
               ("invalid name for a procedure call or missing assignment");
+         when Iir_Kind_Error =>
+            null;
          when others =>
             Error_Kind ("parenthesis_name_to_procedure_call", Name);
       end case;

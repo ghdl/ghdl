@@ -2455,7 +2455,9 @@ package body Vhdl.Sem_Types is
 
       Res := Sem_Subtype_Constraint
         (Def, Type_Mark, Get_Resolution_Indication (Def));
-      if not Is_Error (Res) then
+      if not Is_Error (Res)
+        and then Get_Kind (Res) in Iir_Kinds_Subtype_Definition
+      then
          Set_Subtype_Type_Mark (Res, Type_Mark_Name);
       end if;
       return Res;
