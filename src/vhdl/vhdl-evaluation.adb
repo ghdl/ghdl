@@ -4061,23 +4061,24 @@ package body Vhdl.Evaluation is
       end if;
    end Eval_Expr_Check_If_Static;
 
-   function Eval_Int_In_Range (Val : Int64; Bound : Iir) return Boolean is
+   function Eval_Int_In_Range (Val : Int64; Bound : Iir) return Boolean
+   is
+      L, R : Iir;
    begin
       case Get_Kind (Bound) is
          when Iir_Kind_Range_Expression =>
+            L := Get_Left_Limit (Bound);
+            R := Get_Right_Limit (Bound);
+            if Get_Kind (L) = Iir_Kind_Overflow_Literal
+              or else Get_Kind (R) = Iir_Kind_Overflow_Literal
+            then
+               return True;
+            end if;
             case Get_Direction (Bound) is
                when Dir_To =>
-                  if Val < Eval_Pos (Get_Left_Limit (Bound))
-                    or else Val > Eval_Pos (Get_Right_Limit (Bound))
-                  then
-                     return False;
-                  end if;
+                  return Val >= Eval_Pos (L) and then Val <= Eval_Pos (R);
                when Dir_Downto =>
-                  if Val > Eval_Pos (Get_Left_Limit (Bound))
-                    or else Val < Eval_Pos (Get_Right_Limit (Bound))
-                  then
-                     return False;
-                  end if;
+                  return Val <= Eval_Pos (L) and then Val >= Eval_Pos (R);
             end case;
          when others =>
             Error_Kind ("eval_int_in_range", Bound);
