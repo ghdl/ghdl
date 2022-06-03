@@ -846,42 +846,42 @@ package body Synth.Vhdl_Eval is
                Res : Boolean;
             begin
                Res := Compare_Uns_Uns (Left, Right, Greater, Expr) = Equal;
-               return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
+               return Create_Memory_Boolean (Res);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Ne_Uns_Uns =>
             declare
                Res : Boolean;
             begin
                Res := Compare_Uns_Uns (Left, Right, Greater, Expr) /= Equal;
-               return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
+               return Create_Memory_Boolean (Res);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Ne_Uns_Nat =>
             declare
                Res : Boolean;
             begin
                Res := Compare_Uns_Nat (Left, Right, Greater, Expr) /= Equal;
-               return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
+               return Create_Memory_Boolean (Res);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Eq_Sgn_Sgn =>
             declare
                Res : Boolean;
             begin
                Res := Compare_Sgn_Sgn (Left, Right, Greater, Expr) = Equal;
-               return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
+               return Create_Memory_Boolean (Res);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Nat =>
             declare
                Res : Boolean;
             begin
                Res := Compare_Uns_Nat (Left, Right, Greater, Expr) = Equal;
-               return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
+               return Create_Memory_Boolean (Res);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Eq_Sgn_Int =>
             declare
                Res : Boolean;
             begin
                Res := Compare_Sgn_Int (Left, Right, Greater, Expr) = Equal;
-               return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
+               return Create_Memory_Boolean (Res);
             end;
 
          when Iir_Predefined_Ieee_Numeric_Std_Gt_Uns_Uns =>
@@ -889,50 +889,71 @@ package body Synth.Vhdl_Eval is
                Res : Boolean;
             begin
                Res := Compare_Uns_Uns (Left, Right, Less, Expr) = Greater;
-               return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
+               return Create_Memory_Boolean (Res);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Gt_Sgn_Sgn =>
             declare
                Res : Boolean;
             begin
                Res := Compare_Sgn_Sgn (Left, Right, Less, Expr) = Greater;
-               return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
+               return Create_Memory_Boolean (Res);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Gt_Nat_Uns =>
             declare
                Res : Boolean;
             begin
                Res := Compare_Nat_Uns (Left, Right, Less, Expr) = Greater;
-               return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
+               return Create_Memory_Boolean (Res);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Gt_Uns_Nat =>
             declare
                Res : Boolean;
             begin
                Res := Compare_Uns_Nat (Left, Right, Less, Expr) = Greater;
-               return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
+               return Create_Memory_Boolean (Res);
             end;
 
          when Iir_Predefined_Ieee_Numeric_Std_Ge_Uns_Uns =>
             declare
                Res : Boolean;
             begin
-               Res := Compare_Uns_Uns (Left, Right, Greater, Expr) >= Equal;
-               return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
+               Res := Compare_Uns_Uns (Left, Right, Less, Expr) >= Equal;
+               return Create_Memory_Boolean (Res);
             end;
-         when Iir_Predefined_Ieee_Numeric_Std_Ge_Sgn_Sgn =>
+         when Iir_Predefined_Ieee_Numeric_Std_Ge_Nat_Uns =>
             declare
                Res : Boolean;
             begin
-               Res := Compare_Sgn_Sgn (Left, Right, Less, Expr) >= Equal;
-               return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
+               Res := Compare_Nat_Uns (Left, Right, Less, Expr) >= Equal;
+               return Create_Memory_Boolean (Res);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Ge_Uns_Nat =>
             declare
                Res : Boolean;
             begin
                Res := Compare_Uns_Nat (Left, Right, Less, Expr) >= Equal;
-               return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
+               return Create_Memory_Boolean (Res);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Ge_Sgn_Sgn =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Compare_Sgn_Sgn (Left, Right, Less, Expr) >= Equal;
+               return Create_Memory_Boolean (Res);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Ge_Sgn_Int =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Compare_Sgn_Int (Left, Right, Less, Expr) >= Equal;
+               return Create_Memory_Boolean (Res);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Ge_Int_Sgn =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Compare_Sgn_Int (Right, Left, Greater, Expr) <= Equal;
+               return Create_Memory_Boolean (Res);
             end;
 
          when Iir_Predefined_Ieee_Numeric_Std_Le_Uns_Uns =>
@@ -940,21 +961,42 @@ package body Synth.Vhdl_Eval is
                Res : Boolean;
             begin
                Res := Compare_Uns_Uns (Left, Right, Greater, Expr) <= Equal;
-               return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
+               return Create_Memory_Boolean (Res);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Le_Uns_Nat =>
             declare
                Res : Boolean;
             begin
                Res := Compare_Uns_Nat (Left, Right, Greater, Expr) <= Equal;
-               return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
+               return Create_Memory_Boolean (Res);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Le_Nat_Uns =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Compare_Nat_Uns (Left, Right, Greater, Expr) <= Equal;
+               return Create_Memory_Boolean (Res);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Le_Sgn_Sgn =>
             declare
                Res : Boolean;
             begin
                Res := Compare_Sgn_Sgn (Left, Right, Greater, Expr) <= Equal;
-               return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
+               return Create_Memory_Boolean (Res);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Le_Int_Sgn =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Compare_Sgn_Int (Right, Left, Less, Expr) >= Equal;
+               return Create_Memory_Boolean (Res);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Le_Sgn_Int =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Compare_Sgn_Int (Left, Right, Greater, Expr) <= Equal;
+               return Create_Memory_Boolean (Res);
             end;
 
          when Iir_Predefined_Ieee_Numeric_Std_Lt_Uns_Uns =>
@@ -962,28 +1004,28 @@ package body Synth.Vhdl_Eval is
                Res : Boolean;
             begin
                Res := Compare_Uns_Uns (Left, Right, Greater, Expr) < Equal;
-               return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
+               return Create_Memory_Boolean (Res);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Lt_Uns_Nat =>
             declare
                Res : Boolean;
             begin
                Res := Compare_Uns_Nat (Left, Right, Greater, Expr) < Equal;
-               return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
+               return Create_Memory_Boolean (Res);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Lt_Nat_Uns =>
             declare
                Res : Boolean;
             begin
                Res := Compare_Nat_Uns (Left, Right, Greater, Expr) < Equal;
-               return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
+               return Create_Memory_Boolean (Res);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Lt_Sgn_Sgn =>
             declare
                Res : Boolean;
             begin
                Res := Compare_Sgn_Sgn (Left, Right, Greater, Expr) < Equal;
-               return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
+               return Create_Memory_Boolean (Res);
             end;
 
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns
