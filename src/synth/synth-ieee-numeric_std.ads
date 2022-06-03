@@ -64,7 +64,24 @@ package Synth.Ieee.Numeric_Std is
 
    --  "/"
    function Div_Uns_Uns (L, R : Memtyp; Loc : Syn_Src) return Memtyp;
+   function Div_Uns_Nat (L : Memtyp; R : Uns64; Loc : Syn_Src) return Memtyp;
+   function Div_Nat_Uns (L : Uns64; R : Memtyp; Loc : Syn_Src) return Memtyp;
    function Div_Sgn_Sgn (L, R : Memtyp; Loc : Syn_Src) return Memtyp;
+   function Div_Sgn_Int (L : Memtyp; R : Int64; Loc : Syn_Src) return Memtyp;
+   function Div_Int_Sgn (L : Int64; R : Memtyp; Loc : Syn_Src) return Memtyp;
+
+   --  "rem"
+   function Rem_Uns_Uns (L, R : Memtyp; Loc : Syn_Src) return Memtyp;
+   function Rem_Uns_Nat (L : Memtyp; R : Uns64; Loc : Syn_Src) return Memtyp;
+   function Rem_Nat_Uns (L : Uns64; R : Memtyp; Loc : Syn_Src) return Memtyp;
+   function Rem_Sgn_Sgn (L, R : Memtyp; Loc : Syn_Src) return Memtyp;
+   function Rem_Sgn_Int (L : Memtyp; R : Int64; Loc : Syn_Src) return Memtyp;
+   function Rem_Int_Sgn (L : Int64; R : Memtyp; Loc : Syn_Src) return Memtyp;
+
+   --  "mod"
+   function Mod_Sgn_Sgn (L, R : Memtyp; Loc : Syn_Src) return Memtyp;
+   function Mod_Sgn_Int (L : Memtyp; R : Int64; Loc : Syn_Src) return Memtyp;
+   function Mod_Int_Sgn (L : Int64; R : Memtyp; Loc : Syn_Src) return Memtyp;
 
    --  Shift
    function Shift_Vec (Val : Memtyp;

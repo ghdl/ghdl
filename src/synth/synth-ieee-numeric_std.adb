@@ -920,7 +920,7 @@ package body Synth.Ieee.Numeric_Std is
       Dlen  : constant Uns32 := Dem.Typ.Abound.Len;
       pragma Assert (Nlen > 0);
       pragma Assert (Dlen > 0);
-      pragma Assert (Quot.Typ.Abound.Len = Nlen);
+      pragma Assert (Quot.Typ = null or else Quot.Typ.Abound.Len = Nlen);
       Reg   : Std_Logic_Vector_Type (0 .. Dlen);
       Sub   : Std_Logic_Vector_Type (0 .. Dlen - 1);
       Carry : Sl_X01;
@@ -944,7 +944,9 @@ package body Synth.Ieee.Numeric_Std is
          --  Extra REG bit.
          Carry := Compute_Carry (Carry, Reg (0), '1');
          --  Test
-         Write_Std_Logic (Quot.Mem, I, Carry);
+         if Quot.Mem /= null then
+            Write_Std_Logic (Quot.Mem, I, Carry);
+         end if;
          if Carry = '1' then
             Reg (0) := '0';
             Reg (1 .. Dlen) := Sub;
@@ -1003,6 +1005,28 @@ package body Synth.Ieee.Numeric_Std is
       return Quot;
    end Div_Uns_Uns;
 
+   function Div_Uns_Nat (L : Memtyp; R : Uns64; Loc : Syn_Src) return Memtyp
+   is
+      Rv : Memtyp;
+   begin
+      if L.Typ.Abound.Len = 0 then
+         return Create_Memory (L.Typ); --  FIXME: typ
+      end if;
+      Rv := To_Unsigned (R, L.Typ);
+      return Div_Uns_Uns (L, Rv, Loc);
+   end Div_Uns_Nat;
+
+   function Div_Nat_Uns (L : Uns64; R : Memtyp; Loc : Syn_Src) return Memtyp
+   is
+      Lv : Memtyp;
+   begin
+      if R.Typ.Abound.Len = 0 then
+         return Create_Memory (R.Typ); --  FIXME: typ
+      end if;
+      Lv := To_Unsigned (L, R.Typ);
+      return Div_Uns_Uns (Lv, R, Loc);
+   end Div_Nat_Uns;
+
    function Div_Sgn_Sgn (L, R : Memtyp; Loc : Syn_Src) return Memtyp
    is
       Nlen  : constant Uns32 := L.Typ.Abound.Len;
@@ -1056,5 +1080,247 @@ package body Synth.Ieee.Numeric_Std is
       end if;
       return Quot;
    end Div_Sgn_Sgn;
+
+   function Div_Sgn_Int (L : Memtyp; R : Int64; Loc : Syn_Src) return Memtyp
+   is
+      Rv : Memtyp;
+   begin
+      if L.Typ.Abound.Len = 0 then
+         return Create_Memory (L.Typ); --  FIXME: typ
+      end if;
+      Rv := To_Signed (R, L.Typ);
+      return Div_Sgn_Sgn (L, Rv, Loc);
+   end Div_Sgn_Int;
+
+   function Div_Int_Sgn (L : Int64; R : Memtyp; Loc : Syn_Src) return Memtyp
+   is
+      Lv : Memtyp;
+   begin
+      if R.Typ.Abound.Len = 0 then
+         return Create_Memory (R.Typ); --  FIXME: typ
+      end if;
+      Lv := To_Signed (L, R.Typ);
+      return Div_Sgn_Sgn (Lv, R, Loc);
+   end Div_Int_Sgn;
+
+   function Rem_Uns_Uns (L, R : Memtyp; Loc : Syn_Src) return Memtyp
+   is
+      Nlen  : constant Uns32 := L.Typ.Abound.Len;
+      Dlen  : constant Uns32 := R.Typ.Abound.Len;
+      Rema  : Memtyp;
+      R0    : Sl_X01;
+   begin
+      Rema.Typ := Create_Res_Type (R.Typ, Dlen);
+      Rema := Create_Memory (Rema.Typ);
+      if Nlen = 0 or Dlen = 0 then
+         return Rema;
+      end if;
+
+      R0 := Has_0x (R);
+      if Has_0x (L) = 'X' or R0 = 'X' then
+         Warning_Msg_Synth
+           (+Loc, "NUMERIC_STD.""rem"": non logical value detected");
+         Fill (Rema, 'X');
+         return Rema;
+      end if;
+      if R0 = '0' then
+         Error_Msg_Synth (+Loc, "NUMERIC_STD.""rem"": division by 0");
+         Fill (Rema, 'X');
+         return Rema;
+      end if;
+      Divmod (L, R, Null_Memtyp, Rema);
+      return Rema;
+   end Rem_Uns_Uns;
+
+   function Rem_Uns_Nat (L : Memtyp; R : Uns64; Loc : Syn_Src) return Memtyp
+   is
+      Rv : Memtyp;
+   begin
+      if L.Typ.Abound.Len = 0 then
+         return Create_Memory (L.Typ); --  FIXME: typ
+      end if;
+      Rv := To_Unsigned (R, L.Typ);
+      return Rem_Uns_Uns (L, Rv, Loc);
+   end Rem_Uns_Nat;
+
+   function Rem_Nat_Uns (L : Uns64; R : Memtyp; Loc : Syn_Src) return Memtyp
+   is
+      Lv : Memtyp;
+   begin
+      if R.Typ.Abound.Len = 0 then
+         return Create_Memory (R.Typ); --  FIXME: typ
+      end if;
+      Lv := To_Unsigned (L, R.Typ);
+      return Rem_Uns_Uns (Lv, R, Loc);
+   end Rem_Nat_Uns;
+
+   function Rem_Sgn_Sgn (L, R : Memtyp; Loc : Syn_Src) return Memtyp
+   is
+      Nlen  : constant Uns32 := L.Typ.Abound.Len;
+      Dlen  : constant Uns32 := R.Typ.Abound.Len;
+      Rema  : Memtyp;
+      R0    : Sl_X01;
+      Lu    : Memtyp;
+      Ru    : Memtyp;
+      Neg   : Boolean;
+   begin
+      Rema.Typ := Create_Res_Type (L.Typ, Dlen);
+      Rema := Create_Memory (Rema.Typ);
+      if Nlen = 0 or Dlen = 0 then
+         return Rema;
+      end if;
+
+      R0 := Has_0x (R);
+      if Has_0x (L) = 'X' or R0 = 'X' then
+         Warning_Msg_Synth
+           (+Loc, "NUMERIC_STD.""rem"": non logical value detected");
+         Fill (Rema, 'X');
+         return Rema;
+      end if;
+      if R0 = '0' then
+         Error_Msg_Synth (+Loc, "NUMERIC_STD.""rem"": division by 0");
+         Fill (Rema, 'X');
+         return Rema;
+      end if;
+
+      if To_X01 (Read_Std_Logic (L.Mem, 0)) = '1' then
+         Lu.Typ := L.Typ;
+         Lu.Mem := Neg_Vec_Notyp (L);
+         Neg := True;
+      else
+         Neg := False;
+         Lu := L;
+      end if;
+
+      if To_X01 (Read_Std_Logic (R.Mem, 0)) = '1' then
+         Ru.Typ := R.Typ;
+         Ru.Mem := Neg_Vec_Notyp (R);
+      else
+         Ru := R;
+      end if;
+
+      Divmod (Lu, Ru, Null_Memtyp, Rema);
+
+      --  Result of rem has the sign of the dividend.
+      if Neg then
+         Neg_Vec (Rema);
+      end if;
+      return Rema;
+   end Rem_Sgn_Sgn;
+
+   function Rem_Sgn_Int (L : Memtyp; R : Int64; Loc : Syn_Src) return Memtyp
+   is
+      Rv : Memtyp;
+   begin
+      if L.Typ.Abound.Len = 0 then
+         return Create_Memory (L.Typ); --  FIXME: typ
+      end if;
+      Rv := To_Signed (R, L.Typ);
+      return Rem_Sgn_Sgn (L, Rv, Loc);
+   end Rem_Sgn_Int;
+
+   function Rem_Int_Sgn (L : Int64; R : Memtyp; Loc : Syn_Src) return Memtyp
+   is
+      Lv : Memtyp;
+   begin
+      if R.Typ.Abound.Len = 0 then
+         return Create_Memory (R.Typ); --  FIXME: typ
+      end if;
+      Lv := To_Signed (L, R.Typ);
+      return Rem_Sgn_Sgn (Lv, R, Loc);
+   end Rem_Int_Sgn;
+
+   function Mod_Sgn_Sgn (L, R : Memtyp; Loc : Syn_Src) return Memtyp
+   is
+      Nlen  : constant Uns32 := L.Typ.Abound.Len;
+      Dlen  : constant Uns32 := R.Typ.Abound.Len;
+      Rema  : Memtyp;
+      R0    : Sl_X01;
+      Lu    : Memtyp;
+      Ru    : Memtyp;
+      L_Neg, R_Neg : Boolean;
+   begin
+      Rema.Typ := Create_Res_Type (L.Typ, Dlen);
+      Rema := Create_Memory (Rema.Typ);
+      if Nlen = 0 or Dlen = 0 then
+         return Rema;
+      end if;
+
+      R0 := Has_0x (R);
+      if Has_0x (L) = 'X' or R0 = 'X' then
+         Warning_Msg_Synth
+           (+Loc, "NUMERIC_STD.""rem"": non logical value detected");
+         Fill (Rema, 'X');
+         return Rema;
+      end if;
+      if R0 = '0' then
+         Error_Msg_Synth (+Loc, "NUMERIC_STD.""rem"": division by 0");
+         Fill (Rema, 'X');
+         return Rema;
+      end if;
+
+      if To_X01 (Read_Std_Logic (L.Mem, 0)) = '1' then
+         Lu.Typ := L.Typ;
+         Lu.Mem := Neg_Vec_Notyp (L);
+         L_Neg := True;
+      else
+         Lu := L;
+         L_Neg := False;
+      end if;
+
+      if To_X01 (Read_Std_Logic (R.Mem, 0)) = '1' then
+         Ru.Typ := R.Typ;
+         Ru.Mem := Neg_Vec_Notyp (R);
+         R_Neg := True;
+      else
+         Ru := R;
+         R_Neg := False;
+      end if;
+
+      Divmod (Lu, Ru, Null_Memtyp, Rema);
+
+      if Has_0x (Rema) = '0' then
+         --  If the remainder is 0, then the modulus is 0.
+         return Rema;
+      else
+         --  Result of rem has the sign of the divisor.
+         if R_Neg then
+            if L_Neg then
+               Neg_Vec (Rema);
+               return Rema;
+            else
+               return Add_Vec_Vec (R, Rema, True, Loc);
+            end if;
+         else
+            if L_Neg then
+               return Sub_Vec_Vec (R, Rema, True, Loc);
+            else
+               return Rema;
+            end if;
+         end if;
+      end if;
+   end Mod_Sgn_Sgn;
+
+   function Mod_Sgn_Int (L : Memtyp; R : Int64; Loc : Syn_Src) return Memtyp
+   is
+      Rv : Memtyp;
+   begin
+      if L.Typ.Abound.Len = 0 then
+         return Create_Memory (L.Typ); --  FIXME: typ
+      end if;
+      Rv := To_Signed (R, L.Typ);
+      return Mod_Sgn_Sgn (L, Rv, Loc);
+   end Mod_Sgn_Int;
+
+   function Mod_Int_Sgn (L : Int64; R : Memtyp; Loc : Syn_Src) return Memtyp
+   is
+      Lv : Memtyp;
+   begin
+      if R.Typ.Abound.Len = 0 then
+         return Create_Memory (R.Typ); --  FIXME: typ
+      end if;
+      Lv := To_Signed (L, R.Typ);
+      return Mod_Sgn_Sgn (Lv, R, Loc);
+   end Mod_Int_Sgn;
 
 end Synth.Ieee.Numeric_Std;

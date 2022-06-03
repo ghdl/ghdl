@@ -953,7 +953,7 @@ package body Synth.Vhdl_Eval is
             declare
                Res : Boolean;
             begin
-               Res := Compare_Sgn_Sgn (Left, Right, Less, Expr) <= Equal;
+               Res := Compare_Sgn_Sgn (Left, Right, Greater, Expr) <= Equal;
                return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
             end;
 
@@ -982,7 +982,7 @@ package body Synth.Vhdl_Eval is
             declare
                Res : Boolean;
             begin
-               Res := Compare_Sgn_Sgn (Left, Right, Less, Expr) < Equal;
+               Res := Compare_Sgn_Sgn (Left, Right, Greater, Expr) < Equal;
                return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
             end;
 
@@ -1028,8 +1028,41 @@ package body Synth.Vhdl_Eval is
 
          when Iir_Predefined_Ieee_Numeric_Std_Div_Uns_Uns =>
             return Div_Uns_Uns (Left, Right, Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Div_Uns_Nat =>
+            return Div_Uns_Nat (Left, To_Uns64 (Read_Discrete (Right)), Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Div_Nat_Uns =>
+            return Div_Nat_Uns (To_Uns64 (Read_Discrete (Left)), Right, Expr);
+
          when Iir_Predefined_Ieee_Numeric_Std_Div_Sgn_Sgn =>
             return Div_Sgn_Sgn (Left, Right, Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Div_Int_Sgn =>
+            return Div_Int_Sgn (Read_Discrete (Left), Right, Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Div_Sgn_Int =>
+            return Div_Sgn_Int (Left, Read_Discrete (Right), Expr);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Rem_Uns_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Mod_Uns_Uns =>
+            return Rem_Uns_Uns (Left, Right, Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Rem_Uns_Nat
+            | Iir_Predefined_Ieee_Numeric_Std_Mod_Uns_Nat =>
+            return Rem_Uns_Nat (Left, To_Uns64 (Read_Discrete (Right)), Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Rem_Nat_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Mod_Nat_Uns =>
+            return Rem_Nat_Uns (To_Uns64 (Read_Discrete (Left)), Right, Expr);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Rem_Sgn_Sgn =>
+            return Rem_Sgn_Sgn (Left, Right, Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Rem_Int_Sgn =>
+            return Rem_Int_Sgn (Read_Discrete (Left), Right, Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Rem_Sgn_Int =>
+            return Rem_Sgn_Int (Left, Read_Discrete (Right), Expr);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Mod_Sgn_Sgn =>
+            return Mod_Sgn_Sgn (Left, Right, Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Mod_Int_Sgn =>
+            return Mod_Int_Sgn (Read_Discrete (Left), Right, Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Mod_Sgn_Int =>
+            return Mod_Sgn_Int (Left, Read_Discrete (Right), Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Srl_Uns_Int
            |  Iir_Predefined_Ieee_Numeric_Std_Srl_Sgn_Int =>
@@ -1574,6 +1607,58 @@ package body Synth.Vhdl_Eval is
       return String_To_Memtyp (Str, Res_Typ);
    end Eval_Bit_Vector_To_String;
 
+   function Eval_Logic_Vector_To_String (Val : Memtyp;
+                                         Res_Typ : Type_Acc;
+                                         Log_Base : Natural) return Memtyp
+   is
+      Base : constant Natural := 2 ** Log_Base;
+      Blen : constant Uns32 := Val.Typ.Abound.Len;
+      Str : String (1 .. (Natural (Blen) + Log_Base - 1) / Log_Base);
+      Pos : Natural;
+      D : Std_Ulogic;
+      V : Natural;
+      N : Natural;
+      Has_X, Has_Z, Has_D : Boolean;
+   begin
+      V := 0;
+      N := 1;
+      Has_X := False;
+      Has_Z := False;
+      Has_D := False;
+      Pos := Str'Last;
+      for I in 1 .. Blen loop
+         D := Read_Std_Logic (Val.Mem, Blen - I);
+         case D is
+            when '0' | 'L' =>
+               Has_D := True;
+            when '1' | 'H' =>
+               Has_D := True;
+               V := V + N;
+            when 'Z' | 'W' =>
+               Has_Z := True;
+            when 'X' | 'U' | '-' =>
+               Has_X := True;
+         end case;
+         N := N * 2;
+         if N = Base or else I = Blen then
+            if Has_X or (Has_Z and Has_D) then
+               Str (Pos) := 'X';
+            elsif Has_Z then
+               Str (Pos) := 'Z';
+            else
+               Str (Pos) := Hex_Chars (V);
+            end if;
+            Pos := Pos - 1;
+            N := 1;
+            V := 0;
+            Has_X := False;
+            Has_Z := False;
+            Has_D := False;
+         end if;
+      end loop;
+      return String_To_Memtyp (Str, Res_Typ);
+   end Eval_Logic_Vector_To_String;
+
    function Eval_Static_Predefined_Function_Call (Param1 : Valtyp;
                                                   Param2 : Valtyp;
                                                   Res_Typ : Type_Acc;
@@ -1861,6 +1946,18 @@ package body Synth.Vhdl_Eval is
                B := To_X01 (B);
                return Create_Memory_U8 (Boolean'Pos (B = 'X'), Res_Typ);
             end;
+
+         when Iir_Predefined_Ieee_1164_To_Stdlogicvector_Suv
+           | Iir_Predefined_Ieee_1164_To_Stdulogicvector_Slv =>
+            --  TODO
+            return (Param1.Typ, Param1.Val.Mem);
+
+         when Iir_Predefined_Ieee_1164_To_Hstring =>
+            return Eval_Logic_Vector_To_String
+              (Get_Memtyp (Param1), Res_Typ, 4);
+         when Iir_Predefined_Ieee_1164_To_Ostring =>
+            return Eval_Logic_Vector_To_String
+              (Get_Memtyp (Param1), Res_Typ, 3);
 
          when Iir_Predefined_Ieee_Math_Real_Log2 =>
             declare
