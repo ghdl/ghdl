@@ -33,8 +33,6 @@ with Elab.Vhdl_Context.Debug; use Elab.Vhdl_Context.Debug;
 with Elab.Vhdl_Debug; use Elab.Vhdl_Debug;
 
 package body Elab.Debugger is
-   Flag_Enabled : Boolean := False;
-
    Current_Instance : Synth_Instance_Acc;
    Current_Loc : Node;
 
@@ -923,7 +921,7 @@ package body Elab.Debugger is
 
    procedure Debug_Init (Top : Node) is
    begin
-      Flag_Enabled := True;
+      Flag_Debug_Enable := True;
 
       Current_Instance := null;
       Current_Loc := Top;
@@ -939,7 +937,7 @@ package body Elab.Debugger is
    begin
       Current_Instance := Top;
       Current_Loc := Get_Source_Scope (Top);
-      Flag_Enabled := True;
+      Flag_Debug_Enable := True;
 
       --  To avoid warnings.
       Exec_Statement := Null_Node;
@@ -985,7 +983,7 @@ package body Elab.Debugger is
 
    procedure Debug_Error (Inst : Synth_Instance_Acc; Expr : Node) is
    begin
-      if Flag_Enabled then
+      if Flag_Debug_Enable then
          Current_Instance := Inst;
          Current_Loc := Expr;
          Debug (Reason_Error);

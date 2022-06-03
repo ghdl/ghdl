@@ -44,6 +44,8 @@ with Grtlink;
 with Elab.Vhdl_Context;
 with Elab.Vhdl_Debug;
 with Elab.Vhdl_Insts;
+with Elab.Debugger;
+
 with Synth.Flags;
 with Simul.Vhdl_Elab;
 with Simul.Vhdl_Simul;
@@ -185,7 +187,7 @@ package body Ghdlsimul is
    is
    begin
       if Option = "--debug" or Option = "-g" then
-         Synth.Flags.Flag_Debug_Enable := True;
+         Elab.Debugger.Flag_Debug_Enable := True;
       elsif Option = "-t" then
          Synth.Flags.Flag_Trace_Statements := True;
       elsif Option = "-i" then

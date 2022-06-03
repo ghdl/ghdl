@@ -23,6 +23,9 @@ with Vhdl.Nodes; use Vhdl.Nodes;
 with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 
 package Elab.Debugger is
+   --  True to start debugger on error.
+   Flag_Debug_Enable : Boolean := False;
+
    --  If true, debugging is enabled:
    --  * call Debug_Break() before executing the next sequential statement
    --  * call Debug_Leave when a frame is destroyed.

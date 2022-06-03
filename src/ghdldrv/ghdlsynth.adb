@@ -47,6 +47,7 @@ with Netlists.Inference;
 
 with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 with Elab.Vhdl_Insts;
+with Elab.Debugger;
 
 with Synthesis;
 with Synth.Disp_Vhdl;
@@ -230,7 +231,7 @@ package body Ghdlsynth is
       elsif Option = "-i" then
          Flag_Debug_Init := True;
       elsif Option = "-g" then
-         Flag_Debug_Enable := True;
+         Elab.Debugger.Flag_Debug_Enable := True;
       elsif Option = "-v" then
          if not Synth.Flags.Flag_Verbose then
             Synth.Flags.Flag_Verbose := True;
