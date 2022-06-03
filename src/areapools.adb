@@ -105,6 +105,7 @@ package body Areapools is
 
       if Erase_When_Released
         and then M.Last /= null
+        and then M.Next_Use /= 0
       then
          declare
             Last : Size_Type;
