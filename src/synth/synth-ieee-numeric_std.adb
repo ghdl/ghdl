@@ -65,18 +65,19 @@ package body Synth.Ieee.Numeric_Std is
       end loop;
    end Fill;
 
-   procedure Warn_Compare_Null (Loc : Syn_Src) is
+   procedure Warn_Compare_Null (Loc : Location_Type) is
    begin
-      Warning_Msg_Synth (+Loc, "null argument detected, returning false");
+      Warning_Msg_Synth (Loc, "null argument detected, returning false");
    end Warn_Compare_Null;
 
-   procedure Warn_Compare_Meta (Loc : Syn_Src) is
+   procedure Warn_Compare_Meta (Loc : Location_Type) is
    begin
-      Warning_Msg_Synth (+Loc, "metavalue detected, returning false");
+      Warning_Msg_Synth (Loc, "metavalue detected, returning false");
    end Warn_Compare_Meta;
 
-   function Compare_Uns_Uns
-     (Left, Right : Memtyp; Err : Order_Type; Loc : Syn_Src) return Order_Type
+   function Compare_Uns_Uns (Left, Right : Memtyp;
+                             Err : Order_Type;
+                             Loc : Location_Type) return Order_Type
    is
       Lw : constant Uns32 := Left.Typ.W;
       Rw : constant Uns32 := Right.Typ.W;
@@ -129,8 +130,9 @@ package body Synth.Ieee.Numeric_Std is
       return Equal;
    end Compare_Uns_Uns;
 
-   function Compare_Uns_Nat
-     (Left, Right : Memtyp; Err : Order_Type; Loc : Syn_Src) return Order_Type
+   function Compare_Uns_Nat (Left, Right : Memtyp;
+                             Err : Order_Type;
+                             Loc : Location_Type) return Order_Type
    is
       Lw : constant Uns32 := Left.Typ.W;
       Rval : constant Uns64 := To_Uns64 (Read_Discrete (Right));
@@ -183,8 +185,9 @@ package body Synth.Ieee.Numeric_Std is
       return Equal;
    end Compare_Uns_Nat;
 
-   function Compare_Nat_Uns
-     (Left, Right : Memtyp; Err : Order_Type; Loc : Syn_Src) return Order_Type
+   function Compare_Nat_Uns (Left, Right : Memtyp;
+                             Err : Order_Type;
+                             Loc : Location_Type) return Order_Type
    is
       Rw   : constant Uns32 := Right.Typ.W;
       Lval : constant Uns64 := To_Uns64 (Read_Discrete (Left));
@@ -237,8 +240,9 @@ package body Synth.Ieee.Numeric_Std is
       return Equal;
    end Compare_Nat_Uns;
 
-   function Compare_Sgn_Sgn
-     (Left, Right : Memtyp; Err : Order_Type; Loc : Syn_Src) return Order_Type
+   function Compare_Sgn_Sgn (Left, Right : Memtyp;
+                             Err : Order_Type;
+                             Loc : Location_Type) return Order_Type
    is
       Lw   : constant Uns32 := Left.Typ.W;
       Rw   : constant Uns32 := Right.Typ.W;
@@ -293,8 +297,9 @@ package body Synth.Ieee.Numeric_Std is
       return Res;
    end Compare_Sgn_Sgn;
 
-   function Compare_Sgn_Int
-     (Left, Right : Memtyp; Err : Order_Type; Loc : Syn_Src) return Order_Type
+   function Compare_Sgn_Int (Left, Right : Memtyp;
+                             Err : Order_Type;
+                             Loc : Location_Type) return Order_Type
    is
       Lw      : constant Uns32 := Left.Typ.W;
       Rval    : constant Int64 := Read_Discrete (Right);
@@ -341,7 +346,7 @@ package body Synth.Ieee.Numeric_Std is
       return Res;
    end Compare_Sgn_Int;
 
-   function Add_Vec_Vec (L, R : Memtyp; Signed : Boolean; Loc : Syn_Src)
+   function Add_Vec_Vec (L, R : Memtyp; Signed : Boolean; Loc : Location_Type)
                          return Memtyp
    is
       Llen : constant Uns32 := L.Typ.Abound.Len;
@@ -394,18 +399,20 @@ package body Synth.Ieee.Numeric_Std is
       return Res;
    end Add_Vec_Vec;
 
-   function Add_Uns_Uns (L, R : Memtyp; Loc : Syn_Src) return Memtyp is
+   function Add_Uns_Uns (L, R : Memtyp; Loc : Location_Type) return Memtyp is
    begin
       return Add_Vec_Vec (L, R, False, Loc);
    end Add_Uns_Uns;
 
-   function Add_Sgn_Sgn (L, R : Memtyp; Loc : Syn_Src) return Memtyp is
+   function Add_Sgn_Sgn (L, R : Memtyp; Loc : Location_Type) return Memtyp is
    begin
       return Add_Vec_Vec (L, R, True, Loc);
    end Add_Sgn_Sgn;
 
-   function Add_Vec_Int
-     (L : Memtyp; R : Uns64; Signed : Boolean; Loc : Syn_Src) return Memtyp
+   function Add_Vec_Int (L : Memtyp;
+                         R : Uns64;
+                         Signed : Boolean;
+                         Loc : Location_Type) return Memtyp
    is
       Len          : constant Uns32 := L.Typ.Abound.Len;
       Res : Memtyp;
@@ -439,17 +446,19 @@ package body Synth.Ieee.Numeric_Std is
       return Res;
    end Add_Vec_Int;
 
-   function Add_Sgn_Int (L : Memtyp; R : Int64; Loc : Syn_Src) return Memtyp is
+   function Add_Sgn_Int (L : Memtyp; R : Int64; Loc : Location_Type)
+                        return Memtyp is
    begin
       return Add_Vec_Int (L, To_Uns64 (R), True, Loc);
    end Add_Sgn_Int;
 
-   function Add_Uns_Nat (L : Memtyp; R : Uns64; Loc : Syn_Src) return Memtyp is
+   function Add_Uns_Nat (L : Memtyp; R : Uns64; Loc : Location_Type)
+                        return Memtyp is
    begin
       return Add_Vec_Int (L, R, True, Loc);
    end Add_Uns_Nat;
 
-   function Sub_Vec_Vec (L, R : Memtyp; Signed : Boolean; Loc : Syn_Src)
+   function Sub_Vec_Vec (L, R : Memtyp; Signed : Boolean; Loc : Location_Type)
                          return Memtyp
    is
       Llen          : constant Uns32 := L.Typ.Abound.Len;
@@ -503,18 +512,20 @@ package body Synth.Ieee.Numeric_Std is
       return Res;
    end Sub_Vec_Vec;
 
-   function Sub_Uns_Uns (L, R : Memtyp; Loc : Syn_Src) return Memtyp is
+   function Sub_Uns_Uns (L, R : Memtyp; Loc : Location_Type) return Memtyp is
    begin
       return Sub_Vec_Vec (L, R, False, Loc);
    end Sub_Uns_Uns;
 
-   function Sub_Sgn_Sgn (L, R : Memtyp; Loc : Syn_Src) return Memtyp is
+   function Sub_Sgn_Sgn (L, R : Memtyp; Loc : Location_Type) return Memtyp is
    begin
       return Sub_Vec_Vec (L, R, True, Loc);
    end Sub_Sgn_Sgn;
 
-   function Sub_Vec_Int
-     (L : Memtyp; R : Uns64; Signed : Boolean; Loc : Syn_Src) return Memtyp
+   function Sub_Vec_Int (L : Memtyp;
+                         R : Uns64;
+                         Signed : Boolean;
+                         Loc : Location_Type) return Memtyp
    is
       Len           : constant Uns32 := L.Typ.Abound.Len;
       Res           : Memtyp;
@@ -549,18 +560,23 @@ package body Synth.Ieee.Numeric_Std is
       return Res;
    end Sub_Vec_Int;
 
-   function Sub_Sgn_Int (L : Memtyp; R : Int64; Loc : Syn_Src) return Memtyp is
+   function Sub_Sgn_Int (L : Memtyp;
+                         R : Int64;
+                         Loc : Location_Type) return Memtyp is
    begin
       return Sub_Vec_Int (L, To_Uns64 (R), True, Loc);
    end Sub_Sgn_Int;
 
-   function Sub_Uns_Nat (L : Memtyp; R : Uns64; Loc : Syn_Src) return Memtyp is
+   function Sub_Uns_Nat (L : Memtyp; R : Uns64; Loc : Location_Type)
+                        return Memtyp is
    begin
       return Sub_Vec_Int (L, R, True, Loc);
    end Sub_Uns_Nat;
 
-   function Sub_Int_Vec
-     (L : Uns64; R : Memtyp; Signed : Boolean; Loc : Syn_Src) return Memtyp
+   function Sub_Int_Vec (L : Uns64;
+                         R : Memtyp;
+                         Signed : Boolean;
+                         Loc : Location_Type) return Memtyp
    is
       Len           : constant Uns32 := R.Typ.Abound.Len;
       Res           : Memtyp;
@@ -595,17 +611,19 @@ package body Synth.Ieee.Numeric_Std is
       return Res;
    end Sub_Int_Vec;
 
-   function Sub_Nat_Uns (L : Uns64; R : Memtyp; Loc : Syn_Src) return Memtyp is
+   function Sub_Nat_Uns (L : Uns64; R : Memtyp; Loc : Location_Type)
+                        return Memtyp is
    begin
       return Sub_Int_Vec (L, R, False, Loc);
    end Sub_Nat_Uns;
 
-   function Sub_Int_Sgn (L : Int64; R : Memtyp; Loc : Syn_Src) return Memtyp is
+   function Sub_Int_Sgn (L : Int64; R : Memtyp; Loc : Location_Type)
+                        return Memtyp is
    begin
       return Sub_Int_Vec (To_Uns64 (L), R, True, Loc);
    end Sub_Int_Sgn;
 
-   function Mul_Uns_Uns (L, R : Memtyp; Loc : Syn_Src) return Memtyp
+   function Mul_Uns_Uns (L, R : Memtyp; Loc : Location_Type) return Memtyp
    is
       Llen          : constant Uns32 := L.Typ.Abound.Len;
       Rlen          : constant Uns32 := R.Typ.Abound.Len;
@@ -667,7 +685,8 @@ package body Synth.Ieee.Numeric_Std is
       return Res;
    end To_Unsigned;
 
-   function Mul_Nat_Uns (L : Uns64; R : Memtyp; Loc : Syn_Src) return Memtyp
+   function Mul_Nat_Uns (L : Uns64; R : Memtyp; Loc : Location_Type)
+                        return Memtyp
    is
       Lv : Memtyp;
    begin
@@ -678,7 +697,8 @@ package body Synth.Ieee.Numeric_Std is
       return Mul_Uns_Uns (Lv, R, Loc);
    end Mul_Nat_Uns;
 
-   function Mul_Uns_Nat (L : Memtyp; R : Uns64; Loc : Syn_Src) return Memtyp
+   function Mul_Uns_Nat (L : Memtyp; R : Uns64; Loc : Location_Type)
+                        return Memtyp
    is
       Rv : Memtyp;
    begin
@@ -689,7 +709,7 @@ package body Synth.Ieee.Numeric_Std is
       return Mul_Uns_Uns (L, Rv, Loc);
    end Mul_Uns_Nat;
 
-   function Mul_Sgn_Sgn (L, R : Memtyp; Loc : Syn_Src) return Memtyp
+   function Mul_Sgn_Sgn (L, R : Memtyp; Loc : Location_Type) return Memtyp
    is
       Llen          : constant Uns32 := L.Typ.Abound.Len;
       Rlen          : constant Uns32 := R.Typ.Abound.Len;
@@ -770,7 +790,8 @@ package body Synth.Ieee.Numeric_Std is
       return Res;
    end To_Signed;
 
-   function Mul_Int_Sgn (L : Int64; R : Memtyp; Loc : Syn_Src) return Memtyp
+   function Mul_Int_Sgn (L : Int64; R : Memtyp; Loc : Location_Type)
+                        return Memtyp
    is
       Lv : Memtyp;
    begin
@@ -781,7 +802,8 @@ package body Synth.Ieee.Numeric_Std is
       return Mul_Sgn_Sgn (Lv, R, Loc);
    end Mul_Int_Sgn;
 
-   function Mul_Sgn_Int (L : Memtyp; R : Int64; Loc : Syn_Src) return Memtyp
+   function Mul_Sgn_Int (L : Memtyp; R : Int64; Loc : Location_Type)
+                        return Memtyp
    is
       Rv : Memtyp;
    begin
@@ -822,7 +844,7 @@ package body Synth.Ieee.Numeric_Std is
       Neg_Vec (V.Mem, V.Mem, V.Typ);
    end Neg_Vec;
 
-   function Neg_Vec (V : Memtyp; Loc : Syn_Src) return Memtyp
+   function Neg_Vec (V : Memtyp; Loc : Location_Type) return Memtyp
    is
       Len : constant Uns32 := V.Typ.Abound.Len;
       Res : Memtyp;
@@ -858,7 +880,7 @@ package body Synth.Ieee.Numeric_Std is
       end loop;
    end To_01X;
 
-   function Abs_Vec (V : Memtyp; Loc : Syn_Src) return Memtyp
+   function Abs_Vec (V : Memtyp; Loc : Location_Type) return Memtyp
    is
       pragma Unreferenced (Loc);
       Len : constant Uns32 := V.Typ.Abound.Len;
@@ -973,25 +995,20 @@ package body Synth.Ieee.Numeric_Std is
       return Res;
    end Rotate_Vec;
 
-   function Resize_Vec (Val : Memtyp;
-                        Size : Uns32;
-                        Signed : Boolean) return Memtyp
+   procedure Resize_Vec (Dest : Memtyp; Val : Memtyp; Signed : Boolean)
    is
-      Old_Size : constant Uns32 := Uns32 (Vec_Length (Val.Typ));
+      Size : constant Uns32 := Dest.Typ.Abound.Len;
+      Old_Size : constant Uns32 := Val.Typ.Abound.Len;
       L : Uns32;
-      Res : Memtyp;
       Pad, B : Std_Ulogic;
    begin
-      Res.Typ := Create_Res_Type (Val.Typ, Size);
-      Res := Create_Memory (Res.Typ);
-
       if Size = 0 then
-         return Res;
+         return;
       end if;
 
       if Signed and then Old_Size > 0 then
          Pad := Read_Std_Logic (Val.Mem, 0);
-         Write_Std_Logic (Res.Mem, 0, Pad);
+         Write_Std_Logic (Dest.Mem, 0, Pad);
          L := Size - 1;
       else
          Pad := '0';
@@ -1004,8 +1021,20 @@ package body Synth.Ieee.Numeric_Std is
          else
             B := Pad;
          end if;
-         Write_Std_Logic (Res.Mem, Size - I, B);
+         Write_Std_Logic (Dest.Mem, Size - I, B);
       end loop;
+   end Resize_Vec;
+
+   function Resize_Vec (Val : Memtyp;
+                        Size : Uns32;
+                        Signed : Boolean) return Memtyp
+   is
+      Res : Memtyp;
+   begin
+      Res.Typ := Create_Res_Type (Val.Typ, Size);
+      Res := Create_Memory (Res.Typ);
+
+      Resize_Vec (Res, Val, Signed);
 
       return Res;
    end Resize_Vec;
@@ -1074,7 +1103,7 @@ package body Synth.Ieee.Numeric_Std is
       return Res;
    end Has_0x;
 
-   function Div_Uns_Uns (L, R : Memtyp; Loc : Syn_Src) return Memtyp
+   function Div_Uns_Uns (L, R : Memtyp; Loc : Location_Type) return Memtyp
    is
       Nlen  : constant Uns32 := L.Typ.Abound.Len;
       Dlen  : constant Uns32 := R.Typ.Abound.Len;
@@ -1103,7 +1132,8 @@ package body Synth.Ieee.Numeric_Std is
       return Quot;
    end Div_Uns_Uns;
 
-   function Div_Uns_Nat (L : Memtyp; R : Uns64; Loc : Syn_Src) return Memtyp
+   function Div_Uns_Nat (L : Memtyp; R : Uns64; Loc : Location_Type)
+                        return Memtyp
    is
       Rv : Memtyp;
    begin
@@ -1114,7 +1144,8 @@ package body Synth.Ieee.Numeric_Std is
       return Div_Uns_Uns (L, Rv, Loc);
    end Div_Uns_Nat;
 
-   function Div_Nat_Uns (L : Uns64; R : Memtyp; Loc : Syn_Src) return Memtyp
+   function Div_Nat_Uns (L : Uns64; R : Memtyp; Loc : Location_Type)
+                        return Memtyp
    is
       Lv : Memtyp;
    begin
@@ -1125,7 +1156,7 @@ package body Synth.Ieee.Numeric_Std is
       return Div_Uns_Uns (Lv, R, Loc);
    end Div_Nat_Uns;
 
-   function Div_Sgn_Sgn (L, R : Memtyp; Loc : Syn_Src) return Memtyp
+   function Div_Sgn_Sgn (L, R : Memtyp; Loc : Location_Type) return Memtyp
    is
       Nlen  : constant Uns32 := L.Typ.Abound.Len;
       Dlen  : constant Uns32 := R.Typ.Abound.Len;
@@ -1179,7 +1210,8 @@ package body Synth.Ieee.Numeric_Std is
       return Quot;
    end Div_Sgn_Sgn;
 
-   function Div_Sgn_Int (L : Memtyp; R : Int64; Loc : Syn_Src) return Memtyp
+   function Div_Sgn_Int (L : Memtyp; R : Int64; Loc : Location_Type)
+                        return Memtyp
    is
       Rv : Memtyp;
    begin
@@ -1190,7 +1222,8 @@ package body Synth.Ieee.Numeric_Std is
       return Div_Sgn_Sgn (L, Rv, Loc);
    end Div_Sgn_Int;
 
-   function Div_Int_Sgn (L : Int64; R : Memtyp; Loc : Syn_Src) return Memtyp
+   function Div_Int_Sgn (L : Int64; R : Memtyp; Loc : Location_Type)
+                        return Memtyp
    is
       Lv : Memtyp;
    begin
@@ -1201,7 +1234,7 @@ package body Synth.Ieee.Numeric_Std is
       return Div_Sgn_Sgn (Lv, R, Loc);
    end Div_Int_Sgn;
 
-   function Rem_Uns_Uns (L, R : Memtyp; Loc : Syn_Src) return Memtyp
+   function Rem_Uns_Uns (L, R : Memtyp; Loc : Location_Type) return Memtyp
    is
       Nlen  : constant Uns32 := L.Typ.Abound.Len;
       Dlen  : constant Uns32 := R.Typ.Abound.Len;
@@ -1230,7 +1263,8 @@ package body Synth.Ieee.Numeric_Std is
       return Rema;
    end Rem_Uns_Uns;
 
-   function Rem_Uns_Nat (L : Memtyp; R : Uns64; Loc : Syn_Src) return Memtyp
+   function Rem_Uns_Nat (L : Memtyp; R : Uns64; Loc : Location_Type)
+                        return Memtyp
    is
       Rv : Memtyp;
    begin
@@ -1241,7 +1275,8 @@ package body Synth.Ieee.Numeric_Std is
       return Rem_Uns_Uns (L, Rv, Loc);
    end Rem_Uns_Nat;
 
-   function Rem_Nat_Uns (L : Uns64; R : Memtyp; Loc : Syn_Src) return Memtyp
+   function Rem_Nat_Uns (L : Uns64; R : Memtyp; Loc : Location_Type)
+                        return Memtyp
    is
       Lv : Memtyp;
    begin
@@ -1252,7 +1287,7 @@ package body Synth.Ieee.Numeric_Std is
       return Rem_Uns_Uns (Lv, R, Loc);
    end Rem_Nat_Uns;
 
-   function Rem_Sgn_Sgn (L, R : Memtyp; Loc : Syn_Src) return Memtyp
+   function Rem_Sgn_Sgn (L, R : Memtyp; Loc : Location_Type) return Memtyp
    is
       Nlen  : constant Uns32 := L.Typ.Abound.Len;
       Dlen  : constant Uns32 := R.Typ.Abound.Len;
@@ -1306,7 +1341,8 @@ package body Synth.Ieee.Numeric_Std is
       return Rema;
    end Rem_Sgn_Sgn;
 
-   function Rem_Sgn_Int (L : Memtyp; R : Int64; Loc : Syn_Src) return Memtyp
+   function Rem_Sgn_Int (L : Memtyp; R : Int64; Loc : Location_Type)
+                        return Memtyp
    is
       Rv : Memtyp;
    begin
@@ -1317,7 +1353,8 @@ package body Synth.Ieee.Numeric_Std is
       return Rem_Sgn_Sgn (L, Rv, Loc);
    end Rem_Sgn_Int;
 
-   function Rem_Int_Sgn (L : Int64; R : Memtyp; Loc : Syn_Src) return Memtyp
+   function Rem_Int_Sgn (L : Int64; R : Memtyp; Loc : Location_Type)
+                        return Memtyp
    is
       Lv : Memtyp;
    begin
@@ -1328,7 +1365,7 @@ package body Synth.Ieee.Numeric_Std is
       return Rem_Sgn_Sgn (Lv, R, Loc);
    end Rem_Int_Sgn;
 
-   function Mod_Sgn_Sgn (L, R : Memtyp; Loc : Syn_Src) return Memtyp
+   function Mod_Sgn_Sgn (L, R : Memtyp; Loc : Location_Type) return Memtyp
    is
       Nlen  : constant Uns32 := L.Typ.Abound.Len;
       Dlen  : constant Uns32 := R.Typ.Abound.Len;
@@ -1399,7 +1436,8 @@ package body Synth.Ieee.Numeric_Std is
       end if;
    end Mod_Sgn_Sgn;
 
-   function Mod_Sgn_Int (L : Memtyp; R : Int64; Loc : Syn_Src) return Memtyp
+   function Mod_Sgn_Int (L : Memtyp; R : Int64; Loc : Location_Type)
+                        return Memtyp
    is
       Rv : Memtyp;
    begin
@@ -1410,7 +1448,8 @@ package body Synth.Ieee.Numeric_Std is
       return Mod_Sgn_Sgn (L, Rv, Loc);
    end Mod_Sgn_Int;
 
-   function Mod_Int_Sgn (L : Int64; R : Memtyp; Loc : Syn_Src) return Memtyp
+   function Mod_Int_Sgn (L : Int64; R : Memtyp; Loc : Location_Type)
+                        return Memtyp
    is
       Lv : Memtyp;
    begin
@@ -1420,5 +1459,40 @@ package body Synth.Ieee.Numeric_Std is
       Lv := To_Signed (L, R.Typ);
       return Mod_Sgn_Sgn (Lv, R, Loc);
    end Mod_Int_Sgn;
+
+   function Minmax (L, R : Memtyp; Is_Signed : Boolean; Is_Max : Boolean)
+                   return Memtyp
+   is
+      Len : constant Uns32 := Uns32'Max (L.Typ.Abound.Len, R.Typ.Abound.Len);
+      Res : Memtyp;
+      Lt : Boolean;
+   begin
+      if L.Typ.Abound.Len = 0 or R.Typ.Abound.Len = 0 then
+         Res.Typ := Create_Res_Type (L.Typ, 0);
+         Res := Create_Memory (Res.Typ);
+         return Res;
+      end if;
+
+      Res.Typ := Create_Res_Type (L.Typ, Len);
+      Res := Create_Memory (Res.Typ);
+
+      if Has_0x (L) = 'X' or else Has_0x (R) = 'X' then
+         Fill (Res, 'X');
+         return Res;
+      end if;
+
+      if Is_Signed then
+         Lt := Compare_Sgn_Sgn (L, R, Less, No_Location) = Less;
+      else
+         Lt := Compare_Uns_Uns (L, R, Less, No_Location) = Less;
+      end if;
+
+      if Lt xor Is_Max then
+         Resize_Vec (Res, L, False);
+      else
+         Resize_Vec (Res, R, False);
+      end if;
+      return Res;
+   end Minmax;
 
 end Synth.Ieee.Numeric_Std;
