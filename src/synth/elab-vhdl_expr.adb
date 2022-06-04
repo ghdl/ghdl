@@ -901,7 +901,9 @@ package body Elab.Vhdl_Expr is
            | Iir_Kind_Array_Subtype_Definition =>
             case Conv_Typ.Kind is
                when Type_Vector
-                 | Type_Unbounded_Vector =>
+                 | Type_Unbounded_Vector
+                 | Type_Array
+                 | Type_Unbounded_Array =>
                   return Val;
                when others =>
                   Error_Msg_Elab

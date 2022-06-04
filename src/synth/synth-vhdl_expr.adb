@@ -1432,6 +1432,9 @@ package body Synth.Vhdl_Expr is
                when Type_Vector
                  | Type_Unbounded_Vector =>
                   return Val;
+               when Type_Array
+                 | Type_Unbounded_Array =>
+                  return Val;
                when others =>
                   Error_Msg_Synth
                     (+Conv, "unhandled type conversion (to array)");
