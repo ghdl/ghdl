@@ -1881,6 +1881,14 @@ package body Synth.Vhdl_Eval is
             return Shift_Vec
               (Get_Memtyp (Param1), Uns32 (Read_Discrete (Param2)),
                False, False);
+         when Iir_Predefined_Ieee_Numeric_Std_Rot_Left_Uns_Nat
+            | Iir_Predefined_Ieee_Numeric_Std_Rot_Left_Sgn_Nat =>
+            return Rotate_Vec
+              (Get_Memtyp (Param1), Uns32 (Read_Discrete (Param2)), False);
+         when Iir_Predefined_Ieee_Numeric_Std_Rot_Right_Uns_Nat
+            | Iir_Predefined_Ieee_Numeric_Std_Rot_Right_Sgn_Nat =>
+            return Rotate_Vec
+              (Get_Memtyp (Param1), Uns32 (Read_Discrete (Param2)), True);
          when Iir_Predefined_Ieee_Numeric_Std_Shf_Right_Uns_Nat =>
             return Shift_Vec
               (Get_Memtyp (Param1), Uns32 (Read_Discrete (Param2)),
@@ -1889,6 +1897,7 @@ package body Synth.Vhdl_Eval is
             return Shift_Vec
               (Get_Memtyp (Param1), Uns32 (Read_Discrete (Param2)),
                True, True);
+
          when Iir_Predefined_Ieee_Numeric_Std_Resize_Sgn_Nat =>
             return Resize_Vec
               (Get_Memtyp (Param1), Uns32 (Read_Discrete (Param2)), True);

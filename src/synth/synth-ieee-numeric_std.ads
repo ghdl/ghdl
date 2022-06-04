@@ -89,6 +89,11 @@ package Synth.Ieee.Numeric_Std is
                        Right : Boolean;
                        Arith : Boolean) return Memtyp;
 
+   --  Rotate
+   function Rotate_Vec (Val : Memtyp;
+                        Amt : Uns32;
+                        Right : Boolean) return Memtyp;
+
    function Resize_Vec (Val : Memtyp;
                         Size : Uns32;
                         Signed : Boolean) return Memtyp;

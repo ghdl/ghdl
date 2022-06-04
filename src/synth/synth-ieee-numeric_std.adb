@@ -844,7 +844,6 @@ package body Synth.Ieee.Numeric_Std is
       Res := Create_Memory (Res.Typ);
 
       if Len = 0 then
-         Fill (Res, '0');
          return Res;
       end if;
 
@@ -882,6 +881,47 @@ package body Synth.Ieee.Numeric_Std is
       end if;
       return Res;
    end Shift_Vec;
+
+   function Rotate_Vec (Val : Memtyp;
+                        Amt : Uns32;
+                        Right : Boolean) return Memtyp
+   is
+      Len : constant Uns32 := Uns32 (Vec_Length (Val.Typ));
+      Cnt : Uns32;
+      Res : Memtyp;
+      B : Std_Ulogic;
+   begin
+      Res.Typ := Create_Res_Type (Val.Typ, Len);
+      Res := Create_Memory (Res.Typ);
+
+      if Len = 0 then
+         return Res;
+      end if;
+
+      Cnt := Amt rem Len;
+      pragma Unreferenced (Amt);
+
+      if Right then
+         for I in 1 .. Len - Cnt loop
+            B := Read_Std_Logic (Val.Mem, I - 1);
+            Write_Std_Logic (Res.Mem, Cnt + I - 1, B);
+         end loop;
+         for I in 1 .. Cnt loop
+            B := Read_Std_Logic (Val.Mem, Len - I);
+            Write_Std_Logic (Res.Mem, Cnt - I, B);
+         end loop;
+      else
+         for I in 1 .. Cnt loop
+            B := Read_Std_Logic (Val.Mem, I - 1);
+            Write_Std_Logic (Res.Mem, Len - Cnt + I - 1, B);
+         end loop;
+         for I in 1 .. Len - Cnt loop
+            B := Read_Std_Logic (Val.Mem, Len - I);
+            Write_Std_Logic (Res.Mem, Len - Cnt - I, B);
+         end loop;
+      end if;
+      return Res;
+   end Rotate_Vec;
 
    function Resize_Vec (Val : Memtyp;
                         Size : Uns32;
