@@ -47,6 +47,8 @@ package Elab.Debugger is
    --  * index out of bounds.
    procedure Debug_Error (Inst : Synth_Instance_Acc; Expr : Node);
 
+   function Debug_Current_Instance return Synth_Instance_Acc;
+
    type Menu_Procedure is access procedure (Line : String);
    type Cst_String_Acc is access constant String;
 

@@ -44,6 +44,11 @@ package body Elab.Debugger is
       Reason_Error
      );
 
+   function Debug_Current_Instance return Synth_Instance_Acc is
+   begin
+      return Current_Instance;
+   end Debug_Current_Instance;
+
    package Breakpoints is new Tables
      (Table_Index_Type => Natural,
       Table_Component_Type => Node,
@@ -657,7 +662,7 @@ package body Elab.Debugger is
      (Kind => Menu_Command,
       Name => new String'("?"),
       Help => new String'("print help"),
-      Next => Menu_Break'Access, --  Menu_Help1'Access,
+      Next => Menu_Break'Access,
       Proc => Help_Proc'Access);
 
    Menu_Top : aliased Menu_Entry :=

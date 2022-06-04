@@ -18,15 +18,30 @@
 with Name_Table; use Name_Table;
 with Simple_IO; use Simple_IO;
 with Utils_IO; use Utils_IO;
+with Files_Map;
+with Areapools;
 with Libraries;
+with Std_Names;
+with Errorout;
 
-with Elab.Debugger;
+with Elab.Debugger; use Elab.Debugger;
 with Elab.Memtype; use Elab.Memtype;
 with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 with Elab.Vhdl_Values.Debug; use Elab.Vhdl_Values.Debug;
 
+with Synth.Vhdl_Expr;
+
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Errors;
+with Vhdl.Tokens;
+with Vhdl.Scanner;
+with Vhdl.Parse;
+with Vhdl.Sem_Scopes;
+with Vhdl.Sem_Expr;
+with Vhdl.Canon;
+with Vhdl.Annotations;
+with Vhdl.Std_Package;
+with Vhdl.Prints;
 
 package body Elab.Vhdl_Debug is
    procedure Disp_Discrete_Value (Val : Int64; Btype : Node) is
@@ -1032,4 +1047,284 @@ package body Elab.Vhdl_Debug is
          end;
       end if;
    end Disp_Instance_Path;
+
+   type Handle_Scope_Type is access procedure (N : Iir);
+
+   procedure Foreach_Scopes (N : Iir; Handler : Handle_Scope_Type) is
+   begin
+      case Get_Kind (N) is
+         when Iir_Kind_Process_Statement
+           | Iir_Kind_Sensitized_Process_Statement =>
+            Foreach_Scopes (Get_Parent (N), Handler);
+            Handler.all (N);
+         when Iir_Kind_Architecture_Body =>
+            Foreach_Scopes (Get_Entity (N), Handler);
+            Handler.all (N);
+
+         when Iir_Kind_Entity_Declaration =>
+            --  Top of scopes.
+            Handler.all (N);
+
+         when Iir_Kind_Function_Body
+           | Iir_Kind_Procedure_Body =>
+            Foreach_Scopes (Get_Parent (N), Handler);
+            Handler.all (N);
+         when Iir_Kind_Package_Body =>
+            Handler.all (N);
+
+         when Iir_Kind_Variable_Assignment_Statement
+           | Iir_Kind_Simple_Signal_Assignment_Statement
+           | Iir_Kind_Null_Statement
+           | Iir_Kind_Assertion_Statement
+           | Iir_Kind_Report_Statement
+           | Iir_Kind_Wait_Statement
+           | Iir_Kind_Return_Statement
+           | Iir_Kind_Next_Statement
+           | Iir_Kind_Exit_Statement
+           | Iir_Kind_Procedure_Call_Statement
+           | Iir_Kind_If_Statement
+           | Iir_Kind_While_Loop_Statement
+           | Iir_Kind_Case_Statement =>
+            Foreach_Scopes (Get_Parent (N), Handler);
+
+         when Iir_Kind_For_Loop_Statement
+           | Iir_Kind_Block_Statement
+           | Iir_Kind_If_Generate_Statement
+           | Iir_Kind_For_Generate_Statement
+           | Iir_Kind_Generate_Statement_Body =>
+            Foreach_Scopes (Get_Parent (N), Handler);
+            Handler.all (N);
+
+         when others =>
+            Vhdl.Errors.Error_Kind ("foreach_scopes", N);
+      end case;
+   end Foreach_Scopes;
+
+   procedure Add_Decls_For (N : Iir)
+   is
+      use Vhdl.Sem_Scopes;
+   begin
+      case Get_Kind (N) is
+         when Iir_Kind_Entity_Declaration =>
+            declare
+               Unit : constant Iir := Get_Design_Unit (N);
+            begin
+               Add_Context_Clauses (Unit);
+               --  Add_Name (Unit, Get_Identifier (N), False);
+               Add_Entity_Declarations (N);
+            end;
+         when Iir_Kind_Architecture_Body =>
+            Open_Declarative_Region;
+            Add_Context_Clauses (Get_Design_Unit (N));
+            Add_Declarations (Get_Declaration_Chain (N), False);
+            Add_Declarations_Of_Concurrent_Statement (N);
+         when Iir_Kind_Package_Body =>
+            declare
+               Package_Decl : constant Iir := Get_Package (N);
+               Package_Unit : constant Iir := Get_Design_Unit (Package_Decl);
+            begin
+               Add_Name (Package_Unit);
+               Add_Context_Clauses (Package_Unit);
+               Open_Declarative_Region;
+               Add_Declarations (Get_Declaration_Chain (Package_Decl), False);
+               Add_Declarations (Get_Declaration_Chain (N), False);
+            end;
+         when Iir_Kind_Procedure_Body
+           | Iir_Kind_Function_Body =>
+            declare
+               Spec : constant Iir := Get_Subprogram_Specification (N);
+            begin
+               Open_Declarative_Region;
+               Add_Declarations
+                 (Get_Interface_Declaration_Chain (Spec), False);
+               Add_Declarations
+                 (Get_Declaration_Chain (N), False);
+            end;
+         when Iir_Kind_Process_Statement
+           | Iir_Kind_Sensitized_Process_Statement =>
+            Open_Declarative_Region;
+            Add_Declarations (Get_Declaration_Chain (N), False);
+         when Iir_Kind_For_Loop_Statement
+           | Iir_Kind_For_Generate_Statement =>
+            Open_Declarative_Region;
+            Add_Name (Get_Parameter_Specification (N));
+         when Iir_Kind_Block_Statement =>
+            declare
+               Header : constant Iir := Get_Block_Header (N);
+            begin
+               Open_Declarative_Region;
+               if Header /= Null_Iir then
+                  Add_Declarations (Get_Generic_Chain (Header), False);
+                  Add_Declarations (Get_Port_Chain (Header), False);
+               end if;
+               Add_Declarations (Get_Declaration_Chain (N), False);
+               Add_Declarations_Of_Concurrent_Statement (N);
+            end;
+         when Iir_Kind_Generate_Statement_Body =>
+            Open_Declarative_Region;
+            Add_Declarations (Get_Declaration_Chain (N), False);
+            Add_Declarations_Of_Concurrent_Statement (N);
+         when others =>
+            Vhdl.Errors.Error_Kind ("enter_scope(2)", N);
+      end case;
+   end Add_Decls_For;
+
+   procedure Enter_Scope (Node : Iir)
+   is
+      use Vhdl.Sem_Scopes;
+   begin
+      Push_Interpretations;
+      Open_Declarative_Region;
+
+      --  Add STD
+      Add_Name (Libraries.Std_Library, Std_Names.Name_Std, False);
+      Use_All_Names (Vhdl.Std_Package.Standard_Package);
+
+      Foreach_Scopes (Node, Add_Decls_For'Access);
+   end Enter_Scope;
+
+   procedure Del_Decls_For (N : Iir)
+   is
+      use Vhdl.Sem_Scopes;
+   begin
+      case Get_Kind (N) is
+         when Iir_Kind_Entity_Declaration =>
+            null;
+         when Iir_Kind_Architecture_Body =>
+            Close_Declarative_Region;
+         when Iir_Kind_Process_Statement
+           | Iir_Kind_Sensitized_Process_Statement
+           | Iir_Kind_Package_Body
+           | Iir_Kind_Procedure_Body
+           | Iir_Kind_Function_Body
+           | Iir_Kind_For_Loop_Statement
+           | Iir_Kind_Block_Statement
+           | Iir_Kind_If_Generate_Statement
+           | Iir_Kind_For_Generate_Statement
+           | Iir_Kind_Generate_Statement_Body =>
+            Close_Declarative_Region;
+         when others =>
+            Vhdl.Errors.Error_Kind ("Decl_Decls_For", N);
+      end case;
+   end Del_Decls_For;
+
+   procedure Leave_Scope (Node : Iir)
+   is
+      use Vhdl.Sem_Scopes;
+   begin
+      Foreach_Scopes (Node, Del_Decls_For'Access);
+
+      Close_Declarative_Region;
+      Pop_Interpretations;
+   end Leave_Scope;
+
+   Buffer_Index : Natural := 1;
+
+   procedure Print_Proc (Line : String)
+   is
+      use Vhdl.Tokens;
+      use Areapools;
+      use Errorout;
+      Cur_Inst : constant Synth_Instance_Acc := Debug_Current_Instance;
+      Prev_Nbr_Errors : constant Natural := Nbr_Errors;
+      Index_Str : String := Natural'Image (Buffer_Index);
+      File : Source_File_Entry;
+      Expr : Iir;
+      Res : Valtyp;
+      P : Natural;
+      Opt_Value : Boolean := False;
+      Opt_Name : Boolean := False;
+      Marker : Mark_Type;
+      Cur_Scope : Node;
+   begin
+      --  Decode options: /v
+      P := Line'First;
+      loop
+         P := Skip_Blanks (Line (P .. Line'Last));
+         if P + 2 < Line'Last and then Line (P .. P + 1) = "/v" then
+            Opt_Value := True;
+            P := P + 2;
+         elsif P + 2 < Line'Last and then Line (P .. P + 1) = "/n" then
+            Opt_Name := True;
+            P := P + 2;
+         else
+            exit;
+         end if;
+      end loop;
+
+      pragma Unreferenced (Opt_Value);
+
+      Buffer_Index := Buffer_Index + 1;
+      Index_Str (Index_Str'First) := '*';
+      File := Files_Map.Create_Source_File_From_String
+        (Name_Table.Get_Identifier ("*debug" & Index_Str & '*'),
+         Line (P .. Line'Last));
+      Vhdl.Scanner.Set_File (File);
+      Vhdl.Scanner.Scan;
+      Expr := Vhdl.Parse.Parse_Expression;
+      if Vhdl.Scanner.Current_Token /= Tok_Eof then
+         Put_Line ("garbage at end of expression ignored");
+      end if;
+      Vhdl.Scanner.Close_File;
+      if Nbr_Errors /= Prev_Nbr_Errors then
+         Put_Line ("error while parsing expression, evaluation aborted");
+         Nbr_Errors := Prev_Nbr_Errors;
+         return;
+      end if;
+
+      Cur_Scope := Elab.Vhdl_Context.Get_Source_Scope (Cur_Inst);
+      Enter_Scope (Cur_Scope);
+      Expr := Vhdl.Sem_Expr.Sem_Expression_Universal (Expr);
+      Leave_Scope (Cur_Scope);
+
+      if Expr = Null_Iir
+        or else Nbr_Errors /= Prev_Nbr_Errors
+      then
+         Put_Line ("error while analyzing expression, evaluation aborted");
+         Nbr_Errors := Prev_Nbr_Errors;
+         return;
+      end if;
+
+      Vhdl.Prints.Disp_Expression (Expr);
+      New_Line;
+
+      Vhdl.Annotations.Annotate_Expand_Table;
+      Vhdl.Canon.Canon_Expression (Expr);
+
+      Mark (Marker, Expr_Pool);
+
+      if Opt_Name then
+         case Get_Kind (Expr) is
+            when Iir_Kind_Simple_Name =>
+               null;
+            when others =>
+               Put_Line ("expression is not a name");
+               Opt_Name := False;
+         end case;
+      end if;
+      if Opt_Name then
+         --  Res := Execute_Name (Dbg_Cur_Frame, Expr, True);
+         raise Internal_Error;
+      else
+         Res := Synth.Vhdl_Expr.Synth_Expression (Cur_Inst, Expr);
+      end if;
+      if Res.Val.Kind = Value_Memory then
+         Disp_Memtyp (Get_Memtyp (Res), Get_Type (Expr));
+      else
+         Elab.Vhdl_Values.Debug.Debug_Valtyp (Res);
+      end if;
+      New_Line;
+
+      --  Free value
+      Release (Marker, Expr_Pool);
+   end Print_Proc;
+
+   procedure Append_Commands is
+   begin
+      Append_Menu_Command
+        (Name => new String'("p*rint"),
+         Help => new String'("execute expression"),
+         Proc => Print_Proc'Access);
+   end Append_Commands;
+
 end Elab.Vhdl_Debug;

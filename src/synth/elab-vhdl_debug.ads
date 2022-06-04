@@ -47,4 +47,6 @@ package Elab.Vhdl_Debug is
    --  If COMPONENTS is true, also display components
    procedure Disp_Instance_Path (Inst : Synth_Instance_Acc;
                                  Components : Boolean := False);
+
+   procedure Append_Commands;
 end Elab.Vhdl_Debug;
