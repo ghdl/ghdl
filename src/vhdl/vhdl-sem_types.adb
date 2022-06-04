@@ -871,6 +871,7 @@ package body Vhdl.Sem_Types is
       Last_Type : Iir;
 
       El_List : constant Iir_Flist := Get_Elements_Declaration_List (Def);
+      Last : Integer;
       El : Iir;
       El_Type : Iir;
       Resolved_Flag : Boolean;
@@ -889,7 +890,14 @@ package body Vhdl.Sem_Types is
       Composite_Found := False;
       Set_Signal_Type_Flag (Def, True);
 
-      for I in Flist_First .. Flist_Last (El_List) loop
+      if El_List = Null_Iir_Flist then
+         --  Avoid a crash is no elements.
+         Last := Flist_First - 1;
+      else
+         Last := Flist_Last (El_List);
+      end if;
+
+      for I in Flist_First .. Last loop
          El := Get_Nth_Element (El_List, I);
          El_Type := Get_Subtype_Indication (El);
          if El_Type /= Null_Iir then
