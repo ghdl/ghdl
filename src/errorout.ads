@@ -122,6 +122,9 @@ package Errorout is
       --  be triggered.
       Warnid_Useless,
 
+      --  Missing association for a formal.
+      Warnid_No_Assoc,
+
       --  Violation of staticness rules
       Warnid_Static,
 
@@ -324,6 +327,7 @@ private
         | Warnid_Others | Warnid_Reserved_Word | Warnid_Directive
         | Warnid_Parenthesis | Warnid_Delayed_Checks | Warnid_Default_Binding
         | Warnid_Vital_Generic | Warnid_Missing_Xref
+        | Warnid_No_Assoc
         | Warnid_Unused => (Enabled => False, Error => False));
 
    --  Compute the column from Error_Record E.

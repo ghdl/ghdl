@@ -1350,7 +1350,7 @@ package body Vhdl.Sem_Specs is
    end Sem_Entity_Aspect;
 
    procedure Sem_Check_Missing_Generic_Association
-     (Inter_Chain : Iir;  Assoc1 : Iir; Assoc2 : Iir; Loc : Iir)
+     (Inter_Chain : Iir; Assoc1 : Iir; Assoc2 : Iir; Loc : Iir)
    is
       Inter : Iir;
       Inter_Iter : Iir;
@@ -1389,7 +1389,7 @@ package body Vhdl.Sem_Specs is
          if Get_Open_Flag (Inter) then
             Set_Open_Flag (Inter, False);
             Err := Sem_Check_Missing_Association
-              (Inter, Missing_Generic, True, Loc);
+              (Inter, Missing_Generic, True, False, Loc);
          end if;
          Inter := Get_Chain (Inter);
       end loop;

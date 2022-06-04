@@ -98,7 +98,9 @@ package Vhdl.Sem_Assocs is
    --  INTER is an interface that is known not to be associated.
    --  Report an error according to MISSING iff FINISH is true.
    --  Return True iff not associating INTER is an error.
-   function Sem_Check_Missing_Association
-     (Inter : Iir; Missing : Missing_Type; Finish : Boolean; Loc : Iir)
-      return Boolean;
+   function Sem_Check_Missing_Association (Inter : Iir;
+                                           Missing : Missing_Type;
+                                           Finish : Boolean;
+                                           Is_Open : Boolean;
+                                           Loc : Iir) return Boolean;
 end Vhdl.Sem_Assocs;

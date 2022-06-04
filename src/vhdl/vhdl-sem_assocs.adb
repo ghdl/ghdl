@@ -2724,7 +2724,8 @@ package body Vhdl.Sem_Assocs is
       Pos := 0;
       while Inter /= Null_Iir loop
          if Inter_Matched (Pos) <= Open then
-            if Sem_Check_Missing_Association (Inter, Missing, Finish, Loc)
+            if Sem_Check_Missing_Association
+              (Inter, Missing, Finish, Inter_Matched (Pos) = Open, Loc)
             then
                Match := Not_Compatible;
                if not Finish then
@@ -2738,9 +2739,11 @@ package body Vhdl.Sem_Assocs is
       end loop;
    end Sem_Association_Chain;
 
-   function Sem_Check_Missing_Association
-     (Inter : Iir; Missing : Missing_Type; Finish : Boolean; Loc : Iir)
-      return Boolean
+   function Sem_Check_Missing_Association (Inter : Iir;
+                                           Missing : Missing_Type;
+                                           Finish : Boolean;
+                                           Is_Open : Boolean;
+                                           Loc : Iir) return Boolean
    is
       Err : Boolean;
    begin
@@ -2770,6 +2773,10 @@ package body Vhdl.Sem_Assocs is
                            Error_Msg_Sem
                              (+Loc, "%n of mode IN must be connected", +Inter);
                            Err := True;
+                        elsif not Is_Open then
+                           Warning_Msg_Sem
+                             (Warnid_No_Assoc, +Loc,
+                              "%n of mode IN is not connected", +Inter);
                         end if;
                      when Iir_Out_Mode
                         | Iir_Linkage_Mode
@@ -2783,6 +2790,10 @@ package body Vhdl.Sem_Assocs is
                              (+Loc,
                               "unconstrained %n must be connected", +Inter);
                            Err := True;
+                        elsif not Is_Open then
+                           Warning_Msg_Sem
+                             (Warnid_No_Assoc, +Loc,
+                              "%n of mode OUT is not connected", +Inter);
                         end if;
                      when Iir_Unknown_Mode =>
                         raise Internal_Error;
