@@ -49,9 +49,12 @@ package Synth.Ieee.Numeric_Std is
 
    --  "-"
    function Sub_Uns_Uns (L, R : Memtyp; Loc : Syn_Src) return Memtyp;
+   function Sub_Uns_Nat (L : Memtyp; R : Uns64; Loc : Syn_Src) return Memtyp;
+   function Sub_Nat_Uns (L : Uns64; R : Memtyp; Loc : Syn_Src) return Memtyp;
+
    function Sub_Sgn_Sgn (L, R : Memtyp; Loc : Syn_Src) return Memtyp;
    function Sub_Sgn_Int (L : Memtyp; R : Int64; Loc : Syn_Src) return Memtyp;
-   function Sub_Uns_Nat (L : Memtyp; R : Uns64; Loc : Syn_Src) return Memtyp;
+   function Sub_Int_Sgn (L : Int64; R : Memtyp; Loc : Syn_Src) return Memtyp;
 
    --  "*"
    function Mul_Uns_Uns (L, R : Memtyp; Loc : Syn_Src) return Memtyp;

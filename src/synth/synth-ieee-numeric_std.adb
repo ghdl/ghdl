@@ -351,12 +351,14 @@ package body Synth.Ieee.Numeric_Std is
       Lb, Rb, Carry : Sl_X01;
       R_Ext, L_Ext : Sl_X01;
    begin
-      Res.Typ := Create_Res_Type (L.Typ, Len);
-      Res := Create_Memory (Res.Typ);
-
-      if Len = 0 then
+      if Rlen = 0 or Llen = 0 then
+         Res.Typ := Create_Res_Type (L.Typ, 0);
+         Res := Create_Memory (Res.Typ);
          return Res;
       end if;
+
+      Res.Typ := Create_Res_Type (L.Typ, Len);
+      Res := Create_Memory (Res.Typ);
 
       if Signed then
          --  Extend with the sign bit.
@@ -457,12 +459,14 @@ package body Synth.Ieee.Numeric_Std is
       Lb, Rb, Carry : Sl_X01;
       R_Ext, L_Ext  : Sl_X01;
    begin
-      Res.Typ := Create_Res_Type (L.Typ, Len);
-      Res := Create_Memory (Res.Typ);
-
-      if Len = 0 then
+      if Llen = 0 or Rlen = 0 then
+         Res.Typ := Create_Res_Type (L.Typ, 0);
+         Res := Create_Memory (Res.Typ);
          return Res;
       end if;
+
+      Res.Typ := Create_Res_Type (L.Typ, Len);
+      Res := Create_Memory (Res.Typ);
 
       if Signed then
          --  Extend with the sign bit.
@@ -554,6 +558,52 @@ package body Synth.Ieee.Numeric_Std is
    begin
       return Sub_Vec_Int (L, R, True, Loc);
    end Sub_Uns_Nat;
+
+   function Sub_Int_Vec
+     (L : Uns64; R : Memtyp; Signed : Boolean; Loc : Syn_Src) return Memtyp
+   is
+      Len           : constant Uns32 := R.Typ.Abound.Len;
+      Res           : Memtyp;
+      V             : Uns64;
+      Lb, Rb, Carry : Sl_X01;
+   begin
+      Res.Typ := Create_Res_Type (R.Typ, Len);
+      Res := Create_Memory (Res.Typ);
+      if Len < 1 then
+         return Res;
+      end if;
+      V := L;
+      Carry := '1';
+      for I in 1 .. Len loop
+         Lb := Uns_To_01 (V and 1);
+         Rb := Sl_To_X01 (Read_Std_Logic (R.Mem, Len - I));
+         if Rb = 'X' then
+            Warning_Msg_Synth
+              (+Loc, "NUMERIC_STD.""+"": non logical value detected");
+            Fill (Res, 'X');
+            exit;
+         end if;
+         Rb := Not_Table (Rb);
+         Write_Std_Logic (Res.Mem, Len - I, Compute_Sum (Carry, Rb, Lb));
+         Carry := Compute_Carry (Carry, Rb, Lb);
+         if Signed then
+            V := Shift_Right_Arithmetic (V, 1);
+         else
+            V := Shift_Right (V, 1);
+         end if;
+      end loop;
+      return Res;
+   end Sub_Int_Vec;
+
+   function Sub_Nat_Uns (L : Uns64; R : Memtyp; Loc : Syn_Src) return Memtyp is
+   begin
+      return Sub_Int_Vec (L, R, False, Loc);
+   end Sub_Nat_Uns;
+
+   function Sub_Int_Sgn (L : Int64; R : Memtyp; Loc : Syn_Src) return Memtyp is
+   begin
+      return Sub_Int_Vec (To_Uns64 (L), R, True, Loc);
+   end Sub_Int_Sgn;
 
    function Mul_Uns_Uns (L, R : Memtyp; Loc : Syn_Src) return Memtyp
    is
