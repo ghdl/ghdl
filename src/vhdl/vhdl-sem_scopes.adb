@@ -1116,7 +1116,8 @@ package body Vhdl.Sem_Scopes is
            | Iir_Kind_Signal_Attribute_Declaration =>
             null;
 
-         when Iir_Kind_Protected_Type_Body =>
+         when Iir_Kind_Protected_Type_Body
+           | Iir_Kind_Suspend_State_Declaration =>
             --  FIXME: allowed only in debugger (if the current scope is
             --  within a package body) ?
             null;
