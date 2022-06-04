@@ -82,6 +82,8 @@ package body Elab.Vhdl_Types is
          --  TODO: does this cover all the cases ?
          Typ := Get_Subtype_Object (Syn_Inst, Get_Subtype_Indication (Prefix));
       else
+         --  The expression cannot be fully executed as it can be a signal
+         --  (whose evaluation is not allowed during elaboration).
          Typ := Exec_Name_Subtype (Syn_Inst, Prefix_Name);
       end if;
 

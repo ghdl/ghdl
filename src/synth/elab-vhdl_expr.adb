@@ -698,6 +698,13 @@ package body Elab.Vhdl_Expr is
                Val := Elab.Vhdl_Heap.Synth_Dereference (Read_Access (Val));
                return Val.Typ;
             end;
+         when Iir_Kind_Function_Call =>
+            declare
+               Val : Valtyp;
+            begin
+               Val := Synth.Vhdl_Expr.Synth_Expression (Syn_Inst, Name);
+               return Val.Typ;
+            end;
          when others =>
             Error_Kind ("exec_name_subtype", Name);
       end case;
