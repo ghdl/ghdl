@@ -762,15 +762,30 @@ package body Synth.Vhdl_Eval is
            | Iir_Predefined_Ieee_Numeric_Std_And_Sgn_Sgn =>
             return Eval_Vector_Dyadic (Left, Right, And_Table, Expr);
 
+         when Iir_Predefined_Ieee_1164_Vector_Nand
+           | Iir_Predefined_Ieee_Numeric_Std_Nand_Uns_Uns
+           | Iir_Predefined_Ieee_Numeric_Std_Nand_Sgn_Sgn =>
+            return Eval_Vector_Dyadic (Left, Right, Nand_Table, Expr);
+
          when Iir_Predefined_Ieee_1164_Vector_Or
            | Iir_Predefined_Ieee_Numeric_Std_Or_Uns_Uns
            | Iir_Predefined_Ieee_Numeric_Std_Or_Sgn_Sgn =>
             return Eval_Vector_Dyadic (Left, Right, Or_Table, Expr);
 
+         when Iir_Predefined_Ieee_1164_Vector_Nor
+           | Iir_Predefined_Ieee_Numeric_Std_Nor_Uns_Uns
+           | Iir_Predefined_Ieee_Numeric_Std_Nor_Sgn_Sgn =>
+            return Eval_Vector_Dyadic (Left, Right, Nor_Table, Expr);
+
          when Iir_Predefined_Ieee_1164_Vector_Xor
            | Iir_Predefined_Ieee_Numeric_Std_Xor_Uns_Uns
            | Iir_Predefined_Ieee_Numeric_Std_Xor_Sgn_Sgn =>
             return Eval_Vector_Dyadic (Left, Right, Xor_Table, Expr);
+
+         when Iir_Predefined_Ieee_1164_Vector_Xnor
+            | Iir_Predefined_Ieee_Numeric_Std_Xnor_Uns_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Xnor_Sgn_Sgn =>
+            return Eval_Vector_Dyadic (Left, Right, Xnor_Table, Expr);
 
          when Iir_Predefined_Ieee_1164_Scalar_And =>
             return Eval_Logic_Scalar (Left, Right, And_Table);

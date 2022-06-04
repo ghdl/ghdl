@@ -75,6 +75,19 @@ package Synth.Ieee.Std_Logic_1164 is
       "UX0XXX0XX"    -- -
      );
 
+   Nand_Table : constant Table_2d :=
+   --  UX01ZWLH-
+     ("UU1UUU1UU",   -- U
+      "UX1XXX1XX",   -- X
+      "111111111",   -- 0
+      "UX10XX10X",   -- 1
+      "UX1XXX1XX",   -- Z
+      "UX1XXX1XX",   -- W
+      "111111111",   -- L
+      "UX10XX10X",   -- H
+      "UX1XXX1XX"    -- -
+     );
+
    Or_Table : constant Table_2d :=
    --  UX01ZWLH-
      ("UUU1UUU1U",   -- U
@@ -88,6 +101,19 @@ package Synth.Ieee.Std_Logic_1164 is
       "UXX1XXX1X"    -- -
      );
 
+   Nor_Table : constant Table_2d :=
+   --  UX01ZWLH-
+     ("UUU0UUU0U",   -- U
+      "UXX0XXX0X",   -- X
+      "UX10XX10X",   -- 0
+      "000000000",   -- 1
+      "UXX0XXX0X",   -- Z
+      "UXX0XXX0X",   -- W
+      "UX10XX10X",   -- L
+      "000000000",   -- H
+      "UXX0XXX0X"    -- -
+     );
+
    Xor_Table : constant Table_2d :=
    --  UX01ZWLH-
      ("UUUUUUUUU",   -- U
@@ -98,6 +124,19 @@ package Synth.Ieee.Std_Logic_1164 is
       "UXXXXXXXX",   -- W
       "UX01XX01X",   -- L
       "UX10XX10X",   -- H
+      "UXXXXXXXX"    -- -
+     );
+
+   Xnor_Table : constant Table_2d :=
+   --  UX01ZWLH-
+     ("UUUUUUUUU",   -- U
+      "UXXXXXXXX",   -- X
+      "UX10XX10X",   -- 0
+      "UX01XX01X",   -- 1
+      "UXXXXXXXX",   -- Z
+      "UXXXXXXXX",   -- W
+      "UX10XX10X",   -- L
+      "UX01XX01X",   -- H
       "UXXXXXXXX"    -- -
      );
 
