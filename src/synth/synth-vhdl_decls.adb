@@ -400,7 +400,7 @@ package body Synth.Vhdl_Decls is
          if Is_Valid (Def) then
             Init := Synth_Expression_With_Type (Syn_Inst, Def, Obj_Typ);
             Init := Synth_Subtype_Conversion
-              (Ctxt, Init, Obj_Typ, False, Decl);
+              (Ctxt, Init, Obj_Typ, True, Decl);
             if not Is_Subprg
               and then not Is_Static (Init.Val)
             then
