@@ -76,7 +76,9 @@ def find_def(n, loc):
                         return res
         elif typ == nodes_meta.types.Iir_Flist:
             attr = nodes_meta.get_field_attribute(f)
-            if attr == nodes_meta.Attr.ANone:
+            if (attr == nodes_meta.Attr.ANone
+                or (attr == nodes_meta.Attr.Of_Maybe_Ref
+                    and not nodes.Get_Is_Ref(n))):
                 for n1 in pyutils.flist_iter(nodes_meta.Get_Iir_Flist(n, f)):
                     res = find_def(n1, loc)
                     if res is not None:
