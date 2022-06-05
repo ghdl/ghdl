@@ -404,6 +404,21 @@ package body Synth.Ieee.Numeric_Std is
       return Add_Vec_Vec (L, R, False, Loc);
    end Add_Uns_Uns;
 
+   function Log_To_Vec (Val : Memtyp; Vec : Memtyp) return Memtyp
+   is
+      Len : constant Uns32 := Vec.Typ.Abound.Len;
+      Res : Memtyp;
+   begin
+      if Len = 0 then
+         --  FIXME: is it an error ?
+         return Vec;
+      end if;
+      Res := Create_Memory (Vec.Typ);
+      Fill (Res, '0');
+      Write_U8 (Res.Mem + Size_Type (Len - 1), Read_U8 (Val.Mem));
+      return Res;
+   end Log_To_Vec;
+
    function Add_Sgn_Sgn (L, R : Memtyp; Loc : Location_Type) return Memtyp is
    begin
       return Add_Vec_Vec (L, R, True, Loc);

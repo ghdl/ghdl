@@ -1080,11 +1080,16 @@ package body Synth.Vhdl_Eval is
             end;
 
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns
-           | Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Log
-           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Log
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Slv
            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Uns_Slv =>
             return Add_Uns_Uns (Left, Right, +Expr);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Log
+           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Log =>
+            return Add_Uns_Uns (Left, Log_To_Vec (Right, Left), +Expr);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Add_Log_Uns =>
+            return Add_Uns_Uns (Log_To_Vec (Left, Right), Right, +Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Nat
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Int =>
@@ -1099,6 +1104,11 @@ package body Synth.Vhdl_Eval is
          when Iir_Predefined_Ieee_Numeric_Std_Add_Int_Sgn =>
             return Add_Sgn_Int (Right, Read_Discrete (Left), +Expr);
 
+         when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Log =>
+            return Add_Sgn_Sgn (Left, Log_To_Vec (Right, Left), +Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Add_Log_Sgn =>
+            return Add_Sgn_Sgn (Log_To_Vec (Left, Right), Right, +Expr);
+
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Uns =>
             return Sub_Uns_Uns (Left, Right, +Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Nat =>
@@ -1106,12 +1116,22 @@ package body Synth.Vhdl_Eval is
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Nat_Uns =>
             return Sub_Nat_Uns (To_Uns64 (Read_Discrete (Left)), Right, +Expr);
 
+         when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Log =>
+            return Sub_Uns_Uns (Left, Log_To_Vec (Right, Left), +Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Sub_Log_Uns =>
+            return Sub_Uns_Uns (Log_To_Vec (Left, Right), Right, +Expr);
+
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Sgn =>
             return Sub_Sgn_Sgn (Left, Right, +Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Int =>
             return Sub_Sgn_Int (Left, Read_Discrete (Right), +Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Int_Sgn =>
             return Sub_Int_Sgn (Read_Discrete (Left), Right, +Expr);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Log =>
+            return Sub_Sgn_Sgn (Left, Log_To_Vec (Right, Left), +Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Sub_Log_Sgn =>
+            return Sub_Sgn_Sgn (Log_To_Vec (Left, Right), Right, +Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Mul_Uns_Uns =>
             return Mul_Uns_Uns (Left, Right, +Expr);
