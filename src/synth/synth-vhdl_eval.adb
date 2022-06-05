@@ -906,6 +906,13 @@ package body Synth.Vhdl_Eval is
                Res := Compare_Uns_Nat (Left, Right, Greater, +Expr) /= Equal;
                return Create_Memory_Boolean (Res);
             end;
+         when Iir_Predefined_Ieee_Numeric_Std_Ne_Sgn_Sgn =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Compare_Sgn_Sgn (Left, Right, Greater, +Expr) /= Equal;
+               return Create_Memory_Boolean (Res);
+            end;
 
          when Iir_Predefined_Ieee_Numeric_Std_Gt_Uns_Uns =>
             declare
@@ -1780,6 +1787,21 @@ package body Synth.Vhdl_Eval is
       return String_To_Memtyp (Str, Res_Typ);
    end Eval_Logic_Vector_To_String;
 
+   function Eval_To_X01 (Val : Memtyp; Map : Table_1d) return Memtyp
+   is
+      Len : constant Uns32 := Val.Typ.Abound.Len;
+      Res : Memtyp;
+      B : Std_Ulogic;
+   begin
+      Res := Create_Memory (Create_Res_Bound (Val.Typ));
+      for I in 1 .. Len loop
+         B := Read_Std_Logic (Val.Mem, I - 1);
+         B := Map (B);
+         Write_Std_Logic (Res.Mem, I - 1, B);
+      end loop;
+      return Res;
+   end Eval_To_X01;
+
    function Eval_Static_Predefined_Function_Call (Param1 : Valtyp;
                                                   Param2 : Valtyp;
                                                   Res_Typ : Type_Acc;
@@ -2000,23 +2022,16 @@ package body Synth.Vhdl_Eval is
                B := To_X01 (B);
                return Create_Memory_U8 (Std_Ulogic'Pos (B), Res_Typ);
             end;
-         when Iir_Predefined_Ieee_1164_To_X01_Slv =>
-            declare
-               El_Type : constant Type_Acc := Get_Array_Element (Res_Typ);
-               Res : Memtyp;
-               Bnd : Type_Acc;
-               B : Std_Ulogic;
-            begin
-               Bnd := Create_Vec_Type_By_Length
-                 (Uns32 (Vec_Length (Param1.Typ)), El_Type);
-               Res := Create_Memory (Bnd);
-               for I in 1 .. Uns32 (Vec_Length (Param1.Typ)) loop
-                  B := Read_Std_Logic (Param1.Val.Mem, I - 1);
-                  B := To_X01 (B);
-                  Write_Std_Logic (Res.Mem, I - 1, B);
-               end loop;
-               return Res;
-            end;
+         when Iir_Predefined_Ieee_1164_To_X01_Slv
+            | Iir_Predefined_Ieee_Numeric_Std_To_X01_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_To_X01_Sgn =>
+            return Eval_To_X01 (Get_Memtyp (Param1), Map_X01);
+         when Iir_Predefined_Ieee_Numeric_Std_To_X01Z_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_To_X01Z_Sgn =>
+            return Eval_To_X01 (Get_Memtyp (Param1), Map_X01Z);
+         when Iir_Predefined_Ieee_Numeric_Std_To_UX01_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_To_UX01_Sgn =>
+            return Eval_To_X01 (Get_Memtyp (Param1), Map_UX01);
 
          when Iir_Predefined_Ieee_1164_To_Stdlogicvector_Bv
             | Iir_Predefined_Ieee_1164_To_Stdulogicvector_Bv =>
@@ -2074,7 +2089,25 @@ package body Synth.Vhdl_Eval is
             begin
                B := Read_Std_Logic (Param1.Val.Mem, 0);
                B := To_X01 (B);
-               return Create_Memory_U8 (Boolean'Pos (B = 'X'), Res_Typ);
+               return Create_Memory_Boolean (B = 'X');
+            end;
+
+         when Iir_Predefined_Ieee_Numeric_Std_Is_X_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Is_X_Sgn =>
+            declare
+               Len : constant Uns32 := Param1.Typ.Abound.Len;
+               Res : Boolean;
+               B : Std_Ulogic;
+            begin
+               Res := False;
+               for I in 1 .. Len loop
+                  B := Read_Std_Logic (Param1.Val.Mem, I - 1);
+                  if To_X01 (B) = 'X' then
+                     Res := True;
+                     exit;
+                  end if;
+               end loop;
+               return Create_Memory_Boolean (Res);
             end;
 
          when Iir_Predefined_Ieee_1164_To_Stdlogicvector_Suv
