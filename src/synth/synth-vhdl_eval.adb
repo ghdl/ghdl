@@ -281,6 +281,8 @@ package body Synth.Vhdl_Eval is
       return Equal;
    end Compare_Array;
 
+   --  Execute shift and rot.
+   --  ZERO is the value to be used for '0' (for shifts).
    function Execute_Shift_Operator (Left : Memtyp;
                                     Count : Int64;
                                     Zero : Ghdl_U8;
@@ -838,20 +840,54 @@ package body Synth.Vhdl_Eval is
          when Iir_Predefined_Ieee_1164_Xnor_Log_Suv =>
             return Eval_Logic_Vector_Scalar (Right, Left, Xor_Table, True);
 
-         when Iir_Predefined_Ieee_1164_Vector_Sll =>
+         when Iir_Predefined_Ieee_1164_Vector_Sll
+            | Iir_Predefined_Ieee_Numeric_Std_Sla_Uns_Int =>
             return Execute_Shift_Operator
               (Left, Read_Discrete (Right), Std_Ulogic'Pos('0'),
                Iir_Predefined_Array_Sll);
-         when Iir_Predefined_Ieee_1164_Vector_Srl =>
+         when Iir_Predefined_Ieee_1164_Vector_Srl
+            | Iir_Predefined_Ieee_Numeric_Std_Sra_Uns_Int =>
             return Execute_Shift_Operator
               (Left, Read_Discrete (Right), Std_Ulogic'Pos('0'),
                Iir_Predefined_Array_Srl);
+         when Iir_Predefined_Ieee_Numeric_Std_Sra_Sgn_Int =>
+            declare
+               Cnt : constant Int64 := Read_Discrete (Right);
+            begin
+               if Cnt >= 0 then
+                  return Execute_Shift_Operator
+                    (Left, Cnt, Std_Ulogic'Pos('0'), Iir_Predefined_Array_Sra);
+               else
+                  return Execute_Shift_Operator
+                    (Left, -Cnt, Std_Ulogic'Pos('0'),
+                     Iir_Predefined_Array_Sll);
+               end if;
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Sla_Sgn_Int =>
+            declare
+               Cnt : Int64;
+               Op : Iir_Predefined_Shift_Functions;
+            begin
+               Cnt := Read_Discrete (Right);
+               if Cnt >= 0 then
+                  Op := Iir_Predefined_Array_Sll;
+               else
+                  Cnt := -Cnt;
+                  Op :=Iir_Predefined_Array_Sra;
+               end if;
+               return Execute_Shift_Operator
+                 (Left, Cnt, Std_Ulogic'Pos('0'), Op);
+            end;
 
-         when Iir_Predefined_Ieee_1164_Vector_Rol =>
+         when Iir_Predefined_Ieee_1164_Vector_Rol
+            | Iir_Predefined_Ieee_Numeric_Std_Rol_Uns_Int
+            | Iir_Predefined_Ieee_Numeric_Std_Rol_Sgn_Int =>
             return Execute_Shift_Operator
               (Left, Read_Discrete (Right), Std_Ulogic'Pos('0'),
                Iir_Predefined_Array_Rol);
-         when Iir_Predefined_Ieee_1164_Vector_Ror =>
+         when Iir_Predefined_Ieee_1164_Vector_Ror
+            | Iir_Predefined_Ieee_Numeric_Std_Ror_Uns_Int
+            | Iir_Predefined_Ieee_Numeric_Std_Ror_Sgn_Int =>
             return Execute_Shift_Operator
               (Left, Read_Discrete (Right),  Std_Ulogic'Pos('0'),
                Iir_Predefined_Array_Ror);
