@@ -919,18 +919,25 @@ package body Synth.Vhdl_Eval is
                Res := Compare_Uns_Uns (Left, Right, Greater, +Expr) = Equal;
                return Create_Memory_Boolean (Res);
             end;
-         when Iir_Predefined_Ieee_Numeric_Std_Eq_Sgn_Sgn =>
-            declare
-               Res : Boolean;
-            begin
-               Res := Compare_Sgn_Sgn (Left, Right, Greater, +Expr) = Equal;
-               return Create_Memory_Boolean (Res);
-            end;
          when Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Nat =>
             declare
                Res : Boolean;
             begin
                Res := Compare_Uns_Nat (Left, Right, Greater, +Expr) = Equal;
+               return Create_Memory_Boolean (Res);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Eq_Nat_Uns =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Compare_Uns_Nat (Right, Left, Greater, +Expr) = Equal;
+               return Create_Memory_Boolean (Res);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Eq_Sgn_Sgn =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Compare_Sgn_Sgn (Left, Right, Greater, +Expr) = Equal;
                return Create_Memory_Boolean (Res);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Eq_Sgn_Int =>
@@ -960,6 +967,13 @@ package body Synth.Vhdl_Eval is
                Res : Boolean;
             begin
                Res := Compare_Uns_Nat (Left, Right, Greater, +Expr) /= Equal;
+               return Create_Memory_Boolean (Res);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Ne_Nat_Uns =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Compare_Uns_Nat (Right, Left, Greater, +Expr) /= Equal;
                return Create_Memory_Boolean (Res);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Ne_Sgn_Sgn =>
@@ -1143,8 +1157,9 @@ package body Synth.Vhdl_Eval is
             end;
 
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns
-           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Slv
-           | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Uns_Slv =>
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Uns_Slv
+            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Add_Slv_Slv =>
             return Add_Uns_Uns (Left, Right, +Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Log
@@ -1155,9 +1170,11 @@ package body Synth.Vhdl_Eval is
             return Add_Uns_Uns (Log_To_Vec (Left, Right), Right, +Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Nat
-           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Int =>
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Int
+            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Add_Slv_Nat =>
             return Add_Uns_Nat (Left, To_Uns64 (Read_Discrete (Right)), +Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Add_Nat_Uns =>
+         when Iir_Predefined_Ieee_Numeric_Std_Add_Nat_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Add_Nat_Slv =>
             return Add_Uns_Nat (Right, To_Uns64 (Read_Discrete (Left)), +Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Sgn =>
@@ -1172,11 +1189,14 @@ package body Synth.Vhdl_Eval is
          when Iir_Predefined_Ieee_Numeric_Std_Add_Log_Sgn =>
             return Add_Sgn_Sgn (Log_To_Vec (Left, Right), Right, +Expr);
 
-         when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Uns =>
+         when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Sub_Slv_Slv =>
             return Sub_Uns_Uns (Left, Right, +Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Nat =>
+         when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Nat
+            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Sub_Slv_Nat =>
             return Sub_Uns_Nat (Left, To_Uns64 (Read_Discrete (Right)), +Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Sub_Nat_Uns =>
+         when Iir_Predefined_Ieee_Numeric_Std_Sub_Nat_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Sub_Nat_Slv =>
             return Sub_Nat_Uns (To_Uns64 (Read_Discrete (Left)), Right, +Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Log =>
@@ -1855,6 +1875,7 @@ package body Synth.Vhdl_Eval is
 
    function Eval_Logic_Vector_To_String (Val : Memtyp;
                                          Res_Typ : Type_Acc;
+                                         Is_Signed : Boolean;
                                          Log_Base : Natural) return Memtyp
    is
       Base : constant Natural := 2 ** Log_Base;
@@ -1892,6 +1913,14 @@ package body Synth.Vhdl_Eval is
             elsif Has_Z then
                Str (Pos) := 'Z';
             else
+               if Is_Signed and N < Base and (D = '1' or D = 'H') then
+                  --  Sign extend.
+                  loop
+                     V := V + N;
+                     N := N * 2;
+                     exit when N = Base;
+                  end loop;
+               end if;
                Str (Pos) := Hex_Chars (V);
             end if;
             Pos := Pos - 1;
@@ -2073,11 +2102,12 @@ package body Synth.Vhdl_Eval is
 
          when Iir_Predefined_Ieee_Numeric_Std_Touns_Nat_Nat_Uns
             | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Int
-            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_To_Slv_Nat_Nat_Slv =>
+            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_To_Slv_Nat_Nat =>
             return Eval_To_Log_Vector
               (Uns64 (Read_Discrete (Param1)), Read_Discrete (Param2),
                Res_Typ);
-         when Iir_Predefined_Ieee_Numeric_Std_Touns_Nat_Uns_Uns =>
+         when Iir_Predefined_Ieee_Numeric_Std_Touns_Nat_Uns_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_To_Slv_Nat_Slv =>
             return Eval_To_Log_Vector
               (Uns64 (Read_Discrete (Param1)), Int64 (Param2.Typ.Abound.Len),
                Res_Typ);
@@ -2093,7 +2123,8 @@ package body Synth.Vhdl_Eval is
                Res_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Toint_Uns_Nat
             | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Conv_Integer =>
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Conv_Integer
+            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_To_Integer_Slv_Nat =>
             --  UNSIGNED to Natural.
             return Create_Memory_Discrete
               (Eval_Unsigned_To_Integer (Get_Memtyp (Param1), Expr), Res_Typ);
@@ -2105,19 +2136,13 @@ package body Synth.Vhdl_Eval is
             return Get_Memtyp (Param1);
 
          when Iir_Predefined_Ieee_Numeric_Std_Shf_Left_Uns_Nat
-            | Iir_Predefined_Ieee_Numeric_Std_Shf_Left_Sgn_Nat =>
+            | Iir_Predefined_Ieee_Numeric_Std_Shf_Left_Sgn_Nat
+            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Shift_Left =>
             return Shift_Vec
               (Get_Memtyp (Param1), Uns32 (Read_Discrete (Param2)),
                False, False);
-         when Iir_Predefined_Ieee_Numeric_Std_Rot_Left_Uns_Nat
-            | Iir_Predefined_Ieee_Numeric_Std_Rot_Left_Sgn_Nat =>
-            return Rotate_Vec
-              (Get_Memtyp (Param1), Uns32 (Read_Discrete (Param2)), False);
-         when Iir_Predefined_Ieee_Numeric_Std_Rot_Right_Uns_Nat
-            | Iir_Predefined_Ieee_Numeric_Std_Rot_Right_Sgn_Nat =>
-            return Rotate_Vec
-              (Get_Memtyp (Param1), Uns32 (Read_Discrete (Param2)), True);
-         when Iir_Predefined_Ieee_Numeric_Std_Shf_Right_Uns_Nat =>
+         when Iir_Predefined_Ieee_Numeric_Std_Shf_Right_Uns_Nat
+            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Shift_Right =>
             return Shift_Vec
               (Get_Memtyp (Param1), Uns32 (Read_Discrete (Param2)),
                True, False);
@@ -2125,19 +2150,31 @@ package body Synth.Vhdl_Eval is
             return Shift_Vec
               (Get_Memtyp (Param1), Uns32 (Read_Discrete (Param2)),
                True, True);
+         when Iir_Predefined_Ieee_Numeric_Std_Rot_Left_Uns_Nat
+            | Iir_Predefined_Ieee_Numeric_Std_Rot_Left_Sgn_Nat
+            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Rotate_Left =>
+            return Rotate_Vec
+              (Get_Memtyp (Param1), Uns32 (Read_Discrete (Param2)), False);
+         when Iir_Predefined_Ieee_Numeric_Std_Rot_Right_Uns_Nat
+            | Iir_Predefined_Ieee_Numeric_Std_Rot_Right_Sgn_Nat
+            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Rotate_Right =>
+            return Rotate_Vec
+              (Get_Memtyp (Param1), Uns32 (Read_Discrete (Param2)), True);
 
+         when Iir_Predefined_Ieee_Numeric_Std_Resize_Uns_Nat
+            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Resize_Slv_Nat =>
+            return Resize_Vec
+              (Get_Memtyp (Param1), Uns32 (Read_Discrete (Param2)), False);
+         when Iir_Predefined_Ieee_Numeric_Std_Resize_Uns_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Resize_Slv_Slv =>
+            return Resize_Vec
+              (Get_Memtyp (Param1), Param2.Typ.Abound.Len, False);
          when Iir_Predefined_Ieee_Numeric_Std_Resize_Sgn_Nat =>
             return Resize_Vec
               (Get_Memtyp (Param1), Uns32 (Read_Discrete (Param2)), True);
          when Iir_Predefined_Ieee_Numeric_Std_Resize_Sgn_Sgn =>
             return Resize_Vec
               (Get_Memtyp (Param1), Param2.Typ.Abound.Len, True);
-         when Iir_Predefined_Ieee_Numeric_Std_Resize_Uns_Nat =>
-            return Resize_Vec
-              (Get_Memtyp (Param1), Uns32 (Read_Discrete (Param2)), False);
-         when Iir_Predefined_Ieee_Numeric_Std_Resize_Uns_Uns =>
-            return Resize_Vec
-              (Get_Memtyp (Param1), Param2.Typ.Abound.Len, False);
 
          when Iir_Predefined_Ieee_1164_To_Stdulogic =>
             declare
@@ -2227,6 +2264,26 @@ package body Synth.Vhdl_Eval is
                return Res;
             end;
 
+         when Iir_Predefined_Ieee_1164_To_01_Slv_Log =>
+            declare
+               Len : constant Uns32 := Param1.Typ.Abound.Len;
+               S : Std_Ulogic;
+               Xmap : Std_Ulogic;
+               Res : Memtyp;
+            begin
+               Xmap := Read_Std_Logic (Param2.Val.Mem, 0);
+               Res := Create_Memory (Create_Res_Bound (Param1.Typ));
+               for I in 1 .. Len loop
+                  S := Read_Std_Logic (Param1.Val.Mem, I - 1);
+                  S := To_X01 (S);
+                  if S = 'X' then
+                     S := Xmap;
+                  end if;
+                  Write_Std_Logic (Res.Mem, I - 1, S);
+               end loop;
+               return Res;
+            end;
+
          when Iir_Predefined_Ieee_1164_Scalar_Is_X =>
             declare
                B : Std_Ulogic;
@@ -2259,12 +2316,20 @@ package body Synth.Vhdl_Eval is
             --  TODO
             return (Param1.Typ, Param1.Val.Mem);
 
-         when Iir_Predefined_Ieee_1164_To_Hstring =>
+         when Iir_Predefined_Ieee_1164_To_Hstring
+            | Iir_Predefined_Ieee_Numeric_Std_To_Hstring_Uns =>
             return Eval_Logic_Vector_To_String
-              (Get_Memtyp (Param1), Res_Typ, 4);
-         when Iir_Predefined_Ieee_1164_To_Ostring =>
+              (Get_Memtyp (Param1), Res_Typ, False, 4);
+         when Iir_Predefined_Ieee_Numeric_Std_To_Hstring_Sgn =>
             return Eval_Logic_Vector_To_String
-              (Get_Memtyp (Param1), Res_Typ, 3);
+              (Get_Memtyp (Param1), Res_Typ, True, 4);
+         when Iir_Predefined_Ieee_1164_To_Ostring
+            | Iir_Predefined_Ieee_Numeric_Std_To_Ostring_Uns =>
+            return Eval_Logic_Vector_To_String
+              (Get_Memtyp (Param1), Res_Typ, False, 3);
+         when Iir_Predefined_Ieee_Numeric_Std_To_Ostring_Sgn =>
+            return Eval_Logic_Vector_To_String
+              (Get_Memtyp (Param1), Res_Typ, True, 3);
 
          when Iir_Predefined_Ieee_Numeric_Std_Max_Uns_Uns =>
             return Minmax (Get_Memtyp (Param1), Get_Memtyp (Param2),
@@ -2280,17 +2345,26 @@ package body Synth.Vhdl_Eval is
                            True, False);
 
          when Iir_Predefined_Ieee_Numeric_Std_Find_Rightmost_Uns
-            | Iir_Predefined_Ieee_Numeric_Std_Find_Rightmost_Sgn =>
+            | Iir_Predefined_Ieee_Numeric_Std_Find_Rightmost_Sgn
+            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Find_Rightmost =>
             return Create_Memory_Discrete
               (Int64 (Find_Rightmost (Get_Memtyp (Param1),
                                       Get_Memtyp (Param2))),
                Res_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Find_Leftmost_Uns
-            | Iir_Predefined_Ieee_Numeric_Std_Find_Leftmost_Sgn =>
+            | Iir_Predefined_Ieee_Numeric_Std_Find_Leftmost_Sgn
+            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Find_Leftmost =>
             return Create_Memory_Discrete
               (Int64 (Find_Leftmost (Get_Memtyp (Param1),
                                      Get_Memtyp (Param2))),
                Res_Typ);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Unsigned_Maximum_Slv_Slv =>
+            return Minmax (Get_Memtyp (Param1), Get_Memtyp (Param2),
+                           False, True);
+         when Iir_Predefined_Ieee_Numeric_Std_Unsigned_Minimum_Slv_Slv =>
+            return Minmax (Get_Memtyp (Param1), Get_Memtyp (Param2),
+                           False, False);
 
          when Iir_Predefined_Ieee_Math_Real_Log2 =>
             declare

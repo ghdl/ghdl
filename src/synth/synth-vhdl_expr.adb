@@ -2063,7 +2063,8 @@ package body Synth.Vhdl_Expr is
             begin
                case Get_Implicit_Definition (Imp) is
                   when Iir_Predefined_Operators
-                     | Iir_Predefined_Ieee_Numeric_Std_Binary_Operators =>
+                     | Iir_Predefined_Ieee_Numeric_Std_Binary_Operators
+                     | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Operators =>
                      return Synth_Operator_Function_Call (Syn_Inst, Expr);
                   when Iir_Predefined_None =>
                      return Synth_User_Function_Call (Syn_Inst, Expr);
