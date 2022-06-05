@@ -844,6 +844,22 @@ package body Synth.Ieee.Numeric_Std is
       Neg_Vec (V.Mem, V.Mem, V.Typ);
    end Neg_Vec;
 
+   function Has_0x (V : Memtyp) return Sl_X01
+   is
+      Res : Sl_X01 := '0';
+      E : Sl_X01;
+   begin
+      for I in 0 .. V.Typ.Abound.Len - 1 loop
+         E := To_X01 (Read_Std_Logic (V.Mem, I));
+         if E = 'X' then
+            return 'X';
+         elsif E = '1' then
+            Res := '1';
+         end if;
+      end loop;
+      return Res;
+   end Has_0x;
+
    function Neg_Vec (V : Memtyp; Loc : Location_Type) return Memtyp
    is
       Len : constant Uns32 := V.Typ.Abound.Len;
@@ -856,10 +872,12 @@ package body Synth.Ieee.Numeric_Std is
          return Res;
       end if;
 
-      Neg_Vec (V.Mem, Res.Mem, V.Typ);
-      if Read_Std_Logic (Res.Mem, 0) = 'X' then
+      if Has_0x (V) = 'X' then
          Warning_Msg_Synth
            (+Loc, "NUMERIC_STD.""-"": non logical value detected");
+         Fill (Res, 'X');
+      else
+         Neg_Vec (V.Mem, Res.Mem, V.Typ);
       end if;
       return Res;
    end Neg_Vec;
@@ -1086,22 +1104,6 @@ package body Synth.Ieee.Numeric_Std is
          end loop;
       end if;
    end Divmod;
-
-   function Has_0x (V : Memtyp) return Sl_X01
-   is
-      Res : Sl_X01 := '0';
-      E : Sl_X01;
-   begin
-      for I in 0 .. V.Typ.Abound.Len - 1 loop
-         E := To_X01 (Read_Std_Logic (V.Mem, I));
-         if E = 'X' then
-            return 'X';
-         elsif E = '1' then
-            Res := '1';
-         end if;
-      end loop;
-      return Res;
-   end Has_0x;
 
    function Div_Uns_Uns (L, R : Memtyp; Loc : Location_Type) return Memtyp
    is
