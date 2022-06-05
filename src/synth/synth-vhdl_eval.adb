@@ -1611,20 +1611,30 @@ package body Synth.Vhdl_Eval is
                Operand.Typ);
 
          when Iir_Predefined_Ieee_1164_And_Suv
-            | Iir_Predefined_Ieee_Numeric_Std_And_Uns =>
+            | Iir_Predefined_Ieee_Numeric_Std_And_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_And_Sgn =>
             return Eval_Vector_Reduce ('1', Operand, And_Table, False);
-         when Iir_Predefined_Ieee_1164_Nand_Suv =>
+         when Iir_Predefined_Ieee_1164_Nand_Suv
+            | Iir_Predefined_Ieee_Numeric_Std_Nand_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Nand_Sgn =>
             return Eval_Vector_Reduce ('1', Operand, And_Table, True);
 
          when Iir_Predefined_Ieee_1164_Or_Suv
-            | Iir_Predefined_Ieee_Numeric_Std_Or_Uns =>
+            | Iir_Predefined_Ieee_Numeric_Std_Or_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Or_Sgn =>
             return Eval_Vector_Reduce ('0', Operand, Or_Table, False);
-         when Iir_Predefined_Ieee_1164_Nor_Suv =>
+         when Iir_Predefined_Ieee_1164_Nor_Suv
+            | Iir_Predefined_Ieee_Numeric_Std_Nor_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Nor_Sgn =>
             return Eval_Vector_Reduce ('0', Operand, Or_Table, True);
 
-         when Iir_Predefined_Ieee_1164_Xor_Suv =>
+         when Iir_Predefined_Ieee_1164_Xor_Suv
+            | Iir_Predefined_Ieee_Numeric_Std_Xor_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Xor_Sgn =>
             return Eval_Vector_Reduce ('0', Operand, Xor_Table, False);
-         when Iir_Predefined_Ieee_1164_Xnor_Suv =>
+         when Iir_Predefined_Ieee_1164_Xnor_Suv
+            | Iir_Predefined_Ieee_Numeric_Std_Xnor_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Xnor_Sgn =>
             return Eval_Vector_Reduce ('0', Operand, Xor_Table, True);
 
          when others =>
