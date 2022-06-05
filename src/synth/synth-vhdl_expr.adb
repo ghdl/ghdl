@@ -1258,7 +1258,7 @@ package body Synth.Vhdl_Expr is
          --  max so that max*step+wd <= len - off
          --              max <= (len - off - wd) / step
          Max := (Pfx_Bnd.Len - Off.Net_Off - Res_Bnd.Len) / Step;
-         if Clog2 (Uns64 (Max)) > Natural (Inp_W) then
+         if Max > 2**Natural (Inp_W) - 1 then
             --  The width of Inp limits the max.
             Max := 2**Natural (Inp_W) - 1;
          end if;

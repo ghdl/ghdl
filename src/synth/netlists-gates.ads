@@ -264,8 +264,8 @@ package Netlists.Gates is
    --   addidx.
    --  Inputs:  0: index
    --  Params:  0: step
-   --           1: max
-   --  OUT := IN0 * STEP,  IN0 < MAX
+   --           1: max (maximum value for index, so length - 1).
+   --  OUT := IN0 * STEP,  IN0 <= MAX
    Id_Memidx : constant Module_Id := 90;
 
    --  Combine (simply add) indexes for dynamic insert or extract.
