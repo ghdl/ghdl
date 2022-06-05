@@ -495,6 +495,47 @@ package body Elab.Debugger is
       Prepare_Continue;
    end Cont_Proc;
 
+   procedure Disp_A_Frame (Inst: Synth_Instance_Acc)
+   is
+      Src : Node;
+   begin
+      if Inst = Root_Instance then
+         Put_Line ("root instance");
+         return;
+      end if;
+
+      Src := Get_Source_Scope (Inst);
+      Put (Vhdl.Errors.Disp_Node (Src));
+      Put (" at ");
+      Put (Files_Map.Image (Get_Location (Src)));
+      New_Line;
+   end Disp_A_Frame;
+
+   procedure Debug_Bt (Instance : Synth_Instance_Acc)
+   is
+      Inst : Synth_Instance_Acc;
+   begin
+      Inst := Instance;
+      while Inst /= null loop
+         Disp_A_Frame (Inst);
+         Inst := Get_Caller_Instance (Inst);
+      end loop;
+   end Debug_Bt;
+   pragma Unreferenced (Debug_Bt);
+
+   procedure Where_Proc (Line : String)
+   is
+      pragma Unreferenced (Line);
+      Inst : Synth_Instance_Acc;
+   begin
+      --  Check_Current_Process;
+      Inst := Current_Instance;
+      while Inst /= null loop
+         Disp_A_Frame (Inst);
+         Inst := Get_Caller_Instance (Inst);
+      end loop;
+   end Where_Proc;
+
    procedure List_Proc (Line : String)
    is
       pragma Unreferenced (Line);
@@ -658,11 +699,18 @@ package body Elab.Debugger is
       Next => Menu_Step'Access,
       Proc => Break_Proc'Access);
 
+   Menu_Where : aliased Menu_Entry :=
+     (Kind => Menu_Command,
+      Name => new String'("w*here"),
+      Help => new String'("disp call stack"),
+      Next => Menu_Break'Access,
+      Proc => Where_Proc'Access);
+
    Menu_Help2 : aliased Menu_Entry :=
      (Kind => Menu_Command,
       Name => new String'("?"),
       Help => new String'("print help"),
-      Next => Menu_Break'Access,
+      Next => Menu_Where'Access,
       Proc => Help_Proc'Access);
 
    Menu_Top : aliased Menu_Entry :=
@@ -994,32 +1042,5 @@ package body Elab.Debugger is
          Debug (Reason_Error);
       end if;
    end Debug_Error;
-
-   procedure Disp_A_Frame (Inst: Synth_Instance_Acc) is
-   begin
-      if Inst = Root_Instance then
-         Put_Line ("root instance");
-         return;
-      end if;
-
-      Put (Vhdl.Errors.Disp_Node (Get_Source_Scope (Inst)));
---      if Inst.Stmt /= Null_Iir then
---         Put (" at ");
---         Put (Files_Map.Image (Get_Location (Inst.Stmt)));
---      end if;
-      New_Line;
-   end Disp_A_Frame;
-
-   procedure Debug_Bt (Instance : Synth_Instance_Acc)
-   is
-      Inst : Synth_Instance_Acc;
-   begin
-      Inst := Instance;
-      while Inst /= null loop
-         Disp_A_Frame (Inst);
-         Inst := Get_Caller_Instance (Inst);
-      end loop;
-   end Debug_Bt;
-   pragma Unreferenced (Debug_Bt);
 
 end Elab.Debugger;
