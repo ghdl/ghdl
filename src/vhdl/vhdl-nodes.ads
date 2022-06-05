@@ -5873,22 +5873,46 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_Numeric_Std_Ror_Sgn_Int,
 
       Iir_Predefined_Ieee_Numeric_Std_And_Uns_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_And_Uns_Log,
+      Iir_Predefined_Ieee_Numeric_Std_And_Log_Uns,
       Iir_Predefined_Ieee_Numeric_Std_And_Sgn_Sgn,
-
-      Iir_Predefined_Ieee_Numeric_Std_Or_Uns_Uns,
-      Iir_Predefined_Ieee_Numeric_Std_Or_Sgn_Sgn,
+      Iir_Predefined_Ieee_Numeric_Std_And_Sgn_Log,
+      Iir_Predefined_Ieee_Numeric_Std_And_Log_Sgn,
 
       Iir_Predefined_Ieee_Numeric_Std_Nand_Uns_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Nand_Uns_Log,
+      Iir_Predefined_Ieee_Numeric_Std_Nand_Log_Uns,
       Iir_Predefined_Ieee_Numeric_Std_Nand_Sgn_Sgn,
+      Iir_Predefined_Ieee_Numeric_Std_Nand_Sgn_Log,
+      Iir_Predefined_Ieee_Numeric_Std_Nand_Log_Sgn,
+
+      Iir_Predefined_Ieee_Numeric_Std_Or_Uns_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Or_Uns_Log,
+      Iir_Predefined_Ieee_Numeric_Std_Or_Log_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Or_Sgn_Sgn,
+      Iir_Predefined_Ieee_Numeric_Std_Or_Sgn_Log,
+      Iir_Predefined_Ieee_Numeric_Std_Or_Log_Sgn,
 
       Iir_Predefined_Ieee_Numeric_Std_Nor_Uns_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Nor_Uns_Log,
+      Iir_Predefined_Ieee_Numeric_Std_Nor_Log_Uns,
       Iir_Predefined_Ieee_Numeric_Std_Nor_Sgn_Sgn,
+      Iir_Predefined_Ieee_Numeric_Std_Nor_Sgn_Log,
+      Iir_Predefined_Ieee_Numeric_Std_Nor_Log_Sgn,
 
       Iir_Predefined_Ieee_Numeric_Std_Xor_Uns_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Xor_Uns_Log,
+      Iir_Predefined_Ieee_Numeric_Std_Xor_Log_Uns,
       Iir_Predefined_Ieee_Numeric_Std_Xor_Sgn_Sgn,
+      Iir_Predefined_Ieee_Numeric_Std_Xor_Sgn_Log,
+      Iir_Predefined_Ieee_Numeric_Std_Xor_Log_Sgn,
 
       Iir_Predefined_Ieee_Numeric_Std_Xnor_Uns_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Xnor_Uns_Log,
+      Iir_Predefined_Ieee_Numeric_Std_Xnor_Log_Uns,
       Iir_Predefined_Ieee_Numeric_Std_Xnor_Sgn_Sgn,
+      Iir_Predefined_Ieee_Numeric_Std_Xnor_Sgn_Log,
+      Iir_Predefined_Ieee_Numeric_Std_Xnor_Log_Sgn,
       --  Numeric_Std binary operators (end)
 
       --  Unary functions for numeric_std
