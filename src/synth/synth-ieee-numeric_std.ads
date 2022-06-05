@@ -20,6 +20,8 @@ with Types; use Types;
 
 with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
 
+with Synth.Ieee.Std_Logic_1164; use Synth.Ieee.Std_Logic_1164;
+
 package Synth.Ieee.Numeric_Std is
    --  Reminder: vectors elements are from left to right.
 
@@ -137,4 +139,25 @@ package Synth.Ieee.Numeric_Std is
    --  Find_Rightmost/Find_Leftmost
    function Find_Rightmost (Arg : Memtyp; Val : Memtyp) return Int32;
    function Find_Leftmost (Arg : Memtyp; Val : Memtyp) return Int32;
+
+   --  Std_Match
+   function Match_Vec (L, R : Memtyp; Loc : Location_Type) return Boolean;
+
+   --  Matching comparisons.
+   function Match_Eq_Vec_Vec (Left, Right : Memtyp;
+                              Is_Signed : Boolean;
+                              Loc : Location_Type) return Std_Ulogic;
+
+   type Order_Map_Type is array (Order_Type) of X01;
+
+   Map_Lt : constant Order_Map_Type := "100";
+   Map_Le : constant Order_Map_Type := "110";
+   Map_Ge : constant Order_Map_Type := "011";
+   Map_Gt : constant Order_Map_Type := "001";
+
+   function Match_Cmp_Vec_Vec (Left, Right : Memtyp;
+                               Map : Order_Map_Type;
+                               Is_Signed : Boolean;
+                               Loc : Location_Type) return Memtyp;
+
 end Synth.Ieee.Numeric_Std;

@@ -110,8 +110,7 @@ package body Synth.Vhdl_Eval is
    end Eval_Vector_Dyadic;
 
    function Eval_Logic_Vector_Scalar (Vect, Scal : Memtyp;
-                                      Op : Table_2d;
-                                      Neg : Boolean := False) return Memtyp
+                                      Op : Table_2d) return Memtyp
    is
       Res : Memtyp;
       Vs, Vv, Vr : Std_Ulogic;
@@ -121,9 +120,6 @@ package body Synth.Vhdl_Eval is
       for I in 1 .. Vect.Typ.Abound.Len loop
          Vv := Read_Std_Logic (Vect.Mem, I - 1);
          Vr := Op (Vs, Vv);
-         if Neg then
-            Vr := Not_Table (Vr);
-         end if;
          Write_Std_Logic (Res.Mem, I - 1, Vr);
       end loop;
       return Res;
@@ -814,31 +810,55 @@ package body Synth.Vhdl_Eval is
          when Iir_Predefined_Std_Ulogic_Array_Match_Inequality =>
             return Eval_Vector_Match (Left, Right, True, Expr);
 
-         when Iir_Predefined_Ieee_1164_And_Suv_Log =>
+         when Iir_Predefined_Ieee_1164_And_Suv_Log
+            | Iir_Predefined_Ieee_Numeric_Std_And_Uns_Log
+            | Iir_Predefined_Ieee_Numeric_Std_And_Sgn_Log =>
             return Eval_Logic_Vector_Scalar (Left, Right, And_Table);
-         when Iir_Predefined_Ieee_1164_Or_Suv_Log =>
+         when Iir_Predefined_Ieee_1164_Or_Suv_Log
+            | Iir_Predefined_Ieee_Numeric_Std_Or_Uns_Log
+            | Iir_Predefined_Ieee_Numeric_Std_Or_Sgn_Log =>
             return Eval_Logic_Vector_Scalar (Left, Right, Or_Table);
-         when Iir_Predefined_Ieee_1164_Xor_Suv_Log =>
+         when Iir_Predefined_Ieee_1164_Xor_Suv_Log
+            | Iir_Predefined_Ieee_Numeric_Std_Xor_Uns_Log
+            | Iir_Predefined_Ieee_Numeric_Std_Xor_Sgn_Log =>
             return Eval_Logic_Vector_Scalar (Left, Right, Xor_Table);
-         when Iir_Predefined_Ieee_1164_Nand_Suv_Log =>
-            return Eval_Logic_Vector_Scalar (Left, Right, And_Table, True);
-         when Iir_Predefined_Ieee_1164_Nor_Suv_Log =>
-            return Eval_Logic_Vector_Scalar (Left, Right, Or_Table, True);
-         when Iir_Predefined_Ieee_1164_Xnor_Suv_Log =>
-            return Eval_Logic_Vector_Scalar (Left, Right, Xor_Table, True);
+         when Iir_Predefined_Ieee_1164_Nand_Suv_Log
+            | Iir_Predefined_Ieee_Numeric_Std_Nand_Uns_Log
+            | Iir_Predefined_Ieee_Numeric_Std_Nand_Sgn_Log =>
+            return Eval_Logic_Vector_Scalar (Left, Right, Nand_Table);
+         when Iir_Predefined_Ieee_1164_Nor_Suv_Log
+            | Iir_Predefined_Ieee_Numeric_Std_Nor_Uns_Log
+            | Iir_Predefined_Ieee_Numeric_Std_Nor_Sgn_Log =>
+            return Eval_Logic_Vector_Scalar (Left, Right, Nor_Table);
+         when Iir_Predefined_Ieee_1164_Xnor_Suv_Log
+            | Iir_Predefined_Ieee_Numeric_Std_Xnor_Uns_Log
+            | Iir_Predefined_Ieee_Numeric_Std_Xnor_Sgn_Log =>
+            return Eval_Logic_Vector_Scalar (Left, Right, Xnor_Table);
 
-         when Iir_Predefined_Ieee_1164_And_Log_Suv =>
+         when Iir_Predefined_Ieee_1164_And_Log_Suv
+           | Iir_Predefined_Ieee_Numeric_Std_And_Log_Uns
+           | Iir_Predefined_Ieee_Numeric_Std_And_Log_Sgn =>
             return Eval_Logic_Vector_Scalar (Right, Left, And_Table);
-         when Iir_Predefined_Ieee_1164_Or_Log_Suv =>
+         when Iir_Predefined_Ieee_1164_Or_Log_Suv
+           | Iir_Predefined_Ieee_Numeric_Std_Or_Log_Uns
+           | Iir_Predefined_Ieee_Numeric_Std_Or_Log_Sgn =>
             return Eval_Logic_Vector_Scalar (Right, Left, Or_Table);
-         when Iir_Predefined_Ieee_1164_Xor_Log_Suv =>
+         when Iir_Predefined_Ieee_1164_Xor_Log_Suv
+           | Iir_Predefined_Ieee_Numeric_Std_Xor_Log_Uns
+           | Iir_Predefined_Ieee_Numeric_Std_Xor_Log_Sgn =>
             return Eval_Logic_Vector_Scalar (Right, Left, Xor_Table);
-         when Iir_Predefined_Ieee_1164_Nand_Log_Suv =>
-            return Eval_Logic_Vector_Scalar (Right, Left, And_Table, True);
-         when Iir_Predefined_Ieee_1164_Nor_Log_Suv =>
-            return Eval_Logic_Vector_Scalar (Right, Left, Or_Table, True);
-         when Iir_Predefined_Ieee_1164_Xnor_Log_Suv =>
-            return Eval_Logic_Vector_Scalar (Right, Left, Xor_Table, True);
+         when Iir_Predefined_Ieee_1164_Nand_Log_Suv
+           | Iir_Predefined_Ieee_Numeric_Std_Nand_Log_Uns
+           | Iir_Predefined_Ieee_Numeric_Std_Nand_Log_Sgn =>
+            return Eval_Logic_Vector_Scalar (Right, Left, Nand_Table);
+         when Iir_Predefined_Ieee_1164_Nor_Log_Suv
+           | Iir_Predefined_Ieee_Numeric_Std_Nor_Log_Uns
+           | Iir_Predefined_Ieee_Numeric_Std_Nor_Log_Sgn =>
+            return Eval_Logic_Vector_Scalar (Right, Left, Nor_Table);
+         when Iir_Predefined_Ieee_1164_Xnor_Log_Suv
+           | Iir_Predefined_Ieee_Numeric_Std_Xnor_Log_Uns
+           | Iir_Predefined_Ieee_Numeric_Std_Xnor_Log_Sgn =>
+            return Eval_Logic_Vector_Scalar (Right, Left, Xnor_Table);
 
          when Iir_Predefined_Ieee_1164_Vector_Sll
             | Iir_Predefined_Ieee_Numeric_Std_Sla_Uns_Int =>
@@ -1251,6 +1271,58 @@ package body Synth.Vhdl_Eval is
                else
                   return Shift_Vec (Left, Uns32 (-Amt), True, False);
                end if;
+            end;
+
+         when Iir_Predefined_Ieee_Numeric_Std_Match_Eq_Uns_Uns =>
+            declare
+               Res : Std_Ulogic;
+            begin
+               Res := Match_Eq_Vec_Vec (Left, Right, False, +Expr);
+               return Create_Memory_U8 (Std_Ulogic'Pos (Res), Res_Typ);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Match_Ne_Uns_Uns =>
+            declare
+               Res : Std_Ulogic;
+            begin
+               Res := Match_Eq_Vec_Vec (Left, Right, False, +Expr);
+               Res := Not_Table (Res);
+               return Create_Memory_U8 (Std_Ulogic'Pos (Res), Res_Typ);
+            end;
+
+         when Iir_Predefined_Ieee_Numeric_Std_Match_Lt_Uns_Uns =>
+            return Match_Cmp_Vec_Vec (Left, Right, Map_Lt, False, +Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Match_Lt_Sgn_Sgn =>
+            return Match_Cmp_Vec_Vec (Left, Right, Map_Lt, True, +Expr);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Match_Le_Uns_Uns =>
+            return Match_Cmp_Vec_Vec (Left, Right, Map_Le, False, +Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Match_Le_Sgn_Sgn =>
+            return Match_Cmp_Vec_Vec (Left, Right, Map_Le, True, +Expr);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Match_Gt_Uns_Uns =>
+            return Match_Cmp_Vec_Vec (Left, Right, Map_Gt, False, +Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Match_Gt_Sgn_Sgn =>
+            return Match_Cmp_Vec_Vec (Left, Right, Map_Gt, True, +Expr);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Match_Ge_Uns_Uns =>
+            return Match_Cmp_Vec_Vec (Left, Right, Map_Ge, False, +Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Match_Ge_Sgn_Sgn =>
+            return Match_Cmp_Vec_Vec (Left, Right, Map_Ge, True, +Expr);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Match_Eq_Sgn_Sgn =>
+            declare
+               Res : Std_Ulogic;
+            begin
+               Res := Match_Eq_Vec_Vec (Left, Right, True, +Expr);
+               return Create_Memory_U8 (Std_Ulogic'Pos (Res), Res_Typ);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Match_Ne_Sgn_Sgn =>
+            declare
+               Res : Std_Ulogic;
+            begin
+               Res := Match_Eq_Vec_Vec (Left, Right, True, +Expr);
+               Res := Not_Table (Res);
+               return Create_Memory_U8 (Std_Ulogic'Pos (Res), Res_Typ);
             end;
 
          when Iir_Predefined_Ieee_Math_Real_Pow =>
@@ -1995,10 +2067,19 @@ package body Synth.Vhdl_Eval is
             return Eval_To_Log_Vector
               (Uns64 (Read_Discrete (Param1)), Read_Discrete (Param2),
                Res_Typ);
+         when Iir_Predefined_Ieee_Numeric_Std_Touns_Nat_Uns_Uns =>
+            return Eval_To_Log_Vector
+              (Uns64 (Read_Discrete (Param1)), Int64 (Param2.Typ.Abound.Len),
+               Res_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Tosgn_Int_Nat_Sgn
             | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Int =>
             return Eval_To_Log_Vector
               (To_Uns64 (Read_Discrete (Param1)), Read_Discrete (Param2),
+               Res_Typ);
+         when Iir_Predefined_Ieee_Numeric_Std_Tosgn_Int_Sgn_Sgn =>
+            return Eval_To_Log_Vector
+              (To_Uns64 (Read_Discrete (Param1)),
+               Int64 (Param2.Typ.Abound.Len),
                Res_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Toint_Uns_Nat
             | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Uns
@@ -2038,9 +2119,15 @@ package body Synth.Vhdl_Eval is
          when Iir_Predefined_Ieee_Numeric_Std_Resize_Sgn_Nat =>
             return Resize_Vec
               (Get_Memtyp (Param1), Uns32 (Read_Discrete (Param2)), True);
+         when Iir_Predefined_Ieee_Numeric_Std_Resize_Sgn_Sgn =>
+            return Resize_Vec
+              (Get_Memtyp (Param1), Param2.Typ.Abound.Len, True);
          when Iir_Predefined_Ieee_Numeric_Std_Resize_Uns_Nat =>
             return Resize_Vec
               (Get_Memtyp (Param1), Uns32 (Read_Discrete (Param2)), False);
+         when Iir_Predefined_Ieee_Numeric_Std_Resize_Uns_Uns =>
+            return Resize_Vec
+              (Get_Memtyp (Param1), Param2.Typ.Abound.Len, False);
 
          when Iir_Predefined_Ieee_1164_To_Stdulogic =>
             declare
@@ -2086,6 +2173,17 @@ package body Synth.Vhdl_Eval is
                end loop;
                return Res;
             end;
+
+         when Iir_Predefined_Ieee_Numeric_Std_Match_Log =>
+            return Create_Memory_Boolean
+              (Match_Eq_Table (Read_Std_Logic (Param1.Val.Mem, 0),
+                               Read_Std_Logic (Param2.Val.Mem, 0)) = '1');
+
+         when Iir_Predefined_Ieee_Numeric_Std_Match_Suv
+            | Iir_Predefined_Ieee_Numeric_Std_Match_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Match_Sgn =>
+            return Create_Memory_Boolean
+              (Match_Vec (Get_Memtyp (Param1), Get_Memtyp (Param2), +Expr));
 
          when Iir_Predefined_Ieee_1164_To_Bit =>
             declare

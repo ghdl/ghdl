@@ -21,7 +21,6 @@ with Types_Utils; use Types_Utils;
 with Elab.Memtype; use Elab.Memtype;
 
 with Synth.Errors; use Synth.Errors;
-with Synth.Ieee.Std_Logic_1164; use Synth.Ieee.Std_Logic_1164;
 
 package body Synth.Ieee.Numeric_Std is
    subtype Sl_01 is Std_Ulogic range '0' .. '1';
@@ -1551,4 +1550,125 @@ package body Synth.Ieee.Numeric_Std is
       end loop;
       return -1;
    end Find_Leftmost;
+
+   function Match_Vec (L, R : Memtyp; Loc : Location_Type) return Boolean
+   is
+      Llen : constant Uns32 := L.Typ.Abound.Len;
+      Rlen : constant Uns32 := R.Typ.Abound.Len;
+   begin
+      if Llen = 0 or Rlen = 0 then
+         Warn_Compare_Null (Loc);
+         return False;
+      end if;
+      if Llen /= Rlen then
+         Warning_Msg_Synth
+           (+Loc, "NUMERIC_STD.STD_MATCH: length mismatch, returning FALSE");
+         return False;
+      end if;
+
+      for I in 1 .. Llen loop
+         if Match_Eq_Table (Read_Std_Logic (L.Mem, I - 1),
+                            Read_Std_Logic (R.Mem, I - 1)) /= '1'
+         then
+            return False;
+         end if;
+      end loop;
+      return True;
+   end Match_Vec;
+
+   function Match_Eq_Vec_Vec (Left, Right : Memtyp;
+                              Is_Signed : Boolean;
+                              Loc : Location_Type) return Std_Ulogic
+   is
+      Lw : constant Uns32 := Left.Typ.W;
+      Rw : constant Uns32 := Right.Typ.W;
+      Len : constant Uns32 := Uns32'Max (Left.Typ.W, Right.Typ.W);
+      L, R, T : Std_Ulogic;
+      Res : Std_Ulogic;
+   begin
+      if Len = 0 then
+         Warn_Compare_Null (Loc);
+         return 'X';
+      end if;
+
+      Res := '1';
+      for I in 1 .. Len loop
+         if I > Lw then
+            if not Is_Signed then
+               L := '0';
+            end if;
+         else
+            L := Read_Std_Logic (Left.Mem, Lw - I);
+         end if;
+         if I > Rw then
+            if not Is_Signed then
+               R := '0';
+            end if;
+         else
+            R := Read_Std_Logic (Right.Mem, Rw - I);
+         end if;
+         T := Match_Eq_Table (L, R);
+         if T = 'U' then
+            return T;
+         elsif T = 'X' or Res = 'X' then
+            --  Lower priority than 'U'.
+            Res := 'X';
+         elsif T = '0' then
+            Res := '0';
+         end if;
+      end loop;
+      return Res;
+   end Match_Eq_Vec_Vec;
+
+   function Has_Xd (V : Memtyp) return Std_Ulogic
+   is
+      Res : Std_Ulogic;
+      E : Std_Ulogic;
+   begin
+      Res := '0';
+      for I in 0 .. V.Typ.Abound.Len - 1 loop
+         E := Read_Std_Logic (V.Mem, I);
+         if E = '-' then
+            return '-';
+         elsif To_X01 (E) = 'X' then
+            Res := 'X';
+         end if;
+      end loop;
+      return Res;
+   end Has_Xd;
+
+   function Match_Cmp_Vec_Vec (Left, Right : Memtyp;
+                               Map : Order_Map_Type;
+                               Is_Signed : Boolean;
+                               Loc : Location_Type) return Memtyp
+   is
+      Llen : constant Uns32 := Left.Typ.Abound.Len;
+      Rlen : constant Uns32 := Right.Typ.Abound.Len;
+      L, R : Std_Ulogic;
+      Res : Std_Ulogic;
+      Cmp : Order_Type;
+   begin
+      if Rlen = 0 or Llen = 0 then
+         Warn_Compare_Null (Loc);
+         Res := 'X';
+      else
+         L := Has_Xd (Left);
+         R := Has_Xd (Right);
+         if L = '-' or R = '-' then
+            Warning_Msg_Synth (+Loc, "'-' found in compare string");
+            Res := 'X';
+         elsif L = 'X' or R = 'X' then
+            Res := 'X';
+         else
+            if Is_Signed then
+               Cmp := Compare_Sgn_Sgn (Left, Right, Equal, Loc);
+            else
+               Cmp := Compare_Uns_Uns (Left, Right, Equal, Loc);
+            end if;
+            Res := Map (Cmp);
+         end if;
+      end if;
+
+      return Create_Memory_U8 (Std_Ulogic'Pos (Res), Logic_Type);
+   end Match_Cmp_Vec_Vec;
 end Synth.Ieee.Numeric_Std;

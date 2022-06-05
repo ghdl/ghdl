@@ -44,7 +44,7 @@ package Synth.Ieee.Std_Logic_1164 is
       '-'   --  Don't care.
      );
 
-   subtype X01 is Std_Ulogic range 'X' .. '1';
+   subtype X01  is Std_Ulogic range 'X' .. '1';
 
    function Read_Std_Logic (M : Memory_Ptr; Off : Uns32) return Std_Ulogic;
    procedure Write_Std_Logic (M : Memory_Ptr; Off : Uns32; Val : Std_Ulogic);
@@ -60,11 +60,11 @@ package Synth.Ieee.Std_Logic_1164 is
 
    type Table_1d_X01 is array (Std_Ulogic) of X01;
 
-   --                                  UX01ZWLH-
-   To_X01  : constant Table_1d_X01 := "XX01XX01X";
-   Map_X01 : constant Table_1d     := "XX01XX01X";
-   Map_X01Z : constant Table_1d    := "XX01ZX01X"; --  Note: W => X
-   Map_UX01 : constant Table_1d    := "UX01XX01X";
+   --                                    UX01ZWLH-
+   To_X01   : constant Table_1d_X01  := "XX01XX01X";
+   Map_X01  : constant Table_1d      := "XX01XX01X";
+   Map_X01Z : constant Table_1d      := "XX01ZX01X"; --  Note: W => X
+   Map_UX01 : constant Table_1d      := "UX01XX01X";
 
    And_Table : constant Table_2d :=
    --  UX01ZWLH-
