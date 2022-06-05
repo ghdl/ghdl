@@ -1495,4 +1495,43 @@ package body Synth.Ieee.Numeric_Std is
       return Res;
    end Minmax;
 
+   function Offset_To_Index (Off : Int32; Typ : Type_Acc) return Int32 is
+   begin
+      case Typ.Abound.Dir is
+         when Dir_To =>
+            return Typ.Abound.Left + Off;
+         when Dir_Downto =>
+            return Typ.Abound.Left - Off;
+      end case;
+   end Offset_To_Index;
+
+   function Find_Rightmost (Arg : Memtyp; Val : Memtyp) return Int32
+   is
+      Len : constant Uns32 := Arg.Typ.Abound.Len;
+      Y : Std_Ulogic;
+   begin
+      Y := Read_Std_Logic (Val.Mem, 0);
+
+      for I in reverse 1 .. Len loop
+         if Match_Eq_Table (Read_Std_Logic (Arg.Mem, I - 1), Y) = '1' then
+            return Offset_To_Index (Int32 (I - 1), Arg.Typ);
+         end if;
+      end loop;
+      return -1;
+   end Find_Rightmost;
+
+   function Find_Leftmost (Arg : Memtyp; Val : Memtyp) return Int32
+   is
+      Len : constant Uns32 := Arg.Typ.Abound.Len;
+      Y : Std_Ulogic;
+   begin
+      Y := Read_Std_Logic (Val.Mem, 0);
+
+      for I in 1 .. Len loop
+         if Match_Eq_Table (Read_Std_Logic (Arg.Mem, I - 1), Y) = '1' then
+            return Offset_To_Index (Int32 (I - 1), Arg.Typ);
+         end if;
+      end loop;
+      return -1;
+   end Find_Leftmost;
 end Synth.Ieee.Numeric_Std;

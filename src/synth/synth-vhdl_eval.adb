@@ -2082,6 +2082,19 @@ package body Synth.Vhdl_Eval is
             return Minmax (Get_Memtyp (Param1), Get_Memtyp (Param2),
                            True, False);
 
+         when Iir_Predefined_Ieee_Numeric_Std_Find_Rightmost_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Find_Rightmost_Sgn =>
+            return Create_Memory_Discrete
+              (Int64 (Find_Rightmost (Get_Memtyp (Param1),
+                                      Get_Memtyp (Param2))),
+               Res_Typ);
+         when Iir_Predefined_Ieee_Numeric_Std_Find_Leftmost_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Find_Leftmost_Sgn =>
+            return Create_Memory_Discrete
+              (Int64 (Find_Leftmost (Get_Memtyp (Param1),
+                                     Get_Memtyp (Param2))),
+               Res_Typ);
+
          when Iir_Predefined_Ieee_Math_Real_Log2 =>
             declare
                function Log2 (Arg : Fp64) return Fp64;

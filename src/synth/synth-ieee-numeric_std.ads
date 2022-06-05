@@ -130,4 +130,7 @@ package Synth.Ieee.Numeric_Std is
    function Minmax (L, R : Memtyp; Is_Signed : Boolean; Is_Max : Boolean)
                    return Memtyp;
 
+   --  Find_Rightmost/Find_Leftmost
+   function Find_Rightmost (Arg : Memtyp; Val : Memtyp) return Int32;
+   function Find_Leftmost (Arg : Memtyp; Val : Memtyp) return Int32;
 end Synth.Ieee.Numeric_Std;
