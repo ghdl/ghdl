@@ -5704,6 +5704,9 @@ package Vhdl.Nodes is
 
       Iir_Predefined_Ieee_1164_Condition_Operator,
 
+      Iir_Predefined_Ieee_1164_To_01_Log_Log,
+      Iir_Predefined_Ieee_1164_To_01_Slv_Log,
+
       Iir_Predefined_Ieee_1164_To_Hstring,
       Iir_Predefined_Ieee_1164_To_Ostring,
 
@@ -5992,6 +5995,12 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_Numeric_Std_Is_X_Uns,
       Iir_Predefined_Ieee_Numeric_Std_Is_X_Sgn,
 
+      Iir_Predefined_Ieee_Numeric_Std_To_Hstring_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_To_Ostring_Uns,
+
+      Iir_Predefined_Ieee_Numeric_Std_To_Hstring_Sgn,
+      Iir_Predefined_Ieee_Numeric_Std_To_Ostring_Sgn,
+
       --  numeric_bit
 
       --  To_Integer, To_Unsigned, to_Signed
@@ -6003,8 +6012,33 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_Numeric_Bit_Tosgn_Int_Sgn_Sgn,
 
       --  Numeric_Std_Unsigned (ieee2008)
+      Iir_Predefined_Ieee_Numeric_Std_Unsigned_Add_Slv_Slv,
+      Iir_Predefined_Ieee_Numeric_Std_Unsigned_Add_Slv_Nat,
+      Iir_Predefined_Ieee_Numeric_Std_Unsigned_Add_Nat_Slv,
+
+      Iir_Predefined_Ieee_Numeric_Std_Unsigned_Sub_Slv_Slv,
+      Iir_Predefined_Ieee_Numeric_Std_Unsigned_Sub_Slv_Nat,
+      Iir_Predefined_Ieee_Numeric_Std_Unsigned_Sub_Nat_Slv,
+
+      Iir_Predefined_Ieee_Numeric_Std_Unsigned_Find_Rightmost,
+      Iir_Predefined_Ieee_Numeric_Std_Unsigned_Find_Leftmost,
+
+      Iir_Predefined_Ieee_Numeric_Std_Unsigned_Shift_Left,
+      Iir_Predefined_Ieee_Numeric_Std_Unsigned_Shift_Right,
+
+      Iir_Predefined_Ieee_Numeric_Std_Unsigned_Rotate_Left,
+      Iir_Predefined_Ieee_Numeric_Std_Unsigned_Rotate_Right,
+
       Iir_Predefined_Ieee_Numeric_Std_Unsigned_To_Integer_Slv_Nat,
-      Iir_Predefined_Ieee_Numeric_Std_Unsigned_To_Slv_Nat_Nat_Slv,
+
+      Iir_Predefined_Ieee_Numeric_Std_Unsigned_To_Slv_Nat_Nat,
+      Iir_Predefined_Ieee_Numeric_Std_Unsigned_To_Slv_Nat_Slv,
+
+      Iir_Predefined_Ieee_Numeric_Std_Unsigned_Resize_Slv_Nat,
+      Iir_Predefined_Ieee_Numeric_Std_Unsigned_Resize_Slv_Slv,
+
+      Iir_Predefined_Ieee_Numeric_Std_Unsigned_Maximum_Slv_Slv,
+      Iir_Predefined_Ieee_Numeric_Std_Unsigned_Minimum_Slv_Slv,
 
       --  Math_Real
       Iir_Predefined_Ieee_Math_Real_Ceil,
@@ -6351,6 +6385,11 @@ package Vhdl.Nodes is
      is Iir_Predefined_Functions range
        Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns ..
        Iir_Predefined_Ieee_Numeric_Std_Xnor_Sgn_Sgn;
+
+   subtype Iir_Predefined_Ieee_Numeric_Std_Unsigned_Operators
+      is Iir_Predefined_Functions range
+     Iir_Predefined_Ieee_Numeric_Std_Unsigned_Add_Slv_Slv ..
+     Iir_Predefined_Ieee_Numeric_Std_Unsigned_Sub_Nat_Slv;
 
    --  Size of scalar types.
    --  Their size is determined during analysis (using the range), so that

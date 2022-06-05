@@ -55,10 +55,59 @@ package body Vhdl.Ieee.Numeric_Std_Unsigned is
       Classify_Arg (Arg1, Arg1_Kind);
       Classify_Arg (Arg2, Arg2_Kind);
       case Get_Identifier (Decl) is
+         when Name_Op_Plus =>
+            if Arg1_Kind = Arg_Slv and Arg2_Kind = Arg_Slv then
+               Res := Iir_Predefined_Ieee_Numeric_Std_Unsigned_Add_Slv_Slv;
+            elsif Arg1_Kind = Arg_Slv and Arg2_Kind = Arg_Int then
+               Res := Iir_Predefined_Ieee_Numeric_Std_Unsigned_Add_Slv_Nat;
+            elsif Arg1_Kind = Arg_Int and Arg2_Kind = Arg_Slv then
+               Res := Iir_Predefined_Ieee_Numeric_Std_Unsigned_Add_Nat_Slv;
+            end if;
+         when Name_Op_Minus =>
+            if Arg1_Kind = Arg_Slv and Arg2_Kind = Arg_Slv then
+               Res := Iir_Predefined_Ieee_Numeric_Std_Unsigned_Sub_Slv_Slv;
+            elsif Arg1_Kind = Arg_Slv and Arg2_Kind = Arg_Int then
+               Res := Iir_Predefined_Ieee_Numeric_Std_Unsigned_Sub_Slv_Nat;
+            elsif Arg1_Kind = Arg_Int and Arg2_Kind = Arg_Slv then
+               Res := Iir_Predefined_Ieee_Numeric_Std_Unsigned_Sub_Nat_Slv;
+            end if;
          when Name_To_Stdlogicvector =>
             if Arg1_Kind = Arg_Int and Arg2_Kind = Arg_Int then
-               Res :=
-                 Iir_Predefined_Ieee_Numeric_Std_Unsigned_To_Slv_Nat_Nat_Slv;
+               Res := Iir_Predefined_Ieee_Numeric_Std_Unsigned_To_Slv_Nat_Nat;
+            elsif Arg1_Kind = Arg_Int and Arg2_Kind = Arg_Slv then
+               Res := Iir_Predefined_Ieee_Numeric_Std_Unsigned_To_Slv_Nat_Slv;
+            end if;
+         when Name_Resize =>
+            if Arg2_Kind = Arg_Int then
+               Res := Iir_Predefined_Ieee_Numeric_Std_Unsigned_Resize_Slv_Nat;
+            elsif Arg2_Kind = Arg_Slv then
+               Res := Iir_Predefined_Ieee_Numeric_Std_Unsigned_Resize_Slv_Slv;
+            end if;
+         when Name_Find_Leftmost =>
+            pragma Assert (Arg1_Kind = Arg_Slv and Arg2_Kind = Arg_Log);
+            Res := Iir_Predefined_Ieee_Numeric_Std_Unsigned_Find_Leftmost;
+         when Name_Find_Rightmost =>
+            pragma Assert (Arg1_Kind = Arg_Slv and Arg2_Kind = Arg_Log);
+            Res := Iir_Predefined_Ieee_Numeric_Std_Unsigned_Find_Rightmost;
+         when Name_Shift_Left =>
+            pragma Assert (Arg1_Kind = Arg_Slv and Arg2_Kind = Arg_Int);
+            Res := Iir_Predefined_Ieee_Numeric_Std_Unsigned_Shift_Left;
+         when Name_Shift_Right =>
+            pragma Assert (Arg1_Kind = Arg_Slv and Arg2_Kind = Arg_Int);
+            Res := Iir_Predefined_Ieee_Numeric_Std_Unsigned_Shift_Right;
+         when Name_Rotate_Left =>
+            pragma Assert (Arg1_Kind = Arg_Slv and Arg2_Kind = Arg_Int);
+            Res := Iir_Predefined_Ieee_Numeric_Std_Unsigned_Rotate_Left;
+         when Name_Rotate_Right =>
+            pragma Assert (Arg1_Kind = Arg_Slv and Arg2_Kind = Arg_Int);
+            Res := Iir_Predefined_Ieee_Numeric_Std_Unsigned_Rotate_Right;
+         when Name_Maximum =>
+            if Arg1_Kind = Arg_Slv and Arg2_Kind = Arg_Slv then
+               Res := Iir_Predefined_Ieee_Numeric_Std_Unsigned_Maximum_Slv_Slv;
+            end if;
+         when Name_Minimum =>
+            if Arg1_Kind = Arg_Slv and Arg2_Kind = Arg_Slv then
+               Res := Iir_Predefined_Ieee_Numeric_Std_Unsigned_Minimum_Slv_Slv;
             end if;
          when others =>
             null;

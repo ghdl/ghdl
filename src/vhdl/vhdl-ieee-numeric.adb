@@ -626,6 +626,14 @@ package body Vhdl.Ieee.Numeric is
      (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Is_X_Sgn,
       Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Is_X_Uns);
 
+   To_Hstring_Patterns : constant Shift_Pattern_Type :=
+     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_To_Hstring_Sgn,
+      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_To_Hstring_Uns);
+
+   To_Ostring_Patterns : constant Shift_Pattern_Type :=
+     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_To_Ostring_Sgn,
+      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_To_Ostring_Uns);
+
    Error : exception;
 
    procedure Extract_Declarations (Pkg_Decl : Iir_Package_Declaration;
@@ -1019,10 +1027,6 @@ package body Vhdl.Ieee.Numeric is
                         Handle_Binary (Xor_Patterns);
                      when Name_Xnor =>
                         Handle_Binary (Xnor_Patterns);
-                     when Name_To_Bstring
-                       | Name_To_Ostring
-                       | Name_To_Hstring =>
-                        null;
                      when Name_To_Unsigned =>
                         Handle_To_Unsigned;
                      when Name_To_Signed =>
@@ -1091,6 +1095,12 @@ package body Vhdl.Ieee.Numeric is
                         Handle_To_X01 (To_Ux01_Patterns);
                      when Name_Is_X =>
                         Handle_To_X01 (Is_X_Patterns);
+                     when Name_To_Bstring =>
+                        null;
+                     when Name_To_Ostring =>
+                        Handle_To_X01 (To_Ostring_Patterns);
+                     when Name_To_Hstring =>
+                        Handle_To_X01 (To_Hstring_Patterns);
                      when others =>
                         null;
                   end case;
