@@ -582,6 +582,26 @@ package body Vhdl.Ieee.Numeric is
      (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Find_Rightmost_Sgn,
       Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Find_Rightmost_Uns);
 
+   To_01_Patterns : constant Shift_Pattern_Type :=
+     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_To_01_Sgn,
+      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_To_01_Uns);
+
+   To_X01_Patterns : constant Shift_Pattern_Type :=
+     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_To_X01_Sgn,
+      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_To_X01_Uns);
+
+   To_X01z_Patterns : constant Shift_Pattern_Type :=
+     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_To_X01Z_Sgn,
+      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_To_X01Z_Uns);
+
+   To_Ux01_Patterns : constant Shift_Pattern_Type :=
+     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_To_UX01_Sgn,
+      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_To_UX01_Uns);
+
+   Is_X_Patterns : constant Shift_Pattern_Type :=
+     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Is_X_Sgn,
+      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Is_X_Uns);
+
    Error : exception;
 
    procedure Extract_Declarations (Pkg_Decl : Iir_Package_Declaration;
@@ -804,17 +824,19 @@ package body Vhdl.Ieee.Numeric is
             raise Error;
          end if;
 
-         case Arg1_Sign is
-            when Type_Unsigned =>
-               Predefined := Iir_Predefined_Ieee_Numeric_Std_To_01_Uns;
-            when Type_Signed =>
-               Predefined := Iir_Predefined_Ieee_Numeric_Std_To_01_Sgn;
-            when others =>
-               raise Error;
-         end case;
+         Predefined := To_01_Patterns (Arg1_Sign);
 
          Set_Implicit_Definition (Decl, Predefined);
       end Handle_To_01;
+
+      procedure Handle_To_X01 (Pats : Shift_Pattern_Type) is
+      begin
+         if Arg1_Kind /= Arg_Vect then
+            raise Error;
+         end if;
+
+         Set_Implicit_Definition (Decl, Pats (Arg1_Sign));
+      end Handle_To_X01;
 
       procedure Handle_Shift (Pats : Shift_Pattern_Type; Sh_Sign : Sign_Kind)
       is
@@ -1037,6 +1059,14 @@ package body Vhdl.Ieee.Numeric is
                         Handle_Unary (Red_Xor_Patterns);
                      when Name_Xnor =>
                         Handle_Unary (Red_Xnor_Patterns);
+                     when Name_To_X01 =>
+                        Handle_To_X01 (To_X01_Patterns);
+                     when Name_To_X01Z =>
+                        Handle_To_X01 (To_X01z_Patterns);
+                     when Name_To_UX01 =>
+                        Handle_To_X01 (To_Ux01_Patterns);
+                     when Name_Is_X =>
+                        Handle_To_X01 (Is_X_Patterns);
                      when others =>
                         null;
                   end case;
