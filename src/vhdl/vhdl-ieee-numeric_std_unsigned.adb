@@ -77,6 +77,12 @@ package body Vhdl.Ieee.Numeric_Std_Unsigned is
             elsif Arg1_Kind = Arg_Int and Arg2_Kind = Arg_Slv then
                Res := Iir_Predefined_Ieee_Numeric_Std_Unsigned_To_Slv_Nat_Slv;
             end if;
+         when Name_To_Stdulogicvector =>
+            if Arg1_Kind = Arg_Int and Arg2_Kind = Arg_Int then
+               Res := Iir_Predefined_Ieee_Numeric_Std_Unsigned_To_Suv_Nat_Nat;
+            elsif Arg1_Kind = Arg_Int and Arg2_Kind = Arg_Slv then
+               Res := Iir_Predefined_Ieee_Numeric_Std_Unsigned_To_Suv_Nat_Suv;
+            end if;
          when Name_Resize =>
             if Arg2_Kind = Arg_Int then
                Res := Iir_Predefined_Ieee_Numeric_Std_Unsigned_Resize_Slv_Nat;

@@ -2102,12 +2102,14 @@ package body Synth.Vhdl_Eval is
 
          when Iir_Predefined_Ieee_Numeric_Std_Touns_Nat_Nat_Uns
             | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Int
-            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_To_Slv_Nat_Nat =>
+            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_To_Slv_Nat_Nat
+            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_To_Suv_Nat_Nat =>
             return Eval_To_Log_Vector
               (Uns64 (Read_Discrete (Param1)), Read_Discrete (Param2),
                Res_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Touns_Nat_Uns_Uns
-            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_To_Slv_Nat_Slv =>
+            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_To_Slv_Nat_Slv
+            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_To_Suv_Nat_Suv =>
             return Eval_To_Log_Vector
               (Uns64 (Read_Discrete (Param1)), Int64 (Param2.Typ.Abound.Len),
                Res_Typ);

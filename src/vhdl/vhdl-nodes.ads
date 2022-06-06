@@ -6034,6 +6034,9 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_Numeric_Std_Unsigned_To_Slv_Nat_Nat,
       Iir_Predefined_Ieee_Numeric_Std_Unsigned_To_Slv_Nat_Slv,
 
+      Iir_Predefined_Ieee_Numeric_Std_Unsigned_To_Suv_Nat_Nat,
+      Iir_Predefined_Ieee_Numeric_Std_Unsigned_To_Suv_Nat_Suv,
+
       Iir_Predefined_Ieee_Numeric_Std_Unsigned_Resize_Slv_Nat,
       Iir_Predefined_Ieee_Numeric_Std_Unsigned_Resize_Slv_Slv,
 
@@ -6041,10 +6044,14 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_Numeric_Std_Unsigned_Minimum_Slv_Slv,
 
       --  Math_Real
+      Iir_Predefined_Ieee_Math_Real_Sign,
       Iir_Predefined_Ieee_Math_Real_Ceil,
       Iir_Predefined_Ieee_Math_Real_Floor,
       Iir_Predefined_Ieee_Math_Real_Round,
+      Iir_Predefined_Ieee_Math_Real_Trunc,
+      Iir_Predefined_Ieee_Math_Real_Log,
       Iir_Predefined_Ieee_Math_Real_Log2,
+      Iir_Predefined_Ieee_Math_Real_Log10,
       Iir_Predefined_Ieee_Math_Real_Sin,
       Iir_Predefined_Ieee_Math_Real_Cos,
       Iir_Predefined_Ieee_Math_Real_Arctan,
