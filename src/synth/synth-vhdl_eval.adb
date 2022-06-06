@@ -791,6 +791,12 @@ package body Synth.Vhdl_Eval is
             return Eval_Logic_Scalar (Left, Right, Or_Table);
          when Iir_Predefined_Ieee_1164_Scalar_Xor =>
             return Eval_Logic_Scalar (Left, Right, Xor_Table);
+         when Iir_Predefined_Ieee_1164_Scalar_Nand =>
+            return Eval_Logic_Scalar (Left, Right, Nand_Table);
+         when Iir_Predefined_Ieee_1164_Scalar_Nor =>
+            return Eval_Logic_Scalar (Left, Right, Nor_Table);
+         when Iir_Predefined_Ieee_1164_Scalar_Xnor =>
+            return Eval_Logic_Scalar (Left, Right, Xnor_Table);
 
          when Iir_Predefined_Std_Ulogic_Match_Equality =>
             return Eval_Logic_Scalar (Left, Right, Match_Eq_Table);
@@ -1345,13 +1351,22 @@ package body Synth.Vhdl_Eval is
                return Create_Memory_U8 (Std_Ulogic'Pos (Res), Res_Typ);
             end;
 
-         when Iir_Predefined_Ieee_Math_Real_Pow =>
+         when Iir_Predefined_Ieee_Math_Real_Pow_Real_Real =>
             declare
                function Pow (L, R : Fp64) return Fp64;
                pragma Import (C, Pow);
             begin
                return Create_Memory_Fp64
                  (Pow (Read_Fp64 (Left), Read_Fp64 (Right)), Res_Typ);
+            end;
+
+         when Iir_Predefined_Ieee_Math_Real_Mod =>
+            declare
+               function Fmod (L, R : Fp64) return Fp64;
+               pragma Import (C, Fmod);
+            begin
+               return Create_Memory_Fp64
+                 (Fmod (Read_Fp64 (Left), Read_Fp64 (Right)), Res_Typ);
             end;
 
          when others =>
