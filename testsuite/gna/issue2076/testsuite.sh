@@ -5,6 +5,7 @@
 files="
 gcrash-1a.vhdl
 gcrash-6a.vhdl
+gcrash-9a.vhdl
 "
 
 export GHDL_STD_FLAGS=--std=08
