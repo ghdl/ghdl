@@ -2154,7 +2154,13 @@ package body Vhdl.Parse is
                Ret := Create_Iir (Iir_Kind_Subtype_Declaration);
                Location_Copy (Ret, Tm);
                Set_Identifier (Ret, Get_Identifier (Tm));
-               Set_Return_Identifier (Subprg, Ret);
+               if Get_Kind (Subprg) = Iir_Kind_Interface_Function_Declaration
+               then
+                  Error_Msg_Parse
+                    ("return identifier not allowed in interface function");
+               else
+                  Set_Return_Identifier (Subprg, Ret);
+               end if;
                Free_Iir (Tm);
 
                --  Skip 'of'
