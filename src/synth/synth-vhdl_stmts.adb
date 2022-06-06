@@ -1720,7 +1720,9 @@ package body Synth.Vhdl_Stmts is
                Formal := Get_Formal (Assoc);
                pragma Assert (Formal /= Null_Node);
                Formal := Get_Interface_Of_Formal (Formal);
-               if Formal = Inter then
+               --  Compare by identifier, as INTER can be the generic
+               --  interface, while FORMAL is the instantiated one.
+               if Get_Identifier (Formal) = Get_Identifier (Inter) then
                   --  Found.
                   --  Optimize in case assocs are in order.
                   if Assoc = Iterator.First_Named_Assoc then
