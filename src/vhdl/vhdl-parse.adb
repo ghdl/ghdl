@@ -11249,6 +11249,7 @@ package body Vhdl.Parse is
             --  Skip identifier.
             Scan;
          else
+            Id := Null_Identifier;
             Expect (Tok_Identifier);
          end if;
 
