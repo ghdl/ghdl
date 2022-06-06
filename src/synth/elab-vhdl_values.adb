@@ -69,6 +69,25 @@ package body Elab.Vhdl_Values is
       return (V.Typ, Strip_Alias_Const (V.Val));
    end Strip_Alias_Const;
 
+   function Get_Memory (V : Value_Acc) return Memory_Ptr is
+   begin
+      case V.Kind is
+         when Value_Const =>
+            return Get_Memory (V.C_Val);
+         when Value_Alias =>
+            return Get_Memory (V.A_Obj) + V.A_Off.Mem_Off;
+         when Value_Memory =>
+            return V.Mem;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Get_Memory;
+
+   function Get_Memory (V : Valtyp) return Memory_Ptr is
+   begin
+      return Get_Memory (V.Val);
+   end Get_Memory;
+
    function Is_Equal (L, R : Valtyp) return Boolean is
    begin
       return Is_Equal (Get_Memtyp (L), Get_Memtyp (R));

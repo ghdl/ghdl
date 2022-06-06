@@ -167,6 +167,10 @@ package Elab.Vhdl_Values is
    --  is not correct anymore.
    function Strip_Alias_Const (V : Valtyp) return Valtyp;
 
+   --  Return the memory of a Value_Memory value, but also handle const and
+   --  aliases.
+   function Get_Memory (V : Valtyp) return Memory_Ptr;
+
    --  Return the memtyp of V; also strip const and aliases.
    function Get_Memtyp (V : Valtyp) return Memtyp;
 

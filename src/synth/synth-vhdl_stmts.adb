@@ -497,8 +497,7 @@ package body Synth.Vhdl_Stmts is
             Error_Msg_Synth
               (+Loc, "cannot assign a net to a static value");
          else
-            Strip_Const (V);
-            Copy_Memory (Targ.Val.Mem + Off.Mem_Off, V.Val.Mem, V.Typ.Sz);
+            Copy_Memory (Targ.Val.Mem + Off.Mem_Off, Get_Memory (V), V.Typ.Sz);
          end if;
       end if;
    end Synth_Assignment_Simple;
