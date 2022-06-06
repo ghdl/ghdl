@@ -16,11 +16,13 @@
 
 with Std_Names; use Std_Names;
 
+with Vhdl.Std_Package;
+
 package body Vhdl.Ieee.Math_Real is
    procedure Extract_Declarations (Pkg : Iir_Package_Declaration)
    is
       Decl : Iir;
-      Predef : Iir_Predefined_Functions;
+      Def : Iir_Predefined_Functions;
    begin
       Math_Real_Pkg := Pkg;
 
@@ -36,28 +38,41 @@ package body Vhdl.Ieee.Math_Real is
 
          case Get_Kind (Decl) is
             when Iir_Kind_Function_Declaration =>
-               Predef := Iir_Predefined_None;
+               Def := Iir_Predefined_None;
                case Get_Identifier (Decl) is
+                  when Name_Mod =>
+                     Def := Iir_Predefined_Ieee_Math_Real_Mod;
                   when Name_Ceil =>
-                     Predef := Iir_Predefined_Ieee_Math_Real_Ceil;
+                     Def := Iir_Predefined_Ieee_Math_Real_Ceil;
                   when Name_Floor =>
-                     Predef := Iir_Predefined_Ieee_Math_Real_Floor;
+                     Def := Iir_Predefined_Ieee_Math_Real_Floor;
                   when Name_Round =>
-                     Predef := Iir_Predefined_Ieee_Math_Real_Round;
+                     Def := Iir_Predefined_Ieee_Math_Real_Round;
                   when Name_Log2 =>
-                     Predef := Iir_Predefined_Ieee_Math_Real_Log2;
+                     Def := Iir_Predefined_Ieee_Math_Real_Log2;
                   when Name_Sin =>
-                     Predef := Iir_Predefined_Ieee_Math_Real_Sin;
+                     Def := Iir_Predefined_Ieee_Math_Real_Sin;
                   when Name_Cos =>
-                     Predef := Iir_Predefined_Ieee_Math_Real_Cos;
+                     Def := Iir_Predefined_Ieee_Math_Real_Cos;
                   when Name_Arctan =>
-                     Predef := Iir_Predefined_Ieee_Math_Real_Arctan;
+                     Def := Iir_Predefined_Ieee_Math_Real_Arctan;
                   when Name_Op_Exp =>
-                     Predef := Iir_Predefined_Ieee_Math_Real_Pow;
+                     declare
+                        use Vhdl.Std_Package;
+                        Inter : constant Iir :=
+                          Get_Interface_Declaration_Chain (Decl);
+                        Itype : constant Iir := Get_Type (Inter);
+                     begin
+                        if Itype = Integer_Subtype_Definition then
+                           Def := Iir_Predefined_Ieee_Math_Real_Pow_Int_Real;
+                        elsif Itype = Real_Subtype_Definition then
+                           Def := Iir_Predefined_Ieee_Math_Real_Pow_Real_Real;
+                        end if;
+                     end;
                   when others =>
                      null;
                end case;
-               Set_Implicit_Definition (Decl, Predef);
+               Set_Implicit_Definition (Decl, Def);
             when Iir_Kind_Constant_Declaration =>
                null;
             when others =>
