@@ -621,6 +621,7 @@ package body Std_Names is
       Def ("ieee",                  Name_Ieee);
       Def ("std_logic_1164",        Name_Std_Logic_1164);
       Def ("vital_timing",          Name_VITAL_Timing);
+      Def ("vital_primitives",      Name_VITAL_Primitives);
       Def ("numeric_std",           Name_Numeric_Std);
       Def ("numeric_bit",           Name_Numeric_Bit);
       Def ("numeric_std_unsigned",  Name_Numeric_Std_Unsigned);

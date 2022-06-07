@@ -1995,13 +1995,32 @@ package body Vhdl.Sem is
                end loop;
             end;
 
-            --  Mark the procedure as suspendable, unless in a std packages.
+            --  Mark the procedure as suspendable, unless in a std or
+            --  most ieee packages.
             --  This is a minor optimization.
-            if Get_Library (Get_Design_File (Get_Current_Design_Unit))
-              /= Libraries.Std_Library
-            then
-               Set_Suspend_Flag (Subprg, True);
-            end if;
+            declare
+               Lib : constant Iir :=
+                 Get_Library (Get_Design_File (Get_Current_Design_Unit));
+            begin
+               if Lib = Libraries.Std_Library then
+                  --  No procedures in std have a wait statement.
+                  null;
+               elsif Get_Identifier (Lib) = Std_Names.Name_Ieee then
+                  --  Package ieee.vital_primitives has wait statements.
+                  declare
+                     Unit : constant Iir :=
+                       Get_Library_Unit (Get_Current_Design_Unit);
+                     Unit_Id : constant Name_Id := Get_Identifier (Unit);
+                  begin
+                     if Unit_Id = Std_Names.Name_VITAL_Primitives then
+                        Set_Suspend_Flag (Subprg, True);
+                     end if;
+                  end;
+               else
+                  --  User procedures may have wait statements.
+                  Set_Suspend_Flag (Subprg, True);
+               end if;
+            end;
          when others =>
             Error_Kind ("sem_subprogram_declaration", Subprg);
       end case;
