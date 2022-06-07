@@ -1165,6 +1165,7 @@ package body Synth.Vhdl_Eval is
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns
             | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Slv
             | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Uns_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Uns_Uns
             | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Add_Slv_Slv =>
             return Add_Uns_Uns (Left, Right, +Expr);
 
@@ -1172,7 +1173,8 @@ package body Synth.Vhdl_Eval is
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Log =>
             return Add_Uns_Uns (Left, Log_To_Vec (Right, Left), +Expr);
 
-         when Iir_Predefined_Ieee_Numeric_Std_Add_Log_Uns =>
+         when Iir_Predefined_Ieee_Numeric_Std_Add_Log_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Log_Slv =>
             return Add_Uns_Uns (Log_To_Vec (Left, Right), Right, +Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Nat
@@ -1180,10 +1182,12 @@ package body Synth.Vhdl_Eval is
             | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Add_Slv_Nat =>
             return Add_Uns_Nat (Left, To_Uns64 (Read_Discrete (Right)), +Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Add_Nat_Uns
-            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Add_Nat_Slv =>
+            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Add_Nat_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Int_Slv =>
             return Add_Uns_Nat (Right, To_Uns64 (Read_Discrete (Left)), +Expr);
 
-         when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Sgn =>
+         when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Sgn_Sgn =>
             return Add_Sgn_Sgn (Left, Right, +Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Int =>
             return Add_Sgn_Int (Left, Read_Discrete (Right), +Expr);
@@ -1196,18 +1200,23 @@ package body Synth.Vhdl_Eval is
             return Add_Sgn_Sgn (Log_To_Vec (Left, Right), Right, +Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Uns
-            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Sub_Slv_Slv =>
+            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Sub_Slv_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Slv_Slv =>
             return Sub_Uns_Uns (Left, Right, +Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Nat
-            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Sub_Slv_Nat =>
+            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Sub_Slv_Nat
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Slv_Int =>
             return Sub_Uns_Nat (Left, To_Uns64 (Read_Discrete (Right)), +Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Nat_Uns
-            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Sub_Nat_Slv =>
+            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Sub_Nat_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Int_Slv =>
             return Sub_Nat_Uns (To_Uns64 (Read_Discrete (Left)), Right, +Expr);
 
-         when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Log =>
+         when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Log
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Slv_Log =>
             return Sub_Uns_Uns (Left, Log_To_Vec (Right, Left), +Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Sub_Log_Uns =>
+         when Iir_Predefined_Ieee_Numeric_Std_Sub_Log_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Log_Slv =>
             return Sub_Uns_Uns (Log_To_Vec (Left, Right), Right, +Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Sgn =>
