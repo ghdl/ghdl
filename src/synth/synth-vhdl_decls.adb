@@ -18,6 +18,7 @@
 
 with Types; use Types;
 with Std_Names;
+with Errorout; use Errorout;
 
 with Netlists.Builders; use Netlists.Builders;
 with Netlists.Folds; use Netlists.Folds;
@@ -697,10 +698,11 @@ package body Synth.Vhdl_Decls is
             --  TODO: maybe simply remove it.
             if Def_Val = No_Net then
                Warning_Msg_Synth
-                 (+Decl, "%n is never assigned and has no default value",
-                  (1 => +Decl));
+                 (Warnid_Nowrite, +Decl,
+                  "%n is never assigned and has no default value", +Decl);
             else
-               Warning_Msg_Synth (+Decl, "%n is never assigned", (1 => +Decl));
+               Warning_Msg_Synth
+                 (Warnid_Nowrite, +Decl, "%n is never assigned", +Decl);
             end if;
          end if;
          if Def_Val = No_Net then

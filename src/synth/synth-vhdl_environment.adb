@@ -50,7 +50,7 @@ package body Synth.Vhdl_Environment is
    begin
       if Last_Off < First_Off then
          Warning_Msg_Synth
-           (+Decl.Obj, "no assignment for %n", +Decl.Obj);
+           (Warnid_Nowrite, +Decl.Obj, "no assignment for %n", +Decl.Obj);
       elsif Last_Off = First_Off then
          Warning_Msg_Synth (+Decl.Obj, "no assignment for offset %v of %n",
                             (1 => +First_Off, 2 => +Decl.Obj));

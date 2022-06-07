@@ -106,6 +106,10 @@ package Errorout is
       --  FIXME: currently only subprograms are handled.
       Warnid_Unused,
 
+      --  A variable or signal is never written.
+      --  (only for synthesis)
+      Warnid_Nowrite,
+
       --  Others choice is not needed, all values are already covered.
       Warnid_Others,
 
@@ -320,6 +324,7 @@ private
         | Warnid_Runtime_Error | Warnid_Pure | Warnid_Specs | Warnid_Hide
         | Warnid_Pragma | Warnid_Analyze_Assert | Warnid_Attribute
         | Warnid_Deprecated_Option | Warnid_Unexpected_Option
+        | Warnid_Nowrite
         | Warnid_No_Wait | Warnid_Useless
         | Msgid_Warning  => (Enabled => True, Error => False),
       Warnid_Delta_Cycle | Warnid_Body | Warnid_Static | Warnid_Nested_Comment

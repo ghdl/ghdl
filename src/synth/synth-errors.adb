@@ -33,12 +33,12 @@ package body Synth.Errors is
                   +Loc, Msg, Args);
    end Error_Msg_Synth;
 
-   procedure Warning_Msg_Synth (Loc : Location_Type;
+   procedure Warning_Msg_Synth (Warnid : Msgid_Warnings;
+                                Loc : Location_Type;
                                 Msg : String;
                                 Arg1 : Earg_Type) is
    begin
-      Report_Msg (Msgid_Warning, Errorout.Elaboration,
-                  +Loc, Msg, (1 => Arg1));
+      Report_Msg (Warnid, Errorout.Elaboration, +Loc, Msg, (1 => Arg1));
    end Warning_Msg_Synth;
 
    procedure Warning_Msg_Synth (Loc : Location_Type;
