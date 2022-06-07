@@ -513,7 +513,9 @@ package body Elab.Vhdl_Context is
 
    function Get_Instance_By_Scope
      (Syn_Inst: Synth_Instance_Acc; Scope: Sim_Info_Acc)
-     return Synth_Instance_Acc is
+     return Synth_Instance_Acc
+   is
+      pragma Assert (Scope /= null);
    begin
       case Scope.Kind is
          when Kind_Block
@@ -524,7 +526,9 @@ package body Elab.Vhdl_Context is
             begin
                Current := Syn_Inst;
                while Current /= null loop
-                  if Current.Block_Scope = Scope then
+                  if Current.Block_Scope = Scope
+                    or else Current.Uninst_Scope = Scope
+                  then
                      return Current;
                   end if;
                   Current := Current.Up_Block;
