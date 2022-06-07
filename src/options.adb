@@ -68,7 +68,7 @@ package body Options is
 
    function Option_Warning (Opt: String; Val : Boolean) return Option_State is
    begin
-      --  Handle -Werror.
+      --  Handle -Werror and -Wno-error
       if Opt = "error" then
          Warning_Error (Msgid_Warning, Val);
          for I in Msgid_Warnings loop
@@ -77,7 +77,7 @@ package body Options is
          return Option_Ok;
       end if;
 
-      --  Handle -Werror=xxx
+      --  Handle -Werror=xxx and -Wno-error=xxx
       if Opt'Length >= 6
         and then Opt (Opt'First .. Opt'First + 5) = "error="
       then
