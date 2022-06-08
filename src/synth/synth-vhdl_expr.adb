@@ -2229,9 +2229,10 @@ package body Synth.Vhdl_Expr is
       case Get_Kind (Expr) is
          when Iir_Kind_High_Array_Attribute
            |  Iir_Kind_Low_Array_Attribute
+           |  Iir_Kind_Indexed_Name
            |  Iir_Kind_Integer_Literal =>
             --  The type of this attribute is the type of the index, which is
-            --  not synthesized as atype (only as an index).
+            --  not synthesized as a type (only as an index).
             --  For integer_literal, the type is not really needed, and it
             --  may be created by static evaluation of an array attribute.
             Etype := Get_Base_Type (Etype);
