@@ -97,10 +97,8 @@ get_bt_from_ucontext (void *uctxt, struct backtrace_addrs *bt)
 #ifdef HAVE_BACKTRACE
   bt->size = backtrace (bt->addrs, sizeof (bt->addrs) / sizeof (void *));
   bt->skip = 0;
-  #pragma message "HAVE_BACKTRACE=1"
 #else
   bt->size = 0;
-  #pragma message "HAVE_BACKTRACE=0"
   return;
 #endif
 
