@@ -644,15 +644,43 @@ package body Elab.Vhdl_Types is
       end loop;
    end Get_Declaration_Type;
 
-   procedure Elab_Declaration_Type
-     (Syn_Inst : Synth_Instance_Acc; Decl : Node)
+   function Elab_Declaration_Type
+     (Syn_Inst : Synth_Instance_Acc; Decl : Node) return Type_Acc
    is
-      Atype : constant Node := Get_Declaration_Type (Decl);
+      Atype : Node;
+      Typ : Type_Acc;
    begin
-      if Atype = Null_Node then
-         --  Already elaborated.
-         return;
+      Atype := Get_Subtype_Indication (Decl);
+      if Atype /= Null_Node then
+         case Get_Kind (Atype) is
+            when Iir_Kinds_Subtype_Definition =>
+               if not Get_Is_Ref (Decl) then
+                  --  That's a new type.
+                  Typ := Synth_Subtype_Indication (Syn_Inst, Atype);
+                  Create_Subtype_Object (Syn_Inst, Atype, Typ);
+                  return Typ;
+               end if;
+            when Iir_Kinds_Denoting_Name =>
+               --  Already elaborated.
+               Atype := Get_Type (Get_Named_Entity (Atype));
+            when Iir_Kind_Subtype_Attribute =>
+               declare
+                  Pfx : constant Node := Get_Prefix (Atype);
+                  Vt : Valtyp;
+               begin
+                  Vt := Exec_Name (Syn_Inst, Pfx);
+                  return Vt.Typ;
+               end;
+            when others =>
+               Error_Kind ("elab_declaration_type", Atype);
+         end case;
+      else
+         Atype := Get_Type (Decl);
       end if;
-      Synth_Subtype_Indication (Syn_Inst, Atype);
+      if Get_Kind (Atype) = Iir_Kind_Protected_Type_Declaration then
+         return Protected_Type;
+      else
+         return Get_Subtype_Object (Syn_Inst, Atype);
+      end if;
    end Elab_Declaration_Type;
 end Elab.Vhdl_Types;

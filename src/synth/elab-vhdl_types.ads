@@ -66,6 +66,6 @@ package Elab.Vhdl_Types is
                                         return Type_Acc;
 
    --  Elaborate the type of DECL.
-   procedure Elab_Declaration_Type
-     (Syn_Inst : Synth_Instance_Acc; Decl : Node);
+   function Elab_Declaration_Type
+     (Syn_Inst : Synth_Instance_Acc; Decl : Node) return Type_Acc;
 end Elab.Vhdl_Types;

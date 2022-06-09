@@ -308,6 +308,7 @@ package Elab.Vhdl_Objtypes is
    Boolean_Type : Type_Acc := null;
    Logic_Type : Type_Acc := null;
    Bit_Type : Type_Acc := null;
+   Protected_Type : Type_Acc := null;
 
    --  Also set by initialize.
    Bit0 : Memtyp;

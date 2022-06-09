@@ -136,7 +136,7 @@ package body Synth.Vhdl_Decls is
       Cst : Valtyp;
       Obj_Type : Type_Acc;
    begin
-      Elab_Declaration_Type (Syn_Inst, Decl);
+      Obj_Type := Elab_Declaration_Type (Syn_Inst, Decl);
       if Deferred_Decl = Null_Node
         or else Get_Deferred_Declaration_Flag (Decl)
       then
@@ -170,7 +170,6 @@ package body Synth.Vhdl_Decls is
          end if;
          Last_Type := Decl_Type;
       end if;
-      Obj_Type := Get_Subtype_Object (Syn_Inst, Decl_Type);
       Val := Synth_Expression_With_Type
         (Syn_Inst, Get_Default_Value (Decl), Obj_Type);
       if Val = No_Valtyp then
@@ -380,7 +379,7 @@ package body Synth.Vhdl_Decls is
       Obj_Typ : Type_Acc;
       Wid : Wire_Id;
    begin
-      Elab_Declaration_Type (Syn_Inst, Decl);
+      Obj_Typ := Elab_Declaration_Type (Syn_Inst, Decl);
       if Get_Kind (Decl_Type) = Iir_Kind_Protected_Type_Declaration then
          Error_Msg_Synth
            (+Decl, "protected type variable is not synthesizable");
@@ -389,7 +388,6 @@ package body Synth.Vhdl_Decls is
          return;
       end if;
 
-      Obj_Typ := Get_Subtype_Object (Syn_Inst, Decl_Type);
       if Obj_Typ.Wkind /= Wkind_Net
         and then not Get_Instance_Const (Syn_Inst)
       then
@@ -598,7 +596,12 @@ package body Synth.Vhdl_Decls is
               (Syn_Inst, Get_Type_Definition (Decl),
                Get_Subtype_Definition (Decl));
          when Iir_Kind_Subtype_Declaration =>
-            Elab_Declaration_Type (Syn_Inst, Decl);
+            declare
+               T : Type_Acc;
+            begin
+               T := Elab_Declaration_Type (Syn_Inst, Decl);
+               pragma Unreferenced (T);
+            end;
          when Iir_Kind_Component_Declaration =>
             null;
          when Iir_Kind_File_Declaration =>

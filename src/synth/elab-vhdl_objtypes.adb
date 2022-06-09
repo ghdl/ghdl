@@ -841,6 +841,7 @@ package body Elab.Vhdl_Objtypes is
       Boolean_Type := Create_Bit_Type;
       Logic_Type := Create_Logic_Type;
       Bit_Type := Create_Bit_Type;
+      Protected_Type := Create_Protected_Type;
 
       Bit0 := (Bit_Type, To_Memory_Ptr (Bit0_Mem'Address));
       Bit1 := (Bit_Type, To_Memory_Ptr (Bit1_Mem'Address));
@@ -855,6 +856,7 @@ package body Elab.Vhdl_Objtypes is
       Boolean_Type := null;
       Logic_Type := null;
       Bit_Type := null;
+      Protected_Type := null;
 
       Bit0 := Null_Memtyp;
       Bit1 := Null_Memtyp;

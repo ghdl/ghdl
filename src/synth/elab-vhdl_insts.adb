@@ -71,8 +71,7 @@ package body Elab.Vhdl_Insts is
          Inter := Get_Association_Interface (Assoc, Assoc_Inter);
          case Iir_Kinds_Interface_Declaration (Get_Kind (Inter)) is
             when Iir_Kind_Interface_Constant_Declaration =>
-               Elab_Declaration_Type (Sub_Inst, Inter);
-               Inter_Type := Get_Subtype_Object (Sub_Inst, Get_Type (Inter));
+               Inter_Type := Elab_Declaration_Type (Sub_Inst, Inter);
 
                case Get_Kind (Assoc) is
                   when Iir_Kind_Association_Element_Open =>
@@ -349,8 +348,7 @@ package body Elab.Vhdl_Insts is
                raise Internal_Error;
          end case;
       else
-         Elab_Declaration_Type (Sub_Inst, Inter);
-         return Get_Subtype_Object (Sub_Inst, Get_Type (Inter));
+         return Elab_Declaration_Type (Sub_Inst, Inter);
       end if;
    end Elab_Port_Association_Type;
 
@@ -789,12 +787,11 @@ package body Elab.Vhdl_Insts is
       --  Compute generics.
       Inter := Get_Generic_Chain (Entity);
       while Is_Valid (Inter) loop
-         Elab_Declaration_Type (Top_Inst, Inter);
          declare
             Val : Valtyp;
             Inter_Typ : Type_Acc;
          begin
-            Inter_Typ := Get_Subtype_Object (Top_Inst, Get_Type (Inter));
+            Inter_Typ := Elab_Declaration_Type (Top_Inst, Inter);
             Val := Exec_Expression_With_Type
               (Top_Inst, Get_Default_Value (Inter), Inter_Typ);
             pragma Assert (Is_Static (Val.Val));
@@ -815,8 +812,7 @@ package body Elab.Vhdl_Insts is
          declare
             Inter_Typ : Type_Acc;
          begin
-            Elab_Declaration_Type (Top_Inst, Inter);
-            Inter_Typ := Get_Subtype_Object (Top_Inst, Get_Type (Inter));
+            Inter_Typ := Elab_Declaration_Type (Top_Inst, Inter);
             Create_Signal (Top_Inst, Inter, Inter_Typ, null);
          end;
          Inter := Get_Chain (Inter);

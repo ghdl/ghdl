@@ -32,6 +32,7 @@ package body Elab.Vhdl_Decls is
      (Syn_Inst : Synth_Instance_Acc; Subprg : Node)
    is
       Inter : Node;
+      Typ : Type_Acc;
    begin
       if Is_Second_Subprogram_Specification (Subprg) then
          --  Already handled.
@@ -40,9 +41,10 @@ package body Elab.Vhdl_Decls is
 
       Inter := Get_Interface_Declaration_Chain (Subprg);
       while Inter /= Null_Node loop
-         Elab_Declaration_Type (Syn_Inst, Inter);
+         Typ := Elab_Declaration_Type (Syn_Inst, Inter);
          Inter := Get_Chain (Inter);
       end loop;
+      pragma Unreferenced (Typ);
    end Elab_Subprogram_Declaration;
 
    procedure Elab_Constant_Declaration (Syn_Inst : Synth_Instance_Acc;
@@ -55,7 +57,7 @@ package body Elab.Vhdl_Decls is
       Val : Valtyp;
       Obj_Type : Type_Acc;
    begin
-      Elab_Declaration_Type (Syn_Inst, Decl);
+      Obj_Type := Elab_Declaration_Type (Syn_Inst, Decl);
       if Deferred_Decl = Null_Node
         or else Get_Deferred_Declaration_Flag (Decl)
       then
@@ -89,7 +91,6 @@ package body Elab.Vhdl_Decls is
          end if;
          Last_Type := Decl_Type;
       end if;
-      Obj_Type := Get_Subtype_Object (Syn_Inst, Decl_Type);
       Val := Exec_Expression_With_Type
         (Syn_Inst, Get_Default_Value (Decl), Obj_Type);
       if Val = No_Valtyp then
@@ -107,8 +108,7 @@ package body Elab.Vhdl_Decls is
       Init : Valtyp;
       Obj_Typ : Type_Acc;
    begin
-      Elab_Declaration_Type (Syn_Inst, Decl);
-      Obj_Typ := Get_Subtype_Object (Syn_Inst, Get_Type (Decl));
+      Obj_Typ := Elab_Declaration_Type (Syn_Inst, Decl);
 
       if Is_Valid (Def) then
          Init := Exec_Expression_With_Type (Syn_Inst, Def, Obj_Typ);
@@ -128,12 +128,11 @@ package body Elab.Vhdl_Decls is
       Init : Valtyp;
       Obj_Typ : Type_Acc;
    begin
-      Elab_Declaration_Type (Syn_Inst, Decl);
+      Obj_Typ := Elab_Declaration_Type (Syn_Inst, Decl);
       if Get_Kind (Decl_Type) = Iir_Kind_Protected_Type_Declaration then
          Error_Msg_Elab (+Decl, "protected type not supported");
          return;
       end if;
-      Obj_Typ := Get_Subtype_Object (Syn_Inst, Decl_Type);
 
       if Is_Valid (Def) then
          Init := Exec_Expression_With_Type (Syn_Inst, Def, Obj_Typ);
@@ -262,7 +261,12 @@ package body Elab.Vhdl_Decls is
               (Syn_Inst, Get_Type_Definition (Decl),
                Get_Subtype_Definition (Decl));
          when Iir_Kind_Subtype_Declaration =>
-            Elab_Declaration_Type (Syn_Inst, Decl);
+            declare
+               T : Type_Acc;
+            begin
+               T := Elab_Declaration_Type (Syn_Inst, Decl);
+               pragma Unreferenced (T);
+            end;
          when Iir_Kind_Component_Declaration =>
             null;
          when Iir_Kind_File_Declaration =>
