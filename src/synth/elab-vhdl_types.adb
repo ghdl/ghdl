@@ -220,6 +220,7 @@ package body Elab.Vhdl_Types is
    function Synth_Array_Type_Definition
      (Syn_Inst : Synth_Instance_Acc; Def : Node) return Type_Acc
    is
+      El_St : constant Node := Get_Element_Subtype_Indication (Def);
       El_Type : constant Node := Get_Element_Subtype (Def);
       Ndims : constant Natural := Get_Nbr_Dimensions (Def);
       Idx : Node;
@@ -227,7 +228,9 @@ package body Elab.Vhdl_Types is
       Idx_Typ : Type_Acc;
       Typ : Type_Acc;
    begin
-      Synth_Subtype_Indication_If_Anonymous (Syn_Inst, El_Type);
+      if Get_Kind (El_St) in Iir_Kinds_Subtype_Definition then
+         Synth_Subtype_Indication (Syn_Inst, El_Type);
+      end if;
       El_Typ := Get_Subtype_Object (Syn_Inst, El_Type);
 
       if El_Typ.Kind in Type_Nets and then Ndims = 1 then

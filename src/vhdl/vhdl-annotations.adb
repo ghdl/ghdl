@@ -328,8 +328,13 @@ package body Vhdl.Annotations is
                --  Create an annotation for the element type, as it can be
                --  referenced by the implicit concat function definition for
                --  concatenation with element.
-               El := Get_Element_Subtype (Def);
-               Annotate_Anonymous_Type_Definition (Block_Info, El);
+               El := Get_Element_Subtype_Indication (Def);
+               if Get_Kind (El) in Iir_Kinds_Subtype_Definition then
+                  --  But only if it is a proper new subtype definition
+                  --  (ie not a denoting name, or attributes like 'subtype).
+                  El := Get_Element_Subtype (Def);
+                  Annotate_Anonymous_Type_Definition (Block_Info, El);
+               end if;
 
                --  Then for the array.
                Create_Object_Info (Block_Info, Def, Kind_Type);
