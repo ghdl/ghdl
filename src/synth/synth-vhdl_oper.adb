@@ -1958,8 +1958,8 @@ package body Synth.Vhdl_Oper is
                Set_Location (Edge, Expr);
                return Create_Value_Net (Edge, Res_Typ);
             end;
-         when Iir_Predefined_Ieee_1164_Scalar_Is_X
-            | Iir_Predefined_Ieee_1164_Vector_Is_X =>
+         when Iir_Predefined_Ieee_1164_Is_X_Log
+            | Iir_Predefined_Ieee_1164_Is_X_Slv =>
             --  Always false.
             return Create_Value_Discrete (0, Boolean_Type);
          when Iir_Predefined_Ieee_1164_To_Bitvector

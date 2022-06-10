@@ -1417,8 +1417,8 @@ class Iir_Predefined(IntEnum):
     Ieee_1164_To_UX01_Bv_Slv = 220
     Ieee_1164_To_UX01_Bv_Suv = 221
     Ieee_1164_To_UX01_Bit_Log = 222
-    Ieee_1164_Vector_Is_X = 223
-    Ieee_1164_Scalar_Is_X = 224
+    Ieee_1164_Is_X_Slv = 223
+    Ieee_1164_Is_X_Log = 224
     Ieee_1164_Rising_Edge = 225
     Ieee_1164_Falling_Edge = 226
     Ieee_1164_And_Suv_Log = 227

@@ -2223,10 +2223,12 @@ package body Synth.Vhdl_Eval is
             | Iir_Predefined_Ieee_Numeric_Std_To_X01_Sgn =>
             return Eval_To_X01 (Get_Memtyp (Param1), Map_X01);
          when Iir_Predefined_Ieee_Numeric_Std_To_X01Z_Uns
-            | Iir_Predefined_Ieee_Numeric_Std_To_X01Z_Sgn =>
+            | Iir_Predefined_Ieee_Numeric_Std_To_X01Z_Sgn
+            | Iir_Predefined_Ieee_1164_To_X01Z_Slv =>
             return Eval_To_X01 (Get_Memtyp (Param1), Map_X01Z);
          when Iir_Predefined_Ieee_Numeric_Std_To_UX01_Uns
-            | Iir_Predefined_Ieee_Numeric_Std_To_UX01_Sgn =>
+            | Iir_Predefined_Ieee_Numeric_Std_To_UX01_Sgn
+            | Iir_Predefined_Ieee_1164_To_UX01_Slv =>
             return Eval_To_X01 (Get_Memtyp (Param1), Map_UX01);
 
          when Iir_Predefined_Ieee_1164_To_Stdlogicvector_Bv
@@ -2310,7 +2312,7 @@ package body Synth.Vhdl_Eval is
                return Res;
             end;
 
-         when Iir_Predefined_Ieee_1164_Scalar_Is_X =>
+         when Iir_Predefined_Ieee_1164_Is_X_Log =>
             declare
                B : Std_Ulogic;
             begin
@@ -2320,7 +2322,8 @@ package body Synth.Vhdl_Eval is
             end;
 
          when Iir_Predefined_Ieee_Numeric_Std_Is_X_Uns
-            | Iir_Predefined_Ieee_Numeric_Std_Is_X_Sgn =>
+            | Iir_Predefined_Ieee_Numeric_Std_Is_X_Sgn
+            | Iir_Predefined_Ieee_1164_Is_X_Slv =>
             declare
                Len : constant Uns32 := Param1.Typ.Abound.Len;
                Res : Boolean;
@@ -2392,6 +2395,20 @@ package body Synth.Vhdl_Eval is
             return Minmax (Get_Memtyp (Param1), Get_Memtyp (Param2),
                            False, False);
 
+         when Iir_Predefined_Ieee_Math_Real_Sign =>
+            declare
+               Val : constant Fp64 := Read_Fp64 (Param1);
+               Res : Fp64;
+            begin
+               if Val > 0.0 then
+                  Res := 1.0;
+               elsif Val < 0.0 then
+                  Res := -1.0;
+               else
+                  Res := 0.0;
+               end if;
+               return Create_Memory_Fp64 (Res, Res_Typ);
+            end;
          when Iir_Predefined_Ieee_Math_Real_Log2 =>
             declare
                function Log2 (Arg : Fp64) return Fp64;

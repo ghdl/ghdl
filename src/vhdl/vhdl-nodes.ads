@@ -5669,8 +5669,8 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_1164_To_UX01_Bv_Suv,
       Iir_Predefined_Ieee_1164_To_UX01_Bit_Log,
 
-      Iir_Predefined_Ieee_1164_Vector_Is_X,
-      Iir_Predefined_Ieee_1164_Scalar_Is_X,
+      Iir_Predefined_Ieee_1164_Is_X_Slv,
+      Iir_Predefined_Ieee_1164_Is_X_Log,
 
       Iir_Predefined_Ieee_1164_Rising_Edge,
       Iir_Predefined_Ieee_1164_Falling_Edge,

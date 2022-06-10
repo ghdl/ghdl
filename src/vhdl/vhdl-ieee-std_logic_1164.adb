@@ -383,6 +383,20 @@ package body Vhdl.Ieee.Std_Logic_1164 is
                   elsif Is_Scalar_Function (Decl) then
                      Predefined := Iir_Predefined_Ieee_1164_To_X01_Log;
                   end if;
+               when Name_To_UX01 =>
+                  if Is_Vector_Function (Decl) then
+                     --  TODO: distinguish slv/suv.
+                     Predefined := Iir_Predefined_Ieee_1164_To_UX01_Slv;
+                  elsif Is_Scalar_Function (Decl) then
+                     Predefined := Iir_Predefined_Ieee_1164_To_UX01_Log;
+                  end if;
+               when Name_To_X01Z =>
+                  if Is_Vector_Function (Decl) then
+                     --  TODO: distinguish slv/suv.
+                     Predefined := Iir_Predefined_Ieee_1164_To_X01Z_Slv;
+                  elsif Is_Scalar_Function (Decl) then
+                     Predefined := Iir_Predefined_Ieee_1164_To_X01Z_Log;
+                  end if;
                when Name_To_Hstring =>
                   Predefined := Iir_Predefined_Ieee_1164_To_Hstring;
                when Name_To_Ostring =>
@@ -413,8 +427,7 @@ package body Vhdl.Ieee.Std_Logic_1164 is
                            Predefined :=
                              Iir_Predefined_Ieee_1164_Condition_Operator;
                         when Name_Is_X =>
-                           Predefined :=
-                             Iir_Predefined_Ieee_1164_Scalar_Is_X;
+                           Predefined := Iir_Predefined_Ieee_1164_Is_X_Log;
                         when others =>
                            Predefined := Iir_Predefined_None;
                      end case;
@@ -452,8 +465,7 @@ package body Vhdl.Ieee.Std_Logic_1164 is
                         when Name_Xnor =>
                            Predefined := Iir_Predefined_Ieee_1164_Xnor_Suv;
                         when Name_Is_X =>
-                           Predefined :=
-                             Iir_Predefined_Ieee_1164_Scalar_Is_X;
+                           Predefined := Iir_Predefined_Ieee_1164_Is_X_Slv;
                         when others =>
                            Predefined := Iir_Predefined_None;
                      end case;

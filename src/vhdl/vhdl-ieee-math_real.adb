@@ -40,6 +40,8 @@ package body Vhdl.Ieee.Math_Real is
             when Iir_Kind_Function_Declaration =>
                Def := Iir_Predefined_None;
                case Get_Identifier (Decl) is
+                  when Name_Sign =>
+                     Def := Iir_Predefined_Ieee_Math_Real_Sign;
                   when Name_Mod =>
                      Def := Iir_Predefined_Ieee_Math_Real_Mod;
                   when Name_Ceil =>
