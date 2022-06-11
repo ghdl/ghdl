@@ -87,7 +87,9 @@ package body Elab.Vhdl_Types is
          Typ := Exec_Name_Subtype (Syn_Inst, Prefix_Name);
       end if;
 
-      pragma Assert (Dim = 1);
+      for I in 2 .. Dim loop
+         Typ := Typ.Arr_El;
+      end loop;
       return Get_Array_Bound (Typ);
    end Synth_Array_Attribute;
 
