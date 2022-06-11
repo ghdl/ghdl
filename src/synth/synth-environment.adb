@@ -1447,7 +1447,9 @@ package body Synth.Environment is
       --  TODO: also handle dyn_insert_en
       --  TODO: negative SEL ?
       V := Get_Input_Net (N1_Inst, 0);
-      if Same_Net (V, N0) then
+      --  NOTE: do not try to transform as a dyn_insert_en, as this element
+      --   is not recognized by Infere; so we got spurious latch detected.
+      if False and then Same_Net (V, N0) then
          New_Inst := Add_Enable_To_Dyn_Insert (Ctxt, N1_Inst, Sel);
          return Get_Output (New_Inst, 0);
       else
