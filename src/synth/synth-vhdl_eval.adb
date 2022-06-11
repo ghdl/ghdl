@@ -2218,6 +2218,14 @@ package body Synth.Vhdl_Eval is
                B := To_X01 (B);
                return Create_Memory_U8 (Std_Ulogic'Pos (B), Res_Typ);
             end;
+         when Iir_Predefined_Ieee_1164_To_X01Z_Log =>
+            declare
+               B : Std_Ulogic;
+            begin
+               B := Read_Std_Logic (Param1.Val.Mem, 0);
+               B := Map_X01Z (B);
+               return Create_Memory_U8 (Std_Ulogic'Pos (B), Res_Typ);
+            end;
          when Iir_Predefined_Ieee_1164_To_X01_Slv
             | Iir_Predefined_Ieee_Numeric_Std_To_X01_Uns
             | Iir_Predefined_Ieee_Numeric_Std_To_X01_Sgn =>
@@ -2292,7 +2300,8 @@ package body Synth.Vhdl_Eval is
                return Res;
             end;
 
-         when Iir_Predefined_Ieee_1164_To_01_Slv_Log =>
+         when Iir_Predefined_Ieee_1164_To_01_Slv_Log
+            | Iir_Predefined_Ieee_Numeric_Std_To_01_Uns =>
             declare
                Len : constant Uns32 := Param1.Typ.Abound.Len;
                S : Std_Ulogic;
