@@ -1414,14 +1414,9 @@ package body Netlists.Memories is
       Inst : Instance;
       N : Net;
    begin
-      if Negate then
-         --  TODO.
-         raise Internal_Error;
-      end if;
-
       --  Simple case (but important for the memories)
       if V = Conj then
-         return True;
+         return (not Negate);
       end if;
 
       N := Conj;
@@ -1429,12 +1424,12 @@ package body Netlists.Memories is
       loop
          Inst := Get_Net_Parent (N);
          if Get_Id (Inst) /= Id_And then
-            return N = V;
+            return (N = V) xor Negate;
          end if;
 
          --  Inst is AND2.
          if Get_Input_Net (Inst, 0) = V then
-            return True;
+            return (not Negate);
          end if;
          N := Get_Input_Net (Inst, 1);
       end loop;
