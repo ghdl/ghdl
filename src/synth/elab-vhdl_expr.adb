@@ -859,7 +859,7 @@ package body Elab.Vhdl_Expr is
             return Synth_Subtype_Indication (Syn_Inst, Get_Type (Expr));
 
          when others =>
-            Vhdl.Errors.Error_Kind ("synth_type_of_object", Expr);
+            Vhdl.Errors.Error_Kind ("exec_type_of_object", Expr);
       end case;
       return null;
    end Exec_Type_Of_Object;

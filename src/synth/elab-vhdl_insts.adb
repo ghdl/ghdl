@@ -325,7 +325,10 @@ package body Elab.Vhdl_Insts is
    function Elab_Port_Association_Type (Sub_Inst : Synth_Instance_Acc;
                                         Syn_Inst : Synth_Instance_Acc;
                                         Inter : Node;
-                                        Assoc : Node) return Type_Acc is
+                                        Assoc : Node) return Type_Acc
+   is
+      Inter_Typ : Type_Acc;
+      Val : Valtyp;
    begin
       if not Is_Fully_Constrained_Type (Get_Type (Inter)) then
          --  TODO
@@ -335,7 +338,18 @@ package body Elab.Vhdl_Insts is
          if Assoc = Null_Node then
             raise Internal_Error;
          end if;
-         case Get_Kind (Assoc) is
+
+         if Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Expression
+           and then not Get_Inertial_Flag (Assoc)
+         then
+            --  For expression: just compute the expression and associate.
+            Inter_Typ := Elab_Declaration_Type (Sub_Inst, Inter);
+            Val := Exec_Expression_With_Type
+              (Syn_Inst, Get_Actual (Assoc), Inter_Typ);
+            return Val.Typ;
+         end if;
+
+         case Iir_Kinds_Association_Element_Parameters (Get_Kind (Assoc)) is
             when Iir_Kinds_Association_Element_By_Actual =>
                return Exec_Type_Of_Object (Syn_Inst, Get_Actual (Assoc));
             when Iir_Kind_Association_Element_By_Individual =>
@@ -344,8 +358,6 @@ package body Elab.Vhdl_Insts is
             when Iir_Kind_Association_Element_Open =>
                return Exec_Type_Of_Object
                  (Syn_Inst, Get_Default_Value (Inter));
-            when others =>
-               raise Internal_Error;
          end case;
       else
          return Elab_Declaration_Type (Sub_Inst, Inter);
@@ -657,8 +669,7 @@ package body Elab.Vhdl_Insts is
 
                Inter_Typ := Elab_Port_Association_Type
                  (Comp_Inst, Syn_Inst, Inter, Assoc);
-
-               Create_Signal (Comp_Inst, Assoc_Inter, Inter_Typ, null);
+               Create_Signal (Comp_Inst, Inter, Inter_Typ, null);
             end if;
             Next_Association_Interface (Assoc, Assoc_Inter);
          end loop;
