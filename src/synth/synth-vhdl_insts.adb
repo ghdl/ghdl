@@ -631,6 +631,34 @@ package body Synth.Vhdl_Insts is
       end if;
    end Interning_Get;
 
+   function Synth_Single_Input_Assoc (Syn_Inst : Synth_Instance_Acc;
+                                      Inter_Typ : Type_Acc;
+                                      Act_Inst : Synth_Instance_Acc;
+                                      Actual : Node;
+                                      Assoc : Node) return Valtyp
+   is
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
+      Conv : Node;
+      Act : Valtyp;
+   begin
+      if Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Name then
+         Conv := Get_Actual_Conversion (Assoc);
+      else
+         Conv := Null_Node;
+      end if;
+      if Conv /= Null_Node then
+         pragma Assert (Get_Kind (Conv) = Iir_Kind_Function_Call);
+         pragma Assert (Act_Inst = Syn_Inst);
+         --  This is an abuse, but it works like a user operator.
+         Act := Synth_User_Operator (Syn_Inst, Actual, Null_Node, Conv);
+      else
+         Act := Synth_Expression_With_Type (Act_Inst, Actual, Inter_Typ);
+      end if;
+
+      Act := Synth_Subtype_Conversion (Ctxt, Act, Inter_Typ, False, Assoc);
+      return Act;
+   end Synth_Single_Input_Assoc;
+
    procedure Synth_Individual_Prefix (Syn_Inst : Synth_Instance_Acc;
                                       Inter_Inst : Synth_Instance_Acc;
                                       Formal : Node;
@@ -755,7 +783,8 @@ package body Synth.Vhdl_Insts is
            (Syn_Inst, Inter_Inst, Get_Formal (Iassoc), Off, Typ);
 
          --   2. synth expression
-         V := Synth_Expression_With_Type (Syn_Inst, Get_Actual (Iassoc), Typ);
+         V := Synth_Single_Input_Assoc
+           (Syn_Inst, Typ, Syn_Inst, Get_Actual (Iassoc), Iassoc);
 
          --   3. save in a table
          Value_Offset_Tables.Append (Els, (Off, V));
@@ -791,28 +820,25 @@ package body Synth.Vhdl_Insts is
                               return Net
    is
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
-      Actual : Node;
-      Act_Inst : Synth_Instance_Acc;
-      Act : Valtyp;
+      Res : Valtyp;
    begin
       case Iir_Kinds_Association_Element_Parameters (Get_Kind (Assoc)) is
          when Iir_Kind_Association_Element_Open =>
-            Actual := Get_Default_Value (Inter);
-            Act_Inst := Inter_Inst;
+            Res := Synth_Single_Input_Assoc
+              (Syn_Inst, Inter_Typ, Inter_Inst,
+               Get_Default_Value (Inter), Assoc);
          when Iir_Kind_Association_Element_By_Expression
             | Iir_Kind_Association_Element_By_Name =>
-            Actual := Get_Actual (Assoc);
-            Act_Inst := Syn_Inst;
+            Res := Synth_Single_Input_Assoc
+              (Syn_Inst, Inter_Typ, Syn_Inst, Get_Actual (Assoc), Assoc);
          when Iir_Kind_Association_Element_By_Individual =>
             return Synth_Individual_Input_Assoc (Syn_Inst, Assoc, Inter_Inst);
       end case;
 
-      Act := Synth_Expression_With_Type (Act_Inst, Actual, Inter_Typ);
-      Act := Synth_Subtype_Conversion (Ctxt, Act, Inter_Typ, False, Assoc);
-      if Act = No_Valtyp then
+      if Res = No_Valtyp then
          return No_Net;
       end if;
-      return Get_Net (Ctxt, Act);
+      return Get_Net (Ctxt, Res);
    end Synth_Input_Assoc;
 
    procedure Synth_Individual_Output_Assoc (Outp : Net;
