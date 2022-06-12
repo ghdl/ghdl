@@ -566,6 +566,9 @@ package body Vhdl.Sem is
             --  The actual, if an expression, must be a globally
             --  static expression.
             if Get_Expr_Staticness (Actual) < Globally then
+               --  This is an inertial association.
+               Set_Inertial_Flag (Assoc, True);
+
                if Flags.Vhdl_Std < Vhdl_08 then
                   --  LRM08 6.5.6.3 Port clauses
                   Error_Msg_Sem

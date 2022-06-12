@@ -5736,6 +5736,19 @@ def Set_In_Formal_Flag(obj: Iir, value: Boolean) -> None:
 
 
 @export
+@BindToLibGHDL("vhdl__nodes__get_inertial_flag")
+def Get_Inertial_Flag(obj: Iir) -> Boolean:
+    """"""
+    return 0
+
+
+@export
+@BindToLibGHDL("vhdl__nodes__set_inertial_flag")
+def Set_Inertial_Flag(obj: Iir, value: Boolean) -> None:
+    """"""
+
+
+@export
 @BindToLibGHDL("vhdl__nodes__get_slice_subtype")
 def Get_Slice_Subtype(obj: Iir) -> Iir:
     """"""

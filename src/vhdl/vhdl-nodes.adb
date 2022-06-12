@@ -6074,6 +6074,22 @@ package body Vhdl.Nodes is
       Set_Flag4 (Name, Flag);
    end Set_In_Formal_Flag;
 
+   function Get_Inertial_Flag (Name : Iir) return Boolean is
+   begin
+      pragma Assert (Name /= Null_Iir);
+      pragma Assert (Has_Inertial_Flag (Get_Kind (Name)),
+                     "no field Inertial_Flag");
+      return Get_Flag5 (Name);
+   end Get_Inertial_Flag;
+
+   procedure Set_Inertial_Flag (Name : Iir; Flag : Boolean) is
+   begin
+      pragma Assert (Name /= Null_Iir);
+      pragma Assert (Has_Inertial_Flag (Get_Kind (Name)),
+                     "no field Inertial_Flag");
+      Set_Flag5 (Name, Flag);
+   end Set_Inertial_Flag;
+
    function Get_Slice_Subtype (Slice : Iir) return Iir is
    begin
       pragma Assert (Slice /= Null_Iir);
