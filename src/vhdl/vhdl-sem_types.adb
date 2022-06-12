@@ -570,13 +570,14 @@ package body Vhdl.Sem_Types is
 
    procedure Sem_Protected_Type_Declaration (Type_Decl : Iir_Type_Declaration)
    is
-      Decl : Iir_Protected_Type_Declaration;
+      Decl : constant Iir_Protected_Type_Declaration :=
+        Get_Type_Definition (Type_Decl);
       El : Iir;
    begin
-      Decl := Get_Type_Definition (Type_Decl);
       Set_Resolved_Flag (Decl, False);
       Set_Signal_Type_Flag (Decl, False);
       Set_Type_Staticness (Decl, None);
+      Set_Parent (Decl, Get_Parent (Type_Decl));
 
       --  LRM 10.3 Visibility
       --  [...] except in the declaration of a design_unit or a protected type

@@ -2709,6 +2709,9 @@ package Vhdl.Nodes is
    --   Get/Set_Has_Signal_Flag (Flag3)
 
    -- Iir_Kind_Protected_Type_Declaration (Short)
+   --  The parent of a protected type declarationi s the same parent as the
+   --  type declaration.
+   --   Get/Set_Parent (Field0)
    --
    --   Get/Set_Declaration_Chain (Field1)
    --
