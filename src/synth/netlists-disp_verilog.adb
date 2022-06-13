@@ -1328,6 +1328,11 @@ package body Netlists.Disp_Verilog is
    is
       Self_Inst : constant Instance := Get_Self_Instance (M);
    begin
+      if Self_Inst = No_Instance then
+         --  Blackbox
+         return;
+      end if;
+
       --  Module id and name.
       Put ("module ");
       Put_Name (Get_Module_Name (M));
