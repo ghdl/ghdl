@@ -759,12 +759,12 @@ package body Netlists.Disp_Verilog is
                Put ('0');
             end if;
          end loop;
-         Disp_Template (": \o0 <= ", Inst);
+         Disp_Template (": \o0 = ", Inst);
          Disp_Net_Expr
            (Get_Input_Net (Inst, Port_Idx (2 + W - I)), Inst, Conv_None);
          Put_Line (";");
       end loop;
-      Disp_Template ("      default: \o0 <= \i1;" & NL, Inst);
+      Disp_Template ("      default: \o0 = \i1;" & NL, Inst);
       Disp_Template ("    endcase" & NL, Inst);
    end Disp_Pmux;
 
@@ -826,7 +826,7 @@ package body Netlists.Disp_Verilog is
                                  "    \o0 = \i0; // (isignal)" & NL, Inst);
                end if;
                Disp_Template ("  initial" & NL &
-                              "    \o0 <= \i1;" & NL, Inst);
+                              "    \o0 = \i1;" & NL, Inst);
             end;
          when Id_Port =>
             Disp_Template ("  \o0 <= \i0; -- (port)" & NL, Inst);
@@ -889,13 +889,13 @@ package body Netlists.Disp_Verilog is
                Iw : constant Width := Get_Width (Get_Input_Net (Inst, 1));
             begin
                Put ("  always @* begin // (dyn_insert)" & NL);
-               Disp_Template ("    \o0 <= \i0;" & NL, Inst);
+               Disp_Template ("    \o0 = \i0;" & NL, Inst);
                if Id = Id_Dyn_Insert_En then
                   --  TODO: fix indentation.
                   Disp_Template ("    if (\i3)" & NL, Inst);
                end if;
                Disp_Template
-                 ("    \o0 [\i2 + \p0 -: \n0] <= \i1;" & NL,
+                 ("    \o0 [\i2 + \p0 -: \n0] = \i1;" & NL,
                   Inst, (0 => Iw - 1));
                Disp_Template ("  end" & NL, Inst);
             end;
@@ -921,17 +921,17 @@ package body Netlists.Disp_Verilog is
                              "    \o0 <= \i1;" & NL, Inst);
             if Id = Id_Idff then
                Disp_Template ("  initial" & NL &
-                              "    \o0 <= \i2;" & NL, Inst);
+                              "    \o0 = \i2;" & NL, Inst);
             end if;
          when Id_Mux2 =>
             Disp_Template ("  assign \o0 = \i0 ? \i2 : \i1;" & NL, Inst);
          when Id_Mux4 =>
             Disp_Template ("  always @*" & NL &
                            "    case (\i0)" & NL &
-                           "      2'b00: \o0 <= \i1;" & NL &
-                           "      2'b01: \o0 <= \i2;" & NL &
-                           "      2'b10: \o0 <= \i3;" & NL &
-                           "      2'b11: \o0 <= \i4;" & NL &
+                           "      2'b00: \o0 = \i1;" & NL &
+                           "      2'b01: \o0 = \i2;" & NL &
+                           "      2'b10: \o0 = \i3;" & NL &
+                           "      2'b11: \o0 = \i4;" & NL &
                            "    endcase" & NL, Inst);
          when Id_Pmux =>
             Disp_Pmux (Inst);
