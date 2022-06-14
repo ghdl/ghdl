@@ -878,7 +878,6 @@ package body Netlists is
       pragma Assert (I < Get_Nbr_Inputs (M));
       Idx : constant Port_Desc_Idx := F + Port_Desc_Idx (I);
    begin
-      pragma Assert (Get_Port_Desc (Idx).Name = No_Sname);
       Set_Port_Desc (Idx, Desc);
    end Set_Input_Desc;
 
@@ -888,7 +887,6 @@ package body Netlists is
       pragma Assert (O < Get_Nbr_Outputs (M));
       Idx : constant Port_Desc_Idx := F + Port_Desc_Idx (O);
    begin
-      pragma Assert (Get_Port_Desc (Idx).Name = No_Sname);
       Set_Port_Desc (Idx, Desc);
    end Set_Output_Desc;
 

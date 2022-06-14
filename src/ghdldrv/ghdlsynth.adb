@@ -44,6 +44,7 @@ with Netlists.Disp_Verilog;
 with Netlists.Disp_Dot;
 with Netlists.Errors;
 with Netlists.Inference;
+with Netlists.Rename;
 
 with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 with Elab.Vhdl_Insts;
@@ -452,6 +453,7 @@ package body Ghdlsynth is
          when Format_Raw_Vhdl =>
             Netlists.Disp_Vhdl.Disp_Vhdl (Res);
          when Format_Verilog =>
+            Netlists.Rename.Rename_Module (Res, Language_Verilog);
             Netlists.Disp_Verilog.Disp_Verilog (Res);
       end case;
    end Disp_Design;
