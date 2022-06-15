@@ -253,6 +253,7 @@ package Netlists is
 
    function Get_Self_Instance (M : Module) return Instance;
    function Get_First_Instance (M : Module) return Instance;
+   function Get_Next_Instance (Inst : Instance) return Instance;
 
    --  Linked list of sub-modules.
    --  Use Modules to iterate.
@@ -280,7 +281,6 @@ package Netlists is
    function Get_Instance_Parent (Inst : Instance) return Module;
    function Get_Output (Inst : Instance; Idx : Port_Idx) return Net;
    function Get_Input (Inst : Instance; Idx : Port_Idx) return Input;
-   function Get_Next_Instance (Inst : Instance) return Instance;
 
    function Get_Param_Uns32 (Inst : Instance; Param : Param_Idx) return Uns32;
    procedure Set_Param_Uns32 (Inst : Instance; Param : Param_Idx; Val : Uns32);
@@ -469,6 +469,9 @@ private
 
    procedure Set_Next_Instance (Inst : Instance; Next : Instance);
    procedure Set_Prev_Instance (Inst : Instance; Prev : Instance);
+
+   --  Used by Rename.
+   procedure Set_Instance_Name (Inst : Instance; Name : Sname);
 
    --  Procedures to rewrite the list of instances of a module:
    --  * first extract the chain of instances from module M (and reset the

@@ -19,6 +19,9 @@
 with Name_Table;
 with Std_Names;
 
+with Netlists.Gates; use Netlists.Gates;
+with Netlists.Utils; use Netlists.Utils;
+
 package body Netlists.Rename is
    function Rename_Sname (Name : Sname; Lang : Language_Type) return Sname
    is
@@ -76,6 +79,7 @@ package body Netlists.Rename is
    procedure Rename_User_Module (M : Module; Lang : Language_Type)
    is
       Port : Port_Desc;
+      Inst : Instance;
    begin
       --  Rename inputs and outputs.
       for I in 1 .. Get_Nbr_Inputs (M) loop
@@ -89,7 +93,20 @@ package body Netlists.Rename is
          Set_Output_Desc (M, I - 1, Port);
       end loop;
 
-      --  rename instances ?
+      --  Rename instances
+      Inst := Get_First_Instance (M);
+      while Inst /= No_Instance loop
+         case Get_Id (Inst) is
+            when Id_Signal
+              | Id_Isignal =>
+               Set_Instance_Name
+                 (Inst, Rename_Sname (Get_Instance_Name (Inst), Lang));
+            when others =>
+               null;
+         end case;
+         Inst := Get_Next_Instance (Inst);
+      end loop;
+
       --  rename module name ?
       --  rename parameters ?
    end Rename_User_Module;

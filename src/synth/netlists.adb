@@ -721,6 +721,12 @@ package body Netlists is
       return Instances_Table.Table (Inst).Name;
    end Get_Instance_Name;
 
+   procedure Set_Instance_Name (Inst : Instance; Name : Sname) is
+   begin
+      pragma Assert (Is_Valid (Inst));
+      Instances_Table.Table (Inst).Name := Name;
+   end Set_Instance_Name;
+
    function Get_Instance_Parent (Inst : Instance) return Module is
    begin
       pragma Assert (Is_Valid (Inst));
