@@ -3592,6 +3592,37 @@ package body Vhdl.Sem_Names is
       return Res;
    end Sem_Predefined_Type_Attribute;
 
+   function Is_Element_Attribute_Prefix_A_Type (Prefix : Iir) return Boolean
+   is
+      Pfx : Iir;
+      Ent : Iir;
+   begin
+      Pfx := Prefix;
+      loop
+         case Get_Kind (Pfx) is
+            when Iir_Kinds_Denoting_Name
+              | Iir_Kind_Attribute_Name =>
+               Ent := Get_Named_Entity (Pfx);
+               case Get_Kind (Ent) is
+                  when Iir_Kind_Type_Declaration
+                    | Iir_Kind_Subtype_Declaration
+                    | Iir_Kind_Base_Attribute =>
+                     return True;
+                  when Iir_Kind_Element_Attribute =>
+                     --  Continue.
+                     Pfx := Get_Prefix (Ent);
+                  when others =>
+                     return False;
+               end case;
+            when Iir_Kind_Element_Attribute =>
+               --  Continue
+               Pfx := Get_Prefix (Pfx);
+            when others =>
+               return False;
+         end case;
+      end loop;
+   end Is_Element_Attribute_Prefix_A_Type;
+
    --  Called for attributes Length, Left, Right, High, Low, Range,
    --  Reverse_Range, Ascending.
    --  FIXME: handle overload
@@ -3603,6 +3634,7 @@ package body Vhdl.Sem_Names is
       Prefix : Iir;
       Res : Iir;
       Res_Type : Iir;
+      Is_Prefix_Object : Boolean;
    begin
       Prefix := Get_Named_Entity (Prefix_Name);
 
@@ -3637,6 +3669,7 @@ package body Vhdl.Sem_Names is
            | Iir_Kind_Attribute_Value
            | Iir_Kind_Image_Attribute =>
             --  FIXME: list of expr.
+            Is_Prefix_Object := True;
             Prefix_Type := Get_Type (Prefix);
             case Get_Kind (Prefix_Type) is
                when Iir_Kind_Access_Type_Definition
@@ -3657,21 +3690,24 @@ package body Vhdl.Sem_Names is
             end case;
          when Iir_Kind_Subtype_Declaration
            | Iir_Kind_Type_Declaration
-           | Iir_Kind_Base_Attribute
-           | Iir_Kind_Subtype_Attribute
-           | Iir_Kind_Element_Attribute =>
+           | Iir_Kind_Base_Attribute =>
+            Is_Prefix_Object := False;
             Prefix_Type := Get_Type (Prefix);
-            if not Is_Fully_Constrained_Type (Prefix_Type) then
-               Error_Msg_Sem (+Attr, "prefix type is not constrained");
-               --  We continue using the unconstrained array type.
-               --  At least, this type is valid; and even if the array was
-               --  constrained, the base type would be the same.
-            end if;
+         when Iir_Kind_Subtype_Attribute =>
+            --  Always constrained as the prefix is an object.
+            Is_Prefix_Object := True;
+            Prefix_Type := Get_Type (Prefix);
          when Iir_Kind_Range_Array_Attribute
-           | Iir_Kind_Reverse_Range_Array_Attribute =>
+            | Iir_Kind_Reverse_Range_Array_Attribute =>
             --  For names such as pfx'Range'Left.
-            --  Finish_Sem_Array_Attribute (Prefix_Name, Prefix, Null_Iir);
+            Is_Prefix_Object := False;  --  Doesn't matter, it's scalar.
             Prefix_Type := Get_Type (Prefix);
+         when Iir_Kind_Element_Attribute =>
+            Prefix_Type := Get_Type (Prefix);
+            --  We need to know if the prefix is or denotes an object, as in
+            --  that case the type is constrained.
+            Is_Prefix_Object :=
+              not Is_Element_Attribute_Prefix_A_Type (Prefix);
          when Iir_Kind_Process_Statement =>
             Error_Msg_Sem
               (+Attr, "%n is not an appropriate prefix for %i attribute",
@@ -3694,6 +3730,16 @@ package body Vhdl.Sem_Names is
                              & "constrained array subtype", +Attr);
             return Error_Mark;
       end case;
+
+      --  If the prefix is an object, we know its type is constrained.
+      if not Is_Prefix_Object
+        and then not Get_Index_Constraint_Flag (Prefix_Type)
+      then
+         Error_Msg_Sem (+Attr, "prefix type is not constrained");
+         --  We continue using the unconstrained array type.
+         --  At least, this type is valid; and even if the array was
+         --  constrained, the base type would be the same.
+      end if;
 
       --  Type of the attribute.  This is correct unless there is a parameter,
       --  and furthermore 'range and 'reverse_range has to be handled

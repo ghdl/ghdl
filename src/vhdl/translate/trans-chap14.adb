@@ -31,22 +31,57 @@ with Trans.Foreach_Non_Composite;
 package body Trans.Chap14 is
    use Trans.Helpers;
 
+   function Translate_Name_Bounds (Name : Iir) return Mnode
+   is
+      Res : Mnode;
+   begin
+      case Get_Kind (Name) is
+         when Iir_Kinds_Denoting_Name =>
+            return Translate_Name_Bounds (Get_Named_Entity (Name));
+         when Iir_Kind_Type_Declaration
+           | Iir_Kind_Subtype_Declaration =>
+            Res := T2M (Get_Type (Name), Mode_Value);
+            Res := Chap3.Get_Composite_Bounds (Res);
+            return Res;
+         when Iir_Kinds_Object_Declaration
+           | Iir_Kind_Stable_Attribute
+           | Iir_Kind_Quiet_Attribute
+           | Iir_Kind_Delayed_Attribute
+           | Iir_Kind_Transaction_Attribute
+           | Iir_Kind_Image_Attribute
+           | Iir_Kind_Indexed_Name
+           | Iir_Kind_Selected_Element
+           | Iir_Kind_Slice_Name
+           | Iir_Kind_Dereference
+           | Iir_Kind_Implicit_Dereference
+           | Iir_Kind_Function_Call =>
+            --  Prefix is an object.
+            Res := Chap6.Translate_Name (Name, Mode_Value);
+            Res := Chap3.Get_Composite_Bounds (Res);
+            return Res;
+         when Iir_Kind_Element_Attribute =>
+            declare
+               Pfx : constant Iir := Get_Prefix (Name);
+               Pfx_Type : constant Iir := Get_Type (Pfx);
+            begin
+               Res := Translate_Name_Bounds (Pfx);
+               Res := Chap3.Array_Bounds_To_Element_Bounds (Res, Pfx_Type);
+               return Res;
+            end;
+         when others =>
+            Error_Kind ("translate_name_bounds", Name);
+      end case;
+   end Translate_Name_Bounds;
+
    function Translate_Array_Attribute_To_Range (Expr : Iir) return Mnode
    is
-      Prefix    : constant Iir := Get_Prefix (Expr);
-      Type_Name : constant Iir := Is_Type_Name (Prefix);
-      Arr       : Mnode;
-      Dim       : Natural;
+      Prefix : constant Iir := Get_Prefix (Expr);
+      Bnd : Mnode;
+      Dim : Natural;
    begin
-      if Type_Name /= Null_Iir then
-         --  Prefix denotes a type name
-         Arr := T2M (Type_Name, Mode_Value);
-      else
-         --  Prefix is an object.
-         Arr := Chap6.Translate_Name (Prefix, Mode_Value);
-      end if;
+      Bnd := Translate_Name_Bounds (Prefix);
       Dim := Eval_Attribute_Parameter_Or_1 (Expr);
-      return Chap3.Get_Array_Range (Arr, Get_Type (Prefix), Dim);
+      return Chap3.Bounds_To_Range (Bnd, Get_Type (Prefix), Dim);
    end Translate_Array_Attribute_To_Range;
 
    function Translate_Range_Array_Attribute (Expr : Iir)
