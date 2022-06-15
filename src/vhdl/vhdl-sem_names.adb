@@ -3802,6 +3802,7 @@ package body Vhdl.Sem_Names is
 
       --  The type defined by 'element is always constrained.  Create
       --  a subtype if it is not.
+      --  NO, it isn't.  The prefix can be a type.
       Attr_Subtype := Get_Element_Subtype (Attr_Type);
       if False and not Is_Fully_Constrained_Type (Attr_Subtype) then
          Attr_Subtype :=

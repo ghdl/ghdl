@@ -93,7 +93,7 @@ package body Netlists.Rename is
          Set_Output_Desc (M, I - 1, Port);
       end loop;
 
-      --  Rename instances
+      --  Rename some instances.
       Inst := Get_First_Instance (M);
       while Inst /= No_Instance loop
          case Get_Id (Inst) is
