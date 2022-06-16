@@ -647,10 +647,16 @@ package body Synth.Vhdl_Insts is
          Conv := Null_Node;
       end if;
       if Conv /= Null_Node then
-         pragma Assert (Get_Kind (Conv) = Iir_Kind_Function_Call);
-         pragma Assert (Act_Inst = Syn_Inst);
-         --  This is an abuse, but it works like a user operator.
-         Act := Synth_User_Operator (Syn_Inst, Actual, Null_Node, Conv);
+         case Get_Kind (Conv) is
+            when Iir_Kind_Function_Call =>
+               pragma Assert (Act_Inst = Syn_Inst);
+               --  This is an abuse, but it works like a user operator.
+               Act := Synth_User_Operator (Syn_Inst, Actual, Null_Node, Conv);
+            when Iir_Kind_Type_Conversion =>
+               Act := Synth_Type_Conversion (Syn_Inst, Conv);
+            when others =>
+               Vhdl.Errors.Error_Kind ("synth_single_input_assoc", Conv);
+         end case;
       else
          Act := Synth_Expression_With_Type (Act_Inst, Actual, Inter_Typ);
       end if;
