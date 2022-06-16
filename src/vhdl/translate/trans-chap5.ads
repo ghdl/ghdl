@@ -42,6 +42,7 @@ package Trans.Chap5 is
    --  Save and restore the map environment defined by ENV.
    procedure Save_Map_Env (Env : out Map_Env; Scope_Ptr : Var_Scope_Acc);
    procedure Set_Map_Env (Env : Map_Env);
+   procedure Restore_Map_Env (Env : Map_Env);
 
    procedure Elab_Generic_Map_Aspect
      (Header : Iir; Map : Iir; Formal_Env : Map_Env);

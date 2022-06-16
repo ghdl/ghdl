@@ -3123,6 +3123,7 @@ package body Trans.Chap4 is
       Entity     : Iir)
    is
       pragma Unreferenced (Num);
+      use Trans.Chap5;
       Formal     : constant Iir := Get_Association_Formal (Assoc, Inter);
       Actual     : constant Iir := Get_Actual (Assoc);
       Block_Info : constant Block_Info_Acc := Get_Info (Base_Block);
@@ -3131,6 +3132,7 @@ package body Trans.Chap4 is
       Entity_Info : Ortho_Info_Acc;
       Targ : Mnode;
       Val : Mnode;
+      Act_Env : Map_Env;
    begin
       --  Declare the subprogram.
       Assoc_Info := Add_Info (Assoc, Kind_Inertial_Assoc);
@@ -3153,6 +3155,7 @@ package body Trans.Chap4 is
       Open_Temp;
 
       --  Access for formals.
+      Act_Env.Scope_Ptr := null;
       if Entity /= Null_Iir then
          Entity_Info := Get_Info (Entity);
          declare
@@ -3177,15 +3180,24 @@ package body Trans.Chap4 is
                               Inst_Info.Block_Link_Field),
                            Rtis.Ghdl_Component_Link_Instance)),
                      Entity_Info.Block_Decls_Ptr_Type));
+               --  Save previous scope for recursive instantiation.
+               Save_Map_Env (Act_Env, Entity_Info.Block_Scope'Access);
+               if not Is_Null (Entity_Info.Block_Scope) then
+                  Clear_Scope (Entity_Info.Block_Scope);
+               end if;
                Set_Scope_Via_Param_Ptr (Entity_Info.Block_Scope, V);
             end if;
-
          end;
       end if;
 
       --  Access for formal.
       --  1. Translate target (translate_name)
       Targ := Chap6.Translate_Name (Formal, Mode_Signal);
+
+      if Act_Env.Scope_Ptr /= null then
+         --  Switch to the actual environment (if any).
+         Set_Map_Env (Act_Env);
+      end if;
 
       --  2. Translate expression
       Val := Chap7.Translate_Expression (Actual, Get_Type (Formal));
@@ -3201,9 +3213,10 @@ package body Trans.Chap4 is
 
       if Entity /= Null_Iir then
          if Entity_Info.Kind = Kind_Component then
+            pragma Assert (Act_Env.Scope_Ptr = null);
             Clear_Scope (Entity_Info.Comp_Scope);
          else
-            Clear_Scope (Entity_Info.Block_Scope);
+            Restore_Map_Env (Act_Env);
          end if;
       end if;
 
