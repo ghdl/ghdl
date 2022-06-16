@@ -2979,29 +2979,33 @@ package body Vhdl.Sem_Names is
       Assoc_Chain := Get_Association_Chain (Name);
       Actual := Get_One_Actual (Assoc_Chain);
 
-      if Kind_In (Prefix,
-                  Iir_Kind_Type_Declaration, Iir_Kind_Subtype_Declaration)
-      then
-         --  A type conversion.  The prefix is a type mark.
-         declare
-            In_Formal : Boolean;
-         begin
-            if Actual = Null_Iir then
-               --  More than one actual.  Keep only the first.
-               Error_Msg_Sem
-                 (+Name, "type conversion allows only one expression");
-               In_Formal := False;
-            else
-               In_Formal := Get_In_Formal_Flag (Assoc_Chain);
-            end if;
+      case Get_Kind (Prefix) is
+         when Iir_Kind_Type_Declaration
+           | Iir_Kind_Subtype_Declaration
+           | Iir_Kind_Subtype_Attribute
+           | Iir_Kind_Element_Attribute =>
+            --  A type conversion.  The prefix is a type mark.
+            declare
+               In_Formal : Boolean;
+            begin
+               if Actual = Null_Iir then
+                  --  More than one actual.  Keep only the first.
+                  Error_Msg_Sem
+                    (+Name, "type conversion allows only one expression");
+                  In_Formal := False;
+               else
+                  In_Formal := Get_In_Formal_Flag (Assoc_Chain);
+               end if;
 
-            --  This is certainly the easiest case: the prefix is not
-            --  overloaded, so the result can be computed.
-            Set_Named_Entity
-              (Name, Sem_Type_Conversion (Name, Prefix, Actual, In_Formal));
-         end;
-         return;
-      end if;
+               --  This is certainly the easiest case: the prefix is not
+               --  overloaded, so the result can be computed.
+               Set_Named_Entity
+                 (Name, Sem_Type_Conversion (Name, Prefix, Actual, In_Formal));
+            end;
+            return;
+         when others =>
+            null;
+      end case;
 
       --  Select between slice or indexed name.
       Actual_Expr := Null_Iir;
