@@ -1391,20 +1391,14 @@ package body Vhdl.Sem is
       --  A simple name can be replaced by an expanded name in which this
       --  simple name is the selector, if and only if at both places the
       --  meaning of the simple name is given by the same declaration.
-      case Get_Kind (Left) is
-         when Iir_Kind_Simple_Name
-           | Iir_Kind_Selected_Name =>
-            case Get_Kind (Right) is
-               when Iir_Kind_Simple_Name
-                 | Iir_Kind_Selected_Name =>
-                  return Are_Trees_Equal (Get_Named_Entity (Left),
-                                          Get_Named_Entity (Right));
-               when others =>
-                  return False;
-            end case;
-         when others =>
-            null;
-      end case;
+      if Get_Kind (Left) in Iir_Kinds_Denoting_Name then
+         if Get_Kind (Right) in Iir_Kinds_Denoting_Name then
+            return Are_Trees_Equal (Get_Named_Entity (Left),
+                                    Get_Named_Entity (Right));
+         else
+            return False;
+         end if;
+      end if;
 
       --  If nodes are not of the same kind, then they are not equals!
       if Get_Kind (Left) /= Get_Kind (Right) then
@@ -1656,6 +1650,10 @@ package body Vhdl.Sem is
             return Are_Trees_Chain_Equal
               (Get_Association_Choices_Chain (Left),
                Get_Association_Choices_Chain (Right));
+
+         when Iir_Kind_Simple_Aggregate =>
+            return Are_Trees_Equal (Get_Literal_Origin (Left),
+                                    Get_Literal_Origin (Right));
 
          when Iir_Kind_Choice_By_None
               | Iir_Kind_Choice_By_Others =>
