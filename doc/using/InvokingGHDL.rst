@@ -548,92 +548,190 @@ Some warnings are reported only during analysis, others during elaboration.
   by default.
 
 .. option:: --warn-library
+.. option:: -Wlibrary
 
   Warns if a design unit replaces another design unit with the same name.
 
 .. option:: --warn-default-binding
+.. option:: -Wdefault-binding
 
-  During analyze, warns if a component instantiation has neither configuration specification nor default binding.
-  This may be useful if you want to detect during analyze possibly unbound components if you don't use configuration.
-  See section :ref:`VHDL_standards` for more details about default binding rules.
+  During analyze, warns if a component instantiation has neither
+  configuration specification nor default binding.  This may be useful
+  if you want to detect during analyze possibly unbound components if
+  you don't use configuration.  See section :ref:`VHDL_standards` for
+  more details about default binding rules.
 
 .. option:: --warn-binding
+.. option:: -Wbinding
 
-  During elaboration, warns if a component instantiation is not bound (and not explicitly left unbound).
-  Also warns if a port of an entity is not bound in a configuration specification or in a component configuration.
-  This warning is enabled by default, since default binding rules are somewhat complex and an unbound component is most
-  often unexpected.
+  During elaboration, warns if a component instantiation is not bound
+  (and not explicitly left unbound).  Also warns if a port of an
+  entity is not bound in a configuration specification or in a
+  component configuration.  This warning is enabled by default, since
+  default binding rules are somewhat complex and an unbound component
+  is most often unexpected.
 
-  However, warnings are still emitted if a component instantiation is inside a generate statement.
-  As a consequence, if you use the conditional generate statement to select a component according to the implementation,
-  you will certainly get warnings.
+  However, warnings are still emitted if a component instantiation is
+  inside a generate statement.  As a consequence, if you use the
+  conditional generate statement to select a component according to
+  the implementation, you will certainly get warnings.
+
+.. option:: --warn-port
+.. option:: -Wport
+
+  Emit a warning on unconnected input port without defaults (in
+  relaxed mode).
 
 .. option:: --warn-reserved
+.. option:: -Wreserved
 
   Emit a warning if an identifier is a reserved word in a later VHDL standard.
 
+.. option:: --warn-pragma
+.. option:: -Wpragma
+
+  Emit a warning for unknown pragma
+
 .. option:: --warn-nested-comment
+.. option:: -Wnested-comment
 
   Emit a warning if a ``/*`` appears within a block comment (vhdl 2008).
 
+.. option:: --warn-directive
+.. option:: -Wdirective
+
+  Emit an option on tool directive
+
 .. option:: --warn-parenthesis
+.. option:: -Wparenthesis
 
   Emit a warning in case of weird use of parentheses.
 
 .. option:: --warn-vital-generic
+.. option:: -Wvital-generic
 
   Warns if a generic name of a vital entity is not a vital generic name. This
   is set by default.
 
 .. option:: --warn-delayed-checks
+.. option:: -Wdelayed-checks
 
-  Warns for checks that cannot be done during analysis time and are postponed to elaboration time.
-  This is because not all procedure bodies are available during analysis (either because a package body has not yet been
-  analysed or because `GHDL` doesn't read not required package bodies).
+  Warns for checks that cannot be done during analysis time and are
+  postponed to elaboration time.  This is because not all procedure
+  bodies are available during analysis (either because a package body
+  has not yet been analysed or because `GHDL` doesn't read not
+  required package bodies).
 
-  These are checks for no wait statements in a procedure called in a sensitized process and checks for pure rules of a
-  function.
+  These are checks for no wait statements in a procedure called in a
+  sensitized process and checks for pure rules of a function.
 
 .. option:: --warn-body
+.. option:: -Wbody
 
-  Emit a warning if a package body which is not required is analyzed. If a package does not declare a subprogram or a
-  deferred constant, the package does not require a body.
+  Emit a warning if a package body which is not required is
+  analyzed. If a package does not declare a subprogram or a deferred
+  constant, the package does not require a body.
 
 .. option:: --warn-specs
+.. option:: -Wspecs
 
   Emit a warning if an all or others specification does not apply.
 
+.. option:: --warn-universal
+.. option:: -Wuniversal
+
+  Emit a warning on incorrect use of universal values.
+
+.. option:: --warn-port-bounds
+.. option:: -Wport-bounds
+
+  Emit a warning on bounds mismatch between the actual and formal in a
+  scalar port association
+
 .. option:: --warn-runtime-error
+.. option:: -Wruntime-error
 
   Emit a warning in case of runtime error that is detected during analysis.
 
-.. option:: --warn-shared
+.. option:: --warn-delta-cycle
+.. option:: -Wdelta-cycle
 
-  Emit a warning when a shared variable is declared and its type it not a protected type.
+  Emit a warning if a signal assignemnt creates a delta cycle in a
+  postponed process.
+
+.. option:: --warn-no-wait
+.. option:: -Wno-wait
+
+  Emit a warning if there is no wait statement in a non-sensitized
+  process
+
+.. option:: --warn-shared
+.. option:: -Wshared
+
+  Emit a warning when a shared variable is declared and its type it
+  not a protected type.
 
 .. option:: --warn-hide
+.. option:: -Whide
 
   Emit a warning when a declaration hides a previous hide.
 
 .. option:: --warn-unused
+.. option:: -Wunused
 
   Emit a warning when a subprogram is never used.
 
+.. option:: --warn-nowrite
+.. option:: -Wnowrite
+
+  Emit a warning if a variable or a signal is never assigned (only for synthesis).
+
 .. option:: --warn-others
+.. option:: -Wothers
 
   Emit a warning is an `others` choice is not required because all the choices have been explicitly covered.
 
 .. option:: --warn-pure
+.. option:: -Wpure
 
   Emit a warning when a pure rules is violated (like declaring a pure function with access parameters).
 
+.. option:: --warn-analyze-assert
+.. option:: -Wanalyze-assert
+
+  Emit a warning for assertions that are statically evaluated during
+  analysis.
+
+.. option:: --warn-attribute
+.. option:: -Wattribute
+
+  Emit a warning on incorrect use of attributes.
+
+.. option:: --warn-useless
+.. option:: -Wuseless
+
+  Emit a warning on useless code (like conditions that are always
+  false or true, assertions that cannot be triggered).
+
+.. option:: --warn-no-assoc
+.. option:: -Wno-assoc
+
+  Emit a warning on missing association for a port association.  Open
+  associations are required.
+
 .. option:: --warn-static
+.. option:: -Wstatic
 
   Emit a warning when a non-static expression is used at a place where the standard requires a static expression.
 
 .. option:: --warn-error
+.. option:: --warn-error=<warning>
+.. option:: -Werror
+.. option:: -Werror=<warning>
+.. option:: -Wno-error=<warning>
 
-  When this option is set, warnings are considered as errors.
+  When this option is set, warnings are considered as errors.  With
+  the parameter, only the specific warning is turned into an error.
 
 
 Diagnostics Control
@@ -665,10 +763,11 @@ Library commands
 A new library is created implicitly, by compiling entities (packages etc.) into it:
 ``ghdl -a --work=my_custom_lib my_file.vhdl``.
 
-A library's source code is usually stored and compiled into its own directory, that you specify with the
-:option:`--workdir` option:
-``ghdl -a --work=my_custom_lib --workdir=my_custom_libdir my_custom_lib_srcdir/my_file.vhdl``.
-See also the :option:`-P <-P>` command line option.
+A library's source code is usually stored and compiled into its own
+directory, that you specify with the :option:`--workdir` option:
+``ghdl -a --work=my_custom_lib --workdir=my_custom_libdir
+my_custom_lib_srcdir/my_file.vhdl``.  See also the :option:`-P <-P>`
+command line option.
 
 Furthermore, GHDL provides a few commands which act on a library:
 
