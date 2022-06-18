@@ -1,8 +1,8 @@
 -r ../pyGHDL/requirements.txt
 
-sphinx>=3.4.2
+sphinx>=5.0.2
 #recommonmark>=0.7.1
-python-dateutil>=2.8.1
+python-dateutil>=2.8.2
 
 # Sphinx Extenstions
 # sphinxcontrib-textstyle>=0.2.1
@@ -10,7 +10,7 @@ python-dateutil>=2.8.1
 # changelog>=0.3.5
 autoapi
 sphinx_fontawesome>=0.0.6
-sphinx_autodoc_typehints>=1.11.1
+sphinx_autodoc_typehints>=1.18.3
 
 # BuildTheDocs Extensions (mostly patched Sphinx extensions)
 btd.sphinx.autoprogram>=0.1.6.post1
