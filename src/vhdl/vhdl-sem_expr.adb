@@ -3562,6 +3562,31 @@ package body Vhdl.Sem_Expr is
                                    "element is out of the bounds");
                end if;
 
+               if Is_Array
+                 and then Get_Kind (El) = Iir_Kind_Choice_By_Range
+               then
+                  declare
+                     Ch_Rng : constant Iir := Get_Choice_Range (El);
+                     Expr_Type : constant Iir := Get_Type (Expr);
+                     Idx : Iir;
+                  begin
+                     if Get_Expr_Staticness (Ch_Rng) = Locally
+                       and then Get_Index_Constraint_Flag (Expr_Type)
+                     then
+                        Idx := Get_Index_Type (Expr_Type, 0);
+                        if Get_Type_Staticness (Idx) = Locally
+                          and then (Eval_Discrete_Type_Length (Idx)
+                                      /= Eval_Discrete_Range_Length (Ch_Rng))
+                        then
+                           Warning_Msg_Sem (Warnid_Runtime_Error, +Expr,
+                                            "length mismatch");
+                           Expr := Build_Overflow (Expr, Expr_Type);
+                           Set_Associated_Expr (El, Expr);
+                        end if;
+                     end if;
+                  end;
+               end if;
+
                Expr_Staticness := Min (Expr_Staticness, El_Staticness);
 
                Info.Nbr_Assocs := Info.Nbr_Assocs + 1;
