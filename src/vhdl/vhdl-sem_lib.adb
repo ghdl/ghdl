@@ -354,9 +354,13 @@ package body Vhdl.Sem_Lib is
       --  Disable all warnings.  Warnings are emitted only when the unit
       --  is analyzed.
       Save_Warnings_Setting (Warnings);
-      Disable_All_Warnings;
 
       if Get_Date_State (Design_Unit) = Date_Disk then
+         --  The unit is not loaded, so load it.
+         --  But disable warnings as the unit has already been analyzed.
+         --  The unit can be in memory but not yet analyzed when -c/-r is
+         --  used.  In that case, warnings shouldn't be disabled.
+         Disable_All_Warnings;
          Load_Parse_Design_Unit (Design_Unit, Loc);
       end if;
 
