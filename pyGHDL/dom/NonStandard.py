@@ -98,6 +98,7 @@ class Design(VHDLModel_Design):
         errorout_memory.Install_Handler()
 
         libghdl_set_option("--std=08")
+        libghdl_set_option("--ams")
 
         parse.Flag_Parse_Parenthesis.value = True
 

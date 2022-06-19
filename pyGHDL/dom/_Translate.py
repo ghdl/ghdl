@@ -823,6 +823,16 @@ def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str) -> 
                 print("[NOT IMPLEMENTED] Group template declaration in {name}".format(name=name))
             elif kind == nodes.Iir_Kind.Disconnection_Specification:
                 print("[NOT IMPLEMENTED] Disconnect specification in {name}".format(name=name))
+            elif kind == nodes.Iir_Kind.Nature_Declaration:
+                print("[NOT IMPLEMENTED] Nature declaration in {name}".format(name=name))
+            elif kind == nodes.Iir_Kind.Free_Quantity_Declaration:
+                print("[NOT IMPLEMENTED] Free quantity declaration in {name}".format(name=name))
+            elif kind == nodes.Iir_Kind.Across_Quantity_Declaration:
+                print("[NOT IMPLEMENTED] Across quantity declaration in {name}".format(name=name))
+            elif kind == nodes.Iir_Kind.Through_Quantity_Declaration:
+                print("[NOT IMPLEMENTED] Through quantity declaration in {name}".format(name=name))
+            elif kind == nodes.Iir_Kind.Terminal_Declaration:
+                print("[NOT IMPLEMENTED] Terminal declaration in {name}".format(name=name))
             else:
                 position = Position.parse(item)
                 raise DOMException(
@@ -924,6 +934,12 @@ def GetConcurrentStatementsFromChainedNodes(
             yield ForGenerateStatement.parse(statement, label)
         elif kind == nodes.Iir_Kind.Psl_Assert_Directive:
             yield ConcurrentAssertStatement.parse(statement, label)
+        elif kind == nodes.Iir_Kind.Simple_Simultaneous_Statement:
+            print(
+                "[NOT IMPLEMENTED] Simple simultaneous statement (label: '{label}') at line {line}".format(
+                    label=label, line=pos.Line
+                )
+            )
         else:
             raise DOMException(
                 "Unknown statement of kind '{kind}' in {entity} '{name}' at {file}:{line}:{column}.".format(

@@ -31,31 +31,27 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
 from pathlib import Path
-from subprocess import check_call, STDOUT
-from sys import executable as sys_executable
 
 from pytest import mark
 
-from pyGHDL.dom.NonStandard import Design
+from pyGHDL.dom.NonStandard import Design, Document
+
 
 if __name__ == "__main__":
     print("ERROR: you called a testcase declaration file as an executable module.")
     print("Use: 'python -m unitest <testcase module>'")
     exit(1)
 
+
 _TESTSUITE_ROOT = Path(__file__).parent.parent.parent.resolve()
 _GHDL_ROOT = _TESTSUITE_ROOT.parent
 
-# design = Design()
 
-@mark.xfail(reason="Was it every working?")
+design = Design()
+
+
 @mark.parametrize("file", [str(f.relative_to(_GHDL_ROOT)) for f in _TESTSUITE_ROOT.glob("sanity/**/*.vhdl")])
 def test_AllVHDLSources(file):
-    check_call([sys_executable, _GHDL_ROOT / "pyGHDL/cli/dom.py", "pretty", "-f", file], stderr=STDOUT)
-
-    # try:
-    #     lib = design.GetLibrary("sanity")
-    #     document = Document(Path(file))
-    #     design.AddDocument(document, lib)
-    # except DOMException as ex:
-    #     print(ex)
+    lib = design.GetLibrary("sanity")
+    document = Document(Path(file))
+    design.AddDocument(document, lib)
