@@ -13,7 +13,7 @@
 #
 # License:
 # ============================================================================
-#  Copyright (C) 2019-2021 Tristan Gingold
+#  Copyright (C) 2019-2022 Tristan Gingold
 #
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -31,31 +31,29 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
 from pathlib import Path
-from subprocess import check_call, STDOUT
-from sys import executable as sys_executable
 
 from pytest import mark
 
-from pyGHDL.dom.NonStandard import Design
+from pyGHDL.dom.NonStandard import Design, Document
+
 
 if __name__ == "__main__":
     print("ERROR: you called a testcase declaration file as an executable module.")
     print("Use: 'python -m unitest <testcase module>'")
     exit(1)
 
+
 _TESTSUITE_ROOT = Path(__file__).parent.parent.parent.resolve()
-_GHDL_ROOT = _TESTSUITE_ROOT.parent
+_SANITY_TESTS_ROOT = _TESTSUITE_ROOT / "sanity"
 
 
 design = Design()
 
-@mark.parametrize("file", [str(f.relative_to(_TESTSUITE_ROOT)) for f in _TESTSUITE_ROOT.glob("sanity/**/*.vhdl")])
-def test_AllVHDLSources(file):
-    check_call([sys_executable, _GHDL_ROOT / "pyGHDL/cli/dom.py", "pretty", "-f", file], stderr=STDOUT)
 
-    # try:
-    #     lib = design.GetLibrary("sanity")
-    #     document = Document(Path(file))
-    #     design.AddDocument(document, lib)
-    # except DOMException as ex:
-    #     print(ex)
+@mark.parametrize("file", [str(f.relative_to(_TESTSUITE_ROOT)) for f in _SANITY_TESTS_ROOT.glob("**/*.vhdl")])
+def test_AllVHDLSources(file):
+    filePath = _TESTSUITE_ROOT / file
+
+    lib = design.GetLibrary("sanity")
+    document = Document(filePath)
+    design.AddDocument(document, lib)

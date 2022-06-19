@@ -41,7 +41,7 @@ from pyGHDL.dom import DOMException
 
 from pyGHDL.libghdl import LibGHDLException
 from pyTooling.Decorators import export
-from pyTooling.MetaClasses import Singleton
+from pyTooling.MetaClasses import ExtendedType
 from pyTooling.TerminalUI import LineTerminal, Severity
 from pyAttributes import Attribute
 from pyAttributes.ArgParseAttributes import (
@@ -117,10 +117,6 @@ class Application(LineTerminal, ArgParseMixin):
 
     def __init__(self, debug=False, verbose=False, quiet=False, sphinx=False):
         super().__init__(verbose, debug, quiet)
-
-        # Initialize the Terminal class
-        # --------------------------------------------------------------------------
-        Singleton.Register(LineTerminal, self)
 
         # Initialize DOM with an empty design
         # --------------------------------------------------------------------------
@@ -311,6 +307,9 @@ class Application(LineTerminal, ArgParseMixin):
                         for architecture in architectures:
                             entity.Architectures.append(architecture)
 
+        if not self._design.Documents:
+            self.WriteFatal(f"No files processed at all.")
+
         PP = PrettyPrint()
 
         buffer = []
@@ -347,7 +346,7 @@ def main():  # mccabe:disable=MC0001
 
     try:
         # handover to a class instance
-        app = Application(debug, verbose, quiet)
+        app = Application()  # debug, verbose, quiet)
         app.Run()
         app.exit()
     except PrettyPrintException as ex:
