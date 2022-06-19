@@ -4408,15 +4408,19 @@ package body Trans.Chap7 is
    function Translate_Overflow_Literal (Expr : Iir) return O_Enode
    is
       Expr_Type : constant Iir := Get_Type (Expr);
-      Tinfo : constant Type_Info_Acc := Get_Info (Expr_Type);
-      Otype : constant O_Tnode := Tinfo.Ortho_Type (Mode_Value);
+      Tinfo : Type_Info_Acc;
+      Otype : O_Tnode;
       L     : O_Dnode;
    begin
+      Chap3.Translate_Anonymous_Subtype_Definition (Expr_Type, False);
+
       --  Generate the error message
       Chap6.Gen_Bound_Error (Expr);
 
       --  Create a dummy value, for type checking.  But never
       --  executed.
+      Tinfo := Get_Info (Expr_Type);
+      Otype := Tinfo.Ortho_Type (Mode_Value);
       L := Create_Temp (Otype);
       if Tinfo.Type_Mode in Type_Mode_Fat then
          --  For fat pointers or arrays.
