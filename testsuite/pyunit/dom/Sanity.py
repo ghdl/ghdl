@@ -44,14 +44,16 @@ if __name__ == "__main__":
 
 
 _TESTSUITE_ROOT = Path(__file__).parent.parent.parent.resolve()
-_GHDL_ROOT = _TESTSUITE_ROOT.parent
+_SANITY_TESTS_ROOT = _TESTSUITE_ROOT / "sanity"
 
 
 design = Design()
 
 
-@mark.parametrize("file", [str(f.relative_to(_GHDL_ROOT)) for f in _TESTSUITE_ROOT.glob("sanity/**/*.vhdl")])
+@mark.parametrize("file", [str(f.relative_to(_TESTSUITE_ROOT)) for f in _SANITY_TESTS_ROOT.glob("**/*.vhdl")])
 def test_AllVHDLSources(file):
+    filePath = _TESTSUITE_ROOT / file
+
     lib = design.GetLibrary("sanity")
-    document = Document(Path(file))
+    document = Document(filePath)
     design.AddDocument(document, lib)
