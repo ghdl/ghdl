@@ -41,7 +41,6 @@ from pyGHDL.dom import DOMException
 
 from pyGHDL.libghdl import LibGHDLException
 from pyTooling.Decorators import export
-from pyTooling.MetaClasses import ExtendedType
 from pyTooling.TerminalUI import LineTerminal, Severity
 from pyAttributes import Attribute
 from pyAttributes.ArgParseAttributes import (
@@ -308,7 +307,7 @@ class Application(LineTerminal, ArgParseMixin):
                             entity.Architectures.append(architecture)
 
         if not self._design.Documents:
-            self.WriteFatal(f"No files processed at all.")
+            self.WriteFatal("No files processed at all.")
 
         PP = PrettyPrint()
 
