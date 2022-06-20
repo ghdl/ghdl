@@ -66,6 +66,8 @@ def CheckForErrors() -> None:
                 "{file}:{line}:{column}: {msg}".format(file=fileName, line=rec.line, column=rec.offset, msg=message)
             )
 
+        errorout_memory.Clear_Errors()
+
         raise DOMException("Error raised in libghdl.") from LibGHDLException("libghdl: Internal error.", errors)
 
 
