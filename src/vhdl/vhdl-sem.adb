@@ -1393,8 +1393,8 @@ package body Vhdl.Sem is
       --  meaning of the simple name is given by the same declaration.
       if Get_Kind (Left) in Iir_Kinds_Denoting_Name then
          if Get_Kind (Right) in Iir_Kinds_Denoting_Name then
-            return Are_Trees_Equal (Get_Named_Entity (Left),
-                                    Get_Named_Entity (Right));
+            return Get_Identifier (Left) = Get_Identifier (Right)
+              and then Get_Named_Entity (Left) = Get_Named_Entity (Right);
          else
             return False;
          end if;
