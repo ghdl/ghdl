@@ -62,9 +62,7 @@ def CheckForErrors() -> None:
             fileName = ""  # name_table.Get_Name_Ptr(files_map.Get_File_Name(rec.file))
             message = errorout_memory.Get_Error_Message(i + 1)
 
-            errors.append(
-                "{file}:{line}:{column}: {msg}".format(file=fileName, line=rec.line, column=rec.offset, msg=message)
-            )
+            errors.append(f"{fileName}:{rec.line}:{rec.offset}: {message}")
 
         errorout_memory.Clear_Errors()
 

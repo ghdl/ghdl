@@ -519,11 +519,7 @@ class Aggregate(VHDLModel_Aggregate, DOMMixin):
                     rng = GetNameFromNode(choiceRange)
                 else:
                     pos = Position.parse(item)
-                    raise DOMException(
-                        "Unknown discete range kind '{kind}' in for...generate statement at line {line}.".format(
-                            kind=rangeKind.name, line=pos.Line
-                        )
-                    )
+                    raise DOMException(f"Unknown discrete range kind '{rangeKind.name}' in for...generate statement at line {pos.Line}.")
 
                 choices.append(RangedAggregateElement(item, rng, value))
             elif kind == nodes.Iir_Kind.Choice_By_Name:
@@ -533,8 +529,6 @@ class Aggregate(VHDLModel_Aggregate, DOMMixin):
             elif kind == nodes.Iir_Kind.Choice_By_Others:
                 choices.append(OthersAggregateElement(item, value))
             else:
-                raise DOMException(
-                    "Unknown choice kind '{kind}' in aggregate '{aggr}'.".format(kind=kind.name, aggr=node)
-                )
+                raise DOMException(f"Unknown choice kind '{kind.name}' in aggregate '{node}'.")
 
         return cls(node, choices)

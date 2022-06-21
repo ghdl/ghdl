@@ -314,11 +314,7 @@ class Context(VHDLModel_Context, DOMMixin):
                 items.append(UseClause.parse(item))
             else:
                 pos = Position.parse(item)
-                raise DOMException(
-                    "Unknown context item kind '{kind}' in context at line {line}.".format(
-                        kind=kind.name, line=pos.Line
-                    )
-                )
+                raise DOMException(f"Unknown context item kind '{kind.name}' in context at line {pos.Line}.")
 
         return cls(contextNode, name, items)
 

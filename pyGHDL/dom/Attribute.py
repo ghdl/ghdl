@@ -121,30 +121,14 @@ class AttributeSpecification(VHDLModel_AttributeSpecification, DOMMixin):
                 print("[NOT IMPLEMENTED] Signature name in attribute specifications.")
             else:
                 position = Position.parse(name)
-                raise DOMException(
-                    "Unknown name kind '{kind}' in attribute specification '{attr}' at {file}:{line}:{column}.".format(
-                        kind=nameKind.name,
-                        attr=attributeNode,
-                        file=position.Filename,
-                        line=position.Line,
-                        column=position.Column,
-                    )
-                )
+                raise DOMException(f"Unknown name kind '{nameKind.name}' in attribute specification '{attributeNode}' at {position}.")
 
         entityClassToken = nodes.Get_Entity_Class(attributeNode)
         try:
             entityClass = _TOKEN_TRANSLATION[entityClassToken]
         except KeyError:
             position = Position.parse(attributeNode)
-            raise DOMException(
-                "Unknown token '{token}' in attribute specification for entity class '{entityClass}' at {file}:{line}:{column}.".format(
-                    token=entityClassToken.name,
-                    entityClass=attributeNode,
-                    file=position.Filename,
-                    line=position.Line,
-                    column=position.Column,
-                )
-            )
+            raise DOMException(f"Unknown token '{entityClassToken.name}' in attribute specification for entity class '{attributeNode}' at {position}.")
 
         expression = GetExpressionFromNode(nodes.Get_Expression(attributeNode))
 

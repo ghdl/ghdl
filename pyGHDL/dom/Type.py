@@ -128,11 +128,7 @@ class PhysicalType(VHDLModel_PhysicalType, DOMMixin):
             rng = GetNameFromNode(rangeConstraint)
         else:
             pos = Position.parse(typeDefinitionNode)
-            raise DOMException(
-                "Unknown range kind '{kind}' in physical type definition at line {line}.".format(
-                    kind=rangeKind.name, line=pos.Line
-                )
-            )
+            raise DOMException(f"Unknown range kind '{rangeKind.name}' in physical type definition at line {pos.Line}.")
 
         primaryUnit = nodes.Get_Primary_Unit(typeDefinitionNode)
         primaryUnitName = GetNameOfNode(primaryUnit)
@@ -172,11 +168,7 @@ class ArrayType(VHDLModel_ArrayType, DOMMixin):
                 indexSubtype = GetSimpleTypeFromNode(index)
                 indices.append(indexSubtype)
             else:
-                raise DOMException(
-                    "Unknown kind '{kind}' for an index in the array definition of `{typeName}`.".format(
-                        kind=indexKind.name, typeName=typeName
-                    )
-                )
+                raise DOMException(f"Unknown kind '{indexKind.name}' for an index in the array definition of `{typeName}`.")
 
         elementSubtypeIndication = nodes.Get_Element_Subtype_Indication(typeDefinitionNode)
         elementSubtype = GetSubtypeIndicationFromIndicationNode(elementSubtypeIndication, "array declaration", typeName)
