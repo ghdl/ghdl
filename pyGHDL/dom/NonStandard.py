@@ -59,7 +59,8 @@ from pyGHDL.libghdl import (
     errorout_memory,
     LibGHDLException,
     utils,
-    files_map_editor, ENCODING,
+    files_map_editor,
+    ENCODING,
 )
 from pyGHDL.libghdl.vhdl import nodes, sem_lib, parse
 from pyGHDL.dom import DOMException, Position
@@ -191,7 +192,9 @@ class Document(VHDLModel_Document):
                         contextItems.append(ContextReference.parse(item))
                     else:
                         pos = Position.parse(item)
-                        raise DOMException(f"Unknown context item kind '{itemKind.name}' in context at line {pos.Line}.")
+                        raise DOMException(
+                            f"Unknown context item kind '{itemKind.name}' in context at line {pos.Line}."
+                        )
 
             if nodeKind == nodes.Iir_Kind.Entity_Declaration:
                 entity = Entity.parse(libraryUnit, contextItems)

@@ -216,7 +216,9 @@ def GetAssociations(node: Iir) -> List:
 
             associations.append(expr)
         else:
-            raise DOMException(f"Unknown association kind '{kind.name}' in array index/slice or function call '{node}'.")
+            raise DOMException(
+                f"Unknown association kind '{kind.name}' in array index/slice or function call '{node}'."
+            )
 
     return associations
 
@@ -239,7 +241,9 @@ def GetArrayConstraintsFromSubtypeIndication(
             constraints.append(GetNameFromNode(constraint))
         else:
             position = Position.parse(constraint)
-            raise DOMException(f"Unknown constraint kind '{constraintKind.name}' for constraint '{constraint}' in subtype indication '{subtypeIndication}' at {position}.")
+            raise DOMException(
+                f"Unknown constraint kind '{constraintKind.name}' for constraint '{constraint}' in subtype indication '{subtypeIndication}' at {position}."
+            )
 
     return constraints
 
@@ -266,7 +270,9 @@ def GetTypeFromNode(node: Iir) -> BaseType:
         return ProtectedType.parse(typeName, typeDefinition)
     else:
         position = Position.parse(typeDefinition)
-        raise DOMException(f"GetTypeFromNode: Unknown type definition kind '{kind.name}' for type '{typeName}' at {position}.")
+        raise DOMException(
+            f"GetTypeFromNode: Unknown type definition kind '{kind.name}' for type '{typeName}' at {position}."
+        )
 
 
 @export
@@ -294,7 +300,9 @@ def GetAnonymousTypeFromNode(node: Iir) -> BaseType:
         return ArrayType(typeDefinition, "????", [], None)
     else:
         position = Position.parse(typeDefinition)
-        raise DOMException(f"GetAnonymousTypeFromNode: Unknown type definition kind '{kind.name}' for type '{typeName}' at {position}.")
+        raise DOMException(
+            f"GetAnonymousTypeFromNode: Unknown type definition kind '{kind.name}' for type '{typeName}' at {position}."
+        )
 
 
 @export
@@ -682,7 +690,9 @@ def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str) -> 
                     pass
                 else:
                     position = Position.parse(item)
-                    raise DOMException(f"Found unexpected function body '{GetNameOfNode(item)}' in {entity} '{name}' at {position}.")
+                    raise DOMException(
+                        f"Found unexpected function body '{GetNameOfNode(item)}' in {entity} '{name}' at {position}."
+                    )
             elif kind == nodes.Iir_Kind.Procedure_Declaration:
                 if nodes.Get_Has_Body(item):
                     yield Procedure.parse(item)
@@ -697,7 +707,9 @@ def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str) -> 
                     pass
                 else:
                     position = Position.parse(item)
-                    raise DOMException(f"Found unexpected procedure body '{GetNameOfNode(item)}' in {entity} '{name}' at {position}.")
+                    raise DOMException(
+                        f"Found unexpected procedure body '{GetNameOfNode(item)}' in {entity} '{name}' at {position}."
+                    )
             elif kind == nodes.Iir_Kind.Protected_Type_Body:
                 yield ProtectedTypeBody.parse(item)
             elif kind == nodes.Iir_Kind.Object_Alias_Declaration:
@@ -811,7 +823,9 @@ def GetConcurrentStatementsFromChainedNodes(
             elif instantiatedUnitKind == nodes.Iir_Kind.Simple_Name:
                 yield ComponentInstantiation.parse(statement, instantiatedUnit, label)
             else:
-                raise DOMException(f"Unknown instantiation kind '{instantiatedUnitKind.name}' in instantiation of label {label} at {position}.")
+                raise DOMException(
+                    f"Unknown instantiation kind '{instantiatedUnitKind.name}' in instantiation of label {label} at {position}."
+                )
         elif kind == nodes.Iir_Kind.Block_Statement:
             yield ConcurrentBlockStatement.parse(statement, label)
         elif kind == nodes.Iir_Kind.If_Generate_Statement:

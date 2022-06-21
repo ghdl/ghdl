@@ -291,7 +291,9 @@ class CaseStatement(VHDLModel_CaseStatement, DOMMixin):
                     rng = GetNameFromNode(choiceRange)
                 else:
                     pos = Position.parse(alternative)
-                    raise DOMException(f"Unknown choice range kind '{choiceRangeKind.name}' in case statement at line {pos.Line}.")
+                    raise DOMException(
+                        f"Unknown choice range kind '{choiceRangeKind.name}' in case statement at line {pos.Line}."
+                    )
 
                 choice = RangedChoice(alternative, rng)
                 if sameAlternative:
@@ -362,7 +364,9 @@ class ForLoopStatement(VHDLModel_ForLoopStatement, DOMMixin):
             rng = GetNameFromNode(discreteRange)
         else:
             pos = Position.parse(loopNode)
-            raise DOMException(f"Unknown discrete range kind '{rangeKind.name}' in for...loop statement at line {pos.Line}.")
+            raise DOMException(
+                f"Unknown discrete range kind '{rangeKind.name}' in for...loop statement at line {pos.Line}."
+            )
 
         statementChain = nodes.Get_Sequential_Statement_Chain(loopNode)
         statements = GetSequentialStatementsFromChainedNodes(statementChain, "for", label)

@@ -307,20 +307,26 @@ class PrettyPrint:
         elif isinstance(generic, GenericTypeInterfaceItem):
             return self.formatGenericType(generic, level)
         else:
-            raise PrettyPrintException(f"Unhandled generic kind '{generic.__class__.__name__}' for generic '{generic.Identifiers[0]}'.")
+            raise PrettyPrintException(
+                f"Unhandled generic kind '{generic.__class__.__name__}' for generic '{generic.Identifiers[0]}'."
+            )
 
     def formatPort(self, port: Union[NamedEntity, PortInterfaceItem], level: int = 0) -> StringBuffer:
         if isinstance(port, PortSignalInterfaceItem):
             return self.formatPortSignal(port, level)
         else:
-            raise PrettyPrintException(f"Unhandled port kind '{port.__class__.__name__}' for port '{port.Identifiers[0]}'.")
+            raise PrettyPrintException(
+                f"Unhandled port kind '{port.__class__.__name__}' for port '{port.Identifiers[0]}'."
+            )
 
     def formatGenericConstant(self, generic: GenericConstantInterfaceItem, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
 
-        subTypeIndication = self.formatSubtypeIndication(generic.Subtype, 'generic', generic.Identifiers[0])
-        buffer.append(f"{prefix}  - {', '.join(generic.Identifiers)} : {generic.Mode!s} {subTypeIndication}{self.formatInitialValue(generic)}")
+        subTypeIndication = self.formatSubtypeIndication(generic.Subtype, "generic", generic.Identifiers[0])
+        buffer.append(
+            f"{prefix}  - {', '.join(generic.Identifiers)} : {generic.Mode!s} {subTypeIndication}{self.formatInitialValue(generic)}"
+        )
 
         return buffer
 
@@ -336,8 +342,10 @@ class PrettyPrint:
         buffer = []
         prefix = "  " * level
 
-        subTypeIndication = self.formatSubtypeIndication(port.Subtype, 'port', port.Identifiers[0])
-        buffer.append(f"{prefix}  - {', '.join(port.Identifiers)} : {port.Mode} {subTypeIndication}{self.formatInitialValue(port)}")
+        subTypeIndication = self.formatSubtypeIndication(port.Subtype, "port", port.Identifiers[0])
+        buffer.append(
+            f"{prefix}  - {', '.join(port.Identifiers)} : {port.Mode} {subTypeIndication}{self.formatInitialValue(port)}"
+        )
 
         return buffer
 
@@ -426,7 +434,9 @@ class PrettyPrint:
 
             return f"{subtypeIndication.SymbolName}({', '.join(constraints)})"
         else:
-            raise PrettyPrintException(f"Unhandled subtype kind '{subtypeIndication.__class__.__name__}' for {entity} '{name}'.")
+            raise PrettyPrintException(
+                f"Unhandled subtype kind '{subtypeIndication.__class__.__name__}' for {entity} '{name}'."
+            )
 
     def formatInitialValue(self, item: WithDefaultExpressionMixin) -> str:
         return f" := {item.DefaultExpression}" if item.DefaultExpression is not None else ""
@@ -438,8 +448,7 @@ class PrettyPrint:
         if isinstance(statement, ProcessStatement):
             buffer.append(f"{prefix}- {statement.Label}: process(...)")
         elif isinstance(statement, EntityInstantiation):
-            buffer.append(f"{prefix}- {statement.Label}: entity {statement.Entity}"
-            )
+            buffer.append(f"{prefix}- {statement.Label}: entity {statement.Entity}")
         elif isinstance(statement, ComponentInstantiation):
             buffer.append(f"{prefix}- {statement.Label}: component {statement.Component}")
         elif isinstance(statement, ConfigurationInstantiation):
