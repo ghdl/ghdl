@@ -48,6 +48,8 @@ from pyGHDL import __version__ as ghdlVersion
 
 Nullable = Optional
 
+ENCODING = "latin-1"
+
 
 class LibGHDLException(GHDLBaseException):
     _internalErrors: Nullable[List[str]]
@@ -164,7 +166,7 @@ def _initialize():
     libghdl.libghdl__set_hooks_for_analysis()
 
     # Set the prefix in order to locate the VHDL libraries.
-    prefix = str(_libghdl_path.parent.parent).encode("utf-8")
+    prefix = str(_libghdl_path.parent.parent).encode(ENCODING)
     libghdl.libghdl__set_exec_prefix(c_char_p(prefix), len(prefix))
 
     return libghdl
@@ -197,7 +199,7 @@ def set_option(Opt: str) -> bool:
     :param Opt: Option to set.
     :return:    Return ``True``, if the option is known and handled.
     """
-    Opt = Opt.encode("utf-8")
+    Opt = Opt.encode(ENCODING)
     return libghdl.libghdl__set_option(c_char_p(Opt), len(Opt)) == 0
 
 
@@ -233,7 +235,7 @@ def analyze_file(fname: str) -> Iir:
     :param fname: File name
     :return:      Internal Intermediate Representation (IIR)
     """
-    fname = fname.encode("utf-8")
+    fname = fname.encode(ENCODING)
     return libghdl.libghdl__analyze_file(c_char_p(fname), len(fname))
 
 

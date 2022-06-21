@@ -59,7 +59,7 @@ from pyGHDL.libghdl import (
     errorout_memory,
     LibGHDLException,
     utils,
-    files_map_editor,
+    files_map_editor, ENCODING,
 )
 from pyGHDL.libghdl.flags import Flag_Gather_Comments
 from pyGHDL.libghdl.vhdl import nodes, sem_lib
@@ -155,11 +155,11 @@ class Document(VHDLModel_Document):
                 self.__domTranslateTime = time.perf_counter() - t1
 
     def __loadFromPath(self):
-        with self._filename.open("r", encoding="utf-8") as file:
+        with self._filename.open("r", encoding=ENCODING) as file:
             self.__loadFromString(file.read())
 
     def __loadFromString(self, sourceCode: str):
-        sourcesBytes = sourceCode.encode("utf-8")
+        sourcesBytes = sourceCode.encode(ENCODING)
         sourceLength = len(sourcesBytes)
         bufferLength = sourceLength + 128
         self.__ghdlFileID = name_table.Get_Identifier(str(self._filename))
