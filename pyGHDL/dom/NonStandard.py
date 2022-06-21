@@ -143,14 +143,14 @@ class Document(VHDLModel_Document):
         else:
             self.__loadFromString(sourceCode)
 
-        if dontParse == False:
+        if not dontParse:
             # Parse input file
             t1 = time.perf_counter()
             self.__ghdlFile = sem_lib.Load_File(self.__ghdlSourceFileEntry)
             CheckForErrors()
             self.__ghdlProcessingTime = time.perf_counter() - t1
 
-            if dontTranslate == False:
+            if not dontTranslate:
                 t1 = time.perf_counter()
                 self.translate()
                 self.__domTranslateTime = time.perf_counter() - t1

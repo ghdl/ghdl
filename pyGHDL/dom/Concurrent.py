@@ -579,9 +579,7 @@ class CaseGenerateStatement(VHDLModel_CaseGenerateStatement, DOMMixin):
                 cases.append(GenerateCase.parse(caseNode, choices))
 
             caseNode = alternative
-            choices = [
-                choice,
-            ]
+            choices = [choice]
 
             alternative = nodes.Get_Chain(alternative)
 
