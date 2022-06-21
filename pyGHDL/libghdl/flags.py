@@ -36,12 +36,7 @@ from ctypes import c_bool, sizeof
 
 from pyGHDL.libghdl import libghdl
 
-__all__ = [
-    "Flag_Elocations",
-    "Verbose",
-    "Flag_Elaborate_With_Outdated",
-    "Flag_Force_Analysis",
-]
+__all__ = ["Flag_Elocations", "Verbose", "Flag_Elaborate_With_Outdated", "Flag_Force_Analysis", "AMS_Vhdl"]
 
 assert sizeof(c_bool) == 1
 
@@ -52,3 +47,5 @@ Verbose = c_bool.in_dll(libghdl, "flags__verbose")
 Flag_Elaborate_With_Outdated = c_bool.in_dll(libghdl, "flags__flag_elaborate_with_outdated")
 
 Flag_Force_Analysis = c_bool.in_dll(libghdl, "flags__flag_force_analysis")
+
+AMS_Vhdl = c_bool.in_dll(libghdl, "flags__ams_vhdl")
