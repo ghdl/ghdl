@@ -124,7 +124,7 @@ class PrettyPrint:
                 buffer.append(line)
         buffer.append(f"{prefix}Documents:")
         for document in design.Documents:
-            buffer.append(f"{prefix}  - Path: '{document.Path!s}':")
+            buffer.append(f"{prefix}  - Path: '{document.Path}':")
             for line in self.formatDocument(document, level + 2):
                 buffer.append(line)
 
@@ -190,7 +190,9 @@ class PrettyPrint:
         buffer = []
         prefix = "  " * level
         buffer.append(
-            f"{prefix}- Name: {entity.Identifier}\n{prefix}  File: {entity.Position.Filename.name}\n{prefix}  Position: {entity.Position.Line}:{entity.Position.Column}"
+            f"{prefix}- Name: {entity.Identifier}\n"
+            f"{prefix}  File: {entity.Position.Filename.name}\n"
+            f"{prefix}  Position: {entity.Position.Line}:{entity.Position.Column}"
         )
         buffer.append(f"{prefix}  Generics:")
         for generic in entity.GenericItems:
@@ -217,7 +219,9 @@ class PrettyPrint:
         buffer = []
         prefix = "  " * level
         buffer.append(
-            f"{prefix}- Name: {architecture.Identifier}\n{prefix}  File: {architecture.Position.Filename.name}\n{prefix}  Position: {architecture.Position.Line}:{architecture.Position.Column}"
+            f"{prefix}- Name: {architecture.Identifier}\n"
+            f"{prefix}  File: {architecture.Position.Filename.name}\n"
+            f"{prefix}  Position: {architecture.Position.Line}:{architecture.Position.Column}"
         )
         buffer.append(f"{prefix}  Entity: {architecture.Entity.SymbolName}")
         buffer.append(f"{prefix}  Declared:")
@@ -255,7 +259,9 @@ class PrettyPrint:
         buffer = []
         prefix = "  " * level
         buffer.append(
-            f"{prefix}- Name: {package.Identifier}\n{prefix}  File: {package.Position.Filename.name}\n{prefix}  Position: {package.Position.Line}:{package.Position.Column}"
+            f"{prefix}- Name: {package.Identifier}\n"
+            f"{prefix}  File: {package.Position.Filename.name}\n"
+            f"{prefix}  Position: {package.Position.Line}:{package.Position.Column}"
         )
         buffer.append(f"{prefix}  Declared:")
         for item in package.DeclaredItems:
@@ -323,14 +329,9 @@ class PrettyPrint:
         buffer = []
         prefix = "  " * level
 
+        subTypeIndication = self.formatSubtypeIndication(generic.Subtype, "generic", generic.Identifiers[0])
         buffer.append(
-            "{prefix}  - {name} : {mode!s} {subtypeindication}{initialValue}".format(
-                prefix=prefix,
-                name=", ".join(generic.Identifiers),
-                mode=generic.Mode,
-                subtypeindication=self.formatSubtypeIndication(generic.Subtype, "generic", generic.Identifiers[0]),
-                initialValue=self.formatInitialValue(generic),
-            )
+            f"{prefix}  - {', '.join(generic.Identifiers)} : {generic.Mode!s} {subTypeIndication}{self.formatInitialValue(generic)}"
         )
 
         return buffer
@@ -347,14 +348,9 @@ class PrettyPrint:
         buffer = []
         prefix = "  " * level
 
+        subTypeIndication = self.formatSubtypeIndication(port.Subtype, "port", port.Identifiers[0])
         buffer.append(
-            "{prefix}  - {name} : {mode!s} {subtypeindication}{initialValue}".format(
-                prefix=prefix,
-                name=", ".join(port.Identifiers),
-                mode=port.Mode,
-                subtypeindication=self.formatSubtypeIndication(port.Subtype, "port", port.Identifiers[0]),
-                initialValue=self.formatInitialValue(port),
-            )
+            f"{prefix}  - {', '.join(port.Identifiers)} : {port.Mode} {subTypeIndication}{self.formatInitialValue(port)}"
         )
 
         return buffer
@@ -364,44 +360,19 @@ class PrettyPrint:
         prefix = "  " * level
 
         if isinstance(item, BaseConstant):
-            if isinstance(item, Constant):
-                default = f" := {item.DefaultExpression!s}"
-            else:
-                default = ""
-
-            buffer.append(
-                "{prefix}- constant {name} : {subtype}{default}".format(
-                    prefix=prefix,
-                    name=", ".join(item.Identifiers),
-                    subtype=self.formatSubtypeIndication(item.Subtype, "constant", item.Identifiers[0]),
-                    default=default,
-                )
-            )
+            subTypeIndication = self.formatSubtypeIndication(item.Subtype, "constant", item.Identifiers[0])
+            initValue = f" := {item.DefaultExpression}" if isinstance(item, Constant) else ""
+            buffer.append(f"{prefix}- constant {', '.join(item.Identifiers)} : {subTypeIndication}{initValue}")
         elif isinstance(item, SharedVariable):
-            buffer.append(
-                "{prefix}- shared variable {name} : {subtype}".format(
-                    prefix=prefix,
-                    name=", ".join(item.Identifiers),
-                    subtype=self.formatSubtypeIndication(item.Subtype, "shared variable", item.Identifiers[0]),
-                )
-            )
+            subTypeIndication = self.formatSubtypeIndication(item.Subtype, "shared variable", item.Identifiers[0])
+            buffer.append(f"{prefix}- shared variable {', '.join(item.Identifiers)} : {subTypeIndication}")
         elif isinstance(item, Signal):
-            buffer.append(
-                "{prefix}- signal {name} : {subtype}{initValue}".format(
-                    prefix=prefix,
-                    name=", ".join(item.Identifiers),
-                    subtype=self.formatSubtypeIndication(item.Subtype, "signal", item.Identifiers[0]),
-                    initValue=f" := {item.DefaultExpression!s}" if item.DefaultExpression is not None else "",
-                )
-            )
+            subTypeIndication = self.formatSubtypeIndication(item.Subtype, "signal", item.Identifiers[0])
+            initValue = f" := {item.DefaultExpression}" if item.DefaultExpression is not None else ""
+            buffer.append(f"{prefix}- signal {', '.join(item.Identifiers)} : {subTypeIndication}{initValue}")
         elif isinstance(item, File):
-            buffer.append(
-                "{prefix}- File {name} : {subtype}".format(
-                    prefix=prefix,
-                    name=", ".join(item.Identifiers),
-                    subtype=self.formatSubtypeIndication(item.Subtype, "file", item.Identifiers[0]),
-                )
-            )
+            subTypeIndication = self.formatSubtypeIndication(item.Subtype, "file", item.Identifiers[0])
+            buffer.append(f"{prefix}- File {', '.join(item.Identifiers)} : {subTypeIndication}")
         elif isinstance(item, (FullType, IncompleteType)):
             buffer.append(f"{prefix}- {self.formatType(item)}")
         elif isinstance(item, Subtype):
@@ -409,26 +380,24 @@ class PrettyPrint:
         elif isinstance(item, Alias):
             buffer.append(f"{prefix}- alias {item.Identifier} is ?????")
         elif isinstance(item, Function):
-            buffer.append(f"{prefix}- function {item.Identifier} return {item.ReturnType!s}")
+            buffer.append(f"{prefix}- function {item.Identifier} return {item.ReturnType}")
         elif isinstance(item, Procedure):
             buffer.append(f"{prefix}- procedure {item.Identifier}")
         elif isinstance(item, Component):
             for line in self.formatComponent(item, level):
                 buffer.append(line)
         elif isinstance(item, Attribute):
-            buffer.append(f"{prefix}- attribute {item.Identifier} : {item.Subtype!s}")
+            buffer.append(f"{prefix}- attribute {item.Identifier} : {item.Subtype}")
         elif isinstance(item, AttributeSpecification):
-            buffer.append(f"{prefix}- attribute {item.Attribute!s} of {'????'} : {'????'} is {'????'}")
+            buffer.append(f"{prefix}- attribute {item.Attribute} of {'????'} : {'????'} is {'????'}")
         elif isinstance(item, UseClause):
-            buffer.append("{prefix}- use {names}".format(prefix=prefix, names=", ".join([str(n) for n in item.Names])))
+            buffer.append(f"{prefix}- use {', '.join([str(n) for n in item.Names])}")
         elif isinstance(item, Package):
             buffer.append(f"{prefix}- package {item.Identifier} is ..... end package")
         elif isinstance(item, PackageInstantiation):
-            buffer.append(f"{prefix}- package {item.Identifier} is new {item.PackageReference!s} generic map (.....)")
+            buffer.append(f"{prefix}- package {item.Identifier} is new {item.PackageReference} generic map (.....)")
         elif isinstance(item, DefaultClock):
-            buffer.append(
-                f"{prefix}- default {item.Identifier} is {'...'}",
-            )
+            buffer.append(f"{prefix}- default {item.Identifier} is {'...'}")
         else:
             raise PrettyPrintException(f"Unhandled declared item kind '{item.__class__.__name__}'.")
 
@@ -469,17 +438,14 @@ class PrettyPrint:
             for constraint in subtypeIndication.Constraints:
                 constraints.append(str(constraint))
 
-            return "{type}({constraints})".format(type=subtypeIndication.SymbolName, constraints=", ".join(constraints))
+            return f"{subtypeIndication.SymbolName}({', '.join(constraints)})"
         else:
             raise PrettyPrintException(
                 f"Unhandled subtype kind '{subtypeIndication.__class__.__name__}' for {entity} '{name}'."
             )
 
     def formatInitialValue(self, item: WithDefaultExpressionMixin) -> str:
-        if item.DefaultExpression is None:
-            return ""
-
-        return f" := {item.DefaultExpression!s}"
+        return f" := {item.DefaultExpression}" if item.DefaultExpression is not None else ""
 
     def formatHierarchy(self, statement: ConcurrentStatement, level: int = 0) -> StringBuffer:
         buffer = []

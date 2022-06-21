@@ -59,7 +59,8 @@ from pyGHDL.libghdl import (
     errorout_memory,
     LibGHDLException,
     utils,
-    files_map_editor, ENCODING,
+    files_map_editor,
+    ENCODING,
 )
 from pyGHDL.libghdl.flags import Flag_Gather_Comments
 from pyGHDL.libghdl.vhdl import nodes, sem_lib

@@ -630,7 +630,7 @@ class ForGenerateStatement(VHDLModel_ForGenerateStatement, DOMMixin):
         else:
             pos = Position.parse(generateNode)
             raise DOMException(
-                f"Unknown discete range kind '{rangeKind.name}' in for...generate statement at line {pos.Line}."
+                f"Unknown discrete range kind '{rangeKind.name}' in for...generate statement at line {pos.Line}."
             )
 
         body = nodes.Get_Generate_Statement_Body(generateNode)
