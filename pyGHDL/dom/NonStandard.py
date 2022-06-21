@@ -42,6 +42,8 @@ from typing import Any
 
 from pyTooling.Decorators import export
 
+from pyGHDL.dom.Names import SimpleName
+from pyVHDLModel import VHDLVersion
 from pyVHDLModel.SyntaxModel import (
     Design as VHDLModel_Design,
     Library as VHDLModel_Library,
@@ -50,6 +52,7 @@ from pyVHDLModel.SyntaxModel import (
 )
 
 from pyGHDL.libghdl import (
+    ENCODING,
     initialize as libghdl_initialize,
     finalize as libghdl_finalize,
     set_option as libghdl_set_option,
@@ -58,6 +61,7 @@ from pyGHDL.libghdl import (
     files_map,
     errorout_memory,
     LibGHDLException,
+    flags,
     utils,
     files_map_editor,
     ENCODING,
@@ -102,7 +106,6 @@ class Design(VHDLModel_Design):
         errorout_memory.Install_Handler()
 
         libghdl_set_option("--std=08")
-        libghdl_set_option("--ams")
 
         Flag_Gather_Comments.value = True
         Flag_Parse_Parenthesis.value = True
@@ -131,6 +134,7 @@ class Document(VHDLModel_Document):
         self,
         path: Path,
         sourceCode: str = None,
+        vhdlVersion: VHDLVersion = VHDLVersion.VHDL2008,
         dontParse: bool = False,
         dontTranslate: bool = False,
     ):
@@ -146,8 +150,16 @@ class Document(VHDLModel_Document):
         if not dontParse:
             # Parse input file
             t1 = time.perf_counter()
+
+            if vhdlVersion.IsAMS():
+                flags.AMS_Vhdl.value = True
+
             self.__ghdlFile = sem_lib.Load_File(self.__ghdlSourceFileEntry)
             CheckForErrors()
+
+            if vhdlVersion.IsAMS():
+                flags.AMS_Vhdl.value = False
+
             self.__ghdlProcessingTime = time.perf_counter() - t1
 
             if not dontTranslate:

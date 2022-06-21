@@ -34,6 +34,7 @@ from pathlib import Path
 
 from pytest import mark
 
+from pyVHDLModel import VHDLVersion
 from pyGHDL.dom.NonStandard import Design, Document
 
 
@@ -55,6 +56,8 @@ def test_AllVHDLSources(parameters):
     id, file = parameters.split(":")
     filePath = _TESTSUITE_ROOT / file
 
+    vhdlVersion = VHDLVersion.AMS2017 if "ams" in file else VHDLVersion.VHDL2008
+
     lib = design.GetLibrary(f"sanity_{id}")
-    document = Document(filePath)
+    document = Document(filePath, vhdlVersion=vhdlVersion)
     design.AddDocument(document, lib)
