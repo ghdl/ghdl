@@ -36,6 +36,7 @@ from ctypes import c_char, c_char_p
 
 from pyTooling.Decorators import export
 
+from pyGHDL.libghdl import ENCODING
 from pyGHDL.libghdl._types import NameId
 from pyGHDL.libghdl._decorator import BindToLibGHDL
 
@@ -73,7 +74,7 @@ def Get_Name_Ptr(Id: NameId) -> str:
     :param Id: NameId for the identifier to query.
     :return:   Identifier as string.
     """
-    return _Get_Name_Ptr(Id).decode("utf-8")
+    return _Get_Name_Ptr(Id).decode(ENCODING)
 
 
 # @export
@@ -95,7 +96,7 @@ def Get_Character(Id: NameId) -> str:
     :param Id: NameId for the identifier to query.
     :return:   Get the character of the identifier.
     """
-    return _Get_Character(Id).decode("utf-8")
+    return _Get_Character(Id).decode(ENCODING)
 
 
 # @export
@@ -119,5 +120,5 @@ def Get_Identifier(string: str) -> NameId:
     :param string: String to create or lookup.
     :return:       Id in name table.
     """
-    string = string.encode("utf-8")
+    string = string.encode(ENCODING)
     return _Get_Identifier(c_char_p(string), len(string))

@@ -36,6 +36,7 @@ from ctypes import c_int8, c_int32, c_char_p, Structure
 
 from pyTooling.Decorators import export
 
+from pyGHDL.libghdl import ENCODING
 from pyGHDL.libghdl._types import ErrorIndex
 from pyGHDL.libghdl._decorator import BindToLibGHDL
 
@@ -122,7 +123,7 @@ def Get_Error_Message(Idx: ErrorIndex) -> str:
     :param Idx: Index from 1 to ``Nbr_Messages`` See :func:`Get_Nbr_Messages`.
     :return:    Error message.
     """
-    return _Get_Error_Message(Idx).decode("utf-8")
+    return _Get_Error_Message(Idx).decode(ENCODING)
 
 
 @export

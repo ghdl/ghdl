@@ -36,6 +36,7 @@ from ctypes import c_char_p
 
 from pyTooling.Decorators import export
 
+from pyGHDL.libghdl import ENCODING
 from pyGHDL.libghdl._types import String8Id
 from pyGHDL.libghdl._decorator import BindToLibGHDL
 
@@ -57,4 +58,4 @@ def Get_String8_Ptr(Id: String8Id, Length: int) -> str:
     :param Id: String8Id for the string to query.
     :return:   String8 as string.
     """
-    return _String8_Address(Id)[:Length].decode("utf-8")
+    return _String8_Address(Id)[:Length].decode(ENCODING)

@@ -36,7 +36,7 @@ from ctypes import c_int32, c_char_p, c_bool, c_uint32
 
 from pyTooling.Decorators import export
 
-from pyGHDL.libghdl import libghdl
+from pyGHDL.libghdl import libghdl, ENCODING
 from pyGHDL.libghdl._decorator import BindToLibGHDL
 from pyGHDL.libghdl._types import SourceFileEntry
 
@@ -85,7 +85,7 @@ def Replace_Text(
     :param Text:         undocumented
     :return:             Return True in case of success, False in case of failure (the gap is too small).
     """
-    buffer = Text.encode("utf-8")
+    buffer = Text.encode(ENCODING)
     return _Replace_Text(
         File,
         Start_Line,
