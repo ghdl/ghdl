@@ -17,7 +17,7 @@ warning and error lines with the help of grc/grcat ([generic colourizer][grc]).
  [grc]: http://kassiopeia.juls.savba.sk/~garabik/software/grc.html
 
 See the [GHDL Documentation](https://ghdl.github.io/ghdl) for a detailed
-documentation on how to use [Precompile Scripts](https://ghdl.github.io/ghdl/getting/PrecompileVendorPrimitives.html)
+documentation on how to use [Precompile Scripts](https://ghdl.github.io/ghdl/getting.html#precompile-vendor-primitives)
 
 ---------------------------------------------------------------------
 
@@ -106,7 +106,7 @@ the path to the GHDL executable can be specified with `--ghdl` (Bash) or
 `-GHDL` (PoSh).
 
 For a detailed documentation and all command line options see
-[Precompile Scripts](https://ghdl.github.io/ghdl/getting/PrecompileVendorPrimitives.html)
+[Precompile Scripts](https://ghdl.github.io/ghdl/getting.html#precompile-vendor-primitives)
 
 
 ---------------------------------------------------------------------
