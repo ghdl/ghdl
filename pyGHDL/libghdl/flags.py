@@ -39,6 +39,9 @@ from pyGHDL.libghdl import libghdl
 __all__ = [
     "Flag_Elocations",
     "Verbose",
+    "MB_Comment",
+    "Explicit",
+    "Relaxed",
     "Flag_Elaborate_With_Outdated",
     "Flag_Force_Analysis",
     "AMS_Vhdl",
@@ -49,10 +52,10 @@ assert sizeof(c_bool) == 1
 
 Flag_Elocations = c_bool.in_dll(libghdl, "flags__flag_elocations")
 
-Verbose = c_bool.in_dll(libghdl, "flags__verbose")               #: Internal boolean flag representing :option:`-v`.
-MB_Comment = c_bool.in_dll(libghdl, "flags__mb_comment")         #: Internal boolean flag representing :option:`--mb-comments`.
-Explicit = c_bool.in_dll(libghdl, "flags__flag_explicit")        #: Internal boolean flag representing :option:`-fexplicit`.
-Relaxed = c_bool.in_dll(libghdl, "flags__flag_relaxed_rules")    #: Internal boolean flag representing :option:`-frelaxed`.
+Verbose = c_bool.in_dll(libghdl, "flags__verbose")  #: Internal boolean flag representing :option:`-v`.
+MB_Comment = c_bool.in_dll(libghdl, "flags__mb_comment")  #: Internal boolean flag representing :option:`--mb-comment`.
+Explicit = c_bool.in_dll(libghdl, "flags__flag_explicit")  #: Internal boolean flag representing :option:`-fexplicit`.
+Relaxed = c_bool.in_dll(libghdl, "flags__flag_relaxed_rules")  #: Internal boolean flag representing :option:`-frelaxed`.
 
 Flag_Elaborate_With_Outdated = c_bool.in_dll(libghdl, "flags__flag_elaborate_with_outdated")
 
