@@ -3307,7 +3307,9 @@ package body Trans.Chap8 is
                                                    --  Set the PARAMS field.
                Assign_Params_Field (M2E (Mval), Mode_Value);
             end if;
-         elsif Formal_Info.Interface_Field (Mode_Value) /= O_Fnode_Null then
+         elsif Formal_Info.Interface_Decl (Mode_Value) = O_Dnode_Null
+           and then Formal_Info.Interface_Field (Mode_Value) /= O_Fnode_Null
+         then
             Assign_Params_Field (Val, Mode_Value);
 
             if Sig /= O_Enode_Null then
@@ -3531,8 +3533,13 @@ package body Trans.Chap8 is
               Get_Association_Interface (El, Inter);
             Formal_Info : constant Ortho_Info_Acc := Get_Info (Base_Formal);
          begin
-            if Formal_Info.Interface_Field (Mode_Value) = O_Fnode_Null then
+            if Formal_Info.Interface_Decl (Mode_Value) /= O_Dnode_Null then
                --  Not a PARAMS field.
+               --  Note: an interface can be both a PARAMS field and an ortho
+               --  interface.  This is the case for functions with nested
+               --  subprograms.  At the start of those functions, the interface
+               --  is copied.  But for a call, the actual must be passed as
+               --  a value of the interface.
                if Get_Kind (El) = Iir_Kind_Association_Element_By_Individual
                then
                   --  Pass the whole data for an individual association.
