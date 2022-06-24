@@ -9,8 +9,6 @@
 # Authors:
 #   Patrick Lehmann
 #
-# Package package:  Document object model (DOM) for pyGHDL.libghdl.
-#
 # License:
 # ============================================================================
 #  Copyright (C) 2019-2021 Tristan Gingold
@@ -30,6 +28,9 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+Document object model (DOM) for :mod:`pyGHDL.libghdl` based on :doc:`pyVHDLModel <vhdlmodel:index>`.
+"""
 from pathlib import Path
 
 from pyTooling.Decorators import export
