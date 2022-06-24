@@ -30,6 +30,9 @@ from pyGHDL.libghdl._types import (
 from pyGHDL.libghdl.vhdl.tokens import Tok
 
 Null_Iir = 0
+"""
+Null element for an IIR node reference.
+"""
 
 Null_Iir_List = 0
 Iir_List_All = 1
