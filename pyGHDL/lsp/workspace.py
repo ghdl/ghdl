@@ -96,7 +96,9 @@ class Workspace(object):
         # We assume the path is correct.
         path = lsp.path_from_uri(doc_uri)
         if source is None:
-            source = open(path).read()
+            source = open(path, "rb").read()
+        else:
+            source = source.encode(document.Document.encoding, "replace")
         sfe = document.Document.load(source, os.path.dirname(path), os.path.basename(path))
         return self._create_document(doc_uri, sfe)
 
@@ -152,7 +154,7 @@ class Workspace(object):
             absname = os.path.join(self._root_path, name)
         # Create a document for this file.
         try:
-            fd = open(absname)
+            fd = open(absname, "rb")
             sfe = document.Document.load(fd.read(), self._root_path, name)
             fd.close()
         except OSError as err:

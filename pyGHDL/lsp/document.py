@@ -35,9 +35,8 @@ class Document(object):
         self._tree = nodes.Null_Iir
 
     @staticmethod
-    def load(source, dirname, filename):
+    def load(src_bytes, dirname, filename):
         # Write text to file buffer.
-        src_bytes = source.encode(Document.encoding, "replace")
         src_len = len(src_bytes)
         buf_len = src_len + Document.initial_gap_size
         fileid = name_table.Get_Identifier(filename)
