@@ -50,6 +50,20 @@ __all__ = [
 
 assert sizeof(c_bool) == 1
 
+
+@export
+@unique
+class VhdlStandard(IntEnum):
+    """An enumeration representing libghdl's internal ``Vhdl_Std_Type`` enumeration type."""
+
+    Vhdl_87 = 0   #: VHDL'87
+    Vhdl_93 = 1   #: VHDL'93
+    Vhdl_00 = 2   #: VHDL'2000
+    Vhdl_02 = 3   #: VHDL'2002
+    Vhdl_08 = 4   #: VHDL'2008
+    Vhdl_19 = 5   #: VHDL'2019
+
+    
 Flag_Elocations = c_bool.in_dll(libghdl, "flags__flag_elocations")
 
 Verbose = c_bool.in_dll(libghdl, "flags__verbose")  #: Internal boolean flag representing :option:`-v`.
