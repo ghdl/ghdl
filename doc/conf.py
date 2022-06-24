@@ -174,26 +174,24 @@ extensions = [
     # Standard Sphinx extensions
     'sphinx.ext.autodoc',
     'sphinx.ext.extlinks',
+	  'sphinx.ext.inheritance_diagram',
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',
-#    'sphinx.ext.graphviz',
+    'sphinx.ext.graphviz',
     'sphinx.ext.mathjax',
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
 
     # BuildTheDocs extensions
     'btd.sphinx.autoprogram',
-    'btd.sphinx.graphviz',
-    'btd.sphinx.inheritance_diagram',
+#    'btd.sphinx.graphviz',
+#    'btd.sphinx.inheritance_diagram',
 
     # Other extensions
 #    'recommonmark',
     'exec',
-#     'DocumentMember',
     'sphinx_fontawesome',
     'sphinx_autodoc_typehints',
-
-    # local extensions (patched)
     'autoapi.sphinx',
 ]
 
