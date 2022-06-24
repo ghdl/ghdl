@@ -796,7 +796,7 @@ def GetConcurrentStatementsFromChainedNodes(
         label = nodes.Get_Label(statement)
         label = name_table.Get_Name_Ptr(label) if label != nodes.Null_Iir else None
 
-        pos = Position.parse(statement)
+        position = Position.parse(statement)
 
         kind = GetIirKindOfNode(statement)
         if kind == nodes.Iir_Kind.Sensitized_Process_Statement:
@@ -808,9 +808,9 @@ def GetConcurrentStatementsFromChainedNodes(
         elif kind == nodes.Iir_Kind.Concurrent_Simple_Signal_Assignment:
             yield ConcurrentSimpleSignalAssignment.parse(statement, label)
         elif kind == nodes.Iir_Kind.Concurrent_Conditional_Signal_Assignment:
-            print(f"[NOT IMPLEMENTED] Concurrent (conditional) signal assignment (label: '{label}') at line {pos.Line}")
+            print(f"[NOT IMPLEMENTED] Concurrent (conditional) signal assignment (label: '{label}') at line {position.Line}")
         elif kind == nodes.Iir_Kind.Concurrent_Selected_Signal_Assignment:
-            print(f"[NOT IMPLEMENTED] Concurrent (selected) signal assignment (label: '{label}') at line {pos.Line}")
+            print(f"[NOT IMPLEMENTED] Concurrent (selected) signal assignment (label: '{label}') at line {position.Line}")
         elif kind == nodes.Iir_Kind.Concurrent_Procedure_Call_Statement:
             yield ConcurrentProcedureCall.parse(statement, label)
         elif kind == nodes.Iir_Kind.Component_Instantiation_Statement:
@@ -837,7 +837,7 @@ def GetConcurrentStatementsFromChainedNodes(
         elif kind == nodes.Iir_Kind.Psl_Assert_Directive:
             yield ConcurrentAssertStatement.parse(statement, label)
         elif kind == nodes.Iir_Kind.Simple_Simultaneous_Statement:
-            print(f"[NOT IMPLEMENTED] Simple simultaneous statement (label: '{label}') at line {pos.Line}")
+            print(f"[NOT IMPLEMENTED] Simple simultaneous statement (label: '{label}') at line {position.Line}")
         else:
             raise DOMException(f"Unknown statement of kind '{kind.name}' in {entity} '{name}' at {position}.")
 
@@ -849,7 +849,7 @@ def GetSequentialStatementsFromChainedNodes(
         label = nodes.Get_Label(statement)
         label = name_table.Get_Name_Ptr(label) if label != nodes.Null_Iir else None
 
-        pos = Position.parse(statement)
+        position = Position.parse(statement)
         kind = GetIirKindOfNode(statement)
         if kind == nodes.Iir_Kind.If_Statement:
             yield IfStatement.parse(statement, label)
@@ -863,7 +863,7 @@ def GetSequentialStatementsFromChainedNodes(
             nodes.Iir_Kind.Variable_Assignment_Statement,
             nodes.Iir_Kind.Conditional_Variable_Assignment_Statement,
         ):
-            print(f"[NOT IMPLEMENTED] Variable assignment (label: '{label}') at line {pos.Line}")
+            print(f"[NOT IMPLEMENTED] Variable assignment (label: '{label}') at line {position.Line}")
         elif kind == nodes.Iir_Kind.Wait_Statement:
             yield WaitStatement.parse(statement, label)
         elif kind == nodes.Iir_Kind.Procedure_Call_Statement:

@@ -97,5 +97,5 @@ def GetModeOfNode(node: Iir) -> Mode:
 
     try:
         return __MODE_TRANSLATION[nodes.Get_Mode(node)]
-    except KeyError:
-        raise LibGHDLException("Unknown mode.")
+    except KeyError as ex:
+        raise DOMException(f"Unknown mode '{ex.args[0]}'.") from ex
