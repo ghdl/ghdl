@@ -60,10 +60,10 @@ from pyGHDL.libghdl import (
     files_map,
     errorout_memory,
     LibGHDLException,
-    flags,
     utils,
     files_map_editor,
 )
+from pyGHDL.libghdl.flags import Flags, VhdlStandard
 from pyGHDL.libghdl.vhdl import nodes, sem_lib, parse
 from pyGHDL.dom import DOMException, Position
 from pyGHDL.dom._Utils import GetIirKindOfNode, CheckForErrors, GetNameOfNode
@@ -100,7 +100,7 @@ class Design(VHDLModel_Design):
         # Collect error messages in memory
         errorout_memory.Install_Handler()
 
-        libghdl_set_option("--std=08")
+        #libghdl_set_option("--std=08")
 
         parse.Flag_Parse_Parenthesis.value = True
 
@@ -145,14 +145,17 @@ class Document(VHDLModel_Document):
             # Parse input file
             t1 = time.perf_counter()
 
+            if vhdlVersion is vhdlVersion.VHDL2008:
+                Flags().Vhdl_Std = VhdlStandard.Vhdl_08
+
             if vhdlVersion.IsAMS():
-                flags.AMS_Vhdl.value = True
+                Flags().AMS_Vhdl = True
 
             self.__ghdlFile = sem_lib.Load_File(self.__ghdlSourceFileEntry)
             CheckForErrors()
 
             if vhdlVersion.IsAMS():
-                flags.AMS_Vhdl.value = False
+                Flags().AMS_Vhdl = False
 
             self.__ghdlProcessingTime = time.perf_counter() - t1
 

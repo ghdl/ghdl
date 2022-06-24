@@ -4,7 +4,7 @@ import json
 from ctypes import byref
 import pyGHDL.libghdl as libghdl
 import pyGHDL.libghdl.errorout_memory as errorout_memory
-import pyGHDL.libghdl.flags as flags
+from pyGHDL.libghdl.flags import Flags
 import pyGHDL.libghdl.errorout as errorout
 import pyGHDL.libghdl.files_map as files_map
 import pyGHDL.libghdl.libraries as libraries
@@ -44,15 +44,15 @@ class Workspace(object):
         self._prj = {}
         self._last_linted_doc = None
         errorout_memory.Install_Handler()
-        flags.Flag_Elocations.value = True
-        # flags.Verbose.value = True
+        Flags().Elocations = True
+        # Flags.Verbose = True
         # We do analysis even in case of errors.
         parse.Flag_Parse_Parenthesis.value = True
         # Force analysis to get more feedback + navigation even in case
         # of errors.
-        flags.Flag_Force_Analysis.value = True
+        Flags().Force_Analysis = True
         # Do not consider analysis order issues.
-        flags.Flag_Elaborate_With_Outdated.value = True
+        Flags().Elaborate_With_Outdated = True
         libghdl.errorout.Enable_Warning(errorout.Msgid.Warnid_Unused, True)
         libghdl.errorout.Enable_Warning(errorout.Msgid.Warnid_No_Assoc, True)
         self.read_project()
