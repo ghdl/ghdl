@@ -122,7 +122,7 @@ def Get_Error_Message(Idx: ErrorIndex) -> str:
     :param Idx: Index from 1 to ``Nbr_Messages`` See :func:`Get_Nbr_Messages`.
     :return:    Error message.
     """
-    return _Get_Error_Message(Idx).decode("utf-8")
+    return _Get_Error_Message(Idx).decode("iso-8859-1")
 
 
 @export
