@@ -56,20 +56,22 @@ assert sizeof(c_bool) == 1
 class VhdlStandard(IntEnum):
     """An enumeration representing libghdl's internal ``Vhdl_Std_Type`` enumeration type."""
 
-    Vhdl_87 = 0   #: VHDL'87
-    Vhdl_93 = 1   #: VHDL'93
-    Vhdl_00 = 2   #: VHDL'2000
-    Vhdl_02 = 3   #: VHDL'2002
-    Vhdl_08 = 4   #: VHDL'2008
-    Vhdl_19 = 5   #: VHDL'2019
+    Vhdl_87 = 0  #: VHDL'87
+    Vhdl_93 = 1  #: VHDL'93
+    Vhdl_00 = 2  #: VHDL'2000
+    Vhdl_02 = 3  #: VHDL'2002
+    Vhdl_08 = 4  #: VHDL'2008
+    Vhdl_19 = 5  #: VHDL'2019
 
-    
+
 Flag_Elocations = c_bool.in_dll(libghdl, "flags__flag_elocations")
 
 Verbose = c_bool.in_dll(libghdl, "flags__verbose")  #: Internal boolean flag representing :option:`-v`.
 MB_Comment = c_bool.in_dll(libghdl, "flags__mb_comment")  #: Internal boolean flag representing :option:`--mb-comment`.
 Explicit = c_bool.in_dll(libghdl, "flags__flag_explicit")  #: Internal boolean flag representing :option:`-fexplicit`.
-Relaxed = c_bool.in_dll(libghdl, "flags__flag_relaxed_rules")  #: Internal boolean flag representing :option:`-frelaxed`.
+Relaxed = c_bool.in_dll(
+    libghdl, "flags__flag_relaxed_rules"
+)  #: Internal boolean flag representing :option:`-frelaxed`.
 
 Flag_Elaborate_With_Outdated = c_bool.in_dll(libghdl, "flags__flag_elaborate_with_outdated")
 
