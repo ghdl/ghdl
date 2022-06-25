@@ -223,3 +223,9 @@ class Test008_Error_NoFile(JSONTest):
 
     def test_Request_Response(self):
         self._RequestResponse("cmds.json", "replies.json")
+
+class Test009_ls_122(JSONTest):
+    subdir = Path("009ls122")
+
+    def test_Request_Response(self):
+        self._RequestResponse("cmds.json", "replies.json")
