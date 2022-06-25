@@ -1,0 +1,45 @@
+# To run the LSP testsuite
+Assuming pyGHDL is installed (Hint: use pip install -U -e),
+
+> pytest
+
+or
+
+> pytest-3
+
+
+# To add a test
+
+Enable traces:
+
+> export GHDL_LS_TRACE=ghdl-ls
+
+Run the session
+
+> code .
+(or your preferred editor)
+
+This creates two files (or more): `ghdl-ls.in` and `ghdl-ls.out`
+Those are raw dumps of the LSP data.
+
+Create a new test directory (increment the number):
+
+> mkdir 099mytest
+> cd 099mytest
+
+Transforms those files in json (which are easier to read and to process):
+
+> python3 -m pyGHDL.lsp.lsptools lsp2json < xxx/ghdl-ls.in > cmds.json
+> python3 -m pyGHDL.lsp.lsptools lsp2json < xxx/ghdl-ls.out > replies.json
+
+Substitute the root directory with `@ROOT@` (for privacy and relocation):
+
+> sed -i -e 's!/home/me/test!@ROOT@' cmds.json
+> sed -i -e 's!/home/me/test!@ROOT@' replies.json
+
+Attention: the uri must ends with a `/` (you will be notified if not)
+
+Add a test in LanguageServer.py (use existing tests as a template)
+
+Adjust or improve this file.
+
