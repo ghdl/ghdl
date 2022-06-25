@@ -49,12 +49,12 @@ assert sizeof(c_bool) == 1
 class VhdlStandard(IntEnum):
     """An enumeration representing libghdl's internal ``Vhdl_Std_Type`` enumeration type."""
 
-    Vhdl_87 = 0   #: VHDL'87
-    Vhdl_93 = 1   #: VHDL'93
-    Vhdl_00 = 2   #: VHDL'2000
-    Vhdl_02 = 3   #: VHDL'2002
-    Vhdl_08 = 4   #: VHDL'2008
-    Vhdl_19 = 5   #: VHDL'2019
+    Vhdl_87 = 0  #: VHDL'87
+    Vhdl_93 = 1  #: VHDL'93
+    Vhdl_00 = 2  #: VHDL'2000
+    Vhdl_02 = 3  #: VHDL'2002
+    Vhdl_08 = 4  #: VHDL'2008
+    Vhdl_19 = 5  #: VHDL'2019
 
 
 @export
@@ -94,7 +94,6 @@ class Flags(metaclass=ExtendedType, singleton=True):
     def Verbose(self, value: bool):
         self.__Verbose.value = value
 
-
     @property
     def MB_Comment(self) -> bool:
         """
@@ -108,7 +107,6 @@ class Flags(metaclass=ExtendedType, singleton=True):
     def MB_Comment(self, value: bool):
         self.__MB_Comment.value = value
 
-
     @property
     def Explicit(self) -> bool:
         """
@@ -121,7 +119,6 @@ class Flags(metaclass=ExtendedType, singleton=True):
     @Explicit.setter
     def Explicit(self, value: bool):
         self.__Explicit.value = value
-
 
     @property
     def Relaxed(self) -> bool:
@@ -142,18 +139,16 @@ class Flags(metaclass=ExtendedType, singleton=True):
     def Relaxed(self, value: bool):
         self.__Relaxed.value = value
 
-
     @property
-    def Elaborate_With_Outdated (self) -> bool:
+    def Elaborate_With_Outdated(self) -> bool:
         """
         If set, a default aspect entity aspect might be an outdated unit. Used by ghdldrv.
         """
-        return self.__Elaborate_With_Outdated .value
+        return self.__Elaborate_With_Outdated.value
 
-    @Elaborate_With_Outdated .setter
-    def Elaborate_With_Outdated (self, value: bool):
-        self.__Elaborate_With_Outdated .value = value
-
+    @Elaborate_With_Outdated.setter
+    def Elaborate_With_Outdated(self, value: bool):
+        self.__Elaborate_With_Outdated.value = value
 
     @property
     def Force_Analysis(self) -> bool:
@@ -167,7 +162,6 @@ class Flags(metaclass=ExtendedType, singleton=True):
     def Force_Analysis(self, value: bool):
         self.__Force_Analysis.value = value
 
-
     @property
     def Vhdl_Std(self) -> VhdlStandard:
         """
@@ -180,7 +174,6 @@ class Flags(metaclass=ExtendedType, singleton=True):
     @Vhdl_Std.setter
     def Vhdl_Std(self, value: VhdlStandard):
         self.__Vhdl_Std.value = int(value)
-
 
     @property
     def AMS_Vhdl(self) -> bool:

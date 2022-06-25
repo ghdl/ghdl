@@ -53,6 +53,7 @@ __MODE_TRANSLATION = {
 Translation table if IIR modes to pyVHDLModel mode enumeration values.
 """
 
+
 @export
 def CheckForErrors() -> None:
     """

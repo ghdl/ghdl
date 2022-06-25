@@ -100,7 +100,7 @@ class Design(VHDLModel_Design):
         # Collect error messages in memory
         errorout_memory.Install_Handler()
 
-        #libghdl_set_option("--std=08")
+        # libghdl_set_option("--std=08")
 
         parse.Flag_Parse_Parenthesis.value = True
 

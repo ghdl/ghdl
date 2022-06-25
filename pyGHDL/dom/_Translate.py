@@ -808,9 +808,13 @@ def GetConcurrentStatementsFromChainedNodes(
         elif kind == nodes.Iir_Kind.Concurrent_Simple_Signal_Assignment:
             yield ConcurrentSimpleSignalAssignment.parse(statement, label)
         elif kind == nodes.Iir_Kind.Concurrent_Conditional_Signal_Assignment:
-            print(f"[NOT IMPLEMENTED] Concurrent (conditional) signal assignment (label: '{label}') at line {position.Line}")
+            print(
+                f"[NOT IMPLEMENTED] Concurrent (conditional) signal assignment (label: '{label}') at line {position.Line}"
+            )
         elif kind == nodes.Iir_Kind.Concurrent_Selected_Signal_Assignment:
-            print(f"[NOT IMPLEMENTED] Concurrent (selected) signal assignment (label: '{label}') at line {position.Line}")
+            print(
+                f"[NOT IMPLEMENTED] Concurrent (selected) signal assignment (label: '{label}') at line {position.Line}"
+            )
         elif kind == nodes.Iir_Kind.Concurrent_Procedure_Call_Statement:
             yield ConcurrentProcedureCall.parse(statement, label)
         elif kind == nodes.Iir_Kind.Component_Instantiation_Statement:
