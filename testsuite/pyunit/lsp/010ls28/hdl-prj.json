@@ -1,0 +1,6 @@
+{
+    "files" : [
+         { "file" : "adder.vhdl", "language" : "vhdl" },
+         { "file" : "top.vhdl", "language" : "vhdl" }
+     ]
+ }

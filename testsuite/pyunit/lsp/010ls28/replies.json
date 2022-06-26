@@ -1,0 +1,190 @@
+[
+  {
+    "jsonrpc": "2.0",
+    "id": 0,
+    "result": {
+      "capabilities": {
+        "textDocumentSync": {
+          "openClose": true,
+          "change": 2,
+          "save": {
+            "includeText": true
+          }
+        },
+        "hoverProvider": false,
+        "definitionProvider": true,
+        "referencesProvider": false,
+        "documentHighlightProvider": false,
+        "documentSymbolProvider": true,
+        "codeActionProvider": false,
+        "documentFormattingProvider": false,
+        "documentRangeFormattingProvider": true,
+        "renameProvider": false
+      }
+    }
+  },
+  {
+    "jsonrpc": "2.0",
+    "method": "textDocument/publishDiagnostics",
+    "params": {
+      "uri": "file://@ROOT@/top.vhdl",
+      "diagnostics": []
+    }
+  },
+  {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": [
+      {
+        "kind": 2,
+        "name": "top",
+        "location": {
+          "uri": "file://@ROOT@/top.vhdl",
+          "range": {
+            "start": {
+              "line": 3,
+              "character": 0
+            },
+            "end": {
+              "line": 8,
+              "character": 0
+            }
+          }
+        }
+      },
+      {
+        "kind": 2,
+        "name": "rtl",
+        "location": {
+          "uri": "file://@ROOT@/top.vhdl",
+          "range": {
+            "start": {
+              "line": 10,
+              "character": 0
+            },
+            "end": {
+              "line": 21,
+              "character": 0
+            }
+          }
+        }
+      },
+      {
+        "kind": 6,
+        "name": "adder",
+        "location": {
+          "uri": "file://@ROOT@/top.vhdl",
+          "range": {
+            "start": {
+              "line": 13,
+              "character": 2
+            },
+            "end": {
+              "line": 13,
+              "character": 7
+            }
+          }
+        },
+        "containerName": {
+          "kind": 2,
+          "name": "rtl",
+          "location": {
+            "uri": "file://@ROOT@/top.vhdl",
+            "range": {
+              "start": {
+                "line": 10,
+                "character": 0
+              },
+              "end": {
+                "line": 21,
+                "character": 0
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "jsonrpc": "2.0",
+    "method": "textDocument/publishDiagnostics",
+    "params": {
+      "uri": "file://@ROOT@/top.vhdl",
+      "diagnostics": []
+    }
+  },
+  {
+    "jsonrpc": "2.0",
+    "id": 2,
+    "result": [
+      {
+        "kind": 2,
+        "name": "top",
+        "location": {
+          "uri": "file://@ROOT@/top.vhdl",
+          "range": {
+            "start": {
+              "line": 3,
+              "character": 0
+            },
+            "end": {
+              "line": 8,
+              "character": 0
+            }
+          }
+        }
+      },
+      {
+        "kind": 2,
+        "name": "rtl",
+        "location": {
+          "uri": "file://@ROOT@/top.vhdl",
+          "range": {
+            "start": {
+              "line": 10,
+              "character": 0
+            },
+            "end": {
+              "line": 21,
+              "character": 0
+            }
+          }
+        }
+      },
+      {
+        "kind": 6,
+        "name": "adder",
+        "location": {
+          "uri": "file://@ROOT@/top.vhdl",
+          "range": {
+            "start": {
+              "line": 13,
+              "character": 2
+            },
+            "end": {
+              "line": 13,
+              "character": 7
+            }
+          }
+        },
+        "containerName": {
+          "kind": 2,
+          "name": "rtl",
+          "location": {
+            "uri": "file://@ROOT@/top.vhdl",
+            "range": {
+              "start": {
+                "line": 10,
+                "character": 0
+              },
+              "end": {
+                "line": 21,
+                "character": 0
+              }
+            }
+          }
+        }
+      }
+    ]
+  }
+]

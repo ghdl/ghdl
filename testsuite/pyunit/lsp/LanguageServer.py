@@ -229,3 +229,9 @@ class Test009_ls_122(JSONTest):
 
     def test_Request_Response(self):
         self._RequestResponse("cmds.json", "replies.json")
+
+class Test010_ls_28(JSONTest):
+    subdir = Path("010ls28")
+
+    def test_Request_Response(self):
+        self._RequestResponse("cmds.json", "replies.json")
