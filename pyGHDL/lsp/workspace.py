@@ -481,7 +481,7 @@ class Workspace(object):
                                 # Extract design unit from entity aspect
                                 # Do not care about the architecture.
                                 ent = nodes.Get_Entity_Name(el)
-                                ent = nodes.Get_Named_Entity(ent);
+                                ent = nodes.Get_Named_Entity(ent)
                                 ent = nodes.Get_Design_Unit(ent)
                             else:
                                 assert False, pyutils.kind_image(nodes.Get_Kind(el))
