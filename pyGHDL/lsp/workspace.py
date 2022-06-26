@@ -351,7 +351,8 @@ class Workspace(object):
         self._docs[doc_uri].check_document(source)
 
     def rm_document(self, doc_uri):
-        pass
+        # Clear diagnostics as it's not done automatically.
+        self.publish_diagnostics(doc_uri, [])
 
     def apply_edit(self, edit):
         return self._server.request("workspace/applyEdit", {"edit": edit})
