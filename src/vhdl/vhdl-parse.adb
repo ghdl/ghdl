@@ -2149,8 +2149,9 @@ package body Vhdl.Parse is
                if Vhdl_Std < Vhdl_19 then
                   Error_Msg_Parse
                     ("return identifier not allowed before vhdl 2019");
+               elsif Get_Kind (Tm) /= Iir_Kind_Simple_Name then
+                  Error_Msg_Parse ("return identifier must be an identifier");
                end if;
-               pragma Assert (Get_Kind (Tm) = Iir_Kind_Simple_Name);
                Ret := Create_Iir (Iir_Kind_Subtype_Declaration);
                Location_Copy (Ret, Tm);
                Set_Identifier (Ret, Get_Identifier (Tm));
@@ -10801,10 +10802,13 @@ package body Vhdl.Parse is
       --  Parse configuration item list
       declare
          First, Last : Iir;
+         Item : Iir;
       begin
          Chain_Init (First, Last);
          while Current_Token = Tok_For loop
-            Chain_Append (First, Last, Parse_Configuration_Item);
+            Item := Parse_Configuration_Item;
+            exit when Item = Null_Iir;
+            Chain_Append (First, Last, Item);
          end loop;
          Set_Configuration_Item_Chain (Res, First);
       end;
