@@ -76,9 +76,15 @@ package body Vhdl.Parse_Psl is
    is
       Low_B : constant Node := Get_Low_Bound (N);
       High_B : constant Node := Get_High_Bound (N);
-      Low  : constant Uns32 := Get_Value (Low_B);
+      Low  : Uns32;
       High : Uns32;
    begin
+      if Low_B = Null_Node then
+         --  Avoid crash on error.
+         return;
+      end if;
+
+      Low := Get_Value (Low_B);
       if Get_Kind (High_B) = N_Inf then
          return;
       end if;
