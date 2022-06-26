@@ -16,6 +16,7 @@ class VhdlLanguageServer(object):
             "initialized": self.initialized,
             "shutdown": self.shutdown,
             "$/setTraceNotification": self.setTraceNotification,
+            "$/setTrace": self.setTrace,
             "textDocument/didOpen": self.textDocument_didOpen,
             "textDocument/didChange": self.textDocument_didChange,
             "textDocument/didClose": self.textDocument_didClose,
@@ -37,6 +38,9 @@ class VhdlLanguageServer(object):
         self.lsp.shutdown()
 
     def setTraceNotification(self, value):
+        pass
+
+    def setTrace(self, value):
         pass
 
     def capabilities(self):
