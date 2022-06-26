@@ -475,12 +475,20 @@ class Workspace(object):
                         while lists.Is_Valid(byref(deps_it)):
                             el = lists.Get_Element(byref(deps_it))
                             if nodes.Get_Kind(el) == nodes.Iir_Kind.Design_Unit:
-                                if res.get(el, None):
-                                    res[el].append(units)
-                                else:
-                                    res[el] = [units]
+                                ent = el
+                            elif nodes.Get_Kind(el) == nodes.Iir_Kind.Entity_Aspect_Entity:
+                                # Extract design unit from entity aspect
+                                # Do not care about the architecture.
+                                ent = nodes.Get_Entity_Name(el)
+                                ent = nodes.Get_Named_Entity(ent);
+                                ent = nodes.Get_Design_Unit(ent)
                             else:
-                                assert False
+                                assert False, pyutils.kind_image(nodes.Get_Kind(el))
+                            assert nodes.Get_Kind(ent) == nodes.Iir_Kind.Design_Unit
+                            if res.get(ent, None):
+                                res[ent].append(units)
+                            else:
+                                res[ent] = [units]
                             lists.Next(byref(deps_it))
                     units = nodes.Get_Chain(units)
                 files = nodes.Get_Chain(files)
