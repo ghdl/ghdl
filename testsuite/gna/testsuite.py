@@ -15,7 +15,7 @@ class Job(object):
     def __init__(self, dirname, poll):
         self.dirname = dirname
         self.poll = poll
-        self.out = ''
+        self.out = b''
 
     def start(self):
         self.p = subprocess.Popen(
@@ -69,7 +69,10 @@ def run(keep):
                             j.out += d
             for j in done:
                 print('Finish: {}'.format(j.dirname))
-                print(j.out)
+                s = j.out
+                if sys.version_info[0] >= 3:
+                    s = s.decode('latin-1')
+                print(s)
                 code = j.wait()
                 if code != 0:
                     print('############### Error for {}'.format(j.dirname))
