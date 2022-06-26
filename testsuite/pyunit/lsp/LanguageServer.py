@@ -235,3 +235,9 @@ class Test010_ls_28(JSONTest):
 
     def test_Request_Response(self):
         self._RequestResponse("cmds.json", "replies.json")
+
+class Test011_closediag(JSONTest):
+    subdir = Path("011closediag")
+
+    def test_Request_Response(self):
+        self._RequestResponse("cmds.json", "replies.json")
