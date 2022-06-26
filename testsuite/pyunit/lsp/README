@@ -33,11 +33,11 @@ Transforms those files in json (which are easier to read and to process):
 > python3 -m pyGHDL.lsp.lsptools lsp2json < xxx/ghdl-ls.out > replies.json
 
 Substitute the root directory with `@ROOT@` (for privacy and relocation):
+(The root directory is the parent directory of the test, so it is
+ xxx/ghdl/testsuite/pyunit/lsp)
 
 > sed -i -e 's!/home/me/test!@ROOT@' cmds.json
 > sed -i -e 's!/home/me/test!@ROOT@' replies.json
-
-Attention: the uri must ends with a `/` (you will be notified if not)
 
 Add a test in LanguageServer.py (use existing tests as a template)
 
