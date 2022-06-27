@@ -243,6 +243,11 @@ package body Netlists.Memories is
                end if;
                Res := Res + 1;
                N := Get_Input_Net (Inst, 0);
+            when Id_Const_X =>
+               --  For a null wire.
+               pragma Assert (Res = 0);
+               pragma Assert (Get_Width (N) = 0);
+               return 0;
             when others =>
                raise Internal_Error;
          end case;

@@ -385,4 +385,31 @@ package body Netlists.Cleanup is
       end;
    end Mark_And_Sweep;
 
+   procedure Replace_Null_Inputs (Ctxt : Context_Acc; M : Module)
+   is
+      Inst : Instance;
+      Drv : Net;
+      Inp : Input;
+      Null_X : Net;
+   begin
+      Null_X := No_Net;
+
+      Inst := Get_First_Instance (M);
+      while Inst /= No_Instance loop
+         for I in 1 .. Get_Nbr_Inputs (Inst) loop
+            Inp := Get_Input (Inst, I - 1);
+            Drv := Get_Driver (Inp);
+            if Drv /= No_Net and then Get_Width (Drv) = 0 then
+               if Null_X = No_Net then
+                  Null_X := Build_Const_X (Ctxt, 0);
+               end if;
+               Disconnect (Inp);
+               Connect (Inp, Null_X);
+            end if;
+         end loop;
+
+         Inst := Get_Next_Instance (Inst);
+      end loop;
+   end Replace_Null_Inputs;
+
 end Netlists.Cleanup;

@@ -1149,9 +1149,6 @@ package body Netlists.Disp_Verilog is
                  or else (Flag_Merge_Edge
                             and then Id in Edge_Module_Id
                             and then not Need_Edge (Inst))
-                 or else (not Flag_Null_Wires
-                            and then Get_Nbr_Outputs (Inst) = 1
-                            and then Get_Width (Get_Output (Inst, 0)) = 0)
                then
                   --  Not displayed.
                   null;

@@ -51,7 +51,11 @@ package Synth.Flags is
 
    Flag_Debug_Nomemory2 : Boolean := False;
 
+   --  Do not expand dynamic gates.
    Flag_Debug_Noexpand : Boolean := False;
+
+   --  Do not transform null net to null X.
+   Flag_Debug_Nonull : Boolean := False;
 
    Flag_Trace_Statements : Boolean := False;
 

@@ -79,6 +79,10 @@ package body Synthesis is
 
    procedure Instance_Passes (Ctxt : Context_Acc; M : Module) is
    begin
+      if not Synth.Flags.Flag_Debug_Nonull then
+         Netlists.Cleanup.Replace_Null_Inputs (Ctxt, M);
+      end if;
+
       --  Remove unused gates.  This is not only an optimization but also
       --  a correctness point: there might be some unsynthesizable gates, like
       --  the one created for 'rising_egde (clk) and not rst'.

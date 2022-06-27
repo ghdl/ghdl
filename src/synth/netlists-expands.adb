@@ -46,6 +46,9 @@ package body Netlists.Expands is
       N := Addr_Net;
       Nbr_Els := 1;
       P := Memidx_Arr'Last;
+      if P = 0 then
+         return;
+      end if;
       loop
          Ninst := Get_Net_Parent (N);
          case Get_Id (Ninst) is
@@ -213,34 +216,47 @@ package body Netlists.Expands is
       --  2. compute number of cells.
       Gather_Memidx (Addr_Net, Memidx_Arr, Nbr_Els);
 
-      --  2. build extract gates
-      Els := new Case_Element_Array (1 .. Nbr_Els);
-      declare
-         Idx : Positive;
-         Off : Uns32;
-         Sel : Uns64;
-      begin
-         Idx := 1;
-         Off := Get_Param_Uns32 (Inst, 0);
-         Sel := 0;
-         Fill_Els (Ctxt, Memidx_Arr, 1, Val, Els, Idx, Addr_Net, Off, W, Sel);
-      end;
+      if Nbr_Els = 1 then
+         --  There is only one element, so it's not really dynamic.
+         --  Just return the value.
+         Res := Get_Input_Net (Inst, 0);
+         --  Disconnect the address
+         Addr := Disconnect_And_Get (Inst, 1);
+         if not Is_Connected (Addr) then
+            --  Should be a Const_X.
+            Remove_Instance (Get_Net_Parent (Addr));
+         end if;
+      else
+         --  2. build extract gates
+         Els := new Case_Element_Array (1 .. Nbr_Els);
+         declare
+            Idx : Positive;
+            Off : Uns32;
+            Sel : Uns64;
+         begin
+            Idx := 1;
+            Off := Get_Param_Uns32 (Inst, 0);
+            Sel := 0;
+            Fill_Els (Ctxt, Memidx_Arr,
+                      1, Val, Els, Idx, Addr_Net, Off, W, Sel);
+         end;
 
-      --  3. build mux tree
-      Disconnect (Get_Input (Inst, 1));
-      Extract_Address (Ctxt, Addr_Net, Ndims, Addr);
-      Truncate_Address (Ctxt, Addr, Nbr_Els);
-      Def := No_Net;
-      Synth_Case (Ctxt, Addr, Els.all, Def, Res, Loc);
+         --  3. build mux tree
+         Disconnect (Get_Input (Inst, 1));
+         Extract_Address (Ctxt, Addr_Net, Ndims, Addr);
+         Truncate_Address (Ctxt, Addr, Nbr_Els);
+         Def := No_Net;
+         Synth_Case (Ctxt, Addr, Els.all, Def, Res, Loc);
 
-      --  4. remove old dyn_extract.
+         --  4. remove old dyn_extract.
+         Remove_Memidx (Memidx_Arr);
+
+         Free_Case_Element_Array (Els);
+      end if;
+
       Disconnect (Get_Input (Inst, 0));
       Redirect_Inputs (Get_Output (Inst, 0), Res);
       Remove_Instance (Inst);
-
-      Remove_Memidx (Memidx_Arr);
-
-      Free_Case_Element_Array (Els);
    end Expand_Dyn_Extract;
 
    procedure Generate_Decoder (Ctxt : Context_Acc;
