@@ -31,6 +31,10 @@ package body Netlists.Disp_Verilog is
    Flag_Merge_Lit : constant Boolean := True;
    Flag_Merge_Edge : constant Boolean := True;
 
+   --  Wires/regs/parameters of size 0 are not possible in verilog.
+   --  Do not display them.
+   Flag_Null_Wires : constant Boolean := False;
+
    procedure Put_Type (W : Width) is
    begin
       if W > 1 then
@@ -1145,6 +1149,8 @@ package body Netlists.Disp_Verilog is
                  or else (Flag_Merge_Edge
                             and then Id in Edge_Module_Id
                             and then not Need_Edge (Inst))
+                 or else (not Flag_Null_Wires
+                            or else Get_Width (Get_Output (Inst, 0)) = 0)
                then
                   --  Not displayed.
                   null;
@@ -1212,14 +1218,18 @@ package body Netlists.Disp_Verilog is
       --  Output assignments.
       declare
          Idx : Port_Idx;
+         Desc : Port_Desc;
       begin
          Idx := 0;
          for I of Inputs (Self_Inst) loop
-            Put ("  assign ");
-            Put_Name (Get_Output_Desc (M, Idx).Name);
-            Put (" = ");
-            Disp_Net_Name (Get_Driver (I));
-            Put_Line (";");
+            Desc := Get_Output_Desc (M, Idx);
+            if Desc.W /= 0 or Flag_Null_Wires then
+               Put ("  assign ");
+               Put_Name (Desc.Name);
+               Put (" = ");
+               Disp_Net_Name (Get_Driver (I));
+               Put_Line (";");
+            end if;
             Idx := Idx + 1;
          end loop;
       end;
@@ -1246,6 +1256,10 @@ package body Netlists.Disp_Verilog is
    is
       Attr : Attribute;
    begin
+      if not (Desc.W /= 0 or Flag_Null_Wires) then
+         return;
+      end if;
+
       if First then
          Put ("  (");
          First := False;
