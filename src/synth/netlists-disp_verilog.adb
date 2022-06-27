@@ -246,13 +246,14 @@ package body Netlists.Disp_Verilog is
       --  Outputs
       Idx := 0;
       for O of Outputs (Inst) loop
+         Desc := Get_Output_Desc (Imod, Idx);
          if First then
             First := False;
          else
             Put_Line (",");
          end if;
          Put ("    .");
-         Put_Interface_Name (Get_Output_Desc (Imod, Idx).Name);
+         Put_Interface_Name (Desc.Name);
          Idx := Idx + 1;
          Put ("(");
          declare
