@@ -162,10 +162,12 @@ package body Netlists.Disp_Verilog is
    is
       Imod : constant Module := Get_Module (Inst);
       Idx : Port_Idx;
+      Drv : Net;
       Max_Idx : Port_Idx;
       Name : Sname;
       First : Boolean;
       Param : Param_Desc;
+      Desc : Port_Desc;
    begin
       Put ("  ");
 
@@ -221,22 +223,25 @@ package body Netlists.Disp_Verilog is
       Idx := 0;
       Max_Idx := Get_Nbr_Inputs (Imod);
       for I of Inputs (Inst) loop
-         if First then
-            First := False;
-         else
-            Put_Line (",");
+         Drv := Get_Driver (I);
+         if Flag_Null_Wires or else Get_Width (Drv) /= 0 then
+            if First then
+               First := False;
+            else
+               Put_Line (",");
+            end if;
+            Put ("    ");
+            if Idx < Max_Idx then
+               Put (".");
+               Put_Interface_Name (Get_Input_Desc (Imod, Idx).Name);
+               Put ("(");
+            end if;
+            Disp_Net_Name (Get_Driver (I));
+            if Idx < Max_Idx then
+               Put (")");
+            end if;
          end if;
-         Put ("    ");
-         if Idx < Max_Idx then
-            Put (".");
-            Put_Interface_Name (Get_Input_Desc (Imod, Idx).Name);
-            Put ("(");
-         end if;
-         Disp_Net_Name (Get_Driver (I));
-         if Idx < Max_Idx then
-            Put (")");
-            Idx := Idx + 1;
-         end if;
+         Idx := Idx + 1;
       end loop;
       --  Outputs
       Idx := 0;
