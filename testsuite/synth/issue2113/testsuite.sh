@@ -8,5 +8,8 @@ synth --out=verilog -Wno-nowrite a.vhdl -e > syn_a.v
 if grep channel syn_a.v; then
   exit 1
 fi
+if grep "0'" syn_a.v; then
+  exit 1;
+fi
 
 echo "Test successful"
