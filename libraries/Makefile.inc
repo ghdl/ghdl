@@ -125,10 +125,11 @@ SYNOPSYS08_BSRCS := $(addprefix synopsys/,$(SYNOPSYS_BSRCS)) $(addprefix synopsy
 
 .PREFIXES: .vhdl
 
-SED_V93:= sed -e '/--V87/s/^/  --/' \
+SED_V93:= sed -e '/--V87/s/^/  --/' -e '/--V08/s/^/  --/' \
  -e '/--START-V08/,/--END-V08/s/^/--/'
 
-SED_V87:= sed -e '/--!V87/s/^/  --/' -e '/--START-!V87/,/--END-!V87/s/^/--/' \
+SED_V87:= sed -e '/--!V87/s/^/  --/' -e '/--V08/s/^/  --/' \
+ -e '/--START-!V87/,/--END-!V87/s/^/--/' \
  -e '/--START-V08/,/--END-V08/s/^/--/'
 
 SED_V08:= sed -e '/--V87/s/^/  --/' -e '/--!V08/s/^/  --/' \

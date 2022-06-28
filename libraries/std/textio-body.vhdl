@@ -193,9 +193,11 @@ package body textio is
   is
   begin
     if value then
-      write (l, string'("TRUE"), justified, field);
+      write (l, string'("TRUE"), justified, field);  --!V08
+      write (l, string'("true"), justified, field);  --V08
     else
-      write (l, string'("FALSE"), justified, field);
+      write (l, string'("FALSE"), justified, field); --!V08
+      write (l, string'("false"), justified, field); --V08
     end if;
   end write;
 
