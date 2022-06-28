@@ -444,9 +444,14 @@ package body Netlists.Disp_Verilog is
    --  a name.  In that case, a signal will be created and driven.
    function Need_Signal (Inst : Instance) return Boolean
    is
+      O : constant Net := Get_Output (Inst, 0);
       I : Input;
    begin
-      I := Get_First_Sink (Get_Output (Inst, 0));
+      if not Flag_Null_Wires and then Get_Width (O) = 0 then
+         return False;
+      end if;
+
+      I := Get_First_Sink (O);
       while I /= No_Input loop
          if Need_Name (Get_Input_Parent (I)) then
             return True;
