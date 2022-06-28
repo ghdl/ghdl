@@ -2964,6 +2964,22 @@ package body Vhdl.Sem_Names is
             Assoc_Chain, True, Missing_Parameter, Name, Match);
       end Error_Parenthesis_Function;
 
+      function Has_Error_In_Assocs (Chain : Iir) return Boolean
+      is
+         Assoc : Iir;
+      begin
+         Assoc := Chain;
+         while Assoc /= Null_Iir loop
+            if Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Expression
+              and then Is_Error (Get_Actual (Assoc))
+            then
+               return True;
+            end if;
+            Assoc := Get_Chain (Assoc);
+         end loop;
+         return False;
+      end Has_Error_In_Assocs;
+
       Actual : Iir;
       Actual_Expr : Iir;
    begin
@@ -3068,7 +3084,9 @@ package body Vhdl.Sem_Names is
                Free_Overload_List (Prefix);
                Set_Named_Entity (Prefix_Name, Res_Prefix);
             end;
-            if Res = Null_Iir then
+            if Res = Null_Iir and then not Has_Error_In_Assocs (Assoc_Chain)
+            then
+               --  Emit an error, but avoid a storm.
                Error_Msg_Sem
                  (+Name, "no overloaded function found matching %n",
                   +Prefix_Name);
