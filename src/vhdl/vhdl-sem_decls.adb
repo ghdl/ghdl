@@ -505,6 +505,16 @@ package body Vhdl.Sem_Decls is
          return;
       end if;
 
+      if Get_Is_Within_Flag (Pkg) then
+         --  Looks obvious, but there is apparently no such rule in the LRM.
+         --  Catch error like:
+         --    package gen is
+         --      generic(package g2 is new gen generic map(<>));
+         --    end;
+         Error_Msg_Sem (+Inter, "generic package formal cannot be itself");
+         return;
+      end if;
+
       if Get_Generic_Map_Aspect_Chain (Inter) /= Null_Iir then
          Sem_Generic_Association_Chain (Get_Package_Header (Pkg), Inter);
          --  Not yet fully supported - need to check the instance.
