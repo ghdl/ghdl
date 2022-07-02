@@ -2585,8 +2585,7 @@ package body Vhdl.Evaluation is
            | Iir_Predefined_Bit_Array_Match_Inequality
            | Iir_Predefined_Std_Ulogic_Array_Match_Equality
            | Iir_Predefined_Std_Ulogic_Array_Match_Inequality =>
-            --  TODO
-            raise Internal_Error;
+            return Eval_Ieee_Operator (Orig, Imp, Left, Right);
 
          when Iir_Predefined_Enum_To_String
            | Iir_Predefined_Integer_To_String
