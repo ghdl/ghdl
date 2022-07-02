@@ -2588,7 +2588,9 @@ package body Vhdl.Sem_Names is
            | Iir_Kind_Attribute_Declaration
            | Iir_Kind_Type_Conversion
            | Iir_Kind_Element_Attribute
-           | Iir_Kind_Enumeration_Literal =>
+           | Iir_Kind_Enumeration_Literal
+           | Iir_Kind_Unit_Declaration
+           | Iir_Kind_Variable_Assignment_Statement =>
             if not Soft then
                Error_Msg_Sem
                  (+Prefix_Loc, "%n cannot be selected by name", +Prefix);
@@ -3375,13 +3377,11 @@ package body Vhdl.Sem_Names is
             Error_Msg_Sem (+Attr, "prefix of user defined attribute cannot be "
                              & "an anonymous object");
             return Error_Mark;
-         when Iir_Kind_Attribute_Declaration =>
-            Error_Msg_Sem (+Attr, "prefix of user defined attribute cannot be "
-                             & "an attribute");
-            return Error_Mark;
          when Iir_Kind_Function_Call
            | Iir_Kind_Type_Conversion
-           | Iir_Kinds_Attribute =>
+           | Iir_Kinds_Attribute
+           | Iir_Kind_Attribute_Declaration
+           | Iir_Kind_Library_Declaration =>
             Error_Msg_Sem (+Attr, "invalid prefix for user defined attribute");
             return Error_Mark;
          when Iir_Kinds_Object_Declaration
