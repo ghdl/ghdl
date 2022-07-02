@@ -4609,6 +4609,9 @@ package body Vhdl.Sem_Names is
             Sem_Attribute_Name (Name);
          when Iir_Kinds_External_Name =>
             Sem_External_Name (Name);
+         when Iir_Kind_Signature =>
+            Error_Msg_Sem (+Name, "signature cannot be used here");
+            Set_Named_Entity (Name, Create_Error_Name (Name));
          when others =>
             Error_Kind ("sem_name", Name);
       end case;

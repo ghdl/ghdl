@@ -905,6 +905,10 @@ package Vhdl.Nodes is
    --   Get/Set_Type_Marks_List (Field2)
    --
    --   Get/Set_Return_Type_Mark (Field8)
+   --
+   --   Get/Set_Named_Entity (Field4)
+   --
+   --   Get/Set_Is_Forward_Ref (Flag1)
 
    -- Iir_Kind_Overload_List (Short)
    --
