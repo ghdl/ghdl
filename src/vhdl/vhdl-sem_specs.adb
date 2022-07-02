@@ -1268,7 +1268,11 @@ package body Vhdl.Sem_Specs is
       if Is_Error (Entity_Name) then
          return Null_Iir;
       end if;
-      Entity_Name := Sem_Denoting_Name (Get_Entity_Name (Aspect));
+      if Get_Kind (Entity_Name) not in Iir_Kinds_Denoting_Name then
+         Error_Msg_Sem (+Entity_Name, "name of an entity expected");
+         return Null_Iir;
+      end if;
+      Entity_Name := Sem_Denoting_Name (Entity_Name);
       Set_Entity_Name (Aspect, Entity_Name);
       Entity := Get_Named_Entity (Entity_Name);
       if Entity = Error_Mark then

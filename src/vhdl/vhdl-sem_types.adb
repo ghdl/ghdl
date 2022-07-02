@@ -1749,6 +1749,9 @@ package body Vhdl.Sem_Types is
                Error_Msg_Sem
                  (+Resolution,
                   "record resolution not allowed for array subtype");
+            when Iir_Kind_Attribute_Name =>
+               Error_Msg_Sem
+                 (+Resolution, "%n not allowed as resolution", +Resolution);
             when others =>
                Error_Kind ("sem_array_constraint(resolution)", Resolution);
          end case;
@@ -2056,6 +2059,9 @@ package body Vhdl.Sem_Types is
                Error_Msg_Sem
                  (+Resolution,
                   "resolution indication must be an array element resolution");
+            when Iir_Kind_Attribute_Name =>
+               Error_Msg_Sem
+                 (+Resolution, "%n not allowed as resolution", +Resolution);
             when others =>
                Error_Kind ("sem_record_constraint(resolution)", Resolution);
          end case;

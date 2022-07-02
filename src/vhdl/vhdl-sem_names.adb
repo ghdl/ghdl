@@ -962,7 +962,7 @@ package body Vhdl.Sem_Names is
          if Get_Kind (Res) in Iir_Kinds_Denoting_Name then
             Set_Named_Entity (Res, Atype);
          else
-            return Create_Error_Type (Name);
+            Res := Create_Error_Type (Name);
          end if;
       elsif not Incomplete then
          if Get_Kind (Atype) = Iir_Kind_Incomplete_Type_Definition then
@@ -5017,7 +5017,8 @@ package body Vhdl.Sem_Names is
       Atype : Iir;
    begin
       case Get_Kind (Name) is
-         when Iir_Kinds_Denoting_Name =>
+         when Iir_Kinds_Denoting_Name
+           | Iir_Kind_Attribute_Name =>
             --  Common correct case.
             Atype := Get_Named_Entity (Name);
             case Get_Kind (Atype) is

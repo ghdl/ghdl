@@ -1571,6 +1571,12 @@ package body Vhdl.Sem_Assocs is
 
       --  Analyze actual.
       Actual := Get_Actual (Assoc);
+      if Get_Kind (Actual) not in Iir_Kinds_Denoting_Name then
+         Error_Msg_Sem
+           (+Assoc,
+            "actual of association must denote a package instantiation");
+         return;
+      end if;
       Actual := Sem_Denoting_Name (Actual);
       Set_Actual (Assoc, Actual);
 

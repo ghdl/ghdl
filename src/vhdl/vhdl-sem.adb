@@ -128,6 +128,9 @@ package body Vhdl.Sem is
          Entity := Get_Library_Unit (Entity);
          Set_Named_Entity (Name, Entity);
          Xrefs.Xref_Ref (Name, Entity);
+      elsif Get_Kind (Name) not in Iir_Kinds_Denoting_Name then
+         Error_Msg_Sem (+Name, "entity name expected");
+         return Null_Iir;
       else
          --  Certainly an expanded name.  Use the standard name analysis.
          Name := Sem_Denoting_Name (Name);
@@ -3058,17 +3061,23 @@ package body Vhdl.Sem is
       Name : Iir;
       Pkg : Iir;
    begin
-      Name := Sem_Denoting_Name (Get_Uninstantiated_Package_Name (Decl));
-      Set_Uninstantiated_Package_Name (Decl, Name);
-      Pkg := Get_Named_Entity (Name);
-      if Is_Error (Pkg) then
-         null;
-      elsif Get_Kind (Pkg) /= Iir_Kind_Package_Declaration then
-         Error_Class_Match (Name, "package");
-         Pkg := Create_Error (Pkg);
-      elsif not Is_Uninstantiated_Package (Pkg) then
-         Error_Msg_Sem (+Name, "%n is not an uninstantiated package", +Pkg);
-         Pkg := Create_Error (Pkg);
+      Name := Get_Uninstantiated_Package_Name (Decl);
+      if Get_Kind (Name) not in Iir_Kinds_Denoting_Name then
+         Error_Msg_Sem (+Name, "uninstantiated package name expected");
+         Pkg := Create_Error (Name);
+      else
+         Name := Sem_Denoting_Name (Name);
+         Set_Uninstantiated_Package_Name (Decl, Name);
+         Pkg := Get_Named_Entity (Name);
+         if Is_Error (Pkg) then
+            null;
+         elsif Get_Kind (Pkg) /= Iir_Kind_Package_Declaration then
+            Error_Class_Match (Name, "package");
+            Pkg := Create_Error (Pkg);
+         elsif not Is_Uninstantiated_Package (Pkg) then
+            Error_Msg_Sem (+Name, "%n is not an uninstantiated package", +Pkg);
+            Pkg := Create_Error (Pkg);
+         end if;
       end if;
 
       Set_Uninstantiated_Package_Decl (Decl, Pkg);
