@@ -198,6 +198,13 @@ package body Synth.Vhdl_Insts is
                   T := T.Arr_El;
                end loop;
             end;
+         when Type_Record =>
+            for I in Typ.Rec.E'Range loop
+               Hash_Bounds (C, Typ.Rec.E (I).Typ);
+            end loop;
+         when Type_Bit
+           | Type_Logic =>
+            null;
          when others =>
             raise Internal_Error;
       end case;
