@@ -544,7 +544,8 @@ package body Vhdl.Sem_Psl is
             --  always/never.
             Sem_Property (Prop, Top);
             return Prop;
-         when N_Eventually =>
+         when N_Eventually
+            | N_Strong =>
             Sem_Property (Prop);
             return Prop;
          when N_Clock_Event =>
