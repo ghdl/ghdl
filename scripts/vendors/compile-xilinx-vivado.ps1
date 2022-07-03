@@ -64,7 +64,7 @@ param(
 	[string]$Source =           "",
 	# Set output directory name.
 	[string]$Output =           "",
-	# Set GHDL binary directory.
+	# Set path to GHDL's executable, e.g. <MyGHDLPath>/bin/ghdl.exe
 	[string]$GHDL =             ""
 )
 

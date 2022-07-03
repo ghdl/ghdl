@@ -156,16 +156,19 @@ function Get-GHDLBinary
 	{	$GHDLBinary = $env:GHDL   }
 	else
 	{	try
-		{	write-host "calling which ..."
-			$GHDLBinary = (Get-Command "ghdl.exe").Source }
+		{	Write-host "Calling Get-Command ..."
+			$GHDLBinary = (Get-Command "ghdl.exe" -ErrorAction Stop).Source }
 		catch
-		{	Write-Host "Use adv. options '-GHDL' to set the GHDL executable." -ForegroundColor Red
+		{	Write-Host "Cannot find ghdl.exe." -ForegroundColor Red
+			Write-Host "Use adv. options '-GHDL' to set the GHDL executable." -ForegroundColor Red
 			Exit-CompileScript -1
 		}
 	}
 
 	if (-not (Test-Path $GHDLBinary -PathType Leaf))
-	{	Write-Host "Use adv. options '-GHDL' to set the GHDL executable." -ForegroundColor Red
+	{
+		Write-Host "$GHDLBinary is not a file." -ForegroundColor Red
+		Write-Host "Use adv. options '-GHDL' to set the GHDL executable." -ForegroundColor Red
 		Exit-CompileScript -1
 	}
 
