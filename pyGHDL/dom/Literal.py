@@ -42,6 +42,7 @@ from pyVHDLModel.SyntaxModel import (
     CharacterLiteral as VHDLModel_CharacterLiteral,
     StringLiteral as VHDLModel_StringLiteral,
 )
+from pyGHDL import logger
 from pyGHDL.libghdl import name_table, str_table
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
@@ -153,4 +154,4 @@ class StringLiteral(VHDLModel_StringLiteral, DOMMixin):
             value = str_table.Get_String8_Ptr(nodes.Get_String8_Id(literalNode), nodes.Get_String_Length(literalNode))
             return cls(literalNode, value)
         else:
-            print("[NOT IMPLEMENTED] Bit String Literal not supported yet")
+            logger.warning("[NOT IMPLEMENTED] Bit String Literal not supported yet")

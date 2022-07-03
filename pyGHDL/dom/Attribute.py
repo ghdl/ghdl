@@ -41,6 +41,7 @@ from pyVHDLModel.SyntaxModel import (
     SubtypeOrSymbol,
     EntityClass,
 )
+from pyGHDL import logger
 from pyGHDL.libghdl import utils
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
@@ -118,7 +119,7 @@ class AttributeSpecification(VHDLModel_AttributeSpecification, DOMMixin):
             if nameKind == nodes.Iir_Kind.Simple_Name:
                 names.append(SimpleName(name, GetNameOfNode(name)))
             elif nameKind == nodes.Iir_Kind.Signature:
-                print("[NOT IMPLEMENTED] Signature name in attribute specifications.")
+                logger.warning("[NOT IMPLEMENTED] Signature name in attribute specifications.")
             else:
                 position = Position.parse(name)
                 raise DOMException(

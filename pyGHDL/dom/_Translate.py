@@ -34,6 +34,7 @@ from typing import List, Generator, Type
 
 from pyTooling.Decorators import export
 
+from pyGHDL import logger
 from pyGHDL.dom.Sequential import (
     IfStatement,
     ForLoopStatement,
@@ -310,7 +311,7 @@ def GetAnonymousTypeFromNode(node: Iir) -> BaseType:
         return PhysicalType.parse(typeName, typeDefinition)
 
     elif kind == nodes.Iir_Kind.Array_Subtype_Definition:
-        print("[NOT IMPLEMENTED] Array_Subtype_Definition")
+        logger.warning("[NOT IMPLEMENTED] Array_Subtype_Definition")
 
         return ArrayType(typeDefinition, "????", [], None)
     else:
@@ -741,7 +742,7 @@ def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str) -> 
                 if nodes.Get_Has_Body(item):
                     yield Function.parse(item)
                 else:
-                    print("[NOT IMPLEMENTED] function declaration without body")
+                    logger.warning("[NOT IMPLEMENTED] function declaration without body")
 
                 lastKind = kind
                 item = nodes.Get_Chain(item)
@@ -765,7 +766,7 @@ def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str) -> 
                 if nodes.Get_Has_Body(item):
                     yield Procedure.parse(item)
                 else:
-                    print("[NOT IMPLEMENTED] procedure declaration without body")
+                    logger.warning("[NOT IMPLEMENTED] procedure declaration without body")
 
                 lastKind = kind
                 item = nodes.Get_Chain(item)
@@ -814,25 +815,25 @@ def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str) -> 
 
                 yield PackageInstantiation.parse(item)
             elif kind == nodes.Iir_Kind.Configuration_Specification:
-                print("[NOT IMPLEMENTED] Configuration specification in {name}".format(name=name))
+                logger.warning("[NOT IMPLEMENTED] Configuration specification in {name}".format(name=name))
             elif kind == nodes.Iir_Kind.Psl_Default_Clock:
                 yield DefaultClock.parse(item)
             elif kind == nodes.Iir_Kind.Group_Declaration:
-                print("[NOT IMPLEMENTED] Group declaration in {name}".format(name=name))
+                logger.warning("[NOT IMPLEMENTED] Group declaration in {name}".format(name=name))
             elif kind == nodes.Iir_Kind.Group_Template_Declaration:
-                print("[NOT IMPLEMENTED] Group template declaration in {name}".format(name=name))
+                logger.warning("[NOT IMPLEMENTED] Group template declaration in {name}".format(name=name))
             elif kind == nodes.Iir_Kind.Disconnection_Specification:
-                print("[NOT IMPLEMENTED] Disconnect specification in {name}".format(name=name))
+                logger.warning("[NOT IMPLEMENTED] Disconnect specification in {name}".format(name=name))
             elif kind == nodes.Iir_Kind.Nature_Declaration:
-                print("[NOT IMPLEMENTED] Nature declaration in {name}".format(name=name))
+                logger.warning("[NOT IMPLEMENTED] Nature declaration in {name}".format(name=name))
             elif kind == nodes.Iir_Kind.Free_Quantity_Declaration:
-                print("[NOT IMPLEMENTED] Free quantity declaration in {name}".format(name=name))
+                logger.warning("[NOT IMPLEMENTED] Free quantity declaration in {name}".format(name=name))
             elif kind == nodes.Iir_Kind.Across_Quantity_Declaration:
-                print("[NOT IMPLEMENTED] Across quantity declaration in {name}".format(name=name))
+                logger.warning("[NOT IMPLEMENTED] Across quantity declaration in {name}".format(name=name))
             elif kind == nodes.Iir_Kind.Through_Quantity_Declaration:
-                print("[NOT IMPLEMENTED] Through quantity declaration in {name}".format(name=name))
+                logger.warning("[NOT IMPLEMENTED] Through quantity declaration in {name}".format(name=name))
             elif kind == nodes.Iir_Kind.Terminal_Declaration:
-                print("[NOT IMPLEMENTED] Terminal declaration in {name}".format(name=name))
+                logger.warning("[NOT IMPLEMENTED] Terminal declaration in {name}".format(name=name))
             else:
                 position = Position.parse(item)
                 raise DOMException(
@@ -892,13 +893,13 @@ def GetConcurrentStatementsFromChainedNodes(
         elif kind == nodes.Iir_Kind.Concurrent_Simple_Signal_Assignment:
             yield ConcurrentSimpleSignalAssignment.parse(statement, label)
         elif kind == nodes.Iir_Kind.Concurrent_Conditional_Signal_Assignment:
-            print(
+            logger.warning(
                 "[NOT IMPLEMENTED] Concurrent (conditional) signal assignment (label: '{label}') at line {line}".format(
                     label=label, line=pos.Line
                 )
             )
         elif kind == nodes.Iir_Kind.Concurrent_Selected_Signal_Assignment:
-            print(
+            logger.warning(
                 "[NOT IMPLEMENTED] Concurrent (selected) signal assignment (label: '{label}') at line {line}".format(
                     label=label, line=pos.Line
                 )
@@ -935,7 +936,7 @@ def GetConcurrentStatementsFromChainedNodes(
         elif kind == nodes.Iir_Kind.Psl_Assert_Directive:
             yield ConcurrentAssertStatement.parse(statement, label)
         elif kind == nodes.Iir_Kind.Simple_Simultaneous_Statement:
-            print(
+            logger.warning(
                 "[NOT IMPLEMENTED] Simple simultaneous statement (label: '{label}') at line {line}".format(
                     label=label, line=pos.Line
                 )
@@ -974,7 +975,7 @@ def GetSequentialStatementsFromChainedNodes(
             nodes.Iir_Kind.Variable_Assignment_Statement,
             nodes.Iir_Kind.Conditional_Variable_Assignment_Statement,
         ):
-            print(
+            logger.warning(
                 "[NOT IMPLEMENTED] Variable assignment (label: '{label}') at line {line}".format(
                     label=label, line=pos.Line
                 )
