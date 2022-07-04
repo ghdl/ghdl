@@ -215,7 +215,7 @@ jobs:
         run: |
           ./scripts/macosx/install-ada.sh
           brew --prefix llvm
-          ls -l $(brew --prefix llvm)
+          brew ls --verbose llvm
           brew --prefix
 
       - name: '🚧 Build and 🚦 Test GHDL'
