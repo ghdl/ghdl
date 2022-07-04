@@ -854,7 +854,7 @@ package body Netlists.Disp_Verilog is
          when Id_Neg =>
             Disp_Template ("  assign \o0 = -\i0;" & NL, Inst);
          when Id_Abs=>
-            Disp_Template ("  \o0 <= std_logic_vector(abs \si0);" & NL, Inst);
+            Disp_Template ("  \o0 <= \si0 >= 0 ? \i0 : -\i0;" & NL, Inst);
          when Id_Extract =>
             Disp_Template ("  assign \o0 = ", Inst);
             Disp_Extract (Inst);
