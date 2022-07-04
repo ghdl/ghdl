@@ -55,9 +55,6 @@ __version__ = "3.0.0-dev"
 __keywords__ = ["vhdl", "parser", "compiler", "simulator", "ghdl"]
 
 from pyTooling.Decorators import export
-import logging
-
-logger = logging.Logger("pyGHDL")
 
 
 @export

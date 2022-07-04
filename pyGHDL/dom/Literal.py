@@ -42,11 +42,10 @@ from pyVHDLModel.SyntaxModel import (
     CharacterLiteral as VHDLModel_CharacterLiteral,
     StringLiteral as VHDLModel_StringLiteral,
 )
-from pyGHDL import logger
 from pyGHDL.libghdl import name_table, str_table
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
-from pyGHDL.dom import DOMMixin
+from pyGHDL.dom import DOMMixin, logger
 from pyGHDL.dom._Utils import GetNameOfNode
 
 __all__ = []

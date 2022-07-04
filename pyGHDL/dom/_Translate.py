@@ -34,7 +34,6 @@ from typing import List, Generator, Type
 
 from pyTooling.Decorators import export
 
-from pyGHDL import logger
 from pyGHDL.dom.Sequential import (
     IfStatement,
     ForLoopStatement,
@@ -65,7 +64,7 @@ from pyVHDLModel.SyntaxModel import (
 from pyGHDL.libghdl import utils, name_table
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
-from pyGHDL.dom import Position, DOMException
+from pyGHDL.dom import Position, DOMException, logger
 from pyGHDL.dom._Utils import (
     GetNameOfNode,
     GetIirKindOfNode,

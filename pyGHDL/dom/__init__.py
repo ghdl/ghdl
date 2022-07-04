@@ -30,6 +30,7 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+import logging
 from pathlib import Path
 
 from pyTooling.Decorators import export
@@ -41,6 +42,7 @@ from pyGHDL.libghdl.vhdl import nodes
 
 __all__ = []
 
+logger = logging.getLogger("pyGHDL")
 
 @export
 class Position:

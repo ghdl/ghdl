@@ -41,12 +41,11 @@ from pyVHDLModel.SyntaxModel import (
     SubtypeOrSymbol,
     EntityClass,
 )
-from pyGHDL import logger
 from pyGHDL.libghdl import utils
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.libghdl.vhdl.tokens import Tok
-from pyGHDL.dom import DOMMixin, Position, DOMException, Expression
+from pyGHDL.dom import DOMMixin, Position, DOMException, Expression, logger
 from pyGHDL.dom._Utils import GetNameOfNode, GetIirKindOfNode
 from pyGHDL.dom._Translate import GetNameFromNode, GetExpressionFromNode
 from pyGHDL.dom.Names import SimpleName
