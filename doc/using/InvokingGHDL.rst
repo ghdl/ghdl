@@ -311,9 +311,12 @@ Generate dependency file command [``--gen-depends``]
 
 Generate a Makefile containing only dependencies to build a design unit.
 
-This command works like the make and gen-makefile commands (see :option:`-m`), but instead of a full makefile only
-dependencies without rules are generated on the standard output.
-These rules can then be integrated in another Makefile.
+This command works like the make and gen-makefile commands (see
+:option:`-m`), but instead of a full makefile only dependencies
+without rules are generated on the standard output.  These rules can
+then be integrated in another Makefile.
+
+This command is not available with the mcode backend.
 
 .. _GHDL:options:
 
