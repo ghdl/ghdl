@@ -212,7 +212,7 @@ jobs:
 
       # Although we cache this, we let the script run to check if the cache is valid (without conditions)
       - name: '⚙ Dependencies (brew)'
-        run:
+        run: |
           ./scripts/macosx/install-ada.sh
           brew list
 
