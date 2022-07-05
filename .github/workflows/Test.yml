@@ -214,7 +214,7 @@ jobs:
       - name: '⚙ Dependencies (brew)'
         run: |
           ./scripts/macosx/install-ada.sh
-          brew list
+          brew list llvm@13
 
       - name: '🚧 Build and 🚦 Test GHDL'
         run: |
