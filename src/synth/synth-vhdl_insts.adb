@@ -664,6 +664,10 @@ package body Synth.Vhdl_Insts is
             when others =>
                Vhdl.Errors.Error_Kind ("synth_single_input_assoc", Conv);
          end case;
+      elsif Actual = Null_Node then
+         --  No actual, no default value.
+         Act := Create_Value_Net
+           (Build_Const_X (Ctxt, Inter_Typ.W), Inter_Typ);
       else
          Act := Synth_Expression_With_Type (Act_Inst, Actual, Inter_Typ);
       end if;
