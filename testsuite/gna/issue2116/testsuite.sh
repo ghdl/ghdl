@@ -41,6 +41,8 @@ eval2.vhdl
 func1.vhdl
 func2.vhdl
 func3.vhdl
+func4_0.vhdl
+func4_1.vhdl
 func4.vhdl
 func5.vhdl
 func6.vhdl
