@@ -1959,7 +1959,9 @@ package body Synth.Vhdl_Oper is
                return Create_Value_Net (Edge, Res_Typ);
             end;
          when Iir_Predefined_Ieee_1164_Is_X_Log
-            | Iir_Predefined_Ieee_1164_Is_X_Slv =>
+            | Iir_Predefined_Ieee_1164_Is_X_Slv
+            | Iir_Predefined_Ieee_Numeric_Std_Is_X_Sgn
+            | Iir_Predefined_Ieee_Numeric_Std_Is_X_Uns =>
             --  Always false.
             return Create_Value_Discrete (0, Boolean_Type);
          when Iir_Predefined_Ieee_1164_To_Bitvector
