@@ -212,13 +212,11 @@ jobs:
 
       # Although we cache this, we let the script run to check if the cache is valid (without conditions)
       - name: '⚙ Dependencies (brew)'
-        run: |
-          ./scripts/macosx/install-ada.sh
-          brew list
+        run: ./scripts/macosx/install-ada.sh
 
       - name: '🚧 Build and 🚦 Test GHDL'
         run: |
-          PATH=$PWD/gnat/bin:$PATH
+          PATH=$PWD/gnat/bin:$PATH:/usr/local/Cellar/llvm@13/13.0.1/bin/
           ./scripts/ci-run.sh -c
           mv ghdl-*.tgz ghdl-macos-${{ matrix.os }}-${{ matrix.backend }}.tgz
         env:
