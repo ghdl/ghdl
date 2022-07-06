@@ -2,6 +2,16 @@
 
 . ../../testenv.sh
 
+ok_files="
+func4_0.vhdl
+func4_1.vhdl
+"
+
+export GHDL_STD_FLAGS=--std=08
+for f in $ok_files; do
+    analyze $f
+done
+
 files="
 aspect01.vhdl
 aspect02.vhdl
@@ -41,8 +51,6 @@ eval2.vhdl
 func1.vhdl
 func2.vhdl
 func3.vhdl
-func4_0.vhdl
-func4_1.vhdl
 func4.vhdl
 func5.vhdl
 func6.vhdl
