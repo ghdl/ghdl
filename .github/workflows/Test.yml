@@ -212,9 +212,7 @@ jobs:
 
       # Although we cache this, we let the script run to check if the cache is valid (without conditions)
       - name: '⚙ Dependencies (brew)'
-        run: |
-          ./scripts/macosx/install-ada.sh
-          brew list llvm@13
+        run: ./scripts/macosx/install-ada.sh
 
       - name: '🚧 Build and 🚦 Test GHDL'
         run: |
