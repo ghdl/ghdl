@@ -247,24 +247,26 @@ package body Netlists.Disp_Verilog is
       Idx := 0;
       for O of Outputs (Inst) loop
          Desc := Get_Output_Desc (Imod, Idx);
-         if First then
-            First := False;
-         else
-            Put_Line (",");
-         end if;
-         Put ("    .");
-         Put_Interface_Name (Desc.Name);
          Idx := Idx + 1;
-         Put ("(");
-         declare
-            I : Input;
-         begin
-            I := Get_First_Sink (O);
-            if I /= No_Input then
-               Disp_Net_Name (O);
+         if Flag_Null_Wires or else Desc.W /= 0 then
+            if First then
+               First := False;
+            else
+               Put_Line (",");
             end if;
-         end;
-         Put (")");
+            Put ("    .");
+            Put_Interface_Name (Desc.Name);
+            Put ("(");
+            declare
+               I : Input;
+            begin
+               I := Get_First_Sink (O);
+               if I /= No_Input then
+                  Disp_Net_Name (O);
+               end if;
+            end;
+            Put (")");
+         end if;
       end loop;
       Put_Line (");");
    end Disp_Instance_Gate;
@@ -1126,6 +1128,7 @@ package body Netlists.Disp_Verilog is
    procedure Disp_Module_Declarations (M : Module)
    is
       Id : Module_Id;
+      W : Width;
    begin
       for Inst of Instances (M) loop
          Id := Get_Id (Inst);
@@ -1189,32 +1192,35 @@ package body Netlists.Disp_Verilog is
 
                   --  Display reg/wire for each output.
                   for N of Outputs (Inst) loop
-                     case Id is
-                        when Id_Dff
-                          | Id_Idff
-                          | Id_Adff
-                          | Id_Iadff
-                          | Id_Isignal =>
-                           --  As expected
-                           Put ("  reg ");
-                        when Id_Mux4
-                           | Id_Pmux
-                           | Id_Dyn_Insert
-                           | Id_Dyn_Insert_En =>
-                           --  Implemented by a process
-                           Put ("  reg ");
-                        when Constant_Module_Id =>
-                           Put ("  localparam ");
-                        when others =>
-                           Put ("  wire ");
-                     end case;
-                     Put_Type (Get_Width (N));
-                     Disp_Net_Name (N);
-                     if Id in Constant_Module_Id then
-                        Put (" = ");
-                        Disp_Constant_Inline (Inst);
+                     W := Get_Width (N);
+                     if Flag_Null_Wires or W /= 0 then
+                        case Id is
+                           when Id_Dff
+                             | Id_Idff
+                             | Id_Adff
+                             | Id_Iadff
+                             | Id_Isignal =>
+                              --  As expected
+                              Put ("  reg ");
+                           when Id_Mux4
+                             | Id_Pmux
+                             | Id_Dyn_Insert
+                             | Id_Dyn_Insert_En =>
+                              --  Implemented by a process
+                              Put ("  reg ");
+                           when Constant_Module_Id =>
+                              Put ("  localparam ");
+                           when others =>
+                              Put ("  wire ");
+                        end case;
+                        Put_Type (Get_Width (N));
+                        Disp_Net_Name (N);
+                        if Id in Constant_Module_Id then
+                           Put (" = ");
+                           Disp_Constant_Inline (Inst);
+                        end if;
+                        Put_Line (";");
                      end if;
-                     Put_Line (";");
                   end loop;
                end if;
          end case;
