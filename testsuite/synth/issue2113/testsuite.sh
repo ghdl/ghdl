@@ -12,4 +12,9 @@ if grep "0'" syn_a.v; then
   exit 1;
 fi
 
+synth --out=verilog -Wno-nowrite c.vhdl -e > syn_c.v
+if grep channel syn_c.v; then
+  exit 1
+fi
+
 echo "Test successful"
