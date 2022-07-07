@@ -2167,8 +2167,37 @@ package body Vhdl.Evaluation is
                return Build_Overflow (Orig);
             end if;
          when Iir_Predefined_Integer_Exp =>
-            return Build_Integer_Check
-              (Get_Value (Left) ** Integer (Get_Value (Right)), Orig);
+            declare
+               Exp : Int64;
+               Val : Int64;
+               Res : Int64;
+            begin
+               Val := Get_Value (Left);
+               --  LRM08 9.2.8 Misellaneous operators
+               --  Exponentiation with a negative exponent is only allowed for
+               --  a list operand of a floating-point type.
+               Exp := Get_Value (Right);
+               if Exp < 0 then
+                  raise Constraint_Error;
+               end if;
+               --  LRM08 9.2.8 Misellaneous operators
+               --  Exponentiation with an integer exponent is equivalent to
+               --  repeated multiplication of the left operand by itself for
+               --  a number of times indicated by the absolute value of the
+               --  exponent and from left to right; [...]
+               --  GHDL: use the standard power-of-2 approach.  This is not
+               --  strictly equivalent however.
+               Res := 1;
+               loop
+                  if Exp mod 2 = 1 then
+                     Res := Res * Val;
+                  end if;
+                  Exp := Exp / 2;
+                  exit when Exp = 0;
+                  Val := Val * Val;
+               end loop;
+               return Build_Integer_Check (Res, Orig);
+            end;
 
          when Iir_Predefined_Integer_Equality =>
             return Build_Boolean (Get_Value (Left) = Get_Value (Right));
