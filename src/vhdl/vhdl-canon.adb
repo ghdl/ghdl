@@ -116,6 +116,9 @@ package body Vhdl.Canon is
       end if;
 
       case Get_Kind (Expr) is
+         when Iir_Kind_Overflow_Literal =>
+            null;
+
          when Iir_Kind_Slice_Name =>
             if not Is_Target and then
               Get_Name_Staticness (Expr) >= Globally

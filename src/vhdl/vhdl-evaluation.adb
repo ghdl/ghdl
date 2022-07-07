@@ -228,7 +228,9 @@ package body Vhdl.Evaluation is
       Location_Copy (Res, Origin);
       Set_Type (Res, Expr_Type);
       Set_Literal_Origin (Res, Origin);
-      Set_Expr_Staticness (Res, Locally);
+      --  Expression is not static so that it will be an error if it needs
+      --  to.  Otherwise, the error will occur at runtime.
+      Set_Expr_Staticness (Res, None);
       return Res;
    end Build_Overflow;
 
