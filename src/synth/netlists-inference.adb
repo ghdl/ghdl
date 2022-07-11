@@ -747,12 +747,13 @@ package body Netlists.Inference is
    function Infere_Latch (Ctxt : Context_Acc;
                           Val : Net;
                           Prev_Val : Net;
+                          Last_Use : Boolean;
                           Loc : Location_Type) return Net
    is
       Name : Sname;
    begin
       --  In case of false loop, do not close the loop but assign X.
-      if Is_False_Loop (Prev_Val) then
+      if Last_Use and then Is_False_Loop (Prev_Val) then
          return Build_Const_X (Ctxt, Get_Width (Val));
       end if;
 
@@ -862,7 +863,7 @@ package body Netlists.Inference is
       Extract_Clock (Ctxt, Get_Driver (Sel), Clk, Enable);
       if Clk = No_Net then
          --  No clock -> latch or combinational loop
-         Res := Infere_Latch (Ctxt, Val, Prev_Val, Loc);
+         Res := Infere_Latch (Ctxt, Val, Prev_Val, Last_Use, Loc);
       else
          --  Clock -> FF
          First_Mux := Get_Net_Parent (Val);
