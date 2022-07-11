@@ -428,23 +428,19 @@ package body Synth.Environment is
                   Pa : Partial_Assign_Record renames
                     Partial_Assign_Table.Table (P);
                begin
-                  if Synth.Flags.Flag_Debug_Noinference then
-                     Add_Conc_Assign (Wid, Pa.Value, Pa.Offset);
-                  elsif Wire_Rec.Kind = Wire_Enable then
+                  if Wire_Rec.Kind = Wire_Enable then
                      --  Possibly infere a idff/iadff.
                      pragma Assert (Pa.Offset = 0);
                      pragma Assert (Pa.Next = No_Partial_Assign);
-                     Res := Inference.Infere_Assert
-                       (Ctxt, Pa.Value, Outport, Loc);
+                     if Synth.Flags.Flag_Debug_Noinference then
+                        Res := Pa.Value;
+                     else
+                        Res := Inference.Infere_Assert
+                          (Ctxt, Pa.Value, Outport, Loc);
+                     end if;
                      Connect (Get_Input (Get_Net_Parent (Outport), 0), Res);
                   else
-                     --  Note: lifetime is currently based on the kind of the
-                     --   wire (variable -> not reused beyond this process).
-                     --   This is OK for vhdl but not general.
-                     Res := Inference.Infere
-                       (Ctxt, Pa.Value, Pa.Offset, Outport, Loc,
-                        Wire_Rec.Kind = Wire_Variable);
-                     Add_Conc_Assign (Wid, Res, Pa.Offset);
+                     Add_Conc_Assign (Wid, Pa.Value, Pa.Offset, Loc);
                   end if;
                   P := Pa.Next;
                end;
@@ -807,8 +803,23 @@ package body Synth.Environment is
       Expected_Off : Uns32;
       Nbr_Assign : Natural;
    begin
-      Nbr_Assign := Wire_Rec.Nbr_Final_Assign;
+      --  Do inferences.
+      if not Synth.Flags.Flag_Debug_Noinference then
+         Asgn := Wire_Rec.Final_Assign;
+         while Asgn /= No_Conc_Assign loop
+            declare
+               Ca : Conc_Assign_Record renames Conc_Assign_Table.Table (Asgn);
+            begin
+               Ca.Value := Inference.Infere
+                 (Ctxt, Ca.Value, Ca.Offset, Wire_Rec.Gate, Ca.Loc,
+                  Wire_Rec.Kind = Wire_Variable);
+               Asgn := Ca.Next;
+            end;
+         end loop;
+      end if;
+
       --  Sort assignments by offset.
+      Nbr_Assign := Wire_Rec.Nbr_Final_Assign;
       Asgn := Wire_Rec.Final_Assign;
       Sort_Conc_Assign (Asgn, Nbr_Assign, Asgn, Last_Asgn);
       First_Assign := Asgn;
@@ -969,6 +980,13 @@ package body Synth.Environment is
                then
                   --  Single and full assignment.
                   Value := Conc_Asgn.Value;
+                  if not Synth.Flags.Flag_Debug_Noinference then
+                     pragma Assert (Wire_Rec.Kind /= Wire_Enable);
+                     pragma Assert (Conc_Asgn.Offset = 0);
+                     Value := Inference.Infere
+                       (Ctxt, Value, 0, Wire_Rec.Gate, Conc_Asgn.Loc,
+                        Wire_Rec.Kind = Wire_Variable);
+                  end if;
                else
                   --  Partial assignment.
                   Finalize_Complex_Assignment (Ctxt, Wire_Rec, Value);
