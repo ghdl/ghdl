@@ -276,7 +276,9 @@ package Synth.Environment is
    type Conc_Assign is private;
    No_Conc_Assign : constant Conc_Assign;
 
-   procedure Add_Conc_Assign (Wid : Wire_Id; Val : Net; Off : Uns32);
+   --  Add a concurrent assignment to WID.
+   procedure Add_Conc_Assign
+     (Wid : Wire_Id; Val : Net; Off : Uns32; Loc : Location_Type);
 
    procedure Finalize_Assignment
      (Ctxt : Builders.Context_Acc; Wid : Wire_Id);
@@ -374,6 +376,9 @@ private
 
    type Conc_Assign_Record is record
       Next : Conc_Assign;
+
+      --  Location of the assignment.
+      Loc : Location_Type;
 
       --  Concurrent assignment at OFFSET.  The width is set by value width.
       Value : Net;

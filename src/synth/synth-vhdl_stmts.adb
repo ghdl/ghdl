@@ -3871,7 +3871,7 @@ package body Synth.Vhdl_Stmts is
 
          N := Build_Formal_Input (Get_Build (Syn_Inst), Id, Typ.W);
          Set_Location (N, Val);
-         Add_Conc_Assign (Get_Value_Wire (Base.Val), N, 0);
+         Add_Conc_Assign (Get_Value_Wire (Base.Val), N, 0, Get_Location (Val));
       end;
    end Synth_Attribute_Formal;
 

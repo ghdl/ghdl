@@ -380,12 +380,14 @@ package body Synth.Environment is
       Conc_Assign_Table.Table (Asgn).Next := Chain;
    end Set_Conc_Chain;
 
-   procedure Add_Conc_Assign (Wid : Wire_Id; Val : Net; Off : Uns32)
+   procedure Add_Conc_Assign
+     (Wid : Wire_Id; Val : Net; Off : Uns32; Loc : Location_Type)
    is
       Wire_Rec : Wire_Id_Record renames Wire_Id_Table.Table (Wid);
    begin
       pragma Assert (Wire_Rec.Kind /= Wire_None);
       Conc_Assign_Table.Append ((Next => Wire_Rec.Final_Assign,
+                                 Loc => Loc,
                                  Value => Val,
                                  Offset => Off));
       Wire_Rec.Final_Assign := Conc_Assign_Table.Last;
@@ -416,7 +418,7 @@ package body Synth.Environment is
             if Wire_Rec.Kind = Wire_Enable then
                Connect (Get_Input (Get_Net_Parent (Outport), 0), Res);
             else
-               Add_Conc_Assign (Wid, Res, 0);
+               Add_Conc_Assign (Wid, Res, 0, Loc);
             end if;
          when False =>
             P := Asgn_Rec.Val.Asgns;
@@ -838,6 +840,7 @@ package body Synth.Environment is
             --  FIXME: handle initial values.
             Conc_Assign_Table.Append
               ((Next => Asgn,
+                Loc => No_Location,
                 Value => Build_Const_Z (Ctxt, Next_Off - Expected_Off),
                 Offset => Expected_Off));
             New_Asgn := Conc_Assign_Table.Last;
@@ -2032,6 +2035,7 @@ begin
    pragma Assert (Phis_Table.Last = No_Phi_Id);
 
    Conc_Assign_Table.Append ((Next => No_Conc_Assign,
+                              Loc => No_Location,
                               Value => No_Net,
                               Offset => 0));
    pragma Assert (Conc_Assign_Table.Last = No_Conc_Assign);
