@@ -566,6 +566,20 @@ package body Netlists.Builders is
                       Outputs);
    end Create_Dff_Modules;
 
+   procedure Create_Latch_Modules (Ctxt : Context_Acc)
+   is
+      Outputs : Port_Desc_Array (0 .. 0);
+   begin
+      Ctxt.M_Dlatch := New_User_Module
+        (Ctxt.Design,
+         New_Sname_Artificial (Get_Identifier ("dlatch"), No_Sname),
+         Id_Dlatch, 2, 1, 0);
+      Outputs := (0 => Create_Output ("q"));
+      Set_Ports_Desc (Ctxt.M_Dlatch, (0 => Create_Input ("d"),
+                                      1 => Create_Input ("en", 1)),
+                      Outputs);
+   end Create_Latch_Modules;
+
    procedure Create_Assert_Assume_Cover (Ctxt : Context_Acc)
    is
       Outputs : Port_Desc_Array (1 .. 0);
@@ -758,6 +772,7 @@ package body Netlists.Builders is
       Create_Mux_Modules (Res);
       Create_Objects_Module (Res);
       Create_Dff_Modules (Res);
+      Create_Latch_Modules (Res);
 
       Create_Assert_Assume_Cover (Res);
 
@@ -1588,6 +1603,21 @@ package body Netlists.Builders is
       Connect (Get_Input (Inst, 3), Init);
       return O;
    end Build_Midff;
+
+   function Build_Dlatch (Ctxt : Context_Acc; En : Net; D : Net) return Net
+   is
+      Wd : constant Width := Get_Width (D);
+      pragma Assert (Get_Width (En) = 1);
+      Inst : Instance;
+      O : Net;
+   begin
+      Inst := New_Internal_Instance (Ctxt, Ctxt.M_Dlatch);
+      O := Get_Output (Inst, 0);
+      Set_Width (O, Wd);
+      Connect (Get_Input (Inst, 0), D);
+      Connect (Get_Input (Inst, 1), En);
+      return O;
+   end Build_Dlatch;
 
    function Build_Tri (Ctxt : Context_Acc; En : Net; D : Net) return Net
    is

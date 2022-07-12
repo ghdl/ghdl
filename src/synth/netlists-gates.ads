@@ -201,8 +201,11 @@ package Netlists.Gates is
    --  Output:  0: Q
    Id_Midff : constant Module_Id := 69;
 
-   --  Reserved.
-   Id_Latch : constant Module_Id := 70;
+   --  Gated D Latch
+   --  Inputs:  0: D
+   --           1: EN
+   --  Outputs: 0: Q
+   Id_Dlatch : constant Module_Id := 70;
 
    --  Tri state buffer.
    --  Inputs:  0: D

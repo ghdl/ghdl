@@ -212,6 +212,8 @@ package Netlists.Builders is
                          Els : Net;
                          Init : Net) return Net;
 
+   function Build_Dlatch (Ctxt : Context_Acc; En : Net; D : Net) return Net;
+
    function Build_Tri (Ctxt : Context_Acc; En : Net; D : Net) return Net;
 
    function Build_Resolver (Ctxt : Context_Acc; L, R : Net) return Net;
@@ -257,6 +259,7 @@ private
       M_Iadff : Module;
       M_Mdff : Module;
       M_Midff : Module;
+      M_Dlatch : Module;
       M_Tri : Module;
       M_Resolver : Module;
       M_Truncate : Module_Arr (Truncate_Module_Id);
