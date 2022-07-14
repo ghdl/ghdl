@@ -474,7 +474,7 @@ install.libghdl.include: install.dirs $(srcdir)/src/synth/include/synth_gates.h
 	$(INSTALL_DATA) -p $(srcdir)/src/synth/include/synth_gates.h $(DESTDIR)$(incdir)/
 
 test.$(backend): install.libghdl.local
-install.libghdl.local: all.libghdl
+install.libghdl.local: all.libghdl $(srcdir)/src/synth/include/synth_gates.h
 	$(MKDIR) -p $(incdirsuffix)/ghdl/
 	$(INSTALL_DATA) -p $(srcdir)/src/synth/include/synth.h $(incdirsuffix)/ghdl/
 	$(INSTALL_DATA) -p $(srcdir)/src/synth/include/synth_gates.h $(incdirsuffix)/ghdl/
