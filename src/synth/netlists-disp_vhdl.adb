@@ -1056,7 +1056,10 @@ package body Netlists.Disp_Vhdl is
                            "    if \ei0 then" & NL &
                            "      \o0 <= \i1;" & NL &
                            "    end if;" & NL &
-                           "  end process;" & NL, Inst);
+                             "  end process;" & NL, Inst);
+         when Id_Dlatch =>
+            Disp_Template
+              ("  \o0 <= \i0 when \fi1 = '1' else \o0;" & NL, Inst);
          when Id_Mux2 =>
             Disp_Template
               ("  \o0 <= \i1 when \fi0 = '0' else \i2;" & NL, Inst);

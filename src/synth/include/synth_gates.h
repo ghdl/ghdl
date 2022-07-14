@@ -69,7 +69,7 @@ enum Module_Id {
    Id_Iadff = 67,
    Id_Mdff = 68,
    Id_Midff = 69,
-   Id_Latch = 70,
+   Id_Dlatch = 70,
    Id_Tri = 72,
    Id_Resolver = 73,
    Id_Utrunc = 82,

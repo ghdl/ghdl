@@ -941,6 +941,9 @@ package body Netlists.Disp_Verilog is
                Disp_Template ("  initial" & NL &
                               "    \o0 = \i2;" & NL, Inst);
             end if;
+         when Id_Dlatch =>
+            Disp_Template ("  always @(\i1)" & NL &
+                             "    \o0 <= \i0;" & NL, Inst);
          when Id_Mux2 =>
             Disp_Template ("  assign \o0 = \i0 ? \i2 : \i1;" & NL, Inst);
          when Id_Mux4 =>
@@ -1199,6 +1202,7 @@ package body Netlists.Disp_Verilog is
                              | Id_Idff
                              | Id_Adff
                              | Id_Iadff
+                             | Id_Dlatch
                              | Id_Isignal =>
                               --  As expected
                               Put ("  reg ");
