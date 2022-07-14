@@ -2,15 +2,9 @@
 
 . ../../testenv.sh
 
-# TODO: reuse synth_tb, but we need to pass --latches
 
-analyze afed.vhdl tb_afed.vhdl
-elab_simulate tb_afed
-clean
+GHDL_SYNTH_FLAGS=--latches
 
-synth --latches afed.vhdl -e > syn_afed.vhdl
-analyze syn_afed.vhdl tb_afed.vhdl
-elab_simulate tb_afed --ieee-asserts=disable-at-0 --assert-level=error
-clean
+synth_tb afed
 
 echo "Test successful"
