@@ -1377,6 +1377,8 @@ package body Vhdl.Sem_Names is
                if Param /= Null_Iir then
                   Set_Parameter (Attr, Param);
                end if;
+
+               Sem_Decls.Add_Declaration_For_Implicit_Signal (Attr);
             end if;
          when Iir_Kind_Ramp_Attribute
            | Iir_Kind_Signal_Slew_Attribute

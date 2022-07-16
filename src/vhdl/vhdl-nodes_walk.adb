@@ -157,6 +157,7 @@ package body Vhdl.Nodes_Walk is
       case Get_Kind (Stmt) is
          when Iir_Kinds_Simple_Concurrent_Statement
            | Iir_Kind_Component_Instantiation_Statement
+           | Iir_Kinds_Simultaneous_Statement
            | Iir_Kind_Psl_Default_Clock =>
             Status := Cb.all (Stmt);
          when Iir_Kind_Block_Statement =>

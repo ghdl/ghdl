@@ -160,6 +160,17 @@ package body Elab.Vhdl_Decls is
       Create_Object (Syn_Inst, Decl, Res);
    end Elab_File_Declaration;
 
+   procedure Elab_Free_Quantity_Declaration (Syn_Inst : Synth_Instance_Acc;
+                                             Decl : Node)
+   is
+      Obj_Typ : Type_Acc;
+      Res : Valtyp;
+   begin
+      Obj_Typ := Elab_Declaration_Type (Syn_Inst, Decl);
+      Res := Create_Value_Quantity (Obj_Typ, No_Quantity_Index);
+      Create_Object (Syn_Inst, Decl, Res);
+   end Elab_Free_Quantity_Declaration;
+
    procedure Elab_Attribute_Specification
      (Syn_Inst : Synth_Instance_Acc; Spec : Node)
    is
@@ -285,6 +296,8 @@ package body Elab.Vhdl_Decls is
          when Iir_Kind_Signal_Attribute_Declaration =>
             --  Not supported by synthesis.
             null;
+         when Iir_Kind_Free_Quantity_Declaration =>
+            Elab_Free_Quantity_Declaration (Syn_Inst, Decl);
          when Iir_Kind_Suspend_State_Declaration =>
             declare
                Val : Valtyp;

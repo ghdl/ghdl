@@ -185,6 +185,8 @@ package body Elab.Vhdl_Stmts is
            | Iir_Kind_Concurrent_Conditional_Signal_Assignment
            | Iir_Kind_Concurrent_Assertion_Statement
            | Iir_Kind_Concurrent_Procedure_Call_Statement
+           | Iir_Kind_Concurrent_Break_Statement
+           | Iir_Kind_Simple_Simultaneous_Statement
            | Iir_Kind_Psl_Default_Clock
            | Iir_Kind_Psl_Restrict_Directive
            | Iir_Kind_Psl_Assume_Directive

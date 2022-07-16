@@ -472,6 +472,8 @@ package body Elab.Vhdl_Insts is
            | Iir_Kind_Concurrent_Conditional_Signal_Assignment
            | Iir_Kind_Concurrent_Selected_Signal_Assignment
            | Iir_Kind_Concurrent_Procedure_Call_Statement
+           | Iir_Kind_Concurrent_Break_Statement
+           | Iir_Kind_Simple_Simultaneous_Statement
            | Iir_Kinds_Process_Statement =>
             null;
          when Iir_Kind_If_Generate_Statement =>

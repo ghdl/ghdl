@@ -765,7 +765,8 @@ package body Vhdl.Annotations is
 
          when Iir_Kind_Terminal_Declaration =>
             Add_Terminal_Info (Block_Info, Decl);
-         when Iir_Kinds_Branch_Quantity_Declaration =>
+         when Iir_Kinds_Branch_Quantity_Declaration
+            | Iir_Kind_Free_Quantity_Declaration =>
             Annotate_Declaration_Type (Block_Info, Decl);
             Add_Quantity_Info (Block_Info, Decl);
 
@@ -1151,6 +1152,9 @@ package body Vhdl.Annotations is
            | Iir_Kind_Concurrent_Assertion_Statement =>
             --  In case concurrent signal assignemnts were not
             --  canonicalized (for synthesis).
+            null;
+
+         when Iir_Kind_Concurrent_Break_Statement =>
             null;
 
          when Iir_Kind_Concurrent_Procedure_Call_Statement =>
