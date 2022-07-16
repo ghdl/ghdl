@@ -33,7 +33,8 @@ package body Elab.Vhdl_Values is
          when Value_Net
            | Value_Wire
            | Value_Signal
-           | Value_Dyn_Alias =>
+           | Value_Dyn_Alias
+           | Value_Quantity =>
             return False;
          when Value_File =>
             return True;
@@ -182,6 +183,23 @@ package body Elab.Vhdl_Values is
       return (Vtype, Create_Value_File (File));
    end Create_Value_File;
 
+   function Create_Value_Quantity (Q : Quantity_Index_Type) return Value_Acc
+   is
+      subtype Value_Type_Quantity is Value_Type (Value_Quantity);
+      function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Quantity);
+   begin
+      return To_Value_Acc (Alloc (Current_Pool,
+                                  (Kind => Value_Quantity, Q => Q)));
+   end Create_Value_Quantity;
+
+   function Create_Value_Quantity (Vtype : Type_Acc; Q : Quantity_Index_Type)
+                                  return Valtyp
+   is
+      pragma Assert (Vtype /= null);
+   begin
+      return (Vtype, Create_Value_Quantity (Q));
+   end Create_Value_Quantity;
+
    function Create_Value_Alias
      (Obj : Valtyp; Off : Value_Offsets; Typ : Type_Acc) return Valtyp
    is
@@ -268,6 +286,8 @@ package body Elab.Vhdl_Values is
             Res := (Src.Typ, Create_Value_Wire (Src.Val.N));
          when Value_File =>
             Res := Create_Value_File (Src.Typ, Src.Val.File);
+         when Value_Quantity =>
+            raise Internal_Error;
          when Value_Signal =>
             raise Internal_Error;
          when Value_Const =>
@@ -491,7 +511,8 @@ package body Elab.Vhdl_Values is
             end;
          when Value_Const =>
             return Get_Memtyp ((V.Typ, V.Val.C_Val));
-         when Value_File =>
+         when Value_File
+           | Value_Quantity =>
             raise Internal_Error;
       end case;
    end Get_Memtyp;

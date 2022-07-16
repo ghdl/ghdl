@@ -48,6 +48,7 @@ package Elab.Vhdl_Values is
       Value_Memory,
 
       Value_File,
+      Value_Quantity,
 
       --  A constant.  This is a named value.  One purpose is to avoid to
       --  create many times the same net for the same value.
@@ -73,6 +74,9 @@ package Elab.Vhdl_Values is
    type Signal_Index_Type is new Uns32;
    No_Signal_Index : constant Signal_Index_Type := 0;
 
+   type Quantity_Index_Type is new Uns32;
+   No_Quantity_Index : constant Quantity_Index_Type := 0;
+
    type Value_Type (Kind : Value_Kind) is record
       case Kind is
          when Value_Net
@@ -85,6 +89,8 @@ package Elab.Vhdl_Values is
             Mem : Memory_Ptr;
          when Value_File =>
             File : File_Index;
+         when Value_Quantity =>
+            Q : Quantity_Index_Type;
          when Value_Const =>
             C_Val : Value_Acc;
             C_Loc : Node;
@@ -147,6 +153,9 @@ package Elab.Vhdl_Values is
 
    function Create_Value_File (Vtype : Type_Acc; File : File_Index)
                               return Valtyp;
+
+   function Create_Value_Quantity (Vtype : Type_Acc; Q : Quantity_Index_Type)
+                                  return Valtyp;
 
    function Create_Value_Alias
      (Obj : Valtyp; Off : Value_Offsets; Typ : Type_Acc) return Valtyp;
