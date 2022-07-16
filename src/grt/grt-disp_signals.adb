@@ -399,8 +399,7 @@ package body Grt.Disp_Signals is
    end Disp_Signals_Map;
 
    --  Option --disp-signals-table
-   procedure Disp_Mode_Signal (Mode : Mode_Signal_Type)
-   is
+   procedure Disp_Mode_Signal (Mode : Mode_Signal_Type) is
    begin
       case Mode is
          when Mode_Signal =>
@@ -423,6 +422,8 @@ package body Grt.Disp_Signals is
             Put ("transaction");
          when Mode_Delayed =>
             Put ("delayed");
+         when Mode_Above =>
+            Put ("above");
          when Mode_Guard =>
             Put ("guard");
          when Mode_Conv_In =>

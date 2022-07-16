@@ -193,7 +193,8 @@ package Grt.Types is
    type Mode_Signal_Type is
      (Mode_Signal,
       Mode_Linkage, Mode_Buffer, Mode_Out, Mode_Inout, Mode_In,
-      Mode_Stable, Mode_Quiet, Mode_Delayed, Mode_Transaction, Mode_Guard,
+      Mode_Stable, Mode_Quiet, Mode_Delayed, Mode_Transaction,
+      Mode_Above, Mode_Guard,
       Mode_Conv_In, Mode_Conv_Out,
       Mode_End);
 

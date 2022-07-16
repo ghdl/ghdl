@@ -262,6 +262,7 @@ package Grt.Signals is
             Guard_Instance : System.Address;
 
          when Mode_Transaction
+           | Mode_Above
            | Mode_End =>
             null;
       end case;

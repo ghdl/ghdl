@@ -212,6 +212,7 @@ package body Grt.Signals is
             S.Guard_Func := null;
             S.Guard_Instance := System.Null_Address;
          when Mode_Transaction
+           | Mode_Above
            | Mode_End =>
             null;
       end case;
@@ -2225,8 +2226,7 @@ package body Grt.Signals is
    procedure Order_Signal (Sig : Ghdl_Signal_Ptr; Order : Propag_Order_Flag);
 
    --  Return TRUE is the effective value of SIG is the driving value of SIG.
-   function Is_Eff_Drv (Sig : Ghdl_Signal_Ptr) return Boolean
-   is
+   function Is_Eff_Drv (Sig : Ghdl_Signal_Ptr) return Boolean is
    begin
       case Sig.S.Mode_Sig is
          when Mode_Signal
@@ -2255,7 +2255,8 @@ package body Grt.Signals is
            | Mode_Guard
            | Mode_Quiet
            | Mode_Transaction
-           | Mode_Delayed =>
+           | Mode_Delayed
+           | Mode_Above =>
             return True;
          when Mode_End =>
             return False;
@@ -2395,6 +2396,8 @@ package body Grt.Signals is
                      Add_Propagation ((Kind => Imp_Delayed, Sig => Sig));
                   when Mode_Transaction =>
                      Add_Propagation ((Kind => Imp_Transaction, Sig => Sig));
+                  when Mode_Above =>
+                     Internal_Error ("order_signal");
                end case;
                return;
             when Mode_Conv_In =>
@@ -2451,7 +2454,8 @@ package body Grt.Signals is
            | Mode_Guard
            | Mode_Quiet
            | Mode_Transaction
-           | Mode_Delayed =>
+           | Mode_Delayed
+           | Mode_Above =>
             --  Sig.Propag is already set to PROPAG_DONE.
             null;
          when Mode_Conv_In =>
@@ -2568,6 +2572,7 @@ package body Grt.Signals is
          when Mode_Signal_Forward =>
             null;
          when Mode_Transaction
+           | Mode_Above
            | Mode_Guard =>
             for I in 1 .. Sig.Nbr_Ports loop
                Set_Net (Sig.Ports (I - 1), Net, Link);
