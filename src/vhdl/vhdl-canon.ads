@@ -111,6 +111,10 @@ package Vhdl.Canon is
    procedure Canon_Extract_Sensitivity_Assertion_Statement
      (Stmt : Iir; List : Iir_List);
 
+   --  For a concurrent break statement (AMS).
+   procedure Canon_Extract_Sensitivity_Break_Statement
+     (Stmt : Iir; Sensitivity_List : Iir_List);
+
    --  For a procedure call.
    procedure Canon_Extract_Sensitivity_Procedure_Call
      (Call : Iir; Sensitivity_List : Iir_List);

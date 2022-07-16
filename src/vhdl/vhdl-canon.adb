@@ -427,6 +427,17 @@ package body Vhdl.Canon is
         (Get_Report_Expression (Stmt), List);
    end Canon_Extract_Sensitivity_Assertion_Statement;
 
+   procedure Canon_Extract_Sensitivity_Break_Statement
+     (Stmt : Iir; Sensitivity_List : Iir_List)
+   is
+      Cond : Iir;
+   begin
+      Cond := Get_Condition (Stmt);
+      if Cond /= Null_Iir then
+         Canon_Extract_Sensitivity_Expression (Cond, Sensitivity_List);
+      end if;
+   end Canon_Extract_Sensitivity_Break_Statement;
+
    procedure Canon_Extract_Sensitivity_Statement
      (Stmt : Iir; List : Iir_List) is
    begin
@@ -2136,7 +2147,7 @@ package body Vhdl.Canon is
       Sensitivity_List := Get_Sensitivity_List (Stmt);
       if Sensitivity_List = Null_Iir_List and then Cond /= Null_Iir then
          Sensitivity_List := Create_Iir_List;
-         Canon_Extract_Sensitivity_Expression (Cond, Sensitivity_List, False);
+         Canon_Extract_Sensitivity_Break_Statement (Cond, Sensitivity_List);
       end if;
       Set_Sensitivity_List (Proc, Sensitivity_List);
       Set_Is_Ref (Proc, True);
