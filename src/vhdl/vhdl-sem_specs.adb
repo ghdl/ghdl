@@ -513,6 +513,8 @@ package body Vhdl.Sem_Specs is
                null;
             when Iir_Kind_Anonymous_Type_Declaration =>
                null;
+            when Iir_Kind_Protected_Type_Body =>
+               null;
             when Iir_Kind_Psl_Default_Clock =>
                null;
             when others =>
