@@ -744,9 +744,82 @@ package body Netlists.Inference is
       return Res;
    end Is_False_Loop;
 
+   function Infere_Latch_Create (Ctxt : Context_Acc;
+                                 Val : Net;
+                                 Prev_Val : Net;
+                                 Last_Mux : Instance;
+                                 Loc : Location_Type) return Net
+   is
+      Idx : Port_Idx;
+      Res_In : Net;
+      Res_En : Net;
+      Last : Instance;
+      Last_Out : Net;
+      Is_First : Boolean;
+      Pinp : Input;
+      Sel : Net;
+      Res : Net;
+   begin
+      --  Find which input of the last mux is creating the loop.
+      Res_En := Disconnect_And_Get (Last_Mux, 0);
+      if Get_Input_Net (Last_Mux, 1) = Prev_Val then
+         --  Input on pin i1, normal.
+         Idx := 2;
+      else
+         --  Input on pin i0, inverted.
+         Idx := 1;
+         pragma Assert (Get_Input_Net (Last_Mux, 2) = Prev_Val);
+         Res_En := Build_Monadic (Ctxt, Id_Not, Res_En);
+         Set_Location (Res_En, Loc);
+      end if;
+      Res_In := Disconnect_And_Get (Last_Mux, Idx);
+      Disconnect (Get_Input (Last_Mux, 1 + (2 - Idx)));
+
+      Last := Last_Mux;
+      Last_Out := Get_Output (Last, 0);
+      Is_First := True;
+
+      while Last_Out /= Val loop
+         Pinp := Get_First_Sink (Last_Out);
+         pragma Assert (Pinp /= No_Input);
+         pragma Assert (Get_Next_Sink (Pinp) = No_Input);
+         Last := Get_Input_Parent (Pinp);
+         pragma Assert (Get_Id (Last) = Id_Mux2);
+         Sel := Get_Input_Net (Last, 0);
+         if Get_Input_Net (Last, 2) = Last_Out then
+            --  Inverted
+            Sel := Build_Monadic (Ctxt, Id_Not, Sel);
+            Set_Location (Sel, Loc);
+            Idx := 2;
+         else
+            pragma Assert (Get_Input_Net (Last, 1) = Last_Out);
+            Idx := 1;
+         end if;
+         Res_En := Build_Dyadic (Ctxt, Id_Or, Res_En, Sel);
+         Set_Location (Res_En, Loc);
+
+         --  For the first mux, redirect input.
+         if Is_First then
+            Is_First := False;
+            Disconnect (Get_Input (Last, Idx));
+            Connect (Get_Input (Last, Idx), Res_In);
+            Remove_Instance (Last_Mux);
+         end if;
+
+         Last_Out := Get_Output (Last, 0);
+         Res_In := Last_Out;
+      end loop;
+
+      Res := Build_Dlatch (Ctxt, Res_En, Res_In);
+      Set_Location (Res, Loc);
+
+      return Res;
+   end Infere_Latch_Create;
+
    function Infere_Latch (Ctxt : Context_Acc;
                           Val : Net;
                           Prev_Val : Net;
+                          Last_Mux : Instance;
                           Last_Use : Boolean;
                           Loc : Location_Type) return Net
    is
@@ -758,36 +831,40 @@ package body Netlists.Inference is
       end if;
 
       --  Latch or combinational loop.
-      if Get_Id (Get_Net_Parent (Prev_Val)) = Id_Output then
-         --  Outputs are connected to a port.  The port is the first connection
-         --  made, so it is the last sink.  Be more tolerant and look for
-         --  the (only) port connected to the output.
-         declare
-            Inp : Input;
-            Inst : Instance;
-         begin
-            Inp := Get_First_Sink (Prev_Val);
-            loop
-               pragma Assert (Inp /= No_Input);
-               Inst := Get_Input_Parent (Inp);
-               if Get_Id (Inst) >= Id_User_None then
-                  Name := Get_Output_Desc (Get_Module (Inst),
-                                           Get_Port_Idx (Inp)).Name;
-                  exit;
-               end if;
-               Inp := Get_Next_Sink (Inp);
-            end loop;
-         end;
-      else
-         Name := Get_Instance_Name (Get_Net_Parent (Prev_Val));
-      end if;
-
       if not Flag_Latches then
+         if Get_Id (Get_Net_Parent (Prev_Val)) = Id_Output then
+            --  Outputs are connected to a port.  The port is the first
+            --  connection made, so it is the last sink.  Be  more tolerant and
+            --  look for the (only) port connected to the output.
+            declare
+               Inp : Input;
+               Inst : Instance;
+            begin
+               Inp := Get_First_Sink (Prev_Val);
+               loop
+                  pragma Assert (Inp /= No_Input);
+                  Inst := Get_Input_Parent (Inp);
+                  if Get_Id (Inst) >= Id_User_None then
+                     Name := Get_Output_Desc (Get_Module (Inst),
+                                              Get_Port_Idx (Inp)).Name;
+                     exit;
+                  end if;
+                  Inp := Get_Next_Sink (Inp);
+               end loop;
+            end;
+         else
+            Name := Get_Instance_Name (Get_Net_Parent (Prev_Val));
+         end if;
+
          Error_Msg_Synth
            (Loc, "latch infered for net %n (use --latches)", +Name);
       end if;
 
-      return Val;
+      if False then
+         return Infere_Latch_Create (Ctxt, Val, Prev_Val, Last_Mux, Loc);
+      else
+         return Val;
+      end if;
    end Infere_Latch;
 
    --  VAL is the value to be assigned to a wire at offset OFF.
@@ -863,7 +940,7 @@ package body Netlists.Inference is
       Extract_Clock (Ctxt, Get_Driver (Sel), Clk, Enable);
       if Clk = No_Net then
          --  No clock -> latch or combinational loop
-         Res := Infere_Latch (Ctxt, Val, Prev_Val, Last_Use, Loc);
+         Res := Infere_Latch (Ctxt, Val, Prev_Val, Last_Mux, Last_Use, Loc);
       else
          --  Clock -> FF
          First_Mux := Get_Net_Parent (Val);
