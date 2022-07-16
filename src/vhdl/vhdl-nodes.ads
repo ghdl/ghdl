@@ -5205,8 +5205,8 @@ package Vhdl.Nodes is
       Iir_Kind_Ztf_Attribute,
       Iir_Kind_Dot_Attribute,
       Iir_Kind_Integ_Attribute,
-      Iir_Kind_Above_Attribute,
       Iir_Kind_Quantity_Delayed_Attribute,
+      Iir_Kind_Above_Attribute,
       Iir_Kind_Delayed_Attribute,              --  signal_attribute
       Iir_Kind_Stable_Attribute,               --  signal_attribute
       Iir_Kind_Quiet_Attribute,                --  signal_attribute
@@ -6944,8 +6944,8 @@ package Vhdl.Nodes is
    --Iir_Kind_Ztf_Attribute
    --Iir_Kind_Dot_Attribute
    --Iir_Kind_Integ_Attribute
-   --Iir_Kind_Above_Attribute
    --Iir_Kind_Quantity_Delayed_Attribute
+   --Iir_Kind_Above_Attribute
    --Iir_Kind_Delayed_Attribute
    --Iir_Kind_Stable_Attribute
    --Iir_Kind_Quiet_Attribute
@@ -7012,6 +7012,14 @@ package Vhdl.Nodes is
 
    subtype Iir_Kinds_Signal_Attribute is Iir_Kind range
      Iir_Kind_Delayed_Attribute ..
+   --Iir_Kind_Stable_Attribute
+   --Iir_Kind_Quiet_Attribute
+     Iir_Kind_Transaction_Attribute;
+
+   --  Same as Iir_Kinds_Signal_Attribute but with 'Above.
+   subtype Iir_Kinds_AMS_Signal_Attribute is Iir_Kind range
+     Iir_Kind_Above_Attribute ..
+   --Iir_Kind_Delayed_Attribute
    --Iir_Kind_Stable_Attribute
    --Iir_Kind_Quiet_Attribute
      Iir_Kind_Transaction_Attribute;

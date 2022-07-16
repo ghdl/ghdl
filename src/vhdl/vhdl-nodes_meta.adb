@@ -1751,10 +1751,10 @@ package body Vhdl.Nodes_Meta is
             return "dot_attribute";
          when Iir_Kind_Integ_Attribute =>
             return "integ_attribute";
-         when Iir_Kind_Above_Attribute =>
-            return "above_attribute";
          when Iir_Kind_Quantity_Delayed_Attribute =>
             return "quantity_delayed_attribute";
+         when Iir_Kind_Above_Attribute =>
+            return "above_attribute";
          when Iir_Kind_Delayed_Attribute =>
             return "delayed_attribute";
          when Iir_Kind_Stable_Attribute =>
@@ -5099,7 +5099,7 @@ package body Vhdl.Nodes_Meta is
       Field_Attr_Chain,
       Field_Signal_Attribute_Declaration,
       Field_Base_Name,
-      --  Iir_Kind_Above_Attribute
+      --  Iir_Kind_Quantity_Delayed_Attribute
       Field_Expr_Staticness,
       Field_Name_Staticness,
       Field_Prefix,
@@ -5108,7 +5108,7 @@ package body Vhdl.Nodes_Meta is
       Field_Signal_Attribute_Declaration,
       Field_Parameter,
       Field_Base_Name,
-      --  Iir_Kind_Quantity_Delayed_Attribute
+      --  Iir_Kind_Above_Attribute
       Field_Expr_Staticness,
       Field_Name_Staticness,
       Field_Prefix,
@@ -5587,8 +5587,8 @@ package body Vhdl.Nodes_Meta is
       Iir_Kind_Ztf_Attribute => 2221,
       Iir_Kind_Dot_Attribute => 2228,
       Iir_Kind_Integ_Attribute => 2235,
-      Iir_Kind_Above_Attribute => 2243,
-      Iir_Kind_Quantity_Delayed_Attribute => 2251,
+      Iir_Kind_Quantity_Delayed_Attribute => 2243,
+      Iir_Kind_Above_Attribute => 2251,
       Iir_Kind_Delayed_Attribute => 2260,
       Iir_Kind_Stable_Attribute => 2269,
       Iir_Kind_Quiet_Attribute => 2278,
@@ -8844,8 +8844,8 @@ package body Vhdl.Nodes_Meta is
            | Iir_Kind_Ztf_Attribute
            | Iir_Kind_Dot_Attribute
            | Iir_Kind_Integ_Attribute
-           | Iir_Kind_Above_Attribute
            | Iir_Kind_Quantity_Delayed_Attribute
+           | Iir_Kind_Above_Attribute
            | Iir_Kind_Delayed_Attribute
            | Iir_Kind_Stable_Attribute
            | Iir_Kind_Quiet_Attribute
@@ -9056,8 +9056,8 @@ package body Vhdl.Nodes_Meta is
            | Iir_Kind_Ztf_Attribute
            | Iir_Kind_Dot_Attribute
            | Iir_Kind_Integ_Attribute
-           | Iir_Kind_Above_Attribute
            | Iir_Kind_Quantity_Delayed_Attribute
+           | Iir_Kind_Above_Attribute
            | Iir_Kind_Delayed_Attribute
            | Iir_Kind_Stable_Attribute
            | Iir_Kind_Quiet_Attribute
@@ -11326,8 +11326,8 @@ package body Vhdl.Nodes_Meta is
            | Iir_Kind_Ztf_Attribute
            | Iir_Kind_Dot_Attribute
            | Iir_Kind_Integ_Attribute
-           | Iir_Kind_Above_Attribute
            | Iir_Kind_Quantity_Delayed_Attribute
+           | Iir_Kind_Above_Attribute
            | Iir_Kind_Delayed_Attribute
            | Iir_Kind_Stable_Attribute
            | Iir_Kind_Quiet_Attribute
@@ -11583,8 +11583,8 @@ package body Vhdl.Nodes_Meta is
            | Iir_Kind_Ztf_Attribute
            | Iir_Kind_Dot_Attribute
            | Iir_Kind_Integ_Attribute
-           | Iir_Kind_Above_Attribute
            | Iir_Kind_Quantity_Delayed_Attribute
+           | Iir_Kind_Above_Attribute
            | Iir_Kind_Delayed_Attribute
            | Iir_Kind_Stable_Attribute
            | Iir_Kind_Quiet_Attribute
@@ -11654,8 +11654,8 @@ package body Vhdl.Nodes_Meta is
            | Iir_Kind_Ztf_Attribute
            | Iir_Kind_Dot_Attribute
            | Iir_Kind_Integ_Attribute
-           | Iir_Kind_Above_Attribute
            | Iir_Kind_Quantity_Delayed_Attribute
+           | Iir_Kind_Above_Attribute
            | Iir_Kind_Delayed_Attribute
            | Iir_Kind_Stable_Attribute
            | Iir_Kind_Quiet_Attribute
@@ -11786,8 +11786,8 @@ package body Vhdl.Nodes_Meta is
            | Iir_Kind_Zoh_Attribute
            | Iir_Kind_Ltf_Attribute
            | Iir_Kind_Ztf_Attribute
-           | Iir_Kind_Above_Attribute
            | Iir_Kind_Quantity_Delayed_Attribute
+           | Iir_Kind_Above_Attribute
            | Iir_Kind_Delayed_Attribute
            | Iir_Kind_Stable_Attribute
            | Iir_Kind_Quiet_Attribute
@@ -11842,8 +11842,8 @@ package body Vhdl.Nodes_Meta is
            | Iir_Kind_Ztf_Attribute
            | Iir_Kind_Dot_Attribute
            | Iir_Kind_Integ_Attribute
-           | Iir_Kind_Above_Attribute
            | Iir_Kind_Quantity_Delayed_Attribute
+           | Iir_Kind_Above_Attribute
            | Iir_Kind_Delayed_Attribute
            | Iir_Kind_Stable_Attribute
            | Iir_Kind_Quiet_Attribute
@@ -11859,8 +11859,8 @@ package body Vhdl.Nodes_Meta is
       case K is
          when Iir_Kind_Dot_Attribute
            | Iir_Kind_Integ_Attribute
-           | Iir_Kind_Above_Attribute
            | Iir_Kind_Quantity_Delayed_Attribute
+           | Iir_Kind_Above_Attribute
            | Iir_Kind_Delayed_Attribute
            | Iir_Kind_Stable_Attribute
            | Iir_Kind_Quiet_Attribute

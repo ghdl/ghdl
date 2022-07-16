@@ -339,8 +339,8 @@ class Iir_Kind(IntEnum):
     Ztf_Attribute = 292
     Dot_Attribute = 293
     Integ_Attribute = 294
-    Above_Attribute = 295
-    Quantity_Delayed_Attribute = 296
+    Quantity_Delayed_Attribute = 295
+    Above_Attribute = 296
     Delayed_Attribute = 297
     Stable_Attribute = 298
     Quiet_Attribute = 299
@@ -818,8 +818,8 @@ class Iir_Kinds:
         Iir_Kind.Ztf_Attribute,
         Iir_Kind.Dot_Attribute,
         Iir_Kind.Integ_Attribute,
-        Iir_Kind.Above_Attribute,
         Iir_Kind.Quantity_Delayed_Attribute,
+        Iir_Kind.Above_Attribute,
         Iir_Kind.Delayed_Attribute,
         Iir_Kind.Stable_Attribute,
         Iir_Kind.Quiet_Attribute,
@@ -872,8 +872,8 @@ class Iir_Kinds:
         Iir_Kind.Ztf_Attribute,
         Iir_Kind.Dot_Attribute,
         Iir_Kind.Integ_Attribute,
-        Iir_Kind.Above_Attribute,
         Iir_Kind.Quantity_Delayed_Attribute,
+        Iir_Kind.Above_Attribute,
         Iir_Kind.Delayed_Attribute,
         Iir_Kind.Stable_Attribute,
         Iir_Kind.Quiet_Attribute,
@@ -940,6 +940,14 @@ class Iir_Kinds:
     ]
 
     Signal_Attribute = [
+        Iir_Kind.Delayed_Attribute,
+        Iir_Kind.Stable_Attribute,
+        Iir_Kind.Quiet_Attribute,
+        Iir_Kind.Transaction_Attribute,
+    ]
+
+    AMS_Signal_Attribute = [
+        Iir_Kind.Above_Attribute,
         Iir_Kind.Delayed_Attribute,
         Iir_Kind.Stable_Attribute,
         Iir_Kind.Quiet_Attribute,
