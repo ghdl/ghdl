@@ -178,6 +178,13 @@ package Elab.Vhdl_Context is
                                   Caller : Synth_Instance_Acc);
    function Get_Caller_Instance (Syn_Inst : Synth_Instance_Acc)
                                 return Synth_Instance_Acc;
+
+   --  Iterator over top-level packages.
+   type Iterator_Top_Level_Type is private;
+   Iterator_Top_Level_Init : constant Iterator_Top_Level_Type;
+
+   procedure Iterate_Top_Level (It : in out Iterator_Top_Level_Type;
+                                Res : out Synth_Instance_Acc);
 private
    type Destroy_Type is record
       Inst : Synth_Instance_Acc;
@@ -252,4 +259,11 @@ private
       --  Instance for synthesis.
       Objects : Objects_Array (1 .. Max_Objs);
    end record;
+
+   type Iterator_Top_Level_Type is record
+      Next_Idx : Object_Slot_Type;
+   end record;
+
+   Iterator_Top_Level_Init : constant Iterator_Top_Level_Type :=
+     (Next_Idx => 1);
 end Elab.Vhdl_Context;

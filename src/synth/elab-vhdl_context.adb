@@ -602,4 +602,26 @@ package body Elab.Vhdl_Context is
    begin
       return Syn_Inst.Caller;
    end Get_Caller_Instance;
+
+   procedure Iterate_Top_Level (It : in out Iterator_Top_Level_Type;
+                                Res : out Synth_Instance_Acc)
+   is
+      Obj : Obj_Type;
+   begin
+      loop
+         if It.Next_Idx > Root_Instance.Max_Objs then
+            Res := null;
+            exit;
+         end if;
+
+         Obj := Root_Instance.Objects (It.Next_Idx);
+         It.Next_Idx := It.Next_Idx + 1;
+
+         if Obj.Kind = Obj_Instance then
+            Res := Obj.I_Inst;
+            return;
+         end if;
+      end loop;
+   end Iterate_Top_Level;
+
 end Elab.Vhdl_Context;
