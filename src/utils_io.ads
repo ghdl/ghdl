@@ -30,5 +30,7 @@ package Utils_IO is
    procedure Put_Int32 (V : Int32);
    procedure Put_Int64 (V : Int64);
 
+   procedure Put_Fp64 (V : Fp64);
+
    procedure Put_Addr (V : System.Address);
 end Utils_IO;

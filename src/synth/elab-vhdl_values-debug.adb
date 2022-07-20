@@ -265,7 +265,8 @@ package body Elab.Vhdl_Values.Debug is
          when Type_File =>
             Put ("file");
          when Type_Float =>
-            Put ("float");
+            Put ("float: ");
+            Put_Fp64 (Read_Fp64 (M.Mem));
          when Type_Slice =>
             Put ("slice");
          when Type_Unbounded_Vector =>

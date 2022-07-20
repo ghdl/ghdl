@@ -49,6 +49,11 @@ package body Utils_IO is
       Put_Trim (Int64'Image (V));
    end Put_Int64;
 
+   procedure Put_Fp64 (V : Fp64) is
+   begin
+      Put_Trim (Fp64'Image (V));
+   end Put_Fp64;
+
    Hex_Map : constant array (0 .. 15) of Character := "0123456789ABCDEF";
 
    procedure Put_Addr (V : System.Address)

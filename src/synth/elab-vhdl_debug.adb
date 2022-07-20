@@ -193,7 +193,7 @@ package body Elab.Vhdl_Debug is
          when Type_Array =>
             Disp_Value_Array (M, Vtype);
          when Type_Float =>
-            Put ("*float*");
+            Put_Fp64 (Read_Fp64 (M));
          when Type_Slice =>
             Put ("*slice*");
          when Type_File =>
