@@ -684,6 +684,7 @@ package body Synth.Vhdl_Expr is
            | Iir_Kind_Interface_Constant_Declaration
            | Iir_Kind_Constant_Declaration
            | Iir_Kind_Iterator_Declaration
+           | Iir_Kind_Free_Quantity_Declaration
            | Iir_Kind_Object_Alias_Declaration
            | Iir_Kind_Non_Object_Alias_Declaration
            | Iir_Kind_File_Declaration
@@ -1942,18 +1943,28 @@ package body Synth.Vhdl_Expr is
                Res : Valtyp;
             begin
                Res := Synth_Name (Syn_Inst, Expr);
-               if Res.Val /= null
-                 and then
-                 (Res.Val.Kind = Value_Signal
-                    or else (Res.Val.Kind = Value_Alias
-                               and then Res.Val.A_Obj.Kind = Value_Signal))
-               then
-                  if Hook_Signal_Expr /= null then
-                     return Hook_Signal_Expr (Res);
+               if Res.Val /= null then
+                  if (Res.Val.Kind = Value_Signal
+                        or else (Res.Val.Kind = Value_Alias
+                                   and then Res.Val.A_Obj.Kind = Value_Signal))
+                  then
+                     if Hook_Signal_Expr /= null then
+                        return Hook_Signal_Expr (Res);
+                     end if;
+                     Error_Msg_Synth
+                       (+Expr, "cannot use signal value during elaboration");
+                     return No_Valtyp;
+                  elsif (Res.Val.Kind = Value_Quantity
+                           or else
+                           (Res.Val.Kind = Value_Alias
+                              and then Res.Val.A_Obj.Kind = Value_Quantity))
+                  then
+                     if Hook_Quantity_Expr /= null then
+                        return Hook_Quantity_Expr (Res);
+                     end if;
+                     Error_Msg_Synth (+Expr, "cannot use quantity value");
+                     return No_Valtyp;
                   end if;
-                  Error_Msg_Synth
-                    (+Expr, "cannot use signal value during elaboration");
-                  return No_Valtyp;
                end if;
                if Res.Typ /= null
                  and then Res.Typ.W = 0 and then Res.Val.Kind /= Value_Memory

@@ -77,6 +77,7 @@ package Synth.Vhdl_Expr is
    --  elaboration).
    type Hook_Signal_Expr_Acc is access function (Val : Valtyp) return Valtyp;
    Hook_Signal_Expr : Hook_Signal_Expr_Acc;
+   Hook_Quantity_Expr : Hook_Signal_Expr_Acc;
 
    --  Synthesize EXPR.  The expression must be self-constrained.
    --  If EN is not No_Net, the execution is controlled by EN.  This is used
