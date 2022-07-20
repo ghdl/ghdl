@@ -136,18 +136,6 @@ package body Ghdlsimul is
       end loop;
    end Set_Run_Options;
 
-   procedure Ghdl_Elaborate;
-   pragma Export (C, Ghdl_Elaborate, "__ghdl_ELABORATE");
-
-   type Elaborate_Acc is access procedure;
-   pragma Convention (C, Elaborate_Acc);
-   Elaborate_Proc : Elaborate_Acc := null;
-
-   procedure Ghdl_Elaborate is
-   begin
-      Elaborate_Proc.all;
-   end Ghdl_Elaborate;
-
    procedure Run
    is
       use Ada.Command_Line;
@@ -172,7 +160,6 @@ package body Ghdlsimul is
 
       Synth.Flags.Severity_Level := Grt.Options.Severity_Level;
 
-      Elaborate_Proc := Simul.Vhdl_Simul.Runtime_Elaborate'Access;
       Simul.Vhdl_Simul.Simulation;
 
       --  Simul uses report_msg.
