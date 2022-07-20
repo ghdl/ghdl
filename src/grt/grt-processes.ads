@@ -70,6 +70,16 @@ package Grt.Processes is
    --  Number of non-delta cycles.
    Nbr_Cycles : Ghdl_I64;
 
+   --  If True, do AMS simulation
+   Flag_AMS : Boolean := False;
+
+   --  The break flag of AMS simulation
+   --
+   --  LRM 1076.1-2017 14.7.5.2 Initialization
+   --  At the beginning of initialization, [...] and the break flag is assumed
+   --  to be cleared.
+   Break_Flag : Boolean := False;
+
    type Process_Type is private;
    --  type Process_Acc is access all Process_Type;
 

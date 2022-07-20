@@ -22,8 +22,6 @@
 --  covered by the GNU Public License.
 with Grt.Table;
 with Ada.Unchecked_Deallocation;
-with System.Storage_Elements; --  Work around GNAT bug.
-pragma Unreferenced (System.Storage_Elements);
 with Grt.Disp;
 with Grt.Astdio;
 with Grt.Astdio.Vhdl; use Grt.Astdio.Vhdl;
@@ -39,6 +37,7 @@ with Grt.Stats;
 with Grt.Threads; use Grt.Threads;
 pragma Elaborate_All (Grt.Table);
 with Grt.Stdio;
+with Grt.Analog_Solver;
 
 package body Grt.Processes is
    Last_Time : constant Std_Time := Std_Time'Last;
@@ -880,12 +879,20 @@ package body Grt.Processes is
       --  - The time of the next simulation cycle (which in this case is the
       --    first simulation cycle), Tn, is calculated according to the rules
       --    of step f of the simulation cycle, below.
-      Next_Time := Compute_Next_Time;
-      if Next_Time /= 0 then
-         if Has_Callbacks (Hooks.Cb_Last_Known_Delta) then
-            Call_Callbacks (Hooks.Cb_Last_Known_Delta);
-            Flush_Active_Chain;
-            Next_Time := Compute_Next_Time;
+
+      --  LRM 1076.1-2007
+      --  - The time of the next simulation cycle (which in this case is the
+      --    first simulation cycle), Tn, is set to 0.0
+      if Flag_AMS then
+         Next_Time := 0;
+      else
+         Next_Time := Compute_Next_Time;
+         if Next_Time /= 0 then
+            if Has_Callbacks (Hooks.Cb_Last_Known_Delta) then
+               Call_Callbacks (Hooks.Cb_Last_Known_Delta);
+               Flush_Active_Chain;
+               Next_Time := Compute_Next_Time;
+            end if;
          end if;
       end if;
 
@@ -896,12 +903,26 @@ package body Grt.Processes is
    --  Launch a simulation cycle.
    function Simulation_Cycle return Integer
    is
+      use Grt.Options;
       Tn : Std_Time;
+      Tn_AMS : Ghdl_F64;
       Status : Integer;
    begin
       --  LRM08 14.7.5.3 Simulation cycle (ex LRM93 12.6.4)
       --  A simulation cycle consists of the following steps:
       --
+
+      --  LRM 1076.1-2007 12.6.4 Simulation cycle
+      --  a) The analog solver is executed
+      if Flag_AMS and Next_Time > Current_Time then
+         Current_Time_AMS := Ghdl_F64 (Current_Time) * Time_Phys_To_Real;
+         Tn_AMS := Ghdl_F64 (Next_Time) * Time_Phys_To_Real;
+         Grt.Analog_Solver.Solve (Current_Time_AMS, Tn_AMS, Status);
+         if Status /= 0 then
+            Internal_Error ("simulation_cycle - analog_solver");
+         end if;
+      end if;
+
       --  a) The current time, Tc is set equal to Tn.  Simulation is complete
       --     when Tn = TIME'HIGH and there are no active drivers or process
       --     resumptions at Tn.
@@ -1013,7 +1034,11 @@ package body Grt.Processes is
       if Options.Flag_Stats then
          Stats.Start_Next_Time;
       end if;
-      Tn := Compute_Next_Time;
+      if Flag_AMS and Break_Flag then
+         Tn := Current_Time;
+      else
+         Tn := Compute_Next_Time;
+      end if;
 
       --  h) If the next simulation cycle will be a delta cycle, the remainder
       --     of the step is skipped. Otherwise the following actions occur
