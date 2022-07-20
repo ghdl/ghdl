@@ -110,6 +110,12 @@ ifeq ($(GRT_USE_PTHREADS),y)
  GRT_EXTRA_LIB+=-lpthread
 endif
 
+ifeq ($(with_sundials),true)
+  GRT_ADD_OBJS+=grt-sundials_c.o
+else
+  GRT_ADD_OBJS+=grt-no_sundials_c.o
+endif
+
 GRT_LIBBACKTRACE=
 ifneq ($(LIBBACKTRACE),)
   GRT_LIBBACKTRACE=libbacktrace.a
@@ -215,6 +221,12 @@ pic/grt-cdynload.o: $(GRTSRCDIR)/grt-cdynload.c
 	$(GRT_C_COMPILE_PIC)
 
 grt-cthreads.o: $(GRTSRCDIR)/grt-cthreads.c
+	$(GRT_C_COMPILE)
+
+grt-sundials_c.o: $(GRTSRCDIR)/grt-sundials_c.c
+	$(GRT_C_COMPILE) $(sundials_incflags)
+
+grt-no_sundials_c.o: $(GRTSRCDIR)/grt-no_sundials_c.c
 	$(GRT_C_COMPILE)
 
 fstapi.o: $(GRTSRCDIR)/fst/fstapi.c
