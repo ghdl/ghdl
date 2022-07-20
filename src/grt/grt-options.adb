@@ -49,6 +49,14 @@ package body Grt.Options is
          when others =>
             Error ("unhandled time resolution");
       end case;
+
+      --  For AMS.
+      --  (Don't use **, as it requires the runtime).
+      Time_Real_To_Phys := 1.0;
+      for I in 1 .. Time_Resolution_Scale loop
+         Time_Real_To_Phys := Time_Real_To_Phys * 1000.0;
+      end loop;
+      Time_Phys_To_Real := 1.0 / Time_Real_To_Phys;
    end Set_Time_Resolution;
 
    procedure Help

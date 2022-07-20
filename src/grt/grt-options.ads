@@ -64,6 +64,10 @@ package Grt.Options is
    subtype Natural_Time_Scale is Natural range 0 .. 5;
    Time_Resolution_Scale : Natural_Time_Scale;
 
+   --  For AMS, conversion factors.
+   Time_Phys_To_Real : Ghdl_F64;
+   Time_Real_To_Phys : Ghdl_F64;
+
    --  Set Time_Resolution_Scale from Flag_String.
    procedure Set_Time_Resolution;
 

@@ -158,6 +158,10 @@ package Grt.Vhdl_Types is
    Current_Time : Std_Time;
    --  The current delta cycle number.
    Current_Delta : Integer;
+
+   --  For AMS
+   Current_Time_AMS : Ghdl_F64;
 private
    pragma Export (C, Current_Time, "__ghdl_now");
+   pragma Export (C, Current_Time_AMS, "__ghdl_now_ams");
 end Grt.Vhdl_Types;

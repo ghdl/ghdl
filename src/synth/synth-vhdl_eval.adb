@@ -2005,6 +2005,9 @@ package body Synth.Vhdl_Eval is
          when Iir_Predefined_Now_Function =>
             return Create_Memory_Discrete
               (Int64 (Grt.Vhdl_Types.Current_Time), Res_Typ);
+         when Iir_Predefined_Real_Now_Function =>
+            return Create_Memory_Fp64
+              (Fp64 (Grt.Vhdl_Types.Current_Time_AMS), Res_Typ);
 
          when Iir_Predefined_Endfile =>
             declare
