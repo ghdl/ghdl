@@ -501,7 +501,8 @@ package body Elab.Vhdl_Debug is
                end;
             when Iir_Kinds_Concurrent_Signal_Assignment
               | Iir_Kind_Concurrent_Assertion_Statement
-              | Iir_Kind_Concurrent_Procedure_Call_Statement =>
+              | Iir_Kind_Concurrent_Procedure_Call_Statement
+              | Iir_Kind_Simple_Simultaneous_Statement =>
                null;
             when Iir_Kinds_Process_Statement =>
                --  Note: processes are not elaborated.
@@ -1013,7 +1014,12 @@ package body Elab.Vhdl_Debug is
          --  The top unit
          Put ('/');
          Parent_Scope := Get_Source_Scope (Inst);
-         Put (Image (Get_Identifier (Get_Entity (Parent_Scope))));
+         if Get_Kind (Parent_Scope) = Iir_Kind_Package_Declaration then
+            Scope := Parent_Scope;
+         else
+            Scope := Get_Entity (Parent_Scope);
+         end if;
+         Put (Image (Get_Identifier (Scope)));
          return;
       end if;
 
