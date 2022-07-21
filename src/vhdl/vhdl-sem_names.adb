@@ -2030,7 +2030,7 @@ package body Vhdl.Sem_Names is
             return Res;
          when Iir_Kind_Dot_Attribute
             | Iir_Kind_Integ_Attribute =>
-            --  Already finished.
+            Sem_Decls.Add_Implicit_Declaration (Res);
             return Res;
          when Iir_Kinds_Type_Attribute
             | Iir_Kind_Subtype_Attribute

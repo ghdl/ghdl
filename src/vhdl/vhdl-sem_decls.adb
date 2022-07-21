@@ -68,9 +68,6 @@ package body Vhdl.Sem_Decls is
    is
       Decl : Iir;
    begin
-      --  We deal only with signal attribute.
-      pragma Assert (Get_Kind (Attr) in Iir_Kinds_AMS_Signal_Attribute);
-
       --  There must be a declarative part for implicit signals.
       pragma Assert (Current_Signals_Region.Decls_Parent /= Null_Iir);
 

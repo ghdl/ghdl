@@ -180,6 +180,17 @@ package body Elab.Vhdl_Decls is
       Create_Signal (Syn_Inst, Decl, Obj_Typ, null);
    end Elab_Implicit_Signal_Declaration;
 
+   procedure Elab_Implicit_Quantity_Declaration (Syn_Inst : Synth_Instance_Acc;
+                                                 Decl : Node)
+   is
+      Obj_Typ : Type_Acc;
+      Res : Valtyp;
+   begin
+      Obj_Typ := Get_Subtype_Object (Syn_Inst, Get_Type (Decl));
+      Res := Create_Value_Quantity (Obj_Typ, No_Quantity_Index);
+      Create_Object (Syn_Inst, Decl, Res);
+   end Elab_Implicit_Quantity_Declaration;
+
    procedure Elab_Attribute_Specification
      (Syn_Inst : Synth_Instance_Acc; Spec : Node)
    is
@@ -316,6 +327,8 @@ package body Elab.Vhdl_Decls is
             Elab_Free_Quantity_Declaration (Syn_Inst, Decl);
          when Iir_Kind_Above_Attribute =>
             Elab_Implicit_Signal_Declaration (Syn_Inst, Decl);
+         when Iir_Kind_Dot_Attribute =>
+            Elab_Implicit_Quantity_Declaration (Syn_Inst, Decl);
          when Iir_Kinds_Signal_Attribute =>
             --  Not supported by synthesis.
             null;
