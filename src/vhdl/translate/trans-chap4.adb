@@ -444,13 +444,14 @@ package body Trans.Chap4 is
    end Init_Object;
 
    --  Return True iff subtype indication of DECL is a subtype attribute.
-   function Is_Object_Subtype_Attribute (Decl : Iir) return Boolean
+   function Is_Object_Type_Attribute (Decl : Iir) return Boolean
    is
       Ind : constant Iir := Get_Subtype_Indication (Decl);
    begin
       return Ind /= Null_Iir
-        and then Get_Kind (Ind) = Iir_Kind_Subtype_Attribute;
-   end Is_Object_Subtype_Attribute;
+        and then Kind_In (Ind, Iir_Kind_Subtype_Attribute,
+                          Iir_Kind_Element_Attribute);
+   end Is_Object_Type_Attribute;
 
    procedure Elab_Subtype_Attribute
      (Decl : Iir; Name_Val : Mnode; Name_Sig : Mnode)
@@ -461,6 +462,15 @@ package body Trans.Chap4 is
    begin
       Name := Chap6.Translate_Name (Get_Prefix (Ind), Mode_Value);
       Bnd := Chap3.Get_Composite_Bounds (Name);
+      case Get_Kind (Ind) is
+         when Iir_Kind_Subtype_Attribute =>
+            null;
+         when Iir_Kind_Element_Attribute =>
+            Bnd := Chap3.Array_Bounds_To_Element_Bounds
+              (Bnd, Get_Type (Get_Prefix (Ind)));
+         when others =>
+            raise Internal_Error;
+      end case;
 
       if Name_Sig /= Mnode_Null then
          Stabilize (Bnd);
@@ -471,15 +481,15 @@ package body Trans.Chap4 is
                        M2Addr (Bnd));
    end Elab_Subtype_Attribute;
 
-   procedure Elab_Maybe_Subtype_Attribute
+   procedure Elab_Maybe_Type_Attribute
      (Decl : Iir; Name_Val : Mnode; Name_Sig : Mnode) is
    begin
-      if not Is_Object_Subtype_Attribute (Decl) then
+      if not Is_Object_Type_Attribute (Decl) then
          return;
       end if;
 
       Elab_Subtype_Attribute (Decl, Name_Val, Name_Sig);
-   end Elab_Maybe_Subtype_Attribute;
+   end Elab_Maybe_Type_Attribute;
 
    --  If SIZE is larger than the threshold, call __ghdl_check_stack_allocation
    --  to raise an error if the size is too large.  There are two threshold:
@@ -531,14 +541,14 @@ package body Trans.Chap4 is
          when Iir_Kind_Attribute_Value =>
             null;
          when others =>
-            if Is_Object_Subtype_Attribute (Obj) then
+            if Is_Object_Type_Attribute (Obj) then
                Type_Info := Get_Info (Obj_Type);
                if Type_Info.Type_Mode in Type_Mode_Unbounded then
                   --  Copy bounds and allocate base.
                   Name_Node :=
                     Get_Var (Obj_Info.Object_Var, Type_Info, Mode_Value);
                   Stabilize (Name_Node);
-                  Elab_Maybe_Subtype_Attribute (Obj, Name_Node, Mnode_Null);
+                  Elab_Maybe_Type_Attribute (Obj, Name_Node, Mnode_Null);
                   Alloc_Kind := Get_Alloc_Kind_For_Var (Obj_Info.Object_Var);
                   Chap3.Allocate_Unbounded_Composite_Base
                     (Alloc_Kind, Name_Node, Get_Base_Type (Obj_Type));
@@ -599,7 +609,7 @@ package body Trans.Chap4 is
          Close_Temp;
       elsif Get_Kind (Value) = Iir_Kind_Aggregate then
          if Type_Info.Type_Mode in Type_Mode_Unbounded
-           and then not Is_Object_Subtype_Attribute (Obj)
+           and then not Is_Object_Type_Attribute (Obj)
          then
             --  Allocate.
             declare
@@ -1150,11 +1160,11 @@ package body Trans.Chap4 is
 
          if Name_Val /= Mnode_Null then
             Name_Val := Stabilize (Name_Val);
-            Elab_Maybe_Subtype_Attribute (Decl, Name_Val, Name_Sig);
+            Elab_Maybe_Type_Attribute (Decl, Name_Val, Name_Sig);
             Chap3.Allocate_Unbounded_Composite_Base
               (Alloc_System, Name_Val, Sig_Type);
          else
-            Elab_Maybe_Subtype_Attribute (Decl, Name_Sig, Mnode_Null);
+            Elab_Maybe_Type_Attribute (Decl, Name_Sig, Mnode_Null);
          end if;
 
          Chap3.Allocate_Unbounded_Composite_Base

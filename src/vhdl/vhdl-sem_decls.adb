@@ -1146,7 +1146,8 @@ package body Vhdl.Sem_Decls is
                Ind : constant Iir := Get_Subtype_Indication (Decl);
             begin
                if not (Is_Valid (Ind)
-                       and then Get_Kind (Ind) = Iir_Kind_Subtype_Attribute)
+                         and then Kind_In (Ind, Iir_Kind_Subtype_Attribute,
+                                           Iir_Kind_Element_Attribute))
                  and then not Is_Fully_Constrained_Type (Atype)
                then
                   Report_Start_Group;
