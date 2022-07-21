@@ -366,7 +366,7 @@ class fields(IntEnum):
     Guard_Expression = 246
     Guard_Decl = 247
     Guard_Sensitivity_List = 248
-    Signal_Attribute_Chain = 249
+    Attribute_Implicit_Chain = 249
     Block_Block_Configuration = 250
     Package_Header = 251
     Block_Header = 252
@@ -416,7 +416,7 @@ class fields(IntEnum):
     Parameter_3 = 296
     Parameter_4 = 297
     Attr_Chain = 298
-    Signal_Attribute_Declaration = 299
+    Attribute_Implicit_Declaration = 299
     Actual_Type = 300
     Actual_Type_Definition = 301
     Association_Chain = 302
@@ -2122,8 +2122,8 @@ def Has_Guard_Sensitivity_List(kind: IirKind) -> bool:
 
 
 @export
-@BindToLibGHDL("vhdl__nodes_meta__has_signal_attribute_chain")
-def Has_Signal_Attribute_Chain(kind: IirKind) -> bool:
+@BindToLibGHDL("vhdl__nodes_meta__has_attribute_implicit_chain")
+def Has_Attribute_Implicit_Chain(kind: IirKind) -> bool:
     """"""
 
 
@@ -2422,8 +2422,8 @@ def Has_Attr_Chain(kind: IirKind) -> bool:
 
 
 @export
-@BindToLibGHDL("vhdl__nodes_meta__has_signal_attribute_declaration")
-def Has_Signal_Attribute_Declaration(kind: IirKind) -> bool:
+@BindToLibGHDL("vhdl__nodes_meta__has_attribute_implicit_declaration")
+def Has_Attribute_Implicit_Declaration(kind: IirKind) -> bool:
     """"""
 
 

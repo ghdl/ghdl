@@ -485,9 +485,9 @@ package body Vhdl.Errors is
             return Disp_Identifier (Node, "non-object alias");
          when Iir_Kind_Guard_Signal_Declaration =>
             return "GUARD signal";
-         when Iir_Kind_Signal_Attribute_Declaration =>
+         when Iir_Kind_Attribute_Implicit_Declaration =>
             --  Should not appear.
-            return "signal attribute";
+            return "implicit declaration";
          when Iir_Kind_Suspend_State_Declaration =>
             --  Should not appear.
             return "suspend state variable";

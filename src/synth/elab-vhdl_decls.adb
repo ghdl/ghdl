@@ -302,11 +302,11 @@ package body Elab.Vhdl_Decls is
             null;
          when Iir_Kind_Configuration_Specification =>
             null;
-         when Iir_Kind_Signal_Attribute_Declaration =>
+         when Iir_Kind_Attribute_Implicit_Declaration =>
             declare
                El : Node;
             begin
-               El := Get_Signal_Attribute_Chain (Decl);
+               El := Get_Attribute_Implicit_Chain (Decl);
                while El /= Null_Node loop
                   Elab_Declaration (Syn_Inst, El, Force_Init, Last_Type);
                   El := Get_Attr_Chain (El);
@@ -393,7 +393,7 @@ package body Elab.Vhdl_Decls is
          when Iir_Kind_Psl_Default_Clock =>
             --  Ignored; directly used by PSL directives.
             null;
-         when Iir_Kind_Signal_Attribute_Declaration =>
+         when Iir_Kind_Attribute_Implicit_Declaration =>
             --  Not supported by synthesis.
             null;
          when others =>

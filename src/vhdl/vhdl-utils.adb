@@ -323,7 +323,7 @@ package body Vhdl.Utils is
                | Iir_Kind_Subtype_Definition
                | Iir_Kind_Group_Template_Declaration
                | Iir_Kind_Group_Declaration
-               | Iir_Kind_Signal_Attribute_Declaration
+               | Iir_Kind_Attribute_Implicit_Declaration
                | Iir_Kind_Suspend_State_Declaration
                | Iir_Kind_Unaffected_Waveform
                | Iir_Kind_Waveform_Element

@@ -35,11 +35,11 @@ with Vhdl.Xrefs; use Vhdl.Xrefs;
 
 package body Vhdl.Sem_Decls is
    --  Region that can declare signals.  Used to add implicit declarations.
-   Current_Signals_Region : Implicit_Signal_Declaration_Type :=
+   Current_Signals_Region : Implicit_Declaration_Type :=
      (Null_Iir, Null_Iir, Null_Iir, False, Null_Iir);
 
    procedure Push_Signals_Declarative_Part
-     (Cell: out Implicit_Signal_Declaration_Type; Decls_Parent : Iir) is
+     (Cell: out Implicit_Declaration_Type; Decls_Parent : Iir) is
    begin
       Cell := Current_Signals_Region;
       Current_Signals_Region :=
@@ -47,13 +47,13 @@ package body Vhdl.Sem_Decls is
    end Push_Signals_Declarative_Part;
 
    procedure Pop_Signals_Declarative_Part
-     (Cell: in Implicit_Signal_Declaration_Type) is
+     (Cell: in Implicit_Declaration_Type) is
    begin
       Current_Signals_Region := Cell;
    end Pop_Signals_Declarative_Part;
 
    --  Insert the implicit signal declaration after LAST_DECL.
-   procedure Insert_Implicit_Signal (Last_Decl : Iir) is
+   procedure Insert_Implicit_Declaration (Last_Decl : Iir) is
    begin
       if Last_Decl = Null_Iir then
          Set_Declaration_Chain (Current_Signals_Region.Decls_Parent,
@@ -61,51 +61,51 @@ package body Vhdl.Sem_Decls is
       else
          Set_Chain (Last_Decl, Current_Signals_Region.Implicit_Decl);
       end if;
-   end Insert_Implicit_Signal;
+   end Insert_Implicit_Declaration;
 
-   --  Add SIG as an implicit declaration in the current region.
-   procedure Add_Declaration_For_Implicit_Signal (Sig : Iir)
+   --  Add Attr as an implicit declaration in the current region.
+   procedure Add_Implicit_Declaration (Attr : Iir)
    is
       Decl : Iir;
    begin
       --  We deal only with signal attribute.
-      pragma Assert (Get_Kind (Sig) in Iir_Kinds_AMS_Signal_Attribute);
+      pragma Assert (Get_Kind (Attr) in Iir_Kinds_AMS_Signal_Attribute);
 
       --  There must be a declarative part for implicit signals.
       pragma Assert (Current_Signals_Region.Decls_Parent /= Null_Iir);
 
       --  Attr_Chain must be empty.
-      pragma Assert (Get_Attr_Chain (Sig) = Null_Iir);
+      pragma Assert (Get_Attr_Chain (Attr) = Null_Iir);
 
       if Current_Signals_Region.Implicit_Decl = Null_Iir then
          --  Create the signal_attribute_declaration to hold all the implicit
          --  signals.
-         Decl := Create_Iir (Iir_Kind_Signal_Attribute_Declaration);
-         Location_Copy (Decl, Sig);
+         Decl := Create_Iir (Iir_Kind_Attribute_Implicit_Declaration);
+         Location_Copy (Decl, Attr);
          Set_Parent (Decl, Current_Signals_Region.Decls_Parent);
 
          --  Save the implicit declaration.
          Current_Signals_Region.Implicit_Decl := Decl;
 
          --  Append SIG (this is the first one).
-         Set_Signal_Attribute_Chain (Decl, Sig);
+         Set_Attribute_Implicit_Chain (Decl, Attr);
 
          if Current_Signals_Region.Decls_Analyzed then
             --  Declarative region was completely analyzed.  Just append DECL
             --  at the end of declarations.
-            Insert_Implicit_Signal (Current_Signals_Region.Last_Decl);
+            Insert_Implicit_Declaration (Current_Signals_Region.Last_Decl);
             Current_Signals_Region.Last_Decl :=
               Current_Signals_Region.Implicit_Decl;
          end if;
       else
          --  Append SIG.
-         Set_Attr_Chain (Current_Signals_Region.Last_Attribute_Signal, Sig);
+         Set_Attr_Chain (Current_Signals_Region.Last_Attribute, Attr);
       end if;
-      Current_Signals_Region.Last_Attribute_Signal := Sig;
+      Current_Signals_Region.Last_Attribute := Attr;
 
-      Set_Signal_Attribute_Declaration
-        (Sig, Current_Signals_Region.Implicit_Decl);
-   end Add_Declaration_For_Implicit_Signal;
+      Set_Attribute_Implicit_Declaration
+        (Attr, Current_Signals_Region.Implicit_Decl);
+   end Add_Implicit_Declaration;
 
    --  Insert pending implicit declarations after the last analyzed LAST_DECL,
    --  and update it.  Then the caller has to insert the declaration which
@@ -122,12 +122,12 @@ package body Vhdl.Sem_Decls is
          pragma Assert (not Current_Signals_Region.Decls_Analyzed);
 
          --  Add pending implicit declarations before the current one.
-         Insert_Implicit_Signal (Last_Decl);
+         Insert_Implicit_Declaration (Last_Decl);
          Last_Decl := Current_Signals_Region.Implicit_Decl;
 
          --  Detach the implicit declaration.
          Current_Signals_Region.Implicit_Decl := Null_Iir;
-         Current_Signals_Region.Last_Attribute_Signal := Null_Iir;
+         Current_Signals_Region.Last_Attribute := Null_Iir;
       end if;
    end Insert_Pending_Implicit_Declarations;
 

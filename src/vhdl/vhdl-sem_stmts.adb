@@ -2611,7 +2611,7 @@ package body Vhdl.Sem_Stmts is
 
    procedure Sem_Block (Blk: Iir)
    is
-      Implicit : Implicit_Signal_Declaration_Type;
+      Implicit : Implicit_Declaration_Type;
       Prev_Psl_Default_Clock : Iir;
    begin
       Prev_Psl_Default_Clock := Current_Psl_Default_Clock;

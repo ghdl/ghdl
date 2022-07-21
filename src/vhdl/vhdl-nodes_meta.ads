@@ -310,7 +310,7 @@ package Vhdl.Nodes_Meta is
       Field_Guard_Expression,
       Field_Guard_Decl,
       Field_Guard_Sensitivity_List,
-      Field_Signal_Attribute_Chain,
+      Field_Attribute_Implicit_Chain,
       Field_Block_Block_Configuration,
       Field_Package_Header,
       Field_Block_Header,
@@ -360,7 +360,7 @@ package Vhdl.Nodes_Meta is
       Field_Parameter_3,
       Field_Parameter_4,
       Field_Attr_Chain,
-      Field_Signal_Attribute_Declaration,
+      Field_Attribute_Implicit_Declaration,
       Field_Actual_Type,
       Field_Actual_Type_Definition,
       Field_Association_Chain,
@@ -904,7 +904,7 @@ package Vhdl.Nodes_Meta is
    function Has_Guard_Expression (K : Iir_Kind) return Boolean;
    function Has_Guard_Decl (K : Iir_Kind) return Boolean;
    function Has_Guard_Sensitivity_List (K : Iir_Kind) return Boolean;
-   function Has_Signal_Attribute_Chain (K : Iir_Kind) return Boolean;
+   function Has_Attribute_Implicit_Chain (K : Iir_Kind) return Boolean;
    function Has_Block_Block_Configuration (K : Iir_Kind) return Boolean;
    function Has_Package_Header (K : Iir_Kind) return Boolean;
    function Has_Block_Header (K : Iir_Kind) return Boolean;
@@ -954,7 +954,8 @@ package Vhdl.Nodes_Meta is
    function Has_Parameter_3 (K : Iir_Kind) return Boolean;
    function Has_Parameter_4 (K : Iir_Kind) return Boolean;
    function Has_Attr_Chain (K : Iir_Kind) return Boolean;
-   function Has_Signal_Attribute_Declaration (K : Iir_Kind) return Boolean;
+   function Has_Attribute_Implicit_Declaration (K : Iir_Kind)
+      return Boolean;
    function Has_Actual_Type (K : Iir_Kind) return Boolean;
    function Has_Actual_Type_Definition (K : Iir_Kind) return Boolean;
    function Has_Association_Chain (K : Iir_Kind) return Boolean;

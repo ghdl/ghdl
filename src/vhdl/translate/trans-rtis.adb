@@ -2195,7 +2195,7 @@ package body Trans.Rtis is
               | Iir_Kind_Interface_Constant_Declaration
               | Iir_Kind_Variable_Declaration
               | Iir_Kind_File_Declaration
-              | Iir_Kind_Signal_Attribute_Declaration =>
+              | Iir_Kind_Attribute_Implicit_Declaration =>
                null;
             when Iir_Kind_Object_Alias_Declaration
                | Iir_Kind_Attribute_Declaration =>
@@ -2332,12 +2332,12 @@ package body Trans.Rtis is
                   Generate_Object (Decl, Info.Signal_Rti);
                   Add_Rti_Node (Info.Signal_Rti);
                end;
-            when Iir_Kind_Signal_Attribute_Declaration =>
+            when Iir_Kind_Attribute_Implicit_Declaration =>
                declare
                   Sig : Iir;
                   Info : Signal_Info_Acc;
                begin
-                  Sig := Get_Signal_Attribute_Chain (Decl);
+                  Sig := Get_Attribute_Implicit_Chain (Decl);
                   while Is_Valid (Sig) loop
                      case Iir_Kinds_Signal_Attribute (Get_Kind (Sig)) is
                         when Iir_Kind_Stable_Attribute

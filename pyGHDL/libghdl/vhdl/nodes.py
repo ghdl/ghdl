@@ -185,7 +185,7 @@ class Iir_Kind(IntEnum):
     Interface_Package_Declaration = 138
     Interface_Function_Declaration = 139
     Interface_Procedure_Declaration = 140
-    Signal_Attribute_Declaration = 141
+    Attribute_Implicit_Declaration = 141
     Suspend_State_Declaration = 142
     Identity_Operator = 143
     Negation_Operator = 144
@@ -5211,15 +5211,15 @@ def Set_Guard_Sensitivity_List(obj: Iir, value: Iir) -> None:
 
 
 @export
-@BindToLibGHDL("vhdl__nodes__get_signal_attribute_chain")
-def Get_Signal_Attribute_Chain(obj: Iir) -> Iir:
+@BindToLibGHDL("vhdl__nodes__get_attribute_implicit_chain")
+def Get_Attribute_Implicit_Chain(obj: Iir) -> Iir:
     """"""
     return 0
 
 
 @export
-@BindToLibGHDL("vhdl__nodes__set_signal_attribute_chain")
-def Set_Signal_Attribute_Chain(obj: Iir, value: Iir) -> None:
+@BindToLibGHDL("vhdl__nodes__set_attribute_implicit_chain")
+def Set_Attribute_Implicit_Chain(obj: Iir, value: Iir) -> None:
     """"""
 
 
@@ -5861,15 +5861,15 @@ def Set_Attr_Chain(obj: Iir, value: Iir) -> None:
 
 
 @export
-@BindToLibGHDL("vhdl__nodes__get_signal_attribute_declaration")
-def Get_Signal_Attribute_Declaration(obj: Iir) -> Iir:
+@BindToLibGHDL("vhdl__nodes__get_attribute_implicit_declaration")
+def Get_Attribute_Implicit_Declaration(obj: Iir) -> Iir:
     """"""
     return 0
 
 
 @export
-@BindToLibGHDL("vhdl__nodes__set_signal_attribute_declaration")
-def Set_Signal_Attribute_Declaration(obj: Iir, value: Iir) -> None:
+@BindToLibGHDL("vhdl__nodes__set_attribute_implicit_declaration")
+def Set_Attribute_Implicit_Declaration(obj: Iir, value: Iir) -> None:
     """"""
 
 

@@ -2887,7 +2887,7 @@ package body Vhdl.Sem is
    is
       Unit : constant Iir_Design_Unit := Get_Design_Unit (Pkg);
       Header : constant Iir := Get_Package_Header (Pkg);
-      Implicit : Implicit_Signal_Declaration_Type;
+      Implicit : Implicit_Declaration_Type;
    begin
       Sem_Scopes.Add_Name (Pkg);
       Set_Visible_Flag (Pkg, True);
@@ -3462,7 +3462,7 @@ package body Vhdl.Sem is
       Library : constant Iir := Get_Library (Get_Design_File (Design_Unit));
       Prev_Unit : Iir;
       Old_Design_Unit : Iir_Design_Unit;
-      Implicit : Implicit_Signal_Declaration_Type;
+      Implicit : Implicit_Declaration_Type;
    begin
       --  Sanity check: can analyze either previously analyzed unit or just
       --  parsed unit.

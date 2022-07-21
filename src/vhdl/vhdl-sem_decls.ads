@@ -81,29 +81,29 @@ package Vhdl.Sem_Decls is
    --  declarations lists must register and unregister themselves with
    --  push_declarative_region_with_signals and
    --  pop_declarative_region_with_signals.
-   type Implicit_Signal_Declaration_Type is private;
+   type Implicit_Declaration_Type is private;
 
    procedure Push_Signals_Declarative_Part
-     (Cell: out Implicit_Signal_Declaration_Type; Decls_Parent : Iir);
+     (Cell: out Implicit_Declaration_Type; Decls_Parent : Iir);
 
    procedure Pop_Signals_Declarative_Part
-     (Cell: in Implicit_Signal_Declaration_Type);
+     (Cell: in Implicit_Declaration_Type);
 
-   --  Declare an implicit signal.  This is called from sem_names when a
-   --  signal attribute is analyzed.
-   procedure Add_Declaration_For_Implicit_Signal (Sig : Iir);
+   --  Declare an implicit signal or an implicit quantity.  This is called
+   --  from sem_names when an attribute is analyzed.
+   procedure Add_Implicit_Declaration (Attr : Iir);
 
 private
-   type Implicit_Signal_Declaration_Type is record
+   type Implicit_Declaration_Type is record
       --  Declaration or statement than will contain implicit declarations.
       Decls_Parent : Iir;
 
-      --  Set to the signal_attribute_declaration when created (ie when the
-      --  first attribute signal is added).
+      --  Set to the attribute_declaration when created (ie when the
+      --  first attribute is added).
       Implicit_Decl : Iir;
 
-      --  Last attribute signal inserted in the current Implicit_Decl.
-      Last_Attribute_Signal : Iir;
+      --  Last attribute inserted in the current Implicit_Decl.
+      Last_Attribute : Iir;
 
       --  If True, declarations of DECLS_PARENT have already been analyzed.
       --  So implicit declarations are appended to the parent, and the last

@@ -1933,11 +1933,11 @@ package body Trans.Chap4 is
          when Iir_Kind_Attribute_Specification =>
             Chap5.Translate_Attribute_Specification (Decl);
 
-         when Iir_Kind_Signal_Attribute_Declaration =>
+         when Iir_Kind_Attribute_Implicit_Declaration =>
             declare
                Sig : Iir;
             begin
-               Sig := Get_Signal_Attribute_Chain (Decl);
+               Sig := Get_Attribute_Implicit_Chain (Decl);
                while Is_Valid (Sig) loop
                   Chap4.Create_Implicit_Signal (Sig);
                   Sig := Get_Attr_Chain (Sig);
@@ -2709,11 +2709,11 @@ package body Trans.Chap4 is
                | Iir_Kind_Procedure_Body =>
                null;
 
-            when Iir_Kind_Signal_Attribute_Declaration =>
+            when Iir_Kind_Attribute_Implicit_Declaration =>
                declare
                   Sig : Iir;
                begin
-                  Sig := Get_Signal_Attribute_Chain (Decl);
+                  Sig := Get_Attribute_Implicit_Chain (Decl);
                   while Is_Valid (Sig) loop
                      case Iir_Kinds_Signal_Attribute (Get_Kind (Sig)) is
                         when Iir_Kind_Stable_Attribute

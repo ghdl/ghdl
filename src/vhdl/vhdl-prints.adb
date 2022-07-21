@@ -2498,7 +2498,7 @@ package body Vhdl.Prints is
                Disp_Attribute_Declaration (Ctxt, Decl);
             when Iir_Kind_Attribute_Specification =>
                Disp_Attribute_Specification (Ctxt, Decl);
-            when Iir_Kind_Signal_Attribute_Declaration =>
+            when Iir_Kind_Attribute_Implicit_Declaration =>
                null;
             when Iir_Kind_Group_Template_Declaration =>
                Disp_Group_Template_Declaration (Ctxt, Decl);

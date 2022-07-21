@@ -1869,18 +1869,18 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Is_Ref (Flag12)
 
-   -- Iir_Kind_Signal_Attribute_Declaration (Short)
+   -- Iir_Kind_Attribute_Implicit_Declaration (Short)
    --
-   --  Chain of implicit signals created from signal attribute.  This is just
-   --  an helper so that translation can create these implicit signals at the
-   --  same time as user signal declarations.
+   --  Chain of implicit signals or quantiies created from attributes.  This
+   --  is just an helper so that translation can create these implicit
+   --  signals or quantities at the same time as other declarations.
    --
    --   Get/Set_Parent (Field0)
    --
    --   Get/Set_Chain (Field2)
    --
    --  Chain of signals
-   --   Get/Set_Signal_Attribute_Chain (Field3)
+   --   Get/Set_Attribute_Implicit_Chain (Field3)
 
    -- Iir_Kind_Suspend_State_Declaration (Short)
    --
@@ -4644,7 +4644,7 @@ package Vhdl.Nodes is
    --   Get/Set_Attr_Chain (Field2)
    --
    --  Head of the chain.  Used only to ease the reconstruction of the chain.
-   --   Get/Set_Signal_Attribute_Declaration (Field3)
+   --   Get/Set_Attribute_Implicit_Declaration (Field3)
    --
    -- Only for Iir_Kind_Above_Attribute:
    -- Only for Iir_Kind_Quantity_Delayed_Attribute:
@@ -4752,12 +4752,12 @@ package Vhdl.Nodes is
    --   Get/Set_Type (Field1)
    --
    --  Next attribute signal in the chain owned by the
-   --  signal_attribute_declaration.  Usual Get/Set_Chain is not used here as
+   --  attribute_implicit_declaration.  Usual Get/Set_Chain is not used here as
    --  the chain is composed only of forward references.
    --   Get/Set_Attr_Chain (Field2)
    --
    --  Head of the chain.  Used only to ease the reconstruction of the chain.
-   --   Get/Set_Signal_Attribute_Declaration (Field3)
+   --   Get/Set_Attribute_Implicit_Declaration (Field3)
    --
    --   Get/Set_Base_Name (Field5)
    --
@@ -5034,7 +5034,7 @@ package Vhdl.Nodes is
       Iir_Kind_Interface_Function_Declaration, --         interface
       Iir_Kind_Interface_Procedure_Declaration, --        interface
 
-      Iir_Kind_Signal_Attribute_Declaration,
+      Iir_Kind_Attribute_Implicit_Declaration,
       Iir_Kind_Suspend_State_Declaration,
 
    -- Expressions.
@@ -8910,8 +8910,8 @@ package Vhdl.Nodes is
    procedure Set_Guard_Sensitivity_List (Guard : Iir; List : Iir_List);
 
    --  Field: Field3 Forward_Ref
-   function Get_Signal_Attribute_Chain (Decl : Iir) return Iir;
-   procedure Set_Signal_Attribute_Chain (Decl : Iir; Chain : Iir);
+   function Get_Attribute_Implicit_Chain (Decl : Iir) return Iir;
+   procedure Set_Attribute_Implicit_Chain (Decl : Iir; Chain : Iir);
 
    --  Block_Configuration that applies to this block statement.
    --  Field: Field6 Forward_Ref
@@ -9148,8 +9148,8 @@ package Vhdl.Nodes is
    procedure Set_Attr_Chain (Attr : Iir; Chain : Iir);
 
    --  Field: Field3 Forward_Ref
-   function Get_Signal_Attribute_Declaration (Attr : Iir) return Iir;
-   procedure Set_Signal_Attribute_Declaration (Attr : Iir; Decl : Iir);
+   function Get_Attribute_Implicit_Declaration (Attr : Iir) return Iir;
+   procedure Set_Attribute_Implicit_Declaration (Attr : Iir; Decl : Iir);
 
    --  Type of the actual for an association by individual.
    --    Unless the formal is an unconstrained array type, this is the same as

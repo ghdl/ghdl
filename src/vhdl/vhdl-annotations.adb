@@ -726,11 +726,11 @@ package body Vhdl.Annotations is
          when Iir_Kind_Package_Body =>
             Annotate_Package_Body (Decl);
 
-         when Iir_Kind_Signal_Attribute_Declaration =>
+         when Iir_Kind_Attribute_Implicit_Declaration =>
             declare
                Attr : Iir;
             begin
-               Attr := Get_Signal_Attribute_Chain (Decl);
+               Attr := Get_Attribute_Implicit_Chain (Decl);
                while Is_Valid (Attr) loop
                   Create_Signal_Info (Block_Info, Attr);
                   Attr := Get_Attr_Chain (Attr);

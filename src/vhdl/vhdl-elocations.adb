@@ -296,7 +296,7 @@ package body Vhdl.Elocations is
            | Iir_Kind_Guard_Signal_Declaration
            | Iir_Kind_Interface_Function_Declaration
            | Iir_Kind_Interface_Procedure_Declaration
-           | Iir_Kind_Signal_Attribute_Declaration
+           | Iir_Kind_Attribute_Implicit_Declaration
            | Iir_Kind_Suspend_State_Declaration
            | Iir_Kind_Identity_Operator
            | Iir_Kind_Negation_Operator

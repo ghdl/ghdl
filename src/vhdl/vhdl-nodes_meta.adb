@@ -266,7 +266,7 @@ package body Vhdl.Nodes_Meta is
       Field_Guard_Expression => Type_Iir,
       Field_Guard_Decl => Type_Iir,
       Field_Guard_Sensitivity_List => Type_Iir_List,
-      Field_Signal_Attribute_Chain => Type_Iir,
+      Field_Attribute_Implicit_Chain => Type_Iir,
       Field_Block_Block_Configuration => Type_Iir,
       Field_Package_Header => Type_Iir,
       Field_Block_Header => Type_Iir,
@@ -316,7 +316,7 @@ package body Vhdl.Nodes_Meta is
       Field_Parameter_3 => Type_Iir,
       Field_Parameter_4 => Type_Iir,
       Field_Attr_Chain => Type_Iir,
-      Field_Signal_Attribute_Declaration => Type_Iir,
+      Field_Attribute_Implicit_Declaration => Type_Iir,
       Field_Actual_Type => Type_Iir,
       Field_Actual_Type_Definition => Type_Iir,
       Field_Association_Chain => Type_Iir,
@@ -901,8 +901,8 @@ package body Vhdl.Nodes_Meta is
             return "guard_decl";
          when Field_Guard_Sensitivity_List =>
             return "guard_sensitivity_list";
-         when Field_Signal_Attribute_Chain =>
-            return "signal_attribute_chain";
+         when Field_Attribute_Implicit_Chain =>
+            return "attribute_implicit_chain";
          when Field_Block_Block_Configuration =>
             return "block_block_configuration";
          when Field_Package_Header =>
@@ -1001,8 +1001,8 @@ package body Vhdl.Nodes_Meta is
             return "parameter_4";
          when Field_Attr_Chain =>
             return "attr_chain";
-         when Field_Signal_Attribute_Declaration =>
-            return "signal_attribute_declaration";
+         when Field_Attribute_Implicit_Declaration =>
+            return "attribute_implicit_declaration";
          when Field_Actual_Type =>
             return "actual_type";
          when Field_Actual_Type_Definition =>
@@ -1443,8 +1443,8 @@ package body Vhdl.Nodes_Meta is
             return "interface_function_declaration";
          when Iir_Kind_Interface_Procedure_Declaration =>
             return "interface_procedure_declaration";
-         when Iir_Kind_Signal_Attribute_Declaration =>
-            return "signal_attribute_declaration";
+         when Iir_Kind_Attribute_Implicit_Declaration =>
+            return "attribute_implicit_declaration";
          when Iir_Kind_Suspend_State_Declaration =>
             return "suspend_state_declaration";
          when Iir_Kind_Identity_Operator =>
@@ -2309,7 +2309,7 @@ package body Vhdl.Nodes_Meta is
             return Attr_None;
          when Field_Guard_Sensitivity_List =>
             return Attr_Of_Ref;
-         when Field_Signal_Attribute_Chain =>
+         when Field_Attribute_Implicit_Chain =>
             return Attr_Forward_Ref;
          when Field_Block_Block_Configuration =>
             return Attr_Forward_Ref;
@@ -2409,7 +2409,7 @@ package body Vhdl.Nodes_Meta is
             return Attr_None;
          when Field_Attr_Chain =>
             return Attr_Forward_Ref;
-         when Field_Signal_Attribute_Declaration =>
+         when Field_Attribute_Implicit_Declaration =>
             return Attr_Forward_Ref;
          when Field_Actual_Type =>
             return Attr_Ref;
@@ -3939,10 +3939,10 @@ package body Vhdl.Nodes_Meta is
       Field_Chain,
       Field_Interface_Declaration_Chain,
       Field_Return_Type_Mark,
-      --  Iir_Kind_Signal_Attribute_Declaration
+      --  Iir_Kind_Attribute_Implicit_Declaration
       Field_Parent,
       Field_Chain,
-      Field_Signal_Attribute_Chain,
+      Field_Attribute_Implicit_Chain,
       --  Iir_Kind_Suspend_State_Declaration
       Field_Parent,
       Field_Chain,
@@ -5089,7 +5089,7 @@ package body Vhdl.Nodes_Meta is
       Field_Prefix,
       Field_Type,
       Field_Attr_Chain,
-      Field_Signal_Attribute_Declaration,
+      Field_Attribute_Implicit_Declaration,
       Field_Base_Name,
       --  Iir_Kind_Integ_Attribute
       Field_Expr_Staticness,
@@ -5097,7 +5097,7 @@ package body Vhdl.Nodes_Meta is
       Field_Prefix,
       Field_Type,
       Field_Attr_Chain,
-      Field_Signal_Attribute_Declaration,
+      Field_Attribute_Implicit_Declaration,
       Field_Base_Name,
       --  Iir_Kind_Quantity_Delayed_Attribute
       Field_Expr_Staticness,
@@ -5105,7 +5105,7 @@ package body Vhdl.Nodes_Meta is
       Field_Prefix,
       Field_Type,
       Field_Attr_Chain,
-      Field_Signal_Attribute_Declaration,
+      Field_Attribute_Implicit_Declaration,
       Field_Parameter,
       Field_Base_Name,
       --  Iir_Kind_Above_Attribute
@@ -5114,7 +5114,7 @@ package body Vhdl.Nodes_Meta is
       Field_Prefix,
       Field_Type,
       Field_Attr_Chain,
-      Field_Signal_Attribute_Declaration,
+      Field_Attribute_Implicit_Declaration,
       Field_Parameter,
       Field_Base_Name,
       --  Iir_Kind_Delayed_Attribute
@@ -5125,7 +5125,7 @@ package body Vhdl.Nodes_Meta is
       Field_Parameter,
       Field_Type,
       Field_Attr_Chain,
-      Field_Signal_Attribute_Declaration,
+      Field_Attribute_Implicit_Declaration,
       Field_Base_Name,
       --  Iir_Kind_Stable_Attribute
       Field_Has_Active_Flag,
@@ -5135,7 +5135,7 @@ package body Vhdl.Nodes_Meta is
       Field_Parameter,
       Field_Type,
       Field_Attr_Chain,
-      Field_Signal_Attribute_Declaration,
+      Field_Attribute_Implicit_Declaration,
       Field_Base_Name,
       --  Iir_Kind_Quiet_Attribute
       Field_Has_Active_Flag,
@@ -5145,7 +5145,7 @@ package body Vhdl.Nodes_Meta is
       Field_Parameter,
       Field_Type,
       Field_Attr_Chain,
-      Field_Signal_Attribute_Declaration,
+      Field_Attribute_Implicit_Declaration,
       Field_Base_Name,
       --  Iir_Kind_Transaction_Attribute
       Field_Has_Active_Flag,
@@ -5155,7 +5155,7 @@ package body Vhdl.Nodes_Meta is
       Field_Parameter,
       Field_Type,
       Field_Attr_Chain,
-      Field_Signal_Attribute_Declaration,
+      Field_Attribute_Implicit_Declaration,
       Field_Base_Name,
       --  Iir_Kind_Event_Attribute
       Field_Expr_Staticness,
@@ -5433,7 +5433,7 @@ package body Vhdl.Nodes_Meta is
       Iir_Kind_Interface_Package_Declaration => 1197,
       Iir_Kind_Interface_Function_Declaration => 1215,
       Iir_Kind_Interface_Procedure_Declaration => 1229,
-      Iir_Kind_Signal_Attribute_Declaration => 1232,
+      Iir_Kind_Attribute_Implicit_Declaration => 1232,
       Iir_Kind_Suspend_State_Declaration => 1235,
       Iir_Kind_Identity_Operator => 1239,
       Iir_Kind_Negation_Operator => 1243,
@@ -6388,8 +6388,8 @@ package body Vhdl.Nodes_Meta is
             return Get_Guard_Expression (N);
          when Field_Guard_Decl =>
             return Get_Guard_Decl (N);
-         when Field_Signal_Attribute_Chain =>
-            return Get_Signal_Attribute_Chain (N);
+         when Field_Attribute_Implicit_Chain =>
+            return Get_Attribute_Implicit_Chain (N);
          when Field_Block_Block_Configuration =>
             return Get_Block_Block_Configuration (N);
          when Field_Package_Header =>
@@ -6468,8 +6468,8 @@ package body Vhdl.Nodes_Meta is
             return Get_Parameter_4 (N);
          when Field_Attr_Chain =>
             return Get_Attr_Chain (N);
-         when Field_Signal_Attribute_Declaration =>
-            return Get_Signal_Attribute_Declaration (N);
+         when Field_Attribute_Implicit_Declaration =>
+            return Get_Attribute_Implicit_Declaration (N);
          when Field_Actual_Type =>
             return Get_Actual_Type (N);
          when Field_Actual_Type_Definition =>
@@ -6848,8 +6848,8 @@ package body Vhdl.Nodes_Meta is
             Set_Guard_Expression (N, V);
          when Field_Guard_Decl =>
             Set_Guard_Decl (N, V);
-         when Field_Signal_Attribute_Chain =>
-            Set_Signal_Attribute_Chain (N, V);
+         when Field_Attribute_Implicit_Chain =>
+            Set_Attribute_Implicit_Chain (N, V);
          when Field_Block_Block_Configuration =>
             Set_Block_Block_Configuration (N, V);
          when Field_Package_Header =>
@@ -6928,8 +6928,8 @@ package body Vhdl.Nodes_Meta is
             Set_Parameter_4 (N, V);
          when Field_Attr_Chain =>
             Set_Attr_Chain (N, V);
-         when Field_Signal_Attribute_Declaration =>
-            Set_Signal_Attribute_Declaration (N, V);
+         when Field_Attribute_Implicit_Declaration =>
+            Set_Attribute_Implicit_Declaration (N, V);
          when Field_Actual_Type =>
             Set_Actual_Type (N, V);
          when Field_Actual_Type_Definition =>
@@ -8613,7 +8613,7 @@ package body Vhdl.Nodes_Meta is
            | Iir_Kind_Interface_Package_Declaration
            | Iir_Kind_Interface_Function_Declaration
            | Iir_Kind_Interface_Procedure_Declaration
-           | Iir_Kind_Signal_Attribute_Declaration
+           | Iir_Kind_Attribute_Implicit_Declaration
            | Iir_Kind_Suspend_State_Declaration
            | Iir_Kind_Sensitized_Process_Statement
            | Iir_Kind_Process_Statement
@@ -10824,10 +10824,10 @@ package body Vhdl.Nodes_Meta is
       return K = Iir_Kind_Guard_Signal_Declaration;
    end Has_Guard_Sensitivity_List;
 
-   function Has_Signal_Attribute_Chain (K : Iir_Kind) return Boolean is
+   function Has_Attribute_Implicit_Chain (K : Iir_Kind) return Boolean is
    begin
-      return K = Iir_Kind_Signal_Attribute_Declaration;
-   end Has_Signal_Attribute_Chain;
+      return K = Iir_Kind_Attribute_Implicit_Declaration;
+   end Has_Attribute_Implicit_Chain;
 
    function Has_Block_Block_Configuration (K : Iir_Kind) return Boolean is
    begin
@@ -11037,7 +11037,7 @@ package body Vhdl.Nodes_Meta is
            | Iir_Kind_Interface_Package_Declaration
            | Iir_Kind_Interface_Function_Declaration
            | Iir_Kind_Interface_Procedure_Declaration
-           | Iir_Kind_Signal_Attribute_Declaration
+           | Iir_Kind_Attribute_Implicit_Declaration
            | Iir_Kind_Suspend_State_Declaration
            | Iir_Kind_Sensitized_Process_Statement
            | Iir_Kind_Process_Statement
@@ -11854,7 +11854,8 @@ package body Vhdl.Nodes_Meta is
       end case;
    end Has_Attr_Chain;
 
-   function Has_Signal_Attribute_Declaration (K : Iir_Kind) return Boolean is
+   function Has_Attribute_Implicit_Declaration (K : Iir_Kind)
+      return Boolean is
    begin
       case K is
          when Iir_Kind_Dot_Attribute
@@ -11869,7 +11870,7 @@ package body Vhdl.Nodes_Meta is
          when others =>
             return False;
       end case;
-   end Has_Signal_Attribute_Declaration;
+   end Has_Attribute_Implicit_Declaration;
 
    function Has_Actual_Type (K : Iir_Kind) return Boolean is
    begin

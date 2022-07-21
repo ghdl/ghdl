@@ -1082,7 +1082,7 @@ package body Vhdl.Nodes is
            | Iir_Kind_Interface_Quantity_Declaration
            | Iir_Kind_Interface_Terminal_Declaration
            | Iir_Kind_Interface_Type_Declaration
-           | Iir_Kind_Signal_Attribute_Declaration
+           | Iir_Kind_Attribute_Implicit_Declaration
            | Iir_Kind_Suspend_State_Declaration
            | Iir_Kind_Identity_Operator
            | Iir_Kind_Negation_Operator
@@ -5397,21 +5397,21 @@ package body Vhdl.Nodes is
       Set_Field4 (Guard, Iir_List_To_Iir (List));
    end Set_Guard_Sensitivity_List;
 
-   function Get_Signal_Attribute_Chain (Decl : Iir) return Iir is
+   function Get_Attribute_Implicit_Chain (Decl : Iir) return Iir is
    begin
       pragma Assert (Decl /= Null_Iir);
-      pragma Assert (Has_Signal_Attribute_Chain (Get_Kind (Decl)),
-                     "no field Signal_Attribute_Chain");
+      pragma Assert (Has_Attribute_Implicit_Chain (Get_Kind (Decl)),
+                     "no field Attribute_Implicit_Chain");
       return Get_Field3 (Decl);
-   end Get_Signal_Attribute_Chain;
+   end Get_Attribute_Implicit_Chain;
 
-   procedure Set_Signal_Attribute_Chain (Decl : Iir; Chain : Iir) is
+   procedure Set_Attribute_Implicit_Chain (Decl : Iir; Chain : Iir) is
    begin
       pragma Assert (Decl /= Null_Iir);
-      pragma Assert (Has_Signal_Attribute_Chain (Get_Kind (Decl)),
-                     "no field Signal_Attribute_Chain");
+      pragma Assert (Has_Attribute_Implicit_Chain (Get_Kind (Decl)),
+                     "no field Attribute_Implicit_Chain");
       Set_Field3 (Decl, Chain);
-   end Set_Signal_Attribute_Chain;
+   end Set_Attribute_Implicit_Chain;
 
    function Get_Block_Block_Configuration (Block : Iir) return Iir is
    begin
@@ -6218,21 +6218,21 @@ package body Vhdl.Nodes is
       Set_Field2 (Attr, Chain);
    end Set_Attr_Chain;
 
-   function Get_Signal_Attribute_Declaration (Attr : Iir) return Iir is
+   function Get_Attribute_Implicit_Declaration (Attr : Iir) return Iir is
    begin
       pragma Assert (Attr /= Null_Iir);
-      pragma Assert (Has_Signal_Attribute_Declaration (Get_Kind (Attr)),
-                     "no field Signal_Attribute_Declaration");
+      pragma Assert (Has_Attribute_Implicit_Declaration (Get_Kind (Attr)),
+                     "no field Attribute_Implicit_Declaration");
       return Get_Field3 (Attr);
-   end Get_Signal_Attribute_Declaration;
+   end Get_Attribute_Implicit_Declaration;
 
-   procedure Set_Signal_Attribute_Declaration (Attr : Iir; Decl : Iir) is
+   procedure Set_Attribute_Implicit_Declaration (Attr : Iir; Decl : Iir) is
    begin
       pragma Assert (Attr /= Null_Iir);
-      pragma Assert (Has_Signal_Attribute_Declaration (Get_Kind (Attr)),
-                     "no field Signal_Attribute_Declaration");
+      pragma Assert (Has_Attribute_Implicit_Declaration (Get_Kind (Attr)),
+                     "no field Attribute_Implicit_Declaration");
       Set_Field3 (Attr, Decl);
-   end Set_Signal_Attribute_Declaration;
+   end Set_Attribute_Implicit_Declaration;
 
    function Get_Actual_Type (Target : Iir) return Iir is
    begin

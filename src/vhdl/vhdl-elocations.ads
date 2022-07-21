@@ -279,7 +279,7 @@ package Vhdl.Elocations is
 
    -- Iir_Kind_Guard_Signal_Declaration (None)
 
-   -- Iir_Kind_Signal_Attribute_Declaration (None)
+   -- Iir_Kind_Attribute_Implicit_Declaration (None)
    -- Iir_Kind_Suspend_State_Declaration (None)
 
    -- Iir_Kind_Constant_Declaration (L1)
