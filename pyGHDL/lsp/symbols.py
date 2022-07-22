@@ -39,7 +39,7 @@ SYMBOLS_MAP = {
     nodes.Iir_Kind.Variable_Declaration: {"kind": lsp.SymbolKind.Variable},
     nodes.Iir_Kind.Constant_Declaration: {"kind": lsp.SymbolKind.Constant},
     nodes.Iir_Kind.Signal_Declaration: {"kind": lsp.SymbolKind.Variable},
-    nodes.Iir_Kind.Signal_Attribute_Declaration: {"kind": None},
+    nodes.Iir_Kind.Attribute_Implicit_Declaration: {"kind": None},
     nodes.Iir_Kind.Interface_Variable_Declaration: {"kind": lsp.SymbolKind.Variable},
     nodes.Iir_Kind.Interface_Constant_Declaration: {"kind": lsp.SymbolKind.Constant},
     nodes.Iir_Kind.Interface_Signal_Declaration: {"kind": lsp.SymbolKind.Variable},
