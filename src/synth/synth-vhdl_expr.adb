@@ -2220,10 +2220,16 @@ package body Synth.Vhdl_Expr is
             Error_Msg_Synth (+Expr, "out of bound expression");
             return No_Valtyp;
          when Iir_Kind_Event_Attribute =>
-            if Hook_Signal_Attribute /= null then
-               return Hook_Signal_Attribute (Syn_Inst, Expr);
+            if Hook_Event_Attribute /= null then
+               return Hook_Event_Attribute (Syn_Inst, Expr);
             end if;
-            Error_Msg_Synth (+Expr, "signal attributes not allowed");
+            Error_Msg_Synth (+Expr, "event attributes not allowed");
+            return No_Valtyp;
+         when Iir_Kind_Dot_Attribute =>
+            if Hook_Dot_Attribute /= null then
+               return Hook_Dot_Attribute (Syn_Inst, Expr);
+            end if;
+            Error_Msg_Synth (+Expr, "dot attribute not allowed");
             return No_Valtyp;
          when others =>
             Error_Kind ("synth_expression_with_type", Expr);
