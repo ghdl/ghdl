@@ -79,4 +79,8 @@ package Tables is
    --  of Last + 1.
    function Allocate (Num : Natural := 1) return Table_Index_Type;
    pragma Inline (Allocate);
+
+   --  Reserve memory for NUM extra elements.
+   procedure Reserve (Num : Natural := 1);
+   pragma Inline (Reserve);
 end Tables;

@@ -24,6 +24,11 @@ package body Tables is
       return Res;
    end Allocate;
 
+   procedure Reserve (Num : Natural := 1) is
+   begin
+      Dyn_Table.Reserve (T, Num);
+   end Reserve;
+
    procedure Increment_Last is
    begin
       --  Increase by 1.

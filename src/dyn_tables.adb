@@ -23,8 +23,9 @@ package body Dyn_Tables is
      size_t (Table_Type'Component_Size / System.Storage_Unit);
 
    --  Expand the table by doubling its size.  The table must have been
-   --  initialized.
-   procedure Expand (T : in out Instance; Num : Unsigned)
+   --  initialized.  Memory space for the extra elements are allocated but the
+   --  length of the table is not increased.
+   procedure Reserve (T : in out Instance; Num : Unsigned)
    is
       --  For efficiency, directly call realloc.
       function Crealloc (Ptr : Table_Thin_Ptr; Size : size_t)
@@ -42,10 +43,9 @@ package body Dyn_Tables is
       if New_Last < T.Priv.Last_Pos then
          raise Constraint_Error;
       end if;
-      T.Priv.Last_Pos := New_Last;
 
       --  Check if need to reallocate.
-      if T.Priv.Last_Pos < T.Priv.Length then
+      if New_Last < T.Priv.Length then
          return;
       end if;
 
@@ -59,7 +59,7 @@ package body Dyn_Tables is
          end if;
 
          T.Priv.Length := New_Len;
-         exit when New_Len > T.Priv.Last_Pos;
+         exit when New_Len > New_Last;
       end loop;
 
       --  Realloc and check result.
@@ -70,7 +70,19 @@ package body Dyn_Tables is
       if T.Table = null then
          raise Storage_Error;
       end if;
+   end Reserve;
+
+   --  Expand the table (allocate and increase the length).
+   procedure Expand (T : in out Instance; Num : Unsigned) is
+   begin
+      Reserve (T, Num);
+      T.Priv.Last_Pos := T.Priv.Last_Pos + Num;
    end Expand;
+
+   procedure Reserve (T : in out Instance; Num : Natural) is
+   begin
+      Reserve (T, Unsigned (Num));
+   end Reserve;
 
    procedure Allocate (T : in out Instance; Num : Natural := 1) is
    begin

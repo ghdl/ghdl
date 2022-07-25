@@ -91,6 +91,8 @@ package Dyn_Tables is
    --  Increase by NUM the length of the array.
    procedure Allocate (T : in out Instance; Num : Natural := 1);
 
+   --  Reserve memory for NUM extra entries.
+   procedure Reserve (T : in out Instance; Num : Natural);
 private
    type Unsigned is mod 2**32;
 
