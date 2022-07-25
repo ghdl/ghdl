@@ -49,6 +49,7 @@ package Elab.Vhdl_Values is
 
       Value_File,
       Value_Quantity,
+      Value_Terminal,
 
       --  A constant.  This is a named value.  One purpose is to avoid to
       --  create many times the same net for the same value.
@@ -77,6 +78,9 @@ package Elab.Vhdl_Values is
    type Quantity_Index_Type is new Uns32;
    No_Quantity_Index : constant Quantity_Index_Type := 0;
 
+   type Terminal_Index_Type is new Uns32;
+   No_Terminal_Index : constant Terminal_Index_Type := 0;
+
    type Value_Type (Kind : Value_Kind) is record
       case Kind is
          when Value_Net
@@ -91,6 +95,8 @@ package Elab.Vhdl_Values is
             File : File_Index;
          when Value_Quantity =>
             Q : Quantity_Index_Type;
+         when Value_Terminal =>
+            T : Terminal_Index_Type;
          when Value_Const =>
             C_Val : Value_Acc;
             C_Loc : Node;
@@ -155,6 +161,8 @@ package Elab.Vhdl_Values is
                               return Valtyp;
 
    function Create_Value_Quantity (Vtype : Type_Acc; Q : Quantity_Index_Type)
+                                  return Valtyp;
+   function Create_Value_Terminal (Vtype : Type_Acc; T : Terminal_Index_Type)
                                   return Valtyp;
 
    function Create_Value_Alias

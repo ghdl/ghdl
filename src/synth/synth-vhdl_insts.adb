@@ -229,6 +229,7 @@ package body Synth.Vhdl_Insts is
            | Value_Signal
            | Value_File
            | Value_Quantity
+           | Value_Terminal
            | Value_Dyn_Alias =>
             raise Internal_Error;
       end case;

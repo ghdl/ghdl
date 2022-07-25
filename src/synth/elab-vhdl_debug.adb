@@ -231,6 +231,8 @@ package body Elab.Vhdl_Debug is
             Put ("file");
          when Value_Quantity =>
             Put ("quantity");
+         when Value_Terminal =>
+            Put ("terminal");
          when Value_Const =>
             Put ("const: ");
             Disp_Memtyp (Get_Memtyp (Vt), Vtype);

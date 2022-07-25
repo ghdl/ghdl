@@ -309,6 +309,10 @@ package body Elab.Vhdl_Values.Debug is
             Put ("quantity ");
             Put_Uns32 (Uns32 (V.Val.Q));
             New_Line;
+         when Value_Terminal =>
+            Put ("terminal ");
+            Put_Uns32 (Uns32 (V.Val.T));
+            New_Line;
          when Value_Alias =>
             Put ("an alias: ");
             Debug_Typ1 (V.Typ);
