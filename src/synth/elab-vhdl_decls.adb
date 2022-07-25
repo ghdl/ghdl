@@ -191,6 +191,28 @@ package body Elab.Vhdl_Decls is
       Create_Object (Syn_Inst, Decl, Res);
    end Elab_Implicit_Quantity_Declaration;
 
+   procedure Elab_Terminal_Declaration
+     (Syn_Inst : Synth_Instance_Acc; Decl : Node)
+   is
+      Res : Valtyp;
+   begin
+      Res := Create_Value_Terminal (null, No_Terminal_Index);
+      Create_Object (Syn_Inst, Decl, Res);
+   end Elab_Terminal_Declaration;
+
+   procedure Elab_Nature_Definition
+     (Syn_Inst : Synth_Instance_Acc; Def : Node)
+   is
+      pragma Unreferenced (Syn_Inst);
+   begin
+      case Get_Kind (Def) is
+         when Iir_Kind_Scalar_Nature_Definition =>
+            null;
+         when others =>
+            Error_Kind ("elab_nature_definition", Def);
+      end case;
+   end Elab_Nature_Definition;
+
    procedure Elab_Attribute_Specification
      (Syn_Inst : Synth_Instance_Acc; Spec : Node)
    is
@@ -323,12 +345,18 @@ package body Elab.Vhdl_Decls is
                   El := Get_Attr_Chain (El);
                end loop;
             end;
+         when Iir_Kind_Nature_Declaration =>
+            Elab_Nature_Definition (Syn_Inst, Get_Nature (Decl));
          when Iir_Kind_Free_Quantity_Declaration =>
             Elab_Free_Quantity_Declaration (Syn_Inst, Decl);
+         when Iir_Kinds_Branch_Quantity_Declaration =>
+            Elab_Implicit_Quantity_Declaration (Syn_Inst, Decl);
          when Iir_Kind_Above_Attribute =>
             Elab_Implicit_Signal_Declaration (Syn_Inst, Decl);
          when Iir_Kind_Dot_Attribute =>
             Elab_Implicit_Quantity_Declaration (Syn_Inst, Decl);
+         when Iir_Kind_Terminal_Declaration =>
+            Elab_Terminal_Declaration (Syn_Inst, Decl);
          when Iir_Kinds_Signal_Attribute =>
             --  Not supported by synthesis.
             null;

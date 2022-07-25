@@ -197,4 +197,18 @@ package Simul.Vhdl_Elab is
       Table_Index_Type => Quantity_Index_Type,
       Table_Low_Bound => No_Quantity_Index + 1,
       Table_Initial => 128);
+
+   type Terminal_Entry is record
+      Decl : Iir;
+      Inst : Synth_Instance_Acc;
+      Across_Typ : Type_Acc;
+      Through_Typ : Type_Acc;
+      Ref_Val : Memory_Ptr;
+   end record;
+
+   package Terminal_Table is new Tables
+     (Table_Component_Type => Terminal_Entry,
+      Table_Index_Type => Terminal_Index_Type,
+      Table_Low_Bound => No_Terminal_Index + 1,
+      Table_Initial => 32);
 end Simul.Vhdl_Elab;

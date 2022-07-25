@@ -765,9 +765,10 @@ package body Vhdl.Annotations is
 
          when Iir_Kind_Terminal_Declaration =>
             Add_Terminal_Info (Block_Info, Decl);
-         when Iir_Kinds_Branch_Quantity_Declaration
-            | Iir_Kind_Free_Quantity_Declaration =>
+         when Iir_Kind_Free_Quantity_Declaration =>
             Annotate_Declaration_Type (Block_Info, Decl);
+            Add_Quantity_Info (Block_Info, Decl);
+         when Iir_Kinds_Branch_Quantity_Declaration =>
             Add_Quantity_Info (Block_Info, Decl);
 
          when Iir_Kind_Type_Declaration
@@ -848,7 +849,6 @@ package body Vhdl.Annotations is
 
          when Iir_Kind_Nature_Declaration =>
             null;
-
          when Iir_Kind_Psl_Default_Clock =>
             null;
 

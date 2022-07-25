@@ -92,6 +92,20 @@ package body Simul.Vhdl_Elab is
       Val.Val.Q := Quantity_Table.Last;
    end Gather_Quantity;
 
+   procedure Gather_Terminal (Inst : Synth_Instance_Acc; Decl : Node)
+   is
+      Val : constant Valtyp := Get_Value (Inst, Decl);
+      Def : constant Node := Get_Nature (Decl);
+      Across_Typ : Type_Acc;
+      Through_Typ : Type_Acc;
+   begin
+      Across_Typ := Get_Subtype_Object (Inst, Get_Across_Type (Def));
+      Through_Typ := Get_Subtype_Object (Inst, Get_Through_Type (Def));
+      pragma Assert (Val.Val.T = No_Terminal_Index);
+      Terminal_Table.Append ((Decl, Inst, Across_Typ, Through_Typ, null));
+      Val.Val.T := Terminal_Table.Last;
+   end Gather_Terminal;
+
    procedure Gather_Processes_Decl (Inst : Synth_Instance_Acc; Decl : Node) is
    begin
       case Get_Kind (Decl) is
@@ -128,8 +142,22 @@ package body Simul.Vhdl_Elab is
          when Iir_Kind_Configuration_Specification =>
             null;
          when Iir_Kind_Free_Quantity_Declaration
+           | Iir_Kinds_Branch_Quantity_Declaration
            | Iir_Kind_Dot_Attribute =>
             Gather_Quantity (Inst, Decl);
+         when Iir_Kind_Terminal_Declaration =>
+            Gather_Terminal (Inst, Decl);
+         when Iir_Kind_Nature_Declaration =>
+            declare
+               Def : constant Node := Get_Nature (Decl);
+               Across_Typ : constant Type_Acc :=
+                 Get_Subtype_Object (Inst, Get_Across_Type (Def));
+               Through_Typ : constant Type_Acc :=
+                 Get_Subtype_Object (Inst, Get_Through_Type (Def));
+            begin
+               Convert_Type_Width (Across_Typ);
+               Convert_Type_Width (Through_Typ);
+            end;
          when Iir_Kind_Attribute_Implicit_Declaration =>
             declare
                Sig : Node;
@@ -146,6 +174,7 @@ package body Simul.Vhdl_Elab is
          when Iir_Kind_Constant_Declaration
            | Iir_Kind_Variable_Declaration
            | Iir_Kind_Object_Alias_Declaration
+           | Iir_Kind_Non_Object_Alias_Declaration
            | Iir_Kind_Attribute_Declaration
            | Iir_Kind_Attribute_Specification
            | Iir_Kind_Type_Declaration
