@@ -3014,6 +3014,22 @@ package body Vhdl.Nodes is
       Set_Field5 (Decl, Sub_Nature);
    end Set_Subnature_Indication;
 
+   function Get_Reference_Terminal_Flag (Decl : Iir) return Boolean is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Reference_Terminal_Flag (Get_Kind (Decl)),
+                     "no field Reference_Terminal_Flag");
+      return Get_Flag1 (Decl);
+   end Get_Reference_Terminal_Flag;
+
+   procedure Set_Reference_Terminal_Flag (Decl : Iir; Flag : Boolean) is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Reference_Terminal_Flag (Get_Kind (Decl)),
+                     "no field Reference_Terminal_Flag");
+      Set_Flag1 (Decl, Flag);
+   end Set_Reference_Terminal_Flag;
+
    type Iir_Mode_Conv is record
       Flag13: Boolean;
       Flag14: Boolean;

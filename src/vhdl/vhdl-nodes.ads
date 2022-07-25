@@ -2198,6 +2198,10 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Nature (Field1)
    --
+   --  Set if the terminal is a reference terminal, ie created by a nature
+   --  declaration (ie a ground).
+   --   Get/Set_Reference_Terminal_Flag (Flag1)
+   --
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Use_Flag (Flag6)
@@ -3076,6 +3080,8 @@ package Vhdl.Nodes is
 
    -- Iir_Kind_Scalar_Nature_Definition (Medium)
    --
+   --  Reference terminal (forward ref).
+   --  This is a declaration that is appended after the nature declaration.
    --   Get/Set_Reference (Field2)
    --
    --  The declarator that has created this nature type.
@@ -8152,6 +8158,10 @@ package Vhdl.Nodes is
    --  Field: Field5
    function Get_Subnature_Indication (Decl : Iir) return Iir;
    procedure Set_Subnature_Indication (Decl : Iir; Sub_Nature : Iir);
+
+   --  Field: Flag1
+   function Get_Reference_Terminal_Flag (Decl : Iir) return Boolean;
+   procedure Set_Reference_Terminal_Flag (Decl : Iir; Flag : Boolean);
 
    --  Mode of interfaces or file (v87).
    --  Field: Flag13,Flag14,Flag15 (grp)

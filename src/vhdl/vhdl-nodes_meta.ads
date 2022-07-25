@@ -163,6 +163,7 @@ package Vhdl.Nodes_Meta is
       Field_Nature_Definition,
       Field_Nature,
       Field_Subnature_Indication,
+      Field_Reference_Terminal_Flag,
       Field_Mode,
       Field_Guarded_Signal_Flag,
       Field_Signal_Kind,
@@ -752,6 +753,7 @@ package Vhdl.Nodes_Meta is
    function Has_Nature_Definition (K : Iir_Kind) return Boolean;
    function Has_Nature (K : Iir_Kind) return Boolean;
    function Has_Subnature_Indication (K : Iir_Kind) return Boolean;
+   function Has_Reference_Terminal_Flag (K : Iir_Kind) return Boolean;
    function Has_Mode (K : Iir_Kind) return Boolean;
    function Has_Guarded_Signal_Flag (K : Iir_Kind) return Boolean;
    function Has_Signal_Kind (K : Iir_Kind) return Boolean;

@@ -3300,6 +3300,19 @@ def Set_Subnature_Indication(obj: Iir, value: Iir) -> None:
 
 
 @export
+@BindToLibGHDL("vhdl__nodes__get_reference_terminal_flag")
+def Get_Reference_Terminal_Flag(obj: Iir) -> Boolean:
+    """"""
+    return 0
+
+
+@export
+@BindToLibGHDL("vhdl__nodes__set_reference_terminal_flag")
+def Set_Reference_Terminal_Flag(obj: Iir, value: Boolean) -> None:
+    """"""
+
+
+@export
 @BindToLibGHDL("vhdl__nodes__get_mode")
 def Get_Mode(obj: Iir) -> Iir:
     """"""
