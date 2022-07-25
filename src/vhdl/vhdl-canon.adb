@@ -477,6 +477,22 @@ package body Vhdl.Canon is
               (Get_Target (Stmt), List, True);
             Canon_Extract_Sensitivity_Expression
               (Get_Expression (Stmt), List, False);
+         when Iir_Kind_Conditional_Variable_Assignment_Statement =>
+            declare
+               Ce : Iir;
+            begin
+               Canon_Extract_Sensitivity_Expression
+                 (Get_Target (Stmt), List, True);
+               Ce := Get_Conditional_Expression_Chain (Stmt);
+               while Ce /= Null_Iir loop
+                  Canon_Extract_Sensitivity_Expression
+                    (Get_Condition (Ce), List, False);
+                  Canon_Extract_Sensitivity_Expression
+                    (Get_Expression (Ce), List, False);
+                  Ce := Get_Chain (Ce);
+               end loop;
+            end;
+
          when Iir_Kind_Simple_Signal_Assignment_Statement =>
             --  LRM08 11.3
             --  See variable assignment statement case.
@@ -560,7 +576,6 @@ package body Vhdl.Canon is
             Canon_Extract_Sensitivity_Procedure_Call
               (Get_Procedure_Call (Stmt), List);
          when Iir_Kind_Selected_Waveform_Assignment_Statement
-           | Iir_Kind_Conditional_Variable_Assignment_Statement
            | Iir_Kind_Signal_Force_Assignment_Statement
            | Iir_Kind_Signal_Release_Assignment_Statement
            | Iir_Kind_Break_Statement
