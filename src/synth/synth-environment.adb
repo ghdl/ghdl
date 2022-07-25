@@ -1805,8 +1805,6 @@ package body Synth.Environment is
    procedure Insert_Partial_Assign
      (Ctxt : Builders.Context_Acc; Seq : Seq_Assign; Asgn : Partial_Assign)
    is
-      V : Partial_Assign_Record renames Partial_Assign_Table.Table (Asgn);
-      V_Next : constant Uns32 := V.Offset + Get_Width (V.Value);
       Seq_Asgn : Seq_Assign_Record renames Assign_Table.Table (Seq);
       El, Last_El : Partial_Assign;
       Inserted : Boolean;
@@ -1815,7 +1813,15 @@ package body Synth.Environment is
       Last_El := No_Partial_Assign;
       El := Seq_Asgn.Val.Asgns;
       while El /= No_Partial_Assign loop
+
+         --  A new element may be appends to the partial_assign_table.
+         --  Allow it to grow without allocating memory.
+         Partial_Assign_Table.Reserve (1);
+
          declare
+            V : Partial_Assign_Record renames
+              Partial_Assign_Table.Table (Asgn);
+            V_Next : constant Uns32 := V.Offset + Get_Width (V.Value);
             P : Partial_Assign_Record renames Partial_Assign_Table.Table (El);
             P_Next : constant Uns32 := P.Offset + Get_Width (P.Value);
          begin
