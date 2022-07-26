@@ -3537,6 +3537,7 @@ package body Vhdl.Parse is
          Ref := Create_Iir (Iir_Kind_Terminal_Declaration);
          Scan_Identifier (Ref);
          Set_Reference (Def, Ref);
+         Set_Reference_Terminal_Flag (Ref, True);
          if Current_Token = Tok_Reference then
             Scan;
          else
