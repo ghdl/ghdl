@@ -139,7 +139,7 @@ package body Netlists.Disp_Vhdl is
                   null;
                when others =>
                   Port_Name := Get_Output_Desc (M, Idx).Name;
-                  Put ("_");
+                  Put ("_c_");
                   Put_Interface_Name (Port_Name);
             end case;
          end if;
