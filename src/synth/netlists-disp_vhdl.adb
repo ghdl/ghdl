@@ -122,6 +122,7 @@ package body Netlists.Disp_Vhdl is
          Inst : constant Instance := Get_Net_Parent (N);
          Idx : constant Port_Idx := Get_Port_Idx (N);
          M : Module;
+         Id : Module_Id;
          Inst_Name : Sname;
          Port_Name : Sname;
       begin
@@ -132,14 +133,19 @@ package body Netlists.Disp_Vhdl is
             Inst_Name := Get_Instance_Name (Inst);
             Put_Name (Inst_Name);
             M := Get_Module (Inst);
-            case Get_Id (M) is
+            Id := Get_Id (M);
+            case Id is
                when Id_Signal
                  | Id_Isignal =>
                   --  No suffix for signals (it's 'o').
                   null;
                when others =>
                   Port_Name := Get_Output_Desc (M, Idx).Name;
-                  Put ("_c_");
+                  if Id >= Id_User_None then
+                     Put ("_c_");
+                  else
+                     Put ("_");
+                  end if;
                   Put_Interface_Name (Port_Name);
             end case;
          end if;
