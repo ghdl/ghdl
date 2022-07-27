@@ -221,11 +221,7 @@ package body Netlists.Expands is
          --  Just return the value.
          Res := Get_Input_Net (Inst, 0);
          --  Disconnect the address
-         Addr := Disconnect_And_Get (Inst, 1);
-         if not Is_Connected (Addr) then
-            --  Should be a Const_X.
-            Remove_Instance (Get_Net_Parent (Addr));
-         end if;
+         Disconnect (Get_Input (Inst, 1));
       else
          --  2. build extract gates
          Els := new Case_Element_Array (1 .. Nbr_Els);
