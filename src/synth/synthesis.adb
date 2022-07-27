@@ -100,6 +100,8 @@ package body Synthesis is
 
       if not Synth.Flags.Flag_Debug_Noexpand then
          Netlists.Expands.Expand_Gates (Ctxt, M);
+         --  Remove unused dyn_expand inputs.
+         Netlists.Cleanup.Mark_And_Sweep (M);
       end if;
    end Instance_Passes;
 
