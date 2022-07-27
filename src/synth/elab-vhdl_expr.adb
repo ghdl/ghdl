@@ -754,6 +754,10 @@ package body Elab.Vhdl_Expr is
                Exec_Indexed_Name (Syn_Inst, Pfx, Dest_Typ, Off);
 
                Dest_Off := Dest_Off + Off;
+
+               while not Dest_Typ.Alast loop
+                  Dest_Typ := Get_Array_Element (Dest_Typ);
+               end loop;
                Dest_Typ := Get_Array_Element (Dest_Typ);
             end;
 
@@ -790,6 +794,11 @@ package body Elab.Vhdl_Expr is
                Dest_Off.Net_Off := Dest_Off.Net_Off + Sl_Off.Net_Off;
                Dest_Off.Mem_Off := Dest_Off.Mem_Off + Sl_Off.Mem_Off;
             end;
+
+         when Iir_Kind_Function_Call =>
+            Dest_Base := Synth_Expression (Syn_Inst, Pfx);
+            Dest_Typ := Dest_Base.Typ;
+            Dest_Off := (0, 0);
 
          when others =>
             Error_Kind ("exec_assignment_prefix", Pfx);
