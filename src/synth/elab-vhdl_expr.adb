@@ -450,7 +450,7 @@ package body Elab.Vhdl_Expr is
                                 Off : out Value_Offsets)
    is
       Indexes : constant Iir_Flist := Get_Index_List (Name);
-      El_Typ : constant Type_Acc := Get_Array_Element (Pfx_Type);
+      Arr_Typ : Type_Acc;
       Idx_Expr : Node;
       Idx_Val : Valtyp;
       Bnd : Bound_Type;
@@ -459,8 +459,8 @@ package body Elab.Vhdl_Expr is
    begin
       Off := (0, 0);
 
-      Stride := 1;
-      for I in reverse Flist_First .. Flist_Last (Indexes) loop
+      Arr_Typ := Pfx_Type;
+      for I in Flist_First .. Flist_Last (Indexes) loop
          Idx_Expr := Get_Nth_Element (Indexes, I);
 
          --  Use the base type as the subtype of the index is not synth-ed.
@@ -472,19 +472,27 @@ package body Elab.Vhdl_Expr is
          end if;
 
          Strip_Const (Idx_Val);
-
-         Bnd := Get_Array_Bound (Pfx_Type);
-
          pragma Assert (Is_Static (Idx_Val.Val));
+
+         Bnd := Get_Array_Bound (Arr_Typ);
+
+         if I = Flist_First then
+            Stride := 1;
+         else
+            Stride := Bnd.Len;
+         end if;
 
          Idx_Off := Index_To_Offset (Syn_Inst, Bnd,
                                      Get_Static_Discrete (Idx_Val), Name);
-         Off.Net_Off := Off.Net_Off + Idx_Off.Net_Off * Stride * El_Typ.W;
-         Off.Mem_Off := Off.Mem_Off
-           + Idx_Off.Mem_Off * Size_Type (Stride) * El_Typ.Sz;
+         Off.Net_Off := Off.Net_Off * Stride + Idx_Off.Net_Off;
+         Off.Mem_Off := Off.Mem_Off * Size_Type (Stride) + Idx_Off.Mem_Off;
 
-         Stride := Stride * Bnd.Len;
+
+         Arr_Typ := Arr_Typ.Arr_El;
       end loop;
+
+      Off.Net_Off := Off.Net_Off * Arr_Typ.W;
+      Off.Mem_Off := Off.Mem_Off * Arr_Typ.Sz;
    end Exec_Indexed_Name;
 
    procedure Exec_Slice_Const_Suffix (Syn_Inst: Synth_Instance_Acc;
