@@ -369,8 +369,23 @@ package body Synth.Disp_Vhdl is
                --  unsigned, signed or a compatible array.
                W := Typ.Abound.Len;
                Put ("  " & Pfx & " <= ");
-               Put (Name_Table.Image (Get_Identifier
-                                        (Get_Type_Declarator (Btype))));
+               --  First the first non-anonymous parent type of the prefix.
+               --  We could directly use the base type, but:
+               --  * it is less intuitive
+               --  * vhdl2008 base type of 'unsigned' is 'unresolved_unsigned',
+               --    which is barely used and not defined in vhdl93
+               declare
+                  Pfx_Type : Node;
+                  Type_Decl : Node;
+               begin
+                  Pfx_Type := Ptype;
+                  loop
+                     Type_Decl := Get_Type_Declarator (Pfx_Type);
+                     exit when Type_Decl /= Null_Node;
+                     Pfx_Type := Get_Parent_Type (Pfx_Type);
+                  end loop;
+                  Put (Name_Table.Image (Get_Identifier (Type_Decl)));
+               end;
                Put ("(");
                Disp_Out_Rhs (Mname, Off, W, Full);
                Put_Line (");");
