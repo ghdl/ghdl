@@ -301,7 +301,8 @@ package body Netlists.Disp_Verilog is
       Nd : constant Width := W / 32;
       Ld : constant Natural := Natural (W mod 32);
    begin
-      Put ('"');
+      Put_Uns32 (W);
+      Put ("'b");
       if Ld > 0 then
          Disp_Binary_Digits (Get_Param_Uns32 (Inst, Param_Idx (2 * Nd)),
                              Get_Param_Uns32 (Inst, Param_Idx (2 * Nd + 1)),
@@ -313,7 +314,6 @@ package body Netlists.Disp_Verilog is
             Get_Param_Uns32 (Inst, Param_Idx (2 * (I - 1)) + 1),
             32);
       end loop;
-      Put ('"');
    end Disp_Const_Log;
 
    procedure Disp_X_Lit (W : Width; C : Character) is
