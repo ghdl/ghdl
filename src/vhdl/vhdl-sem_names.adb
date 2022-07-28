@@ -1214,6 +1214,7 @@ package body Vhdl.Sem_Names is
          Set_Expr_Staticness (Attr, None);
          return;
       end if;
+      Check_Read (Parameter);
       Set_Parameter (Attr, Parameter);
       Set_Expr_Staticness (Attr, Min (Get_Type_Staticness (Prefix_Type),
                                       Get_Expr_Staticness (Parameter)));

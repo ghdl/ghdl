@@ -4752,10 +4752,26 @@ package body Vhdl.Sem_Expr is
 
    procedure Check_Read_Aggregate (Aggr : Iir)
    is
-      pragma Unreferenced (Aggr);
+      Choice : Iir;
    begin
-      --  FIXME: todo.
-      null;
+      Choice := Get_Association_Choices_Chain (Aggr);
+      while Choice /= Null_Iir loop
+         case Iir_Kinds_Choice (Get_Kind (Choice)) is
+            when Iir_Kind_Choice_By_Range =>
+               --  Already checked while analyzing the range.
+               null;
+            when Iir_Kind_Choice_By_Expression =>
+               Check_Read (Get_Choice_Expression (Choice));
+            when Iir_Kind_Choice_By_Others
+              | Iir_Kind_Choice_By_Name
+              | Iir_Kind_Choice_By_None =>
+               --  Nothing to check.
+               null;
+         end case;
+         Check_Read (Get_Associated_Expr (Choice));
+
+         Choice := Get_Chain (Choice);
+      end loop;
    end Check_Read_Aggregate;
 
    --  Check EXPR can be read.
