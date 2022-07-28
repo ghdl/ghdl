@@ -525,6 +525,13 @@ package body Simul.Vhdl_Debug is
       case Get_Kind (Decl) is
          when Iir_Kind_Free_Quantity_Declaration =>
             Put (Image (Get_Identifier (Decl)));
+            Put (" (free)");
+         when Iir_Kind_Across_Quantity_Declaration =>
+            Put (Image (Get_Identifier (Decl)));
+            Put (" (across)");
+         when Iir_Kind_Through_Quantity_Declaration =>
+            Put (Image (Get_Identifier (Decl)));
+            Put (" (through)");
          when Iir_Kind_Dot_Attribute =>
             Disp_Quantity_Prefix (Get_Prefix (Decl));
             Put ("'dot");
@@ -535,6 +542,34 @@ package body Simul.Vhdl_Debug is
       end case;
    end Disp_Quantity_Prefix;
 
+   procedure Info_Scalar_Quantity (First : Scalar_Quantity_Index; Len : Uns32)
+   is
+      Idx : Scalar_Quantity_Index;
+   begin
+      if First = No_Scalar_Quantity then
+         return;
+      end if;
+      Idx := First;
+      for I in 1 .. Len loop
+         declare
+            use Simul.Vhdl_Simul;
+            Sq : Scalar_Quantity_Record renames
+              Scalar_Quantities_Table.Table (Idx);
+         begin
+            Put ("  scal #");
+            Put_Uns32 (Uns32 (Idx));
+            Put ("  idx: ");
+            Put_Int32 (Int32 (Sq.Idx));
+            Put (", deriv: ");
+            Put_Uns32 (Uns32 (Sq.Deriv));
+            Put (", integ: ");
+            Put_Uns32 (Uns32 (Sq.Integ));
+            New_Line;
+         end;
+         Idx := Idx + 1;
+      end loop;
+   end Info_Scalar_Quantity;
+
    procedure Info_Quantity_Proc (Line : String)
    is
       pragma Unreferenced (Line);
@@ -542,7 +577,6 @@ package body Simul.Vhdl_Debug is
       for I in Quantity_Table.First .. Quantity_Table.Last loop
          declare
             Q : Quantity_Entry renames Quantity_Table.Table (I);
-            Idx : Scalar_Quantity_Index;
          begin
             Put_Int32 (Int32 (I));
             Put (": ");
@@ -559,28 +593,39 @@ package body Simul.Vhdl_Debug is
             Put (", val: ");
             Disp_Memtyp ((Q.Typ, Q.Val), Get_Type (Q.Decl));
             New_Line;
-            Idx := Q.Idx;
-            for I in 1 .. Q.Typ.W loop
-               declare
-                  use Simul.Vhdl_Simul;
-                  Sq : Scalar_Quantity_Record renames
-                    Scalar_Quantities_Table.Table (Idx);
-               begin
-                  Put ("  scal #");
-                  Put_Uns32 (Uns32 (Idx));
-                  Put ("  idx: ");
-                  Put_Uns32 (Uns32 (Sq.Idx));
-                  Put (", deriv: ");
-                  Put_Uns32 (Uns32 (Sq.Deriv));
-                  Put (", integ: ");
-                  Put_Uns32 (Uns32 (Sq.Integ));
-                  New_Line;
-               end;
-               Idx := Idx + 1;
-            end loop;
+            Info_Scalar_Quantity (Q.Idx, Q.Typ.W);
          end;
       end loop;
    end Info_Quantity_Proc;
+
+   procedure Info_Terminal_Proc (Line : String)
+   is
+      pragma Unreferenced (Line);
+   begin
+      for I in Terminal_Table.First .. Terminal_Table.Last loop
+         declare
+            T : Terminal_Entry renames Terminal_Table.Table (I);
+         begin
+            Put_Int32 (Int32 (I));
+            Put (": ");
+
+            Disp_Instance_Path (T.Inst, True);
+            Put ('/');
+            Put (Image (Get_Identifier (T.Decl)));
+            Put ("  across: ");
+            Debug_Type_Short (T.Across_Typ);
+            Put ("  through: ");
+            Debug_Type_Short (T.Through_Typ);
+            Put (", len: ");
+            Put_Uns32 (T.Across_Typ.W);
+            Put (", val: ");
+            Disp_Memtyp ((T.Across_Typ, T.Ref_Val),
+                         Get_Across_Type (Get_Nature (T.Decl)));
+            New_Line;
+            Info_Scalar_Quantity (T.Ref_Idx, T.Across_Typ.W);
+         end;
+      end loop;
+   end Info_Terminal_Proc;
 
    procedure Info_Equations_Proc (Line : String)
    is
@@ -700,6 +745,10 @@ package body Simul.Vhdl_Debug is
         (new String'("quan*tity"),
          new String'("display info about quantities"),
          Info_Quantity_Proc'Access);
+      Append_Info_Command
+        (new String'("term*inal"),
+         new String'("display info about terminals"),
+         Info_Terminal_Proc'Access);
       Append_Info_Command
         (new String'("equ*ations"),
          new String'("display info about equations"),
