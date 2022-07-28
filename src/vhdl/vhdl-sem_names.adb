@@ -3858,23 +3858,25 @@ package body Vhdl.Sem_Names is
           in Iir_Kinds_Object_Declaration)
       then
          Attr_Type := Get_Type (Prefix_Name);
-      elsif (Get_Kind (Get_Base_Name (Prefix_Name))
-          in Iir_Kinds_Type_Declaration)
-      then
-         Attr_Type := Get_Type (Get_Base_Name (Prefix_Name));
+         Attr_Subtype := Get_Element_Subtype (Attr_Type);
       else
-         Error_Msg_Sem (+Attr, "prefix must denote an object or a type");
+         Attr_Type := Is_Type_Name (Prefix_Name);
+         if Attr_Type /= Null_Iir then
+            Attr_Subtype := Get_Element_Subtype (Attr_Type);
+         else
+            Error_Msg_Sem (+Attr, "prefix must denote an object or a type");
+            Attr_Subtype := Create_Error_Type (Attr);
+         end if;
       end if;
 
-      if False and not Is_Array_Type (Attr_Type) then
+      if False and then not Is_Array_Type (Attr_Type) then
          Error_Msg_Sem (+Attr, "prefix must denote an array");
       end if;
 
       --  The type defined by 'element is always constrained.  Create
       --  a subtype if it is not.
       --  NO, it isn't.  The prefix can be a type.
-      Attr_Subtype := Get_Element_Subtype (Attr_Type);
-      if False and not Is_Fully_Constrained_Type (Attr_Subtype) then
+      if False and then not Is_Fully_Constrained_Type (Attr_Subtype) then
          Attr_Subtype :=
              Sem_Types.Build_Constrained_Subtype (Attr_Subtype, Attr);
       end if;

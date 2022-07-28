@@ -1213,6 +1213,8 @@ package body Vhdl.Utils is
             end case;
          when Iir_Kind_Subtype_Attribute =>
             return Get_Type (Ent);
+         when Iir_Kind_Element_Attribute =>
+            return Get_Type (Name);
          when others =>
             return Null_Iir;
       end case;

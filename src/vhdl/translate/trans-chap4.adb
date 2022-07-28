@@ -453,25 +453,36 @@ package body Trans.Chap4 is
                           Iir_Kind_Element_Attribute);
    end Is_Object_Type_Attribute;
 
-   procedure Elab_Subtype_Attribute
-     (Decl : Iir; Name_Val : Mnode; Name_Sig : Mnode)
+   --  Handle 'Subtype or 'Element, return the bounds.
+   function Type_Attribute_To_Bounds (Attr : Iir) return Mnode
    is
-      Ind : constant Iir := Get_Subtype_Indication (Decl);
+      Pfx : constant Iir := Get_Prefix (Attr);
       Name : Mnode;
       Bnd : Mnode;
    begin
-      Name := Chap6.Translate_Name (Get_Prefix (Ind), Mode_Value);
-      Bnd := Chap3.Get_Composite_Bounds (Name);
-      case Get_Kind (Ind) is
+      if Get_Kind (Pfx) = Iir_Kind_Element_Attribute then
+         Bnd := Type_Attribute_To_Bounds (Pfx);
+      else
+         Name := Chap6.Translate_Name (Pfx, Mode_Value);
+         Bnd := Chap3.Get_Composite_Bounds (Name);
+      end if;
+
+      case Get_Kind (Attr) is
          when Iir_Kind_Subtype_Attribute =>
-            null;
+            return Bnd;
          when Iir_Kind_Element_Attribute =>
-            Bnd := Chap3.Array_Bounds_To_Element_Bounds
-              (Bnd, Get_Type (Get_Prefix (Ind)));
+            return Chap3.Array_Bounds_To_Element_Bounds (Bnd, Get_Type (Pfx));
          when others =>
             raise Internal_Error;
       end case;
+   end Type_Attribute_To_Bounds;
 
+   procedure Elab_Subtype_Attribute
+     (Decl : Iir; Name_Val : Mnode; Name_Sig : Mnode)
+   is
+      Bnd : Mnode;
+   begin
+      Bnd := Type_Attribute_To_Bounds (Get_Subtype_Indication (Decl));
       if Name_Sig /= Mnode_Null then
          Stabilize (Bnd);
          New_Assign_Stmt (M2Lp (Chap3.Get_Composite_Bounds (Name_Sig)),

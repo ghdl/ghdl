@@ -473,6 +473,8 @@ package body Trans.Chap8 is
                   null;
                when Iir_Kind_Subtype_Declaration =>
                   null;
+               when Iir_Kind_Element_Attribute =>
+                  null;
                when others =>
                   Error_Kind ("is_for_loop_iterator_stable(2)", Name);
             end case;
