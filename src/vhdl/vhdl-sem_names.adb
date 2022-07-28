@@ -497,35 +497,6 @@ package body Vhdl.Sem_Names is
       return Res;
    end Find_Declarations_In_List;
 
-   --  Create an implicit_dereference node if PREFIX is of type access.
-   --  Return PREFIX otherwise.
-   --  PARENT is used if an implicit dereference node is created, to copy
-   --  location from.
-   function Insert_Implicit_Dereference (Prefix : Iir; Parent : Iir)
-                                        return Iir
-   is
-      Prefix_Type : Iir;
-      Res : Iir_Implicit_Dereference;
-   begin
-      Prefix_Type := Get_Type (Prefix);
-
-      case Get_Kind (Prefix_Type) is
-         when Iir_Kind_Access_Type_Definition
-           | Iir_Kind_Access_Subtype_Definition =>
-            null;
-         when others =>
-            return Prefix;
-      end case;
-      Check_Read (Prefix);
-      Res := Create_Iir (Iir_Kind_Implicit_Dereference);
-      Location_Copy (Res, Parent);
-      Set_Type (Res, Get_Designated_Type (Prefix_Type));
-      Set_Prefix (Res, Prefix);
-      Set_Base_Name (Res, Res);
-      Set_Expr_Staticness (Res, None);
-      return Res;
-   end Insert_Implicit_Dereference;
-
    --  If PREFIX is a function specification that cannot be converted to a
    --  function call (because of lack of association), return FALSE.
    function Maybe_Function_Call (Prefix : Iir) return Boolean
@@ -611,8 +582,7 @@ package body Vhdl.Sem_Names is
 
    --  If SPEC is a function specification, then return a function call,
    --  else return SPEC.
-   function Maybe_Insert_Function_Call (Name : Iir; Spec : Iir) return Iir
-   is
+   function Maybe_Insert_Function_Call (Name : Iir; Spec : Iir) return Iir is
    begin
       if Get_Kind (Spec) = Iir_Kind_Function_Declaration then
          return Sem_As_Function_Call (Name, Spec, Null_Iir);
@@ -621,13 +591,16 @@ package body Vhdl.Sem_Names is
       end if;
    end Maybe_Insert_Function_Call;
 
-   --  If PTR_TYPE is not NULL_IIR, then return an implciti dereference to
+   --  If PTR_TYPE is not NULL_IIR, then return an implicite dereference to
    --  PREFIX, else return PREFIX.
    function Maybe_Insert_Dereference (Prefix : Iir; Ptr_Type : Iir) return Iir
    is
       Id : Iir;
    begin
       if Ptr_Type /= Null_Iir then
+         --  Is it useful ?  Only ports can be not read and they aren't
+         --  of access type.
+         Check_Read (Prefix);
          Id := Create_Iir (Iir_Kind_Implicit_Dereference);
          Location_Copy (Id, Prefix);
          Set_Type (Id, Get_Designated_Type (Ptr_Type));
@@ -3698,14 +3671,9 @@ package body Vhdl.Sem_Names is
             case Get_Kind (Prefix_Type) is
                when Iir_Kind_Access_Type_Definition
                  | Iir_Kind_Access_Subtype_Definition =>
-                  declare
-                     Designated_Type : Iir;
-                  begin
-                     Designated_Type :=
-                       Get_Designated_Type (Get_Base_Type (Prefix_Type));
-                     Prefix := Insert_Implicit_Dereference (Prefix, Attr);
-                     Prefix_Type := Designated_Type;
-                  end;
+                  Prefix := Maybe_Insert_Function_Call (Prefix_Name, Prefix);
+                  Prefix := Maybe_Insert_Dereference (Prefix, Prefix_Type);
+                  Prefix_Type := Get_Designated_Type (Prefix_Type);
                when Iir_Kinds_Array_Type_Definition =>
                   null;
                when others =>
