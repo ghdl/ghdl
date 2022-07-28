@@ -83,6 +83,7 @@ package body Options is
       then
          for I in Msgid_Warnings loop
             if Warning_Image (I) = Opt (Opt'First + 6 .. Opt'Last) then
+               Enable_Warning (I, True);
                Warning_Error (I, Val);
                return Option_Ok;
             end if;
