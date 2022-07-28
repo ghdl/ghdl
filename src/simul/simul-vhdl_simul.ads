@@ -94,6 +94,22 @@ package Simul.Vhdl_Simul is
       Table_Low_Bound => No_Scalar_Quantity + 1,
       Table_Initial => 128);
 
+   type Contrib_Index_Type is new Uns32;
+
+   type Scalar_Terminal_Record is record
+      --  Index in Y vector
+      Ref_Idx : Integer;
+      --  Number of contributions.
+      Nbr_Contrib : Natural;
+      First_Contrib : Contrib_Index_Type;
+   end record;
+
+   package Scalar_Terminals_Table is new Tables
+     (Table_Component_Type => Scalar_Terminal_Record,
+      Table_Index_Type => Scalar_Terminal_Index,
+      Table_Low_Bound => No_Scalar_Terminal + 1,
+      Table_Initial => 64);
+
    type Augmentation_Kind is
      (
       Aug_Noise,
