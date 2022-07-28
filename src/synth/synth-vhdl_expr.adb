@@ -685,6 +685,7 @@ package body Synth.Vhdl_Expr is
            | Iir_Kind_Constant_Declaration
            | Iir_Kind_Iterator_Declaration
            | Iir_Kind_Free_Quantity_Declaration
+           | Iir_Kinds_Branch_Quantity_Declaration
            | Iir_Kind_Object_Alias_Declaration
            | Iir_Kind_Non_Object_Alias_Declaration
            | Iir_Kind_File_Declaration

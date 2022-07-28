@@ -120,6 +120,7 @@ package body Synth.Vhdl_Stmts is
            | Iir_Kind_Non_Object_Alias_Declaration
            | Iir_Kind_Object_Alias_Declaration
            | Iir_Kind_Free_Quantity_Declaration
+           | Iir_Kinds_Branch_Quantity_Declaration
            | Iir_Kind_Dot_Attribute =>
             declare
                Targ : constant Valtyp := Get_Value (Syn_Inst, Pfx);
