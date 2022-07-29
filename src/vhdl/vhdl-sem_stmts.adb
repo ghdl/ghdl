@@ -1147,7 +1147,19 @@ package body Vhdl.Sem_Stmts is
       if Expr /= Null_Iir then
          Expr := Sem_Expression (Expr, Severity_Level_Type_Definition);
          Check_Read (Expr);
+         Expr := Eval_Expr_If_Static (Expr);
          Set_Severity_Expression (Stmt, Expr);
+
+         --  Avoid infinite loop warning if the severity is failure.
+         if Current_Subprogram /= Null_Iir
+           and then Get_Kind (Current_Subprogram) = Iir_Kind_Process_Statement
+           and then Expr /= Null_Iir
+           and then not Is_Error (Expr)
+           and then Get_Expr_Staticness (Expr) = Locally
+           and then Eval_Is_Eq (Expr, Severity_Level_Failure)
+         then
+            Set_Stop_Flag (Current_Subprogram, True);
+         end if;
       end if;
    end Sem_Report_Statement;
 
@@ -1713,6 +1725,48 @@ package body Vhdl.Sem_Stmts is
       Sem_Condition_Opt (Stmt);
    end Sem_Break_Statement;
 
+   procedure Sem_Procedure_Call_Statement (Stmt : Iir)
+   is
+      Call : constant Iir := Get_Procedure_Call (Stmt);
+      Imp : Iir;
+      Def : Iir_Predefined_Functions;
+   begin
+      Sem_Procedure_Call (Call, Stmt);
+
+      Imp := Get_Implementation (Call);
+      if Imp /= Null_Iir
+        and then Get_Kind (Imp) = Iir_Kind_Procedure_Declaration
+      then
+         --  Sane procedure call.
+
+         --  Set suspend flag, if calling a suspendable procedure
+         --  from a procedure or from a process.
+         if Get_Suspend_Flag (Imp)
+           and then (Get_Kind (Get_Current_Subprogram)
+                       /= Iir_Kind_Function_Declaration)
+           and then (Get_Kind (Get_Current_Subprogram)
+                       /= Iir_Kind_Sensitized_Process_Statement)
+         then
+            Set_Suspend_Flag (Stmt, True);
+            Mark_Suspendable (Stmt);
+         end if;
+
+         --  To avoid inifinite loop warning.
+         if Get_Kind (Current_Subprogram) = Iir_Kind_Process_Statement then
+            Def := Get_Implicit_Definition (Imp);
+            case Def is
+               when Iir_Predefined_Std_Env_Stop_Status
+                 | Iir_Predefined_Std_Env_Stop
+                 | Iir_Predefined_Std_Env_Finish_Status
+                 | Iir_Predefined_Std_Env_Finish =>
+                  Set_Stop_Flag (Current_Subprogram, True);
+               when others =>
+                  null;
+            end case;
+         end if;
+      end if;
+   end Sem_Procedure_Call_Statement;
+
    --  LRM08 11.3 Process statement
    --  A process statement is said to be a passive process if neither the
    --  process itself, nor any procedure of which the process is a parent,
@@ -1801,27 +1855,7 @@ package body Vhdl.Sem_Stmts is
             when Iir_Kind_Break_Statement =>
                Sem_Break_Statement (Stmt);
             when Iir_Kind_Procedure_Call_Statement =>
-               declare
-                  Call : constant Iir := Get_Procedure_Call (Stmt);
-                  Imp : Iir;
-               begin
-                  Sem_Procedure_Call (Call, Stmt);
-
-                  --  Set suspend flag, if calling a suspendable procedure
-                  --  from a procedure or from a process.
-                  Imp := Get_Implementation (Call);
-                  if Imp /= Null_Iir
-                    and then Get_Kind (Imp) = Iir_Kind_Procedure_Declaration
-                    and then Get_Suspend_Flag (Imp)
-                    and then (Get_Kind (Get_Current_Subprogram)
-                                /= Iir_Kind_Function_Declaration)
-                    and then (Get_Kind (Get_Current_Subprogram)
-                                /= Iir_Kind_Sensitized_Process_Statement)
-                  then
-                     Set_Suspend_Flag (Stmt, True);
-                     Mark_Suspendable (Stmt);
-                  end if;
-               end;
+               Sem_Procedure_Call_Statement (Stmt);
             when Iir_Kind_Next_Statement
               | Iir_Kind_Exit_Statement =>
                Sem_Exit_Next_Statement (Stmt);
@@ -2267,7 +2301,7 @@ package body Vhdl.Sem_Stmts is
             Sem.Add_Analysis_Checks_List (Proc);
          end if;
       else
-         if not Get_Suspend_Flag (Proc) then
+         if not Get_Suspend_Flag (Proc) and then not Get_Stop_Flag (Proc) then
             Warning_Msg_Sem
               (Warnid_No_Wait, +Proc,
                "infinite loop for this process without a wait statement");
