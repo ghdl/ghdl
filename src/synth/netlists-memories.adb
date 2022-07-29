@@ -1313,7 +1313,8 @@ package body Netlists.Memories is
                Inst := Get_Input_Instance (Inst, 0);
             when Id_Isignal
                | Id_Signal
-               | Id_Const_Bit =>
+               | Id_Const_Bit
+               | Id_Const_Log =>
                return Inst;
             when others =>
                if Flag_Memory_Verbose then
@@ -2439,7 +2440,8 @@ package body Netlists.Memories is
             case Get_Id (Inst) is
                when Id_Isignal
                  | Id_Signal
-                 | Id_Const_Bit =>
+                 | Id_Const_Bit
+                 | Id_Const_Log =>
                   null;
                when others =>
                   raise Internal_Error;
