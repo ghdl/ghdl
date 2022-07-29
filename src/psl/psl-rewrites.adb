@@ -463,13 +463,15 @@ package body PSL.Rewrites is
       B1, B2 : Node;
       N_B2 : Node;
    begin
+      --  b1 before b2
       B1 := Rewrite_Boolean (Get_Left (N));
       B2 := Rewrite_Boolean (Get_Right (N));
       N_B2 := Build_Bool_Not (B2);
+      --  (!b1 && !b2)[*]
       Res := Build_Star (Build_Bool_And (Build_Bool_Not (B1), N_B2));
 
       if Get_Inclusive_Flag (N) then
-         R := B2;
+         R := B1;
       else
          R := Build_Bool_And (B1, N_B2);
       end if;
