@@ -6628,6 +6628,19 @@ def Set_Suspend_Flag(obj: Iir, value: Boolean) -> None:
 
 
 @export
+@BindToLibGHDL("vhdl__nodes__get_stop_flag")
+def Get_Stop_Flag(obj: Iir) -> Boolean:
+    """"""
+    return 0
+
+
+@export
+@BindToLibGHDL("vhdl__nodes__set_stop_flag")
+def Set_Stop_Flag(obj: Iir, value: Boolean) -> None:
+    """"""
+
+
+@export
 @BindToLibGHDL("vhdl__nodes__get_is_ref")
 def Get_Is_Ref(obj: Iir) -> Boolean:
     """"""

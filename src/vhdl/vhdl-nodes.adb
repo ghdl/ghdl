@@ -7170,6 +7170,22 @@ package body Vhdl.Nodes is
       Set_Flag11 (Stmt, Flag);
    end Set_Suspend_Flag;
 
+   function Get_Stop_Flag (Stmt : Iir) return Boolean is
+   begin
+      pragma Assert (Stmt /= Null_Iir);
+      pragma Assert (Has_Stop_Flag (Get_Kind (Stmt)),
+                     "no field Stop_Flag");
+      return Get_Flag13 (Stmt);
+   end Get_Stop_Flag;
+
+   procedure Set_Stop_Flag (Stmt : Iir; Flag : Boolean) is
+   begin
+      pragma Assert (Stmt /= Null_Iir);
+      pragma Assert (Has_Stop_Flag (Get_Kind (Stmt)),
+                     "no field Stop_Flag");
+      Set_Flag13 (Stmt, Flag);
+   end Set_Stop_Flag;
+
    function Get_Is_Ref (N : Iir) return Boolean is
    begin
       pragma Assert (N /= Null_Iir);

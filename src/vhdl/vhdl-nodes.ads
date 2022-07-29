@@ -3334,6 +3334,10 @@ package Vhdl.Nodes is
    -- Only for Iir_Kind_Process_Statement:
    --   Get/Set_Suspend_Flag (Flag11)
    --
+   --  Set when std.env.stop/finish is called.  Prevents the infinite loop
+   --  warning.
+   --   Get/Set_Stop_Flag (Flag13)
+   --
    -- Only for Iir_Kind_Sensitized_Process_Statement:
    --   Get/Set_Is_Ref (Flag12)
 
@@ -9461,6 +9465,10 @@ package Vhdl.Nodes is
    --  Field: Flag11
    function Get_Suspend_Flag (Stmt : Iir) return Boolean;
    procedure Set_Suspend_Flag (Stmt : Iir; Flag : Boolean);
+
+   --  Field: Flag13
+   function Get_Stop_Flag (Stmt : Iir) return Boolean;
+   procedure Set_Stop_Flag (Stmt : Iir; Flag : Boolean);
 
    --  Set to True if Maybe_Ref fields are references.  This cannot be shared
    --  with Has_Identifier_List as: Is_Ref is set to True on all items but
