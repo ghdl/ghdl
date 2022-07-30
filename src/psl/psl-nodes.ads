@@ -360,8 +360,10 @@ package PSL.Nodes is
    -- N_Until (Short)
    -- N_Before (Short)
    --
+   --  True for the ! variant.
    --   Get/Set_Strong_Flag (Flag1)
    --
+   --  True for the _ variant.
    --   Get/Set_Inclusive_Flag (Flag2)
    --
    --   Get/Set_Left (Field1)
