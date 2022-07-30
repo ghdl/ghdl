@@ -2526,9 +2526,20 @@ package body Trans.Chap3 is
             end if;
 
          when Iir_Kind_Access_Subtype_Definition =>
-            --  Like the access type.
-            Free_Info (Def);
-            Set_Info (Def, Get_Info (Get_Parent_Type (Def)));
+            declare
+               Ind : constant Iir := Get_Designated_Subtype_Indication (Def);
+               Mark : Id_Mark_Type;
+            begin
+               if Ind /= Null_Iir then
+                  Push_Identifier_Prefix (Mark, "EST");
+                  Translate_Subtype_Definition (Ind, With_Vars);
+                  Pop_Identifier_Prefix (Mark);
+               end if;
+
+               --  Like the access type.
+               Free_Info (Def);
+               Set_Info (Def, Get_Info (Get_Parent_Type (Def)));
+            end;
 
          when others =>
             Error_Kind ("translate_subtype_definition", Def);
