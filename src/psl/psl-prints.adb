@@ -104,7 +104,8 @@ package body PSL.Prints is
    is
    begin
       case Get_Kind (N) is
-         when N_HDL_Expr =>
+         when N_HDL_Expr
+           | N_HDL_Bool =>
             if HDL_Expr_Printer = null then
                Put ("Expr");
             else
