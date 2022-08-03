@@ -308,7 +308,10 @@ package body PSL.Build is
       Eps := Get_Epsilon_NFA (L) or Get_Epsilon_NFA (R);
 
       --  Optimize [*0] | R.
-      if Start_L = Final_L
+      --  TODO: this was not valid if there is an edge from Start(R)
+      --  to Start(R), like: {[*0] | {d[*]; e}}
+      if False
+        and then Start_L = Final_L
         and then Get_First_Src_Edge (Start_L) = No_Edge
       then
          if Start_R /= Final_R then

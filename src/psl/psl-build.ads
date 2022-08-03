@@ -17,7 +17,7 @@
 with PSL.Nodes; use PSL.Nodes;
 
 package PSL.Build is
-   Optimize_Final : Boolean := True;
+   Optimize_Final : constant Boolean := True;
 
    function Build_SERE_FA (N : Node) return NFA;
    function Build_FA (N : Node) return NFA;
