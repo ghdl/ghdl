@@ -66,5 +66,6 @@ package Vhdl.Prints is
    procedure Disp_PSL_NFA (N : PSL_NFA);
 
    procedure Disp_Expression (Expr: Iir);
+   procedure Disp_PSL_Expr (N : PSL_Node);
    --  Display an expression.
 end Vhdl.Prints;

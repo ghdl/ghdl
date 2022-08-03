@@ -1983,7 +1983,9 @@ package body Vhdl.Prints is
             Close_Lit (Ctxt);
          when N_Not_Bool =>
             Disp_Token (Ctxt, Tok_Exclam_Mark);
+            Disp_Token (Ctxt, Tok_Left_Paren);
             Print_Expr (Ctxt, Get_Boolean (N), Prio);
+            Disp_Token (Ctxt, Tok_Right_Paren);
          when N_And_Bool =>
             Disp_Token (Ctxt, Tok_Left_Paren);
             Print_Expr (Ctxt, Get_Left (N), Prio);
@@ -3931,8 +3933,12 @@ package body Vhdl.Prints is
       procedure Disp_State (S : NFA_State)
       is
          Str : constant String := Int32'Image (Get_State_Label (S));
+         S1 : constant String := NFA_State'Image (S);
       begin
          OOB.Put (Str (2 .. Str'Last));
+         OOB.Put ("[");
+         OOB.Put (S1 (2 .. S1'Last));
+         OOB.Put ("]");
       end Disp_State;
 
       S : NFA_State;
@@ -3950,6 +3956,9 @@ package body Vhdl.Prints is
          else
             Disp_State (S);
          end if;
+         if Get_Epsilon_NFA (N) then
+            OOB.Put (", epsilon");
+         end if;
          OOB.New_Line;
 
          S := Get_First_State (N);
@@ -3960,7 +3969,7 @@ package body Vhdl.Prints is
                Disp_State (S);
                OOB.Put (" -> ");
                Disp_State (Get_Edge_Dest (E));
-               OOB.Put (": ");
+               Disp_Token (Ctxt, Tok_Colon);  --  To display ": "
                Disp_Psl_Expression (Ctxt, Get_Edge_Expr (E));
                OOB.New_Line;
                E := Get_Next_Src_Edge (E);
@@ -4995,7 +5004,7 @@ package body Vhdl.Prints is
          --  A space after a keyword.
          if Tok /= Tok_Semi_Colon
            and Tok /= Tok_Dot
-             and Tok /= Tok_Right_Paren
+           and Tok /= Tok_Right_Paren
          then
             return True;
          end if;
@@ -5032,6 +5041,7 @@ package body Vhdl.Prints is
          if Prev_Tok /= Tok_Tick
            and Prev_Tok /= Tok_Left_Paren
            and Prev_Tok /= Tok_Right_Paren
+           and Prev_Tok /= Tok_Exclam_Mark
          then
             --  A space before '('.
             return True;
@@ -5182,5 +5192,15 @@ package body Vhdl.Prints is
       Init (Ctxt);
       Disp_PSL_NFA (Ctxt, N);
    end Disp_PSL_NFA;
+
+   procedure Disp_PSL_Expr (N : PSL_Node)
+   is
+      use Simple_Disp_Ctxt;
+      Ctxt : Simple_Ctxt;
+   begin
+      Init (Ctxt);
+      Disp_Psl_Expression (Ctxt, N);
+      OOB.New_Line;
+   end Disp_PSL_Expr;
 
 end Vhdl.Prints;
