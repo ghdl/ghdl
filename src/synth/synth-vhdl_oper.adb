@@ -699,10 +699,8 @@ package body Synth.Vhdl_Oper is
             Amt := Amt mod Int64 (Left.Typ.W);
             R1 := Build_Const_UB32 (Ctxt, Uns32 (Amt), Right.Typ.W);
             Set_Location (R1, Right_Expr);
-         elsif not Is_Positive (Right) then
-            Error_Msg_Synth (+Expr, "rotation quantity must be unsigned");
-            return Left;
          else
+            --  The amount should be positive.
             R1 := Get_Net (Ctxt, Right);
             Ww := Netlists.Utils.Clog2 (Left.Typ.W);
             if Right.Typ.W >= Ww then
