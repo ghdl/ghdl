@@ -252,7 +252,8 @@ package body Vhdl.Prints is
            | Iir_Kinds_Quantity_Declaration
            | Iir_Kind_Group_Template_Declaration
            | Iir_Kind_Character_Literal
-           | Iir_Kinds_Process_Statement =>
+           | Iir_Kinds_Process_Statement
+           | Iir_Kind_Psl_Endpoint_Declaration =>
             Disp_Identifier (Ctxt, Decl);
          when Iir_Kind_Anonymous_Type_Declaration =>
             Start_Lit (Ctxt, Tok_Identifier);
@@ -2379,6 +2380,7 @@ package body Vhdl.Prints is
    is
       Decl : constant PSL_Node := Get_Psl_Declaration (Stmt);
    begin
+      Start_Hbox (Ctxt);
       if Vhdl_Std < Vhdl_08 then
          OOB.Put ("--psl ");
       end if;
@@ -2401,9 +2403,15 @@ package body Vhdl.Prints is
             Disp_Token (Ctxt, Tok_Is);
             Print_Sequence (Ctxt, Get_Sequence (Decl));
             Disp_Token (Ctxt, Tok_Semi_Colon);
-            Disp_PSL_NFA (Get_PSL_NFA (Stmt));
          when others =>
             PSL.Errors.Error_Kind ("disp_psl_declaration", Decl);
+      end case;
+      Close_Hbox (Ctxt);
+      case Get_Kind (Decl) is
+         when N_Endpoint_Declaration =>
+            Disp_PSL_NFA (Get_PSL_NFA (Stmt));
+         when others =>
+            null;
       end case;
    end Disp_Psl_Declaration;
 
@@ -4916,7 +4924,8 @@ package body Vhdl.Prints is
            | Iir_Kind_Terminal_Declaration
            | Iir_Kinds_Quantity_Declaration
            | Iir_Kind_Component_Declaration
-           | Iir_Kind_Group_Template_Declaration =>
+           | Iir_Kind_Group_Template_Declaration
+           | Iir_Kind_Psl_Endpoint_Declaration =>
             Disp_Name_Of (Ctxt, Expr);
 
          when Iir_Kind_Function_Body
