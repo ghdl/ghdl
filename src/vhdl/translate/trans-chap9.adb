@@ -49,6 +49,8 @@ with Trans.Foreach_Non_Composite;
 package body Trans.Chap9 is
    use Trans.Helpers;
 
+   procedure Destroy_Types (N : PSL_Node);
+
    procedure Set_Direct_Drivers (Proc : Iir)
    is
       Proc_Info : constant Proc_Info_Acc := Get_Info (Proc);
@@ -753,6 +755,8 @@ package body Trans.Chap9 is
                                 New_Lit (Ghdl_Bool_True_Node));
             end if;
             Finish_If_Stmt (E_Blk);
+
+            Destroy_Types (Get_Edge_Expr (E));
 
             Close_Temp;
             E := Get_Next_Src_Edge (E);
@@ -1524,9 +1528,9 @@ package body Trans.Chap9 is
                         raise Internal_Error;
                   end case;
                when Type_PSL_NFA
-                  | Type_PSL_Node =>
-                  --  TODO
-                  raise Internal_Error;
+                 | Type_PSL_Node =>
+                  --  For endpoint in PSL HDL_Expr.
+                  null;
                when Type_Date_Type
                  | Type_Date_State_Type
                  | Type_Time_Stamp_Id
@@ -1559,6 +1563,30 @@ package body Trans.Chap9 is
             end case;
          end loop;
       end;
+   end Destroy_Types;
+
+   procedure Destroy_Types (N : PSL_Node)
+   is
+      use PSL.Nodes;
+   begin
+      case Get_Kind (N) is
+         when N_HDL_Bool
+           | N_HDL_Expr =>
+            Destroy_Types (Get_HDL_Node (N));
+         when N_True =>
+            null;
+         when N_EOS =>
+            null;
+         when N_Not_Bool =>
+            Destroy_Types (Get_Boolean (N));
+         when N_And_Bool
+           | N_Or_Bool
+           | N_Imp_Bool =>
+            Destroy_Types (Get_Left (N));
+            Destroy_Types (Get_Right (N));
+         when others =>
+            Error_Kind ("destroy_types(psl)", N);
+      end case;
    end Destroy_Types;
 
    function Foreach_Non_Composite_Prepare_Data_Array_Mnode
