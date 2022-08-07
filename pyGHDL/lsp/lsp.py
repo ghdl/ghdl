@@ -1,7 +1,7 @@
 import os
 import logging
 import json
-from urllib.parse import unquote, quote, urlparse
+from urllib.parse import unquote, quote
 
 log = logging.getLogger("ghdl-ls")
 
