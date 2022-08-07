@@ -231,6 +231,7 @@ package body Vhdl.Prints is
            | Iir_Kinds_Interface_Object_Declaration
            | Iir_Kind_Interface_Terminal_Declaration
            | Iir_Kind_Interface_Type_Declaration
+           | Iir_Kinds_Interface_Subprogram_Declaration
            | Iir_Kind_Constant_Declaration
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Guard_Signal_Declaration
@@ -1674,6 +1675,7 @@ package body Vhdl.Prints is
      (Ctxt : in out Ctxt_Class; Subprg: Iir; Implicit : Boolean := False)
    is
       Inter : Iir;
+      Default : Iir;
    begin
       if Implicit then
          OOB.Put ("-- ");
@@ -1715,6 +1717,18 @@ package body Vhdl.Prints is
          when others =>
             raise Internal_Error;
       end case;
+
+      if Get_Kind (Subprg) in Iir_Kinds_Interface_Subprogram_Declaration then
+         Default := Get_Default_Subprogram (Subprg);
+         if Default /= Null_Iir then
+            Disp_Token (Ctxt, Tok_Is);
+            if Get_Kind (Default) = Iir_Kind_Reference_Name then
+               Disp_Token (Ctxt, Tok_Box);
+            else
+               Print (Ctxt, Default);
+            end if;
+         end if;
+      end if;
    end Disp_Subprogram_Declaration;
 
    procedure Disp_Subprogram_Body (Ctxt : in out Ctxt_Class; Subprg : Iir) is
@@ -3326,7 +3340,10 @@ package body Vhdl.Prints is
 
       El := Chain;
       while El /= Null_Iir loop
-         if Get_Kind (El) /= Iir_Kind_Association_Element_By_Individual then
+         if Get_Kind (El) /= Iir_Kind_Association_Element_By_Individual
+           and then not (Get_Kind (El) = Iir_Kind_Association_Element_Open
+                           and then Get_Artificial_Flag (El))
+         then
             if Need_Comma then
                Disp_Token (Ctxt, Tok_Comma);
             end if;
@@ -4917,6 +4934,7 @@ package body Vhdl.Prints is
            | Iir_Kind_Subtype_Declaration
            | Iir_Kind_Unit_Declaration
            | Iir_Kinds_Interface_Object_Declaration
+           | Iir_Kinds_Interface_Subprogram_Declaration
            | Iir_Kind_Variable_Declaration
            | Iir_Kind_Constant_Declaration
            | Iir_Kind_Function_Declaration
