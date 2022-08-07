@@ -61,7 +61,7 @@ def normalize_rpc_file_uris(rpc):
     # capitalization.
     for (key, val) in rpc.items():
         # recurse into all leaf elements.
-        if type(val) is dict:
+        if isinstance(val, dict):
             normalize_rpc_file_uris(val)
         elif key == "rootUri" or key == "uri":
             rpc[key] = path_to_uri(path_from_uri(val))
