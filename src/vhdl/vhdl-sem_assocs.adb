@@ -1899,6 +1899,13 @@ package body Vhdl.Sem_Assocs is
       end case;
    end Sem_Association_Subprogram_Check;
 
+   --  LRM08 6.5.6.2 Generic clauses
+   --  - If the interface subprogram default is in the form of a box (<>)
+   --    symbol, then there shall be a subprogram directly visible at the
+   --    place of the generic association list that has the same designator
+   --    as the formal and that has a conforming profile to that of the
+   --    formal; the subprogram denoted by the generic is the directly
+   --    visible subprogram.
    function Sem_Association_Subprogram_Open (Inter : Iir; Loc : Iir)
                                             return Iir
    is
