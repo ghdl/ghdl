@@ -2637,6 +2637,19 @@ def Set_Actual(obj: Iir, value: Iir) -> None:
 
 
 @export
+@BindToLibGHDL("vhdl__nodes__get_open_actual")
+def Get_Open_Actual(obj: Iir) -> Iir:
+    """"""
+    return 0
+
+
+@export
+@BindToLibGHDL("vhdl__nodes__set_open_actual")
+def Set_Open_Actual(obj: Iir, value: Iir) -> None:
+    """"""
+
+
+@export
 @BindToLibGHDL("vhdl__nodes__get_actual_conversion")
 def Get_Actual_Conversion(obj: Iir) -> Iir:
     """"""
@@ -3261,6 +3274,19 @@ def Set_Interface_Type_Subprograms(obj: Iir, value: Iir) -> None:
 
 
 @export
+@BindToLibGHDL("vhdl__nodes__get_interface_type_definition")
+def Get_Interface_Type_Definition(obj: Iir) -> Iir:
+    """"""
+    return 0
+
+
+@export
+@BindToLibGHDL("vhdl__nodes__set_interface_type_definition")
+def Set_Interface_Type_Definition(obj: Iir, value: Iir) -> None:
+    """"""
+
+
+@export
 @BindToLibGHDL("vhdl__nodes__get_nature_definition")
 def Get_Nature_Definition(obj: Iir) -> Iir:
     """"""
@@ -3374,6 +3400,19 @@ def Get_Interface_Declaration_Chain(obj: Iir) -> Iir:
 @export
 @BindToLibGHDL("vhdl__nodes__set_interface_declaration_chain")
 def Set_Interface_Declaration_Chain(obj: Iir, value: Iir) -> None:
+    """"""
+
+
+@export
+@BindToLibGHDL("vhdl__nodes__get_default_subprogram")
+def Get_Default_Subprogram(obj: Iir) -> Iir:
+    """"""
+    return 0
+
+
+@export
+@BindToLibGHDL("vhdl__nodes__set_default_subprogram")
+def Set_Default_Subprogram(obj: Iir, value: Iir) -> None:
     """"""
 
 

@@ -2197,6 +2197,22 @@ package body Vhdl.Nodes is
       Set_Field3 (Target, Actual);
    end Set_Actual;
 
+   function Get_Open_Actual (Target : Iir) return Iir is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Open_Actual (Get_Kind (Target)),
+                     "no field Open_Actual");
+      return Get_Field3 (Target);
+   end Get_Open_Actual;
+
+   procedure Set_Open_Actual (Target : Iir; Actual : Iir) is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Open_Actual (Get_Kind (Target)),
+                     "no field Open_Actual");
+      Set_Field3 (Target, Actual);
+   end Set_Open_Actual;
+
    function Get_Actual_Conversion (Target : Iir) return Iir is
    begin
       pragma Assert (Target /= Null_Iir);
@@ -2966,6 +2982,22 @@ package body Vhdl.Nodes is
       Set_Field4 (Target, Subprg);
    end Set_Interface_Type_Subprograms;
 
+   function Get_Interface_Type_Definition (N : Iir) return Iir is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Interface_Type_Definition (Get_Kind (N)),
+                     "no field Interface_Type_Definition");
+      return Get_Field5 (N);
+   end Get_Interface_Type_Definition;
+
+   procedure Set_Interface_Type_Definition (N : Iir; Atype : Iir) is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Interface_Type_Definition (Get_Kind (N)),
+                     "no field Interface_Type_Definition");
+      Set_Field5 (N, Atype);
+   end Set_Interface_Type_Definition;
+
    function Get_Nature_Definition (Target : Iir) return Iir is
    begin
       pragma Assert (Target /= Null_Iir);
@@ -3131,6 +3163,22 @@ package body Vhdl.Nodes is
                      "no field Interface_Declaration_Chain");
       Set_Field5 (Target, Chain);
    end Set_Interface_Declaration_Chain;
+
+   function Get_Default_Subprogram (Inter : Iir) return Iir is
+   begin
+      pragma Assert (Inter /= Null_Iir);
+      pragma Assert (Has_Default_Subprogram (Get_Kind (Inter)),
+                     "no field Default_Subprogram");
+      return Get_Field9 (Inter);
+   end Get_Default_Subprogram;
+
+   procedure Set_Default_Subprogram (Inter : Iir; Subprg : Iir) is
+   begin
+      pragma Assert (Inter /= Null_Iir);
+      pragma Assert (Has_Default_Subprogram (Get_Kind (Inter)),
+                     "no field Default_Subprogram");
+      Set_Field9 (Inter, Subprg);
+   end Set_Default_Subprogram;
 
    function Get_Subprogram_Specification (Target : Iir) return Iir is
    begin

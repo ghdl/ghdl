@@ -129,6 +129,9 @@ package Errorout is
       --  Missing association for a formal.
       Warnid_No_Assoc,
 
+      --  Lexical conformance
+      Warnid_Conformance,
+
       --  Violation of staticness rules
       Warnid_Static,
 
@@ -326,6 +329,7 @@ private
         | Warnid_Deprecated_Option | Warnid_Unexpected_Option
         | Warnid_Nowrite
         | Warnid_No_Wait | Warnid_Useless
+        | Warnid_Conformance
         | Msgid_Warning  => (Enabled => True, Error => False),
       Warnid_Delta_Cycle | Warnid_Body | Warnid_Static | Warnid_Nested_Comment
         | Warnid_Universal | Warnid_Port_Bounds

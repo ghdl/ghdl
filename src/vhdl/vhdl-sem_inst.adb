@@ -927,7 +927,9 @@ package body Vhdl.Sem_Inst is
 
    --  In the instance, replace references (and inner references) to interface
    --  package declaration to the associated package.
-   procedure Instantiate_Generic_Map (Assoc : Iir; Inter: Iir) is
+   procedure Instantiate_Generic_Map (Assoc : Iir; Inter: Iir)
+   is
+      Assoc_Formal : Iir;
    begin
       --  Replace formal reference to the instance.
       --  Cf Get_association_Interface
@@ -939,7 +941,8 @@ package body Vhdl.Sem_Inst is
             loop
                case Get_Kind (Formal) is
                   when Iir_Kind_Simple_Name
-                    | Iir_Kind_Operator_Symbol =>
+                    | Iir_Kind_Operator_Symbol
+                    | Iir_Kind_Reference_Name =>
                      Set_Named_Entity
                        (Formal, Get_Instance (Get_Named_Entity (Formal)));
                      exit;
@@ -954,16 +957,14 @@ package body Vhdl.Sem_Inst is
          end if;
       end;
 
-      case Get_Kind (Assoc) is
-         when Iir_Kind_Association_Element_By_Expression
-           | Iir_Kind_Association_Element_By_Individual
-           | Iir_Kind_Association_Element_Open =>
+      Assoc_Formal := Get_Association_Interface (Assoc, Inter);
+
+      case Get_Kind (Inter) is
+         when Iir_Kind_Interface_Constant_Declaration =>
             --  If the type of the formal is an interface type also
             --  associated by this map, change the type of the formal
             --  to the associated type.
             declare
-               Assoc_Formal : constant Iir :=
-                 Get_Association_Interface (Assoc, Inter);
                Formal_Type : Iir;
                Formal_Orig : Iir;
             begin
@@ -985,13 +986,13 @@ package body Vhdl.Sem_Inst is
                   end if;
                end if;
             end;
-         when Iir_Kind_Association_Element_Package =>
+         when Iir_Kind_Interface_Package_Declaration =>
+            pragma Assert
+              (Get_Kind (Assoc) = Iir_Kind_Association_Element_Package);
             declare
                Sub_Inst : constant Iir :=
                  Get_Named_Entity (Get_Actual (Assoc));
-               Sub_Pkg_Inter : constant Iir :=
-                 Get_Association_Interface (Assoc, Inter);
-               Sub_Pkg : constant Iir := Get_Origin (Sub_Pkg_Inter);
+               Sub_Pkg : constant Iir := Get_Origin (Assoc_Formal);
             begin
                --  Replace references of interface package to references
                --  to the actual package.
@@ -1001,27 +1002,32 @@ package body Vhdl.Sem_Inst is
                Set_Instance_On_Chain (Get_Declaration_Chain (Sub_Pkg),
                                       Get_Declaration_Chain (Sub_Inst));
             end;
-         when Iir_Kind_Association_Element_Type =>
+         when Iir_Kind_Interface_Type_Declaration =>
+            pragma Assert
+              (Get_Kind (Assoc) = Iir_Kind_Association_Element_Type);
             --  Replace the incomplete interface type by the actual subtype
             --  indication.
             declare
-               Assoc_Inter : constant Iir :=
-                 Get_Association_Interface (Assoc, Inter);
-               Inter_Type_Def : constant Iir := Get_Type (Assoc_Inter);
+               Inter_Type_Def : constant Iir := Get_Type (Assoc_Formal);
                Actual_Type : constant Iir := Get_Actual_Type (Assoc);
             begin
                Set_Instance (Inter_Type_Def, Actual_Type);
             end;
-         when Iir_Kind_Association_Element_Subprogram =>
-            --  Replace the interface subprogram by the subprogram.
-            declare
-               Inter_Subprg : constant Iir :=
-                 Get_Association_Interface (Assoc, Inter);
-               Actual_Subprg : constant Iir :=
-                 Get_Named_Entity (Get_Actual (Assoc));
-            begin
-               Set_Instance (Get_Origin (Inter_Subprg), Actual_Subprg);
-            end;
+         when Iir_Kinds_Interface_Subprogram_Declaration =>
+            if Get_Kind (Assoc) = Iir_Kind_Association_Element_Open then
+               Set_Instance (Get_Origin (Assoc_Formal),
+                             Get_Open_Actual (Assoc));
+            else
+               pragma Assert
+                 (Get_Kind (Assoc) = Iir_Kind_Association_Element_Subprogram);
+               --  Replace the interface subprogram by the subprogram.
+               declare
+                  Actual_Subprg : constant Iir :=
+                    Get_Named_Entity (Get_Actual (Assoc));
+               begin
+                  Set_Instance (Get_Origin (Assoc_Formal), Actual_Subprg);
+               end;
+            end if;
          when others =>
             Error_Kind ("instantiate_generic_map", Assoc);
       end case;
@@ -1167,8 +1173,8 @@ package body Vhdl.Sem_Inst is
          Inst_El := Get_Generic_Map_Aspect_Chain (Inst);
          Inter_El := Get_Generic_Chain (Inst);
          while Is_Valid (Inst_El) loop
-            case Get_Kind (Inst_El) is
-               when Iir_Kind_Association_Element_Type =>
+            case Get_Kind (Inter_El) is
+               when Iir_Kind_Interface_Type_Declaration =>
                   Inter := Get_Association_Interface (Inst_El, Inter_El);
                   Set_Instance (Get_Type (Get_Origin (Inter)),
                                 Get_Actual_Type (Inst_El));
@@ -1189,14 +1195,18 @@ package body Vhdl.Sem_Inst is
                      end loop;
                   end;
 
-               when Iir_Kind_Association_Element_Subprogram =>
+               when Iir_Kinds_Interface_Subprogram_Declaration =>
                   Inter := Get_Association_Interface (Inst_El, Inter_El);
-                  Set_Instance (Get_Origin (Inter),
-                                Get_Named_Entity (Get_Actual (Inst_El)));
+                  if Get_Kind (Inst_El) = Iir_Kind_Association_Element_Open
+                  then
+                     Set_Instance (Get_Origin (Inter),
+                                   Get_Open_Actual (Inst_El));
+                  else
+                     Set_Instance (Get_Origin (Inter),
+                                   Get_Named_Entity (Get_Actual (Inst_El)));
+                  end if;
 
-               when Iir_Kind_Association_Element_By_Expression
-                 | Iir_Kind_Association_Element_By_Individual
-                 | Iir_Kind_Association_Element_Open =>
+               when Iir_Kind_Interface_Constant_Declaration =>
                   null;
                when others =>
                   --  TODO.
@@ -1243,7 +1253,12 @@ package body Vhdl.Sem_Inst is
                   declare
                      S : constant Iir := Get_Iir (N, F);
                   begin
-                     if S = E then
+                     if F = Field_Interface_Type_Definition then
+                        --  Do not substitute this Interface_Type_Definition,
+                        --  it is only to own the type definition in the
+                        --  uninstantiated interface.
+                        null;
+                     elsif S = E then
                         --  Substitute
                         Set_Iir (N, F, Rep);
                         pragma Assert (Get_Field_Attribute (F) = Attr_Ref);

@@ -32,20 +32,19 @@ package Vhdl.Sem_Assocs is
    --  Analyze association chain ASSOC_CHAIN with interfaces from
    --  INTERFACE_CHAIN.
    --  Return the level of compatibility between the two chains in LEVEL.
-   --  If FINISH is true, then ASSOC_CHAIN may be modifies (individual assoc
+   --  If FINISH is true, then ASSOC_CHAIN may be modified (individual assoc
    --  added), and error messages (if any) are displayed.
    --  MISSING control unassociated interfaces.
    -- LOC is the association.
    -- Sem_Actual_Of_Association_Chain must have been called before.
    type Missing_Type is (Missing_Parameter, Missing_Port, Missing_Generic,
                          Missing_Allowed);
-   procedure Sem_Association_Chain
-     (Interface_Chain : Iir;
-      Assoc_Chain: in out Iir;
-      Finish: Boolean;
-      Missing : Missing_Type;
-      Loc : Iir;
-      Match : out Compatibility_Level);
+   procedure Sem_Association_Chain (Interface_Chain : Iir;
+                                    Assoc_Chain: in out Iir;
+                                    Finish: Boolean;
+                                    Missing : Missing_Type;
+                                    Loc : Iir;
+                                    Match : out Compatibility_Level);
 
    --  Check association for expression ACTUAL to interface FORMAL.
    --  ASSOC may be null for operator.

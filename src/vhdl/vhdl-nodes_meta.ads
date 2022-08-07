@@ -112,6 +112,7 @@ package Vhdl.Nodes_Meta is
       Field_Designated_Entity,
       Field_Formal,
       Field_Actual,
+      Field_Open_Actual,
       Field_Actual_Conversion,
       Field_Formal_Conversion,
       Field_Whole_Association_Flag,
@@ -160,6 +161,7 @@ package Vhdl.Nodes_Meta is
       Field_Subtype_Definition,
       Field_Incomplete_Type_Declaration,
       Field_Interface_Type_Subprograms,
+      Field_Interface_Type_Definition,
       Field_Nature_Definition,
       Field_Nature,
       Field_Subnature_Indication,
@@ -169,6 +171,7 @@ package Vhdl.Nodes_Meta is
       Field_Signal_Kind,
       Field_Base_Name,
       Field_Interface_Declaration_Chain,
+      Field_Default_Subprogram,
       Field_Subprogram_Specification,
       Field_Sequential_Statement_Chain,
       Field_Simultaneous_Statement_Chain,
@@ -702,6 +705,7 @@ package Vhdl.Nodes_Meta is
    function Has_Designated_Entity (K : Iir_Kind) return Boolean;
    function Has_Formal (K : Iir_Kind) return Boolean;
    function Has_Actual (K : Iir_Kind) return Boolean;
+   function Has_Open_Actual (K : Iir_Kind) return Boolean;
    function Has_Actual_Conversion (K : Iir_Kind) return Boolean;
    function Has_Formal_Conversion (K : Iir_Kind) return Boolean;
    function Has_Whole_Association_Flag (K : Iir_Kind) return Boolean;
@@ -751,6 +755,7 @@ package Vhdl.Nodes_Meta is
    function Has_Subtype_Definition (K : Iir_Kind) return Boolean;
    function Has_Incomplete_Type_Declaration (K : Iir_Kind) return Boolean;
    function Has_Interface_Type_Subprograms (K : Iir_Kind) return Boolean;
+   function Has_Interface_Type_Definition (K : Iir_Kind) return Boolean;
    function Has_Nature_Definition (K : Iir_Kind) return Boolean;
    function Has_Nature (K : Iir_Kind) return Boolean;
    function Has_Subnature_Indication (K : Iir_Kind) return Boolean;
@@ -760,6 +765,7 @@ package Vhdl.Nodes_Meta is
    function Has_Signal_Kind (K : Iir_Kind) return Boolean;
    function Has_Base_Name (K : Iir_Kind) return Boolean;
    function Has_Interface_Declaration_Chain (K : Iir_Kind) return Boolean;
+   function Has_Default_Subprogram (K : Iir_Kind) return Boolean;
    function Has_Subprogram_Specification (K : Iir_Kind) return Boolean;
    function Has_Sequential_Statement_Chain (K : Iir_Kind) return Boolean;
    function Has_Simultaneous_Statement_Chain (K : Iir_Kind) return Boolean;

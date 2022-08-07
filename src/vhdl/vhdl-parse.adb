@@ -2206,6 +2206,7 @@ package body Vhdl.Parse is
       Subprg: Iir;
       Old : Iir;
       pragma Unreferenced (Old);
+      Def : Iir;
    begin
       --  Create the node.
       case Current_Token is
@@ -2254,6 +2255,22 @@ package body Vhdl.Parse is
         (Subprg, Kind = Iir_Kind_Interface_Function_Declaration, True);
 
       --  TODO: interface_subprogram_default
+      if Current_Token = Tok_Is then
+         --  Skip 'is'.
+         Scan;
+
+         if Current_Token = Tok_Box then
+            Def := Create_Iir (Iir_Kind_Reference_Name);
+            Set_Location (Def);
+
+            --  Skip '<>'.
+            Scan;
+         else
+            Def := Parse_Name;
+         end if;
+
+         Set_Default_Subprogram (Subprg, Def);
+      end if;
 
       return Subprg;
    end Parse_Interface_Subprogram_Declaration;

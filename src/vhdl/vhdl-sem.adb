@@ -1566,7 +1566,8 @@ package body Vhdl.Sem is
               and then Are_Trees_Equal (Get_Formal_Conversion (Left),
                                         Get_Formal_Conversion (Right));
 
-         when Iir_Kind_Type_Conversion =>
+         when Iir_Kind_Type_Conversion
+           | Iir_Kind_Qualified_Expression =>
             return Are_Trees_Equal (Get_Type_Mark (Left),
                                     Get_Type_Mark (Right))
               and then
@@ -1703,8 +1704,9 @@ package body Vhdl.Sem is
    begin
       if not Are_Trees_Equal (Subprg, Spec) then
          --  FIXME: should explain why it does not conform ?
-         Error_Msg_Sem
-           (+Subprg, "body of %n does not conform with specification at %l",
+         Error_Msg_Sem_Relaxed
+           (Subprg, Warnid_Conformance,
+            "body of %n does not conform with specification at %l",
             (+Subprg, +Spec));
       end if;
    end Check_Conformance_Rules;

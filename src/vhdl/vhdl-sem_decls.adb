@@ -550,11 +550,12 @@ package body Vhdl.Sem_Decls is
       Finters : Iir;
       Op_Eq, Op_Neq : Iir;
    begin
-      --  Create type definition.
+      --  Create type definition.  The definition is owned by the declaration.
       Def := Create_Iir (Iir_Kind_Interface_Type_Definition);
       Set_Location (Def, Get_Location (Inter));
       Set_Type_Declarator (Def, Inter);
       Set_Type (Inter, Def);
+      Set_Interface_Type_Definition (Inter, Def);
       Set_Type_Staticness (Def, None);
       Set_Resolved_Flag (Def, False);
       Set_Signal_Type_Flag (Def, True);

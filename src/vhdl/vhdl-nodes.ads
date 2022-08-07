@@ -449,6 +449,10 @@ package Vhdl.Nodes is
    -- Only for Iir_Kind_Association_Element_Terminal:
    --   Get/Set_Actual (Field3)
    --
+   --  For '<>' default interface subprogram.
+   -- Only for Iir_Kind_Association_Element_Open:
+   --   Get/Set_Open_Actual (Field3)
+   --
    -- Only for Iir_Kind_Association_Element_By_Individual:
    --   Get/Set_Individual_Association_Chain (Field4)
    --
@@ -1499,6 +1503,8 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Parent (Field0)
    --
+   --   Get/Set_Interface_Type_Definition (Field5)
+   --
    --   Get/Set_Type (Field1)
    --
    --   Get/Set_Chain (Field2)
@@ -1771,6 +1777,8 @@ package Vhdl.Nodes is
    --   Get/Set_Interface_Declaration_Chain (Field5)
    --
    --   Get/Set_Return_Type_Mark (Field8)
+   --
+   --   Get/Set_Default_Subprogram (Field9)
    --
    --   Get/Set_Subprogram_Depth (Field10)
    --
@@ -7909,6 +7917,10 @@ package Vhdl.Nodes is
    function Get_Actual (Target : Iir) return Iir;
    procedure Set_Actual (Target : Iir; Actual : Iir);
 
+   --  Field: Field3 Ref
+   function Get_Open_Actual (Target : Iir) return Iir;
+   procedure Set_Open_Actual (Target : Iir; Actual : Iir);
+
    --  Field: Field4
    function Get_Actual_Conversion (Target : Iir) return Iir;
    procedure Set_Actual_Conversion (Target : Iir; Conv : Iir);
@@ -8151,6 +8163,11 @@ package Vhdl.Nodes is
    function Get_Interface_Type_Subprograms (Target : Iir) return Iir;
    procedure Set_Interface_Type_Subprograms (Target : Iir; Subprg : Iir);
 
+   --  Owner of the interface type definition.
+   --  Field: Field5
+   function Get_Interface_Type_Definition (N : Iir) return Iir;
+   procedure Set_Interface_Type_Definition (N : Iir; Atype : Iir);
+
    --  Field: Field1
    function Get_Nature_Definition (Target : Iir) return Iir;
    procedure Set_Nature_Definition (Target : Iir; Def : Iir);
@@ -8193,6 +8210,10 @@ package Vhdl.Nodes is
    function Get_Interface_Declaration_Chain (Target : Iir) return Iir;
    procedure Set_Interface_Declaration_Chain (Target : Iir; Chain : Iir);
    pragma Inline (Get_Interface_Declaration_Chain);
+
+   --  Field: Field9
+   function Get_Default_Subprogram (Inter : Iir) return Iir;
+   procedure Set_Default_Subprogram (Inter : Iir; Subprg : Iir);
 
    --  Field: Field6 Ref
    function Get_Subprogram_Specification (Target : Iir) return Iir;

@@ -850,6 +850,9 @@ package body Trans.Chap5 is
                      Set_Map_Env (Formal_Env);
                      Chap2.Elab_Package_Instantiation_Declaration (Formal);
                      Set_Map_Env (Actual_Env);
+                  when Iir_Kinds_Interface_Subprogram_Declaration =>
+                     --  Expanded.
+                     null;
                   when others =>
                      Error_Kind ("elab_generic_map_aspect(open)", Formal);
                end case;
