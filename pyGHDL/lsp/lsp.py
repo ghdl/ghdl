@@ -1,7 +1,7 @@
 import os
 import logging
 import json
-from urllib.parse import unquote, quote
+from urllib.parse import unquote, quote, urlparse
 
 log = logging.getLogger("ghdl-ls")
 
@@ -42,7 +42,28 @@ def path_from_uri(uri):
         # On windows, absolute files start like "/C:/aa/bbb".
         # Remove the first "/".
         path = path[1:]
-    return os.path.normpath(unquote(path))
+
+    # Normalize path for consistency
+    path = os.path.normpath(unquote(path))
+
+    # On windows, normpath doesn't make capitalization match 
+    # the true filename capitalization, so fix this now.
+    if is_windows:
+        path = os.path.realpath(path)
+
+    return path
+
+def normalize_rpc_file_uris(rpc):
+    # Normalize all file URIs inside an RPC to have consistent capitalization.
+    # Fixes a crash on windows where the underlying ada crashes
+    # if paths to the same file are given with inconsistent
+    # capitalization.
+    for (key, val) in rpc.items():
+        #recurse into all leaf elements.
+        if type(val) is dict:
+            normalize_rpc_file_uris(val)
+        elif key == 'rootUri' or key == 'uri':
+            rpc[key] = path_to_uri(path_from_uri(val))
 
 
 def path_to_uri(path):
@@ -52,6 +73,10 @@ def path_to_uri(path):
         # On windows, do not quote the colon after the driver letter, as
         # it is not quoted in uri from the client.
         path = path.replace("\\", "/")
+
+        # On windows, make sure the capitalization of the file matches
+        # capitalization on disk.
+        path = os.path.realpath(path)
         return "file:///{0}{1}".format(path[:2], quote(path[2:]))
     return "file://{0}".format(quote(path))
 
@@ -114,6 +139,9 @@ class LanguageProtocolServer(object):
             log.error("Unexpected reply for %s", tid)
             return
         params = msg.get("params", None)
+        # Fix capitalization issues on windws.
+        if is_windows:
+            normalize_rpc_file_uris(msg)
         fmethod = self.handler.dispatcher.get(method, None)
         if fmethod:
             if params is None:
