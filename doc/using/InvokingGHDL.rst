@@ -432,6 +432,10 @@ Options
   * Default binding indication rules of VHDL-02 are used. Default binding rules are often used, but they are
     particularly obscure before VHDL-02.
 
+  * Allow a subprogram body to match its declaration when the argument lists are semantically identical but
+    do not satisfy formal rules (e.g when a function declaration uses the keyword ``in`` for an
+    argument but its body does not).
+
   * Within an object declaration, allow references to the name (which references the hidden declaration).
     This ignores the error in the following code:
 
