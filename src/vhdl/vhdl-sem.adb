@@ -1704,8 +1704,9 @@ package body Vhdl.Sem is
    begin
       if not Are_Trees_Equal (Subprg, Spec) then
          --  FIXME: should explain why it does not conform ?
-         Error_Msg_Sem
-           (+Subprg, "body of %n does not conform with specification at %l",
+         Error_Msg_Sem_Relaxed
+           (Subprg, Warnid_Conformance,
+            "body of %n does not conform with specification at %l",
             (+Subprg, +Spec));
       end if;
    end Check_Conformance_Rules;
