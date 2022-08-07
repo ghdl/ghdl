@@ -150,8 +150,9 @@ package body Vhdl.Sem_Assocs is
                Inter := Find_Name_In_Chain
                  (Inter_Chain, Get_Identifier (Formal));
                if Inter /= Null_Iir
-                 and then
-                 Get_Kind (Inter) not in Iir_Kinds_Interface_Object_Declaration
+                 and then Get_Kind (Assoc) /= Iir_Kind_Association_Element_Open
+                 and then (Get_Kind (Inter) not in
+                             Iir_Kinds_Interface_Object_Declaration)
                then
                   Assoc := Rewrite_Non_Object_Association (Assoc, Inter);
                end if;
@@ -1811,58 +1812,37 @@ package body Vhdl.Sem_Assocs is
       return True;
    end Has_Interface_Subprogram_Profile;
 
-   procedure Sem_Association_Subprogram (Assoc : Iir;
-                                         Inter : Iir;
-                                         Finish : Boolean;
-                                         Match : out Compatibility_Level)
+   --  LOC is the location (usually the association, but could be the
+   --  instantiation for unassociated interface).
+   --  RES is set to NULL_IIR in case of error, or the result (in case of
+   --  overload).
+   procedure Sem_Association_Subprogram_Check
+     (Inter : Iir; Res : in out Iir; Loc : Iir)
    is
       Discard : Boolean;
       pragma Unreferenced (Discard);
-      Actual : Iir;
-      Res : Iir;
    begin
-      if not Finish then
-         Sem_Association_Package_Type_Not_Finish (Assoc, Inter, Match);
-         return;
-      end if;
-
-      Match := Fully_Compatible;
-      Sem_Association_Package_Type_Finish (Assoc, Inter);
-      Actual := Get_Actual (Assoc);
-
-      --  LRM08 6.5.7.2 Generic map aspects
-      --  An actual associated with a formal generic subprogram shall be a name
-      --  that denotes a subprogram whose profile conforms to that of the
-      --  formal, or the reserved word OPEN.  The actual, if a predefined
-      --  attribute name that denotes a function, shall be one of the
-      --  predefined attributes 'IMAGE, 'VALUE, 'POS, 'VAL, 'SUCC, 'PREV,
-      --  'LEFTOF, or 'RIGHTOF.
-      Sem_Name (Actual);
-      Res := Get_Named_Entity (Actual);
-
-      if Is_Error (Res) then
-         return;
-      end if;
-
       case Get_Kind (Res) is
          when Iir_Kinds_Subprogram_Declaration
            | Iir_Kinds_Interface_Subprogram_Declaration =>
             if not Has_Interface_Subprogram_Profile (Inter, Res) then
                Error_Msg_Sem
-                 (+Assoc, "profile of %n doesn't match profile of %n",
-                  (+Actual, +Inter));
+                 (+Loc, "profile of %n doesn't match profile of %n",
+                  (+Res, +Inter));
                --  Explain
                Discard := Has_Interface_Subprogram_Profile
-                 (Inter, Res, Get_Location (Assoc));
-               return;
+                 (Inter, Res, Get_Location (Loc));
+               Res := Null_Iir;
             end if;
          when Iir_Kind_Overload_List =>
             declare
+               Orig : Iir;
                Nbr_Errors : Natural;
                List : Iir_List;
                It : List_Iterator;
                El, R : Iir;
             begin
+               Orig := Res;
                Nbr_Errors := 0;
                R := Null_Iir;
                List := Get_Overload_List (Res);
@@ -1875,14 +1855,14 @@ package body Vhdl.Sem_Assocs is
                      else
                         if Nbr_Errors = 0 then
                            Error_Msg_Sem
-                             (+Assoc,
+                             (+Loc,
                               "many possible actual subprogram for %n:",
                               +Inter);
                            Error_Msg_Sem
-                             (+Assoc, " %n declared at %l", (+R, + R));
+                             (+Loc, " %n declared at %l", (+R, + R));
                         else
                            Error_Msg_Sem
-                             (+Assoc, " %n declared at %l", (+El, +El));
+                             (+Loc, " %n declared at %l", (+El, +El));
                         end if;
                         Nbr_Errors := Nbr_Errors + 1;
                      end if;
@@ -1890,33 +1870,99 @@ package body Vhdl.Sem_Assocs is
                   Next (It);
                end loop;
                if Is_Null (R) then
-                  Error_Msg_Sem
-                    (+Assoc, "no matching name for %n", +Inter);
+                  Error_Msg_Sem (+Loc, "no matching name for %n", +Inter);
                   if True then
-                     Error_Msg_Sem
-                       (+Assoc, " these names were incompatible:");
+                     Error_Msg_Sem (+Loc, " these names were incompatible:");
                      It := List_Iterate (List);
                      while Is_Valid (It) loop
                         El := Get_Element (It);
                         Error_Msg_Sem
-                          (+Assoc, " %n declared at %l", (+El, +El));
+                          (+Loc, " %n declared at %l", (+El, +El));
                         Next (It);
                      end loop;
                   end if;
-                  return;
+                  Res := Null_Iir;
                elsif Nbr_Errors > 0 then
-                  return;
+                  Res := Null_Iir;
+               else
+                  Res := R;
                end if;
-               Free_Overload_List (Res);
-               Res := R;
+               Free_Overload_List (Orig);
             end;
          when others =>
-            Error_Kind ("sem_association_subprogram", Res);
+            Report_Start_Group;
+            Error_Msg_Sem
+              (+Loc, "%n must be associated with a subprogram", +Inter);
+            Error_Msg_Sem (+Loc, "found %n defined at %l", (+Res, +Res));
+            Report_End_Group;
+            Res := Null_Iir;
       end case;
+   end Sem_Association_Subprogram_Check;
 
-      Set_Named_Entity (Actual, Res);
-      Vhdl.Xrefs.Xref_Name (Actual);
+   function Sem_Association_Subprogram_Open (Inter : Iir; Loc : Iir)
+                                            return Iir
+   is
+      Res : Iir;
+   begin
+      Res := Sem_Identifier_Name
+        (Get_Identifier (Inter), Loc, False, False);
+      if Is_Error (Res) then
+         return Null_Iir;
+      end if;
+      Sem_Association_Subprogram_Check (Inter, Res, Loc);
+      if Res = Null_Iir then
+         return Null_Iir;
+      end if;
       Sem_Decls.Mark_Subprogram_Used (Res);
+      return Res;
+   end Sem_Association_Subprogram_Open;
+
+   procedure Sem_Association_Subprogram (Assoc : Iir;
+                                         Inter : Iir;
+                                         Finish : Boolean;
+                                         Match : out Compatibility_Level)
+   is
+      Actual : Iir;
+      Res : Iir;
+   begin
+      if not Finish then
+         --  Common code when not finished.
+         Sem_Association_Package_Type_Not_Finish (Assoc, Inter, Match);
+         return;
+      end if;
+
+      Match := Fully_Compatible;
+      Sem_Association_Package_Type_Finish (Assoc, Inter);
+      if Get_Kind (Assoc) = Iir_Kind_Association_Element_Open then
+         Res := Sem_Association_Subprogram_Open (Inter, Assoc);
+         Set_Open_Actual (Assoc, Res);
+      else
+         Actual := Get_Actual (Assoc);
+
+         --  LRM08 6.5.7.2 Generic map aspects
+         --  An actual associated with a formal generic subprogram shall be a
+         --  name that denotes a subprogram whose profile conforms to that of
+         --  the formal, or the reserved word OPEN.  The actual, if a
+         --  predefined attribute name that denotes a function, shall be one
+         --  of the predefined attributes 'IMAGE, 'VALUE, 'POS, 'VAL, 'SUCC,
+         --  'PREV, 'LEFTOF, or 'RIGHTOF.
+         Sem_Name (Actual);
+         Res := Get_Named_Entity (Actual);
+
+         if Is_Error (Res) then
+            return;
+         end if;
+
+         Sem_Association_Subprogram_Check (Inter, Res, Assoc);
+         if Res = Null_Iir then
+            return;
+         end if;
+
+         Set_Named_Entity (Actual, Res);
+         Vhdl.Xrefs.Xref_Name (Actual);
+
+         Sem_Decls.Mark_Subprogram_Used (Res);
+      end if;
    end Sem_Association_Subprogram;
 
    procedure Sem_Association_Terminal
@@ -2296,13 +2342,12 @@ package body Vhdl.Sem_Assocs is
       end case;
    end Sem_Association;
 
-   procedure Sem_Association_Chain
-     (Interface_Chain : Iir;
-      Assoc_Chain: in out Iir;
-      Finish: Boolean;
-      Missing : Missing_Type;
-      Loc : Iir;
-      Match : out Compatibility_Level)
+   procedure Sem_Association_Chain (Interface_Chain : Iir;
+                                    Assoc_Chain: in out Iir;
+                                    Finish: Boolean;
+                                    Missing : Missing_Type;
+                                    Loc : Iir;
+                                    Match : out Compatibility_Level)
    is
       Assoc : Iir;
       Inter : Iir;
@@ -2321,6 +2366,7 @@ package body Vhdl.Sem_Assocs is
       Pos : Integer;
       Formal : Iir;
 
+      Last_Assoc : Iir;
       First_Named_Assoc : Iir;
       Last_Named_Assoc : Iir;
 
@@ -2330,6 +2376,7 @@ package body Vhdl.Sem_Assocs is
       Match := Fully_Compatible;
       First_Named_Assoc := Null_Iir;
       Has_Individual := False;
+      Last_Assoc := Null_Iir;
 
       --  Clear associated type of interface type.
       Inter := Interface_Chain;
@@ -2348,6 +2395,7 @@ package body Vhdl.Sem_Assocs is
       --  First positional associations
       Assoc := Assoc_Chain;
       while Assoc /= Null_Iir loop
+         Last_Assoc := Assoc;
          Formal := Get_Formal (Assoc);
          exit when Formal /= Null_Iir;
 
@@ -2429,6 +2477,7 @@ package body Vhdl.Sem_Assocs is
 
             --  Last assoc to be cleaned up.
             Last_Named_Assoc := Assoc;
+            Last_Assoc := Assoc;
 
             if Finish then
                Sem_Name (Formal);
@@ -2624,6 +2673,7 @@ package body Vhdl.Sem_Assocs is
                   Last_Individual := Null_Iir;
                   if Inter_Matched (Pos) = None then
                      if Get_Kind (Assoc) = Iir_Kind_Association_Element_Open
+                       and then Get_Open_Actual (Assoc) = Null_Iir
                      then
                         Inter_Matched (Pos) := Open;
                      else
@@ -2730,7 +2780,44 @@ package body Vhdl.Sem_Assocs is
       Pos := 0;
       while Inter /= Null_Iir loop
          if Inter_Matched (Pos) <= Open then
-            if Sem_Check_Missing_Association
+            if Get_Kind (Inter) in Iir_Kinds_Interface_Subprogram_Declaration
+              and then Get_Default_Subprogram (Inter) /= Null_Iir
+            then
+               declare
+                  Def : constant Iir := Get_Default_Subprogram (Inter);
+                  Res : Iir;
+                  Ref : Iir;
+               begin
+                  if Finish
+                    and then Get_Kind (Def) = Iir_Kind_Reference_Name
+                  then
+                     --  Resolve now the default subprogram (as we have the
+                     --  context for that).
+                     Res := Sem_Association_Subprogram_Open (Inter, Loc);
+                     if Res /= Null_Iir then
+                        --  Create an artificial open association to keep it.
+                        Assoc :=
+                          Create_Iir (Iir_Kind_Association_Element_Open);
+                        Location_Copy (Assoc, Loc);
+                        Set_Open_Actual (Assoc, Res);
+                        Set_Artificial_Flag (Assoc, True);
+                        Set_Whole_Association_Flag (Assoc, True);
+                        Ref := Create_Iir (Iir_Kind_Reference_Name);
+                        Location_Copy (Ref, Loc);
+                        Set_Named_Entity (Ref, Inter);
+                        Set_Formal (Assoc, Ref);
+
+                        --  Append it.
+                        if Last_Assoc /= Null_Iir then
+                           Set_Chain (Last_Assoc, Assoc);
+                        else
+                           Assoc_Chain := Assoc;
+                        end if;
+                        Last_Assoc := Assoc;
+                     end if;
+                  end if;
+               end;
+            elsif Sem_Check_Missing_Association
               (Inter, Missing, Finish, Inter_Matched (Pos) = Open, Loc)
             then
                Match := Not_Compatible;
@@ -2814,8 +2901,10 @@ package body Vhdl.Sem_Assocs is
             end if;
          when Iir_Kind_Interface_Function_Declaration
             | Iir_Kind_Interface_Procedure_Declaration =>
-            Error_Msg_Sem (+Loc, "%n must be associated", +Inter);
-            Err := True;
+            if Get_Default_Subprogram (Inter) = Null_Iir then
+               Error_Msg_Sem (+Loc, "%n must be associated", +Inter);
+               Err := True;
+            end if;
          when others =>
             Error_Kind ("sem_association_chain", Inter);
       end case;

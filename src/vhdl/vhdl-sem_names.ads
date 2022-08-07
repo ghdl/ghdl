@@ -13,6 +13,7 @@
 --
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
+with Types; use Types;
 with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Vhdl.Sem_Names is
@@ -72,6 +73,20 @@ package Vhdl.Sem_Names is
    --  If NAME is Null_Iir then this is no op.
    --  To be used only for names (weakly) analyzed by sem_name_soft.
    procedure Sem_Name_Clean (Name : Iir);
+
+   --  Return an interpretation for identifier ID.
+   --  Used mostly by Sem_Simple_Name but also for unassociated interface
+   --  subprogram whose default is <>.
+   --  Do not follow aliases is KEEP_ALIAS is true (used for attribute
+   --  specification),
+   --  do not report error if SOFT is true (used for associations of
+   --  overloaded names).
+   --
+   --  Returns either the interpretation, an overload list or a error_mark.
+   function Sem_Identifier_Name (Id : Name_Id;
+                                 Loc : Iir;
+                                 Keep_Alias : Boolean;
+                                 Soft : Boolean) return Iir;
 
    --  If NAME is a selected name whose prefix is a protected variable, set
    --  method_object of CALL.

@@ -15,15 +15,15 @@
 --  along with this program.  If not, see <gnu.org/licenses>.
 with Flags; use Flags;
 with Name_Table;
+with Std_Names;
 with Libraries;
+with Errorout; use Errorout;
+
 with Vhdl.Evaluation; use Vhdl.Evaluation;
 with Vhdl.Utils; use Vhdl.Utils;
-with Errorout; use Errorout;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
-with Types; use Types;
 with Vhdl.Nodes_Utils; use Vhdl.Nodes_Utils;
-with Std_Names;
 with Vhdl.Sem;
 with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
 with Vhdl.Sem_Scopes; use Vhdl.Sem_Scopes;
@@ -2089,19 +2089,11 @@ package body Vhdl.Sem_Names is
       return Finish_Sem_Name_1 (Name, Get_Named_Entity (Name));
    end Finish_Sem_Name;
 
-   --  LRM93 6.2
-   --  The evaluation of a simple name has no other effect than to determine
-   --  the named entity denoted by the name.
-   --
-   --  NAME may be a simple name, a strig literal or a character literal.
-   --  GHDL: set interpretation of NAME (possibly an overload list) or
-   --  error_mark for unknown names.
-   --  If SOFT is TRUE, then no error message is reported in case of failure.
-   procedure Sem_Simple_Name (Name : Iir; Keep_Alias : Boolean; Soft : Boolean)
+   function Sem_Identifier_Name
+     (Id : Name_Id; Loc : Iir; Keep_Alias : Boolean; Soft : Boolean) return Iir
    is
-      Id : constant Name_Id := Get_Identifier (Name);
       Interpretation: Name_Interpretation_Type;
-      Res: Iir;
+      Res : Iir;
       Res_List : Iir_List;
       Res_It : List_Iterator;
       N : Natural;
@@ -2116,9 +2108,9 @@ package body Vhdl.Sem_Names is
               and then Is_Conflict_Declaration (Interpretation)
             then
                Error_Msg_Sem
-                 (+Name, "no declaration for %i (due to conflicts)", +Name);
+                 (+Loc, "no declaration for %i (due to conflicts)", +Id);
             else
-               Error_Msg_Sem (+Name, "no declaration for %i", +Name);
+               Error_Msg_Sem (+Loc, "no declaration for %i", +Id);
             end if;
          end if;
          Res := Error_Mark;
@@ -2130,7 +2122,7 @@ package body Vhdl.Sem_Names is
          --  For a design unit, return the library unit
          if Get_Kind (Res) = Iir_Kind_Design_Unit then
             --  FIXME: should replace interpretation ?
-            Load_Design_Unit (Res, Name);
+            Load_Design_Unit (Res, Loc);
             Sem.Add_Dependence (Res);
             Res := Get_Library_Unit (Res);
          end if;
@@ -2144,7 +2136,7 @@ package body Vhdl.Sem_Names is
                Res := Get_Declaration (Get_Under_Interpretation (Id));
             else
                if not Soft then
-                  Error_Msg_Sem (+Name, "%n is not visible here", +Res);
+                  Error_Msg_Sem (+Loc, "%n is not visible here", +Res);
                end if;
                --  Even if a named entity was found, return an error_mark.
                --  Indeed, the named entity found is certainly the one being
@@ -2189,7 +2181,23 @@ package body Vhdl.Sem_Names is
 
          Res := Create_Overload_List (Res_List);
       end if;
+      return Res;
+   end Sem_Identifier_Name;
 
+   --  LRM93 6.2
+   --  The evaluation of a simple name has no other effect than to determine
+   --  the named entity denoted by the name.
+   --
+   --  NAME may be a simple name, a strig literal or a character literal.
+   --  GHDL: set interpretation of NAME (possibly an overload list) or
+   --  error_mark for unknown names.
+   --  If SOFT is TRUE, then no error message is reported in case of failure.
+   procedure Sem_Simple_Name (Name : Iir; Keep_Alias : Boolean; Soft : Boolean)
+   is
+      Id : constant Name_Id := Get_Identifier (Name);
+      Res : Iir;
+   begin
+      Res := Sem_Identifier_Name (Id, Name, Keep_Alias, Soft);
       Set_Named_Entity (Name, Res);
    end Sem_Simple_Name;
 

@@ -569,6 +569,7 @@ package body Vhdl.Utils is
       loop
          case Get_Kind (El) is
             when Iir_Kind_Simple_Name
+              | Iir_Kind_Reference_Name
               | Iir_Kind_Operator_Symbol =>
                --  Operator is for subprogram interfaces.
                return Get_Named_Entity (El);
@@ -630,6 +631,7 @@ package body Vhdl.Utils is
          --  Strip denoting name
          case Get_Kind (Formal) is
             when Iir_Kind_Simple_Name
+              | Iir_Kind_Reference_Name
               | Iir_Kind_Operator_Symbol =>
                return Get_Named_Entity (Formal);
             when Iir_Kinds_Interface_Declaration =>
