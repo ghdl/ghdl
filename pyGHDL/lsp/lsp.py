@@ -46,12 +46,13 @@ def path_from_uri(uri):
     # Normalize path for consistency
     path = os.path.normpath(unquote(path))
 
-    # On windows, normpath doesn't make capitalization match 
+    # On windows, normpath doesn't make capitalization match
     # the true filename capitalization, so fix this now.
     if is_windows:
         path = os.path.realpath(path)
 
     return path
+
 
 def normalize_rpc_file_uris(rpc):
     # Normalize all file URIs inside an RPC to have consistent capitalization.
@@ -59,10 +60,10 @@ def normalize_rpc_file_uris(rpc):
     # if paths to the same file are given with inconsistent
     # capitalization.
     for (key, val) in rpc.items():
-        #recurse into all leaf elements.
+        # recurse into all leaf elements.
         if type(val) is dict:
             normalize_rpc_file_uris(val)
-        elif key == 'rootUri' or key == 'uri':
+        elif key == "rootUri" or key == "uri":
             rpc[key] = path_to_uri(path_from_uri(val))
 
 
