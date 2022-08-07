@@ -1461,13 +1461,13 @@ package body Vhdl.Sem_Names is
       Index_List1, Index_List2 : Iir_Flist;
       El1, El2 : Iir;
    begin
-      --  LRM 7.3.5
+      --  LRM93 7.3.5
       --  In particular, a type is closely related to itself.
       if Base_Type1 = Base_Type2 then
          return True;
       end if;
 
-      --  LRM 7.3.5
+      --  LRM93 7.3.5
       --  a) Abstract Numeric Types: Any abstract numeric type is closely
       --     related to any other abstract numeric type.
       Ant1 := Is_Type_Abstract_Numeric (Type1);
@@ -1479,11 +1479,16 @@ package body Vhdl.Sem_Names is
          return False;
       end if;
 
-      --  LRM 7.3.5
+      --  LRM93 7.3.5
       --  b) Array Types: Two array types are closely related if and only if
       --     The types have the same dimensionality; For each index position,
       --     the index types are either the same or are closely related; and
       --     The element types are the same.
+      --
+      --  LRM08 9.3.6 Type conversions
+      --  -  Array types: Two array types are closely related if and only if
+      --     the types have the same dimensionality and the element types
+      --     are closely related.
       --
       --  No other types are closely related.
       if not (Get_Kind (Base_Type1) = Iir_Kind_Array_Type_Definition
@@ -1496,19 +1501,24 @@ package body Vhdl.Sem_Names is
       if Get_Nbr_Elements (Index_List1) /= Get_Nbr_Elements (Index_List2) then
          return False;
       end if;
-      if Get_Base_Type (Get_Element_Subtype (Base_Type1))
-        /= Get_Base_Type (Get_Element_Subtype (Base_Type2))
-      then
-         return False;
-      end if;
-      for I in Flist_First .. Flist_Last (Index_List1) loop
-         El1 := Get_Index_Type (Index_List1, I);
-         El2 := Get_Index_Type (Index_List2, I);
-         if not Are_Types_Closely_Related (El1, El2) then
+      if Vhdl_Std >= Vhdl_08 then
+         return Are_Types_Closely_Related (Get_Element_Subtype (Base_Type1),
+                                           Get_Element_Subtype (Base_Type2));
+      else
+         if Get_Base_Type (Get_Element_Subtype (Base_Type1))
+           /= Get_Base_Type (Get_Element_Subtype (Base_Type2))
+         then
             return False;
          end if;
-      end loop;
-      return True;
+         for I in Flist_First .. Flist_Last (Index_List1) loop
+            El1 := Get_Index_Type (Index_List1, I);
+            El2 := Get_Index_Type (Index_List2, I);
+            if not Are_Types_Closely_Related (El1, El2) then
+               return False;
+            end if;
+         end loop;
+         return True;
+      end if;
    end Are_Types_Closely_Related;
 
    function Sem_Type_Conversion
