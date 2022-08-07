@@ -2,6 +2,7 @@
 
 . ../../testenv.sh
 
+export GHDL_STD_FLAGS=--std=93
 analyze_failure repro.vhdl
 analyze_failure repro2.vhdl
 analyze_failure repro3.vhdl
