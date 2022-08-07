@@ -1,7 +1,8 @@
 import os
+from pathlib import Path
 import logging
 import json
-from urllib.parse import unquote, quote
+from urllib.parse import unquote, urlparse
 
 log = logging.getLogger("ghdl-ls")
 
@@ -37,21 +38,20 @@ def path_from_uri(uri):
     if not uri.startswith("file://"):
         # No scheme
         return uri
-    _, path = uri.split("file://", 1)
-    if is_windows and path.startswith("/"):
-        # On windows, absolute files start like "/C:/aa/bbb".
-        # Remove the first "/".
+
+    path = unquote(urlparse(uri).path)
+    # On windows, absolute files start like "/C:/aa/bbb".
+    # Remove the first "/".
+    if is_windows:
         path = path[1:]
 
-    # Normalize path for consistency
-    path = os.path.normpath(unquote(path))
+    # Path.resolve used to ensure consistent capitalization
+    # on Windows, as GHDL-ada will fail if it is inconsistent.
+    return Path(path).resolve().as_posix()
 
-    # On windows, normpath doesn't make capitalization match
-    # the true filename capitalization, so fix this now.
-    if is_windows:
-        path = os.path.realpath(path)
 
-    return path
+def path_to_uri(path):
+    return Path(path).resolve().as_uri()
 
 
 def normalize_rpc_file_uris(rpc):
@@ -64,22 +64,8 @@ def normalize_rpc_file_uris(rpc):
         if isinstance(val, dict):
             normalize_rpc_file_uris(val)
         elif key == "rootUri" or key == "uri":
+            # normalize URI
             rpc[key] = path_to_uri(path_from_uri(val))
-
-
-def path_to_uri(path):
-    # Convert path to file uri (add html like head part)
-    # :param path: is an absolute path.
-    if is_windows:
-        # On windows, do not quote the colon after the driver letter, as
-        # it is not quoted in uri from the client.
-        path = path.replace("\\", "/")
-
-        # On windows, make sure the capitalization of the file matches
-        # capitalization on disk.
-        path = os.path.realpath(path)
-        return "file:///{0}{1}".format(path[:2], quote(path[2:]))
-    return "file://{0}".format(quote(path))
 
 
 class LanguageProtocolServer(object):
