@@ -1566,7 +1566,8 @@ package body Vhdl.Sem is
               and then Are_Trees_Equal (Get_Formal_Conversion (Left),
                                         Get_Formal_Conversion (Right));
 
-         when Iir_Kind_Type_Conversion =>
+         when Iir_Kind_Type_Conversion
+           | Iir_Kind_Qualified_Expression =>
             return Are_Trees_Equal (Get_Type_Mark (Left),
                                     Get_Type_Mark (Right))
               and then
