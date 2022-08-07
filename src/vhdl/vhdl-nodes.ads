@@ -1503,6 +1503,8 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Parent (Field0)
    --
+   --   Get/Set_Interface_Type_Definition (Field5)
+   --
    --   Get/Set_Type (Field1)
    --
    --   Get/Set_Chain (Field2)
@@ -8160,6 +8162,11 @@ package Vhdl.Nodes is
    --  Field: Field4 Chain
    function Get_Interface_Type_Subprograms (Target : Iir) return Iir;
    procedure Set_Interface_Type_Subprograms (Target : Iir; Subprg : Iir);
+
+   --  Owner of the interface type definition.
+   --  Field: Field5
+   function Get_Interface_Type_Definition (N : Iir) return Iir;
+   procedure Set_Interface_Type_Definition (N : Iir; Atype : Iir);
 
    --  Field: Field1
    function Get_Nature_Definition (Target : Iir) return Iir;

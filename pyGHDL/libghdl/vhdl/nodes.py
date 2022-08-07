@@ -3274,6 +3274,19 @@ def Set_Interface_Type_Subprograms(obj: Iir, value: Iir) -> None:
 
 
 @export
+@BindToLibGHDL("vhdl__nodes__get_interface_type_definition")
+def Get_Interface_Type_Definition(obj: Iir) -> Iir:
+    """"""
+    return 0
+
+
+@export
+@BindToLibGHDL("vhdl__nodes__set_interface_type_definition")
+def Set_Interface_Type_Definition(obj: Iir, value: Iir) -> None:
+    """"""
+
+
+@export
 @BindToLibGHDL("vhdl__nodes__get_nature_definition")
 def Get_Nature_Definition(obj: Iir) -> Iir:
     """"""

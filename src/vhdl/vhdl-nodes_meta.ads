@@ -161,6 +161,7 @@ package Vhdl.Nodes_Meta is
       Field_Subtype_Definition,
       Field_Incomplete_Type_Declaration,
       Field_Interface_Type_Subprograms,
+      Field_Interface_Type_Definition,
       Field_Nature_Definition,
       Field_Nature,
       Field_Subnature_Indication,
@@ -754,6 +755,7 @@ package Vhdl.Nodes_Meta is
    function Has_Subtype_Definition (K : Iir_Kind) return Boolean;
    function Has_Incomplete_Type_Declaration (K : Iir_Kind) return Boolean;
    function Has_Interface_Type_Subprograms (K : Iir_Kind) return Boolean;
+   function Has_Interface_Type_Definition (K : Iir_Kind) return Boolean;
    function Has_Nature_Definition (K : Iir_Kind) return Boolean;
    function Has_Nature (K : Iir_Kind) return Boolean;
    function Has_Subnature_Indication (K : Iir_Kind) return Boolean;

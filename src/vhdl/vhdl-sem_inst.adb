@@ -1253,7 +1253,12 @@ package body Vhdl.Sem_Inst is
                   declare
                      S : constant Iir := Get_Iir (N, F);
                   begin
-                     if S = E then
+                     if F = Field_Interface_Type_Definition then
+                        --  Do not substitute this Interface_Type_Definition,
+                        --  it is only to own the type definition in the
+                        --  uninstantiated interface.
+                        null;
+                     elsif S = E then
                         --  Substitute
                         Set_Iir (N, F, Rep);
                         pragma Assert (Get_Field_Attribute (F) = Attr_Ref);

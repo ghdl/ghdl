@@ -2982,6 +2982,22 @@ package body Vhdl.Nodes is
       Set_Field4 (Target, Subprg);
    end Set_Interface_Type_Subprograms;
 
+   function Get_Interface_Type_Definition (N : Iir) return Iir is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Interface_Type_Definition (Get_Kind (N)),
+                     "no field Interface_Type_Definition");
+      return Get_Field5 (N);
+   end Get_Interface_Type_Definition;
+
+   procedure Set_Interface_Type_Definition (N : Iir; Atype : Iir) is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Interface_Type_Definition (Get_Kind (N)),
+                     "no field Interface_Type_Definition");
+      Set_Field5 (N, Atype);
+   end Set_Interface_Type_Definition;
+
    function Get_Nature_Definition (Target : Iir) return Iir is
    begin
       pragma Assert (Target /= Null_Iir);
