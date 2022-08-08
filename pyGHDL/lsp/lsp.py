@@ -1,7 +1,8 @@
 import os
+from pathlib import Path
 import logging
 import json
-from urllib.parse import unquote, quote
+from urllib.parse import unquote, urlparse
 
 log = logging.getLogger("ghdl-ls")
 
@@ -37,23 +38,34 @@ def path_from_uri(uri):
     if not uri.startswith("file://"):
         # No scheme
         return uri
-    _, path = uri.split("file://", 1)
-    if is_windows and path.startswith("/"):
-        # On windows, absolute files start like "/C:/aa/bbb".
-        # Remove the first "/".
+
+    path = unquote(urlparse(uri).path)
+    # On windows, absolute files start like "/C:/aa/bbb".
+    # Remove the first "/".
+    if is_windows:
         path = path[1:]
-    return os.path.normpath(unquote(path))
+
+    # Path.resolve used to ensure consistent capitalization
+    # on Windows, as GHDL-ada will fail if it is inconsistent.
+    return Path(path).resolve().as_posix()
 
 
 def path_to_uri(path):
-    # Convert path to file uri (add html like head part)
-    # :param path: is an absolute path.
-    if is_windows:
-        # On windows, do not quote the colon after the driver letter, as
-        # it is not quoted in uri from the client.
-        path = path.replace("\\", "/")
-        return "file:///{0}{1}".format(path[:2], quote(path[2:]))
-    return "file://{0}".format(quote(path))
+    return Path(path).resolve().as_uri()
+
+
+def normalize_rpc_file_uris(rpc):
+    # Normalize all file URIs inside an RPC to have consistent capitalization.
+    # Fixes a crash on windows where the underlying ada crashes
+    # if paths to the same file are given with inconsistent
+    # capitalization.
+    for (key, val) in rpc.items():
+        # recurse into all leaf elements.
+        if isinstance(val, dict):
+            normalize_rpc_file_uris(val)
+        elif key == "rootUri" or key == "uri":
+            # normalize URI
+            rpc[key] = path_to_uri(path_from_uri(val))
 
 
 class LanguageProtocolServer(object):
@@ -114,6 +126,9 @@ class LanguageProtocolServer(object):
             log.error("Unexpected reply for %s", tid)
             return
         params = msg.get("params", None)
+        # Fix capitalization issues on windws.
+        if is_windows:
+            normalize_rpc_file_uris(msg)
         fmethod = self.handler.dispatcher.get(method, None)
         if fmethod:
             if params is None:
