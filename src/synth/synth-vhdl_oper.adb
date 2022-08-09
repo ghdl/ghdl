@@ -1233,7 +1233,7 @@ package body Synth.Vhdl_Oper is
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Mul_Slv_Slv =>
             --  "*" (unsigned, unsigned)
             return Synth_Dyadic_Xxx_Xxx
-              (Ctxt, Id_Smul, Left.Typ.W + Right.Typ.W,
+              (Ctxt, Id_Umul, Left.Typ.W + Right.Typ.W,
                Left, Right, False, False, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Mul_Uns_Nat =>
             --  "*" (unsigned, natural)
