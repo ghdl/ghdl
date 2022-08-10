@@ -1201,23 +1201,36 @@ package body Trans.Chap8 is
          if Get_Kind (Expr) = Iir_Kind_Aggregate then
             if Is_Aggregate_Loop (Expr) then
                Chap7.Translate_Aggregate (Targ_Node, Targ_Type, Expr);
-            elsif Get_Constraint_State (Get_Type (Expr)) /= Fully_Constrained
-            then
+            elsif Get_Determined_Aggregate_Flag (Expr) then
                declare
-                  Expr_Type : constant Iir := Get_Type (Expr);
-                  Expr_Tinfo : constant Type_Info_Acc := Get_Info (Expr_Type);
+--                  Expr_Type : constant Iir := Get_Type (Expr);
+--                  Expr_Btype : constant Iir := Get_Base_Type (Expr_Type);
+                  Expr_Tinfo : constant Type_Info_Acc := Get_Info (Targ_Type);
                   Val : Mnode;
                begin
                   --  Create a temp.
                   Val := Create_Temp (Expr_Tinfo);
-                  --  Set bounds from target
-                  Stabilize (Targ_Node);
-                  New_Assign_Stmt
-                    (M2Lp (Chap3.Get_Composite_Bounds (Val)),
-                     M2Addr (Chap3.Get_Composite_Bounds (Targ_Node)));
-                  --  Allocate target
-                  Chap3.Allocate_Unbounded_Composite_Base
-                    (Alloc_Stack, Val, Get_Base_Type (Expr_Type));
+                  case Type_Mode_Aggregate (Expr_Tinfo.Type_Mode) is
+                     when Type_Mode_Unbounded_Record
+                       | Type_Mode_Unbounded_Array =>
+                        --  Set bounds from target
+                        Stabilize (Targ_Node);
+                        New_Assign_Stmt
+                          (M2Lp (Chap3.Get_Composite_Bounds (Val)),
+                           M2Addr (Chap3.Get_Composite_Bounds (Targ_Node)));
+                        --  Allocate target
+                        Chap3.Allocate_Unbounded_Composite_Base
+                          (Alloc_Stack, Val, Targ_Type);
+                     when Type_Mode_Static_Record
+                       | Type_Mode_Static_Array =>
+                        null;
+                     when Type_Mode_Complex_Record
+                       | Type_Mode_Complex_Array =>
+                        Chap4.Allocate_Complex_Object
+                          (Targ_Type, Alloc_Stack, Val);
+                     when Type_Mode_Protected =>
+                        raise Internal_Error;
+                  end case;
                   --  Translate aggregate
                   Chap7.Translate_Aggregate (Val, Targ_Type, Expr);
                   --  Assign

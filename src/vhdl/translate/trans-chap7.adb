@@ -3000,8 +3000,7 @@ package body Trans.Chap7 is
    procedure Translate_Aggregate_Others
      (Target : Mnode; Target_Type : Iir; El : Iir)
    is
-      Base_Ptr : Mnode;
-      Info     : Type_Info_Acc;
+      El_Type : constant Iir := Get_Element_Subtype (Target_Type);
       It       : O_Dnode;
       Len      : O_Dnode;
       Len_Val  : O_Enode;
@@ -3011,18 +3010,9 @@ package body Trans.Chap7 is
    begin
       Open_Temp;
 
-      Info := Get_Info (Target_Type);
-      case Info.Type_Mode is
-         when Type_Mode_Unbounded_Array =>
-            Arr_Var := Stabilize (Target);
-            Base_Ptr := Stabilize (Chap3.Get_Composite_Base (Arr_Var));
-            Len_Val := Chap3.Get_Array_Length (Arr_Var, Target_Type);
-         when Type_Mode_Bounded_Arrays =>
-            Base_Ptr := Stabilize (Chap3.Get_Composite_Base (Target));
-            Len_Val := Chap3.Get_Array_Type_Length (Target_Type);
-         when others =>
-            raise Internal_Error;
-      end case;
+      Arr_Var := Stabilize (Target);
+      Len_Val := Chap3.Get_Array_Length (Arr_Var, Target_Type);
+
       --  FIXME: use this (since this use one variable instead of two):
       --  I := length;
       --  loop
@@ -3042,9 +3032,9 @@ package body Trans.Chap7 is
         (Label, New_Compare_Op (ON_Eq,
                                 New_Obj_Value (It), New_Obj_Value (Len),
                                 Ghdl_Bool_Type));
-      El_Node := Chap3.Index_Base (Base_Ptr, Target_Type,
-                                   New_Obj_Value (It));
-      Translate_Assign (El_Node, El, Get_Element_Subtype (Target_Type));
+      El_Node := Chap6.Translate_Indexed_Name_By_Offset
+        (Arr_Var, Target_Type, It);
+      Translate_Assign (El_Node, El, El_Type);
       Inc_Var (It);
       Finish_Loop_Stmt (Label);
 
@@ -3052,10 +3042,7 @@ package body Trans.Chap7 is
    end Translate_Aggregate_Others;
 
    procedure Translate_Array_Aggregate_Gen_String
-     (Base_Ptr   : Mnode;
-      Aggr       : Iir;
-      Aggr_Type  : Iir;
-      Var_Index  : O_Dnode)
+     (Targ : Mnode; Aggr : Iir; Aggr_Type : Iir; Var_Index : O_Dnode)
    is
       Expr_Type  : constant Iir := Get_Element_Subtype (Aggr_Type);
       Len : constant Nat32 := Get_String_Length (Aggr);
@@ -3088,8 +3075,8 @@ package body Trans.Chap7 is
                                      New_Lit (New_Index_Lit (Nat32'Pos (Len))),
                                      Ghdl_Bool_Type));
       New_Assign_Stmt
-        (M2Lv (Chap3.Index_Base (Base_Ptr, Aggr_Type,
-                                 New_Obj_Value (Var_Index))),
+        (M2Lv (Chap6.Translate_Indexed_Name_By_Offset
+                 (Targ, Aggr_Type, Var_Index)),
          New_Value (New_Indexed_Element (Get_Var (Cst),
                                          New_Obj_Value (Var_I))));
       Inc_Var (Var_I);
@@ -3098,8 +3085,7 @@ package body Trans.Chap7 is
       Close_Temp;
    end Translate_Array_Aggregate_Gen_String;
 
-   procedure Translate_Array_Aggregate_Gen (Base_Ptr   : Mnode;
-                                            Bounds_Ptr : Mnode;
+   procedure Translate_Array_Aggregate_Gen (Targ       : Mnode;
                                             Aggr       : Iir;
                                             Aggr_Type  : Iir;
                                             Dim        : Natural;
@@ -3115,8 +3101,8 @@ package body Trans.Chap7 is
       is
          Dest : Mnode;
       begin
-         Dest := Chap3.Index_Base (Base_Ptr, Aggr_Type,
-                                   New_Obj_Value (Var_Index));
+         Dest := Chap6.Translate_Indexed_Name_By_Offset
+           (Targ, Aggr_Type, Var_Index);
          Translate_Assign (Dest, Expr, Aggr_El_Type);
          Assoc_Len := 1;
          Inc_Var (Var_Index);
@@ -3132,9 +3118,9 @@ package body Trans.Chap7 is
          Bnd : Mnode;
       begin
          Expr_Type := Get_Type (Expr);
-         Dest := Chap3.Slice_Base (Base_Ptr, Aggr_Type,
-                                   New_Obj_Value (Var_Index),
-                                   O_Enode_Null);
+         Dest := Chap3.Slice_Base
+           (Chap3.Get_Composite_Base (Targ), Aggr_Type,
+            New_Obj_Value (Var_Index), O_Enode_Null);
          Src := Translate_Expression (Expr, Expr_Type);
          Stabilize (Src);
          --  FIXME: check bounds ?
@@ -3183,7 +3169,7 @@ package body Trans.Chap7 is
             end if;
          else
             Translate_Array_Aggregate_Gen
-              (Base_Ptr, Bounds_Ptr, Expr, Aggr_Type, Dim + 1, Var_Index);
+              (Targ, Expr, Aggr_Type, Dim + 1, Var_Index);
             Assoc_Len := 1;
          end if;
       end Do_Assign;
@@ -3226,7 +3212,8 @@ package body Trans.Chap7 is
             --  Create a loop from P to len.
             Var_Len := Create_Temp (Ghdl_Index_Type);
 
-            Range_Ptr := Chap3.Bounds_To_Range (Bounds_Ptr, Aggr_Type, Dim);
+            Range_Ptr := Chap3.Bounds_To_Range
+              (Chap3.Get_Composite_Bounds (Targ), Aggr_Type, Dim);
             Len_Tmp := M2E (Chap3.Range_To_Length (Range_Ptr));
             if P /= 0 then
                Len_Tmp := New_Dyadic_Op
@@ -3326,7 +3313,8 @@ package body Trans.Chap7 is
             --   to/downto right.
             Var_Pos := Create_Temp (Rtinfo.Ortho_Type (Mode_Value));
             Range_Ptr := Stabilize
-              (Chap3.Bounds_To_Range (Bounds_Ptr, Aggr_Type, Dim));
+              (Chap3.Bounds_To_Range
+                 (Chap3.Get_Composite_Bounds (Targ), Aggr_Type, Dim));
             New_Assign_Stmt (New_Obj (Var_Pos),
                              M2E (Chap3.Range_To_Left (Range_Ptr)));
 
@@ -3401,7 +3389,7 @@ package body Trans.Chap7 is
    begin
       if Get_Kind (Aggr) = Iir_Kind_String_Literal8 then
          Translate_Array_Aggregate_Gen_String
-           (Base_Ptr, Aggr, Aggr_Type, Var_Index);
+           (Targ, Aggr, Aggr_Type, Var_Index);
          return;
       end if;
 
@@ -3516,7 +3504,6 @@ package body Trans.Chap7 is
         Get_Index_Subtype_List (Target_Type);
 
       Aggr_Info : Iir_Aggregate_Info;
-      Base      : Mnode;
       Bounds    : Mnode;
       Var_Index : O_Dnode;
       Targ      : Mnode;
@@ -3561,7 +3548,6 @@ package body Trans.Chap7 is
    begin
       Open_Temp;
       Targ := Stabilize (Target);
-      Base := Stabilize (Chap3.Get_Composite_Base (Targ));
       Bounds := Stabilize (Chap3.Get_Composite_Bounds (Targ));
       Aggr_Info := Get_Aggregate_Info (Aggr);
 
@@ -3682,8 +3668,7 @@ package body Trans.Chap7 is
 
       Var_Index := Create_Temp_Init
         (Ghdl_Index_Type, New_Lit (Ghdl_Index_0));
-      Translate_Array_Aggregate_Gen
-        (Base, Bounds, Aggr, Target_Type, 1, Var_Index);
+      Translate_Array_Aggregate_Gen (Targ, Aggr, Target_Type, 1, Var_Index);
       Close_Temp;
 
       --  FIXME: creating aggregate subtype is expensive and rarely used.

@@ -3137,6 +3137,7 @@ package body Trans.Chap3 is
          return Lv2M (New_Indexed_Element (M2Lv (Base), Index),
                       El_Tinfo, Kind);
       elsif Is_Unbounded_Type (El_Tinfo) then
+         pragma Assert (Stride /= O_Enode_Null);
          return E2M (Add_Pointer (M2E (Base),
                                   New_Dyadic_Op (ON_Mul_Ov, Index, Stride),
                                   El_Tinfo.B.Base_Ptr_Type (Kind)),
@@ -3165,24 +3166,32 @@ package body Trans.Chap3 is
       end if;
    end Convert_Array_Base;
 
-   function Index_Array (Arr : Mnode; Atype : Iir; Index : O_Enode)
-                        return Mnode
+   --  For array with unbounded elements, return the stride.
+   --  Otherwise, return O_Enode_Null.
+   function Get_Array_Stride (Arr : Mnode; Atype : Iir) return O_Enode
    is
       El_Type  : constant Iir := Get_Element_Subtype (Atype);
       El_Tinfo : constant Type_Info_Acc := Get_Info (El_Type);
       Kind     : constant Object_Kind_Type := Get_Object_Kind (Arr);
+   begin
+      if Is_Unbounded_Type (El_Tinfo) then
+         return New_Value
+           (Array_Bounds_To_Element_Size
+              (Get_Composite_Bounds (Arr), Atype, Kind));
+      else
+         return O_Enode_Null;
+      end if;
+   end Get_Array_Stride;
+
+   function Index_Array (Arr : Mnode; Atype : Iir; Index : O_Enode)
+                        return Mnode
+   is
       Base     : Mnode;
       Stride   : O_Enode;
    begin
       Base := Get_Composite_Base (Arr);
       --  For indexing, we need to consider the size of elements.
-      if Is_Unbounded_Type (El_Tinfo) then
-         Stride := New_Value
-           (Array_Bounds_To_Element_Size
-              (Get_Composite_Bounds (Arr), Atype, Kind));
-      else
-         Stride := O_Enode_Null;
-      end if;
+      Stride := Get_Array_Stride (Arr, Atype);
       return Index_Base (Base, Atype, Index, Stride);
    end Index_Array;
 
