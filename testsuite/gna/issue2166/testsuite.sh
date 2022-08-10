@@ -16,6 +16,9 @@ elab_simulate repro2
 analyze tb3.vhdl
 elab_simulate tb3
 
+analyze repro4.vhdl
+elab_simulate repro4
+
 if false; then
     export GHDL_STD_FLAGS="--std=08 -frelaxed --work=osvvm -Wno-hide"
 
