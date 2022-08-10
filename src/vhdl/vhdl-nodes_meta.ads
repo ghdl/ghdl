@@ -379,6 +379,7 @@ package Vhdl.Nodes_Meta is
       Field_Aggr_Others_Flag,
       Field_Aggr_Named_Flag,
       Field_Aggregate_Expand_Flag,
+      Field_Determined_Aggregate_Flag,
       Field_Association_Choices_Chain,
       Field_Case_Statement_Alternative_Chain,
       Field_Matching_Flag,
@@ -979,6 +980,7 @@ package Vhdl.Nodes_Meta is
    function Has_Aggr_Others_Flag (K : Iir_Kind) return Boolean;
    function Has_Aggr_Named_Flag (K : Iir_Kind) return Boolean;
    function Has_Aggregate_Expand_Flag (K : Iir_Kind) return Boolean;
+   function Has_Determined_Aggregate_Flag (K : Iir_Kind) return Boolean;
    function Has_Association_Choices_Chain (K : Iir_Kind) return Boolean;
    function Has_Case_Statement_Alternative_Chain (K : Iir_Kind)
       return Boolean;

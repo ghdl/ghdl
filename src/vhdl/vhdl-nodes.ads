@@ -4248,6 +4248,8 @@ package Vhdl.Nodes is
    --  If true, the aggregate can be statically built.  This is an optimization
    --  and the conditions are defined in sem_expr.
    --   Get/Set_Aggregate_Expand_Flag (Flag1)
+   --
+   --   Get/Set_Determined_Aggregate_Flag (Flag2)
 
    -- Iir_Kind_Aggregate_Info (Short)
    --
@@ -9262,6 +9264,11 @@ package Vhdl.Nodes is
    --  Field: Flag1
    function Get_Aggregate_Expand_Flag (Aggr : Iir) return Boolean;
    procedure Set_Aggregate_Expand_Flag (Aggr : Iir; Flag : Boolean);
+
+   --  True if the bounds of the aggregated are determined by the context.
+   --  Field: Flag2
+   function Get_Determined_Aggregate_Flag (Aggr : Iir) return Boolean;
+   procedure Set_Determined_Aggregate_Flag (Aggr : Iir; Flag : Boolean);
 
    --  Chain of choices.
    --  Field: Field4 Chain

@@ -6108,6 +6108,19 @@ def Set_Aggregate_Expand_Flag(obj: Iir, value: Boolean) -> None:
 
 
 @export
+@BindToLibGHDL("vhdl__nodes__get_determined_aggregate_flag")
+def Get_Determined_Aggregate_Flag(obj: Iir) -> Boolean:
+    """"""
+    return 0
+
+
+@export
+@BindToLibGHDL("vhdl__nodes__set_determined_aggregate_flag")
+def Set_Determined_Aggregate_Flag(obj: Iir, value: Boolean) -> None:
+    """"""
+
+
+@export
 @BindToLibGHDL("vhdl__nodes__get_association_choices_chain")
 def Get_Association_Choices_Chain(obj: Iir) -> Iir:
     """"""

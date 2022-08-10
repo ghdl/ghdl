@@ -435,69 +435,70 @@ class fields(IntEnum):
     Aggr_Others_Flag = 315
     Aggr_Named_Flag = 316
     Aggregate_Expand_Flag = 317
-    Association_Choices_Chain = 318
-    Case_Statement_Alternative_Chain = 319
-    Matching_Flag = 320
-    Choice_Staticness = 321
-    Procedure_Call = 322
-    Implementation = 323
-    Parameter_Association_Chain = 324
-    Method_Object = 325
-    Subtype_Type_Mark = 326
-    Subnature_Nature_Mark = 327
-    Type_Conversion_Subtype = 328
-    Type_Mark = 329
-    File_Type_Mark = 330
-    Return_Type_Mark = 331
-    Has_Disconnect_Flag = 332
-    Has_Active_Flag = 333
-    Is_Within_Flag = 334
-    Type_Marks_List = 335
-    Implicit_Alias_Flag = 336
-    Alias_Signature = 337
-    Attribute_Signature = 338
-    Overload_List = 339
-    Simple_Name_Identifier = 340
-    Simple_Name_Subtype = 341
-    Protected_Type_Body = 342
-    Protected_Type_Declaration = 343
-    Use_Flag = 344
-    End_Has_Reserved_Id = 345
-    End_Has_Identifier = 346
-    End_Has_Postponed = 347
-    Has_Label = 348
-    Has_Begin = 349
-    Has_End = 350
-    Has_Is = 351
-    Has_Pure = 352
-    Has_Body = 353
-    Has_Parameter = 354
-    Has_Component = 355
-    Has_Identifier_List = 356
-    Has_Mode = 357
-    Has_Class = 358
-    Has_Delay_Mechanism = 359
-    Suspend_Flag = 360
-    Stop_Flag = 361
-    Is_Ref = 362
-    Is_Forward_Ref = 363
-    Psl_Property = 364
-    Psl_Sequence = 365
-    Psl_Declaration = 366
-    Psl_Expression = 367
-    Psl_Boolean = 368
-    PSL_Clock = 369
-    PSL_NFA = 370
-    PSL_Nbr_States = 371
-    PSL_Clock_Sensitivity = 372
-    PSL_EOS_Flag = 373
-    PSL_Abort_Flag = 374
-    Count_Expression = 375
-    Clock_Expression = 376
-    Default_Clock = 377
-    Foreign_Node = 378
-    Suspend_State_Index = 379
-    Suspend_State_Chain = 380
+    Determined_Aggregate_Flag = 318
+    Association_Choices_Chain = 319
+    Case_Statement_Alternative_Chain = 320
+    Matching_Flag = 321
+    Choice_Staticness = 322
+    Procedure_Call = 323
+    Implementation = 324
+    Parameter_Association_Chain = 325
+    Method_Object = 326
+    Subtype_Type_Mark = 327
+    Subnature_Nature_Mark = 328
+    Type_Conversion_Subtype = 329
+    Type_Mark = 330
+    File_Type_Mark = 331
+    Return_Type_Mark = 332
+    Has_Disconnect_Flag = 333
+    Has_Active_Flag = 334
+    Is_Within_Flag = 335
+    Type_Marks_List = 336
+    Implicit_Alias_Flag = 337
+    Alias_Signature = 338
+    Attribute_Signature = 339
+    Overload_List = 340
+    Simple_Name_Identifier = 341
+    Simple_Name_Subtype = 342
+    Protected_Type_Body = 343
+    Protected_Type_Declaration = 344
+    Use_Flag = 345
+    End_Has_Reserved_Id = 346
+    End_Has_Identifier = 347
+    End_Has_Postponed = 348
+    Has_Label = 349
+    Has_Begin = 350
+    Has_End = 351
+    Has_Is = 352
+    Has_Pure = 353
+    Has_Body = 354
+    Has_Parameter = 355
+    Has_Component = 356
+    Has_Identifier_List = 357
+    Has_Mode = 358
+    Has_Class = 359
+    Has_Delay_Mechanism = 360
+    Suspend_Flag = 361
+    Stop_Flag = 362
+    Is_Ref = 363
+    Is_Forward_Ref = 364
+    Psl_Property = 365
+    Psl_Sequence = 366
+    Psl_Declaration = 367
+    Psl_Expression = 368
+    Psl_Boolean = 369
+    PSL_Clock = 370
+    PSL_NFA = 371
+    PSL_Nbr_States = 372
+    PSL_Clock_Sensitivity = 373
+    PSL_EOS_Flag = 374
+    PSL_Abort_Flag = 375
+    Count_Expression = 376
+    Clock_Expression = 377
+    Default_Clock = 378
+    Foreign_Node = 379
+    Suspend_State_Index = 380
+    Suspend_State_Chain = 381
 
 
 def Get_Boolean(node, field):
@@ -2537,6 +2538,12 @@ def Has_Aggr_Named_Flag(kind: IirKind) -> bool:
 @export
 @BindToLibGHDL("vhdl__nodes_meta__has_aggregate_expand_flag")
 def Has_Aggregate_Expand_Flag(kind: IirKind) -> bool:
+    """"""
+
+
+@export
+@BindToLibGHDL("vhdl__nodes_meta__has_determined_aggregate_flag")
+def Has_Determined_Aggregate_Flag(kind: IirKind) -> bool:
     """"""
 
 

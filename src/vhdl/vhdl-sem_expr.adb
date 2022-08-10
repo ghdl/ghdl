@@ -3887,6 +3887,7 @@ package body Vhdl.Sem_Expr is
                   Sub_Aggr := Get_Associated_Expr (Choice);
                   case Get_Kind (Sub_Aggr) is
                      when Iir_Kind_Aggregate =>
+                        Set_Determined_Aggregate_Flag (Sub_Aggr, Constrained);
                         Sem_Array_Aggregate_1
                           (Sub_Aggr, A_Type, Infos, Constrained, Dim + 1);
                         if not Get_Aggregate_Expand_Flag (Sub_Aggr) then
@@ -4404,6 +4405,8 @@ package body Vhdl.Sem_Expr is
          --  An aggregate is at most globally static.
          Set_Expr_Staticness (Expr, Globally);
       end if;
+
+      Set_Determined_Aggregate_Flag (Expr, Constrained);
 
       Set_Type (Expr, A_Type); -- FIXME: should free old type
       case Get_Kind (A_Type) is

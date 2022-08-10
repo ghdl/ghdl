@@ -6528,6 +6528,22 @@ package body Vhdl.Nodes is
       Set_Flag1 (Aggr, Flag);
    end Set_Aggregate_Expand_Flag;
 
+   function Get_Determined_Aggregate_Flag (Aggr : Iir) return Boolean is
+   begin
+      pragma Assert (Aggr /= Null_Iir);
+      pragma Assert (Has_Determined_Aggregate_Flag (Get_Kind (Aggr)),
+                     "no field Determined_Aggregate_Flag");
+      return Get_Flag2 (Aggr);
+   end Get_Determined_Aggregate_Flag;
+
+   procedure Set_Determined_Aggregate_Flag (Aggr : Iir; Flag : Boolean) is
+   begin
+      pragma Assert (Aggr /= Null_Iir);
+      pragma Assert (Has_Determined_Aggregate_Flag (Get_Kind (Aggr)),
+                     "no field Determined_Aggregate_Flag");
+      Set_Flag2 (Aggr, Flag);
+   end Set_Determined_Aggregate_Flag;
+
    function Get_Association_Choices_Chain (Target : Iir) return Iir is
    begin
       pragma Assert (Target /= Null_Iir);
