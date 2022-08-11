@@ -1391,6 +1391,16 @@ package body Vhdl.Parse is
          --  Skip identifier.
          Scan;
 
+         if Current_Token = Tok_Left_Paren then
+            --  Skip '('.
+            Scan;
+
+            Set_Pathname_Expression (El, Parse_Expression);
+
+            --  Skip ')'.
+            Expect_Scan (Tok_Right_Paren);
+         end if;
+
          exit when Current_Token /= Tok_Dot;
 
          --  Skip '.'.
