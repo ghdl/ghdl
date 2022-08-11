@@ -1404,9 +1404,12 @@ package body Trans.Chap7 is
       --  Pre_Walk: compute known static length and number of dynamic arrays.
       procedure Pre_Walk_El (E : Iir; Is_First : Boolean)
       is
-         pragma Unreferenced (Is_First);
          pragma Unreferenced (E);
       begin
+         if Is_First and Is_Unbounded_El then
+            --  Force evaluation of the first expression to get element bounds.
+            Nbr_Dyn_Expr := Nbr_Dyn_Expr + 1;
+         end if;
          Static_Length := Static_Length + 1;
       end Pre_Walk_El;
 
@@ -1418,9 +1421,10 @@ package body Trans.Chap7 is
          --  * type is fully constrained, range is static, length is known
          --  * type is fully constrained, range is not static, length isn't
          --  * type is not constrained
-         if Is_Static_Arr (E)
-           and then not (Is_First and Is_Unbounded_El)
-         then
+         if Is_First and Is_Unbounded_El then
+            --  Force evaluation of the first expression to get element bounds.
+            Nbr_Dyn_Expr := Nbr_Dyn_Expr + 1;
+         elsif Is_Static_Arr (E) then
             Idx_Type := Get_Index_Type (Get_Type (E), 0);
             Static_Length := Static_Length
               + Eval_Discrete_Range_Length (Get_Range_Constraint (Idx_Type));
@@ -1465,45 +1469,62 @@ package body Trans.Chap7 is
          null;
       end Nil_El;
 
-      procedure Eval_First_El (E : Iir; Is_First : Boolean)
+      procedure Eval_One (E : Iir; Res_Type : Iir; Copy_El_Layout : Boolean)
       is
-         pragma Unreferenced (E);
+         E_Val : O_Enode;
+         Bnd : Mnode;
+      begin
+         Dyn_I := Dyn_I + 1;
+         --  First, translate expression.
+         E_Val := Translate_Expression (E, Res_Type);
+         --  Then create Mnode (type info may be computed by
+         --  translate_expression).
+         Dyn_Mnodes (Dyn_I) :=
+           Stabilize (E2M (E_Val, Get_Info (Res_Type), Mode_Value));
+
+         if Copy_El_Layout then
+            --  Copy layout.
+            pragma Assert (Dyn_I = 1);
+            Bnd := Chap3.Get_Composite_Bounds (Dyn_Mnodes (1));
+            if Res_Type = Expr_Type then
+               Bnd := Chap3.Array_Bounds_To_Element_Layout (Bnd, Expr_Type);
+            end if;
+            Gen_Memcpy
+              (M2Addr (Chap3.Array_Bounds_To_Element_Layout
+                         (Var_Bounds, Expr_Type)),
+               M2Addr (Bnd),
+               New_Lit (New_Sizeof (Get_Info (El_Type).B.Layout_Type,
+                                    Ghdl_Index_Type)));
+         end if;
+      end Eval_One;
+
+      procedure Eval_First_El (E : Iir; Is_First : Boolean) is
       begin
          if Is_First and then Is_Unbounded_El then
-            raise Internal_Error;
+            Eval_One (E, El_Type, True);
          end if;
       end Eval_First_El;
 
       --  Evaluate a dynamic parameter.
-      procedure Eval_Dyn_Arr (E : Iir; Is_First : Boolean)
-      is
-         E_Val : O_Enode;
+      procedure Eval_Dyn_Arr (E : Iir; Is_First : Boolean) is
       begin
          if (Is_First and Is_Unbounded_El)
            or else not Is_Static_Arr (E)
          then
-            Dyn_I := Dyn_I + 1;
-            --  First, translate expression.
-            E_Val := Translate_Expression (E, Expr_Type);
-            --  Then create Mnode (type info may be computed by
-            --  translate_expression).
-            Dyn_Mnodes (Dyn_I) :=
-              Stabilize (E2M (E_Val, Get_Info (Expr_Type), Mode_Value));
-
-            if Is_First and then Is_Unbounded_El then
-               --  Copy layout.
-               pragma Assert (Dyn_I = 1);
-               Gen_Memcpy
-                 (M2Addr (Chap3.Array_Bounds_To_Element_Layout
-                            (Var_Bounds, Expr_Type)),
-                  M2Addr (Chap3.Array_Bounds_To_Element_Layout
-                            (Chap3.Get_Composite_Bounds
-                               (Dyn_Mnodes (1)), Expr_Type)),
-                  New_Lit (New_Sizeof (Get_Info (El_Type).B.Layout_Type,
-                                       Ghdl_Index_Type)));
-            end if;
+            Eval_One (E, Expr_Type, Is_First and then Is_Unbounded_El);
          end if;
       end Eval_Dyn_Arr;
+
+      procedure Len_El (E : Iir; Is_First : Boolean)
+      is
+         pragma Unreferenced (E);
+      begin
+         if Is_First and Is_Unbounded_El then
+            --  The first param is evaluated to get the element bounds, but
+            --  its length is known.
+            Dyn_I := Dyn_I + 1;
+         end if;
+      end Len_El;
 
       --  Add contribution to length of result from a dynamic parameter.
       procedure Len_Dyn_Arr (E : Iir; Is_First : Boolean)
@@ -1543,14 +1564,18 @@ package body Trans.Chap7 is
       --  Assign: write values to the result array.
       procedure Assign_El (E : Iir; Is_First : Boolean)
       is
-         pragma Unreferenced (Is_First);
          Dest : Mnode;
          Src : Mnode;
       begin
          Dest := Chap3.Index_Base
            (Var_Arr, Expr_Type, New_Obj_Value (Var_Off), Get_Stride);
 
-         Src := Translate_Expression (E, El_Type);
+         if Is_First and Is_Unbounded_El then
+            Dyn_I := Dyn_I + 1;
+            Src := Dyn_Mnodes (Dyn_I);
+         else
+            Src := Translate_Expression (E, El_Type);
+         end if;
          if Is_Unbounded_El then
             Gen_Memcpy (M2Addr (Dest),
                         M2Addr (Chap3.Get_Composite_Base (Src)),
@@ -1738,7 +1763,7 @@ package body Trans.Chap7 is
          E_Length := O_Enode_Null;
       end if;
       Dyn_I := 0;
-      Walk ((Nil_El'Access, Len_Dyn_Arr'Access));
+      Walk ((Len_El'Access, Len_Dyn_Arr'Access));
       pragma Assert (Dyn_I = Dyn_Mnodes'Last);
       pragma Assert (E_Length /= O_Enode_Null);
       Var_Length := Create_Temp_Init (Ghdl_Index_Type, E_Length);
