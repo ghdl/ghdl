@@ -912,7 +912,7 @@ package body Vhdl.Sem_Stmts is
             Target_Type := Get_Type (Target);
             Target_Object := Check_Simple_Signal_Target_Object (Target);
             Target_Prefix := Get_Object_Prefix (Target_Object);
-            Constrained := Is_Object_Name_Fully_Constrained (Target_Object);
+            Constrained := Is_Object_Name_Fully_Constrained (Target);
          else
             Constrained := False;
          end if;
@@ -950,6 +950,8 @@ package body Vhdl.Sem_Stmts is
                   --  - If the target is not a port or a signal parameter,
                   --    a force mode of IN is used.
                   Set_Force_Mode (Stmt, Iir_Force_In);
+               when Iir_Kind_External_Signal_Name =>
+                  null;
                when others =>
                   Error_Msg_Sem (+Stmt, "target (%n) is not a signal",
                                  +Get_Base_Name (Target));
@@ -969,6 +971,8 @@ package body Vhdl.Sem_Stmts is
                when Iir_Kind_Signal_Declaration
                  | Iir_Kind_Guard_Signal_Declaration =>
                   --  FIXME: guard is dubious
+                  null;
+               when Iir_Kind_External_Signal_Name =>
                   null;
                when others =>
                   Error_Msg_Sem (+Stmt, "target (%n) is not a signal",
