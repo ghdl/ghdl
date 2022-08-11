@@ -4224,6 +4224,10 @@ package body Vhdl.Sem_Expr is
          Sem_Array_Aggregate_Extract_Element_Subtype
            (Aggr, 1, Nbr_Dim, El_Subtype);
          if El_Subtype = Null_Iir then
+            if not Constrained then
+               Error_Msg_Sem
+                 (+Aggr, "no element bounds for self-determined aggregate");
+            end if;
             El_Subtype := El_Type;
          else
             --  TODO: check constraints of elements (if El_Subtype is static)
@@ -4655,13 +4659,14 @@ package body Vhdl.Sem_Expr is
       --  qualified expression.
       --  TODO: also handle unbounded subtypes, but only if this is a proper
       --   subtype.
-      case Get_Kind (N_Type) is
-         when Iir_Kind_Array_Type_Definition
-           | Iir_Kind_Record_Type_Definition =>
-            Set_Type (Expr, Get_Type (Res));
-         when others =>
-            null;
-      end case;
+      --  FIXME: is it valid ?  Try to merge bounds ?  This has real
+      --    consequences on validity, for self-determined aggregates with
+      --    unbounded types: the element may become bounded.
+      if not Is_Fully_Constrained_Type (N_Type)
+        and then Is_Fully_Constrained_Type (Get_Type (Res))
+      then
+         Set_Type (Expr, Get_Type (Res));
+      end if;
 
       --  Emit a warning if the value is known not to be within the bounds.
       if Get_Expr_Staticness (Res) = Locally
