@@ -532,6 +532,21 @@ package body Trans.Chap5 is
       Close_Temp;
    end Elab_Port_Map_Aspect_Assoc;
 
+   procedure Elab_Port_Map_Aspect_Assoc_Or_Inertial (Assoc : Iir;
+                                                     Formal : Iir;
+                                                     Formal_Env : Map_Env;
+                                                     Actual_Env : Map_Env) is
+   begin
+      if Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Expression
+        and then Get_Inertial_Flag (Assoc)
+      then
+         Chap9.Elab_Inertial_Association (Assoc, Formal);
+      else
+         Elab_Port_Map_Aspect_Assoc
+           (Assoc, Formal, False, Formal_Env, Actual_Env);
+      end if;
+   end Elab_Port_Map_Aspect_Assoc_Or_Inertial;
+
    function Alloc_Bounds (Atype : Iir; Alloc : Allocation_Kind) return Mnode
    is
       Tinfo : constant Type_Info_Acc := Get_Info (Atype);
@@ -760,25 +775,17 @@ package body Trans.Chap5 is
                         --  Create non-collapsed signals.
                         Chap4.Elab_Signal_Declaration_Object
                           (Formal, Block_Parent, False);
-                        --  And associate (if not an inertial association).
-                        if (Get_Kind (Assoc)
-                              = Iir_Kind_Association_Element_By_Name)
-                          or else (Get_Expr_Staticness (Get_Actual (Assoc))
-                                     /= None)
-                        then
-                           Elab_Port_Map_Aspect_Assoc
-                             (Assoc, Formal, False, Formal_Env, Actual_Env);
-                        else
-                           Chap9.Elab_Inertial_Association (Assoc, Formal);
-                        end if;
+                        --  And associate
+                        Elab_Port_Map_Aspect_Assoc_Or_Inertial
+                             (Assoc, Formal, Formal_Env, Actual_Env);
                      end if;
                   else
                      --  By sub-element.
                      --  Never collapsed, signal was already created (by the
                      --  By_Individual association).
                      --  And associate.
-                     Elab_Port_Map_Aspect_Assoc
-                       (Assoc, Formal, False, Formal_Env, Actual_Env);
+                     Elab_Port_Map_Aspect_Assoc_Or_Inertial
+                       (Assoc, Formal, Formal_Env, Actual_Env);
                   end if;
                when Iir_Kind_Association_Element_Open
                  | Iir_Kind_Association_Element_By_Individual =>
