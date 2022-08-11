@@ -3710,18 +3710,19 @@ package body Vhdl.Sem_Expr is
       end loop;
    end Sem_Array_Aggregate_Extract_Element_Subtype;
 
-   procedure Check_Matching_Subtype (Expr : Iir; St : Iir)
+   --  Return FALSE in case of known mismatch.
+   function Check_Matching_Subtype (Expr : Iir; St : Iir) return Boolean
    is
       Et : constant Iir := Get_Type (Expr);
    begin
       case Get_Kind (St) is
          when Iir_Kind_Array_Subtype_Definition =>
             if Get_Kind (Et) /= Iir_Kind_Array_Subtype_Definition then
-               return;
+               return True;
             end if;
             --  Fast check.
             if Et = St then
-               return;
+               return True;
             end if;
 
             --  Check indexes.
@@ -3745,7 +3746,7 @@ package body Vhdl.Sem_Expr is
                           (Warnid_Runtime_Error, +Expr,
                            "expression subtype doesn't match "
                              & "aggregate element subtype");
-                        return;
+                        return False;
                      end if;
                   end loop;
                end;
@@ -3758,19 +3759,21 @@ package body Vhdl.Sem_Expr is
          when others =>
             null;
       end case;
+      return True;
    end Check_Matching_Subtype;
 
    --  Check the subtype of all elements of AGGR match EL_SUBTYPE.
    --  Used only if the aggregate element subtype is extracted from an
    --  element of the aggregate.  In that case, we should check the match.
-   procedure Sem_Array_Aggregate_Check_Element_Subtype (El_Subtype : Iir;
-                                                        Aggr : Iir;
-                                                        Dim : Natural;
-                                                        Nbr_Dim : Natural)
+   function Sem_Array_Aggregate_Check_Element_Subtype
+     (El_Subtype : Iir; Aggr : Iir; Dim : Natural; Nbr_Dim : Natural)
+     return Boolean
    is
+      Ok : Boolean;
       Assoc : Iir;
       Sub_Aggr : Iir;
    begin
+      Ok := True;
       Assoc := Get_Association_Choices_Chain (Aggr);
       while Assoc /= Null_Iir loop
          if not Get_Same_Alternative_Flag (Assoc) then
@@ -3779,17 +3782,23 @@ package body Vhdl.Sem_Expr is
                --  If a string is a proper subaggregate, then the element
                --  subtype must be fully bounded.
                pragma Assert (Get_Kind (Sub_Aggr) = Iir_Kind_Aggregate);
-               Sem_Array_Aggregate_Check_Element_Subtype
-                 (El_Subtype, Sub_Aggr, Dim + 1, Nbr_Dim);
+               if not Sem_Array_Aggregate_Check_Element_Subtype
+                 (El_Subtype, Sub_Aggr, Dim + 1, Nbr_Dim)
+               then
+                  Ok := False;
+               end if;
             else
                if Get_Element_Type_Flag (Assoc) then
                   --  TODO: only report the first error ?
-                  Check_Matching_Subtype (Sub_Aggr, El_Subtype);
+                  if not Check_Matching_Subtype (Sub_Aggr, El_Subtype) then
+                     Ok := False;
+                  end if;
                end if;
             end if;
          end if;
          Assoc := Get_Chain (Assoc);
       end loop;
+      return Ok;
    end Sem_Array_Aggregate_Check_Element_Subtype;
 
    --  Analyze an array aggregate AGGR of *base type* A_TYPE.
@@ -4255,8 +4264,11 @@ package body Vhdl.Sem_Expr is
             A_Subtype := Create_Array_Subtype (Base_Type, Get_Location (Aggr));
             Set_Element_Subtype (A_Subtype, El_Subtype);
             if El_Subtype /= El_Type then
-               Sem_Array_Aggregate_Check_Element_Subtype
-                 (El_Subtype, Aggr, 1, Nbr_Dim);
+               if not Sem_Array_Aggregate_Check_Element_Subtype
+                 (El_Subtype, Aggr, 1, Nbr_Dim)
+               then
+                  Infos (Nbr_Dim).Has_Bound_Error := True;
+               end if;
             end if;
             Type_Staticness := Min (Type_Staticness,
                                     Get_Type_Staticness (El_Subtype));
@@ -4323,8 +4335,11 @@ package body Vhdl.Sem_Expr is
          then
             A_Subtype := Create_Array_Subtype (Base_Type, Get_Location (Aggr));
             Set_Element_Subtype (A_Subtype, El_Subtype);
-            Sem_Array_Aggregate_Check_Element_Subtype
-              (El_Subtype, Aggr, 1, Nbr_Dim);
+            if not Sem_Array_Aggregate_Check_Element_Subtype
+              (El_Subtype, Aggr, 1, Nbr_Dim)
+            then
+               Infos (Nbr_Dim).Has_Bound_Error := True;
+            end if;
             Type_Staticness := Get_Type_Staticness (El_Subtype);
             if Get_Index_Constraint_Flag (Aggr_Type) then
                declare
