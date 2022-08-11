@@ -356,6 +356,8 @@ package body Vhdl.Sem_Stmts is
          when Iir_Kind_Signal_Declaration =>
             Sem_Add_Driver (Target_Object, Stmt);
             Set_Use_Flag (Target_Prefix, True);
+         when Iir_Kind_External_Signal_Name =>
+            Sem_Add_Driver (Target_Object, Stmt);
          when Iir_Kind_Guard_Signal_Declaration =>
             Error_Msg_Sem (+Stmt, "implicit GUARD signal cannot be assigned");
             return;
@@ -379,6 +381,8 @@ package body Vhdl.Sem_Stmts is
       if Targ_Obj_Kind = Iir_Kind_Interface_Signal_Declaration
         and then Is_Parameter (Target_Prefix)
       then
+         Guarded_Target := Unknown;
+      elsif Targ_Obj_Kind = Iir_Kind_External_Signal_Name then
          Guarded_Target := Unknown;
       else
          if Get_Guarded_Signal_Flag (Target_Prefix) then
