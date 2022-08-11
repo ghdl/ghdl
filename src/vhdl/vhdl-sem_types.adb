@@ -521,7 +521,8 @@ package body Vhdl.Sem_Types is
    procedure Check_No_File_Type (El_Type : Iir; Loc : Iir) is
    begin
       case Get_Kind (El_Type) is
-         when Iir_Kind_File_Type_Definition =>
+         when Iir_Kind_File_Type_Definition
+           | Iir_Kind_File_Subtype_Definition =>
             Error_Msg_Sem
               (+Loc, "file type element not allowed in a composite type");
          when Iir_Kind_Protected_Type_Declaration =>
@@ -1550,6 +1551,10 @@ package body Vhdl.Sem_Types is
             Set_Resolved_Flag (Res, Get_Resolved_Flag (Def));
             Set_Constraint_State (Res, Get_Constraint_State (Def));
             Copy_Record_Elements_Declaration_List (Res, Def);
+
+         when Iir_Kind_File_Type_Definition =>
+            Res := Create_Iir (Iir_Kind_File_Subtype_Definition);
+            Set_Text_File_Flag (Res, Get_Text_File_Flag (Def));
 
          when others =>
             --  FIXME: todo (protected type ?)

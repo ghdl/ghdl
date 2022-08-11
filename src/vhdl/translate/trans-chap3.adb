@@ -2541,6 +2541,11 @@ package body Trans.Chap3 is
                Set_Info (Def, Get_Info (Get_Parent_Type (Def)));
             end;
 
+         when Iir_Kind_File_Subtype_Definition =>
+            --  Same as parent.
+            Free_Info (Def);
+            Set_Info (Def, Get_Info (Get_Parent_Type (Def)));
+
          when others =>
             Error_Kind ("translate_subtype_definition", Def);
       end case;
@@ -2792,7 +2797,8 @@ package body Trans.Chap3 is
                Elab_Composite_Subtype_Layout (Def);
             end if;
 
-         when Iir_Kind_Access_Subtype_Definition =>
+         when Iir_Kind_Access_Subtype_Definition
+           | Iir_Kind_File_Subtype_Definition =>
             null;
 
          when others =>

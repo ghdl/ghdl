@@ -1838,7 +1838,8 @@ package body Trans.Rtis is
             Generate_Fileacc_Type_Definition (Atype);
          when Iir_Kind_Record_Subtype_Definition =>
             Generate_Composite_Subtype_Definition (Atype);
-         when Iir_Kind_Access_Subtype_Definition =>
+         when Iir_Kind_Access_Subtype_Definition
+           | Iir_Kind_File_Subtype_Definition =>
             --  FIXME: No separate infos (yet).
             Info.Type_Rti := Get_Info (Get_Base_Type (Atype)).Type_Rti;
          when Iir_Kind_Record_Type_Definition =>

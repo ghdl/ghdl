@@ -318,6 +318,8 @@ package body Vhdl.Errors is
             return Disp_Type (Node, "physical subtype");
          when Iir_Kind_File_Type_Definition =>
             return Disp_Type (Node, "file type");
+         when Iir_Kind_File_Subtype_Definition =>
+            return Disp_Type (Node, "file subtype");
          when Iir_Kind_Access_Type_Definition =>
             return Disp_Type (Node, "access type");
          when Iir_Kind_Access_Subtype_Definition =>

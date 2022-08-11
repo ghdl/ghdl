@@ -1039,6 +1039,7 @@ package body Vhdl.Nodes is
            | Iir_Kind_Protected_Type_Declaration
            | Iir_Kind_Record_Type_Definition
            | Iir_Kind_Access_Subtype_Definition
+           | Iir_Kind_File_Subtype_Definition
            | Iir_Kind_Physical_Subtype_Definition
            | Iir_Kind_Integer_Subtype_Definition
            | Iir_Kind_Enumeration_Subtype_Definition

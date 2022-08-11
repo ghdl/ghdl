@@ -2926,6 +2926,24 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Signal_Type_Flag (Flag2)
 
+   -- Iir_Kind_File_Subtype_Definition (Short)
+   --
+   --   Get/Set_Subtype_Type_Mark (Field2)
+   --
+   --   Get/Set_Type_Declarator (Field3)
+   --
+   --   Get/Set_Parent_Type (Field4)
+   --
+   --   Get/Set_Resolved_Flag (Flag1)
+   --
+   --   Get/Set_Signal_Type_Flag (Flag2)
+   --
+   --  True if this is the std.textio.text file type, which may require special
+   --  handling.
+   --   Get/Set_Text_File_Flag (Flag4)
+   --
+   --   Get/Set_Type_Staticness (State1)
+
    -- Iir_Kind_Array_Element_Resolution (Short)
    --
    --  LRM08 6.3 Subtype declarations
@@ -4966,6 +4984,7 @@ package Vhdl.Nodes is
       Iir_Kind_Array_Subtype_Definition,         -- composite, array, st
       Iir_Kind_Record_Subtype_Definition,        -- composite, st
       Iir_Kind_Access_Subtype_Definition,        -- st
+      Iir_Kind_File_Subtype_Definition,
       Iir_Kind_Physical_Subtype_Definition,      -- scalar, st, rng
       Iir_Kind_Floating_Subtype_Definition,      -- scalar, st, rng
       Iir_Kind_Integer_Subtype_Definition,       -- scalar, disc, st, rng
@@ -6611,6 +6630,7 @@ package Vhdl.Nodes is
    --Iir_Kind_Array_Subtype_Definition
    --Iir_Kind_Record_Subtype_Definition
    --Iir_Kind_Access_Subtype_Definition
+   --Iir_Kind_File_Subtype_Definition
    --Iir_Kind_Physical_Subtype_Definition
    --Iir_Kind_Floating_Subtype_Definition
    --Iir_Kind_Integer_Subtype_Definition
@@ -6624,6 +6644,7 @@ package Vhdl.Nodes is
      Iir_Kind_Array_Subtype_Definition ..
    --Iir_Kind_Record_Subtype_Definition
    --Iir_Kind_Access_Subtype_Definition
+   --Iir_Kind_File_Subtype_Definition
    --Iir_Kind_Physical_Subtype_Definition
    --Iir_Kind_Floating_Subtype_Definition
    --Iir_Kind_Integer_Subtype_Definition

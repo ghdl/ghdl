@@ -4302,7 +4302,8 @@ package body Vhdl.Evaluation is
             --  FIXME: do it.
             return True;
 
-         when Iir_Kind_File_Type_Definition =>
+         when Iir_Kind_File_Type_Definition
+           | Iir_Kind_File_Subtype_Definition =>
             return True;
 
          when Iir_Kind_Integer_Type_Definition

@@ -1039,6 +1039,7 @@ package body Vhdl.Utils is
                | Iir_Kind_Error =>
                return Res;
             when Iir_Kind_Access_Subtype_Definition
+               | Iir_Kind_File_Subtype_Definition
                | Iir_Kind_Integer_Subtype_Definition
                | Iir_Kind_Floating_Subtype_Definition
                | Iir_Kind_Enumeration_Subtype_Definition
@@ -1342,6 +1343,7 @@ package body Vhdl.Utils is
             return True;
          when Iir_Kind_Incomplete_Type_Definition
            | Iir_Kind_File_Type_Definition
+           | Iir_Kind_File_Subtype_Definition
            | Iir_Kind_Interface_Type_Definition =>
             Error_Kind ("are_bounds_locally_static", Def);
       end case;

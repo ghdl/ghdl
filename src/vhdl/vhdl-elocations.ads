@@ -357,6 +357,8 @@ package Vhdl.Elocations is
 
    -- Iir_Kind_File_Type_Definition (None)
 
+   -- Iir_Kind_File_Subtype_Definition (None)
+
    -- Iir_Kind_Incomplete_Type_Definition (None)
 
    -- Iir_Kind_Interface_Type_Definition (None)

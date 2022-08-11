@@ -255,6 +255,7 @@ package body Vhdl.Elocations is
            | Iir_Kind_Array_Subtype_Definition
            | Iir_Kind_Record_Subtype_Definition
            | Iir_Kind_Access_Subtype_Definition
+           | Iir_Kind_File_Subtype_Definition
            | Iir_Kind_Physical_Subtype_Definition
            | Iir_Kind_Floating_Subtype_Definition
            | Iir_Kind_Integer_Subtype_Definition

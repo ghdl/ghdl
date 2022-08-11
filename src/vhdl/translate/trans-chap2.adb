@@ -373,6 +373,8 @@ package body Trans.Chap2 is
                      null;
                   when Iir_Kind_File_Type_Definition =>
                      return True;
+                  when Iir_Kind_File_Subtype_Definition =>
+                     null;
                   when Iir_Kind_Protected_Type_Declaration =>
                      --  We suppose there is at least one method.
                      return True;
