@@ -752,8 +752,10 @@ package body Trans.Chap3 is
                      --  Fully unconstrained, so there is no layout variable
                      --  for it.
                      null;
-                  elsif Get_Array_Element_Constraint (Def) = Null_Iir then
-                     --  No new constraints.
+                  elsif El_Tinfo.S.Subtype_Owner /= Tinfo then
+                     --  The element is not owned by this subtype, so it has
+                     --  its own layout variable that must have been set.
+                     --  Just copy the layout.
                      Gen_Memcpy
                        (M2Addr (Array_Bounds_To_Element_Layout (Targ, Def)),
                         M2Addr (Get_Composite_Type_Layout (El_Tinfo)),
