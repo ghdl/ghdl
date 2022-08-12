@@ -19,6 +19,9 @@ elab_simulate tb3
 analyze repro4.vhdl
 elab_simulate repro4
 
+analyze mempkgreproducer4.vhdl
+elab_simulate mempkgreproducer4
+
 if false; then
     export GHDL_STD_FLAGS="--std=08 -frelaxed --work=osvvm -Wno-hide"
 
