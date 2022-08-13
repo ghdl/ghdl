@@ -877,6 +877,9 @@ package body Netlists.Memories is
       return Get_Param_Uns32 (Val, 0) = Get_Param_Uns32 (Midx, 1);
    end Is_Reverse_Range;
 
+   --  Direction TO in address port generates a sub (as vectors are normalized
+   --  on the DOWNTO direction).  Simply remap the memory by removing all the
+   --  subs.
    procedure Maybe_Remap_Address
      (Ctxt : Context_Acc; Sig : Instance; Nbr_Ports : Nat32)
    is
@@ -926,7 +929,7 @@ package body Netlists.Memories is
                   when Id_Memidx =>
                      null;
                   when Id_Addidx =>
-                     M := Get_Net_Parent (Get_Output (M, 0));
+                     M := Get_Input_Instance (M, 0);
                      pragma Assert (Get_Id (M) = Id_Memidx);
                   when others =>
                      raise Internal_Error;
@@ -961,9 +964,9 @@ package body Netlists.Memories is
                      Ports (I) := No_Instance;
                      Done := True;
                   when Id_Addidx =>
-                     M := Get_Net_Parent (Get_Output (M, 0));
+                     Ports (I) := Get_Input_Instance (M, 1);
+                     M := Get_Input_Instance (M, 0);
                      pragma Assert (Get_Id (M) = Id_Memidx);
-                     Ports (I) := Get_Net_Parent (Get_Output (M, 1));
                   when others =>
                      raise Internal_Error;
                end case;
