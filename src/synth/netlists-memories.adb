@@ -1557,25 +1557,6 @@ package body Netlists.Memories is
       end loop;
    end Reduce_Extract_Muxes;
 
-   --  Extract the step (equivalent to data width) of a dyn_insert/dyn_extract
-   --  address.  This is either a memidx or an addidx gate.
-   function Extract_Memidx_Step (Memidx : Instance) return Width
-   is
-      Inst : Instance;
-   begin
-      Inst := Memidx;
-      loop
-         case Get_Id (Inst) is
-            when Id_Addidx =>
-               Inst := Get_Input_Instance (Inst, 1);
-            when Id_Memidx =>
-               return Get_Param_Uns32 (Inst, 0);
-            when others =>
-               raise Internal_Error;
-         end case;
-      end loop;
-   end Extract_Memidx_Step;
-
    type Off_Array is array (Int32 range <>) of Uns32;
    type Off_Array_Acc is access Off_Array;
 
@@ -1747,23 +1728,75 @@ package body Netlists.Memories is
       end case;
    end Extract_Sub_Constant;
 
+   --  Physical dimension of the memory.
+   type Mem_Dim_Type is record
+      Data_Wd : Width;
+      Depth : Uns32;
+      --  Number of dimensions.
+      Dim : Natural;
+   end record;
+
+   --  Extract the dim (equivalent to data width) of a dyn_insert/dyn_extract
+   --  address.  This is either a memidx or an addidx gate.
+   function Extract_Memidx_Dim (Memidx : Instance) return Mem_Dim_Type
+   is
+      Res : Mem_Dim_Type;
+      Inst : Instance;
+      Idx : Instance;
+   begin
+      Inst := Memidx;
+      Res := (Data_Wd => 0, Depth => 1, Dim => 0);
+      loop
+         case Get_Id (Inst) is
+            when Id_Addidx =>
+               --  Handle the memidx, ...
+               Idx := Get_Input_Instance (Inst, 0);
+               --  ..  and continue with the chain.
+               Inst := Get_Input_Instance (Inst, 1);
+            when Id_Memidx =>
+               --  Just handle the memidx.
+               Idx := Inst;
+               Inst := No_Instance;
+            when others =>
+               raise Internal_Error;
+         end case;
+         Res.Dim := Res.Dim + 1;
+         Res.Data_Wd := Get_Param_Uns32 (Idx, 0);
+         Res.Depth := Res.Depth * (Get_Param_Uns32 (Idx, 1) + 1);
+         if Inst = No_Instance then
+            return Res;
+         end if;
+      end loop;
+   end Extract_Memidx_Dim;
+
    --  Subroutine of Convert_To_Memory.
    --
    --  Compute the number of ports (dyn_extract and dyn_insert) and the width
    --  of the memory.  Just walk all the gates.
-   procedure Compute_Ports_And_Width
-     (Sig : Instance; Nbr_Ports : out Int32; Wd : out Width)
+   procedure Compute_Ports_And_Dim
+     (Sig : Instance; Nbr_Ports : out Int32; Dim : out Mem_Dim_Type)
    is
-      procedure Add_Port_And_Width (Memidx : Instance) is
+      procedure Add_Port_And_Width (Memidx : Instance)
+      is
+         T : Mem_Dim_Type;
       begin
          Nbr_Ports := Nbr_Ports + 1;
-         if Wd = 0 then
-            Wd := Extract_Memidx_Step (Memidx);
-         elsif Wd /= Extract_Memidx_Step (Memidx) then
-            Info_Msg_Synth (+Sig, "memory %n uses different widths",
+         T := Extract_Memidx_Dim (Memidx);
+         if Nbr_Ports = 1 then
+            Dim := T;
+         else
+            --  TODO: handle different width and depth.
+            if T.Data_Wd /= Dim.Data_Wd then
+               Info_Msg_Synth (+Sig, "memory %n uses different widths",
                             (1 => +Sig));
-            Nbr_Ports := 0;
-            return;
+               Nbr_Ports := 0;
+               return;
+            elsif T.Depth /= Dim.Depth then
+               Info_Msg_Synth (+Sig, "memory %n uses different depth",
+                            (1 => +Sig));
+               Nbr_Ports := 0;
+               return;
+            end if;
          end if;
       end Add_Port_And_Width;
 
@@ -1771,7 +1804,7 @@ package body Netlists.Memories is
       Inp2 : Input;
    begin
       Nbr_Ports := 0;
-      Wd := 0;
+      Dim.Dim := 0;
 
       --  Top-level loop, for each parallel path of multiport RAMs.
       Inp2 := Get_First_Sink (Get_Output (Sig, 0));
@@ -1837,7 +1870,7 @@ package body Netlists.Memories is
          end case;
          Inp2 := Get_Next_Sink (Inp2);
       end loop;
-   end Compute_Ports_And_Width;
+   end Compute_Ports_And_Dim;
 
    --  Subroutine of Convert_To_Memory.
    --
@@ -2166,10 +2199,13 @@ package body Netlists.Memories is
 
       Sig_Name : constant Sname := Get_Instance_Name (Sig);
 
+      Dim : Mem_Dim_Type;
+
       --  Width of the RAM, computed from the step of memidx.
+      --  Width is the length of the data bus.
       Mem_W : Width;
 
-      --  Number of addresses of the memory.
+      --  Number of elements of the memory.
       --  Sz = W * Depth.
       Mem_Depth : Uns32;
 
@@ -2193,10 +2229,11 @@ package body Netlists.Memories is
       Nbr_Ports := 0;
       Mem_W := 0;
       Inst := Sig;
-      Compute_Ports_And_Width (Sig, Nbr_Ports, Mem_W);
+      Compute_Ports_And_Dim (Sig, Nbr_Ports, Dim);
       if Nbr_Ports = 0 then
          return;
       end if;
+      Mem_W := Dim.Data_Wd;
 
       if Mem_W = 0 then
          --  No ports ?
@@ -2216,6 +2253,10 @@ package body Netlists.Memories is
       end if;
 
       --  2. Walk to extract offsets/width
+      --  NOTE: ideally, there are two kinds of offsets:
+      --   * offsets within the width: when the data is a struct
+      --   * offsets larger than the size: multiple memories, which may have
+      --     different sizes.
       Offs := new Off_Array (1 .. 2 * Nbr_Ports);
       Extract_Ports_Offsets (Sig, Offs, Nbr_Offs);
 
@@ -2370,6 +2411,7 @@ package body Netlists.Memories is
       end case;
    end Is_Const_Input;
 
+   --  The main entry point.
    procedure Extract_Memories (Ctxt : Context_Acc; M : Module)
    is
       Dyns : Instance_Tables.Instance;
@@ -2433,6 +2475,7 @@ package body Netlists.Memories is
       --  Unmark memory gates.
       Unmark_Table (Mems);
 
+      --  Convert to RAM or ROM.
       for I in Instance_Tables.First .. Instance_Tables.Last (Mems) loop
          --  INST is the memorizing instance, ie isignal/signal.
          Inst := Mems.Table (I);
