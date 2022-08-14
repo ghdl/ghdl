@@ -412,12 +412,11 @@ package body Synth.Vhdl_Context is
                if Val.Val.A_Obj.Kind = Value_Wire then
                   Res := Get_Current_Value
                     (Ctxt, Get_Value_Wire (Val.Val.A_Obj));
-                  return Build2_Extract
-                    (Ctxt, Res, Val.Val.A_Off.Net_Off, Val.Typ.W);
                else
-                  pragma Assert (Val.Val.A_Off.Net_Off = 0);
-                  return Get_Net (Ctxt, (Val.Typ, Val.Val.A_Obj));
+                  Res := Get_Net (Ctxt, (Val.Typ, Val.Val.A_Obj));
                end if;
+               return Build2_Extract
+                 (Ctxt, Res, Val.Val.A_Off.Net_Off, Val.Typ.W);
             end;
          when Value_Const =>
             declare
