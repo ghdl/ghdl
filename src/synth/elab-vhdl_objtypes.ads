@@ -90,8 +90,12 @@ package Elab.Vhdl_Objtypes is
 
    subtype Type_Nets is Type_Kind range Type_Bit .. Type_Logic;
    subtype Type_All_Discrete is Type_Kind range Type_Bit .. Type_Discrete;
-   subtype Type_Records is
-     Type_Kind range Type_Unbounded_Record .. Type_Record;
+   subtype Type_Records is Type_Kind range
+     Type_Unbounded_Record .. Type_Record;
+   subtype Type_Arrays is Type_Kind range
+     Type_Array .. Type_Unbounded_Array;
+   subtype Type_Vectors is Type_Kind range
+     Type_Vector .. Type_Unbounded_Vector;
 
    type Type_Type (Kind : Type_Kind);
    type Type_Acc is access Type_Type;
@@ -167,6 +171,7 @@ package Elab.Vhdl_Objtypes is
             Uarr_Idx : Type_Acc;
          when Type_Record
             | Type_Unbounded_Record =>
+            --  The first elements is in the LSBs of the net.
             Rec : Rec_El_Array_Acc;
          when Type_Access =>
             Acc_Acc : Type_Acc;

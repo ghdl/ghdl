@@ -274,6 +274,10 @@ package body Synth.Vhdl_Stmts is
       Res : Type_Acc;
    begin
       Base_Typ := Get_Subtype_Object (Syn_Inst, Base_Type);
+      if Base_Typ.Kind = Type_Record then
+         return Base_Typ;
+      end if;
+
       --  It's a basetype, so not bounded.
       pragma Assert (Base_Typ.Kind = Type_Unbounded_Vector);
 
@@ -383,11 +387,11 @@ package body Synth.Vhdl_Stmts is
 
    --  Extract a part of VAL from a target aggregate at offset OFF (offset
    --  in the array).
-   function Aggregate_Extract (Ctxt : Context_Acc;
-                               Val : Valtyp;
-                               Off : Uns32;
-                               Typ : Type_Acc;
-                               Loc : Node) return Valtyp
+   function Aggregate_Array_Extract (Ctxt : Context_Acc;
+                                     Val : Valtyp;
+                                     Off : Uns32;
+                                     Typ : Type_Acc;
+                                     Loc : Node) return Valtyp
    is
       El_Typ : constant Type_Acc := Get_Array_Element (Val.Typ);
    begin
@@ -417,7 +421,40 @@ package body Synth.Vhdl_Stmts is
          when others =>
             raise Internal_Error;
       end case;
-   end Aggregate_Extract;
+   end Aggregate_Array_Extract;
+
+   function Aggregate_Record_Extract (Ctxt : Context_Acc;
+                                      Val : Valtyp;
+                                      El_Idx : Iir_Index32;
+                                      Typ : Type_Acc;
+                                      Loc : Node) return Valtyp
+   is
+      El_Typ : Rec_El_Type renames Val.Typ.Rec.E (El_Idx);
+   begin
+      case Val.Val.Kind is
+         when Value_Net
+           | Value_Wire =>
+            declare
+               N : Net;
+            begin
+               N := Build2_Extract (Ctxt, Get_Net (Ctxt, Val),
+                                    El_Typ.Offs.Net_Off, El_Typ.Typ.W);
+               Set_Location (N, Loc);
+               return Create_Value_Net (N, Typ);
+            end;
+         when Value_Memory =>
+            declare
+               Res : Valtyp;
+            begin
+               Res := Create_Value_Memory (Typ);
+               Copy_Memory (Res.Val.Mem,
+                            Val.Val.Mem + El_Typ.Offs.Mem_Off, El_Typ.Typ.Sz);
+               return Res;
+            end;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Aggregate_Record_Extract;
 
    procedure Assign_Aggregate (Inst : Synth_Instance_Acc;
                                Target : Node;
@@ -426,33 +463,69 @@ package body Synth.Vhdl_Stmts is
                                Loc : Node)
    is
       Ctxt : constant Context_Acc := Get_Build (Inst);
-      Targ_Bnd : constant Bound_Type := Get_Array_Bound (Target_Typ);
       Choice : Node;
-      Assoc : Node;
-      Pos : Uns32;
+      Assoc_Expr : Node;
       Targ_Info : Target_Info;
    begin
       Choice := Get_Association_Choices_Chain (Target);
-      Pos := Targ_Bnd.Len;
-      while Is_Valid (Choice) loop
-         Assoc := Get_Associated_Expr (Choice);
-         case Get_Kind (Choice) is
-            when Iir_Kind_Choice_By_None =>
-               Targ_Info := Synth_Target (Inst, Assoc);
-               if Get_Element_Type_Flag (Choice) then
-                  Pos := Pos - 1;
-               else
-                  Pos := Pos - Get_Array_Bound (Targ_Info.Targ_Type).Len;
-               end if;
-               Assign (Inst, Targ_Info,
-                       Aggregate_Extract (Ctxt, Val, Pos,
-                                          Targ_Info.Targ_Type, Assoc),
-                       Loc);
-            when others =>
-               Error_Kind ("assign_aggregate", Choice);
-         end case;
-         Choice := Get_Chain (Choice);
-      end loop;
+
+      case Target_Typ.Kind is
+         when Type_Vectors
+           | Type_Arrays =>
+            declare
+               Targ_Bnd : Bound_Type;
+               Pos : Uns32;
+               El_Len : Uns32;
+            begin
+               Targ_Bnd := Get_Array_Bound (Target_Typ);
+               Pos := Targ_Bnd.Len;
+               while Is_Valid (Choice) loop
+                  Assoc_Expr := Get_Associated_Expr (Choice);
+                  Targ_Info := Synth_Target (Inst, Assoc_Expr);
+                  case Get_Kind (Choice) is
+                     when Iir_Kind_Choice_By_None =>
+                        if Get_Element_Type_Flag (Choice) then
+                           El_Len := 1;
+                        else
+                           El_Len := Get_Array_Bound (Targ_Info.Targ_Type).Len;
+                        end if;
+                        Pos := Pos - El_Len;
+                        Assign (Inst, Targ_Info,
+                                Aggregate_Array_Extract (Ctxt, Val, Pos,
+                                                         Targ_Info.Targ_Type,
+                                                         Assoc_Expr),
+                                Loc);
+                     when others =>
+                        Error_Kind ("assign_aggregate(arr)", Choice);
+                  end case;
+                  Choice := Get_Chain (Choice);
+               end loop;
+            end;
+         when Type_Records =>
+            declare
+               El_Idx : Iir_Index32;
+            begin
+               El_Idx := Target_Typ.Rec.E'First;
+               while Is_Valid (Choice) loop
+                  Assoc_Expr := Get_Associated_Expr (Choice);
+                  Targ_Info := Synth_Target (Inst, Assoc_Expr);
+                  case Get_Kind (Choice) is
+                     when Iir_Kind_Choice_By_None =>
+                        Assign (Inst, Targ_Info,
+                                Aggregate_Record_Extract (Ctxt, Val, El_Idx,
+                                                          Targ_Info.Targ_Type,
+                                                          Assoc_Expr),
+                                Loc);
+                        El_Idx := El_Idx + 1;
+                     when others =>
+                        Error_Kind ("assign_aggregate(rec)", Choice);
+                  end case;
+                  Choice := Get_Chain (Choice);
+               end loop;
+            end;
+         when others =>
+            raise Internal_Error;
+      end case;
    end Assign_Aggregate;
 
    procedure Synth_Assignment_Aggregate is
