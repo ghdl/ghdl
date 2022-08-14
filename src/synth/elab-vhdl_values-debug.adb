@@ -316,8 +316,10 @@ package body Elab.Vhdl_Values.Debug is
          when Value_Alias =>
             Put ("an alias: ");
             Debug_Typ1 (V.Typ);
+            Put (" at offs ");
+            Put_Uns32 (V.Val.A_Off.Net_Off);
             Put (" of ");
-            Debug_Valtyp ((V.Typ, V.Val.A_Obj));
+            Debug_Valtyp ((V.Val.A_Typ, V.Val.A_Obj));
          when Value_Dyn_Alias =>
             Put ("dyn alias: ");
             Debug_Typ1 (V.Typ);
