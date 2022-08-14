@@ -4,7 +4,10 @@
 
 GHDL_STD_FLAGS=--std=08
 
-for t in ent2 ent3 ent5; do
+# Not yet handled.
+synth_only ent1
+
+for t in ent2 ent3 ent5 ent6; do
     synth_tb $t
 done
 
