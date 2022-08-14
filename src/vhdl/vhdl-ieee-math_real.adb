@@ -42,6 +42,8 @@ package body Vhdl.Ieee.Math_Real is
                case Get_Identifier (Decl) is
                   when Name_Sign =>
                      Def := Iir_Predefined_Ieee_Math_Real_Sign;
+                  when Name_Sqrt =>
+                     Def := Iir_Predefined_Ieee_Math_Real_Sqrt;
                   when Name_Mod =>
                      Def := Iir_Predefined_Ieee_Math_Real_Mod;
                   when Name_Ceil =>
@@ -52,6 +54,8 @@ package body Vhdl.Ieee.Math_Real is
                      Def := Iir_Predefined_Ieee_Math_Real_Round;
                   when Name_Log2 =>
                      Def := Iir_Predefined_Ieee_Math_Real_Log2;
+                  when Name_Log10 =>
+                     Def := Iir_Predefined_Ieee_Math_Real_Log10;
                   when Name_Sin =>
                      Def := Iir_Predefined_Ieee_Math_Real_Sin;
                   when Name_Cos =>

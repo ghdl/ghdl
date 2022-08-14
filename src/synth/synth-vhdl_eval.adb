@@ -2421,12 +2421,26 @@ package body Synth.Vhdl_Eval is
                end if;
                return Create_Memory_Fp64 (Res, Res_Typ);
             end;
+         when Iir_Predefined_Ieee_Math_Real_Sqrt =>
+            declare
+               function Sqrt (Arg : Fp64) return Fp64;
+               pragma Import (C, Sqrt);
+            begin
+               return Create_Memory_Fp64 (Sqrt (Read_Fp64 (Param1)), Res_Typ);
+            end;
          when Iir_Predefined_Ieee_Math_Real_Log2 =>
             declare
                function Log2 (Arg : Fp64) return Fp64;
                pragma Import (C, Log2);
             begin
                return Create_Memory_Fp64 (Log2 (Read_Fp64 (Param1)), Res_Typ);
+            end;
+         when Iir_Predefined_Ieee_Math_Real_Log10 =>
+            declare
+               function Log10 (Arg : Fp64) return Fp64;
+               pragma Import (C, Log10);
+            begin
+               return Create_Memory_Fp64 (Log10 (Read_Fp64 (Param1)), Res_Typ);
             end;
          when Iir_Predefined_Ieee_Math_Real_Ceil =>
             declare
