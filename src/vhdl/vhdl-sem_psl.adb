@@ -300,7 +300,8 @@ package body Vhdl.Sem_Psl is
             when Iir_Kind_Overload_List =>
                --  FIXME: todo.
                raise Internal_Error;
-            when Iir_Kind_Psl_Declaration =>
+            when Iir_Kind_Psl_Declaration
+              | Iir_Kind_Psl_Boolean_Parameter =>
                Decl := Get_Psl_Declaration (Name);
                case Get_Kind (Decl) is
                   when N_Sequence_Declaration =>
@@ -704,7 +705,12 @@ package body Vhdl.Sem_Psl is
       --  Make formal parameters visible.
       Formal := Get_Parameter_List (Decl);
       while Formal /= Null_PSL_Node loop
-         El := Create_Iir (Iir_Kind_Psl_Declaration);
+         if Get_Kind (Formal) = N_Boolean_Parameter then
+            El := Create_Iir (Iir_Kind_Psl_Boolean_Parameter);
+            Set_Type (El, Std_Package.Boolean_Type_Definition);
+         else
+            El := Create_Iir (Iir_Kind_Psl_Declaration);
+         end if;
          Set_Location (El, Get_Location (Formal));
          Set_Identifier (El, Get_Identifier (Formal));
          Set_Psl_Declaration (El, Formal);

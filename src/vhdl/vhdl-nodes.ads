@@ -2151,7 +2151,7 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Identifier (Field3)
    --
-   --   Get/Set_Psl_Declaration (Field6)
+   --   Get/Set_Psl_Declaration (Field5)
    --
    --   Get/Set_PSL_Clock (Field7)
    --
@@ -2182,13 +2182,32 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Identifier (Field3)
    --
-   --   Get/Set_Psl_Declaration (Field6)
+   --   Get/Set_Psl_Declaration (Field5)
    --
    --  Valid only for property declaration.
    --   Get/Set_PSL_Clock (Field7)
    --
    --  Valid only for property declaration without parameters.
    --   Get/Set_PSL_NFA (Field8)
+   --
+   --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Use_Flag (Flag6)
+
+   -- Iir_Kind_Psl_Boolean_Parameter (Short)
+   --  A psl boolean parameter.
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   --   Get/Set_Identifier (Field3)
+   --
+   --   Get/Set_Psl_Declaration (Field5)
+   --
+   --   Get/Set_Type (Field1)
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Expr_Staticness (State1)
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
@@ -5038,6 +5057,7 @@ package Vhdl.Nodes is
       Iir_Kind_Non_Object_Alias_Declaration,
 
       Iir_Kind_Psl_Declaration,
+      Iir_Kind_Psl_Boolean_Parameter,
       Iir_Kind_Psl_Endpoint_Declaration,
 
       Iir_Kind_Enumeration_Literal,
@@ -9540,7 +9560,7 @@ package Vhdl.Nodes is
    function Get_Psl_Sequence (Decl : Iir) return PSL_Node;
    procedure Set_Psl_Sequence (Decl : Iir; Prop : PSL_Node);
 
-   --  Field: Field6 (uc)
+   --  Field: Field5 (uc)
    function Get_Psl_Declaration (Decl : Iir) return PSL_Node;
    procedure Set_Psl_Declaration (Decl : Iir; Prop : PSL_Node);
 

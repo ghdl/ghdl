@@ -284,6 +284,7 @@ package body Vhdl.Elocations is
            | Iir_Kind_Nature_Element_Declaration
            | Iir_Kind_Non_Object_Alias_Declaration
            | Iir_Kind_Psl_Declaration
+           | Iir_Kind_Psl_Boolean_Parameter
            | Iir_Kind_Psl_Endpoint_Declaration
            | Iir_Kind_Enumeration_Literal
            | Iir_Kind_Function_Instantiation_Declaration

@@ -315,6 +315,8 @@ package Vhdl.Elocations is
 
    -- Iir_Kind_Psl_Declaration (None)
 
+   -- Iir_Kind_Psl_Boolean_Parameter (None)
+
    -- Iir_Kind_Terminal_Declaration (None)
 
    -- Iir_Kind_Free_Quantity_Declaration (None)

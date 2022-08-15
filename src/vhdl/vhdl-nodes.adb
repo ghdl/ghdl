@@ -1067,6 +1067,7 @@ package body Vhdl.Nodes is
            | Iir_Kind_Element_Declaration
            | Iir_Kind_Nature_Element_Declaration
            | Iir_Kind_Non_Object_Alias_Declaration
+           | Iir_Kind_Psl_Boolean_Parameter
            | Iir_Kind_Enumeration_Literal
            | Iir_Kind_Terminal_Declaration
            | Iir_Kind_Object_Alias_Declaration
@@ -7320,7 +7321,7 @@ package body Vhdl.Nodes is
       pragma Assert (Decl /= Null_Iir);
       pragma Assert (Has_Psl_Declaration (Get_Kind (Decl)),
                      "no field Psl_Declaration");
-      return Iir_To_PSL_Node (Get_Field6 (Decl));
+      return Iir_To_PSL_Node (Get_Field5 (Decl));
    end Get_Psl_Declaration;
 
    procedure Set_Psl_Declaration (Decl : Iir; Prop : PSL_Node) is
@@ -7328,7 +7329,7 @@ package body Vhdl.Nodes is
       pragma Assert (Decl /= Null_Iir);
       pragma Assert (Has_Psl_Declaration (Get_Kind (Decl)),
                      "no field Psl_Declaration");
-      Set_Field6 (Decl, PSL_Node_To_Iir (Prop));
+      Set_Field5 (Decl, PSL_Node_To_Iir (Prop));
    end Set_Psl_Declaration;
 
    function Get_Psl_Expression (Decl : Iir) return PSL_Node is

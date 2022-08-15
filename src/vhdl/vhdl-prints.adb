@@ -254,7 +254,8 @@ package body Vhdl.Prints is
            | Iir_Kind_Group_Template_Declaration
            | Iir_Kind_Character_Literal
            | Iir_Kinds_Process_Statement
-           | Iir_Kind_Psl_Endpoint_Declaration =>
+           | Iir_Kind_Psl_Endpoint_Declaration
+           | Iir_Kind_Psl_Boolean_Parameter =>
             Disp_Identifier (Ctxt, Decl);
          when Iir_Kind_Anonymous_Type_Declaration =>
             Start_Lit (Ctxt, Tok_Identifier);
@@ -4966,6 +4967,8 @@ package body Vhdl.Prints is
             Disp_Psl_Assume_Directive (Ctxt, Expr);
          when Iir_Kind_Psl_Restrict_Directive =>
             Disp_Psl_Restrict_Directive (Ctxt, Expr);
+         when Iir_Kind_Psl_Boolean_Parameter =>
+            Disp_Name_Of (Ctxt, Expr);
 
          when Iir_Kind_Error =>
             declare

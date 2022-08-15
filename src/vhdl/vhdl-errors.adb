@@ -629,6 +629,8 @@ package body Vhdl.Errors is
 
          when Iir_Kind_Psl_Declaration =>
             return Disp_Identifier (Node, "PSL declaration");
+         when Iir_Kind_Psl_Boolean_Parameter =>
+            return Disp_Identifier (Node, "PSL boolean parameter");
          when Iir_Kind_Psl_Endpoint_Declaration =>
             return Disp_Identifier (Node, "PSL endpoint declaration");
 

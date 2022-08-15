@@ -1125,7 +1125,7 @@ package body Vhdl.Parse_Psl is
       if Current_Token = Tok_Left_Paren then
          Last_Param := Null_Node;
          loop
-            --  precond: '(' or ';'.
+            --  Skip '(' or ';'.
             Scan;
             case Current_Token is
                when Tok_Psl_Const =>
@@ -1142,7 +1142,7 @@ package body Vhdl.Parse_Psl is
 
             --  Formal parameters.
             loop
-               --  precond: parameter_type or ','
+               --  Skip parameter_type or ','.
                Scan;
                Param := Create_Node_Loc (Pkind);
                if Current_Token /= Tok_Identifier then
@@ -1156,15 +1156,21 @@ package body Vhdl.Parse_Psl is
                   Set_Chain (Last_Param, Param);
                end if;
                Last_Param := Param;
+
+               --  Skip identifier.
                Scan;
+
                exit when Current_Token /= Tok_Comma;
+               Set_Has_Identifier_List (Last_Param, True);
             end loop;
             exit when Current_Token = Tok_Right_Paren;
             if Current_Token /= Tok_Semi_Colon then
-               Error_Msg_Parse ("';' expected between formal parameter");
+               Error_Msg_Parse ("';' expected between formal parameters");
             end if;
 
          end loop;
+
+         --  Skip ')'.
          Scan;
       end if;
 

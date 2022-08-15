@@ -2038,7 +2038,8 @@ package body Vhdl.Sem_Names is
             return Res;
          when Iir_Kind_Psl_Expression =>
             return Res;
-         when Iir_Kind_Psl_Declaration =>
+         when Iir_Kind_Psl_Declaration
+            | Iir_Kind_Psl_Boolean_Parameter =>
             return Name;
          when Iir_Kind_Element_Declaration =>
             --  Certainly an error!
