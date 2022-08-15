@@ -70,6 +70,14 @@ document ploc
 Print the location for iir $.
 end
 
+define ppsltf
+  call psl.dump_tree.disp_tree($arg0, 0, 2)
+end
+
+document ppsltf
+Print the PSL node that is $arg0
+end
+
 set lang ada
 
 # Must be the last command: some distributions use a shared libgnat by default,
