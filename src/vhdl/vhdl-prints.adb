@@ -1998,10 +1998,10 @@ package body Vhdl.Prints is
             Disp_Str (Ctxt, "EOS");
             Close_Lit (Ctxt);
          when N_Not_Bool =>
-            Disp_Token (Ctxt, Tok_Exclam_Mark);
-            Disp_Token (Ctxt, Tok_Left_Paren);
+            Disp_Token (Ctxt, Tok_Not);
+--            Disp_Token (Ctxt, Tok_Left_Paren);
             Print_Expr (Ctxt, Get_Boolean (N), Prio);
-            Disp_Token (Ctxt, Tok_Right_Paren);
+--            Disp_Token (Ctxt, Tok_Right_Paren);
          when N_And_Bool =>
             Disp_Token (Ctxt, Tok_Left_Paren);
             Print_Expr (Ctxt, Get_Left (N), Prio);
@@ -2074,6 +2074,34 @@ package body Vhdl.Prints is
       Disp_Token (Ctxt, Tok_Right_Bracket);
    end Print_Bool_Repeat_Sere;
 
+   procedure Print_PSL_Instance (Ctxt : in out Ctxt_Class; Inst : PSL_Node)
+   is
+      Decl : constant PSL_Node := Get_Declaration (Inst);
+      Assoc : PSL_Node;
+      Actual, Formal : PSL_Node;
+   begin
+      Disp_Ident (Ctxt, Get_Identifier (Decl));
+      Assoc := Get_Association_Chain (Inst);
+      if Assoc = Null_PSL_Node then
+         return;
+      end if;
+      Disp_Token (Ctxt, Tok_Left_Paren);
+      loop
+         Actual := Get_Actual (Assoc);
+         Formal := Get_Formal (Assoc);
+         case Get_Kind (Formal) is
+            when N_Boolean_Parameter =>
+               Print_Expr (Ctxt, Actual);
+            when others =>
+               PSL.Errors.Error_Kind ("print_psl_instance", Formal);
+         end case;
+         Assoc := Get_Chain (Assoc);
+         exit when Assoc = Null_PSL_Node;
+         Disp_Token (Ctxt, Tok_Comma);
+      end loop;
+      Disp_Token (Ctxt, Tok_Right_Paren);
+   end Print_PSL_Instance;
+
    procedure Print_Sequence (Ctxt : in out Ctxt_Class;
                              Seq : PSL_Node;
                              Parent_Prio : Priority := Prio_Lowest)
@@ -2082,6 +2110,11 @@ package body Vhdl.Prints is
       Add_Paren : constant Boolean := Prio < Parent_Prio
         or else Parent_Prio <= Prio_FL_Paren;
    begin
+      if Get_Kind (Seq) = N_Sequence_Instance then
+         Print_PSL_Instance (Ctxt, Seq);
+         return;
+      end if;
+
       if Add_Paren then
          Disp_Token (Ctxt, Tok_Left_Curly);
       end if;
@@ -2114,8 +2147,8 @@ package body Vhdl.Prints is
          when N_Booleans
            | N_Name_Decl =>
             Print_Expr (Ctxt, Seq);
-         when N_Sequence_Instance =>
-            Disp_Ident (Ctxt, Get_Identifier (Get_Declaration (Seq)));
+         when N_Boolean_Parameter =>
+            Disp_Ident (Ctxt, Get_Identifier (Seq));
          when others =>
             PSL.Errors.Error_Kind ("print_sequence", Seq);
       end case;
@@ -2391,6 +2424,40 @@ package body Vhdl.Prints is
       Disp_Token (Ctxt, Tok_Right_Paren);
    end Disp_Psl_Onehot0;
 
+   procedure Disp_Psl_Parameter_List
+     (Ctxt : in out Ctxt_Class; Decl : PSL_Node)
+   is
+      Param : PSL_Node;
+   begin
+      Param := Get_Parameter_List (Decl);
+      if Param = Null_PSL_Node then
+         return;
+      end if;
+      Disp_Token (Ctxt, Tok_Left_Paren);
+      loop
+         case Get_Kind (Param) is
+            when N_Boolean_Parameter =>
+               Disp_Ident (Ctxt, Name_Boolean);
+            when N_Property_Parameter =>
+               Disp_Token (Ctxt, Tok_Property);
+            when N_Sequence_Parameter =>
+               Disp_Token (Ctxt, Tok_Sequence);
+            when others =>
+               PSL.Errors.Error_Kind ("disp_psl_parameter_list", Param);
+         end case;
+         loop
+            Disp_Ident (Ctxt, Get_Identifier (Param));
+            exit when not Get_Has_Identifier_List (Param);
+            Disp_Token (Ctxt, Tok_Comma);
+            Param := Get_Chain (Param);
+         end loop;
+         Param := Get_Chain (Param);
+         exit when Param = Null_PSL_Node;
+         Disp_Token (Ctxt, Tok_Semi_Colon);
+      end loop;
+      Disp_Token (Ctxt, Tok_Right_Paren);
+   end Disp_Psl_Parameter_List;
+
    procedure Disp_Psl_Declaration (Ctxt : in out Ctxt_Class; Stmt : Iir)
    is
       Decl : constant PSL_Node := Get_Psl_Declaration (Stmt);
@@ -2403,18 +2470,21 @@ package body Vhdl.Prints is
          when N_Property_Declaration =>
             Disp_Token (Ctxt, Tok_Property);
             Disp_Ident (Ctxt, Get_Identifier (Decl));
+            Disp_Psl_Parameter_List (Ctxt, Decl);
             Disp_Token (Ctxt, Tok_Is);
             Disp_Psl_Expression (Ctxt, Get_Property (Decl));
             Disp_Token (Ctxt, Tok_Semi_Colon);
          when N_Sequence_Declaration =>
             Disp_Token (Ctxt, Tok_Sequence);
             Disp_Ident (Ctxt, Get_Identifier (Decl));
+            Disp_Psl_Parameter_List (Ctxt, Decl);
             Disp_Token (Ctxt, Tok_Is);
             Print_Sequence (Ctxt, Get_Sequence (Decl));
             Disp_Token (Ctxt, Tok_Semi_Colon);
          when N_Endpoint_Declaration =>
             Disp_Token (Ctxt, Tok_Psl_Endpoint);
             Disp_Ident (Ctxt, Get_Identifier (Decl));
+            Disp_Psl_Parameter_List (Ctxt, Decl);
             Disp_Token (Ctxt, Tok_Is);
             Print_Sequence (Ctxt, Get_Sequence (Decl));
             Disp_Token (Ctxt, Tok_Semi_Colon);

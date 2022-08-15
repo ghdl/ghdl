@@ -717,6 +717,22 @@ package body PSL.Nodes is
       Set_Flag2 (N, B);
    end Set_Inclusive_Flag;
 
+   function Get_Has_Identifier_List (N : Node) return Boolean is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Has_Identifier_List (Get_Kind (N)),
+                     "no field Has_Identifier_List");
+      return Get_Flag1 (N);
+   end Get_Has_Identifier_List;
+
+   procedure Set_Has_Identifier_List (N : Node; B : Boolean) is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Has_Identifier_List (Get_Kind (N)),
+                     "no field Has_Identifier_List");
+      Set_Flag1 (N, B);
+   end Set_Has_Identifier_List;
+
    function Get_Low_Bound (N : Node) return Node is
    begin
       pragma Assert (N /= Null_Node);

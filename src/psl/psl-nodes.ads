@@ -206,6 +206,8 @@ package PSL.Nodes is
    --
    --  --  Current actual parameter.
    --   Get/Set_Actual (Field3)
+   --
+   --   Get/Set_Has_Identifier_List (Flag1)
 
    -- N_Sequence_Instance (Short)
    -- N_Endpoint_Instance (Short)
@@ -563,6 +565,10 @@ package PSL.Nodes is
    --  Field: Flag2
    function Get_Inclusive_Flag (N : Node) return Boolean;
    procedure Set_Inclusive_Flag (N : Node; B : Boolean);
+
+   --  Field: Flag1
+   function Get_Has_Identifier_List (N : Node) return Boolean;
+   procedure Set_Has_Identifier_List (N : Node; B : Boolean);
 
    --  Field: Field1
    function Get_Low_Bound (N : Node) return Node;

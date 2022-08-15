@@ -74,6 +74,7 @@ package body PSL.Prints is
            | N_EOS
            | N_HDL_Expr
            | N_HDL_Bool
+           | N_Boolean_Parameter
            | N_Property_Instance
            | N_Sequence_Instance =>
             return Prio_HDL;

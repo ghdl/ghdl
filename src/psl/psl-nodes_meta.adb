@@ -31,6 +31,7 @@ package body PSL.Nodes_Meta is
       Field_Sequence => Type_Node,
       Field_Strong_Flag => Type_Boolean,
       Field_Inclusive_Flag => Type_Boolean,
+      Field_Has_Identifier_List => Type_Boolean,
       Field_Low_Bound => Type_Node,
       Field_High_Bound => Type_Node,
       Field_Number => Type_Node,
@@ -88,6 +89,8 @@ package body PSL.Nodes_Meta is
             return "strong_flag";
          when Field_Inclusive_Flag =>
             return "inclusive_flag";
+         when Field_Has_Identifier_List =>
+            return "has_identifier_list";
          when Field_Low_Bound =>
             return "low_bound";
          when Field_High_Bound =>
@@ -300,6 +303,8 @@ package body PSL.Nodes_Meta is
             return Attr_None;
          when Field_Inclusive_Flag =>
             return Attr_None;
+         when Field_Has_Identifier_List =>
+            return Attr_None;
          when Field_Low_Bound =>
             return Attr_None;
          when Field_High_Bound =>
@@ -386,18 +391,22 @@ package body PSL.Nodes_Meta is
       Field_Parameter_List,
       --  N_Const_Parameter
       Field_Identifier,
+      Field_Has_Identifier_List,
       Field_Chain,
       Field_Actual,
       --  N_Boolean_Parameter
       Field_Identifier,
+      Field_Has_Identifier_List,
       Field_Chain,
       Field_Actual,
       --  N_Property_Parameter
       Field_Identifier,
+      Field_Has_Identifier_List,
       Field_Chain,
       Field_Actual,
       --  N_Sequence_Parameter
       Field_Identifier,
+      Field_Has_Identifier_List,
       Field_Chain,
       Field_Actual,
       --  N_Sequence_Instance
@@ -602,64 +611,64 @@ package body PSL.Nodes_Meta is
       N_Property_Declaration => 23,
       N_Sequence_Declaration => 27,
       N_Endpoint_Declaration => 31,
-      N_Const_Parameter => 34,
-      N_Boolean_Parameter => 37,
-      N_Property_Parameter => 40,
-      N_Sequence_Parameter => 43,
-      N_Sequence_Instance => 45,
-      N_Endpoint_Instance => 47,
-      N_Property_Instance => 49,
-      N_Actual => 52,
-      N_Clock_Event => 54,
-      N_Always => 55,
-      N_Never => 56,
-      N_Eventually => 57,
-      N_Strong => 58,
-      N_Imp_Seq => 60,
-      N_Overlap_Imp_Seq => 62,
-      N_Log_Imp_Prop => 64,
-      N_Log_Equiv_Prop => 66,
-      N_Next => 69,
-      N_Next_A => 73,
-      N_Next_E => 77,
-      N_Next_Event => 81,
-      N_Next_Event_A => 86,
-      N_Next_Event_E => 91,
-      N_Abort => 93,
-      N_Async_Abort => 95,
-      N_Sync_Abort => 97,
-      N_Until => 101,
-      N_Before => 105,
-      N_Or_Prop => 107,
-      N_And_Prop => 109,
-      N_Paren_Prop => 110,
-      N_Braced_SERE => 111,
-      N_Concat_SERE => 113,
-      N_Fusion_SERE => 115,
-      N_Within_SERE => 117,
-      N_Clocked_SERE => 119,
-      N_Match_And_Seq => 121,
-      N_And_Seq => 123,
-      N_Or_Seq => 125,
-      N_Star_Repeat_Seq => 128,
-      N_Goto_Repeat_Seq => 131,
-      N_Plus_Repeat_Seq => 132,
-      N_Equal_Repeat_Seq => 135,
-      N_Paren_Bool => 139,
-      N_Not_Bool => 143,
-      N_And_Bool => 148,
-      N_Or_Bool => 153,
-      N_Imp_Bool => 158,
-      N_Equiv_Bool => 163,
-      N_HDL_Expr => 165,
-      N_HDL_Bool => 170,
-      N_False => 170,
-      N_True => 170,
-      N_EOS => 173,
-      N_Name => 175,
-      N_Name_Decl => 177,
-      N_Inf => 177,
-      N_Number => 178
+      N_Const_Parameter => 35,
+      N_Boolean_Parameter => 39,
+      N_Property_Parameter => 43,
+      N_Sequence_Parameter => 47,
+      N_Sequence_Instance => 49,
+      N_Endpoint_Instance => 51,
+      N_Property_Instance => 53,
+      N_Actual => 56,
+      N_Clock_Event => 58,
+      N_Always => 59,
+      N_Never => 60,
+      N_Eventually => 61,
+      N_Strong => 62,
+      N_Imp_Seq => 64,
+      N_Overlap_Imp_Seq => 66,
+      N_Log_Imp_Prop => 68,
+      N_Log_Equiv_Prop => 70,
+      N_Next => 73,
+      N_Next_A => 77,
+      N_Next_E => 81,
+      N_Next_Event => 85,
+      N_Next_Event_A => 90,
+      N_Next_Event_E => 95,
+      N_Abort => 97,
+      N_Async_Abort => 99,
+      N_Sync_Abort => 101,
+      N_Until => 105,
+      N_Before => 109,
+      N_Or_Prop => 111,
+      N_And_Prop => 113,
+      N_Paren_Prop => 114,
+      N_Braced_SERE => 115,
+      N_Concat_SERE => 117,
+      N_Fusion_SERE => 119,
+      N_Within_SERE => 121,
+      N_Clocked_SERE => 123,
+      N_Match_And_Seq => 125,
+      N_And_Seq => 127,
+      N_Or_Seq => 129,
+      N_Star_Repeat_Seq => 132,
+      N_Goto_Repeat_Seq => 135,
+      N_Plus_Repeat_Seq => 136,
+      N_Equal_Repeat_Seq => 139,
+      N_Paren_Bool => 143,
+      N_Not_Bool => 147,
+      N_And_Bool => 152,
+      N_Or_Bool => 157,
+      N_Imp_Bool => 162,
+      N_Equiv_Bool => 167,
+      N_HDL_Expr => 169,
+      N_HDL_Bool => 174,
+      N_False => 174,
+      N_True => 174,
+      N_EOS => 177,
+      N_Name => 179,
+      N_Name_Decl => 181,
+      N_Inf => 181,
+      N_Number => 182
      );
 
    function Get_Fields (K : Nkind) return Fields_Array
@@ -685,6 +694,8 @@ package body PSL.Nodes_Meta is
             return Get_Strong_Flag (N);
          when Field_Inclusive_Flag =>
             return Get_Inclusive_Flag (N);
+         when Field_Has_Identifier_List =>
+            return Get_Has_Identifier_List (N);
          when others =>
             raise Internal_Error;
       end case;
@@ -699,6 +710,8 @@ package body PSL.Nodes_Meta is
             Set_Strong_Flag (N, V);
          when Field_Inclusive_Flag =>
             Set_Inclusive_Flag (N, V);
+         when Field_Has_Identifier_List =>
+            Set_Has_Identifier_List (N, V);
          when others =>
             raise Internal_Error;
       end case;
@@ -1182,6 +1195,19 @@ package body PSL.Nodes_Meta is
             return False;
       end case;
    end Has_Inclusive_Flag;
+
+   function Has_Has_Identifier_List (K : Nkind) return Boolean is
+   begin
+      case K is
+         when N_Const_Parameter
+           | N_Boolean_Parameter
+           | N_Property_Parameter
+           | N_Sequence_Parameter =>
+            return True;
+         when others =>
+            return False;
+      end case;
+   end Has_Has_Identifier_List;
 
    function Has_Low_Bound (K : Nkind) return Boolean is
    begin

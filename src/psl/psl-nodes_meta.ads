@@ -48,6 +48,7 @@ package PSL.Nodes_Meta is
       Field_Sequence,
       Field_Strong_Flag,
       Field_Inclusive_Flag,
+      Field_Has_Identifier_List,
       Field_Low_Bound,
       Field_High_Bound,
       Field_Number,
@@ -152,6 +153,7 @@ package PSL.Nodes_Meta is
    function Has_Sequence (K : Nkind) return Boolean;
    function Has_Strong_Flag (K : Nkind) return Boolean;
    function Has_Inclusive_Flag (K : Nkind) return Boolean;
+   function Has_Has_Identifier_List (K : Nkind) return Boolean;
    function Has_Low_Bound (K : Nkind) return Boolean;
    function Has_High_Bound (K : Nkind) return Boolean;
    function Has_Number (K : Nkind) return Boolean;
