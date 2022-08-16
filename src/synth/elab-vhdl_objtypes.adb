@@ -787,13 +787,78 @@ package body Elab.Vhdl_Objtypes is
          return False;
       end if;
 
-      --  FIXME: not correct for records, not correct for floats!
-      for I in 1 .. L.Typ.Sz loop
-         if L.Mem (I - 1) /= R.Mem (I - 1) then
-            return False;
-         end if;
-      end loop;
-      return True;
+      case L.Typ.Kind is
+         when Type_Bit
+           | Type_Logic =>
+            return L.Mem (0) = R.Mem (0);
+         when Type_Discrete =>
+            return Read_Discrete (L.Mem, L.Typ) = Read_Discrete (R.Mem, R.Typ);
+         when Type_Float =>
+            return Read_Fp64 (L.Mem) = Read_Fp64 (R.Mem);
+         when Type_Vector =>
+            pragma Assert (L.Typ.Arr_El.Sz = 1);
+            for I in 1 .. Size_Type (L.Typ.Abound.Len) loop
+               if L.Mem (I - 1) /= R.Mem (I - 1) then
+                  return False;
+               end if;
+            end loop;
+            return True;
+         when Type_Array =>
+            declare
+               Etl, Etr : Type_Acc;
+               Len : Uns32;
+               Off : Size_Type;
+            begin
+               Len := 1;
+               Etl := L.Typ;
+               Etr := R.Typ;
+               loop
+                  if Etl.Abound.Len /= Etr.Abound.Len then
+                     return False;
+                  end if;
+                  Len := Len * Etl.Abound.Len;
+                  exit when Etl.Alast;
+                  Etl := Etl.Arr_El;
+                  Etr := Etr.Arr_El;
+               end loop;
+               Etl := Etl.Arr_El;
+               Etr := Etr.Arr_El;
+               Off := 0;
+               for I in 1 .. Len loop
+                  if not Is_Equal ((Etl, L.Mem + Off),
+                                   (Etr, R.Mem + Off))
+                  then
+                     return False;
+                  end if;
+                  Off := Off + Etl.Sz;
+               end loop;
+               return True;
+            end;
+         when Type_Record =>
+            for I in L.Typ.Rec.E'Range loop
+               declare
+                  El : Rec_El_Type renames L.Typ.Rec.E (I);
+               begin
+                  if not Is_Equal ((El.Typ, L.Mem + El.Offs.Mem_Off),
+                                   (El.Typ, R.Mem + El.Offs.Mem_Off))
+                  then
+                     return False;
+                  end if;
+               end;
+            end loop;
+            return True;
+         when Type_Access =>
+            pragma Assert (L.Typ.Sz = 4);
+            return Read_U32 (L.Mem) = Read_U32 (R.Mem);
+         when Type_Slice =>
+            raise Internal_Error;
+         when Type_Unbounded_Vector
+           | Type_Unbounded_Array
+           | Type_Unbounded_Record
+           | Type_Protected
+           | Type_File =>
+            raise Internal_Error;
+      end case;
    end Is_Equal;
 
    procedure Copy_Memory (Dest : Memory_Ptr; Src : Memory_Ptr; Sz : Size_Type)
