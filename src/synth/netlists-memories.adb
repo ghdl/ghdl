@@ -457,6 +457,7 @@ package body Netlists.Memories is
       end if;
    end Is_Enable_Dff;
 
+   --  INST is a Dyn_Extract.
    --  If INST is followed by a dff or a dff+enable (with mux2), return the
    --  dff in LAST_INST, the clock in CLK and the enable in EN.
    procedure Extract_Extract_Dff (Ctxt : Context_Acc;

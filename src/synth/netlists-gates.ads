@@ -284,16 +284,22 @@ package Netlists.Gates is
    --  Id_Addidx_Cst : constant Module_Id := XX;
 
    --  Represent a memory with a fixed size.
-   --  This is not a regular gate as it has only one output, PORTS.
-   --  The width of the output is the size (in bits) of the memory.
-   --  The PORTS links to the first read or write port.  There must be only
-   --  one connection.  The order is important as it defines the order of
-   --  actions.
-   --  Outputs: PORTS
+   --  This is not really a regular gate, as it must be handled with the
+   --  read and write ports.
+   --  The width of IPORT and OPORT is the size (in bits) of the memory.
+   --  IPORT and OPORT describe how the memory is affect by the ports.  It is
+   --  as if the memory is constantly being modified by the ports, under the
+   --  write enable condition.
+   --  The order of the ports is important as it defines the order of action.
+   --  The first port connected to OPORT is the first port to act.
+   --  Inputs:  IPORT
+   --  Outputs: OPORT
    Id_Memory : constant Module_Id := 92;
 
    --  Same as Id_Memory but with an initial value.
-   --  Input: INIT
+   --  Inputs:  IPORT
+   --           INIT
+   --  Outputs: OPORT
    Id_Memory_Init : constant Module_Id := 93;
 
    --  Asynchronous memory read port.
