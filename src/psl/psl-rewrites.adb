@@ -266,8 +266,7 @@ package body PSL.Rewrites is
             when N_Property_Parameter =>
                Set_Actual (Assoc, Rewrite_Property (Get_Actual (Assoc)));
             when others =>
-               Error_Kind ("rewrite_instance",
-                           Get_Formal (Assoc));
+               Error_Kind ("rewrite_instance", Get_Formal (Assoc));
          end case;
          Assoc := Get_Chain (Assoc);
       end loop;
