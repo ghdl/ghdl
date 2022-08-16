@@ -36,6 +36,14 @@ package body Netlists.Memories is
    --  a little bit cryptic.
    Flag_Memory_Verbose : constant Boolean := False;
 
+   --  TODO:
+   --  * Add an offset to Id_Mem_Wr_Sync to handle partial write,
+   --    and do not create multiple memories in case of partial writes.  This
+   --    will allow a representation closer to the Yosys one.
+   --  * Handle multi-dim memories with some fixed addresses.  Here we need
+   --    to split a memory into multiple ones.
+   --  * Improve detection of synchronous read ports.  See mem03/
+
    --  What is a memory ?
    --
    --  A memory is obviously a memorizing element.  This means there is a
