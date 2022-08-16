@@ -29,14 +29,14 @@ parse_cmdline () {
     --start-at=*) d="$(echo "$opt" | sed -e 's/--start-at=//')"
 		  dirs="$(echo "" "$dirs" | sed -e "s/^.* $d//")"
 		  dirs="$d $dirs" ;;
-    --list-tests) echo "$dirs"; exit 0;;
+    --list-tests) echo $dirs; exit 0;;
     *) echo "Unknown option $opt"
        exit 2
        ;;
     esac
   done
 
-  NPROC=${NPROC:-$(nproc || echo 1)}
+  NPROC=${NPROC:-$(nproc 2> /dev/null || echo 1)}
 }
 
 singlerun() {
