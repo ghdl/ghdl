@@ -1002,7 +1002,7 @@ package body Netlists.Memories is
    --  VAL is the output of the dyn_extract.
    --
    --  Infere a synchronous read if the dyn_extract is connected to a dff.
-   function Create_Read_Port
+   function Create_ROM_Read_Port
      (Ctxt : Context_Acc; Last : Net; Addr : Net; Val : Net; Step : Width)
      return Instance
    is
@@ -1087,10 +1087,10 @@ package body Netlists.Memories is
       Redirect_Inputs (Val, N);
 
       return Res;
-   end Create_Read_Port;
+   end Create_ROM_Read_Port;
 
    --  MEM_INST is the memory instance.
-   procedure Replace_Read_Ports
+   procedure Replace_ROM_Read_Ports
      (Ctxt : Context_Acc; Orig : Instance; Mem_Inst : Instance; Step : Width)
    is
       Orig_Net : constant Net := Get_Output (Orig, 0);
@@ -1129,7 +1129,7 @@ package body Netlists.Memories is
                Convert_Memidx (Ctxt, Orig, Addr, Step);
 
                --  Replace Dyn_Extract with mem_rd.
-               Port_Inst := Create_Read_Port (Ctxt, Last, Addr, Val, Step);
+               Port_Inst := Create_ROM_Read_Port (Ctxt, Last, Addr, Val, Step);
 
                Remove_Instance (Extr_Inst);
 
@@ -1142,7 +1142,7 @@ package body Netlists.Memories is
 
       --  Close the loop.
       Connect (Get_Input (Mem_Inst, 0), Last);
-   end Replace_Read_Ports;
+   end Replace_ROM_Read_Ports;
 
    --  ORIG (the memory) must be Const.
    procedure Replace_ROM_Memory
@@ -1154,7 +1154,7 @@ package body Netlists.Memories is
    begin
       Inst := Build_Memory_Init (Ctxt, Name, Get_Width (Orig_Net), Orig_Net);
 
-      Replace_Read_Ports (Ctxt, Orig, Inst, Step);
+      Replace_ROM_Read_Ports (Ctxt, Orig, Inst, Step);
    end Replace_ROM_Memory;
 
    type Get_Next_Status is
@@ -1957,13 +1957,14 @@ package body Netlists.Memories is
       end loop;
    end Extract_Ports_Offsets;
 
-   procedure Convert_Memory_Read_Port (Ctxt : Context_Acc;
-                                       In_Inst : Instance;
-                                       Mem_Sz : Uns32;
-                                       Mem_W : Width;
-                                       Offs : Off_Array_Acc;
-                                       Tails : Net_Array_Acc;
-                                       Outs : Net_Array_Acc)
+   --  IN_INST is the Dyn_Extract gate.
+   procedure Convert_RAM_Read_Port (Ctxt : Context_Acc;
+                                    In_Inst : Instance;
+                                    Mem_Sz : Uns32;
+                                    Mem_W : Width;
+                                    Offs : Off_Array_Acc;
+                                    Tails : Net_Array_Acc;
+                                    Outs : Net_Array_Acc)
    is
       Off : constant Uns32 := Get_Param_Uns32 (In_Inst, 0);
       Wd : constant Width := Get_Width (Get_Output (In_Inst, 0));
@@ -1977,12 +1978,17 @@ package body Netlists.Memories is
       Clk : Net;
       Last_Inst : Instance;
    begin
+      --  Find the corresponding memory/ies for the dyn_extract.
       Off_Array_To_Idx (Offs.all, Off, Wd, Idx, Len);
+
       Inp2 := Get_Input (In_Inst, 1);
       Addr := Get_Driver (Inp2);
       Disconnect (Inp2);
+
+      --  Build the address net.
       Convert_Memidx (Ctxt, Mem_Sz, Addr, Mem_W);
 
+      --  Optimize the network.
       Maybe_Swap_Concat_Mux_Dff (Ctxt, In_Inst);
       Maybe_Swap_Mux_Concat_Dff (Ctxt, In_Inst);
 
@@ -2007,20 +2013,21 @@ package body Netlists.Memories is
       if Last_Inst /= In_Inst then
          Remove_Instance (Last_Inst);
       end if;
-   end Convert_Memory_Read_Port;
+   end Convert_RAM_Read_Port;
 
    --  Subroutine of Convert_To_Memory.
    --
    --  Convert dyn_insert/dyn_extract to memory write/read ports.
+   --  SIG is the isignal/signal gate.
    --  TAILS is the output of memories (so the next value to be read).
    --  OUTS is a temporary array.
-   procedure Create_Memory_Ports (Ctxt : Context_Acc;
-                                  Sig : Instance;
-                                  Mem_Sz : Uns32;
-                                  Mem_W : Width;
-                                  Offs : Off_Array_Acc;
-                                  Tails : Net_Array_Acc;
-                                  Outs : Net_Array_Acc)
+   procedure Create_RAM_Ports (Ctxt : Context_Acc;
+                               Sig : Instance;
+                               Mem_Sz : Uns32;
+                               Mem_W : Width;
+                               Offs : Off_Array_Acc;
+                               Tails : Net_Array_Acc;
+                               Outs : Net_Array_Acc)
    is
       Inst, Inst2 : Instance;
       Inp, Inp2 : Input;
@@ -2036,7 +2043,7 @@ package body Netlists.Memories is
          Inst2 := Get_Input_Parent (Inp2);
          case Get_Id (Inst2) is
             when Id_Dyn_Extract =>
-               Convert_Memory_Read_Port
+               Convert_RAM_Read_Port
                  (Ctxt, Inst2, Mem_Sz, Mem_W, Offs, Tails, Outs);
                Disconnect (Get_Input (Inst2, 0));
                Remove_Instance (Inst2);
@@ -2123,7 +2130,7 @@ package body Netlists.Memories is
                N_Inp := Get_Next_Sink (Inp);
                case Get_Id (In_Inst) is
                   when Id_Dyn_Extract =>
-                     Convert_Memory_Read_Port
+                     Convert_RAM_Read_Port
                        (Ctxt, In_Inst, Mem_Sz, Mem_W, Offs, Tails, Outs);
                      pragma Assert (Inp = Get_Input (In_Inst, 0));
                      Disconnect (Inp);
@@ -2172,7 +2179,7 @@ package body Netlists.Memories is
          end loop;
          Inp2 := N_Inp2;
       end loop;
-   end Create_Memory_Ports;
+   end Create_RAM_Ports;
 
    --  Return True iff the initial value of SIG is uniform (same value for
    --  all bits).
@@ -2192,6 +2199,7 @@ package body Netlists.Memories is
       end case;
    end Is_Simple_Init;
 
+   --  SIG is the signal/isignal.
    procedure Convert_To_Memory (Ctxt : Context_Acc; Sig : Instance)
    is
       --  Size of RAM (in bits).
@@ -2246,6 +2254,8 @@ package body Netlists.Memories is
         (+Sig, "found RAM %n, width: %v bits, depth: %v",
          (1 => +Sig, 2 => +Mem_W, 3 => +Mem_Depth));
 
+      --  Change the address (convert 'to' direction to 'downto'), to simplify
+      --  the logic.
       if Get_Id (Sig) = Id_Signal
         or else (Get_Id (Sig) = Id_Isignal and then Is_Simple_Init (Sig))
       then
@@ -2306,6 +2316,9 @@ package body Netlists.Memories is
       end if;
 
       --  3. Create array of instances
+      --   HEADS contains the memory instance.
+      --   TAILS contain the last link to the ports chain.
+      --   OUTS is a temporary.
       Heads := new Instance_Array (1 .. Nbr_Offs - 1);
       Tails := new Net_Array (1 .. Nbr_Offs - 1);
       Outs := new Net_Array (1 .. Nbr_Offs - 1);
@@ -2341,7 +2354,7 @@ package body Netlists.Memories is
       end loop;
 
       --  5. For each part of the data, create memory ports
-      Create_Memory_Ports (Ctxt, Sig, Mem_Sz, Mem_W, Offs, Tails, Outs);
+      Create_RAM_Ports (Ctxt, Sig, Mem_Sz, Mem_W, Offs, Tails, Outs);
 
       --  Close loops.
       for I in Heads'Range loop
