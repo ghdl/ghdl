@@ -376,13 +376,13 @@ package body Simul.Vhdl_Debug is
          declare
             C : Connect_Entry renames Connect_Table.Table (Conn);
          begin
-            if C.Formal_Base = Idx then
+            if C.Formal.Base = Idx then
                if C.Drive_Formal then
                   Nbr_Conn_Drv := Nbr_Conn_Drv + 1;
                end if;
                Conn := C.Formal_Link;
             else
-               pragma Assert (C.Actual_Base = Idx);
+               pragma Assert (C.Actual.Base = Idx);
                if C.Drive_Actual then
                   Nbr_Conn_Drv := Nbr_Conn_Drv + 1;
                end if;

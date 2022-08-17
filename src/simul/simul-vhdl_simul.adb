@@ -1584,6 +1584,97 @@ package body Simul.Vhdl_Simul is
       end loop;
    end Create_Signals;
 
+   type Connect_Mode is (Connect_Source, Connect_Effective);
+
+   -- Add a driving value PORT to signal SIG, ie: PORT is a source for SIG.
+   -- As a side effect, this connect the signal SIG with the port PORT.
+   -- PORT is the formal, while SIG is the actual.
+   procedure Connect (Dst : Connect_Endpoint;
+                      Src : Connect_Endpoint;
+                      Mode : Connect_Mode) is
+   begin
+      pragma Assert (Dst.Typ.Kind = Src.Typ.Kind);
+
+      case Dst.Typ.Kind is
+         when Type_Vector =>
+            declare
+               Len : constant Uns32 := Dst.Typ.Abound.Len;
+               Etyp : constant Type_Acc := Dst.Typ.Arr_El;
+            begin
+               if Len /= Src.Typ.Abound.Len then
+                  raise Internal_Error;
+               end if;
+               for I in 1 .. Len loop
+                  Connect ((Dst.Base,
+                            (Dst.Offs.Net_Off + (Len - I) * Etyp.W,
+                             Dst.Offs.Mem_Off + Size_Type (I - 1) * Etyp.Sz),
+                            Etyp),
+                           (Src.Base,
+                            (Src.Offs.Net_Off + (Len - I) * Etyp.W,
+                             Src.Offs.Mem_Off + Size_Type (I - 1) * Etyp.Sz),
+                            Src.Typ.Arr_El),
+                           Mode);
+               end loop;
+            end;
+            return;
+         when Type_Logic
+           | Type_Bit =>
+            declare
+               S, D : Ghdl_Signal_Ptr;
+            begin
+               S := Read_Sig (Sig_Index (Signals_Table.Table (Src.Base).Sig,
+                                         Src.Offs.Net_Off));
+               D := Read_Sig (Sig_Index (Signals_Table.Table (Dst.Base).Sig,
+                                         Dst.Offs.Net_Off));
+               case Mode is
+                  when Connect_Source =>
+                     Grt.Signals.Ghdl_Signal_Add_Source (D, S);
+                  when Connect_Effective =>
+                     Grt.Signals.Ghdl_Signal_Effective_Value (D, S);
+               end case;
+            end;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Connect;
+
+   procedure Create_Connect (C : Connect_Entry) is
+   begin
+      if C.Drive_Actual then
+         declare
+            Out_Conv : constant Iir := Get_Formal_Conversion (C.Assoc);
+         begin
+            pragma Assert (Out_Conv = Null_Iir);
+            --  LRM93 12.6.2
+            --  A signal is said to be active [...] if one of its source
+            --  is active.
+            Connect (C.Actual, C.Formal, Connect_Source);
+         end;
+      end if;
+
+      if C.Drive_Formal then
+         declare
+            In_Conv : constant Iir := Get_Actual_Conversion (C.Assoc);
+         begin
+            pragma Assert (In_Conv = Null_Iir);
+            Connect (C.Formal, C.Actual, Connect_Effective);
+         end;
+      end if;
+   end Create_Connect;
+
+   procedure Create_Connects is
+   begin
+      for I in Connect_Table.First .. Connect_Table.Last loop
+         declare
+            C : Connect_Entry renames Connect_Table.Table (I);
+         begin
+            if not C.Collapsed then
+               Create_Connect (C);
+            end if;
+         end;
+      end loop;
+   end Create_Connects;
+
    procedure Create_Terminals
    is
    begin
@@ -1928,7 +2019,7 @@ package body Simul.Vhdl_Simul is
       Disp_Time_Before_Values := True;
 
       Create_Signals;
-      -- Create_Connects;
+      Create_Connects;
       -- Create_Disconnections;
       Create_Processes;
       -- Create_PSL;

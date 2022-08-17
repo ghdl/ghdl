@@ -83,18 +83,20 @@ package Simul.Vhdl_Elab is
    type Connect_Index_Type is new Nat32;
    No_Connect_Index : constant Connect_Index_Type := 0;
 
+   type Connect_Endpoint is record
+      Base : Signal_Index_Type;
+      Offs : Value_Offsets;
+      Typ : Type_Acc;
+   end record;
+
    --  Connections.  For each associations (block/component/entry), the
    --  elaborator adds an entry in that table.
    type Connect_Entry is record
-      Formal_Base : Signal_Index_Type;
-      Formal_Offs : Value_Offsets;
-      Formal_Type : Type_Acc;
+      Formal : Connect_Endpoint;
       --  Next connection for the formal.
       Formal_Link : Connect_Index_Type;
 
-      Actual_Base : Signal_Index_Type;
-      Actual_Offs : Value_Offsets;
-      Actual_Type : Type_Acc;
+      Actual : Connect_Endpoint;
       --  Next connection for the actual.
       Actual_Link : Connect_Index_Type;
 
@@ -102,6 +104,10 @@ package Simul.Vhdl_Elab is
       --  The correct word is 'source'.
       Drive_Formal : Boolean;
       Drive_Actual : Boolean;
+
+      --  If true, the connection is fully collapsed: formal is the same
+      --  signal as actual.
+      Collapsed : Boolean;
 
       Assoc : Node;
       Assoc_Inst : Synth_Instance_Acc;

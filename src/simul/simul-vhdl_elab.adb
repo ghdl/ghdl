@@ -185,7 +185,8 @@ package body Simul.Vhdl_Elab is
            | Iir_Kind_Procedure_Declaration
            | Iir_Kind_Function_Body
            | Iir_Kind_Procedure_Body
-           | Iir_Kind_Component_Declaration =>
+           | Iir_Kind_Component_Declaration
+           | Iir_Kind_File_Declaration =>
             null;
          when others =>
             Error_Kind ("gather_processes_decl", Decl);
@@ -366,6 +367,7 @@ package body Simul.Vhdl_Elab is
       Dyn : Dyn_Name;
       Conn : Connect_Entry;
       List : Iir_List;
+      Formal_Ep, Actual_Ep : Connect_Endpoint;
    begin
       Assoc := Assocs;
       Assoc_Inter := Ports;
@@ -377,22 +379,23 @@ package body Simul.Vhdl_Elab is
                  (Port_Inst, Inter, Formal_Base, Typ, Off, Dyn);
                pragma Assert (Dyn = No_Dyn_Name);
                Formal_Sig := Formal_Base.Val.S;
-               Conn.Formal_Base := Formal_Sig;
-               Conn.Formal_Offs := Off;
-               Conn.Formal_Type := Typ;
-               Conn.Formal_Link := Signals_Table.Table (Formal_Sig).Connect;
-
+               Formal_Ep := (Formal_Sig, Off, Typ);
                Synth_Assignment_Prefix
                  (Assoc_Inst, Get_Actual (Assoc), Actual_Base, Typ, Off, Dyn);
                pragma Assert (Dyn = No_Dyn_Name);
                Actual_Sig := Actual_Base.Val.S;
-               Conn.Actual_Base := Actual_Sig;
-               Conn.Actual_Offs := Off;
-               Conn.Actual_Type := Typ;
-               Conn.Actual_Link := Signals_Table.Table (Actual_Sig).Connect;
+               Actual_Ep := (Actual_Sig, Off, Typ);
 
-               Conn.Assoc := Assoc;
-               Conn.Assoc_Inst := Assoc_Inst;
+               Conn :=
+                 (Formal => Formal_Ep,
+                  Formal_Link => Signals_Table.Table (Formal_Sig).Connect,
+                  Actual => Actual_Ep,
+                  Actual_Link => Signals_Table.Table (Actual_Sig).Connect,
+                  Drive_Formal => False,
+                  Drive_Actual => False,
+                  Collapsed => False,
+                  Assoc => Assoc,
+                  Assoc_Inst => Assoc_Inst);
 
                --  LRM08 6.4.2.3 Signal declarations
                --  [...], each source is either a driver or an OUT, INOUT,
@@ -413,24 +416,24 @@ package body Simul.Vhdl_Elab is
                      raise Internal_Error;
                end case;
 
+
                Connect_Table.Append (Conn);
 
                Signals_Table.Table (Formal_Sig).Connect := Connect_Table.Last;
                Signals_Table.Table (Actual_Sig).Connect := Connect_Table.Last;
 
                --  Collapse
-               if Get_Collapse_Signal_Flag (Assoc) then
-                  pragma Assert (Conn.Formal_Offs.Mem_Off = 0);
-                  pragma Assert (Conn.Actual_Offs.Mem_Off = 0);
-                  pragma Assert (Actual_Base.Typ.W = Typ.W);
-                  pragma Assert (Formal_Base.Typ.W = Typ.W);
+               if Get_Collapse_Signal_Flag (Assoc)
+                 and then Formal_Ep.Offs.Mem_Off = 0
+                 and then Actual_Ep.Offs.Mem_Off = 0
+                 and then Actual_Base.Typ.W = Formal_Base.Typ.W
+               then
+                  --  Full collapse.
                   pragma Assert (Signals_Table.Table (Formal_Sig).Collapsed_By
                                    = No_Signal_Index);
                   pragma Assert (Formal_Sig > Actual_Sig);
                   Signals_Table.Table (Formal_Sig).Collapsed_By := Actual_Sig;
-               else
-                  --  TODO: handle non-collapsed signals in simul.
-                  raise Internal_Error;
+                  Connect_Table.Table (Connect_Table.Last).Collapsed := True;
                end if;
             when Iir_Kind_Association_Element_Open
               | Iir_Kind_Association_Element_By_Individual =>
@@ -442,22 +445,20 @@ package body Simul.Vhdl_Elab is
                     (Port_Inst, Inter, Formal_Base, Typ, Off, Dyn);
                   pragma Assert (Dyn = No_Dyn_Name);
                   Formal_Sig := Formal_Base.Val.S;
-                  Conn.Formal_Base := Formal_Sig;
-                  Conn.Formal_Offs := Off;
-                  Conn.Formal_Type := Typ;
-                  Conn.Formal_Link := Signals_Table.Table (Formal_Sig).Connect;
+                  Formal_Ep := (Formal_Sig, Off, Typ);
 
-                  Conn.Actual_Base := No_Signal_Index;
-                  Conn.Actual_Offs := No_Value_Offsets;
-                  Conn.Actual_Type := null;
-                  Conn.Actual_Link := No_Connect_Index;
+                  Actual_Ep := (No_Signal_Index, No_Value_Offsets, null);
 
-                  Conn.Assoc := Assoc;
-                  Conn.Assoc_Inst := Assoc_Inst;
-
-                  --  Always an IN interface.
-                  Conn.Drive_Formal := True;
-                  Conn.Drive_Actual := False;
+                  Conn :=
+                    (Formal => Formal_Ep,
+                     Formal_Link => Signals_Table.Table (Formal_Sig).Connect,
+                     Actual => Actual_Ep,
+                     Actual_Link => No_Connect_Index,
+                     Drive_Formal => True, --  Always an IN interface
+                     Drive_Actual => False,
+                     Collapsed => False,
+                     Assoc => Assoc,
+                     Assoc_Inst => Assoc_Inst);
 
                   Connect_Table.Append (Conn);
 
