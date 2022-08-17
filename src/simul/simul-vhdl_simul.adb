@@ -1618,7 +1618,8 @@ package body Simul.Vhdl_Simul is
             end;
             return;
          when Type_Logic
-           | Type_Bit =>
+           | Type_Bit
+           | Type_Discrete =>
             declare
                S, D : Ghdl_Signal_Ptr;
             begin
@@ -1669,7 +1670,13 @@ package body Simul.Vhdl_Simul is
             C : Connect_Entry renames Connect_Table.Table (I);
          begin
             if not C.Collapsed then
-               Create_Connect (C);
+               if C.Actual.Base /= No_Signal_Index then
+                  Create_Connect (C);
+               elsif Get_Expr_Staticness (Get_Actual (C.Assoc)) >= Globally
+               then
+                  --  TODO: association with static expr.
+                  raise Internal_Error;
+               end if;
             end if;
          end;
       end loop;

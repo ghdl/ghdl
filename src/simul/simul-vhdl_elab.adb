@@ -358,6 +358,7 @@ package body Simul.Vhdl_Elab is
       Assoc_Inter : Node;
       Assoc : Node;
       Inter : Node;
+      Formal : Node;
       Formal_Base : Valtyp;
       Actual_Base : Valtyp;
       Formal_Sig : Signal_Index_Type;
@@ -375,11 +376,16 @@ package body Simul.Vhdl_Elab is
          case Get_Kind (Assoc) is
             when Iir_Kind_Association_Element_By_Name =>
                Inter := Get_Association_Interface (Assoc, Assoc_Inter);
+               Formal := Get_Formal (Assoc);
+               if Formal = Null_Iir then
+                  Formal := Inter;
+               end if;
                Synth_Assignment_Prefix
-                 (Port_Inst, Inter, Formal_Base, Typ, Off, Dyn);
+                 (Port_Inst, Formal, Formal_Base, Typ, Off, Dyn);
                pragma Assert (Dyn = No_Dyn_Name);
                Formal_Sig := Formal_Base.Val.S;
                Formal_Ep := (Formal_Sig, Off, Typ);
+
                Synth_Assignment_Prefix
                  (Assoc_Inst, Get_Actual (Assoc), Actual_Base, Typ, Off, Dyn);
                pragma Assert (Dyn = No_Dyn_Name);
@@ -415,7 +421,6 @@ package body Simul.Vhdl_Elab is
                   when Iir_Unknown_Mode =>
                      raise Internal_Error;
                end case;
-
 
                Connect_Table.Append (Conn);
 
