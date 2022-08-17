@@ -190,6 +190,8 @@ package Simul.Vhdl_Elab is
       Val : Memory_Ptr;
       --  Index in the scalar table.
       Idx : Scalar_Quantity_Index;
+      --  For across quantity, we need the terminals to compute the value
+      --  For a through quantity, we need the terminals to compute the contrib
    end record;
 
    package Quantity_Table is new Tables
@@ -198,12 +200,20 @@ package Simul.Vhdl_Elab is
       Table_Low_Bound => No_Quantity_Index + 1,
       Table_Initial => 128);
 
+   type Scalar_Terminal_Index is new Uns32;
+   No_Scalar_Terminal : constant Scalar_Terminal_Index := 0;
+
    type Terminal_Entry is record
       Decl : Iir;
       Inst : Synth_Instance_Acc;
       Across_Typ : Type_Acc;
       Through_Typ : Type_Acc;
+      --  The reference value.
       Ref_Val : Memory_Ptr;
+      --  Index in the scalar quantity table for the reference value.
+      Ref_Idx : Scalar_Quantity_Index;
+      --  Index in the scalar terminal table for the contribution.
+      Term_Idx : Scalar_Terminal_Index;
    end record;
 
    package Terminal_Table is new Tables

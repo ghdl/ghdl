@@ -81,7 +81,7 @@ package Simul.Vhdl_Simul is
 
    type Scalar_Quantity_Record is record
       --  Index in Y or Yp vector.
-      Idx : Natural;
+      Idx : Integer;
       --  If there is a 'Dot, the corresponding entry.
       Deriv : Scalar_Quantity_Index;
       --  If there is a 'Integ, the corresponding entry.

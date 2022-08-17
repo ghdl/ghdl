@@ -102,7 +102,8 @@ package body Simul.Vhdl_Elab is
       Across_Typ := Get_Subtype_Object (Inst, Get_Across_Type (Def));
       Through_Typ := Get_Subtype_Object (Inst, Get_Through_Type (Def));
       pragma Assert (Val.Val.T = No_Terminal_Index);
-      Terminal_Table.Append ((Decl, Inst, Across_Typ, Through_Typ, null));
+      Terminal_Table.Append ((Decl, Inst, Across_Typ, Through_Typ, null,
+                              No_Scalar_Quantity, No_Scalar_Terminal));
       Val.Val.T := Terminal_Table.Last;
    end Gather_Terminal;
 

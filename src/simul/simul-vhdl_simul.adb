@@ -1584,15 +1584,44 @@ package body Simul.Vhdl_Simul is
       end loop;
    end Create_Signals;
 
+   procedure Create_Terminals
+   is
+   begin
+      for I in Terminal_Table.First .. Terminal_Table.Last loop
+         declare
+            T : Terminal_Entry renames Terminal_Table.Table (I);
+         begin
+            --  Allocate Ref_Val and set it to 0.
+            pragma Assert (T.Across_Typ.Kind = Type_Float);
+            T.Ref_Val := Alloc_Memory (T.Across_Typ);
+            Write_Fp64 (T.Ref_Val, 0.0);
+
+            if not Get_Reference_Terminal_Flag (T.Decl) then
+               --  A non-ground reference.
+               --  Allocate the reference quantity.
+               T.Ref_Idx := Scalar_Quantities_Table.Last + 1;
+               Scalar_Quantities_Table.Append
+                 ((Idx => Nbr_Solver_Variables,
+                   Deriv => No_Scalar_Quantity,
+                   Integ => No_Scalar_Quantity));
+
+               Nbr_Solver_Variables :=
+                 Nbr_Solver_Variables + Natural (T.Across_Typ.W);
+            end if;
+         end;
+      end loop;
+   end Create_Terminals;
+
    --  Compute solver variables, allocate memory for quantities.
    procedure Create_Quantities
    is
       use Grt.Analog_Solver;
       Num : Natural;
+      Idx : Integer;
       Vec : F64_C_Arr_Ptr;
    begin
       --  Compute number of scalar quantities.
-      Num := 0;
+      Num := Nbr_Solver_Variables;
       for I in Quantity_Table.First .. Quantity_Table.Last loop
          declare
             Q : Quantity_Entry renames Quantity_Table.Table (I);
@@ -1600,18 +1629,22 @@ package body Simul.Vhdl_Simul is
             Pfx_Info : Target_Info;
          begin
             case Get_Kind (Q.Decl) is
-               when Iir_Kind_Free_Quantity_Declaration =>
+               when Iir_Kind_Free_Quantity_Declaration
+                 | Iir_Kind_Through_Quantity_Declaration =>
                   --  For a free or branch quantity:
                   --  * if it is the actual of a OUT formal, then use the
                   --    variable from the formal.
                   --  TODO: handle OUT associations.
                   pragma Assert (Q.Typ.Kind = Type_Float); -- TODO
+
+                  Idx := Num;
+                  Num := Num + Natural (Q.Typ.W);
+
                   Q.Idx := Scalar_Quantities_Table.Last + 1;
                   Scalar_Quantities_Table.Append
-                    ((Idx => Num,
+                    ((Idx => Idx,
                       Deriv => No_Scalar_Quantity,
                       Integ => No_Scalar_Quantity));
-                  Num := Num + Natural (Q.Typ.W);
 
                   Def := Get_Default_Value (Q.Decl);
                   if Def /= Null_Node then
@@ -1620,6 +1653,12 @@ package body Simul.Vhdl_Simul is
                   end if;
                   Q.Val := Alloc_Memory (Q.Typ);
                   Write_Fp64 (Q.Val, 0.0);
+
+                  --  TODO:
+                  --  For through quantities, add contribution to terminals.
+
+               when Iir_Kind_Across_Quantity_Declaration =>
+                  null;
 
                when Iir_Kind_Dot_Attribute =>
                   Pfx_Info := Synth_Target (Q.Inst, Get_Prefix (Q.Decl));
@@ -1692,10 +1731,13 @@ package body Simul.Vhdl_Simul is
       for I in Quantity_Table.First .. Quantity_Table.Last loop
          declare
             Q : Quantity_Entry renames Quantity_Table.Table (I);
+            Idx : Integer;
          begin
             pragma Assert (Q.Typ.Kind = Type_Float); --  TODO
-            Vec (Scalar_Quantities_Table.Table (Q.Idx).Idx) :=
-              Ghdl_F64 (Read_Fp64 (Q.Val));
+            Idx := Scalar_Quantities_Table.Table (Q.Idx).Idx;
+            if Idx >= 0 then
+               Vec (Idx) := Ghdl_F64 (Read_Fp64 (Q.Val));
+            end if;
          end;
       end loop;
    end Create_Quantities;
@@ -1890,6 +1932,7 @@ package body Simul.Vhdl_Simul is
       -- Create_Disconnections;
       Create_Processes;
       -- Create_PSL;
+      Create_Terminals;
       Create_Quantities;
 
       --  Allow Synth_Expression to handle signals.
