@@ -2075,9 +2075,9 @@ package body Simul.Vhdl_Simul is
 
 --      Grt.Errors.Error_Hook := Debug_Error'Access;
 
---      if Flag_Interractive then
---         Debug (Reason_Start);
---      end if;
+      if Flag_Debug_Elab then
+         Elab.Debugger.Debug_Elab (Vhdl_Elab.Top_Instance);
+      end if;
 
       Ok := Grt.Main.Run_Elab;
       if not Ok then

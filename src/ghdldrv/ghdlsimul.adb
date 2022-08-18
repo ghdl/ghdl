@@ -179,6 +179,8 @@ package body Ghdlsimul is
          Synth.Flags.Flag_Trace_Statements := True;
       elsif Option = "-i" then
          Simul.Vhdl_Simul.Flag_Interractive := True;
+      elsif Option = "-ge" then
+         Simul.Vhdl_Simul.Flag_Debug_Elab := True;
       else
          return False;
       end if;

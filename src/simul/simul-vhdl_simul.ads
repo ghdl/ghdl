@@ -37,6 +37,7 @@ package Simul.Vhdl_Simul is
    Trace_Simulation : Boolean := False;
 
    Flag_Interractive : Boolean := False;
+   Flag_Debug_Elab : Boolean := False;
 
    Trace_Residues : Boolean := False;
 
