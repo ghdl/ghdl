@@ -101,6 +101,43 @@ package body Simul.Vhdl_Debug is
       New_Line;
    end Disp_Driver_Entry;
 
+   procedure Disp_Conn_Endpoint (Ep : Connect_Endpoint) is
+   begin
+      Put ("sig: ");
+      Put_Uns32 (Uns32 (Ep.Base));
+      Put (", noff: ");
+      Put_Uns32 (Ep.Offs.Net_Off);
+      Put (", moff: ");
+      Put_Uns32 (Uns32 (Ep.Offs.Mem_Off));
+      Put (", typ: ");
+      Debug_Type_Short (Ep.Typ);
+   end Disp_Conn_Endpoint;
+
+   procedure Disp_Conn_Entry (Idx : Connect_Index_Type)
+   is
+      C : Connect_Entry renames Connect_Table.Table (Idx);
+   begin
+      Put ("    ");
+      Put_Uns32 (Uns32 (Idx));
+      Put (": ");
+      if C.Collapsed then
+         Put ("[collapsed]");
+      end if;
+      New_Line;
+      Put ("     formal: ");
+      Disp_Conn_Endpoint (C.Formal);
+      if C.Drive_Formal then
+         Put (" [drive]");
+      end if;
+      New_Line;
+      Put ("     actual: ");
+      Disp_Conn_Endpoint (C.Actual);
+      if C.Drive_Actual then
+         Put (" [drive]");
+      end if;
+      New_Line;
+   end Disp_Conn_Entry;
+
    function Read_Value (Value_Ptr : Ghdl_Value_Ptr; Mode : Mode_Type)
      return Int64 is
    begin
@@ -351,11 +388,11 @@ package body Simul.Vhdl_Debug is
                when Iir_Out_Mode =>
                   Put (" [out]");
                when Iir_Buffer_Mode =>
-                  Put (" [buf]");
+                  Put (" [buffer]");
                when Iir_Linkage_Mode =>
-                  Put (" [lnk]");
+                  Put (" [linkage]");
                when Iir_Inout_Mode =>
-                  Put (" [io]");
+                  Put (" [inout]");
                when Iir_Unknown_Mode =>
                   Put (" [??]");
             end case;
@@ -397,8 +434,10 @@ package body Simul.Vhdl_Debug is
          Nbr_Drv := Nbr_Drv + 1;
          Driver := Drivers_Table.Table (Driver).Prev_Sig;
       end loop;
-      Put ("  nbr sources: ");
-      Put_Int32 (Nbr_Drv + Nbr_Conn_Drv);
+      Put ("  nbr drivers: ");
+      Put_Int32 (Nbr_Drv);
+      Put (", nbr conn srcs: ");
+      Put_Int32 (Nbr_Conn_Drv);
 
       Nbr_Sens := 0;
       Sens := S.Sensitivity;
@@ -426,6 +465,25 @@ package body Simul.Vhdl_Debug is
                Driver := D.Prev_Sig;
             end;
          end loop;
+
+         Conn := S.Connect;
+         if Conn /= No_Connect_Index then
+            Put ("  connections:");
+            New_Line;
+            while Conn /= No_Connect_Index loop
+               declare
+                  C : Connect_Entry renames Connect_Table.Table (Conn);
+               begin
+                  Disp_Conn_Entry (Conn);
+                  if C.Formal.Base = Idx then
+                     Conn := C.Formal_Link;
+                  else
+                     pragma Assert (C.Actual.Base = Idx);
+                     Conn := C.Actual_Link;
+                  end if;
+               end;
+            end loop;
+         end if;
 
          Sens := S.Sensitivity;
          while Sens /= No_Sensitivity_Index loop
