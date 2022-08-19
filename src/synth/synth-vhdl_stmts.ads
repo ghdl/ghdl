@@ -122,6 +122,11 @@ package Synth.Vhdl_Stmts is
       Inter_Chain : Node;
       Assoc_Chain : Node);
 
+   --  For simulation.
+   function Exec_Resolution_Call (Syn_Inst : Synth_Instance_Acc;
+                                  Func : Node;
+                                  Arg : Valtyp) return Valtyp;
+
    --  Return the statements chain to be executed.
    function Execute_Static_Case_Statement
      (Inst : Synth_Instance_Acc; Stmt : Node; Sel : Valtyp) return Node;

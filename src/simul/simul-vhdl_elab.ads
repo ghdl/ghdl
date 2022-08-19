@@ -50,6 +50,7 @@ package Simul.Vhdl_Elab is
    type Driver_Index_Type is new Nat32;
    subtype Sensitivity_Index_Type is Driver_Index_Type;
 
+   No_Process_Index : constant Process_Index_Type := 0;
    No_Driver_Index : constant Driver_Index_Type := 0;
    No_Sensitivity_Index : constant Sensitivity_Index_Type := 0;
 
@@ -64,7 +65,7 @@ package Simul.Vhdl_Elab is
    package Processes_Table is new Tables
      (Table_Component_Type => Proc_Record_Type,
       Table_Index_Type => Process_Index_Type,
-      Table_Low_Bound => 1,
+      Table_Low_Bound => No_Process_Index + 1,
       Table_Initial => 128);
 
    type Simultaneous_Record is record

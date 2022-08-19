@@ -18,16 +18,19 @@
 
 with System;
 with Ada.Unchecked_Conversion;
+with Ada.Unchecked_Deallocation;
 
 with Simple_IO;
 with Utils_IO;
 
 with Vhdl.Errors;
+with Vhdl.Utils;
 with Vhdl.Sem_Inst;
 with Vhdl.Canon;
 
 with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
 with Elab.Vhdl_Values; use Elab.Vhdl_Values;
+with Elab.Vhdl_Types;
 with Elab.Vhdl_Decls;
 with Elab.Debugger;
 
@@ -1368,10 +1371,190 @@ package body Simul.Vhdl_Simul is
 --      end if;
    end Create_Processes;
 
+   type Resolver_Read_Mode is (Read_Port, Read_Driver);
+
+   procedure Resolver_Read_Value (Dst : Memtyp;
+                                  Sig : Memory_Ptr;
+                                  Mode : Resolver_Read_Mode;
+                                  Index : Ghdl_Index_Type)
+   is
+      Val : Ghdl_Value_Ptr;
+   begin
+      case Dst.Typ.Kind is
+         when Type_Bit
+           | Type_Logic
+           | Type_Discrete =>
+            null;
+         when others =>
+            raise Internal_Error;
+      end case;
+      case Mode is
+         when Read_Port =>
+            Val := Ghdl_Signal_Read_Port (Read_Sig (Sig), Index);
+         when Read_Driver =>
+            Val := Ghdl_Signal_Read_Driver (Read_Sig (Sig), Index);
+      end case;
+      case Dst.Typ.Kind is
+         when Type_Bit =>
+            Write_U8 (Dst.Mem, Ghdl_B1'Pos (Val.B1));
+         when Type_Logic =>
+            Write_U8 (Dst.Mem, Val.E8);
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Resolver_Read_Value;
+
+   procedure Write_Ghdl_Value (Mt : Memtyp; Val : out Value_Union) is
+   begin
+      case Mt.Typ.Kind is
+         when Type_Bit =>
+            Val.B1 := Ghdl_B1'Val (Read_U8 (Mt.Mem));
+         when Type_Logic =>
+            Val.E8 := Read_U8 (Mt.Mem);
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Write_Ghdl_Value;
+
+   type Write_Signal_Enum is
+     (Write_Signal_Driving_Value,
+      Write_Signal_Effective_Value);
+
+   procedure Exec_Write_Signal (Sig: Memory_Ptr;
+                                Val : Memtyp;
+                                Attr : Write_Signal_Enum)
+   is
+      S : Ghdl_Signal_Ptr;
+   begin
+      case Val.Typ.Kind is
+         when Type_Bit
+           | Type_Logic =>
+            S := Read_Sig (Sig);
+            case Attr is
+               when Write_Signal_Driving_Value =>
+                  Write_Ghdl_Value (Val, S.Driving_Value);
+               when Write_Signal_Effective_Value =>
+                  Write_Ghdl_Value (Val, S.Value_Ptr.all);
+            end case;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Exec_Write_Signal;
+
+   type Nbr_Sources_Vector is array (Uns32 range <>) of Natural;
+   type Nbr_Sources_Vector_Acc is access Nbr_Sources_Vector;
+   procedure Free is new Ada.Unchecked_Deallocation
+     (Nbr_Sources_Vector, Nbr_Sources_Vector_Acc);
+
+   --  Compute the number of sources (drivers + conn) for each scalar
+   --  sub-element of signal SIG.
+   procedure Compute_Nbr_Sources (Vec : in out Nbr_Sources_Vector;
+                                  Sig : Signal_Index_Type)
+   is
+      type Proc_Sources_Vector is array (Uns32 range <>) of
+        Process_Index_Type;
+      type Proc_Sources_Vector_Acc is access Proc_Sources_Vector;
+      procedure Free is new Ada.Unchecked_Deallocation
+        (Proc_Sources_Vector, Proc_Sources_Vector_Acc);
+      Procs : Proc_Sources_Vector_Acc;
+
+      S : Signal_Entry renames Signals_Table.Table (Sig);
+      Drv : Driver_Index_Type;
+      Conn : Connect_Index_Type;
+   begin
+      Drv := S.Drivers;
+
+      if S.Connect = No_Connect_Index then
+         if Drv = No_Driver_Index then
+            --  No connections, no drivers.
+            return;
+         end if;
+
+         declare
+            E : Driver_Entry renames Drivers_Table.Table (Drv);
+            Off : Uns32;
+         begin
+            if E.Prev_Sig = No_Driver_Index then
+               --  Only one driver, this is probably a very common case.
+               pragma Assert (E.Typ.W > 0);
+               Off := E.Off.Net_Off;
+               for I in Off .. Off + E.Typ.W - 1 loop
+                  Vec (I) := Vec (I) + 1;
+               end loop;
+               return;
+            end if;
+         end;
+      end if;
+
+      if Drv /= No_Driver_Index then
+
+         --  Count number of drivers.
+         --  We know that drivers from the same process are consecutive in the
+         --  driver list for a signal (because drivers are registered by
+         --  process).
+         Procs := new Proc_Sources_Vector'(0 .. S.Typ.W - 1 =>
+                                             No_Process_Index);
+         loop
+            declare
+               E : Driver_Entry renames Drivers_Table.Table (Drv);
+               Off : constant Uns32 := E.Off.Net_Off;
+            begin
+               for I in Off .. Off + E.Typ.W - 1 loop
+                  if Procs (I) /= E.Proc then
+                     Procs (I) := E.Proc;
+                     Vec (I) := Vec (I) + 1;
+                  end if;
+               end loop;
+
+               Drv := E.Prev_Sig;
+            end;
+            exit when Drv = No_Driver_Index;
+         end loop;
+         Free (Procs);
+      end if;
+
+      Conn := S.Connect;
+      while Conn /= No_Connect_Index loop
+         declare
+            C : Connect_Entry renames Connect_Table.Table (Conn);
+            Off : Uns32;
+         begin
+            if C.Formal.Base = Sig then
+               if C.Drive_Formal then
+                  Off := C.Formal.Offs.Net_Off;
+                  for I in Off .. Off + C.Formal.Typ.W - 1 loop
+                     Vec (I) := Vec (I) + 1;
+                  end loop;
+               end if;
+               Conn := C.Formal_Link;
+            else
+               pragma Assert (C.Actual.Base = Sig);
+               if C.Drive_Actual then
+                  if C.Collapsed then
+                     --  A connection with collapsed signal.
+                     --  Recurse on the formal.
+                     pragma Assert (C.Formal.Offs = (0, 0));
+                     pragma Assert (C.Formal.Typ.W = S.Typ.W);
+                     Compute_Nbr_Sources (Vec, C.Formal.Base);
+                  else
+                     Off := C.Actual.Offs.Net_Off;
+                     for I in Off .. Off + C.Actual.Typ.W - 1 loop
+                        Vec (I) := Vec (I) + 1;
+                     end loop;
+                  end if;
+               end if;
+               Conn := C.Actual_Link;
+            end if;
+         end;
+      end loop;
+   end Compute_Nbr_Sources;
+
    type Resolv_Instance_Type is record
       Func : Iir;
       Inst : Synth_Instance_Acc;
       Sig : Memory_Ptr;
+      Idx_Typ : Type_Acc;
+      Arr_Typ : Type_Acc;
    end record;
    type Resolv_Instance_Acc is access Resolv_Instance_Type;
 
@@ -1389,68 +1572,130 @@ package body Simul.Vhdl_Simul is
                               Bool_Vec : System.Address;
                               Vec_Len : Ghdl_Index_Type;
                               Nbr_Drv : Ghdl_Index_Type;
-                              Nbr_Ports : Ghdl_Index_Type) is
+                              Nbr_Ports : Ghdl_Index_Type)
+   is
+      pragma Unreferenced (Val);
+
+      R : Resolv_Instance_Type;
+      pragma Import (Ada, R);
+      for R'Address use Instance_Addr;
+
+      type Bool_Array is array (1 .. Nbr_Drv) of Boolean;
+      Vec : Bool_Array;
+      pragma Import (Ada, Vec);
+      for Vec'Address use Bool_Vec;
+
+      Len : constant Iir_Index32 := Iir_Index32 (Vec_Len + Nbr_Ports);
+      Bnd : Bound_Type;
+
+      El_Typ : constant Type_Acc := R.Arr_Typ.Uarr_El;
+      Stride : constant Size_Type := El_Typ.Sz;
+      Arr_Typ : Type_Acc;
+      Arr : Memtyp;
+      Off : Size_Type;
+
+      Res : Valtyp;
+
+      Instance_Mark, Expr_Mark : Mark_Type;
    begin
-      raise Internal_Error;
+      Mark (Expr_Mark, Expr_Pool);
+      Mark (Instance_Mark, Instance_Pool.all);
+
+      --  Create the type.
+      Bnd := Elab.Vhdl_Types.Create_Bounds_From_Length (R.Idx_Typ.Drange, Len);
+      Arr_Typ := Create_Array_Type (Bnd, True, El_Typ);
+
+      --  Allocate the array.
+      Arr := Create_Memory (Arr_Typ);
+
+      --  Write ports.
+      Off := 0;
+      for I in 1 .. Nbr_Ports loop
+         Resolver_Read_Value ((El_Typ, Arr.Mem + Off),
+                              R.Sig, Read_Port, I - 1);
+         Off := Off + Stride;
+      end loop;
+
+      --  Write drivers.
+      for I in 1 .. Nbr_Drv loop
+         if Vec (I) then
+            Resolver_Read_Value ((El_Typ, Arr.Mem + Off),
+                                 R.Sig, Read_Driver, I - 1);
+            Off := Off + Stride;
+         end if;
+      end loop;
+
+      --  Call resolution function
+      Res := Exec_Resolution_Call (R.Inst, R.Func, Create_Value_Memory (Arr));
+
+      --  Set driving value.
+      Exec_Write_Signal (R.Sig, (Res.Typ, Res.Val.Mem),
+                         Write_Signal_Driving_Value);
+
+      Release (Expr_Mark, Expr_Pool);
+      Release (Instance_Mark, Instance_Pool.all);
    end Resolution_Proc;
 
-   -- Create a new signal, using DEFAULT as initial value.
-   -- Set its number.
-   procedure Create_User_Signal (Inst : Synth_Instance_Acc;
-                                 Mode : Mode_Signal_Type;
-                                 Signal: Node;
-                                 Typ : Type_Acc;
-                                 Sig : Memory_Ptr;
-                                 Val : Memory_Ptr)
+   procedure Create_User_Signal (Idx : Signal_Index_Type)
    is
---      use Grt.Signals;
+      E : Signal_Entry renames Signals_Table.Table (Idx);
 
       procedure Create_Signal (Val : Memory_Ptr;
-                               Sig : Memory_Ptr;
+                               Sig_Off : Uns32;
+--                               Sig : Memory_Ptr;
                                Sig_Type: Iir;
                                Typ : Type_Acc;
+                               Vec : Nbr_Sources_Vector;
                                Already_Resolved : Boolean)
       is
          Sub_Resolved : Boolean := Already_Resolved;
          Resolv_Func : Iir;
          Resolv_Instance : Resolv_Instance_Acc;
          S : Ghdl_Signal_Ptr;
+         Arr_Type : Iir;
+         Idx_Type : Iir;
       begin
          if not Already_Resolved
            and then Get_Kind (Sig_Type) in Iir_Kinds_Subtype_Definition
          then
             Resolv_Func := Get_Resolution_Indication (Sig_Type);
-         else
-            Resolv_Func := Null_Iir;
-         end if;
-         if False and Resolv_Func /= Null_Iir then
-            Sub_Resolved := True;
-            Resolv_Instance := new Resolv_Instance_Type'
-              (Func => Get_Named_Entity (Resolv_Func),
-               Inst => Inst,
-               Sig => Sig);
-            Grt.Signals.Ghdl_Signal_Create_Resolution
-              (Resolution_Proc'Access,
-               Resolv_Instance.all'Address,
-               System.Null_Address,
-               Ghdl_Index_Type (Typ.W));
+            if Resolv_Func /= Null_Iir
+              and then Vec (Sig_Off) > 1
+            then
+               Sub_Resolved := True;
+               Resolv_Func := Get_Named_Entity (Resolv_Func);
+               Arr_Type :=
+                 Get_Type (Get_Interface_Declaration_Chain (Resolv_Func));
+               Idx_Type := Vhdl.Utils.Get_Index_Type (Arr_Type, 0);
+               Resolv_Instance := new Resolv_Instance_Type'
+                 (Func => Resolv_Func,
+                  Inst => E.Inst,
+                  Sig => Sig_Index (E.Sig, Sig_Off),
+                  Idx_Typ => Get_Subtype_Object (E.Inst, Idx_Type),
+                  Arr_Typ => Get_Subtype_Object (E.Inst, Arr_Type));
+               Grt.Signals.Ghdl_Signal_Create_Resolution
+                 (Resolution_Proc'Access,
+                  Resolv_Instance.all'Address,
+                  System.Null_Address,
+                  Ghdl_Index_Type (Typ.W));
+            end if;
          end if;
          case Typ.Kind is
             when Type_Bit =>
                S := Grt.Signals.Ghdl_Create_Signal_B1
                  (To_Ghdl_Value_Ptr (To_Address (Val)),
                   null, System.Null_Address);
-               Write_Sig (Sig, S);
+               Write_Sig (Sig_Index (E.Sig, Sig_Off), S);
             when Type_Logic =>
                S := Grt.Signals.Ghdl_Create_Signal_E8
                  (To_Ghdl_Value_Ptr (To_Address (Val)),
                   null, System.Null_Address);
-               Write_Sig (Sig, S);
+               Write_Sig (Sig_Index (E.Sig, Sig_Off), S);
             when Type_Float =>
                S := Grt.Signals.Ghdl_Create_Signal_F64
                  (To_Ghdl_Value_Ptr (To_Address (Val)),
                   null, System.Null_Address);
-               Write_Sig (Sig, S);
+               Write_Sig (Sig_Index (E.Sig, Sig_Off), S);
             when Type_Discrete =>
                if Typ.Sz = 1 then
                   S := Grt.Signals.Ghdl_Create_Signal_E8
@@ -1467,7 +1712,7 @@ package body Simul.Vhdl_Simul is
                else
                   raise Internal_Error;
                end if;
-               Write_Sig (Sig, S);
+               Write_Sig (Sig_Index (E.Sig, Sig_Off), S);
             when Type_Vector
               | Type_Array =>
                declare
@@ -1481,8 +1726,9 @@ package body Simul.Vhdl_Simul is
                   end if;
                   for I in 1 .. Len loop
                      Create_Signal (Val + Size_Type (I - 1) * Typ.Arr_El.Sz,
-                                    Sig_Index (Sig, (Len - I) * Typ.Arr_El.W),
-                                    El_Type, Typ.Arr_El, Already_Resolved);
+                                    Sig_Off + (Len - I) * Typ.Arr_El.W,
+                                    El_Type, Typ.Arr_El,
+                                    Vec, Already_Resolved);
                   end loop;
                end;
             when Type_Record =>
@@ -1495,9 +1741,9 @@ package body Simul.Vhdl_Simul is
                      El := Get_Nth_Element (List, Natural (I - 1));
                      Create_Signal
                        (Val + Typ.Rec.E (I).Offs.Mem_Off,
-                        Sig_Index (Sig, Typ.Rec.E (I).Offs.Net_Off),
+                        Sig_Off + Typ.Rec.E (I).Offs.Net_Off,
                         Get_Type (El), Typ.Rec.E (I).Typ,
-                        Sub_Resolved);
+                        Vec, Sub_Resolved);
                   end loop;
                end;
 
@@ -1512,7 +1758,7 @@ package body Simul.Vhdl_Simul is
          end case;
       end Create_Signal;
 
-      Sig_Type: constant Iir := Get_Type (Signal);
+      Sig_Type: constant Iir := Get_Type (E.Decl);
       Kind : Kind_Signal_Type;
 
       type Iir_Kind_To_Kind_Signal_Type is
@@ -1520,16 +1766,21 @@ package body Simul.Vhdl_Simul is
       Iir_Kind_To_Kind_Signal : constant Iir_Kind_To_Kind_Signal_Type :=
         (Iir_Register_Kind  => Kind_Signal_Register,
          Iir_Bus_Kind       => Kind_Signal_Bus);
+
+      Vec : Nbr_Sources_Vector_Acc;
    begin
-      if Get_Guarded_Signal_Flag (Signal) then
-         Kind := Iir_Kind_To_Kind_Signal (Get_Signal_Kind (Signal));
+      if Get_Guarded_Signal_Flag (E.Decl) then
+         Kind := Iir_Kind_To_Kind_Signal (Get_Signal_Kind (E.Decl));
       else
          Kind := Kind_Signal_No;
       end if;
 
-      Grt.Signals.Ghdl_Signal_Set_Mode (Mode, Kind, True);
+      Grt.Signals.Ghdl_Signal_Set_Mode (E.Kind, Kind, True);
 
-      Create_Signal (Val, Sig, Sig_Type, Typ, False);
+      Vec := new Nbr_Sources_Vector'(0 .. E.Typ.W - 1 => 0);
+      Compute_Nbr_Sources (Vec.all, Idx);
+      Create_Signal (E.Val, 0, Sig_Type, E.Typ, Vec.all, False);
+      Free (Vec);
    end Create_User_Signal;
 
    function Alloc_Signal_Memory (Vtype : Type_Acc) return Memory_Ptr
@@ -1543,7 +1794,9 @@ package body Simul.Vhdl_Simul is
       return To_Memory_Ptr (M);
    end Alloc_Signal_Memory;
 
-   procedure Create_Signal (E : in out Signal_Entry) is
+   procedure Create_Signal (Idx : Signal_Index_Type)
+   is
+      E : Signal_Entry renames Signals_Table.Table (Idx);
    begin
       E.Sig := Alloc_Signal_Memory (E.Typ);
       case E.Kind is
@@ -1560,7 +1813,7 @@ package body Simul.Vhdl_Simul is
          when Mode_Above =>
             raise Internal_Error;
          when Mode_Signal_User =>
-            Create_User_Signal (E.Inst, E.Kind, E.Decl, E.Typ, E.Sig, E.Val);
+            Create_User_Signal (Idx);
          when Mode_Conv_In | Mode_Conv_Out | Mode_End =>
             raise Internal_Error;
       end case;
@@ -1578,7 +1831,7 @@ package body Simul.Vhdl_Simul is
                --  TODO: keep val ?
                E.Val := Signals_Table.Table (E.Collapsed_By).Val;
             else
-               Create_Signal (E);
+               Create_Signal (I);
             end if;
          end;
       end loop;

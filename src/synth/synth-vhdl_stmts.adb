@@ -2236,12 +2236,11 @@ package body Synth.Vhdl_Stmts is
 
    function Synth_Static_Subprogram_Call (Syn_Inst : Synth_Instance_Acc;
                                           Sub_Inst : Synth_Instance_Acc;
-                                          Call     : Node;
+                                          Imp      : Node;
                                           Bod      : Node;
-                                          Init : Association_Iterator_Init)
-                                         return Valtyp
+                                          Init : Association_Iterator_Init;
+                                          Loc : Node) return Valtyp
    is
-      Imp  : constant Node := Get_Implementation (Call);
       Is_Func : constant Boolean := Is_Function_Declaration (Imp);
       Res : Valtyp;
       C : Seq_Context (Mode_Static);
@@ -2271,7 +2270,7 @@ package body Synth.Vhdl_Stmts is
          if Is_Func then
             if C.Nbr_Ret = 0 then
                Error_Msg_Synth
-                 (+Call, "function call completed without a return statement");
+                 (+Loc, "function call completed without a return statement");
                Res := No_Valtyp;
             else
                pragma Assert (C.Nbr_Ret = 1);
@@ -2338,7 +2337,7 @@ package body Synth.Vhdl_Stmts is
 
          if Get_Instance_Const (Sub_Inst) then
             Res := Synth_Static_Subprogram_Call
-              (Syn_Inst, Sub_Inst, Call, Bod, Init);
+              (Syn_Inst, Sub_Inst, Imp, Bod, Init, Call);
          else
             Res := Synth_Dynamic_Subprogram_Call
               (Syn_Inst, Sub_Inst, Call, Init);
@@ -2445,6 +2444,31 @@ package body Synth.Vhdl_Stmts is
             Synth_Implicit_Procedure_Call (Syn_Inst, Call);
       end case;
    end Synth_Procedure_Call;
+
+   function Exec_Resolution_Call (Syn_Inst : Synth_Instance_Acc;
+                                  Func : Node;
+                                  Arg : Valtyp) return Valtyp
+   is
+      Bod : constant Node := Vhdl.Sem_Inst.Get_Subprogram_Body_Origin (Func);
+      Inter : constant Node := Get_Interface_Declaration_Chain (Func);
+      Init : Association_Iterator_Init;
+      Res : Valtyp;
+      Sub_Inst : Synth_Instance_Acc;
+   begin
+      Sub_Inst := Synth_Subprogram_Call_Instance (Syn_Inst, Func, Bod);
+      Set_Instance_Const (Sub_Inst, True);
+
+      Create_Object (Sub_Inst, Inter, Arg);
+
+      Init := Association_Iterator_Build (Inter, Null_Node);
+
+      Res := Synth_Static_Subprogram_Call
+        (Syn_Inst, Sub_Inst, Func, Bod, Init, Func);
+
+      Free_Instance (Sub_Inst);
+
+      return Res;
+   end Exec_Resolution_Call;
 
    --  Return True iff WID is a static wire and its value is V.
    function Is_Static_Bit (Wid : Wire_Id; V : Ghdl_U8) return Boolean
