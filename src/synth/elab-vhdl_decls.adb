@@ -27,6 +27,9 @@ with Elab.Vhdl_Errors; use Elab.Vhdl_Errors;
 with Elab.Vhdl_Expr; use Elab.Vhdl_Expr;
 with Elab.Vhdl_Insts;
 
+with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
+with Synth.Vhdl_Stmts; use Synth.Vhdl_Stmts;
+
 package body Elab.Vhdl_Decls is
    procedure Elab_Subprogram_Declaration
      (Syn_Inst : Synth_Instance_Acc; Subprg : Node)
@@ -91,7 +94,7 @@ package body Elab.Vhdl_Decls is
          end if;
          Last_Type := Decl_Type;
       end if;
-      Val := Exec_Expression_With_Type
+      Val := Synth_Expression_With_Type
         (Syn_Inst, Get_Default_Value (Decl), Obj_Type);
       if Val = No_Valtyp then
          Set_Error (Syn_Inst);
@@ -111,7 +114,7 @@ package body Elab.Vhdl_Decls is
       Obj_Typ := Elab_Declaration_Type (Syn_Inst, Decl);
 
       if Is_Valid (Def) then
-         Init := Exec_Expression_With_Type (Syn_Inst, Def, Obj_Typ);
+         Init := Synth_Expression_With_Type (Syn_Inst, Def, Obj_Typ);
          Init := Exec_Subtype_Conversion (Init, Obj_Typ, False, Decl);
       else
          Init := No_Valtyp;
@@ -135,7 +138,7 @@ package body Elab.Vhdl_Decls is
       end if;
 
       if Is_Valid (Def) then
-         Init := Exec_Expression_With_Type (Syn_Inst, Def, Obj_Typ);
+         Init := Synth_Expression_With_Type (Syn_Inst, Def, Obj_Typ);
          Init := Exec_Subtype_Conversion (Init, Obj_Typ, False, Decl);
       else
          if Force_Init then
@@ -233,7 +236,7 @@ package body Elab.Vhdl_Decls is
          --     subtype conversion is first performed on the value,
          --     unless the attribute's subtype indication denotes an
          --     unconstrained array type.
-         Val := Exec_Expression_With_Type
+         Val := Synth_Expression_With_Type
            (Syn_Inst, Get_Expression (Spec), Val_Type);
          --  Check_Constraints (Instance, Val, Attr_Type, Decl);
 
@@ -258,6 +261,7 @@ package body Elab.Vhdl_Decls is
       Obj_Typ : Type_Acc;
       Base : Valtyp;
       Typ : Type_Acc;
+      Dyn : Dyn_Name;
    begin
       --  Subtype indication may not be present.
       if Atype /= Null_Node then
@@ -267,7 +271,8 @@ package body Elab.Vhdl_Decls is
          Obj_Typ := null;
       end if;
 
-      Exec_Assignment_Prefix (Syn_Inst, Get_Name (Decl), Base, Typ, Off);
+      Synth_Assignment_Prefix (Syn_Inst, Get_Name (Decl), Base, Typ, Off, Dyn);
+      pragma Assert (Dyn = No_Dyn_Name);
       Res := Create_Value_Alias (Base, Off, Typ);
       if Obj_Typ /= null then
          Res := Exec_Subtype_Conversion (Res, Obj_Typ, True, Decl);

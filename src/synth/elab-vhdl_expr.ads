@@ -38,35 +38,9 @@ package Elab.Vhdl_Expr is
    function Exec_Type_Of_Object (Syn_Inst : Synth_Instance_Acc; Expr : Node)
                                 return Type_Acc;
 
-   procedure Exec_Assignment_Prefix (Syn_Inst : Synth_Instance_Acc;
-                                     Pfx : Node;
-                                     Dest_Base : out Valtyp;
-                                     Dest_Typ : out Type_Acc;
-                                     Dest_Off : out Value_Offsets);
-
-   function Exec_Name (Syn_Inst : Synth_Instance_Acc; Name : Node)
-                      return Valtyp;
-
    --  Get the type of NAME.  No expressions are expected to be evaluated.
    function Exec_Name_Subtype (Syn_Inst : Synth_Instance_Acc; Name : Node)
                               return Type_Acc;
-
-   --  Synthesize EXPR.  The expression must be self-constrained.
-   --  If EN is not No_Net, the execution is controlled by EN.  This is used
-   --  for assertions and checks.
-   function Exec_Expression
-     (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Valtyp;
-
-   --  Same as Synth_Expression, but the expression may be constrained by
-   --  EXPR_TYPE.
-   function Exec_Expression_With_Type (Syn_Inst : Synth_Instance_Acc;
-                                       Expr : Node;
-                                       Expr_Type : Type_Acc) return Valtyp;
-
-   --  Use base type of EXPR to synthesize EXPR.  Useful when the type of
-   --  EXPR is defined by itself or a range.
-   function Exec_Expression_With_Basetype (Syn_Inst : Synth_Instance_Acc;
-                                           Expr : Node) return Valtyp;
 
    --  Subtype conversion.
    function Exec_Subtype_Conversion (Vt : Valtyp;

@@ -26,7 +26,8 @@ with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 with Elab.Vhdl_Types; use Elab.Vhdl_Types;
 with Elab.Vhdl_Decls; use Elab.Vhdl_Decls;
 with Elab.Vhdl_Insts; use Elab.Vhdl_Insts;
-with Elab.Vhdl_Expr; use Elab.Vhdl_Expr;
+
+with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
 
 package body Elab.Vhdl_Stmts is
    function Elab_Generate_Statement_Body (Syn_Inst : Synth_Instance_Acc;
@@ -129,7 +130,7 @@ package body Elab.Vhdl_Stmts is
       loop
          Icond := Get_Condition (Gen);
          if Icond /= Null_Node then
-            Cond := Exec_Expression (Syn_Inst, Icond);
+            Cond := Synth_Expression (Syn_Inst, Icond);
             Strip_Const (Cond);
          else
             --  It is the else generate.

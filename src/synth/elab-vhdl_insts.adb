@@ -34,6 +34,8 @@ with Elab.Vhdl_Files;
 with Elab.Vhdl_Errors; use Elab.Vhdl_Errors;
 with Elab.Vhdl_Expr; use Elab.Vhdl_Expr;
 
+with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
+
 package body Elab.Vhdl_Insts is
    procedure Elab_Instance_Body (Syn_Inst : Synth_Instance_Acc);
    procedure Elab_Recurse_Instantiations
@@ -76,11 +78,11 @@ package body Elab.Vhdl_Insts is
                case Get_Kind (Assoc) is
                   when Iir_Kind_Association_Element_Open =>
                      Actual := Get_Default_Value (Inter);
-                     Val := Exec_Expression_With_Type
+                     Val := Synth_Expression_With_Type
                        (Sub_Inst, Actual, Inter_Type);
                   when Iir_Kind_Association_Element_By_Expression =>
                      Actual := Get_Actual (Assoc);
-                     Val := Exec_Expression_With_Type
+                     Val := Synth_Expression_With_Type
                        (Syn_Inst, Actual, Inter_Type);
                   when others =>
                      raise Internal_Error;
@@ -344,7 +346,7 @@ package body Elab.Vhdl_Insts is
          then
             --  For expression: just compute the expression and associate.
             Inter_Typ := Elab_Declaration_Type (Sub_Inst, Inter);
-            Val := Exec_Expression_With_Type
+            Val := Synth_Expression_With_Type
               (Syn_Inst, Get_Actual (Assoc), Inter_Typ);
             return Val.Typ;
          end if;
@@ -805,7 +807,7 @@ package body Elab.Vhdl_Insts is
             Inter_Typ : Type_Acc;
          begin
             Inter_Typ := Elab_Declaration_Type (Top_Inst, Inter);
-            Val := Exec_Expression_With_Type
+            Val := Synth_Expression_With_Type
               (Top_Inst, Get_Default_Value (Inter), Inter_Typ);
             pragma Assert (Is_Static (Val.Val));
             Create_Object (Top_Inst, Inter, Val);

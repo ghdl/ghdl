@@ -30,6 +30,8 @@ with Elab.Vhdl_Expr; use Elab.Vhdl_Expr;
 with Elab.Vhdl_Decls;
 with Elab.Vhdl_Errors; use Elab.Vhdl_Errors;
 
+with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
+
 package body Elab.Vhdl_Types is
    function Synth_Discrete_Range_Expression
      (Syn_Inst : Synth_Instance_Acc; Rng : Node) return Discrete_Range_Type
@@ -38,8 +40,8 @@ package body Elab.Vhdl_Types is
       Lval, Rval : Int64;
    begin
       --  Static values.
-      L := Exec_Expression_With_Basetype (Syn_Inst, Get_Left_Limit (Rng));
-      R := Exec_Expression_With_Basetype (Syn_Inst, Get_Right_Limit (Rng));
+      L := Synth_Expression_With_Basetype (Syn_Inst, Get_Left_Limit (Rng));
+      R := Synth_Expression_With_Basetype (Syn_Inst, Get_Right_Limit (Rng));
       Strip_Const (L);
       Strip_Const (R);
 
@@ -63,8 +65,8 @@ package body Elab.Vhdl_Types is
       L, R : Valtyp;
    begin
       --  Static values (so no enable).
-      L := Exec_Expression (Syn_Inst, Get_Left_Limit (Rng));
-      R := Exec_Expression (Syn_Inst, Get_Right_Limit (Rng));
+      L := Synth_Expression (Syn_Inst, Get_Left_Limit (Rng));
+      R := Synth_Expression (Syn_Inst, Get_Right_Limit (Rng));
       return (Get_Direction (Rng), Read_Fp64 (L), Read_Fp64 (R));
    end Synth_Float_Range_Expression;
 
@@ -670,7 +672,7 @@ package body Elab.Vhdl_Types is
                   Pfx : constant Node := Get_Prefix (Atype);
                   Vt : Valtyp;
                begin
-                  Vt := Exec_Name (Syn_Inst, Pfx);
+                  Vt := Synth_Name (Syn_Inst, Pfx);
                   return Vt.Typ;
                end;
             when others =>

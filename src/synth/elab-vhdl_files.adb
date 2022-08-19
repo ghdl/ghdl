@@ -29,8 +29,9 @@ with Grt.Stdio;
 
 with Elab.Memtype; use Elab.Memtype;
 with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
-with Elab.Vhdl_Expr; use Elab.Vhdl_Expr;
 with Elab.Vhdl_Errors; use Elab.Vhdl_Errors;
+
+with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
 
 package body Elab.Vhdl_Files is
 
@@ -214,10 +215,10 @@ package body Elab.Vhdl_Files is
          return F;
       end if;
 
-      File_Name := Exec_Expression_With_Basetype (Syn_Inst, External_Name);
+      File_Name := Synth_Expression_With_Basetype (Syn_Inst, External_Name);
 
       if Open_Kind /= Null_Node then
-         Mode := Exec_Expression (Syn_Inst, Open_Kind);
+         Mode := Synth_Expression (Syn_Inst, Open_Kind);
          File_Mode := Ghdl_I32 (Read_Discrete (Mode));
       else
          case Get_Mode (Decl) is

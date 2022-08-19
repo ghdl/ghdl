@@ -51,9 +51,6 @@ with Synth.Vhdl_Aggr;
 with Synth.Vhdl_Context; use Synth.Vhdl_Context;
 
 package body Synth.Vhdl_Expr is
-   function Synth_Name (Syn_Inst : Synth_Instance_Acc; Name : Node)
-                       return Valtyp;
-
    procedure Set_Location (N : Net; Loc : Node)
      renames Synth.Source.Set_Location;
 

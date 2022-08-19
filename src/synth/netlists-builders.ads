@@ -23,6 +23,8 @@ package Netlists.Builders is
    type Context is private;
    type Context_Acc is access Context;
 
+   No_Context : constant Context_Acc := null;
+
    type Uns32_Arr is array (Natural range <>) of Uns32;
    type Uns32_Arr_Acc is access Uns32_Arr;
    procedure Unchecked_Deallocate is new Ada.Unchecked_Deallocation

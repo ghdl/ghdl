@@ -130,6 +130,9 @@ package Synth.Vhdl_Expr is
                                  Off : out Value_Offsets;
                                  Error : out Boolean);
 
+   function Synth_Name (Syn_Inst : Synth_Instance_Acc; Name : Node)
+                       return Valtyp;
+
    --  Conversion to logic vector.
    type Digit_Index is new Natural;
    type Logvec_Array is array (Digit_Index range <>) of Logic_32;
