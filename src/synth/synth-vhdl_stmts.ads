@@ -105,6 +105,12 @@ package Synth.Vhdl_Stmts is
                                           Stmt : Node);
    procedure Execute_Report_Statement (Inst : Synth_Instance_Acc;
                                        Stmt : Node);
+   procedure Exec_Failed_Assertion (Syn_Inst : Synth_Instance_Acc;
+                                    Stmt : Node;
+                                    Stmt_Msg : String;
+                                    Default_Rep : String;
+                                    Default_Severity : Natural);
+
    procedure Init_For_Loop_Statement (Inst : Synth_Instance_Acc;
                                       Stmt : Node;
                                       Val : out Valtyp);

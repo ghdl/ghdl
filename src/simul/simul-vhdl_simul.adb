@@ -23,10 +23,19 @@ with Ada.Unchecked_Deallocation;
 with Simple_IO;
 with Utils_IO;
 
+with Vhdl.Types;
 with Vhdl.Errors;
 with Vhdl.Utils;
+with Vhdl.Std_Package;
+with Vhdl.Ieee.Std_Logic_1164;
 with Vhdl.Sem_Inst;
 with Vhdl.Canon;
+
+with PSL.Types; use PSL.Types;
+with PSL.Nodes;
+with PSL.NFAs;
+with PSL.NFAs.Utils;
+with PSL.Errors;
 
 with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
 with Elab.Vhdl_Values; use Elab.Vhdl_Values;
@@ -1117,12 +1126,12 @@ package body Simul.Vhdl_Simul is
         ((Drv.Typ, Sig.Sig), 0, 0, Get_Value_Memtyp (Val));
    end Execute_Expression_Association;
 
+   function To_Process_State_Acc is new Ada.Unchecked_Conversion
+     (Grt.Processes.Instance_Acc, Process_State_Acc);
+
    procedure Process_Executer (Self : Grt.Processes.Instance_Acc)
    is
       use Simple_IO;
-
-      function To_Process_State_Acc is new Ada.Unchecked_Conversion
-        (Grt.Processes.Instance_Acc, Process_State_Acc);
 
       Process : Process_State_Acc renames
         To_Process_State_Acc (Self);
@@ -1254,6 +1263,230 @@ package body Simul.Vhdl_Simul is
       end if;
    end Create_Process_Sensitized;
 
+   procedure PSL_Process_Executer (Self : Grt.Processes.Instance_Acc);
+   pragma Convention (C, PSL_Process_Executer);
+
+   procedure PSL_Assert_Finalizer (Self : Grt.Processes.Instance_Acc);
+   pragma Convention (C, PSL_Assert_Finalizer);
+
+   function Execute_Psl_Expr (Inst : Synth_Instance_Acc;
+                              Expr : PSL_Node;
+                              Eos : Boolean)
+                             return Boolean
+   is
+      use Vhdl.Types;
+      use Vhdl.Utils;
+      use PSL.Nodes;
+   begin
+      case Get_Kind (Expr) is
+         when N_HDL_Expr
+           | N_HDL_Bool =>
+            declare
+               E : constant Vhdl_Node := Get_HDL_Node (Expr);
+               Rtype : constant Vhdl_Node := Get_Base_Type (Get_Type (E));
+               Res   : Valtyp;
+               V     : Ghdl_U8;
+            begin
+               Res := Synth.Vhdl_Expr.Synth_Expression (Inst, E);
+               if Rtype = Vhdl.Std_Package.Boolean_Type_Definition then
+                  return Read_U8 (Res.Val.Mem) = 1;
+               elsif Rtype = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type then
+                  V := Read_U8 (Res.Val.Mem);
+                  return V = 3 or V = 7; --  1 or H
+               else
+                  PSL.Errors.Error_Kind ("execute_psl_expr", Expr);
+               end if;
+            end;
+         when N_True =>
+            return True;
+         when N_EOS =>
+            return Eos;
+         when N_Not_Bool =>
+            return not Execute_Psl_Expr (Inst, Get_Boolean (Expr), Eos);
+         when N_And_Bool =>
+            return Execute_Psl_Expr (Inst, Get_Left (Expr), Eos)
+              and Execute_Psl_Expr (Inst, Get_Right (Expr), Eos);
+         when N_Or_Bool =>
+            return Execute_Psl_Expr (Inst, Get_Left (Expr), Eos)
+              or Execute_Psl_Expr (Inst, Get_Right (Expr), Eos);
+         when others =>
+            PSL.Errors.Error_Kind ("execute_psl_expr", Expr);
+      end case;
+   end Execute_Psl_Expr;
+
+   procedure PSL_Process_Executer (Self : Grt.Processes.Instance_Acc)
+   is
+      use PSL.NFAs;
+
+      E : constant Process_State_Acc := To_Process_State_Acc (Self);
+      Nvec : Boolean_Vector (E.States.all'Range);
+      Marker : Mark_Type;
+      V : Boolean;
+
+      NFA : PSL_NFA;
+      S : NFA_State;
+      S_Num : Nat32;
+      Ed : NFA_Edge;
+      Sd : NFA_State;
+      Sd_Num : Nat32;
+   begin
+      --  Exit now if already covered (never set for assertion).
+      if E.Done then
+         return;
+      end if;
+
+      Instance_Pool := Global_Pool'Access;
+--      Current_Process := No_Process;
+
+      Mark (Marker, Expr_Pool);
+      V := Execute_Psl_Expr (E.Instance, Get_PSL_Clock (E.Proc), False);
+      Release (Marker, Expr_Pool);
+      if V then
+         Nvec := (others => False);
+         case Get_Kind (E.Proc) is
+            when Iir_Kind_Psl_Cover_Directive
+              | Iir_Kind_Psl_Endpoint_Declaration =>
+               Nvec (0) := True;
+            when others =>
+               null;
+         end case;
+
+         --  For each state: if set, evaluate all outgoing edges.
+         NFA := Get_PSL_NFA (E.Proc);
+         S := Get_First_State (NFA);
+         while S /= No_State loop
+            S_Num := Get_State_Label (S);
+
+            if E.States (S_Num) then
+               Ed := Get_First_Src_Edge (S);
+               while Ed /= No_Edge loop
+                  Sd := Get_Edge_Dest (Ed);
+                  Sd_Num := Get_State_Label (Sd);
+
+                  if not Nvec (Sd_Num) then
+                     Mark (Marker, Expr_Pool);
+                     V := Execute_Psl_Expr
+                       (E.Instance, Get_Edge_Expr (Ed), False);
+                     Release (Marker, Expr_Pool);
+                     if V then
+                        Nvec (Sd_Num) := True;
+                     end if;
+                  end if;
+
+                  Ed := Get_Next_Src_Edge (Ed);
+               end loop;
+            end if;
+
+            S := Get_Next_State (S);
+         end loop;
+
+         --  Check fail state.
+         S := Get_Final_State (NFA);
+         S_Num := Get_State_Label (S);
+         pragma Assert (S_Num = Get_PSL_Nbr_States (E.Proc) - 1);
+         case Get_Kind (E.Proc) is
+            when Iir_Kind_Psl_Assert_Directive =>
+               if Nvec (S_Num) then
+                  Exec_Failed_Assertion
+                    (E.Instance, E.Proc,
+                     "psl assertion", "assertion violation", 2);
+               end if;
+            when Iir_Kind_Psl_Assume_Directive =>
+               if Nvec (S_Num) then
+                  Exec_Failed_Assertion
+                    (E.Instance, E.Proc,
+                     "psl assumption", "assumption violation", 2);
+               end if;
+            when Iir_Kind_Psl_Cover_Directive =>
+               if Nvec (S_Num) then
+                  if Get_Report_Expression (E.Proc) /= Null_Iir then
+                     Exec_Failed_Assertion
+                       (E.Instance, E.Proc,
+                        "psl cover", "sequence covered", 0);
+                  end if;
+                  E.Done := True;
+               end if;
+--            when Iir_Kind_Psl_Endpoint_Declaration =>
+--               declare
+--                  Info : constant Sim_Info_Acc := Get_Info (E.Stmt);
+--               begin
+--                E.Instance.Objects (Info.Slot).B1 := Ghdl_B1 (Nvec (S_Num));
+--               end;
+            when others =>
+               Vhdl.Errors.Error_Kind ("PSL_Process_Executer", E.Proc);
+         end case;
+
+         E.States.all := Nvec;
+      end if;
+
+      Instance_Pool := null;
+      Current_Process := null;
+   end PSL_Process_Executer;
+
+   procedure PSL_Assert_Finalizer (Self : Grt.Processes.Instance_Acc)
+   is
+      use PSL.NFAs;
+      Ent : constant Process_State_Acc := To_Process_State_Acc (Self);
+
+      NFA : constant PSL_NFA := Get_PSL_NFA (Ent.Proc);
+      S : NFA_State;
+      E : NFA_Edge;
+      Sd : NFA_State;
+      S_Num : Int32;
+   begin
+      S := Get_Final_State (NFA);
+      E := Get_First_Dest_Edge (S);
+      while E /= No_Edge loop
+         Sd := Get_Edge_Src (E);
+
+         if PSL.NFAs.Utils.Has_EOS (Get_Edge_Expr (E)) then
+
+            S_Num := Get_State_Label (Sd);
+
+            if Ent.States (S_Num)
+              and then
+              Execute_Psl_Expr (Ent.Instance, Get_Edge_Expr (E), True)
+            then
+               Exec_Failed_Assertion
+                 (Ent.Instance, Ent.Proc,
+                  "psl assertion", "assertion violation", 2);
+               exit;
+            end if;
+         end if;
+
+         E := Get_Next_Dest_Edge (E);
+      end loop;
+   end PSL_Assert_Finalizer;
+
+   procedure Create_PSL (Proc : in out Process_State_Type;
+                         Inst : System.Address)
+   is
+      Stmt : constant Node := Proc.Proc;
+   begin
+      --  Create the vector.
+      Proc.States := new Boolean_Vector'
+        (0 .. Get_PSL_Nbr_States (Stmt) - 1 => False);
+      Proc.States (0) := True;
+
+      Grt.Processes.Ghdl_Process_Register
+        (To_Instance_Acc (Inst), PSL_Process_Executer'Access,
+         null, System.Null_Address);
+
+      case Get_Kind (Proc.Proc) is
+         when Iir_Kind_Psl_Assert_Directive
+           | Iir_Kind_Psl_Assume_Directive =>
+            if Get_PSL_EOS_Flag (Proc.Proc) then
+               Grt.Processes.Ghdl_Finalize_Register
+                 (To_Instance_Acc (Inst), PSL_Assert_Finalizer'Access);
+            end if;
+         when Iir_Kind_Psl_Cover_Directive =>
+            --  TODO
+            null;
+         when others =>
+            null;
+      end case;
+   end Create_PSL;
+
    procedure Create_Processes
    is
       use Grt.Processes;
@@ -1268,13 +1501,12 @@ package body Simul.Vhdl_Simul is
          Instance := Processes_Table.Table (I).Inst;
          Proc := Processes_Table.Table (I).Proc;
 
---         Instance_Pool := Processes_State (I).Pool'Access;
---         Instance.Stmt := Get_Sequential_Statement_Chain (Proc);
-
-         Processes_State (I).Top_Instance := Instance;
-         Processes_State (I).Proc := Proc;
-         Processes_State (I).Idx := I;
-         Processes_State (I).Instance := Instance;
+         Processes_State (I) := (Kind => Kind_Process,
+                                 Top_Instance => Instance,
+                                 Proc => Proc,
+                                 Idx => I,
+                                 Instance => Instance,
+                                 Pool => <>);
 
          Current_Process := Processes_State (I)'Access;
          Instance_Addr := Processes_State (I)'Address;
@@ -1326,6 +1558,16 @@ package body Simul.Vhdl_Simul is
                   Create_Process_Drivers (Instance, Proc, Driver_List);
                   Trans_Analyzes.Free_Drivers_List (Driver_List);
                end;
+
+            when Iir_Kind_Psl_Assert_Directive =>
+               Processes_State (I) := (Kind => Kind_PSL,
+                                       Top_Instance => Instance,
+                                       Proc => Proc,
+                                       Idx => I,
+                                       Instance => Instance,
+                                       Done => False,
+                                       States => null);
+               Create_PSL (Processes_State (I), Processes_State (I)'Address);
 
             when others =>
                Vhdl.Errors.Error_Kind ("create_processes", Proc);

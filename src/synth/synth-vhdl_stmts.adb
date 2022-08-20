@@ -3020,12 +3020,13 @@ package body Synth.Vhdl_Stmts is
       C.Nbr_Ret := C.Nbr_Ret + 1;
    end Synth_Return_Statement;
 
-   procedure Synth_Static_Report (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
+   procedure Exec_Failed_Assertion (Syn_Inst : Synth_Instance_Acc;
+                                    Stmt : Node;
+                                    Stmt_Msg : String;
+                                    Default_Rep : String;
+                                    Default_Severity : Natural)
    is
       use Simple_IO;
-
-      Is_Report : constant Boolean :=
-        Get_Kind (Stmt) = Iir_Kind_Report_Statement;
       Rep_Expr : constant Node := Get_Report_Expression (Stmt);
       Sev_Expr : constant Node := Get_Severity_Expression (Stmt);
       Rep : Valtyp;
@@ -3051,18 +3052,10 @@ package body Synth.Vhdl_Stmts is
 
       Put_Err (Disp_Location (Stmt));
       Put_Err (":(");
-      if Is_Report then
-         Put_Err ("report");
-      else
-         Put_Err ("assertion");
-      end if;
+      Put_Err (Stmt_Msg);
       Put_Err (' ');
       if Sev = No_Valtyp then
-         if Is_Report then
-            Sev_V := 0;
-         else
-            Sev_V := 2;
-         end if;
+         Sev_V := Default_Severity;
       else
          Sev_V := Natural (Read_Discrete (Sev));
       end if;
@@ -3081,7 +3074,7 @@ package body Synth.Vhdl_Stmts is
       Put_Err ("): ");
 
       if Rep = No_Valtyp then
-         Put_Line_Err ("Assertion violation");
+         Put_Line_Err (Default_Rep);
       else
          Put_Line_Err (Value_To_String (Rep));
       end if;
@@ -3090,12 +3083,12 @@ package body Synth.Vhdl_Stmts is
          Error_Msg_Synth (+Stmt, "error due to assertion failure");
          Elab.Debugger.Debug_Error (Syn_Inst, Stmt);
       end if;
-   end Synth_Static_Report;
+   end Exec_Failed_Assertion;
 
    procedure Execute_Report_Statement (Inst : Synth_Instance_Acc;
                                        Stmt : Node) is
    begin
-      Synth_Static_Report (Inst, Stmt);
+      Exec_Failed_Assertion (Inst, Stmt, "report", "Assertion violation.", 0);
    end Execute_Report_Statement;
 
    --  Return True if EXPR can be evaluated with static values.
@@ -3136,7 +3129,8 @@ package body Synth.Vhdl_Stmts is
         and then (Sev_Expr = Null_Node
                     or else Is_Static_Expr (Inst, Sev_Expr))
       then
-         Synth_Static_Report (Inst, Stmt);
+         Exec_Failed_Assertion
+           (Inst, Stmt, "report", "Assertion violation.", 0);
       end if;
    end Synth_Dynamic_Report_Statement;
 
@@ -3155,7 +3149,8 @@ package body Synth.Vhdl_Stmts is
       if Read_Discrete (Cond) = 1 then
          return;
       end if;
-      Synth_Static_Report (Inst, Stmt);
+      Exec_Failed_Assertion
+        (Inst, Stmt, "assertion", "Assertion violation.", 2);
    end Execute_Assertion_Statement;
 
    procedure Synth_Dynamic_Assertion_Statement (C : Seq_Context; Stmt : Node)
@@ -3448,7 +3443,8 @@ package body Synth.Vhdl_Stmts is
       end if;
       if Is_Static (Val.Val) then
          if Read_Discrete (Val) /= 1 then
-            Synth_Static_Report (Syn_Inst, Stmt);
+            Exec_Failed_Assertion
+              (Syn_Inst, Stmt, "assertion", "Assertion violation.", 2);
          end if;
          return;
       end if;

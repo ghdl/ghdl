@@ -41,19 +41,30 @@ package Simul.Vhdl_Simul is
 
    Trace_Residues : Boolean := False;
 
+   type Process_Kind is (Kind_Process, Kind_PSL);
+
+   type Boolean_Vector is array (Nat32 range <>) of Boolean;
+   type Boolean_Vector_Acc is access Boolean_Vector;
+
    -- State associed with each process.
-   type Process_State_Type is record
+   type Process_State_Type (Kind : Process_Kind := Kind_Process) is record
       --  The process instance.
       Top_Instance : Synth_Instance_Acc := null;
       Proc : Node := Null_Node;
 
       Idx : Process_Index_Type;
 
-      --  Memory pool to allocate objects from.
-      Pool : aliased Areapool;
-
       -- The stack of the process.
       Instance : Synth_Instance_Acc := null;
+
+      case Kind is
+         when Kind_Process =>
+            --  Memory pool to allocate objects from.
+            Pool : Areapool_Acc;
+         when Kind_PSL =>
+            Done : Boolean;
+            States: Boolean_Vector_Acc;
+      end case;
    end record;
    type Process_State_Acc is access all Process_State_Type;
 
