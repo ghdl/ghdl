@@ -888,31 +888,48 @@ package body Simul.Vhdl_Simul is
                raise Internal_Error;
          end case;
          if Eq then
-            Execute_Waveform_Assignment (Inst, Info, Wf);
+            Execute_Waveform_Assignment (Inst, Info, Stmt, Wf);
             exit;
          end if;
          Sw := Get_Chain (Sw);
       end loop;
    end Execute_Selected_Signal_Assignment;
 
-   procedure Execute_Sequential_Statements (Process : Process_State_Acc)
+   procedure Execute_Assertion_Statement (Inst : Synth_Instance_Acc;
+                                          Stmt : Node)
+   is
+      use Grt.Options;
+   begin
+      if Execute_Condition (Inst, Get_Assertion_Condition (Stmt)) then
+         return;
+      end if;
+
+      --  TODO: ieee asserts vs user asserts.
+      case Asserts_Policy is
+         when Enable_Asserts =>
+            null;
+         when Disable_Asserts =>
+            return;
+         when Disable_Asserts_At_Time_0 =>
+            if Current_Time = 0 then
+               return;
+            end if;
+      end case;
+
+      Exec_Failed_Assertion
+        (Inst, Stmt, "assertion", "Assertion violation.", 2);
+   end Execute_Assertion_Statement;
+
+   procedure Execute_Sequential_Statements_Inner (Process : Process_State_Acc;
+                                                  First_Stmt : Node;
+                                                  Is_Resume : Boolean)
    is
       Inst : Synth_Instance_Acc;
-      Src : Node;
       Stmt : Node;
       Resume : Boolean;
    begin
-      Inst := Process.Instance;
-      Src := Get_Source_Scope (Inst);
-      if Get_Kind (Src) = Iir_Kind_Sensitized_Process_Statement
-        or else (Get_Kind (Src) = Iir_Kind_Procedure_Body
-                   and then not Get_Suspend_Flag (Src))
-      then
-         Stmt := Get_Sequential_Statement_Chain (Src);
-         Resume := True;
-      else
-         Get_Suspend_State_Statement (Inst, Stmt, Resume);
-      end if;
+      Stmt := First_Stmt;
+      Resume := Is_Resume;
 
       loop
          Inst := Process.Instance;
@@ -1145,7 +1162,64 @@ package body Simul.Vhdl_Simul is
 
          exit when Stmt = Null_Node;
       end loop;
+   end Execute_Sequential_Statements_Inner;
+
+   procedure Execute_Sequential_Statements (Process : Process_State_Acc)
+   is
+      Inst : Synth_Instance_Acc;
+      Src : Node;
+      Stmt : Node;
+      Resume : Boolean;
+   begin
+      Inst := Process.Instance;
+      Src := Get_Source_Scope (Inst);
+      if Get_Kind (Src) = Iir_Kind_Sensitized_Process_Statement
+        or else (Get_Kind (Src) = Iir_Kind_Procedure_Body
+                   and then not Get_Suspend_Flag (Src))
+      then
+         --  No suspend, simply execute.
+         Stmt := Get_Sequential_Statement_Chain (Src);
+         Resume := True;
+      else
+         --  Find the resume instruction (or start instruction).
+         Get_Suspend_State_Statement (Inst, Stmt, Resume);
+      end if;
+
+      Execute_Sequential_Statements_Inner (Process, Stmt, Resume);
    end Execute_Sequential_Statements;
+
+   procedure Execute_Concurrent_Procedure_Call (Proc : Process_State_Acc)
+   is
+      Next_Stmt : Node;
+      Resume : Boolean;
+   begin
+      if Proc.Instance = null then
+         --  Resume after implicit wait statement.
+         raise Internal_Error;
+      elsif Proc.Instance = Proc.Top_Instance then
+         --  Call procedure.
+         Execute_Procedure_Call_Statement (Proc, Proc.Proc, Next_Stmt);
+         if Next_Stmt = Null_Node then
+            --  Fully executed.
+            raise Internal_Error;
+         else
+            --  Execute.
+            Execute_Sequential_Statements_Inner (Proc, Next_Stmt, False);
+            if Proc.Instance = Proc.Top_Instance then
+               --  Do implicit wait.
+               raise Internal_Error;
+            end if;
+         end if;
+      else
+         --  Resume within the procedure.
+         Get_Suspend_State_Statement (Proc.Instance, Next_Stmt, Resume);
+         Execute_Sequential_Statements_Inner (Proc, Next_Stmt, Resume);
+         if Proc.Instance = Proc.Top_Instance then
+            --  Do implicit wait
+            raise Internal_Error;
+         end if;
+      end if;
+   end Execute_Concurrent_Procedure_Call;
 
    procedure Execute_Expression_Association (Proc_Idx : Process_Index_Type)
    is
@@ -1225,6 +1299,11 @@ package body Simul.Vhdl_Simul is
                Elab.Debugger.Debug_Break (Process.Instance, Process.Proc);
             end if;
             Execute_Expression_Association (Process.Idx);
+         when Iir_Kind_Concurrent_Procedure_Call_Statement =>
+            if Elab.Debugger.Flag_Need_Debug then
+               Elab.Debugger.Debug_Break (Process.Instance, Process.Proc);
+            end if;
+            Execute_Concurrent_Procedure_Call (Process);
          when others =>
             raise Internal_Error;
       end case;
@@ -1573,7 +1652,8 @@ package body Simul.Vhdl_Simul is
                Register_Sensitivity (I);
                Create_Process_Drivers (I);
 
-            when Iir_Kind_Process_Statement =>
+            when Iir_Kind_Process_Statement
+              | Iir_Kind_Concurrent_Procedure_Call_Statement =>
                declare
                   Driver_List: Iir_List;
                begin
