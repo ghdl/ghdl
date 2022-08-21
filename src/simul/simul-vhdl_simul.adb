@@ -1067,7 +1067,7 @@ package body Simul.Vhdl_Simul is
                end;
 
             when Iir_Kind_Assertion_Statement =>
-               Synth.Vhdl_Stmts.Execute_Assertion_Statement (Inst, Stmt);
+               Execute_Assertion_Statement (Inst, Stmt);
                Next_Statement (Process, Stmt);
             when Iir_Kind_Report_Statement =>
                Synth.Vhdl_Stmts.Execute_Report_Statement (Inst, Stmt);
@@ -1275,8 +1275,7 @@ package body Simul.Vhdl_Simul is
             if Elab.Debugger.Flag_Need_Debug then
                Elab.Debugger.Debug_Break (Process.Instance, Process.Proc);
             end if;
-            Synth.Vhdl_Stmts.Execute_Assertion_Statement
-              (Process.Instance, Process.Proc);
+            Execute_Assertion_Statement (Process.Instance, Process.Proc);
          when Iir_Kind_Concurrent_Simple_Signal_Assignment =>
             if Elab.Debugger.Flag_Need_Debug then
                Elab.Debugger.Debug_Break (Process.Instance, Process.Proc);
@@ -2670,6 +2669,8 @@ package body Simul.Vhdl_Simul is
 
       Grt.Options.Progname := To_Ghdl_C_String (Ghdl_Progname'Address);
       Grt.Errors.Set_Error_Stream (Grt.Stdio.stdout);
+
+      Elab.Debugger.Error_Hook := Grt.Errors.Fatal_Error'Access;
 
 --      Grt.Errors.Error_Hook := Debug_Error'Access;
 

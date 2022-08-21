@@ -101,8 +101,6 @@ package Synth.Vhdl_Stmts is
                                       Unit : Node;
                                       Parent_Inst : Synth_Instance_Acc);
 
-   procedure Execute_Assertion_Statement (Inst : Synth_Instance_Acc;
-                                          Stmt : Node);
    procedure Execute_Report_Statement (Inst : Synth_Instance_Acc;
                                        Stmt : Node);
    procedure Exec_Failed_Assertion (Syn_Inst : Synth_Instance_Acc;

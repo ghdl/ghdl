@@ -45,7 +45,13 @@ package Elab.Debugger is
 
    --  To be called in case of execution error, like:
    --  * index out of bounds.
+   --  * assertion failuere
    procedure Debug_Error (Inst : Synth_Instance_Acc; Expr : Node);
+
+   --  Hook called in case of fatal error.
+   type Error_Hook_Type is access procedure;
+   pragma Convention (C, Error_Hook_Type);
+   Error_Hook : Error_Hook_Type;
 
    function Debug_Current_Instance return Synth_Instance_Acc;
 

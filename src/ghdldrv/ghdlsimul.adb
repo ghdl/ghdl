@@ -162,11 +162,6 @@ package body Ghdlsimul is
 
       Simul.Vhdl_Simul.Simulation;
 
-      --  Simul uses report_msg.
-      if Errorout.Nbr_Errors > 0 then
-         Grt.Errors.Exit_Status := 1;
-      end if;
-
       Set_Exit_Status (Exit_Status (Grt.Errors.Exit_Status));
    end Run;
 

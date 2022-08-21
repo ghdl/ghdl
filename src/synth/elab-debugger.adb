@@ -1041,6 +1041,9 @@ package body Elab.Debugger is
          Current_Loc := Expr;
          Debug (Reason_Error);
       end if;
+      if Error_Hook /= null then
+         Error_Hook.all;
+      end if;
    end Debug_Error;
 
 end Elab.Debugger;
