@@ -167,6 +167,31 @@ package body Simul.Vhdl_Simul is
       Grt.Errors.Fatal_Error;
    end Error_Msg_Exec;
 
+   function To_Ghdl_Value (Mt : Memtyp) return Value_Union
+   is
+      Val : Value_Union;
+   begin
+      case Mt.Typ.Kind is
+         when Type_Bit =>
+            Val.B1 := Ghdl_B1'Val (Read_U8 (Mt.Mem));
+         when Type_Logic =>
+            Val.E8 := Read_U8 (Mt.Mem);
+         when Type_Discrete =>
+            if Mt.Typ.Sz = 1 then
+               Val.E8 := Read_U8 (Mt.Mem);
+            elsif Mt.Typ.Sz = 4 then
+               Val.I32 := Read_I32 (Mt.Mem);
+            elsif Mt.Typ.Sz = 8 then
+               Val.I64 := Read_I64 (Mt.Mem);
+            else
+               raise Internal_Error;
+            end if;
+         when others =>
+            raise Internal_Error;
+      end case;
+      return Val;
+   end To_Ghdl_Value;
+
    procedure Start_Assign_Value_To_Signal (Target: Memtyp;
                                            Rej : Std_Time;
                                            After : Std_Time;
@@ -174,22 +199,11 @@ package body Simul.Vhdl_Simul is
    begin
       case Target.Typ.Kind is
          when Type_Logic
-           | Type_Bit =>
-            Ghdl_Signal_Start_Assign_E8
-              (Read_Sig (Target.Mem), Rej, Read_U8 (Val), After);
-         when Type_Discrete =>
-            if Target.Typ.Sz = 1 then
-               Ghdl_Signal_Start_Assign_E8
-                 (Read_Sig (Target.Mem), Rej, Read_U8 (Val), After);
-            elsif Target.Typ.Sz = 4 then
-               Ghdl_Signal_Start_Assign_I32
-                 (Read_Sig (Target.Mem), Rej, Read_I32 (Val.Mem), After);
-            elsif Target.Typ.Sz = 8 then
-               Ghdl_Signal_Start_Assign_I64
-                 (Read_Sig (Target.Mem), Rej, Read_I64 (Val.Mem), After);
-            else
-               raise Internal_Error;
-            end if;
+           | Type_Bit
+           | Type_Discrete
+           | Type_Float =>
+            Ghdl_Signal_Start_Assign_Any
+              (Read_Sig (Target.Mem), Rej, To_Ghdl_Value (Val), After);
          when Type_Vector
            | Type_Array =>
             declare
@@ -720,55 +734,75 @@ package body Simul.Vhdl_Simul is
       Areapools.Release (Area_Mark, Instance_Pool.all);
    end Execute_Procedure_Call_Statement;
 
-   procedure Execute_Signal_Assignment (Inst : Synth_Instance_Acc;
-                                       Target : Target_Info;
-                                       Val : Valtyp;
-                                       Loc : Node);
-
-   procedure Execute_Aggregate_Signal_Assignment is
-      new Assign_Aggregate (Execute_Signal_Assignment);
-
-   procedure Execute_Signal_Assignment (Inst : Synth_Instance_Acc;
-                                        Target : Target_Info;
-                                        Val : Valtyp;
-                                        Loc : Node)
-   is
-      use Synth.Vhdl_Expr;
-      V : Valtyp;
-      Sig : Memtyp;
-   begin
-      V := Synth_Subtype_Conversion (Inst, Val, Target.Targ_Type, False, Loc);
-      pragma Unreferenced (Val);
-
-      case Target.Kind is
-         when Target_Aggregate =>
-            Execute_Aggregate_Signal_Assignment
-              (Inst, Target.Aggr, Target.Targ_Type, V, Loc);
-
-         when Target_Simple =>
-            declare
-               E : Signal_Entry renames Signals_Table.Table (Target.Obj.Val.S);
-            begin
-               Sig := (Target.Targ_Type,
-                       Sig_Index (E.Sig, Target.Off.Net_Off));
-            end;
-
-            Start_Assign_Value_To_Signal (Sig, 0, 0, Get_Value_Memtyp (V));
-
-         when Target_Memory =>
-            raise Internal_Error;
-      end case;
-   end Execute_Signal_Assignment;
-
    procedure Execute_Waveform_Assignment (Inst : Synth_Instance_Acc;
                                           Target : Target_Info;
+                                          Stmt : Node;
                                           Waveform : Node)
    is
       use Synth.Vhdl_Expr;
+      V_Aft : Std_Time;
+
+      procedure Execute_Signal_Assignment (Inst : Synth_Instance_Acc;
+                                           Target : Target_Info;
+                                           Val : Valtyp;
+                                           Loc : Node);
+
+      procedure Execute_Aggregate_Signal_Assignment is
+         new Assign_Aggregate (Execute_Signal_Assignment);
+
+      procedure Execute_Signal_Assignment (Inst : Synth_Instance_Acc;
+                                           Target : Target_Info;
+                                           Val : Valtyp;
+                                           Loc : Node)
+      is
+         V : Valtyp;
+         Sig : Memtyp;
+      begin
+         V := Synth_Subtype_Conversion
+           (Inst, Val, Target.Targ_Type, False, Loc);
+         pragma Unreferenced (Val);
+
+         case Target.Kind is
+            when Target_Aggregate =>
+               Execute_Aggregate_Signal_Assignment
+                 (Inst, Target.Aggr, Target.Targ_Type, V, Loc);
+
+            when Target_Simple =>
+               declare
+                  E : Signal_Entry renames
+                    Signals_Table.Table (Target.Obj.Val.S);
+               begin
+                  Sig := (Target.Targ_Type,
+                          Sig_Index (E.Sig, Target.Off.Net_Off));
+               end;
+
+               Start_Assign_Value_To_Signal
+                 (Sig, V_Aft, V_Aft, Get_Value_Memtyp (V));
+
+            when Target_Memory =>
+               raise Internal_Error;
+         end case;
+      end Execute_Signal_Assignment;
+
       Wf : Node;
       Val : Valtyp;
+      Aft : Node;
+      Rej : Node;
    begin
+      Rej := Get_Reject_Time_Expression (Stmt);
+      if Rej /= Null_Node then
+         raise Internal_Error;
+      end if;
+
       Wf := Waveform;
+      Aft := Get_Time (Wf);
+      if Aft /= Null_Node then
+         Val := Synth_Expression (Inst, Aft);
+         V_Aft := Std_Time (Read_I64 (Val.Val.Mem));
+      else
+         V_Aft := 0;
+      end if;
+
       Val := Synth_Expression_With_Type
         (Inst, Get_We_Value (Wf), Target.Targ_Type);
       Execute_Signal_Assignment (Inst, Target, Val, Wf);
@@ -788,7 +822,8 @@ package body Simul.Vhdl_Simul is
    begin
       Info := Synth_Target (Inst, Target);
 
-      Execute_Waveform_Assignment (Inst, Info, Get_Waveform_Chain (Stmt));
+      Execute_Waveform_Assignment
+        (Inst, Info, Stmt, Get_Waveform_Chain (Stmt));
    end Execute_Simple_Signal_Assignment;
 
    procedure Execute_Conditional_Signal_Assignment (Inst : Synth_Instance_Acc;
@@ -809,7 +844,7 @@ package body Simul.Vhdl_Simul is
            or else Execute_Condition (Inst, Cond)
          then
             Execute_Waveform_Assignment
-              (Inst, Info, Get_Waveform_Chain (Cw));
+              (Inst, Info, Stmt, Get_Waveform_Chain (Cw));
             exit;
          end if;
          Cw := Get_Chain (Cw);
@@ -1646,18 +1681,6 @@ package body Simul.Vhdl_Simul is
       end case;
    end Resolver_Read_Value;
 
-   procedure Write_Ghdl_Value (Mt : Memtyp; Val : out Value_Union) is
-   begin
-      case Mt.Typ.Kind is
-         when Type_Bit =>
-            Val.B1 := Ghdl_B1'Val (Read_U8 (Mt.Mem));
-         when Type_Logic =>
-            Val.E8 := Read_U8 (Mt.Mem);
-         when others =>
-            raise Internal_Error;
-      end case;
-   end Write_Ghdl_Value;
-
    type Write_Signal_Enum is
      (Write_Signal_Driving_Value,
       Write_Signal_Effective_Value);
@@ -1674,9 +1697,9 @@ package body Simul.Vhdl_Simul is
             S := Read_Sig (Sig);
             case Attr is
                when Write_Signal_Driving_Value =>
-                  Write_Ghdl_Value (Val, S.Driving_Value);
+                  S.Driving_Value := To_Ghdl_Value (Val);
                when Write_Signal_Effective_Value =>
-                  Write_Ghdl_Value (Val, S.Value_Ptr.all);
+                  S.Value_Ptr.all := To_Ghdl_Value (Val);
             end case;
          when others =>
             raise Internal_Error;

@@ -1076,6 +1076,18 @@ package body Grt.Signals is
       Ghdl_Signal_Start_Assign (Sign, 0, Trans, 0);
    end Ghdl_Signal_Simple_Assign_B1;
 
+   procedure Ghdl_Signal_Start_Assign_Any (Sign : Ghdl_Signal_Ptr;
+                                           Rej : Std_Time;
+                                           Val : Value_Union;
+                                           After : Std_Time)
+   is
+      Trans : Transaction_Acc;
+   begin
+      Trans := new Transaction'
+        (Kind => Trans_Value, Line => 0, Time => 0, Next => null, Val => Val);
+      Ghdl_Signal_Start_Assign (Sign, Rej, Trans, After);
+   end Ghdl_Signal_Start_Assign_Any;
+
    procedure Ghdl_Signal_Start_Assign_B1 (Sign : Ghdl_Signal_Ptr;
                                           Rej : Std_Time;
                                           Val : Ghdl_B1;
