@@ -24,7 +24,6 @@ with Grt.Stdio; use Grt.Stdio;
 with Grt.Astdio; use Grt.Astdio;
 with Grt.Astdio.Vhdl; use Grt.Astdio.Vhdl;
 with Grt.Options; use Grt.Options;
-with Grt.Hooks; use Grt.Hooks;
 
 package body Grt.Errors is
    --  Output stream to send error messages
@@ -66,15 +65,6 @@ package body Grt.Errors is
 
    procedure Fatal_Error is
    begin
-      if Error_Hook /= null then
-         --  Call the hook, but avoid infinite loop by reseting it.
-         declare
-            Current_Hook : constant Proc_Hook_Type := Error_Hook;
-         begin
-            Error_Hook := null;
-            Current_Hook.all;
-         end;
-      end if;
       Maybe_Return_Via_Longjump (-1);
       if Expect_Failure then
          Ghdl_Exit (0);

@@ -22,7 +22,6 @@
 --  covered by the GNU Public License.
 with Grt.Types; use Grt.Types;
 with Grt.Vhdl_Types; use Grt.Vhdl_Types;
-with Grt.Hooks;
 with Grt.Stdio;
 
 package Grt.Errors is
@@ -119,9 +118,6 @@ package Grt.Errors is
    Run_Limit : constant Integer := 4;
    --  Stop/finish request from user (via std.env).
    Run_Stop : constant Integer := 5;
-
-   --  Hook called in case of error.
-   Error_Hook : Grt.Hooks.Proc_Hook_Type := null;
 
    --  If true, an error is expected and the exit status is inverted.
    Expect_Failure : Boolean := False;
