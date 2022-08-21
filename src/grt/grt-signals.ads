@@ -604,7 +604,11 @@ package Grt.Signals is
                                            Rej : Std_Time;
                                            Val : Value_Union;
                                            After : Std_Time);
+   procedure Ghdl_Signal_Next_Assign (Sign : Ghdl_Signal_Ptr;
+                                      Val : Value_Union;
+                                      After : Std_Time);
 
+   --  For B1
    function Ghdl_Create_Signal_B1 (Val_Ptr : Ghdl_Value_Ptr;
                                    Resolv_Func : Resolver_Acc;
                                    Resolv_Inst : System.Address)

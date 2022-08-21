@@ -192,18 +192,27 @@ package body Simul.Vhdl_Simul is
       return Val;
    end To_Ghdl_Value;
 
-   procedure Start_Assign_Value_To_Signal (Target: Memtyp;
-                                           Rej : Std_Time;
-                                           After : Std_Time;
-                                           Val : Memtyp) is
+   procedure Assign_Value_To_Signal (Target: Memtyp;
+                                     Is_Start : Boolean;
+                                     Rej : Std_Time;
+                                     After : Std_Time;
+                                     Val : Memtyp)
+   is
+      Sig : Ghdl_Signal_Ptr;
    begin
       case Target.Typ.Kind is
          when Type_Logic
            | Type_Bit
            | Type_Discrete
            | Type_Float =>
-            Ghdl_Signal_Start_Assign_Any
-              (Read_Sig (Target.Mem), Rej, To_Ghdl_Value (Val), After);
+            Sig := Read_Sig (Target.Mem);
+            if Is_Start then
+               Ghdl_Signal_Start_Assign_Any
+                 (Sig, Rej, To_Ghdl_Value (Val), After);
+            else
+               Ghdl_Signal_Next_Assign
+                 (Sig, To_Ghdl_Value (Val), After);
+            end if;
          when Type_Vector
            | Type_Array =>
             declare
@@ -212,9 +221,9 @@ package body Simul.Vhdl_Simul is
             begin
                pragma Assert (Val.Typ.Abound.Len = Len);
                for I in 1 .. Len loop
-                  Start_Assign_Value_To_Signal
+                  Assign_Value_To_Signal
                     ((El, Sig_Index (Target.Mem, (Len - I) * El.W)),
-                     Rej, After,
+                     Is_Start, Rej, After,
                      (Val.Typ.Arr_El, Val.Mem + Size_Type (I - 1) * El.Sz));
                end loop;
             end;
@@ -223,16 +232,16 @@ package body Simul.Vhdl_Simul is
                declare
                   E : Rec_El_Type renames Val.Typ.Rec.E (I);
                begin
-                  Start_Assign_Value_To_Signal
+                  Assign_Value_To_Signal
                     ((E.Typ, Sig_Index (Target.Mem, E.Offs.Net_Off)),
-                     Rej, After,
+                     Is_Start, Rej, After,
                      (E.Typ, Val.Mem + E.Offs.Mem_Off));
                end;
             end loop;
          when others =>
             raise Internal_Error;
       end case;
-   end Start_Assign_Value_To_Signal;
+   end Assign_Value_To_Signal;
 
    procedure Add_Source (Typ : Type_Acc; Sig : Memory_Ptr; Val : Memory_Ptr) is
    begin
@@ -741,6 +750,7 @@ package body Simul.Vhdl_Simul is
    is
       use Synth.Vhdl_Expr;
       V_Aft : Std_Time;
+      Start : Boolean;
 
       procedure Execute_Signal_Assignment (Inst : Synth_Instance_Acc;
                                            Target : Target_Info;
@@ -755,17 +765,12 @@ package body Simul.Vhdl_Simul is
                                            Val : Valtyp;
                                            Loc : Node)
       is
-         V : Valtyp;
          Sig : Memtyp;
       begin
-         V := Synth_Subtype_Conversion
-           (Inst, Val, Target.Targ_Type, False, Loc);
-         pragma Unreferenced (Val);
-
          case Target.Kind is
             when Target_Aggregate =>
                Execute_Aggregate_Signal_Assignment
-                 (Inst, Target.Aggr, Target.Targ_Type, V, Loc);
+                 (Inst, Target.Aggr, Target.Targ_Type, Val, Loc);
 
             when Target_Simple =>
                declare
@@ -776,8 +781,8 @@ package body Simul.Vhdl_Simul is
                           Sig_Index (E.Sig, Target.Off.Net_Off));
                end;
 
-               Start_Assign_Value_To_Signal
-                 (Sig, V_Aft, V_Aft, Get_Value_Memtyp (V));
+               Assign_Value_To_Signal
+                 (Sig, Start, V_Aft, V_Aft, Get_Value_Memtyp (Val));
 
             when Target_Memory =>
                raise Internal_Error;
@@ -795,22 +800,26 @@ package body Simul.Vhdl_Simul is
       end if;
 
       Wf := Waveform;
-      Aft := Get_Time (Wf);
-      if Aft /= Null_Node then
-         Val := Synth_Expression (Inst, Aft);
-         V_Aft := Std_Time (Read_I64 (Val.Val.Mem));
-      else
-         V_Aft := 0;
-      end if;
+      Start := True;
+      loop
+         Aft := Get_Time (Wf);
+         if Aft /= Null_Node then
+            Val := Synth_Expression (Inst, Aft);
+            V_Aft := Std_Time (Read_I64 (Val.Val.Mem));
+         else
+            V_Aft := 0;
+         end if;
 
-      Val := Synth_Expression_With_Type
-        (Inst, Get_We_Value (Wf), Target.Targ_Type);
-      Execute_Signal_Assignment (Inst, Target, Val, Wf);
-      Wf := Get_Chain (Wf);
+         Val := Synth_Expression_With_Type
+           (Inst, Get_We_Value (Wf), Target.Targ_Type);
+         Val := Synth_Subtype_Conversion
+           (Inst, Val, Target.Targ_Type, False, Wf);
+         Execute_Signal_Assignment (Inst, Target, Val, Wf);
 
-      if Wf /= Null_Node then
-         raise Internal_Error;
-      end if;
+         Wf := Get_Chain (Wf);
+         exit when Wf = Null_Node;
+         Start := False;
+      end loop;
    end Execute_Waveform_Assignment;
 
    procedure Execute_Simple_Signal_Assignment (Inst : Synth_Instance_Acc;
@@ -1231,8 +1240,8 @@ package body Simul.Vhdl_Simul is
    begin
       Val := Synth_Expression_With_Type
         (Proc.Inst, Get_Actual (Proc.Proc), Drv.Typ);
-      Start_Assign_Value_To_Signal
-        ((Drv.Typ, Sig.Sig), 0, 0, Get_Value_Memtyp (Val));
+      Assign_Value_To_Signal
+        ((Drv.Typ, Sig.Sig), True, 0, 0, Get_Value_Memtyp (Val));
    end Execute_Expression_Association;
 
    function To_Process_State_Acc is new Ada.Unchecked_Conversion
@@ -1448,7 +1457,7 @@ package body Simul.Vhdl_Simul is
          return;
       end if;
 
-      Instance_Pool := Global_Pool'Access;
+--      Instance_Pool := Global_Pool'Access;
 --      Current_Process := No_Process;
 
       Mark (Marker, Expr_Pool);
@@ -1532,8 +1541,8 @@ package body Simul.Vhdl_Simul is
          E.States.all := Nvec;
       end if;
 
-      Instance_Pool := null;
-      Current_Process := null;
+--      Instance_Pool := null;
+--      Current_Process := null;
    end PSL_Process_Executer;
 
    procedure PSL_Assert_Finalizer (Self : Grt.Processes.Instance_Acc)
@@ -2719,8 +2728,6 @@ package body Simul.Vhdl_Simul is
             exit when Grt.Processes.Has_Simulation_Timeout;
          end loop;
       end if;
-
-      Grt.Processes.Simulation_Finish;
 
       Grt.Main.Run_Finish (Status);
    exception
