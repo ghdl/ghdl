@@ -128,7 +128,6 @@ package body Synth.Vhdl_Decls is
                                          Is_Subprg : Boolean;
                                          Last_Type : in out Node)
    is
-      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Deferred_Decl : constant Node := Get_Deferred_Declaration (Decl);
       First_Decl : Node;
       Decl_Type : Node;
@@ -176,7 +175,7 @@ package body Synth.Vhdl_Decls is
          Set_Error (Syn_Inst);
          return;
       end if;
-      Val := Synth_Subtype_Conversion (Ctxt, Val, Obj_Type, True, Decl);
+      Val := Synth_Subtype_Conversion (Syn_Inst, Val, Obj_Type, True, Decl);
       --  For constant functions, the value must be constant.
       pragma Assert (not Get_Instance_Const (Syn_Inst)
                      or else Is_Static (Val.Val));
@@ -399,7 +398,7 @@ package body Synth.Vhdl_Decls is
          if Is_Valid (Def) then
             Init := Synth_Expression_With_Type (Syn_Inst, Def, Obj_Typ);
             Init := Synth_Subtype_Conversion
-              (Ctxt, Init, Obj_Typ, True, Decl);
+              (Syn_Inst, Init, Obj_Typ, True, Decl);
             if not Is_Subprg
               and then not Is_Static (Init.Val)
             then
@@ -501,7 +500,7 @@ package body Synth.Vhdl_Decls is
          Res := Create_Value_Alias (Base, Off, Typ);
       end if;
       if Obj_Typ /= null then
-         Res := Synth_Subtype_Conversion (Ctxt, Res, Obj_Typ, True, Decl);
+         Res := Synth_Subtype_Conversion (Syn_Inst, Res, Obj_Typ, True, Decl);
       end if;
       Create_Object (Syn_Inst, Decl, Res);
    end Synth_Object_Alias_Declaration;

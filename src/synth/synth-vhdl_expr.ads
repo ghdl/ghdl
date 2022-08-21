@@ -34,13 +34,6 @@ with Synth.Source;
 
 package Synth.Vhdl_Expr is
    --  Perform a subtype conversion.  Check constraints.
-   function Synth_Subtype_Conversion (Ctxt : Context_Acc;
-                                      Vt : Valtyp;
-                                      Dtype : Type_Acc;
-                                      Bounds : Boolean;
-                                      Loc : Source.Syn_Src)
-                                     return Valtyp;
-
    function Synth_Subtype_Conversion (Syn_Inst : Synth_Instance_Acc;
                                       Vt : Valtyp;
                                       Dtype : Type_Acc;

@@ -121,7 +121,6 @@ package body Synth.Vhdl_Aggr is
                                    Const_P : out Boolean;
                                    Err_P : out boolean)
    is
-      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Bound : constant Bound_Type := Get_Array_Bound (Typ);
       El_Typ : constant Type_Acc := Get_Array_Element (Typ);
       Stride : constant Nat32 := Strides (Dim);
@@ -141,7 +140,8 @@ package body Synth.Vhdl_Aggr is
          if Typ.Alast then
             pragma Assert (Dim = Strides'Last);
             Val := Synth_Expression_With_Type (Syn_Inst, Value, El_Typ);
-            Val := Synth_Subtype_Conversion (Ctxt, Val, El_Typ, False, Value);
+            Val := Synth_Subtype_Conversion
+              (Syn_Inst, Val, El_Typ, False, Value);
             pragma Assert (Res (Pos) = No_Valtyp);
             Res (Pos) := Val;
             if Val = No_Valtyp then
@@ -345,7 +345,6 @@ package body Synth.Vhdl_Aggr is
                                     Err_P : out Boolean;
                                     Const_P : out Boolean)
    is
-      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Value : Node;
       Assoc : Node;
       Pos : Nat32;
@@ -361,7 +360,8 @@ package body Synth.Vhdl_Aggr is
          if Const_P and not Is_Static (Val.Val) then
             Const_P := False;
          end if;
-         Val := Synth_Subtype_Conversion (Ctxt, Val, El_Type, False, Value);
+         Val := Synth_Subtype_Conversion
+           (Syn_Inst, Val, El_Type, False, Value);
          if Val = No_Valtyp then
             Err_P := True;
             return;

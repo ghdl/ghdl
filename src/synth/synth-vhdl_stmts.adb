@@ -93,7 +93,7 @@ package body Synth.Vhdl_Stmts is
          Res := Synth_Expression_With_Type
            (Syn_Inst, Get_We_Value (Wf), Targ_Type);
          Res := Synth_Subtype_Conversion
-           (Get_Build (Syn_Inst), Res, Targ_Type, False, Wf);
+           (Syn_Inst, Res, Targ_Type, False, Wf);
          return Res;
       end if;
    end Synth_Waveform;
@@ -607,10 +607,10 @@ package body Synth.Vhdl_Stmts is
                                Val : Valtyp;
                                Loc : Node)
    is
-      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       V : Valtyp;
    begin
-      V := Synth_Subtype_Conversion (Ctxt, Val, Target.Targ_Type, False, Loc);
+      V := Synth_Subtype_Conversion
+        (Syn_Inst, Val, Target.Targ_Type, False, Loc);
       pragma Unreferenced (Val);
       if V = No_Valtyp then
          --  In case of error.
@@ -819,7 +819,7 @@ package body Synth.Vhdl_Stmts is
               (Inst, Get_Expression (Ce), Targ_Type);
             --  Convert to the target subtype so that all the conditional
             --  expressions have the same width.
-            Val := Synth_Subtype_Conversion (Ctxt, Val, Targ_Type, False, Ce);
+            Val := Synth_Subtype_Conversion (Inst, Val, Targ_Type, False, Ce);
 
             if Cond_Tri = True and then First = No_Valtyp then
                --  This is the first and only value.
@@ -1001,7 +1001,7 @@ package body Synth.Vhdl_Stmts is
                   V := Synth_Expression_With_Basetype
                     (Syn_Inst, Get_Choice_Expression (Choice));
                   V := Synth_Subtype_Conversion
-                    (Ctxt, V, Choice_Typ, False, Choice);
+                    (Syn_Inst, V, Choice_Typ, False, Choice);
                   if Ignore_Choice_Expression (V, Choice) then
                      Cond := No_Net;
                   else
@@ -1845,7 +1845,6 @@ package body Synth.Vhdl_Stmts is
                                             Caller_Inst : Synth_Instance_Acc;
                                             Init : Association_Iterator_Init)
    is
-      Ctxt : constant Context_Acc := Get_Build (Caller_Inst);
       Inter : Node;
       Inter_Type : Type_Acc;
       Assoc : Node;
@@ -1930,7 +1929,7 @@ package body Synth.Vhdl_Stmts is
                if Get_Mode (Inter) /= Iir_Out_Mode then
                   --  Always passed by value
                   Val := Synth_Subtype_Conversion
-                    (Ctxt, Val, Inter_Type, True, Assoc);
+                    (Subprg_Inst, Val, Inter_Type, True, Assoc);
                else
                   --  Use default value ?
                   null;
@@ -1974,7 +1973,7 @@ package body Synth.Vhdl_Stmts is
                   --  This is equivalent to subtype conversion for non-scalar
                   --  types.
                   Val := Synth_Subtype_Conversion
-                    (Ctxt, Val, Inter_Type, True, Assoc);
+                    (Subprg_Inst, Val, Inter_Type, True, Assoc);
                end if;
             when Iir_Kind_Interface_File_Declaration =>
                null;
@@ -2987,7 +2986,7 @@ package body Synth.Vhdl_Stmts is
             return;
          end if;
 
-         Val := Synth_Subtype_Conversion (Ctxt, Val, C.Ret_Typ, True, Stmt);
+         Val := Synth_Subtype_Conversion (C.Inst, Val, C.Ret_Typ, True, Stmt);
 
          if C.Nbr_Ret = 0 then
             C.Ret_Value := Val;

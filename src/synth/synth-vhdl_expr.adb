@@ -513,7 +513,7 @@ package body Synth.Vhdl_Expr is
       end case;
    end Reshape_Value;
 
-   function Synth_Subtype_Conversion (Ctxt : Context_Acc;
+   function Synth_Subtype_Conversion (Syn_Inst : Synth_Instance_Acc;
                                       Vt : Valtyp;
                                       Dtype : Type_Acc;
                                       Bounds : Boolean;
@@ -547,6 +547,7 @@ package body Synth.Vhdl_Expr is
                      --  Truncate.
                      --  TODO: check overflow.
                      declare
+                        Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
                         N : Net;
                      begin
                         if Is_Static_Val (Vt.Val) then
@@ -569,7 +570,7 @@ package body Synth.Vhdl_Expr is
                   end if;
                when Value_Const =>
                   return Synth_Subtype_Conversion
-                    (Ctxt, (Vt.Typ, Vt.Val.C_Val), Dtype, Bounds, Loc);
+                    (Syn_Inst, (Vt.Typ, Vt.Val.C_Val), Dtype, Bounds, Loc);
                when Value_Memory =>
                   --  Check for overflow.
                   declare
@@ -577,6 +578,7 @@ package body Synth.Vhdl_Expr is
                   begin
                      if not In_Range (Dtype.Drange, Val) then
                         Error_Msg_Synth (+Loc, "value out of range");
+                        Elab.Debugger.Debug_Error (Syn_Inst, Loc);
                         return No_Valtyp;
                      end if;
                      return Create_Value_Discrete (Val, Dtype);
@@ -653,18 +655,6 @@ package body Synth.Vhdl_Expr is
             --  above check.
             raise Internal_Error;
       end case;
-   end Synth_Subtype_Conversion;
-
-   function Synth_Subtype_Conversion (Syn_Inst : Synth_Instance_Acc;
-                                      Vt : Valtyp;
-                                      Dtype : Type_Acc;
-                                      Bounds : Boolean;
-                                      Loc : Source.Syn_Src)
-                                     return Valtyp
-   is
-      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
-   begin
-      return Synth_Subtype_Conversion (Ctxt, Vt, Dtype, Bounds, Loc);
    end Synth_Subtype_Conversion;
 
    function Synth_Name (Syn_Inst : Synth_Instance_Acc; Name : Node)
@@ -2155,7 +2145,6 @@ package body Synth.Vhdl_Expr is
          when Iir_Kind_Pos_Attribute
            | Iir_Kind_Val_Attribute =>
             declare
-               Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
                Param : constant Node := Get_Parameter (Expr);
                V : Valtyp;
                Dtype : Type_Acc;
@@ -2164,7 +2153,8 @@ package body Synth.Vhdl_Expr is
                Dtype := Get_Subtype_Object (Syn_Inst, Get_Type (Expr));
                --  FIXME: to be generalized.  Not always as simple as a
                --  subtype conversion.
-               return Synth_Subtype_Conversion (Ctxt, V, Dtype, False, Expr);
+               return Synth_Subtype_Conversion
+                 (Syn_Inst, V, Dtype, False, Expr);
             end;
          when Iir_Kind_Low_Type_Attribute =>
             return Synth_Low_High_Type_Attribute (Syn_Inst, Expr, Dir_To);

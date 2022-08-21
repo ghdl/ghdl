@@ -723,12 +723,13 @@ package body Synth.Vhdl_Oper is
       if Left = No_Valtyp then
          return No_Valtyp;
       end if;
-      Left := Synth_Subtype_Conversion (Ctxt, Left, Left_Typ, False, Expr);
+      Left := Synth_Subtype_Conversion (Syn_Inst, Left, Left_Typ, False, Expr);
       Right := Synth_Expression_With_Type (Syn_Inst, Right_Expr, Right_Typ);
       if Right = No_Valtyp then
          return No_Valtyp;
       end if;
-      Right := Synth_Subtype_Conversion (Ctxt, Right, Right_Typ, False, Expr);
+      Right := Synth_Subtype_Conversion
+        (Syn_Inst, Right, Right_Typ, False, Expr);
 
       if Is_Static_Val (Left.Val) and Is_Static_Val (Right.Val) then
          Srec := Eval_Static_Dyadic_Predefined
@@ -1663,7 +1664,7 @@ package body Synth.Vhdl_Oper is
          return No_Valtyp;
       end if;
       Operand := Synth_Subtype_Conversion
-        (Ctxt, Operand, Oper_Typ, False, Loc);
+        (Syn_Inst, Operand, Oper_Typ, False, Loc);
       Strip_Const (Operand);
 
       if Is_Static_Val (Operand.Val) then
@@ -1766,12 +1767,13 @@ package body Synth.Vhdl_Oper is
       return Create_Value_Net (N, Create_Res_Bound (Left));
    end Synth_Shift_Rotate;
 
-   function Synth_Find_Bit (Ctxt : Context_Acc;
+   function Synth_Find_Bit (Syn_Inst : Synth_Instance_Acc;
                             Left, Right : Valtyp;
                             Res_Typ     : Type_Acc;
                             Leftmost    : Boolean;
                             Expr        : Node) return Valtyp
    is
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       pragma Assert (Left.Typ.Kind = Type_Vector);
       Len : constant Uns32 := Left.Typ.Abound.Len;
       Max : Int32;
@@ -1831,7 +1833,7 @@ package body Synth.Vhdl_Oper is
          end;
       end loop;
 
-      return Synth_Subtype_Conversion (Ctxt, Create_Value_Net (Res, Typ),
+      return Synth_Subtype_Conversion (Syn_Inst, Create_Value_Net (Res, Typ),
                                        Res_Typ, False, Expr);
    end Synth_Find_Bit;
 
@@ -2144,10 +2146,10 @@ package body Synth.Vhdl_Oper is
 
          when Iir_Predefined_Ieee_Numeric_Std_Find_Leftmost_Sgn
             | Iir_Predefined_Ieee_Numeric_Std_Find_Leftmost_Uns =>
-            return Synth_Find_Bit (Ctxt, L, R, Res_Typ, True, Expr);
+            return Synth_Find_Bit (Subprg_Inst, L, R, Res_Typ, True, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Find_Rightmost_Sgn
             | Iir_Predefined_Ieee_Numeric_Std_Find_Rightmost_Uns =>
-            return Synth_Find_Bit (Ctxt, L, R, Res_Typ, False, Expr);
+            return Synth_Find_Bit (Subprg_Inst, L, R, Res_Typ, False, Expr);
 
          when others =>
             Error_Msg_Synth

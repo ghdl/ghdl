@@ -20,7 +20,7 @@ with Types; use Types;
 with Name_Table;
 with Str_Table;
 
-with Netlists.Builders;
+with Netlists;
 
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
@@ -101,8 +101,7 @@ package body Elab.Vhdl_Expr is
                                      Bounds : Boolean;
                                      Loc : Node) return Valtyp is
    begin
-      return Synth_Subtype_Conversion
-        (Netlists.Builders.No_Context, Vt, Dtype, Bounds, Loc);
+      return Synth_Subtype_Conversion (null, Vt, Dtype, Bounds, Loc);
    end Exec_Subtype_Conversion;
 
    function Exec_Value_Attribute (Syn_Inst : Synth_Instance_Acc; Attr : Node)

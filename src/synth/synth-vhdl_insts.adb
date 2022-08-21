@@ -674,7 +674,7 @@ package body Synth.Vhdl_Insts is
          Act := Synth_Expression_With_Type (Act_Inst, Actual, Inter_Typ);
       end if;
 
-      Act := Synth_Subtype_Conversion (Ctxt, Act, Inter_Typ, False, Assoc);
+      Act := Synth_Subtype_Conversion (Act_Inst, Act, Inter_Typ, False, Assoc);
       return Act;
    end Synth_Single_Input_Assoc;
 
@@ -1475,7 +1475,7 @@ package body Synth.Vhdl_Insts is
          Inter_Typ := Get_Subtype_Object (Syn_Inst, Get_Type (Inter));
          Init := Synth_Expression_With_Type (Syn_Inst, Default, Inter_Typ);
          Init := Synth_Subtype_Conversion
-           (Ctxt, Init, Inter_Typ, False, Inter);
+           (Syn_Inst, Init, Inter_Typ, False, Inter);
          Init_Net := Get_Net (Ctxt, Init);
       else
          Init_Net := No_Net;

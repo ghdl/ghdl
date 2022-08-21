@@ -45,7 +45,7 @@ package Synth.Vhdl_Context is
                         Base : Base_Instance_Acc;
                         Name : Sname := No_Sname);
 
-   procedure Set_Extra (Inst :Synth_Instance_Acc;
+   procedure Set_Extra (Inst : Synth_Instance_Acc;
                         Parent : Synth_Instance_Acc;
                         Name : Sname := No_Sname);
 
