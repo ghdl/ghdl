@@ -338,13 +338,25 @@ package body Grt.Signals is
       end if;
    end Check_New_Source;
 
-   --  Return TRUE if already present.
-   function Ghdl_Signal_Add_Driver (Sign : Ghdl_Signal_Ptr;
-                                    Trans : Transaction_Acc)
-                                   return Boolean
-   is
-      Proc : constant Process_Acc := Get_Current_Process;
+   --  Return True iff signal SIGN has a driver for PROC.
+   function Has_Driver (Sign : Ghdl_Signal_Ptr; Proc : Process_Acc)
+                       return Boolean is
+   begin
+      if Sign.S.Nbr_Drivers /= 0 then
+         for I in 0 .. Sign.S.Nbr_Drivers - 1 loop
+            if Sign.S.Drivers (I).Proc = Proc then
+               return True;
+            end if;
+         end loop;
+      end if;
+      return False;
+   end Has_Driver;
 
+   --  Add a driver (using TRANS) for signal SIGN and process PROC.
+   procedure Ghdl_Signal_Add_Driver (Sign : Ghdl_Signal_Ptr;
+                                     Proc : Process_Acc;
+                                     Trans : Transaction_Acc)
+   is
       type Size_T is mod 2**Standard'Address_Size;
 
       function Malloc (Size : Size_T) return Driver_Arr_Ptr;
@@ -360,18 +372,12 @@ package body Grt.Signals is
                         / System.Storage_Unit);
       end Size;
    begin
+      Check_New_Source (Sign);
+
       if Sign.S.Nbr_Drivers = 0 then
-         Check_New_Source (Sign);
          Sign.S.Drivers := Malloc (Size (1));
          Sign.S.Nbr_Drivers := 1;
       else
-         -- Do not create a driver twice.
-         for I in 0 .. Sign.S.Nbr_Drivers - 1 loop
-            if Sign.S.Drivers (I).Proc = Proc then
-               return True;
-            end if;
-         end loop;
-         Check_New_Source (Sign);
          Sign.S.Nbr_Drivers := Sign.S.Nbr_Drivers + 1;
          Sign.S.Drivers := Realloc (Sign.S.Drivers, Size (Sign.S.Nbr_Drivers));
       end if;
@@ -379,54 +385,62 @@ package body Grt.Signals is
         (First_Trans => Trans,
          Last_Trans => Trans,
          Proc => Proc);
-      return False;
    end Ghdl_Signal_Add_Driver;
 
    procedure Ghdl_Process_Add_Driver (Sign : Ghdl_Signal_Ptr)
    is
+      Proc : constant Process_Acc := Get_Current_Process;
       Trans : Transaction_Acc;
    begin
+      if Has_Driver (Sign, Proc) then
+         return;
+      end if;
+
       Trans := new Transaction'(Kind => Trans_Value,
                                 Line => 0,
                                 Time => 0,
                                 Next => null,
                                 Val => Read_Value (Sign.Value_Ptr, Sign.Mode));
-      if Ghdl_Signal_Add_Driver (Sign, Trans) then
-         Free (Trans);
-      end if;
+      Ghdl_Signal_Add_Driver (Sign, Proc, Trans);
    end Ghdl_Process_Add_Driver;
 
    procedure Ghdl_Process_Add_Port_Driver
      (Sign : Ghdl_Signal_Ptr; Val : Value_Union)
    is
+      Proc : constant Process_Acc := Get_Current_Process;
       Trans : Transaction_Acc;
    begin
+      if Has_Driver (Sign, Proc) then
+         return;
+      end if;
+
       Trans := new Transaction'(Kind => Trans_Value,
                                 Line => 0,
                                 Time => 0,
                                 Next => null,
                                 Val => Val);
-      if Ghdl_Signal_Add_Driver (Sign, Trans) then
-         Free (Trans);
-      end if;
+      Ghdl_Signal_Add_Driver (Sign, Proc, Trans);
    end Ghdl_Process_Add_Port_Driver;
 
    procedure Ghdl_Signal_Add_Direct_Driver (Sign : Ghdl_Signal_Ptr;
                                             Drv : Ghdl_Value_Ptr)
    is
+      Proc : constant Process_Acc := Get_Current_Process;
       Trans : Transaction_Acc;
       Trans1 : Transaction_Acc;
    begin
+      if Has_Driver (Sign, Proc) then
+         return;
+      end if;
+
       --  Create transaction for current driving value.
       Trans := new Transaction'(Kind => Trans_Value,
                                 Line => 0,
                                 Time => 0,
                                 Next => null,
                                 Val => Read_Value (Drv, Sign.Mode));
-      if Ghdl_Signal_Add_Driver (Sign, Trans) then
-         Free (Trans);
-         return;
-      end if;
+      Ghdl_Signal_Add_Driver (Sign, Proc, Trans);
+
       --  Create transaction for the next driving value.
       Trans1 := new Transaction'(Kind => Trans_Direct,
                                  Line => 0,
