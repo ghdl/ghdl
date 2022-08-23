@@ -775,6 +775,12 @@ package Grt.Signals is
    procedure Ghdl_Signal_Effective_Value (Targ : Ghdl_Signal_Ptr;
                                           Src : Ghdl_Signal_Ptr);
 
+   --  Add an extra driver for SIGN set to value VAL.
+   --  This is used when SIGN is connected to an out/inout/buffer port which
+   --  has no source.
+   procedure Ghdl_Signal_Add_Extra_Driver (Sign : Ghdl_Signal_Ptr;
+                                           Val : Value_Union);
+
    --  Conversions.  In order to do conversion from A to B, an intermediate
    --  signal T must be created.  The flow is A -> T -> B.
    --  The link from A -> T is a conversion, added by one of the two

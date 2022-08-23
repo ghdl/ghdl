@@ -404,6 +404,19 @@ package body Grt.Signals is
       Ghdl_Signal_Add_Driver (Sign, Proc, Trans);
    end Ghdl_Process_Add_Driver;
 
+   procedure Ghdl_Signal_Add_Extra_Driver (Sign : Ghdl_Signal_Ptr;
+                                           Val : Value_Union)
+   is
+      Trans : Transaction_Acc;
+   begin
+      Trans := new Transaction'(Kind => Trans_Value,
+                                Line => 0,
+                                Time => 0,
+                                Next => null,
+                                Val => Val);
+      Ghdl_Signal_Add_Driver (Sign, null, Trans);
+   end Ghdl_Signal_Add_Extra_Driver;
+
    procedure Ghdl_Process_Add_Port_Driver
      (Sign : Ghdl_Signal_Ptr; Val : Value_Union)
    is
