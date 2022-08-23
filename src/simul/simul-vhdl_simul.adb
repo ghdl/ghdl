@@ -1995,7 +1995,6 @@ package body Simul.Vhdl_Simul is
 
       procedure Create_Signal (Val : Memory_Ptr;
                                Sig_Off : Uns32;
---                               Sig : Memory_Ptr;
                                Sig_Type: Iir;
                                Typ : Type_Acc;
                                Vec : Nbr_Sources_Vector;
@@ -2181,14 +2180,76 @@ package body Simul.Vhdl_Simul is
             pragma Assert (E.Sig = null);
             if E.Collapsed_By /= No_Signal_Index then
                E.Sig := Signals_Table.Table (E.Collapsed_By).Sig;
-               --  TODO: keep val ?
-               E.Val := Signals_Table.Table (E.Collapsed_By).Val;
+               --  E.Val will be assigned in Collapse_Signals.
             else
                Create_Signal (I);
             end if;
          end;
       end loop;
    end Create_Signals;
+
+   procedure Add_Extra_Driver_To_Signal (Sig : Memory_Ptr;
+                                         Typ : Type_Acc;
+                                         Init : Memory_Ptr;
+                                         Off : Uns32;
+                                         Vec : Nbr_Sources_Array) is
+   begin
+      case Typ.Kind is
+         when Type_Logic
+           | Type_Bit
+           | Type_Discrete
+           | Type_Float =>
+            if Vec (Off).Nbr_Drivers = 0
+              and then Vec (Off).Nbr_Conns = 0
+            then
+               Grt.Signals.Ghdl_Signal_Add_Extra_Driver
+                 (Read_Sig (Sig), To_Ghdl_Value ((Typ, Init)));
+            end if;
+         when Type_Vector
+           | Type_Array =>
+            declare
+               Len : constant Uns32 := Typ.Abound.Len;
+               El : constant Type_Acc := Typ.Arr_El;
+            begin
+               for I in 1 .. Len loop
+                  Add_Extra_Driver_To_Signal
+                    (Sig_Index (Sig, (Len - I) * El.W), El,
+                     Init + Size_Type (I - 1) * El.Sz, Off + (Len - I), Vec);
+               end loop;
+            end;
+         when Type_Record =>
+            for I in Typ.Rec.E'Range loop
+               declare
+                  E : Rec_El_Type renames Typ.Rec.E (I);
+               begin
+                  Add_Extra_Driver_To_Signal
+                    (Sig_Index (Sig, E.Offs.Net_Off), E.Typ,
+                     Init + E.Offs.Mem_Off, Off + E.Offs.Net_Off, Vec);
+               end;
+            end loop;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Add_Extra_Driver_To_Signal;
+
+   procedure Collapse_Signals is
+   begin
+      for I in Signals_Table.First .. Signals_Table.Last loop
+         declare
+            E : Signal_Entry renames Signals_Table.Table (I);
+         begin
+            if E.Collapsed_By /= No_Signal_Index then
+               if Get_Mode (E.Decl) in Iir_Out_Modes then
+                  Add_Extra_Driver_To_Signal
+                    (E.Sig, E.Typ, E.Val, 0, E.Nbr_Sources.all);
+               end if;
+               --  The signal value is the value of the collapsed signal.
+               --  TODO: keep the default value ?
+               E.Val := Signals_Table.Table (E.Collapsed_By).Val;
+            end if;
+         end;
+      end loop;
+   end Collapse_Signals;
 
    type Connect_Mode is (Connect_Source, Connect_Effective);
 
@@ -2635,9 +2696,9 @@ package body Simul.Vhdl_Simul is
       Create_Connects;
       -- Create_Disconnections;
       Create_Processes;
-      -- Create_PSL;
       Create_Terminals;
       Create_Quantities;
+      Collapse_Signals;
 
       --  Allow Synth_Expression to handle signals.
       Synth.Vhdl_Expr.Hook_Signal_Expr := Hook_Signal_Expr'Access;

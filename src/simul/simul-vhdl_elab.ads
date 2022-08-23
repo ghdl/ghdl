@@ -122,6 +122,16 @@ package Simul.Vhdl_Elab is
 
    --  Signals.
 
+   --  Number of drivers and out connections for each scalar element.
+   type Nbr_Sources_Type is record
+      Nbr_Drivers : Uns32;
+      Nbr_Conns : Uns32;
+      Last_Proc : Process_Index_Type;
+   end record;
+
+   type Nbr_Sources_Array is array (Uns32 range <>) of Nbr_Sources_Type;
+   type Nbr_Sources_Arr_Acc is access Nbr_Sources_Array;
+
    type Signal_Entry (Kind : Mode_Signal_Type := Mode_Signal) is record
       Decl : Iir;
       Inst : Synth_Instance_Acc;
@@ -139,6 +149,7 @@ package Simul.Vhdl_Elab is
          when Mode_Signal_User =>
             Drivers : Driver_Index_Type;
             Connect : Connect_Index_Type;
+            Nbr_Sources : Nbr_Sources_Arr_Acc;
          when Mode_Quiet | Mode_Stable | Mode_Delayed
            | Mode_Transaction =>
             Time : Std_Time;
