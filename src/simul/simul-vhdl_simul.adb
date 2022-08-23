@@ -246,22 +246,10 @@ package body Simul.Vhdl_Simul is
    begin
       case Typ.Kind is
          when Type_Logic
-           | Type_Bit =>
-            Grt.Signals.Ghdl_Signal_Add_Port_Driver_E8
-              (Read_Sig (Sig), Read_U8 (Val));
-         when Type_Discrete =>
-            if Typ.Sz = 1 then
-               Grt.Signals.Ghdl_Signal_Add_Port_Driver_E8
-                 (Read_Sig (Sig), Read_U8 (Val));
-            elsif Typ.Sz = 4 then
-               Grt.Signals.Ghdl_Signal_Add_Port_Driver_I32
-                 (Read_Sig (Sig), Read_I32 (Val));
-            elsif Typ.Sz = 8 then
-               Grt.Signals.Ghdl_Signal_Add_Port_Driver_I64
-                 (Read_Sig (Sig), Read_I64 (Val));
-            else
-               raise Internal_Error;
-            end if;
+            | Type_Bit
+            | Type_Discrete =>
+            Grt.Signals.Ghdl_Process_Add_Port_Driver
+              (Read_Sig (Sig), To_Ghdl_Value ((Typ, Val)));
          when Type_Vector
            | Type_Array =>
             declare
