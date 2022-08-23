@@ -453,6 +453,20 @@ package body Simul.Vhdl_Debug is
       Put_Uns32 (Uns32 (S.Collapsed_By));
       New_Line;
 
+      if Boolean'(True) then
+         Put ("  nbr sources (drv + conn):");
+         New_Line;
+         for I in 0 .. S.Typ.W - 1 loop
+            Put ("    ");
+            Put_Uns32 (I);
+            Put (": ");
+            Put_Uns32 (S.Nbr_Sources (I).Nbr_Drivers);
+            Put (" + ");
+            Put_Uns32 (S.Nbr_Sources (I).Nbr_Conns);
+            New_Line;
+         end loop;
+      end if;
+
       if Opts.Value then
          Driver := S.Drivers;
          while Driver /= No_Driver_Index loop
@@ -520,7 +534,7 @@ package body Simul.Vhdl_Debug is
 
    procedure Info_Signal (Idx : Signal_Index_Type) is
    begin
-      Info_Signal_Opts (Idx, (others => False));
+      Info_Signal_Opts (Idx, (others => True));
    end Info_Signal;
 
    --  For gdb.
