@@ -18,6 +18,7 @@
 
 with Vhdl.Nodes; use Vhdl.Nodes;
 
+with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
 with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 
 package Elab.Vhdl_Decls is
@@ -40,4 +41,11 @@ package Elab.Vhdl_Decls is
                                     Decls : Iir;
                                     Is_Subprg : Boolean := False);
 
+   --  Create a signal.
+   --  It's a wrapper around elab.vhdl_context.create_signal but it computes
+   --  the default value.
+   --  Also used to create signals for ports.
+   procedure Create_Signal (Syn_Inst : Synth_Instance_Acc;
+                            Decl : Node;
+                            Typ : Type_Acc);
 end Elab.Vhdl_Decls;

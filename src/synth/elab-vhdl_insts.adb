@@ -383,7 +383,7 @@ package body Elab.Vhdl_Insts is
          if Get_Whole_Association_Flag (Assoc) then
             Inter_Typ := Elab_Port_Association_Type
               (Sub_Inst, Syn_Inst, Inter, Assoc);
-            Create_Signal (Sub_Inst, Inter, Inter_Typ, null);
+            Create_Signal (Sub_Inst, Inter, Inter_Typ);
          end if;
          Next_Association_Interface (Assoc, Assoc_Inter);
       end loop;
@@ -673,7 +673,7 @@ package body Elab.Vhdl_Insts is
 
                Inter_Typ := Elab_Port_Association_Type
                  (Comp_Inst, Syn_Inst, Inter, Assoc);
-               Create_Signal (Comp_Inst, Inter, Inter_Typ, null);
+               Create_Signal (Comp_Inst, Inter, Inter_Typ);
             end if;
             Next_Association_Interface (Assoc, Assoc_Inter);
          end loop;
@@ -828,7 +828,7 @@ package body Elab.Vhdl_Insts is
             Inter_Typ : Type_Acc;
          begin
             Inter_Typ := Elab_Declaration_Type (Top_Inst, Inter);
-            Create_Signal (Top_Inst, Inter, Inter_Typ, null);
+            Create_Signal (Top_Inst, Inter, Inter_Typ);
          end;
          Inter := Get_Chain (Inter);
       end loop;

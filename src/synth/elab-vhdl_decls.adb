@@ -19,7 +19,6 @@
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
 
-with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
 with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 with Elab.Vhdl_Types; use Elab.Vhdl_Types;
 with Elab.Vhdl_Files;
@@ -104,22 +103,30 @@ package body Elab.Vhdl_Decls is
       Create_Object_Force (Syn_Inst, First_Decl, Val);
    end Elab_Constant_Declaration;
 
-   procedure Elab_Signal_Declaration (Syn_Inst : Synth_Instance_Acc;
-                                      Decl : Node)
+   procedure Create_Signal (Syn_Inst : Synth_Instance_Acc;
+                            Decl : Node;
+                            Typ : Type_Acc)
    is
       Def : constant Iir := Get_Default_Value (Decl);
       Init : Valtyp;
+   begin
+      if Is_Valid (Def) then
+         Init := Synth_Expression_With_Type (Syn_Inst, Def, Typ);
+         Init := Exec_Subtype_Conversion (Init, Typ, False, Decl);
+      else
+         Init := No_Valtyp;
+      end if;
+      Create_Signal (Syn_Inst, Decl, Typ, Init.Val);
+   end Create_Signal;
+
+   procedure Elab_Signal_Declaration (Syn_Inst : Synth_Instance_Acc;
+                                      Decl : Node)
+   is
       Obj_Typ : Type_Acc;
    begin
       Obj_Typ := Elab_Declaration_Type (Syn_Inst, Decl);
 
-      if Is_Valid (Def) then
-         Init := Synth_Expression_With_Type (Syn_Inst, Def, Obj_Typ);
-         Init := Exec_Subtype_Conversion (Init, Obj_Typ, False, Decl);
-      else
-         Init := No_Valtyp;
-      end if;
-      Create_Signal (Syn_Inst, Decl, Obj_Typ, Init.Val);
+      Create_Signal (Syn_Inst, Decl, Obj_Typ);
    end Elab_Signal_Declaration;
 
    procedure Elab_Variable_Declaration (Syn_Inst : Synth_Instance_Acc;

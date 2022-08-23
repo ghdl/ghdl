@@ -302,7 +302,7 @@ package body Elab.Vhdl_Objtypes is
       pragma Assert (El_Type.Kind in Type_Nets);
       return To_Type_Acc
         (Alloc (Current_Pool, (Kind => Type_Vector,
-                               Wkind => Wkind_Net,
+                               Wkind => El_Type.Wkind,
                                Al => El_Type.Al,
                                Sz => El_Type.Sz * Size_Type (Bnd.Len),
                                W => Bnd.Len,
