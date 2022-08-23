@@ -124,8 +124,17 @@ package Simul.Vhdl_Elab is
 
    --  Number of drivers and out connections for each scalar element.
    type Nbr_Sources_Type is record
+      --  Number of processes that drive the signal.
       Nbr_Drivers : Uns32;
+
+      --  Number of sources due to connections.
       Nbr_Conns : Uns32;
+
+      --  Total number of sources, including sources of collapsed signals.
+      Total : Uns32;
+
+      --  Used only while computing the number of drivers: process for the
+      --  last driver.
       Last_Proc : Process_Index_Type;
    end record;
 

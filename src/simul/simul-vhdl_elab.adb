@@ -88,6 +88,7 @@ package body Simul.Vhdl_Elab is
            new Nbr_Sources_Array'(0 .. E.Typ.W - 1 =>
                                     (Nbr_Drivers => 0,
                                      Nbr_Conns => 0,
+                                     Total => 0,
                                      Last_Proc => No_Process_Index));
       end if;
 
@@ -728,6 +729,7 @@ package body Simul.Vhdl_Elab is
 
       Simul.Vhdl_Debug.Init;
 
+      --  Init Signals_Table.
       Signals_Table.Set_Last (Get_Nbr_Signal);
       for I in Signals_Table.First .. Signals_Table.Last loop
          Signals_Table.Table (I) :=
@@ -749,10 +751,43 @@ package body Simul.Vhdl_Elab is
          end loop;
       end;
 
+      --  Gather declarations in the hierarchy.
       Gather_Processes_1 (Top);
 
       --  For the debugger.
       Top_Instance := Top;
+
+      --  Compute total number of sources.
+      for I in Signals_Table.First .. Signals_Table.Last loop
+         declare
+            E : Signal_Entry renames Signals_Table.Table (I);
+            Is_Out : constant Boolean :=
+              Get_Kind (E.Decl) = Iir_Kind_Interface_Signal_Declaration
+              and then Get_Mode (E.Decl) in Iir_Out_Modes;
+         begin
+            for J in 1 .. E.Typ.W loop
+               declare
+                  Ns : Nbr_Sources_Type renames E.Nbr_Sources (J - 1);
+               begin
+                  Ns.Total := Ns.Nbr_Drivers + Ns.Nbr_Conns;
+                  if Ns.Total = 0 and then Is_Out then
+                     Ns.Total := 1;
+                  end if;
+                  if E.Collapsed_By /= No_Signal_Index then
+                     --  Add to the parent.
+                     declare
+                        C_Ns : Nbr_Sources_Type renames
+                          Signals_Table.Table (E.Collapsed_By)
+                          .Nbr_Sources (J - 1);
+                     begin
+                        C_Ns.Total := C_Ns.Total + Ns.Total;
+                     end;
+                  end if;
+               end;
+            end loop;
+         end;
+      end loop;
+
    end Gather_Processes;
 
    procedure Elab_Processes

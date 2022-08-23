@@ -454,7 +454,7 @@ package body Simul.Vhdl_Debug is
       New_Line;
 
       if Boolean'(True) then
-         Put ("  nbr sources (drv + conn):");
+         Put ("  nbr sources (drv + conn : total):");
          New_Line;
          for I in 0 .. S.Typ.W - 1 loop
             Put ("    ");
@@ -463,6 +463,8 @@ package body Simul.Vhdl_Debug is
             Put_Uns32 (S.Nbr_Sources (I).Nbr_Drivers);
             Put (" + ");
             Put_Uns32 (S.Nbr_Sources (I).Nbr_Conns);
+            Put (" : ");
+            Put_Uns32 (S.Nbr_Sources (I).Total);
             New_Line;
          end loop;
       end if;

@@ -18,7 +18,6 @@
 
 with System;
 with Ada.Unchecked_Conversion;
-with Ada.Unchecked_Deallocation;
 
 with Simple_IO;
 with Utils_IO;
@@ -1794,114 +1793,6 @@ package body Simul.Vhdl_Simul is
       end case;
    end Exec_Write_Signal;
 
-   type Nbr_Sources_Vector is array (Uns32 range <>) of Natural;
-   type Nbr_Sources_Vector_Acc is access Nbr_Sources_Vector;
-   procedure Free is new Ada.Unchecked_Deallocation
-     (Nbr_Sources_Vector, Nbr_Sources_Vector_Acc);
-
-   --  Compute the number of sources (drivers + conn) for each scalar
-   --  sub-element of signal SIG.
-   procedure Compute_Nbr_Sources (Vec : in out Nbr_Sources_Vector;
-                                  Sig : Signal_Index_Type)
-   is
-      type Proc_Sources_Vector is array (Uns32 range <>) of
-        Process_Index_Type;
-      type Proc_Sources_Vector_Acc is access Proc_Sources_Vector;
-      procedure Free is new Ada.Unchecked_Deallocation
-        (Proc_Sources_Vector, Proc_Sources_Vector_Acc);
-      Procs : Proc_Sources_Vector_Acc;
-
-      S : Signal_Entry renames Signals_Table.Table (Sig);
-      Drv : Driver_Index_Type;
-      Conn : Connect_Index_Type;
-   begin
-      Drv := S.Drivers;
-
-      if S.Connect = No_Connect_Index then
-         if Drv = No_Driver_Index then
-            --  No connections, no drivers.
-            return;
-         end if;
-
-         declare
-            E : Driver_Entry renames Drivers_Table.Table (Drv);
-            Off : Uns32;
-         begin
-            if E.Prev_Sig = No_Driver_Index then
-               --  Only one driver, this is probably a very common case.
-               pragma Assert (E.Typ.W > 0);
-               Off := E.Off.Net_Off;
-               for I in Off .. Off + E.Typ.W - 1 loop
-                  Vec (I) := Vec (I) + 1;
-               end loop;
-               return;
-            end if;
-         end;
-      end if;
-
-      if Drv /= No_Driver_Index then
-
-         --  Count number of drivers.
-         --  We know that drivers from the same process are consecutive in the
-         --  driver list for a signal (because drivers are registered by
-         --  process).
-         Procs := new Proc_Sources_Vector'(0 .. S.Typ.W - 1 =>
-                                             No_Process_Index);
-         loop
-            declare
-               E : Driver_Entry renames Drivers_Table.Table (Drv);
-               Off : constant Uns32 := E.Off.Net_Off;
-            begin
-               for I in Off .. Off + E.Typ.W - 1 loop
-                  if Procs (I) /= E.Proc then
-                     Procs (I) := E.Proc;
-                     Vec (I) := Vec (I) + 1;
-                  end if;
-               end loop;
-
-               Drv := E.Prev_Sig;
-            end;
-            exit when Drv = No_Driver_Index;
-         end loop;
-         Free (Procs);
-      end if;
-
-      Conn := S.Connect;
-      while Conn /= No_Connect_Index loop
-         declare
-            C : Connect_Entry renames Connect_Table.Table (Conn);
-            Off : Uns32;
-         begin
-            if C.Formal.Base = Sig then
-               if C.Drive_Formal then
-                  Off := C.Formal.Offs.Net_Off;
-                  for I in Off .. Off + C.Formal.Typ.W - 1 loop
-                     Vec (I) := Vec (I) + 1;
-                  end loop;
-               end if;
-               Conn := C.Formal_Link;
-            else
-               pragma Assert (C.Actual.Base = Sig);
-               if C.Drive_Actual then
-                  if C.Collapsed then
-                     --  A connection with collapsed signal.
-                     --  Recurse on the formal.
-                     pragma Assert (C.Formal.Offs = (0, 0));
-                     pragma Assert (C.Formal.Typ.W = S.Typ.W);
-                     Compute_Nbr_Sources (Vec, C.Formal.Base);
-                  else
-                     Off := C.Actual.Offs.Net_Off;
-                     for I in Off .. Off + C.Actual.Typ.W - 1 loop
-                        Vec (I) := Vec (I) + 1;
-                     end loop;
-                  end if;
-               end if;
-               Conn := C.Actual_Link;
-            end if;
-         end;
-      end loop;
-   end Compute_Nbr_Sources;
-
    type Resolv_Instance_Type is record
       Func : Iir;
       Inst : Synth_Instance_Acc;
@@ -1997,7 +1888,7 @@ package body Simul.Vhdl_Simul is
                                Sig_Off : Uns32;
                                Sig_Type: Iir;
                                Typ : Type_Acc;
-                               Vec : Nbr_Sources_Vector;
+                               Vec : Nbr_Sources_Array;
                                Already_Resolved : Boolean)
       is
          Sub_Resolved : Boolean := Already_Resolved;
@@ -2011,9 +1902,7 @@ package body Simul.Vhdl_Simul is
            and then Get_Kind (Sig_Type) in Iir_Kinds_Subtype_Definition
          then
             Resolv_Func := Get_Resolution_Indication (Sig_Type);
-            if Resolv_Func /= Null_Iir
-              and then Vec (Sig_Off) > 1
-            then
+            if Resolv_Func /= Null_Iir and then Vec (Sig_Off).Total > 1 then
                Sub_Resolved := True;
                Resolv_Func := Get_Named_Entity (Resolv_Func);
                Arr_Type :=
@@ -2118,8 +2007,6 @@ package body Simul.Vhdl_Simul is
       Iir_Kind_To_Kind_Signal : constant Iir_Kind_To_Kind_Signal_Type :=
         (Iir_Register_Kind  => Kind_Signal_Register,
          Iir_Bus_Kind       => Kind_Signal_Bus);
-
-      Vec : Nbr_Sources_Vector_Acc;
    begin
       if Get_Guarded_Signal_Flag (E.Decl) then
          Kind := Iir_Kind_To_Kind_Signal (Get_Signal_Kind (E.Decl));
@@ -2129,10 +2016,7 @@ package body Simul.Vhdl_Simul is
 
       Grt.Signals.Ghdl_Signal_Set_Mode (E.Kind, Kind, True);
 
-      Vec := new Nbr_Sources_Vector'(0 .. E.Typ.W - 1 => 0);
-      Compute_Nbr_Sources (Vec.all, Idx);
-      Create_Signal (E.Val, 0, Sig_Type, E.Typ, Vec.all, False);
-      Free (Vec);
+      Create_Signal (E.Val, 0, Sig_Type, E.Typ, E.Nbr_Sources.all, False);
    end Create_User_Signal;
 
    function Alloc_Signal_Memory (Vtype : Type_Acc) return Memory_Ptr
