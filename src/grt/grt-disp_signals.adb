@@ -472,6 +472,17 @@ package body Grt.Disp_Signals is
                Put (" resolved");
             end if;
          end if;
+         if Sig.S.Mode_Sig = Mode_Conv_In or Sig.S.Mode_Sig = Mode_Conv_Out
+         then
+            Put (" conv: ");
+            Put_I32 (stdout, Ghdl_I32 (Sig.S.Conv.Src.First));
+            Put ("..");
+            Put_I32 (stdout, Ghdl_I32 (Sig.S.Conv.Src.Last));
+            Put ("->");
+            Put_I32 (stdout, Ghdl_I32 (Sig.S.Conv.Dest.First));
+            Put ("..");
+            Put_I32 (stdout, Ghdl_I32 (Sig.S.Conv.Dest.Last));
+         end if;
          if Boolean'(False) then
             Put (" link: ");
             Put (stdout, Sig.Link.all'Address);
