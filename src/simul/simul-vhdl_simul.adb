@@ -191,6 +191,28 @@ package body Simul.Vhdl_Simul is
       return Val;
    end To_Ghdl_Value;
 
+   procedure Write_Ghdl_Value (Mt : Memtyp; Val : Value_Union) is
+   begin
+      case Mt.Typ.Kind is
+         when Type_Bit =>
+            Write_U8 (Mt.Mem, Ghdl_B1'Pos (Val.B1));
+         when Type_Logic =>
+            Write_U8 (Mt.Mem, Val.E8);
+         when Type_Discrete =>
+            if Mt.Typ.Sz = 1 then
+               Write_U8 (Mt.Mem, Val.E8);
+            elsif Mt.Typ.Sz = 4 then
+               Write_I32 (Mt.Mem, Val.I32);
+            elsif Mt.Typ.Sz = 8 then
+               Write_I64 (Mt.Mem, Val.I64);
+            else
+               raise Internal_Error;
+            end if;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Write_Ghdl_Value;
+
    procedure Assign_Value_To_Signal (Target: Memtyp;
                                      Is_Start : Boolean;
                                      Rej : Std_Time;
@@ -1756,6 +1778,52 @@ package body Simul.Vhdl_Simul is
       end case;
    end Resolver_Read_Value;
 
+   type Read_Signal_Enum is
+     (
+--      Read_Signal_Last_Value,
+
+      --  For conversion functions.
+      Read_Signal_Driving_Value,
+      Read_Signal_Effective_Value --,
+
+      --  'Driving_Value
+--      Read_Signal_Driver_Value
+     );
+
+   procedure Exec_Read_Signal (Sig: Memory_Ptr;
+                               Val : Memtyp;
+                               Attr : Read_Signal_Enum)
+   is
+      S : Ghdl_Signal_Ptr;
+   begin
+      case Val.Typ.Kind is
+         when Type_Bit
+           | Type_Logic =>
+            S := Read_Sig (Sig);
+            case Attr is
+               when Read_Signal_Driving_Value =>
+                  Write_Ghdl_Value (Val, S.Driving_Value);
+               when Read_Signal_Effective_Value =>
+                  Write_Ghdl_Value (Val, S.Value_Ptr.all);
+            end case;
+         when Type_Vector
+           | Type_Array =>
+            declare
+               Typ : constant Type_Acc := Val.Typ;
+               Len : constant Uns32 := Typ.Abound.Len;
+            begin
+               for I in 1 .. Len loop
+                  Exec_Read_Signal
+                    (Sig_Index (Sig, (Len - I) * Typ.Arr_El.W),
+                     (Typ.Arr_El, Val.Mem + Size_Type (I - 1) * Typ.Arr_El.Sz),
+                     Attr);
+               end loop;
+            end;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Exec_Read_Signal;
+
    type Write_Signal_Enum is
      (Write_Signal_Driving_Value,
       Write_Signal_Effective_Value);
@@ -1776,6 +1844,19 @@ package body Simul.Vhdl_Simul is
                when Write_Signal_Effective_Value =>
                   S.Value_Ptr.all := To_Ghdl_Value (Val);
             end case;
+         when Type_Vector
+           | Type_Array =>
+            declare
+               Typ : constant Type_Acc := Val.Typ;
+               Len : constant Uns32 := Typ.Abound.Len;
+            begin
+               for I in 1 .. Len loop
+                  Exec_Write_Signal
+                    (Sig_Index (Sig, (Len - I) * Typ.Arr_El.W),
+                     (Typ.Arr_El, Val.Mem + Size_Type (I - 1) * Typ.Arr_El.Sz),
+                     Attr);
+               end loop;
+            end;
          when others =>
             raise Internal_Error;
       end case;
@@ -1868,6 +1949,37 @@ package body Simul.Vhdl_Simul is
       Release (Instance_Mark, Instance_Pool.all);
    end Resolution_Proc;
 
+   function Create_Scalar_Signal (Typ : Type_Acc; Val : Ghdl_Value_Ptr)
+                                 return Ghdl_Signal_Ptr is
+   begin
+      case Typ.Kind is
+         when Type_Bit =>
+            return Grt.Signals.Ghdl_Create_Signal_B1
+              (Val, null, System.Null_Address);
+         when Type_Logic =>
+            return Grt.Signals.Ghdl_Create_Signal_E8
+              (Val, null, System.Null_Address);
+         when Type_Float =>
+            return Grt.Signals.Ghdl_Create_Signal_F64
+              (Val, null, System.Null_Address);
+         when Type_Discrete =>
+            if Typ.Sz = 1 then
+               return Grt.Signals.Ghdl_Create_Signal_E8
+                 (Val, null, System.Null_Address);
+            elsif Typ.Sz = 4 then
+               return Grt.Signals.Ghdl_Create_Signal_I32
+                 (Val, null, System.Null_Address);
+            elsif Typ.Sz = 8 then
+               return Grt.Signals.Ghdl_Create_Signal_I64
+                 (Val, null, System.Null_Address);
+            else
+               raise Internal_Error;
+            end if;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Create_Scalar_Signal;
+
    procedure Create_User_Signal (Idx : Signal_Index_Type)
    is
       E : Signal_Entry renames Signals_Table.Table (Idx);
@@ -1910,37 +2022,12 @@ package body Simul.Vhdl_Simul is
             end if;
          end if;
          case Typ.Kind is
-            when Type_Bit =>
-               S := Grt.Signals.Ghdl_Create_Signal_B1
-                 (To_Ghdl_Value_Ptr (To_Address (Val)),
-                  null, System.Null_Address);
-               Write_Sig (Sig_Index (E.Sig, Sig_Off), S);
-            when Type_Logic =>
-               S := Grt.Signals.Ghdl_Create_Signal_E8
-                 (To_Ghdl_Value_Ptr (To_Address (Val)),
-                  null, System.Null_Address);
-               Write_Sig (Sig_Index (E.Sig, Sig_Off), S);
-            when Type_Float =>
-               S := Grt.Signals.Ghdl_Create_Signal_F64
-                 (To_Ghdl_Value_Ptr (To_Address (Val)),
-                  null, System.Null_Address);
-               Write_Sig (Sig_Index (E.Sig, Sig_Off), S);
-            when Type_Discrete =>
-               if Typ.Sz = 1 then
-                  S := Grt.Signals.Ghdl_Create_Signal_E8
-                    (To_Ghdl_Value_Ptr (To_Address (Val)),
-                     null, System.Null_Address);
-               elsif Typ.Sz = 4 then
-                  S := Grt.Signals.Ghdl_Create_Signal_I32
-                    (To_Ghdl_Value_Ptr (To_Address (Val)),
-                     null, System.Null_Address);
-               elsif Typ.Sz = 8 then
-                  S := Grt.Signals.Ghdl_Create_Signal_I64
-                    (To_Ghdl_Value_Ptr (To_Address (Val)),
-                     null, System.Null_Address);
-               else
-                  raise Internal_Error;
-               end if;
+            when Type_Bit
+              | Type_Logic
+              | Type_Float
+              | Type_Discrete =>
+               S := Create_Scalar_Signal
+                 (Typ, To_Ghdl_Value_Ptr (To_Address (Val)));
                Write_Sig (Sig_Index (E.Sig, Sig_Off), S);
             when Type_Vector
               | Type_Array =>
@@ -2125,11 +2212,24 @@ package body Simul.Vhdl_Simul is
 
    type Connect_Mode is (Connect_Source, Connect_Effective);
 
+   type Connect_Data is record
+      Sig : Memory_Ptr;
+      Offs : Value_Offsets;
+      Typ : Type_Acc;
+   end record;
+
+   function To_Connect_Data (Ep : Connect_Endpoint) return Connect_Data is
+   begin
+      return (Sig => Signals_Table.Table (Ep.Base).Sig,
+              Offs => Ep.Offs,
+              Typ => Ep.Typ);
+   end To_Connect_Data;
+
    -- Add a driving value PORT to signal SIG, ie: PORT is a source for SIG.
    -- As a side effect, this connect the signal SIG with the port PORT.
    -- PORT is the formal, while SIG is the actual.
-   procedure Connect (Dst : Connect_Endpoint;
-                      Src : Connect_Endpoint;
+   procedure Connect (Dst : Connect_Data;
+                      Src : Connect_Data;
                       Mode : Connect_Mode) is
    begin
       pragma Assert (Dst.Typ.Kind = Src.Typ.Kind);
@@ -2144,11 +2244,11 @@ package body Simul.Vhdl_Simul is
                   raise Internal_Error;
                end if;
                for I in 1 .. Len loop
-                  Connect ((Dst.Base,
+                  Connect ((Dst.Sig,
                             (Dst.Offs.Net_Off + (Len - I) * Etyp.W,
                              Dst.Offs.Mem_Off + Size_Type (I - 1) * Etyp.Sz),
                             Etyp),
-                           (Src.Base,
+                           (Src.Sig,
                             (Src.Offs.Net_Off + (Len - I) * Etyp.W,
                              Src.Offs.Mem_Off + Size_Type (I - 1) * Etyp.Sz),
                             Src.Typ.Arr_El),
@@ -2162,10 +2262,8 @@ package body Simul.Vhdl_Simul is
             declare
                S, D : Ghdl_Signal_Ptr;
             begin
-               S := Read_Sig (Sig_Index (Signals_Table.Table (Src.Base).Sig,
-                                         Src.Offs.Net_Off));
-               D := Read_Sig (Sig_Index (Signals_Table.Table (Dst.Base).Sig,
-                                         Dst.Offs.Net_Off));
+               S := Read_Sig (Sig_Index (Src.Sig, Src.Offs.Net_Off));
+               D := Read_Sig (Sig_Index (Dst.Sig, Dst.Offs.Net_Off));
                case Mode is
                   when Connect_Source =>
                      Grt.Signals.Ghdl_Signal_Add_Source (D, S);
@@ -2178,6 +2276,155 @@ package body Simul.Vhdl_Simul is
       end case;
    end Connect;
 
+   function Execute_Assoc_Conversion (Inst : Synth_Instance_Acc;
+                                      Func : Node;
+                                      Val : Memtyp;
+                                      Res_Typ : Type_Acc) return Memtyp is
+   begin
+      case Get_Kind (Func) is
+         when Iir_Kind_Function_Call =>
+            declare
+               Res : Valtyp;
+            begin
+               Res := Exec_Resolution_Call (Inst, Get_Implementation (Func),
+                                            Create_Value_Memory (Val));
+               Res := Synth.Vhdl_Expr.Synth_Subtype_Conversion
+                 (Inst, Res, Res_Typ, False, Func);
+               return Synth.Vhdl_Expr.Get_Value_Memtyp (Res);
+            end;
+         when others =>
+            Vhdl.Errors.Error_Kind ("execute_assoc_conversion", Func);
+      end case;
+   end Execute_Assoc_Conversion;
+
+   procedure Create_Shadow_Signal (Sig : Memory_Ptr;
+                                   Val : Memory_Ptr;
+                                   Typ : Type_Acc)
+   is
+      S : Ghdl_Signal_Ptr;
+   begin
+      case Typ.Kind is
+         when Type_Bit
+           | Type_Logic
+           | Type_Discrete =>
+            S := Create_Scalar_Signal
+              (Typ, To_Ghdl_Value_Ptr (To_Address (Val)));
+            Write_Sig (Sig, S);
+         when Type_Vector
+           | Type_Array =>
+            declare
+               Len : constant Uns32 := Typ.Abound.Len;
+            begin
+               for I in 1 .. Len loop
+                  Create_Shadow_Signal
+                    (Sig_Index (Sig, (Len - I) * Typ.Arr_El.W),
+                     Val + Size_Type (I - 1) * Typ.Arr_El.Sz,
+                     Typ.Arr_El);
+               end loop;
+            end;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Create_Shadow_Signal;
+
+   type Convert_Mode is (Convert_In, Convert_Out);
+
+   type Convert_Instance_Type is record
+      Mode : Convert_Mode;
+      Inst : Synth_Instance_Acc;
+      Func : Iir;
+      Src_Sig : Memory_Ptr;
+      Src_Typ : Type_Acc;
+      Dst_Sig : Memory_Ptr;
+      Dst_Typ : Type_Acc;
+   end record;
+
+   type Convert_Instance_Acc is access Convert_Instance_Type;
+
+   procedure Conversion_Proc (Data : System.Address) is
+      Conv : Convert_Instance_Type;
+      pragma Import (Ada, Conv);
+      for Conv'Address use Data;
+
+      Val : Memtyp;
+      Dst : Memtyp;
+
+      Expr_Mark : Mark_Type;
+   begin
+--      pragma Assert (Instance_Pool = null);
+--      Instance_Pool := Global_Pool'Access;
+      Mark (Expr_Mark, Expr_Pool);
+      Current_Process := null;
+
+      Val := Create_Memory (Conv.Src_Typ);
+      case Conv.Mode is
+         when Convert_In =>
+            Exec_Read_Signal (Conv.Src_Sig, Val, Read_Signal_Effective_Value);
+         when Convert_Out =>
+            Exec_Read_Signal (Conv.Src_Sig, Val, Read_Signal_Driving_Value);
+      end case;
+
+      Dst := Execute_Assoc_Conversion
+        (Conv.Inst, Conv.Func, Val, Conv.Dst_Typ);
+
+      case Conv.Mode is
+         when Convert_In =>
+            Exec_Write_Signal
+              (Conv.Dst_Sig, Dst, Write_Signal_Effective_Value);
+         when Convert_Out =>
+            Exec_Write_Signal
+              (Conv.Dst_Sig, Dst, Write_Signal_Driving_Value);
+      end case;
+
+      Release (Expr_Mark, Expr_Pool);
+--      Instance_Pool := null;
+   end Conversion_Proc;
+
+   function Get_Leftest_Signal (Sig : Memory_Ptr; Typ : Type_Acc)
+                               return Ghdl_Signal_Ptr is
+   begin
+      case Typ.Kind is
+         when Type_Bit
+           | Type_Logic
+           | Type_Discrete =>
+            return Read_Sig (Sig);
+         when Type_Vector
+           | Type_Array =>
+            return Get_Leftest_Signal
+              (Sig_Index (Sig, (Typ.Abound.Len - 1) * Typ.Arr_El.W),
+               Typ.Arr_El);
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Get_Leftest_Signal;
+
+   procedure Add_Conversion (Conv : Convert_Instance_Acc)
+   is
+      Src_Left : Grt.Signals.Ghdl_Signal_Ptr;
+      Src_Len : Ghdl_Index_Type;
+      Dst_Left : Grt.Signals.Ghdl_Signal_Ptr;
+      Dst_Len : Ghdl_Index_Type;
+   begin
+      Src_Left := Get_Leftest_Signal (Conv.Src_Sig, Conv.Src_Typ);
+      Src_Len := Ghdl_Index_Type (Conv.Src_Typ.W);
+
+      Dst_Left := Get_Leftest_Signal (Conv.Dst_Sig, Conv.Dst_Typ);
+      Dst_Len := Ghdl_Index_Type (Conv.Dst_Typ.W);
+
+      case Conv.Mode is
+         when Convert_In =>
+            Grt.Signals.Ghdl_Signal_In_Conversion (Conversion_Proc'Address,
+                                                   Conv.all'Address,
+                                                   Src_Left, Src_Len,
+                                                   Dst_Left, Dst_Len);
+         when Convert_Out =>
+            Grt.Signals.Ghdl_Signal_Out_Conversion (Conversion_Proc'Address,
+                                                    Conv.all'Address,
+                                                    Src_Left, Src_Len,
+                                                    Dst_Left, Dst_Len);
+      end case;
+   end Add_Conversion;
+
    procedure Create_Connect (C : Connect_Entry) is
    begin
       if C.Drive_Actual then
@@ -2188,25 +2435,102 @@ package body Simul.Vhdl_Simul is
             --  LRM93 12.6.2
             --  A signal is said to be active [...] if one of its source
             --  is active.
-            Connect (C.Actual, C.Formal, Connect_Source);
+            Connect (To_Connect_Data (C.Actual),
+                     To_Connect_Data (C.Formal),
+                     Connect_Source);
          end;
       end if;
 
       if C.Drive_Formal then
          declare
             In_Conv : constant Iir := Get_Actual_Conversion (C.Assoc);
+            Csig : Memory_Ptr;
+            Cval : Memory_Ptr;
+            Ctyp : Type_Acc;
+            Act, Act2 : Connect_Data;
          begin
-            pragma Assert (In_Conv = Null_Iir);
-            Connect (C.Formal, C.Actual, Connect_Effective);
+            Act := To_Connect_Data (C.Actual);
+
+            if In_Conv /= Null_Iir then
+               Ctyp := C.Formal.Typ;
+               Csig := Alloc_Signal_Memory (Ctyp);
+               Cval := Alloc_Memory (Ctyp);
+               Create_Shadow_Signal (Csig, Cval, Ctyp);
+               Act2 := (Sig => Csig,
+                        Offs => No_Value_Offsets,
+                        Typ => Ctyp);
+               Add_Conversion
+                 (new Convert_Instance_Type'(Mode => Convert_In,
+                                             Inst => C.Assoc_Inst,
+                                             Func => In_Conv,
+                                             Src_Sig => Act.Sig,
+                                             Src_Typ => Act.Typ,
+                                             Dst_Sig => Act2.Sig,
+                                             Dst_Typ => Act2.Typ));
+            else
+               Act2 := Act;
+            end if;
+            Connect (To_Connect_Data (C.Formal), Act2, Connect_Effective);
          end;
       end if;
    end Create_Connect;
+
+   procedure Signal_Associate_Cst (Sig : Memory_Ptr;
+                                   Typ : Type_Acc;
+                                   Val : Memory_Ptr) is
+   begin
+      case Typ.Kind is
+         when Type_Bit
+           | Type_Logic
+           | Type_Discrete =>
+            declare
+               S : constant Ghdl_Signal_Ptr := Read_Sig (Sig);
+               V : Value_Union;
+            begin
+               case S.Mode is
+                  when Mode_B1 =>
+                     V.B1 := Ghdl_B1'Val (Read_U8 (Val));
+                     S.Value_Ptr.B1 := V.B1;
+                     S.Driving_Value.B1 := V.B1;
+                  when Mode_E8 =>
+                     V.E8 := Read_U8 (Val);
+                     S.Value_Ptr.E8 := V.E8;
+                     S.Driving_Value.E8 := V.E8;
+                  when Mode_I32 =>
+                     V.I32 := Read_I32 (Val);
+                     S.Value_Ptr.I32 := V.I32;
+                     S.Driving_Value.I32 := V.I32;
+                  when Mode_I64 =>
+                     V.I64 := Read_I64 (Val);
+                     S.Value_Ptr.I64 := V.I64;
+                     S.Driving_Value.I64 := V.I64;
+                  when others =>
+                     raise Internal_Error;
+               end case;
+            end;
+         when Type_Vector
+           | Type_Array =>
+            declare
+               Len : constant Uns32 := Typ.Abound.Len;
+            begin
+               for I in 1 .. Len loop
+                  Signal_Associate_Cst
+                    (Sig_Index (Sig, (Len - I) * Typ.Arr_El.W),
+                     Typ.Arr_El,
+                     Val + Size_Type (I - 1) * Typ.Arr_El.Sz);
+               end loop;
+            end;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Signal_Associate_Cst;
 
    procedure Create_Connects is
    begin
       for I in Connect_Table.First .. Connect_Table.Last loop
          declare
             C : Connect_Entry renames Connect_Table.Table (I);
+            Val : Valtyp;
          begin
             if not C.Collapsed then
                if C.Actual.Base /= No_Signal_Index then
@@ -2214,7 +2538,13 @@ package body Simul.Vhdl_Simul is
                elsif Get_Expr_Staticness (Get_Actual (C.Assoc)) >= Globally
                then
                   --  TODO: association with static expr.
-                  raise Internal_Error;
+                  Val := Synth.Vhdl_Expr.Synth_Expression_With_Type
+                    (C.Assoc_Inst, Get_Actual (C.Assoc), C.Formal.Typ);
+                  Signal_Associate_Cst
+                    (Sig_Index (Signals_Table.Table (C.Formal.Base).Sig,
+                                C.Formal.Offs.Net_Off),
+                     C.Formal.Typ,
+                     Val.Val.Mem);
                end if;
             end if;
          end;

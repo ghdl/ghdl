@@ -511,32 +511,33 @@ package body Simul.Vhdl_Elab is
               | Iir_Kind_Association_Element_By_Individual =>
                null;
             when Iir_Kind_Association_Element_By_Expression =>
+               Inter := Get_Association_Interface (Assoc, Assoc_Inter);
+               Synth_Assignment_Prefix
+                 (Port_Inst, Inter, Formal_Base, Typ, Off, Dyn);
+               pragma Assert (Dyn = No_Dyn_Name);
+               Formal_Sig := Formal_Base.Val.S;
+               Formal_Ep := (Formal_Sig, Off, Typ);
+
+               Actual_Ep := (No_Signal_Index, No_Value_Offsets, null);
+
+               Conn :=
+                 (Formal => Formal_Ep,
+                  Formal_Link => Signals_Table.Table (Formal_Sig).Connect,
+                  Actual => Actual_Ep,
+                  Actual_Link => No_Connect_Index,
+                  Drive_Formal => True, --  Always an IN interface
+                  Drive_Actual => False,
+                  Collapsed => False,
+                  Assoc => Assoc,
+                  Assoc_Inst => Assoc_Inst);
+
+               Connect_Table.Append (Conn);
+
+               Signals_Table.Table (Formal_Sig).Connect :=
+                 Connect_Table.Last;
+
                if Get_Expr_Staticness (Get_Actual (Assoc)) < Globally then
-                  Inter := Get_Association_Interface (Assoc, Assoc_Inter);
-                  Synth_Assignment_Prefix
-                    (Port_Inst, Inter, Formal_Base, Typ, Off, Dyn);
-                  pragma Assert (Dyn = No_Dyn_Name);
-                  Formal_Sig := Formal_Base.Val.S;
-                  Formal_Ep := (Formal_Sig, Off, Typ);
-
-                  Actual_Ep := (No_Signal_Index, No_Value_Offsets, null);
-
-                  Conn :=
-                    (Formal => Formal_Ep,
-                     Formal_Link => Signals_Table.Table (Formal_Sig).Connect,
-                     Actual => Actual_Ep,
-                     Actual_Link => No_Connect_Index,
-                     Drive_Formal => True, --  Always an IN interface
-                     Drive_Actual => False,
-                     Collapsed => False,
-                     Assoc => Assoc,
-                     Assoc_Inst => Assoc_Inst);
-
-                  Connect_Table.Append (Conn);
-
-                  Signals_Table.Table (Formal_Sig).Connect :=
-                    Connect_Table.Last;
-
+                  --  Create a process to assign the expression to the port.
                   Processes_Table.Append
                     ((Proc => Assoc,
                       Inst => Assoc_Inst,
@@ -551,8 +552,6 @@ package body Simul.Vhdl_Elab is
                     (Get_Actual (Assoc), List, False);
                   Gather_Sensitivity (Assoc_Inst, Processes_Table.Last, List);
                   Destroy_Iir_List (List);
-               else
-                  raise Internal_Error;
                end if;
             when others =>
                Error_Kind ("gather_connections", Assoc);
