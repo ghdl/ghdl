@@ -185,6 +185,8 @@ package body Simul.Vhdl_Simul is
             else
                raise Internal_Error;
             end if;
+         when Type_Float =>
+            Val.F64 := Ghdl_F64 (Read_Fp64 (Mt.Mem));
          when others =>
             raise Internal_Error;
       end case;
@@ -269,11 +271,12 @@ package body Simul.Vhdl_Simul is
       case Typ.Kind is
          when Type_Logic
             | Type_Bit
-            | Type_Discrete =>
+            | Type_Discrete
+            | Type_Float =>
             Grt.Signals.Ghdl_Process_Add_Port_Driver
               (Read_Sig (Sig), To_Ghdl_Value ((Typ, Val)));
          when Type_Vector
-           | Type_Array =>
+            | Type_Array =>
             declare
                Len : constant Uns32 := Typ.Abound.Len;
             begin
@@ -1334,7 +1337,8 @@ package body Simul.Vhdl_Simul is
       case Typ.Kind is
          when Type_Logic
            | Type_Bit
-           | Type_Discrete =>
+           | Type_Discrete
+           | Type_Float =>
             Grt.Processes.Ghdl_Process_Add_Sensitivity (Read_Sig (Sig));
          when Type_Vector
            | Type_Array =>
