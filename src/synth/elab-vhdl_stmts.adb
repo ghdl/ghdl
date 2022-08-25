@@ -68,6 +68,7 @@ package body Elab.Vhdl_Stmts is
       It_Rng : Type_Acc;
       Val : Valtyp;
       Ival : Valtyp;
+      Dval : Int64;
       Len : Uns32;
    begin
       if It_Type /= Null_Node then
@@ -85,27 +86,50 @@ package body Elab.Vhdl_Stmts is
       Create_Sub_Instance (Syn_Inst, Stmt, Gen_Inst);
 
       for I in 1 .. Len loop
+         --  Create a copy of the current iterator value for the generate
+         --  block.
+         Dval := Read_Discrete (Val);
+         Ival := Create_Value_Discrete (Dval, It_Rng);
+
          --  Find and apply the config block.
          declare
             Spec : Node;
+            Default : Node;
+            Idxes : Node_Flist;
+            Drng : Discrete_Range_Type;
          begin
+            --  TODO: do not recompute indexes and ranges for each sub-block
+            --  TODO: mark & release memory
+            Default := Null_Node;
             Config := Configs;
             while Config /= Null_Node loop
                Spec := Get_Block_Specification (Config);
                case Get_Kind (Spec) is
                   when Iir_Kind_Simple_Name =>
                      exit;
+                  when Iir_Kind_Indexed_Name =>
+                     Idxes := Get_Index_List (Spec);
+                     if Idxes = Iir_Flist_Others then
+                        Default := Config;
+                     else
+                        Val := Synth_Expression_With_Type
+                          (Syn_Inst, Get_Nth_Element (Idxes, 0), It_Rng);
+                        exit when Is_Equal (Val, Ival);
+                     end if;
+                  when Iir_Kind_Slice_Name =>
+                     Synth_Discrete_Range (Syn_Inst, Get_Suffix (Spec), Drng);
+                     exit when In_Range (Drng, Dval);
                   when others =>
                      Error_Kind ("elab_for_generate_statement", Spec);
                end case;
                Config := Get_Prev_Block_Configuration (Config);
             end loop;
+
+            if Config = Null_Node then
+               Config := Default;
+            end if;
             Apply_Block_Configuration (Config, Bod);
          end;
-
-         --  Create a copy of the current iterator value for the generate
-         --  block.
-         Ival := Create_Value_Discrete (Read_Discrete (Val), It_Rng);
 
          Sub_Inst := Elab_Generate_Statement_Body
            (Gen_Inst, Bod, Config, Iterator, Ival);
