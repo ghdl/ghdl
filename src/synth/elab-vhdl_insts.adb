@@ -694,6 +694,11 @@ package body Elab.Vhdl_Insts is
          when Iir_Kind_Entity_Aspect_Entity =>
             Ent := Get_Entity (Aspect);
             Arch := Get_Architecture (Aspect);
+            Sub_Config := Get_Block_Configuration (Config);
+         when Iir_Kind_Entity_Aspect_Configuration =>
+            Sub_Config := Get_Block_Configuration (Get_Configuration (Aspect));
+            Arch := Get_Block_Specification (Sub_Config);
+            Ent := Get_Entity (Get_Named_Entity (Arch));
          when others =>
             Vhdl.Errors.Error_Kind
               ("Elab_Component_Instantiation_Statement(2)", Aspect);
@@ -712,7 +717,6 @@ package body Elab.Vhdl_Insts is
       else
          Arch := Get_Named_Entity (Arch);
       end if;
-      Sub_Config := Get_Block_Configuration (Config);
       if Sub_Config = Null_Node then
          Sub_Config := Get_Library_Unit
            (Get_Default_Configuration_Declaration (Arch));
