@@ -283,7 +283,7 @@ package body Vhdl.Sem_Assocs is
                   end if;
                when others =>
                   Error_Msg_Sem
-                    (+Loc, "signal parameter requires a signal expression");
+                    (+Loc, "signal parameter requires a signal name");
             end case;
 
             case Get_Kind (Prefix) is
