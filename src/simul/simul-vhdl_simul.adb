@@ -2260,9 +2260,26 @@ package body Simul.Vhdl_Simul is
                end loop;
             end;
             return;
+         when Type_Record =>
+            for I in Dst.Typ.Rec.E'Range loop
+               declare
+                  E : Rec_El_Type renames Dst.Typ.Rec.E (I);
+               begin
+                  Connect ((Dst.Sig,
+                            (Dst.Offs.Net_Off + E.Offs.Net_Off,
+                             Dst.Offs.Mem_Off + E.Offs.Mem_Off),
+                            E.Typ),
+                           (Src.Sig,
+                            (Src.Offs.Net_Off + E.Offs.Net_Off,
+                             Src.Offs.Mem_Off + E.Offs.Mem_Off),
+                            Src.Typ.Rec.E (I).Typ),
+                           Mode);
+               end;
+            end loop;
          when Type_Logic
            | Type_Bit
-           | Type_Discrete =>
+           | Type_Discrete
+           | Type_Float =>
             declare
                S, D : Ghdl_Signal_Ptr;
             begin
