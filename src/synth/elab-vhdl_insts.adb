@@ -820,16 +820,25 @@ package body Elab.Vhdl_Insts is
       --    association.
       Inter := Get_Port_Chain (Entity);
       while Is_Valid (Inter) loop
-         if not Is_Fully_Constrained_Type (Get_Type (Inter)) then
-            --  TODO
-            raise Internal_Error;
+         if Is_Fully_Constrained_Type (Get_Type (Inter)) then
+            declare
+               Inter_Typ : Type_Acc;
+            begin
+               Inter_Typ := Elab_Declaration_Type (Top_Inst, Inter);
+               Create_Signal (Top_Inst, Inter, Inter_Typ);
+            end;
+         else
+            declare
+               Def : constant Node := Get_Default_Value (Inter);
+               Inter_Typ : Type_Acc;
+               Val : Valtyp;
+            begin
+               pragma Assert (Def /= Null_Node);
+               Inter_Typ := Elab_Declaration_Type (Top_Inst, Inter);
+               Val := Synth_Expression_With_Type (Top_Inst, Def, Inter_Typ);
+               Create_Signal (Top_Inst, Inter, Val.Typ);
+            end;
          end if;
-         declare
-            Inter_Typ : Type_Acc;
-         begin
-            Inter_Typ := Elab_Declaration_Type (Top_Inst, Inter);
-            Create_Signal (Top_Inst, Inter, Inter_Typ);
-         end;
          Inter := Get_Chain (Inter);
       end loop;
 
