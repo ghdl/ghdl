@@ -2078,6 +2078,20 @@ package body Synth.Vhdl_Expr is
          when Iir_Kind_Parenthesis_Expression =>
             return Synth_Expression_With_Type
               (Syn_Inst, Get_Expression (Expr), Expr_Type);
+         when Iir_Kind_Left_Type_Attribute =>
+            declare
+               T : Type_Acc;
+            begin
+               T := Synth_Type_Attribute (Syn_Inst, Expr);
+               return Create_Value_Discrete (T.Drange.Left, Expr_Type);
+            end;
+         when Iir_Kind_Right_Type_Attribute =>
+            declare
+               T : Type_Acc;
+            begin
+               T := Synth_Type_Attribute (Syn_Inst, Expr);
+               return Create_Value_Discrete (T.Drange.Right, Expr_Type);
+            end;
          when Iir_Kind_Left_Array_Attribute =>
             declare
                B : Bound_Type;
