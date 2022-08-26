@@ -2216,24 +2216,17 @@ package body Simul.Vhdl_Simul is
 
    type Connect_Mode is (Connect_Source, Connect_Effective);
 
-   type Connect_Data is record
-      Sig : Memory_Ptr;
-      Offs : Value_Offsets;
-      Typ : Type_Acc;
-   end record;
-
-   function To_Connect_Data (Ep : Connect_Endpoint) return Connect_Data is
+   function To_Memtyp (Ep : Connect_Endpoint) return Memtyp is
    begin
-      return (Sig => Signals_Table.Table (Ep.Base).Sig,
-              Offs => Ep.Offs,
-              Typ => Ep.Typ);
-   end To_Connect_Data;
+      return (Ep.Typ,
+              Sig_Index (Signals_Table.Table (Ep.Base).Sig, Ep.Offs.Net_Off));
+   end To_Memtyp;
 
    -- Add a driving value PORT to signal SIG, ie: PORT is a source for SIG.
    -- As a side effect, this connect the signal SIG with the port PORT.
    -- PORT is the formal, while SIG is the actual.
-   procedure Connect (Dst : Connect_Data;
-                      Src : Connect_Data;
+   procedure Connect (Dst : Memtyp;
+                      Src : Memtyp;
                       Mode : Connect_Mode) is
    begin
       pragma Assert (Dst.Typ.Kind = Src.Typ.Kind);
@@ -2248,14 +2241,9 @@ package body Simul.Vhdl_Simul is
                   raise Internal_Error;
                end if;
                for I in 1 .. Len loop
-                  Connect ((Dst.Sig,
-                            (Dst.Offs.Net_Off + (Len - I) * Etyp.W,
-                             Dst.Offs.Mem_Off + Size_Type (I - 1) * Etyp.Sz),
-                            Etyp),
-                           (Src.Sig,
-                            (Src.Offs.Net_Off + (Len - I) * Etyp.W,
-                             Src.Offs.Mem_Off + Size_Type (I - 1) * Etyp.Sz),
-                            Src.Typ.Arr_El),
+                  Connect ((Etyp, Sig_Index (Dst.Mem, (Len - I) * Etyp.W)),
+                           (Src.Typ.Arr_El,
+                            Sig_Index (Src.Mem, (Len - I) * Etyp.W)),
                            Mode);
                end loop;
             end;
@@ -2265,14 +2253,9 @@ package body Simul.Vhdl_Simul is
                declare
                   E : Rec_El_Type renames Dst.Typ.Rec.E (I);
                begin
-                  Connect ((Dst.Sig,
-                            (Dst.Offs.Net_Off + E.Offs.Net_Off,
-                             Dst.Offs.Mem_Off + E.Offs.Mem_Off),
-                            E.Typ),
-                           (Src.Sig,
-                            (Src.Offs.Net_Off + E.Offs.Net_Off,
-                             Src.Offs.Mem_Off + E.Offs.Mem_Off),
-                            Src.Typ.Rec.E (I).Typ),
+                  Connect ((E.Typ, Sig_Index (Dst.Mem, E.Offs.Net_Off)),
+                           (Src.Typ.Rec.E (I).Typ,
+                            Sig_Index (Src.Mem, E.Offs.Net_Off)),
                            Mode);
                end;
             end loop;
@@ -2283,8 +2266,8 @@ package body Simul.Vhdl_Simul is
             declare
                S, D : Ghdl_Signal_Ptr;
             begin
-               S := Read_Sig (Sig_Index (Src.Sig, Src.Offs.Net_Off));
-               D := Read_Sig (Sig_Index (Dst.Sig, Dst.Offs.Net_Off));
+               S := Read_Sig (Src.Mem);
+               D := Read_Sig (Dst.Mem);
                case Mode is
                   when Connect_Source =>
                      Grt.Signals.Ghdl_Signal_Add_Source (D, S);
@@ -2456,8 +2439,8 @@ package body Simul.Vhdl_Simul is
             --  LRM93 12.6.2
             --  A signal is said to be active [...] if one of its source
             --  is active.
-            Connect (To_Connect_Data (C.Actual),
-                     To_Connect_Data (C.Formal),
+            Connect (To_Memtyp (C.Actual),
+                     To_Memtyp (C.Formal),
                      Connect_Source);
          end;
       end if;
@@ -2468,30 +2451,28 @@ package body Simul.Vhdl_Simul is
             Csig : Memory_Ptr;
             Cval : Memory_Ptr;
             Ctyp : Type_Acc;
-            Act, Act2 : Connect_Data;
+            Act, Act2 : Memtyp;
          begin
-            Act := To_Connect_Data (C.Actual);
+            Act := To_Memtyp (C.Actual);
 
             if In_Conv /= Null_Iir then
                Ctyp := C.Formal.Typ;
                Csig := Alloc_Signal_Memory (Ctyp);
                Cval := Alloc_Memory (Ctyp);
                Create_Shadow_Signal (Csig, Cval, Ctyp);
-               Act2 := (Sig => Csig,
-                        Offs => No_Value_Offsets,
-                        Typ => Ctyp);
+               Act2 := (Ctyp, Csig);
                Add_Conversion
                  (new Convert_Instance_Type'(Mode => Convert_In,
                                              Inst => C.Assoc_Inst,
                                              Func => In_Conv,
-                                             Src_Sig => Act.Sig,
+                                             Src_Sig => Act.Mem,
                                              Src_Typ => Act.Typ,
-                                             Dst_Sig => Act2.Sig,
+                                             Dst_Sig => Act2.Mem,
                                              Dst_Typ => Act2.Typ));
             else
                Act2 := Act;
             end if;
-            Connect (To_Connect_Data (C.Formal), Act2, Connect_Effective);
+            Connect (To_Memtyp (C.Formal), Act2, Connect_Effective);
          end;
       end if;
    end Create_Connect;
