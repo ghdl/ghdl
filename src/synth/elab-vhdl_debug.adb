@@ -44,6 +44,18 @@ with Vhdl.Std_Package;
 with Vhdl.Prints;
 
 package body Elab.Vhdl_Debug is
+   procedure Put_Stmt_Trace (Stmt : Iir)
+   is
+      Name : Name_Id;
+      Line : Natural;
+      Col : Natural;
+   begin
+      Files_Map.Location_To_Position (Get_Location (Stmt), Name, Line, Col);
+      Simple_IO.Put_Line ("Execute statement at "
+                            & Name_Table.Image (Name)
+                            & Natural'Image (Line));
+   end Put_Stmt_Trace;
+
    procedure Disp_Discrete_Value (Val : Int64; Btype : Node) is
    begin
       case Get_Kind (Btype) is

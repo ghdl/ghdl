@@ -36,11 +36,12 @@ with PSL.NFAs;
 with PSL.NFAs.Utils;
 with PSL.Errors;
 
+with Elab.Debugger;
 with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
 with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 with Elab.Vhdl_Types;
 with Elab.Vhdl_Decls;
-with Elab.Debugger;
+with Elab.Vhdl_Debug;
 
 with Trans_Analyzes;
 
@@ -954,6 +955,9 @@ package body Simul.Vhdl_Simul is
 
       loop
          Inst := Process.Instance;
+         if Synth.Flags.Flag_Trace_Statements then
+            Elab.Vhdl_Debug.Put_Stmt_Trace (Stmt);
+         end if;
          if Elab.Debugger.Flag_Need_Debug then
             Elab.Debugger.Debug_Break (Inst, Stmt);
          end if;
@@ -1272,8 +1276,8 @@ package body Simul.Vhdl_Simul is
 --      Instance_Pool := Process.Pool'Access;
 
       if Synth.Flags.Flag_Trace_Statements then
-         Put (" run process: ");
---         Disp_Instance_Name (Process.Top_Instance);
+         Put ("run process: ");
+         Elab.Vhdl_Debug.Disp_Instance_Path (Process.Top_Instance);
          Put_Line (" (" & Vhdl.Errors.Disp_Location (Process.Proc) & ")");
       end if;
 

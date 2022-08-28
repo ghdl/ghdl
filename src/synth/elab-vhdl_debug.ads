@@ -48,5 +48,7 @@ package Elab.Vhdl_Debug is
    procedure Disp_Instance_Path (Inst : Synth_Instance_Acc;
                                  Components : Boolean := False);
 
+   procedure Put_Stmt_Trace (Stmt : Iir);
+
    procedure Append_Commands;
 end Elab.Vhdl_Debug;

@@ -22,10 +22,8 @@ with Grt.Types; use Grt.Types;
 with Grt.Algos;
 with Grt.Severity; use Grt.Severity;
 with Areapools;
-with Name_Table;
 with Std_Names;
 with Errorout; use Errorout;
-with Files_Map;
 with Simple_IO;
 
 with Vhdl.Errors; use Vhdl.Errors;
@@ -45,6 +43,7 @@ with Elab.Memtype; use Elab.Memtype;
 with Elab.Vhdl_Heap;
 with Elab.Vhdl_Types; use Elab.Vhdl_Types;
 with Elab.Vhdl_Expr; use Elab.Vhdl_Expr;
+with Elab.Vhdl_Debug;
 with Elab.Debugger;
 
 with Synth.Errors; use Synth.Errors;
@@ -3201,17 +3200,7 @@ package body Synth.Vhdl_Stmts is
          end if;
 
          if Flags.Flag_Trace_Statements then
-            declare
-               Name : Name_Id;
-               Line : Natural;
-               Col : Natural;
-            begin
-               Files_Map.Location_To_Position
-                 (Get_Location (Stmt), Name, Line, Col);
-               Simple_IO.Put_Line ("Execute statement at "
-                                     & Name_Table.Image (Name)
-                                     & Natural'Image (Line));
-            end;
+            Elab.Vhdl_Debug.Put_Stmt_Trace (Stmt);
          end if;
          if Elab.Debugger.Flag_Need_Debug then
             Elab.Debugger.Debug_Break (C.Inst, Stmt);
