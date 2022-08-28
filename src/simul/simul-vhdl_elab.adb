@@ -59,6 +59,76 @@ package body Simul.Vhdl_Elab is
       end case;
    end Convert_Type_Width;
 
+   --  For each scalar element, set Vec (off).Total to 1 if the signal is
+   --  resolved.
+   procedure Mark_Resolved_Signals (Sig_Off : Uns32;
+                                    Sig_Type: Iir;
+                                    Typ : Type_Acc;
+                                    Vec : in out Nbr_Sources_Array;
+                                    Already_Resolved : Boolean)
+   is
+      Sub_Resolved : Boolean;
+   begin
+      if not Already_Resolved
+        and then Get_Kind (Sig_Type) in Iir_Kinds_Subtype_Definition
+      then
+         Sub_Resolved := Get_Resolution_Indication (Sig_Type) /= Null_Iir;
+      else
+         Sub_Resolved := Already_Resolved;
+      end if;
+
+      case Typ.Kind is
+         when Type_Bit
+           | Type_Logic
+           | Type_Float
+           | Type_Discrete =>
+            if Sub_Resolved then
+               Vec (Sig_Off).Total := 1;
+            end if;
+         when Type_Vector
+           | Type_Array =>
+            declare
+               Len : constant Uns32 := Typ.Abound.Len;
+               El_Type : Node;
+            begin
+               if Typ.Alast then
+                  El_Type := Get_Element_Subtype (Sig_Type);
+               else
+                  El_Type := Sig_Type;
+               end if;
+               for I in 1 .. Len loop
+                  Mark_Resolved_Signals
+                    (Sig_Off + (Len - I) * Typ.Arr_El.W,
+                     El_Type, Typ.Arr_El,
+                     Vec, Already_Resolved);
+               end loop;
+            end;
+         when Type_Record =>
+            declare
+               List : constant Iir_Flist := Get_Elements_Declaration_List
+                 (Sig_Type);
+               El : Iir_Element_Declaration;
+            begin
+               for I in Typ.Rec.E'Range loop
+                  El := Get_Nth_Element (List, Natural (I - 1));
+                  Mark_Resolved_Signals
+                    (Sig_Off + Typ.Rec.E (I).Offs.Net_Off,
+                     Get_Type (El), Typ.Rec.E (I).Typ,
+                     Vec, Sub_Resolved);
+               end loop;
+            end;
+
+         when Type_Slice
+           | Type_Access
+           | Type_Unbounded_Vector
+           | Type_Unbounded_Array
+           | Type_Unbounded_Record
+           | Type_File
+           | Type_Protected =>
+            raise Internal_Error;
+      end case;
+   end Mark_Resolved_Signals;
+
    procedure Gather_Signal (Proto_E : Signal_Entry)
    is
       Val : constant Valtyp := Get_Value (Proto_E.Inst, Proto_E.Decl);
@@ -90,6 +160,9 @@ package body Simul.Vhdl_Elab is
                                      Nbr_Conns => 0,
                                      Total => 0,
                                      Last_Proc => No_Process_Index));
+
+         Mark_Resolved_Signals
+           (0, Get_Type (E.Decl), E.Typ, E.Nbr_Sources.all, False);
       end if;
 
       pragma Assert (E.Kind /= Mode_End);
@@ -232,7 +305,8 @@ package body Simul.Vhdl_Elab is
    procedure Add_Process_Driver (Proc_Idx : Process_Index_Type;
                                  Sig : Signal_Index_Type;
                                  Off : Value_Offsets;
-                                 Typ : Type_Acc)
+                                 Typ : Type_Acc;
+                                 Loc : Node)
    is
       S : Signal_Entry renames Signals_Table.Table (Sig);
       Need_It : Boolean;
@@ -247,11 +321,22 @@ package body Simul.Vhdl_Elab is
       --  Increment the number of driver for each scalar element.
       Need_It := False;
       for I in Off.Net_Off .. Off.Net_Off + Typ.W - 1 loop
-         if S.Nbr_Sources (I).Last_Proc /= Proc_Idx then
-            S.Nbr_Sources (I).Nbr_Drivers := S.Nbr_Sources (I).Nbr_Drivers + 1;
-            S.Nbr_Sources (I).Last_Proc := Proc_Idx;
-            Need_It := True;
-         end if;
+         declare
+            Ns : Nbr_Sources_Type renames S.Nbr_Sources (I);
+         begin
+            if Ns.Last_Proc /= Proc_Idx then
+               --  New driver.
+               if not Need_It
+                 and then Ns.Nbr_Drivers > 0
+                 and then Ns.Total = 0
+               then
+                  Error_Msg_Elab (Loc, "too many drivers for %n", +S.Decl);
+               end if;
+               Ns.Nbr_Drivers := Ns.Nbr_Drivers + 1;
+               Ns.Last_Proc := Proc_Idx;
+               Need_It := True;
+            end if;
+         end;
       end loop;
 
       if not Need_It then
@@ -295,7 +380,7 @@ package body Simul.Vhdl_Elab is
          pragma Assert (Dyn = No_Dyn_Name);
          Base := Base_Vt.Val.S;
 
-         Add_Process_Driver (Proc_Idx, Base, Off, Typ);
+         Add_Process_Driver (Proc_Idx, Base, Off, Typ, Sig);
 
          Next (It);
       end loop;
@@ -546,7 +631,7 @@ package body Simul.Vhdl_Elab is
                       Sensitivity => No_Sensitivity_Index));
 
                   Add_Process_Driver
-                    (Processes_Table.Last, Formal_Sig, Off, Typ);
+                    (Processes_Table.Last, Formal_Sig, Off, Typ, Assoc);
 
                   List := Create_Iir_List;
                   Vhdl.Canon.Canon_Extract_Sensitivity_Expression
