@@ -83,7 +83,7 @@ package body Elab.Vhdl_Expr is
          Res_Type := Create_Array_Type (Bnd, True, El_Typ);
       end if;
 
-      Res := Create_Value_Memory (Res_Type);
+      Res := Create_Value_Memory (Res_Type, Current_Pool);
 
       for I in Flist_First .. Last loop
          --  Elements are supposed to be static, so no need for enable.
@@ -331,10 +331,11 @@ package body Elab.Vhdl_Expr is
            | Iir_Kind_Dereference =>
             declare
                Val : Valtyp;
+               Obj : Memtyp;
             begin
                Val := Synth_Expression (Syn_Inst, Get_Prefix (Name));
-               Val := Elab.Vhdl_Heap.Synth_Dereference (Read_Access (Val));
-               return Val.Typ;
+               Obj := Elab.Vhdl_Heap.Synth_Dereference (Read_Access (Val));
+               return Obj.Typ;
             end;
          when Iir_Kind_Function_Call =>
             declare
@@ -400,7 +401,7 @@ package body Elab.Vhdl_Expr is
            | Iir_Kind_Dereference =>
             declare
                Val : Valtyp;
-               Res : Valtyp;
+               Res : Memtyp;
             begin
                --  Maybe do not dereference it if its type is known ?
                Val := Synth_Expression (Syn_Inst, Get_Prefix (Expr));
@@ -452,7 +453,7 @@ package body Elab.Vhdl_Expr is
       else
          Res_Type := Create_Array_Type (Bounds, True, El_Type);
       end if;
-      Res := Create_Value_Memory (Res_Type);
+      Res := Create_Value_Memory (Res_Type, Current_Pool);
 
       --  Only U8 are handled.
       pragma Assert (El_Type.Sz = 1);

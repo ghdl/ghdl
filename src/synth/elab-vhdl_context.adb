@@ -287,6 +287,18 @@ package body Elab.Vhdl_Context is
       Syn_Inst.Objects (Info.Slot) := (Kind => Obj_Object, Obj => Vt);
    end Create_Object_Force;
 
+   procedure Create_Object_Marker
+     (Syn_Inst : Synth_Instance_Acc; N : Node; Pool : Areapools.Areapool_Acc)
+   is
+      use Areapools;
+      Info : constant Sim_Info_Acc := Get_Info (N);
+   begin
+      Create_Object (Syn_Inst, Info.Slot, 1);
+      Syn_Inst.Objects (Info.Slot) := (Kind => Obj_Marker,
+                                       M_Mark => Empty_Marker);
+      Mark (Syn_Inst.Objects (Info.Slot).M_Mark, Pool.all);
+   end Create_Object_Marker;
+
    procedure Create_Object
      (Syn_Inst : Synth_Instance_Acc; Decl : Node; Vt : Valtyp)
    is
@@ -466,9 +478,8 @@ package body Elab.Vhdl_Context is
             Last => Syn_Inst.Elab_Objects);
    end Destroy_Init;
 
-   procedure Destroy_Object (D : in out Destroy_Type; Decl : Node)
+   procedure Destroy_Check (D : in out Destroy_Type; Info : Sim_Info_Acc)
    is
-      Info : constant Sim_Info_Acc := Get_Info (Decl);
       Slot : constant Object_Slot_Type := Info.Slot;
    begin
       if Info.Obj_Scope /= D.Inst.Block_Scope then
@@ -486,8 +497,27 @@ package body Elab.Vhdl_Context is
       if Slot < D.First then
          D.First := Slot;
       end if;
-      D.Inst.Objects (Slot) := (Kind => Obj_None);
+   end Destroy_Check;
+
+   procedure Destroy_Object (D : in out Destroy_Type; Decl : Node)
+   is
+      Info : constant Sim_Info_Acc := Get_Info (Decl);
+   begin
+      Destroy_Check (D, Info);
+      D.Inst.Objects (Info.Slot) := (Kind => Obj_None);
    end Destroy_Object;
+
+   procedure Destroy_Marker
+     (D : in out Destroy_Type; N : Node; Pool : Areapools.Areapool_Acc)
+   is
+      use Areapools;
+      Info : constant Sim_Info_Acc := Get_Info (N);
+      Slot : constant Object_Slot_Type := Info.Slot;
+   begin
+      Destroy_Check (D, Info);
+      Release (D.Inst.Objects (Slot).M_Mark, Pool.all);
+      D.Inst.Objects (Slot) := (Kind => Obj_None);
+   end Destroy_Marker;
 
    procedure Destroy_Finish (D : in out Destroy_Type) is
    begin

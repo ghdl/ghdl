@@ -202,7 +202,7 @@ package body Synth.Vhdl_Aggr is
                Err_P := True;
             end if;
             for I in 1 .. Pos32'Min (Pos32 (Str_Len), Pos32 (Bound.Len)) loop
-               E := Create_Value_Memory (El_Typ);
+               E := Create_Value_Memory (El_Typ, Current_Pool);
                V := Str_Table.Element_String8 (Str_Id, I);
                Write_U8 (E.Val.Mem, Nat8'Pos (V));
                Res (Pos) := E;
@@ -450,7 +450,7 @@ package body Synth.Vhdl_Aggr is
          declare
             Off : Size_Type;
          begin
-            Res := Create_Value_Memory (Aggr_Type);
+            Res := Create_Value_Memory (Aggr_Type, Current_Pool);
             Off := 0;
             for I in Tab_Res'Range loop
                if Tab_Res (I).Val /= null then
@@ -511,7 +511,7 @@ package body Synth.Vhdl_Aggr is
          end case;
 
          if Const_P then
-            Res := Create_Value_Memory (Res_Typ);
+            Res := Create_Value_Memory (Res_Typ, Current_Pool);
             for I in Aggr_Type.Rec.E'Range loop
                --  Note: elements are put in reverse order in Tab_Res,
                --  so reverse again...

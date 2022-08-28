@@ -18,6 +18,7 @@
 
 with Types; use Types;
 with Libraries;
+with Areapools;
 
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Std_Package;
@@ -60,6 +61,7 @@ package body Elab.Vhdl_Insts is
                                         Inter_Chain : Node;
                                         Assoc_Chain : Node)
    is
+      Marker : Mark_Type;
       Inter : Node;
       Inter_Type : Type_Acc;
       Assoc : Node;
@@ -67,6 +69,8 @@ package body Elab.Vhdl_Insts is
       Actual : Node;
       Val : Valtyp;
    begin
+      Mark_Expr_Pool (Marker);
+
       Assoc := Assoc_Chain;
       Assoc_Inter := Inter_Chain;
       while Is_Valid (Assoc) loop
@@ -97,9 +101,14 @@ package body Elab.Vhdl_Insts is
                     (+Assoc, "value of generic %i must be static", +Inter);
                   Val := No_Valtyp;
                   Set_Error (Sub_Inst);
+               else
+                  Val := Unshare (Val, Global_Pool'Access);
+                  Val.Typ := Unshare (Val.Typ, Global_Pool'Access);
                end if;
 
                Create_Object (Sub_Inst, Inter, Val);
+
+               Release_Expr_Pool (Marker);
 
             when Iir_Kind_Interface_Package_Declaration =>
                declare
@@ -127,8 +136,10 @@ package body Elab.Vhdl_Insts is
                      else
                         Act_Typ := Get_Subtype_Object (Syn_Inst, Act);
                      end if;
+                     Act_Typ := Unshare (Act_Typ, Instance_Pool);
                      Create_Subtype_Object
                        (Sub_Inst, Get_Type (Inter), Act_Typ);
+                     Release_Expr_Pool (Marker);
                   end;
                end if;
 
@@ -329,8 +340,10 @@ package body Elab.Vhdl_Insts is
                                         Inter : Node;
                                         Assoc : Node) return Type_Acc
    is
+      Marker : Mark_Type;
       Inter_Typ : Type_Acc;
       Val : Valtyp;
+      Res : Type_Acc;
    begin
       if not Is_Fully_Constrained_Type (Get_Type (Inter)) then
          --  TODO
@@ -341,6 +354,8 @@ package body Elab.Vhdl_Insts is
             raise Internal_Error;
          end if;
 
+         Mark_Expr_Pool (Marker);
+
          if Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Expression
            and then not Get_Inertial_Flag (Assoc)
          then
@@ -348,19 +363,23 @@ package body Elab.Vhdl_Insts is
             Inter_Typ := Elab_Declaration_Type (Sub_Inst, Inter);
             Val := Synth_Expression_With_Type
               (Syn_Inst, Get_Actual (Assoc), Inter_Typ);
-            return Val.Typ;
+            Res := Val.Typ;
+         else
+            case Iir_Kinds_Association_Element_Parameters (Get_Kind (Assoc)) is
+               when Iir_Kinds_Association_Element_By_Actual =>
+                  Res := Exec_Type_Of_Object (Syn_Inst, Get_Actual (Assoc));
+               when Iir_Kind_Association_Element_By_Individual =>
+                  Res := Synth_Subtype_Indication
+                    (Syn_Inst, Get_Actual_Type (Assoc));
+               when Iir_Kind_Association_Element_Open =>
+                  Res := Exec_Type_Of_Object
+                    (Syn_Inst, Get_Default_Value (Inter));
+            end case;
          end if;
 
-         case Iir_Kinds_Association_Element_Parameters (Get_Kind (Assoc)) is
-            when Iir_Kinds_Association_Element_By_Actual =>
-               return Exec_Type_Of_Object (Syn_Inst, Get_Actual (Assoc));
-            when Iir_Kind_Association_Element_By_Individual =>
-               return Synth_Subtype_Indication
-                 (Syn_Inst, Get_Actual_Type (Assoc));
-            when Iir_Kind_Association_Element_Open =>
-               return Exec_Type_Of_Object
-                 (Syn_Inst, Get_Default_Value (Inter));
-         end case;
+         Res := Unshare (Res, Global_Pool'Access);
+         Release_Expr_Pool (Marker);
+         return Res;
       else
          return Elab_Declaration_Type (Sub_Inst, Inter);
       end if;
@@ -580,6 +599,8 @@ package body Elab.Vhdl_Insts is
          return;
       end if;
 
+      pragma Assert (Areapools.Is_Empty (Expr_Pool));
+
       Entity := Get_Entity (Arch);
       Apply_Block_Configuration (Config, Arch);
 
@@ -589,15 +610,26 @@ package body Elab.Vhdl_Insts is
       Elab_Concurrent_Statements
         (Syn_Inst, Get_Concurrent_Statement_Chain (Entity));
 
+      pragma Assert (Areapools.Is_Empty (Expr_Pool));
+
       Elab_Verification_Units (Syn_Inst, Entity);
 
+      pragma Assert (Areapools.Is_Empty (Expr_Pool));
+
       Elab_Declarations (Syn_Inst, Get_Declaration_Chain (Arch));
+      pragma Assert (Areapools.Is_Empty (Expr_Pool));
       Elab_Concurrent_Statements
         (Syn_Inst, Get_Concurrent_Statement_Chain (Arch));
 
+      pragma Assert (Areapools.Is_Empty (Expr_Pool));
+
       Elab_Recurse_Instantiations (Syn_Inst, Arch);
 
+      pragma Assert (Areapools.Is_Empty (Expr_Pool));
+
       Elab_Verification_Units (Syn_Inst, Arch);
+
+      pragma Assert (Areapools.Is_Empty (Expr_Pool));
    end Elab_Instance_Body;
 
    procedure Elab_Direct_Instantiation_Statement
@@ -614,18 +646,25 @@ package body Elab.Vhdl_Insts is
 
       Create_Sub_Instance (Syn_Inst, Stmt, Sub_Inst);
 
+      pragma Assert (Is_Expr_Pool_Empty);
+
       Elab_Dependencies (Root_Instance, Get_Design_Unit (Entity));
       Elab_Dependencies (Root_Instance, Get_Design_Unit (Arch));
 
+      pragma Assert (Is_Expr_Pool_Empty);
 
       Elab_Generics_Association (Sub_Inst, Syn_Inst,
                                  Get_Generic_Chain (Entity),
                                  Get_Generic_Map_Aspect_Chain (Stmt));
 
+      pragma Assert (Is_Expr_Pool_Empty);
+
       --  Elaborate port types.
       Elab_Ports_Association_Type (Sub_Inst, Syn_Inst,
                                    Get_Port_Chain (Entity),
                                    Get_Port_Map_Aspect_Chain (Stmt));
+
+      pragma Assert (Is_Expr_Pool_Empty);
 
       if Is_Error (Sub_Inst) then
          --  TODO: Free it?
@@ -648,14 +687,20 @@ package body Elab.Vhdl_Insts is
       Sub_Config : Node;
       Sub_Inst : Synth_Instance_Acc;
    begin
+      pragma Assert (Is_Expr_Pool_Empty);
+
       --  Create the sub-instance for the component
       --  Elaborate generic + map aspect
       Comp_Inst := Make_Elab_Instance (Syn_Inst, Component, Config);
       Create_Sub_Instance (Syn_Inst, Stmt, Comp_Inst);
 
+      pragma Assert (Is_Expr_Pool_Empty);
+
       Elab_Generics_Association (Comp_Inst, Syn_Inst,
                                  Get_Generic_Chain (Component),
                                  Get_Generic_Map_Aspect_Chain (Stmt));
+
+      pragma Assert (Is_Expr_Pool_Empty);
 
       --  Create objects for the inputs and the outputs of the component,
       --  assign inputs (that's nets) and create wires for outputs.
@@ -680,6 +725,8 @@ package body Elab.Vhdl_Insts is
       end;
 
       Set_Component_Configuration (Stmt, Null_Node);
+
+      pragma Assert (Is_Expr_Pool_Empty);
 
       if Bind = Null_Iir then
          --  No association.
@@ -737,6 +784,7 @@ package body Elab.Vhdl_Insts is
       Elab_Ports_Association_Type (Sub_Inst, Comp_Inst,
                                    Get_Port_Chain (Ent),
                                    Get_Port_Map_Aspect_Chain (Bind));
+      pragma Assert (Is_Expr_Pool_Empty);
    end Elab_Component_Instantiation_Statement;
 
    procedure Elab_Design_Instantiation_Statement
@@ -767,6 +815,8 @@ package body Elab.Vhdl_Insts is
       Config := Get_Block_Configuration (Config);
       Ent := Get_Entity (Arch);
 
+      pragma Assert (Is_Expr_Pool_Empty);
+
       Elab_Direct_Instantiation_Statement
         (Syn_Inst, Stmt, Ent, Arch, Config);
    end Elab_Design_Instantiation_Statement;
@@ -790,6 +840,10 @@ package body Elab.Vhdl_Insts is
          Vhdl.Annotations.Annotate (Design_Units.Table (I));
       end loop;
 
+      --  Use global memory.
+      Instance_Pool := Global_Pool'Access;
+      pragma Assert (Areapools.Is_Empty (Expr_Pool));
+
       --  Start elaboration.
       Make_Root_Instance;
 
@@ -803,21 +857,30 @@ package body Elab.Vhdl_Insts is
       Elab_Dependencies (Root_Instance, Get_Design_Unit (Entity));
       Elab_Dependencies (Root_Instance, Get_Design_Unit (Arch));
 
+      pragma Assert (Areapools.Is_Empty (Expr_Pool));
+
       --  Compute generics.
       Inter := Get_Generic_Chain (Entity);
       while Is_Valid (Inter) loop
          declare
+            Em : Mark_Type;
             Val : Valtyp;
             Inter_Typ : Type_Acc;
          begin
+            Mark_Expr_Pool (Em);
             Inter_Typ := Elab_Declaration_Type (Top_Inst, Inter);
             Val := Synth_Expression_With_Type
               (Top_Inst, Get_Default_Value (Inter), Inter_Typ);
             pragma Assert (Is_Static (Val.Val));
+            Val := Unshare (Val, Instance_Pool);
+            Val.Typ := Unshare (Val.Typ, Instance_Pool);
             Create_Object (Top_Inst, Inter, Val);
+            Release_Expr_Pool (Em);
          end;
          Inter := Get_Chain (Inter);
       end loop;
+
+      pragma Assert (Areapools.Is_Empty (Expr_Pool));
 
       --  Elaborate port types.
       --  FIXME: what about unconstrained ports ?  Get the type from the
@@ -846,7 +909,13 @@ package body Elab.Vhdl_Insts is
          Inter := Get_Chain (Inter);
       end loop;
 
+      pragma Assert (Areapools.Is_Empty (Expr_Pool));
+
       Elab_Instance_Body (Top_Inst);
+
+      pragma Assert (Areapools.Is_Empty (Expr_Pool));
+
+      Instance_Pool := null;
 
       --  Clear elab_flag
       for I in Design_Units.First .. Design_Units.Last loop

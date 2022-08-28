@@ -140,6 +140,12 @@ package Elab.Vhdl_Objtypes is
       --  Alignment (in bytes) for this type.
       Al : Palign_Type;
 
+      --  Lifetime of the type.  If true, the type is not allocated on a
+      --  temporary pool (Expr_Pool).
+      --  The purpose of this flag is to avoid to duplicate the type when
+      --  unshared.
+      Is_Global : Boolean;
+
       --  Number of bytes (when in memory) for this type.
       Sz : Size_Type;
 
@@ -175,6 +181,8 @@ package Elab.Vhdl_Objtypes is
             Rec : Rec_El_Array_Acc;
          when Type_Access =>
             Acc_Acc : Type_Acc;
+            --  Memory size to store the type.
+            Acc_Bnd_Sz : Size_Type;
          when Type_File =>
             File_Typ  : Type_Acc;
             File_Signature : String_Acc;
@@ -190,14 +198,34 @@ package Elab.Vhdl_Objtypes is
 
    Null_Memtyp : constant Memtyp := (null, null);
 
+   --  Memory pools, which defines where the memory is allocated for data,
+   --  types, values...
+
+   --  The global pool is for data that live forever: packages, hierarchy, ...
    Global_Pool : aliased Areapool;
+
+   --  Pool for sensitized processes: will be fully released when the process
+   --  returns.
+   Process_Pool : aliased Areapool;
+
+   --  A temporary pool for expressions.
    Expr_Pool : aliased Areapool;
+
+   --  Pool for objects created.  Either Global_Pool (for global objects) or
+   --  a process pool (for objects in subprograms).
+   Instance_Pool : Areapool_Acc;
+
+   --  Memory pool for wires static values.
+   Wireval_Pool : aliased Areapool;
 
    --  Areapool used by Create_*_Value
    Current_Pool : Areapool_Acc := Expr_Pool'Access;
 
-   --  Pool for objects allocated in the current instance.
-   Instance_Pool : Areapool_Acc;
+   --  Aliases and utils to avoid the use of low-level subprograms.
+   subtype Mark_Type is Areapools.Mark_Type;
+   procedure Mark_Expr_Pool (M : out Mark_Type);
+   procedure Release_Expr_Pool (M : Mark_Type);
+   function Is_Expr_Pool_Empty return Boolean;
 
    --  Types.
    function Create_Discrete_Type (Rng : Discrete_Range_Type;
@@ -292,7 +320,8 @@ package Elab.Vhdl_Objtypes is
    --  For states.
    function Create_Memory_U32 (Val : Uns32) return Memtyp;
 
-   function Alloc_Memory (Vtype : Type_Acc) return Memory_Ptr;
+   function Alloc_Memory (Vtype : Type_Acc; Pool : Areapool_Acc)
+                         return Memory_Ptr;
    function Create_Memory (Vtype : Type_Acc) return Memtyp;
 
    --  Like Create_Memory but initialize to 0.  To be used only for types
@@ -305,6 +334,17 @@ package Elab.Vhdl_Objtypes is
 
    function Unshare (Src : Memtyp) return Memtyp;
    function Unshare (Src : Memtyp; Pool : Areapool_Acc) return Memtyp;
+
+   --  Unshare type T if not global.
+   function Unshare (T : Type_Acc; Pool : Areapool_Acc) return Type_Acc;
+
+   --  Unshare parts of TYP that is not in BASE.
+   function Unshare_Type (Typ : Type_Acc; Base : Type_Acc) return Type_Acc;
+
+   --  Copy TYP to MEM; MEM_SZ.
+   function Save_Type (Typ : Type_Acc;
+                       Mem : Memory_Ptr;
+                       Mem_Sz : Size_Type) return Type_Acc;
 
    procedure Initialize;
    procedure Finalize;

@@ -17,6 +17,7 @@
 --  along with this program.  If not, see <gnu.org/licenses>.
 
 with Types; use Types;
+with Areapools;
 
 with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
@@ -114,7 +115,9 @@ package Synth.Vhdl_Context is
                                     Ptyp : Type_Acc;
                                     Voff : Net;
                                     Eoff : Uns32;
-                                    Typ : Type_Acc) return Valtyp;
+                                    Typ : Type_Acc;
+                                    Pool : Areapools.Areapool_Acc)
+                                   return Valtyp;
 
    function Get_Value_Dyn_Alias_Voff (Val : Value_Acc) return Net;
 private

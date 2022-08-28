@@ -68,6 +68,8 @@ package body Synth.Vhdl_Stmts is
    procedure Set_Location (N : Net; Loc : Node)
      renames Synth.Source.Set_Location;
 
+   Proc_Pool : aliased Areapools.Areapool;
+
    function Synth_Waveform (Syn_Inst : Synth_Instance_Acc;
                             Wf : Node;
                             Targ_Type : Type_Acc) return Valtyp
@@ -253,8 +255,8 @@ package body Synth.Vhdl_Stmts is
             if Dest_Off /= (0, 0) and then Dest_Dyn.Voff /= No_Net then
                raise Internal_Error;
             end if;
-            Dest_Base := Elab.Vhdl_Heap.Synth_Dereference
-              (Read_Access (Dest_Base));
+            Dest_Base := Create_Value_Memory
+              (Elab.Vhdl_Heap.Synth_Dereference (Read_Access (Dest_Base)));
             Dest_Typ := Dest_Base.Typ;
 
          when others =>
@@ -409,7 +411,7 @@ package body Synth.Vhdl_Stmts is
             declare
                Res : Valtyp;
             begin
-               Res := Create_Value_Memory (Typ);
+               Res := Create_Value_Memory (Typ, Current_Pool);
                --  Need to reverse offsets.
                Copy_Memory
                  (Res.Val.Mem,
@@ -445,7 +447,7 @@ package body Synth.Vhdl_Stmts is
             declare
                Res : Valtyp;
             begin
-               Res := Create_Value_Memory (Typ);
+               Res := Create_Value_Memory (Typ, Current_Pool);
                Copy_Memory (Res.Val.Mem,
                             Val.Val.Mem + El_Typ.Offs.Mem_Off, El_Typ.Typ.Sz);
                return Res;
@@ -539,6 +541,7 @@ package body Synth.Vhdl_Stmts is
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       W : Wire_Id;
       V : Valtyp;
+      M : Memtyp;
    begin
       if Targ = No_Valtyp then
          --  There was an error.
@@ -559,7 +562,9 @@ package body Synth.Vhdl_Stmts is
            and then V.Typ.Sz = Targ.Typ.Sz
          then
             pragma Assert (Off = No_Value_Offsets);
-            Phi_Assign_Static (W, Unshare (Get_Memtyp (V)));
+            M := Unshare (Get_Memtyp (V), Wireval_Pool'Access);
+            M.Typ := Unshare (M.Typ, Wireval_Pool'Access);
+            Phi_Assign_Static (W, M);
          else
             if V.Typ.W = 0 then
                --  Forget about null wires.
@@ -764,9 +769,11 @@ package body Synth.Vhdl_Stmts is
 
    procedure Synth_Variable_Assignment (Inst : Synth_Instance_Acc; Stmt : Node)
    is
+      Marker : Mark_Type;
       Targ : Target_Info;
       Val : Valtyp;
    begin
+      Mark_Expr_Pool (Marker);
       Targ := Synth_Target (Inst, Get_Target (Stmt));
       Val := Synth_Expression_With_Type
         (Inst, Get_Expression (Stmt), Targ.Targ_Type);
@@ -775,6 +782,7 @@ package body Synth.Vhdl_Stmts is
          return;
       end if;
       Synth_Assignment (Inst, Targ, Val, Stmt);
+      Release_Expr_Pool (Marker);
    end Synth_Variable_Assignment;
 
    procedure Synth_Conditional_Variable_Assignment
@@ -782,6 +790,7 @@ package body Synth.Vhdl_Stmts is
    is
       Ctxt : constant Context_Acc := Get_Build (Inst);
       Target : constant Node := Get_Target (Stmt);
+      Marker : Mark_Type;
       Targ_Type : Type_Acc;
       Cond : Node;
       Ce : Node;
@@ -790,6 +799,7 @@ package body Synth.Vhdl_Stmts is
       First : Valtyp;
       Cond_Tri : Tri_State_Type;
    begin
+      Mark_Expr_Pool (Marker);
       Targ_Type := Get_Subtype_Object (Inst, Get_Type (Target));
       First := No_Valtyp;
       Last := No_Net;
@@ -853,6 +863,7 @@ package body Synth.Vhdl_Stmts is
          Ce := Get_Chain (Ce);
       end loop;
       Synth_Assignment (Inst, Target, First, Stmt);
+      Release_Expr_Pool (Marker);
    end Synth_Conditional_Variable_Assignment;
 
    procedure Synth_If_Statement (C : in out Seq_Context; Stmt : Node)
@@ -1826,7 +1837,8 @@ package body Synth.Vhdl_Stmts is
             if Info.Off = No_Value_Offsets then
                return Info.Obj;
             else
-               return Create_Value_Alias (Info.Obj, Info.Off, Info.Targ_Type);
+               return Create_Value_Alias
+                 (Info.Obj, Info.Off, Info.Targ_Type, Instance_Pool);
             end if;
          when Target_Aggregate =>
             raise Internal_Error;
@@ -1836,7 +1848,8 @@ package body Synth.Vhdl_Stmts is
                                            Info.Mem_Dyn.Pfx_Typ,
                                            Info.Mem_Dyn.Voff,
                                            Info.Mem_Doff,
-                                           Info.Targ_Type);
+                                           Info.Targ_Type,
+                                           Instance_Pool);
       end case;
    end Info_To_Valtyp;
 
@@ -1844,6 +1857,7 @@ package body Synth.Vhdl_Stmts is
                                             Caller_Inst : Synth_Instance_Acc;
                                             Init : Association_Iterator_Init)
    is
+      Marker : Mark_Type;
       Inter : Node;
       Inter_Type : Type_Acc;
       Assoc : Node;
@@ -1852,6 +1866,8 @@ package body Synth.Vhdl_Stmts is
       Iterator : Association_Iterator;
       Info : Target_Info;
    begin
+      Mark_Expr_Pool (Marker);
+
       Set_Instance_Const (Subprg_Inst, True);
 
       --  Process in INTER order.
@@ -1887,17 +1903,21 @@ package body Synth.Vhdl_Stmts is
                Actual := Get_Actual (Assoc);
                Info := Synth_Target (Caller_Inst, Actual);
                if Is_Copyback_Parameter (Inter) then
+                  --  For the copy back: keep info of formal.
                   Create_Object (Caller_Inst, Assoc, Info_To_Valtyp (Info));
                end if;
                if Info.Kind /= Target_Memory
                  and then Is_Static (Info.Obj.Val)
                then
-                  Val := Create_Value_Memory (Info.Targ_Type);
+                  --  FIXME: the subtype conversion will copy the value, so
+                  --   allocate here in current_pool ?
+                  Val := Create_Value_Memory (Info.Targ_Type, Instance_Pool);
                   Copy_Memory (Val.Val.Mem,
                                Info.Obj.Val.Mem + Info.Off.Mem_Off,
                                Info.Targ_Type.Sz);
                else
                   Val := Synth_Read (Caller_Inst, Info, Assoc);
+                  Val := Unshare (Val, Instance_Pool);
                end if;
             when Iir_Kind_Interface_Signal_Declaration =>
                --  Always pass by reference (use an alias).
@@ -1907,7 +1927,7 @@ package body Synth.Vhdl_Stmts is
                   raise Internal_Error;
                end if;
                Val := Create_Value_Alias
-                 (Info.Obj, Info.Off, Info.Targ_Type);
+                 (Info.Obj, Info.Off, Info.Targ_Type, Instance_Pool);
             when Iir_Kind_Interface_File_Declaration =>
                Actual := Get_Actual (Assoc);
                Info := Synth_Target (Caller_Inst, Actual);
@@ -1929,10 +1949,12 @@ package body Synth.Vhdl_Stmts is
                   --  Always passed by value
                   Val := Synth_Subtype_Conversion
                     (Subprg_Inst, Val, Inter_Type, True, Assoc);
+                  Val := Unshare (Val, Instance_Pool);
                else
                   --  Use default value ?
                   null;
                end if;
+               Val.Typ := Unshare (Val.Typ, Instance_Pool);
             when Iir_Kind_Interface_Signal_Declaration =>
                --  LRM08 4.2.2.3 Signal parameters
                --  If an actual signal is associated with a signal parameter
@@ -1954,7 +1976,6 @@ package body Synth.Vhdl_Stmts is
                           (+Actual,
                            "scalar subtype of actual is not compatible with "
                              & "signal formal interface");
-                        Val := No_Valtyp;
                      end if;
                   end if;
                   if Get_Mode (Inter) in Iir_Out_Modes then
@@ -1964,7 +1985,6 @@ package body Synth.Vhdl_Stmts is
                           (+Actual,
                            "signal formal interface scalar subtype is not "
                              & "compatible with of actual subtype");
-                        Val := No_Valtyp;
                      end if;
                   end if;
                else
@@ -1973,6 +1993,10 @@ package body Synth.Vhdl_Stmts is
                   --  types.
                   Val := Synth_Subtype_Conversion
                     (Subprg_Inst, Val, Inter_Type, True, Assoc);
+                  Val := Unshare (Val, Instance_Pool);
+               end if;
+               if Val.Typ /= null then
+                  Val.Typ := Unshare (Val.Typ, Instance_Pool);
                end if;
             when Iir_Kind_Interface_File_Declaration =>
                null;
@@ -1999,7 +2023,7 @@ package body Synth.Vhdl_Stmts is
                --  Arguments are passed by copy.
                if Is_Static (Val.Val) or else Get_Mode (Inter) = Iir_In_Mode
                then
-                  Val := Unshare (Val, Current_Pool);
+                  Val := Unshare (Val, Instance_Pool);
                else
                   --  Will be changed to a wire.
                   null;
@@ -2012,6 +2036,7 @@ package body Synth.Vhdl_Stmts is
             when Iir_Kind_Interface_Quantity_Declaration =>
                raise Internal_Error;
          end case;
+         Release_Expr_Pool (Marker);
       end loop;
    end Synth_Subprogram_Associations;
 
@@ -2312,6 +2337,7 @@ package body Synth.Vhdl_Stmts is
       Is_Func : constant Boolean := Is_Function_Declaration (Imp);
       Bod : constant Node := Vhdl.Sem_Inst.Get_Subprogram_Body_Origin (Imp);
       Area_Mark : Areapools.Mark_Type;
+      Ret_Typ : Type_Acc;
       Res : Valtyp;
       Sub_Inst : Synth_Instance_Acc;
    begin
@@ -2352,6 +2378,14 @@ package body Synth.Vhdl_Stmts is
       end if;
 
       Free_Instance (Sub_Inst);
+
+      if Res /= No_Valtyp then
+         --  Protect return value from being deallocated
+         Res := Unshare (Res, Expr_Pool'Access);
+         Ret_Typ := Get_Subtype_Object (Syn_Inst, Get_Type (Imp));
+         Res.Typ := Unshare_Type (Res.Typ, Ret_Typ);
+      end if;
+
       Areapools.Release (Area_Mark, Instance_Pool.all);
 
       return Res;
@@ -2789,13 +2823,17 @@ package body Synth.Vhdl_Stmts is
       It_Type : constant Node := Get_Declaration_Type (Iterator);
       It_Rng : Type_Acc;
    begin
+      Create_Object_Marker (Inst, Stmt, Instance_Pool);
+
       if It_Type /= Null_Node then
          Synth_Subtype_Indication (Inst, It_Type);
       end if;
 
       --  Initial value.
       It_Rng := Get_Subtype_Object (Inst, Get_Type (Iterator));
+      Current_Pool := Instance_Pool;
       Val := Create_Value_Discrete (It_Rng.Drange.Left, It_Rng);
+      Current_Pool := Expr_Pool'Access;
       Create_Object (Inst, Iterator, Val);
    end Init_For_Loop_Statement;
 
@@ -2811,6 +2849,7 @@ package body Synth.Vhdl_Stmts is
       if It_Type /= Null_Node then
          Destroy_Object (D, It_Type);
       end if;
+      Destroy_Marker (D, Stmt, Instance_Pool);
       Destroy_Finish (D);
    end Finish_For_Loop_Statement;
 
@@ -3027,10 +3066,13 @@ package body Synth.Vhdl_Stmts is
       use Simple_IO;
       Rep_Expr : constant Node := Get_Report_Expression (Stmt);
       Sev_Expr : constant Node := Get_Severity_Expression (Stmt);
+      Marker : Mark_Type;
       Rep : Valtyp;
       Sev : Valtyp;
       Sev_V : Natural;
    begin
+      Mark_Expr_Pool (Marker);
+
       if Rep_Expr /= Null_Node then
          Rep := Synth_Expression_With_Basetype (Syn_Inst, Rep_Expr);
          if Rep = No_Valtyp then
@@ -3076,6 +3118,8 @@ package body Synth.Vhdl_Stmts is
       else
          Put_Line_Err (Value_To_String (Rep));
       end if;
+
+      Release_Expr_Pool (Marker);
 
       if Sev_V >= Flags.Severity_Level then
          Error_Msg_Synth (+Stmt, "error due to assertion failure");
@@ -3287,8 +3331,6 @@ package body Synth.Vhdl_Stmts is
       end loop;
    end Synth_Sequential_Statements;
 
-   Proc_Pool : aliased Areapools.Areapool;
-
    --  Synthesis of statements of a non-sensitized process.
    procedure Synth_Process_Sequential_Statements
      (C : in out Seq_Context; Proc : Node)
@@ -3385,6 +3427,7 @@ package body Synth.Vhdl_Stmts is
 
       Finalize_Assignment (Ctxt, C.W_En);
       Free_Wire (C.W_En);
+      Release (Empty_Marker, Wireval_Pool);
    end Synth_Process_Statement;
 
    function Synth_User_Function_Call
@@ -3554,6 +3597,8 @@ package body Synth.Vhdl_Stmts is
       Clk : Net;
       Clk_Inst : Instance;
    begin
+      Instance_Pool := Proc_Pool'Access;
+
       --  create init net, clock net
       Init := Build_Const_UB32 (Ctxt, 1, Uns32 (Nbr_States));
       Set_Location (Init, Stmt);
@@ -3604,6 +3649,8 @@ package body Synth.Vhdl_Stmts is
       end if;
 
       Connect (Get_Input (Get_Net_Parent (States), 1), Next_States);
+
+      Instance_Pool := null;
    end Synth_Psl_Dff;
 
    function Synth_Psl_Final
@@ -3823,23 +3870,29 @@ package body Synth.Vhdl_Stmts is
    is
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
    begin
+      Instance_Pool := Process_Pool'Access;
+
       case Get_Kind (Stmt) is
          when Iir_Kind_Concurrent_Simple_Signal_Assignment =>
             Push_Phi;
             Synth_Simple_Signal_Assignment (Syn_Inst, Stmt);
             Pop_And_Merge_Phi (Ctxt, Get_Location (Stmt));
+            Areapools.Release (Areapools.Empty_Marker, Wireval_Pool);
          when Iir_Kind_Concurrent_Conditional_Signal_Assignment =>
             Push_Phi;
             Synth_Conditional_Signal_Assignment (Syn_Inst, Stmt);
             Pop_And_Merge_Phi (Ctxt, Get_Location (Stmt));
+            Areapools.Release (Areapools.Empty_Marker, Wireval_Pool);
          when Iir_Kind_Concurrent_Selected_Signal_Assignment =>
             Push_Phi;
             Synth_Selected_Signal_Assignment (Syn_Inst, Stmt);
             Pop_And_Merge_Phi (Ctxt, Get_Location (Stmt));
+            Areapools.Release (Areapools.Empty_Marker, Wireval_Pool);
          when Iir_Kind_Concurrent_Procedure_Call_Statement =>
             Push_Phi;
             Synth_Procedure_Call (Syn_Inst, Stmt);
             Pop_And_Merge_Phi (Ctxt, Get_Location (Stmt));
+            Areapools.Release (Areapools.Empty_Marker, Wireval_Pool);
          when Iir_Kinds_Process_Statement =>
             Synth_Process_Statement (Syn_Inst, Stmt);
          when Iir_Kind_If_Generate_Statement =>
@@ -3895,6 +3948,9 @@ package body Synth.Vhdl_Stmts is
          when others =>
             Error_Kind ("synth_concurrent_statement", Stmt);
       end case;
+
+      pragma Assert (Areapools.Is_Empty (Process_Pool));
+      Instance_Pool := null;
    end Synth_Concurrent_Statement;
 
    procedure Synth_Concurrent_Statements

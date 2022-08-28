@@ -17,6 +17,7 @@
 --  along with this program.  If not, see <gnu.org/licenses>.
 
 with Types; use Types;
+with Areapools;
 
 with Vhdl.Annotations; use Vhdl.Annotations;
 with Vhdl.Nodes; use Vhdl.Nodes;
@@ -145,10 +146,17 @@ package Elab.Vhdl_Context is
    procedure Mutate_Object
      (Syn_Inst : Synth_Instance_Acc; Decl : Node; Vt : Valtyp);
 
+   --  Save an areapool mark (likely the instance_pool).
+   --  Used by for-loop.
+   procedure Create_Object_Marker
+     (Syn_Inst : Synth_Instance_Acc; N : Node; Pool : Areapools.Areapool_Acc);
+
    type Destroy_Type is limited private;
    procedure Destroy_Init (D : out Destroy_Type;
                            Syn_Inst : Synth_Instance_Acc);
    procedure Destroy_Object (D : in out Destroy_Type; Decl : Node);
+   procedure Destroy_Marker
+     (D : in out Destroy_Type; N : Node; Pool : Areapools.Areapool_Acc);
    procedure Destroy_Finish (D : in out Destroy_Type);
 
    --  Get the value of OBJ.
@@ -197,7 +205,8 @@ private
       Obj_None,
       Obj_Object,
       Obj_Subtype,
-      Obj_Instance
+      Obj_Instance,
+      Obj_Marker
      );
 
    type Obj_Type (Kind : Obj_Kind := Obj_None) is record
@@ -210,6 +219,8 @@ private
             T_Typ : Type_Acc;
          when Obj_Instance =>
             I_Inst : Synth_Instance_Acc;
+         when Obj_Marker =>
+            M_Mark : Areapools.Mark_Type;
       end case;
    end record;
 

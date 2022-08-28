@@ -223,6 +223,72 @@ package body Elab.Vhdl_Objtypes is
               Is_Signed => L < 0 or R < 0);
    end Build_Discrete_Range_Type;
 
+   procedure Realign (Res : in out Size_Type;
+                      Align : Size_Type) is
+   begin
+      Res := (Res + Align - 1) and not (Align - 1);
+   end Realign;
+
+   --  For Compute_Size_Type.
+   procedure Add_Size_Type (Typ : Type_Acc;
+                            Sz : in out Size_Type;
+                            Align : in out Size_Type);
+
+   procedure Add_Array_Size_Type (El_Typ : Type_Acc;
+                                  Sz : in out Size_Type;
+                                  Align : in out Size_Type)
+   is
+      subtype T is Type_Type (Type_Array);
+   begin
+      Align := Size_Type'Max (Align, T'Alignment);
+      Realign (Sz, Align);
+      Sz := Sz + (T'Size / System.Storage_Unit);
+      Add_Size_Type (El_Typ, Sz, Align);
+   end Add_Array_Size_Type;
+
+   procedure Add_Size_Type (Typ : Type_Acc;
+                            Sz : in out Size_Type;
+                            Align : in out Size_Type) is
+   begin
+      case Typ.Kind is
+         when Type_Bit
+           | Type_Logic
+           | Type_Discrete
+           | Type_Float =>
+            --  Never copied.
+            return;
+         when Type_Access
+           | Type_File
+           | Type_Protected =>
+            --  Never copied
+            return;
+         when Type_Array
+           | Type_Vector =>
+            Add_Array_Size_Type (Typ.Arr_El, Sz, Align);
+         when Type_Unbounded_Array
+           | Type_Unbounded_Vector =>
+            Add_Array_Size_Type (Typ.Uarr_El, Sz, Align);
+         when Type_Record
+           | Type_Unbounded_Record =>
+            --  TODO
+            raise Internal_Error;
+         when Type_Slice =>
+            raise Internal_Error;
+      end case;
+   end Add_Size_Type;
+
+   --  Compute the memory size needed to store T.
+   function Compute_Size_Type (T : Type_Acc) return Size_Type
+   is
+      Align : Size_Type;
+      Size : Size_Type;
+   begin
+      Size := 0;
+      Align := 1;
+      Add_Size_Type (T, Size, Align);
+      return Size;
+   end Compute_Size_Type;
+
    function Create_Bit_Type return Type_Acc
    is
       subtype Bit_Type_Type is Type_Type (Type_Bit);
@@ -235,6 +301,7 @@ package body Elab.Vhdl_Objtypes is
                                                            Dir => Dir_To,
                                                            Is_Signed => False),
                                                 Al => 0,
+                                                Is_Global => False,
                                                 Sz => 1,
                                                 W => 1)));
    end Create_Bit_Type;
@@ -251,6 +318,7 @@ package body Elab.Vhdl_Objtypes is
                                                            Dir => Dir_To,
                                                            Is_Signed => False),
                                                 Al => 0,
+                                                Is_Global => False,
                                                 Sz => 1,
                                                 W => 1)));
    end Create_Logic_Type;
@@ -275,6 +343,7 @@ package body Elab.Vhdl_Objtypes is
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Discrete,
                                                 Wkind => Wkind_Net,
                                                 Al => Al,
+                                                Is_Global => False,
                                                 Sz => Sz,
                                                 W => W,
                                                 Drange => Rng)));
@@ -288,6 +357,7 @@ package body Elab.Vhdl_Objtypes is
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Float,
                                                 Wkind => Wkind_Net,
                                                 Al => 3,
+                                                Is_Global => False,
                                                 Sz => 8,
                                                 W => 64,
                                                 Frange => Rng)));
@@ -304,6 +374,7 @@ package body Elab.Vhdl_Objtypes is
         (Alloc (Current_Pool, (Kind => Type_Vector,
                                Wkind => El_Type.Wkind,
                                Al => El_Type.Al,
+                               Is_Global => False,
                                Sz => El_Type.Sz * Size_Type (Bnd.Len),
                                W => Bnd.Len,
                                Alast => True,
@@ -321,6 +392,7 @@ package body Elab.Vhdl_Objtypes is
                                  (Kind => Type_Slice,
                                   Wkind => El_Type.Wkind,
                                   Al => El_Type.Al,
+                                  Is_Global => False,
                                   Sz => Size_Type (Len) * El_Type.Sz,
                                   W => Len * El_Type.W,
                                   Slice_El => El_Type)));
@@ -346,6 +418,7 @@ package body Elab.Vhdl_Objtypes is
                                  (Kind => Type_Array,
                                   Wkind => El_Type.Wkind,
                                   Al => El_Type.Al,
+                                  Is_Global => False,
                                   Sz => El_Type.Sz * Size_Type (Bnd.Len),
                                   W => El_Type.W * Bnd.Len,
                                   Abound => Bnd,
@@ -362,6 +435,7 @@ package body Elab.Vhdl_Objtypes is
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Unbounded_Array,
                                                 Wkind => El_Type.Wkind,
                                                 Al => El_Type.Al,
+                                                Is_Global => False,
                                                 Sz => 0,
                                                 W => 0,
                                                 Ulast => Last,
@@ -378,6 +452,7 @@ package body Elab.Vhdl_Objtypes is
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Unbounded_Vector,
                                                 Wkind => El_Type.Wkind,
                                                 Al => El_Type.Al,
+                                                Is_Global => False,
                                                 Sz => 0,
                                                 W => 0,
                                                 Ulast => True,
@@ -438,7 +513,8 @@ package body Elab.Vhdl_Objtypes is
       end if;
    end Get_Range_Length;
 
-   function Create_Rec_El_Array (Nels : Iir_Index32) return Rec_El_Array_Acc
+   function Create_Rec_El_Array (Nels : Iir_Index32; Pool : Areapool_Acc)
+                                return Rec_El_Array_Acc
    is
       subtype Data_Type is Rec_El_Array (Nels);
       Res : Address;
@@ -446,7 +522,7 @@ package body Elab.Vhdl_Objtypes is
       --  Manually allocate the array to handle large arrays without
       --  creating a large temporary value.
       Areapools.Allocate
-        (Current_Pool.all, Res,
+        (Pool.all, Res,
          Data_Type'Size / Storage_Unit, Data_Type'Alignment);
 
       declare
@@ -462,6 +538,11 @@ package body Elab.Vhdl_Objtypes is
       end;
 
       return To_Rec_El_Array_Acc (Res);
+   end Create_Rec_El_Array;
+
+   function Create_Rec_El_Array (Nels : Iir_Index32) return Rec_El_Array_Acc is
+   begin
+      return Create_Rec_El_Array (Nels, Current_Pool);
    end Create_Rec_El_Array;
 
    function Align (Off : Size_Type; Al : Palign_Type) return Size_Type
@@ -508,6 +589,7 @@ package body Elab.Vhdl_Objtypes is
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Record,
                                                 Wkind => Wkind,
                                                 Al => Al,
+                                                Is_Global => False,
                                                 Sz => Sz,
                                                 W => W,
                                                 Rec => Els)));
@@ -522,6 +604,7 @@ package body Elab.Vhdl_Objtypes is
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Unbounded_Record,
                                                 Wkind => Wkind_Net,
                                                 Al => 0,
+                                                Is_Global => False,
                                                 Sz => 0,
                                                 W => 0,
                                                 Rec => Els)));
@@ -531,13 +614,17 @@ package body Elab.Vhdl_Objtypes is
    is
       subtype Access_Type_Type is Type_Type (Type_Access);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Access_Type_Type);
+      Bnd_Sz : Size_Type;
    begin
+      Bnd_Sz := Compute_Size_Type (Acc_Type);
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Access,
                                                 Wkind => Wkind_Sim,
                                                 Al => 2,
+                                                Is_Global => False,
                                                 Sz => 4,
                                                 W => 1,
-                                                Acc_Acc => Acc_Type)));
+                                                Acc_Acc => Acc_Type,
+                                                Acc_Bnd_Sz => Bnd_Sz)));
    end Create_Access_Type;
 
    function Create_File_Type (File_Type : Type_Acc) return Type_Acc
@@ -548,6 +635,7 @@ package body Elab.Vhdl_Objtypes is
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_File,
                                                 Wkind => Wkind_Sim,
                                                 Al => 2,
+                                                Is_Global => False,
                                                 Sz => 4,
                                                 W => 1,
                                                 File_Typ => File_Type,
@@ -562,6 +650,7 @@ package body Elab.Vhdl_Objtypes is
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Protected,
                                                 Wkind => Wkind_Sim,
                                                 Al => 2,
+                                                Is_Global => False,
                                                 Sz => 4,
                                                 W => 1)));
    end Create_Protected_Type;
@@ -696,31 +785,34 @@ package body Elab.Vhdl_Objtypes is
       end case;
    end Write_Discrete;
 
-   function Alloc_Memory (Sz : Size_Type; Align2 : Natural) return Memory_Ptr
+   function Alloc_Memory (Sz : Size_Type;
+                          Align2 : Natural;
+                          Pool : Areapool_Acc) return Memory_Ptr
    is
       function To_Memory_Ptr is new Ada.Unchecked_Conversion
         (System.Address, Memory_Ptr);
       M : System.Address;
    begin
-      Areapools.Allocate (Current_Pool.all, M, Sz, Size_Type (2 ** Align2));
+      Areapools.Allocate (Pool.all, M, Sz, Size_Type (2 ** Align2));
       return To_Memory_Ptr (M);
    end Alloc_Memory;
 
-   function Alloc_Memory (Vtype : Type_Acc) return Memory_Ptr is
+   function Alloc_Memory (Vtype : Type_Acc; Pool : Areapool_Acc)
+                         return Memory_Ptr is
    begin
-      return Alloc_Memory (Vtype.Sz, Natural (Vtype.Al));
+      return Alloc_Memory (Vtype.Sz, Natural (Vtype.Al), Pool);
    end Alloc_Memory;
 
    function Create_Memory (Vtype : Type_Acc) return Memtyp is
    begin
-      return (Vtype, Alloc_Memory (Vtype));
+      return (Vtype, Alloc_Memory (Vtype, Current_Pool));
    end Create_Memory;
 
    function Create_Memory_Zero (Vtype : Type_Acc) return Memtyp
    is
       Mem : Memory_Ptr;
    begin
-      Mem := Alloc_Memory (Vtype);
+      Mem := Alloc_Memory (Vtype, Current_Pool);
       for I in 1 .. Vtype.Sz loop
          Write_U8 (Mem + (I - 1), 0);
       end loop;
@@ -733,7 +825,7 @@ package body Elab.Vhdl_Objtypes is
       pragma Assert (Vtype.Sz = 1);
       Res : Memory_Ptr;
    begin
-      Res := Alloc_Memory (Vtype);
+      Res := Alloc_Memory (Vtype, Current_Pool);
       Write_U8 (Res, Val);
       return (Vtype, Res);
    end Create_Memory_U8;
@@ -744,7 +836,7 @@ package body Elab.Vhdl_Objtypes is
       pragma Assert (Vtype.Sz = 8);
       Res : Memory_Ptr;
    begin
-      Res := Alloc_Memory (Vtype);
+      Res := Alloc_Memory (Vtype, Current_Pool);
       Write_Fp64 (Res, Val);
       return (Vtype, Res);
    end Create_Memory_Fp64;
@@ -754,7 +846,7 @@ package body Elab.Vhdl_Objtypes is
    is
       Res : Memory_Ptr;
    begin
-      Res := Alloc_Memory (Vtype);
+      Res := Alloc_Memory (Vtype, Current_Pool);
       case Vtype.Sz is
          when 1 =>
             Write_U8 (Res, Ghdl_U8 (Val));
@@ -772,7 +864,7 @@ package body Elab.Vhdl_Objtypes is
    is
       Res : Memory_Ptr;
    begin
-      Res := Alloc_Memory (4, 2);
+      Res := Alloc_Memory (4, 2, Current_Pool);
       Write_U32 (Res, Ghdl_U32 (Val));
       return (null, Res);
    end Create_Memory_U32;
@@ -871,13 +963,10 @@ package body Elab.Vhdl_Objtypes is
 
    function Unshare (Src : Memtyp; Pool : Areapool_Acc) return Memtyp
    is
-      Prev_Pool : constant Areapool_Acc := Current_Pool;
       Res : Memory_Ptr;
    begin
-      Current_Pool := Pool;
-      Res := Alloc_Memory (Src.Typ);
+      Res := Alloc_Memory (Src.Typ, Pool);
       Copy_Memory (Res, Src.Mem, Src.Typ.Sz);
-      Current_Pool := Prev_Pool;
       return (Src.Typ, Res);
    end Unshare;
 
@@ -885,10 +974,206 @@ package body Elab.Vhdl_Objtypes is
    is
       Res : Memory_Ptr;
    begin
-      Res := Alloc_Memory (Src.Typ);
+      Res := Alloc_Memory (Src.Typ, Current_Pool);
       Copy_Memory (Res, Src.Mem, Src.Typ.Sz);
       return (Src.Typ, Res);
    end Unshare;
+
+   function Raw_Copy (T : Type_Acc; Pool : Areapool_Acc) return Type_Acc
+   is
+      Addr : System.Address;
+      Sz : Size_Type;
+   begin
+      Sz := T.all'Size / Storage_Unit;
+      Allocate (Pool.all, Addr, Sz, T.all'Alignment);
+      Copy_Memory (To_Memory_Ptr (Addr), To_Memory_Ptr (T.all'Address), Sz);
+      return To_Type_Acc (Addr);
+   end Raw_Copy;
+
+   function Unshare (T : Type_Acc; Pool : Areapool_Acc) return Type_Acc
+   is
+      Res : Type_Acc;
+   begin
+      if T.Is_Global then
+         return T;
+      end if;
+
+      Res := Raw_Copy (T, Pool);
+      Res.Is_Global := True;
+
+      case Res.Kind is
+         when Type_Bit
+           | Type_Logic
+           | Type_Discrete
+           | Type_Float =>
+            null;
+         when Type_Slice =>
+            raise Internal_Error;
+         when Type_Array
+           | Type_Vector =>
+            Res.Arr_El := Unshare (T.Arr_El, Pool);
+         when Type_Unbounded_Array
+           | Type_Unbounded_Vector =>
+            Res.Uarr_El := Unshare (T.Uarr_El, Pool);
+            Res.Uarr_Idx := Unshare (T.Uarr_Idx, Pool);
+         when Type_Record
+           | Type_Unbounded_Record =>
+            Res.Rec := Create_Rec_El_Array (T.Rec.Len, Pool);
+            for I in T.Rec.E'Range loop
+               Res.Rec.E (I) := (Offs => T.Rec.E (I).Offs,
+                                 Typ => Unshare (T.Rec.E (I).Typ, Pool));
+            end loop;
+         when Type_Access =>
+            Res.Acc_Acc := Unshare (T.Acc_Acc, Pool);
+         when Type_File =>
+            Res.File_Typ := Unshare (T.File_Typ, Pool);
+         when Type_Protected =>
+            raise Internal_Error;
+      end case;
+      return Res;
+   end Unshare;
+
+   function Unshare_Type (Typ : Type_Acc; Base : Type_Acc) return Type_Acc
+   is
+      Res : Type_Acc;
+   begin
+      if Typ = Base or else not Typ.Is_Global then
+         return Typ;
+      end if;
+      Res := Raw_Copy (Typ, Expr_Pool'Access);
+      Res.Is_Global := False;
+
+      case Res.Kind is
+         when Type_Bit
+           | Type_Logic
+           | Type_Discrete
+           | Type_Float =>
+            null;
+         when Type_Slice =>
+            raise Internal_Error;
+         when Type_Array
+           | Type_Vector =>
+            Res.Arr_El := Unshare_Type (Typ.Arr_El, Base.Uarr_El);
+         when Type_Unbounded_Array
+           | Type_Unbounded_Vector
+           | Type_Unbounded_Record =>
+            raise Internal_Error;
+         when Type_Record =>
+            Res.Rec := Create_Rec_El_Array (Typ.Rec.Len, Expr_Pool'Access);
+            for I in Typ.Rec.E'Range loop
+               Res.Rec.E (I) := (Offs => Typ.Rec.E (I).Offs,
+                                 Typ => Unshare_Type (Typ.Rec.E (I).Typ,
+                                                      Base.Rec.E (I).Typ));
+            end loop;
+         when Type_Access =>
+            raise Internal_Error;
+         when Type_File =>
+            raise Internal_Error;
+         when Type_Protected =>
+            raise Internal_Error;
+      end case;
+      return Res;
+   end Unshare_Type;
+
+   procedure Save_Type (Typ : Type_Acc;
+                        Res : out Type_Acc;
+                        Mem : Memory_Ptr;
+                        Off : in out Size_Type;
+                        Mem_Sz : Size_Type)
+   is
+      Sz : constant Size_Type := Typ.all'Size / Storage_Unit;
+      Raw_Res : Address;
+   begin
+      --  Don't copy scalar types.
+      case Typ.Kind is
+         when Type_Bit
+           | Type_Logic
+           | Type_Discrete
+           | Type_Float =>
+            Res := Typ;
+            return;
+         when others =>
+            null;
+      end case;
+
+      --  Copy Typ.
+      Realign (Off, Typ.all'Alignment);
+      pragma Assert (Off + Sz <= Mem_Sz);
+      Raw_Res := To_Address (Mem + Off);
+      Off := Off + Sz;
+      Res := To_Type_Acc (Raw_Res);
+      Copy_Memory (To_Memory_Ptr (Raw_Res),
+                   To_Memory_Ptr (Typ.all'Address), Sz);
+      Res.Is_Global := True;
+
+      --  Copy elements.
+      case Res.Kind is
+         when Type_Bit
+           | Type_Logic
+           | Type_Discrete
+           | Type_Float =>
+            raise Internal_Error;
+         when Type_Slice =>
+            raise Internal_Error;
+         when Type_Array
+           | Type_Vector =>
+            Save_Type (Typ.Arr_El, Res.Arr_El, Mem, Off, Mem_Sz);
+         when Type_Unbounded_Array
+           | Type_Unbounded_Vector
+           | Type_Unbounded_Record =>
+            raise Internal_Error;
+         when Type_Record =>
+            declare
+               subtype Data_Type is Rec_El_Array (Typ.Rec.Len);
+            begin
+               Realign (Off, Data_Type'Alignment);
+               pragma Assert (Off + Sz <= Mem_Sz);
+               Raw_Res := To_Address (Mem + Off);
+               Off := Off + Sz;
+               Res.Rec := To_Rec_El_Array_Acc (Raw_Res);
+               for I in Typ.Rec.E'Range loop
+                  Res.Rec.E (I).Offs := Typ.Rec.E (I).Offs;
+                  Save_Type (Res.Rec.E (I).Typ,
+                             Typ.Rec.E (I).Typ,
+                             Mem, Off, Mem_Sz);
+               end loop;
+            end;
+         when Type_Access =>
+            raise Internal_Error;
+         when Type_File =>
+            raise Internal_Error;
+         when Type_Protected =>
+            raise Internal_Error;
+      end case;
+   end Save_Type;
+
+   function Save_Type (Typ : Type_Acc;
+                       Mem : Memory_Ptr;
+                       Mem_Sz : Size_Type) return Type_Acc
+   is
+      Off : Size_Type;
+      Res : Type_Acc;
+   begin
+      Off := 0;
+      Save_Type (Typ, Res, Mem, Off, Mem_Sz);
+      pragma Assert (Off <= Mem_Sz);
+      return Res;
+   end Save_Type;
+
+   procedure Mark_Expr_Pool (M : out Mark_Type) is
+   begin
+      Mark (M, Expr_Pool);
+   end Mark_Expr_Pool;
+
+   procedure Release_Expr_Pool (M : Mark_Type) is
+   begin
+      Release (M, Expr_Pool);
+   end Release_Expr_Pool;
+
+   function Is_Expr_Pool_Empty return Boolean is
+   begin
+      return Is_Empty (Expr_Pool);
+   end Is_Expr_Pool_Empty;
 
    Bit0_Mem : constant Memory_Element := 0;
    Bit1_Mem : constant Memory_Element := 1;
@@ -899,14 +1184,23 @@ package body Elab.Vhdl_Objtypes is
    procedure Initialize is
    begin
       if Boolean_Type /= null then
+         --  Restarting.  Free the global pool.
          Release (Empty_Marker, Global_Pool);
       end if;
 
-      Instance_Pool := Global_Pool'Access;
+      --  Alloc fundamental types (on the global pool).
+      Current_Pool := Global_Pool'Access;
       Boolean_Type := Create_Bit_Type;
       Logic_Type := Create_Logic_Type;
       Bit_Type := Create_Bit_Type;
       Protected_Type := Create_Protected_Type;
+
+      Boolean_Type.Is_Global := True;
+      Logic_Type.Is_Global := True;
+      Bit_Type.Is_Global := True;
+      Protected_Type.Is_Global := True;
+
+      Current_Pool := Expr_Pool'Access;
 
       Bit0 := (Bit_Type, To_Memory_Ptr (Bit0_Mem'Address));
       Bit1 := (Bit_Type, To_Memory_Ptr (Bit1_Mem'Address));

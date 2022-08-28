@@ -177,6 +177,7 @@ package body Elab.Vhdl_Files is
       File_Type : constant Node := Get_Type (Decl);
       External_Name : constant Node := Get_File_Logical_Name (Decl);
       Open_Kind : constant Node := Get_File_Open_Kind (Decl);
+      Marker : Mark_Type;
       File_Name : Valtyp;
       C_Name : C_File_Name;
       C_Name_Len : Natural;
@@ -215,6 +216,8 @@ package body Elab.Vhdl_Files is
          return F;
       end if;
 
+      Mark_Expr_Pool (Marker);
+
       File_Name := Synth_Expression_With_Basetype (Syn_Inst, External_Name);
 
       if Open_Kind /= Null_Node then
@@ -232,6 +235,9 @@ package body Elab.Vhdl_Files is
       end if;
 
       Convert_File_Name (File_Name, C_Name, C_Name_Len, Status);
+
+      Release_Expr_Pool (Marker);
+
       if Status = Op_Ok then
          if Get_Text_File_Flag (File_Type) then
             Ghdl_Text_File_Open

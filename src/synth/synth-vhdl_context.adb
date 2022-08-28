@@ -387,10 +387,13 @@ package body Synth.Vhdl_Context is
                                     Ptyp : Type_Acc;
                                     Voff : Net;
                                     Eoff : Uns32;
-                                    Typ : Type_Acc) return Valtyp is
+                                    Typ : Type_Acc;
+                                    Pool : Areapools.Areapool_Acc)
+                                   return Valtyp is
    begin
       return (Typ,
-              Create_Value_Dyn_Alias (Obj, Poff, Ptyp, To_Uns32 (Voff), Eoff));
+              Create_Value_Dyn_Alias (Obj, Poff, Ptyp, To_Uns32 (Voff), Eoff,
+                                      Pool));
    end Create_Value_Dyn_Alias;
 
    function Get_Value_Dyn_Alias_Voff (Val : Value_Acc) return Net is

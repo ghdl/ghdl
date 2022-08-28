@@ -131,12 +131,13 @@ package body Elab.Vhdl_Values is
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Signal);
    begin
       return To_Value_Acc
-        (Alloc (Current_Pool, Value_Type_Signal'(Kind => Value_Signal,
-                                                 S => S,
-                                                 Init => Init)));
+        (Alloc (Instance_Pool, Value_Type_Signal'(Kind => Value_Signal,
+                                                  S => S,
+                                                  Init => Init)));
    end Create_Value_Signal;
 
-   function Create_Value_Memory (Vtype : Type_Acc) return Valtyp
+   function Create_Value_Memory (Vtype : Type_Acc; Pool : Areapool_Acc)
+                                return Valtyp
    is
       subtype Value_Type_Memory is Value_Type (Value_Memory);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Memory);
@@ -145,11 +146,11 @@ package body Elab.Vhdl_Values is
       V : Value_Acc;
       M : System.Address;
    begin
-      Areapools.Allocate (Current_Pool.all, M,
+      Areapools.Allocate (Pool.all, M,
                           Vtype.Sz, Size_Type (2 ** Natural (Vtype.Al)));
       V := To_Value_Acc
-        (Alloc (Current_Pool, Value_Type_Memory'(Kind => Value_Memory,
-                                                 Mem => To_Memory_Ptr (M))));
+        (Alloc (Pool, Value_Type_Memory'(Kind => Value_Memory,
+                                         Mem => To_Memory_Ptr (M))));
 
       return (Vtype, V);
    end Create_Value_Memory;
@@ -216,19 +217,20 @@ package body Elab.Vhdl_Values is
       return (Vtype, Create_Value_Terminal (T));
    end Create_Value_Terminal;
 
-   function Create_Value_Alias
-     (Obj : Valtyp; Off : Value_Offsets; Typ : Type_Acc) return Valtyp
+   function Create_Value_Alias (Obj : Valtyp;
+                                Off : Value_Offsets;
+                                Typ : Type_Acc;
+                                Pool : Areapool_Acc) return Valtyp
    is
       pragma Assert (Typ /= null);
       subtype Value_Type_Alias is Value_Type (Value_Alias);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Alias);
       Val : Value_Acc;
    begin
-      Val := To_Value_Acc (Alloc (Current_Pool,
-                                  (Kind => Value_Alias,
-                                   A_Obj => Obj.Val,
-                                   A_Typ => Obj.Typ,
-                                   A_Off => Off)));
+      Val := To_Value_Acc (Alloc (Pool, (Kind => Value_Alias,
+                                         A_Obj => Obj.Val,
+                                         A_Typ => Obj.Typ,
+                                         A_Off => Off)));
       return (Typ, Val);
    end Create_Value_Alias;
 
@@ -236,20 +238,20 @@ package body Elab.Vhdl_Values is
                                     Poff : Uns32;
                                     Ptyp : Type_Acc;
                                     Voff : Uns32;
-                                    Eoff : Uns32) return Value_Acc
+                                    Eoff : Uns32;
+                                    Pool : Areapool_Acc) return Value_Acc
    is
       subtype Value_Type_Dyn_Alias is Value_Type (Value_Dyn_Alias);
       function Alloc is new Areapools.Alloc_On_Pool_Addr
         (Value_Type_Dyn_Alias);
       Val : Value_Acc;
    begin
-      Val := To_Value_Acc (Alloc (Current_Pool,
-                                  (Kind => Value_Dyn_Alias,
-                                   D_Obj => Obj,
-                                   D_Poff => Poff,
-                                   D_Ptyp => Ptyp,
-                                   D_Voff => Voff,
-                                   D_Eoff => Eoff)));
+      Val := To_Value_Acc (Alloc (Pool, (Kind => Value_Dyn_Alias,
+                                         D_Obj => Obj,
+                                         D_Poff => Poff,
+                                         D_Ptyp => Ptyp,
+                                         D_Voff => Voff,
+                                         D_Eoff => Eoff)));
       return Val;
    end Create_Value_Dyn_Alias;
 
@@ -292,10 +294,8 @@ package body Elab.Vhdl_Values is
    begin
       case Src.Val.Kind is
          when Value_Memory =>
-            Res := Create_Value_Memory (Src.Typ);
-            for I in 1 .. Src.Typ.Sz loop
-               Res.Val.Mem (I - 1) := Src.Val.Mem (I - 1);
-            end loop;
+            Res := Create_Value_Memory (Src.Typ, Current_Pool);
+            Copy_Memory (Res.Val.Mem, Src.Val.Mem, Src.Typ.Sz);
          when Value_Net =>
             Res := (Src.Typ, Create_Value_Net (Src.Val.N));
          when Value_Wire =>
@@ -308,10 +308,19 @@ package body Elab.Vhdl_Values is
          when Value_Signal =>
             raise Internal_Error;
          when Value_Const =>
-            raise Internal_Error;
-         when Value_Alias
-           | Value_Dyn_Alias =>
-            raise Internal_Error;
+            Res := (Src.Typ,
+                    Create_Value_Const (Src.Val.C_Val, Src.Val.C_Loc));
+            Res.Val.C_Net := Src.Val.C_Net;
+         when Value_Alias =>
+            Res := Create_Value_Alias ((Src.Val.A_Typ, Src.Val.A_Obj),
+                                       Src.Val.A_Off, Src.Typ,
+                                       Current_Pool);
+         when Value_Dyn_Alias =>
+            Res := (Src.Typ,
+                    Create_Value_Dyn_Alias (Src.Val.D_Obj,
+                                            Src.Val.D_Poff, Src.Val.D_Ptyp,
+                                            Src.Val.D_Voff, Src.Val.D_Eoff,
+                                            Current_Pool));
       end case;
       return Res;
    end Copy;
@@ -321,6 +330,10 @@ package body Elab.Vhdl_Values is
       Prev_Pool : constant Areapool_Acc := Current_Pool;
       Res : Valtyp;
    begin
+      if Src = No_Valtyp then
+         return Src;
+      end if;
+
       Current_Pool := Pool;
       Res := Copy (Src);
       Current_Pool := Prev_Pool;
@@ -365,7 +378,7 @@ package body Elab.Vhdl_Values is
       Res : Valtyp;
       pragma Assert (Vtype /= null);
    begin
-      Res := Create_Value_Memory (Vtype);
+      Res := Create_Value_Memory (Vtype, Current_Pool);
       Write_Fp64 (Res.Val.Mem, Val);
       return Res;
    end Create_Value_Float;
@@ -387,7 +400,7 @@ package body Elab.Vhdl_Values is
    is
       Res : Valtyp;
    begin
-      Res := Create_Value_Memory (Vtype);
+      Res := Create_Value_Memory (Vtype, Current_Pool);
       case Vtype.Sz is
          when 1 =>
             Write_U8 (Res.Val.Mem, Ghdl_U8 (Val));
@@ -405,7 +418,7 @@ package body Elab.Vhdl_Values is
    is
       Res : Valtyp;
    begin
-      Res := Create_Value_Memory (Vtype);
+      Res := Create_Value_Memory (Vtype, Current_Pool);
       case Vtype.Sz is
          when 1 =>
             Write_U8 (Res.Val.Mem, Ghdl_U8 (Val));
@@ -421,7 +434,7 @@ package body Elab.Vhdl_Values is
    is
       Res : Valtyp;
    begin
-      Res := Create_Value_Memory (Vtype);
+      Res := Create_Value_Memory (Vtype, Current_Pool);
       case Vtype.Sz is
          when 4 =>
             Write_I32 (Res.Val.Mem, Ghdl_I32 (Val));
@@ -483,7 +496,7 @@ package body Elab.Vhdl_Values is
    is
       Res : Valtyp;
    begin
-      Res := Create_Value_Memory (Typ);
+      Res := Create_Value_Memory (Typ, Current_Pool);
       Write_Value_Default (Res.Val.Mem, Typ);
       return Res;
    end Create_Value_Default;
@@ -493,7 +506,7 @@ package body Elab.Vhdl_Values is
    is
       Res : Valtyp;
    begin
-      Res := Create_Value_Memory (Acc_Typ);
+      Res := Create_Value_Memory (Acc_Typ, Current_Pool);
       Write_Access (Res.Val.Mem, Val);
       return Res;
    end Create_Value_Access;

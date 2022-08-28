@@ -419,7 +419,9 @@ package body Synth.Vhdl_Decls is
             Wid := Get_Value_Wire (Val.Val);
             if Is_Subprg then
                if Is_Static (Init.Val) then
-                  Phi_Assign_Static (Wid, Get_Memtyp (Init));
+                  --  FIXME: use global pool for shared variables ?
+                  Phi_Assign_Static
+                    (Wid, Unshare (Get_Memtyp (Init), Wireval_Pool'Access));
                else
                   Phi_Assign_Net (Ctxt, Wid, Get_Net (Ctxt, Init), 0);
                end if;
@@ -489,6 +491,7 @@ package body Synth.Vhdl_Decls is
       Vhdl_Stmts.Synth_Assignment_Prefix (Syn_Inst, Get_Name (Decl),
                                           Base, Typ, Off, Dyn);
       pragma Assert (Dyn.Voff = No_Net);
+      Typ := Unshare (Typ, Instance_Pool);
       if Base.Val.Kind = Value_Net then
          --  Object is a net if it is not writable.  Extract the
          --  bits for the alias.
@@ -497,11 +500,12 @@ package body Synth.Vhdl_Decls is
                             Get_Value_Net (Base.Val), Off.Net_Off, Typ.W),
             Typ);
       else
-         Res := Create_Value_Alias (Base, Off, Typ);
+         Res := Create_Value_Alias (Base, Off, Typ, Expr_Pool'Access);
       end if;
       if Obj_Typ /= null then
          Res := Synth_Subtype_Conversion (Syn_Inst, Res, Obj_Typ, True, Decl);
       end if;
+      Res := Unshare (Res, Instance_Pool);
       Create_Object (Syn_Inst, Decl, Res);
    end Synth_Object_Alias_Declaration;
 

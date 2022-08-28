@@ -145,6 +145,7 @@ package body Synth.Vhdl_Oper is
          when Type_Vector =>
             if Res.Abound.Dir = Dir_Downto
               and then Res.Abound.Right = 0
+              and then not Res.Is_Global
             then
                --  Normalized range
                return Res;
@@ -954,6 +955,7 @@ package body Synth.Vhdl_Oper is
             declare
                L : constant Net := Get_Net (Ctxt, Left);
                Le_Typ : constant Type_Acc := Get_Array_Element (Left.Typ);
+               El_Typ : Type_Acc;
                Bnd : Bound_Type;
                Res_Typ : Type_Acc;
                N : Net;
@@ -966,14 +968,16 @@ package body Synth.Vhdl_Oper is
                   Get_Index_Type (Get_Type (Expr), 0),
                   Iir_Index32 (Get_Bound_Length (Left.Typ) + 1));
 
+               El_Typ := Unshare_Type (Le_Typ, Get_Array_Element (Expr_Typ));
                Res_Typ := Create_Onedimensional_Array_Subtype
-                 (Left_Typ, Bnd, Le_Typ);
+                 (Expr_Typ, Bnd, El_Typ);
                return Create_Value_Net (N, Res_Typ);
             end;
          when Iir_Predefined_Element_Array_Concat =>
             declare
                R : constant Net := Get_Net (Ctxt, Right);
                Re_Typ : constant Type_Acc := Get_Array_Element (Right.Typ);
+               El_Typ : Type_Acc;
                Bnd : Bound_Type;
                Res_Typ : Type_Acc;
                N : Net;
@@ -986,12 +990,14 @@ package body Synth.Vhdl_Oper is
                   Get_Index_Type (Get_Type (Expr), 0),
                   Iir_Index32 (Get_Bound_Length (Right.Typ) + 1));
 
+               El_Typ := Unshare_Type (Re_Typ, Get_Array_Element (Expr_Typ));
                Res_Typ := Create_Onedimensional_Array_Subtype
-                 (Right_Typ, Bnd, Re_Typ);
+                 (Expr_Typ, Bnd, El_Typ);
                return Create_Value_Net (N, Res_Typ);
             end;
          when Iir_Predefined_Element_Element_Concat =>
             declare
+               El_Typ : Type_Acc;
                N : Net;
                Bnd : Bound_Type;
                Res_Typ : Type_Acc;
@@ -1002,8 +1008,9 @@ package body Synth.Vhdl_Oper is
                Set_Location (N, Expr);
                Bnd := Create_Bounds_From_Length
                  (Syn_Inst, Get_Index_Type (Get_Type (Expr), 0), 2);
+               El_Typ := Unshare_Type (Left.Typ, Get_Array_Element (Expr_Typ));
                Res_Typ := Create_Onedimensional_Array_Subtype
-                 (Expr_Typ, Bnd, Left.Typ);
+                 (Expr_Typ, Bnd, El_Typ);
                return Create_Value_Net (N, Res_Typ);
             end;
          when Iir_Predefined_Array_Array_Concat =>
@@ -1012,6 +1019,7 @@ package body Synth.Vhdl_Oper is
                Re_Typ : constant Type_Acc := Get_Array_Element (Right.Typ);
                L : constant Net := Get_Net (Ctxt, Left);
                R : constant Net := Get_Net (Ctxt, Right);
+               El_Typ : Type_Acc;
                Bnd : Bound_Type;
                Res_Typ : Type_Acc;
                N : Net;
@@ -1025,8 +1033,9 @@ package body Synth.Vhdl_Oper is
                   Iir_Index32 (Get_Bound_Length (Left.Typ)
                                  + Get_Bound_Length (Right.Typ)));
 
+               El_Typ := Unshare_Type (Le_Typ, Get_Array_Element (Expr_Typ));
                Res_Typ := Create_Onedimensional_Array_Subtype
-                 (Expr_Typ, Bnd, Le_Typ);
+                 (Expr_Typ, Bnd, El_Typ);
                return Create_Value_Net (N, Res_Typ);
             end;
          when Iir_Predefined_Integer_Plus =>

@@ -19,7 +19,6 @@ with Name_Table; use Name_Table;
 with Simple_IO; use Simple_IO;
 with Utils_IO; use Utils_IO;
 with Files_Map;
-with Areapools;
 with Libraries;
 with Std_Names;
 with Errorout;
@@ -1245,7 +1244,6 @@ package body Elab.Vhdl_Debug is
    procedure Print_Proc (Line : String)
    is
       use Vhdl.Tokens;
-      use Areapools;
       use Errorout;
       Cur_Inst : constant Synth_Instance_Acc := Debug_Current_Instance;
       Prev_Nbr_Errors : constant Natural := Nbr_Errors;
@@ -1313,7 +1311,7 @@ package body Elab.Vhdl_Debug is
       Vhdl.Annotations.Annotate_Expand_Table;
       Vhdl.Canon.Canon_Expression (Expr);
 
-      Mark (Marker, Expr_Pool);
+      Mark_Expr_Pool (Marker);
 
       if Opt_Name then
          case Get_Kind (Expr) is
@@ -1338,7 +1336,7 @@ package body Elab.Vhdl_Debug is
       New_Line;
 
       --  Free value
-      Release (Marker, Expr_Pool);
+      Release_Expr_Pool (Marker);
    end Print_Proc;
 
    procedure Append_Commands is

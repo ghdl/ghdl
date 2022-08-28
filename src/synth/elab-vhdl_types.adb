@@ -396,8 +396,10 @@ package body Elab.Vhdl_Types is
 
    procedure Elab_Type_Definition (Syn_Inst : Synth_Instance_Acc; Def : Node)
    is
+      Marker : Mark_Type;
       Typ : Type_Acc;
    begin
+      Mark_Expr_Pool (Marker);
       case Get_Kind (Def) is
          when Iir_Kind_Enumeration_Type_Definition =>
             Typ := Elab_Enumeration_Type_Definition (Def);
@@ -417,8 +419,10 @@ package body Elab.Vhdl_Types is
             Vhdl.Errors.Error_Kind ("synth_type_definition", Def);
       end case;
       if Typ /= null then
+         Typ := Unshare (Typ, Instance_Pool);
          Create_Subtype_Object (Syn_Inst, Def, Typ);
       end if;
+      Release_Expr_Pool (Marker);
    end Elab_Type_Definition;
 
    function Elab_Scalar_Type_Definition (Def : Node; St : Node) return Type_Acc
@@ -438,8 +442,10 @@ package body Elab.Vhdl_Types is
    procedure Elab_Anonymous_Type_Definition
      (Syn_Inst : Synth_Instance_Acc; Def : Node; St : Node)
    is
+      Marker : Mark_Type;
       Typ : Type_Acc;
    begin
+      Mark_Expr_Pool (Marker);
       case Get_Kind (Def) is
          when Iir_Kind_Integer_Type_Definition
            | Iir_Kind_Physical_Type_Definition =>
@@ -460,7 +466,9 @@ package body Elab.Vhdl_Types is
          when others =>
             Vhdl.Errors.Error_Kind ("synth_anonymous_type_definition", Def);
       end case;
+      Typ := Unshare (Typ, Instance_Pool);
       Create_Subtype_Object (Syn_Inst, Def, Typ);
+      Release_Expr_Pool (Marker);
    end Elab_Anonymous_Type_Definition;
 
    function Synth_Discrete_Range_Constraint
@@ -618,9 +626,12 @@ package body Elab.Vhdl_Types is
      (Syn_Inst : Synth_Instance_Acc; Atype : Node)
    is
       Typ : Type_Acc;
+      Marker : Mark_Type;
    begin
+      Mark_Expr_Pool (Marker);
       Typ := Synth_Subtype_Indication (Syn_Inst, Atype);
-      Create_Subtype_Object (Syn_Inst, Atype, Typ);
+      Create_Subtype_Object (Syn_Inst, Atype, Unshare (Typ, Instance_Pool));
+      Release_Expr_Pool (Marker);
    end Synth_Subtype_Indication;
 
    function Get_Declaration_Type (Decl : Node) return Node
@@ -659,6 +670,7 @@ package body Elab.Vhdl_Types is
    function Elab_Declaration_Type
      (Syn_Inst : Synth_Instance_Acc; Decl : Node) return Type_Acc
    is
+      Marker : Mark_Type;
       Atype : Node;
       Typ : Type_Acc;
    begin
@@ -668,8 +680,11 @@ package body Elab.Vhdl_Types is
             when Iir_Kinds_Subtype_Definition =>
                if not Get_Is_Ref (Decl) then
                   --  That's a new type.
+                  Mark_Expr_Pool (Marker);
                   Typ := Synth_Subtype_Indication (Syn_Inst, Atype);
+                  Typ := Unshare (Typ, Instance_Pool);
                   Create_Subtype_Object (Syn_Inst, Atype, Typ);
+                  Release_Expr_Pool (Marker);
                   return Typ;
                end if;
             when Iir_Kinds_Denoting_Name =>
@@ -680,7 +695,10 @@ package body Elab.Vhdl_Types is
                   Pfx : constant Node := Get_Prefix (Atype);
                   Vt : Valtyp;
                begin
+                  Mark_Expr_Pool (Marker);
                   Vt := Synth_Name (Syn_Inst, Pfx);
+                  Release_Expr_Pool (Marker);
+                  pragma Assert (Vt.Typ.Is_Global);
                   return Vt.Typ;
                end;
             when others =>

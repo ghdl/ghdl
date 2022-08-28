@@ -50,7 +50,11 @@ package body Synth.Ieee.Numeric_Std is
       if Otyp.Abound.Len = Len
         and then Otyp.Abound.Right = 0
         and then Otyp.Abound.Dir = Dir_Downto
+        and then not Otyp.Is_Global
       then
+         --  Try to reuse the same type as the parameter.
+         --  But the result type must be allocated on the expr_pool.
+         --  FIXME: is this code ever executed ?
          pragma Assert (Otyp.Abound.Left = Int32 (Len) - 1);
          return Otyp;
       end if;
@@ -847,7 +851,7 @@ package body Synth.Ieee.Numeric_Std is
    is
       Res : Memory_Ptr;
    begin
-      Res := Alloc_Memory (V.Typ);
+      Res := Alloc_Memory (V.Typ, Current_Pool);
 
       Neg_Vec (V.Mem, Res, V.Typ);
       return Res;

@@ -16,6 +16,8 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
+with Ada.Unchecked_Conversion;
+
 with Types; use Types;
 with Tables;
 
@@ -23,8 +25,13 @@ with Elab.Memtype; use Elab.Memtype;
 
 package body Elab.Vhdl_Heap is
 
+   type Heap_Entry is record
+      Obj : Memory_Ptr;
+      Typ : Memory_Ptr;
+   end record;
+
    package Heap_Table is new Tables
-     (Table_Component_Type => Valtyp,
+     (Table_Component_Type => Heap_Entry,
       Table_Index_Type => Heap_Index,
       Table_Low_Bound => 1,
       Table_Initial => 16);
@@ -32,59 +39,71 @@ package body Elab.Vhdl_Heap is
    function Alloc_Mem (Sz : Size_Type) return Memory_Ptr;
    pragma Import (C, Alloc_Mem, "malloc");
 
-   function Allocate_Memory (T : Type_Acc) return Value_Acc
+   --  ACC_TYP is the access type,
+   --  OBJ_TYP is the object type.
+   procedure Allocate (Acc_Typ : Type_Acc;
+                       Obj_Typ : Type_Acc;
+                       Res : out Memory_Ptr;
+                       Idx : out Heap_Index)
    is
-      M : Memory_Ptr;
+      Typ_Sz : constant Size_Type := Acc_Typ.Acc_Bnd_Sz;
+      E : Heap_Entry;
+      T : Type_Acc;
    begin
-      M := Alloc_Mem (T.Sz);
-      return new Value_Type'(Kind => Value_Memory, Mem => M);
-   end Allocate_Memory;
+      pragma Assert (Acc_Typ.Kind = Type_Access);
 
-   function Allocate_By_Type (T : Type_Acc) return Value_Acc
+      E.Obj := Alloc_Mem (Obj_Typ.Sz);
+      E.Typ := Alloc_Mem (Typ_Sz);
+
+      T := Save_Type (Obj_Typ, E.Typ, Typ_Sz);
+      pragma Unreferenced (T);
+      Res := E.Obj;
+
+      Heap_Table.Append (E);
+      Idx := Heap_Table.Last;
+   end Allocate;
+
+   function Allocate_By_Type (Acc_Typ : Type_Acc; T : Type_Acc)
+                             return Heap_Index
    is
-      Res : Value_Acc;
+      Res : Memory_Ptr;
+      Idx : Heap_Index;
    begin
-      Res := Allocate_Memory (T);
-      Write_Value_Default (Res.Mem, T);
-      return Res;
+      Allocate (Acc_Typ, T, Res, Idx);
+      Write_Value_Default (Res, T);
+      return Idx;
    end Allocate_By_Type;
 
-   function Allocate_By_Type (T : Type_Acc) return Heap_Index is
-   begin
-      --  FIXME: allocate type.
-      Heap_Table.Append ((T, Allocate_By_Type (T)));
-      return Heap_Table.Last;
-   end Allocate_By_Type;
-
-   function Allocate_By_Value (V : Valtyp) return Value_Acc
+   function Allocate_By_Value (Acc_Typ : Type_Acc; V : Valtyp)
+                              return Heap_Index
    is
-      Res : Value_Acc;
+      Mem : Memory_Ptr;
+      Idx : Heap_Index;
    begin
-      Res := Allocate_Memory (V.Typ);
-      Write_Value (Res.Mem, V);
-      return Res;
+      Allocate (Acc_Typ, V.Typ, Mem, Idx);
+      Write_Value (Mem, V);
+      return Idx;
    end Allocate_By_Value;
 
-   function Allocate_By_Value (V : Valtyp) return Heap_Index is
-   begin
-      Heap_Table.Append ((V.Typ, Allocate_By_Value (V)));
-      return Heap_Table.Last;
-   end Allocate_By_Value;
+   function Synth_Dereference (Idx : Heap_Index) return Memtyp
+   is
+      function To_Type_Acc is new Ada.Unchecked_Conversion
+        (Memory_Ptr, Type_Acc);
 
-   function Synth_Dereference (Idx : Heap_Index) return Valtyp is
+      E : Heap_Entry renames Heap_Table.Table (Idx);
    begin
-      return Heap_Table.Table (Idx);
+      return (To_Type_Acc (E.Typ), E.Obj);
    end Synth_Dereference;
 
-   procedure Free (Obj : in out Valtyp) is
+   procedure Free (Obj : in out Heap_Entry) is
    begin
       -- TODO
-      Obj := No_Valtyp;
+      Obj := (null, null);
    end Free;
 
    procedure Synth_Deallocate (Idx : Heap_Index) is
    begin
-      if Heap_Table.Table (Idx) = No_Valtyp then
+      if Heap_Table.Table (Idx).Obj = null then
          return;
       end if;
       Free (Heap_Table.Table (Idx));

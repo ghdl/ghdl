@@ -20,11 +20,14 @@ with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
 with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 
 package Elab.Vhdl_Heap is
-   --  Allocate a value.
-   function Allocate_By_Type (T : Type_Acc) return Heap_Index;
-   function Allocate_By_Value (V : Valtyp) return Heap_Index;
 
-   function Synth_Dereference (Idx : Heap_Index) return Valtyp;
+   --  Allocate a value.
+   function Allocate_By_Type (Acc_Typ : Type_Acc; T : Type_Acc)
+                             return Heap_Index;
+   function Allocate_By_Value (Acc_Typ : Type_Acc; V : Valtyp)
+                              return Heap_Index;
+
+   function Synth_Dereference (Idx : Heap_Index) return Memtyp;
 
    procedure Synth_Deallocate (Idx : Heap_Index);
 end Elab.Vhdl_Heap;

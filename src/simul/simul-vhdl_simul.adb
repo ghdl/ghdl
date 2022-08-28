@@ -303,6 +303,7 @@ package body Simul.Vhdl_Simul is
                                      Driver_List : Iir_List)
    is
       pragma Unreferenced (Proc);
+      Marker : Mark_Type;
       It : List_Iterator;
       El: Iir;
       Info : Target_Info;
@@ -312,7 +313,8 @@ package body Simul.Vhdl_Simul is
       while Is_Valid (It) loop
          El := Get_Element (It);
 
-         -- Mark (Marker, Expr_Pool);
+         Mark_Expr_Pool (Marker);
+
          Info := Synth_Target (Inst, El);
          declare
             E : Signal_Entry renames Signals_Table.Table (Info.Obj.Val.S);
@@ -322,7 +324,7 @@ package body Simul.Vhdl_Simul is
                         E.Val + Info.Off.Mem_Off);
          end;
 
-         --  Release (Marker, Expr_Pool);
+         Release_Expr_Pool (Marker);
 
          Next (It);
       end loop;
@@ -375,7 +377,7 @@ package body Simul.Vhdl_Simul is
         ((Pfx.Targ_Type,
           Sig_Index (Signals_Table.Table (Pfx.Obj.Val.S).Sig,
                      Pfx.Off.Net_Off)));
-      Res := Create_Value_Memory (Boolean_Type);
+      Res := Create_Value_Memory (Boolean_Type, Expr_Pool'Access);
       Write_U8 (Res.Val.Mem, Boolean'Pos (E));
       return Res;
    end Exec_Event_Attribute;
@@ -398,13 +400,20 @@ package body Simul.Vhdl_Simul is
    function Execute_Condition (Inst : Synth_Instance_Acc;
                                Cond : Node) return Boolean
    is
+      Mark : Mark_Type;
       Cond_Val : Valtyp;
+      Res : Boolean;
    begin
       if Cond = Null_Node then
          return True;
       end if;
+
+      Mark_Expr_Pool (Mark);
       Cond_Val := Synth.Vhdl_Expr.Synth_Expression (Inst, Cond);
-      return Read_Discrete (Cond_Val) = 1;
+      Res := Read_Discrete (Cond_Val) = 1;
+      Release_Expr_Pool (Mark);
+
+      return Res;
    end Execute_Condition;
 
    function Get_Suspend_State_Var (Inst : Synth_Instance_Acc) return Memory_Ptr
@@ -589,11 +598,14 @@ package body Simul.Vhdl_Simul is
    procedure Execute_Wait_Statement (Inst : Synth_Instance_Acc;
                                      Stmt : Node)
    is
+      Marker : Mark_Type;
       Expr : Node;
       List : Node_List;
       Val : Valtyp;
       Timeout : Int64;
    begin
+      Mark_Expr_Pool (Marker);
+
       --  LRM93 8.1
       --  The execution of a wait statement causes the time expression to
       --  be evaluated to determine the timeout interval.
@@ -636,6 +648,8 @@ package body Simul.Vhdl_Simul is
             end loop;
          end;
       end if;
+
+      Release_Expr_Pool (Marker);
 
       --  LRM93 8.1
       --  It also causes the execution of the corresponding process
@@ -689,7 +703,7 @@ package body Simul.Vhdl_Simul is
 
       Assoc_Chain : constant Node := Get_Parameter_Association_Chain (Call);
 
-      Area_Mark : Areapools.Mark_Type;
+      Area_Mark : Mark_Type;
       Sub_Inst : Synth_Instance_Acc;
    begin
       Areapools.Mark (Area_Mark, Instance_Pool.all);
@@ -840,12 +854,15 @@ package body Simul.Vhdl_Simul is
    is
       use Synth.Vhdl_Expr;
       Target : constant Node := Get_Target (Stmt);
+      Marker : Mark_Type;
       Info : Target_Info;
    begin
+      Mark_Expr_Pool (Marker);
       Info := Synth_Target (Inst, Target);
 
       Execute_Waveform_Assignment
         (Inst, Info, Stmt, Get_Waveform_Chain (Stmt));
+      Release_Expr_Pool (Marker);
    end Execute_Simple_Signal_Assignment;
 
    procedure Execute_Conditional_Signal_Assignment (Inst : Synth_Instance_Acc;
@@ -853,10 +870,12 @@ package body Simul.Vhdl_Simul is
    is
       use Synth.Vhdl_Expr;
       Target : constant Node := Get_Target (Stmt);
+      Marker : Mark_Type;
       Cw : Node;
       Cond : Node;
       Info : Target_Info;
    begin
+      Mark_Expr_Pool (Marker);
       Info := Synth_Target (Inst, Target);
 
       Cw := Get_Conditional_Waveform_Chain (Stmt);
@@ -871,6 +890,7 @@ package body Simul.Vhdl_Simul is
          end if;
          Cw := Get_Chain (Cw);
       end loop;
+      Release_Expr_Pool (Marker);
    end Execute_Conditional_Signal_Assignment;
 
    procedure Execute_Selected_Signal_Assignment (Inst : Synth_Instance_Acc;
@@ -878,12 +898,14 @@ package body Simul.Vhdl_Simul is
    is
       use Synth.Vhdl_Expr;
       Target : constant Node := Get_Target (Stmt);
+      Marker : Mark_Type;
       Sel : Memtyp;
       Sw : Node;
       Wf : Node;
       Info : Target_Info;
       Eq : Boolean;
    begin
+      Mark_Expr_Pool (Marker);
       Info := Synth_Target (Inst, Target);
 
       Sel := Get_Memtyp (Synth_Expression (Inst, Get_Expression (Stmt)));
@@ -915,6 +937,7 @@ package body Simul.Vhdl_Simul is
          end if;
          Sw := Get_Chain (Sw);
       end loop;
+      Release_Expr_Pool (Marker);
    end Execute_Selected_Signal_Assignment;
 
    procedure Execute_Assertion_Statement (Inst : Synth_Instance_Acc;
@@ -961,6 +984,8 @@ package body Simul.Vhdl_Simul is
          if Elab.Debugger.Flag_Need_Debug then
             Elab.Debugger.Debug_Break (Inst, Stmt);
          end if;
+
+         pragma Assert (Is_Expr_Pool_Empty);
 
          case Get_Kind (Stmt) is
             when Iir_Kind_Null_Statement =>
@@ -1058,6 +1083,7 @@ package body Simul.Vhdl_Simul is
                   end case;
                end loop;
                Finish_Procedure_Call (Process, Stmt, Stmt);
+               pragma Assert (Is_Expr_Pool_Empty);
                --  For a non-suspend procedure, return now to the caller.
                exit when Stmt = Null_Node;
                Next_Statement (Process, Stmt);
@@ -1084,11 +1110,14 @@ package body Simul.Vhdl_Simul is
                declare
                   use Synth.Vhdl_Expr;
                   Expr : constant Node := Get_Expression (Stmt);
+                  Marker : Mark_Type;
                   Sel : Valtyp;
                begin
+                  Mark_Expr_Pool (Marker);
                   Sel := Synth_Expression_With_Basetype (Inst, Expr);
                   Stmt := Synth.Vhdl_Stmts.Execute_Static_Case_Statement
                     (Inst, Stmt, Sel);
+                  Release_Expr_Pool (Marker);
                end;
 
             when Iir_Kind_Assertion_Statement =>
@@ -1124,6 +1153,7 @@ package body Simul.Vhdl_Simul is
                begin
                   Execute_Procedure_Call_Statement (Process, Stmt, Next_Stmt);
                   pragma Assert (Next_Stmt = Null_Node);
+                  pragma Assert (Is_Expr_Pool_Empty);
                   Next_Statement (Process, Stmt);
                end;
 
@@ -1160,6 +1190,7 @@ package body Simul.Vhdl_Simul is
                         end if;
                         Execute_Procedure_Call_Statement
                           (Process, Stmt2, Next_Stmt);
+                        pragma Assert (Is_Expr_Pool_Empty);
                         if Next_Stmt /= Null_Node then
                            --  User procedure.
                            --  Save current state.
@@ -1249,15 +1280,18 @@ package body Simul.Vhdl_Simul is
    procedure Execute_Expression_Association (Proc_Idx : Process_Index_Type)
    is
       use Synth.Vhdl_Expr;
+      Mark : Mark_Type;
       Proc : Proc_Record_Type renames Processes_Table.Table (Proc_Idx);
       Drv : Driver_Entry renames Drivers_Table.Table (Proc.Drivers);
       Sig : Signal_Entry renames Signals_Table.Table (Drv.Sig);
       Val : Valtyp;
    begin
+      Mark_Expr_Pool (Mark);
       Val := Synth_Expression_With_Type
         (Proc.Inst, Get_Actual (Proc.Proc), Drv.Typ);
       Assign_Value_To_Signal
         ((Drv.Typ, Sig.Sig), True, 0, 0, Get_Value_Memtyp (Val));
+      Release_Expr_Pool (Mark);
    end Execute_Expression_Association;
 
    function To_Process_State_Acc is new Ada.Unchecked_Conversion
@@ -1273,7 +1307,10 @@ package body Simul.Vhdl_Simul is
       --  For debugger
       Current_Process := Process;
 
---      Instance_Pool := Process.Pool'Access;
+      Instance_Pool := Process.Pool;
+
+      --  Sanity checks.
+      pragma Assert (Is_Expr_Pool_Empty);
 
       if Synth.Flags.Flag_Trace_Statements then
          Put ("run process: ");
@@ -1281,19 +1318,13 @@ package body Simul.Vhdl_Simul is
          Put_Line (" (" & Vhdl.Errors.Disp_Location (Process.Proc) & ")");
       end if;
 
---      Execute_Sequential_Statements (Process);
-
-      --  Sanity checks.
---      if not Is_Empty (Expr_Pool) then
---         raise Internal_Error;
---      end if;
-
       case Get_Kind (Process.Proc) is
          when Iir_Kind_Sensitized_Process_Statement =>
 --            if Process.Instance.In_Wait_Flag then
 --               raise Internal_Error;
 --            end if;
             Execute_Sequential_Statements (Process);
+            pragma Assert (Areapools.Is_Empty (Instance_Pool.all));
          when Iir_Kind_Process_Statement =>
             Execute_Sequential_Statements (Process);
          when Iir_Kind_Concurrent_Assertion_Statement =>
@@ -1301,28 +1332,33 @@ package body Simul.Vhdl_Simul is
                Elab.Debugger.Debug_Break (Process.Instance, Process.Proc);
             end if;
             Execute_Assertion_Statement (Process.Instance, Process.Proc);
+            pragma Assert (Areapools.Is_Empty (Instance_Pool.all));
          when Iir_Kind_Concurrent_Simple_Signal_Assignment =>
             if Elab.Debugger.Flag_Need_Debug then
                Elab.Debugger.Debug_Break (Process.Instance, Process.Proc);
             end if;
             Execute_Simple_Signal_Assignment (Process.Instance, Process.Proc);
+            pragma Assert (Areapools.Is_Empty (Instance_Pool.all));
          when Iir_Kind_Concurrent_Conditional_Signal_Assignment =>
             if Elab.Debugger.Flag_Need_Debug then
                Elab.Debugger.Debug_Break (Process.Instance, Process.Proc);
             end if;
             Execute_Conditional_Signal_Assignment
               (Process.Instance, Process.Proc);
+            pragma Assert (Areapools.Is_Empty (Instance_Pool.all));
          when Iir_Kind_Concurrent_Selected_Signal_Assignment =>
             if Elab.Debugger.Flag_Need_Debug then
                Elab.Debugger.Debug_Break (Process.Instance, Process.Proc);
             end if;
             Execute_Selected_Signal_Assignment
               (Process.Instance, Process.Proc);
+            pragma Assert (Areapools.Is_Empty (Instance_Pool.all));
          when Iir_Kind_Association_Element_By_Expression =>
             if Elab.Debugger.Flag_Need_Debug then
                Elab.Debugger.Debug_Break (Process.Instance, Process.Proc);
             end if;
             Execute_Expression_Association (Process.Idx);
+            pragma Assert (Areapools.Is_Empty (Instance_Pool.all));
          when Iir_Kind_Concurrent_Procedure_Call_Statement =>
             if Elab.Debugger.Flag_Need_Debug then
                Elab.Debugger.Debug_Break (Process.Instance, Process.Proc);
@@ -1332,7 +1368,7 @@ package body Simul.Vhdl_Simul is
             raise Internal_Error;
       end case;
 
---      Instance_Pool := null;
+      Instance_Pool := null;
       Current_Process := null;
    end Process_Executer;
 
@@ -1386,19 +1422,21 @@ package body Simul.Vhdl_Simul is
    procedure Create_Process_Sensitized (Proc : Process_State_Acc)
    is
       use Grt.Processes;
-      Instance_Grt : Grt.Processes.Instance_Acc;
+      Instance_Grt : constant Grt.Processes.Instance_Acc :=
+        To_Instance_Acc (Proc.all'Address);
    begin
-      Instance_Grt := To_Instance_Acc (Proc.all'Address);
+      --  As those processes only suspend at the end, they don't need a
+      --  specific stack and can share the same stack.
+      Proc.Pool := Process_Pool'Access;
+
       if Get_Postponed_Flag (Proc.Proc) then
-         Ghdl_Postponed_Sensitized_Process_Register
-           (Instance_Grt,
-            Process_Executer'Access,
-            null, To_Address (Proc));
+         Ghdl_Postponed_Sensitized_Process_Register (Instance_Grt,
+                                                     Process_Executer'Access,
+                                                     null, To_Address (Proc));
       else
-         Ghdl_Sensitized_Process_Register
-           (Instance_Grt,
-            Process_Executer'Access,
-            null, To_Address (Proc));
+         Ghdl_Sensitized_Process_Register (Instance_Grt,
+                                           Process_Executer'Access,
+                                           null, To_Address (Proc));
       end if;
    end Create_Process_Sensitized;
 
@@ -1474,12 +1512,12 @@ package body Simul.Vhdl_Simul is
          return;
       end if;
 
---      Instance_Pool := Global_Pool'Access;
+      Instance_Pool := Process_Pool'Access;
 --      Current_Process := No_Process;
 
-      Mark (Marker, Expr_Pool);
+      Mark_Expr_Pool (Marker);
       V := Execute_Psl_Expr (E.Instance, Get_PSL_Clock (E.Proc), False);
-      Release (Marker, Expr_Pool);
+      Release_Expr_Pool (Marker);
       if V then
          Nvec := (others => False);
          case Get_Kind (E.Proc) is
@@ -1503,10 +1541,10 @@ package body Simul.Vhdl_Simul is
                   Sd_Num := Get_State_Label (Sd);
 
                   if not Nvec (Sd_Num) then
-                     Mark (Marker, Expr_Pool);
+                     Mark_Expr_Pool (Marker);
                      V := Execute_Psl_Expr
                        (E.Instance, Get_Edge_Expr (Ed), False);
-                     Release (Marker, Expr_Pool);
+                     Release_Expr_Pool (Marker);
                      if V then
                         Nvec (Sd_Num) := True;
                      end if;
@@ -1558,7 +1596,7 @@ package body Simul.Vhdl_Simul is
          E.States.all := Nvec;
       end if;
 
---      Instance_Pool := null;
+      Instance_Pool := null;
 --      Current_Process := null;
    end PSL_Process_Executer;
 
@@ -1664,12 +1702,16 @@ package body Simul.Vhdl_Simul is
                begin
                   Driver_List := Trans_Analyzes.Extract_Drivers (Proc);
                   Create_Process_Sensitized (Current_Process);
+                  pragma Assert (Areapools.Is_Empty (Expr_Pool));
                   Register_Sensitivity (I);
+                  pragma Assert (Areapools.Is_Empty (Expr_Pool));
                   Create_Process_Drivers (Instance, Proc, Driver_List);
+                  pragma Assert (Areapools.Is_Empty (Expr_Pool));
                   Trans_Analyzes.Free_Drivers_List (Driver_List);
                end;
 
             when Iir_Kind_Association_Element_By_Expression =>
+               Processes_State (I).Pool := Process_Pool'Access;
                Ghdl_Sensitized_Process_Register
                  (Instance_Grt,
                   Process_Executer'Access,
@@ -1682,6 +1724,10 @@ package body Simul.Vhdl_Simul is
                declare
                   Driver_List: Iir_List;
                begin
+                  --  As those processes can suspend, they need a dedicated
+                  --  stack.
+                  Processes_State (I).Pool := new Areapools.Areapool;
+
                   Driver_List := Trans_Analyzes.Extract_Drivers (Proc);
 
                   if Get_Postponed_Flag (Proc) then
@@ -1713,44 +1759,8 @@ package body Simul.Vhdl_Simul is
                Vhdl.Errors.Error_Kind ("create_processes", Proc);
          end case;
 
-         --  LRM93 12.4.4  Other Concurrent Statements
-         --  All other concurrent statements are either process
-         --  statements or are statements for which there is an
-         --  equivalent process statement.
-         --  Elaboration of a process statement proceeds as follows:
-         --  1.  The process declarative part is elaborated.
---         Elaborate_Declarative_Part
---           (Instance, Get_Declaration_Chain (Proc));
-
-         --  2.  The drivers required by the process statement
-         --      are created.
-         --  3.  The initial transaction defined by the default value
-         --      associated with each scalar signal driven by the
-         --      process statement is inserted into the corresponding
-         --      driver.
-         --  FIXME: do it for drivers in called subprograms too.
---         Elaborate_Drivers (Instance, Proc);
-
---         if not Is_Empty (Expr_Pool) then
---            raise Internal_Error;
---         end if;
-
-         --  Elaboration of all concurrent signal assignment
-         --  statements and concurrent assertion statements consists
-         --  of the construction of the equivalent process statement
-         --  followed by the elaboration of the equivalent process
-         --  statement.
-         --  [GHDL:  this is done by canonicalize.  ]
-
-         --  FIXME: check passive statements,
-         --  check no wait statement in sensitized processes.
-
---         Instance_Pool := null;
+         pragma Assert (Areapools.Is_Empty (Expr_Pool));
       end loop;
-
---      if Trace_Simulation then
---         Disp_Signals_Value;
---      end if;
    end Create_Processes;
 
    type Resolver_Read_Mode is (Read_Port, Read_Driver);
@@ -1917,10 +1927,10 @@ package body Simul.Vhdl_Simul is
 
       Res : Valtyp;
 
-      Instance_Mark, Expr_Mark : Mark_Type;
+      Marker : Mark_Type;
    begin
-      Mark (Expr_Mark, Expr_Pool);
-      Mark (Instance_Mark, Instance_Pool.all);
+      Mark_Expr_Pool (Marker);
+      Instance_Pool := Process_Pool'Access;
 
       --  Create the type.
       Bnd := Elab.Vhdl_Types.Create_Bounds_From_Length (R.Idx_Typ.Drange, Len);
@@ -1953,8 +1963,8 @@ package body Simul.Vhdl_Simul is
       Exec_Write_Signal (R.Sig, (Res.Typ, Res.Val.Mem),
                          Write_Signal_Driving_Value);
 
-      Release (Expr_Mark, Expr_Pool);
-      Release (Instance_Mark, Instance_Pool.all);
+      Release_Expr_Pool (Marker);
+      pragma Assert (Is_Expr_Pool_Empty);
    end Resolution_Proc;
 
    function Create_Scalar_Signal (Typ : Type_Acc; Val : Ghdl_Value_Ptr)
@@ -2108,7 +2118,7 @@ package body Simul.Vhdl_Simul is
         (System.Address, Memory_Ptr);
       M : System.Address;
    begin
-      Areapools.Allocate (Current_Pool.all,
+      Areapools.Allocate (Global_Pool,
                           M, Sig_Size * Size_Type (Vtype.W), Sig_Size);
       return To_Memory_Ptr (M);
    end Alloc_Signal_Memory;
@@ -2357,11 +2367,10 @@ package body Simul.Vhdl_Simul is
       Val : Memtyp;
       Dst : Memtyp;
 
-      Expr_Mark : Mark_Type;
+      Marker : Mark_Type;
    begin
---      pragma Assert (Instance_Pool = null);
---      Instance_Pool := Global_Pool'Access;
-      Mark (Expr_Mark, Expr_Pool);
+      Instance_Pool := Process_Pool'Access;
+      Mark_Expr_Pool (Marker);
       Current_Process := null;
 
       Val := Create_Memory (Conv.Src_Typ);
@@ -2384,8 +2393,8 @@ package body Simul.Vhdl_Simul is
               (Conv.Dst_Sig, Dst, Write_Signal_Driving_Value);
       end case;
 
-      Release (Expr_Mark, Expr_Pool);
---      Instance_Pool := null;
+      Release_Expr_Pool (Marker);
+      Instance_Pool := null;
    end Conversion_Proc;
 
    function Get_Leftest_Signal (Sig : Memory_Ptr; Typ : Type_Acc)
@@ -2462,7 +2471,7 @@ package body Simul.Vhdl_Simul is
             if In_Conv /= Null_Iir then
                Ctyp := C.Formal.Typ;
                Csig := Alloc_Signal_Memory (Ctyp);
-               Cval := Alloc_Memory (Ctyp);
+               Cval := Alloc_Memory (Ctyp, Global_Pool'Access);
                Create_Shadow_Signal (Csig, Cval, Ctyp);
                Act2 := (Ctyp, Csig);
                Add_Conversion
@@ -2566,7 +2575,7 @@ package body Simul.Vhdl_Simul is
          begin
             --  Allocate Ref_Val and set it to 0.
             pragma Assert (T.Across_Typ.Kind = Type_Float);
-            T.Ref_Val := Alloc_Memory (T.Across_Typ);
+            T.Ref_Val := Alloc_Memory (T.Across_Typ, Global_Pool'Access);
             Write_Fp64 (T.Ref_Val, 0.0);
 
             if not Get_Reference_Terminal_Flag (T.Decl) then
@@ -2624,7 +2633,7 @@ package body Simul.Vhdl_Simul is
                      --  TODO
                      raise Internal_Error;
                   end if;
-                  Q.Val := Alloc_Memory (Q.Typ);
+                  Q.Val := Alloc_Memory (Q.Typ, Global_Pool'Access);
                   Write_Fp64 (Q.Val, 0.0);
 
                   --  TODO:
@@ -2661,7 +2670,7 @@ package body Simul.Vhdl_Simul is
                           ((Kind => Aug_Dot, Q => Q.Idx));
                      end if;
 
-                     Q.Val := Alloc_Memory (Q.Typ);
+                     Q.Val := Alloc_Memory (Q.Typ, Global_Pool'Access);
                      Write_Fp64 (Q.Val, 0.0);
                   end;
 
@@ -2900,15 +2909,25 @@ package body Simul.Vhdl_Simul is
       -- All the simulation is done via time, so it must be displayed.
       Disp_Time_Before_Values := True;
 
+      pragma Assert (Is_Expr_Pool_Empty);
+
       Create_Signals;
+      pragma Assert (Is_Expr_Pool_Empty);
       Create_Connects;
       -- Create_Disconnections;
+      pragma Assert (Is_Expr_Pool_Empty);
       Create_Processes;
+      pragma Assert (Is_Expr_Pool_Empty);
       Create_Terminals;
       Create_Quantities;
+      pragma Assert (Is_Expr_Pool_Empty);
       Collapse_Signals;
 
+      pragma Assert (Is_Expr_Pool_Empty);
+
       --  Allow Synth_Expression to handle signals.
+      --  This is done after elaboration as signals are available only after
+      --  elaboration.
       Synth.Vhdl_Expr.Hook_Signal_Expr := Hook_Signal_Expr'Access;
       Synth.Vhdl_Expr.Hook_Event_Attribute := Exec_Event_Attribute'Access;
 
@@ -2950,7 +2969,7 @@ package body Simul.Vhdl_Simul is
 
       Elab.Debugger.Error_Hook := Grt.Errors.Fatal_Error'Access;
 
---      Grt.Errors.Error_Hook := Debug_Error'Access;
+      pragma Assert (Areapools.Is_Empty (Expr_Pool));
 
       if Flag_Debug_Elab then
          Elab.Debugger.Debug_Elab (Vhdl_Elab.Top_Instance);
@@ -2960,6 +2979,8 @@ package body Simul.Vhdl_Simul is
       if not Ok then
          return;
       end if;
+
+      pragma Assert (Areapools.Is_Empty (Expr_Pool));
 
       Synth.Flags.Severity_Level := Grt.Options.Severity_Level;
 

@@ -18,7 +18,7 @@
 
 with Types; use Types;
 with Tables;
-with Areapools; use Areapools;
+with Areapools;
 
 with Vhdl.Nodes; use Vhdl.Nodes;
 
@@ -60,7 +60,7 @@ package Simul.Vhdl_Simul is
       case Kind is
          when Kind_Process =>
             --  Memory pool to allocate objects from.
-            Pool : Areapool_Acc;
+            Pool : Areapools.Areapool_Acc;
          when Kind_PSL =>
             Done : Boolean;
             States: Boolean_Vector_Acc;

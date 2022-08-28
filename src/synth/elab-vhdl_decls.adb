@@ -16,6 +16,8 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
+with Areapools;
+
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
 
@@ -53,6 +55,7 @@ package body Elab.Vhdl_Decls is
                                         Decl : Node;
                                         Last_Type : in out Node)
    is
+      Em : Mark_Type;
       Deferred_Decl : constant Node := Get_Deferred_Declaration (Decl);
       First_Decl : Node;
       Decl_Type : Node;
@@ -93,6 +96,9 @@ package body Elab.Vhdl_Decls is
          end if;
          Last_Type := Decl_Type;
       end if;
+
+      --  Compute expression.
+      Mark_Expr_Pool (Em);
       Val := Synth_Expression_With_Type
         (Syn_Inst, Get_Default_Value (Decl), Obj_Type);
       if Val = No_Valtyp then
@@ -100,6 +106,10 @@ package body Elab.Vhdl_Decls is
          return;
       end if;
       Val := Exec_Subtype_Conversion (Val, Obj_Type, True, Decl);
+      Val := Unshare (Val, Instance_Pool);
+      Val.Typ := Unshare (Val.Typ, Instance_Pool);
+      Release_Expr_Pool (Em);
+
       Create_Object_Force (Syn_Inst, First_Decl, Val);
    end Elab_Constant_Declaration;
 
@@ -108,11 +118,17 @@ package body Elab.Vhdl_Decls is
                             Typ : Type_Acc)
    is
       Def : constant Iir := Get_Default_Value (Decl);
+      Expr_Mark : Mark_Type;
       Init : Valtyp;
    begin
+      pragma Assert (Typ.Is_Global);
+
       if Is_Valid (Def) then
+         Mark_Expr_Pool (Expr_Mark);
          Init := Synth_Expression_With_Type (Syn_Inst, Def, Typ);
          Init := Exec_Subtype_Conversion (Init, Typ, False, Decl);
+         Init := Unshare (Init, Instance_Pool);
+         Release_Expr_Pool (Expr_Mark);
       else
          Init := No_Valtyp;
       end if;
@@ -135,6 +151,7 @@ package body Elab.Vhdl_Decls is
    is
       Def : constant Node := Get_Default_Value (Decl);
       Decl_Type : constant Node := Get_Type (Decl);
+      Marker : Mark_Type;
       Init : Valtyp;
       Obj_Typ : Type_Acc;
    begin
@@ -144,16 +161,23 @@ package body Elab.Vhdl_Decls is
          return;
       end if;
 
+
+      Mark_Expr_Pool (Marker);
       if Is_Valid (Def) then
          Init := Synth_Expression_With_Type (Syn_Inst, Def, Obj_Typ);
          Init := Exec_Subtype_Conversion (Init, Obj_Typ, False, Decl);
+         Init := Unshare (Init, Instance_Pool);
       else
          if Force_Init then
+            Current_Pool := Instance_Pool;
             Init := Create_Value_Default (Obj_Typ);
+            Current_Pool := Expr_Pool'Access;
          else
             Init := (Typ => Obj_Typ, Val => null);
          end if;
       end if;
+      Release_Expr_Pool (Marker);
+
       Create_Object (Syn_Inst, Decl, Init);
    end Elab_Variable_Declaration;
 
@@ -166,7 +190,9 @@ package body Elab.Vhdl_Decls is
    begin
       F := Elab.Vhdl_Files.Elaborate_File_Declaration (Syn_Inst, Decl);
       Obj_Typ := Get_Subtype_Object (Syn_Inst, Get_Type (Decl));
+      Current_Pool := Instance_Pool;
       Res := Create_Value_File (Obj_Typ, F);
+      Current_Pool := Expr_Pool'Access;
       Create_Object (Syn_Inst, Decl, Res);
    end Elab_File_Declaration;
 
@@ -228,10 +254,13 @@ package body Elab.Vhdl_Decls is
    is
       Attr_Decl : constant Node :=
         Get_Named_Entity (Get_Attribute_Designator (Spec));
+      Marker : Mark_Type;
       Value : Node;
       Val : Valtyp;
       Val_Type : Type_Acc;
    begin
+      Mark_Expr_Pool (Marker);
+
       Val_Type := Get_Subtype_Object (Syn_Inst, Get_Type (Attr_Decl));
       Value := Get_Attribute_Value_Spec_Chain (Spec);
       while Value /= Null_Iir loop
@@ -252,8 +281,10 @@ package body Elab.Vhdl_Decls is
          --
          --  4. Each new attribute instance is assigned the value of
          --     the expression.
+         Val := Unshare (Val, Instance_Pool);
+         Val.Typ := Unshare (Val.Typ, Instance_Pool);
          Create_Object (Syn_Inst, Value, Val);
-         --  Unshare (Val, Instance_Pool);
+         Release_Expr_Pool (Marker);
 
          Value := Get_Spec_Chain (Value);
       end loop;
@@ -263,6 +294,7 @@ package body Elab.Vhdl_Decls is
      (Syn_Inst : Synth_Instance_Acc; Decl : Node)
    is
       Atype : constant Node := Get_Declaration_Type (Decl);
+      Marker : Mark_Type;
       Off : Value_Offsets;
       Res : Valtyp;
       Obj_Typ : Type_Acc;
@@ -270,6 +302,8 @@ package body Elab.Vhdl_Decls is
       Typ : Type_Acc;
       Dyn : Dyn_Name;
    begin
+      Mark_Expr_Pool (Marker);
+
       --  Subtype indication may not be present.
       if Atype /= Null_Node then
          Synth_Subtype_Indication (Syn_Inst, Atype);
@@ -280,11 +314,14 @@ package body Elab.Vhdl_Decls is
 
       Synth_Assignment_Prefix (Syn_Inst, Get_Name (Decl), Base, Typ, Off, Dyn);
       pragma Assert (Dyn = No_Dyn_Name);
-      Res := Create_Value_Alias (Base, Off, Typ);
+      Typ := Unshare (Typ, Instance_Pool);
+      Res := Create_Value_Alias (Base, Off, Typ, Expr_Pool'Access);
       if Obj_Typ /= null then
          Res := Exec_Subtype_Conversion (Res, Obj_Typ, True, Decl);
       end if;
+      Res := Unshare (Res, Instance_Pool);
       Create_Object (Syn_Inst, Decl, Res);
+      Release_Expr_Pool (Marker);
    end Elab_Object_Alias_Declaration;
 
    procedure Elab_Declaration (Syn_Inst : Synth_Instance_Acc;
@@ -376,12 +413,18 @@ package body Elab.Vhdl_Decls is
             declare
                Val : Valtyp;
             begin
+               pragma Assert (Areapools.Is_Empty (Expr_Pool));
+
+               Current_Pool := Instance_Pool;
                Val := Create_Value_Memory (Create_Memory_U32 (0));
+               Current_Pool := Expr_Pool'Access;
                Create_Object (Syn_Inst, Decl, Val);
             end;
          when others =>
             Vhdl.Errors.Error_Kind ("elab_declaration", Decl);
       end case;
+
+      pragma Assert (Is_Expr_Pool_Empty);
    end Elab_Declaration;
 
    procedure Elab_Declarations (Syn_Inst : Synth_Instance_Acc;

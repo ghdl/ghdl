@@ -23,7 +23,6 @@ with Str_Table;
 with Flags; use Flags;
 with Std_Names;
 with Errorout; use Errorout;
-with Areapools;
 
 with Vhdl.Scanner;
 with Vhdl.Errors; use Vhdl.Errors;
@@ -1018,7 +1017,6 @@ package body Vhdl.Evaluation is
    function Eval_Ieee_Operator (Orig : Iir; Imp : Iir; Left : Iir; Right : Iir)
                                return Iir
    is
-      use Areapools;
       use Elab.Vhdl_Objtypes;
       use Synth.Vhdl_Eval;
       use Synth_Helpers;
@@ -1030,7 +1028,7 @@ package body Vhdl.Evaluation is
       Res_Mt : Memtyp;
       Res : Iir;
    begin
-      Mark (Marker, Expr_Pool);
+      Mark_Expr_Pool (Marker);
 
       Res_Typ := Convert_Node_To_Typ (Res_Type);
       Left_Mt := Convert_Node_To_Memtyp (Left);
@@ -1043,7 +1041,7 @@ package body Vhdl.Evaluation is
            (Imp, Left_Mt, Orig);
       end if;
       Res := Convert_Memtyp_To_Node (Res_Mt, Res_Type, Orig);
-      Release (Marker, Expr_Pool);
+      Release_Expr_Pool (Marker);
 
       return Res;
    end Eval_Ieee_Operator;

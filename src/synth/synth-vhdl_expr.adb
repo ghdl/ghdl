@@ -503,7 +503,8 @@ package body Synth.Vhdl_Expr is
             return Create_Value_Net (Get_Value_Net (Val.Val), Ntype);
          when Value_Alias =>
             return Create_Value_Alias
-              ((Val.Val.A_Typ, Val.Val.A_Obj), Val.Val.A_Off, Ntype);
+              ((Val.Val.A_Typ, Val.Val.A_Obj), Val.Val.A_Off, Ntype,
+              Current_Pool);
          when Value_Const =>
             return Reshape_Value ((Val.Typ, Val.Val.C_Val), Ntype);
          when Value_Memory =>
@@ -684,7 +685,7 @@ package body Synth.Vhdl_Expr is
                  Get_Subtype_Object (Syn_Inst, Get_Type (Name));
                Res : Valtyp;
             begin
-               Res := Create_Value_Memory (Typ);
+               Res := Create_Value_Memory (Typ, Current_Pool);
                Write_Discrete (Res, Int64 (Get_Enum_Pos (Name)));
                return Res;
             end;
@@ -700,9 +701,11 @@ package body Synth.Vhdl_Expr is
            | Iir_Kind_Dereference =>
             declare
                Val : Valtyp;
+               Obj : Memtyp;
             begin
                Val := Synth_Expression (Syn_Inst, Get_Prefix (Name));
-               return Elab.Vhdl_Heap.Synth_Dereference (Read_Access (Val));
+               Obj := Elab.Vhdl_Heap.Synth_Dereference (Read_Access (Val));
+               return Create_Value_Memory (Obj);
             end;
          when others =>
             Error_Kind ("synth_name", Name);
@@ -2014,7 +2017,8 @@ package body Synth.Vhdl_Expr is
                   --  returns 0.
                   return Create_Value_Memtyp (Create_Memory_Zero (Res_Typ));
                elsif Is_Static (Val.Val) then
-                  Res := Create_Value_Memory (Res_Typ);
+                  --  TODO: why a copy ?
+                  Res := Create_Value_Memory (Res_Typ, Current_Pool);
                   Copy_Memory
                     (Res.Val.Mem,
                      Val.Val.Mem + Val.Typ.Rec.E (Idx + 1).Offs.Mem_Off,
@@ -2035,7 +2039,7 @@ package body Synth.Vhdl_Expr is
             declare
                Res : Valtyp;
             begin
-               Res := Create_Value_Memory (Expr_Type);
+               Res := Create_Value_Memory (Expr_Type, Current_Pool);
                Write_Discrete (Res, Get_Value (Expr));
                return Res;
             end;
@@ -2185,22 +2189,26 @@ package body Synth.Vhdl_Expr is
             return Create_Value_Access (Null_Heap_Index, Expr_Type);
          when Iir_Kind_Allocator_By_Subtype =>
             declare
+               Acc_Typ : constant Type_Acc :=
+                 Get_Subtype_Object (Syn_Inst, Get_Type (Expr));
                T : Type_Acc;
                Acc : Heap_Index;
             begin
                T := Synth_Subtype_Indication
                  (Syn_Inst, Get_Subtype_Indication (Expr));
-               Acc := Allocate_By_Type (T);
+               Acc := Allocate_By_Type (Acc_Typ, T);
                return Create_Value_Access (Acc, Expr_Type);
             end;
          when Iir_Kind_Allocator_By_Expression =>
             declare
+               Acc_Typ : constant Type_Acc :=
+                 Get_Subtype_Object (Syn_Inst, Get_Type (Expr));
                V : Valtyp;
                Acc : Heap_Index;
             begin
                V := Synth_Expression_With_Type
                  (Syn_Inst, Get_Expression (Expr), Expr_Type.Acc_Acc);
-               Acc := Allocate_By_Value (V);
+               Acc := Allocate_By_Value (Acc_Typ, V);
                return Create_Value_Access (Acc, Expr_Type);
             end;
          when Iir_Kind_Stable_Attribute =>

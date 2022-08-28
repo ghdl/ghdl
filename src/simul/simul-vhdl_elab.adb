@@ -16,6 +16,8 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
+with Areapools;
+
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Canon;
@@ -141,9 +143,7 @@ package body Simul.Vhdl_Elab is
       Convert_Type_Width (E.Typ);
 
       --  Allocate the value in global pool.
-      Current_Pool := Global_Pool'Access;
-      E.Val := Alloc_Memory (E.Typ);
-      Current_Pool := Expr_Pool'Access;
+      E.Val := Alloc_Memory (E.Typ, Global_Pool'Access);
 
       --  Set it to the default value.
       if Val.Val.Init /= null then
@@ -287,6 +287,7 @@ package body Simul.Vhdl_Elab is
          when others =>
             Error_Kind ("gather_processes_decl", Decl);
       end case;
+      pragma Assert (Areapools.Is_Empty (Expr_Pool));
    end Gather_Processes_Decl;
 
    procedure Gather_Processes_Decls
@@ -362,6 +363,7 @@ package body Simul.Vhdl_Elab is
      (Inst : Synth_Instance_Acc; Proc : Node; Proc_Idx : Process_Index_Type)
    is
       use Synth.Vhdl_Stmts;
+      Marker : Mark_Type;
       Driver_List: Iir_List;
       It : List_Iterator;
       Sig : Node;
@@ -371,6 +373,8 @@ package body Simul.Vhdl_Elab is
       Off : Value_Offsets;
       Dyn : Dyn_Name;
    begin
+      Mark_Expr_Pool (Marker);
+
       Driver_List := Trans_Analyzes.Extract_Drivers (Proc);
       It := List_Iterate_Safe (Driver_List);
       while Is_Valid (It) loop
@@ -379,12 +383,14 @@ package body Simul.Vhdl_Elab is
          Synth_Assignment_Prefix (Inst, Sig, Base_Vt, Typ, Off, Dyn);
          pragma Assert (Dyn = No_Dyn_Name);
          Base := Base_Vt.Val.S;
+         Typ := Unshare (Typ, Global_Pool'Access);
 
          Add_Process_Driver (Proc_Idx, Base, Off, Typ, Sig);
 
          Next (It);
       end loop;
       Trans_Analyzes.Free_Drivers_List (Driver_List);
+      Release_Expr_Pool (Marker);
    end Gather_Process_Drivers;
 
    procedure Gather_Sensitivity (Inst : Synth_Instance_Acc;
@@ -392,6 +398,7 @@ package body Simul.Vhdl_Elab is
                                  List : Iir_List)
    is
       use Synth.Vhdl_Stmts;
+      Marker : Mark_Type;
       It : List_Iterator;
       Sig : Node;
       Base_Vt : Valtyp;
@@ -400,6 +407,8 @@ package body Simul.Vhdl_Elab is
       Off : Value_Offsets;
       Dyn : Dyn_Name;
    begin
+      Mark_Expr_Pool (Marker);
+
       It := List_Iterate_Safe (List);
       while Is_Valid (It) loop
          Sig := Get_Element (It);
@@ -407,6 +416,7 @@ package body Simul.Vhdl_Elab is
          Synth_Assignment_Prefix (Inst, Sig, Base_Vt, Typ, Off, Dyn);
          pragma Assert (Dyn = No_Dyn_Name);
          Base := Base_Vt.Val.S;
+         Typ := Unshare (Typ, Global_Pool'Access);
 
          Sensitivity_Table.Append
            ((Sig => Base,
@@ -423,6 +433,7 @@ package body Simul.Vhdl_Elab is
 
          Next (It);
       end loop;
+      Release_Expr_Pool (Marker);
    end Gather_Sensitivity;
 
    procedure Gather_Process_Sensitivity
@@ -506,6 +517,7 @@ package body Simul.Vhdl_Elab is
                                  Assocs : Node)
    is
       use Synth.Vhdl_Stmts;
+      Marker : Mark_Type;
       Assoc_Inter : Node;
       Assoc : Node;
       Inter : Node;
@@ -521,6 +533,7 @@ package body Simul.Vhdl_Elab is
       List : Iir_List;
       Formal_Ep, Actual_Ep : Connect_Endpoint;
    begin
+      Mark_Expr_Pool (Marker);
       Assoc := Assocs;
       Assoc_Inter := Ports;
       while Is_Valid (Assoc) loop
@@ -534,12 +547,14 @@ package body Simul.Vhdl_Elab is
                Synth_Assignment_Prefix
                  (Port_Inst, Formal, Formal_Base, Typ, Off, Dyn);
                pragma Assert (Dyn = No_Dyn_Name);
+               Typ := Unshare (Typ, Global_Pool'Access);
                Formal_Sig := Formal_Base.Val.S;
                Formal_Ep := (Formal_Sig, Off, Typ);
 
                Synth_Assignment_Prefix
                  (Assoc_Inst, Get_Actual (Assoc), Actual_Base, Typ, Off, Dyn);
                pragma Assert (Dyn = No_Dyn_Name);
+               Typ := Unshare (Typ, Global_Pool'Access);
                Actual_Sig := Actual_Base.Val.S;
                Actual_Ep := (Actual_Sig, Off, Typ);
 
@@ -642,6 +657,7 @@ package body Simul.Vhdl_Elab is
             when others =>
                Error_Kind ("gather_connections", Assoc);
          end case;
+         Release_Expr_Pool (Marker);
          Next_Association_Interface (Assoc, Assoc_Inter);
       end loop;
    end Gather_Connections;
@@ -679,6 +695,7 @@ package body Simul.Vhdl_Elab is
            (Sub_Inst, Get_Port_Chain (Get_Entity (Sub_Scope)),
             Inst, Get_Port_Map_Aspect_Chain (Stmt));
       end if;
+      pragma Assert (Areapools.Is_Empty (Expr_Pool));
    end Gather_Connections_Instantiation_Statement;
 
    procedure Gather_Processes_Stmt
@@ -691,6 +708,7 @@ package body Simul.Vhdl_Elab is
                  Get_Sub_Instance (Inst, Stmt);
             begin
                Gather_Processes_1 (Sub_Inst);
+               pragma Assert (Areapools.Is_Empty (Expr_Pool));
                Gather_Connections_Instantiation_Statement
                  (Inst, Stmt, Sub_Inst);
             end;
@@ -733,7 +751,9 @@ package body Simul.Vhdl_Elab is
                                      Inst => Inst,
                                      Drivers => No_Driver_Index,
                                      Sensitivity => No_Sensitivity_Index));
+            pragma Assert (Is_Expr_Pool_Empty);
             Gather_Process_Drivers (Inst, Stmt, Processes_Table.Last);
+            pragma Assert (Is_Expr_Pool_Empty);
             Gather_Process_Sensitivity (Inst, Stmt, Processes_Table.Last);
          when Iir_Kind_Psl_Default_Clock =>
             null;
@@ -749,6 +769,7 @@ package body Simul.Vhdl_Elab is
          when others =>
             Vhdl.Errors.Error_Kind ("gather_processes_stmt", Stmt);
       end case;
+      pragma Assert (Is_Expr_Pool_Empty);
    end Gather_Processes_Stmt;
 
    procedure Gather_Processes_Stmts (Inst : Synth_Instance_Acc; Stmts : Node)
@@ -804,10 +825,14 @@ package body Simul.Vhdl_Elab is
          when others =>
             Vhdl.Errors.Error_Kind ("gater_processes_1", N);
       end case;
+
+      pragma Assert (Areapools.Is_Empty (Expr_Pool));
    end Gather_Processes_1;
 
    procedure Gather_Processes (Top : Synth_Instance_Acc) is
    begin
+      pragma Assert (Areapools.Is_Empty (Expr_Pool));
+
       Processes_Table.Init;
       Signals_Table.Init;
       Drivers_Table.Init;
@@ -872,7 +897,6 @@ package body Simul.Vhdl_Elab is
             end loop;
          end;
       end loop;
-
    end Gather_Processes;
 
    procedure Elab_Processes
@@ -880,6 +904,9 @@ package body Simul.Vhdl_Elab is
       Proc : Node;
       Proc_Inst : Synth_Instance_Acc;
    begin
+      pragma Assert (Areapools.Is_Empty (Expr_Pool));
+
+      Instance_Pool := Global_Pool'Access;
       for I in Processes_Table.First .. Processes_Table.Last loop
          Proc := Processes_Table.Table (I).Proc;
          if Get_Kind (Proc) in Iir_Kinds_Process_Statement then
@@ -890,6 +917,7 @@ package body Simul.Vhdl_Elab is
               (Proc_Inst, Get_Declaration_Chain (Proc), True);
          end if;
       end loop;
+      Instance_Pool := null;
    end Elab_Processes;
 
    procedure Elab_Drivers is

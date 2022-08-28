@@ -141,10 +141,12 @@ package Elab.Vhdl_Values is
    --  Create a Value_Wire.
    function Create_Value_Wire (S : Uns32) return Value_Acc;
 
+   --  Create a Value_Signal, always on the instance_pool.
    function Create_Value_Signal (S : Signal_Index_Type; Init : Value_Acc)
                                 return Value_Acc;
 
-   function Create_Value_Memory (Vtype : Type_Acc) return Valtyp;
+   function Create_Value_Memory (Vtype : Type_Acc; Pool : Areapool_Acc)
+                                return Valtyp;
    function Create_Value_Memory (Mt : Memtyp) return Valtyp;
 
    function Create_Value_Uns (Val : Uns64; Vtype : Type_Acc) return Valtyp;
@@ -165,14 +167,17 @@ package Elab.Vhdl_Values is
    function Create_Value_Terminal (Vtype : Type_Acc; T : Terminal_Index_Type)
                                   return Valtyp;
 
-   function Create_Value_Alias
-     (Obj : Valtyp; Off : Value_Offsets; Typ : Type_Acc) return Valtyp;
+   function Create_Value_Alias (Obj : Valtyp;
+                                Off : Value_Offsets;
+                                Typ : Type_Acc;
+                                Pool : Areapool_Acc) return Valtyp;
 
    function Create_Value_Dyn_Alias (Obj : Value_Acc;
                                     Poff : Uns32;
                                     Ptyp : Type_Acc;
                                     Voff : Uns32;
-                                    Eoff : Uns32) return Value_Acc;
+                                    Eoff : Uns32;
+                                    Pool : Areapool_Acc) return Value_Acc;
 
    function Create_Value_Const (Val : Valtyp; Loc : Node) return Valtyp;
 

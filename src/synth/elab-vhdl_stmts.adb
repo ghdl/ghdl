@@ -47,7 +47,11 @@ package body Elab.Vhdl_Stmts is
          Create_Object (Bod_Inst, Iterator, Iterator_Val);
       end if;
 
+      pragma Assert (Is_Expr_Pool_Empty);
+
       Elab_Declarations (Bod_Inst, Decls_Chain);
+
+      pragma Assert (Is_Expr_Pool_Empty);
 
       Elab_Concurrent_Statements
         (Bod_Inst, Get_Concurrent_Statement_Chain (Bod));
@@ -67,7 +71,6 @@ package body Elab.Vhdl_Stmts is
       Config : Node;
       It_Rng : Type_Acc;
       Val : Valtyp;
-      Ival : Valtyp;
       Dval : Int64;
       Len : Uns32;
    begin
@@ -78,7 +81,7 @@ package body Elab.Vhdl_Stmts is
       --  Initial value.
       It_Rng := Get_Subtype_Object (Syn_Inst, Get_Type (Iterator));
       Len := Get_Range_Length (It_Rng.Drange);
-      Val := Create_Value_Discrete (It_Rng.Drange.Left, It_Rng);
+      Dval := It_Rng.Drange.Left;
 
       Gen_Inst := Make_Elab_Generate_Instance
         (Syn_Inst, Stmt, Configs, Natural (Len));
@@ -86,11 +89,6 @@ package body Elab.Vhdl_Stmts is
       Create_Sub_Instance (Syn_Inst, Stmt, Gen_Inst);
 
       for I in 1 .. Len loop
-         --  Create a copy of the current iterator value for the generate
-         --  block.
-         Dval := Read_Discrete (Val);
-         Ival := Create_Value_Discrete (Dval, It_Rng);
-
          --  Find and apply the config block.
          declare
             Spec : Node;
@@ -114,7 +112,7 @@ package body Elab.Vhdl_Stmts is
                      else
                         Val := Synth_Expression_With_Type
                           (Syn_Inst, Get_Nth_Element (Idxes, 0), It_Rng);
-                        exit when Is_Equal (Val, Ival);
+                        exit when Read_Discrete (Val) = Dval;
                      end if;
                   when Iir_Kind_Slice_Name =>
                      Synth_Discrete_Range (Syn_Inst, Get_Suffix (Spec), Drng);
@@ -131,24 +129,38 @@ package body Elab.Vhdl_Stmts is
             Apply_Block_Configuration (Config, Bod);
          end;
 
+         --  Allocate the iterator value for the body.
+         Current_Pool := Instance_Pool;
+         Val := Create_Value_Discrete (Dval, It_Rng);
+         Current_Pool := Expr_Pool'Access;
+
          Sub_Inst := Elab_Generate_Statement_Body
-           (Gen_Inst, Bod, Config, Iterator, Ival);
+           (Gen_Inst, Bod, Config, Iterator, Val);
          Set_Generate_Sub_Instance (Gen_Inst, Positive (I), Sub_Inst);
 
-         Update_Index (It_Rng.Drange, Val);
+         --  Update index.
+         case It_Rng.Drange.Dir is
+            when Dir_To =>
+               Dval := Dval + 1;
+            when Dir_Downto =>
+               Dval := Dval - 1;
+         end case;
       end loop;
    end Elab_For_Generate_Statement;
 
    procedure Elab_If_Generate_Statement
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
+      Marker : Mark_Type;
       Gen : Node;
       Bod : Node;
       Icond : Node;
       Cond : Valtyp;
+      Cond_Val : Boolean;
       Config : Node;
       Sub_Inst : Synth_Instance_Acc;
    begin
+      Mark_Expr_Pool (Marker);
       Gen := Stmt;
 
       loop
@@ -156,11 +168,14 @@ package body Elab.Vhdl_Stmts is
          if Icond /= Null_Node then
             Cond := Synth_Expression (Syn_Inst, Icond);
             Strip_Const (Cond);
+            Cond_Val := Read_Discrete (Cond) = 1;
          else
             --  It is the else generate.
-            Cond := No_Valtyp;
+            Cond_Val := True;
          end if;
-         if Cond = No_Valtyp or else Read_Discrete (Cond) = 1 then
+         Release_Expr_Pool (Marker);
+
+         if Cond_Val then
             Bod := Get_Generate_Statement_Body (Gen);
             Config := Get_Generate_Block_Configuration (Bod);
 
@@ -238,6 +253,7 @@ package body Elab.Vhdl_Stmts is
          when others =>
             Error_Kind ("elab_concurrent_statement", Stmt);
       end case;
+      pragma Assert (Is_Expr_Pool_Empty);
    end Elab_Concurrent_Statement;
 
    procedure Elab_Concurrent_Statements

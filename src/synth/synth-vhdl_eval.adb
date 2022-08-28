@@ -584,6 +584,7 @@ package body Synth.Vhdl_Eval is
                  Iir_Index32 (Get_Bound_Length (Right.Typ));
                Le_Typ : constant Type_Acc := Get_Array_Element (Left.Typ);
                Re_Typ : constant Type_Acc := Get_Array_Element (Right.Typ);
+               El_Typ : Type_Acc;
                Bnd : Bound_Type;
                Res_St : Type_Acc;
                Res : Memtyp;
@@ -591,8 +592,9 @@ package body Synth.Vhdl_Eval is
                Check_Matching_Bounds (Le_Typ, Re_Typ, Expr);
                Bnd := Elab.Vhdl_Types.Create_Bounds_From_Length
                  (Get_Uarray_Index (Res_Typ).Drange, L_Len + R_Len);
+               El_Typ := Unshare_Type (Le_Typ, Get_Array_Element (Res_Typ));
                Res_St := Create_Onedimensional_Array_Subtype
-                 (Res_Typ, Bnd, Le_Typ);
+                 (Res_Typ, Bnd, El_Typ);
                Res := Create_Memory (Res_St);
                if Left.Typ.Sz > 0 then
                   Copy_Memory (Res.Mem, Left.Mem, Left.Typ.Sz);
@@ -607,6 +609,7 @@ package body Synth.Vhdl_Eval is
                Rlen : constant Iir_Index32 :=
                  Iir_Index32 (Get_Bound_Length (Right.Typ));
                Re_Typ : constant Type_Acc := Get_Array_Element (Right.Typ);
+               El_Typ : Type_Acc;
                Bnd : Bound_Type;
                Res_St : Type_Acc;
                Res : Memtyp;
@@ -614,8 +617,9 @@ package body Synth.Vhdl_Eval is
                Check_Matching_Bounds (Left.Typ, Re_Typ, Expr);
                Bnd := Elab.Vhdl_Types.Create_Bounds_From_Length
                  (Get_Uarray_Index (Res_Typ).Drange, 1 + Rlen);
+               El_Typ := Unshare_Type (Re_Typ, Get_Array_Element (Res_Typ));
                Res_St := Create_Onedimensional_Array_Subtype
-                 (Res_Typ, Bnd, Re_Typ);
+                 (Res_Typ, Bnd, El_Typ);
                Res := Create_Memory (Res_St);
                Copy_Memory (Res.Mem, Left.Mem, Left.Typ.Sz);
                Copy_Memory (Res.Mem + Left.Typ.Sz,
@@ -627,6 +631,7 @@ package body Synth.Vhdl_Eval is
                Llen : constant Iir_Index32 :=
                  Iir_Index32 (Get_Bound_Length (Left.Typ));
                Le_Typ : constant Type_Acc := Get_Array_Element (Left.Typ);
+               El_Typ : Type_Acc;
                Bnd : Bound_Type;
                Res_St : Type_Acc;
                Res : Memtyp;
@@ -634,8 +639,9 @@ package body Synth.Vhdl_Eval is
                Check_Matching_Bounds (Le_Typ, Right.Typ, Expr);
                Bnd := Elab.Vhdl_Types.Create_Bounds_From_Length
                  (Get_Uarray_Index (Res_Typ).Drange, Llen + 1);
+               El_Typ := Unshare_Type (Le_Typ, Get_Array_Element (Res_Typ));
                Res_St := Create_Onedimensional_Array_Subtype
-                 (Res_Typ, Bnd, Le_Typ);
+                 (Res_Typ, Bnd, El_Typ);
                Res := Create_Memory (Res_St);
                Copy_Memory (Res.Mem, Left.Mem, Left.Typ.Sz);
                Copy_Memory (Res.Mem + Left.Typ.Sz,
@@ -644,7 +650,8 @@ package body Synth.Vhdl_Eval is
             end;
          when Iir_Predefined_Element_Element_Concat =>
             declare
-               El_Typ : constant Type_Acc := Left.Typ;
+               Le_Typ : constant Type_Acc := Left.Typ;
+               El_Typ : Type_Acc;
                Bnd : Bound_Type;
                Res_St : Type_Acc;
                Res : Memtyp;
@@ -652,6 +659,7 @@ package body Synth.Vhdl_Eval is
                Check_Matching_Bounds (Left.Typ, Right.Typ, Expr);
                Bnd := Elab.Vhdl_Types.Create_Bounds_From_Length
                  (Get_Uarray_Index (Res_Typ).Drange, 2);
+               El_Typ := Unshare_Type (Le_Typ, Get_Array_Element (Res_Typ));
                Res_St := Create_Onedimensional_Array_Subtype
                  (Res_Typ, Bnd, El_Typ);
                Res := Create_Memory (Res_St);
