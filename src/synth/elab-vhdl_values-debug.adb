@@ -261,7 +261,8 @@ package body Elab.Vhdl_Values.Debug is
             Put ("discrete: ");
             Put_Int64 (Read_Discrete (M));
          when Type_Access =>
-            Put ("access");
+            Put ("access: ");
+            Put_Uns32 (Uns32 (Read_Access (M)));
          when Type_File =>
             Put ("file");
          when Type_Float =>

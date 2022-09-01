@@ -560,6 +560,12 @@ package body Elab.Debugger is
             With_Objs := True;
          elsif Line (F .. L) = "-R" then
             Recurse := True;
+         elsif Line (F .. L) = "-h" then
+            Put_Line ("options:");
+            Put_Line (" -h   this help");
+            Put_Line (" -v   with objects");
+            Put_Line (" -R   recurses");
+            return;
          else
             Put_Line ("unknown option: " & Line (F .. L));
             return;
