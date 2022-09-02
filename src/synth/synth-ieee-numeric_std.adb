@@ -21,29 +21,9 @@ with Types_Utils; use Types_Utils;
 with Elab.Memtype; use Elab.Memtype;
 
 with Synth.Errors; use Synth.Errors;
+with Synth.Ieee.Utils; use Synth.Ieee.Utils;
 
 package body Synth.Ieee.Numeric_Std is
-   subtype Sl_01 is Std_Ulogic range '0' .. '1';
-   subtype Sl_X01 is Std_Ulogic range 'X' .. '1';
-
-   type Carry_Array is array (Sl_01, Sl_01, Sl_01) of Sl_01;
-   Compute_Carry : constant Carry_Array :=
-     ('0' => ('0' => ('0' => '0', '1' => '0'),
-              '1' => ('0' => '0', '1' => '1')),
-      '1' => ('0' => ('0' => '0', '1' => '1'),
-              '1' => ('0' => '1', '1' => '1')));
-   Compute_Sum : constant Carry_Array :=
-     ('0' => ('0' => ('0' => '0', '1' => '1'),
-              '1' => ('0' => '1', '1' => '0')),
-      '1' => ('0' => ('0' => '1', '1' => '0'),
-              '1' => ('0' => '0', '1' => '1')));
-
-   type Sl_To_X01_Array is array (Std_Ulogic) of Sl_X01;
-   Sl_To_X01 : constant Sl_To_X01_Array :=
-     ('0' | 'L' => '0', '1' | 'H' => '1', others => 'X');
-
-   type Uns_To_01_Array is array (Uns64 range 0 .. 1) of Sl_X01;
-   Uns_To_01 : constant Uns_To_01_Array := (0 => '0', 1 => '1');
 
    function Create_Res_Type (Otyp : Type_Acc; Len : Uns32) return Type_Acc is
    begin
