@@ -79,6 +79,10 @@ static JMP_BUF run_env;
 #define NEED_SIGBUS_HANDLER
 #endif
 
+#if defined (__linux__) && defined (__x86_64__)
+#define NEED_SIGFPE_HANDLER
+#endif
+
 static struct sigaction prev_sigsegv_act;
 
 #ifdef NEED_SIGFPE_HANDLER
