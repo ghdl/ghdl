@@ -812,34 +812,19 @@ package body Synth.Ieee.Numeric_Std is
       return Mul_Sgn_Sgn (L, Rv, Loc);
    end Mul_Sgn_Int;
 
-   --  Note: SRC = DST is allowed.
-   procedure Neg_Vec (Src : Memory_Ptr; Dst : Memory_Ptr; Typ : Type_Acc)
-   is
-      Len : constant Uns32 := Typ.Abound.Len;
-      Vb, Carry : Sl_X01;
-   begin
-      Carry := '1';
-      for I in 1 .. Len loop
-         Vb := Sl_To_X01 (Read_Std_Logic (Src, Len - I));
-         Vb := Not_Table (Vb);
-         Write_Std_Logic (Dst, Len - I, Xor_Table (Carry, Vb));
-         Carry := And_Table (Carry, Vb);
-      end loop;
-   end Neg_Vec;
-
    function Neg_Vec_Notyp (V : Memtyp) return Memory_Ptr
    is
       Res : Memory_Ptr;
    begin
       Res := Alloc_Memory (V.Typ, Current_Pool);
 
-      Neg_Vec (V.Mem, Res, V.Typ);
+      Neg_Vec (V.Mem, Res, V.Typ.Abound.Len);
       return Res;
    end Neg_Vec_Notyp;
 
    procedure Neg_Vec (V : Memtyp) is
    begin
-      Neg_Vec (V.Mem, V.Mem, V.Typ);
+      Neg_Vec (V.Mem, V.Mem, V.Typ.Abound.Len);
    end Neg_Vec;
 
    function Has_0x (V : Memtyp) return Sl_X01
@@ -875,7 +860,7 @@ package body Synth.Ieee.Numeric_Std is
            (+Loc, "NUMERIC_STD.""-"": non logical value detected");
          Fill (Res, 'X');
       else
-         Neg_Vec (V.Mem, Res.Mem, V.Typ);
+         Neg_Vec (V.Mem, Res.Mem, V.Typ.Abound.Len);
       end if;
       return Res;
    end Neg_Vec;
