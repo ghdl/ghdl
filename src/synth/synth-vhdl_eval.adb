@@ -929,7 +929,8 @@ package body Synth.Vhdl_Eval is
                Iir_Predefined_Array_Ror);
 
          when Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Uns_Uns =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Uns_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Eq_Slv_Slv =>
             declare
                Res : Boolean;
             begin
@@ -951,7 +952,8 @@ package body Synth.Vhdl_Eval is
                return Create_Memory_Boolean (Res);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Eq_Sgn_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Sgn_Sgn =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Sgn_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Eq_Slv_Slv =>
             declare
                Res : Boolean;
             begin
@@ -959,7 +961,8 @@ package body Synth.Vhdl_Eval is
                return Create_Memory_Boolean (Res);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Eq_Sgn_Int
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Sgn_Int =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Sgn_Int
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Eq_Slv_Int =>
             declare
                Res : Boolean;
             begin
@@ -967,7 +970,8 @@ package body Synth.Vhdl_Eval is
                return Create_Memory_Boolean (Res);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Eq_Int_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Int_Sgn =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Int_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Eq_Int_Slv =>
             declare
                Res : Boolean;
             begin
@@ -976,7 +980,8 @@ package body Synth.Vhdl_Eval is
             end;
 
          when Iir_Predefined_Ieee_Numeric_Std_Ne_Uns_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Uns_Uns =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Uns_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Ne_Slv_Slv =>
             declare
                Res : Boolean;
             begin
@@ -998,7 +1003,8 @@ package body Synth.Vhdl_Eval is
                return Create_Memory_Boolean (Res);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Ne_Sgn_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Sgn_Sgn =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Sgn_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Ne_Slv_Slv =>
             declare
                Res : Boolean;
             begin
@@ -1006,7 +1012,8 @@ package body Synth.Vhdl_Eval is
                return Create_Memory_Boolean (Res);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Ne_Sgn_Int
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Sgn_Int =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Sgn_Int
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Ne_Slv_Int =>
             declare
                Res : Boolean;
             begin
@@ -1014,7 +1021,8 @@ package body Synth.Vhdl_Eval is
                return Create_Memory_Boolean (Res);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Ne_Int_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Int_Sgn =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Int_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Ne_Int_Slv =>
             declare
                Res : Boolean;
             begin
@@ -1023,7 +1031,8 @@ package body Synth.Vhdl_Eval is
             end;
 
          when Iir_Predefined_Ieee_Numeric_Std_Gt_Uns_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Uns_Uns =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Uns_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Gt_Slv_Slv =>
             declare
                Res : Boolean;
             begin
@@ -1031,7 +1040,8 @@ package body Synth.Vhdl_Eval is
                return Create_Memory_Boolean (Res);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Gt_Sgn_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Sgn_Sgn =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Sgn_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Gt_Slv_Slv =>
             declare
                Res : Boolean;
             begin
@@ -1053,7 +1063,8 @@ package body Synth.Vhdl_Eval is
                return Create_Memory_Boolean (Res);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Gt_Sgn_Int
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Sgn_Int =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Sgn_Int
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Gt_Slv_Int =>
             declare
                Res : Boolean;
             begin
@@ -1061,7 +1072,8 @@ package body Synth.Vhdl_Eval is
                return Create_Memory_Boolean (Res);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Gt_Int_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Int_Sgn =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Int_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Gt_Int_Slv =>
             declare
                Res : Boolean;
             begin
@@ -1070,7 +1082,8 @@ package body Synth.Vhdl_Eval is
             end;
 
          when Iir_Predefined_Ieee_Numeric_Std_Ge_Uns_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Uns_Uns =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Uns_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Ge_Slv_Slv =>
             declare
                Res : Boolean;
             begin
@@ -1092,7 +1105,8 @@ package body Synth.Vhdl_Eval is
                return Create_Memory_Boolean (Res);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Ge_Sgn_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Sgn_Sgn =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Sgn_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Ge_Slv_Slv =>
             declare
                Res : Boolean;
             begin
@@ -1100,7 +1114,8 @@ package body Synth.Vhdl_Eval is
                return Create_Memory_Boolean (Res);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Ge_Sgn_Int
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Sgn_Int =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Sgn_Int
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Ge_Slv_Int =>
             declare
                Res : Boolean;
             begin
@@ -1108,7 +1123,8 @@ package body Synth.Vhdl_Eval is
                return Create_Memory_Boolean (Res);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Ge_Int_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Int_Sgn =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Int_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Ge_Int_Slv =>
             declare
                Res : Boolean;
             begin
@@ -1117,7 +1133,8 @@ package body Synth.Vhdl_Eval is
             end;
 
          when Iir_Predefined_Ieee_Numeric_Std_Le_Uns_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Le_Uns_Uns =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Le_Uns_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Le_Slv_Slv =>
             declare
                Res : Boolean;
             begin
@@ -1139,7 +1156,8 @@ package body Synth.Vhdl_Eval is
                return Create_Memory_Boolean (Res);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Le_Sgn_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Le_Sgn_Sgn =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Le_Sgn_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Le_Slv_Slv =>
             declare
                Res : Boolean;
             begin
@@ -1147,7 +1165,8 @@ package body Synth.Vhdl_Eval is
                return Create_Memory_Boolean (Res);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Le_Int_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Le_Int_Sgn =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Le_Int_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Le_Int_Slv =>
             declare
                Res : Boolean;
             begin
@@ -1155,7 +1174,8 @@ package body Synth.Vhdl_Eval is
                return Create_Memory_Boolean (Res);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Le_Sgn_Int
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Le_Sgn_Int =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Le_Sgn_Int
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Le_Slv_Int =>
             declare
                Res : Boolean;
             begin
@@ -1164,7 +1184,8 @@ package body Synth.Vhdl_Eval is
             end;
 
          when Iir_Predefined_Ieee_Numeric_Std_Lt_Uns_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Uns_Uns =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Uns_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Lt_Slv_Slv =>
             declare
                Res : Boolean;
             begin
@@ -1186,7 +1207,8 @@ package body Synth.Vhdl_Eval is
                return Create_Memory_Boolean (Res);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Lt_Sgn_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Sgn_Sgn =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Sgn_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Lt_Slv_Slv =>
             declare
                Res : Boolean;
             begin
@@ -1194,7 +1216,8 @@ package body Synth.Vhdl_Eval is
                return Create_Memory_Boolean (Res);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Lt_Int_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Int_Sgn =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Int_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Lt_Int_Slv =>
             declare
                Res : Boolean;
             begin
@@ -1202,7 +1225,8 @@ package body Synth.Vhdl_Eval is
                return Create_Memory_Boolean (Res);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Lt_Sgn_Int
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Sgn_Int =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Sgn_Int
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Lt_Slv_Int =>
             declare
                Res : Boolean;
             begin
@@ -1224,14 +1248,16 @@ package body Synth.Vhdl_Eval is
                Res := Compare_Uns_Sgn (Right, Left, +Expr);
                return Create_Memory_Boolean (Res > Equal);
             end;
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Uns_Int =>
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Uns_Int
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Lt_Slv_Int =>
             declare
                Res : Order_Type;
             begin
                Res := Compare_Uns_Int (Left, Read_Discrete (Right), +Expr);
                return Create_Memory_Boolean (Res < Equal);
             end;
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Int_Uns =>
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Int_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Lt_Int_Slv =>
             declare
                Res : Order_Type;
             begin
@@ -1253,14 +1279,16 @@ package body Synth.Vhdl_Eval is
                Res := Compare_Uns_Sgn (Right, Left, +Expr);
                return Create_Memory_Boolean (Res >= Equal);
             end;
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Le_Uns_Int =>
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Le_Uns_Int
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Le_Slv_Int =>
             declare
                Res : Order_Type;
             begin
                Res := Compare_Uns_Int (Left, Read_Discrete (Right), +Expr);
                return Create_Memory_Boolean (Res <= Equal);
             end;
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Le_Int_Uns =>
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Le_Int_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Le_Int_Slv =>
             declare
                Res : Order_Type;
             begin
@@ -1282,14 +1310,16 @@ package body Synth.Vhdl_Eval is
                Res := Compare_Uns_Sgn (Right, Left, +Expr);
                return Create_Memory_Boolean (Res < Equal);
             end;
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Uns_Int =>
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Uns_Int
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Gt_Slv_Int =>
             declare
                Res : Order_Type;
             begin
                Res := Compare_Uns_Int (Left, Read_Discrete (Right), +Expr);
                return Create_Memory_Boolean (Res > Equal);
             end;
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Int_Uns =>
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Int_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Gt_Int_Slv =>
             declare
                Res : Order_Type;
             begin
@@ -1311,14 +1341,16 @@ package body Synth.Vhdl_Eval is
                Res := Compare_Uns_Sgn (Right, Left, +Expr);
                return Create_Memory_Boolean (Res <= Equal);
             end;
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Uns_Int =>
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Uns_Int
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Ge_Slv_Int =>
             declare
                Res : Order_Type;
             begin
                Res := Compare_Uns_Int (Left, Read_Discrete (Right), +Expr);
                return Create_Memory_Boolean (Res >= Equal);
             end;
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Int_Uns =>
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Int_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Ge_Int_Slv =>
             declare
                Res : Order_Type;
             begin
@@ -1340,14 +1372,16 @@ package body Synth.Vhdl_Eval is
                Res := Compare_Uns_Sgn (Right, Left, +Expr);
                return Create_Memory_Boolean (Res = Equal);
             end;
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Uns_Int =>
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Uns_Int
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Eq_Slv_Int =>
             declare
                Res : Order_Type;
             begin
                Res := Compare_Uns_Int (Left, Read_Discrete (Right), +Expr);
                return Create_Memory_Boolean (Res = Equal);
             end;
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Int_Uns =>
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Int_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Eq_Int_Slv =>
             declare
                Res : Order_Type;
             begin
@@ -1369,14 +1403,16 @@ package body Synth.Vhdl_Eval is
                Res := Compare_Uns_Sgn (Right, Left, +Expr);
                return Create_Memory_Boolean (Res /= Equal);
             end;
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Uns_Int =>
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Uns_Int
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Ne_Slv_Int =>
             declare
                Res : Order_Type;
             begin
                Res := Compare_Uns_Int (Left, Read_Discrete (Right), +Expr);
                return Create_Memory_Boolean (Res /= Equal);
             end;
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Int_Uns =>
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Int_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Ne_Int_Slv =>
             declare
                Res : Order_Type;
             begin
@@ -1410,16 +1446,21 @@ package body Synth.Vhdl_Eval is
 
          when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Sgn
             | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Sgn_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Sgn_Slv =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Sgn_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Add_Slv_Slv =>
             return Add_Sgn_Sgn (Left, Right, +Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Int =>
+         when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Int
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Add_Slv_Int =>
             return Add_Sgn_Int (Left, Read_Discrete (Right), +Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Add_Int_Sgn =>
+         when Iir_Predefined_Ieee_Numeric_Std_Add_Int_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Add_Int_Slv =>
             return Add_Sgn_Int (Right, Read_Discrete (Left), +Expr);
 
-         when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Log =>
+         when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Log
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Add_Slv_Log =>
             return Add_Sgn_Sgn (Left, Log_To_Vec (Right, Left), +Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Add_Log_Sgn =>
+         when Iir_Predefined_Ieee_Numeric_Std_Add_Log_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Add_Log_Slv =>
             return Add_Sgn_Sgn (Log_To_Vec (Left, Right), Right, +Expr);
 
          --  std_logic_arith."+"
@@ -1478,16 +1519,21 @@ package body Synth.Vhdl_Eval is
 
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Sgn
             | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Sgn_Sgn_Slv
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Sgn_Sgn_Sgn =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Sgn_Sgn_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Slv_Slv =>
             return Sub_Sgn_Sgn (Left, Right, +Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Int =>
+         when Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Int
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Slv_Int =>
             return Sub_Sgn_Int (Left, Read_Discrete (Right), +Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Sub_Int_Sgn =>
+         when Iir_Predefined_Ieee_Numeric_Std_Sub_Int_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Int_Slv =>
             return Sub_Int_Sgn (Read_Discrete (Left), Right, +Expr);
 
-         when Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Log =>
+         when Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Log
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Slv_Log =>
             return Sub_Sgn_Sgn (Left, Log_To_Vec (Right, Left), +Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Sub_Log_Sgn =>
+         when Iir_Predefined_Ieee_Numeric_Std_Sub_Log_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Log_Slv =>
             return Sub_Sgn_Sgn (Log_To_Vec (Left, Right), Right, +Expr);
 
          --  std_logic_arith."-"
@@ -1538,10 +1584,12 @@ package body Synth.Vhdl_Eval is
 
          --  std_logic_arith."*"
          when Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Uns_Uns_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Uns_Uns_Slv =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Uns_Uns_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Mul_Slv_Slv =>
             return Mul_Uns_Uns_Uns (Left, Right, +Expr);
          when Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Sgn_Sgn_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Sgn_Sgn_Slv =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Sgn_Sgn_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Mul_Slv_Slv =>
             return Mul_Sgn_Sgn_Sgn (Left, Right, +Expr);
          when Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Uns_Sgn_Sgn
             | Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Uns_Sgn_Slv =>
@@ -1989,15 +2037,19 @@ package body Synth.Vhdl_Eval is
          when Iir_Predefined_Ieee_Std_Logic_Arith_Id_Uns_Uns
             | Iir_Predefined_Ieee_Std_Logic_Arith_Id_Uns_Slv
             | Iir_Predefined_Ieee_Std_Logic_Arith_Id_Sgn_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Id_Sgn_Slv =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Id_Sgn_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Id_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Id_Slv =>
             return Operand;
 
          when Iir_Predefined_Ieee_Std_Logic_Arith_Neg_Sgn_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Neg_Sgn_Slv =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Neg_Sgn_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Neg_Slv =>
             return Neg_Sgn_Sgn (Operand, +Expr);
 
          when Iir_Predefined_Ieee_Std_Logic_Arith_Abs_Sgn_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Abs_Sgn_Slv =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Abs_Sgn_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Abs_Slv =>
             return Abs_Sgn_Sgn (Operand, +Expr);
 
          when others =>
@@ -2747,22 +2799,26 @@ package body Synth.Vhdl_Eval is
             return Minmax (Get_Memtyp (Param1), Get_Memtyp (Param2),
                            False, False);
 
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Shl_Uns =>
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Shl_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Shl =>
             return Execute_Shift_Operator
               (Get_Memtyp (Param1), Read_Discrete (Param2),
                Std_Ulogic'Pos('0'), Iir_Predefined_Array_Sll);
 
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Shl_Sgn =>
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Shl_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Shl =>
             return Execute_Shift_Operator
               (Get_Memtyp (Param1), Read_Discrete (Param2),
                Std_Ulogic'Pos('0'), Iir_Predefined_Array_Sla);
 
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Shr_Uns =>
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Shr_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Shr =>
             return Execute_Shift_Operator
               (Get_Memtyp (Param1), Read_Discrete (Param2),
                Std_Ulogic'Pos('0'), Iir_Predefined_Array_Srl);
 
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Shr_Sgn =>
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Shr_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Shr =>
             return Execute_Shift_Operator
               (Get_Memtyp (Param1), Read_Discrete (Param2),
                Std_Ulogic'Pos('0'), Iir_Predefined_Array_Sra);
