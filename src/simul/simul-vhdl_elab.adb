@@ -906,7 +906,8 @@ package body Simul.Vhdl_Elab is
                           Signals_Table.Table (E.Collapsed_By)
                           .Nbr_Sources (J - 1);
                      begin
-                        C_Ns.Total := C_Ns.Total + Ns.Total;
+                        --  Remove 1 for the connection.
+                        C_Ns.Total := C_Ns.Total + Ns.Total - 1;
                      end;
                   end if;
                end;
