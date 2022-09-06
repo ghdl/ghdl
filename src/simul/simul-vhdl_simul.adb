@@ -2579,13 +2579,14 @@ package body Simul.Vhdl_Simul is
          declare
             C : Connect_Entry renames Connect_Table.Table (I);
             Val : Valtyp;
+            Marker : Mark_Type;
          begin
             if not C.Collapsed then
                if C.Actual.Base /= No_Signal_Index then
                   Create_Connect (C);
                elsif Get_Expr_Staticness (Get_Actual (C.Assoc)) >= Globally
                then
-                  --  TODO: association with static expr.
+                  Mark_Expr_Pool (Marker);
                   Val := Synth.Vhdl_Expr.Synth_Expression_With_Type
                     (C.Assoc_Inst, Get_Actual (C.Assoc), C.Formal.Typ);
                   Signal_Associate_Cst
@@ -2593,6 +2594,7 @@ package body Simul.Vhdl_Simul is
                                 C.Formal.Offs.Net_Off),
                      C.Formal.Typ,
                      Val.Val.Mem);
+                  Release_Expr_Pool (Marker);
                end if;
             end if;
          end;

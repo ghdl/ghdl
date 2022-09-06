@@ -194,20 +194,35 @@ package body Elab.Vhdl_Stmts is
 
    procedure Elab_Block_Statement (Syn_Inst : Synth_Instance_Acc; Blk : Node)
    is
+      Hdr : constant Node := Get_Block_Header (Blk);
       Blk_Inst : Synth_Instance_Acc;
+      Assoc : Node;
+      Inter : Node;
    begin
-      --  No support for guard or header.
-      if Get_Block_Header (Blk) /= Null_Node
-        or else Get_Guard_Decl (Blk) /= Null_Node
-      then
-         raise Internal_Error;
-      end if;
-
       Apply_Block_Configuration
         (Get_Block_Block_Configuration (Blk), Blk);
 
       Blk_Inst := Make_Elab_Instance (Syn_Inst, Blk, Null_Iir);
       Create_Sub_Instance (Syn_Inst, Blk, Blk_Inst);
+
+      --  No support for guard.
+      if Get_Guard_Decl (Blk) /= Null_Node then
+         raise Internal_Error;
+      end if;
+
+      if Hdr /= Null_Node then
+         Inter := Get_Generic_Chain (Hdr);
+         if Inter /= Null_Node then
+            Assoc := Get_Generic_Map_Aspect_Chain (Hdr);
+            Elab_Generics_Association (Blk_Inst, Syn_Inst, Inter, Assoc);
+         end if;
+
+         Inter := Get_Port_Chain (Hdr);
+         if Inter /= Null_Node then
+            Assoc := Get_Port_Map_Aspect_Chain (Hdr);
+            Elab_Ports_Association_Type (Blk_Inst, Syn_Inst, Inter, Assoc);
+         end if;
+      end if;
 
       Elab_Declarations (Blk_Inst, Get_Declaration_Chain (Blk));
       Elab_Concurrent_Statements

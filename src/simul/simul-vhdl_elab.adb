@@ -740,8 +740,13 @@ package body Simul.Vhdl_Elab is
             declare
                Sub : constant Synth_Instance_Acc :=
                  Get_Sub_Instance (Inst, Stmt);
+               Hdr : constant Node := Get_Block_Header (Stmt);
             begin
                Gather_Processes_1 (Sub);
+               if Hdr /= Null_Node then
+                  Gather_Connections (Sub, Get_Port_Chain (Hdr),
+                                      Inst, Get_Port_Map_Aspect_Chain (Hdr));
+               end if;
             end;
          when Iir_Kinds_Concurrent_Signal_Assignment
            | Iir_Kind_Concurrent_Assertion_Statement
@@ -813,8 +818,19 @@ package body Simul.Vhdl_Elab is
                   Gather_Processes_1 (Comp_Inst);
                end if;
             end;
-         when Iir_Kind_Generate_Statement_Body
-           | Iir_Kind_Block_Statement =>
+         when Iir_Kind_Block_Statement =>
+            declare
+               Hdr : constant Node := Get_Block_Header (N);
+            begin
+               if Hdr /= Null_Node then
+                  Gather_Processes_Decls (Inst, Get_Port_Chain (Hdr));
+               end if;
+               Gather_Processes_Decls
+                 (Inst, Get_Declaration_Chain (N));
+               Gather_Processes_Stmts
+                 (Inst, Get_Concurrent_Statement_Chain (N));
+            end;
+         when Iir_Kind_Generate_Statement_Body =>
             Gather_Processes_Decls
               (Inst, Get_Declaration_Chain (N));
             Gather_Processes_Stmts

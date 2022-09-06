@@ -23,6 +23,16 @@ with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 package Elab.Vhdl_Insts is
    function Elab_Top_Unit (Config : Node) return Synth_Instance_Acc;
 
+   procedure Elab_Generics_Association (Sub_Inst : Synth_Instance_Acc;
+                                        Syn_Inst : Synth_Instance_Acc;
+                                        Inter_Chain : Node;
+                                        Assoc_Chain : Node);
+
+   procedure Elab_Ports_Association_Type (Sub_Inst : Synth_Instance_Acc;
+                                          Syn_Inst : Synth_Instance_Acc;
+                                          Inter_Chain : Node;
+                                          Assoc_Chain : Node);
+
    procedure Elab_Package_Instantiation
      (Parent_Inst : Synth_Instance_Acc; Pkg : Node);
 
