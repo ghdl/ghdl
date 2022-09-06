@@ -60,6 +60,7 @@ with Grt.Stdio;
 with Grt.Processes;
 with Grt.Main;
 with Grt.Errors;
+with Grt.Severity;
 with Grt.Lib;
 with Grt.Analog_Solver;
 
@@ -940,6 +941,47 @@ package body Simul.Vhdl_Simul is
       Release_Expr_Pool (Marker);
    end Execute_Selected_Signal_Assignment;
 
+   procedure Assertion_Report_Msg (Inst : Synth_Instance_Acc;
+                                   Stmt : Node;
+                                   Severity : Natural;
+                                   Msg : Valtyp)
+   is
+      pragma Unreferenced (Inst);
+      use Grt.Severity;
+      use Grt.Errors;
+   begin
+      Report_S (Vhdl.Errors.Disp_Location (Stmt));
+      Diag_C (":@");
+      Diag_C_Now;
+      Diag_C (":(");
+      if Get_Kind (Stmt) = Iir_Kind_Report_Statement then
+         Diag_C ("report");
+      else
+         Diag_C ("assert");
+      end if;
+      Diag_C (' ');
+      case Severity is
+         when Note_Severity =>
+            Diag_C ("note");
+         when Warning_Severity =>
+            Diag_C ("warning");
+         when Error_Severity =>
+            Diag_C ("error");
+         when Failure_Severity =>
+            Diag_C ("failure");
+         when others =>
+            Diag_C ("??");
+      end case;
+      Diag_C ("): ");
+
+      if Msg = No_Valtyp then
+         Diag_C ("Assertion violation.");
+      else
+         Diag_C (Value_To_String (Msg));
+      end if;
+      Report_E;
+   end Assertion_Report_Msg;
+
    procedure Execute_Assertion_Statement (Inst : Synth_Instance_Acc;
                                           Stmt : Node)
    is
@@ -961,8 +1003,7 @@ package body Simul.Vhdl_Simul is
             end if;
       end case;
 
-      Exec_Failed_Assertion
-        (Inst, Stmt, "assertion", "Assertion violation.", 2);
+      Exec_Failed_Assertion (Inst, Stmt);
    end Execute_Assertion_Statement;
 
    procedure Execute_Sequential_Statements_Inner (Process : Process_State_Acc;
@@ -1564,22 +1605,16 @@ package body Simul.Vhdl_Simul is
          case Get_Kind (E.Proc) is
             when Iir_Kind_Psl_Assert_Directive =>
                if Nvec (S_Num) then
-                  Exec_Failed_Assertion
-                    (E.Instance, E.Proc,
-                     "psl assertion", "assertion violation", 2);
+                  Exec_Failed_Assertion (E.Instance, E.Proc);
                end if;
             when Iir_Kind_Psl_Assume_Directive =>
                if Nvec (S_Num) then
-                  Exec_Failed_Assertion
-                    (E.Instance, E.Proc,
-                     "psl assumption", "assumption violation", 2);
+                  Exec_Failed_Assertion (E.Instance, E.Proc);
                end if;
             when Iir_Kind_Psl_Cover_Directive =>
                if Nvec (S_Num) then
                   if Get_Report_Expression (E.Proc) /= Null_Iir then
-                     Exec_Failed_Assertion
-                       (E.Instance, E.Proc,
-                        "psl cover", "sequence covered", 0);
+                     Exec_Failed_Assertion (E.Instance, E.Proc);
                   end if;
                   E.Done := True;
                end if;
@@ -1624,9 +1659,7 @@ package body Simul.Vhdl_Simul is
               and then
               Execute_Psl_Expr (Ent.Instance, Get_Edge_Expr (E), True)
             then
-               Exec_Failed_Assertion
-                 (Ent.Instance, Ent.Proc,
-                  "psl assertion", "assertion violation", 2);
+               Exec_Failed_Assertion (Ent.Instance, Ent.Proc);
                exit;
             end if;
          end if;
@@ -2995,6 +3028,9 @@ package body Simul.Vhdl_Simul is
          if Grt.Processes.Flag_AMS then
             Grt.Analog_Solver.Start;
          end if;
+
+         Grt.Errors.Set_Error_Stream (Grt.Stdio.stdout);
+         Assertion_Report_Handler := Assertion_Report_Msg'Access;
 
          loop
             if Break_Time < Grt.Processes.Next_Time then

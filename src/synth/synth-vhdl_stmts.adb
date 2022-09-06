@@ -3058,10 +3058,7 @@ package body Synth.Vhdl_Stmts is
    end Synth_Return_Statement;
 
    procedure Exec_Failed_Assertion (Syn_Inst : Synth_Instance_Acc;
-                                    Stmt : Node;
-                                    Stmt_Msg : String;
-                                    Default_Rep : String;
-                                    Default_Severity : Natural)
+                                    Stmt : Node)
    is
       use Simple_IO;
       Rep_Expr : constant Node := Get_Report_Expression (Stmt);
@@ -3090,33 +3087,75 @@ package body Synth.Vhdl_Stmts is
          Strip_Const (Sev);
       end if;
 
-      Put_Err (Disp_Location (Stmt));
-      Put_Err (":(");
-      Put_Err (Stmt_Msg);
-      Put_Err (' ');
       if Sev = No_Valtyp then
-         Sev_V := Default_Severity;
+         case Get_Kind (Stmt) is
+            when Iir_Kind_Report_Statement
+              | Iir_Kind_Psl_Cover_Directive =>
+               Sev_V := Note_Severity;
+            when Iir_Kind_Assertion_Statement
+              | Iir_Kind_Concurrent_Assertion_Statement
+              | Iir_Kind_Psl_Assert_Directive
+              | Iir_Kind_Psl_Assume_Directive =>
+               Sev_V := Error_Severity;
+            when others =>
+               raise Internal_Error;
+         end case;
       else
          Sev_V := Natural (Read_Discrete (Sev));
       end if;
-      case Sev_V is
-         when Note_Severity =>
-            Put_Err ("note");
-         when Warning_Severity =>
-            Put_Err ("warning");
-         when Error_Severity =>
-            Put_Err ("error");
-         when Failure_Severity =>
-            Put_Err ("failure");
-         when others =>
-            Put_Err ("??");
-      end case;
-      Put_Err ("): ");
 
-      if Rep = No_Valtyp then
-         Put_Line_Err (Default_Rep);
+      if Assertion_Report_Handler /= null then
+         Assertion_Report_Handler (Syn_Inst, Stmt, Sev_V, Rep);
       else
-         Put_Line_Err (Value_To_String (Rep));
+         Put_Err (Disp_Location (Stmt));
+         Put_Err (":(");
+         case Get_Kind (Stmt) is
+            when Iir_Kind_Report_Statement =>
+               Put_Err ("report");
+            when Iir_Kind_Assertion_Statement
+              | Iir_Kind_Concurrent_Assertion_Statement =>
+               Put_Err ("assert");
+            when Iir_Kind_Psl_Assert_Directive =>
+               Put_Err ("psl assertion");
+            when Iir_Kind_Psl_Assume_Directive =>
+               Put_Err ("psl assumption");
+            when Iir_Kind_Psl_Cover_Directive =>
+               Put_Err ("psl cover");
+            when others =>
+               raise Internal_Error;
+         end case;
+         Put_Err (' ');
+         case Sev_V is
+            when Note_Severity =>
+               Put_Err ("note");
+            when Warning_Severity =>
+               Put_Err ("warning");
+            when Error_Severity =>
+               Put_Err ("error");
+            when Failure_Severity =>
+               Put_Err ("failure");
+            when others =>
+               Put_Err ("??");
+         end case;
+         Put_Err ("): ");
+
+         if Rep = No_Valtyp then
+            case Get_Kind (Stmt) is
+               when Iir_Kind_Report_Statement
+                 | Iir_Kind_Assertion_Statement
+                 | Iir_Kind_Concurrent_Assertion_Statement
+                 | Iir_Kind_Psl_Assert_Directive =>
+                  Put_Err ("Assertion violation.");
+               when Iir_Kind_Psl_Assume_Directive =>
+                  Put_Err ("Assumption violation.");
+               when Iir_Kind_Psl_Cover_Directive =>
+                  Put_Err ("sequence coveredr");
+               when others =>
+                  raise Internal_Error;
+            end case;
+         else
+            Put_Line_Err (Value_To_String (Rep));
+         end if;
       end if;
 
       Release_Expr_Pool (Marker);
@@ -3130,7 +3169,7 @@ package body Synth.Vhdl_Stmts is
    procedure Execute_Report_Statement (Inst : Synth_Instance_Acc;
                                        Stmt : Node) is
    begin
-      Exec_Failed_Assertion (Inst, Stmt, "report", "Assertion violation.", 0);
+      Exec_Failed_Assertion (Inst, Stmt);
    end Execute_Report_Statement;
 
    --  Return True if EXPR can be evaluated with static values.
@@ -3171,8 +3210,7 @@ package body Synth.Vhdl_Stmts is
         and then (Sev_Expr = Null_Node
                     or else Is_Static_Expr (Inst, Sev_Expr))
       then
-         Exec_Failed_Assertion
-           (Inst, Stmt, "report", "Assertion violation.", 0);
+         Exec_Failed_Assertion (Inst, Stmt);
       end if;
    end Synth_Dynamic_Report_Statement;
 
@@ -3191,8 +3229,7 @@ package body Synth.Vhdl_Stmts is
       if Read_Discrete (Cond) = 1 then
          return;
       end if;
-      Exec_Failed_Assertion
-        (Inst, Stmt, "assertion", "Assertion violation.", 2);
+      Exec_Failed_Assertion (Inst, Stmt);
    end Execute_Assertion_Statement;
 
    procedure Synth_Dynamic_Assertion_Statement (C : Seq_Context; Stmt : Node)
@@ -3474,8 +3511,7 @@ package body Synth.Vhdl_Stmts is
       end if;
       if Is_Static (Val.Val) then
          if Read_Discrete (Val) /= 1 then
-            Exec_Failed_Assertion
-              (Syn_Inst, Stmt, "assertion", "Assertion violation.", 2);
+            Exec_Failed_Assertion (Syn_Inst, Stmt);
          end if;
          return;
       end if;

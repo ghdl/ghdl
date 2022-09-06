@@ -28,6 +28,15 @@ with Netlists; use Netlists;
 with Synth.Vhdl_Environment; use Synth.Vhdl_Environment.Env;
 
 package Synth.Vhdl_Stmts is
+   type Assertion_Report_Handler_Acc is access procedure
+     (Inst : Synth_Instance_Acc;
+      Stmt : Node;
+      Severity : Natural;
+      Msg : Valtyp);
+
+   --  Procedure to call for report/assertion message.
+   Assertion_Report_Handler : Assertion_Report_Handler_Acc;
+
    --  Create a new Synth_Instance for calling subprogram IMP/BOD.
    function Synth_Subprogram_Call_Instance (Inst : Synth_Instance_Acc;
                                             Imp : Node;
@@ -104,10 +113,7 @@ package Synth.Vhdl_Stmts is
    procedure Execute_Report_Statement (Inst : Synth_Instance_Acc;
                                        Stmt : Node);
    procedure Exec_Failed_Assertion (Syn_Inst : Synth_Instance_Acc;
-                                    Stmt : Node;
-                                    Stmt_Msg : String;
-                                    Default_Rep : String;
-                                    Default_Severity : Natural);
+                                    Stmt : Node);
 
    procedure Init_For_Loop_Statement (Inst : Synth_Instance_Acc;
                                       Stmt : Node;
