@@ -2341,6 +2341,9 @@ package body Simul.Vhdl_Simul is
                                             Create_Value_Memory (Val));
                Res := Synth.Vhdl_Expr.Synth_Subtype_Conversion
                  (Inst, Res, Res_Typ, False, Func);
+               if Res = No_Valtyp then
+                  Grt.Errors.Fatal_Error;
+               end if;
                return Synth.Vhdl_Expr.Get_Value_Memtyp (Res);
             end;
          when others =>
