@@ -1990,7 +1990,7 @@ package body Simul.Vhdl_Simul is
       end loop;
 
       --  Call resolution function
-      Res := Exec_Resolution_Call (R.Inst, R.Func, Create_Value_Memory (Arr));
+      Res := Exec_Resolution_Call (R.Inst, R.Func, Create_Value_Memtyp (Arr));
 
       --  Set driving value.
       Exec_Write_Signal (R.Sig, (Res.Typ, Res.Val.Mem),
@@ -2338,7 +2338,7 @@ package body Simul.Vhdl_Simul is
                Res : Valtyp;
             begin
                Res := Exec_Resolution_Call (Inst, Get_Implementation (Func),
-                                            Create_Value_Memory (Val));
+                                            Create_Value_Memtyp (Val));
                Res := Synth.Vhdl_Expr.Synth_Subtype_Conversion
                  (Inst, Res, Res_Typ, False, Func);
                if Res = No_Valtyp then

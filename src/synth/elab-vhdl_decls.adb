@@ -416,7 +416,7 @@ package body Elab.Vhdl_Decls is
                pragma Assert (Areapools.Is_Empty (Expr_Pool));
 
                Current_Pool := Instance_Pool;
-               Val := Create_Value_Memory (Create_Memory_U32 (0));
+               Val := Create_Value_Memtyp (Create_Memory_U32 (0));
                Current_Pool := Expr_Pool'Access;
                Create_Object (Syn_Inst, Decl, Val);
             end;

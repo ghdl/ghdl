@@ -255,7 +255,7 @@ package body Synth.Vhdl_Stmts is
             if Dest_Off /= (0, 0) and then Dest_Dyn.Voff /= No_Net then
                raise Internal_Error;
             end if;
-            Dest_Base := Create_Value_Memory
+            Dest_Base := Create_Value_Memtyp
               (Elab.Vhdl_Heap.Synth_Dereference (Read_Access (Dest_Base)));
             Dest_Typ := Dest_Base.Typ;
 
@@ -1841,7 +1841,7 @@ package body Synth.Vhdl_Stmts is
                if Info.Obj.Val.Kind = Value_Memory then
                   --  But for memory value, do not copy the content, as it is
                   --  a reference.
-                  Obj := Create_Value_Memory_Pool
+                  Obj := Create_Value_Memory
                     (Get_Memtyp (Info.Obj), Instance_Pool);
                else
                   Obj := Unshare (Info.Obj, Instance_Pool);

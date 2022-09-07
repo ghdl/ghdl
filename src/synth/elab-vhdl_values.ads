@@ -133,8 +133,6 @@ package Elab.Vhdl_Values is
 
    function Is_Equal (L, R : Valtyp) return Boolean;
 
-   function Create_Value_Memtyp (Mt : Memtyp) return Valtyp;
-
    --  Create a Value_Net.
    function Create_Value_Net (S : Uns32) return Value_Acc;
 
@@ -147,9 +145,9 @@ package Elab.Vhdl_Values is
 
    function Create_Value_Memory (Vtype : Type_Acc; Pool : Areapool_Acc)
                                 return Valtyp;
-   function Create_Value_Memory_Pool (Mt : Memtyp; Pool : Areapool_Acc)
-                                     return Valtyp;
-   function Create_Value_Memory (Mt : Memtyp) return Valtyp;
+   function Create_Value_Memory (Mt : Memtyp; Pool : Areapool_Acc)
+                                return Valtyp;
+   function Create_Value_Memtyp (Mt : Memtyp) return Valtyp;
 
    function Create_Value_Uns (Val : Uns64; Vtype : Type_Acc) return Valtyp;
    function Create_Value_Int (Val : Int64; Vtype : Type_Acc) return Valtyp;

@@ -705,7 +705,7 @@ package body Synth.Vhdl_Expr is
             begin
                Val := Synth_Expression (Syn_Inst, Get_Prefix (Name));
                Obj := Elab.Vhdl_Heap.Synth_Dereference (Read_Access (Val));
-               return Create_Value_Memory (Obj);
+               return Create_Value_Memtyp (Obj);
             end;
          when others =>
             Error_Kind ("synth_name", Name);

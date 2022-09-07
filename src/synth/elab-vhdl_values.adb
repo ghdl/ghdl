@@ -95,17 +95,6 @@ package body Elab.Vhdl_Values is
       return Is_Equal (Get_Memtyp (L), Get_Memtyp (R));
    end Is_Equal;
 
-   function Create_Value_Memtyp (Mt : Memtyp) return Valtyp
-   is
-      subtype Value_Type_Memory is Value_Type (Value_Memory);
-      function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Memory);
-      Res : Value_Acc;
-   begin
-      Res := To_Value_Acc (Alloc (Current_Pool, (Kind => Value_Memory,
-                                                 Mem => Mt.Mem)));
-      return (Mt.Typ, Res);
-   end Create_Value_Memtyp;
-
    function Create_Value_Wire (S : Uns32) return Value_Acc
    is
       subtype Value_Type_Wire is Value_Type (Value_Wire);
@@ -136,8 +125,8 @@ package body Elab.Vhdl_Values is
                                                   Init => Init)));
    end Create_Value_Signal;
 
-   function Create_Value_Memory_Pool (Mt : Memtyp; Pool : Areapool_Acc)
-                                     return Valtyp
+   function Create_Value_Memory (Mt : Memtyp; Pool : Areapool_Acc)
+                                return Valtyp
    is
       subtype Value_Type_Memory is Value_Type (Value_Memory);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Memory);
@@ -146,12 +135,12 @@ package body Elab.Vhdl_Values is
       V := To_Value_Acc (Alloc (Pool, Value_Type_Memory'(Kind => Value_Memory,
                                                          Mem => Mt.Mem)));
       return (Mt.Typ, V);
-   end Create_Value_Memory_Pool;
-
-   function Create_Value_Memory (Mt : Memtyp) return Valtyp is
-   begin
-      return Create_Value_Memory_Pool (Mt, Current_Pool);
    end Create_Value_Memory;
+
+   function Create_Value_Memtyp (Mt : Memtyp) return Valtyp is
+   begin
+      return Create_Value_Memory (Mt, Current_Pool);
+   end Create_Value_Memtyp;
 
    function Create_Value_Memory (Vtype : Type_Acc; Pool : Areapool_Acc)
                                 return Valtyp
@@ -162,7 +151,7 @@ package body Elab.Vhdl_Values is
    begin
       Areapools.Allocate (Pool.all, M,
                           Vtype.Sz, Size_Type (2 ** Natural (Vtype.Al)));
-      return Create_Value_Memory_Pool ((Vtype, To_Memory_Ptr (M)), Pool);
+      return Create_Value_Memory ((Vtype, To_Memory_Ptr (M)), Pool);
    end Create_Value_Memory;
 
    function Create_Value_File (File : File_Index) return Value_Acc
