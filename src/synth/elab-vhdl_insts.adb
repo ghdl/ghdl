@@ -737,7 +737,7 @@ package body Elab.Vhdl_Insts is
       Aspect := Get_Entity_Aspect (Bind);
 
       --  Extract entity/architecture instantiated by the component.
-      case Get_Kind (Aspect) is
+      case Iir_Kinds_Entity_Aspect (Get_Kind (Aspect)) is
          when Iir_Kind_Entity_Aspect_Entity =>
             Ent := Get_Entity (Aspect);
             Arch := Get_Architecture (Aspect);
@@ -746,9 +746,9 @@ package body Elab.Vhdl_Insts is
             Sub_Config := Get_Block_Configuration (Get_Configuration (Aspect));
             Arch := Get_Block_Specification (Sub_Config);
             Ent := Get_Entity (Get_Named_Entity (Arch));
-         when others =>
-            Vhdl.Errors.Error_Kind
-              ("Elab_Component_Instantiation_Statement(2)", Aspect);
+         when Iir_Kind_Entity_Aspect_Open =>
+            Create_Component_Instance (Comp_Inst, null);
+            return;
       end case;
 
       if Get_Kind (Ent) = Iir_Kind_Foreign_Module then
