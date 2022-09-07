@@ -48,15 +48,28 @@ package body Elab.Vhdl_Heap is
    is
       Typ_Sz : constant Size_Type := Acc_Typ.Acc_Bnd_Sz;
       E : Heap_Entry;
-      T : Type_Acc;
    begin
       pragma Assert (Acc_Typ.Kind = Type_Access);
 
       E.Obj := Alloc_Mem (Obj_Typ.Sz);
-      E.Typ := Alloc_Mem (Typ_Sz);
 
-      T := Save_Type (Obj_Typ, E.Typ, Typ_Sz);
-      pragma Unreferenced (T);
+      if Typ_Sz > 0 then
+         declare
+            T : Type_Acc;
+         begin
+            E.Typ := Alloc_Mem (Typ_Sz);
+            T := Save_Type (Obj_Typ, E.Typ, Typ_Sz);
+            pragma Unreferenced (T);
+         end;
+      else
+         declare
+            function To_Memory_Ptr is new Ada.Unchecked_Conversion
+              (Type_Acc, Memory_Ptr);
+         begin
+            E.Typ := To_Memory_Ptr (Obj_Typ);
+         end;
+      end if;
+
       Res := E.Obj;
 
       Heap_Table.Append (E);
