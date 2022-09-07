@@ -136,36 +136,33 @@ package body Elab.Vhdl_Values is
                                                   Init => Init)));
    end Create_Value_Signal;
 
-   function Create_Value_Memory (Vtype : Type_Acc; Pool : Areapool_Acc)
-                                return Valtyp
+   function Create_Value_Memory_Pool (Mt : Memtyp; Pool : Areapool_Acc)
+                                     return Valtyp
    is
       subtype Value_Type_Memory is Value_Type (Value_Memory);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Memory);
+      V : Value_Acc;
+   begin
+      V := To_Value_Acc (Alloc (Pool, Value_Type_Memory'(Kind => Value_Memory,
+                                                         Mem => Mt.Mem)));
+      return (Mt.Typ, V);
+   end Create_Value_Memory_Pool;
+
+   function Create_Value_Memory (Mt : Memtyp) return Valtyp is
+   begin
+      return Create_Value_Memory_Pool (Mt, Current_Pool);
+   end Create_Value_Memory;
+
+   function Create_Value_Memory (Vtype : Type_Acc; Pool : Areapool_Acc)
+                                return Valtyp
+   is
       function To_Memory_Ptr is new Ada.Unchecked_Conversion
         (System.Address, Memory_Ptr);
-      V : Value_Acc;
       M : System.Address;
    begin
       Areapools.Allocate (Pool.all, M,
                           Vtype.Sz, Size_Type (2 ** Natural (Vtype.Al)));
-      V := To_Value_Acc
-        (Alloc (Pool, Value_Type_Memory'(Kind => Value_Memory,
-                                         Mem => To_Memory_Ptr (M))));
-
-      return (Vtype, V);
-   end Create_Value_Memory;
-
-   function Create_Value_Memory (Mt : Memtyp) return Valtyp
-   is
-      subtype Value_Type_Memory is Value_Type (Value_Memory);
-      function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Memory);
-      V : Value_Acc;
-   begin
-      V := To_Value_Acc
-        (Alloc (Current_Pool, Value_Type_Memory'(Kind => Value_Memory,
-                                                 Mem => Mt.Mem)));
-
-      return (Mt.Typ, V);
+      return Create_Value_Memory_Pool ((Vtype, To_Memory_Ptr (M)), Pool);
    end Create_Value_Memory;
 
    function Create_Value_File (File : File_Index) return Value_Acc

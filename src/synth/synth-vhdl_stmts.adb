@@ -1834,12 +1834,25 @@ package body Synth.Vhdl_Stmts is
    begin
       case Info.Kind is
          when Target_Simple =>
-            if Info.Off = No_Value_Offsets then
-               return Info.Obj;
-            else
-               return Create_Value_Alias
-                 (Info.Obj, Info.Off, Info.Targ_Type, Instance_Pool);
-            end if;
+            declare
+               Obj : Valtyp;
+            begin
+               --  Unshare the value.
+               if Info.Obj.Val.Kind = Value_Memory then
+                  --  But for memory value, do not copy the content, as it is
+                  --  a reference.
+                  Obj := Create_Value_Memory_Pool
+                    (Get_Memtyp (Info.Obj), Instance_Pool);
+               else
+                  Obj := Unshare (Info.Obj, Instance_Pool);
+               end if;
+               if Info.Off = No_Value_Offsets then
+                  return Obj;
+               else
+                  return Create_Value_Alias
+                    (Obj, Info.Off, Info.Targ_Type, Instance_Pool);
+               end if;
+            end;
          when Target_Aggregate =>
             raise Internal_Error;
          when Target_Memory =>
