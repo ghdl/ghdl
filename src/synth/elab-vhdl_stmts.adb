@@ -95,9 +95,10 @@ package body Elab.Vhdl_Stmts is
             Default : Node;
             Idxes : Node_Flist;
             Drng : Discrete_Range_Type;
+            Marker : Mark_Type;
          begin
             --  TODO: do not recompute indexes and ranges for each sub-block
-            --  TODO: mark & release memory
+            Mark_Expr_Pool (Marker);
             Default := Null_Node;
             Config := Configs;
             while Config /= Null_Node loop
@@ -122,6 +123,7 @@ package body Elab.Vhdl_Stmts is
                end case;
                Config := Get_Prev_Block_Configuration (Config);
             end loop;
+            Release_Expr_Pool (Marker);
 
             if Config = Null_Node then
                Config := Default;
