@@ -4,7 +4,7 @@
 
 GHDL_STD_FLAGS="-fsynopsys"
 
-for t in ram1 ram2 ram4; do
+for t in ram1 ram10 ram2 ram4; do
     synth_tb $t 2> $t.log
     grep "found R" $t.log
 done
