@@ -1053,7 +1053,8 @@ package body Elab.Vhdl_Objtypes is
             raise Internal_Error;
          when Type_Array
            | Type_Vector =>
-            Res.Arr_El := Unshare_Type (Typ.Arr_El, Base.Uarr_El);
+            Res.Arr_El := Unshare_Type (Typ.Arr_El,
+                                        Get_Array_Element (Base));
          when Type_Unbounded_Array
            | Type_Unbounded_Vector
            | Type_Unbounded_Record =>
