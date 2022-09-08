@@ -349,6 +349,29 @@ package body Elab.Vhdl_Values is
       return Read_Access (Mt.Mem);
    end Read_Access;
 
+   procedure Write_Protected (Mem : Memory_Ptr; Idx : Protected_Index)
+   is
+      V : Protected_Index;
+      for V'Address use Mem.all'Address;
+      pragma Import (Ada, V);
+   begin
+      V := Idx;
+   end Write_Protected;
+
+   function Read_Protected (Mem : Memory_Ptr) return Protected_Index
+   is
+      V : Protected_Index;
+      for V'Address use Mem.all'Address;
+      pragma Import (Ada, V);
+   begin
+      return V;
+   end Read_Protected;
+
+   function Read_Protected (Mt : Memtyp) return Protected_Index is
+   begin
+      return Read_Protected (Mt.Mem);
+   end Read_Protected;
+
    procedure Write_Discrete (Vt : Valtyp; Val : Int64) is
    begin
       Write_Discrete (Vt.Val.Mem, Vt.Typ, Val);

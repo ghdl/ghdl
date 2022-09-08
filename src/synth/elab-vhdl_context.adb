@@ -550,7 +550,8 @@ package body Elab.Vhdl_Context is
       case Scope.Kind is
          when Kind_Block
            | Kind_Frame
-           | Kind_Process =>
+           | Kind_Process
+           | Kind_Protected =>
             declare
                Current : Synth_Instance_Acc;
             begin

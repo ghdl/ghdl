@@ -24,7 +24,6 @@ with Vhdl.Utils; use Vhdl.Utils;
 with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 with Elab.Vhdl_Types; use Elab.Vhdl_Types;
 with Elab.Vhdl_Files;
-with Elab.Vhdl_Errors; use Elab.Vhdl_Errors;
 with Elab.Vhdl_Expr; use Elab.Vhdl_Expr;
 with Elab.Vhdl_Insts;
 
@@ -150,17 +149,11 @@ package body Elab.Vhdl_Decls is
                                         Force_Init : Boolean)
    is
       Def : constant Node := Get_Default_Value (Decl);
-      Decl_Type : constant Node := Get_Type (Decl);
       Marker : Mark_Type;
       Init : Valtyp;
       Obj_Typ : Type_Acc;
    begin
       Obj_Typ := Elab_Declaration_Type (Syn_Inst, Decl);
-      if Get_Kind (Decl_Type) = Iir_Kind_Protected_Type_Declaration then
-         Error_Msg_Elab (+Decl, "protected type not supported");
-         return;
-      end if;
-
 
       Mark_Expr_Pool (Marker);
       if Is_Valid (Def) then
@@ -173,6 +166,8 @@ package body Elab.Vhdl_Decls is
             Init := Create_Value_Default (Obj_Typ);
             Current_Pool := Expr_Pool'Access;
          else
+            --  For synthesis, no need to set a value for a shared variable
+            --  (they will certainly become a memory).
             Init := (Typ => Obj_Typ, Val => null);
          end if;
       end if;

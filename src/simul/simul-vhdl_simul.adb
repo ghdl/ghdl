@@ -701,6 +701,7 @@ package body Simul.Vhdl_Simul is
       Inst : constant Synth_Instance_Acc := Process.Instance;
       Call : constant Node := Get_Procedure_Call (Stmt);
       Imp  : constant Node := Get_Implementation (Call);
+      Obj  : constant Node := Get_Method_Object (Call);
 
       Assoc_Chain : constant Node := Get_Parameter_Association_Chain (Call);
 
@@ -714,7 +715,9 @@ package body Simul.Vhdl_Simul is
             Inter_Chain : constant Node :=
               Get_Interface_Declaration_Chain (Imp);
          begin
+            pragma Assert (Obj = Null_Node);
             Sub_Inst := Synth_Subprogram_Call_Instance (Inst, Imp, Imp);
+
             Synth_Subprogram_Association
               (Sub_Inst, Inst, Inter_Chain, Assoc_Chain);
 
@@ -739,7 +742,12 @@ package body Simul.Vhdl_Simul is
                return;
             end if;
 
-            Sub_Inst := Synth_Subprogram_Call_Instance (Inst, Imp, Bod);
+            if Obj /= Null_Node then
+               Sub_Inst := Synth_Protected_Call_Instance (Inst, Obj, Imp, Bod);
+            else
+               Sub_Inst := Synth_Subprogram_Call_Instance (Inst, Imp, Bod);
+            end if;
+
             --  Note: in fact the uninstantiated scope is the instantiated
             --  one!
             Set_Uninstantiated_Scope (Sub_Inst, Imp);

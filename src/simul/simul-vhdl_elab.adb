@@ -24,7 +24,9 @@ with Vhdl.Canon;
 
 with Synth.Vhdl_Stmts;
 with Trans_Analyzes;
+
 with Elab.Vhdl_Decls;
+with Elab.Vhdl_Prot;
 
 with Simul.Vhdl_Debug;
 
@@ -195,6 +197,35 @@ package body Simul.Vhdl_Elab is
       Val.Val.T := Terminal_Table.Last;
    end Gather_Terminal;
 
+   function Create_Protected_Object (Inst : Synth_Instance_Acc;
+                                     Decl : Node;
+                                     Typ : Type_Acc) return Valtyp
+   is
+      Decl_Type : constant Node := Get_Type (Decl);
+      Bod : constant Node := Get_Protected_Type_Body (Decl_Type);
+      Obj_Inst : Synth_Instance_Acc;
+      Obj_Hand : Protected_Index;
+      Mem : Memory_Ptr;
+      Parent : Synth_Instance_Acc;
+      Res : Valtyp;
+   begin
+      Parent := Get_Instance_By_Scope (Inst, Get_Parent_Scope (Bod));
+      Obj_Inst := Make_Elab_Instance (Parent, Bod, Null_Node);
+      Obj_Hand := Elab.Vhdl_Prot.Create (Obj_Inst);
+
+      Instance_Pool := Global_Pool'Access;
+      Elab.Vhdl_Decls.Elab_Declarations
+        (Obj_Inst, Get_Declaration_Chain (Bod), True);
+
+      Mem := Alloc_Memory (Typ, Instance_Pool);
+      Write_Protected (Mem, Obj_Hand);
+
+      Res := Create_Value_Memory ((Typ, Mem), Instance_Pool);
+      Instance_Pool := null;
+
+      return Res;
+   end Create_Protected_Object;
+
    procedure Gather_Processes_Decl (Inst : Synth_Instance_Acc; Decl : Node) is
    begin
       case Get_Kind (Decl) is
@@ -268,8 +299,28 @@ package body Simul.Vhdl_Elab is
                V := Get_Value (Inst, Decl);
                Convert_Type_Width (V.Typ);
             end;
+         when Iir_Kind_Variable_Declaration =>
+            pragma Assert (Get_Shared_Flag (Decl));
+            if Get_Default_Value (Decl) = Null_Node then
+               --  Elab doesn't set a value to variables with no default
+               --  value.
+               declare
+                  V : Valtyp;
+               begin
+                  V := Get_Value (Inst, Decl);
+                  pragma Assert (V.Val = null);
+                  Current_Pool := Global_Pool'Access;
+                  if V.Typ.Kind = Type_Protected then
+                     V := Create_Protected_Object (Inst, Decl, V.Typ);
+                  else
+                     V := Create_Value_Default (V.Typ);
+                  end if;
+                  Current_Pool := Expr_Pool'Access;
+                  Mutate_Object (Inst, Decl, V);
+               end;
+            end if;
+
          when Iir_Kind_Constant_Declaration
-           | Iir_Kind_Variable_Declaration
            | Iir_Kind_Non_Object_Alias_Declaration
            | Iir_Kind_Attribute_Declaration
            | Iir_Kind_Attribute_Specification
@@ -282,6 +333,7 @@ package body Simul.Vhdl_Elab is
            | Iir_Kind_Procedure_Body
            | Iir_Kind_Component_Declaration
            | Iir_Kind_File_Declaration
+           | Iir_Kind_Protected_Type_Body
            | Iir_Kind_Use_Clause =>
             null;
          when others =>

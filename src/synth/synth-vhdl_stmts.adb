@@ -41,6 +41,7 @@ with PSL.NFAs;
 
 with Elab.Memtype; use Elab.Memtype;
 with Elab.Vhdl_Heap;
+with Elab.Vhdl_Prot;
 with Elab.Vhdl_Types; use Elab.Vhdl_Types;
 with Elab.Vhdl_Expr; use Elab.Vhdl_Expr;
 with Elab.Vhdl_Debug;
@@ -347,8 +348,9 @@ package body Synth.Vhdl_Stmts is
          when Iir_Kind_Simple_Name
            | Iir_Kind_Selected_Element
            | Iir_Kind_Interface_Signal_Declaration
-           | Iir_Kind_Variable_Declaration
            | Iir_Kind_Signal_Declaration
+           | Iir_Kind_Interface_Variable_Declaration
+           | Iir_Kind_Variable_Declaration
            | Iir_Kind_Object_Alias_Declaration
            | Iir_Kind_Indexed_Name
            | Iir_Kind_Slice_Name
@@ -1872,7 +1874,8 @@ package body Synth.Vhdl_Stmts is
    is
       Marker : Mark_Type;
       Inter : Node;
-      Inter_Type : Type_Acc;
+      Inter_Type : Node;
+      Inter_Typ : Type_Acc;
       Assoc : Node;
       Actual : Node;
       Val : Valtyp;
@@ -1889,7 +1892,12 @@ package body Synth.Vhdl_Stmts is
          Association_Iterate_Next (Iterator, Inter, Assoc);
          exit when Inter = Null_Node;
 
-         Inter_Type := Get_Subtype_Object (Subprg_Inst, Get_Type (Inter));
+         Inter_Type := Get_Type (Inter);
+         if Get_Kind (Inter_Type) = Iir_Kind_Protected_Type_Declaration then
+            Inter_Typ := Protected_Type;
+         else
+            Inter_Typ := Get_Subtype_Object (Subprg_Inst, Inter_Type);
+         end if;
 
          case Iir_Kinds_Interface_Object_Declaration (Get_Kind (Inter)) is
             when Iir_Kind_Interface_Constant_Declaration =>
@@ -1899,7 +1907,7 @@ package body Synth.Vhdl_Stmts is
                then
                   Actual := Get_Default_Value (Inter);
                   Val := Synth_Expression_With_Type
-                    (Subprg_Inst, Actual, Inter_Type);
+                    (Subprg_Inst, Actual, Inter_Typ);
                else
                   if Get_Kind (Assoc) =
                     Iir_Kind_Association_Element_By_Expression
@@ -1909,7 +1917,7 @@ package body Synth.Vhdl_Stmts is
                      Actual := Assoc;
                   end if;
                   Val := Synth_Expression_With_Type
-                    (Caller_Inst, Actual, Inter_Type);
+                    (Caller_Inst, Actual, Inter_Typ);
                end if;
             when Iir_Kind_Interface_Variable_Declaration =>
                --  Always pass by value.
@@ -1961,7 +1969,7 @@ package body Synth.Vhdl_Stmts is
                if Get_Mode (Inter) /= Iir_Out_Mode then
                   --  Always passed by value
                   Val := Synth_Subtype_Conversion
-                    (Subprg_Inst, Val, Inter_Type, True, Assoc);
+                    (Subprg_Inst, Val, Inter_Typ, True, Assoc);
                   Val := Unshare (Val, Instance_Pool);
                else
                   --  Use default value ?
@@ -1983,7 +1991,7 @@ package body Synth.Vhdl_Stmts is
                  Iir_Kinds_Scalar_Type_And_Subtype_Definition
                then
                   if Get_Mode (Inter) in Iir_In_Modes then
-                     if not Is_Scalar_Subtype_Compatible (Val.Typ, Inter_Type)
+                     if not Is_Scalar_Subtype_Compatible (Val.Typ, Inter_Typ)
                      then
                         Error_Msg_Synth
                           (+Actual,
@@ -1992,7 +2000,7 @@ package body Synth.Vhdl_Stmts is
                      end if;
                   end if;
                   if Get_Mode (Inter) in Iir_Out_Modes then
-                     if not Is_Scalar_Subtype_Compatible (Inter_Type, Val.Typ)
+                     if not Is_Scalar_Subtype_Compatible (Inter_Typ, Val.Typ)
                      then
                         Error_Msg_Synth
                           (+Actual,
@@ -2005,7 +2013,7 @@ package body Synth.Vhdl_Stmts is
                   --  This is equivalent to subtype conversion for non-scalar
                   --  types.
                   Val := Synth_Subtype_Conversion
-                    (Subprg_Inst, Val, Inter_Type, True, Assoc);
+                    (Subprg_Inst, Val, Inter_Typ, True, Assoc);
                   Val := Unshare (Val, Instance_Pool);
                end if;
                if Val.Typ /= null then
@@ -2340,6 +2348,47 @@ package body Synth.Vhdl_Stmts is
       return Res;
    end Synth_Subprogram_Call_Instance;
 
+   --  Like Get_Protected_Type_Body, but also works for instances, where
+   --  instantiated nodes have no bodies.
+   --  FIXME: maybe fix the issue directly in Sem_Inst ?
+   function Get_Protected_Type_Body_Origin (Spec : Node) return Node
+   is
+      Res : constant Node := Get_Protected_Type_Body (Spec);
+      Orig : Node;
+   begin
+      if Res /= Null_Node then
+         return Res;
+      else
+         Orig := Vhdl.Sem_Inst.Get_Origin (Spec);
+         return Get_Protected_Type_Body_Origin (Orig);
+      end if;
+   end Get_Protected_Type_Body_Origin;
+   pragma Unreferenced (Get_Protected_Type_Body_Origin);
+
+   function Synth_Protected_Call_Instance (Inst : Synth_Instance_Acc;
+                                           Obj : Node;
+                                           Imp : Node;
+                                           Bod : Node)
+                                          return Synth_Instance_Acc
+   is
+      pragma Unreferenced (Imp);
+      Obj_Info : Target_Info;
+      Idx : Protected_Index;
+      Obj_Inst : Synth_Instance_Acc;
+      Res : Synth_Instance_Acc;
+   begin
+      Obj_Info := Synth_Target (Inst, Obj);
+      pragma Assert (Obj_Info.Kind = Target_Simple);
+      pragma Assert (Obj_Info.Off = No_Value_Offsets);
+      --  Get instance_acc of the variable
+      Idx := Read_Protected (Obj_Info.Obj.Val.Mem);
+      Obj_Inst := Elab.Vhdl_Prot.Get (Idx);
+
+      Res := Make_Elab_Instance (Obj_Inst, Bod, Config => Null_Node);
+      Set_Caller_Instance (Res, Inst);
+      return Res;
+   end Synth_Protected_Call_Instance;
+
    function Synth_Subprogram_Call (Syn_Inst : Synth_Instance_Acc;
                                    Call : Node;
                                    Init : Association_Iterator_Init)
@@ -2349,6 +2398,7 @@ package body Synth.Vhdl_Stmts is
       Imp  : constant Node := Get_Implementation (Call);
       Is_Func : constant Boolean := Is_Function_Declaration (Imp);
       Bod : constant Node := Vhdl.Sem_Inst.Get_Subprogram_Body_Origin (Imp);
+      Obj : Node;
       Area_Mark : Areapools.Mark_Type;
       Ret_Typ : Type_Acc;
       Res : Valtyp;
@@ -2356,7 +2406,22 @@ package body Synth.Vhdl_Stmts is
    begin
       Areapools.Mark (Area_Mark, Instance_Pool.all);
 
-      Sub_Inst := Synth_Subprogram_Call_Instance (Syn_Inst, Imp, Bod);
+      case Get_Kind (Call) is
+         when Iir_Kinds_Dyadic_Operator
+           | Iir_Kinds_Monadic_Operator =>
+            Obj := Null_Node;
+         when Iir_Kind_Function_Call
+           | Iir_Kind_Procedure_Call =>
+            Obj := Get_Method_Object (Call);
+         when others =>
+            raise Internal_Error;
+      end case;
+
+      if Obj /= Null_Node then
+         Sub_Inst := Synth_Protected_Call_Instance (Syn_Inst, Obj, Imp, Bod);
+      else
+         Sub_Inst := Synth_Subprogram_Call_Instance (Syn_Inst, Imp, Bod);
+      end if;
       if Ctxt /= null then
          Set_Extra (Sub_Inst, Syn_Inst, New_Internal_Name (Ctxt));
       end if;

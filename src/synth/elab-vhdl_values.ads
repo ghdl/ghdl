@@ -70,6 +70,9 @@ package Elab.Vhdl_Values is
    type Heap_Index is new Uns32;
    Null_Heap_Index : constant Heap_Index := 0;
 
+   type Protected_Index is new Uns32;
+   No_Protected_Index : constant Protected_Index := 0;
+
    subtype File_Index is Grt.Files_Operations.Ghdl_File_Index;
 
    type Signal_Index_Type is new Uns32;
@@ -213,6 +216,10 @@ package Elab.Vhdl_Values is
    procedure Write_Access (Mem : Memory_Ptr; Val : Heap_Index);
    function Read_Access (Mt : Memtyp) return Heap_Index;
    function Read_Access (Vt : Valtyp) return Heap_Index;
+
+   procedure Write_Protected (Mem : Memory_Ptr; Idx : Protected_Index);
+   function Read_Protected (Mem : Memory_Ptr) return Protected_Index;
+   function Read_Protected (Mt : Memtyp) return Protected_Index;
 
    function Read_Fp64 (Vt : Valtyp) return Fp64;
 

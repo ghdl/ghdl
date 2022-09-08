@@ -437,8 +437,13 @@ package body Synth.Vhdl_Decls is
       Val : Valtyp;
    begin
       Init := Get_Value (Syn_Inst, Decl);
-      if Init.Val = null then
-         Init := Create_Value_Default (Init.Typ);
+      if Init.Typ.Kind = Type_Protected then
+         Error_Msg_Synth (+Decl, "protected type not supported");
+         Set_Error (Syn_Inst);
+      else
+         if Init.Val = null then
+            Init := Create_Value_Default (Init.Typ);
+         end if;
       end if;
 
       Val := Create_Var_Wire (Syn_Inst, Decl, Wire_Variable, Init);
@@ -809,6 +814,7 @@ package body Synth.Vhdl_Decls is
            | Iir_Kind_Procedure_Declaration
            | Iir_Kind_Procedure_Body
            | Iir_Kind_Type_Declaration
+           | Iir_Kind_Protected_Type_Body
            | Iir_Kind_Anonymous_Type_Declaration
            | Iir_Kind_Subtype_Declaration
            | Iir_Kind_Component_Declaration

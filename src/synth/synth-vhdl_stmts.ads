@@ -42,6 +42,11 @@ package Synth.Vhdl_Stmts is
                                             Imp : Node;
                                             Bod : Node)
                                            return Synth_Instance_Acc;
+   function Synth_Protected_Call_Instance (Inst : Synth_Instance_Acc;
+                                           Obj : Node;
+                                           Imp : Node;
+                                           Bod : Node)
+                                          return Synth_Instance_Acc;
 
    procedure Synth_Subprogram_Association (Subprg_Inst : Synth_Instance_Acc;
                                            Caller_Inst : Synth_Instance_Acc;
