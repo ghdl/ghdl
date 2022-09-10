@@ -17,7 +17,7 @@
 --  along with this program.  If not, see <gnu.org/licenses>.
 
 with Types; use Types;
-with Areapools;
+with Areapools; use Areapools;
 
 with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
@@ -107,7 +107,9 @@ package Synth.Vhdl_Context is
    function Create_Value_Net (N : Net; Ntype : Type_Acc) return Valtyp;
 
    --  Create a Value_Wire.  For a bit wire, RNG must be null.
-   function Create_Value_Wire (W : Wire_Id; Wtype : Type_Acc) return Valtyp;
+   function Create_Value_Wire (W : Wire_Id;
+                               Wtype : Type_Acc;
+                               Pool : Areapool_Acc) return Valtyp;
 
    --  Create a Value_Dyn_Alias
    function Create_Value_Dyn_Alias (Obj : Value_Acc;

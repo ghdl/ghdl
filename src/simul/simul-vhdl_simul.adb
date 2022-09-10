@@ -1968,10 +1968,12 @@ package body Simul.Vhdl_Simul is
 
       Res : Valtyp;
 
-      Marker : Mark_Type;
+      Expr_Marker, Inst_Marker : Mark_Type;
    begin
-      Mark_Expr_Pool (Marker);
+      Mark_Expr_Pool (Expr_Marker);
       Instance_Pool := Process_Pool'Access;
+      Areapools.Mark (Inst_Marker, Instance_Pool.all);
+      pragma Assert (Areapools.Is_Empty (Instance_Pool.all));
 
       --  Create the type.
       Bnd := Elab.Vhdl_Types.Create_Bounds_From_Length (R.Idx_Typ.Drange, Len);
@@ -2004,8 +2006,11 @@ package body Simul.Vhdl_Simul is
       Exec_Write_Signal (R.Sig, (Res.Typ, Res.Val.Mem),
                          Write_Signal_Driving_Value);
 
-      Release_Expr_Pool (Marker);
+      Release_Expr_Pool (Expr_Marker);
+      Areapools.Release (Inst_Marker, Instance_Pool.all);
+
       pragma Assert (Is_Expr_Pool_Empty);
+      pragma Assert (Areapools.Is_Empty (Instance_Pool.all));
    end Resolution_Proc;
 
    function Create_Scalar_Signal (Typ : Type_Acc; Val : Ghdl_Value_Ptr)
@@ -2411,10 +2416,11 @@ package body Simul.Vhdl_Simul is
       Val : Memtyp;
       Dst : Memtyp;
 
-      Marker : Mark_Type;
+      Expr_Marker, Inst_Marker : Mark_Type;
    begin
+      Areapools.Mark (Inst_Marker, Process_Pool);
+      Mark_Expr_Pool (Expr_Marker);
       Instance_Pool := Process_Pool'Access;
-      Mark_Expr_Pool (Marker);
       Current_Process := null;
 
       Val := Create_Memory (Conv.Src_Typ);
@@ -2437,7 +2443,8 @@ package body Simul.Vhdl_Simul is
               (Conv.Dst_Sig, Dst, Write_Signal_Driving_Value);
       end case;
 
-      Release_Expr_Pool (Marker);
+      Release_Expr_Pool (Expr_Marker);
+      Areapools.Release (Inst_Marker, Process_Pool);
       Instance_Pool := null;
    end Conversion_Proc;
 
@@ -3027,6 +3034,7 @@ package body Simul.Vhdl_Simul is
       end if;
 
       pragma Assert (Areapools.Is_Empty (Expr_Pool));
+      pragma Assert (Areapools.Is_Empty (Process_Pool));
 
       Synth.Flags.Severity_Level := Grt.Options.Severity_Level;
 
@@ -3036,6 +3044,9 @@ package body Simul.Vhdl_Simul is
 
       Status := Grt.Main.Run_Through_Longjump
         (Grt.Processes.Simulation_Init'Access);
+
+      pragma Assert (Areapools.Is_Empty (Expr_Pool));
+      pragma Assert (Areapools.Is_Empty (Process_Pool));
 
       if Status = 0 then
          if Grt.Processes.Flag_AMS then

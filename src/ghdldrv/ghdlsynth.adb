@@ -49,6 +49,7 @@ with Netlists.Rename;
 with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 with Elab.Vhdl_Insts;
 with Elab.Debugger;
+with Elab.Vhdl_Objtypes;
 
 with Synthesis;
 with Synth.Disp_Vhdl;
@@ -465,6 +466,7 @@ package body Ghdlsynth is
      return Module
    is
       use Vhdl.Configuration;
+      use Elab.Vhdl_Objtypes;
       Args : Argument_List (1 .. Argc);
       Res : Module;
       Cmd : Command_Synth;
@@ -499,10 +501,14 @@ package body Ghdlsynth is
 
       Inst := Elab.Vhdl_Insts.Elab_Top_Unit (Get_Library_Unit (Config));
 
+      pragma Assert (Is_Expr_Pool_Empty);
+
       Res := Synthesis.Synth_Design (Config, Inst, Cmd.Top_Encoding);
       if Res = No_Module then
          return No_Module;
       end if;
+
+      pragma Assert (Is_Expr_Pool_Empty);
 
       Disp_Design (Cmd, Format_None, Res, Config, Inst);
 
@@ -513,6 +519,8 @@ package body Ghdlsynth is
          Set_Elab_Flag (Design_Units.Table (I), False);
       end loop;
       Set_Elab_Flag (Vhdl.Std_Package.Std_Standard_Unit, False);
+
+      pragma Assert (Is_Expr_Pool_Empty);
 
       Vhdl.Annotations.Finalize_Annotate;
       Synth.Vhdl_Context.Free_Base_Instance;

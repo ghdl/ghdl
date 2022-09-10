@@ -140,7 +140,8 @@ package Elab.Vhdl_Values is
    function Create_Value_Net (S : Uns32) return Value_Acc;
 
    --  Create a Value_Wire.
-   function Create_Value_Wire (S : Uns32) return Value_Acc;
+   function Create_Value_Wire (S : Uns32; Pool : Areapool_Acc)
+                              return Value_Acc;
 
    --  Create a Value_Signal, always on the instance_pool.
    function Create_Value_Signal (S : Signal_Index_Type; Init : Value_Acc)
@@ -162,8 +163,9 @@ package Elab.Vhdl_Values is
 
    function Create_Value_Float (Val : Fp64; Vtype : Type_Acc) return Valtyp;
 
-   function Create_Value_File (Vtype : Type_Acc; File : File_Index)
-                              return Valtyp;
+   function Create_Value_File (Vtype : Type_Acc;
+                               File : File_Index;
+                               Pool : Areapool_Acc) return Valtyp;
 
    function Create_Value_Quantity (Vtype : Type_Acc; Q : Quantity_Index_Type)
                                   return Valtyp;
@@ -182,7 +184,8 @@ package Elab.Vhdl_Values is
                                     Eoff : Uns32;
                                     Pool : Areapool_Acc) return Value_Acc;
 
-   function Create_Value_Const (Val : Valtyp; Loc : Node) return Valtyp;
+   function Create_Value_Const (Val : Valtyp; Loc : Node; Pool : Areapool_Acc)
+                               return Valtyp;
 
    --  If VAL is a const, replace it by its value.
    procedure Strip_Const (Vt : in out Valtyp);

@@ -498,7 +498,8 @@ package body Synth.Vhdl_Expr is
    begin
       case Val.Val.Kind is
          when Value_Wire =>
-            return Create_Value_Wire (Get_Value_Wire (Val.Val), Ntype);
+            return Create_Value_Wire
+              (Get_Value_Wire (Val.Val), Ntype, Current_Pool);
          when Value_Net =>
             return Create_Value_Net (Get_Value_Net (Val.Val), Ntype);
          when Value_Alias =>

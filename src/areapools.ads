@@ -49,6 +49,10 @@ package Areapools is
    procedure Release (M : Mark_Type;
                       Pool : in out Areapool);
 
+   --  Return True iff POOL is at the mark level (ie, calling Relase will be
+   --  a no-op).
+   function Is_At_Mark (Pool : Areapool; M : Mark_Type) return Boolean;
+
    Empty_Marker : constant Mark_Type;
 private
    --  Minimal size of allocation.

@@ -18,6 +18,7 @@
 
 with Types; use Types;
 with Std_Names;
+with Areapools;
 with Errorout; use Errorout;
 
 with Netlists.Builders; use Netlists.Builders;
@@ -32,7 +33,6 @@ with Vhdl.Std_Package;
 with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 with Elab.Vhdl_Types; use Elab.Vhdl_Types;
 with Elab.Vhdl_Decls; use Elab.Vhdl_Decls;
-with Elab.Vhdl_Files;
 
 with Synth.Vhdl_Environment; use Synth.Vhdl_Environment.Env;
 with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
@@ -70,7 +70,7 @@ package body Synth.Vhdl_Decls is
       Set_Location (Value, Decl);
 
       Set_Wire_Gate (Wid, Value);
-      return Create_Value_Wire (Wid, Init.Typ);
+      return Create_Value_Wire (Wid, Init.Typ, Instance_Pool);
    end Create_Var_Wire;
 
    function Type_To_Param_Type (Atype : Node) return Param_Type
@@ -129,12 +129,15 @@ package body Synth.Vhdl_Decls is
                                          Last_Type : in out Node)
    is
       Deferred_Decl : constant Node := Get_Deferred_Declaration (Decl);
+      Marker : Mark_Type;
       First_Decl : Node;
       Decl_Type : Node;
       Val : Valtyp;
       Cst : Valtyp;
       Obj_Type : Type_Acc;
    begin
+      Mark_Expr_Pool (Marker);
+
       Obj_Type := Elab_Declaration_Type (Syn_Inst, Decl);
       if Deferred_Decl = Null_Node
         or else Get_Deferred_Declaration_Flag (Decl)
@@ -173,19 +176,26 @@ package body Synth.Vhdl_Decls is
         (Syn_Inst, Get_Default_Value (Decl), Obj_Type);
       if Val = No_Valtyp then
          Set_Error (Syn_Inst);
+         Release_Expr_Pool (Marker);
          return;
       end if;
       Val := Synth_Subtype_Conversion (Syn_Inst, Val, Obj_Type, True, Decl);
       --  For constant functions, the value must be constant.
       pragma Assert (not Get_Instance_Const (Syn_Inst)
-                     or else Is_Static (Val.Val));
+                       or else Is_Static (Val.Val));
+
+      Val := Unshare (Val, Instance_Pool);
+      Val.Typ := Unshare (Val.Typ, Instance_Pool);
+
+      --  TODO: share above code with elab_constant_declaration
+
       case Val.Val.Kind is
          when Value_Const
             | Value_Alias =>
             Cst := Val;
          when others =>
             if Is_Static (Val.Val) then
-               Cst := Create_Value_Const (Val, Decl);
+               Cst := Create_Value_Const (Val, Decl, Instance_Pool);
             else
                if not Is_Subprg then
                   Error_Msg_Synth
@@ -196,6 +206,7 @@ package body Synth.Vhdl_Decls is
             end if;
       end case;
       Create_Object_Force (Syn_Inst, First_Decl, Cst);
+      Release_Expr_Pool (Marker);
    end Synth_Constant_Declaration;
 
    procedure Synth_Attribute_Object (Syn_Inst : Synth_Instance_Acc;
@@ -373,6 +384,7 @@ package body Synth.Vhdl_Decls is
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Def : constant Node := Get_Default_Value (Decl);
       Decl_Type : constant Node := Get_Type (Decl);
+      Marker : Mark_Type;
       Init : Valtyp;
       Val : Valtyp;
       Obj_Typ : Type_Acc;
@@ -387,13 +399,16 @@ package body Synth.Vhdl_Decls is
          return;
       end if;
 
+      Mark_Expr_Pool (Marker);
       if Obj_Typ.Wkind /= Wkind_Net
         and then not Get_Instance_Const (Syn_Inst)
       then
          Error_Msg_Synth
            (+Decl, "variable with access type is not synthesizable");
          --  FIXME: use a poison value ?
-         Create_Object (Syn_Inst, Decl, Create_Value_Default (Obj_Typ));
+         Init := Create_Value_Default (Obj_Typ);
+         Init := Unshare (Init, Instance_Pool);
+         Create_Object (Syn_Inst, Decl, Init);
       else
          if Is_Valid (Def) then
             Init := Synth_Expression_With_Type (Syn_Inst, Def, Obj_Typ);
@@ -411,7 +426,7 @@ package body Synth.Vhdl_Decls is
          end if;
          if Get_Instance_Const (Syn_Inst) then
             Init := Strip_Alias_Const (Init);
-            Init := Unshare (Init, Current_Pool);
+            Init := Unshare (Init, Instance_Pool);
             Create_Object (Syn_Inst, Decl, Init);
          else
             Val := Create_Var_Wire (Syn_Inst, Decl, Wire_Variable, Init);
@@ -428,11 +443,13 @@ package body Synth.Vhdl_Decls is
             end if;
          end if;
       end if;
+      Release_Expr_Pool (Marker);
    end Synth_Variable_Declaration;
 
    procedure Synth_Shared_Variable_Declaration (Syn_Inst : Synth_Instance_Acc;
                                                 Decl : Node)
    is
+      Marker : Mark_Type;
       Init : Valtyp;
       Val : Valtyp;
    begin
@@ -442,7 +459,10 @@ package body Synth.Vhdl_Decls is
          Set_Error (Syn_Inst);
       else
          if Init.Val = null then
+            Mark_Expr_Pool (Marker);
             Init := Create_Value_Default (Init.Typ);
+            Init := Unshare (Init, Instance_Pool);
+            Release_Expr_Pool (Marker);
          end if;
       end if;
 
@@ -478,6 +498,7 @@ package body Synth.Vhdl_Decls is
    is
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Atype : constant Node := Get_Declaration_Type (Decl);
+      Marker : Mark_Type;
       Off : Value_Offsets;
       Dyn : Vhdl_Stmts.Dyn_Name;
       Res : Valtyp;
@@ -492,6 +513,8 @@ package body Synth.Vhdl_Decls is
       else
          Obj_Typ := null;
       end if;
+
+      Mark_Expr_Pool (Marker);
 
       Vhdl_Stmts.Synth_Assignment_Prefix (Syn_Inst, Get_Name (Decl),
                                           Base, Typ, Off, Dyn);
@@ -511,12 +534,14 @@ package body Synth.Vhdl_Decls is
          Res := Synth_Subtype_Conversion (Syn_Inst, Res, Obj_Typ, True, Decl);
       end if;
       Res := Unshare (Res, Instance_Pool);
+      Release_Expr_Pool (Marker);
       Create_Object (Syn_Inst, Decl, Res);
    end Synth_Object_Alias_Declaration;
 
    procedure Synth_Concurrent_Object_Alias_Declaration
      (Syn_Inst : Synth_Instance_Acc; Decl : Node)
    is
+      Marker : Mark_Type;
       Val : Valtyp;
       Aval : Valtyp;
       Obj : Value_Acc;
@@ -527,6 +552,8 @@ package body Synth.Vhdl_Decls is
       pragma Assert (Val.Val.Kind = Value_Alias);
       Obj := Val.Val.A_Obj;
       if Obj.Kind = Value_Signal then
+         Mark_Expr_Pool (Marker);
+
          --  A signal must have been changed to a wire or a net, but the
          --  aliases have not been updated.  Update here.
          Base := Decl;
@@ -547,21 +574,30 @@ package body Synth.Vhdl_Decls is
          if Aval.Val.Kind = Value_Net then
             --  Object is a net if it is not writable.  Extract the
             --  bits for the alias.
+            Current_Pool := Instance_Pool;
             Aval := Create_Value_Net
               (Build2_Extract (Get_Build (Syn_Inst), Get_Value_Net (Aval.Val),
                                Off, Val.Typ.W),
                Val.Typ);
+            Current_Pool := Expr_Pool'Access;
             Val.Val.A_Off := (0, 0);
+         else
+            Aval := Unshare (Aval, Instance_Pool);
          end if;
          Val.Val.A_Obj := Aval.Val;
+         Release_Expr_Pool (Marker);
       end if;
    end Synth_Concurrent_Object_Alias_Declaration;
 
    procedure Synth_Declaration (Syn_Inst : Synth_Instance_Acc;
                                 Decl : Node;
                                 Is_Subprg : Boolean;
-                                Last_Type : in out Node) is
+                                Last_Type : in out Node)
+   is
+      Marker : Mark_Type;
    begin
+      Mark_Expr_Pool (Marker);
+
       case Get_Kind (Decl) is
          when Iir_Kind_Variable_Declaration =>
             Synth_Variable_Declaration (Syn_Inst, Decl, Is_Subprg);
@@ -613,17 +649,7 @@ package body Synth.Vhdl_Decls is
          when Iir_Kind_Component_Declaration =>
             null;
          when Iir_Kind_File_Declaration =>
-            declare
-               F : File_Index;
-               Res : Valtyp;
-               Obj_Typ : Type_Acc;
-            begin
-               F := Elab.Vhdl_Files.Elaborate_File_Declaration
-                 (Syn_Inst, Decl);
-               Obj_Typ := Get_Subtype_Object (Syn_Inst, Get_Type (Decl));
-               Res := Create_Value_File (Obj_Typ, F);
-               Create_Object (Syn_Inst, Decl, Res);
-            end;
+            Elab.Vhdl_Decls.Elab_File_Declaration (Syn_Inst, Decl);
          when Iir_Kind_Protected_Type_Body =>
             null;
          when Iir_Kind_Psl_Default_Clock =>
@@ -639,6 +665,8 @@ package body Synth.Vhdl_Decls is
          when others =>
             Vhdl.Errors.Error_Kind ("synth_declaration", Decl);
       end case;
+
+      pragma Assert (Areapools.Is_At_Mark (Expr_Pool, Marker));
    end Synth_Declaration;
 
    procedure Synth_Declarations (Syn_Inst : Synth_Instance_Acc;
@@ -835,6 +863,7 @@ package body Synth.Vhdl_Decls is
          when others =>
             Vhdl.Errors.Error_Kind ("synth_concurrent_declaration", Decl);
       end case;
+      pragma Assert (Is_Expr_Pool_Empty);
    end Synth_Concurrent_Declaration;
 
    procedure Synth_Concurrent_Declarations (Syn_Inst : Synth_Instance_Acc;

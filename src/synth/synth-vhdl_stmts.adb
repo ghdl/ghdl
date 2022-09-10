@@ -699,19 +699,23 @@ package body Synth.Vhdl_Stmts is
    procedure Synth_Simple_Signal_Assignment
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
+      Marker : Mark_Type;
       Targ : Target_Info;
       Val : Valtyp;
    begin
+      Mark_Expr_Pool (Marker);
       Targ := Synth_Target (Syn_Inst, Get_Target (Stmt));
       Val := Synth_Waveform
         (Syn_Inst, Get_Waveform_Chain (Stmt), Targ.Targ_Type);
       Synth_Assignment (Syn_Inst, Targ, Val, Stmt);
+      Release_Expr_Pool (Marker);
    end Synth_Simple_Signal_Assignment;
 
    procedure Synth_Conditional_Signal_Assignment
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
+      Marker : Mark_Type;
       Targ : Target_Info;
       Cond : Node;
       Cwf : Node;
@@ -721,6 +725,7 @@ package body Synth.Vhdl_Stmts is
       First, Last : Net;
       V : Net;
    begin
+      Mark_Expr_Pool (Marker);
       Targ := Synth_Target (Syn_Inst, Get_Target (Stmt));
       Last := No_Net;
       Cwf := Get_Conditional_Waveform_Chain (Stmt);
@@ -767,6 +772,7 @@ package body Synth.Vhdl_Stmts is
       end if;
       Val := Create_Value_Net (First, Targ.Targ_Type);
       Synth_Assignment (Syn_Inst, Targ, Val, Stmt);
+      Release_Expr_Pool (Marker);
    end Synth_Conditional_Signal_Assignment;
 
    procedure Synth_Variable_Assignment (Inst : Synth_Instance_Acc; Stmt : Node)
@@ -873,24 +879,33 @@ package body Synth.Vhdl_Stmts is
       Cond : constant Node := Get_Condition (Stmt);
       Els : constant Node := Get_Else_Clause (Stmt);
       Ctxt : constant Context_Acc := Get_Build (C.Inst);
+      Cond_Static : Int64;
+      Marker : Mark_Type;
       Cond_Val : Valtyp;
       Cond_Net : Net;
       Phi_True : Phi_Type;
       Phi_False : Phi_Type;
    begin
+      Mark_Expr_Pool (Marker);
+
       Cond_Val := Synth_Expression (C.Inst, Cond);
       if Cond_Val = No_Valtyp then
          Set_Error (C.Inst);
+         Release_Expr_Pool (Marker);
          return;
       end if;
+
       if Is_Static_Val (Cond_Val.Val) then
          Strip_Const (Cond_Val);
-         if Read_Discrete (Get_Value_Memtyp (Cond_Val)) = 1 then
+         Cond_Static := Read_Discrete (Get_Value_Memtyp (Cond_Val));
+         Release_Expr_Pool (Marker);
+
+         if Cond_Static = 1 then
             --  True.
             Synth_Sequential_Statements
               (C, Get_Sequential_Statement_Chain (Stmt));
          else
-            pragma Assert (Read_Discrete (Get_Value_Memtyp (Cond_Val)) = 0);
+            pragma Assert (Cond_Static = 0);
             if Is_Valid (Els) then
                --  Else part
                if Is_Null (Get_Condition (Els)) then
@@ -904,6 +919,9 @@ package body Synth.Vhdl_Stmts is
             end if;
          end if;
       else
+         Cond_Net := Get_Net (Ctxt, Cond_Val);
+         Release_Expr_Pool (Marker);
+
          --  The statements for the 'then' part.
          Push_Phi;
          Synth_Sequential_Statements
@@ -925,7 +943,6 @@ package body Synth.Vhdl_Stmts is
 
          Pop_Phi (Phi_False);
 
-         Cond_Net := Get_Net (Ctxt, Cond_Val);
          Merge_Phis (Ctxt, Cond_Net, Phi_True, Phi_False, Get_Location (Stmt));
       end if;
    end Synth_If_Statement;
@@ -1000,9 +1017,11 @@ package body Synth.Vhdl_Stmts is
                            Choice : in out Node)
    is
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
+      Marker : Mark_Type;
       Cond : Net;
       Res : Net;
    begin
+      Mark_Expr_Pool (Marker);
       Res := No_Net;
       loop
          case Iir_Kinds_Case_Choice (Get_Kind (Choice)) is
@@ -1021,6 +1040,7 @@ package body Synth.Vhdl_Stmts is
                        (Ctxt, Id_Eq, Sel, Get_Net (Ctxt, V));
                      Set_Location (Cond, Choice);
                   end if;
+                  Release_Expr_Pool (Marker);
                end;
 
             when Iir_Kind_Choice_By_Range =>
@@ -1066,6 +1086,7 @@ package body Synth.Vhdl_Stmts is
 
                   Cond := Build_Dyadic (Ctxt, Id_And, L, R);
                   Set_Location (Cond, Choice);
+                  Release_Expr_Pool (Marker);
                end;
 
             when Iir_Kind_Choice_By_Others =>
@@ -1551,16 +1572,20 @@ package body Synth.Vhdl_Stmts is
    procedure Synth_Case_Statement (C : in out Seq_Context; Stmt : Node)
    is
       Expr : constant Node := Get_Expression (Stmt);
+      Marker : Mark_Type;
       Sel : Valtyp;
       Stmts : Node;
    begin
+      Mark_Expr_Pool (Marker);
       Sel := Synth_Expression_With_Basetype (C.Inst, Expr);
       Strip_Const (Sel);
       if Is_Static (Sel.Val) then
          Stmts := Execute_Static_Case_Statement (C.Inst, Stmt, Sel);
+         Release_Expr_Pool (Marker);
          Synth_Sequential_Statements (C, Stmts);
       else
          Synth_Case_Statement_Dynamic (C, Stmt, Sel);
+         Release_Expr_Pool (Marker);
       end if;
    end Synth_Case_Statement;
 
@@ -1572,6 +1597,8 @@ package body Synth.Vhdl_Stmts is
 
       Expr : constant Node := Get_Expression (Stmt);
       Choices : constant Node := Get_Selected_Waveform_Chain (Stmt);
+
+      Marker : Mark_Type;
 
       Targ : Target_Info;
       Targ_Type : Type_Acc;
@@ -1592,6 +1619,7 @@ package body Synth.Vhdl_Stmts is
       Sel : Valtyp;
       Sel_Net : Net;
    begin
+      Mark_Expr_Pool (Marker);
       Targ := Synth_Target (Syn_Inst, Get_Target (Stmt));
       Targ_Type := Targ.Targ_Type;
 
@@ -1684,6 +1712,7 @@ package body Synth.Vhdl_Stmts is
       --  free.
       Free_Alternative_Data_Array (Alts);
       Free_Net_Array (Nets);
+      Release_Expr_Pool (Marker);
    end Synth_Selected_Signal_Assignment;
 
    function Synth_Label (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
@@ -2097,7 +2126,7 @@ package body Synth.Vhdl_Stmts is
             Wire := Alloc_Wire (Wire_Variable, (Inter, Val.Typ));
             Set_Wire_Gate (Wire, Get_Net (Ctxt, Val));
 
-            Val := Create_Value_Wire (Wire, Val.Typ);
+            Val := Create_Value_Wire (Wire, Val.Typ, Instance_Pool);
             Create_Object_Force (Subprg_Inst, Inter, No_Valtyp);
             Create_Object_Force (Subprg_Inst, Inter, Val);
          end if;
@@ -2178,6 +2207,7 @@ package body Synth.Vhdl_Stmts is
       Is_Func : constant Boolean := Is_Function_Declaration (Imp);
       Bod : constant Node := Vhdl.Sem_Inst.Get_Subprogram_Body_Origin (Imp);
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
+      Ret_Typ : Type_Acc;
       Res : Valtyp;
       C : Seq_Context (Mode_Dynamic);
       Wire_Mark : Wire_Id;
@@ -2209,11 +2239,12 @@ package body Synth.Vhdl_Stmts is
 
       if Is_Func then
          --  Set a default value for the return.
-         C.Ret_Typ := Get_Subtype_Object (Syn_Inst, Get_Return_Type (Imp));
+         Ret_Typ := Get_Subtype_Object (Syn_Inst, Get_Return_Type (Imp));
+         C.Ret_Typ := Ret_Typ;
 
          Set_Wire_Gate (C.W_Val,
-                        Build_Control_Signal (Sub_Inst, C.Ret_Typ.W, Imp));
-         C.Ret_Init := Build_Const_X (Ctxt, C.Ret_Typ.W);
+                        Build_Control_Signal (Sub_Inst, Ret_Typ.W, Imp));
+         C.Ret_Init := Build_Const_X (Ctxt, Ret_Typ.W);
          Phi_Assign_Net (Ctxt, C.W_Val, C.Ret_Init, 0);
       end if;
 
@@ -2242,8 +2273,8 @@ package body Synth.Vhdl_Stmts is
             elsif C.Nbr_Ret = 1 and then Is_Static (C.Ret_Value.Val) then
                Res := C.Ret_Value;
             else
-               Res := Create_Value_Net
-                 (Get_Current_Value (Ctxt, C.W_Val), C.Ret_Value.Typ);
+               Res := Create_Value_Net (Get_Current_Value (Ctxt, C.W_Val),
+                                        Unshare_Type (C.Ret_Typ, Ret_Typ));
             end if;
          else
             Res := No_Valtyp;
@@ -2577,6 +2608,9 @@ package body Synth.Vhdl_Stmts is
 
       Free_Instance (Sub_Inst);
 
+      --  Note: instance_pool is not released, as the result may be on that
+      --  pool.  Must be done by the caller.
+
       return Res;
    end Exec_Resolution_Call;
 
@@ -2785,6 +2819,7 @@ package body Synth.Vhdl_Stmts is
       Ctxt : constant Context_Acc := Get_Build (C.Inst);
       Cond : constant Node := Get_Condition (Stmt);
       Is_Exit : constant Boolean := Get_Kind (Stmt) = Iir_Kind_Exit_Statement;
+      Marker : Mark_Type;
       Static_Cond : Boolean;
       Loop_Label : Node;
       Lc : Loop_Context_Acc;
@@ -2792,12 +2827,14 @@ package body Synth.Vhdl_Stmts is
       Phi_True : Phi_Type;
       Phi_False : Phi_Type;
    begin
+      Mark_Expr_Pool (Marker);
       if Cond /= Null_Node then
          Cond_Val := Synth_Expression (C.Inst, Cond);
          Static_Cond := Is_Static_Val (Cond_Val.Val);
          if Static_Cond then
             if Get_Static_Discrete (Cond_Val) = 0 then
                --  Not executed.
+               Release_Expr_Pool (Marker);
                return;
             end if;
          else
@@ -2844,6 +2881,7 @@ package body Synth.Vhdl_Stmts is
          Merge_Phis (Ctxt, Get_Net (Ctxt, Cond_Val), Phi_True, Phi_False,
                      Get_Location (Stmt));
       end if;
+      Release_Expr_Pool (Marker);
    end Synth_Dynamic_Exit_Next_Statement;
 
    procedure Synth_Static_Exit_Next_Statement
@@ -2851,21 +2889,26 @@ package body Synth.Vhdl_Stmts is
    is
       Cond : constant Node := Get_Condition (Stmt);
       Is_Exit : constant Boolean := Get_Kind (Stmt) = Iir_Kind_Exit_Statement;
+      Marker : Mark_Type;
       Loop_Label : Node;
       Lc : Loop_Context_Acc;
       Cond_Val : Valtyp;
    begin
       if Cond /= Null_Node then
+         Mark_Expr_Pool (Marker);
          Cond_Val := Synth_Expression (C.Inst, Cond);
          if Cond_Val = No_Valtyp then
             Set_Error (C.Inst);
+            Release_Expr_Pool (Marker);
             return;
          end if;
          pragma Assert (Is_Static_Val (Cond_Val.Val));
          if Get_Static_Discrete (Cond_Val) = 0 then
             --  Not executed.
+            Release_Expr_Pool (Marker);
             return;
          end if;
+         Release_Expr_Pool (Marker);
       end if;
 
       --  Execution is suspended.
@@ -3005,7 +3048,9 @@ package body Synth.Vhdl_Stmts is
    is
       Stmts : constant Node := Get_Sequential_Statement_Chain (Stmt);
       Cond : constant Node := Get_Condition (Stmt);
+      Marker : Mark_Type;
       Val : Valtyp;
+      Cv : Boolean;
       Lc : aliased Loop_Context (Mode_Dynamic);
       Iter_Nbr : Natural;
    begin
@@ -3025,12 +3070,16 @@ package body Synth.Vhdl_Stmts is
 
       loop
          if Cond /= Null_Node then
+            Mark_Expr_Pool (Marker);
             Val := Synth_Expression_With_Type (C.Inst, Cond, Boolean_Type);
             if not Is_Static (Val.Val) then
                Error_Msg_Synth (+Cond, "loop condition must be static");
+               Release_Expr_Pool (Marker);
                exit;
             end if;
-            exit when Read_Discrete (Val) = 0;
+            Cv := Read_Discrete (Val) = 0;
+            Release_Expr_Pool (Marker);
+            exit when Cv;
          end if;
 
          Synth_Sequential_Statements (C, Stmts);
@@ -3060,7 +3109,9 @@ package body Synth.Vhdl_Stmts is
    is
       Stmts : constant Node := Get_Sequential_Statement_Chain (Stmt);
       Cond : constant Node := Get_Condition (Stmt);
+      Marker : Mark_Type;
       Val : Valtyp;
+      Cv : Boolean;
       Lc : aliased Loop_Context (Mode_Static);
    begin
       Lc := (Mode => Mode_Static,
@@ -3072,9 +3123,12 @@ package body Synth.Vhdl_Stmts is
 
       loop
          if Cond /= Null_Node then
+            Mark_Expr_Pool (Marker);
             Val := Synth_Expression_With_Type (C.Inst, Cond, Boolean_Type);
             pragma Assert (Is_Static (Val.Val));
-            exit when Read_Discrete (Val) = 0;
+            Cv := Read_Discrete (Val) = 0;
+            Release_Expr_Pool (Marker);
+            exit when Cv;
          end if;
 
          Synth_Sequential_Statements (C, Stmts);
@@ -3091,35 +3145,37 @@ package body Synth.Vhdl_Stmts is
    is
       Is_Dyn : constant Boolean := not Get_Instance_Const (C.Inst);
       Ctxt : constant Context_Acc := Get_Build (C.Inst);
-      Val : Valtyp;
       Expr : constant Node := Get_Expression (Stmt);
+      Val : Valtyp;
    begin
       if Expr /= Null_Node then
          --  Return in function.
          Val := Synth_Expression_With_Type (C.Inst, Expr, C.Ret_Typ);
+         if Val /= No_Valtyp then
+            Val := Synth_Subtype_Conversion
+              (C.Inst, Val, C.Ret_Typ, True, Stmt);
+         end if;
          if Val = No_Valtyp then
             Set_Error (C.Inst);
-            return;
-         end if;
-
-         Val := Synth_Subtype_Conversion (C.Inst, Val, C.Ret_Typ, True, Stmt);
-
-         if C.Nbr_Ret = 0 then
-            C.Ret_Value := Val;
-            if not Is_Bounded_Type (C.Ret_Typ) then
-               --  The function was declared with an unconstrained return type.
-               --  Now that a value has been returned, we know the subtype of
-               --  the returned values.  So adjust it.
-               --  All the returned values must have the same length.
-               C.Ret_Typ := Val.Typ;
-               if Is_Dyn then
-                  Set_Width (Get_Wire_Gate (C.W_Val), C.Ret_Typ.W);
-                  Set_Width (C.Ret_Init, C.Ret_Typ.W);
+         else
+            if C.Nbr_Ret = 0 then
+               C.Ret_Value := Val;
+               if not Is_Bounded_Type (C.Ret_Typ) then
+                  --  The function was declared with an unconstrained
+                  --  return type.  Now that a value has been returned,
+                  --  we know the subtype of the returned values.
+                  --  So adjust it. All the returned values must have the
+                  --  same length.
+                  C.Ret_Typ := Unshare (Val.Typ, Instance_Pool);
+                  if Is_Dyn then
+                     Set_Width (Get_Wire_Gate (C.W_Val), C.Ret_Typ.W);
+                     Set_Width (C.Ret_Init, C.Ret_Typ.W);
+                  end if;
                end if;
             end if;
-         end if;
-         if Is_Dyn then
-            Phi_Assign_Net (Ctxt, C.W_Val, Get_Net (Ctxt, Val), 0);
+            if Is_Dyn then
+               Phi_Assign_Net (Ctxt, C.W_Val, Get_Net (Ctxt, Val), 0);
+            end if;
          end if;
       end if;
 
@@ -3295,16 +3351,22 @@ package body Synth.Vhdl_Stmts is
    procedure Execute_Assertion_Statement (Inst : Synth_Instance_Acc;
                                           Stmt : Node)
    is
+      Marker : Mark_Type;
       Cond : Valtyp;
+      C : Boolean;
    begin
+      Mark_Expr_Pool (Marker);
       Cond := Synth_Expression (Inst, Get_Assertion_Condition (Stmt));
       if Cond = No_Valtyp then
          Set_Error (Inst);
+         Release_Expr_Pool (Marker);
          return;
       end if;
       pragma Assert (Is_Static (Cond.Val));
       Strip_Const (Cond);
-      if Read_Discrete (Cond) = 1 then
+      C := Read_Discrete (Cond) = 1;
+      Release_Expr_Pool (Marker);
+      if C then
          return;
       end if;
       Exec_Failed_Assertion (Inst, Stmt);
@@ -3314,6 +3376,7 @@ package body Synth.Vhdl_Stmts is
    is
       Ctxt : constant Context_Acc := Get_Build (C.Inst);
       Loc : constant Location_Type := Get_Location (Stmt);
+      Marker : Mark_Type;
       Cond : Valtyp;
       N : Net;
       En : Net;
@@ -3323,12 +3386,17 @@ package body Synth.Vhdl_Stmts is
          return;
       end if;
 
+      Mark_Expr_Pool (Marker);
       Cond := Synth_Expression (C.Inst, Get_Assertion_Condition (Stmt));
       if Cond = No_Valtyp then
          Set_Error (C.Inst);
+         Release_Expr_Pool (Marker);
          return;
       end if;
+
       N := Get_Net (Ctxt, Cond);
+      Release_Expr_Pool (Marker);
+
       En := Phi_Enable (Ctxt, (Stmt, Bit_Type), Bit0, Bit1,
                         Get_Location (Stmt));
       if En /= No_Net then
@@ -3344,10 +3412,13 @@ package body Synth.Vhdl_Stmts is
    is
       Is_Dyn : constant Boolean := not Get_Instance_Const (C.Inst);
       Ctxt : constant Context_Acc := Get_Build (C.Inst);
+      Marker : Mark_Type;
       Stmt : Node;
       Phi_T, Phi_F : Phi_Type;
       Has_Phi : Boolean;
    begin
+      Mark_Expr_Pool (Marker);
+
       Stmt := Stmts;
       while Is_Valid (Stmt) loop
          if Is_Dyn then
@@ -3442,6 +3513,8 @@ package body Synth.Vhdl_Stmts is
                return;
             end if;
          end if;
+         --  Not possible due to returns.
+--         pragma Assert (Areapools.Is_At_Mark (Expr_Pool, Marker));
          Stmt := Get_Chain (Stmt);
       end loop;
    end Synth_Sequential_Statements;
@@ -3451,6 +3524,7 @@ package body Synth.Vhdl_Stmts is
      (C : in out Seq_Context; Proc : Node)
    is
       Ctxt : constant Context_Acc := Get_Build (C.Inst);
+      Marker : Mark_Type;
       Stmt : Node;
       Cond : Node;
       Cond_Val : Valtyp;
@@ -3464,6 +3538,8 @@ package body Synth.Vhdl_Stmts is
          Error_Msg_Synth (+Stmt, "expect wait as the first statement");
          return;
       end if;
+
+      Mark_Expr_Pool (Marker);
 
       --  Handle the condition as an if.
       Cond := Get_Condition_Clause (Stmt);
@@ -3481,6 +3557,8 @@ package body Synth.Vhdl_Stmts is
 
       Merge_Phis (Ctxt, Get_Net (Ctxt, Cond_Val), Phi_True, Phi_False,
                   Get_Location (Stmt));
+
+      Release_Expr_Pool (Marker);
    end Synth_Process_Sequential_Statements;
 
    procedure Synth_Process_Statement
@@ -3516,7 +3594,10 @@ package body Synth.Vhdl_Stmts is
 
       Push_Phi;
 
+      pragma Assert (Is_Expr_Pool_Empty);
+
       Synth_Declarations (C.Inst, Decls_Chain);
+      pragma Assert (Is_Expr_Pool_Empty);
 
       Set_Wire_Gate (C.W_En, Build_Control_Signal (Syn_Inst, 1, Proc));
       Phi_Assign_Static (C.W_En, Bit1);
@@ -3531,10 +3612,12 @@ package body Synth.Vhdl_Stmts is
                Synth_Process_Sequential_Statements (C, Proc);
          end case;
       end if;
+      pragma Assert (Is_Expr_Pool_Empty);
 
       Pop_And_Merge_Phi (Ctxt, Get_Location (Proc));
 
       Finalize_Declarations (C.Inst, Decls_Chain);
+      pragma Assert (Is_Expr_Pool_Empty);
 
       Free_Instance (C.Inst);
       Release (M, Proc_Pool);
@@ -3579,29 +3662,28 @@ package body Synth.Vhdl_Stmts is
    is
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Cond : constant Node := Get_Assertion_Condition (Stmt);
+      Marker : Mark_Type;
       Val : Valtyp;
       Inst : Instance;
    begin
+      Mark_Expr_Pool (Marker);
       Val := Synth_Expression (Syn_Inst, Cond);
       if Val = No_Valtyp then
          Set_Error (Syn_Inst);
-         return;
-      end if;
-      if Is_Static (Val.Val) then
+      elsif Is_Static (Val.Val) then
          if Read_Discrete (Val) /= 1 then
             Exec_Failed_Assertion (Syn_Inst, Stmt);
          end if;
-         return;
-      end if;
-
-      if not Flags.Flag_Formal then
+      elsif Flags.Flag_Formal then
+         Inst := Build_Assert
+           (Ctxt, Synth_Label (Syn_Inst, Stmt), Get_Net (Ctxt, Val));
+         Set_Location (Inst, Get_Location (Stmt));
+      else
          --  Ignore the net.
-         return;
+         null;
       end if;
 
-      Inst := Build_Assert
-        (Ctxt, Synth_Label (Syn_Inst, Stmt), Get_Net (Ctxt, Val));
-      Set_Location (Inst, Get_Location (Stmt));
+      Release_Expr_Pool (Marker);
    end Synth_Concurrent_Assertion_Statement;
 
    procedure Synth_Block_Statement (Syn_Inst : Synth_Instance_Acc; Blk : Node)
@@ -3704,6 +3786,7 @@ package body Synth.Vhdl_Stmts is
    is
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Nbr_States : constant Int32 := Get_PSL_Nbr_States (Stmt);
+      Marker : Mark_Type;
       Has_Async_Abort : Boolean;
       States : Net;
       Init : Net;
@@ -3711,6 +3794,7 @@ package body Synth.Vhdl_Stmts is
       Clk : Net;
       Clk_Inst : Instance;
    begin
+      Mark_Expr_Pool (Marker);
       Instance_Pool := Proc_Pool'Access;
 
       --  create init net, clock net
@@ -3723,6 +3807,7 @@ package body Synth.Vhdl_Stmts is
       if Get_Id (Clk_Inst) not in Edge_Module_Id then
          Error_Msg_Synth (+Stmt, "clock is not an edge");
          Next_States := No_Net;
+         Release_Expr_Pool (Marker);
          return;
       end if;
 
@@ -3765,6 +3850,7 @@ package body Synth.Vhdl_Stmts is
       Connect (Get_Input (Get_Net_Parent (States), 1), Next_States);
 
       Instance_Pool := null;
+      Release_Expr_Pool (Marker);
    end Synth_Psl_Dff;
 
    function Synth_Psl_Final
@@ -4063,7 +4149,7 @@ package body Synth.Vhdl_Stmts is
             Error_Kind ("synth_concurrent_statement", Stmt);
       end case;
 
-      pragma Assert (Areapools.Is_Empty (Process_Pool));
+      pragma Assert (Is_Expr_Pool_Empty);
       Instance_Pool := null;
    end Synth_Concurrent_Statement;
 
@@ -4086,6 +4172,8 @@ package body Synth.Vhdl_Stmts is
    is
       Spec : constant Node := Get_Attribute_Specification (Val);
       Sig : constant Node := Get_Designated_Entity (Val);
+      Marker : Mark_Type;
+      Cv : Boolean;
       V : Valtyp;
    begin
       --  The type must be boolean
@@ -4105,9 +4193,12 @@ package body Synth.Vhdl_Stmts is
       end if;
 
       --  The value must be true
+      Mark_Expr_Pool (Marker);
       V := Synth_Expression_With_Type
         (Syn_Inst, Get_Expression (Spec), Boolean_Type);
-      if Read_Discrete (V) /= 1 then
+      Cv := Read_Discrete (V) = 1;
+      Release_Expr_Pool (Marker);
+      if not Cv then
          return;
       end if;
 

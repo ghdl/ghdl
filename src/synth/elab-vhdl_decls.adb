@@ -185,9 +185,7 @@ package body Elab.Vhdl_Decls is
    begin
       F := Elab.Vhdl_Files.Elaborate_File_Declaration (Syn_Inst, Decl);
       Obj_Typ := Get_Subtype_Object (Syn_Inst, Get_Type (Decl));
-      Current_Pool := Instance_Pool;
-      Res := Create_Value_File (Obj_Typ, F);
-      Current_Pool := Expr_Pool'Access;
+      Res := Create_Value_File (Obj_Typ, F, Instance_Pool);
       Create_Object (Syn_Inst, Decl, Res);
    end Elab_File_Declaration;
 

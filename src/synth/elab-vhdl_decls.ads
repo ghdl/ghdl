@@ -24,6 +24,8 @@ with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 package Elab.Vhdl_Decls is
    procedure Elab_Subprogram_Declaration
      (Syn_Inst : Synth_Instance_Acc; Subprg : Node);
+   procedure Elab_File_Declaration (Syn_Inst : Synth_Instance_Acc;
+                                    Decl : Node);
 
    procedure Elab_Declaration (Syn_Inst : Synth_Instance_Acc;
                                Decl : Node;

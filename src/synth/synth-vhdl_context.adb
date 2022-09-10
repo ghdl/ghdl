@@ -180,7 +180,7 @@ package body Synth.Vhdl_Context is
       else
          Wid := Alloc_Wire (Kind, (Obj, Otyp));
       end if;
-      Val := Create_Value_Wire (Wid, Otyp);
+      Val := Create_Value_Wire (Wid, Otyp, Current_Pool);
 
       Create_Object (Syn_Inst, Obj, Val);
    end Create_Wire_Object;
@@ -354,18 +354,21 @@ package body Synth.Vhdl_Context is
       Val.N := To_Uns32 (W);
    end Set_Value_Wire;
 
-   function Create_Value_Wire (W : Wire_Id) return Value_Acc
+   function Create_Value_Wire (W : Wire_Id; Pool : Areapool_Acc)
+                              return Value_Acc
    is
       function To_Uns32 is new Ada.Unchecked_Conversion (Wire_Id, Uns32);
    begin
-      return Create_Value_Wire (To_Uns32 (W));
+      return Create_Value_Wire (To_Uns32 (W), Pool);
    end Create_Value_Wire;
 
-   function Create_Value_Wire (W : Wire_Id; Wtype : Type_Acc) return Valtyp
+   function Create_Value_Wire (W : Wire_Id;
+                               Wtype : Type_Acc;
+                               Pool : Areapool_Acc) return Valtyp
    is
       pragma Assert (Wtype /= null);
    begin
-      return (Wtype, Create_Value_Wire (W));
+      return (Wtype, Create_Value_Wire (W, Pool));
    end Create_Value_Wire;
 
    function Create_Value_Net (N : Net) return Value_Acc

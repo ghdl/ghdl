@@ -95,13 +95,13 @@ package body Elab.Vhdl_Values is
       return Is_Equal (Get_Memtyp (L), Get_Memtyp (R));
    end Is_Equal;
 
-   function Create_Value_Wire (S : Uns32) return Value_Acc
+   function Create_Value_Wire (S : Uns32; Pool : Areapool_Acc)
+                              return Value_Acc
    is
       subtype Value_Type_Wire is Value_Type (Value_Wire);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Wire);
    begin
-      return To_Value_Acc
-        (Alloc (Current_Pool, (Kind => Value_Wire, N => S)));
+      return To_Value_Acc (Alloc (Pool, (Kind => Value_Wire, N => S)));
    end Create_Value_Wire;
 
    function Create_Value_Net (S : Uns32) return Value_Acc
@@ -154,21 +154,22 @@ package body Elab.Vhdl_Values is
       return Create_Value_Memory ((Vtype, To_Memory_Ptr (M)), Pool);
    end Create_Value_Memory;
 
-   function Create_Value_File (File : File_Index) return Value_Acc
+   function Create_Value_File (File : File_Index; Pool : Areapool_Acc)
+                              return Value_Acc
    is
       subtype Value_Type_File is Value_Type (Value_File);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_File);
    begin
-      return To_Value_Acc (Alloc (Current_Pool,
-                                  (Kind => Value_File, File => File)));
+      return To_Value_Acc (Alloc (Pool, (Kind => Value_File, File => File)));
    end Create_Value_File;
 
-   function Create_Value_File (Vtype : Type_Acc; File : File_Index)
-                              return Valtyp
+   function Create_Value_File (Vtype : Type_Acc;
+                               File : File_Index;
+                               Pool : Areapool_Acc) return Valtyp
    is
       pragma Assert (Vtype /= null);
    begin
-      return (Vtype, Create_Value_File (File));
+      return (Vtype, Create_Value_File (File, Pool));
    end Create_Value_File;
 
    function Create_Value_Quantity (Q : Quantity_Index_Type) return Value_Acc
@@ -241,22 +242,23 @@ package body Elab.Vhdl_Values is
       return Val;
    end Create_Value_Dyn_Alias;
 
-   function Create_Value_Const (Val : Value_Acc; Loc : Node) return Value_Acc
+   function Create_Value_Const
+     (Val : Value_Acc; Loc : Node; Pool : Areapool_Acc) return Value_Acc
    is
       subtype Value_Type_Const is Value_Type (Value_Const);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Const);
    begin
       pragma Assert (Val = null or else Val.Kind /= Value_Const);
-      return To_Value_Acc (Alloc (Current_Pool,
-                                  (Kind => Value_Const,
-                                   C_Val => Val,
-                                   C_Loc => Loc,
-                                   C_Net => 0)));
+      return To_Value_Acc (Alloc (Pool, (Kind => Value_Const,
+                                         C_Val => Val,
+                                         C_Loc => Loc,
+                                         C_Net => 0)));
    end Create_Value_Const;
 
-   function Create_Value_Const (Val : Valtyp; Loc : Node) return Valtyp is
+   function Create_Value_Const (Val : Valtyp; Loc : Node; Pool : Areapool_Acc)
+                               return Valtyp is
    begin
-      return (Val.Typ, Create_Value_Const (Val.Val, Loc));
+      return (Val.Typ, Create_Value_Const (Val.Val, Loc, Pool));
    end Create_Value_Const;
 
    procedure Strip_Const (Vt : in out Valtyp) is
@@ -285,18 +287,24 @@ package body Elab.Vhdl_Values is
          when Value_Net =>
             Res := (Src.Typ, Create_Value_Net (Src.Val.N));
          when Value_Wire =>
-            Res := (Src.Typ, Create_Value_Wire (Src.Val.N));
+            Res := (Src.Typ, Create_Value_Wire (Src.Val.N, Current_Pool));
          when Value_File =>
-            Res := Create_Value_File (Src.Typ, Src.Val.File);
+            Res := Create_Value_File (Src.Typ, Src.Val.File, Current_Pool);
          when Value_Quantity
            | Value_Terminal =>
             raise Internal_Error;
          when Value_Signal =>
             raise Internal_Error;
          when Value_Const =>
-            Res := (Src.Typ,
-                    Create_Value_Const (Src.Val.C_Val, Src.Val.C_Loc));
-            Res.Val.C_Net := Src.Val.C_Net;
+            declare
+               Cst : Valtyp;
+            begin
+               Cst := Copy ((Src.Typ, Src.Val.C_Val));
+               Res := (Src.Typ,
+                       Create_Value_Const (Cst.Val, Src.Val.C_Loc,
+                                           Current_Pool));
+               Res.Val.C_Net := Src.Val.C_Net;
+            end;
          when Value_Alias =>
             Res := Create_Value_Alias ((Src.Val.A_Typ, Src.Val.A_Obj),
                                        Src.Val.A_Off, Src.Typ,

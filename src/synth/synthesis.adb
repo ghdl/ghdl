@@ -25,6 +25,7 @@ with Netlists.Expands;
 
 with Elab.Vhdl_Values.Debug;
 pragma Unreferenced (Elab.Vhdl_Values.Debug);
+with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
 
 with Synth.Vhdl_Insts; use Synth.Vhdl_Insts;
 
@@ -58,6 +59,8 @@ package body Synthesis is
          Synth_Initialize_Foreign.all;
       end if;
 
+      pragma Assert (Is_Expr_Pool_Empty);
+
       Unit := Get_Library_Unit (Design);
       if Get_Kind (Unit) = Iir_Kind_Foreign_Module then
          if Synth_Top_Foreign = null then
@@ -68,7 +71,11 @@ package body Synthesis is
          Synth_Top_Entity (Base, Design, Encoding, Inst);
       end if;
 
+      pragma Assert (Is_Expr_Pool_Empty);
+
       Synth.Vhdl_Insts.Synth_All_Instances;
+
+      pragma Assert (Is_Expr_Pool_Empty);
 
       if Errorout.Nbr_Errors > 0 then
          return No_Module;

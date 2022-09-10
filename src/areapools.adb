@@ -128,6 +128,11 @@ package body Areapools is
       return Pool.Last = null;
    end Is_Empty;
 
+   function Is_At_Mark (Pool : Areapool; M : Mark_Type) return Boolean is
+   begin
+      return Pool.Last = M.Last and Pool.Next_Use = M.Next_Use;
+   end Is_At_Mark;
+
    function Alloc_On_Pool_Addr (Pool : Areapool_Acc; Val : T)
                                return System.Address
    is

@@ -842,7 +842,7 @@ package body Elab.Vhdl_Insts is
 
       --  Use global memory.
       Instance_Pool := Global_Pool'Access;
-      pragma Assert (Areapools.Is_Empty (Expr_Pool));
+      pragma Assert (Is_Expr_Pool_Empty);
 
       --  Start elaboration.
       Make_Root_Instance;
@@ -857,7 +857,7 @@ package body Elab.Vhdl_Insts is
       Elab_Dependencies (Root_Instance, Get_Design_Unit (Entity));
       Elab_Dependencies (Root_Instance, Get_Design_Unit (Arch));
 
-      pragma Assert (Areapools.Is_Empty (Expr_Pool));
+      pragma Assert (Is_Expr_Pool_Empty);
 
       --  Compute generics.
       Inter := Get_Generic_Chain (Entity);
@@ -880,7 +880,7 @@ package body Elab.Vhdl_Insts is
          Inter := Get_Chain (Inter);
       end loop;
 
-      pragma Assert (Areapools.Is_Empty (Expr_Pool));
+      pragma Assert (Is_Expr_Pool_Empty);
 
       --  Elaborate port types.
       --  FIXME: what about unconstrained ports ?  Get the type from the
@@ -909,7 +909,7 @@ package body Elab.Vhdl_Insts is
          Inter := Get_Chain (Inter);
       end loop;
 
-      pragma Assert (Areapools.Is_Empty (Expr_Pool));
+      pragma Assert (Is_Expr_Pool_Empty);
 
       Elab_Instance_Body (Top_Inst);
 
