@@ -2056,19 +2056,25 @@ package body Simul.Vhdl_Simul is
                                Already_Resolved : Boolean)
       is
          Sub_Resolved : Boolean := Already_Resolved;
-         Resolv_Func : Iir;
+         Resolv_Func : Node;
          Resolv_Instance : Resolv_Instance_Acc;
          S : Ghdl_Signal_Ptr;
-         Arr_Type : Iir;
-         Idx_Type : Iir;
+         Arr_Type : Node;
+         Idx_Type : Node;
       begin
          if not Already_Resolved
            and then Get_Kind (Sig_Type) in Iir_Kinds_Subtype_Definition
          then
             Resolv_Func := Get_Resolution_Indication (Sig_Type);
-            if Resolv_Func /= Null_Iir and then Vec (Sig_Off).Total > 1 then
-               Sub_Resolved := True;
+            if Resolv_Func /= Null_Node then
                Resolv_Func := Get_Named_Entity (Resolv_Func);
+            end if;
+            if Resolv_Func /= Null_Node
+              and then
+              (Vec (Sig_Off).Total > 1
+                 or else Resolv_Func /= Vhdl.Ieee.Std_Logic_1164.Resolved)
+            then
+               Sub_Resolved := True;
                Arr_Type :=
                  Get_Type (Get_Interface_Declaration_Chain (Resolv_Func));
                Idx_Type := Vhdl.Utils.Get_Index_Type (Arr_Type, 0);
