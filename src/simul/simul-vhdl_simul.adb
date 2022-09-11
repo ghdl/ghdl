@@ -3051,9 +3051,6 @@ package body Simul.Vhdl_Simul is
       Status := Grt.Main.Run_Through_Longjump
         (Grt.Processes.Simulation_Init'Access);
 
-      pragma Assert (Areapools.Is_Empty (Expr_Pool));
-      pragma Assert (Areapools.Is_Empty (Process_Pool));
-
       if Status = 0 then
          if Grt.Processes.Flag_AMS then
             Grt.Analog_Solver.Start;
@@ -3061,6 +3058,9 @@ package body Simul.Vhdl_Simul is
 
          Grt.Errors.Set_Error_Stream (Grt.Stdio.stdout);
          Assertion_Report_Handler := Assertion_Report_Msg'Access;
+
+         pragma Assert (Areapools.Is_Empty (Expr_Pool));
+         pragma Assert (Areapools.Is_Empty (Process_Pool));
 
          loop
             if Break_Time < Grt.Processes.Next_Time then
