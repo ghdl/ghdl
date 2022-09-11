@@ -873,7 +873,7 @@ package body Elab.Vhdl_Insts is
               (Top_Inst, Get_Default_Value (Inter), Inter_Typ);
             pragma Assert (Is_Static (Val.Val));
             Val := Unshare (Val, Instance_Pool);
-            Val.Typ := Unshare (Val.Typ, Instance_Pool);
+            Val.Typ := Unshare_Type_Instance (Val.Typ, Inter_Typ);
             Create_Object (Top_Inst, Inter, Val);
             Release_Expr_Pool (Em);
          end;
@@ -897,12 +897,17 @@ package body Elab.Vhdl_Insts is
          else
             declare
                Def : constant Node := Get_Default_Value (Inter);
+               Marker : Mark_Type;
                Inter_Typ : Type_Acc;
                Val : Valtyp;
             begin
+               Mark_Expr_Pool (Marker);
                pragma Assert (Def /= Null_Node);
                Inter_Typ := Elab_Declaration_Type (Top_Inst, Inter);
                Val := Synth_Expression_With_Type (Top_Inst, Def, Inter_Typ);
+               Val := Unshare (Val, Instance_Pool);
+               Val.Typ := Unshare_Type_Instance (Val.Typ, Inter_Typ);
+               Release_Expr_Pool (Marker);
                Create_Signal (Top_Inst, Inter, Val.Typ);
             end;
          end if;

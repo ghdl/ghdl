@@ -594,7 +594,8 @@ package body Synth.Vhdl_Eval is
                Check_Matching_Bounds (Le_Typ, Re_Typ, Expr);
                Bnd := Elab.Vhdl_Types.Create_Bounds_From_Length
                  (Get_Uarray_Index (Res_Typ).Drange, L_Len + R_Len);
-               El_Typ := Unshare_Type (Le_Typ, Get_Array_Element (Res_Typ));
+               El_Typ := Unshare_Type_Expr (Le_Typ,
+                                            Get_Array_Element (Res_Typ));
                Res_St := Create_Onedimensional_Array_Subtype
                  (Res_Typ, Bnd, El_Typ);
                Res := Create_Memory (Res_St);
@@ -619,7 +620,8 @@ package body Synth.Vhdl_Eval is
                Check_Matching_Bounds (Left.Typ, Re_Typ, Expr);
                Bnd := Elab.Vhdl_Types.Create_Bounds_From_Length
                  (Get_Uarray_Index (Res_Typ).Drange, 1 + Rlen);
-               El_Typ := Unshare_Type (Re_Typ, Get_Array_Element (Res_Typ));
+               El_Typ := Unshare_Type_Expr (Re_Typ,
+                                            Get_Array_Element (Res_Typ));
                Res_St := Create_Onedimensional_Array_Subtype
                  (Res_Typ, Bnd, El_Typ);
                Res := Create_Memory (Res_St);
@@ -641,7 +643,8 @@ package body Synth.Vhdl_Eval is
                Check_Matching_Bounds (Le_Typ, Right.Typ, Expr);
                Bnd := Elab.Vhdl_Types.Create_Bounds_From_Length
                  (Get_Uarray_Index (Res_Typ).Drange, Llen + 1);
-               El_Typ := Unshare_Type (Le_Typ, Get_Array_Element (Res_Typ));
+               El_Typ := Unshare_Type_Expr (Le_Typ,
+                                            Get_Array_Element (Res_Typ));
                Res_St := Create_Onedimensional_Array_Subtype
                  (Res_Typ, Bnd, El_Typ);
                Res := Create_Memory (Res_St);
@@ -661,7 +664,8 @@ package body Synth.Vhdl_Eval is
                Check_Matching_Bounds (Left.Typ, Right.Typ, Expr);
                Bnd := Elab.Vhdl_Types.Create_Bounds_From_Length
                  (Get_Uarray_Index (Res_Typ).Drange, 2);
-               El_Typ := Unshare_Type (Le_Typ, Get_Array_Element (Res_Typ));
+               El_Typ := Unshare_Type_Expr (Le_Typ,
+                                            Get_Array_Element (Res_Typ));
                Res_St := Create_Onedimensional_Array_Subtype
                  (Res_Typ, Bnd, El_Typ);
                Res := Create_Memory (Res_St);

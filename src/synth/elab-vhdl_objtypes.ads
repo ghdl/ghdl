@@ -339,7 +339,12 @@ package Elab.Vhdl_Objtypes is
    function Unshare (T : Type_Acc; Pool : Areapool_Acc) return Type_Acc;
 
    --  Unshare parts of TYP that is not in BASE.
-   function Unshare_Type (Typ : Type_Acc; Base : Type_Acc) return Type_Acc;
+   --  For return expression, the type is allocated on the Expr_Pool.
+   function Unshare_Type_Expr (Typ : Type_Acc; Base : Type_Acc)
+                              return Type_Acc;
+   --  For object types, the type is allocated on the Instance_Pool.
+   function Unshare_Type_Instance (Typ : Type_Acc; Base : Type_Acc)
+                                  return Type_Acc;
 
    --  Copy TYP to MEM; MEM_SZ.
    function Save_Type (Typ : Type_Acc;

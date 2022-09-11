@@ -1033,15 +1033,18 @@ package body Elab.Vhdl_Objtypes is
       return Res;
    end Unshare;
 
-   function Unshare_Type (Typ : Type_Acc; Base : Type_Acc) return Type_Acc
+   function Unshare_Type (Typ : Type_Acc;
+                          Base : Type_Acc;
+                          Global : Boolean;
+                          Pool : Areapool_Acc) return Type_Acc
    is
       Res : Type_Acc;
    begin
-      if Typ = Base or else not Typ.Is_Global then
+      if Typ = Base or else Typ.Is_Global = Global then
          return Typ;
       end if;
-      Res := Raw_Copy (Typ, Expr_Pool'Access);
-      Res.Is_Global := False;
+      Res := Raw_Copy (Typ, Pool);
+      Res.Is_Global := Global;
 
       case Res.Kind is
          when Type_Bit
@@ -1054,17 +1057,19 @@ package body Elab.Vhdl_Objtypes is
          when Type_Array
            | Type_Vector =>
             Res.Arr_El := Unshare_Type (Typ.Arr_El,
-                                        Get_Array_Element (Base));
+                                        Get_Array_Element (Base),
+                                        Global, Pool);
          when Type_Unbounded_Array
            | Type_Unbounded_Vector
            | Type_Unbounded_Record =>
             raise Internal_Error;
          when Type_Record =>
-            Res.Rec := Create_Rec_El_Array (Typ.Rec.Len, Expr_Pool'Access);
+            Res.Rec := Create_Rec_El_Array (Typ.Rec.Len, Pool);
             for I in Typ.Rec.E'Range loop
                Res.Rec.E (I) := (Offs => Typ.Rec.E (I).Offs,
                                  Typ => Unshare_Type (Typ.Rec.E (I).Typ,
-                                                      Base.Rec.E (I).Typ));
+                                                      Base.Rec.E (I).Typ,
+                                                      Global, Pool));
             end loop;
          when Type_Access =>
             raise Internal_Error;
@@ -1075,6 +1080,18 @@ package body Elab.Vhdl_Objtypes is
       end case;
       return Res;
    end Unshare_Type;
+
+   function Unshare_Type_Expr (Typ : Type_Acc; Base : Type_Acc)
+                              return Type_Acc is
+   begin
+      return Unshare_Type (Typ, Base, False, Expr_Pool'Access);
+   end Unshare_Type_Expr;
+
+   function Unshare_Type_Instance (Typ : Type_Acc; Base : Type_Acc)
+                                  return Type_Acc is
+   begin
+      return Unshare_Type (Typ, Base, True, Instance_Pool);
+   end Unshare_Type_Instance;
 
    procedure Save_Type (Typ : Type_Acc;
                         Res : out Type_Acc;

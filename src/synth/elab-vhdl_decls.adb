@@ -160,6 +160,8 @@ package body Elab.Vhdl_Decls is
          Init := Synth_Expression_With_Type (Syn_Inst, Def, Obj_Typ);
          Init := Exec_Subtype_Conversion (Init, Obj_Typ, False, Decl);
          Init := Unshare (Init, Instance_Pool);
+         --  Note: Obj_Typ is bounded.
+         Init.Typ := Obj_Typ;
       else
          if Force_Init then
             Current_Pool := Instance_Pool;

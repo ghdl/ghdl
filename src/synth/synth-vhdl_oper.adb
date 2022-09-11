@@ -968,7 +968,8 @@ package body Synth.Vhdl_Oper is
                   Get_Index_Type (Get_Type (Expr), 0),
                   Iir_Index32 (Get_Bound_Length (Left.Typ) + 1));
 
-               El_Typ := Unshare_Type (Le_Typ, Get_Array_Element (Expr_Typ));
+               El_Typ := Unshare_Type_Expr (Le_Typ,
+                                            Get_Array_Element (Expr_Typ));
                Res_Typ := Create_Onedimensional_Array_Subtype
                  (Expr_Typ, Bnd, El_Typ);
                return Create_Value_Net (N, Res_Typ);
@@ -990,7 +991,8 @@ package body Synth.Vhdl_Oper is
                   Get_Index_Type (Get_Type (Expr), 0),
                   Iir_Index32 (Get_Bound_Length (Right.Typ) + 1));
 
-               El_Typ := Unshare_Type (Re_Typ, Get_Array_Element (Expr_Typ));
+               El_Typ := Unshare_Type_Expr (Re_Typ,
+                                            Get_Array_Element (Expr_Typ));
                Res_Typ := Create_Onedimensional_Array_Subtype
                  (Expr_Typ, Bnd, El_Typ);
                return Create_Value_Net (N, Res_Typ);
@@ -1008,7 +1010,8 @@ package body Synth.Vhdl_Oper is
                Set_Location (N, Expr);
                Bnd := Create_Bounds_From_Length
                  (Syn_Inst, Get_Index_Type (Get_Type (Expr), 0), 2);
-               El_Typ := Unshare_Type (Left.Typ, Get_Array_Element (Expr_Typ));
+               El_Typ := Unshare_Type_Expr (Left.Typ,
+                                            Get_Array_Element (Expr_Typ));
                Res_Typ := Create_Onedimensional_Array_Subtype
                  (Expr_Typ, Bnd, El_Typ);
                return Create_Value_Net (N, Res_Typ);
@@ -1033,7 +1036,8 @@ package body Synth.Vhdl_Oper is
                   Iir_Index32 (Get_Bound_Length (Left.Typ)
                                  + Get_Bound_Length (Right.Typ)));
 
-               El_Typ := Unshare_Type (Le_Typ, Get_Array_Element (Expr_Typ));
+               El_Typ := Unshare_Type_Expr (Le_Typ,
+                                            Get_Array_Element (Expr_Typ));
                Res_Typ := Create_Onedimensional_Array_Subtype
                  (Expr_Typ, Bnd, El_Typ);
                return Create_Value_Net (N, Res_Typ);

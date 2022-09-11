@@ -2280,8 +2280,9 @@ package body Synth.Vhdl_Stmts is
             elsif C.Nbr_Ret = 1 and then Is_Static (C.Ret_Value.Val) then
                Res := C.Ret_Value;
             else
-               Res := Create_Value_Net (Get_Current_Value (Ctxt, C.W_Val),
-                                        Unshare_Type (C.Ret_Typ, Ret_Typ));
+               Res := Create_Value_Net
+                 (Get_Current_Value (Ctxt, C.W_Val),
+                  Unshare_Type_Expr (C.Ret_Typ, Ret_Typ));
             end if;
          else
             Res := No_Valtyp;
@@ -2499,7 +2500,7 @@ package body Synth.Vhdl_Stmts is
          --  Protect return value from being deallocated
          Res := Unshare (Res, Expr_Pool'Access);
          Ret_Typ := Get_Subtype_Object (Syn_Inst, Get_Type (Imp));
-         Res.Typ := Unshare_Type (Res.Typ, Ret_Typ);
+         Res.Typ := Unshare_Type_Expr (Res.Typ, Ret_Typ);
       end if;
 
       Areapools.Release (Area_Mark, Instance_Pool.all);
