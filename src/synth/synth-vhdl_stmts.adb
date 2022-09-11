@@ -2001,8 +2001,15 @@ package body Synth.Vhdl_Stmts is
                     (Subprg_Inst, Val, Inter_Typ, True, Assoc);
                   Val := Unshare (Val, Instance_Pool);
                else
-                  --  Use default value ?
-                  null;
+                  --  Use default value
+                  --  FIXME: also for wires ?
+                  if Val.Val.Kind = Value_Memory then
+                     if Is_Bounded_Type (Inter_Typ) then
+                        Write_Value_Default (Val.Val.Mem, Inter_Typ);
+                     else
+                        Write_Value_Default (Val.Val.Mem, Val.Typ);
+                     end if;
+                  end if;
                end if;
                Val.Typ := Unshare (Val.Typ, Instance_Pool);
             when Iir_Kind_Interface_Signal_Declaration =>
