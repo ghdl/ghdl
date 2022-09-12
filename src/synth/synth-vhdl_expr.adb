@@ -1405,8 +1405,26 @@ package body Synth.Vhdl_Expr is
                --  Int to int.
                return Val;
             elsif Val.Typ.Kind = Type_Float then
-               return Create_Value_Discrete
-                 (Int64 (Read_Fp64 (Val)), Conv_Typ);
+               pragma Assert (Is_Static (Val.Val));
+               declare
+                  V : constant Fp64 := Read_Fp64 (Val);
+                  Err : Boolean;
+               begin
+                  case Conv_Typ.Drange.Dir is
+                     when Dir_To =>
+                        Err := V < Fp64 (Conv_Typ.Drange.Left)
+                          or V > Fp64 (Conv_Typ.Drange.Right);
+                     when Dir_Downto =>
+                        Err := V < Fp64 (Conv_Typ.Drange.Right)
+                          or V > Fp64 (Conv_Typ.Drange.Left);
+                  end case;
+                  if Err then
+                     Error_Msg_Synth (+Expr, "value out of range");
+                     Elab.Debugger.Debug_Error (Syn_Inst, Expr);
+                     return No_Valtyp;
+                  end if;
+                  return Create_Value_Discrete (Int64 (V), Conv_Typ);
+               end;
             else
                Error_Msg_Synth (+Conv, "unhandled type conversion (to int)");
                return No_Valtyp;
@@ -2324,6 +2342,7 @@ package body Synth.Vhdl_Expr is
             return Synth_Psl_Onehot0(Syn_Inst, Expr);
          when Iir_Kind_Overflow_Literal =>
             Error_Msg_Synth (+Expr, "out of bound expression");
+            Elab.Debugger.Debug_Error (Syn_Inst, Expr);
             return No_Valtyp;
          when Iir_Kind_Event_Attribute =>
             if Hook_Event_Attribute /= null then
