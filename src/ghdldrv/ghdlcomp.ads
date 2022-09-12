@@ -67,6 +67,9 @@ package Ghdlcomp is
    --  Output of --disp-config.
    procedure Disp_Config;
 
+   --  Option --expect-failure.
+   Flag_Expect_Failure : Boolean := False;
+
    -- --time-resolution=X
    -- Where X corresponds to:
    -- fs => 'f'

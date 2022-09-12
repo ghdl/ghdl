@@ -35,8 +35,6 @@ with Libraries;
 
 package body Ghdlcomp is
 
-   Flag_Expect_Failure : Boolean := False;
-
    --  Commands which use the mcode compiler.
    type Command_Comp is abstract new Command_Lib with null record;
 

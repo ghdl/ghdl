@@ -82,21 +82,24 @@ package body Ghdlsimul is
    begin
       Common_Compile_Elab (Cmd_Name, Args, False, Opt_Arg, Config);
 
+      for I in Opt_Arg .. Args'Last loop
+         if Args (I).all = "--expect-failure" then
+            Flag_Expect_Failure := True;
+            exit;
+         end if;
+      end loop;
+
       Lib_Unit := Get_Library_Unit (Config);
       pragma Assert (Get_Kind (Lib_Unit) /= Iir_Kind_Foreign_Module);
       Inst := Elab.Vhdl_Insts.Elab_Top_Unit (Lib_Unit);
 
       if Errorout.Nbr_Errors > 0 then
-         raise Errorout.Compilation_Error;
+         if Grt.Errors.Expect_Failure then
+            return;
+         else
+            raise Errorout.Compilation_Error;
+         end if;
       end if;
-
---      if Inst = null then
---         if Cmd.Expect_Failure then
---            return;
---         else
---            raise Errorout.Compilation_Error;
---         end if;
---      end if;
 
       Simul.Vhdl_Elab.Gather_Processes (Inst);
       Simul.Vhdl_Elab.Elab_Processes;
