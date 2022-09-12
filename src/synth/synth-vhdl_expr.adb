@@ -1495,6 +1495,71 @@ package body Synth.Vhdl_Expr is
       return Create_Value_Discrete (R, Typ);
    end Synth_Low_High_Type_Attribute;
 
+   --  For 'Succ, 'Pred, 'Leftof or 'Rightof
+   function Synth_Inc_Dec_Attribute (Syn_Inst : Synth_Instance_Acc;
+                                     Expr : Node;
+                                     Dtype : Type_Acc;
+                                     Is_Inc : Boolean) return Valtyp
+   is
+      Param : constant Node := Get_Parameter (Expr);
+      Val : Valtyp;
+      Res : Valtyp;
+   begin
+      Val := Synth_Expression (Syn_Inst, Param);
+      if Is_Static (Val.Val) then
+         declare
+            T : Int64;
+            Err : Boolean;
+         begin
+            T := Read_Discrete (Val);
+            case Dtype.Drange.Dir is
+               when Dir_To =>
+                  if Is_Inc then
+                     Err := T >= Dtype.Drange.Right;
+                  else
+                     Err := T <= Dtype.Drange.Left;
+                  end if;
+               when Dir_Downto =>
+                  if Is_Inc then
+                     Err := T >= Dtype.Drange.Left;
+                  else
+                     Err := T <= Dtype.Drange.Right;
+                  end if;
+            end case;
+            if Err then
+               Error_Msg_Synth (+Expr, "value out of range");
+               Elab.Debugger.Debug_Error (Syn_Inst, Expr);
+               return No_Valtyp;
+            end if;
+            Res := Create_Value_Memory (Dtype, Expr_Pool'Access);
+            if Is_Inc then
+               T := T + 1;
+            else
+               T := T - 1;
+            end if;
+            Write_Discrete (Res, T);
+         end;
+      else
+         declare
+            Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
+            N, One : Net;
+            Op : Module_Id;
+         begin
+            N := Get_Net (Ctxt, Val);
+            One := Build_Const_UB32 (Ctxt, 1, Dtype.W);
+            if Is_Inc then
+               Op := Id_Add;
+            else
+               Op := Id_Sub;
+            end if;
+            N := Build_Dyadic (Ctxt, Op, N, One);
+            Set_Location (N, Expr);
+            Res := Create_Value_Net (N, Dtype);
+         end;
+      end if;
+      return Res;
+   end Synth_Inc_Dec_Attribute;
+
    function Synth_PSL_Expression
      (Syn_Inst : Synth_Instance_Acc; Expr : PSL.Types.PSL_Node) return Net
    is
@@ -2179,6 +2244,36 @@ package body Synth.Vhdl_Expr is
             return Synth_Low_High_Type_Attribute (Syn_Inst, Expr, Dir_To);
          when Iir_Kind_High_Type_Attribute =>
             return Synth_Low_High_Type_Attribute (Syn_Inst, Expr, Dir_Downto);
+         when Iir_Kind_Succ_Attribute =>
+            declare
+               Dtype : Type_Acc;
+            begin
+               Dtype := Get_Subtype_Object (Syn_Inst, Get_Type (Expr));
+               return Synth_Inc_Dec_Attribute (Syn_Inst, Expr, Dtype, True);
+            end;
+         when Iir_Kind_Pred_Attribute =>
+            declare
+               Dtype : Type_Acc;
+            begin
+               Dtype := Get_Subtype_Object (Syn_Inst, Get_Type (Expr));
+               return Synth_Inc_Dec_Attribute (Syn_Inst, Expr, Dtype, False);
+            end;
+         when Iir_Kind_Leftof_Attribute =>
+            declare
+               Dtype : Type_Acc;
+            begin
+               Dtype := Get_Subtype_Object (Syn_Inst, Get_Type (Expr));
+               return Synth_Inc_Dec_Attribute
+                 (Syn_Inst, Expr, Dtype, Dtype.Drange.Dir = Dir_Downto);
+            end;
+         when Iir_Kind_Rightof_Attribute =>
+            declare
+               Dtype : Type_Acc;
+            begin
+               Dtype := Get_Subtype_Object (Syn_Inst, Get_Type (Expr));
+               return Synth_Inc_Dec_Attribute
+                 (Syn_Inst, Expr, Dtype, Dtype.Drange.Dir = Dir_To);
+            end;
          when Iir_Kind_Value_Attribute =>
             return Elab.Vhdl_Expr.Exec_Value_Attribute (Syn_Inst, Expr);
          when Iir_Kind_Image_Attribute =>
