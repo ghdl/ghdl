@@ -40,6 +40,7 @@ package Grt.Types is
 
    function To_Ghdl_I32 is new Ada.Unchecked_Conversion (Ghdl_U32, Ghdl_I32);
    function To_Ghdl_U64 is new Ada.Unchecked_Conversion (Ghdl_I64, Ghdl_U64);
+   function To_Ghdl_I64 is new Ada.Unchecked_Conversion (Ghdl_U64, Ghdl_I64);
 
    type Ghdl_Ptr is new Address;
    type Ghdl_Index_Type is mod 2 ** 32;

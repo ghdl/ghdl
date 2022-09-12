@@ -23,6 +23,7 @@ with Name_Table;
 with Grt.Types; use Grt.Types;
 with Grt.Vhdl_Types; use Grt.Vhdl_Types;
 with Grt.To_Strings;
+with Grt.Arith;
 
 with Vhdl.Utils;
 with Vhdl.Evaluation;
@@ -487,9 +488,21 @@ package body Synth.Vhdl_Eval is
             end;
 
          when Iir_Predefined_Integer_Exp =>
-            return Create_Memory_Discrete
-              (Read_Discrete (Left) ** Natural (Read_Discrete (Right)),
-               Res_Typ);
+            declare
+               Lv : Ghdl_I64;
+               Rv : Std_Integer;
+               Res : Ghdl_I64;
+               Ovf : Boolean;
+            begin
+               Lv := Ghdl_I64 (Read_Discrete (Left));
+               Rv := Std_Integer (Read_Discrete (Right));
+               Grt.Arith.Exp_I64 (Lv, Rv, Res, Ovf);
+               if Ovf then
+                  Error_Msg_Synth (+Expr, "exponentiation overflow");
+                  Res := 0;
+               end if;
+               return Create_Memory_Discrete (Int64 (Res), Res_Typ);
+            end;
 
          when Iir_Predefined_Integer_Less_Equal
             | Iir_Predefined_Physical_Less_Equal
