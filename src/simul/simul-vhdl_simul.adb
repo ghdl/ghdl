@@ -1811,30 +1811,16 @@ package body Simul.Vhdl_Simul is
                                   Mode : Resolver_Read_Mode;
                                   Index : Ghdl_Index_Type)
    is
+      S : constant Ghdl_Signal_Ptr := Read_Sig (Sig);
       Val : Ghdl_Value_Ptr;
    begin
-      case Dst.Typ.Kind is
-         when Type_Bit
-           | Type_Logic
-           | Type_Discrete =>
-            null;
-         when others =>
-            raise Internal_Error;
-      end case;
       case Mode is
          when Read_Port =>
-            Val := Ghdl_Signal_Read_Port (Read_Sig (Sig), Index);
+            Val := Ghdl_Signal_Read_Port (S, Index);
          when Read_Driver =>
-            Val := Ghdl_Signal_Read_Driver (Read_Sig (Sig), Index);
+            Val := Ghdl_Signal_Read_Driver (S, Index);
       end case;
-      case Dst.Typ.Kind is
-         when Type_Bit =>
-            Write_U8 (Dst.Mem, Ghdl_B1'Pos (Val.B1));
-         when Type_Logic =>
-            Write_U8 (Dst.Mem, Val.E8);
-         when others =>
-            raise Internal_Error;
-      end case;
+      Write_Ghdl_Value (Dst, Val.all);
    end Resolver_Read_Value;
 
    type Read_Signal_Enum is
@@ -1895,7 +1881,8 @@ package body Simul.Vhdl_Simul is
    begin
       case Val.Typ.Kind is
          when Type_Bit
-           | Type_Logic =>
+           | Type_Logic
+           | Type_Discrete =>
             S := Read_Sig (Sig);
             case Attr is
                when Write_Signal_Driving_Value =>
