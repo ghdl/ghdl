@@ -84,5 +84,10 @@ package Synth.Flags is
    --  If true, treat all PSL assume directives like assert directives
    Flag_Assume_As_Assert : Boolean := False;
 
+   --  If true, simulation is run instead of synthesis.  Consequences:
+   --  * signals value are known and can be read (through hooks).
+   --  * signals attributes are supported.
+   Flag_Simulation : Boolean := False;
+
    Flag_Verbose : Boolean := False;
 end Synth.Flags;

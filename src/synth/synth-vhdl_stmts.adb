@@ -2067,7 +2067,9 @@ package body Synth.Vhdl_Stmts is
             return;
          end if;
 
-         if Get_Instance_Const (Subprg_Inst) and then not Is_Static (Val.Val)
+         if Get_Instance_Const (Subprg_Inst)
+           and then not Flags.Flag_Simulation
+           and then not Is_Static (Val.Val)
          then
             Set_Instance_Const (Subprg_Inst, False);
          end if;
