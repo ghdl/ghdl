@@ -108,7 +108,8 @@ package body Synth.Vhdl_Stmts is
                                       Dest_Dyn : out Dyn_Name) is
    begin
       case Get_Kind (Pfx) is
-         when Iir_Kind_Simple_Name =>
+         when Iir_Kind_Simple_Name
+           | Iir_Kind_Attribute_Name =>
             Synth_Assignment_Prefix (Syn_Inst, Get_Named_Entity (Pfx),
                                      Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
          when Iir_Kind_Interface_Signal_Declaration
@@ -121,6 +122,7 @@ package body Synth.Vhdl_Stmts is
            | Iir_Kind_Interface_File_Declaration
            | Iir_Kind_Non_Object_Alias_Declaration
            | Iir_Kind_Object_Alias_Declaration
+           | Iir_Kind_Attribute_Value
            | Iir_Kind_Free_Quantity_Declaration
            | Iir_Kinds_Branch_Quantity_Declaration
            | Iir_Kind_Dot_Attribute =>
