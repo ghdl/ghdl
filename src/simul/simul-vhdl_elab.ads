@@ -46,6 +46,9 @@ package Simul.Vhdl_Elab is
    --  * need to track events
    procedure Elab_Drivers;
 
+   --  Change the meaning of W (width) in T for simulation.
+   procedure Convert_Type_Width (T : Type_Acc);
+
    type Process_Index_Type is new Nat32;
    type Driver_Index_Type is new Nat32;
    subtype Sensitivity_Index_Type is Driver_Index_Type;
