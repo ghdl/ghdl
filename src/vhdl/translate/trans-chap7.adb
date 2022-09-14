@@ -2669,12 +2669,12 @@ package body Trans.Chap7 is
             return New_Convert_Ov (Res, Res_Otype);
          when Iir_Predefined_Integer_Exp =>
             declare
-               Left_Tinfo : constant Type_Info_Acc :=
-                 Get_Info (Get_Type (Left));
+               Expr_Tinfo : constant Type_Info_Acc :=
+                 Get_Info (Get_Type (Expr));
                Opr : O_Dnode;
                Etype : O_Tnode;
             begin
-               case Type_Mode_Integers (Left_Tinfo.Type_Mode) is
+               case Type_Mode_Integers (Expr_Tinfo.Type_Mode) is
                   when Type_Mode_I32 =>
                      Opr := Ghdl_I32_Exp;
                      Etype := Ghdl_I32_Type;
