@@ -1,0 +1,19 @@
+TYPE __ghdl_i32 IS SIGNED (32);
+
+TYPE __ghdl_i64 IS SIGNED (64);
+
+TYPE std__standard__integer__BT IS SIGNED (32);
+
+EXTERNAL FUNCTION __ghdl_i64_exp (
+  left: __ghdl_i64;
+  right: std__standard__integer__BT)
+  RETURN __ghdl_i64;
+
+PUBLIC FUNCTION conv  (
+  bw: std__standard__integer__BT)
+  RETURN std__standard__integer__BT
+DECLARE
+BEGIN
+  RETURN -std__standard__integer__BT'conv# (__ghdl_i64_exp (__ghdl_i64'conv# (
+    std__standard__integer__BT'[2]), (bw -# 1)));
+END;
