@@ -2316,7 +2316,6 @@ package body Ortho_Code.X86.Insns is
 
       Left : O_Enode;
       Right : O_Enode;
-      P_Reg : O_Reg;
       Num : O_Inum;
 
       Prev_Stack_Offset : Uns32;
@@ -2374,12 +2373,21 @@ package body Ortho_Code.X86.Insns is
             Left := Gen_Call (Stmt, R_None, Num);
             --  Gen_Call already link the statement.  Discard the result.
          when OE_Ret =>
-            Left := Get_Expr_Operand (Stmt);
-            P_Reg := Get_Return_Register (Get_Expr_Mode (Stmt));
-            Left := Gen_Insn (Left, P_Reg, Num);
-            Set_Expr_Operand (Stmt, Left);
-            Link_Stmt (Stmt);
-            Free_Insn_Regs (Left);
+            declare
+               R_Reg : O_Reg;
+               P_Reg : O_Reg;
+            begin
+               Left := Get_Expr_Operand (Stmt);
+               P_Reg := Get_Return_Register (Get_Expr_Mode (Stmt));
+               Left := Gen_Insn (Left, P_Reg, Num);
+               Free_Insn_Regs (Left);
+               R_Reg := Get_Expr_Reg (Left);
+               if R_Reg /= P_Reg then
+                  Left := Insert_Move (Left, P_Reg);
+               end if;
+               Set_Expr_Operand (Stmt, Left);
+               Link_Stmt (Stmt);
+            end;
          when OE_Case =>
             Left := Gen_Insn (Get_Expr_Operand (Stmt),
                               Get_Reg_Any (Stmt), Num);

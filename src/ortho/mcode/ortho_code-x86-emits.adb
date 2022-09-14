@@ -2739,6 +2739,8 @@ package body Ortho_Code.X86.Emits is
                        and then Op_Reg in Regs_R64
                      then
                         Emit_Tst (Op_Reg, Sz_8);
+                     elsif Reg in Regs_R64 and then Op_Reg in Regs_R64 then
+                        Emit_Move (Operand, Sz_Ptr, Reg);
                      else
                         Error_Emit ("emit_insn: move/b2", Stmt);
                      end if;
