@@ -48,6 +48,8 @@ package Elab.Vhdl_Files is
 
    procedure Synth_File_Read
      (Syn_Inst : Synth_Instance_Acc; Imp : Node; Loc : Node);
+   procedure Synth_File_Read_Length
+     (Syn_Inst : Synth_Instance_Acc; Imp : Node; Loc : Node);
    procedure Synth_File_Write
      (Syn_Inst : Synth_Instance_Acc; Imp : Node; Loc : Node);
 end Elab.Vhdl_Files;
