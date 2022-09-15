@@ -572,7 +572,8 @@ package body Elab.Vhdl_Types is
             else
                raise Internal_Error;
             end if;
-         when Type_Vector =>
+         when Type_Vector
+           | Type_Array =>
             --  An alias with just a different resolver ?
             return Parent_Typ;
          when others =>
@@ -585,6 +586,8 @@ package body Elab.Vhdl_Types is
    begin
       --  TODO: handle aliases directly.
       case Get_Kind (Atype) is
+         when Iir_Kinds_Denoting_Name =>
+            return Get_Subtype_Object (Syn_Inst, Get_Type (Atype));
          when Iir_Kind_Array_Subtype_Definition =>
             return Synth_Array_Subtype_Indication (Syn_Inst, Atype);
          when Iir_Kind_Record_Subtype_Definition =>

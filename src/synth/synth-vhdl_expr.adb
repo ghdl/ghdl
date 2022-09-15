@@ -81,12 +81,13 @@ package body Synth.Vhdl_Expr is
       case V.Val.Kind is
          when Value_Memory =>
             return Read_Discrete (V);
-         when Value_Const =>
-            return Read_Discrete (Get_Memtyp (V));
          when Value_Wire =>
             return Read_Discrete
               (Synth.Vhdl_Environment.Env.Get_Static_Wire
                  (Get_Value_Wire (V.Val)));
+         when Value_Const
+           | Value_Alias =>
+            return Read_Discrete (Get_Memtyp (V));
          when others =>
             raise Internal_Error;
       end case;

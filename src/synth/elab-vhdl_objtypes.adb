@@ -270,8 +270,23 @@ package body Elab.Vhdl_Objtypes is
             Add_Array_Size_Type (Typ.Uarr_El, Sz, Align);
          when Type_Record
            | Type_Unbounded_Record =>
-            --  TODO
-            raise Internal_Error;
+            declare
+               subtype T is Type_Type (Type_Record);
+               subtype T_El is Rec_El_Array (Typ.Rec.Len);
+            begin
+               --  The type
+               Align := Size_Type'Max (Align, T'Alignment);
+               Realign (Sz, Align);
+               Sz := Sz + (T'Size / System.Storage_Unit);
+               --  The el array
+               Align := Size_Type'Max (Align, T_El'Alignment);
+               Realign (Sz, Align);
+               Sz := Sz + (T_El'Size / System.Storage_Unit);
+               --  The elements
+               for I in Typ.Rec.E'Range loop
+                  Add_Size_Type (Typ.Rec.E (I).Typ, Sz, Align);
+               end loop;
+            end;
          when Type_Slice =>
             raise Internal_Error;
       end case;
@@ -1143,11 +1158,14 @@ package body Elab.Vhdl_Objtypes is
          when Type_Record =>
             declare
                subtype Data_Type is Rec_El_Array (Typ.Rec.Len);
+               Rec_Sz : constant Size_Type := Data_Type'Size / Storage_Unit;
             begin
                Realign (Off, Data_Type'Alignment);
-               pragma Assert (Off + Sz <= Mem_Sz);
+               pragma Assert (Off + Rec_Sz <= Mem_Sz);
                Raw_Res := To_Address (Mem + Off);
-               Off := Off + Sz;
+               Off := Off + Rec_Sz;
+               Copy_Memory (To_Memory_Ptr (Raw_Res),
+                            To_Memory_Ptr (Typ.Rec.all'Address), Rec_Sz);
                Res.Rec := To_Rec_El_Array_Acc (Raw_Res);
                for I in Typ.Rec.E'Range loop
                   Res.Rec.E (I).Offs := Typ.Rec.E (I).Offs;

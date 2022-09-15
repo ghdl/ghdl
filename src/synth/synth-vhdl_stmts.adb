@@ -1959,7 +1959,7 @@ package body Synth.Vhdl_Stmts is
                   Create_Object (Caller_Inst, Assoc, Info_To_Valtyp (Info));
                end if;
                if Info.Kind /= Target_Memory
-                 and then Is_Static (Info.Obj.Val)
+                 and then Info.Obj.Val.Kind = Value_Memory
                then
                   --  FIXME: the subtype conversion will copy the value, so
                   --   allocate here in current_pool ?
