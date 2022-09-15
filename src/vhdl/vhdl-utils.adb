@@ -681,8 +681,14 @@ package body Vhdl.Utils is
 
    function Is_Copyback_Parameter (Inter : Iir) return Boolean is
    begin
-      return Get_Kind (Inter) = Iir_Kind_Interface_Variable_Declaration
-        and then Get_Mode (Inter) in Iir_Out_Mode .. Iir_Inout_Mode;
+      if Get_Kind (Inter) = Iir_Kind_Interface_Variable_Declaration
+        and then Get_Mode (Inter) in Iir_Out_Mode .. Iir_Inout_Mode
+      then
+         --  For Vhdl-87, files are not copyback.
+         return Get_Kind (Get_Type (Inter)) /= Iir_Kind_File_Type_Definition;
+      else
+         return False;
+      end if;
    end Is_Copyback_Parameter;
 
    function Find_Name_In_Flist (List : Iir_Flist; Lit : Name_Id) return Iir

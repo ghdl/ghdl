@@ -1967,6 +1967,12 @@ package body Synth.Vhdl_Stmts is
                   Copy_Memory (Val.Val.Mem,
                                Info.Obj.Val.Mem + Info.Off.Mem_Off,
                                Info.Targ_Type.Sz);
+               elsif Info.Kind = Target_Simple
+                 and then Info.Obj.Val.Kind = Value_File
+               then
+                  --  For vhdl-87
+                  Val := Create_Value_File
+                    (Info.Targ_Type, Info.Obj.Val.File, Instance_Pool);
                else
                   Val := Synth_Read (Caller_Inst, Info, Assoc);
                   Val := Unshare (Val, Instance_Pool);
