@@ -617,6 +617,14 @@ package body Elab.Vhdl_Types is
                  (Syn_Inst, Get_Range_Constraint (Atype));
                return Create_Float_Type (Rng);
             end;
+         when Iir_Kind_Access_Subtype_Definition =>
+            declare
+               Acc_Typ : Type_Acc;
+            begin
+               Acc_Typ := Synth_Subtype_Indication
+                 (Syn_Inst, Get_Designated_Type (Atype));
+               return Create_Access_Type (Acc_Typ);
+            end;
          when others =>
             Vhdl.Errors.Error_Kind ("synth_subtype_indication", Atype);
       end case;

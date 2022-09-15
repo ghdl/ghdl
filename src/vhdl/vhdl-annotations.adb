@@ -401,7 +401,7 @@ package body Vhdl.Annotations is
             end if;
 
          when Iir_Kind_Access_Subtype_Definition =>
-            null;
+            Create_Object_Info (Block_Info, Def, Kind_Type);
 
          when Iir_Kind_File_Type_Definition =>
             if Flag_Synthesis then
