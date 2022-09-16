@@ -2256,6 +2256,9 @@ package body Synth.Vhdl_Expr is
                Dtype := Get_Subtype_Object (Syn_Inst, Get_Type (Expr));
                --  FIXME: to be generalized.  Not always as simple as a
                --  subtype conversion.
+               if Is_Static (V.Val) then
+                  V := Create_Value_Discrete (Read_Discrete (V), Dtype);
+               end if;
                return Synth_Subtype_Conversion
                  (Syn_Inst, V, Dtype, False, Expr);
             end;
