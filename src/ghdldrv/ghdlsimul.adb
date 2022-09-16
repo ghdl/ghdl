@@ -94,15 +94,15 @@ package body Ghdlsimul is
       Inst := Elab.Vhdl_Insts.Elab_Top_Unit (Lib_Unit);
 
       if Errorout.Nbr_Errors > 0 then
-         if Grt.Errors.Expect_Failure then
-            return;
-         else
-            raise Errorout.Compilation_Error;
-         end if;
+         raise Errorout.Compilation_Error;
       end if;
 
       Simul.Vhdl_Elab.Gather_Processes (Inst);
       Simul.Vhdl_Elab.Elab_Processes;
+
+      if Errorout.Nbr_Errors > 0 then
+         raise Errorout.Compilation_Error;
+      end if;
 
       if False then
          Elab.Vhdl_Debug.Disp_Hierarchy (Inst, False, True);

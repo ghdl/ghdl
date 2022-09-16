@@ -984,6 +984,7 @@ package body Simul.Vhdl_Elab is
             Processes_Table.Table (I).Inst := Proc_Inst;
             Elab.Vhdl_Decls.Elab_Declarations
               (Proc_Inst, Get_Declaration_Chain (Proc), True);
+            exit when Is_Error (Proc_Inst);
          end if;
       end loop;
       Instance_Pool := null;
