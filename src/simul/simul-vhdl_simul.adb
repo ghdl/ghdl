@@ -351,21 +351,48 @@ package body Simul.Vhdl_Simul is
       end loop;
    end Create_Process_Drivers;
 
-   function Exec_Event_Attribute (Sig : Memtyp) return Boolean is
+   type Read_Signal_Flag_Enum is
+     (Read_Signal_Event,
+      Read_Signal_Active,
+      --  In order to reuse the same code (that returns immediately if the
+      --  attribute is true), we use not driving.
+      Read_Signal_Not_Driving);
+
+   function Read_Signal_Flag (Sig : Memtyp; Kind : Read_Signal_Flag_Enum)
+                             return Boolean is
    begin
       case Sig.Typ.Kind is
          when Type_Logic
            | Type_Bit
            | Type_Discrete =>
-            return Read_Sig (Sig.Mem).Event;
+            declare
+               S : Ghdl_Signal_Ptr;
+            begin
+               S := Read_Sig (Sig.Mem);
+               case Kind is
+                  when Read_Signal_Event =>
+                     return S.Event;
+                  when Read_Signal_Active =>
+                     return S.Active;
+                  when Read_Signal_Not_Driving =>
+                     --  Ghdl_B1 to boolean.
+                     if Grt.Signals.Ghdl_Signal_Driving (S) = True then
+                        return False;
+                     else
+                        return True;
+                     end if;
+               end case;
+            end;
          when others =>
             raise Internal_Error;
             return False;
       end case;
-   end Exec_Event_Attribute;
+   end Read_Signal_Flag;
 
-   function Exec_Event_Attribute (Inst : Synth_Instance_Acc;
-                                  Expr : Node) return Valtyp
+   function Exec_Signal_Flag_Attribute (Inst : Synth_Instance_Acc;
+                                        Expr : Node;
+                                        Kind : Read_Signal_Flag_Enum)
+                                       return Valtyp
    is
       Res : Valtyp;
       Pfx : Target_Info;
@@ -376,14 +403,27 @@ package body Simul.Vhdl_Simul is
       --  TODO: alias.
       pragma Assert (Pfx.Obj.Val /= null
                        and then Pfx.Obj.Val.Kind = Value_Signal);
-      E := Exec_Event_Attribute
+      E := Read_Signal_Flag
         ((Pfx.Targ_Type,
           Sig_Index (Signals_Table.Table (Pfx.Obj.Val.S).Sig,
-                     Pfx.Off.Net_Off)));
+                     Pfx.Off.Net_Off)),
+         Kind);
       Res := Create_Value_Memory (Boolean_Type, Expr_Pool'Access);
       Write_U8 (Res.Val.Mem, Boolean'Pos (E));
       return Res;
+   end Exec_Signal_Flag_Attribute;
+
+   function Exec_Event_Attribute (Inst : Synth_Instance_Acc;
+                                  Expr : Node) return Valtyp is
+   begin
+      return Exec_Signal_Flag_Attribute (Inst, Expr, Read_Signal_Event);
    end Exec_Event_Attribute;
+
+   function Exec_Active_Attribute (Inst : Synth_Instance_Acc;
+                                   Expr : Node) return Valtyp is
+   begin
+      return Exec_Signal_Flag_Attribute (Inst, Expr, Read_Signal_Active);
+   end Exec_Active_Attribute;
 
    function Exec_Dot_Attribute (Inst : Synth_Instance_Acc;
                                 Expr : Node) return Valtyp
@@ -573,9 +613,7 @@ package body Simul.Vhdl_Simul is
    procedure Add_Wait_Sensitivity (Typ : Type_Acc; Sig : Memory_Ptr) is
    begin
       case Typ.Kind is
-         when Type_Logic
-           | Type_Bit
-           | Type_Discrete =>
+         when Type_Scalars =>
             Grt.Processes.Ghdl_Process_Wait_Add_Sensitivity (Read_Sig (Sig));
          when Type_Vector
            | Type_Array =>
@@ -3097,6 +3135,7 @@ package body Simul.Vhdl_Simul is
       --  elaboration.
       Synth.Vhdl_Expr.Hook_Signal_Expr := Hook_Signal_Expr'Access;
       Synth.Vhdl_Expr.Hook_Event_Attribute := Exec_Event_Attribute'Access;
+      Synth.Vhdl_Expr.Hook_Active_Attribute := Exec_Active_Attribute'Access;
 
       Synth.Vhdl_Oper.Hook_Bit_Rising_Edge := Exec_Bit_Rising_Edge'Access;
       Synth.Vhdl_Oper.Hook_Bit_Falling_Edge := Exec_Bit_Falling_Edge'Access;

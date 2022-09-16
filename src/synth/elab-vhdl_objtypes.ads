@@ -90,6 +90,7 @@ package Elab.Vhdl_Objtypes is
 
    subtype Type_Nets is Type_Kind range Type_Bit .. Type_Logic;
    subtype Type_All_Discrete is Type_Kind range Type_Bit .. Type_Discrete;
+   subtype Type_Scalars is Type_Kind range Type_Bit .. Type_Float;
    subtype Type_Records is Type_Kind range
      Type_Unbounded_Record .. Type_Record;
    subtype Type_Arrays is Type_Kind range

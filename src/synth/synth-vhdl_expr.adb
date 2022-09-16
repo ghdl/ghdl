@@ -2352,7 +2352,13 @@ package body Synth.Vhdl_Expr is
             if Hook_Event_Attribute /= null then
                return Hook_Event_Attribute (Syn_Inst, Expr);
             end if;
-            Error_Msg_Synth (+Expr, "event attributes not allowed");
+            Error_Msg_Synth (+Expr, "event attribute not allowed");
+            return No_Valtyp;
+         when Iir_Kind_Active_Attribute =>
+            if Hook_Active_Attribute /= null then
+               return Hook_Active_Attribute (Syn_Inst, Expr);
+            end if;
+            Error_Msg_Synth (+Expr, "active attribute not allowed");
             return No_Valtyp;
          when Iir_Kind_Dot_Attribute =>
             if Hook_Dot_Attribute /= null then
