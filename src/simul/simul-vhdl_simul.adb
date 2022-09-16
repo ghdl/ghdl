@@ -1308,7 +1308,26 @@ package body Simul.Vhdl_Simul is
          Execute_Procedure_Call_Statement (Proc, Proc.Proc, Next_Stmt);
          if Next_Stmt = Null_Node then
             --  Fully executed.
-            raise Internal_Error;
+            --  Execute implicit wait.
+            declare
+               Sens : Sensitivity_Index_Type;
+            begin
+               Sens := Processes_Table.Table (Proc.Idx).Sensitivity;
+               while Sens /= No_Sensitivity_Index loop
+                  declare
+                     S : Sensitivity_Entry renames
+                       Sensitivity_Table.Table (Sens);
+                     Base : constant Memory_Ptr :=
+                       Signals_Table.Table (S.Sig).Sig;
+                  begin
+                     Add_Wait_Sensitivity
+                       (S.Typ, Sig_Index (Base, S.Off.Net_Off));
+                     Sens := S.Prev_Proc;
+                  end;
+               end loop;
+               Grt.Processes.Ghdl_Process_Wait_Suspend;
+               return;
+            end;
          else
             --  Execute.
             Execute_Sequential_Statements_Inner (Proc, Next_Stmt, False);
