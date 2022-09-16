@@ -500,7 +500,6 @@ package body Synth.Vhdl_Decls is
       Atype : constant Node := Get_Declaration_Type (Decl);
       Marker : Mark_Type;
       Off : Value_Offsets;
-      Dyn : Vhdl_Stmts.Dyn_Name;
       Res : Valtyp;
       Obj_Typ : Type_Acc;
       Base : Valtyp;
@@ -516,9 +515,8 @@ package body Synth.Vhdl_Decls is
 
       Mark_Expr_Pool (Marker);
 
-      Vhdl_Stmts.Synth_Assignment_Prefix (Syn_Inst, Get_Name (Decl),
-                                          Base, Typ, Off, Dyn);
-      pragma Assert (Dyn.Voff = No_Net);
+      Vhdl_Stmts.Synth_Assignment_Prefix
+        (Syn_Inst, Get_Name (Decl), Base, Typ, Off);
       Typ := Unshare (Typ, Instance_Pool);
       if Base.Val.Kind = Value_Net then
          --  Object is a net if it is not writable.  Extract the

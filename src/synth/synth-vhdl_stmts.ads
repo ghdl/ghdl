@@ -75,12 +75,22 @@ package Synth.Vhdl_Stmts is
    --  DEST_TYP is the type of the result.
    --  DEST_OFF is the offset, within DEST_DYN.
    --  DEST_DYN is set (Voff field set) when there is a non-static index.
+   --  SYN_INST is used for all parts except when PFX is an interface.  In the
+   --  latter, INTER_INST is used.
    procedure Synth_Assignment_Prefix (Syn_Inst : Synth_Instance_Acc;
+                                      Inter_Inst : Synth_Instance_Acc;
                                       Pfx : Node;
                                       Dest_Base : out Valtyp;
                                       Dest_Typ : out Type_Acc;
                                       Dest_Off : out Value_Offsets;
                                       Dest_Dyn : out Dyn_Name);
+
+   --  Simplified version.  No dynamic offset expected.
+   procedure Synth_Assignment_Prefix (Syn_Inst : Synth_Instance_Acc;
+                                      Pfx : Node;
+                                      Dest_Base : out Valtyp;
+                                      Dest_Typ : out Type_Acc;
+                                      Dest_Off : out Value_Offsets);
 
    procedure Synth_Assignment (Syn_Inst : Synth_Instance_Acc;
                                Target : Node;

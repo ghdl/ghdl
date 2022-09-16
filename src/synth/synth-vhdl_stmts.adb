@@ -101,46 +101,52 @@ package body Synth.Vhdl_Stmts is
    end Synth_Waveform;
 
    procedure Synth_Assignment_Prefix (Syn_Inst : Synth_Instance_Acc;
+                                      Inter_Inst : Synth_Instance_Acc;
                                       Pfx : Node;
                                       Dest_Base : out Valtyp;
                                       Dest_Typ : out Type_Acc;
                                       Dest_Off : out Value_Offsets;
-                                      Dest_Dyn : out Dyn_Name) is
+                                      Dest_Dyn : out Dyn_Name)
+   is
+      procedure Assign_Base (Inst : Synth_Instance_Acc)
+      is
+         Targ : constant Valtyp := Get_Value (Inst, Pfx);
+      begin
+         Dest_Dyn := No_Dyn_Name;
+         Dest_Typ := Targ.Typ;
+
+         if Targ.Val.Kind = Value_Alias then
+            --  Replace alias by the aliased name.
+            Dest_Base := (Targ.Val.A_Typ, Targ.Val.A_Obj);
+            Dest_Off := Targ.Val.A_Off;
+         else
+            Dest_Base := Targ;
+            Dest_Off := No_Value_Offsets;
+         end if;
+      end Assign_Base;
    begin
       case Get_Kind (Pfx) is
          when Iir_Kind_Simple_Name
            | Iir_Kind_Attribute_Name =>
-            Synth_Assignment_Prefix (Syn_Inst, Get_Named_Entity (Pfx),
-                                     Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
+            Synth_Assignment_Prefix
+              (Syn_Inst, Inter_Inst, Get_Named_Entity (Pfx),
+               Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
          when Iir_Kind_Interface_Signal_Declaration
-           | Iir_Kind_Variable_Declaration
            | Iir_Kind_Interface_Variable_Declaration
-           | Iir_Kind_Signal_Declaration
            | Iir_Kind_Interface_Constant_Declaration
+           | Iir_Kind_Interface_File_Declaration =>
+            Assign_Base (Inter_Inst);
+         when Iir_Kind_Variable_Declaration
+           | Iir_Kind_Signal_Declaration
            | Iir_Kind_Constant_Declaration
            | Iir_Kind_File_Declaration
-           | Iir_Kind_Interface_File_Declaration
            | Iir_Kind_Non_Object_Alias_Declaration
            | Iir_Kind_Object_Alias_Declaration
            | Iir_Kind_Attribute_Value
            | Iir_Kind_Free_Quantity_Declaration
            | Iir_Kinds_Branch_Quantity_Declaration
            | Iir_Kind_Dot_Attribute =>
-            declare
-               Targ : constant Valtyp := Get_Value (Syn_Inst, Pfx);
-            begin
-               Dest_Dyn := No_Dyn_Name;
-               Dest_Typ := Targ.Typ;
-
-               if Targ.Val.Kind = Value_Alias then
-                  --  Replace alias by the aliased name.
-                  Dest_Base := (Targ.Val.A_Typ, Targ.Val.A_Obj);
-                  Dest_Off := Targ.Val.A_Off;
-               else
-                  Dest_Base := Targ;
-                  Dest_Off := (0, 0);
-               end if;
-            end;
+            Assign_Base (Syn_Inst);
          when Iir_Kind_Function_Call =>
             Dest_Base := Synth_Expression (Syn_Inst, Pfx);
             Dest_Typ := Dest_Base.Typ;
@@ -155,7 +161,7 @@ package body Synth.Vhdl_Stmts is
                Err : Boolean;
             begin
                Synth_Assignment_Prefix
-                 (Syn_Inst, Get_Prefix (Pfx),
+                 (Syn_Inst, Inter_Inst, Get_Prefix (Pfx),
                   Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
                Strip_Const (Dest_Base);
                Synth_Indexed_Name (Syn_Inst, Pfx, Dest_Typ,
@@ -197,7 +203,7 @@ package body Synth.Vhdl_Stmts is
                  Get_Element_Position (Get_Named_Entity (Pfx));
             begin
                Synth_Assignment_Prefix
-                 (Syn_Inst, Get_Prefix (Pfx),
+                 (Syn_Inst, Inter_Inst, Get_Prefix (Pfx),
                   Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
                Dest_Off := Dest_Off + Dest_Typ.Rec.E (Idx + 1).Offs;
 
@@ -213,7 +219,7 @@ package body Synth.Vhdl_Stmts is
                Sl_Off : Value_Offsets;
             begin
                Synth_Assignment_Prefix
-                 (Syn_Inst, Get_Prefix (Pfx),
+                 (Syn_Inst, Inter_Inst, Get_Prefix (Pfx),
                   Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
                Strip_Const (Dest_Base);
 
@@ -253,18 +259,31 @@ package body Synth.Vhdl_Stmts is
          when Iir_Kind_Implicit_Dereference
            | Iir_Kind_Dereference =>
             Synth_Assignment_Prefix
-              (Syn_Inst, Get_Prefix (Pfx),
-               Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
-            if Dest_Off /= (0, 0) and then Dest_Dyn.Voff /= No_Net then
+              (Syn_Inst, Get_Prefix (Pfx), Dest_Base, Dest_Typ, Dest_Off);
+            if Dest_Off /= (0, 0) then
                raise Internal_Error;
             end if;
             Dest_Base := Create_Value_Memtyp
               (Elab.Vhdl_Heap.Synth_Dereference (Read_Access (Dest_Base)));
             Dest_Typ := Dest_Base.Typ;
+            Dest_Dyn := No_Dyn_Name;
 
          when others =>
             Error_Kind ("synth_assignment_prefix", Pfx);
       end case;
+   end Synth_Assignment_Prefix;
+
+   procedure Synth_Assignment_Prefix (Syn_Inst : Synth_Instance_Acc;
+                                      Pfx : Node;
+                                      Dest_Base : out Valtyp;
+                                      Dest_Typ : out Type_Acc;
+                                      Dest_Off : out Value_Offsets)
+   is
+      Dyn : Dyn_Name;
+   begin
+      Synth_Assignment_Prefix
+        (Syn_Inst, Syn_Inst, Pfx, Dest_Base, Dest_Typ, Dest_Off, Dyn);
+      pragma Assert (Dyn = No_Dyn_Name);
    end Synth_Assignment_Prefix;
 
    function Synth_Aggregate_Target_Type (Syn_Inst : Synth_Instance_Acc;
@@ -365,7 +384,8 @@ package body Synth.Vhdl_Stmts is
 
                Dyn : Dyn_Name;
             begin
-               Synth_Assignment_Prefix (Syn_Inst, Target, Base, Typ, Off, Dyn);
+               Synth_Assignment_Prefix
+                 (Syn_Inst, Syn_Inst, Target, Base, Typ, Off, Dyn);
                if Dyn.Voff = No_Net then
                   --  FIXME: check index.
                   return Target_Info'(Kind => Target_Simple,
@@ -4222,14 +4242,12 @@ package body Synth.Vhdl_Stmts is
 
       declare
          Off : Value_Offsets;
-         Dyn : Dyn_Name;
          N : Net;
          Base : Valtyp;
          Typ : Type_Acc;
       begin
-         Synth_Assignment_Prefix (Syn_Inst, Sig, Base, Typ, Off, Dyn);
+         Synth_Assignment_Prefix (Syn_Inst, Sig, Base, Typ, Off);
          pragma Assert (Off = (0, 0));
-         pragma Assert (Dyn.Voff = No_Net);
          pragma Assert (Base.Val.Kind = Value_Wire);
          pragma Assert (Base.Typ = Typ);
 

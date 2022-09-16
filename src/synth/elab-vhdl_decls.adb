@@ -295,7 +295,6 @@ package body Elab.Vhdl_Decls is
       Obj_Typ : Type_Acc;
       Base : Valtyp;
       Typ : Type_Acc;
-      Dyn : Dyn_Name;
    begin
       Mark_Expr_Pool (Marker);
 
@@ -307,8 +306,7 @@ package body Elab.Vhdl_Decls is
          Obj_Typ := null;
       end if;
 
-      Synth_Assignment_Prefix (Syn_Inst, Get_Name (Decl), Base, Typ, Off, Dyn);
-      pragma Assert (Dyn = No_Dyn_Name);
+      Synth_Assignment_Prefix (Syn_Inst, Get_Name (Decl), Base, Typ, Off);
       Typ := Unshare (Typ, Instance_Pool);
       Res := Create_Value_Alias (Base, Off, Typ, Expr_Pool'Access);
       if Obj_Typ /= null then

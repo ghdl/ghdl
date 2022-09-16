@@ -423,7 +423,6 @@ package body Simul.Vhdl_Elab is
       Base : Signal_Index_Type;
       Typ : Type_Acc;
       Off : Value_Offsets;
-      Dyn : Dyn_Name;
    begin
       Mark_Expr_Pool (Marker);
 
@@ -432,8 +431,7 @@ package body Simul.Vhdl_Elab is
       while Is_Valid (It) loop
          Sig := Get_Element (It);
          exit when Sig = Null_Node;
-         Synth_Assignment_Prefix (Inst, Sig, Base_Vt, Typ, Off, Dyn);
-         pragma Assert (Dyn = No_Dyn_Name);
+         Synth_Assignment_Prefix (Inst, Sig, Base_Vt, Typ, Off);
          Base := Base_Vt.Val.S;
          Typ := Unshare (Typ, Global_Pool'Access);
 
@@ -457,7 +455,6 @@ package body Simul.Vhdl_Elab is
       Base : Signal_Index_Type;
       Typ : Type_Acc;
       Off : Value_Offsets;
-      Dyn : Dyn_Name;
    begin
       Mark_Expr_Pool (Marker);
 
@@ -465,8 +462,7 @@ package body Simul.Vhdl_Elab is
       while Is_Valid (It) loop
          Sig := Get_Element (It);
          exit when Sig = Null_Node;
-         Synth_Assignment_Prefix (Inst, Sig, Base_Vt, Typ, Off, Dyn);
-         pragma Assert (Dyn = No_Dyn_Name);
+         Synth_Assignment_Prefix (Inst, Sig, Base_Vt, Typ, Off);
          Base := Base_Vt.Val.S;
          Typ := Unshare (Typ, Global_Pool'Access);
 
@@ -580,7 +576,6 @@ package body Simul.Vhdl_Elab is
       Actual_Sig : Signal_Index_Type;
       Typ : Type_Acc;
       Off : Value_Offsets;
-      Dyn : Dyn_Name;
       Conn : Connect_Entry;
       List : Iir_List;
       Formal_Ep, Actual_Ep : Connect_Endpoint;
@@ -597,15 +592,13 @@ package body Simul.Vhdl_Elab is
                   Formal := Inter;
                end if;
                Synth_Assignment_Prefix
-                 (Port_Inst, Formal, Formal_Base, Typ, Off, Dyn);
-               pragma Assert (Dyn = No_Dyn_Name);
+                 (Port_Inst, Formal, Formal_Base, Typ, Off);
                Typ := Unshare (Typ, Global_Pool'Access);
                Formal_Sig := Formal_Base.Val.S;
                Formal_Ep := (Formal_Sig, Off, Typ);
 
                Synth_Assignment_Prefix
-                 (Assoc_Inst, Get_Actual (Assoc), Actual_Base, Typ, Off, Dyn);
-               pragma Assert (Dyn = No_Dyn_Name);
+                 (Assoc_Inst, Get_Actual (Assoc), Actual_Base, Typ, Off);
                Typ := Unshare (Typ, Global_Pool'Access);
                Actual_Sig := Actual_Base.Val.S;
                Actual_Ep := (Actual_Sig, Off, Typ);
@@ -666,8 +659,7 @@ package body Simul.Vhdl_Elab is
             when Iir_Kind_Association_Element_By_Expression =>
                Inter := Get_Association_Interface (Assoc, Assoc_Inter);
                Synth_Assignment_Prefix
-                 (Port_Inst, Inter, Formal_Base, Typ, Off, Dyn);
-               pragma Assert (Dyn = No_Dyn_Name);
+                 (Port_Inst, Inter, Formal_Base, Typ, Off);
                Formal_Sig := Formal_Base.Val.S;
                Formal_Ep := (Formal_Sig, Off, Typ);
 
