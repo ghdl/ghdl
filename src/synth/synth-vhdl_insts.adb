@@ -47,7 +47,6 @@ with Elab.Memtype; use Elab.Memtype;
 with Elab.Vhdl_Files;
 with Elab.Debugger;
 with Elab.Vhdl_Errors;
-with Elab.Vhdl_Expr; use Elab.Vhdl_Expr;
 
 with Synth.Vhdl_Environment; use Synth.Vhdl_Environment.Env;
 with Synth.Vhdl_Stmts; use Synth.Vhdl_Stmts;
@@ -682,72 +681,6 @@ package body Synth.Vhdl_Insts is
       return Act;
    end Synth_Single_Input_Assoc;
 
-   procedure Synth_Individual_Prefix (Syn_Inst : Synth_Instance_Acc;
-                                      Inter_Inst : Synth_Instance_Acc;
-                                      Formal : Node;
-                                      Off : out Uns32;
-                                      Typ : out Type_Acc) is
-   begin
-      case Get_Kind (Formal) is
-         when Iir_Kind_Interface_Signal_Declaration =>
-            Off := 0;
-            Typ := Get_Value (Inter_Inst, Formal).Typ;
-         when Iir_Kind_Simple_Name =>
-            Synth_Individual_Prefix
-              (Syn_Inst, Inter_Inst, Get_Named_Entity (Formal), Off, Typ);
-         when Iir_Kind_Selected_Element =>
-            declare
-               Idx : constant Iir_Index32 :=
-                 Get_Element_Position (Get_Named_Entity (Formal));
-            begin
-               Synth_Individual_Prefix
-                 (Syn_Inst, Inter_Inst, Get_Prefix (Formal), Off, Typ);
-               Off := Off + Typ.Rec.E (Idx + 1).Offs.Net_Off;
-               Typ := Typ.Rec.E (Idx + 1).Typ;
-            end;
-         when Iir_Kind_Indexed_Name =>
-            declare
-               El_Typ : Type_Acc;
-               Voff : Net;
-               Arr_Off : Value_Offsets;
-               Err : Boolean;
-            begin
-               Synth_Individual_Prefix
-                 (Syn_Inst, Inter_Inst, Get_Prefix (Formal), Off, Typ);
-               Synth_Indexed_Name (Syn_Inst, Formal, Typ,
-                                   El_Typ, Voff, Arr_Off, Err);
-               if Voff /= No_Net or Err then
-                  raise Internal_Error;
-               end if;
-               Off := Off + Arr_Off.Net_Off;
-               Typ := El_Typ;
-            end;
-         when Iir_Kind_Slice_Name =>
-            declare
-               Pfx_Bnd : Bound_Type;
-               El_Typ : Type_Acc;
-               Res_Bnd : Bound_Type;
-               Sl_Voff : Net;
-               Sl_Off : Value_Offsets;
-            begin
-               Synth_Individual_Prefix
-                 (Syn_Inst, Inter_Inst, Get_Prefix (Formal), Off, Typ);
-
-               Get_Onedimensional_Array_Bounds (Typ, Pfx_Bnd, El_Typ);
-               Synth_Slice_Suffix (Syn_Inst, Formal, Pfx_Bnd, El_Typ,
-                                   Res_Bnd, Sl_Voff, Sl_Off);
-               if Sl_Voff /= No_Net then
-                  raise Internal_Error;
-               end if;
-               Off := Off + Sl_Off.Net_Off;
-               Typ := Create_Onedimensional_Array_Subtype
-                 (Typ, Res_Bnd, El_Typ);
-            end;
-         when others =>
-            Vhdl.Errors.Error_Kind ("synth_individual_prefix", Formal);
-      end case;
-   end Synth_Individual_Prefix;
-
    type Value_Offset_Record is record
       Off : Uns32;
       Val : Valtyp;
@@ -787,12 +720,15 @@ package body Synth.Vhdl_Insts is
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Iassoc : Node;
       V : Valtyp;
-      Off : Uns32;
       Typ : Type_Acc;
       Els : Value_Offset_Tables.Instance;
       Concat : Concat_Type;
       N_Off : Uns32;
       N : Net;
+      Base : Valtyp;
+      pragma Unreferenced (Base);
+      Offs : Value_Offsets;
+      Dyn : Dyn_Name;
    begin
       Value_Offset_Tables.Init (Els, 16);
 
@@ -802,15 +738,16 @@ package body Synth.Vhdl_Insts is
       loop
          --  For each individual assoc:
          --   1. compute type and offset
-         Synth_Individual_Prefix
-           (Syn_Inst, Inter_Inst, Get_Formal (Iassoc), Off, Typ);
+         Synth_Assignment_Prefix
+           (Syn_Inst, Inter_Inst, Get_Formal (Iassoc), Base, Typ, Offs, Dyn);
+         pragma Assert (Dyn = No_Dyn_Name);
 
          --   2. synth expression
          V := Synth_Single_Input_Assoc
            (Syn_Inst, Typ, Syn_Inst, Get_Actual (Iassoc), Iassoc);
 
          --   3. save in a table
-         Value_Offset_Tables.Append (Els, (Off, V));
+         Value_Offset_Tables.Append (Els, (Offs.Net_Off, V));
 
          Iassoc := Get_Chain (Iassoc);
       end loop;
@@ -880,10 +817,12 @@ package body Synth.Vhdl_Insts is
       Marker : Mark_Type;
       Iassoc : Node;
       V : Valtyp;
-      Off : Uns32;
       Typ : Type_Acc;
       O : Net;
       Port : Net;
+      Base : Valtyp;
+      Dyn : Dyn_Name;
+      Offs : Value_Offsets;
    begin
       Mark_Expr_Pool (Marker);
 
@@ -896,11 +835,12 @@ package body Synth.Vhdl_Insts is
       loop
          --  For each individual assoc:
          --   1. compute type and offset
-         Synth_Individual_Prefix
-           (Syn_Inst, Inter_Inst, Get_Formal (Iassoc), Off, Typ);
+         Synth_Assignment_Prefix
+           (Syn_Inst, Inter_Inst, Get_Formal (Iassoc), Base, Typ, Offs, Dyn);
+         pragma Assert (Dyn = No_Dyn_Name);
 
          --   2. Extract the value.
-         O := Build_Extract (Get_Build (Syn_Inst), Port, Off, Typ.W);
+         O := Build_Extract (Get_Build (Syn_Inst), Port, Offs.Net_Off, Typ.W);
          V := Create_Value_Net (O, Typ);
 
          --   3. Assign.
