@@ -33,6 +33,7 @@ with Vhdl.Std_Package;
 with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 with Elab.Vhdl_Types; use Elab.Vhdl_Types;
 with Elab.Vhdl_Decls; use Elab.Vhdl_Decls;
+with Elab.Vhdl_Files;
 
 with Synth.Vhdl_Environment; use Synth.Vhdl_Environment.Env;
 with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
@@ -793,7 +794,7 @@ package body Synth.Vhdl_Decls is
          when Iir_Kind_Component_Declaration =>
             null;
          when Iir_Kind_File_Declaration =>
-            null;
+            Elab.Vhdl_Files.Finalize_File (Syn_Inst, Decl);
          when Iir_Kind_Configuration_Specification =>
             null;
          when Iir_Kind_Psl_Default_Clock =>

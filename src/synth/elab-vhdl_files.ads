@@ -31,6 +31,7 @@ package Elab.Vhdl_Files is
 
    function Elaborate_File_Declaration
      (Syn_Inst : Synth_Instance_Acc; Decl : Node) return File_Index;
+   procedure Finalize_File (Syn_Inst : Synth_Instance_Acc; Decl : Node);
 
    function Endfile (F : File_Index; Loc : Node) return Boolean;
 

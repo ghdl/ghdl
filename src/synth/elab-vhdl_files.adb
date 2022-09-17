@@ -355,7 +355,8 @@ package body Elab.Vhdl_Files is
       case Status is
          when Op_Ok =>
             Vstatus := Open_Ok;
-         when Op_Status_Error =>
+         when Op_Status_Error
+           | Op_Not_Closed =>
             Vstatus := Status_Error;
          when Op_Mode_Error =>
             Vstatus := Mode_Error;
@@ -372,8 +373,7 @@ package body Elab.Vhdl_Files is
            | Op_Read_Error
            | Op_Write_Error
            | Op_Bad_Index
-           | Op_Bad_Mode
-           | Op_Not_Closed =>
+           | Op_Bad_Mode =>
             raise File_Execution_Error;
       end case;
 
@@ -664,4 +664,28 @@ package body Elab.Vhdl_Files is
          File_Write_Value (File, (Value.Typ, Value.Val.Mem), Loc);
       end if;
    end Synth_File_Write;
+
+   procedure Finalize_File (Syn_Inst : Synth_Instance_Acc; Decl : Node)
+   is
+      File : constant File_Index := Get_Value (Syn_Inst, Decl).Val.File;
+      Is_Text : constant Boolean := Get_Text_File_Flag (Get_Type (Decl));
+      Status : Op_Status;
+   begin
+      if Is_Text then
+         Ghdl_Text_File_Close (File, Status);
+      else
+         Ghdl_File_Close (File, Status);
+      end if;
+      if Status /= Op_Ok then
+         File_Error (Decl, Status);
+      end if;
+      if Is_Text then
+         Ghdl_Text_File_Finalize (File, Status);
+      else
+         Ghdl_File_Finalize (File, Status);
+      end if;
+      if Status /= Op_Ok then
+         File_Error (Decl, Status);
+      end if;
+   end Finalize_File;
 end Elab.Vhdl_Files;
