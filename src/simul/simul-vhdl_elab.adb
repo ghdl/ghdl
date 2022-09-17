@@ -614,7 +614,8 @@ package body Simul.Vhdl_Elab is
                if Get_Collapse_Signal_Flag (Assoc)
                  and then Formal_Ep.Offs.Mem_Off = 0
                  and then Actual_Ep.Offs.Mem_Off = 0
-                 and then Actual_Base.Typ.W = Formal_Base.Typ.W
+                 and then Actual_Base.Typ.W = Actual_Ep.Typ.W
+                 and then Formal_Base.Typ.W = Formal_Ep.Typ.W
                then
                   --  Full collapse.
                   pragma Assert (Signals_Table.Table (Formal_Sig).Collapsed_By

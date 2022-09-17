@@ -2216,7 +2216,7 @@ package body Simul.Vhdl_Simul is
                      Create_Signal (Val + Size_Type (I - 1) * Typ.Arr_El.Sz,
                                     Sig_Off + (Len - I) * Typ.Arr_El.W,
                                     El_Type, Typ.Arr_El,
-                                    Vec, Already_Resolved);
+                                    Vec, Sub_Resolved);
                   end loop;
                end;
             when Type_Record =>
