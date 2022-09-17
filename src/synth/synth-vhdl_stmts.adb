@@ -1973,30 +1973,39 @@ package body Synth.Vhdl_Stmts is
                end if;
             when Iir_Kind_Interface_Variable_Declaration =>
                --  Always pass by value.
-               Actual := Get_Actual (Assoc);
-               Info := Synth_Target (Caller_Inst, Actual);
-               if Is_Copyback_Parameter (Inter) then
-                  --  For the copy back: keep info of formal.
-                  Create_Object (Caller_Inst, Assoc, Info_To_Valtyp (Info));
-               end if;
-               if Info.Kind /= Target_Memory
-                 and then Info.Obj.Val.Kind = Value_Memory
+               if Assoc = Null_Node
+                 or else Get_Kind (Assoc) = Iir_Kind_Association_Element_Open
                then
-                  --  FIXME: the subtype conversion will copy the value, so
-                  --   allocate here in current_pool ?
-                  Val := Create_Value_Memory (Info.Targ_Type, Instance_Pool);
-                  Copy_Memory (Val.Val.Mem,
-                               Info.Obj.Val.Mem + Info.Off.Mem_Off,
-                               Info.Targ_Type.Sz);
-               elsif Info.Kind = Target_Simple
-                 and then Info.Obj.Val.Kind = Value_File
-               then
-                  --  For vhdl-87
-                  Val := Create_Value_File
-                    (Info.Targ_Type, Info.Obj.Val.File, Instance_Pool);
-               else
-                  Val := Synth_Read (Caller_Inst, Info, Assoc);
+                  Val := Synth_Expression_With_Type
+                    (Caller_Inst, Get_Default_Value (Inter), Inter_Typ);
                   Val := Unshare (Val, Instance_Pool);
+               else
+                  Actual := Get_Actual (Assoc);
+                  Info := Synth_Target (Caller_Inst, Actual);
+                  if Is_Copyback_Parameter (Inter) then
+                     --  For the copy back: keep info of formal.
+                     Create_Object (Caller_Inst, Assoc, Info_To_Valtyp (Info));
+                  end if;
+                  if Info.Kind /= Target_Memory
+                    and then Info.Obj.Val.Kind = Value_Memory
+                  then
+                     --  FIXME: the subtype conversion will copy the value, so
+                     --   allocate here in current_pool ?
+                     Val := Create_Value_Memory
+                       (Info.Targ_Type, Instance_Pool);
+                     Copy_Memory (Val.Val.Mem,
+                                  Info.Obj.Val.Mem + Info.Off.Mem_Off,
+                                  Info.Targ_Type.Sz);
+                  elsif Info.Kind = Target_Simple
+                    and then Info.Obj.Val.Kind = Value_File
+                  then
+                     --  For vhdl-87
+                     Val := Create_Value_File
+                       (Info.Targ_Type, Info.Obj.Val.File, Instance_Pool);
+                  else
+                     Val := Synth_Read (Caller_Inst, Info, Assoc);
+                     Val := Unshare (Val, Instance_Pool);
+                  end if;
                end if;
             when Iir_Kind_Interface_Signal_Declaration =>
                --  Always pass by reference (use an alias).
