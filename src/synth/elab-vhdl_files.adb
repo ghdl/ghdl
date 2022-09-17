@@ -503,6 +503,24 @@ package body Elab.Vhdl_Files is
       File_Read_Value (File, (Value.Typ, Value.Val.Mem), Loc);
    end Synth_File_Read;
 
+   procedure Synth_File_Text_Read_Length
+     (File : File_Index; Value : Valtyp; Length : Valtyp; Loc : Node)
+   is
+      Bnd : aliased Std_String_Bound;
+      Str : aliased Std_String;
+      Status : Op_Status;
+      Len : Std_Integer;
+   begin
+      Str := (Base => To_Std_String_Basep (Value.Val.Mem.all'Address),
+              Bounds => Bnd'Unrestricted_Access);
+      Ghdl_Text_Read_Length (File, Str'Unrestricted_Access, Status, Len);
+      if Status /= Op_Ok then
+         File_Error (Loc, Status);
+         Len := 0;
+      end if;
+      Write_Discrete (Length, Int64 (Len));
+   end Synth_File_Text_Read_Length;
+
    procedure Synth_File_Read_Length
      (Syn_Inst : Synth_Instance_Acc; Imp : Node; Loc : Node)
    is
@@ -513,28 +531,34 @@ package body Elab.Vhdl_Files is
       Param3 : constant Node := Get_Chain (Param2);
       Length : constant Valtyp := Get_Value (Syn_Inst, Param3);
 
+      File_Type : constant Node := Get_Type (Param1);
+      Is_Text : constant Boolean := Get_Text_File_Flag (File_Type);
       El_Typ : constant Type_Acc := Get_Array_Element (Value.Typ);
       Len : Uns32;
       Status : Op_Status;
       Off    : Size_Type;
    begin
-      Ghdl_Read_Scalar (File, Ghdl_Ptr (Len'Address), 4, Status);
-      if Status /= Op_Ok then
-         File_Error (Loc, Status);
-         return;
-      end if;
-      Off := 0;
-      for I in 1 .. Len loop
-         if I <= Value.Typ.Abound.Len then
-            File_Read_Value (File, (El_Typ, Value.Val.Mem + Off), Loc);
-            Off := Off + El_Typ.Sz;
-         else
-            --  FIXME: for empty arrays ??
-            --  Lose_Binary (File, Value.Val_Array (0));
-            raise Internal_Error;
+      if Is_Text then
+         Synth_File_Text_Read_Length (File, Value, Length, Loc);
+      else
+         Ghdl_Read_Scalar (File, Ghdl_Ptr (Len'Address), 4, Status);
+         if Status /= Op_Ok then
+            File_Error (Loc, Status);
+            return;
          end if;
-      end loop;
-      Write_Discrete (Length, Int64 (Len));
+         Off := 0;
+         for I in 1 .. Len loop
+            if I <= Value.Typ.Abound.Len then
+               File_Read_Value (File, (El_Typ, Value.Val.Mem + Off), Loc);
+               Off := Off + El_Typ.Sz;
+            else
+               --  FIXME: for empty arrays ??
+               --  Lose_Binary (File, Value.Val_Array (0));
+               raise Internal_Error;
+            end if;
+         end loop;
+         Write_Discrete (Length, Int64 (Len));
+      end if;
    end Synth_File_Read_Length;
 
    procedure File_Write_Value (File : File_Index; Val : Memtyp; Loc : Node)
