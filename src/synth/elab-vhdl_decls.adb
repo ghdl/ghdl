@@ -29,6 +29,7 @@ with Elab.Vhdl_Insts;
 
 with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
 with Synth.Vhdl_Stmts; use Synth.Vhdl_Stmts;
+with Synth.Vhdl_Decls;
 
 package body Elab.Vhdl_Decls is
    procedure Elab_Subprogram_Declaration
@@ -49,68 +50,6 @@ package body Elab.Vhdl_Decls is
       end loop;
       pragma Unreferenced (Typ);
    end Elab_Subprogram_Declaration;
-
-   procedure Elab_Constant_Declaration (Syn_Inst : Synth_Instance_Acc;
-                                        Decl : Node;
-                                        Last_Type : in out Node)
-   is
-      Em : Mark_Type;
-      Deferred_Decl : constant Node := Get_Deferred_Declaration (Decl);
-      First_Decl : Node;
-      Decl_Type : Node;
-      Val : Valtyp;
-      Obj_Type : Type_Acc;
-   begin
-      Obj_Type := Elab_Declaration_Type (Syn_Inst, Decl);
-      if Deferred_Decl = Null_Node
-        or else Get_Deferred_Declaration_Flag (Decl)
-      then
-         --  Create the object (except for full declaration of a
-         --  deferred constant).
-         Create_Object (Syn_Inst, Decl, No_Valtyp);
-      end if;
-      --  Initialize the value (except for a deferred declaration).
-      if Get_Deferred_Declaration_Flag (Decl) then
-         return;
-      end if;
-      if Deferred_Decl = Null_Node then
-         --  A normal constant declaration
-         First_Decl := Decl;
-      else
-         --  The full declaration of a deferred constant.
-         First_Decl := Deferred_Decl;
-      end if;
-      pragma Assert (First_Decl /= Null_Node);
-
-      --  Use the type of the declaration.  The type of the constant may
-      --  be derived from the value.
-      --  FIXME: what about multiple declarations ?
-      Decl_Type := Get_Subtype_Indication (Decl);
-      if Decl_Type = Null_Node then
-         Decl_Type := Last_Type;
-      else
-         if Get_Kind (Decl_Type) in Iir_Kinds_Denoting_Name then
-            --  Type mark.
-            Decl_Type := Get_Type (Get_Named_Entity (Decl_Type));
-         end if;
-         Last_Type := Decl_Type;
-      end if;
-
-      --  Compute expression.
-      Mark_Expr_Pool (Em);
-      Val := Synth_Expression_With_Type
-        (Syn_Inst, Get_Default_Value (Decl), Obj_Type);
-      if Val = No_Valtyp then
-         Set_Error (Syn_Inst);
-         return;
-      end if;
-      Val := Exec_Subtype_Conversion (Val, Obj_Type, True, Decl);
-      Val := Unshare (Val, Instance_Pool);
-      Val.Typ := Unshare (Val.Typ, Instance_Pool);
-      Release_Expr_Pool (Em);
-
-      Create_Object_Force (Syn_Inst, First_Decl, Val);
-   end Elab_Constant_Declaration;
 
    procedure Create_Signal (Syn_Inst : Synth_Instance_Acc;
                             Decl : Node;
@@ -320,7 +259,9 @@ package body Elab.Vhdl_Decls is
    procedure Elab_Declaration (Syn_Inst : Synth_Instance_Acc;
                                Decl : Node;
                                Force_Init : Boolean;
-                               Last_Type : in out Node) is
+                               Last_Type : in out Node)
+   is
+      use Synth.Vhdl_Decls;
    begin
       case Get_Kind (Decl) is
          when Iir_Kind_Variable_Declaration =>
@@ -330,7 +271,7 @@ package body Elab.Vhdl_Decls is
          --     Create_Wire_Object (Syn_Inst, Wire_Variable, Decl);
          --     Create_Var_Wire (Syn_Inst, Decl, No_Valtyp);
          when Iir_Kind_Constant_Declaration =>
-            Elab_Constant_Declaration (Syn_Inst, Decl, Last_Type);
+            Synth_Constant_Declaration (Syn_Inst, Decl, False, Last_Type);
          when Iir_Kind_Signal_Declaration =>
             Elab_Signal_Declaration (Syn_Inst, Decl);
          when Iir_Kind_Object_Alias_Declaration =>

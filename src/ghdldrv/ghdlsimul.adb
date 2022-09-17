@@ -89,6 +89,8 @@ package body Ghdlsimul is
          end if;
       end loop;
 
+      Synth.Flags.Flag_Simulation := True;
+
       Lib_Unit := Get_Library_Unit (Config);
       pragma Assert (Get_Kind (Lib_Unit) /= Iir_Kind_Foreign_Module);
       Inst := Elab.Vhdl_Insts.Elab_Top_Unit (Lib_Unit);

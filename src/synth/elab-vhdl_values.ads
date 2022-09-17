@@ -197,6 +197,7 @@ package Elab.Vhdl_Values is
 
    --  Return the memory of a Value_Memory value, but also handle const and
    --  aliases.
+   function Get_Memory (V : Value_Acc) return Memory_Ptr;
    function Get_Memory (V : Valtyp) return Memory_Ptr;
 
    --  Return the memtyp of V; also strip const and aliases.

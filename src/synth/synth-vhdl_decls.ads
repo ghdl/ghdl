@@ -31,6 +31,11 @@ package Synth.Vhdl_Decls is
    --  Convert MT to a Pval.
    function Memtyp_To_Pval (Mt : Memtyp) return Pval;
 
+   procedure Synth_Constant_Declaration (Syn_Inst : Synth_Instance_Acc;
+                                         Decl : Node;
+                                         Is_Subprg : Boolean;
+                                         Last_Type : in out Node);
+
    procedure Synth_Object_Alias_Declaration
      (Syn_Inst : Synth_Instance_Acc; Decl : Node);
 

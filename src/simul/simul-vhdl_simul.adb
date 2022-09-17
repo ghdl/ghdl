@@ -2759,6 +2759,7 @@ package body Simul.Vhdl_Simul is
                   Mark_Expr_Pool (Marker);
                   Val := Synth.Vhdl_Expr.Synth_Expression_With_Type
                     (C.Assoc_Inst, Get_Actual (C.Assoc), C.Formal.Typ);
+                  Val := Strip_Alias_Const (Val);
                   Signal_Associate_Cst
                     (Sig_Index (Signals_Table.Table (C.Formal.Base).Sig,
                                 C.Formal.Offs.Net_Off),
@@ -3190,7 +3191,6 @@ package body Simul.Vhdl_Simul is
       pragma Assert (Areapools.Is_Empty (Process_Pool));
 
       Synth.Flags.Severity_Level := Grt.Options.Severity_Level;
-      Synth.Flags.Flag_Simulation := True;
 
       if Flag_Interractive then
          Elab.Debugger.Debug_Elab (Vhdl_Elab.Top_Instance);

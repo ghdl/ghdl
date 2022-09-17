@@ -149,7 +149,7 @@ package body Simul.Vhdl_Elab is
 
       --  Set it to the default value.
       if Val.Val.Init /= null then
-         Copy_Memory (E.Val, Val.Val.Init.Mem, E.Typ.Sz);
+         Copy_Memory (E.Val, Get_Memory (Val.Val.Init), E.Typ.Sz);
       else
          Write_Value_Default (E.Val, E.Typ);
       end if;

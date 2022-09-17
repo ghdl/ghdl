@@ -190,15 +190,19 @@ package body Synth.Vhdl_Decls is
       Val := Unshare (Val, Instance_Pool);
       Val.Typ := Unshare (Val.Typ, Instance_Pool);
 
-      --  TODO: share above code with elab_constant_declaration
-
       case Val.Val.Kind is
          when Value_Const
             | Value_Alias =>
             Cst := Val;
          when others =>
             if Is_Static (Val.Val) then
-               Cst := Create_Value_Const (Val, Decl, Instance_Pool);
+               if Synth.Flags.Flag_Simulation then
+                  Cst := Val;
+               else
+                  --  For synthesis, add a Value_Const to try to reuse the
+                  --  net.
+                  Cst := Create_Value_Const (Val, Decl, Instance_Pool);
+               end if;
             else
                if not Is_Subprg then
                   Error_Msg_Synth
