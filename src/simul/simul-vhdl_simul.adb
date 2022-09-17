@@ -40,7 +40,6 @@ with Elab.Debugger;
 with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
 with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 with Elab.Vhdl_Types;
-with Elab.Vhdl_Decls;
 with Elab.Vhdl_Debug;
 
 with Trans_Analyzes;
@@ -49,6 +48,7 @@ with Synth.Errors;
 with Synth.Vhdl_Stmts; use Synth.Vhdl_Stmts;
 with Synth.Vhdl_Expr;
 with Synth.Vhdl_Oper;
+with Synth.Vhdl_Decls;
 with Synth.Vhdl_Static_Proc;
 with Synth.Flags;
 with Synth.Ieee.Std_Logic_1164; use Synth.Ieee.Std_Logic_1164;
@@ -795,7 +795,7 @@ package body Simul.Vhdl_Simul is
               (Sub_Inst, Inst, Inter_Chain, Assoc_Chain);
 
             Process.Instance := Sub_Inst;
-            Elab.Vhdl_Decls.Elab_Declarations
+            Synth.Vhdl_Decls.Synth_Declarations
               (Sub_Inst, Get_Declaration_Chain (Bod), True);
 
             if Get_Suspend_Flag (Bod) then

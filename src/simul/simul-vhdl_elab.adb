@@ -26,8 +26,6 @@ with Synth.Vhdl_Stmts;
 with Synth.Vhdl_Decls;
 with Trans_Analyzes;
 
-with Elab.Vhdl_Decls;
-
 with Simul.Vhdl_Debug;
 
 package body Simul.Vhdl_Elab is
@@ -946,7 +944,8 @@ package body Simul.Vhdl_Elab is
             Proc_Inst := Make_Elab_Instance (Processes_Table.Table (I).Inst,
                                              Proc, Null_Node);
             Processes_Table.Table (I).Inst := Proc_Inst;
-            Elab.Vhdl_Decls.Elab_Declarations
+            Set_Instance_Const (Proc_Inst, True);
+            Synth.Vhdl_Decls.Synth_Declarations
               (Proc_Inst, Get_Declaration_Chain (Proc), True);
             exit when Is_Error (Proc_Inst);
          end if;

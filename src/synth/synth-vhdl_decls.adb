@@ -703,6 +703,17 @@ package body Synth.Vhdl_Decls is
          when Iir_Kind_Attribute_Implicit_Declaration =>
             --  Not supported by synthesis.
             null;
+         when Iir_Kind_Suspend_State_Declaration =>
+            declare
+               Val : Valtyp;
+            begin
+               pragma Assert (Areapools.Is_Empty (Expr_Pool));
+
+               Current_Pool := Instance_Pool;
+               Val := Create_Value_Memtyp (Create_Memory_U32 (0));
+               Current_Pool := Expr_Pool'Access;
+               Create_Object (Syn_Inst, Decl, Val);
+            end;
          when others =>
             Vhdl.Errors.Error_Kind ("synth_declaration", Decl);
       end case;
