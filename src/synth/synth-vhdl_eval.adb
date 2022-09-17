@@ -2403,6 +2403,9 @@ package body Synth.Vhdl_Eval is
             begin
                Res := Elab.Vhdl_Files.Endfile (Param1.Val.File, Expr);
                return Create_Memory_U8 (Boolean'Pos (Res), Boolean_Type);
+            exception
+               when Elab.Vhdl_Files.File_Execution_Error =>
+                  return Null_Memtyp;
             end;
 
          when Iir_Predefined_Integer_To_String =>

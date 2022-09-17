@@ -492,6 +492,49 @@ package body Elab.Vhdl_Files is
       end case;
    end File_Read_Value;
 
+   procedure File_Skip_Value (File : File_Index; Typ : Type_Acc; Loc : Node)
+   is
+      Status : Op_Status;
+   begin
+      case Typ.Kind is
+         when Type_Discrete
+            | Type_Bit
+            | Type_Logic
+            | Type_Float =>
+            declare
+               Mem : Memory_Array (0 .. 7);
+               pragma Assert (Typ.Sz <= 8);
+            begin
+               Ghdl_Read_Scalar (File, Ghdl_Ptr (Mem'Address),
+                                 Ghdl_Index_Type (Typ.Sz), Status);
+               if Status /= Op_Ok then
+                  File_Error (Loc, Status);
+               end if;
+            end;
+         when Type_Vector
+            | Type_Array =>
+            declare
+               El_Typ : constant Type_Acc := Get_Array_Element (Typ);
+            begin
+               for I in 1 .. Get_Bound_Length (Typ) loop
+                  File_Skip_Value (File, El_Typ, Loc);
+               end loop;
+            end;
+         when Type_Record =>
+            for I in Typ.Rec.E'Range loop
+               File_Skip_Value (File, Typ.Rec.E (I).Typ, Loc);
+            end loop;
+         when Type_Unbounded_Record
+            | Type_Unbounded_Array
+            | Type_Unbounded_Vector
+            | Type_Protected
+            | Type_Slice
+            | Type_File
+            | Type_Access =>
+            raise Internal_Error;
+      end case;
+   end File_Skip_Value;
+
    procedure Synth_File_Read
      (Syn_Inst : Synth_Instance_Acc; Imp : Node; Loc : Node)
    is
@@ -552,9 +595,9 @@ package body Elab.Vhdl_Files is
                File_Read_Value (File, (El_Typ, Value.Val.Mem + Off), Loc);
                Off := Off + El_Typ.Sz;
             else
-               --  FIXME: for empty arrays ??
-               --  Lose_Binary (File, Value.Val_Array (0));
-               raise Internal_Error;
+               --  Loose extra data.
+               File_Skip_Value (File, El_Typ, Loc);
+               Len := Len - 1;
             end if;
          end loop;
          Write_Discrete (Length, Int64 (Len));

@@ -26,6 +26,7 @@ with Elab.Memtype;
 with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 with Elab.Vhdl_Heap;
 with Elab.Vhdl_Files; use Elab.Vhdl_Files;
+with Elab.Debugger;
 
 with Synth.Errors; use Synth.Errors;
 
@@ -111,5 +112,8 @@ package body Synth.Vhdl_Static_Proc is
             Error_Msg_Synth
               (+Loc, "call to implicit %n is not supported", +Imp);
       end case;
+   exception
+      when File_Execution_Error =>
+         Elab.Debugger.Debug_Error (Syn_Inst, Loc);
    end Synth_Static_Procedure;
 end Synth.Vhdl_Static_Proc;
