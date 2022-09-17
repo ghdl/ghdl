@@ -30,11 +30,13 @@ with Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Std_Package;
 
-with Elab.Vhdl_Values; use Elab.Vhdl_Values;
+with Elab.Memtype;
 with Elab.Vhdl_Types; use Elab.Vhdl_Types;
 with Elab.Vhdl_Decls; use Elab.Vhdl_Decls;
 with Elab.Vhdl_Files;
+with Elab.Vhdl_Prot;
 
+with Synth.Flags;
 with Synth.Vhdl_Environment; use Synth.Vhdl_Environment.Env;
 with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
 with Synth.Vhdl_Stmts;
@@ -378,13 +380,43 @@ package body Synth.Vhdl_Decls is
       end if;
    end Synth_Package_Instantiation;
 
+   function Create_Protected_Object (Inst : Synth_Instance_Acc;
+                                     Decl : Node;
+                                     Typ : Type_Acc) return Valtyp
+   is
+      use Elab.Memtype;
+      Prev_Instance_Pool : constant Areapools.Areapool_Acc := Instance_Pool;
+      Decl_Type : constant Node := Get_Type (Decl);
+      Bod : constant Node := Get_Protected_Type_Body (Decl_Type);
+      Obj_Inst : Synth_Instance_Acc;
+      Obj_Hand : Protected_Index;
+      Mem : Memory_Ptr;
+      Parent : Synth_Instance_Acc;
+      Res : Valtyp;
+   begin
+      Parent := Get_Instance_By_Scope (Inst, Get_Parent_Scope (Bod));
+      Obj_Inst := Make_Elab_Instance (Parent, Bod, Null_Node);
+      Obj_Hand := Elab.Vhdl_Prot.Create (Obj_Inst);
+
+      Instance_Pool := Global_Pool'Access;
+      Elab.Vhdl_Decls.Elab_Declarations
+        (Obj_Inst, Get_Declaration_Chain (Bod), True);
+
+      Mem := Alloc_Memory (Typ, Instance_Pool);
+      Write_Protected (Mem, Obj_Hand);
+
+      Res := Create_Value_Memory ((Typ, Mem), Instance_Pool);
+      Instance_Pool := Prev_Instance_Pool;
+
+      return Res;
+   end Create_Protected_Object;
+
    procedure Synth_Variable_Declaration (Syn_Inst : Synth_Instance_Acc;
                                          Decl : Node;
                                          Is_Subprg : Boolean)
    is
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Def : constant Node := Get_Default_Value (Decl);
-      Decl_Type : constant Node := Get_Type (Decl);
       Marker : Mark_Type;
       Init : Valtyp;
       Val : Valtyp;
@@ -392,11 +424,17 @@ package body Synth.Vhdl_Decls is
       Wid : Wire_Id;
    begin
       Obj_Typ := Elab_Declaration_Type (Syn_Inst, Decl);
-      if Get_Kind (Decl_Type) = Iir_Kind_Protected_Type_Declaration then
-         Error_Msg_Synth
-           (+Decl, "protected type variable is not synthesizable");
-         Set_Error (Syn_Inst);
-         Create_Object (Syn_Inst, Decl, No_Valtyp);
+      if Obj_Typ.Kind = Type_Protected then
+         if not Synth.Flags.Flag_Simulation then
+            Error_Msg_Synth
+              (+Decl, "protected type variable is not synthesizable");
+            Set_Error (Syn_Inst);
+            Init := No_Valtyp;
+         else
+            Init := Create_Protected_Object (Syn_Inst, Decl, Obj_Typ);
+            Init := Unshare (Init, Instance_Pool);
+         end if;
+         Create_Object (Syn_Inst, Decl, Init);
          return;
       end if;
 

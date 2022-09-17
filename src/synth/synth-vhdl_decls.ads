@@ -20,6 +20,7 @@ with Vhdl.Nodes; use Vhdl.Nodes;
 
 with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
+with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 
 with Netlists; use Netlists;
 
@@ -53,6 +54,10 @@ package Synth.Vhdl_Decls is
    procedure Finalize_Declarations (Syn_Inst : Synth_Instance_Acc;
                                     Decls : Node;
                                     Is_Subprg : Boolean := False);
+
+   function Create_Protected_Object (Inst : Synth_Instance_Acc;
+                                     Decl : Node;
+                                     Typ : Type_Acc) return Valtyp;
 
    procedure Synth_Package_Declaration
      (Parent_Inst : Synth_Instance_Acc; Pkg : Node);

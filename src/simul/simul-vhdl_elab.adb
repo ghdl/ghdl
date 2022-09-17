@@ -23,10 +23,10 @@ with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Canon;
 
 with Synth.Vhdl_Stmts;
+with Synth.Vhdl_Decls;
 with Trans_Analyzes;
 
 with Elab.Vhdl_Decls;
-with Elab.Vhdl_Prot;
 
 with Simul.Vhdl_Debug;
 
@@ -197,35 +197,6 @@ package body Simul.Vhdl_Elab is
       Val.Val.T := Terminal_Table.Last;
    end Gather_Terminal;
 
-   function Create_Protected_Object (Inst : Synth_Instance_Acc;
-                                     Decl : Node;
-                                     Typ : Type_Acc) return Valtyp
-   is
-      Decl_Type : constant Node := Get_Type (Decl);
-      Bod : constant Node := Get_Protected_Type_Body (Decl_Type);
-      Obj_Inst : Synth_Instance_Acc;
-      Obj_Hand : Protected_Index;
-      Mem : Memory_Ptr;
-      Parent : Synth_Instance_Acc;
-      Res : Valtyp;
-   begin
-      Parent := Get_Instance_By_Scope (Inst, Get_Parent_Scope (Bod));
-      Obj_Inst := Make_Elab_Instance (Parent, Bod, Null_Node);
-      Obj_Hand := Elab.Vhdl_Prot.Create (Obj_Inst);
-
-      Instance_Pool := Global_Pool'Access;
-      Elab.Vhdl_Decls.Elab_Declarations
-        (Obj_Inst, Get_Declaration_Chain (Bod), True);
-
-      Mem := Alloc_Memory (Typ, Instance_Pool);
-      Write_Protected (Mem, Obj_Hand);
-
-      Res := Create_Value_Memory ((Typ, Mem), Instance_Pool);
-      Instance_Pool := null;
-
-      return Res;
-   end Create_Protected_Object;
-
    procedure Gather_Processes_Decl (Inst : Synth_Instance_Acc; Decl : Node) is
    begin
       case Get_Kind (Decl) is
@@ -311,7 +282,8 @@ package body Simul.Vhdl_Elab is
                   pragma Assert (V.Val = null);
                   Current_Pool := Global_Pool'Access;
                   if V.Typ.Kind = Type_Protected then
-                     V := Create_Protected_Object (Inst, Decl, V.Typ);
+                     V := Synth.Vhdl_Decls.Create_Protected_Object
+                       (Inst, Decl, V.Typ);
                   else
                      V := Create_Value_Default (V.Typ);
                   end if;
