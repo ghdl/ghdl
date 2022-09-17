@@ -631,7 +631,12 @@ package body Elab.Vhdl_Objtypes is
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Access_Type_Type);
       Bnd_Sz : Size_Type;
    begin
-      Bnd_Sz := Compute_Size_Type (Acc_Type);
+      if Acc_Type = null then
+         --  For incomplete type.
+         Bnd_Sz := 0;
+      else
+         Bnd_Sz := Compute_Size_Type (Acc_Type);
+      end if;
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Access,
                                                 Wkind => Wkind_Sim,
                                                 Al => 2,
@@ -641,6 +646,12 @@ package body Elab.Vhdl_Objtypes is
                                                 Acc_Acc => Acc_Type,
                                                 Acc_Bnd_Sz => Bnd_Sz)));
    end Create_Access_Type;
+
+   procedure Complete_Access_Type (Acc_Type : Type_Acc; Des_Typ : Type_Acc) is
+   begin
+      Acc_Type.Acc_Acc := Des_Typ;
+      Acc_Type.Acc_Bnd_Sz := Compute_Size_Type (Des_Typ);
+   end Complete_Access_Type;
 
    function Create_File_Type (File_Type : Type_Acc) return Type_Acc
    is
@@ -1039,7 +1050,12 @@ package body Elab.Vhdl_Objtypes is
                                  Typ => Unshare (T.Rec.E (I).Typ, Pool));
             end loop;
          when Type_Access =>
-            Res.Acc_Acc := Unshare (T.Acc_Acc, Pool);
+            if T.Acc_Acc /= null then
+               Res.Acc_Acc := Unshare (T.Acc_Acc, Pool);
+            else
+               --  For incomplete types
+               Res.Acc_Acc := null;
+            end if;
          when Type_File =>
             Res.File_Typ := Unshare (T.File_Typ, Pool);
          when Type_Protected =>
@@ -1122,7 +1138,8 @@ package body Elab.Vhdl_Objtypes is
          when Type_Bit
            | Type_Logic
            | Type_Discrete
-           | Type_Float =>
+           | Type_Float
+           | Type_Access =>
             Res := Typ;
             return;
          when others =>

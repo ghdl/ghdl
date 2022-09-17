@@ -211,14 +211,6 @@ package body Elab.Vhdl_Types is
       return Res;
    end Create_Bounds_From_Length;
 
-   procedure Synth_Subtype_Indication_If_Anonymous
-     (Syn_Inst : Synth_Instance_Acc; Atype : Node) is
-   begin
-      if Get_Type_Declarator (Atype) = Null_Node then
-         Synth_Subtype_Indication (Syn_Inst, Atype);
-      end if;
-   end Synth_Subtype_Indication_If_Anonymous;
-
    function Synth_Subtype_Indication_If_Anonymous
      (Syn_Inst : Synth_Instance_Acc; Atype : Node) return Type_Acc is
    begin
@@ -310,15 +302,48 @@ package body Elab.Vhdl_Types is
      (Syn_Inst : Synth_Instance_Acc; Def : Node) return Type_Acc
    is
       Des_Type : constant Node := Get_Designated_Type (Def);
+      Des_Ind : constant Node := Get_Designated_Subtype_Indication (Def);
+      T : Node;
       Des_Typ : Type_Acc;
       Typ : Type_Acc;
    begin
-      Synth_Subtype_Indication_If_Anonymous (Syn_Inst, Des_Type);
-      Des_Typ := Get_Subtype_Object (Syn_Inst, Des_Type);
+      if Get_Kind (Des_Ind) in Iir_Kinds_Denoting_Name then
+         T := Get_Named_Entity (Des_Ind);
+         if Get_Kind (T) = Iir_Kind_Type_Declaration
+           and then
+           Get_Kind (Get_Type (T)) = Iir_Kind_Incomplete_Type_Definition
+         then
+            --  Access to incomplete type.
+            Des_Typ := null;
+         else
+            Des_Typ := Get_Subtype_Object (Syn_Inst, Des_Type);
+         end if;
+      else
+         Des_Typ := Synth_Subtype_Indication_If_Anonymous (Syn_Inst, Des_Type);
+      end if;
 
       Typ := Create_Access_Type (Des_Typ);
       return Typ;
    end Synth_Access_Type_Definition;
+
+   procedure Elab_Incomplete_Type_Finish (Syn_Inst : Synth_Instance_Acc;
+                                          Incomp : Node;
+                                          Des_Def : Node)
+   is
+      Des_Typ : Type_Acc;
+      Acc : Node;
+      Acc_Typ : Type_Acc;
+   begin
+      Des_Typ := Get_Subtype_Object (Syn_Inst, Des_Def);
+
+      --  Complete all the access types in the chain.
+      Acc := Get_Incomplete_Type_Ref_Chain (Incomp);
+      while Acc /= Null_Node loop
+         Acc_Typ := Get_Subtype_Object (Syn_Inst, Acc);
+         Complete_Access_Type (Acc_Typ, Des_Typ);
+         Acc := Get_Incomplete_Type_Ref_Chain (Acc);
+      end loop;
+   end Elab_Incomplete_Type_Finish;
 
    function Synth_File_Type_Definition
      (Syn_Inst : Synth_Instance_Acc; Def : Node) return Type_Acc
@@ -415,6 +440,8 @@ package body Elab.Vhdl_Types is
             --  TODO...
             Elab.Vhdl_Decls.Elab_Declarations
               (Syn_Inst, Get_Declaration_Chain (Def));
+         when Iir_Kind_Incomplete_Type_Definition =>
+            return;
          when others =>
             Vhdl.Errors.Error_Kind ("synth_type_definition", Def);
       end case;

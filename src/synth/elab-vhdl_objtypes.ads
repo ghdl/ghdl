@@ -252,7 +252,9 @@ package Elab.Vhdl_Objtypes is
    function Create_Record_Type (Els : Rec_El_Array_Acc) return Type_Acc;
    function Create_Unbounded_Record (Els : Rec_El_Array_Acc) return Type_Acc;
 
+   --  ACC_TYPE can be null for an incomplete type.
    function Create_Access_Type (Acc_Type : Type_Acc) return Type_Acc;
+   procedure Complete_Access_Type (Acc_Type : Type_Acc; Des_Typ : Type_Acc);
 
    function Create_File_Type (File_Type : Type_Acc) return Type_Acc;
 

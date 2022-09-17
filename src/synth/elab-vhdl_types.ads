@@ -64,6 +64,12 @@ package Elab.Vhdl_Types is
    procedure Elab_Anonymous_Type_Definition
      (Syn_Inst : Synth_Instance_Acc; Def : Node; St : Node);
 
+   --  Complete incomplete type definition INCOMP.
+   --  DES_DEF is the complete designated type.
+   procedure Elab_Incomplete_Type_Finish (Syn_Inst : Synth_Instance_Acc;
+                                          Incomp : Node;
+                                          Des_Def : Node);
+
    --  Exported only for Vhdl.Evaluation to create temporary types.
    function Elab_Enumeration_Type_Definition (Def : Node) return Type_Acc;
    function Elab_Scalar_Type_Definition (Def : Node; St : Node)

@@ -350,7 +350,17 @@ package body Elab.Vhdl_Decls is
          when Iir_Kind_Attribute_Specification =>
             Elab_Attribute_Specification (Syn_Inst, Decl);
          when Iir_Kind_Type_Declaration =>
-            Elab_Type_Definition (Syn_Inst, Get_Type_Definition (Decl));
+            declare
+               Incomp : constant Node :=
+                 Get_Incomplete_Type_Declaration (Decl);
+               Def : constant Node := Get_Type_Definition (Decl);
+            begin
+               Elab_Type_Definition (Syn_Inst, Def);
+               if Incomp /= Null_Node then
+                  Elab_Incomplete_Type_Finish
+                    (Syn_Inst, Get_Type_Definition (Incomp), Def);
+               end if;
+            end;
          when Iir_Kind_Anonymous_Type_Declaration =>
             Elab_Anonymous_Type_Definition
               (Syn_Inst, Get_Type_Definition (Decl),

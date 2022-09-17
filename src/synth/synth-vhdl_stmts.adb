@@ -258,16 +258,17 @@ package body Synth.Vhdl_Stmts is
 
          when Iir_Kind_Implicit_Dereference
            | Iir_Kind_Dereference =>
-            Synth_Assignment_Prefix
-              (Syn_Inst, Get_Prefix (Pfx), Dest_Base, Dest_Typ, Dest_Off);
-            if Dest_Off /= (0, 0) then
-               raise Internal_Error;
-            end if;
-            Dest_Base := Create_Value_Memtyp
-              (Elab.Vhdl_Heap.Synth_Dereference (Read_Access (Dest_Base)));
-            Dest_Typ := Dest_Base.Typ;
-            Dest_Dyn := No_Dyn_Name;
-
+            declare
+               Acc : Memtyp;
+            begin
+               Synth_Assignment_Prefix
+                 (Syn_Inst, Get_Prefix (Pfx), Dest_Base, Dest_Typ, Dest_Off);
+               Acc := (Dest_Typ, Dest_Base.Val.Mem + Dest_Off.Mem_Off);
+               Dest_Base := Create_Value_Memtyp
+                 (Elab.Vhdl_Heap.Synth_Dereference (Read_Access (Acc)));
+               Dest_Typ := Dest_Base.Typ;
+               Dest_Dyn := No_Dyn_Name;
+            end;
          when others =>
             Error_Kind ("synth_assignment_prefix", Pfx);
       end case;
