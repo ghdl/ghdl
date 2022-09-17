@@ -26,6 +26,7 @@ with Vhdl.Annotations;
 with Vhdl.Configuration; use Vhdl.Configuration;
 with Vhdl.Errors; use Vhdl.Errors;
 
+with Elab.Memtype;
 with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
 with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 with Elab.Vhdl_Decls; use Elab.Vhdl_Decls;
@@ -36,6 +37,7 @@ with Elab.Vhdl_Errors; use Elab.Vhdl_Errors;
 with Elab.Vhdl_Expr; use Elab.Vhdl_Expr;
 
 with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
+with Synth.Vhdl_Stmts;
 
 package body Elab.Vhdl_Insts is
    procedure Elab_Instance_Body (Syn_Inst : Synth_Instance_Acc);
@@ -86,13 +88,21 @@ package body Elab.Vhdl_Insts is
                        (Sub_Inst, Actual, Inter_Type);
                   when Iir_Kind_Association_Element_By_Expression =>
                      Actual := Get_Actual (Assoc);
+                     --  FIXME: Inter_Type is not correct for individual assoc
                      Val := Synth_Expression_With_Type
                        (Syn_Inst, Actual, Inter_Type);
+                  when Iir_Kind_Association_Element_By_Individual =>
+                     Val.Typ := Synth_Subtype_Indication
+                       (Syn_Inst, Get_Actual_Type (Assoc));
+                     Val := Create_Value_Memory (Val.Typ, Expr_Pool'Access);
                   when others =>
                      raise Internal_Error;
                end case;
 
-               Val := Exec_Subtype_Conversion (Val, Inter_Type, True, Assoc);
+               if Get_Whole_Association_Flag (Assoc) then
+                  Val := Exec_Subtype_Conversion
+                    (Val, Inter_Type, True, Assoc);
+               end if;
 
                if Val = No_Valtyp then
                   Set_Error (Sub_Inst);
@@ -101,12 +111,32 @@ package body Elab.Vhdl_Insts is
                     (+Assoc, "value of generic %i must be static", +Inter);
                   Val := No_Valtyp;
                   Set_Error (Sub_Inst);
-               else
-                  Val := Unshare (Val, Global_Pool'Access);
-                  Val.Typ := Unshare (Val.Typ, Global_Pool'Access);
                end if;
 
-               Create_Object (Sub_Inst, Inter, Val);
+               if Get_Whole_Association_Flag (Assoc) then
+                  if Val /= No_Valtyp then
+                     Val := Unshare (Val, Global_Pool'Access);
+                     Val.Typ := Unshare (Val.Typ, Global_Pool'Access);
+                  end if;
+                  Create_Object (Sub_Inst, Inter, Val);
+               else
+                  --  Modify the generic.
+                  declare
+                     use Synth.Vhdl_Stmts;
+                     use Elab.Memtype;
+                     Base : Valtyp;
+                     Typ : Type_Acc;
+                     Offs : Value_Offsets;
+                     Dyn : Dyn_Name;
+                  begin
+                     Synth_Assignment_Prefix
+                       (Syn_Inst, Sub_Inst, Get_Formal (Assoc),
+                        Base, Typ, Offs, Dyn);
+                     pragma Assert (Dyn = No_Dyn_Name);
+                     Copy_Memory (Base.Val.Mem + Offs.Mem_Off,
+                                  Get_Memory (Val), Typ.Sz);
+                  end;
+               end if;
 
                Release_Expr_Pool (Marker);
 
