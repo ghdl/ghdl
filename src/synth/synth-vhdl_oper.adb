@@ -2188,7 +2188,7 @@ package body Synth.Vhdl_Oper is
       Areapools.Mark (M, Instance_Pool.all);
       Subprg_Inst := Make_Instance (Syn_Inst, Imp);
 
-      Synth_Subprogram_Association
+      Synth_Subprogram_Associations
         (Subprg_Inst, Syn_Inst, Inter_Chain, Assoc_Chain);
 
       if Is_Error (Subprg_Inst) then

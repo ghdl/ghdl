@@ -48,10 +48,10 @@ package Synth.Vhdl_Stmts is
                                            Bod : Node)
                                           return Synth_Instance_Acc;
 
-   procedure Synth_Subprogram_Association (Subprg_Inst : Synth_Instance_Acc;
-                                           Caller_Inst : Synth_Instance_Acc;
-                                           Inter_Chain : Node;
-                                           Assoc_Chain : Node);
+   procedure Synth_Subprogram_Associations (Subprg_Inst : Synth_Instance_Acc;
+                                            Caller_Inst : Synth_Instance_Acc;
+                                            Inter_Chain : Node;
+                                            Assoc_Chain : Node);
 
    --  Dynamic index for Synth_Assignment_Prefix.
    --  As dynamic is about dynamic (!) index, the index is a net.

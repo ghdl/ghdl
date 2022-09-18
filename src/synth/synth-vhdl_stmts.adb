@@ -2137,16 +2137,16 @@ package body Synth.Vhdl_Stmts is
       end loop;
    end Synth_Subprogram_Associations;
 
-   procedure Synth_Subprogram_Association (Subprg_Inst : Synth_Instance_Acc;
-                                           Caller_Inst : Synth_Instance_Acc;
-                                           Inter_Chain : Node;
-                                           Assoc_Chain : Node)
+   procedure Synth_Subprogram_Associations (Subprg_Inst : Synth_Instance_Acc;
+                                            Caller_Inst : Synth_Instance_Acc;
+                                            Inter_Chain : Node;
+                                            Assoc_Chain : Node)
    is
       Init : Association_Iterator_Init;
    begin
       Init := Association_Iterator_Build (Inter_Chain, Assoc_Chain);
       Synth_Subprogram_Associations (Subprg_Inst, Caller_Inst, Init);
-   end Synth_Subprogram_Association;
+   end Synth_Subprogram_Associations;
 
    --  Create wires for out and inout interface variables.
    procedure Synth_Subprogram_Association_Wires

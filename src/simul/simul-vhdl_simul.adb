@@ -758,7 +758,7 @@ package body Simul.Vhdl_Simul is
             pragma Assert (Obj = Null_Node);
             Sub_Inst := Synth_Subprogram_Call_Instance (Inst, Imp, Imp);
 
-            Synth_Subprogram_Association
+            Synth_Subprogram_Associations
               (Sub_Inst, Inst, Inter_Chain, Assoc_Chain);
 
             Synth.Vhdl_Static_Proc.Synth_Static_Procedure
@@ -791,7 +791,7 @@ package body Simul.Vhdl_Simul is
             --  Note: in fact the uninstantiated scope is the instantiated
             --  one!
             Set_Uninstantiated_Scope (Sub_Inst, Imp);
-            Synth_Subprogram_Association
+            Synth_Subprogram_Associations
               (Sub_Inst, Inst, Inter_Chain, Assoc_Chain);
 
             Process.Instance := Sub_Inst;
