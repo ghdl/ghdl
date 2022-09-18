@@ -271,10 +271,12 @@ package body Synth.Vhdl_Decls is
    is
       Attr_Decl : constant Node :=
         Get_Named_Entity (Get_Attribute_Designator (Spec));
+      Marker : Mark_Type;
       Value : Node;
       Val : Valtyp;
       Val_Type : Type_Acc;
    begin
+      Mark_Expr_Pool (Marker);
       Val_Type := Get_Subtype_Object (Syn_Inst, Get_Type (Attr_Decl));
       Value := Get_Attribute_Value_Spec_Chain (Spec);
       while Value /= Null_Iir loop
@@ -295,8 +297,10 @@ package body Synth.Vhdl_Decls is
          --
          --  4. Each new attribute instance is assigned the value of
          --     the expression.
+         Val := Unshare (Val, Instance_Pool);
          Create_Object (Syn_Inst, Value, Val);
-         --  Unshare (Val, Instance_Pool);
+
+         Release_Expr_Pool (Marker);
 
          Value := Get_Spec_Chain (Value);
       end loop;
