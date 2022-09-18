@@ -629,8 +629,12 @@ package body Simul.Vhdl_Elab is
                null;
             when Iir_Kind_Association_Element_By_Expression =>
                Inter := Get_Association_Interface (Assoc, Assoc_Inter);
+               Formal := Get_Formal (Assoc);
+               if Formal = Null_Iir then
+                  Formal := Inter;
+               end if;
                Synth_Assignment_Prefix
-                 (Port_Inst, Inter, Formal_Base, Typ, Off);
+                 (Port_Inst, Formal, Formal_Base, Typ, Off);
                Formal_Sig := Formal_Base.Val.S;
                Formal_Ep := (Formal_Sig, Off, Typ);
 
