@@ -2452,26 +2452,32 @@ package body Simul.Vhdl_Simul is
    function Execute_Assoc_Conversion (Inst : Synth_Instance_Acc;
                                       Func : Node;
                                       Val : Memtyp;
-                                      Res_Typ : Type_Acc) return Memtyp is
+                                      Res_Typ : Type_Acc) return Memtyp
+   is
+      Res : Valtyp;
    begin
       case Get_Kind (Func) is
          when Iir_Kind_Function_Call =>
+            Res := Exec_Resolution_Call (Inst, Get_Implementation (Func),
+                                         Create_Value_Memtyp (Val));
+         when Iir_Kind_Type_Conversion =>
             declare
-               Res : Valtyp;
+               Conv_Typ : constant Type_Acc :=
+                 Get_Subtype_Object (Inst, Get_Type (Func));
             begin
-               Res := Exec_Resolution_Call (Inst, Get_Implementation (Func),
-                                            Create_Value_Memtyp (Val));
-               Res := Synth.Vhdl_Expr.Synth_Subtype_Conversion
-                 (Inst, Res, Res_Typ, False, Func);
-               if Res = No_Valtyp then
-                  Grt.Errors.Fatal_Error;
-               end if;
-               Convert_Type_Width (Res.Typ);
-               return Synth.Vhdl_Expr.Get_Value_Memtyp (Res);
+               Res := Synth.Vhdl_Expr.Synth_Type_Conversion
+                 (Inst, Create_Value_Memtyp (Val), Conv_Typ, Func);
             end;
          when others =>
             Vhdl.Errors.Error_Kind ("execute_assoc_conversion", Func);
       end case;
+      Res := Synth.Vhdl_Expr.Synth_Subtype_Conversion
+        (Inst, Res, Res_Typ, False, Func);
+      if Res = No_Valtyp then
+         Grt.Errors.Fatal_Error;
+      end if;
+      Convert_Type_Width (Res.Typ);
+      return Synth.Vhdl_Expr.Get_Value_Memtyp (Res);
    end Execute_Assoc_Conversion;
 
    procedure Create_Shadow_Signal (Sig : Memory_Ptr;

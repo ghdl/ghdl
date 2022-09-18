@@ -96,6 +96,10 @@ package Synth.Vhdl_Expr is
    function Synth_Expression_With_Basetype (Syn_Inst : Synth_Instance_Acc;
                                             Expr : Node) return Valtyp;
 
+   function Synth_Type_Conversion (Syn_Inst : Synth_Instance_Acc;
+                                   Val : Valtyp;
+                                   Conv_Typ : Type_Acc;
+                                   Loc : Node) return Valtyp;
    function Synth_Type_Conversion
      (Syn_Inst : Synth_Instance_Acc; Conv : Node) return Valtyp;
 

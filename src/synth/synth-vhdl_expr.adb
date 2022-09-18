@@ -1387,21 +1387,13 @@ package body Synth.Vhdl_Expr is
       return No_Net;
    end Synth_Clock_Edge;
 
-   function Synth_Type_Conversion
-     (Syn_Inst : Synth_Instance_Acc; Conv : Node) return Valtyp
-   is
-      Expr : constant Node := Get_Expression (Conv);
-      Conv_Type : constant Node := Get_Type (Conv);
-      Conv_Typ : constant Type_Acc := Get_Subtype_Object (Syn_Inst, Conv_Type);
-      Val : Valtyp;
+   function Synth_Type_Conversion (Syn_Inst : Synth_Instance_Acc;
+                                   Val : Valtyp;
+                                   Conv_Typ : Type_Acc;
+                                   Loc : Node) return Valtyp is
    begin
-      Val := Synth_Expression_With_Basetype (Syn_Inst, Expr);
-      if Val = No_Valtyp then
-         return No_Valtyp;
-      end if;
-      Strip_Const (Val);
-      case Get_Kind (Conv_Type) is
-         when Iir_Kind_Integer_Subtype_Definition =>
+      case Conv_Typ.Kind is
+         when Type_Discrete =>
             if Val.Typ.Kind = Type_Discrete then
                --  Int to int.
                return Val;
@@ -1420,47 +1412,53 @@ package body Synth.Vhdl_Expr is
                           or V > Fp64 (Conv_Typ.Drange.Left);
                   end case;
                   if Err then
-                     Error_Msg_Synth (+Expr, "value out of range");
-                     Elab.Debugger.Debug_Error (Syn_Inst, Expr);
+                     Error_Msg_Synth (+Loc, "value out of range");
+                     Elab.Debugger.Debug_Error (Syn_Inst, Loc);
                      return No_Valtyp;
                   end if;
                   return Create_Value_Discrete (Int64 (V), Conv_Typ);
                end;
             else
-               Error_Msg_Synth (+Conv, "unhandled type conversion (to int)");
+               Error_Msg_Synth (+Loc, "unhandled type conversion (to int)");
                return No_Valtyp;
             end if;
-         when Iir_Kind_Floating_Subtype_Definition =>
+         when Type_Float =>
             if Is_Static (Val.Val) then
                return Create_Value_Float
                  (Fp64 (Read_Discrete (Val)), Conv_Typ);
             else
-               Error_Msg_Synth (+Conv, "unhandled type conversion (to float)");
+               Error_Msg_Synth (+Loc, "unhandled type conversion (to float)");
                return No_Valtyp;
             end if;
-         when Iir_Kind_Array_Type_Definition
-           | Iir_Kind_Array_Subtype_Definition =>
-            case Conv_Typ.Kind is
-               when Type_Vector
-                 | Type_Unbounded_Vector =>
-                  return Val;
-               when Type_Array
-                 | Type_Unbounded_Array =>
-                  return Val;
-               when others =>
-                  Error_Msg_Synth
-                    (+Conv, "unhandled type conversion (to array)");
-                  return No_Valtyp;
-            end case;
-         when Iir_Kind_Enumeration_Type_Definition
-           | Iir_Kind_Enumeration_Subtype_Definition =>
-            pragma Assert (Get_Base_Type (Get_Type (Expr))
-                             = Get_Base_Type (Conv_Type));
+         when Type_Vector
+           | Type_Unbounded_Vector =>
+            return Val;
+         when Type_Array
+           | Type_Unbounded_Array =>
+            return Val;
+         when Type_Bit
+           | Type_Logic =>
             return Val;
          when others =>
-            Error_Msg_Synth (+Conv, "unhandled type conversion");
+            Error_Msg_Synth (+Loc, "unhandled type conversion");
             return No_Valtyp;
       end case;
+   end Synth_Type_Conversion;
+
+   function Synth_Type_Conversion
+     (Syn_Inst : Synth_Instance_Acc; Conv : Node) return Valtyp
+   is
+      Expr : constant Node := Get_Expression (Conv);
+      Conv_Type : constant Node := Get_Type (Conv);
+      Conv_Typ : constant Type_Acc := Get_Subtype_Object (Syn_Inst, Conv_Type);
+      Val : Valtyp;
+   begin
+      Val := Synth_Expression_With_Basetype (Syn_Inst, Expr);
+      if Val = No_Valtyp then
+         return No_Valtyp;
+      end if;
+      Strip_Const (Val);
+      return Synth_Type_Conversion (Syn_Inst, Val, Conv_Typ, Conv);
    end Synth_Type_Conversion;
 
    function Error_Ieee_Operator (Imp : Node; Loc : Node) return Boolean
