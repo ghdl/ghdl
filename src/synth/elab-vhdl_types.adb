@@ -655,6 +655,9 @@ package body Elab.Vhdl_Types is
                  (Syn_Inst, Get_Designated_Type (Atype));
                return Create_Access_Type (Acc_Typ);
             end;
+         when Iir_Kind_Record_Type_Definition
+           | Iir_Kind_Array_Type_Definition =>
+            return Get_Subtype_Object (Syn_Inst, Atype);
          when others =>
             Vhdl.Errors.Error_Kind ("synth_subtype_indication", Atype);
       end case;

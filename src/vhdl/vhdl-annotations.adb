@@ -885,7 +885,9 @@ package body Vhdl.Annotations is
       Assoc_Inter := Inter_Chain;
       while Assoc /= Null_Iir loop
          Inter := Get_Association_Interface (Assoc, Assoc_Inter);
-         if Is_Copyback_Parameter (Inter) then
+         if Get_Kind (Assoc) /= Iir_Kind_Association_Element_By_Individual
+           and then Is_Copyback_Parameter (Inter)
+         then
             Create_Object_Info (Block_Info, Assoc, Kind_Object);
          end if;
          Next_Association_Interface (Assoc, Assoc_Inter);

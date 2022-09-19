@@ -1792,12 +1792,38 @@ package body Synth.Vhdl_Stmts is
       case Kind is
          when Association_Function =>
             First_Named_Assoc : Node;
-            Next_Assoc : Node;
+            Assoc : Node;
          when Association_Operator =>
             Op1 : Node;
             Op2 : Node;
       end case;
    end record;
+
+   --  Find association for Iterator.Inter
+   procedure Association_Find_Assoc (Iterator : in out Association_Iterator)
+   is
+      Inter : constant Node := Iterator.Inter;
+      Formal : Node;
+   begin
+      --  Search by name.
+      Iterator.Assoc := Iterator.First_Named_Assoc;
+      while Iterator.Assoc /= Null_Node loop
+         Formal := Get_Formal (Iterator.Assoc);
+         pragma Assert (Formal /= Null_Node);
+         Formal := Get_Interface_Of_Formal (Formal);
+         --  Compare by identifier, as INTER can be the generic
+         --  interface, while FORMAL is the instantiated one.
+         if Get_Identifier (Formal) = Get_Identifier (Inter) then
+            --  Found.
+            --  Optimize in case assocs are in order.
+            if Iterator.Assoc = Iterator.First_Named_Assoc then
+               Iterator.First_Named_Assoc := Get_Chain (Iterator.Assoc);
+            end if;
+            return;
+         end if;
+         Iterator.Assoc := Get_Chain (Iterator.Assoc);
+      end loop;
+   end Association_Find_Assoc;
 
    procedure Association_Iterate_Init (Iterator : out Association_Iterator;
                                        Init : Association_Iterator_Init) is
@@ -1807,7 +1833,16 @@ package body Synth.Vhdl_Stmts is
             Iterator := (Kind => Association_Function,
                          Inter => Init.Inter_Chain,
                          First_Named_Assoc => Null_Node,
-                         Next_Assoc => Init.Assoc_Chain);
+                         Assoc => Null_Node);
+            if Init.Assoc_Chain /= Null_Node
+              and then Get_Formal (Init.Assoc_Chain) /= Null_Node
+            then
+               --  The first assoc is a named association.
+               Iterator.First_Named_Assoc := Init.Assoc_Chain;
+               Association_Find_Assoc (Iterator);
+            else
+               Iterator.Assoc := Init.Assoc_Chain;
+            end if;
          when Association_Operator =>
             Iterator := (Kind => Association_Operator,
                          Inter => Init.Inter_Chain,
@@ -1821,64 +1856,63 @@ package body Synth.Vhdl_Stmts is
    --  * an Iir_Kind_Association_By_XXX node (normal case)
    --  * Null_Iir if INTER is not associated (and has a default value).
    --  * an expression (for operator association).
+   --  Associations are returned in the order of interfaces.
    procedure Association_Iterate_Next (Iterator : in out Association_Iterator;
                                        Inter : out Node;
-                                       Assoc : out Node)
-   is
-      Formal : Node;
+                                       Assoc : out Node) is
    begin
       Inter := Iterator.Inter;
       if Inter = Null_Node then
          --  End of iterator.
          Assoc := Null_Node;
          return;
-      else
-         --  Advance to the next interface for the next call.
-         Iterator.Inter := Get_Chain (Iterator.Inter);
       end if;
 
       case Iterator.Kind is
          when Association_Function =>
-            if Iterator.First_Named_Assoc = Null_Node then
-               Assoc := Iterator.Next_Assoc;
-               if Assoc = Null_Node then
-                  --  No more association: open association.
+            Assoc := Iterator.Assoc;
+
+            --  Next individual association for the same interface.
+            if Assoc /= Null_Node then
+               if Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Individual
+               then
+                  Iterator.Assoc := Get_Chain (Assoc);
                   return;
                end if;
-               Formal := Get_Formal (Assoc);
-               if Formal = Null_Node then
-                  --  Association by position.
-                  --  Update for the next call.
-                  Iterator.Next_Assoc := Get_Chain (Assoc);
+               if not Get_Whole_Association_Flag (Assoc) then
+                  --  Still individual assoc.
+                  Iterator.Assoc := Get_Chain (Assoc);
                   return;
                end if;
-               Iterator.First_Named_Assoc := Assoc;
             end if;
 
-            --  Search by name.
-            Assoc := Iterator.First_Named_Assoc;
-            while Assoc /= Null_Node loop
-               Formal := Get_Formal (Assoc);
-               pragma Assert (Formal /= Null_Node);
-               Formal := Get_Interface_Of_Formal (Formal);
-               --  Compare by identifier, as INTER can be the generic
-               --  interface, while FORMAL is the instantiated one.
-               if Get_Identifier (Formal) = Get_Identifier (Inter) then
-                  --  Found.
-                  --  Optimize in case assocs are in order.
-                  if Assoc = Iterator.First_Named_Assoc then
-                     Iterator.First_Named_Assoc := Get_Chain (Assoc);
-                  end if;
+            --  Advance to the next interface for the next call.
+            Iterator.Inter := Get_Chain (Iterator.Inter);
+            if Iterator.Inter = Null_Node then
+               --  Last one.
+               return;
+            end if;
+
+            if Iterator.First_Named_Assoc = Null_Node then
+               --  Still using association by position.
+               if Iterator.Assoc = Null_Node then
+                  --  No more associations, all open.
                   return;
                end if;
-               Assoc := Get_Chain (Assoc);
-            end loop;
-
-            --  Not found: open association.
-            return;
+               Iterator.Assoc := Get_Chain (Iterator.Assoc);
+               if Iterator.Assoc = Null_Node
+                 or else Get_Formal (Iterator.Assoc) = Null_Node
+               then
+                  --  Still by position
+                  return;
+               end if;
+               Iterator.First_Named_Assoc := Iterator.Assoc;
+            end if;
+            Association_Find_Assoc (Iterator);
 
          when Association_Operator =>
             Assoc := Iterator.Op1;
+            Iterator.Inter := Get_Chain (Iterator.Inter);
             Iterator.Op1 := Iterator.Op2;
             Iterator.Op2 := Null_Node;
       end case;
@@ -1979,6 +2013,12 @@ package body Synth.Vhdl_Stmts is
                   Val := Synth_Expression_With_Type
                     (Caller_Inst, Get_Default_Value (Inter), Inter_Typ);
                   Val := Unshare (Val, Instance_Pool);
+               elsif (Get_Kind (Assoc)
+                        = Iir_Kind_Association_Element_By_Individual)
+               then
+                  Val.Typ := Synth_Subtype_Indication
+                    (Caller_Inst, Get_Actual_Type (Assoc));
+                  Val := Create_Value_Memory (Val.Typ, Expr_Pool'Access);
                else
                   Actual := Get_Actual (Assoc);
                   Info := Synth_Target (Caller_Inst, Actual);
@@ -2200,10 +2240,10 @@ package body Synth.Vhdl_Stmts is
       while Is_Valid (Assoc) loop
          Inter := Get_Association_Interface (Assoc, Assoc_Inter);
 
-         if Is_Copyback_Parameter (Inter) then
-            if not Get_Whole_Association_Flag (Assoc) then
-               raise Internal_Error;
-            end if;
+         if Is_Copyback_Parameter (Inter)
+           and then
+           Get_Kind (Assoc) /= Iir_Kind_Association_Element_By_Individual
+         then
             Targ := Get_Value (Caller_Inst, Assoc);
             Val := Get_Value (Subprg_Inst, Inter);
             if Targ.Val.Kind = Value_Dyn_Alias then
