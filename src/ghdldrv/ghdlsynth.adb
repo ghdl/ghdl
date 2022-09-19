@@ -264,7 +264,6 @@ package body Ghdlsynth is
    procedure Synth_Compile_Init (Enable_Translate_Off : Boolean;
                                  Load_Work : Boolean) is
    begin
-      Elab.Vhdl_Annotations.Flag_Synthesis := True;
       if Enable_Translate_Off then
          Vhdl.Scanner.Flag_Comment_Keyword := True;
          Vhdl.Scanner.Flag_Pragma_Comment := True;

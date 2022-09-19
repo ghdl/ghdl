@@ -32,7 +32,6 @@ with Vhdl.Nodes; use Vhdl.Nodes;
 with Vhdl.Std_Package;
 with Vhdl.Canon;
 
-with Elab.Vhdl_Annotations;
 
 with Grt.Options;
 with Grt.Types;
@@ -66,8 +65,6 @@ package body Ghdlsimul is
       Flags.Flag_Whole_Analyze := True;
       Vhdl.Canon.Canon_Flag_Add_Labels := True;
       Vhdl.Canon.Canon_Flag_Add_Suspend_State := True;
-
-      Elab.Vhdl_Annotations.Flag_Synthesis := True;
 
       --  Do not canon concurrent statements.
       Vhdl.Canon.Canon_Flag_Concurrent_Stmts := False;

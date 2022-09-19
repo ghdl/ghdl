@@ -21,7 +21,6 @@ with Simple_IO;
 with Vhdl.Std_Package;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
-with Vhdl.Ieee.Std_Logic_1164;
 
 package body Elab.Vhdl_Annotations is
    procedure Annotate_Declaration_List
@@ -74,10 +73,6 @@ package body Elab.Vhdl_Annotations is
                                        Ref => Obj,
                                        Obj_Scope => Block_Info,
                                        Slot => Block_Info.Nbr_Objects);
-            if not Flag_Synthesis then
-               --  Reserve one more slot for value, and initial driver value.
-               Block_Info.Nbr_Objects := Block_Info.Nbr_Objects + 2;
-            end if;
          when Kind_Terminal =>
             Info := new Sim_Info_Type'(Kind => Kind_Terminal,
                                        Ref => Obj,
@@ -137,17 +132,6 @@ package body Elab.Vhdl_Annotations is
       Set_Info (Blk, Info);
       return Info;
    end Create_Block_Info;
-
-   -- If EXPR has not a literal value, create one.
-   -- This is necessary for subtype bounds.
-   procedure Annotate_Range_Expression
-     (Block_Info: Sim_Info_Acc; Expr: Iir_Range_Expression) is
-   begin
-      if Get_Info (Expr) /= null then
-         return;
-      end if;
-      Create_Object_Info (Block_Info, Expr);
-   end Annotate_Range_Expression;
 
    --  Annotate type definition DEF only if it is anonymous.
    procedure Annotate_Anonymous_Type_Definition
@@ -227,43 +211,7 @@ package body Elab.Vhdl_Annotations is
 
       case Get_Kind (Def) is
          when Iir_Kind_Enumeration_Type_Definition =>
-            if Flag_Synthesis then
-               Create_Object_Info (Block_Info, Def, Kind_Type);
-            else
-               declare
-                  Info : Sim_Info_Acc;
-                  Nbr_Enums : Natural;
-               begin
-                  if Def = Vhdl.Std_Package.Boolean_Type_Definition
-                    or else Def = Vhdl.Std_Package.Bit_Type_Definition
-                  then
-                     Info := new Sim_Info_Type'(Kind => Kind_Bit_Type,
-                                                Ref => Def,
-                                                Width => 1);
-                  elsif Def = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type
-                    or else Def = Vhdl.Ieee.Std_Logic_1164.Std_Logic_Type
-                  then
-                     Info := new Sim_Info_Type'(Kind => Kind_Log_Type,
-                                                Ref => Def,
-                                                Width => 1);
-                  else
-                     Nbr_Enums := Get_Nbr_Elements
-                       (Get_Enumeration_Literal_List (Def));
-                     if Nbr_Enums <= 256 then
-                        Info := new Sim_Info_Type'(Kind => Kind_E8_Type,
-                                                   Ref => Def,
-                                                   Width => 0);
-                     else
-                        Info := new Sim_Info_Type'(Kind => Kind_E32_Type,
-                                                   Ref => Def,
-                                                   Width => 0);
-                     end if;
-                  end if;
-                  Set_Info (Def, Info);
-                  Annotate_Range_Expression
-                    (Block_Info, Get_Range_Constraint (Def));
-               end;
-            end if;
+            Create_Object_Info (Block_Info, Def, Kind_Type);
 
          when Iir_Kind_Integer_Subtype_Definition
            | Iir_Kind_Floating_Subtype_Definition
@@ -275,9 +223,6 @@ package body Elab.Vhdl_Annotations is
             if El /= Null_Iir then
                case Get_Kind (El) is
                   when Iir_Kind_Range_Expression =>
-                     if not Flag_Synthesis then
-                        Annotate_Range_Expression (Block_Info, El);
-                     end if;
                      --  A physical subtype may be defined by an integer range.
                      if Get_Kind (Def) = Iir_Kind_Physical_Subtype_Definition
                      then
@@ -292,149 +237,54 @@ package body Elab.Vhdl_Annotations is
                      Error_Kind ("annotate_type_definition (rc)", El);
                end case;
             end if;
-            if Flag_Synthesis then
-               Create_Object_Info (Block_Info, Def, Kind_Type);
-            end if;
+            Create_Object_Info (Block_Info, Def, Kind_Type);
 
          when Iir_Kind_Integer_Type_Definition =>
-            if Flag_Synthesis then
-               Create_Object_Info (Block_Info, Def, Kind_Type);
-            else
-               Set_Info (Def, new Sim_Info_Type'(Kind => Kind_I64_Type,
-                                                 Ref => Def,
-                                                 Width => 0));
-            end if;
+            Create_Object_Info (Block_Info, Def, Kind_Type);
 
          when Iir_Kind_Floating_Type_Definition =>
-            if Flag_Synthesis then
-               Create_Object_Info (Block_Info, Def, Kind_Type);
-            else
-               Set_Info (Def, new Sim_Info_Type'(Kind => Kind_F64_Type,
-                                                 Ref => Def,
-                                                 Width => 0));
-            end if;
+            Create_Object_Info (Block_Info, Def, Kind_Type);
 
          when Iir_Kind_Physical_Type_Definition =>
-            if Flag_Synthesis then
-               Create_Object_Info (Block_Info, Def, Kind_Type);
-            else
-               Set_Info (Def, new Sim_Info_Type'(Kind => Kind_I64_Type,
-                                                 Ref => Def,
-                                                 Width => 0));
-            end if;
+            Create_Object_Info (Block_Info, Def, Kind_Type);
 
          when Iir_Kind_Array_Type_Definition =>
-            if Flag_Synthesis then
-               --  Create an annotation for the element type, as it can be
-               --  referenced by the implicit concat function definition for
-               --  concatenation with element.
-               El := Get_Element_Subtype_Indication (Def);
-               if Get_Kind (El) in Iir_Kinds_Subtype_Definition then
-                  --  But only if it is a proper new subtype definition
-                  --  (ie not a denoting name, or attributes like 'subtype).
-                  El := Get_Element_Subtype (Def);
-                  Annotate_Anonymous_Type_Definition (Block_Info, El);
-               end if;
-
-               --  Then for the array.
-               Create_Object_Info (Block_Info, Def, Kind_Type);
+            --  Create an annotation for the element type, as it can be
+            --  referenced by the implicit concat function definition for
+            --  concatenation with element.
+            El := Get_Element_Subtype_Indication (Def);
+            if Get_Kind (El) in Iir_Kinds_Subtype_Definition then
+               --  But only if it is a proper new subtype definition
+               --  (ie not a denoting name, or attributes like 'subtype).
+               El := Get_Element_Subtype (Def);
+               Annotate_Anonymous_Type_Definition (Block_Info, El);
             end if;
+
+            --  Then for the array.
+            Create_Object_Info (Block_Info, Def, Kind_Type);
 
          when Iir_Kind_Array_Subtype_Definition =>
-            if Flag_Synthesis then
-               --  For the bounds.
-               Create_Object_Info (Block_Info, Def, Kind_Type);
-            else
-               if Get_Array_Element_Constraint (Def) /= Null_Node
-                 or else
-                 (Get_Resolution_Indication (Def) /= Null_Node
-                    and then
-                    (Get_Kind (Get_Resolution_Indication (Def))
-                       = Iir_Kind_Array_Element_Resolution))
-               then
-                  --  This subtype has created a new anonymous subtype for the
-                  --  element.
-                  El := Get_Element_Subtype (Def);
-                  Annotate_Type_Definition (Block_Info, El);
-               end if;
-               declare
-                  List : constant Iir_Flist := Get_Index_Subtype_List (Def);
-               begin
-                  for I in Flist_First .. Flist_Last (List) loop
-                     El := Get_Index_Type (List, I);
-                     Annotate_Anonymous_Type_Definition (Block_Info, El);
-                  end loop;
-               end;
-            end if;
+            --  For the bounds.
+            Create_Object_Info (Block_Info, Def, Kind_Type);
 
          when Iir_Kind_Record_Type_Definition =>
-            if Flag_Synthesis then
-               --  For the offsets.
-               Create_Object_Info (Block_Info, Def, Kind_Type);
-            else
-               declare
-                  List : constant Iir_Flist :=
-                    Get_Elements_Declaration_List (Def);
-               begin
-                  for I in Flist_First .. Flist_Last (List) loop
-                     El := Get_Nth_Element (List, I);
-                     if Get_Subtype_Indication (El) /= Null_Iir then
-                        Annotate_Anonymous_Type_Definition
-                          (Block_Info, Get_Type (El));
-                     end if;
-                  end loop;
-               end;
-            end if;
+            --  For the offsets.
+            Create_Object_Info (Block_Info, Def, Kind_Type);
 
          when Iir_Kind_Record_Subtype_Definition =>
-            if Flag_Synthesis then
-               --  For the offsets.
-               Create_Object_Info (Block_Info, Def, Kind_Type);
-            end if;
+            --  For the offsets.
+            Create_Object_Info (Block_Info, Def, Kind_Type);
 
          when Iir_Kind_Access_Type_Definition =>
-            if Flag_Synthesis then
-               --  For the designated type.
-               Create_Object_Info (Block_Info, Def, Kind_Type);
-            end if;
+            --  For the designated type.
+            Create_Object_Info (Block_Info, Def, Kind_Type);
 
          when Iir_Kind_Access_Subtype_Definition =>
             Create_Object_Info (Block_Info, Def, Kind_Type);
 
          when Iir_Kind_File_Type_Definition =>
-            if Flag_Synthesis then
-               --  For the File type.
-               Create_Object_Info (Block_Info, Def, Kind_Type);
-            else
-               declare
-                  Type_Name : constant Iir :=
-                    Get_Type (Get_File_Type_Mark (Def));
-                  Res : String_Acc;
-               begin
-                  if Get_Text_File_Flag (Def)
-                    or else
-                    (Get_Kind (Type_Name)
-                       in Iir_Kinds_Scalar_Type_And_Subtype_Definition)
-                  then
-                     Res := null;
-                  else
-                     declare
-                        Sig : String
-                          (1 .. Get_File_Signature_Length (Type_Name) + 2);
-                        Off : Natural := Sig'First;
-                     begin
-                        Get_File_Signature (Type_Name, Sig, Off);
-                        Sig (Off + 0) := '.';
-                        Sig (Off + 1) := ASCII.NUL;
-                        Res := new String'(Sig);
-                     end;
-                  end if;
-                  Set_Info (Def,
-                            new Sim_Info_Type'(Kind => Kind_File_Type,
-                                               Ref => Def,
-                                               File_Signature => Res));
-               end;
-            end if;
+            --  For the File type.
+            Create_Object_Info (Block_Info, Def, Kind_Type);
 
          when Iir_Kind_Protected_Type_Declaration =>
             Annotate_Protected_Type_Declaration (Block_Info, Def);
@@ -444,10 +294,8 @@ package body Elab.Vhdl_Annotations is
             null;
 
          when Iir_Kind_Foreign_Vector_Type_Definition =>
-            if Flag_Synthesis then
-               --  For the bounds.
-               Create_Object_Info (Block_Info, Def, Kind_Type);
-            end if;
+            --  For the bounds.
+            Create_Object_Info (Block_Info, Def, Kind_Type);
 
          when others =>
             Error_Kind ("annotate_type_definition", Def);
@@ -519,9 +367,7 @@ package body Elab.Vhdl_Annotations is
             when Iir_Kind_Interface_Package_Declaration =>
                Annotate_Interface_Package_Declaration (Block_Info, Decl);
             when Iir_Kind_Interface_Type_Declaration =>
-               if Flag_Synthesis
-                 and then (Get_Kind (Get_Parent (Decl))
-                             = Iir_Kind_Entity_Declaration)
+               if Get_Kind (Get_Parent (Decl)) = Iir_Kind_Entity_Declaration
                then
                   --  Create an info on the interface_type_definition.
                   --  This is needed for a generic type in an entity, as the
@@ -752,7 +598,7 @@ package body Elab.Vhdl_Annotations is
                --  declaration.
                Annotate_Declaration_Type (Block_Info, Decl);
                Create_Object_Info (Block_Info, Decl);
-            elsif Flag_Synthesis then
+            else
                --  Always create the slot for the subtype.
                Annotate_Declaration_Type (Block_Info, Decl);
             end if;
@@ -812,10 +658,6 @@ package body Elab.Vhdl_Annotations is
             begin
                Value := Get_Attribute_Value_Spec_Chain (Decl);
                while Value /= Null_Iir loop
-                  if not Flag_Synthesis then
-                     Annotate_Anonymous_Type_Definition
-                       (Block_Info, Get_Type (Value));
-                  end if;
                   Create_Object_Info (Block_Info, Value);
                   Value := Get_Spec_Chain (Value);
                end loop;

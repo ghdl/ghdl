@@ -863,7 +863,6 @@ package body Elab.Vhdl_Insts is
       Entity := Get_Entity (Arch);
 
       --  Annotate units.
-      Elab.Vhdl_Annotations.Flag_Synthesis := True;
       Elab.Vhdl_Annotations.Initialize_Annotate;
       Elab.Vhdl_Annotations.Annotate (Vhdl.Std_Package.Std_Standard_Unit);
       for I in Design_Units.First .. Design_Units.Last loop

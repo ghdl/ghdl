@@ -18,9 +18,6 @@ with Types; use Types;
 with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Elab.Vhdl_Annotations is
-   --  If True, annotate for synthesis.
-   Flag_Synthesis : Boolean := False;
-
    type Object_Slot_Type is new Natural;
 
    --  This slot is not used.
