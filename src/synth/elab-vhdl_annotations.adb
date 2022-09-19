@@ -23,7 +23,7 @@ with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Ieee.Std_Logic_1164;
 
-package body Vhdl.Annotations is
+package body Elab.Vhdl_Annotations is
    procedure Annotate_Declaration_List
      (Block_Info: Sim_Info_Acc; Decl_Chain: Iir);
    procedure Annotate_Sequential_Statement_Chain
@@ -1532,4 +1532,4 @@ package body Vhdl.Annotations is
    begin
       return Info_Node.Table (Target);
    end Get_Info;
-end Vhdl.Annotations;
+end Elab.Vhdl_Annotations;

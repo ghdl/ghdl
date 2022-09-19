@@ -25,6 +25,7 @@ with Errorout;
 
 with Elab.Debugger; use Elab.Debugger;
 with Elab.Memtype; use Elab.Memtype;
+with Elab.Vhdl_Annotations;
 with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 with Elab.Vhdl_Values.Debug; use Elab.Vhdl_Values.Debug;
 
@@ -38,7 +39,6 @@ with Vhdl.Parse;
 with Vhdl.Sem_Scopes;
 with Vhdl.Sem_Expr;
 with Vhdl.Canon;
-with Vhdl.Annotations;
 with Vhdl.Std_Package;
 with Vhdl.Prints;
 
@@ -1308,7 +1308,7 @@ package body Elab.Vhdl_Debug is
       Vhdl.Prints.Disp_Expression (Expr);
       New_Line;
 
-      Vhdl.Annotations.Annotate_Expand_Table;
+      Elab.Vhdl_Annotations.Annotate_Expand_Table;
       Vhdl.Canon.Canon_Expression (Expr);
 
       Mark_Expr_Pool (Marker);

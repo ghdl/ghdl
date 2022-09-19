@@ -27,7 +27,6 @@ with Vhdl.Std_Package;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Evaluation; use Vhdl.Evaluation;
-with Vhdl.Annotations; use Vhdl.Annotations;
 
 with PSL.Nodes;
 with PSL.Errors;
@@ -38,6 +37,7 @@ with Netlists.Utils; use Netlists.Utils;
 with Netlists.Locations;
 
 with Elab.Memtype; use Elab.Memtype;
+with Elab.Vhdl_Annotations;
 with Elab.Vhdl_Heap; use Elab.Vhdl_Heap;
 with Elab.Vhdl_Types; use Elab.Vhdl_Types;
 with Elab.Vhdl_Expr;
@@ -474,6 +474,7 @@ package body Synth.Vhdl_Expr is
                                 Atype : Node;
                                 Dim : Dim_Type) return Bound_Type
    is
+      use Elab.Vhdl_Annotations;
       Info : constant Sim_Info_Acc := Get_Info (Atype);
    begin
       if Info = null then

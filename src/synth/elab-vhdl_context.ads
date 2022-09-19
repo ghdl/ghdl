@@ -19,9 +19,9 @@
 with Types; use Types;
 with Areapools;
 
-with Vhdl.Annotations; use Vhdl.Annotations;
 with Vhdl.Nodes; use Vhdl.Nodes;
 
+with Elab.Vhdl_Annotations; use Elab.Vhdl_Annotations;
 with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
 with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 

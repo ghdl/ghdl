@@ -17,7 +17,7 @@
 with Types; use Types;
 with Vhdl.Nodes; use Vhdl.Nodes;
 
-package Vhdl.Annotations is
+package Elab.Vhdl_Annotations is
    --  If True, annotate for synthesis.
    Flag_Synthesis : Boolean := False;
 
@@ -160,4 +160,4 @@ package Vhdl.Annotations is
    --  Expand the annotation table.  This is automatically done by Annotate,
    --  to be used only by debugger.
    procedure Annotate_Expand_Table;
-end Vhdl.Annotations;
+end Elab.Vhdl_Annotations;

@@ -22,11 +22,11 @@ with Areapools;
 
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Std_Package;
-with Vhdl.Annotations;
 with Vhdl.Configuration; use Vhdl.Configuration;
 with Vhdl.Errors; use Vhdl.Errors;
 
 with Elab.Memtype;
+with Elab.Vhdl_Annotations;
 with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
 with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 with Elab.Vhdl_Decls; use Elab.Vhdl_Decls;
@@ -863,11 +863,11 @@ package body Elab.Vhdl_Insts is
       Entity := Get_Entity (Arch);
 
       --  Annotate units.
-      Vhdl.Annotations.Flag_Synthesis := True;
-      Vhdl.Annotations.Initialize_Annotate;
-      Vhdl.Annotations.Annotate (Vhdl.Std_Package.Std_Standard_Unit);
+      Elab.Vhdl_Annotations.Flag_Synthesis := True;
+      Elab.Vhdl_Annotations.Initialize_Annotate;
+      Elab.Vhdl_Annotations.Annotate (Vhdl.Std_Package.Std_Standard_Unit);
       for I in Design_Units.First .. Design_Units.Last loop
-         Vhdl.Annotations.Annotate (Design_Units.Table (I));
+         Elab.Vhdl_Annotations.Annotate (Design_Units.Table (I));
       end loop;
 
       --  Use global memory.

@@ -35,7 +35,6 @@ with Vhdl.Scanner;
 with Vhdl.Std_Package;
 with Vhdl.Canon;
 with Vhdl.Configuration;
-with Vhdl.Annotations;
 with Vhdl.Utils;
 
 with Netlists.Dump;
@@ -46,6 +45,7 @@ with Netlists.Errors;
 with Netlists.Inference;
 with Netlists.Rename;
 
+with Elab.Vhdl_Annotations;
 with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 with Elab.Vhdl_Insts;
 with Elab.Debugger;
@@ -264,7 +264,7 @@ package body Ghdlsynth is
    procedure Synth_Compile_Init (Enable_Translate_Off : Boolean;
                                  Load_Work : Boolean) is
    begin
-      Vhdl.Annotations.Flag_Synthesis := True;
+      Elab.Vhdl_Annotations.Flag_Synthesis := True;
       if Enable_Translate_Off then
          Vhdl.Scanner.Flag_Comment_Keyword := True;
          Vhdl.Scanner.Flag_Pragma_Comment := True;
@@ -522,7 +522,7 @@ package body Ghdlsynth is
 
       pragma Assert (Is_Expr_Pool_Empty);
 
-      Vhdl.Annotations.Finalize_Annotate;
+      Elab.Vhdl_Annotations.Finalize_Annotate;
       Synth.Vhdl_Context.Free_Base_Instance;
       return Res;
 
