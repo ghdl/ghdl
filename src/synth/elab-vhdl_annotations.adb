@@ -16,8 +16,10 @@
 
 with Ada.Unchecked_Deallocation;
 
+with Types; use Types;
 with Tables;
 with Simple_IO;
+
 with Vhdl.Std_Package;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
@@ -93,8 +95,6 @@ package body Elab.Vhdl_Annotations is
            | Kind_Frame
            | Kind_Protected
            | Kind_Package
-           | Kind_Scalar_Types
-           | Kind_File_Type
            | Kind_Extra =>
             raise Internal_Error;
       end case;
@@ -1308,9 +1308,7 @@ package body Elab.Vhdl_Annotations is
            | Kind_Quantity
            | Kind_PSL =>
             Put_Line ("-- slot:" & Object_Slot_Type'Image (Info.Slot));
-         when Kind_Scalar_Types
-           | Kind_File_Type
-           | Kind_Extra =>
+         when Kind_Extra =>
             null;
       end case;
    end Disp_Vhdl_Info;
@@ -1346,16 +1344,6 @@ package body Elab.Vhdl_Annotations is
             Put_Line ("slot:" & Object_Slot_Type'Image (Info.Slot));
          when Kind_Extra =>
             Put_Line ("extra:" & Extra_Slot_Type'Image (Info.Extra_Slot));
-         when Kind_Scalar_Types =>
-            Put_Line ("scalar type");
-         when Kind_File_Type =>
-            Put ("file type: ");
-            if Info.File_Signature = null then
-               Put ("(no sig)");
-            else
-               Put (Info.File_Signature.all);
-            end if;
-            New_Line;
       end case;
    end Disp_Info;
 

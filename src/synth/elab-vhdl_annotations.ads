@@ -14,7 +14,6 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with Types; use Types;
 with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Elab.Vhdl_Annotations is
@@ -34,9 +33,6 @@ package Elab.Vhdl_Annotations is
    type Sim_Info_Kind is
      (
       Kind_Block, Kind_Process, Kind_Frame, Kind_Protected, Kind_Package,
-      Kind_Bit_Type, Kind_Log_Type,
-      Kind_E8_Type, Kind_E32_Type, Kind_I64_Type, Kind_F64_Type,
-      Kind_File_Type,
       Kind_Type,
       Kind_Object, Kind_Signal,
       Kind_File,
@@ -44,27 +40,6 @@ package Elab.Vhdl_Annotations is
       Kind_PSL,
       Kind_Extra
      );
-
-   subtype Kind_Scalar_Types is Sim_Info_Kind range
-     Kind_Bit_Type ..
-   --Kind_Log_Type
-   --Kind_E8_Type
-   --Kind_E32_Type
-   --Kind_I64_Type
-     Kind_F64_Type;
-
-   subtype Kind_Discrete_Types is Sim_Info_Kind range
-     Kind_Bit_Type ..
-   --Kind_Log_Type
-   --Kind_E8_Type
-   --Kind_E32_Type
-     Kind_I64_Type;
-
-   subtype Kind_Enum_Types is Sim_Info_Kind range
-     Kind_Bit_Type ..
-   --Kind_Log_Type
-   --Kind_E8_Type
-     Kind_E32_Type;
 
    type Instance_Slot_Type is new Integer;
    Invalid_Instance_Slot : constant Instance_Slot_Type := -1;
@@ -114,17 +89,6 @@ package Elab.Vhdl_Annotations is
 
             --  Variable index in the block.
             Slot: Object_Slot_Type;
-
-         when Kind_Bit_Type
-           | Kind_Log_Type
-           | Kind_E8_Type
-           | Kind_E32_Type
-           | Kind_I64_Type
-           | Kind_F64_Type =>
-            Width : Uns32;
-
-         when Kind_File_Type =>
-            File_Signature : String_Acc;
 
          when Kind_Extra =>
             Extra_Slot : Extra_Slot_Type;
