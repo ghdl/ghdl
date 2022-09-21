@@ -1954,14 +1954,16 @@ package body Synth.Vhdl_Stmts is
       end case;
    end Info_To_Valtyp;
 
-   procedure Synth_Subprogram_Associations (Subprg_Inst : Synth_Instance_Acc;
-                                            Caller_Inst : Synth_Instance_Acc;
-                                            Init : Association_Iterator_Init)
-   is
-      Marker : Mark_Type;
+   procedure Synth_Subprogram_Association
+     (Subprg_Inst : Synth_Instance_Acc;
+      Caller_Inst : Synth_Instance_Acc;
       Inter : Node;
-      Inter_Type : Node;
       Assoc : Node;
+      Iterator : in out Association_Iterator)
+   is
+      pragma Unreferenced (Iterator);
+      Marker : Mark_Type;
+      Inter_Type : Node;
       Actual : Node;
       Formal : Node;
       Formal_Base : Valtyp;
@@ -1969,12 +1971,223 @@ package body Synth.Vhdl_Stmts is
       Formal_Offs : Value_Offsets;
       Formal_Dyn : Dyn_Name;
       Val : Valtyp;
-      Iterator : Association_Iterator;
       Info : Target_Info;
       Actual_Inst : Synth_Instance_Acc;
    begin
       Mark_Expr_Pool (Marker);
 
+      --  Actual and formal.
+      Actual_Inst := Caller_Inst;
+      if Assoc /= Null_Node
+        and then Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Individual
+      then
+         --  Special case: preliminary individual association.
+         Formal := Inter;
+         Actual := Null_Node;
+      else
+         if Assoc = Null_Node
+           or else Get_Kind (Assoc) = Iir_Kind_Association_Element_Open
+         then
+            --  Missing association or open association: use default value.
+            Formal := Inter;
+            Actual := Get_Default_Value (Inter);
+            Actual_Inst := Subprg_Inst;
+         elsif Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Expression
+         then
+            --  Normal case: formal and actual.
+            if Get_Whole_Association_Flag (Assoc) then
+               Formal := Inter;
+            else
+               Formal := Get_Formal (Assoc);
+            end if;
+            Actual := Get_Actual (Assoc);
+         else
+            --  Just an expression.
+            Formal := Inter;
+            Actual := Assoc;
+         end if;
+      end if;
+
+      if Formal = Inter then
+         --  Special case for protected type as the slot describes
+         --  declarations.
+         Inter_Type := Get_Type (Inter);
+         if Get_Kind (Inter_Type) = Iir_Kind_Protected_Type_Declaration then
+            Formal_Typ := Protected_Type;
+         else
+            Formal_Typ := Get_Subtype_Object (Subprg_Inst, Inter_Type);
+         end if;
+         Formal_Offs := No_Value_Offsets;
+         Formal_Dyn := No_Dyn_Name;
+      else
+         --  Individual association.
+         Synth_Assignment_Prefix
+           (Caller_Inst, Subprg_Inst, Formal,
+            Formal_Base, Formal_Typ, Formal_Offs, Formal_Dyn);
+         pragma Assert (Formal_Dyn = No_Dyn_Name);
+      end if;
+
+      if Actual = Null_Node then
+         --  For By_Individual.
+         Val := Create_Value_Memory (Formal_Typ, Expr_Pool'Access);
+      elsif Get_Mode (Inter) /= Iir_In_Mode
+        or else Get_Kind (Inter) = Iir_Kind_Interface_Signal_Declaration
+        or else Get_Kind (Inter) = Iir_Kind_Interface_File_Declaration
+      then
+         --  Actual is a reference.
+         Info := Synth_Target (Caller_Inst, Actual);
+      else
+         --  For constants and in variables.
+         Val := Synth_Expression_With_Type (Actual_Inst, Actual, Formal_Typ);
+         if Val = No_Valtyp then
+            Set_Error (Subprg_Inst);
+            return;
+         end if;
+         Val := Synth_Subtype_Conversion
+           (Subprg_Inst, Val, Formal_Typ, True, Assoc);
+         if Val = No_Valtyp then
+            Set_Error (Subprg_Inst);
+            return;
+         end if;
+         Val := Unshare (Val, Instance_Pool);
+         Val.Typ := Unshare (Val.Typ, Instance_Pool);
+         if Get_Instance_Const (Subprg_Inst)
+           and then not Flags.Flag_Simulation
+           and then not Is_Static (Val.Val)
+         then
+            Set_Instance_Const (Subprg_Inst, False);
+         end if;
+      end if;
+
+      if Formal /= Inter
+        and then not Get_Whole_Association_Flag (Assoc)
+      then
+         raise Internal_Error;
+      end if;
+
+      case Iir_Kinds_Interface_Object_Declaration (Get_Kind (Inter)) is
+         when Iir_Kind_Interface_Constant_Declaration =>
+            --  Pass by copy.
+            Create_Object (Subprg_Inst, Inter, Val);
+         when Iir_Kind_Interface_Variable_Declaration =>
+            --  Always pass by value.
+            if Is_Copyback_Parameter (Inter) then
+               --  For the copy back: keep info of formal.
+               Create_Object (Caller_Inst, Assoc, Info_To_Valtyp (Info));
+            end if;
+            if Get_Mode (Inter) /= Iir_In_Mode then
+               if Info.Kind /= Target_Memory
+                 and then Info.Obj.Val.Kind = Value_Memory
+               then
+                  --  FIXME: the subtype conversion will copy the value, so
+                  --   allocate here in current_pool ?
+                  Val := Create_Value_Memory (Info.Targ_Type, Instance_Pool);
+                  Copy_Memory (Val.Val.Mem,
+                               Info.Obj.Val.Mem + Info.Off.Mem_Off,
+                               Info.Targ_Type.Sz);
+               elsif Info.Kind = Target_Simple
+                 and then Info.Obj.Val.Kind = Value_File
+               then
+                  --  For vhdl-87
+                  Val := Create_Value_File
+                    (Info.Targ_Type, Info.Obj.Val.File, Instance_Pool);
+               else
+                  Val := Synth_Read (Caller_Inst, Info, Assoc);
+                  Val := Unshare (Val, Instance_Pool);
+                  if not Flags.Flag_Simulation then
+                     Set_Instance_Const (Subprg_Inst, False);
+                  end if;
+               end if;
+            end if;
+            if Get_Mode (Inter) /= Iir_Out_Mode then
+               --  Always passed by value
+               Val := Synth_Subtype_Conversion
+                 (Subprg_Inst, Val, Formal_Typ, True, Assoc);
+               Val := Unshare (Val, Instance_Pool);
+            else
+               --  Use default value
+               --  FIXME: also for wires ?
+               if Val.Val.Kind = Value_Memory then
+                  if Is_Bounded_Type (Formal_Typ) then
+                     Write_Value_Default (Val.Val.Mem, Formal_Typ);
+                  else
+                     Write_Value_Default (Val.Val.Mem, Val.Typ);
+                  end if;
+               end if;
+            end if;
+            Val.Typ := Unshare (Val.Typ, Instance_Pool);
+            Create_Object (Subprg_Inst, Inter, Val);
+         when Iir_Kind_Interface_Signal_Declaration =>
+            --  Always pass by reference (use an alias).
+            if Info.Kind = Target_Memory then
+               raise Internal_Error;
+            end if;
+            if not Flags.Flag_Simulation then
+               Set_Instance_Const (Subprg_Inst, False);
+            end if;
+            Val := Create_Value_Alias
+              (Info.Obj, Info.Off, Info.Targ_Type, Instance_Pool);
+            --  LRM08 4.2.2.3 Signal parameters
+            --  If an actual signal is associated with a signal parameter
+            --  of mode IN or INOUT, and if the type of the formal is a
+            --  scalar type, then it is an error if the subtype of the
+            --  actual is not compatible with the subtype of the formal.
+            --  Similarly, if an actual signal is associated with a signal
+            --  parameter of mode OUT or INOUT, and if the type of the
+            --  actual is a scalar type, then it is an error if the subtype
+            --  of the formal is not compatible with the subtype of the
+            --  actual.
+            if Get_Kind (Get_Type (Inter)) in
+              Iir_Kinds_Scalar_Type_And_Subtype_Definition
+            then
+               if Get_Mode (Inter) in Iir_In_Modes then
+                  if not Is_Scalar_Subtype_Compatible (Val.Typ, Formal_Typ)
+                  then
+                     Error_Msg_Synth
+                       (+Actual,
+                        "scalar subtype of actual is not compatible with "
+                          & "signal formal interface");
+                  end if;
+               end if;
+               if Get_Mode (Inter) in Iir_Out_Modes then
+                  if not Is_Scalar_Subtype_Compatible (Formal_Typ, Val.Typ)
+                  then
+                     Error_Msg_Synth
+                       (+Actual,
+                        "signal formal interface scalar subtype is not "
+                          & "compatible with of actual subtype");
+                  end if;
+               end if;
+            else
+               --  Check matching.
+               --  This is equivalent to subtype conversion for non-scalar
+               --  types.
+               Val := Synth_Subtype_Conversion
+                 (Subprg_Inst, Val, Formal_Typ, True, Assoc);
+               Val := Unshare (Val, Instance_Pool);
+            end if;
+            if Val.Typ /= null then
+               Val.Typ := Unshare (Val.Typ, Instance_Pool);
+            end if;
+            Create_Object (Subprg_Inst, Inter, Val);
+         when Iir_Kind_Interface_File_Declaration =>
+            Val := Info.Obj;
+            Create_Object (Subprg_Inst, Inter, Val);
+         when Iir_Kind_Interface_Quantity_Declaration =>
+            raise Internal_Error;
+      end case;
+
+      Release_Expr_Pool (Marker);
+   end Synth_Subprogram_Association;
+
+   procedure Synth_Subprogram_Associations (Subprg_Inst : Synth_Instance_Acc;
+                                            Caller_Inst : Synth_Instance_Acc;
+                                            Init : Association_Iterator_Init)
+   is
+      Inter : Node;
+      Assoc : Node;
+      Iterator : Association_Iterator;
+   begin
       Set_Instance_Const (Subprg_Inst, True);
 
       --  Process in INTER order.
@@ -1983,204 +2196,10 @@ package body Synth.Vhdl_Stmts is
          Association_Iterate_Next (Iterator, Inter, Assoc);
          exit when Inter = Null_Node;
 
-         --  Actual and formal.
-         Actual_Inst := Caller_Inst;
-         if Assoc /= Null_Node
-           and then
-           Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Individual
-         then
-            Formal := Inter;
-            Actual := Null_Node;
-         else
-            if Assoc = Null_Node
-              or else Get_Kind (Assoc) = Iir_Kind_Association_Element_Open
-            then
-               Formal := Inter;
-               Actual := Get_Default_Value (Inter);
-               Actual_Inst := Subprg_Inst;
-            elsif Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Expression
-            then
-               if Get_Whole_Association_Flag (Assoc) then
-                  Formal := Inter;
-               else
-                  Formal := Get_Formal (Assoc);
-               end if;
-               Actual := Get_Actual (Assoc);
-            else
-               Formal := Inter;
-               Actual := Assoc;
-            end if;
-         end if;
+         Synth_Subprogram_Association
+           (Subprg_Inst, Caller_Inst, Inter, Assoc, Iterator);
 
-         if Formal = Inter then
-            --  Special case for protected type as the slot describes
-            --  declarations.
-            Inter_Type := Get_Type (Inter);
-            if Get_Kind (Inter_Type) = Iir_Kind_Protected_Type_Declaration then
-               Formal_Typ := Protected_Type;
-            else
-               Formal_Typ := Get_Subtype_Object (Subprg_Inst, Inter_Type);
-            end if;
-            Formal_Offs := No_Value_Offsets;
-            Formal_Dyn := No_Dyn_Name;
-         else
-            Synth_Assignment_Prefix
-              (Caller_Inst, Subprg_Inst, Formal,
-               Formal_Base, Formal_Typ, Formal_Offs, Formal_Dyn);
-         end if;
-
-         if Actual = Null_Node then
-            --  For By_Individual.
-            Val := Create_Value_Memory (Formal_Typ, Expr_Pool'Access);
-         elsif Get_Mode (Inter) /= Iir_In_Mode
-           or else Get_Kind (Inter) = Iir_Kind_Interface_Signal_Declaration
-           or else Get_Kind (Inter) = Iir_Kind_Interface_File_Declaration
-         then
-            Info := Synth_Target (Caller_Inst, Actual);
-         else
-            --  For constants and in variables.
-            Val := Synth_Expression_With_Type
-              (Actual_Inst, Actual, Formal_Typ);
-            if Val = No_Valtyp then
-               Set_Error (Subprg_Inst);
-               return;
-            end if;
-            Val := Synth_Subtype_Conversion
-              (Subprg_Inst, Val, Formal_Typ, True, Assoc);
-            if Val = No_Valtyp then
-               Set_Error (Subprg_Inst);
-               return;
-            end if;
-            Val := Unshare (Val, Instance_Pool);
-            Val.Typ := Unshare (Val.Typ, Instance_Pool);
-            if Get_Instance_Const (Subprg_Inst)
-              and then not Flags.Flag_Simulation
-              and then not Is_Static (Val.Val)
-            then
-               Set_Instance_Const (Subprg_Inst, False);
-            end if;
-         end if;
-
-         if Formal /= Inter
-           and then not Get_Whole_Association_Flag (Assoc)
-         then
-            raise Internal_Error;
-         end if;
-
-         case Iir_Kinds_Interface_Object_Declaration (Get_Kind (Inter)) is
-            when Iir_Kind_Interface_Constant_Declaration =>
-               --  Pass by copy.
-               Create_Object (Subprg_Inst, Inter, Val);
-            when Iir_Kind_Interface_Variable_Declaration =>
-               --  Always pass by value.
-               if Is_Copyback_Parameter (Inter) then
-                  --  For the copy back: keep info of formal.
-                  Create_Object (Caller_Inst, Assoc, Info_To_Valtyp (Info));
-               end if;
-               if Get_Mode (Inter) /= Iir_In_Mode then
-                  if Info.Kind /= Target_Memory
-                    and then Info.Obj.Val.Kind = Value_Memory
-                  then
-                     --  FIXME: the subtype conversion will copy the value, so
-                     --   allocate here in current_pool ?
-                     Val := Create_Value_Memory
-                       (Info.Targ_Type, Instance_Pool);
-                     Copy_Memory (Val.Val.Mem,
-                                  Info.Obj.Val.Mem + Info.Off.Mem_Off,
-                                  Info.Targ_Type.Sz);
-                  elsif Info.Kind = Target_Simple
-                    and then Info.Obj.Val.Kind = Value_File
-                  then
-                     --  For vhdl-87
-                     Val := Create_Value_File
-                       (Info.Targ_Type, Info.Obj.Val.File, Instance_Pool);
-                  else
-                     Val := Synth_Read (Caller_Inst, Info, Assoc);
-                     Val := Unshare (Val, Instance_Pool);
-                     if not Flags.Flag_Simulation then
-                        Set_Instance_Const (Subprg_Inst, False);
-                     end if;
-                  end if;
-               end if;
-               if Get_Mode (Inter) /= Iir_Out_Mode then
-                  --  Always passed by value
-                  Val := Synth_Subtype_Conversion
-                    (Subprg_Inst, Val, Formal_Typ, True, Assoc);
-                  Val := Unshare (Val, Instance_Pool);
-               else
-                  --  Use default value
-                  --  FIXME: also for wires ?
-                  if Val.Val.Kind = Value_Memory then
-                     if Is_Bounded_Type (Formal_Typ) then
-                        Write_Value_Default (Val.Val.Mem, Formal_Typ);
-                     else
-                        Write_Value_Default (Val.Val.Mem, Val.Typ);
-                     end if;
-                  end if;
-               end if;
-               Val.Typ := Unshare (Val.Typ, Instance_Pool);
-               Create_Object (Subprg_Inst, Inter, Val);
-            when Iir_Kind_Interface_Signal_Declaration =>
-               --  Always pass by reference (use an alias).
-               if Info.Kind = Target_Memory then
-                  raise Internal_Error;
-               end if;
-               if not Flags.Flag_Simulation then
-                  Set_Instance_Const (Subprg_Inst, False);
-               end if;
-               Val := Create_Value_Alias
-                 (Info.Obj, Info.Off, Info.Targ_Type, Instance_Pool);
-               --  LRM08 4.2.2.3 Signal parameters
-               --  If an actual signal is associated with a signal parameter
-               --  of mode IN or INOUT, and if the type of the formal is a
-               --  scalar type, then it is an error if the subtype of the
-               --  actual is not compatible with the subtype of the formal.
-               --  Similarly, if an actual signal is associated with a signal
-               --  parameter of mode OUT or INOUT, and if the type of the
-               --  actual is a scalar type, then it is an error if the subtype
-               --  of the formal is not compatible with the subtype of the
-               --  actual.
-               if Get_Kind (Get_Type (Inter)) in
-                 Iir_Kinds_Scalar_Type_And_Subtype_Definition
-               then
-                  if Get_Mode (Inter) in Iir_In_Modes then
-                     if not Is_Scalar_Subtype_Compatible (Val.Typ, Formal_Typ)
-                     then
-                        Error_Msg_Synth
-                          (+Actual,
-                           "scalar subtype of actual is not compatible with "
-                             & "signal formal interface");
-                     end if;
-                  end if;
-                  if Get_Mode (Inter) in Iir_Out_Modes then
-                     if not Is_Scalar_Subtype_Compatible (Formal_Typ, Val.Typ)
-                     then
-                        Error_Msg_Synth
-                          (+Actual,
-                           "signal formal interface scalar subtype is not "
-                             & "compatible with of actual subtype");
-                     end if;
-                  end if;
-               else
-                  --  Check matching.
-                  --  This is equivalent to subtype conversion for non-scalar
-                  --  types.
-                  Val := Synth_Subtype_Conversion
-                    (Subprg_Inst, Val, Formal_Typ, True, Assoc);
-                  Val := Unshare (Val, Instance_Pool);
-               end if;
-               if Val.Typ /= null then
-                  Val.Typ := Unshare (Val.Typ, Instance_Pool);
-               end if;
-               Create_Object (Subprg_Inst, Inter, Val);
-            when Iir_Kind_Interface_File_Declaration =>
-               Val := Info.Obj;
-               Create_Object (Subprg_Inst, Inter, Val);
-            when Iir_Kind_Interface_Quantity_Declaration =>
-               raise Internal_Error;
-         end case;
-
-         Release_Expr_Pool (Marker);
+         exit when Is_Error (Subprg_Inst);
       end loop;
    end Synth_Subprogram_Associations;
 
