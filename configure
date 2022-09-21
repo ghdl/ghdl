@@ -311,6 +311,7 @@ if test $backend = llvm; then
        check_version 12.0 $llvm_version ||
        check_version 13.0 $llvm_version ||
        check_version 14.0 $llvm_version ||
+       check_version 15.0 $llvm_version ||
        false; then
     echo "Debugging is enabled with llvm $llvm_version"
   else
