@@ -726,7 +726,6 @@ package body Synth.Vhdl_Insts is
       N_Off : Uns32;
       N : Net;
       Base : Valtyp;
-      pragma Unreferenced (Base);
       Offs : Value_Offsets;
       Dyn : Dyn_Name;
    begin
@@ -751,6 +750,8 @@ package body Synth.Vhdl_Insts is
 
          Iassoc := Get_Chain (Iassoc);
       end loop;
+
+      pragma Unreferenced (Base);
 
       --  Then:
       --   1. sort table by offset
