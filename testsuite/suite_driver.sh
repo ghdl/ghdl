@@ -45,6 +45,7 @@ singlerun() {
     printf "$_suite $1: ${ANSI_GREEN}ok${ANSI_NOCOLOR}\n"
     # Don't disp log
   else
+    printf "$_suite $1: ${ANSI_RED}failed${ANSI_NOCOLOR}\n"
     printf '%s ' "$1" >> ../failures.log
     if [ x"$2" = x"n" ]; then
       exit 1;
