@@ -707,9 +707,33 @@ package body Synth.Vhdl_Stmts is
    begin
       case Targ.Kind is
          when Target_Simple =>
-            N := Build2_Extract (Ctxt, Get_Net (Ctxt, Targ.Obj),
-                                 Targ.Off.Net_Off, Targ.Targ_Type.W);
-            return Create_Value_Net (N, Targ.Targ_Type);
+            case Targ.Obj.Val.Kind is
+               when Value_Net
+                 | Value_Wire =>
+                  N := Build2_Extract (Ctxt, Get_Net (Ctxt, Targ.Obj),
+                                       Targ.Off.Net_Off, Targ.Targ_Type.W);
+                  return Create_Value_Net (N, Targ.Targ_Type);
+               when Value_File =>
+                  return Create_Value_File
+                    (Targ.Targ_Type, Targ.Obj.Val.File, Current_Pool);
+               when Value_Memory =>
+                  declare
+                     Res : Valtyp;
+                  begin
+                     Res := Create_Value_Memory (Targ.Targ_Type, Current_Pool);
+                     Copy_Memory (Res.Val.Mem,
+                                  Targ.Obj.Val.Mem + Targ.Off.Mem_Off,
+                                  Targ.Targ_Type.Sz);
+                     return Res;
+                  end;
+               when Value_Quantity
+                 | Value_Terminal
+                 | Value_Const
+                 | Value_Alias
+                 | Value_Dyn_Alias
+                 | Value_Signal =>
+                  raise Internal_Error;
+            end case;
          when Target_Aggregate =>
             raise Internal_Error;
          when Target_Memory =>
@@ -2076,27 +2100,11 @@ package body Synth.Vhdl_Stmts is
                Create_Object (Caller_Inst, Assoc, Info_To_Valtyp (Info));
             end if;
             if Get_Mode (Inter) /= Iir_In_Mode then
-               if Info.Kind /= Target_Memory
-                 and then Info.Obj.Val.Kind = Value_Memory
+               Val := Synth_Read (Caller_Inst, Info, Assoc);
+               if not Flags.Flag_Simulation
+                 and then not Is_Static (Val.Val)
                then
-                  --  FIXME: the subtype conversion will copy the value, so
-                  --   allocate here in current_pool ?
-                  Val := Create_Value_Memory (Info.Targ_Type, Instance_Pool);
-                  Copy_Memory (Val.Val.Mem,
-                               Info.Obj.Val.Mem + Info.Off.Mem_Off,
-                               Info.Targ_Type.Sz);
-               elsif Info.Kind = Target_Simple
-                 and then Info.Obj.Val.Kind = Value_File
-               then
-                  --  For vhdl-87
-                  Val := Create_Value_File
-                    (Info.Targ_Type, Info.Obj.Val.File, Instance_Pool);
-               else
-                  Val := Synth_Read (Caller_Inst, Info, Assoc);
-                  Val := Unshare (Val, Instance_Pool);
-                  if not Flags.Flag_Simulation then
-                     Set_Instance_Const (Subprg_Inst, False);
-                  end if;
+                  Set_Instance_Const (Subprg_Inst, False);
                end if;
             end if;
             if Get_Mode (Inter) /= Iir_Out_Mode then
@@ -2107,6 +2115,7 @@ package body Synth.Vhdl_Stmts is
             else
                --  Use default value
                --  FIXME: also for wires ?
+               Val := Unshare (Val, Instance_Pool);
                if Val.Val.Kind = Value_Memory then
                   if Is_Bounded_Type (Formal_Typ) then
                      Write_Value_Default (Val.Val.Mem, Formal_Typ);
