@@ -385,7 +385,7 @@ package body Simul.Vhdl_Elab is
      (Inst : Synth_Instance_Acc; Proc : Node; Proc_Idx : Process_Index_Type)
    is
       use Synth.Vhdl_Stmts;
-      Marker : Mark_Type;
+      Expr_Marker : Mark_Type;
       Driver_List: Iir_List;
       It : List_Iterator;
       Sig : Node;
@@ -394,7 +394,8 @@ package body Simul.Vhdl_Elab is
       Typ : Type_Acc;
       Off : Value_Offsets;
    begin
-      Mark_Expr_Pool (Marker);
+      Mark_Expr_Pool (Expr_Marker);
+      Instance_Pool := Process_Pool'Access;
 
       Driver_List := Trans_Analyzes.Extract_Drivers (Proc);
       It := List_Iterate_Safe (Driver_List);
@@ -405,12 +406,15 @@ package body Simul.Vhdl_Elab is
          Base := Base_Vt.Val.S;
          Typ := Unshare (Typ, Global_Pool'Access);
 
+         Release_Expr_Pool (Expr_Marker);
+         pragma Assert (Areapools.Is_Empty (Instance_Pool.all));
+
          Add_Process_Driver (Proc_Idx, Base, Off, Typ, Sig);
 
          Next (It);
       end loop;
+      Instance_Pool := null;
       Trans_Analyzes.Free_Drivers_List (Driver_List);
-      Release_Expr_Pool (Marker);
    end Gather_Process_Drivers;
 
    procedure Gather_Sensitivity (Inst : Synth_Instance_Acc;

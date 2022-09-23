@@ -42,8 +42,6 @@ with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 with Elab.Vhdl_Types;
 with Elab.Vhdl_Debug;
 
-with Trans_Analyzes;
-
 with Synth.Errors;
 with Synth.Vhdl_Stmts; use Synth.Vhdl_Stmts;
 with Synth.Vhdl_Expr;
@@ -301,38 +299,6 @@ package body Simul.Vhdl_Simul is
       end case;
    end Add_Source;
 
-   procedure Create_Process_Drivers (Inst : Synth_Instance_Acc;
-                                     Proc : Node;
-                                     Driver_List : Iir_List)
-   is
-      pragma Unreferenced (Proc);
-      Marker : Mark_Type;
-      It : List_Iterator;
-      El: Iir;
-      Info : Target_Info;
-   begin
-      -- Some processes have no driver list (assertion).
-      It := List_Iterate_Safe (Driver_List);
-      while Is_Valid (It) loop
-         El := Get_Element (It);
-
-         Mark_Expr_Pool (Marker);
-
-         Info := Synth_Target (Inst, El);
-         declare
-            E : Signal_Entry renames Signals_Table.Table (Info.Obj.Val.S);
-         begin
-            Add_Source (Info.Targ_Type,
-                        Sig_Index (E.Sig, Info.Off.Net_Off),
-                        E.Val + Info.Off.Mem_Off);
-         end;
-
-         Release_Expr_Pool (Marker);
-
-         Next (It);
-      end loop;
-   end Create_Process_Drivers;
-
    procedure Create_Process_Drivers (Proc : Process_Index_Type)
    is
       Drv : Driver_Index_Type;
@@ -343,8 +309,8 @@ package body Simul.Vhdl_Simul is
             D : Driver_Entry renames Drivers_Table.Table (Drv);
             S : Signal_Entry renames Signals_Table.Table (D.Sig);
          begin
-            pragma Assert (D.Off = No_Value_Offsets);
-            Add_Source (S.Typ, S.Sig, S.Val);
+            Add_Source
+              (D.Typ, Sig_Index (S.Sig, D.Off.Net_Off), S.Val + D.Off.Mem_Off);
 
             Drv := D.Prev_Proc;
          end;
@@ -1797,18 +1763,9 @@ package body Simul.Vhdl_Simul is
               | Iir_Kind_Concurrent_Simple_Signal_Assignment
               | Iir_Kind_Concurrent_Conditional_Signal_Assignment
               | Iir_Kind_Concurrent_Selected_Signal_Assignment =>
-               declare
-                  Driver_List: Iir_List;
-               begin
-                  Driver_List := Trans_Analyzes.Extract_Drivers (Proc);
-                  Create_Process_Sensitized (Current_Process);
-                  pragma Assert (Areapools.Is_Empty (Expr_Pool));
-                  Register_Sensitivity (I);
-                  pragma Assert (Areapools.Is_Empty (Expr_Pool));
-                  Create_Process_Drivers (Instance, Proc, Driver_List);
-                  pragma Assert (Areapools.Is_Empty (Expr_Pool));
-                  Trans_Analyzes.Free_Drivers_List (Driver_List);
-               end;
+               Create_Process_Sensitized (Current_Process);
+               Register_Sensitivity (I);
+               Create_Process_Drivers (I);
 
             when Iir_Kind_Association_Element_By_Expression =>
                Processes_State (I).Pool := Process_Pool'Access;
@@ -1821,29 +1778,20 @@ package body Simul.Vhdl_Simul is
 
             when Iir_Kind_Process_Statement
               | Iir_Kind_Concurrent_Procedure_Call_Statement =>
-               declare
-                  Driver_List: Iir_List;
-               begin
-                  --  As those processes can suspend, they need a dedicated
-                  --  stack.
-                  Processes_State (I).Pool := new Areapools.Areapool;
+               --  As those processes can suspend, they need a dedicated
+               --  stack.
+               Processes_State (I).Pool := new Areapools.Areapool;
 
-                  Driver_List := Trans_Analyzes.Extract_Drivers (Proc);
-
-                  if Get_Postponed_Flag (Proc) then
-                     Ghdl_Postponed_Process_Register
-                       (Instance_Grt,
-                        Process_Executer'Access,
-                        null, Instance_Addr);
-                  else
-                     Ghdl_Process_Register
-                       (Instance_Grt,
-                        Process_Executer'Access,
-                        null, Instance_Addr);
-                  end if;
-                  Create_Process_Drivers (Instance, Proc, Driver_List);
-                  Trans_Analyzes.Free_Drivers_List (Driver_List);
-               end;
+               if Get_Postponed_Flag (Proc) then
+                  Ghdl_Postponed_Process_Register (Instance_Grt,
+                                                   Process_Executer'Access,
+                                                   null, Instance_Addr);
+               else
+                  Ghdl_Process_Register (Instance_Grt,
+                                         Process_Executer'Access,
+                                         null, Instance_Addr);
+               end if;
+               Create_Process_Drivers (I);
 
             when Iir_Kind_Psl_Assert_Directive =>
                Processes_State (I) := (Kind => Kind_PSL,
