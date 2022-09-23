@@ -97,7 +97,7 @@ def Get_Token_Offset() -> int:
 
 @export
 @BindToLibGHDL("vhdl__scanner__get_token_position")
-def Get_Token_Position():
+def Get_Token_Position() -> int:
     """
     Get the current token's position.
 
@@ -108,7 +108,7 @@ def Get_Token_Position():
 
 @export
 @BindToLibGHDL("vhdl__scanner__get_position")
-def Get_Position():
+def Get_Position() -> int:
     """
     Get the current position.
 
