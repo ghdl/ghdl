@@ -1978,15 +1978,11 @@ package body Synth.Vhdl_Stmts is
       end case;
    end Info_To_Valtyp;
 
-   procedure Synth_Subprogram_Association
-     (Subprg_Inst : Synth_Instance_Acc;
-      Caller_Inst : Synth_Instance_Acc;
-      Inter : Node;
-      Assoc : Node;
-      Iterator : in out Association_Iterator)
+   function Synth_Subprogram_Association (Subprg_Inst : Synth_Instance_Acc;
+                                          Caller_Inst : Synth_Instance_Acc;
+                                          Inter : Node;
+                                          Assoc : Node) return Valtyp
    is
-      pragma Unreferenced (Iterator);
-      Marker : Mark_Type;
       Inter_Type : Node;
       Actual : Node;
       Formal : Node;
@@ -1998,38 +1994,28 @@ package body Synth.Vhdl_Stmts is
       Info : Target_Info;
       Actual_Inst : Synth_Instance_Acc;
    begin
-      Mark_Expr_Pool (Marker);
-
       --  Actual and formal.
       Actual_Inst := Caller_Inst;
-      if Assoc /= Null_Node
-        and then Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Individual
+      if Assoc = Null_Node
+        or else Get_Kind (Assoc) = Iir_Kind_Association_Element_Open
       then
-         --  Special case: preliminary individual association.
+         --  Missing association or open association: use default value.
          Formal := Inter;
-         Actual := Null_Node;
-      else
-         if Assoc = Null_Node
-           or else Get_Kind (Assoc) = Iir_Kind_Association_Element_Open
-         then
-            --  Missing association or open association: use default value.
+         Actual := Get_Default_Value (Inter);
+         Actual_Inst := Subprg_Inst;
+      elsif Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Expression
+      then
+         --  Normal case: formal and actual.
+         if Get_Whole_Association_Flag (Assoc) then
             Formal := Inter;
-            Actual := Get_Default_Value (Inter);
-            Actual_Inst := Subprg_Inst;
-         elsif Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Expression
-         then
-            --  Normal case: formal and actual.
-            if Get_Whole_Association_Flag (Assoc) then
-               Formal := Inter;
-            else
-               Formal := Get_Formal (Assoc);
-            end if;
-            Actual := Get_Actual (Assoc);
          else
-            --  Just an expression.
-            Formal := Inter;
-            Actual := Assoc;
+            Formal := Get_Formal (Assoc);
          end if;
+         Actual := Get_Actual (Assoc);
+      else
+         --  Just an expression.
+         Formal := Inter;
+         Actual := Assoc;
       end if;
 
       if Formal = Inter then
@@ -2064,14 +2050,12 @@ package body Synth.Vhdl_Stmts is
          --  For constants and in variables.
          Val := Synth_Expression_With_Type (Actual_Inst, Actual, Formal_Typ);
          if Val = No_Valtyp then
-            Set_Error (Subprg_Inst);
-            return;
+            return Val;
          end if;
          Val := Synth_Subtype_Conversion
            (Subprg_Inst, Val, Formal_Typ, True, Assoc);
          if Val = No_Valtyp then
-            Set_Error (Subprg_Inst);
-            return;
+            return Val;
          end if;
          Val := Unshare (Val, Instance_Pool);
          Val.Typ := Unshare (Val.Typ, Instance_Pool);
@@ -2092,7 +2076,7 @@ package body Synth.Vhdl_Stmts is
       case Iir_Kinds_Interface_Object_Declaration (Get_Kind (Inter)) is
          when Iir_Kind_Interface_Constant_Declaration =>
             --  Pass by copy.
-            Create_Object (Subprg_Inst, Inter, Val);
+            return Val;
          when Iir_Kind_Interface_Variable_Declaration =>
             --  Always pass by value.
             if Is_Copyback_Parameter (Inter) then
@@ -2111,11 +2095,9 @@ package body Synth.Vhdl_Stmts is
                --  Always passed by value
                Val := Synth_Subtype_Conversion
                  (Subprg_Inst, Val, Formal_Typ, True, Assoc);
-               Val := Unshare (Val, Instance_Pool);
             else
                --  Use default value
                --  FIXME: also for wires ?
-               Val := Unshare (Val, Instance_Pool);
                if Val.Val.Kind = Value_Memory then
                   if Is_Bounded_Type (Formal_Typ) then
                      Write_Value_Default (Val.Val.Mem, Formal_Typ);
@@ -2125,7 +2107,7 @@ package body Synth.Vhdl_Stmts is
                end if;
             end if;
             Val.Typ := Unshare (Val.Typ, Instance_Pool);
-            Create_Object (Subprg_Inst, Inter, Val);
+            return Val;
          when Iir_Kind_Interface_Signal_Declaration =>
             --  Always pass by reference (use an alias).
             if Info.Kind = Target_Memory then
@@ -2173,20 +2155,17 @@ package body Synth.Vhdl_Stmts is
                --  types.
                Val := Synth_Subtype_Conversion
                  (Subprg_Inst, Val, Formal_Typ, True, Assoc);
-               Val := Unshare (Val, Instance_Pool);
             end if;
             if Val.Typ /= null then
                Val.Typ := Unshare (Val.Typ, Instance_Pool);
             end if;
-            Create_Object (Subprg_Inst, Inter, Val);
+            return Val;
          when Iir_Kind_Interface_File_Declaration =>
-            Val := Info.Obj;
-            Create_Object (Subprg_Inst, Inter, Val);
+            return Info.Obj;
          when Iir_Kind_Interface_Quantity_Declaration =>
             raise Internal_Error;
       end case;
 
-      Release_Expr_Pool (Marker);
    end Synth_Subprogram_Association;
 
    procedure Synth_Subprogram_Associations (Subprg_Inst : Synth_Instance_Acc;
@@ -2205,10 +2184,34 @@ package body Synth.Vhdl_Stmts is
          Association_Iterate_Next (Iterator, Inter, Assoc);
          exit when Inter = Null_Node;
 
-         Synth_Subprogram_Association
-           (Subprg_Inst, Caller_Inst, Inter, Assoc, Iterator);
+         if Assoc /= Null_Node
+           and then
+           Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Individual
+         then
+            --  1. Count number of assocs
+            --  2. Build array formal-value
+            --  3. For each assoc: synth value
+            --  4. If static: build mem, if in: build net, if out: build concat
+            raise Internal_Error;
+         else
+            declare
+               Marker : Mark_Type;
+               Val : Valtyp;
+            begin
+               Mark_Expr_Pool (Marker);
 
-         exit when Is_Error (Subprg_Inst);
+               Val := Synth_Subprogram_Association
+                 (Subprg_Inst, Caller_Inst, Inter, Assoc);
+               if Val = No_Valtyp then
+                  Set_Error (Subprg_Inst);
+                  exit;
+               end if;
+               Val := Unshare (Val, Instance_Pool);
+               Create_Object (Subprg_Inst, Inter, Val);
+
+               Release_Expr_Pool (Marker);
+            end;
+         end if;
       end loop;
    end Synth_Subprogram_Associations;
 
