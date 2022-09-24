@@ -1965,13 +1965,9 @@ package body Synth.Vhdl_Stmts is
                                           Inter : Node;
                                           Assoc : Node) return Valtyp
    is
-      Inter_Type : Node;
+      Inter_Type : constant Node := Get_Type (Inter);
+      Inter_Typ : Type_Acc;
       Actual : Node;
-      Formal : Node;
-      Formal_Base : Valtyp;
-      Formal_Typ : Type_Acc;
-      Formal_Offs : Value_Offsets;
-      Formal_Dyn : Dyn_Name;
       Val : Valtyp;
       Info : Target_Info;
       Actual_Inst : Synth_Instance_Acc;
@@ -1982,60 +1978,43 @@ package body Synth.Vhdl_Stmts is
         or else Get_Kind (Assoc) = Iir_Kind_Association_Element_Open
       then
          --  Missing association or open association: use default value.
-         Formal := Inter;
          Actual := Get_Default_Value (Inter);
          Actual_Inst := Subprg_Inst;
       elsif Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Expression
       then
          --  Normal case: formal and actual.
-         if Get_Whole_Association_Flag (Assoc) then
-            Formal := Inter;
-         else
-            Formal := Get_Formal (Assoc);
-         end if;
+         pragma Assert (Get_Whole_Association_Flag (Assoc));
          Actual := Get_Actual (Assoc);
       else
          --  Just an expression.
-         Formal := Inter;
          Actual := Assoc;
       end if;
 
-      if Formal = Inter then
-         --  Special case for protected type as the slot describes
-         --  declarations.
-         Inter_Type := Get_Type (Inter);
-         if Get_Kind (Inter_Type) = Iir_Kind_Protected_Type_Declaration then
-            Formal_Typ := Protected_Type;
-         else
-            Formal_Typ := Get_Subtype_Object (Subprg_Inst, Inter_Type);
-         end if;
-         Formal_Offs := No_Value_Offsets;
-         Formal_Dyn := No_Dyn_Name;
+      --  Special case for protected type as the slot describes
+      --  declarations.
+      if Get_Kind (Inter_Type) = Iir_Kind_Protected_Type_Declaration then
+         Inter_Typ := Protected_Type;
       else
-         --  Individual association.
-         Synth_Assignment_Prefix
-           (Caller_Inst, Subprg_Inst, Formal,
-            Formal_Base, Formal_Typ, Formal_Offs, Formal_Dyn);
-         pragma Assert (Formal_Dyn = No_Dyn_Name);
+         Inter_Typ := Get_Subtype_Object (Subprg_Inst, Inter_Type);
       end if;
 
-      if Actual = Null_Node then
-         --  For By_Individual.
-         Val := Create_Value_Memory (Formal_Typ, Expr_Pool'Access);
-      elsif Get_Mode (Inter) /= Iir_In_Mode
-        or else Get_Kind (Inter) = Iir_Kind_Interface_Signal_Declaration
-        or else Get_Kind (Inter) = Iir_Kind_Interface_File_Declaration
-      then
+      if Get_Kind (Inter) /= Iir_Kind_Interface_Constant_Declaration then
          --  Actual is a reference.
          Info := Synth_Target (Caller_Inst, Actual);
+         if Assoc /= Null_Node
+           and then Get_Actual_Conversion (Assoc) /= Null_Node
+         then
+            --  TODO
+            raise Internal_Error;
+         end if;
       else
          --  For constants and in variables.
-         Val := Synth_Expression_With_Type (Actual_Inst, Actual, Formal_Typ);
+         Val := Synth_Expression_With_Type (Actual_Inst, Actual, Inter_Typ);
          if Val = No_Valtyp then
             return Val;
          end if;
          Val := Synth_Subtype_Conversion
-           (Subprg_Inst, Val, Formal_Typ, True, Assoc);
+           (Subprg_Inst, Val, Inter_Typ, True, Assoc);
          if Val = No_Valtyp then
             return Val;
          end if;
@@ -2049,12 +2028,6 @@ package body Synth.Vhdl_Stmts is
          end if;
       end if;
 
-      if Formal /= Inter
-        and then not Get_Whole_Association_Flag (Assoc)
-      then
-         raise Internal_Error;
-      end if;
-
       case Iir_Kinds_Interface_Object_Declaration (Get_Kind (Inter)) is
          when Iir_Kind_Interface_Constant_Declaration =>
             --  Pass by copy.
@@ -2065,24 +2038,22 @@ package body Synth.Vhdl_Stmts is
                --  For the copy back: keep info of formal.
                Create_Object (Caller_Inst, Assoc, Info_To_Valtyp (Info));
             end if;
-            if Get_Mode (Inter) /= Iir_In_Mode then
-               Val := Synth_Read (Caller_Inst, Info, Assoc);
-               if not Flags.Flag_Simulation
-                 and then not Is_Static (Val.Val)
-               then
-                  Set_Instance_Const (Subprg_Inst, False);
-               end if;
+            Val := Synth_Read (Caller_Inst, Info, Assoc);
+            if not Flags.Flag_Simulation
+              and then not Is_Static (Val.Val)
+            then
+               Set_Instance_Const (Subprg_Inst, False);
             end if;
             if Get_Mode (Inter) /= Iir_Out_Mode then
                --  Always passed by value
                Val := Synth_Subtype_Conversion
-                 (Subprg_Inst, Val, Formal_Typ, True, Assoc);
+                 (Subprg_Inst, Val, Inter_Typ, True, Assoc);
             else
                --  Use default value
                --  FIXME: also for wires ?
                if Val.Val.Kind = Value_Memory then
-                  if Is_Bounded_Type (Formal_Typ) then
-                     Write_Value_Default (Val.Val.Mem, Formal_Typ);
+                  if Is_Bounded_Type (Inter_Typ) then
+                     Write_Value_Default (Val.Val.Mem, Inter_Typ);
                   else
                      Write_Value_Default (Val.Val.Mem, Val.Typ);
                   end if;
@@ -2114,7 +2085,7 @@ package body Synth.Vhdl_Stmts is
               Iir_Kinds_Scalar_Type_And_Subtype_Definition
             then
                if Get_Mode (Inter) in Iir_In_Modes then
-                  if not Is_Scalar_Subtype_Compatible (Val.Typ, Formal_Typ)
+                  if not Is_Scalar_Subtype_Compatible (Val.Typ, Inter_Typ)
                   then
                      Error_Msg_Synth
                        (+Actual,
@@ -2123,7 +2094,7 @@ package body Synth.Vhdl_Stmts is
                   end if;
                end if;
                if Get_Mode (Inter) in Iir_Out_Modes then
-                  if not Is_Scalar_Subtype_Compatible (Formal_Typ, Val.Typ)
+                  if not Is_Scalar_Subtype_Compatible (Inter_Typ, Val.Typ)
                   then
                      Error_Msg_Synth
                        (+Actual,
@@ -2136,7 +2107,7 @@ package body Synth.Vhdl_Stmts is
                --  This is equivalent to subtype conversion for non-scalar
                --  types.
                Val := Synth_Subtype_Conversion
-                 (Subprg_Inst, Val, Formal_Typ, True, Assoc);
+                 (Subprg_Inst, Val, Inter_Typ, True, Assoc);
             end if;
             if Val.Typ /= null then
                Val.Typ := Unshare (Val.Typ, Instance_Pool);
@@ -2240,6 +2211,10 @@ package body Synth.Vhdl_Stmts is
                Synth_Assignment_Prefix
                  (Caller_Inst, Subprg_Inst,
                   Get_Actual (Assoc), Act_Base, Act_Typ, Act_Off, Act_Dyn);
+               if Get_Actual_Conversion (Assoc) /= Null_Node then
+                  --  TODO
+                  raise Internal_Error;
+               end if;
                if Act_Typ.Kind in Type_Composite then
                   --  TODO: reshape
                   null;
@@ -2410,6 +2385,10 @@ package body Synth.Vhdl_Stmts is
                Val := Get_Value (Subprg_Inst, Inter);
             else
                Val := Synth_Expression (Subprg_Inst, Formal);
+            end if;
+            if Get_Formal_Conversion (Assoc) /= Null_Node then
+               --  TODO
+               raise Internal_Error;
             end if;
             Targ := Get_Value (Caller_Inst, Assoc);
             if Targ.Val.Kind = Value_Dyn_Alias then
