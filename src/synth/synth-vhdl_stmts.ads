@@ -147,6 +147,11 @@ package Synth.Vhdl_Stmts is
       Inter_Chain : Node;
       Assoc_Chain : Node);
 
+   function Synth_Association_Conversion (Inst : Synth_Instance_Acc;
+                                          Func : Node;
+                                          Val : Valtyp;
+                                          Res_Typ : Type_Acc) return Valtyp;
+
    --  For simulation.
    function Exec_Resolution_Call (Syn_Inst : Synth_Instance_Acc;
                                   Func : Node;

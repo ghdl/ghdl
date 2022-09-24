@@ -2397,37 +2397,6 @@ package body Simul.Vhdl_Simul is
       end case;
    end Connect;
 
-   function Execute_Assoc_Conversion (Inst : Synth_Instance_Acc;
-                                      Func : Node;
-                                      Val : Memtyp;
-                                      Res_Typ : Type_Acc) return Memtyp
-   is
-      Res : Valtyp;
-   begin
-      case Get_Kind (Func) is
-         when Iir_Kind_Function_Call =>
-            Res := Exec_Resolution_Call (Inst, Get_Implementation (Func),
-                                         Create_Value_Memtyp (Val));
-         when Iir_Kind_Type_Conversion =>
-            declare
-               Conv_Typ : constant Type_Acc :=
-                 Get_Subtype_Object (Inst, Get_Type (Func));
-            begin
-               Res := Synth.Vhdl_Expr.Synth_Type_Conversion
-                 (Inst, Create_Value_Memtyp (Val), Conv_Typ, Func);
-            end;
-         when others =>
-            Vhdl.Errors.Error_Kind ("execute_assoc_conversion", Func);
-      end case;
-      Res := Synth.Vhdl_Expr.Synth_Subtype_Conversion
-        (Inst, Res, Res_Typ, False, Func);
-      if Res = No_Valtyp then
-         Grt.Errors.Fatal_Error;
-      end if;
-      Convert_Type_Width (Res.Typ);
-      return Synth.Vhdl_Expr.Get_Value_Memtyp (Res);
-   end Execute_Assoc_Conversion;
-
    procedure Create_Shadow_Signal (Sig : Memory_Ptr;
                                    Val : Memory_Ptr;
                                    Typ : Type_Acc)
@@ -2490,6 +2459,7 @@ package body Simul.Vhdl_Simul is
 
       Val : Memtyp;
       Dst : Memtyp;
+      Dst_Val : Valtyp;
 
       Expr_Marker, Inst_Marker : Mark_Type;
    begin
@@ -2506,9 +2476,16 @@ package body Simul.Vhdl_Simul is
             Exec_Read_Signal (Conv.Src_Sig, Val, Read_Signal_Driving_Value);
       end case;
 
-      Dst := Execute_Assoc_Conversion
-        (Conv.Inst, Conv.Func, Val, Conv.Dst_Typ);
-      pragma Assert (Dst.Typ.Wkind = Wkind_Sim);
+      Dst_Val := Create_Value_Memory (Val, Current_Pool);
+      Dst_Val := Synth_Association_Conversion
+        (Conv.Inst, Conv.Func, Dst_Val, Conv.Dst_Typ);
+      pragma Assert (Dst_Val.Typ.Wkind = Wkind_Sim);
+
+      if Dst_Val = No_Valtyp then
+         Grt.Errors.Fatal_Error;
+      end if;
+      Convert_Type_Width (Dst_Val.Typ);
+      Dst := Synth.Vhdl_Expr.Get_Value_Memtyp (Dst_Val);
 
       case Conv.Mode is
          when Convert_In =>

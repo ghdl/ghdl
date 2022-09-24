@@ -1971,6 +1971,7 @@ package body Synth.Vhdl_Stmts is
       Val : Valtyp;
       Info : Target_Info;
       Actual_Inst : Synth_Instance_Acc;
+      Conv : Node;
    begin
       --  Actual and formal.
       Actual_Inst := Caller_Inst;
@@ -1980,14 +1981,17 @@ package body Synth.Vhdl_Stmts is
          --  Missing association or open association: use default value.
          Actual := Get_Default_Value (Inter);
          Actual_Inst := Subprg_Inst;
+         Conv := Null_Node;
       elsif Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Expression
       then
          --  Normal case: formal and actual.
          pragma Assert (Get_Whole_Association_Flag (Assoc));
          Actual := Get_Actual (Assoc);
+         Conv := Get_Actual_Conversion (Assoc);
       else
          --  Just an expression.
          Actual := Assoc;
+         Conv := Null_Node;
       end if;
 
       --  Special case for protected type as the slot describes
@@ -1998,17 +2002,8 @@ package body Synth.Vhdl_Stmts is
          Inter_Typ := Get_Subtype_Object (Subprg_Inst, Inter_Type);
       end if;
 
-      if Get_Kind (Inter) /= Iir_Kind_Interface_Constant_Declaration then
-         --  Actual is a reference.
-         Info := Synth_Target (Caller_Inst, Actual);
-         if Assoc /= Null_Node
-           and then Get_Actual_Conversion (Assoc) /= Null_Node
-         then
-            --  TODO
-            raise Internal_Error;
-         end if;
-      else
-         --  For constants and in variables.
+      if Get_Kind (Inter) = Iir_Kind_Interface_Constant_Declaration then
+         --  Constants: simply synth the expression
          Val := Synth_Expression_With_Type (Actual_Inst, Actual, Inter_Typ);
          if Val = No_Valtyp then
             return Val;
@@ -2026,6 +2021,9 @@ package body Synth.Vhdl_Stmts is
          then
             Set_Instance_Const (Subprg_Inst, False);
          end if;
+      else
+         --  Actual is a reference.
+         Info := Synth_Target (Caller_Inst, Actual);
       end if;
 
       case Iir_Kinds_Interface_Object_Declaration (Get_Kind (Inter)) is
@@ -2038,25 +2036,28 @@ package body Synth.Vhdl_Stmts is
                --  For the copy back: keep info of formal.
                Create_Object (Caller_Inst, Assoc, Info_To_Valtyp (Info));
             end if;
-            Val := Synth_Read (Caller_Inst, Info, Assoc);
-            if not Flags.Flag_Simulation
-              and then not Is_Static (Val.Val)
+            if Get_Mode (Inter) /= Iir_Out_Mode
+              or else Inter_Typ.Kind = Type_File
             then
-               Set_Instance_Const (Subprg_Inst, False);
-            end if;
-            if Get_Mode (Inter) /= Iir_Out_Mode then
+               Val := Synth_Read (Caller_Inst, Info, Assoc);
+               if Conv /= Null_Node then
+                  Val := Synth_Association_Conversion
+                    (Caller_Inst, Conv, Val, Inter_Typ);
+               end if;
+               if not Flags.Flag_Simulation
+                 and then not Is_Static (Val.Val)
+               then
+                  Set_Instance_Const (Subprg_Inst, False);
+               end if;
                --  Always passed by value
                Val := Synth_Subtype_Conversion
                  (Subprg_Inst, Val, Inter_Typ, True, Assoc);
             else
                --  Use default value
-               --  FIXME: also for wires ?
-               if Val.Val.Kind = Value_Memory then
-                  if Is_Bounded_Type (Inter_Typ) then
-                     Write_Value_Default (Val.Val.Mem, Inter_Typ);
-                  else
-                     Write_Value_Default (Val.Val.Mem, Val.Typ);
-                  end if;
+               if Is_Bounded_Type (Inter_Typ) then
+                  Val := Create_Value_Default (Inter_Typ);
+               else
+                  Val := Create_Value_Default (Info.Targ_Type);
                end if;
             end if;
             Val.Typ := Unshare (Val.Typ, Instance_Pool);
@@ -2353,6 +2354,31 @@ package body Synth.Vhdl_Stmts is
       end loop;
    end Synth_Subprogram_Association_Wires;
 
+   function Synth_Association_Conversion (Inst : Synth_Instance_Acc;
+                                          Func : Node;
+                                          Val : Valtyp;
+                                          Res_Typ : Type_Acc) return Valtyp
+   is
+      Res : Valtyp;
+   begin
+      case Get_Kind (Func) is
+         when Iir_Kind_Function_Call =>
+            Res := Exec_Resolution_Call (Inst, Get_Implementation (Func), Val);
+         when Iir_Kind_Type_Conversion =>
+            declare
+               Conv_Typ : constant Type_Acc :=
+                 Get_Subtype_Object (Inst, Get_Type (Func));
+            begin
+               Res := Synth_Type_Conversion (Inst, Val, Conv_Typ, Func);
+            end;
+         when others =>
+            Vhdl.Errors.Error_Kind ("synth_association_conversion", Func);
+      end case;
+      Res := Synth.Vhdl_Expr.Synth_Subtype_Conversion
+        (Inst, Res, Res_Typ, False, Func);
+      return Res;
+   end Synth_Association_Conversion;
+
    procedure Synth_Subprogram_Back_Association
      (Subprg_Inst : Synth_Instance_Acc;
       Caller_Inst : Synth_Instance_Acc;
@@ -2366,6 +2392,7 @@ package body Synth.Vhdl_Stmts is
       Formal : Node;
       Val : Valtyp;
       Targ : Valtyp;
+      Conv : Node;
       W : Wire_Id;
       D : Destroy_Type;
    begin
@@ -2380,17 +2407,21 @@ package body Synth.Vhdl_Stmts is
            and then
            Get_Kind (Assoc) /= Iir_Kind_Association_Element_By_Individual
          then
+            Targ := Get_Value (Caller_Inst, Assoc);
             Formal := Get_Formal (Assoc);
+            Conv := Get_Formal_Conversion (Assoc);
+
             if Formal = Null_Node then
                Val := Get_Value (Subprg_Inst, Inter);
             else
                Val := Synth_Expression (Subprg_Inst, Formal);
             end if;
-            if Get_Formal_Conversion (Assoc) /= Null_Node then
-               --  TODO
-               raise Internal_Error;
+
+            if Conv /= Null_Node then
+               Val := Synth_Association_Conversion
+                 (Caller_Inst, Conv, Val, Targ.Typ);
             end if;
-            Targ := Get_Value (Caller_Inst, Assoc);
+
             if Targ.Val.Kind = Value_Dyn_Alias then
                Synth_Assignment_Memory
                  (Caller_Inst, Targ.Val.D_Obj,
