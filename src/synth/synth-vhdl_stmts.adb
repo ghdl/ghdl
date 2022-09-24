@@ -115,7 +115,7 @@ package body Synth.Vhdl_Stmts is
          Dest_Dyn := No_Dyn_Name;
          Dest_Typ := Targ.Typ;
 
-         if Targ.Val.Kind = Value_Alias then
+         if Targ.Val /= null and then Targ.Val.Kind = Value_Alias then
             --  Replace alias by the aliased name.
             Dest_Base := (Targ.Val.A_Typ, Targ.Val.A_Obj);
             Dest_Off := Targ.Val.A_Off;
@@ -163,7 +163,10 @@ package body Synth.Vhdl_Stmts is
                Synth_Assignment_Prefix
                  (Syn_Inst, Inter_Inst, Get_Prefix (Pfx),
                   Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
-               Strip_Const (Dest_Base);
+               if Dest_Base.Val /= null then
+                  --  For individual associations, only the typ can be set.
+                  Strip_Const (Dest_Base);
+               end if;
                Synth_Indexed_Name (Syn_Inst, Pfx, Dest_Typ,
                                    El_Typ, Voff, Off, Err);
 
@@ -358,6 +361,26 @@ package body Synth.Vhdl_Stmts is
       return Res;
    end Synth_Aggregate_Target_Type;
 
+   function To_Target_Info (Base : Valtyp;
+                            Typ : Type_Acc;
+                            Off : Value_Offsets;
+                            Dyn : Dyn_Name) return Target_Info is
+   begin
+      if Dyn.Voff = No_Net then
+         --  FIXME: check index.
+         return Target_Info'(Kind => Target_Simple,
+                             Targ_Type => Typ,
+                             Obj => Base,
+                             Off => Off);
+      else
+         return Target_Info'(Kind => Target_Memory,
+                             Targ_Type => Typ,
+                             Mem_Obj => Base,
+                             Mem_Dyn => Dyn,
+                             Mem_Doff => Off.Net_Off);
+      end if;
+   end To_Target_Info;
+
    function Synth_Target (Syn_Inst : Synth_Instance_Acc;
                           Target : Node) return Target_Info is
    begin
@@ -387,19 +410,7 @@ package body Synth.Vhdl_Stmts is
             begin
                Synth_Assignment_Prefix
                  (Syn_Inst, Syn_Inst, Target, Base, Typ, Off, Dyn);
-               if Dyn.Voff = No_Net then
-                  --  FIXME: check index.
-                  return Target_Info'(Kind => Target_Simple,
-                                      Targ_Type => Typ,
-                                      Obj => Base,
-                                      Off => Off);
-               else
-                  return Target_Info'(Kind => Target_Memory,
-                                      Targ_Type => Typ,
-                                      Mem_Obj => Base,
-                                      Mem_Dyn => Dyn,
-                                      Mem_Doff => Off.Net_Off);
-               end if;
+               return To_Target_Info (Base, Typ, Off, Dyn);
             end;
          when others =>
             Error_Kind ("synth_target", Target);
@@ -1823,32 +1834,6 @@ package body Synth.Vhdl_Stmts is
       end case;
    end record;
 
-   --  Find association for Iterator.Inter
-   procedure Association_Find_Assoc (Iterator : in out Association_Iterator)
-   is
-      Inter : constant Node := Iterator.Inter;
-      Formal : Node;
-   begin
-      --  Search by name.
-      Iterator.Assoc := Iterator.First_Named_Assoc;
-      while Iterator.Assoc /= Null_Node loop
-         Formal := Get_Formal (Iterator.Assoc);
-         pragma Assert (Formal /= Null_Node);
-         Formal := Get_Interface_Of_Formal (Formal);
-         --  Compare by identifier, as INTER can be the generic
-         --  interface, while FORMAL is the instantiated one.
-         if Get_Identifier (Formal) = Get_Identifier (Inter) then
-            --  Found.
-            --  Optimize in case assocs are in order.
-            if Iterator.Assoc = Iterator.First_Named_Assoc then
-               Iterator.First_Named_Assoc := Get_Chain (Iterator.Assoc);
-            end if;
-            return;
-         end if;
-         Iterator.Assoc := Get_Chain (Iterator.Assoc);
-      end loop;
-   end Association_Find_Assoc;
-
    procedure Association_Iterate_Init (Iterator : out Association_Iterator;
                                        Init : Association_Iterator_Init) is
    begin
@@ -1857,16 +1842,7 @@ package body Synth.Vhdl_Stmts is
             Iterator := (Kind => Association_Function,
                          Inter => Init.Inter_Chain,
                          First_Named_Assoc => Null_Node,
-                         Assoc => Null_Node);
-            if Init.Assoc_Chain /= Null_Node
-              and then Get_Formal (Init.Assoc_Chain) /= Null_Node
-            then
-               --  The first assoc is a named association.
-               Iterator.First_Named_Assoc := Init.Assoc_Chain;
-               Association_Find_Assoc (Iterator);
-            else
-               Iterator.Assoc := Init.Assoc_Chain;
-            end if;
+                         Assoc => Init.Assoc_Chain);
          when Association_Operator =>
             Iterator := (Kind => Association_Operator,
                          Inter => Init.Inter_Chain,
@@ -1885,58 +1861,64 @@ package body Synth.Vhdl_Stmts is
                                        Inter : out Node;
                                        Assoc : out Node) is
    begin
+      --  Next interface.
       Inter := Iterator.Inter;
+
       if Inter = Null_Node then
          --  End of iterator.
          Assoc := Null_Node;
          return;
       end if;
 
+      --  Advance to the next interface for the next call.
+      Iterator.Inter := Get_Chain (Iterator.Inter);
+
       case Iterator.Kind is
          when Association_Function =>
-            Assoc := Iterator.Assoc;
-
-            --  Next individual association for the same interface.
-            if Assoc /= Null_Node then
-               if Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Individual
-               then
-                  Iterator.Assoc := Get_Chain (Assoc);
-                  return;
-               end if;
-               if not Get_Whole_Association_Flag (Assoc) then
-                  --  Still individual assoc.
-                  Iterator.Assoc := Get_Chain (Assoc);
-                  return;
-               end if;
-            end if;
-
-            --  Advance to the next interface for the next call.
-            Iterator.Inter := Get_Chain (Iterator.Inter);
-            if Iterator.Inter = Null_Node then
-               --  Last one.
-               return;
-            end if;
-
             if Iterator.First_Named_Assoc = Null_Node then
+               Assoc := Iterator.Assoc;
                --  Still using association by position.
-               if Iterator.Assoc = Null_Node then
+               if Assoc = Null_Node then
                   --  No more associations, all open.
                   return;
                end if;
-               Iterator.Assoc := Get_Chain (Iterator.Assoc);
-               if Iterator.Assoc = Null_Node
-                 or else Get_Formal (Iterator.Assoc) = Null_Node
-               then
-                  --  Still by position
+               if Get_Formal (Assoc) = Null_Node then
+                  --  Still by position, update for the next call.
+                  Iterator.Assoc := Get_Chain (Assoc);
                   return;
                end if;
-               Iterator.First_Named_Assoc := Iterator.Assoc;
+               Iterator.First_Named_Assoc := Assoc;
             end if;
-            Association_Find_Assoc (Iterator);
+
+            --  Search by name.
+            declare
+               Formal : Node;
+            begin
+               Assoc := Iterator.First_Named_Assoc;
+               while Assoc /= Null_Node loop
+                  Formal := Get_Formal (Assoc);
+                  pragma Assert (Formal /= Null_Node);
+                  Formal := Get_Interface_Of_Formal (Formal);
+
+                  --  Compare by identifier, as INTER can be the generic
+                  --  interface, while FORMAL is the instantiated one.
+                  if Get_Identifier (Formal) = Get_Identifier (Inter) then
+                     --  Found.
+                     --  Optimize in case assocs are in order.
+                     if Assoc = Iterator.First_Named_Assoc then
+                        Iterator.First_Named_Assoc := Get_Chain (Assoc);
+                     end if;
+                     return;
+                  end if;
+                  Assoc := Get_Chain (Assoc);
+               end loop;
+            end;
+
+            --  Not found: open association.
+            return;
 
          when Association_Operator =>
             Assoc := Iterator.Op1;
-            Iterator.Inter := Get_Chain (Iterator.Inter);
             Iterator.Op1 := Iterator.Op2;
             Iterator.Op2 := Null_Node;
       end case;
@@ -2165,8 +2147,150 @@ package body Synth.Vhdl_Stmts is
          when Iir_Kind_Interface_Quantity_Declaration =>
             raise Internal_Error;
       end case;
-
    end Synth_Subprogram_Association;
+
+   function Count_Individual_Associations (Inter : Node;
+                                           First_Assoc : Node) return Natural
+   is
+      Count : Natural;
+      Assoc : Node;
+      Formal : Node;
+   begin
+      --  1. Count number of assocs
+      Count := 0;
+      Assoc := Get_Chain (First_Assoc);
+      Formal := Get_Formal (Assoc);
+      pragma Assert (Get_Interface_Of_Formal (Formal) = Inter);
+      loop
+         Count := Count + 1;
+         Assoc := Get_Chain (Assoc);
+         exit when Assoc = Null_Node;
+         Formal := Get_Formal (Assoc);
+         exit when Get_Interface_Of_Formal (Formal) /= Inter;
+      end loop;
+      return Count;
+   end Count_Individual_Associations;
+
+   type Assoc_Record is record
+      Formal : Node;
+      Form_Off : Value_Offsets;
+
+      Act_Base : Valtyp;
+      Act_Typ : Type_Acc;
+      Act_Off : Value_Offsets;
+      Act_Dyn : Dyn_Name;
+   end record;
+
+   type Assoc_Array is array (Natural range <>) of Assoc_Record;
+   type Assoc_Array_Acc is access Assoc_Array;
+   procedure Free_Assoc_Array is new Ada.Unchecked_Deallocation
+     (Assoc_Array, Assoc_Array_Acc);
+
+   function Synth_Individual_Association (Subprg_Inst : Synth_Instance_Acc;
+                                          Caller_Inst : Synth_Instance_Acc;
+                                          Inter : Node;
+                                          First_Assoc : Node) return Valtyp
+   is
+      Inter_Kind : constant Iir_Kinds_Interface_Object_Declaration :=
+        Get_Kind (Inter);
+      Count : constant Natural :=
+        Count_Individual_Associations (Inter, First_Assoc);
+      Assoc : Node;
+      Assocs : Assoc_Array_Acc;
+      Formal_Typ : Type_Acc;
+      Inter_Typ : Type_Acc;
+      Static : Boolean;
+      Res : Valtyp;
+   begin
+      --  2. Build array formal-value
+      Assocs := new Assoc_Array (1 .. Count);
+
+      --  3. For each assoc: synth value
+      Inter_Typ := Get_Subtype_Object (Subprg_Inst, Get_Type (Inter));
+      if Inter_Kind = Iir_Kind_Interface_Constant_Declaration then
+         raise Internal_Error;
+      else
+         Formal_Typ := Synth_Subtype_Indication
+           (Caller_Inst, Get_Actual_Type (First_Assoc));
+         Formal_Typ := Unshare_Type_Instance (Formal_Typ, Inter_Typ);
+
+         Create_Object (Subprg_Inst, Inter, (Formal_Typ, null));
+
+         Assoc := Get_Chain (First_Assoc);
+         Static := True;
+         for I in 1 .. Count loop
+            declare
+               Formal : Node;
+               Form_Base : Valtyp;
+               Form_Typ : Type_Acc;
+               Form_Off : Value_Offsets;
+               Dyn : Dyn_Name;
+               Act_Base : Valtyp;
+               Act_Typ : Type_Acc;
+               Act_Off : Value_Offsets;
+               Act_Dyn : Dyn_Name;
+               Cb_Val : Valtyp;
+            begin
+               Formal := Get_Formal (Assoc);
+               Synth_Assignment_Prefix
+                 (Caller_Inst, Subprg_Inst,
+                  Formal, Form_Base, Form_Typ, Form_Off, Dyn);
+               pragma Assert (Dyn = No_Dyn_Name);
+               pragma Assert (Form_Base = (Formal_Typ, null));
+               Synth_Assignment_Prefix
+                 (Caller_Inst, Subprg_Inst,
+                  Get_Actual (Assoc), Act_Base, Act_Typ, Act_Off, Act_Dyn);
+               if Act_Typ.Kind in Type_Composite then
+                  --  TODO: reshape
+                  null;
+               end if;
+               Assocs (I) := (Formal => Formal,
+                              Form_Off => Form_Off,
+                              Act_Base => Act_Base,
+                              Act_Typ => Act_Typ,
+                              Act_Off => Act_Off,
+                              Act_Dyn => Act_Dyn);
+               if Inter_Kind = Iir_Kind_Interface_Variable_Declaration
+                 and then Get_Mode (Inter) /= Iir_In_Mode
+               then
+                  Cb_Val := Info_To_Valtyp
+                    (To_Target_Info (Act_Base, Act_Typ, Act_Off, Act_Dyn));
+                  Create_Object (Caller_Inst, Assoc, Cb_Val);
+               end if;
+               Static := Static and then Is_Static (Act_Base.Val);
+            end;
+            Assoc := Get_Chain (Assoc);
+         end loop;
+      end if;
+
+      --  4. If static: build mem, if in: build net, if out: build concat
+      if Static then
+         Res := Create_Value_Memory (Formal_Typ, Instance_Pool);
+         for I in Assocs'Range loop
+            declare
+               A : Assoc_Record renames Assocs (I);
+            begin
+               Copy_Memory (Get_Memory (Res) + A.Form_Off.Mem_Off,
+                            Get_Memory (A.Act_Base) + A.Act_Off.Mem_Off,
+                            A.Act_Typ.Sz);
+            end;
+         end loop;
+         declare
+            D : Destroy_Type;
+         begin
+            Destroy_Init (D, Subprg_Inst);
+            Destroy_Object (D, Inter);
+            Destroy_Finish (D);
+         end;
+      else
+         Res := No_Valtyp;
+         raise Internal_Error;
+      end if;
+
+      Free_Assoc_Array (Assocs);
+
+      return Res;
+   end Synth_Individual_Association;
 
    procedure Synth_Subprogram_Associations (Subprg_Inst : Synth_Instance_Acc;
                                             Caller_Inst : Synth_Instance_Acc;
@@ -2175,6 +2299,8 @@ package body Synth.Vhdl_Stmts is
       Inter : Node;
       Assoc : Node;
       Iterator : Association_Iterator;
+      Marker : Mark_Type;
+      Val : Valtyp;
    begin
       Set_Instance_Const (Subprg_Inst, True);
 
@@ -2184,34 +2310,28 @@ package body Synth.Vhdl_Stmts is
          Association_Iterate_Next (Iterator, Inter, Assoc);
          exit when Inter = Null_Node;
 
+         Mark_Expr_Pool (Marker);
+
          if Assoc /= Null_Node
            and then
            Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Individual
          then
-            --  1. Count number of assocs
-            --  2. Build array formal-value
-            --  3. For each assoc: synth value
-            --  4. If static: build mem, if in: build net, if out: build concat
-            raise Internal_Error;
+            Val := Synth_Individual_Association
+              (Subprg_Inst, Caller_Inst, Inter, Assoc);
          else
-            declare
-               Marker : Mark_Type;
-               Val : Valtyp;
-            begin
-               Mark_Expr_Pool (Marker);
-
-               Val := Synth_Subprogram_Association
-                 (Subprg_Inst, Caller_Inst, Inter, Assoc);
-               if Val = No_Valtyp then
-                  Set_Error (Subprg_Inst);
-                  exit;
-               end if;
+            Val := Synth_Subprogram_Association
+              (Subprg_Inst, Caller_Inst, Inter, Assoc);
+            if Val /= No_Valtyp then
                Val := Unshare (Val, Instance_Pool);
-               Create_Object (Subprg_Inst, Inter, Val);
-
-               Release_Expr_Pool (Marker);
-            end;
+            end if;
          end if;
+         if Val = No_Valtyp then
+            Set_Error (Subprg_Inst);
+            exit;
+         end if;
+         Create_Object (Subprg_Inst, Inter, Val);
+
+         Release_Expr_Pool (Marker);
       end loop;
    end Synth_Subprogram_Associations;
 
@@ -2264,14 +2384,17 @@ package body Synth.Vhdl_Stmts is
       Inter_Chain : Node;
       Assoc_Chain : Node)
    is
+      Marker : Mark_Type;
       Inter : Node;
       Assoc : Node;
       Assoc_Inter : Node;
+      Formal : Node;
       Val : Valtyp;
       Targ : Valtyp;
       W : Wire_Id;
       D : Destroy_Type;
    begin
+      Mark_Expr_Pool (Marker);
       Destroy_Init (D, Caller_Inst);
       Assoc := Assoc_Chain;
       Assoc_Inter := Inter_Chain;
@@ -2282,8 +2405,13 @@ package body Synth.Vhdl_Stmts is
            and then
            Get_Kind (Assoc) /= Iir_Kind_Association_Element_By_Individual
          then
+            Formal := Get_Formal (Assoc);
+            if Formal = Null_Node then
+               Val := Get_Value (Subprg_Inst, Inter);
+            else
+               Val := Synth_Expression (Subprg_Inst, Formal);
+            end if;
             Targ := Get_Value (Caller_Inst, Assoc);
-            Val := Get_Value (Subprg_Inst, Inter);
             if Targ.Val.Kind = Value_Dyn_Alias then
                Synth_Assignment_Memory
                  (Caller_Inst, Targ.Val.D_Obj,
@@ -2294,6 +2422,8 @@ package body Synth.Vhdl_Stmts is
                Synth_Assignment_Simple
                  (Caller_Inst, Targ, No_Value_Offsets, Val, Assoc);
             end if;
+
+            Release_Expr_Pool (Marker);
 
             --  Free wire used for out/inout interface variables.
             if Val.Val.Kind = Value_Wire then
