@@ -1296,7 +1296,15 @@ package body Simul.Vhdl_Simul is
          Get_Suspend_State_Statement (Inst, Stmt, Resume);
       end if;
 
-      Execute_Sequential_Statements_Inner (Process, Stmt, Resume);
+      if Stmt = Null_Node then
+         --  No statement, return.
+         if Get_Kind (Src) = Iir_Kind_Procedure_Body then
+            Finish_Procedure_Call (Process, Src, Stmt);
+         end if;
+      else
+         --  There are statements
+         Execute_Sequential_Statements_Inner (Process, Stmt, Resume);
+      end if;
    end Execute_Sequential_Statements;
 
    procedure Execute_Concurrent_Procedure_Call (Proc : Process_State_Acc)
