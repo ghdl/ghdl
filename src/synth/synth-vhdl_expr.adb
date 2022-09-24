@@ -666,21 +666,23 @@ package body Synth.Vhdl_Expr is
    begin
       case Get_Kind (Name) is
          when Iir_Kind_Simple_Name
-           | Iir_Kind_Selected_Name =>
+            | Iir_Kind_Selected_Name
+            | Iir_Kind_Attribute_Name =>
             return Synth_Name (Syn_Inst, Get_Named_Entity (Name));
          when Iir_Kind_Interface_Signal_Declaration
-           | Iir_Kind_Variable_Declaration
-           | Iir_Kind_Interface_Variable_Declaration
-           | Iir_Kind_Signal_Declaration
-           | Iir_Kind_Interface_Constant_Declaration
-           | Iir_Kind_Constant_Declaration
-           | Iir_Kind_Iterator_Declaration
-           | Iir_Kind_Free_Quantity_Declaration
-           | Iir_Kinds_Branch_Quantity_Declaration
-           | Iir_Kind_Object_Alias_Declaration
-           | Iir_Kind_Non_Object_Alias_Declaration
-           | Iir_Kind_File_Declaration
-           | Iir_Kind_Interface_File_Declaration =>
+            | Iir_Kind_Variable_Declaration
+            | Iir_Kind_Interface_Variable_Declaration
+            | Iir_Kind_Signal_Declaration
+            | Iir_Kind_Interface_Constant_Declaration
+            | Iir_Kind_Constant_Declaration
+            | Iir_Kind_Iterator_Declaration
+            | Iir_Kind_Free_Quantity_Declaration
+            | Iir_Kinds_Branch_Quantity_Declaration
+            | Iir_Kind_Object_Alias_Declaration
+            | Iir_Kind_Non_Object_Alias_Declaration
+            | Iir_Kind_File_Declaration
+            | Iir_Kind_Interface_File_Declaration
+            | Iir_Kind_Attribute_Value =>
             return Get_Value (Syn_Inst, Name);
          when Iir_Kind_Enumeration_Literal =>
             declare
@@ -2008,6 +2010,7 @@ package body Synth.Vhdl_Expr is
             end;
          when Iir_Kind_Simple_Name
             | Iir_Kind_Selected_Name
+            | Iir_Kind_Attribute_Name
             | Iir_Kind_Interface_Signal_Declaration --  For PSL.
             | Iir_Kind_Signal_Declaration   -- For PSL.
             | Iir_Kind_Object_Alias_Declaration   -- For PSL
