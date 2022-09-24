@@ -2179,65 +2179,71 @@ package body Synth.Vhdl_Stmts is
 
       --  3. For each assoc: synth value
       Inter_Typ := Get_Subtype_Object (Subprg_Inst, Get_Type (Inter));
-      if Inter_Kind = Iir_Kind_Interface_Constant_Declaration then
-         raise Internal_Error;
-      else
-         Formal_Typ := Synth_Subtype_Indication
-           (Caller_Inst, Get_Actual_Type (First_Assoc));
-         Formal_Typ := Unshare_Type_Instance (Formal_Typ, Inter_Typ);
 
-         Create_Object (Subprg_Inst, Inter, (Formal_Typ, null));
+      Formal_Typ := Synth_Subtype_Indication
+        (Caller_Inst, Get_Actual_Type (First_Assoc));
+      Formal_Typ := Unshare_Type_Instance (Formal_Typ, Inter_Typ);
 
-         Assoc := Get_Chain (First_Assoc);
-         Static := True;
-         for I in 1 .. Count loop
-            declare
-               Formal : Node;
-               Form_Base : Valtyp;
-               Form_Typ : Type_Acc;
-               Form_Off : Value_Offsets;
-               Dyn : Dyn_Name;
-               Act_Base : Valtyp;
-               Act_Typ : Type_Acc;
-               Act_Off : Value_Offsets;
-               Act_Dyn : Dyn_Name;
-               Cb_Val : Valtyp;
-            begin
-               Formal := Get_Formal (Assoc);
+      Create_Object (Subprg_Inst, Inter, (Formal_Typ, null));
+
+      Assoc := Get_Chain (First_Assoc);
+      Static := True;
+      for I in 1 .. Count loop
+         declare
+            Actual : constant Node := Get_Actual (Assoc);
+            Formal : constant Node := Get_Formal (Assoc);
+            Form_Base : Valtyp;
+            Form_Typ : Type_Acc;
+            Form_Off : Value_Offsets;
+            Dyn : Dyn_Name;
+            Act_Base : Valtyp;
+            Act_Typ : Type_Acc;
+            Act_Off : Value_Offsets;
+            Act_Dyn : Dyn_Name;
+            Cb_Val : Valtyp;
+         begin
+            Synth_Assignment_Prefix
+              (Caller_Inst, Subprg_Inst,
+               Formal, Form_Base, Form_Typ, Form_Off, Dyn);
+            pragma Assert (Dyn = No_Dyn_Name);
+            pragma Assert (Form_Base = (Formal_Typ, null));
+
+            if Inter_Kind = Iir_Kind_Interface_Constant_Declaration then
+               Act_Base := Synth_Expression (Caller_Inst, Actual);
+               Act_Typ := Act_Base.Typ;
+               Act_Off := No_Value_Offsets;
+               Act_Dyn := No_Dyn_Name;
+            else
                Synth_Assignment_Prefix
                  (Caller_Inst, Subprg_Inst,
-                  Formal, Form_Base, Form_Typ, Form_Off, Dyn);
-               pragma Assert (Dyn = No_Dyn_Name);
-               pragma Assert (Form_Base = (Formal_Typ, null));
-               Synth_Assignment_Prefix
-                 (Caller_Inst, Subprg_Inst,
-                  Get_Actual (Assoc), Act_Base, Act_Typ, Act_Off, Act_Dyn);
-               if Get_Actual_Conversion (Assoc) /= Null_Node then
-                  --  TODO
-                  raise Internal_Error;
-               end if;
-               if Act_Typ.Kind in Type_Composite then
-                  --  TODO: reshape
-                  null;
-               end if;
-               Assocs (I) := (Formal => Formal,
-                              Form_Off => Form_Off,
-                              Act_Base => Act_Base,
-                              Act_Typ => Act_Typ,
-                              Act_Off => Act_Off,
-                              Act_Dyn => Act_Dyn);
-               if Inter_Kind = Iir_Kind_Interface_Variable_Declaration
-                 and then Get_Mode (Inter) /= Iir_In_Mode
-               then
-                  Cb_Val := Info_To_Valtyp
-                    (To_Target_Info (Act_Base, Act_Typ, Act_Off, Act_Dyn));
-                  Create_Object (Caller_Inst, Assoc, Cb_Val);
-               end if;
-               Static := Static and then Is_Static (Act_Base.Val);
-            end;
-            Assoc := Get_Chain (Assoc);
-         end loop;
-      end if;
+                  Actual, Act_Base, Act_Typ, Act_Off, Act_Dyn);
+            end if;
+            if Get_Actual_Conversion (Assoc) /= Null_Node then
+               --  TODO
+               raise Internal_Error;
+            end if;
+            if Act_Typ.Kind in Type_Composite then
+               --  TODO: reshape
+               null;
+            end if;
+            Assocs (I) := (Formal => Formal,
+                           Form_Off => Form_Off,
+                           Act_Base => Act_Base,
+                           Act_Typ => Act_Typ,
+                           Act_Off => Act_Off,
+                           Act_Dyn => Act_Dyn);
+            if Inter_Kind = Iir_Kind_Interface_Variable_Declaration
+              and then Get_Mode (Inter) /= Iir_In_Mode
+            then
+               --  Copy-back object.
+               Cb_Val := Info_To_Valtyp
+                 (To_Target_Info (Act_Base, Act_Typ, Act_Off, Act_Dyn));
+               Create_Object (Caller_Inst, Assoc, Cb_Val);
+            end if;
+            Static := Static and then Is_Static (Act_Base.Val);
+         end;
+         Assoc := Get_Chain (Assoc);
+      end loop;
 
       --  4. If static: build mem, if in: build net, if out: build concat
       if Static then
