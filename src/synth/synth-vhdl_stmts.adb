@@ -3558,11 +3558,11 @@ package body Synth.Vhdl_Stmts is
                  | Iir_Kind_Assertion_Statement
                  | Iir_Kind_Concurrent_Assertion_Statement
                  | Iir_Kind_Psl_Assert_Directive =>
-                  Put_Err ("Assertion violation.");
+                  Put_Line_Err ("Assertion violation.");
                when Iir_Kind_Psl_Assume_Directive =>
-                  Put_Err ("Assumption violation.");
+                  Put_Line_Err ("Assumption violation.");
                when Iir_Kind_Psl_Cover_Directive =>
-                  Put_Err ("sequence coveredr");
+                  Put_Line_Err ("sequence covered.");
                when others =>
                   raise Internal_Error;
             end case;
