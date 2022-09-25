@@ -197,6 +197,7 @@ package body Elab.Vhdl_Stmts is
    procedure Elab_Block_Statement (Syn_Inst : Synth_Instance_Acc; Blk : Node)
    is
       Hdr : constant Node := Get_Block_Header (Blk);
+      Guard : constant Node := Get_Guard_Decl (Blk);
       Blk_Inst : Synth_Instance_Acc;
       Assoc : Node;
       Inter : Node;
@@ -207,9 +208,8 @@ package body Elab.Vhdl_Stmts is
       Blk_Inst := Make_Elab_Instance (Syn_Inst, Blk, Null_Iir);
       Create_Sub_Instance (Syn_Inst, Blk, Blk_Inst);
 
-      --  No support for guard.
-      if Get_Guard_Decl (Blk) /= Null_Node then
-         raise Internal_Error;
+      if Guard /= Null_Node then
+         Create_Signal (Blk_Inst, Guard, Boolean_Type, null);
       end if;
 
       if Hdr /= Null_Node then

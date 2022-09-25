@@ -2222,6 +2222,97 @@ package body Simul.Vhdl_Simul is
       Create_Signal (E.Val, 0, Sig_Type, E.Typ, E.Nbr_Sources.all, False);
    end Create_User_Signal;
 
+   type Guard_Instance_Type is record
+      Instance : Synth_Instance_Acc;
+      Guard : Iir;
+   end record;
+
+   type Guard_Instance_Acc is access Guard_Instance_Type;
+
+   function Guard_Func (Data : System.Address) return Ghdl_B1;
+   pragma Convention (C, Guard_Func);
+
+   function Guard_Func (Data : System.Address) return Ghdl_B1
+   is
+      use Areapools;
+
+      Guard : Guard_Instance_Type;
+      pragma Import (Ada, Guard);
+      for Guard'Address use Data;
+
+      Val : Boolean;
+
+      Prev_Instance_Pool : constant Areapool_Acc := Instance_Pool;
+   begin
+      Instance_Pool := Process_Pool'Access;
+
+      Val := Execute_Condition
+        (Guard.Instance, Get_Guard_Expression (Guard.Guard));
+
+      Instance_Pool := Prev_Instance_Pool;
+
+      return Ghdl_B1'Val (Boolean'Pos (Val));
+   end Guard_Func;
+
+   procedure Add_Guard_Sensitivity (Typ : Type_Acc; Sig : Memory_Ptr) is
+   begin
+      case Typ.Kind is
+         when Type_Scalars =>
+            Grt.Signals.Ghdl_Signal_Guard_Dependence (Read_Sig (Sig));
+         when Type_Vector
+           | Type_Array =>
+            declare
+               Len : constant Uns32 := Typ.Abound.Len;
+            begin
+               for I in 1 .. Len loop
+                  Add_Guard_Sensitivity
+                    (Typ.Arr_El, Sig_Index (Sig, (Len - I) * Typ.Arr_El.W));
+               end loop;
+            end;
+         when Type_Record =>
+            for I in Typ.Rec.E'Range loop
+               Add_Guard_Sensitivity
+                 (Typ.Rec.E (I).Typ,
+                  Sig_Index (Sig, Typ.Rec.E (I).Offs.Net_Off));
+            end loop;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Add_Guard_Sensitivity;
+
+   procedure Create_Guard_Signal (Idx : Signal_Index_Type)
+   is
+      E : Signal_Entry renames Signals_Table.Table (Idx);
+
+      Dep_List : Iir_List;
+      Dep_It : List_Iterator;
+      S : Ghdl_Signal_Ptr;
+      Data : Guard_Instance_Acc;
+   begin
+      Data := new Guard_Instance_Type'(Instance => E.Inst, Guard => E.Decl);
+
+      S := Grt.Signals.Ghdl_Signal_Create_Guard
+        (To_Ghdl_Value_Ptr (To_Address (E.Val)),
+         Data.all'Address, Guard_Func'Access);
+      Write_Sig (E.Sig, S);
+
+      Dep_List := Get_Guard_Sensitivity_List (E.Decl);
+      Dep_It := List_Iterate (Dep_List);
+      while Is_Valid (Dep_It) loop
+         declare
+            El : constant Node := Get_Element (Dep_It);
+            Sig_Mem : Memory_Ptr;
+            Info : Target_Info;
+         begin
+            Info := Synth_Target (E.Inst, El);
+            Sig_Mem := Signals_Table.Table (Info.Obj.Val.S).Sig;
+            Add_Guard_Sensitivity
+              (Info.Targ_Type, Sig_Index (Sig_Mem, Info.Off.Net_Off));
+         end;
+         Next (Dep_It);
+      end loop;
+   end Create_Guard_Signal;
+
    function Alloc_Signal_Memory (Vtype : Type_Acc) return Memory_Ptr
    is
       function To_Memory_Ptr is new Ada.Unchecked_Conversion
@@ -2240,8 +2331,7 @@ package body Simul.Vhdl_Simul is
       E.Sig := Alloc_Signal_Memory (E.Typ);
       case E.Kind is
          when Mode_Guard =>
-            --  Create_Guard_Signal (E.Instance, E.Sig, E.Val, E.Decl);
-            raise Internal_Error;
+            Create_Guard_Signal (Idx);
          when Mode_Stable | Mode_Quiet | Mode_Transaction =>
             -- Create_Implicit_Signal
             --  (E.Sig, E.Val, E.Time, E.Prefix, E.Kind);
@@ -2487,11 +2577,11 @@ package body Simul.Vhdl_Simul is
       Dst_Val := Create_Value_Memory (Val, Current_Pool);
       Dst_Val := Synth_Association_Conversion
         (Conv.Inst, Conv.Func, Dst_Val, Conv.Dst_Typ);
-      pragma Assert (Dst_Val.Typ.Wkind = Wkind_Sim);
-
       if Dst_Val = No_Valtyp then
          Grt.Errors.Fatal_Error;
       end if;
+
+      pragma Assert (Dst_Val.Typ.Wkind = Wkind_Sim);
       Convert_Type_Width (Dst_Val.Typ);
       Dst := Synth.Vhdl_Expr.Get_Value_Memtyp (Dst_Val);
 

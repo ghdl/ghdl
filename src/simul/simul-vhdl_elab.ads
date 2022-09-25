@@ -52,10 +52,12 @@ package Simul.Vhdl_Elab is
    type Process_Index_Type is new Nat32;
    type Driver_Index_Type is new Nat32;
    subtype Sensitivity_Index_Type is Driver_Index_Type;
+   type Disconnect_Index_Type is new Nat32;
 
    No_Process_Index : constant Process_Index_Type := 0;
    No_Driver_Index : constant Driver_Index_Type := 0;
    No_Sensitivity_Index : constant Sensitivity_Index_Type := 0;
+   No_Disconnect_Index : constant Disconnect_Index_Type := 0;
 
    type Proc_Record_Type is record
       Proc : Node;
@@ -161,6 +163,7 @@ package Simul.Vhdl_Elab is
          when Mode_Signal_User =>
             Drivers : Driver_Index_Type;
             Connect : Connect_Index_Type;
+            Disconnect : Disconnect_Index_Type;
             Nbr_Sources : Nbr_Sources_Arr_Acc;
          when Mode_Quiet | Mode_Stable | Mode_Delayed
            | Mode_Transaction =>
@@ -209,6 +212,20 @@ package Simul.Vhdl_Elab is
       Table_Index_Type => Sensitivity_Index_Type,
       Table_Low_Bound => No_Sensitivity_Index + 1,
       Table_Initial => 128);
+
+   type Disconnect_Entry is record
+      Sig : Signal_Index_Type;
+      Off : Value_Offsets;
+      Typ : Type_Acc;
+      Prev : Disconnect_Index_Type;
+      Val : Std_Time;
+   end record;
+
+   package Disconnect_Table is new Tables
+     (Table_Component_Type => Disconnect_Entry,
+      Table_Index_Type => Disconnect_Index_Type,
+      Table_Low_Bound => No_Disconnect_Index + 1,
+      Table_Initial => 8);
 
    type Scalar_Quantity_Index is new Uns32;
    No_Scalar_Quantity : constant Scalar_Quantity_Index := 0;
