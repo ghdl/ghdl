@@ -2003,8 +2003,14 @@ package body Synth.Vhdl_Stmts is
          Inter_Typ := Get_Subtype_Object (Subprg_Inst, Inter_Type);
       end if;
 
-      if Get_Kind (Inter) = Iir_Kind_Interface_Constant_Declaration then
-         --  Constants: simply synth the expression
+      if Get_Kind (Inter) = Iir_Kind_Interface_Constant_Declaration
+        or else (Get_Kind (Inter) = Iir_Kind_Interface_Variable_Declaration
+                   and then Get_Mode (Inter) = Iir_In_Mode
+                   and then Inter_Typ.Kind < Type_File)
+      then
+         --  Constants: simply synth the expression.
+         --  Same for IN variable interface as the actual may be a default
+         --   value which is any expression.
          Val := Synth_Expression_With_Type (Actual_Inst, Actual, Inter_Typ);
          if Val = No_Valtyp then
             return Val;
@@ -2022,6 +2028,7 @@ package body Synth.Vhdl_Stmts is
          then
             Set_Instance_Const (Subprg_Inst, False);
          end if;
+         return Val;
       else
          --  Actual is a reference.
          Info := Synth_Target (Caller_Inst, Actual);
@@ -2029,8 +2036,7 @@ package body Synth.Vhdl_Stmts is
 
       case Iir_Kinds_Interface_Object_Declaration (Get_Kind (Inter)) is
          when Iir_Kind_Interface_Constant_Declaration =>
-            --  Pass by copy.
-            return Val;
+            raise Internal_Error;
          when Iir_Kind_Interface_Variable_Declaration =>
             --  Always pass by value.
             if Is_Copyback_Parameter (Inter) then
