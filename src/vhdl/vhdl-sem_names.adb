@@ -5041,7 +5041,8 @@ package body Vhdl.Sem_Names is
            | Iir_Kind_Library_Declaration
            | Iir_Kind_Foreign_Module
            | Iir_Kinds_Subprogram_Declaration
-           | Iir_Kind_Component_Declaration =>
+           | Iir_Kind_Component_Declaration
+           | Iir_Kind_Architecture_Body =>
             Res := Finish_Sem_Name (Name, Res);
             pragma Assert (Get_Kind (Res) in Iir_Kinds_Denoting_Name);
             return Res;
