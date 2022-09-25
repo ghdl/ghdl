@@ -605,6 +605,12 @@ package body Synth.Vhdl_Eval is
                Res : Memtyp;
             begin
                Check_Matching_Bounds (Le_Typ, Re_Typ, Expr);
+               if L_Len = 0 and R_Len = 0 then
+                  --  LRM08 9.2.5 Adding operators
+                  --  If both operands are null arrays, then the result of the
+                  --  concatenation is the right operand.
+                  return Right;
+               end if;
                Bnd := Elab.Vhdl_Types.Create_Bounds_From_Length
                  (Get_Uarray_Index (Res_Typ).Drange, L_Len + R_Len);
                El_Typ := Unshare_Type_Expr (Le_Typ,
