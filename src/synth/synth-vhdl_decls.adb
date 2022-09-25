@@ -177,12 +177,14 @@ package body Synth.Vhdl_Decls is
       end if;
       Val := Synth_Expression_With_Type
         (Syn_Inst, Get_Default_Value (Decl), Obj_Type);
+      if Val /= No_Valtyp then
+         Val := Synth_Subtype_Conversion (Syn_Inst, Val, Obj_Type, True, Decl);
+      end if;
       if Val = No_Valtyp then
          Set_Error (Syn_Inst);
          Release_Expr_Pool (Marker);
          return;
       end if;
-      Val := Synth_Subtype_Conversion (Syn_Inst, Val, Obj_Type, True, Decl);
       --  For constant functions, the value must be constant.
       pragma Assert (not Get_Instance_Const (Syn_Inst)
                        or else Is_Static (Val.Val));

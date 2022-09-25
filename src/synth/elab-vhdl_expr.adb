@@ -33,6 +33,7 @@ with Elab.Vhdl_Errors; use Elab.Vhdl_Errors;
 
 with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
 with Synth.Vhdl_Eval; use Synth.Vhdl_Eval;
+with Synth.Errors; use Synth.Errors;
 
 with Grt.Types;
 with Grt.To_Strings;
@@ -424,9 +425,9 @@ package body Elab.Vhdl_Expr is
                                  Str : Node;
                                  Str_Typ : Type_Acc) return Valtyp
    is
-      pragma Unreferenced (Syn_Inst);
       pragma Assert (Get_Kind (Str) = Iir_Kind_String_Literal8);
       Id : constant String8_Id := Get_String8_Id (Str);
+      Len : constant Int32 := Get_String_Length (Str);
 
       Str_Type : constant Node := Get_Type (Str);
       El_Type : Type_Acc;
@@ -439,10 +440,15 @@ package body Elab.Vhdl_Expr is
          when Type_Vector
            | Type_Array =>
             Bounds := Str_Typ.Abound;
+            if Bounds.Len /= Uns32 (Len) then
+               Error_Msg_Synth
+                 (Syn_Inst, Str, "string length doesn't match constraints");
+               return No_Valtyp;
+            end if;
          when Type_Unbounded_Vector
             | Type_Unbounded_Array =>
             Bounds := Synth_Bounds_From_Length
-              (Get_Index_Type (Str_Type, 0), Get_String_Length (Str));
+              (Get_Index_Type (Str_Type, 0), Len);
          when others =>
             raise Internal_Error;
       end case;

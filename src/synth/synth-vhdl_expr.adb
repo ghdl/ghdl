@@ -1187,34 +1187,25 @@ package body Synth.Vhdl_Expr is
       Off := (0, 0);
       Inp := No_Net;
 
-      case Get_Kind (Expr) is
-         when Iir_Kind_Range_Expression =>
-            --  As the range may be dynamic, cannot use synth_discrete_range.
-            Left := Synth_Expression_With_Basetype
-              (Syn_Inst, Get_Left_Limit (Expr));
-            Right := Synth_Expression_With_Basetype
-              (Syn_Inst, Get_Right_Limit (Expr));
-            Dir := Get_Direction (Expr);
-
-         when Iir_Kind_Range_Array_Attribute
-           | Iir_Kind_Reverse_Range_Array_Attribute
-           | Iir_Kinds_Denoting_Name =>
-            declare
-               Rng : Discrete_Range_Type;
-            begin
-               Synth_Discrete_Range (Syn_Inst, Expr, Rng);
-               Synth_Slice_Const_Suffix (Syn_Inst, Expr,
-                                         Name, Pfx_Bnd,
-                                         Rng.Left, Rng.Right, Rng.Dir,
-                                         El_Typ, Res_Bnd, Off);
-               return;
-            end;
-         when others =>
-            Error_Msg_Synth
-              (Syn_Inst, Expr, "only range expression supported for slices");
-            Res_Bnd := (Dir => Dir_To, Left => 1, Right => 0, Len => 0);
+      if Get_Kind (Expr) = Iir_Kind_Range_Expression then
+         --  As the range may be dynamic, cannot use synth_discrete_range.
+         Left := Synth_Expression_With_Basetype
+           (Syn_Inst, Get_Left_Limit (Expr));
+         Right := Synth_Expression_With_Basetype
+           (Syn_Inst, Get_Right_Limit (Expr));
+         Dir := Get_Direction (Expr);
+      else
+         declare
+            Rng : Discrete_Range_Type;
+         begin
+            Synth_Discrete_Range (Syn_Inst, Expr, Rng);
+            Synth_Slice_Const_Suffix (Syn_Inst, Expr,
+                                      Name, Pfx_Bnd,
+                                      Rng.Left, Rng.Right, Rng.Dir,
+                                      El_Typ, Res_Bnd, Off);
             return;
-      end case;
+         end;
+      end if;
 
       if Is_Static_Val (Left.Val) and then Is_Static_Val (Right.Val) then
          Synth_Slice_Const_Suffix (Syn_Inst, Expr,
@@ -1395,13 +1386,17 @@ package body Synth.Vhdl_Expr is
    function Synth_Type_Conversion (Syn_Inst : Synth_Instance_Acc;
                                    Val : Valtyp;
                                    Conv_Typ : Type_Acc;
-                                   Loc : Node) return Valtyp is
+                                   Loc : Node) return Valtyp
+   is
+      Res : Valtyp;
    begin
       case Conv_Typ.Kind is
          when Type_Discrete =>
             if Val.Typ.Kind = Type_Discrete then
                --  Int to int.
-               return Val;
+               Res := Synth_Subtype_Conversion
+                 (Syn_Inst, Val, Conv_Typ, False, Loc);
+               return Res;
             elsif Val.Typ.Kind = Type_Float then
                pragma Assert (Is_Static (Val.Val));
                declare
@@ -1429,8 +1424,9 @@ package body Synth.Vhdl_Expr is
             end if;
          when Type_Float =>
             if Is_Static (Val.Val) then
-               return Create_Value_Float
+               Res := Create_Value_Float
                  (Fp64 (Read_Discrete (Val)), Conv_Typ);
+               return Res;
             else
                Error_Msg_Synth (Syn_Inst, Loc,
                                 "unhandled type conversion (to float)");
