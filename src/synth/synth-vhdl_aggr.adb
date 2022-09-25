@@ -23,7 +23,6 @@ with Netlists; use Netlists;
 with Netlists.Utils; use Netlists.Utils;
 with Netlists.Builders; use Netlists.Builders;
 
-with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
 
 with Elab.Memtype; use Elab.Memtype;
@@ -36,7 +35,8 @@ with Synth.Vhdl_Context; use Synth.Vhdl_Context;
 package body Synth.Vhdl_Aggr is
    type Stride_Array is array (Dim_Type range <>) of Nat32;
 
-   procedure Get_Index_Offset (Index : Int64;
+   procedure Get_Index_Offset (Syn_Inst : Synth_Instance_Acc;
+                               Index : Int64;
                                Bounds : Bound_Type;
                                Expr : Iir;
                                Off : out Uns32;
@@ -61,18 +61,20 @@ package body Synth.Vhdl_Aggr is
                return;
             end if;
       end case;
-      Error_Msg_Synth (+Expr, "index out of bounds");
+      Error_Msg_Synth (Syn_Inst, Expr, "index out of bounds");
       Off := 0;
       Err_P := True;
    end Get_Index_Offset;
 
-   procedure Get_Index_Offset (Index : Valtyp;
+   procedure Get_Index_Offset (Syn_Inst : Synth_Instance_Acc;
+                               Index : Valtyp;
                                Bounds : Bound_Type;
                                Expr : Iir;
                                Off : out Uns32;
                                Err_P : out Boolean) is
    begin
-      Get_Index_Offset (Read_Discrete (Index), Bounds, Expr, Off, Err_P);
+      Get_Index_Offset
+        (Syn_Inst, Read_Discrete (Index), Bounds, Expr, Off, Err_P);
    end Get_Index_Offset;
 
    function Fill_Stride (Typ : Type_Acc) return Stride_Array is
@@ -198,7 +200,7 @@ package body Synth.Vhdl_Aggr is
             pragma Assert (Stride = 1);
             if Bound.Len /= Width (Str_Len) then
                Error_Msg_Synth
-                 (+Aggr, "string length doesn't match bound length");
+                 (Syn_Inst, Aggr, "string length doesn't match bound length");
                Err_P := True;
             end if;
             for I in 1 .. Pos32'Min (Pos32 (Str_Len), Pos32 (Bound.Len)) loop
@@ -220,7 +222,8 @@ package body Synth.Vhdl_Aggr is
                when Iir_Kind_Choice_By_None =>
                   if Get_Element_Type_Flag (Assoc) then
                      if Pos >= First_Pos + Stride * Nat32 (Bound.Len) then
-                        Error_Msg_Synth (+Assoc, "element out of array bound");
+                        Error_Msg_Synth
+                          (Syn_Inst, Assoc, "element out of array bound");
                      else
                         Set_Elem (Pos);
                         Pos := Pos + Stride;
@@ -236,7 +239,7 @@ package body Synth.Vhdl_Aggr is
                         pragma Assert (Stride = 1);
                         if Pos - First_Pos > Nat32 (Bound.Len - Val_Len) then
                            Error_Msg_Synth
-                             (+Assoc, "element out of array bound");
+                             (Syn_Inst, Assoc, "element out of array bound");
                         else
                            Set_Vector (Pos, Nat32 (Val_Len), Val);
                            Pos := Pos + Nat32 (Val_Len);
@@ -267,9 +270,10 @@ package body Synth.Vhdl_Aggr is
                   begin
                      Idx := Synth_Expression (Syn_Inst, Ch);
                      if not Is_Static (Idx.Val) then
-                        Error_Msg_Synth (+Ch, "choice is not static");
+                        Error_Msg_Synth (Syn_Inst, Ch, "choice is not static");
                      else
-                        Get_Index_Offset (Idx, Bound, Ch, Off, Sub_Err);
+                        Get_Index_Offset
+                          (Syn_Inst, Idx, Bound, Ch, Off, Sub_Err);
                         Err_P := Err_P or Sub_Err;
                         exit when Err_P;
                         Set_Elem (First_Pos + Nat32 (Off) * Stride);
@@ -290,7 +294,8 @@ package body Synth.Vhdl_Aggr is
                            Get_Subtype_Object (Syn_Inst,
                                                Get_Base_Type (Get_Type (Ch))));
                         while In_Range (Rng, Read_Discrete (Val)) loop
-                           Get_Index_Offset (Val, Bound, Ch, Off, Sub_Err);
+                           Get_Index_Offset
+                             (Syn_Inst, Val, Bound, Ch, Off, Sub_Err);
                            Err_P := Err_P or Sub_Err;
                            exit when Err_P;
                            Set_Elem (First_Pos + Nat32 (Off) * Stride);
@@ -301,7 +306,8 @@ package body Synth.Vhdl_Aggr is
                         --  The direction must be the same.
                         if Rng.Dir /= Bound.Dir then
                            Error_Msg_Synth
-                             (+Assoc, "direction of range does not match "
+                             (Syn_Inst, Assoc,
+                              "direction of range does not match "
                                 & "direction of array");
                         end if;
                         --  FIXME: can the expression be unbounded ?
@@ -311,10 +317,11 @@ package body Synth.Vhdl_Aggr is
                         Rng_Len := Get_Range_Length (Rng);
                         if Get_Bound_Length (Val.Typ) /= Rng_Len then
                            Error_Msg_Synth
-                             (+Value, "length doesn't match range");
+                             (Syn_Inst, Value, "length doesn't match range");
                         end if;
                         pragma Assert (Stride = 1);
-                        Get_Index_Offset (Rng.Left, Bound, Ch, Off, Sub_Err);
+                        Get_Index_Offset
+                          (Syn_Inst, Rng.Left, Bound, Ch, Off, Sub_Err);
                         Err_P := Err_P or Sub_Err;
                         exit when Err_P;
                         Set_Vector
@@ -323,7 +330,7 @@ package body Synth.Vhdl_Aggr is
                   end;
                when others =>
                   Error_Msg_Synth
-                    (+Assoc, "unhandled association form");
+                    (Syn_Inst, Assoc, "unhandled association form");
             end case;
             Assoc := Get_Chain (Assoc);
             exit when Is_Null (Assoc);
@@ -333,7 +340,8 @@ package body Synth.Vhdl_Aggr is
       end loop;
 
       if not Err_P and then Nbr_Els /= Nat32 (Bound.Len) then
-         Error_Msg_Synth (+Aggr, "aggregate length doesn't match its bound");
+         Error_Msg_Synth
+           (Syn_Inst, Aggr, "aggregate length doesn't match its bound");
          Err_P := True;
       end if;
    end Fill_Array_Aggregate;
@@ -395,7 +403,7 @@ package body Synth.Vhdl_Aggr is
                   Set_Elem (Pos);
                when others =>
                   Error_Msg_Synth
-                    (+Assoc, "unhandled association form");
+                    (Syn_Inst, Assoc, "unhandled association form");
             end case;
             Assoc := Get_Chain (Assoc);
             exit when Is_Null (Assoc);

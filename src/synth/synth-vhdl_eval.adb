@@ -87,14 +87,15 @@ package body Synth.Vhdl_Eval is
       return Create_Vec_Type_By_Length (Prev.W, Prev.Arr_El);
    end Create_Res_Bound;
 
-   function Eval_Vector_Dyadic (Left, Right : Memtyp;
+   function Eval_Vector_Dyadic (Inst : Synth_Instance_Acc;
+                                Left, Right : Memtyp;
                                 Op : Table_2d;
                                 Loc : Syn_Src) return Memtyp
    is
       Res : Memtyp;
    begin
       if Left.Typ.W /= Right.Typ.W then
-         Error_Msg_Synth (+Loc, "length of operands mismatch");
+         Error_Msg_Synth (Inst, Loc, "length of operands mismatch");
          return Null_Memtyp;
       end if;
 
@@ -141,14 +142,15 @@ package body Synth.Vhdl_Eval is
       return Create_Memory_U8 (Std_Ulogic'Pos (Res), Left.Typ);
    end Eval_Logic_Scalar;
 
-   function Eval_Vector_Match (Left, Right : Memtyp;
+   function Eval_Vector_Match (Inst : Synth_Instance_Acc;
+                               Left, Right : Memtyp;
                                Neg : Boolean;
                                Loc : Syn_Src) return Memtyp
    is
       Res : Std_Ulogic;
    begin
       if Left.Typ.W /= Right.Typ.W then
-         Error_Msg_Synth (+Loc, "length of operands mismatch");
+         Error_Msg_Synth (Inst, Loc, "length of operands mismatch");
          return Null_Memtyp;
       end if;
 
@@ -168,7 +170,8 @@ package body Synth.Vhdl_Eval is
       return Create_Memory_U8 (Std_Ulogic'Pos (Res), Left.Typ.Arr_El);
    end Eval_Vector_Match;
 
-   function Eval_TF_Vector_Dyadic (Left, Right : Memtyp;
+   function Eval_TF_Vector_Dyadic (Inst : Synth_Instance_Acc;
+                                   Left, Right : Memtyp;
                                    Op : Tf_Table_2d;
                                    Loc : Syn_Src) return Memtyp
    is
@@ -176,7 +179,7 @@ package body Synth.Vhdl_Eval is
       L, R : Boolean;
    begin
       if Left.Typ.Sz /= Right.Typ.Sz then
-         Error_Msg_Synth (+Loc, "length mismatch");
+         Error_Msg_Synth (Inst, Loc, "length mismatch");
          return Null_Memtyp;
       end if;
 
@@ -389,14 +392,16 @@ package body Synth.Vhdl_Eval is
       return Res;
    end Execute_Shift_Operator;
 
-   procedure Check_Integer_Overflow
-     (Val : in out Int64; Typ : Type_Acc; Loc : Syn_Src) is
+   procedure Check_Integer_Overflow (Inst : Synth_Instance_Acc;
+                                     Val : in out Int64;
+                                     Typ : Type_Acc;
+                                     Loc : Syn_Src) is
    begin
       pragma Assert (Typ.Kind = Type_Discrete);
       case Typ.Sz is
          when 4 =>
             if Val < -2**31 or Val >= 2**31 then
-               Error_Msg_Synth (+Loc, "integer overflow");
+               Error_Msg_Synth (Inst, Loc, "integer overflow");
                --  Just keep the lower 32bit (and sign extend).
                Val := Int64
                  (To_Int32 (Uns32 (To_Uns64 (Val) and 16#ffff_ffff#)));
@@ -413,7 +418,8 @@ package body Synth.Vhdl_Eval is
       return Create_Memory_U8 (Boolean'Pos (V), Boolean_Type);
    end Create_Memory_Boolean;
 
-   function Eval_Static_Dyadic_Predefined (Imp : Node;
+   function Eval_Static_Dyadic_Predefined (Inst : Synth_Instance_Acc;
+                                           Imp : Node;
                                            Res_Typ : Type_Acc;
                                            Left : Memtyp;
                                            Right : Memtyp;
@@ -439,7 +445,7 @@ package body Synth.Vhdl_Eval is
                Res : Int64;
             begin
                Res := Read_Discrete (Left) + Read_Discrete (Right);
-               Check_Integer_Overflow (Res, Res_Typ, Expr);
+               Check_Integer_Overflow (Inst, Res, Res_Typ, Expr);
                return Create_Memory_Discrete (Res, Res_Typ);
             end;
          when Iir_Predefined_Integer_Minus
@@ -448,7 +454,7 @@ package body Synth.Vhdl_Eval is
                Res : Int64;
             begin
                Res := Read_Discrete (Left) - Read_Discrete (Right);
-               Check_Integer_Overflow (Res, Res_Typ, Expr);
+               Check_Integer_Overflow (Inst, Res, Res_Typ, Expr);
                return Create_Memory_Discrete (Res, Res_Typ);
             end;
          when Iir_Predefined_Integer_Mul
@@ -458,7 +464,7 @@ package body Synth.Vhdl_Eval is
                Res : Int64;
             begin
                Res := Read_Discrete (Left) * Read_Discrete (Right);
-               Check_Integer_Overflow (Res, Res_Typ, Expr);
+               Check_Integer_Overflow (Inst, Res, Res_Typ, Expr);
                return Create_Memory_Discrete (Res, Res_Typ);
             end;
          when Iir_Predefined_Integer_Div
@@ -468,7 +474,7 @@ package body Synth.Vhdl_Eval is
                Res : Int64;
             begin
                Res := Read_Discrete (Left) / Read_Discrete (Right);
-               Check_Integer_Overflow (Res, Res_Typ, Expr);
+               Check_Integer_Overflow (Inst, Res, Res_Typ, Expr);
                return Create_Memory_Discrete (Res, Res_Typ);
             end;
          when Iir_Predefined_Integer_Mod =>
@@ -476,7 +482,7 @@ package body Synth.Vhdl_Eval is
                Res : Int64;
             begin
                Res := Read_Discrete (Left) mod Read_Discrete (Right);
-               Check_Integer_Overflow (Res, Res_Typ, Expr);
+               Check_Integer_Overflow (Inst, Res, Res_Typ, Expr);
                return Create_Memory_Discrete (Res, Res_Typ);
             end;
          when Iir_Predefined_Integer_Rem =>
@@ -484,7 +490,7 @@ package body Synth.Vhdl_Eval is
                Res : Int64;
             begin
                Res := Read_Discrete (Left) rem Read_Discrete (Right);
-               Check_Integer_Overflow (Res, Res_Typ, Expr);
+               Check_Integer_Overflow (Inst, Res, Res_Typ, Expr);
                return Create_Memory_Discrete (Res, Res_Typ);
             end;
 
@@ -499,7 +505,7 @@ package body Synth.Vhdl_Eval is
                Rv := Std_Integer (Read_Discrete (Right));
                Grt.Arith.Exp_I64 (Lv, Rv, Res, Ovf);
                if Ovf then
-                  Error_Msg_Synth (+Expr, "exponentiation overflow");
+                  Error_Msg_Synth (Inst, Expr, "exponentiation overflow");
                   Res := 0;
                end if;
                return Create_Memory_Discrete (Int64 (Res), Res_Typ);
@@ -775,17 +781,17 @@ package body Synth.Vhdl_Eval is
               (Left, Read_Discrete (Right), 0, Def);
 
          when Iir_Predefined_TF_Array_And =>
-            return Eval_TF_Vector_Dyadic (Left, Right, Tf_2d_And, Expr);
+            return Eval_TF_Vector_Dyadic (Inst, Left, Right, Tf_2d_And, Expr);
          when Iir_Predefined_TF_Array_Or =>
-            return Eval_TF_Vector_Dyadic (Left, Right, Tf_2d_Or, Expr);
+            return Eval_TF_Vector_Dyadic (Inst, Left, Right, Tf_2d_Or, Expr);
          when Iir_Predefined_TF_Array_Xor =>
-            return Eval_TF_Vector_Dyadic (Left, Right, Tf_2d_Xor, Expr);
+            return Eval_TF_Vector_Dyadic (Inst, Left, Right, Tf_2d_Xor, Expr);
          when Iir_Predefined_TF_Array_Nand =>
-            return Eval_TF_Vector_Dyadic (Left, Right, Tf_2d_Nand, Expr);
+            return Eval_TF_Vector_Dyadic (Inst, Left, Right, Tf_2d_Nand, Expr);
          when Iir_Predefined_TF_Array_Nor =>
-            return Eval_TF_Vector_Dyadic (Left, Right, Tf_2d_Nor, Expr);
+            return Eval_TF_Vector_Dyadic (Inst, Left, Right, Tf_2d_Nor, Expr);
          when Iir_Predefined_TF_Array_Xnor =>
-            return Eval_TF_Vector_Dyadic (Left, Right, Tf_2d_Xnor, Expr);
+            return Eval_TF_Vector_Dyadic (Inst, Left, Right, Tf_2d_Xnor, Expr);
 
          when Iir_Predefined_TF_Element_Array_Or =>
             return Eval_TF_Array_Element (Left, Right, Tf_2d_Or);
@@ -820,32 +826,32 @@ package body Synth.Vhdl_Eval is
          when Iir_Predefined_Ieee_1164_Vector_And
            | Iir_Predefined_Ieee_Numeric_Std_And_Uns_Uns
            | Iir_Predefined_Ieee_Numeric_Std_And_Sgn_Sgn =>
-            return Eval_Vector_Dyadic (Left, Right, And_Table, Expr);
+            return Eval_Vector_Dyadic (Inst, Left, Right, And_Table, Expr);
 
          when Iir_Predefined_Ieee_1164_Vector_Nand
            | Iir_Predefined_Ieee_Numeric_Std_Nand_Uns_Uns
            | Iir_Predefined_Ieee_Numeric_Std_Nand_Sgn_Sgn =>
-            return Eval_Vector_Dyadic (Left, Right, Nand_Table, Expr);
+            return Eval_Vector_Dyadic (Inst, Left, Right, Nand_Table, Expr);
 
          when Iir_Predefined_Ieee_1164_Vector_Or
            | Iir_Predefined_Ieee_Numeric_Std_Or_Uns_Uns
            | Iir_Predefined_Ieee_Numeric_Std_Or_Sgn_Sgn =>
-            return Eval_Vector_Dyadic (Left, Right, Or_Table, Expr);
+            return Eval_Vector_Dyadic (Inst, Left, Right, Or_Table, Expr);
 
          when Iir_Predefined_Ieee_1164_Vector_Nor
            | Iir_Predefined_Ieee_Numeric_Std_Nor_Uns_Uns
            | Iir_Predefined_Ieee_Numeric_Std_Nor_Sgn_Sgn =>
-            return Eval_Vector_Dyadic (Left, Right, Nor_Table, Expr);
+            return Eval_Vector_Dyadic (Inst, Left, Right, Nor_Table, Expr);
 
          when Iir_Predefined_Ieee_1164_Vector_Xor
            | Iir_Predefined_Ieee_Numeric_Std_Xor_Uns_Uns
            | Iir_Predefined_Ieee_Numeric_Std_Xor_Sgn_Sgn =>
-            return Eval_Vector_Dyadic (Left, Right, Xor_Table, Expr);
+            return Eval_Vector_Dyadic (Inst, Left, Right, Xor_Table, Expr);
 
          when Iir_Predefined_Ieee_1164_Vector_Xnor
             | Iir_Predefined_Ieee_Numeric_Std_Xnor_Uns_Uns
             | Iir_Predefined_Ieee_Numeric_Std_Xnor_Sgn_Sgn =>
-            return Eval_Vector_Dyadic (Left, Right, Xnor_Table, Expr);
+            return Eval_Vector_Dyadic (Inst, Left, Right, Xnor_Table, Expr);
 
          when Iir_Predefined_Ieee_1164_Scalar_And =>
             return Eval_Logic_Scalar (Left, Right, And_Table);
@@ -874,9 +880,9 @@ package body Synth.Vhdl_Eval is
             return Eval_Logic_Scalar (Left, Right, Match_Lt_Table);
 
          when Iir_Predefined_Std_Ulogic_Array_Match_Equality =>
-            return Eval_Vector_Match (Left, Right, False, Expr);
+            return Eval_Vector_Match (Inst, Left, Right, False, Expr);
          when Iir_Predefined_Std_Ulogic_Array_Match_Inequality =>
-            return Eval_Vector_Match (Left, Right, True, Expr);
+            return Eval_Vector_Match (Inst, Left, Right, True, Expr);
 
          when Iir_Predefined_Ieee_1164_And_Suv_Log
             | Iir_Predefined_Ieee_Numeric_Std_And_Uns_Log
@@ -1651,42 +1657,46 @@ package body Synth.Vhdl_Eval is
             return Mul_Sgn_Uns_Sgn (Left, Right, +Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Div_Uns_Uns =>
-            return Div_Uns_Uns (Left, Right, +Expr);
+            return Div_Uns_Uns (Inst, Left, Right, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Div_Uns_Nat =>
-            return Div_Uns_Nat (Left, To_Uns64 (Read_Discrete (Right)), +Expr);
+            return Div_Uns_Nat
+              (Inst, Left, To_Uns64 (Read_Discrete (Right)), Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Div_Nat_Uns =>
-            return Div_Nat_Uns (To_Uns64 (Read_Discrete (Left)), Right, +Expr);
+            return Div_Nat_Uns
+              (Inst, To_Uns64 (Read_Discrete (Left)), Right, Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Div_Sgn_Sgn =>
-            return Div_Sgn_Sgn (Left, Right, +Expr);
+            return Div_Sgn_Sgn (Inst, Left, Right, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Div_Int_Sgn =>
-            return Div_Int_Sgn (Read_Discrete (Left), Right, +Expr);
+            return Div_Int_Sgn (Inst, Read_Discrete (Left), Right, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Div_Sgn_Int =>
-            return Div_Sgn_Int (Left, Read_Discrete (Right), +Expr);
+            return Div_Sgn_Int (Inst, Left, Read_Discrete (Right), Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Rem_Uns_Uns
             | Iir_Predefined_Ieee_Numeric_Std_Mod_Uns_Uns =>
-            return Rem_Uns_Uns (Left, Right, +Expr);
+            return Rem_Uns_Uns (Inst, Left, Right, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Rem_Uns_Nat
             | Iir_Predefined_Ieee_Numeric_Std_Mod_Uns_Nat =>
-            return Rem_Uns_Nat (Left, To_Uns64 (Read_Discrete (Right)), +Expr);
+            return Rem_Uns_Nat
+              (Inst, Left, To_Uns64 (Read_Discrete (Right)), Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Rem_Nat_Uns
             | Iir_Predefined_Ieee_Numeric_Std_Mod_Nat_Uns =>
-            return Rem_Nat_Uns (To_Uns64 (Read_Discrete (Left)), Right, +Expr);
+            return Rem_Nat_Uns
+              (Inst, To_Uns64 (Read_Discrete (Left)), Right, Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Rem_Sgn_Sgn =>
-            return Rem_Sgn_Sgn (Left, Right, +Expr);
+            return Rem_Sgn_Sgn (Inst, Left, Right, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Rem_Int_Sgn =>
-            return Rem_Int_Sgn (Read_Discrete (Left), Right, +Expr);
+            return Rem_Int_Sgn (Inst, Read_Discrete (Left), Right, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Rem_Sgn_Int =>
-            return Rem_Sgn_Int (Left, Read_Discrete (Right), +Expr);
+            return Rem_Sgn_Int (Inst, Left, Read_Discrete (Right), Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Mod_Sgn_Sgn =>
-            return Mod_Sgn_Sgn (Left, Right, +Expr);
+            return Mod_Sgn_Sgn (Inst, Left, Right, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Mod_Int_Sgn =>
-            return Mod_Int_Sgn (Read_Discrete (Left), Right, +Expr);
+            return Mod_Int_Sgn (Inst, Read_Discrete (Left), Right, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Mod_Sgn_Int =>
-            return Mod_Sgn_Int (Left, Read_Discrete (Right), +Expr);
+            return Mod_Sgn_Int (Inst, Left, Read_Discrete (Right), Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Srl_Uns_Int
            |  Iir_Predefined_Ieee_Numeric_Std_Srl_Sgn_Int =>
@@ -1785,7 +1795,7 @@ package body Synth.Vhdl_Eval is
 
          when others =>
             Error_Msg_Synth
-              (+Expr, "eval_static_dyadic_predefined: unhandled "
+              (Inst, Expr, "eval_static_dyadic_predefined: unhandled "
                  & Iir_Predefined_Functions'Image (Def));
             return Null_Memtyp;
       end case;
@@ -1978,9 +1988,10 @@ package body Synth.Vhdl_Eval is
       end case;
    end Eval_Vector_Minimum;
 
-   function Eval_Static_Monadic_Predefined (Imp : Node;
-                                             Operand : Memtyp;
-                                             Expr : Node) return Memtyp
+   function Eval_Static_Monadic_Predefined (Inst : Synth_Instance_Acc;
+                                            Imp : Node;
+                                            Operand : Memtyp;
+                                            Expr : Node) return Memtyp
    is
       Def : constant Iir_Predefined_Functions :=
         Get_Implicit_Definition (Imp);
@@ -2106,7 +2117,7 @@ package body Synth.Vhdl_Eval is
 
          when others =>
             Error_Msg_Synth
-              (+Expr, "eval_static_monadic_predefined: unhandled "
+              (Inst, Expr, "eval_static_monadic_predefined: unhandled "
                  & Iir_Predefined_Functions'Image (Def));
             raise Internal_Error;
       end case;
@@ -2396,7 +2407,8 @@ package body Synth.Vhdl_Eval is
       return Res;
    end Eval_To_X01;
 
-   function Eval_Static_Predefined_Function_Call (Param1 : Valtyp;
+   function Eval_Static_Predefined_Function_Call (Inst : Synth_Instance_Acc;
+                                                  Param1 : Valtyp;
                                                   Param2 : Valtyp;
                                                   Res_Typ : Type_Acc;
                                                   Expr : Node) return Memtyp
@@ -2525,7 +2537,7 @@ package body Synth.Vhdl_Eval is
                end loop;
                if Unit = Null_Iir then
                   Error_Msg_Synth
-                    (+Expr, "to_string for time called with wrong unit");
+                    (Inst, Expr, "to_string for time called with wrong unit");
                end if;
                Grt.To_Strings.To_String (Str, First,
                                          Ghdl_I64 (Read_Discrete (Param1)),
@@ -2958,7 +2970,7 @@ package body Synth.Vhdl_Eval is
          when others =>
             null;
       end case;
-      Error_Msg_Synth (+Expr, "unhandled (static) function: "
+      Error_Msg_Synth (Inst, Expr, "unhandled (static) function: "
                          & Iir_Predefined_Functions'Image (Def));
       return Null_Memtyp;
    end Eval_Static_Predefined_Function_Call;

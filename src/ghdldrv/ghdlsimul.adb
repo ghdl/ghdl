@@ -47,6 +47,7 @@ with Elab.Vhdl_Insts;
 with Elab.Debugger;
 
 with Synth.Flags;
+with Synth.Errors;
 with Simul.Vhdl_Elab;
 with Simul.Vhdl_Simul;
 
@@ -88,6 +89,7 @@ package body Ghdlsimul is
       end loop;
 
       Synth.Flags.Flag_Simulation := True;
+      Synth.Errors.Debug_Handler := Elab.Debugger.Debug_Error'Access;
 
       Lib_Unit := Get_Library_Unit (Config);
       pragma Assert (Get_Kind (Lib_Unit) /= Iir_Kind_Foreign_Module);

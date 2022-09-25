@@ -110,7 +110,7 @@ package body Synth.Vhdl_Static_Proc is
             Synth_Textio_Write_Real (Syn_Inst, Imp);
          when others =>
             Error_Msg_Synth
-              (+Loc, "call to implicit %n is not supported", +Imp);
+              (Syn_Inst, Loc, "call to implicit %n is not supported", +Imp);
       end case;
    exception
       when File_Execution_Error =>

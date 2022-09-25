@@ -206,7 +206,7 @@ package body Synth.Vhdl_Decls is
             else
                if not Is_Subprg then
                   Error_Msg_Synth
-                    (+Decl, "signals cannot be used in default value "
+                    (Syn_Inst, Decl, "signals cannot be used in default value "
                      & "of this constant");
                end if;
                Cst := Val;
@@ -435,7 +435,7 @@ package body Synth.Vhdl_Decls is
       if Obj_Typ.Kind = Type_Protected then
          if not Synth.Flags.Flag_Simulation then
             Error_Msg_Synth
-              (+Decl, "protected type variable is not synthesizable");
+              (Syn_Inst, Decl, "protected type variable is not synthesizable");
             Set_Error (Syn_Inst);
             Init := No_Valtyp;
          else
@@ -451,7 +451,7 @@ package body Synth.Vhdl_Decls is
         and then not Get_Instance_Const (Syn_Inst)
       then
          Error_Msg_Synth
-           (+Decl, "variable with access type is not synthesizable");
+           (Syn_Inst, Decl, "variable with access type is not synthesizable");
          --  FIXME: use a poison value ?
          Init := Create_Value_Default (Obj_Typ);
          Init := Unshare (Init, Instance_Pool);
@@ -465,7 +465,7 @@ package body Synth.Vhdl_Decls is
               and then not Is_Static (Init.Val)
             then
                Error_Msg_Synth
-                 (+Decl, "signals cannot be used in default value of "
+                 (Syn_Inst, Decl, "signals cannot be used in default value of "
                     & "this variable");
             end if;
          else
@@ -502,7 +502,7 @@ package body Synth.Vhdl_Decls is
    begin
       Init := Get_Value (Syn_Inst, Decl);
       if Init.Typ.Kind = Type_Protected then
-         Error_Msg_Synth (+Decl, "protected type not supported");
+         Error_Msg_Synth (Syn_Inst, Decl, "protected type not supported");
          Set_Error (Syn_Inst);
       else
          if Init.Val = null then
@@ -525,7 +525,8 @@ package body Synth.Vhdl_Decls is
       Val : Valtyp;
    begin
       if Get_Kind (Get_Parent (Decl)) = Iir_Kind_Package_Declaration then
-         Error_Msg_Synth (+Decl, "signals in packages are not supported");
+         Error_Msg_Synth
+           (Syn_Inst, Decl, "signals in packages are not supported");
          return;
       end if;
 

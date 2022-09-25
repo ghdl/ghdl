@@ -249,7 +249,8 @@ package body Synth.Vhdl_Stmts is
                   else
                      --  Nested.
                      if Dest_Off /= (0, 0) then
-                        Error_Msg_Synth (+Pfx, "nested memory not supported");
+                        Error_Msg_Synth
+                          (Syn_Inst, Pfx, "nested memory not supported");
                      end if;
 
                      Dest_Dyn.Voff := Build_Addidx
@@ -613,7 +614,7 @@ package body Synth.Vhdl_Stmts is
          if not Is_Static (V.Val) then
             --  Maybe the error message is too cryptic ?
             Error_Msg_Synth
-              (+Loc, "cannot assign a net to a static value");
+              (Syn_Inst, Loc, "cannot assign a net to a static value");
          else
             Copy_Memory (Targ.Val.Mem + Off.Mem_Off, Get_Memory (V), V.Typ.Sz);
          end if;
@@ -2096,7 +2097,7 @@ package body Synth.Vhdl_Stmts is
                   if not Is_Scalar_Subtype_Compatible (Val.Typ, Inter_Typ)
                   then
                      Error_Msg_Synth
-                       (+Actual,
+                       (Caller_Inst, Actual,
                         "scalar subtype of actual is not compatible with "
                           & "signal formal interface");
                   end if;
@@ -2105,7 +2106,7 @@ package body Synth.Vhdl_Stmts is
                   if not Is_Scalar_Subtype_Compatible (Inter_Typ, Val.Typ)
                   then
                      Error_Msg_Synth
-                       (+Actual,
+                       (Caller_Inst, Actual,
                         "signal formal interface scalar subtype is not "
                           & "compatible with of actual subtype");
                   end if;
@@ -2546,7 +2547,7 @@ package body Synth.Vhdl_Stmts is
          if Is_Func then
             if C.Nbr_Ret = 0 then
                Error_Msg_Synth
-                 (+Bod, "missing return statement at end of function");
+                 (C.Inst, Bod, "missing return statement at end of function");
                Res := No_Valtyp;
             elsif C.Nbr_Ret = 1 and then Is_Static (C.Ret_Value.Val) then
                Res := C.Ret_Value;
@@ -2624,7 +2625,8 @@ package body Synth.Vhdl_Stmts is
          if Is_Func then
             if C.Nbr_Ret = 0 then
                Error_Msg_Synth
-                 (+Loc, "function call completed without a return statement");
+                 (C.Inst, Loc,
+                  "function call completed without a return statement");
                Res := No_Valtyp;
             else
                pragma Assert (C.Nbr_Ret = 1);
@@ -2855,7 +2857,7 @@ package body Synth.Vhdl_Stmts is
          when Iir_Predefined_None =>
             if Get_Foreign_Flag (Imp) then
                Error_Msg_Synth
-                 (+Stmt, "call to foreign %n is not supported", +Imp);
+                 (Syn_Inst, Stmt, "call to foreign %n is not supported", +Imp);
             else
                Res := Synth_Subprogram_Call (Syn_Inst, Call);
                pragma Assert (Res = No_Valtyp);
@@ -3352,7 +3354,7 @@ package body Synth.Vhdl_Stmts is
             Mark_Expr_Pool (Marker);
             Val := Synth_Expression_With_Type (C.Inst, Cond, Boolean_Type);
             if not Is_Static (Val.Val) then
-               Error_Msg_Synth (+Cond, "loop condition must be static");
+               Error_Msg_Synth (C.Inst, Cond, "loop condition must be static");
                Release_Expr_Pool (Marker);
                exit;
             end if;
@@ -3373,7 +3375,7 @@ package body Synth.Vhdl_Stmts is
          Iter_Nbr := Iter_Nbr + 1;
          if Iter_Nbr > Flags.Flag_Max_Loop and Flags.Flag_Max_Loop /= 0 then
             Error_Msg_Synth
-              (+Stmt, "maximum number of iterations (%v) reached",
+              (C.Inst, Stmt, "maximum number of iterations (%v) reached",
                +Uns32 (Flags.Flag_Max_Loop));
             exit;
          end if;
@@ -3574,8 +3576,7 @@ package body Synth.Vhdl_Stmts is
       Release_Expr_Pool (Marker);
 
       if Sev_V >= Flags.Severity_Level then
-         Error_Msg_Synth (+Stmt, "error due to assertion failure");
-         Elab.Debugger.Debug_Error (Syn_Inst, Stmt);
+         Error_Msg_Synth (Syn_Inst, Stmt, "error due to assertion failure");
       end if;
    end Exec_Failed_Assertion;
 
@@ -3771,7 +3772,7 @@ package body Synth.Vhdl_Stmts is
                end if;
             when Iir_Kind_Wait_Statement =>
                Error_Msg_Synth
-                 (+Stmt, "wait statement not allowed for synthesis");
+                 (C.Inst, Stmt, "wait statement not allowed for synthesis");
             when others =>
                Error_Kind ("synth_sequential_statements", Stmt);
          end case;
@@ -3814,7 +3815,7 @@ package body Synth.Vhdl_Stmts is
 
       --  The first statement must be a wait statement.
       if Get_Kind (Stmt) /= Iir_Kind_Wait_Statement then
-         Error_Msg_Synth (+Stmt, "expect wait as the first statement");
+         Error_Msg_Synth (C.Inst, Stmt, "expect wait as the first statement");
          return;
       end if;
 
@@ -3823,7 +3824,7 @@ package body Synth.Vhdl_Stmts is
       --  Handle the condition as an if.
       Cond := Get_Condition_Clause (Stmt);
       if Cond = Null_Node then
-         Error_Msg_Synth (+Stmt, "expect wait condition");
+         Error_Msg_Synth (C.Inst, Stmt, "expect wait condition");
          return;
       end if;
       Cond_Val := Synth_Expression (C.Inst, Cond);
@@ -3924,8 +3925,8 @@ package body Synth.Vhdl_Stmts is
             if Get_Kind (Unit) = Iir_Kind_Design_Unit then
                Lib := Get_Library (Get_Design_File (Unit));
                if Get_Identifier (Lib) = Std_Names.Name_Ieee then
-                  Error_Msg_Synth
-                    (+Expr, "unhandled call to ieee function %i", +Imp);
+                  Error_Msg_Synth (Syn_Inst, Expr,
+                                   "unhandled call to ieee function %i", +Imp);
                   Set_Error (Syn_Inst);
                   return No_Valtyp;
                end if;
@@ -4084,7 +4085,7 @@ package body Synth.Vhdl_Stmts is
       --  Check the clock is an edge and extract it.
       Clk_Inst := Get_Net_Parent (Clk);
       if Get_Id (Clk_Inst) not in Edge_Module_Id then
-         Error_Msg_Synth (+Stmt, "clock is not an edge");
+         Error_Msg_Synth (Syn_Inst, Stmt, "clock is not an edge");
          Next_States := No_Net;
          Release_Expr_Pool (Marker);
          return;
@@ -4459,15 +4460,17 @@ package body Synth.Vhdl_Stmts is
       if (Get_Base_Type (Get_Type (Val)) /=
             Vhdl.Std_Package.Boolean_Type_Definition)
       then
-         Error_Msg_Synth (+Val, "type of attribute %i must be boolean",
-                          (1 => +Get_Attribute_Designator (Spec)));
+         Error_Msg_Synth
+           (Syn_Inst, Val, "type of attribute %i must be boolean",
+            (1 => +Get_Attribute_Designator (Spec)));
          return;
       end if;
 
       --  The designated entity must be a signal.
       if Get_Kind (Sig) /= Iir_Kind_Signal_Declaration then
-         Error_Msg_Synth (+Val, "attribute %i only applies to signals",
-                          (1 => +Get_Attribute_Designator (Spec)));
+         Error_Msg_Synth
+           (Syn_Inst, Val, "attribute %i only applies to signals",
+            (1 => +Get_Attribute_Designator (Spec)));
          return;
       end if;
 

@@ -1035,10 +1035,10 @@ package body Vhdl.Evaluation is
       if Right /= Null_Iir then
          Right_Mt := Convert_Node_To_Memtyp (Right);
          Res_Mt := Eval_Static_Dyadic_Predefined
-           (Imp, Res_Typ, Left_Mt, Right_Mt, Orig);
+           (null, Imp, Res_Typ, Left_Mt, Right_Mt, Orig);
       else
          Res_Mt := Eval_Static_Monadic_Predefined
-           (Imp, Left_Mt, Orig);
+           (null, Imp, Left_Mt, Orig);
       end if;
       Res := Convert_Memtyp_To_Node (Res_Mt, Res_Type, Orig);
       Release_Expr_Pool (Marker);

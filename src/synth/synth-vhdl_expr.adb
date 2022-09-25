@@ -41,7 +41,6 @@ with Elab.Vhdl_Annotations;
 with Elab.Vhdl_Heap; use Elab.Vhdl_Heap;
 with Elab.Vhdl_Types; use Elab.Vhdl_Types;
 with Elab.Vhdl_Expr;
-with Elab.Debugger;
 
 with Synth.Errors; use Synth.Errors;
 with Synth.Vhdl_Environment;
@@ -581,8 +580,7 @@ package body Synth.Vhdl_Expr is
                      Val : constant Int64 := Read_Discrete (Vt);
                   begin
                      if not In_Range (Dtype.Drange, Val) then
-                        Error_Msg_Synth (+Loc, "value out of range");
-                        Elab.Debugger.Debug_Error (Syn_Inst, Loc);
+                        Error_Msg_Synth (Syn_Inst, Loc, "value out of range");
                         return No_Valtyp;
                      end if;
                      return Create_Value_Discrete (Val, Dtype);
@@ -598,9 +596,9 @@ package body Synth.Vhdl_Expr is
             pragma Assert (Vtype.Kind = Type_Vector
                              or Vtype.Kind = Type_Slice);
             if Dtype.W /= Vtype.W then
-               Error_Msg_Synth
-                 (+Loc, "mismatching vector length; got %v, expect %v",
-                  (Errorout."+" (Vtype.W), +Dtype.W));
+               Error_Msg_Synth (Syn_Inst, Loc,
+                                "mismatching vector length; got %v, expect %v",
+                                (+Vtype.W, +Dtype.W));
                return No_Valtyp;
             end if;
             if Bounds then
@@ -622,7 +620,8 @@ package body Synth.Vhdl_Expr is
                loop
                   pragma Assert (Src_Typ.Alast = Dst_Typ.Alast);
                   if Src_Typ.Abound.Len /= Dst_Typ.Abound.Len then
-                     Error_Msg_Synth (+Loc, "mismatching array bounds");
+                     Error_Msg_Synth
+                       (Syn_Inst, Loc, "mismatching array bounds");
                      return No_Valtyp;
                   end if;
                   exit when Src_Typ.Alast;
@@ -719,8 +718,7 @@ package body Synth.Vhdl_Expr is
 
    procedure Bound_Error (Syn_Inst : Synth_Instance_Acc; Loc : Node) is
    begin
-      Error_Msg_Synth (+Loc, "index not within bounds");
-      Elab.Debugger.Debug_Error (Syn_Inst, Loc);
+      Error_Msg_Synth (Syn_Inst, Loc, "index not within bounds");
    end Bound_Error;
 
    --  Convert index IDX in PFX to an offset.
@@ -962,7 +960,8 @@ package body Synth.Vhdl_Expr is
 
    --  Identify LEFT to/downto RIGHT as:
    --  INP * STEP + WIDTH - 1 + OFF to/downto INP * STEP + OFF
-   procedure Synth_Extract_Dyn_Suffix (Ctxt : Context_Acc;
+   procedure Synth_Extract_Dyn_Suffix (Syn_Inst : Synth_Instance_Acc;
+                                       Ctxt : Context_Acc;
                                        Loc : Node;
                                        Pfx_Bnd : Bound_Type;
                                        Left : Net;
@@ -999,14 +998,16 @@ package body Synth.Vhdl_Expr is
 
       if not Same_Net (L_Inp, R_Inp) then
          Error_Msg_Synth
-           (+Loc, "cannot extract same variable part for dynamic slice");
+           (Syn_Inst, Loc,
+            "cannot extract same variable part for dynamic slice");
          return;
       end if;
       Inp := L_Inp;
 
       if L_Fac /= R_Fac then
          Error_Msg_Synth
-           (+Loc, "cannot extract same constant factor for dynamic slice");
+           (Syn_Inst, Loc,
+            "cannot extract same constant factor for dynamic slice");
          return;
       end if;
 
@@ -1121,7 +1122,7 @@ package body Synth.Vhdl_Expr is
       Len : Uns32;
    begin
       if Pfx_Bnd.Dir /= Dir then
-         Error_Msg_Synth (+Name, "direction mismatch in slice");
+         Error_Msg_Synth (Syn_Inst, Name, "direction mismatch in slice");
          Off := (0, 0);
          if Dir = Dir_To then
             Res_Bnd := (Dir => Dir_To, Left => 1, Right => 0, Len => 0);
@@ -1145,8 +1146,7 @@ package body Synth.Vhdl_Expr is
          if not In_Bounds (Pfx_Bnd, Int32 (L))
            or else not In_Bounds (Pfx_Bnd, Int32 (R))
          then
-            Error_Msg_Synth (+Name, "index not within bounds");
-            Elab.Debugger.Debug_Error (Syn_Inst, Expr);
+            Error_Msg_Synth (Syn_Inst, Expr, "index not within bounds");
             Off := (0, 0);
             return;
          end if;
@@ -1211,7 +1211,7 @@ package body Synth.Vhdl_Expr is
             end;
          when others =>
             Error_Msg_Synth
-              (+Expr, "only range expression supported for slices");
+              (Syn_Inst, Expr, "only range expression supported for slices");
             Res_Bnd := (Dir => Dir_To, Left => 1, Right => 0, Len => 0);
             return;
       end case;
@@ -1225,7 +1225,7 @@ package body Synth.Vhdl_Expr is
                                    El_Typ, Res_Bnd, Off);
       else
          if Pfx_Bnd.Dir /= Dir then
-            Error_Msg_Synth (+Name, "direction mismatch in slice");
+            Error_Msg_Synth (Syn_Inst, Name, "direction mismatch in slice");
             if Dir = Dir_To then
                Res_Bnd := (Dir => Dir_To, Left => 1, Right => 0, Len => 0);
             else
@@ -1236,14 +1236,14 @@ package body Synth.Vhdl_Expr is
 
          if Is_Static (Left.Val) or else Is_Static (Right.Val) then
             Error_Msg_Synth
-              (+Name, "left and right bounds of a slice must be "
+              (Syn_Inst, Name, "left and right bounds of a slice must be "
                  & "either constant or dynamic");
             return;
          end if;
 
-         Synth_Extract_Dyn_Suffix
-           (Ctxt, Name, Pfx_Bnd, Get_Net (Ctxt, Left), Get_Net (Ctxt, Right),
-            Inp, Step, Off.Net_Off, Res_Bnd.Len);
+         Synth_Extract_Dyn_Suffix (Syn_Inst, Ctxt, Name, Pfx_Bnd,
+                                   Get_Net (Ctxt, Left), Get_Net (Ctxt, Right),
+                                   Inp, Step, Off.Net_Off, Res_Bnd.Len);
          if Inp = No_Net then
             return;
          end if;
@@ -1310,14 +1310,16 @@ package body Synth.Vhdl_Expr is
    begin
       Clk := Get_Net (Ctxt, Synth_Expression (Syn_Inst, Prefix));
       if Get_Kind (Expr) /= Iir_Kind_Equality_Operator then
-         Error_Msg_Synth (+Expr, "ill-formed clock-level, '=' expected");
+         Error_Msg_Synth
+           (Syn_Inst, Expr, "ill-formed clock-level, '=' expected");
          Res := Build_Posedge (Ctxt, Clk);
          Set_Location (Res, Expr);
          return Res;
       end if;
       Imp := Get_Implementation (Expr);
       if Get_Implicit_Definition (Imp) /= Iir_Predefined_Enum_Equality then
-         Error_Msg_Synth (+Expr, "ill-formed clock-level, '=' expected");
+         Error_Msg_Synth
+           (Syn_Inst, Expr, "ill-formed clock-level, '=' expected");
          Res := Build_Posedge (Ctxt, Clk);
          Set_Location (Res, Expr);
          return Res;
@@ -1325,14 +1327,14 @@ package body Synth.Vhdl_Expr is
 
       Left := Get_Left (Expr);
       if not Is_Same_Clock (Syn_Inst, Prefix, Left, Clk) then
-         Error_Msg_Synth (+Left, "clock signal name doesn't match");
+         Error_Msg_Synth (Syn_Inst, Left, "clock signal name doesn't match");
       end if;
 
       Right := Get_Right (Expr);
       Lit_Type := Get_Base_Type (Get_Type (Right));
       Lit := Synth_Expression (Syn_Inst, Right);
       if Lit.Val.Kind /= Value_Memory then
-         Error_Msg_Synth (+Right, "clock-level is not a constant");
+         Error_Msg_Synth (Syn_Inst, Right, "clock-level is not a constant");
          Posedge := True;
       else
          if Lit_Type = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type then
@@ -1343,7 +1345,7 @@ package body Synth.Vhdl_Expr is
                   Posedge := True;
                when others =>
                   Error_Msg_Synth
-                    (+Right, "clock-level must be either '0' or '1'");
+                    (Syn_Inst, Right, "clock-level must be either '0' or '1'");
                   Posedge := True;
             end case;
          else
@@ -1415,14 +1417,14 @@ package body Synth.Vhdl_Expr is
                           or V > Fp64 (Conv_Typ.Drange.Left);
                   end case;
                   if Err then
-                     Error_Msg_Synth (+Loc, "value out of range");
-                     Elab.Debugger.Debug_Error (Syn_Inst, Loc);
+                     Error_Msg_Synth (Syn_Inst, Loc, "value out of range");
                      return No_Valtyp;
                   end if;
                   return Create_Value_Discrete (Int64 (V), Conv_Typ);
                end;
             else
-               Error_Msg_Synth (+Loc, "unhandled type conversion (to int)");
+               Error_Msg_Synth (Syn_Inst, Loc,
+                                "unhandled type conversion (to int)");
                return No_Valtyp;
             end if;
          when Type_Float =>
@@ -1430,7 +1432,8 @@ package body Synth.Vhdl_Expr is
                return Create_Value_Float
                  (Fp64 (Read_Discrete (Val)), Conv_Typ);
             else
-               Error_Msg_Synth (+Loc, "unhandled type conversion (to float)");
+               Error_Msg_Synth (Syn_Inst, Loc,
+                                "unhandled type conversion (to float)");
                return No_Valtyp;
             end if;
          when Type_Vector
@@ -1443,7 +1446,7 @@ package body Synth.Vhdl_Expr is
            | Type_Logic =>
             return Val;
          when others =>
-            Error_Msg_Synth (+Loc, "unhandled type conversion");
+            Error_Msg_Synth (Syn_Inst, Loc, "unhandled type conversion");
             return No_Valtyp;
       end case;
    end Synth_Type_Conversion;
@@ -1464,7 +1467,8 @@ package body Synth.Vhdl_Expr is
       return Synth_Type_Conversion (Syn_Inst, Val, Conv_Typ, Conv);
    end Synth_Type_Conversion;
 
-   function Error_Ieee_Operator (Imp : Node; Loc : Node) return Boolean
+   function Error_Ieee_Operator
+     (Syn_Inst : Synth_Instance_Acc; Imp : Node; Loc : Node) return Boolean
    is
       use Std_Names;
       Parent : constant Iir := Get_Parent (Imp);
@@ -1483,10 +1487,10 @@ package body Synth.Vhdl_Expr is
                | Name_Numeric_Std
                | Name_Numeric_Bit
                | Name_Math_Real =>
-               Error_Msg_Synth
-                 (+Loc, "unhandled predefined IEEE operator %i", +Imp);
-               Error_Msg_Synth
-                 (+Imp, " declared here");
+               Error_Msg_Synth (Syn_Inst, Loc,
+                                "unhandled predefined IEEE operator %i", +Imp);
+               Error_Msg_Synth (Syn_Inst, Imp,
+                                " declared here");
                return True;
             when others =>
                --  ieee 2008 packages are handled like regular packages.
@@ -1547,8 +1551,7 @@ package body Synth.Vhdl_Expr is
                   end if;
             end case;
             if Err then
-               Error_Msg_Synth (+Expr, "value out of range");
-               Elab.Debugger.Debug_Error (Syn_Inst, Expr);
+               Error_Msg_Synth (Syn_Inst, Expr, "value out of range");
                return No_Valtyp;
             end if;
             Res := Create_Value_Memory (Dtype, Expr_Pool'Access);
@@ -1978,7 +1981,7 @@ package body Synth.Vhdl_Expr is
                        (Syn_Inst, Id_Or, Get_Left (Expr), Get_Right (Expr),
                         Bit_Type, Expr);
                   when Iir_Predefined_None =>
-                     if Error_Ieee_Operator (Imp, Expr) then
+                     if Error_Ieee_Operator (Syn_Inst, Imp, Expr) then
                         return No_Valtyp;
                      else
                         return Synth_User_Operator
@@ -1997,7 +2000,7 @@ package body Synth.Vhdl_Expr is
                  Get_Implicit_Definition (Imp);
             begin
                if Def = Iir_Predefined_None then
-                  if Error_Ieee_Operator (Imp, Expr) then
+                  if Error_Ieee_Operator (Syn_Inst, Imp, Expr) then
                      return No_Valtyp;
                   else
                      return Synth_User_Operator
@@ -2030,7 +2033,8 @@ package body Synth.Vhdl_Expr is
                         return Hook_Signal_Expr (Res);
                      end if;
                      Error_Msg_Synth
-                       (+Expr, "cannot use signal value during elaboration");
+                       (Syn_Inst, Expr,
+                        "cannot use signal value during elaboration");
                      return No_Valtyp;
                   elsif (Res.Val.Kind = Value_Quantity
                            or else
@@ -2040,7 +2044,8 @@ package body Synth.Vhdl_Expr is
                      if Hook_Quantity_Expr /= null then
                         return Hook_Quantity_Expr (Res);
                      end if;
-                     Error_Msg_Synth (+Expr, "cannot use quantity value");
+                     Error_Msg_Synth
+                       (Syn_Inst, Expr, "cannot use quantity value");
                      return No_Valtyp;
                   end if;
                end if;
@@ -2333,7 +2338,7 @@ package body Synth.Vhdl_Expr is
                return Create_Value_Access (Acc, Expr_Type);
             end;
          when Iir_Kind_Stable_Attribute =>
-            Error_Msg_Synth (+Expr, "signal attribute not supported");
+            Error_Msg_Synth (Syn_Inst, Expr, "signal attribute not supported");
             return No_Valtyp;
          when Iir_Kind_Psl_Prev =>
             return Synth_Psl_Prev (Syn_Inst, Expr);
@@ -2348,26 +2353,25 @@ package body Synth.Vhdl_Expr is
          when Iir_Kind_Psl_Onehot0 =>
             return Synth_Psl_Onehot0(Syn_Inst, Expr);
          when Iir_Kind_Overflow_Literal =>
-            Error_Msg_Synth (+Expr, "out of bound expression");
-            Elab.Debugger.Debug_Error (Syn_Inst, Expr);
+            Error_Msg_Synth (Syn_Inst, Expr, "out of bound expression");
             return No_Valtyp;
          when Iir_Kind_Event_Attribute =>
             if Hook_Event_Attribute /= null then
                return Hook_Event_Attribute (Syn_Inst, Expr);
             end if;
-            Error_Msg_Synth (+Expr, "event attribute not allowed");
+            Error_Msg_Synth (Syn_Inst, Expr, "event attribute not allowed");
             return No_Valtyp;
          when Iir_Kind_Active_Attribute =>
             if Hook_Active_Attribute /= null then
                return Hook_Active_Attribute (Syn_Inst, Expr);
             end if;
-            Error_Msg_Synth (+Expr, "active attribute not allowed");
+            Error_Msg_Synth (Syn_Inst, Expr, "active attribute not allowed");
             return No_Valtyp;
          when Iir_Kind_Dot_Attribute =>
             if Hook_Dot_Attribute /= null then
                return Hook_Dot_Attribute (Syn_Inst, Expr);
             end if;
-            Error_Msg_Synth (+Expr, "dot attribute not allowed");
+            Error_Msg_Synth (Syn_Inst, Expr, "dot attribute not allowed");
             return No_Valtyp;
          when others =>
             Error_Kind ("synth_expression_with_type", Expr);

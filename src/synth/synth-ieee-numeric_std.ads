@@ -18,7 +18,10 @@
 
 with Types; use Types;
 
+with Vhdl.Nodes; use Vhdl.Nodes;
+
 with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
+with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 
 with Synth.Ieee.Std_Logic_1164; use Synth.Ieee.Std_Logic_1164;
 
@@ -86,36 +89,65 @@ package Synth.Ieee.Numeric_Std is
                         return Memtyp;
 
    --  "/"
-   function Div_Uns_Uns (L, R : Memtyp; Loc : Location_Type) return Memtyp;
-   function Div_Uns_Nat (L : Memtyp; R : Uns64; Loc : Location_Type)
-                        return Memtyp;
-   function Div_Nat_Uns (L : Uns64; R : Memtyp; Loc : Location_Type)
-                        return Memtyp;
-   function Div_Sgn_Sgn (L, R : Memtyp; Loc : Location_Type) return Memtyp;
-   function Div_Sgn_Int (L : Memtyp; R : Int64; Loc : Location_Type)
-                        return Memtyp;
-   function Div_Int_Sgn (L : Int64; R : Memtyp; Loc : Location_Type)
-                        return Memtyp;
+   function Div_Uns_Uns (Inst : Synth_Instance_Acc;
+                         L, R : Memtyp;
+                         Loc : Node) return Memtyp;
+   function Div_Uns_Nat (Inst : Synth_Instance_Acc;
+                         L : Memtyp;
+                         R : Uns64;
+                         Loc : Node) return Memtyp;
+   function Div_Nat_Uns (Inst : Synth_Instance_Acc;
+                         L : Uns64;
+                         R : Memtyp;
+                         Loc : Node) return Memtyp;
+   function Div_Sgn_Sgn (Inst : Synth_Instance_Acc;
+                         L, R : Memtyp;
+                         Loc : Node) return Memtyp;
+   function Div_Sgn_Int (Inst : Synth_Instance_Acc;
+                         L : Memtyp;
+                         R : Int64;
+                         Loc : Node) return Memtyp;
+   function Div_Int_Sgn (Inst : Synth_Instance_Acc;
+                         L : Int64;
+                         R : Memtyp;
+                         Loc : Node) return Memtyp;
 
    --  "rem"
-   function Rem_Uns_Uns (L, R : Memtyp; Loc : Location_Type) return Memtyp;
-   function Rem_Uns_Nat (L : Memtyp; R : Uns64; Loc : Location_Type)
-                        return Memtyp;
-   function Rem_Nat_Uns (L : Uns64; R : Memtyp; Loc : Location_Type)
-                        return Memtyp;
-   function Rem_Sgn_Sgn (L, R : Memtyp; Loc : Location_Type) return Memtyp;
-   function Rem_Sgn_Int (L : Memtyp; R : Int64; Loc : Location_Type)
-                        return Memtyp;
-   function Rem_Int_Sgn (L : Int64; R : Memtyp; Loc : Location_Type)
-                        return Memtyp;
+   function Rem_Uns_Uns (Inst : Synth_Instance_Acc;
+                         L, R : Memtyp;
+                         Loc : Node) return Memtyp;
+   function Rem_Uns_Nat (Inst : Synth_Instance_Acc;
+                         L : Memtyp;
+                         R : Uns64;
+                         Loc : Node) return Memtyp;
+   function Rem_Nat_Uns (Inst : Synth_Instance_Acc;
+                         L : Uns64;
+                         R : Memtyp;
+                         Loc : Node) return Memtyp;
+   function Rem_Sgn_Sgn (Inst : Synth_Instance_Acc;
+                         L, R : Memtyp;
+                         Loc : Node) return Memtyp;
+   function Rem_Sgn_Int (Inst : Synth_Instance_Acc;
+                         L : Memtyp;
+                         R : Int64;
+                         Loc : Node) return Memtyp;
+   function Rem_Int_Sgn (Inst : Synth_Instance_Acc;
+                         L : Int64;
+                         R : Memtyp;
+                         Loc : Node) return Memtyp;
 
    --  "mod"
-   function Mod_Sgn_Sgn (L, R : Memtyp; Loc : Location_Type)
-                        return Memtyp;
-   function Mod_Sgn_Int (L : Memtyp; R : Int64; Loc : Location_Type)
-                        return Memtyp;
-   function Mod_Int_Sgn (L : Int64; R : Memtyp; Loc : Location_Type)
-                        return Memtyp;
+   function Mod_Sgn_Sgn (Inst : Synth_Instance_Acc;
+                         L, R : Memtyp;
+                         Loc : Node) return Memtyp;
+   function Mod_Sgn_Int (Inst : Synth_Instance_Acc;
+                         L : Memtyp;
+                         R : Int64;
+                         Loc : Node) return Memtyp;
+   function Mod_Int_Sgn (Inst : Synth_Instance_Acc;
+                         L : Int64;
+                         R : Memtyp;
+                         Loc : Node) return Memtyp;
 
    --  Shift
    function Shift_Vec (Val : Memtyp;

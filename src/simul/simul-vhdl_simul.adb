@@ -743,7 +743,7 @@ package body Simul.Vhdl_Simul is
          begin
             if Get_Foreign_Flag (Imp) then
                Synth.Errors.Error_Msg_Synth
-                 (+Stmt, "call to foreign %n is not supported", +Imp);
+                 (Inst, Stmt, "call to foreign %n is not supported", +Imp);
                Next_Stmt := Null_Node;
                return;
             end if;

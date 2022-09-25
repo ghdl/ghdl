@@ -391,7 +391,7 @@ package body Netlists.Inference is
             end if;
          else
             if Els_Net /= No_Net then
-               Error_Msg_Synth
+               Error_Msg_Netlist
                  (Loc, "synchronous code does not expect else part");
             end if;
 
@@ -447,7 +447,7 @@ package body Netlists.Inference is
             Els_Clk := No_Net;
          end if;
          if Els_Clk = No_Net then
-            Error_Msg_Synth
+            Error_Msg_Netlist
               (Mux_Loc, "clocked logic requires clocked logic on else part");
             Els := No_Net;
          else
@@ -856,8 +856,8 @@ package body Netlists.Inference is
             Name := Get_Instance_Name (Get_Net_Parent (Prev_Val));
          end if;
 
-         Error_Msg_Synth
-           (Loc, "latch infered for net %n (use --latches)", +Name);
+         Error_Msg_Netlist
+           (Loc, "latch infered for net %n (use --latches)", (1 => +Name));
       end if;
 
       if False then
@@ -1058,7 +1058,7 @@ package body Netlists.Inference is
       begin
          Next_Inst := Find_Condition_Chain_Next (Last_Inst);
          if Next_Inst /= Get_Net_Parent (Get_Input_Net (Inst, 2)) then
-            Error_Msg_Synth
+            Error_Msg_Netlist
               (+Last_Inst, "assertion checked on else branch of an edge");
             return Val;
          end if;

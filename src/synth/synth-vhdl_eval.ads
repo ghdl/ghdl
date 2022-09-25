@@ -18,20 +18,26 @@
 
 with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
 with Elab.Vhdl_Values; use Elab.Vhdl_Values;
+with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 
 with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Synth.Vhdl_Eval is
-   function Eval_Static_Dyadic_Predefined (Imp : Node;
+   --  Note: INST is only used to report errors.
+
+   function Eval_Static_Dyadic_Predefined (Inst : Synth_Instance_Acc;
+                                           Imp : Node;
                                            Res_Typ : Type_Acc;
                                            Left : Memtyp;
                                            Right : Memtyp;
                                            Expr : Node) return Memtyp;
-   function Eval_Static_Monadic_Predefined (Imp : Node;
+   function Eval_Static_Monadic_Predefined (Inst : Synth_Instance_Acc;
+                                            Imp : Node;
                                             Operand : Memtyp;
                                             Expr : Node) return Memtyp;
 
-   function Eval_Static_Predefined_Function_Call (Param1 : Valtyp;
+   function Eval_Static_Predefined_Function_Call (Inst : Synth_Instance_Acc;
+                                                  Param1 : Valtyp;
                                                   Param2 : Valtyp;
                                                   Res_Typ : Type_Acc;
                                                   Expr : Node) return Memtyp;

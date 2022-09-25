@@ -205,8 +205,9 @@ package body Synth.Vhdl_Environment is
    procedure Error_Multiple_Assignments
      (Decl : Decl_Type; First_Off : Uns32; Last_Off : Uns32) is
    begin
-      Error_Msg_Synth (+Decl.Obj, "multiple assignments for %i offsets %v:%v",
-                       (+Decl.Obj, +First_Off, +Last_Off));
+      Error_Msg_Netlist
+        (+Decl.Obj, "multiple assignments for %i offsets %v:%v",
+         (+Decl.Obj, +First_Off, +Last_Off));
       Info_Subnet (Decl.Obj, Decl.Typ, First_Off, Last_Off + 1 - First_Off);
    end Error_Multiple_Assignments;
 

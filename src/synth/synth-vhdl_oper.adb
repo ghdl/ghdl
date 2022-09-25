@@ -584,7 +584,8 @@ package body Synth.Vhdl_Oper is
          N : Net;
       begin
          if Left.Typ.W /= Right.Typ.W then
-            Error_Msg_Synth (+Expr, "operands don't have the same length");
+            Error_Msg_Synth
+              (Syn_Inst, Expr, "operands don't have the same length");
             return No_Valtyp;
          end if;
          N := Build_Dyadic (Ctxt, Id,
@@ -709,7 +710,8 @@ package body Synth.Vhdl_Oper is
                   R1 := Build2_Trunc (Ctxt, Id_Utrunc, R1, Ww, +Expr);
                else
                   Error_Msg_Synth
-                    (+Expr, "vector length of rotation must be a power of 2");
+                    (Syn_Inst, Expr,
+                     "vector length of rotation must be a power of 2");
                   return Left;
                end if;
             end if;
@@ -734,7 +736,7 @@ package body Synth.Vhdl_Oper is
 
       if Is_Static_Val (Left.Val) and Is_Static_Val (Right.Val) then
          Srec := Eval_Static_Dyadic_Predefined
-           (Imp, Expr_Typ,
+           (Syn_Inst, Imp, Expr_Typ,
             Get_Value_Memtyp (Left), Get_Value_Memtyp (Right), Expr);
          if Srec = Null_Memtyp then
             return No_Valtyp;
@@ -882,7 +884,8 @@ package body Synth.Vhdl_Oper is
             begin
                if Left.Typ.W /= Right.Typ.W then
                   Error_Msg_Synth
-                    (+Expr, "operands of ?= don't have the same size");
+                    (Syn_Inst, Expr,
+                     "operands of ?= don't have the same size");
                   return Create_Value_Discrete (0, Bit_Type);
                end if;
 
@@ -910,8 +913,8 @@ package body Synth.Vhdl_Oper is
                Res : Net;
             begin
                if Left.Typ.W /= Right.Typ.W then
-                  Error_Msg_Synth
-                    (+Expr, "operands of ?/= don't have the same size");
+                  Error_Msg_Synth (Syn_Inst, Expr,
+                                   "operands of ?/= don't have the same size");
                   return Create_Value_Discrete (1, Bit_Type);
                end if;
 
@@ -1077,7 +1080,7 @@ package body Synth.Vhdl_Oper is
             return Synth_Int_Dyadic (Id_Srem);
          when Iir_Predefined_Integer_Exp =>
             Error_Msg_Synth
-              (+Expr, "non-constant exponentiation not supported");
+              (Syn_Inst, Expr, "non-constant exponentiation not supported");
             return No_Valtyp;
          when Iir_Predefined_Integer_Less_Equal =>
             return Synth_Compare (Id_Sle, Boolean_Type);
@@ -1092,11 +1095,13 @@ package body Synth.Vhdl_Oper is
          when Iir_Predefined_Integer_Inequality =>
             return Synth_Compare (Id_Ne, Boolean_Type);
          when Iir_Predefined_Physical_Physical_Div =>
-            Error_Msg_Synth (+Expr, "non-constant division not supported");
+            Error_Msg_Synth
+              (Syn_Inst, Expr, "non-constant division not supported");
             return No_Valtyp;
 
          when Iir_Predefined_Floating_Div =>
-            Error_Msg_Synth (+Expr, "non-constant division not supported");
+            Error_Msg_Synth
+              (Syn_Inst, Expr, "non-constant division not supported");
             return No_Valtyp;
 
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns
@@ -1618,8 +1623,9 @@ package body Synth.Vhdl_Oper is
             return Synth_Rotation (Id_Rol);
 
          when others =>
-            Error_Msg_Synth (+Expr, "synth_dyadic_operation: unhandled "
-                               & Iir_Predefined_Functions'Image (Def));
+            Error_Msg_Synth
+              (Syn_Inst, Expr, "synth_dyadic_operation: unhandled "
+                 & Iir_Predefined_Functions'Image (Def));
             return No_Valtyp;
       end case;
    end Synth_Dyadic_Operation;
@@ -1683,7 +1689,7 @@ package body Synth.Vhdl_Oper is
       if Is_Static_Val (Operand.Val) then
          return Create_Value_Memtyp
            (Eval_Static_Monadic_Predefined
-              (Imp, Get_Value_Memtyp (Operand), Loc));
+              (Syn_Inst, Imp, Get_Value_Memtyp (Operand), Loc));
       end if;
 
       case Def is
@@ -1761,7 +1767,7 @@ package body Synth.Vhdl_Oper is
 
          when others =>
             Error_Msg_Synth
-              (+Loc,
+              (Syn_Inst, Loc,
                "unhandled monadic: " & Iir_Predefined_Functions'Image (Def));
             return No_Valtyp;
       end case;
@@ -1905,7 +1911,9 @@ package body Synth.Vhdl_Oper is
          Size_Vt := Get_Value (Subprg_Inst, Param2);
          Strip_Const (Size_Vt);
          if not Is_Static (Size_Vt.Val) then
-            Error_Msg_Synth (+Expr, "size parameter must be constant");
+            Error_Msg_Synth
+              (Get_Caller_Instance (Subprg_Inst), Expr,
+               "size parameter must be constant");
             return No_Valtyp;
          end if;
          Size := Uns32 (Read_Discrete (Size_Vt));
@@ -2034,7 +2042,9 @@ package body Synth.Vhdl_Oper is
                W : Width;
             begin
                if not Is_Static (R.Val) then
-                  Error_Msg_Synth (+Expr, "size must be constant");
+                  Error_Msg_Synth
+                    (Get_Caller_Instance (Subprg_Inst), Expr,
+                     "size must be constant");
                   return No_Valtyp;
                end if;
                W := Uns32 (Read_Discrete (R));
@@ -2059,7 +2069,9 @@ package body Synth.Vhdl_Oper is
             | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Sgn
             | Iir_Predefined_Ieee_Std_Logic_Arith_Sxt =>
             if not Is_Static (R.Val) then
-               Error_Msg_Synth (+Expr, "size must be constant");
+               Error_Msg_Synth
+                 (Get_Caller_Instance (Subprg_Inst), Expr,
+                  "size must be constant");
                return No_Valtyp;
             end if;
             return Synth_Resize
@@ -2140,12 +2152,14 @@ package body Synth.Vhdl_Oper is
                   Oper := L;
                else
                   Error_Msg_Synth
-                    (+Expr, "one operand of std_match must be constant");
+                    (Get_Caller_Instance (Subprg_Inst), Expr,
+                     "one operand of std_match must be constant");
                   return No_Valtyp;
                end if;
                if Oper.Typ.W /= Cst.Typ.W then
                   Error_Msg_Synth
-                    (+Expr, "operands of std_match don't have the same size");
+                    (Get_Caller_Instance (Subprg_Inst), Expr,
+                     "operands of std_match don't have the same size");
                   return Create_Value_Discrete (0, Boolean_Type);
                end if;
                Strip_Const (Cst);
@@ -2166,7 +2180,7 @@ package body Synth.Vhdl_Oper is
 
          when others =>
             Error_Msg_Synth
-              (+Expr,
+              (Get_Caller_Instance (Subprg_Inst), Expr,
                "unhandled function: " & Iir_Predefined_Functions'Image (Def));
             return No_Valtyp;
       end case;
@@ -2232,7 +2246,7 @@ package body Synth.Vhdl_Oper is
                Res_Typ := Get_Subtype_Object (Subprg_Inst, Get_Type (Imp));
 
                Mt := Eval_Static_Predefined_Function_Call
-                 (Param1, Param2, Res_Typ, Expr);
+                 (Syn_Inst, Param1, Param2, Res_Typ, Expr);
                if Mt /= Null_Memtyp then
                   Res := Create_Value_Memtyp (Mt);
                else

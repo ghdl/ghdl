@@ -19,13 +19,26 @@
 with Types; use Types;
 with Errorout; use Errorout;
 
+with Vhdl.Nodes; use Vhdl.Nodes;
+with Elab.Vhdl_Context; use Elab.Vhdl_Context;
+
 package Synth.Errors is
-   procedure Error_Msg_Synth (Loc : Location_Type;
+   --  The error procedures return during synthesis, but not during
+   --  simulation (they are fatal).
+   --  Debugger may be called.
+   procedure Error_Msg_Synth (Inst : Synth_Instance_Acc;
+                              Loc : Node;
                               Msg : String;
                               Arg1 : Earg_Type);
-   procedure Error_Msg_Synth (Loc : Location_Type;
+   procedure Error_Msg_Synth (Inst : Synth_Instance_Acc;
+                              Loc : Node;
                               Msg : String;
                               Args : Earg_Arr := No_Eargs);
+
+   procedure Error_Msg_Netlist (Loc : Location_Type;
+                                Msg : String;
+                                Args : Earg_Arr := No_Eargs);
+
    procedure Warning_Msg_Synth (Warnid : Msgid_Warnings;
                                 Loc : Location_Type;
                                 Msg : String;
@@ -36,4 +49,8 @@ package Synth.Errors is
    procedure Info_Msg_Synth (Loc : Location_Type;
                              Msg : String;
                              Args : Earg_Arr := No_Eargs);
+
+   type Handler_Access is access procedure (Inst : Synth_Instance_Acc;
+                                            Loc : Node);
+   Debug_Handler : Handler_Access;
 end Synth.Errors;

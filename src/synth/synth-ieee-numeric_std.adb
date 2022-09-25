@@ -22,6 +22,7 @@ with Elab.Memtype; use Elab.Memtype;
 
 with Synth.Errors; use Synth.Errors;
 with Synth.Ieee.Utils; use Synth.Ieee.Utils;
+with Synth.Source; use Synth.Source;
 
 package body Synth.Ieee.Numeric_Std is
 
@@ -1088,7 +1089,9 @@ package body Synth.Ieee.Numeric_Std is
       end if;
    end Divmod;
 
-   function Div_Uns_Uns (L, R : Memtyp; Loc : Location_Type) return Memtyp
+   function Div_Uns_Uns (Inst : Synth_Instance_Acc;
+                         L, R : Memtyp;
+                         Loc : Node) return Memtyp
    is
       Nlen  : constant Uns32 := L.Typ.Abound.Len;
       Dlen  : constant Uns32 := R.Typ.Abound.Len;
@@ -1109,7 +1112,7 @@ package body Synth.Ieee.Numeric_Std is
          return Quot;
       end if;
       if R0 = '0' then
-         Error_Msg_Synth (+Loc, "NUMERIC_STD.""/"": division by 0");
+         Error_Msg_Synth (Inst, Loc, "NUMERIC_STD.""/"": division by 0");
          Fill (Quot, 'X');
          return Quot;
       end if;
@@ -1117,8 +1120,10 @@ package body Synth.Ieee.Numeric_Std is
       return Quot;
    end Div_Uns_Uns;
 
-   function Div_Uns_Nat (L : Memtyp; R : Uns64; Loc : Location_Type)
-                        return Memtyp
+   function Div_Uns_Nat (Inst : Synth_Instance_Acc;
+                         L : Memtyp;
+                         R : Uns64;
+                         Loc : Node) return Memtyp
    is
       Rv : Memtyp;
    begin
@@ -1126,11 +1131,13 @@ package body Synth.Ieee.Numeric_Std is
          return Create_Memory (L.Typ); --  FIXME: typ
       end if;
       Rv := To_Unsigned (R, L.Typ);
-      return Div_Uns_Uns (L, Rv, Loc);
+      return Div_Uns_Uns (Inst, L, Rv, Loc);
    end Div_Uns_Nat;
 
-   function Div_Nat_Uns (L : Uns64; R : Memtyp; Loc : Location_Type)
-                        return Memtyp
+   function Div_Nat_Uns (Inst : Synth_Instance_Acc;
+                         L : Uns64;
+                         R : Memtyp;
+                         Loc : Node) return Memtyp
    is
       Lv : Memtyp;
    begin
@@ -1138,10 +1145,12 @@ package body Synth.Ieee.Numeric_Std is
          return Create_Memory (R.Typ); --  FIXME: typ
       end if;
       Lv := To_Unsigned (L, R.Typ);
-      return Div_Uns_Uns (Lv, R, Loc);
+      return Div_Uns_Uns (Inst, Lv, R, Loc);
    end Div_Nat_Uns;
 
-   function Div_Sgn_Sgn (L, R : Memtyp; Loc : Location_Type) return Memtyp
+   function Div_Sgn_Sgn (Inst : Synth_Instance_Acc;
+                         L, R : Memtyp;
+                         Loc : Node) return Memtyp
    is
       Nlen  : constant Uns32 := L.Typ.Abound.Len;
       Dlen  : constant Uns32 := R.Typ.Abound.Len;
@@ -1165,7 +1174,7 @@ package body Synth.Ieee.Numeric_Std is
          return Quot;
       end if;
       if R0 = '0' then
-         Error_Msg_Synth (+Loc, "NUMERIC_STD.""/"": division by 0");
+         Error_Msg_Synth (Inst, Loc, "NUMERIC_STD.""/"": division by 0");
          Fill (Quot, 'X');
          return Quot;
       end if;
@@ -1195,8 +1204,10 @@ package body Synth.Ieee.Numeric_Std is
       return Quot;
    end Div_Sgn_Sgn;
 
-   function Div_Sgn_Int (L : Memtyp; R : Int64; Loc : Location_Type)
-                        return Memtyp
+   function Div_Sgn_Int (Inst : Synth_Instance_Acc;
+                         L : Memtyp;
+                         R : Int64;
+                         Loc : Node) return Memtyp
    is
       Rv : Memtyp;
    begin
@@ -1204,11 +1215,13 @@ package body Synth.Ieee.Numeric_Std is
          return Create_Memory (L.Typ); --  FIXME: typ
       end if;
       Rv := To_Signed (R, L.Typ);
-      return Div_Sgn_Sgn (L, Rv, Loc);
+      return Div_Sgn_Sgn (Inst, L, Rv, Loc);
    end Div_Sgn_Int;
 
-   function Div_Int_Sgn (L : Int64; R : Memtyp; Loc : Location_Type)
-                        return Memtyp
+   function Div_Int_Sgn (Inst : Synth_Instance_Acc;
+                         L : Int64;
+                         R : Memtyp;
+                         Loc : Node) return Memtyp
    is
       Lv : Memtyp;
    begin
@@ -1216,10 +1229,12 @@ package body Synth.Ieee.Numeric_Std is
          return Create_Memory (R.Typ); --  FIXME: typ
       end if;
       Lv := To_Signed (L, R.Typ);
-      return Div_Sgn_Sgn (Lv, R, Loc);
+      return Div_Sgn_Sgn (Inst, Lv, R, Loc);
    end Div_Int_Sgn;
 
-   function Rem_Uns_Uns (L, R : Memtyp; Loc : Location_Type) return Memtyp
+   function Rem_Uns_Uns (Inst : Synth_Instance_Acc;
+                         L, R : Memtyp;
+                         Loc : Node) return Memtyp
    is
       Nlen  : constant Uns32 := L.Typ.Abound.Len;
       Dlen  : constant Uns32 := R.Typ.Abound.Len;
@@ -1240,7 +1255,7 @@ package body Synth.Ieee.Numeric_Std is
          return Rema;
       end if;
       if R0 = '0' then
-         Error_Msg_Synth (+Loc, "NUMERIC_STD.""rem"": division by 0");
+         Error_Msg_Synth (Inst, Loc, "NUMERIC_STD.""rem"": division by 0");
          Fill (Rema, 'X');
          return Rema;
       end if;
@@ -1248,8 +1263,10 @@ package body Synth.Ieee.Numeric_Std is
       return Rema;
    end Rem_Uns_Uns;
 
-   function Rem_Uns_Nat (L : Memtyp; R : Uns64; Loc : Location_Type)
-                        return Memtyp
+   function Rem_Uns_Nat (Inst : Synth_Instance_Acc;
+                         L : Memtyp;
+                         R : Uns64;
+                         Loc : Node) return Memtyp
    is
       Rv : Memtyp;
    begin
@@ -1257,11 +1274,13 @@ package body Synth.Ieee.Numeric_Std is
          return Create_Memory (L.Typ); --  FIXME: typ
       end if;
       Rv := To_Unsigned (R, L.Typ);
-      return Rem_Uns_Uns (L, Rv, Loc);
+      return Rem_Uns_Uns (Inst, L, Rv, Loc);
    end Rem_Uns_Nat;
 
-   function Rem_Nat_Uns (L : Uns64; R : Memtyp; Loc : Location_Type)
-                        return Memtyp
+   function Rem_Nat_Uns (Inst : Synth_Instance_Acc;
+                         L : Uns64;
+                         R : Memtyp;
+                         Loc : Node) return Memtyp
    is
       Lv : Memtyp;
    begin
@@ -1269,10 +1288,12 @@ package body Synth.Ieee.Numeric_Std is
          return Create_Memory (R.Typ); --  FIXME: typ
       end if;
       Lv := To_Unsigned (L, R.Typ);
-      return Rem_Uns_Uns (Lv, R, Loc);
+      return Rem_Uns_Uns (Inst, Lv, R, Loc);
    end Rem_Nat_Uns;
 
-   function Rem_Sgn_Sgn (L, R : Memtyp; Loc : Location_Type) return Memtyp
+   function Rem_Sgn_Sgn (Inst : Synth_Instance_Acc;
+                         L, R : Memtyp;
+                         Loc : Node) return Memtyp
    is
       Nlen  : constant Uns32 := L.Typ.Abound.Len;
       Dlen  : constant Uns32 := R.Typ.Abound.Len;
@@ -1296,7 +1317,7 @@ package body Synth.Ieee.Numeric_Std is
          return Rema;
       end if;
       if R0 = '0' then
-         Error_Msg_Synth (+Loc, "NUMERIC_STD.""rem"": division by 0");
+         Error_Msg_Synth (Inst, Loc, "NUMERIC_STD.""rem"": division by 0");
          Fill (Rema, 'X');
          return Rema;
       end if;
@@ -1326,8 +1347,10 @@ package body Synth.Ieee.Numeric_Std is
       return Rema;
    end Rem_Sgn_Sgn;
 
-   function Rem_Sgn_Int (L : Memtyp; R : Int64; Loc : Location_Type)
-                        return Memtyp
+   function Rem_Sgn_Int (Inst : Synth_Instance_Acc;
+                         L : Memtyp;
+                         R : Int64;
+                         Loc : Node) return Memtyp
    is
       Rv : Memtyp;
    begin
@@ -1335,11 +1358,13 @@ package body Synth.Ieee.Numeric_Std is
          return Create_Memory (L.Typ); --  FIXME: typ
       end if;
       Rv := To_Signed (R, L.Typ);
-      return Rem_Sgn_Sgn (L, Rv, Loc);
+      return Rem_Sgn_Sgn (Inst, L, Rv, Loc);
    end Rem_Sgn_Int;
 
-   function Rem_Int_Sgn (L : Int64; R : Memtyp; Loc : Location_Type)
-                        return Memtyp
+   function Rem_Int_Sgn (Inst : Synth_Instance_Acc;
+                         L : Int64;
+                         R : Memtyp;
+                         Loc : Node) return Memtyp
    is
       Lv : Memtyp;
    begin
@@ -1347,10 +1372,12 @@ package body Synth.Ieee.Numeric_Std is
          return Create_Memory (R.Typ); --  FIXME: typ
       end if;
       Lv := To_Signed (L, R.Typ);
-      return Rem_Sgn_Sgn (Lv, R, Loc);
+      return Rem_Sgn_Sgn (Inst, Lv, R, Loc);
    end Rem_Int_Sgn;
 
-   function Mod_Sgn_Sgn (L, R : Memtyp; Loc : Location_Type) return Memtyp
+   function Mod_Sgn_Sgn (Inst : Synth_Instance_Acc;
+                         L, R : Memtyp;
+                         Loc : Node) return Memtyp
    is
       Nlen  : constant Uns32 := L.Typ.Abound.Len;
       Dlen  : constant Uns32 := R.Typ.Abound.Len;
@@ -1374,7 +1401,7 @@ package body Synth.Ieee.Numeric_Std is
          return Rema;
       end if;
       if R0 = '0' then
-         Error_Msg_Synth (+Loc, "NUMERIC_STD.""rem"": division by 0");
+         Error_Msg_Synth (Inst, Loc, "NUMERIC_STD.""rem"": division by 0");
          Fill (Rema, 'X');
          return Rema;
       end if;
@@ -1409,11 +1436,11 @@ package body Synth.Ieee.Numeric_Std is
                Neg_Vec (Rema);
                return Rema;
             else
-               return Add_Vec_Vec (R, Rema, True, Loc);
+               return Add_Vec_Vec (R, Rema, True, +Loc);
             end if;
          else
             if L_Neg then
-               return Sub_Vec_Vec (R, Rema, True, Loc);
+               return Sub_Vec_Vec (R, Rema, True, +Loc);
             else
                return Rema;
             end if;
@@ -1421,8 +1448,10 @@ package body Synth.Ieee.Numeric_Std is
       end if;
    end Mod_Sgn_Sgn;
 
-   function Mod_Sgn_Int (L : Memtyp; R : Int64; Loc : Location_Type)
-                        return Memtyp
+   function Mod_Sgn_Int (Inst : Synth_Instance_Acc;
+                         L : Memtyp;
+                         R : Int64;
+                         Loc : Node) return Memtyp
    is
       Rv : Memtyp;
    begin
@@ -1430,11 +1459,13 @@ package body Synth.Ieee.Numeric_Std is
          return Create_Memory (L.Typ); --  FIXME: typ
       end if;
       Rv := To_Signed (R, L.Typ);
-      return Mod_Sgn_Sgn (L, Rv, Loc);
+      return Mod_Sgn_Sgn (Inst, L, Rv, Loc);
    end Mod_Sgn_Int;
 
-   function Mod_Int_Sgn (L : Int64; R : Memtyp; Loc : Location_Type)
-                        return Memtyp
+   function Mod_Int_Sgn (Inst : Synth_Instance_Acc;
+                         L : Int64;
+                         R : Memtyp;
+                         Loc : Node) return Memtyp
    is
       Lv : Memtyp;
    begin
@@ -1442,7 +1473,7 @@ package body Synth.Ieee.Numeric_Std is
          return Create_Memory (R.Typ); --  FIXME: typ
       end if;
       Lv := To_Signed (L, R.Typ);
-      return Mod_Sgn_Sgn (Lv, R, Loc);
+      return Mod_Sgn_Sgn (Inst, Lv, R, Loc);
    end Mod_Int_Sgn;
 
    function Minmax (L, R : Memtyp; Is_Signed : Boolean; Is_Max : Boolean)
