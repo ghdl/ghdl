@@ -18,6 +18,7 @@
 
 with Types; use Types;
 with Types_Utils; use Types_Utils;
+with Flags;
 with Name_Table;
 
 with Grt.Types; use Grt.Types;
@@ -593,6 +594,7 @@ package body Synth.Vhdl_Eval is
 
          when Iir_Predefined_Array_Array_Concat =>
             declare
+               use Flags;
                L_Len : constant Iir_Index32 :=
                  Iir_Index32 (Get_Bound_Length (Left.Typ));
                R_Len : constant Iir_Index32 :=
@@ -611,8 +613,35 @@ package body Synth.Vhdl_Eval is
                   --  concatenation is the right operand.
                   return Right;
                end if;
-               Bnd := Elab.Vhdl_Types.Create_Bounds_From_Length
-                 (Get_Uarray_Index (Res_Typ).Drange, L_Len + R_Len);
+               if Vhdl_Std > Vhdl_87 then
+                  Bnd := Elab.Vhdl_Types.Create_Bounds_From_Length
+                    (Get_Uarray_Index (Res_Typ).Drange, L_Len + R_Len);
+               else
+                  --  LRM87 7.2.3
+                  --  [...], unless the left operand is a null array, in which
+                  --  case the result of the concatenation is the right
+                  --  operand.
+                  if L_Len = 0 then
+                     return Right;
+                  end if;
+
+                  --  LRM87 7.2.3
+                  --  The left bound of the result is the left operand, [...]
+                  --
+                  --  LRM87 7.2.3
+                  --  The direction of the result is the direction of the left
+                  --  operand, [...]
+                  Bnd.Left := Left.Typ.Abound.Left;
+                  Bnd.Dir := Left.Typ.Abound.Dir;
+                  Bnd.Len := Uns32 (L_Len + R_Len);
+                  --  TODO: overflow.
+                  case Bnd.Dir is
+                     when Dir_To =>
+                        Bnd.Right := Bnd.Left + Int32 (L_Len + R_Len - 1);
+                     when Dir_Downto =>
+                        Bnd.Right := Bnd.Left - Int32 (L_Len + R_Len - 1);
+                  end case;
+               end if;
                El_Typ := Unshare_Type_Expr (Le_Typ,
                                             Get_Array_Element (Res_Typ));
                Res_St := Create_Onedimensional_Array_Subtype
