@@ -351,6 +351,13 @@ package body Elab.Vhdl_Decls is
          when Iir_Kinds_Signal_Attribute =>
             --  Not supported by synthesis.
             null;
+         when Iir_Kind_Disconnection_Specification =>
+            null;
+
+         when Iir_Kind_Group_Template_Declaration
+           | Iir_Kind_Group_Declaration =>
+            null;
+
          when others =>
             Vhdl.Errors.Error_Kind ("elab_declaration", Decl);
       end case;
