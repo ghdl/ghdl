@@ -1631,7 +1631,6 @@ package body Grt.Signals is
    is
       Res : Ghdl_Signal_Ptr;
    begin
-      Val_Ptr.B1 := Proc.all (This);
       Res := Create_Signal (Mode_B1, Val_Ptr, Mode_Guard, null, Null_Address);
       Res.S.Guard_Func := Proc;
       Res.S.Guard_Instance := This;
@@ -3877,6 +3876,10 @@ package body Grt.Signals is
    begin
       for I in Sig_Table.First .. Sig_Table.Last loop
          Sig := Sig_Table.Table (I);
+
+         if Sig.S.Mode_Sig = Mode_Guard then
+            Sig.Value_Ptr.B1 := Sig.S.Guard_Func.all (Sig.S.Guard_Instance);
+         end if;
 
          case Sig.Net is
             when Net_One_Driver
