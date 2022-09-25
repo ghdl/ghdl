@@ -127,7 +127,8 @@ package body Synth.Vhdl_Stmts is
    begin
       case Get_Kind (Pfx) is
          when Iir_Kind_Simple_Name
-           | Iir_Kind_Attribute_Name =>
+            | Iir_Kind_Selected_Name
+            | Iir_Kind_Attribute_Name =>
             Synth_Assignment_Prefix
               (Syn_Inst, Inter_Inst, Get_Named_Entity (Pfx),
                Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
