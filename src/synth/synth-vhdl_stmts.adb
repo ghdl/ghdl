@@ -393,6 +393,7 @@ package body Synth.Vhdl_Stmts is
                                   (Syn_Inst, Target),
                                 Aggr => Target);
          when Iir_Kind_Simple_Name
+           | Iir_Kind_Selected_Name
            | Iir_Kind_Selected_Element
            | Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Signal_Declaration

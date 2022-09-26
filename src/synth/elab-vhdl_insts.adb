@@ -255,6 +255,15 @@ package body Elab.Vhdl_Insts is
       end if;
    end Elab_Package_Instantiation;
 
+   procedure Elab_Configuration_Declaration (Parent_Inst : Synth_Instance_Acc;
+                                             Conf : Node)
+   is
+      Syn_Inst : Synth_Instance_Acc;
+   begin
+      Syn_Inst := Create_Package_Instance (Parent_Inst, Conf);
+      Elab_Declarations (Syn_Inst, Get_Declaration_Chain (Conf));
+   end Elab_Configuration_Declaration;
+
    procedure Elab_Dependencies (Parent_Inst : Synth_Instance_Acc; Unit : Node)
    is
       Dep_List : constant Node_List := Get_Dependence_List (Unit);
@@ -275,7 +284,7 @@ package body Elab.Vhdl_Insts is
                when Iir_Kind_Entity_Declaration =>
                   null;
                when Iir_Kind_Configuration_Declaration =>
-                  null;
+                  Elab_Configuration_Declaration (Parent_Inst, Dep_Unit);
                when Iir_Kind_Context_Declaration =>
                   null;
                when Iir_Kind_Package_Declaration =>
@@ -885,6 +894,7 @@ package body Elab.Vhdl_Insts is
 
       Elab_Dependencies (Root_Instance, Get_Design_Unit (Entity));
       Elab_Dependencies (Root_Instance, Get_Design_Unit (Arch));
+      Elab_Configuration_Declaration (Root_Instance, Config);
 
       pragma Assert (Is_Expr_Pool_Empty);
 

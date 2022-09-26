@@ -2581,8 +2581,8 @@ package body Simul.Vhdl_Simul is
          Grt.Errors.Fatal_Error;
       end if;
 
-      pragma Assert (Dst_Val.Typ.Wkind = Wkind_Sim);
       Convert_Type_Width (Dst_Val.Typ);
+      pragma Assert (Dst_Val.Typ.Wkind = Wkind_Sim);
       Dst := Synth.Vhdl_Expr.Get_Value_Memtyp (Dst_Val);
 
       case Conv.Mode is

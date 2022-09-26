@@ -912,8 +912,10 @@ package body Simul.Vhdl_Elab is
          when Iir_Kind_Package_Declaration =>
             Gather_Processes_Decls
               (Inst, Get_Declaration_Chain (N));
+         when Iir_Kind_Configuration_Declaration =>
+            null;
          when others =>
-            Vhdl.Errors.Error_Kind ("gater_processes_1", N);
+            Vhdl.Errors.Error_Kind ("gather_processes_1", N);
       end case;
 
       pragma Assert (Areapools.Is_Empty (Expr_Pool));
