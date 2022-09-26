@@ -154,16 +154,20 @@ package body Simul.Vhdl_Elab is
       end if;
       E.Sig := null;
 
-      if E.Kind in Mode_Signal_User and then E.Typ.W > 0 then
-         E.Nbr_Sources :=
-           new Nbr_Sources_Array'(0 .. E.Typ.W - 1 =>
-                                    (Nbr_Drivers => 0,
-                                     Nbr_Conns => 0,
-                                     Total => 0,
-                                     Last_Proc => No_Process_Index));
+      if E.Kind in Mode_Signal_User then
+         if E.Typ.W > 0 then
+            E.Nbr_Sources :=
+              new Nbr_Sources_Array'(0 .. E.Typ.W - 1 =>
+                                       (Nbr_Drivers => 0,
+                                        Nbr_Conns => 0,
+                                        Total => 0,
+                                        Last_Proc => No_Process_Index));
 
-         Mark_Resolved_Signals
-           (0, Get_Type (E.Decl), E.Typ, E.Nbr_Sources.all, False);
+            Mark_Resolved_Signals
+              (0, Get_Type (E.Decl), E.Typ, E.Nbr_Sources.all, False);
+         else
+            E.Nbr_Sources := new Nbr_Sources_Array (1 .. 0);
+         end if;
       end if;
 
       pragma Assert (E.Kind /= Mode_End);
