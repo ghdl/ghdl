@@ -432,11 +432,32 @@ package body Synth.Vhdl_Eval is
          when Iir_Predefined_Error =>
             return Null_Memtyp;
 
+         when Iir_Predefined_Boolean_Or
+            | Iir_Predefined_Bit_Or
+            | Iir_Predefined_Boolean_And
+            | Iir_Predefined_Bit_And =>
+            --  Short-circuit operators.
+            raise Internal_Error;
+
          when Iir_Predefined_Boolean_Xor
             | Iir_Predefined_Bit_Xor =>
             return Create_Memory_U8
               (Boolean'Pos (Boolean'Val (Read_Discrete (Left))
                               xor Boolean'Val (Read_Discrete (Right))),
+               Res_Typ);
+
+         when Iir_Predefined_Boolean_Nand
+            | Iir_Predefined_Bit_Nand =>
+            return Create_Memory_U8
+              (Boolean'Pos (not (Boolean'Val (Read_Discrete (Left))
+                                   and Boolean'Val (Read_Discrete (Right)))),
+               Res_Typ);
+
+         when Iir_Predefined_Boolean_Nor
+            | Iir_Predefined_Bit_Nor =>
+            return Create_Memory_U8
+              (Boolean'Pos (not (Boolean'Val (Read_Discrete (Left))
+                                   or Boolean'Val (Read_Discrete (Right)))),
                Res_Typ);
 
          when Iir_Predefined_Integer_Plus
