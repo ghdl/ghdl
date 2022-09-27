@@ -2370,7 +2370,6 @@ package body NUMERIC_STD is
 
   -- Id: M.1
   function STD_MATCH (L, R: STD_ULOGIC) return BOOLEAN is
-    variable VALUE: STD_ULOGIC;
   begin
     return MATCH_TABLE(L, R);
   end STD_MATCH;
