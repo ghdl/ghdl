@@ -463,6 +463,11 @@ package body Synth.Vhdl_Decls is
             Init := Synth_Expression_With_Type (Syn_Inst, Def, Obj_Typ);
             Init := Synth_Subtype_Conversion
               (Syn_Inst, Init, Obj_Typ, True, Decl);
+            if Init = No_Valtyp then
+               Set_Error (Syn_Inst);
+               Release_Expr_Pool (Marker);
+               return;
+            end if;
             if not Is_Subprg
               and then not Is_Static (Init.Val)
             then
