@@ -303,12 +303,13 @@ package body Synth.Vhdl_Stmts is
       Res : Type_Acc;
    begin
       Base_Typ := Get_Subtype_Object (Syn_Inst, Base_Type);
-      if Base_Typ.Kind = Type_Record then
+      if Is_Bounded_Type (Base_Typ) then
          return Base_Typ;
       end if;
 
       --  It's a basetype, so not bounded.
-      pragma Assert (Base_Typ.Kind = Type_Unbounded_Vector);
+      pragma Assert (Base_Typ.Kind = Type_Unbounded_Vector
+                       or Base_Typ.Kind = Type_Unbounded_Array);
 
       if Is_Fully_Constrained_Type (Targ_Type) then
          --  If the aggregate subtype is known, just use it.
@@ -357,6 +358,9 @@ package body Synth.Vhdl_Stmts is
       case Base_Typ.Kind is
          when Type_Unbounded_Vector =>
             Res := Create_Vector_Type (Bnd, Base_Typ.Uarr_El);
+         when Type_Unbounded_Array =>
+            pragma Assert (Base_Typ.Ulast);
+            Res := Create_Array_Type (Bnd, True, Base_Typ.Uarr_El);
          when others =>
             raise Internal_Error;
       end case;
