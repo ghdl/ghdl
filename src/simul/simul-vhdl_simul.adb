@@ -232,8 +232,12 @@ package body Simul.Vhdl_Simul is
            | Type_Float =>
             Sig := Read_Sig (Target.Mem);
             if Is_Start then
-               Ghdl_Signal_Start_Assign_Any
-                 (Sig, Rej, To_Ghdl_Value (Val), After);
+               if Val = Null_Memtyp then
+                  Ghdl_Signal_Start_Assign_Null (Sig, Rej, After);
+               else
+                  Ghdl_Signal_Start_Assign_Any
+                    (Sig, Rej, To_Ghdl_Value (Val), After);
+               end if;
             else
                Ghdl_Signal_Next_Assign
                  (Sig, To_Ghdl_Value (Val), After);
@@ -243,24 +247,34 @@ package body Simul.Vhdl_Simul is
             declare
                Len : constant Uns32 := Target.Typ.Abound.Len;
                El : constant Type_Acc := Target.Typ.Arr_El;
+               Smem : Memory_Ptr;
             begin
                pragma Assert (Val.Typ.Abound.Len = Len);
                for I in 1 .. Len loop
+                  if Val.Mem = null then
+                     Smem := null;
+                  else
+                     Smem := Val.Mem + Size_Type (I - 1) * El.Sz;
+                  end if;
                   Assign_Value_To_Signal
                     ((El, Sig_Index (Target.Mem, (Len - I) * El.W)),
-                     Is_Start, Rej, After,
-                     (Val.Typ.Arr_El, Val.Mem + Size_Type (I - 1) * El.Sz));
+                     Is_Start, Rej, After, (Val.Typ.Arr_El, Smem));
                end loop;
             end;
          when Type_Record =>
             for I in Val.Typ.Rec.E'Range loop
                declare
                   E : Rec_El_Type renames Val.Typ.Rec.E (I);
+                  Smem : Memory_Ptr;
                begin
+                  if Val.Mem = null then
+                     Smem := null;
+                  else
+                     Smem := Val.Mem + E.Offs.Mem_Off;
+                  end if;
                   Assign_Value_To_Signal
                     ((E.Typ, Sig_Index (Target.Mem, E.Offs.Net_Off)),
-                     Is_Start, Rej, After,
-                     (E.Typ, Val.Mem + E.Offs.Mem_Off));
+                     Is_Start, Rej, After, (E.Typ, Smem));
                end;
             end loop;
          when others =>
@@ -808,6 +822,7 @@ package body Simul.Vhdl_Simul is
                                            Loc : Node)
       is
          Sig : Memtyp;
+         Mem : Memtyp;
       begin
          case Target.Kind is
             when Target_Aggregate =>
@@ -823,8 +838,12 @@ package body Simul.Vhdl_Simul is
                           Sig_Index (E.Sig, Target.Off.Net_Off));
                end;
 
-               Assign_Value_To_Signal
-                 (Sig, Start, V_Aft, V_Aft, Get_Value_Memtyp (Val));
+               if Val /= No_Valtyp then
+                  Mem := Get_Value_Memtyp (Val);
+               else
+                  Mem := Null_Memtyp;
+               end if;
+               Assign_Value_To_Signal (Sig, Start, V_Aft, V_Aft, Mem);
 
             when Target_Memory =>
                raise Internal_Error;
@@ -832,6 +851,7 @@ package body Simul.Vhdl_Simul is
       end Execute_Signal_Assignment;
 
       Wf : Node;
+      We : Node;
       Val : Valtyp;
       Aft : Node;
       Rej : Node;
@@ -852,10 +872,14 @@ package body Simul.Vhdl_Simul is
             V_Aft := 0;
          end if;
 
-         Val := Synth_Expression_With_Type
-           (Inst, Get_We_Value (Wf), Target.Targ_Type);
-         Val := Synth_Subtype_Conversion
-           (Inst, Val, Target.Targ_Type, False, Wf);
+         We := Get_We_Value (Wf);
+         if Get_Kind (We) = Iir_Kind_Null_Literal then
+            Val := No_Valtyp;
+         else
+            Val := Synth_Expression_With_Type (Inst, We, Target.Targ_Type);
+            Val := Synth_Subtype_Conversion
+              (Inst, Val, Target.Targ_Type, False, Wf);
+         end if;
          Execute_Signal_Assignment (Inst, Target, Val, Wf);
 
          Wf := Get_Chain (Wf);
