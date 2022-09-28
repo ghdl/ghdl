@@ -24,7 +24,7 @@ with Utils_IO;
 
 with Vhdl.Types;
 with Vhdl.Errors;
-with Vhdl.Utils;
+with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Std_Package;
 with Vhdl.Ieee.Std_Logic_1164;
 with Vhdl.Sem_Inst;
@@ -1092,8 +1092,13 @@ package body Simul.Vhdl_Simul is
             when Iir_Kind_Exit_Statement =>
                if Execute_Condition (Inst, Get_Condition (Stmt)) then
                   declare
-                     Label : constant Node := Get_Loop_Label (Stmt);
+                     Label : Node;
                   begin
+                     Label := Get_Loop_Label (Stmt);
+                     if Label /= Null_Node then
+                        Label := Get_Named_Entity (Label);
+                     end if;
+
                      loop
                         Stmt := Get_Parent (Stmt);
                         case Get_Kind (Stmt) is
@@ -1116,8 +1121,13 @@ package body Simul.Vhdl_Simul is
             when Iir_Kind_Next_Statement =>
                if Execute_Condition (Inst, Get_Condition (Stmt)) then
                   declare
-                     Label : constant Node := Get_Loop_Label (Stmt);
+                     Label : Node;
                   begin
+                     Label := Get_Loop_Label (Stmt);
+                     if Label /= Null_Node then
+                        Label := Get_Named_Entity (Label);
+                     end if;
+
                      loop
                         Stmt := Get_Parent (Stmt);
                         case Get_Kind (Stmt) is
@@ -1557,7 +1567,6 @@ package body Simul.Vhdl_Simul is
                              return Boolean
    is
       use Vhdl.Types;
-      use Vhdl.Utils;
       use PSL.Nodes;
    begin
       case Get_Kind (Expr) is
