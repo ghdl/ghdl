@@ -139,6 +139,7 @@ package body Synth.Vhdl_Stmts is
             Assign_Base (Inter_Inst);
          when Iir_Kind_Variable_Declaration
            | Iir_Kind_Signal_Declaration
+           | Iir_Kind_Guard_Signal_Declaration
            | Iir_Kind_Constant_Declaration
            | Iir_Kind_File_Declaration
            | Iir_Kind_Non_Object_Alias_Declaration

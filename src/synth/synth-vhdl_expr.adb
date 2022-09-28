@@ -672,6 +672,7 @@ package body Synth.Vhdl_Expr is
             | Iir_Kind_Variable_Declaration
             | Iir_Kind_Interface_Variable_Declaration
             | Iir_Kind_Signal_Declaration
+            | Iir_Kind_Guard_Signal_Declaration
             | Iir_Kind_Interface_Constant_Declaration
             | Iir_Kind_Constant_Declaration
             | Iir_Kind_Iterator_Declaration
