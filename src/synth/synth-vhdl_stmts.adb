@@ -561,6 +561,14 @@ package body Synth.Vhdl_Stmts is
                                                           Assoc_Expr),
                                 Loc);
                         El_Idx := El_Idx + 1;
+                     when Iir_Kind_Choice_By_Name =>
+                        El_Idx := Get_Element_Position
+                          (Get_Named_Entity (Get_Choice_Name (Choice))) + 1;
+                        Assign (Inst, Targ_Info,
+                                Aggregate_Record_Extract (Ctxt, Val, El_Idx,
+                                                          Targ_Info.Targ_Type,
+                                                          Assoc_Expr),
+                                Loc);
                      when others =>
                         Error_Kind ("assign_aggregate(rec)", Choice);
                   end case;
@@ -666,6 +674,10 @@ package body Synth.Vhdl_Stmts is
 
       case Target.Kind is
          when Target_Aggregate =>
+            if V.Val.Kind = Value_Memory then
+               --  Copy value in case of overlap.
+               V := Unshare (V, Expr_Pool'Access);
+            end if;
             Synth_Assignment_Aggregate
               (Syn_Inst, Target.Aggr, Target.Targ_Type, V, Loc);
          when Target_Simple =>
