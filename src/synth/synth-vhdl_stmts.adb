@@ -3277,6 +3277,7 @@ package body Synth.Vhdl_Stmts is
    is
       Stmts : constant Node := Get_Sequential_Statement_Chain (Stmt);
       Val : Valtyp;
+      Valid : Boolean;
       Lc : aliased Loop_Context (Mode_Dynamic);
    begin
       Lc := (Mode => Mode_Dynamic,
@@ -3293,17 +3294,21 @@ package body Synth.Vhdl_Stmts is
 
       Init_For_Loop_Statement (C.Inst, Stmt, Val);
 
-      while In_Range (Val.Typ.Drange, Read_Discrete (Val)) loop
-         Synth_Sequential_Statements (C, Stmts);
+      if In_Range (Val.Typ.Drange, Read_Discrete (Val)) then
+         loop
+            Synth_Sequential_Statements (C, Stmts);
 
-         Update_Index (Val.Typ.Drange, Val);
-         Loop_Control_Update (C);
+            Loop_Control_Update (C);
 
-         --  Constant exit.
-         exit when Is_Static_Bit0 (C.W_En);
+            --  Constant exit.
+            exit when Is_Static_Bit0 (C.W_En);
 
-         --  FIXME: dynamic exits.
-      end loop;
+            Update_Index (Val.Typ.Drange, Valid, Val);
+            exit when not Valid;
+
+            --  FIXME: dynamic exits.
+         end loop;
+      end if;
       Loop_Control_Finish (C);
 
       Finish_For_Loop_Statement (C.Inst, Stmt);
@@ -3316,6 +3321,7 @@ package body Synth.Vhdl_Stmts is
    is
       Stmts : constant Node := Get_Sequential_Statement_Chain (Stmt);
       Val : Valtyp;
+      Valid : Boolean;
       Lc : aliased Loop_Context (Mode_Static);
    begin
       Lc := (Mode_Static,
@@ -3327,14 +3333,17 @@ package body Synth.Vhdl_Stmts is
 
       Init_For_Loop_Statement (C.Inst, Stmt, Val);
 
-      while In_Range (Val.Typ.Drange, Read_Discrete (Val)) loop
-         Synth_Sequential_Statements (C, Stmts);
-         C.S_En := True;
+      if In_Range (Val.Typ.Drange, Read_Discrete (Val)) then
+         loop
+            Synth_Sequential_Statements (C, Stmts);
+            C.S_En := True;
 
-         Update_Index (Val.Typ.Drange, Val);
+            Update_Index (Val.Typ.Drange, Valid, Val);
+            exit when not Valid;
 
-         exit when Lc.S_Exit or Lc.S_Quit or C.Nbr_Ret > 0;
-      end loop;
+            exit when Lc.S_Exit or Lc.S_Quit or C.Nbr_Ret > 0;
+         end loop;
+      end if;
 
       Finish_For_Loop_Statement (C.Inst, Stmt);
 

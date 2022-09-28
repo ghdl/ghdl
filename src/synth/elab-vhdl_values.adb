@@ -565,17 +565,24 @@ package body Elab.Vhdl_Values is
       end case;
    end Get_Memtyp;
 
-   procedure Update_Index (Rng : Discrete_Range_Type; V : in out Valtyp)
+   procedure Update_Index
+     (Rng : Discrete_Range_Type; Valid : out Boolean; V : in out Valtyp)
    is
       T : Int64;
    begin
       T := Read_Discrete (V);
+      if T = Rng.Right then
+         Valid := False;
+         return;
+      end if;
+
       case Rng.Dir is
          when Dir_To =>
             T := T + 1;
          when Dir_Downto =>
             T := T - 1;
       end case;
+      Valid := True;
       Write_Discrete (V, T);
    end Update_Index;
 end Elab.Vhdl_Values;

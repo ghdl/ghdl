@@ -284,6 +284,7 @@ package body Synth.Vhdl_Aggr is
                      Ch : constant Node := Get_Choice_Range (Assoc);
                      Rng : Discrete_Range_Type;
                      Val : Valtyp;
+                     Valid : Boolean;
                      Rng_Len : Width;
                      Off : Uns32;
                   begin
@@ -299,8 +300,9 @@ package body Synth.Vhdl_Aggr is
                            Err_P := Err_P or Sub_Err;
                            exit when Err_P;
                            Set_Elem (First_Pos + Nat32 (Off) * Stride);
-                           Update_Index (Rng, Val);
                            exit when Err_P;
+                           Update_Index (Rng, Valid, Val);
+                           exit when not Valid;
                         end loop;
                      else
                         --  The direction must be the same.

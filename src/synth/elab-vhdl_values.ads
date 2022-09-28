@@ -229,5 +229,7 @@ package Elab.Vhdl_Values is
 
    procedure Write_Value (Dest : Memory_Ptr; Vt : Valtyp);
 
-   procedure Update_Index (Rng : Discrete_Range_Type; V : in out Valtyp);
+   --  If V is at the right bound of RNG, VALID is set to False.
+   procedure Update_Index
+     (Rng : Discrete_Range_Type; Valid : out Boolean; V : in out Valtyp);
 end Elab.Vhdl_Values;

@@ -533,15 +533,14 @@ package body Simul.Vhdl_Simul is
                   Param : constant Node :=
                     Get_Parameter_Specification (Parent);
                   Val : Valtyp;
+                  Valid : Boolean;
                begin
                   --  Update index
                   Val := Get_Value (Process.Instance, Param);
-                  Update_Index (Val.Typ.Drange, Val);
+                  Update_Index (Val.Typ.Drange, Valid, Val);
 
                   --  Test.
-                  if Elab.Vhdl_Objtypes.In_Range (Val.Typ.Drange,
-                                                  Read_Discrete (Val))
-                  then
+                  if Valid then
                      Stmt := Get_Sequential_Statement_Chain (Parent);
                      return;
                   end if;
