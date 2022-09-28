@@ -887,16 +887,76 @@ package body Simul.Vhdl_Simul is
       end loop;
    end Execute_Waveform_Assignment;
 
+   procedure Disconnect_Signal (Sig : Memtyp)
+   is
+      S : Ghdl_Signal_Ptr;
+   begin
+      case Sig.Typ.Kind is
+         when Type_Logic
+           | Type_Bit
+           | Type_Discrete
+           | Type_Float =>
+            S := Read_Sig (Sig.Mem);
+            if S.Flags.Sig_Kind /= Kind_Signal_No then
+               Ghdl_Signal_Disconnect (S);
+            end if;
+         when Type_Vector
+           | Type_Array =>
+            declare
+               Len : constant Uns32 := Sig.Typ.Abound.Len;
+               El : constant Type_Acc := Sig.Typ.Arr_El;
+            begin
+               for I in 1 .. Len loop
+                  Disconnect_Signal
+                    ((El, Sig_Index (Sig.Mem, (Len - I) * El.W)));
+               end loop;
+            end;
+         when Type_Record =>
+            for I in Sig.Typ.Rec.E'Range loop
+               declare
+                  E : Rec_El_Type renames Sig.Typ.Rec.E (I);
+               begin
+                  Disconnect_Signal
+                    ((E.Typ, Sig_Index (Sig.Mem, E.Offs.Net_Off)));
+               end;
+            end loop;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Disconnect_Signal;
+
+   procedure Disconnect_Signal_Target (Target : Target_Info)
+   is
+      E : Signal_Entry renames Signals_Table.Table (Target.Obj.Val.S);
+      Sig : Memtyp;
+   begin
+      Sig := (Target.Targ_Type, Sig_Index (E.Sig, Target.Off.Net_Off));
+      Disconnect_Signal (Sig);
+   end Disconnect_Signal_Target;
+
    procedure Execute_Simple_Signal_Assignment (Inst : Synth_Instance_Acc;
-                                               Stmt : Node)
+                                               Stmt : Node;
+                                               Concurrent : Boolean)
    is
       use Synth.Vhdl_Expr;
       Target : constant Node := Get_Target (Stmt);
       Marker : Mark_Type;
       Info : Target_Info;
+      Guard : Node;
    begin
       Mark_Expr_Pool (Marker);
       Info := Synth_Target (Inst, Target);
+
+      if Concurrent then
+         Guard := Get_Guard (Stmt);
+         if Guard /= Null_Node
+           and then not Execute_Condition (Inst, Guard)
+         then
+            Disconnect_Signal_Target (Info);
+            Release_Expr_Pool (Marker);
+            return;
+         end if;
+      end if;
 
       Execute_Waveform_Assignment
         (Inst, Info, Stmt, Get_Waveform_Chain (Stmt));
@@ -904,7 +964,8 @@ package body Simul.Vhdl_Simul is
    end Execute_Simple_Signal_Assignment;
 
    procedure Execute_Conditional_Signal_Assignment (Inst : Synth_Instance_Acc;
-                                                    Stmt : Node)
+                                                    Stmt : Node;
+                                                    Concurrent : Boolean)
    is
       use Synth.Vhdl_Expr;
       Target : constant Node := Get_Target (Stmt);
@@ -915,6 +976,10 @@ package body Simul.Vhdl_Simul is
    begin
       Mark_Expr_Pool (Marker);
       Info := Synth_Target (Inst, Target);
+
+      if Concurrent and then Get_Guard (Stmt) /= Null_Node then
+         raise Internal_Error;
+      end if;
 
       Cw := Get_Conditional_Waveform_Chain (Stmt);
       while Cw /= Null_Node loop
@@ -932,7 +997,8 @@ package body Simul.Vhdl_Simul is
    end Execute_Conditional_Signal_Assignment;
 
    procedure Execute_Selected_Signal_Assignment (Inst : Synth_Instance_Acc;
-                                                 Stmt : Node)
+                                                 Stmt : Node;
+                                                 Concurrent : Boolean)
    is
       use Synth.Vhdl_Expr;
       Target : constant Node := Get_Target (Stmt);
@@ -945,6 +1011,10 @@ package body Simul.Vhdl_Simul is
    begin
       Mark_Expr_Pool (Marker);
       Info := Synth_Target (Inst, Target);
+
+      if Concurrent and then Get_Guard (Stmt) /= Null_Node then
+         raise Internal_Error;
+      end if;
 
       Sel := Get_Memtyp (Synth_Expression (Inst, Get_Expression (Stmt)));
 
@@ -1224,10 +1294,10 @@ package body Simul.Vhdl_Simul is
                Next_Statement (Process, Stmt);
 
             when Iir_Kind_Simple_Signal_Assignment_Statement =>
-               Execute_Simple_Signal_Assignment (Inst, Stmt);
+               Execute_Simple_Signal_Assignment (Inst, Stmt, False);
                Next_Statement (Process, Stmt);
             when Iir_Kind_Conditional_Signal_Assignment_Statement =>
-               Execute_Conditional_Signal_Assignment (Inst, Stmt);
+               Execute_Conditional_Signal_Assignment (Inst, Stmt, False);
                Next_Statement (Process, Stmt);
 
             when Iir_Kind_Wait_Statement =>
@@ -1452,21 +1522,22 @@ package body Simul.Vhdl_Simul is
             if Elab.Debugger.Flag_Need_Debug then
                Elab.Debugger.Debug_Break (Process.Instance, Process.Proc);
             end if;
-            Execute_Simple_Signal_Assignment (Process.Instance, Process.Proc);
+            Execute_Simple_Signal_Assignment
+              (Process.Instance, Process.Proc, True);
             pragma Assert (Areapools.Is_Empty (Instance_Pool.all));
          when Iir_Kind_Concurrent_Conditional_Signal_Assignment =>
             if Elab.Debugger.Flag_Need_Debug then
                Elab.Debugger.Debug_Break (Process.Instance, Process.Proc);
             end if;
             Execute_Conditional_Signal_Assignment
-              (Process.Instance, Process.Proc);
+              (Process.Instance, Process.Proc, True);
             pragma Assert (Areapools.Is_Empty (Instance_Pool.all));
          when Iir_Kind_Concurrent_Selected_Signal_Assignment =>
             if Elab.Debugger.Flag_Need_Debug then
                Elab.Debugger.Debug_Break (Process.Instance, Process.Proc);
             end if;
             Execute_Selected_Signal_Assignment
-              (Process.Instance, Process.Proc);
+              (Process.Instance, Process.Proc, True);
             pragma Assert (Areapools.Is_Empty (Instance_Pool.all));
          when Iir_Kind_Association_Element_By_Expression =>
             if Elab.Debugger.Flag_Need_Debug then
