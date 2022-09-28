@@ -1905,7 +1905,7 @@ package body Simul.Vhdl_Simul is
 
    type Read_Signal_Enum is
      (
---      Read_Signal_Last_Value,
+      Read_Signal_Last_Value,
 
       --  For conversion functions.
       Read_Signal_Driving_Value,
@@ -1932,6 +1932,8 @@ package body Simul.Vhdl_Simul is
                   Write_Ghdl_Value (Val, S.Driving_Value);
                when Read_Signal_Effective_Value =>
                   Write_Ghdl_Value (Val, S.Value_Ptr.all);
+               when Read_Signal_Last_Value =>
+                  Write_Ghdl_Value (Val, S.Last_Value);
             end case;
          when Type_Vector
            | Type_Array =>
@@ -1960,6 +1962,24 @@ package body Simul.Vhdl_Simul is
             raise Internal_Error;
       end case;
    end Exec_Read_Signal;
+
+   function Exec_Last_Value_Attribute (Inst : Synth_Instance_Acc;
+                                       Expr : Node) return Valtyp
+   is
+      Pfx : Target_Info;
+      Res : Valtyp;
+      S : Memory_Ptr;
+   begin
+      Pfx := Synth_Target (Inst, Get_Prefix (Expr));
+
+      Res := Create_Value_Memory (Pfx.Targ_Type, Expr_Pool'Access);
+
+      S := Sig_Index (Signals_Table.Table (Pfx.Obj.Val.S).Sig,
+                      Pfx.Off.Net_Off);
+
+      Exec_Read_Signal (S, Get_Memtyp (Res), Read_Signal_Last_Value);
+      return Res;
+   end Exec_Last_Value_Attribute;
 
    type Write_Signal_Enum is
      (Write_Signal_Driving_Value,
@@ -3198,6 +3218,8 @@ package body Simul.Vhdl_Simul is
       Synth.Vhdl_Expr.Hook_Signal_Expr := Hook_Signal_Expr'Access;
       Synth.Vhdl_Expr.Hook_Event_Attribute := Exec_Event_Attribute'Access;
       Synth.Vhdl_Expr.Hook_Active_Attribute := Exec_Active_Attribute'Access;
+      Synth.Vhdl_Expr.Hook_Last_Value_Attribute :=
+        Exec_Last_Value_Attribute'Access;
 
       Synth.Vhdl_Oper.Hook_Bit_Rising_Edge := Exec_Bit_Rising_Edge'Access;
       Synth.Vhdl_Oper.Hook_Bit_Falling_Edge := Exec_Bit_Falling_Edge'Access;

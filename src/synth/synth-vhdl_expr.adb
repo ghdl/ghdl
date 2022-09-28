@@ -2364,6 +2364,13 @@ package body Synth.Vhdl_Expr is
             end if;
             Error_Msg_Synth (Syn_Inst, Expr, "active attribute not allowed");
             return No_Valtyp;
+         when Iir_Kind_Last_Value_Attribute =>
+            if Hook_Last_Value_Attribute /= null then
+               return Hook_Last_Value_Attribute (Syn_Inst, Expr);
+            end if;
+            Error_Msg_Synth (Syn_Inst, Expr,
+                             "last_value attribute not allowed");
+            return No_Valtyp;
          when Iir_Kind_Dot_Attribute =>
             if Hook_Dot_Attribute /= null then
                return Hook_Dot_Attribute (Syn_Inst, Expr);
