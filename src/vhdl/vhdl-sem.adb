@@ -1074,6 +1074,7 @@ package body Vhdl.Sem is
                then
                   Error_Msg_Sem
                     (+Block_Conf, "corresponding component not fully bound");
+                  return;
                end if;
 
                Block_Spec := Get_Block_Specification (Block_Conf);
