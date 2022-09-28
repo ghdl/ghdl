@@ -369,8 +369,22 @@ package body Vhdl.Canon is
    end Canon_Extract_Sensitivity_Waveform;
 
    procedure Canon_Extract_Sensitivity_Signal_Assignment_Common
-     (Stmt : Iir; List : Iir_List) is
+     (Stmt : Iir; List : Iir_List)
+   is
+      Guard : Iir;
    begin
+      case Get_Kind (Stmt) is
+         when Iir_Kind_Concurrent_Conditional_Signal_Assignment
+           | Iir_Kind_Concurrent_Selected_Signal_Assignment
+           | Iir_Kind_Concurrent_Simple_Signal_Assignment =>
+            Guard := Get_Guard (Stmt);
+            if Guard /= Null_Iir then
+               Add_Element (List, Guard);
+            end if;
+         when others =>
+            null;
+      end case;
+
       Canon_Extract_Sensitivity_Expression (Get_Target (Stmt), List, True);
       Canon_Extract_Sensitivity_If_Not_Null
         (Get_Reject_Time_Expression (Stmt), List);
