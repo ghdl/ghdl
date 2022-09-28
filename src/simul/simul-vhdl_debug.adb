@@ -396,6 +396,8 @@ package body Simul.Vhdl_Debug is
                when Iir_Unknown_Mode =>
                   Put (" [??]");
             end case;
+         when Iir_Kind_Guard_Signal_Declaration =>
+            Put (" [guard]");
          when others =>
             raise Internal_Error;
       end case;
@@ -407,37 +409,42 @@ package body Simul.Vhdl_Debug is
       Put_Uns32 (S.Typ.W);
       New_Line;
 
-      Nbr_Conn_Drv := 0;
-      Conn := S.Connect;
-      while Conn /= No_Connect_Index loop
-         declare
-            C : Connect_Entry renames Connect_Table.Table (Conn);
-         begin
-            if C.Formal.Base = Idx then
-               if C.Drive_Formal then
-                  Nbr_Conn_Drv := Nbr_Conn_Drv + 1;
+      if S.Kind in Mode_Signal_User then
+         Nbr_Conn_Drv := 0;
+         Conn := S.Connect;
+         while Conn /= No_Connect_Index loop
+            declare
+               C : Connect_Entry renames Connect_Table.Table (Conn);
+            begin
+               if C.Formal.Base = Idx then
+                  if C.Drive_Formal then
+                     Nbr_Conn_Drv := Nbr_Conn_Drv + 1;
+                  end if;
+                  Conn := C.Formal_Link;
+               else
+                  pragma Assert (C.Actual.Base = Idx);
+                  if C.Drive_Actual then
+                     Nbr_Conn_Drv := Nbr_Conn_Drv + 1;
+                  end if;
+                  Conn := C.Actual_Link;
                end if;
-               Conn := C.Formal_Link;
-            else
-               pragma Assert (C.Actual.Base = Idx);
-               if C.Drive_Actual then
-                  Nbr_Conn_Drv := Nbr_Conn_Drv + 1;
-               end if;
-               Conn := C.Actual_Link;
-            end if;
-         end;
-      end loop;
+            end;
+         end loop;
 
-      Nbr_Drv := 0;
-      Driver := S.Drivers;
-      while Driver /= No_Driver_Index loop
-         Nbr_Drv := Nbr_Drv + 1;
-         Driver := Drivers_Table.Table (Driver).Prev_Sig;
-      end loop;
-      Put ("  nbr drivers: ");
-      Put_Int32 (Nbr_Drv);
-      Put (", nbr conn srcs: ");
-      Put_Int32 (Nbr_Conn_Drv);
+         Nbr_Drv := 0;
+         Driver := S.Drivers;
+         while Driver /= No_Driver_Index loop
+            Nbr_Drv := Nbr_Drv + 1;
+            Driver := Drivers_Table.Table (Driver).Prev_Sig;
+         end loop;
+         Put ("  nbr drivers: ");
+         Put_Int32 (Nbr_Drv);
+         Put (", nbr conn srcs: ");
+         Put_Int32 (Nbr_Conn_Drv);
+         Put (", ");
+      else
+         Put ("  ");
+      end if;
 
       Nbr_Sens := 0;
       Sens := S.Sensitivity;
@@ -446,14 +453,14 @@ package body Simul.Vhdl_Debug is
          Sens := Sensitivity_Table.Table (Sens).Prev_Sig;
       end loop;
 
-      Put (", nbr sensitivity: ");
+      Put ("nbr sensitivity: ");
       Put_Int32 (Nbr_Sens);
 
       Put (", collapsed_by: ");
       Put_Uns32 (Uns32 (S.Collapsed_By));
       New_Line;
 
-      if Boolean'(True) then
+      if Boolean'(True) and then S.Kind in Mode_Signal_User then
          Put ("  nbr sources (drv + conn : total):");
          New_Line;
          for I in 0 .. S.Typ.W - 1 loop
@@ -470,35 +477,37 @@ package body Simul.Vhdl_Debug is
       end if;
 
       if Opts.Value then
-         Driver := S.Drivers;
-         while Driver /= No_Driver_Index loop
-            declare
-               D : Driver_Entry renames Drivers_Table.Table (Driver);
-            begin
-               Put ("  driver:");
-               Disp_Driver_Entry (D);
-
-               Driver := D.Prev_Sig;
-            end;
-         end loop;
-
-         Conn := S.Connect;
-         if Conn /= No_Connect_Index then
-            Put ("  connections:");
-            New_Line;
-            while Conn /= No_Connect_Index loop
+         if S.Kind in Mode_Signal_User then
+            Driver := S.Drivers;
+            while Driver /= No_Driver_Index loop
                declare
-                  C : Connect_Entry renames Connect_Table.Table (Conn);
+                  D : Driver_Entry renames Drivers_Table.Table (Driver);
                begin
-                  Disp_Conn_Entry (Conn);
-                  if C.Formal.Base = Idx then
-                     Conn := C.Formal_Link;
-                  else
-                     pragma Assert (C.Actual.Base = Idx);
-                     Conn := C.Actual_Link;
-                  end if;
+                  Put ("  driver:");
+                  Disp_Driver_Entry (D);
+
+                  Driver := D.Prev_Sig;
                end;
             end loop;
+
+            Conn := S.Connect;
+            if Conn /= No_Connect_Index then
+               Put ("  connections:");
+               New_Line;
+               while Conn /= No_Connect_Index loop
+                  declare
+                     C : Connect_Entry renames Connect_Table.Table (Conn);
+                  begin
+                     Disp_Conn_Entry (Conn);
+                     if C.Formal.Base = Idx then
+                        Conn := C.Formal_Link;
+                     else
+                        pragma Assert (C.Actual.Base = Idx);
+                        Conn := C.Actual_Link;
+                     end if;
+                  end;
+               end loop;
+            end if;
          end if;
 
          Sens := S.Sensitivity;

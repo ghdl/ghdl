@@ -2013,6 +2013,7 @@ package body Synth.Vhdl_Expr is
             | Iir_Kind_Attribute_Name
             | Iir_Kind_Interface_Signal_Declaration --  For PSL.
             | Iir_Kind_Signal_Declaration   -- For PSL.
+            | Iir_Kind_Guard_Signal_Declaration
             | Iir_Kind_Object_Alias_Declaration   -- For PSL
             | Iir_Kind_Non_Object_Alias_Declaration   -- For PSL
             | Iir_Kind_Implicit_Dereference

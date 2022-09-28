@@ -177,10 +177,21 @@ package body Grt.Disp_Signals is
       Put (C);
    end Disp_Flag;
 
-   procedure Disp_Single_Signal_Attributes (Sig : Ghdl_Signal_Ptr) is
+   procedure Disp_Single_Signal_Attributes (Sig : Ghdl_Signal_Ptr)
+   is
+      C : Character;
    begin
       Disp_Mode (Sig.Mode);
       Put (' ');
+      case Sig.Flags.Sig_Kind is
+         when Kind_Signal_No =>
+            C := '-';
+         when Kind_Signal_Register =>
+            C := 'R';
+         when Kind_Signal_Bus =>
+            C := 'B';
+      end case;
+      Put (C);
       Disp_Flag ('A', Sig.Active);
       Disp_Flag ('E', Sig.Event);
       Disp_Flag ('a', Sig.Has_Active);
