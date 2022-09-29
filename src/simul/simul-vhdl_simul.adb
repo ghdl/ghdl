@@ -321,10 +321,10 @@ package body Simul.Vhdl_Simul is
       while Drv /= No_Driver_Index loop
          declare
             D : Driver_Entry renames Drivers_Table.Table (Drv);
-            S : Signal_Entry renames Signals_Table.Table (D.Sig);
+            S : Signal_Entry renames Signals_Table.Table (D.Sig.Base);
          begin
-            Add_Source
-              (D.Typ, Sig_Index (S.Sig, D.Off.Net_Off), S.Val + D.Off.Mem_Off);
+            Add_Source (D.Sig.Typ, Sig_Index (S.Sig, D.Sig.Offs.Net_Off),
+                        S.Val + D.Sig.Offs.Mem_Off);
 
             Drv := D.Prev_Proc;
          end;
@@ -1433,10 +1433,10 @@ package body Simul.Vhdl_Simul is
                      S : Sensitivity_Entry renames
                        Sensitivity_Table.Table (Sens);
                      Base : constant Memory_Ptr :=
-                       Signals_Table.Table (S.Sig).Sig;
+                       Signals_Table.Table (S.Sig.Base).Sig;
                   begin
                      Add_Wait_Sensitivity
-                       (S.Typ, Sig_Index (Base, S.Off.Net_Off));
+                       (S.Sig.Typ, Sig_Index (Base, S.Sig.Offs.Net_Off));
                      Sens := S.Prev_Proc;
                   end;
                end loop;
@@ -1468,14 +1468,14 @@ package body Simul.Vhdl_Simul is
       Mark : Mark_Type;
       Proc : Proc_Record_Type renames Processes_Table.Table (Proc_Idx);
       Drv : Driver_Entry renames Drivers_Table.Table (Proc.Drivers);
-      Sig : Signal_Entry renames Signals_Table.Table (Drv.Sig);
+      Sig : Signal_Entry renames Signals_Table.Table (Drv.Sig.Base);
       Val : Valtyp;
    begin
       Mark_Expr_Pool (Mark);
       Val := Synth_Expression_With_Type
-        (Proc.Inst, Get_Actual (Proc.Proc), Drv.Typ);
+        (Proc.Inst, Get_Actual (Proc.Proc), Drv.Sig.Typ);
       Assign_Value_To_Signal
-        ((Drv.Typ, Sig.Sig), True, 0, 0, Get_Value_Memtyp (Val));
+        ((Drv.Sig.Typ, Sig.Sig), True, 0, 0, Get_Value_Memtyp (Val));
       Release_Expr_Pool (Mark);
    end Execute_Expression_Association;
 
@@ -1594,9 +1594,9 @@ package body Simul.Vhdl_Simul is
       while Sens /= No_Sensitivity_Index loop
          declare
             S : Sensitivity_Entry renames Sensitivity_Table.Table (Sens);
-            Base : constant Memory_Ptr := Signals_Table.Table (S.Sig).Sig;
+            Base : constant Memory_Ptr := Signals_Table.Table (S.Sig.Base).Sig;
          begin
-            Add_Sensitivity (S.Typ, Sig_Index (Base, S.Off.Net_Off));
+            Add_Sensitivity (S.Sig.Typ, Sig_Index (Base, S.Sig.Offs.Net_Off));
             Sens := S.Prev_Proc;
          end;
       end loop;
@@ -2553,7 +2553,7 @@ package body Simul.Vhdl_Simul is
 
    type Connect_Mode is (Connect_Source, Connect_Effective);
 
-   function To_Memtyp (Ep : Connect_Endpoint) return Memtyp is
+   function To_Memtyp (Ep : Sub_Signal_Type) return Memtyp is
    begin
       return (Ep.Typ,
               Sig_Index (Signals_Table.Table (Ep.Base).Sig, Ep.Offs.Net_Off));

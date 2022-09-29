@@ -175,15 +175,32 @@ package body Simul.Vhdl_Elab is
       Signals_Table.Table (Val.Val.S) := E;
    end Gather_Signal;
 
+   function Compute_Sub_Signal (Inst : Synth_Instance_Acc; Name : Node)
+                               return Sub_Signal_Type
+   is
+      Marker : Mark_Type;
+      Base : Valtyp;
+      Typ : Type_Acc;
+      Off : Value_Offsets;
+      Res : Sub_Signal_Type;
+   begin
+      Mark_Expr_Pool (Marker);
+
+      Synth.Vhdl_Stmts.Synth_Assignment_Prefix (Inst, Name, Base, Typ, Off);
+      Res := (Base => Base.Val.S,
+              Typ => Unshare (Typ, Global_Pool'Access),
+              Offs => Off);
+
+      Release_Expr_Pool (Marker);
+      return Res;
+   end Compute_Sub_Signal;
+
    procedure Gather_Disconnection (Inst : Synth_Instance_Acc; Decl : Node)
    is
       List : constant Node_Flist := Get_Signal_List (Decl);
       Marker : Mark_Type;
       Name : Node;
-      Base_Vt : Valtyp;
-      Typ : Type_Acc;
-      Off : Value_Offsets;
-      Sig : Signal_Index_Type;
+      Sig : Sub_Signal_Type;
       Tval : Valtyp;
       T : Std_Time;
    begin
@@ -192,22 +209,18 @@ package body Simul.Vhdl_Elab is
       Tval := Synth.Vhdl_Expr.Synth_Expression (Inst, Get_Expression (Decl));
       T := Std_Time (Read_Discrete (Tval));
 
+      Release_Expr_Pool (Marker);
+
       for I in Flist_First .. Flist_Last (List) loop
          Name := Get_Nth_Element (List, I);
-         Synth.Vhdl_Stmts.Synth_Assignment_Prefix
-           (Inst, Name, Base_Vt, Typ, Off);
-         Sig := Base_Vt.Val.S;
-         Typ := Unshare (Typ, Global_Pool'Access);
+         Sig := Compute_Sub_Signal (Inst, Name);
          Disconnect_Table.Append
            ((Sig => Sig,
-             Off => Off,
-             Typ => Typ,
              Val => T,
-             Prev => Signals_Table.Table (Sig).Disconnect));
-         Signals_Table.Table (Sig).Disconnect := Disconnect_Table.Last;
+             Prev => Signals_Table.Table (Sig.Base).Disconnect));
+         Signals_Table.Table (Sig.Base).Disconnect := Disconnect_Table.Last;
       end loop;
 
-      Release_Expr_Pool (Marker);
    end Gather_Disconnection;
 
    procedure Gather_Quantity (Inst : Synth_Instance_Acc; Decl : Node)
@@ -376,24 +389,22 @@ package body Simul.Vhdl_Elab is
 
    --  Add a driver for process PROC_IDX on signal SIG at OFF/TYP.
    procedure Add_Process_Driver (Proc_Idx : Process_Index_Type;
-                                 Sig : Signal_Index_Type;
-                                 Off : Value_Offsets;
-                                 Typ : Type_Acc;
+                                 Sig : Sub_Signal_Type;
                                  Loc : Node)
    is
-      S : Signal_Entry renames Signals_Table.Table (Sig);
+      S : Signal_Entry renames Signals_Table.Table (Sig.Base);
       Need_It : Boolean;
    begin
-      pragma Assert (Typ.Wkind = Wkind_Sim);
+      pragma Assert (Sig.Typ.Wkind = Wkind_Sim);
 
-      if Typ.W = 0 then
+      if Sig.Typ.W = 0 then
          --  Be safe: no signal, then no driver.
          return;
       end if;
 
       --  Increment the number of driver for each scalar element.
       Need_It := False;
-      for I in Off.Net_Off .. Off.Net_Off + Typ.W - 1 loop
+      for I in Sig.Offs.Net_Off .. Sig.Offs.Net_Off + Sig.Typ.W - 1 loop
          declare
             Ns : Nbr_Sources_Type renames S.Nbr_Sources (I);
          begin
@@ -419,8 +430,6 @@ package body Simul.Vhdl_Elab is
 
       Drivers_Table.Append
         ((Sig => Sig,
-          Off => Off,
-          Typ => Typ,
           Prev_Sig => S.Drivers,
 
           Proc => Proc_Idx,
@@ -435,31 +444,21 @@ package body Simul.Vhdl_Elab is
      (Inst : Synth_Instance_Acc; Proc : Node; Proc_Idx : Process_Index_Type)
    is
       use Synth.Vhdl_Stmts;
-      Expr_Marker : Mark_Type;
       Driver_List: Iir_List;
       It : List_Iterator;
-      Sig : Node;
-      Base_Vt : Valtyp;
-      Base : Signal_Index_Type;
-      Typ : Type_Acc;
-      Off : Value_Offsets;
+      El : Node;
+      Sig : Sub_Signal_Type;
    begin
-      Mark_Expr_Pool (Expr_Marker);
       Instance_Pool := Process_Pool'Access;
 
       Driver_List := Trans_Analyzes.Extract_Drivers (Proc);
       It := List_Iterate_Safe (Driver_List);
       while Is_Valid (It) loop
-         Sig := Get_Element (It);
-         exit when Sig = Null_Node;
-         Synth_Assignment_Prefix (Inst, Sig, Base_Vt, Typ, Off);
-         Base := Base_Vt.Val.S;
-         Typ := Unshare (Typ, Global_Pool'Access);
+         El := Get_Element (It);
+         exit when El = Null_Node;
+         Sig := Compute_Sub_Signal (Inst, El);
 
-         Release_Expr_Pool (Expr_Marker);
-         pragma Assert (Areapools.Is_Empty (Instance_Pool.all));
-
-         Add_Process_Driver (Proc_Idx, Base, Off, Typ, Sig);
+         Add_Process_Driver (Proc_Idx, Sig, El);
 
          Next (It);
       end loop;
@@ -472,40 +471,29 @@ package body Simul.Vhdl_Elab is
                                  List : Iir_List)
    is
       use Synth.Vhdl_Stmts;
-      Marker : Mark_Type;
       It : List_Iterator;
-      Sig : Node;
-      Base_Vt : Valtyp;
-      Base : Signal_Index_Type;
-      Typ : Type_Acc;
-      Off : Value_Offsets;
+      El : Node;
+      Sig : Sub_Signal_Type;
    begin
-      Mark_Expr_Pool (Marker);
-
       It := List_Iterate_Safe (List);
       while Is_Valid (It) loop
-         Sig := Get_Element (It);
-         exit when Sig = Null_Node;
-         Synth_Assignment_Prefix (Inst, Sig, Base_Vt, Typ, Off);
-         Base := Base_Vt.Val.S;
-         Typ := Unshare (Typ, Global_Pool'Access);
+         El := Get_Element (It);
+         exit when El = Null_Node;
+         Sig := Compute_Sub_Signal (Inst, El);
 
          Sensitivity_Table.Append
-           ((Sig => Base,
-             Off => Off,
-             Typ => Typ,
-             Prev_Sig => Signals_Table.Table (Base).Sensitivity,
+           ((Sig => Sig,
+             Prev_Sig => Signals_Table.Table (Sig.Base).Sensitivity,
 
              Proc => Proc_Idx,
              Prev_Proc => Processes_Table.Table (Proc_Idx).Sensitivity));
 
-         Signals_Table.Table (Base).Sensitivity := Sensitivity_Table.Last;
+         Signals_Table.Table (Sig.Base).Sensitivity := Sensitivity_Table.Last;
          Processes_Table.Table (Proc_Idx).Sensitivity :=
            Sensitivity_Table.Last;
 
          Next (It);
       end loop;
-      Release_Expr_Pool (Marker);
    end Gather_Sensitivity;
 
    procedure Gather_Process_Sensitivity
@@ -568,7 +556,7 @@ package body Simul.Vhdl_Elab is
    end Gather_Process_Sensitivity;
 
    --  Increment the number of sources for EP.
-   procedure Increment_Nbr_Sources (Ep : Connect_Endpoint) is
+   procedure Increment_Nbr_Sources (Ep : Sub_Signal_Type) is
    begin
       if Ep.Typ.W = 0 then
          return;
@@ -602,7 +590,7 @@ package body Simul.Vhdl_Elab is
       Off : Value_Offsets;
       Conn : Connect_Entry;
       List : Iir_List;
-      Formal_Ep, Actual_Ep : Connect_Endpoint;
+      Formal_Ep, Actual_Ep : Sub_Signal_Type;
    begin
       Mark_Expr_Pool (Marker);
       Assoc := Assocs;
@@ -687,16 +675,13 @@ package body Simul.Vhdl_Elab is
                if Formal = Null_Iir then
                   Formal := Inter;
                end if;
-               Synth_Assignment_Prefix
-                 (Port_Inst, Formal, Formal_Base, Typ, Off);
-               Formal_Sig := Formal_Base.Val.S;
-               Formal_Ep := (Formal_Sig, Off, Typ);
+               Formal_Ep := Compute_Sub_Signal (Port_Inst, Formal);
 
                Actual_Ep := (No_Signal_Index, No_Value_Offsets, null);
 
                Conn :=
                  (Formal => Formal_Ep,
-                  Formal_Link => Signals_Table.Table (Formal_Sig).Connect,
+                  Formal_Link => Signals_Table.Table (Formal_Ep.Base).Connect,
                   Actual => Actual_Ep,
                   Actual_Link => No_Connect_Index,
                   Drive_Formal => True, --  Always an IN interface
@@ -707,7 +692,7 @@ package body Simul.Vhdl_Elab is
 
                Connect_Table.Append (Conn);
 
-               Signals_Table.Table (Formal_Sig).Connect :=
+               Signals_Table.Table (Formal_Ep.Base).Connect :=
                  Connect_Table.Last;
 
                if Get_Expr_Staticness (Get_Actual (Assoc)) < Globally then
@@ -719,7 +704,7 @@ package body Simul.Vhdl_Elab is
                       Sensitivity => No_Sensitivity_Index));
 
                   Add_Process_Driver
-                    (Processes_Table.Last, Formal_Sig, Off, Typ, Assoc);
+                    (Processes_Table.Last, Formal_Ep, Assoc);
 
                   List := Create_Iir_List;
                   Vhdl.Canon.Canon_Extract_Sensitivity_Expression

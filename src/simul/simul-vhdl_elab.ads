@@ -89,7 +89,7 @@ package Simul.Vhdl_Elab is
    type Connect_Index_Type is new Nat32;
    No_Connect_Index : constant Connect_Index_Type := 0;
 
-   type Connect_Endpoint is record
+   type Sub_Signal_Type is record
       Base : Signal_Index_Type;
       Offs : Value_Offsets;
       Typ : Type_Acc;
@@ -98,11 +98,11 @@ package Simul.Vhdl_Elab is
    --  Connections.  For each associations (block/component/entry), the
    --  elaborator adds an entry in that table.
    type Connect_Entry is record
-      Formal : Connect_Endpoint;
+      Formal : Sub_Signal_Type;
       --  Next connection for the formal.
       Formal_Link : Connect_Index_Type;
 
-      Actual : Connect_Endpoint;
+      Actual : Sub_Signal_Type;
       --  Next connection for the actual.
       Actual_Link : Connect_Index_Type;
 
@@ -168,7 +168,7 @@ package Simul.Vhdl_Elab is
          when Mode_Quiet | Mode_Stable | Mode_Delayed
            | Mode_Transaction =>
             Time : Std_Time;
-            Prefix : Memory_Ptr;
+            Pfx : Sub_Signal_Type;
          when Mode_Above =>
             null;
          when Mode_Guard =>
@@ -187,9 +187,7 @@ package Simul.Vhdl_Elab is
 
    type Driver_Entry is record
       --  The signal having a driver.
-      Sig : Signal_Index_Type;
-      Off : Value_Offsets;
-      Typ : Type_Acc;
+      Sig : Sub_Signal_Type;
       --  Previous driver for the same signal.
       Prev_Sig : Driver_Index_Type;
 
@@ -214,9 +212,7 @@ package Simul.Vhdl_Elab is
       Table_Initial => 128);
 
    type Disconnect_Entry is record
-      Sig : Signal_Index_Type;
-      Off : Value_Offsets;
-      Typ : Type_Acc;
+      Sig : Sub_Signal_Type;
       Prev : Disconnect_Index_Type;
       Val : Std_Time;
    end record;

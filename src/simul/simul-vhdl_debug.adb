@@ -91,17 +91,17 @@ package body Simul.Vhdl_Debug is
       Disp_Instance_Path (Processes_Table.Table (D.Proc).Inst);
       New_Line;
       Put ("    noff: ");
-      Put_Uns32 (D.Off.Net_Off);
+      Put_Uns32 (D.Sig.Offs.Net_Off);
       Put (", moff: ");
-      Put_Uns32 (Uns32 (D.Off.Mem_Off));
+      Put_Uns32 (Uns32 (D.Sig.Offs.Mem_Off));
       Put (", len: ");
-      Put_Uns32 (D.Typ.W);
+      Put_Uns32 (D.Sig.Typ.W);
       Put (", typ: ");
-      Debug_Type_Short (D.Typ);
+      Debug_Type_Short (D.Sig.Typ);
       New_Line;
    end Disp_Driver_Entry;
 
-   procedure Disp_Conn_Endpoint (Ep : Connect_Endpoint) is
+   procedure Disp_Conn_Endpoint (Ep : Sub_Signal_Type) is
    begin
       Put ("sig: ");
       Put_Uns32 (Uns32 (Ep.Base));
