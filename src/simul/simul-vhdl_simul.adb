@@ -2436,6 +2436,32 @@ package body Simul.Vhdl_Simul is
       end loop;
    end Create_Guard_Signal;
 
+   procedure Register_Prefix (Typ : Type_Acc; Sig : Memory_Ptr) is
+   begin
+      case Typ.Kind is
+         when Type_Scalars =>
+            Grt.Signals.Ghdl_Signal_Attribute_Register_Prefix (Read_Sig (Sig));
+         when Type_Vector
+           | Type_Array =>
+            declare
+               Len : constant Uns32 := Typ.Abound.Len;
+            begin
+               for I in 1 .. Len loop
+                  Register_Prefix
+                    (Typ.Arr_El, Sig_Index (Sig, (Len - I) * Typ.Arr_El.W));
+               end loop;
+            end;
+         when Type_Record =>
+            for I in Typ.Rec.E'Range loop
+               Register_Prefix
+                 (Typ.Rec.E (I).Typ,
+                  Sig_Index (Sig, Typ.Rec.E (I).Offs.Net_Off));
+            end loop;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Register_Prefix;
+
    function Alloc_Signal_Memory (Vtype : Type_Acc) return Memory_Ptr
    is
       function To_Memory_Ptr is new Ada.Unchecked_Conversion
@@ -2447,15 +2473,31 @@ package body Simul.Vhdl_Simul is
       return To_Memory_Ptr (M);
    end Alloc_Signal_Memory;
 
+   function To_Memory_Ptr (S : Sub_Signal_Type) return Memory_Ptr is
+   begin
+      return Sig_Index (Signals_Table.Table (S.Base).Sig, S.Offs.Net_Off);
+   end To_Memory_Ptr;
+
+   function To_Memtyp (S : Sub_Signal_Type) return Memtyp is
+   begin
+      return (S.Typ, To_Memory_Ptr (S));
+   end To_Memtyp;
+
    procedure Create_Signal (Idx : Signal_Index_Type)
    is
       E : Signal_Entry renames Signals_Table.Table (Idx);
+      S : Ghdl_Signal_Ptr;
    begin
       E.Sig := Alloc_Signal_Memory (E.Typ);
       case E.Kind is
          when Mode_Guard =>
             Create_Guard_Signal (Idx);
-         when Mode_Stable | Mode_Quiet | Mode_Transaction =>
+         when Mode_Quiet =>
+            S := Grt.Signals.Ghdl_Create_Quiet_Signal
+              (To_Ghdl_Value_Ptr (To_Address (E.Val)), E.Time);
+            Write_Sig (E.Sig, S);
+            Register_Prefix (E.Pfx.Typ, To_Memory_Ptr (E.Pfx));
+         when Mode_Stable | Mode_Transaction =>
             -- Create_Implicit_Signal
             --  (E.Sig, E.Val, E.Time, E.Prefix, E.Kind);
             raise Internal_Error;
@@ -2552,12 +2594,6 @@ package body Simul.Vhdl_Simul is
    end Collapse_Signals;
 
    type Connect_Mode is (Connect_Source, Connect_Effective);
-
-   function To_Memtyp (Ep : Sub_Signal_Type) return Memtyp is
-   begin
-      return (Ep.Typ,
-              Sig_Index (Signals_Table.Table (Ep.Base).Sig, Ep.Offs.Net_Off));
-   end To_Memtyp;
 
    -- Add a driving value PORT to signal SIG, ie: PORT is a source for SIG.
    -- As a side effect, this connect the signal SIG with the port PORT.

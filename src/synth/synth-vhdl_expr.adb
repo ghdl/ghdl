@@ -672,6 +672,7 @@ package body Synth.Vhdl_Expr is
             | Iir_Kind_Variable_Declaration
             | Iir_Kind_Interface_Variable_Declaration
             | Iir_Kind_Signal_Declaration
+            | Iir_Kinds_Signal_Attribute
             | Iir_Kind_Guard_Signal_Declaration
             | Iir_Kind_Interface_Constant_Declaration
             | Iir_Kind_Constant_Declaration
@@ -2056,6 +2057,20 @@ package body Synth.Vhdl_Expr is
                end if;
                return Res;
             end;
+         when Iir_Kinds_Signal_Attribute =>
+            declare
+               Res : Valtyp;
+            begin
+               if Hook_Signal_Expr = null then
+                  Error_Msg_Synth (Syn_Inst, Expr,
+                                   "signal attribute not supported");
+                  Res := No_Valtyp;
+               else
+                  Res := Synth_Name (Syn_Inst, Expr);
+                  Res := Hook_Signal_Expr (Res);
+               end if;
+               return Res;
+            end;
          when Iir_Kind_Reference_Name =>
             --  Only used for anonymous signals in internal association.
             return Synth_Expression_With_Type
@@ -2335,9 +2350,6 @@ package body Synth.Vhdl_Expr is
                Acc := Allocate_By_Value (Acc_Typ, V);
                return Create_Value_Access (Acc, Expr_Type);
             end;
-         when Iir_Kind_Stable_Attribute =>
-            Error_Msg_Synth (Syn_Inst, Expr, "signal attribute not supported");
-            return No_Valtyp;
          when Iir_Kind_Psl_Prev =>
             return Synth_Psl_Prev (Syn_Inst, Expr);
          when Iir_Kind_Psl_Stable =>

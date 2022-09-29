@@ -248,6 +248,24 @@ package body Simul.Vhdl_Elab is
       Val.Val.T := Terminal_Table.Last;
    end Gather_Terminal;
 
+   function Compute_Attribute_Time (Inst : Synth_Instance_Acc; Attr : Node)
+                                   return Std_Time
+   is
+      Param : constant Node := Get_Parameter (Attr);
+      Marker : Mark_Type;
+      Val : Valtyp;
+      Res : Std_Time;
+   begin
+      if Param = Null_Node then
+         return 0;
+      end if;
+      Mark_Expr_Pool (Marker);
+      Val := Synth.Vhdl_Expr.Synth_Expression (Inst, Param);
+      Res := Std_Time (Read_Discrete (Val));
+      Release_Expr_Pool (Marker);
+      return Res;
+   end Compute_Attribute_Time;
+
    procedure Gather_Processes_Decl (Inst : Synth_Instance_Acc; Decl : Node) is
    begin
       case Get_Kind (Decl) is
@@ -319,6 +337,17 @@ package body Simul.Vhdl_Elab is
          when Iir_Kind_Above_Attribute =>
             Gather_Signal ((Mode_Above, Decl, Inst, null, null, null,
                             No_Sensitivity_Index, No_Signal_Index));
+         when Iir_Kind_Quiet_Attribute =>
+            declare
+               T : Std_Time;
+               Pfx : Sub_Signal_Type;
+            begin
+               T := Compute_Attribute_Time (Inst, Decl);
+               Pfx := Compute_Sub_Signal (Inst, Get_Prefix (Decl));
+               Gather_Signal ((Mode_Quiet, Decl, Inst, null, null, null,
+                               No_Sensitivity_Index, No_Signal_Index,
+                               T, Pfx));
+            end;
          when Iir_Kind_Object_Alias_Declaration =>
             --  In case it aliases a signal.
             declare

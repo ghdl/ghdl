@@ -349,8 +349,7 @@ package body Elab.Vhdl_Decls is
          when Iir_Kind_Terminal_Declaration =>
             Elab_Terminal_Declaration (Syn_Inst, Decl);
          when Iir_Kinds_Signal_Attribute =>
-            --  Not supported by synthesis.
-            null;
+            Elab_Implicit_Signal_Declaration (Syn_Inst, Decl);
          when Iir_Kind_Disconnection_Specification =>
             null;
 
