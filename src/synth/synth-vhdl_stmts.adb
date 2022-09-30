@@ -1610,16 +1610,9 @@ package body Synth.Vhdl_Stmts is
             when Iir_Kind_Choice_By_Range =>
                declare
                   Bnd : Discrete_Range_Type;
-                  Is_In : Boolean;
                begin
                   Synth_Discrete_Range (Inst, Get_Choice_Range (Choice), Bnd);
-                  case Bnd.Dir is
-                     when Dir_To =>
-                        Is_In := Sel >= Bnd.Left and Sel <= Bnd.Right;
-                     when Dir_Downto =>
-                        Is_In := Sel <= Bnd.Left and Sel >= Bnd.Right;
-                  end case;
-                  if Is_In then
+                  if In_Range (Bnd, Sel) then
                      return Stmts;
                   end if;
                end;

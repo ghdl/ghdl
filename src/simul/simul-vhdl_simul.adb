@@ -1034,6 +1034,14 @@ package body Simul.Vhdl_Simul is
                   Ch := Synth_Expression (Inst, Get_Choice_Expression (Sw));
                   Eq := Is_Equal (Sel, Get_Memtyp (Ch));
                end;
+            when Iir_Kind_Choice_By_Range =>
+               declare
+                  Bnd : Discrete_Range_Type;
+               begin
+                  Elab.Vhdl_Types.Synth_Discrete_Range
+                    (Inst, Get_Choice_Range (Sw), Bnd);
+                  Eq := In_Range (Bnd, Read_Discrete (Sel));
+               end;
             when Iir_Kind_Choice_By_Others =>
                Eq := True;
             when others =>
