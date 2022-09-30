@@ -25,6 +25,7 @@ with Grt.Types; use Grt.Types;
 with Grt.Vhdl_Types; use Grt.Vhdl_Types;
 with Grt.To_Strings;
 with Grt.Arith;
+with Grt.Fcvt;
 
 with Vhdl.Utils;
 with Vhdl.Evaluation;
@@ -2987,6 +2988,17 @@ package body Synth.Vhdl_Eval is
                pragma Import (C, Atan);
             begin
                return Create_Memory_Fp64 (Atan (Read_Fp64 (Param1)), Res_Typ);
+            end;
+
+         when Iir_Predefined_Foreign_Textio_Read_Real =>
+            declare
+               Len : constant Natural := Natural (Param1.Typ.Abound.Len);
+               Res : Fp64;
+               Cs : Ghdl_C_String;
+            begin
+               Cs := To_Ghdl_C_String (To_Address (Param1.Val.Mem));
+               Res := Fp64 (Grt.Fcvt.From_String (Cs (1 .. Len)));
+               return Create_Memory_Fp64 (Res, Res_Typ);
             end;
          when others =>
             null;

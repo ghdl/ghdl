@@ -177,9 +177,9 @@ package body Vhdl.Sem_Specs is
       return Null_Iir;
    end Find_Attribute_Value;
 
-   --  Called for 'Foreign attribute ATTR on procedure DECL.
+   --  Called for 'Foreign attribute ATTR on subprogram DECL.
    --  Handle intrinsic subprograms.
-   procedure Attribute_Foreign_Procedure (Decl : Iir; Attr : Iir)
+   procedure Attribute_Foreign_Subprogram (Decl : Iir; Attr : Iir)
    is
       Expr : constant Iir := Get_Expression (Attr);
       Intrinsic_Str : constant String := "GHDL intrinsic";
@@ -218,7 +218,7 @@ package body Vhdl.Sem_Specs is
          end case;
          Set_Implicit_Definition (Decl, Predefined);
       end;
-   end Attribute_Foreign_Procedure;
+   end Attribute_Foreign_Subprogram;
 
    --  Decorate DECL with attribute ATTR.
    --  If CHECK_CLASS is true, class of DECL must be class of ATTR, otherwise
@@ -399,11 +399,15 @@ package body Vhdl.Sem_Specs is
 
          --  Use 'standard' convention call for foreign procedures, so as a
          --  consequence they cannot be suspended.
-         if Get_Kind (Decl) = Iir_Kind_Procedure_Declaration then
-            Set_Suspend_Flag (Decl, False);
-
-            Attribute_Foreign_Procedure (Decl, Attr);
-         end if;
+         case Get_Kind (Decl) is
+            when Iir_Kind_Procedure_Declaration =>
+               Set_Suspend_Flag (Decl, False);
+               Attribute_Foreign_Subprogram (Decl, Attr);
+            when Iir_Kind_Function_Declaration =>
+               Attribute_Foreign_Subprogram (Decl, Attr);
+            when others =>
+               null;
+         end case;
 
          declare
             use Vhdl.Back_End;
