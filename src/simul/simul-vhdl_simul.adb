@@ -2530,6 +2530,47 @@ package body Simul.Vhdl_Simul is
       end loop;
    end Create_Signals;
 
+   procedure Set_Disconnect
+     (Typ : Type_Acc; Sig : Memory_Ptr; Val : Std_Time) is
+   begin
+      case Typ.Kind is
+         when Type_Scalars =>
+            Grt.Signals.Ghdl_Signal_Set_Disconnect (Read_Sig (Sig), Val);
+         when Type_Vector
+           | Type_Array =>
+            declare
+               Len : constant Uns32 := Typ.Abound.Len;
+            begin
+               for I in 1 .. Len loop
+                  Set_Disconnect (Typ.Arr_El,
+                                  Sig_Index (Sig, (Len - I) * Typ.Arr_El.W),
+                                  Val);
+               end loop;
+            end;
+         when Type_Record =>
+            for I in Typ.Rec.E'Range loop
+               Set_Disconnect (Typ.Rec.E (I).Typ,
+                               Sig_Index (Sig, Typ.Rec.E (I).Offs.Net_Off),
+                               Val);
+            end loop;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Set_Disconnect;
+
+   procedure Create_Disconnections is
+   begin
+      for I in Disconnect_Table.First .. Disconnect_Table.Last loop
+         declare
+            E : Disconnect_Entry renames Disconnect_Table.Table (I);
+            S : Memtyp;
+         begin
+            S := To_Memtyp (E.Sig);
+            Set_Disconnect (S.Typ, S.Mem, E.Val);
+         end;
+      end loop;
+   end Create_Disconnections;
+
    procedure Add_Extra_Driver_To_Signal (Sig : Memory_Ptr;
                                          Typ : Type_Acc;
                                          Init : Memory_Ptr;
@@ -3308,7 +3349,7 @@ package body Simul.Vhdl_Simul is
       Create_Signals;
       pragma Assert (Is_Expr_Pool_Empty);
       Create_Connects;
-      -- Create_Disconnections;
+      Create_Disconnections;
       pragma Assert (Is_Expr_Pool_Empty);
       Create_Processes;
       pragma Assert (Is_Expr_Pool_Empty);
