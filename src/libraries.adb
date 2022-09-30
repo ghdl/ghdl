@@ -576,7 +576,6 @@ package body Libraries is
                   Scan_Expect (Tok_Identifier);
                   Ent := Create_Iir (Iir_Kind_Simple_Name);
                   Set_Identifier (Ent, Current_Identifier);
-                  Set_Location (Ent, Get_Token_Location);
                   Set_Entity_Name (Library_Unit, Ent);
                end;
             end if;
