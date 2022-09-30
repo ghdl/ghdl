@@ -342,9 +342,7 @@ package body Simul.Vhdl_Simul is
                              return Boolean is
    begin
       case Sig.Typ.Kind is
-         when Type_Logic
-           | Type_Bit
-           | Type_Discrete =>
+         when Type_Scalars =>
             declare
                S : Ghdl_Signal_Ptr;
             begin
@@ -363,9 +361,34 @@ package body Simul.Vhdl_Simul is
                      end if;
                end case;
             end;
+         when Type_Vector
+            | Type_Array =>
+            declare
+               Len : constant Uns32 := Sig.Typ.Abound.Len;
+               Sub : Memory_Ptr;
+            begin
+               for I in 1 .. Len loop
+                  Sub := Sig_Index (Sig.Mem, (Len - I) * Sig.Typ.Arr_El.W);
+                  if Read_Signal_Flag ((Sig.Typ.Arr_El, Sub), Kind) then
+                     return True;
+                  end if;
+               end loop;
+               return False;
+            end;
+         when Type_Record =>
+            declare
+               Sub : Memory_Ptr;
+            begin
+               for I in Sig.Typ.Rec.E'Range loop
+                  Sub := Sig_Index (Sig.Mem, Sig.Typ.Rec.E (I).Offs.Net_Off);
+                  if Read_Signal_Flag ((Sig.Typ.Rec.E (I).Typ, Sub), Kind) then
+                     return True;
+                  end if;
+               end loop;
+               return False;
+            end;
          when others =>
             raise Internal_Error;
-            return False;
       end case;
    end Read_Signal_Flag;
 
@@ -2505,7 +2528,12 @@ package body Simul.Vhdl_Simul is
               (To_Ghdl_Value_Ptr (To_Address (E.Val)), E.Time);
             Write_Sig (E.Sig, S);
             Register_Prefix (E.Pfx.Typ, To_Memory_Ptr (E.Pfx));
-         when Mode_Stable | Mode_Transaction =>
+         when Mode_Stable =>
+            S := Grt.Signals.Ghdl_Create_Stable_Signal
+              (To_Ghdl_Value_Ptr (To_Address (E.Val)), E.Time);
+            Write_Sig (E.Sig, S);
+            Register_Prefix (E.Pfx.Typ, To_Memory_Ptr (E.Pfx));
+         when Mode_Transaction =>
             -- Create_Implicit_Signal
             --  (E.Sig, E.Val, E.Time, E.Prefix, E.Kind);
             raise Internal_Error;

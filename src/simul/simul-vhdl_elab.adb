@@ -348,6 +348,17 @@ package body Simul.Vhdl_Elab is
                                No_Sensitivity_Index, No_Signal_Index,
                                T, Pfx));
             end;
+         when Iir_Kind_Stable_Attribute =>
+            declare
+               T : Std_Time;
+               Pfx : Sub_Signal_Type;
+            begin
+               T := Compute_Attribute_Time (Inst, Decl);
+               Pfx := Compute_Sub_Signal (Inst, Get_Prefix (Decl));
+               Gather_Signal ((Mode_Stable, Decl, Inst, null, null, null,
+                               No_Sensitivity_Index, No_Signal_Index,
+                               T, Pfx));
+            end;
          when Iir_Kind_Object_Alias_Declaration =>
             --  In case it aliases a signal.
             declare
