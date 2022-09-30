@@ -1426,9 +1426,20 @@ package body Synth.Vhdl_Expr is
             end if;
          when Type_Float =>
             if Is_Static (Val.Val) then
-               Res := Create_Value_Float
-                 (Fp64 (Read_Discrete (Val)), Conv_Typ);
-               return Res;
+               declare
+                  R : Fp64;
+               begin
+                  case Val.Typ.Kind is
+                     when Type_Discrete =>
+                        R := Fp64 (Read_Discrete (Val));
+                     when Type_Float =>
+                        R := Read_Fp64 (Val);
+                     when others =>
+                        raise Internal_Error;
+                  end case;
+                  Res := Create_Value_Float (R, Conv_Typ);
+                  return Res;
+               end;
             else
                Error_Msg_Synth (Syn_Inst, Loc,
                                 "unhandled type conversion (to float)");
