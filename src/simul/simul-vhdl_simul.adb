@@ -523,6 +523,8 @@ package body Simul.Vhdl_Simul is
       --  Skip the resume statement.
       Stmt := Get_Chain (Stmt);
       pragma Assert (Get_Kind (Stmt) = Iir_Kind_Procedure_Call_Statement);
+      Synth.Vhdl_Decls.Finalize_Declarations
+        (Process.Instance, Get_Declaration_Chain (Bod), True);
       Synth_Subprogram_Back_Association
         (Process.Instance, Caller_Inst,
          Get_Interface_Declaration_Chain (Imp),
@@ -806,6 +808,8 @@ package body Simul.Vhdl_Simul is
                --  TODO: end of call.
             else
                Execute_Sequential_Statements (Process);
+               Synth.Vhdl_Decls.Finalize_Declarations
+                 (Sub_Inst, Get_Declaration_Chain (Bod), True);
                Synth_Subprogram_Back_Association
                  (Sub_Inst, Inst, Inter_Chain, Assoc_Chain);
                Next_Stmt := Null_Node;

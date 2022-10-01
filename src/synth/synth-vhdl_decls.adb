@@ -878,6 +878,8 @@ package body Synth.Vhdl_Decls is
             null;
          when Iir_Kind_Use_Clause =>
             null;
+         when Iir_Kind_Suspend_State_Declaration =>
+            null;
          when others =>
             Vhdl.Errors.Error_Kind ("finalize_declaration", Decl);
       end case;
