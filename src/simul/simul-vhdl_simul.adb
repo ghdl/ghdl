@@ -803,16 +803,18 @@ package body Simul.Vhdl_Simul is
 
             if Get_Suspend_Flag (Bod) then
                Next_Stmt := Get_Sequential_Statement_Chain (Bod);
-               return;
-               --  TODO: end of call.
-            else
-               Execute_Sequential_Statements (Process);
-               Synth.Vhdl_Decls.Finalize_Declarations
-                 (Sub_Inst, Get_Declaration_Chain (Bod), True);
-               Synth_Subprogram_Back_Association
-                 (Sub_Inst, Inst, Inter_Chain, Assoc_Chain);
-               Next_Stmt := Null_Node;
+               if Next_Stmt /= Null_Node then
+                  return;
+               end if;
             end if;
+
+            --  No suspension (or no statements).
+            Execute_Sequential_Statements (Process);
+            Synth.Vhdl_Decls.Finalize_Declarations
+              (Sub_Inst, Get_Declaration_Chain (Bod), True);
+            Synth_Subprogram_Back_Association
+              (Sub_Inst, Inst, Inter_Chain, Assoc_Chain);
+            Next_Stmt := Null_Node;
          end;
       end if;
 
