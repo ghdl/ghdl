@@ -63,12 +63,16 @@ package body Elab.Vhdl_Insts is
                                         Inter_Chain : Node;
                                         Assoc_Chain : Node)
    is
+      use Elab.Memtype;
       Marker : Mark_Type;
       Inter : Node;
       Inter_Type : Type_Acc;
       Assoc : Node;
       Assoc_Inter : Node;
       Actual : Node;
+      Formal_Typ : Type_Acc;
+      Formal_Base : Valtyp;
+      Formal_Offs : Value_Offsets;
       Val : Valtyp;
    begin
       Mark_Expr_Pool (Marker);
@@ -80,6 +84,7 @@ package body Elab.Vhdl_Insts is
          case Iir_Kinds_Interface_Declaration (Get_Kind (Inter)) is
             when Iir_Kind_Interface_Constant_Declaration =>
                Inter_Type := Elab_Declaration_Type (Sub_Inst, Inter);
+               Formal_Base := No_Valtyp;
 
                case Get_Kind (Assoc) is
                   when Iir_Kind_Association_Element_Open =>
@@ -88,9 +93,22 @@ package body Elab.Vhdl_Insts is
                        (Sub_Inst, Actual, Inter_Type);
                   when Iir_Kind_Association_Element_By_Expression =>
                      Actual := Get_Actual (Assoc);
-                     --  FIXME: Inter_Type is not correct for individual assoc
+                     if Get_Whole_Association_Flag (Assoc) then
+                        Formal_Typ := Inter_Type;
+                     else
+                        declare
+                           use Synth.Vhdl_Stmts;
+                           Formal : constant Node := Get_Formal (Assoc);
+                           Dyn : Dyn_Name;
+                        begin
+                           Synth_Assignment_Prefix
+                             (Syn_Inst, Sub_Inst, Formal,
+                              Formal_Base, Formal_Typ, Formal_Offs, Dyn);
+                           pragma Assert (Dyn = No_Dyn_Name);
+                        end;
+                     end if;
                      Val := Synth_Expression_With_Type
-                       (Syn_Inst, Actual, Inter_Type);
+                       (Syn_Inst, Actual, Formal_Typ);
                   when Iir_Kind_Association_Element_By_Individual =>
                      Val.Typ := Synth_Subtype_Indication
                        (Syn_Inst, Get_Actual_Type (Assoc));
@@ -121,21 +139,8 @@ package body Elab.Vhdl_Insts is
                   Create_Object (Sub_Inst, Inter, Val);
                else
                   --  Modify the generic.
-                  declare
-                     use Synth.Vhdl_Stmts;
-                     use Elab.Memtype;
-                     Base : Valtyp;
-                     Typ : Type_Acc;
-                     Offs : Value_Offsets;
-                     Dyn : Dyn_Name;
-                  begin
-                     Synth_Assignment_Prefix
-                       (Syn_Inst, Sub_Inst, Get_Formal (Assoc),
-                        Base, Typ, Offs, Dyn);
-                     pragma Assert (Dyn = No_Dyn_Name);
-                     Copy_Memory (Base.Val.Mem + Offs.Mem_Off,
-                                  Get_Memory (Val), Typ.Sz);
-                  end;
+                  Copy_Memory (Formal_Base.Val.Mem + Formal_Offs.Mem_Off,
+                               Get_Memory (Val), Formal_Typ.Sz);
                end if;
 
                Release_Expr_Pool (Marker);
