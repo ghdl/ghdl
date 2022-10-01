@@ -2155,9 +2155,18 @@ package body Synth.Vhdl_Expr is
          when Iir_Kind_Integer_Literal =>
             declare
                Res : Valtyp;
+               V : Int64;
             begin
                Res := Create_Value_Memory (Expr_Type, Current_Pool);
-               Write_Discrete (Res, Get_Value (Expr));
+               V := Get_Value (Expr);
+               if Expr_Type.Sz = 4
+                 and then (V < Int64 (Int32'First) or V > Int64 (Int32'Last))
+               then
+                  --  TODO: should not exist, should be an overflow.
+                  Error_Msg_Synth (Syn_Inst, Expr, "value out of range");
+                  return No_Valtyp;
+               end if;
+               Write_Discrete (Res, V);
                return Res;
             end;
          when Iir_Kind_Floating_Point_Literal =>
