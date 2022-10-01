@@ -42,6 +42,14 @@ package body Elab.Vhdl_Types is
       --  Static values.
       L := Synth_Expression_With_Basetype (Syn_Inst, Get_Left_Limit (Rng));
       R := Synth_Expression_With_Basetype (Syn_Inst, Get_Right_Limit (Rng));
+      if L = No_Valtyp or else R = No_Valtyp then
+         Set_Error (Syn_Inst);
+         return (Dir => Get_Direction (Rng),
+                 Left => 0,
+                 Right => 0,
+                 Is_Signed => False);
+      end if;
+
       Strip_Const (L);
       Strip_Const (R);
 
