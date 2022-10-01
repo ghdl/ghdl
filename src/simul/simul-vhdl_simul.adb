@@ -528,8 +528,7 @@ package body Simul.Vhdl_Simul is
       Synth_Subprogram_Back_Association
         (Process.Instance, Caller_Inst,
          Get_Interface_Declaration_Chain (Imp),
-         Get_Parameter_Association_Chain
-           (Get_Procedure_Call (Stmt)));
+         Get_Parameter_Association_Chain (Get_Procedure_Call (Stmt)));
       Process.Instance := Caller_Inst;
       --  TODO: free old inst.
    end Finish_Procedure_Call;
@@ -587,7 +586,7 @@ package body Simul.Vhdl_Simul is
                Finish_Procedure_Call (Process, Parent, Stmt);
                exit when Stmt = Null_Node;
             when others =>
-               Vhdl.Errors.Error_Kind ("next_statement", Parent);
+               Vhdl.Errors.Error_Kind ("next_parent_statement", Parent);
          end case;
 
          N_Stmt := Get_Chain (Stmt);
