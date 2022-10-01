@@ -3819,9 +3819,194 @@ package body Synth.Vhdl_Stmts is
       end loop;
    end Synth_Sequential_Statements;
 
+   procedure Synth_Sequential_Statement
+     (C : in out Seq_Context; Stmt : Node)
+   is
+      Is_Dyn : constant Boolean := not Get_Instance_Const (C.Inst);
+      Marker : Mark_Type;
+      Has_Phi : Boolean;
+   begin
+      Mark_Expr_Pool (Marker);
+
+      if Is_Dyn then
+         pragma Assert (not Is_Static_Bit0 (C.W_En));
+         Has_Phi := not Is_Static_Bit1 (C.W_En);
+         if Has_Phi then
+            Push_Phi;
+         end if;
+      end if;
+
+      if Flags.Flag_Trace_Statements then
+         Elab.Vhdl_Debug.Put_Stmt_Trace (Stmt);
+      end if;
+      if Elab.Debugger.Flag_Need_Debug then
+         Elab.Debugger.Debug_Break (C.Inst, Stmt);
+      end if;
+
+      case Get_Kind (Stmt) is
+         when Iir_Kind_If_Statement =>
+            Synth_If_Statement (C, Stmt);
+         when Iir_Kind_Simple_Signal_Assignment_Statement =>
+            Synth_Simple_Signal_Assignment (C.Inst, Stmt);
+         when Iir_Kind_Conditional_Signal_Assignment_Statement =>
+            Synth_Conditional_Signal_Assignment (C.Inst, Stmt);
+         when Iir_Kind_Variable_Assignment_Statement =>
+            Synth_Variable_Assignment (C.Inst, Stmt);
+         when Iir_Kind_Conditional_Variable_Assignment_Statement =>
+            Synth_Conditional_Variable_Assignment (C.Inst, Stmt);
+         when Iir_Kind_Case_Statement =>
+            Synth_Case_Statement (C, Stmt);
+         when Iir_Kind_For_Loop_Statement =>
+            if Is_Dyn then
+               Synth_Dynamic_For_Loop_Statement (C, Stmt);
+            else
+               Synth_Static_For_Loop_Statement (C, Stmt);
+            end if;
+         when Iir_Kind_While_Loop_Statement =>
+            if Is_Dyn then
+               Synth_Dynamic_While_Loop_Statement (C, Stmt);
+            else
+               Synth_Static_While_Loop_Statement (C, Stmt);
+            end if;
+         when Iir_Kind_Null_Statement =>
+            --  Easy
+            null;
+         when Iir_Kind_Return_Statement =>
+            Synth_Return_Statement (C, Stmt);
+         when Iir_Kind_Procedure_Call_Statement =>
+            Synth_Procedure_Call (C.Inst, Stmt);
+         when Iir_Kind_Report_Statement =>
+            if not Is_Dyn then
+               Execute_Report_Statement (C.Inst, Stmt);
+            else
+               --  Not executed.
+               --  Depends on the execution path: the report statement may
+               --  be conditionally executed.
+               Synth_Dynamic_Report_Statement (C.Inst, Stmt, True);
+            end if;
+         when Iir_Kind_Assertion_Statement =>
+            if not Is_Dyn then
+               Execute_Assertion_Statement (C.Inst, Stmt);
+            else
+               Synth_Dynamic_Assertion_Statement (C, Stmt);
+            end if;
+         when Iir_Kind_Exit_Statement
+           | Iir_Kind_Next_Statement =>
+            if Is_Dyn then
+               Synth_Dynamic_Exit_Next_Statement (C, Stmt);
+            else
+               Synth_Static_Exit_Next_Statement (C, Stmt);
+            end if;
+         when Iir_Kind_Wait_Statement =>
+            Error_Msg_Synth
+              (C.Inst, Stmt, "wait statement not allowed for synthesis");
+         when others =>
+            Error_Kind ("synth_sequential_statements", Stmt);
+      end case;
+      if Is_Dyn then
+         if Has_Phi then
+            declare
+               Ctxt : constant Context_Acc := Get_Build (C.Inst);
+               Phi_T, Phi_F : Phi_Type;
+            begin
+               Pop_Phi (Phi_T);
+               Push_Phi;
+               Pop_Phi (Phi_F);
+               Merge_Phis (Ctxt, Get_Current_Value (Ctxt, C.W_En),
+                           Phi_T, Phi_F, Get_Location (Stmt));
+            end;
+         end if;
+         if Is_Static_Bit0 (C.W_En) then
+            --  Not more execution.
+            return;
+         end if;
+      else
+         if not C.S_En or C.Nbr_Ret /= 0 then
+            return;
+         end if;
+      end if;
+   end Synth_Sequential_Statement;
+
+   function Make_Process_Instance (Syn_Inst : Synth_Instance_Acc;
+                                   Proc : Node) return Synth_Instance_Acc
+   is
+      Label : constant Name_Id := Get_Identifier (Proc);
+      P_Sname : constant Sname := Get_Sname (Syn_Inst);
+      C_Sname : Sname;
+   begin
+      if Label = Null_Identifier then
+         C_Sname := New_Internal_Name (Get_Build (Syn_Inst), P_Sname);
+      else
+         C_Sname := New_Sname_User (Label, P_Sname);
+      end if;
+      return Make_Instance (Syn_Inst, Proc, C_Sname);
+   end Make_Process_Instance;
+
+   --  Non-sensitized process statement whose first statement is no a wait.
+   --  Allow:
+   --  * conditional if/then with globally static conditions
+   --  * asserts with globally static conditions
+   --  * reports
+   --  * final wait (without any expression).
+   procedure Synth_Non_Sensitized_Process_Statement
+     (Syn_Inst : Synth_Instance_Acc; Proc : Node)
+   is
+      use Areapools;
+      Decls : constant Node := Get_Declaration_Chain (Proc);
+      Prev_Instance_Pool : constant Areapool_Acc := Instance_Pool;
+      Proc_Marker : Areapools.Mark_Type;
+      C : Seq_Context (Mode_Static);
+      Stmt : Node;
+   begin
+      C := (Mode_Static,
+            Inst => Make_Process_Instance (Syn_Inst, Proc),
+            Cur_Loop => null,
+            S_En => True,
+            Ret_Value => No_Valtyp,
+            Ret_Typ => null,
+            Nbr_Ret => 0);
+      Set_Instance_Const (C.Inst, True);
+
+      Mark (Proc_Marker, Proc_Pool);
+      Instance_Pool := Proc_Pool'Access;
+
+      Synth_Declarations (C.Inst, Decls, True);
+
+      Stmt := Get_Sequential_Statement_Chain (Proc);
+      while Stmt /= Null_Node loop
+         if Get_Kind (Stmt) = Iir_Kind_Wait_Statement then
+            if Get_Chain (Stmt) /= Null_Node then
+               Error_Msg_Synth (C.Inst, Stmt,
+                                "wait must be the last statement");
+            elsif Get_Condition_Clause (Stmt) /= Null_Node
+              or else Get_Timeout_Clause (Stmt) /= Null_Node
+              or else Get_Sensitivity_List (Stmt) /= Null_Iir_List
+            then
+               Error_Msg_Synth (C.Inst, Stmt,
+                                "wait statement must have no clauses");
+            end if;
+            exit;
+         end if;
+
+         Synth_Sequential_Statement (C, Stmt);
+
+         Stmt := Get_Chain (Stmt);
+      end loop;
+      if Stmt = Null_Node then
+         Error_Msg_Synth (C.Inst, Proc,
+                          "missing wait statement at end of process");
+      end if;
+
+      Finalize_Declarations (C.Inst, Decls);
+
+      Free_Instance (C.Inst);
+      Release (Proc_Marker, Proc_Pool);
+      Instance_Pool := Prev_Instance_Pool;
+   end Synth_Non_Sensitized_Process_Statement;
+
    --  Synthesis of statements of a non-sensitized process.
    procedure Synth_Process_Sequential_Statements
-     (C : in out Seq_Context; Proc : Node)
+     (C : in out Seq_Context; Stmts : Node)
    is
       Ctxt : constant Context_Acc := Get_Build (C.Inst);
       Marker : Mark_Type;
@@ -3831,13 +4016,7 @@ package body Synth.Vhdl_Stmts is
       Phi_True : Phi_Type;
       Phi_False : Phi_Type;
    begin
-      Stmt := Get_Sequential_Statement_Chain (Proc);
-
-      --  The first statement must be a wait statement.
-      if Get_Kind (Stmt) /= Iir_Kind_Wait_Statement then
-         Error_Msg_Synth (C.Inst, Stmt, "expect wait as the first statement");
-         return;
-      end if;
+      Stmt := Stmts;
 
       Mark_Expr_Pool (Marker);
 
@@ -3865,21 +4044,29 @@ package body Synth.Vhdl_Stmts is
      (Syn_Inst : Synth_Instance_Acc; Proc : Node)
    is
       use Areapools;
-      Label : constant Name_Id := Get_Identifier (Proc);
       Decls_Chain : constant Node := Get_Declaration_Chain (Proc);
       Prev_Instance_Pool : constant Areapool_Acc := Instance_Pool;
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
+      Stmts : constant Node := Get_Sequential_Statement_Chain (Proc);
       M : Areapools.Mark_Type;
-      C_Sname : Sname;
       C : Seq_Context (Mode_Dynamic);
    begin
-      if Label = Null_Identifier then
-         C_Sname := New_Internal_Name (Ctxt, Get_Sname (Syn_Inst));
-      else
-         C_Sname := New_Sname_User (Label, Get_Sname (Syn_Inst));
+      --  Quick check for non-sensitized processes
+      if Get_Kind (Proc) = Iir_Kind_Process_Statement then
+         if Stmts = Null_Node then
+            Error_Msg_Synth (Syn_Inst, Proc,
+                             "empty process statement not allowed");
+            return;
+         end if;
+         if Get_Kind (Stmts) /= Iir_Kind_Wait_Statement then
+            --  Don't start with a wait, assume a passive process.
+            Synth_Non_Sensitized_Process_Statement (Syn_Inst, Proc);
+            return;
+         end if;
       end if;
+
       C := (Mode => Mode_Dynamic,
-            Inst => Make_Instance (Syn_Inst, Proc, C_Sname),
+            Inst => Make_Process_Instance (Syn_Inst, Proc),
             Cur_Loop => null,
             W_En => Alloc_Wire (Wire_Variable, (Proc, Bit_Type)),
             W_Ret => No_Wire_Id,
@@ -3905,11 +4092,10 @@ package body Synth.Vhdl_Stmts is
       if not Is_Error (C.Inst) then
          case Iir_Kinds_Process_Statement (Get_Kind (Proc)) is
             when Iir_Kind_Sensitized_Process_Statement =>
-               Synth_Sequential_Statements
-                 (C, Get_Sequential_Statement_Chain (Proc));
+               Synth_Sequential_Statements (C, Stmts);
                --  FIXME: check sensitivity list.
             when Iir_Kind_Process_Statement =>
-               Synth_Process_Sequential_Statements (C, Proc);
+               Synth_Process_Sequential_Statements (C, Stmts);
          end case;
       end if;
       pragma Assert (Is_Expr_Pool_Empty);
