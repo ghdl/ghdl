@@ -1130,8 +1130,8 @@ package body Trans.Chap7 is
       Iir_Predefined_Integer_Minus => ON_Sub_Ov,
       Iir_Predefined_Integer_Mul => ON_Mul_Ov,
       Iir_Predefined_Integer_Rem => ON_Rem_Ov,
-      Iir_Predefined_Integer_Mod => ON_Mod_Ov,
-      Iir_Predefined_Integer_Div => ON_Div_Ov,
+      Iir_Predefined_Integer_Mod => ON_Nil,
+      Iir_Predefined_Integer_Div => ON_Nil,
       Iir_Predefined_Integer_Absolute => ON_Abs_Ov,
       Iir_Predefined_Integer_Negation => ON_Neg_Ov,
 
@@ -2334,6 +2334,31 @@ package body Trans.Chap7 is
       return New_Convert_Ov (New_Obj_Value (Res), Res_Otype);
    end Translate_Predefined_Std_Ulogic_Array_Match;
 
+   --  Div/mod/rem intrinsic (to handle 0 and overflow).
+   function Translate_Predefined_Div (Expr : Iir_Function_Declaration;
+                                      Div32 : O_Dnode;
+                                      Div64 : O_Dnode;
+                                      Left_Tree, Right_Tree : O_Enode;
+                                      Res_Otype : O_Tnode) return O_Enode
+   is
+      Expr_Tinfo : constant Type_Info_Acc := Get_Info (Get_Type (Expr));
+      Opr : O_Dnode;
+      Etype : O_Tnode;
+      Res : O_Enode;
+   begin
+      case Type_Mode_Integers (Expr_Tinfo.Type_Mode) is
+         when Type_Mode_I32 =>
+            Opr := Div32;
+            Etype := Ghdl_I32_Type;
+         when Type_Mode_I64 =>
+            Opr := Div64;
+            Etype := Ghdl_I64_Type;
+      end case;
+      Res := Translate_Lib_Operator (New_Convert_Ov (Left_Tree, Etype),
+                                     New_Convert_Ov (Right_Tree, Etype), Opr);
+      return New_Convert_Ov (Res, Res_Otype);
+   end Translate_Predefined_Div;
+
    function Translate_Predefined_Operator
      (Expr : Iir_Function_Declaration; Left, Right : Iir; Res_Type : Iir)
      return O_Enode
@@ -2592,6 +2617,28 @@ package body Trans.Chap7 is
                   return New_Compare_Op
                     (ON_Neq, Left_Tree, Right_Tree, Std_Boolean_Type_Node);
                end if;
+            end if;
+
+         when Iir_Predefined_Integer_Div =>
+            if Get_Kind (Right) /= Iir_Kind_Integer_Literal
+              or else Get_Value (Right) in -1 .. 0
+            then
+               return Translate_Predefined_Div
+                 (Expr, Ghdl_I32_Div, Ghdl_I64_Div,
+                  Left_Tree, Right_Tree, Res_Otype);
+            else
+               return New_Dyadic_Op (ON_Div_Ov, Left_Tree, Right_Tree);
+            end if;
+
+         when Iir_Predefined_Integer_Mod =>
+            if Get_Kind (Right) /= Iir_Kind_Integer_Literal
+              or else Get_Value (Right) = 0
+            then
+               return Translate_Predefined_Div
+                 (Expr, Ghdl_I32_Mod, Ghdl_I64_Mod,
+                  Left_Tree, Right_Tree, Res_Otype);
+            else
+               return New_Dyadic_Op (ON_Mod_Ov, Left_Tree, Right_Tree);
             end if;
 
          when Iir_Predefined_Physical_Integer_Div =>
@@ -6348,8 +6395,6 @@ package body Trans.Chap7 is
             | Iir_Predefined_Integer_Plus
             | Iir_Predefined_Integer_Minus
             | Iir_Predefined_Integer_Mul
-            | Iir_Predefined_Integer_Div
-            | Iir_Predefined_Integer_Mod
             | Iir_Predefined_Integer_Rem
             | Iir_Predefined_Floating_Equality
             | Iir_Predefined_Floating_Inequality
@@ -6376,6 +6421,11 @@ package body Trans.Chap7 is
             | Iir_Predefined_Physical_Mod
             | Iir_Predefined_Physical_Rem =>
             pragma Assert (Predefined_To_Onop (Kind) /= ON_Nil);
+            return;
+
+         when Iir_Predefined_Integer_Div
+            | Iir_Predefined_Integer_Mod =>
+            --  Intrinsic
             return;
 
          when Iir_Predefined_Boolean_Nand

@@ -386,6 +386,14 @@ package body Ghdlrun is
            Grt.Lib.Ghdl_I32_Exp'Address);
       Def (Trans_Decls.Ghdl_I64_Exp,
            Grt.Lib.Ghdl_I64_Exp'Address);
+      Def (Trans_Decls.Ghdl_I32_Div,
+           Grt.Lib.Ghdl_I32_Div'Address);
+      Def (Trans_Decls.Ghdl_I64_Div,
+           Grt.Lib.Ghdl_I64_Div'Address);
+      Def (Trans_Decls.Ghdl_I32_Mod,
+           Grt.Lib.Ghdl_I32_Mod'Address);
+      Def (Trans_Decls.Ghdl_I64_Mod,
+           Grt.Lib.Ghdl_I64_Mod'Address);
       Def (Trans_Decls.Ghdl_Check_Stack_Allocation,
            Grt.Lib.Ghdl_Check_Stack_Allocation'Address);
 

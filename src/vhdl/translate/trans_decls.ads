@@ -182,6 +182,10 @@ package Trans_Decls is
    Ghdl_Real_Exp : O_Dnode;
    Ghdl_I32_Exp : O_Dnode;
    Ghdl_I64_Exp : O_Dnode;
+   Ghdl_I32_Div : O_Dnode;
+   Ghdl_I64_Div : O_Dnode;
+   Ghdl_I32_Mod : O_Dnode;
+   Ghdl_I64_Mod : O_Dnode;
 
    --  Procedure called in case of check failed.
    Ghdl_Program_Error : O_Dnode;

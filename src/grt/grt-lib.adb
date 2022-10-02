@@ -271,6 +271,50 @@ package body Grt.Lib is
       return Res;
    end Ghdl_I64_Exp;
 
+   function Ghdl_I32_Div (L, R : Ghdl_I32) return Ghdl_I32
+   is
+      pragma Suppress (Overflow_Check);
+   begin
+      if R = 0 then
+         Error ("division by 0");
+      elsif R = -1 and L = Ghdl_I32'First then
+         Error ("overflow in division");
+      end if;
+      return L / R;
+   end Ghdl_I32_Div;
+
+   function Ghdl_I64_Div (L, R : Ghdl_I64) return Ghdl_I64
+   is
+      pragma Suppress (Overflow_Check);
+   begin
+      if R = 0 then
+         Error ("division by 0");
+      elsif R = -1 and L = Ghdl_I64'First then
+         Error ("overflow in division");
+      end if;
+      return L / R;
+   end Ghdl_I64_Div;
+
+   function Ghdl_I32_Mod (L, R : Ghdl_I32) return Ghdl_I32
+   is
+      pragma Suppress (Overflow_Check);
+   begin
+      if R = 0 then
+         Error ("division by 0");
+      end if;
+      return L mod R;
+   end Ghdl_I32_Mod;
+
+   function Ghdl_I64_Mod (L, R : Ghdl_I64) return Ghdl_I64
+   is
+      pragma Suppress (Overflow_Check);
+   begin
+      if R = 0 then
+         Error ("division by 0");
+      end if;
+      return L mod R;
+   end Ghdl_I64_Mod;
+
    procedure Ghdl_Check_Stack_Allocation (Size : Ghdl_Index_Type)
    is
       Bt : Backtrace_Addrs;

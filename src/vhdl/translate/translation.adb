@@ -1200,10 +1200,8 @@ package body Translation is
       Start_Function_Decl
         (Interfaces, Get_Identifier ("__ghdl_real_exp"), O_Storage_External,
          Std_Real_Otype);
-      New_Interface_Decl (Interfaces, Param, Get_Identifier ("left"),
-                          Std_Real_Otype);
-      New_Interface_Decl (Interfaces, Param, Get_Identifier ("right"),
-                          Std_Integer_Otype);
+      New_Interface_Decl (Interfaces, Param, Wki_Left, Std_Real_Otype);
+      New_Interface_Decl (Interfaces, Param, Wki_Right, Std_Integer_Otype);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Real_Exp);
 
       --  function __ghdl_i32_exp (left : ghdl_i32;
@@ -1225,6 +1223,30 @@ package body Translation is
       New_Interface_Decl (Interfaces, Param, Wki_Left, Ghdl_I64_Type);
       New_Interface_Decl (Interfaces, Param, Wki_Right, Std_Integer_Otype);
       Finish_Subprogram_Decl (Interfaces, Ghdl_I64_Exp);
+
+      declare
+         procedure Create_Div_Subprogram
+           (Name : String; T : O_Tnode; Decl : out O_Dnode) is
+         begin
+            Start_Function_Decl
+              (Interfaces, Get_Identifier (Name), O_Storage_External, T);
+            New_Interface_Decl (Interfaces, Param, Wki_Left, T);
+            New_Interface_Decl (Interfaces, Param, Wki_Right, T);
+            Finish_Subprogram_Decl (Interfaces, Decl);
+         end Create_Div_Subprogram;
+      begin
+         --  function __ghdl_i32_div (left, right : ghdl_i32) return ghdl_i32;
+         Create_Div_Subprogram ("__ghdl_i32_div", Ghdl_I32_Type, Ghdl_I32_Div);
+
+         --  function __ghdl_i64_div (left, right : ghdl_i64) return ghdl_i64;
+         Create_Div_Subprogram ("__ghdl_i64_div", Ghdl_I64_Type, Ghdl_I64_Div);
+
+         --  function __ghdl_i32_mod (left, right : ghdl_i32) return ghdl_i32;
+         Create_Div_Subprogram ("__ghdl_i32_mod", Ghdl_I32_Type, Ghdl_I32_Mod);
+
+         --  function __ghdl_i64_mod (left, right : ghdl_i64) return ghdl_i64;
+         Create_Div_Subprogram ("__ghdl_i64_mod", Ghdl_I64_Type, Ghdl_I64_Mod);
+      end;
 
       --  procedure __ghdl_image_b1 (res : std_string_ptr_node;
       --                             val : ghdl_bool_type;

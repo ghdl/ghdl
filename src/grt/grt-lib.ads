@@ -69,6 +69,12 @@ package Grt.Lib is
    function Ghdl_I32_Exp (V : Ghdl_I32; E : Std_Integer) return Ghdl_I32;
    function Ghdl_I64_Exp (V : Ghdl_I64; E : Std_Integer) return Ghdl_I64;
 
+   function Ghdl_I32_Div (L, R : Ghdl_I32) return Ghdl_I32;
+   function Ghdl_I64_Div (L, R : Ghdl_I64) return Ghdl_I64;
+
+   function Ghdl_I32_Mod (L, R : Ghdl_I32) return Ghdl_I32;
+   function Ghdl_I64_Mod (L, R : Ghdl_I64) return Ghdl_I64;
+
    --  Called before allocation of large (complex) objects.
    procedure Ghdl_Check_Stack_Allocation (Size : Ghdl_Index_Type);
 
@@ -140,6 +146,12 @@ private
    pragma Export (C, Ghdl_I32_Exp, "__ghdl_i32_exp");
    pragma Export (C, Ghdl_I64_Exp, "__ghdl_i64_exp");
    pragma Export (C, Ghdl_Real_Exp, "__ghdl_real_exp");
+
+   pragma Export (C, Ghdl_I32_Div, "__ghdl_i32_div");
+   pragma Export (C, Ghdl_I64_Div, "__ghdl_i64_div");
+
+   pragma Export (C, Ghdl_I32_Mod, "__ghdl_i32_mod");
+   pragma Export (C, Ghdl_I64_Mod, "__ghdl_i64_mod");
 
    pragma Export (C, Ghdl_Std_Ulogic_To_Boolean_Array,
                   "__ghdl_std_ulogic_to_boolean_array");
