@@ -490,12 +490,18 @@ package body Synth.Vhdl_Eval is
                return Create_Memory_Discrete (Res, Res_Typ);
             end;
          when Iir_Predefined_Integer_Div
-           | Iir_Predefined_Physical_Physical_Div
-           | Iir_Predefined_Physical_Integer_Div =>
+            | Iir_Predefined_Physical_Physical_Div
+            | Iir_Predefined_Physical_Integer_Div =>
             declare
+               Rv : Int64;
                Res : Int64;
             begin
-               Res := Read_Discrete (Left) / Read_Discrete (Right);
+               Rv := Read_Discrete (Right);
+               if Rv = 0 then
+                  Error_Msg_Synth (Inst, Expr, "division by zero");
+                  return Null_Memtyp;
+               end if;
+               Res := Read_Discrete (Left) / Rv;
                Check_Integer_Overflow (Inst, Res, Res_Typ, Expr);
                return Create_Memory_Discrete (Res, Res_Typ);
             end;
@@ -619,6 +625,20 @@ package body Synth.Vhdl_Eval is
          when Iir_Predefined_Floating_Exp =>
             return Create_Memory_Fp64
               (Read_Fp64 (Left) ** Integer (Read_Discrete (Right)), Res_Typ);
+
+         when Iir_Predefined_Universal_R_I_Div =>
+            declare
+               Rv : Int64;
+               Res : Fp64;
+            begin
+               Rv := Read_Discrete (Right);
+               if Rv = 0 then
+                  Error_Msg_Synth (Inst, Expr, "division by zero");
+                  return Null_Memtyp;
+               end if;
+               Res := Read_Fp64 (Left) / Fp64 (Rv);
+               return Create_Memory_Fp64 (Res, Res_Typ);
+            end;
 
          when Iir_Predefined_Array_Array_Concat =>
             declare
