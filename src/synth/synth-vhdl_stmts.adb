@@ -2327,6 +2327,7 @@ package body Synth.Vhdl_Stmts is
             end if;
          end if;
          if Val = No_Valtyp then
+            Release_Expr_Pool (Marker);
             Set_Error (Subprg_Inst);
             exit;
          end if;
@@ -3509,6 +3510,7 @@ package body Synth.Vhdl_Stmts is
          Rep := Synth_Expression_With_Basetype (Syn_Inst, Rep_Expr);
          if Rep = No_Valtyp then
             Set_Error (Syn_Inst);
+            Release_Expr_Pool (Marker);
             return;
          end if;
          Strip_Const (Rep);
@@ -3517,6 +3519,7 @@ package body Synth.Vhdl_Stmts is
          Sev := Synth_Expression (Syn_Inst, Sev_Expr);
          if Sev = No_Valtyp then
             Set_Error (Syn_Inst);
+            Release_Expr_Pool (Marker);
             return;
          end if;
          Strip_Const (Sev);
