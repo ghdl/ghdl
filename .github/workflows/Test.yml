@@ -216,7 +216,7 @@ jobs:
 
       - name: '🚧 Build and 🚦 Test GHDL'
         run: |
-          PATH=$PWD/gnat/bin:$PATH:/usr/local/Cellar/llvm@13/13.0.1/bin/
+          PATH=$PWD/gnat/bin:$PATH:/usr/local/Cellar/llvm@14/14.0.6/bin/
           ./scripts/ci-run.sh -c
           mv ghdl-*.tgz ghdl-macos-${{ matrix.os }}-${{ matrix.backend }}.tgz
         env:
