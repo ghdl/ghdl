@@ -931,6 +931,9 @@ package body Synth.Vhdl_Decls is
             Synth_Concurrent_Attribute_Specification (Syn_Inst, Decl);
          when Iir_Kind_Package_Instantiation_Declaration =>
             Synth_Package_Instantiation (Syn_Inst, Decl);
+         when Iir_Kind_Attribute_Implicit_Declaration =>
+            --  Error will be printed when the attribute is used.
+            null;
          when others =>
             Vhdl.Errors.Error_Kind ("synth_concurrent_declaration", Decl);
       end case;

@@ -4217,6 +4217,7 @@ package body Synth.Vhdl_Stmts is
       Cond : Net;
       E : NFA_Edge;
       D_Arr : Net_Array_Acc;
+      N : Net;
       Res : Net;
    begin
       D_Arr := new Net_Array'(0 .. Nbr_States - 1 => No_Net);
@@ -4232,10 +4233,14 @@ package body Synth.Vhdl_Stmts is
          E := Get_First_Src_Edge (S);
          while E /= No_Edge loop
             --  Edge condition.
-            Cond := Build_Dyadic
-              (Ctxt, Id_And,
-               I, Synth_PSL_Expression (Syn_Inst, Get_Edge_Expr (E)));
-            Set_Location (Cond, Loc);
+            N := Synth_PSL_Expression (Syn_Inst, Get_Edge_Expr (E));
+            if N = No_Net then
+               --  Anything ?
+               Cond := I;
+            else
+               Cond := Build_Dyadic (Ctxt, Id_And, I, N);
+               Set_Location (Cond, Loc);
+            end if;
 
             --  TODO: if EOS is present, then this is a live state.
 

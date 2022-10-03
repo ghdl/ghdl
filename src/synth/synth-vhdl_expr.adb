@@ -1606,19 +1606,31 @@ package body Synth.Vhdl_Expr is
          when N_HDL_Bool =>
             declare
                E : constant Vhdl.Types.Vhdl_Node := Get_HDL_Node (Expr);
+               Val : Valtyp;
             begin
-               return Get_Net (Ctxt, Synth_Expression (Syn_Inst, E));
+               Val := Synth_Expression (Syn_Inst, E);
+               if Val = No_Valtyp then
+                  return No_Net;
+               end if;
+               return Get_Net (Ctxt, Val);
             end;
          when N_Not_Bool =>
-            pragma Assert (Loc /= No_Location);
-            Res := Build_Monadic
-              (Ctxt, Id_Not,
-               Synth_PSL_Expression (Syn_Inst, Get_Boolean (Expr)));
+            declare
+               V : Net;
+            begin
+               pragma Assert (Loc /= No_Location);
+               V := Synth_PSL_Expression (Syn_Inst, Get_Boolean (Expr));
+               if V = No_Net then
+                  return No_Net;
+               end if;
+               Res := Build_Monadic (Ctxt, Id_Not, V);
+            end;
          when N_And_Bool =>
             pragma Assert (Loc /= No_Location);
             declare
                L : constant PSL_Node := Get_Left (Expr);
                R : constant PSL_Node := Get_Right (Expr);
+               Lv, Rv : Net;
                Edge : Net;
             begin
                --  Handle edge (as it can be in default clock).
@@ -1633,17 +1645,26 @@ package body Synth.Vhdl_Expr is
                   --  It is never EOS!
                   Res := Build_Const_UB32 (Ctxt, 0, 1);
                else
-                  Res := Build_Dyadic (Ctxt, Id_And,
-                                       Synth_PSL_Expression (Syn_Inst, L),
-                                       Synth_PSL_Expression (Syn_Inst, R));
+                  Lv := Synth_PSL_Expression (Syn_Inst, L);
+                  Rv := Synth_PSL_Expression (Syn_Inst, R);
+                  if Lv = No_Net or Rv = No_Net then
+                     return No_Net;
+                  end if;
+                  Res := Build_Dyadic (Ctxt, Id_And, Lv, Rv);
                end if;
             end;
          when N_Or_Bool =>
-            pragma Assert (Loc /= No_Location);
-            Res := Build_Dyadic
-              (Ctxt, Id_Or,
-               Synth_PSL_Expression (Syn_Inst, Get_Left (Expr)),
-               Synth_PSL_Expression (Syn_Inst, Get_Right (Expr)));
+            declare
+               Lv, Rv : Net;
+            begin
+               pragma Assert (Loc /= No_Location);
+               Lv := Synth_PSL_Expression (Syn_Inst, Get_Left (Expr));
+               Rv := Synth_PSL_Expression (Syn_Inst, Get_Right (Expr));
+               if Lv = No_Net or Rv = No_Net then
+                  return No_Net;
+               end if;
+               Res := Build_Dyadic (Ctxt, Id_Or, Lv, Rv);
+            end;
          when N_True =>
             Res := Build_Const_UB32 (Ctxt, 1, 1);
          when N_False
