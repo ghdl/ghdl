@@ -47,12 +47,14 @@ set -e
 
 ISGPL=false
 ISSYNTH=true
+USEDOCKER=false
 
 # Transform long options to short ones
 for arg in "$@"; do
   shift
   case "$arg" in
       "--color"|"-color")         set -- "$@" "-c";;
+      "--docker"|"-docker")       set -- "$@" "-d";;
       "--backend"|"-backend")     set -- "$@" "-b";;
       "--pkg"|"-pkg")             set -- "$@" "-p";;
       "--gplcompat"|"-gplcompat") set -- "$@" "-g";;
@@ -61,8 +63,9 @@ for arg in "$@"; do
   esac
 done
 # Parse args
-while getopts ":b:p:cgs" opt; do
+while getopts ":b:p:cdgs" opt; do
   case $opt in
+    d) USEDOCKER=true;;
     c) enable_color;;
     b) BACK=$OPTARG ;;
     p) PKG_NAME=$OPTARG;;
@@ -353,18 +356,24 @@ ci_run () {
   else
       # Assume linux
 
-      gstart "[CI] Docker pull ghdl/build:$BUILD_IMAGE_TAG" "$ANSI_BLUE"
-      docker pull ghdl/build:$BUILD_IMAGE_TAG
-      gend
+      if [ "$USEDOCKER" = "true" ]; then
+	  gstart "[CI] Docker pull ghdl/build:$BUILD_IMAGE_TAG" "$ANSI_BLUE"
+	  docker pull ghdl/build:$BUILD_IMAGE_TAG
+	  gend
 
-      printf "$ANSI_BLUE[CI] Build ghdl in docker image ghdl/build:$BUILD_IMAGE_TAG\n"
-      $RUN \
-        -e GHDL_VER_DESC="$(git describe --dirty)" \
-        -e GHDL_VER_REF="$(git rev-parse --abbrev-ref HEAD)@${BUILD_IMAGE_TAG}" \
-        -e GHDL_VER_HASH="$(git rev-parse HEAD)" \
-        -e CONFIG_OPTS="$CONFIG_OPTS" \
-        ghdl/build:"$BUILD_IMAGE_TAG" \
-        bash -c "${scriptdir}/ci-run.sh $BUILD_CMD_OPTS build"
+	  printf "$ANSI_BLUE[CI] Build ghdl in docker image ghdl/build:$BUILD_IMAGE_TAG\n"
+	  $RUN \
+              -e GHDL_VER_DESC="$(git describe --dirty)" \
+              -e GHDL_VER_REF="$(git rev-parse --abbrev-ref HEAD)@${BUILD_IMAGE_TAG}" \
+              -e GHDL_VER_HASH="$(git rev-parse HEAD)" \
+              -e CONFIG_OPTS="$CONFIG_OPTS" \
+              ghdl/build:"$BUILD_IMAGE_TAG" \
+              bash -c "${scriptdir}/ci-run.sh $BUILD_CMD_OPTS build"
+      else
+	  sudo apt-get update -qq
+	  sudo apt-get -y install --no-install-recommends gnat zlib1g-dev
+	  bash -c "${scriptdir}/ci-run.sh $BUILD_CMD_OPTS build"
+      fi
   fi
 
   if [ ! -f build_ok ]; then
@@ -380,31 +389,37 @@ ci_run () {
       PATH="$PATH:$(pwd)/install-$(echo "$TASK" | cut -d+ -f2)/usr/local/bin" \
       ./testsuite/testsuite.sh
   else
-      # Build ghdl/ghdl:$GHDL_IMAGE_TAG image
-      build_img_ghdl
+      if [ "$USEDOCKER" = "true" ]; then
+	  # Build ghdl/ghdl:$GHDL_IMAGE_TAG image
+	  build_img_ghdl
+      fi
 
       tests="sanity"
 
       case "$GHDL_IMAGE_TAG" in
-        *ubuntu22*|*ubuntu20*|*buster*|*bullseye*)
-          GHDL_TEST_IMAGE="test:$GHDL_IMAGE_TAG-py"
-          gstart "[CI] Docker build $GHDL_TEST_IMAGE" "$ANSI_BLUE"
-          docker build -t "$GHDL_TEST_IMAGE" . -f- <<-EOF
+          *ubuntu*|*buster*|*bullseye*)
+	      if [ "$USEDOCKER" = "true" ]; then
+		  GHDL_TEST_IMAGE="test:$GHDL_IMAGE_TAG-py"
+		  gstart "[CI] Docker build $GHDL_TEST_IMAGE" "$ANSI_BLUE"
+		  docker build -t "$GHDL_TEST_IMAGE" . -f- <<-EOF
 # syntax=docker/dockerfile:experimental
 FROM ghdl/ghdl:$GHDL_IMAGE_TAG
 RUN apt update -qq && apt install -y python3 python3-pip
 RUN --mount=type=bind,src=./,target=/tmp/ghdl/ \
   pip3 install -r /tmp/ghdl/testsuite/requirements.txt
 EOF
-          gend
-          tests+=" pyunit"
-        ;;
-        *)
-          GHDL_TEST_IMAGE="ghdl/ghdl:$GHDL_IMAGE_TAG"
-        ;;
+		  gend
+	      else
+		  pip3 install -r testsuite/requirements.txt
+	      fi
+              tests+=" pyunit"
+              ;;
+          *)
+              GHDL_TEST_IMAGE="ghdl/ghdl:$GHDL_IMAGE_TAG"
+              ;;
       esac
 
-      if [ "x$ISGPL" != "xtrue" ]; then
+      if [ -d testsuite/gna ]; then
         tests+=" gna"
       fi
 
@@ -416,8 +431,13 @@ EOF
 
       tests+=" vpi vhpi"
 
-      # Run tests in docker container
-      $RUN "$GHDL_TEST_IMAGE" bash -c "GHDL=ghdl ./testsuite/testsuite.sh $tests"
+      if [ "$USEDOCKER" = "true" ]; then
+	  # Run tests in docker container
+	  $RUN "$GHDL_TEST_IMAGE" bash -c "GHDL=ghdl ./testsuite/testsuite.sh $tests"
+      else
+	  PATH="$PATH:$(pwd)/install-$(echo "$TASK" | cut -d+ -f2)/usr/local/bin" \
+	      ./testsuite/testsuite.sh $tests
+      fi
   fi
 
   if [ ! -f testsuite/test_ok ]; then
