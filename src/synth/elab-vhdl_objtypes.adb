@@ -1034,7 +1034,7 @@ package body Elab.Vhdl_Objtypes is
            | Type_Float =>
             null;
          when Type_Slice =>
-            raise Internal_Error;
+            Res.Slice_El := Unshare (T.Slice_El, Pool);
          when Type_Array
            | Type_Vector =>
             Res.Arr_El := Unshare (T.Arr_El, Pool);
@@ -1084,7 +1084,9 @@ package body Elab.Vhdl_Objtypes is
            | Type_Float =>
             null;
          when Type_Slice =>
-            raise Internal_Error;
+            Res.Slice_El := Unshare_Type (Typ.Slice_El,
+                                          Get_Array_Element (Base),
+                                          Global, Pool);
          when Type_Array
            | Type_Vector =>
             Res.Arr_El := Unshare_Type (Typ.Arr_El,
