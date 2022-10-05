@@ -48,6 +48,10 @@ package Simul.Vhdl_Simul is
 
    -- State associed with each process.
    type Process_State_Type (Kind : Process_Kind := Kind_Process) is record
+      --  True if the process has a suspend state.
+      --  (Used for procedure calls)
+      Has_State : Boolean;
+
       --  The process instance.
       Top_Instance : Synth_Instance_Acc := null;
       Proc : Node := Null_Node;

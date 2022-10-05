@@ -512,7 +512,7 @@ package body Simul.Vhdl_Simul is
         Get_Caller_Instance (Process.Instance);
       Resume : Boolean;
    begin
-      if not Get_Suspend_Flag (Bod) then
+      if not Get_Suspend_Flag (Bod) or else not Process.Has_State then
          Process.Instance := Caller_Inst;
          --  TODO: free old inst.
          Stmt := Null_Node;
@@ -801,7 +801,8 @@ package body Simul.Vhdl_Simul is
             Synth.Vhdl_Decls.Synth_Declarations
               (Sub_Inst, Get_Declaration_Chain (Bod), True);
 
-            if Get_Suspend_Flag (Bod) then
+            if Process.Has_State and then Get_Suspend_Flag (Bod) then
+               --  The procedure may suspend, in a suspendable process.
                Next_Stmt := Get_Sequential_Statement_Chain (Bod);
                if Next_Stmt /= Null_Node then
                   return;
@@ -1892,6 +1893,7 @@ package body Simul.Vhdl_Simul is
          Proc := Processes_Table.Table (I).Proc;
 
          Processes_State (I) := (Kind => Kind_Process,
+                                 Has_State => False,
                                  Top_Instance => Instance,
                                  Proc => Proc,
                                  Idx => I,
@@ -1927,7 +1929,8 @@ package body Simul.Vhdl_Simul is
               | Iir_Kind_Concurrent_Procedure_Call_Statement =>
                --  As those processes can suspend, they need a dedicated
                --  stack.
-               Processes_State (I).Pool := new Areapools.Areapool;
+               Current_Process.Pool := new Areapools.Areapool;
+               Current_Process.Has_State := True;
 
                if Get_Postponed_Flag (Proc) then
                   Ghdl_Postponed_Process_Register (Instance_Grt,
@@ -1942,6 +1945,7 @@ package body Simul.Vhdl_Simul is
 
             when Iir_Kind_Psl_Assert_Directive =>
                Processes_State (I) := (Kind => Kind_PSL,
+                                       Has_State => False,
                                        Top_Instance => Instance,
                                        Proc => Proc,
                                        Idx => I,
