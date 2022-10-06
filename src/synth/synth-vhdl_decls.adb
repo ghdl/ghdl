@@ -723,8 +723,6 @@ package body Synth.Vhdl_Decls is
             declare
                Val : Valtyp;
             begin
-               pragma Assert (Areapools.Is_Empty (Expr_Pool));
-
                Current_Pool := Instance_Pool;
                Val := Create_Value_Memtyp (Create_Memory_U32 (0));
                Current_Pool := Expr_Pool'Access;

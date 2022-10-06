@@ -3796,6 +3796,11 @@ package body Synth.Vhdl_Stmts is
             when Iir_Kind_Wait_Statement =>
                Error_Msg_Synth
                  (C.Inst, Stmt, "wait statement not allowed for synthesis");
+            when Iir_Kind_Suspend_State_Statement =>
+               --  Could happen in simulation when an 'unknown' procedure
+               --  is called from a sensitized process.
+               --  But this could also be detected during elaboration.
+               null;
             when others =>
                Error_Kind ("synth_sequential_statements", Stmt);
          end case;

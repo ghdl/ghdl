@@ -510,6 +510,7 @@ package body Simul.Vhdl_Simul is
       Imp : constant Node := Get_Subprogram_Specification (Bod);
       Caller_Inst : constant Synth_Instance_Acc :=
         Get_Caller_Instance (Process.Instance);
+      Call : Node;
       Resume : Boolean;
    begin
       if not Get_Suspend_Flag (Bod) or else not Process.Has_State then
@@ -518,17 +519,27 @@ package body Simul.Vhdl_Simul is
          Stmt := Null_Node;
          return;
       end if;
-      Get_Suspend_State_Statement (Caller_Inst, Stmt, Resume);
-      pragma Assert (Resume);
-      --  Skip the resume statement.
-      Stmt := Get_Chain (Stmt);
-      pragma Assert (Get_Kind (Stmt) = Iir_Kind_Procedure_Call_Statement);
+      if Caller_Inst = Process.Top_Instance
+        and then
+        Get_Kind (Process.Proc) = Iir_Kind_Concurrent_Procedure_Call_Statement
+      then
+         Call := Get_Procedure_Call (Process.Proc);
+         Stmt := Null_Node;
+      else
+         Get_Suspend_State_Statement (Caller_Inst, Stmt, Resume);
+         pragma Assert (Resume);
+         --  Skip the resume statement.
+         Stmt := Get_Chain (Stmt);
+         pragma Assert (Get_Kind (Stmt) = Iir_Kind_Procedure_Call_Statement);
+         Call := Get_Procedure_Call (Stmt);
+      end if;
+
       Synth.Vhdl_Decls.Finalize_Declarations
         (Process.Instance, Get_Declaration_Chain (Bod), True);
       Synth_Subprogram_Back_Association
         (Process.Instance, Caller_Inst,
          Get_Interface_Declaration_Chain (Imp),
-         Get_Parameter_Association_Chain (Get_Procedure_Call (Stmt)));
+         Get_Parameter_Association_Chain (Call));
       Process.Instance := Caller_Inst;
       --  TODO: free old inst.
    end Finish_Procedure_Call;
@@ -1447,6 +1458,24 @@ package body Simul.Vhdl_Simul is
       end if;
    end Execute_Sequential_Statements;
 
+   procedure Wait_For_Concurrent_Procedure_Call (Proc : Process_State_Acc)
+   is
+      Sens : Sensitivity_Index_Type;
+   begin
+      Sens := Processes_Table.Table (Proc.Idx).Sensitivity;
+      while Sens /= No_Sensitivity_Index loop
+         declare
+            S : Sensitivity_Entry renames Sensitivity_Table.Table (Sens);
+            Base : constant Memory_Ptr := Signals_Table.Table (S.Sig.Base).Sig;
+         begin
+            Add_Wait_Sensitivity (S.Sig.Typ,
+                                  Sig_Index (Base, S.Sig.Offs.Net_Off));
+            Sens := S.Prev_Proc;
+         end;
+      end loop;
+      Grt.Processes.Ghdl_Process_Wait_Suspend;
+   end Wait_For_Concurrent_Procedure_Call;
+
    procedure Execute_Concurrent_Procedure_Call (Proc : Process_State_Acc)
    is
       Next_Stmt : Node;
@@ -1461,31 +1490,13 @@ package body Simul.Vhdl_Simul is
          if Next_Stmt = Null_Node then
             --  Fully executed.
             --  Execute implicit wait.
-            declare
-               Sens : Sensitivity_Index_Type;
-            begin
-               Sens := Processes_Table.Table (Proc.Idx).Sensitivity;
-               while Sens /= No_Sensitivity_Index loop
-                  declare
-                     S : Sensitivity_Entry renames
-                       Sensitivity_Table.Table (Sens);
-                     Base : constant Memory_Ptr :=
-                       Signals_Table.Table (S.Sig.Base).Sig;
-                  begin
-                     Add_Wait_Sensitivity
-                       (S.Sig.Typ, Sig_Index (Base, S.Sig.Offs.Net_Off));
-                     Sens := S.Prev_Proc;
-                  end;
-               end loop;
-               Grt.Processes.Ghdl_Process_Wait_Suspend;
-               return;
-            end;
+            Wait_For_Concurrent_Procedure_Call (Proc);
          else
             --  Execute.
             Execute_Sequential_Statements_Inner (Proc, Next_Stmt, False);
             if Proc.Instance = Proc.Top_Instance then
                --  Do implicit wait.
-               raise Internal_Error;
+               Wait_For_Concurrent_Procedure_Call (Proc);
             end if;
          end if;
       else
@@ -1494,7 +1505,7 @@ package body Simul.Vhdl_Simul is
          Execute_Sequential_Statements_Inner (Proc, Next_Stmt, Resume);
          if Proc.Instance = Proc.Top_Instance then
             --  Do implicit wait
-            raise Internal_Error;
+            Wait_For_Concurrent_Procedure_Call (Proc);
          end if;
       end if;
    end Execute_Concurrent_Procedure_Call;
