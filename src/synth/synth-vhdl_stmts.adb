@@ -147,7 +147,8 @@ package body Synth.Vhdl_Stmts is
            | Iir_Kind_Attribute_Value
            | Iir_Kind_Free_Quantity_Declaration
            | Iir_Kinds_Branch_Quantity_Declaration
-           | Iir_Kind_Dot_Attribute =>
+           | Iir_Kind_Dot_Attribute
+           | Iir_Kinds_Signal_Attribute =>
             Assign_Base (Syn_Inst);
          when Iir_Kind_Function_Call =>
             Dest_Base := Synth_Expression (Syn_Inst, Pfx);
@@ -408,7 +409,8 @@ package body Synth.Vhdl_Stmts is
            | Iir_Kind_Indexed_Name
            | Iir_Kind_Slice_Name
            | Iir_Kind_Dereference
-           | Iir_Kind_Dot_Attribute =>
+           | Iir_Kind_Dot_Attribute
+           | Iir_Kinds_Signal_Attribute =>
             declare
                Base : Valtyp;
                Typ : Type_Acc;
