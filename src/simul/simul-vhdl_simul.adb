@@ -262,9 +262,9 @@ package body Simul.Vhdl_Simul is
                end loop;
             end;
          when Type_Record =>
-            for I in Val.Typ.Rec.E'Range loop
+            for I in Target.Typ.Rec.E'Range loop
                declare
-                  E : Rec_El_Type renames Val.Typ.Rec.E (I);
+                  E : Rec_El_Type renames Target.Typ.Rec.E (I);
                   Smem : Memory_Ptr;
                begin
                   if Val.Mem = null then
