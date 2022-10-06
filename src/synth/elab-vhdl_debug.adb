@@ -55,23 +55,51 @@ package body Elab.Vhdl_Debug is
                             & Natural'Image (Line));
    end Put_Stmt_Trace;
 
+   procedure Disp_Integer_Value (Val : Int64; Btype : Node)
+   is
+      pragma Unreferenced (Btype);
+   begin
+      Put_Int64 (Val);
+   end Disp_Integer_Value;
+
+   procedure Disp_Enumeration_Value (Val : Int64; Btype : Node)
+   is
+      Pos : constant Natural := Natural (Val);
+      Enums : constant Node_Flist :=
+        Get_Enumeration_Literal_List (Btype);
+      Id : constant Name_Id :=
+        Get_Identifier (Get_Nth_Element (Enums, Pos));
+   begin
+      Put (Name_Table.Image (Id));
+   end Disp_Enumeration_Value;
+
+   procedure Disp_Physical_Value (Val : Int64; Btype : Node)
+   is
+      Id : constant Name_Id := Get_Identifier (Get_Primary_Unit (Btype));
+   begin
+      Put_Int64 (Val);
+      Put (' ');
+      Put (Name_Table.Image (Id));
+   end Disp_Physical_Value;
+
+   procedure Disp_Float_Value (Val : Fp64; Btype : Node)
+   is
+      pragma Unreferenced (Btype);
+   begin
+      Put_Fp64 (Val);
+   end Disp_Float_Value;
+
    procedure Disp_Discrete_Value (Val : Int64; Btype : Node) is
    begin
       case Get_Kind (Btype) is
          when Iir_Kind_Integer_Type_Definition
            | Iir_Kind_Integer_Subtype_Definition =>
-            Put_Int64 (Val);
+            Disp_Integer_Value (Val, Btype);
          when Iir_Kind_Enumeration_Type_Definition
            | Iir_Kind_Enumeration_Subtype_Definition =>
-            declare
-               Pos : constant Natural := Natural (Val);
-               Enums : constant Node_Flist :=
-                 Get_Enumeration_Literal_List (Btype);
-               Id : constant Name_Id :=
-                 Get_Identifier (Get_Nth_Element (Enums, Pos));
-            begin
-               Put (Name_Table.Image (Id));
-            end;
+            Disp_Enumeration_Value (Val, Btype);
+         when Iir_Kind_Physical_Type_Definition =>
+            Disp_Physical_Value (Val, Btype);
          when others =>
             Vhdl.Errors.Error_Kind ("disp_discrete_value", Btype);
       end case;
@@ -158,7 +186,7 @@ package body Elab.Vhdl_Debug is
             if I /= 1 then
                Put (", ");
             end if;
-            Disp_Value_Array ((Mem.Typ,
+            Disp_Value_Array ((Mem.Typ.Arr_El,
                                Mem.Mem + Size_Type (Len - I) * Stride),
                               A_Type);
          end loop;

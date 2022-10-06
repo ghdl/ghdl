@@ -138,43 +138,45 @@ package body Simul.Vhdl_Debug is
       New_Line;
    end Disp_Conn_Entry;
 
-   function Read_Value (Value_Ptr : Ghdl_Value_Ptr; Mode : Mode_Type)
-     return Int64 is
+   procedure Disp_Value (Value_Ptr : Ghdl_Value_Ptr;
+                         Mode : Mode_Type;
+                         Btype : Node) is
    begin
       case Mode is
          when Mode_B1 =>
-            return Ghdl_B1'Pos (Value_Ptr.B1);
+            Disp_Enumeration_Value (Ghdl_B1'Pos (Value_Ptr.B1), Btype);
          when Mode_E8 =>
-            return Int64 (Value_Ptr.E8);
+            Disp_Enumeration_Value (Int64 (Value_Ptr.E8), Btype);
          when Mode_E32 =>
-            return Int64 (Value_Ptr.E32);
+            Disp_Enumeration_Value (Int64 (Value_Ptr.E32), Btype);
          when Mode_I32 =>
-            return Int64 (Value_Ptr.I32);
+            Disp_Integer_Value (Int64 (Value_Ptr.I32), Btype);
          when Mode_I64 =>
-            return Int64 (Value_Ptr.I64);
+            Disp_Integer_Value (Int64 (Value_Ptr.I64), Btype);
          when Mode_F64 =>
-            raise Internal_Error;
+            Disp_Float_Value (Fp64 (Value_Ptr.F64), Btype);
       end case;
-   end Read_Value;
+   end Disp_Value;
 
-   function Read_Value (Value : Value_Union; Mode : Mode_Type)
-     return Int64 is
+   procedure Disp_Value (Value : Value_Union;
+                         Mode : Mode_Type;
+                         Btype : Node) is
    begin
       case Mode is
          when Mode_B1 =>
-            return Ghdl_B1'Pos (Value.B1);
+            Disp_Enumeration_Value (Ghdl_B1'Pos (Value.B1), Btype);
          when Mode_E8 =>
-            return Int64 (Value.E8);
+            Disp_Enumeration_Value (Int64 (Value.E8), Btype);
          when Mode_E32 =>
-            return Int64 (Value.E32);
+            Disp_Enumeration_Value (Int64 (Value.E32), Btype);
          when Mode_I32 =>
-            return Int64 (Value.I32);
+            Disp_Integer_Value (Int64 (Value.I32), Btype);
          when Mode_I64 =>
-            return Int64 (Value.I64);
+            Disp_Integer_Value (Int64 (Value.I64), Btype);
          when Mode_F64 =>
-            raise Internal_Error;
+            Disp_Float_Value (Fp64 (Value.F64), Btype);
       end case;
-   end Read_Value;
+   end Disp_Value;
 
    procedure Disp_Transaction (Trans : Transaction_Acc;
                                Sig_Type : Node;
@@ -186,9 +188,9 @@ package body Simul.Vhdl_Debug is
       loop
          case T.Kind is
             when Trans_Value =>
-               Disp_Discrete_Value (Read_Value (T.Val, Mode), Sig_Type);
+               Disp_Value (T.Val, Mode, Sig_Type);
             when Trans_Direct =>
-               Disp_Discrete_Value (Read_Value (T.Val_Ptr, Mode), Sig_Type);
+               Disp_Value (T.Val_Ptr, Mode, Sig_Type);
             when Trans_Null =>
                Put ("NULL");
             when Trans_Error =>
@@ -218,9 +220,9 @@ package body Simul.Vhdl_Debug is
       Put (' ');
       Grt.Disp_Signals.Disp_Single_Signal_Attributes (Sig);
       Put (" val=");
-      Disp_Discrete_Value (Read_Value (Sig.Value_Ptr, Sig.Mode), Stype);
+      Disp_Value (Sig.Value_Ptr, Sig.Mode, Stype);
       Put ("; drv=");
-      Disp_Discrete_Value (Read_Value (Sig.Driving_Value, Sig.Mode), Stype);
+      Disp_Value (Sig.Driving_Value, Sig.Mode, Stype);
       if Sig.Nbr_Ports > 0 then
          Put (';');
          Put_Int32 (Int32 (Sig.Nbr_Ports));
@@ -267,9 +269,7 @@ package body Simul.Vhdl_Debug is
    procedure For_Each_Scalar_Signal (S : Memtyp; Stype : Node) is
    begin
       case S.Typ.Kind is
-         when Type_Bit
-           | Type_Logic
-           | Type_Discrete =>
+         when Type_Scalars =>
             For_Scalar_Signal (S, Get_Base_Type (Stype));
          when Type_Vector
            | Type_Array =>
@@ -309,8 +309,7 @@ package body Simul.Vhdl_Debug is
                      Get_Type (El));
                end loop;
             end;
-         when Type_Float
-           | Type_Unbounded_Vector
+         when Type_Unbounded_Vector
            | Type_Unbounded_Record
            | Type_Unbounded_Array
            | Type_Slice

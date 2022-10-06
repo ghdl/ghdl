@@ -448,6 +448,10 @@ package body Elab.Debugger is
       P : Natural;
    begin
       P := Skip_Blanks (Line);
+      if P > Line'Last then
+         Put_Line ("missing subprogram name");
+         return;
+      end if;
       if Line (P) = '"' then
          --  An operator name.
          declare

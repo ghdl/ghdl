@@ -27,6 +27,11 @@ package Elab.Vhdl_Debug is
    procedure Disp_Memtyp (M : Memtyp; Vtype : Node);
    function Walk_Declarations (Cb : Walk_Cb) return Walk_Status;
 
+   procedure Disp_Integer_Value (Val : Int64; Btype : Node);
+   procedure Disp_Enumeration_Value (Val : Int64; Btype : Node);
+   procedure Disp_Physical_Value (Val : Int64; Btype : Node);
+   procedure Disp_Float_Value (Val : Fp64; Btype : Node);
+
    procedure Disp_Discrete_Value (Val : Int64; Btype : Node);
 
    procedure Disp_Declaration_Objects
