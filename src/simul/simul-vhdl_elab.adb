@@ -358,15 +358,28 @@ package body Simul.Vhdl_Elab is
                Pfx := Compute_Sub_Signal (Inst, Get_Prefix (Decl));
                Gather_Signal ((Mode_Stable, Decl, Inst, null, null, null,
                                No_Sensitivity_Index, No_Signal_Index,
-                               T, Pfx));
+                               No_Connect_Index, T, Pfx));
             end;
          when Iir_Kind_Object_Alias_Declaration =>
             --  In case it aliases a signal.
             declare
+               Marker : Mark_Type;
                V : Valtyp;
+               Base : Valtyp;
+               Typ : Type_Acc;
+               Off : Value_Offsets;
             begin
                V := Get_Value (Inst, Decl);
                Convert_Type_Width (V.Typ);
+
+               --  Recompute alias offsets.
+               Mark_Expr_Pool (Marker);
+               Synth.Vhdl_Stmts.Synth_Assignment_Prefix
+                 (Inst, Get_Name (Decl), Base, Typ, Off);
+               V.Val.A_Off := Off;
+               pragma Assert (Base.Val = V.Val.A_Obj);
+               pragma Unreferenced (Typ);
+               Release_Expr_Pool (Marker);
             end;
          when Iir_Kind_Disconnection_Specification =>
             Gather_Disconnection (Inst, Decl);
