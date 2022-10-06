@@ -159,10 +159,12 @@ package Simul.Vhdl_Elab is
       --  This signal is identical to Collapsed_By, if set.
       Collapsed_By : Signal_Index_Type;
 
+      --  Connections.  Non-user signals can only be actuals.
+      Connect : Connect_Index_Type;
+
       case Kind is
          when Mode_Signal_User =>
             Drivers : Driver_Index_Type;
-            Connect : Connect_Index_Type;
             Disconnect : Disconnect_Index_Type;
             Nbr_Sources : Nbr_Sources_Arr_Acc;
          when Mode_Quiet | Mode_Stable | Mode_Delayed

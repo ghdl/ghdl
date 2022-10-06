@@ -277,33 +277,33 @@ package body Simul.Vhdl_Elab is
                when Iir_Linkage_Mode =>
                   Gather_Signal ((Mode_Linkage, Decl, Inst, null, null, null,
                                   No_Sensitivity_Index, No_Signal_Index,
-                                  No_Driver_Index, No_Connect_Index,
+                                  No_Connect_Index, No_Driver_Index,
                                   No_Disconnect_Index, null));
                when Iir_Buffer_Mode =>
                   Gather_Signal ((Mode_Buffer, Decl, Inst, null, null, null,
                                   No_Sensitivity_Index, No_Signal_Index,
-                                  No_Driver_Index, No_Connect_Index,
+                                  No_Connect_Index, No_Driver_Index,
                                   No_Disconnect_Index, null));
                when Iir_Out_Mode =>
                   Gather_Signal ((Mode_Out, Decl, Inst, null, null, null,
                                   No_Sensitivity_Index, No_Signal_Index,
-                                  No_Driver_Index, No_Connect_Index,
+                                  No_Connect_Index, No_Driver_Index,
                                   No_Disconnect_Index, null));
                when Iir_Inout_Mode =>
                   Gather_Signal ((Mode_Inout, Decl, Inst, null, null, null,
                                   No_Sensitivity_Index, No_Signal_Index,
-                                  No_Driver_Index, No_Connect_Index,
+                                  No_Connect_Index, No_Driver_Index,
                                   No_Disconnect_Index, null));
                when Iir_In_Mode =>
                   Gather_Signal ((Mode_In, Decl, Inst, null, null, null,
                                   No_Sensitivity_Index, No_Signal_Index,
-                                  No_Driver_Index, No_Connect_Index,
+                                  No_Connect_Index, No_Driver_Index,
                                   No_Disconnect_Index, null));
             end case;
          when Iir_Kind_Signal_Declaration =>
             Gather_Signal ((Mode_Signal, Decl, Inst, null, null, null,
                             No_Sensitivity_Index, No_Signal_Index,
-                            No_Driver_Index, No_Connect_Index,
+                            No_Connect_Index, No_Driver_Index,
                             No_Disconnect_Index, null));
          when Iir_Kind_Configuration_Specification =>
             null;
@@ -336,7 +336,8 @@ package body Simul.Vhdl_Elab is
             end;
          when Iir_Kind_Above_Attribute =>
             Gather_Signal ((Mode_Above, Decl, Inst, null, null, null,
-                            No_Sensitivity_Index, No_Signal_Index));
+                            No_Sensitivity_Index, No_Signal_Index,
+                            No_Connect_Index));
          when Iir_Kind_Quiet_Attribute =>
             declare
                T : Std_Time;
@@ -346,7 +347,7 @@ package body Simul.Vhdl_Elab is
                Pfx := Compute_Sub_Signal (Inst, Get_Prefix (Decl));
                Gather_Signal ((Mode_Quiet, Decl, Inst, null, null, null,
                                No_Sensitivity_Index, No_Signal_Index,
-                               T, Pfx));
+                               No_Connect_Index, T, Pfx));
             end;
          when Iir_Kind_Stable_Attribute =>
             declare
@@ -923,7 +924,8 @@ package body Simul.Vhdl_Elab is
             begin
                if Guard /= Null_Node then
                   Gather_Signal ((Mode_Guard, Guard, Inst, null, null, null,
-                                  No_Sensitivity_Index, No_Signal_Index));
+                                  No_Sensitivity_Index, No_Signal_Index,
+                                  No_Connect_Index));
                end if;
                if Hdr /= Null_Node then
                   Gather_Processes_Decls (Inst, Get_Port_Chain (Hdr));
@@ -965,7 +967,7 @@ package body Simul.Vhdl_Elab is
       for I in Signals_Table.First .. Signals_Table.Last loop
          Signals_Table.Table (I) :=
            (Mode_End, Null_Node, null, null, null, null,
-            No_Sensitivity_Index, No_Signal_Index);
+            No_Sensitivity_Index, No_Signal_Index, No_Connect_Index);
       end loop;
 
       --  Gather declarations of top-level packages.
