@@ -1591,6 +1591,10 @@ package body Vhdl.Sem is
                                     Get_Prefix (Right))
               and then Get_Identifier (Left) = Get_Identifier (Right);
 
+         when Iir_Kind_Parenthesis_Expression =>
+            return Are_Trees_Equal (Get_Expression (Left),
+                                    Get_Expression (Right));
+
          when Iir_Kind_Access_Type_Definition
            | Iir_Kind_Record_Type_Definition
            | Iir_Kind_Array_Type_Definition
