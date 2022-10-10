@@ -974,6 +974,23 @@ package body Simul.Vhdl_Simul is
       Disconnect_Signal (Sig);
    end Disconnect_Signal_Target;
 
+   function Execute_Maybe_Guarded_Assignment (Inst : Synth_Instance_Acc;
+                                              Stmt : Node;
+                                              Targ : Target_Info)
+                                             return Boolean
+   is
+      Guard : constant Node := Get_Guard (Stmt);
+   begin
+      if Guard /= Null_Node
+        and then not Execute_Condition (Inst, Guard)
+      then
+         Disconnect_Signal_Target (Targ);
+         return True;
+      else
+         return False;
+      end if;
+   end Execute_Maybe_Guarded_Assignment;
+
    procedure Execute_Simple_Signal_Assignment (Inst : Synth_Instance_Acc;
                                                Stmt : Node;
                                                Concurrent : Boolean)
@@ -982,20 +999,15 @@ package body Simul.Vhdl_Simul is
       Target : constant Node := Get_Target (Stmt);
       Marker : Mark_Type;
       Info : Target_Info;
-      Guard : Node;
    begin
       Mark_Expr_Pool (Marker);
       Info := Synth_Target (Inst, Target);
 
-      if Concurrent then
-         Guard := Get_Guard (Stmt);
-         if Guard /= Null_Node
-           and then not Execute_Condition (Inst, Guard)
-         then
-            Disconnect_Signal_Target (Info);
-            Release_Expr_Pool (Marker);
-            return;
-         end if;
+      if Concurrent
+        and then Execute_Maybe_Guarded_Assignment (Inst, Stmt, Info)
+      then
+         Release_Expr_Pool (Marker);
+         return;
       end if;
 
       Execute_Waveform_Assignment
@@ -1017,8 +1029,11 @@ package body Simul.Vhdl_Simul is
       Mark_Expr_Pool (Marker);
       Info := Synth_Target (Inst, Target);
 
-      if Concurrent and then Get_Guard (Stmt) /= Null_Node then
-         raise Internal_Error;
+      if Concurrent
+        and then Execute_Maybe_Guarded_Assignment (Inst, Stmt, Info)
+      then
+         Release_Expr_Pool (Marker);
+         return;
       end if;
 
       Cw := Get_Conditional_Waveform_Chain (Stmt);
@@ -1052,8 +1067,11 @@ package body Simul.Vhdl_Simul is
       Mark_Expr_Pool (Marker);
       Info := Synth_Target (Inst, Target);
 
-      if Concurrent and then Get_Guard (Stmt) /= Null_Node then
-         raise Internal_Error;
+      if Concurrent
+        and then Execute_Maybe_Guarded_Assignment (Inst, Stmt, Info)
+      then
+         Release_Expr_Pool (Marker);
+         return;
       end if;
 
       Sel := Get_Memtyp (Synth_Expression (Inst, Get_Expression (Stmt)));
