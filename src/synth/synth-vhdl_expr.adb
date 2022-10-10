@@ -1538,7 +1538,7 @@ package body Synth.Vhdl_Expr is
       Val : Valtyp;
       Res : Valtyp;
    begin
-      Val := Synth_Expression (Syn_Inst, Param);
+      Val := Synth_Expression_With_Type (Syn_Inst, Param, Dtype);
       if Is_Static (Val.Val) then
          declare
             T : Int64;
@@ -2314,8 +2314,8 @@ package body Synth.Vhdl_Expr is
                V : Valtyp;
                Dtype : Type_Acc;
             begin
-               V := Synth_Expression (Syn_Inst, Param);
                Dtype := Get_Subtype_Object (Syn_Inst, Get_Type (Expr));
+               V := Synth_Expression_With_Type (Syn_Inst, Param, Dtype);
                --  FIXME: to be generalized.  Not always as simple as a
                --  subtype conversion.
                if Is_Static (V.Val) then
