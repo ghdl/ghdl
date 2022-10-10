@@ -216,6 +216,10 @@ package body Simul.Vhdl_Debug is
       Sig : Ghdl_Signal_Ptr;
    begin
       Sig := Simul.Vhdl_Simul.Read_Sig (S.Mem);
+      if Sig = null then
+         Put_Line ("*not yet elaborated*");
+         return;
+      end if;
       Put_Addr (Sig.all'Address);
       Put (' ');
       Grt.Disp_Signals.Disp_Single_Signal_Attributes (Sig);
@@ -333,6 +337,10 @@ package body Simul.Vhdl_Debug is
       Ctxt : Rti_Context;
    begin
       Sig := Simul.Vhdl_Simul.Read_Sig (S.Mem);
+      if Sig = null then
+         Put_Line ("*not yet elaborated*");
+         return;
+      end if;
       Put_Addr (Sig.all'Address);
       Put (' ');
       Ev := Sig.Event_List;
