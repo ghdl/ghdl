@@ -499,7 +499,7 @@ package body Vhdl.Canon is
                  (Get_Target (Stmt), List, True);
                Ce := Get_Conditional_Expression_Chain (Stmt);
                while Ce /= Null_Iir loop
-                  Canon_Extract_Sensitivity_Expression
+                  Canon_Extract_Sensitivity_If_Not_Null
                     (Get_Condition (Ce), List, False);
                   Canon_Extract_Sensitivity_Expression
                     (Get_Expression (Ce), List, False);
