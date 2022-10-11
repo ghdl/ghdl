@@ -36,7 +36,7 @@ parse_cmdline () {
     esac
   done
 
-  NPROC=${NPROC:-$(nproc 2> /dev/null || echo 1)}
+  NPROC=${NPROC:-$(nproc 2> /dev/null || sysctl -n hw.ncpu 2> /dev/null || echo 1)}
 }
 
 singlerun() {
@@ -48,6 +48,7 @@ singlerun() {
     printf "$_suite $1: ${ANSI_RED}failed${ANSI_NOCOLOR}\n"
     printf '%s ' "$1" >> ../failures.log
     if [ x"$2" = x"n" ]; then
+      cat test.log
       exit 1;
     fi
   fi
