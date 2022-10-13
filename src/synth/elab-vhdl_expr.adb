@@ -363,6 +363,8 @@ package body Elab.Vhdl_Expr is
             end;
          when Iir_Kind_Simple_Name =>
             return Exec_Type_Of_Object (Syn_Inst, Get_Named_Entity (Expr));
+         when Iir_Kind_Parenthesis_Expression =>
+            return Exec_Type_Of_Object (Syn_Inst, Get_Expression (Expr));
          when Iir_Kind_Slice_Name =>
             declare
                use Netlists;
@@ -410,7 +412,8 @@ package body Elab.Vhdl_Expr is
                return Res.Typ;
             end;
 
-         when Iir_Kind_String_Literal8 =>
+         when Iir_Kind_String_Literal8
+           | Iir_Kind_Aggregate =>
             --  TODO: the value should be computed (once) and its type
             --  returned.
             return Synth_Subtype_Indication (Syn_Inst, Get_Type (Expr));
