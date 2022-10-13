@@ -2703,7 +2703,16 @@ package body Simul.Vhdl_Simul is
                     (E.Sig, E.Typ, E.Val, 0, E.Nbr_Sources.all);
                end if;
                --  The signal value is the value of the collapsed signal.
-               --  TODO: keep the default value ?
+               if Get_Mode (E.Decl) in Iir_Out_Modes then
+                  --  Keep default value.
+                  Copy_Memory (Signals_Table.Table (E.Collapsed_By).Val,
+                               E.Val,
+                               E.Typ.Sz);
+                  Exec_Write_Signal
+                    (Signals_Table.Table (E.Collapsed_By).Sig,
+                     (E.Typ, E.Val), Write_Signal_Driving_Value);
+               end if;
+
                E.Val := Signals_Table.Table (E.Collapsed_By).Val;
             end if;
          end;
