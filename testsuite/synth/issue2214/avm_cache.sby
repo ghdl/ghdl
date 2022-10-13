@@ -1,0 +1,18 @@
+[tasks]
+bmc
+
+[options]
+bmc: mode bmc
+bmc: depth 6
+
+[engines]
+smtbmc
+
+[script]
+ghdl --std=08 -gG_CACHE_SIZE=8 -gG_ADDRESS_SIZE=4 -gG_DATA_SIZE=8 avm_cache.vhd avm_cache.psl -e avm_cache
+prep -top avm_cache
+
+[files]
+avm_cache.psl
+avm_cache.vhd
+

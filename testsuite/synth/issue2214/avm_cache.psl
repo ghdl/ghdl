@@ -1,0 +1,162 @@
+vunit i_avm_cache(avm_cache(synthesis))
+{
+   -- set all declarations to run on clk_i
+   default clock is rising_edge(clk_i);
+
+   -- Additional signals used during formal verification
+   signal f_s_rd_burstcount : integer;
+   signal f_m_rd_burstcount : integer;
+
+   p_s_rd_burstcount : process (clk_i)
+   begin
+      if rising_edge(clk_i) then
+         if s_avm_readdatavalid_o then
+            f_s_rd_burstcount <= f_s_rd_burstcount - 1;
+         end if;
+         if s_avm_read_i and not s_avm_waitrequest_o then
+            f_s_rd_burstcount <= to_integer(s_avm_burstcount_i);
+         end if;
+         if rst_i then
+            f_s_rd_burstcount <= 0;
+         end if;
+      end if;
+   end process p_s_rd_burstcount;
+
+   p_m_rd_burstcount : process (clk_i)
+   begin
+      if rising_edge(clk_i) then
+         if m_avm_readdatavalid_i then
+            f_m_rd_burstcount <= f_m_rd_burstcount - 1;
+         end if;
+         if m_avm_read_o and not m_avm_waitrequest_i then
+            f_m_rd_burstcount <= to_integer(m_avm_burstcount_o);
+         end if;
+         if rst_i then
+            f_m_rd_burstcount <= 0;
+         end if;
+      end if;
+   end process p_m_rd_burstcount;
+
+   signal f_s_written : std_logic := '0';
+   signal f_s_data    : std_logic_vector(G_DATA_SIZE-1 downto 0);
+   signal f_s_read    : std_logic := '0';
+   signal f_m_written : std_logic := '0';
+   signal f_m_data    : std_logic_vector(G_DATA_SIZE-1 downto 0);
+   signal f_m_read    : std_logic := '0';
+   signal f_addr      : std_logic_vector(G_ADDRESS_SIZE-1 downto 0);
+   attribute anyconst : boolean;
+   attribute anyconst of f_addr : signal is true;
+
+   p_s_write : process (clk_i)
+   begin
+      if rising_edge(clk_i) then
+         if s_avm_write_i and not s_avm_waitrequest_o then
+            if s_avm_address_i = f_addr then
+               f_s_data    <= s_avm_writedata_i;
+               f_s_written <= '1';
+            end if;
+         end if;
+      end if;
+   end process p_s_write;
+
+   p_s_read : process (clk_i)
+   begin
+      if rising_edge(clk_i) then
+         if s_avm_read_i and not s_avm_waitrequest_o then
+            if s_avm_address_i = f_addr then
+               f_s_read <= '1';
+            end if;
+         end if;
+
+         if f_s_read = '1' and s_avm_readdatavalid_o = '1' then
+             f_s_read <= '0';
+         end if;
+      end if;
+   end process p_s_read;
+
+   p_m_write : process (clk_i)
+   begin
+      if rising_edge(clk_i) then
+         if m_avm_write_o and not m_avm_waitrequest_i then
+            if m_avm_address_o = f_addr then
+               f_m_data    <= m_avm_writedata_o;
+               f_m_written <= '1';
+            end if;
+         end if;
+      end if;
+   end process p_m_write;
+
+   p_m_read : process (clk_i)
+   begin
+      if rising_edge(clk_i) then
+         if m_avm_read_o and not m_avm_waitrequest_i then
+            if m_avm_address_o = f_addr then
+               f_m_read <= '1';
+            end if;
+         end if;
+
+         if f_m_read = '1' and m_avm_readdatavalid_i = '1' then
+             f_m_read <= '0';
+         end if;
+      end if;
+   end process p_m_read;
+
+   f_slave : assert always f_s_written and f_s_read and s_avm_readdatavalid_o |-> s_avm_readdata_o = f_s_data;
+
+   f_master : assume always f_m_written and f_m_read and m_avm_readdatavalid_i |-> m_avm_readdata_i = f_m_data;
+
+
+
+   -----------------------------
+   -- ASSERTIONS ABOUT OUTPUTS
+   -----------------------------
+
+   -- Master must be empty after reset
+   f_master_after_reset_empty : assert always {rst_i} |=> not (m_avm_write_o or m_avm_read_o);
+
+   -- Master may not assert both write and read.
+   f_master_not_double: assert always rst_i or not (m_avm_write_o and m_avm_read_o);
+
+   -- Master must be stable until accepted
+   f_master_stable : assert always {(m_avm_write_o or m_avm_read_o) and m_avm_waitrequest_i and not rst_i} |=>
+      {stable(m_avm_write_o) and stable(m_avm_read_o) and stable(m_avm_address_o) and stable(m_avm_writedata_o) and
+       stable(m_avm_byteenable_o) and stable(m_avm_burstcount_o)};
+
+   f_master_burst_valid : assert always rst_i or not (m_avm_read_o and not m_avm_waitrequest_i and nor(m_avm_burstcount_o));
+   f_slave_burst_reset  : assert always rst_i |=> {f_s_rd_burstcount = 0};
+   f_slave_burst_range  : assert always rst_i or f_s_rd_burstcount >= 0;
+   f_slave_burst_block  : assert always rst_i or f_s_rd_burstcount = 0 or s_avm_waitrequest_o or (f_s_rd_burstcount = 1 and s_avm_readdatavalid_o = '1');
+   f_slave_no_data      : assert always rst_i or not (f_s_rd_burstcount = 0 and s_avm_readdatavalid_o = '1');
+
+
+   -----------------------------
+   -- ASSUMPTIONS ABOUT INPUTS
+   -----------------------------
+
+   -- Require reset at startup.
+   f_reset : assume {rst_i};
+
+   -- Slave must be empty after reset
+   f_slave_after_reset_empty : assume always {rst_i} |=> not (s_avm_write_i or s_avm_read_i);
+
+   -- Slave may not assert both write and read.
+   f_slave_not_double: assume always not (s_avm_write_i and s_avm_read_i);
+
+   -- Slaves must be stable until accepted
+   f_slave_input_stable : assume always {(s_avm_write_i or s_avm_read_i) and s_avm_waitrequest_o and not rst_i} |=>
+      {stable(s_avm_write_i) and stable(s_avm_read_i) and stable(s_avm_address_i) and stable(s_avm_writedata_i) and
+       stable(s_avm_byteenable_i) and stable(s_avm_burstcount_i)};
+
+   f_slave_burst_valid  : assume always rst_i or not (s_avm_read_i and not s_avm_waitrequest_o and nor(s_avm_burstcount_i));
+   f_master_burst_reset : assume always rst_i |=> {f_m_rd_burstcount = 0};
+   f_master_burst_range : assume always rst_i or f_m_rd_burstcount >= 0;
+   f_master_burst_block : assume always rst_i or f_m_rd_burstcount = 0 or m_avm_waitrequest_i or (f_m_rd_burstcount = 1 and m_avm_readdatavalid_i = '1');
+   f_master_no_data     : assume always rst_i or not (f_m_rd_burstcount = 0 and m_avm_readdatavalid_i = '1');
+
+
+   --------------------------------------------
+   -- COVER STATEMENTS TO VERIFY REACHABILITY
+   --------------------------------------------
+
+} -- vunit i_avm_cache(avm_cache(synthesis))
+
