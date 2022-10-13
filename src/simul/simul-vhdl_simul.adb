@@ -2645,6 +2645,7 @@ package body Simul.Vhdl_Simul is
       end loop;
    end Create_Disconnections;
 
+   --  Add an extra driver for undriven collapsed out signals.
    procedure Add_Extra_Driver_To_Signal (Sig : Memory_Ptr;
                                          Typ : Type_Acc;
                                          Init : Memory_Ptr;
@@ -2652,10 +2653,7 @@ package body Simul.Vhdl_Simul is
                                          Vec : Nbr_Sources_Array) is
    begin
       case Typ.Kind is
-         when Type_Logic
-           | Type_Bit
-           | Type_Discrete
-           | Type_Float =>
+         when Type_Scalars =>
             if Vec (Off).Nbr_Drivers = 0
               and then Vec (Off).Nbr_Conns = 0
             then
@@ -2671,7 +2669,8 @@ package body Simul.Vhdl_Simul is
                for I in 1 .. Len loop
                   Add_Extra_Driver_To_Signal
                     (Sig_Index (Sig, (Len - I) * El.W), El,
-                     Init + Size_Type (I - 1) * El.Sz, Off + (Len - I), Vec);
+                     Init + Size_Type (I - 1) * El.Sz,
+                     Off + (Len - I) * El.W, Vec);
                end loop;
             end;
          when Type_Record =>
@@ -2697,6 +2696,9 @@ package body Simul.Vhdl_Simul is
          begin
             if E.Collapsed_By /= No_Signal_Index then
                if Get_Mode (E.Decl) in Iir_Out_Modes then
+                  --  As an out connection creates a source, if a signal is
+                  --  collapsed and has no source, an extra source needs to be
+                  --  created.
                   Add_Extra_Driver_To_Signal
                     (E.Sig, E.Typ, E.Val, 0, E.Nbr_Sources.all);
                end if;
