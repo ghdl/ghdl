@@ -1020,7 +1020,10 @@ package body Simul.Vhdl_Elab is
                      if Ns.Total = 0 and then Is_Out then
                         Ns.Total := 1;
                      end if;
-                     if E.Collapsed_By /= No_Signal_Index then
+                     if E.Collapsed_By /= No_Signal_Index
+                       and then (Signals_Table.Table (E.Collapsed_By).Kind
+                                   in Mode_Signal_User)
+                     then
                         --  Add to the parent.
                         declare
                            C_Ns : Nbr_Sources_Type renames
