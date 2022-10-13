@@ -410,7 +410,7 @@ package body Elab.Vhdl_Values is
    function Read_Access (Vt : Valtyp) return Heap_Index is
    begin
       pragma Assert (Vt.Typ.Kind = Type_Access);
-      return Read_Access (Vt.Val.Mem);
+      return Read_Access (Get_Memory (Vt));
    end Read_Access;
 
    function Create_Value_Discrete (Val : Int64; Vtype : Type_Acc) return Valtyp
