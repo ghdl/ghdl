@@ -4770,10 +4770,12 @@ package body Synth.Vhdl_Stmts is
                                     Get_Sname (Syn_Inst));
       Set_Extra (Syn_Inst, Parent_Inst, Unit_Sname);
       Mark (M, Proc_Pool);
-      Instance_Pool := Proc_Pool'Access;
 
       Item := Get_Vunit_Item_Chain (Unit);
       while Item /= Null_Node loop
+         --  Always set instance_pool.
+         --  (it is cleared by synth_concurrent_statement).
+         Instance_Pool := Proc_Pool'Access;
          case Get_Kind (Item) is
             when Iir_Kind_Psl_Default_Clock
                | Iir_Kind_Psl_Declaration
