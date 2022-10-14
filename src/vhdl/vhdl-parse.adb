@@ -8078,7 +8078,8 @@ package body Vhdl.Parse is
             when Tok_Case =>
                Stmt := Parse_Case_Statement (Label);
             when Tok_Identifier
-              | Tok_String =>
+              | Tok_String
+              | Tok_Double_Less =>
                --  String for an expanded name with operator_symbol prefix.
                Stmt := Parse_Sequential_Assignment_Statement (Parse_Name);
             when Tok_Left_Paren =>
@@ -10253,7 +10254,8 @@ package body Vhdl.Parse is
                   Error_Msg_Parse ("label is not allowed here");
                end if;
                return Null_Iir;
-            when Tok_Identifier =>
+            when Tok_Identifier
+              | Tok_Double_Less =>
                Target := Parse_Name (Allow_Indexes => True);
                Stmt := Parse_Concurrent_Assignment (Target);
                if Get_Kind (Stmt) = Iir_Kind_Component_Instantiation_Statement
