@@ -1454,6 +1454,9 @@ package body Synth.Vhdl_Expr is
          when Type_Bit
            | Type_Logic =>
             return Val;
+         when Type_Record
+           | Type_Unbounded_Record =>
+            return Val;
          when others =>
             Error_Msg_Synth (Syn_Inst, Loc, "unhandled type conversion");
             return No_Valtyp;
