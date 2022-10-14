@@ -225,7 +225,6 @@ package body Elab.Vhdl_Decls is
    procedure Elab_Object_Alias_Declaration
      (Syn_Inst : Synth_Instance_Acc; Decl : Node)
    is
-      Atype : constant Node := Get_Declaration_Type (Decl);
       Marker : Mark_Type;
       Off : Value_Offsets;
       Res : Valtyp;
@@ -235,10 +234,8 @@ package body Elab.Vhdl_Decls is
    begin
       Mark_Expr_Pool (Marker);
 
-      --  Subtype indication may not be present.
-      if Atype /= Null_Node then
-         Synth_Subtype_Indication (Syn_Inst, Atype);
-         Obj_Typ := Get_Subtype_Object (Syn_Inst, Atype);
+      if Get_Subtype_Indication (Decl) /= Null_Node then
+         Obj_Typ := Elab_Declaration_Type (Syn_Inst, Decl);
       else
          Obj_Typ := null;
       end if;
@@ -246,7 +243,8 @@ package body Elab.Vhdl_Decls is
       Synth_Assignment_Prefix (Syn_Inst, Get_Name (Decl), Base, Typ, Off);
       Typ := Unshare (Typ, Instance_Pool);
       Res := Create_Value_Alias (Base, Off, Typ, Expr_Pool'Access);
-      if Obj_Typ /= null then
+      if Obj_Typ /= null and then Obj_Typ.Kind not in Type_Scalars then
+         --  Reshape bounds.
          Res := Exec_Subtype_Conversion (Res, Obj_Typ, True, Decl);
       end if;
       Res := Unshare (Res, Instance_Pool);
