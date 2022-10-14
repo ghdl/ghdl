@@ -458,6 +458,7 @@ package body Simul.Vhdl_Elab is
                                  Loc : Node)
    is
       S : Signal_Entry renames Signals_Table.Table (Sig.Base);
+      Resolved : constant Boolean := Get_Resolved_Flag (Get_Type (S.Decl));
       Need_It : Boolean;
    begin
       pragma Assert (Sig.Typ.Wkind = Wkind_Sim);
@@ -478,6 +479,7 @@ package body Simul.Vhdl_Elab is
                if not Need_It
                  and then Ns.Nbr_Drivers > 0
                  and then Ns.Total = 0
+                 and then not Resolved
                then
                   Error_Msg_Elab (Loc, "too many drivers for %n", +S.Decl);
                end if;
