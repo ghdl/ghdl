@@ -2432,10 +2432,7 @@ package body Simul.Vhdl_Simul is
             end if;
          end if;
          case Typ.Kind is
-            when Type_Bit
-              | Type_Logic
-              | Type_Float
-              | Type_Discrete =>
+            when Type_Scalars =>
                S := Create_Scalar_Signal
                  (Typ, To_Ghdl_Value_Ptr (To_Address (Val)));
                Write_Sig (Sig_Index (E.Sig, Sig_Off), S);
@@ -2595,6 +2592,58 @@ package body Simul.Vhdl_Simul is
       end loop;
    end Create_Guard_Signal;
 
+   procedure Create_Delayed_Signal (Sig : Memory_Ptr;
+                                    Val : Memory_Ptr;
+                                    Pfx : Memory_Ptr;
+                                    Typ : Type_Acc;
+                                    Time : Std_Time) is
+   begin
+      case Typ.Kind is
+         when Type_Scalars =>
+            declare
+               S : Ghdl_Signal_Ptr;
+            begin
+               S := Grt.Signals.Ghdl_Create_Delayed_Signal
+                 (Read_Sig (Pfx), To_Ghdl_Value_Ptr (To_Address (Val)), Time);
+               Write_Sig (Sig, S);
+            end;
+         when Type_Vector
+           | Type_Array =>
+            declare
+               Len : constant Uns32 := Typ.Abound.Len;
+            begin
+               for I in 1 .. Len loop
+                  Create_Delayed_Signal
+                    (Sig_Index (Sig,  (Len - I) * Typ.Arr_El.W),
+                     Val + Size_Type (I - 1) * Typ.Arr_El.Sz,
+                     Sig_Index (Pfx, (Len - I) * Typ.Arr_El.W),
+                     Typ.Arr_El, Time);
+               end loop;
+            end;
+         when Type_Record =>
+            for I in Typ.Rec.E'Range loop
+               declare
+                  E : Rec_El_Type renames Typ.Rec.E (I);
+               begin
+                  Create_Delayed_Signal
+                    (Sig_Index (Sig, E.Offs.Net_Off),
+                     Val + E.Offs.Mem_Off,
+                     Sig_Index (Pfx, E.Offs.Net_Off),
+                     E.Typ, Time);
+               end;
+            end loop;
+
+         when Type_Slice
+           | Type_Access
+           | Type_Unbounded_Vector
+           | Type_Unbounded_Array
+           | Type_Unbounded_Record
+           | Type_File
+           | Type_Protected =>
+            raise Internal_Error;
+      end case;
+   end Create_Delayed_Signal;
+
    procedure Register_Prefix (Typ : Type_Acc; Sig : Memory_Ptr) is
    begin
       case Typ.Kind is
@@ -2666,8 +2715,8 @@ package body Simul.Vhdl_Simul is
             --  (E.Sig, E.Val, E.Time, E.Prefix, E.Kind);
             raise Internal_Error;
          when Mode_Delayed =>
-            -- Create_Delayed_Signal (E.Sig, E.Val, E.Prefix, E.Time);
-            raise Internal_Error;
+            Create_Delayed_Signal (E.Sig, E.Val, To_Memory_Ptr (E.Pfx),
+                                   E.Typ, E.Time);
          when Mode_Above =>
             raise Internal_Error;
          when Mode_Signal_User =>
