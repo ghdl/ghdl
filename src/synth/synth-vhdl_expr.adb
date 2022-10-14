@@ -2159,7 +2159,8 @@ package body Synth.Vhdl_Expr is
                   Res := Create_Value_Memory (Res_Typ, Current_Pool);
                   Copy_Memory
                     (Res.Val.Mem,
-                     Val.Val.Mem + Val.Typ.Rec.E (Idx + 1).Offs.Mem_Off,
+                     Get_Memory (Val)
+                       + Val.Typ.Rec.E (Idx + 1).Offs.Mem_Off,
                      Res_Typ.Sz);
                   return Res;
                else
