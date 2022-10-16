@@ -268,7 +268,9 @@ package body Vhdl.Sem_Expr is
       if Get_Kind (El_Bt) /= Iir_Kind_Enumeration_Type_Definition then
          return False;
       end if;
-      --  FIXME: character type
+      if not Get_Is_Character_Type (El_Bt) then
+         return False;
+      end if;
       return True;
    end Is_String_Type;
 
