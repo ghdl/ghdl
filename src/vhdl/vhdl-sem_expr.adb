@@ -4778,8 +4778,14 @@ package body Vhdl.Sem_Expr is
 
    procedure Check_Read_Aggregate (Aggr : Iir)
    is
+      Atype : constant Iir := Get_Type (Aggr);
       Choice : Iir;
    begin
+      if Atype /= Null_Iir and then Is_Error (Atype) then
+         --  No check in case of error.
+         return;
+      end if;
+
       Choice := Get_Association_Choices_Chain (Aggr);
       while Choice /= Null_Iir loop
          case Iir_Kinds_Choice (Get_Kind (Choice)) is
