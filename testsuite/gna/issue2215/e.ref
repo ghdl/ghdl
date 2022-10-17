@@ -1,0 +1,10 @@
+elaborate and simulate e
+e.vhdl:15:9:@0ms:(report note): exp: -1.7976931348623157e308, act: -1.7976931348623157e308
+e.vhdl:16:9:@0ms:(report note): exp: ???,                     act: -inf
+e.vhdl:19:9:@0ms:(report note): exp: 2.0,                     act: 2.0
+e.vhdl:20:9:@0ms:(report note): exp: 1.002e3,                 act: 1.002e3
+e.vhdl:23:9:@0ms:(report note): exp: 2.0,                     act: 2.0
+e.vhdl:24:9:@0ms:(report note): exp: 1.002e3,                 act: 1.002e3
+e.vhdl:27:9:@0ms:(report note): exp: 2.0,                     act: 2.0
+e.vhdl:28:9:@0ms:(report note): exp: 1.002e3,                 act: 1.002e3
+simulation finished @0ms
