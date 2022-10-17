@@ -74,8 +74,14 @@ package body Ortho_Code.X86.Abi is
                   Abi.Inum := Abi.Inum + 1;
                end if;
             when Mode_Fp =>
-               if Abi.Fnum <= Sse_Regs'Last (2) then
-                  Reg := Sse_Regs (Flags.Win64, Abi.Fnum);
+               if Flags.Win64 then
+                  --  On Win64, only the first 4 arguments are passed in regs.
+                  if Abi.Inum < 4 then
+                     Reg := Sse_Regs (True, Abi.Inum);
+                     Abi.Inum := Abi.Inum + 1;
+                  end if;
+               elsif Abi.Fnum <= Sse_Regs'Last (2) then
+                  Reg := Sse_Regs (False, Abi.Fnum);
                   Abi.Fnum := Abi.Fnum + 1;
                end if;
             when others =>
