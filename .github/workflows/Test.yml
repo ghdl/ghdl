@@ -222,6 +222,7 @@ jobs:
         env:
           TASK: macosx+${{ matrix.backend }}
           GITHUB_OS: ${{ runner.os }}
+          MACOSX_DEPLOYMENT_TARGET: 11.0
 
       - name: '📤 Upload artifact: package'
         uses: actions/upload-artifact@v2
