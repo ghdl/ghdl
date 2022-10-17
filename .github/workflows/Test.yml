@@ -193,7 +193,7 @@ jobs:
       matrix:
         os:
         - '11'
-        - '12'
+#        - '12' # issue1897 fails.  Maybe test 11 build on 12.
         backend:
           - mcode
           - llvm
