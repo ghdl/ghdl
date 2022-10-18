@@ -44,6 +44,7 @@ with Elab.Vhdl_Heap;
 with Elab.Vhdl_Prot;
 with Elab.Vhdl_Types; use Elab.Vhdl_Types;
 with Elab.Vhdl_Expr; use Elab.Vhdl_Expr;
+with Elab.Vhdl_Utils; use Elab.Vhdl_Utils;
 with Elab.Vhdl_Debug;
 with Elab.Debugger;
 
@@ -1800,145 +1801,6 @@ package body Synth.Vhdl_Stmts is
       end if;
    end Synth_Label;
 
-   type Association_Iterator_Kind is
-     (Association_Function,
-      Association_Operator);
-
-   type Association_Iterator_Init
-     (Kind : Association_Iterator_Kind := Association_Function) is
-   record
-      Inter_Chain : Node;
-      case Kind is
-         when Association_Function =>
-            Assoc_Chain : Node;
-         when Association_Operator =>
-            Left : Node;
-            Right : Node;
-      end case;
-   end record;
-
-   function Association_Iterator_Build (Inter_Chain : Node; Assoc_Chain : Node)
-                                       return Association_Iterator_Init is
-   begin
-      return Association_Iterator_Init'(Kind => Association_Function,
-                                        Inter_Chain => Inter_Chain,
-                                        Assoc_Chain => Assoc_Chain);
-   end Association_Iterator_Build;
-
-   function Association_Iterator_Build
-     (Inter_Chain : Node; Left : Node; Right : Node)
-     return Association_Iterator_Init is
-   begin
-      return Association_Iterator_Init'(Kind => Association_Operator,
-                                        Inter_Chain => Inter_Chain,
-                                        Left => Left,
-                                        Right => Right);
-   end Association_Iterator_Build;
-
-   type Association_Iterator
-     (Kind : Association_Iterator_Kind := Association_Function) is
-   record
-      Inter : Node;
-      case Kind is
-         when Association_Function =>
-            First_Named_Assoc : Node;
-            Assoc : Node;
-         when Association_Operator =>
-            Op1 : Node;
-            Op2 : Node;
-      end case;
-   end record;
-
-   procedure Association_Iterate_Init (Iterator : out Association_Iterator;
-                                       Init : Association_Iterator_Init) is
-   begin
-      case Init.Kind is
-         when Association_Function =>
-            Iterator := (Kind => Association_Function,
-                         Inter => Init.Inter_Chain,
-                         First_Named_Assoc => Null_Node,
-                         Assoc => Init.Assoc_Chain);
-         when Association_Operator =>
-            Iterator := (Kind => Association_Operator,
-                         Inter => Init.Inter_Chain,
-                         Op1 => Init.Left,
-                         Op2 => Init.Right);
-      end case;
-   end Association_Iterate_Init;
-
-   --  Return the next association.
-   --  ASSOC can be:
-   --  * an Iir_Kind_Association_By_XXX node (normal case)
-   --  * Null_Iir if INTER is not associated (and has a default value).
-   --  * an expression (for operator association).
-   --  Associations are returned in the order of interfaces.
-   procedure Association_Iterate_Next (Iterator : in out Association_Iterator;
-                                       Inter : out Node;
-                                       Assoc : out Node) is
-   begin
-      --  Next interface.
-      Inter := Iterator.Inter;
-
-      if Inter = Null_Node then
-         --  End of iterator.
-         Assoc := Null_Node;
-         return;
-      end if;
-
-      --  Advance to the next interface for the next call.
-      Iterator.Inter := Get_Chain (Iterator.Inter);
-
-      case Iterator.Kind is
-         when Association_Function =>
-            if Iterator.First_Named_Assoc = Null_Node then
-               Assoc := Iterator.Assoc;
-               --  Still using association by position.
-               if Assoc = Null_Node then
-                  --  No more associations, all open.
-                  return;
-               end if;
-               if Get_Formal (Assoc) = Null_Node then
-                  --  Still by position, update for the next call.
-                  Iterator.Assoc := Get_Chain (Assoc);
-                  return;
-               end if;
-               Iterator.First_Named_Assoc := Assoc;
-            end if;
-
-            --  Search by name.
-            declare
-               Formal : Node;
-            begin
-               Assoc := Iterator.First_Named_Assoc;
-               while Assoc /= Null_Node loop
-                  Formal := Get_Formal (Assoc);
-                  pragma Assert (Formal /= Null_Node);
-                  Formal := Get_Interface_Of_Formal (Formal);
-
-                  --  Compare by identifier, as INTER can be the generic
-                  --  interface, while FORMAL is the instantiated one.
-                  if Get_Identifier (Formal) = Get_Identifier (Inter) then
-                     --  Found.
-                     --  Optimize in case assocs are in order.
-                     if Assoc = Iterator.First_Named_Assoc then
-                        Iterator.First_Named_Assoc := Get_Chain (Assoc);
-                     end if;
-                     return;
-                  end if;
-                  Assoc := Get_Chain (Assoc);
-               end loop;
-            end;
-
-            --  Not found: open association.
-            return;
-
-         when Association_Operator =>
-            Assoc := Iterator.Op1;
-            Iterator.Op1 := Iterator.Op2;
-            Iterator.Op2 := Null_Node;
-      end case;
-   end Association_Iterate_Next;
-
    function Info_To_Valtyp (Info : Target_Info) return Valtyp is
    begin
       case Info.Kind is
@@ -2573,7 +2435,9 @@ package body Synth.Vhdl_Stmts is
          else
             Res := No_Valtyp;
             Synth_Subprogram_Back_Association
-              (C.Inst, Syn_Inst, Init.Inter_Chain, Init.Assoc_Chain);
+              (C.Inst, Syn_Inst,
+               Get_Iterator_Inter_Chain (Init),
+               Get_Iterator_Assoc_Chain (Init));
          end if;
       end if;
 
@@ -2650,7 +2514,9 @@ package body Synth.Vhdl_Stmts is
          else
             Res := No_Valtyp;
             Synth_Subprogram_Back_Association
-              (C.Inst, Syn_Inst, Init.Inter_Chain, Init.Assoc_Chain);
+              (C.Inst, Syn_Inst,
+               Get_Iterator_Inter_Chain (Init),
+               Get_Iterator_Assoc_Chain (Init));
          end if;
       end if;
 
@@ -2855,7 +2721,7 @@ package body Synth.Vhdl_Stmts is
       Synth.Vhdl_Static_Proc.Synth_Static_Procedure (Sub_Inst, Imp, Call);
 
       Synth_Subprogram_Back_Association
-        (Sub_Inst, Syn_Inst, Init.Inter_Chain, Init.Assoc_Chain);
+        (Sub_Inst, Syn_Inst, Inter_Chain, Assoc_Chain);
 
       Free_Instance (Sub_Inst);
       Areapools.Release (Area_Mark, Instance_Pool.all);
