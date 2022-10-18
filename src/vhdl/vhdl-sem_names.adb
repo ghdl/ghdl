@@ -5079,6 +5079,14 @@ package body Vhdl.Sem_Names is
 
       Set_Expr_Staticness (Name, None);
 
+      case Iir_Kinds_External_Name (Get_Kind (Name)) is
+         when Iir_Kind_External_Signal_Name =>
+            --  By default.
+            Set_Has_Active_Flag (Name, True);
+         when others =>
+            null;
+      end case;
+
       --  Consider the node as analyzed.
       Set_Named_Entity (Name, Name);
    end Sem_External_Name;

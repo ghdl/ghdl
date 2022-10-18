@@ -268,7 +268,8 @@ package body Vhdl.Sem_Assocs is
                when Iir_Kind_Interface_Signal_Declaration
                  | Iir_Kind_Signal_Declaration
                  | Iir_Kind_Guard_Signal_Declaration
-                 | Iir_Kinds_Signal_Attribute =>
+                 | Iir_Kinds_Signal_Attribute
+                 | Iir_Kind_External_Signal_Name =>
                   --  LRM93 2.1.1.2
                   --  If an actual signal is associated with
                   --  a signal parameter of any mode, the actual

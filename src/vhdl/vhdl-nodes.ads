@@ -4499,6 +4499,9 @@ package Vhdl.Nodes is
    -- Only for Iir_Kind_External_Variable_Name:
    --   Get/Set_Shared_Flag (Flag2)
    --
+   -- Only for Iir_Kind_External_Signal_Name:
+   --   Get/Set_Has_Active_Flag (Flag2)
+   --
    --   Get/Set_Expr_Staticness (State1)
    --
    --   Get/Set_Name_Staticness (State2)
