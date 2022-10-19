@@ -25,9 +25,7 @@ for t in sns01; do
     clean
 done
 
-synth_analyze sns02
-clean
-
+synth_tb reduce
 synth_tb add03
 
 echo "Test successful"
