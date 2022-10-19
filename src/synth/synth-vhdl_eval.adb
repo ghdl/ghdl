@@ -2932,6 +2932,33 @@ package body Synth.Vhdl_Eval is
               (Get_Memtyp (Param1), Read_Discrete (Param2),
                Std_Ulogic'Pos('0'), Iir_Predefined_Array_Sra);
 
+         when Iir_Predefined_Ieee_Std_Logic_Misc_And_Reduce_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Misc_And_Reduce_Suv =>
+            return Eval_Vector_Reduce
+              ('1', Get_Memtyp (Param1), And_Table, False);
+         when Iir_Predefined_Ieee_Std_Logic_Misc_Nand_Reduce_Slv
+           | Iir_Predefined_Ieee_Std_Logic_Misc_Nand_Reduce_Suv =>
+            return Eval_Vector_Reduce
+              ('1', Get_Memtyp (Param1), And_Table, True);
+
+         when Iir_Predefined_Ieee_Std_Logic_Misc_Or_Reduce_Slv
+           | Iir_Predefined_Ieee_Std_Logic_Misc_Or_Reduce_Suv =>
+            return Eval_Vector_Reduce
+              ('0', Get_Memtyp (Param1), Or_Table, False);
+         when Iir_Predefined_Ieee_Std_Logic_Misc_Nor_Reduce_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Misc_Nor_Reduce_Suv =>
+            return Eval_Vector_Reduce
+              ('0', Get_Memtyp (Param1), Or_Table, True);
+
+         when Iir_Predefined_Ieee_Std_Logic_Misc_Xor_Reduce_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Misc_Xor_Reduce_Suv =>
+            return Eval_Vector_Reduce
+              ('0', Get_Memtyp (Param1), Xor_Table, False);
+         when Iir_Predefined_Ieee_Std_Logic_Misc_Xnor_Reduce_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Misc_Xnor_Reduce_Suv =>
+            return Eval_Vector_Reduce
+              ('0', Get_Memtyp (Param1), Xor_Table, True);
+
          when Iir_Predefined_Ieee_Math_Real_Sign =>
             declare
                Val : constant Fp64 := Read_Fp64 (Param1);
