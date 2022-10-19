@@ -2129,11 +2129,20 @@ package body Synth.Vhdl_Oper is
             return Synth_Dyadic_Int_Sgn (Ctxt, Id_Smax, L, R, Expr);
 
          when Iir_Predefined_Ieee_Std_Logic_Misc_Or_Reduce_Slv
-           | Iir_Predefined_Ieee_Std_Logic_Misc_Or_Reduce_Suv =>
+            | Iir_Predefined_Ieee_Std_Logic_Misc_Or_Reduce_Suv =>
             declare
                N : Net;
             begin
                N := Build_Reduce (Ctxt, Id_Red_Or, Get_Net (Ctxt, L));
+               Set_Location (N, Expr);
+               return Create_Value_Net (N, Res_Typ);
+            end;
+         when Iir_Predefined_Ieee_Std_Logic_Misc_And_Reduce_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Misc_And_Reduce_Suv =>
+            declare
+               N : Net;
+            begin
+               N := Build_Reduce (Ctxt, Id_Red_And, Get_Net (Ctxt, L));
                Set_Location (N, Expr);
                return Create_Value_Net (N, Res_Typ);
             end;
