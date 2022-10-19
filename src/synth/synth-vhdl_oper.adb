@@ -1888,6 +1888,24 @@ package body Synth.Vhdl_Oper is
       return Create_Value_Net (N, Res_Typ);
    end Synth_Minmax;
 
+   function Synth_Vec_Reduce_Monadic (Ctxt : Context_Acc;
+                                      Id : Reduce_Module_Id;
+                                      Neg : Boolean;
+                                      Operand : Valtyp;
+                                      Loc : Node) return Valtyp
+   is
+      Op: constant Net := Get_Net (Ctxt, Operand);
+      N : Net;
+   begin
+      N := Build_Reduce (Ctxt, Id, Op);
+      Set_Location (N, Loc);
+      if Neg then
+         N := Build_Monadic (Ctxt, Id_Not, N);
+         Set_Location (N, Loc);
+      end if;
+      return Create_Value_Net (N, Operand.Typ.Arr_El);
+   end Synth_Vec_Reduce_Monadic;
+
    function Synth_Dynamic_Predefined_Function_Call
      (Subprg_Inst : Synth_Instance_Acc; Expr : Node) return Valtyp
    is
@@ -2128,24 +2146,24 @@ package body Synth.Vhdl_Oper is
          when Iir_Predefined_Ieee_Numeric_Std_Max_Int_Sgn =>
             return Synth_Dyadic_Int_Sgn (Ctxt, Id_Smax, L, R, Expr);
 
-         when Iir_Predefined_Ieee_Std_Logic_Misc_Or_Reduce_Slv
-            | Iir_Predefined_Ieee_Std_Logic_Misc_Or_Reduce_Suv =>
-            declare
-               N : Net;
-            begin
-               N := Build_Reduce (Ctxt, Id_Red_Or, Get_Net (Ctxt, L));
-               Set_Location (N, Expr);
-               return Create_Value_Net (N, Res_Typ);
-            end;
          when Iir_Predefined_Ieee_Std_Logic_Misc_And_Reduce_Slv
             | Iir_Predefined_Ieee_Std_Logic_Misc_And_Reduce_Suv =>
-            declare
-               N : Net;
-            begin
-               N := Build_Reduce (Ctxt, Id_Red_And, Get_Net (Ctxt, L));
-               Set_Location (N, Expr);
-               return Create_Value_Net (N, Res_Typ);
-            end;
+            return Synth_Vec_Reduce_Monadic (Ctxt, Id_Red_And, False, L, Expr);
+         when Iir_Predefined_Ieee_Std_Logic_Misc_Nand_Reduce_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Misc_Nand_Reduce_Suv =>
+            return Synth_Vec_Reduce_Monadic (Ctxt, Id_Red_And, True, L, Expr);
+         when Iir_Predefined_Ieee_Std_Logic_Misc_Or_Reduce_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Misc_Or_Reduce_Suv =>
+            return Synth_Vec_Reduce_Monadic (Ctxt, Id_Red_Or, False, L, Expr);
+         when Iir_Predefined_Ieee_Std_Logic_Misc_Nor_Reduce_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Misc_Nor_Reduce_Suv =>
+            return Synth_Vec_Reduce_Monadic (Ctxt, Id_Red_Or, True, L, Expr);
+         when Iir_Predefined_Ieee_Std_Logic_Misc_Xor_Reduce_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Misc_Xor_Reduce_Suv =>
+            return Synth_Vec_Reduce_Monadic (Ctxt, Id_Red_Xor, False, L, Expr);
+         when Iir_Predefined_Ieee_Std_Logic_Misc_Xnor_Reduce_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Misc_Xnor_Reduce_Suv =>
+            return Synth_Vec_Reduce_Monadic (Ctxt, Id_Red_Xor, True, L, Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Match_Suv
             | Iir_Predefined_Ieee_Numeric_Std_Match_Slv =>
