@@ -24,6 +24,8 @@ with Vhdl.Std_Package;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
 
+with Elab.Vhdl_Utils;
+
 package body Elab.Vhdl_Annotations is
    procedure Annotate_Declaration_List
      (Block_Info: Sim_Info_Acc; Decl_Chain: Iir);
@@ -715,24 +717,40 @@ package body Elab.Vhdl_Annotations is
    procedure Annotate_Procedure_Call_Statement
      (Block_Info : Sim_Info_Acc; Stmt : Iir)
    is
+      use Elab.Vhdl_Utils;
       Call : constant Iir := Get_Procedure_Call (Stmt);
       Imp  : constant Iir := Get_Implementation (Call);
-      Assoc_Chain : constant Iir := Get_Parameter_Association_Chain (Call);
-      Inter_Chain : constant Iir := Get_Interface_Declaration_Chain (Imp);
+      Init : Association_Iterator_Init;
+      It : Association_Iterator;
       Assoc : Iir;
-      Assoc_Inter : Iir;
       Inter : Iir;
    begin
-      Assoc := Assoc_Chain;
-      Assoc_Inter := Inter_Chain;
-      while Assoc /= Null_Iir loop
-         Inter := Get_Association_Interface (Assoc, Assoc_Inter);
-         if Get_Kind (Assoc) /= Iir_Kind_Association_Element_By_Individual
-           and then Is_Copyback_Parameter (Inter)
-         then
-            Create_Object_Info (Block_Info, Assoc, Kind_Object);
+      Init := Association_Iterator_Build
+        (Get_Interface_Declaration_Chain (Imp),
+         Get_Parameter_Association_Chain (Call));
+
+      --  Need to use iterators so that associations are processed in the
+      --  order of the interfaces.
+      Association_Iterate_Init (It, Init);
+      Association_Iterate_Next (It, Inter, Assoc);
+      while Inter /= Null_Node loop
+         if Assoc /= Null_Node then
+            if Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Expression
+              and then Is_Copyback_Parameter (Inter)
+            then
+               Create_Object_Info (Block_Info, Assoc, Kind_Object);
+            end if;
+            if Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Individual
+              or else not Get_Whole_Association_Flag (Assoc)
+            then
+               --  Annotate each individual associations.
+               Assoc := Get_Chain (Assoc);
+            else
+               Association_Iterate_Next (It, Inter, Assoc);
+            end if;
+         else
+            Association_Iterate_Next (It, Inter, Assoc);
          end if;
-         Next_Association_Interface (Assoc, Assoc_Inter);
       end loop;
    end Annotate_Procedure_Call_Statement;
 
