@@ -718,9 +718,14 @@ package body Netlists.Disp_Verilog is
          begin
             Val := Get_Input_Net (Mem, 1);
             Val_Inst := Get_Net_Parent (Val);
-            if Get_Id (Val_Inst) = Id_Isignal then
-               Val := Get_Input_Net (Val_Inst, 1);
-            end if;
+            case Get_Id (Val_Inst) is
+               when Id_Isignal =>
+                  Val := Get_Input_Net (Val_Inst, 1);
+               when Id_Signal =>
+                  Val := Get_Input_Net (Val_Inst, 0);
+               when others =>
+                  null;
+            end case;
             Disp_Memory_Init (Mem, Val, Data_W, Depth);
          end;
       end if;
