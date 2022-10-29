@@ -17,7 +17,6 @@
 --  along with this program.  If not, see <gnu.org/licenses>.
 
 with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
-with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 
 with Vhdl.Nodes; use Vhdl.Nodes;
@@ -37,8 +36,8 @@ package Synth.Vhdl_Eval is
                                             Expr : Node) return Memtyp;
 
    function Eval_Static_Predefined_Function_Call (Inst : Synth_Instance_Acc;
-                                                  Param1 : Valtyp;
-                                                  Param2 : Valtyp;
+                                                  Param1 : Memtyp;
+                                                  Param2 : Memtyp;
                                                   Res_Typ : Type_Acc;
                                                   Expr : Node) return Memtyp;
 

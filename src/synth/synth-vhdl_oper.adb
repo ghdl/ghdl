@@ -35,6 +35,7 @@ with Netlists.Utils;
 with Elab.Memtype; use Elab.Memtype;
 with Elab.Vhdl_Types; use Elab.Vhdl_Types;
 with Elab.Vhdl_Expr; use Elab.Vhdl_Expr;
+with Elab.Vhdl_Files;
 
 with Synth.Errors; use Synth.Errors;
 with Synth.Vhdl_Stmts; use Synth.Vhdl_Stmts;
@@ -1957,6 +1958,18 @@ package body Synth.Vhdl_Oper is
       end if;
 
       case Def is
+         when Iir_Predefined_Endfile =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Elab.Vhdl_Files.Endfile (L.Val.File, Expr);
+               return Create_Value_Memtyp
+                 (Create_Memory_U8 (Boolean'Pos (Res), Boolean_Type));
+            exception
+               when Elab.Vhdl_Files.File_Execution_Error =>
+                  return No_Valtyp;
+            end;
+
          when Iir_Predefined_Integer_Minimum =>
             return Synth_Minmax (Ctxt, L, R, Res_Typ, Id_Slt, Expr);
          when Iir_Predefined_Integer_Maximum =>
@@ -2249,25 +2262,27 @@ package body Synth.Vhdl_Oper is
 
          if Static then
             declare
-               Param1 : Valtyp;
-               Param2 : Valtyp;
+               Param : Valtyp;
+               Param1, Param2 : Memtyp;
                Res_Typ : Type_Acc;
                Mt : Memtyp;
             begin
                Inter := Inter_Chain;
                if Inter /= Null_Node then
-                  Param1 := Get_Value (Subprg_Inst, Inter);
-                  Strip_Const (Param1);
+                  Param := Get_Value (Subprg_Inst, Inter);
+                  Strip_Const (Param);
+                  Param1 := Get_Memtyp (Param);
                   Inter := Get_Chain (Inter);
                else
-                  Param1 := No_Valtyp;
+                  Param1 := Null_Memtyp;
                end if;
                if Inter /= Null_Node then
-                  Param2 := Get_Value (Subprg_Inst, Inter);
-                  Strip_Const (Param2);
+                  Param := Get_Value (Subprg_Inst, Inter);
+                  Strip_Const (Param);
+                  Param2 := Get_Memtyp (Param);
                   Inter := Get_Chain (Inter);
                else
-                  Param2 := No_Valtyp;
+                  Param2 := Null_Memtyp;
                end if;
 
                Res_Typ := Get_Subtype_Object (Subprg_Inst, Get_Type (Imp));

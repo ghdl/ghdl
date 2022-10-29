@@ -32,9 +32,9 @@ with Vhdl.Evaluation;
 with Vhdl.Ieee.Std_Logic_1164; use Vhdl.Ieee.Std_Logic_1164;
 
 with Elab.Memtype; use Elab.Memtype;
-with Elab.Vhdl_Files;
 with Elab.Vhdl_Expr; use Elab.Vhdl_Expr;
 with Elab.Vhdl_Types;
+with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 
 with Netlists; use Netlists;
 
@@ -2450,8 +2450,8 @@ package body Synth.Vhdl_Eval is
    end Eval_To_X01;
 
    function Eval_Static_Predefined_Function_Call (Inst : Synth_Instance_Acc;
-                                                  Param1 : Valtyp;
-                                                  Param2 : Valtyp;
+                                                  Param1 : Memtyp;
+                                                  Param2 : Memtyp;
                                                   Res_Typ : Type_Acc;
                                                   Expr : Node) return Memtyp
    is
@@ -2486,17 +2486,6 @@ package body Synth.Vhdl_Eval is
             return Create_Memory_Fp64
               (Fp64 (Grt.Vhdl_Types.Current_Time_AMS), Res_Typ);
 
-         when Iir_Predefined_Endfile =>
-            declare
-               Res : Boolean;
-            begin
-               Res := Elab.Vhdl_Files.Endfile (Param1.Val.File, Expr);
-               return Create_Memory_U8 (Boolean'Pos (Res), Boolean_Type);
-            exception
-               when Elab.Vhdl_Files.File_Execution_Error =>
-                  return Null_Memtyp;
-            end;
-
          when Iir_Predefined_Integer_To_String =>
             declare
                Str : String (1 .. 21);
@@ -2507,7 +2496,7 @@ package body Synth.Vhdl_Eval is
                return String_To_Memtyp (Str (First .. Str'Last), Res_Typ);
             end;
          when Iir_Predefined_Enum_To_String =>
-            return Eval_Enum_To_String (Get_Memtyp (Param1), Res_Typ, Imp);
+            return Eval_Enum_To_String (Param1, Res_Typ, Imp);
          when Iir_Predefined_Floating_To_String =>
             declare
                Str : String (1 .. 24);
@@ -2538,7 +2527,7 @@ package body Synth.Vhdl_Eval is
                --  Copy format
                for I in 1 .. Param2.Typ.Abound.Len loop
                   Format (Positive (I)) := Character'Val
-                    (Read_U8 (Param2.Val.Mem + Size_Type (I - 1)));
+                    (Read_U8 (Param2.Mem + Size_Type (I - 1)));
                end loop;
                Format (Format'Last) := ASCII.NUL;
                Grt.To_Strings.To_String
@@ -2591,13 +2580,12 @@ package body Synth.Vhdl_Eval is
             end;
 
          when Iir_Predefined_Array_Char_To_String =>
-            return Eval_Array_Char_To_String
-              (Get_Memtyp (Param1), Res_Typ, Imp);
+            return Eval_Array_Char_To_String (Param1, Res_Typ, Imp);
 
          when Iir_Predefined_Bit_Vector_To_Hstring =>
-            return Eval_Bit_Vector_To_String (Get_Memtyp (Param1), Res_Typ, 4);
+            return Eval_Bit_Vector_To_String (Param1, Res_Typ, 4);
          when Iir_Predefined_Bit_Vector_To_Ostring =>
-            return Eval_Bit_Vector_To_String (Get_Memtyp (Param1), Res_Typ, 3);
+            return Eval_Bit_Vector_To_String (Param1, Res_Typ, 3);
 
          when Iir_Predefined_Std_Env_Resolution_Limit =>
             return Create_Memory_Discrete (1, Res_Typ);
@@ -2636,54 +2624,45 @@ package body Synth.Vhdl_Eval is
             | Iir_Predefined_Ieee_Numeric_Std_Unsigned_To_Integer_Slv_Nat =>
             --  UNSIGNED to Natural.
             return Create_Memory_Discrete
-              (Eval_Unsigned_To_Integer (Get_Memtyp (Param1), Expr), Res_Typ);
+              (Eval_Unsigned_To_Integer (Param1, Expr), Res_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Toint_Sgn_Int =>
             --  SIGNED to Integer
             return Create_Memory_Discrete
-              (Eval_Signed_To_Integer (Get_Memtyp (Param1), Expr), Res_Typ);
+              (Eval_Signed_To_Integer (Param1, Expr), Res_Typ);
          when Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Int =>
-            return Get_Memtyp (Param1);
+            return Param1;
 
          when Iir_Predefined_Ieee_Numeric_Std_Shf_Left_Uns_Nat
             | Iir_Predefined_Ieee_Numeric_Std_Shf_Left_Sgn_Nat
             | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Shift_Left =>
-            return Shift_Vec
-              (Get_Memtyp (Param1), Uns32 (Read_Discrete (Param2)),
-               False, False);
+            return Shift_Vec (Param1, Uns32 (Read_Discrete (Param2)),
+                              False, False);
          when Iir_Predefined_Ieee_Numeric_Std_Shf_Right_Uns_Nat
             | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Shift_Right =>
-            return Shift_Vec
-              (Get_Memtyp (Param1), Uns32 (Read_Discrete (Param2)),
-               True, False);
+            return Shift_Vec (Param1, Uns32 (Read_Discrete (Param2)),
+                              True, False);
          when Iir_Predefined_Ieee_Numeric_Std_Shf_Right_Sgn_Nat =>
-            return Shift_Vec
-              (Get_Memtyp (Param1), Uns32 (Read_Discrete (Param2)),
-               True, True);
+            return Shift_Vec (Param1, Uns32 (Read_Discrete (Param2)),
+                              True, True);
          when Iir_Predefined_Ieee_Numeric_Std_Rot_Left_Uns_Nat
             | Iir_Predefined_Ieee_Numeric_Std_Rot_Left_Sgn_Nat
             | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Rotate_Left =>
-            return Rotate_Vec
-              (Get_Memtyp (Param1), Uns32 (Read_Discrete (Param2)), False);
+            return Rotate_Vec (Param1, Uns32 (Read_Discrete (Param2)), False);
          when Iir_Predefined_Ieee_Numeric_Std_Rot_Right_Uns_Nat
             | Iir_Predefined_Ieee_Numeric_Std_Rot_Right_Sgn_Nat
             | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Rotate_Right =>
-            return Rotate_Vec
-              (Get_Memtyp (Param1), Uns32 (Read_Discrete (Param2)), True);
+            return Rotate_Vec (Param1, Uns32 (Read_Discrete (Param2)), True);
 
          when Iir_Predefined_Ieee_Numeric_Std_Resize_Uns_Nat
             | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Resize_Slv_Nat =>
-            return Resize_Vec
-              (Get_Memtyp (Param1), Uns32 (Read_Discrete (Param2)), False);
+            return Resize_Vec (Param1, Uns32 (Read_Discrete (Param2)), False);
          when Iir_Predefined_Ieee_Numeric_Std_Resize_Uns_Uns
             | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Resize_Slv_Slv =>
-            return Resize_Vec
-              (Get_Memtyp (Param1), Param2.Typ.Abound.Len, False);
+            return Resize_Vec (Param1, Param2.Typ.Abound.Len, False);
          when Iir_Predefined_Ieee_Numeric_Std_Resize_Sgn_Nat =>
-            return Resize_Vec
-              (Get_Memtyp (Param1), Uns32 (Read_Discrete (Param2)), True);
+            return Resize_Vec (Param1, Uns32 (Read_Discrete (Param2)), True);
          when Iir_Predefined_Ieee_Numeric_Std_Resize_Sgn_Sgn =>
-            return Resize_Vec
-              (Get_Memtyp (Param1), Param2.Typ.Abound.Len, True);
+            return Resize_Vec (Param1, Param2.Typ.Abound.Len, True);
 
          when Iir_Predefined_Ieee_Std_Logic_Arith_Ext =>
             declare
@@ -2693,7 +2672,7 @@ package body Synth.Vhdl_Eval is
                if Len < 0 then
                   Len := 0;
                end if;
-               return Resize_Vec (Get_Memtyp (Param1), Uns32 (Len), False);
+               return Resize_Vec (Param1, Uns32 (Len), False);
             end;
          when Iir_Predefined_Ieee_Std_Logic_Arith_Sxt =>
             declare
@@ -2703,14 +2682,14 @@ package body Synth.Vhdl_Eval is
                if Len < 0 then
                   Len := 0;
                end if;
-               return Resize_Vec (Get_Memtyp (Param1), Uns32 (Len), True);
+               return Resize_Vec (Param1, Uns32 (Len), True);
             end;
 
          when Iir_Predefined_Ieee_1164_To_Stdulogic =>
             declare
                B : Std_Ulogic;
             begin
-               B := Read_Bit_To_Std_Logic (Param1.Val.Mem, 0);
+               B := Read_Bit_To_Std_Logic (Param1.Mem, 0);
                return Create_Memory_U8 (Std_Ulogic'Pos (B), Res_Typ);
             end;
 
@@ -2718,7 +2697,7 @@ package body Synth.Vhdl_Eval is
             declare
                B : Std_Ulogic;
             begin
-               B := Read_Std_Logic (Param1.Val.Mem, 0);
+               B := Read_Std_Logic (Param1.Mem, 0);
                B := To_X01 (B);
                return Create_Memory_U8 (Std_Ulogic'Pos (B), Res_Typ);
             end;
@@ -2726,22 +2705,22 @@ package body Synth.Vhdl_Eval is
             declare
                B : Std_Ulogic;
             begin
-               B := Read_Std_Logic (Param1.Val.Mem, 0);
+               B := Read_Std_Logic (Param1.Mem, 0);
                B := Map_X01Z (B);
                return Create_Memory_U8 (Std_Ulogic'Pos (B), Res_Typ);
             end;
          when Iir_Predefined_Ieee_1164_To_X01_Slv
             | Iir_Predefined_Ieee_Numeric_Std_To_X01_Uns
             | Iir_Predefined_Ieee_Numeric_Std_To_X01_Sgn =>
-            return Eval_To_X01 (Get_Memtyp (Param1), Map_X01);
+            return Eval_To_X01 (Param1, Map_X01);
          when Iir_Predefined_Ieee_Numeric_Std_To_X01Z_Uns
             | Iir_Predefined_Ieee_Numeric_Std_To_X01Z_Sgn
             | Iir_Predefined_Ieee_1164_To_X01Z_Slv =>
-            return Eval_To_X01 (Get_Memtyp (Param1), Map_X01Z);
+            return Eval_To_X01 (Param1, Map_X01Z);
          when Iir_Predefined_Ieee_Numeric_Std_To_UX01_Uns
             | Iir_Predefined_Ieee_Numeric_Std_To_UX01_Sgn
             | Iir_Predefined_Ieee_1164_To_UX01_Slv =>
-            return Eval_To_X01 (Get_Memtyp (Param1), Map_UX01);
+            return Eval_To_X01 (Param1, Map_UX01);
 
          when Iir_Predefined_Ieee_1164_To_Stdlogicvector_Bv
             | Iir_Predefined_Ieee_1164_To_Stdulogicvector_Bv =>
@@ -2755,7 +2734,7 @@ package body Synth.Vhdl_Eval is
                  (Uns32 (Vec_Length (Param1.Typ)), El_Type);
                Res := Create_Memory (Bnd);
                for I in 1 .. Uns32 (Vec_Length (Param1.Typ)) loop
-                  B := Read_Bit_To_Std_Logic (Param1.Val.Mem, I - 1);
+                  B := Read_Bit_To_Std_Logic (Param1.Mem, I - 1);
                   Write_Std_Logic (Res.Mem, I - 1, B);
                end loop;
                return Res;
@@ -2763,14 +2742,13 @@ package body Synth.Vhdl_Eval is
 
          when Iir_Predefined_Ieee_Numeric_Std_Match_Log =>
             return Create_Memory_Boolean
-              (Match_Eq_Table (Read_Std_Logic (Param1.Val.Mem, 0),
-                               Read_Std_Logic (Param2.Val.Mem, 0)) = '1');
+              (Match_Eq_Table (Read_Std_Logic (Param1.Mem, 0),
+                               Read_Std_Logic (Param2.Mem, 0)) = '1');
 
          when Iir_Predefined_Ieee_Numeric_Std_Match_Suv
             | Iir_Predefined_Ieee_Numeric_Std_Match_Uns
             | Iir_Predefined_Ieee_Numeric_Std_Match_Sgn =>
-            return Create_Memory_Boolean
-              (Match_Vec (Get_Memtyp (Param1), Get_Memtyp (Param2), +Expr));
+            return Create_Memory_Boolean (Match_Vec (Param1, Param2, +Expr));
 
          when Iir_Predefined_Ieee_1164_To_Bit =>
             declare
@@ -2778,8 +2756,8 @@ package body Synth.Vhdl_Eval is
                X : Bit;
                R : Bit;
             begin
-               V := Read_Std_Logic (Param1.Val.Mem, 0);
-               X := Read_Bit (Param2.Val.Mem, 0);
+               V := Read_Std_Logic (Param1.Mem, 0);
+               X := Read_Bit (Param2.Mem, 0);
                R := To_Bit (V, X);
                return Create_Memory_U8 (Bit'Pos(R), Res_Typ);
             end;
@@ -2792,12 +2770,12 @@ package body Synth.Vhdl_Eval is
                X       : Bit;
                R       : Bit;
             begin
-               X := Read_Bit (Param2.Val.Mem, 0);
+               X := Read_Bit (Param2.Mem, 0);
                Bnd := Create_Vec_Type_By_Length
                  (Uns32 (Vec_Length (Param1.Typ)), El_Type);
                Res := Create_Memory (Bnd);
                for I in 1 .. Uns32 (Vec_Length (Param1.Typ)) loop
-                  S := Read_Std_Logic (Param1.Val.Mem, I - 1);
+                  S := Read_Std_Logic (Param1.Mem, I - 1);
                   R := To_Bit (S, X);
                   Write_Bit (Res.Mem, I - 1, R);
                end loop;
@@ -2812,10 +2790,10 @@ package body Synth.Vhdl_Eval is
                Xmap : Std_Ulogic;
                Res : Memtyp;
             begin
-               Xmap := Read_Std_Logic (Param2.Val.Mem, 0);
+               Xmap := Read_Std_Logic (Param2.Mem, 0);
                Res := Create_Memory (Create_Res_Bound (Param1.Typ));
                for I in 1 .. Len loop
-                  S := Read_Std_Logic (Param1.Val.Mem, I - 1);
+                  S := Read_Std_Logic (Param1.Mem, I - 1);
                   S := To_X01 (S);
                   if S = 'X' then
                      S := Xmap;
@@ -2829,7 +2807,7 @@ package body Synth.Vhdl_Eval is
             declare
                B : Std_Ulogic;
             begin
-               B := Read_Std_Logic (Param1.Val.Mem, 0);
+               B := Read_Std_Logic (Param1.Mem, 0);
                B := To_X01 (B);
                return Create_Memory_Boolean (B = 'X');
             end;
@@ -2844,7 +2822,7 @@ package body Synth.Vhdl_Eval is
             begin
                Res := False;
                for I in 1 .. Len loop
-                  B := Read_Std_Logic (Param1.Val.Mem, I - 1);
+                  B := Read_Std_Logic (Param1.Mem, I - 1);
                   if To_X01 (B) = 'X' then
                      Res := True;
                      exit;
@@ -2856,108 +2834,88 @@ package body Synth.Vhdl_Eval is
          when Iir_Predefined_Ieee_1164_To_Stdlogicvector_Suv
            | Iir_Predefined_Ieee_1164_To_Stdulogicvector_Slv =>
             --  TODO
-            return (Param1.Typ, Param1.Val.Mem);
+            return (Param1.Typ, Param1.Mem);
 
          when Iir_Predefined_Ieee_1164_To_Hstring
             | Iir_Predefined_Ieee_Numeric_Std_To_Hstring_Uns =>
-            return Eval_Logic_Vector_To_String
-              (Get_Memtyp (Param1), Res_Typ, False, 4);
+            return Eval_Logic_Vector_To_String (Param1, Res_Typ, False, 4);
          when Iir_Predefined_Ieee_Numeric_Std_To_Hstring_Sgn =>
-            return Eval_Logic_Vector_To_String
-              (Get_Memtyp (Param1), Res_Typ, True, 4);
+            return Eval_Logic_Vector_To_String (Param1, Res_Typ, True, 4);
          when Iir_Predefined_Ieee_1164_To_Ostring
             | Iir_Predefined_Ieee_Numeric_Std_To_Ostring_Uns =>
-            return Eval_Logic_Vector_To_String
-              (Get_Memtyp (Param1), Res_Typ, False, 3);
+            return Eval_Logic_Vector_To_String (Param1, Res_Typ, False, 3);
          when Iir_Predefined_Ieee_Numeric_Std_To_Ostring_Sgn =>
-            return Eval_Logic_Vector_To_String
-              (Get_Memtyp (Param1), Res_Typ, True, 3);
+            return Eval_Logic_Vector_To_String (Param1, Res_Typ, True, 3);
 
          when Iir_Predefined_Ieee_Numeric_Std_Max_Uns_Uns =>
-            return Minmax (Get_Memtyp (Param1), Get_Memtyp (Param2),
-                           False, True);
+            return Minmax (Param1, Param2, False, True);
          when Iir_Predefined_Ieee_Numeric_Std_Min_Uns_Uns =>
-            return Minmax (Get_Memtyp (Param1), Get_Memtyp (Param2),
-                           False, False);
+            return Minmax (Param1, Param2, False, False);
          when Iir_Predefined_Ieee_Numeric_Std_Max_Sgn_Sgn =>
-            return Minmax (Get_Memtyp (Param1), Get_Memtyp (Param2),
-                           True, True);
+            return Minmax (Param1, Param2, True, True);
          when Iir_Predefined_Ieee_Numeric_Std_Min_Sgn_Sgn =>
-            return Minmax (Get_Memtyp (Param1), Get_Memtyp (Param2),
-                           True, False);
+            return Minmax (Param1, Param2, True, False);
 
          when Iir_Predefined_Ieee_Numeric_Std_Find_Rightmost_Uns
             | Iir_Predefined_Ieee_Numeric_Std_Find_Rightmost_Sgn
             | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Find_Rightmost =>
             return Create_Memory_Discrete
-              (Int64 (Find_Rightmost (Get_Memtyp (Param1),
-                                      Get_Memtyp (Param2))),
-               Res_Typ);
+              (Int64 (Find_Rightmost (Param1, Param2)), Res_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Find_Leftmost_Uns
             | Iir_Predefined_Ieee_Numeric_Std_Find_Leftmost_Sgn
             | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Find_Leftmost =>
             return Create_Memory_Discrete
-              (Int64 (Find_Leftmost (Get_Memtyp (Param1),
-                                     Get_Memtyp (Param2))),
-               Res_Typ);
+              (Int64 (Find_Leftmost (Param1, Param2)), Res_Typ);
 
          when Iir_Predefined_Ieee_Numeric_Std_Unsigned_Maximum_Slv_Slv =>
-            return Minmax (Get_Memtyp (Param1), Get_Memtyp (Param2),
-                           False, True);
+            return Minmax (Param1, Param2, False, True);
          when Iir_Predefined_Ieee_Numeric_Std_Unsigned_Minimum_Slv_Slv =>
-            return Minmax (Get_Memtyp (Param1), Get_Memtyp (Param2),
-                           False, False);
+            return Minmax (Param1, Param2, False, False);
 
          when Iir_Predefined_Ieee_Std_Logic_Arith_Shl_Uns
             | Iir_Predefined_Ieee_Std_Logic_Unsigned_Shl =>
             return Execute_Shift_Operator
-              (Get_Memtyp (Param1), Read_Discrete (Param2),
+              (Param1, Read_Discrete (Param2),
                Std_Ulogic'Pos('0'), Iir_Predefined_Array_Sll);
 
          when Iir_Predefined_Ieee_Std_Logic_Arith_Shl_Sgn
             | Iir_Predefined_Ieee_Std_Logic_Signed_Shl =>
             return Execute_Shift_Operator
-              (Get_Memtyp (Param1), Read_Discrete (Param2),
+              (Param1, Read_Discrete (Param2),
                Std_Ulogic'Pos('0'), Iir_Predefined_Array_Sla);
 
          when Iir_Predefined_Ieee_Std_Logic_Arith_Shr_Uns
             | Iir_Predefined_Ieee_Std_Logic_Unsigned_Shr =>
             return Execute_Shift_Operator
-              (Get_Memtyp (Param1), Read_Discrete (Param2),
+              (Param1, Read_Discrete (Param2),
                Std_Ulogic'Pos('0'), Iir_Predefined_Array_Srl);
 
          when Iir_Predefined_Ieee_Std_Logic_Arith_Shr_Sgn
             | Iir_Predefined_Ieee_Std_Logic_Signed_Shr =>
             return Execute_Shift_Operator
-              (Get_Memtyp (Param1), Read_Discrete (Param2),
+              (Param1, Read_Discrete (Param2),
                Std_Ulogic'Pos('0'), Iir_Predefined_Array_Sra);
 
          when Iir_Predefined_Ieee_Std_Logic_Misc_And_Reduce_Slv
             | Iir_Predefined_Ieee_Std_Logic_Misc_And_Reduce_Suv =>
-            return Eval_Vector_Reduce
-              ('1', Get_Memtyp (Param1), And_Table, False);
+            return Eval_Vector_Reduce ('1', Param1, And_Table, False);
          when Iir_Predefined_Ieee_Std_Logic_Misc_Nand_Reduce_Slv
            | Iir_Predefined_Ieee_Std_Logic_Misc_Nand_Reduce_Suv =>
-            return Eval_Vector_Reduce
-              ('1', Get_Memtyp (Param1), And_Table, True);
+            return Eval_Vector_Reduce ('1', Param1, And_Table, True);
 
          when Iir_Predefined_Ieee_Std_Logic_Misc_Or_Reduce_Slv
            | Iir_Predefined_Ieee_Std_Logic_Misc_Or_Reduce_Suv =>
-            return Eval_Vector_Reduce
-              ('0', Get_Memtyp (Param1), Or_Table, False);
+            return Eval_Vector_Reduce ('0', Param1, Or_Table, False);
          when Iir_Predefined_Ieee_Std_Logic_Misc_Nor_Reduce_Slv
             | Iir_Predefined_Ieee_Std_Logic_Misc_Nor_Reduce_Suv =>
-            return Eval_Vector_Reduce
-              ('0', Get_Memtyp (Param1), Or_Table, True);
+            return Eval_Vector_Reduce ('0', Param1, Or_Table, True);
 
          when Iir_Predefined_Ieee_Std_Logic_Misc_Xor_Reduce_Slv
             | Iir_Predefined_Ieee_Std_Logic_Misc_Xor_Reduce_Suv =>
-            return Eval_Vector_Reduce
-              ('0', Get_Memtyp (Param1), Xor_Table, False);
+            return Eval_Vector_Reduce ('0', Param1, Xor_Table, False);
          when Iir_Predefined_Ieee_Std_Logic_Misc_Xnor_Reduce_Slv
             | Iir_Predefined_Ieee_Std_Logic_Misc_Xnor_Reduce_Suv =>
-            return Eval_Vector_Reduce
-              ('0', Get_Memtyp (Param1), Xor_Table, True);
+            return Eval_Vector_Reduce ('0', Param1, Xor_Table, True);
 
          when Iir_Predefined_Ieee_Math_Real_Sign =>
             declare
@@ -3043,7 +3001,7 @@ package body Synth.Vhdl_Eval is
                Res : Fp64;
                Cs : Ghdl_C_String;
             begin
-               Cs := To_Ghdl_C_String (To_Address (Param1.Val.Mem));
+               Cs := To_Ghdl_C_String (To_Address (Param1.Mem));
                Res := Fp64 (Grt.Fcvt.From_String (Cs (1 .. Len)));
                return Create_Memory_Fp64 (Res, Res_Typ);
             end;

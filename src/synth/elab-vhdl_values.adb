@@ -38,7 +38,7 @@ package body Elab.Vhdl_Values is
            | Value_Terminal =>
             return False;
          when Value_File =>
-            return True;
+            return False;
          when Value_Alias =>
             return Is_Static (Val.A_Obj);
          when Value_Const =>
