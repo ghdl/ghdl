@@ -799,18 +799,22 @@ package body Vhdl.Evaluation is
                   W := Discrete_Range_Width (Res_Rng);
                   return Create_Discrete_Type (Res_Rng, Base_Typ.Sz, W);
                end;
+            when Iir_Kind_Floating_Type_Definition =>
+               return Create_Float_Type ((Dir_To, Fp64'First, Fp64'Last));
             when Iir_Kind_Array_Type_Definition =>
                declare
                   El : Type_Acc;
                   Idx : Type_Acc;
                begin
+                  if Get_Nbr_Elements (Get_Index_Subtype_List (N)) /= 1 then
+                     raise Internal_Error;
+                  end if;
                   El := Convert_Node_To_Typ (Get_Element_Subtype (N));
                   Idx := Convert_Node_To_Typ (Get_Index_Type (N, 0));
                   if El.Kind in Type_Nets then
                      return Create_Unbounded_Vector (El, Idx);
                   else
-                     raise Internal_Error;
-                     --  return Create_Unbounded_Array (Xx, El, Idx);
+                     return Create_Unbounded_Array (Idx, True, El);
                   end if;
                end;
             when Iir_Kind_Array_Subtype_Definition =>
@@ -889,6 +893,10 @@ package body Vhdl.Evaluation is
               | Iir_Kind_Enumeration_Literal =>
                Res := Create_Memory (Typ);
                Write_Discrete (Res.Mem, Typ, Eval_Pos (N));
+
+            when Iir_Kind_Floating_Point_Literal =>
+               Res := Create_Memory (Typ);
+               Write_Fp64 (Res.Mem, Get_Fp_Value (N));
 
             when others =>
                Error_Kind ("convert_node_to_memtyp", N);
@@ -1000,7 +1008,8 @@ package body Vhdl.Evaluation is
          Res_Type : Iir;
       begin
          case Mt.Typ.Kind is
-            when Type_Vector =>
+            when Type_Vector
+              | Type_Array =>
                Res_Type := Convert_Typ_To_Node (Mt.Typ, Btype, Orig);
                return Convert_Vect_To_Simple_Aggregate
                  (Mt, Res_Type, Orig);
@@ -1008,6 +1017,8 @@ package body Vhdl.Evaluation is
               | Type_Bit =>
                return Convert_Discrete_To_Node
                  (Read_Discrete (Mt), Btype, Orig);
+            when Type_Float =>
+               return Build_Floating (Read_Fp64 (Mt), Orig);
             when others =>
                raise Internal_Error;
          end case;
@@ -1045,6 +1056,39 @@ package body Vhdl.Evaluation is
 
       return Res;
    end Eval_Ieee_Operator;
+
+   function Eval_Predefined_Call (Orig : Iir;
+                                  Call : Iir;
+                                  Param1, Param2 : Iir) return Iir
+   is
+      use Elab.Vhdl_Objtypes;
+      use Synth.Vhdl_Eval;
+      use Synth_Helpers;
+
+      Imp : constant Iir := Get_Implementation (Call);
+      Res_Type : constant Iir := Get_Return_Type (Imp);
+      Marker : Mark_Type;
+      Param1_Mt, Param2_Mt : Memtyp;
+      Res_Typ : Type_Acc;
+      Res_Mt : Memtyp;
+      Res : Iir;
+   begin
+      Mark_Expr_Pool (Marker);
+
+      Res_Typ := Convert_Node_To_Typ (Res_Type);
+      Param1_Mt := Convert_Node_To_Memtyp (Param1);
+      if Param2 /= Null_Iir then
+         Param2_Mt := Convert_Node_To_Memtyp (Param2);
+      else
+         Param2_Mt := Null_Memtyp;
+      end if;
+      Res_Mt := Eval_Static_Predefined_Function_Call
+        (null, Param1_Mt, Param2_Mt, Res_Typ, Call);
+      Res := Convert_Memtyp_To_Node (Res_Mt, Res_Type, Orig);
+      Release_Expr_Pool (Marker);
+
+      return Res;
+   end Eval_Predefined_Call;
 
    function Eval_Monadic_Operator (Orig : Iir; Operand : Iir) return Iir
    is
@@ -2581,8 +2625,9 @@ package body Vhdl.Evaluation is
                                             Get_Enum_Pos (Right), Orig),
                Orig);
 
-         when Iir_Predefined_Real_To_String_Digits
-           | Iir_Predefined_Time_To_String_Unit =>
+         when Iir_Predefined_Real_To_String_Digits =>
+            return Eval_Predefined_Call (Orig, Orig, Left, Right);
+         when Iir_Predefined_Time_To_String_Unit =>
             --  TODO: to_string with a format parameter
             raise Internal_Error;
 
