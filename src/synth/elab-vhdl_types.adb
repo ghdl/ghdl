@@ -474,6 +474,20 @@ package body Elab.Vhdl_Types is
       return Create_Discrete_Type (Rng, Scalar_Size_To_Size (Def), W);
    end Elab_Scalar_Type_Definition;
 
+   function Elab_Floating_Type_Definition (Def : Node; St : Node)
+                                          return Type_Acc
+   is
+      pragma Unreferenced (Def);
+      Cst : constant Node := Get_Range_Constraint (St);
+      L, R : Fp64;
+      Rng : Float_Range_Type;
+   begin
+      L := Get_Fp_Value (Get_Left_Limit (Cst));
+      R := Get_Fp_Value (Get_Right_Limit (Cst));
+      Rng := (Get_Direction (Cst), L, R);
+      return Create_Float_Type (Rng);
+   end Elab_Floating_Type_Definition;
+
    procedure Elab_Anonymous_Type_Definition
      (Syn_Inst : Synth_Instance_Acc; Def : Node; St : Node)
    is
@@ -486,16 +500,7 @@ package body Elab.Vhdl_Types is
            | Iir_Kind_Physical_Type_Definition =>
             Typ := Elab_Scalar_Type_Definition (Def, St);
          when Iir_Kind_Floating_Type_Definition =>
-            declare
-               Cst : constant Node := Get_Range_Constraint (St);
-               L, R : Fp64;
-               Rng : Float_Range_Type;
-            begin
-               L := Get_Fp_Value (Get_Left_Limit (Cst));
-               R := Get_Fp_Value (Get_Right_Limit (Cst));
-               Rng := (Get_Direction (Cst), L, R);
-               Typ := Create_Float_Type (Rng);
-            end;
+            Typ := Elab_Floating_Type_Definition (Def, St);
          when Iir_Kind_Array_Type_Definition =>
             Typ := Synth_Array_Type_Definition (Syn_Inst, Def);
          when others =>
