@@ -289,6 +289,7 @@ package body Vhdl.Sem_Names is
          case Get_Kind (El) is
             when Iir_Kind_Function_Call
               | Iir_Kind_Indexed_Name
+              | Iir_Kind_Slice_Name
               | Iir_Kind_Selected_Element =>
                Sem_Name_Free (Get_Prefix (El));
                Free_Iir (El);
