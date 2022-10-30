@@ -235,6 +235,7 @@ package Netlists.Gates is
 
    --  Extract a bit or a slice at a constant offset.
    --  OUT := IN0[OFF+WD-1:OFF]
+   --  Param:   0: offset
    Id_Extract : constant Module_Id := 86;
 
    --  OUT := IN0[IN1+OFF+WD-1:IN1+OFF]
