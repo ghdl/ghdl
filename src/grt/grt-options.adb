@@ -95,6 +95,7 @@ package body Grt.Options is
       P ("                        warning at the end of simulation");
       --  P (" --threads=N       use N threads for simulation");
       P ("Additional features:");
+      P ("  -gNAME=VALUE     override the generic NAME of the top unit");
       P (" --has-feature=X   test presence of feature X");
       P (" --list-features   display the list of features");
       Grt.Hooks.Call_Help_Hooks;
