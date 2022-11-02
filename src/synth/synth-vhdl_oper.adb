@@ -808,29 +808,53 @@ package body Synth.Vhdl_Oper is
             | Iir_Predefined_Ieee_Numeric_Std_Xnor_Sgn_Sgn =>
             return Synth_Vec_Dyadic (Id_Xnor);
 
-         when Iir_Predefined_Ieee_1164_And_Suv_Log =>
+         when Iir_Predefined_Ieee_1164_And_Suv_Log
+            | Iir_Predefined_Ieee_Numeric_Std_And_Uns_Log
+            | Iir_Predefined_Ieee_Numeric_Std_And_Sgn_Log =>
             return Synth_Dyadic_Vec_Log (Ctxt, Id_And, Left, Right, Expr);
-         when Iir_Predefined_Ieee_1164_And_Log_Suv =>
+         when Iir_Predefined_Ieee_1164_And_Log_Suv
+            | Iir_Predefined_Ieee_Numeric_Std_And_Log_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_And_Log_Sgn =>
             return Synth_Dyadic_Vec_Log (Ctxt, Id_And, Right, Left, Expr);
-         when Iir_Predefined_Ieee_1164_Nand_Suv_Log =>
+         when Iir_Predefined_Ieee_1164_Nand_Suv_Log
+            | Iir_Predefined_Ieee_Numeric_Std_Nand_Uns_Log
+            | Iir_Predefined_Ieee_Numeric_Std_Nand_Sgn_Log =>
             return Synth_Dyadic_Vec_Log (Ctxt, Id_Nand, Left, Right, Expr);
-         when Iir_Predefined_Ieee_1164_Nand_Log_Suv =>
+         when Iir_Predefined_Ieee_1164_Nand_Log_Suv
+            | Iir_Predefined_Ieee_Numeric_Std_Nand_Log_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Nand_Log_Sgn =>
             return Synth_Dyadic_Vec_Log (Ctxt, Id_Nand, Right, Left, Expr);
-         when Iir_Predefined_Ieee_1164_Or_Suv_Log =>
+         when Iir_Predefined_Ieee_1164_Or_Suv_Log
+            | Iir_Predefined_Ieee_Numeric_Std_Or_Uns_Log
+            | Iir_Predefined_Ieee_Numeric_Std_Or_Sgn_Log =>
             return Synth_Dyadic_Vec_Log (Ctxt, Id_Or, Left, Right, Expr);
-         when Iir_Predefined_Ieee_1164_Or_Log_Suv =>
+         when Iir_Predefined_Ieee_1164_Or_Log_Suv
+            | Iir_Predefined_Ieee_Numeric_Std_Or_Log_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Or_Log_Sgn =>
             return Synth_Dyadic_Vec_Log (Ctxt, Id_Or, Right, Left, Expr);
-         when Iir_Predefined_Ieee_1164_Nor_Suv_Log =>
+         when Iir_Predefined_Ieee_1164_Nor_Suv_Log
+            | Iir_Predefined_Ieee_Numeric_Std_Nor_Uns_Log
+            | Iir_Predefined_Ieee_Numeric_Std_Nor_Sgn_Log =>
             return Synth_Dyadic_Vec_Log (Ctxt, Id_Nor, Left, Right, Expr);
-         when Iir_Predefined_Ieee_1164_Nor_Log_Suv =>
+         when Iir_Predefined_Ieee_1164_Nor_Log_Suv
+            | Iir_Predefined_Ieee_Numeric_Std_Nor_Log_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Nor_Log_Sgn =>
             return Synth_Dyadic_Vec_Log (Ctxt, Id_Nor, Right, Left, Expr);
-         when Iir_Predefined_Ieee_1164_Xor_Suv_Log =>
+         when Iir_Predefined_Ieee_1164_Xor_Suv_Log
+            | Iir_Predefined_Ieee_Numeric_Std_Xor_Uns_Log
+            | Iir_Predefined_Ieee_Numeric_Std_Xor_Sgn_Log =>
             return Synth_Dyadic_Vec_Log (Ctxt, Id_Xor, Left, Right, Expr);
-         when Iir_Predefined_Ieee_1164_Xor_Log_Suv =>
+         when Iir_Predefined_Ieee_1164_Xor_Log_Suv
+            | Iir_Predefined_Ieee_Numeric_Std_Xor_Log_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Xor_Log_Sgn =>
             return Synth_Dyadic_Vec_Log (Ctxt, Id_Xor, Right, Left, Expr);
-         when Iir_Predefined_Ieee_1164_Xnor_Suv_Log =>
+         when Iir_Predefined_Ieee_1164_Xnor_Suv_Log
+            | Iir_Predefined_Ieee_Numeric_Std_Xnor_Uns_Log
+            | Iir_Predefined_Ieee_Numeric_Std_Xnor_Sgn_Log =>
             return Synth_Dyadic_Vec_Log (Ctxt, Id_Xnor, Left, Right, Expr);
-         when Iir_Predefined_Ieee_1164_Xnor_Log_Suv =>
+         when Iir_Predefined_Ieee_1164_Xnor_Log_Suv
+            | Iir_Predefined_Ieee_Numeric_Std_Xnor_Log_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Xnor_Log_Sgn =>
             return Synth_Dyadic_Vec_Log (Ctxt, Id_Xnor, Right, Left, Expr);
 
          when Iir_Predefined_Enum_Equality =>
