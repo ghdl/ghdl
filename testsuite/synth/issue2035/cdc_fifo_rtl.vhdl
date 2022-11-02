@@ -10,4 +10,6 @@ ARCHITECTURE rtl OF cdc_fifo IS
   ATTRIBUTE gclk : boolean;
   ATTRIBUTE gclk OF ver_clk : SIGNAL is true;
 BEGIN
+  ver_clk <= '0';
+  assert ver_clk = '0';
 END ARCHITECTURE;
