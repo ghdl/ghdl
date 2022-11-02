@@ -4668,10 +4668,20 @@ package body Vhdl.Sem_Expr is
       --  i) A qualified expression whose type mark denotes a locally static
       --     subtype and whose operand is a locally static expression.
       --
-      --  We always use the vhdl08, because it is weird to have locally
+      --  We use the vhdl08 definition, because it is weird to have locally
       --  static expression with a non-locally static subtype.
       Set_Expr_Staticness (Expr, Min (Get_Expr_Staticness (Res),
                                       Get_Type_Staticness (N_Type)));
+
+      --  But be nice with vhdl93 if the type mark is an array type definition.
+      --  In that case copy the type from the expression.
+      if Flags.Vhdl_Std < Vhdl_08
+        and then Get_Kind (N_Type) = Iir_Kind_Array_Type_Definition
+        and then Get_Expr_Staticness (Res) >= Globally
+      then
+         Set_Expr_Staticness (Expr, Get_Expr_Staticness (Res));
+         Set_Type (Expr, Get_Type (Res));
+      end if;
 
       --  When possible, use the type of the expression as the type of the
       --  qualified expression.
