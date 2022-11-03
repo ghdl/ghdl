@@ -394,7 +394,9 @@ package body Netlists.Inference is
             end if;
 
             if Els_Net = No_Net then
-               if Init /= No_Net then
+               if Init /= No_Net
+                 and then Get_Id (Get_Net_Parent (Init)) /= Id_Const_X
+               then
                   Res := Build_Idff (Ctxt, Clk, D => Ndata, Init => Init);
                else
                   Res := Build_Dff (Ctxt, Clk, D => Ndata);

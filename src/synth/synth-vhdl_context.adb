@@ -265,12 +265,25 @@ package body Synth.Vhdl_Context is
          --  32 bit result.
          if not Has_Zx then
             Res := Build_Const_UB32 (Ctxt, Vec (0).Val, W);
-         elsif Vec (0).Val = 0 and then Sext (Vec (0).Zx, Natural (W)) = not 0
-         then
-            Res := Build_Const_Z (Ctxt, W);
-         else
-            Res := Build_Const_UL32 (Ctxt, Vec (0).Val, Vec (0).Zx, W);
+            return;
          end if;
+
+         if Sext (Vec (0).Zx, Natural (W)) = not 0 then
+            --  All bits are either Z or X.
+            if Vec (0).Val = 0 then
+               --  All bits are Z.
+               Res := Build_Const_Z (Ctxt, W);
+               return;
+            end if;
+            if Sext (Vec (0).Val, Natural (W)) = not 0 then
+               --  All bits are X.
+               Res := Build_Const_X (Ctxt, W);
+               return;
+            end if;
+            --  Mix of Z and X.
+         end if;
+         --  Generic.
+         Res := Build_Const_UL32 (Ctxt, Vec (0).Val, Vec (0).Zx, W);
          return;
       else
          Is_Full (Vec, W, Is_0, Is_X, Is_Z);
