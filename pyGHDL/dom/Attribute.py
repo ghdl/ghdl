@@ -45,7 +45,7 @@ from pyGHDL.libghdl import utils
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.libghdl.vhdl.tokens import Tok
-from pyGHDL.dom import DOMMixin, Position, DOMException, Expression
+from pyGHDL.dom import DOMMixin, Position, DOMException, Expression, logger
 from pyGHDL.dom._Utils import GetNameOfNode, GetIirKindOfNode
 from pyGHDL.dom._Translate import GetNameFromNode, GetExpressionFromNode
 from pyGHDL.dom.Names import SimpleName
@@ -118,7 +118,7 @@ class AttributeSpecification(VHDLModel_AttributeSpecification, DOMMixin):
             if nameKind == nodes.Iir_Kind.Simple_Name:
                 names.append(SimpleName(name, GetNameOfNode(name)))
             elif nameKind == nodes.Iir_Kind.Signature:
-                print("[NOT IMPLEMENTED] Signature name in attribute specifications.")
+                logger.warning("[NOT IMPLEMENTED] Signature name in attribute specifications.")
             else:
                 position = Position.parse(name)
                 raise DOMException(
