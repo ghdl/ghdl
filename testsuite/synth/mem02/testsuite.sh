@@ -2,7 +2,7 @@
 
 . ../../testenv.sh
 
-for t in dpram1; do
+for t in dpram1 dpram3 dpram4 dpram5 dpram7 dpram8; do
     synth_tb $t 2> $t.log
     grep "found R" $t.log
 done
