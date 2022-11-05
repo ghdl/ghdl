@@ -1332,8 +1332,10 @@ package body Netlists.Builders is
       pragma Assert (Addr_W > 0);
       Data_W : constant Width := Get_Width (Data);
       pragma Assert (Data_W * (2**Natural(Addr_W)) >= Mem_W);
-      pragma Assert (Get_Width (Clk) = 1);
-      pragma Assert (Get_Width (En) = 1);
+      --  Assertions currently disabled as netlists-memories create
+      --  mem_wr_sync without clk/en (and connect them later).
+      --  pragma Assert (Get_Width (Clk) = 1);
+      --  pragma Assert (Get_Width (En) = 1);
       Inst : Instance;
       O : Net;
    begin
@@ -1342,8 +1344,12 @@ package body Netlists.Builders is
       Set_Width (O, Mem_W);
       Connect (Get_Input (Inst, 0), Pport);
       Connect (Get_Input (Inst, 1), Addr);
-      Connect (Get_Input (Inst, 2), Clk);
-      Connect (Get_Input (Inst, 3), En);
+      if Clk /= No_Net then
+         Connect (Get_Input (Inst, 2), Clk);
+      end if;
+      if En /= No_Net then
+         Connect (Get_Input (Inst, 3), En);
+      end if;
       Connect (Get_Input (Inst, 4), Data);
       return Inst;
    end Build_Mem_Wr_Sync;
