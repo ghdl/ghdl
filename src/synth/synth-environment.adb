@@ -718,6 +718,33 @@ package body Synth.Environment is
       end if;
    end Sort_Conc_Assign;
 
+   function Is_Proto_Memory (N : Net) return Boolean
+   is
+      use Netlists.Gates;
+      Inst, Inst1 : Instance;
+      Inp : Input;
+   begin
+      Inst := Get_Net_Parent (N);
+      case Get_Id (Inst) is
+         when Id_Dff
+           | Id_Idff =>
+            Inp := Get_Input (Inst, 1);
+         when others =>
+            return False;
+      end case;
+
+      Inst1 := Get_Net_Parent (Get_Driver (Inp));
+      case Get_Id (Inst1) is
+         when Id_Dyn_Insert
+           | Id_Dyn_Insert_En =>
+            null;
+         when others =>
+            return False;
+      end case;
+
+      return True;
+   end Is_Proto_Memory;
+
    --  Return True iff PREV and NEXT are two concurrent assignments for
    --  a multiport memory.
    function Is_Finalize_Assignment_Multiport (Prev, Next : Conc_Assign)
@@ -738,20 +765,7 @@ package body Synth.Environment is
       end if;
 
       --  Both assignments must be a dff.
-      case Get_Id (Get_Net_Parent (P_Val)) is
-         when Id_Dyn_Insert_En =>
-            null;
-         when others =>
-            return False;
-      end case;
-      case Get_Id (Get_Net_Parent (N_Val)) is
-         when Id_Dyn_Insert_En =>
-            null;
-         when others =>
-            return False;
-      end case;
-
-      return True;
+      return Is_Proto_Memory (P_Val) and then Is_Proto_Memory (N_Val);
    end Is_Finalize_Assignment_Multiport;
 
    function Is_Tribuf_Net (N : Net) return Boolean

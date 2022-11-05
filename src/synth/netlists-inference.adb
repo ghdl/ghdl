@@ -361,7 +361,7 @@ package body Netlists.Inference is
         and then Can_Infere_RAM (Data, Prev_Val)
       then
          --  Maybe it is a RAM.
-         Res := Infere_RAM (Ctxt, Data, Els_Net, Clk, Clk_Enable);
+         Ndata := Infere_RAM (Ctxt, Data, Els_Net, No_Net, Clk_Enable);
       else
          if Clk_Enable /= No_Net then
             --  If there is a condition with the clock, that's an enable which
@@ -378,55 +378,55 @@ package body Netlists.Inference is
          else
             Ndata := Data;
          end if;
+      end if;
 
-         --  Create the FF.
-         if Rst = No_Net then
-            --  No async reset
-            pragma Assert (Rst_Val = No_Net);
+      --  Create the FF.
+      if Rst = No_Net then
+         --  No async reset
+         pragma Assert (Rst_Val = No_Net);
 
-            if Els_Net /= No_Net then
-               Els_Inst := Get_Net_Parent (Els_Net);
-               if Get_Id (Els_Inst) in Dff_Module_Id
-                 and then Same_Clock (Clk, Get_Input_Net (Els_Inst, 0))
-               then
-                  Els_Net := No_Net;
-               end if;
-            end if;
-
-            if Els_Net = No_Net then
-               if Init /= No_Net
-                 and then Get_Id (Get_Net_Parent (Init)) /= Id_Const_X
-               then
-                  Res := Build_Idff (Ctxt, Clk, D => Ndata, Init => Init);
-               else
-                  Res := Build_Dff (Ctxt, Clk, D => Ndata);
-               end if;
-            else
-               if Init /= No_Net then
-                  Res := Build_Midff (Ctxt, Clk, D => Ndata,
-                                      Els => Els_Net, Init => Init);
-               else
-                  Res := Build_Mdff (Ctxt, Clk, D => Ndata, Els => Els_Net);
-               end if;
-            end if;
-         else
-            if Els_Net /= No_Net then
-               Error_Msg_Netlist
-                 (Loc, "synchronous code does not expect else part");
-            end if;
-
-            if Init /= No_Net then
-               Res := Build_Iadff (Ctxt, Clk, D => Ndata,
-                                   Rst => Rst, Rst_Val => Rst_Val,
-                                   Init => Init);
-            else
-               Res := Build_Adff (Ctxt, Clk, D => Ndata,
-                                  Rst => Rst, Rst_Val => Rst_Val);
+         if Els_Net /= No_Net then
+            Els_Inst := Get_Net_Parent (Els_Net);
+            if Get_Id (Els_Inst) in Dff_Module_Id
+              and then Same_Clock (Clk, Get_Input_Net (Els_Inst, 0))
+            then
+               Els_Net := No_Net;
             end if;
          end if;
 
-         Set_Location (Res, Loc);
+         if Els_Net = No_Net then
+            if Init /= No_Net
+              and then Get_Id (Get_Net_Parent (Init)) /= Id_Const_X
+            then
+               Res := Build_Idff (Ctxt, Clk, D => Ndata, Init => Init);
+            else
+               Res := Build_Dff (Ctxt, Clk, D => Ndata);
+            end if;
+         else
+            if Init /= No_Net then
+               Res := Build_Midff (Ctxt, Clk, D => Ndata,
+                                   Els => Els_Net, Init => Init);
+            else
+               Res := Build_Mdff (Ctxt, Clk, D => Ndata, Els => Els_Net);
+            end if;
+         end if;
+      else
+         if Els_Net /= No_Net then
+            Error_Msg_Netlist
+              (Loc, "synchronous code does not expect else part");
+         end if;
+
+         if Init /= No_Net then
+            Res := Build_Iadff (Ctxt, Clk, D => Ndata,
+                                Rst => Rst, Rst_Val => Rst_Val,
+                                Init => Init);
+         else
+            Res := Build_Adff (Ctxt, Clk, D => Ndata,
+                               Rst => Rst, Rst_Val => Rst_Val);
+         end if;
       end if;
+
+      Set_Location (Res, Loc);
 
       --  The output may already be used (if the target is a variable that
       --  is read).  So redirect the net.

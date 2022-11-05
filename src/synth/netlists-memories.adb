@@ -822,9 +822,17 @@ package body Netlists.Memories is
                               N_Inst := In_Inst;
                            when Id_Signal
                               | Id_Isignal
-                              | Id_Mem_Multiport =>
+                              | Id_Mem_Multiport
+                              | Id_Dff
+                              | Id_Idff =>
                               pragma Assert (N_Inst = No_Instance);
                               N_Inst := In_Inst;
+                           when Id_Mdff
+                              | Id_Midff =>
+                              if Inp = Get_Input (In_Inst, 1) then
+                                 pragma Assert (N_Inst = No_Instance);
+                                 N_Inst := In_Inst;
+                              end if;
                            when others =>
                               raise Internal_Error;
                         end case;
@@ -1268,8 +1276,13 @@ package body Netlists.Memories is
             when Id_Mux2
                | Id_Mux4 =>
                O := Get_Output (Inst, 0);
+            when Id_Dff
+               | Id_Idff
+               | Id_Mdff
+               | Id_Midff =>
+               O := Get_Output (Inst, 0);
             when Id_Isignal
-              | Id_Signal =>
+               | Id_Signal =>
                return Inst;
             when Id_Mem_Multiport =>
                O := Get_Output (Inst, 0);
@@ -1369,12 +1382,28 @@ package body Netlists.Memories is
             Inst := Get_Input_Parent (Inp);
             case Get_Id (Inst) is
                when Id_Dyn_Insert_En
-                  | Id_Mem_Multiport =>
+                  | Id_Dyn_Insert
+                  | Id_Mem_Multiport
+                  | Id_Dff
+                  | Id_Idff =>
                   if N /= No_Net then
                      --  There must be only one such gate per stage.
                      return No_Instance;
                   end if;
                   N := Get_Output (Inst, 0);
+               when Id_Mdff
+                 | Id_Midff =>
+                  if Inp = Get_Input (Inst, 1) then
+                     --  Data.
+                     if N /= No_Net then
+                        --  There must be only one such gate per stage.
+                        return No_Instance;
+                     end if;
+                     N := Get_Output (Inst, 0);
+                  else
+                     --  Ignore.
+                     null;
+                  end if;
                when Id_Dyn_Extract =>
                   null;
                when Id_Isignal
@@ -1862,9 +1891,17 @@ package body Netlists.Memories is
                               N_Inst := In_Inst;
                            when Id_Signal
                               | Id_Isignal
-                              | Id_Mem_Multiport =>
+                              | Id_Mem_Multiport
+                              | Id_Dff
+                              | Id_Idff =>
                               pragma Assert (N_Inst = No_Instance);
                               N_Inst := In_Inst;
+                           when Id_Mdff
+                             | Id_Midff =>
+                              if Inp = Get_Input (In_Inst, 1) then
+                                 pragma Assert (N_Inst = No_Instance);
+                                 N_Inst := In_Inst;
+                              end if;
                            when others =>
                               raise Internal_Error;
                         end case;
@@ -1947,9 +1984,17 @@ package body Netlists.Memories is
                               N_Inst := In_Inst;
                            when Id_Signal
                               | Id_Isignal
-                              | Id_Mem_Multiport =>
+                              | Id_Mem_Multiport
+                              | Id_Dff
+                              | Id_Idff =>
                               pragma Assert (N_Inst = No_Instance);
                               N_Inst := In_Inst;
+                           when Id_Mdff
+                              | Id_Midff =>
+                              if Inp = Get_Input (In_Inst, 1) then
+                                 pragma Assert (N_Inst = No_Instance);
+                                 N_Inst := In_Inst;
+                              end if;
                            when others =>
                               raise Internal_Error;
                         end case;
@@ -2036,13 +2081,15 @@ package body Netlists.Memories is
                                Mem_W : Width;
                                Offs : Off_Array_Acc;
                                Tails : Net_Array_Acc;
-                               Outs : Net_Array_Acc)
+                               Outs : Net_Array_Acc;
+                               Ports : Instance_Array_Acc)
    is
       Inst, Inst2 : Instance;
       Inp, Inp2 : Input;
       N_Inp, N_Inp2 : Input;
       N_Inst : Instance;
       In_Inst : Instance;
+      N_Ports : Nat32;
    begin
       --  Start from the end.
       --  First: the read ports at the end.
@@ -2067,6 +2114,7 @@ package body Netlists.Memories is
 
       --  Second, the chains.
       Inp2 := Get_First_Sink (Get_Output (Sig, 0));
+      N_Ports := 0;
       while Inp2 /= No_Input loop
          N_Inp2 := Get_Next_Sink (Inp2);
          Inst2 := Get_Input_Parent (Inp2);
@@ -2091,7 +2139,6 @@ package body Netlists.Memories is
                      Inp2 : Input;
                      Dat : Net;
                      En : Net;
-                     Clk : Net;
                   begin
                      Off_Array_To_Idx (Offs.all, Off, Wd, Idx, Len);
                      Inp2 := Get_Input (Inst, 2);
@@ -2100,27 +2147,65 @@ package body Netlists.Memories is
                      Convert_Memidx (Ctxt, Mem_Sz, Addr, Mem_W);
                      if Get_Id (Inst) = Id_Dyn_Insert_En then
                         Inp2 := Get_Input (Inst, 3);
-                        Inference.Extract_Clock
-                          (Ctxt, Get_Driver (Inp2), Clk, En);
+                        En := Get_Driver (Inp2);
                         Disconnect (Inp2);
                      else
-                        Clk := No_Net;
                         En := No_Net;
-                     end if;
-                     pragma Assert (Clk /= No_Net);
-                     if En = No_Net then
-                        En := Build_Const_UB32 (Ctxt, 1, 1);
                      end if;
                      Inp2 := Get_Input (Inst, 1);
                      Dat := Get_Driver (Inp2);
                      for I in Idx .. Idx + Len - 1 loop
                         Wr_Inst := Build_Mem_Wr_Sync
-                          (Ctxt, Tails (I), Addr, Clk, En,
+                          (Ctxt, Tails (I), Addr, No_Net, En,
                            Build2_Extract (Ctxt, Dat, Offs (I) - Offs (Idx),
                                            Offs (I + 1) - Offs (I)));
+                        --  Keep instance to add clock.
+                        N_Ports := N_Ports + 1;
+                        Ports (N_Ports) := Wr_Inst;
                         Tails (I) := Get_Output (Wr_Inst, 0);
                      end loop;
                      Disconnect (Inp2);
+                  end;
+               when Id_Dff
+                  | Id_Idff
+                  | Id_Mdff
+                  | Id_Midff =>
+                  --  Extract clock.
+                  declare
+                     En : Net;
+                     Clk : Net;
+                  begin
+                     Inp2 := Get_Input (Inst, 0);
+                     Inference.Extract_Clock
+                       (Ctxt, Get_Driver (Inp2), Clk, En);
+                     Disconnect (Inp2);
+                     --  Assign clock.
+                     for I in Ports'First .. N_Ports loop
+                        declare
+                           P : constant Instance := Ports (I);
+                           En_Inp : constant Input := Get_Input (P, 3);
+                           Mem_En : Net;
+                        begin
+                           Connect (Get_Input (P, 2), Clk);
+                           Mem_En := Get_Driver (En_Inp);
+                           if Mem_En /= No_Net then
+                              Disconnect (En_Inp);
+                              if En /= No_Net then
+                                 Mem_En := Build_Dyadic (Ctxt, Id_And,
+                                                     Mem_En, En);
+                                 Copy_Location (Mem_En, Inst);
+                              end if;
+                           else
+                              if En = No_Net then
+                                 Mem_En := Build_Const_UB32 (Ctxt, 1, 1);
+                              else
+                                 Mem_En := En;
+                              end if;
+                           end if;
+                           Connect (En_Inp, Mem_En);
+                        end;
+                     end loop;
+                     N_Ports := 0;
                   end;
                when Id_Signal
                   | Id_Isignal =>
@@ -2158,6 +2243,37 @@ package body Netlists.Memories is
                      Disconnect (Inp);
                      pragma Assert (N_Inst = No_Instance);
                      N_Inst := In_Inst;
+                  when Id_Dff
+                     | Id_Idff =>
+                     Disconnect (Inp);
+                     --  Disconnect outputs going to mdff.els
+                     declare
+                        Dout : constant Net := Get_Output (In_Inst, 0);
+                        Inp2, N_Inp2 : Input;
+                        Inp2_P : Instance;
+                     begin
+                        Inp2 := Get_First_Sink (Dout);
+                        while Inp2 /= No_Input loop
+                           N_Inp2 := Get_Next_Sink (Inp2);
+                           Inp2_P := Get_Input_Parent (Inp2);
+                           if (Get_Id (Inp2_P) = Id_Mdff
+                                 or else Get_Id (Inp2_P) = Id_Midff)
+                             and then Inp2 = Get_Input (Inp2_P, 2)
+                           then
+                              Disconnect (Inp2);
+                           end if;
+                           Inp2 := N_Inp2;
+                        end loop;
+                     end;
+                     pragma Assert (N_Inst = No_Instance);
+                     N_Inst := In_Inst;
+                  when Id_Mdff
+                     | Id_Midff =>
+                     if Inp = Get_Input (In_Inst, 1) then
+                        Disconnect (Inp);
+                        pragma Assert (N_Inst = No_Instance);
+                        N_Inst := In_Inst;
+                     end if;
                   when others =>
                      raise Internal_Error;
                end case;
@@ -2167,7 +2283,19 @@ package body Netlists.Memories is
             --  Remove INST.
             case Get_Id (Inst) is
                when Id_Dyn_Insert_En
-                  | Id_Dyn_Insert =>
+                  | Id_Dyn_Insert
+                  | Id_Dff
+                  | Id_Mdff =>
+                  Remove_Instance (Inst);
+               when Id_Midff =>
+                  --  Foget initial value (the memory initial value is
+                  --  extracted from the isignal).
+                  Disconnect (Get_Input (Inst, 3));
+                  Remove_Instance (Inst);
+               when Id_Idff =>
+                  --  Foget initial value (the memory initial value is
+                  --  extracted from the isignal).
+                  Disconnect (Get_Input (Inst, 2));
                   Remove_Instance (Inst);
                when Id_Signal
                   | Id_Isignal =>
@@ -2241,6 +2369,7 @@ package body Netlists.Memories is
       Heads : Instance_Array_Acc;
       Tails : Net_Array_Acc;
       Outs : Net_Array_Acc;
+      Ports : Instance_Array_Acc;
    begin
       --  1. Walk to count number of insert/extract instances + extract width
       Nbr_Ports := 0;
@@ -2331,6 +2460,7 @@ package body Netlists.Memories is
       Heads := new Instance_Array (1 .. Nbr_Offs - 1);
       Tails := new Net_Array (1 .. Nbr_Offs - 1);
       Outs := new Net_Array (1 .. Nbr_Offs - 1);
+      Ports := new Instance_Array (1 .. Nbr_Ports * Nbr_Offs);
 
       --  4. Create Memory/Memory_Init from signal/isignal.
       for I in 1 .. Nbr_Offs - 1 loop
@@ -2363,7 +2493,7 @@ package body Netlists.Memories is
       end loop;
 
       --  5. For each part of the data, create memory ports
-      Create_RAM_Ports (Ctxt, Sig, Mem_Sz, Mem_W, Offs, Tails, Outs);
+      Create_RAM_Ports (Ctxt, Sig, Mem_Sz, Mem_W, Offs, Tails, Outs, Ports);
 
       --  Close loops.
       for I in Heads'Range loop
@@ -2409,6 +2539,7 @@ package body Netlists.Memories is
       Free_Instance_Array (Heads);
       Free_Net_Array (Tails);
       Free_Net_Array (Outs);
+      Free_Instance_Array (Ports);
    end Convert_To_Memory;
 
    function Is_Const_Input (Inst : Instance) return Boolean is
@@ -2618,15 +2749,21 @@ package body Netlists.Memories is
                declare
                   En : Net;
                begin
-                  if Sel /= No_Net then
-                     En := Build_Dyadic (Ctxt, Id_And, Clk, Sel);
-                     Copy_Location (En, Sel);
+                  if Clk /= No_Net then
+                     if Sel /= No_Net then
+                        En := Build_Dyadic (Ctxt, Id_And, Clk, Sel);
+                        Copy_Location (En, Sel);
+                     else
+                        En := Clk;
+                     end if;
                   else
-                     En := Clk;
+                     En := Sel;
                   end if;
-                  Tail_Out := Add_Enable_To_Dyn_Insert (Ctxt, Inst, En);
-                  Inst := Tail_Out;
+                  if En /= No_Net then
+                     Inst := Add_Enable_To_Dyn_Insert (Ctxt, Inst, En);
+                  end if;
                end;
+               Tail_Out := Inst;
             when Id_Dyn_Insert_En =>
                --  Simply add SEL to the enable input.
                declare
@@ -2639,8 +2776,10 @@ package body Netlists.Memories is
                      En := Build_Dyadic (Ctxt, Id_And, En, Sel);
                      Copy_Location (En, Sel);
                   end if;
-                  En := Build_Dyadic (Ctxt, Id_And, Clk, En);
-                  Copy_Location (En, Inst);
+                  if Clk /= No_Net then
+                     En := Build_Dyadic (Ctxt, Id_And, Clk, En);
+                     Copy_Location (En, Inst);
+                  end if;
                   Connect (En_Inp, En);
                end;
                Tail_Out := Inst;
@@ -2787,7 +2926,6 @@ package body Netlists.Memories is
      (Ctxt : Context_Acc; Val : Net; Tail : Net; Clk : Net; En : Net)
       return Net
    is
-      pragma Assert (Clk /= No_Net);
       --  pragma Assert (not Is_Connected (Val));
       New_Tail : Instance;
       Res : Instance;
@@ -2892,6 +3030,9 @@ package body Netlists.Memories is
               | Id_Dyn_Insert_En =>
                --  Skip the dyn_insert.
                Inst := Get_Input_Instance (Inst, 0);
+            when Id_Dff =>
+               --  Skip dff.
+               Inst := Get_Input_Instance (Inst, 1);
             when Id_Signal
               | Id_Isignal =>
                return Get_Output (Inst, 0) = Prev_Val;
