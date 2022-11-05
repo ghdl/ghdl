@@ -750,7 +750,6 @@ package body Synth.Environment is
    function Is_Finalize_Assignment_Multiport (Prev, Next : Conc_Assign)
                                              return Boolean
    is
-      use Netlists.Gates;
       P_Val : Net;
       N_Val : Net;
    begin
