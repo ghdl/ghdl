@@ -1807,6 +1807,54 @@ package body Netlists.Memories is
       end loop;
    end Extract_Memidx_Dim;
 
+   type Ports_And_Dim_Data is record
+      Nbr_Ports : Int32;
+      Dim : Mem_Dim_Type;
+      Sig : Instance;
+   end record;
+
+   procedure Ports_And_Dim_Cb (Inst : Instance;
+                               Data : in out Ports_And_Dim_Data;
+                               Fail : out Boolean)
+   is
+      T : Mem_Dim_Type;
+      Mem : Instance;
+   begin
+      Fail := False;
+
+      case Get_Id (Inst) is
+         when Id_Dyn_Extract =>
+            Mem := Get_Input_Instance (Inst, 1);
+         when Id_Dyn_Insert
+           | Id_Dyn_Insert_En =>
+            Mem := Get_Input_Instance (Inst, 2);
+         when others =>
+            raise Internal_Error;
+      end case;
+
+      Data.Nbr_Ports := Data.Nbr_Ports + 1;
+      T := Extract_Memidx_Dim (Mem);
+      if Data.Nbr_Ports = 1 then
+         Data.Dim := T;
+      else
+         --  TODO: handle different width and depth.
+         if T.Data_Wd /= Data.Dim.Data_Wd then
+            Info_Msg_Synth (+Data.Sig, "memory %n uses different widths",
+                            (1 => +Data.Sig));
+            Data.Nbr_Ports := 0;
+            Fail := True;
+         elsif T.Depth /= Data.Dim.Depth then
+            Info_Msg_Synth (+Data.Sig, "memory %n uses different depth",
+                            (1 => +Data.Sig));
+            Data.Nbr_Ports := 0;
+            Fail := True;
+         end if;
+      end if;
+   end Ports_And_Dim_Cb;
+
+   procedure Ports_And_Dim_Foreach_Port is new Foreach_Port
+     (Data_Type => Ports_And_Dim_Data, Cb => Ports_And_Dim_Cb);
+
    --  Subroutine of Convert_To_Memory.
    --
    --  Compute the number of ports (dyn_extract and dyn_insert) and the width
@@ -1814,108 +1862,16 @@ package body Netlists.Memories is
    procedure Compute_Ports_And_Dim
      (Sig : Instance; Nbr_Ports : out Int32; Dim : out Mem_Dim_Type)
    is
-      procedure Add_Port_And_Width (Memidx : Instance)
-      is
-         T : Mem_Dim_Type;
-      begin
-         Nbr_Ports := Nbr_Ports + 1;
-         T := Extract_Memidx_Dim (Memidx);
-         if Nbr_Ports = 1 then
-            Dim := T;
-         else
-            --  TODO: handle different width and depth.
-            if T.Data_Wd /= Dim.Data_Wd then
-               Info_Msg_Synth (+Sig, "memory %n uses different widths",
-                            (1 => +Sig));
-               Nbr_Ports := 0;
-               return;
-            elsif T.Depth /= Dim.Depth then
-               Info_Msg_Synth (+Sig, "memory %n uses different depth",
-                            (1 => +Sig));
-               Nbr_Ports := 0;
-               return;
-            end if;
-         end if;
-      end Add_Port_And_Width;
-
-      Inst, Inst2 : Instance;
-      Inp2 : Input;
+      Data : Ports_And_Dim_Data;
    begin
-      Nbr_Ports := 0;
-      Dim.Dim := 0;
+      Data := (Nbr_Ports => 0,
+               Dim => (Data_Wd => 0, Depth => 0, Dim => 0),
+               Sig => Sig);
 
-      --  Top-level loop, for each parallel path of multiport RAMs.
-      Inp2 := Get_First_Sink (Get_Output (Sig, 0));
-      while Inp2 /= No_Input loop
-         Inst2 := Get_Input_Parent (Inp2);
-         case Get_Id (Inst2) is
-            when Id_Dyn_Extract =>
-               Add_Port_And_Width (Get_Input_Instance (Inst2, 1));
-               if Nbr_Ports = 0 then
-                  return;
-               end if;
-            when Id_Dyn_Insert
-              | Id_Dyn_Insert_En =>
-               Add_Port_And_Width (Get_Input_Instance (Inst2, 2));
-               if Nbr_Ports = 0 then
-                  return;
-               end if;
-               --  Walk till the signal.
-               Inst := Inst2;
-               loop
-                  declare
-                     Inp : Input;
-                     N_Inst : Instance;
-                     In_Inst : Instance;
-                  begin
-                     --  Check gates connected to the output.
-                     Inp := Get_First_Sink (Get_Output (Inst, 0));
-                     N_Inst := No_Instance;
-                     while Inp /= No_Input loop
-                        In_Inst := Get_Input_Parent (Inp);
-                        case Get_Id (In_Inst) is
-                           when Id_Dyn_Extract =>
-                              Add_Port_And_Width
-                                (Get_Input_Instance (In_Inst, 1));
-                              if Nbr_Ports = 0 then
-                                 return;
-                              end if;
-                           when Id_Dyn_Insert_En
-                              | Id_Dyn_Insert =>
-                              Add_Port_And_Width
-                                (Get_Input_Instance (In_Inst, 2));
-                              if Nbr_Ports = 0 then
-                                 return;
-                              end if;
-                              pragma Assert (N_Inst = No_Instance);
-                              N_Inst := In_Inst;
-                           when Id_Signal
-                              | Id_Isignal
-                              | Id_Mem_Multiport
-                              | Id_Dff
-                              | Id_Idff =>
-                              pragma Assert (N_Inst = No_Instance);
-                              N_Inst := In_Inst;
-                           when Id_Mdff
-                             | Id_Midff =>
-                              if Inp = Get_Input (In_Inst, 1) then
-                                 pragma Assert (N_Inst = No_Instance);
-                                 N_Inst := In_Inst;
-                              end if;
-                           when others =>
-                              raise Internal_Error;
-                        end case;
-                        Inp := Get_Next_Sink (Inp);
-                     end loop;
-                     Inst := N_Inst;
-                     exit when Inst = Sig;
-                  end;
-               end loop;
-            when others =>
-               raise Internal_Error;
-         end case;
-         Inp2 := Get_Next_Sink (Inp2);
-      end loop;
+      Ports_And_Dim_Foreach_Port (Sig, Data);
+
+      Nbr_Ports := Data.Nbr_Ports;
+      Dim := Data.Dim;
    end Compute_Ports_And_Dim;
 
    --  Subroutine of Convert_To_Memory.
