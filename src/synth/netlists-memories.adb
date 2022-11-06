@@ -1874,97 +1874,55 @@ package body Netlists.Memories is
       Dim := Data.Dim;
    end Compute_Ports_And_Dim;
 
+   type Ports_Offsets_Data is record
+      Offs : Off_Array_Acc;
+      Nbr_Offs : Int32;
+   end record;
+
+   procedure Ports_Offsets_Cb (Inst : Instance;
+                               Data : in out Ports_Offsets_Data;
+                               Fail : out Boolean)
+   is
+      Off : Uns32;
+      Wd : Uns32;
+      Ow : Off_Array (1 .. 2);
+   begin
+      case Get_Id (Inst) is
+         when Id_Dyn_Extract =>
+            Off := Get_Param_Uns32 (Inst, 0);
+            Wd := Get_Width (Get_Output (Inst, 0));
+         when Id_Dyn_Insert_En
+            | Id_Dyn_Insert =>
+            Off := Get_Param_Uns32 (Inst, 0);
+            Wd := Get_Width (Get_Input_Net (Inst, 1));
+         when others =>
+            raise Internal_Error;
+      end case;
+
+      Ow := (Off, Off + Wd);
+      if Data.Nbr_Offs = 0 or else Ow /= Data.Offs (1 .. 2) then
+         Data.Nbr_Offs := Data.Nbr_Offs + 2;
+         Data.Offs (Data.Nbr_Offs -1 .. Data.Nbr_Offs) := Ow;
+      end if;
+      Fail := False;
+   end Ports_Offsets_Cb;
+
+   procedure Ports_Offsets_Foreach_Port is new Foreach_Port
+     (Data_Type => Ports_Offsets_Data, Cb => Ports_Offsets_Cb);
+
    --  Subroutine of Convert_To_Memory.
    --
    --  Extract offsets/width of each port.
    procedure Extract_Ports_Offsets
      (Sig : Instance; Offs : Off_Array_Acc; Nbr_Offs : out Int32)
    is
-      procedure Add_Offset (Off : Uns32; Wd : Uns32)
-      is
-         Ow : Off_Array (1 .. 2);
-      begin
-         Ow := (Off, Off + Wd);
-         if Nbr_Offs = 0 or else Ow /= Offs (1 .. 2) then
-            Nbr_Offs := Nbr_Offs + 2;
-            Offs (Nbr_Offs -1 .. Nbr_Offs) := Ow;
-         end if;
-      end Add_Offset;
-
-      procedure Add_Extract_Offset (Inst : Instance) is
-      begin
-         Add_Offset (Get_Param_Uns32 (Inst, 0),
-                     Get_Width (Get_Output (Inst, 0)));
-      end Add_Extract_Offset;
-
-      procedure Add_Insert_Offset (Inst : Instance) is
-      begin
-         Add_Offset (Get_Param_Uns32 (Inst, 0),
-                     Get_Width (Get_Input_Net (Inst, 1)));
-      end Add_Insert_Offset;
-
-      Inst, Inst2 : Instance;
-      Inp2 : Input;
+      Data : Ports_Offsets_Data;
    begin
-      Nbr_Offs := 0;
+      Data := (Offs => Offs,
+               Nbr_Offs => 0);
 
-      --  Top-level loop, for each parallel path of multiport RAMs.
-      Inp2 := Get_First_Sink (Get_Output (Sig, 0));
-      while Inp2 /= No_Input loop
-         Inst2 := Get_Input_Parent (Inp2);
-         case Get_Id (Inst2) is
-            when Id_Dyn_Extract =>
-               Add_Extract_Offset (Inst2);
-            when Id_Dyn_Insert_En
-              | Id_Dyn_Insert =>
-               Add_Insert_Offset (Inst2);
-               Inst := Inst2;
-               loop
-                  declare
-                     Inp : Input;
-                     N_Inst : Instance;
-                     In_Inst : Instance;
-                  begin
-                     --  Check gates connected to the output.
-                     Inp := Get_First_Sink (Get_Output (Inst, 0));
-                     N_Inst := No_Instance;
-                     while Inp /= No_Input loop
-                        In_Inst := Get_Input_Parent (Inp);
-                        case Get_Id (In_Inst) is
-                           when Id_Dyn_Extract =>
-                              Add_Extract_Offset (In_Inst);
-                           when Id_Dyn_Insert_En
-                              | Id_Dyn_Insert =>
-                              Add_Insert_Offset (In_Inst);
-                              pragma Assert (N_Inst = No_Instance);
-                              N_Inst := In_Inst;
-                           when Id_Signal
-                              | Id_Isignal
-                              | Id_Mem_Multiport
-                              | Id_Dff
-                              | Id_Idff =>
-                              pragma Assert (N_Inst = No_Instance);
-                              N_Inst := In_Inst;
-                           when Id_Mdff
-                              | Id_Midff =>
-                              if Inp = Get_Input (In_Inst, 1) then
-                                 pragma Assert (N_Inst = No_Instance);
-                                 N_Inst := In_Inst;
-                              end if;
-                           when others =>
-                              raise Internal_Error;
-                        end case;
-                        Inp := Get_Next_Sink (Inp);
-                     end loop;
-                     Inst := N_Inst;
-                     exit when Inst = Sig;
-                  end;
-               end loop;
-            when others =>
-               raise Internal_Error;
-         end case;
-         Inp2 := Get_Next_Sink (Inp2);
-      end loop;
+      Ports_Offsets_Foreach_Port (Sig, Data);
+      Nbr_Offs := Data.Nbr_Offs;
    end Extract_Ports_Offsets;
 
    --  IN_INST is the Dyn_Extract gate.
