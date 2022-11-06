@@ -1774,87 +1774,6 @@ package body Netlists.Memories is
       Dim : Natural;
    end record;
 
-   --  Extract the dim (equivalent to data width) of a dyn_insert/dyn_extract
-   --  address.  This is either a memidx or an addidx gate.
-   function Extract_Memidx_Dim (Memidx : Instance) return Mem_Dim_Type
-   is
-      Res : Mem_Dim_Type;
-      Inst : Instance;
-      Idx : Instance;
-   begin
-      Inst := Memidx;
-      Res := (Data_Wd => 0, Depth => 1, Dim => 0);
-      loop
-         case Get_Id (Inst) is
-            when Id_Addidx =>
-               --  Handle the memidx, ...
-               Idx := Get_Input_Instance (Inst, 0);
-               --  ..  and continue with the chain.
-               Inst := Get_Input_Instance (Inst, 1);
-            when Id_Memidx =>
-               --  Just handle the memidx.
-               Idx := Inst;
-               Inst := No_Instance;
-            when others =>
-               raise Internal_Error;
-         end case;
-         Res.Dim := Res.Dim + 1;
-         Res.Data_Wd := Get_Param_Uns32 (Idx, 0);
-         Res.Depth := Res.Depth * (Get_Param_Uns32 (Idx, 1) + 1);
-         if Inst = No_Instance then
-            return Res;
-         end if;
-      end loop;
-   end Extract_Memidx_Dim;
-
-   type Ports_And_Dim_Data is record
-      Nbr_Ports : Int32;
-      Dim : Mem_Dim_Type;
-      Sig : Instance;
-   end record;
-
-   procedure Ports_And_Dim_Cb (Inst : Instance;
-                               Data : in out Ports_And_Dim_Data;
-                               Fail : out Boolean)
-   is
-      T : Mem_Dim_Type;
-      Mem : Instance;
-   begin
-      Fail := False;
-
-      case Get_Id (Inst) is
-         when Id_Dyn_Extract =>
-            Mem := Get_Input_Instance (Inst, 1);
-         when Id_Dyn_Insert
-           | Id_Dyn_Insert_En =>
-            Mem := Get_Input_Instance (Inst, 2);
-         when others =>
-            raise Internal_Error;
-      end case;
-
-      Data.Nbr_Ports := Data.Nbr_Ports + 1;
-      T := Extract_Memidx_Dim (Mem);
-      if Data.Nbr_Ports = 1 then
-         Data.Dim := T;
-      else
-         --  TODO: handle different width and depth.
-         if T.Data_Wd /= Data.Dim.Data_Wd then
-            Info_Msg_Synth (+Data.Sig, "memory %n uses different widths",
-                            (1 => +Data.Sig));
-            Data.Nbr_Ports := 0;
-            Fail := True;
-         elsif T.Depth /= Data.Dim.Depth then
-            Info_Msg_Synth (+Data.Sig, "memory %n uses different depth",
-                            (1 => +Data.Sig));
-            Data.Nbr_Ports := 0;
-            Fail := True;
-         end if;
-      end if;
-   end Ports_And_Dim_Cb;
-
-   procedure Ports_And_Dim_Foreach_Port is new Foreach_Port
-     (Data_Type => Ports_And_Dim_Data, Cb => Ports_And_Dim_Cb);
-
    --  Subroutine of Convert_To_Memory.
    --
    --  Compute the number of ports (dyn_extract and dyn_insert) and the width
@@ -1862,6 +1781,79 @@ package body Netlists.Memories is
    procedure Compute_Ports_And_Dim
      (Sig : Instance; Nbr_Ports : out Int32; Dim : out Mem_Dim_Type)
    is
+      type Ports_And_Dim_Data is record
+         Nbr_Ports : Int32;
+         Dim : Mem_Dim_Type;
+         Sig : Instance;
+      end record;
+
+      procedure Ports_And_Dim_Cb (Dyn_Inst : Instance;
+                                  Data : in out Ports_And_Dim_Data;
+                                  Fail : out Boolean)
+      is
+         Res : Mem_Dim_Type;
+         Inst : Instance;
+         Idx : Instance;
+      begin
+         Fail := False;
+
+         case Get_Id (Dyn_Inst) is
+            when Id_Dyn_Extract =>
+               Inst := Get_Input_Instance (Dyn_Inst, 1);
+            when Id_Dyn_Insert
+              | Id_Dyn_Insert_En =>
+               Inst := Get_Input_Instance (Dyn_Inst, 2);
+            when others =>
+               raise Internal_Error;
+         end case;
+
+         Data.Nbr_Ports := Data.Nbr_Ports + 1;
+
+         --  Extract the dim (equivalent to data width) of a dyn_insert or
+         --  dyn_extract address.  This is either a memidx or an addidx gate.
+         Res := (Data_Wd => 0, Depth => 1, Dim => 0);
+         loop
+            case Get_Id (Inst) is
+               when Id_Addidx =>
+                  --  Handle the memidx, ...
+                  Idx := Get_Input_Instance (Inst, 0);
+                  --  ..  and continue with the chain.
+                  Inst := Get_Input_Instance (Inst, 1);
+               when Id_Memidx =>
+                  --  Just handle the memidx.
+                  Idx := Inst;
+                  Inst := No_Instance;
+               when others =>
+                  raise Internal_Error;
+            end case;
+            Res.Dim := Res.Dim + 1;
+            Res.Data_Wd := Get_Param_Uns32 (Idx, 0);
+            Res.Depth := Res.Depth * (Get_Param_Uns32 (Idx, 1) + 1);
+
+            exit when Inst = No_Instance;
+         end loop;
+
+         if Data.Nbr_Ports = 1 then
+            Data.Dim := Res;
+         else
+            --  TODO: handle different width and depth.
+            if Res.Data_Wd /= Data.Dim.Data_Wd then
+               Info_Msg_Synth (+Data.Sig, "memory %n uses different widths",
+                               (1 => +Data.Sig));
+               Data.Nbr_Ports := 0;
+               Fail := True;
+            elsif Res.Depth /= Data.Dim.Depth then
+               Info_Msg_Synth (+Data.Sig, "memory %n uses different depth",
+                               (1 => +Data.Sig));
+               Data.Nbr_Ports := 0;
+               Fail := True;
+            end if;
+         end if;
+      end Ports_And_Dim_Cb;
+
+      procedure Ports_And_Dim_Foreach_Port is new Foreach_Port
+        (Data_Type => Ports_And_Dim_Data, Cb => Ports_And_Dim_Cb);
+
       Data : Ports_And_Dim_Data;
    begin
       Data := (Nbr_Ports => 0,
@@ -1874,48 +1866,48 @@ package body Netlists.Memories is
       Dim := Data.Dim;
    end Compute_Ports_And_Dim;
 
-   type Ports_Offsets_Data is record
-      Offs : Off_Array_Acc;
-      Nbr_Offs : Int32;
-   end record;
-
-   procedure Ports_Offsets_Cb (Inst : Instance;
-                               Data : in out Ports_Offsets_Data;
-                               Fail : out Boolean)
-   is
-      Off : Uns32;
-      Wd : Uns32;
-      Ow : Off_Array (1 .. 2);
-   begin
-      case Get_Id (Inst) is
-         when Id_Dyn_Extract =>
-            Off := Get_Param_Uns32 (Inst, 0);
-            Wd := Get_Width (Get_Output (Inst, 0));
-         when Id_Dyn_Insert_En
-            | Id_Dyn_Insert =>
-            Off := Get_Param_Uns32 (Inst, 0);
-            Wd := Get_Width (Get_Input_Net (Inst, 1));
-         when others =>
-            raise Internal_Error;
-      end case;
-
-      Ow := (Off, Off + Wd);
-      if Data.Nbr_Offs = 0 or else Ow /= Data.Offs (1 .. 2) then
-         Data.Nbr_Offs := Data.Nbr_Offs + 2;
-         Data.Offs (Data.Nbr_Offs -1 .. Data.Nbr_Offs) := Ow;
-      end if;
-      Fail := False;
-   end Ports_Offsets_Cb;
-
-   procedure Ports_Offsets_Foreach_Port is new Foreach_Port
-     (Data_Type => Ports_Offsets_Data, Cb => Ports_Offsets_Cb);
-
    --  Subroutine of Convert_To_Memory.
    --
    --  Extract offsets/width of each port.
    procedure Extract_Ports_Offsets
      (Sig : Instance; Offs : Off_Array_Acc; Nbr_Offs : out Int32)
    is
+      type Ports_Offsets_Data is record
+         Offs : Off_Array_Acc;
+         Nbr_Offs : Int32;
+      end record;
+
+      procedure Ports_Offsets_Cb (Inst : Instance;
+                                  Data : in out Ports_Offsets_Data;
+                                  Fail : out Boolean)
+      is
+         Off : Uns32;
+         Wd : Uns32;
+         Ow : Off_Array (1 .. 2);
+      begin
+         case Get_Id (Inst) is
+            when Id_Dyn_Extract =>
+               Off := Get_Param_Uns32 (Inst, 0);
+               Wd := Get_Width (Get_Output (Inst, 0));
+            when Id_Dyn_Insert_En
+              | Id_Dyn_Insert =>
+               Off := Get_Param_Uns32 (Inst, 0);
+               Wd := Get_Width (Get_Input_Net (Inst, 1));
+            when others =>
+               raise Internal_Error;
+         end case;
+
+         Ow := (Off, Off + Wd);
+         if Data.Nbr_Offs = 0 or else Ow /= Data.Offs (1 .. 2) then
+            Data.Nbr_Offs := Data.Nbr_Offs + 2;
+            Data.Offs (Data.Nbr_Offs -1 .. Data.Nbr_Offs) := Ow;
+         end if;
+         Fail := False;
+      end Ports_Offsets_Cb;
+
+      procedure Ports_Offsets_Foreach_Port is new Foreach_Port
+        (Data_Type => Ports_Offsets_Data, Cb => Ports_Offsets_Cb);
+
       Data : Ports_Offsets_Data;
    begin
       Data := (Offs => Offs,
