@@ -150,7 +150,9 @@ package Trans.Chap7 is
          return Iir;
 
    function Translate_Lib_Operator (Left, Right : O_Enode; Func : O_Dnode)
-                                       return O_Enode;
+                                   return O_Enode;
+
+   function Get_ON_Op (Imp : Iir) return ON_Op_Kind;
 private
    type Implicit_Subprogram_Infos is record
       Arr_Eq_Info     : Operator_Info_Acc;

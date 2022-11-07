@@ -3030,53 +3030,68 @@ package body Trans.Chap4 is
             --  Create result value.
             Subprg_Info := Get_Info (Func);
 
-            if Subprg_Info.Use_Stack2 then
-               Create_Temp_Stack2_Mark;
-            end if;
-
-            if Subprg_Info.Res_Interface /= O_Dnode_Null then
-               --  Composite result.
-               --  If we need to allocate, do it before starting the call!
+            if Subprg_Info = null
+              and then
+              Get_Implicit_Definition (Func) in Iir_Predefined_Operators
+            then
+               --  An implicit operation like not, "-", abs.
                declare
-                  Res_Type : constant Iir := Get_Return_Type (Func);
-                  Res_Info : constant Type_Info_Acc := Get_Info (Res_Type);
+                  Op : constant ON_Op_Kind := Chap7.Get_ON_Op (Func);
+                  pragma Assert (Op /= ON_Nil);
                begin
-                  Res := Create_Temp (Res_Info);
-                  if Res_Info.Type_Mode /= Type_Mode_Fat_Array then
-                     Chap4.Allocate_Complex_Object
-                       (Res_Type, Alloc_Stack, Res);
-                  end if;
+                  E := New_Monadic_Op (Op, R);
+                  Res := E2M (E, Get_Info (Out_Type), Mode_Value);
+
                end;
-            end if;
-
-            --  Call conversion function.
-            Start_Association (Constr, Subprg_Info.Subprg_Node);
-
-            if Subprg_Info.Res_Interface /= O_Dnode_Null then
-               --  Composite result.
-               New_Association (Constr, M2E (Res));
-            end if;
-
-            if Obj /= Null_Iir then
-               --  Protected object.
-               New_Association
-                 (Constr,
-                  New_Value (New_Selected_Acc_Value
-                               (New_Obj (Var_Data),
-                                Conv_Info.Method_Object)));
             else
-               Subprgs.Add_Subprg_Instance_Assoc
-                 (Constr, Subprg_Info.Subprg_Instance);
-            end if;
+               if Subprg_Info.Use_Stack2 then
+                  Create_Temp_Stack2_Mark;
+               end if;
 
-            New_Association (Constr, R);
+               if Subprg_Info.Res_Interface /= O_Dnode_Null then
+                  --  Composite result.
+                  --  If we need to allocate, do it before starting the call!
+                  declare
+                     Res_Type : constant Iir := Get_Return_Type (Func);
+                     Res_Info : constant Type_Info_Acc := Get_Info (Res_Type);
+                  begin
+                     Res := Create_Temp (Res_Info);
+                     if Res_Info.Type_Mode /= Type_Mode_Fat_Array then
+                        Chap4.Allocate_Complex_Object
+                          (Res_Type, Alloc_Stack, Res);
+                     end if;
+                  end;
+               end if;
 
-            if Subprg_Info.Res_Interface /= O_Dnode_Null then
-               --  Composite result.
-               New_Procedure_Call (Constr);
-               E := M2E (Res);
-            else
-               E := New_Function_Call (Constr);
+               --  Call conversion function.
+               Start_Association (Constr, Subprg_Info.Subprg_Node);
+
+               if Subprg_Info.Res_Interface /= O_Dnode_Null then
+                  --  Composite result.
+                  New_Association (Constr, M2E (Res));
+               end if;
+
+               if Obj /= Null_Iir then
+                  --  Protected object.
+                  New_Association
+                    (Constr,
+                     New_Value (New_Selected_Acc_Value
+                                  (New_Obj (Var_Data),
+                                   Conv_Info.Method_Object)));
+               else
+                  Subprgs.Add_Subprg_Instance_Assoc
+                    (Constr, Subprg_Info.Subprg_Instance);
+               end if;
+
+               New_Association (Constr, R);
+
+               if Subprg_Info.Res_Interface /= O_Dnode_Null then
+                  --  Composite result.
+                  New_Procedure_Call (Constr);
+                  E := M2E (Res);
+               else
+                  E := New_Function_Call (Constr);
+               end if;
             end if;
             Res := E2M
               (Chap7.Translate_Implicit_Conv (E, Get_Return_Type (Func),

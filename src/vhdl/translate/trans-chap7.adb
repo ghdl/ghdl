@@ -1108,7 +1108,7 @@ package body Trans.Chap7 is
    end Translate_Implicit_Conv;
 
    type Predefined_To_Onop_Type is
-     array (Iir_Predefined_Functions) of ON_Op_Kind;
+     array (Iir_Predefined_Pure_Functions) of ON_Op_Kind;
    Predefined_To_Onop : constant Predefined_To_Onop_Type :=
      (Iir_Predefined_Boolean_Or => ON_Or,
       Iir_Predefined_Boolean_Not => ON_Not,
@@ -1170,16 +1170,29 @@ package body Trans.Chap7 is
 
       others => ON_Nil);
 
+   function Get_ON_Op (Imp : Iir) return ON_Op_Kind
+   is
+      Kind : constant Iir_Predefined_Functions :=
+        Get_Implicit_Definition (Imp);
+   begin
+      if Kind in Iir_Predefined_Pure_Functions then
+         return Predefined_To_Onop (Kind);
+      else
+         return ON_Nil;
+      end if;
+   end Get_ON_Op;
+
    function Translate_Shortcircuit_Operator
      (Imp : Iir_Function_Declaration; Left, Right : Iir) return O_Enode
    is
+      Kind : constant Iir_Predefined_Functions :=
+        Get_Implicit_Definition (Imp);
       Rtype    : Iir;
       Res      : O_Dnode;
       Res_Type : O_Tnode;
       If_Blk   : O_If_Block;
       Val      : Integer;
       V        : O_Cnode;
-      Kind     : Iir_Predefined_Functions;
       Invert   : Boolean;
    begin
       Rtype := Get_Return_Type (Imp);
@@ -1188,7 +1201,6 @@ package body Trans.Chap7 is
       Open_Temp;
       New_Assign_Stmt (New_Obj (Res), Chap7.Translate_Expression (Left));
       Close_Temp;
-      Kind := Get_Implicit_Definition (Imp);
 
       --  Short cut: RIGHT is the result (and must be evaluated) iff
       --  LEFT is equal to VAL (ie '0' or false for 0, '1' or true for 1).
@@ -2511,7 +2523,7 @@ package body Trans.Chap7 is
          Right_Tree := Translate_Expression (Right, Right_Type);
       end if;
 
-      Op := Predefined_To_Onop (Kind);
+      Op := Get_ON_Op (Imp);
       if Op /= ON_Nil then
          case Op is
             when ON_Eq
