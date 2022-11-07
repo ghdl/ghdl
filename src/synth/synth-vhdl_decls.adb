@@ -257,7 +257,9 @@ package body Synth.Vhdl_Decls is
             --  TODO: components ?
             --  TODO: Interface_Signal ?  But no instance for them.
             Warning_Msg_Synth
-              (+Attr_Value, "attribute %i for %n is not kept in the netlist",
+              (Warnid_Unkept_Attribute,
+               +Attr_Value,
+               "attribute %i for %n is not kept in the netlist",
                (+Attr_Decl, +Obj));
             return;
       end case;

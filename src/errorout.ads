@@ -131,6 +131,10 @@ package Errorout is
 
       --  Lexical conformance
       Warnid_Conformance,
+      
+      -- Attributes in the netlist is not kept during synthesis
+      Warnid_Unkept_Attribute,
+      Warnid_Unhandled_Attribute,
 
       --  Violation of staticness rules
       Warnid_Static,
@@ -330,6 +334,7 @@ private
         | Warnid_Nowrite
         | Warnid_No_Wait | Warnid_Useless
         | Warnid_Conformance
+        | Warnid_Unkept_Attribute | Warnid_Unhandled_Attribute
         | Msgid_Warning  => (Enabled => True, Error => False),
       Warnid_Delta_Cycle | Warnid_Body | Warnid_Static | Warnid_Nested_Comment
         | Warnid_Universal | Warnid_Port_Bounds

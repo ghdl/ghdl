@@ -4616,7 +4616,11 @@ package body Synth.Vhdl_Stmts is
                --  Applies to nets/ports.
                null;
             when others =>
-               Warning_Msg_Synth (+Spec, "unhandled attribute %i", (1 => +Id));
+               Warning_Msg_Synth
+                 (Warnid_Unhandled_Attribute,
+                  +Spec,
+                  "unhandled attribute %i",
+                  (1 => +Id));
          end case;
          Val := Get_Value_Chain (Val);
       end loop;
