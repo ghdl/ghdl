@@ -914,11 +914,7 @@ package body Netlists.Inference is
            (Loc, "latch infered for net %n (use --latches)", (1 => +Name));
       end if;
 
-      if False then
-         return Infere_Latch_Create (Ctxt, Val, Prev_Val, Last_Mux, Loc);
-      else
-         return Val;
-      end if;
+      return Infere_Latch_Create (Ctxt, Val, Prev_Val, Last_Mux, Loc);
    end Infere_Latch;
 
    --  VAL is the value to be assigned to a wire at offset OFF.
