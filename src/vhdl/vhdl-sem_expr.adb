@@ -1675,6 +1675,8 @@ package body Vhdl.Sem_Expr is
             end if;
             if Get_Kind (Formal) = Iir_Kind_Interface_Signal_Declaration
               and then Get_Mode (Formal) in Iir_Out_Modes
+              and then
+              Get_Kind (Param) = Iir_Kind_Association_Element_By_Expression
             then
                Prefix := Name_To_Object (Get_Actual (Param));
                if Prefix /= Null_Iir then
