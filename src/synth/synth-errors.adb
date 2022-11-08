@@ -61,7 +61,7 @@ package body Synth.Errors is
    begin
       Report_Msg (Warnid, Errorout.Elaboration, +Loc, Msg, (1 => Arg1));
    end Warning_Msg_Synth;
-   
+
    procedure Warning_Msg_Synth (Warnid : Msgid_Warnings;
                                 Loc : Location_Type;
                                 Msg : String;
