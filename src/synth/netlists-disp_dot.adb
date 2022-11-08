@@ -76,7 +76,7 @@ package body Netlists.Disp_Dot is
             for Idx in 1 .. Get_Nbr_Inputs (M) loop
                Put ("  p");
                Put_Uns32 (Uns32 (Idx - 1));
-               Put (" [label=""");
+               Put (" [label=""" & "\");
                Dump_Name (Get_Input_Desc (M, Idx - 1).Name);
                Put ("""];");
                New_Line;
