@@ -246,6 +246,7 @@ package body Elab.Vhdl_Types is
       El_Typ := Get_Subtype_Object (Syn_Inst, El_Type);
 
       if El_Typ.Kind in Type_Nets and then Ndims = 1 then
+         --  An array of nets is a vector.
          Idx := Get_Index_Type (Def, 0);
          Idx_Typ := Get_Subtype_Object (Syn_Inst, Idx);
          Typ := Create_Unbounded_Vector (El_Typ, Idx_Typ);

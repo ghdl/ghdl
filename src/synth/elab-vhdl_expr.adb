@@ -63,35 +63,32 @@ package body Elab.Vhdl_Expr is
    function Exec_Simple_Aggregate (Syn_Inst : Synth_Instance_Acc;
                                    Aggr : Node) return Valtyp
    is
-      Aggr_Type : constant Node := Get_Type (Aggr);
-      pragma Assert (Get_Nbr_Dimensions (Aggr_Type) = 1);
-      El_Type : constant Node := Get_Element_Subtype (Aggr_Type);
-      El_Typ : constant Type_Acc := Get_Subtype_Object (Syn_Inst, El_Type);
       Els : constant Iir_Flist := Get_Simple_Aggregate_List (Aggr);
       Last : constant Natural := Flist_Last (Els);
-      Bnd : Bound_Type;
-      Res_Type : Type_Acc;
+      Aggr_Type : Node;
+      Res_Typ : Type_Acc;
       Val : Valtyp;
       Res : Valtyp;
    begin
       --  Allocate the result.
-      Bnd := Synth_Array_Bounds (Syn_Inst, Aggr_Type, 1);
-      pragma Assert (Bnd.Len = Uns32 (Last + 1));
-
-      if El_Typ.Kind in Type_Nets then
-         Res_Type := Create_Vector_Type (Bnd, El_Typ);
+      Aggr_Type := Get_Literal_Subtype (Aggr);
+      if Aggr_Type /= Null_Node then
+         Res_Typ := Synth_Subtype_Indication (Syn_Inst, Aggr_Type);
       else
-         Res_Type := Create_Array_Type (Bnd, True, El_Typ);
+         Aggr_Type := Get_Type (Aggr);
+         Res_Typ := Get_Subtype_Object (Syn_Inst, Aggr_Type);
       end if;
+      pragma Assert (Get_Nbr_Dimensions (Aggr_Type) = 1);
+      pragma Assert (Res_Typ.Abound.Len = Uns32 (Last + 1));
 
-      Res := Create_Value_Memory (Res_Type, Current_Pool);
+      Res := Create_Value_Memory (Res_Typ, Current_Pool);
 
       for I in Flist_First .. Last loop
          --  Elements are supposed to be static, so no need for enable.
          Val := Synth_Expression_With_Type
-           (Syn_Inst, Get_Nth_Element (Els, I), El_Typ);
+           (Syn_Inst, Get_Nth_Element (Els, I), Res_Typ.Arr_El);
          pragma Assert (Is_Static (Val.Val));
-         Write_Value (Res.Val.Mem + Size_Type (I) * El_Typ.Sz, Val);
+         Write_Value (Res.Val.Mem + Size_Type (I) * Res_Typ.Arr_El.Sz, Val);
       end loop;
 
       return Res;
