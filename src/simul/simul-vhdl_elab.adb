@@ -510,7 +510,6 @@ package body Simul.Vhdl_Elab is
    procedure Gather_Process_Drivers
      (Inst : Synth_Instance_Acc; Proc : Node; Proc_Idx : Process_Index_Type)
    is
-      use Synth.Vhdl_Stmts;
       Driver_List: Iir_List;
       It : List_Iterator;
       El : Node;
@@ -537,7 +536,6 @@ package body Simul.Vhdl_Elab is
                                  Proc_Idx : Process_Index_Type;
                                  List : Iir_List)
    is
-      use Synth.Vhdl_Stmts;
       It : List_Iterator;
       El : Node;
       Sig : Sub_Signal_Type;

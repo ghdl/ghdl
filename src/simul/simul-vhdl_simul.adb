@@ -995,7 +995,6 @@ package body Simul.Vhdl_Simul is
                                                Stmt : Node;
                                                Concurrent : Boolean)
    is
-      use Synth.Vhdl_Expr;
       Target : constant Node := Get_Target (Stmt);
       Marker : Mark_Type;
       Info : Target_Info;
@@ -1019,7 +1018,6 @@ package body Simul.Vhdl_Simul is
                                                     Stmt : Node;
                                                     Concurrent : Boolean)
    is
-      use Synth.Vhdl_Expr;
       Target : constant Node := Get_Target (Stmt);
       Marker : Mark_Type;
       Cw : Node;

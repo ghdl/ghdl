@@ -13,7 +13,7 @@
 --
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
-with System; use System;
+with System;
 
 with Ada.Unchecked_Conversion;
 with Ada.Command_Line;
@@ -23,10 +23,10 @@ with Interfaces;
 with Interfaces.C;
 
 with Ghdllocal; use Ghdllocal;
-with Simple_IO; use Simple_IO;
 
 with Flags;
 with Errorout;
+with Simple_IO;
 
 with Vhdl.Nodes; use Vhdl.Nodes;
 with Vhdl.Std_Package;
