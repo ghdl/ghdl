@@ -3723,7 +3723,12 @@ package body Synth.Vhdl_Stmts is
          when Iir_Kind_If_Statement =>
             Synth_If_Statement (C, Stmt);
          when Iir_Kind_Simple_Signal_Assignment_Statement =>
-            Synth_Simple_Signal_Assignment (C.Inst, Stmt);
+            if Is_Dyn then
+               Synth_Simple_Signal_Assignment (C.Inst, Stmt);
+            else
+               Error_Msg_Synth (C.Inst, Stmt,
+                                "signal assignment not allowed here");
+            end if;
          when Iir_Kind_Conditional_Signal_Assignment_Statement =>
             Synth_Conditional_Signal_Assignment (C.Inst, Stmt);
          when Iir_Kind_Variable_Assignment_Statement =>
@@ -3896,7 +3901,9 @@ package body Synth.Vhdl_Stmts is
 
       Mark_Expr_Pool (Marker);
 
-      --  Handle the condition as an if.
+      --  The first statement is a wait statement, handle the condition
+      --  as an if.
+      pragma Assert (Get_Kind (Stmt) = Iir_Kind_Wait_Statement);
       Cond := Get_Condition_Clause (Stmt);
       if Cond = Null_Node then
          Error_Msg_Synth (C.Inst, Stmt, "expect wait condition");
