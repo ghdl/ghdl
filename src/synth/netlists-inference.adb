@@ -469,7 +469,9 @@ package body Netlists.Inference is
          end if;
          if Els_Clk = No_Net then
             Error_Msg_Netlist
-              (Mux_Loc, "clocked logic requires clocked logic on else part");
+              (Mux_Loc,
+               "clocked logic requires clocked logic on else part for net %n",
+               (1 => +Get_Net_Parent (Prev_Val)));
             Els := No_Net;
          else
             --  Create and return the DFF.
