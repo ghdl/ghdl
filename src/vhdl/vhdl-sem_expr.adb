@@ -3417,6 +3417,13 @@ package body Vhdl.Sem_Expr is
       --  True if one sub-aggregate is dynamic.
       Has_Dynamic : Boolean := False;
 
+      --  True if one association is a choice by range and the expression is
+      --  of the type of the aggregate (vhdl-08).  If so, Dir is also set.
+      Has_Dir : Boolean := False;
+
+      --  Direction of the range.
+      Dir : Direction_Type;
+
       --  LOW and HIGH limits for the dimension.
       Low : Iir := Null_Iir;
       High : Iir := Null_Iir;
@@ -3575,18 +3582,30 @@ package body Vhdl.Sem_Expr is
                      Expr_Type : constant Iir := Get_Type (Expr);
                      Idx : Iir;
                   begin
-                     if Get_Expr_Staticness (Ch_Rng) = Locally
-                       and then Get_Index_Constraint_Flag (Expr_Type)
-                     then
-                        Idx := Get_Index_Type (Expr_Type, 0);
-                        if Get_Type_Staticness (Idx) = Locally
-                          and then (Eval_Discrete_Type_Length (Idx)
-                                      /= Eval_Discrete_Range_Length (Ch_Rng))
-                        then
-                           Warning_Msg_Sem (Warnid_Runtime_Error, +Expr,
-                                            "length mismatch");
-                           Expr := Build_Overflow (Expr, Expr_Type);
-                           Set_Associated_Expr (El, Expr);
+                     if Get_Expr_Staticness (Ch_Rng) = Locally then
+                        --  Check for matching length.
+                        if Get_Index_Constraint_Flag (Expr_Type) then
+                           Idx := Get_Index_Type (Expr_Type, 0);
+                           if Get_Type_Staticness (Idx) = Locally
+                             and then
+                             (Eval_Discrete_Type_Length (Idx)
+                                /= Eval_Discrete_Range_Length (Ch_Rng))
+                           then
+                              Warning_Msg_Sem (Warnid_Runtime_Error, +Expr,
+                                               "length mismatch");
+                              Expr := Build_Overflow (Expr, Expr_Type);
+                              Set_Associated_Expr (El, Expr);
+                           end if;
+                        end if;
+
+                        --  Check for matching direction.
+                        if Info.Has_Dir then
+                           if Get_Direction (Ch_Rng) /= Info.Dir then
+                              Error_Msg_Sem (+El, "direction mismatch");
+                           end if;
+                        else
+                           Info.Has_Dir := True;
+                           Info.Dir := Get_Direction (Ch_Rng);
                         end if;
                      end if;
                   end;
@@ -3669,6 +3688,7 @@ package body Vhdl.Sem_Expr is
       end case;
    end Sem_Array_Aggregate_Choice_Length;
 
+   --  Extract the best element subtype (the most static one).
    procedure Sem_Array_Aggregate_Extract_Element_Subtype
      (Aggr : Iir; Dim : Natural; Nbr_Dim : Natural; El_Subtype : in out Iir)
    is
@@ -4094,7 +4114,16 @@ package body Vhdl.Sem_Expr is
             Set_Type_Staticness (Info.Index_Subtype, Choice_Staticness);
             Set_Expr_Staticness (Index_Subtype_Constraint, Choice_Staticness);
             Set_Type (Index_Subtype_Constraint, Index_Type);
-            if Get_Kind (Index_Constraint) = Iir_Kind_Range_Expression then
+            if Info.Has_Dir then
+               --  LRM08 9.3.3.3 array aggregate
+               --  If the aggregate does not appear in one of the contexts in
+               --  the preceding list and an element association in the
+               --  aggregate list has a choice that is a discrete range and an
+               --  expression that is of the type of the aggregate, then the
+               --  direction of the index range of the aggregate is that of
+               --  the discrete range.
+               Dir := Info.Dir;
+            elsif Get_Kind (Index_Constraint) = Iir_Kind_Range_Expression then
                Dir := Get_Direction (Index_Constraint);
             else
                --  This is not correct, as the direction must be the one of
