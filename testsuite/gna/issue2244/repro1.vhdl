@@ -49,5 +49,6 @@ begin
     begin
         wait for 3 ns;
         assert s_resulting_vector = s_expected_vector severity failure;
+	wait;
     end process;
 end rtl;
