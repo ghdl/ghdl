@@ -158,8 +158,12 @@ package Vhdl.Evaluation is
    --  is associated with its corresponding choice from CHOICES_CHAIN.
    --  VECT bounds must be 0 .. Len - 1, where Len is the length of
    --  CHOICE_RANGE.
-   procedure Build_Array_Choices_Vector
-     (Vect : out Iir_Array; Choice_Range : Iir; Choices_Chain : Iir);
+   --  If LAST_DIM is true, VECT is filled with expressions rather than with
+   --   choices.
+   procedure Build_Array_Choices_Vector (Vect : out Iir_Array;
+                                         Choice_Range : Iir;
+                                         Choices_Chain : Iir;
+                                         Last_Dim : Boolean);
 
    --  Create an array subtype from LEN and BASE_TYPE, according to rules
    --  of LRM93 7.3.2.2. (which are the same as LRM93 7.2.4).

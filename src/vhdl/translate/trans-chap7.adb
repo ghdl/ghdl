@@ -206,39 +206,15 @@ package body Trans.Chap7 is
                   return;
                end if;
 
-               Build_Array_Choices_Vector (Vect, Index_Range, Assocs);
+               Build_Array_Choices_Vector
+                 (Vect, Index_Range, Assocs, Dim = Nbr_Dims);
 
                if Dim = Nbr_Dims then
-                  declare
-                     Idx : Natural;
-                     Assoc : Iir;
-                     Expr : Iir;
-                     El : Iir;
-                     Assoc_Len : Iir_Index32;
-                  begin
-                     Idx := 0;
-                     while Idx < Natural (Len) loop
-                        Assoc := Vect (Idx);
-                        Expr  := Get_Associated_Expr (Assoc);
-                        if Get_Element_Type_Flag (Assoc) then
-                           New_Array_Aggr_El
-                             (List,
-                              Translate_Static_Expression (Expr, El_Type));
-                           Idx := Idx + 1;
-                        else
-                           Assoc_Len := Iir_Index32
-                             (Eval_Discrete_Type_Length
-                                (Get_Index_Type (Get_Type (Expr), 0)));
-                           for I in 0 .. Assoc_Len - 1 loop
-                              El := Eval_Indexed_Name_By_Offset (Expr, I);
-                              New_Array_Aggr_El
-                                (List,
-                                 Translate_Static_Expression (El, El_Type));
-                              Idx := Idx + 1;
-                           end loop;
-                        end if;
-                     end loop;
-                  end;
+                  for I in Vect'Range loop
+                     New_Array_Aggr_El
+                       (List,
+                        Translate_Static_Expression (Vect (I), El_Type));
+                  end loop;
                else
                   for I in Vect'Range loop
                      Translate_Static_Array_Aggregate_1

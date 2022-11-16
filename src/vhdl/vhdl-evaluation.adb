@@ -632,13 +632,15 @@ package body Vhdl.Evaluation is
       end case;
    end Eval_Pos_In_Range;
 
-   procedure Build_Array_Choices_Vector
-     (Vect : out Iir_Array; Choice_Range : Iir; Choices_Chain : Iir)
+   procedure Build_Array_Choices_Vector (Vect : out Iir_Array;
+                                         Choice_Range : Iir;
+                                         Choices_Chain : Iir;
+                                         Last_Dim : Boolean)
    is
       pragma Assert (Vect'First = 0);
       pragma Assert (Vect'Length = Eval_Discrete_Range_Length (Choice_Range));
       Assoc : Iir;
-      Choice : Iir;
+      Expr : Iir;
       Cur_Pos : Natural;
    begin
       --  Initialize Vect (to correctly handle 'others').
@@ -646,20 +648,40 @@ package body Vhdl.Evaluation is
 
       Assoc := Choices_Chain;
       Cur_Pos := 0;
-      Choice := Null_Iir;
+      Expr := Null_Iir;
       while Is_Valid (Assoc) loop
          if not Get_Same_Alternative_Flag (Assoc) then
-            Choice := Assoc;
+            if Last_Dim then
+               Expr := Get_Associated_Expr (Assoc);
+            else
+               Expr := Assoc;
+            end if;
          end if;
          case Iir_Kinds_Array_Choice (Get_Kind (Assoc)) is
             when Iir_Kind_Choice_By_None =>
-               Vect (Cur_Pos) := Choice;
-               Cur_Pos := Cur_Pos + 1;
+               if Get_Element_Type_Flag (Assoc) then
+                  Vect (Cur_Pos) := Expr;
+                  Cur_Pos := Cur_Pos + 1;
+               else
+                  declare
+                     Assoc_Len : Int64;
+                  begin
+                     pragma Assert (Last_Dim);
+                     Assoc_Len := Eval_Discrete_Type_Length
+                       (Get_Index_Type (Get_Type (Expr), 0));
+                     for I in 0 .. Iir_Index32 (Assoc_Len - 1) loop
+                        Vect (Cur_Pos) :=
+                          Eval_Indexed_Name_By_Offset (Expr, I);
+                        Cur_Pos := Cur_Pos + 1;
+                     end loop;
+                  end;
+               end if;
             when Iir_Kind_Choice_By_Range =>
                declare
                   Rng : constant Iir := Get_Choice_Range (Assoc);
                   Rng_Start : Iir;
                   Rng_Len : Int64;
+                  E : Iir;
                begin
                   if Get_Direction (Rng) = Get_Direction (Choice_Range) then
                      Rng_Start := Get_Left_Limit (Rng);
@@ -669,8 +691,14 @@ package body Vhdl.Evaluation is
                   Cur_Pos := Natural
                     (Eval_Pos_In_Range (Choice_Range, Rng_Start));
                   Rng_Len := Eval_Discrete_Range_Length (Rng);
-                  for I in 1 .. Rng_Len loop
-                     Vect (Cur_Pos) := Choice;
+                  for I in 1 .. Iir_Index32 (Rng_Len) loop
+                     if Get_Element_Type_Flag (Assoc) then
+                        E := Expr;
+                     else
+                        pragma Assert (Last_Dim);
+                        E := Eval_Indexed_Name_By_Offset (Expr, I - 1);
+                     end if;
+                     Vect (Cur_Pos) := E;
                      Cur_Pos := Cur_Pos + 1;
                   end loop;
                end;
@@ -678,11 +706,11 @@ package body Vhdl.Evaluation is
                Cur_Pos := Natural
                  (Eval_Pos_In_Range (Choice_Range,
                                      Get_Choice_Expression (Assoc)));
-               Vect (Cur_Pos) := Choice;
+               Vect (Cur_Pos) := Expr;
             when Iir_Kind_Choice_By_Others =>
                for I in Vect'Range loop
                   if Vect (I) = Null_Iir then
-                     Vect (I) := Choice;
+                     Vect (I) := Expr;
                   end if;
                end loop;
          end case;
@@ -716,13 +744,13 @@ package body Vhdl.Evaluation is
          Assoc := Get_Chain (Assoc);
       end loop;
 
-      Build_Array_Choices_Vector (Vect, Index_Range, Assocs);
+      Build_Array_Choices_Vector (Vect, Index_Range, Assocs, True);
 
       List := Create_Iir_Flist (Natural (Len));
       if Len > 0 then
          --  Workaround GNAT GPL2014 compiler bug.
          for I in Vect'Range loop
-            Set_Nth_Element (List, I, Get_Associated_Expr (Vect (I)));
+            Set_Nth_Element (List, I, Vect (I));
          end loop;
       end if;
 
@@ -3543,6 +3571,12 @@ package body Vhdl.Evaluation is
    is
    begin
       case Get_Kind (Prefix) is
+         when Iir_Kinds_Denoting_Name =>
+            return Eval_Indexed_Name_By_Offset
+              (Get_Named_Entity (Prefix), Off);
+         when Iir_Kind_Constant_Declaration =>
+            return Eval_Indexed_Name_By_Offset
+              (Get_Default_Value (Prefix), Off);
          when Iir_Kind_Aggregate =>
             return Eval_Indexed_Aggregate_By_Offset (Prefix, Off);
          when Iir_Kind_String_Literal8 =>
@@ -3551,7 +3585,7 @@ package body Vhdl.Evaluation is
                El_Type : constant Iir :=
                  Get_Element_Subtype (Get_Type (Prefix));
                Enums : constant Iir_Flist :=
-                 Get_Enumeration_Literal_List (El_Type);
+                 Get_Enumeration_Literal_List (Get_Base_Type (El_Type));
                Lit : Pos32;
             begin
                Lit := Str_Table.Element_String8 (Id, Int32 (Off + 1));
