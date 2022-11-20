@@ -20,6 +20,7 @@ with Files_Map; use Files_Map;
 with Std_Names;
 with Str_Table;
 with Flags; use Flags;
+with File_Comments; use File_Comments;
 
 package body Vhdl.Scanner is
 
@@ -2162,6 +2163,12 @@ package body Vhdl.Scanner is
                   end if;
                   Pos := Pos + 1;
                end loop;
+
+               if Flag_Gather_Comments then
+                  Add_Comment (Current_Context.Source_File,
+                               Current_Context.Token_Pos, Pos - 1);
+               end if;
+
                if Flag_Comment then
                   Current_Token := Tok_Line_Comment;
                   return;

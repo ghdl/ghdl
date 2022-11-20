@@ -152,6 +152,10 @@ package Flags is
    --  If true, allow to use synopsys packages (std_logic_arith & co).
    Flag_Synopsys : Boolean := False;
 
+   --  If true, comments are gathered during scan.
+   --  See package File_Comments.
+   Flag_Gather_Comments : Boolean := False;
+
    --  If True, disp original source line and a caret indicating the column.
    Flag_Caret_Diagnostics : Boolean := True;
 

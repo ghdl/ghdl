@@ -13,18 +13,23 @@
 --
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
+
+with Std_Names; use Std_Names;
+with Flags; use Flags;
+with Str_Table;
+with Errorout; use Errorout;
+with File_Comments;
+
 with Vhdl.Nodes_Utils; use Vhdl.Nodes_Utils;
 with Vhdl.Tokens; use Vhdl.Tokens;
 with Vhdl.Scanner; use Vhdl.Scanner;
 with Vhdl.Utils; use Vhdl.Utils;
-with Errorout; use Errorout;
 with Vhdl.Errors; use Vhdl.Errors;
-with Std_Names; use Std_Names;
-with Flags; use Flags;
 with Vhdl.Parse_Psl;
-with Str_Table;
 with Vhdl.Xrefs;
 with Vhdl.Elocations; use Vhdl.Elocations;
+with Vhdl.Comments; use Vhdl.Comments;
+
 with PSL.Types; use PSL.Types;
 
 --  Recursive descendant parser.
@@ -1707,6 +1712,10 @@ package body Vhdl.Parse is
       if Flag_Elocations then
          Create_Elocations (First);
          Set_Start_Location (First, Get_Token_Location);
+      end if;
+
+      if Flag_Gather_Comments then
+         Gather_Comments (First);
       end if;
 
       if Current_Token = Tok_Identifier then
@@ -11701,6 +11710,11 @@ package body Vhdl.Parse is
       Set_Location (Res);
       Set_Date_State (Res, Date_Extern);
 
+      --  Attach comments to the design unit.
+      if Flag_Gather_Comments then
+         Gather_Comments (Res);
+      end if;
+
       Parse_Context_Clause (Res);
 
       if Get_Library_Unit (Res) = Null_Iir then
@@ -11766,6 +11780,10 @@ package body Vhdl.Parse is
          Last_Design := Design;
          Set_Last_Design_Unit (Res, Last_Design);
       end loop;
+
+      if Flag_Gather_Comments then
+         File_Comments.Sort_Comments_By_Node (Get_Current_Source_File);
+      end if;
 
       if Last_Design = Null_Iir then
          Error_Msg_Parse ("design file is empty (no design unit found)");
