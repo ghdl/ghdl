@@ -20,9 +20,18 @@
 --  Since the names are not prefixed, this package is expected to be with'ed
 --  but not to be use'd.
 
+with Types; use Types;
+with File_Comments; use File_Comments;
+
 with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Vhdl.Comments is
    --  Attach previously scanned comments to node N.
    procedure Gather_Comments (N : Iir);
+
+   --  Return the first comment attached to node N.  FILE must be the file
+   --  of N.
+   --  Use File_Comments to iterate on comments.
+   function Find_First_Comment (File : Source_File_Entry; N : Node)
+                               return Comment_Index;
 end Vhdl.Comments;

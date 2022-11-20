@@ -66,6 +66,12 @@ package File_Comments is
                           Idx : Comment_Index;
                           Start, Last : out Source_Ptr);
 
+   --  Simpler functions for python binding.
+   function Get_Comment_Start (File : Source_File_Entry;
+                               Idx : Comment_Index) return Source_Ptr;
+   function Get_Comment_Last (File : Source_File_Entry;
+                              Idx : Comment_Index) return Source_Ptr;
+
    --  Return the next comment after IDX.
    --  Return No_Comment_Index if no related comment exists.
    function Get_Next_Comment (File : Source_File_Entry;

@@ -99,7 +99,7 @@ def BindToLibGHDL(subprogramName):
             return c_bool
         elif typ is bytes:
             return c_char_p
-        elif typ in (c_char, c_char_p):
+        elif typ in (c_char, c_char_p, c_uint32):
             return typ
         elif isinstance(typ, TypeVar):
             # Humm, recurse ?

@@ -166,6 +166,24 @@ package body File_Comments is
       Last := Fc.Comments.Table (Idx).Last;
    end Get_Comment;
 
+   function Get_Comment_Start (File : Source_File_Entry;
+                               Idx : Comment_Index) return Source_Ptr
+   is
+      Start, Last : Source_Ptr;
+   begin
+      Get_Comment (File, Idx, Start, Last);
+      return Start;
+   end Get_Comment_Start;
+
+   function Get_Comment_Last (File : Source_File_Entry;
+                              Idx : Comment_Index) return Source_Ptr
+   is
+      Start, Last : Source_Ptr;
+   begin
+      Get_Comment (File, Idx, Start, Last);
+      return Last;
+   end Get_Comment_Last;
+
    function Get_Next_Comment (File : Source_File_Entry; Idx : Comment_Index)
                              return Comment_Index
    is

@@ -20,8 +20,7 @@
 --  Since the names are not prefixed, this package is expected to be with'ed
 --  but not to be use'd.
 
-with Types; use Types;
-with File_Comments; use File_Comments;
+with Files_Map;
 
 with Vhdl.Scanner; use Vhdl.Scanner;
 
@@ -30,4 +29,12 @@ package body Vhdl.Comments is
    begin
       Gather_Comments (Get_Current_Source_File, Uns32 (N));
    end Gather_Comments;
+
+   function Find_First_Comment (File : Source_File_Entry; N : Node)
+                               return Comment_Index
+   is
+      pragma Assert (Files_Map.Location_To_File (Get_Location (N)) = File);
+   begin
+      return Find_First_Comment (File, Uns32 (N));
+   end Find_First_Comment;
 end Vhdl.Comments;
