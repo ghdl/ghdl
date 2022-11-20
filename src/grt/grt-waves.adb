@@ -1783,7 +1783,8 @@ package body Grt.Waves is
 
    procedure Wave_Cycle
    is
-      function Lt (Op1, Op2 : Natural) return Boolean is
+      function Lt (Op1, Op2 : Positive) return Boolean
+      is
          Left : Ghdl_Signal_Ptr;
          Right : Ghdl_Signal_Ptr;
       begin
@@ -1793,7 +1794,8 @@ package body Grt.Waves is
       end Lt;
       pragma Inline (Lt);
 
-      procedure Swap (From, To : Natural) is
+      procedure Swap (From, To : Positive)
+      is
          Tmp : Ghdl_Signal_Ptr;
       begin
          Tmp := Changed_Sig_Table.Table (From);

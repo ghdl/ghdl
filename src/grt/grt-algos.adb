@@ -39,6 +39,9 @@ package body Grt.Algos is
       end Bubble_Down;
 
    begin
+      --  Note: if N < 2, there is nothing to sort.  The loops are not
+      --  executed.
+
       --  Heapify
       for I in reverse 1 .. N / 2 loop
          Bubble_Down (I, N);

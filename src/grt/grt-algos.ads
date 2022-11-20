@@ -15,12 +15,12 @@
 --  along with this program.  If not, see <gnu.org/licenses>.
 
 package Grt.Algos is
-   --  Heap sort the N elements.
+   --  Heap sort the N elements.  Indexes are from 1 to N.
    generic
-      --  Compare two elements, return true iff OP1 < OP2.
-      with function Lt (Op1, Op2 : Natural) return Boolean;
+      --  Compare two elements, return true iff L < R.
+      with function Lt (L, R : Positive) return Boolean;
 
       --  Swap two elements.
-      with procedure Swap (From : Natural; To : Natural);
+      with procedure Swap (P1 : Positive; P2 : Positive);
    procedure Heap_Sort (N : Natural);
 end Grt.Algos;
