@@ -37,6 +37,12 @@ package Vhdl.Prints is
    procedure Close_Hbox (Ctxt : in out Disp_Ctxt) is abstract;
    procedure Start_Vbox (Ctxt : in out Disp_Ctxt) is abstract;
    procedure Close_Vbox (Ctxt : in out Disp_Ctxt) is abstract;
+
+   --  Called before some nodes to display comments.  The nodes are:
+   --  Iir_Kind_Design_Unit
+   --  Iir_Kinds_Interface_Declaration
+   procedure Start_Node (Ctxt : in out Disp_Ctxt; N : Iir) is null;
+
    procedure Valign (Ctxt : in out Disp_Ctxt; Point : Valign_Type)
      is abstract;
    procedure Disp_Token (Ctxt : in out Disp_Ctxt; Tok : Token_Type)
@@ -60,12 +66,16 @@ package Vhdl.Prints is
    -- Mainly used to dispatch to other functions according to the kind of
    -- the node.
    procedure Disp_Vhdl (Ctxt : in out Ctxt_Class; N : Iir);
-   procedure Disp_Vhdl (N : Iir);
 
    procedure Disp_PSL_NFA (Ctxt : in out Ctxt_Class; N : PSL_NFA);
+
+   --  Standalone version of above method, create a default context.
+   --  Used for debugging.
+   procedure Disp_Vhdl (N : Iir);
    procedure Disp_PSL_NFA (N : PSL_NFA);
 
+   --  Display an expression.
+   --  Used for debugging.
    procedure Disp_Expression (Expr: Iir);
    procedure Disp_PSL_Expr (N : PSL_Node);
-   --  Display an expression.
 end Vhdl.Prints;

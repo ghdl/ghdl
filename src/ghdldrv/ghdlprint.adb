@@ -1007,13 +1007,23 @@ package body Ghdlprint is
 
    --  Command Reprint.
    type Command_Reprint is new Command_Lib with record
+      --  Do a semantic analysis.
       Flag_Sem : Boolean := True;
+
+      --  Reprint even in case of errors.
+      Flag_Force : Boolean := False;
+
+      --  Format the outputs, using LEVEL and REALIGN.
       Flag_Format : Boolean := False;
       Level : Format_Level := Format_Indent;
       Flag_Realign : Boolean := False;
-      Flag_Force : Boolean := False;
+
+      --  Output only lines within this range.
       First_Line : Positive := 1;
       Last_Line : Positive := Positive'Last;
+
+      --  Collect and display comments.
+      Flag_Comments : Boolean := True;
    end record;
    function Decode_Command (Cmd : Command_Reprint; Name : String)
                            return Boolean;
@@ -1081,6 +1091,9 @@ package body Ghdlprint is
             when Constraint_Error =>
                Res := Option_Err;
          end;
+      elsif Option = "--comments" then
+         Cmd.Flag_Comments := True;
+         Res := Option_Ok;
       else
          Decode_Option (Command_Lib (Cmd), Option, Arg, Res);
       end if;
@@ -1110,6 +1123,8 @@ package body Ghdlprint is
       Vhdl.Canon.Canon_Flag_Configurations := False;
       Vhdl.Canon.Canon_Flag_Specification_Lists := False;
       Vhdl.Canon.Canon_Flag_Associations := False;
+
+      Flags.Flag_Gather_Comments := Cmd.Flag_Comments;
 
       --  Parse all files.
       for I in Args'Range loop

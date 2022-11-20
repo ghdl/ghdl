@@ -25,6 +25,8 @@ with Name_Table;
 with Str_Table;
 with Std_Names; use Std_Names;
 with Files_Map;
+with File_Comments;
+
 with Vhdl.Types; use Vhdl.Types;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
@@ -1213,6 +1215,8 @@ package body Vhdl.Prints is
          Next_Inter := Get_Chain (Inter);
 
          First_Inter := Inter;
+
+         Start_Node (Ctxt, Inter);
 
          if With_Box then
             Start_Hbox (Ctxt);
@@ -4654,6 +4658,7 @@ package body Vhdl.Prints is
                end loop;
             end;
          when Iir_Kind_Design_Unit =>
+            Start_Node (Ctxt, N);
             Disp_Design_Unit (Ctxt, N);
          when Iir_Kind_Enumeration_Type_Definition =>
             Disp_Enumeration_Type_Definition (Ctxt, N);
@@ -5164,8 +5169,14 @@ package body Vhdl.Prints is
 
    package Simple_Disp_Ctxt is
       type Simple_Ctxt is new Disp_Ctxt with record
+         --  Boxes level.
          Vnum : Natural;
          Hnum : Natural;
+
+         --  Used by comments.
+         Sfe : Source_File_Entry;
+
+         --  Previous token, to decided whether or not a blank must be added.
          Prev_Tok : Token_Type;
       end record;
 
@@ -5174,6 +5185,7 @@ package body Vhdl.Prints is
       procedure Close_Hbox (Ctxt : in out Simple_Ctxt);
       procedure Start_Vbox (Ctxt : in out Simple_Ctxt);
       procedure Close_Vbox (Ctxt : in out Simple_Ctxt);
+      procedure Start_Node (Ctxt : in out Simple_Ctxt; N : Iir);
       procedure Valign (Ctxt : in out Simple_Ctxt; Point : Valign_Type);
       procedure Disp_Token (Ctxt : in out Simple_Ctxt; Tok : Token_Type);
       procedure Start_Lit (Ctxt : in out Simple_Ctxt; Tok : Token_Type);
@@ -5188,6 +5200,7 @@ package body Vhdl.Prints is
       begin
          Ctxt := (Vnum => 0,
                   Hnum => 0,
+                  Sfe => No_Source_File_Entry,
                   Prev_Tok => Tok_Newline);
       end Init;
 
@@ -5228,6 +5241,39 @@ package body Vhdl.Prints is
       begin
          Ctxt.Vnum := Ctxt.Vnum - 1;
       end Close_Vbox;
+
+      procedure Start_Node (Ctxt : in out Simple_Ctxt; N : Iir)
+      is
+         use File_Comments;
+         Sfe : Source_File_Entry;
+         Idx : Comment_Index;
+      begin
+         if not Flag_Gather_Comments then
+            return;
+         end if;
+         Sfe := Ctxt.Sfe;
+         if Sfe = No_Source_File_Entry then
+            Sfe := Files_Map.Location_To_File (Get_Location (N));
+            Ctxt.Sfe := Sfe;
+         end if;
+         Idx := Find_First_Comment (Sfe, Uns32 (N));
+         while Idx /= No_Comment_Index loop
+            declare
+               Buf : constant File_Buffer_Acc :=
+                 Files_Map.Get_File_Source (Sfe);
+               Start, Last : Source_Ptr;
+            begin
+               --  TODO: indent
+               Get_Comment (Sfe, Idx, Start, Last);
+               Start_Hbox (Ctxt);
+               for I in Start .. Last loop
+                  Disp_Char (Ctxt, Buf (I));
+               end loop;
+               Close_Hbox (Ctxt);
+            end;
+            Idx := Get_Next_Comment (Sfe, Idx);
+         end loop;
+      end Start_Node;
 
       procedure Valign (Ctxt : in out Simple_Ctxt; Point : Valign_Type) is
       begin
