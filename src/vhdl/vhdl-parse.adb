@@ -1714,6 +1714,7 @@ package body Vhdl.Parse is
          Set_Start_Location (First, Get_Token_Location);
       end if;
 
+      --  Comments for the interface.
       if Flag_Gather_Comments then
          Gather_Comments (First);
       end if;
@@ -5695,6 +5696,12 @@ package body Vhdl.Parse is
 
       --  Skip 'is'.
       Expect_Scan (Tok_Is);
+
+      --  Comments after 'entity' but before the first generic or port are
+      --  attached to the entity.
+      if Flag_Gather_Comments then
+         Gather_Comments (Res);
+      end if;
 
       Parse_Generic_Port_Clauses (Res);
 
@@ -10541,6 +10548,12 @@ package body Vhdl.Parse is
       --  Skip 'is'.
       Expect_Scan (Tok_Is);
 
+      --  Comments after 'architecture' but before the first declaration are
+      --  attached to the architecture.
+      if Flag_Gather_Comments then
+         Gather_Comments (Res);
+      end if;
+
       Parse_Declarative_Part (Res, Res);
 
       --  Skip 'begin'.
@@ -11032,6 +11045,12 @@ package body Vhdl.Parse is
       --  Skip 'is'.
       Expect_Scan (Tok_Is);
 
+      --  Comments after 'context' but before the first clause are attached
+      --  to the context.
+      if Flag_Gather_Comments then
+         Gather_Comments (Res);
+      end if;
+
       Parse_Configuration_Declarative_Part (Res);
 
       Set_Block_Configuration (Res, Parse_Block_Configuration);
@@ -11131,6 +11150,12 @@ package body Vhdl.Parse is
       Set_Location (Res, Loc);
       Set_Identifier (Res, Id);
       Set_Parent (Res, Parent);
+
+      --  Comments after 'package' but before the first declaration are
+      --  attached to the package.
+      if Flag_Gather_Comments then
+         Gather_Comments (Res);
+      end if;
 
       if Current_Token = Tok_Generic then
          Check_Vhdl_At_Least_2008 ("generic packages");
@@ -11591,6 +11616,12 @@ package body Vhdl.Parse is
 
       --  Skip 'is'
       Scan;
+
+      --  Comments after 'context' but before the first clause are attached
+      --  to the context.
+      if Flag_Gather_Comments then
+         Gather_Comments (Decl);
+      end if;
 
       Parse_Context_Clause (Decl);
 

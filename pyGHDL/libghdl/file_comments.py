@@ -83,7 +83,7 @@ def Get_Comment(File: SourceFileEntry, Idx: Comment_Index) -> str:
     buf = files_map.Get_File_Buffer(File)
     s = Get_Comment_Start(File, Idx);
     l = Get_Comment_Last(File, Idx);
-    return buf[s:l].decode("iso-8859-1")
+    return buf[s:l+1].decode("iso-8859-1")
 
 @export
 @BindToLibGHDL("file_comments__get_next_comment")
