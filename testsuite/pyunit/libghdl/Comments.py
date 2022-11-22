@@ -4,7 +4,7 @@ from unittest import TestCase, skip, expectedFailure
 import pyGHDL.libghdl as libghdl
 from pyGHDL.libghdl import name_table, files_map, errorout_console, flags
 from pyGHDL.libghdl import file_comments
-from pyGHDL.libghdl.vhdl import nodes, sem_lib
+from pyGHDL.libghdl.vhdl import nodes, flists, sem_lib
 
 
 if __name__ == "__main__":
@@ -44,11 +44,32 @@ class Instantiate(TestCase):
                             "no :{}: in '{}'".format(name, s))
             idx = file_comments.Get_Next_Comment(f, idx)
 
-    def checkInterfaces(self, first) -> None:
-        inter = first
-        while inter != nodes.Null_Iir:
-            self.checkComments(inter, self.getIdentifier(inter))
-            inter = nodes.Get_Chain(inter)
+    def checkFlist(self, flist) -> None:
+        for i in range(flists.Length(flist)):
+            e = flists.Get_Nth_Element(flist, i)
+            self.checkComments(e, self.getIdentifier(e))
+
+    def checkDecls(self, first) -> None:
+        decl = first
+        while decl != nodes.Null_Iir:
+            k = nodes.Get_Kind(decl)
+            if (k not in nodes.Iir_Kinds.Specification
+                and k not in nodes.Iir_Kinds.Clause):
+                self.checkComments(decl, self.getIdentifier(decl))
+            if k == nodes.Iir_Kind.Type_Declaration:
+                tdef = nodes.Get_Type_Definition(decl)
+                defk = nodes.Get_Kind(tdef)
+                if defk == nodes.Iir_Kind.Record_Type_Definition:
+                    self.checkFlist(nodes.Get_Elements_Declaration_List(tdef))
+            decl = nodes.Get_Chain(decl)
+
+    def checkConc(self, first) -> None:
+        stmt = first
+        while stmt != nodes.Null_Iir:
+            k = nodes.Get_Kind(stmt)
+            if k in nodes.Iir_Kinds.Process_Statement:
+                self.checkDecls(nodes.Get_Declaration_Chain(stmt))
+            stmt = nodes.Get_Chain(stmt)
 
     def checkFile(self, filename) -> None:
         # Load the file
@@ -63,32 +84,35 @@ class Instantiate(TestCase):
         # Display all design units
         designUnit = nodes.Get_First_Design_Unit(file)
         while designUnit != nodes.Null_Iir:
-            libraryUnit = nodes.Get_Library_Unit(designUnit)
+            unit = nodes.Get_Library_Unit(designUnit)
 
-            k = nodes.Get_Kind(libraryUnit)
-            name = self.getIdentifier(libraryUnit)
+            k = nodes.Get_Kind(unit)
+            name = self.getIdentifier(unit)
 
             if k == nodes.Iir_Kind.Entity_Declaration:
                 self.checkComments(designUnit, name)
-                self.checkComments(libraryUnit, name)
-                self.checkInterfaces(nodes.Get_Generic_Chain(libraryUnit))
-                self.checkInterfaces(nodes.Get_Port_Chain(libraryUnit))
+                self.checkComments(unit, name)
+                self.checkDecls(nodes.Get_Generic_Chain(unit))
+                self.checkDecls(nodes.Get_Port_Chain(unit))
 
             elif k == nodes.Iir_Kind.Architecture_Body:
                 self.checkComments(designUnit, name)
-                self.checkComments(libraryUnit, name)
+                self.checkComments(unit, name)
+                self.checkDecls(nodes.Get_Declaration_Chain(unit))
+                self.checkConc(nodes.Get_Concurrent_Statement_Chain(unit))
 
             elif k == nodes.Iir_Kind.Package_Declaration:
                 self.checkComments(designUnit, name)
-                self.checkComments(libraryUnit, name)
+                self.checkComments(unit, name)
+                self.checkDecls(nodes.Get_Declaration_Chain(unit))
 
             elif k == nodes.Iir_Kind.Context_Declaration:
                 self.checkComments(designUnit, name)
-                self.checkComments(libraryUnit, name)
+                self.checkComments(unit, name)
 
             elif k == nodes.Iir_Kind.Configuration_Declaration:
                 self.checkComments(designUnit, name)
-                self.checkComments(libraryUnit, name)
+                self.checkComments(unit, name)
 
             else:
                 self.fail("Unknown unit.")
@@ -149,3 +173,53 @@ class Instantiate(TestCase):
 
     def test_conf_inside(self) -> None:
         self.checkFile(self._root / "conf_inside.vhdl")
+
+    @expectedFailure
+    def test_const_fail(self) -> None:
+        self.checkFile(self._root / "const_fail.vhdl")
+
+    def test_const(self) -> None:
+        self.checkFile(self._root / "const.vhdl")
+
+    @expectedFailure
+    def test_sig_fail(self) -> None:
+        self.checkFile(self._root / "sig_fail.vhdl")
+
+    def test_sig(self) -> None:
+        self.checkFile(self._root / "sig.vhdl")
+
+    @expectedFailure
+    def test_var_fail(self) -> None:
+        self.checkFile(self._root / "var_fail.vhdl")
+
+    def test_var(self) -> None:
+        self.checkFile(self._root / "var.vhdl")
+
+    @expectedFailure
+    def test_type_fail(self) -> None:
+        self.checkFile(self._root / "type_fail.vhdl")
+
+    def test_type(self) -> None:
+        self.checkFile(self._root / "type.vhdl")
+
+    def test_array(self) -> None:
+        self.checkFile(self._root / "array.vhdl")
+
+    @expectedFailure
+    def test_record_fail(self) -> None:
+        self.checkFile(self._root / "record_fail.vhdl")
+
+    def test_record(self) -> None:
+        self.checkFile(self._root / "record.vhdl")
+
+    @expectedFailure
+    def test_elements_fail(self) -> None:
+        self.checkFile(self._root / "elements_fail.vhdl")
+
+    def test_element_1(self) -> None:
+        self.checkFile(self._root / "element_1.vhdl")
+
+    def test_element_2(self) -> None:
+        self.checkFile(self._root / "element_2.vhdl")
+
+# Empty line before to easy cut & put
