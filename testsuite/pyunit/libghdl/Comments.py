@@ -61,6 +61,8 @@ class Instantiate(TestCase):
                 defk = nodes.Get_Kind(tdef)
                 if defk == nodes.Iir_Kind.Record_Type_Definition:
                     self.checkFlist(nodes.Get_Elements_Declaration_List(tdef))
+                elif defk == nodes.Iir_Kind.Enumeration_Type_Definition:
+                    self.checkFlist(nodes.Get_Enumeration_Literal_List(tdef))
             decl = nodes.Get_Chain(decl)
 
     def checkConc(self, first) -> None:
@@ -222,4 +224,23 @@ class Instantiate(TestCase):
     def test_element_2(self) -> None:
         self.checkFile(self._root / "element_2.vhdl")
 
+    @expectedFailure
+    def test_enum_fail(self) -> None:
+        self.checkFile(self._root / "enum_fail.vhdl")
+
+    def test_enum(self) -> None:
+        self.checkFile(self._root / "enum.vhdl")
+
+    @expectedFailure
+    def test_enumlit_fail(self) -> None:
+        self.checkFile(self._root / "enumlit_fail.vhdl")
+
+    def test_enumlit_1(self) -> None:
+        self.checkFile(self._root / "enumlit_1.vhdl")
+
+    def test_enumlit_2(self) -> None:
+        self.checkFile(self._root / "enumlit_2.vhdl")
+
+# TODO: subprograms, subprogram parameters
+# TODO: first comment
 # Empty line before to easy cut & put
