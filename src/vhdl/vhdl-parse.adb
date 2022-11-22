@@ -2582,6 +2582,11 @@ package body Vhdl.Parse is
                Set_Location (Enum_Lit);
                Set_Enum_Pos (Enum_Lit, Pos);
 
+               --  Comments for the enumeration literal.
+               if Flag_Gather_Comments then
+                  Gather_Comments (Enum_Lit);
+               end if;
+
                --  LRM93 3.1.1
                --  the position number for each additional enumeration literal
                --  is one more than that if its predecessor in the list.
@@ -3146,8 +3151,17 @@ package body Vhdl.Parse is
       case Current_Token is
          when Tok_Left_Paren =>
             --  This is an enumeration.
+            --  Create the type declaration now so that comments can be
+            --  attached to it (and later comments to the literals).
+            Decl := Create_Iir (Iir_Kind_Type_Declaration);
+
+            --  Comments attached to the type.
+            if Flag_Gather_Comments then
+               Gather_Comments (Decl);
+            end if;
+
             Def := Parse_Enumeration_Type_Definition (Parent);
-            Decl := Null_Iir;
+            Set_Type_Definition (Decl, Def);
 
          when Tok_Range =>
             --  This is a range definition.
