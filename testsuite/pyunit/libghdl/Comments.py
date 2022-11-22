@@ -63,6 +63,8 @@ class Instantiate(TestCase):
                     self.checkFlist(nodes.Get_Elements_Declaration_List(tdef))
                 elif defk == nodes.Iir_Kind.Enumeration_Type_Definition:
                     self.checkFlist(nodes.Get_Enumeration_Literal_List(tdef))
+            elif k in nodes.Iir_Kinds.Subprogram_Declaration:
+                self.checkDecls(nodes.Get_Interface_Declaration_Chain(decl))
             decl = nodes.Get_Chain(decl)
 
     def checkConc(self, first) -> None:
@@ -241,6 +243,19 @@ class Instantiate(TestCase):
     def test_enumlit_2(self) -> None:
         self.checkFile(self._root / "enumlit_2.vhdl")
 
-# TODO: subprograms, subprogram parameters
+    @expectedFailure
+    def test_func_fail(self) -> None:
+        self.checkFile(self._root / "func_fail.vhdl")
+
+    def test_func(self) -> None:
+        self.checkFile(self._root / "func.vhdl")
+
+    @expectedFailure
+    def test_func_param_fail(self) -> None:
+        self.checkFile(self._root / "func_param_fail.vhdl")
+
+    def test_func_param(self) -> None:
+        self.checkFile(self._root / "func_param.vhdl")
+
 # TODO: first comment
 # Empty line before to easy cut & put
