@@ -2714,7 +2714,7 @@ package body Vhdl.Parse is
    end Parse_Array_Indexes;
 
    --  precond : ARRAY
-   --  postcond: ??
+   --  postcond: ';'
    --
    --  [ LRM93 3.2.1 ]
    --  array_type_definition ::= unconstrained_array_definition
@@ -2918,6 +2918,11 @@ package body Vhdl.Parse is
                --  Skip ','
                Scan;
             end loop;
+
+            --  Comments attached to the first element.
+            if Flag_Gather_Comments then
+               Gather_Comments (First);
+            end if;
 
             --  Scan ':'.
             Expect_Scan (Tok_Colon);
@@ -3183,6 +3188,12 @@ package body Vhdl.Parse is
             Decl := Create_Iir (Iir_Kind_Type_Declaration);
             Set_Identifier (Decl, Ident);
             Set_Location (Decl, Loc);
+
+            --  Comments attached to the record.
+            if Flag_Gather_Comments then
+               Gather_Comments (Decl);
+            end if;
+
             Def := Parse_Record_Type_Definition;
             Set_Type_Definition (Decl, Def);
             Set_Type_Declarator (Def, Decl);
@@ -3238,6 +3249,11 @@ package body Vhdl.Parse is
                Error_Kind ("parse_type_declaration", Def);
          end case;
          Set_Type_Definition (Decl, Def);
+
+         --  Comments attached to the type.
+         if Flag_Gather_Comments then
+            Gather_Comments (Decl);
+         end if;
       end if;
       Set_Identifier (Decl, Ident);
       Set_Location (Decl, Loc);
@@ -4274,6 +4290,11 @@ package body Vhdl.Parse is
          Object := Create_Iir (Kind);
          if Kind = Iir_Kind_Variable_Declaration then
             Set_Shared_Flag (Object, Shared);
+         end if;
+
+         --  Comments attached to the object.
+         if Flag_Gather_Comments then
+            Gather_Comments (Object);
          end if;
 
          Scan_Identifier (Object);
