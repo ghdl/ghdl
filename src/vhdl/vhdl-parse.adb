@@ -8457,6 +8457,11 @@ package body Vhdl.Parse is
       Set_Location (Subprg);
       Set_Implicit_Definition (Subprg, Iir_Predefined_None);
 
+      --  Comments for the subprogram.
+      if Flag_Gather_Comments then
+         Gather_Comments (Subprg);
+      end if;
+
       case Current_Token is
          when Tok_Procedure =>
             null;
