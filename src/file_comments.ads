@@ -37,9 +37,21 @@ package File_Comments is
    --  Discard unassigned comments ?
    procedure Discard_Comments (File : Source_File_Entry);
 
-   --  Assign node N to the last comments scanned.
+   type Comments_Range_Type is private;
+
+   --  Save comments recently scanned and not yet gathered.
+   procedure Save_Comments (File : Source_File_Entry;
+                            Rng : out Comments_Range_Type);
+
+   --  Assign node N to the saved RNG comments.
    --  This procedure is called by the parser when a node that could be
    --  annotated with a comment is parsed.
+   procedure Gather_Comments (File : Source_File_Entry;
+                              Rng : Comments_Range_Type;
+                              N : Uns32);
+
+   --  Assign node N to the last comments scanned.
+   --  Identical to Save_Comments followed by above Gather_Comments.
    procedure Gather_Comments (File : Source_File_Entry;
                               N : Uns32);
 
@@ -78,6 +90,11 @@ package File_Comments is
                               Idx : Comment_Index)
                              return Comment_Index;
 private
+   type Comments_Range_Type is record
+      --  Range of saved comments.
+      First, Last : Comment_Index;
+   end record;
+
    type Comment_Record is record
       --  Comment range in the source.
       Start : Source_Ptr;

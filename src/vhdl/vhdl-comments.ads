@@ -26,6 +26,10 @@ with File_Comments; use File_Comments;
 with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Vhdl.Comments is
+   --  Save comments and attached them to a node.
+   procedure Save_Comments (Rng : out Comments_Range_Type);
+   procedure Gather_Comments (Rng : Comments_Range_Type; N : Iir);
+
    --  Attach previously scanned comments to node N.
    procedure Gather_Comments (N : Iir);
 

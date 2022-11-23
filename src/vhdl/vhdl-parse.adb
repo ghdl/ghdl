@@ -8562,14 +8562,26 @@ package body Vhdl.Parse is
       Res: Iir;
       Sensitivity_List : Iir_List;
       Start_Loc, Begin_Loc, End_Loc : Location_Type;
+      Comments_Rng : File_Comments.Comments_Range_Type;
    begin
       Start_Loc := Get_Token_Location;
+
+      --  Attach comments now, as 'process' may appear alone, followed
+      --  by a comment for the next declaration.
+      if Flag_Gather_Comments then
+         Save_Comments (Comments_Rng);
+      end if;
 
       --  Skip 'process'
       Scan;
 
       if Current_Token = Tok_Left_Paren then
          Res := Create_Iir (Iir_Kind_Sensitized_Process_Statement);
+
+         --  Comments for the process.
+         if Flag_Gather_Comments then
+            Gather_Comments (Comments_Rng, Res);
+         end if;
 
          --  Skip '('
          Scan;
@@ -8589,6 +8601,11 @@ package body Vhdl.Parse is
          Expect_Scan (Tok_Right_Paren);
       else
          Res := Create_Iir (Iir_Kind_Process_Statement);
+
+         --  Comments for the process.
+         if Flag_Gather_Comments then
+            Gather_Comments (Comments_Rng, Res);
+         end if;
       end if;
 
       Set_Location (Res, Loc);

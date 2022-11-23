@@ -25,6 +25,16 @@ with Files_Map;
 with Vhdl.Scanner; use Vhdl.Scanner;
 
 package body Vhdl.Comments is
+   procedure Save_Comments (Rng : out Comments_Range_Type) is
+   begin
+      Save_Comments (Get_Current_Source_File, Rng);
+   end Save_Comments;
+
+   procedure Gather_Comments (Rng : Comments_Range_Type; N : Iir) is
+   begin
+      Gather_Comments (Get_Current_Source_File, Rng, Uns32 (N));
+   end Gather_Comments;
+
    procedure Gather_Comments (N : Iir) is
    begin
       Gather_Comments (Get_Current_Source_File, Uns32 (N));

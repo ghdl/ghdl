@@ -53,22 +53,50 @@ package body File_Comments is
       raise Internal_Error;
    end Discard_Comments;
 
-   procedure Gather_Comments (File : Source_File_Entry; N : Uns32)
+   procedure Save_Comments (File : Source_File_Entry;
+                            Rng : out Comments_Range_Type)
    is
       use File_Comments_Tables;
    begin
       if Comments_Table.Last < File then
          --  No comments for FILE.
+         Rng := (First | Last => No_Comment_Index);
          return;
       end if;
       declare
          Fc : File_Comment_Record renames Comments_Table.Table (File);
       begin
-         while Fc.Next <= Last (Fc.Comments) loop
-            Fc.Comments.Table (Fc.Next).N := N;
-            Fc.Next := Fc.Next + 1;
+         Rng := (First => Fc.Next, Last => Last (Fc.Comments));
+         Fc.Next := Rng.Last + 1;
+      end;
+   end Save_Comments;
+
+   procedure Gather_Comments (File : Source_File_Entry;
+                              Rng : Comments_Range_Type;
+                              N : Uns32)
+   is
+      use File_Comments_Tables;
+   begin
+      if Rng.Last = No_Comment_Index then
+         return;
+      end if;
+
+      pragma Assert (File <= Comments_Table.Last);
+      declare
+         Fc : File_Comment_Record renames Comments_Table.Table (File);
+      begin
+         for I in Rng.First .. Rng.Last loop
+            Fc.Comments.Table (I).N := N;
          end loop;
       end;
+   end Gather_Comments;
+
+   procedure Gather_Comments (File : Source_File_Entry; N : Uns32)
+   is
+      Rng : Comments_Range_Type;
+   begin
+      Save_Comments (File, Rng);
+      Gather_Comments (File, Rng, N);
    end Gather_Comments;
 
    procedure Rename_Comments (File : Source_File_Entry;
