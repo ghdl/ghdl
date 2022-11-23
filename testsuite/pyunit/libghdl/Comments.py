@@ -73,6 +73,9 @@ class Instantiate(TestCase):
             k = nodes.Get_Kind(stmt)
             if k in nodes.Iir_Kinds.Process_Statement:
                 self.checkDecls(nodes.Get_Declaration_Chain(stmt))
+                id = nodes.Get_Identifier(stmt)
+                if id != name_table.Null_Identifier:
+                    self.checkComments(stmt, name_table.Get_Name_Ptr(id))
             stmt = nodes.Get_Chain(stmt)
 
     def checkFile(self, filename) -> None:
@@ -256,6 +259,13 @@ class Instantiate(TestCase):
 
     def test_func_param(self) -> None:
         self.checkFile(self._root / "func_param.vhdl")
+
+    @expectedFailure
+    def test_process_fail(self) -> None:
+        self.checkFile(self._root / "process_fail.vhdl")
+
+    def test_process(self) -> None:
+        self.checkFile(self._root / "process.vhdl")
 
 # TODO: first comment
 # Empty line before to easy cut & put
