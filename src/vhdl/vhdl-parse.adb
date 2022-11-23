@@ -140,8 +140,10 @@ package body Vhdl.Parse is
    begin
       case Token is
          when Tok_Semi_Colon
-           | Tok_Right_Paren
-           | Tok_Comma =>
+            | Tok_Right_Paren
+            | Tok_Comma =>
+            --  Improve the location of the error: point just after the last
+            --  token so that new lines don't have a bad effect.
             Loc := Get_Prev_Location;
          when others =>
             Loc := Get_Token_Location;
