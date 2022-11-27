@@ -27,11 +27,19 @@ with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Vhdl.Comments is
    --  Save comments and attached them to a node.
-   procedure Save_Comments (Rng : out Comments_Range_Type);
-   procedure Gather_Comments (Rng : Comments_Range_Type; N : Iir);
+   procedure Gather_Comments_Block (Rng : Comments_Range; N : Iir);
 
-   --  Attach previously scanned comments to node N.
-   procedure Gather_Comments (N : Iir);
+   --  General rule:
+   --  Previous unattached comments are attached to node N.
+   --  Previous attached comments from the last empty line are attached to N.
+   --
+   --  For Gather_Comments_Block: the following comments until an empty line
+   --    will be attached to node N too.
+   --  For Gather_Comments_Line: if there is a comment on the same line, it
+   --    is attached to node N and so are the following comments until an
+   --    empty line.
+   procedure Gather_Comments_Block (N : Iir);
+   procedure Gather_Comments_Line (N : Iir);
 
    --  Return the first comment attached to node N.  FILE must be the file
    --  of N.

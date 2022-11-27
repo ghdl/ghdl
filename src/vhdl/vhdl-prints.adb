@@ -1615,6 +1615,8 @@ package body Vhdl.Prints is
    is
       Next_Decl : Iir;
    begin
+      Start_Node (Ctxt, Decl);
+
       Start_Hbox (Ctxt);
       case Get_Kind (Decl) is
          when Iir_Kind_Variable_Declaration =>

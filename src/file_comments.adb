@@ -14,104 +14,255 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
---  All the variables declared in this package are set by Parse_Option function
---  and can by read as soon as the command line is parsed.
---
---  Since the names are not prefixed, this package is expected to be with'ed
---  but not to be use'd.
-
 with Grt.Algos;
 
+with Simple_IO; use Simple_IO;
+with Utils_IO; use Utils_IO;
+
 package body File_Comments is
-   procedure Add_Comment (File : Source_File_Entry;
-                          Start, Last : Source_Ptr)
-   is
-      pragma Assert (File > No_Source_File_Entry);
+   Flag_Trace : constant Boolean := False;
+
+   Ctxt : Comment_Context;
+
+   procedure Comment_Init_Scan (File : Source_File_Entry) is
    begin
+      Ctxt := (File => File,
+               State => State_Before,
+               Next => No_Comment_Index + 1,
+               Last_Node => 0,
+               Line_Start => Source_Ptr_Bad);
+
       --  Create entry for FILE if not already created.
-      if Comments_Table.Last < File then
-         while Comments_Table.Last < File loop
-            Comments_Table.Append
-              (File_Comment_Record'(Comments => <>,
-                                    Next => File_Comments_Tables.First));
+      if Comments_Table.Last < Ctxt.File then
+         while Comments_Table.Last < Ctxt.File loop
+            Comments_Table.Append (File_Comments_Table'(Table => null,
+                                                        Priv => <>));
          end loop;
-         File_Comments_Tables.Init (Comments_Table.Table (File).Comments, 16);
+         File_Comments_Tables.Init (Comments_Table.Table (Ctxt.File), 16);
+      end if;
+   end Comment_Init_Scan;
+
+   procedure Comment_Close_Scan is
+   begin
+      Ctxt.File := No_Source_File_Entry;
+   end Comment_Close_Scan;
+
+   --  Gather last comments to the current node.
+   --  Called at the end of a block.
+   procedure Comment_Gather_Existing
+   is
+      Fc : File_Comments_Table renames
+        Comments_Table.Table (Ctxt.File);
+      Last : constant Comment_Index := File_Comments_Tables.Last (Fc);
+   begin
+      if Flag_Trace then
+         Put ("Comment_Gather_Existing: ");
+         Put_Uns32 (Uns32 (Ctxt.Next));
+         Put ("..");
+         Put_Uns32 (Uns32 (Last));
+         Put (" -> ");
+         Put_Uns32 (Ctxt.Last_Node);
+         New_Line;
+      end if;
+
+      for I in Ctxt.Next .. Last loop
+         pragma Assert (Fc.Table (I).N = 0);
+         Fc.Table (I).N := Ctxt.Last_Node;
+      end loop;
+      Ctxt.Next := Last + 1;
+   end Comment_Gather_Existing;
+
+   procedure Comment_Newline (Line_Start : Source_Ptr) is
+   begin
+      case Ctxt.State is
+         when State_Before =>
+            null;
+         when State_Block =>
+            --  Detect empty line.
+            --  This can happen only after a comments has been added.
+            declare
+               Fc : File_Comments_Table renames
+                 Comments_Table.Table (Ctxt.File);
+               Last : constant Comment_Index := File_Comments_Tables.Last (Fc);
+            begin
+               if Line_Start > Fc.Table (Last).Last then
+                  --  Newline without a comment.
+                  --  Attach existing comments.
+                  Comment_Gather_Existing;
+               end if;
+            end;
+         when State_Line =>
+            --  No comment on the same line.
+            --  The following comments will be attached to the next node.
+            Ctxt.State := State_Before;
+      end case;
+   end Comment_Newline;
+
+   procedure Add_Comment (Start, Last : Source_Ptr;
+                          Line_Start : Source_Ptr)
+   is
+      pragma Assert (Ctxt.File /= No_Source_File_Entry);
+      N : Uns32;
+   begin
+      if Flag_Trace then
+         Put ("Add_Comment, file=");
+         Put_Uns32 (Uns32 (Ctxt.File));
+         Put (", start=");
+         Put_Uns32 (Uns32 (Start));
+         Put ("..");
+         Put_Uns32 (Uns32 (Last));
+         Put (" => ");
+         Put_Uns32 (Uns32 (File_Comments_Tables.Last
+                             (Comments_Table.Table (Ctxt.File)) + 1));
+         Put (", state=");
+      end if;
+
+      case Ctxt.State is
+         when State_Before =>
+            --  Will be attached later.
+            N := 0;
+            if Flag_Trace then
+               Put ("before");
+            end if;
+         when State_Block =>
+            --  Will be attached on the next empty line.
+            N := 0;
+            if Flag_Trace then
+               Put ("block");
+            end if;
+         when State_Line =>
+            --  Is it on the same line ?
+            if Line_Start = Ctxt.Line_Start then
+               N := Ctxt.Last_Node;
+               Ctxt.Next := File_Comments_Tables.Last
+                 (Comments_Table.Table (Ctxt.File)) + 2;
+               Ctxt.State := State_Block;
+            else
+               --  Not the same line, for the next node.
+               N := 0;
+               Ctxt.State := State_Before;
+            end if;
+            if Flag_Trace then
+               Put ("line");
+               Put (" (start=");
+               Put_Uns32 (Uns32 (Ctxt.Line_Start));
+               Put (", cmt=");
+               Put_Uns32 (Uns32 (Line_Start));
+               Put (")");
+            end if;
+      end case;
+
+      if Flag_Trace then
+         Put (", node=");
+         Put_Uns32 (N);
+         New_Line;
       end if;
 
       --  Append a comment entry.
       File_Comments_Tables.Append
-        (Comments_Table.Table (File).Comments,
-         Comment_Record'(Start => Start, Last => Last, N => 0));
+        (Comments_Table.Table (Ctxt.File),
+         Comment_Record'(Start => Start, Last => Last, N => N));
    end Add_Comment;
 
-   procedure Discard_Comments (File : Source_File_Entry) is
-   begin
-      if Comments_Table.Last < File then
-         --  No comments for FILE.
-         return;
-      end if;
-      raise Internal_Error;
-   end Discard_Comments;
-
-   procedure Save_Comments (File : Source_File_Entry;
-                            Rng : out Comments_Range_Type)
+   procedure Save_Comments (Rng : out Comments_Range)
    is
       use File_Comments_Tables;
+      pragma Assert (Ctxt.File /= No_Source_File_Entry);
+      Fc : File_Comments_Table renames Comments_Table.Table (Ctxt.File);
    begin
-      if Comments_Table.Last < File then
-         --  No comments for FILE.
-         Rng := (First | Last => No_Comment_Index);
-         return;
-      end if;
-      declare
-         Fc : File_Comment_Record renames Comments_Table.Table (File);
-      begin
-         Rng := (First => Fc.Next, Last => Last (Fc.Comments));
-         Fc.Next := Rng.Last + 1;
-      end;
+      Rng := (First => Ctxt.Next, Last => Last (Fc));
+      Ctxt.Next := Rng.Last + 1;
    end Save_Comments;
 
-   procedure Gather_Comments (File : Source_File_Entry;
-                              Rng : Comments_Range_Type;
-                              N : Uns32)
+   procedure Gather_Comments_Before (Rng : Comments_Range; N : Uns32)
    is
       use File_Comments_Tables;
+      pragma Assert (Ctxt.File /= No_Source_File_Entry);
    begin
-      if Rng.Last = No_Comment_Index then
-         return;
+      if Rng.Last /= No_Comment_Index then
+         if Flag_Trace then
+            Put ("Gather_Comments_Before, file=");
+            Put_Uns32 (Uns32 (Ctxt.File));
+            Put (", rng=");
+            Put_Uns32 (Uns32 (Rng.First));
+            Put ("..");
+            Put_Uns32 (Uns32 (Rng.Last));
+            Put (", node=");
+            Put_Uns32 (N);
+            New_Line;
+         end if;
+
+         declare
+            Fc : File_Comments_Table renames Comments_Table.Table (Ctxt.File);
+         begin
+            for I in Rng.First .. Rng.Last loop
+               Fc.Table (I).N := N;
+            end loop;
+
+            Ctxt.Next := Rng.Last + 1;
+         end;
       end if;
+   end Gather_Comments_Before;
 
-      pragma Assert (File <= Comments_Table.Last);
-      declare
-         Fc : File_Comment_Record renames Comments_Table.Table (File);
-      begin
-         for I in Rng.First .. Rng.Last loop
-            Fc.Comments.Table (I).N := N;
-         end loop;
-      end;
+   procedure Gather_Comments_Block (Rng : Comments_Range; N : Uns32) is
+   begin
+      Gather_Comments_Before (Rng, N);
+      Ctxt.State := State_Block;
+      Ctxt.Last_Node := N;
+   end Gather_Comments_Block;
+
+   procedure Gather_Comments_Line (Rng : Comments_Range;
+                                   Pos : Source_Ptr;
+                                   N : Uns32) is
+   begin
+      Gather_Comments_Before (Rng, N);
+      Ctxt.State := State_Line;
+      Ctxt.Last_Node := N;
+      Ctxt.Line_Start := Pos;
+   end Gather_Comments_Line;
+
+   procedure Gather_Comments_End is
+   begin
+      case Ctxt.State is
+         when State_Before =>
+            --  Discard unattached comments.
+            declare
+               Fc : File_Comments_Table renames
+                 Comments_Table.Table (Ctxt.File);
+               Last : Comment_Index;
+            begin
+               loop
+                  Last := File_Comments_Tables.Last (Fc);
+                  exit when Last = No_Comment_Index;
+                  exit when Fc.Table (Last).N /= 0;
+                  File_Comments_Tables.Decrement_Last (Fc);
+               end loop;
+            end;
+         when State_Block =>
+            Comment_Gather_Existing;
+         when State_Line =>
+            null;
+      end case;
+      Ctxt.State := State_Before;
+   end Gather_Comments_End;
+
+   procedure Gather_Comments (N : Uns32)
+   is
+      Rng : Comments_Range;
+   begin
+      Save_Comments (Rng);
+      Gather_Comments_Block (Rng, N);
    end Gather_Comments;
 
-   procedure Gather_Comments (File : Source_File_Entry; N : Uns32)
+   procedure Sort_Comments_By_Node
    is
-      Rng : Comments_Range_Type;
-   begin
-      Save_Comments (File, Rng);
-      Gather_Comments (File, Rng, N);
-   end Gather_Comments;
+      pragma Assert (Ctxt.File /= No_Source_File_Entry);
+      Fc : File_Comments_Table renames Comments_Table.Table (Ctxt.File);
 
-   procedure Rename_Comments (File : Source_File_Entry;
-                              Prev : Uns32;
-                              N : Uns32) is
-   begin
-      raise Internal_Error;
-   end Rename_Comments;
-
-   procedure Sort_Comments_By_Node_1 (Fc : File_Comment_Record)
-   is
       function Lt (L, R : Positive) return Boolean
       is
-         Lc : Comment_Record renames Fc.Comments.Table (Comment_Index (L));
-         Rc : Comment_Record renames Fc.Comments.Table (Comment_Index (R));
+         Lc : Comment_Record renames Fc.Table (Comment_Index (L));
+         Rc : Comment_Record renames Fc.Table (Comment_Index (R));
       begin
          if Lc.N < Rc.N then
             return True;
@@ -123,8 +274,8 @@ package body File_Comments is
 
       procedure Swap (P1 : Positive; P2 : Positive)
       is
-         L : Comment_Record renames Fc.Comments.Table (Comment_Index (P1));
-         R : Comment_Record renames Fc.Comments.Table (Comment_Index (P2));
+         L : Comment_Record renames Fc.Table (Comment_Index (P1));
+         R : Comment_Record renames Fc.Table (Comment_Index (P2));
          T : Comment_Record;
       begin
          T := L;
@@ -135,16 +286,7 @@ package body File_Comments is
       procedure Sort is new Grt.Algos.Heap_Sort
         (Lt => Lt, Swap => Swap);
    begin
-      Sort (Natural (File_Comments_Tables.Last (Fc.Comments)));
-   end Sort_Comments_By_Node_1;
-
-   procedure Sort_Comments_By_Node (File : Source_File_Entry) is
-   begin
-      if File > Comments_Table.Last then
-         --  No comments gathered, nothing to do.
-         return;
-      end if;
-      Sort_Comments_By_Node_1 (Comments_Table.Table (File));
+      Sort (Natural (File_Comments_Tables.Last (Fc)));
    end Sort_Comments_By_Node;
 
    function Find_First_Comment (File : Source_File_Entry; N : Uns32)
@@ -155,19 +297,19 @@ package body File_Comments is
          return No_Comment_Index;
       end if;
       declare
-         Fc : File_Comment_Record renames Comments_Table.Table (File);
+         Fc : File_Comments_Table renames Comments_Table.Table (File);
          Nd : Uns32;
          F, L, M : Comment_Index;
       begin
          F := File_Comments_Tables.First;
-         L := File_Comments_Tables.Last (Fc.Comments);
+         L := File_Comments_Tables.Last (Fc);
          while F <= L loop
             M := F + (L - F) / 2;
-            Nd := Fc.Comments.Table (M).N;
+            Nd := Fc.Table (M).N;
             if Nd = N then
                --  Found, but must return the first comment.
                while M > No_Comment_Index + 1
-                 and then Fc.Comments.Table (M - 1).N = N
+                 and then Fc.Table (M - 1).N = N
                loop
                   M := M - 1;
                end loop;
@@ -188,10 +330,10 @@ package body File_Comments is
                           Start, Last : out Source_Ptr)
    is
       pragma Assert (Comments_Table.Last >= File);
-      Fc : File_Comment_Record renames Comments_Table.Table (File);
+      Fc : File_Comments_Table renames Comments_Table.Table (File);
    begin
-      Start := Fc.Comments.Table (Idx).Start;
-      Last := Fc.Comments.Table (Idx).Last;
+      Start := Fc.Table (Idx).Start;
+      Last := Fc.Table (Idx).Last;
    end Get_Comment;
 
    function Get_Comment_Start (File : Source_File_Entry;
@@ -217,10 +359,10 @@ package body File_Comments is
    is
       use File_Comments_Tables;
       pragma Assert (Comments_Table.Last >= File);
-      Fc : File_Comment_Record renames Comments_Table.Table (File);
+      Fc : File_Comments_Table renames Comments_Table.Table (File);
    begin
-      if Idx < Last (Fc.Comments)
-        and then Fc.Comments.Table (Idx + 1).N = Fc.Comments.Table (Idx).N
+      if Idx < Last (Fc)
+        and then Fc.Table (Idx + 1).N = Fc.Table (Idx).N
       then
          return Idx + 1;
       else

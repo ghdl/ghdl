@@ -178,6 +178,8 @@ package body Vhdl.Sem_Lib is
    is
       use Vhdl.Scanner;
       Design_File : constant Iir_Design_File := Get_Design_File (Design_Unit);
+      Prev_Flag_Gather_Comments : constant Boolean :=
+        Flags.Flag_Gather_Comments;
       Fe : Source_File_Entry;
       Line, Off: Natural;
       Pos: Source_Ptr;
@@ -225,10 +227,15 @@ package body Vhdl.Sem_Lib is
       Files_Map.File_Add_Line_Number (Get_Current_Source_File, Line, Pos);
       Set_Current_Position (Pos + Source_Ptr (Off));
 
+      Flags.Flag_Gather_Comments := False;
+
       --  Parse
       Scan;
       Res := Vhdl.Parse.Parse_Design_Unit;
       Close_File;
+
+      Flags.Flag_Gather_Comments := Prev_Flag_Gather_Comments;
+
       if Res = Null_Iir then
          raise Compilation_Error;
       end if;

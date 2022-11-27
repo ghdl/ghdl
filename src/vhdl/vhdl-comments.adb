@@ -21,24 +21,28 @@
 --  but not to be use'd.
 
 with Files_Map;
-
-with Vhdl.Scanner; use Vhdl.Scanner;
+with Vhdl.Scanner;
 
 package body Vhdl.Comments is
-   procedure Save_Comments (Rng : out Comments_Range_Type) is
+   procedure Gather_Comments_Block (Rng : Comments_Range; N : Iir) is
    begin
-      Save_Comments (Get_Current_Source_File, Rng);
-   end Save_Comments;
+      Gather_Comments_Block (Rng, Uns32 (N));
+   end Gather_Comments_Block;
 
-   procedure Gather_Comments (Rng : Comments_Range_Type; N : Iir) is
+   procedure Gather_Comments_Block (N : Iir) is
    begin
-      Gather_Comments (Get_Current_Source_File, Rng, Uns32 (N));
-   end Gather_Comments;
+      Gather_Comments (Uns32 (N));
+   end Gather_Comments_Block;
 
-   procedure Gather_Comments (N : Iir) is
+   procedure Gather_Comments_Line (N : Iir)
+   is
+      Coord : Source_Coord_Type;
+      Rng : Comments_Range;
    begin
-      Gather_Comments (Get_Current_Source_File, Uns32 (N));
-   end Gather_Comments;
+      Save_Comments (Rng);
+      Coord := Scanner.Get_Current_Coord;
+      Gather_Comments_Line (Rng, Coord.Line_Pos, Uns32 (N));
+   end Gather_Comments_Line;
 
    function Find_First_Comment (File : Source_File_Entry; N : Node)
                                return Comment_Index

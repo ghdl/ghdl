@@ -2062,11 +2062,16 @@ package body Vhdl.Scanner is
    end Scan_Block_Comment;
 
    -- Get a new token.
-   procedure Scan is
+   procedure Scan
+   is
+      --  If true, newlines must be reported for comments.
+      Comment_Report_Newline : Boolean;
    begin
       if Current_Token /= Tok_Invalid then
          Current_Context.Prev_Token := Current_Token;
       end if;
+
+      Comment_Report_Newline := False;
 
       Current_Context.Prev_Pos := Pos;
 
@@ -2095,6 +2100,9 @@ package body Vhdl.Scanner is
             Pos := Pos + 1;
             goto Again;
          when LF =>
+            if Comment_Report_Newline then
+               Comment_Newline (Current_Context.Line_Pos);
+            end if;
             Scan_LF_Newline;
             if Flag_Newline then
                Current_Token := Tok_Newline;
@@ -2102,6 +2110,9 @@ package body Vhdl.Scanner is
             end if;
             goto Again;
          when CR =>
+            if Comment_Report_Newline then
+               Comment_Newline (Current_Context.Line_Pos);
+            end if;
             Scan_CR_Newline;
             if Flag_Newline then
                Current_Token := Tok_Newline;
@@ -2165,8 +2176,11 @@ package body Vhdl.Scanner is
                end loop;
 
                if Flag_Gather_Comments then
-                  Add_Comment (Current_Context.Source_File,
-                               Current_Context.Token_Pos, Pos - 1);
+                  Add_Comment (Current_Context.Token_Pos, Pos - 1,
+                               Current_Context.Line_Pos);
+                  --  Following newlines will be reported so that a blank
+                  --  line is detected.
+                  Comment_Report_Newline := True;
                end if;
 
                if Flag_Comment then

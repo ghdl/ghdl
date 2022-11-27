@@ -846,9 +846,12 @@ package body Vhdl.Formatters is
    is
       use Format_Disp_Ctxt;
       Sfe : constant Source_File_Entry := Get_Design_File_Source (F);
+      Prev_Flag_Gather_Comments : constant Boolean :=
+        Flags.Flag_Gather_Comments;
    begin
       Scanner.Flag_Comment := True;
       Scanner.Flag_Newline := True;
+      Flags.Flag_Gather_Comments := False;
 
       Set_File (Sfe);
       Scan;
@@ -859,6 +862,7 @@ package body Vhdl.Formatters is
       Close_File;
       Scanner.Flag_Comment := False;
       Scanner.Flag_Newline := False;
+      Flags.Flag_Gather_Comments := Prev_Flag_Gather_Comments;
 
       Append_Eof (Ctxt);
    end Format_Init;

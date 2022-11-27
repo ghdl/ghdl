@@ -14,56 +14,58 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
---  All the variables declared in this package are set by Parse_Option function
---  and can by read as soon as the command line is parsed.
---
---  Since the names are not prefixed, this package is expected to be with'ed
---  but not to be use'd.
-
 with Types; use Types;
 with Dyn_Tables;
 with Tables;
 
 package File_Comments is
+   --  To be called at begin/end of scan to initialize the context.
+   --  TODO: nested context ?
+   procedure Comment_Init_Scan (File : Source_File_Entry);
+   procedure Comment_Close_Scan;
+
    --  Add a comment for FILE.
    --  This procedure is called from a scanner when a comment is scanned.
    --
    --  For a line comment, START is the position of the token that starts the
    --  comment (the '--' in vhdl).  LAST is the position of the last character
    --  of the comment (before the new line).
-   procedure Add_Comment (File : Source_File_Entry;
-                          Start, Last : Source_Ptr);
+   --  LINE_START is the start of the current line (to detect comments in
+   --  the same line as a node).
+   procedure Add_Comment (Start, Last : Source_Ptr;
+                          Line_Start : Source_Ptr);
 
-   --  Discard unassigned comments ?
-   procedure Discard_Comments (File : Source_File_Entry);
+   --  A newline (after a comment) has been scanned.
+   --  If this is a blank line, comments before the blank line are attached
+   --  to the previous node.
+   procedure Comment_Newline (Line_Start : Source_Ptr);
 
-   type Comments_Range_Type is private;
+   type Comments_Range is private;
 
    --  Save comments recently scanned and not yet gathered.
-   procedure Save_Comments (File : Source_File_Entry;
-                            Rng : out Comments_Range_Type);
+   procedure Save_Comments (Rng : out Comments_Range);
 
    --  Assign node N to the saved RNG comments.
    --  This procedure is called by the parser when a node that could be
    --  annotated with a comment is parsed.
-   procedure Gather_Comments (File : Source_File_Entry;
-                              Rng : Comments_Range_Type;
-                              N : Uns32);
+   procedure Gather_Comments_Block (Rng : Comments_Range;
+                                    N : Uns32);
+   procedure Gather_Comments_Line (Rng : Comments_Range;
+                                   Pos : Source_Ptr;
+                                   N : Uns32);
 
    --  Assign node N to the last comments scanned.
    --  Identical to Save_Comments followed by above Gather_Comments.
-   procedure Gather_Comments (File : Source_File_Entry;
-                              N : Uns32);
+   procedure Gather_Comments (N : Uns32);
 
-   --  Reassign comments to node N.
-   procedure Rename_Comments (File : Source_File_Entry;
-                              Prev : Uns32;
-                              N : Uns32);
+   --  To be called at the end of a lexical block.
+   --  Assign last comments to the block (if any).
+   procedure Gather_Comments_End;
 
    --  Sort comments; to be done once all comments have been gathered and
    --  before searching comments.
    --  Discard unassigned comments ?
-   procedure Sort_Comments_By_Node (File : Source_File_Entry);
+   procedure Sort_Comments_By_Node;
 
    type Comment_Index is new Nat32;
    No_Comment_Index : constant Comment_Index := 0;
@@ -90,7 +92,7 @@ package File_Comments is
                               Idx : Comment_Index)
                              return Comment_Index;
 private
-   type Comments_Range_Type is record
+   type Comments_Range is record
       --  Range of saved comments.
       First, Last : Comment_Index;
    end record;
@@ -104,21 +106,46 @@ private
       N : Uns32;
    end record;
 
+   type Comment_State is
+     (
+      --  Keep comments, to be attached.
+      --  This is the initial state.
+      State_Before,
+
+      --  Comments until the first newline are attached to LAST_NODE.
+      State_Block,
+
+      --  If the next comment is on the same line, it will be attached to
+      --  LAST_NODE, and so will be the next comments.
+      State_Line
+     );
+
+   type Comment_Context is record
+      --  Current file.
+      File : Source_File_Entry;
+
+      --  Current state.
+      State : Comment_State;
+
+      --  Next unassigned comment.
+      Next : Comment_Index;
+
+      --  Node to attach for next comments.
+      Last_Node : Uns32;
+
+      Line_Start : Source_Ptr;
+   end record;
+
    package File_Comments_Tables is new Dyn_Tables
      (Table_Component_Type => Comment_Record,
       Table_Index_Type => Comment_Index,
       Table_Low_Bound => 1);
 
-   type File_Comment_Record is record
-      --  Table of comments for a file.
-      Comments : File_Comments_Tables.Instance;
-      --  Next unassigned comment.
-      Next : Comment_Index;
-   end record;
+   subtype File_Comments_Table is File_Comments_Tables.Instance;
 
    --  Table of comments, indexed by files.
    package Comments_Table is new Tables
-     (Table_Component_Type => File_Comment_Record,
+     (Table_Component_Type => File_Comments_Table,
       Table_Index_Type => Source_File_Entry,
       Table_Low_Bound => No_Source_File_Entry + 1,
       Table_Initial => 8);
