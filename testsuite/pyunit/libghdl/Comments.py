@@ -33,7 +33,7 @@ class Instantiate(TestCase):
 
         # Finish initialization. This will load the standard package.
         if libghdl.analyze_init_status() != 0:
-            self.fail("libghdl initialization error")
+            cls.fail("libghdl initialization error")
 
     def checkComments(self, node, name) -> None:
         f = files_map.Location_To_File(nodes.Get_Location(node))
