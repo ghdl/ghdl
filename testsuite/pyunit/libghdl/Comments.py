@@ -164,6 +164,10 @@ class Instantiate(TestCase):
     def test_pkg_inside_fail(self) -> None:
         self.checkFile(self._root / "pkg_inside_fail.vhdl")
 
+    @expectedFailure
+    def test_pkg_inside_fail2(self) -> None:
+        self.checkFile(self._root / "pkg_inside_fail2.vhdl")
+
     def test_pkg_inside(self) -> None:
         self.checkFile(self._root / "pkg_inside.vhdl")
 
@@ -266,6 +270,9 @@ class Instantiate(TestCase):
 
     def test_process(self) -> None:
         self.checkFile(self._root / "process.vhdl")
+
+    def test_multi1(self) -> None:
+        self.checkFile(self._root / "multi1.vhdl")
 
 # TODO: first comment
 # Empty line before to easy cut & put
