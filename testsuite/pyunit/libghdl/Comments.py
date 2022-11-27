@@ -233,6 +233,9 @@ class Instantiate(TestCase):
     def test_element_2(self) -> None:
         self.checkFile(self._root / "element_2.vhdl")
 
+    def test_element_3(self) -> None:
+        self.checkFile(self._root / "element_3.vhdl")
+
     @expectedFailure
     def test_enum_fail(self) -> None:
         self.checkFile(self._root / "enum_fail.vhdl")
@@ -249,6 +252,9 @@ class Instantiate(TestCase):
 
     def test_enumlit_2(self) -> None:
         self.checkFile(self._root / "enumlit_2.vhdl")
+
+    def test_enumlit_3(self) -> None:
+        self.checkFile(self._root / "enumlit_3.vhdl")
 
     @expectedFailure
     def test_func_fail(self) -> None:
@@ -274,5 +280,7 @@ class Instantiate(TestCase):
     def test_multi1(self) -> None:
         self.checkFile(self._root / "multi1.vhdl")
 
-# TODO: first comment
+    def test_line1(self) -> None:
+        self.checkFile(self._root / "line1.vhdl")
+
 # Empty line before to easy cut & put
