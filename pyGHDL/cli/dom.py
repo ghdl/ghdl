@@ -224,7 +224,7 @@ class Application(LineTerminal, ArgParseMixin):
             try:
                 self.SubParsers[args.Command].print_help()
             except KeyError:
-                self.WriteError("Command {0} is unknown.".format(args.Command))
+                self.WriteError(f"Command {args.Command} is unknown.")
 
         self.WriteNormal("")
         self.exit()
@@ -237,15 +237,15 @@ class Application(LineTerminal, ArgParseMixin):
         self.PrintHeadline()
 
         copyrights = __copyright__.split("\n", 1)
-        self.WriteNormal("Copyright:  {0}".format(copyrights[0]))
+        self.WriteNormal(f"Copyright:  {copyrights[0]}")
         for copyright in copyrights[1:]:
-            self.WriteNormal("            {0}".format(copyright))
-        self.WriteNormal("License:    {0}".format(__license__))
+            self.WriteNormal(f"            {copyright}")
+        self.WriteNormal(f"License:    {__license__}")
         authors = __author__.split(", ")
-        self.WriteNormal("Authors:    {0}".format(authors[0]))
+        self.WriteNormal(f"Authors:    {authors[0]}")
         for author in authors[1:]:
-            self.WriteNormal("            {0}".format(author))
-        self.WriteNormal("Version:    {0}".format(__version__))
+            self.WriteNormal(f"            {author}")
+        self.WriteNormal(f"Version:    {__version__}")
         self.exit()
 
     # ----------------------------------------------------------------------------
@@ -263,10 +263,10 @@ class Application(LineTerminal, ArgParseMixin):
         if args.Files is not None:
             for file in args.Files:
                 if not file.exists():
-                    self.WriteError("File '{0!s}' does not exist.".format(file))
+                    self.WriteError(f"File '{file!s}' does not exist.")
                     continue
 
-                self.WriteNormal("Parsing file '{!s}'".format(file))
+                self.WriteNormal(f"Parsing file '{file!s}'")
                 document = self.addFile(file, "pretty")
                 self.WriteInfo(
                     dedent(
@@ -282,10 +282,10 @@ class Application(LineTerminal, ArgParseMixin):
         elif args.Directory is not None:
             d: Path = args.Directory
             if not d.exists():
-                self.WriteError("Directory '{0!s}' does not exist.".format(d))
+                self.WriteError(f"Directory '{d!s}' does not exist.")
 
             for file in d.glob("**/*.vhd?"):
-                self.WriteNormal("Parsing file '{!s}'".format(file))
+                self.WriteNormal(f"Parsing file '{file!s}'")
                 document = self.addFile(file, "pretty")
                 self.WriteInfo(
                     dedent(
@@ -349,23 +349,23 @@ def main():  # mccabe:disable=MC0001
         app.Run()
         app.exit()
     except PrettyPrintException as ex:
-        print("PP: {!s}".format(ex))
+        print(f"PP: {ex!s}")
         LineTerminal.exit()
 
     except DOMException as ex:
-        print("DOM: {!s}".format(ex))
+        print(f"DOM: {ex!s}")
         ex2: LibGHDLException = ex.__cause__
         if ex2 is not None:
             for message in ex2.InternalErrors:
-                print("libghdl: {message}".format(message=message))
+                print(f"libghdl: {message}")
             LineTerminal.exit(0)
 
         LineTerminal.exit(6)
 
     except LibGHDLException as ex:
-        print("LIB: {!s}".format(ex))
+        print(f"LIB: {ex!s}")
         for message in ex.InternalErrors:
-            print("  {message}".format(message=message))
+            print(f"  {message}")
         LineTerminal.exit(5)
 
     except GHDLBaseException as ex:

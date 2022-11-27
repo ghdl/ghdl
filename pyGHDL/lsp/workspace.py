@@ -158,7 +158,7 @@ class Workspace(object):
             sfe = document.Document.load(fd.read(), self._root_path, name)
             fd.close()
         except OSError as err:
-            self._server.show_message(lsp.MessageType.Error, "cannot load {}: {}".format(name, err.strerror))
+            self._server.show_message(lsp.MessageType.Error, f"cannot load {name}: {err.strerror}")
             return
         doc = self.create_document_from_sfe(sfe, absname)
         doc.parse_document()
@@ -173,7 +173,7 @@ class Workspace(object):
         except OSError as err:
             self._server.show_message(
                 lsp.MessageType.Error,
-                "cannot open project file {}: {}".format(prj_file, err.strerror),
+                f"cannot open project file {prj_file}: {err.strerror}",
             )
             return
         log.info("reading project file %s", prj_file)
@@ -183,7 +183,7 @@ class Workspace(object):
             log.info("error in project file")
             self._server.show_message(
                 lsp.MessageType.Error,
-                "json error in project file {}:{}:{}".format(prj_file, e.lineno, e.colno),
+                f"json error in project file {prj_file}:{e.lineno}:{e.colno}",
             )
         f.close()
 
@@ -204,9 +204,9 @@ class Workspace(object):
             log.info("Using options: %s", ghdl_opts)
             for opt in ghdl_opts:
                 if not libghdl.set_option(opt):
-                    self._server.show_message(lsp.MessageType.Error, "error with option: {}".format(opt))
+                    self._server.show_message(lsp.MessageType.Error, f"error with option: {opt}")
         except ProjectError as e:
-            self._server.show_message(lsp.MessageType.Error, "error in project file: {}".format(e.msg))
+            self._server.show_message(lsp.MessageType.Error, f"error in project file: {e.msg}")
 
     def read_files_from_project(self):
         try:
@@ -223,7 +223,7 @@ class Workspace(object):
                 if lang == "vhdl":
                     self.add_vhdl_file(name)
         except ProjectError as e:
-            self._server.show_message(lsp.MessageType.Error, "error in project file: {}".format(e.msg))
+            self._server.show_message(lsp.MessageType.Error, f"error in project file: {e.msg}")
 
     def get_configuration(self):
         self._server.configuration([{"scopeUri": "", "section": "vhdl.maxNumberOfProblems"}])

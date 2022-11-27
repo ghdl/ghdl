@@ -116,7 +116,7 @@ def BindToLibGHDL(subprogramName):
                 c_double,
             ):
                 return typ.__bound__
-            raise TypeError("Unsupported typevar bound to {!s}".format(typ.__bound__))
+            raise TypeError(f"Unsupported typevar bound to {typ.__bound__!s}")
         elif issubclass(typ, IntEnum):
             return c_int32
         elif issubclass(typ, Structure):
@@ -128,19 +128,15 @@ def BindToLibGHDL(subprogramName):
         typeHintCount = len(typeHints)
 
         if typeHintCount == 0:
-            raise ValueError("Function {0} is not annotated with types.".format(func.__name__))
+            raise ValueError(f"Function {func.__name__} is not annotated with types.")
 
         try:
             returnType = typeHints["return"]
         except KeyError:
-            raise ValueError("Function {0} is not annotated with a return type.".format(func.__name__))
+            raise ValueError(f"Function {func.__name__} is not annotated with a return type.")
 
         if (typeHintCount - 1) != func.__code__.co_argcount:
-            raise ValueError(
-                "Number of type annotations ({0}) for function '{1}' does not match number of parameters ({2}).".format(
-                    typeHintCount - 1, func.__name__, func.__code__.co_argcount
-                )
-            )
+            raise ValueError(f"Number of type annotations ({typeHintCount - 1}) for function '{func.__name__}' does not match number of parameters ({func.__code__.co_argcount}).")
 
         # 		print(typeHints)
 
@@ -152,14 +148,12 @@ def BindToLibGHDL(subprogramName):
             try:
                 parameterTypes.append(PythonTypeToCtype(parameter))
             except TypeError:
-                raise TypeError(
-                    "Unsupported parameter type '{0!s}' in function '{1}'.".format(parameter, func.__name__)
-                )
+                raise TypeError(f"Unsupported parameter type '{parameter!s}' in function '{func.__name__}'.")
 
         try:
             resultType = PythonTypeToCtype(returnType)
         except TypeError:
-            raise TypeError("Unsupported return type '{0!s}' in function '{1}'.".format(returnType, func.__name__))
+            raise TypeError(f"Unsupported return type '{returnType!s}' in function '{func.__name__}'.")
 
         functionPointer = getattr(libghdl, subprogramName)
         functionPointer.parameterTypes = parameterTypes
@@ -173,10 +167,7 @@ def BindToLibGHDL(subprogramName):
                     returnValue = functionPointer(*args)
                 except OSError as ex:
                     errors = [str(ex)]
-                    raise LibGHDLException(
-                        "Caught exception when calling '{func}' in libghdl.".format(func=subprogramName),
-                        errors,
-                    ) from ex
+                    raise LibGHDLException(f"Caught exception when calling '{subprogramName}' in libghdl.", errors,) from ex
 
                 return returnType(returnValue)
 
@@ -189,10 +180,7 @@ def BindToLibGHDL(subprogramName):
                     return functionPointer(*args)
                 except OSError as ex:
                     errors = [str(ex)]
-                    raise LibGHDLException(
-                        "Caught exception when calling '{func}' in libghdl.".format(func=subprogramName),
-                        errors,
-                    ) from ex
+                    raise LibGHDLException(f"Caught exception when calling '{subprogramName}' in libghdl.", errors,) from ex
 
             return inner
 

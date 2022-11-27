@@ -93,7 +93,7 @@ def get_symbols(fe, n):
         return get_symbols(fe, nodes.Get_Library_Unit(n))
     m = SYMBOLS_MAP.get(k, None)
     if m is None:
-        raise AssertionError("get_symbol: unhandled {}".format(pyutils.kind_image(k)))
+        raise AssertionError(f"get_symbol: unhandled {pyutils.kind_image(k)}")
     kind = m["kind"]
     if kind is None:
         return None

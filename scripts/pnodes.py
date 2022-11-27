@@ -73,7 +73,7 @@ class ParseError(Exception):
         self.msg = msg
 
     def __str__(self):
-        return ("Parse error at {lr.filename}:{lr.lineno}: {msg}".format(lr=self.lr, msg=self.msg))
+        return f"Parse error at {self.lr.filename}:{self.lr.lineno}: {self.msg}"
 
 
 # Return fields description.
@@ -328,7 +328,7 @@ def read_nodes_fields(lr, names, fields, nodes, funcs_dict):
     cur_nodes = []
     for (nm, fmt) in names:
         if fmt not in fields:
-            raise ParseError(lr, 'unknown format "{}"'.format(fmt))
+            raise ParseError(lr, f'unknown format "{fmt}"')
         n = NodeDesc(nm, fmt, {x: None for x in fields[fmt]}, {})
         nodes[nm] = n
         cur_nodes.append(n)

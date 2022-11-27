@@ -67,18 +67,18 @@ def __rotate_log_files(basename: str, num: int):
     # one.
     # Note: Path.with_suffix cannot be used as there might be multiple
     # suffixes (like in trace.out.0).
-    oldfile = Path("{}.{}".format(basename, num))
+    oldfile = Path(f"{basename}.{num}")
     if oldfile.is_file():
         oldfile.unlink()
     # Rotate old files
     for i in range(num, 0, -1):
-        oldfile = Path("{}.{}".format(basename, i - 1))
+        oldfile = Path(f"{basename}.{i-1}")
         if oldfile.is_file():
-            oldfile.rename(Path("{}.{}".format(basename, i)))
+            oldfile.rename(Path(f"{basename}.{i}"))
     # Rotate the newest log file.
     bname = Path(basename)
     if bname.is_file():
-        bname.rename(Path("{}.{}".format(basename, 0)))
+        bname.rename(Path(f"{basename}.0"))
 
 
 def _generateCLIParser() -> ArgumentParser:
@@ -115,7 +115,7 @@ def main():
         errorout_console.Install_Handler()
         libghdl.disp_config()
         print("python:")
-        print("sys.platform: {}, os.name: {}".format(sys.platform, os.name))
+        print(f"sys.platform: {sys.platform}, os.name: {os.name}")
         print(sys.version)
         return
 
@@ -140,8 +140,8 @@ def main():
     )
 
     if args.verbose != 0:
-        sys_stderr.write("Args: {}\n".format(sys_argv))
-        sys_stderr.write("Current directory: {}\n".format(os_getcwd()))
+        sys_stderr.write(f"Args: {sys_argv}\n")
+        sys_stderr.write(f"Current directory: {os_getcwd()}\n")
 
     logger.info("Args: %s", sys_argv)
     logger.info("Current directory is %s", os_getcwd())

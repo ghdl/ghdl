@@ -139,7 +139,7 @@ class LanguageProtocolServer(object):
                 log.exception("Caught exception while handling %s with params %s:", method, params)
                 self.show_message(
                     MessageType.Error,
-                    ("Caught exception while handling {}, see VHDL language server output for details.").format(method),
+                    f"Caught exception while handling {method}, see VHDL language server output for details.",
                 )
                 response = None
             if tid is None:
@@ -163,14 +163,14 @@ class LanguageProtocolServer(object):
                 "id": tid,
                 "error": {
                     "code": JSONErrorCodes.MethodNotFound,
-                    "message": "unknown method {}".format(method),
+                    "message": f"unknown method {method}",
                 },
             }
         return rbody
 
     def write_output(self, body):
         output = json.dumps(body, separators=(",", ":"))
-        self.conn.write("Content-Length: {}\r\n".format(len(output)))
+        self.conn.write(f"Content-Length: {len(output)}\r\n")
         self.conn.write("\r\n")
         self.conn.write(output)
 
