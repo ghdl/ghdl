@@ -199,6 +199,9 @@ class Instantiate(TestCase):
     def test_sig(self) -> None:
         self.checkFile(self._root / "sig.vhdl")
 
+    def test_sig_2(self) -> None:
+        self.checkFile(self._root / "sig_2.vhdl")
+
     @expectedFailure
     def test_var_fail(self) -> None:
         self.checkFile(self._root / "var_fail.vhdl")
@@ -235,6 +238,9 @@ class Instantiate(TestCase):
 
     def test_element_3(self) -> None:
         self.checkFile(self._root / "element_3.vhdl")
+
+    def test_element_4(self) -> None:
+        self.checkFile(self._root / "element_4.vhdl")
 
     @expectedFailure
     def test_enum_fail(self) -> None:
