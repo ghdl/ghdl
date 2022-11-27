@@ -189,7 +189,9 @@ class PrettyPrint:
     def formatEntity(self, entity: Entity, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
-        buffer.append(f"{prefix}- Name: {entity.Identifier}\n{prefix}  File: {entity.Position.Filename.name}\n{prefix}  Position: {entity.Position.Line}:{entity.Position.Column}")
+        buffer.append(
+            f"{prefix}- Name: {entity.Identifier}\n{prefix}  File: {entity.Position.Filename.name}\n{prefix}  Position: {entity.Position.Line}:{entity.Position.Column}"
+        )
         buffer.append(f"{prefix}  Generics:")
         for generic in entity.GenericItems:
             for line in self.formatGeneric(generic, level + 1):
@@ -214,7 +216,9 @@ class PrettyPrint:
     def formatArchitecture(self, architecture: Architecture, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
-        buffer.append(f"{prefix}- Name: {architecture.Identifier}\n{prefix}  File: {architecture.Position.Filename.name}\n{prefix}  Position: {architecture.Position.Line}:{architecture.Position.Column}")
+        buffer.append(
+            f"{prefix}- Name: {architecture.Identifier}\n{prefix}  File: {architecture.Position.Filename.name}\n{prefix}  Position: {architecture.Position.Line}:{architecture.Position.Column}"
+        )
         buffer.append(f"{prefix}  Entity: {architecture.Entity.SymbolName}")
         buffer.append(f"{prefix}  Declared:")
         for item in architecture.DeclaredItems:
@@ -250,7 +254,9 @@ class PrettyPrint:
     def formatPackage(self, package: Package, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
-        buffer.append(f"{prefix}- Name: {package.Identifier}\n{prefix}  File: {package.Position.Filename.name}\n{prefix}  Position: {package.Position.Line}:{package.Position.Column}")
+        buffer.append(
+            f"{prefix}- Name: {package.Identifier}\n{prefix}  File: {package.Position.Filename.name}\n{prefix}  Position: {package.Position.Line}:{package.Position.Column}"
+        )
         buffer.append(f"{prefix}  Declared:")
         for item in package.DeclaredItems:
             for line in self.formatDeclaredItems(item, level + 1):
@@ -301,13 +307,17 @@ class PrettyPrint:
         elif isinstance(generic, GenericTypeInterfaceItem):
             return self.formatGenericType(generic, level)
         else:
-            raise PrettyPrintException(f"Unhandled generic kind '{generic.__class__.__name__}' for generic '{generic.Identifiers[0]}'.")
+            raise PrettyPrintException(
+                f"Unhandled generic kind '{generic.__class__.__name__}' for generic '{generic.Identifiers[0]}'."
+            )
 
     def formatPort(self, port: Union[NamedEntity, PortInterfaceItem], level: int = 0) -> StringBuffer:
         if isinstance(port, PortSignalInterfaceItem):
             return self.formatPortSignal(port, level)
         else:
-            raise PrettyPrintException(f"Unhandled port kind '{port.__class__.__name__}' for port '{port.Identifiers[0]}'.")
+            raise PrettyPrintException(
+                f"Unhandled port kind '{port.__class__.__name__}' for port '{port.Identifiers[0]}'."
+            )
 
     def formatGenericConstant(self, generic: GenericConstantInterfaceItem, level: int = 0) -> StringBuffer:
         buffer = []
@@ -381,9 +391,7 @@ class PrettyPrint:
                     prefix=prefix,
                     name=", ".join(item.Identifiers),
                     subtype=self.formatSubtypeIndication(item.Subtype, "signal", item.Identifiers[0]),
-                    initValue=f" := {item.DefaultExpression!s}"
-                    if item.DefaultExpression is not None
-                    else "",
+                    initValue=f" := {item.DefaultExpression!s}" if item.DefaultExpression is not None else "",
                 )
             )
         elif isinstance(item, File):
@@ -418,7 +426,9 @@ class PrettyPrint:
         elif isinstance(item, PackageInstantiation):
             buffer.append(f"{prefix}- package {item.Identifier} is new {item.PackageReference!s} generic map (.....)")
         elif isinstance(item, DefaultClock):
-            buffer.append(f"{prefix}- default {item.Identifier} is {'...'}", )
+            buffer.append(
+                f"{prefix}- default {item.Identifier} is {'...'}",
+            )
         else:
             raise PrettyPrintException(f"Unhandled declared item kind '{item.__class__.__name__}'.")
 
@@ -461,7 +471,9 @@ class PrettyPrint:
 
             return "{type}({constraints})".format(type=subtypeIndication.SymbolName, constraints=", ".join(constraints))
         else:
-            raise PrettyPrintException(f"Unhandled subtype kind '{subtypeIndication.__class__.__name__}' for {entity} '{name}'.")
+            raise PrettyPrintException(
+                f"Unhandled subtype kind '{subtypeIndication.__class__.__name__}' for {entity} '{name}'."
+            )
 
     def formatInitialValue(self, item: WithDefaultExpressionMixin) -> str:
         if item.DefaultExpression is None:

@@ -136,7 +136,9 @@ def BindToLibGHDL(subprogramName):
             raise ValueError(f"Function {func.__name__} is not annotated with a return type.")
 
         if (typeHintCount - 1) != func.__code__.co_argcount:
-            raise ValueError(f"Number of type annotations ({typeHintCount - 1}) for function '{func.__name__}' does not match number of parameters ({func.__code__.co_argcount}).")
+            raise ValueError(
+                f"Number of type annotations ({typeHintCount - 1}) for function '{func.__name__}' does not match number of parameters ({func.__code__.co_argcount})."
+            )
 
         # 		print(typeHints)
 
@@ -167,7 +169,10 @@ def BindToLibGHDL(subprogramName):
                     returnValue = functionPointer(*args)
                 except OSError as ex:
                     errors = [str(ex)]
-                    raise LibGHDLException(f"Caught exception when calling '{subprogramName}' in libghdl.", errors,) from ex
+                    raise LibGHDLException(
+                        f"Caught exception when calling '{subprogramName}' in libghdl.",
+                        errors,
+                    ) from ex
 
                 return returnType(returnValue)
 
@@ -180,7 +185,10 @@ def BindToLibGHDL(subprogramName):
                     return functionPointer(*args)
                 except OSError as ex:
                     errors = [str(ex)]
-                    raise LibGHDLException(f"Caught exception when calling '{subprogramName}' in libghdl.", errors,) from ex
+                    raise LibGHDLException(
+                        f"Caught exception when calling '{subprogramName}' in libghdl.",
+                        errors,
+                    ) from ex
 
             return inner
 

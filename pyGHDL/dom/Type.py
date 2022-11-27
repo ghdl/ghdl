@@ -168,7 +168,9 @@ class ArrayType(VHDLModel_ArrayType, DOMMixin):
                 indexSubtype = GetSimpleTypeFromNode(index)
                 indices.append(indexSubtype)
             else:
-                raise DOMException(f"Unknown kind '{indexKind.name}' for an index in the array definition of `{typeName}`.")
+                raise DOMException(
+                    f"Unknown kind '{indexKind.name}' for an index in the array definition of `{typeName}`."
+                )
 
         elementSubtypeIndication = nodes.Get_Element_Subtype_Indication(typeDefinitionNode)
         elementSubtype = GetSubtypeIndicationFromIndicationNode(elementSubtypeIndication, "array declaration", typeName)

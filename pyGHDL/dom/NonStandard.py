@@ -191,7 +191,9 @@ class Document(VHDLModel_Document):
                         contextItems.append(ContextReference.parse(item))
                     else:
                         pos = Position.parse(item)
-                        raise DOMException(f"Unknown context item kind '{itemKind.name}' in context at line {pos.Line}.")
+                        raise DOMException(
+                            f"Unknown context item kind '{itemKind.name}' in context at line {pos.Line}."
+                        )
 
             if nodeKind == nodes.Iir_Kind.Entity_Declaration:
                 entity = Entity.parse(libraryUnit, contextItems)
