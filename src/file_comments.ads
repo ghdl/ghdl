@@ -35,7 +35,7 @@ package File_Comments is
    procedure Add_Comment (Start, Last : Source_Ptr;
                           Line_Start : Source_Ptr);
 
-   --  A newline (after a comment) has been scanned.
+   --  A newline *after a comment* has been scanned.
    --  If this is a blank line, comments before the blank line are attached
    --  to the previous node.
    procedure Comment_Newline (Line_Start : Source_Ptr);
@@ -117,7 +117,11 @@ private
 
       --  If the next comment is on the same line, it will be attached to
       --  LAST_NODE, and so will be the next comments.
-      State_Line
+      State_Line,
+
+      --  Continuation of line.  Any comment is attached to the LAST_NODE,
+      --  until an empty line.
+      State_Line_Cont
      );
 
    type Comment_Context is record

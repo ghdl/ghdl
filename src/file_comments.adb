@@ -72,6 +72,23 @@ package body File_Comments is
       Ctxt.Next := Last + 1;
    end Comment_Gather_Existing;
 
+   function Is_Empty_Line (Line_Start : Source_Ptr) return Boolean
+   is
+      Fc : File_Comments_Table renames
+        Comments_Table.Table (Ctxt.File);
+      Last : constant Comment_Index := File_Comments_Tables.Last (Fc);
+   begin
+      --  The start of the line is after the last comment, so the line is
+      --  empty.
+      return Line_Start > Fc.Table (Last).Last;
+   end Is_Empty_Line;
+
+   --  Very important: this procedure is called only after a comment has
+   --  been scanned and added.
+   --  So this is either the newline after a comment (in that case
+   --   LINE_START is less than the last comment),
+   --  or an empty line (in that case LINE_START is greater than the last
+   --   comment).
    procedure Comment_Newline (Line_Start : Source_Ptr) is
    begin
       case Ctxt.State is
@@ -80,21 +97,22 @@ package body File_Comments is
          when State_Block =>
             --  Detect empty line.
             --  This can happen only after a comments has been added.
-            declare
-               Fc : File_Comments_Table renames
-                 Comments_Table.Table (Ctxt.File);
-               Last : constant Comment_Index := File_Comments_Tables.Last (Fc);
-            begin
-               if Line_Start > Fc.Table (Last).Last then
-                  --  Newline without a comment.
-                  --  Attach existing comments.
-                  Comment_Gather_Existing;
-               end if;
-            end;
+            if Is_Empty_Line (Line_Start) then
+               --  Attach existing comments.
+               Comment_Gather_Existing;
+            end if;
          when State_Line =>
-            --  No comment on the same line.
+            --  If a comment appear before the newline, the state would be
+            --  changed to State_Line_Cont; so here no comment on the same
+            --  line.
+            --
             --  The following comments will be attached to the next node.
             Ctxt.State := State_Before;
+         when State_Line_Cont =>
+            --  If the line is empty, change to State_Block.
+            if Is_Empty_Line (Line_Start) then
+               Ctxt.State := State_Block;
+            end if;
       end case;
    end Comment_Newline;
 
@@ -132,16 +150,6 @@ package body File_Comments is
             end if;
          when State_Line =>
             --  Is it on the same line ?
-            if Line_Start = Ctxt.Line_Start then
-               N := Ctxt.Last_Node;
-               Ctxt.Next := File_Comments_Tables.Last
-                 (Comments_Table.Table (Ctxt.File)) + 2;
-               Ctxt.State := State_Block;
-            else
-               --  Not the same line, for the next node.
-               N := 0;
-               Ctxt.State := State_Before;
-            end if;
             if Flag_Trace then
                Put ("line");
                Put (" (start=");
@@ -150,6 +158,24 @@ package body File_Comments is
                Put_Uns32 (Uns32 (Line_Start));
                Put (")");
             end if;
+            if Line_Start = Ctxt.Line_Start then
+               N := Ctxt.Last_Node;
+               Ctxt.Next := File_Comments_Tables.Last
+                 (Comments_Table.Table (Ctxt.File)) + 2;
+               Ctxt.State := State_Line_Cont;
+            else
+               --  Not the same line, for the next node.
+               N := 0;
+               Ctxt.State := State_Before;
+            end if;
+         when State_Line_Cont =>
+            --  Attached on the next empty line.
+            if Flag_Trace then
+               Put ("line_cont");
+            end if;
+            N := Ctxt.Last_Node;
+            Ctxt.Next := File_Comments_Tables.Last
+              (Comments_Table.Table (Ctxt.File)) + 2;
       end case;
 
       if Flag_Trace then
@@ -240,7 +266,9 @@ package body File_Comments is
             end;
          when State_Block =>
             Comment_Gather_Existing;
-         when State_Line =>
+         when State_Line
+           | State_Line_Cont =>
+            --  All comments are attached.
             null;
       end case;
       Ctxt.State := State_Before;
