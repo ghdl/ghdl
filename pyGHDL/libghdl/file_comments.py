@@ -45,11 +45,12 @@ import pyGHDL.libghdl.files_map as files_map
 __all__ = [
     "Comment_Index",
     "No_Comment_Index",
-    ]
+]
 
 Comment_Index = TypeVar("Comment_Index", bound=c_uint32)
 
 No_Comment_Index = 0
+
 
 @export
 @BindToLibGHDL("file_comments__find_first_comment")
@@ -62,12 +63,14 @@ def Find_First_Comment(File: SourceFileEntry, N: c_uint32) -> Comment_Index:
     """
     return 0
 
+
 @export
 @BindToLibGHDL("file_comments__get_comment_start")
 def Get_Comment_Start(File: SourceFileEntry, Idx: Comment_Index) -> SourcePtr:
     """
     Get the start of comment
     """
+
 
 @export
 @BindToLibGHDL("file_comments__get_comment_last")
@@ -76,14 +79,16 @@ def Get_Comment_Last(File: SourceFileEntry, Idx: Comment_Index) -> SourcePtr:
     Get the end of comment
     """
 
+
 def Get_Comment(File: SourceFileEntry, Idx: Comment_Index) -> str:
     """
     Get a comment
     """
     buf = files_map.Get_File_Buffer(File)
-    s = Get_Comment_Start(File, Idx);
-    l = Get_Comment_Last(File, Idx);
-    return buf[s:l+1].decode("iso-8859-1")
+    s = Get_Comment_Start(File, Idx)
+    l = Get_Comment_Last(File, Idx)
+    return buf[s : l + 1].decode("iso-8859-1")
+
 
 @export
 @BindToLibGHDL("file_comments__get_next_comment")
@@ -91,4 +96,3 @@ def Get_Next_Comment(File: SourceFileEntry, Idx: Comment_Index) -> Comment_Index
     """
     Get the next comment
     """
-
