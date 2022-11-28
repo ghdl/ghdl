@@ -22,7 +22,7 @@ jobs:
     steps:
 
       - name: '🧰 Checkout'
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: '📚 Run gnatdoc'
         run: |
@@ -33,7 +33,7 @@ jobs:
           EOF
 
       - name: '📤 Upload artifact: gnatdoc'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: gnatdoc
           path: gnatdoc
@@ -46,7 +46,7 @@ jobs:
     steps:
 
       - name: '🧰 Checkout'
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: '⛴ Build ghdl/doc'
         run: |
@@ -57,7 +57,7 @@ jobs:
           EOF
 
       - name: '📥 Download artifact: gnatdoc'
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: gnatdoc
           path: public/gnatdoc
@@ -71,7 +71,7 @@ jobs:
       #- run: nroff -man doc/_build/man/ghdl.1
 
       - name: '📤 Upload artifact: HTML, LaTeX and man'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: doc
           path: |
@@ -90,10 +90,10 @@ jobs:
     steps:
 
       - name: '🧰 Checkout'
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: '🐍 Setup Python'
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
@@ -123,7 +123,7 @@ jobs:
         run: python setup.py bdist_wheel
 
       - name: '📤 Upload artifact: pyGHDL'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: pyGHDL
           path: dist/
@@ -140,7 +140,7 @@ jobs:
     steps:
 
       - name: '🧰 Checkout'
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - run: TASK=bullseye+mcode ./scripts/ci-run.sh -c --gplcompat
 
@@ -166,7 +166,7 @@ jobs:
     steps:
 
       - name: '🧰 Checkout'
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: '🛳 Build and test GHDL in containers'
         run: |
@@ -174,7 +174,7 @@ jobs:
           mv ghdl-*-ubuntu${{ matrix.os }}-*.tgz ghdl-gha-ubuntu-${{ matrix.os }}.04-$(echo ${{ matrix.backend }} | sed 's#-.*##g').tgz
 
       - name: '📤 Upload artifact: package'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ubuntu${{ matrix.os }}-${{ matrix.backend }}
           path: ghdl-gha-ubuntu-*.tgz
@@ -201,11 +201,11 @@ jobs:
     steps:
 
       - name: '🧰 Checkout'
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: '💾 Cache gnat'
         id: cache-gnat
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: gnat
           key: ${{ runner.os }}-gnat
@@ -225,7 +225,7 @@ jobs:
           MACOSX_DEPLOYMENT_TARGET: '10.14'
 
       - name: '📤 Upload artifact: package'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: macos${{ matrix.os }}-${{ matrix.backend }}
           path: ghdl-macos-${{ matrix.os }}-${{ matrix.backend }}.tgz
@@ -271,7 +271,7 @@ jobs:
         shell: bash
 
       - name: '🧰 Checkout'
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           # The command 'git describe' (used for version) needs the history.
           fetch-depth: 0
@@ -285,7 +285,7 @@ jobs:
           done
 
       - name: '📤 Upload artifact: builddir'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.sys }}-${{ matrix.pkg }}-builddir
           path: |
@@ -293,7 +293,7 @@ jobs:
             scripts/msys2-${{ matrix.pkg }}/msys2-${{ matrix.pkg }}.pkg.tar.gz
 
       - name: '📤 Upload artifact: package'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.sys }}-${{ matrix.pkg }}
           path: scripts/msys2-${{ matrix.pkg }}/mingw-*ghdl*.pkg.tar.zst
@@ -349,10 +349,10 @@ jobs:
         shell: bash
 
       - name: '🧰 Checkout'
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: '📥 Download artifact: package'
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           path: artifact
           name: ${{ matrix.sys.sys }}-${{ matrix.sys.pkg }}
@@ -406,10 +406,10 @@ jobs:
         shell: bash
 
       - name: '🧰 Checkout'
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: '📥 Download artifact: package'
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           path: artifact
           name: ${{ matrix.sys }}-mcode
@@ -430,7 +430,7 @@ jobs:
           zip "${_zipdir}".zip -r "${_zipdir}"
 
       - name: '📤 Upload artifact: zipfile'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.sys }}-mcode-standalone
           path: ${{ matrix.sys }}-mcode-standalone.zip
@@ -473,10 +473,10 @@ jobs:
         run: git config --global core.autocrlf input
 
       - name: '🧰 Checkout'
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: '📥 Download artifact: package'
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           path: artifact
           name: ${{ matrix.sys }}-${{ matrix.pkg }}
@@ -495,7 +495,7 @@ jobs:
           echo "GHDL_PREFIX=$GHDL_PREFIX" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: '🐍 Setup Python'
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: '3.10'
           architecture: ${{ matrix.pyarch }}
@@ -549,10 +549,10 @@ jobs:
         run: git config --global core.autocrlf input
 
       - name: '🧰 Checkout'
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: '📥 Download artifact: package'
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           path: artifact
           name: ${{ matrix.sys }}-${{ matrix.pkg }}-standalone
@@ -571,13 +571,13 @@ jobs:
           echo "GHDL_PREFIX=$GHDL_PREFIX" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: '🐍 Setup Python'
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: '3.10'
           architecture: ${{ matrix.pyarch }}
 
       - name: '📥 Download artifact: pyGHDL'
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: pyGHDL
 
@@ -620,7 +620,7 @@ jobs:
 
       - name: '📥 Download artifacts'
         if: "!contains(github.ref, 'refs/tags/')"
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           path: artifacts
 
@@ -681,10 +681,10 @@ jobs:
         shell: bash
 
       - name: '🧰 Checkout'
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: '📥 Download artifact: package'
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           path: artifact
           name: MINGW64-llvm
@@ -703,7 +703,7 @@ jobs:
 
       - name: '📤 Upload artifact: coverage report'
         if: always()
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: coverage
           path: coverage.xml
@@ -724,19 +724,19 @@ jobs:
     steps:
 
       - name: '📥 Download artifact: coverage report'
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           path: .
           name: coverage
 
       - name: CodeCov
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v3
         with:
           file: coverage.xml
           flags: unittests
 
       - name: Codacy
-        uses: codacy/codacy-coverage-reporter-action@master
+        uses: codacy/codacy-coverage-reporter-action@v1
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
           coverage-reports: coverage.xml
