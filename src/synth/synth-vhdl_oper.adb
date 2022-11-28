@@ -736,9 +736,9 @@ package body Synth.Vhdl_Oper is
         (Syn_Inst, Right, Right_Typ, False, Expr);
 
       if Is_Static_Val (Left.Val) and Is_Static_Val (Right.Val) then
-         Srec := Eval_Static_Dyadic_Predefined
-           (Syn_Inst, Imp, Expr_Typ,
-            Get_Value_Memtyp (Left), Get_Value_Memtyp (Right), Expr);
+         Srec := Eval_Static_Predefined_Function_Call
+           (Syn_Inst, Get_Value_Memtyp (Left), Get_Value_Memtyp (Right),
+            Expr_Typ, Expr);
          if Srec = Null_Memtyp then
             return No_Valtyp;
          end if;
@@ -1713,8 +1713,9 @@ package body Synth.Vhdl_Oper is
 
       if Is_Static_Val (Operand.Val) then
          return Create_Value_Memtyp
-           (Eval_Static_Monadic_Predefined
-              (Syn_Inst, Imp, Get_Value_Memtyp (Operand), Loc));
+           (Eval_Static_Predefined_Function_Call
+              (Syn_Inst, Get_Value_Memtyp (Operand), Null_Memtyp,
+                null, Loc));
       end if;
 
       case Def is
@@ -1932,26 +1933,24 @@ package body Synth.Vhdl_Oper is
    end Synth_Vec_Reduce_Monadic;
 
    function Synth_Dynamic_Predefined_Function_Call
-     (Subprg_Inst : Synth_Instance_Acc; Expr : Node) return Valtyp
+     (Subprg_Inst : Synth_Instance_Acc;
+      Imp : Node;
+      L, R : Valtyp;
+      Expr : Node) return Valtyp
    is
       Ctxt : constant Context_Acc := Get_Build (Subprg_Inst);
-      Imp  : constant Node := Get_Implementation (Expr);
       Def : constant Iir_Predefined_Functions :=
         Get_Implicit_Definition (Imp);
-      Inter_Chain : constant Node := Get_Interface_Declaration_Chain (Imp);
-      Param1 : Node;
-      Param2 : Node;
       Res_Typ : constant Type_Acc :=
         Get_Subtype_Object (Subprg_Inst, Get_Type (Imp));
 
-      --  Resize PARAM1 to PARAM2 bit according to IS_SIGNED.
+      --  Resize L to R bit according to IS_SIGNED.
       function Synth_Conv_Vector (Is_Signed : Boolean) return Valtyp
       is
-         Arg : constant Valtyp := Get_Value (Subprg_Inst, Param1);
          Size_Vt : Valtyp;
          Size : Width;
       begin
-         Size_Vt := Get_Value (Subprg_Inst, Param2);
+         Size_Vt := R;
          Strip_Const (Size_Vt);
          if not Is_Static (Size_Vt.Val) then
             Error_Msg_Synth
@@ -1960,27 +1959,9 @@ package body Synth.Vhdl_Oper is
             return No_Valtyp;
          end if;
          Size := Uns32 (Read_Discrete (Size_Vt));
-         return Synth_Resize (Ctxt, Arg, Size, Is_Signed, Expr);
+         return Synth_Resize (Ctxt, L, Size, Is_Signed, Expr);
       end Synth_Conv_Vector;
-
-      L : Valtyp;
-      R : Valtyp;
    begin
-      Param1 := Inter_Chain;
-      if Param1 /= Null_Node then
-         L := Get_Value (Subprg_Inst, Param1);
-         Param2 := Get_Chain (Inter_Chain);
-         if Param2 /= Null_Node then
-            R := Get_Value (Subprg_Inst, Param2);
-         else
-            R := No_Valtyp;
-         end if;
-      else
-         L := No_Valtyp;
-         R := No_Valtyp;
-         Param2 := Null_Node;
-      end if;
-
       case Def is
          when Iir_Predefined_Endfile =>
             declare
@@ -2320,7 +2301,28 @@ package body Synth.Vhdl_Oper is
                end if;
             end;
          else
-            Res := Synth_Dynamic_Predefined_Function_Call (Subprg_Inst, Expr);
+            declare
+               Inter : Node;
+               L, R : Valtyp;
+            begin
+               Inter := Inter_Chain;
+               if Inter /= Null_Node then
+                  L := Get_Value (Subprg_Inst, Inter);
+                  Inter := Get_Chain (Inter_Chain);
+                  if Inter /= Null_Node then
+                     R := Get_Value (Subprg_Inst, Inter);
+                     pragma Assert (Get_Chain (Inter) = Null_Node);
+                  else
+                     R := No_Valtyp;
+                  end if;
+               else
+                  L := No_Valtyp;
+                  R := No_Valtyp;
+               end if;
+
+               Res := Synth_Dynamic_Predefined_Function_Call
+                 (Subprg_Inst, Get_Implementation (Expr), L, R, Expr);
+            end;
          end if;
       end if;
 

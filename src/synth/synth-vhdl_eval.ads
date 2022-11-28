@@ -24,17 +24,6 @@ with Vhdl.Nodes; use Vhdl.Nodes;
 package Synth.Vhdl_Eval is
    --  Note: INST is only used to report errors.
 
-   function Eval_Static_Dyadic_Predefined (Inst : Synth_Instance_Acc;
-                                           Imp : Node;
-                                           Res_Typ : Type_Acc;
-                                           Left : Memtyp;
-                                           Right : Memtyp;
-                                           Expr : Node) return Memtyp;
-   function Eval_Static_Monadic_Predefined (Inst : Synth_Instance_Acc;
-                                            Imp : Node;
-                                            Operand : Memtyp;
-                                            Expr : Node) return Memtyp;
-
    function Eval_Static_Predefined_Function_Call (Inst : Synth_Instance_Acc;
                                                   Param1 : Memtyp;
                                                   Param2 : Memtyp;

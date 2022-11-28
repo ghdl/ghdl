@@ -419,1430 +419,6 @@ package body Synth.Vhdl_Eval is
       return Create_Memory_U8 (Boolean'Pos (V), Boolean_Type);
    end Create_Memory_Boolean;
 
-   function Eval_Static_Dyadic_Predefined (Inst : Synth_Instance_Acc;
-                                           Imp : Node;
-                                           Res_Typ : Type_Acc;
-                                           Left : Memtyp;
-                                           Right : Memtyp;
-                                           Expr : Node) return Memtyp
-   is
-      Def : constant Iir_Predefined_Functions :=
-        Get_Implicit_Definition (Imp);
-   begin
-      case Def is
-         when Iir_Predefined_Error =>
-            return Null_Memtyp;
-
-         when Iir_Predefined_Boolean_Or
-            | Iir_Predefined_Bit_Or
-            | Iir_Predefined_Boolean_And
-            | Iir_Predefined_Bit_And =>
-            --  Short-circuit operators.
-            raise Internal_Error;
-
-         when Iir_Predefined_Boolean_Xor
-            | Iir_Predefined_Bit_Xor =>
-            return Create_Memory_U8
-              (Boolean'Pos (Boolean'Val (Read_Discrete (Left))
-                              xor Boolean'Val (Read_Discrete (Right))),
-               Res_Typ);
-
-         when Iir_Predefined_Boolean_Nand
-            | Iir_Predefined_Bit_Nand =>
-            return Create_Memory_U8
-              (Boolean'Pos (not (Boolean'Val (Read_Discrete (Left))
-                                   and Boolean'Val (Read_Discrete (Right)))),
-               Res_Typ);
-
-         when Iir_Predefined_Boolean_Nor
-            | Iir_Predefined_Bit_Nor =>
-            return Create_Memory_U8
-              (Boolean'Pos (not (Boolean'Val (Read_Discrete (Left))
-                                   or Boolean'Val (Read_Discrete (Right)))),
-               Res_Typ);
-
-         when Iir_Predefined_Integer_Plus
-           | Iir_Predefined_Physical_Plus =>
-            declare
-               Res : Int64;
-            begin
-               Res := Read_Discrete (Left) + Read_Discrete (Right);
-               Check_Integer_Overflow (Inst, Res, Res_Typ, Expr);
-               return Create_Memory_Discrete (Res, Res_Typ);
-            end;
-         when Iir_Predefined_Integer_Minus
-            | Iir_Predefined_Physical_Minus =>
-            declare
-               Res : Int64;
-            begin
-               Res := Read_Discrete (Left) - Read_Discrete (Right);
-               Check_Integer_Overflow (Inst, Res, Res_Typ, Expr);
-               return Create_Memory_Discrete (Res, Res_Typ);
-            end;
-         when Iir_Predefined_Integer_Mul
-           | Iir_Predefined_Physical_Integer_Mul
-           | Iir_Predefined_Integer_Physical_Mul =>
-            declare
-               Res : Int64;
-            begin
-               Res := Read_Discrete (Left) * Read_Discrete (Right);
-               Check_Integer_Overflow (Inst, Res, Res_Typ, Expr);
-               return Create_Memory_Discrete (Res, Res_Typ);
-            end;
-         when Iir_Predefined_Integer_Div
-            | Iir_Predefined_Physical_Physical_Div
-            | Iir_Predefined_Physical_Integer_Div =>
-            declare
-               Rv : Int64;
-               Res : Int64;
-            begin
-               Rv := Read_Discrete (Right);
-               if Rv = 0 then
-                  Error_Msg_Synth (Inst, Expr, "division by zero");
-                  return Null_Memtyp;
-               end if;
-               Res := Read_Discrete (Left) / Rv;
-               Check_Integer_Overflow (Inst, Res, Res_Typ, Expr);
-               return Create_Memory_Discrete (Res, Res_Typ);
-            end;
-         when Iir_Predefined_Integer_Mod =>
-            declare
-               Res : Int64;
-            begin
-               Res := Read_Discrete (Left) mod Read_Discrete (Right);
-               Check_Integer_Overflow (Inst, Res, Res_Typ, Expr);
-               return Create_Memory_Discrete (Res, Res_Typ);
-            end;
-         when Iir_Predefined_Integer_Rem =>
-            declare
-               Res : Int64;
-            begin
-               Res := Read_Discrete (Left) rem Read_Discrete (Right);
-               Check_Integer_Overflow (Inst, Res, Res_Typ, Expr);
-               return Create_Memory_Discrete (Res, Res_Typ);
-            end;
-
-         when Iir_Predefined_Integer_Exp =>
-            declare
-               Lv : Ghdl_I64;
-               Rv : Std_Integer;
-               Res : Ghdl_I64;
-               Ovf : Boolean;
-            begin
-               Lv := Ghdl_I64 (Read_Discrete (Left));
-               Rv := Std_Integer (Read_Discrete (Right));
-               Grt.Arith.Exp_I64 (Lv, Rv, Res, Ovf);
-               if Ovf then
-                  Error_Msg_Synth (Inst, Expr, "exponentiation overflow");
-                  Res := 0;
-               end if;
-               return Create_Memory_Discrete (Int64 (Res), Res_Typ);
-            end;
-
-         when Iir_Predefined_Integer_Less_Equal
-            | Iir_Predefined_Physical_Less_Equal
-            | Iir_Predefined_Enum_Less_Equal =>
-            return Create_Memory_Boolean
-              (Read_Discrete (Left) <= Read_Discrete (Right));
-         when Iir_Predefined_Integer_Less
-            | Iir_Predefined_Physical_Less
-            | Iir_Predefined_Enum_Less =>
-            return Create_Memory_Boolean
-              (Read_Discrete (Left) < Read_Discrete (Right));
-         when Iir_Predefined_Integer_Greater_Equal
-            | Iir_Predefined_Physical_Greater_Equal
-            | Iir_Predefined_Enum_Greater_Equal =>
-            return Create_Memory_Boolean
-              (Read_Discrete (Left) >= Read_Discrete (Right));
-         when Iir_Predefined_Integer_Greater
-            | Iir_Predefined_Physical_Greater
-            | Iir_Predefined_Enum_Greater =>
-            return Create_Memory_Boolean
-              (Read_Discrete (Left) > Read_Discrete (Right));
-         when Iir_Predefined_Integer_Equality
-            | Iir_Predefined_Physical_Equality
-            | Iir_Predefined_Enum_Equality
-            | Iir_Predefined_Bit_Match_Equality =>
-            return Create_Memory_Boolean
-              (Read_Discrete (Left) = Read_Discrete (Right));
-         when Iir_Predefined_Integer_Inequality
-            | Iir_Predefined_Physical_Inequality
-            | Iir_Predefined_Enum_Inequality
-            | Iir_Predefined_Bit_Match_Inequality =>
-            return Create_Memory_Boolean
-              (Read_Discrete (Left) /= Read_Discrete (Right));
-
-         when Iir_Predefined_Physical_Real_Mul =>
-            return Create_Memory_Discrete
-              (Int64 (Fp64 (Read_Discrete (Left)) * Read_Fp64 (Right)),
-               Res_Typ);
-         when Iir_Predefined_Real_Physical_Mul =>
-            return Create_Memory_Discrete
-              (Int64 (Read_Fp64 (Left) * Fp64 (Read_Discrete (Right))),
-               Res_Typ);
-         when Iir_Predefined_Physical_Real_Div =>
-            return Create_Memory_Discrete
-              (Int64 (Fp64 (Read_Discrete (Left)) / Read_Fp64 (Right)),
-               Res_Typ);
-
-         when Iir_Predefined_Floating_Less =>
-            return Create_Memory_U8
-              (Boolean'Pos (Read_Fp64 (Left) < Read_Fp64 (Right)),
-               Boolean_Type);
-         when Iir_Predefined_Floating_Less_Equal =>
-            return Create_Memory_U8
-              (Boolean'Pos (Read_Fp64 (Left) <= Read_Fp64 (Right)),
-               Boolean_Type);
-         when Iir_Predefined_Floating_Equality =>
-            return Create_Memory_U8
-              (Boolean'Pos (Read_Fp64 (Left) = Read_Fp64 (Right)),
-               Boolean_Type);
-         when Iir_Predefined_Floating_Inequality =>
-            return Create_Memory_U8
-              (Boolean'Pos (Read_Fp64 (Left) /= Read_Fp64 (Right)),
-               Boolean_Type);
-         when Iir_Predefined_Floating_Greater =>
-            return Create_Memory_U8
-              (Boolean'Pos (Read_Fp64 (Left) > Read_Fp64 (Right)),
-               Boolean_Type);
-         when Iir_Predefined_Floating_Greater_Equal =>
-            return Create_Memory_U8
-              (Boolean'Pos (Read_Fp64 (Left) >= Read_Fp64 (Right)),
-               Boolean_Type);
-
-         when Iir_Predefined_Floating_Plus =>
-            return Create_Memory_Fp64 (Read_Fp64 (Left) + Read_Fp64 (Right),
-                                       Res_Typ);
-         when Iir_Predefined_Floating_Minus =>
-            return Create_Memory_Fp64 (Read_Fp64 (Left) - Read_Fp64 (Right),
-                                       Res_Typ);
-         when Iir_Predefined_Floating_Mul =>
-            return Create_Memory_Fp64 (Read_Fp64 (Left) * Read_Fp64 (Right),
-                                       Res_Typ);
-         when Iir_Predefined_Floating_Div =>
-            return Create_Memory_Fp64 (Read_Fp64 (Left) / Read_Fp64 (Right),
-                                       Res_Typ);
-         when Iir_Predefined_Floating_Exp =>
-            return Create_Memory_Fp64
-              (Read_Fp64 (Left) ** Integer (Read_Discrete (Right)), Res_Typ);
-
-         when Iir_Predefined_Universal_R_I_Div =>
-            declare
-               Rv : Int64;
-               Res : Fp64;
-            begin
-               Rv := Read_Discrete (Right);
-               if Rv = 0 then
-                  Error_Msg_Synth (Inst, Expr, "division by zero");
-                  return Null_Memtyp;
-               end if;
-               Res := Read_Fp64 (Left) / Fp64 (Rv);
-               return Create_Memory_Fp64 (Res, Res_Typ);
-            end;
-
-         when Iir_Predefined_Array_Array_Concat =>
-            declare
-               use Flags;
-               L_Len : constant Iir_Index32 :=
-                 Iir_Index32 (Get_Bound_Length (Left.Typ));
-               R_Len : constant Iir_Index32 :=
-                 Iir_Index32 (Get_Bound_Length (Right.Typ));
-               Le_Typ : constant Type_Acc := Get_Array_Element (Left.Typ);
-               Re_Typ : constant Type_Acc := Get_Array_Element (Right.Typ);
-               El_Typ : Type_Acc;
-               Bnd : Bound_Type;
-               Res_St : Type_Acc;
-               Res : Memtyp;
-            begin
-               Check_Matching_Bounds (Le_Typ, Re_Typ, Expr);
-               if L_Len = 0 and R_Len = 0 then
-                  --  LRM08 9.2.5 Adding operators
-                  --  If both operands are null arrays, then the result of the
-                  --  concatenation is the right operand.
-                  return Right;
-               end if;
-               if Vhdl_Std > Vhdl_87 then
-                  Bnd := Elab.Vhdl_Types.Create_Bounds_From_Length
-                    (Get_Uarray_Index (Res_Typ).Drange, L_Len + R_Len);
-               else
-                  --  LRM87 7.2.3
-                  --  [...], unless the left operand is a null array, in which
-                  --  case the result of the concatenation is the right
-                  --  operand.
-                  if L_Len = 0 then
-                     return Right;
-                  end if;
-
-                  --  LRM87 7.2.3
-                  --  The left bound of the result is the left operand, [...]
-                  --
-                  --  LRM87 7.2.3
-                  --  The direction of the result is the direction of the left
-                  --  operand, [...]
-                  Bnd.Left := Left.Typ.Abound.Left;
-                  Bnd.Dir := Left.Typ.Abound.Dir;
-                  Bnd.Len := Uns32 (L_Len + R_Len);
-                  --  TODO: overflow.
-                  case Bnd.Dir is
-                     when Dir_To =>
-                        Bnd.Right := Bnd.Left + Int32 (L_Len + R_Len - 1);
-                     when Dir_Downto =>
-                        Bnd.Right := Bnd.Left - Int32 (L_Len + R_Len - 1);
-                  end case;
-               end if;
-               El_Typ := Unshare_Type_Expr (Le_Typ,
-                                            Get_Array_Element (Res_Typ));
-               Res_St := Create_Onedimensional_Array_Subtype
-                 (Res_Typ, Bnd, El_Typ);
-               Res := Create_Memory (Res_St);
-               if Left.Typ.Sz > 0 then
-                  Copy_Memory (Res.Mem, Left.Mem, Left.Typ.Sz);
-               end if;
-               if Right.Typ.Sz > 0 then
-                  Copy_Memory (Res.Mem + Left.Typ.Sz, Right.Mem, Right.Typ.Sz);
-               end if;
-               return Res;
-            end;
-         when Iir_Predefined_Element_Array_Concat =>
-            declare
-               Rlen : constant Iir_Index32 :=
-                 Iir_Index32 (Get_Bound_Length (Right.Typ));
-               Re_Typ : constant Type_Acc := Get_Array_Element (Right.Typ);
-               El_Typ : Type_Acc;
-               Bnd : Bound_Type;
-               Res_St : Type_Acc;
-               Res : Memtyp;
-            begin
-               Check_Matching_Bounds (Left.Typ, Re_Typ, Expr);
-               Bnd := Elab.Vhdl_Types.Create_Bounds_From_Length
-                 (Get_Uarray_Index (Res_Typ).Drange, 1 + Rlen);
-               El_Typ := Unshare_Type_Expr (Re_Typ,
-                                            Get_Array_Element (Res_Typ));
-               Res_St := Create_Onedimensional_Array_Subtype
-                 (Res_Typ, Bnd, El_Typ);
-               Res := Create_Memory (Res_St);
-               Copy_Memory (Res.Mem, Left.Mem, Left.Typ.Sz);
-               Copy_Memory (Res.Mem + Left.Typ.Sz,
-                            Right.Mem, Right.Typ.Sz);
-               return Res;
-            end;
-         when Iir_Predefined_Array_Element_Concat =>
-            declare
-               Llen : constant Iir_Index32 :=
-                 Iir_Index32 (Get_Bound_Length (Left.Typ));
-               Le_Typ : constant Type_Acc := Get_Array_Element (Left.Typ);
-               El_Typ : Type_Acc;
-               Bnd : Bound_Type;
-               Res_St : Type_Acc;
-               Res : Memtyp;
-            begin
-               Check_Matching_Bounds (Le_Typ, Right.Typ, Expr);
-               Bnd := Elab.Vhdl_Types.Create_Bounds_From_Length
-                 (Get_Uarray_Index (Res_Typ).Drange, Llen + 1);
-               El_Typ := Unshare_Type_Expr (Le_Typ,
-                                            Get_Array_Element (Res_Typ));
-               Res_St := Create_Onedimensional_Array_Subtype
-                 (Res_Typ, Bnd, El_Typ);
-               Res := Create_Memory (Res_St);
-               Copy_Memory (Res.Mem, Left.Mem, Left.Typ.Sz);
-               Copy_Memory (Res.Mem + Left.Typ.Sz,
-                            Right.Mem, Right.Typ.Sz);
-               return Res;
-            end;
-         when Iir_Predefined_Element_Element_Concat =>
-            declare
-               Le_Typ : constant Type_Acc := Left.Typ;
-               El_Typ : Type_Acc;
-               Bnd : Bound_Type;
-               Res_St : Type_Acc;
-               Res : Memtyp;
-            begin
-               Check_Matching_Bounds (Left.Typ, Right.Typ, Expr);
-               Bnd := Elab.Vhdl_Types.Create_Bounds_From_Length
-                 (Get_Uarray_Index (Res_Typ).Drange, 2);
-               El_Typ := Unshare_Type_Expr (Le_Typ,
-                                            Get_Array_Element (Res_Typ));
-               Res_St := Create_Onedimensional_Array_Subtype
-                 (Res_Typ, Bnd, El_Typ);
-               Res := Create_Memory (Res_St);
-               Copy_Memory (Res.Mem, Left.Mem, El_Typ.Sz);
-               Copy_Memory (Res.Mem + El_Typ.Sz,
-                            Right.Mem, El_Typ.Sz);
-               return Res;
-            end;
-
-         when Iir_Predefined_Array_Equality
-            | Iir_Predefined_Record_Equality
-            | Iir_Predefined_Bit_Array_Match_Equality =>
-            return Create_Memory_Boolean (Is_Equal (Left, Right));
-         when Iir_Predefined_Array_Inequality
-            | Iir_Predefined_Record_Inequality
-            | Iir_Predefined_Bit_Array_Match_Inequality =>
-            return Create_Memory_Boolean (not Is_Equal (Left, Right));
-
-         when Iir_Predefined_Access_Equality =>
-            return Create_Memory_Boolean
-              (Read_Access (Left) = Read_Access (Right));
-         when Iir_Predefined_Access_Inequality =>
-            return Create_Memory_Boolean
-              (Read_Access (Left) /= Read_Access (Right));
-
-         when Iir_Predefined_Array_Less =>
-            return Create_Memory_Boolean
-              (Compare_Array (Left, Right) = Less);
-         when Iir_Predefined_Array_Less_Equal =>
-            return Create_Memory_Boolean
-              (Compare_Array (Left, Right) <= Equal);
-         when Iir_Predefined_Array_Greater =>
-            return Create_Memory_Boolean
-              (Compare_Array (Left, Right) = Greater);
-         when Iir_Predefined_Array_Greater_Equal =>
-            return Create_Memory_Boolean
-              (Compare_Array (Left, Right) >= Equal);
-
-         when Iir_Predefined_Array_Maximum =>
-            --  IEEE 1076-2008 5.3.2.4 Predefined operations on array types
-            if Compare_Array (Left, Right) = Less then
-               return Right;
-            else
-               return Left;
-            end if;
-         when Iir_Predefined_Array_Minimum =>
-            --  IEEE 1076-2008 5.3.2.4 Predefined operations on array types
-            if Compare_Array (Left, Right) = Less then
-               return Left;
-            else
-               return Right;
-            end if;
-
-         when Iir_Predefined_Array_Sll
-           | Iir_Predefined_Array_Srl
-           | Iir_Predefined_Array_Rol
-           | Iir_Predefined_Array_Ror =>
-            return Execute_Shift_Operator
-              (Left, Read_Discrete (Right), 0, Def);
-
-         when Iir_Predefined_TF_Array_And =>
-            return Eval_TF_Vector_Dyadic (Inst, Left, Right, Tf_2d_And, Expr);
-         when Iir_Predefined_TF_Array_Or =>
-            return Eval_TF_Vector_Dyadic (Inst, Left, Right, Tf_2d_Or, Expr);
-         when Iir_Predefined_TF_Array_Xor =>
-            return Eval_TF_Vector_Dyadic (Inst, Left, Right, Tf_2d_Xor, Expr);
-         when Iir_Predefined_TF_Array_Nand =>
-            return Eval_TF_Vector_Dyadic (Inst, Left, Right, Tf_2d_Nand, Expr);
-         when Iir_Predefined_TF_Array_Nor =>
-            return Eval_TF_Vector_Dyadic (Inst, Left, Right, Tf_2d_Nor, Expr);
-         when Iir_Predefined_TF_Array_Xnor =>
-            return Eval_TF_Vector_Dyadic (Inst, Left, Right, Tf_2d_Xnor, Expr);
-
-         when Iir_Predefined_TF_Element_Array_Or =>
-            return Eval_TF_Array_Element (Left, Right, Tf_2d_Or);
-         when Iir_Predefined_TF_Array_Element_Or =>
-            return Eval_TF_Array_Element (Right, Left, Tf_2d_Or);
-
-         when Iir_Predefined_TF_Element_Array_Nor =>
-            return Eval_TF_Array_Element (Left, Right, Tf_2d_Nor);
-         when Iir_Predefined_TF_Array_Element_Nor =>
-            return Eval_TF_Array_Element (Right, Left, Tf_2d_Nor);
-
-         when Iir_Predefined_TF_Element_Array_And =>
-            return Eval_TF_Array_Element (Left, Right, Tf_2d_And);
-         when Iir_Predefined_TF_Array_Element_And =>
-            return Eval_TF_Array_Element (Right, Left, Tf_2d_And);
-
-         when Iir_Predefined_TF_Element_Array_Nand =>
-            return Eval_TF_Array_Element (Left, Right, Tf_2d_Nand);
-         when Iir_Predefined_TF_Array_Element_Nand =>
-            return Eval_TF_Array_Element (Right, Left, Tf_2d_Nand);
-
-         when Iir_Predefined_TF_Element_Array_Xor =>
-            return Eval_TF_Array_Element (Left, Right, Tf_2d_Xor);
-         when Iir_Predefined_TF_Array_Element_Xor =>
-            return Eval_TF_Array_Element (Right, Left, Tf_2d_Xor);
-
-         when Iir_Predefined_TF_Element_Array_Xnor =>
-            return Eval_TF_Array_Element (Left, Right, Tf_2d_Xnor);
-         when Iir_Predefined_TF_Array_Element_Xnor =>
-            return Eval_TF_Array_Element (Right, Left, Tf_2d_Xnor);
-
-         when Iir_Predefined_Ieee_1164_Vector_And
-           | Iir_Predefined_Ieee_Numeric_Std_And_Uns_Uns
-           | Iir_Predefined_Ieee_Numeric_Std_And_Sgn_Sgn =>
-            return Eval_Vector_Dyadic (Inst, Left, Right, And_Table, Expr);
-
-         when Iir_Predefined_Ieee_1164_Vector_Nand
-           | Iir_Predefined_Ieee_Numeric_Std_Nand_Uns_Uns
-           | Iir_Predefined_Ieee_Numeric_Std_Nand_Sgn_Sgn =>
-            return Eval_Vector_Dyadic (Inst, Left, Right, Nand_Table, Expr);
-
-         when Iir_Predefined_Ieee_1164_Vector_Or
-           | Iir_Predefined_Ieee_Numeric_Std_Or_Uns_Uns
-           | Iir_Predefined_Ieee_Numeric_Std_Or_Sgn_Sgn =>
-            return Eval_Vector_Dyadic (Inst, Left, Right, Or_Table, Expr);
-
-         when Iir_Predefined_Ieee_1164_Vector_Nor
-           | Iir_Predefined_Ieee_Numeric_Std_Nor_Uns_Uns
-           | Iir_Predefined_Ieee_Numeric_Std_Nor_Sgn_Sgn =>
-            return Eval_Vector_Dyadic (Inst, Left, Right, Nor_Table, Expr);
-
-         when Iir_Predefined_Ieee_1164_Vector_Xor
-           | Iir_Predefined_Ieee_Numeric_Std_Xor_Uns_Uns
-           | Iir_Predefined_Ieee_Numeric_Std_Xor_Sgn_Sgn =>
-            return Eval_Vector_Dyadic (Inst, Left, Right, Xor_Table, Expr);
-
-         when Iir_Predefined_Ieee_1164_Vector_Xnor
-            | Iir_Predefined_Ieee_Numeric_Std_Xnor_Uns_Uns
-            | Iir_Predefined_Ieee_Numeric_Std_Xnor_Sgn_Sgn =>
-            return Eval_Vector_Dyadic (Inst, Left, Right, Xnor_Table, Expr);
-
-         when Iir_Predefined_Ieee_1164_Scalar_And =>
-            return Eval_Logic_Scalar (Left, Right, And_Table);
-         when Iir_Predefined_Ieee_1164_Scalar_Or =>
-            return Eval_Logic_Scalar (Left, Right, Or_Table);
-         when Iir_Predefined_Ieee_1164_Scalar_Xor =>
-            return Eval_Logic_Scalar (Left, Right, Xor_Table);
-         when Iir_Predefined_Ieee_1164_Scalar_Nand =>
-            return Eval_Logic_Scalar (Left, Right, Nand_Table);
-         when Iir_Predefined_Ieee_1164_Scalar_Nor =>
-            return Eval_Logic_Scalar (Left, Right, Nor_Table);
-         when Iir_Predefined_Ieee_1164_Scalar_Xnor =>
-            return Eval_Logic_Scalar (Left, Right, Xnor_Table);
-
-         when Iir_Predefined_Std_Ulogic_Match_Equality =>
-            return Eval_Logic_Scalar (Left, Right, Match_Eq_Table);
-         when Iir_Predefined_Std_Ulogic_Match_Inequality =>
-            return Eval_Logic_Scalar (Left, Right, Match_Eq_Table, True);
-         when Iir_Predefined_Std_Ulogic_Match_Greater =>
-            return Eval_Logic_Scalar (Left, Right, Match_Gt_Table);
-         when Iir_Predefined_Std_Ulogic_Match_Greater_Equal =>
-            return Eval_Logic_Scalar (Left, Right, Match_Ge_Table);
-         when Iir_Predefined_Std_Ulogic_Match_Less_Equal =>
-            return Eval_Logic_Scalar (Left, Right, Match_Le_Table);
-         when Iir_Predefined_Std_Ulogic_Match_Less =>
-            return Eval_Logic_Scalar (Left, Right, Match_Lt_Table);
-
-         when Iir_Predefined_Std_Ulogic_Array_Match_Equality =>
-            return Eval_Vector_Match (Inst, Left, Right, False, Expr);
-         when Iir_Predefined_Std_Ulogic_Array_Match_Inequality =>
-            return Eval_Vector_Match (Inst, Left, Right, True, Expr);
-
-         when Iir_Predefined_Ieee_1164_And_Suv_Log
-            | Iir_Predefined_Ieee_Numeric_Std_And_Uns_Log
-            | Iir_Predefined_Ieee_Numeric_Std_And_Sgn_Log =>
-            return Eval_Logic_Vector_Scalar (Left, Right, And_Table);
-         when Iir_Predefined_Ieee_1164_Or_Suv_Log
-            | Iir_Predefined_Ieee_Numeric_Std_Or_Uns_Log
-            | Iir_Predefined_Ieee_Numeric_Std_Or_Sgn_Log =>
-            return Eval_Logic_Vector_Scalar (Left, Right, Or_Table);
-         when Iir_Predefined_Ieee_1164_Xor_Suv_Log
-            | Iir_Predefined_Ieee_Numeric_Std_Xor_Uns_Log
-            | Iir_Predefined_Ieee_Numeric_Std_Xor_Sgn_Log =>
-            return Eval_Logic_Vector_Scalar (Left, Right, Xor_Table);
-         when Iir_Predefined_Ieee_1164_Nand_Suv_Log
-            | Iir_Predefined_Ieee_Numeric_Std_Nand_Uns_Log
-            | Iir_Predefined_Ieee_Numeric_Std_Nand_Sgn_Log =>
-            return Eval_Logic_Vector_Scalar (Left, Right, Nand_Table);
-         when Iir_Predefined_Ieee_1164_Nor_Suv_Log
-            | Iir_Predefined_Ieee_Numeric_Std_Nor_Uns_Log
-            | Iir_Predefined_Ieee_Numeric_Std_Nor_Sgn_Log =>
-            return Eval_Logic_Vector_Scalar (Left, Right, Nor_Table);
-         when Iir_Predefined_Ieee_1164_Xnor_Suv_Log
-            | Iir_Predefined_Ieee_Numeric_Std_Xnor_Uns_Log
-            | Iir_Predefined_Ieee_Numeric_Std_Xnor_Sgn_Log =>
-            return Eval_Logic_Vector_Scalar (Left, Right, Xnor_Table);
-
-         when Iir_Predefined_Ieee_1164_And_Log_Suv
-           | Iir_Predefined_Ieee_Numeric_Std_And_Log_Uns
-           | Iir_Predefined_Ieee_Numeric_Std_And_Log_Sgn =>
-            return Eval_Logic_Vector_Scalar (Right, Left, And_Table);
-         when Iir_Predefined_Ieee_1164_Or_Log_Suv
-           | Iir_Predefined_Ieee_Numeric_Std_Or_Log_Uns
-           | Iir_Predefined_Ieee_Numeric_Std_Or_Log_Sgn =>
-            return Eval_Logic_Vector_Scalar (Right, Left, Or_Table);
-         when Iir_Predefined_Ieee_1164_Xor_Log_Suv
-           | Iir_Predefined_Ieee_Numeric_Std_Xor_Log_Uns
-           | Iir_Predefined_Ieee_Numeric_Std_Xor_Log_Sgn =>
-            return Eval_Logic_Vector_Scalar (Right, Left, Xor_Table);
-         when Iir_Predefined_Ieee_1164_Nand_Log_Suv
-           | Iir_Predefined_Ieee_Numeric_Std_Nand_Log_Uns
-           | Iir_Predefined_Ieee_Numeric_Std_Nand_Log_Sgn =>
-            return Eval_Logic_Vector_Scalar (Right, Left, Nand_Table);
-         when Iir_Predefined_Ieee_1164_Nor_Log_Suv
-           | Iir_Predefined_Ieee_Numeric_Std_Nor_Log_Uns
-           | Iir_Predefined_Ieee_Numeric_Std_Nor_Log_Sgn =>
-            return Eval_Logic_Vector_Scalar (Right, Left, Nor_Table);
-         when Iir_Predefined_Ieee_1164_Xnor_Log_Suv
-           | Iir_Predefined_Ieee_Numeric_Std_Xnor_Log_Uns
-           | Iir_Predefined_Ieee_Numeric_Std_Xnor_Log_Sgn =>
-            return Eval_Logic_Vector_Scalar (Right, Left, Xnor_Table);
-
-         when Iir_Predefined_Ieee_1164_Vector_Sll
-            | Iir_Predefined_Ieee_Numeric_Std_Sla_Uns_Int =>
-            return Execute_Shift_Operator
-              (Left, Read_Discrete (Right), Std_Ulogic'Pos('0'),
-               Iir_Predefined_Array_Sll);
-         when Iir_Predefined_Ieee_1164_Vector_Srl
-            | Iir_Predefined_Ieee_Numeric_Std_Sra_Uns_Int =>
-            return Execute_Shift_Operator
-              (Left, Read_Discrete (Right), Std_Ulogic'Pos('0'),
-               Iir_Predefined_Array_Srl);
-         when Iir_Predefined_Ieee_Numeric_Std_Sra_Sgn_Int =>
-            declare
-               Cnt : constant Int64 := Read_Discrete (Right);
-            begin
-               if Cnt >= 0 then
-                  return Execute_Shift_Operator
-                    (Left, Cnt, Std_Ulogic'Pos('0'), Iir_Predefined_Array_Sra);
-               else
-                  return Execute_Shift_Operator
-                    (Left, -Cnt, Std_Ulogic'Pos('0'),
-                     Iir_Predefined_Array_Sll);
-               end if;
-            end;
-         when Iir_Predefined_Ieee_Numeric_Std_Sla_Sgn_Int =>
-            declare
-               Cnt : Int64;
-               Op : Iir_Predefined_Shift_Functions;
-            begin
-               Cnt := Read_Discrete (Right);
-               if Cnt >= 0 then
-                  Op := Iir_Predefined_Array_Sll;
-               else
-                  Cnt := -Cnt;
-                  Op :=Iir_Predefined_Array_Sra;
-               end if;
-               return Execute_Shift_Operator
-                 (Left, Cnt, Std_Ulogic'Pos('0'), Op);
-            end;
-
-         when Iir_Predefined_Ieee_1164_Vector_Rol
-            | Iir_Predefined_Ieee_Numeric_Std_Rol_Uns_Int
-            | Iir_Predefined_Ieee_Numeric_Std_Rol_Sgn_Int =>
-            return Execute_Shift_Operator
-              (Left, Read_Discrete (Right), Std_Ulogic'Pos('0'),
-               Iir_Predefined_Array_Rol);
-         when Iir_Predefined_Ieee_1164_Vector_Ror
-            | Iir_Predefined_Ieee_Numeric_Std_Ror_Uns_Int
-            | Iir_Predefined_Ieee_Numeric_Std_Ror_Sgn_Int =>
-            return Execute_Shift_Operator
-              (Left, Read_Discrete (Right), Std_Ulogic'Pos('0'),
-               Iir_Predefined_Array_Ror);
-
-         when Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Uns_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Eq_Slv_Slv =>
-            declare
-               Res : Boolean;
-            begin
-               Res := Compare_Uns_Uns (Left, Right, Greater, +Expr) = Equal;
-               return Create_Memory_Boolean (Res);
-            end;
-         when Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Nat =>
-            declare
-               Res : Boolean;
-            begin
-               Res := Compare_Uns_Nat (Left, Right, Greater, +Expr) = Equal;
-               return Create_Memory_Boolean (Res);
-            end;
-         when Iir_Predefined_Ieee_Numeric_Std_Eq_Nat_Uns =>
-            declare
-               Res : Boolean;
-            begin
-               Res := Compare_Uns_Nat (Right, Left, Greater, +Expr) = Equal;
-               return Create_Memory_Boolean (Res);
-            end;
-         when Iir_Predefined_Ieee_Numeric_Std_Eq_Sgn_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Sgn_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Signed_Eq_Slv_Slv =>
-            declare
-               Res : Boolean;
-            begin
-               Res := Compare_Sgn_Sgn (Left, Right, Greater, +Expr) = Equal;
-               return Create_Memory_Boolean (Res);
-            end;
-         when Iir_Predefined_Ieee_Numeric_Std_Eq_Sgn_Int
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Sgn_Int
-            | Iir_Predefined_Ieee_Std_Logic_Signed_Eq_Slv_Int =>
-            declare
-               Res : Boolean;
-            begin
-               Res := Compare_Sgn_Int (Left, Right, Greater, +Expr) = Equal;
-               return Create_Memory_Boolean (Res);
-            end;
-         when Iir_Predefined_Ieee_Numeric_Std_Eq_Int_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Int_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Signed_Eq_Int_Slv =>
-            declare
-               Res : Boolean;
-            begin
-               Res := Compare_Sgn_Int (Right, Left, Greater, +Expr) = Equal;
-               return Create_Memory_Boolean (Res);
-            end;
-
-         when Iir_Predefined_Ieee_Numeric_Std_Ne_Uns_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Uns_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Ne_Slv_Slv =>
-            declare
-               Res : Boolean;
-            begin
-               Res := Compare_Uns_Uns (Left, Right, Greater, +Expr) /= Equal;
-               return Create_Memory_Boolean (Res);
-            end;
-         when Iir_Predefined_Ieee_Numeric_Std_Ne_Uns_Nat =>
-            declare
-               Res : Boolean;
-            begin
-               Res := Compare_Uns_Nat (Left, Right, Greater, +Expr) /= Equal;
-               return Create_Memory_Boolean (Res);
-            end;
-         when Iir_Predefined_Ieee_Numeric_Std_Ne_Nat_Uns =>
-            declare
-               Res : Boolean;
-            begin
-               Res := Compare_Uns_Nat (Right, Left, Greater, +Expr) /= Equal;
-               return Create_Memory_Boolean (Res);
-            end;
-         when Iir_Predefined_Ieee_Numeric_Std_Ne_Sgn_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Sgn_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Signed_Ne_Slv_Slv =>
-            declare
-               Res : Boolean;
-            begin
-               Res := Compare_Sgn_Sgn (Left, Right, Greater, +Expr) /= Equal;
-               return Create_Memory_Boolean (Res);
-            end;
-         when Iir_Predefined_Ieee_Numeric_Std_Ne_Sgn_Int
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Sgn_Int
-            | Iir_Predefined_Ieee_Std_Logic_Signed_Ne_Slv_Int =>
-            declare
-               Res : Boolean;
-            begin
-               Res := Compare_Sgn_Int (Left, Right, Greater, +Expr) /= Equal;
-               return Create_Memory_Boolean (Res);
-            end;
-         when Iir_Predefined_Ieee_Numeric_Std_Ne_Int_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Int_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Signed_Ne_Int_Slv =>
-            declare
-               Res : Boolean;
-            begin
-               Res := Compare_Sgn_Int (Right, Left, Greater, +Expr) /= Equal;
-               return Create_Memory_Boolean (Res);
-            end;
-
-         when Iir_Predefined_Ieee_Numeric_Std_Gt_Uns_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Uns_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Gt_Slv_Slv =>
-            declare
-               Res : Boolean;
-            begin
-               Res := Compare_Uns_Uns (Left, Right, Less, +Expr) = Greater;
-               return Create_Memory_Boolean (Res);
-            end;
-         when Iir_Predefined_Ieee_Numeric_Std_Gt_Sgn_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Sgn_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Signed_Gt_Slv_Slv =>
-            declare
-               Res : Boolean;
-            begin
-               Res := Compare_Sgn_Sgn (Left, Right, Less, +Expr) = Greater;
-               return Create_Memory_Boolean (Res);
-            end;
-         when Iir_Predefined_Ieee_Numeric_Std_Gt_Nat_Uns =>
-            declare
-               Res : Boolean;
-            begin
-               Res := Compare_Nat_Uns (Left, Right, Less, +Expr) = Greater;
-               return Create_Memory_Boolean (Res);
-            end;
-         when Iir_Predefined_Ieee_Numeric_Std_Gt_Uns_Nat =>
-            declare
-               Res : Boolean;
-            begin
-               Res := Compare_Uns_Nat (Left, Right, Less, +Expr) = Greater;
-               return Create_Memory_Boolean (Res);
-            end;
-         when Iir_Predefined_Ieee_Numeric_Std_Gt_Sgn_Int
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Sgn_Int
-            | Iir_Predefined_Ieee_Std_Logic_Signed_Gt_Slv_Int =>
-            declare
-               Res : Boolean;
-            begin
-               Res := Compare_Sgn_Int (Left, Right, Less, +Expr) = Greater;
-               return Create_Memory_Boolean (Res);
-            end;
-         when Iir_Predefined_Ieee_Numeric_Std_Gt_Int_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Int_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Signed_Gt_Int_Slv =>
-            declare
-               Res : Boolean;
-            begin
-               Res := Compare_Sgn_Int (Right, Left, Greater, +Expr) < Equal;
-               return Create_Memory_Boolean (Res);
-            end;
-
-         when Iir_Predefined_Ieee_Numeric_Std_Ge_Uns_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Uns_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Ge_Slv_Slv =>
-            declare
-               Res : Boolean;
-            begin
-               Res := Compare_Uns_Uns (Left, Right, Less, +Expr) >= Equal;
-               return Create_Memory_Boolean (Res);
-            end;
-         when Iir_Predefined_Ieee_Numeric_Std_Ge_Nat_Uns =>
-            declare
-               Res : Boolean;
-            begin
-               Res := Compare_Nat_Uns (Left, Right, Less, +Expr) >= Equal;
-               return Create_Memory_Boolean (Res);
-            end;
-         when Iir_Predefined_Ieee_Numeric_Std_Ge_Uns_Nat =>
-            declare
-               Res : Boolean;
-            begin
-               Res := Compare_Uns_Nat (Left, Right, Less, +Expr) >= Equal;
-               return Create_Memory_Boolean (Res);
-            end;
-         when Iir_Predefined_Ieee_Numeric_Std_Ge_Sgn_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Sgn_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Signed_Ge_Slv_Slv =>
-            declare
-               Res : Boolean;
-            begin
-               Res := Compare_Sgn_Sgn (Left, Right, Less, +Expr) >= Equal;
-               return Create_Memory_Boolean (Res);
-            end;
-         when Iir_Predefined_Ieee_Numeric_Std_Ge_Sgn_Int
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Sgn_Int
-            | Iir_Predefined_Ieee_Std_Logic_Signed_Ge_Slv_Int =>
-            declare
-               Res : Boolean;
-            begin
-               Res := Compare_Sgn_Int (Left, Right, Less, +Expr) >= Equal;
-               return Create_Memory_Boolean (Res);
-            end;
-         when Iir_Predefined_Ieee_Numeric_Std_Ge_Int_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Int_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Signed_Ge_Int_Slv =>
-            declare
-               Res : Boolean;
-            begin
-               Res := Compare_Sgn_Int (Right, Left, Greater, +Expr) <= Equal;
-               return Create_Memory_Boolean (Res);
-            end;
-
-         when Iir_Predefined_Ieee_Numeric_Std_Le_Uns_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Le_Uns_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Le_Slv_Slv =>
-            declare
-               Res : Boolean;
-            begin
-               Res := Compare_Uns_Uns (Left, Right, Greater, +Expr) <= Equal;
-               return Create_Memory_Boolean (Res);
-            end;
-         when Iir_Predefined_Ieee_Numeric_Std_Le_Uns_Nat =>
-            declare
-               Res : Boolean;
-            begin
-               Res := Compare_Uns_Nat (Left, Right, Greater, +Expr) <= Equal;
-               return Create_Memory_Boolean (Res);
-            end;
-         when Iir_Predefined_Ieee_Numeric_Std_Le_Nat_Uns =>
-            declare
-               Res : Boolean;
-            begin
-               Res := Compare_Nat_Uns (Left, Right, Greater, +Expr) <= Equal;
-               return Create_Memory_Boolean (Res);
-            end;
-         when Iir_Predefined_Ieee_Numeric_Std_Le_Sgn_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Le_Sgn_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Signed_Le_Slv_Slv =>
-            declare
-               Res : Boolean;
-            begin
-               Res := Compare_Sgn_Sgn (Left, Right, Greater, +Expr) <= Equal;
-               return Create_Memory_Boolean (Res);
-            end;
-         when Iir_Predefined_Ieee_Numeric_Std_Le_Int_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Le_Int_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Signed_Le_Int_Slv =>
-            declare
-               Res : Boolean;
-            begin
-               Res := Compare_Sgn_Int (Right, Left, Less, +Expr) >= Equal;
-               return Create_Memory_Boolean (Res);
-            end;
-         when Iir_Predefined_Ieee_Numeric_Std_Le_Sgn_Int
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Le_Sgn_Int
-            | Iir_Predefined_Ieee_Std_Logic_Signed_Le_Slv_Int =>
-            declare
-               Res : Boolean;
-            begin
-               Res := Compare_Sgn_Int (Left, Right, Greater, +Expr) <= Equal;
-               return Create_Memory_Boolean (Res);
-            end;
-
-         when Iir_Predefined_Ieee_Numeric_Std_Lt_Uns_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Uns_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Lt_Slv_Slv =>
-            declare
-               Res : Boolean;
-            begin
-               Res := Compare_Uns_Uns (Left, Right, Greater, +Expr) < Equal;
-               return Create_Memory_Boolean (Res);
-            end;
-         when Iir_Predefined_Ieee_Numeric_Std_Lt_Uns_Nat =>
-            declare
-               Res : Boolean;
-            begin
-               Res := Compare_Uns_Nat (Left, Right, Greater, +Expr) < Equal;
-               return Create_Memory_Boolean (Res);
-            end;
-         when Iir_Predefined_Ieee_Numeric_Std_Lt_Nat_Uns =>
-            declare
-               Res : Boolean;
-            begin
-               Res := Compare_Nat_Uns (Left, Right, Greater, +Expr) < Equal;
-               return Create_Memory_Boolean (Res);
-            end;
-         when Iir_Predefined_Ieee_Numeric_Std_Lt_Sgn_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Sgn_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Signed_Lt_Slv_Slv =>
-            declare
-               Res : Boolean;
-            begin
-               Res := Compare_Sgn_Sgn (Left, Right, Greater, +Expr) < Equal;
-               return Create_Memory_Boolean (Res);
-            end;
-         when Iir_Predefined_Ieee_Numeric_Std_Lt_Int_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Int_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Signed_Lt_Int_Slv =>
-            declare
-               Res : Boolean;
-            begin
-               Res := Compare_Sgn_Int (Right, Left, Less, +Expr) > Equal;
-               return Create_Memory_Boolean (Res);
-            end;
-         when Iir_Predefined_Ieee_Numeric_Std_Lt_Sgn_Int
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Sgn_Int
-            | Iir_Predefined_Ieee_Std_Logic_Signed_Lt_Slv_Int =>
-            declare
-               Res : Boolean;
-            begin
-               Res := Compare_Sgn_Int (Left, Right, Greater, +Expr) < Equal;
-               return Create_Memory_Boolean (Res);
-            end;
-
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Uns_Sgn =>
-            declare
-               Res : Order_Type;
-            begin
-               Res := Compare_Uns_Sgn (Left, Right, +Expr);
-               return Create_Memory_Boolean (Res < Equal);
-            end;
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Sgn_Uns =>
-            declare
-               Res : Order_Type;
-            begin
-               Res := Compare_Uns_Sgn (Right, Left, +Expr);
-               return Create_Memory_Boolean (Res > Equal);
-            end;
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Uns_Int
-            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Lt_Slv_Int =>
-            declare
-               Res : Order_Type;
-            begin
-               Res := Compare_Uns_Int (Left, Read_Discrete (Right), +Expr);
-               return Create_Memory_Boolean (Res < Equal);
-            end;
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Int_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Lt_Int_Slv =>
-            declare
-               Res : Order_Type;
-            begin
-               Res := Compare_Uns_Int (Right, Read_Discrete (Left), +Expr);
-               return Create_Memory_Boolean (Res > Equal);
-            end;
-
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Le_Uns_Sgn =>
-            declare
-               Res : Order_Type;
-            begin
-               Res := Compare_Uns_Sgn (Left, Right, +Expr);
-               return Create_Memory_Boolean (Res <= Equal);
-            end;
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Le_Sgn_Uns =>
-            declare
-               Res : Order_Type;
-            begin
-               Res := Compare_Uns_Sgn (Right, Left, +Expr);
-               return Create_Memory_Boolean (Res >= Equal);
-            end;
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Le_Uns_Int
-            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Le_Slv_Int =>
-            declare
-               Res : Order_Type;
-            begin
-               Res := Compare_Uns_Int (Left, Read_Discrete (Right), +Expr);
-               return Create_Memory_Boolean (Res <= Equal);
-            end;
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Le_Int_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Le_Int_Slv =>
-            declare
-               Res : Order_Type;
-            begin
-               Res := Compare_Uns_Int (Right, Read_Discrete (Left), +Expr);
-               return Create_Memory_Boolean (Res >= Equal);
-            end;
-
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Uns_Sgn =>
-            declare
-               Res : Order_Type;
-            begin
-               Res := Compare_Uns_Sgn (Left, Right, +Expr);
-               return Create_Memory_Boolean (Res > Equal);
-            end;
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Sgn_Uns =>
-            declare
-               Res : Order_Type;
-            begin
-               Res := Compare_Uns_Sgn (Right, Left, +Expr);
-               return Create_Memory_Boolean (Res < Equal);
-            end;
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Uns_Int
-            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Gt_Slv_Int =>
-            declare
-               Res : Order_Type;
-            begin
-               Res := Compare_Uns_Int (Left, Read_Discrete (Right), +Expr);
-               return Create_Memory_Boolean (Res > Equal);
-            end;
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Int_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Gt_Int_Slv =>
-            declare
-               Res : Order_Type;
-            begin
-               Res := Compare_Uns_Int (Right, Read_Discrete (Left), +Expr);
-               return Create_Memory_Boolean (Res < Equal);
-            end;
-
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Uns_Sgn =>
-            declare
-               Res : Order_Type;
-            begin
-               Res := Compare_Uns_Sgn (Left, Right, +Expr);
-               return Create_Memory_Boolean (Res >= Equal);
-            end;
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Sgn_Uns =>
-            declare
-               Res : Order_Type;
-            begin
-               Res := Compare_Uns_Sgn (Right, Left, +Expr);
-               return Create_Memory_Boolean (Res <= Equal);
-            end;
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Uns_Int
-            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Ge_Slv_Int =>
-            declare
-               Res : Order_Type;
-            begin
-               Res := Compare_Uns_Int (Left, Read_Discrete (Right), +Expr);
-               return Create_Memory_Boolean (Res >= Equal);
-            end;
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Int_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Ge_Int_Slv =>
-            declare
-               Res : Order_Type;
-            begin
-               Res := Compare_Uns_Int (Right, Read_Discrete (Left), +Expr);
-               return Create_Memory_Boolean (Res <= Equal);
-            end;
-
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Uns_Sgn =>
-            declare
-               Res : Order_Type;
-            begin
-               Res := Compare_Uns_Sgn (Left, Right, +Expr);
-               return Create_Memory_Boolean (Res = Equal);
-            end;
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Sgn_Uns =>
-            declare
-               Res : Order_Type;
-            begin
-               Res := Compare_Uns_Sgn (Right, Left, +Expr);
-               return Create_Memory_Boolean (Res = Equal);
-            end;
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Uns_Int
-            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Eq_Slv_Int =>
-            declare
-               Res : Order_Type;
-            begin
-               Res := Compare_Uns_Int (Left, Read_Discrete (Right), +Expr);
-               return Create_Memory_Boolean (Res = Equal);
-            end;
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Int_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Eq_Int_Slv =>
-            declare
-               Res : Order_Type;
-            begin
-               Res := Compare_Uns_Int (Right, Read_Discrete (Left), +Expr);
-               return Create_Memory_Boolean (Res = Equal);
-            end;
-
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Uns_Sgn =>
-            declare
-               Res : Order_Type;
-            begin
-               Res := Compare_Uns_Sgn (Left, Right, +Expr);
-               return Create_Memory_Boolean (Res /= Equal);
-            end;
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Sgn_Uns =>
-            declare
-               Res : Order_Type;
-            begin
-               Res := Compare_Uns_Sgn (Right, Left, +Expr);
-               return Create_Memory_Boolean (Res /= Equal);
-            end;
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Uns_Int
-            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Ne_Slv_Int =>
-            declare
-               Res : Order_Type;
-            begin
-               Res := Compare_Uns_Int (Left, Read_Discrete (Right), +Expr);
-               return Create_Memory_Boolean (Res /= Equal);
-            end;
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Int_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Ne_Int_Slv =>
-            declare
-               Res : Order_Type;
-            begin
-               Res := Compare_Uns_Int (Right, Read_Discrete (Left), +Expr);
-               return Create_Memory_Boolean (Res /= Equal);
-            end;
-
-         when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Slv
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Uns_Slv
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Uns_Uns
-            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Add_Slv_Slv =>
-            return Add_Uns_Uns (Left, Right, +Expr);
-
-         when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Log
-           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Log =>
-            return Add_Uns_Uns (Left, Log_To_Vec (Right, Left), +Expr);
-
-         when Iir_Predefined_Ieee_Numeric_Std_Add_Log_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Log_Slv =>
-            return Add_Uns_Uns (Log_To_Vec (Left, Right), Right, +Expr);
-
-         when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Nat
-            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Int
-            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Add_Slv_Nat =>
-            return Add_Uns_Nat (Left, To_Uns64 (Read_Discrete (Right)), +Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Add_Nat_Uns
-            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Add_Nat_Slv
-            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Int_Slv =>
-            return Add_Uns_Nat (Right, To_Uns64 (Read_Discrete (Left)), +Expr);
-
-         when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Sgn_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Sgn_Slv
-            | Iir_Predefined_Ieee_Std_Logic_Signed_Add_Slv_Slv =>
-            return Add_Sgn_Sgn (Left, Right, +Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Int
-            | Iir_Predefined_Ieee_Std_Logic_Signed_Add_Slv_Int =>
-            return Add_Sgn_Int (Left, Read_Discrete (Right), +Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Add_Int_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Signed_Add_Int_Slv =>
-            return Add_Sgn_Int (Right, Read_Discrete (Left), +Expr);
-
-         when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Log
-            | Iir_Predefined_Ieee_Std_Logic_Signed_Add_Slv_Log =>
-            return Add_Sgn_Sgn (Left, Log_To_Vec (Right, Left), +Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Add_Log_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Signed_Add_Log_Slv =>
-            return Add_Sgn_Sgn (Log_To_Vec (Left, Right), Right, +Expr);
-
-         --  std_logic_arith."+"
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Sgn_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Sgn_Slv =>
-            return Add_Uns_Sgn_Sgn (Left, Right, +Expr);
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Uns_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Uns_Slv =>
-            return Add_Sgn_Uns_Sgn (Left, Right, +Expr);
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Int_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Int_Slv =>
-            return Add_Uns_Int_Uns (Left, Read_Discrete (Right), +Expr);
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Add_Int_Uns_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Int_Uns_Slv =>
-            return Add_Uns_Int_Uns (Right, Read_Discrete (Left), +Expr);
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Int_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Int_Slv =>
-            return Add_Sgn_Int_Sgn (Left, Read_Discrete (Right), +Expr);
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Add_Int_Sgn_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Int_Sgn_Slv =>
-            return Add_Sgn_Int_Sgn (Right, Read_Discrete (Left), +Expr);
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Log_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Log_Slv =>
-            return Add_Uns_Log_Uns (Left, Right, +Expr);
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Add_Log_Uns_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Log_Uns_Slv =>
-            return Add_Uns_Log_Uns (Right, Left, +Expr);
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Log_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Log_Slv =>
-            return Add_Sgn_Log_Sgn (Left, Right, +Expr);
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Add_Log_Sgn_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Log_Sgn_Slv =>
-            return Add_Sgn_Log_Sgn (Right, Left, +Expr);
-
-         when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Uns
-            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Sub_Slv_Slv
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Uns_Uns_Slv
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Uns_Uns_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Slv_Slv =>
-            return Sub_Uns_Uns (Left, Right, +Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Nat
-            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Sub_Slv_Nat
-            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Slv_Int =>
-            return Sub_Uns_Nat (Left, To_Uns64 (Read_Discrete (Right)), +Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Sub_Nat_Uns
-            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Sub_Nat_Slv
-            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Int_Slv =>
-            return Sub_Nat_Uns (To_Uns64 (Read_Discrete (Left)), Right, +Expr);
-
-         when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Log
-            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Slv_Log =>
-            return Sub_Uns_Uns (Left, Log_To_Vec (Right, Left), +Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Sub_Log_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Log_Slv =>
-            return Sub_Uns_Uns (Log_To_Vec (Left, Right), Right, +Expr);
-
-         when Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Sgn_Sgn_Slv
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Sgn_Sgn_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Slv_Slv =>
-            return Sub_Sgn_Sgn (Left, Right, +Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Int
-            | Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Slv_Int =>
-            return Sub_Sgn_Int (Left, Read_Discrete (Right), +Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Sub_Int_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Int_Slv =>
-            return Sub_Int_Sgn (Read_Discrete (Left), Right, +Expr);
-
-         when Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Log
-            | Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Slv_Log =>
-            return Sub_Sgn_Sgn (Left, Log_To_Vec (Right, Left), +Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Sub_Log_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Log_Slv =>
-            return Sub_Sgn_Sgn (Log_To_Vec (Left, Right), Right, +Expr);
-
-         --  std_logic_arith."-"
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Uns_Sgn_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Uns_Sgn_Slv =>
-            return Sub_Uns_Sgn_Sgn (Left, Right, +Expr);
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Sgn_Uns_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Sgn_Uns_Slv =>
-            return Sub_Sgn_Uns_Sgn (Left, Right, +Expr);
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Uns_Int_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Uns_Int_Slv =>
-            return Sub_Uns_Int_Uns (Left, Read_Discrete (Right), +Expr);
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Int_Uns_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Int_Uns_Slv =>
-            return Sub_Int_Uns_Uns (Read_Discrete (Left), Right, +Expr);
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Sgn_Int_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Sgn_Int_Slv =>
-            return Sub_Sgn_Int_Sgn (Left, Read_Discrete (Right), +Expr);
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Int_Sgn_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Int_Sgn_Slv =>
-            return Sub_Int_Sgn_Sgn (Read_Discrete (Left), Right, +Expr);
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Uns_Log_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Uns_Log_Slv =>
-            return Sub_Uns_Log_Uns (Left, Right, +Expr);
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Log_Uns_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Log_Uns_Slv =>
-            return Sub_Log_Uns_Uns (Left, Right, +Expr);
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Sgn_Log_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Sgn_Log_Slv =>
-            return Sub_Sgn_Log_Sgn (Left, Right, +Expr);
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Log_Sgn_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Log_Sgn_Slv =>
-            return Sub_Log_Sgn_Sgn (Left, Right, +Expr);
-
-         when Iir_Predefined_Ieee_Numeric_Std_Mul_Uns_Uns =>
-            return Mul_Uns_Uns (Left, Right, +Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Mul_Nat_Uns =>
-            return Mul_Nat_Uns (To_Uns64 (Read_Discrete (Left)), Right, +Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Mul_Uns_Nat =>
-            return Mul_Uns_Nat (Left, To_Uns64 (Read_Discrete (Right)), +Expr);
-
-         when Iir_Predefined_Ieee_Numeric_Std_Mul_Sgn_Sgn =>
-            return Mul_Sgn_Sgn (Left, Right, +Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Mul_Sgn_Int =>
-            return Mul_Sgn_Int (Left, Read_Discrete (Right), +Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Mul_Int_Sgn =>
-            return Mul_Int_Sgn (Read_Discrete (Left), Right, +Expr);
-
-         --  std_logic_arith."*"
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Uns_Uns_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Uns_Uns_Slv
-            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Mul_Slv_Slv =>
-            return Mul_Uns_Uns_Uns (Left, Right, +Expr);
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Sgn_Sgn_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Sgn_Sgn_Slv
-            | Iir_Predefined_Ieee_Std_Logic_Signed_Mul_Slv_Slv =>
-            return Mul_Sgn_Sgn_Sgn (Left, Right, +Expr);
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Uns_Sgn_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Uns_Sgn_Slv =>
-            return Mul_Uns_Sgn_Sgn (Left, Right, +Expr);
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Sgn_Uns_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Sgn_Uns_Slv =>
-            return Mul_Sgn_Uns_Sgn (Left, Right, +Expr);
-
-         when Iir_Predefined_Ieee_Numeric_Std_Div_Uns_Uns =>
-            return Div_Uns_Uns (Inst, Left, Right, Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Div_Uns_Nat =>
-            return Div_Uns_Nat
-              (Inst, Left, To_Uns64 (Read_Discrete (Right)), Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Div_Nat_Uns =>
-            return Div_Nat_Uns
-              (Inst, To_Uns64 (Read_Discrete (Left)), Right, Expr);
-
-         when Iir_Predefined_Ieee_Numeric_Std_Div_Sgn_Sgn =>
-            return Div_Sgn_Sgn (Inst, Left, Right, Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Div_Int_Sgn =>
-            return Div_Int_Sgn (Inst, Read_Discrete (Left), Right, Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Div_Sgn_Int =>
-            return Div_Sgn_Int (Inst, Left, Read_Discrete (Right), Expr);
-
-         when Iir_Predefined_Ieee_Numeric_Std_Rem_Uns_Uns
-            | Iir_Predefined_Ieee_Numeric_Std_Mod_Uns_Uns =>
-            return Rem_Uns_Uns (Inst, Left, Right, Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Rem_Uns_Nat
-            | Iir_Predefined_Ieee_Numeric_Std_Mod_Uns_Nat =>
-            return Rem_Uns_Nat
-              (Inst, Left, To_Uns64 (Read_Discrete (Right)), Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Rem_Nat_Uns
-            | Iir_Predefined_Ieee_Numeric_Std_Mod_Nat_Uns =>
-            return Rem_Nat_Uns
-              (Inst, To_Uns64 (Read_Discrete (Left)), Right, Expr);
-
-         when Iir_Predefined_Ieee_Numeric_Std_Rem_Sgn_Sgn =>
-            return Rem_Sgn_Sgn (Inst, Left, Right, Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Rem_Int_Sgn =>
-            return Rem_Int_Sgn (Inst, Read_Discrete (Left), Right, Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Rem_Sgn_Int =>
-            return Rem_Sgn_Int (Inst, Left, Read_Discrete (Right), Expr);
-
-         when Iir_Predefined_Ieee_Numeric_Std_Mod_Sgn_Sgn =>
-            return Mod_Sgn_Sgn (Inst, Left, Right, Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Mod_Int_Sgn =>
-            return Mod_Int_Sgn (Inst, Read_Discrete (Left), Right, Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Mod_Sgn_Int =>
-            return Mod_Sgn_Int (Inst, Left, Read_Discrete (Right), Expr);
-
-         when Iir_Predefined_Ieee_Numeric_Std_Srl_Uns_Int
-           |  Iir_Predefined_Ieee_Numeric_Std_Srl_Sgn_Int =>
-            declare
-               Amt : Int64;
-            begin
-               Amt := Read_Discrete (Right);
-               if Amt >= 0 then
-                  return Shift_Vec (Left, Uns32 (Amt), True, False);
-               else
-                  return Shift_Vec (Left, Uns32 (-Amt), False, False);
-               end if;
-            end;
-         when Iir_Predefined_Ieee_Numeric_Std_Sll_Uns_Int
-           |  Iir_Predefined_Ieee_Numeric_Std_Sll_Sgn_Int =>
-            declare
-               Amt : Int64;
-            begin
-               Amt := Read_Discrete (Right);
-               if Amt >= 0 then
-                  return Shift_Vec (Left, Uns32 (Amt), False, False);
-               else
-                  return Shift_Vec (Left, Uns32 (-Amt), True, False);
-               end if;
-            end;
-
-         when Iir_Predefined_Ieee_Numeric_Std_Match_Eq_Uns_Uns =>
-            declare
-               Res : Std_Ulogic;
-            begin
-               Res := Match_Eq_Vec_Vec (Left, Right, False, +Expr);
-               return Create_Memory_U8 (Std_Ulogic'Pos (Res), Res_Typ);
-            end;
-         when Iir_Predefined_Ieee_Numeric_Std_Match_Ne_Uns_Uns =>
-            declare
-               Res : Std_Ulogic;
-            begin
-               Res := Match_Eq_Vec_Vec (Left, Right, False, +Expr);
-               Res := Not_Table (Res);
-               return Create_Memory_U8 (Std_Ulogic'Pos (Res), Res_Typ);
-            end;
-
-         when Iir_Predefined_Ieee_Numeric_Std_Match_Lt_Uns_Uns =>
-            return Match_Cmp_Vec_Vec (Left, Right, Map_Lt, False, +Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Match_Lt_Sgn_Sgn =>
-            return Match_Cmp_Vec_Vec (Left, Right, Map_Lt, True, +Expr);
-
-         when Iir_Predefined_Ieee_Numeric_Std_Match_Le_Uns_Uns =>
-            return Match_Cmp_Vec_Vec (Left, Right, Map_Le, False, +Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Match_Le_Sgn_Sgn =>
-            return Match_Cmp_Vec_Vec (Left, Right, Map_Le, True, +Expr);
-
-         when Iir_Predefined_Ieee_Numeric_Std_Match_Gt_Uns_Uns =>
-            return Match_Cmp_Vec_Vec (Left, Right, Map_Gt, False, +Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Match_Gt_Sgn_Sgn =>
-            return Match_Cmp_Vec_Vec (Left, Right, Map_Gt, True, +Expr);
-
-         when Iir_Predefined_Ieee_Numeric_Std_Match_Ge_Uns_Uns =>
-            return Match_Cmp_Vec_Vec (Left, Right, Map_Ge, False, +Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Match_Ge_Sgn_Sgn =>
-            return Match_Cmp_Vec_Vec (Left, Right, Map_Ge, True, +Expr);
-
-         when Iir_Predefined_Ieee_Numeric_Std_Match_Eq_Sgn_Sgn =>
-            declare
-               Res : Std_Ulogic;
-            begin
-               Res := Match_Eq_Vec_Vec (Left, Right, True, +Expr);
-               return Create_Memory_U8 (Std_Ulogic'Pos (Res), Res_Typ);
-            end;
-         when Iir_Predefined_Ieee_Numeric_Std_Match_Ne_Sgn_Sgn =>
-            declare
-               Res : Std_Ulogic;
-            begin
-               Res := Match_Eq_Vec_Vec (Left, Right, True, +Expr);
-               Res := Not_Table (Res);
-               return Create_Memory_U8 (Std_Ulogic'Pos (Res), Res_Typ);
-            end;
-
-         when Iir_Predefined_Ieee_Math_Real_Pow_Real_Real =>
-            declare
-               function Pow (L, R : Fp64) return Fp64;
-               pragma Import (C, Pow);
-            begin
-               return Create_Memory_Fp64
-                 (Pow (Read_Fp64 (Left), Read_Fp64 (Right)), Res_Typ);
-            end;
-
-         when Iir_Predefined_Ieee_Math_Real_Mod =>
-            declare
-               function Fmod (L, R : Fp64) return Fp64;
-               pragma Import (C, Fmod);
-            begin
-               return Create_Memory_Fp64
-                 (Fmod (Read_Fp64 (Left), Read_Fp64 (Right)), Res_Typ);
-            end;
-
-         when others =>
-            Error_Msg_Synth
-              (Inst, Expr, "eval_static_dyadic_predefined: unhandled "
-                 & Iir_Predefined_Functions'Image (Def));
-            return Null_Memtyp;
-      end case;
-   end Eval_Static_Dyadic_Predefined;
-
    function Eval_Vector_Monadic (Vec : Memtyp; Op : Table_1d) return Memtyp
    is
       Len : constant Iir_Index32 := Vec_Length (Vec.Typ);
@@ -2029,141 +605,6 @@ package body Synth.Vhdl_Eval is
             raise Internal_Error;
       end case;
    end Eval_Vector_Minimum;
-
-   function Eval_Static_Monadic_Predefined (Inst : Synth_Instance_Acc;
-                                            Imp : Node;
-                                            Operand : Memtyp;
-                                            Expr : Node) return Memtyp
-   is
-      Def : constant Iir_Predefined_Functions :=
-        Get_Implicit_Definition (Imp);
-   begin
-      case Def is
-         when Iir_Predefined_Boolean_Not
-           | Iir_Predefined_Bit_Not =>
-            return Create_Memory_U8 (1 - Read_U8 (Operand), Operand.Typ);
-
-         when Iir_Predefined_Bit_Condition =>
-            return Create_Memory_U8 (Read_U8 (Operand), Operand.Typ);
-
-         when Iir_Predefined_Integer_Negation
-           | Iir_Predefined_Physical_Negation =>
-            return Create_Memory_Discrete
-              (-Read_Discrete (Operand), Operand.Typ);
-         when Iir_Predefined_Integer_Absolute
-           | Iir_Predefined_Physical_Absolute =>
-            return Create_Memory_Discrete
-              (abs Read_Discrete (Operand), Operand.Typ);
-         when Iir_Predefined_Integer_Identity
-           | Iir_Predefined_Physical_Identity =>
-            return Operand;
-
-         when Iir_Predefined_Floating_Negation =>
-            return Create_Memory_Fp64 (-Read_Fp64 (Operand), Operand.Typ);
-         when Iir_Predefined_Floating_Identity =>
-            return Operand;
-         when Iir_Predefined_Floating_Absolute =>
-            return Create_Memory_Fp64 (abs Read_Fp64 (Operand), Operand.Typ);
-
-         when Iir_Predefined_Vector_Maximum =>
-            return Eval_Vector_Maximum (Operand);
-         when Iir_Predefined_Vector_Minimum =>
-            return Eval_Vector_Minimum (Operand);
-
-         when Iir_Predefined_TF_Array_Not =>
-            return Eval_TF_Vector_Monadic (Operand);
-
-         when Iir_Predefined_TF_Reduction_Or =>
-            return Eval_TF_Vector_Reduce (False, False, Operand, Tf_2d_Or);
-         when Iir_Predefined_TF_Reduction_And =>
-            return Eval_TF_Vector_Reduce (True, False, Operand, Tf_2d_And);
-         when Iir_Predefined_TF_Reduction_Xor =>
-            return Eval_TF_Vector_Reduce (False, False, Operand, Tf_2d_Xor);
-         when Iir_Predefined_TF_Reduction_Nor =>
-            return Eval_TF_Vector_Reduce (False, True, Operand, Tf_2d_Or);
-         when Iir_Predefined_TF_Reduction_Nand =>
-            return Eval_TF_Vector_Reduce (True, True, Operand, Tf_2d_And);
-         when Iir_Predefined_TF_Reduction_Xnor =>
-            return Eval_TF_Vector_Reduce (False, True, Operand, Tf_2d_Xor);
-
-         when Iir_Predefined_Ieee_1164_Condition_Operator =>
-            --  Constant std_logic: need to convert.
-            declare
-               Val : Uns32;
-               Zx : Uns32;
-            begin
-               From_Std_Logic (Int64 (Read_U8 (Operand)), Val, Zx);
-               return Create_Memory_U8
-                 (Boolean'Pos (Val = 1 and Zx = 0), Boolean_Type);
-            end;
-
-         when Iir_Predefined_Ieee_Numeric_Std_Neg_Sgn =>
-            return Neg_Vec (Operand, +Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Abs_Sgn =>
-            return Abs_Vec (Operand, +Expr);
-
-         when Iir_Predefined_Ieee_1164_Vector_Not
-           | Iir_Predefined_Ieee_Numeric_Std_Not_Uns
-           | Iir_Predefined_Ieee_Numeric_Std_Not_Sgn =>
-            return Eval_Vector_Monadic (Operand, Not_Table);
-
-         when Iir_Predefined_Ieee_1164_Scalar_Not =>
-            return Create_Memory_U8
-              (Std_Ulogic'Pos (Not_Table (Read_Std_Logic (Operand.Mem, 0))),
-               Operand.Typ);
-
-         when Iir_Predefined_Ieee_1164_And_Suv
-            | Iir_Predefined_Ieee_Numeric_Std_And_Uns
-            | Iir_Predefined_Ieee_Numeric_Std_And_Sgn =>
-            return Eval_Vector_Reduce ('1', Operand, And_Table, False);
-         when Iir_Predefined_Ieee_1164_Nand_Suv
-            | Iir_Predefined_Ieee_Numeric_Std_Nand_Uns
-            | Iir_Predefined_Ieee_Numeric_Std_Nand_Sgn =>
-            return Eval_Vector_Reduce ('1', Operand, And_Table, True);
-
-         when Iir_Predefined_Ieee_1164_Or_Suv
-            | Iir_Predefined_Ieee_Numeric_Std_Or_Uns
-            | Iir_Predefined_Ieee_Numeric_Std_Or_Sgn =>
-            return Eval_Vector_Reduce ('0', Operand, Or_Table, False);
-         when Iir_Predefined_Ieee_1164_Nor_Suv
-            | Iir_Predefined_Ieee_Numeric_Std_Nor_Uns
-            | Iir_Predefined_Ieee_Numeric_Std_Nor_Sgn =>
-            return Eval_Vector_Reduce ('0', Operand, Or_Table, True);
-
-         when Iir_Predefined_Ieee_1164_Xor_Suv
-            | Iir_Predefined_Ieee_Numeric_Std_Xor_Uns
-            | Iir_Predefined_Ieee_Numeric_Std_Xor_Sgn =>
-            return Eval_Vector_Reduce ('0', Operand, Xor_Table, False);
-         when Iir_Predefined_Ieee_1164_Xnor_Suv
-            | Iir_Predefined_Ieee_Numeric_Std_Xnor_Uns
-            | Iir_Predefined_Ieee_Numeric_Std_Xnor_Sgn =>
-            return Eval_Vector_Reduce ('0', Operand, Xor_Table, True);
-
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Id_Uns_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Id_Uns_Slv
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Id_Sgn_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Id_Sgn_Slv
-            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Id_Slv
-            | Iir_Predefined_Ieee_Std_Logic_Signed_Id_Slv =>
-            return Operand;
-
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Neg_Sgn_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Neg_Sgn_Slv
-            | Iir_Predefined_Ieee_Std_Logic_Signed_Neg_Slv =>
-            return Neg_Sgn_Sgn (Operand, +Expr);
-
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Abs_Sgn_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Abs_Sgn_Slv
-            | Iir_Predefined_Ieee_Std_Logic_Signed_Abs_Slv =>
-            return Abs_Sgn_Sgn (Operand, +Expr);
-
-         when others =>
-            Error_Msg_Synth
-              (Inst, Expr, "eval_static_monadic_predefined: unhandled "
-                 & Iir_Predefined_Functions'Image (Def));
-            raise Internal_Error;
-      end case;
-   end Eval_Static_Monadic_Predefined;
 
    function Eval_To_Log_Vector (Arg : Uns64; Sz : Int64; Res_Type : Type_Acc)
                                return Memtyp
@@ -2460,6 +901,1544 @@ package body Synth.Vhdl_Eval is
         Get_Implicit_Definition (Imp);
    begin
       case Def is
+         when Iir_Predefined_Error =>
+            return Null_Memtyp;
+
+         when Iir_Predefined_Boolean_Not
+           | Iir_Predefined_Bit_Not =>
+            return Create_Memory_U8 (1 - Read_U8 (Param1), Param1.Typ);
+
+         when Iir_Predefined_Bit_Condition =>
+            return Create_Memory_U8 (Read_U8 (Param1), Param1.Typ);
+
+         when Iir_Predefined_Integer_Negation
+           | Iir_Predefined_Physical_Negation =>
+            return Create_Memory_Discrete
+              (-Read_Discrete (Param1), Param1.Typ);
+         when Iir_Predefined_Integer_Absolute
+           | Iir_Predefined_Physical_Absolute =>
+            return Create_Memory_Discrete
+              (abs Read_Discrete (Param1), Param1.Typ);
+         when Iir_Predefined_Integer_Identity
+           | Iir_Predefined_Physical_Identity =>
+            return Param1;
+
+         when Iir_Predefined_Floating_Negation =>
+            return Create_Memory_Fp64 (-Read_Fp64 (Param1), Param1.Typ);
+         when Iir_Predefined_Floating_Identity =>
+            return Param1;
+         when Iir_Predefined_Floating_Absolute =>
+            return Create_Memory_Fp64 (abs Read_Fp64 (Param1), Param1.Typ);
+
+         when Iir_Predefined_Vector_Maximum =>
+            return Eval_Vector_Maximum (Param1);
+         when Iir_Predefined_Vector_Minimum =>
+            return Eval_Vector_Minimum (Param1);
+
+         when Iir_Predefined_TF_Array_Not =>
+            return Eval_TF_Vector_Monadic (Param1);
+
+         when Iir_Predefined_TF_Reduction_Or =>
+            return Eval_TF_Vector_Reduce (False, False, Param1, Tf_2d_Or);
+         when Iir_Predefined_TF_Reduction_And =>
+            return Eval_TF_Vector_Reduce (True, False, Param1, Tf_2d_And);
+         when Iir_Predefined_TF_Reduction_Xor =>
+            return Eval_TF_Vector_Reduce (False, False, Param1, Tf_2d_Xor);
+         when Iir_Predefined_TF_Reduction_Nor =>
+            return Eval_TF_Vector_Reduce (False, True, Param1, Tf_2d_Or);
+         when Iir_Predefined_TF_Reduction_Nand =>
+            return Eval_TF_Vector_Reduce (True, True, Param1, Tf_2d_And);
+         when Iir_Predefined_TF_Reduction_Xnor =>
+            return Eval_TF_Vector_Reduce (False, True, Param1, Tf_2d_Xor);
+
+         when Iir_Predefined_Ieee_1164_Condition_Operator =>
+            --  Constant std_logic: need to convert.
+            declare
+               Val : Uns32;
+               Zx : Uns32;
+            begin
+               From_Std_Logic (Int64 (Read_U8 (Param1)), Val, Zx);
+               return Create_Memory_U8
+                 (Boolean'Pos (Val = 1 and Zx = 0), Boolean_Type);
+            end;
+
+         when Iir_Predefined_Ieee_Numeric_Std_Neg_Sgn =>
+            return Neg_Vec (Param1, +Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Abs_Sgn =>
+            return Abs_Vec (Param1, +Expr);
+
+         when Iir_Predefined_Ieee_1164_Vector_Not
+           | Iir_Predefined_Ieee_Numeric_Std_Not_Uns
+           | Iir_Predefined_Ieee_Numeric_Std_Not_Sgn =>
+            return Eval_Vector_Monadic (Param1, Not_Table);
+
+         when Iir_Predefined_Ieee_1164_Scalar_Not =>
+            return Create_Memory_U8
+              (Std_Ulogic'Pos (Not_Table (Read_Std_Logic (Param1.Mem, 0))),
+               Param1.Typ);
+
+         when Iir_Predefined_Ieee_1164_And_Suv
+            | Iir_Predefined_Ieee_Numeric_Std_And_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_And_Sgn =>
+            return Eval_Vector_Reduce ('1', Param1, And_Table, False);
+         when Iir_Predefined_Ieee_1164_Nand_Suv
+            | Iir_Predefined_Ieee_Numeric_Std_Nand_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Nand_Sgn =>
+            return Eval_Vector_Reduce ('1', Param1, And_Table, True);
+
+         when Iir_Predefined_Ieee_1164_Or_Suv
+            | Iir_Predefined_Ieee_Numeric_Std_Or_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Or_Sgn =>
+            return Eval_Vector_Reduce ('0', Param1, Or_Table, False);
+         when Iir_Predefined_Ieee_1164_Nor_Suv
+            | Iir_Predefined_Ieee_Numeric_Std_Nor_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Nor_Sgn =>
+            return Eval_Vector_Reduce ('0', Param1, Or_Table, True);
+
+         when Iir_Predefined_Ieee_1164_Xor_Suv
+            | Iir_Predefined_Ieee_Numeric_Std_Xor_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Xor_Sgn =>
+            return Eval_Vector_Reduce ('0', Param1, Xor_Table, False);
+         when Iir_Predefined_Ieee_1164_Xnor_Suv
+            | Iir_Predefined_Ieee_Numeric_Std_Xnor_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Xnor_Sgn =>
+            return Eval_Vector_Reduce ('0', Param1, Xor_Table, True);
+
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Id_Uns_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Id_Uns_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Id_Sgn_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Id_Sgn_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Id_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Id_Slv =>
+            return Param1;
+
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Neg_Sgn_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Neg_Sgn_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Neg_Slv =>
+            return Neg_Sgn_Sgn (Param1, +Expr);
+
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Abs_Sgn_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Abs_Sgn_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Abs_Slv =>
+            return Abs_Sgn_Sgn (Param1, +Expr);
+
+         when Iir_Predefined_Boolean_Or
+            | Iir_Predefined_Bit_Or
+            | Iir_Predefined_Boolean_And
+            | Iir_Predefined_Bit_And =>
+            --  Short-circuit operators.
+            raise Internal_Error;
+
+         when Iir_Predefined_Boolean_Xor
+            | Iir_Predefined_Bit_Xor =>
+            return Create_Memory_U8
+              (Boolean'Pos (Boolean'Val (Read_Discrete (Param1))
+                              xor Boolean'Val (Read_Discrete (Param2))),
+               Res_Typ);
+
+         when Iir_Predefined_Boolean_Nand
+            | Iir_Predefined_Bit_Nand =>
+            return Create_Memory_U8
+              (Boolean'Pos (not (Boolean'Val (Read_Discrete (Param1))
+                                   and Boolean'Val (Read_Discrete (Param2)))),
+               Res_Typ);
+
+         when Iir_Predefined_Boolean_Nor
+            | Iir_Predefined_Bit_Nor =>
+            return Create_Memory_U8
+              (Boolean'Pos (not (Boolean'Val (Read_Discrete (Param1))
+                                   or Boolean'Val (Read_Discrete (Param2)))),
+               Res_Typ);
+
+         when Iir_Predefined_Integer_Plus
+           | Iir_Predefined_Physical_Plus =>
+            declare
+               Res : Int64;
+            begin
+               Res := Read_Discrete (Param1) + Read_Discrete (Param2);
+               Check_Integer_Overflow (Inst, Res, Res_Typ, Expr);
+               return Create_Memory_Discrete (Res, Res_Typ);
+            end;
+         when Iir_Predefined_Integer_Minus
+            | Iir_Predefined_Physical_Minus =>
+            declare
+               Res : Int64;
+            begin
+               Res := Read_Discrete (Param1) - Read_Discrete (Param2);
+               Check_Integer_Overflow (Inst, Res, Res_Typ, Expr);
+               return Create_Memory_Discrete (Res, Res_Typ);
+            end;
+         when Iir_Predefined_Integer_Mul
+           | Iir_Predefined_Physical_Integer_Mul
+           | Iir_Predefined_Integer_Physical_Mul =>
+            declare
+               Res : Int64;
+            begin
+               Res := Read_Discrete (Param1) * Read_Discrete (Param2);
+               Check_Integer_Overflow (Inst, Res, Res_Typ, Expr);
+               return Create_Memory_Discrete (Res, Res_Typ);
+            end;
+         when Iir_Predefined_Integer_Div
+            | Iir_Predefined_Physical_Physical_Div
+            | Iir_Predefined_Physical_Integer_Div =>
+            declare
+               Rv : Int64;
+               Res : Int64;
+            begin
+               Rv := Read_Discrete (Param2);
+               if Rv = 0 then
+                  Error_Msg_Synth (Inst, Expr, "division by zero");
+                  return Null_Memtyp;
+               end if;
+               Res := Read_Discrete (Param1) / Rv;
+               Check_Integer_Overflow (Inst, Res, Res_Typ, Expr);
+               return Create_Memory_Discrete (Res, Res_Typ);
+            end;
+         when Iir_Predefined_Integer_Mod =>
+            declare
+               Res : Int64;
+            begin
+               Res := Read_Discrete (Param1) mod Read_Discrete (Param2);
+               Check_Integer_Overflow (Inst, Res, Res_Typ, Expr);
+               return Create_Memory_Discrete (Res, Res_Typ);
+            end;
+         when Iir_Predefined_Integer_Rem =>
+            declare
+               Res : Int64;
+            begin
+               Res := Read_Discrete (Param1) rem Read_Discrete (Param2);
+               Check_Integer_Overflow (Inst, Res, Res_Typ, Expr);
+               return Create_Memory_Discrete (Res, Res_Typ);
+            end;
+
+         when Iir_Predefined_Integer_Exp =>
+            declare
+               Lv : Ghdl_I64;
+               Rv : Std_Integer;
+               Res : Ghdl_I64;
+               Ovf : Boolean;
+            begin
+               Lv := Ghdl_I64 (Read_Discrete (Param1));
+               Rv := Std_Integer (Read_Discrete (Param2));
+               Grt.Arith.Exp_I64 (Lv, Rv, Res, Ovf);
+               if Ovf then
+                  Error_Msg_Synth (Inst, Expr, "exponentiation overflow");
+                  Res := 0;
+               end if;
+               return Create_Memory_Discrete (Int64 (Res), Res_Typ);
+            end;
+
+         when Iir_Predefined_Integer_Less_Equal
+            | Iir_Predefined_Physical_Less_Equal
+            | Iir_Predefined_Enum_Less_Equal =>
+            return Create_Memory_Boolean
+              (Read_Discrete (Param1) <= Read_Discrete (Param2));
+         when Iir_Predefined_Integer_Less
+            | Iir_Predefined_Physical_Less
+            | Iir_Predefined_Enum_Less =>
+            return Create_Memory_Boolean
+              (Read_Discrete (Param1) < Read_Discrete (Param2));
+         when Iir_Predefined_Integer_Greater_Equal
+            | Iir_Predefined_Physical_Greater_Equal
+            | Iir_Predefined_Enum_Greater_Equal =>
+            return Create_Memory_Boolean
+              (Read_Discrete (Param1) >= Read_Discrete (Param2));
+         when Iir_Predefined_Integer_Greater
+            | Iir_Predefined_Physical_Greater
+            | Iir_Predefined_Enum_Greater =>
+            return Create_Memory_Boolean
+              (Read_Discrete (Param1) > Read_Discrete (Param2));
+         when Iir_Predefined_Integer_Equality
+            | Iir_Predefined_Physical_Equality
+            | Iir_Predefined_Enum_Equality
+            | Iir_Predefined_Bit_Match_Equality =>
+            return Create_Memory_Boolean
+              (Read_Discrete (Param1) = Read_Discrete (Param2));
+         when Iir_Predefined_Integer_Inequality
+            | Iir_Predefined_Physical_Inequality
+            | Iir_Predefined_Enum_Inequality
+            | Iir_Predefined_Bit_Match_Inequality =>
+            return Create_Memory_Boolean
+              (Read_Discrete (Param1) /= Read_Discrete (Param2));
+
+         when Iir_Predefined_Physical_Real_Mul =>
+            return Create_Memory_Discrete
+              (Int64 (Fp64 (Read_Discrete (Param1)) * Read_Fp64 (Param2)),
+               Res_Typ);
+         when Iir_Predefined_Real_Physical_Mul =>
+            return Create_Memory_Discrete
+              (Int64 (Read_Fp64 (Param1) * Fp64 (Read_Discrete (Param2))),
+               Res_Typ);
+         when Iir_Predefined_Physical_Real_Div =>
+            return Create_Memory_Discrete
+              (Int64 (Fp64 (Read_Discrete (Param1)) / Read_Fp64 (Param2)),
+               Res_Typ);
+
+         when Iir_Predefined_Floating_Less =>
+            return Create_Memory_U8
+              (Boolean'Pos (Read_Fp64 (Param1) < Read_Fp64 (Param2)),
+               Boolean_Type);
+         when Iir_Predefined_Floating_Less_Equal =>
+            return Create_Memory_U8
+              (Boolean'Pos (Read_Fp64 (Param1) <= Read_Fp64 (Param2)),
+               Boolean_Type);
+         when Iir_Predefined_Floating_Equality =>
+            return Create_Memory_U8
+              (Boolean'Pos (Read_Fp64 (Param1) = Read_Fp64 (Param2)),
+               Boolean_Type);
+         when Iir_Predefined_Floating_Inequality =>
+            return Create_Memory_U8
+              (Boolean'Pos (Read_Fp64 (Param1) /= Read_Fp64 (Param2)),
+               Boolean_Type);
+         when Iir_Predefined_Floating_Greater =>
+            return Create_Memory_U8
+              (Boolean'Pos (Read_Fp64 (Param1) > Read_Fp64 (Param2)),
+               Boolean_Type);
+         when Iir_Predefined_Floating_Greater_Equal =>
+            return Create_Memory_U8
+              (Boolean'Pos (Read_Fp64 (Param1) >= Read_Fp64 (Param2)),
+               Boolean_Type);
+
+         when Iir_Predefined_Floating_Plus =>
+            return Create_Memory_Fp64 (Read_Fp64 (Param1) + Read_Fp64 (Param2),
+                                       Res_Typ);
+         when Iir_Predefined_Floating_Minus =>
+            return Create_Memory_Fp64 (Read_Fp64 (Param1) - Read_Fp64 (Param2),
+                                       Res_Typ);
+         when Iir_Predefined_Floating_Mul =>
+            return Create_Memory_Fp64 (Read_Fp64 (Param1) * Read_Fp64 (Param2),
+                                       Res_Typ);
+         when Iir_Predefined_Floating_Div =>
+            return Create_Memory_Fp64 (Read_Fp64 (Param1) / Read_Fp64 (Param2),
+                                       Res_Typ);
+         when Iir_Predefined_Floating_Exp =>
+            return Create_Memory_Fp64
+              (Read_Fp64 (Param1)
+                 ** Integer (Read_Discrete (Param2)), Res_Typ);
+
+         when Iir_Predefined_Universal_R_I_Div =>
+            declare
+               Rv : Int64;
+               Res : Fp64;
+            begin
+               Rv := Read_Discrete (Param2);
+               if Rv = 0 then
+                  Error_Msg_Synth (Inst, Expr, "division by zero");
+                  return Null_Memtyp;
+               end if;
+               Res := Read_Fp64 (Param1) / Fp64 (Rv);
+               return Create_Memory_Fp64 (Res, Res_Typ);
+            end;
+
+         when Iir_Predefined_Array_Array_Concat =>
+            declare
+               use Flags;
+               L_Len : constant Iir_Index32 :=
+                 Iir_Index32 (Get_Bound_Length (Param1.Typ));
+               R_Len : constant Iir_Index32 :=
+                 Iir_Index32 (Get_Bound_Length (Param2.Typ));
+               Le_Typ : constant Type_Acc := Get_Array_Element (Param1.Typ);
+               Re_Typ : constant Type_Acc := Get_Array_Element (Param2.Typ);
+               El_Typ : Type_Acc;
+               Bnd : Bound_Type;
+               Res_St : Type_Acc;
+               Res : Memtyp;
+            begin
+               Check_Matching_Bounds (Le_Typ, Re_Typ, Expr);
+               if L_Len = 0 and R_Len = 0 then
+                  --  LRM08 9.2.5 Adding operators
+                  --  If both operands are null arrays, then the result of the
+                  --  concatenation is the right operand.
+                  return Param2;
+               end if;
+               if Vhdl_Std > Vhdl_87 then
+                  Bnd := Elab.Vhdl_Types.Create_Bounds_From_Length
+                    (Get_Uarray_Index (Res_Typ).Drange, L_Len + R_Len);
+               else
+                  --  LRM87 7.2.3
+                  --  [...], unless the left operand is a null array, in which
+                  --  case the result of the concatenation is the right
+                  --  operand.
+                  if L_Len = 0 then
+                     return Param2;
+                  end if;
+
+                  --  LRM87 7.2.3
+                  --  The left bound of the result is the left operand, [...]
+                  --
+                  --  LRM87 7.2.3
+                  --  The direction of the result is the direction of the left
+                  --  operand, [...]
+                  Bnd.Left := Param1.Typ.Abound.Left;
+                  Bnd.Dir := Param1.Typ.Abound.Dir;
+                  Bnd.Len := Uns32 (L_Len + R_Len);
+                  --  TODO: overflow.
+                  case Bnd.Dir is
+                     when Dir_To =>
+                        Bnd.Right := Bnd.Left + Int32 (L_Len + R_Len - 1);
+                     when Dir_Downto =>
+                        Bnd.Right := Bnd.Left - Int32 (L_Len + R_Len - 1);
+                  end case;
+               end if;
+               El_Typ := Unshare_Type_Expr (Le_Typ,
+                                            Get_Array_Element (Res_Typ));
+               Res_St := Create_Onedimensional_Array_Subtype
+                 (Res_Typ, Bnd, El_Typ);
+               Res := Create_Memory (Res_St);
+               if Param1.Typ.Sz > 0 then
+                  Copy_Memory (Res.Mem, Param1.Mem, Param1.Typ.Sz);
+               end if;
+               if Param2.Typ.Sz > 0 then
+                  Copy_Memory
+                    (Res.Mem + Param1.Typ.Sz, Param2.Mem, Param2.Typ.Sz);
+               end if;
+               return Res;
+            end;
+         when Iir_Predefined_Element_Array_Concat =>
+            declare
+               Rlen : constant Iir_Index32 :=
+                 Iir_Index32 (Get_Bound_Length (Param2.Typ));
+               Re_Typ : constant Type_Acc := Get_Array_Element (Param2.Typ);
+               El_Typ : Type_Acc;
+               Bnd : Bound_Type;
+               Res_St : Type_Acc;
+               Res : Memtyp;
+            begin
+               Check_Matching_Bounds (Param1.Typ, Re_Typ, Expr);
+               Bnd := Elab.Vhdl_Types.Create_Bounds_From_Length
+                 (Get_Uarray_Index (Res_Typ).Drange, 1 + Rlen);
+               El_Typ := Unshare_Type_Expr (Re_Typ,
+                                            Get_Array_Element (Res_Typ));
+               Res_St := Create_Onedimensional_Array_Subtype
+                 (Res_Typ, Bnd, El_Typ);
+               Res := Create_Memory (Res_St);
+               Copy_Memory (Res.Mem, Param1.Mem, Param1.Typ.Sz);
+               Copy_Memory (Res.Mem + Param1.Typ.Sz,
+                            Param2.Mem, Param2.Typ.Sz);
+               return Res;
+            end;
+         when Iir_Predefined_Array_Element_Concat =>
+            declare
+               Llen : constant Iir_Index32 :=
+                 Iir_Index32 (Get_Bound_Length (Param1.Typ));
+               Le_Typ : constant Type_Acc := Get_Array_Element (Param1.Typ);
+               El_Typ : Type_Acc;
+               Bnd : Bound_Type;
+               Res_St : Type_Acc;
+               Res : Memtyp;
+            begin
+               Check_Matching_Bounds (Le_Typ, Param2.Typ, Expr);
+               Bnd := Elab.Vhdl_Types.Create_Bounds_From_Length
+                 (Get_Uarray_Index (Res_Typ).Drange, Llen + 1);
+               El_Typ := Unshare_Type_Expr (Le_Typ,
+                                            Get_Array_Element (Res_Typ));
+               Res_St := Create_Onedimensional_Array_Subtype
+                 (Res_Typ, Bnd, El_Typ);
+               Res := Create_Memory (Res_St);
+               Copy_Memory (Res.Mem, Param1.Mem, Param1.Typ.Sz);
+               Copy_Memory (Res.Mem + Param1.Typ.Sz,
+                            Param2.Mem, Param2.Typ.Sz);
+               return Res;
+            end;
+         when Iir_Predefined_Element_Element_Concat =>
+            declare
+               Le_Typ : constant Type_Acc := Param1.Typ;
+               El_Typ : Type_Acc;
+               Bnd : Bound_Type;
+               Res_St : Type_Acc;
+               Res : Memtyp;
+            begin
+               Check_Matching_Bounds (Param1.Typ, Param2.Typ, Expr);
+               Bnd := Elab.Vhdl_Types.Create_Bounds_From_Length
+                 (Get_Uarray_Index (Res_Typ).Drange, 2);
+               El_Typ := Unshare_Type_Expr (Le_Typ,
+                                            Get_Array_Element (Res_Typ));
+               Res_St := Create_Onedimensional_Array_Subtype
+                 (Res_Typ, Bnd, El_Typ);
+               Res := Create_Memory (Res_St);
+               Copy_Memory (Res.Mem, Param1.Mem, El_Typ.Sz);
+               Copy_Memory (Res.Mem + El_Typ.Sz,
+                            Param2.Mem, El_Typ.Sz);
+               return Res;
+            end;
+
+         when Iir_Predefined_Array_Equality
+            | Iir_Predefined_Record_Equality
+            | Iir_Predefined_Bit_Array_Match_Equality =>
+            return Create_Memory_Boolean (Is_Equal (Param1, Param2));
+         when Iir_Predefined_Array_Inequality
+            | Iir_Predefined_Record_Inequality
+            | Iir_Predefined_Bit_Array_Match_Inequality =>
+            return Create_Memory_Boolean (not Is_Equal (Param1, Param2));
+
+         when Iir_Predefined_Access_Equality =>
+            return Create_Memory_Boolean
+              (Read_Access (Param1) = Read_Access (Param2));
+         when Iir_Predefined_Access_Inequality =>
+            return Create_Memory_Boolean
+              (Read_Access (Param1) /= Read_Access (Param2));
+
+         when Iir_Predefined_Array_Less =>
+            return Create_Memory_Boolean
+              (Compare_Array (Param1, Param2) = Less);
+         when Iir_Predefined_Array_Less_Equal =>
+            return Create_Memory_Boolean
+              (Compare_Array (Param1, Param2) <= Equal);
+         when Iir_Predefined_Array_Greater =>
+            return Create_Memory_Boolean
+              (Compare_Array (Param1, Param2) = Greater);
+         when Iir_Predefined_Array_Greater_Equal =>
+            return Create_Memory_Boolean
+              (Compare_Array (Param1, Param2) >= Equal);
+
+         when Iir_Predefined_Array_Maximum =>
+            --  IEEE 1076-2008 5.3.2.4 Predefined operations on array types
+            if Compare_Array (Param1, Param2) = Less then
+               return Param2;
+            else
+               return Param1;
+            end if;
+         when Iir_Predefined_Array_Minimum =>
+            --  IEEE 1076-2008 5.3.2.4 Predefined operations on array types
+            if Compare_Array (Param1, Param2) = Less then
+               return Param1;
+            else
+               return Param2;
+            end if;
+
+         when Iir_Predefined_Array_Sll
+           | Iir_Predefined_Array_Srl
+           | Iir_Predefined_Array_Rol
+           | Iir_Predefined_Array_Ror =>
+            return Execute_Shift_Operator
+              (Param1, Read_Discrete (Param2), 0, Def);
+
+         when Iir_Predefined_TF_Array_And =>
+            return Eval_TF_Vector_Dyadic
+              (Inst, Param1, Param2, Tf_2d_And, Expr);
+         when Iir_Predefined_TF_Array_Or =>
+            return Eval_TF_Vector_Dyadic
+              (Inst, Param1, Param2, Tf_2d_Or, Expr);
+         when Iir_Predefined_TF_Array_Xor =>
+            return Eval_TF_Vector_Dyadic
+              (Inst, Param1, Param2, Tf_2d_Xor, Expr);
+         when Iir_Predefined_TF_Array_Nand =>
+            return Eval_TF_Vector_Dyadic
+              (Inst, Param1, Param2, Tf_2d_Nand, Expr);
+         when Iir_Predefined_TF_Array_Nor =>
+            return Eval_TF_Vector_Dyadic
+              (Inst, Param1, Param2, Tf_2d_Nor, Expr);
+         when Iir_Predefined_TF_Array_Xnor =>
+            return Eval_TF_Vector_Dyadic
+              (Inst, Param1, Param2, Tf_2d_Xnor, Expr);
+
+         when Iir_Predefined_TF_Element_Array_Or =>
+            return Eval_TF_Array_Element (Param1, Param2, Tf_2d_Or);
+         when Iir_Predefined_TF_Array_Element_Or =>
+            return Eval_TF_Array_Element (Param2, Param1, Tf_2d_Or);
+
+         when Iir_Predefined_TF_Element_Array_Nor =>
+            return Eval_TF_Array_Element (Param1, Param2, Tf_2d_Nor);
+         when Iir_Predefined_TF_Array_Element_Nor =>
+            return Eval_TF_Array_Element (Param2, Param1, Tf_2d_Nor);
+
+         when Iir_Predefined_TF_Element_Array_And =>
+            return Eval_TF_Array_Element (Param1, Param2, Tf_2d_And);
+         when Iir_Predefined_TF_Array_Element_And =>
+            return Eval_TF_Array_Element (Param2, Param1, Tf_2d_And);
+
+         when Iir_Predefined_TF_Element_Array_Nand =>
+            return Eval_TF_Array_Element (Param1, Param2, Tf_2d_Nand);
+         when Iir_Predefined_TF_Array_Element_Nand =>
+            return Eval_TF_Array_Element (Param2, Param1, Tf_2d_Nand);
+
+         when Iir_Predefined_TF_Element_Array_Xor =>
+            return Eval_TF_Array_Element (Param1, Param2, Tf_2d_Xor);
+         when Iir_Predefined_TF_Array_Element_Xor =>
+            return Eval_TF_Array_Element (Param2, Param1, Tf_2d_Xor);
+
+         when Iir_Predefined_TF_Element_Array_Xnor =>
+            return Eval_TF_Array_Element (Param1, Param2, Tf_2d_Xnor);
+         when Iir_Predefined_TF_Array_Element_Xnor =>
+            return Eval_TF_Array_Element (Param2, Param1, Tf_2d_Xnor);
+
+         when Iir_Predefined_Ieee_1164_Vector_And
+           | Iir_Predefined_Ieee_Numeric_Std_And_Uns_Uns
+           | Iir_Predefined_Ieee_Numeric_Std_And_Sgn_Sgn =>
+            return Eval_Vector_Dyadic (Inst, Param1, Param2, And_Table, Expr);
+
+         when Iir_Predefined_Ieee_1164_Vector_Nand
+           | Iir_Predefined_Ieee_Numeric_Std_Nand_Uns_Uns
+           | Iir_Predefined_Ieee_Numeric_Std_Nand_Sgn_Sgn =>
+            return Eval_Vector_Dyadic (Inst, Param1, Param2, Nand_Table, Expr);
+
+         when Iir_Predefined_Ieee_1164_Vector_Or
+           | Iir_Predefined_Ieee_Numeric_Std_Or_Uns_Uns
+           | Iir_Predefined_Ieee_Numeric_Std_Or_Sgn_Sgn =>
+            return Eval_Vector_Dyadic (Inst, Param1, Param2, Or_Table, Expr);
+
+         when Iir_Predefined_Ieee_1164_Vector_Nor
+           | Iir_Predefined_Ieee_Numeric_Std_Nor_Uns_Uns
+           | Iir_Predefined_Ieee_Numeric_Std_Nor_Sgn_Sgn =>
+            return Eval_Vector_Dyadic (Inst, Param1, Param2, Nor_Table, Expr);
+
+         when Iir_Predefined_Ieee_1164_Vector_Xor
+           | Iir_Predefined_Ieee_Numeric_Std_Xor_Uns_Uns
+           | Iir_Predefined_Ieee_Numeric_Std_Xor_Sgn_Sgn =>
+            return Eval_Vector_Dyadic (Inst, Param1, Param2, Xor_Table, Expr);
+
+         when Iir_Predefined_Ieee_1164_Vector_Xnor
+            | Iir_Predefined_Ieee_Numeric_Std_Xnor_Uns_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Xnor_Sgn_Sgn =>
+            return Eval_Vector_Dyadic (Inst, Param1, Param2, Xnor_Table, Expr);
+
+         when Iir_Predefined_Ieee_1164_Scalar_And =>
+            return Eval_Logic_Scalar (Param1, Param2, And_Table);
+         when Iir_Predefined_Ieee_1164_Scalar_Or =>
+            return Eval_Logic_Scalar (Param1, Param2, Or_Table);
+         when Iir_Predefined_Ieee_1164_Scalar_Xor =>
+            return Eval_Logic_Scalar (Param1, Param2, Xor_Table);
+         when Iir_Predefined_Ieee_1164_Scalar_Nand =>
+            return Eval_Logic_Scalar (Param1, Param2, Nand_Table);
+         when Iir_Predefined_Ieee_1164_Scalar_Nor =>
+            return Eval_Logic_Scalar (Param1, Param2, Nor_Table);
+         when Iir_Predefined_Ieee_1164_Scalar_Xnor =>
+            return Eval_Logic_Scalar (Param1, Param2, Xnor_Table);
+
+         when Iir_Predefined_Std_Ulogic_Match_Equality =>
+            return Eval_Logic_Scalar (Param1, Param2, Match_Eq_Table);
+         when Iir_Predefined_Std_Ulogic_Match_Inequality =>
+            return Eval_Logic_Scalar (Param1, Param2, Match_Eq_Table, True);
+         when Iir_Predefined_Std_Ulogic_Match_Greater =>
+            return Eval_Logic_Scalar (Param1, Param2, Match_Gt_Table);
+         when Iir_Predefined_Std_Ulogic_Match_Greater_Equal =>
+            return Eval_Logic_Scalar (Param1, Param2, Match_Ge_Table);
+         when Iir_Predefined_Std_Ulogic_Match_Less_Equal =>
+            return Eval_Logic_Scalar (Param1, Param2, Match_Le_Table);
+         when Iir_Predefined_Std_Ulogic_Match_Less =>
+            return Eval_Logic_Scalar (Param1, Param2, Match_Lt_Table);
+
+         when Iir_Predefined_Std_Ulogic_Array_Match_Equality =>
+            return Eval_Vector_Match (Inst, Param1, Param2, False, Expr);
+         when Iir_Predefined_Std_Ulogic_Array_Match_Inequality =>
+            return Eval_Vector_Match (Inst, Param1, Param2, True, Expr);
+
+         when Iir_Predefined_Ieee_1164_And_Suv_Log
+            | Iir_Predefined_Ieee_Numeric_Std_And_Uns_Log
+            | Iir_Predefined_Ieee_Numeric_Std_And_Sgn_Log =>
+            return Eval_Logic_Vector_Scalar (Param1, Param2, And_Table);
+         when Iir_Predefined_Ieee_1164_Or_Suv_Log
+            | Iir_Predefined_Ieee_Numeric_Std_Or_Uns_Log
+            | Iir_Predefined_Ieee_Numeric_Std_Or_Sgn_Log =>
+            return Eval_Logic_Vector_Scalar (Param1, Param2, Or_Table);
+         when Iir_Predefined_Ieee_1164_Xor_Suv_Log
+            | Iir_Predefined_Ieee_Numeric_Std_Xor_Uns_Log
+            | Iir_Predefined_Ieee_Numeric_Std_Xor_Sgn_Log =>
+            return Eval_Logic_Vector_Scalar (Param1, Param2, Xor_Table);
+         when Iir_Predefined_Ieee_1164_Nand_Suv_Log
+            | Iir_Predefined_Ieee_Numeric_Std_Nand_Uns_Log
+            | Iir_Predefined_Ieee_Numeric_Std_Nand_Sgn_Log =>
+            return Eval_Logic_Vector_Scalar (Param1, Param2, Nand_Table);
+         when Iir_Predefined_Ieee_1164_Nor_Suv_Log
+            | Iir_Predefined_Ieee_Numeric_Std_Nor_Uns_Log
+            | Iir_Predefined_Ieee_Numeric_Std_Nor_Sgn_Log =>
+            return Eval_Logic_Vector_Scalar (Param1, Param2, Nor_Table);
+         when Iir_Predefined_Ieee_1164_Xnor_Suv_Log
+            | Iir_Predefined_Ieee_Numeric_Std_Xnor_Uns_Log
+            | Iir_Predefined_Ieee_Numeric_Std_Xnor_Sgn_Log =>
+            return Eval_Logic_Vector_Scalar (Param1, Param2, Xnor_Table);
+
+         when Iir_Predefined_Ieee_1164_And_Log_Suv
+           | Iir_Predefined_Ieee_Numeric_Std_And_Log_Uns
+           | Iir_Predefined_Ieee_Numeric_Std_And_Log_Sgn =>
+            return Eval_Logic_Vector_Scalar (Param2, Param1, And_Table);
+         when Iir_Predefined_Ieee_1164_Or_Log_Suv
+           | Iir_Predefined_Ieee_Numeric_Std_Or_Log_Uns
+           | Iir_Predefined_Ieee_Numeric_Std_Or_Log_Sgn =>
+            return Eval_Logic_Vector_Scalar (Param2, Param1, Or_Table);
+         when Iir_Predefined_Ieee_1164_Xor_Log_Suv
+           | Iir_Predefined_Ieee_Numeric_Std_Xor_Log_Uns
+           | Iir_Predefined_Ieee_Numeric_Std_Xor_Log_Sgn =>
+            return Eval_Logic_Vector_Scalar (Param2, Param1, Xor_Table);
+         when Iir_Predefined_Ieee_1164_Nand_Log_Suv
+           | Iir_Predefined_Ieee_Numeric_Std_Nand_Log_Uns
+           | Iir_Predefined_Ieee_Numeric_Std_Nand_Log_Sgn =>
+            return Eval_Logic_Vector_Scalar (Param2, Param1, Nand_Table);
+         when Iir_Predefined_Ieee_1164_Nor_Log_Suv
+           | Iir_Predefined_Ieee_Numeric_Std_Nor_Log_Uns
+           | Iir_Predefined_Ieee_Numeric_Std_Nor_Log_Sgn =>
+            return Eval_Logic_Vector_Scalar (Param2, Param1, Nor_Table);
+         when Iir_Predefined_Ieee_1164_Xnor_Log_Suv
+           | Iir_Predefined_Ieee_Numeric_Std_Xnor_Log_Uns
+           | Iir_Predefined_Ieee_Numeric_Std_Xnor_Log_Sgn =>
+            return Eval_Logic_Vector_Scalar (Param2, Param1, Xnor_Table);
+
+         when Iir_Predefined_Ieee_1164_Vector_Sll
+            | Iir_Predefined_Ieee_Numeric_Std_Sla_Uns_Int =>
+            return Execute_Shift_Operator
+              (Param1, Read_Discrete (Param2), Std_Ulogic'Pos('0'),
+               Iir_Predefined_Array_Sll);
+         when Iir_Predefined_Ieee_1164_Vector_Srl
+            | Iir_Predefined_Ieee_Numeric_Std_Sra_Uns_Int =>
+            return Execute_Shift_Operator
+              (Param1, Read_Discrete (Param2), Std_Ulogic'Pos('0'),
+               Iir_Predefined_Array_Srl);
+         when Iir_Predefined_Ieee_Numeric_Std_Sra_Sgn_Int =>
+            declare
+               Cnt : constant Int64 := Read_Discrete (Param2);
+            begin
+               if Cnt >= 0 then
+                  return Execute_Shift_Operator
+                    (Param1, Cnt, Std_Ulogic'Pos('0'),
+                     Iir_Predefined_Array_Sra);
+               else
+                  return Execute_Shift_Operator
+                    (Param1, -Cnt, Std_Ulogic'Pos('0'),
+                     Iir_Predefined_Array_Sll);
+               end if;
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Sla_Sgn_Int =>
+            declare
+               Cnt : Int64;
+               Op : Iir_Predefined_Shift_Functions;
+            begin
+               Cnt := Read_Discrete (Param2);
+               if Cnt >= 0 then
+                  Op := Iir_Predefined_Array_Sll;
+               else
+                  Cnt := -Cnt;
+                  Op :=Iir_Predefined_Array_Sra;
+               end if;
+               return Execute_Shift_Operator
+                 (Param1, Cnt, Std_Ulogic'Pos('0'), Op);
+            end;
+
+         when Iir_Predefined_Ieee_1164_Vector_Rol
+            | Iir_Predefined_Ieee_Numeric_Std_Rol_Uns_Int
+            | Iir_Predefined_Ieee_Numeric_Std_Rol_Sgn_Int =>
+            return Execute_Shift_Operator
+              (Param1, Read_Discrete (Param2), Std_Ulogic'Pos('0'),
+               Iir_Predefined_Array_Rol);
+         when Iir_Predefined_Ieee_1164_Vector_Ror
+            | Iir_Predefined_Ieee_Numeric_Std_Ror_Uns_Int
+            | Iir_Predefined_Ieee_Numeric_Std_Ror_Sgn_Int =>
+            return Execute_Shift_Operator
+              (Param1, Read_Discrete (Param2), Std_Ulogic'Pos('0'),
+               Iir_Predefined_Array_Ror);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Uns_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Eq_Slv_Slv =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Compare_Uns_Uns (Param1, Param2, Greater, +Expr) = Equal;
+               return Create_Memory_Boolean (Res);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Nat =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Compare_Uns_Nat (Param1, Param2, Greater, +Expr) = Equal;
+               return Create_Memory_Boolean (Res);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Eq_Nat_Uns =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Compare_Uns_Nat (Param2, Param1, Greater, +Expr) = Equal;
+               return Create_Memory_Boolean (Res);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Eq_Sgn_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Sgn_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Eq_Slv_Slv =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Compare_Sgn_Sgn (Param1, Param2, Greater, +Expr) = Equal;
+               return Create_Memory_Boolean (Res);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Eq_Sgn_Int
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Sgn_Int
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Eq_Slv_Int =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Compare_Sgn_Int (Param1, Param2, Greater, +Expr) = Equal;
+               return Create_Memory_Boolean (Res);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Eq_Int_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Int_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Eq_Int_Slv =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Compare_Sgn_Int (Param2, Param1, Greater, +Expr) = Equal;
+               return Create_Memory_Boolean (Res);
+            end;
+
+         when Iir_Predefined_Ieee_Numeric_Std_Ne_Uns_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Uns_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Ne_Slv_Slv =>
+            declare
+               Res : Order_Type;
+            begin
+               Res := Compare_Uns_Uns (Param1, Param2, Greater, +Expr);
+               return Create_Memory_Boolean (Res /= Equal);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Ne_Uns_Nat =>
+            declare
+               Res : Order_Type;
+            begin
+               Res := Compare_Uns_Nat (Param1, Param2, Greater, +Expr);
+               return Create_Memory_Boolean (Res /= Equal);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Ne_Nat_Uns =>
+            declare
+               Res : Order_Type;
+            begin
+               Res := Compare_Uns_Nat (Param2, Param1, Greater, +Expr);
+               return Create_Memory_Boolean (Res /= Equal);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Ne_Sgn_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Sgn_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Ne_Slv_Slv =>
+            declare
+               Res : Order_Type;
+            begin
+               Res := Compare_Sgn_Sgn (Param1, Param2, Greater, +Expr);
+               return Create_Memory_Boolean (Res /= Equal);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Ne_Sgn_Int
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Sgn_Int
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Ne_Slv_Int =>
+            declare
+               Res : Order_Type;
+            begin
+               Res := Compare_Sgn_Int (Param1, Param2, Greater, +Expr);
+               return Create_Memory_Boolean (Res /= Equal);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Ne_Int_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Int_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Ne_Int_Slv =>
+            declare
+               Res : Order_Type;
+            begin
+               Res := Compare_Sgn_Int (Param2, Param1, Greater, +Expr);
+               return Create_Memory_Boolean (Res /= Equal);
+            end;
+
+         when Iir_Predefined_Ieee_Numeric_Std_Gt_Uns_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Uns_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Gt_Slv_Slv =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Compare_Uns_Uns (Param1, Param2, Less, +Expr) = Greater;
+               return Create_Memory_Boolean (Res);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Gt_Sgn_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Sgn_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Gt_Slv_Slv =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Compare_Sgn_Sgn (Param1, Param2, Less, +Expr) = Greater;
+               return Create_Memory_Boolean (Res);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Gt_Nat_Uns =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Compare_Nat_Uns (Param1, Param2, Less, +Expr) = Greater;
+               return Create_Memory_Boolean (Res);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Gt_Uns_Nat =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Compare_Uns_Nat (Param1, Param2, Less, +Expr) = Greater;
+               return Create_Memory_Boolean (Res);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Gt_Sgn_Int
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Sgn_Int
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Gt_Slv_Int =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Compare_Sgn_Int (Param1, Param2, Less, +Expr) = Greater;
+               return Create_Memory_Boolean (Res);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Gt_Int_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Int_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Gt_Int_Slv =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Compare_Sgn_Int (Param2, Param1, Greater, +Expr) < Equal;
+               return Create_Memory_Boolean (Res);
+            end;
+
+         when Iir_Predefined_Ieee_Numeric_Std_Ge_Uns_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Uns_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Ge_Slv_Slv =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Compare_Uns_Uns (Param1, Param2, Less, +Expr) >= Equal;
+               return Create_Memory_Boolean (Res);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Ge_Nat_Uns =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Compare_Nat_Uns (Param1, Param2, Less, +Expr) >= Equal;
+               return Create_Memory_Boolean (Res);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Ge_Uns_Nat =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Compare_Uns_Nat (Param1, Param2, Less, +Expr) >= Equal;
+               return Create_Memory_Boolean (Res);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Ge_Sgn_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Sgn_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Ge_Slv_Slv =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Compare_Sgn_Sgn (Param1, Param2, Less, +Expr) >= Equal;
+               return Create_Memory_Boolean (Res);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Ge_Sgn_Int
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Sgn_Int
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Ge_Slv_Int =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Compare_Sgn_Int (Param1, Param2, Less, +Expr) >= Equal;
+               return Create_Memory_Boolean (Res);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Ge_Int_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Int_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Ge_Int_Slv =>
+            declare
+               Res : Order_Type;
+            begin
+               Res := Compare_Sgn_Int (Param2, Param1, Greater, +Expr);
+               return Create_Memory_Boolean (Res <= Equal);
+            end;
+
+         when Iir_Predefined_Ieee_Numeric_Std_Le_Uns_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Le_Uns_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Le_Slv_Slv =>
+            declare
+               Res : Order_Type;
+            begin
+               Res := Compare_Uns_Uns (Param1, Param2, Greater, +Expr);
+               return Create_Memory_Boolean (Res <= Equal);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Le_Uns_Nat =>
+            declare
+               Res : Order_Type;
+            begin
+               Res := Compare_Uns_Nat (Param1, Param2, Greater, +Expr);
+               return Create_Memory_Boolean (Res <= Equal);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Le_Nat_Uns =>
+            declare
+               Res : Order_Type;
+            begin
+               Res := Compare_Nat_Uns (Param1, Param2, Greater, +Expr);
+               return Create_Memory_Boolean (Res <= Equal);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Le_Sgn_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Le_Sgn_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Le_Slv_Slv =>
+            declare
+               Res : Order_Type;
+            begin
+               Res := Compare_Sgn_Sgn (Param1, Param2, Greater, +Expr);
+               return Create_Memory_Boolean (Res <= Equal);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Le_Int_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Le_Int_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Le_Int_Slv =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Compare_Sgn_Int (Param2, Param1, Less, +Expr) >= Equal;
+               return Create_Memory_Boolean (Res);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Le_Sgn_Int
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Le_Sgn_Int
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Le_Slv_Int =>
+            declare
+               Res : Order_Type;
+            begin
+               Res := Compare_Sgn_Int (Param1, Param2, Greater, +Expr);
+               return Create_Memory_Boolean (Res <= Equal);
+            end;
+
+         when Iir_Predefined_Ieee_Numeric_Std_Lt_Uns_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Uns_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Lt_Slv_Slv =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Compare_Uns_Uns (Param1, Param2, Greater, +Expr) < Equal;
+               return Create_Memory_Boolean (Res);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Lt_Uns_Nat =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Compare_Uns_Nat (Param1, Param2, Greater, +Expr) < Equal;
+               return Create_Memory_Boolean (Res);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Lt_Nat_Uns =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Compare_Nat_Uns (Param1, Param2, Greater, +Expr) < Equal;
+               return Create_Memory_Boolean (Res);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Lt_Sgn_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Sgn_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Lt_Slv_Slv =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Compare_Sgn_Sgn (Param1, Param2, Greater, +Expr) < Equal;
+               return Create_Memory_Boolean (Res);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Lt_Int_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Int_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Lt_Int_Slv =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Compare_Sgn_Int (Param2, Param1, Less, +Expr) > Equal;
+               return Create_Memory_Boolean (Res);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Lt_Sgn_Int
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Sgn_Int
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Lt_Slv_Int =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Compare_Sgn_Int (Param1, Param2, Greater, +Expr) < Equal;
+               return Create_Memory_Boolean (Res);
+            end;
+
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Uns_Sgn =>
+            declare
+               Res : Order_Type;
+            begin
+               Res := Compare_Uns_Sgn (Param1, Param2, +Expr);
+               return Create_Memory_Boolean (Res < Equal);
+            end;
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Sgn_Uns =>
+            declare
+               Res : Order_Type;
+            begin
+               Res := Compare_Uns_Sgn (Param2, Param1, +Expr);
+               return Create_Memory_Boolean (Res > Equal);
+            end;
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Uns_Int
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Lt_Slv_Int =>
+            declare
+               Res : Order_Type;
+            begin
+               Res := Compare_Uns_Int (Param1, Read_Discrete (Param2), +Expr);
+               return Create_Memory_Boolean (Res < Equal);
+            end;
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Int_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Lt_Int_Slv =>
+            declare
+               Res : Order_Type;
+            begin
+               Res := Compare_Uns_Int (Param2, Read_Discrete (Param1), +Expr);
+               return Create_Memory_Boolean (Res > Equal);
+            end;
+
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Le_Uns_Sgn =>
+            declare
+               Res : Order_Type;
+            begin
+               Res := Compare_Uns_Sgn (Param1, Param2, +Expr);
+               return Create_Memory_Boolean (Res <= Equal);
+            end;
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Le_Sgn_Uns =>
+            declare
+               Res : Order_Type;
+            begin
+               Res := Compare_Uns_Sgn (Param2, Param1, +Expr);
+               return Create_Memory_Boolean (Res >= Equal);
+            end;
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Le_Uns_Int
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Le_Slv_Int =>
+            declare
+               Res : Order_Type;
+            begin
+               Res := Compare_Uns_Int (Param1, Read_Discrete (Param2), +Expr);
+               return Create_Memory_Boolean (Res <= Equal);
+            end;
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Le_Int_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Le_Int_Slv =>
+            declare
+               Res : Order_Type;
+            begin
+               Res := Compare_Uns_Int (Param2, Read_Discrete (Param1), +Expr);
+               return Create_Memory_Boolean (Res >= Equal);
+            end;
+
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Uns_Sgn =>
+            declare
+               Res : Order_Type;
+            begin
+               Res := Compare_Uns_Sgn (Param1, Param2, +Expr);
+               return Create_Memory_Boolean (Res > Equal);
+            end;
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Sgn_Uns =>
+            declare
+               Res : Order_Type;
+            begin
+               Res := Compare_Uns_Sgn (Param2, Param1, +Expr);
+               return Create_Memory_Boolean (Res < Equal);
+            end;
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Uns_Int
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Gt_Slv_Int =>
+            declare
+               Res : Order_Type;
+            begin
+               Res := Compare_Uns_Int (Param1, Read_Discrete (Param2), +Expr);
+               return Create_Memory_Boolean (Res > Equal);
+            end;
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Int_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Gt_Int_Slv =>
+            declare
+               Res : Order_Type;
+            begin
+               Res := Compare_Uns_Int (Param2, Read_Discrete (Param1), +Expr);
+               return Create_Memory_Boolean (Res < Equal);
+            end;
+
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Uns_Sgn =>
+            declare
+               Res : Order_Type;
+            begin
+               Res := Compare_Uns_Sgn (Param1, Param2, +Expr);
+               return Create_Memory_Boolean (Res >= Equal);
+            end;
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Sgn_Uns =>
+            declare
+               Res : Order_Type;
+            begin
+               Res := Compare_Uns_Sgn (Param2, Param1, +Expr);
+               return Create_Memory_Boolean (Res <= Equal);
+            end;
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Uns_Int
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Ge_Slv_Int =>
+            declare
+               Res : Order_Type;
+            begin
+               Res := Compare_Uns_Int (Param1, Read_Discrete (Param2), +Expr);
+               return Create_Memory_Boolean (Res >= Equal);
+            end;
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Int_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Ge_Int_Slv =>
+            declare
+               Res : Order_Type;
+            begin
+               Res := Compare_Uns_Int (Param2, Read_Discrete (Param1), +Expr);
+               return Create_Memory_Boolean (Res <= Equal);
+            end;
+
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Uns_Sgn =>
+            declare
+               Res : Order_Type;
+            begin
+               Res := Compare_Uns_Sgn (Param1, Param2, +Expr);
+               return Create_Memory_Boolean (Res = Equal);
+            end;
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Sgn_Uns =>
+            declare
+               Res : Order_Type;
+            begin
+               Res := Compare_Uns_Sgn (Param2, Param1, +Expr);
+               return Create_Memory_Boolean (Res = Equal);
+            end;
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Uns_Int
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Eq_Slv_Int =>
+            declare
+               Res : Order_Type;
+            begin
+               Res := Compare_Uns_Int (Param1, Read_Discrete (Param2), +Expr);
+               return Create_Memory_Boolean (Res = Equal);
+            end;
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Int_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Eq_Int_Slv =>
+            declare
+               Res : Order_Type;
+            begin
+               Res := Compare_Uns_Int (Param2, Read_Discrete (Param1), +Expr);
+               return Create_Memory_Boolean (Res = Equal);
+            end;
+
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Uns_Sgn =>
+            declare
+               Res : Order_Type;
+            begin
+               Res := Compare_Uns_Sgn (Param1, Param2, +Expr);
+               return Create_Memory_Boolean (Res /= Equal);
+            end;
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Sgn_Uns =>
+            declare
+               Res : Order_Type;
+            begin
+               Res := Compare_Uns_Sgn (Param2, Param1, +Expr);
+               return Create_Memory_Boolean (Res /= Equal);
+            end;
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Uns_Int
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Ne_Slv_Int =>
+            declare
+               Res : Order_Type;
+            begin
+               Res := Compare_Uns_Int (Param1, Read_Discrete (Param2), +Expr);
+               return Create_Memory_Boolean (Res /= Equal);
+            end;
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Int_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Ne_Int_Slv =>
+            declare
+               Res : Order_Type;
+            begin
+               Res := Compare_Uns_Int (Param2, Read_Discrete (Param1), +Expr);
+               return Create_Memory_Boolean (Res /= Equal);
+            end;
+
+         when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Uns_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Uns_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Add_Slv_Slv =>
+            return Add_Uns_Uns (Param1, Param2, +Expr);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Log
+           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Log =>
+            return Add_Uns_Uns (Param1, Log_To_Vec (Param2, Param1), +Expr);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Add_Log_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Log_Slv =>
+            return Add_Uns_Uns (Log_To_Vec (Param1, Param2), Param2, +Expr);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Nat
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Int
+            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Add_Slv_Nat =>
+            return Add_Uns_Nat
+              (Param1, To_Uns64 (Read_Discrete (Param2)), +Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Add_Nat_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Add_Nat_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Int_Slv =>
+            return Add_Uns_Nat
+              (Param2, To_Uns64 (Read_Discrete (Param1)), +Expr);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Sgn_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Sgn_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Add_Slv_Slv =>
+            return Add_Sgn_Sgn (Param1, Param2, +Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Int
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Add_Slv_Int =>
+            return Add_Sgn_Int (Param1, Read_Discrete (Param2), +Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Add_Int_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Add_Int_Slv =>
+            return Add_Sgn_Int (Param2, Read_Discrete (Param1), +Expr);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Log
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Add_Slv_Log =>
+            return Add_Sgn_Sgn (Param1, Log_To_Vec (Param2, Param1), +Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Add_Log_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Add_Log_Slv =>
+            return Add_Sgn_Sgn (Log_To_Vec (Param1, Param2), Param2, +Expr);
+
+         --  std_logic_arith."+"
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Sgn_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Sgn_Slv =>
+            return Add_Uns_Sgn_Sgn (Param1, Param2, +Expr);
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Uns_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Uns_Slv =>
+            return Add_Sgn_Uns_Sgn (Param1, Param2, +Expr);
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Int_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Int_Slv =>
+            return Add_Uns_Int_Uns (Param1, Read_Discrete (Param2), +Expr);
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Add_Int_Uns_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Int_Uns_Slv =>
+            return Add_Uns_Int_Uns (Param2, Read_Discrete (Param1), +Expr);
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Int_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Int_Slv =>
+            return Add_Sgn_Int_Sgn (Param1, Read_Discrete (Param2), +Expr);
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Add_Int_Sgn_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Int_Sgn_Slv =>
+            return Add_Sgn_Int_Sgn (Param2, Read_Discrete (Param1), +Expr);
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Log_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Log_Slv =>
+            return Add_Uns_Log_Uns (Param1, Param2, +Expr);
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Add_Log_Uns_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Log_Uns_Slv =>
+            return Add_Uns_Log_Uns (Param2, Param1, +Expr);
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Log_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Log_Slv =>
+            return Add_Sgn_Log_Sgn (Param1, Param2, +Expr);
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Add_Log_Sgn_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Log_Sgn_Slv =>
+            return Add_Sgn_Log_Sgn (Param2, Param1, +Expr);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Sub_Slv_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Uns_Uns_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Uns_Uns_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Slv_Slv =>
+            return Sub_Uns_Uns (Param1, Param2, +Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Nat
+            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Sub_Slv_Nat
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Slv_Int =>
+            return Sub_Uns_Nat
+              (Param1, To_Uns64 (Read_Discrete (Param2)), +Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Sub_Nat_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Sub_Nat_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Int_Slv =>
+            return Sub_Nat_Uns
+              (To_Uns64 (Read_Discrete (Param1)), Param2, +Expr);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Log
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Slv_Log =>
+            return Sub_Uns_Uns (Param1, Log_To_Vec (Param2, Param1), +Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Sub_Log_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Log_Slv =>
+            return Sub_Uns_Uns (Log_To_Vec (Param1, Param2), Param2, +Expr);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Sgn_Sgn_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Sgn_Sgn_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Slv_Slv =>
+            return Sub_Sgn_Sgn (Param1, Param2, +Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Int
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Slv_Int =>
+            return Sub_Sgn_Int (Param1, Read_Discrete (Param2), +Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Sub_Int_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Int_Slv =>
+            return Sub_Int_Sgn (Read_Discrete (Param1), Param2, +Expr);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Log
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Slv_Log =>
+            return Sub_Sgn_Sgn (Param1, Log_To_Vec (Param2, Param1), +Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Sub_Log_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Log_Slv =>
+            return Sub_Sgn_Sgn (Log_To_Vec (Param1, Param2), Param2, +Expr);
+
+         --  std_logic_arith."-"
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Uns_Sgn_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Uns_Sgn_Slv =>
+            return Sub_Uns_Sgn_Sgn (Param1, Param2, +Expr);
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Sgn_Uns_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Sgn_Uns_Slv =>
+            return Sub_Sgn_Uns_Sgn (Param1, Param2, +Expr);
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Uns_Int_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Uns_Int_Slv =>
+            return Sub_Uns_Int_Uns (Param1, Read_Discrete (Param2), +Expr);
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Int_Uns_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Int_Uns_Slv =>
+            return Sub_Int_Uns_Uns (Read_Discrete (Param1), Param2, +Expr);
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Sgn_Int_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Sgn_Int_Slv =>
+            return Sub_Sgn_Int_Sgn (Param1, Read_Discrete (Param2), +Expr);
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Int_Sgn_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Int_Sgn_Slv =>
+            return Sub_Int_Sgn_Sgn (Read_Discrete (Param1), Param2, +Expr);
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Uns_Log_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Uns_Log_Slv =>
+            return Sub_Uns_Log_Uns (Param1, Param2, +Expr);
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Log_Uns_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Log_Uns_Slv =>
+            return Sub_Log_Uns_Uns (Param1, Param2, +Expr);
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Sgn_Log_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Sgn_Log_Slv =>
+            return Sub_Sgn_Log_Sgn (Param1, Param2, +Expr);
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Log_Sgn_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Log_Sgn_Slv =>
+            return Sub_Log_Sgn_Sgn (Param1, Param2, +Expr);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Mul_Uns_Uns =>
+            return Mul_Uns_Uns (Param1, Param2, +Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Mul_Nat_Uns =>
+            return Mul_Nat_Uns
+              (To_Uns64 (Read_Discrete (Param1)), Param2, +Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Mul_Uns_Nat =>
+            return Mul_Uns_Nat
+              (Param1, To_Uns64 (Read_Discrete (Param2)), +Expr);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Mul_Sgn_Sgn =>
+            return Mul_Sgn_Sgn (Param1, Param2, +Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Mul_Sgn_Int =>
+            return Mul_Sgn_Int (Param1, Read_Discrete (Param2), +Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Mul_Int_Sgn =>
+            return Mul_Int_Sgn (Read_Discrete (Param1), Param2, +Expr);
+
+         --  std_logic_arith."*"
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Uns_Uns_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Uns_Uns_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Mul_Slv_Slv =>
+            return Mul_Uns_Uns_Uns (Param1, Param2, +Expr);
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Sgn_Sgn_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Sgn_Sgn_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Mul_Slv_Slv =>
+            return Mul_Sgn_Sgn_Sgn (Param1, Param2, +Expr);
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Uns_Sgn_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Uns_Sgn_Slv =>
+            return Mul_Uns_Sgn_Sgn (Param1, Param2, +Expr);
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Sgn_Uns_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Sgn_Uns_Slv =>
+            return Mul_Sgn_Uns_Sgn (Param1, Param2, +Expr);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Div_Uns_Uns =>
+            return Div_Uns_Uns (Inst, Param1, Param2, Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Div_Uns_Nat =>
+            return Div_Uns_Nat
+              (Inst, Param1, To_Uns64 (Read_Discrete (Param2)), Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Div_Nat_Uns =>
+            return Div_Nat_Uns
+              (Inst, To_Uns64 (Read_Discrete (Param1)), Param2, Expr);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Div_Sgn_Sgn =>
+            return Div_Sgn_Sgn (Inst, Param1, Param2, Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Div_Int_Sgn =>
+            return Div_Int_Sgn (Inst, Read_Discrete (Param1), Param2, Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Div_Sgn_Int =>
+            return Div_Sgn_Int (Inst, Param1, Read_Discrete (Param2), Expr);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Rem_Uns_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Mod_Uns_Uns =>
+            return Rem_Uns_Uns (Inst, Param1, Param2, Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Rem_Uns_Nat
+            | Iir_Predefined_Ieee_Numeric_Std_Mod_Uns_Nat =>
+            return Rem_Uns_Nat
+              (Inst, Param1, To_Uns64 (Read_Discrete (Param2)), Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Rem_Nat_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Mod_Nat_Uns =>
+            return Rem_Nat_Uns
+              (Inst, To_Uns64 (Read_Discrete (Param1)), Param2, Expr);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Rem_Sgn_Sgn =>
+            return Rem_Sgn_Sgn (Inst, Param1, Param2, Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Rem_Int_Sgn =>
+            return Rem_Int_Sgn (Inst, Read_Discrete (Param1), Param2, Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Rem_Sgn_Int =>
+            return Rem_Sgn_Int (Inst, Param1, Read_Discrete (Param2), Expr);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Mod_Sgn_Sgn =>
+            return Mod_Sgn_Sgn (Inst, Param1, Param2, Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Mod_Int_Sgn =>
+            return Mod_Int_Sgn (Inst, Read_Discrete (Param1), Param2, Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Mod_Sgn_Int =>
+            return Mod_Sgn_Int (Inst, Param1, Read_Discrete (Param2), Expr);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Srl_Uns_Int
+           |  Iir_Predefined_Ieee_Numeric_Std_Srl_Sgn_Int =>
+            declare
+               Amt : Int64;
+            begin
+               Amt := Read_Discrete (Param2);
+               if Amt >= 0 then
+                  return Shift_Vec (Param1, Uns32 (Amt), True, False);
+               else
+                  return Shift_Vec (Param1, Uns32 (-Amt), False, False);
+               end if;
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Sll_Uns_Int
+           |  Iir_Predefined_Ieee_Numeric_Std_Sll_Sgn_Int =>
+            declare
+               Amt : Int64;
+            begin
+               Amt := Read_Discrete (Param2);
+               if Amt >= 0 then
+                  return Shift_Vec (Param1, Uns32 (Amt), False, False);
+               else
+                  return Shift_Vec (Param1, Uns32 (-Amt), True, False);
+               end if;
+            end;
+
+         when Iir_Predefined_Ieee_Numeric_Std_Match_Eq_Uns_Uns =>
+            declare
+               Res : Std_Ulogic;
+            begin
+               Res := Match_Eq_Vec_Vec (Param1, Param2, False, +Expr);
+               return Create_Memory_U8 (Std_Ulogic'Pos (Res), Res_Typ);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Match_Ne_Uns_Uns =>
+            declare
+               Res : Std_Ulogic;
+            begin
+               Res := Match_Eq_Vec_Vec (Param1, Param2, False, +Expr);
+               Res := Not_Table (Res);
+               return Create_Memory_U8 (Std_Ulogic'Pos (Res), Res_Typ);
+            end;
+
+         when Iir_Predefined_Ieee_Numeric_Std_Match_Lt_Uns_Uns =>
+            return Match_Cmp_Vec_Vec (Param1, Param2, Map_Lt, False, +Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Match_Lt_Sgn_Sgn =>
+            return Match_Cmp_Vec_Vec (Param1, Param2, Map_Lt, True, +Expr);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Match_Le_Uns_Uns =>
+            return Match_Cmp_Vec_Vec (Param1, Param2, Map_Le, False, +Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Match_Le_Sgn_Sgn =>
+            return Match_Cmp_Vec_Vec (Param1, Param2, Map_Le, True, +Expr);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Match_Gt_Uns_Uns =>
+            return Match_Cmp_Vec_Vec (Param1, Param2, Map_Gt, False, +Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Match_Gt_Sgn_Sgn =>
+            return Match_Cmp_Vec_Vec (Param1, Param2, Map_Gt, True, +Expr);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Match_Ge_Uns_Uns =>
+            return Match_Cmp_Vec_Vec (Param1, Param2, Map_Ge, False, +Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Match_Ge_Sgn_Sgn =>
+            return Match_Cmp_Vec_Vec (Param1, Param2, Map_Ge, True, +Expr);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Match_Eq_Sgn_Sgn =>
+            declare
+               Res : Std_Ulogic;
+            begin
+               Res := Match_Eq_Vec_Vec (Param1, Param2, True, +Expr);
+               return Create_Memory_U8 (Std_Ulogic'Pos (Res), Res_Typ);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Match_Ne_Sgn_Sgn =>
+            declare
+               Res : Std_Ulogic;
+            begin
+               Res := Match_Eq_Vec_Vec (Param1, Param2, True, +Expr);
+               Res := Not_Table (Res);
+               return Create_Memory_U8 (Std_Ulogic'Pos (Res), Res_Typ);
+            end;
+
+         when Iir_Predefined_Ieee_Math_Real_Pow_Real_Real =>
+            declare
+               function Pow (L, R : Fp64) return Fp64;
+               pragma Import (C, Pow);
+            begin
+               return Create_Memory_Fp64
+                 (Pow (Read_Fp64 (Param1), Read_Fp64 (Param2)), Res_Typ);
+            end;
+
+         when Iir_Predefined_Ieee_Math_Real_Mod =>
+            declare
+               function Fmod (L, R : Fp64) return Fp64;
+               pragma Import (C, Fmod);
+            begin
+               return Create_Memory_Fp64
+                 (Fmod (Read_Fp64 (Param1), Read_Fp64 (Param2)), Res_Typ);
+            end;
+
          when Iir_Predefined_Physical_Minimum
            | Iir_Predefined_Integer_Minimum
            | Iir_Predefined_Enum_Minimum =>
