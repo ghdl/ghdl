@@ -1047,14 +1047,27 @@ package body Vhdl.Evaluation is
                  (Read_Discrete (Mt), Btype, Orig);
             when Type_Float =>
                return Build_Floating (Read_Fp64 (Mt), Orig);
+            when Type_Discrete =>
+               Res_Type := Get_Type (Orig);
+               case Iir_Kinds_Discrete_Type_Definition (Get_Kind (Res_Type)) is
+                  when Iir_Kind_Integer_Type_Definition
+                    | Iir_Kind_Integer_Subtype_Definition =>
+                     return Build_Integer (Read_Discrete (Mt), Orig);
+                  when Iir_Kind_Enumeration_Type_Definition
+                    | Iir_Kind_Enumeration_Subtype_Definition =>
+                     --  Cannot happen: only bit and std_ulogic are involed in
+                     --  static operations and those are handled by Type_Logic
+                     --  and Type_Bit.
+                     raise Internal_Error;
+               end case;
             when others =>
                raise Internal_Error;
          end case;
       end Convert_Memtyp_To_Node;
    end Synth_Helpers;
 
-   function Eval_Ieee_Operator (Orig : Iir; Imp : Iir; Left : Iir; Right : Iir)
-                               return Iir
+   function Eval_Ieee_Operation
+     (Orig : Iir; Imp : Iir; Left : Iir; Right : Iir) return Iir
    is
       use Elab.Vhdl_Objtypes;
       use Synth.Vhdl_Eval;
@@ -1076,13 +1089,15 @@ package body Vhdl.Evaluation is
       else
          Right_Mt := Null_Memtyp;
       end if;
+
       Res_Mt := Eval_Static_Predefined_Function_Call
         (null, Left_Mt, Right_Mt, Res_Typ, Orig);
+
       Res := Convert_Memtyp_To_Node (Res_Mt, Res_Type, Orig);
       Release_Expr_Pool (Marker);
 
       return Res;
-   end Eval_Ieee_Operator;
+   end Eval_Ieee_Operation;
 
    function Eval_Predefined_Call (Orig : Iir;
                                   Call : Iir;
@@ -1276,7 +1291,7 @@ package body Vhdl.Evaluation is
             end;
 
          when Iir_Predefined_IEEE_Explicit =>
-            return Eval_Ieee_Operator (Orig, Imp, Operand, Null_Iir);
+            return Eval_Ieee_Operation (Orig, Imp, Operand, Null_Iir);
 
          when others =>
             Error_Internal (Orig, "eval_monadic_operator: " &
@@ -2670,7 +2685,7 @@ package body Vhdl.Evaluation is
            | Iir_Predefined_TF_Element_Array_Xor
            | Iir_Predefined_TF_Array_Element_Xnor
            | Iir_Predefined_TF_Element_Array_Xnor =>
-            return Eval_Ieee_Operator (Orig, Imp, Left, Right);
+            return Eval_Ieee_Operation (Orig, Imp, Left, Right);
 
          when Iir_Predefined_TF_Reduction_And
            | Iir_Predefined_TF_Reduction_Or
@@ -2686,7 +2701,7 @@ package body Vhdl.Evaluation is
            | Iir_Predefined_Bit_Array_Match_Inequality
            | Iir_Predefined_Std_Ulogic_Array_Match_Equality
            | Iir_Predefined_Std_Ulogic_Array_Match_Inequality =>
-            return Eval_Ieee_Operator (Orig, Imp, Left, Right);
+            return Eval_Ieee_Operation (Orig, Imp, Left, Right);
 
          when Iir_Predefined_Enum_To_String
            | Iir_Predefined_Integer_To_String
@@ -2696,7 +2711,7 @@ package body Vhdl.Evaluation is
             raise Internal_Error;
 
          when Iir_Predefined_IEEE_Explicit =>
-            return Eval_Ieee_Operator (Orig, Imp, Left, Right);
+            return Eval_Ieee_Operation (Orig, Imp, Left, Right);
 
          when Iir_Predefined_None =>
             --  Not static
@@ -3909,24 +3924,40 @@ package body Vhdl.Evaluation is
          when Iir_Kind_Function_Call =>
             declare
                Imp : constant Iir := Get_Implementation (Expr);
+               Def : constant Iir_Predefined_Functions :=
+                 Get_Implicit_Definition (Imp);
                Left, Right : Iir;
             begin
-               if (Get_Implicit_Definition (Imp)
-                     in Iir_Predefined_Concat_Functions)
-               then
+               if Def in Iir_Predefined_Concat_Functions then
                   return Eval_Concatenation ((1 => Expr));
-               else
-                  --  Note: there can't be association by name.
-                  Left := Get_Parameter_Association_Chain (Expr);
-                  Right := Get_Chain (Left);
+               end if;
 
+               Left := Get_Parameter_Association_Chain (Expr);
+               Right := Get_Chain (Left);
+
+               if Def in Iir_Predefined_IEEE_Explicit then
+                  --  Note: what about association by name ?
+                  pragma Assert
+                    (Get_Kind (Left)
+                       = Iir_Kind_Association_Element_By_Expression);
                   Left := Eval_Static_Expr (Get_Actual (Left));
-                  if Right = Null_Iir then
-                     return Eval_Monadic_Operator (Expr, Left);
-                  else
+                  if Right /= Null_Node then
+                     pragma Assert
+                       (Get_Kind (Right)
+                          = Iir_Kind_Association_Element_By_Expression);
                      Right := Eval_Static_Expr (Get_Actual (Right));
-                     return Eval_Dyadic_Operator (Expr, Imp, Left, Right);
                   end if;
+                  return Eval_Ieee_Operation (Expr, Imp, Left, Right);
+               end if;
+
+               --  Note: no association by name as the interfaces are
+               --  anonymous.
+               Left := Eval_Static_Expr (Get_Actual (Left));
+               if Right = Null_Iir then
+                  return Eval_Monadic_Operator (Expr, Left);
+               else
+                  Right := Eval_Static_Expr (Get_Actual (Right));
+                  return Eval_Dyadic_Operator (Expr, Imp, Left, Right);
                end if;
             end;
 

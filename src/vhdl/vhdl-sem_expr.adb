@@ -17,7 +17,6 @@
 with Grt.Algos;
 with Errorout; use Errorout;
 with Name_Table;
-with Std_Names;
 with Str_Table;
 with Flags; use Flags;
 
@@ -895,25 +894,10 @@ package body Vhdl.Sem_Expr is
 
    function Is_Ieee_Operation (Imp : Iir) return Boolean
    is
-      use Std_Names;
-      Parent : Iir;
-   begin
       pragma Assert (Get_Kind (Imp) = Iir_Kind_Function_Declaration);
-
-      --  TODO: remove this code so that all operations are allowed (and not
-      --   only operators).
-      case Get_Identifier (Imp) is
-         when Name_Id_Operators
-           | Name_Word_Operators
-           | Name_Logical_Operators =>
-            null;
-         when others =>
-            --  Not an operator.
-            return False;
-      end case;
-
+      Parent : constant Iir := Get_Parent (Imp);
+   begin
       --  TODO: numeric_bit, numeric_bit_unsigned, numeric_std_unsigned.
-      Parent := Get_Parent (Imp);
       return Parent = Vhdl.Ieee.Numeric.Numeric_Std_Pkg
         or Parent = Vhdl.Ieee.Std_Logic_1164.Std_Logic_1164_Pkg;
    end Is_Ieee_Operation;
