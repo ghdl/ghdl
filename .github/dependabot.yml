@@ -1,0 +1,31 @@
+version: 2
+updates:
+  # Maintain Python packages
+  - package-ecosystem: "pip"
+    directory: "/"
+    target-branch: master
+    commit-message:
+      prefix: "[Dependabot]"
+    labels:
+      - Dependencies
+    reviewers:
+      - tgingold
+      - Paebbels
+      - umarcor
+    schedule:
+      interval: "daily"    # Checks on Monday trough Friday.
+
+  # Maintain GitHub Action runners
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    target-branch: master
+    commit-message:
+      prefix: "[Dependabot]"
+    labels:
+      - Dependencies
+    reviewers:
+      - tgingold
+      - Paebbels
+      - umarcor
+    schedule:
+      interval: "weekly"
