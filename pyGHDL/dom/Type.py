@@ -13,7 +13,7 @@
 #
 # License:
 # ============================================================================
-#  Copyright (C) 2019-2021 Tristan Gingold
+#  Copyright (C) 2019-2022 Tristan Gingold
 #
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -192,13 +192,7 @@ class RecordTypeElement(VHDLModel_RecordTypeElement, DOMMixin):
         elementName = GetNameOfNode(elementDeclarationNode)
         elementType = GetSubtypeIndicationFromNode(elementDeclarationNode, "record element", elementName)
 
-        return cls(
-            elementDeclarationNode,
-            [
-                elementName,
-            ],
-            elementType,
-        )
+        return cls(elementDeclarationNode, [elementName], elementType,)
 
 
 @export

@@ -13,7 +13,7 @@
 #
 # License:
 # ============================================================================
-#  Copyright (C) 2019-2021 Tristan Gingold
+#  Copyright (C) 2019-2022 Tristan Gingold
 #
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@ from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.libghdl.vhdl.tokens import Tok
 from pyGHDL.dom import DOMMixin, Position, DOMException, Expression
-from pyGHDL.dom._Utils import GetNameOfNode, GetIirKindOfNode
+from pyGHDL.dom._Utils import GetNameOfNode, GetIirKindOfNode, GetDocumentationOfNode
 from pyGHDL.dom._Translate import GetNameFromNode, GetExpressionFromNode
 from pyGHDL.dom.Names import SimpleName
 from pyGHDL.dom.Symbol import SimpleSubtypeSymbol
@@ -54,18 +54,19 @@ from pyGHDL.dom.Symbol import SimpleSubtypeSymbol
 
 @export
 class Attribute(VHDLModel_Attribute, DOMMixin):
-    def __init__(self, node: Iir, identifier: str, subtype: SubtypeOrSymbol):
-        super().__init__(identifier, subtype)
+    def __init__(self, node: Iir, identifier: str, subtype: SubtypeOrSymbol, documentation: str = None):
+        super().__init__(identifier, subtype, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, attributeNode: Iir) -> "Attribute":
         name = GetNameOfNode(attributeNode)
+        documentation = GetDocumentationOfNode(attributeNode)
         subtypeMark = nodes.Get_Type_Mark(attributeNode)
         subtypeName = GetNameOfNode(subtypeMark)
 
         subtype = SimpleSubtypeSymbol(subtypeMark, subtypeName)
-        return cls(attributeNode, name, subtype)
+        return cls(attributeNode, name, subtype, documentation)
 
 
 _TOKEN_TRANSLATION = {
@@ -102,14 +103,16 @@ class AttributeSpecification(VHDLModel_AttributeSpecification, DOMMixin):
         attribute: Name,
         entityClass: EntityClass,
         expression: Expression,
+        documentation: str = None
     ):
-        super().__init__(identifiers, attribute, entityClass, expression)
+        super().__init__(identifiers, attribute, entityClass, expression, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, attributeNode: Iir) -> "AttributeSpecification":
         attributeDesignator = nodes.Get_Attribute_Designator(attributeNode)
         attributeName = GetNameFromNode(attributeDesignator)
+        documentation = GetDocumentationOfNode(attributeNode)
 
         names = []
         entityNameList = nodes.Get_Entity_Name_List(attributeNode)
@@ -136,4 +139,4 @@ class AttributeSpecification(VHDLModel_AttributeSpecification, DOMMixin):
 
         expression = GetExpressionFromNode(nodes.Get_Expression(attributeNode))
 
-        return cls(attributeNode, names, attributeName, entityClass, expression)
+        return cls(attributeNode, names, attributeName, entityClass, expression, documentation)

@@ -13,7 +13,7 @@
 #
 # License:
 # ============================================================================
-#  Copyright (C) 2019-2021 Tristan Gingold
+#  Copyright (C) 2019-2022 Tristan Gingold
 #
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -42,7 +42,6 @@ from typing import Any
 
 from pyTooling.Decorators import export
 
-from pyGHDL.dom.Names import SimpleName
 from pyVHDLModel.SyntaxModel import (
     Design as VHDLModel_Design,
     Library as VHDLModel_Library,
@@ -61,9 +60,12 @@ from pyGHDL.libghdl import (
     utils,
     files_map_editor,
 )
-from pyGHDL.libghdl.vhdl import nodes, sem_lib, parse
+from pyGHDL.libghdl.flags import Flag_Gather_Comments
+from pyGHDL.libghdl.vhdl import nodes, sem_lib
+from pyGHDL.libghdl.vhdl.parse import Flag_Parse_Parenthesis
 from pyGHDL.dom import DOMException, Position
 from pyGHDL.dom._Utils import GetIirKindOfNode, CheckForErrors, GetNameOfNode
+from pyGHDL.dom.Names import SimpleName
 from pyGHDL.dom.DesignUnit import (
     Entity,
     Architecture,
@@ -100,7 +102,8 @@ class Design(VHDLModel_Design):
         libghdl_set_option("--std=08")
         libghdl_set_option("--ams")
 
-        parse.Flag_Parse_Parenthesis.value = True
+        Flag_Gather_Comments.value = True
+        Flag_Parse_Parenthesis.value = True
 
         # Finish initialization. This will load the standard package.
         if libghdl_analyze_init_status() != 0:
