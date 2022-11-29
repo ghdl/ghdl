@@ -419,8 +419,8 @@ package body Synth.Vhdl_Oper is
 
    function Synth_Dyadic_Operation (Syn_Inst : Synth_Instance_Acc;
                                     Imp : Node;
-                                    Left_Expr : Node;
-                                    Right_Expr : Node;
+                                    Left : Valtyp;
+                                    Right : Valtyp;
                                     Expr : Node) return Valtyp
    is
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
@@ -433,12 +433,7 @@ package body Synth.Vhdl_Oper is
       Right_Type : constant Node := Get_Type (Get_Chain (Inter_Chain));
       Left_Typ : constant Type_Acc :=
         Get_Subtype_Object (Syn_Inst, Left_Type);
-      Right_Typ : constant Type_Acc :=
-        Get_Subtype_Object (Syn_Inst, Right_Type);
       Expr_Typ : constant Type_Acc := Get_Subtype_Object (Syn_Inst, Expr_Type);
-      Srec : Memtyp;
-      Left : Valtyp;
-      Right : Valtyp;
 
       function Synth_Bit_Dyadic (Id : Dyadic_Module_Id) return Valtyp
       is
@@ -701,7 +696,7 @@ package body Synth.Vhdl_Oper is
             end if;
             Amt := Amt mod Int64 (Left.Typ.W);
             R1 := Build_Const_UB32 (Ctxt, Uns32 (Amt), Right.Typ.W);
-            Set_Location (R1, Right_Expr);
+            Set_Location (R1, Expr);
          else
             --  The amount should be positive.
             R1 := Get_Net (Ctxt, Right);
@@ -723,31 +718,6 @@ package body Synth.Vhdl_Oper is
          return Create_Value_Net (N, Create_Res_Bound (Left));
       end Synth_Rotation;
    begin
-      Left := Synth_Expression_With_Type (Syn_Inst, Left_Expr, Left_Typ);
-      if Left = No_Valtyp then
-         return No_Valtyp;
-      end if;
-      Left := Synth_Subtype_Conversion (Syn_Inst, Left, Left_Typ, False, Expr);
-      Right := Synth_Expression_With_Type (Syn_Inst, Right_Expr, Right_Typ);
-      if Right = No_Valtyp then
-         return No_Valtyp;
-      end if;
-      Right := Synth_Subtype_Conversion
-        (Syn_Inst, Right, Right_Typ, False, Expr);
-
-      if Is_Static_Val (Left.Val) and Is_Static_Val (Right.Val) then
-         Srec := Eval_Static_Predefined_Function_Call
-           (Syn_Inst, Get_Value_Memtyp (Left), Get_Value_Memtyp (Right),
-            Expr_Typ, Expr);
-         if Srec = Null_Memtyp then
-            return No_Valtyp;
-         end if;
-         return Create_Value_Memtyp (Srec);
-      end if;
-
-      Strip_Const (Left);
-      Strip_Const (Right);
-
       case Def is
          when Iir_Predefined_Error =>
             return No_Valtyp;
@@ -1655,19 +1625,61 @@ package body Synth.Vhdl_Oper is
       end case;
    end Synth_Dyadic_Operation;
 
+   function Synth_Dyadic_Operation (Syn_Inst : Synth_Instance_Acc;
+                                    Imp : Node;
+                                    Left_Expr : Node;
+                                    Right_Expr : Node;
+                                    Expr : Node) return Valtyp
+   is
+      Inter_Chain : constant Node :=
+        Get_Interface_Declaration_Chain (Imp);
+      Expr_Type : constant Node := Get_Type (Expr);
+      Left_Type : constant Node := Get_Type (Inter_Chain);
+      Right_Type : constant Node := Get_Type (Get_Chain (Inter_Chain));
+      Left_Typ : constant Type_Acc :=
+        Get_Subtype_Object (Syn_Inst, Left_Type);
+      Right_Typ : constant Type_Acc :=
+        Get_Subtype_Object (Syn_Inst, Right_Type);
+      Expr_Typ : constant Type_Acc := Get_Subtype_Object (Syn_Inst, Expr_Type);
+      Srec : Memtyp;
+      Left : Valtyp;
+      Right : Valtyp;
+   begin
+      Left := Synth_Expression_With_Type (Syn_Inst, Left_Expr, Left_Typ);
+      if Left = No_Valtyp then
+         return No_Valtyp;
+      end if;
+      Left := Synth_Subtype_Conversion (Syn_Inst, Left, Left_Typ, False, Expr);
+      Right := Synth_Expression_With_Type (Syn_Inst, Right_Expr, Right_Typ);
+      if Right = No_Valtyp then
+         return No_Valtyp;
+      end if;
+      Right := Synth_Subtype_Conversion
+        (Syn_Inst, Right, Right_Typ, False, Expr);
+
+      if Is_Static_Val (Left.Val) and Is_Static_Val (Right.Val) then
+         Srec := Eval_Static_Predefined_Function_Call
+           (Syn_Inst, Get_Value_Memtyp (Left), Get_Value_Memtyp (Right),
+            Expr_Typ, Expr);
+         if Srec = Null_Memtyp then
+            return No_Valtyp;
+         end if;
+         return Create_Value_Memtyp (Srec);
+      else
+         Strip_Const (Left);
+         Strip_Const (Right);
+         return Synth_Dyadic_Operation (Syn_Inst, Imp, Left, Right, Expr);
+      end if;
+   end Synth_Dyadic_Operation;
+
    function Synth_Monadic_Operation (Syn_Inst : Synth_Instance_Acc;
                                      Imp : Node;
-                                     Operand_Expr : Node;
+                                     Operand : Valtyp;
                                      Loc : Node) return Valtyp
    is
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Def : constant Iir_Predefined_Functions :=
         Get_Implicit_Definition (Imp);
-      Inter_Chain : constant Node :=
-        Get_Interface_Declaration_Chain (Imp);
-      Oper_Type : constant Node := Get_Type (Inter_Chain);
-      Oper_Typ : constant Type_Acc := Get_Subtype_Object (Syn_Inst, Oper_Type);
-      Operand : Valtyp;
 
       function Synth_Bit_Monadic (Id : Monadic_Module_Id) return Valtyp
       is
@@ -1703,21 +1715,6 @@ package body Synth.Vhdl_Oper is
          return Create_Value_Net (N, Operand.Typ.Arr_El);
       end Synth_Vec_Reduce_Monadic;
    begin
-      Operand := Synth_Expression_With_Type (Syn_Inst, Operand_Expr, Oper_Typ);
-      if Operand = No_Valtyp then
-         return No_Valtyp;
-      end if;
-      Operand := Synth_Subtype_Conversion
-        (Syn_Inst, Operand, Oper_Typ, False, Loc);
-      Strip_Const (Operand);
-
-      if Is_Static_Val (Operand.Val) then
-         return Create_Value_Memtyp
-           (Eval_Static_Predefined_Function_Call
-              (Syn_Inst, Get_Value_Memtyp (Operand), Null_Memtyp,
-                null, Loc));
-      end if;
-
       case Def is
          when Iir_Predefined_Error =>
             return No_Valtyp;
@@ -1797,6 +1794,35 @@ package body Synth.Vhdl_Oper is
                "unhandled monadic: " & Iir_Predefined_Functions'Image (Def));
             return No_Valtyp;
       end case;
+   end Synth_Monadic_Operation;
+
+   function Synth_Monadic_Operation (Syn_Inst : Synth_Instance_Acc;
+                                     Imp : Node;
+                                     Operand_Expr : Node;
+                                     Loc : Node) return Valtyp
+   is
+      Inter_Chain : constant Node :=
+        Get_Interface_Declaration_Chain (Imp);
+      Oper_Type : constant Node := Get_Type (Inter_Chain);
+      Oper_Typ : constant Type_Acc := Get_Subtype_Object (Syn_Inst, Oper_Type);
+      Operand : Valtyp;
+   begin
+      Operand := Synth_Expression_With_Type (Syn_Inst, Operand_Expr, Oper_Typ);
+      if Operand = No_Valtyp then
+         return No_Valtyp;
+      end if;
+      Operand := Synth_Subtype_Conversion
+        (Syn_Inst, Operand, Oper_Typ, False, Loc);
+      Strip_Const (Operand);
+
+      if Is_Static_Val (Operand.Val) then
+         return Create_Value_Memtyp
+           (Eval_Static_Predefined_Function_Call
+              (Syn_Inst, Get_Value_Memtyp (Operand), Null_Memtyp,
+               null, Loc));
+      else
+         return Synth_Monadic_Operation (Syn_Inst, Imp, Operand, Loc);
+      end if;
    end Synth_Monadic_Operation;
 
    function Synth_Shift_Rotate (Ctxt : Context_Acc;
@@ -1932,11 +1958,10 @@ package body Synth.Vhdl_Oper is
       return Create_Value_Net (N, Operand.Typ.Arr_El);
    end Synth_Vec_Reduce_Monadic;
 
-   function Synth_Dynamic_Predefined_Function_Call
-     (Subprg_Inst : Synth_Instance_Acc;
-      Imp : Node;
-      L, R : Valtyp;
-      Expr : Node) return Valtyp
+   function Synth_Dynamic_Predefined_Call (Subprg_Inst : Synth_Instance_Acc;
+                                           Imp : Node;
+                                           L, R : Valtyp;
+                                           Expr : Node) return Valtyp
    is
       Ctxt : constant Context_Acc := Get_Build (Subprg_Inst);
       Def : constant Iir_Predefined_Functions :=
@@ -2229,7 +2254,7 @@ package body Synth.Vhdl_Oper is
                "unhandled function: " & Iir_Predefined_Functions'Image (Def));
             return No_Valtyp;
       end case;
-   end Synth_Dynamic_Predefined_Function_Call;
+   end Synth_Dynamic_Predefined_Call;
 
    function Synth_Predefined_Function_Call
      (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Valtyp
@@ -2320,7 +2345,7 @@ package body Synth.Vhdl_Oper is
                   R := No_Valtyp;
                end if;
 
-               Res := Synth_Dynamic_Predefined_Function_Call
+               Res := Synth_Dynamic_Predefined_Call
                  (Subprg_Inst, Get_Implementation (Expr), L, R, Expr);
             end;
          end if;
