@@ -37,7 +37,7 @@ package Synth.Vhdl_Oper is
    function Synth_Monadic_Operation (Syn_Inst : Synth_Instance_Acc;
                                      Imp : Node;
                                      Operand_Expr : Node;
-                                     Loc : Node) return Valtyp;
+                                     Expr : Node) return Valtyp;
 
    function Create_Bounds_From_Length
      (Syn_Inst : Synth_Instance_Acc; Atype : Iir; Len : Iir_Index32)
