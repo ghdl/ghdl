@@ -91,12 +91,13 @@ def GetNameOfNode(node: Iir) -> str:
 def GetDocumentationOfNode(node: Iir) -> str:
     file = files_map.Location_To_File(nodes.Get_Location(node))
     idx = file_comments.Find_First_Comment(file, node)
-    documentation = ""
+    documentation = []
     while idx != file_comments.No_Comment_Index:
-        documentation += file_comments.Get_Comment(file, idx)
+        documentation.append(file_comments.Get_Comment(file, idx))
         idx = file_comments.Get_Next_Comment(file, idx)
 
-    return documentation
+    return "\n".join(documentation)
+
 
 @export
 def GetModeOfNode(node: Iir) -> Mode:
