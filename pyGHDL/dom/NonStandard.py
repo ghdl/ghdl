@@ -64,7 +64,7 @@ from pyGHDL.libghdl.flags import Flag_Gather_Comments
 from pyGHDL.libghdl.vhdl import nodes, sem_lib
 from pyGHDL.libghdl.vhdl.parse import Flag_Parse_Parenthesis
 from pyGHDL.dom import DOMException, Position
-from pyGHDL.dom._Utils import GetIirKindOfNode, CheckForErrors, GetNameOfNode
+from pyGHDL.dom._Utils import GetIirKindOfNode, CheckForErrors, GetNameOfNode, GetDocumentationOfNode
 from pyGHDL.dom.Names import SimpleName
 from pyGHDL.dom.DesignUnit import (
     Entity,
@@ -170,6 +170,7 @@ class Document(VHDLModel_Document):
 
     def translate(self):
         firstUnit = nodes.Get_First_Design_Unit(self.__ghdlFile)
+        self._documentation = GetDocumentationOfNode(firstUnit)
 
         for unit in utils.chain_iter(firstUnit):
             libraryUnit = nodes.Get_Library_Unit(unit)
