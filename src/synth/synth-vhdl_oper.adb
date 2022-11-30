@@ -882,10 +882,61 @@ package body Synth.Vhdl_Oper is
          Size := Uns32 (Read_Discrete (Size_Vt));
          return Synth_Resize (Ctxt, L, Size, Is_Signed, Expr);
       end Synth_Conv_Vector;
+
+      function Error_Unhandled return Valtyp is
+      begin
+         Error_Msg_Synth
+           (Get_Caller_Instance (Syn_Inst), Expr,
+            "unhandled function: " & Iir_Predefined_Functions'Image (Def));
+         return No_Valtyp;
+      end Error_Unhandled;
    begin
       case Def is
-         when Iir_Predefined_Error =>
-            return No_Valtyp;
+         when Iir_Predefined_Error
+            | Iir_Predefined_None =>
+            --  Should not happen.
+            raise Internal_Error;
+
+         when Iir_Predefined_Boolean_Rising_Edge
+           | Iir_Predefined_Boolean_Falling_Edge =>
+            return Error_Unhandled;
+         when Iir_Predefined_Bit_Rising_Edge =>
+            if Hook_Bit_Rising_Edge /= null then
+               return Create_Value_Memtyp
+                 (Hook_Bit_Rising_Edge.all (L, Res_Typ));
+            end if;
+            raise Internal_Error;
+         when Iir_Predefined_Bit_Falling_Edge =>
+            if Hook_Bit_Falling_Edge /= null then
+               return Create_Value_Memtyp
+                 (Hook_Bit_Falling_Edge.all (L, Res_Typ));
+            end if;
+            raise Internal_Error;
+         when Iir_Predefined_Ieee_1164_Rising_Edge =>
+            if Hook_Std_Rising_Edge /= null then
+               return Create_Value_Memtyp
+                 (Hook_Std_Rising_Edge.all (L, Res_Typ));
+            end if;
+            declare
+               Edge : Net;
+            begin
+               Edge := Build_Posedge (Ctxt, Get_Net (Ctxt, L));
+               Set_Location (Edge, Expr);
+               return Create_Value_Net (Edge, Res_Typ);
+            end;
+         when Iir_Predefined_Ieee_1164_Falling_Edge =>
+            if Hook_Std_Falling_Edge /= null then
+               return Create_Value_Memtyp
+                 (Hook_Std_Falling_Edge.all (L, Res_Typ));
+            end if;
+            declare
+               Edge : Net;
+            begin
+               Edge := Build_Negedge (Ctxt, Get_Net (Ctxt, L));
+               Set_Location (Edge, Expr);
+               return Create_Value_Net (Edge, Res_Typ);
+            end;
+
          when Iir_Predefined_Ieee_1164_Scalar_Not =>
             return Synth_Bit_Monadic (Id_Not);
          when Iir_Predefined_Boolean_Not
@@ -1058,7 +1109,8 @@ package body Synth.Vhdl_Oper is
             | Iir_Predefined_Ieee_Numeric_Std_Xnor_Log_Sgn =>
             return Synth_Dyadic_Vec_Log (Ctxt, Id_Xnor, R, L, Expr);
 
-         when Iir_Predefined_Enum_Equality =>
+         when Iir_Predefined_Enum_Equality
+            | Iir_Predefined_Bit_Match_Equality =>
             if L.Typ = Bit_Type or else L.Typ = Logic_Type then
                if Is_Static (L.Val) then
                   return Synth_Bit_Eq_Const (Ctxt, L, R, Expr);
@@ -1067,16 +1119,21 @@ package body Synth.Vhdl_Oper is
                end if;
             end if;
             return Synth_Compare (Id_Eq, Boolean_Type);
-         when Iir_Predefined_Enum_Inequality =>
+         when Iir_Predefined_Enum_Inequality
+            | Iir_Predefined_Bit_Match_Inequality =>
             --  TODO: Optimize ?
             return Synth_Compare (Id_Ne, Boolean_Type);
-         when Iir_Predefined_Enum_Less_Equal =>
+         when Iir_Predefined_Enum_Less_Equal
+            | Iir_Predefined_Bit_Match_Less_Equal =>
             return Synth_Compare (Id_Ule, Boolean_Type);
-         when Iir_Predefined_Enum_Less =>
+         when Iir_Predefined_Enum_Less
+            | Iir_Predefined_Bit_Match_Less =>
             return Synth_Compare (Id_Ult, Boolean_Type);
-         when Iir_Predefined_Enum_Greater_Equal =>
+         when Iir_Predefined_Enum_Greater_Equal
+            | Iir_Predefined_Bit_Match_Greater_Equal =>
             return Synth_Compare (Id_Uge, Boolean_Type);
-         when Iir_Predefined_Enum_Greater =>
+         when Iir_Predefined_Enum_Greater
+            | Iir_Predefined_Bit_Match_Greater =>
             return Synth_Compare (Id_Ugt, Boolean_Type);
 
          when Iir_Predefined_Std_Ulogic_Match_Equality =>
@@ -1316,14 +1373,76 @@ package body Synth.Vhdl_Oper is
             return Synth_Compare (Id_Eq, Boolean_Type);
          when Iir_Predefined_Integer_Inequality =>
             return Synth_Compare (Id_Ne, Boolean_Type);
-         when Iir_Predefined_Physical_Physical_Div =>
+         when Iir_Predefined_Physical_Physical_Div
+            | Iir_Predefined_Physical_Real_Div
+            | Iir_Predefined_Physical_Integer_Div
+            | Iir_Predefined_Physical_Mod
+            | Iir_Predefined_Physical_Rem =>
             Error_Msg_Synth
               (Syn_Inst, Expr, "non-constant division not supported");
             return No_Valtyp;
 
-         when Iir_Predefined_Floating_Div =>
+         when Iir_Predefined_Floating_Equality
+            | Iir_Predefined_Floating_Inequality
+            | Iir_Predefined_Floating_Less
+            | Iir_Predefined_Floating_Less_Equal
+            | Iir_Predefined_Floating_Greater
+            | Iir_Predefined_Floating_Greater_Equal
+            | Iir_Predefined_Floating_Identity
+            | Iir_Predefined_Floating_Absolute
+            | Iir_Predefined_Floating_Negation
+            | Iir_Predefined_Floating_Minus
+            | Iir_Predefined_Floating_Plus
+            | Iir_Predefined_Floating_Mul
+            | Iir_Predefined_Floating_Div
+            | Iir_Predefined_Floating_Exp
+            | Iir_Predefined_Floating_Minimum
+            | Iir_Predefined_Floating_Maximum
+            | Iir_Predefined_Real_Physical_Mul =>
+            --  TODO: comparison, as the order is the same as a vector ?
             Error_Msg_Synth
-              (Syn_Inst, Expr, "non-constant division not supported");
+              (Syn_Inst, Expr,
+               "non-constant floating point operation not supported");
+            return No_Valtyp;
+
+         when Iir_Predefined_Access_Equality
+            | Iir_Predefined_Access_Inequality
+            | Iir_Predefined_Deallocate =>
+            Error_Msg_Synth
+              (Syn_Inst, Expr, "non-constant access operations not supported");
+            return No_Valtyp;
+
+         when Iir_Predefined_Enum_To_String
+            | Iir_Predefined_Integer_To_String
+            | Iir_Predefined_Floating_To_String
+            | Iir_Predefined_Real_To_String_Format
+            | Iir_Predefined_Real_To_String_Digits
+            | Iir_Predefined_Bit_Vector_To_Hstring
+            | Iir_Predefined_Bit_Vector_To_Ostring =>
+            Error_Msg_Synth
+              (Syn_Inst, Expr, "to_string is not supported");
+            return No_Valtyp;
+
+         when Iir_Predefined_Now_Function
+            | Iir_Predefined_Real_Now_Function
+            | Iir_Predefined_Frequency_Function
+            | Iir_Predefined_Std_Env_Resolution_Limit
+            | Iir_Predefined_Std_Env_Stop
+            | Iir_Predefined_Std_Env_Stop_Status
+            | Iir_Predefined_Std_Env_Finish
+            | Iir_Predefined_Std_Env_Finish_Status
+            | Iir_Predefined_Read
+            | Iir_Predefined_Write
+            | Iir_Predefined_Read_Length
+            | Iir_Predefined_Flush
+            | Iir_Predefined_File_Open_Status
+            | Iir_Predefined_File_Open
+            | Iir_Predefined_File_Close
+            | Iir_Predefined_Foreign_Untruncated_Text_Read
+            | Iir_Predefined_Foreign_Textio_Read_Real
+            | Iir_Predefined_Foreign_Textio_Write_Real =>
+            Error_Msg_Synth
+              (Syn_Inst, Expr, "call to %i is not supported", (1 => +Imp));
             return No_Valtyp;
 
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns
@@ -1852,42 +1971,6 @@ package body Synth.Vhdl_Oper is
             return Synth_Minmax (Ctxt, L, R, Res_Typ, Id_Slt, Expr);
          when Iir_Predefined_Integer_Maximum =>
             return Synth_Minmax (Ctxt, L, R, Res_Typ, Id_Sgt, Expr);
-         when Iir_Predefined_Bit_Rising_Edge =>
-            if Hook_Bit_Rising_Edge /= null then
-               return Create_Value_Memtyp
-                 (Hook_Bit_Rising_Edge.all (L, Res_Typ));
-            end if;
-            raise Internal_Error;
-         when Iir_Predefined_Bit_Falling_Edge =>
-            if Hook_Bit_Falling_Edge /= null then
-               return Create_Value_Memtyp
-                 (Hook_Bit_Falling_Edge.all (L, Res_Typ));
-            end if;
-            raise Internal_Error;
-         when Iir_Predefined_Ieee_1164_Rising_Edge =>
-            if Hook_Std_Rising_Edge /= null then
-               return Create_Value_Memtyp
-                 (Hook_Std_Rising_Edge.all (L, Res_Typ));
-            end if;
-            declare
-               Edge : Net;
-            begin
-               Edge := Build_Posedge (Ctxt, Get_Net (Ctxt, L));
-               Set_Location (Edge, Expr);
-               return Create_Value_Net (Edge, Res_Typ);
-            end;
-         when Iir_Predefined_Ieee_1164_Falling_Edge =>
-            if Hook_Std_Falling_Edge /= null then
-               return Create_Value_Memtyp
-                 (Hook_Std_Falling_Edge.all (L, Res_Typ));
-            end if;
-            declare
-               Edge : Net;
-            begin
-               Edge := Build_Negedge (Ctxt, Get_Net (Ctxt, L));
-               Set_Location (Edge, Expr);
-               return Create_Value_Net (Edge, Res_Typ);
-            end;
          when Iir_Predefined_Ieee_1164_Is_X_Log
             | Iir_Predefined_Ieee_1164_Is_X_Slv
             | Iir_Predefined_Ieee_Numeric_Std_Is_X_Sgn
@@ -2097,10 +2180,7 @@ package body Synth.Vhdl_Oper is
             return Synth_Find_Bit (Syn_Inst, L, R, Res_Typ, False, Expr);
 
          when others =>
-            Error_Msg_Synth
-              (Get_Caller_Instance (Syn_Inst), Expr,
-               "unhandled function: " & Iir_Predefined_Functions'Image (Def));
-            return No_Valtyp;
+            return Error_Unhandled;
       end case;
    end Synth_Dynamic_Predefined_Call;
 
