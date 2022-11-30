@@ -54,7 +54,7 @@ from pyGHDL.libghdl import libghdl, LibGHDLException
 @export
 def EnumLookupTable(cls) -> Callable:
     """
-    Decorator to precalculate a enum lookup table (LUT) for enum position to
+    Decorator to precalculate an enum lookup table (LUT) for enum position to
     enum literal name.
 
     :param cls: Enumerator class for which a LUT shall be pre-calculated.
@@ -62,7 +62,7 @@ def EnumLookupTable(cls) -> Callable:
 
     def decorator(func) -> Callable:
         def gen() -> List[str]:
-            d = [e for e in dir(cls) if e[0] != "_"]
+            d = [e for e in dir(cls) if e[0].isupper() and e[0] != "_"]
             res = [None] * len(d)
             for e in d:
                 res[getattr(cls, e)] = e
