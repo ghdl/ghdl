@@ -161,7 +161,8 @@ package Vhdl.Sem_Scopes is
 
    --  Add declarations of interface chain CHAIN into the current
    --  declarative region.
-   procedure Add_Declarations_From_Interface_Chain (Chain : Iir);
+   procedure Add_Declarations_From_Interface_Chain
+     (Chain : Iir; Potentially : Boolean);
 
    --  Add all declarations for concurrent statements declared in PARENT.
    procedure Add_Declarations_Of_Concurrent_Statement (Parent : Iir);

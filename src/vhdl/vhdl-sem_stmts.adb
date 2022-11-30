@@ -2099,8 +2099,8 @@ package body Vhdl.Sem_Stmts is
          --  ... and reopen-it.
          Open_Declarative_Region;
          Set_Is_Within_Flag (Stmt, True);
-         Add_Declarations_From_Interface_Chain (Generic_Chain);
-         Add_Declarations_From_Interface_Chain (Port_Chain);
+         Add_Declarations_From_Interface_Chain (Generic_Chain, False);
+         Add_Declarations_From_Interface_Chain (Port_Chain, False);
       end if;
 
       --  LRM93 9.1

@@ -1007,8 +1007,7 @@ package body Vhdl.Sem_Scopes is
       Set_Visible_Flag (Decl, True);
    end Name_Visible;
 
-   procedure Iterator_Decl (Decl : Iir; Arg : Arg_Type)
-   is
+   procedure Iterator_Decl (Decl : Iir; Arg : Arg_Type) is
    begin
       case Get_Kind (Decl) is
          when Iir_Kind_Subtype_Declaration
@@ -1229,23 +1228,57 @@ package body Vhdl.Sem_Scopes is
    procedure Add_Declarations_List is new Iterator_Decl_List
      (Arg_Type => Boolean, Handle_Decl => Add_Declaration);
 
-   procedure Add_Declarations_From_Interface_Chain (Chain : Iir)
+   procedure Add_Declarations_From_Interface_Chain
+     (Chain : Iir; Potentially : Boolean)
    is
-      El : Iir;
+      Inter : Iir;
+      Assoc : Iir;
       Id : Name_Id;
    begin
-      El := Chain;
-      while El /= Null_Iir loop
-         Id := Get_Identifier (El);
+      Inter := Chain;
+      while Inter /= Null_Iir loop
+         Id := Get_Identifier (Inter);
 
          --  The chain may be from an implicitely declared subprograms, with
          --  anonymous identifiers.  In that case, all interfaces are
          --  anonymous and there is no need to iterate.
          exit when Id = Null_Identifier;
 
-         Add_Declaration (El, False);
+         --  Not very different from Add_Declaration, except for interface
+         --  subprograms.
+         case Iir_Kinds_Interface_Declaration (Get_Kind (Inter)) is
+            when Iir_Kinds_Interface_Object_Declaration
+              | Iir_Kind_Interface_Package_Declaration
+              | Iir_Kind_Interface_Terminal_Declaration =>
+               Add_Name (Inter, Id, Potentially);
+            when Iir_Kinds_Interface_Subprogram_Declaration =>
+               if Potentially then
+                  --  The normal case: an interface subprogram in a package
+                  --  is visible through a use clause.  But in fact it refer
+                  --  to the associated subprogram.
+                  Assoc := Get_Associated_Subprogram (Inter);
+                  pragma Assert (Assoc /= Null_Iir);
+                  Add_Name (Assoc, Id, Potentially);
+               else
+                  --  Called only when resolving associations (the identifiers
+                  --  of the interfaces are put in the name table).
+                  --  TODO: add a flag or create a different procedure ?
+                  Add_Name (Inter, Id, Potentially);
+               end if;
+            when Iir_Kind_Interface_Type_Declaration =>
+               Add_Name (Inter, Id, Potentially);
+               declare
+                  El : Iir;
+               begin
+                  El := Get_Interface_Type_Subprograms (Inter);
+                  while El /= Null_Iir loop
+                     Add_Name (El, Get_Identifier (El), Potentially);
+                     El := Get_Chain (El);
+                  end loop;
+               end;
+         end case;
 
-         El := Get_Chain (El);
+         Inter := Get_Chain (Inter);
       end loop;
    end Add_Declarations_From_Interface_Chain;
 
@@ -1278,8 +1311,10 @@ package body Vhdl.Sem_Scopes is
       --  Temporarly disable hide warning to avoid spurious messages.
       Enable_Warning (Warnid_Hide, False);
 
-      Add_Declarations_From_Interface_Chain (Get_Generic_Chain (Entity));
-      Add_Declarations_From_Interface_Chain (Get_Port_Chain (Entity));
+      Add_Declarations_From_Interface_Chain
+        (Get_Generic_Chain (Entity), False);
+      Add_Declarations_From_Interface_Chain
+        (Get_Port_Chain (Entity), False);
       Add_Declarations (Get_Declaration_Chain (Entity), False);
       Add_Declarations_Of_Concurrent_Statement (Entity);
 
@@ -1314,7 +1349,8 @@ package body Vhdl.Sem_Scopes is
       --  LRM08 4.9 Package instantiation declarations
       --  The package instantiation declaration is equivalent to declaration of
       --  a generic-mapped package, consisting of a package declaration [...]
-      Add_Declarations (Get_Generic_Chain (Decl), Potentially);
+      Add_Declarations_From_Interface_Chain
+        (Get_Generic_Chain (Decl), Potentially);
       Add_Declarations (Get_Declaration_Chain (Decl), Potentially);
    end Add_Package_Instantiation_Declarations;
 
@@ -1325,11 +1361,13 @@ package body Vhdl.Sem_Scopes is
       Add_Package_Declarations (Decl, False);
    end Add_Package_Declarations;
 
-   procedure Add_Component_Declarations (Component: Iir_Component_Declaration)
-   is
+   procedure Add_Component_Declarations
+     (Component: Iir_Component_Declaration) is
    begin
-      Add_Declarations_From_Interface_Chain (Get_Generic_Chain (Component));
-      Add_Declarations_From_Interface_Chain (Get_Port_Chain (Component));
+      Add_Declarations_From_Interface_Chain
+        (Get_Generic_Chain (Component), False);
+      Add_Declarations_From_Interface_Chain
+        (Get_Port_Chain (Component), False);
    end Add_Component_Declarations;
 
    procedure Add_Protected_Type_Declarations

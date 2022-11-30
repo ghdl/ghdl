@@ -1026,6 +1026,9 @@ package body Vhdl.Sem_Inst is
                     Get_Named_Entity (Get_Actual (Assoc));
                begin
                   Set_Instance (Get_Origin (Assoc_Formal), Actual_Subprg);
+                  --  Also set the associated subprogram to the interface
+                  --  subprogram, so that it can referenced through its name.
+                  Set_Associated_Subprogram (Assoc_Formal, Actual_Subprg);
                end;
             end if;
          when others =>

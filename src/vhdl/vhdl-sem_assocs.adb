@@ -2468,7 +2468,8 @@ package body Vhdl.Sem_Assocs is
          Warn_Hide_Enabled := Is_Warning_Enabled (Warnid_Hide);
          Enable_Warning (Warnid_Hide, False);
 
-         Sem_Scopes.Add_Declarations_From_Interface_Chain (Interface_Chain);
+         Sem_Scopes.Add_Declarations_From_Interface_Chain
+           (Interface_Chain, False);
 
          Enable_Warning (Warnid_Hide, Warn_Hide_Enabled);
 
