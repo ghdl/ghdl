@@ -908,6 +908,41 @@ package body Synth.Vhdl_Eval is
            | Iir_Predefined_Bit_Not =>
             return Create_Memory_U8 (1 - Read_U8 (Param1), Param1.Typ);
 
+         when Iir_Predefined_Boolean_Or
+            | Iir_Predefined_Bit_Or
+            | Iir_Predefined_Boolean_And
+            | Iir_Predefined_Bit_And =>
+            --  Short-circuit operators.
+            raise Internal_Error;
+
+         when Iir_Predefined_Boolean_Rising_Edge
+            | Iir_Predefined_Boolean_Falling_Edge
+            | Iir_Predefined_Bit_Rising_Edge
+            | Iir_Predefined_Bit_Falling_Edge =>
+            --  Cannot be static
+            raise Internal_Error;
+
+         when Iir_Predefined_Boolean_Xor
+            | Iir_Predefined_Bit_Xor =>
+            return Create_Memory_U8
+              (Boolean'Pos (Boolean'Val (Read_Discrete (Param1))
+                              xor Boolean'Val (Read_Discrete (Param2))),
+               Res_Typ);
+
+         when Iir_Predefined_Boolean_Nand
+            | Iir_Predefined_Bit_Nand =>
+            return Create_Memory_U8
+              (Boolean'Pos (not (Boolean'Val (Read_Discrete (Param1))
+                                   and Boolean'Val (Read_Discrete (Param2)))),
+               Res_Typ);
+
+         when Iir_Predefined_Boolean_Nor
+            | Iir_Predefined_Bit_Nor =>
+            return Create_Memory_U8
+              (Boolean'Pos (not (Boolean'Val (Read_Discrete (Param1))
+                                   or Boolean'Val (Read_Discrete (Param2)))),
+               Res_Typ);
+
          when Iir_Predefined_Bit_Condition =>
             return Create_Memory_U8 (Read_U8 (Param1), Param1.Typ);
 
@@ -1021,34 +1056,6 @@ package body Synth.Vhdl_Eval is
             | Iir_Predefined_Ieee_Std_Logic_Arith_Abs_Sgn_Slv
             | Iir_Predefined_Ieee_Std_Logic_Signed_Abs_Slv =>
             return Abs_Sgn_Sgn (Param1, +Expr);
-
-         when Iir_Predefined_Boolean_Or
-            | Iir_Predefined_Bit_Or
-            | Iir_Predefined_Boolean_And
-            | Iir_Predefined_Bit_And =>
-            --  Short-circuit operators.
-            raise Internal_Error;
-
-         when Iir_Predefined_Boolean_Xor
-            | Iir_Predefined_Bit_Xor =>
-            return Create_Memory_U8
-              (Boolean'Pos (Boolean'Val (Read_Discrete (Param1))
-                              xor Boolean'Val (Read_Discrete (Param2))),
-               Res_Typ);
-
-         when Iir_Predefined_Boolean_Nand
-            | Iir_Predefined_Bit_Nand =>
-            return Create_Memory_U8
-              (Boolean'Pos (not (Boolean'Val (Read_Discrete (Param1))
-                                   and Boolean'Val (Read_Discrete (Param2)))),
-               Res_Typ);
-
-         when Iir_Predefined_Boolean_Nor
-            | Iir_Predefined_Bit_Nor =>
-            return Create_Memory_U8
-              (Boolean'Pos (not (Boolean'Val (Read_Discrete (Param1))
-                                   or Boolean'Val (Read_Discrete (Param2)))),
-               Res_Typ);
 
          when Iir_Predefined_Integer_Plus
            | Iir_Predefined_Physical_Plus =>
@@ -2985,10 +2992,9 @@ package body Synth.Vhdl_Eval is
                return Create_Memory_Fp64 (Res, Res_Typ);
             end;
          when others =>
-            null;
+            Error_Msg_Synth (Inst, Expr, "unhandled (static) function: "
+                               & Iir_Predefined_Functions'Image (Def));
+            return Null_Memtyp;
       end case;
-      Error_Msg_Synth (Inst, Expr, "unhandled (static) function: "
-                         & Iir_Predefined_Functions'Image (Def));
-      return Null_Memtyp;
    end Eval_Static_Predefined_Function_Call;
 end Synth.Vhdl_Eval;
