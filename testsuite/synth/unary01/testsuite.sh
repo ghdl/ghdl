@@ -4,10 +4,12 @@
 
 GHDL_STD_FLAGS=--std=08
 
-synth test.vhdl -e test > syn_test.vhdl
+synth_only test
 analyze syn_test.vhdl
 
-synth snot.vhdl -e > syn_snot.vhdl
+synth_only func
+
+synth_only snot
 clean
 
 echo "Test successful"
