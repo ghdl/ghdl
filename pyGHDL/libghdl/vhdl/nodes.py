@@ -3421,6 +3421,19 @@ def Set_Default_Subprogram(obj: Iir, value: Iir) -> None:
 
 
 @export
+@BindToLibGHDL("vhdl__nodes__get_associated_subprogram")
+def Get_Associated_Subprogram(obj: Iir) -> Iir:
+    """"""
+    return 0
+
+
+@export
+@BindToLibGHDL("vhdl__nodes__set_associated_subprogram")
+def Set_Associated_Subprogram(obj: Iir, value: Iir) -> None:
+    """"""
+
+
+@export
 @BindToLibGHDL("vhdl__nodes__get_subprogram_specification")
 def Get_Subprogram_Specification(obj: Iir) -> Iir:
     """"""

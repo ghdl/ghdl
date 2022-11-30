@@ -172,6 +172,7 @@ package Vhdl.Nodes_Meta is
       Field_Base_Name,
       Field_Interface_Declaration_Chain,
       Field_Default_Subprogram,
+      Field_Associated_Subprogram,
       Field_Subprogram_Specification,
       Field_Sequential_Statement_Chain,
       Field_Simultaneous_Statement_Chain,
@@ -767,6 +768,7 @@ package Vhdl.Nodes_Meta is
    function Has_Base_Name (K : Iir_Kind) return Boolean;
    function Has_Interface_Declaration_Chain (K : Iir_Kind) return Boolean;
    function Has_Default_Subprogram (K : Iir_Kind) return Boolean;
+   function Has_Associated_Subprogram (K : Iir_Kind) return Boolean;
    function Has_Subprogram_Specification (K : Iir_Kind) return Boolean;
    function Has_Sequential_Statement_Chain (K : Iir_Kind) return Boolean;
    function Has_Simultaneous_Statement_Chain (K : Iir_Kind) return Boolean;

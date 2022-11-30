@@ -1782,6 +1782,8 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Subprogram_Depth (Field10)
    --
+   --   Get/Set_Associated_Subprogram (Field6)
+   --
    --   Get/Set_Seen_Flag (Flag1)
    --
    -- Only for Iir_Kind_Interface_Function_Declaration:
@@ -8260,6 +8262,10 @@ package Vhdl.Nodes is
    --  Field: Field9
    function Get_Default_Subprogram (Inter : Iir) return Iir;
    procedure Set_Default_Subprogram (Inter : Iir; Subprg : Iir);
+
+   --  Field: Field6 Ref
+   function Get_Associated_Subprogram (Inter : Iir) return Iir;
+   procedure Set_Associated_Subprogram (Inter : Iir; Subprg : Iir);
 
    --  Field: Field6 Ref
    function Get_Subprogram_Specification (Target : Iir) return Iir;

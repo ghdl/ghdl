@@ -3182,6 +3182,22 @@ package body Vhdl.Nodes is
       Set_Field9 (Inter, Subprg);
    end Set_Default_Subprogram;
 
+   function Get_Associated_Subprogram (Inter : Iir) return Iir is
+   begin
+      pragma Assert (Inter /= Null_Iir);
+      pragma Assert (Has_Associated_Subprogram (Get_Kind (Inter)),
+                     "no field Associated_Subprogram");
+      return Get_Field6 (Inter);
+   end Get_Associated_Subprogram;
+
+   procedure Set_Associated_Subprogram (Inter : Iir; Subprg : Iir) is
+   begin
+      pragma Assert (Inter /= Null_Iir);
+      pragma Assert (Has_Associated_Subprogram (Get_Kind (Inter)),
+                     "no field Associated_Subprogram");
+      Set_Field6 (Inter, Subprg);
+   end Set_Associated_Subprogram;
+
    function Get_Subprogram_Specification (Target : Iir) return Iir is
    begin
       pragma Assert (Target /= Null_Iir);
