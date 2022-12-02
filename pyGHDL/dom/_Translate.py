@@ -199,7 +199,7 @@ def GetNameFromNode(node: Iir) -> Name:
         prefixName = GetNameFromNode(nodes.Get_Prefix(node))
         return AllName(node, prefixName)
     else:
-        raise DOMException("Unknown name kind '{kind}'".format(kind=kind.name))
+        raise DOMException(f"Unknown name kind '{kind.name}'")
 
 
 def GetAssociations(node: Iir) -> List:
@@ -217,9 +217,7 @@ def GetAssociations(node: Iir) -> List:
             associations.append(expr)
         else:
             raise DOMException(
-                "Unknown association kind '{kind}' in array index/slice or function call '{node}'.".format(
-                    kind=kind.name, node=node
-                )
+                f"Unknown association kind '{kind.name}' in array index/slice or function call '{node}'."
             )
 
     return associations
@@ -244,14 +242,7 @@ def GetArrayConstraintsFromSubtypeIndication(
         else:
             position = Position.parse(constraint)
             raise DOMException(
-                "Unknown constraint kind '{kind}' for constraint '{constraint}' in subtype indication '{indication}' at {file}:{line}:{column}.".format(
-                    kind=constraintKind.name,
-                    constraint=constraint,
-                    indication=subtypeIndication,
-                    file=position.Filename,
-                    line=position.Line,
-                    column=position.Column,
-                )
+                f"Unknown constraint kind '{constraintKind.name}' for constraint '{constraint}' in subtype indication '{subtypeIndication}' at {position.Filename}:{position.Line}:{position.Column}."
             )
 
     return constraints
@@ -280,13 +271,7 @@ def GetTypeFromNode(node: Iir) -> BaseType:
     else:
         position = Position.parse(typeDefinition)
         raise DOMException(
-            "GetTypeFromNode: Unknown type definition kind '{kind}' for type '{name}' at {file}:{line}:{column}.".format(
-                kind=kind.name,
-                name=typeName,
-                file=position.Filename,
-                line=position.Line,
-                column=position.Column,
-            )
+            f"GetTypeFromNode: Unknown type definition kind '{kind.name}' for type '{typeName}' at {position.Filename}:{position.Line}:{position.Column}."
         )
 
 
@@ -316,13 +301,7 @@ def GetAnonymousTypeFromNode(node: Iir) -> BaseType:
     else:
         position = Position.parse(typeDefinition)
         raise DOMException(
-            "GetAnonymousTypeFromNode: Unknown type definition kind '{kind}' for type '{name}' at {file}:{line}:{column}.".format(
-                kind=kind.name,
-                name=typeName,
-                file=position.Filename,
-                line=position.Line,
-                column=position.Column,
-            )
+            f"GetAnonymousTypeFromNode: Unknown type definition kind '{kind.name}' for type '{typeName}' at {position.Filename}:{position.Line}:{position.Column}."
         )
 
 
@@ -349,11 +328,7 @@ def GetSubtypeIndicationFromIndicationNode(subtypeIndicationNode: Iir, entity: s
     elif kind == nodes.Iir_Kind.Array_Subtype_Definition:
         return GetCompositeConstrainedSubtypeFromNode(subtypeIndicationNode)
     else:
-        raise DOMException(
-            "Unknown kind '{kind}' for an subtype indication in a {entity} of `{name}`.".format(
-                kind=kind.name, entity=entity, name=name
-            )
-        )
+        raise DOMException(f"Unknown kind '{kind.name}' for an subtype indication in a {entity} of `{name}`.")
 
 
 @export
@@ -472,13 +447,7 @@ def GetExpressionFromNode(node: Iir) -> ExpressionUnion:
     except KeyError:
         position = Position.parse(node)
         raise DOMException(
-            "Unknown expression kind '{kind}' in expression '{expr}' at {file}:{line}:{column}.".format(
-                kind=kind.name,
-                expr=node,
-                file=position.Filename,
-                line=position.Line,
-                column=position.Column,
-            )
+            f"Unknown expression kind '{kind.name}' in expression '{node}' at {position.Filename}:{position.Line}:{position.Column}."
         )
 
     return cls.parse(node)
@@ -537,13 +506,7 @@ def GetGenericsFromChainedNodes(
             else:
                 position = Position.parse(generic)
                 raise DOMException(
-                    "Unknown generic kind '{kind}' in generic '{generic}' at {file}:{line}:{column}.".format(
-                        kind=kind.name,
-                        generic=generic,
-                        file=position.Filename,
-                        line=position.Line,
-                        column=position.Column,
-                    )
+                    f"Unknown generic kind '{kind.name}' in generic '{generic}' at {position.Filename}:{position.Line}:{position.Column}."
                 )
 
         generic = nodes.Get_Chain(generic)
@@ -587,13 +550,7 @@ def GetPortsFromChainedNodes(
         else:
             position = Position.parse(port)
             raise DOMException(
-                "Unknown port kind '{kind}' in port '{port}' at {file}:{line}:{column}.".format(
-                    kind=kind.name,
-                    port=port,
-                    file=position.Filename,
-                    line=position.Line,
-                    column=position.Column,
-                )
+                f"Unknown port kind '{kind.name}' in port '{port}' at {position.Filename}:{position.Line}:{position.Column}."
             )
 
 
@@ -624,13 +581,7 @@ def GetParameterFromChainedNodes(
         else:
             position = Position.parse(parameter)
             raise DOMException(
-                "Unknown parameter kind '{kind}' in parameter '{param}' at {file}:{line}:{column}.".format(
-                    kind=kind.name,
-                    param=parameter,
-                    file=position.Filename,
-                    line=position.Line,
-                    column=position.Column,
-                )
+                f"Unknown parameter kind '{kind.name}' in parameter '{parameter}' at {position.Filename}:{position.Line}:{position.Column}."
             )
 
         # Lookahead for parameters with multiple identifiers at once
@@ -679,11 +630,7 @@ def GetMapAspect(mapAspect: Iir, cls: Type, entity: str) -> Generator[Associatio
             yield cls(generic, OpenName(generic), formal)
         else:
             pos = Position.parse(generic)
-            raise DOMException(
-                "Unknown association kind '{kind}' in {entity} map at line {line}.".format(
-                    kind=kind.name, entity=entity, line=pos.Line
-                )
-            )
+            raise DOMException(f"Unknown association kind '{kind.name}' in {entity} map at line {pos.Line}.")
 
 
 def GetGenericMapAspect(
@@ -752,14 +699,7 @@ def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str) -> 
                 else:
                     position = Position.parse(item)
                     raise DOMException(
-                        "Found unexpected function body '{functionName}' in {entity} '{name}' at {file}:{line}:{column}.".format(
-                            functionName=GetNameOfNode(item),
-                            entity=entity,
-                            name=name,
-                            file=position.Filename,
-                            line=position.Line,
-                            column=position.Column,
-                        )
+                        f"Found unexpected function body '{GetNameOfNode(item)}' in {entity} '{name}' at {position.Filename}:{position.Line}:{position.Column}."
                     )
             elif kind == nodes.Iir_Kind.Procedure_Declaration:
                 if nodes.Get_Has_Body(item):
@@ -776,14 +716,7 @@ def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str) -> 
                 else:
                     position = Position.parse(item)
                     raise DOMException(
-                        "Found unexpected procedure body '{functionName}' in {entity} '{name}' at {file}:{line}:{column}.".format(
-                            functionName=GetNameOfNode(item),
-                            entity=entity,
-                            name=name,
-                            file=position.Filename,
-                            line=position.Line,
-                            column=position.Column,
-                        )
+                        f"Found unexpected procedure body '{GetNameOfNode(item)}' in {entity} '{name}' at {position.Filename}:{position.Line}:{position.Column}."
                     )
             elif kind == nodes.Iir_Kind.Protected_Type_Body:
                 yield ProtectedTypeBody.parse(item)
@@ -814,36 +747,29 @@ def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str) -> 
 
                 yield PackageInstantiation.parse(item)
             elif kind == nodes.Iir_Kind.Configuration_Specification:
-                print("[NOT IMPLEMENTED] Configuration specification in {name}".format(name=name))
+                print(f"[NOT IMPLEMENTED] Configuration specification in {name}")
             elif kind == nodes.Iir_Kind.Psl_Default_Clock:
                 yield DefaultClock.parse(item)
             elif kind == nodes.Iir_Kind.Group_Declaration:
-                print("[NOT IMPLEMENTED] Group declaration in {name}".format(name=name))
+                print(f"[NOT IMPLEMENTED] Group declaration in {name}")
             elif kind == nodes.Iir_Kind.Group_Template_Declaration:
-                print("[NOT IMPLEMENTED] Group template declaration in {name}".format(name=name))
+                print(f"[NOT IMPLEMENTED] Group template declaration in {name}")
             elif kind == nodes.Iir_Kind.Disconnection_Specification:
-                print("[NOT IMPLEMENTED] Disconnect specification in {name}".format(name=name))
+                print(f"[NOT IMPLEMENTED] Disconnect specification in {name}")
             elif kind == nodes.Iir_Kind.Nature_Declaration:
-                print("[NOT IMPLEMENTED] Nature declaration in {name}".format(name=name))
+                print(f"[NOT IMPLEMENTED] Nature declaration in {name}")
             elif kind == nodes.Iir_Kind.Free_Quantity_Declaration:
-                print("[NOT IMPLEMENTED] Free quantity declaration in {name}".format(name=name))
+                print(f"[NOT IMPLEMENTED] Free quantity declaration in {name}")
             elif kind == nodes.Iir_Kind.Across_Quantity_Declaration:
-                print("[NOT IMPLEMENTED] Across quantity declaration in {name}".format(name=name))
+                print(f"[NOT IMPLEMENTED] Across quantity declaration in {name}")
             elif kind == nodes.Iir_Kind.Through_Quantity_Declaration:
-                print("[NOT IMPLEMENTED] Through quantity declaration in {name}".format(name=name))
+                print(f"[NOT IMPLEMENTED] Through quantity declaration in {name}")
             elif kind == nodes.Iir_Kind.Terminal_Declaration:
-                print("[NOT IMPLEMENTED] Terminal declaration in {name}".format(name=name))
+                print(f"[NOT IMPLEMENTED] Terminal declaration in {name}")
             else:
                 position = Position.parse(item)
                 raise DOMException(
-                    "Unknown declared item kind '{kind}' in {entity} '{name}' at {file}:{line}:{column}.".format(
-                        kind=kind.name,
-                        entity=entity,
-                        name=name,
-                        file=position.Filename,
-                        line=position.Line,
-                        column=position.Column,
-                    )
+                    f"Unknown declared item kind '{kind.name}' in {entity} '{name}' at {position.Filename}:{position.Line}:{position.Column}."
                 )
 
             lastKind = None
@@ -880,7 +806,7 @@ def GetConcurrentStatementsFromChainedNodes(
         label = nodes.Get_Label(statement)
         label = name_table.Get_Name_Ptr(label) if label != nodes.Null_Iir else None
 
-        pos = Position.parse(statement)
+        position = Position.parse(statement)
 
         kind = GetIirKindOfNode(statement)
         if kind == nodes.Iir_Kind.Sensitized_Process_Statement:
@@ -893,15 +819,11 @@ def GetConcurrentStatementsFromChainedNodes(
             yield ConcurrentSimpleSignalAssignment.parse(statement, label)
         elif kind == nodes.Iir_Kind.Concurrent_Conditional_Signal_Assignment:
             print(
-                "[NOT IMPLEMENTED] Concurrent (conditional) signal assignment (label: '{label}') at line {line}".format(
-                    label=label, line=pos.Line
-                )
+                f"[NOT IMPLEMENTED] Concurrent (conditional) signal assignment (label: '{label}') at line {position.Line}"
             )
         elif kind == nodes.Iir_Kind.Concurrent_Selected_Signal_Assignment:
             print(
-                "[NOT IMPLEMENTED] Concurrent (selected) signal assignment (label: '{label}') at line {line}".format(
-                    label=label, line=pos.Line
-                )
+                f"[NOT IMPLEMENTED] Concurrent (selected) signal assignment (label: '{label}') at line {position.Line}"
             )
         elif kind == nodes.Iir_Kind.Concurrent_Procedure_Call_Statement:
             yield ConcurrentProcedureCall.parse(statement, label)
@@ -916,13 +838,7 @@ def GetConcurrentStatementsFromChainedNodes(
                 yield ComponentInstantiation.parse(statement, instantiatedUnit, label)
             else:
                 raise DOMException(
-                    "Unknown instantiation kind '{kind}' in instantiation of label {label} at {file}:{line}:{column}.".format(
-                        kind=instantiatedUnitKind.name,
-                        label=label,
-                        file=pos.Filename,
-                        line=pos.Line,
-                        column=pos.Column,
-                    )
+                    f"Unknown instantiation kind '{instantiatedUnitKind.name}' in instantiation of label {label} at {position.Filename}:{position.Line}:{position.Column}."
                 )
         elif kind == nodes.Iir_Kind.Block_Statement:
             yield ConcurrentBlockStatement.parse(statement, label)
@@ -935,21 +851,10 @@ def GetConcurrentStatementsFromChainedNodes(
         elif kind == nodes.Iir_Kind.Psl_Assert_Directive:
             yield ConcurrentAssertStatement.parse(statement, label)
         elif kind == nodes.Iir_Kind.Simple_Simultaneous_Statement:
-            print(
-                "[NOT IMPLEMENTED] Simple simultaneous statement (label: '{label}') at line {line}".format(
-                    label=label, line=pos.Line
-                )
-            )
+            print(f"[NOT IMPLEMENTED] Simple simultaneous statement (label: '{label}') at line {position.Line}")
         else:
             raise DOMException(
-                "Unknown statement of kind '{kind}' in {entity} '{name}' at {file}:{line}:{column}.".format(
-                    kind=kind.name,
-                    entity=entity,
-                    name=name,
-                    file=pos.Filename,
-                    line=pos.Line,
-                    column=pos.Column,
-                )
+                f"Unknown statement of kind '{kind.name}' in {entity} '{name}' at {position.Filename}:{position.Line}:{position.Column}."
             )
 
 
@@ -960,7 +865,7 @@ def GetSequentialStatementsFromChainedNodes(
         label = nodes.Get_Label(statement)
         label = name_table.Get_Name_Ptr(label) if label != nodes.Null_Iir else None
 
-        pos = Position.parse(statement)
+        position = Position.parse(statement)
         kind = GetIirKindOfNode(statement)
         if kind == nodes.Iir_Kind.If_Statement:
             yield IfStatement.parse(statement, label)
@@ -974,11 +879,7 @@ def GetSequentialStatementsFromChainedNodes(
             nodes.Iir_Kind.Variable_Assignment_Statement,
             nodes.Iir_Kind.Conditional_Variable_Assignment_Statement,
         ):
-            print(
-                "[NOT IMPLEMENTED] Variable assignment (label: '{label}') at line {line}".format(
-                    label=label, line=pos.Line
-                )
-            )
+            print(f"[NOT IMPLEMENTED] Variable assignment (label: '{label}') at line {position.Line}")
         elif kind == nodes.Iir_Kind.Wait_Statement:
             yield WaitStatement.parse(statement, label)
         elif kind == nodes.Iir_Kind.Procedure_Call_Statement:
@@ -991,14 +892,7 @@ def GetSequentialStatementsFromChainedNodes(
             yield NullStatement(statement, label)
         else:
             raise DOMException(
-                "Unknown statement of kind '{kind}' in {entity} '{name}' at {file}:{line}:{column}.".format(
-                    kind=kind.name,
-                    entity=entity,
-                    name=name,
-                    file=pos.Filename,
-                    line=pos.Line,
-                    column=pos.Column,
-                )
+                f"Unknown statement of kind '{kind.name}' in {entity} '{name}' at {position.Filename}:{position.Line}:{position.Column}."
             )
 
 

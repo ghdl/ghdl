@@ -30,29 +30,29 @@ def show_diffs(name, ref, res):
     if isinstance(ref, dict) and isinstance(res, dict):
         for k in ref:
             if k not in res:
-                print("{}.{} not in the result".format(name, k))
+                print(f"{name}.{k} not in the result")
             else:
-                show_diffs("{}.{}".format(name, k), ref[k], res[k])
+                show_diffs(f"{name}.{k}", ref[k], res[k])
         for k in res:
             if k not in ref:
-                print("{}.{} unexpected in the result".format(name, k))
+                print(f"{name}.{k} unexpected in the result")
     elif isinstance(ref, str) and isinstance(res, str):
         if res != ref:
-            print("{}: mismatch (ref: {}, result: {})".format(name, ref, res))
+            print(f"{name}: mismatch (ref: {ref}, result: {res})")
     elif isinstance(ref, int) and isinstance(res, int):
         if res != ref:
-            print("{}: mismatch (ref: {}, result: {})".format(name, ref, res))
+            print(f"{name}: mismatch (ref: {ref}, result: {res})")
     elif isinstance(ref, list) and isinstance(res, list):
         for i in range(max(len(ref), len(res))):
             if i >= len(res):
-                print("{}[{}]: missing element:".format(name, i))
-                print(" {}".format(res[i]))
+                print(f"{name}[{i}]: missing element:")
+                print(f" {res[i]}")
             elif i >= len(ref):
-                print("{}[{}]: extra elements".format(name, i))
+                print(f"{name}[{i}]: extra elements")
             else:
-                show_diffs("{}[{}]".format(name, i), ref[i], res[i])
+                show_diffs(f"{name}[{i}]", ref[i], res[i])
     else:
-        print("unhandle type {} in {}".format(type(ref), name))
+        print(f"unhandle type {type(ref)} in {name}")
 
 
 def root_subst(obj, path, uri):
@@ -81,7 +81,7 @@ def root_subst(obj, path, uri):
             res.append(root_subst(v, path, uri))
         return res
     else:
-        raise AssertionError("root_subst: unhandled type {}".format(type(obj)))
+        raise AssertionError(f"root_subst: unhandled type {type(obj)}")
 
 
 class JSONTest(TestCase):
@@ -140,17 +140,17 @@ class JSONTest(TestCase):
 
             rep = json_loads(rep)
             json_res.append(rep)
-            # 			self.assertEqual(rep, r, "reply does not match for {!s}".format(requestFile))
+            # 			self.assertEqual(rep, r, f"reply does not match for {requestFile!s}")
             if rep != r:
                 print(self.__class__.__name__)
-                show_diffs("[{}]".format(i), r, rep)
+                show_diffs(f"[{i}]", r, rep)
                 errs += 1
 
         rep = ls.read_request()
         self.assertIsNone(rep, "Too many replies.")
 
         if errs != 0:
-            print("FAILURE between output and {!s} (for {!s})".format(responseFile, requestFile))
+            print(f"FAILURE between output and {responseFile!s} (for {requestFile!s})")
             print("Writing result output to result.json")
             with open("result.json", "w") as f:
                 f.write(json_dumps(json_res, indent=2))

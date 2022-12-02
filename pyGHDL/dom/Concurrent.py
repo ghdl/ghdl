@@ -553,9 +553,7 @@ class CaseGenerateStatement(VHDLModel_CaseGenerateStatement, DOMMixin):
                 else:
                     pos = Position.parse(alternative)
                     raise DOMException(
-                        "Unknown choice range kind '{kind}' in case...generate statement at line {line}.".format(
-                            kind=choiceRangeKind.name, line=pos.Line
-                        )
+                        f"Unknown choice range kind '{choiceRangeKind.name}' in case...generate statement at line {pos.Line}."
                     )
 
                 choice = RangedGenerateChoice(alternative, rng)
@@ -574,9 +572,7 @@ class CaseGenerateStatement(VHDLModel_CaseGenerateStatement, DOMMixin):
             else:
                 pos = Position.parse(alternative)
                 raise DOMException(
-                    "Unknown choice kind '{kind}' in case...generate statement at line {line}.".format(
-                        kind=choiceKind.name, line=pos.Line
-                    )
+                    f"Unknown choice kind '{choiceKind.name}' in case...generate statement at line {pos.Line}."
                 )
 
             if choices is not None:
@@ -634,9 +630,7 @@ class ForGenerateStatement(VHDLModel_ForGenerateStatement, DOMMixin):
         else:
             pos = Position.parse(generateNode)
             raise DOMException(
-                "Unknown discete range kind '{kind}' in for...generate statement at line {line}.".format(
-                    kind=rangeKind.name, line=pos.Line
-                )
+                f"Unknown discete range kind '{rangeKind.name}' in for...generate statement at line {pos.Line}."
             )
 
         body = nodes.Get_Generate_Statement_Body(generateNode)

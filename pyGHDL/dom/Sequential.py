@@ -292,9 +292,7 @@ class CaseStatement(VHDLModel_CaseStatement, DOMMixin):
                 else:
                     pos = Position.parse(alternative)
                     raise DOMException(
-                        "Unknown choice range kind '{kind}' in case statement at line {line}.".format(
-                            kind=choiceRangeKind.name, line=pos.Line
-                        )
+                        f"Unknown choice range kind '{choiceRangeKind.name}' in case statement at line {pos.Line}."
                     )
 
                 choice = RangedChoice(alternative, rng)
@@ -312,11 +310,7 @@ class CaseStatement(VHDLModel_CaseStatement, DOMMixin):
                 continue
             else:
                 pos = Position.parse(alternative)
-                raise DOMException(
-                    "Unknown choice kind '{kind}' in case statement at line {line}.".format(
-                        kind=choiceKind.name, line=pos.Line
-                    )
-                )
+                raise DOMException(f"Unknown choice kind '{choiceKind.name}' in case statement at line {pos.Line}.")
 
             if choices is not None:
                 cases.append(Case.parse(cNode, choices, label))
@@ -371,9 +365,7 @@ class ForLoopStatement(VHDLModel_ForLoopStatement, DOMMixin):
         else:
             pos = Position.parse(loopNode)
             raise DOMException(
-                "Unknown discete range kind '{kind}' in for...loop statement at line {line}.".format(
-                    kind=rangeKind.name, line=pos.Line
-                )
+                f"Unknown discete range kind '{rangeKind.name}' in for...loop statement at line {pos.Line}."
             )
 
         statementChain = nodes.Get_Sequential_Statement_Chain(loopNode)

@@ -33,7 +33,7 @@ class Instantiate(TestCase):
 
         # Finish initialization. This will load the standard package.
         if libghdl.analyze_init_status() != 0:
-            self.fail("libghdl initialization error")
+            cls.fail("libghdl initialization error")
 
     def checkComments(self, node, name) -> None:
         f = files_map.Location_To_File(nodes.Get_Location(node))
@@ -41,7 +41,7 @@ class Instantiate(TestCase):
         while idx != file_comments.No_Comment_Index:
             s = file_comments.Get_Comment(f, idx)
             self.assertTrue(s.find(':'+name+':') >= 0,
-                            "no :{}: in '{}'".format(name, s))
+                            f"no :{name}: in '{s}'")
             idx = file_comments.Get_Next_Comment(f, idx)
 
     def checkFlist(self, flist) -> None:
@@ -83,7 +83,7 @@ class Instantiate(TestCase):
         file_id = name_table.Get_Identifier(str(filename))
         sfe = files_map.Read_Source_File(name_table.Null_Identifier, file_id)
         if sfe == files_map.No_Source_File_Entry:
-            self.fail("Cannot read file '{!s}'".format(filename))
+            self.fail(f"Cannot read file '{filename!s}'")
 
         # Parse
         file = sem_lib.Load_File(sfe)

@@ -54,7 +54,7 @@ from pyGHDL.libghdl import libghdl, LibGHDLException
 @export
 def EnumLookupTable(cls) -> Callable:
     """
-    Decorator to precalculate a enum lookup table (LUT) for enum position to
+    Decorator to precalculate an enum lookup table (LUT) for enum position to
     enum literal name.
 
     :param cls: Enumerator class for which a LUT shall be pre-calculated.
@@ -62,7 +62,7 @@ def EnumLookupTable(cls) -> Callable:
 
     def decorator(func) -> Callable:
         def gen() -> List[str]:
-            d = [e for e in dir(cls) if e[0] != "_"]
+            d = [e for e in dir(cls) if e[0].isupper() and e[0] != "_"]
             res = [None] * len(d)
             for e in d:
                 res[getattr(cls, e)] = e
@@ -116,7 +116,7 @@ def BindToLibGHDL(subprogramName):
                 c_double,
             ):
                 return typ.__bound__
-            raise TypeError("Unsupported typevar bound to {!s}".format(typ.__bound__))
+            raise TypeError(f"Unsupported typevar bound to {typ.__bound__!s}")
         elif issubclass(typ, IntEnum):
             return c_int32
         elif issubclass(typ, Structure):
@@ -128,18 +128,16 @@ def BindToLibGHDL(subprogramName):
         typeHintCount = len(typeHints)
 
         if typeHintCount == 0:
-            raise ValueError("Function {0} is not annotated with types.".format(func.__name__))
+            raise ValueError(f"Function {func.__name__} is not annotated with types.")
 
         try:
             returnType = typeHints["return"]
         except KeyError:
-            raise ValueError("Function {0} is not annotated with a return type.".format(func.__name__))
+            raise ValueError(f"Function {func.__name__} is not annotated with a return type.")
 
         if (typeHintCount - 1) != func.__code__.co_argcount:
             raise ValueError(
-                "Number of type annotations ({0}) for function '{1}' does not match number of parameters ({2}).".format(
-                    typeHintCount - 1, func.__name__, func.__code__.co_argcount
-                )
+                f"Number of type annotations ({typeHintCount - 1}) for function '{func.__name__}' does not match number of parameters ({func.__code__.co_argcount})."
             )
 
         # 		print(typeHints)
@@ -152,14 +150,12 @@ def BindToLibGHDL(subprogramName):
             try:
                 parameterTypes.append(PythonTypeToCtype(parameter))
             except TypeError:
-                raise TypeError(
-                    "Unsupported parameter type '{0!s}' in function '{1}'.".format(parameter, func.__name__)
-                )
+                raise TypeError(f"Unsupported parameter type '{parameter!s}' in function '{func.__name__}'.")
 
         try:
             resultType = PythonTypeToCtype(returnType)
         except TypeError:
-            raise TypeError("Unsupported return type '{0!s}' in function '{1}'.".format(returnType, func.__name__))
+            raise TypeError(f"Unsupported return type '{returnType!s}' in function '{func.__name__}'.")
 
         functionPointer = getattr(libghdl, subprogramName)
         functionPointer.parameterTypes = parameterTypes
@@ -174,7 +170,7 @@ def BindToLibGHDL(subprogramName):
                 except OSError as ex:
                     errors = [str(ex)]
                     raise LibGHDLException(
-                        "Caught exception when calling '{func}' in libghdl.".format(func=subprogramName),
+                        f"Caught exception when calling '{subprogramName}' in libghdl.",
                         errors,
                     ) from ex
 
@@ -190,7 +186,7 @@ def BindToLibGHDL(subprogramName):
                 except OSError as ex:
                     errors = [str(ex)]
                     raise LibGHDLException(
-                        "Caught exception when calling '{func}' in libghdl.".format(func=subprogramName),
+                        f"Caught exception when calling '{subprogramName}' in libghdl.",
                         errors,
                     ) from ex
 

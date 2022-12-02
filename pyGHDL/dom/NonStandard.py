@@ -192,9 +192,7 @@ class Document(VHDLModel_Document):
                     else:
                         pos = Position.parse(item)
                         raise DOMException(
-                            "Unknown context item kind '{kind}' in context at line {line}.".format(
-                                kind=itemKind.name, line=pos.Line
-                            )
+                            f"Unknown context item kind '{itemKind.name}' in context at line {pos.Line}."
                         )
 
             if nodeKind == nodes.Iir_Kind.Entity_Declaration:
@@ -238,7 +236,7 @@ class Document(VHDLModel_Document):
                 self.VerificationModes.append(vmod)
 
             else:
-                raise DOMException("Unknown design unit kind '{kind}'.".format(kind=nodeKind.name))
+                raise DOMException(f"Unknown design unit kind '{nodeKind.name}'.")
 
     @property
     def LibGHDLProcessingTime(self) -> float:

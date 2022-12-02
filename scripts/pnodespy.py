@@ -17,17 +17,17 @@ libname = "libghdl"
 
 
 def print_enum(name, vals):
-    print(dedent("""
+    print(dedent(f"""
 
         @export
         @unique
-        class {0}(IntEnum):
-        """).format(name), end=''
+        class {name}(IntEnum):
+        """), end=''
     )
     for n, k in enumerate(vals):
         if k == "None":
             k = "PNone"
-        print("    {0} = {1}".format(k, n))
+        print(f"    {k} = {n}")
 
 
 def print_file_header(includeIntEnumUnique=True, includeBindToLibGHDL=True):
@@ -51,16 +51,16 @@ def do_class_kinds():
         """), end=''
     )
     for k, v in pnodes.kinds_ranges.items():
-        print("    {0} = [".format(k))
+        print(f"    {k} = [")
         for e in v:
-            print("        Iir_Kind.{},".format(e))
+            print(f"        Iir_Kind.{e},")
         print("    ]")
         print()
 
 
 def do_iirs_subprg():
     classname = "vhdl__nodes"
-    print(dedent("""
+    print(dedent(f"""
 
         @export
         @BindToLibGHDL("{classname}__get_kind")
@@ -73,7 +73,7 @@ def do_iirs_subprg():
         def Get_Location(node: Iir) -> LocationType:
             \"\"\"\"\"\"
             return 0
-        """).format(libname=libname, classname=classname)
+        """)
     )
     for k in pnodes.funcs:
         # Don't use the Iir_* subtypes (as they are not described).
@@ -82,18 +82,17 @@ def do_iirs_subprg():
         if rtype == "TokenType":
             rtype = "Tok"
 
-        print(dedent("""
+        print(dedent(f"""
             @export
-            @BindToLibGHDL("{classname}__get_{kname_lower}")
-            def Get_{kname}(obj: Iir) -> {rtype}:
+            @BindToLibGHDL("{classname}__get_{k.name.lower()}")
+            def Get_{k.name}(obj: Iir) -> {rtype}:
                 \"\"\"\"\"\"
                 return 0
             @export
-            @BindToLibGHDL("{classname}__set_{kname_lower}")
-            def Set_{kname}(obj: Iir, value: {rtype}) -> None:
+            @BindToLibGHDL("{classname}__set_{k.name.lower()}")
+            def Set_{k.name}(obj: Iir, value: {rtype}) -> None:
                 \"\"\"\"\"\"
-            """).format(kname=k.name, kname_lower=k.name.lower(), rtype=rtype,
-                         libname=libname, classname=classname)
+            """)
         )
 
 
@@ -103,14 +102,14 @@ def do_libghdl_elocations():
     print("from pyGHDL.libghdl import libghdl")
     print()
     for k in pnodes.funcs:
-        print(dedent("""
+        print(dedent(f"""
             @export
-            def Get_{kname}(obj):
-                return {libname}.{classname}__get_{kname_lower}(obj)
+            def Get_{k.name}(obj):
+                return {libname}.{classname}__get_{k.name.lower()}(obj)
             @export
-            def Set_{kname}(obj, value) -> None:
-                {libname}.{classname}__set_{kname_lower}(obj, value)
-            """).format(kname=k.name, kname_lower=k.name.lower(), libname=libname, classname=classname)
+            def Set_{k.name}(obj, value) -> None:
+                {libname}.{classname}__set_{k.name.lower()}(obj, value)
+            """)
         )
 
 
@@ -121,22 +120,22 @@ def do_class_types():
 def do_types_subprg():
     print()
     for k in pnodes.get_types():
-        print(dedent("""
-            def Get_{0}(node, field):
-                return {1}.vhdl__nodes_meta__get_{2}(node, field)
-            """).format(k, libname, k.lower())
+        print(dedent(f"""
+            def Get_{k}(node, field):
+                return {libname}.vhdl__nodes_meta__get_{k.lower()}(node, field)
+            """)
         )
 
 
 def do_has_subprg():
     print()
     for f in pnodes.funcs:
-        print(dedent("""
+        print(dedent(f"""
             @export
-            @BindToLibGHDL("vhdl__nodes_meta__has_{fname_lower}")
-            def Has_{fname}(kind: IirKind) -> bool:
+            @BindToLibGHDL("vhdl__nodes_meta__has_{f.name.lower()}")
+            def Has_{f.name}(kind: IirKind) -> bool:
                 \"\"\"\"\"\"
-            """).format(fname=f.name, libname=libname, fname_lower=f.name.lower())
+            """)
         )
 
 
@@ -158,9 +157,7 @@ def read_enum(filename, type_name, prefix, class_name, g=lambda m: m.group(1)):
         pass
     line = lr.get()
     if line != "     (\n":
-        raise pnodes.ParseError(
-            lr, "{}:{}: missing open parenthesis".format(filename, lr.lineno)
-        )
+        raise pnodes.ParseError(lr, f"{filename}:{lr.lineno}: missing open parenthesis")
     toks = []
     while True:
         line = lr.get()
@@ -177,9 +174,7 @@ def read_enum(filename, type_name, prefix, class_name, g=lambda m: m.group(1)):
             print(line, file=sys.stderr)
             raise pnodes.ParseError(
                 lr,
-                "{}:{}: incorrect line in enum {}".format(
-                    filename, lr.lineno, type_name
-                ),
+                f"{filename}:{ lr.lineno}: incorrect line in enum {type_name}"
             )
     print_enum(class_name, toks)
 
@@ -334,7 +329,7 @@ def do_libghdl_names():
                 val = 0
             val_ref = dict.get(name_ref, None)
             if not val_ref:
-                raise pnodes.ParseError(lr, "name {0} not found".format(name_ref))
+                raise pnodes.ParseError(lr, f"name {name_ref} not found")
             val = val_ref + int(val)
             val_max = max(val_max, val)
             dict[name_def] = val
@@ -351,7 +346,7 @@ def do_libghdl_names():
         # Avoid clash with Python names
         if n in ["False", "True", "None"]:
             n = "N" + n
-        print("    {0} = {1}".format(n, v))
+        print(f"    {n} = {v}")
 
 
 def do_libghdl_tokens():
