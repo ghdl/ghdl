@@ -650,6 +650,7 @@ def GetParameterMapAspect(
 
 
 def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str) -> Generator[ModelEntity, None, None]:
+    furtherIdentifiers = []
     item = nodeChain
     lastKind = None
     while item != nodes.Null_Iir:
@@ -657,22 +658,27 @@ def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str) -> 
         if kind == nodes.Iir_Kind.Constant_Declaration:
             from pyGHDL.dom.Object import Constant
 
-            obj = Constant.parse(item)
+            objectParseMethod = Constant.parse
+            objectItem = item
         elif kind == nodes.Iir_Kind.Variable_Declaration:
             from pyGHDL.dom.Object import SharedVariable
 
             if nodes.Get_Shared_Flag(item):
-                obj = SharedVariable.parse(item)
+                objectParseMethod = SharedVariable.parse
+                objectItem = item
             else:
-                obj = Variable.parse(item)
+                objectParseMethod = Variable.parse
+                objectItem = item
         elif kind == nodes.Iir_Kind.Signal_Declaration:
             from pyGHDL.dom.Object import Signal
 
-            obj = Signal.parse(item)
+            objectParseMethod = Signal.parse
+            objectItem = item
         elif kind == nodes.Iir_Kind.File_Declaration:
             from pyGHDL.dom.Object import File
 
-            obj = File.parse(item)
+            objectParseMethod = File.parse
+            objectItem = item
         else:
             if kind == nodes.Iir_Kind.Type_Declaration:
                 yield GetTypeFromNode(item)
@@ -781,7 +787,7 @@ def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str) -> 
             for nextItem in utils.chain_iter(nextNode):
                 # Consecutive identifiers are found, if the subtype indication is Null
                 if nodes.Get_Subtype_Indication(nextItem) == nodes.Null_Iir:
-                    obj.Identifiers.append(GetNameOfNode(nextItem))
+                    furtherIdentifiers.append(GetNameOfNode(nextItem))
                 else:
                     item = nextItem
                     break
@@ -795,7 +801,8 @@ def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str) -> 
         else:
             item = nodes.Get_Chain(item)
 
-        yield obj
+        yield objectParseMethod(objectItem, furtherIdentifiers)
+        furtherIdentifiers.clear()
 
 
 def GetConcurrentStatementsFromChainedNodes(

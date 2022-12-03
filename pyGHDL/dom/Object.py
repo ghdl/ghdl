@@ -30,7 +30,7 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-from typing import Union, List
+from typing import Union, List, Iterable
 
 from pyTooling.Decorators import export
 
@@ -67,22 +67,25 @@ class Constant(VHDLModel_Constant, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, constantNode: Iir) -> Union["Constant", "DeferredConstant"]:
+    def parse(cls, constantNode: Iir, furtherIdentifiers: Iterable[str] = None) -> Union["Constant", "DeferredConstant"]:
         from pyGHDL.dom._Translate import (
             GetSubtypeIndicationFromNode,
             GetExpressionFromNode,
         )
 
         name = GetNameOfNode(constantNode)
+        identifiers = [name]
+        if furtherIdentifiers is not None:
+            identifiers.extend(furtherIdentifiers)
         documentation = GetDocumentationOfNode(constantNode)
         subtypeIndication = GetSubtypeIndicationFromNode(constantNode, "constant", name)
         defaultValue = nodes.Get_Default_Value(constantNode)
         if defaultValue != nodes.Null_Iir:
             defaultExpression = GetExpressionFromNode(defaultValue)
 
-            return cls(constantNode, [name], subtypeIndication, defaultExpression, documentation)
+            return cls(constantNode, identifiers, subtypeIndication, defaultExpression, documentation)
         else:
-            return DeferredConstant(constantNode, [name], subtypeIndication, documentation)
+            return DeferredConstant(constantNode, identifiers, subtypeIndication, documentation)
 
 
 @export
@@ -92,14 +95,17 @@ class DeferredConstant(VHDLModel_DeferredConstant, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, constantNode: Iir) -> "DeferredConstant":
+    def parse(cls, constantNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "DeferredConstant":
         from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode
 
         name = GetNameOfNode(constantNode)
+        identifiers = [name]
+        if furtherIdentifiers is not None:
+            identifiers.extend(furtherIdentifiers)
         documentation = GetDocumentationOfNode(constantNode)
         subtypeIndication = GetSubtypeIndicationFromNode(constantNode, "deferred constant", name)
 
-        return cls(constantNode, [name], subtypeIndication, documentation)
+        return cls(constantNode, identifiers, subtypeIndication, documentation)
 
 
 @export
@@ -116,13 +122,16 @@ class Variable(VHDLModel_Variable, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, variableNode: Iir) -> "Variable":
+    def parse(cls, variableNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "Variable":
         from pyGHDL.dom._Translate import (
             GetSubtypeIndicationFromNode,
             GetExpressionFromNode,
         )
 
         name = GetNameOfNode(variableNode)
+        identifiers = [name]
+        if furtherIdentifiers is not None:
+            identifiers.extend(furtherIdentifiers)
         documentation = GetDocumentationOfNode(variableNode)
         subtypeIndication = GetSubtypeIndicationFromNode(variableNode, "variable", name)
         defaultValue = nodes.Get_Default_Value(variableNode)
@@ -130,7 +139,7 @@ class Variable(VHDLModel_Variable, DOMMixin):
         if defaultValue != nodes.Null_Iir:
             defaultExpression = GetExpressionFromNode(defaultValue)
 
-        return cls(variableNode, [name], subtypeIndication, defaultExpression, documentation)
+        return cls(variableNode, identifiers, subtypeIndication, defaultExpression, documentation)
 
 
 @export
@@ -140,14 +149,17 @@ class SharedVariable(VHDLModel_SharedVariable, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, variableNode: Iir) -> "SharedVariable":
+    def parse(cls, variableNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "SharedVariable":
         from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode
 
         name = GetNameOfNode(variableNode)
+        identifiers = [name]
+        if furtherIdentifiers is not None:
+            identifiers.extend(furtherIdentifiers)
         documentation = GetDocumentationOfNode(variableNode)
         subtypeIndication = GetSubtypeIndicationFromNode(variableNode, "variable", name)
 
-        return cls(variableNode, [name], subtypeIndication, documentation)
+        return cls(variableNode, identifiers, subtypeIndication, documentation)
 
 
 @export
@@ -164,19 +176,22 @@ class Signal(VHDLModel_Signal, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, signalNode: Iir) -> "Signal":
+    def parse(cls, signalNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "Signal":
         from pyGHDL.dom._Translate import (
             GetSubtypeIndicationFromNode,
             GetExpressionFromNode,
         )
 
         name = GetNameOfNode(signalNode)
+        identifiers = [name]
+        if furtherIdentifiers is not None:
+            identifiers.extend(furtherIdentifiers)
         documentation = GetDocumentationOfNode(signalNode)
         subtypeIndication = GetSubtypeIndicationFromNode(signalNode, "signal", name)
         default = nodes.Get_Default_Value(signalNode)
         defaultExpression = GetExpressionFromNode(default) if default else None
 
-        return cls(signalNode, [name], subtypeIndication, defaultExpression, documentation)
+        return cls(signalNode, identifiers, subtypeIndication, defaultExpression, documentation)
 
 
 @export
@@ -186,13 +201,16 @@ class File(VHDLModel_File, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, fileNode: Iir) -> "File":
+    def parse(cls, fileNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "File":
         from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode
 
         name = GetNameOfNode(fileNode)
+        identifiers = [name]
+        if furtherIdentifiers is not None:
+            identifiers.extend(furtherIdentifiers)
         documentation = GetDocumentationOfNode(fileNode)
         subtypeIndication = GetSubtypeIndicationFromNode(fileNode, "file", name)
 
         # FIXME: handle file open stuff
 
-        return cls(fileNode, [name], subtypeIndication, documentation)
+        return cls(fileNode, identifiers, subtypeIndication, documentation)
