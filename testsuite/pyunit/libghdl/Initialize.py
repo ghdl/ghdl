@@ -39,7 +39,7 @@ class Instantiate(TestCase):
         file_id = name_table.Get_Identifier(str(self._filename))
         sfe = files_map.Read_Source_File(name_table.Null_Identifier, file_id)
         if sfe == files_map.No_Source_File_Entry:
-            self.fail("Cannot read file '{!s}'".format(self._filename))
+            self.fail(f"Cannot read file '{self._filename}'")
 
         # Parse
         file = sem_lib.Load_File(sfe)
@@ -54,7 +54,7 @@ class Instantiate(TestCase):
                 self.assertEqual(
                     "counter",
                     entityName,
-                    "expected entity name 'counter', got '{}'".format(entityName),
+                    f"expected entity name 'counter', got '{entityName}'",
                 )
 
             elif nodes.Get_Kind(libraryUnit) == nodes.Iir_Kind.Architecture_Body:
@@ -62,9 +62,7 @@ class Instantiate(TestCase):
                 self.assertEqual(
                     "rtl",
                     architectureName,
-                    "expected architecture name 'rtl', got '{}'".format(
-                        architectureName
-                    ),
+                    f"expected architecture name 'rtl', got '{architectureName}'"
                 )
 
             else:
