@@ -30,7 +30,7 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-from typing import List, Union, Iterator, Tuple
+from typing import List, Union, Iterator, Tuple, Iterable
 
 from pyTooling.Decorators import export
 
@@ -185,14 +185,18 @@ class RecordTypeElement(VHDLModel_RecordTypeElement, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, elementDeclarationNode: Iir) -> "RecordTypeElement":
+    def parse(cls, elementDeclarationNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "RecordTypeElement":
         from pyGHDL.dom._Utils import GetNameOfNode
         from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode
 
         elementName = GetNameOfNode(elementDeclarationNode)
         elementType = GetSubtypeIndicationFromNode(elementDeclarationNode, "record element", elementName)
 
-        return cls(elementDeclarationNode, [elementName], elementType,)
+        identifiers = [elementName]
+        if furtherIdentifiers is not None:
+            identifiers.extend(furtherIdentifiers)
+
+        return cls(elementDeclarationNode, identifiers, elementType,)
 
 
 @export
@@ -208,12 +212,11 @@ class RecordType(VHDLModel_RecordType, DOMMixin):
         elements = []
         elementDeclarations = nodes.Get_Elements_Declaration_List(typeDefinitionNode)
 
+        furtherIdentifiers = []
         elementCount = flists.Flast(elementDeclarations) + 1
         index = 0
         while index < elementCount:
             elementDeclaration = flists.Get_Nth_Element(elementDeclarations, index)
-
-            element = RecordTypeElement.parse(elementDeclaration)
 
             # Lookahead for elements with multiple identifiers at once
             if nodes.Get_Has_Identifier_List(elementDeclaration):
@@ -222,7 +225,7 @@ class RecordType(VHDLModel_RecordType, DOMMixin):
                     nextNode: Iir = flists.Get_Nth_Element(elementDeclarations, index)
                     # Consecutive identifiers are found, if the subtype indication is Null
                     if nodes.Get_Subtype_Indication(nextNode) == nodes.Null_Iir:
-                        element.Identifiers.append(GetNameOfNode(nextNode))
+                        furtherIdentifiers.append(GetNameOfNode(nextNode))
                     else:
                         break
                     index += 1
@@ -233,7 +236,9 @@ class RecordType(VHDLModel_RecordType, DOMMixin):
             else:
                 index += 1
 
+            element = RecordTypeElement.parse(elementDeclaration, furtherIdentifiers)
             elements.append(element)
+            furtherIdentifiers.clear()
 
         return cls(typeDefinitionNode, typeName, elements)
 

@@ -658,7 +658,6 @@ def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str) -> 
             from pyGHDL.dom.Object import Constant
 
             obj = Constant.parse(item)
-
         elif kind == nodes.Iir_Kind.Variable_Declaration:
             from pyGHDL.dom.Object import SharedVariable
 
