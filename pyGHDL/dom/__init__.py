@@ -39,8 +39,6 @@ from pyGHDL.libghdl import files_map, name_table
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
 
-__all__ = []
-
 
 @export
 class Position:
