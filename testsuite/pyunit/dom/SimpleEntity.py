@@ -60,6 +60,9 @@ class SimpleEntity(TestCase):
         design.Documents.append(document)
 
         self.assertEqual(1, len(design.Documents))
+        print()
+        print(document.Documentation)
+        self.assertEqual(4, len(document.Documentation.splitlines()))
 
     def test_Entity(self):
         design = Design()
@@ -67,7 +70,12 @@ class SimpleEntity(TestCase):
         design.Documents.append(document)
 
         self.assertEqual(1, len(design.Documents[0].Entities))
-        self.assertEqual("Counter", design.Documents[0].Entities[0].Identifier)
+
+        entity = design.Documents[0].Entities[0]
+        self.assertEqual("Counter", entity.Identifier)
+        print()
+        print(entity.Documentation)
+        self.assertEqual(11, len(entity.Documentation.splitlines()))
 
     def test_Architecture(self):
         design = Design()
@@ -75,4 +83,9 @@ class SimpleEntity(TestCase):
         design.Documents.append(document)
 
         self.assertEqual(1, len(design.Documents[0].Architectures))
-        self.assertEqual("rtl", design.Documents[0].Architectures[0].Identifier)
+
+        architecture = design.Documents[0].Architectures[0]
+        self.assertEqual("rtl", architecture.Identifier)
+        print()
+        print(architecture.Documentation)
+        self.assertEqual(1, len(architecture.Documentation.splitlines()))
