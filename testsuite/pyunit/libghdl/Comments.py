@@ -153,6 +153,9 @@ class Instantiate(TestCase):
     def test_entity_inside(self) -> None:
         self.checkFile(self._root / "ent_inside.vhdl")
 
+    def test_entity_arch(self) -> None:
+        self.checkFile(self._root / "ent_arch.vhdl")
+
     @expectedFailure
     def test_arch_inside_fail(self) -> None:
         self.checkFile(self._root / "arch_inside_fail.vhdl")
