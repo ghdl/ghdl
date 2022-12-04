@@ -153,7 +153,7 @@ class CommentAssociation(Base):
         self.checkFile(self._root / "comments/ent_inside.vhdl")
 
     def test_entity_arch(self) -> None:
-        self.checkFile(self._root / "ent_arch.vhdl")
+        self.checkFile(self._root / "comments/ent_arch.vhdl")
 
     @expectedFailure
     def test_arch_inside_fail(self) -> None:

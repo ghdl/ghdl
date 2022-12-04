@@ -66,7 +66,9 @@ class Constant(VHDLModel_Constant, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, constantNode: Iir, furtherIdentifiers: Iterable[str] = None) -> Union["Constant", "DeferredConstant"]:
+    def parse(
+        cls, constantNode: Iir, furtherIdentifiers: Iterable[str] = None
+    ) -> Union["Constant", "DeferredConstant"]:
         from pyGHDL.dom._Translate import (
             GetSubtypeIndicationFromNode,
             GetExpressionFromNode,
