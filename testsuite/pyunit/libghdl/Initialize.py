@@ -52,17 +52,17 @@ class Instantiate(TestCase):
             if nodes.Get_Kind(libraryUnit) == nodes.Iir_Kind.Entity_Declaration:
                 entityName = self.getIdentifier(libraryUnit)
                 self.assertEqual(
+                    "counter",
                     entityName,
-                    "entity_1",
-                    "expected entity name 'e1', got '{}'".format(entityName),
+                    "expected entity name 'counter', got '{}'".format(entityName),
                 )
 
             elif nodes.Get_Kind(libraryUnit) == nodes.Iir_Kind.Architecture_Body:
                 architectureName = self.getIdentifier(libraryUnit)
                 self.assertEqual(
+                    "rtl",
                     architectureName,
-                    "behav",
-                    "expected architecture name 'behav', got '{}'".format(
+                    "expected architecture name 'rtl', got '{}'".format(
                         architectureName
                     ),
                 )
