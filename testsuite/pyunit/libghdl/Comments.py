@@ -1,5 +1,6 @@
 from pathlib import Path
-from unittest import TestCase, skip, expectedFailure
+from unittest import TestCase, expectedFailure
+from pytest import mark
 
 import pyGHDL.libghdl as libghdl
 from pyGHDL.libghdl import name_table, files_map, errorout_console, flags
@@ -12,8 +13,8 @@ if __name__ == "__main__":
     exit(1)
 
 
-class Instantiate(TestCase):
-    _root = Path(__file__).resolve().parent
+class Base(TestCase):
+    _root = Path(__file__).resolve().parent / "examples"
 
     @staticmethod
     def getIdentifier(node) -> str:
@@ -39,9 +40,10 @@ class Instantiate(TestCase):
         f = files_map.Location_To_File(nodes.Get_Location(node))
         idx = file_comments.Find_First_Comment(f, node)
         while idx != file_comments.No_Comment_Index:
-            s = file_comments.Get_Comment(f, idx)
-            self.assertTrue(s.find(':'+name+':') >= 0,
-                            f"no :{name}: in '{s}'")
+            commentText = file_comments.Get_Comment(f, idx)
+            commentStart = file_comments.Get_Comment_Start(f, idx)
+            commentEnd = file_comments.Get_Comment_Last(f, idx)
+            self.assertTrue(commentText.find(':'+name+':') >= 0, f"no :{name}: in [{commentStart}..{commentEnd}] '{commentText}'({len(commentText)})")
             idx = file_comments.Get_Next_Comment(f, idx)
 
     def checkFlist(self, flist) -> None:
@@ -126,170 +128,174 @@ class Instantiate(TestCase):
 
             designUnit = nodes.Get_Chain(designUnit)
 
+
+class CommentAssociation(Base):
     def test_Comments(self) -> None:
         """Very first test"""
-        self.checkFile(self._root / "DesignComment.vhdl")
-
-    @skip("not yet handled")
-    def test_Comment2(self) -> None:
-        """More exhaustive"""
-        self.checkFile(self._root / "Comment2.vhdl")
+        self.checkFile(self._root / "comments/DesignComment.vhdl")
 
     def test_entity_before(self) -> None:
-        self.checkFile(self._root / "ent_bef.vhdl")
+        self.checkFile(self._root / "comments/ent_bef.vhdl")
 
     def test_arch_before(self) -> None:
-        self.checkFile(self._root / "arch_bef.vhdl")
+        self.checkFile(self._root / "comments/arch_bef.vhdl")
 
     def test_pkg_before(self) -> None:
-        self.checkFile(self._root / "pkg_bef.vhdl")
+        self.checkFile(self._root / "comments/pkg_bef.vhdl")
 
     def test_ctxt_before(self) -> None:
-        self.checkFile(self._root / "ctxt_bef.vhdl")
+        self.checkFile(self._root / "comments/ctxt_bef.vhdl")
 
     def test_conf_before(self) -> None:
-        self.checkFile(self._root / "conf_bef.vhdl")
+        self.checkFile(self._root / "comments/conf_bef.vhdl")
 
     def test_entity_inside(self) -> None:
-        self.checkFile(self._root / "ent_inside.vhdl")
+        self.checkFile(self._root / "comments/ent_inside.vhdl")
 
     def test_entity_arch(self) -> None:
-        self.checkFile(self._root / "ent_arch.vhdl")
+        self.checkFile(self._root / "comments/ent_arch.vhdl")
 
     @expectedFailure
     def test_arch_inside_fail(self) -> None:
-        self.checkFile(self._root / "arch_inside_fail.vhdl")
+        self.checkFile(self._root / "comments/arch_inside_fail.vhdl")
 
     def test_arch_inside(self) -> None:
-        self.checkFile(self._root / "arch_inside.vhdl")
+        self.checkFile(self._root / "comments/arch_inside.vhdl")
 
     @expectedFailure
     def test_pkg_inside_fail(self) -> None:
-        self.checkFile(self._root / "pkg_inside_fail.vhdl")
+        self.checkFile(self._root / "comments/pkg_inside_fail.vhdl")
 
     @expectedFailure
     def test_pkg_inside_fail2(self) -> None:
-        self.checkFile(self._root / "pkg_inside_fail2.vhdl")
+        self.checkFile(self._root / "comments/pkg_inside_fail2.vhdl")
 
     def test_pkg_inside(self) -> None:
-        self.checkFile(self._root / "pkg_inside.vhdl")
+        self.checkFile(self._root / "comments/pkg_inside.vhdl")
 
     @expectedFailure
     def test_ctxt_inside_fail(self) -> None:
-        self.checkFile(self._root / "ctxt_inside_fail.vhdl")
+        self.checkFile(self._root / "comments/ctxt_inside_fail.vhdl")
 
     def test_ctxt_inside(self) -> None:
-        self.checkFile(self._root / "ctxt_inside.vhdl")
+        self.checkFile(self._root / "comments/ctxt_inside.vhdl")
 
     @expectedFailure
     def test_conf_inside_fail(self) -> None:
-        self.checkFile(self._root / "conf_inside_fail.vhdl")
+        self.checkFile(self._root / "comments/conf_inside_fail.vhdl")
 
     def test_conf_inside(self) -> None:
-        self.checkFile(self._root / "conf_inside.vhdl")
+        self.checkFile(self._root / "comments/conf_inside.vhdl")
 
     @expectedFailure
     def test_const_fail(self) -> None:
-        self.checkFile(self._root / "const_fail.vhdl")
+        self.checkFile(self._root / "comments/const_fail.vhdl")
 
     def test_const(self) -> None:
-        self.checkFile(self._root / "const.vhdl")
+        self.checkFile(self._root / "comments/const.vhdl")
 
     @expectedFailure
     def test_sig_fail(self) -> None:
-        self.checkFile(self._root / "sig_fail.vhdl")
+        self.checkFile(self._root / "comments/sig_fail.vhdl")
 
     def test_sig(self) -> None:
-        self.checkFile(self._root / "sig.vhdl")
+        self.checkFile(self._root / "comments/sig.vhdl")
 
     def test_sig_2(self) -> None:
-        self.checkFile(self._root / "sig_2.vhdl")
+        self.checkFile(self._root / "comments/sig_2.vhdl")
 
     @expectedFailure
     def test_var_fail(self) -> None:
-        self.checkFile(self._root / "var_fail.vhdl")
+        self.checkFile(self._root / "comments/var_fail.vhdl")
 
     def test_var(self) -> None:
-        self.checkFile(self._root / "var.vhdl")
+        self.checkFile(self._root / "comments/var.vhdl")
 
     @expectedFailure
     def test_type_fail(self) -> None:
-        self.checkFile(self._root / "type_fail.vhdl")
+        self.checkFile(self._root / "comments/type_fail.vhdl")
 
     def test_type(self) -> None:
-        self.checkFile(self._root / "type.vhdl")
+        self.checkFile(self._root / "comments/type.vhdl")
 
     def test_array(self) -> None:
-        self.checkFile(self._root / "array.vhdl")
+        self.checkFile(self._root / "comments/array.vhdl")
 
     @expectedFailure
     def test_record_fail(self) -> None:
-        self.checkFile(self._root / "record_fail.vhdl")
+        self.checkFile(self._root / "comments/record_fail.vhdl")
 
     def test_record(self) -> None:
-        self.checkFile(self._root / "record.vhdl")
+        self.checkFile(self._root / "comments/record.vhdl")
 
     @expectedFailure
     def test_elements_fail(self) -> None:
-        self.checkFile(self._root / "elements_fail.vhdl")
+        self.checkFile(self._root / "comments/elements_fail.vhdl")
 
     def test_element_1(self) -> None:
-        self.checkFile(self._root / "element_1.vhdl")
+        self.checkFile(self._root / "comments/element_1.vhdl")
 
     def test_element_2(self) -> None:
-        self.checkFile(self._root / "element_2.vhdl")
+        self.checkFile(self._root / "comments/element_2.vhdl")
 
     def test_element_3(self) -> None:
-        self.checkFile(self._root / "element_3.vhdl")
+        self.checkFile(self._root / "comments/element_3.vhdl")
 
     def test_element_4(self) -> None:
-        self.checkFile(self._root / "element_4.vhdl")
+        self.checkFile(self._root / "comments/element_4.vhdl")
 
     @expectedFailure
     def test_enum_fail(self) -> None:
-        self.checkFile(self._root / "enum_fail.vhdl")
+        self.checkFile(self._root / "comments/enum_fail.vhdl")
 
     def test_enum(self) -> None:
-        self.checkFile(self._root / "enum.vhdl")
+        self.checkFile(self._root / "comments/enum.vhdl")
 
     @expectedFailure
     def test_enumlit_fail(self) -> None:
-        self.checkFile(self._root / "enumlit_fail.vhdl")
+        self.checkFile(self._root / "comments/enumlit_fail.vhdl")
 
     def test_enumlit_1(self) -> None:
-        self.checkFile(self._root / "enumlit_1.vhdl")
+        self.checkFile(self._root / "comments/enumlit_1.vhdl")
 
     def test_enumlit_2(self) -> None:
-        self.checkFile(self._root / "enumlit_2.vhdl")
+        self.checkFile(self._root / "comments/enumlit_2.vhdl")
 
     def test_enumlit_3(self) -> None:
-        self.checkFile(self._root / "enumlit_3.vhdl")
+        self.checkFile(self._root / "comments/enumlit_3.vhdl")
 
     @expectedFailure
     def test_func_fail(self) -> None:
-        self.checkFile(self._root / "func_fail.vhdl")
+        self.checkFile(self._root / "comments/func_fail.vhdl")
 
     def test_func(self) -> None:
-        self.checkFile(self._root / "func.vhdl")
+        self.checkFile(self._root / "comments/func.vhdl")
 
     @expectedFailure
     def test_func_param_fail(self) -> None:
-        self.checkFile(self._root / "func_param_fail.vhdl")
+        self.checkFile(self._root / "comments/func_param_fail.vhdl")
 
     def test_func_param(self) -> None:
-        self.checkFile(self._root / "func_param.vhdl")
+        self.checkFile(self._root / "comments/func_param.vhdl")
 
     @expectedFailure
     def test_process_fail(self) -> None:
-        self.checkFile(self._root / "process_fail.vhdl")
+        self.checkFile(self._root / "comments/process_fail.vhdl")
 
     def test_process(self) -> None:
-        self.checkFile(self._root / "process.vhdl")
+        self.checkFile(self._root / "comments/process.vhdl")
 
     def test_multi1(self) -> None:
-        self.checkFile(self._root / "multi1.vhdl")
+        self.checkFile(self._root / "comments/multi1.vhdl")
 
     def test_line1(self) -> None:
-        self.checkFile(self._root / "line1.vhdl")
+        self.checkFile(self._root / "comments/line1.vhdl")
+
+
+class Complex(Base):
+    @mark.xfail(reason="not yet handled")
+    def test_Comment2(self) -> None:
+        """More exhaustive"""
+        self.checkFile(self._root / "Complex.vhdl")
 
 # Empty line before to easy cut & put
