@@ -76,10 +76,10 @@ class Constant(VHDLModel_Constant, DOMMixin):
         )
 
         name = GetNameOfNode(constantNode)
+        documentation = GetDocumentationOfNode(constantNode)
         identifiers = [name]
         if furtherIdentifiers is not None:
             identifiers.extend(furtherIdentifiers)
-        documentation = GetDocumentationOfNode(constantNode)
         subtypeIndication = GetSubtypeIndicationFromNode(constantNode, "constant", name)
         defaultValue = nodes.Get_Default_Value(constantNode)
         if defaultValue != nodes.Null_Iir:
@@ -101,10 +101,10 @@ class DeferredConstant(VHDLModel_DeferredConstant, DOMMixin):
         from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode
 
         name = GetNameOfNode(constantNode)
+        documentation = GetDocumentationOfNode(constantNode)
         identifiers = [name]
         if furtherIdentifiers is not None:
             identifiers.extend(furtherIdentifiers)
-        documentation = GetDocumentationOfNode(constantNode)
         subtypeIndication = GetSubtypeIndicationFromNode(constantNode, "deferred constant", name)
 
         return cls(constantNode, identifiers, subtypeIndication, documentation)
@@ -131,10 +131,10 @@ class Variable(VHDLModel_Variable, DOMMixin):
         )
 
         name = GetNameOfNode(variableNode)
+        documentation = GetDocumentationOfNode(variableNode)
         identifiers = [name]
         if furtherIdentifiers is not None:
             identifiers.extend(furtherIdentifiers)
-        documentation = GetDocumentationOfNode(variableNode)
         subtypeIndication = GetSubtypeIndicationFromNode(variableNode, "variable", name)
         defaultValue = nodes.Get_Default_Value(variableNode)
         defaultExpression = None
@@ -155,10 +155,10 @@ class SharedVariable(VHDLModel_SharedVariable, DOMMixin):
         from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode
 
         name = GetNameOfNode(variableNode)
+        documentation = GetDocumentationOfNode(variableNode)
         identifiers = [name]
         if furtherIdentifiers is not None:
             identifiers.extend(furtherIdentifiers)
-        documentation = GetDocumentationOfNode(variableNode)
         subtypeIndication = GetSubtypeIndicationFromNode(variableNode, "variable", name)
 
         return cls(variableNode, identifiers, subtypeIndication, documentation)
@@ -185,10 +185,10 @@ class Signal(VHDLModel_Signal, DOMMixin):
         )
 
         name = GetNameOfNode(signalNode)
+        documentation = GetDocumentationOfNode(signalNode)
         identifiers = [name]
         if furtherIdentifiers is not None:
             identifiers.extend(furtherIdentifiers)
-        documentation = GetDocumentationOfNode(signalNode)
         subtypeIndication = GetSubtypeIndicationFromNode(signalNode, "signal", name)
         default = nodes.Get_Default_Value(signalNode)
         defaultExpression = GetExpressionFromNode(default) if default else None
@@ -207,10 +207,10 @@ class File(VHDLModel_File, DOMMixin):
         from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode
 
         name = GetNameOfNode(fileNode)
+        documentation = GetDocumentationOfNode(fileNode)
         identifiers = [name]
         if furtherIdentifiers is not None:
             identifiers.extend(furtherIdentifiers)
-        documentation = GetDocumentationOfNode(fileNode)
         subtypeIndication = GetSubtypeIndicationFromNode(fileNode, "file", name)
 
         # FIXME: handle file open stuff
