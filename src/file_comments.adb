@@ -399,4 +399,17 @@ package body File_Comments is
          return No_Comment_Index;
       end if;
    end Get_Next_Comment;
+
+   procedure Finalize is
+   begin
+      for I in Comments_Table.First .. Comments_Table.Last loop
+         File_Comments_Tables.Free (Comments_Table.Table (I));
+      end loop;
+      Comments_Table.Free;
+   end Finalize;
+
+   procedure Initialize is
+   begin
+      Comments_Table.Init;
+   end Initialize;
 end File_Comments;

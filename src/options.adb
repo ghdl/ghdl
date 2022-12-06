@@ -25,6 +25,7 @@ with PSL.Nodes;
 with PSL.Dump_Tree;
 with Flags; use Flags;
 with Files_Map;
+with File_Comments;
 
 with Vhdl.Nodes;
 with Vhdl.Lists;
@@ -46,6 +47,7 @@ package body Options is
       Vhdl.Nodes.Initialize;
       Elab.Vhdl_Objtypes.Initialize;
       Files_Map.Initialize;
+      File_Comments.Initialize;
       Libraries.Initialize;
       PSL.Nodes.Init (Libraries.Library_Location);
       PSL.Dump_Tree.Dump_Hdl_Node := Vhdl.Disp_Tree.Disp_Tree_For_Psl'Access;
@@ -60,6 +62,7 @@ package body Options is
       Vhdl.Nodes.Finalize;
       Elab.Vhdl_Objtypes.Finalize;
       Files_Map.Finalize;
+      File_Comments.Finalize;
       Libraries.Finalize;
       --  TODO: finalize errors (reset counters, handlers...)
       --  TODO: PSL

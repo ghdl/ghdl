@@ -91,6 +91,10 @@ package File_Comments is
    function Get_Next_Comment (File : Source_File_Entry;
                               Idx : Comment_Index)
                              return Comment_Index;
+
+   --  For the whole package.
+   procedure Initialize;
+   procedure Finalize;
 private
    type Comments_Range is record
       --  Range of saved comments.
