@@ -471,6 +471,8 @@ def GetGenericsFromChainedNodes(
         if kind == nodes.Iir_Kind.Interface_Constant_Declaration:
             from pyGHDL.dom.InterfaceItem import GenericConstantInterfaceItem
 
+            parseNode = generic
+
             # Lookahead for generics with multiple identifiers at once
             if nodes.Get_Has_Identifier_List(generic):
                 nextNode = nodes.Get_Chain(generic)
@@ -491,7 +493,7 @@ def GetGenericsFromChainedNodes(
             else:
                 generic = nodes.Get_Chain(generic)
 
-            yield GenericConstantInterfaceItem.parse(generic, furtherIdentifiers)
+            yield GenericConstantInterfaceItem.parse(parseNode, furtherIdentifiers)
             furtherIdentifiers.clear()
             continue
         else:
