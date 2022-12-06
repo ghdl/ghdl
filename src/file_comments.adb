@@ -38,8 +38,10 @@ package body File_Comments is
             Comments_Table.Append (File_Comments_Table'(Table => null,
                                                         Priv => <>));
          end loop;
-         File_Comments_Tables.Init (Comments_Table.Table (Ctxt.File), 16);
       end if;
+
+      --  Always reset the table.
+      File_Comments_Tables.Init (Comments_Table.Table (Ctxt.File), 16);
    end Comment_Init_Scan;
 
    procedure Comment_Close_Scan is
