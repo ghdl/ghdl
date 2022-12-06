@@ -196,7 +196,7 @@ class RecordTypeElement(VHDLModel_RecordTypeElement, DOMMixin):
         if furtherIdentifiers is not None:
             identifiers.extend(furtherIdentifiers)
 
-        return cls(elementDeclarationNode, identifiers, elementType,)
+        return cls(elementDeclarationNode, identifiers, elementType)
 
 
 @export

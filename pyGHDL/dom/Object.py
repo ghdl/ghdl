@@ -61,13 +61,15 @@ class Constant(VHDLModel_Constant, DOMMixin):
         identifiers: List[str],
         subtype: SubtypeOrSymbol,
         defaultExpression: ExpressionUnion,
-        documentation: str = None
+        documentation: str = None,
     ):
         super().__init__(identifiers, subtype, defaultExpression, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, constantNode: Iir, furtherIdentifiers: Iterable[str] = None) -> Union["Constant", "DeferredConstant"]:
+    def parse(
+        cls, constantNode: Iir, furtherIdentifiers: Iterable[str] = None
+    ) -> Union["Constant", "DeferredConstant"]:
         from pyGHDL.dom._Translate import (
             GetSubtypeIndicationFromNode,
             GetExpressionFromNode,
@@ -116,7 +118,7 @@ class Variable(VHDLModel_Variable, DOMMixin):
         identifiers: List[str],
         subtype: SubtypeOrSymbol,
         defaultExpression: ExpressionUnion,
-        documentation: str = None
+        documentation: str = None,
     ):
         super().__init__(identifiers, subtype, defaultExpression, documentation)
         DOMMixin.__init__(self, node)
@@ -170,7 +172,7 @@ class Signal(VHDLModel_Signal, DOMMixin):
         identifiers: List[str],
         subtype: SubtypeOrSymbol,
         defaultExpression: ExpressionUnion,
-        documentation: str = None
+        documentation: str = None,
     ):
         super().__init__(identifiers, subtype, defaultExpression, documentation)
         DOMMixin.__init__(self, node)

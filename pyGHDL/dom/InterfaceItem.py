@@ -69,7 +69,7 @@ class GenericConstantInterfaceItem(VHDLModel_GenericConstantInterfaceItem, DOMMi
         mode: Mode,
         subtype: SubtypeOrSymbol,
         defaultExpression: ExpressionUnion,
-        documentation: str = None
+        documentation: str = None,
     ):
         super().__init__(identifiers, mode, subtype, defaultExpression, documentation)
         DOMMixin.__init__(self, node)
@@ -88,12 +88,7 @@ class GenericConstantInterfaceItem(VHDLModel_GenericConstantInterfaceItem, DOMMi
 
 @export
 class GenericTypeInterfaceItem(VHDLModel_GenericTypeInterfaceItem, DOMMixin):
-    def __init__(
-        self,
-        node: Iir,
-        identifier: str,
-        documentation: str = None
-    ):
+    def __init__(self, node: Iir, identifier: str, documentation: str = None):
         super().__init__(identifier, documentation)
         DOMMixin.__init__(self, node)
 
@@ -107,12 +102,7 @@ class GenericTypeInterfaceItem(VHDLModel_GenericTypeInterfaceItem, DOMMixin):
 
 @export
 class GenericPackageInterfaceItem(VHDLModel_GenericPackageInterfaceItem, DOMMixin):
-    def __init__(
-        self,
-        node: Iir,
-        name: str,
-        documentation: str = None
-    ):
+    def __init__(self, node: Iir, name: str, documentation: str = None):
         super().__init__(name, documentation)
         DOMMixin.__init__(self, node)
 
@@ -126,12 +116,7 @@ class GenericPackageInterfaceItem(VHDLModel_GenericPackageInterfaceItem, DOMMixi
 
 @export
 class GenericProcedureInterfaceItem(VHDLModel_GenericProcedureInterfaceItem, DOMMixin):
-    def __init__(
-        self,
-        node: Iir,
-        identifier: str,
-        documentation: str = None
-    ):
+    def __init__(self, node: Iir, identifier: str, documentation: str = None):
         super().__init__(identifier, documentation)
         DOMMixin.__init__(self, node)
 
@@ -145,12 +130,7 @@ class GenericProcedureInterfaceItem(VHDLModel_GenericProcedureInterfaceItem, DOM
 
 @export
 class GenericFunctionInterfaceItem(VHDLModel_GenericFunctionInterfaceItem, DOMMixin):
-    def __init__(
-        self,
-        node: Iir,
-        identifier: str,
-        documentation: str = None
-    ):
+    def __init__(self, node: Iir, identifier: str, documentation: str = None):
         super().__init__(identifier, documentation)
         DOMMixin.__init__(self, node)
 
@@ -171,7 +151,7 @@ class PortSignalInterfaceItem(VHDLModel_PortSignalInterfaceItem, DOMMixin):
         mode: Mode,
         subtype: SubtypeOrSymbol,
         defaultExpression: ExpressionUnion = None,
-        documentation: str = None
+        documentation: str = None,
     ):
         super().__init__(identifiers, mode, subtype, defaultExpression, documentation)
         DOMMixin.__init__(self, node)
@@ -198,7 +178,7 @@ class ParameterConstantInterfaceItem(VHDLModel_ParameterConstantInterfaceItem, D
         mode: Mode,
         subtype: SubtypeOrSymbol,
         defaultExpression: ExpressionUnion = None,
-        documentation: str = None
+        documentation: str = None,
     ):
         super().__init__(identifiers, mode, subtype, defaultExpression, documentation)
         DOMMixin.__init__(self, node)
@@ -225,7 +205,7 @@ class ParameterVariableInterfaceItem(VHDLModel_ParameterVariableInterfaceItem, D
         mode: Mode,
         subtype: SubtypeOrSymbol,
         defaultExpression: ExpressionUnion = None,
-        documentation: str = None
+        documentation: str = None,
     ):
         super().__init__(identifiers, mode, subtype, defaultExpression, documentation)
         DOMMixin.__init__(self, node)
@@ -252,7 +232,7 @@ class ParameterSignalInterfaceItem(VHDLModel_ParameterSignalInterfaceItem, DOMMi
         mode: Mode,
         subtype: SubtypeOrSymbol,
         defaultExpression: ExpressionUnion = None,
-        documentation: str = None
+        documentation: str = None,
     ):
         super().__init__(identifiers, mode, subtype, defaultExpression, documentation)
         DOMMixin.__init__(self, node)
@@ -272,13 +252,7 @@ class ParameterSignalInterfaceItem(VHDLModel_ParameterSignalInterfaceItem, DOMMi
 
 @export
 class ParameterFileInterfaceItem(VHDLModel_ParameterFileInterfaceItem, DOMMixin):
-    def __init__(
-        self,
-        node: Iir,
-        identifiers: List[str],
-        subtype: SubtypeOrSymbol,
-        documentation: str = None
-    ):
+    def __init__(self, node: Iir, identifiers: List[str], subtype: SubtypeOrSymbol, documentation: str = None):
         super().__init__(identifiers, subtype, documentation)
         DOMMixin.__init__(self, node)
 

@@ -103,7 +103,7 @@ class AttributeSpecification(VHDLModel_AttributeSpecification, DOMMixin):
         attribute: Name,
         entityClass: EntityClass,
         expression: Expression,
-        documentation: str = None
+        documentation: str = None,
     ):
         super().__init__(identifiers, attribute, entityClass, expression, documentation)
         DOMMixin.__init__(self, node)

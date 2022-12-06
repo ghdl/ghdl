@@ -57,7 +57,7 @@ class Function(VHDLModel_Function, DOMMixin):
         returnType: SubtypeOrSymbol,
         genericItems: List[GenericInterfaceItem] = None,
         parameterItems: List[ParameterInterfaceItem] = None,
-        documentation: str = None
+        documentation: str = None,
     ):
         super().__init__(functionName, documentation)
         DOMMixin.__init__(self, node)
@@ -95,7 +95,7 @@ class Procedure(VHDLModel_Procedure, DOMMixin):
         procedureName: str,
         genericItems: List[GenericInterfaceItem] = None,
         parameterItems: List[ParameterInterfaceItem] = None,
-        documentation: str = None
+        documentation: str = None,
     ):
         super().__init__(procedureName, documentation)
         DOMMixin.__init__(self, node)
