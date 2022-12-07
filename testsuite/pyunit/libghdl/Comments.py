@@ -162,6 +162,9 @@ class CommentAssociation(Base):
     def test_arch_inside(self) -> None:
         self.checkFile(self._root / "comments/arch_inside.vhdl")
 
+    def test_arch_inside_2(self) -> None:
+        self.checkFile(self._root / "comments/arch_inside_2.vhdl")
+
     @expectedFailure
     def test_pkg_inside_fail(self) -> None:
         self.checkFile(self._root / "comments/pkg_inside_fail.vhdl")
