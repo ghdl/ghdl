@@ -1018,7 +1018,8 @@ package body PSL.Build is
          when N_Always =>
             R := Build_Property_FA (Get_Property (N), With_Active);
             return Build_Initial_Rep (R);
-         when N_Abort =>
+         when N_Abort
+            | N_Sync_Abort =>
             R := Build_Property_FA (Get_Property (N), With_Active);
             Build_Abort (R, Get_Boolean (N));
             return R;
