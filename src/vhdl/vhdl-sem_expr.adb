@@ -4251,10 +4251,6 @@ package body Vhdl.Sem_Expr is
          Sem_Array_Aggregate_Extract_Element_Subtype
            (Aggr, 1, Nbr_Dim, El_Subtype);
          if El_Subtype = Null_Iir then
-            if not Constrained then
-               Error_Msg_Sem
-                 (+Aggr, "no element bounds for self-determined aggregate");
-            end if;
             El_Subtype := El_Type;
          else
             --  TODO: check constraints of elements (if El_Subtype is static)
@@ -4300,8 +4296,14 @@ package body Vhdl.Sem_Expr is
             end;
             Set_Type_Staticness (A_Subtype, Type_Staticness);
             Set_Index_Constraint_Flag (A_Subtype, True);
-            --  FIXME: the element can be unconstrained.
-            Set_Constraint_State (A_Subtype, Fully_Constrained);
+            if Get_Kind (El_Subtype) in Iir_Kinds_Composite_Type_Definition
+            then
+               Set_Constraint_State
+                 (A_Subtype, Get_Constraint_State (El_Subtype));
+            else
+               Set_Constraint_State
+                 (A_Subtype, Fully_Constrained);
+            end if;
             Set_Type (Aggr, A_Subtype);
             Set_Literal_Subtype (Aggr, A_Subtype);
          end if;

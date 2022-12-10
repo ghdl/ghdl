@@ -3554,6 +3554,9 @@ package body Trans.Chap7 is
       Close_Temp;
    end Translate_Record_Aggregate;
 
+   --  Translate any (non-static) array aggregate to TARGET.
+   --  The bounds of TARGET have already been computed (either by the context
+   --  or from the aggregate).
    procedure Translate_Array_Aggregate
      (Target : Mnode; Target_Type : Iir; Aggr : Iir)
    is
@@ -3736,6 +3739,8 @@ package body Trans.Chap7 is
       Chap3.Translate_Anonymous_Subtype_Definition (Aggr_Type, False);
    end Translate_Array_Aggregate;
 
+   --  Translate any aggregate.
+   --  Bounds are already setin TARGET.
    procedure Translate_Aggregate
      (Target : Mnode; Target_Type : Iir; Aggr : Iir) is
    begin
@@ -3761,68 +3766,33 @@ package body Trans.Chap7 is
    procedure Translate_Aggregate_Sub_Bounds
      (Bounds : Mnode; Aggr : Iir; Mode : Object_Kind_Type);
 
-   procedure Translate_Array_Aggregate_Bounds
-     (Bounds : Mnode; Aggr : Iir; Mode : Object_Kind_Type)
+   --  Compute bounds for AGGR.
+   procedure Translate_Array_Aggregate_Bounds_By_Pos
+     (Bounds : Mnode; Aggr : Iir; El_Assoc : out Iir)
    is
       Aggr_Type : constant Iir := Get_Base_Type (Get_Type (Aggr));
-      El_Type : constant Iir := Get_Element_Subtype (Aggr_Type);
       Assoc : Iir;
       Static_Len : Int64;
       Var_Len : O_Dnode;
       Expr_Type : Iir;
       Range_Type : Iir;
-      El_Bounds_Copied : Boolean;
+      Assoc_Expr : Iir;
    begin
-      pragma Assert (Is_Stable (Bounds));
+      El_Assoc := Null_Iir;
       Static_Len := 0;
-
-      --  If the element subtype is fully constrained, there is no bounds to
-      --  be copied.
-      El_Bounds_Copied := Is_Fully_Constrained_Type (El_Type);
 
       --  First pass: static length.
       Assoc := Get_Association_Choices_Chain (Aggr);
       while Assoc /= Null_Iir loop
+         Assoc_Expr := Get_Associated_Expr (Assoc);
          pragma Assert (Get_Kind (Assoc) = Iir_Kind_Choice_By_None);
          if Get_Element_Type_Flag (Assoc) then
             Static_Len := Static_Len + 1;
-            if not El_Bounds_Copied then
-               declare
-                  Expr : constant Iir := Get_Associated_Expr (Assoc);
-                  Expr_Bnd : Mnode;
-                  El_Layout : Mnode;
-                  Info : Ortho_Info_Acc;
-                  Obj : Mnode;
-               begin
-                  Expr_Type := Get_Type (Expr);
-                  if Is_Fully_Constrained_Type (Expr_Type) then
-                     Expr_Bnd := Chap3.Get_Composite_Type_Bounds (Expr_Type);
-                  else
-                     Obj := Chap6.Translate_Name (Expr, Mode);
-                     Stabilize (Obj);
-                     Info := Add_Info (Assoc, Kind_Expr_Eval);
-                     Info.Expr_Eval := Obj;
-                     Expr_Bnd := Chap3.Get_Composite_Bounds (Obj);
-                  end if;
-                  El_Layout := Chap3.Array_Bounds_To_Element_Bounds
-                    (Bounds, Aggr_Type);
-                  Chap3.Copy_Bounds (El_Layout, Expr_Bnd, El_Type);
-                  --  Compute size.
-                  --  TODO: this is just a multiplication, could be done
-                  --  inline.
-                  Chap3.Gen_Call_Type_Builder
-                    (Chap3.Array_Bounds_To_Element_Layout (Bounds, Aggr_Type),
-                     Expr_Type, Mode);
-                  if Mode = Mode_Signal then
-                     Chap3.Gen_Call_Type_Builder
-                       (Chap3.Array_Bounds_To_Element_Layout (Bounds,
-                                                              Aggr_Type),
-                        Expr_Type, Mode_Value);
-                  end if;
-               end;
+            if El_Assoc = Null_Iir then
+               El_Assoc := Assoc;
             end if;
          else
-            Expr_Type := Get_Type (Get_Associated_Expr (Assoc));
+            Expr_Type := Get_Type (Assoc_Expr);
             pragma Assert (Is_One_Dimensional_Array_Type (Expr_Type));
             if Get_Constraint_State (Expr_Type) = Fully_Constrained then
                Range_Type := Get_Index_Type (Expr_Type, 0);
@@ -3835,6 +3805,7 @@ package body Trans.Chap7 is
                raise Internal_Error;
             end if;
          end if;
+
          Assoc := Get_Chain (Assoc);
       end loop;
 
@@ -3877,6 +3848,123 @@ package body Trans.Chap7 is
       Chap3.Create_Range_From_Length
         (Get_Index_Type (Aggr_Type, 0), Var_Len,
          Chap3.Bounds_To_Range (Bounds, Aggr_Type, 1), Aggr);
+   end Translate_Array_Aggregate_Bounds_By_Pos;
+
+   --  Compute bounds for AGGR.
+   procedure Translate_Array_Aggregate_Bounds
+     (Bounds : Mnode; Aggr : Iir; Mode : Object_Kind_Type)
+   is
+      Aggr_Type : constant Iir := Get_Type (Aggr);
+      Aggr_Base_Type : constant Iir := Get_Base_Type (Aggr_Type);
+      El_Type : constant Iir := Get_Element_Subtype (Aggr_Base_Type);
+      Expr_Type : Iir;
+      El_Bounds_Copied : Boolean;
+      El_Assoc : Iir;
+   begin
+      pragma Assert (Is_Stable (Bounds));
+
+      --  Copy info from parent.
+      if Get_Info (Aggr_Type) = null then
+         declare
+            Parent_Tinfo : constant Type_Info_Acc :=
+              Get_Info (Get_Parent_Type (Aggr_Type));
+            Tinfo : Type_Info_Acc;
+         begin
+            Tinfo := Add_Info (Aggr_Type, Kind_Type);
+            Tinfo.all := Parent_Tinfo.all;
+            Tinfo.S.Composite_Layout := Null_Var;
+            Tinfo.Type_Rti := O_Dnode_Null;
+         end;
+      end if;
+
+      --  If the aggregate has non-array element value(s), then it's a vector.
+      --    It should have positional associations;
+      --    It may have range, but either only one dynamic range or only
+      --    locally static ranges.
+      --  If the aggregate has only element values, it is either dynamic or
+      --    static (!).
+      --
+      --  In all cases, the element bounds can be unknown.  The best element
+      --  has to be saved.
+
+      --  If the element subtype is fully constrained, there is no bounds to
+      --  be copied.
+      El_Bounds_Copied := Is_Fully_Constrained_Type (El_Type);
+
+      --  1. If all indexes are constrained, build the type.  Maybe
+      --     look for the best element.
+      if Get_Index_Constraint_Flag (Aggr_Type) then
+         --   Eval indexes.
+         declare
+            Indexes_List : constant Iir_Flist :=
+              Get_Index_Subtype_List (Aggr_Type);
+            Rng : Mnode;
+            Index : Iir;
+         begin
+            for I in Flist_First .. Flist_Last (Indexes_List) loop
+               Index := Get_Index_Type (Indexes_List, I);
+               Open_Temp;
+               Rng := Chap3.Bounds_To_Range (Bounds, Aggr_Base_Type, I + 1);
+               Chap7.Translate_Discrete_Range (Rng, Index);
+               Close_Temp;
+            end loop;
+         end;
+
+         --  Find an element.
+         declare
+            Assoc : Iir;
+            Expr : Iir;
+         begin
+            Assoc := Get_Association_Choices_Chain (Aggr);
+            while Assoc /= Null_Iir loop
+               Expr := Get_Associated_Expr (Assoc);
+               if Get_Kind (Expr) not in Iir_Kinds_Array_Choice then
+                  El_Assoc := Assoc;
+                  exit;
+               end if;
+               Assoc := Get_Chain (Assoc);
+            end loop;
+         end;
+      else
+         --  2. Otherwise, this is a vector by positions.
+         Translate_Array_Aggregate_Bounds_By_Pos (Bounds, Aggr, El_Assoc);
+      end if;
+
+      if not El_Bounds_Copied then
+         pragma Assert (El_Assoc /= Null_Iir);
+         declare
+            El_Expr : constant Node := Get_Associated_Expr (El_Assoc);
+            Expr_Bnd : Mnode;
+            El_Layout : Mnode;
+            Obj : Mnode;
+         begin
+            Expr_Type := Get_Type (El_Expr);
+            if Is_Fully_Constrained_Type (Expr_Type) then
+               Expr_Bnd := Chap3.Get_Composite_Type_Bounds (Expr_Type);
+            elsif Get_Kind (El_Expr) in Iir_Kinds_Denoting_Name then
+               Obj := Chap6.Translate_Name (El_Expr, Mode);
+               Expr_Bnd := Chap3.Get_Composite_Bounds (Obj);
+            else
+               --  TODO: translate expression, keep value.
+               raise Internal_Error;
+            end if;
+            El_Layout := Chap3.Array_Bounds_To_Element_Bounds
+              (Bounds, Aggr_Base_Type);
+            Chap3.Copy_Bounds (El_Layout, Expr_Bnd, El_Type);
+            --  Compute size.
+            --  TODO: this is just a multiplication, could be done
+            --  inline.
+            Chap3.Gen_Call_Type_Builder
+              (Chap3.Array_Bounds_To_Element_Layout (Bounds, Aggr_Base_Type),
+               Expr_Type, Mode);
+            if Mode = Mode_Signal then
+               Chap3.Gen_Call_Type_Builder
+                 (Chap3.Array_Bounds_To_Element_Layout
+                    (Bounds, Aggr_Base_Type),
+                  Expr_Type, Mode_Value);
+            end if;
+         end;
+      end if;
    end Translate_Array_Aggregate_Bounds;
 
    procedure Translate_Record_Aggregate_Bounds
@@ -4476,6 +4564,8 @@ package body Trans.Chap7 is
       end if;
    end Translate_Overflow_Literal;
 
+   --  Translate an aggregate when it appears as an expression (and not as
+   --  a default or associated value).
    function Translate_Aggregate_Expression (Expr : Iir; Rtype : Iir)
                                             return  O_Enode
    is
