@@ -3949,8 +3949,9 @@ package body Trans.Chap7 is
                Obj := Chap6.Translate_Name (El_Expr, Mode);
                Expr_Bnd := Chap3.Get_Composite_Bounds (Obj);
             else
-               --  TODO: translate expression, keep value.
-               raise Internal_Error;
+               --  TODO: Keep value.
+               Obj := Chap7.Translate_Expression (El_Expr);
+               Expr_Bnd := Chap3.Get_Composite_Bounds (Obj);
             end if;
             El_Layout := Chap3.Array_Bounds_To_Element_Bounds
               (Bounds, Aggr_Base_Type);
