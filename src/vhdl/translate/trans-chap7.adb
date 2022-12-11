@@ -3157,14 +3157,13 @@ package body Trans.Chap7 is
 
       --  Assign EXPR to current position (defined by index VAR_INDEX), and
       --  update VAR_INDEX.  Handles sub-aggregates.
-      procedure Do_Assign_El (Expr : Iir; Assoc_Len : out Int64)
+      procedure Do_Assign_El (Expr : Iir)
       is
          Dest : Mnode;
       begin
          Dest := Chap6.Translate_Indexed_Name_By_Offset
            (Targ, Aggr_Type, Var_Index);
          Translate_Assign (Dest, Expr, Aggr_El_Type);
-         Assoc_Len := 1;
          Inc_Var (Var_Index);
       end Do_Assign_El;
 
@@ -3197,8 +3196,12 @@ package body Trans.Chap7 is
          else
             --  Try to get the range from the expression (if it is static).
             pragma Assert (Get_Kind (Assoc) = Iir_Kind_Choice_By_None);
-            Idx_Type := Get_Index_Type (Expr_Type, 0);
-            if Get_Type_Staticness (Idx_Type) /= Locally then
+            if Get_Index_Constraint_Flag (Expr_Type) then
+               Idx_Type := Get_Index_Type (Expr_Type, 0);
+               if Get_Type_Staticness (Idx_Type) /= Locally then
+                  Idx_Type := Null_Iir;
+               end if;
+            else
                Idx_Type := Null_Iir;
             end if;
          end if;
@@ -3207,7 +3210,7 @@ package body Trans.Chap7 is
             Assoc_Len := Eval_Discrete_Range_Length (Idx_Type);
             El_Len := New_Lit (New_Index_Lit (Unsigned_64 (Assoc_Len)));
          else
-            Bnd := Chap3.Get_Composite_Type_Bounds (Expr_Type);
+            Bnd := Chap3.Get_Composite_Bounds (Src);
             El_Len := M2E
               (Chap3.Range_To_Length
                  (Chap3.Bounds_To_Range (Bnd, Expr_Type, 1)));
@@ -3223,7 +3226,8 @@ package body Trans.Chap7 is
       begin
          if Final then
             if Get_Element_Type_Flag (Assoc) then
-               Do_Assign_El (Expr, Assoc_Len);
+               Do_Assign_El (Expr);
+               Assoc_Len := 1;
             else
                Do_Assign_Vec (Assoc, Expr, Assoc_Len);
             end if;
