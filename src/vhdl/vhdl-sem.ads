@@ -34,14 +34,14 @@ package Vhdl.Sem is
    --  Add EL in the current design unit list of items to be checked later.
    procedure Add_Analysis_Checks_List (El : Iir);
 
-   --  INTER_PARENT contains generics and ports interfaces;
-   --  ASSOC_PARENT constains generics and ports map aspects.
-   procedure Sem_Generic_Port_Association_Chain
-     (Inter_Parent : Iir; Assoc_Parent : Iir);
-
    --  INTER_PARENT contains generics interfaces;
    --  ASSOC_PARENT constains generic aspects.
    procedure Sem_Generic_Association_Chain
+     (Inter_Parent : Iir; Assoc_Parent : Iir);
+
+   --  INTER_PARENT contains ports interfaces;
+   --  ASSOC_PARENT constains ports map aspects.
+   procedure Sem_Port_Association_Chain
      (Inter_Parent : Iir; Assoc_Parent : Iir);
 
    --  Return TRUE iff the actual of ASSOC can be the formal FORMAL.

@@ -1970,8 +1970,9 @@ package body Vhdl.Sem_Stmts is
          return;
       end if;
 
-      --  The association
-      Sem_Generic_Port_Association_Chain (Decl, Stmt);
+      --  The associations
+      Sem_Generic_Association_Chain (Decl, Stmt);
+      Sem_Port_Association_Chain (Decl, Stmt);
 
       --  FIXME: add sources for signals, in order to detect multiple sources
       --  to unresolved signals.
@@ -2094,7 +2095,8 @@ package body Vhdl.Sem_Stmts is
          Set_Is_Within_Flag (Stmt, False);
          Close_Declarative_Region;
 
-         Sem_Generic_Port_Association_Chain (Header, Header);
+         Sem_Generic_Association_Chain (Header, Header);
+         Sem_Port_Association_Chain (Header, Header);
 
          --  ... and reopen-it.
          Open_Declarative_Region;

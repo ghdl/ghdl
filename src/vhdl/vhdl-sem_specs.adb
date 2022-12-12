@@ -1477,7 +1477,8 @@ package body Vhdl.Sem_Specs is
             return;
          end if;
       else
-         Sem_Generic_Port_Association_Chain (Entity, Bind);
+         Sem_Generic_Association_Chain (Entity, Bind);
+         Sem_Port_Association_Chain (Entity, Bind);
 
          --  If the binding is final (cannot be incrementally bound), check
          --  that all generics are associated when required (like no default

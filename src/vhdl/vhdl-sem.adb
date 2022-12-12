@@ -622,7 +622,7 @@ package body Vhdl.Sem is
             --  FIXME: it is possible to have port unassociated ?
             Miss := Missing_Port;
          when others =>
-            Error_Kind ("sem_port_association_list", Assoc_Parent);
+            Error_Kind ("sem_port_association_chain", Assoc_Parent);
       end case;
 
       --  The ports
@@ -689,18 +689,6 @@ package body Vhdl.Sem is
          Next_Association_Interface (Assoc, Inter);
       end loop;
    end Sem_Port_Association_Chain;
-
-   --  INTER_PARENT contains generics and ports interfaces;
-   --  ASSOC_PARENT constains generics and ports map aspects.
-   procedure Sem_Generic_Port_Association_Chain
-     (Inter_Parent : Iir; Assoc_Parent : Iir)
-   is
-      Res : Boolean;
-      pragma Unreferenced (Res);
-   begin
-      Sem_Generic_Association_Chain (Inter_Parent, Assoc_Parent);
-      Sem_Port_Association_Chain (Inter_Parent, Assoc_Parent);
-   end Sem_Generic_Port_Association_Chain;
 
    --  LRM 1.3  Configuration Declarations.
    procedure Sem_Configuration_Declaration (Decl: Iir)
