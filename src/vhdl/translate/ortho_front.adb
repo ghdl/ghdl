@@ -643,6 +643,11 @@ package body Ortho_Front is
             Flags.Flag_Only_Elab_Warnings := False;
             Config := Vhdl.Configuration.Configure
               (Elab_Library, Elab_Entity, Elab_Architecture);
+
+            if Errorout.Nbr_Errors > 0 then
+               raise Compilation_Error;
+            end if;
+
             Translation.Elaborate (Config, True);
 
             if Errorout.Nbr_Errors > 0 then
