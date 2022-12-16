@@ -2623,7 +2623,14 @@ package body Synth.Vhdl_Stmts is
       if Is_Error (Sub_Inst) then
          Res := No_Valtyp;
       else
-         if not Is_Func then
+         --  If the subprogram is not pure, clear the const flag.
+         if Is_Func then
+            --  For functions.
+            if Ctxt /= null and then not Get_Pure_Flag (Imp) then
+               Set_Instance_Const (Sub_Inst, False);
+            end if;
+         else
+            --  For procedures.
             if Ctxt /= null and then Get_Purity_State (Imp) /= Pure then
                Set_Instance_Const (Sub_Inst, False);
             end if;
