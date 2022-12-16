@@ -5238,6 +5238,22 @@ package body Vhdl.Nodes is
       Set_Field1 (Target, Unit);
    end Set_Instantiated_Unit;
 
+   function Get_Instantiated_Header (Target : Iir) return Iir is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Instantiated_Header (Get_Kind (Target)),
+                     "no field Instantiated_Header");
+      return Get_Field4 (Target);
+   end Get_Instantiated_Header;
+
+   procedure Set_Instantiated_Header (Target : Iir; Hdr : Iir) is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Instantiated_Header (Get_Kind (Target)),
+                     "no field Instantiated_Header");
+      Set_Field4 (Target, Hdr);
+   end Set_Instantiated_Header;
+
    function Get_Generic_Map_Aspect_Chain (Target : Iir) return Iir is
    begin
       pragma Assert (Target /= Null_Iir);

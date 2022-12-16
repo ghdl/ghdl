@@ -3490,6 +3490,10 @@ package Vhdl.Nodes is
    --   Get/Set_Label (Field3)
    --   Get/Set_Identifier (Alias Field3)
    --
+   --  If the instantiated unit contains generic types or packages, this is
+   --  the instantiated unit.
+   --   Get/Set_Instantiated_Header (Field4)
+   --
    --   Get/Set_Default_Binding_Indication (Field5)
    --
    --   Get/Set_Generic_Map_Aspect_Chain (Field8)
@@ -8918,6 +8922,10 @@ package Vhdl.Nodes is
    --  Field: Field1
    function Get_Instantiated_Unit (Target : Iir) return Iir;
    procedure Set_Instantiated_Unit (Target : Iir; Unit : Iir);
+
+   --  Field: Field4
+   function Get_Instantiated_Header (Target : Iir) return Iir;
+   procedure Set_Instantiated_Header (Target : Iir; Hdr : Iir);
 
    --  Generic map aspect list.
    --  Field: Field8 Chain

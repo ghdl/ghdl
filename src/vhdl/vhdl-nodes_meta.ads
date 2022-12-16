@@ -300,6 +300,7 @@ package Vhdl.Nodes_Meta is
       Field_Report_Expression,
       Field_Severity_Expression,
       Field_Instantiated_Unit,
+      Field_Instantiated_Header,
       Field_Generic_Map_Aspect_Chain,
       Field_Port_Map_Aspect_Chain,
       Field_Configuration_Name,
@@ -900,6 +901,7 @@ package Vhdl.Nodes_Meta is
    function Has_Report_Expression (K : Iir_Kind) return Boolean;
    function Has_Severity_Expression (K : Iir_Kind) return Boolean;
    function Has_Instantiated_Unit (K : Iir_Kind) return Boolean;
+   function Has_Instantiated_Header (K : Iir_Kind) return Boolean;
    function Has_Generic_Map_Aspect_Chain (K : Iir_Kind) return Boolean;
    function Has_Port_Map_Aspect_Chain (K : Iir_Kind) return Boolean;
    function Has_Configuration_Name (K : Iir_Kind) return Boolean;

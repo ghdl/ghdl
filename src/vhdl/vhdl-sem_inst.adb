@@ -163,6 +163,7 @@ package body Vhdl.Sem_Inst is
       end if;
    end Relocate;
 
+   --  Create a new Source_File for ORIG instantiated by INST.
    procedure Create_Relocation (Inst : Iir; Orig : Iir)
    is
       use Files_Map;
@@ -925,8 +926,8 @@ package body Vhdl.Sem_Inst is
       pragma Assert (Inst_El = Null_Iir);
    end Set_Instance_On_Chain;
 
-   --  In the instance, replace references (and inner references) to interface
-   --  package declaration to the associated package.
+   --  In ASSOC (which is the association for interface INTER), adjust
+   --  references to the instance.
    procedure Instantiate_Generic_Map (Assoc : Iir; Inter: Iir)
    is
       Assoc_Formal : Iir;
@@ -951,7 +952,7 @@ package body Vhdl.Sem_Inst is
                     | Iir_Kind_Selected_Element =>
                      Formal := Get_Prefix (Formal);
                   when others =>
-                     Error_Kind ("instantiate_generic_map_chain", Formal);
+                     Error_Kind ("instantiate_generic_map", Formal);
                end case;
             end loop;
          end if;
@@ -972,8 +973,7 @@ package body Vhdl.Sem_Inst is
                   return;
                end if;
                Formal_Type := Get_Type (Assoc_Formal);
-               if Get_Kind (Formal_Type)
-                 = Iir_Kind_Interface_Type_Definition
+               if Get_Kind (Formal_Type) = Iir_Kind_Interface_Type_Definition
                then
                   --  Type of the formal is an interface type.
                   --  Check if the interface type was declared in the same

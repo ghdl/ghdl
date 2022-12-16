@@ -5085,6 +5085,19 @@ def Set_Instantiated_Unit(obj: Iir, value: Iir) -> None:
 
 
 @export
+@BindToLibGHDL("vhdl__nodes__get_instantiated_header")
+def Get_Instantiated_Header(obj: Iir) -> Iir:
+    """"""
+    return 0
+
+
+@export
+@BindToLibGHDL("vhdl__nodes__set_instantiated_header")
+def Set_Instantiated_Header(obj: Iir, value: Iir) -> None:
+    """"""
+
+
+@export
 @BindToLibGHDL("vhdl__nodes__get_generic_map_aspect_chain")
 def Get_Generic_Map_Aspect_Chain(obj: Iir) -> Iir:
     """"""
