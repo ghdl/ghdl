@@ -1290,7 +1290,9 @@ package body Vhdl.Evaluation is
                return Res;
             end;
 
-         when Iir_Predefined_IEEE_Explicit =>
+         when Iir_Predefined_IEEE_Explicit
+            | Iir_Predefined_Bit_Vector_To_Hstring
+            | Iir_Predefined_Bit_Vector_To_Ostring =>
             return Eval_Ieee_Operation (Orig, Imp, Operand, Null_Iir);
 
          when others =>
