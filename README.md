@@ -13,7 +13,7 @@
   -->
 </p>
 <p align="center">
-  <a title="'Test' workflow Status" href="https://github.com/ghdl/ghdl/actions?query=workflow%3ATest"><img alt="'Test' workflow Status" src="https://img.shields.io/github/workflow/status/ghdl/ghdl/Test?longCache=true&style=flat-square&label=Test&logo=github%20actions&logoColor=fff"></a><!--
+  <a title="'Test' workflow Status" href="https://github.com/ghdl/ghdl/actions/workflows/Test.yml"><img alt="'Test' workflow Status" src="https://img.shields.io/github/actions/workflow/status/ghdl/ghdl/Test.yml?branch=master&longCache=true&style=flat-square&label=Test&logo=github%20actions&logoColor=fff"></a><!--
   -->
   <a title="AppVeyor" href="https://ci.appveyor.com/project/tgingold/ghdl-psgys/history"><img src="https://img.shields.io/appveyor/ci/tgingold/ghdl-psgys/master.svg?logo=appveyor&logoColor=e8ecef&style=flat-square&label=Test"></a><!--
   -->
