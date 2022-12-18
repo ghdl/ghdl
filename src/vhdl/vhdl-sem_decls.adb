@@ -517,7 +517,9 @@ package body Vhdl.Sem_Decls is
          --  Not yet fully supported - need to check the instance.
       end if;
 
-      Sem_Inst.Instantiate_Package_Declaration (Inter, Pkg);
+      --  Create generics and declarations for the interface package so that
+      --  references are resolved to those declarations.
+      Sem_Inst.Instantiate_Interface_Package_Declaration (Inter, Pkg);
 
       Sem_Scopes.Add_Name (Inter);
       Set_Is_Within_Flag (Inter, True);

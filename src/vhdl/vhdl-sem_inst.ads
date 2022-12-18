@@ -21,7 +21,16 @@ package Vhdl.Sem_Inst is
    --  If N is not an instance, this function returns Null_Iir.
    function Get_Origin (N : Iir) return Iir;
 
-   --  Create declaration chain and generic declarations for INST from PKG.
+   --  Create declaration chain and generic declarations for INTER from PKG,
+   --  so the the parent of INTER can be analyzed and references to PKG
+   --  points to an instance.
+   --  It is necessary to create an instance because two interface packages
+   --  are different even if they have the same uninstantiated package.
+   procedure Instantiate_Interface_Package_Declaration
+     (Inter : Iir; Pkg : Iir);
+
+   --  - package instantiations
+   --    instantiate each node.
    procedure Instantiate_Package_Declaration (Inst : Iir; Pkg : Iir);
 
    --  Create interface parameters of INST from SUBPRG.

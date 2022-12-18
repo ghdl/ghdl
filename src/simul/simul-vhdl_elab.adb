@@ -434,6 +434,10 @@ package body Simul.Vhdl_Elab is
            | Iir_Kind_Group_Template_Declaration
            | Iir_Kind_Group_Declaration =>
             null;
+
+         when Iir_Kind_Package_Instantiation_Declaration =>
+            --  TODO: signals in package ?
+            null;
          when others =>
             Error_Kind ("gather_processes_decl", Decl);
       end case;
