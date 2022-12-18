@@ -29,8 +29,8 @@ package Vhdl.Sem_Inst is
    procedure Instantiate_Interface_Package_Declaration
      (Inter : Iir; Pkg : Iir);
 
-   --  - package instantiations
-   --    instantiate each node.
+   --  Instantiate each node of PKG to INST.
+   --  A generic interface package points to the actual.
    procedure Instantiate_Package_Declaration (Inst : Iir; Pkg : Iir);
 
    --  Create interface parameters of INST from SUBPRG.

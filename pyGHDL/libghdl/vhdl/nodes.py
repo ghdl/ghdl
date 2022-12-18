@@ -5371,6 +5371,19 @@ def Set_Uninstantiated_Package_Decl(obj: Iir, value: Iir) -> None:
 
 
 @export
+@BindToLibGHDL("vhdl__nodes__get_associated_package")
+def Get_Associated_Package(obj: Iir) -> Iir:
+    """"""
+    return 0
+
+
+@export
+@BindToLibGHDL("vhdl__nodes__set_associated_package")
+def Set_Associated_Package(obj: Iir, value: Iir) -> None:
+    """"""
+
+
+@export
 @BindToLibGHDL("vhdl__nodes__get_instance_source_file")
 def Get_Instance_Source_File(obj: Iir) -> SourceFileEntry:
     """"""

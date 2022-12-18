@@ -322,6 +322,7 @@ package Vhdl.Nodes_Meta is
       Field_Block_Header,
       Field_Uninstantiated_Package_Name,
       Field_Uninstantiated_Package_Decl,
+      Field_Associated_Package,
       Field_Instance_Source_File,
       Field_Generate_Block_Configuration,
       Field_Generate_Statement_Body,
@@ -924,6 +925,7 @@ package Vhdl.Nodes_Meta is
    function Has_Block_Header (K : Iir_Kind) return Boolean;
    function Has_Uninstantiated_Package_Name (K : Iir_Kind) return Boolean;
    function Has_Uninstantiated_Package_Decl (K : Iir_Kind) return Boolean;
+   function Has_Associated_Package (K : Iir_Kind) return Boolean;
    function Has_Instance_Source_File (K : Iir_Kind) return Boolean;
    function Has_Generate_Block_Configuration (K : Iir_Kind) return Boolean;
    function Has_Generate_Statement_Body (K : Iir_Kind) return Boolean;

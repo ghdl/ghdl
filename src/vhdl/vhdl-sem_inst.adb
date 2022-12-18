@@ -684,7 +684,8 @@ package body Vhdl.Sem_Inst is
 
    --  As the scope generic interfaces extends beyond the immediate scope (see
    --  LRM08 12.2 Scope of declarations), they must be instantiated.
-   function Instantiate_Generic_Chain (Inst : Iir; Inters : Iir) return Iir
+   function Instantiate_Generic_Chain
+     (Inst : Iir; Inters : Iir; In_Interface : Boolean) return Iir
    is
       Inter : Iir;
       First : Iir;
@@ -722,11 +723,17 @@ package body Vhdl.Sem_Inst is
             when Iir_Kind_Interface_Package_Declaration =>
                Set_Uninstantiated_Package_Decl
                  (Res, Get_Uninstantiated_Package_Decl (Inter));
-               Set_Generic_Chain
-                 (Res,
-                  Instantiate_Generic_Chain (Res, Get_Generic_Chain (Inter)));
-               Set_Declaration_Chain
-                 (Res, Instantiate_Iir_Chain (Get_Declaration_Chain (Inter)));
+               if In_Interface then
+                  --  Only set generics and declarations when instantiating
+                  --  for an uninstantiated unit.
+                  Set_Generic_Chain
+                    (Res,
+                     Instantiate_Generic_Chain
+                       (Res, Get_Generic_Chain (Inter), True));
+                  Set_Declaration_Chain
+                    (Res,
+                     Instantiate_Iir_Chain (Get_Declaration_Chain (Inter)));
+               end if;
             when Iir_Kind_Interface_Type_Declaration =>
                Set_Type (Res, Get_Type (Inter));
             when Iir_Kinds_Interface_Subprogram_Declaration =>
@@ -779,6 +786,23 @@ package body Vhdl.Sem_Inst is
 
          --  pragma Assert (Get_Instance (N) = Null_Iir);
          Set_Instance (N, Inst);
+
+         if Kind = Iir_Kind_Interface_Package_Declaration then
+            --  For interface package, this is not symetric.
+            --  The nodes to set instance on are in the interface package,
+            --  while the instances are in the associated package.
+            declare
+               Pkg_Actual : constant Iir := Get_Associated_Package (Inst);
+            begin
+               Set_Instance_On_Chain (Get_Generic_Chain (N),
+                                      Get_Generic_Chain (Pkg_Actual));
+               Set_Instance_On_Chain (Get_Declaration_Chain (N),
+                                      Get_Declaration_Chain (Pkg_Actual));
+               Set_Instance_On_Chain (Get_Attribute_Value_Chain (N),
+                                      Get_Attribute_Value_Chain (Pkg_Actual));
+            end;
+            return;
+         end if;
 
          for I in Fields'Range loop
             F := Fields (I);
@@ -928,6 +952,7 @@ package body Vhdl.Sem_Inst is
 
    --  In ASSOC (which is the association for interface INTER), adjust
    --  references to the instance.
+   --  INTER is the interface of the uninstantiated unit.
    procedure Instantiate_Generic_Map (Assoc : Iir; Inter: Iir)
    is
       Assoc_Formal : Iir;
@@ -987,19 +1012,22 @@ package body Vhdl.Sem_Inst is
                end if;
             end;
          when Iir_Kind_Interface_Package_Declaration =>
+            --  INTER is an instantiation, without generic nor declaration
+            --  chains.
             pragma Assert
               (Get_Kind (Assoc) = Iir_Kind_Association_Element_Package);
             declare
                Sub_Inst : constant Iir :=
                  Get_Named_Entity (Get_Actual (Assoc));
-               Sub_Pkg : constant Iir := Get_Origin (Assoc_Formal);
+               Pkg_Inter : constant Iir := Get_Origin (Assoc_Formal);
             begin
                --  Replace references of interface package to references
                --  to the actual package.
-               Set_Instance (Sub_Pkg, Sub_Inst);
-               Set_Instance_On_Chain (Get_Generic_Chain (Sub_Pkg),
+               Set_Instance (Pkg_Inter, Sub_Inst);
+               Set_Associated_Package (Assoc_Formal, Sub_Inst);
+               Set_Instance_On_Chain (Get_Generic_Chain (Pkg_Inter),
                                       Get_Generic_Chain (Sub_Inst));
-               Set_Instance_On_Chain (Get_Declaration_Chain (Sub_Pkg),
+               Set_Instance_On_Chain (Get_Declaration_Chain (Pkg_Inter),
                                       Get_Declaration_Chain (Sub_Inst));
             end;
          when Iir_Kind_Interface_Type_Declaration =>
@@ -1085,7 +1113,8 @@ package body Vhdl.Sem_Inst is
 
       --  Manually instantiate the package declaration.
       Set_Generic_Chain
-        (Inst, Instantiate_Generic_Chain (Inst, Get_Generic_Chain (Subprg)));
+        (Inst,
+         Instantiate_Generic_Chain (Inst, Get_Generic_Chain (Subprg), True));
       Instantiate_Generic_Map_Chain (Inst, Subprg);
       if Get_Kind (Subprg) = Iir_Kind_Function_Instantiation_Declaration then
          Set_Return_Type (Inst, Instantiate_Iir (Subprg, True));
@@ -1121,7 +1150,8 @@ package body Vhdl.Sem_Inst is
 
       --  Manually instantiate the package declaration.
       Set_Generic_Chain
-        (Inter, Instantiate_Generic_Chain (Inter, Get_Generic_Chain (Header)));
+        (Inter,
+         Instantiate_Generic_Chain (Inter, Get_Generic_Chain (Header), True));
       Instantiate_Generic_Map_Chain (Inter, Pkg);
       Set_Declaration_Chain
         (Inter, Instantiate_Iir_Chain (Get_Declaration_Chain (Pkg)));
@@ -1158,7 +1188,8 @@ package body Vhdl.Sem_Inst is
 
       --  Manually instantiate the package declaration.
       Set_Generic_Chain
-        (Inst, Instantiate_Generic_Chain (Inst, Get_Generic_Chain (Header)));
+        (Inst,
+         Instantiate_Generic_Chain (Inst, Get_Generic_Chain (Header), False));
       Instantiate_Generic_Map_Chain (Inst, Pkg);
       Set_Declaration_Chain
         (Inst, Instantiate_Iir_Chain (Get_Declaration_Chain (Pkg)));

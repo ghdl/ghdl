@@ -1542,6 +1542,8 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Identifier (Field3)
    --
+   --  Those fields are set only for the interface package in uninstantiated
+   --  units.
    --   Get/Set_Uninstantiated_Package_Name (Field7)
    --
    --   Get/Set_Uninstantiated_Package_Decl (Field9)
@@ -1554,9 +1556,12 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Declaration_Chain (Field1)
    --
-   --   Get/Set_Chain (Field2)
-   --
    --   Get/Set_Attribute_Value_Chain (Field5)
+   --
+   --  This field is set only for interface package that has been associated.
+   --   Get/Set_Associated_Package (Field4)
+   --
+   --   Get/Set_Chain (Field2)
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
@@ -9028,6 +9033,10 @@ package Vhdl.Nodes is
    --  Field: Field9 Ref
    function Get_Uninstantiated_Package_Decl (Inst : Iir) return Iir;
    procedure Set_Uninstantiated_Package_Decl (Inst : Iir; Pkg : Iir);
+
+   --  Field: Field4 Ref
+   function Get_Associated_Package (Inter : Iir) return Iir;
+   procedure Set_Associated_Package (Inter : Iir; Pkg : Iir);
 
    --  The created pseudo-file for relocating the instantiated nodes
    --  (generics and declarations).

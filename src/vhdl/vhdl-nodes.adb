@@ -5591,6 +5591,22 @@ package body Vhdl.Nodes is
       Set_Field9 (Inst, Pkg);
    end Set_Uninstantiated_Package_Decl;
 
+   function Get_Associated_Package (Inter : Iir) return Iir is
+   begin
+      pragma Assert (Inter /= Null_Iir);
+      pragma Assert (Has_Associated_Package (Get_Kind (Inter)),
+                     "no field Associated_Package");
+      return Get_Field4 (Inter);
+   end Get_Associated_Package;
+
+   procedure Set_Associated_Package (Inter : Iir; Pkg : Iir) is
+   begin
+      pragma Assert (Inter /= Null_Iir);
+      pragma Assert (Has_Associated_Package (Get_Kind (Inter)),
+                     "no field Associated_Package");
+      Set_Field4 (Inter, Pkg);
+   end Set_Associated_Package;
+
    function Get_Instance_Source_File (Inst : Iir) return Source_File_Entry is
    begin
       pragma Assert (Inst /= Null_Iir);
