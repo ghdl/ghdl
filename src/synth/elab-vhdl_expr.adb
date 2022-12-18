@@ -292,16 +292,9 @@ package body Elab.Vhdl_Expr is
          when Iir_Kind_Simple_Name
            | Iir_Kind_Selected_Name =>
             return Exec_Name_Subtype (Syn_Inst, Get_Named_Entity (Name));
-         when Iir_Kind_Interface_Signal_Declaration
-           | Iir_Kind_Variable_Declaration
-           | Iir_Kind_Interface_Variable_Declaration
-           | Iir_Kind_Signal_Declaration
-           | Iir_Kind_Interface_Constant_Declaration
-           | Iir_Kind_Constant_Declaration
-           | Iir_Kind_Iterator_Declaration
-           | Iir_Kind_Object_Alias_Declaration
-           | Iir_Kind_File_Declaration
-           | Iir_Kind_Interface_File_Declaration =>
+         when Iir_Kind_Parenthesis_Expression =>
+            return Exec_Name_Subtype (Syn_Inst, Get_Expression (Name));
+         when Iir_Kinds_Object_Declaration =>
             return Get_Value (Syn_Inst, Name).Typ;
          when Iir_Kind_Selected_Element =>
             declare
@@ -322,15 +315,31 @@ package body Elab.Vhdl_Expr is
                Res := Exec_Name_Subtype (Syn_Inst, Pfx);
                return Res.Arr_El;
             end;
-         when Iir_Kind_Enumeration_Literal
-            | Iir_Kind_Unit_Declaration =>
-            return Get_Subtype_Object (Syn_Inst, Get_Type (Name));
+         when Iir_Kind_Slice_Name =>
+            declare
+               use Netlists;
+               Pfx_Typ : Type_Acc;
+               Pfx_Bnd : Bound_Type;
+               El_Typ : Type_Acc;
+               Res_Bnd : Bound_Type;
+               Sl_Off : Value_Offsets;
+               Inp : Net;
+            begin
+               Pfx_Typ := Exec_Name_Subtype (Syn_Inst, Get_Prefix (Name));
+               Get_Onedimensional_Array_Bounds (Pfx_Typ, Pfx_Bnd, El_Typ);
+               Synth_Slice_Suffix (Syn_Inst, Name, Pfx_Bnd, El_Typ,
+                                   Res_Bnd, Inp, Sl_Off);
+               pragma Assert (Inp = No_Net);
+               return Create_Onedimensional_Array_Subtype
+                 (Pfx_Typ, Res_Bnd, El_Typ);
+            end;
          when Iir_Kind_Implicit_Dereference
            | Iir_Kind_Dereference =>
             declare
                Val : Valtyp;
                Obj : Memtyp;
             begin
+               --  Maybe do not dereference it if its type is known ?
                Val := Synth_Expression (Syn_Inst, Get_Prefix (Name));
                Obj := Elab.Vhdl_Heap.Synth_Dereference (Read_Access (Val));
                return Obj.Typ;
@@ -342,84 +351,21 @@ package body Elab.Vhdl_Expr is
                Val := Synth.Vhdl_Expr.Synth_Expression (Syn_Inst, Name);
                return Val.Typ;
             end;
-         when others =>
-            Error_Kind ("exec_name_subtype", Name);
-      end case;
-   end Exec_Name_Subtype;
 
-   --  Return the type of EXPR without evaluating it.
-   function Exec_Type_Of_Object (Syn_Inst : Synth_Instance_Acc; Expr : Node)
-                                return Type_Acc is
-   begin
-      case Get_Kind (Expr) is
-         when Iir_Kinds_Object_Declaration =>
-            declare
-               Val : constant Valtyp := Get_Value (Syn_Inst, Expr);
-            begin
-               return Val.Typ;
-            end;
-         when Iir_Kind_Simple_Name =>
-            return Exec_Type_Of_Object (Syn_Inst, Get_Named_Entity (Expr));
-         when Iir_Kind_Parenthesis_Expression =>
-            return Exec_Type_Of_Object (Syn_Inst, Get_Expression (Expr));
-         when Iir_Kind_Slice_Name =>
-            declare
-               use Netlists;
-               Pfx_Typ : Type_Acc;
-               Pfx_Bnd : Bound_Type;
-               El_Typ : Type_Acc;
-               Res_Bnd : Bound_Type;
-               Sl_Off : Value_Offsets;
-               Inp : Net;
-            begin
-               Pfx_Typ := Exec_Type_Of_Object (Syn_Inst, Get_Prefix (Expr));
-               Get_Onedimensional_Array_Bounds (Pfx_Typ, Pfx_Bnd, El_Typ);
-               Synth_Slice_Suffix (Syn_Inst, Expr, Pfx_Bnd, El_Typ,
-                                   Res_Bnd, Inp, Sl_Off);
-               pragma Assert (Inp = No_Net);
-               return Create_Onedimensional_Array_Subtype
-                 (Pfx_Typ, Res_Bnd, El_Typ);
-            end;
-         when Iir_Kind_Indexed_Name =>
-            declare
-               Pfx_Typ : Type_Acc;
-            begin
-               Pfx_Typ := Exec_Type_Of_Object (Syn_Inst, Get_Prefix (Expr));
-               return Get_Array_Element (Pfx_Typ);
-            end;
-         when Iir_Kind_Selected_Element =>
-            declare
-               Idx : constant Iir_Index32 :=
-                 Get_Element_Position (Get_Named_Entity (Expr));
-               Pfx_Typ : Type_Acc;
-            begin
-               Pfx_Typ := Exec_Type_Of_Object (Syn_Inst, Get_Prefix (Expr));
-               return Pfx_Typ.Rec.E (Idx + 1).Typ;
-            end;
-
-         when Iir_Kind_Implicit_Dereference
-           | Iir_Kind_Dereference =>
-            declare
-               Val : Valtyp;
-               Res : Memtyp;
-            begin
-               --  Maybe do not dereference it if its type is known ?
-               Val := Synth_Expression (Syn_Inst, Get_Prefix (Expr));
-               Res := Elab.Vhdl_Heap.Synth_Dereference (Read_Access (Val));
-               return Res.Typ;
-            end;
+         when Iir_Kind_Enumeration_Literal
+            | Iir_Kind_Unit_Declaration =>
+            return Get_Subtype_Object (Syn_Inst, Get_Type (Name));
 
          when Iir_Kind_String_Literal8
            | Iir_Kind_Aggregate =>
             --  TODO: the value should be computed (once) and its type
             --  returned.
-            return Synth_Subtype_Indication (Syn_Inst, Get_Type (Expr));
+            return Synth_Subtype_Indication (Syn_Inst, Get_Type (Name));
 
          when others =>
-            Vhdl.Errors.Error_Kind ("exec_type_of_object", Expr);
+            Error_Kind ("exec_name_subtype", Name);
       end case;
-      return null;
-   end Exec_Type_Of_Object;
+   end Exec_Name_Subtype;
 
    function Exec_String_Literal (Syn_Inst : Synth_Instance_Acc;
                                  Str : Node;

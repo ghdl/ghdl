@@ -34,10 +34,6 @@ package Elab.Vhdl_Expr is
 
    procedure Check_Matching_Bounds (L, R : Type_Acc; Loc : Node);
 
-   --  Return the type of EXPR without evaluating it.
-   function Exec_Type_Of_Object (Syn_Inst : Synth_Instance_Acc; Expr : Node)
-                                return Type_Acc;
-
    --  Get the type of NAME.  No expressions are expected to be evaluated.
    function Exec_Name_Subtype (Syn_Inst : Synth_Instance_Acc; Name : Node)
                               return Type_Acc;

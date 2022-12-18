@@ -411,12 +411,12 @@ package body Elab.Vhdl_Insts is
          else
             case Iir_Kinds_Association_Element_Parameters (Get_Kind (Assoc)) is
                when Iir_Kinds_Association_Element_By_Actual =>
-                  Res := Exec_Type_Of_Object (Syn_Inst, Get_Actual (Assoc));
+                  Res := Exec_Name_Subtype (Syn_Inst, Get_Actual (Assoc));
                when Iir_Kind_Association_Element_By_Individual =>
                   Res := Synth_Subtype_Indication
                     (Syn_Inst, Get_Actual_Type (Assoc));
                when Iir_Kind_Association_Element_Open =>
-                  Res := Exec_Type_Of_Object
+                  Res := Exec_Name_Subtype
                     (Syn_Inst, Get_Default_Value (Inter));
             end case;
          end if;
