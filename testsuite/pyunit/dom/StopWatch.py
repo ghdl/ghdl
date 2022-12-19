@@ -42,22 +42,54 @@ if __name__ == "__main__":
     exit(1)
 
 
-class SimplePackage(TestCase):
+class Display(TestCase):
     _root = Path(__file__).resolve().parent.parent
-    _filename: Path = _root / "SimplePackage.vhdl"
+    _sourceDirectory: Path = _root / "dom/examples/StopWatch"
 
-    def test_Package(self):
+    def test_Encoder(self):
         design = Design()
-        document = Document(self._filename)
-        design.Documents.append(document)
+        files = (
+            Path("Utilities.pkg.vhdl"),
+            Path("StopWatch.pkg.vhdl"),
+            Path("seg7_Encoder.vhdl"),
+            Path("toplevel.Encoder.vhdl"),
+        )
+        for file in files:
+            document = Document(self._sourceDirectory / file)
+            design.Documents.append(document)
 
-        self.assertEqual(1, len(design.Documents[0].Packages))
-        self.assertEqual("pack_1", design.Documents[0].Packages[0].Identifier)
+        self.assertEqual(len(files), len(design.Documents))
 
-    def test_PackageBody(self):
+    def test_Display(self):
         design = Design()
-        document = Document(self._filename)
-        design.Documents.append(document)
+        files = (
+            Path("Utilities.pkg.vhdl"),
+            Path("StopWatch.pkg.vhdl"),
+            Path("Counter.vhdl"),
+            Path("seg7_Encoder.vhdl"),
+            Path("seg7_Display.vhdl"),
+            Path("toplevel.Display.vhdl"),
+        )
+        for file in files:
+            document = Document(self._sourceDirectory / file)
+            design.Documents.append(document)
 
-        self.assertEqual(1, len(design.Documents[0].PackageBodies))
-        self.assertEqual("pack_1", design.Documents[0].PackageBodies[0].Identifier)
+        self.assertEqual(len(files), len(design.Documents))
+
+    def test_StopWatch(self):
+        design = Design()
+        files = (
+            Path("Utilities.pkg.vhdl"),
+            Path("StopWatch.pkg.vhdl"),
+            Path("Counter.vhdl"),
+            Path("seg7_Encoder.vhdl"),
+            Path("seg7_Display.vhdl"),
+            Path("StopWatch.vhdl"),
+            Path("Debouncer.vhdl"),
+            Path("toplevel.StopWatch.vhdl"),
+        )
+        for file in files:
+            document = Document(self._sourceDirectory / file)
+            design.Documents.append(document)
+
+        self.assertEqual(len(files), len(design.Documents))
