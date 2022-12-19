@@ -44,7 +44,7 @@ if __name__ == "__main__":
 
 class SimpleEntity(TestCase):
     _root = Path(__file__).resolve().parent.parent
-    _filename: Path = _root / "SimpleEntity.vhdl"
+    _filename: Path = _root / "dom/examples/SimpleEntity.vhdl"
 
     def test_Design(self):
         design = Design()
@@ -89,3 +89,52 @@ class SimpleEntity(TestCase):
         print()
         print(architecture.Documentation)
         self.assertEqual(1, len(architecture.Documentation.splitlines()))
+
+
+class SimplePackage(TestCase):
+    _root = Path(__file__).resolve().parent.parent
+    _filename: Path = _root / "dom/examples/SimplePackage.vhdl"
+
+    def test_Design(self):
+        design = Design()
+
+        self.assertIsNotNone(design)
+
+    # def test_Library(self):
+    # 	library = Library()
+
+    def test_Document(self):
+        design = Design()
+        document = Document(self._filename)
+        design.Documents.append(document)
+
+        self.assertEqual(1, len(design.Documents))
+        print()
+        print(document.Documentation)
+        self.assertEqual(4, len(document.Documentation.splitlines()))
+
+    def test_Package(self):
+        design = Design()
+        document = Document(self._filename)
+        design.Documents.append(document)
+
+        self.assertEqual(1, len(design.Documents[0].Packages))
+
+        package = design.Documents[0].Packages[0]
+        self.assertEqual("utilities", package.Identifier)
+        print()
+        print(package.Documentation)
+        self.assertEqual(1, len(package.Documentation.splitlines()))
+
+    def test_PackageBody(self):
+        design = Design()
+        document = Document(self._filename)
+        design.Documents.append(document)
+
+        self.assertEqual(1, len(design.Documents[0].PackageBodies))
+
+        packageBodies = design.Documents[0].PackageBodies[0]
+        self.assertEqual("utilities", packageBodies.Identifier)
+        print()
+        print(packageBodies.Documentation)
+        self.assertEqual(0, len(packageBodies.Documentation.splitlines()))
