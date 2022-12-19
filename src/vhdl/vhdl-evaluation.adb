@@ -926,6 +926,10 @@ package body Vhdl.Evaluation is
                Res := Create_Memory (Typ);
                Write_Fp64 (Res.Mem, Get_Fp_Value (N));
 
+            when Iir_Kind_Character_Literal =>
+               --  For default values of interfaces.
+               return Convert_Node_To_Memtyp (Get_Named_Entity (N), Typ);
+
             when others =>
                Error_Kind ("convert_node_to_memtyp", N);
          end case;
@@ -3928,14 +3932,17 @@ package body Vhdl.Evaluation is
                Imp : constant Iir := Get_Implementation (Expr);
                Def : constant Iir_Predefined_Functions :=
                  Get_Implicit_Definition (Imp);
+               Inter : Iir;
                Left, Right : Iir;
             begin
                if Def in Iir_Predefined_Concat_Functions then
                   return Eval_Concatenation ((1 => Expr));
                end if;
 
+               Inter := Get_Interface_Declaration_Chain (Imp);
                Left := Get_Parameter_Association_Chain (Expr);
                Right := Get_Chain (Left);
+               Inter := Get_Chain (Inter);
 
                if Def in Iir_Predefined_IEEE_Explicit then
                   --  Note: what about association by name ?
@@ -3948,6 +3955,8 @@ package body Vhdl.Evaluation is
                        (Get_Kind (Right)
                           = Iir_Kind_Association_Element_By_Expression);
                      Right := Eval_Static_Expr (Get_Actual (Right));
+                  elsif Inter /= Null_Node then
+                     Right := Get_Default_Value (Inter);
                   end if;
                   return Eval_Ieee_Operation (Expr, Imp, Left, Right);
                end if;
