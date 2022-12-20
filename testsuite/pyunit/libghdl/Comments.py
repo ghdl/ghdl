@@ -1,6 +1,5 @@
 from pathlib import Path
 from unittest import TestCase, expectedFailure
-from pytest import mark
 
 import pyGHDL.libghdl as libghdl
 from pyGHDL.libghdl import name_table, files_map, errorout_console, flags
@@ -296,7 +295,7 @@ class CommentAssociation(Base):
 
 
 class Complex(Base):
-    @mark.xfail(reason="not yet handled")
+    @expectedFailure # "not yet handled"
     def test_Comment2(self) -> None:
         """More exhaustive"""
         self.checkFile(self._root / "Complex.vhdl")
