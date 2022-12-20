@@ -123,6 +123,7 @@ package body File_Comments is
                           Line_Start : Source_Ptr)
    is
       pragma Assert (Ctxt.File /= No_Source_File_Entry);
+      T : File_Comments_Table renames Comments_Table.Table (Ctxt.File);
       N : Uns32;
    begin
       if Flag_Trace then
@@ -133,8 +134,7 @@ package body File_Comments is
          Put ("..");
          Put_Uns32 (Uns32 (Last));
          Put (" => ");
-         Put_Uns32 (Uns32 (File_Comments_Tables.Last
-                             (Comments_Table.Table (Ctxt.File)) + 1));
+         Put_Uns32 (Uns32 (File_Comments_Tables.Last (T) + 1));
          Put (", state=");
       end if;
 
@@ -164,8 +164,7 @@ package body File_Comments is
             if Line_Start = Ctxt.Line_Start then
                --  Yes, associate with the last node.
                N := Ctxt.Last_Node;
-               Ctxt.Next := File_Comments_Tables.Last
-                 (Comments_Table.Table (Ctxt.File)) + 2;
+               Ctxt.Next := File_Comments_Tables.Last (T) + 2;
                --  And continue to associate.
                Ctxt.State := State_Line_Cont;
             else
@@ -179,8 +178,7 @@ package body File_Comments is
                Put ("line_cont");
             end if;
             N := Ctxt.Last_Node;
-            Ctxt.Next := File_Comments_Tables.Last
-              (Comments_Table.Table (Ctxt.File)) + 2;
+            Ctxt.Next := File_Comments_Tables.Last (T) + 2;
       end case;
 
       if Flag_Trace then
@@ -191,8 +189,7 @@ package body File_Comments is
 
       --  Append a comment entry.
       File_Comments_Tables.Append
-        (Comments_Table.Table (Ctxt.File),
-         Comment_Record'(Start => Start, Last => Last, N => N));
+        (T, Comment_Record'(Start => Start, Last => Last, N => N));
    end Add_Comment;
 
    procedure Save_Comments (Rng : out Comments_Range)
