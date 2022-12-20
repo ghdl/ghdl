@@ -19,6 +19,44 @@ with Dyn_Tables;
 with Tables;
 
 package File_Comments is
+   --  Usage of File_Comments:
+   --  There are two parts: the generating part which gather comments and
+   --  associate them to nodes, and the user part which allow to get comments
+   --  for a node.
+   --
+   --  The generating part is combined work done by the scanner and the
+   --  parser.  The scanner calls Add_Comment on evey comment, and
+   --  Comment_Newline on every newlines after a comment.
+   --  The parser does the remaining work: it initializes and finishes the
+   --  process (calls Comment_Init_Scan and Comment_Close_Scan).
+   --  It also associate comments with nodes.
+   --
+   --  There are two modes of association: block and line.
+   --
+   --  Line is the simplest mode: it starts by calling Gather_Comments_Line.
+   --  First, it associates previous comments to the node, and then if a
+   --  comment appear on the same line as the node, all consecutive comments
+   --  are associated with the node.  Consecutive comments mean comments
+   --  without empty lines.  Another declaration or statement will also
+   --  interrupt this association because the comments will be associated
+   --  with this new declaration or statement.  After interruption, comments
+   --  are not associated anymore; they will be associated by the next
+   --  call.  Finally, Gather_Comments_End will simply discard unassociated
+   --  comments that appears at an end (or before an 'end').
+   --
+   --  Block is the default mode.  Gathered but unassociated comments are
+   --  simply associated with a node.  The following comments are also
+   --  associated with the current node only when an empty line appears.
+   --  The block mode is made more complex by the possibility of saving
+   --  a range of comments because parsing and scanning needs to be
+   --  continued before building a node (eg: to distinguish package
+   --  declaration and package instantiation, or to distinguish process and
+   --  sensitized process).
+   --
+   --  Before use, Sort_Comments_By_Node must be called to sort comments.
+   --  Then the iterator can be called to get the comments associated to a
+   --  node.
+
    --  To be called at begin/end of scan to initialize the context.
    --  TODO: nested context ?
    procedure Comment_Init_Scan (File : Source_File_Entry);
@@ -50,8 +88,7 @@ package File_Comments is
    --  annotated with a comment is parsed.
    procedure Gather_Comments_Block (Rng : Comments_Range;
                                     N : Uns32);
-   procedure Gather_Comments_Line (Rng : Comments_Range;
-                                   Pos : Source_Ptr;
+   procedure Gather_Comments_Line (Pos : Source_Ptr;
                                    N : Uns32);
 
    --  Assign node N to the last comments scanned.

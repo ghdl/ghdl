@@ -37,11 +37,9 @@ package body Vhdl.Comments is
    procedure Gather_Comments_Line (N : Iir)
    is
       Coord : Source_Coord_Type;
-      Rng : Comments_Range;
    begin
-      Save_Comments (Rng);
       Coord := Scanner.Get_Current_Coord;
-      Gather_Comments_Line (Rng, Coord.Line_Pos, Uns32 (N));
+      Gather_Comments_Line (Coord.Line_Pos, Uns32 (N));
    end Gather_Comments_Line;
 
    function Find_First_Comment (File : Source_File_Entry; N : Node)

@@ -11196,7 +11196,7 @@ package body Vhdl.Parse is
       return Res;
    end Parse_Package_Header;
 
-   --  precond : token (after 'IS')
+   --  precond : token (after 'IS', the first token of declarations or header).
    --  postcond: next token.
    --
    --  [ LRM93 2.5, LRM08 4.7 ]
@@ -11396,6 +11396,8 @@ package body Vhdl.Parse is
          end if;
 
          if Flag_Gather_Comments then
+            --  Save existing comments (before the 'is').  Those comments will
+            --  be associated with this package.
             File_Comments.Save_Comments (Comments);
          end if;
 

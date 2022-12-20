@@ -112,6 +112,7 @@ package body File_Comments is
             Ctxt.State := State_Before;
          when State_Line_Cont =>
             --  If the line is empty, change to State_Block.
+            --  Otherwise, continue to associate with the last node.
             if Is_Empty_Line (Line_Start) then
                Ctxt.State := State_Block;
             end if;
@@ -151,7 +152,6 @@ package body File_Comments is
                Put ("block");
             end if;
          when State_Line =>
-            --  Is it on the same line ?
             if Flag_Trace then
                Put ("line");
                Put (" (start=");
@@ -160,10 +160,13 @@ package body File_Comments is
                Put_Uns32 (Uns32 (Line_Start));
                Put (")");
             end if;
+            --  Is it on the same line ?
             if Line_Start = Ctxt.Line_Start then
+               --  Yes, associate with the last node.
                N := Ctxt.Last_Node;
                Ctxt.Next := File_Comments_Tables.Last
                  (Comments_Table.Table (Ctxt.File)) + 2;
+               --  And continue to associate.
                Ctxt.State := State_Line_Cont;
             else
                --  Not the same line, for the next node.
@@ -171,7 +174,7 @@ package body File_Comments is
                Ctxt.State := State_Before;
             end if;
          when State_Line_Cont =>
-            --  Attached on the next empty line.
+            --  Continue to associate with the last node.
             if Flag_Trace then
                Put ("line_cont");
             end if;
@@ -239,11 +242,16 @@ package body File_Comments is
       Ctxt.Last_Node := N;
    end Gather_Comments_Block;
 
-   procedure Gather_Comments_Line (Rng : Comments_Range;
-                                   Pos : Source_Ptr;
-                                   N : Uns32) is
+   procedure Gather_Comments_Line (Pos : Source_Ptr;
+                                   N : Uns32)
+   is
+      Rng : Comments_Range;
    begin
+      --  Previous unassociated comments are associated to the node N.
+      Save_Comments (Rng);
       Gather_Comments_Before (Rng, N);
+
+      --  Start Line mode.
       Ctxt.State := State_Line;
       Ctxt.Last_Node := N;
       Ctxt.Line_Start := Pos;
