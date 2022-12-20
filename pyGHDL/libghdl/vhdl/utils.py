@@ -36,6 +36,8 @@ from pyTooling.Decorators import export
 
 from pyGHDL.libghdl._types import Iir, NameId
 from pyGHDL.libghdl._decorator import BindToLibGHDL
+from pyGHDL.libghdl import name_table, files_map
+from pyGHDL.libghdl.vhdl import nodes
 
 
 @export
@@ -48,3 +50,12 @@ def Get_Source_Identifier(Decl: Iir) -> NameId:
     :param Decl: Iir Node. Type: ``Iir``
     """
     return 0
+
+@export
+def Get_Source_Identifier_Str(n: Iir) -> str:
+    loc = nodes.Get_Location(n)
+    l = name_table.Get_Name_Length(nodes.Get_Identifier(n))
+    sfe = files_map.Location_To_File(loc)
+    pos = files_map.Location_File_To_Pos(loc, sfe)
+    buf = files_map.Get_File_Buffer(sfe)
+    return buf[pos:pos+l].decode("utf-8")
