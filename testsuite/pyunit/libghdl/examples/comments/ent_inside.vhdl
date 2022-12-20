@@ -5,8 +5,8 @@ entity e2 is
   -- comments in design units (python doc-string style) :e2:
     -- might be multi line :e2:
     generic (
-      -- comment before a generic :frequency:
-        -- might be multiline :frequency:
+      -- comment before a generic :FREQUENCY:
+        -- might be multiline :FREQUENCY:
         constant FREQUENCY : positive
     );
     port (

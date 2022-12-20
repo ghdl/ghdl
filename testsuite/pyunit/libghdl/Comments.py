@@ -4,7 +4,7 @@ from unittest import TestCase, expectedFailure
 import pyGHDL.libghdl as libghdl
 from pyGHDL.libghdl import name_table, files_map, errorout_console, flags
 from pyGHDL.libghdl import file_comments
-from pyGHDL.libghdl.vhdl import nodes, flists, sem_lib
+from pyGHDL.libghdl.vhdl import nodes, flists, sem_lib, utils
 
 
 if __name__ == "__main__":
@@ -18,7 +18,7 @@ class Base(TestCase):
     @staticmethod
     def getIdentifier(node) -> str:
         """Return the Python string from node :obj:`node` identifier."""
-        return name_table.Get_Name_Ptr(nodes.Get_Identifier(node))
+        return utils.Get_Source_Identifier_Str(node)
 
     @classmethod
     def setUpClass(cls):
@@ -76,7 +76,7 @@ class Base(TestCase):
                 self.checkDecls(nodes.Get_Declaration_Chain(stmt))
                 id = nodes.Get_Identifier(stmt)
                 if id != name_table.Null_Identifier:
-                    self.checkComments(stmt, name_table.Get_Name_Ptr(id))
+                    self.checkComments(stmt, self.getIdentifier(stmt))
             stmt = nodes.Get_Chain(stmt)
 
     def checkFile(self, filename) -> None:
