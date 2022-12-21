@@ -1786,9 +1786,18 @@ package body Vhdl.Prints is
       Disp_Instantiation_List (Ctxt, Get_Instantiation_List (Spec));
       Disp_Token (Ctxt, Tok_Colon);
       Print (Ctxt, Get_Component_Name (Spec));
+      Close_Hbox (Ctxt);
+
+      Start_Vbox (Ctxt);
+      Start_Hbox (Ctxt);
       Disp_Binding_Indication (Ctxt, Get_Binding_Indication (Spec));
       Disp_Token (Ctxt, Tok_Semi_Colon);
       Close_Hbox (Ctxt);
+      Close_Vbox (Ctxt);
+
+      if Get_Has_End (Spec) then
+         Disp_End (Ctxt, Tok_For);
+      end if;
    end Disp_Configuration_Specification;
 
    procedure Disp_Disconnection_Specification

@@ -4614,6 +4614,15 @@ package body Vhdl.Parse is
    --  [ LRM93 5.2 ]
    --  configuration_specification ::=
    --      FOR component_specification binding_indication ;
+   --
+   --  [ LRM08 7.3 Configuration specification ]
+   --  configuration_specification ::=
+   --      simple_configuration_specification
+   --    | compound_configuration_specification
+   --
+   --  simple_configuration_specification ::=
+   --      FOR component_specification binding_indication ;
+   --      [ END FOR ; ]
    function Parse_Configuration_Specification
      return Iir_Configuration_Specification
    is
@@ -4630,6 +4639,20 @@ package body Vhdl.Parse is
 
       --  Skip ';'.
       Scan_Semi_Colon_Declaration ("configuration specification");
+
+      if Current_Token = Tok_End then
+         Check_Vhdl_At_Least_2008 ("'end for'");
+         Set_Has_End (Res, True);
+
+         --  Skip 'end'.
+         Scan;
+
+         --  Skip 'for'.
+         Expect_Scan (Tok_For, "'for' expected after 'end'");
+
+         --  Skip ';'.
+         Scan_Semi_Colon ("';' expected after 'end for'");
+      end if;
 
       return Res;
    end Parse_Configuration_Specification;

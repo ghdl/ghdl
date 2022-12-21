@@ -710,6 +710,9 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Chain (Field2)
    --
+   --  Only for Iir_Kind_Configuration_Specification:
+   --   Get/Set_Has_End (Flag11)
+   --
    --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Disconnection_Specification (Short)
