@@ -175,6 +175,9 @@ class CommentAssociation(Base):
     def test_pkg_inside(self) -> None:
         self.checkFile(self._root / "comments/pkg_inside.vhdl")
 
+    def test_pkg_inside_2(self) -> None:
+        self.checkFile(self._root / "comments/pkg_inside_2.vhdl")
+
     @expectedFailure
     def test_ctxt_inside_fail(self) -> None:
         self.checkFile(self._root / "comments/ctxt_inside_fail.vhdl")
