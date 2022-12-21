@@ -290,6 +290,9 @@ class CommentAssociation(Base):
     def test_process(self) -> None:
         self.checkFile(self._root / "comments/process.vhdl")
 
+    def test_process_2(self) -> None:
+        self.checkFile(self._root / "comments/process_2.vhdl")
+
     def test_multi1(self) -> None:
         self.checkFile(self._root / "comments/multi1.vhdl")
 
