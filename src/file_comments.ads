@@ -175,6 +175,8 @@ private
       --  Next unassigned comment.
       Next : Comment_Index;
 
+      Last_Newline : Comment_Index;
+
       --  Node to attach for next comments.
       Last_Node : Uns32;
 

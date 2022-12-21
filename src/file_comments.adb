@@ -30,6 +30,7 @@ package body File_Comments is
                State => State_Before,
                Next => No_Comment_Index + 1,
                Last_Node => 0,
+               Last_Newline => No_Comment_Index,
                Line_Start => Source_Ptr_Bad);
 
       --  Create entry for FILE if not already created.
@@ -95,7 +96,12 @@ package body File_Comments is
    begin
       case Ctxt.State is
          when State_Before =>
-            null;
+            --  In before mode, we simply gather all the comments.
+            if Is_Empty_Line (Line_Start) then
+               --  Keep a marker to the comments up to the last newline.
+               Ctxt.Last_Newline :=
+                 File_Comments_Tables.Last (Comments_Table.Table (Ctxt.File));
+            end if;
          when State_Block =>
             --  Detect empty line.
             --  This can happen only after a comments has been added.
@@ -200,11 +206,12 @@ package body File_Comments is
    begin
       Rng := (First => Ctxt.Next, Last => Last (Fc));
       Ctxt.Next := Rng.Last + 1;
+      Ctxt.State := State_Before;
+      Ctxt.Last_Newline := Rng.Last;
    end Save_Comments;
 
    procedure Gather_Comments_Before (Rng : Comments_Range; N : Uns32)
    is
-      use File_Comments_Tables;
       pragma Assert (Ctxt.File /= No_Source_File_Entry);
    begin
       if Rng.Last /= No_Comment_Index then
@@ -235,6 +242,11 @@ package body File_Comments is
    procedure Gather_Comments_Block (Rng : Comments_Range; N : Uns32) is
    begin
       Gather_Comments_Before (Rng, N);
+      if Ctxt.Last_Newline /= No_Comment_Index then
+         --  Comments after RNG and until last_newline are also gathered.
+         Gather_Comments_Before ((First => Rng.Last + 1,
+                                  Last => Ctxt.Last_Newline), N);
+      end if;
       Ctxt.State := State_Block;
       Ctxt.Last_Node := N;
    end Gather_Comments_Block;
