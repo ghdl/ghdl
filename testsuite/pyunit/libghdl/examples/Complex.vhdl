@@ -14,8 +14,6 @@ end architecture;
 package p1 is
 end package;
 
--- package body should be supported too to keep parity, but I have currently no usecase for it.
-
 -- :ctx1: comments before design units
 -- :ctx1: might be multiline
 context ctx1 is
@@ -41,7 +39,7 @@ entity e2 is
         constant FREQUENCY : positive;
       constant BITS      : positive; -- :BITS: comment after a generic are mostly single line,
                                        -- :BITS: but could be multi line too
-        -- in case comment is before and after
+        -- :BITS: in case comment is before and after
         constant DEBUG     : boolean   -- :DEBUG: the after has presidency
     );
     port (
@@ -56,7 +54,7 @@ begin
 
 end architecture;
 
--- As packages define public elements like constants, types and sub-programs, we are interested in such documentation too.
+-- :p2: As packages define public elements like constants, types and sub-programs, we are interested in such documentation too.
 package p2 is
   -- :p2: comments in design units (python doc-string style)
     -- :p2: might be multi line

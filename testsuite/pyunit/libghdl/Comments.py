@@ -306,4 +306,7 @@ class Complex(Base):
         """More exhaustive"""
         self.checkFile(self._root / "Complex.vhdl")
 
+    def test_complex(self) -> None:
+        self.checkFile(self._root / "Complex_Multilines.vhdl")
+
 # Empty line before to easy cut & put
