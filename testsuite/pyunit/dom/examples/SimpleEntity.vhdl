@@ -35,8 +35,10 @@ entity Counter is
 end entity;
 
 
--- Synthesizable and simulatable variant of a generic counter.
 architecture rtl of Counter is
+	-- Synthesizable and simulatable variant of a generic counter.
+
+	-- Internal counter value
 	signal CounterValue : unsigned(log2(MODULO) - 1 downto 0) := (others => '0');
 begin
 	process (Clock)
