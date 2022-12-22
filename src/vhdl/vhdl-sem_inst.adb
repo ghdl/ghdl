@@ -1129,7 +1129,7 @@ package body Vhdl.Sem_Inst is
       Restore_Origin (Mark);
    end Instantiate_Subprogram_Declaration;
 
-   procedure Instantiate_Interface_Package_Declaration (Inter : Iir; Pkg : Iir)
+   procedure Instantiate_Package (Inter : Iir; Pkg : Iir; Is_Inter : Boolean)
    is
       Header : constant Iir := Get_Package_Header (Pkg);
       Prev_Instance_File : constant Source_File_Entry := Instance_File;
@@ -1149,9 +1149,9 @@ package body Vhdl.Sem_Inst is
       Is_Within_Shared_Instance := not Get_Macro_Expanded_Flag (Pkg);
 
       --  Manually instantiate the package declaration.
-      Set_Generic_Chain
-        (Inter,
-         Instantiate_Generic_Chain (Inter, Get_Generic_Chain (Header), True));
+      Set_Generic_Chain (Inter,
+                         Instantiate_Generic_Chain
+                           (Inter, Get_Generic_Chain (Header), Is_Inter));
       Instantiate_Generic_Map_Chain (Inter, Pkg);
       Set_Declaration_Chain
         (Inter, Instantiate_Iir_Chain (Get_Declaration_Chain (Pkg)));
@@ -1165,44 +1165,17 @@ package body Vhdl.Sem_Inst is
       Restore_Origin (Mark);
 
       Is_Within_Shared_Instance := Prev_Within_Shared_Instance;
+   end Instantiate_Package;
+
+   procedure Instantiate_Interface_Package_Declaration
+     (Inter : Iir; Pkg : Iir) is
+   begin
+      Instantiate_Package (Inter, Pkg, True);
    end Instantiate_Interface_Package_Declaration;
 
-   procedure Instantiate_Package_Declaration (Inst : Iir; Pkg : Iir)
-   is
-      Header : constant Iir := Get_Package_Header (Pkg);
-      Prev_Instance_File : constant Source_File_Entry := Instance_File;
-      Mark : constant Instance_Index_Type := Prev_Instance_Table.Last;
-      Prev_Within_Shared_Instance : constant Boolean :=
-        Is_Within_Shared_Instance;
+   procedure Instantiate_Package_Declaration (Inst : Iir; Pkg : Iir) is
    begin
-      Create_Relocation (Inst, Pkg);
-      Set_Instance_Source_File (Inst, Instance_File);
-
-      --  Be sure Get_Origin_Priv can be called on existing nodes.
-      Expand_Origin_Table;
-
-      --  For Parent: the instance of PKG is INST.
-      Set_Origin (Pkg, Inst);
-
-      Is_Within_Shared_Instance := not Get_Macro_Expanded_Flag (Pkg);
-
-      --  Manually instantiate the package declaration.
-      Set_Generic_Chain
-        (Inst,
-         Instantiate_Generic_Chain (Inst, Get_Generic_Chain (Header), False));
-      Instantiate_Generic_Map_Chain (Inst, Pkg);
-      Set_Declaration_Chain
-        (Inst, Instantiate_Iir_Chain (Get_Declaration_Chain (Pkg)));
-      Set_Attribute_Value_Chain
-        (Inst, Instantiate_Iir (Get_Attribute_Value_Chain (Pkg), True));
-      Instantiate_Attribute_Value_Chain (Inst);
-
-      Set_Origin (Pkg, Null_Iir);
-
-      Instance_File := Prev_Instance_File;
-      Restore_Origin (Mark);
-
-      Is_Within_Shared_Instance := Prev_Within_Shared_Instance;
+      Instantiate_Package (Inst, Pkg, False);
    end Instantiate_Package_Declaration;
 
    function Instantiate_Package_Body (Inst : Iir) return Iir
