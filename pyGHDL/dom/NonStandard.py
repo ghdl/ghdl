@@ -201,43 +201,43 @@ class Document(VHDLModel_Document):
 
             if nodeKind == nodes.Iir_Kind.Entity_Declaration:
                 entity = Entity.parse(libraryUnit, contextItems)
-                self.Entities.append(entity)
+                self._AddEntity(entity)
 
             elif nodeKind == nodes.Iir_Kind.Architecture_Body:
                 architecture = Architecture.parse(libraryUnit, contextItems)
-                self.Architectures.append(architecture)
+                self._AddArchitecture(architecture)
 
             elif nodeKind == nodes.Iir_Kind.Package_Declaration:
                 package = Package.parse(libraryUnit, contextItems)
-                self.Packages.append(package)
+                self._AddPackage(package)
 
             elif nodeKind == nodes.Iir_Kind.Package_Body:
                 packageBody = PackageBody.parse(libraryUnit, contextItems)
-                self.PackageBodies.append(packageBody)
+                self._AddPackageBody(packageBody)
 
             elif nodeKind == nodes.Iir_Kind.Package_Instantiation_Declaration:
                 package = PackageInstantiation.parse(libraryUnit)
-                self.Packages.append(package)
+                self._AddPackage(package)
 
             elif nodeKind == nodes.Iir_Kind.Context_Declaration:
                 context = Context.parse(libraryUnit)
-                self.Contexts.append(context)
+                self._AddContext(context)
 
             elif nodeKind == nodes.Iir_Kind.Configuration_Declaration:
                 configuration = Configuration.parse(libraryUnit, contextItems)
-                self.Configurations.append(configuration)
+                self._AddConfiguration(configuration)
 
             elif nodeKind == nodes.Iir_Kind.Vunit_Declaration:
                 vunit = VerificationUnit.parse(libraryUnit)
-                self.VerificationUnits.append(vunit)
+                self._AddVerificationUnit(vunit)
 
             elif nodeKind == nodes.Iir_Kind.Vprop_Declaration:
                 vprop = VerificationProperty.parse(libraryUnit)
-                self.VerificationProperties.append(vprop)
+                self._AddVerificationProperty(vprop)
 
             elif nodeKind == nodes.Iir_Kind.Vmode_Declaration:
                 vmod = VerificationMode.parse(libraryUnit)
-                self.VerificationModes.append(vmod)
+                self._AddVerificationMode(vmod)
 
             else:
                 raise DOMException(f"Unknown design unit kind '{nodeKind.name}'.")
