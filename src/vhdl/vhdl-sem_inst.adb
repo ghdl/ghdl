@@ -1300,6 +1300,54 @@ package body Vhdl.Sem_Inst is
       return Res;
    end Instantiate_Package_Body;
 
+   function Instantiate_Component_Declaration (Comp : Iir; Map : Iir)
+                                              return Iir
+   is
+      Prev_Instance_File : constant Source_File_Entry := Instance_File;
+      Mark : constant Instance_Index_Type := Prev_Instance_Table.Last;
+      Prev_Orig : Iir;
+      Inst : Iir;
+   begin
+      --  Create the component/entity.
+      Inst := Create_Iir (Get_Kind (Comp));
+
+      --  Build and set the new location.
+      Create_Relocation (Map, Comp);
+      Set_Location (Inst, Relocate (Get_Location (Comp)));
+
+      --  Be sure Get_Origin_Priv can be called on existing nodes.
+      Expand_Origin_Table;
+
+      --  For Parent: the instance of PKG is INST.
+      Prev_Orig := Get_Origin (Comp);
+      Set_Origin (Comp, Inst);
+
+      --  Instantiate generics
+      Set_Generic_Chain
+        (Inst,
+         Instantiate_Generic_Chain (Inst, Get_Generic_Chain (Comp), True));
+
+      declare
+         Assoc, Inter : Iir;
+      begin
+         Assoc := Get_Generic_Map_Aspect_Chain (Map);
+         Inter := Get_Generic_Chain (Inst);
+         while Is_Valid (Assoc) loop
+            Instantiate_Generic_Map (Assoc, Inter);
+            Next_Association_Interface (Assoc, Inter);
+         end loop;
+      end;
+
+      Set_Port_Chain
+        (Inst, Instantiate_Iir_Chain (Get_Port_Chain (Comp)));
+
+      Set_Origin (Comp, Prev_Orig);
+
+      Instance_File := Prev_Instance_File;
+      Restore_Origin (Mark);
+      return Inst;
+   end Instantiate_Component_Declaration;
+
    procedure Substitute_On_Iir_List (L : Iir_List; E : Iir; Rep : Iir);
 
    procedure Substitute_On_Iir (N : Iir; E : Iir; Rep : Iir) is

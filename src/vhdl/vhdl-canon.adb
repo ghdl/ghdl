@@ -2321,18 +2321,22 @@ package body Vhdl.Canon is
          when Iir_Kind_Component_Instantiation_Statement =>
             declare
                Inst : Iir;
+               Hdr : Iir;
                Assoc_Chain : Iir;
             begin
-               Inst := Get_Instantiated_Unit (Stmt);
-               Inst := Get_Entity_From_Entity_Aspect (Inst);
+               Hdr := Get_Instantiated_Header (Stmt);
+               if True or Hdr = Null_Iir then
+                  Inst := Get_Instantiated_Unit (Stmt);
+                  Hdr := Get_Entity_From_Entity_Aspect (Inst);
+               end if;
                Assoc_Chain := Canon_Association_Chain_And_Actuals
-                 (Get_Generic_Chain (Inst),
+                 (Get_Generic_Chain (Hdr),
                   Get_Generic_Map_Aspect_Chain (Stmt),
                   Stmt);
                Set_Generic_Map_Aspect_Chain (Stmt, Assoc_Chain);
 
                Assoc_Chain := Canon_Association_Chain_And_Actuals
-                 (Get_Port_Chain (Inst),
+                 (Get_Port_Chain (Hdr),
                   Get_Port_Map_Aspect_Chain (Stmt),
                   Stmt);
                Set_Port_Map_Aspect_Chain (Stmt, Assoc_Chain);

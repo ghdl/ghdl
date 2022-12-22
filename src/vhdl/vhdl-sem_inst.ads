@@ -40,6 +40,9 @@ package Vhdl.Sem_Inst is
    --  body.  INST has the form of a generic-mapped package.
    function Instantiate_Package_Body (Inst : Iir) return Iir;
 
+   function Instantiate_Component_Declaration (Comp : Iir; Map : Iir)
+                                              return Iir;
+
    --  In CHAIN, substitute all references to E by REP.
    procedure Substitute_On_Chain (Chain : Iir; E : Iir; Rep : Iir);
 

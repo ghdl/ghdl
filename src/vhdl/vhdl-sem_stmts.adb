@@ -25,6 +25,7 @@ with Vhdl.Sem_Expr; use Vhdl.Sem_Expr;
 with Vhdl.Sem_Names; use Vhdl.Sem_Names;
 with Vhdl.Sem_Scopes; use Vhdl.Sem_Scopes;
 with Vhdl.Sem_Types;
+with Vhdl.Sem_Inst;
 with Vhdl.Sem_Psl;
 with Std_Names;
 with Vhdl.Evaluation; use Vhdl.Evaluation;
@@ -1945,10 +1946,79 @@ package body Vhdl.Sem_Stmts is
       end if;
    end Sem_Instantiated_Unit;
 
+   function Component_Need_Instance (Comp : Iir) return Boolean
+   is
+      Inter : Iir;
+      Inter_Type, Type_Name : Iir;
+      Has_Type_Gen : Boolean;
+   begin
+      Has_Type_Gen := False;
+      Inter := Get_Generic_Chain (Comp);
+      while Inter /= Null_Iir loop
+         case Get_Kind (Inter) is
+            when Iir_Kind_Interface_Package_Declaration
+              | Iir_Kind_Interface_Type_Declaration =>
+               Has_Type_Gen := True;
+            when others =>
+               null;
+         end case;
+         Inter := Get_Chain (Inter);
+      end loop;
+
+      --  If neither interface package nor interface type, no need to check
+      --  ports.
+      if not Has_Type_Gen then
+         return False;
+      end if;
+
+      --  Check if a type from an interface package or a generic type is used.
+      Inter := Get_Port_Chain (Comp);
+      while Inter /= Null_Iir loop
+         Inter_Type := Get_Subtype_Indication (Inter);
+         if Inter_Type /= Null_Iir then
+            --  Maybe to ad-hoc ?
+            Type_Name := Get_Base_Name (Inter_Type);
+            case Get_Kind (Type_Name) is
+               when Iir_Kind_Interface_Package_Declaration
+                 | Iir_Kind_Interface_Type_Declaration =>
+                  return True;
+               when others =>
+                  null;
+            end case;
+         end if;
+         Inter := Get_Chain (Inter);
+      end loop;
+
+      return False;
+   end Component_Need_Instance;
+
+   procedure Reassoc_Association_Chain (Chain : Iir)
+   is
+      Assoc : Iir;
+      Formal : Iir;
+      Ent : Iir;
+   begin
+      Assoc := Chain;
+      while Assoc /= Null_Iir loop
+         Formal := Get_Formal (Assoc);
+         if Formal /= Null_Iir then
+            if Get_Kind (Formal) = Iir_Kind_Simple_Name then
+               Ent := Get_Named_Entity (Formal);
+               Ent := Sem_Inst.Get_Origin (Ent);
+               Set_Named_Entity (Formal, Ent);
+            else
+               raise Internal_Error;
+            end if;
+         end if;
+         Assoc := Get_Chain (Assoc);
+      end loop;
+   end Reassoc_Association_Chain;
+
    procedure Sem_Component_Instantiation_Statement
      (Stmt: Iir_Component_Instantiation_Statement; Is_Passive : Boolean)
    is
       Decl : Iir;
+      Decl_Inst : Iir;
       Entity_Unit : Iir_Design_Unit;
       Bind : Iir_Binding_Indication;
    begin
@@ -1972,7 +2042,16 @@ package body Vhdl.Sem_Stmts is
 
       --  The associations
       Sem_Generic_Association_Chain (Decl, Stmt);
-      Sem_Port_Association_Chain (Decl, Stmt);
+      if Component_Need_Instance (Decl) then
+         Decl_Inst := Sem_Inst.Instantiate_Component_Declaration (Decl, Stmt);
+         Set_Instantiated_Header (Stmt, Decl_Inst);
+         Sem_Port_Association_Chain (Decl_Inst, Stmt);
+         --  Re-associate formals with the non-instantiated interfaces.
+         Reassoc_Association_Chain (Get_Generic_Map_Aspect_Chain (Stmt));
+         Reassoc_Association_Chain (Get_Port_Map_Aspect_Chain (Stmt));
+      else
+         Sem_Port_Association_Chain (Decl, Stmt);
+      end if;
 
       --  FIXME: add sources for signals, in order to detect multiple sources
       --  to unresolved signals.
