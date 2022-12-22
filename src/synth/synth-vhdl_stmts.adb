@@ -331,9 +331,13 @@ package body Synth.Vhdl_Stmts is
             while Choice /= Null_Node loop
                pragma Assert (Get_Kind (Choice) = Iir_Kind_Choice_By_None);
                El := Get_Associated_Expr (Choice);
-               El_Typ := Elab.Vhdl_Expr.Exec_Name_Subtype (Syn_Inst, El);
-               Bnd := Get_Array_Bound (El_Typ);
-               Len := Len + Bnd.Len;
+               if Get_Element_Type_Flag (Choice) then
+                  Len := Len + 1;
+               else
+                  El_Typ := Elab.Vhdl_Expr.Exec_Name_Subtype (Syn_Inst, El);
+                  Bnd := Get_Array_Bound (El_Typ);
+                  Len := Len + Bnd.Len;
+               end if;
                Choice := Get_Chain (Choice);
             end loop;
          end;
