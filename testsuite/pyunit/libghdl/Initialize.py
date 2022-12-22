@@ -14,7 +14,7 @@ if __name__ == "__main__":
 
 class Instantiate(TestCase):
     _root = Path(__file__).resolve().parent.parent
-    _filename: Path = _root / "SimpleEntity.vhdl"
+    _filename: Path = _root / "dom/examples/SimpleEntity.vhdl"
 
     @staticmethod
     def getIdentifier(node):
