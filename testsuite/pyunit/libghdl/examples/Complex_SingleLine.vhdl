@@ -14,7 +14,7 @@ end architecture;
 package p1 is
 end package;
 
--- package body should be supported too to keep parity, but I have currently no usecase for it.
+--! :ctx1: package body should be supported too to keep parity, but I have currently no usecase for it.
 
 -- :ctx1: comments before design units
 -- :ctx1: might be multiline
@@ -41,7 +41,8 @@ entity e2 is
 		constant FREQUENCY : positive;
 		constant BITS      : positive;   -- :BITS: comment after a generic are mostly single line,
 																		 -- :BITS: but could be multi line too
-		-- in case comment is before and after
+
+		-- :DEBUG: in case comment is before and after
 		constant DEBUG     : boolean     -- :DEBUG: the after has presidency
 	);
 	port (
@@ -56,7 +57,7 @@ begin
 
 end architecture;
 
--- As packages define public elements like constants, types and sub-programs, we are interested in such documentation too.
+-- :p2: As packages define public elements like constants, types and sub-programs, we are interested in such documentation too.
 package p2 is
   -- :p2: comments in design units (python doc-string style)
 	-- :p2: might be multi line
@@ -69,7 +70,7 @@ package p2 is
 	type AType1 is array(natural range <>) of bit;
 	type AType2 is array(natural range <>) of bit; -- :AType2: comment after
 
-	-- same applies to subtype, alias, attributes, ...
+	--! :AType2: same applies to subtype, alias, attributes, ...
 
 	-- :RType: comment before
 	type RType is record
@@ -80,18 +81,18 @@ package p2 is
 		elem2 : integer; -- :elem2: per element comment behind
 	end record;
 
-	-- :log2: as functions are longer in definitions, it might be written before
+	--! :elem2: as functions are longer in definitions, it might be written before
 	function log2(param : positive) return natural;
 
 	function log2(
-		-- :log2: otoh, we also want to document parameters too (similar to a record with comments)
+		--! :param1: otoh, we also want to document parameters too (similar to a record with comments)
 
 		-- :param1: comment before
 		param1 : integer;
 		param2 : boolean  -- :param2: comment after
 	) return natural;
 
-	-- this applies to procedures as well.
+	--! :param2: this applies to procedures as well.
 end package;
 
 context ctx2 is
@@ -107,11 +108,11 @@ configuration cfg2 of e2 is
 end configuration;
 
 
--- This should allow for any kind of documentation style and embedded documentation language.
--- A real implementation might use similar rules are Python+docutils+Sphinx. Here we would e.g.
--- document a function either before (or inside) a function declaration and use the
---   :arg name: description
--- syntax.
+--! :cfg2: This should allow for any kind of documentation style and embedded documentation language.
+--! :cfg2: A real implementation might use similar rules are Python+docutils+Sphinx. Here we would e.g.
+--! :cfg2: document a function either before (or inside) a function declaration and use the
+--! :cfg2:   :arg name: description
+--! :cfg2: syntax.
 
 
 -- :math: Package `math` provides math extensions not provided by the IEEE packages.
