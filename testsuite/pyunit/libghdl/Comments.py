@@ -300,13 +300,15 @@ class CommentAssociation(Base):
         self.checkFile(self._root / "comments/line1.vhdl")
 
 
-class Complex(Base):
-    @expectedFailure # "not yet handled"
-    def test_Comment2(self) -> None:
+class SingleLine(Base):
+    def test_Complex(self) -> None:
         """More exhaustive"""
-        self.checkFile(self._root / "Complex.vhdl")
+        self.checkFile(self._root / "Complex_SingleLine.vhdl")
 
-    def test_complex(self) -> None:
-        self.checkFile(self._root / "Complex_Multilines.vhdl")
+
+class MultiLine(Base):
+    def test_Complex(self) -> None:
+        """More exhaustive"""
+        self.checkFile(self._root / "Complex_MultiLine.vhdl")
 
 # Empty line before to easy cut & put
