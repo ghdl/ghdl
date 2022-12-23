@@ -1946,13 +1946,13 @@ package body Vhdl.Sem_Stmts is
       end if;
    end Sem_Instantiated_Unit;
 
+   --  If a component or an entity contains an interface package or type,
+   --  the ports have to be instantiated in the case they use a type of the
+   --  interface.
    function Component_Need_Instance (Comp : Iir) return Boolean
    is
       Inter : Iir;
-      Inter_Type, Type_Name : Iir;
-      Has_Type_Gen : Boolean;
    begin
-      Has_Type_Gen := False;
       Inter := Get_Generic_Chain (Comp);
       while Inter /= Null_Iir loop
          case Get_Kind (Inter) is
@@ -1965,33 +1965,10 @@ package body Vhdl.Sem_Stmts is
          Inter := Get_Chain (Inter);
       end loop;
 
-      --  If neither interface package nor interface type, no need to check
-      --  ports.
-      if not Has_Type_Gen then
-         return False;
-      end if;
-
-      --  Check if a type from an interface package or a generic type is used.
-      Inter := Get_Port_Chain (Comp);
-      while Inter /= Null_Iir loop
-         Inter_Type := Get_Subtype_Indication (Inter);
-         if Inter_Type /= Null_Iir then
-            --  Maybe to ad-hoc ?
-            Type_Name := Get_Base_Name (Inter_Type);
-            case Get_Kind (Type_Name) is
-               when Iir_Kind_Interface_Package_Declaration
-                 | Iir_Kind_Interface_Type_Declaration =>
-                  return True;
-               when others =>
-                  null;
-            end case;
-         end if;
-         Inter := Get_Chain (Inter);
-      end loop;
-
       return False;
    end Component_Need_Instance;
 
+   --  Change the formal so that it refers to the original interface.
    procedure Reassoc_Association_Chain (Chain : Iir)
    is
       Assoc : Iir;
@@ -2007,6 +1984,7 @@ package body Vhdl.Sem_Stmts is
                Ent := Sem_Inst.Get_Origin (Ent);
                Set_Named_Entity (Formal, Ent);
             else
+               --  TODO.
                raise Internal_Error;
             end if;
          end if;
