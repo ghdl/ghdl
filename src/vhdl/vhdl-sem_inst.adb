@@ -1059,6 +1059,8 @@ package body Vhdl.Sem_Inst is
                   Set_Associated_Subprogram (Assoc_Formal, Actual_Subprg);
                end;
             end if;
+         when Iir_Kind_Error =>
+            null;
          when others =>
             Error_Kind ("instantiate_generic_map", Assoc);
       end case;
