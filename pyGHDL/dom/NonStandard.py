@@ -45,7 +45,8 @@ from pyTooling.Decorators import export
 from pyVHDLModel.SyntaxModel import (
     Design as VHDLModel_Design,
     Library as VHDLModel_Library,
-    Document as VHDLModel_Document, LibraryReferenceSymbol, PackageReferenceSymbol, ContextReferenceSymbol,
+    Document as VHDLModel_Document,
+    LibraryReferenceSymbol,
 )
 
 from pyGHDL.libghdl import (

@@ -49,7 +49,7 @@ from pyVHDLModel import (
     LibraryClause as VHDLModel_LibraryClause,
     UseClause as VHDLModel_UseClause,
     ContextReference as VHDLModel_ContextReference,
-    Name
+    Name,
 )
 from pyVHDLModel.SyntaxModel import (
     Entity as VHDLModel_Entity,
@@ -62,7 +62,9 @@ from pyVHDLModel.SyntaxModel import (
     Component as VHDLModel_Component,
     GenericInterfaceItem,
     PortInterfaceItem,
-    ConcurrentStatement, PackageReferenceSymbol, ContextReferenceSymbol,
+    ConcurrentStatement,
+    PackageReferenceSymbol,
+    ContextReferenceSymbol,
 )
 
 from pyGHDL.libghdl import utils
