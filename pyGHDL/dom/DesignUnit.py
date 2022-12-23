@@ -344,7 +344,7 @@ class Configuration(VHDLModel_Configuration, DOMMixin):
 
     @classmethod
     def parse(cls, configurationNode: Iir, contextItems: Iterable[Context]):
-        name = (GetNameOfNode(configurationNode),)
+        name = GetNameOfNode(configurationNode)
         documentation = GetDocumentationOfNode(configurationNode)
 
         # FIXME: read use clauses
