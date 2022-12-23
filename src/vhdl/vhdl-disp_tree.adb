@@ -618,8 +618,7 @@ package body Vhdl.Disp_Tree is
                   Log_Line (Image_Scalar_Size (Get_Scalar_Size (N, F)));
                when Type_Name_Id =>
                   Log (Image_Name_Id (Get_Name_Id (N, F)));
-                  Log (" ");
-                  Disp_Int32 (Int32 (Get_Name_Id (N, F)));
+                  Log (Name_Id'Image (Get_Name_Id (N, F)));
                   Log_Line;
             end case;
          end loop;
