@@ -466,7 +466,8 @@ package body Synth.Vhdl_Stmts is
                --  Need to reverse offsets.
                Copy_Memory
                  (Res.Val.Mem,
-                  Val.Val.Mem + (Val.Typ.Sz - Size_Type (Off + 1) * El_Typ.Sz),
+                  Val.Val.Mem
+                    + (Val.Typ.Sz - Typ.Sz - Size_Type (Off) * El_Typ.Sz),
                   Typ.Sz);
                return Res;
             end;
