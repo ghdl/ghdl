@@ -99,6 +99,8 @@ class Display(Designs):
 class CompileOrder(Designs):
     def test_Encoder(self):
         design = Design()
+        design.LoadStdLibrary()
+        design.LoadIEEELibrary()
         library = design.GetLibrary("lib_StopWatch")
         for file in self._encoderFiles:
             document = Document(self._sourceDirectory / file)
