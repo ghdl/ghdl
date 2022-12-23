@@ -1067,14 +1067,15 @@ package body Vhdl.Sem_Inst is
    procedure Instantiate_Generic_Map_Chain (Inst : Iir; Pkg : Iir)
    is
       pragma Unreferenced (Pkg);
-      Assoc : Iir;
-      Inter : Iir;
+      Assoc, Inter : Iir;
+      Inter_Iter : Iir;
    begin
       Assoc := Get_Generic_Map_Aspect_Chain (Inst);
-      Inter := Get_Generic_Chain (Inst);
+      Inter_Iter := Get_Generic_Chain (Inst);
       while Is_Valid (Assoc) loop
+         Inter := Get_Association_Interface (Assoc, Inter_Iter);
          Instantiate_Generic_Map (Assoc, Inter);
-         Next_Association_Interface (Assoc, Inter);
+         Next_Association_Interface (Assoc, Inter_Iter);
       end loop;
    end Instantiate_Generic_Map_Chain;
 
@@ -1301,13 +1302,14 @@ package body Vhdl.Sem_Inst is
          Instantiate_Generic_Chain (Inst, Get_Generic_Chain (Comp), True));
 
       declare
-         Assoc, Inter : Iir;
+         Assoc, Inter, Inter_Iter : Iir;
       begin
          Assoc := Get_Generic_Map_Aspect_Chain (Map);
-         Inter := Get_Generic_Chain (Inst);
+         Inter_Iter := Get_Generic_Chain (Inst);
          while Is_Valid (Assoc) loop
+            Inter := Get_Association_Interface (Assoc, Inter_Iter);
             Instantiate_Generic_Map (Assoc, Inter);
-            Next_Association_Interface (Assoc, Inter);
+            Next_Association_Interface (Assoc, Inter_Iter);
          end loop;
       end;
 

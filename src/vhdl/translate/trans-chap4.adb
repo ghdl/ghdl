@@ -1847,12 +1847,12 @@ package body Trans.Chap4 is
             when Iir_Kinds_Interface_Object_Declaration =>
                Create_Object (Decl);
             when Iir_Kind_Interface_Package_Declaration =>
-               if Get_Generic_Map_Aspect_Chain (Decl) = Null_Iir then
+               if Get_Generic_Map_Aspect_Chain (Decl) /= Null_Iir then
+                  --  The package is instantiated by the interface.
+                  Chap2.Translate_Package_Instantiation_Declaration (Decl);
+               else
                   --  Need a formal
                   Create_Package_Interface (Decl);
-               else
-                  --  Instantiated.
-                  Chap2.Translate_Package_Instantiation_Declaration (Decl);
                end if;
             when Iir_Kind_Interface_Type_Declaration
               | Iir_Kinds_Interface_Subprogram_Declaration =>

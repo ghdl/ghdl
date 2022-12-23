@@ -902,19 +902,24 @@ package body Trans.Chap5 is
                   Actual      : constant Iir := Get_Named_Entity
                     (Get_Actual (Assoc));
                   Actual_Info : constant Ortho_Info_Acc := Get_Info (Actual);
+                  Spec_Addr, Body_Addr : O_Enode;
                begin
+                  Spec_Addr := New_Address
+                    (Get_Instance_Ref
+                       (Actual_Info.Package_Instance_Spec_Scope),
+                     Uninst_Info.Package_Spec_Ptr_Type);
+                  Body_Addr  := New_Address
+                    (Get_Instance_Ref
+                       (Actual_Info.Package_Instance_Body_Scope),
+                     Uninst_Info.Package_Body_Ptr_Type);
+                  Set_Map_Env (Formal_Env);
                   New_Assign_Stmt
                     (Get_Var (Formal_Info.Package_Instance_Spec_Var),
-                     New_Address
-                       (Get_Instance_Ref
-                            (Actual_Info.Package_Instance_Spec_Scope),
-                        Uninst_Info.Package_Spec_Ptr_Type));
+                     Spec_Addr);
                   New_Assign_Stmt
                     (Get_Var (Formal_Info.Package_Instance_Body_Var),
-                     New_Address
-                       (Get_Instance_Ref
-                            (Actual_Info.Package_Instance_Body_Scope),
-                        Uninst_Info.Package_Body_Ptr_Type));
+                     Body_Addr);
+                  Set_Map_Env (Actual_Env);
                end;
             when Iir_Kind_Association_Element_Type
               | Iir_Kind_Association_Element_Subprogram =>

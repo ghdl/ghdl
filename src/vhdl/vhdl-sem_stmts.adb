@@ -1958,7 +1958,7 @@ package body Vhdl.Sem_Stmts is
          case Get_Kind (Inter) is
             when Iir_Kind_Interface_Package_Declaration
               | Iir_Kind_Interface_Type_Declaration =>
-               Has_Type_Gen := True;
+               return True;
             when others =>
                null;
          end case;
