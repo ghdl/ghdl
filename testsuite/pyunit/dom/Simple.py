@@ -31,6 +31,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
 from pathlib import Path
+from typing import TypeVar, Dict
 from unittest import TestCase
 
 from pyGHDL.dom.NonStandard import Design, Document
@@ -40,6 +41,13 @@ if __name__ == "__main__":
     print("ERROR: you called a testcase declaration file as an executable module.")
     print("Use: 'python -m unitest <testcase module>'")
     exit(1)
+
+
+_DictKey = TypeVar("_DictKey")
+_DictValue = TypeVar("_DictValue")
+
+def firstValue(d: Dict[_DictKey, _DictValue]) -> _DictValue:
+    return next(iter(d.values()))
 
 
 class SimpleEntity(TestCase):
@@ -71,7 +79,7 @@ class SimpleEntity(TestCase):
 
         self.assertEqual(1, len(design.Documents[0].Entities))
 
-        entity = design.Documents[0].Entities[0]
+        entity = firstValue(design.Documents[0].Entities)
         self.assertEqual("Counter", entity.Identifier)
         print()
         print(entity.Documentation)
@@ -84,7 +92,7 @@ class SimpleEntity(TestCase):
 
         self.assertEqual(1, len(design.Documents[0].Architectures))
 
-        architecture = design.Documents[0].Architectures[0]
+        architecture = firstValue(firstValue(design.Documents[0].Architectures))
         self.assertEqual("rtl", architecture.Identifier)
         print()
         print(architecture.Documentation)
@@ -120,7 +128,7 @@ class SimplePackage(TestCase):
 
         self.assertEqual(1, len(design.Documents[0].Packages))
 
-        package = design.Documents[0].Packages[0]
+        package = firstValue(design.Documents[0].Packages)
         self.assertEqual("utilities", package.Identifier)
         print()
         print(package.Documentation)
@@ -133,7 +141,7 @@ class SimplePackage(TestCase):
 
         self.assertEqual(1, len(design.Documents[0].PackageBodies))
 
-        packageBodies = design.Documents[0].PackageBodies[0]
+        packageBodies = firstValue(design.Documents[0].PackageBodies)
         self.assertEqual("utilities", packageBodies.Identifier)
         print()
         print(packageBodies.Documentation)

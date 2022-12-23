@@ -32,6 +32,7 @@
 # ============================================================================
 from pathlib import Path
 from textwrap import dedent
+from typing import TypeVar, Dict
 from unittest import TestCase
 
 from pyVHDLModel.SyntaxModel import ExpressionUnion
@@ -47,6 +48,13 @@ if __name__ == "__main__":
     print("ERROR: you called a testcase declaration file as an executable module.")
     print("Use: 'python -m unitest <testcase module>'")
     exit(1)
+
+
+_DictKey = TypeVar("_DictKey")
+_DictValue = TypeVar("_DictValue")
+
+def firstValue(d: Dict[_DictKey, _DictValue]) -> _DictValue:
+    return next(iter(d.values()))
 
 
 class Literals(TestCase):
@@ -67,7 +75,7 @@ class Literals(TestCase):
         self._design.Documents.append(document)
 
         # Traverse already to default value expression
-        package: Package = document.Packages[0]
+        package: Package = firstValue(document.Packages)
         item: Constant = package.DeclaredItems[0]
         default: ExpressionUnion = item.DefaultExpression
 

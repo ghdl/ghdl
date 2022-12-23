@@ -45,7 +45,7 @@ from pyTooling.Decorators import export
 from pyVHDLModel.SyntaxModel import (
     Design as VHDLModel_Design,
     Library as VHDLModel_Library,
-    Document as VHDLModel_Document,
+    Document as VHDLModel_Document, LibraryReferenceSymbol, PackageReferenceSymbol, ContextReferenceSymbol,
 )
 
 from pyGHDL.libghdl import (
@@ -183,7 +183,7 @@ class Document(VHDLModel_Document):
                 for item in utils.chain_iter(context):
                     itemKind = GetIirKindOfNode(item)
                     if itemKind is nodes.Iir_Kind.Library_Clause:
-                        contextNames.append(SimpleName(item, GetNameOfNode(item)))
+                        contextNames.append(LibraryReferenceSymbol(SimpleName(item, GetNameOfNode(item))))
                         if nodes.Get_Has_Identifier_List(item):
                             continue
 
