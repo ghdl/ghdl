@@ -33,6 +33,9 @@
 # ============================================================================
 
 from ctypes import c_bool, sizeof
+from enum import unique, IntEnum
+
+from pyTooling.Decorators import export
 
 from pyGHDL.libghdl import libghdl
 

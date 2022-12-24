@@ -66,8 +66,8 @@ from pyGHDL.libghdl import (
     files_map_editor,
     ENCODING,
 )
-from pyGHDL.libghdl.flags import Flag_Gather_Comments, Flags, VhdlStandard
-from pyGHDL.libghdl.vhdl import nodes, sem_lib, parse
+from pyGHDL.libghdl.flags import Flag_Gather_Comments
+from pyGHDL.libghdl.vhdl import nodes, sem_lib
 from pyGHDL.libghdl.vhdl.parse import Flag_Parse_Parenthesis
 from pyGHDL.dom import DOMException, Position
 from pyGHDL.dom._Utils import GetIirKindOfNode, CheckForErrors, GetNameOfNode, GetDocumentationOfNode
@@ -151,13 +151,13 @@ class Document(VHDLModel_Document):
             # Parse input file
             t1 = time.perf_counter()
 
-            if vhdlVersion.IsAMS():
+            if vhdlVersion.IsAMS:
                 flags.AMS_Vhdl.value = True
 
             self.__ghdlFile = sem_lib.Load_File(self.__ghdlSourceFileEntry)
             CheckForErrors()
 
-            if vhdlVersion.IsAMS():
+            if vhdlVersion.IsAMS:
                 flags.AMS_Vhdl.value = False
 
             self.__ghdlProcessingTime = time.perf_counter() - t1
