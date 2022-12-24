@@ -3,6 +3,7 @@ from unittest import TestCase
 
 import pyGHDL.libghdl as libghdl
 from pyGHDL.libghdl import name_table, files_map, errorout_console
+from pyGHDL.libghdl.flags import Flags, VhdlStandard
 from pyGHDL.libghdl.vhdl import nodes, sem_lib
 
 
@@ -29,7 +30,7 @@ class Instantiate(TestCase):
         errorout_console.Install_Handler()
 
         # Set options. This must be done before analyze_init()
-        libghdl.set_option("--std=08")
+        Flags().Vhdl_Std = VhdlStandard.Vhdl_08
 
         # Finish initialization. This will load the standard package.
         if libghdl.analyze_init_status() != 0:
