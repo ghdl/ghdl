@@ -80,6 +80,6 @@ Flag_Elaborate_With_Outdated = c_bool.in_dll(libghdl, "flags__flag_elaborate_wit
 
 Flag_Force_Analysis = c_bool.in_dll(libghdl, "flags__flag_force_analysis")
 
-AMS_Vhdl = c_bool.in_dll(libghdl, "flags__ams_vhdl")
+AMS_Vhdl = c_bool.in_dll(libghdl, "flags__ams_vhdl")  #: Internal boolean flag representing :option:`-ams`.
 
 Flag_Gather_Comments = c_bool.in_dll(libghdl, "flags__flag_gather_comments")
