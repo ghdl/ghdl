@@ -46,12 +46,24 @@ __all__ = ["Std_Location", "Standard_Package", "Character_Type_Definition"]
 
 
 Std_Location: LocationType = c_int32.in_dll(libghdl, "vhdl__std_package__std_location")
-"""Virtual location for the ``std.standard`` package. Use ``.value`` to access this variable inside libghdl."""
+"""
+Virtual location for the ``std.standard`` package.
+
+Use the property ``.value`` to access the variable's value.
+"""
 
 Standard_Package: Iir_Package_Declaration = c_int32.in_dll(libghdl, "vhdl__std_package__standard_package")
-"""Virtual package ``std.package``. Use ``.value`` to access this variable inside libghdl."""
+"""
+Virtual package ``std.package``.
+
+Use the property ``.value`` to access the variable's value.
+"""
 
 Character_Type_Definition: Iir_Enumeration_Type_Definition = c_int32.in_dll(
     libghdl, "vhdl__std_package__character_type_definition"
 )
-"""Predefined character. Use ``.value`` to access this variable inside libghdl."""
+"""
+Predefined character.
+
+Use the property ``.value`` to access the variable's value.
+"""

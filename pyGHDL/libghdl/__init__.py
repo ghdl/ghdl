@@ -10,11 +10,9 @@
 #   Tristan Gingold
 #   Patrick Lehmann
 #
-# Package package:  Python binding and low-level API for shared library 'libghdl'.
-#
 # License:
 # ============================================================================
-#  Copyright (C) 2019-2021 Tristan Gingold
+#  Copyright (C) 2019-2022 Tristan Gingold
 #
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -31,6 +29,11 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+Python binding and low-level API for shared library ``libghdl``.
+
+In case of an error, a :exc:`LibGHDLException` is raised.
+"""
 from ctypes import c_char_p, CDLL
 from sys import platform as sys_platform, version_info as sys_version_info
 from os import environ as os_environ
@@ -48,9 +51,12 @@ from pyGHDL import __version__ as ghdlVersion
 
 Nullable = Optional
 
+__all__ = ["ENCODING"]
+
 ENCODING = "latin-1"
 
 
+@export
 class LibGHDLException(GHDLBaseException):
     _internalErrors: Nullable[List[str]]
 
@@ -63,6 +69,7 @@ class LibGHDLException(GHDLBaseException):
         return self._internalErrors
 
 
+@export
 def _get_libghdl_name() -> Path:
     """Get the name of the libghdl library (with version and extension)."""
     version = ghdlVersion.replace("-", "_").replace(".", "_")
@@ -70,6 +77,7 @@ def _get_libghdl_name() -> Path:
     return Path(f"libghdl-{version}.{ext}")
 
 
+@export
 def _check_libghdl_libdir(libdir: Path, basename: Path) -> Path:
     """Returns libghdl path in :obj:`libdir`, if found."""
     if libdir is None:
@@ -82,6 +90,7 @@ def _check_libghdl_libdir(libdir: Path, basename: Path) -> Path:
     raise FileNotFoundError(str(res))
 
 
+@export
 def _check_libghdl_bindir(bindir: Path, basename: Path) -> Path:
     if bindir is None:
         raise ValueError("Parameter 'bindir' is None.")
@@ -89,11 +98,12 @@ def _check_libghdl_bindir(bindir: Path, basename: Path) -> Path:
     return _check_libghdl_libdir((bindir / "../lib").resolve(), basename)
 
 
+@export
 def _get_libghdl_path():
     """\
     Locate the directory where the shared library is installed.
 
-    Search order:
+    **Search order:**
 
     1. `GHDL_PREFIX` - directory (prefix) of the vhdl libraries.
     2. `VUNIT_GHDL_PATH` - path of the `ghdl` binary when using VUnit.
@@ -145,6 +155,7 @@ def _get_libghdl_path():
     raise Exception(f"Cannot find libghdl {basename}")
 
 
+@export
 def _initialize():
     # Load the shared library
     _libghdl_path = _get_libghdl_path()
@@ -192,15 +203,15 @@ def initialize() -> None:
 
 @export
 # @BindToLibGHDL("libghdl__set_option")
-def set_option(Opt: str) -> bool:
+def set_option(opt: str) -> bool:
     """\
     Set option :obj:`opt`.
 
-    :param Opt: Option to set.
+    :param opt: Option to set.
     :return:    Return ``True``, if the option is known and handled.
     """
-    Opt = Opt.encode(ENCODING)
-    return libghdl.libghdl__set_option(c_char_p(Opt), len(Opt)) == 0
+    opt = opt.encode(ENCODING)
+    return libghdl.libghdl__set_option(c_char_p(opt), len(opt)) == 0
 
 
 @export

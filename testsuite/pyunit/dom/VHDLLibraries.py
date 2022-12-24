@@ -7,9 +7,10 @@
 # |_|    |___/
 # =============================================================================
 # Authors:
+#   Patrick Lehmann
 #   Unai Martinez-Corral
 #
-# Testsuite:        Parse files from sanity checks
+# Testsuite:        Parse files from ieee2008 directory.
 #
 # License:
 # ============================================================================
@@ -34,7 +35,6 @@ from pathlib import Path
 
 from pytest import mark
 
-from pyVHDLModel import VHDLVersion
 from pyGHDL.dom.NonStandard import Design, Document
 
 
@@ -44,20 +44,50 @@ if __name__ == "__main__":
     exit(1)
 
 
-_TESTSUITE_ROOT = Path(__file__).parent.parent.parent.resolve()
-_SANITY_TESTS_ROOT = _TESTSUITE_ROOT / "sanity"
+_GHDL_ROOT = Path(__file__).parent.parent.parent.parent.resolve()
+_LIBRARIES_ROOT = _GHDL_ROOT / "libraries"
+
+_IEEE2008_ROOT = _LIBRARIES_ROOT / "ieee2008"
+_MENTOR_ROOT = _LIBRARIES_ROOT / "mentor"
+_SYNOPSYS_ROOT = _LIBRARIES_ROOT / "synopsys"
+_VITAL_ROOT = _LIBRARIES_ROOT / "vital2000"
 
 
 design = Design()
 
 
-@mark.parametrize("parameters", [f"{i}:{f.relative_to(_TESTSUITE_ROOT)}" for i, f in enumerate(_SANITY_TESTS_ROOT.glob("**/*.vhdl"))])
-def test_AllVHDLSources(parameters):
-    id, file = parameters.split(":")
-    filePath = _TESTSUITE_ROOT / file
+@mark.parametrize("file", [str(f.relative_to(_IEEE2008_ROOT)) for f in _IEEE2008_ROOT.glob("*.vhdl")])
+def test_IEEE2008(file):
+    filePath = _IEEE2008_ROOT / file
 
-    vhdlVersion = VHDLVersion.AMS2017 if "ams" in file else VHDLVersion.VHDL2008
+    lib = design.GetLibrary("ieee2008")
+    document = Document(filePath)
+    design.AddDocument(document, lib)
 
-    lib = design.GetLibrary(f"sanity_{id}")
-    document = Document(filePath, vhdlVersion=vhdlVersion)
+
+@mark.parametrize("file", [str(f.relative_to(_MENTOR_ROOT)) for f in _MENTOR_ROOT.glob("*.vhdl")])
+def test_Mentor(file):
+    filePath = _MENTOR_ROOT / file
+
+    lib = design.GetLibrary("mentor")
+    document = Document(filePath)
+    design.AddDocument(document, lib)
+
+
+@mark.parametrize("file", [str(f.relative_to(_SYNOPSYS_ROOT)) for f in _SYNOPSYS_ROOT.glob("*.vhdl")])
+def test_Synopsys(file):
+    filePath = _SYNOPSYS_ROOT / file
+
+    lib = design.GetLibrary("synopsys")
+    document = Document(filePath)
+    design.AddDocument(document, lib)
+
+
+@mark.xfail(reason="Needs further investigations.")
+@mark.parametrize("file", [str(f.relative_to(_VITAL_ROOT)) for f in _VITAL_ROOT.glob("*.vhdl")])
+def test_Synopsys(file):
+    filePath = _VITAL_ROOT / file
+
+    lib = design.GetLibrary("vital")
+    document = Document(filePath)
     design.AddDocument(document, lib)

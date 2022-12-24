@@ -50,15 +50,18 @@ __all__ = ["Library_Location", "Work_Library"]
 
 Library_Location: LocationType = c_int32.in_dll(libghdl, "libraries__library_location")
 """
-A location for library declarations (such as library WORK). Use ``.value`` to
-access this variable inside libghdl.
+A location for library declarations (such as library WORK).
+
+Use the property ``.value`` to access the variable's value.
 """
 
 Work_Library: Iir_Library_Declaration = c_int32.in_dll(libghdl, "libraries__work_library")
 """
-Library declaration for the work library. Note: the identifier of the work_library
-is ``work_library_name``, which may be different from 'WORK'. Use ``.value`` to
-access this variable inside libghdl.
+Library declaration for the work library.
+
+.. note:: The identifier of the work_library is ``work_library_name``, which may be different from 'WORK'.
+
+Use the property ``.value`` to access the variable's value.
 """
 
 
