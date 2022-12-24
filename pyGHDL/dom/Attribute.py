@@ -125,7 +125,7 @@ class AttributeSpecification(VHDLModel_AttributeSpecification, DOMMixin):
             else:
                 position = Position.parse(name)
                 raise DOMException(
-                    f"Unknown name kind '{nameKind.name}' in attribute specification '{attributeNode}' at {position.Filename}:{position.Line}:{position.Column}."
+                    f"Unknown name kind '{nameKind.name}' in attribute specification '{attributeNode}' at {position}."
                 )
 
         entityClassToken = nodes.Get_Entity_Class(attributeNode)
@@ -134,7 +134,7 @@ class AttributeSpecification(VHDLModel_AttributeSpecification, DOMMixin):
         except KeyError:
             position = Position.parse(attributeNode)
             raise DOMException(
-                f"Unknown token '{entityClassToken.name}' in attribute specification for entity class '{attributeNode}' at {position.Filename}:{position.Line}:{position.Column}."
+                f"Unknown token '{entityClassToken.name}' in attribute specification for entity class '{attributeNode}' at {position}."
             )
 
         expression = GetExpressionFromNode(nodes.Get_Expression(attributeNode))

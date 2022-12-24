@@ -520,7 +520,7 @@ class Aggregate(VHDLModel_Aggregate, DOMMixin):
                 else:
                     pos = Position.parse(item)
                     raise DOMException(
-                        f"Unknown discete range kind '{rangeKind.name}' in for...generate statement at line {pos.Line}."
+                        f"Unknown discrete range kind '{rangeKind.name}' in for...generate statement at line {pos.Line}."
                     )
 
                 choices.append(RangedAggregateElement(item, rng, value))

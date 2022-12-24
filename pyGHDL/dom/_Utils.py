@@ -64,6 +64,8 @@ def CheckForErrors() -> None:
 
             errors.append(f"{fileName}:{rec.line}:{rec.offset}: {message}")
 
+        errorout_memory.Clear_Errors()
+
         raise DOMException("Error raised in libghdl.") from LibGHDLException("libghdl: Internal error.", errors)
 
 

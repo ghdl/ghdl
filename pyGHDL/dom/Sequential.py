@@ -365,7 +365,7 @@ class ForLoopStatement(VHDLModel_ForLoopStatement, DOMMixin):
         else:
             pos = Position.parse(loopNode)
             raise DOMException(
-                f"Unknown discete range kind '{rangeKind.name}' in for...loop statement at line {pos.Line}."
+                f"Unknown discrete range kind '{rangeKind.name}' in for...loop statement at line {pos.Line}."
             )
 
         statementChain = nodes.Get_Sequential_Statement_Chain(loopNode)
