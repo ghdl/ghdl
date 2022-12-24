@@ -13,7 +13,7 @@
 #
 # License:
 # ============================================================================
-#  Copyright (C) 2019-2021 Tristan Gingold
+#  Copyright (C) 2019-2022 Tristan Gingold
 #
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -42,11 +42,11 @@ from typing import Any
 
 from pyTooling.Decorators import export
 
-from pyGHDL.dom.Names import SimpleName
 from pyVHDLModel.SyntaxModel import (
     Design as VHDLModel_Design,
     Library as VHDLModel_Library,
     Document as VHDLModel_Document,
+    LibraryReferenceSymbol,
 )
 
 from pyGHDL.libghdl import (
@@ -61,9 +61,12 @@ from pyGHDL.libghdl import (
     utils,
     files_map_editor,
 )
-from pyGHDL.libghdl.vhdl import nodes, sem_lib, parse
+from pyGHDL.libghdl.flags import Flag_Gather_Comments
+from pyGHDL.libghdl.vhdl import nodes, sem_lib
+from pyGHDL.libghdl.vhdl.parse import Flag_Parse_Parenthesis
 from pyGHDL.dom import DOMException, Position
-from pyGHDL.dom._Utils import GetIirKindOfNode, CheckForErrors, GetNameOfNode
+from pyGHDL.dom._Utils import GetIirKindOfNode, CheckForErrors, GetNameOfNode, GetDocumentationOfNode
+from pyGHDL.dom.Names import SimpleName
 from pyGHDL.dom.DesignUnit import (
     Entity,
     Architecture,
@@ -100,7 +103,8 @@ class Design(VHDLModel_Design):
         libghdl_set_option("--std=08")
         libghdl_set_option("--ams")
 
-        parse.Flag_Parse_Parenthesis.value = True
+        Flag_Gather_Comments.value = True
+        Flag_Parse_Parenthesis.value = True
 
         # Finish initialization. This will load the standard package.
         if libghdl_analyze_init_status() != 0:
@@ -167,6 +171,7 @@ class Document(VHDLModel_Document):
 
     def translate(self):
         firstUnit = nodes.Get_First_Design_Unit(self.__ghdlFile)
+        self._documentation = GetDocumentationOfNode(firstUnit)
 
         for unit in utils.chain_iter(firstUnit):
             libraryUnit = nodes.Get_Library_Unit(unit)
@@ -179,7 +184,7 @@ class Document(VHDLModel_Document):
                 for item in utils.chain_iter(context):
                     itemKind = GetIirKindOfNode(item)
                     if itemKind is nodes.Iir_Kind.Library_Clause:
-                        contextNames.append(SimpleName(item, GetNameOfNode(item)))
+                        contextNames.append(LibraryReferenceSymbol(SimpleName(item, GetNameOfNode(item))))
                         if nodes.Get_Has_Identifier_List(item):
                             continue
 
@@ -197,43 +202,43 @@ class Document(VHDLModel_Document):
 
             if nodeKind == nodes.Iir_Kind.Entity_Declaration:
                 entity = Entity.parse(libraryUnit, contextItems)
-                self.Entities.append(entity)
+                self._AddEntity(entity)
 
             elif nodeKind == nodes.Iir_Kind.Architecture_Body:
                 architecture = Architecture.parse(libraryUnit, contextItems)
-                self.Architectures.append(architecture)
+                self._AddArchitecture(architecture)
 
             elif nodeKind == nodes.Iir_Kind.Package_Declaration:
                 package = Package.parse(libraryUnit, contextItems)
-                self.Packages.append(package)
+                self._AddPackage(package)
 
             elif nodeKind == nodes.Iir_Kind.Package_Body:
                 packageBody = PackageBody.parse(libraryUnit, contextItems)
-                self.PackageBodies.append(packageBody)
+                self._AddPackageBody(packageBody)
 
             elif nodeKind == nodes.Iir_Kind.Package_Instantiation_Declaration:
                 package = PackageInstantiation.parse(libraryUnit)
-                self.Packages.append(package)
+                self._AddPackage(package)
 
             elif nodeKind == nodes.Iir_Kind.Context_Declaration:
                 context = Context.parse(libraryUnit)
-                self.Contexts.append(context)
+                self._AddContext(context)
 
             elif nodeKind == nodes.Iir_Kind.Configuration_Declaration:
                 configuration = Configuration.parse(libraryUnit, contextItems)
-                self.Configurations.append(configuration)
+                self._AddConfiguration(configuration)
 
             elif nodeKind == nodes.Iir_Kind.Vunit_Declaration:
                 vunit = VerificationUnit.parse(libraryUnit)
-                self.VerificationUnits.append(vunit)
+                self._AddVerificationUnit(vunit)
 
             elif nodeKind == nodes.Iir_Kind.Vprop_Declaration:
                 vprop = VerificationProperty.parse(libraryUnit)
-                self.VerificationProperties.append(vprop)
+                self._AddVerificationProperty(vprop)
 
             elif nodeKind == nodes.Iir_Kind.Vmode_Declaration:
                 vmod = VerificationMode.parse(libraryUnit)
-                self.VerificationModes.append(vmod)
+                self._AddVerificationMode(vmod)
 
             else:
                 raise DOMException(f"Unknown design unit kind '{nodeKind.name}'.")

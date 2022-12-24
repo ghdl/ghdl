@@ -13,7 +13,7 @@
 #
 # License:
 # ============================================================================
-#  Copyright (C) 2019-2021 Tristan Gingold
+#  Copyright (C) 2019-2022 Tristan Gingold
 #
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@ from pyVHDLModel.SyntaxModel import (
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin
-from pyGHDL.dom._Utils import GetNameOfNode
+from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode
 from pyGHDL.dom.Symbol import SimpleSubtypeSymbol
 
 
@@ -57,8 +57,9 @@ class Function(VHDLModel_Function, DOMMixin):
         returnType: SubtypeOrSymbol,
         genericItems: List[GenericInterfaceItem] = None,
         parameterItems: List[ParameterInterfaceItem] = None,
+        documentation: str = None,
     ):
-        super().__init__(functionName)
+        super().__init__(functionName, documentation)
         DOMMixin.__init__(self, node)
 
         # TODO: move to model
@@ -74,6 +75,7 @@ class Function(VHDLModel_Function, DOMMixin):
         )
 
         functionName = GetNameOfNode(functionNode)
+        documentation = GetDocumentationOfNode(functionNode)
 
         generics = GetGenericsFromChainedNodes(nodes.Get_Generic_Chain(functionNode))
         parameters = GetParameterFromChainedNodes(nodes.Get_Interface_Declaration_Chain(functionNode))
@@ -82,7 +84,7 @@ class Function(VHDLModel_Function, DOMMixin):
         returnTypeName = GetNameOfNode(returnType)
         returnTypeSymbol = SimpleSubtypeSymbol(returnType, returnTypeName)
 
-        return cls(functionNode, functionName, returnTypeSymbol, generics, parameters)
+        return cls(functionNode, functionName, returnTypeSymbol, generics, parameters, documentation)
 
 
 @export
@@ -93,8 +95,9 @@ class Procedure(VHDLModel_Procedure, DOMMixin):
         procedureName: str,
         genericItems: List[GenericInterfaceItem] = None,
         parameterItems: List[ParameterInterfaceItem] = None,
+        documentation: str = None,
     ):
-        super().__init__(procedureName)
+        super().__init__(procedureName, documentation)
         DOMMixin.__init__(self, node)
 
         # TODO: move to model
@@ -109,8 +112,9 @@ class Procedure(VHDLModel_Procedure, DOMMixin):
         )
 
         procedureName = GetNameOfNode(procedureNode)
+        documentation = GetDocumentationOfNode(procedureNode)
 
         generics = GetGenericsFromChainedNodes(nodes.Get_Generic_Chain(procedureNode))
         parameters = GetParameterFromChainedNodes(nodes.Get_Interface_Declaration_Chain(procedureNode))
 
-        return cls(procedureNode, procedureName, generics, parameters)
+        return cls(procedureNode, procedureName, generics, parameters, documentation)

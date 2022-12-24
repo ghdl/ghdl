@@ -13,7 +13,7 @@
 #
 # License:
 # ============================================================================
-#  Copyright (C) 2019-2021 Tristan Gingold
+#  Copyright (C) 2019-2022 Tristan Gingold
 #
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -42,22 +42,22 @@ from pyVHDLModel.SyntaxModel import (
 )
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.dom import DOMMixin
-from pyGHDL.dom._Utils import GetNameOfNode
-
+from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode
 
 __all__ = []
 
 
 @export
 class Alias(VHDLModel_Alias, DOMMixin):
-    def __init__(self, node: Iir, aliasName: str):
-        super().__init__(aliasName)
+    def __init__(self, node: Iir, aliasName: str, documentation: str = None):
+        super().__init__(aliasName, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, node: Iir):
-        aliasName = GetNameOfNode(node)
+    def parse(cls, aliasNode: Iir):
+        aliasName = GetNameOfNode(aliasNode)
+        documentation = GetDocumentationOfNode(aliasNode)
 
         # FIXME: add an implementation
 
-        return cls(node, aliasName)
+        return cls(aliasNode, aliasName)

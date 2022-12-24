@@ -50,10 +50,11 @@ _SANITY_TESTS_ROOT = _TESTSUITE_ROOT / "sanity"
 design = Design()
 
 
-@mark.parametrize("file", [str(f.relative_to(_TESTSUITE_ROOT)) for f in _SANITY_TESTS_ROOT.glob("**/*.vhdl")])
-def test_AllVHDLSources(file):
+@mark.parametrize("parameters", [f"{i}:{f.relative_to(_TESTSUITE_ROOT)}" for i, f in enumerate(_SANITY_TESTS_ROOT.glob("**/*.vhdl"))])
+def test_AllVHDLSources(parameters):
+    id, file = parameters.split(":")
     filePath = _TESTSUITE_ROOT / file
 
-    lib = design.GetLibrary("sanity")
+    lib = design.GetLibrary(f"sanity_{id}")
     document = Document(filePath)
     design.AddDocument(document, lib)

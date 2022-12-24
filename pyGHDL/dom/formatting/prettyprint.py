@@ -47,7 +47,7 @@ from pyGHDL.dom.Concurrent import (
 )
 from pyVHDLModel.SyntaxModel import (
     GenericInterfaceItem,
-    NamedEntity,
+    NamedEntityMixin,
     PortInterfaceItem,
     WithDefaultExpressionMixin,
     Function,
@@ -301,7 +301,7 @@ class PrettyPrint:
 
         return buffer
 
-    def formatGeneric(self, generic: Union[NamedEntity, GenericInterfaceItem], level: int = 0) -> StringBuffer:
+    def formatGeneric(self, generic: Union[NamedEntityMixin, GenericInterfaceItem], level: int = 0) -> StringBuffer:
         if isinstance(generic, GenericConstantInterfaceItem):
             return self.formatGenericConstant(generic, level)
         elif isinstance(generic, GenericTypeInterfaceItem):
@@ -311,7 +311,7 @@ class PrettyPrint:
                 f"Unhandled generic kind '{generic.__class__.__name__}' for generic '{generic.Identifiers[0]}'."
             )
 
-    def formatPort(self, port: Union[NamedEntity, PortInterfaceItem], level: int = 0) -> StringBuffer:
+    def formatPort(self, port: Union[NamedEntityMixin, PortInterfaceItem], level: int = 0) -> StringBuffer:
         if isinstance(port, PortSignalInterfaceItem):
             return self.formatPortSignal(port, level)
         else:

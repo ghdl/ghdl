@@ -13,7 +13,7 @@
 #
 # License:
 # ============================================================================
-#  Copyright (C) 2019-2021 Tristan Gingold
+#  Copyright (C) 2019-2022 Tristan Gingold
 #
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ from pyTooling.Decorators import export
 
 from pyVHDLModel.SyntaxModel import Mode
 
-from pyGHDL.libghdl import LibGHDLException, name_table, errorout_memory
+from pyGHDL.libghdl import LibGHDLException, name_table, errorout_memory, files_map, file_comments
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes, utils
 from pyGHDL.libghdl.vhdl.nodes import Null_Iir
@@ -85,6 +85,18 @@ def GetNameOfNode(node: Iir) -> str:
 
     identifier = utils.Get_Source_Identifier(node)
     return name_table.Get_Name_Ptr(identifier)
+
+
+@export
+def GetDocumentationOfNode(node: Iir) -> str:
+    file = files_map.Location_To_File(nodes.Get_Location(node))
+    idx = file_comments.Find_First_Comment(file, node)
+    documentation = []
+    while idx != file_comments.No_Comment_Index:
+        documentation.append(file_comments.Get_Comment(file, idx))
+        idx = file_comments.Get_Next_Comment(file, idx)
+
+    return "\n".join(documentation)
 
 
 @export

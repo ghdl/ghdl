@@ -31,6 +31,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
 from pathlib import Path
+from typing import TypeVar, Dict
 from unittest import TestCase
 
 from pyGHDL.dom.NonStandard import Design, Document
@@ -42,9 +43,16 @@ if __name__ == "__main__":
     exit(1)
 
 
+_DictKey = TypeVar("_DictKey")
+_DictValue = TypeVar("_DictValue")
+
+def firstValue(d: Dict[_DictKey, _DictValue]) -> _DictValue:
+    return next(iter(d.values()))
+
+
 class SimpleEntity(TestCase):
     _root = Path(__file__).resolve().parent.parent
-    _filename: Path = _root / "SimpleEntity.vhdl"
+    _filename: Path = _root / "dom/examples/SimpleEntity.vhdl"
 
     def test_Design(self):
         design = Design()
@@ -60,6 +68,9 @@ class SimpleEntity(TestCase):
         design.Documents.append(document)
 
         self.assertEqual(1, len(design.Documents))
+        print()
+        print(document.Documentation)
+        self.assertEqual(4, len(document.Documentation.splitlines()))
 
     def test_Entity(self):
         design = Design()
@@ -67,7 +78,12 @@ class SimpleEntity(TestCase):
         design.Documents.append(document)
 
         self.assertEqual(1, len(design.Documents[0].Entities))
-        self.assertEqual("Counter", design.Documents[0].Entities[0].Identifier)
+
+        entity = firstValue(design.Documents[0].Entities)
+        self.assertEqual("Counter", entity.Identifier)
+        print()
+        print(entity.Documentation)
+        self.assertEqual(11, len(entity.Documentation.splitlines()))
 
     def test_Architecture(self):
         design = Design()
@@ -75,4 +91,58 @@ class SimpleEntity(TestCase):
         design.Documents.append(document)
 
         self.assertEqual(1, len(design.Documents[0].Architectures))
-        self.assertEqual("rtl", design.Documents[0].Architectures[0].Identifier)
+
+        architecture = firstValue(firstValue(design.Documents[0].Architectures))
+        self.assertEqual("rtl", architecture.Identifier)
+        print()
+        print(architecture.Documentation)
+        self.assertEqual(1, len(architecture.Documentation.splitlines()))
+
+
+class SimplePackage(TestCase):
+    _root = Path(__file__).resolve().parent.parent
+    _filename: Path = _root / "dom/examples/SimplePackage.vhdl"
+
+    def test_Design(self):
+        design = Design()
+
+        self.assertIsNotNone(design)
+
+    # def test_Library(self):
+    # 	library = Library()
+
+    def test_Document(self):
+        design = Design()
+        document = Document(self._filename)
+        design.Documents.append(document)
+
+        self.assertEqual(1, len(design.Documents))
+        print()
+        print(document.Documentation)
+        self.assertEqual(4, len(document.Documentation.splitlines()))
+
+    def test_Package(self):
+        design = Design()
+        document = Document(self._filename)
+        design.Documents.append(document)
+
+        self.assertEqual(1, len(design.Documents[0].Packages))
+
+        package = firstValue(design.Documents[0].Packages)
+        self.assertEqual("utilities", package.Identifier)
+        print()
+        print(package.Documentation)
+        self.assertEqual(1, len(package.Documentation.splitlines()))
+
+    def test_PackageBody(self):
+        design = Design()
+        document = Document(self._filename)
+        design.Documents.append(document)
+
+        self.assertEqual(1, len(design.Documents[0].PackageBodies))
+
+        packageBodies = firstValue(design.Documents[0].PackageBodies)
+        self.assertEqual("utilities", packageBodies.Identifier)
+        print()
+        print(packageBodies.Documentation)
+        self.assertEqual(0, len(packageBodies.Documentation.splitlines()))

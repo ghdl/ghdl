@@ -32,10 +32,13 @@
 # ============================================================================
 from typing import List, Iterator
 
-from pyTooling.Decorators import export
+from pyTooling.Decorators import export, InheritDocString
 
+from pyGHDL.dom.Names import SimpleName
 from pyVHDLModel.SyntaxModel import (
     EntitySymbol as VHDLModel_EntitySymbol,
+    ArchitectureSymbol as VHDLModel_ArchitectureSymbol,
+    PackageSymbol as VHDLModel_PackageSymbol,
     SimpleSubtypeSymbol as VHDLModel_SimpleSubtypeSymbol,
     ConstrainedScalarSubtypeSymbol as VHDLModel_ConstrainedScalarSubtypeSymbol,
     ConstrainedCompositeSubtypeSymbol as VHDLModel_ConstrainedCompositeSubtypeSymbol,
@@ -54,8 +57,25 @@ __all__ = []
 
 @export
 class EntitySymbol(VHDLModel_EntitySymbol, DOMMixin):
-    def __init__(self, node: Iir, entityName: Name):
+    @InheritDocString(VHDLModel_EntitySymbol)
+    def __init__(self, node: Iir, entityName: SimpleName):
         super().__init__(entityName)
+        DOMMixin.__init__(self, node)
+
+
+@export
+class ArchitectureSymbol(VHDLModel_ArchitectureSymbol, DOMMixin):
+    @InheritDocString(VHDLModel_ArchitectureSymbol)
+    def __init__(self, node: Iir, architectureName: SimpleName):
+        super().__init__(architectureName)
+        DOMMixin.__init__(self, node)
+
+
+@export
+class PackageSymbol(VHDLModel_PackageSymbol, DOMMixin):
+    @InheritDocString(VHDLModel_PackageSymbol)
+    def __init__(self, node: Iir, packageName: SimpleName):
+        super().__init__(packageName)
         DOMMixin.__init__(self, node)
 
 
