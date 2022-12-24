@@ -63,7 +63,7 @@ exclude_patterns = [
 ]
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'stata-dark'
+pygments_style = 'manni'
 
 
 # ==============================================================================
@@ -174,26 +174,24 @@ extensions = [
     # Standard Sphinx extensions
     'sphinx.ext.autodoc',
     'sphinx.ext.extlinks',
+	  'sphinx.ext.inheritance_diagram',
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',
-#    'sphinx.ext.graphviz',
+    'sphinx.ext.graphviz',
     'sphinx.ext.mathjax',
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
 
     # BuildTheDocs extensions
     'btd.sphinx.autoprogram',
-    'btd.sphinx.graphviz',
-    'btd.sphinx.inheritance_diagram',
+#    'btd.sphinx.graphviz',
+#    'btd.sphinx.inheritance_diagram',
 
     # Other extensions
 #    'recommonmark',
     'exec',
-#     'DocumentMember',
     'sphinx_fontawesome',
     'sphinx_autodoc_typehints',
-
-    # local extensions (patched)
     'autoapi.sphinx',
 ]
 
@@ -202,7 +200,7 @@ extensions = [
 # Sphinx.Ext.InterSphinx
 # ==============================================================================
 intersphinx_mapping = {
-   'python':    ('https://docs.python.org/3.6/', None),
+   'python':    ('https://docs.python.org/3', None),
    'cosim':     ('https://ghdl.github.io/ghdl-cosim', None),
    'poc':       ('https://poc-library.readthedocs.io/en/release', None),
    'vhdlmodel': ('https://vhdl.github.io/pyVHDLModel', None),
@@ -215,12 +213,7 @@ intersphinx_mapping = {
 # ==============================================================================
 # see: https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html#configuration
 autodoc_member_order = "bysource"       # alphabetical, groupwise, bysource
-# autodoc_default_options = {
-#     "members": True,
-#     'undoc-members': True,
-#     #'private-members': True,
-#     'inherited-members': True,
-# }
+autodoc_typehints = "both"
 
 
 # ==============================================================================
@@ -230,11 +223,28 @@ graphviz_output_format = "svg"
 
 
 # ==============================================================================
+# Sphinx.Ext.Inheritance_Diagram
+# ==============================================================================
+inheritance_node_attrs = {
+#	"shape": "ellipse",
+#	"fontsize": 14,
+#	"height": 0.75,
+	"color": "dodgerblue1",
+	"style": "filled"
+}
+
+# ==============================================================================
 # Sphinx.Ext.ToDo
 # ==============================================================================
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
 todo_link_only = True
+
+
+# ==============================================================================
+# Sphinx.Ext.Coverage
+# ==============================================================================
+coverage_show_missing_items = True
 
 
 # ==============================================================================

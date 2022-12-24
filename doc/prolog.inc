@@ -12,3 +12,7 @@
 .. |hr| raw:: html
 
    <hr />
+
+.. role:: pycode(code)
+   :language: python
+   :class: highlight
