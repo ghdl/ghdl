@@ -8,6 +8,7 @@ use     IEEE.std_logic_1164.all;
 use     IEEE.numeric_std.all;
 
 
+-- Useful utility functions and types.
 package Utilities is
 	type freq is range integer'low to integer'high units
 		Hz;

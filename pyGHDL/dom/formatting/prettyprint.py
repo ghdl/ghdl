@@ -114,6 +114,14 @@ class PrettyPrint:
     # def __init__(self):
     #     self._buffer = []
 
+    def CleanupDocumentationBlocks(self, documentationContent: str,  level: int = 0):
+        prefix = "  " * level
+        if documentationContent is None:
+            return prefix
+
+        documentationLines = documentationContent.split("\n")
+        return f"{prefix}{documentationLines[0][2:].lstrip()}"
+
     def formatDesign(self, design: Design, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
@@ -190,10 +198,12 @@ class PrettyPrint:
     def formatEntity(self, entity: Entity, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
+        documentationFirstLine = self.CleanupDocumentationBlocks(entity.Documentation)
         buffer.append(
             f"{prefix}- Name: {entity.Identifier}\n"
             f"{prefix}  File: {entity.Position.Filename.name}\n"
-            f"{prefix}  Position: {entity.Position.Line}:{entity.Position.Column}"
+            f"{prefix}  Position: {entity.Position.Line}:{entity.Position.Column}\n"
+            f"{prefix}  Documentation: {documentationFirstLine}"
         )
         buffer.append(f"{prefix}  Generics:")
         for generic in entity.GenericItems:
@@ -219,10 +229,12 @@ class PrettyPrint:
     def formatArchitecture(self, architecture: Architecture, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
+        documentationFirstLine = self.CleanupDocumentationBlocks(architecture.Documentation)
         buffer.append(
             f"{prefix}- Name: {architecture.Identifier}\n"
             f"{prefix}  File: {architecture.Position.Filename.name}\n"
-            f"{prefix}  Position: {architecture.Position.Line}:{architecture.Position.Column}"
+            f"{prefix}  Position: {architecture.Position.Line}:{architecture.Position.Column}\n"
+            f"{prefix}  Documentation: {documentationFirstLine}"
         )
         buffer.append(f"{prefix}  Entity: {architecture.Entity.SymbolName}")
         buffer.append(f"{prefix}  Declared:")
@@ -244,6 +256,7 @@ class PrettyPrint:
     def formatComponent(self, component: Component, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
+        documentationFirstLine = self.CleanupDocumentationBlocks(component.Documentation)
         buffer.append(f"{prefix}- Component: {component.Identifier}")
         buffer.append(f"{prefix}  Generics:")
         for generic in component.GenericItems:
@@ -259,10 +272,12 @@ class PrettyPrint:
     def formatPackage(self, package: Package, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
+        documentationFirstLine = self.CleanupDocumentationBlocks(package.Documentation)
         buffer.append(
             f"{prefix}- Name: {package.Identifier}\n"
             f"{prefix}  File: {package.Position.Filename.name}\n"
-            f"{prefix}  Position: {package.Position.Line}:{package.Position.Column}"
+            f"{prefix}  Position: {package.Position.Line}:{package.Position.Column}\n"
+            f"{prefix}  Documentation: {documentationFirstLine}"
         )
         buffer.append(f"{prefix}  Declared:")
         for item in package.DeclaredItems:
@@ -274,6 +289,7 @@ class PrettyPrint:
     def formatPackageInstance(self, package: PackageInstantiation, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
+        documentationFirstLine = self.CleanupDocumentationBlocks(package.Documentation)
         buffer.append(f"{prefix}- Name: {package.Identifier}")
         buffer.append(f"{prefix}  Package: {package.PackageReference!s}")
         buffer.append(f"{prefix}  Generic Map: ...")
@@ -286,7 +302,11 @@ class PrettyPrint:
     def formatPackageBody(self, packageBody: PackageBody, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
-        buffer.append(f"{prefix}- Name: {packageBody.Identifier}")
+        documentationFirstLine = self.CleanupDocumentationBlocks(packageBody.Documentation)
+        buffer.append(
+            f"{prefix}- Name: {packageBody.Identifier}\n"
+            f"{prefix}  Documentation: {documentationFirstLine}"
+        )
         buffer.append(f"{prefix}  Declared:")
         for item in packageBody.DeclaredItems:
             for line in self.formatDeclaredItems(item, level + 1):

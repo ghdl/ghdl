@@ -11,6 +11,7 @@ use     work.Utilities.all;
 use     work.StopWatch_pkg.all;
 
 
+-- Encoder that translates from 4-bit binary (BCD) to 7-segment code.
 entity seg7_Encoder is
 	port (
 		BCDValue  : in  T_BCD;

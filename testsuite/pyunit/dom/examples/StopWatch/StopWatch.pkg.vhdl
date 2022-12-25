@@ -7,7 +7,7 @@ library IEEE;
 use     IEEE.std_logic_1164.all;
 use     IEEE.numeric_std.all;
 
-
+-- Package with stop watch specific types.
 package StopWatch_pkg is
 	subtype T_BCD is unsigned(3 downto 0);
 	type T_BCD_Vector is array(natural range <>) of T_BCD;
