@@ -39,7 +39,7 @@ This module contains all DOM classes for VHDL's design units (:class:`context <E
 
 
 """
-from typing import Iterable
+from typing import Iterable, Union
 
 from pyTooling.Decorators import export
 
@@ -63,15 +63,13 @@ from pyVHDLModel.SyntaxModel import (
     GenericInterfaceItem,
     PortInterfaceItem,
     ConcurrentStatement,
-    PackageReferenceSymbol,
-    ContextReferenceSymbol,
 )
 
 from pyGHDL.libghdl import utils
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin, Position, DOMException
-from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode
+from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode, GetIirKindOfNode
 from pyGHDL.dom._Translate import (
     GetGenericsFromChainedNodes,
     GetPortsFromChainedNodes,
@@ -79,7 +77,7 @@ from pyGHDL.dom._Translate import (
     GetConcurrentStatementsFromChainedNodes,
 )
 from pyGHDL.dom.Names import SimpleName
-from pyGHDL.dom.Symbol import EntitySymbol
+from pyGHDL.dom.Symbol import EntitySymbol, LibraryReferenceSymbol,     PackageReferenceSymbol, PackageMembersReferenceSymbol, AllPackageMembersReferenceSymbol, ContextReferenceSymbol
 
 
 @export
@@ -96,12 +94,41 @@ class UseClause(VHDLModel_UseClause, DOMMixin):
         DOMMixin.__init__(self, useNode)
 
     @classmethod
-    def parse(cls, useNode: Iir):
-        from pyGHDL.dom._Translate import GetNameFromNode
+    def GetPackageMemberSymbol(cls, node: Iir) -> Union[PackageMembersReferenceSymbol, AllPackageMembersReferenceSymbol]:
+        kind = GetIirKindOfNode(node)
+        prefixName = cls.GetPackageSymbol(nodes.Get_Prefix(node))
+        if kind == nodes.Iir_Kind.Selected_Name:
+            name = GetNameOfNode(node)
+            return PackageMembersReferenceSymbol(node, name, prefixName)
+        elif kind == nodes.Iir_Kind.Selected_By_All_Name:
+            return AllPackageMembersReferenceSymbol(node, prefixName)
+        else:
+            raise DOMException()
 
-        uses = [PackageReferenceSymbol(GetNameFromNode(nodes.Get_Selected_Name(useNode)))]
+    @classmethod
+    def GetPackageSymbol(cls, node: Iir) -> PackageReferenceSymbol:
+        kind = GetIirKindOfNode(node)
+        if kind == nodes.Iir_Kind.Selected_Name:
+            name = GetNameOfNode(node)
+            prefixName = cls.GetLibrarySymbol(nodes.Get_Prefix(node))
+            return PackageReferenceSymbol(node, name, prefixName)
+        else:
+            raise DOMException()
+
+    @classmethod
+    def GetLibrarySymbol(cls, node: Iir) -> LibraryReferenceSymbol:
+        kind = GetIirKindOfNode(node)
+        if kind == nodes.Iir_Kind.Simple_Name:
+            name = GetNameOfNode(node)
+            return LibraryReferenceSymbol(node, name)
+        else:
+            raise DOMException()
+
+    @classmethod
+    def parse(cls, useNode: Iir):
+        uses = [cls.GetPackageMemberSymbol(nodes.Get_Selected_Name(useNode))]
         for use in utils.chain_iter(nodes.Get_Use_Clause_Chain(useNode)):
-            uses.append(PackageReferenceSymbol(GetNameFromNode(nodes.Get_Selected_Name(use))))
+            uses.append(cls.GetPackageMemberSymbol(nodes.Get_Selected_Name(use)))
 
         return cls(useNode, uses)
 

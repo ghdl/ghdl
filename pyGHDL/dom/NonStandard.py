@@ -48,7 +48,6 @@ from pyVHDLModel.SyntaxModel import (
     Design as VHDLModel_Design,
     Library as VHDLModel_Library,
     Document as VHDLModel_Document,
-    LibraryReferenceSymbol,
 )
 
 from pyGHDL.libghdl import (
@@ -82,8 +81,8 @@ from pyGHDL.dom.DesignUnit import (
     PackageInstantiation,
     LibraryClause,
     UseClause,
-    ContextReference,
-)
+    ContextReference, )
+from pyGHDL.dom.Symbol import LibraryReferenceSymbol
 from pyGHDL.dom.PSL import VerificationUnit, VerificationProperty, VerificationMode
 
 
@@ -195,7 +194,8 @@ class Document(VHDLModel_Document):
                 for item in utils.chain_iter(context):
                     itemKind = GetIirKindOfNode(item)
                     if itemKind is nodes.Iir_Kind.Library_Clause:
-                        contextNames.append(LibraryReferenceSymbol(SimpleName(item, GetNameOfNode(item))))
+                        libraryIdentifier = GetNameOfNode(item)
+                        contextNames.append(LibraryReferenceSymbol(item, libraryIdentifier))
                         if nodes.Get_Has_Identifier_List(item):
                             continue
 

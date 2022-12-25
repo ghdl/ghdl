@@ -34,7 +34,6 @@ from typing import List, Iterator
 
 from pyTooling.Decorators import export, InheritDocString
 
-from pyGHDL.dom.Names import SimpleName
 from pyVHDLModel.SyntaxModel import (
     EntitySymbol as VHDLModel_EntitySymbol,
     ArchitectureSymbol as VHDLModel_ArchitectureSymbol,
@@ -46,13 +45,51 @@ from pyVHDLModel.SyntaxModel import (
     IndexedObjectOrFunctionCallSymbol as VHDLModel_IndexedObjectOrFunctionCallSymbol,
     ConstraintUnion,
     Name,
+    LibraryReferenceSymbol as VHDLModel_LibraryReferenceSymbol,
+    PackageReferenceSymbol as VHDLModel_PackageReferenceSymbol,
+    PackageMembersReferenceSymbol as VHDLModel_PackageMembersReferenceSymbol,
+    AllPackageMembersReferenceSymbol as VHDLModel_AllPackageMembersReferenceSymbol,
+    ContextReferenceSymbol as VHDLModel_ContextReferenceSymbol,
 )
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.dom import DOMMixin
+from pyGHDL.dom.Names import SimpleName
 from pyGHDL.dom.Range import Range
 
 
-__all__ = []
+@export
+class LibraryReferenceSymbol(VHDLModel_LibraryReferenceSymbol, DOMMixin):
+    def __init__(self, libraryNode: Iir, identifier: str):
+        super().__init__(identifier)
+        DOMMixin.__init__(self, libraryNode)
+
+
+@export
+class PackageReferenceSymbol(VHDLModel_PackageReferenceSymbol, DOMMixin):
+    def __init__(self, libraryNode: Iir, identifier: str, prefix: LibraryReferenceSymbol):
+        super().__init__(identifier, prefix)
+        DOMMixin.__init__(self, libraryNode)
+
+
+@export
+class PackageMembersReferenceSymbol(VHDLModel_PackageMembersReferenceSymbol, DOMMixin):
+    def __init__(self, libraryNode: Iir, identifier: str, prefix: PackageReferenceSymbol):
+        super().__init__(identifier, prefix)
+        DOMMixin.__init__(self, libraryNode)
+
+
+@export
+class AllPackageMembersReferenceSymbol(VHDLModel_AllPackageMembersReferenceSymbol, DOMMixin):
+    def __init__(self, libraryNode: Iir, prefix: PackageReferenceSymbol):
+        super().__init__(prefix)
+        DOMMixin.__init__(self, libraryNode)
+
+
+@export
+class ContextReferenceSymbol(VHDLModel_ContextReferenceSymbol, DOMMixin):
+    def __init__(self, libraryNode: Iir, identifier: str, prefix: LibraryReferenceSymbol):
+        super().__init__(identifier, prefix)
+        DOMMixin.__init__(self, libraryNode)
 
 
 @export
