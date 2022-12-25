@@ -57,9 +57,6 @@ from pyGHDL.dom._Utils import GetNameOfNode, GetModeOfNode, GetDocumentationOfNo
 from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode, GetExpressionFromNode
 
 
-__all__ = []
-
-
 @export
 class GenericConstantInterfaceItem(VHDLModel_GenericConstantInterfaceItem, DOMMixin):
     def __init__(

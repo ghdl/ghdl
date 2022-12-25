@@ -82,9 +82,6 @@ from pyGHDL.dom.Names import SimpleName
 from pyGHDL.dom.Symbol import EntitySymbol
 
 
-__all__ = []
-
-
 @export
 class LibraryClause(VHDLModel_LibraryClause, DOMMixin):
     def __init__(self, libraryNode: Iir, symbols: Iterable[Name]):

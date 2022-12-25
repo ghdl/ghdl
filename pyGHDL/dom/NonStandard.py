@@ -86,8 +86,6 @@ from pyGHDL.dom.DesignUnit import (
 )
 from pyGHDL.dom.PSL import VerificationUnit, VerificationProperty, VerificationMode
 
-__all__ = []
-
 
 @export
 class Design(VHDLModel_Design):

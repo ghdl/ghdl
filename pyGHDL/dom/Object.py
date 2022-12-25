@@ -50,8 +50,6 @@ from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin
 from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode
 
-__all__ = []
-
 
 @export
 class Constant(VHDLModel_Constant, DOMMixin):

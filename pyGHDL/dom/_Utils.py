@@ -40,8 +40,6 @@ from pyGHDL.libghdl.vhdl import nodes, utils
 from pyGHDL.libghdl.vhdl.nodes import Null_Iir
 from pyGHDL.dom import DOMException
 
-__all__ = []
-
 __MODE_TRANSLATION = {
     nodes.Iir_Mode.In_Mode: Mode.In,
     nodes.Iir_Mode.Out_Mode: Mode.Out,

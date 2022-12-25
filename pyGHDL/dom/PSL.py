@@ -53,9 +53,6 @@ from pyGHDL.dom import DOMMixin
 from pyGHDL.dom._Utils import GetNameOfNode
 
 
-__all__ = []
-
-
 @export
 class VerificationUnit(VHDLModel_VerificationUnit, DOMMixin):
     def __init__(

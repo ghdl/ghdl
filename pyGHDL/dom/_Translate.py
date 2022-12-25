@@ -173,9 +173,6 @@ from pyGHDL.dom.Misc import Alias
 from pyGHDL.dom.PSL import DefaultClock
 
 
-__all__ = []
-
-
 @export
 def GetNameFromNode(node: Iir) -> Name:
     kind = GetIirKindOfNode(node)
