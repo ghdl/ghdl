@@ -133,37 +133,33 @@ class PrettyPrint:
     def formatLibrary(self, library: Library, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
-        buffer.append(f"{prefix}Entities:")
-        for entity in library.Entities:
-            buffer.append(f"{prefix}  - {entity.Identifier}({', '.join([a.Identifier for a in entity.Architectures])})")
+        buffer.append(f"{prefix}Contexts:")
+        for context in library.Contexts.values():
+            buffer.append(f"{prefix}  - {context.Identifier}")
         buffer.append(f"{prefix}Packages:")
-        for package in library.Packages:
+        for package in library.Packages.values():
             if isinstance(package, Package):
                 buffer.append(f"{prefix}  - {package.Identifier}")
             elif isinstance(package, PackageInstantiation):
                 buffer.append(f"{prefix}  - {package.Identifier} instantiate from {package.PackageReference}")
+        buffer.append(f"{prefix}Entities:")
+        for entity in library.Entities.values():
+            buffer.append(f"{prefix}  - {entity.Identifier}({', '.join([a.Identifier for a in entity.Architectures])})")
         buffer.append(f"{prefix}Configurations:")
-        for configuration in library.Configurations:
+        for configuration in library.Configurations.values():
             buffer.append(f"{prefix}  - {configuration.Identifier}")
-        buffer.append(f"{prefix}Contexts:")
-        for context in library.Contexts:
-            buffer.append(f"{prefix}  - {context.Identifier}")
 
         return buffer
 
     def formatDocument(self, document: Document, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
-        buffer.append(f"{prefix}Entities:")
-        for entity in document.Entities:
-            for line in self.formatEntity(entity, level + 1):
-                buffer.append(line)
-        buffer.append(f"{prefix}Architectures:")
-        for architecture in document.Architectures:
-            for line in self.formatArchitecture(architecture, level + 1):
+        buffer.append(f"{prefix}Contexts:")
+        for context in document.Contexts.values():
+            for line in self.formatContext(context, level + 1):
                 buffer.append(line)
         buffer.append(f"{prefix}Packages:")
-        for package in document.Packages:
+        for package in document.Packages.values():
             if isinstance(package, Package):
                 gen = self.formatPackage
             else:
@@ -172,16 +168,21 @@ class PrettyPrint:
             for line in gen(package, level + 1):
                 buffer.append(line)
         buffer.append(f"{prefix}PackageBodies:")
-        for packageBodies in document.PackageBodies:
+        for packageBodies in document.PackageBodies.values():
             for line in self.formatPackageBody(packageBodies, level + 1):
                 buffer.append(line)
-        buffer.append(f"{prefix}Configurations:")
-        for configuration in document.Configurations:
-            for line in self.formatConfiguration(configuration, level + 1):
+        buffer.append(f"{prefix}Entities:")
+        for entity in document.Entities.values():
+            for line in self.formatEntity(entity, level + 1):
                 buffer.append(line)
-        buffer.append(f"{prefix}Contexts:")
-        for context in document.Contexts:
-            for line in self.formatContext(context, level + 1):
+        buffer.append(f"{prefix}Architectures:")
+        for architectures in document.Architectures.values():
+            for architecture in architectures.values():
+                for line in self.formatArchitecture(architecture, level + 1):
+                    buffer.append(line)
+        buffer.append(f"{prefix}Configurations:")
+        for configuration in document.Configurations.values():
+            for line in self.formatConfiguration(configuration, level + 1):
                 buffer.append(line)
 
         return buffer
