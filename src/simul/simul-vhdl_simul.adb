@@ -69,6 +69,9 @@ package body Simul.Vhdl_Simul is
    procedure Process_Executer (Self : Grt.Processes.Instance_Acc);
    pragma Convention (C, Process_Executer);
 
+   procedure Update_Signal_Individual_Assocs_Values
+     (Inst : Synth_Instance_Acc);
+
    type Ghdl_Signal_Ptr_Ptr is access all Ghdl_Signal_Ptr;
    function To_Ghdl_Signal_Ptr_Ptr is
       new Ada.Unchecked_Conversion (Memory_Ptr, Ghdl_Signal_Ptr_Ptr);
@@ -110,20 +113,32 @@ package body Simul.Vhdl_Simul is
 
    function Hook_Signal_Expr (Val : Valtyp) return Valtyp is
    begin
-      if Val.Val.Kind = Value_Alias then
-         declare
-            E : Signal_Entry renames Signals_Table.Table (Val.Val.A_Obj.S);
-         begin
-            return Create_Value_Memtyp
-              ((Val.Typ, E.Val + Val.Val.A_Off.Mem_Off));
-         end;
-      else
-         declare
-            E : Signal_Entry renames Signals_Table.Table (Val.Val.S);
-         begin
-            return Create_Value_Memtyp ((E.Typ, E.Val));
-         end;
-      end if;
+      case Val.Val.Kind is
+         when Value_Alias =>
+            declare
+               E : Signal_Entry renames Signals_Table.Table (Val.Val.A_Obj.S);
+            begin
+               return Create_Value_Memtyp
+                 ((Val.Typ, E.Val + Val.Val.A_Off.Mem_Off));
+            end;
+         when Value_Signal =>
+            declare
+               E : Signal_Entry renames Signals_Table.Table (Val.Val.S);
+            begin
+               return Create_Value_Memtyp ((E.Typ, E.Val));
+            end;
+         when Value_Sig_Val =>
+            return Create_Value_Memtyp ((Val.Typ, Val.Val.I_Vals));
+         when Value_Net
+           | Value_Wire
+           | Value_Memory
+           | Value_File
+           | Value_Quantity
+           | Value_Terminal
+           | Value_Dyn_Alias
+           | Value_Const =>
+            raise Internal_Error;
+      end case;
    end Hook_Signal_Expr;
 
    function Hook_Quantity_Expr (Val : Valtyp) return Valtyp is
@@ -331,6 +346,29 @@ package body Simul.Vhdl_Simul is
       end loop;
    end Create_Process_Drivers;
 
+   function Get_Sig_Mem (Val : Value_Acc; Idx : Uns32) return Memory_Ptr
+   is
+      Base : Memory_Ptr;
+   begin
+      case Val.Kind is
+         when Value_Signal =>
+            Base := Signals_Table.Table (Val.S).Sig;
+         when Value_Sig_Val =>
+            Base := Val.I_Sigs;
+         when Value_Net
+           | Value_Wire
+           | Value_Memory
+           | Value_File
+           | Value_Quantity
+           | Value_Terminal
+           | Value_Const
+           | Value_Dyn_Alias
+           | Value_Alias =>
+            raise Internal_Error;
+      end case;
+      return Sig_Index (Base, Idx);
+   end Get_Sig_Mem;
+
    type Read_Signal_Flag_Enum is
      (Read_Signal_Event,
       Read_Signal_Active,
@@ -407,10 +445,7 @@ package body Simul.Vhdl_Simul is
       pragma Assert (Pfx.Obj.Val /= null
                        and then Pfx.Obj.Val.Kind = Value_Signal);
       E := Read_Signal_Flag
-        ((Pfx.Targ_Type,
-          Sig_Index (Signals_Table.Table (Pfx.Obj.Val.S).Sig,
-                     Pfx.Off.Net_Off)),
-         Kind);
+        ((Pfx.Targ_Type, Get_Sig_Mem (Pfx.Obj.Val, Pfx.Off.Net_Off)), Kind);
       Res := Create_Value_Memory (Boolean_Type, Expr_Pool'Access);
       Write_U8 (Res.Val.Mem, Boolean'Pos (E));
       return Res;
@@ -696,9 +731,8 @@ package body Simul.Vhdl_Simul is
             while Is_Valid (It) loop
                El := Get_Element (It);
                Info := Synth_Target (Inst, El);
-               Sig := Signals_Table.Table (Info.Obj.Val.S).Sig;
-               Add_Wait_Sensitivity
-                 (Info.Targ_Type, Sig_Index (Sig, Info.Off.Net_Off));
+               Sig := Get_Sig_Mem (Info.Obj.Val, Info.Off.Net_Off);
+               Add_Wait_Sensitivity (Info.Targ_Type, Sig);
                Next (It);
             end loop;
          end;
@@ -715,6 +749,21 @@ package body Simul.Vhdl_Simul is
    function Resume_Wait_Statement (Inst : Synth_Instance_Acc;
                                    Stmt : Node) return Boolean is
    begin
+      --  For all procedures in the activation chain, update individual
+      --  signal associations.
+      declare
+         Cinst : Synth_Instance_Acc;
+      begin
+         Cinst := Inst;
+         loop
+            if Get_Indiv_Signal_Assoc_Flag (Cinst) then
+               Update_Signal_Individual_Assocs_Values (Cinst);
+            end if;
+            exit when not Get_Indiv_Signal_Assoc_Parent_Flag (Cinst);
+            Cinst := Get_Instance_Parent (Cinst);
+         end loop;
+      end;
+
       --  LRM93 8.1
       --  The suspended process will resume, at the latest, immediately
       --  after the timeout interval has expired.
@@ -2668,14 +2717,15 @@ package body Simul.Vhdl_Simul is
       end case;
    end Register_Prefix;
 
-   function Alloc_Signal_Memory (Vtype : Type_Acc) return Memory_Ptr
+   function Alloc_Signal_Memory
+     (Vtype : Type_Acc; Pool : Areapools.Areapool_Acc) return Memory_Ptr
    is
       function To_Memory_Ptr is new Ada.Unchecked_Conversion
         (System.Address, Memory_Ptr);
       M : System.Address;
    begin
-      Areapools.Allocate (Global_Pool,
-                          M, Sig_Size * Size_Type (Vtype.W), Sig_Size);
+      Areapools.Allocate
+        (Pool.all, M, Sig_Size * Size_Type (Vtype.W), Sig_Size);
       return To_Memory_Ptr (M);
    end Alloc_Signal_Memory;
 
@@ -2694,7 +2744,7 @@ package body Simul.Vhdl_Simul is
       E : Signal_Entry renames Signals_Table.Table (Idx);
       S : Ghdl_Signal_Ptr;
    begin
-      E.Sig := Alloc_Signal_Memory (E.Typ);
+      E.Sig := Alloc_Signal_Memory (E.Typ, Global_Pool'Access);
       case E.Kind is
          when Mode_Guard =>
             Create_Guard_Signal (Idx);
@@ -3089,7 +3139,7 @@ package body Simul.Vhdl_Simul is
             if Out_Conv /= Null_Node then
                --  From formal to actual.
                Ctyp := C.Actual.Typ;
-               Csig := Alloc_Signal_Memory (Ctyp);
+               Csig := Alloc_Signal_Memory (Ctyp, Global_Pool'Access);
                Cval := Alloc_Memory (Ctyp, Global_Pool'Access);
                Create_Shadow_Signal (Csig, Cval, Ctyp);
                Form2 := (Ctyp, Csig);
@@ -3124,7 +3174,7 @@ package body Simul.Vhdl_Simul is
 
             if In_Conv /= Null_Node then
                Ctyp := C.Formal.Typ;
-               Csig := Alloc_Signal_Memory (Ctyp);
+               Csig := Alloc_Signal_Memory (Ctyp, Global_Pool'Access);
                Cval := Alloc_Memory (Ctyp, Global_Pool'Access);
                Create_Shadow_Signal (Csig, Cval, Ctyp);
                Act2 := (Ctyp, Csig);
@@ -3223,8 +3273,93 @@ package body Simul.Vhdl_Simul is
       end loop;
    end Create_Connects;
 
-   procedure Create_Terminals
+   procedure Update_Sig_Val (Typ : Type_Acc;
+                             Sigs : Memory_Ptr;
+                             Vals : Memory_Ptr)
    is
+      Sig : Ghdl_Signal_Ptr;
+   begin
+      case Typ.Kind is
+         when Type_Logic
+           | Type_Bit
+           | Type_Discrete
+           | Type_Float =>
+            Sig := Read_Sig (Sigs);
+            Write_Ghdl_Value ((Typ, Vals), Sig.Value_Ptr.all);
+         when Type_Vector
+           | Type_Array =>
+            declare
+               Len : constant Uns32 := Typ.Abound.Len;
+               El : constant Type_Acc := Typ.Arr_El;
+            begin
+               for I in 1 .. Len loop
+                  Update_Sig_Val (El,
+                                  Sig_Index (Sigs, (Len - I) * El.W),
+                                  Vals + Size_Type (I - 1) * El.Sz);
+               end loop;
+            end;
+         when Type_Record =>
+            for I in Typ.Rec.E'Range loop
+               declare
+                  E : Rec_El_Type renames Typ.Rec.E (I);
+               begin
+                  Update_Sig_Val (E.Typ,
+                                  Sig_Index (Sigs, E.Offs.Net_Off),
+                                  Vals + E.Offs.Mem_Off);
+               end;
+            end loop;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Update_Sig_Val;
+
+   procedure Update_Signal_Individual_Assocs_Values (Inst : Synth_Instance_Acc)
+   is
+      Bod : constant Node := Get_Source_Scope (Inst);
+      Spec : constant Node := Get_Subprogram_Specification (Bod);
+      Inter : Node;
+      Obj : Valtyp;
+   begin
+      Inter := Get_Interface_Declaration_Chain (Spec);
+      while Inter /= Null_Node loop
+         Obj := Get_Value (Inst, Inter);
+         if Obj.Val.Kind = Value_Sig_Val then
+            Update_Sig_Val (Obj.Typ, Obj.Val.I_Sigs, Obj.Val.I_Vals);
+         end if;
+         Inter := Get_Chain (Inter);
+      end loop;
+   end Update_Signal_Individual_Assocs_Values;
+
+   function Hook_Create_Value_For_Signal_Individual_Assocs
+     (Inst : Synth_Instance_Acc;
+      Assocs : Assoc_Array;
+      Typ : Type_Acc) return Valtyp
+   is
+      Sigs : Memory_Ptr;
+      Vals : Memory_Ptr;
+   begin
+      Set_Indiv_Signal_Assoc_Flag (Inst);
+
+      Sigs := Alloc_Signal_Memory (Typ, Instance_Pool);
+      for I in Assocs'Range loop
+         declare
+            A : Assoc_Record renames Assocs (I);
+         begin
+            --  TODO: individual assoc using individual assoc formal.
+            Copy_Memory
+              (Sig_Index (Sigs, A.Form_Off.Net_Off),
+               Sig_Index (Exec_Sig_Sig (A.Act_Base.Val), A.Act_Off.Net_Off),
+               Size_Type (A.Act_Typ.W) * Sig_Size);
+         end;
+      end loop;
+
+      Vals := Alloc_Memory (Typ, Instance_Pool);
+      Update_Sig_Val (Typ, Sigs, Vals);
+
+      return Create_Value_Sig_Val (Sigs, Vals, Typ, Instance_Pool);
+   end Hook_Create_Value_For_Signal_Individual_Assocs;
+
+   procedure Create_Terminals is
    begin
       for I in Terminal_Table.First .. Terminal_Table.Last loop
          declare
@@ -3605,6 +3740,9 @@ package body Simul.Vhdl_Simul is
       Synth.Vhdl_Expr.Hook_Dot_Attribute := Exec_Dot_Attribute'Access;
 
       Synth.Vhdl_Static_Proc.Hook_Finish := Exec_Finish'Access;
+
+      Synth.Vhdl_Stmts.Hook_Create_Value_For_Signal_Individual_Assocs :=
+        Hook_Create_Value_For_Signal_Individual_Assocs'Access;
 
       -- if Flag_Interractive then
       --    Debug (Reason_Elab);

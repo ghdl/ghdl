@@ -230,7 +230,8 @@ package body Synth.Vhdl_Insts is
            | Value_File
            | Value_Quantity
            | Value_Terminal
-           | Value_Dyn_Alias =>
+           | Value_Dyn_Alias
+           | Value_Sig_Val =>
             raise Internal_Error;
       end case;
    end Hash_Const;

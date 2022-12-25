@@ -34,6 +34,7 @@ package body Elab.Vhdl_Values is
            | Value_Wire
            | Value_Signal
            | Value_Dyn_Alias
+           | Value_Sig_Val
            | Value_Quantity
            | Value_Terminal =>
             return False;
@@ -268,6 +269,26 @@ package body Elab.Vhdl_Values is
       end if;
    end Strip_Const;
 
+   function Create_Value_Sig_Val (Sigs : Memory_Ptr;
+                                  Vals : Memory_Ptr;
+                                  Pool : Areapool_Acc) return Value_Acc
+   is
+      subtype Value_Type_Sig_Val is Value_Type (Value_Sig_Val);
+      function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Sig_Val);
+   begin
+      return To_Value_Acc (Alloc (Pool, (Kind => Value_Sig_Val,
+                                         I_Sigs => Sigs,
+                                         I_Vals => Vals)));
+   end Create_Value_Sig_Val;
+
+   function Create_Value_Sig_Val (Sigs : Memory_Ptr;
+                                  Vals : Memory_Ptr;
+                                  Typ : Type_Acc;
+                                  Pool : Areapool_Acc) return Valtyp is
+   begin
+      return (Typ, Create_Value_Sig_Val (Sigs, Vals, Pool));
+   end Create_Value_Sig_Val;
+
    procedure Write_Value (Dest : Memory_Ptr; Vt : Valtyp)
    is
       Mt : Memtyp;
@@ -315,6 +336,8 @@ package body Elab.Vhdl_Values is
                                             Src.Val.D_Poff, Src.Val.D_Ptyp,
                                             Src.Val.D_Voff, Src.Val.D_Eoff,
                                             Current_Pool));
+         when Value_Sig_Val =>
+            raise Internal_Error;
       end case;
       return Res;
    end Copy;
@@ -545,7 +568,8 @@ package body Elab.Vhdl_Values is
          when Value_Net
            | Value_Wire
            | Value_Signal
-           | Value_Dyn_Alias =>
+           | Value_Dyn_Alias
+           | Value_Sig_Val =>
             raise Internal_Error;
          when Value_Memory =>
             return (V.Typ, V.Val.Mem);

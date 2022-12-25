@@ -464,7 +464,8 @@ package body Synth.Vhdl_Context is
             return True;
          when Value_Net
            | Value_Signal
-           | Value_Dyn_Alias =>
+           | Value_Dyn_Alias
+           | Value_Sig_Val =>
             return False;
          when Value_Quantity
            | Value_Terminal =>

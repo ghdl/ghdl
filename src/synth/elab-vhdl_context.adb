@@ -53,6 +53,7 @@ package body Elab.Vhdl_Context is
         new Synth_Instance_Type'(Max_Objs => Global_Info.Nbr_Objects,
                                  Is_Const => False,
                                  Is_Error => False,
+                                 Flag1 | Flag2 => False,
                                  Id => Inst_Tables.Last + 1,
                                  Block_Scope => Global_Info,
                                  Up_Block => null,
@@ -101,6 +102,7 @@ package body Elab.Vhdl_Context is
       Res := new Synth_Instance_Type'(Max_Objs => Nbr_Objs,
                                       Is_Const => False,
                                       Is_Error => False,
+                                      Flag1 | Flag2 => False,
                                       Id => Inst_Tables.Last + 1,
                                       Block_Scope => Scope,
                                       Up_Block => Parent,
@@ -142,6 +144,7 @@ package body Elab.Vhdl_Context is
       Res := new Synth_Instance_Type'(Max_Objs => Object_Slot_Type (Len),
                                       Is_Const => False,
                                       Is_Error => False,
+                                      Flag1 | Flag2 => False,
                                       Id => Inst_Tables.Last + 1,
                                       Block_Scope => Info,
                                       Up_Block => Parent,
@@ -236,6 +239,28 @@ package body Elab.Vhdl_Context is
    begin
       return Inst.Foreign;
    end Get_Instance_Foreign;
+
+   procedure Set_Indiv_Signal_Assoc_Flag (Inst : Synth_Instance_Acc) is
+   begin
+      Inst.Flag1 := True;
+   end Set_Indiv_Signal_Assoc_Flag;
+
+   function Get_Indiv_Signal_Assoc_Flag (Inst : Synth_Instance_Acc)
+                                        return Boolean is
+   begin
+      return Inst.Flag1;
+   end Get_Indiv_Signal_Assoc_Flag;
+
+   procedure Set_Indiv_Signal_Assoc_Parent_Flag (Inst : Synth_Instance_Acc) is
+   begin
+      Inst.Flag2 := True;
+   end Set_Indiv_Signal_Assoc_Parent_Flag;
+
+   function Get_Indiv_Signal_Assoc_Parent_Flag (Inst : Synth_Instance_Acc)
+                                               return Boolean is
+   begin
+      return Inst.Flag2;
+   end Get_Indiv_Signal_Assoc_Parent_Flag;
 
    procedure Add_Extra_Instance (Inst : Synth_Instance_Acc;
                                  Extra : Synth_Instance_Acc) is

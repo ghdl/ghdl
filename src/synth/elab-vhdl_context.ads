@@ -74,6 +74,8 @@ package Elab.Vhdl_Context is
 
    procedure Set_Error (Inst : Synth_Instance_Acc);
 
+   --  Get/Set the const flag.
+   --  This is for subprograms, and set when all parameters are static.
    function Get_Instance_Const (Inst : Synth_Instance_Acc) return Boolean;
    procedure Set_Instance_Const (Inst : Synth_Instance_Acc; Val : Boolean);
 
@@ -89,6 +91,19 @@ package Elab.Vhdl_Context is
 
    procedure Set_Instance_Foreign (Inst : Synth_Instance_Acc; N : Int32);
    function Get_Instance_Foreign (Inst : Synth_Instance_Acc) return Int32;
+
+   --  For simulation: set a flag if a signal parameter has individual
+   --  association.  In that case, the value of the parameter must be
+   --  updated after a wait statement.
+   procedure Set_Indiv_Signal_Assoc_Flag (Inst : Synth_Instance_Acc);
+   function Get_Indiv_Signal_Assoc_Flag (Inst : Synth_Instance_Acc)
+                                        return Boolean;
+
+   --  For simulation: set if a parent has the Indiv_Signal_Assoc_Flag set.
+   --  In that case, update must continue in the parent.
+   procedure Set_Indiv_Signal_Assoc_Parent_Flag (Inst : Synth_Instance_Acc);
+   function Get_Indiv_Signal_Assoc_Parent_Flag (Inst : Synth_Instance_Acc)
+                                               return Boolean;
 
    --  Add/Get extra instances.
    --  Those instances are verification units.
@@ -232,6 +247,13 @@ private
       --  True if a fatal error has been detected that aborts the synthesis
       --  of this instance.
       Is_Error : Boolean;
+
+      --  For simulation: set if a subprogram has a signal parameter
+      --  associated by individual elements.
+      Flag1 : Boolean;
+
+      --  For simulation: set if a parent instance has Flag1 set.
+      Flag2 : Boolean;
 
       Id : Instance_Id_Type;
 

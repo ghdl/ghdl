@@ -60,7 +60,10 @@ package Elab.Vhdl_Values is
       Value_Alias,
 
       --  Used only for associations.
-      Value_Dyn_Alias
+      Value_Dyn_Alias,
+
+      --  Used only for individual signal associations in simulation
+      Value_Sig_Val
      );
 
    type Value_Type (Kind : Value_Kind);
@@ -114,6 +117,9 @@ package Elab.Vhdl_Values is
             D_Ptyp : Type_Acc;  --  Type of the prefix (after offset).
             D_Voff : Uns32;     --  Variable offset
             D_Eoff : Uns32;     --  Fixed offset.
+         when Value_Sig_Val =>
+            I_Sigs : Memory_Ptr;
+            I_Vals : Memory_Ptr;
       end case;
    end record;
 
@@ -186,6 +192,11 @@ package Elab.Vhdl_Values is
 
    function Create_Value_Const (Val : Valtyp; Loc : Node; Pool : Areapool_Acc)
                                return Valtyp;
+
+   function Create_Value_Sig_Val (Sigs : Memory_Ptr;
+                                  Vals : Memory_Ptr;
+                                  Typ : Type_Acc;
+                                  Pool : Areapool_Acc) return Valtyp;
 
    --  If VAL is a const, replace it by its value.
    procedure Strip_Const (Vt : in out Valtyp);

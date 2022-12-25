@@ -2060,6 +2060,7 @@ package body Synth.Vhdl_Expr is
                Res := Synth_Name (Syn_Inst, Expr);
                if Res.Val /= null then
                   if (Res.Val.Kind = Value_Signal
+                        or else Res.Val.Kind = Value_Sig_Val
                         or else (Res.Val.Kind = Value_Alias
                                    and then Res.Val.A_Obj.Kind = Value_Signal))
                   then

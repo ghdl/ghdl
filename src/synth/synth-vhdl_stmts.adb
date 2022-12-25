@@ -770,7 +770,8 @@ package body Synth.Vhdl_Stmts is
                  | Value_Const
                  | Value_Alias
                  | Value_Dyn_Alias
-                 | Value_Signal =>
+                 | Value_Signal
+                 | Value_Sig_Val =>
                   raise Internal_Error;
             end case;
          when Target_Aggregate =>
@@ -2031,17 +2032,6 @@ package body Synth.Vhdl_Stmts is
       return Count;
    end Count_Individual_Associations;
 
-   type Assoc_Record is record
-      Formal : Node;
-      Form_Off : Value_Offsets;
-
-      Act_Base : Valtyp;
-      Act_Typ : Type_Acc;
-      Act_Off : Value_Offsets;
-      Act_Dyn : Dyn_Name;
-   end record;
-
-   type Assoc_Array is array (Natural range <>) of Assoc_Record;
    type Assoc_Array_Acc is access Assoc_Array;
    procedure Free_Assoc_Array is new Ada.Unchecked_Deallocation
      (Assoc_Array, Assoc_Array_Acc);
@@ -2145,17 +2135,23 @@ package body Synth.Vhdl_Stmts is
                             A.Act_Typ.Sz);
             end;
          end loop;
-         declare
-            D : Destroy_Type;
-         begin
-            Destroy_Init (D, Subprg_Inst);
-            Destroy_Object (D, Inter);
-            Destroy_Finish (D);
-         end;
+      elsif Flags.Flag_Simulation then
+         Res := Hook_Create_Value_For_Signal_Individual_Assocs
+           (Subprg_Inst, Assocs.all, Formal_Typ);
       else
          Res := No_Valtyp;
          raise Internal_Error;
       end if;
+
+      --  Destroy the object.  It will be recreated by
+      --  Synth_Subprogram_Association.
+      declare
+         D : Destroy_Type;
+      begin
+         Destroy_Init (D, Subprg_Inst);
+         Destroy_Object (D, Inter);
+         Destroy_Finish (D);
+      end;
 
       Free_Assoc_Array (Assocs);
 

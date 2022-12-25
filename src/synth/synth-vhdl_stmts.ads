@@ -211,6 +211,25 @@ package Synth.Vhdl_Stmts is
                                Val : Valtyp;
                                Loc : Node);
 
+   type Assoc_Record is record
+      Formal : Node;
+      Form_Off : Value_Offsets;
+
+      Act_Base : Valtyp;
+      Act_Typ : Type_Acc;
+      Act_Off : Value_Offsets;
+      Act_Dyn : Dyn_Name;
+   end record;
+
+   type Assoc_Array is array (Natural range <>) of Assoc_Record;
+
+   --  For simulation: create a value for individual signal associations.
+   type Create_Value_For_Signal_Individual_Assocs_Acc is
+     access function (Inst : Synth_Instance_Acc;
+                      Assocs : Assoc_Array;
+                      Typ : Type_Acc) return Valtyp;
+   Hook_Create_Value_For_Signal_Individual_Assocs :
+     Create_Value_For_Signal_Individual_Assocs_Acc;
 
 private
    --  There are 2 execution mode:

@@ -280,6 +280,8 @@ package body Elab.Vhdl_Debug is
             Disp_Memtyp (Get_Memtyp (Vt), Vtype);
          when Value_Dyn_Alias =>
             Put ("dyn alias");
+         when Value_Sig_Val =>
+            Put ("sig val");
          when Value_Memory =>
             Disp_Memtyp (Get_Memtyp (Vt), Vtype);
       end case;
