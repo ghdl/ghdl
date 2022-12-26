@@ -910,11 +910,17 @@ package body Elab.Vhdl_Insts is
             Em : Mark_Type;
             Val : Valtyp;
             Inter_Typ : Type_Acc;
+            Defval : Node;
          begin
             Mark_Expr_Pool (Em);
             Inter_Typ := Elab_Declaration_Type (Top_Inst, Inter);
-            Val := Synth_Expression_With_Type
-              (Top_Inst, Get_Default_Value (Inter), Inter_Typ);
+            Defval := Get_Default_Value (Inter);
+            if Defval /= Null_Node then
+               Val := Synth_Expression_With_Type (Top_Inst, Defval, Inter_Typ);
+            else
+               --  Only for simulation, expect override.
+               Val := Create_Value_Default (Inter_Typ);
+            end if;
             pragma Assert (Is_Static (Val.Val));
             Val := Unshare (Val, Instance_Pool);
             Val.Typ := Unshare_Type_Instance (Val.Typ, Inter_Typ);

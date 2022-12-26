@@ -79,7 +79,7 @@ package body Ghdlsimul is
       Lib_Unit : Node;
       Inst : Synth_Instance_Acc;
    begin
-      Common_Compile_Elab (Cmd_Name, Args, False, Opt_Arg, Config);
+      Common_Compile_Elab (Cmd_Name, Args, True, Opt_Arg, Config);
 
       for I in Opt_Arg .. Args'Last loop
          if Args (I).all = "--expect-failure" then
