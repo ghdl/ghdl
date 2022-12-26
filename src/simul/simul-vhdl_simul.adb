@@ -1019,13 +1019,35 @@ package body Simul.Vhdl_Simul is
       end case;
    end Disconnect_Signal;
 
-   procedure Disconnect_Signal_Target (Target : Target_Info)
-   is
-      E : Signal_Entry renames Signals_Table.Table (Target.Obj.Val.S);
-      Sig : Memtyp;
+   procedure Disconnect_Signal_Target (Inst : Synth_Instance_Acc;
+                                       Target : Target_Info) is
    begin
-      Sig := (Target.Targ_Type, Sig_Index (E.Sig, Target.Off.Net_Off));
-      Disconnect_Signal (Sig);
+      case Target.Kind is
+         when Target_Simple =>
+            declare
+               Sig : Memtyp;
+            begin
+               Sig := (Target.Targ_Type,
+                       Get_Sig_Mem (Target.Obj.Val, Target.Off.Net_Off));
+               Disconnect_Signal (Sig);
+            end;
+         when Target_Aggregate =>
+            declare
+               Choice : Node;
+               Assoc_Expr : Node;
+               Sub_Targ : Target_Info;
+            begin
+               Choice := Get_Association_Choices_Chain (Target.Aggr);
+               while Choice /= Null_Node loop
+                  Assoc_Expr := Get_Associated_Expr (Choice);
+                  Sub_Targ := Synth_Target (Inst, Assoc_Expr);
+                  Disconnect_Signal_Target (Inst, Sub_Targ);
+                  Choice := Get_Chain (Choice);
+               end loop;
+            end;
+         when Target_Memory =>
+            raise Internal_Error;
+      end case;
    end Disconnect_Signal_Target;
 
    function Execute_Maybe_Guarded_Assignment (Inst : Synth_Instance_Acc;
@@ -1038,7 +1060,7 @@ package body Simul.Vhdl_Simul is
       if Guard /= Null_Node
         and then not Execute_Condition (Inst, Guard)
       then
-         Disconnect_Signal_Target (Targ);
+         Disconnect_Signal_Target (Inst, Targ);
          return True;
       else
          return False;
