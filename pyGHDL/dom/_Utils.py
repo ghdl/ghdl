@@ -30,8 +30,11 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+from typing import Union
+
 from pyTooling.Decorators import export
 
+from pyGHDL.dom.Symbol import LibraryReferenceSymbol, PackageReferenceSymbol, PackageMembersReferenceSymbol, AllPackageMembersReferenceSymbol
 from pyVHDLModel.SyntaxModel import Mode
 
 from pyGHDL.libghdl import LibGHDLException, name_table, errorout_memory, files_map, file_comments
@@ -134,3 +137,31 @@ def GetModeOfNode(node: Iir) -> Mode:
         return __MODE_TRANSLATION[nodes.Get_Mode(node)]
     except KeyError as ex:
         raise DOMException(f"Unknown mode '{ex.args[0]}'.") from ex
+
+def GetPackageMemberSymbol(node: Iir) -> Union[PackageMembersReferenceSymbol, AllPackageMembersReferenceSymbol]:
+    kind = GetIirKindOfNode(node)
+    prefixName = GetPackageSymbol(nodes.Get_Prefix(node))
+    if kind == nodes.Iir_Kind.Selected_Name:
+        name = GetNameOfNode(node)
+        return PackageMembersReferenceSymbol(node, name, prefixName)
+    elif kind == nodes.Iir_Kind.Selected_By_All_Name:
+        return AllPackageMembersReferenceSymbol(node, prefixName)
+    else:
+        raise DOMException()
+
+def GetPackageSymbol(node: Iir) -> PackageReferenceSymbol:
+    kind = GetIirKindOfNode(node)
+    if kind == nodes.Iir_Kind.Selected_Name:
+        name = GetNameOfNode(node)
+        prefixName = GetLibrarySymbol(nodes.Get_Prefix(node))
+        return PackageReferenceSymbol(node, name, prefixName)
+    else:
+        raise DOMException()
+
+def GetLibrarySymbol(node: Iir) -> LibraryReferenceSymbol:
+    kind = GetIirKindOfNode(node)
+    if kind == nodes.Iir_Kind.Simple_Name:
+        name = GetNameOfNode(node)
+        return LibraryReferenceSymbol(node, name)
+    else:
+        raise DOMException()

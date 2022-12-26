@@ -69,7 +69,7 @@ from pyGHDL.libghdl import utils
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin, Position, DOMException
-from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode, GetIirKindOfNode
+from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode, GetPackageMemberSymbol
 from pyGHDL.dom._Translate import (
     GetGenericsFromChainedNodes,
     GetPortsFromChainedNodes,
@@ -77,7 +77,7 @@ from pyGHDL.dom._Translate import (
     GetConcurrentStatementsFromChainedNodes,
 )
 from pyGHDL.dom.Names import SimpleName
-from pyGHDL.dom.Symbol import EntitySymbol, LibraryReferenceSymbol,     PackageReferenceSymbol, PackageMembersReferenceSymbol, AllPackageMembersReferenceSymbol, ContextReferenceSymbol
+from pyGHDL.dom.Symbol import EntitySymbol, ContextReferenceSymbol, LibraryReferenceSymbol
 
 
 @export
@@ -94,41 +94,10 @@ class UseClause(VHDLModel_UseClause, DOMMixin):
         DOMMixin.__init__(self, useNode)
 
     @classmethod
-    def GetPackageMemberSymbol(cls, node: Iir) -> Union[PackageMembersReferenceSymbol, AllPackageMembersReferenceSymbol]:
-        kind = GetIirKindOfNode(node)
-        prefixName = cls.GetPackageSymbol(nodes.Get_Prefix(node))
-        if kind == nodes.Iir_Kind.Selected_Name:
-            name = GetNameOfNode(node)
-            return PackageMembersReferenceSymbol(node, name, prefixName)
-        elif kind == nodes.Iir_Kind.Selected_By_All_Name:
-            return AllPackageMembersReferenceSymbol(node, prefixName)
-        else:
-            raise DOMException()
-
-    @classmethod
-    def GetPackageSymbol(cls, node: Iir) -> PackageReferenceSymbol:
-        kind = GetIirKindOfNode(node)
-        if kind == nodes.Iir_Kind.Selected_Name:
-            name = GetNameOfNode(node)
-            prefixName = cls.GetLibrarySymbol(nodes.Get_Prefix(node))
-            return PackageReferenceSymbol(node, name, prefixName)
-        else:
-            raise DOMException()
-
-    @classmethod
-    def GetLibrarySymbol(cls, node: Iir) -> LibraryReferenceSymbol:
-        kind = GetIirKindOfNode(node)
-        if kind == nodes.Iir_Kind.Simple_Name:
-            name = GetNameOfNode(node)
-            return LibraryReferenceSymbol(node, name)
-        else:
-            raise DOMException()
-
-    @classmethod
     def parse(cls, useNode: Iir):
-        uses = [cls.GetPackageMemberSymbol(nodes.Get_Selected_Name(useNode))]
+        uses = [GetPackageMemberSymbol(nodes.Get_Selected_Name(useNode))]
         for use in utils.chain_iter(nodes.Get_Use_Clause_Chain(useNode)):
-            uses.append(cls.GetPackageMemberSymbol(nodes.Get_Selected_Name(use)))
+            uses.append(GetPackageMemberSymbol(nodes.Get_Selected_Name(use)))
 
         return cls(useNode, uses)
 
@@ -328,11 +297,10 @@ class Context(VHDLModel_Context, DOMMixin):
         self,
         node: Iir,
         identifier: str,
-        libraryReferences: Iterable[LibraryClause] = None,
-        packageReferences: Iterable[UseClause] = None,
+        references: Iterable[Union[LibraryClause, UseClause]] = None,
         documentation: str = None,
     ):
-        super().__init__(identifier, libraryReferences, packageReferences, documentation)
+        super().__init__(identifier, references, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -347,7 +315,8 @@ class Context(VHDLModel_Context, DOMMixin):
         for item in utils.chain_iter(nodes.Get_Context_Items(contextNode)):
             kind = GetIirKindOfNode(item)
             if kind is nodes.Iir_Kind.Library_Clause:
-                names.append(SimpleName(item, GetNameOfNode(item)))
+                libraryIdentifier = GetNameOfNode(item)
+                names.append(LibraryReferenceSymbol(item, libraryIdentifier))
                 if nodes.Get_Has_Identifier_List(item):
                     continue
 
@@ -355,6 +324,8 @@ class Context(VHDLModel_Context, DOMMixin):
                 names = []
             elif kind is nodes.Iir_Kind.Use_Clause:
                 items.append(UseClause.parse(item))
+            elif kind is nodes.Iir_Kind.Context_Reference:
+                items.append(ContextReference.parse(item))
             else:
                 pos = Position.parse(item)
                 raise DOMException(f"Unknown context item kind '{kind.name}' in context at line {pos.Line}.")
