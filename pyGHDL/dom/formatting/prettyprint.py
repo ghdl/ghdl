@@ -114,7 +114,7 @@ class PrettyPrint:
     # def __init__(self):
     #     self._buffer = []
 
-    def CleanupDocumentationBlocks(self, documentationContent: str,  level: int = 0):
+    def CleanupDocumentationBlocks(self, documentationContent: str, level: int = 0):
         prefix = "  " * level
         if documentationContent is None:
             return prefix
@@ -303,10 +303,7 @@ class PrettyPrint:
         buffer = []
         prefix = "  " * level
         documentationFirstLine = self.CleanupDocumentationBlocks(packageBody.Documentation)
-        buffer.append(
-            f"{prefix}- Name: {packageBody.Identifier}\n"
-            f"{prefix}  Documentation: {documentationFirstLine}"
-        )
+        buffer.append(f"{prefix}- Name: {packageBody.Identifier}\n{prefix}  Documentation: {documentationFirstLine}")
         buffer.append(f"{prefix}  Declared:")
         for item in packageBody.DeclaredItems:
             for line in self.formatDeclaredItems(item, level + 1):

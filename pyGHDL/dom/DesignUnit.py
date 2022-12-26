@@ -257,7 +257,9 @@ class PackageBody(VHDLModel_PackageBody, DOMMixin):
         packageName = GetNameOfNode(packageBodyNode)
         packageSymbol = PackageSymbol(packageBodyNode, packageName)
         documentation = GetDocumentationOfNode(packageBodyNode)
-        declaredItems = GetDeclaredItemsFromChainedNodes(nodes.Get_Declaration_Chain(packageBodyNode), "package", packageName)
+        declaredItems = GetDeclaredItemsFromChainedNodes(
+            nodes.Get_Declaration_Chain(packageBodyNode), "package", packageName
+        )
 
         # FIXME: read use clauses
 

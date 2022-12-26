@@ -81,7 +81,8 @@ from pyGHDL.dom.DesignUnit import (
     PackageInstantiation,
     LibraryClause,
     UseClause,
-    ContextReference, )
+    ContextReference,
+)
 from pyGHDL.dom.Symbol import LibraryReferenceSymbol
 from pyGHDL.dom.PSL import VerificationUnit, VerificationProperty, VerificationMode
 

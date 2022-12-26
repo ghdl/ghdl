@@ -34,7 +34,12 @@ from typing import Union
 
 from pyTooling.Decorators import export
 
-from pyGHDL.dom.Symbol import LibraryReferenceSymbol, PackageReferenceSymbol, PackageMembersReferenceSymbol, AllPackageMembersReferenceSymbol
+from pyGHDL.dom.Symbol import (
+    LibraryReferenceSymbol,
+    PackageReferenceSymbol,
+    PackageMembersReferenceSymbol,
+    AllPackageMembersReferenceSymbol,
+)
 from pyVHDLModel.SyntaxModel import Mode
 
 from pyGHDL.libghdl import LibGHDLException, name_table, errorout_memory, files_map, file_comments
