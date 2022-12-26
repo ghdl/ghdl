@@ -9,7 +9,7 @@ use     IEEE.numeric_std.all;
 
 
 -- Useful utility functions and types.
-package Utilities is
+package Utilities_pkg is
 	type freq is range integer'low to integer'high units
 		Hz;
 		kHz = 1000 Hz;
@@ -33,7 +33,7 @@ package Utilities is
 end package;
 
 
-package body Utilities is
+package body Utilities_pkg is
 	function simulation return boolean is
 		variable result : boolean := FALSE;
 	begin

@@ -7,8 +7,10 @@ library IEEE;
 use     IEEE.std_logic_1164.all;
 use     IEEE.numeric_std.all;
 
-use     work.Utilities.all;
-use     work.StopWatch_pkg.all;
+library lib_Utilities;
+use     lib_Utilities.Utilities_pkg.all;
+
+use     lib_StopWatch.StopWatch_pkg.all;
 
 
 -- Toplevel module to demonstrate the translation of 4 slide-switches to 1 digit 7-segment display.

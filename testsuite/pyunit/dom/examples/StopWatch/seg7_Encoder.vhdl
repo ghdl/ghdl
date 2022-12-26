@@ -3,12 +3,7 @@
 --
 -- A generic counter module used in the StopWatch example.
 --
-library IEEE;
-use     IEEE.std_logic_1164.all;
-use     IEEE.numeric_std.all;
-
-use     work.Utilities.all;
-use     work.StopWatch_pkg.all;
+context work.StopWatch_ctx;
 
 
 -- Encoder that translates from 4-bit binary (BCD) to 7-segment code.

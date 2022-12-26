@@ -34,7 +34,7 @@ from pathlib import Path
 from unittest import TestCase
 
 from pyGHDL.dom.NonStandard import Design, Document
-
+from pyGHDL.dom.formatting.prettyprint import PrettyPrint
 
 if __name__ == "__main__":
     print("ERROR: you called a testcase declaration file as an executable module.")
@@ -47,51 +47,56 @@ class Designs(TestCase):
     _sourceDirectory: Path = _root / "dom/examples/StopWatch"
 
     _packageFiles = (
-        Path("Utilities.pkg.vhdl"),
-        Path("StopWatch.pkg.vhdl"),
+        ("lib_Utilities", Path("Utilities.pkg.vhdl")),
+        ("lib_Utilities", Path("Utilities.ctx.vhdl")),
+        ("lib_StopWatch", Path("StopWatch.pkg.vhdl")),
+        ("lib_StopWatch", Path("StopWatch.ctx.vhdl")),
     )
     _encoderFiles = _packageFiles + (
-        Path("seg7_Encoder.vhdl"),
-        Path("toplevel.Encoder.vhdl"),
+        ("lib_StopWatch", Path("seg7_Encoder.vhdl")),
+        ("lib_StopWatch", Path("toplevel.Encoder.vhdl")),
     )
     _displayFiles = _packageFiles + (
-        Path("Counter.vhdl"),
-        Path("seg7_Encoder.vhdl"),
-        Path("seg7_Display.vhdl"),
-        Path("toplevel.Display.vhdl"),
+        ("lib_StopWatch", Path("Counter.vhdl")),
+        ("lib_StopWatch", Path("seg7_Encoder.vhdl")),
+        ("lib_StopWatch", Path("seg7_Display.vhdl")),
+        ("lib_StopWatch", Path("toplevel.Display.vhdl")),
     )
     _stopwatchFiles = _packageFiles + (
-        Path("Counter.vhdl"),
-        Path("seg7_Encoder.vhdl"),
-        Path("seg7_Display.vhdl"),
-        Path("StopWatch.vhdl"),
-        Path("Debouncer.vhdl"),
-        Path("toplevel.StopWatch.vhdl"),
+        ("lib_Utilities", Path("Counter.vhdl")),
+        ("lib_StopWatch", Path("seg7_Encoder.vhdl")),
+        ("lib_StopWatch", Path("seg7_Display.vhdl")),
+        ("lib_StopWatch", Path("StopWatch.vhdl")),
+        ("lib_Utilities", Path("Debouncer.vhdl")),
+        ("lib_StopWatch", Path("toplevel.StopWatch.vhdl")),
     )
 
 
 class Display(Designs):
     def test_Encoder(self):
         design = Design()
-        for file in self._encoderFiles:
+        for lib, file in self._encoderFiles:
+            library = design.GetLibrary(lib)
             document = Document(self._sourceDirectory / file)
-            design.Documents.append(document)
+            design.AddDocument(document, library)
 
         self.assertEqual(len(self._encoderFiles), len(design.Documents))
 
     def test_Display(self):
         design = Design()
-        for file in self._displayFiles:
+        for lib, file in self._displayFiles:
+            library = design.GetLibrary(lib)
             document = Document(self._sourceDirectory / file)
-            design.Documents.append(document)
+            design.AddDocument(document, library)
 
         self.assertEqual(len(self._displayFiles), len(design.Documents))
 
     def test_StopWatch(self):
         design = Design()
-        for file in self._stopwatchFiles:
+        for lib, file in self._stopwatchFiles:
+            library = design.GetLibrary(lib)
             document = Document(self._sourceDirectory / file)
-            design.Documents.append(document)
+            design.AddDocument(document, library)
 
         self.assertEqual(len(self._stopwatchFiles), len(design.Documents))
 
@@ -101,9 +106,16 @@ class CompileOrder(Designs):
         design = Design()
         design.LoadStdLibrary()
         design.LoadIEEELibrary()
-        library = design.GetLibrary("lib_StopWatch")
-        for file in self._encoderFiles:
+        for lib, file in self._encoderFiles:
+            library = design.GetLibrary(lib)
             document = Document(self._sourceDirectory / file)
             design.AddDocument(document, library)
 
         design.Analyze()
+
+        PP = PrettyPrint()
+        buffer = []
+        buffer.append("Design:")
+        for line in PP.formatDesign(design, 1):
+            buffer.append(line)
+        print("\n".join(buffer))
