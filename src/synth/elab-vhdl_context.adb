@@ -615,15 +615,21 @@ package body Elab.Vhdl_Context is
       end case;
    end Get_Instance_By_Scope;
 
-   function Get_Parent_Scope (Blk : Node) return Sim_Info_Acc
+   function Get_Info_Scope (Blk : Node) return Sim_Info_Acc
    is
-      Parent : Node;
+      N : Node;
    begin
-      Parent := Get_Parent (Blk);
-      if Get_Kind (Parent) = Iir_Kind_Architecture_Body then
-         Parent := Vhdl.Utils.Get_Entity (Parent);
+      if Get_Kind (Blk) = Iir_Kind_Architecture_Body then
+         N := Vhdl.Utils.Get_Entity (Blk);
+      else
+         N := Blk;
       end if;
-      return Get_Info (Parent);
+      return Get_Info (N);
+   end Get_Info_Scope;
+
+   function Get_Parent_Scope (Blk : Node) return Sim_Info_Acc is
+   begin
+      return Get_Info_Scope (Get_Parent (Blk));
    end Get_Parent_Scope;
 
    function Get_Value (Syn_Inst: Synth_Instance_Acc; Obj : Node)

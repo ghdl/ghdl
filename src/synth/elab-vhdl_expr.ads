@@ -55,6 +55,8 @@ package Elab.Vhdl_Expr is
                                  return Valtyp;
    function Exec_Instance_Name_Attribute
      (Syn_Inst : Synth_Instance_Acc; Attr : Node) return Valtyp;
+   function Exec_Path_Instance_Name_Attribute
+     (Inst : Synth_Instance_Acc; Attr : Iir) return Memtyp;
 
    function Exec_Simple_Aggregate (Syn_Inst : Synth_Instance_Acc;
                                    Aggr : Node) return Valtyp;

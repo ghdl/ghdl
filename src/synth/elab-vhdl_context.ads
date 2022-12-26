@@ -190,6 +190,9 @@ package Elab.Vhdl_Context is
    function Get_Component_Instance
      (Syn_Inst : Synth_Instance_Acc) return Synth_Instance_Acc;
 
+   --  Return the scope of BLK.  Deals with architecture bodies.
+   function Get_Info_Scope (Blk : Node) return Sim_Info_Acc;
+
    --  Return the scope of the parent of BLK.  Deals with architecture bodies.
    function Get_Parent_Scope (Blk : Node) return Sim_Info_Acc;
 

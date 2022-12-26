@@ -2367,9 +2367,15 @@ package body Synth.Vhdl_Expr is
             return Elab.Vhdl_Expr.Exec_Value_Attribute (Syn_Inst, Expr);
          when Iir_Kind_Image_Attribute =>
             return Elab.Vhdl_Expr.Exec_Image_Attribute (Syn_Inst, Expr);
-         when Iir_Kind_Instance_Name_Attribute =>
-            return Elab.Vhdl_Expr.Exec_Instance_Name_Attribute
-              (Syn_Inst, Expr);
+         when Iir_Kind_Path_Name_Attribute
+            | Iir_Kind_Instance_Name_Attribute =>
+            declare
+               Mt : Memtyp;
+            begin
+               Mt := Elab.Vhdl_Expr.Exec_Path_Instance_Name_Attribute
+                 (Syn_Inst, Expr);
+               return Create_Value_Memtyp (Mt);
+            end;
          when Iir_Kind_Null_Literal =>
             return Create_Value_Access (Null_Heap_Index, Expr_Type);
          when Iir_Kind_Allocator_By_Subtype =>

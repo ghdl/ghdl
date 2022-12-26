@@ -37,6 +37,7 @@ with Synth.Errors; use Synth.Errors;
 
 with Grt.Types;
 with Grt.To_Strings;
+with Grt.Vstrings;
 
 package body Elab.Vhdl_Expr is
    function Synth_Bounds_From_Length (Atype : Node; Len : Int32)
@@ -420,4 +421,92 @@ package body Elab.Vhdl_Expr is
       return Res;
    end Exec_String_Literal;
 
+   function Exec_Path_Instance_Name_Attribute
+     (Inst : Synth_Instance_Acc; Attr : Iir) return Memtyp
+   is
+      use Grt.Vstrings;
+      use Name_Table;
+
+      Is_Instance : constant Boolean :=
+        Get_Kind (Attr) = Iir_Kind_Instance_Name_Attribute;
+
+      Atype : constant Node := Get_Type (Attr);
+      Str_Typ  : constant Type_Acc := Get_Subtype_Object (Inst, Atype);
+      Name : constant Path_Instance_Name_Type :=
+        Get_Path_Instance_Name_Suffix (Attr);
+      Instance, Parent : Synth_Instance_Acc;
+      Rstr : Rstring;
+      Label : Node;
+   begin
+      if Name.Path_Instance = Null_Iir then
+         return String_To_Memtyp (Name.Suffix, Str_Typ);
+      end if;
+
+      Instance := Get_Instance_By_Scope
+        (Inst, Get_Info_Scope (Name.Path_Instance));
+
+      loop
+         Parent := Get_Instance_Parent (Instance);
+         if Parent = Root_Instance then
+            Parent := null;
+         end if;
+         Label := Get_Source_Scope (Instance);
+
+         case Get_Kind (Label) is
+            when Iir_Kind_Entity_Declaration =>
+               if Parent = null then
+                  Prepend (Rstr, Image (Get_Identifier (Label)));
+                  exit;
+               end if;
+            when Iir_Kind_Architecture_Body =>
+               if Is_Instance then
+                  Prepend (Rstr, ')');
+                  Prepend (Rstr, Image (Get_Identifier (Label)));
+                  Prepend (Rstr, '(');
+               end if;
+
+               if Is_Instance or else Parent = null then
+                  Prepend (Rstr, Image (Get_Identifier (Get_Entity (Label))));
+               end if;
+               if Parent = null then
+                  Prepend (Rstr, ':');
+                  exit;
+               end if;
+            when Iir_Kind_Block_Statement =>
+               Prepend (Rstr, Image (Get_Label (Label)));
+               Prepend (Rstr, ':');
+            when Iir_Kind_Iterator_Declaration =>
+               declare
+                  Val : Valtyp;
+               begin
+                  Val := Get_Value (Instance, Label);
+                  Prepend (Rstr, ')');
+                  Prepend (Rstr,
+                           Synth_Image_Attribute_Str (Val, Get_Type (Label)));
+                  Prepend (Rstr, '(');
+               end;
+            when Iir_Kind_Generate_Statement_Body =>
+               Prepend (Rstr, Image (Get_Label (Get_Parent (Label))));
+               Prepend (Rstr, ':');
+            when Iir_Kind_Component_Instantiation_Statement =>
+               if Is_Instance then
+                  Prepend (Rstr, '@');
+               end if;
+               Prepend (Rstr, Image (Get_Label (Label)));
+               Prepend (Rstr, ':');
+            when others =>
+               Error_Kind ("Execute_Path_Instance_Name_Attribute",
+                           Label);
+         end case;
+         Instance := Parent;
+      end loop;
+      declare
+         Str1 : String (1 .. Length (Rstr));
+         Len1 : Natural;
+      begin
+         Copy (Rstr, Str1, Len1);
+         Free (Rstr);
+         return String_To_Memtyp (Str1 & ':' & Name.Suffix, Str_Typ);
+      end;
+   end Exec_Path_Instance_Name_Attribute;
 end Elab.Vhdl_Expr;
