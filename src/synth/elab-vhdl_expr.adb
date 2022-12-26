@@ -23,6 +23,7 @@ with Str_Table;
 with Netlists;
 
 with Vhdl.Errors; use Vhdl.Errors;
+with Vhdl.Scanner;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Evaluation; use Vhdl.Evaluation;
 
@@ -36,6 +37,7 @@ with Synth.Vhdl_Eval; use Synth.Vhdl_Eval;
 with Synth.Errors; use Synth.Errors;
 
 with Grt.Types;
+with Grt.Vhdl_Types;
 with Grt.To_Strings;
 with Grt.Vstrings;
 
@@ -125,17 +127,48 @@ package body Elab.Vhdl_Expr is
       end if;
 
       declare
-         Str : constant String := Value_To_String (V);
+         Value : constant String := Value_To_String (V);
+         First, Last : Integer;
          Res_N : Node;
          Val : Int64;
       begin
+         --  LRM93 14.1 Predefined attributes.
+         --  Leading and trailing whitespace are ignored.
+         First := Value'First;
+         Last := Value'Last;
+         while First <= Last loop
+            exit when not Vhdl.Scanner.Is_Whitespace (Value (First));
+            First := First + 1;
+         end loop;
+         while Last >= First loop
+            exit when not Vhdl.Scanner.Is_Whitespace (Value (Last));
+            Last := Last - 1;
+         end loop;
+
          case Get_Kind (Btype) is
             when Iir_Kind_Enumeration_Type_Definition =>
-               Res_N := Eval_Value_Attribute (Str, Etype, Attr);
+               Res_N := Eval_Value_Attribute
+                 (Value (First .. Last), Etype, Attr);
                Val := Int64 (Get_Enum_Pos (Res_N));
                Free_Iir (Res_N);
             when Iir_Kind_Integer_Type_Definition =>
-               Val := Int64'Value (Str);
+               declare
+                  use Grt.To_Strings;
+                  use Grt.Types;
+                  use Grt.Vhdl_Types;
+                  Value1 : String renames Value (First .. Last);
+                  Res : Value_I64_Result;
+               begin
+                  Res := Value_I64 (To_Std_String_Basep (Value1'Address),
+                                    Value1'Length, 0);
+                  if Res.Status = Value_Ok then
+                     Val := Int64 (Res.Val);
+                  else
+                     Error_Msg_Synth
+                       (Syn_Inst, Attr, "incorrect 'value string");
+                     return No_Valtyp;
+                  end if;
+               end;
             when others =>
                Error_Msg_Elab (+Attr, "unhandled type for 'value");
                return No_Valtyp;

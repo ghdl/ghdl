@@ -23,9 +23,8 @@
 
 package body Grt.Strings is
    function Is_Whitespace (C : in Character) return Boolean is
-      use ASCII;
    begin
-      return C = ' ' or C = NBSP or C = HT;
+      return C = ' ' or C = NBSP;
    end Is_Whitespace;
 
    function First_Non_Whitespace_Pos (Str : String) return Integer is

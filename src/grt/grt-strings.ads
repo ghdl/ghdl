@@ -26,7 +26,9 @@ package Grt.Strings is
 
    NBSP : constant Character := Character'Val (160);
 
-   --  Return True IFF C is a whitespace character (as defined in LRM93 14.3)
+   --  Return True IFF C is a whitespace character as defined by LRM93 13.1
+   --  Note: this is different from the definition in LRM93 14.3 (for files,
+   --   which includes HT).
    function Is_Whitespace (C : in Character) return Boolean;
 
    -- The following functions return -1 in case there is no match in string ---
