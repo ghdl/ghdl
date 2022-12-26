@@ -360,6 +360,15 @@ package body Simul.Vhdl_Elab is
                                No_Sensitivity_Index, No_Signal_Index,
                                No_Connect_Index, T, Pfx));
             end;
+         when Iir_Kind_Transaction_Attribute =>
+            declare
+               Pfx : Sub_Signal_Type;
+            begin
+               Pfx := Compute_Sub_Signal (Inst, Get_Prefix (Decl));
+               Gather_Signal ((Mode_Transaction, Decl, Inst, null, null, null,
+                               No_Sensitivity_Index, No_Signal_Index,
+                               No_Connect_Index, 0, Pfx));
+            end;
          when Iir_Kind_Delayed_Attribute =>
             declare
                T : Std_Time;

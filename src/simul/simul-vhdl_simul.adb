@@ -2786,9 +2786,10 @@ package body Simul.Vhdl_Simul is
             Write_Sig (E.Sig, S);
             Register_Prefix (E.Pfx.Typ, To_Memory_Ptr (E.Pfx));
          when Mode_Transaction =>
-            -- Create_Implicit_Signal
-            --  (E.Sig, E.Val, E.Time, E.Prefix, E.Kind);
-            raise Internal_Error;
+            S := Grt.Signals.Ghdl_Create_Transaction_Signal
+              (To_Ghdl_Value_Ptr (To_Address (E.Val)));
+            Write_Sig (E.Sig, S);
+            Register_Prefix (E.Pfx.Typ, To_Memory_Ptr (E.Pfx));
          when Mode_Delayed =>
             Create_Delayed_Signal (E.Sig, E.Val, To_Memory_Ptr (E.Pfx),
                                    E.Typ, E.Time);
