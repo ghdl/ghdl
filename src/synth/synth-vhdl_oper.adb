@@ -1449,6 +1449,7 @@ package body Synth.Vhdl_Oper is
             | Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Log
             | Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Log
             | Iir_Predefined_Ieee_Numeric_Std_Add_Log_Sgn
+            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Add_Slv_Slv
             | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Log
             | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Log_Slv
             | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Slv
@@ -1466,7 +1467,8 @@ package body Synth.Vhdl_Oper is
             | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Log_Sgn_Slv =>
             --  "+" (Unsigned, Unsigned)
             return Synth_Dyadic_Uns_Uns (Ctxt, Id_Add, L, R, Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Nat =>
+         when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Nat
+            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Add_Slv_Nat =>
             --  "+" (Unsigned, Natural)
             return Synth_Dyadic_Uns_Nat (Ctxt, Id_Add, L, R, Expr);
          when Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Int_Slv
@@ -1475,6 +1477,7 @@ package body Synth.Vhdl_Oper is
             --  "+" (Unsigned, Integer)
             return Synth_Dyadic_Sgn_Int (Ctxt, Id_Add, L, R, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Add_Nat_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Add_Nat_Slv
             | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Int_Uns_Uns
             | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Int_Uns_Slv
             | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Int_Slv =>
@@ -1511,6 +1514,7 @@ package body Synth.Vhdl_Oper is
             | Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Log
             | Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Log
             | Iir_Predefined_Ieee_Numeric_Std_Sub_Log_Sgn
+            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Sub_Slv_Slv
             | Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Slv_Slv
             | Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Log_Slv
             | Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Slv_Log
@@ -1534,7 +1538,8 @@ package body Synth.Vhdl_Oper is
             | Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Slv_Slv =>
             --  "-" (Signed, Signed)
             return Synth_Dyadic_Sgn_Sgn (Ctxt, Id_Sub, L, R, Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Nat =>
+         when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Nat
+            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Sub_Slv_Nat =>
             --  "-" (Unsigned, Natural)
             return Synth_Dyadic_Uns_Nat (Ctxt, Id_Sub, L, R, Expr);
          when Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Uns_Int_Uns
@@ -1543,6 +1548,7 @@ package body Synth.Vhdl_Oper is
             --  "-" (Unsigned, Integer)
             return Synth_Dyadic_Sgn_Int (Ctxt, Id_Sub, L, R, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Nat_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Sub_Nat_Slv
             | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Int_Uns_Uns
             | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Int_Uns_Slv
             | Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Int_Slv =>
