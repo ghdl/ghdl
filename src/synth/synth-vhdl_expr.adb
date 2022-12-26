@@ -2317,6 +2317,7 @@ package body Synth.Vhdl_Expr is
             declare
                Param : constant Node := Get_Parameter (Expr);
                V : Valtyp;
+               Vi : Int64;
                Dtype : Type_Acc;
             begin
                Dtype := Get_Subtype_Object (Syn_Inst, Get_Type (Expr));
@@ -2324,10 +2325,16 @@ package body Synth.Vhdl_Expr is
                --  FIXME: to be generalized.  Not always as simple as a
                --  subtype conversion.
                if Is_Static (V.Val) then
-                  V := Create_Value_Discrete (Read_Discrete (V), Dtype);
+                  Vi := Read_Discrete (V);
+                  if not In_Range (Dtype.Drange, Vi) then
+                     Error_Msg_Synth (Syn_Inst, Expr, "value out of range");
+                     return No_Valtyp;
+                  end if;
+                  return Create_Value_Discrete (Vi, Dtype);
+               else
+                  return Synth_Subtype_Conversion
+                    (Syn_Inst, V, Dtype, False, Expr);
                end if;
-               return Synth_Subtype_Conversion
-                 (Syn_Inst, V, Dtype, False, Expr);
             end;
          when Iir_Kind_Low_Type_Attribute =>
             return Synth_Low_High_Type_Attribute (Syn_Inst, Expr, Dir_To);
