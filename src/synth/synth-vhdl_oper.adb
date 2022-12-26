@@ -1985,7 +1985,8 @@ package body Synth.Vhdl_Oper is
             | Iir_Predefined_Ieee_Numeric_Std_To_01_Uns
             | Iir_Predefined_Ieee_Numeric_Std_To_01_Sgn
             | Iir_Predefined_Ieee_1164_To_X01_Slv
-            | Iir_Predefined_Ieee_1164_To_UX01_Slv =>
+            | Iir_Predefined_Ieee_1164_To_UX01_Slv
+            | Iir_Predefined_Ieee_1164_To_X01Z_Slv =>
             if Is_Static (L.Val) then
                raise Internal_Error;
             end if;
@@ -1994,6 +1995,7 @@ package body Synth.Vhdl_Oper is
          when Iir_Predefined_Ieee_1164_To_Bit
             | Iir_Predefined_Ieee_1164_To_X01_Log
             | Iir_Predefined_Ieee_1164_To_UX01_Log
+            | Iir_Predefined_Ieee_1164_To_X01Z_Log
             | Iir_Predefined_Ieee_1164_To_Stdulogic =>
             --  A no-op.
             return Create_Value_Net (Get_Net (Ctxt, L), Res_Typ);
