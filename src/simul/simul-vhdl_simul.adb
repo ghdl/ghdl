@@ -446,6 +446,9 @@ package body Simul.Vhdl_Simul is
                        and then Pfx.Obj.Val.Kind = Value_Signal);
       E := Read_Signal_Flag
         ((Pfx.Targ_Type, Get_Sig_Mem (Pfx.Obj.Val, Pfx.Off.Net_Off)), Kind);
+      if Kind = Read_Signal_Not_Driving then
+         E := not E;
+      end if;
       Res := Create_Value_Memory (Boolean_Type, Expr_Pool'Access);
       Write_U8 (Res.Val.Mem, Boolean'Pos (E));
       return Res;
@@ -462,6 +465,12 @@ package body Simul.Vhdl_Simul is
    begin
       return Exec_Signal_Flag_Attribute (Inst, Expr, Read_Signal_Active);
    end Exec_Active_Attribute;
+
+   function Exec_Driving_Attribute (Inst : Synth_Instance_Acc;
+                                   Expr : Node) return Valtyp is
+   begin
+      return Exec_Signal_Flag_Attribute (Inst, Expr, Read_Signal_Not_Driving);
+   end Exec_Driving_Attribute;
 
    function Exec_Dot_Attribute (Inst : Synth_Instance_Acc;
                                 Expr : Node) return Valtyp
@@ -2123,10 +2132,10 @@ package body Simul.Vhdl_Simul is
 
       --  For conversion functions.
       Read_Signal_Driving_Value,
-      Read_Signal_Effective_Value --,
+      Read_Signal_Effective_Value,
 
       --  'Driving_Value
---      Read_Signal_Driver_Value
+      Read_Signal_Driver_Value
      );
 
    procedure Exec_Read_Signal (Sig: Memory_Ptr;
@@ -2145,6 +2154,8 @@ package body Simul.Vhdl_Simul is
                   Write_Ghdl_Value (Val, S.Value_Ptr.all);
                when Read_Signal_Last_Value =>
                   Write_Ghdl_Value (Val, S.Last_Value);
+               when Read_Signal_Driver_Value =>
+                  Write_Ghdl_Value (Val, Ghdl_Signal_Driving_Value (S));
             end case;
          when Type_Vector
            | Type_Array =>
@@ -2174,23 +2185,37 @@ package body Simul.Vhdl_Simul is
       end case;
    end Exec_Read_Signal;
 
-   function Exec_Last_Value_Attribute (Inst : Synth_Instance_Acc;
-                                       Expr : Node) return Valtyp
+   function Exec_Signal_Value_Attribute (Inst : Synth_Instance_Acc;
+                                         Attr : Node;
+                                         Kind : Read_Signal_Enum) return Valtyp
    is
       Pfx : Target_Info;
       Res : Valtyp;
       S : Memory_Ptr;
    begin
-      Pfx := Synth_Target (Inst, Get_Prefix (Expr));
+      Pfx := Synth_Target (Inst, Get_Prefix (Attr));
 
       Res := Create_Value_Memory (Pfx.Targ_Type, Expr_Pool'Access);
 
       S := Sig_Index (Signals_Table.Table (Pfx.Obj.Val.S).Sig,
                       Pfx.Off.Net_Off);
 
-      Exec_Read_Signal (S, Get_Memtyp (Res), Read_Signal_Last_Value);
+      Exec_Read_Signal (S, Get_Memtyp (Res), Kind);
       return Res;
+   end Exec_Signal_Value_Attribute;
+
+   function Exec_Last_Value_Attribute (Inst : Synth_Instance_Acc;
+                                       Expr : Node) return Valtyp is
+   begin
+      return Exec_Signal_Value_Attribute (Inst, Expr, Read_Signal_Last_Value);
    end Exec_Last_Value_Attribute;
+
+   function Exec_Driving_Value_Attribute (Inst : Synth_Instance_Acc;
+                                          Expr : Node) return Valtyp is
+   begin
+      return Exec_Signal_Value_Attribute
+        (Inst, Expr, Read_Signal_Driver_Value);
+   end Exec_Driving_Value_Attribute;
 
    type Read_Signal_Last_Enum is
      (
@@ -2269,6 +2294,11 @@ package body Simul.Vhdl_Simul is
                       Pfx.Off.Net_Off);
 
       T := Exec_Read_Signal_Last (S, Get_Memtyp (Res), Attr);
+      if T < 0 then
+         T := Std_Time'Last;
+      else
+         T := Current_Time - T;
+      end if;
       Write_I64 (Res.Val.Mem, Ghdl_I64 (T));
       return Res;
    end Exec_Signal_Last_Attribute;
@@ -3751,6 +3781,9 @@ package body Simul.Vhdl_Simul is
       Synth.Vhdl_Expr.Hook_Signal_Expr := Hook_Signal_Expr'Access;
       Synth.Vhdl_Expr.Hook_Event_Attribute := Exec_Event_Attribute'Access;
       Synth.Vhdl_Expr.Hook_Active_Attribute := Exec_Active_Attribute'Access;
+      Synth.Vhdl_Expr.Hook_Driving_Attribute := Exec_Driving_Attribute'Access;
+      Synth.Vhdl_Expr.Hook_Driving_Value_Attribute :=
+        Exec_Driving_Value_Attribute'Access;
       Synth.Vhdl_Expr.Hook_Last_Value_Attribute :=
         Exec_Last_Value_Attribute'Access;
       Synth.Vhdl_Expr.Hook_Last_Event_Attribute :=

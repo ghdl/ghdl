@@ -89,6 +89,8 @@ package Synth.Vhdl_Expr is
      function (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Valtyp;
    Hook_Event_Attribute : Hook_Attribute_Acc;
    Hook_Active_Attribute : Hook_Attribute_Acc;
+   Hook_Driving_Attribute : Hook_Attribute_Acc;
+   Hook_Driving_Value_Attribute : Hook_Attribute_Acc;
    Hook_Last_Value_Attribute : Hook_Attribute_Acc;
    Hook_Last_Event_Attribute : Hook_Attribute_Acc;
    Hook_Last_Active_Attribute : Hook_Attribute_Acc;

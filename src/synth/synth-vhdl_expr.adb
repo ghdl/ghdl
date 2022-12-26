@@ -2429,6 +2429,19 @@ package body Synth.Vhdl_Expr is
             end if;
             Error_Msg_Synth (Syn_Inst, Expr, "active attribute not allowed");
             return No_Valtyp;
+         when Iir_Kind_Driving_Attribute =>
+            if Hook_Driving_Attribute /= null then
+               return Hook_Driving_Attribute (Syn_Inst, Expr);
+            end if;
+            Error_Msg_Synth (Syn_Inst, Expr, "driving attribute not allowed");
+            return No_Valtyp;
+         when Iir_Kind_Driving_Value_Attribute =>
+            if Hook_Driving_Value_Attribute /= null then
+               return Hook_Driving_Value_Attribute (Syn_Inst, Expr);
+            end if;
+            Error_Msg_Synth (Syn_Inst, Expr,
+                             "driving_value attribute not allowed");
+            return No_Valtyp;
          when Iir_Kind_Last_Value_Attribute =>
             if Hook_Last_Value_Attribute /= null then
                return Hook_Last_Value_Attribute (Syn_Inst, Expr);

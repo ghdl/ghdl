@@ -599,6 +599,9 @@ package Grt.Signals is
 
    function Ghdl_Signal_Driving (Sig : Ghdl_Signal_Ptr) return Ghdl_B1;
 
+   function Ghdl_Signal_Driving_Value (Sig : Ghdl_Signal_Ptr)
+                                      return Value_Union;
+
    --  Generic version.
    procedure Ghdl_Signal_Start_Assign_Any (Sign : Ghdl_Signal_Ptr;
                                            Rej : Std_Time;

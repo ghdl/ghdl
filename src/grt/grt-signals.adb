@@ -1803,7 +1803,8 @@ package body Grt.Signals is
       end if;
    end Ghdl_Signal_Driving;
 
-   function Ghdl_Signal_Driving_Value_B1 (Sig : Ghdl_Signal_Ptr) return Ghdl_B1
+   function Ghdl_Signal_Driving_Value (Sig : Ghdl_Signal_Ptr)
+                                      return Value_Union
    is
       Drv : Driver_Acc;
    begin
@@ -1811,8 +1812,14 @@ package body Grt.Signals is
       if Drv = null or else Drv.First_Trans.Kind /= Trans_Value then
          Error ("'driving_value: no active driver in process for signal");
       else
-         return Drv.First_Trans.Val.B1;
+         return Drv.First_Trans.Val;
       end if;
+   end Ghdl_Signal_Driving_Value;
+
+   function Ghdl_Signal_Driving_Value_B1 (Sig : Ghdl_Signal_Ptr)
+                                         return Ghdl_B1 is
+   begin
+      return Ghdl_Signal_Driving_Value (Sig).B1;
    end Ghdl_Signal_Driving_Value_B1;
 
    function Ghdl_Signal_Driving_Value_E8 (Sig : Ghdl_Signal_Ptr)
