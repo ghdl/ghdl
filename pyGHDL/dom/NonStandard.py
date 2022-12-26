@@ -111,6 +111,21 @@ class Design(VHDLModel_Design):
         if libghdl_analyze_init_status() != 0:
             raise LibGHDLException("Error initializing 'libghdl'.")
 
+    def LoadDefaultLibraries(self):
+        t1 = time.perf_counter()
+
+        super().LoadStdLibrary()
+        super().LoadIEEELibrary()
+
+        self._loadDefaultLibraryTime = time.perf_counter() - t1
+
+    def Analyze(self):
+        t1 = time.perf_counter()
+
+        super().Analyze()
+
+        self._analyzeTime = time.perf_counter() - t1
+
 
 @export
 class Library(VHDLModel_Library):
