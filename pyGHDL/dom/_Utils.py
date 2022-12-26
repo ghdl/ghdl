@@ -41,7 +41,7 @@ from pyGHDL.libghdl import LibGHDLException, name_table, errorout_memory, files_
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes, utils
 from pyGHDL.libghdl.vhdl.nodes import Null_Iir
-from pyGHDL.dom import DOMException
+from pyGHDL.dom import DOMException, Position
 
 __MODE_TRANSLATION = {
     nodes.Iir_Mode.In_Mode: Mode.In,
@@ -138,6 +138,7 @@ def GetModeOfNode(node: Iir) -> Mode:
     except KeyError as ex:
         raise DOMException(f"Unknown mode '{ex.args[0]}'.") from ex
 
+
 def GetPackageMemberSymbol(node: Iir) -> Union[PackageMembersReferenceSymbol, AllPackageMembersReferenceSymbol]:
     kind = GetIirKindOfNode(node)
     prefixName = GetPackageSymbol(nodes.Get_Prefix(node))
@@ -147,7 +148,8 @@ def GetPackageMemberSymbol(node: Iir) -> Union[PackageMembersReferenceSymbol, Al
     elif kind == nodes.Iir_Kind.Selected_By_All_Name:
         return AllPackageMembersReferenceSymbol(node, prefixName)
     else:
-        raise DOMException()
+        raise DOMException(f"{kind.name} at {Position.parse(node)}")
+
 
 def GetPackageSymbol(node: Iir) -> PackageReferenceSymbol:
     kind = GetIirKindOfNode(node)
@@ -156,7 +158,8 @@ def GetPackageSymbol(node: Iir) -> PackageReferenceSymbol:
         prefixName = GetLibrarySymbol(nodes.Get_Prefix(node))
         return PackageReferenceSymbol(node, name, prefixName)
     else:
-        raise DOMException()
+        raise DOMException(f"{kind.name} at {Position.parse(node)}")
+
 
 def GetLibrarySymbol(node: Iir) -> LibraryReferenceSymbol:
     kind = GetIirKindOfNode(node)
@@ -164,4 +167,4 @@ def GetLibrarySymbol(node: Iir) -> LibraryReferenceSymbol:
         name = GetNameOfNode(node)
         return LibraryReferenceSymbol(node, name)
     else:
-        raise DOMException()
+        raise DOMException(f"{kind} at {Position.parse(node)}")
