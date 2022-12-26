@@ -59,6 +59,7 @@ from pyGHDL.dom.Range import Range
 
 @export
 class LibraryReferenceSymbol(VHDLModel_LibraryReferenceSymbol, DOMMixin):
+    @InheritDocString(VHDLModel_LibraryReferenceSymbol)
     def __init__(self, libraryNode: Iir, identifier: str):
         super().__init__(identifier)
         DOMMixin.__init__(self, libraryNode)
@@ -66,6 +67,7 @@ class LibraryReferenceSymbol(VHDLModel_LibraryReferenceSymbol, DOMMixin):
 
 @export
 class PackageReferenceSymbol(VHDLModel_PackageReferenceSymbol, DOMMixin):
+    @InheritDocString(VHDLModel_PackageReferenceSymbol)
     def __init__(self, libraryNode: Iir, identifier: str, prefix: LibraryReferenceSymbol):
         super().__init__(identifier, prefix)
         DOMMixin.__init__(self, libraryNode)
@@ -73,6 +75,7 @@ class PackageReferenceSymbol(VHDLModel_PackageReferenceSymbol, DOMMixin):
 
 @export
 class PackageMembersReferenceSymbol(VHDLModel_PackageMembersReferenceSymbol, DOMMixin):
+    @InheritDocString(VHDLModel_PackageMembersReferenceSymbol)
     def __init__(self, libraryNode: Iir, identifier: str, prefix: PackageReferenceSymbol):
         super().__init__(identifier, prefix)
         DOMMixin.__init__(self, libraryNode)
@@ -80,6 +83,7 @@ class PackageMembersReferenceSymbol(VHDLModel_PackageMembersReferenceSymbol, DOM
 
 @export
 class AllPackageMembersReferenceSymbol(VHDLModel_AllPackageMembersReferenceSymbol, DOMMixin):
+    @InheritDocString(VHDLModel_AllPackageMembersReferenceSymbol)
     def __init__(self, libraryNode: Iir, prefix: PackageReferenceSymbol):
         super().__init__(prefix)
         DOMMixin.__init__(self, libraryNode)
@@ -87,6 +91,7 @@ class AllPackageMembersReferenceSymbol(VHDLModel_AllPackageMembersReferenceSymbo
 
 @export
 class ContextReferenceSymbol(VHDLModel_ContextReferenceSymbol, DOMMixin):
+    @InheritDocString(VHDLModel_ContextReferenceSymbol)
     def __init__(self, libraryNode: Iir, identifier: str, prefix: LibraryReferenceSymbol):
         super().__init__(identifier, prefix)
         DOMMixin.__init__(self, libraryNode)
@@ -95,24 +100,24 @@ class ContextReferenceSymbol(VHDLModel_ContextReferenceSymbol, DOMMixin):
 @export
 class EntitySymbol(VHDLModel_EntitySymbol, DOMMixin):
     @InheritDocString(VHDLModel_EntitySymbol)
-    def __init__(self, node: Iir, entityName: SimpleName):
-        super().__init__(entityName)
+    def __init__(self, node: Iir, identifier: str):
+        super().__init__(identifier)
         DOMMixin.__init__(self, node)
 
 
 @export
 class ArchitectureSymbol(VHDLModel_ArchitectureSymbol, DOMMixin):
     @InheritDocString(VHDLModel_ArchitectureSymbol)
-    def __init__(self, node: Iir, architectureName: SimpleName):
-        super().__init__(architectureName)
+    def __init__(self, node: Iir, identifier: str, prefix: EntitySymbol):
+        super().__init__(identifier, prefix)
         DOMMixin.__init__(self, node)
 
 
 @export
 class PackageSymbol(VHDLModel_PackageSymbol, DOMMixin):
     @InheritDocString(VHDLModel_PackageSymbol)
-    def __init__(self, node: Iir, packageName: SimpleName):
-        super().__init__(packageName)
+    def __init__(self, node: Iir, identifier: str):
+        super().__init__(identifier)
         DOMMixin.__init__(self, node)
 
 

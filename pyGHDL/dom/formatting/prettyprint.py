@@ -236,7 +236,7 @@ class PrettyPrint:
             f"{prefix}  Position: {architecture.Position.Line}:{architecture.Position.Column}\n"
             f"{prefix}  Documentation: {documentationFirstLine}"
         )
-        buffer.append(f"{prefix}  Entity: {architecture.Entity.SymbolName}")
+        buffer.append(f"{prefix}  Entity: {architecture.Entity.Identifier}")
         buffer.append(f"{prefix}  Declared:")
         for item in architecture.DeclaredItems:
             for line in self.formatDeclaredItems(item, level + 2):

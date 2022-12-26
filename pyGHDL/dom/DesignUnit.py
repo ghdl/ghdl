@@ -77,7 +77,7 @@ from pyGHDL.dom._Translate import (
     GetConcurrentStatementsFromChainedNodes,
 )
 from pyGHDL.dom.Names import SimpleName
-from pyGHDL.dom.Symbol import EntitySymbol, ContextReferenceSymbol, LibraryReferenceSymbol
+from pyGHDL.dom.Symbol import EntitySymbol, ContextReferenceSymbol, LibraryReferenceSymbol, PackageSymbol
 
 
 @export
@@ -171,8 +171,7 @@ class Architecture(VHDLModel_Architecture, DOMMixin):
         name = GetNameOfNode(architectureNode)
         documentation = GetDocumentationOfNode(architectureNode)
         entityNameNode = nodes.Get_Entity_Name(architectureNode)
-        entityName = GetNameOfNode(entityNameNode)
-        entitySymbol = EntitySymbol(entityNameNode, SimpleName(entityNameNode, entityName))
+        entitySymbol = EntitySymbol(entityNameNode, GetNameOfNode(entityNameNode))
         declaredItems = GetDeclaredItemsFromChainedNodes(
             nodes.Get_Declaration_Chain(architectureNode), "architecture", name
         )
@@ -245,23 +244,24 @@ class PackageBody(VHDLModel_PackageBody, DOMMixin):
     def __init__(
         self,
         node: Iir,
-        identifier: str,
+        packageSymbol: PackageSymbol,
         contextItems: Iterable[VHDLModel_ContextUnion] = None,
         declaredItems: Iterable = None,
         documentation: str = None,
     ):
-        super().__init__(identifier, contextItems, declaredItems, documentation)
+        super().__init__(packageSymbol, contextItems, declaredItems, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, packageBodyNode: Iir, contextItems: Iterable[VHDLModel_ContextUnion]):
-        name = GetNameOfNode(packageBodyNode)
+        packageName = GetNameOfNode(packageBodyNode)
+        packageSymbol = PackageSymbol(packageBodyNode, packageName)
         documentation = GetDocumentationOfNode(packageBodyNode)
-        declaredItems = GetDeclaredItemsFromChainedNodes(nodes.Get_Declaration_Chain(packageBodyNode), "package", name)
+        declaredItems = GetDeclaredItemsFromChainedNodes(nodes.Get_Declaration_Chain(packageBodyNode), "package", packageName)
 
         # FIXME: read use clauses
 
-        return cls(packageBodyNode, name, contextItems, declaredItems, documentation)
+        return cls(packageBodyNode, packageSymbol, contextItems, declaredItems, documentation)
 
 
 @export
@@ -297,7 +297,7 @@ class Context(VHDLModel_Context, DOMMixin):
         self,
         node: Iir,
         identifier: str,
-        references: Iterable[Union[LibraryClause, UseClause]] = None,
+        references: Iterable[Union[LibraryClause, UseClause, ContextReference]] = None,
         documentation: str = None,
     ):
         super().__init__(identifier, references, documentation)
