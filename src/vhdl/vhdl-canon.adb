@@ -362,6 +362,7 @@ package body Vhdl.Canon is
    begin
       We := Chain;
       while We /= Null_Iir loop
+         exit when Get_Kind (We) = Iir_Kind_Unaffected_Waveform;
          Canon_Extract_Sensitivity_Expression (Get_We_Value (We), List);
          Canon_Extract_Sensitivity_If_Not_Null (Get_Time (We), List);
          We := Get_Chain (We);

@@ -944,6 +944,11 @@ package body Simul.Vhdl_Simul is
       Aft : Node;
       Rej : Node;
    begin
+      --  Nothing to assign.
+      if Get_Kind (Waveform) = Iir_Kind_Unaffected_Waveform then
+         return;
+      end if;
+
       Rej := Get_Reject_Time_Expression (Stmt);
       if Rej /= Null_Node then
          raise Internal_Error;
