@@ -54,9 +54,10 @@ package Elab.Vhdl_Context is
    procedure Free_Base_Instance;
 
    --  Create and free the corresponding synth instance.
-   function Make_Elab_Instance
-     (Parent : Synth_Instance_Acc; Blk : Node; Config : Node)
-     return Synth_Instance_Acc;
+   function Make_Elab_Instance (Parent : Synth_Instance_Acc;
+                                Stmt : Node;
+                                Blk : Node;
+                                Config : Node) return Synth_Instance_Acc;
 
    procedure Free_Elab_Instance (Synth_Inst : in out Synth_Instance_Acc);
 
@@ -81,6 +82,9 @@ package Elab.Vhdl_Context is
 
    --  Get the corresponding source for the scope of the instance.
    function Get_Source_Scope (Inst : Synth_Instance_Acc) return Node;
+
+   --  Return the statement that created the scope.
+   function Get_Statement_Scope (Inst : Synth_Instance_Acc) return Node;
 
    --  Get parent_instance.
    function Get_Instance_Parent (Inst : Synth_Instance_Acc)
@@ -278,7 +282,26 @@ private
       --  Used only fo debugging purpose.
       Caller : Synth_Instance_Acc;
 
+      --  Statement that created the scope.  One of:
+      --  * Subprogram call statement
+      --  * Component instantiation
+      --  * Block
+      --  * Process
+      --  * Generate body
+      --  * Block
+      --  * Protected object
+      --  * Null_Node for Root_Instance, package, vunit.
+      Stmt : Node;
+
       --  Source construct corresponding to this instance.
+      --  * Architecture body
+      --  * Component declaration
+      --  * Foreign Module
+      --  * Subprogram
+      --  * Process
+      --  * Generate body
+      --  * Block
+      --  * ...
       Source_Scope : Node;
 
       --  Block configuration (unless the instance is for a package).

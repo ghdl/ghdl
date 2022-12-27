@@ -1077,7 +1077,7 @@ package body Simul.Vhdl_Elab is
          Proc := Processes_Table.Table (I).Proc;
          if Get_Kind (Proc) in Iir_Kinds_Process_Statement then
             Proc_Inst := Make_Elab_Instance (Processes_Table.Table (I).Inst,
-                                             Proc, Null_Node);
+                                             Proc, Proc, Null_Node);
             Processes_Table.Table (I).Inst := Proc_Inst;
             Set_Instance_Const (Proc_Inst, True);
             Synth.Vhdl_Decls.Synth_Declarations

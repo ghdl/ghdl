@@ -58,6 +58,7 @@ package body Elab.Vhdl_Context is
                                  Block_Scope => Global_Info,
                                  Up_Block => null,
                                  Uninst_Scope => null,
+                                 Stmt         => Null_Node,
                                  Source_Scope => Null_Node,
                                  Caller       => null,
                                  Config       => Null_Node,
@@ -75,22 +76,17 @@ package body Elab.Vhdl_Context is
       null;
    end Free_Base_Instance;
 
-   function Make_Elab_Instance
-     (Parent : Synth_Instance_Acc; Blk : Node; Config : Node)
+   function Make_Elab_Instance (Parent : Synth_Instance_Acc;
+                                Stmt : Node;
+                                Blk : Node;
+                                Config : Node)
      return Synth_Instance_Acc
    is
       Info : constant Sim_Info_Acc := Get_Info (Blk);
-      Scope : Sim_Info_Acc;
+      Scope : constant Sim_Info_Acc := Get_Info_Scope (Blk);
       Nbr_Objs : Object_Slot_Type;
       Res : Synth_Instance_Acc;
    begin
-      if Get_Kind (Blk) = Iir_Kind_Architecture_Body then
-         --  Architectures are extensions of entities.
-         Scope := Get_Info (Vhdl.Utils.Get_Entity (Blk));
-      else
-         Scope := Info;
-      end if;
-
       if Scope = null then
          --  Foreign modules are not annotated.
          pragma Assert (Get_Kind (Blk) = Iir_Kind_Foreign_Module);
@@ -107,6 +103,7 @@ package body Elab.Vhdl_Context is
                                       Block_Scope => Scope,
                                       Up_Block => Parent,
                                       Uninst_Scope => null,
+                                      Stmt         => Stmt,
                                       Source_Scope => Blk,
                                       Caller       => null,
                                       Config       => Config,
@@ -149,6 +146,7 @@ package body Elab.Vhdl_Context is
                                       Block_Scope => Info,
                                       Up_Block => Parent,
                                       Uninst_Scope => null,
+                                      Stmt         => Blk, --  TBC.
                                       Source_Scope => Blk,
                                       Caller       => null,
                                       Config       => Config,
@@ -189,6 +187,11 @@ package body Elab.Vhdl_Context is
    begin
       return Inst.Source_Scope;
    end Get_Source_Scope;
+
+   function Get_Statement_Scope (Inst : Synth_Instance_Acc) return Node is
+   begin
+      return Inst.Stmt;
+   end Get_Statement_Scope;
 
    function Get_Instance_Parent (Inst : Synth_Instance_Acc)
                                 return Synth_Instance_Acc is
@@ -462,7 +465,7 @@ package body Elab.Vhdl_Context is
    is
       Syn_Inst : Synth_Instance_Acc;
    begin
-      Syn_Inst := Make_Elab_Instance (Parent_Inst, Pkg, Null_Node);
+      Syn_Inst := Make_Elab_Instance (Parent_Inst, Null_Node, Pkg, Null_Node);
       if Get_Kind (Get_Parent (Pkg)) = Iir_Kind_Design_Unit then
          --  Global package.
          Create_Package_Object (Parent_Inst, Pkg, Syn_Inst, True);

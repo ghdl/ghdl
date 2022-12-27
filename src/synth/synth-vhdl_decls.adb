@@ -407,7 +407,7 @@ package body Synth.Vhdl_Decls is
       Res : Valtyp;
    begin
       Parent := Get_Instance_By_Scope (Inst, Get_Parent_Scope (Bod));
-      Obj_Inst := Make_Elab_Instance (Parent, Bod, Null_Node);
+      Obj_Inst := Make_Elab_Instance (Parent, Decl, Bod, Null_Node);
       Obj_Hand := Elab.Vhdl_Prot.Create (Obj_Inst);
 
       Instance_Pool := Global_Pool'Access;

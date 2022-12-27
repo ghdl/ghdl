@@ -469,7 +469,7 @@ package body Elab.Vhdl_Expr is
         Get_Path_Instance_Name_Suffix (Attr);
       Instance, Parent : Synth_Instance_Acc;
       Rstr : Rstring;
-      Label : Node;
+      Label, Stmt : Node;
    begin
       if Name.Path_Instance = Null_Iir then
          return String_To_Memtyp (Name.Suffix, Str_Typ);
@@ -484,6 +484,7 @@ package body Elab.Vhdl_Expr is
             Parent := null;
          end if;
          Label := Get_Source_Scope (Instance);
+         Stmt := Get_Statement_Scope (Instance);
 
          case Get_Kind (Label) is
             when Iir_Kind_Entity_Declaration =>
@@ -508,27 +509,45 @@ package body Elab.Vhdl_Expr is
             when Iir_Kind_Block_Statement =>
                Prepend (Rstr, Image (Get_Label (Label)));
                Prepend (Rstr, ':');
-            when Iir_Kind_Iterator_Declaration =>
-               declare
-                  Val : Valtyp;
-               begin
-                  Val := Get_Value (Instance, Label);
-                  Prepend (Rstr, ')');
-                  Prepend (Rstr,
-                           Synth_Image_Attribute_Str (Val, Get_Type (Label)));
-                  Prepend (Rstr, '(');
-               end;
             when Iir_Kind_Generate_Statement_Body =>
-               Prepend (Rstr, Image (Get_Label (Get_Parent (Label))));
-               Prepend (Rstr, ':');
-            when Iir_Kind_Component_Instantiation_Statement =>
+               declare
+                  Gen : constant Node := Get_Parent (Label);
+               begin
+                  case Iir_Kinds_Generate_Statement (Get_Kind (Gen)) is
+                     when Iir_Kind_For_Generate_Statement =>
+                        declare
+                           It : constant Node :=
+                             Get_Parameter_Specification (Gen);
+                           Val : Valtyp;
+                        begin
+                           Val := Get_Value (Instance, It);
+                           Prepend (Rstr, ')');
+                           Prepend
+                             (Rstr,
+                              Synth_Image_Attribute_Str (Val, Get_Type (It)));
+                           Prepend (Rstr, '(');
+                        end;
+
+                        --  Skip the for generate instance.
+                        Parent := Get_Instance_Parent (Parent);
+
+                     when Iir_Kind_If_Generate_Statement
+                       | Iir_Kind_Case_Generate_Statement =>
+                        null;
+                  end case;
+
+                  Prepend (Rstr, Image (Get_Label (Gen)));
+                  Prepend (Rstr, ':');
+               end;
+
+            when Iir_Kind_Component_Declaration =>
                if Is_Instance then
                   Prepend (Rstr, '@');
                end if;
-               Prepend (Rstr, Image (Get_Label (Label)));
+               Prepend (Rstr, Image (Get_Label (Stmt)));
                Prepend (Rstr, ':');
             when others =>
-               Error_Kind ("Execute_Path_Instance_Name_Attribute",
+               Error_Kind ("Exec_Path_Instance_Name_Attribute",
                            Label);
          end case;
          Instance := Parent;

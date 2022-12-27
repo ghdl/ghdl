@@ -90,7 +90,7 @@ package body Synth.Vhdl_Context is
    is
       Res : Synth_Instance_Acc;
    begin
-      Res := Make_Elab_Instance (Parent, Blk, Null_Node);
+      Res := Make_Elab_Instance (Parent, Null_Node, Blk, Null_Node);
       Set_Extra (Res, Parent, Name);
       return Res;
    end Make_Instance;

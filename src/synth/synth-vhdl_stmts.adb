@@ -2536,7 +2536,7 @@ package body Synth.Vhdl_Stmts is
       Up_Inst : Synth_Instance_Acc;
    begin
       Up_Inst := Get_Instance_By_Scope (Inst, Get_Parent_Scope (Imp));
-      Res := Make_Elab_Instance (Up_Inst, Bod, Config => Null_Node);
+      Res := Make_Elab_Instance (Up_Inst, Null_Node, Bod, Config => Null_Node);
       Set_Caller_Instance (Res, Inst);
       return Res;
    end Synth_Subprogram_Call_Instance;
@@ -2577,7 +2577,8 @@ package body Synth.Vhdl_Stmts is
       Idx := Read_Protected (Obj_Info.Obj.Val.Mem);
       Obj_Inst := Elab.Vhdl_Prot.Get (Idx);
 
-      Res := Make_Elab_Instance (Obj_Inst, Bod, Config => Null_Node);
+      Res := Make_Elab_Instance (Obj_Inst,
+                                 Null_Node, Bod, Config => Null_Node);
       Set_Caller_Instance (Res, Inst);
       return Res;
    end Synth_Protected_Call_Instance;
@@ -2718,7 +2719,7 @@ package body Synth.Vhdl_Stmts is
       Sub_Inst : Synth_Instance_Acc;
    begin
       Areapools.Mark (Area_Mark, Instance_Pool.all);
-      Sub_Inst := Make_Elab_Instance (Syn_Inst, Imp, Null_Node);
+      Sub_Inst := Make_Elab_Instance (Syn_Inst, Call, Imp, Null_Node);
 
       if Ctxt /= null then
          Set_Extra (Sub_Inst, Syn_Inst, New_Internal_Name (Ctxt));

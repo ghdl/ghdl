@@ -461,7 +461,8 @@ package body Elab.Vhdl_Insts is
    begin
       Elab_Dependencies (Root_Instance, Get_Design_Unit (Unit));
 
-      Unit_Inst := Make_Elab_Instance (Syn_Inst, Unit, Config => Null_Node);
+      Unit_Inst := Make_Elab_Instance
+        (Syn_Inst, Null_Node, Unit, Config => Null_Node);
       Add_Extra_Instance (Syn_Inst, Unit_Inst);
 
       Apply_Block_Configuration
@@ -686,7 +687,7 @@ package body Elab.Vhdl_Insts is
       Sub_Inst : Synth_Instance_Acc;
    begin
       --  Elaborate generic + map aspect
-      Sub_Inst := Make_Elab_Instance (Syn_Inst, Arch, Config);
+      Sub_Inst := Make_Elab_Instance (Syn_Inst, Stmt, Arch, Config);
 
       Create_Sub_Instance (Syn_Inst, Stmt, Sub_Inst);
 
@@ -735,7 +736,7 @@ package body Elab.Vhdl_Insts is
 
       --  Create the sub-instance for the component
       --  Elaborate generic + map aspect
-      Comp_Inst := Make_Elab_Instance (Syn_Inst, Component, Config);
+      Comp_Inst := Make_Elab_Instance (Syn_Inst, Stmt, Component, Config);
       Create_Sub_Instance (Syn_Inst, Stmt, Comp_Inst);
 
       pragma Assert (Is_Expr_Pool_Empty);
@@ -796,7 +797,7 @@ package body Elab.Vhdl_Insts is
       end case;
 
       if Get_Kind (Ent) = Iir_Kind_Foreign_Module then
-         Sub_Inst := Make_Elab_Instance (Comp_Inst, Ent, Null_Node);
+         Sub_Inst := Make_Elab_Instance (Comp_Inst, Stmt, Ent, Null_Node);
          Create_Component_Instance (Comp_Inst, Sub_Inst);
 
          Elab_Foreign_Instance (Sub_Inst, Comp_Inst, Bind, Ent);
@@ -818,7 +819,7 @@ package body Elab.Vhdl_Insts is
       Elab_Dependencies (Root_Instance, Get_Design_Unit (Arch));
 
       --  Elaborate generic + map aspect for the entity instance.
-      Sub_Inst := Make_Elab_Instance (Comp_Inst, Arch, Sub_Config);
+      Sub_Inst := Make_Elab_Instance (Comp_Inst, Stmt, Arch, Sub_Config);
       Create_Component_Instance (Comp_Inst, Sub_Inst);
 
       Elab_Generics_Association (Sub_Inst, Comp_Inst,
@@ -891,7 +892,7 @@ package body Elab.Vhdl_Insts is
       Make_Root_Instance;
 
       Top_Inst := Make_Elab_Instance
-        (Root_Instance, Arch, Get_Block_Configuration (Config));
+        (Root_Instance, Null_Node, Arch, Get_Block_Configuration (Config));
 
       --  Save the current architecture, so that files can be open using a
       --  path relative to the architecture filename.

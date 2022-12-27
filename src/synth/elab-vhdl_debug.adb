@@ -1199,6 +1199,8 @@ package body Elab.Vhdl_Debug is
            | Iir_Kind_For_Generate_Statement =>
             Open_Declarative_Region;
             Add_Name (Get_Parameter_Specification (N));
+         when Iir_Kind_If_Generate_Statement =>
+            Open_Declarative_Region;
          when Iir_Kind_Block_Statement =>
             declare
                Header : constant Iir := Get_Block_Header (N);
@@ -1216,7 +1218,7 @@ package body Elab.Vhdl_Debug is
             Add_Declarations (Get_Declaration_Chain (N), False);
             Add_Declarations_Of_Concurrent_Statement (N);
          when others =>
-            Vhdl.Errors.Error_Kind ("enter_scope(2)", N);
+            Vhdl.Errors.Error_Kind ("add_decls_for", N);
       end case;
    end Add_Decls_For;
 

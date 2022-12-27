@@ -40,7 +40,7 @@ package body Elab.Vhdl_Stmts is
       Decls_Chain : constant Node := Get_Declaration_Chain (Bod);
       Bod_Inst : Synth_Instance_Acc;
    begin
-      Bod_Inst := Make_Elab_Instance (Syn_Inst, Bod, Config);
+      Bod_Inst := Make_Elab_Instance (Syn_Inst, Bod, Bod, Config);
 
       if Iterator /= Null_Node then
          --  Add the iterator (for for-generate).
@@ -205,7 +205,7 @@ package body Elab.Vhdl_Stmts is
       Apply_Block_Configuration
         (Get_Block_Block_Configuration (Blk), Blk);
 
-      Blk_Inst := Make_Elab_Instance (Syn_Inst, Blk, Null_Iir);
+      Blk_Inst := Make_Elab_Instance (Syn_Inst, Blk, Blk, Null_Iir);
       Create_Sub_Instance (Syn_Inst, Blk, Blk_Inst);
 
       if Guard /= Null_Node then
