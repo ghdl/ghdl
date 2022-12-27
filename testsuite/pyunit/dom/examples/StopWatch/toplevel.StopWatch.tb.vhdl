@@ -7,9 +7,10 @@ library IEEE;
 use     IEEE.std_logic_1164.all;
 use     IEEE.numeric_std.all;
 
-library lib_StopWatch;
-use     lib_StopWatch.Utilities.all;
-use     lib_StopWatch.StopWatch_pkg.all;
+library lib_Utilities;
+use     lib_Utilities.Utilities_pkg.all;
+
+use     work.StopWatch_pkg.all;
 
 
 entity toplevel_tb is
