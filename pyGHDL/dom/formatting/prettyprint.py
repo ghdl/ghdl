@@ -125,12 +125,12 @@ class PrettyPrint:
     def formatDesign(self, design: Design, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
-        buffer.append(f"{prefix}Libraries:")
+        buffer.append(f"{prefix}Libraries ({len(design.Libraries)}):")
         for library in design.Libraries.values():
             buffer.append(f"{prefix}  - Name: {library.Identifier}")
             for line in self.formatLibrary(library, level + 2):
                 buffer.append(line)
-        buffer.append(f"{prefix}Documents:")
+        buffer.append(f"{prefix}Documents ({len(design.Documents)}):")
         for document in design.Documents:
             buffer.append(f"{prefix}  - Path: '{document.Path}':")
             for line in self.formatDocument(document, level + 2):
@@ -141,19 +141,19 @@ class PrettyPrint:
     def formatLibrary(self, library: Library, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
-        buffer.append(f"{prefix}Contexts:")
+        buffer.append(f"{prefix}Contexts ({len(library.Contexts)}):")
         for context in library.Contexts.values():
             buffer.append(f"{prefix}  - {context.Identifier}")
-        buffer.append(f"{prefix}Packages:")
+        buffer.append(f"{prefix}Packages ({len(library.Packages)}):")
         for package in library.Packages.values():
             if isinstance(package, Package):
                 buffer.append(f"{prefix}  - {package.Identifier}")
             elif isinstance(package, PackageInstantiation):
                 buffer.append(f"{prefix}  - {package.Identifier} instantiate from {package.PackageReference}")
-        buffer.append(f"{prefix}Entities:")
+        buffer.append(f"{prefix}Entities ({len(library.Entities)}):")
         for entity in library.Entities.values():
             buffer.append(f"{prefix}  - {entity.Identifier}({', '.join([a.Identifier for a in entity.Architectures])})")
-        buffer.append(f"{prefix}Configurations:")
+        buffer.append(f"{prefix}Configurations ({len(library.Configurations)}):")
         for configuration in library.Configurations.values():
             buffer.append(f"{prefix}  - {configuration.Identifier}")
 
@@ -162,11 +162,11 @@ class PrettyPrint:
     def formatDocument(self, document: Document, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
-        buffer.append(f"{prefix}Contexts:")
+        buffer.append(f"{prefix}Contexts ({len(document.Contexts)}):")
         for context in document.Contexts.values():
             for line in self.formatContext(context, level + 1):
                 buffer.append(line)
-        buffer.append(f"{prefix}Packages:")
+        buffer.append(f"{prefix}Packages ({len(document.Packages)}):")
         for package in document.Packages.values():
             if isinstance(package, Package):
                 gen = self.formatPackage
@@ -175,20 +175,20 @@ class PrettyPrint:
 
             for line in gen(package, level + 1):
                 buffer.append(line)
-        buffer.append(f"{prefix}PackageBodies:")
+        buffer.append(f"{prefix}PackageBodies ({len(document.PackageBodies)}):")
         for packageBodies in document.PackageBodies.values():
             for line in self.formatPackageBody(packageBodies, level + 1):
                 buffer.append(line)
-        buffer.append(f"{prefix}Entities:")
+        buffer.append(f"{prefix}Entities ({len(document.Entities)}):")
         for entity in document.Entities.values():
             for line in self.formatEntity(entity, level + 1):
                 buffer.append(line)
-        buffer.append(f"{prefix}Architectures:")
+        buffer.append(f"{prefix}Architectures ({len(document.Architectures)}):")
         for architectures in document.Architectures.values():
             for architecture in architectures.values():
                 for line in self.formatArchitecture(architecture, level + 1):
                     buffer.append(line)
-        buffer.append(f"{prefix}Configurations:")
+        buffer.append(f"{prefix}Configurations ({len(document.Configurations)}):")
         for configuration in document.Configurations.values():
             for line in self.formatConfiguration(configuration, level + 1):
                 buffer.append(line)
