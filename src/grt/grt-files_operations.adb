@@ -562,7 +562,10 @@ package body Grt.Files_Operations is
       for I in 1 .. Len loop
          C := fgetc (Stream);
          if C < 0 then
-            Status := Op_End_Of_File;
+            --  Return EOF only if no character has been read.
+            if L = 0 then
+               Status := Op_End_Of_File;
+            end if;
             exit;
          end if;
          --  Be nice with DOS files: handle CR/CR+LF/LF.
