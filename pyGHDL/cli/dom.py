@@ -280,11 +280,11 @@ class Application(LineTerminal, ArgParseMixin):
                     )
                 )
         elif args.Directory is not None:
-            d: Path = args.Directory
+            d: Path = args.Directory.resolve()
             if not d.exists():
                 self.WriteError(f"Directory '{d!s}' does not exist.")
 
-            for file in d.glob("**/*.vhd?"):
+            for file in d.glob("**/*.vhd*"):
                 self.WriteNormal(f"Parsing file '{file!s}'")
                 document = self.addFile(file, "pretty")
                 self.WriteInfo(
