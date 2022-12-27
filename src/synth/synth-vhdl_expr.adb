@@ -2493,7 +2493,8 @@ package body Synth.Vhdl_Expr is
            |  Iir_Kind_Low_Array_Attribute
            |  Iir_Kind_Indexed_Name
            |  Iir_Kind_Selected_Element
-           |  Iir_Kind_Integer_Literal =>
+           |  Iir_Kind_Integer_Literal
+           |  Iir_Kind_String_Literal8 =>
             --  For array attributes: the type is the type of the index, which
             --  is not synthesized as a type (only as an index).
             --
