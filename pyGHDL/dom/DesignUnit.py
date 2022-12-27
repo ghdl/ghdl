@@ -69,7 +69,7 @@ from pyGHDL.libghdl import utils
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin, Position, DOMException
-from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode, GetPackageMemberSymbol
+from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode, GetPackageMemberSymbol, GetContextSymbol
 from pyGHDL.dom._Translate import (
     GetGenericsFromChainedNodes,
     GetPortsFromChainedNodes,
@@ -110,11 +110,9 @@ class ContextReference(VHDLModel_ContextReference, DOMMixin):
 
     @classmethod
     def parse(cls, contextNode: Iir):
-        from pyGHDL.dom._Translate import GetNameFromNode
-
-        contexts = [ContextReferenceSymbol(GetNameFromNode(nodes.Get_Selected_Name(contextNode)))]
+        contexts = [GetContextSymbol(nodes.Get_Selected_Name(contextNode))]
         for context in utils.chain_iter(nodes.Get_Context_Reference_Chain(contextNode)):
-            contexts.append(ContextReferenceSymbol(GetNameFromNode(nodes.Get_Selected_Name(context))))
+            contexts.append(GetContextSymbol(nodes.Get_Selected_Name(context)))
 
         return cls(contextNode, contexts)
 

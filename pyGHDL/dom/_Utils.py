@@ -39,6 +39,7 @@ from pyGHDL.dom.Symbol import (
     PackageReferenceSymbol,
     PackageMembersReferenceSymbol,
     AllPackageMembersReferenceSymbol,
+    ContextReferenceSymbol,
 )
 from pyVHDLModel.SyntaxModel import Mode
 
@@ -162,6 +163,16 @@ def GetPackageSymbol(node: Iir) -> PackageReferenceSymbol:
         name = GetNameOfNode(node)
         prefixName = GetLibrarySymbol(nodes.Get_Prefix(node))
         return PackageReferenceSymbol(node, name, prefixName)
+    else:
+        raise DOMException(f"{kind.name} at {Position.parse(node)}")
+
+
+def GetContextSymbol(node: Iir) -> ContextReferenceSymbol:
+    kind = GetIirKindOfNode(node)
+    if kind == nodes.Iir_Kind.Selected_Name:
+        name = GetNameOfNode(node)
+        prefixName = GetLibrarySymbol(nodes.Get_Prefix(node))
+        return ContextReferenceSymbol(node, name, prefixName)
     else:
         raise DOMException(f"{kind.name} at {Position.parse(node)}")
 
