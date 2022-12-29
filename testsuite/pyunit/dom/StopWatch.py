@@ -60,13 +60,16 @@ class Designs(TestCase):
         ("lib_StopWatch", Path("Counter.vhdl")),
         ("lib_StopWatch", Path("seg7_Encoder.vhdl")),
         ("lib_StopWatch", Path("seg7_Display.vhdl")),
+        ("lib_StopWatch", Path("seg7_Display.cfg.vhdl")),
         ("lib_StopWatch", Path("toplevel.Display.vhdl")),
     )
     _stopwatchFiles = _packageFiles + (
         ("lib_Utilities", Path("Counter.vhdl")),
         ("lib_StopWatch", Path("seg7_Encoder.vhdl")),
         ("lib_StopWatch", Path("seg7_Display.vhdl")),
+        ("lib_StopWatch", Path("seg7_Display.cfg.vhdl")),
         ("lib_StopWatch", Path("StopWatch.vhdl")),
+        ("lib_Utilities", Path("sync_Bits.vhdl")),
         ("lib_Utilities", Path("Debouncer.vhdl")),
         ("lib_StopWatch", Path("toplevel.StopWatch.vhdl")),
     )

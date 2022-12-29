@@ -1,42 +1,37 @@
 -- Author:  Patrick Lehmann
 -- License: MIT
 --
--- A generic counter module used in the StopWatch example.
+-- A generic multi-FF synchronizer.
 --
-context work.StopWatch_ctx;
+library ieee;
+use     ieee.std_logic_1164.all;
 
 
--- Encoder that translates from 4-bit binary (BCD) to 7-segment code.
-entity seg7_Encoder is
+-- Multi-stage FF synchronizer
+entity sync_Bits is
+	generic (
+		BITS      : positive              := 1;
+		STAGES    : positive range 2 to 5 := 3
+	);
 	port (
-		BCDValue  : in  T_BCD;
-		Dot       : in  std_logic  := '0';
+		Clock     : in  std_logic;
 
-		Seg7Code  : out std_logic_vector(7 downto 0)
+		Input     : in  std_logic_vector(BITS - 1 downto 0);
+		output    : in  std_logic_vector(BITS - 1 downto 0)
 	);
 end entity;
 
 
-architecture rtl of seg7_Encoder is
+architecture rtl of sync_Bits is
 
 begin
-	process(BCDValue, Dot)
-		variable temp : std_logic_vector(6 downto 0);
+	gen : for i in Input'range generate
+		signal meta   : std_logic := '0';
+		signal ffs    : std_logic_vector(STAGES - 1 downto 1) := (others => '0');
 	begin
-		case BCDValue is -- segments:  GFEDCBA     -- Segment Pos.   Index Pos.
-			when x"0" =>        temp := "0111111";   --
-			when x"1" =>        temp := "0000110";   --
-			when x"2" =>        temp := "1011011";   -- 	 AAA           000
-			when x"3" =>        temp := "1001111";   -- 	F   B         5   1
-			when x"4" =>        temp := "1100110";   -- 	F   B         5   1
-			when x"5" =>        temp := "1101101";   -- 	 GGG           666
-			when x"6" =>        temp := "1111101";   -- 	E   C         4   2
-			when x"7" =>        temp := "0000111";   -- 	E   C         4   2
-			when x"8" =>        temp := "1111111";   -- 	 DDD  DOT      333  7
-			when x"9" =>        temp := "1101111";   --
-			when others =>      temp := "XXXXXXX";   --
-		end case;
+		meta      <= Input(i) when rising_edge(Clock);
+		ffs       <= (ffs(ffs'left downto 1) & meta) when rising_edge(Clock);
 
-		Seg7Code <= Dot & temp;
-	end process;
+		Output(i) <= ffs(ffs'left);
+	end generate;
 end architecture;

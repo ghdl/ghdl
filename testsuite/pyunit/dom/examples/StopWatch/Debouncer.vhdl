@@ -15,7 +15,8 @@ entity Debouncer is
 		CLOCK_PERIOD   : time := 10 ns;
 		DEBOUNCE_TIME  : time := 3 ms;
 
-		BITS           : positive
+		BITS           : positive;
+		INPUT_SYNC     : boolean := true
 	);
 	port (
 		Clock  : in  std_logic;
@@ -29,11 +30,26 @@ architecture rtl of Debouncer is
 	constant DEBOUNCE_COUNTER_MAX  : positive := DEBOUNCE_TIME / (CLOCK_PERIOD* ite(IS_SIMULATION, 20, 1));
 	constant DEBOUNCE_COUNTER_BITS : positive := log2(DEBOUNCE_COUNTER_MAX);
 
+	signal Input_sync : Input'subtype;
 begin
 	assert false report "CLOCK_PERIOD:         " & time'image(CLOCK_PERIOD);
 	assert false report "DEBOUNCE_TIME:        " & time'image(DEBOUNCE_TIME);
 	--assert false report "DEBOUNCE_COUNTER_MAX: " & to_string(10 ns);
 	--assert false report "INTEGER'high:         " & integer'image(integer'high);
+
+	genSync: if INPUT_SYNC generate
+		sync: entity work.sync_Bits
+			generic map (
+				BITS => BITS
+			)
+			port map (
+				Clock  => Clock,
+				Input  => Input,
+				Output => Input_sync
+			);
+	else generate
+		Input_sync <= Input;
+	end generate;
 
 	genBits: for i in Input'range generate
 		signal DebounceCounter         : signed(DEBOUNCE_COUNTER_BITS downto 0) := to_signed(DEBOUNCE_COUNTER_MAX - 3, DEBOUNCE_COUNTER_BITS + 1);

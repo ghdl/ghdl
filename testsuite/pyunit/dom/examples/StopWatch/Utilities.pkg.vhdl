@@ -30,6 +30,21 @@ package Utilities_pkg is
 
 	function to_index(value : unsigned; max : positive) return natural;
 	function to_index(value : natural;  max : positive) return natural;
+
+	component Debouncer is
+		generic (
+			CLOCK_PERIOD   : time := 10 ns;
+			DEBOUNCE_TIME  : time := 3 ms;
+
+			BITS           : positive
+		);
+		port (
+			Clock  : in  std_logic;
+
+			Input  : in  std_logic_vector(BITS - 1 downto 0);
+			Output : out std_logic_vector(BITS - 1 downto 0) := (others => '0')
+		);
+	end component;
 end package;
 
 

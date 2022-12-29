@@ -18,4 +18,16 @@ package StopWatch_pkg is
 	end record;
 
 	type T_STOPWATCH_CONFIGURATION is array(natural range <>) of T_DIGIT_CONFIGURATION;
+
+	-- Encoder that translates from 4-bit binary (BCD) to 7-segment code.
+	--
+	-- In addition, an optional dot input is supported.
+	component seg7_Encoder is
+		port (
+			BCDValue  : in  T_BCD;
+			Dot       : in  std_logic  := '0';
+
+			Seg7Code  : out std_logic_vector(7 downto 0)
+		);
+	end component;
 end package;
