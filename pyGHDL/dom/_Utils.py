@@ -39,7 +39,7 @@ from pyGHDL.dom.Symbol import (
     PackageReferenceSymbol,
     PackageMembersReferenceSymbol,
     AllPackageMembersReferenceSymbol,
-    ContextReferenceSymbol,
+    ContextReferenceSymbol, EntityInstantiationSymbol, ComponentInstantiationSymbol, ConfigurationInstantiationSymbol,
 )
 from pyVHDLModel.SyntaxModel import Mode
 
@@ -145,16 +145,13 @@ def GetModeOfNode(node: Iir) -> Mode:
         raise DOMException(f"Unknown mode '{ex.args[0]}'.") from ex
 
 
-def GetPackageMemberSymbol(node: Iir) -> Union[PackageMembersReferenceSymbol, AllPackageMembersReferenceSymbol]:
+def GetLibrarySymbol(node: Iir) -> LibraryReferenceSymbol:
     kind = GetIirKindOfNode(node)
-    prefixName = GetPackageSymbol(nodes.Get_Prefix(node))
-    if kind == nodes.Iir_Kind.Selected_Name:
+    if kind == nodes.Iir_Kind.Simple_Name:
         name = GetNameOfNode(node)
-        return PackageMembersReferenceSymbol(node, name, prefixName)
-    elif kind == nodes.Iir_Kind.Selected_By_All_Name:
-        return AllPackageMembersReferenceSymbol(node, prefixName)
+        return LibraryReferenceSymbol(node, name)
     else:
-        raise DOMException(f"{kind.name} at {Position.parse(node)}")
+        raise DOMException(f"{kind} at {Position.parse(node)}")
 
 
 def GetPackageSymbol(node: Iir) -> PackageReferenceSymbol:
@@ -163,6 +160,18 @@ def GetPackageSymbol(node: Iir) -> PackageReferenceSymbol:
         name = GetNameOfNode(node)
         prefixName = GetLibrarySymbol(nodes.Get_Prefix(node))
         return PackageReferenceSymbol(node, name, prefixName)
+    else:
+        raise DOMException(f"{kind.name} at {Position.parse(node)}")
+
+
+def GetPackageMemberSymbol(node: Iir) -> Union[PackageMembersReferenceSymbol, AllPackageMembersReferenceSymbol]:
+    kind = GetIirKindOfNode(node)
+    prefixName = GetPackageSymbol(nodes.Get_Prefix(node))
+    if kind == nodes.Iir_Kind.Selected_Name:
+        name = GetNameOfNode(node)
+        return PackageMembersReferenceSymbol(node, name, prefixName)
+    elif kind == nodes.Iir_Kind.Selected_By_All_Name:
+        return AllPackageMembersReferenceSymbol(node, prefixName)
     else:
         raise DOMException(f"{kind.name} at {Position.parse(node)}")
 
@@ -177,10 +186,29 @@ def GetContextSymbol(node: Iir) -> ContextReferenceSymbol:
         raise DOMException(f"{kind.name} at {Position.parse(node)}")
 
 
-def GetLibrarySymbol(node: Iir) -> LibraryReferenceSymbol:
+def GetEntityInstantiationSymbol(node: Iir) -> EntityInstantiationSymbol:
+    kind = GetIirKindOfNode(node)
+    if kind == nodes.Iir_Kind.Selected_Name:
+        name = GetNameOfNode(node)
+        prefixName = GetLibrarySymbol(nodes.Get_Prefix(node))
+        return EntityInstantiationSymbol(node, name, prefixName)
+    else:
+        raise DOMException(f"{kind.name} at {Position.parse(node)}")
+
+
+def GetComponentInstantiationSymbol(node: Iir) -> ComponentInstantiationSymbol:
     kind = GetIirKindOfNode(node)
     if kind == nodes.Iir_Kind.Simple_Name:
         name = GetNameOfNode(node)
-        return LibraryReferenceSymbol(node, name)
+        return ComponentInstantiationSymbol(node, name)
     else:
-        raise DOMException(f"{kind} at {Position.parse(node)}")
+        raise DOMException(f"{kind.name} at {Position.parse(node)}")
+
+
+def GetConfigurationInstantiationSymbol(node: Iir) -> ConfigurationInstantiationSymbol:
+    kind = GetIirKindOfNode(node)
+    if kind == nodes.Iir_Kind.Simple_Name:
+        name = GetNameOfNode(node)
+        return ConfigurationInstantiationSymbol(node, name)
+    else:
+        raise DOMException(f"{kind.name} at {Position.parse(node)}")

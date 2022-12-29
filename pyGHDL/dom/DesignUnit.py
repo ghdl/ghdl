@@ -45,7 +45,6 @@ from pyTooling.Decorators import export
 
 from pyVHDLModel import (
     ContextUnion as VHDLModel_ContextUnion,
-    EntityOrSymbol as VHDLModel_EntityOrSymbol,
     LibraryClause as VHDLModel_LibraryClause,
     UseClause as VHDLModel_UseClause,
     ContextReference as VHDLModel_ContextReference,
@@ -76,7 +75,6 @@ from pyGHDL.dom._Translate import (
     GetDeclaredItemsFromChainedNodes,
     GetConcurrentStatementsFromChainedNodes,
 )
-from pyGHDL.dom.Names import SimpleName
 from pyGHDL.dom.Symbol import EntitySymbol, ContextReferenceSymbol, LibraryReferenceSymbol, PackageSymbol
 
 
@@ -155,7 +153,7 @@ class Architecture(VHDLModel_Architecture, DOMMixin):
         self,
         node: Iir,
         identifier: str,
-        entity: VHDLModel_EntityOrSymbol,
+        entity: EntitySymbol,
         contextItems: Iterable[VHDLModel_ContextUnion] = None,
         declaredItems: Iterable = None,
         statements: Iterable["ConcurrentStatement"] = None,
