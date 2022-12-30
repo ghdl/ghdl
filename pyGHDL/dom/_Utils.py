@@ -156,21 +156,24 @@ def GetLibrarySymbol(node: Iir) -> LibraryReferenceSymbol:
 
 def GetPackageSymbol(node: Iir) -> PackageReferenceSymbol:
     kind = GetIirKindOfNode(node)
+    name = GetNameOfNode(node)
     if kind == nodes.Iir_Kind.Selected_Name:
-        name = GetNameOfNode(node)
         prefixName = GetLibrarySymbol(nodes.Get_Prefix(node))
         return PackageReferenceSymbol(node, name, prefixName)
+    elif kind == nodes.Iir_Kind.Simple_Name:
+        return PackageReferenceSymbol(node, name, None)
     else:
         raise DOMException(f"{kind.name} at {Position.parse(node)}")
 
 
-def GetPackageMemberSymbol(node: Iir) -> Union[PackageMembersReferenceSymbol, AllPackageMembersReferenceSymbol]:
+def GetPackageMemberSymbol(node: Iir) -> Union[PackageReferenceSymbol, PackageMembersReferenceSymbol, AllPackageMembersReferenceSymbol]:
     kind = GetIirKindOfNode(node)
     prefixName = GetPackageSymbol(nodes.Get_Prefix(node))
     if kind == nodes.Iir_Kind.Selected_Name:
         name = GetNameOfNode(node)
         return PackageMembersReferenceSymbol(node, name, prefixName)
     elif kind == nodes.Iir_Kind.Selected_By_All_Name:
+        prefixName = GetPackageSymbol(nodes.Get_Prefix(node))
         return AllPackageMembersReferenceSymbol(node, prefixName)
     else:
         raise DOMException(f"{kind.name} at {Position.parse(node)}")
