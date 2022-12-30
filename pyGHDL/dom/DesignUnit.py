@@ -48,7 +48,7 @@ from pyVHDLModel import (
     LibraryClause as VHDLModel_LibraryClause,
     UseClause as VHDLModel_UseClause,
     ContextReference as VHDLModel_ContextReference,
-    Name,
+    Name, ContextUnion,
 )
 from pyVHDLModel.SyntaxModel import (
     Entity as VHDLModel_Entity,
@@ -295,7 +295,7 @@ class Context(VHDLModel_Context, DOMMixin):
         self,
         node: Iir,
         identifier: str,
-        references: Iterable[Union[LibraryClause, UseClause, ContextReference]] = None,
+        references: Iterable[ContextUnion] = None,
         documentation: str = None,
     ):
         super().__init__(identifier, references, documentation)
