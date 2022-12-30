@@ -68,19 +68,13 @@ package body Elab.Vhdl_Expr is
    is
       Els : constant Iir_Flist := Get_Simple_Aggregate_List (Aggr);
       Last : constant Natural := Flist_Last (Els);
-      Aggr_Type : Node;
+      Aggr_Type : constant Node := Get_Type (Aggr);
       Res_Typ : Type_Acc;
       Val : Valtyp;
       Res : Valtyp;
    begin
       --  Allocate the result.
-      Aggr_Type := Get_Literal_Subtype (Aggr);
-      if Aggr_Type /= Null_Node then
-         Res_Typ := Synth_Subtype_Indication (Syn_Inst, Aggr_Type);
-      else
-         Aggr_Type := Get_Type (Aggr);
-         Res_Typ := Get_Subtype_Object (Syn_Inst, Aggr_Type);
-      end if;
+      Res_Typ := Synth_Subtype_Indication (Syn_Inst, Aggr_Type);
       pragma Assert (Get_Nbr_Dimensions (Aggr_Type) = 1);
       pragma Assert (Res_Typ.Abound.Len = Uns32 (Last + 1));
 
