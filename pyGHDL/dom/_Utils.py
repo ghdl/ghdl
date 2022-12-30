@@ -39,7 +39,10 @@ from pyGHDL.dom.Symbol import (
     PackageReferenceSymbol,
     PackageMembersReferenceSymbol,
     AllPackageMembersReferenceSymbol,
-    ContextReferenceSymbol, EntityInstantiationSymbol, ComponentInstantiationSymbol, ConfigurationInstantiationSymbol,
+    ContextReferenceSymbol,
+    EntityInstantiationSymbol,
+    ComponentInstantiationSymbol,
+    ConfigurationInstantiationSymbol,
 )
 from pyVHDLModel.SyntaxModel import Mode
 
@@ -166,7 +169,9 @@ def GetPackageSymbol(node: Iir) -> PackageReferenceSymbol:
         raise DOMException(f"{kind.name} at {Position.parse(node)}")
 
 
-def GetPackageMemberSymbol(node: Iir) -> Union[PackageReferenceSymbol, PackageMembersReferenceSymbol, AllPackageMembersReferenceSymbol]:
+def GetPackageMemberSymbol(
+    node: Iir,
+) -> Union[PackageReferenceSymbol, PackageMembersReferenceSymbol, AllPackageMembersReferenceSymbol]:
     kind = GetIirKindOfNode(node)
     prefixName = GetPackageSymbol(nodes.Get_Prefix(node))
     if kind == nodes.Iir_Kind.Selected_Name:

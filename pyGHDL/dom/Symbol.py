@@ -146,8 +146,10 @@ class PackageSymbol(VHDLModel_PackageSymbol, DOMMixin):
         super().__init__(identifier)
         DOMMixin.__init__(self, identifierNode)
 
+
 # TODO: ||||                 ||||
 # TODO: VVVV   old symbols   VVVV
+
 
 @export
 class SimpleSubtypeSymbol(VHDLModel_SimpleSubtypeSymbol, DOMMixin):

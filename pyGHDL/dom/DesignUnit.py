@@ -48,7 +48,8 @@ from pyVHDLModel import (
     LibraryClause as VHDLModel_LibraryClause,
     UseClause as VHDLModel_UseClause,
     ContextReference as VHDLModel_ContextReference,
-    Name, ContextUnion,
+    Name,
+    ContextUnion,
 )
 from pyVHDLModel.SyntaxModel import (
     Entity as VHDLModel_Entity,

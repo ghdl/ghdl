@@ -35,7 +35,12 @@ from typing import Iterable
 from pyTooling.Decorators import export
 
 from pyGHDL.dom.Range import Range
-from pyGHDL.dom.Symbol import ArchitectureSymbol, EntityInstantiationSymbol, ComponentInstantiationSymbol, ConfigurationInstantiationSymbol
+from pyGHDL.dom.Symbol import (
+    ArchitectureSymbol,
+    EntityInstantiationSymbol,
+    ComponentInstantiationSymbol,
+    ConfigurationInstantiationSymbol,
+)
 from pyVHDLModel.SyntaxModel import (
     GenericAssociationItem as VHDLModel_GenericAssociationItem,
     PortAssociationItem as VHDLModel_PortAssociationItem,
@@ -71,7 +76,12 @@ from pyVHDLModel.SyntaxModel import (
 from pyGHDL.libghdl import Iir, utils
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin, DOMException, Position
-from pyGHDL.dom._Utils import GetNameOfNode, GetEntityInstantiationSymbol, GetComponentInstantiationSymbol, GetConfigurationInstantiationSymbol
+from pyGHDL.dom._Utils import (
+    GetNameOfNode,
+    GetEntityInstantiationSymbol,
+    GetComponentInstantiationSymbol,
+    GetConfigurationInstantiationSymbol,
+)
 
 
 @export
@@ -126,7 +136,7 @@ class EntityInstantiation(VHDLModel_EntityInstantiation, DOMMixin):
         instantiationNode: Iir,
         label: str,
         entitySymbol: EntityInstantiationSymbol,
-        architectureSymbol: ArchitectureSymbol = None,   # TODO: merge both symbols ?
+        architectureSymbol: ArchitectureSymbol = None,  # TODO: merge both symbols ?
         genericAssociations: Iterable[AssociationItem] = None,
         portAssociations: Iterable[AssociationItem] = None,
     ):
