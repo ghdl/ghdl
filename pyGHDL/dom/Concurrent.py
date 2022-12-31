@@ -35,6 +35,12 @@ from typing import Iterable
 from pyTooling.Decorators import export
 
 from pyGHDL.dom.Range import Range
+from pyGHDL.dom.Symbol import (
+    ArchitectureSymbol,
+    EntityInstantiationSymbol,
+    ComponentInstantiationSymbol,
+    ConfigurationInstantiationSymbol,
+)
 from pyVHDLModel.SyntaxModel import (
     GenericAssociationItem as VHDLModel_GenericAssociationItem,
     PortAssociationItem as VHDLModel_PortAssociationItem,
@@ -70,7 +76,12 @@ from pyVHDLModel.SyntaxModel import (
 from pyGHDL.libghdl import Iir, utils
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin, DOMException, Position
-from pyGHDL.dom._Utils import GetNameOfNode
+from pyGHDL.dom._Utils import (
+    GetNameOfNode,
+    GetEntityInstantiationSymbol,
+    GetComponentInstantiationSymbol,
+    GetConfigurationInstantiationSymbol,
+)
 
 
 @export
@@ -100,32 +111,22 @@ class ComponentInstantiation(VHDLModel_ComponentInstantiation, DOMMixin):
         self,
         instantiationNode: Iir,
         label: str,
-        componentName: Name,
+        componentSymbol: ComponentInstantiationSymbol,
         genericAssociations: Iterable[AssociationItem] = None,
         portAssociations: Iterable[AssociationItem] = None,
     ):
-        super().__init__(label, componentName, genericAssociations, portAssociations)
+        super().__init__(label, componentSymbol, genericAssociations, portAssociations)
         DOMMixin.__init__(self, instantiationNode)
 
     @classmethod
     def parse(cls, instantiationNode: Iir, instantiatedUnit: Iir, label: str) -> "ComponentInstantiation":
-        from pyGHDL.dom._Translate import (
-            GetNameFromNode,
-            GetGenericMapAspect,
-            GetPortMapAspect,
-        )
+        from pyGHDL.dom._Translate import GetGenericMapAspect, GetPortMapAspect
 
-        componentName = GetNameFromNode(instantiatedUnit)
+        componentSymbol = GetComponentInstantiationSymbol(instantiatedUnit)
         genericAssociations = GetGenericMapAspect(nodes.Get_Generic_Map_Aspect_Chain(instantiationNode))
         portAssociations = GetPortMapAspect(nodes.Get_Port_Map_Aspect_Chain(instantiationNode))
 
-        return cls(
-            instantiationNode,
-            label,
-            componentName,
-            genericAssociations,
-            portAssociations,
-        )
+        return cls(instantiationNode, label, componentSymbol, genericAssociations, portAssociations)
 
 
 @export
@@ -134,41 +135,30 @@ class EntityInstantiation(VHDLModel_EntityInstantiation, DOMMixin):
         self,
         instantiationNode: Iir,
         label: str,
-        entityName: Name,
-        architectureName: Name = None,
+        entitySymbol: EntityInstantiationSymbol,
+        architectureSymbol: ArchitectureSymbol = None,  # TODO: merge both symbols ?
         genericAssociations: Iterable[AssociationItem] = None,
         portAssociations: Iterable[AssociationItem] = None,
     ):
-        super().__init__(label, entityName, architectureName, genericAssociations, portAssociations)
+        super().__init__(label, entitySymbol, architectureSymbol, genericAssociations, portAssociations)
         DOMMixin.__init__(self, instantiationNode)
 
     @classmethod
     def parse(cls, instantiationNode: Iir, instantiatedUnit: Iir, label: str) -> "EntityInstantiation":
-        from pyGHDL.dom._Translate import (
-            GetNameFromNode,
-            GetGenericMapAspect,
-            GetPortMapAspect,
-        )
+        from pyGHDL.dom._Translate import GetGenericMapAspect, GetPortMapAspect
 
         entityId = nodes.Get_Entity_Name(instantiatedUnit)
-        entityName = GetNameFromNode(entityId)
+        entitySymbol = GetEntityInstantiationSymbol(entityId)
 
-        architectureName = None
+        architectureSymbol = None
         architectureId = nodes.Get_Architecture(instantiatedUnit)
         if architectureId != nodes.Null_Iir:
-            architectureName = GetNameOfNode(architectureId)
+            architectureSymbol = ArchitectureSymbol(GetNameOfNode(architectureId), entitySymbol)
 
         genericAssociations = GetGenericMapAspect(nodes.Get_Generic_Map_Aspect_Chain(instantiationNode))
         portAssociations = GetPortMapAspect(nodes.Get_Port_Map_Aspect_Chain(instantiationNode))
 
-        return cls(
-            instantiationNode,
-            label,
-            entityName,
-            architectureName,
-            genericAssociations,
-            portAssociations,
-        )
+        return cls(instantiationNode, label, entitySymbol, architectureSymbol, genericAssociations, portAssociations)
 
 
 @export
@@ -177,34 +167,24 @@ class ConfigurationInstantiation(VHDLModel_ConfigurationInstantiation, DOMMixin)
         self,
         instantiationNode: Iir,
         label: str,
-        configurationName: Name,
+        configurationSymbol: ConfigurationInstantiationSymbol,
         genericAssociations: Iterable[AssociationItem] = None,
         portAssociations: Iterable[AssociationItem] = None,
     ):
-        super().__init__(label, configurationName, genericAssociations, portAssociations)
+        super().__init__(label, configurationSymbol, genericAssociations, portAssociations)
         DOMMixin.__init__(self, instantiationNode)
 
     @classmethod
     def parse(cls, instantiationNode: Iir, instantiatedUnit: Iir, label: str) -> "ConfigurationInstantiation":
-        from pyGHDL.dom._Translate import (
-            GetNameFromNode,
-            GetGenericMapAspect,
-            GetPortMapAspect,
-        )
+        from pyGHDL.dom._Translate import GetGenericMapAspect, GetPortMapAspect
 
         configurationId = nodes.Get_Configuration_Name(instantiatedUnit)
-        configurationName = GetNameFromNode(configurationId)
+        configurationSymbol = GetConfigurationInstantiationSymbol(configurationId)
 
         genericAssociations = GetGenericMapAspect(nodes.Get_Generic_Map_Aspect_Chain(instantiationNode))
         portAssociations = GetPortMapAspect(nodes.Get_Port_Map_Aspect_Chain(instantiationNode))
 
-        return cls(
-            instantiationNode,
-            label,
-            configurationName,
-            genericAssociations,
-            portAssociations,
-        )
+        return cls(instantiationNode, label, configurationSymbol, genericAssociations, portAssociations)
 
 
 @export
@@ -221,10 +201,7 @@ class ConcurrentBlockStatement(VHDLModel_ConcurrentBlockStatement, DOMMixin):
 
     @classmethod
     def parse(cls, blockNode: Iir, label: str) -> "ConcurrentBlockStatement":
-        from pyGHDL.dom._Translate import (
-            GetDeclaredItemsFromChainedNodes,
-            GetConcurrentStatementsFromChainedNodes,
-        )
+        from pyGHDL.dom._Translate import GetDeclaredItemsFromChainedNodes, GetConcurrentStatementsFromChainedNodes
 
         #        genericAssociations = GetGenericMapAspect(nodes.Get_Generic_Map_Aspect_Chain(instantiationNode))
         #        portAssociations = GetPortMapAspect(nodes.Get_Port_Map_Aspect_Chain(instantiationNode))
@@ -252,10 +229,7 @@ class ProcessStatement(VHDLModel_ProcessStatement, DOMMixin):
 
     @classmethod
     def parse(cls, processNode: Iir, label: str, hasSensitivityList: bool) -> "ProcessStatement":
-        from pyGHDL.dom._Translate import (
-            GetDeclaredItemsFromChainedNodes,
-            GetSequentialStatementsFromChainedNodes,
-        )
+        from pyGHDL.dom._Translate import GetDeclaredItemsFromChainedNodes, GetSequentialStatementsFromChainedNodes
 
         sensitivityList = None
         if hasSensitivityList:

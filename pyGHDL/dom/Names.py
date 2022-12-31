@@ -48,8 +48,6 @@ from pyVHDLModel.SyntaxModel import (
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.dom import DOMMixin
 
-__all__ = []
-
 
 @export
 class SimpleName(VHDLModel_SimpleName, DOMMixin):

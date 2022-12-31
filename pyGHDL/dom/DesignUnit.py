@@ -39,17 +39,17 @@ This module contains all DOM classes for VHDL's design units (:class:`context <E
 
 
 """
-from typing import Iterable
+from typing import Iterable, Union
 
 from pyTooling.Decorators import export
 
 from pyVHDLModel import (
     ContextUnion as VHDLModel_ContextUnion,
-    EntityOrSymbol as VHDLModel_EntityOrSymbol,
     LibraryClause as VHDLModel_LibraryClause,
     UseClause as VHDLModel_UseClause,
     ContextReference as VHDLModel_ContextReference,
     Name,
+    ContextUnion,
 )
 from pyVHDLModel.SyntaxModel import (
     Entity as VHDLModel_Entity,
@@ -63,26 +63,20 @@ from pyVHDLModel.SyntaxModel import (
     GenericInterfaceItem,
     PortInterfaceItem,
     ConcurrentStatement,
-    PackageReferenceSymbol,
-    ContextReferenceSymbol,
 )
 
 from pyGHDL.libghdl import utils
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin, Position, DOMException
-from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode
+from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode, GetPackageMemberSymbol, GetContextSymbol
 from pyGHDL.dom._Translate import (
     GetGenericsFromChainedNodes,
     GetPortsFromChainedNodes,
     GetDeclaredItemsFromChainedNodes,
     GetConcurrentStatementsFromChainedNodes,
 )
-from pyGHDL.dom.Names import SimpleName
-from pyGHDL.dom.Symbol import EntitySymbol
-
-
-__all__ = []
+from pyGHDL.dom.Symbol import EntitySymbol, ContextReferenceSymbol, LibraryReferenceSymbol, PackageSymbol
 
 
 @export
@@ -100,11 +94,9 @@ class UseClause(VHDLModel_UseClause, DOMMixin):
 
     @classmethod
     def parse(cls, useNode: Iir):
-        from pyGHDL.dom._Translate import GetNameFromNode
-
-        uses = [PackageReferenceSymbol(GetNameFromNode(nodes.Get_Selected_Name(useNode)))]
+        uses = [GetPackageMemberSymbol(nodes.Get_Selected_Name(useNode))]
         for use in utils.chain_iter(nodes.Get_Use_Clause_Chain(useNode)):
-            uses.append(PackageReferenceSymbol(GetNameFromNode(nodes.Get_Selected_Name(use))))
+            uses.append(GetPackageMemberSymbol(nodes.Get_Selected_Name(use)))
 
         return cls(useNode, uses)
 
@@ -117,11 +109,9 @@ class ContextReference(VHDLModel_ContextReference, DOMMixin):
 
     @classmethod
     def parse(cls, contextNode: Iir):
-        from pyGHDL.dom._Translate import GetNameFromNode
-
-        contexts = [ContextReferenceSymbol(GetNameFromNode(nodes.Get_Selected_Name(contextNode)))]
+        contexts = [GetContextSymbol(nodes.Get_Selected_Name(contextNode))]
         for context in utils.chain_iter(nodes.Get_Context_Reference_Chain(contextNode)):
-            contexts.append(ContextReferenceSymbol(GetNameFromNode(nodes.Get_Selected_Name(context))))
+            contexts.append(GetContextSymbol(nodes.Get_Selected_Name(context)))
 
         return cls(contextNode, contexts)
 
@@ -164,7 +154,7 @@ class Architecture(VHDLModel_Architecture, DOMMixin):
         self,
         node: Iir,
         identifier: str,
-        entity: VHDLModel_EntityOrSymbol,
+        entity: EntitySymbol,
         contextItems: Iterable[VHDLModel_ContextUnion] = None,
         declaredItems: Iterable = None,
         statements: Iterable["ConcurrentStatement"] = None,
@@ -178,8 +168,7 @@ class Architecture(VHDLModel_Architecture, DOMMixin):
         name = GetNameOfNode(architectureNode)
         documentation = GetDocumentationOfNode(architectureNode)
         entityNameNode = nodes.Get_Entity_Name(architectureNode)
-        entityName = GetNameOfNode(entityNameNode)
-        entitySymbol = EntitySymbol(entityNameNode, SimpleName(entityNameNode, entityName))
+        entitySymbol = EntitySymbol(entityNameNode, GetNameOfNode(entityNameNode))
         declaredItems = GetDeclaredItemsFromChainedNodes(
             nodes.Get_Declaration_Chain(architectureNode), "architecture", name
         )
@@ -252,23 +241,26 @@ class PackageBody(VHDLModel_PackageBody, DOMMixin):
     def __init__(
         self,
         node: Iir,
-        identifier: str,
+        packageSymbol: PackageSymbol,
         contextItems: Iterable[VHDLModel_ContextUnion] = None,
         declaredItems: Iterable = None,
         documentation: str = None,
     ):
-        super().__init__(identifier, contextItems, declaredItems, documentation)
+        super().__init__(packageSymbol, contextItems, declaredItems, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, packageBodyNode: Iir, contextItems: Iterable[VHDLModel_ContextUnion]):
-        name = GetNameOfNode(packageBodyNode)
+        packageName = GetNameOfNode(packageBodyNode)
+        packageSymbol = PackageSymbol(packageBodyNode, packageName)
         documentation = GetDocumentationOfNode(packageBodyNode)
-        declaredItems = GetDeclaredItemsFromChainedNodes(nodes.Get_Declaration_Chain(packageBodyNode), "package", name)
+        declaredItems = GetDeclaredItemsFromChainedNodes(
+            nodes.Get_Declaration_Chain(packageBodyNode), "package", packageName
+        )
 
         # FIXME: read use clauses
 
-        return cls(packageBodyNode, name, contextItems, declaredItems, documentation)
+        return cls(packageBodyNode, packageSymbol, contextItems, declaredItems, documentation)
 
 
 @export
@@ -304,11 +296,10 @@ class Context(VHDLModel_Context, DOMMixin):
         self,
         node: Iir,
         identifier: str,
-        libraryReferences: Iterable[LibraryClause] = None,
-        packageReferences: Iterable[UseClause] = None,
+        references: Iterable[ContextUnion] = None,
         documentation: str = None,
     ):
-        super().__init__(identifier, libraryReferences, packageReferences, documentation)
+        super().__init__(identifier, references, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -323,7 +314,8 @@ class Context(VHDLModel_Context, DOMMixin):
         for item in utils.chain_iter(nodes.Get_Context_Items(contextNode)):
             kind = GetIirKindOfNode(item)
             if kind is nodes.Iir_Kind.Library_Clause:
-                names.append(SimpleName(item, GetNameOfNode(item)))
+                libraryIdentifier = GetNameOfNode(item)
+                names.append(LibraryReferenceSymbol(item, libraryIdentifier))
                 if nodes.Get_Has_Identifier_List(item):
                     continue
 
@@ -331,6 +323,8 @@ class Context(VHDLModel_Context, DOMMixin):
                 names = []
             elif kind is nodes.Iir_Kind.Use_Clause:
                 items.append(UseClause.parse(item))
+            elif kind is nodes.Iir_Kind.Context_Reference:
+                items.append(ContextReference.parse(item))
             else:
                 pos = Position.parse(item)
                 raise DOMException(f"Unknown context item kind '{kind.name}' in context at line {pos.Line}.")

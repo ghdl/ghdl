@@ -7,7 +7,9 @@ library IEEE;
 use     IEEE.std_logic_1164.all;
 use     IEEE.numeric_std.all;
 
-use     work.Utilities.all;
+library lib_Utilities;
+use     lib_Utilities.Utilities_pkg.all;
+
 use     work.StopWatch_pkg.all;
 
 
@@ -77,7 +79,7 @@ begin
 	Dot   <= DotValues(to_index(Digit_Select, DotValues'high));
 
 	-- 7-segment encoder
-	enc: entity work.seg7_Encoder
+	enc: configuration seg7_Encoder
 		port map (
 			BCDValue  => Digit,
 			Dot       => Dot,

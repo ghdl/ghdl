@@ -34,11 +34,7 @@ from typing import List, Iterator
 
 from pyTooling.Decorators import export, InheritDocString
 
-from pyGHDL.dom.Names import SimpleName
 from pyVHDLModel.SyntaxModel import (
-    EntitySymbol as VHDLModel_EntitySymbol,
-    ArchitectureSymbol as VHDLModel_ArchitectureSymbol,
-    PackageSymbol as VHDLModel_PackageSymbol,
     SimpleSubtypeSymbol as VHDLModel_SimpleSubtypeSymbol,
     ConstrainedScalarSubtypeSymbol as VHDLModel_ConstrainedScalarSubtypeSymbol,
     ConstrainedCompositeSubtypeSymbol as VHDLModel_ConstrainedCompositeSubtypeSymbol,
@@ -46,37 +42,113 @@ from pyVHDLModel.SyntaxModel import (
     IndexedObjectOrFunctionCallSymbol as VHDLModel_IndexedObjectOrFunctionCallSymbol,
     ConstraintUnion,
     Name,
+    LibraryReferenceSymbol as VHDLModel_LibraryReferenceSymbol,
+    PackageReferenceSymbol as VHDLModel_PackageReferenceSymbol,
+    PackageMembersReferenceSymbol as VHDLModel_PackageMembersReferenceSymbol,
+    AllPackageMembersReferenceSymbol as VHDLModel_AllPackageMembersReferenceSymbol,
+    ContextReferenceSymbol as VHDLModel_ContextReferenceSymbol,
+    EntityInstantiationSymbol as VHDLModel_EntityInstantiationSymbol,
+    ComponentInstantiationSymbol as VHDLModel_ComponentInstantiationSymbol,
+    ConfigurationInstantiationSymbol as VHDLModel_ConfigurationInstantiationSymbol,
+    EntitySymbol as VHDLModel_EntitySymbol,
+    ArchitectureSymbol as VHDLModel_ArchitectureSymbol,
+    PackageSymbol as VHDLModel_PackageSymbol,
 )
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.dom import DOMMixin
 from pyGHDL.dom.Range import Range
 
 
-__all__ = []
+@export
+class LibraryReferenceSymbol(VHDLModel_LibraryReferenceSymbol, DOMMixin):
+    @InheritDocString(VHDLModel_LibraryReferenceSymbol)
+    def __init__(self, identifierNode: Iir, identifier: str):
+        super().__init__(identifier)
+        DOMMixin.__init__(self, identifierNode)
+
+
+@export
+class PackageReferenceSymbol(VHDLModel_PackageReferenceSymbol, DOMMixin):
+    @InheritDocString(VHDLModel_PackageReferenceSymbol)
+    def __init__(self, identifierNode: Iir, identifier: str, prefix: LibraryReferenceSymbol):
+        super().__init__(identifier, prefix)
+        DOMMixin.__init__(self, identifierNode)
+
+
+@export
+class PackageMembersReferenceSymbol(VHDLModel_PackageMembersReferenceSymbol, DOMMixin):
+    @InheritDocString(VHDLModel_PackageMembersReferenceSymbol)
+    def __init__(self, identifierNode: Iir, identifier: str, prefix: PackageReferenceSymbol):
+        super().__init__(identifier, prefix)
+        DOMMixin.__init__(self, identifierNode)
+
+
+@export
+class AllPackageMembersReferenceSymbol(VHDLModel_AllPackageMembersReferenceSymbol, DOMMixin):
+    @InheritDocString(VHDLModel_AllPackageMembersReferenceSymbol)
+    def __init__(self, identifierNode: Iir, prefix: PackageReferenceSymbol):
+        super().__init__(prefix)
+        DOMMixin.__init__(self, identifierNode)
+
+
+@export
+class ContextReferenceSymbol(VHDLModel_ContextReferenceSymbol, DOMMixin):
+    @InheritDocString(VHDLModel_ContextReferenceSymbol)
+    def __init__(self, identifierNode: Iir, identifier: str, prefix: LibraryReferenceSymbol):
+        super().__init__(identifier, prefix)
+        DOMMixin.__init__(self, identifierNode)
+
+
+@export
+class EntityInstantiationSymbol(VHDLModel_EntityInstantiationSymbol, DOMMixin):
+    @InheritDocString(VHDLModel_EntityInstantiationSymbol)
+    def __init__(self, identifierNode: Iir, identifier: str, prefix: LibraryReferenceSymbol):
+        super().__init__(identifier, prefix)
+        DOMMixin.__init__(self, identifierNode)
+
+
+@export
+class ComponentInstantiationSymbol(VHDLModel_ComponentInstantiationSymbol, DOMMixin):
+    @InheritDocString(VHDLModel_ComponentInstantiationSymbol)
+    def __init__(self, identifierNode: Iir, identifier: str):
+        super().__init__(identifier)
+        DOMMixin.__init__(self, identifierNode)
+
+
+@export
+class ConfigurationInstantiationSymbol(VHDLModel_ConfigurationInstantiationSymbol, DOMMixin):
+    @InheritDocString(VHDLModel_ConfigurationInstantiationSymbol)
+    def __init__(self, identifierNode: Iir, identifier: str):
+        super().__init__(identifier)
+        DOMMixin.__init__(self, identifierNode)
 
 
 @export
 class EntitySymbol(VHDLModel_EntitySymbol, DOMMixin):
     @InheritDocString(VHDLModel_EntitySymbol)
-    def __init__(self, node: Iir, entityName: SimpleName):
-        super().__init__(entityName)
-        DOMMixin.__init__(self, node)
+    def __init__(self, identifierNode: Iir, identifier: str):
+        super().__init__(identifier)
+        DOMMixin.__init__(self, identifierNode)
 
 
 @export
 class ArchitectureSymbol(VHDLModel_ArchitectureSymbol, DOMMixin):
     @InheritDocString(VHDLModel_ArchitectureSymbol)
-    def __init__(self, node: Iir, architectureName: SimpleName):
-        super().__init__(architectureName)
-        DOMMixin.__init__(self, node)
+    def __init__(self, identifierNode: Iir, identifier: str, prefix: EntitySymbol):
+        super().__init__(identifier, prefix)
+        DOMMixin.__init__(self, identifierNode)
 
 
 @export
 class PackageSymbol(VHDLModel_PackageSymbol, DOMMixin):
     @InheritDocString(VHDLModel_PackageSymbol)
-    def __init__(self, node: Iir, packageName: SimpleName):
-        super().__init__(packageName)
-        DOMMixin.__init__(self, node)
+    def __init__(self, identifierNode: Iir, identifier: str):
+        super().__init__(identifier)
+        DOMMixin.__init__(self, identifierNode)
+
+
+# TODO: ||||                 ||||
+# TODO: VVVV   old symbols   VVVV
 
 
 @export

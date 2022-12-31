@@ -7,10 +7,13 @@ library IEEE;
 use     IEEE.std_logic_1164.all;
 use     IEEE.numeric_std.all;
 
-use     work.Utilities.all;
+library lib_Utilities;
+use     lib_Utilities.Utilities_pkg.all;
+
 use     work.StopWatch_pkg.all;
 
 
+-- Toplevel module to demonstrate the translation of 4 slide-switches to 1 digit 7-segment display.
 entity toplevel is
 	port (
 		NexysA7_GPIO_Switch         : in  std_logic_vector(3 downto 0);

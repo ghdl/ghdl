@@ -44,8 +44,6 @@ from pyGHDL.libghdl._types import Iir
 from pyGHDL.dom import DOMMixin
 from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode
 
-__all__ = []
-
 
 @export
 class Alias(VHDLModel_Alias, DOMMixin):

@@ -85,7 +85,7 @@ def test_Synopsys(file):
 
 @mark.xfail(reason="Needs further investigations.")
 @mark.parametrize("file", [str(f.relative_to(_VITAL_ROOT)) for f in _VITAL_ROOT.glob("*.vhdl")])
-def test_Synopsys(file):
+def test_Vital(file):
     filePath = _VITAL_ROOT / file
 
     lib = design.GetLibrary("vital")

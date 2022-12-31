@@ -114,15 +114,23 @@ class PrettyPrint:
     # def __init__(self):
     #     self._buffer = []
 
+    def CleanupDocumentationBlocks(self, documentationContent: str, level: int = 0):
+        prefix = "  " * level
+        if documentationContent is None:
+            return prefix
+
+        documentationLines = documentationContent.split("\n")
+        return f"{prefix}{documentationLines[0][2:].lstrip()}"
+
     def formatDesign(self, design: Design, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
-        buffer.append(f"{prefix}Libraries:")
+        buffer.append(f"{prefix}Libraries ({len(design.Libraries)}):")
         for library in design.Libraries.values():
             buffer.append(f"{prefix}  - Name: {library.Identifier}")
             for line in self.formatLibrary(library, level + 2):
                 buffer.append(line)
-        buffer.append(f"{prefix}Documents:")
+        buffer.append(f"{prefix}Documents ({len(design.Documents)}):")
         for document in design.Documents:
             buffer.append(f"{prefix}  - Path: '{document.Path}':")
             for line in self.formatDocument(document, level + 2):
@@ -133,37 +141,33 @@ class PrettyPrint:
     def formatLibrary(self, library: Library, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
-        buffer.append(f"{prefix}Entities:")
-        for entity in library.Entities:
-            buffer.append(f"{prefix}  - {entity.Identifier}({', '.join([a.Identifier for a in entity.Architectures])})")
-        buffer.append(f"{prefix}Packages:")
-        for package in library.Packages:
+        buffer.append(f"{prefix}Contexts ({len(library.Contexts)}):")
+        for context in library.Contexts.values():
+            buffer.append(f"{prefix}  - {context.Identifier}")
+        buffer.append(f"{prefix}Packages ({len(library.Packages)}):")
+        for package in library.Packages.values():
             if isinstance(package, Package):
                 buffer.append(f"{prefix}  - {package.Identifier}")
             elif isinstance(package, PackageInstantiation):
                 buffer.append(f"{prefix}  - {package.Identifier} instantiate from {package.PackageReference}")
-        buffer.append(f"{prefix}Configurations:")
-        for configuration in library.Configurations:
+        buffer.append(f"{prefix}Entities ({len(library.Entities)}):")
+        for entity in library.Entities.values():
+            buffer.append(f"{prefix}  - {entity.Identifier}({', '.join([a.Identifier for a in entity.Architectures])})")
+        buffer.append(f"{prefix}Configurations ({len(library.Configurations)}):")
+        for configuration in library.Configurations.values():
             buffer.append(f"{prefix}  - {configuration.Identifier}")
-        buffer.append(f"{prefix}Contexts:")
-        for context in library.Contexts:
-            buffer.append(f"{prefix}  - {context.Identifier}")
 
         return buffer
 
     def formatDocument(self, document: Document, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
-        buffer.append(f"{prefix}Entities:")
-        for entity in document.Entities:
-            for line in self.formatEntity(entity, level + 1):
+        buffer.append(f"{prefix}Contexts ({len(document.Contexts)}):")
+        for context in document.Contexts.values():
+            for line in self.formatContext(context, level + 1):
                 buffer.append(line)
-        buffer.append(f"{prefix}Architectures:")
-        for architecture in document.Architectures:
-            for line in self.formatArchitecture(architecture, level + 1):
-                buffer.append(line)
-        buffer.append(f"{prefix}Packages:")
-        for package in document.Packages:
+        buffer.append(f"{prefix}Packages ({len(document.Packages)}):")
+        for package in document.Packages.values():
             if isinstance(package, Package):
                 gen = self.formatPackage
             else:
@@ -171,17 +175,22 @@ class PrettyPrint:
 
             for line in gen(package, level + 1):
                 buffer.append(line)
-        buffer.append(f"{prefix}PackageBodies:")
-        for packageBodies in document.PackageBodies:
+        buffer.append(f"{prefix}PackageBodies ({len(document.PackageBodies)}):")
+        for packageBodies in document.PackageBodies.values():
             for line in self.formatPackageBody(packageBodies, level + 1):
                 buffer.append(line)
-        buffer.append(f"{prefix}Configurations:")
-        for configuration in document.Configurations:
-            for line in self.formatConfiguration(configuration, level + 1):
+        buffer.append(f"{prefix}Entities ({len(document.Entities)}):")
+        for entity in document.Entities.values():
+            for line in self.formatEntity(entity, level + 1):
                 buffer.append(line)
-        buffer.append(f"{prefix}Contexts:")
-        for context in document.Contexts:
-            for line in self.formatContext(context, level + 1):
+        buffer.append(f"{prefix}Architectures ({len(document.Architectures)}):")
+        for architectures in document.Architectures.values():
+            for architecture in architectures.values():
+                for line in self.formatArchitecture(architecture, level + 1):
+                    buffer.append(line)
+        buffer.append(f"{prefix}Configurations ({len(document.Configurations)}):")
+        for configuration in document.Configurations.values():
+            for line in self.formatConfiguration(configuration, level + 1):
                 buffer.append(line)
 
         return buffer
@@ -189,10 +198,12 @@ class PrettyPrint:
     def formatEntity(self, entity: Entity, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
+        documentationFirstLine = self.CleanupDocumentationBlocks(entity.Documentation)
         buffer.append(
             f"{prefix}- Name: {entity.Identifier}\n"
             f"{prefix}  File: {entity.Position.Filename.name}\n"
-            f"{prefix}  Position: {entity.Position.Line}:{entity.Position.Column}"
+            f"{prefix}  Position: {entity.Position.Line}:{entity.Position.Column}\n"
+            f"{prefix}  Documentation: {documentationFirstLine}"
         )
         buffer.append(f"{prefix}  Generics:")
         for generic in entity.GenericItems:
@@ -218,12 +229,14 @@ class PrettyPrint:
     def formatArchitecture(self, architecture: Architecture, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
+        documentationFirstLine = self.CleanupDocumentationBlocks(architecture.Documentation)
         buffer.append(
             f"{prefix}- Name: {architecture.Identifier}\n"
             f"{prefix}  File: {architecture.Position.Filename.name}\n"
-            f"{prefix}  Position: {architecture.Position.Line}:{architecture.Position.Column}"
+            f"{prefix}  Position: {architecture.Position.Line}:{architecture.Position.Column}\n"
+            f"{prefix}  Documentation: {documentationFirstLine}"
         )
-        buffer.append(f"{prefix}  Entity: {architecture.Entity.SymbolName}")
+        buffer.append(f"{prefix}  Entity: {architecture.Entity.Identifier}")
         buffer.append(f"{prefix}  Declared:")
         for item in architecture.DeclaredItems:
             for line in self.formatDeclaredItems(item, level + 2):
@@ -243,6 +256,7 @@ class PrettyPrint:
     def formatComponent(self, component: Component, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
+        documentationFirstLine = self.CleanupDocumentationBlocks(component.Documentation)
         buffer.append(f"{prefix}- Component: {component.Identifier}")
         buffer.append(f"{prefix}  Generics:")
         for generic in component.GenericItems:
@@ -258,10 +272,12 @@ class PrettyPrint:
     def formatPackage(self, package: Package, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
+        documentationFirstLine = self.CleanupDocumentationBlocks(package.Documentation)
         buffer.append(
             f"{prefix}- Name: {package.Identifier}\n"
             f"{prefix}  File: {package.Position.Filename.name}\n"
-            f"{prefix}  Position: {package.Position.Line}:{package.Position.Column}"
+            f"{prefix}  Position: {package.Position.Line}:{package.Position.Column}\n"
+            f"{prefix}  Documentation: {documentationFirstLine}"
         )
         buffer.append(f"{prefix}  Declared:")
         for item in package.DeclaredItems:
@@ -273,6 +289,7 @@ class PrettyPrint:
     def formatPackageInstance(self, package: PackageInstantiation, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
+        documentationFirstLine = self.CleanupDocumentationBlocks(package.Documentation)
         buffer.append(f"{prefix}- Name: {package.Identifier}")
         buffer.append(f"{prefix}  Package: {package.PackageReference!s}")
         buffer.append(f"{prefix}  Generic Map: ...")
@@ -285,7 +302,8 @@ class PrettyPrint:
     def formatPackageBody(self, packageBody: PackageBody, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
-        buffer.append(f"{prefix}- Name: {packageBody.Identifier}")
+        documentationFirstLine = self.CleanupDocumentationBlocks(packageBody.Documentation)
+        buffer.append(f"{prefix}- Name: {packageBody.Identifier}\n{prefix}  Documentation: {documentationFirstLine}")
         buffer.append(f"{prefix}  Declared:")
         for item in packageBody.DeclaredItems:
             for line in self.formatDeclaredItems(item, level + 1):

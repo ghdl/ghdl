@@ -173,9 +173,6 @@ from pyGHDL.dom.Misc import Alias
 from pyGHDL.dom.PSL import DefaultClock
 
 
-__all__ = []
-
-
 @export
 def GetNameFromNode(node: Iir) -> Name:
     kind = GetIirKindOfNode(node)
@@ -835,6 +832,7 @@ def GetConcurrentStatementsFromChainedNodes(
         elif kind == nodes.Iir_Kind.Component_Instantiation_Statement:
             instantiatedUnit = nodes.Get_Instantiated_Unit(statement)
             instantiatedUnitKind = GetIirKindOfNode(instantiatedUnit)
+
             if instantiatedUnitKind == nodes.Iir_Kind.Entity_Aspect_Entity:
                 yield EntityInstantiation.parse(statement, instantiatedUnit, label)
             elif instantiatedUnitKind == nodes.Iir_Kind.Entity_Aspect_Configuration:

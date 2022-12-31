@@ -8,7 +8,8 @@ use     IEEE.std_logic_1164.all;
 use     IEEE.numeric_std.all;
 
 
-package Utilities is
+-- Useful utility functions and types.
+package Utilities_pkg is
 	type freq is range integer'low to integer'high units
 		Hz;
 		kHz = 1000 Hz;
@@ -29,10 +30,25 @@ package Utilities is
 
 	function to_index(value : unsigned; max : positive) return natural;
 	function to_index(value : natural;  max : positive) return natural;
+
+	component Debouncer is
+		generic (
+			CLOCK_PERIOD   : time := 10 ns;
+			DEBOUNCE_TIME  : time := 3 ms;
+
+			BITS           : positive
+		);
+		port (
+			Clock  : in  std_logic;
+
+			Input  : in  std_logic_vector(BITS - 1 downto 0);
+			Output : out std_logic_vector(BITS - 1 downto 0) := (others => '0')
+		);
+	end component;
 end package;
 
 
-package body Utilities is
+package body Utilities_pkg is
 	function simulation return boolean is
 		variable result : boolean := FALSE;
 	begin

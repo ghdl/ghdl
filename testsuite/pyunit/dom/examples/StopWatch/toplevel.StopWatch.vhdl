@@ -7,7 +7,9 @@ library IEEE;
 use     IEEE.std_logic_1164.all;
 use     IEEE.numeric_std.all;
 
-use     work.Utilities.all;
+library lib_Utilities;
+use     lib_Utilities.Utilities_pkg.all;
+
 use     work.StopWatch_pkg.all;
 
 
@@ -57,7 +59,7 @@ begin
 	Board_Reset <= not NexysA7_GPIO_Button_Reset_n;
 
 	-- Debounce input signals
-	deb: entity work.Debouncer
+	deb: component Debouncer
 		generic map (
 			CLOCK_PERIOD  => CLOCK_PERIOD,
 			BITS          => 2
@@ -98,7 +100,7 @@ begin
 		);
 
 	-- 7-segment display
-	display: entity work.seg7_Display
+	display: configuration seg7_Display_cfg
 		generic map (
 			CLOCK_PERIOD  => CLOCK_PERIOD,
 			DIGITS        => Digits'length

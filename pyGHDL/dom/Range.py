@@ -34,8 +34,6 @@ from pyTooling.Decorators import export
 
 from pyVHDLModel.SyntaxModel import Range as VHDLModel_Range
 
-__all__ = []
-
 
 @export
 class Range(VHDLModel_Range):

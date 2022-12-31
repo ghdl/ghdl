@@ -54,8 +54,6 @@ from pyGHDL.libghdl._types import Iir
 from pyGHDL.dom import DOMMixin
 from pyGHDL.dom.Range import Range
 
-__all__ = []
-
 
 @export
 class SimpleAggregateElement(VHDLModel_SimpleAggregateElement, DOMMixin):

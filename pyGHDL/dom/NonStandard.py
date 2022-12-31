@@ -48,7 +48,6 @@ from pyVHDLModel.SyntaxModel import (
     Design as VHDLModel_Design,
     Library as VHDLModel_Library,
     Document as VHDLModel_Document,
-    LibraryReferenceSymbol,
 )
 
 from pyGHDL.libghdl import (
@@ -84,9 +83,8 @@ from pyGHDL.dom.DesignUnit import (
     UseClause,
     ContextReference,
 )
+from pyGHDL.dom.Symbol import LibraryReferenceSymbol
 from pyGHDL.dom.PSL import VerificationUnit, VerificationProperty, VerificationMode
-
-__all__ = []
 
 
 @export
@@ -113,6 +111,21 @@ class Design(VHDLModel_Design):
         # Finish initialization. This will load the standard package.
         if libghdl_analyze_init_status() != 0:
             raise LibGHDLException("Error initializing 'libghdl'.")
+
+    def LoadDefaultLibraries(self):
+        t1 = time.perf_counter()
+
+        super().LoadStdLibrary()
+        super().LoadIEEELibrary()
+
+        self._loadDefaultLibraryTime = time.perf_counter() - t1
+
+    def Analyze(self):
+        t1 = time.perf_counter()
+
+        super().Analyze()
+
+        self._analyzeTime = time.perf_counter() - t1
 
 
 @export
@@ -197,7 +210,8 @@ class Document(VHDLModel_Document):
                 for item in utils.chain_iter(context):
                     itemKind = GetIirKindOfNode(item)
                     if itemKind is nodes.Iir_Kind.Library_Clause:
-                        contextNames.append(LibraryReferenceSymbol(SimpleName(item, GetNameOfNode(item))))
+                        libraryIdentifier = GetNameOfNode(item)
+                        contextNames.append(LibraryReferenceSymbol(item, libraryIdentifier))
                         if nodes.Get_Has_Identifier_List(item):
                             continue
 

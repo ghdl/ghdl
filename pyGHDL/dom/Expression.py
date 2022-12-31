@@ -104,9 +104,6 @@ from pyGHDL.dom.Aggregates import (
 )
 
 
-__all__ = []
-
-
 class _ParseUnaryExpressionMixin:
     @classmethod
     def parse(cls, node: Iir) -> VHDLModel_UnaryExpression:

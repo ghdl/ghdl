@@ -30,17 +30,27 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+from typing import Union
+
 from pyTooling.Decorators import export
 
+from pyGHDL.dom.Symbol import (
+    LibraryReferenceSymbol,
+    PackageReferenceSymbol,
+    PackageMembersReferenceSymbol,
+    AllPackageMembersReferenceSymbol,
+    ContextReferenceSymbol,
+    EntityInstantiationSymbol,
+    ComponentInstantiationSymbol,
+    ConfigurationInstantiationSymbol,
+)
 from pyVHDLModel.SyntaxModel import Mode
 
 from pyGHDL.libghdl import LibGHDLException, name_table, errorout_memory, files_map, file_comments
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes, utils
 from pyGHDL.libghdl.vhdl.nodes import Null_Iir
-from pyGHDL.dom import DOMException
-
-__all__ = []
+from pyGHDL.dom import DOMException, Position
 
 __MODE_TRANSLATION = {
     nodes.Iir_Mode.In_Mode: Mode.In,
@@ -136,3 +146,77 @@ def GetModeOfNode(node: Iir) -> Mode:
         return __MODE_TRANSLATION[nodes.Get_Mode(node)]
     except KeyError as ex:
         raise DOMException(f"Unknown mode '{ex.args[0]}'.") from ex
+
+
+def GetLibrarySymbol(node: Iir) -> LibraryReferenceSymbol:
+    kind = GetIirKindOfNode(node)
+    if kind == nodes.Iir_Kind.Simple_Name:
+        name = GetNameOfNode(node)
+        return LibraryReferenceSymbol(node, name)
+    else:
+        raise DOMException(f"{kind} at {Position.parse(node)}")
+
+
+def GetPackageSymbol(node: Iir) -> PackageReferenceSymbol:
+    kind = GetIirKindOfNode(node)
+    name = GetNameOfNode(node)
+    if kind == nodes.Iir_Kind.Selected_Name:
+        prefixName = GetLibrarySymbol(nodes.Get_Prefix(node))
+        return PackageReferenceSymbol(node, name, prefixName)
+    elif kind == nodes.Iir_Kind.Simple_Name:
+        return PackageReferenceSymbol(node, name, None)
+    else:
+        raise DOMException(f"{kind.name} at {Position.parse(node)}")
+
+
+def GetPackageMemberSymbol(
+    node: Iir,
+) -> Union[PackageReferenceSymbol, PackageMembersReferenceSymbol, AllPackageMembersReferenceSymbol]:
+    kind = GetIirKindOfNode(node)
+    prefixName = GetPackageSymbol(nodes.Get_Prefix(node))
+    if kind == nodes.Iir_Kind.Selected_Name:
+        name = GetNameOfNode(node)
+        return PackageMembersReferenceSymbol(node, name, prefixName)
+    elif kind == nodes.Iir_Kind.Selected_By_All_Name:
+        prefixName = GetPackageSymbol(nodes.Get_Prefix(node))
+        return AllPackageMembersReferenceSymbol(node, prefixName)
+    else:
+        raise DOMException(f"{kind.name} at {Position.parse(node)}")
+
+
+def GetContextSymbol(node: Iir) -> ContextReferenceSymbol:
+    kind = GetIirKindOfNode(node)
+    if kind == nodes.Iir_Kind.Selected_Name:
+        name = GetNameOfNode(node)
+        prefixName = GetLibrarySymbol(nodes.Get_Prefix(node))
+        return ContextReferenceSymbol(node, name, prefixName)
+    else:
+        raise DOMException(f"{kind.name} at {Position.parse(node)}")
+
+
+def GetEntityInstantiationSymbol(node: Iir) -> EntityInstantiationSymbol:
+    kind = GetIirKindOfNode(node)
+    if kind == nodes.Iir_Kind.Selected_Name:
+        name = GetNameOfNode(node)
+        prefixName = GetLibrarySymbol(nodes.Get_Prefix(node))
+        return EntityInstantiationSymbol(node, name, prefixName)
+    else:
+        raise DOMException(f"{kind.name} at {Position.parse(node)}")
+
+
+def GetComponentInstantiationSymbol(node: Iir) -> ComponentInstantiationSymbol:
+    kind = GetIirKindOfNode(node)
+    if kind == nodes.Iir_Kind.Simple_Name:
+        name = GetNameOfNode(node)
+        return ComponentInstantiationSymbol(node, name)
+    else:
+        raise DOMException(f"{kind.name} at {Position.parse(node)}")
+
+
+def GetConfigurationInstantiationSymbol(node: Iir) -> ConfigurationInstantiationSymbol:
+    kind = GetIirKindOfNode(node)
+    if kind == nodes.Iir_Kind.Simple_Name:
+        name = GetNameOfNode(node)
+        return ConfigurationInstantiationSymbol(node, name)
+    else:
+        raise DOMException(f"{kind.name} at {Position.parse(node)}")

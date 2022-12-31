@@ -280,11 +280,11 @@ class Application(LineTerminal, ArgParseMixin):
                     )
                 )
         elif args.Directory is not None:
-            d: Path = args.Directory
+            d: Path = args.Directory.resolve()
             if not d.exists():
                 self.WriteError(f"Directory '{d!s}' does not exist.")
 
-            for file in d.glob("**/*.vhd?"):
+            for file in d.glob("**/*.vhd*"):
                 self.WriteNormal(f"Parsing file '{file!s}'")
                 document = self.addFile(file, "pretty")
                 self.WriteInfo(
@@ -299,15 +299,22 @@ class Application(LineTerminal, ArgParseMixin):
                     )
                 )
 
-        for library in self._design.Libraries.values():
-            for entityName, architectures in library.Architectures.items():
-                for entity in library.Entities:
-                    if entity.Identifier == str(entityName):
-                        for architecture in architectures:
-                            entity.Architectures.append(architecture)
-
         if not self._design.Documents:
             self.WriteFatal("No files processed at all.")
+
+        self._design.LoadDefaultLibraries()
+        self._design.Analyze()
+        self.WriteInfo(
+            dedent(
+                """\
+                  default library load time: {:5.3f} us
+                  dependency analysis time:  {:5.3f} us
+                """
+            ).format(
+                self._design._loadDefaultLibraryTime * 10**6,
+                self._design._analyzeTime * 10**6,
+            )
+        )
 
         PP = PrettyPrint()
 

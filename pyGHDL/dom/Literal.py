@@ -48,8 +48,6 @@ from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin
 from pyGHDL.dom._Utils import GetNameOfNode
 
-__all__ = []
-
 
 @export
 class NullLiteral(VHDLModel_NullLiteral, DOMMixin):
