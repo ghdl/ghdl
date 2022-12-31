@@ -3781,6 +3781,7 @@ package body Trans.Chap7 is
       Expr_Type : Iir;
       Range_Type : Iir;
       Assoc_Expr : Iir;
+      Bnd : Mnode;
    begin
       El_Assoc := Null_Iir;
       Static_Len := 0;
@@ -3805,8 +3806,8 @@ package body Trans.Chap7 is
                     Static_Len + Eval_Discrete_Type_Length (Range_Type);
                end if;
             else
-               --  TODO
-               raise Internal_Error;
+               --  Then it's dynamic; will be handled in the second pass.
+               null;
             end if;
          end if;
 
@@ -3820,30 +3821,44 @@ package body Trans.Chap7 is
       Assoc := Get_Association_Choices_Chain (Aggr);
       while Assoc /= Null_Iir loop
          pragma Assert (Get_Kind (Assoc) = Iir_Kind_Choice_By_None);
-         if not Get_Element_Type_Flag (Assoc) then
-            Expr_Type := Get_Type (Get_Associated_Expr (Assoc));
-            if Get_Constraint_State (Expr_Type) = Fully_Constrained then
-               Range_Type := Get_Index_Type (Expr_Type, 0);
-               if Get_Type_Staticness (Range_Type) /= Locally then
-                  declare
-                     Bnd : Mnode;
-                     L : Mnode;
-                  begin
-                     Bnd := Chap3.Get_Composite_Type_Bounds (Expr_Type);
-
-                     L := Chap3.Range_To_Length
-                       (Chap3.Bounds_To_Range (Bnd, Expr_Type, 1));
-                     New_Assign_Stmt
-                       (New_Obj (Var_Len),
-                        New_Dyadic_Op (ON_Add_Ov,
-                                       New_Obj_Value (Var_Len), M2E (L)));
-                  end;
-               end if;
-            else
-               --  TODO
-               raise Internal_Error;
-            end if;
+         if Get_Element_Type_Flag (Assoc) then
+            goto Next;
          end if;
+
+         Assoc_Expr := Get_Associated_Expr (Assoc);
+         Expr_Type := Get_Type (Assoc_Expr);
+         if Get_Constraint_State (Expr_Type) = Fully_Constrained then
+            Range_Type := Get_Index_Type (Expr_Type, 0);
+            if Get_Type_Staticness (Range_Type) = Locally then
+               goto Next;
+            end if;
+            Bnd := Chap3.Get_Composite_Type_Bounds (Expr_Type);
+         else
+            --  Eval expr
+            declare
+               Val : Mnode;
+               Info : Ortho_Info_Acc;
+            begin
+               Val := Translate_Expression (Assoc_Expr);
+               Val := Stabilize (Val);
+               Info := Add_Info (Assoc, Kind_Expr_Eval);
+               Info.Expr_Eval := Val;
+
+               Bnd := Chap3.Get_Composite_Bounds (Val);
+            end;
+         end if;
+
+         declare
+            L : Mnode;
+         begin
+            L := Chap3.Range_To_Length
+              (Chap3.Bounds_To_Range (Bnd, Expr_Type, 1));
+            New_Assign_Stmt
+              (New_Obj (Var_Len),
+               New_Dyadic_Op (ON_Add_Ov,
+                              New_Obj_Value (Var_Len), M2E (L)));
+         end;
+         <<Next>> null;
          Assoc := Get_Chain (Assoc);
       end loop;
 
