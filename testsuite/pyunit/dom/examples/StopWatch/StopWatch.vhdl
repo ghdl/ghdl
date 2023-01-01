@@ -32,7 +32,7 @@ entity Stopwatch is
 end entity;
 
 
-architecture trl of Stopwatch is
+architecture rtl of Stopwatch is
 	type T_STATE is (ST_RESET, ST_IDLE, ST_COUNTING, ST_PAUSE);
 
 	signal State      : T_STATE := ST_IDLE;
@@ -92,7 +92,7 @@ begin
 		end case;
 	end process;
 
-	TimeBaseCnt: entity work.Counter
+	TimeBaseCnt: entity lib_Utilities.Counter
 		generic map (
 			MODULO     => TIMEBASE / (CLOCK_PERIOD * ite(IS_SIMULATION, 100, 1)),
 			BITS       => 0
@@ -109,7 +109,7 @@ begin
 	Overflows(0) <= Tick;
 
 	genDigits: for i in CONFIG'range generate
-		cnt: entity work.Counter
+		cnt: entity lib_Utilities.Counter
 			generic map (
 				MODULO     => CONFIG(i).Modulo,
 				BITS       => Digits(i)'length
