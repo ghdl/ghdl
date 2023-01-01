@@ -896,6 +896,8 @@ package body Elab.Vhdl_Annotations is
       Info : Sim_Info_Acc;
       Clause : Iir;
    begin
+      --  Create info for the if-generate statement so that we can know the
+      --  slot of the generate body.
       Info := Create_Block_Info (Block_Info, Stmt);
       pragma Unreferenced (Info);
 
@@ -928,11 +930,20 @@ package body Elab.Vhdl_Annotations is
    procedure Annotate_Case_Generate_Statement
      (Block_Info : Sim_Info_Acc; Stmt : Iir)
    is
+      Info : Sim_Info_Acc;
       Assoc : Iir;
    begin
+      --  Create info for the case-generate statement so that we can know the
+      --  slot of the generate body.
+      Info := Create_Block_Info (Block_Info, Stmt);
+      pragma Unreferenced (Info);
+
       Assoc := Get_Case_Statement_Alternative_Chain (Stmt);
       while Assoc /= Null_Iir loop
          if not Get_Same_Alternative_Flag (Assoc) then
+            --  Use the same slot as the case-generate statement.
+            Block_Info.Nbr_Objects := Block_Info.Nbr_Objects - 1;
+
             Annotate_Generate_Statement_Body
               (Block_Info, Get_Associated_Block (Assoc), Null_Iir);
          end if;

@@ -1558,9 +1558,8 @@ package body Synth.Vhdl_Stmts is
    end Synth_Case_Statement_Dynamic;
 
    function Execute_Static_Case_Statement_Array
-     (Inst : Synth_Instance_Acc; Stmt : Node; Sel : Valtyp) return Node
+     (Inst : Synth_Instance_Acc; Choices : Node; Sel : Valtyp) return Node
    is
-      Choices : constant Node := Get_Case_Statement_Alternative_Chain (Stmt);
       Choice : Node;
       Stmts : Node;
       Sel_Expr : Node;
@@ -1591,38 +1590,37 @@ package body Synth.Vhdl_Stmts is
       end loop;
    end Execute_Static_Case_Statement_Array;
 
-   function Execute_Static_Case_Statement_Scalar
-     (Inst : Synth_Instance_Acc; Stmt : Node; Sel : Int64) return Node
+   function Execute_Static_Choices_Scalar
+     (Inst : Synth_Instance_Acc; Choices : Node; Sel : Int64) return Node
    is
-      Choices : constant Node := Get_Case_Statement_Alternative_Chain (Stmt);
       Choice : Node;
-      Stmts : Node;
+      Res : Node;
       Sel_Expr : Node;
    begin
       --  Synth statements, extract choice value.
-      Stmts := Null_Node;
+      Res := Null_Node;
       Choice := Choices;
       loop
          pragma Assert (Is_Valid (Choice));
          if not Get_Same_Alternative_Flag (Choice) then
-            Stmts := Get_Associated_Chain (Choice);
+            Res := Choice;
          end if;
 
          case Get_Kind (Choice) is
             when Iir_Kind_Choice_By_Expression =>
                Sel_Expr := Get_Choice_Expression (Choice);
                if Vhdl.Evaluation.Eval_Pos (Sel_Expr) = Sel then
-                  return Stmts;
+                  return Res;
                end if;
             when Iir_Kind_Choice_By_Others =>
-               return Stmts;
+               return Res;
             when Iir_Kind_Choice_By_Range =>
                declare
                   Bnd : Discrete_Range_Type;
                begin
                   Synth_Discrete_Range (Inst, Get_Choice_Range (Choice), Bnd);
                   if In_Range (Bnd, Sel) then
-                     return Stmts;
+                     return Res;
                   end if;
                end;
             when others =>
@@ -1630,20 +1628,24 @@ package body Synth.Vhdl_Stmts is
          end case;
          Choice := Get_Chain (Choice);
       end loop;
-   end Execute_Static_Case_Statement_Scalar;
+   end Execute_Static_Choices_Scalar;
 
    function Execute_Static_Case_Statement
-     (Inst : Synth_Instance_Acc; Stmt : Node; Sel : Valtyp) return Node is
+     (Inst : Synth_Instance_Acc; Stmt : Node; Sel : Valtyp) return Node
+   is
+      Choices : constant Node := Get_Case_Statement_Alternative_Chain (Stmt);
+      Choice : Node;
    begin
       case Sel.Typ.Kind is
          when Type_Bit
            | Type_Logic
            | Type_Discrete =>
-            return Execute_Static_Case_Statement_Scalar
-              (Inst, Stmt, Read_Discrete (Sel));
+            Choice := Execute_Static_Choices_Scalar (Inst, Choices,
+                                                     Read_Discrete (Sel));
+            return Get_Associated_Chain (Choice);
          when Type_Vector
            | Type_Array =>
-            return Execute_Static_Case_Statement_Array (Inst, Stmt, Sel);
+            return Execute_Static_Case_Statement_Array (Inst, Choices, Sel);
          when others =>
             raise Internal_Error;
       end case;

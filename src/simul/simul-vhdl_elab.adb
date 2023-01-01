@@ -852,7 +852,8 @@ package body Simul.Vhdl_Elab is
                Gather_Connections_Instantiation_Statement
                  (Inst, Stmt, Sub_Inst);
             end;
-         when Iir_Kind_If_Generate_Statement =>
+         when Iir_Kind_If_Generate_Statement
+            | Iir_Kind_Case_Generate_Statement =>
             declare
                Sub : constant Synth_Instance_Acc :=
                  Get_Sub_Instance (Inst, Stmt);

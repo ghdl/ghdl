@@ -542,7 +542,8 @@ package body Elab.Vhdl_Insts is
            | Iir_Kind_Simple_Simultaneous_Statement
            | Iir_Kinds_Process_Statement =>
             null;
-         when Iir_Kind_If_Generate_Statement =>
+         when Iir_Kind_If_Generate_Statement
+            | Iir_Kind_Case_Generate_Statement =>
             declare
                Sub_Inst : constant Synth_Instance_Acc :=
                  Get_Sub_Instance (Syn_Inst, Stmt);

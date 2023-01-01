@@ -28,6 +28,7 @@ with Elab.Vhdl_Decls; use Elab.Vhdl_Decls;
 with Elab.Vhdl_Insts; use Elab.Vhdl_Insts;
 
 with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
+with Synth.Vhdl_Stmts;
 
 package body Elab.Vhdl_Stmts is
    function Elab_Generate_Statement_Body (Syn_Inst : Synth_Instance_Acc;
@@ -194,6 +195,37 @@ package body Elab.Vhdl_Stmts is
       Create_Sub_Instance (Syn_Inst, Stmt, null);
    end Elab_If_Generate_Statement;
 
+   procedure Elab_Case_Generate_Statement
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
+   is
+      Choices : constant Node := Get_Case_Statement_Alternative_Chain (Stmt);
+      Marker : Mark_Type;
+      Expr : Node;
+      Val : Valtyp;
+      Gen : Node;
+      Bod : Node;
+      Config : Node;
+      Sub_Inst : Synth_Instance_Acc;
+   begin
+      Mark_Expr_Pool (Marker);
+
+      --  Execute expression.
+      Expr := Get_Expression (Stmt);
+      Val := Synth_Expression (Syn_Inst, Expr);
+      Strip_Const (Val);
+
+      Gen := Synth.Vhdl_Stmts.Execute_Static_Choices_Scalar
+        (Syn_Inst, Choices, Read_Discrete (Val));
+      Bod := Get_Associated_Block (Gen);
+      Release_Expr_Pool (Marker);
+
+      Config := Get_Generate_Block_Configuration (Bod);
+
+      Apply_Block_Configuration (Config, Bod);
+      Sub_Inst := Elab_Generate_Statement_Body (Syn_Inst, Bod, Config);
+      Create_Sub_Instance (Syn_Inst, Bod, Sub_Inst);
+   end Elab_Case_Generate_Statement;
+
    procedure Elab_Block_Statement (Syn_Inst : Synth_Instance_Acc; Blk : Node)
    is
       Hdr : constant Node := Get_Block_Header (Blk);
@@ -263,6 +295,9 @@ package body Elab.Vhdl_Stmts is
 
          when Iir_Kind_If_Generate_Statement =>
             Elab_If_Generate_Statement (Syn_Inst, Stmt);
+
+         when Iir_Kind_Case_Generate_Statement =>
+            Elab_Case_Generate_Statement (Syn_Inst, Stmt);
 
          when Iir_Kind_Block_Statement =>
             Elab_Block_Statement (Syn_Inst, Stmt);
