@@ -313,8 +313,18 @@ package body Elab.Vhdl_Decls is
             null;
          when Iir_Kind_File_Declaration =>
             Elab_File_Declaration (Syn_Inst, Decl);
+
          when Iir_Kind_Package_Instantiation_Declaration =>
             Vhdl_Insts.Elab_Package_Instantiation (Syn_Inst, Decl);
+         when Iir_Kind_Package_Declaration =>
+            Vhdl_Insts.Elab_Package_Declaration (Syn_Inst, Decl);
+         when Iir_Kind_Package_Body =>
+            declare
+               Spec : constant Node := Get_Package (Decl);
+            begin
+               Vhdl_Insts.Elab_Package_Body (Syn_Inst, Spec, Decl);
+            end;
+
          when Iir_Kind_Protected_Type_Body =>
             null;
          when Iir_Kind_Psl_Default_Clock =>

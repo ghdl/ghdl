@@ -33,6 +33,10 @@ package Elab.Vhdl_Insts is
                                           Inter_Chain : Node;
                                           Assoc_Chain : Node);
 
+   procedure Elab_Package_Declaration
+     (Parent_Inst : Synth_Instance_Acc; Pkg : Node);
+   procedure Elab_Package_Body
+     (Parent_Inst : Synth_Instance_Acc; Pkg : Node; Bod : Node);
    procedure Elab_Package_Instantiation
      (Parent_Inst : Synth_Instance_Acc; Pkg : Node);
 
