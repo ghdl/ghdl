@@ -2491,6 +2491,7 @@ package body Synth.Vhdl_Expr is
       case Get_Kind (Expr) is
          when Iir_Kind_High_Array_Attribute
            |  Iir_Kind_Low_Array_Attribute
+           |  Iir_Kind_Simple_Name
            |  Iir_Kind_Indexed_Name
            |  Iir_Kind_Selected_Element
            |  Iir_Kind_Integer_Literal
