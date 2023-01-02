@@ -374,8 +374,15 @@ package body Elab.Vhdl_Expr is
             end;
          when Iir_Kind_Function_Call =>
             declare
+               Ret_Typ : Type_Acc;
                Val : Valtyp;
             begin
+               Ret_Typ := Get_Subtype_Object (Syn_Inst, Get_Type (Name));
+               if Is_Bounded_Type (Ret_Typ) then
+                  return Ret_Typ;
+               end if;
+
+               --  Humm, is it an error ?
                Val := Synth.Vhdl_Expr.Synth_Expression (Syn_Inst, Name);
                return Val.Typ;
             end;
