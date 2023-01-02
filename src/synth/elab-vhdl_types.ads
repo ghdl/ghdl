@@ -52,9 +52,6 @@ package Elab.Vhdl_Types is
    function Create_Bounds_From_Length
      (Bounds : Discrete_Range_Type; Len : Iir_Index32) return Bound_Type;
 
-   function Synth_Array_Subtype_Indication
-     (Syn_Inst : Synth_Instance_Acc; Atype : Node) return Type_Acc;
-
    procedure Synth_Subtype_Indication
      (Syn_Inst : Synth_Instance_Acc; Atype : Node);
    function Synth_Subtype_Indication

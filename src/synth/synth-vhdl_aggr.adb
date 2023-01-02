@@ -549,7 +549,7 @@ package body Synth.Vhdl_Aggr is
             declare
                Res_Type : Type_Acc;
             begin
-               Res_Type := Synth_Array_Subtype_Indication
+               Res_Type := Synth_Subtype_Indication
                  (Syn_Inst, Get_Type (Aggr));
                return Synth_Aggregate_Array (Syn_Inst, Aggr, Res_Type);
             end;

@@ -33,6 +33,11 @@ with Elab.Vhdl_Errors; use Elab.Vhdl_Errors;
 with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
 
 package body Elab.Vhdl_Types is
+   function Synth_Subtype_Indication_With_Parent
+     (Syn_Inst : Synth_Instance_Acc;
+      Parent_Typ : Type_Acc;
+      Atype : Node) return Type_Acc;
+
    function Synth_Discrete_Range_Expression
      (Syn_Inst : Synth_Instance_Acc; Rng : Node) return Discrete_Range_Type
    is
@@ -543,14 +548,13 @@ package body Elab.Vhdl_Types is
               = Iir_Kind_Array_Element_Resolution));
    end Has_Element_Subtype_Indication;
 
-   function Synth_Array_Subtype_Indication
-     (Syn_Inst : Synth_Instance_Acc; Atype : Node) return Type_Acc
+   function Synth_Array_Subtype_Indication (Syn_Inst : Synth_Instance_Acc;
+                                            Parent_Typ : Type_Acc;
+                                            Atype : Node) return Type_Acc
    is
       Parent_Type : constant Node := Get_Parent_Type (Atype);
       El_Type : constant Node := Get_Element_Subtype (Atype);
       St_Indexes : constant Node_Flist := Get_Index_Subtype_List (Atype);
-      Parent_Typ : constant Type_Acc :=
-        Get_Subtype_Object (Syn_Inst, Parent_Type);
       St_El : Node;
       El_Typ : Type_Acc;
    begin
@@ -558,7 +562,8 @@ package body Elab.Vhdl_Types is
       if Has_Element_Subtype_Indication (Atype) then
          --  This subtype has created a new anonymous subtype for the
          --  element.
-         El_Typ := Synth_Subtype_Indication_If_Anonymous (Syn_Inst, El_Type);
+         El_Typ := Synth_Subtype_Indication_With_Parent
+           (Syn_Inst, Get_Array_Element (Parent_Typ), El_Type);
       else
          El_Typ := Parent_Typ;
          loop
@@ -572,8 +577,7 @@ package body Elab.Vhdl_Types is
       end if;
 
       if not Get_Index_Constraint_Flag (Atype) then
-         if Get_Element_Subtype (Parent_Type)
-           = Get_Element_Subtype (Atype)
+         if Get_Element_Subtype (Parent_Type) = Get_Element_Subtype (Atype)
          then
             --  That's an alias.
             --  FIXME: maybe a resolution function was added?
@@ -611,7 +615,8 @@ package body Elab.Vhdl_Types is
                   return Res_Typ;
                end;
             else
-               raise Internal_Error;
+               return Create_Unbounded_Array
+                 (Parent_Typ.Uarr_Idx, Parent_Typ.Ulast, El_Typ);
             end if;
          when Type_Vector
            | Type_Array =>
@@ -622,6 +627,24 @@ package body Elab.Vhdl_Types is
       end case;
    end Synth_Array_Subtype_Indication;
 
+   function Synth_Subtype_Indication_With_Parent
+     (Syn_Inst : Synth_Instance_Acc;
+      Parent_Typ : Type_Acc;
+      Atype : Node) return Type_Acc is
+   begin
+      if Get_Type_Declarator (Atype) = Null_Node then
+         case Get_Kind (Atype) is
+            when Iir_Kind_Array_Subtype_Definition =>
+               return Synth_Array_Subtype_Indication
+                 (Syn_Inst, Parent_Typ, Atype);
+            when others =>
+               return Synth_Subtype_Indication (Syn_Inst, Atype);
+         end case;
+      else
+         return Get_Subtype_Object (Syn_Inst, Atype);
+      end if;
+   end Synth_Subtype_Indication_With_Parent;
+
    function Synth_Subtype_Indication
      (Syn_Inst : Synth_Instance_Acc; Atype : Node) return Type_Acc is
    begin
@@ -630,7 +653,14 @@ package body Elab.Vhdl_Types is
          when Iir_Kinds_Denoting_Name =>
             return Get_Subtype_Object (Syn_Inst, Get_Type (Atype));
          when Iir_Kind_Array_Subtype_Definition =>
-            return Synth_Array_Subtype_Indication (Syn_Inst, Atype);
+            declare
+               Parent_Type : constant Node := Get_Parent_Type (Atype);
+               Parent_Typ : constant Type_Acc :=
+                 Get_Subtype_Object (Syn_Inst, Parent_Type);
+            begin
+               return Synth_Array_Subtype_Indication
+                 (Syn_Inst, Parent_Typ, Atype);
+            end;
          when Iir_Kind_Record_Subtype_Definition =>
             return Synth_Record_Type_Definition (Syn_Inst, Atype);
          when Iir_Kind_Integer_Subtype_Definition
