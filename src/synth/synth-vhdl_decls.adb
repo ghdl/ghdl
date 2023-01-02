@@ -331,7 +331,7 @@ package body Synth.Vhdl_Decls is
       end loop;
    end Synth_Concurrent_Attribute_Specification;
 
-   procedure Synth_Package_Declaration
+   procedure Synth_Concurrent_Package_Declaration
      (Parent_Inst : Synth_Instance_Acc; Pkg : Node)
    is
       Syn_Inst : Synth_Instance_Acc;
@@ -345,9 +345,9 @@ package body Synth.Vhdl_Decls is
       Set_Extra (Syn_Inst, Parent_Inst, No_Sname);
 
       Synth_Concurrent_Declarations (Syn_Inst, Get_Declaration_Chain (Pkg));
-   end Synth_Package_Declaration;
+   end Synth_Concurrent_Package_Declaration;
 
-   procedure Synth_Package_Body
+   procedure Synth_Concurrent_Package_Body
      (Parent_Inst : Synth_Instance_Acc; Pkg : Node; Bod : Node)
    is
       Pkg_Inst : Synth_Instance_Acc;
@@ -360,9 +360,9 @@ package body Synth.Vhdl_Decls is
       Pkg_Inst := Get_Package_Object (Parent_Inst, Pkg);
 
       Synth_Concurrent_Declarations (Pkg_Inst, Get_Declaration_Chain (Bod));
-   end Synth_Package_Body;
+   end Synth_Concurrent_Package_Body;
 
-   procedure Synth_Package_Instantiation
+   procedure Synth_Concurrent_Package_Instantiation
      (Parent_Inst : Synth_Instance_Acc; Pkg : Node)
    is
       Bod : constant Node := Get_Instance_Package_Body (Pkg);
@@ -390,7 +390,7 @@ package body Synth.Vhdl_Decls is
             end if;
          end;
       end if;
-   end Synth_Package_Instantiation;
+   end Synth_Concurrent_Package_Instantiation;
 
    function Create_Protected_Object (Inst : Synth_Instance_Acc;
                                      Decl : Node;
@@ -721,6 +721,37 @@ package body Synth.Vhdl_Decls is
            | Iir_Kind_Group_Declaration =>
             null;
 
+         when Iir_Kind_Package_Declaration =>
+            declare
+               Pkg_Inst : Synth_Instance_Acc;
+            begin
+               if Is_Uninstantiated_Package (Decl) then
+                  --  Nothing to do (yet) for uninstantiated packages.
+                  return;
+               end if;
+
+               Pkg_Inst := Create_Package_Instance (Syn_Inst, Decl);
+
+               Synth_Declarations
+                 (Pkg_Inst, Get_Declaration_Chain (Decl), Is_Subprg);
+            end;
+
+         when Iir_Kind_Package_Body =>
+            declare
+               Spec : constant Node := Get_Package (Decl);
+               Pkg_Inst : Synth_Instance_Acc;
+            begin
+               if Is_Uninstantiated_Package (Spec) then
+                  --  Nothing to do (yet) for uninstantiated packages.
+                  return;
+               end if;
+
+               Pkg_Inst := Get_Package_Object (Syn_Inst, Spec);
+
+               Synth_Declarations
+                 (Pkg_Inst, Get_Declaration_Chain (Decl), Is_Subprg);
+            end;
+
          when Iir_Kind_Suspend_State_Declaration =>
             declare
                Val : Valtyp;
@@ -873,6 +904,38 @@ package body Synth.Vhdl_Decls is
          when Iir_Kind_Attribute_Implicit_Declaration =>
             --  Not supported by synthesis.
             null;
+
+         when Iir_Kind_Package_Declaration =>
+            declare
+               Pkg_Inst : Synth_Instance_Acc;
+            begin
+               if Is_Uninstantiated_Package (Decl) then
+                  --  Nothing to do (yet) for uninstantiated packages.
+                  return;
+               end if;
+
+               Pkg_Inst := Get_Package_Object (Syn_Inst, Decl);
+
+               Finalize_Declarations
+                 (Pkg_Inst, Get_Declaration_Chain (Decl), Is_Subprg);
+            end;
+
+         when Iir_Kind_Package_Body =>
+            declare
+               Spec : constant Node := Get_Package (Decl);
+               Pkg_Inst : Synth_Instance_Acc;
+            begin
+               if Is_Uninstantiated_Package (Spec) then
+                  --  Nothing to do (yet) for uninstantiated packages.
+                  return;
+               end if;
+
+               Pkg_Inst := Get_Package_Object (Syn_Inst, Spec);
+
+               Finalize_Declarations
+                 (Pkg_Inst, Get_Declaration_Chain (Decl), Is_Subprg);
+            end;
+
          when Iir_Kind_Package_Instantiation_Declaration =>
             --  TODO: also finalize ?
             null;
@@ -930,7 +993,7 @@ package body Synth.Vhdl_Decls is
          when Iir_Kind_Attribute_Specification =>
             Synth_Concurrent_Attribute_Specification (Syn_Inst, Decl);
          when Iir_Kind_Package_Instantiation_Declaration =>
-            Synth_Package_Instantiation (Syn_Inst, Decl);
+            Synth_Concurrent_Package_Instantiation (Syn_Inst, Decl);
          when Iir_Kind_Attribute_Implicit_Declaration =>
             --  Error will be printed when the attribute is used.
             null;

@@ -48,11 +48,6 @@ package Synth.Vhdl_Decls is
                                  Decls : Node;
                                  Is_Subprg : Boolean := False);
 
-   procedure Synth_Concurrent_Declaration (Syn_Inst : Synth_Instance_Acc;
-                                           Decl : Node);
-   procedure Synth_Concurrent_Declarations (Syn_Inst : Synth_Instance_Acc;
-                                            Decls : Node);
-
    procedure Finalize_Declaration (Syn_Inst : Synth_Instance_Acc;
                                    Decl : Node;
                                    Is_Subprg : Boolean);
@@ -64,11 +59,18 @@ package Synth.Vhdl_Decls is
                                      Decl : Node;
                                      Typ : Type_Acc) return Valtyp;
 
-   procedure Synth_Package_Declaration
-     (Parent_Inst : Synth_Instance_Acc; Pkg : Node);
-   procedure Synth_Package_Body
-     (Parent_Inst : Synth_Instance_Acc; Pkg : Node; Bod : Node);
+   --  For declarations in architectural statements (top-level, entities,
+   --   architecture, blocks...)
 
-   procedure Synth_Package_Instantiation
+   procedure Synth_Concurrent_Declaration (Syn_Inst : Synth_Instance_Acc;
+                                           Decl : Node);
+   procedure Synth_Concurrent_Declarations (Syn_Inst : Synth_Instance_Acc;
+                                            Decls : Node);
+
+   procedure Synth_Concurrent_Package_Declaration
+     (Parent_Inst : Synth_Instance_Acc; Pkg : Node);
+   procedure Synth_Concurrent_Package_Body
+     (Parent_Inst : Synth_Instance_Acc; Pkg : Node; Bod : Node);
+   procedure Synth_Concurrent_Package_Instantiation
      (Parent_Inst : Synth_Instance_Acc; Pkg : Node);
 end Synth.Vhdl_Decls;

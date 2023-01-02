@@ -1334,7 +1334,8 @@ package body Synth.Vhdl_Insts is
                      Bod : constant Node := Get_Package_Body (Dep_Unit);
                      Bod_Unit : Node;
                   begin
-                     Synth_Package_Declaration (Parent_Inst, Dep_Unit);
+                     Synth_Concurrent_Package_Declaration
+                       (Parent_Inst, Dep_Unit);
                      --  Do not try to elaborate math_real body: there are
                      --  functions with loop.  Currently, try create signals,
                      --  which is not possible during package elaboration.
@@ -1343,11 +1344,13 @@ package body Synth.Vhdl_Insts is
                      then
                         Bod_Unit := Get_Design_Unit (Bod);
                         Synth_Dependencies (Parent_Inst, Bod_Unit);
-                        Synth_Package_Body (Parent_Inst, Dep_Unit, Bod);
+                        Synth_Concurrent_Package_Body
+                          (Parent_Inst, Dep_Unit, Bod);
                      end if;
                   end;
                when Iir_Kind_Package_Instantiation_Declaration =>
-                  Synth_Package_Instantiation (Parent_Inst, Dep_Unit);
+                  Synth_Concurrent_Package_Instantiation
+                    (Parent_Inst, Dep_Unit);
                when Iir_Kind_Package_Body =>
                   null;
                when Iir_Kind_Architecture_Body =>
