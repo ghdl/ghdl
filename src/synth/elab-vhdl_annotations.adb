@@ -369,13 +369,10 @@ package body Elab.Vhdl_Annotations is
             when Iir_Kind_Interface_Package_Declaration =>
                Annotate_Interface_Package_Declaration (Block_Info, Decl);
             when Iir_Kind_Interface_Type_Declaration =>
-               if Get_Kind (Get_Parent (Decl)) = Iir_Kind_Entity_Declaration
-               then
-                  --  Create an info on the interface_type_definition.
-                  --  This is needed for a generic type in an entity, as the
-                  --  nodes are not instantiated.
-                  Create_Object_Info (Block_Info, Get_Type (Decl));
-               end if;
+               --  Create an info on the interface_type_definition.
+               --  This is needed for a generic type in an entity, as the
+               --  nodes are not instantiated.
+               Create_Object_Info (Block_Info, Get_Type (Decl));
             when Iir_Kinds_Interface_Subprogram_Declaration =>
                --  Macro-expanded
                null;

@@ -735,7 +735,14 @@ package body Vhdl.Sem_Inst is
                      Instantiate_Iir_Chain (Get_Declaration_Chain (Inter)));
                end if;
             when Iir_Kind_Interface_Type_Declaration =>
-               Set_Type (Res, Get_Type (Inter));
+               declare
+                  Itype : Iir;
+               begin
+                  Itype := Instantiate_Iir (Get_Type (Inter), False);
+                  Set_Type (Res, Itype);
+                  Set_Interface_Type_Definition (Res, Itype);
+                  Set_Is_Ref (Res, True);
+               end;
             when Iir_Kinds_Interface_Subprogram_Declaration =>
                Sem_Utils.Compute_Subprogram_Hash (Res);
             when others =>
@@ -1036,7 +1043,8 @@ package body Vhdl.Sem_Inst is
             --  Replace the incomplete interface type by the actual subtype
             --  indication.
             declare
-               Inter_Type_Def : constant Iir := Get_Type (Assoc_Formal);
+               Orig_Formal : constant Iir := Get_Origin (Assoc_Formal);
+               Inter_Type_Def : constant Iir := Get_Type (Orig_Formal);
                Actual_Type : constant Iir := Get_Actual_Type (Assoc);
             begin
                Set_Instance (Inter_Type_Def, Actual_Type);
