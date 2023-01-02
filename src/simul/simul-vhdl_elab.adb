@@ -439,6 +439,7 @@ package body Simul.Vhdl_Elab is
            | Iir_Kind_Component_Declaration
            | Iir_Kind_File_Declaration
            | Iir_Kind_Protected_Type_Body
+           | Iir_Kind_Psl_Default_Clock
            | Iir_Kind_Use_Clause
            | Iir_Kind_Group_Template_Declaration
            | Iir_Kind_Group_Declaration =>
