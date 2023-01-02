@@ -27,6 +27,7 @@ with Grt.To_Strings;
 with Grt.Arith;
 with Grt.Fcvt;
 
+with Vhdl.Std_Package;
 with Vhdl.Utils;
 with Vhdl.Evaluation;
 with Vhdl.Ieee.Std_Logic_1164; use Vhdl.Ieee.Std_Logic_1164;
@@ -776,7 +777,14 @@ package body Synth.Vhdl_Eval is
       V := Read_Discrete (Param.Mem, Param.Typ);
       Lit := Get_Nth_Element (Enums, Natural (V));
       Lit_Id := Get_Identifier (Lit);
-      if Is_Character (Lit_Id) then
+
+      --  LRM08 5.7 String representations
+      --  - For a given value of type CHARACTER, the string representation
+      --    contains one element that is the given value.
+      if Etype = Vhdl.Std_Package.Character_Type_Definition then
+         C (1) := Character'Val (V);
+         return String_To_Memtyp (C, Res_Typ);
+      elsif Is_Character (Lit_Id) then
          C (1) := Get_Character (Lit_Id);
          return String_To_Memtyp (C, Res_Typ);
       else
