@@ -72,12 +72,14 @@ package Elab.Vhdl_Objtypes is
       Type_Logic,
       Type_Discrete,
       Type_Float,
-      Type_Vector,
-      Type_Unbounded_Vector,
 
       --  A slice is for a slice of vector with dynamic bounds.  So the bounds
       --  of the result aren't known, but its width is.
       Type_Slice,
+
+      --  A vector is an array a net type.
+      Type_Vector,
+      Type_Unbounded_Vector,
 
       --  Fully bounded array.
       Type_Array,
@@ -104,6 +106,8 @@ package Elab.Vhdl_Objtypes is
    subtype Type_Scalars is Type_Kind range Type_Bit .. Type_Float;
    subtype Type_Records is Type_Kind range
      Type_Unbounded_Record .. Type_Record;
+   subtype Type_Vectors_Arrays is Type_Kind range
+     Type_Vector .. Type_Unbounded_Array;
    subtype Type_Arrays is Type_Kind range
      Type_Array .. Type_Unbounded_Array;
    subtype Type_Vectors is Type_Kind range

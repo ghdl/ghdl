@@ -82,7 +82,8 @@ package body Synth.Vhdl_Aggr is
       case Typ.Kind is
          when Type_Vector =>
             return (1 => 1);
-         when Type_Array =>
+         when Type_Array
+           | Type_Array_Unbounded =>
             declare
                T : Type_Acc;
                Ndim : Dim_Type;
@@ -444,6 +445,7 @@ package body Synth.Vhdl_Aggr is
       Tab_Res : Valtyp_Array_Acc;
       Const_P : Boolean;
       Err_P : Boolean;
+      Res_Typ : Type_Acc;
       Res : Valtyp;
    begin
       Tab_Res := new Valtyp_Array'(1 .. Nat32 (Flen) => No_Valtyp);
@@ -454,13 +456,25 @@ package body Synth.Vhdl_Aggr is
          return No_Valtyp;
       end if;
 
-      --  TODO: check all element types have the same bounds ?
+
+      case Type_Vectors_Arrays (Aggr_Typ.Kind) is
+         when Type_Array
+           | Type_Vector =>
+            Res_Typ := Aggr_Typ;
+         when Type_Array_Unbounded =>
+            --  TODO: check all element types have the same bounds ?
+            Res_Typ := Create_Array_From_Array_Unbounded
+              (Aggr_Typ, Tab_Res (1).Typ);
+         when Type_Unbounded_Vector
+           | Type_Unbounded_Array =>
+            raise Internal_Error;
+      end case;
 
       if Const_P then
          declare
             Off : Size_Type;
          begin
-            Res := Create_Value_Memory (Aggr_Typ, Current_Pool);
+            Res := Create_Value_Memory (Res_Typ, Current_Pool);
             Off := 0;
             for I in Tab_Res'Range loop
                if Tab_Res (I).Val /= null then
@@ -469,11 +483,11 @@ package body Synth.Vhdl_Aggr is
                   Off := Off + Tab_Res (I).Typ.Sz;
                end if;
             end loop;
-            pragma Assert (Off = Aggr_Typ.Sz);
+            pragma Assert (Off = Res_Typ.Sz);
          end;
       else
          Res := Create_Value_Net
-           (Valtyp_Array_To_Net (Ctxt, Tab_Res.all), Aggr_Typ);
+           (Valtyp_Array_To_Net (Ctxt, Tab_Res.all), Res_Typ);
       end if;
 
       Free_Valtyp_Array (Tab_Res);
@@ -552,7 +566,19 @@ package body Synth.Vhdl_Aggr is
             begin
                Res_Type := Synth_Subtype_Indication
                  (Syn_Inst, Get_Type (Aggr));
-               return Synth_Aggregate_Array (Syn_Inst, Aggr, Res_Type);
+               case Res_Type.Kind is
+                  when Type_Array
+                    | Type_Array_Unbounded
+                    | Type_Vector =>
+                     return Synth_Aggregate_Array (Syn_Inst, Aggr, Res_Type);
+                  when Type_Unbounded_Vector
+                    | Type_Unbounded_Array =>
+                     --  The only possibility is vector elements.
+                     pragma Assert (Res_Type.Ulast);
+                     raise Internal_Error;
+                  when others =>
+                     raise Internal_Error;
+               end case;
             end;
          when Type_Vector
            | Type_Array =>

@@ -526,8 +526,9 @@ package body Elab.Vhdl_Objtypes is
 
    function Get_Array_Bound (Typ : Type_Acc) return Bound_Type is
    begin
-      case Typ.Kind is
+      case Type_Vectors_Arrays (Typ.Kind) is
          when Type_Vector
+           | Type_Array_Unbounded
            | Type_Array =>
             return Typ.Abound;
          when others =>
@@ -723,10 +724,11 @@ package body Elab.Vhdl_Objtypes is
 
    function Get_Array_Flat_Length (Typ : Type_Acc) return Iir_Index32 is
    begin
-      case Typ.Kind is
+      case Type_Vectors_Arrays (Typ.Kind) is
          when Type_Vector =>
             return Iir_Index32 (Typ.Abound.Len);
-         when Type_Array =>
+         when Type_Array
+           | Type_Array_Unbounded =>
             declare
                Len : Uns32;
                T : Type_Acc;
