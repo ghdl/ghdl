@@ -5345,8 +5345,8 @@ package Vhdl.Nodes is
 
    type Iir_Force_Mode is
      (
-      Iir_Force_In,
-      Iir_Force_Out
+      Iir_Force_In,  --  Effective
+      Iir_Force_Out  --  Driving
      );
 
    --  LRM93 2.7 (conformance rules).

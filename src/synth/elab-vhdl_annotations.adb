@@ -786,7 +786,9 @@ package body Elab.Vhdl_Annotations is
               | Iir_Kind_Selected_Waveform_Assignment_Statement
               | Iir_Kind_Conditional_Signal_Assignment_Statement
               | Iir_Kind_Variable_Assignment_Statement
-              | Iir_Kind_Conditional_Variable_Assignment_Statement =>
+              | Iir_Kind_Conditional_Variable_Assignment_Statement
+              | Iir_Kind_Signal_Force_Assignment_Statement
+              | Iir_Kind_Signal_Release_Assignment_Statement =>
                null;
             when Iir_Kind_Procedure_Call_Statement =>
                Annotate_Procedure_Call_Statement (Block_Info, Stmt);

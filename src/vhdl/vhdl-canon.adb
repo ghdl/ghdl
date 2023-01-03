@@ -1397,11 +1397,13 @@ package body Vhdl.Canon is
 
          case Get_Kind (Stmt) is
             when Iir_Kind_Simple_Signal_Assignment_Statement
-               | Iir_Kind_Conditional_Signal_Assignment_Statement =>
+               | Iir_Kind_Conditional_Signal_Assignment_Statement
+               | Iir_Kind_Signal_Force_Assignment_Statement
+               | Iir_Kind_Signal_Release_Assignment_Statement =>
                null;
 
             when Iir_Kind_Variable_Assignment_Statement
-              | Iir_Kind_Conditional_Variable_Assignment_Statement =>
+               | Iir_Kind_Conditional_Variable_Assignment_Statement =>
                null;
 
             when Iir_Kind_If_Statement =>

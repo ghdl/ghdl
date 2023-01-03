@@ -297,6 +297,79 @@ package body Simul.Vhdl_Simul is
       end case;
    end Assign_Value_To_Signal;
 
+   type Force_Kind is (Force, Release);
+
+   procedure Force_Signal_Value (Target: Memtyp;
+                                 Kind : Force_Kind;
+                                 Mode : Iir_Force_Mode;
+                                 Val : Memtyp)
+   is
+      Sig : Ghdl_Signal_Ptr;
+   begin
+      case Target.Typ.Kind is
+         when Type_Logic
+           | Type_Bit
+           | Type_Discrete
+           | Type_Float =>
+            Sig := Read_Sig (Target.Mem);
+            case Kind is
+               when Force =>
+                  case Mode is
+                     when Iir_Force_In =>
+                        Ghdl_Signal_Force_Effective_Any
+                          (Sig, To_Ghdl_Value (Val));
+                     when Iir_Force_Out =>
+                        Ghdl_Signal_Force_Driving_Any
+                          (Sig, To_Ghdl_Value (Val));
+                  end case;
+               when Release =>
+                  case Mode is
+                     when Iir_Force_In =>
+                        Ghdl_Signal_Release_Eff (Sig);
+                     when Iir_Force_Out =>
+                        Ghdl_Signal_Release_Drv (Sig);
+                  end case;
+            end case;
+         when Type_Vector
+           | Type_Array =>
+            declare
+               Len : constant Uns32 := Target.Typ.Abound.Len;
+               El : constant Type_Acc := Target.Typ.Arr_El;
+               Smem : Memory_Ptr;
+            begin
+               pragma Assert (Val.Typ.Abound.Len = Len);
+               for I in 1 .. Len loop
+                  if Val.Mem = null then
+                     Smem := null;
+                  else
+                     Smem := Val.Mem + Size_Type (I - 1) * El.Sz;
+                  end if;
+                  Force_Signal_Value
+                    ((El, Sig_Index (Target.Mem, (Len - I) * El.W)),
+                     Kind, Mode, (Val.Typ.Arr_El, Smem));
+               end loop;
+            end;
+         when Type_Record =>
+            for I in Target.Typ.Rec.E'Range loop
+               declare
+                  E : Rec_El_Type renames Target.Typ.Rec.E (I);
+                  Smem : Memory_Ptr;
+               begin
+                  if Val.Mem = null then
+                     Smem := null;
+                  else
+                     Smem := Val.Mem + E.Offs.Mem_Off;
+                  end if;
+                  Force_Signal_Value
+                    ((E.Typ, Sig_Index (Target.Mem, E.Offs.Net_Off)),
+                     Kind, Mode, (E.Typ, Smem));
+               end;
+            end loop;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Force_Signal_Value;
+
    procedure Add_Source (Typ : Type_Acc; Sig : Memory_Ptr; Val : Memory_Ptr) is
    begin
       case Typ.Kind is
@@ -990,6 +1063,70 @@ package body Simul.Vhdl_Simul is
       end loop;
    end Execute_Waveform_Assignment;
 
+   procedure Execute_Force_Assignment (Inst : Synth_Instance_Acc;
+                                       Target : Target_Info;
+                                       Kind : Force_Kind;
+                                       Stmt : Node;
+                                       Expr : Node)
+   is
+      use Synth.Vhdl_Expr;
+      Mode : constant Iir_Force_Mode := Get_Force_Mode (Stmt);
+
+      procedure Execute_Force_Signal (Inst : Synth_Instance_Acc;
+                                      Target : Target_Info;
+                                      Val : Valtyp;
+                                      Loc : Node);
+
+      procedure Execute_Force_Aggregate_Signal is
+         new Assign_Aggregate (Execute_Force_Signal);
+
+      procedure Execute_Force_Signal (Inst : Synth_Instance_Acc;
+                                      Target : Target_Info;
+                                      Val : Valtyp;
+                                      Loc : Node)
+      is
+         Sig : Memtyp;
+         Mem : Memtyp;
+      begin
+         case Target.Kind is
+            when Target_Aggregate =>
+               Execute_Force_Aggregate_Signal
+                 (Inst, Target.Aggr, Target.Targ_Type, Val, Loc);
+
+            when Target_Simple =>
+               declare
+                  E : Signal_Entry renames
+                    Signals_Table.Table (Target.Obj.Val.S);
+               begin
+                  Sig := (Target.Targ_Type,
+                          Sig_Index (E.Sig, Target.Off.Net_Off));
+               end;
+
+               if Val /= No_Valtyp then
+                  Mem := Get_Value_Memtyp (Val);
+               else
+                  Mem := Null_Memtyp;
+               end if;
+               Force_Signal_Value (Sig, Kind, Mode, Mem);
+
+            when Target_Memory =>
+               raise Internal_Error;
+         end case;
+      end Execute_Force_Signal;
+
+      Val : Valtyp;
+   begin
+      if Expr /= Null_Node then
+         Val := Synth_Expression_With_Type (Inst, Expr, Target.Targ_Type);
+         Val := Synth_Subtype_Conversion
+           (Inst, Val, Target.Targ_Type, False, Expr);
+      else
+         Val := No_Valtyp;
+      end if;
+
+      Execute_Force_Signal (Inst, Target, Val, Stmt);
+   end Execute_Force_Assignment;
+
    procedure Disconnect_Signal (Sig : Memtyp)
    is
       S : Ghdl_Signal_Ptr;
@@ -1098,6 +1235,36 @@ package body Simul.Vhdl_Simul is
         (Inst, Info, Stmt, Get_Waveform_Chain (Stmt));
       Release_Expr_Pool (Marker);
    end Execute_Simple_Signal_Assignment;
+
+   procedure Execute_Signal_Force_Assignment (Inst : Synth_Instance_Acc;
+                                              Stmt : Node)
+   is
+      Target : constant Node := Get_Target (Stmt);
+      Marker : Mark_Type;
+      Info : Target_Info;
+   begin
+      Mark_Expr_Pool (Marker);
+      Info := Synth_Target (Inst, Target);
+
+      Execute_Force_Assignment
+        (Inst, Info, Force, Stmt, Get_Expression (Stmt));
+      Release_Expr_Pool (Marker);
+   end Execute_Signal_Force_Assignment;
+
+   procedure Execute_Signal_Release_Assignment (Inst : Synth_Instance_Acc;
+                                                Stmt : Node)
+   is
+      Target : constant Node := Get_Target (Stmt);
+      Marker : Mark_Type;
+      Info : Target_Info;
+   begin
+      Mark_Expr_Pool (Marker);
+      Info := Synth_Target (Inst, Target);
+
+      Execute_Force_Assignment
+        (Inst, Info, Release, Stmt, Null_Node);
+      Release_Expr_Pool (Marker);
+   end Execute_Signal_Release_Assignment;
 
    procedure Execute_Conditional_Signal_Assignment (Inst : Synth_Instance_Acc;
                                                     Stmt : Node;
@@ -1447,6 +1614,13 @@ package body Simul.Vhdl_Simul is
                Next_Statement (Process, Stmt);
             when Iir_Kind_Conditional_Signal_Assignment_Statement =>
                Execute_Conditional_Signal_Assignment (Inst, Stmt, False);
+               Next_Statement (Process, Stmt);
+
+            when Iir_Kind_Signal_Force_Assignment_Statement =>
+               Execute_Signal_Force_Assignment (Inst, Stmt);
+               Next_Statement (Process, Stmt);
+            when Iir_Kind_Signal_Release_Assignment_Statement =>
+               Execute_Signal_Release_Assignment (Inst, Stmt);
                Next_Statement (Process, Stmt);
 
             when Iir_Kind_Wait_Statement =>

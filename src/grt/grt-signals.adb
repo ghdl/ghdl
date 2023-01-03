@@ -2070,6 +2070,26 @@ package body Grt.Signals is
                                                    F64 => Val)));
    end Ghdl_Signal_Force_Effective_F64;
 
+   procedure Ghdl_Signal_Force_Driving_Any (Sig : Ghdl_Signal_Ptr;
+                                            Val : Value_Union) is
+   begin
+      Append_Force_Value (new Force_Value'(Kind => Force,
+                                           Mode => Force_Driving,
+                                           Next => null,
+                                           Sig => Sig,
+                                           Val => Val));
+   end Ghdl_Signal_Force_Driving_Any;
+
+   procedure Ghdl_Signal_Force_Effective_Any (Sig : Ghdl_Signal_Ptr;
+                                              Val : Value_Union) is
+   begin
+      Append_Force_Value (new Force_Value'(Kind => Force,
+                                           Mode => Force_Effective,
+                                           Next => null,
+                                           Sig => Sig,
+                                           Val => Val));
+   end Ghdl_Signal_Force_Effective_Any;
+
    --  Remove all (but Signal_End) signals in the next active chain.
    --  Called when a transaction/event will occur before the time for this
    --  chain.
@@ -3565,20 +3585,20 @@ package body Grt.Signals is
             if Trans /= null then
                Free (Sig.S.Drivers (0).First_Trans);
                Sig.S.Drivers (0).First_Trans := Trans;
-            end if;
 
-            --  Update driving value (unless forced)
-            if not Sig.Flags.Is_Drv_Forced then
-               case Trans.Kind is
-                  when Trans_Value =>
-                     Sig.Driving_Value := Trans.Val;
-                  when Trans_Direct =>
-                     Internal_Error ("update_signals: trans_direct");
-                  when Trans_Null =>
-                     Error ("null transaction");
-                  when Trans_Error =>
-                     Error_Trans_Error (Trans);
-               end case;
+               --  Update driving value (unless forced)
+               if not Sig.Flags.Is_Drv_Forced then
+                  case Trans.Kind is
+                     when Trans_Value =>
+                        Sig.Driving_Value := Trans.Val;
+                     when Trans_Direct =>
+                        Internal_Error ("update_signals: trans_direct");
+                     when Trans_Null =>
+                        Error ("null transaction");
+                     when Trans_Error =>
+                        Error_Trans_Error (Trans);
+                  end case;
+               end if;
             end if;
 
             if not Sig.Flags.Is_Eff_Forced then
