@@ -78,9 +78,20 @@ package Elab.Vhdl_Objtypes is
       --  A slice is for a slice of vector with dynamic bounds.  So the bounds
       --  of the result aren't known, but its width is.
       Type_Slice,
+
+      --  Fully bounded array.
       Type_Array,
+
+      --  Array with indexes, but with unbounded element.
+      Type_Array_Unbounded,
+
+      --  Array without bounds, possibly with unbounded elements.
       Type_Unbounded_Array,
+
+      --  Record with at least one unbounded element.
       Type_Unbounded_Record,
+
+      --  Fully bounded record.
       Type_Record,
 
       Type_Access,
@@ -169,6 +180,7 @@ package Elab.Vhdl_Objtypes is
          when Type_Slice =>
             Slice_El : Type_Acc;
          when Type_Array
+            | Type_Array_Unbounded
             | Type_Vector =>
             Abound : Bound_Type;
             Alast : Boolean;  --  True for the last dimension
@@ -247,8 +259,11 @@ package Elab.Vhdl_Objtypes is
                               return Type_Acc;
    function Create_Array_Type
      (Bnd : Bound_Type; Last : Boolean; El_Type : Type_Acc) return Type_Acc;
+   function Create_Array_Unbounded_Type
+     (Bnd : Bound_Type; Last : Boolean; El_Type : Type_Acc) return Type_Acc;
    function Create_Unbounded_Array
      (Idx : Type_Acc; Last : Boolean; El_Type : Type_Acc) return Type_Acc;
+
    function Create_Rec_El_Array (Nels : Iir_Index32) return Rec_El_Array_Acc;
 
    function Create_Record_Type (Els : Rec_El_Array_Acc) return Type_Acc;
@@ -265,6 +280,11 @@ package Elab.Vhdl_Objtypes is
    function In_Bounds (Bnd : Bound_Type; V : Int32) return Boolean;
    function In_Range (Rng : Discrete_Range_Type; V : Int64) return Boolean;
 
+   --  Create an Type_Array from an Type_Array_Unbounded by replacing the
+   --  element type.
+   function Create_Array_From_Array_Unbounded
+     (Parent : Type_Acc; El : Type_Acc) return Type_Acc;
+
    --  Index type of unbounded array or unbounded vector.
    function Get_Uarray_Index (Typ : Type_Acc) return Type_Acc;
 
@@ -280,6 +300,7 @@ package Elab.Vhdl_Objtypes is
    --  Return the element of a vector/array/unbounded_array.
    function Get_Array_Element (Arr_Type : Type_Acc) return Type_Acc;
 
+   --  Return True if TYP is bounded (at top level!).
    function Is_Bounded_Type (Typ : Type_Acc) return Boolean;
 
    function Are_Types_Equal (L, R : Type_Acc) return Boolean;

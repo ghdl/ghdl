@@ -2576,6 +2576,7 @@ package body Simul.Vhdl_Simul is
 
             when Type_Slice
               | Type_Access
+              | Type_Array_Unbounded
               | Type_Unbounded_Vector
               | Type_Unbounded_Array
               | Type_Unbounded_Record
@@ -2739,6 +2740,7 @@ package body Simul.Vhdl_Simul is
 
          when Type_Slice
            | Type_Access
+           | Type_Array_Unbounded
            | Type_Unbounded_Vector
            | Type_Unbounded_Array
            | Type_Unbounded_Record

@@ -132,6 +132,8 @@ package body Elab.Vhdl_Values.Debug is
             Put ("slice");
          when Type_Unbounded_Vector =>
             Put ("unbounded vector");
+         when Type_Array_Unbounded =>
+            Put ("array_unbounded");
          when Type_Unbounded_Array =>
             Put ("unbounded arr (");
             declare
@@ -201,6 +203,8 @@ package body Elab.Vhdl_Values.Debug is
             Put ("slice");
          when Type_Unbounded_Vector =>
             Put ("unbounded vector");
+         when Type_Array_Unbounded =>
+            Put ("array unbounded");
          when Type_Unbounded_Array =>
             Put ("unbounded array");
          when Type_Protected =>
@@ -274,6 +278,8 @@ package body Elab.Vhdl_Values.Debug is
             Put ("unbounded vector");
          when Type_Unbounded_Array =>
             Put ("unbounded array");
+         when Type_Array_Unbounded =>
+            Put ("array unbounded");
          when Type_Unbounded_Record =>
             Put ("unbounded record");
          when Type_Protected =>

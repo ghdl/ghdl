@@ -514,6 +514,7 @@ package body Elab.Vhdl_Values is
                end loop;
             end;
          when Type_Unbounded_Vector
+           | Type_Array_Unbounded
            | Type_Unbounded_Array
            | Type_Unbounded_Record =>
             raise Internal_Error;

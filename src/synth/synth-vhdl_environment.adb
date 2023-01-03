@@ -112,6 +112,7 @@ package body Synth.Vhdl_Environment is
          when Type_File
             | Type_Protected
             | Type_Access
+            | Type_Array_Unbounded
             | Type_Unbounded_Array
             | Type_Unbounded_Record
             | Type_Unbounded_Vector =>

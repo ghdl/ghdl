@@ -382,6 +382,7 @@ package body Synth.Vhdl_Insts is
            | Type_Vector
            | Type_Unbounded_Vector
            | Type_Array
+           | Type_Array_Unbounded
            | Type_Unbounded_Array =>
             return 1;
          when Type_Record
@@ -425,6 +426,7 @@ package body Synth.Vhdl_Insts is
            | Type_Vector
            | Type_Unbounded_Vector
            | Type_Array
+           | Type_Array_Unbounded
            | Type_Unbounded_Array =>
             Idx := Idx + 1;
             Descs (Idx) := (Name => Port_Sname,
@@ -904,6 +906,7 @@ package body Synth.Vhdl_Insts is
            | Type_Vector
            | Type_Unbounded_Vector
            | Type_Array
+           | Type_Array_Unbounded
            | Type_Unbounded_Array =>
             if N /= No_Net then
                Connect (Get_Input (Inst, Port), N);
@@ -942,6 +945,7 @@ package body Synth.Vhdl_Insts is
            | Type_Vector
            | Type_Unbounded_Vector
            | Type_Array
+           | Type_Array_Unbounded
            | Type_Unbounded_Array =>
             N := Get_Output (Inst, Idx);
             Idx := Idx + 1;

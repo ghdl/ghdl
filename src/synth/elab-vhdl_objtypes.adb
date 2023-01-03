@@ -37,20 +37,21 @@ package body Elab.Vhdl_Objtypes is
    begin
       case Typ.Kind is
          when Type_Bit
-           | Type_Logic
-           | Type_Discrete
-           | Type_Float
-           | Type_Vector
-           | Type_Slice
-           | Type_Array
-           | Type_Record
-           | Type_Access
-           | Type_File =>
+            | Type_Logic
+            | Type_Discrete
+            | Type_Float
+            | Type_Vector
+            | Type_Slice
+            | Type_Array
+            | Type_Record
+            | Type_Access
+            | Type_File =>
             return True;
          when Type_Unbounded_Array
-           | Type_Unbounded_Vector
-           | Type_Unbounded_Record
-           | Type_Protected =>
+            | Type_Array_Unbounded
+            | Type_Unbounded_Vector
+            | Type_Unbounded_Record
+            | Type_Protected =>
             return False;
       end case;
    end Is_Bounded_Type;
@@ -75,7 +76,8 @@ package body Elab.Vhdl_Objtypes is
          when Type_Float =>
             return L.Frange = R.Frange;
          when Type_Array
-           | Type_Vector =>
+            | Type_Array_Unbounded
+            | Type_Vector =>
             if L.Alast /= R.Alast then
                return False;
             end if;
@@ -84,7 +86,7 @@ package body Elab.Vhdl_Objtypes is
             end if;
             return Are_Types_Equal (L.Arr_El, R.Arr_El);
          when Type_Unbounded_Array
-           | Type_Unbounded_Vector =>
+            | Type_Unbounded_Vector =>
             if L.Ulast /= R.Ulast then
                return False;
             end if;
@@ -252,24 +254,25 @@ package body Elab.Vhdl_Objtypes is
    begin
       case Typ.Kind is
          when Type_Bit
-           | Type_Logic
-           | Type_Discrete
-           | Type_Float =>
+            | Type_Logic
+            | Type_Discrete
+            | Type_Float =>
             --  Never copied.
             return;
          when Type_Access
-           | Type_File
-           | Type_Protected =>
+            | Type_File
+            | Type_Protected =>
             --  Never copied
             return;
          when Type_Array
-           | Type_Vector =>
+            | Type_Array_Unbounded
+            | Type_Vector =>
             Add_Array_Size_Type (Typ.Arr_El, Sz, Align);
          when Type_Unbounded_Array
-           | Type_Unbounded_Vector =>
+            | Type_Unbounded_Vector =>
             Add_Array_Size_Type (Typ.Uarr_El, Sz, Align);
          when Type_Record
-           | Type_Unbounded_Record =>
+            | Type_Unbounded_Record =>
             declare
                subtype T is Type_Type (Type_Record);
                subtype T_El is Rec_El_Array (Typ.Rec.Len);
@@ -441,6 +444,25 @@ package body Elab.Vhdl_Objtypes is
                                   Arr_El => El_Type)));
    end Create_Array_Type;
 
+   function Create_Array_Unbounded_Type
+     (Bnd : Bound_Type; Last : Boolean; El_Type : Type_Acc) return Type_Acc
+   is
+      subtype Array_Unbounded_Type_Type is Type_Type (Type_Array_Unbounded);
+      function Alloc is
+         new Areapools.Alloc_On_Pool_Addr (Array_Unbounded_Type_Type);
+   begin
+      return To_Type_Acc (Alloc (Current_Pool,
+                                 (Kind => Type_Array_Unbounded,
+                                  Wkind => El_Type.Wkind,
+                                  Al => El_Type.Al,
+                                  Is_Global => False,
+                                  Sz => 0,
+                                  W => 0,
+                                  Abound => Bnd,
+                                  Alast => Last,
+                                  Arr_El => El_Type)));
+   end Create_Array_Unbounded_Type;
+
    function Create_Unbounded_Array
      (Idx : Type_Acc; Last : Boolean; El_Type : Type_Acc) return Type_Acc
    is
@@ -457,6 +479,18 @@ package body Elab.Vhdl_Objtypes is
                                                 Uarr_El => El_Type,
                                                 Uarr_Idx => Idx)));
    end Create_Unbounded_Array;
+
+   function Create_Array_From_Array_Unbounded
+     (Parent : Type_Acc; El : Type_Acc) return Type_Acc is
+   begin
+      if Parent.Alast then
+         return Create_Array_Type (Parent.Abound, True, El);
+      else
+         return Create_Array_Type
+           (Parent.Abound, False,
+            Create_Array_From_Array_Unbounded (Parent.Arr_El, El));
+      end if;
+   end Create_Array_From_Array_Unbounded;
 
    function Create_Unbounded_Vector (El_Type : Type_Acc; Idx : Type_Acc)
                                     return Type_Acc
@@ -479,7 +513,8 @@ package body Elab.Vhdl_Objtypes is
    begin
       case Arr_Type.Kind is
          when Type_Vector
-           | Type_Array =>
+           | Type_Array
+           | Type_Array_Unbounded =>
             return Arr_Type.Arr_El;
          when Type_Unbounded_Array
            | Type_Unbounded_Vector =>
@@ -750,9 +785,10 @@ package body Elab.Vhdl_Objtypes is
                return True;
             end if;
             return Get_Bound_Length (L.Arr_El) = Get_Bound_Length (R.Arr_El);
-         when Type_Unbounded_Array
-           | Type_Unbounded_Vector
-           | Type_Unbounded_Record =>
+         when Type_Array_Unbounded
+            | Type_Unbounded_Array
+            | Type_Unbounded_Vector
+            | Type_Unbounded_Record =>
             raise Internal_Error;
          when Type_Record =>
             --  FIXME: handle vhdl-08
@@ -972,6 +1008,7 @@ package body Elab.Vhdl_Objtypes is
             raise Internal_Error;
          when Type_Unbounded_Vector
            | Type_Unbounded_Array
+           | Type_Array_Unbounded
            | Type_Unbounded_Record
            | Type_Protected
            | Type_File =>
@@ -1029,21 +1066,22 @@ package body Elab.Vhdl_Objtypes is
 
       case Res.Kind is
          when Type_Bit
-           | Type_Logic
-           | Type_Discrete
-           | Type_Float =>
+            | Type_Logic
+            | Type_Discrete
+            | Type_Float =>
             null;
          when Type_Slice =>
             Res.Slice_El := Unshare (T.Slice_El, Pool);
          when Type_Array
-           | Type_Vector =>
+            | Type_Array_Unbounded
+            | Type_Vector =>
             Res.Arr_El := Unshare (T.Arr_El, Pool);
          when Type_Unbounded_Array
-           | Type_Unbounded_Vector =>
+            | Type_Unbounded_Vector =>
             Res.Uarr_El := Unshare (T.Uarr_El, Pool);
             Res.Uarr_Idx := Unshare (T.Uarr_Idx, Pool);
          when Type_Record
-           | Type_Unbounded_Record =>
+            | Type_Unbounded_Record =>
             Res.Rec := Create_Rec_El_Array (T.Rec.Len, Pool);
             for I in T.Rec.E'Range loop
                Res.Rec.E (I) := (Offs => T.Rec.E (I).Offs,
@@ -1092,7 +1130,8 @@ package body Elab.Vhdl_Objtypes is
             Res.Arr_El := Unshare_Type (Typ.Arr_El,
                                         Get_Array_Element (Base),
                                         Global, Pool);
-         when Type_Unbounded_Array
+         when Type_Array_Unbounded
+           | Type_Unbounded_Array
            | Type_Unbounded_Vector
            | Type_Unbounded_Record =>
             raise Internal_Error;
@@ -1161,18 +1200,19 @@ package body Elab.Vhdl_Objtypes is
       --  Copy elements.
       case Res.Kind is
          when Type_Bit
-           | Type_Logic
-           | Type_Discrete
-           | Type_Float =>
+            | Type_Logic
+            | Type_Discrete
+            | Type_Float =>
             raise Internal_Error;
          when Type_Slice =>
             raise Internal_Error;
          when Type_Array
-           | Type_Vector =>
+            | Type_Vector =>
             Save_Type (Typ.Arr_El, Res.Arr_El, Mem, Off, Mem_Sz);
          when Type_Unbounded_Array
-           | Type_Unbounded_Vector
-           | Type_Unbounded_Record =>
+            | Type_Array_Unbounded
+            | Type_Unbounded_Vector
+            | Type_Unbounded_Record =>
             raise Internal_Error;
          when Type_Record =>
             declare

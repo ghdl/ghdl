@@ -635,6 +635,9 @@ package body Synth.Vhdl_Expr is
                   return Vt;
                end if;
             end;
+         when Type_Array_Unbounded =>
+            pragma Assert (Vtype.Kind = Type_Array);
+            return Vt;
          when Type_Unbounded_Array =>
             pragma Assert (Vtype.Kind = Type_Array);
             return Vt;

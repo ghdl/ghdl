@@ -482,6 +482,7 @@ package body Elab.Vhdl_Files is
                   Loc);
             end loop;
          when Type_Unbounded_Record
+            | Type_Array_Unbounded
             | Type_Unbounded_Array
             | Type_Unbounded_Vector
             | Type_Protected
@@ -525,6 +526,7 @@ package body Elab.Vhdl_Files is
                File_Skip_Value (File, Typ.Rec.E (I).Typ, Loc);
             end loop;
          when Type_Unbounded_Record
+            | Type_Array_Unbounded
             | Type_Unbounded_Array
             | Type_Unbounded_Vector
             | Type_Protected
@@ -638,6 +640,7 @@ package body Elab.Vhdl_Files is
                                  Loc);
             end loop;
          when Type_Unbounded_Record
+            | Type_Array_Unbounded
             | Type_Unbounded_Array
             | Type_Unbounded_Vector
             | Type_Protected

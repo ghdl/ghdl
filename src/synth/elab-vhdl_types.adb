@@ -566,14 +566,10 @@ package body Elab.Vhdl_Types is
            (Syn_Inst, Get_Array_Element (Parent_Typ), El_Type);
       else
          El_Typ := Parent_Typ;
-         loop
-            if Is_Last_Dimension (El_Typ) then
-               El_Typ := Get_Array_Element (El_Typ);
-               exit;
-            else
-               El_Typ := Get_Array_Element (El_Typ);
-            end if;
+         while not Is_Last_Dimension (El_Typ) loop
+            El_Typ := Get_Array_Element (El_Typ);
          end loop;
+         El_Typ := Get_Array_Element (El_Typ);
       end if;
 
       if not Get_Index_Constraint_Flag (Atype) then
@@ -602,6 +598,7 @@ package body Elab.Vhdl_Types is
             --  FIXME: partially constrained arrays, subtype in indexes...
             if Get_Index_Constraint_Flag (Atype) then
                declare
+                  El_Bounded : constant Boolean := Is_Bounded_Type (El_Typ);
                   Res_Typ : Type_Acc;
                   Bnd : Bound_Type;
                begin
@@ -609,14 +606,26 @@ package body Elab.Vhdl_Types is
                   for I in reverse Flist_First .. Flist_Last (St_Indexes) loop
                      St_El := Get_Index_Type (St_Indexes, I);
                      Bnd := Synth_Bounds_From_Range (Syn_Inst, St_El);
-                     Res_Typ := Create_Array_Type
-                       (Bnd, Res_Typ = El_Typ, Res_Typ);
+                     if El_Bounded then
+                        Res_Typ := Create_Array_Type
+                          (Bnd, Res_Typ = El_Typ, Res_Typ);
+                     else
+                        Res_Typ := Create_Array_Unbounded_Type
+                          (Bnd, Res_Typ = El_Typ, Res_Typ);
+                     end if;
                   end loop;
                   return Res_Typ;
                end;
             else
                return Create_Unbounded_Array
                  (Parent_Typ.Uarr_Idx, Parent_Typ.Ulast, El_Typ);
+            end if;
+         when Type_Array_Unbounded =>
+            if Is_Bounded_Type (El_Typ) then
+               return Create_Array_From_Array_Unbounded
+                 (Parent_Typ, El_Typ);
+            else
+               raise Internal_Error;
             end if;
          when Type_Vector
            | Type_Array =>

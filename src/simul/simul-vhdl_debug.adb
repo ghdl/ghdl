@@ -315,6 +315,7 @@ package body Simul.Vhdl_Debug is
             end;
          when Type_Unbounded_Vector
            | Type_Unbounded_Record
+           | Type_Array_Unbounded
            | Type_Unbounded_Array
            | Type_Slice
            | Type_Protected

@@ -244,6 +244,7 @@ package body Elab.Vhdl_Debug is
          when Type_Protected =>
             Put ("*protected*");
          when Type_Unbounded_Array
+            | Type_Array_Unbounded
             | Type_Unbounded_Record
             | Type_Unbounded_Vector =>
             Put ("*unbounded*");
@@ -326,6 +327,8 @@ package body Elab.Vhdl_Debug is
             Put ("unbounded_vector");
          when Type_Array =>
             Put ("array");
+         when Type_Array_Unbounded =>
+            Put ("array_unbounded");
          when Type_Unbounded_Array =>
             Put ("unbounded_array");
          when Type_Unbounded_Record =>
