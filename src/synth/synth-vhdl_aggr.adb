@@ -436,11 +436,11 @@ package body Synth.Vhdl_Aggr is
 
    function Synth_Aggregate_Array (Syn_Inst : Synth_Instance_Acc;
                                    Aggr : Node;
-                                   Aggr_Type : Type_Acc) return Valtyp
+                                   Aggr_Typ : Type_Acc) return Valtyp
    is
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
-      Strides : constant Stride_Array := Fill_Stride (Aggr_Type);
-      Flen : constant Iir_Index32 := Get_Array_Flat_Length (Aggr_Type);
+      Strides : constant Stride_Array := Fill_Stride (Aggr_Typ);
+      Flen : constant Iir_Index32 := Get_Array_Flat_Length (Aggr_Typ);
       Tab_Res : Valtyp_Array_Acc;
       Const_P : Boolean;
       Err_P : Boolean;
@@ -449,7 +449,7 @@ package body Synth.Vhdl_Aggr is
       Tab_Res := new Valtyp_Array'(1 .. Nat32 (Flen) => No_Valtyp);
 
       Fill_Array_Aggregate (Syn_Inst, Aggr, Tab_Res,
-                            Aggr_Type, 1, Strides, 1, Const_P, Err_P);
+                            Aggr_Typ, 1, Strides, 1, Const_P, Err_P);
       if Err_P then
          return No_Valtyp;
       end if;
@@ -460,7 +460,7 @@ package body Synth.Vhdl_Aggr is
          declare
             Off : Size_Type;
          begin
-            Res := Create_Value_Memory (Aggr_Type, Current_Pool);
+            Res := Create_Value_Memory (Aggr_Typ, Current_Pool);
             Off := 0;
             for I in Tab_Res'Range loop
                if Tab_Res (I).Val /= null then
@@ -469,11 +469,11 @@ package body Synth.Vhdl_Aggr is
                   Off := Off + Tab_Res (I).Typ.Sz;
                end if;
             end loop;
-            pragma Assert (Off = Aggr_Type.Sz);
+            pragma Assert (Off = Aggr_Typ.Sz);
          end;
       else
          Res := Create_Value_Net
-           (Valtyp_Array_To_Net (Ctxt, Tab_Res.all), Aggr_Type);
+           (Valtyp_Array_To_Net (Ctxt, Tab_Res.all), Aggr_Typ);
       end if;
 
       Free_Valtyp_Array (Tab_Res);
@@ -545,7 +545,8 @@ package body Synth.Vhdl_Aggr is
                              Aggr_Type : Type_Acc) return Valtyp is
    begin
       case Aggr_Type.Kind is
-         when Type_Unbounded_Array | Type_Unbounded_Vector =>
+         when Type_Unbounded_Array
+            | Type_Unbounded_Vector =>
             declare
                Res_Type : Type_Acc;
             begin
