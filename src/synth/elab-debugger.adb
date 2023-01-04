@@ -26,6 +26,7 @@ with Grt.Types; use Grt.Types;
 with Grt.Readline;
 
 with Vhdl.Errors;
+with Vhdl.Utils;
 with Vhdl.Nodes_Walk; use Vhdl.Nodes_Walk;
 with Vhdl.Parse;
 
@@ -213,13 +214,9 @@ package body Elab.Debugger is
       Line_Pos : Source_Ptr;
       Line : Natural;
       Offset : Natural;
-      Buf : File_Buffer_Acc;
-      Next_Line_Pos : Source_Ptr;
    begin
       Location_To_Coord (Loc, File, Line_Pos, Line, Offset);
-      Buf := Get_File_Source (File);
-      Next_Line_Pos := File_Line_To_Position (File, Line + 1);
-      Put (String (Buf (Line_Pos .. Next_Line_Pos - 1)));
+      Put_Line (Extract_Expanded_Line (File, Line));
    end Disp_Source_Line;
 
    --  The status of the debugger.  This status can be modified by a command
@@ -501,6 +498,7 @@ package body Elab.Debugger is
 
    procedure Disp_A_Frame (Inst: Synth_Instance_Acc)
    is
+      use Vhdl.Utils;
       Src : Node;
    begin
       if Inst = Root_Instance then
@@ -509,7 +507,16 @@ package body Elab.Debugger is
       end if;
 
       Src := Get_Source_Scope (Inst);
-      Put (Vhdl.Errors.Disp_Node (Src));
+      case Get_Kind (Src) is
+         when Iir_Kind_Procedure_Body =>
+            Put ("procedure ");
+            Put (Image_Identifier (Get_Subprogram_Specification (Src)));
+         when Iir_Kind_Function_Body =>
+            Put ("function ");
+            Put (Image_Identifier (Get_Subprogram_Specification (Src)));
+         when others =>
+            Put (Vhdl.Errors.Disp_Node (Src));
+      end case;
       Put (" at ");
       Put (Files_Map.Image (Get_Location (Src)));
       New_Line;
@@ -866,9 +873,13 @@ package body Elab.Debugger is
    procedure Debug (Reason: Debug_Reason)
    is
       use Grt.Readline;
+      Prev_Hook : constant Error_Hook_Type := Error_Hook;
       Raw_Line : Ghdl_C_String;
       Prompt : Ghdl_C_String;
    begin
+      --  Do not call the error hook on nested debug.
+      Error_Hook := null;
+
       Prompt := To_Ghdl_C_String (Prompt_Debug'Address);
 
       case Reason is
@@ -980,6 +991,8 @@ package body Elab.Debugger is
          end;
       end loop;
       --  Put ("resuming");
+
+      Error_Hook := Prev_Hook;
    end Debug;
 
    procedure Debug_Init (Top : Node) is
