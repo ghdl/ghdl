@@ -1118,7 +1118,8 @@ package body Elab.Vhdl_Debug is
    begin
       case Get_Kind (N) is
          when Iir_Kind_Process_Statement
-           | Iir_Kind_Sensitized_Process_Statement =>
+           | Iir_Kind_Sensitized_Process_Statement
+           | Iir_Kind_Protected_Type_Body =>
             Foreach_Scopes (Get_Parent (N), Handler);
             Handler.all (N);
          when Iir_Kind_Architecture_Body =>
@@ -1188,7 +1189,10 @@ package body Elab.Vhdl_Debug is
                Package_Unit : constant Iir := Get_Design_Unit (Package_Decl);
             begin
                Add_Name (Package_Unit);
-               Add_Context_Clauses (Package_Unit);
+               if Get_Kind (Package_Unit) = Iir_Kind_Design_Unit then
+                  --  Only for top-level packages.
+                  Add_Context_Clauses (Package_Unit);
+               end if;
                Open_Declarative_Region;
                Add_Declarations (Get_Declaration_Chain (Package_Decl), False);
                Add_Declarations (Get_Declaration_Chain (N), False);
@@ -1205,7 +1209,8 @@ package body Elab.Vhdl_Debug is
                  (Get_Declaration_Chain (N), False);
             end;
          when Iir_Kind_Process_Statement
-           | Iir_Kind_Sensitized_Process_Statement =>
+           | Iir_Kind_Sensitized_Process_Statement
+           | Iir_Kind_Protected_Type_Body =>
             Open_Declarative_Region;
             Add_Declarations (Get_Declaration_Chain (N), False);
          when Iir_Kind_For_Loop_Statement
@@ -1267,10 +1272,11 @@ package body Elab.Vhdl_Debug is
            | Iir_Kind_Block_Statement
            | Iir_Kind_If_Generate_Statement
            | Iir_Kind_For_Generate_Statement
-           | Iir_Kind_Generate_Statement_Body =>
+           | Iir_Kind_Generate_Statement_Body
+           | Iir_Kind_Protected_Type_Body =>
             Close_Declarative_Region;
          when others =>
-            Vhdl.Errors.Error_Kind ("Decl_Decls_For", N);
+            Vhdl.Errors.Error_Kind ("Del_Decls_For", N);
       end case;
    end Del_Decls_For;
 
