@@ -49,6 +49,25 @@ package body Synth.Ieee.Numeric_Std is
       end loop;
    end Fill;
 
+   --  Return 'X' if V has at least one 'X',
+   --  Return '1' if V has at least one '1' but no 'X'.
+   --  Otherwise return '0' if V is 0.
+   function Has_0x (V : Memtyp) return Sl_X01
+   is
+      Res : Sl_X01 := '0';
+      E : Sl_X01;
+   begin
+      for I in 0 .. V.Typ.Abound.Len - 1 loop
+         E := To_X01 (Read_Std_Logic (V.Mem, I));
+         if E = 'X' then
+            return 'X';
+         elsif E = '1' then
+            Res := '1';
+         end if;
+      end loop;
+      return Res;
+   end Has_0x;
+
    procedure Warn_Compare_Null (Loc : Location_Type) is
    begin
       Warning_Msg_Synth (Loc, "null argument detected, returning false");
@@ -722,6 +741,13 @@ package body Synth.Ieee.Numeric_Std is
          return Res;
       end if;
       Fill (Res, '0');
+      if Has_0x (L) = 'X' then
+         Warning_Msg_Synth
+           (+Loc, "NUMERIC_STD.""*"": non logical value detected");
+         Fill (Res, 'X');
+         return Res;
+      end if;
+
       --  Shift and add L, do not consider (yet) the sign bit of R.
       for I in 1 .. Rlen - 1 loop
          Rb := Sl_To_X01 (Read_Std_Logic (R.Mem, Rlen - I));
@@ -729,7 +755,7 @@ package body Synth.Ieee.Numeric_Std is
             --  Compute res := res + shift_left (l, i).
             Carry := '0';
             for J in 1 .. Llen loop
-               Lb := Read_Std_Logic (L.Mem, Llen - J);
+               Lb := Sl_To_X01 (Read_Std_Logic (L.Mem, Llen - J));
                Vb := Read_Std_Logic (Res.Mem, Len - (I + J - 1));
                Write_Std_Logic
                  (Res.Mem, Len - (I + J - 1), Compute_Sum (Carry, Vb, Lb));
@@ -738,7 +764,7 @@ package body Synth.Ieee.Numeric_Std is
             --  Sign extend and propagate carry.
             Lb := Read_Std_Logic (L.Mem, 0);
             for J in I + Llen .. Len loop
-               Vb := Read_Std_Logic (Res.Mem, Len - J);
+               Vb := Sl_To_X01 (Read_Std_Logic (Res.Mem, Len - J));
                Write_Std_Logic (Res.Mem, Len - J, Compute_Sum (Carry, Vb, Lb));
                Carry := Compute_Carry (Carry, Vb, Lb);
             end loop;
@@ -746,7 +772,7 @@ package body Synth.Ieee.Numeric_Std is
             Warning_Msg_Synth
               (+Loc, "NUMERIC_STD.""*"": non logical value detected");
             Fill (Res, 'X');
-            exit;
+            return Res;
          end if;
       end loop;
       if Read_Std_Logic (R.Mem, 0) = '1' then
@@ -827,22 +853,6 @@ package body Synth.Ieee.Numeric_Std is
    begin
       Neg_Vec (V.Mem, V.Mem, V.Typ.Abound.Len);
    end Neg_Vec;
-
-   function Has_0x (V : Memtyp) return Sl_X01
-   is
-      Res : Sl_X01 := '0';
-      E : Sl_X01;
-   begin
-      for I in 0 .. V.Typ.Abound.Len - 1 loop
-         E := To_X01 (Read_Std_Logic (V.Mem, I));
-         if E = 'X' then
-            return 'X';
-         elsif E = '1' then
-            Res := '1';
-         end if;
-      end loop;
-      return Res;
-   end Has_0x;
 
    function Neg_Vec (V : Memtyp; Loc : Location_Type) return Memtyp
    is
