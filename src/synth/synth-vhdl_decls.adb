@@ -393,26 +393,47 @@ package body Synth.Vhdl_Decls is
    end Synth_Concurrent_Package_Instantiation;
 
    function Create_Protected_Object (Inst : Synth_Instance_Acc;
-                                     Decl : Node;
+                                     Var : Node;
                                      Typ : Type_Acc) return Valtyp
    is
       use Elab.Memtype;
       Prev_Instance_Pool : constant Areapools.Areapool_Acc := Instance_Pool;
-      Decl_Type : constant Node := Get_Type (Decl);
+      Decl_Type : constant Node := Get_Type (Var);
       Bod : constant Node := Get_Protected_Type_Body (Decl_Type);
       Obj_Inst : Synth_Instance_Acc;
       Obj_Hand : Protected_Index;
       Mem : Memory_Ptr;
       Parent : Synth_Instance_Acc;
+      Decl : Node;
       Res : Valtyp;
+      Last_Type : Node;
    begin
       Parent := Get_Instance_By_Scope (Inst, Get_Parent_Scope (Bod));
-      Obj_Inst := Make_Elab_Instance (Parent, Decl, Bod, Null_Node);
+      Obj_Inst := Make_Elab_Instance (Parent, Var, Bod, Null_Node);
       Obj_Hand := Elab.Vhdl_Prot.Create (Obj_Inst);
 
       Instance_Pool := Global_Pool'Access;
-      Elab.Vhdl_Decls.Elab_Declarations
-        (Obj_Inst, Get_Declaration_Chain (Bod), True);
+      Decl := Get_Declaration_Chain (Bod);
+      Last_Type := Null_Node;
+      while Decl /= Null_Node loop
+         case Get_Kind (Decl) is
+            when Iir_Kind_Type_Declaration
+              | Iir_Kind_Anonymous_Type_Declaration
+              | Iir_Kind_Subtype_Declaration
+              | Iir_Kind_Variable_Declaration =>
+               Elab.Vhdl_Decls.Elab_Declaration
+                 (Obj_Inst, Decl, True, Last_Type);
+            when Iir_Kind_Function_Declaration
+              | Iir_Kind_Procedure_Declaration
+              | Iir_Kind_Function_Body
+              | Iir_Kind_Procedure_Body =>
+               --  Interface subtypes ?
+               null;
+            when others =>
+               Vhdl.Errors.Error_Kind ("create_protected_object", Decl);
+         end case;
+         Decl := Get_Chain (Decl);
+      end loop;
 
       Mem := Alloc_Memory (Typ, Instance_Pool);
       Write_Protected (Mem, Obj_Hand);

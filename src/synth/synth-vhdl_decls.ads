@@ -56,7 +56,7 @@ package Synth.Vhdl_Decls is
                                     Is_Subprg : Boolean := False);
 
    function Create_Protected_Object (Inst : Synth_Instance_Acc;
-                                     Decl : Node;
+                                     Var : Node;
                                      Typ : Type_Acc) return Valtyp;
 
    --  For declarations in architectural statements (top-level, entities,
