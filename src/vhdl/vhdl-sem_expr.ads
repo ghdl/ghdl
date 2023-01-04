@@ -92,6 +92,9 @@ package Vhdl.Sem_Expr is
    -- For a procedure call, A_TYPE must be null.
    function Sem_Subprogram_Call (Expr: Iir; A_Type: Iir) return Iir;
 
+   --  Return TRUE if EXPR is null or valid for an expression.
+   function Is_Expression (Expr : Iir) return Boolean;
+
    --  If EXPR is a node for an expression, then return EXPR.
    --  Otherwise, emit an error message using LOC as location
    --   and return NULL_IIR.

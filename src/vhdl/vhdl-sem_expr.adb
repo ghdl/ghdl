@@ -375,11 +375,10 @@ package body Vhdl.Sem_Expr is
       end if;
    end Is_Expr_Compatible;
 
-   function Check_Is_Expression (Expr : Iir; Loc : Iir) return Iir
-   is
+   function Is_Expression (Expr : Iir) return Boolean is
    begin
       if Expr = Null_Iir then
-         return Null_Iir;
+         return True;
       end if;
       case Get_Kind (Expr) is
          when Iir_Kind_Type_Declaration
@@ -407,30 +406,29 @@ package body Vhdl.Sem_Expr is
            | Iir_Kind_Signature
            | Iir_Kind_Interface_Terminal_Declaration
            | Iir_Kind_Terminal_Declaration =>
-            Error_Msg_Sem (+Loc, "%n not allowed in an expression", +Expr);
-            return Null_Iir;
+            return False;
          when Iir_Kind_Function_Declaration =>
-            return Expr;
+            return True;
          when Iir_Kind_Overload_List =>
-            return Expr;
+            return True;
          when Iir_Kinds_Literal
            | Iir_Kind_Character_Literal
            | Iir_Kind_Simple_Aggregate
            | Iir_Kind_Unit_Declaration
            | Iir_Kind_Enumeration_Literal =>
-            return Expr;
+            return True;
          when Iir_Kinds_External_Name =>
-            return Expr;
+            return True;
          when Iir_Kinds_Object_Declaration
            | Iir_Kind_Aggregate
            | Iir_Kind_Allocator_By_Expression
            | Iir_Kind_Allocator_By_Subtype
            | Iir_Kind_Qualified_Expression
            | Iir_Kind_Overflow_Literal =>
-            return Expr;
+            return True;
          when Iir_Kinds_Dyadic_Operator
            | Iir_Kinds_Monadic_Operator =>
-            return Expr;
+            return True;
          when Iir_Kind_Slice_Name
            | Iir_Kind_Indexed_Name
            | Iir_Kind_Selected_Element
@@ -441,7 +439,7 @@ package body Vhdl.Sem_Expr is
            | Iir_Kind_Parenthesis_Expression
            | Iir_Kind_Type_Conversion
            | Iir_Kind_Function_Call =>
-            return Expr;
+            return True;
          when Iir_Kind_Psl_Endpoint_Declaration
            | Iir_Kind_Psl_Boolean_Parameter
            | Iir_Kind_Psl_Prev
@@ -450,20 +448,31 @@ package body Vhdl.Sem_Expr is
            | Iir_Kind_Psl_Fell
            | Iir_Kind_Psl_Onehot
            | Iir_Kind_Psl_Onehot0 =>
-            return Expr;
+            return True;
          when Iir_Kind_Simple_Name
            | Iir_Kind_Parenthesis_Name
            | Iir_Kind_Attribute_Name
            | Iir_Kind_Selected_Name
            | Iir_Kind_Selected_By_All_Name =>
-            return Expr;
+            return True;
          when Iir_Kind_Error =>
-            return Expr;
+            return True;
          when others =>
-            Error_Kind ("check_is_expression", Expr);
-            --N := Get_Type (Expr);
-            --return Expr;
+            Error_Kind ("is_expression", Expr);
       end case;
+   end Is_Expression;
+
+   function Check_Is_Expression (Expr : Iir; Loc : Iir) return Iir is
+   begin
+      if Expr = Null_Iir then
+         return Null_Iir;
+      end if;
+      if Is_Expression (Expr) then
+         return Expr;
+      else
+         Error_Msg_Sem (+Loc, "%n not allowed in an expression", +Expr);
+         return Null_Iir;
+      end if;
    end Check_Is_Expression;
 
    -- Find a type compatible with A_TYPE in TYPE_LIST (which can be an
