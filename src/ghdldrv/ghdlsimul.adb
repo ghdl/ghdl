@@ -30,8 +30,9 @@ with Simple_IO;
 
 with Vhdl.Nodes; use Vhdl.Nodes;
 with Vhdl.Std_Package;
+with Vhdl.Sem;
 with Vhdl.Canon;
-
+with Vhdl.Configuration;
 
 with Grt.Options;
 with Grt.Types;
@@ -80,6 +81,23 @@ package body Ghdlsimul is
       Inst : Synth_Instance_Acc;
    begin
       Common_Compile_Elab (Cmd_Name, Args, True, Opt_Arg, Config);
+
+      --  If all design units are loaded, late semantic checks can be
+      --  performed.
+      declare
+         use Vhdl.Configuration;
+         Unit : Node;
+      begin
+         if Flag_Load_All_Design_Units then
+            for I in Design_Units.First .. Design_Units.Last loop
+               Unit := Design_Units.Table (I);
+               Vhdl.Sem.Sem_Analysis_Checks_List (Unit, False);
+               --  There cannot be remaining checks to do.
+               pragma Assert
+                 (Get_Analysis_Checks_List (Unit) = Null_Iir_List);
+            end loop;
+         end if;
+      end;
 
       for I in Opt_Arg .. Args'Last loop
          if Args (I).all = "--expect-failure" then
