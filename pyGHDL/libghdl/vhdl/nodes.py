@@ -6992,3 +6992,29 @@ def Get_Suspend_State_Chain(obj: Iir) -> Iir:
 @BindToLibGHDL("vhdl__nodes__set_suspend_state_chain")
 def Set_Suspend_State_Chain(obj: Iir, value: Iir) -> None:
     """"""
+
+
+@export
+@BindToLibGHDL("vhdl__nodes__get_suspend_state_last")
+def Get_Suspend_State_Last(obj: Iir) -> Iir:
+    """"""
+    return 0
+
+
+@export
+@BindToLibGHDL("vhdl__nodes__set_suspend_state_last")
+def Set_Suspend_State_Last(obj: Iir, value: Iir) -> None:
+    """"""
+
+
+@export
+@BindToLibGHDL("vhdl__nodes__get_suspend_state_decl")
+def Get_Suspend_State_Decl(obj: Iir) -> Iir:
+    """"""
+    return 0
+
+
+@export
+@BindToLibGHDL("vhdl__nodes__set_suspend_state_decl")
+def Set_Suspend_State_Decl(obj: Iir, value: Iir) -> None:
+    """"""

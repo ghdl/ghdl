@@ -1909,7 +1909,11 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Chain (Field2)
    --
+   --  First suspend statement.
    --   Get/Set_Suspend_State_Chain (Field4)
+   --
+   --  Last suspend statement (to help instantiation).
+   --   Get/Set_Suspend_State_Last (Field5)
 
    -- Iir_Kind_Constant_Declaration (Medium)
    -- Iir_Kind_Iterator_Declaration (Short)
@@ -4225,6 +4229,9 @@ package Vhdl.Nodes is
    --   Get/Set_Chain (Field2)
    --
    --   Get/Set_Suspend_State_Index (Field3)
+   --
+   --  Corresponding suspend state declaration.
+   --   Get/Set_Suspend_State_Decl (Field5)
    --
    --   Get/Set_Suspend_State_Chain (Field4)
 
@@ -9642,11 +9649,21 @@ package Vhdl.Nodes is
    function Get_Foreign_Node (N : Iir) return Int32;
    procedure Set_Foreign_Node (N : Iir; En : Int32);
 
+   --  State index for the statement.
    --  Field: Field3 (uc)
    function Get_Suspend_State_Index (N : Iir) return Int32;
    procedure Set_Suspend_State_Index (N : Iir; Num : Int32);
 
+   --  Chain of suspend state statement.
    --  Field: Field4 Forward_Ref
    function Get_Suspend_State_Chain (N : Iir) return Iir;
    procedure Set_Suspend_State_Chain (N : Iir; Chain : Iir);
+
+   --  Field: Field5 Forward_Ref
+   function Get_Suspend_State_Last (N : Iir) return Iir;
+   procedure Set_Suspend_State_Last (N : Iir; Chain : Iir);
+
+   --  Field: Field5 Ref
+   function Get_Suspend_State_Decl (N : Iir) return Iir;
+   procedure Set_Suspend_State_Decl (N : Iir; Chain : Iir);
 end Vhdl.Nodes;

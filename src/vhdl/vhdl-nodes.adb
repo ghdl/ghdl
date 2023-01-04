@@ -7604,4 +7604,36 @@ package body Vhdl.Nodes is
       Set_Field4 (N, Chain);
    end Set_Suspend_State_Chain;
 
+   function Get_Suspend_State_Last (N : Iir) return Iir is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Suspend_State_Last (Get_Kind (N)),
+                     "no field Suspend_State_Last");
+      return Get_Field5 (N);
+   end Get_Suspend_State_Last;
+
+   procedure Set_Suspend_State_Last (N : Iir; Chain : Iir) is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Suspend_State_Last (Get_Kind (N)),
+                     "no field Suspend_State_Last");
+      Set_Field5 (N, Chain);
+   end Set_Suspend_State_Last;
+
+   function Get_Suspend_State_Decl (N : Iir) return Iir is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Suspend_State_Decl (Get_Kind (N)),
+                     "no field Suspend_State_Decl");
+      return Get_Field5 (N);
+   end Get_Suspend_State_Decl;
+
+   procedure Set_Suspend_State_Decl (N : Iir; Chain : Iir) is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Suspend_State_Decl (Get_Kind (N)),
+                     "no field Suspend_State_Decl");
+      Set_Field5 (N, Chain);
+   end Set_Suspend_State_Decl;
+
 end Vhdl.Nodes;

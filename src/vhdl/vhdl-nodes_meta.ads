@@ -445,7 +445,9 @@ package Vhdl.Nodes_Meta is
       Field_Default_Clock,
       Field_Foreign_Node,
       Field_Suspend_State_Index,
-      Field_Suspend_State_Chain
+      Field_Suspend_State_Chain,
+      Field_Suspend_State_Last,
+      Field_Suspend_State_Decl
      );
    pragma Discard_Names (Fields_Enum);
 
@@ -1051,4 +1053,6 @@ package Vhdl.Nodes_Meta is
    function Has_Foreign_Node (K : Iir_Kind) return Boolean;
    function Has_Suspend_State_Index (K : Iir_Kind) return Boolean;
    function Has_Suspend_State_Chain (K : Iir_Kind) return Boolean;
+   function Has_Suspend_State_Last (K : Iir_Kind) return Boolean;
+   function Has_Suspend_State_Decl (K : Iir_Kind) return Boolean;
 end Vhdl.Nodes_Meta;

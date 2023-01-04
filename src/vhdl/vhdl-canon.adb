@@ -1357,7 +1357,7 @@ package body Vhdl.Canon is
    end Canon_Sequential_Stmts;
 
    function Canon_Insert_Suspend_State_Statement (Stmt : Iir; Var : Iir)
-                                                  return Iir
+                                                 return Iir
    is
       Last : Iir;
       Num : Int32;
@@ -1367,17 +1367,20 @@ package body Vhdl.Canon is
       Location_Copy (Res, Stmt);
       Set_Parent (Res, Get_Parent (Stmt));
       Set_Chain (Res, Stmt);
+      Set_Suspend_State_Decl (Res, Var);
 
-      Last := Get_Suspend_State_Chain (Var);
+      Last := Get_Suspend_State_Last (Var);
+      Set_Suspend_State_Last (Var, Res);
+
       if Last = Null_Iir then
          Num := 0;
+         Set_Suspend_State_Chain (Var, Res);
       else
          Num := Get_Suspend_State_Index (Last);
+         Set_Suspend_State_Chain (Last, Res);
       end if;
 
       Set_Suspend_State_Index (Res, Num + 1);
-      Set_Suspend_State_Chain (Res, Last);
-      Set_Suspend_State_Chain (Var, Res);
       return Res;
    end Canon_Insert_Suspend_State_Statement;
 

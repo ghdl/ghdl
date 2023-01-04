@@ -662,6 +662,27 @@ package body Vhdl.Sem_Inst is
                   --  forward_ref links can be fixed.
                   Instantiate_Attribute_Value_Chain (Res);
 
+               when Field_Suspend_State_Chain =>
+                  if Kind = Iir_Kind_Suspend_State_Declaration then
+                     Set_Suspend_State_Chain (Res, Null_Node);
+                     Set_Suspend_State_Last (Res, Null_Node);
+                  else
+                     declare
+                        Decl : constant Node := Get_Suspend_State_Decl (Res);
+                        Last : constant Node := Get_Suspend_State_Last (Decl);
+                     begin
+                        Set_Suspend_State_Chain (Res, Last);
+                        Set_Suspend_State_Last (Decl, Res);
+                        if Decl = Null_Node then
+                           Set_Suspend_State_Chain (Decl, Res);
+                        end if;
+                     end;
+                  end if;
+
+               when Field_Suspend_State_Last =>
+                  --  Already handled by Field_Suspend_State_Chain.
+                  null;
+
                when others =>
                   --  Common case.
                   Instantiate_Iir_Field (Res, N, F);

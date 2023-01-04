@@ -502,6 +502,8 @@ class fields(IntEnum):
     Foreign_Node = 382
     Suspend_State_Index = 383
     Suspend_State_Chain = 384
+    Suspend_State_Last = 385
+    Suspend_State_Decl = 386
 
 
 def Get_Boolean(node, field):
@@ -2943,4 +2945,16 @@ def Has_Suspend_State_Index(kind: IirKind) -> bool:
 @export
 @BindToLibGHDL("vhdl__nodes_meta__has_suspend_state_chain")
 def Has_Suspend_State_Chain(kind: IirKind) -> bool:
+    """"""
+
+
+@export
+@BindToLibGHDL("vhdl__nodes_meta__has_suspend_state_last")
+def Has_Suspend_State_Last(kind: IirKind) -> bool:
+    """"""
+
+
+@export
+@BindToLibGHDL("vhdl__nodes_meta__has_suspend_state_decl")
+def Has_Suspend_State_Decl(kind: IirKind) -> bool:
     """"""
