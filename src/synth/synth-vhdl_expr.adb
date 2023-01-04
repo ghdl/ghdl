@@ -710,10 +710,16 @@ package body Synth.Vhdl_Expr is
            | Iir_Kind_Dereference =>
             declare
                Val : Valtyp;
+               Acc : Heap_Index;
                Obj : Memtyp;
             begin
                Val := Synth_Expression (Syn_Inst, Get_Prefix (Name));
-               Obj := Elab.Vhdl_Heap.Synth_Dereference (Read_Access (Val));
+               Acc := Read_Access (Val);
+               if Acc = Null_Heap_Index then
+                  Error_Msg_Synth (Syn_Inst, Name, "null access dereference");
+                  return No_Valtyp;
+               end if;
+               Obj := Elab.Vhdl_Heap.Synth_Dereference (Acc);
                return Create_Value_Memtyp (Obj);
             end;
          when others =>

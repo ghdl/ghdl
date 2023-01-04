@@ -268,14 +268,23 @@ package body Synth.Vhdl_Stmts is
            | Iir_Kind_Dereference =>
             declare
                Acc : Memtyp;
+               Idx : Heap_Index;
             begin
                Synth_Assignment_Prefix
                  (Syn_Inst, Get_Prefix (Pfx), Dest_Base, Dest_Typ, Dest_Off);
                Acc := (Dest_Typ, Dest_Base.Val.Mem + Dest_Off.Mem_Off);
-               Dest_Base := Create_Value_Memtyp
-                 (Elab.Vhdl_Heap.Synth_Dereference (Read_Access (Acc)));
-               Dest_Typ := Dest_Base.Typ;
+               Idx := Read_Access (Acc);
+               if Idx = Null_Heap_Index then
+                  Error_Msg_Synth (Syn_Inst, Pfx, "null access dereference");
+                  Dest_Base := No_Valtyp;
+                  Dest_Typ := Dest_Typ.Acc_Acc;
+               else
+                  Dest_Base := Create_Value_Memtyp
+                    (Elab.Vhdl_Heap.Synth_Dereference (Idx));
+                  Dest_Typ := Dest_Base.Typ;
+               end if;
                Dest_Dyn := No_Dyn_Name;
+               Dest_Off := No_Value_Offsets;
             end;
          when others =>
             Error_Kind ("synth_assignment_prefix", Pfx);
