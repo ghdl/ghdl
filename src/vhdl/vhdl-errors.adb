@@ -334,7 +334,8 @@ package body Vhdl.Errors is
          when Iir_Kind_Protected_Type_Declaration =>
             return Disp_Type (Node, "protected type");
          when Iir_Kind_Protected_Type_Body =>
-            return Disp_Type (Node, "protected type body");
+            return Disp_Type (Get_Protected_Type_Declaration (Node),
+                              "protected type body");
          when Iir_Kind_Subtype_Definition =>
             return "subtype definition";
          when Iir_Kind_Foreign_Vector_Type_Definition =>
