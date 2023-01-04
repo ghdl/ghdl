@@ -1377,14 +1377,18 @@ package body Elab.Vhdl_Debug is
          --  Res := Execute_Name (Dbg_Cur_Frame, Expr, True);
          raise Internal_Error;
       else
+         --  TODO: check EXPR is an expression.
+         --  TODO: protected object.
          Res := Synth.Vhdl_Expr.Synth_Expression (Cur_Inst, Expr);
       end if;
-      if Res.Val.Kind = Value_Memory then
-         Disp_Memtyp (Get_Memtyp (Res), Get_Type (Expr));
-      else
-         Elab.Vhdl_Values.Debug.Debug_Valtyp (Res);
+      if Res /= No_Valtyp then
+         if Res.Val.Kind = Value_Memory then
+            Disp_Memtyp (Get_Memtyp (Res), Get_Type (Expr));
+         else
+            Elab.Vhdl_Values.Debug.Debug_Valtyp (Res);
+         end if;
+         New_Line;
       end if;
-      New_Line;
 
       --  Free value
       Release_Expr_Pool (Marker);
