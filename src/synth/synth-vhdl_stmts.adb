@@ -884,8 +884,8 @@ package body Synth.Vhdl_Stmts is
      (Inst : Synth_Instance_Acc; Stmt : Node)
    is
       Ctxt : constant Context_Acc := Get_Build (Inst);
-      Target : constant Node := Get_Target (Stmt);
       Marker : Mark_Type;
+      Targ : Target_Info;
       Targ_Type : Type_Acc;
       Cond : Node;
       Ce : Node;
@@ -895,7 +895,8 @@ package body Synth.Vhdl_Stmts is
       Cond_Tri : Tri_State_Type;
    begin
       Mark_Expr_Pool (Marker);
-      Targ_Type := Get_Subtype_Object (Inst, Get_Type (Target));
+      Targ := Synth_Target (Inst, Get_Target (Stmt));
+      Targ_Type := Targ.Targ_Type;
       First := No_Valtyp;
       Last := No_Net;
       Ce := Get_Conditional_Expression_Chain (Stmt);
@@ -957,7 +958,7 @@ package body Synth.Vhdl_Stmts is
 
          Ce := Get_Chain (Ce);
       end loop;
-      Synth_Assignment (Inst, Target, First, Stmt);
+      Synth_Assignment (Inst, Targ, First, Stmt);
       Release_Expr_Pool (Marker);
    end Synth_Conditional_Variable_Assignment;
 
