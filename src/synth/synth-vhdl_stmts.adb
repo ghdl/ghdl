@@ -1582,6 +1582,10 @@ package body Synth.Vhdl_Stmts is
                if Is_Equal (Sel_Val, Sel) then
                   return Stmts;
                end if;
+               if Sel_Val.Typ.Abound.Len /= Sel.Typ.Abound.Len then
+                  Error_Msg_Synth (Inst, Choice, "incorrect selector length");
+                  --  TODO: what value should be returned ?
+               end if;
             when Iir_Kind_Choice_By_Others =>
                return Stmts;
             when others =>
