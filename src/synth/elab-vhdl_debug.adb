@@ -28,6 +28,7 @@ with Elab.Memtype; use Elab.Memtype;
 with Elab.Vhdl_Annotations;
 with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 with Elab.Vhdl_Values.Debug; use Elab.Vhdl_Values.Debug;
+with Elab.Vhdl_Heap;
 
 with Synth.Vhdl_Expr;
 
@@ -240,7 +241,16 @@ package body Elab.Vhdl_Debug is
          when Type_Record =>
             Disp_Value_Record (M, Vtype);
          when Type_Access =>
-            Put ("*access*");
+            declare
+               Idx : constant Heap_Index := Read_Access (M);
+            begin
+               if Idx = Null_Heap_Index then
+                  Put ("null");
+               else
+                  Put ("@");
+                  Put_Uns32 (Uns32 (Idx));
+               end if;
+            end;
          when Type_Protected =>
             Put ("*protected*");
          when Type_Unbounded_Array
@@ -1374,12 +1384,33 @@ package body Elab.Vhdl_Debug is
       Release_Expr_Pool (Marker);
    end Print_Proc;
 
+   procedure Print_Heap_Proc (Line : String)
+   is
+      F : Natural;
+      Idx : Uns32;
+      Valid : Boolean;
+      Mt : Memtyp;
+   begin
+      F := Skip_Blanks (Line, Line'First);
+      To_Num (Line (F .. Line'Last), Idx, Valid);
+      if not Valid then
+         Put_Line ("invalid heap index");
+         return;
+      end if;
+      Mt := Elab.Vhdl_Heap.Synth_Dereference (Heap_Index (Idx));
+      Debug_Memtyp (Mt);
+   end Print_Heap_Proc;
+
    procedure Append_Commands is
    begin
       Append_Menu_Command
         (Name => new String'("p*rint"),
          Help => new String'("execute expression"),
          Proc => Print_Proc'Access);
+      Append_Menu_Command
+        (Name => new String'("ph*eap"),
+         Help => new String'("print heap index"),
+         Proc => Print_Heap_Proc'Access);
    end Append_Commands;
 
 end Elab.Vhdl_Debug;
