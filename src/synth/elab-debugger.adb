@@ -314,7 +314,8 @@ package body Elab.Debugger is
                Decl := Get_Subprogram_Specification (Decl);
                exit;
             when Iir_Kind_Process_Statement
-              | Iir_Kind_Sensitized_Process_Statement =>
+              | Iir_Kind_Sensitized_Process_Statement
+              | Iir_Kind_Architecture_Body =>
                Put_Line ("processes have no parameters");
                return;
             when Iir_Kind_While_Loop_Statement
@@ -344,7 +345,8 @@ package body Elab.Debugger is
                | Iir_Kind_Function_Body
                | Iir_Kind_Process_Statement
                | Iir_Kind_Sensitized_Process_Statement
-               | Iir_Kind_Generate_Statement_Body =>
+               | Iir_Kind_Generate_Statement_Body
+               | Iir_Kind_Architecture_Body =>
                Decls := Get_Declaration_Chain (Decl);
                exit;
             when Iir_Kind_While_Loop_Statement
