@@ -24,6 +24,7 @@ with Ada.Unchecked_Conversion;
 with Grt.Options; use Grt.Options;
 with Grt.Main;
 with Grt.Types; use Grt.Types;
+with Grt.Modules;
 
 --  Some files are only referenced from compiled code.  With it here so that
 --  they get compiled during build (and elaborated).
@@ -45,7 +46,7 @@ is
    Args : constant Grt.Options.Argv_Type := To_Argv_Type (Argv);
    Progname : Ghdl_C_String := null;
 begin
-   --  Ada elaboration.
+   --  Self Ada elaboration.
    Grt_Init;
 
    --  Set the options.
@@ -53,6 +54,10 @@ begin
      Progname := Args (0);
    end if;
    Grt.Main.Run_Options (Progname, Argc, Args);
+
+   --  Register modules.
+   --  They may insert hooks.
+   Grt.Modules.Register_Modules;
 
    --  Initialize, elaborate and simulate.
    Grt.Main.Run;

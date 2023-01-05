@@ -805,6 +805,8 @@ package body Ghdlrun is
          Put_Line ("Starting simulation");
       end if;
 
+      Grt.Modules.Register_Modules;
+
       Grt.Main.Run;
 
       Ada.Command_Line.Set_Exit_Status

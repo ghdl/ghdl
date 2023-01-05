@@ -154,7 +154,7 @@ grt/run-bind.adb: grt $(GRT_SRC_DEPS) grt-force
 # 	Set No Run-Time flag to suppress references to standard gnat library.
 	sed -e '/^P /s/P /P NR /' < grt/ghdl_main.ali > grt/ghdl_main-tmp.ali
 	$(MV) grt/ghdl_main-tmp.ali grt/ghdl_main.ali
-	cd grt && $(GNATMAKE) -b ghdl_main.ali -bargs  -Lgrt_ -o run-bind.adb -n
+	cd grt && $(GNATMAKE) -b ghdl_main.ali -bargs -Lgrt_ -o run-bind.adb -n
 
 grt:
 	mkdir grt
