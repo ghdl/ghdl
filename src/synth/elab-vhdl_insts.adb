@@ -171,7 +171,7 @@ package body Elab.Vhdl_Insts is
                   end if;
                   Act_Typ := Unshare (Act_Typ, Instance_Pool);
                   Create_Subtype_Object
-                    (Sub_Inst, Get_Type (Inter), Act_Typ);
+                    (Sub_Inst, Get_Interface_Type_Definition (Inter), Act_Typ);
                   Release_Expr_Pool (Marker);
                end;
 
@@ -193,6 +193,7 @@ package body Elab.Vhdl_Insts is
    procedure Elab_Package_Declaration
      (Parent_Inst : Synth_Instance_Acc; Pkg : Node)
    is
+      Header : constant Node := Get_Package_Header (Pkg);
       Syn_Inst : Synth_Instance_Acc;
    begin
       if Is_Uninstantiated_Package (Pkg) then
@@ -201,6 +202,12 @@ package body Elab.Vhdl_Insts is
       end if;
 
       Syn_Inst := Create_Package_Instance (Parent_Inst, Pkg);
+
+      if Header /= Null_Node then
+         Elab_Generics_Association
+           (Syn_Inst, Parent_Inst,
+            Get_Generic_Chain (Header), Get_Generic_Map_Aspect_Chain (Header));
+      end if;
 
       Elab_Declarations (Syn_Inst, Get_Declaration_Chain (Pkg));
       if Pkg = Vhdl.Std_Package.Standard_Package then

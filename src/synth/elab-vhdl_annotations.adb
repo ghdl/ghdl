@@ -372,7 +372,8 @@ package body Elab.Vhdl_Annotations is
                --  Create an info on the interface_type_definition.
                --  This is needed for a generic type in an entity, as the
                --  nodes are not instantiated.
-               Create_Object_Info (Block_Info, Get_Type (Decl));
+               Create_Object_Info
+                 (Block_Info, Get_Interface_Type_Definition (Decl));
             when Iir_Kinds_Interface_Subprogram_Declaration =>
                --  Macro-expanded
                null;
