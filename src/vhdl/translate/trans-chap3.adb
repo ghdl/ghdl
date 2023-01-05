@@ -1220,6 +1220,7 @@ package body Trans.Chap3 is
                El_Tinfo.S.Subtype_Owner := Get_Info (Def);
             when Kind_Type_Scalar =>
                pragma Assert (El_Tinfo.S.Range_Var /= Null_Var);
+               null;
             when Kind_Type_File
               | Kind_Type_Protected =>
                raise Internal_Error;
