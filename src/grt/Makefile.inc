@@ -97,8 +97,7 @@ endif
 GRT_FST_OBJS := fstapi.o lz4.o fastlz.o
 
 # Additionnal object files (C or asm files).
-GRT_BASE_C_OBJS:=$(GRT_TARGET_OBJS) grt-cstdio.o grt-cgnatrts.o
-GRT_ADD_OBJS:=$(GRT_BASE_C_OBJS) grt-cvpi.o grt-cvhpi.o grt-cdynload.o $(GRT_FST_OBJS)
+GRT_C_OBJS:=$(GRT_TARGET_OBJS) grt-cstdio.o grt-cgnatrts.o
 
 # Source files create by grt.
 GRT_SRC_DEPS:=grt-backtraces-impl.ads
@@ -106,20 +105,22 @@ GRT_SRC_DEPS:=grt-backtraces-impl.ads
 #GRT_USE_PTHREADS=y
 ifeq ($(GRT_USE_PTHREADS),y)
  GRT_CFLAGS+=-DUSE_THREADS
- GRT_ADD_OBJS+=grt-cthreads.o
+ GRT_C_OBJS+=grt-cthreads.o
  GRT_EXTRA_LIB+=-lpthread
 endif
 
 ifeq ($(with_sundials),true)
-  GRT_ADD_OBJS+=grt-sundials_c.o
+  GRT_C_OBJS+=grt-sundials_c.o
 else
-  GRT_ADD_OBJS+=grt-no_sundials_c.o
+  GRT_C_OBJS+=grt-no_sundials_c.o
 endif
 
 GRT_LIBBACKTRACE=
 ifneq ($(LIBBACKTRACE),)
   GRT_LIBBACKTRACE=libbacktrace.a
 endif
+
+GRT_ADD_OBJS:=$(GRT_C_OBJS) grt-cvpi.o grt-cvhpi.o grt-cdynload.o $(GRT_FST_OBJS)
 
 # MSYS2 tries to be clever with paths in command line: it replaces msys2 paths
 # by Windows paths.  So for example, /bin/ls becomes c:/mingw64/bin/ls
