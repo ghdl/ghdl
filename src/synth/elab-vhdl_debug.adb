@@ -1165,6 +1165,19 @@ package body Elab.Vhdl_Debug is
       end case;
    end Foreach_Scopes;
 
+   procedure Add_Decls_For_Design_Unit (Unit : Iir)
+   is
+      use Vhdl.Sem_Scopes;
+      File : constant Node := Get_Design_File (Unit);
+   begin
+      --  The std library.
+      Add_Name (Libraries.Std_Library);
+      --  The work library.
+      Add_Name (Get_Library (File), Std_Names.Name_Work, False);
+      --  Unit context clauses.
+      Add_Context_Clauses (Unit);
+   end Add_Decls_For_Design_Unit;
+
    procedure Add_Decls_For (N : Iir)
    is
       use Vhdl.Sem_Scopes;
@@ -1174,13 +1187,13 @@ package body Elab.Vhdl_Debug is
             declare
                Unit : constant Iir := Get_Design_Unit (N);
             begin
-               Add_Context_Clauses (Unit);
+               Add_Decls_For_Design_Unit (Unit);
                --  Add_Name (Unit, Get_Identifier (N), False);
                Add_Entity_Declarations (N);
             end;
          when Iir_Kind_Architecture_Body =>
             Open_Declarative_Region;
-            Add_Context_Clauses (Get_Design_Unit (N));
+            Add_Decls_For_Design_Unit (Get_Design_Unit (N));
             Add_Declarations (Get_Declaration_Chain (N), False);
             Add_Declarations_Of_Concurrent_Statement (N);
          when Iir_Kind_Package_Body =>
@@ -1188,11 +1201,11 @@ package body Elab.Vhdl_Debug is
                Package_Decl : constant Iir := Get_Package (N);
                Package_Unit : constant Iir := Get_Design_Unit (Package_Decl);
             begin
-               Add_Name (Package_Unit);
                if Get_Kind (Package_Unit) = Iir_Kind_Design_Unit then
                   --  Only for top-level packages.
-                  Add_Context_Clauses (Package_Unit);
+                  Add_Decls_For_Design_Unit (Package_Unit);
                end if;
+               Add_Name (Package_Unit);
                Open_Declarative_Region;
                Add_Declarations (Get_Declaration_Chain (Package_Decl), False);
                Add_Declarations (Get_Declaration_Chain (N), False);
