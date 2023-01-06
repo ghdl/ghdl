@@ -16,10 +16,12 @@
 with Flags;
 with Name_Table;
 with Files_Map;
-with Vhdl.Utils; use Vhdl.Utils;
+with Std_Names;
 with Errorout; use Errorout;
-with Vhdl.Errors; use Vhdl.Errors;
 with Libraries; use Libraries;
+
+with Vhdl.Errors; use Vhdl.Errors;
+with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Scanner;
 with Vhdl.Parse;
 with Vhdl.Disp_Tree;
@@ -369,6 +371,22 @@ package body Vhdl.Sem_Lib is
          --  used.  In that case, warnings shouldn't be disabled.
          Disable_All_Warnings;
          Load_Parse_Design_Unit (Design_Unit, Loc);
+      else
+         --  For -c/-r or -m, disable warnings in ieee.
+         --  Ideally, we need turn warnings off for non-user units, but
+         --  is there an easy way to know what are they ?
+         --  Probably units that have been analyzed don't need warnings,
+         --  except when outdated ?
+         declare
+            File : constant Iir := Get_Design_File (Design_Unit);
+            Lib : constant Iir := Get_Library (File);
+         begin
+            if Lib /= Work_Library
+              and then Get_Identifier (Lib) = Std_Names.Name_Ieee
+            then
+               Disable_All_Warnings;
+            end if;
+         end;
       end if;
 
       Error := False;
