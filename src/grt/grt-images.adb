@@ -173,7 +173,7 @@ package body Grt.Images is
    procedure Ghdl_To_String_F64_Digits
      (Res : Std_String_Ptr; Val : Ghdl_F64; Nbr_Digits : Ghdl_I32)
    is
-      Str : String (1 .. 128);
+      Str : String (1 .. 320 + Natural (Nbr_Digits));
       P : Natural;
    begin
       To_String (Str, P, Val, Nbr_Digits);
