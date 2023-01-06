@@ -275,7 +275,7 @@ package body Synth.Vhdl_Stmts is
                Acc := (Dest_Typ, Dest_Base.Val.Mem + Dest_Off.Mem_Off);
                Idx := Read_Access (Acc);
                if Idx = Null_Heap_Index then
-                  Error_Msg_Synth (Syn_Inst, Pfx, "null access dereference");
+                  Error_Msg_Synth (Syn_Inst, Pfx, "NULL access dereferenced");
                   Dest_Base := No_Valtyp;
                   Dest_Typ := Dest_Typ.Acc_Acc;
                else

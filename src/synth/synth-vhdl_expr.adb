@@ -716,7 +716,7 @@ package body Synth.Vhdl_Expr is
                Val := Synth_Expression (Syn_Inst, Get_Prefix (Name));
                Acc := Read_Access (Val);
                if Acc = Null_Heap_Index then
-                  Error_Msg_Synth (Syn_Inst, Name, "null access dereference");
+                  Error_Msg_Synth (Syn_Inst, Name, "NULL access dereferenced");
                   return No_Valtyp;
                end if;
                Obj := Elab.Vhdl_Heap.Synth_Dereference (Acc);
