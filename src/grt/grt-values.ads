@@ -31,7 +31,8 @@ package Grt.Values is
    --  Set LIT_POS to the position of the first character of the numeric
    --  literal (after whitespaces are skipped).
    --  Set LIT_END to the position of the next character of the numeric lit.
-   procedure Ghdl_Value_Physical_Split (Str : Std_String_Ptr;
+   procedure Ghdl_Value_Physical_Split (Str : Std_String_Basep;
+                                        Len : Ghdl_Index_Type;
                                         Is_Real : out Boolean;
                                         Lit_Pos : out Ghdl_Index_Type;
                                         Lit_End : out Ghdl_Index_Type;

@@ -38,7 +38,9 @@ with Synth.Errors; use Synth.Errors;
 
 with Grt.Types;
 with Grt.Vhdl_Types;
+with Grt.Strings;
 with Grt.To_Strings;
+with Grt.Values;
 with Grt.Vstrings;
 
 package body Elab.Vhdl_Expr is
@@ -98,6 +100,24 @@ package body Elab.Vhdl_Expr is
    begin
       return Synth_Subtype_Conversion (null, Vt, Dtype, Bounds, Loc);
    end Exec_Subtype_Conversion;
+
+   --  Return True iff ID = S, case insensitive.
+   function Match_Id (Id : Name_Id; S : String) return Boolean is
+   begin
+      if Name_Table.Get_Name_Length (Id) /= S'Length then
+         return False;
+      end if;
+      declare
+         Img : constant String (S'Range) := Name_Table.Image (Id);
+      begin
+         for I in Img'Range loop
+            if Grt.Strings.To_Lower (S (I)) /= Img (I) then
+               return False;
+            end if;
+         end loop;
+         return True;
+      end;
+   end Match_Id;
 
    function Exec_Value_Attribute (Syn_Inst : Synth_Instance_Acc; Attr : Node)
                                  return Valtyp
@@ -163,6 +183,59 @@ package body Elab.Vhdl_Expr is
                      return No_Valtyp;
                   end if;
                end;
+            when Iir_Kind_Physical_Type_Definition =>
+               declare
+                  use Grt.Types;
+                  use Grt.Vhdl_Types;
+                  Value1 : String renames Value (First .. Last);
+                  F : constant Ghdl_Index_Type := Ghdl_Index_Type (First);
+                  S : constant Std_String_Basep :=
+                    To_Std_String_Basep (Value1'Address);
+                  Len : constant Ghdl_Index_Type :=
+                    Ghdl_Index_Type (Last - First + 1);
+                  Is_Real : Boolean;
+                  Lit_Pos : Ghdl_Index_Type;
+                  Lit_End : Ghdl_Index_Type;
+                  Unit_Pos : Ghdl_Index_Type;
+                  Unit_F, Unit_L : Positive;
+                  Mult : Int64;
+                  Unit : Iir;
+                  Unit_Id : Name_Id;
+                  Val_F : Grt.To_Strings.Value_F64_Result;
+               begin
+                  Grt.Values.Ghdl_Value_Physical_Split
+                    (S, Len, Is_Real, Lit_Pos, Lit_End, Unit_Pos);
+                  Unit_F := Positive (Unit_Pos + 1);
+
+                  --  Find unit.
+                  Unit_L := Unit_F;
+                  for I in Unit_F .. Last loop
+                     exit when Grt.Strings.Is_Whitespace (Value1 (I));
+                     Unit_L := I;
+                  end loop;
+
+                  Unit := Get_Primary_Unit (Btype);
+                  while Unit /= Null_Iir loop
+                     Unit_Id := Get_Identifier (Unit);
+                     exit when Match_Id (Unit_Id, Value1 (Unit_F .. Unit_L));
+                     Unit := Get_Chain (Unit);
+                  end loop;
+
+                  if Unit = Null_Iir then
+                     Error_Msg_Synth (Syn_Inst, Attr, "incorrect unit name");
+                     return No_Valtyp;
+                  end if;
+                  Mult := Get_Value (Get_Physical_Literal (Unit));
+
+                  if Is_Real then
+                     Val_F := Grt.To_Strings.Value_F64 (S, Lit_End, F);
+                     Val := Int64 (Val_F.Val * Ghdl_F64 (Mult));
+                  else
+                     Val := Int64 (Grt.Values.Value_I64 (S, Lit_End, F))
+                       * Mult;
+                  end if;
+               end;
+
             when others =>
                Error_Msg_Elab (+Attr, "unhandled type for 'value");
                return No_Valtyp;

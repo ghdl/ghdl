@@ -234,38 +234,40 @@ package body Grt.Values is
       return Value_F64 (S, Len, Pos);
    end Ghdl_Value_F64;
 
-   procedure Ghdl_Value_Physical_Split (Str : Std_String_Ptr;
+   procedure Ghdl_Value_Physical_Split (Str : Std_String_Basep;
+                                        Len : Ghdl_Index_Type;
                                         Is_Real : out Boolean;
                                         Lit_Pos : out Ghdl_Index_Type;
                                         Lit_End : out Ghdl_Index_Type;
                                         Unit_Pos : out Ghdl_Index_Type)
    is
-      S        : constant Std_String_Basep := Str.Base;
-      Len      : Ghdl_Index_Type  := Str.Bounds.Dim_1.Length;
+      L : Ghdl_Index_Type;
    begin
       --  LRM 14.1
       --  Leading and trailing whitespace is allowed and ignored.
       Lit_Pos := 0;
-      Remove_Whitespaces (S, Len, Lit_Pos);
+      L := Len;
+      Remove_Whitespaces (Str, L, Lit_Pos);
+      pragma Unreferenced (Len);
 
       --  Split between abstract literal (optionnal) and unit name.
       Lit_End := Lit_Pos;
       Is_Real := False;
-      while Lit_End < Len loop
-         exit when Is_Whitespace (S (Lit_End));
-         if S (Lit_End) = '.' then
+      while Lit_End < L loop
+         exit when Is_Whitespace (Str (Lit_End));
+         if Str (Lit_End) = '.' then
             Is_Real := True;
          end if;
          Lit_End := Lit_End + 1;
       end loop;
-      if Lit_End = Len then
+      if Lit_End = L then
          --  No literal
          Unit_Pos := Lit_Pos;
          Lit_End := 0;
       else
          Unit_Pos := Lit_End + 1;
-         while Unit_Pos < Len loop
-            exit when not Is_Whitespace (S (Unit_Pos));
+         while Unit_Pos < L loop
+            exit when not Is_Whitespace (Str (Unit_Pos));
             Unit_Pos := Unit_Pos + 1;
          end loop;
       end if;
@@ -294,7 +296,8 @@ package body Grt.Values is
       Remove_Whitespaces (S, Len, Lit_Pos);
 
       --  Extract literal and unit
-      Ghdl_Value_Physical_Split (Str, Found_Real, Lit_Pos, Lit_End, Unit_Pos);
+      Ghdl_Value_Physical_Split
+        (S, Len, Found_Real, Lit_Pos, Lit_End, Unit_Pos);
 
       --  Find unit value
       Multiple := null;
