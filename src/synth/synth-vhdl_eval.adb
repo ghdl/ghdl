@@ -788,7 +788,30 @@ package body Synth.Vhdl_Eval is
          C (1) := Get_Character (Lit_Id);
          return String_To_Memtyp (C, Res_Typ);
       else
-         return String_To_Memtyp (Image (Lit_Id), Res_Typ);
+         declare
+            Img : String := Image (Lit_Id);
+            P, Idx : Natural;
+         begin
+            if Img (Img'First) = '\' then
+               --  Extended identifier.
+               --  Remove initial and final backslash.
+               --  Un-duplicate doubled backslashes.
+               P := Img'First - 1;
+               Idx := 2;
+               while Idx < Img'Last loop
+                  P := P + 1;
+                  Img (P) := Img (Idx);
+                  if Img (Idx) = '\' then
+                     Idx := Idx + 2;
+                  else
+                     Idx := Idx + 1;
+                  end if;
+               end loop;
+            else
+               P := Img'Last;
+            end if;
+            return String_To_Memtyp (Img (Img'First .. P), Res_Typ);
+         end;
       end if;
    end Eval_Enum_To_String;
 
