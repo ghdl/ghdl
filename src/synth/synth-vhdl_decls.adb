@@ -925,6 +925,8 @@ package body Synth.Vhdl_Decls is
          when Iir_Kind_Attribute_Implicit_Declaration =>
             --  Not supported by synthesis.
             null;
+         when Iir_Kind_Protected_Type_Body =>
+            null;
 
          when Iir_Kind_Package_Declaration =>
             declare
