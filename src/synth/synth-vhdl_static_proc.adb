@@ -100,7 +100,9 @@ package body Synth.Vhdl_Static_Proc is
          when Iir_Predefined_Flush =>
             Synth_File_Flush (Syn_Inst, Imp, Loc);
          when Iir_Predefined_Std_Env_Finish_Status
-            | Iir_Predefined_Std_Env_Stop_Status =>
+            | Iir_Predefined_Std_Env_Stop_Status
+            | Iir_Predefined_Std_Env_Finish
+            | Iir_Predefined_Std_Env_Stop =>
             if Hook_Finish /= null then
                Hook_Finish.all (Syn_Inst, Imp);
             else
