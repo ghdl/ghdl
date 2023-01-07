@@ -37,10 +37,6 @@ package Elab.Vhdl_Types is
    function Synth_Array_Attribute (Syn_Inst : Synth_Instance_Acc; Attr : Node)
                                   return Bound_Type;
 
-   --  Return the type for 'left/'right/... attributes.
-   function Synth_Type_Attribute (Syn_Inst : Synth_Instance_Acc; Attr : Node)
-                                 return Type_Acc;
-
    procedure Synth_Discrete_Range (Syn_Inst : Synth_Instance_Acc;
                                    Bound : Node;
                                    Rng : out Discrete_Range_Type);

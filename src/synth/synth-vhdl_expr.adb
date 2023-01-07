@@ -1981,6 +1981,27 @@ package body Synth.Vhdl_Expr is
       return Create_Value_Net (N, Typ);
    end Synth_Short_Circuit;
 
+   --  Return the type for 'left/'right/... attributes.
+   function Synth_Type_Attribute (Syn_Inst : Synth_Instance_Acc; Attr : Node)
+                                 return Type_Acc
+   is
+      Pfx : constant Node := Get_Prefix (Attr);
+   begin
+      if Get_Kind (Pfx) = Iir_Kind_Subtype_Attribute then
+         --  Prefix is an object.
+         declare
+            V : Valtyp;
+         begin
+            V := Get_Value (Syn_Inst, Get_Named_Entity (Get_Prefix (Pfx)));
+            return V.Typ;
+         end;
+      else
+         --  The prefix is a type.
+         return Get_Subtype_Object
+           (Syn_Inst, Get_Subtype_Indication (Get_Named_Entity (Pfx)));
+      end if;
+   end Synth_Type_Attribute;
+
    function Synth_Expression_With_Type (Syn_Inst : Synth_Instance_Acc;
                                         Expr : Node;
                                         Expr_Type : Type_Acc) return Valtyp is

@@ -108,14 +108,6 @@ package body Elab.Vhdl_Types is
       return Get_Array_Bound (Typ);
    end Synth_Array_Attribute;
 
-   function Synth_Type_Attribute (Syn_Inst : Synth_Instance_Acc; Attr : Node)
-                                 return Type_Acc is
-   begin
-      return Get_Subtype_Object
-        (Syn_Inst,
-         Get_Subtype_Indication (Get_Named_Entity (Get_Prefix (Attr))));
-   end Synth_Type_Attribute;
-
    procedure Synth_Discrete_Range (Syn_Inst : Synth_Instance_Acc;
                                    Bound : Node;
                                    Rng : out Discrete_Range_Type) is
