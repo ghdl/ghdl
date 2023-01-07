@@ -269,6 +269,7 @@ copy-sources.gcc: version.ads scripts/gcc/Make-lang.in
 	$(CP) -p $(srcdir)/src/grt/grt-table.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/grt/grt-files_operations.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/grt/grt-to_strings.ad? $(gcc_vhdl_dir)
+	$(CP) -p $(srcdir)/src/grt/grt-strings.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/grt/grt-severity.ads $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/grt/grt-readline_*.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/ortho/*.ad? $(gcc_vhdl_dir)

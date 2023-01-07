@@ -44,6 +44,8 @@ package Elab.Memtype is
    procedure Write_U8 (Mem : Memory_Ptr; Val : Ghdl_U8);
    function Read_U8 (Mem : Memory_Ptr) return Ghdl_U8;
 
+   function Read_Char (Mem : Memory_Ptr) return Character;
+
    procedure Write_U32 (Mem : Memory_Ptr; Val : Ghdl_U32);
    function Read_U32 (Mem : Memory_Ptr) return Ghdl_U32;
 

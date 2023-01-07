@@ -42,6 +42,14 @@ package body Elab.Memtype is
       return To_U8_Ptr (To_Address (Mem)).all;
    end Read_U8;
 
+   type Char_Ptr is access all Character;
+   function To_Char_Ptr is new Ada.Unchecked_Conversion (Address, Char_Ptr);
+
+   function Read_Char (Mem : Memory_Ptr) return Character is
+   begin
+      return To_Char_Ptr (To_Address (Mem)).all;
+   end Read_Char;
+
    procedure Write_I32 (Mem : Memory_Ptr; Val : Ghdl_I32)
    is
       V : Ghdl_I32;

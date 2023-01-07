@@ -40,7 +40,6 @@ with Grt.Types;
 with Grt.Vhdl_Types;
 with Grt.Strings;
 with Grt.To_Strings;
-with Grt.Values;
 with Grt.Vstrings;
 
 package body Elab.Vhdl_Expr is
@@ -102,16 +101,20 @@ package body Elab.Vhdl_Expr is
    end Exec_Subtype_Conversion;
 
    --  Return True iff ID = S, case insensitive.
-   function Match_Id (Id : Name_Id; S : String) return Boolean is
+   function Match_Id (Id : Name_Id; M : Memory_Ptr; Len : Natural)
+                     return Boolean is
    begin
-      if Name_Table.Get_Name_Length (Id) /= S'Length then
+      if Name_Table.Get_Name_Length (Id) /= Len then
          return False;
       end if;
       declare
-         Img : constant String (S'Range) := Name_Table.Image (Id);
+         Img : constant String (1 .. Len) := Name_Table.Image (Id);
+         C : Character;
       begin
          for I in Img'Range loop
-            if Grt.Strings.To_Lower (S (I)) /= Img (I) then
+            C := Read_Char (M + Size_Type (I - 1));
+            C := Grt.Strings.To_Lower (C);
+            if C /= Img (I) then
                return False;
             end if;
          end loop;
@@ -119,14 +122,163 @@ package body Elab.Vhdl_Expr is
       end;
    end Match_Id;
 
+   --  V is the string whose value should be extracted from.  ETYPE and DTYPE
+   --  are the type of the value.
+   function Value_Attribute (V : Valtyp; Etype : Node; Dtype : Type_Acc)
+                            return Valtyp
+   is
+      Btype : constant Node := Get_Base_Type (Etype);
+      M : constant Memory_Ptr := V.Val.Mem;
+      L : constant Uns32 := V.Typ.Abound.Len;
+      Len : Uns32;
+      First, Last : Size_Type;
+      Val : Int64;
+   begin
+      --  LRM93 14.1 Predefined attributes.
+      --  Leading and trailing whitespace are ignored.
+      First := 0;
+      Last := Size_Type (L - 1);
+      while First <= Last loop
+         exit when not Vhdl.Scanner.Is_Whitespace (Read_Char (M + First));
+         First := First + 1;
+      end loop;
+      while Last >= First loop
+         exit when not Vhdl.Scanner.Is_Whitespace (Read_Char (M + Last));
+         Last := Last - 1;
+      end loop;
+      Len := Uns32 (Last - First + 1);
+
+      case Get_Kind (Btype) is
+         when Iir_Kind_Enumeration_Type_Definition =>
+            declare
+               Id : Name_Id;
+               En : Node;
+            begin
+               if Len = 3
+                 and then Read_Char (M + First) = '''
+                 and then Read_Char (M + First + 2) = '''
+               then
+                  Id := Name_Table.Get_Identifier (Read_Char (M + First + 1));
+               else
+                  declare
+                     S : String (1 .. Natural (Len));
+                     C : Character;
+                  begin
+                     for I in S'Range loop
+                        C := Read_Char (M + First + Size_Type (I - 1));
+                        C := Grt.Strings.To_Lower (C);
+                        S (I) := C;
+                     end loop;
+                     Id := Name_Table.Get_Identifier_No_Create (S);
+                  end;
+               end if;
+               En := Find_Name_In_Flist
+                 (Get_Enumeration_Literal_List (Btype), Id);
+               if En = Null_Node then
+                  return No_Valtyp;
+               end if;
+               Val := Int64 (Get_Enum_Pos (En));
+            end;
+         when Iir_Kind_Integer_Type_Definition =>
+            declare
+               use Grt.To_Strings;
+               use Grt.Types;
+               use Grt.Vhdl_Types;
+               Res : Value_I64_Result;
+            begin
+               Res := Value_I64 (To_Std_String_Basep (To_Address (M + First)),
+                                 Ghdl_Index_Type (Len), 0);
+               if Res.Status /= Value_Ok then
+                  return No_Valtyp;
+               end if;
+               Val := Int64 (Res.Val);
+            end;
+         when Iir_Kind_Floating_Type_Definition =>
+            declare
+               use Grt.To_Strings;
+               use Grt.Types;
+               use Grt.Vhdl_Types;
+               Res : Value_F64_Result;
+            begin
+               Res := Value_F64 (To_Std_String_Basep (To_Address (M + First)),
+                                 Ghdl_Index_Type (Len), 0);
+               if Res.Status /= Value_Ok then
+                  return No_Valtyp;
+               end if;
+               return Create_Value_Float (Fp64 (Res.Val), Dtype);
+            end;
+         when Iir_Kind_Physical_Type_Definition =>
+            declare
+               use Grt.Types;
+               use Grt.Vhdl_Types;
+               use Grt.To_Strings;
+               Is_Real : Boolean;
+               Lit_Pos : Ghdl_Index_Type;
+               Lit_End : Ghdl_Index_Type;
+               Unit_Pos : Ghdl_Index_Type;
+               Unit_F : Size_Type;
+               Unit_Len : Natural;
+               Mult : Int64;
+               Unit : Iir;
+               Unit_Id : Name_Id;
+               Val_F : Grt.To_Strings.Value_F64_Result;
+               Val_I : Grt.To_Strings.Value_I64_Result;
+            begin
+               Grt.To_Strings.Ghdl_Value_Physical_Split
+                 (To_Std_String_Basep (To_Address (M)), Ghdl_Index_Type (L),
+                  Is_Real, Lit_Pos, Lit_End, Unit_Pos);
+               Unit_F := Size_Type (Unit_Pos);
+
+               --  Find unit.
+               Unit_Len := 0;
+               for I in Unit_F .. Last loop
+                  exit when Grt.Strings.Is_Whitespace (Read_Char (M + I));
+                  Unit_Len := Unit_Len + 1;
+               end loop;
+
+               Unit := Get_Primary_Unit (Btype);
+               while Unit /= Null_Iir loop
+                  Unit_Id := Get_Identifier (Unit);
+                  exit when Match_Id (Unit_Id, M + Unit_F, Unit_Len);
+                  Unit := Get_Chain (Unit);
+               end loop;
+
+               if Unit = Null_Iir then
+                  return No_Valtyp;
+               end if;
+               Mult := Get_Value (Get_Physical_Literal (Unit));
+
+               if Is_Real then
+                  Val_F := Value_F64 (To_Std_String_Basep (To_Address (M)),
+                                      Lit_End, Ghdl_Index_Type (First));
+                  if Val_F.Status /= Value_Ok then
+                     return No_Valtyp;
+                  end if;
+                  Val := Int64 (Val_F.Val * Ghdl_F64 (Mult));
+               else
+                  Val_I := Value_I64 (To_Std_String_Basep (To_Address (M)),
+                                      Lit_End, Ghdl_Index_Type (First));
+                  if Val_I.Status /= Value_Ok then
+                     return No_Valtyp;
+                  end if;
+                  Val := Int64 (Val_I.Val) * Mult;
+               end if;
+            end;
+
+         when others =>
+            raise Internal_Error;
+      end case;
+      return Create_Value_Discrete (Val, Dtype);
+   end Value_Attribute;
+
    function Exec_Value_Attribute (Syn_Inst : Synth_Instance_Acc; Attr : Node)
                                  return Valtyp
    is
       Param : constant Node := Get_Parameter (Attr);
       Etype : constant Node := Get_Type (Attr);
-      Btype : constant Node := Get_Base_Type (Etype);
       V : Valtyp;
       Dtype : Type_Acc;
+      Res : Valtyp;
    begin
       --  The value is supposed to be static.
       V := Synth_Expression (Syn_Inst, Param);
@@ -140,108 +292,11 @@ package body Elab.Vhdl_Expr is
          return No_Valtyp;
       end if;
 
-      declare
-         Value : constant String := Value_To_String (V);
-         First, Last : Integer;
-         Res_N : Node;
-         Val : Int64;
-      begin
-         --  LRM93 14.1 Predefined attributes.
-         --  Leading and trailing whitespace are ignored.
-         First := Value'First;
-         Last := Value'Last;
-         while First <= Last loop
-            exit when not Vhdl.Scanner.Is_Whitespace (Value (First));
-            First := First + 1;
-         end loop;
-         while Last >= First loop
-            exit when not Vhdl.Scanner.Is_Whitespace (Value (Last));
-            Last := Last - 1;
-         end loop;
-
-         case Get_Kind (Btype) is
-            when Iir_Kind_Enumeration_Type_Definition =>
-               Res_N := Eval_Value_Attribute
-                 (Value (First .. Last), Etype, Attr);
-               Val := Int64 (Get_Enum_Pos (Res_N));
-               Free_Iir (Res_N);
-            when Iir_Kind_Integer_Type_Definition =>
-               declare
-                  use Grt.To_Strings;
-                  use Grt.Types;
-                  use Grt.Vhdl_Types;
-                  Value1 : String renames Value (First .. Last);
-                  Res : Value_I64_Result;
-               begin
-                  Res := Value_I64 (To_Std_String_Basep (Value1'Address),
-                                    Value1'Length, 0);
-                  if Res.Status = Value_Ok then
-                     Val := Int64 (Res.Val);
-                  else
-                     Error_Msg_Synth
-                       (Syn_Inst, Attr, "incorrect 'value string");
-                     return No_Valtyp;
-                  end if;
-               end;
-            when Iir_Kind_Physical_Type_Definition =>
-               declare
-                  use Grt.Types;
-                  use Grt.Vhdl_Types;
-                  Value1 : String renames Value (First .. Last);
-                  F : constant Ghdl_Index_Type := Ghdl_Index_Type (First);
-                  S : constant Std_String_Basep :=
-                    To_Std_String_Basep (Value1'Address);
-                  Len : constant Ghdl_Index_Type :=
-                    Ghdl_Index_Type (Last - First + 1);
-                  Is_Real : Boolean;
-                  Lit_Pos : Ghdl_Index_Type;
-                  Lit_End : Ghdl_Index_Type;
-                  Unit_Pos : Ghdl_Index_Type;
-                  Unit_F, Unit_L : Positive;
-                  Mult : Int64;
-                  Unit : Iir;
-                  Unit_Id : Name_Id;
-                  Val_F : Grt.To_Strings.Value_F64_Result;
-               begin
-                  Grt.Values.Ghdl_Value_Physical_Split
-                    (S, Len, Is_Real, Lit_Pos, Lit_End, Unit_Pos);
-                  Unit_F := Positive (Unit_Pos + 1);
-
-                  --  Find unit.
-                  Unit_L := Unit_F;
-                  for I in Unit_F .. Last loop
-                     exit when Grt.Strings.Is_Whitespace (Value1 (I));
-                     Unit_L := I;
-                  end loop;
-
-                  Unit := Get_Primary_Unit (Btype);
-                  while Unit /= Null_Iir loop
-                     Unit_Id := Get_Identifier (Unit);
-                     exit when Match_Id (Unit_Id, Value1 (Unit_F .. Unit_L));
-                     Unit := Get_Chain (Unit);
-                  end loop;
-
-                  if Unit = Null_Iir then
-                     Error_Msg_Synth (Syn_Inst, Attr, "incorrect unit name");
-                     return No_Valtyp;
-                  end if;
-                  Mult := Get_Value (Get_Physical_Literal (Unit));
-
-                  if Is_Real then
-                     Val_F := Grt.To_Strings.Value_F64 (S, Lit_End, F);
-                     Val := Int64 (Val_F.Val * Ghdl_F64 (Mult));
-                  else
-                     Val := Int64 (Grt.Values.Value_I64 (S, Lit_End, F))
-                       * Mult;
-                  end if;
-               end;
-
-            when others =>
-               Error_Msg_Elab (+Attr, "unhandled type for 'value");
-               return No_Valtyp;
-         end case;
-         return Create_Value_Discrete (Val, Dtype);
-      end;
+      Res := Value_Attribute (V, Etype, Dtype);
+      if Res = No_Valtyp then
+         Error_Msg_Synth (Syn_Inst, Attr, "incorrect 'value string");
+      end if;
+      return Res;
    end Exec_Value_Attribute;
 
    function Synth_Image_Attribute_Str (Val : Valtyp; Expr_Type : Iir)

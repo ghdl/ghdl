@@ -22,7 +22,9 @@
 --  covered by the GNU Public License.
 
 with Interfaces;
+
 with Grt.Fcvt;
+with Grt.Strings; use Grt.Strings;
 
 package body Grt.To_Strings is
    generic
@@ -509,4 +511,62 @@ package body Grt.To_Strings is
 
       return (Status => Value_Ok, Val => Val);
    end Value_F64;
+
+   --  Increase POS to skip leading whitespace characters, decrease LEN to
+   --  skip trailing whitespaces in string S.
+   procedure Remove_Whitespaces (S     : Std_String_Basep;
+                                 Len   : in out Ghdl_Index_Type;
+                                 Pos   : in out Ghdl_Index_Type) is
+   begin
+      --  GHDL: allow several leading whitespace.
+      while Pos < Len loop
+         exit when not Is_Whitespace (S (Pos));
+         Pos := Pos + 1;
+      end loop;
+
+      --  GHDL: allow several leading whitespace.
+      while Len > Pos loop
+         exit when not Is_Whitespace (S (Len - 1));
+         Len := Len - 1;
+      end loop;
+   end Remove_Whitespaces;
+
+   procedure Ghdl_Value_Physical_Split (Str : Std_String_Basep;
+                                        Len : Ghdl_Index_Type;
+                                        Is_Real : out Boolean;
+                                        Lit_Pos : out Ghdl_Index_Type;
+                                        Lit_End : out Ghdl_Index_Type;
+                                        Unit_Pos : out Ghdl_Index_Type)
+   is
+      L : Ghdl_Index_Type;
+   begin
+      --  LRM 14.1
+      --  Leading and trailing whitespace is allowed and ignored.
+      Lit_Pos := 0;
+      L := Len;
+      Remove_Whitespaces (Str, L, Lit_Pos);
+      pragma Unreferenced (Len);
+
+      --  Split between abstract literal (optionnal) and unit name.
+      Lit_End := Lit_Pos;
+      Is_Real := False;
+      while Lit_End < L loop
+         exit when Is_Whitespace (Str (Lit_End));
+         if Str (Lit_End) = '.' then
+            Is_Real := True;
+         end if;
+         Lit_End := Lit_End + 1;
+      end loop;
+      if Lit_End = L then
+         --  No literal
+         Unit_Pos := Lit_Pos;
+         Lit_End := 0;
+      else
+         Unit_Pos := Lit_End + 1;
+         while Unit_Pos < L loop
+            exit when not Is_Whitespace (Str (Unit_Pos));
+            Unit_Pos := Unit_Pos + 1;
+         end loop;
+      end if;
+   end Ghdl_Value_Physical_Split;
 end Grt.To_Strings;

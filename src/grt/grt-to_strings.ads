@@ -106,4 +106,23 @@ package Grt.To_Strings is
    function Value_F64 (S : Std_String_Basep;
                        Len : Ghdl_Index_Type;
                        Init_Pos : Ghdl_Index_Type) return Value_F64_Result;
+
+   --  Increase POS to skip leading whitespace characters, decrease LEN to
+   --  skip trailing whitespaces in string S.
+   procedure Remove_Whitespaces (S     : Std_String_Basep;
+                                 Len   : in out Ghdl_Index_Type;
+                                 Pos   : in out Ghdl_Index_Type);
+
+   --  Extract position of numeric literal and unit in string STR.
+   --  Set IS_REAL if the unit is a real number (presence of '.').
+   --  Set UNIT_POS to the position of the first character of the unit name.
+   --  Set LIT_POS to the position of the first character of the numeric
+   --  literal (after whitespaces are skipped).
+   --  Set LIT_END to the position of the next character of the numeric lit.
+   procedure Ghdl_Value_Physical_Split (Str : Std_String_Basep;
+                                        Len : Ghdl_Index_Type;
+                                        Is_Real : out Boolean;
+                                        Lit_Pos : out Ghdl_Index_Type;
+                                        Lit_End : out Ghdl_Index_Type;
+                                        Unit_Pos : out Ghdl_Index_Type);
 end Grt.To_Strings;

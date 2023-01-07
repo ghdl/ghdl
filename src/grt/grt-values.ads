@@ -25,19 +25,6 @@ with Grt.Vhdl_Types; use Grt.Vhdl_Types;
 with Grt.Rtis; use Grt.Rtis;
 
 package Grt.Values is
-   --  Extract position of numeric literal and unit in string STR.
-   --  Set IS_REAL if the unit is a real number (presence of '.').
-   --  Set UNIT_POS to the position of the first character of the unit name.
-   --  Set LIT_POS to the position of the first character of the numeric
-   --  literal (after whitespaces are skipped).
-   --  Set LIT_END to the position of the next character of the numeric lit.
-   procedure Ghdl_Value_Physical_Split (Str : Std_String_Basep;
-                                        Len : Ghdl_Index_Type;
-                                        Is_Real : out Boolean;
-                                        Lit_Pos : out Ghdl_Index_Type;
-                                        Lit_End : out Ghdl_Index_Type;
-                                        Unit_Pos : out Ghdl_Index_Type);
-
    function Ghdl_Value_B1 (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
       return Ghdl_B1;
    function Ghdl_Value_E8 (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
