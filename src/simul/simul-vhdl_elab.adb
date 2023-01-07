@@ -618,7 +618,8 @@ package body Simul.Vhdl_Elab is
                Gather_Sensitivity (Inst, Proc_Idx, List);
                return;
             end if;
-         when Iir_Kind_Psl_Assert_Directive =>
+         when Iir_Kind_Psl_Assert_Directive
+            | Iir_Kind_Psl_Cover_Directive =>
             List := Get_PSL_Clock_Sensitivity (Proc);
             Gather_Sensitivity (Inst, Proc_Idx, List);
             return;
@@ -903,9 +904,11 @@ package body Simul.Vhdl_Elab is
             Gather_Process_Drivers (Inst, Stmt, Processes_Table.Last);
             pragma Assert (Is_Expr_Pool_Empty);
             Gather_Process_Sensitivity (Inst, Stmt, Processes_Table.Last);
-         when Iir_Kind_Psl_Default_Clock =>
+         when Iir_Kind_Psl_Default_Clock
+            | Iir_Kind_Psl_Declaration =>
             null;
          when Iir_Kind_Psl_Assert_Directive
+           | Iir_Kind_Psl_Cover_Directive
            | Iir_Kind_Concurrent_Break_Statement =>
             Processes_Table.Append ((Proc => Stmt,
                                      Inst => Inst,
