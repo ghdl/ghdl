@@ -188,9 +188,15 @@ package body Simul.Vhdl_Elab is
       Mark_Expr_Pool (Marker);
 
       Synth.Vhdl_Stmts.Synth_Assignment_Prefix (Inst, Name, Base, Typ, Off);
-      Res := (Base => Base.Val.S,
-              Typ => Unshare (Typ, Global_Pool'Access),
-              Offs => Off);
+      if Base = No_Valtyp then
+         Res := (Base => No_Signal_Index,
+                 Typ => null,
+                 Offs => No_Value_Offsets);
+      else
+         Res := (Base => Base.Val.S,
+                 Typ => Unshare (Typ, Global_Pool'Access),
+                 Offs => Off);
+      end if;
 
       Release_Expr_Pool (Marker);
       return Res;
@@ -564,6 +570,9 @@ package body Simul.Vhdl_Elab is
          El := Get_Element (It);
          exit when El = Null_Node;
          Sig := Compute_Sub_Signal (Inst, El);
+
+         --  Exit now in case of error.
+         exit when Sig.Base = No_Signal_Index;
 
          Sensitivity_Table.Append
            ((Sig => Sig,
