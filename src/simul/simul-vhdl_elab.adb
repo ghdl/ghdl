@@ -565,10 +565,14 @@ package body Simul.Vhdl_Elab is
       El : Node;
       Sig : Sub_Signal_Type;
    begin
+      --  There can be function calls.
+      Instance_Pool := Process_Pool'Access;
+
       It := List_Iterate_Safe (List);
       while Is_Valid (It) loop
          El := Get_Element (It);
          exit when El = Null_Node;
+
          Sig := Compute_Sub_Signal (Inst, El);
 
          --  Exit now in case of error.
@@ -587,6 +591,8 @@ package body Simul.Vhdl_Elab is
 
          Next (It);
       end loop;
+
+      Instance_Pool := null;
    end Gather_Sensitivity;
 
    procedure Gather_Process_Sensitivity
