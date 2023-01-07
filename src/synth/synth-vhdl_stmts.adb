@@ -228,12 +228,14 @@ package body Synth.Vhdl_Stmts is
                Synth_Assignment_Prefix
                  (Syn_Inst, Inter_Inst, Get_Prefix (Pfx),
                   Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
-               Strip_Const (Dest_Base);
+
+               if Dest_Base.Val /= null then
+                  Strip_Const (Dest_Base);
+               end if;
 
                Get_Onedimensional_Array_Bounds (Dest_Typ, Pfx_Bnd, El_Typ);
                Synth_Slice_Suffix (Syn_Inst, Pfx, Pfx_Bnd, El_Typ,
                                    Res_Bnd, Sl_Voff, Sl_Off);
-
 
                if Sl_Voff = No_Net then
                   --  Fixed slice.
