@@ -151,11 +151,6 @@ package body Synth.Vhdl_Stmts is
            | Iir_Kind_Dot_Attribute
            | Iir_Kinds_Signal_Attribute =>
             Assign_Base (Syn_Inst);
-         when Iir_Kind_Function_Call =>
-            Dest_Base := Synth_Expression (Syn_Inst, Pfx);
-            Dest_Typ := Dest_Base.Typ;
-            Dest_Off := (0, 0);
-            Dest_Dyn := No_Dyn_Name;
 
          when Iir_Kind_Indexed_Name =>
             declare
@@ -288,6 +283,14 @@ package body Synth.Vhdl_Stmts is
                Dest_Dyn := No_Dyn_Name;
                Dest_Off := No_Value_Offsets;
             end;
+
+         when Iir_Kind_Function_Call
+           | Iir_Kind_Image_Attribute =>
+            Dest_Base := Synth_Expression (Syn_Inst, Pfx);
+            Dest_Typ := Dest_Base.Typ;
+            Dest_Off := (0, 0);
+            Dest_Dyn := No_Dyn_Name;
+
          when others =>
             Error_Kind ("synth_assignment_prefix", Pfx);
       end case;
