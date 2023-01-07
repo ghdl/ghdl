@@ -2519,13 +2519,12 @@ package body Synth.Vhdl_Expr is
       Etype := Get_Type (Expr);
 
       case Get_Kind (Expr) is
-         when Iir_Kind_High_Array_Attribute
-           |  Iir_Kind_Low_Array_Attribute
-           |  Iir_Kind_Simple_Name
-           |  Iir_Kind_Indexed_Name
-           |  Iir_Kind_Selected_Element
-           |  Iir_Kind_Integer_Literal
-           |  Iir_Kind_String_Literal8 =>
+         when Iir_Kind_Simple_Name
+            | Iir_Kind_Indexed_Name
+            | Iir_Kind_Selected_Element
+            | Iir_Kind_Integer_Literal
+            | Iir_Kind_String_Literal8
+            | Iir_Kinds_Array_Attribute =>
             --  For array attributes: the type is the type of the index, which
             --  is not synthesized as a type (only as an index).
             --
