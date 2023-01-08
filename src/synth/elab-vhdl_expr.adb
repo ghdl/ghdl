@@ -525,6 +525,14 @@ package body Elab.Vhdl_Expr is
             --  returned.
             return Synth_Subtype_Indication (Syn_Inst, Get_Type (Name));
 
+         when Iir_Kind_Image_Attribute =>
+            declare
+               Val : Valtyp;
+            begin
+               Val := Synth.Vhdl_Expr.Synth_Expression (Syn_Inst, Name);
+               return Val.Typ;
+            end;
+
          when others =>
             Error_Kind ("exec_name_subtype", Name);
       end case;
