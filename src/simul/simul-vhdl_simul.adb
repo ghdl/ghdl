@@ -2510,7 +2510,26 @@ package body Simul.Vhdl_Simul is
                when Write_Signal_Driving_Value =>
                   S.Driving_Value := To_Ghdl_Value (Val);
                when Write_Signal_Effective_Value =>
-                  S.Value_Ptr.all := To_Ghdl_Value (Val);
+                  case Val.Typ.Kind is
+                     when Type_Bit =>
+                        S.Value_Ptr.B1 := Ghdl_B1'Val (Read_U8 (Val.Mem));
+                     when Type_Logic =>
+                        S.Value_Ptr.E8 := Read_U8 (Val.Mem);
+                     when Type_Discrete =>
+                        if Val.Typ.Sz = 1 then
+                           S.Value_Ptr.E8 := Read_U8 (Val.Mem);
+                        elsif Val.Typ.Sz = 4 then
+                           S.Value_Ptr.I32 := Read_I32 (Val.Mem);
+                        elsif Val.Typ.Sz = 8 then
+                           S.Value_Ptr.I64 := Read_I64 (Val.Mem);
+                        else
+                           raise Internal_Error;
+                        end if;
+                     when Type_Float =>
+                        S.Value_Ptr.F64 := Ghdl_F64 (Read_Fp64 (Val.Mem));
+                     when others =>
+                        raise Internal_Error;
+                  end case;
             end case;
          when Type_Vector
            | Type_Array =>
