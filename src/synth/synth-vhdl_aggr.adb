@@ -448,7 +448,8 @@ package body Synth.Vhdl_Aggr is
       Res_Typ : Type_Acc;
       Res : Valtyp;
    begin
-      Tab_Res := new Valtyp_Array'(1 .. Nat32 (Flen) => No_Valtyp);
+      Tab_Res := new Valtyp_Array(1 .. Nat32 (Flen));
+      Tab_Res.all := (others => No_Valtyp);
 
       Fill_Array_Aggregate (Syn_Inst, Aggr, Tab_Res,
                             Aggr_Typ, 1, Strides, 1, Const_P, Err_P);
