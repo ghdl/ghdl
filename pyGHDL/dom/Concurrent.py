@@ -36,17 +36,36 @@ from pyTooling.Decorators import export
 
 from pyVHDLModel.Base import ExpressionUnion, WaveformElement as VHDLModel_WaveformElement
 from pyVHDLModel.Symbol import Symbol
-from pyVHDLModel.Association import AssociationItem, GenericAssociationItem as VHDLModel_GenericAssociationItem, \
-    PortAssociationItem as VHDLModel_PortAssociationItem, ParameterAssociationItem as VHDLModel_ParameterAssociationItem
+from pyVHDLModel.Association import (
+    AssociationItem,
+    GenericAssociationItem as VHDLModel_GenericAssociationItem,
+    PortAssociationItem as VHDLModel_PortAssociationItem,
+    ParameterAssociationItem as VHDLModel_ParameterAssociationItem,
+)
 from pyVHDLModel.Sequential import SequentialStatement
-from pyVHDLModel.Concurrent import ComponentInstantiation as VHDLModel_ComponentInstantiation, EntityInstantiation as VHDLModel_EntityInstantiation, \
-    ConfigurationInstantiation as VHDLModel_ConfigurationInstantiation, ProcessStatement as VHDLModel_ProcessStatement, \
-    ConcurrentProcedureCall as VHDLModel_ConcurrentProcedureCall, ConcurrentBlockStatement as VHDLModel_ConcurrentBlockStatement, \
-    IfGenerateBranch as VHDLModel_IfGenerateBranch, ElsifGenerateBranch as VHDLModel_ElsifGenerateBranch, ElseGenerateBranch as VHDLModel_ElseGenerateBranch, \
-    IfGenerateStatement as VHDLModel_IfGenerateStatement, ConcurrentChoice, ConcurrentCase, CaseGenerateStatement as VHDLModel_CaseGenerateStatement, \
-    ForGenerateStatement as VHDLModel_ForGenerateStatement, ConcurrentSimpleSignalAssignment as VHDLModel_ConcurrentSimpleSignalAssignment, ConcurrentAssertStatement as VHDLModel_ConcurrentAssertStatement, \
-    ConcurrentStatement, GenerateCase as VHDLModel_GenerateCase, OthersGenerateCase as VHDLModel_OthersGenerateCase, \
-    IndexedGenerateChoice as VHDLModel_IndexedGenerateChoice, RangedGenerateChoice as VHDLModel_RangedGenerateChoice
+from pyVHDLModel.Concurrent import (
+    ComponentInstantiation as VHDLModel_ComponentInstantiation,
+    EntityInstantiation as VHDLModel_EntityInstantiation,
+    ConfigurationInstantiation as VHDLModel_ConfigurationInstantiation,
+    ProcessStatement as VHDLModel_ProcessStatement,
+    ConcurrentProcedureCall as VHDLModel_ConcurrentProcedureCall,
+    ConcurrentBlockStatement as VHDLModel_ConcurrentBlockStatement,
+    IfGenerateBranch as VHDLModel_IfGenerateBranch,
+    ElsifGenerateBranch as VHDLModel_ElsifGenerateBranch,
+    ElseGenerateBranch as VHDLModel_ElseGenerateBranch,
+    IfGenerateStatement as VHDLModel_IfGenerateStatement,
+    ConcurrentChoice,
+    ConcurrentCase,
+    CaseGenerateStatement as VHDLModel_CaseGenerateStatement,
+    ForGenerateStatement as VHDLModel_ForGenerateStatement,
+    ConcurrentSimpleSignalAssignment as VHDLModel_ConcurrentSimpleSignalAssignment,
+    ConcurrentAssertStatement as VHDLModel_ConcurrentAssertStatement,
+    ConcurrentStatement,
+    GenerateCase as VHDLModel_GenerateCase,
+    OthersGenerateCase as VHDLModel_OthersGenerateCase,
+    IndexedGenerateChoice as VHDLModel_IndexedGenerateChoice,
+    RangedGenerateChoice as VHDLModel_RangedGenerateChoice,
+)
 
 from pyGHDL.libghdl import Iir, utils
 from pyGHDL.libghdl.vhdl import nodes

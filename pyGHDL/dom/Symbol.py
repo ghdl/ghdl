@@ -34,8 +34,8 @@ from typing import List, Iterator, Iterable
 
 from pyTooling.Decorators import export, InheritDocString
 
-from pyVHDLModel        import Name
-from pyVHDLModel.Base   import ExpressionUnion
+from pyVHDLModel import Name
+from pyVHDLModel.Base import ExpressionUnion
 from pyVHDLModel.Symbol import LibraryReferenceSymbol as VHDLModel_LibraryReferenceSymbol
 from pyVHDLModel.Symbol import PackageReferenceSymbol as VHDLModel_PackageReferenceSymbol
 from pyVHDLModel.Symbol import PackageMembersReferenceSymbol as VHDLModel_PackageMembersReferenceSymbol
@@ -163,7 +163,7 @@ class SimpleSubtypeSymbol(VHDLModel_SimpleSubtypeSymbol, DOMMixin):
 @export
 class ConstrainedScalarSubtypeSymbol(VHDLModel_ConstrainedScalarSubtypeSymbol, DOMMixin):
     def __init__(self, node: Iir, subtypeName: Name, rng: Range = None):
-        super().__init__(subtypeName)  #, rng)  # XXX: hacked
+        super().__init__(subtypeName)  # , rng)  # XXX: hacked
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -174,7 +174,7 @@ class ConstrainedScalarSubtypeSymbol(VHDLModel_ConstrainedScalarSubtypeSymbol, D
 @export
 class ConstrainedCompositeSubtypeSymbol(VHDLModel_ConstrainedCompositeSubtypeSymbol, DOMMixin):
     def __init__(self, node: Iir, subtypeName: Name, constraints: List = None):
-        super().__init__(subtypeName) #, constraints)  # XXX: hacked
+        super().__init__(subtypeName)  # , constraints)  # XXX: hacked
         DOMMixin.__init__(self, node)
 
     @classmethod

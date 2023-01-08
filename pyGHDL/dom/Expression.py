@@ -36,27 +36,57 @@ from pyTooling.Decorators import export
 
 from pyVHDLModel.Base import ExpressionUnion
 from pyVHDLModel.Symbol import Symbol
-from pyVHDLModel.Expression import UnaryExpression as VHDLModel_UnaryExpression, NegationExpression as VHDLModel_NegationExpression, \
-    IdentityExpression as VHDLModel_IdentityExpression, InverseExpression as VHDLModel_InverseExpression, AbsoluteExpression as VHDLModel_AbsoluteExpression, \
-    TypeConversion as VHDLModel_TypeConversion, SubExpression as VHDLModel_ParenthesisExpression, BinaryExpression as VHDLModel_BinaryExpression, \
-    RangeExpression as VHDLModel_RangeExpression, AscendingRangeExpression as VHDLModel_AscendingRangeExpression, \
-    DescendingRangeExpression as VHDLModel_DescendingRangeExpression, AdditionExpression as VHDLModel_AdditionExpression, \
-    SubtractionExpression as VHDLModel_SubtractionExpression, ConcatenationExpression as VHDLModel_ConcatenationExpression, \
-    MultiplyExpression as VHDLModel_MultiplyExpression, DivisionExpression as VHDLModel_DivisionExpression, \
-    RemainderExpression as VHDLModel_RemainderExpression, ModuloExpression as VHDLModel_ModuloExpression, \
-    ExponentiationExpression as VHDLModel_ExponentiationExpression, AndExpression as VHDLModel_AndExpression, NandExpression as VHDLModel_NandExpression, \
-    OrExpression as VHDLModel_OrExpression, NorExpression as VHDLModel_NorExpression, XorExpression as VHDLModel_XorExpression, \
-    XnorExpression as VHDLModel_XnorExpression, EqualExpression as VHDLModel_EqualExpression, UnequalExpression as VHDLModel_UnequalExpression, \
-    GreaterThanExpression as VHDLModel_GreaterThanExpression, GreaterEqualExpression as VHDLModel_GreaterEqualExpression, \
-    LessThanExpression as VHDLModel_LessThanExpression, LessEqualExpression as VHDLModel_LessEqualExpression, \
-    MatchingEqualExpression as VHDLModel_MatchingEqualExpression, MatchingUnequalExpression as VHDLModel_MatchingUnequalExpression, \
-    MatchingGreaterThanExpression as VHDLModel_MatchingGreaterThanExpression, MatchingGreaterEqualExpression as VHDLModel_MatchingGreaterEqualExpression, \
-    MatchingLessThanExpression as VHDLModel_MatchingLessThanExpression, MatchingLessEqualExpression as VHDLModel_MatchingLessEqualExpression, \
-    ShiftRightLogicExpression as VHDLModel_ShiftRightLogicExpression, ShiftLeftLogicExpression as VHDLModel_ShiftLeftLogicExpression, \
-    ShiftRightArithmeticExpression as VHDLModel_ShiftRightArithmeticExpression, ShiftLeftArithmeticExpression as VHDLModel_ShiftLeftArithmeticExpression, \
-    RotateRightExpression as VHDLModel_RotateRightExpression, RotateLeftExpression as VHDLModel_RotateLeftExpression, \
-    QualifiedExpression as VHDLModel_QualifiedExpression, FunctionCall as VHDLModel_FunctionCall, SubtypeAllocation as VHDLModel_SubtypeAllocation, \
-    QualifiedExpressionAllocation as VHDLModel_QualifiedExpressionAllocation, AggregateElement, Aggregate as VHDLModel_Aggregate
+from pyVHDLModel.Expression import (
+    UnaryExpression as VHDLModel_UnaryExpression,
+    NegationExpression as VHDLModel_NegationExpression,
+    IdentityExpression as VHDLModel_IdentityExpression,
+    InverseExpression as VHDLModel_InverseExpression,
+    AbsoluteExpression as VHDLModel_AbsoluteExpression,
+    TypeConversion as VHDLModel_TypeConversion,
+    SubExpression as VHDLModel_ParenthesisExpression,
+    BinaryExpression as VHDLModel_BinaryExpression,
+    RangeExpression as VHDLModel_RangeExpression,
+    AscendingRangeExpression as VHDLModel_AscendingRangeExpression,
+    DescendingRangeExpression as VHDLModel_DescendingRangeExpression,
+    AdditionExpression as VHDLModel_AdditionExpression,
+    SubtractionExpression as VHDLModel_SubtractionExpression,
+    ConcatenationExpression as VHDLModel_ConcatenationExpression,
+    MultiplyExpression as VHDLModel_MultiplyExpression,
+    DivisionExpression as VHDLModel_DivisionExpression,
+    RemainderExpression as VHDLModel_RemainderExpression,
+    ModuloExpression as VHDLModel_ModuloExpression,
+    ExponentiationExpression as VHDLModel_ExponentiationExpression,
+    AndExpression as VHDLModel_AndExpression,
+    NandExpression as VHDLModel_NandExpression,
+    OrExpression as VHDLModel_OrExpression,
+    NorExpression as VHDLModel_NorExpression,
+    XorExpression as VHDLModel_XorExpression,
+    XnorExpression as VHDLModel_XnorExpression,
+    EqualExpression as VHDLModel_EqualExpression,
+    UnequalExpression as VHDLModel_UnequalExpression,
+    GreaterThanExpression as VHDLModel_GreaterThanExpression,
+    GreaterEqualExpression as VHDLModel_GreaterEqualExpression,
+    LessThanExpression as VHDLModel_LessThanExpression,
+    LessEqualExpression as VHDLModel_LessEqualExpression,
+    MatchingEqualExpression as VHDLModel_MatchingEqualExpression,
+    MatchingUnequalExpression as VHDLModel_MatchingUnequalExpression,
+    MatchingGreaterThanExpression as VHDLModel_MatchingGreaterThanExpression,
+    MatchingGreaterEqualExpression as VHDLModel_MatchingGreaterEqualExpression,
+    MatchingLessThanExpression as VHDLModel_MatchingLessThanExpression,
+    MatchingLessEqualExpression as VHDLModel_MatchingLessEqualExpression,
+    ShiftRightLogicExpression as VHDLModel_ShiftRightLogicExpression,
+    ShiftLeftLogicExpression as VHDLModel_ShiftLeftLogicExpression,
+    ShiftRightArithmeticExpression as VHDLModel_ShiftRightArithmeticExpression,
+    ShiftLeftArithmeticExpression as VHDLModel_ShiftLeftArithmeticExpression,
+    RotateRightExpression as VHDLModel_RotateRightExpression,
+    RotateLeftExpression as VHDLModel_RotateLeftExpression,
+    QualifiedExpression as VHDLModel_QualifiedExpression,
+    FunctionCall as VHDLModel_FunctionCall,
+    SubtypeAllocation as VHDLModel_SubtypeAllocation,
+    QualifiedExpressionAllocation as VHDLModel_QualifiedExpressionAllocation,
+    AggregateElement,
+    Aggregate as VHDLModel_Aggregate,
+)
 
 from pyGHDL.libghdl import utils
 from pyGHDL.libghdl._types import Iir
