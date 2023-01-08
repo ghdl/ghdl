@@ -779,13 +779,13 @@ package body Elab.Vhdl_Types is
             when Iir_Kind_Subtype_Attribute =>
                declare
                   Pfx : constant Node := Get_Prefix (Atype);
-                  Vt : Valtyp;
+                  T : Type_Acc;
                begin
                   Mark_Expr_Pool (Marker);
-                  Vt := Synth_Name (Syn_Inst, Pfx);
+                  T := Exec_Name_Subtype (Syn_Inst, Pfx);
                   Release_Expr_Pool (Marker);
-                  pragma Assert (Vt.Typ.Is_Global);
-                  return Vt.Typ;
+                  pragma Assert (T.Is_Global);
+                  return T;
                end;
             when others =>
                Error_Kind ("elab_declaration_type", Atype);
