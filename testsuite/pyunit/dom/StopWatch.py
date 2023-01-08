@@ -30,11 +30,13 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+from time import perf_counter_ns as time_perf_counter
 from pathlib import Path
+from textwrap import dedent
 from unittest import TestCase
 
 from pyGHDL.dom.NonStandard import Design, Document
-from pyGHDL.dom.formatting.prettyprint import PrettyPrint
+
 
 if __name__ == "__main__":
     print("ERROR: you called a testcase declaration file as an executable module.")
@@ -108,18 +110,48 @@ class CompileOrder(Designs):
     def test_Encoder(self):
         design = Design()
         design.LoadDefaultLibraries()
-        t1 = time.perf_counter()
+        t1 = time_perf_counter()
         for lib, file in self._stopwatchFiles:
-        # for lib, file in self._encoderFiles:
             library = design.GetLibrary(lib)
             document = Document(self._sourceDirectory / file)
             design.AddDocument(document, library)
+            print(dedent("""\
+                file: {}
+                  libghdl processing time: {:5.3f} us
+                  DOM translation time:    {:5.3f} us
+                """
+                ).format(
+                    document.Path,
+                    document.LibGHDLProcessingTime * 10**6,
+                    document.DOMTranslationTime * 10**6,
+                )
+            )
+        pyGHDLTime = time_perf_counter() - t1
 
         design.Analyze()
+        leafs = [leaf.Value.Identifier for leaf in design.DependencyGraph.IterateLeafs()]
 
-        PP = PrettyPrint()
-        buffer = []
-        buffer.append("Design:")
-        for line in PP.formatDesign(design, 1):
-            buffer.append(line)
-        print("\n".join(buffer))
+        print(dedent("""
+            pyGHDL:
+              sum:                       {:5.3f} us
+            Analysis:
+              default library load time: {:5.3f} us
+              dependency analysis time:  {:5.3f} us
+            Toplevel:                    {toplevel}
+            """
+            ).format(
+                pyGHDLTime * 10**6,
+                design._loadDefaultLibraryTime * 10**6,
+                design._analyzeTime * 10**6,
+                toplevel=", ".join(leafs)
+            )
+        )
+
+
+
+        # PP = PrettyPrint()
+        # buffer = []
+        # buffer.append("Design:")
+        # for line in PP.formatDesign(design, 1):
+        #     buffer.append(line)
+        # print("\n".join(buffer))
