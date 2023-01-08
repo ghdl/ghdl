@@ -34,7 +34,7 @@ from typing import List, Union, Iterator, Tuple, Iterable
 
 from pyTooling.Decorators import export
 
-from pyVHDLModel import Name
+from pyVHDLModel.Name import Name
 from pyVHDLModel.Symbol import Symbol
 from pyVHDLModel.Type import Subtype as VHDLModel_Subtype
 from pyVHDLModel.Type import AnonymousType as VHDLModel_AnonymousType

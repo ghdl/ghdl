@@ -34,7 +34,7 @@ from typing import List
 
 from pyTooling.Decorators import export
 
-from pyVHDLModel import Name
+from pyVHDLModel.Name import Name
 from pyVHDLModel.Symbol import Symbol
 from pyVHDLModel.Declaration import EntityClass, Attribute as VHDLModel_Attribute
 from pyVHDLModel.Declaration import AttributeSpecification as VHDLModel_AttributeSpecification
