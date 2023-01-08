@@ -4048,6 +4048,9 @@ package body Simul.Vhdl_Simul is
          Elab.Debugger.Debug_Elab (Vhdl_Elab.Top_Instance);
       end if;
 
+      Grt.Errors.Set_Error_Stream (Grt.Stdio.stdout);
+      Assertion_Report_Handler := Assertion_Report_Msg'Access;
+
       Status := Grt.Main.Run_Through_Longjump
         (Grt.Processes.Simulation_Init'Access);
 
@@ -4055,9 +4058,6 @@ package body Simul.Vhdl_Simul is
          if Grt.Processes.Flag_AMS then
             Grt.Analog_Solver.Start;
          end if;
-
-         Grt.Errors.Set_Error_Stream (Grt.Stdio.stdout);
-         Assertion_Report_Handler := Assertion_Report_Msg'Access;
 
          pragma Assert (Areapools.Is_Empty (Expr_Pool));
          pragma Assert (Areapools.Is_Empty (Process_Pool));
