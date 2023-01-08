@@ -34,60 +34,29 @@ from typing import List, Union
 
 from pyTooling.Decorators import export
 
-from pyVHDLModel.SyntaxModel import (
-    UnaryExpression as VHDLModel_UnaryExpression,
-    BinaryExpression as VHDLModel_BinaryExpression,
-    InverseExpression as VHDLModel_InverseExpression,
-    IdentityExpression as VHDLModel_IdentityExpression,
-    NegationExpression as VHDLModel_NegationExpression,
-    AbsoluteExpression as VHDLModel_AbsoluteExpression,
-    SubExpression as VHDLModel_ParenthesisExpression,
-    TypeConversion as VHDLModel_TypeConversion,
-    FunctionCall as VHDLModel_FunctionCall,
-    QualifiedExpression as VHDLModel_QualifiedExpression,
-    RangeExpression as VHDLModel_RangeExpression,
-    AscendingRangeExpression as VHDLModel_AscendingRangeExpression,
-    DescendingRangeExpression as VHDLModel_DescendingRangeExpression,
-    AdditionExpression as VHDLModel_AdditionExpression,
-    SubtractionExpression as VHDLModel_SubtractionExpression,
-    ConcatenationExpression as VHDLModel_ConcatenationExpression,
-    MultiplyExpression as VHDLModel_MultiplyExpression,
-    DivisionExpression as VHDLModel_DivisionExpression,
-    RemainderExpression as VHDLModel_RemainderExpression,
-    ModuloExpression as VHDLModel_ModuloExpression,
-    ExponentiationExpression as VHDLModel_ExponentiationExpression,
-    AndExpression as VHDLModel_AndExpression,
-    NandExpression as VHDLModel_NandExpression,
-    OrExpression as VHDLModel_OrExpression,
-    NorExpression as VHDLModel_NorExpression,
-    XorExpression as VHDLModel_XorExpression,
-    XnorExpression as VHDLModel_XnorExpression,
-    EqualExpression as VHDLModel_EqualExpression,
-    UnequalExpression as VHDLModel_UnequalExpression,
-    LessThanExpression as VHDLModel_LessThanExpression,
-    LessEqualExpression as VHDLModel_LessEqualExpression,
-    GreaterThanExpression as VHDLModel_GreaterThanExpression,
-    GreaterEqualExpression as VHDLModel_GreaterEqualExpression,
-    MatchingEqualExpression as VHDLModel_MatchingEqualExpression,
-    MatchingUnequalExpression as VHDLModel_MatchingUnequalExpression,
-    MatchingLessThanExpression as VHDLModel_MatchingLessThanExpression,
-    MatchingLessEqualExpression as VHDLModel_MatchingLessEqualExpression,
-    MatchingGreaterThanExpression as VHDLModel_MatchingGreaterThanExpression,
-    MatchingGreaterEqualExpression as VHDLModel_MatchingGreaterEqualExpression,
-    ShiftRightLogicExpression as VHDLModel_ShiftRightLogicExpression,
-    ShiftLeftLogicExpression as VHDLModel_ShiftLeftLogicExpression,
-    ShiftRightArithmeticExpression as VHDLModel_ShiftRightArithmeticExpression,
-    ShiftLeftArithmeticExpression as VHDLModel_ShiftLeftArithmeticExpression,
-    RotateRightExpression as VHDLModel_RotateRightExpression,
-    RotateLeftExpression as VHDLModel_RotateLeftExpression,
-    SubtypeAllocation as VHDLModel_SubtypeAllocation,
-    QualifiedExpressionAllocation as VHDLModel_QualifiedExpressionAllocation,
-    Aggregate as VHDLModel_Aggregate,
-    ExpressionUnion,
-    AggregateElement,
-    SubtypeOrSymbol,
-    Symbol,
-)
+from pyVHDLModel.Base import ExpressionUnion
+from pyVHDLModel.Symbol import Symbol
+from pyVHDLModel.Expression import UnaryExpression as VHDLModel_UnaryExpression, NegationExpression as VHDLModel_NegationExpression, \
+    IdentityExpression as VHDLModel_IdentityExpression, InverseExpression as VHDLModel_InverseExpression, AbsoluteExpression as VHDLModel_AbsoluteExpression, \
+    TypeConversion as VHDLModel_TypeConversion, SubExpression as VHDLModel_ParenthesisExpression, BinaryExpression as VHDLModel_BinaryExpression, \
+    RangeExpression as VHDLModel_RangeExpression, AscendingRangeExpression as VHDLModel_AscendingRangeExpression, \
+    DescendingRangeExpression as VHDLModel_DescendingRangeExpression, AdditionExpression as VHDLModel_AdditionExpression, \
+    SubtractionExpression as VHDLModel_SubtractionExpression, ConcatenationExpression as VHDLModel_ConcatenationExpression, \
+    MultiplyExpression as VHDLModel_MultiplyExpression, DivisionExpression as VHDLModel_DivisionExpression, \
+    RemainderExpression as VHDLModel_RemainderExpression, ModuloExpression as VHDLModel_ModuloExpression, \
+    ExponentiationExpression as VHDLModel_ExponentiationExpression, AndExpression as VHDLModel_AndExpression, NandExpression as VHDLModel_NandExpression, \
+    OrExpression as VHDLModel_OrExpression, NorExpression as VHDLModel_NorExpression, XorExpression as VHDLModel_XorExpression, \
+    XnorExpression as VHDLModel_XnorExpression, EqualExpression as VHDLModel_EqualExpression, UnequalExpression as VHDLModel_UnequalExpression, \
+    GreaterThanExpression as VHDLModel_GreaterThanExpression, GreaterEqualExpression as VHDLModel_GreaterEqualExpression, \
+    LessThanExpression as VHDLModel_LessThanExpression, LessEqualExpression as VHDLModel_LessEqualExpression, \
+    MatchingEqualExpression as VHDLModel_MatchingEqualExpression, MatchingUnequalExpression as VHDLModel_MatchingUnequalExpression, \
+    MatchingGreaterThanExpression as VHDLModel_MatchingGreaterThanExpression, MatchingGreaterEqualExpression as VHDLModel_MatchingGreaterEqualExpression, \
+    MatchingLessThanExpression as VHDLModel_MatchingLessThanExpression, MatchingLessEqualExpression as VHDLModel_MatchingLessEqualExpression, \
+    ShiftRightLogicExpression as VHDLModel_ShiftRightLogicExpression, ShiftLeftLogicExpression as VHDLModel_ShiftLeftLogicExpression, \
+    ShiftRightArithmeticExpression as VHDLModel_ShiftRightArithmeticExpression, ShiftLeftArithmeticExpression as VHDLModel_ShiftLeftArithmeticExpression, \
+    RotateRightExpression as VHDLModel_RotateRightExpression, RotateLeftExpression as VHDLModel_RotateLeftExpression, \
+    QualifiedExpression as VHDLModel_QualifiedExpression, FunctionCall as VHDLModel_FunctionCall, SubtypeAllocation as VHDLModel_SubtypeAllocation, \
+    QualifiedExpressionAllocation as VHDLModel_QualifiedExpressionAllocation, AggregateElement, Aggregate as VHDLModel_Aggregate
 
 from pyGHDL.libghdl import utils
 from pyGHDL.libghdl._types import Iir
@@ -434,7 +403,7 @@ class RotateLeftExpression(VHDLModel_RotateLeftExpression, DOMMixin, _ParseBinar
 
 @export
 class QualifiedExpression(VHDLModel_QualifiedExpression, DOMMixin):
-    def __init__(self, node: Iir, subtype: SubtypeOrSymbol, operand: ExpressionUnion):
+    def __init__(self, node: Iir, subtype: Symbol, operand: ExpressionUnion):
         super().__init__(subtype, operand)
         DOMMixin.__init__(self, node)
 

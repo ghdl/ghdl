@@ -34,6 +34,18 @@ from typing import List, Generator, Type
 
 from pyTooling.Decorators import export
 
+from pyVHDLModel import Name
+from pyVHDLModel.Base import ModelEntity, Direction, ExpressionUnion
+from pyVHDLModel.Symbol import Symbol
+from pyVHDLModel.Association import AssociationItem
+from pyVHDLModel.Interface import GenericInterfaceItem, PortInterfaceItem, ParameterInterfaceItem
+from pyVHDLModel.Type import BaseType
+from pyVHDLModel.Sequential import SequentialStatement
+from pyVHDLModel.Concurrent import ConcurrentStatement
+
+from pyGHDL.libghdl import utils, name_table
+from pyGHDL.libghdl._types import Iir
+from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom.Sequential import (
     IfStatement,
     ForLoopStatement,
@@ -45,30 +57,9 @@ from pyGHDL.dom.Sequential import (
     NullStatement,
     SequentialProcedureCall,
 )
-from pyVHDLModel.SyntaxModel import (
-    ConstraintUnion,
-    Direction,
-    ExpressionUnion,
-    SubtypeOrSymbol,
-    BaseType,
-    GenericInterfaceItem,
-    PortInterfaceItem,
-    ParameterInterfaceItem,
-    ModelEntity,
-    Name,
-    ConcurrentStatement,
-    SequentialStatement,
-    AssociationItem,
-)
 
-from pyGHDL.libghdl import utils, name_table
-from pyGHDL.libghdl._types import Iir
-from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import Position, DOMException
-from pyGHDL.dom._Utils import (
-    GetNameOfNode,
-    GetIirKindOfNode,
-)
+from pyGHDL.dom._Utils import GetNameOfNode, GetIirKindOfNode
 from pyGHDL.dom.Names import (
     SimpleName,
     SelectedName,
@@ -223,7 +214,7 @@ def GetAssociations(node: Iir) -> List:
 @export
 def GetArrayConstraintsFromSubtypeIndication(
     subtypeIndication: Iir,
-) -> List[ConstraintUnion]:
+) -> List:
     constraints = []
     for constraint in utils.flist_iter(nodes.Get_Index_Constraint_List(subtypeIndication)):
         constraintKind = GetIirKindOfNode(constraint)
@@ -303,13 +294,13 @@ def GetAnonymousTypeFromNode(node: Iir) -> BaseType:
 
 
 @export
-def GetSubtypeIndicationFromNode(node: Iir, entity: str, name: str) -> SubtypeOrSymbol:
+def GetSubtypeIndicationFromNode(node: Iir, entity: str, name: str) -> Symbol:
     subtypeIndicationNode = nodes.Get_Subtype_Indication(node)
     return GetSubtypeIndicationFromIndicationNode(subtypeIndicationNode, entity, name)
 
 
 @export
-def GetSubtypeIndicationFromIndicationNode(subtypeIndicationNode: Iir, entity: str, name: str) -> SubtypeOrSymbol:
+def GetSubtypeIndicationFromIndicationNode(subtypeIndicationNode: Iir, entity: str, name: str) -> Symbol:
     if subtypeIndicationNode is nodes.Null_Iir:
         raise ValueError("Parameter 'subtypeIndicationNode' is 'Null_Iir'.")
 
@@ -331,7 +322,7 @@ def GetSubtypeIndicationFromIndicationNode(subtypeIndicationNode: Iir, entity: s
 @export
 def GetSimpleTypeFromNode(subtypeIndicationNode: Iir) -> SimpleSubtypeSymbol:
     subtypeName = GetNameFromNode(subtypeIndicationNode)
-    return SimpleSubtypeSymbol(subtypeIndicationNode, subtypeName)
+    return SimpleSubtypeSymbol(subtypeIndicationNode, str(subtypeName))  # XXX: hacked
 
 
 @export
@@ -343,7 +334,7 @@ def GetScalarConstrainedSubtypeFromNode(
     simpleTypeMark = SimpleName(typeMark, typeMarkName)
     rangeConstraint = nodes.Get_Range_Constraint(subtypeIndicationNode)
     r = GetRangeFromNode(rangeConstraint)
-    return ConstrainedScalarSubtypeSymbol(subtypeIndicationNode, simpleTypeMark, r)
+    return ConstrainedScalarSubtypeSymbol(subtypeIndicationNode, str(simpleTypeMark), r)  # XXX: hacked
 
 
 @export
@@ -355,11 +346,11 @@ def GetCompositeConstrainedSubtypeFromNode(
     simpleTypeMark = SimpleName(typeMark, typeMarkName)
 
     constraints = GetArrayConstraintsFromSubtypeIndication(subtypeIndicationNode)
-    return ConstrainedCompositeSubtypeSymbol(subtypeIndicationNode, simpleTypeMark, constraints)
+    return ConstrainedCompositeSubtypeSymbol(subtypeIndicationNode, str(simpleTypeMark), constraints)  # XXX: hacked
 
 
 @export
-def GetSubtypeFromNode(subtypeNode: Iir) -> SubtypeOrSymbol:
+def GetSubtypeFromNode(subtypeNode: Iir) -> Symbol:
     subtypeName = GetNameOfNode(subtypeNode)
 
     return Subtype(subtypeNode, subtypeName)

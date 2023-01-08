@@ -30,30 +30,29 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-from typing import List, Iterator
+from typing import List, Iterator, Iterable
 
 from pyTooling.Decorators import export, InheritDocString
 
-from pyVHDLModel.SyntaxModel import (
-    SimpleSubtypeSymbol as VHDLModel_SimpleSubtypeSymbol,
-    ConstrainedScalarSubtypeSymbol as VHDLModel_ConstrainedScalarSubtypeSymbol,
-    ConstrainedCompositeSubtypeSymbol as VHDLModel_ConstrainedCompositeSubtypeSymbol,
-    SimpleObjectOrFunctionCallSymbol as VHDLModel_SimpleObjectOrFunctionCallSymbol,
-    IndexedObjectOrFunctionCallSymbol as VHDLModel_IndexedObjectOrFunctionCallSymbol,
-    ConstraintUnion,
-    Name,
-    LibraryReferenceSymbol as VHDLModel_LibraryReferenceSymbol,
-    PackageReferenceSymbol as VHDLModel_PackageReferenceSymbol,
-    PackageMembersReferenceSymbol as VHDLModel_PackageMembersReferenceSymbol,
-    AllPackageMembersReferenceSymbol as VHDLModel_AllPackageMembersReferenceSymbol,
-    ContextReferenceSymbol as VHDLModel_ContextReferenceSymbol,
-    EntityInstantiationSymbol as VHDLModel_EntityInstantiationSymbol,
-    ComponentInstantiationSymbol as VHDLModel_ComponentInstantiationSymbol,
-    ConfigurationInstantiationSymbol as VHDLModel_ConfigurationInstantiationSymbol,
-    EntitySymbol as VHDLModel_EntitySymbol,
-    ArchitectureSymbol as VHDLModel_ArchitectureSymbol,
-    PackageSymbol as VHDLModel_PackageSymbol,
-)
+from pyVHDLModel        import Name
+from pyVHDLModel.Base   import ExpressionUnion
+from pyVHDLModel.Symbol import LibraryReferenceSymbol as VHDLModel_LibraryReferenceSymbol
+from pyVHDLModel.Symbol import PackageReferenceSymbol as VHDLModel_PackageReferenceSymbol
+from pyVHDLModel.Symbol import PackageMembersReferenceSymbol as VHDLModel_PackageMembersReferenceSymbol
+from pyVHDLModel.Symbol import AllPackageMembersReferenceSymbol as VHDLModel_AllPackageMembersReferenceSymbol
+from pyVHDLModel.Symbol import ContextReferenceSymbol as VHDLModel_ContextReferenceSymbol
+from pyVHDLModel.Symbol import EntitySymbol as VHDLModel_EntitySymbol
+from pyVHDLModel.Symbol import ArchitectureSymbol as VHDLModel_ArchitectureSymbol
+from pyVHDLModel.Symbol import PackageSymbol as VHDLModel_PackageSymbol
+from pyVHDLModel.Symbol import EntityInstantiationSymbol as VHDLModel_EntityInstantiationSymbol
+from pyVHDLModel.Symbol import ComponentInstantiationSymbol as VHDLModel_ComponentInstantiationSymbol
+from pyVHDLModel.Symbol import ConfigurationInstantiationSymbol as VHDLModel_ConfigurationInstantiationSymbol
+from pyVHDLModel.Symbol import SimpleSubtypeSymbol as VHDLModel_SimpleSubtypeSymbol
+from pyVHDLModel.Symbol import ConstrainedScalarSubtypeSymbol as VHDLModel_ConstrainedScalarSubtypeSymbol
+from pyVHDLModel.Symbol import ConstrainedCompositeSubtypeSymbol as VHDLModel_ConstrainedCompositeSubtypeSymbol
+from pyVHDLModel.Symbol import SimpleObjectOrFunctionCallSymbol as VHDLModel_SimpleObjectOrFunctionCallSymbol
+from pyVHDLModel.Symbol import IndexedObjectOrFunctionCallSymbol as VHDLModel_IndexedObjectOrFunctionCallSymbol
+
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.dom import DOMMixin
 from pyGHDL.dom.Range import Range
@@ -153,18 +152,18 @@ class PackageSymbol(VHDLModel_PackageSymbol, DOMMixin):
 
 @export
 class SimpleSubtypeSymbol(VHDLModel_SimpleSubtypeSymbol, DOMMixin):
-    def __init__(self, node: Iir, subtypeName: Name):
+    def __init__(self, node: Iir, subtypeName: str):
         if isinstance(subtypeName, (List, Iterator)):
             subtypeName = ".".join(subtypeName)
 
-        super().__init__(subtypeName=subtypeName)
+        super().__init__(subtypeName)
         DOMMixin.__init__(self, node)
 
 
 @export
 class ConstrainedScalarSubtypeSymbol(VHDLModel_ConstrainedScalarSubtypeSymbol, DOMMixin):
     def __init__(self, node: Iir, subtypeName: Name, rng: Range = None):
-        super().__init__(subtypeName, rng)
+        super().__init__(subtypeName)  #, rng)  # XXX: hacked
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -174,8 +173,8 @@ class ConstrainedScalarSubtypeSymbol(VHDLModel_ConstrainedScalarSubtypeSymbol, D
 
 @export
 class ConstrainedCompositeSubtypeSymbol(VHDLModel_ConstrainedCompositeSubtypeSymbol, DOMMixin):
-    def __init__(self, node: Iir, subtypeName: Name, constraints: List[ConstraintUnion] = None):
-        super().__init__(subtypeName, constraints)
+    def __init__(self, node: Iir, subtypeName: Name, constraints: List = None):
+        super().__init__(subtypeName) #, constraints)  # XXX: hacked
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -185,18 +184,8 @@ class ConstrainedCompositeSubtypeSymbol(VHDLModel_ConstrainedCompositeSubtypeSym
 
 @export
 class SimpleObjectOrFunctionCallSymbol(VHDLModel_SimpleObjectOrFunctionCallSymbol, DOMMixin):
-    @classmethod
-    def parse(cls, node: Iir):
-        from pyGHDL.dom._Translate import GetNameFromNode
-
-        name = GetNameFromNode(node)
-        return cls(name)
-
-
-@export
-class IndexedObjectOrFunctionCallSymbol(VHDLModel_IndexedObjectOrFunctionCallSymbol, DOMMixin):
-    def __init__(self, node: Iir, name: Name):
-        super().__init__(name)
+    def __init__(self, node: Iir, identifier: str):
+        super().__init__(identifier)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -205,4 +194,19 @@ class IndexedObjectOrFunctionCallSymbol(VHDLModel_IndexedObjectOrFunctionCallSym
 
         name = GetNameFromNode(node)
 
-        return cls(node, name)
+        return cls(node, str(name))  # XXX: hacked
+
+
+@export
+class IndexedObjectOrFunctionCallSymbol(VHDLModel_IndexedObjectOrFunctionCallSymbol, DOMMixin):
+    def __init__(self, node: Iir, prefix: Name, indices: Iterable[ExpressionUnion]):
+        super().__init__(prefix, indices)
+        DOMMixin.__init__(self, node)
+
+    @classmethod
+    def parse(cls, node: Iir):
+        from pyGHDL.dom._Translate import GetNameFromNode
+
+        name = GetNameFromNode(node)
+
+        return cls(node, name, [])

@@ -32,7 +32,7 @@
 # ============================================================================
 from pyTooling.Decorators import export
 
-from pyVHDLModel.SyntaxModel import Range as VHDLModel_Range
+from pyVHDLModel.Base import Range as VHDLModel_Range
 
 
 @export

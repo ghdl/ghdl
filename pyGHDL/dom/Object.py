@@ -34,16 +34,14 @@ from typing import Union, List, Iterable
 
 from pyTooling.Decorators import export
 
-from pyVHDLModel.SyntaxModel import (
-    Constant as VHDLModel_Constant,
-    DeferredConstant as VHDLModel_DeferredConstant,
-    Variable as VHDLModel_Variable,
-    SharedVariable as VHDLModel_SharedVariable,
-    Signal as VHDLModel_Signal,
-    File as VHDLModel_File,
-    ExpressionUnion,
-    SubtypeOrSymbol,
-)
+from pyVHDLModel.Base import ExpressionUnion
+from pyVHDLModel.Symbol import Symbol
+from pyVHDLModel.Object import Constant as VHDLModel_Constant
+from pyVHDLModel.Object import DeferredConstant as VHDLModel_DeferredConstant
+from pyVHDLModel.Object import Variable as VHDLModel_Variable
+from pyVHDLModel.Object import SharedVariable as VHDLModel_SharedVariable
+from pyVHDLModel.Object import Signal as VHDLModel_Signal
+from pyVHDLModel.Object import File as VHDLModel_File
 
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
@@ -57,7 +55,7 @@ class Constant(VHDLModel_Constant, DOMMixin):
         self,
         node: Iir,
         identifiers: List[str],
-        subtype: SubtypeOrSymbol,
+        subtype: Symbol,
         defaultExpression: ExpressionUnion,
         documentation: str = None,
     ):
@@ -90,7 +88,7 @@ class Constant(VHDLModel_Constant, DOMMixin):
 
 @export
 class DeferredConstant(VHDLModel_DeferredConstant, DOMMixin):
-    def __init__(self, node: Iir, identifiers: List[str], subtype: SubtypeOrSymbol, documentation: str = None):
+    def __init__(self, node: Iir, identifiers: List[str], subtype: Symbol, documentation: str = None):
         super().__init__(identifiers, subtype, documentation)
         DOMMixin.__init__(self, node)
 
@@ -114,7 +112,7 @@ class Variable(VHDLModel_Variable, DOMMixin):
         self,
         node: Iir,
         identifiers: List[str],
-        subtype: SubtypeOrSymbol,
+        subtype: Symbol,
         defaultExpression: ExpressionUnion,
         documentation: str = None,
     ):
@@ -144,7 +142,7 @@ class Variable(VHDLModel_Variable, DOMMixin):
 
 @export
 class SharedVariable(VHDLModel_SharedVariable, DOMMixin):
-    def __init__(self, node: Iir, identifiers: List[str], subtype: SubtypeOrSymbol, documentation: str = None):
+    def __init__(self, node: Iir, identifiers: List[str], subtype: Symbol, documentation: str = None):
         super().__init__(identifiers, subtype, documentation)
         DOMMixin.__init__(self, node)
 
@@ -168,7 +166,7 @@ class Signal(VHDLModel_Signal, DOMMixin):
         self,
         node: Iir,
         identifiers: List[str],
-        subtype: SubtypeOrSymbol,
+        subtype: Symbol,
         defaultExpression: ExpressionUnion,
         documentation: str = None,
     ):
@@ -196,7 +194,7 @@ class Signal(VHDLModel_Signal, DOMMixin):
 
 @export
 class File(VHDLModel_File, DOMMixin):
-    def __init__(self, node: Iir, identifiers: List[str], subtype: SubtypeOrSymbol, documentation: str = None):
+    def __init__(self, node: Iir, identifiers: List[str], subtype: Symbol, documentation: str = None):
         super().__init__(identifiers, subtype, documentation)
         DOMMixin.__init__(self, node)
 

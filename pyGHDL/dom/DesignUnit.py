@@ -39,31 +39,25 @@ This module contains all DOM classes for VHDL's design units (:class:`context <E
 
 
 """
-from typing import Iterable, Union
+from typing import Iterable
 
 from pyTooling.Decorators import export
 
-from pyVHDLModel import (
-    ContextUnion as VHDLModel_ContextUnion,
-    LibraryClause as VHDLModel_LibraryClause,
-    UseClause as VHDLModel_UseClause,
-    ContextReference as VHDLModel_ContextReference,
-    Name,
-    ContextUnion,
-)
-from pyVHDLModel.SyntaxModel import (
-    Entity as VHDLModel_Entity,
-    Architecture as VHDLModel_Architecture,
-    Package as VHDLModel_Package,
-    PackageBody as VHDLModel_PackageBody,
-    PackageInstantiation as VHDLModel_PackageInstantiation,
-    Context as VHDLModel_Context,
-    Configuration as VHDLModel_Configuration,
-    Component as VHDLModel_Component,
-    GenericInterfaceItem,
-    PortInterfaceItem,
-    ConcurrentStatement,
-)
+from pyVHDLModel.Symbol import Symbol
+from pyVHDLModel.Instantiation import PackageInstantiation as VHDLModel_PackageInstantiation
+from pyVHDLModel.Interface import GenericInterfaceItem, PortInterfaceItem
+from pyVHDLModel.Concurrent import ConcurrentStatement
+from pyVHDLModel.DesignUnit import Context as VHDLModel_Context
+from pyVHDLModel.DesignUnit import Package as VHDLModel_Package
+from pyVHDLModel.DesignUnit import PackageBody as VHDLModel_PackageBody
+from pyVHDLModel.DesignUnit import Entity as VHDLModel_Entity
+from pyVHDLModel.DesignUnit import Architecture as VHDLModel_Architecture
+from pyVHDLModel.DesignUnit import Component as VHDLModel_Component
+from pyVHDLModel.DesignUnit import Configuration as VHDLModel_Configuration
+from pyVHDLModel.DesignUnit import LibraryClause as VHDLModel_LibraryClause
+from pyVHDLModel.DesignUnit import UseClause as VHDLModel_UseClause
+from pyVHDLModel.DesignUnit import ContextReference as VHDLModel_ContextReference
+from pyVHDLModel.DesignUnit import ContextUnion as VHDLModel_ContextUnion
 
 from pyGHDL.libghdl import utils
 from pyGHDL.libghdl._types import Iir
@@ -81,14 +75,14 @@ from pyGHDL.dom.Symbol import EntitySymbol, ContextReferenceSymbol, LibraryRefer
 
 @export
 class LibraryClause(VHDLModel_LibraryClause, DOMMixin):
-    def __init__(self, libraryNode: Iir, symbols: Iterable[Name]):
+    def __init__(self, libraryNode: Iir, symbols: Iterable[Symbol]):
         super().__init__(symbols)
         DOMMixin.__init__(self, libraryNode)
 
 
 @export
 class UseClause(VHDLModel_UseClause, DOMMixin):
-    def __init__(self, useNode: Iir, symbols: Iterable[Name]):
+    def __init__(self, useNode: Iir, symbols: Iterable[Symbol]):
         super().__init__(symbols)
         DOMMixin.__init__(self, useNode)
 
@@ -103,7 +97,7 @@ class UseClause(VHDLModel_UseClause, DOMMixin):
 
 @export
 class ContextReference(VHDLModel_ContextReference, DOMMixin):
-    def __init__(self, contextNode: Iir, symbols: Iterable[Name]):
+    def __init__(self, contextNode: Iir, symbols: Iterable[Symbol]):
         super().__init__(symbols)
         DOMMixin.__init__(self, contextNode)
 
@@ -269,7 +263,7 @@ class PackageInstantiation(VHDLModel_PackageInstantiation, DOMMixin):
         self,
         node: Iir,
         identifier: str,
-        uninstantiatedPackageName: Name,
+        uninstantiatedPackageName: Symbol,
         #        genericItems: List[GenericInterfaceItem] = None,
         documentation: str = None,
     ):
@@ -296,7 +290,7 @@ class Context(VHDLModel_Context, DOMMixin):
         self,
         node: Iir,
         identifier: str,
-        references: Iterable[ContextUnion] = None,
+        references: Iterable[VHDLModel_ContextUnion] = None,
         documentation: str = None,
     ):
         super().__init__(identifier, references, documentation)

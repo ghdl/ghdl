@@ -34,13 +34,11 @@ from typing import List
 
 from pyTooling.Decorators import export
 
-from pyVHDLModel.SyntaxModel import (
-    Attribute as VHDLModel_Attribute,
-    AttributeSpecification as VHDLModel_AttributeSpecification,
-    Name,
-    SubtypeOrSymbol,
-    EntityClass,
-)
+from pyVHDLModel import Name
+from pyVHDLModel.Symbol import Symbol
+from pyVHDLModel.Declaration import EntityClass, Attribute as VHDLModel_Attribute
+from pyVHDLModel.Declaration import AttributeSpecification as VHDLModel_AttributeSpecification
+
 from pyGHDL.libghdl import utils
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
@@ -54,7 +52,7 @@ from pyGHDL.dom.Symbol import SimpleSubtypeSymbol
 
 @export
 class Attribute(VHDLModel_Attribute, DOMMixin):
-    def __init__(self, node: Iir, identifier: str, subtype: SubtypeOrSymbol, documentation: str = None):
+    def __init__(self, node: Iir, identifier: str, subtype: Symbol, documentation: str = None):
         super().__init__(identifier, subtype, documentation)
         DOMMixin.__init__(self, node)
 

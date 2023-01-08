@@ -107,9 +107,10 @@ class Display(Designs):
 class CompileOrder(Designs):
     def test_Encoder(self):
         design = Design()
-        design.LoadStdLibrary()
-        design.LoadIEEELibrary()
-        for lib, file in self._encoderFiles:
+        design.LoadDefaultLibraries()
+        t1 = time.perf_counter()
+        for lib, file in self._stopwatchFiles:
+        # for lib, file in self._encoderFiles:
             library = design.GetLibrary(lib)
             document = Document(self._sourceDirectory / file)
             design.AddDocument(document, library)

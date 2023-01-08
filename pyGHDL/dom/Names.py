@@ -34,17 +34,16 @@ from typing import List
 
 from pyTooling.Decorators import export
 
-from pyVHDLModel.SyntaxModel import (
-    SimpleName as VHDLModel_SimpleName,
-    ParenthesisName as VHDLModel_ParenthesisName,
-    IndexedName as VHDLModel_IndexedName,
-    SlicedName as VHDLModel_SlicedName,
-    SelectedName as VHDLModel_SelectedName,
-    AttributeName as VHDLModel_AttributeName,
-    AllName as VHDLModel_AllName,
-    OpenName as VHDLModel_OpenName,
-    Name,
-)
+from pyVHDLModel.Name import Name
+from pyVHDLModel.Name import SimpleName as VHDLModel_SimpleName
+from pyVHDLModel.Name import ParenthesisName as VHDLModel_ParenthesisName
+from pyVHDLModel.Name import IndexedName as VHDLModel_IndexedName
+from pyVHDLModel.Name import SlicedName as VHDLModel_SlicedName
+from pyVHDLModel.Name import SelectedName as VHDLModel_SelectedName
+from pyVHDLModel.Name import AttributeName as VHDLModel_AttributeName
+from pyVHDLModel.Name import AllName as VHDLModel_AllName
+from pyVHDLModel.Name import OpenName as VHDLModel_OpenName
+
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.dom import DOMMixin
 

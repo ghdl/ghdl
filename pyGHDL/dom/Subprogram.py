@@ -34,13 +34,10 @@ from typing import List
 
 from pyTooling.Decorators import export
 
-from pyVHDLModel.SyntaxModel import (
-    Function as VHDLModel_Function,
-    Procedure as VHDLModel_Procedure,
-    SubtypeOrSymbol,
-    GenericInterfaceItem,
-    ParameterInterfaceItem,
-)
+from pyVHDLModel.Symbol import Symbol
+from pyVHDLModel.Interface import GenericInterfaceItem, ParameterInterfaceItem
+from pyVHDLModel.Subprogram import Procedure as VHDLModel_Procedure, Function as VHDLModel_Function
+
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin
@@ -54,7 +51,7 @@ class Function(VHDLModel_Function, DOMMixin):
         self,
         node: Iir,
         functionName: str,
-        returnType: SubtypeOrSymbol,
+        returnType: Symbol,
         genericItems: List[GenericInterfaceItem] = None,
         parameterItems: List[ParameterInterfaceItem] = None,
         documentation: str = None,

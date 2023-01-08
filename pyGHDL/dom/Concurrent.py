@@ -34,44 +34,19 @@ from typing import Iterable
 
 from pyTooling.Decorators import export
 
-from pyGHDL.dom.Range import Range
-from pyGHDL.dom.Symbol import (
-    ArchitectureSymbol,
-    EntityInstantiationSymbol,
-    ComponentInstantiationSymbol,
-    ConfigurationInstantiationSymbol,
-)
-from pyVHDLModel.SyntaxModel import (
-    GenericAssociationItem as VHDLModel_GenericAssociationItem,
-    PortAssociationItem as VHDLModel_PortAssociationItem,
-    ParameterAssociationItem as VHDLModel_ParameterAssociationItem,
-    ComponentInstantiation as VHDLModel_ComponentInstantiation,
-    EntityInstantiation as VHDLModel_EntityInstantiation,
-    ConfigurationInstantiation as VHDLModel_ConfigurationInstantiation,
-    ConcurrentBlockStatement as VHDLModel_ConcurrentBlockStatement,
-    ProcessStatement as VHDLModel_ProcessStatement,
-    IfGenerateBranch as VHDLModel_IfGenerateBranch,
-    ElsifGenerateBranch as VHDLModel_ElsifGenerateBranch,
-    ElseGenerateBranch as VHDLModel_ElseGenerateBranch,
-    IfGenerateStatement as VHDLModel_IfGenerateStatement,
-    IndexedGenerateChoice as VHDLModel_IndexedGenerateChoice,
-    RangedGenerateChoice as VHDLModel_RangedGenerateChoice,
-    OthersGenerateCase as VHDLModel_OthersGenerateCase,
-    GenerateCase as VHDLModel_GenerateCase,
-    CaseGenerateStatement as VHDLModel_CaseGenerateStatement,
-    ForGenerateStatement as VHDLModel_ForGenerateStatement,
-    WaveformElement as VHDLModel_WaveformElement,
-    ConcurrentSimpleSignalAssignment as VHDLModel_ConcurrentSimpleSignalAssignment,
-    ConcurrentProcedureCall as VHDLModel_ConcurrentProcedureCall,
-    ConcurrentAssertStatement as VHDLModel_ConcurrentAssertStatement,
-    Name,
-    ConcurrentStatement,
-    SequentialStatement,
-    ExpressionUnion,
-    ConcurrentChoice,
-    ConcurrentCase,
-    AssociationItem,
-)
+from pyVHDLModel.Base import ExpressionUnion, WaveformElement as VHDLModel_WaveformElement
+from pyVHDLModel.Symbol import Symbol
+from pyVHDLModel.Association import AssociationItem, GenericAssociationItem as VHDLModel_GenericAssociationItem, \
+    PortAssociationItem as VHDLModel_PortAssociationItem, ParameterAssociationItem as VHDLModel_ParameterAssociationItem
+from pyVHDLModel.Sequential import SequentialStatement
+from pyVHDLModel.Concurrent import ComponentInstantiation as VHDLModel_ComponentInstantiation, EntityInstantiation as VHDLModel_EntityInstantiation, \
+    ConfigurationInstantiation as VHDLModel_ConfigurationInstantiation, ProcessStatement as VHDLModel_ProcessStatement, \
+    ConcurrentProcedureCall as VHDLModel_ConcurrentProcedureCall, ConcurrentBlockStatement as VHDLModel_ConcurrentBlockStatement, \
+    IfGenerateBranch as VHDLModel_IfGenerateBranch, ElsifGenerateBranch as VHDLModel_ElsifGenerateBranch, ElseGenerateBranch as VHDLModel_ElseGenerateBranch, \
+    IfGenerateStatement as VHDLModel_IfGenerateStatement, ConcurrentChoice, ConcurrentCase, CaseGenerateStatement as VHDLModel_CaseGenerateStatement, \
+    ForGenerateStatement as VHDLModel_ForGenerateStatement, ConcurrentSimpleSignalAssignment as VHDLModel_ConcurrentSimpleSignalAssignment, ConcurrentAssertStatement as VHDLModel_ConcurrentAssertStatement, \
+    ConcurrentStatement, GenerateCase as VHDLModel_GenerateCase, OthersGenerateCase as VHDLModel_OthersGenerateCase, \
+    IndexedGenerateChoice as VHDLModel_IndexedGenerateChoice, RangedGenerateChoice as VHDLModel_RangedGenerateChoice
 
 from pyGHDL.libghdl import Iir, utils
 from pyGHDL.libghdl.vhdl import nodes
@@ -82,25 +57,32 @@ from pyGHDL.dom._Utils import (
     GetComponentInstantiationSymbol,
     GetConfigurationInstantiationSymbol,
 )
+from pyGHDL.dom.Range import Range
+from pyGHDL.dom.Symbol import (
+    ArchitectureSymbol,
+    EntityInstantiationSymbol,
+    ComponentInstantiationSymbol,
+    ConfigurationInstantiationSymbol,
+)
 
 
 @export
 class GenericAssociationItem(VHDLModel_GenericAssociationItem, DOMMixin):
-    def __init__(self, associationNode: Iir, actual: ExpressionUnion, formal: Name = None):
+    def __init__(self, associationNode: Iir, actual: ExpressionUnion, formal: Symbol = None):
         super().__init__(actual, formal)
         DOMMixin.__init__(self, associationNode)
 
 
 @export
 class PortAssociationItem(VHDLModel_PortAssociationItem, DOMMixin):
-    def __init__(self, associationNode: Iir, actual: ExpressionUnion, formal: Name = None):
+    def __init__(self, associationNode: Iir, actual: ExpressionUnion, formal: Symbol = None):
         super().__init__(actual, formal)
         DOMMixin.__init__(self, associationNode)
 
 
 @export
 class ParameterAssociationItem(VHDLModel_ParameterAssociationItem, DOMMixin):
-    def __init__(self, associationNode: Iir, actual: ExpressionUnion, formal: Name = None):
+    def __init__(self, associationNode: Iir, actual: ExpressionUnion, formal: Symbol = None):
         super().__init__(actual, formal)
         DOMMixin.__init__(self, associationNode)
 
@@ -222,7 +204,7 @@ class ProcessStatement(VHDLModel_ProcessStatement, DOMMixin):
         label: str = None,
         declaredItems: Iterable = None,
         statements: Iterable[SequentialStatement] = None,
-        sensitivityList: Iterable[Name] = None,
+        sensitivityList: Iterable[Symbol] = None,
     ):
         super().__init__(label, declaredItems, statements, sensitivityList)
         DOMMixin.__init__(self, processNode)
@@ -642,7 +624,7 @@ class ConcurrentSimpleSignalAssignment(VHDLModel_ConcurrentSimpleSignalAssignmen
         self,
         assignmentNode: Iir,
         label: str,
-        target: Name,
+        target: Symbol,
         waveform: Iterable[WaveformElement],
     ):
         super().__init__(label, target, waveform)
@@ -668,7 +650,7 @@ class ConcurrentProcedureCall(VHDLModel_ConcurrentProcedureCall, DOMMixin):
         self,
         callNode: Iir,
         label: str,
-        procedureName: Name,
+        procedureName: Symbol,
         parameterMappings: Iterable,
     ):
         super().__init__(label, procedureName, parameterMappings)
