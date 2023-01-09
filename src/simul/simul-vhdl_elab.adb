@@ -157,12 +157,14 @@ package body Simul.Vhdl_Elab is
 
       if E.Kind in Mode_Signal_User then
          if E.Typ.W > 0 then
-            E.Nbr_Sources :=
-              new Nbr_Sources_Array'(0 .. E.Typ.W - 1 =>
-                                       (Nbr_Drivers => 0,
-                                        Nbr_Conns => 0,
-                                        Total => 0,
-                                        Last_Proc => No_Process_Index));
+            E.Nbr_Sources := new Nbr_Sources_Array (0 .. E.Typ.W - 1);
+            --  Avoid aggregate to avoid stack overflow.
+            for I in E.Nbr_Sources'Range loop
+               E.Nbr_Sources (I) := (Nbr_Drivers => 0,
+                                     Nbr_Conns => 0,
+                                     Total => 0,
+                                     Last_Proc => No_Process_Index);
+            end loop;
 
             Mark_Resolved_Signals
               (0, Get_Type (E.Decl), E.Typ, E.Nbr_Sources.all, False);

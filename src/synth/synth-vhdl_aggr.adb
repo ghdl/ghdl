@@ -132,6 +132,23 @@ package body Synth.Vhdl_Aggr is
       Nbr_Els : Nat32;
       Sub_Err : Boolean;
 
+      function Synth_Single_Value return Valtyp
+      is
+         Val : Valtyp;
+      begin
+         Val := Synth_Expression_With_Type (Syn_Inst, Value, El_Typ);
+         Val := Synth_Subtype_Conversion
+           (Syn_Inst, Val, El_Typ, False, Value);
+         if Val = No_Valtyp then
+            Err_P := True;
+         else
+            if Const_P and then not Is_Static (Val.Val) then
+               Const_P := False;
+            end if;
+         end if;
+         return Val;
+      end Synth_Single_Value;
+
       procedure Set_Elem (Pos : Nat32)
       is
          Sub_Const : Boolean;
@@ -142,18 +159,9 @@ package body Synth.Vhdl_Aggr is
 
          if Typ.Alast then
             pragma Assert (Dim = Strides'Last);
-            Val := Synth_Expression_With_Type (Syn_Inst, Value, El_Typ);
-            Val := Synth_Subtype_Conversion
-              (Syn_Inst, Val, El_Typ, False, Value);
+            Val := Synth_Single_Value;
             pragma Assert (Res (Pos) = No_Valtyp);
             Res (Pos) := Val;
-            if Val = No_Valtyp then
-               Err_P := True;
-            else
-               if Const_P and then not Is_Static (Val.Val) then
-                  Const_P := False;
-               end if;
-            end if;
          else
             Fill_Array_Aggregate
               (Syn_Inst, Value, Res, El_Typ, Pos, Strides, Dim + 1,
@@ -252,12 +260,23 @@ package body Synth.Vhdl_Aggr is
                   declare
                      Last_Pos : constant Nat32 :=
                        First_Pos + Nat32 (Bound.Len) * Stride;
+                     Is_Static : constant Boolean := Typ.Alast
+                       and then Get_Expr_Staticness (Value) >= Globally;
+                     Val : Valtyp;
                   begin
+                     if Is_Static then
+                        Val := Synth_Single_Value;
+                     end if;
                      while Pos < Last_Pos loop
                         if Res (Pos) = No_Valtyp then
                            --  FIXME: the check is not correct if there is
                            --   an array.
-                           Set_Elem (Pos);
+                           if Is_Static then
+                              Nbr_Els := Nbr_Els + 1;
+                              Res (Pos) := Val;
+                           else
+                              Set_Elem (Pos);
+                           end if;
                         end if;
                         Pos := Pos + Stride;
                      end loop;
