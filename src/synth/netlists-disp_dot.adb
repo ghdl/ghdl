@@ -105,7 +105,7 @@ package body Netlists.Disp_Dot is
       Put_Line (";");
    end Put_Net_Instance_To_Instance;
    
-   procedure Disp_Dot_Instance (Inst : Instance)
+   procedure Disp_Dot_Instance (Self : in Instance; Inst : Instance)
    is
       M : constant Module := Get_Module (Inst);
       N : Net;
@@ -119,7 +119,14 @@ package body Netlists.Disp_Dot is
          I := Get_First_Sink (N);
          while I /= No_Input loop
             D := Get_Input_Parent (I);
-            Put_Net_Instance_To_Instance(Inst, D, N);
+            if D = Self then
+               -- Hold on a second, this net goes straight to
+               -- an output port of the top module !
+               -- Do not write the net, the top module has
+               -- already done it.
+            else
+               Put_Net_Instance_To_Instance(Inst, D, N);
+            end if;
             I := Get_Next_Sink (I);
          end loop;
       end loop;
@@ -160,14 +167,14 @@ package body Netlists.Disp_Dot is
                Put_Net_Instance_To_Port(D, Idx, N);
                New_Line;
             end loop;
+            
+            for Inst of Instances (M) loop
+               Disp_Dot_Instance (Self, Inst);
+               New_Line;
+            end loop;
                         
          end if;
       end;
-
-      for Inst of Instances (M) loop
-         Disp_Dot_Instance (Inst);
-         New_Line;
-      end loop;
 
       Put_Line ("}");
    end Disp_Dot_Module;
