@@ -24,15 +24,15 @@ with Netlists.Iterators; use Netlists.Iterators;
 with Netlists.Dump; use Netlists.Dump;
 
 package body Netlists.Disp_Dot is
-   
+
    -- That can't be right.
    -- This must already be defined somewhere.
    type Port_Dir is (Port_Input, Port_Output);
-   
+
    Prefix_Port_Input  : constant String := "pi";
    Prefix_Port_Output : constant String := "po";
    Prefix_Instance    : constant String := "i";
-   
+
    procedure Put_Port (Dir : in Port_Dir; M : in Module; Idx : in Port_Nbr) is
    begin
       Put("  ");
@@ -49,12 +49,12 @@ package body Netlists.Disp_Dot is
       Put("""];");
       New_Line;
    end Put_Port;
-   
+
    procedure Put_Port_Input (M : in Module; Idx : in Port_Nbr) is
    begin
       Put_Port(Port_Input, M, Idx);
    end Put_Port_Input;
-   
+
    procedure Put_Instance (Inst : in Instance; M : in Module) is
    begin
       Put ("  " & Prefix_Instance);
@@ -63,13 +63,14 @@ package body Netlists.Disp_Dot is
       Dump_Name (Get_Module_Name (M));
       Put_Line ("""];");
    end Put_Instance;
-   
+
    procedure Put_Port_Output (M : in Module; Idx : in Port_Nbr) is
    begin
       Put_Port(Port_Output, M, Idx);
    end Put_Port_Output;
-   
-   procedure Put_Net_Port_To_Instance (Idx : in Port_Nbr; D : in Instance; N : in Net) is
+
+   procedure Put_Net_Port_To_Instance (Idx : in Port_Nbr;
+                                       D : in Instance; N : in Net) is
    begin
       Put ("  " & Prefix_Port_Input);
       Put_Uns32 (Uns32 (Idx - 1));
@@ -80,8 +81,9 @@ package body Netlists.Disp_Dot is
       Put ("""]");
       Put_Line (";");
    end Put_Net_Port_To_Instance;
-   
-   procedure Put_Net_Instance_To_Port (D : in Instance; Idx : in Port_Nbr; N : in Net) is
+
+   procedure Put_Net_Instance_To_Port (D : in Instance;
+                                       Idx : in Port_Nbr; N : in Net) is
    begin
       Put("  " & Prefix_Instance);
       Put_Uns32(Uns32(D));
@@ -92,8 +94,9 @@ package body Netlists.Disp_Dot is
       Put ("""]");
       Put_Line (";");
    end Put_Net_Instance_To_Port;
-   
-   procedure Put_Net_Instance_To_Instance (Inst, D : in Instance; N : in Net) is
+
+   procedure Put_Net_Instance_To_Instance (Inst, D : in Instance;
+                                           N : in Net) is
    begin
       Put ("  " & Prefix_Instance);
       Put_Uns32 (Uns32 (Inst));
@@ -104,7 +107,7 @@ package body Netlists.Disp_Dot is
       Put ("""]");
       Put_Line (";");
    end Put_Net_Instance_To_Instance;
-   
+
    procedure Disp_Dot_Instance (Self : in Instance; Inst : Instance)
    is
       M : constant Module := Get_Module (Inst);
@@ -142,7 +145,7 @@ package body Netlists.Disp_Dot is
       Put ("digraph m");
       Put_Uns32 (Uns32 (M));
       Put_Line (" {");
-      
+
       -- uh ?
       if Self = No_Instance then
          return;
@@ -161,7 +164,7 @@ package body Netlists.Disp_Dot is
          end loop;
          New_Line;
       end loop;
-      
+
       for Idx in 1 .. Get_Nbr_Outputs(M) loop
          Put_Port_Output(M, Idx);
          I := Get_Input(Self, Idx - 1);
@@ -170,7 +173,7 @@ package body Netlists.Disp_Dot is
          Put_Net_Instance_To_Port(D, Idx, N);
          New_Line;
       end loop;
-      
+
       for Inst of Instances (M) loop
          Disp_Dot_Instance (Self, Inst);
          New_Line;
