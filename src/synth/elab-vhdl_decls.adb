@@ -100,13 +100,19 @@ package body Elab.Vhdl_Decls is
          --  Note: Obj_Typ is bounded.
          Init.Typ := Obj_Typ;
       else
-         if Force_Init then
-            Current_Pool := Instance_Pool;
-            Init := Create_Value_Default (Obj_Typ);
-            Current_Pool := Expr_Pool'Access;
+         --  Always create shared variables, as they might be referenced
+         --  during elaboration.
+         if (Force_Init or else Get_Shared_Flag (Decl)) then
+            if Obj_Typ.Kind /= Type_Protected then
+               Current_Pool := Instance_Pool;
+               Init := Create_Value_Default (Obj_Typ);
+               Current_Pool := Expr_Pool'Access;
+            else
+               Init := Synth.Vhdl_Decls.Create_Protected_Object
+                 (Syn_Inst, Decl, Obj_Typ);
+               Init := Unshare (Init, Instance_Pool);
+            end if;
          else
-            --  For synthesis, no need to set a value for a shared variable
-            --  (they will certainly become a memory).
             Init := (Typ => Obj_Typ, Val => null);
          end if;
       end if;

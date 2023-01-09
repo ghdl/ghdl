@@ -411,27 +411,8 @@ package body Simul.Vhdl_Elab is
          when Iir_Kind_Disconnection_Specification =>
             Gather_Disconnection (Inst, Decl);
          when Iir_Kind_Variable_Declaration =>
-            pragma Assert (Get_Shared_Flag (Decl));
-            if Get_Default_Value (Decl) = Null_Node then
-               --  Elab doesn't set a value to variables with no default
-               --  value.
-               declare
-                  V : Valtyp;
-               begin
-                  V := Get_Value (Inst, Decl);
-                  pragma Assert (V.Val = null);
-                  Current_Pool := Global_Pool'Access;
-                  if V.Typ.Kind = Type_Protected then
-                     V := Synth.Vhdl_Decls.Create_Protected_Object
-                       (Inst, Decl, V.Typ);
-                  else
-                     V := Create_Value_Default (V.Typ);
-                  end if;
-                  Current_Pool := Expr_Pool'Access;
-                  Mutate_Object (Inst, Decl, V);
-               end;
-            end if;
-
+            --  Variables are always created.
+            null;
          when Iir_Kind_Constant_Declaration
            | Iir_Kind_Non_Object_Alias_Declaration
            | Iir_Kind_Attribute_Declaration

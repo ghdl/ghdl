@@ -534,13 +534,14 @@ package body Synth.Vhdl_Decls is
       if Init.Typ.Kind = Type_Protected then
          Error_Msg_Synth (Syn_Inst, Decl, "protected type not supported");
          Set_Error (Syn_Inst);
-      else
-         if Init.Val = null then
-            Mark_Expr_Pool (Marker);
-            Init := Create_Value_Default (Init.Typ);
-            Init := Unshare (Init, Instance_Pool);
-            Release_Expr_Pool (Marker);
-         end if;
+         return;
+      end if;
+
+      if Init.Val = null then
+         Mark_Expr_Pool (Marker);
+         Init := Create_Value_Default (Init.Typ);
+         Init := Unshare (Init, Instance_Pool);
+         Release_Expr_Pool (Marker);
       end if;
 
       Val := Create_Var_Wire (Syn_Inst, Decl, Wire_Variable, Init);
