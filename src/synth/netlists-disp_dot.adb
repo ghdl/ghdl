@@ -124,6 +124,7 @@ package body Netlists.Disp_Dot is
                -- an output port of the top module !
                -- Do not write the net, the top module has
                -- already done it.
+               null;
             else
                Put_Net_Instance_To_Instance(Inst, D, N);
             end if;
@@ -133,6 +134,10 @@ package body Netlists.Disp_Dot is
    end Disp_Dot_Instance;
 
    procedure Disp_Dot_Module (M : Module) is
+      Self : constant Instance := Get_Self_Instance (M);
+      N : Net;
+      I : Input;
+      D : Instance;
    begin
       Put ("digraph m");
       Put_Uns32 (Uns32 (M));
@@ -144,40 +149,32 @@ package body Netlists.Disp_Dot is
       end if;
 
       --  Handle inputs and outputs.
-      declare
-         Self : constant Instance := Get_Self_Instance (M);
-         N : Net;
-         I : Input;
-         D : Instance;
-      begin
-         for Idx in 1 .. Get_Nbr_Inputs (M) loop
-            Put_Port_Input(M, Idx);
+      for Idx in 1 .. Get_Nbr_Inputs (M) loop
+         Put_Port_Input(M, Idx);
 
-            N := Get_Output (Self, Idx - 1);
-            I := Get_First_Sink (N);
-            while I /= No_Input loop
-               D := Get_Input_Parent (I);
-               Put_Net_Port_To_Instance(Idx, D, N);
-               I := Get_Next_Sink (I);
-            end loop;
-            New_Line;
+         N := Get_Output (Self, Idx - 1);
+         I := Get_First_Sink (N);
+         while I /= No_Input loop
+            D := Get_Input_Parent (I);
+            Put_Net_Port_To_Instance(Idx, D, N);
+            I := Get_Next_Sink (I);
          end loop;
-         
-         for Idx in 1 .. Get_Nbr_Outputs(M) loop
-            Put_Port_Output(M, Idx);
-            I := Get_Input(Self, Idx - 1);
-            N := Get_Driver(I);
-            D := Get_Net_Parent(N);
-            Put_Net_Instance_To_Port(D, Idx, N);
-            New_Line;
-         end loop;
-         
-         for Inst of Instances (M) loop
-            Disp_Dot_Instance (Self, Inst);
-            New_Line;
-         end loop;
-         
-      end;
+         New_Line;
+      end loop;
+      
+      for Idx in 1 .. Get_Nbr_Outputs(M) loop
+         Put_Port_Output(M, Idx);
+         I := Get_Input(Self, Idx - 1);
+         N := Get_Driver(I);
+         D := Get_Net_Parent(N);
+         Put_Net_Instance_To_Port(D, Idx, N);
+         New_Line;
+      end loop;
+      
+      for Inst of Instances (M) loop
+         Disp_Dot_Instance (Self, Inst);
+         New_Line;
+      end loop;
 
       Put_Line ("}");
    end Disp_Dot_Module;
