@@ -2108,7 +2108,8 @@ package body Synth.Vhdl_Stmts is
             pragma Assert (Form_Base = (Formal_Typ, null));
 
             if Inter_Kind = Iir_Kind_Interface_Constant_Declaration then
-               Act_Base := Synth_Expression (Caller_Inst, Actual);
+               Act_Base := Synth_Expression_With_Type
+                 (Caller_Inst, Actual, Form_Typ);
                Act_Typ := Act_Base.Typ;
                Act_Off := No_Value_Offsets;
                Act_Dyn := No_Dyn_Name;
