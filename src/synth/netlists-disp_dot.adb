@@ -155,8 +155,8 @@ package body Netlists.Disp_Dot is
             for Idx in 1 .. Get_Nbr_Outputs(M) loop
                Put_Port_Output(M, Idx);
                I := Get_Input(Self, Idx - 1);
-               D := Get_Input_Parent(I);
                N := Get_Driver(I);
+               D := Get_Net_Parent(N);
                Put_Net_Instance_To_Port(D, Idx, N);
                New_Line;
             end loop;
