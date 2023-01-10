@@ -27,8 +27,6 @@ with Synth.Vhdl_Decls;
 with Synth.Vhdl_Expr;
 with Trans_Analyzes;
 
-with Simul.Vhdl_Debug;
-
 package body Simul.Vhdl_Elab is
    procedure Gather_Processes_1 (Inst : Synth_Instance_Acc);
 
@@ -1007,8 +1005,6 @@ package body Simul.Vhdl_Elab is
       Processes_Table.Init;
       Signals_Table.Init;
       Drivers_Table.Init;
-
-      Simul.Vhdl_Debug.Init;
 
       --  Init Signals_Table.
       Signals_Table.Set_Last (Get_Nbr_Signal);

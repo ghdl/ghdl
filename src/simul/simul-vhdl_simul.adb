@@ -51,6 +51,8 @@ with Synth.Vhdl_Static_Proc;
 with Synth.Flags;
 with Synth.Ieee.Std_Logic_1164; use Synth.Ieee.Std_Logic_1164;
 
+with Simul.Vhdl_Debug;
+
 with Grt.Types; use Grt.Types;
 with Grt.Signals; use Grt.Signals;
 with Grt.Options;
@@ -3655,7 +3657,6 @@ package body Simul.Vhdl_Simul is
    --  Compute solver variables, allocate memory for quantities.
    procedure Create_Quantities
    is
-      use Grt.Analog_Solver;
       Num : Natural;
       Idx : Integer;
       Vec : F64_C_Arr_Ptr;
@@ -4039,6 +4040,7 @@ package body Simul.Vhdl_Simul is
       Grt.Errors.Set_Error_Stream (Grt.Stdio.stdout);
 
       Elab.Debugger.Error_Hook := Grt.Errors.Fatal_Error'Access;
+      Simul.Vhdl_Debug.Init;
 
       pragma Assert (Areapools.Is_Empty (Expr_Pool));
 
