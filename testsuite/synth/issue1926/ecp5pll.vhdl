@@ -59,7 +59,7 @@ architecture mix of ecp5pll is
   
   type T_secondary is record
     div            : natural;
-    freq_string    : string(0 to 9);
+    freq_string    : string(1 to 10);
     freq           : natural;
     phase          : natural;
     cphase         : natural;
@@ -74,8 +74,8 @@ architecture mix of ecp5pll is
     refclk_div     : natural;
     feedback_div   : natural;
     output_div     : natural;
-    fin_string     : string(0 to 9);
-    fout_string    : string(0 to 9);
+    fin_string     : string(1 to 10);
+    fout_string    : string(1 to 10);
     fout           : natural;
     fvco           : natural;
     primary_cphase : natural;
@@ -96,17 +96,17 @@ architecture mix of ecp5pll is
   function Hz2MHz_str(int: integer)
     return string is
       constant base    :  natural := 10;
-      constant digit   :  string(0 to 9) := "0123456789";
-      variable temp    :  string(0 to 8) := (others => '0');
+      constant digit   :  string(1 to 10) := "0123456789";
+      variable temp    :  string(1 to 9) := (others => '0');
       variable power   :  natural := 1;
     begin
       -- convert integer to string
-      for i in temp'high downto 0 loop
-        temp(i) := digit(int/power mod base);
+      for i in temp'high downto 1 loop
+        temp(i) := digit((int/power mod base) + 1);
         power   := power * base;
       end loop;
       -- insert decimal point "123.456789"
-      return temp(0 to 2) & "." & temp(3 to temp'high);
+      return temp(1 to 3) & "." & temp(4 to temp'high);
     end Hz2MHz_str;
   
   function F_ecp5pll(request: T_clocks)
