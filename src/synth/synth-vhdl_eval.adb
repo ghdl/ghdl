@@ -1135,16 +1135,28 @@ package body Synth.Vhdl_Eval is
          when Iir_Predefined_Integer_Mod =>
             declare
                Res : Int64;
+               Div : Int64;
             begin
-               Res := Read_Discrete (Param1) mod Read_Discrete (Param2);
+               Div := Read_Discrete (Param2);
+               if Div = 0 then
+                  Error_Msg_Synth (Inst, Expr, "division by zero");
+                  return Null_Memtyp;
+               end if;
+               Res := Read_Discrete (Param1) mod Div;
                Check_Integer_Overflow (Inst, Res, Res_Typ, Expr);
                return Create_Memory_Discrete (Res, Res_Typ);
             end;
          when Iir_Predefined_Integer_Rem =>
             declare
                Res : Int64;
+               Div : Int64;
             begin
-               Res := Read_Discrete (Param1) rem Read_Discrete (Param2);
+               Div := Read_Discrete (Param2);
+               if Div = 0 then
+                  Error_Msg_Synth (Inst, Expr, "division by zero");
+                  return Null_Memtyp;
+               end if;
+               Res := Read_Discrete (Param1) rem Div;
                Check_Integer_Overflow (Inst, Res, Res_Typ, Expr);
                return Create_Memory_Discrete (Res, Res_Typ);
             end;
