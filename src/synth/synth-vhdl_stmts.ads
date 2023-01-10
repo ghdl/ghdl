@@ -51,7 +51,8 @@ package Synth.Vhdl_Stmts is
    procedure Synth_Subprogram_Associations (Subprg_Inst : Synth_Instance_Acc;
                                             Caller_Inst : Synth_Instance_Acc;
                                             Inter_Chain : Node;
-                                            Assoc_Chain : Node);
+                                            Assoc_Chain : Node;
+                                            Call_Loc : Node);
 
    --  Dynamic index for Synth_Assignment_Prefix.
    --  As dynamic is about dynamic (!) index, the index is a net.

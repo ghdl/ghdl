@@ -904,7 +904,7 @@ package body Simul.Vhdl_Simul is
             Sub_Inst := Synth_Subprogram_Call_Instance (Inst, Imp, Imp);
 
             Synth_Subprogram_Associations
-              (Sub_Inst, Inst, Inter_Chain, Assoc_Chain);
+              (Sub_Inst, Inst, Inter_Chain, Assoc_Chain, Call);
 
             Synth.Vhdl_Static_Proc.Synth_Static_Procedure
               (Sub_Inst, Imp, Call);
@@ -937,7 +937,7 @@ package body Simul.Vhdl_Simul is
             --  one!
             Set_Uninstantiated_Scope (Sub_Inst, Imp);
             Synth_Subprogram_Associations
-              (Sub_Inst, Inst, Inter_Chain, Assoc_Chain);
+              (Sub_Inst, Inst, Inter_Chain, Assoc_Chain, Call);
 
             Process.Instance := Sub_Inst;
             Synth.Vhdl_Decls.Synth_Declarations

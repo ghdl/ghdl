@@ -1867,7 +1867,8 @@ package body Synth.Vhdl_Stmts is
    function Synth_Subprogram_Association (Subprg_Inst : Synth_Instance_Acc;
                                           Caller_Inst : Synth_Instance_Acc;
                                           Inter : Node;
-                                          Assoc : Node) return Valtyp
+                                          Assoc : Node;
+                                          Loc : Node) return Valtyp
    is
       Inter_Type : constant Node := Get_Type (Inter);
       Inter_Typ : Type_Acc;
@@ -1919,7 +1920,7 @@ package body Synth.Vhdl_Stmts is
             return Val;
          end if;
          Val := Synth_Subtype_Conversion
-           (Subprg_Inst, Val, Inter_Typ, True, Assoc);
+           (Subprg_Inst, Val, Inter_Typ, True, Loc);
          if Val = No_Valtyp then
             return Val;
          end if;
@@ -2182,13 +2183,15 @@ package body Synth.Vhdl_Stmts is
 
    procedure Synth_Subprogram_Associations (Subprg_Inst : Synth_Instance_Acc;
                                             Caller_Inst : Synth_Instance_Acc;
-                                            Init : Association_Iterator_Init)
+                                            Init : Association_Iterator_Init;
+                                            Call_Loc : Node)
    is
       Inter : Node;
       Assoc : Node;
       Iterator : Association_Iterator;
       Marker : Mark_Type;
       Val : Valtyp;
+      Loc : Node;
    begin
       Set_Instance_Const (Subprg_Inst, True);
 
@@ -2207,8 +2210,13 @@ package body Synth.Vhdl_Stmts is
             Val := Synth_Individual_Association
               (Subprg_Inst, Caller_Inst, Inter, Assoc);
          else
+            if Assoc = Null_Node then
+               Loc := Call_Loc;
+            else
+               Loc := Assoc;
+            end if;
             Val := Synth_Subprogram_Association
-              (Subprg_Inst, Caller_Inst, Inter, Assoc);
+              (Subprg_Inst, Caller_Inst, Inter, Assoc, Loc);
             if Val /= No_Valtyp then
                Val := Unshare (Val, Instance_Pool);
             end if;
@@ -2227,12 +2235,13 @@ package body Synth.Vhdl_Stmts is
    procedure Synth_Subprogram_Associations (Subprg_Inst : Synth_Instance_Acc;
                                             Caller_Inst : Synth_Instance_Acc;
                                             Inter_Chain : Node;
-                                            Assoc_Chain : Node)
+                                            Assoc_Chain : Node;
+                                            Call_Loc : Node)
    is
       Init : Association_Iterator_Init;
    begin
       Init := Association_Iterator_Build (Inter_Chain, Assoc_Chain);
-      Synth_Subprogram_Associations (Subprg_Inst, Caller_Inst, Init);
+      Synth_Subprogram_Associations (Subprg_Inst, Caller_Inst, Init, Call_Loc);
    end Synth_Subprogram_Associations;
 
    --  Create wires for out and inout interface variables.
@@ -2642,7 +2651,7 @@ package body Synth.Vhdl_Stmts is
          Set_Extra (Sub_Inst, Syn_Inst, New_Internal_Name (Ctxt));
       end if;
 
-      Synth_Subprogram_Associations (Sub_Inst, Syn_Inst, Init);
+      Synth_Subprogram_Associations (Sub_Inst, Syn_Inst, Init, Call);
 
       if Is_Error (Sub_Inst) then
          Res := No_Valtyp;
@@ -2747,7 +2756,7 @@ package body Synth.Vhdl_Stmts is
          Set_Extra (Sub_Inst, Syn_Inst, New_Internal_Name (Ctxt));
       end if;
 
-      Synth_Subprogram_Associations (Sub_Inst, Syn_Inst, Init);
+      Synth_Subprogram_Associations (Sub_Inst, Syn_Inst, Init, Call);
 
       Synth.Vhdl_Static_Proc.Synth_Static_Procedure (Sub_Inst, Imp, Call);
 

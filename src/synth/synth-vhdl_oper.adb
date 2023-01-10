@@ -2209,7 +2209,7 @@ package body Synth.Vhdl_Oper is
       Subprg_Inst := Make_Instance (Syn_Inst, Imp);
 
       Synth_Subprogram_Associations
-        (Subprg_Inst, Syn_Inst, Inter_Chain, Assoc_Chain);
+        (Subprg_Inst, Syn_Inst, Inter_Chain, Assoc_Chain, Expr);
 
       if Is_Error (Subprg_Inst) then
          Res := No_Valtyp;

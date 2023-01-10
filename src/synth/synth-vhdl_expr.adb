@@ -516,12 +516,46 @@ package body Synth.Vhdl_Expr is
       end case;
    end Reshape_Value;
 
+   function Convert_Array_Indexes (Syn_Inst : Synth_Instance_Acc;
+                                   Utype : Type_Acc;
+                                   Stype : Type_Acc;
+                                   Loc : Node) return Type_Acc
+   is
+      Res_El : Type_Acc;
+   begin
+      if not Stype.Alast then
+         Res_El := Convert_Array_Indexes
+           (Syn_Inst, Utype.Uarr_El, Stype.Arr_El, Loc);
+      else
+         Res_El := Stype.Arr_El;
+      end if;
+
+      --  FIXME: we assume the index types are closely related...
+      if Stype.Abound.Len = 0
+        or else
+        (In_Range (Utype.Uarr_Idx.Drange, Int64 (Stype.Abound.Left))
+           and then
+           In_Range (Utype.Uarr_Idx.Drange, Int64 (Stype.Abound.Right)))
+      then
+         case Utype.Kind is
+            when Type_Unbounded_Array =>
+               return Create_Array_Type (Stype.Abound, Utype.Ulast, Res_El);
+            when Type_Unbounded_Vector =>
+               return Create_Vector_Type (Stype.Abound, Res_El);
+            when others =>
+               raise Internal_Error;
+         end case;
+      else
+         Error_Msg_Synth (Syn_Inst, Loc, "indexes out of range");
+         return Stype;
+      end if;
+   end Convert_Array_Indexes;
+
    function Synth_Subtype_Conversion (Syn_Inst : Synth_Instance_Acc;
                                       Vt : Valtyp;
                                       Dtype : Type_Acc;
                                       Bounds : Boolean;
-                                      Loc : Source.Syn_Src)
-                                     return Valtyp
+                                      Loc : Source.Syn_Src) return Valtyp
    is
       Vtype : constant Type_Acc := Vt.Typ;
    begin
@@ -637,20 +671,44 @@ package body Synth.Vhdl_Expr is
             end;
          when Type_Array_Unbounded =>
             pragma Assert (Vtype.Kind = Type_Array);
+            --  TODO: check element.
             return Vt;
          when Type_Unbounded_Array =>
             pragma Assert (Vtype.Kind = Type_Array);
-            return Vt;
+            declare
+               Rtype : Type_Acc;
+            begin
+               Rtype := Convert_Array_Indexes (Syn_Inst, Dtype, Vtype, Loc);
+               if Bounds then
+                  return Reshape_Value (Vt, Rtype);
+               else
+                  return Vt;
+               end if;
+            end;
          when Type_Unbounded_Vector =>
             pragma Assert (Vtype.Kind = Type_Vector
                              or else Vtype.Kind = Type_Slice);
-            return Vt;
+            if Vtype.Kind = Type_Slice then
+               --  Cannot be converted.
+               return Vt;
+            end if;
+            declare
+               Rtype : Type_Acc;
+            begin
+               Rtype := Convert_Array_Indexes (Syn_Inst, Dtype, Vtype, Loc);
+               if Bounds then
+                  return Reshape_Value (Vt, Rtype);
+               else
+                  return Vt;
+               end if;
+            end;
          when Type_Record =>
             pragma Assert (Vtype.Kind = Type_Record);
-            --  TODO: handle elements.
+            --  TODO: check elements.
             return Vt;
          when Type_Unbounded_Record =>
             pragma Assert (Vtype.Kind = Type_Record);
+            --  TODO: check elements
             return Vt;
          when Type_Access =>
             return Vt;
