@@ -41,7 +41,7 @@ from pyTooling.Graph import Vertex
 import pyVHDLModel
 import pyVHDLModel.DesignUnit
 from pyGHDL.dom.NonStandard import Design, Document
-from pyGHDL.dom.formatting.GraphML import DependencyGraphFormatter, HierarchyGraphFormatter
+from pyGHDL.dom.formatting.GraphML import DependencyGraphFormatter, HierarchyGraphFormatter, CompileOrderGraphFormatter
 from pyGHDL.dom.formatting.prettyprint import PrettyPrint
 from pyVHDLModel import DependencyGraphVertexKind, DependencyGraphEdgeKind, Library
 
@@ -147,6 +147,7 @@ class CompileOrder(Designs):
               default library load time: {:5.3f} us
               dependency analysis time:  {:5.3f} us
             Toplevel:                    {toplevel}
+            Compile order:\
             """
             ).format(
                 pyGHDLTime * 10**6,
@@ -155,6 +156,8 @@ class CompileOrder(Designs):
                 toplevel=", ".join(toplevel)
             )
         )
+        for i, vertex in enumerate(design.GetCompileOrder()):
+            print(f"  {i:<2}: {vertex.Value.Path.relative_to(Path.cwd())}")
 
         graphML = Path("dependencies.graphml")
         dependencyFormatter = DependencyGraphFormatter(design.DependencyGraph)
@@ -163,6 +166,10 @@ class CompileOrder(Designs):
         graphML = Path("hierarchy.graphml")
         hierarchyFormatter = HierarchyGraphFormatter(design.HierarchyGraph)
         hierarchyFormatter.WriteGraphML(graphML)
+
+        graphML = Path("compileorder.graphml")
+        compileOrderFormatter = CompileOrderGraphFormatter(design.CompileOrderGraph)
+        compileOrderFormatter.WriteGraphML(graphML)
 
         # PP = PrettyPrint()
         # buffer = []
