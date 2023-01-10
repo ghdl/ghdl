@@ -2622,6 +2622,13 @@ package body Vhdl.Prints is
                Disp_Package_Instantiation_Declaration (Ctxt, Decl);
             when Iir_Kind_Psl_Default_Clock =>
                Disp_Psl_Default_Clock (Ctxt, Decl);
+
+            when Iir_Kind_Suspend_State_Declaration =>
+               Start_Hbox (Ctxt);
+               Disp_Ident (Ctxt, Name_State);
+               Disp_Token (Ctxt, Tok_Semi_Colon);
+               Close_Hbox (Ctxt);
+
             when others =>
                Error_Kind ("disp_declaration_chain", Decl);
          end case;
@@ -3240,7 +3247,7 @@ package body Vhdl.Prints is
    begin
       Stmt := First;
       while Stmt /= Null_Iir loop
-         case Iir_Kinds_Sequential_Statement (Get_Kind (Stmt)) is
+         case Iir_Kinds_Sequential_Statement_Ext (Get_Kind (Stmt)) is
             when Iir_Kind_Null_Statement =>
                Start_Hbox (Ctxt);
                Disp_Label (Ctxt, Stmt);
@@ -3354,6 +3361,17 @@ package body Vhdl.Prints is
                end;
             when Iir_Kind_Break_Statement =>
                Disp_Break_Statement (Ctxt, Stmt);
+
+            when Iir_Kind_Suspend_State_Statement =>
+               Start_Hbox (Ctxt);
+               Disp_Ident (Ctxt, Name_State);
+               Disp_Token (Ctxt, Tok_Colon);
+               Start_Lit (Ctxt, Tok_Integer);
+               Disp_Int32 (Ctxt, Iir_Int32 (Get_Suspend_State_Index (Stmt)));
+               Close_Lit (Ctxt);
+               Disp_Token (Ctxt, Tok_Semi_Colon);
+               Close_Hbox (Ctxt);
+
          end case;
          Stmt := Get_Chain (Stmt);
       end loop;
@@ -4694,7 +4712,9 @@ package body Vhdl.Prints is
          when Iir_Kind_Selected_Name
            | Iir_Kind_Selected_Element
            | Iir_Kind_Indexed_Name
-           | Iir_Kind_Slice_Name =>
+           | Iir_Kind_Slice_Name
+           | Iir_Kind_Procedure_Body
+           | Iir_Kind_Function_Body =>
             Print (Ctxt, N);
          when Iir_Kind_Psl_Cover_Directive =>
             Disp_Psl_Cover_Directive (Ctxt, N);
