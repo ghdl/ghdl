@@ -1111,11 +1111,19 @@ package body Elab.Vhdl_Objtypes is
    is
       Res : Type_Acc;
    begin
-      if Typ = Base or else Typ.Is_Global = Global then
+      if Typ = Base then
          return Typ;
       end if;
-      Res := Raw_Copy (Typ, Pool);
-      Res.Is_Global := Global;
+      if Typ.Is_Global /= Global then
+         Res := Raw_Copy (Typ, Pool);
+         Res.Is_Global := Global;
+      elsif Global then
+         return Typ;
+      else
+         --  We want a local copy, but the original local type can have
+         --  global sub-elements.
+         Res := Typ;
+      end if;
 
       case Res.Kind is
          when Type_Bit
@@ -1138,7 +1146,9 @@ package body Elab.Vhdl_Objtypes is
            | Type_Unbounded_Record =>
             raise Internal_Error;
          when Type_Record =>
-            Res.Rec := Create_Rec_El_Array (Typ.Rec.Len, Pool);
+            if Typ /= Res then
+               Res.Rec := Create_Rec_El_Array (Typ.Rec.Len, Pool);
+            end if;
             for I in Typ.Rec.E'Range loop
                Res.Rec.E (I) := (Offs => Typ.Rec.E (I).Offs,
                                  Typ => Unshare_Type (Typ.Rec.E (I).Typ,
