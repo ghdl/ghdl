@@ -64,12 +64,8 @@ from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin, Position, DOMException
 from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode, GetPackageMemberSymbol, GetContextSymbol
-from pyGHDL.dom._Translate import (
-    GetGenericsFromChainedNodes,
-    GetPortsFromChainedNodes,
-    GetDeclaredItemsFromChainedNodes,
-    GetConcurrentStatementsFromChainedNodes,
-)
+from pyGHDL.dom._Translate import GetGenericsFromChainedNodes, GetPortsFromChainedNodes
+from pyGHDL.dom._Translate import GetDeclaredItemsFromChainedNodes, GetConcurrentStatementsFromChainedNodes
 from pyGHDL.dom.Symbol import EntitySymbol, ContextReferenceSymbol, LibraryReferenceSymbol, PackageSymbol
 
 

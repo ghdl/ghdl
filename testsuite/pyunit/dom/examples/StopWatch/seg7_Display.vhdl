@@ -79,7 +79,7 @@ begin
 	Dot   <= DotValues(to_index(Digit_Select, DotValues'high));
 
 	-- 7-segment encoder
-	enc: configuration seg7_Encoder
+	enc: component seg7_Encoder
 		port map (
 			BCDValue  => Digit,
 			Dot       => Dot,

@@ -33,10 +33,17 @@
 from time import perf_counter_ns as time_perf_counter
 from pathlib import Path
 from textwrap import dedent
+from typing import Dict, List
 from unittest import TestCase
 
-from pyGHDL.dom.NonStandard import Design, Document
+from pyTooling.Graph import Vertex
 
+import pyVHDLModel
+import pyVHDLModel.DesignUnit
+from pyGHDL.dom.NonStandard import Design, Document
+from pyGHDL.dom.formatting.GraphML import DependencyGraphFormatter, HierarchyGraphFormatter
+from pyGHDL.dom.formatting.prettyprint import PrettyPrint
+from pyVHDLModel import DependencyGraphVertexKind, DependencyGraphEdgeKind, Library
 
 if __name__ == "__main__":
     print("ERROR: you called a testcase declaration file as an executable module.")
@@ -108,6 +115,7 @@ class Display(Designs):
 
 class CompileOrder(Designs):
     def test_Encoder(self):
+        print()
         design = Design()
         design.LoadDefaultLibraries()
         t1 = time_perf_counter()
@@ -129,7 +137,8 @@ class CompileOrder(Designs):
         pyGHDLTime = time_perf_counter() - t1
 
         design.Analyze()
-        leafs = [leaf.Value.Identifier for leaf in design.DependencyGraph.IterateLeafs()]
+
+        toplevel = [root.Value.Identifier for root in design.HierarchyGraph.IterateRoots()]
 
         print(dedent("""
             pyGHDL:
@@ -143,11 +152,17 @@ class CompileOrder(Designs):
                 pyGHDLTime * 10**6,
                 design._loadDefaultLibraryTime * 10**6,
                 design._analyzeTime * 10**6,
-                toplevel=", ".join(leafs)
+                toplevel=", ".join(toplevel)
             )
         )
 
+        graphML = Path("dependencies.graphml")
+        dependencyFormatter = DependencyGraphFormatter(design.DependencyGraph)
+        dependencyFormatter.WriteGraphML(graphML)
 
+        graphML = Path("hierarchy.graphml")
+        hierarchyFormatter = HierarchyGraphFormatter(design.HierarchyGraph)
+        hierarchyFormatter.WriteGraphML(graphML)
 
         # PP = PrettyPrint()
         # buffer = []
