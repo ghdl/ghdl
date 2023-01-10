@@ -673,7 +673,7 @@ package body Vhdl.Sem_Inst is
                      begin
                         Set_Suspend_State_Chain (Res, Last);
                         Set_Suspend_State_Last (Decl, Res);
-                        if Decl = Null_Node then
+                        if Last = Null_Node then
                            Set_Suspend_State_Chain (Decl, Res);
                         end if;
                      end;
