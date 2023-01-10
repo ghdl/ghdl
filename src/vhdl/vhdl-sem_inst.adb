@@ -1253,8 +1253,11 @@ package body Vhdl.Sem_Inst is
             case Get_Kind (Inter_El) is
                when Iir_Kind_Interface_Type_Declaration =>
                   Inter := Get_Association_Interface (Inst_El, Inter_El);
+                  --  Redirect the interface type definition.
                   Set_Instance (Get_Type (Get_Origin (Inter)),
                                 Get_Actual_Type (Inst_El));
+                  --  And also the interface type declaration.
+                  Set_Instance (Get_Origin (Inter), Inter);
                   --  Implicit operators.
                   declare
                      Imp_Inter : Iir;
