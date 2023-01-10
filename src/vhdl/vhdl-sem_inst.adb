@@ -757,11 +757,12 @@ package body Vhdl.Sem_Inst is
                end if;
             when Iir_Kind_Interface_Type_Declaration =>
                declare
-                  Itype : Iir;
+                  Def : Iir;
                begin
-                  Itype := Instantiate_Iir (Get_Type (Inter), False);
-                  Set_Type (Res, Itype);
-                  Set_Interface_Type_Definition (Res, Itype);
+                  --  Also instantiate the interface type definition.
+                  Def := Instantiate_Iir (Get_Type (Inter), False);
+                  Set_Type (Res, Def);
+                  Set_Interface_Type_Definition (Res, Def);
                   Set_Is_Ref (Res, True);
                end;
             when Iir_Kinds_Interface_Subprogram_Declaration =>

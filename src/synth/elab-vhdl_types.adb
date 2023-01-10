@@ -775,6 +775,8 @@ package body Elab.Vhdl_Types is
                end if;
             when Iir_Kinds_Denoting_Name =>
                --  Already elaborated.
+               --  We cannot use the object type as it can be a subtype
+               --  deduced from the default value (for constants).
                Atype := Get_Type (Get_Named_Entity (Atype));
             when Iir_Kind_Subtype_Attribute =>
                declare

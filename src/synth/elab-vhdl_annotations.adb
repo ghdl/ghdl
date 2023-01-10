@@ -479,14 +479,15 @@ package body Elab.Vhdl_Annotations is
          Nbr_Objects => 0,
          Pkg_Slot => Invalid_Object_Slot,
          Pkg_Parent => null);
+      Set_Info (Decl, Package_Info);
 
       if Is_Inst or else not Is_Uninstantiated_Package (Decl) then
+         --  Allocate a slot in the parent block.
          Block_Info.Nbr_Objects := Block_Info.Nbr_Objects + 1;
+         --  Link with parent.
          Package_Info.Pkg_Slot := Block_Info.Nbr_Objects;
          Package_Info.Pkg_Parent := Block_Info;
       end if;
-
-      Set_Info (Decl, Package_Info);
 
       if Is_Inst then
          Annotate_Interface_List
