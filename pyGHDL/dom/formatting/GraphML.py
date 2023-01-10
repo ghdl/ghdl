@@ -111,10 +111,12 @@ class DependencyGraphFormatter:
             </graphml>
             """))
 
+
 class HierarchyGraphFormatter:
     _graph: Graph
 
     NODE_COLORS = {
+        DependencyGraphVertexKind.Document: "#999999",
         DependencyGraphVertexKind.Library: "#99ccff",
         DependencyGraphVertexKind.Package: "#ff9900",
         DependencyGraphVertexKind.PackageBody: "#ff9900",
@@ -124,6 +126,7 @@ class HierarchyGraphFormatter:
         DependencyGraphVertexKind.Configuration: "#ff9900",
     }
     EDGE_COLORS = {
+        DependencyGraphEdgeKind.Document: "#000000",
         DependencyGraphEdgeKind.LibraryClause: "#000000",
         DependencyGraphEdgeKind.UseClause: "#000000",
         DependencyGraphEdgeKind.ContextReference: "#000000",
@@ -172,6 +175,82 @@ class HierarchyGraphFormatter:
                         {prefix}<node id="{vertex.ID}">
                         {prefix}  <data key="nd1">{vertex.ID}</data>
                         {prefix}  <data key="nd2">{vertex.Value.Identifier}</data>
+                        {prefix}  <data key="nd3">{vertex[kind].name}</data>
+                        {prefix}  <data key="nd4">{color}</data>
+                        {prefix}</node>
+                    """).format(prefix="    ", vertex=vertex, color=self.NODE_COLORS[vertex["kind"]]))
+
+            edgeCount = 1
+            for edge in self._graph._edgesWithoutID:
+                file.write(dedent("""\
+                    {prefix}<edge id="e{edgeCount}" source="{edge.Source.ID}" target="{edge.Destination.ID}">
+                    {prefix}  <data key="ed3">{edge[kind].name}</data>
+                    {prefix}  <data key="ed4">{color}</data>
+                    {prefix}</edge>
+                """).format(prefix="    ", edgeCount=edgeCount, edge=edge, color=self.EDGE_COLORS[edge["kind"]]))
+                edgeCount += 1
+
+            file.write(dedent("""\
+              </graph>
+            </graphml>
+            """))
+
+
+class CompileOrderGraphFormatter:
+    _graph: Graph
+
+    NODE_COLORS = {
+        DependencyGraphVertexKind.Document: "#999999",
+        DependencyGraphVertexKind.Library: "#99ccff",
+        DependencyGraphVertexKind.Package: "#ff9900",
+        DependencyGraphVertexKind.PackageBody: "#ff9900",
+        DependencyGraphVertexKind.Context: "#cc99ff",
+        DependencyGraphVertexKind.Entity: "#ffff99",
+        DependencyGraphVertexKind.Architecture: "#ff99cc",
+        DependencyGraphVertexKind.Configuration: "#ff9900",
+    }
+    EDGE_COLORS = {
+        DependencyGraphEdgeKind.Document: "#000000",
+        DependencyGraphEdgeKind.LibraryClause: "#000000",
+        DependencyGraphEdgeKind.UseClause: "#000000",
+        DependencyGraphEdgeKind.ContextReference: "#000000",
+        DependencyGraphEdgeKind.EntityImplementation: "#99ccff",
+        DependencyGraphEdgeKind.PackageImplementation: "#99ccff",
+        DependencyGraphEdgeKind.EntityInstantiation: "#000000",
+        DependencyGraphEdgeKind.ComponentInstantiation: "#000000",
+        DependencyGraphEdgeKind.ConfigurationInstantiation: "#000000",
+    }
+
+    def __init__(self, graph: Graph):
+        self._graph = graph
+
+    def WriteGraphML(self, path: Path):
+        print(path.absolute())
+        with path.open("w") as file:
+            file.write(dedent(f"""\
+            <graphml xmlns="http://graphml.graphdrawing.org/xmlns"
+                     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                     xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">
+              <key id="nd1" for="node" attr.name="id" attr.type="string"/>
+              <key id="nd2" for="node" attr.name="value" attr.type="string"/>
+              <key id="nd3" for="node" attr.name="kind" attr.type="string"/>
+              <key id="nd4" for="node" attr.name="color" attr.type="string"/>
+
+              <key id="ed3" for="edge" attr.name="kind" attr.type="string"/>
+              <key id="ed4" for="edge" attr.name="color" attr.type="string"/>
+              <graph id="CompileOrderGraph"
+                     edgedefault="directed"
+                     parse.nodes="{len(self._graph._verticesWithID)}"
+                     parse.edges="{len(self._graph._edgesWithoutID)}"
+                     parse.order="nodesfirst">
+            """))
+
+            for vertex in self._graph._verticesWithID.values():
+                if vertex["kind"] is DependencyGraphVertexKind.Document:
+                    file.write(dedent("""\
+                        {prefix}<node id="{vertex.ID}">
+                        {prefix}  <data key="nd1">{vertex.ID}</data>
+                        {prefix}  <data key="nd2">{vertex.Value.Path.name}</data>
                         {prefix}  <data key="nd3">{vertex[kind].name}</data>
                         {prefix}  <data key="nd4">{color}</data>
                         {prefix}</node>
