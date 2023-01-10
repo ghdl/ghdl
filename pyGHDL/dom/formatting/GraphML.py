@@ -4,13 +4,14 @@ from typing import Dict, List
 
 from pyTooling.Graph import Graph, Vertex
 
-from pyVHDLModel import DependencyGraphVertexKind, DependencyGraphEdgeKind, Library as VHDLModel_Library
+from pyVHDLModel import DependencyGraphVertexKind, DependencyGraphEdgeKind, Library as VHDLModel_Library, Document as VHDLModel_Document
 
 
 class DependencyGraphFormatter:
     _graph: Graph
 
     NODE_COLORS = {
+        DependencyGraphVertexKind.Document: "#999999",
         DependencyGraphVertexKind.Library: "#99ccff",
         DependencyGraphVertexKind.Package: "#ff9900",
         DependencyGraphVertexKind.PackageBody: "#ff9900",
@@ -20,6 +21,7 @@ class DependencyGraphFormatter:
         DependencyGraphVertexKind.Configuration: "#ff9900",
     }
     EDGE_COLORS = {
+        DependencyGraphEdgeKind.Document: "#000000",
         DependencyGraphEdgeKind.LibraryClause: "#000000",
         DependencyGraphEdgeKind.UseClause: "#000000",
         DependencyGraphEdgeKind.ContextReference: "#000000",
@@ -56,6 +58,8 @@ class DependencyGraphFormatter:
             for vertex in self._graph._verticesWithID.values():
                 if isinstance(vertex.Value, VHDLModel_Library):
                     identifier = vertex.Value.NormalizedIdentifier
+                elif isinstance(vertex.Value, VHDLModel_Document):
+                    identifier = vertex.Value.DesignUnits[0].Library.NormalizedIdentifier
                 else:
                     identifier = vertex.Value.Library.NormalizedIdentifier
 
@@ -74,6 +78,8 @@ class DependencyGraphFormatter:
                 for vertex in vertices:
                     if vertex["kind"] is DependencyGraphVertexKind.Architecture:
                         value = f"{vertex.Value.Entity.Identifier}({vertex.Value.Identifier})"
+                    elif vertex["kind"] is DependencyGraphVertexKind.Document:
+                        value = f"{vertex.ID}"
                     else:
                         value = f"{vertex.Value.Identifier}"
                     file.write(dedent("""\
@@ -97,7 +103,7 @@ class DependencyGraphFormatter:
                     {prefix}  <data key="ed3">{edge[kind].name}</data>
                     {prefix}  <data key="ed4">{color}</data>
                     {prefix}</edge>
-                """).format(prefix="        ", edgeCount=edgeCount, edge=edge, color=self.EDGE_COLORS[edge["kind"]]))
+                """).format(prefix="    ", edgeCount=edgeCount, edge=edge, color=self.EDGE_COLORS[edge["kind"]]))
                 edgeCount += 1
 
             file.write(dedent("""\
