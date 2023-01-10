@@ -976,6 +976,7 @@ package body Simul.Vhdl_Simul is
    is
       use Synth.Vhdl_Expr;
       V_Aft : Std_Time;
+      V_Rej : Std_Time;
       Start : Boolean;
 
       procedure Execute_Signal_Assignment (Inst : Synth_Instance_Acc;
@@ -1013,7 +1014,7 @@ package body Simul.Vhdl_Simul is
                else
                   Mem := Null_Memtyp;
                end if;
-               Assign_Value_To_Signal (Sig, Start, V_Aft, V_Aft, Mem);
+               Assign_Value_To_Signal (Sig, Start, V_Rej, V_Aft, Mem);
 
             when Target_Memory =>
                raise Internal_Error;
@@ -1033,7 +1034,10 @@ package body Simul.Vhdl_Simul is
 
       Rej := Get_Reject_Time_Expression (Stmt);
       if Rej /= Null_Node then
-         raise Internal_Error;
+         Val := Synth_Expression (Inst, Rej);
+         V_Rej := Std_Time (Read_I64 (Val.Val.Mem));
+      else
+         V_Rej := 0;
       end if;
 
       Wf := Waveform;
@@ -1043,6 +1047,14 @@ package body Simul.Vhdl_Simul is
          if Aft /= Null_Node then
             Val := Synth_Expression (Inst, Aft);
             V_Aft := Std_Time (Read_I64 (Val.Val.Mem));
+            if Rej = Null_Node then
+               case Get_Delay_Mechanism (Stmt) is
+                  when Iir_Inertial_Delay =>
+                     V_Rej := V_Aft;
+                  when Iir_Transport_Delay =>
+                     V_Rej := 0;
+               end case;
+            end if;
          else
             V_Aft := 0;
          end if;
