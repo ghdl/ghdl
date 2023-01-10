@@ -2525,15 +2525,18 @@ package body Synth.Vhdl_Eval is
             end;
          when Iir_Predefined_Real_To_String_Digits =>
             declare
-               Str : Grt.To_Strings.String_Real_Format;
                Last : Natural;
                Val : Ghdl_F64;
                Dig : Ghdl_I32;
             begin
                Val := Ghdl_F64 (Read_Fp64 (Param1));
                Dig := Ghdl_I32 (Read_Discrete (Param2));
-               Grt.To_Strings.To_String (Str, Last, Val, Dig);
-               return String_To_Memtyp (Str (Str'First .. Last), Res_Typ);
+               declare
+                  Str : String (1 .. 320 + Natural (Dig));
+               begin
+                  Grt.To_Strings.To_String (Str, Last, Val, Dig);
+                  return String_To_Memtyp (Str (Str'First .. Last), Res_Typ);
+               end;
             end;
          when Iir_Predefined_Real_To_String_Format =>
             declare
