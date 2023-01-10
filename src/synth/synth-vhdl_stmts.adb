@@ -2690,8 +2690,10 @@ package body Synth.Vhdl_Stmts is
       Free_Instance (Sub_Inst);
 
       if Res /= No_Valtyp then
-         --  Protect return value from being deallocated
+         --  Protect return value from being deallocated.
+         --  The result can be a local variable.
          Res := Unshare (Res, Expr_Pool'Access);
+         --  The type can have been created in the function.
          Ret_Typ := Get_Subtype_Object (Syn_Inst, Get_Type (Imp));
          Res.Typ := Unshare_Type_Expr (Res.Typ, Ret_Typ);
       end if;

@@ -2255,8 +2255,11 @@ package body Synth.Vhdl_Oper is
 
                Mt := Eval_Static_Predefined_Function_Call
                  (Syn_Inst, Param1, Param2, Res_Typ, Expr);
+
                if Mt /= Null_Memtyp then
                   Res := Create_Value_Memtyp (Mt);
+                  --  Protect deallocation.
+                  Res.Typ := Unshare_Type_Expr (Res.Typ, Res_Typ);
                else
                   Res := No_Valtyp;
                end if;

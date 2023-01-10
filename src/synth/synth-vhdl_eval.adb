@@ -86,6 +86,8 @@ package body Synth.Vhdl_Eval is
          return Prev;
       end if;
 
+      --  TODO: should be directly allocated on the expr_pool to avoid
+      --  a copy.
       return Create_Vec_Type_By_Length (Prev.W, Prev.Arr_El);
    end Create_Res_Bound;
 
