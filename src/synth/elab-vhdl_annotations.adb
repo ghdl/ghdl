@@ -293,7 +293,8 @@ package body Elab.Vhdl_Annotations is
             Annotate_Protected_Type_Declaration (Block_Info, Def);
 
          when Iir_Kind_Incomplete_Type_Definition
-            | Iir_Kind_Subtype_Attribute =>
+            | Iir_Kind_Subtype_Attribute
+            | Iir_Kind_Element_Attribute =>
             null;
 
          when Iir_Kind_Foreign_Vector_Type_Definition =>

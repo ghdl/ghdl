@@ -83,24 +83,32 @@ package body Elab.Vhdl_Types is
       return (Get_Direction (Rng), Read_Fp64 (L), Read_Fp64 (R));
    end Synth_Float_Range_Expression;
 
-   function Synth_Array_Attribute (Syn_Inst : Synth_Instance_Acc; Attr : Node)
-                                  return Bound_Type
+   --  Return the type of the prefix for an array attribute.
+   function Synth_Array_Attribute_Prefix
+     (Syn_Inst : Synth_Instance_Acc; Attr : Node) return Type_Acc
    is
       Prefix_Name : constant Iir := Get_Prefix (Attr);
       Prefix : constant Iir := Strip_Denoting_Name (Prefix_Name);
-      Dim    : constant Natural :=
-        Vhdl.Evaluation.Eval_Attribute_Parameter_Or_1 (Attr);
-      Typ    : Type_Acc;
    begin
       --  Prefix is an array object or an array subtype.
       if Get_Kind (Prefix) = Iir_Kind_Subtype_Declaration then
          --  TODO: does this cover all the cases ?
-         Typ := Get_Subtype_Object (Syn_Inst, Get_Subtype_Indication (Prefix));
+         return Get_Subtype_Object (Syn_Inst, Get_Subtype_Indication (Prefix));
       else
          --  The expression cannot be fully executed as it can be a signal
          --  (whose evaluation is not allowed during elaboration).
-         Typ := Exec_Name_Subtype (Syn_Inst, Prefix_Name);
+         return Exec_Name_Subtype (Syn_Inst, Prefix);
       end if;
+   end Synth_Array_Attribute_Prefix;
+
+   function Synth_Array_Attribute (Syn_Inst : Synth_Instance_Acc; Attr : Node)
+                                  return Bound_Type
+   is
+      Dim    : constant Natural :=
+        Vhdl.Evaluation.Eval_Attribute_Parameter_Or_1 (Attr);
+      Typ    : Type_Acc;
+   begin
+      Typ := Synth_Array_Attribute_Prefix (Syn_Inst, Attr);
 
       for I in 2 .. Dim loop
          Typ := Typ.Arr_El;
@@ -795,6 +803,15 @@ package body Elab.Vhdl_Types is
                   Release_Expr_Pool (Marker);
                   pragma Assert (T.Is_Global);
                   return T;
+               end;
+            when Iir_Kind_Element_Attribute =>
+               declare
+                  T : Type_Acc;
+               begin
+                  T := Synth_Array_Attribute_Prefix (Syn_Inst, Atype);
+                  pragma Assert (T.Is_Global);
+                  --  Always a bounded array/vector.
+                  return T.Arr_El;
                end;
             when others =>
                Error_Kind ("elab_declaration_type", Atype);

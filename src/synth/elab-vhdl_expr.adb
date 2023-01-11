@@ -533,6 +533,14 @@ package body Elab.Vhdl_Expr is
                return Val.Typ;
             end;
 
+         when Iir_Kind_Element_Attribute =>
+            declare
+               Pfx : Type_Acc;
+            begin
+               Pfx := Exec_Name_Subtype (Syn_Inst, Get_Prefix (Name));
+               return Pfx.Arr_El;
+            end;
+
          when others =>
             Error_Kind ("exec_name_subtype", Name);
       end case;

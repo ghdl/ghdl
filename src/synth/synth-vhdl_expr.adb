@@ -717,7 +717,11 @@ package body Synth.Vhdl_Expr is
          when Type_Record =>
             pragma Assert (Vtype.Kind = Type_Record);
             --  TODO: check elements.
-            return Vt;
+            if Bounds then
+               return Reshape_Value (Vt, Dtype);
+            else
+               return Vt;
+            end if;
          when Type_Unbounded_Record =>
             pragma Assert (Vtype.Kind = Type_Record);
             --  TODO: check elements
