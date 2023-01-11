@@ -62,7 +62,6 @@ package body Elab.Vhdl_Files is
    begin
       pragma Assert (Vtyp.Kind = Type_Array);
       pragma Assert (Vtyp.Arr_El.Kind = Type_Discrete);
-      pragma Assert (Vtyp.Arr_El.W in 7 .. 8); --  Could be 7 in vhdl87
       pragma Assert (Vtyp.Alast);
       pragma Assert (Vtyp.Abound.Len = Res'Length);
 
