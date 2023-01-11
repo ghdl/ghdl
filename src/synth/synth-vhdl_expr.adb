@@ -1223,7 +1223,8 @@ package body Synth.Vhdl_Expr is
       Len : Uns32;
    begin
       if Pfx_Bnd.Dir /= Dir then
-         Error_Msg_Synth (Syn_Inst, Name, "direction mismatch in slice");
+         Error_Msg_Synth (Syn_Inst, Name,
+                          "slice direction doesn't match index direction");
          Off := (0, 0);
          if Dir = Dir_To then
             Res_Bnd := (Dir => Dir_To, Left => 1, Right => 0, Len => 0);
