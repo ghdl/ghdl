@@ -2169,10 +2169,7 @@ package body Simul.Vhdl_Simul is
         (0 .. Get_PSL_Nbr_States (Stmt) - 1 => False);
       Proc.States (0) := True;
 
-      Grt.Processes.Ghdl_Process_Register
-        (To_Instance_Acc (Inst), PSL_Process_Executer'Access,
-         null, System.Null_Address);
-
+      --  First the finalizers.
       case Get_Kind (Proc.Proc) is
          when Iir_Kind_Psl_Assert_Directive
            | Iir_Kind_Psl_Assume_Directive =>
@@ -2186,6 +2183,11 @@ package body Simul.Vhdl_Simul is
          when others =>
             null;
       end case;
+
+      --  Then the process, so that sensitivity can be added.
+      Grt.Processes.Ghdl_Process_Register
+        (To_Instance_Acc (Inst), PSL_Process_Executer'Access,
+         null, System.Null_Address);
    end Create_PSL;
 
    procedure Create_Processes
@@ -2264,6 +2266,7 @@ package body Simul.Vhdl_Simul is
                                        Done => False,
                                        States => null);
                Create_PSL (Processes_State (I), Processes_State (I)'Address);
+               Register_Sensitivity (I);
 
             when others =>
                Vhdl.Errors.Error_Kind ("create_processes", Proc);
