@@ -3408,7 +3408,7 @@ package body Synth.Vhdl_Stmts is
    is
       use Simple_IO;
       Rep_Expr : constant Node := Get_Report_Expression (Stmt);
-      Sev_Expr : constant Node := Get_Severity_Expression (Stmt);
+      Sev_Expr : Node;
       Marker : Mark_Type;
       Rep : Valtyp;
       Sev : Valtyp;
@@ -3425,31 +3425,38 @@ package body Synth.Vhdl_Stmts is
          end if;
          Strip_Const (Rep);
       end if;
-      if Sev_Expr /= Null_Node then
-         Sev := Synth_Expression (Syn_Inst, Sev_Expr);
-         if Sev = No_Valtyp then
-            Set_Error (Syn_Inst);
-            Release_Expr_Pool (Marker);
-            return;
-         end if;
-         Strip_Const (Sev);
-      end if;
 
-      if Sev = No_Valtyp then
-         case Get_Kind (Stmt) is
-            when Iir_Kind_Report_Statement
-              | Iir_Kind_Psl_Cover_Directive =>
-               Sev_V := Note_Severity;
-            when Iir_Kind_Assertion_Statement
-              | Iir_Kind_Concurrent_Assertion_Statement
-              | Iir_Kind_Psl_Assert_Directive
-              | Iir_Kind_Psl_Assume_Directive =>
-               Sev_V := Error_Severity;
-            when others =>
-               raise Internal_Error;
-         end case;
+      if Get_Kind (Stmt) /= Iir_Kind_Psl_Cover_Directive then
+         Sev_Expr := Get_Severity_Expression (Stmt);
+
+         if Sev_Expr /= Null_Node then
+            Sev := Synth_Expression (Syn_Inst, Sev_Expr);
+            if Sev = No_Valtyp then
+               Set_Error (Syn_Inst);
+               Release_Expr_Pool (Marker);
+               return;
+            end if;
+            Strip_Const (Sev);
+         end if;
+
+         if Sev = No_Valtyp then
+            case Get_Kind (Stmt) is
+               when Iir_Kind_Report_Statement
+                 | Iir_Kind_Psl_Cover_Directive =>
+                  Sev_V := Note_Severity;
+               when Iir_Kind_Assertion_Statement
+                 | Iir_Kind_Concurrent_Assertion_Statement
+                 | Iir_Kind_Psl_Assert_Directive
+                 | Iir_Kind_Psl_Assume_Directive =>
+                  Sev_V := Error_Severity;
+               when others =>
+                  raise Internal_Error;
+            end case;
+         else
+            Sev_V := Natural (Read_Discrete (Sev));
+         end if;
       else
-         Sev_V := Natural (Read_Discrete (Sev));
+         Sev_V := Note_Severity;
       end if;
 
       if Assertion_Report_Handler /= null then

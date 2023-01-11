@@ -1391,11 +1391,21 @@ package body Simul.Vhdl_Simul is
       Diag_C (":@");
       Diag_C_Now;
       Diag_C (":(");
-      if Get_Kind (Stmt) = Iir_Kind_Report_Statement then
-         Diag_C ("report");
-      else
-         Diag_C ("assert");
-      end if;
+      case Get_Kind (Stmt) is
+         when Iir_Kind_Report_Statement =>
+            Diag_C ("report");
+         when Iir_Kind_Assertion_Statement
+           | Iir_Kind_Concurrent_Assertion_Statement =>
+            Diag_C ("assert");
+         when Iir_Kind_Psl_Assert_Directive =>
+            Diag_C ("psl assertion");
+         when Iir_Kind_Psl_Assume_Directive =>
+            Diag_C ("psl assumption");
+         when Iir_Kind_Psl_Cover_Directive =>
+            Diag_C ("psl cover");
+         when others =>
+            raise Types.Internal_Error;
+      end case;
       Diag_C (' ');
       case Severity is
          when Note_Severity =>
