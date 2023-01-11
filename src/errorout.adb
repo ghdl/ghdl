@@ -214,6 +214,18 @@ package body Errorout is
       Report_Handler.Message (S (2 .. S'Last));
    end Output_Uns32;
 
+   procedure Output_Int32 (V : Int32)
+   is
+      S : constant String := Int32'Image (V);
+      F : Positive;
+   begin
+      F := 1;
+      if S (F) = ' ' then
+         F := 2;
+      end if;
+      Report_Handler.Message (S (F .. S'Last));
+   end Output_Int32;
+
    procedure Output_String8 (Str : String8_Len_Type) is
    begin
       Report_Handler.Message ("""");
@@ -348,7 +360,11 @@ package body Errorout is
                               raise Internal_Error;
                            end if;
                         when Earg_Int32 =>
-                           raise Internal_Error;
+                           if Format = 'v' then
+                              Output_Int32 (Arg.Val_Int32);
+                           else
+                              raise Internal_Error;
+                           end if;
                         when Earg_Lang_Kind =>
                            if Lang_Handlers (Arg.Kind) = null then
                               raise Internal_Error;

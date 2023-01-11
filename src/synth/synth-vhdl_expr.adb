@@ -817,9 +817,21 @@ package body Synth.Vhdl_Expr is
       end case;
    end Synth_Name;
 
-   procedure Bound_Error (Syn_Inst : Synth_Instance_Acc; Loc : Node) is
+   procedure Bound_Error (Syn_Inst : Synth_Instance_Acc;
+                          Loc : Node;
+                          Bnd : Bound_Type;
+                          Val : Int32) is
    begin
-      Error_Msg_Synth (Syn_Inst, Loc, "index not within bounds");
+      case Bnd.Dir is
+         when Dir_To =>
+            Error_Msg_Synth (Syn_Inst, Loc,
+                             "index (%v) out of bounds (%v to %v)",
+                             (+Val, +Bnd.Left, +Bnd.Right));
+         when Dir_Downto =>
+            Error_Msg_Synth (Syn_Inst, Loc,
+                             "index (%v) out of bounds (%v downto %v)",
+                             (+Val, +Bnd.Left, +Bnd.Right));
+      end case;
    end Bound_Error;
 
    --  Convert index IDX in PFX to an offset.
@@ -831,7 +843,7 @@ package body Synth.Vhdl_Expr is
       Res : Value_Offsets;
    begin
       if not In_Bounds (Bnd, Int32 (Idx)) then
-         Bound_Error (Syn_Inst, Loc);
+         Bound_Error (Syn_Inst, Loc, Bnd, Int32 (Idx));
          return (0, 0);
       end if;
 
@@ -928,7 +940,7 @@ package body Synth.Vhdl_Expr is
       if Is_Static_Val (Idx_Val.Val) then
          Idx := Get_Static_Discrete (Idx_Val);
          if not In_Bounds (Bnd, Int32 (Idx)) then
-            Bound_Error (Syn_Inst, Idx_Expr);
+            Bound_Error (Syn_Inst, Idx_Expr, Bnd, Int32 (Idx));
             Error := True;
          else
             Idx_Off := Index_To_Offset (Syn_Inst, Bnd, Idx, Idx_Expr);
@@ -1245,10 +1257,13 @@ package body Synth.Vhdl_Expr is
          Len := 0;
          Off := (0, 0);
       else
-         if not In_Bounds (Pfx_Bnd, Int32 (L))
-           or else not In_Bounds (Pfx_Bnd, Int32 (R))
-         then
-            Error_Msg_Synth (Syn_Inst, Expr, "index not within bounds");
+         if not In_Bounds (Pfx_Bnd, Int32 (L)) then
+            Bound_Error (Syn_Inst, Expr, Pfx_Bnd, Int32 (L));
+            Off := (0, 0);
+            return;
+         end if;
+         if not In_Bounds (Pfx_Bnd, Int32 (R)) then
+            Bound_Error (Syn_Inst, Expr, Pfx_Bnd, Int32 (R));
             Off := (0, 0);
             return;
          end if;
