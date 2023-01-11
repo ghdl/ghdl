@@ -31,20 +31,11 @@ with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 
 package Simul.Vhdl_Elab is
    procedure Gather_Processes (Top : Synth_Instance_Acc);
+   procedure Compute_Sources;
    procedure Elab_Processes;
 
    --  For the debugger.
    Top_Instance : Synth_Instance_Acc;
-
-   --  For each signals:
-   --  * drivers (process + area), sources
-   --  * sensitivity
-   --  * waveform assignments
-   --  * decomposition level: none, vectors, full.
-   --  * force/release
-   --  * need to track activity
-   --  * need to track events
-   procedure Elab_Drivers;
 
    --  Change the meaning of W (width) in T for simulation.
    procedure Convert_Type_Width (T : Type_Acc);

@@ -146,6 +146,7 @@ package body Ghdlsimul is
 
       Simul.Vhdl_Elab.Gather_Processes (Inst);
       Simul.Vhdl_Elab.Elab_Processes;
+      Simul.Vhdl_Elab.Compute_Sources;
 
       if Errorout.Nbr_Errors > 0 then
          raise Errorout.Compilation_Error;

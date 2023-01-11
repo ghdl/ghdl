@@ -516,6 +516,7 @@ package body Simul.Vhdl_Elab is
    procedure Gather_Process_Drivers
      (Inst : Synth_Instance_Acc; Proc : Node; Proc_Idx : Process_Index_Type)
    is
+      Prev_Instance_Pool : constant Areapools.Areapool_Acc := Instance_Pool;
       Driver_List: Iir_List;
       It : List_Iterator;
       El : Node;
@@ -534,7 +535,7 @@ package body Simul.Vhdl_Elab is
 
          Next (It);
       end loop;
-      Instance_Pool := null;
+      Instance_Pool := Prev_Instance_Pool;
       Trans_Analyzes.Free_Drivers_List (Driver_List);
    end Gather_Process_Drivers;
 
@@ -542,6 +543,7 @@ package body Simul.Vhdl_Elab is
                                  Proc_Idx : Process_Index_Type;
                                  List : Iir_List)
    is
+      Prev_Instance_Pool : constant Areapools.Areapool_Acc := Instance_Pool;
       It : List_Iterator;
       El : Node;
       Sig : Sub_Signal_Type;
@@ -573,7 +575,7 @@ package body Simul.Vhdl_Elab is
          Next (It);
       end loop;
 
-      Instance_Pool := null;
+      Instance_Pool := Prev_Instance_Pool;
    end Gather_Sensitivity;
 
    procedure Gather_Process_Sensitivity
@@ -890,9 +892,8 @@ package body Simul.Vhdl_Elab is
                end if;
             end;
          when Iir_Kinds_Concurrent_Signal_Assignment
-           | Iir_Kind_Concurrent_Assertion_Statement
-           | Iir_Kind_Concurrent_Procedure_Call_Statement
-           | Iir_Kinds_Process_Statement =>
+            | Iir_Kind_Concurrent_Assertion_Statement
+            | Iir_Kind_Concurrent_Procedure_Call_Statement =>
             Processes_Table.Append ((Proc => Stmt,
                                      Inst => Inst,
                                      Drivers => No_Driver_Index,
@@ -901,6 +902,13 @@ package body Simul.Vhdl_Elab is
             Gather_Process_Drivers (Inst, Stmt, Processes_Table.Last);
             pragma Assert (Is_Expr_Pool_Empty);
             Gather_Process_Sensitivity (Inst, Stmt, Processes_Table.Last);
+         when Iir_Kinds_Process_Statement =>
+            Processes_Table.Append ((Proc => Stmt,
+                                     Inst => Inst,
+                                     Drivers => No_Driver_Index,
+                                     Sensitivity => No_Sensitivity_Index));
+            --  Do not yet compute drivers or sensitivity as it may depends
+            --  on declarations within the process.
          when Iir_Kind_Psl_Default_Clock
            | Iir_Kind_Psl_Declaration
            | Iir_Kind_Psl_Endpoint_Declaration =>
@@ -1036,7 +1044,10 @@ package body Simul.Vhdl_Elab is
 
       --  For the debugger.
       Top_Instance := Top;
+   end Gather_Processes;
 
+   procedure Compute_Sources is
+   begin
       --  Compute total number of sources.
       for I in Signals_Table.First .. Signals_Table.Last loop
          declare
@@ -1073,7 +1084,7 @@ package body Simul.Vhdl_Elab is
             end if;
          end;
       end loop;
-   end Gather_Processes;
+   end Compute_Sources;
 
    procedure Elab_Processes
    is
@@ -1093,13 +1104,14 @@ package body Simul.Vhdl_Elab is
             Synth.Vhdl_Decls.Synth_Declarations
               (Proc_Inst, Get_Declaration_Chain (Proc), True);
             exit when Is_Error (Proc_Inst);
+
+            pragma Assert (Is_Expr_Pool_Empty);
+            Gather_Process_Drivers (Proc_Inst, Proc, I);
+            pragma Assert (Is_Expr_Pool_Empty);
+            Gather_Process_Sensitivity (Proc_Inst, Proc, I);
+
          end if;
       end loop;
       Instance_Pool := null;
    end Elab_Processes;
-
-   procedure Elab_Drivers is
-   begin
-      null;
-   end Elab_Drivers;
 end Simul.Vhdl_Elab;
