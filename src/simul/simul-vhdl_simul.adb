@@ -3544,6 +3544,7 @@ package body Simul.Vhdl_Simul is
                elsif Get_Expr_Staticness (Get_Actual (C.Assoc)) >= Globally
                then
                   Mark_Expr_Pool (Marker);
+                  Instance_Pool := Process_Pool'Access;
                   Val := Synth.Vhdl_Expr.Synth_Expression_With_Type
                     (C.Assoc_Inst, Get_Actual (C.Assoc), C.Formal.Typ);
                   Val := Strip_Alias_Const (Val);
@@ -3552,6 +3553,7 @@ package body Simul.Vhdl_Simul is
                                 C.Formal.Offs.Net_Off),
                      C.Formal.Typ,
                      Val.Val.Mem);
+                  Instance_Pool := null;
                   Release_Expr_Pool (Marker);
                end if;
             end if;
