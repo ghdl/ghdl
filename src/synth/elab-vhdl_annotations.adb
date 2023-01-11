@@ -310,6 +310,7 @@ package body Elab.Vhdl_Annotations is
      (Block_Info: Sim_Info_Acc; Decl_Chain: Iir)
    is
       El: Iir;
+      Ind : Iir;
    begin
       El := Decl_Chain;
       while El /= Null_Iir loop
@@ -318,10 +319,21 @@ package body Elab.Vhdl_Annotations is
               | Iir_Kind_Interface_Variable_Declaration
               | Iir_Kind_Interface_Constant_Declaration
               | Iir_Kind_Interface_File_Declaration =>
-               if not Get_Is_Ref (El) then
-                  Annotate_Anonymous_Type_Definition
-                    (Block_Info, Get_Type (El));
+               Ind := Get_Subtype_Indication (El);
+               if Ind /= Null_Iir then
+                  case Get_Kind (Ind) is
+                     when Iir_Kinds_Subtype_Definition =>
+                        Annotate_Type_Definition (Block_Info, Ind);
+                     when Iir_Kinds_Denoting_Name
+                       | Iir_Kind_Element_Attribute
+                       | Iir_Kind_Subtype_Attribute =>
+                        null;
+                     when others =>
+                        Error_Kind ("annotate_interface_list_subtype(1)", Ind);
+                  end case;
                end if;
+               --  Annotate_Anonymous_Type_Definition
+               --   (Block_Info, Get_Type (El));
             when others =>
                Error_Kind ("annotate_interface_list_subtype", El);
          end case;
