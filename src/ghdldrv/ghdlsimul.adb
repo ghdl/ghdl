@@ -27,12 +27,14 @@ with Ghdllocal; use Ghdllocal;
 with Flags;
 with Errorout;
 with Simple_IO;
+with Options;
 
 with Vhdl.Nodes; use Vhdl.Nodes;
 with Vhdl.Std_Package;
 with Vhdl.Sem;
 with Vhdl.Canon;
 with Vhdl.Configuration;
+with Vhdl.Utils;
 
 with Grt.Options;
 with Grt.Types;
@@ -79,8 +81,29 @@ package body Ghdlsimul is
       Config : Node;
       Lib_Unit : Node;
       Inst : Synth_Instance_Acc;
+      Top : Node;
    begin
       Common_Compile_Elab (Cmd_Name, Args, True, Opt_Arg, Config);
+
+      --  For compatibility, also handle '-gGEN=VAL' options after the
+      --  top-level unit.
+      --  Handle --expect-failure
+      for I in Opt_Arg .. Args'Last loop
+         declare
+            Arg : String renames Args (I).all;
+            Res : Options.Option_State;
+            pragma Unreferenced (Res);
+         begin
+            if Arg'Length > 3
+              and then Arg (Arg'First + 1) = 'g'
+              and then Is_Generic_Override_Option (Arg)
+            then
+               Res := Decode_Generic_Override_Option (Arg);
+            elsif Arg = "--expect-failure" then
+               Flag_Expect_Failure := True;
+            end if;
+         end;
+      end loop;
 
       --  If all design units are loaded, late semantic checks can be
       --  performed.
@@ -99,18 +122,22 @@ package body Ghdlsimul is
          end if;
       end;
 
-      for I in Opt_Arg .. Args'Last loop
-         if Args (I).all = "--expect-failure" then
-            Flag_Expect_Failure := True;
-            exit;
-         end if;
-      end loop;
-
       Synth.Flags.Flag_Simulation := True;
       Synth.Errors.Debug_Handler := Elab.Debugger.Debug_Error'Access;
 
       Lib_Unit := Get_Library_Unit (Config);
       pragma Assert (Get_Kind (Lib_Unit) /= Iir_Kind_Foreign_Module);
+
+      --  Generic overriding.
+      Top := Vhdl.Utils.Get_Entity_From_Configuration (Config);
+      Vhdl.Configuration.Apply_Generic_Override (Top);
+      Vhdl.Configuration.Check_Entity_Declaration_Top (Top, False);
+
+      if Errorout.Nbr_Errors > 0 then
+         raise Errorout.Compilation_Error;
+      end if;
+
+      --  The elaboration.
       Inst := Elab.Vhdl_Insts.Elab_Top_Unit (Lib_Unit);
 
       if Errorout.Nbr_Errors > 0 then
@@ -190,6 +217,8 @@ package body Ghdlsimul is
 
    function Decode_Option (Option : String) return Boolean
    is
+      Res : Options.Option_State;
+      pragma Unreferenced (Res);
    begin
       if Option = "--debug" or Option = "-g" then
          Elab.Debugger.Flag_Debug_Enable := True;
@@ -199,6 +228,11 @@ package body Ghdlsimul is
          Simul.Vhdl_Simul.Flag_Interractive := True;
       elsif Option = "-ge" then
          Simul.Vhdl_Simul.Flag_Debug_Elab := True;
+      elsif Option'Last > 3
+        and then Option (Option'First + 1) = 'g'
+        and then Is_Generic_Override_Option (Option)
+      then
+         Res := Decode_Generic_Override_Option (Option);
       else
          return False;
       end if;
