@@ -264,11 +264,15 @@ package body Elab.Vhdl_Insts is
       end if;
    end Elab_Package_Instantiation;
 
+   procedure Elab_Dependencies (Parent_Inst : Synth_Instance_Acc; Unit : Node);
+
    procedure Elab_Configuration_Declaration (Parent_Inst : Synth_Instance_Acc;
                                              Conf : Node)
    is
       Syn_Inst : Synth_Instance_Acc;
    begin
+      Elab_Dependencies (Root_Instance, Get_Design_Unit (Conf));
+
       Syn_Inst := Create_Package_Instance (Parent_Inst, Conf);
       Elab_Declarations (Syn_Inst, Get_Declaration_Chain (Conf));
    end Elab_Configuration_Declaration;
