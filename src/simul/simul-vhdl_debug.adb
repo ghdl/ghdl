@@ -754,16 +754,22 @@ package body Simul.Vhdl_Debug is
    procedure Run_Proc (Line : String)
    is
       Delta_Time : Std_Time;
-      P : Positive;
+      P, L : Positive;
    begin
       P := Skip_Blanks (Line);
       if P <= Line'Last then
-         Delta_Time := Grt.Options.Parse_Time (Line (P .. Line'Last));
-         if Delta_Time = -1 then
-            return;
+         L := Get_Word (Line, P);
+         if Line (P .. L) = "-s" then
+            Simul.Vhdl_Simul.Break_Step := True;
+         else
+            Delta_Time := Grt.Options.Parse_Time (Line (P .. L));
+            if Delta_Time = -1 then
+               --  Error, ignore command.
+               return;
+            end if;
+            Simul.Vhdl_Simul.Break_Time := Current_Time + Delta_Time;
+            Grt.Processes.Next_Time := Current_Time + Delta_Time;
          end if;
-         Simul.Vhdl_Simul.Break_Time := Current_Time + Delta_Time;
-         Grt.Processes.Next_Time := Current_Time + Delta_Time;
       end if;
 
       Elab.Debugger.Prepare_Continue;

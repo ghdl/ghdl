@@ -33,6 +33,7 @@ with Grt.Signals;
 
 package Simul.Vhdl_Simul is
    Break_Time : Std_Time;
+   Break_Step : Boolean;
 
    Trace_Simulation : Boolean := False;
 

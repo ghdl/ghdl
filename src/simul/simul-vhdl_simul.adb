@@ -4040,6 +4040,7 @@ package body Simul.Vhdl_Simul is
       Status : Integer;
    begin
       Break_Time := Std_Time'Last;
+      Break_Step := False;
 
       Grt.Options.Progname := To_Ghdl_C_String (Ghdl_Progname'Address);
       Grt.Errors.Set_Error_Stream (Grt.Stdio.stdout);
@@ -4092,11 +4093,13 @@ package body Simul.Vhdl_Simul is
               or Status = Grt.Errors.Run_Stop
               or Status = Grt.Errors.Run_Finished;
 
-            if Current_Time >= Break_Time
-              and then Break_Time /= Std_Time'Last
+            if Break_Step
+              or else (Current_Time >= Break_Time
+                         and then Break_Time /= Std_Time'Last)
             then
                --  No not break anymore on time,
                Break_Time := Std_Time'Last;
+               Break_Step := False;
                Elab.Debugger.Debug_Time;
             end if;
 
