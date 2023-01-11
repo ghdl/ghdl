@@ -343,7 +343,7 @@ package body Simul.Vhdl_Debug is
          return;
       end if;
       Put_Addr (Sig.all'Address);
-      Put (' ');
+      Put (':');
       Ev := Sig.Event_List;
       while Ev /= null loop
          Ctxt := Get_Rti_Context (Ev.Proc);
@@ -546,7 +546,7 @@ package body Simul.Vhdl_Debug is
       end if;
 
       if Opts.Actions and then S.Sig /= null then
-         Put_Line ("actions:");
+         Put_Line ("actions (for each scalar):");
          Info_Signal_Action ((S.Typ, S.Sig), Get_Type (S.Decl));
       end if;
    end Info_Signal_Opts;
@@ -791,14 +791,14 @@ package body Simul.Vhdl_Debug is
    begin
       Fn := Skip_Blanks (Line, Line'First);
       if Fn > Line'Last then
-         Put ("missing trace name");
+         Put_Line ("missing trace name");
          return;
       end if;
       Ln := Get_Word (Line, Fn);
 
       Fv := Skip_Blanks (Line, Ln + 1);
       if Fv > Line'Last then
-         Put ("missing on/off/0/1");
+         Put_Line ("missing on/off/0/1");
          return;
       end if;
       Lv := Get_Word (Line, Fv);
@@ -807,7 +807,7 @@ package body Simul.Vhdl_Debug is
       elsif Line (Fv .. Lv) = "off" or Line (Fv .. Lv) = "0" then
          State := False;
       else
-         Put ("expect on/off/0/1");
+         Put_Line ("expect on/off/0/1");
          return;
       end if;
 
