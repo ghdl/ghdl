@@ -1289,10 +1289,16 @@ package body Vhdl.Sem_Scopes is
    begin
       El := Get_Concurrent_Statement_Chain (Parent);
       while El /= Null_Iir loop
-         Label := Get_Label (El);
-         if Label /= Null_Identifier then
-            Add_Name (El, Get_Identifier (El), False);
-         end if;
+         case Get_Kind (El) is
+            when Iir_Kind_Psl_Default_Clock =>
+               --  Not a statement with label.
+               null;
+            when others =>
+               Label := Get_Label (El);
+               if Label /= Null_Identifier then
+                  Add_Name (El, Get_Identifier (El), False);
+               end if;
+         end case;
          El := Get_Chain (El);
       end loop;
    end Add_Declarations_Of_Concurrent_Statement;
