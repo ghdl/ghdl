@@ -1305,7 +1305,7 @@ package body Synth.Vhdl_Eval is
                end if;
                if Vhdl_Std > Vhdl_87 then
                   Bnd := Elab.Vhdl_Types.Create_Bounds_From_Length
-                    (Get_Uarray_Index (Res_Typ).Drange, L_Len + R_Len);
+                    (Res_Typ.Uarr_Idx.Drange, L_Len + R_Len);
                else
                   --  LRM87 7.2.3
                   --  [...], unless the left operand is a null array, in which
@@ -1331,6 +1331,11 @@ package body Synth.Vhdl_Eval is
                      when Dir_Downto =>
                         Bnd.Right := Bnd.Left - Int32 (L_Len + R_Len - 1);
                   end case;
+                  if not In_Range (Res_Typ.Uarr_Idx.Drange, Int64 (Bnd.Right))
+                  then
+                     Error_Msg_Synth (Inst, Expr, "bound not in range");
+                     return Null_Memtyp;
+                  end if;
                end if;
                El_Typ := Unshare_Type_Expr (Le_Typ,
                                             Get_Array_Element (Res_Typ));
