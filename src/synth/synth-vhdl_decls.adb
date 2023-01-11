@@ -420,6 +420,7 @@ package body Synth.Vhdl_Decls is
             when Iir_Kind_Type_Declaration
               | Iir_Kind_Anonymous_Type_Declaration
               | Iir_Kind_Subtype_Declaration
+              | Iir_Kind_Constant_Declaration
               | Iir_Kind_Variable_Declaration
               | Iir_Kind_File_Declaration =>
                Elab.Vhdl_Decls.Elab_Declaration
