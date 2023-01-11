@@ -55,6 +55,9 @@ package Synth.Ieee.Std_Logic_1164 is
 
    function To_Bit (S : Std_Ulogic; Xmap : Bit) return Bit;
 
+   type Table_Bit_Log_Type is array (Bit) of Std_Ulogic;
+   Bit2log_Table : Table_Bit_Log_Type := ('0', '1');
+
    type Table_1d is array (Std_Ulogic) of Std_Ulogic;
    type Table_2d is array (Std_Ulogic, Std_Ulogic) of Std_Ulogic;
 

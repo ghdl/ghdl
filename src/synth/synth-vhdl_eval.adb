@@ -2756,6 +2756,15 @@ package body Synth.Vhdl_Eval is
                B := Map_X01Z (B);
                return Create_Memory_U8 (Std_Ulogic'Pos (B), Res_Typ);
             end;
+         when Iir_Predefined_Ieee_1164_To_X01_Bit_Log =>
+            declare
+               B : Bit;
+               S : Std_Ulogic;
+            begin
+               B := Read_Bit (Param1.Mem, 0);
+               S := Bit2log_Table (B);
+               return Create_Memory_U8 (Std_Ulogic'Pos (S), Res_Typ);
+            end;
          when Iir_Predefined_Ieee_1164_To_X01_Slv
             | Iir_Predefined_Ieee_Numeric_Std_To_X01_Uns
             | Iir_Predefined_Ieee_Numeric_Std_To_X01_Sgn =>

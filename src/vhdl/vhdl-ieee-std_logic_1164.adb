@@ -41,6 +41,13 @@ package body Vhdl.Ieee.Std_Logic_1164 is
       return Base_Type = Std_Package.Bit_Vector_Type_Definition;
    end Is_Bitvec_Parameter;
 
+   function Is_Bit_Parameter (Inter : Iir) return Boolean
+   is
+      Base_Type : constant Iir := Get_Base_Type (Get_Type (Inter));
+   begin
+      return Base_Type = Std_Package.Bit_Type_Definition;
+   end Is_Bit_Parameter;
+
    function Is_Integer_Parameter (Inter : Iir) return Boolean is
    begin
       return (Get_Base_Type (Get_Type (Inter))
@@ -219,6 +226,24 @@ package body Vhdl.Ieee.Std_Logic_1164 is
       return True;
    end Is_Bitvec_Function;
 
+   --  Return True iff the profile of FUNC is: (l : bit)
+   function Is_Bit_Function (Func : Iir) return Boolean
+   is
+      Inter : constant Iir := Get_Interface_Declaration_Chain (Func);
+   begin
+      if Get_Implicit_Definition (Func) /= Iir_Predefined_None then
+         return False;
+      end if;
+      if Inter = Null_Iir or else not Is_Bit_Parameter (Inter) then
+         return False;
+      end if;
+      if Get_Chain (Inter) /= Null_Iir then
+         return False;
+      end if;
+
+      return True;
+   end Is_Bit_Function;
+
    procedure Extract_Declarations (Pkg : Iir_Package_Declaration)
    is
       Error : exception;
@@ -382,6 +407,8 @@ package body Vhdl.Ieee.Std_Logic_1164 is
                      Predefined := Iir_Predefined_Ieee_1164_To_X01_Slv;
                   elsif Is_Scalar_Function (Decl) then
                      Predefined := Iir_Predefined_Ieee_1164_To_X01_Log;
+                  elsif Is_Bit_Function (Decl) then
+                     Predefined := Iir_Predefined_Ieee_1164_To_X01_Bit_Log;
                   end if;
                when Name_To_UX01 =>
                   if Is_Vector_Function (Decl) then
