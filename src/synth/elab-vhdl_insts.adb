@@ -429,7 +429,9 @@ package body Elab.Vhdl_Insts is
             end case;
          end if;
 
-         Res := Unshare (Res, Global_Pool'Access);
+         if Res /= null then
+            Res := Unshare (Res, Global_Pool'Access);
+         end if;
          Release_Expr_Pool (Marker);
          return Res;
       else
@@ -454,7 +456,9 @@ package body Elab.Vhdl_Insts is
          if Get_Whole_Association_Flag (Assoc) then
             Inter_Typ := Elab_Port_Association_Type
               (Sub_Inst, Syn_Inst, Inter, Assoc);
-            Create_Signal (Sub_Inst, Inter, Inter_Typ);
+            if Inter_Typ /= null then
+               Create_Signal (Sub_Inst, Inter, Inter_Typ);
+            end if;
          end if;
          Next_Association_Interface (Assoc, Assoc_Inter);
       end loop;
