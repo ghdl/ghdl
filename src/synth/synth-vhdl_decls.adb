@@ -28,6 +28,7 @@ with Netlists.Gates;
 
 with Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
+with Vhdl.Sem_Inst;
 with Vhdl.Std_Package;
 
 with Elab.Memtype;
@@ -399,7 +400,8 @@ package body Synth.Vhdl_Decls is
       use Elab.Memtype;
       Prev_Instance_Pool : constant Areapools.Areapool_Acc := Instance_Pool;
       Decl_Type : constant Node := Get_Type (Var);
-      Bod : constant Node := Get_Protected_Type_Body (Decl_Type);
+      Bod : constant Node :=
+        Vhdl.Sem_Inst.Get_Protected_Type_Body_Origin (Decl_Type);
       Obj_Inst : Synth_Instance_Acc;
       Obj_Hand : Protected_Index;
       Mem : Memory_Ptr;
@@ -408,7 +410,11 @@ package body Synth.Vhdl_Decls is
       Res : Valtyp;
       Last_Type : Node;
    begin
-      Parent := Get_Instance_By_Scope (Inst, Get_Parent_Scope (Bod));
+      --  Get instance scope.  Use the protected type definition as the
+      --  instance for the body is the same, but the body can be shared in
+      --  within an instantiated package.
+      Parent := Get_Instance_By_Scope (Inst, Get_Parent_Scope (Decl_Type));
+
       Obj_Inst := Make_Elab_Instance (Parent, Var, Bod, Null_Node);
       Obj_Hand := Elab.Vhdl_Prot.Create (Obj_Inst);
 

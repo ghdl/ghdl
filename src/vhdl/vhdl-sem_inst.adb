@@ -664,17 +664,20 @@ package body Vhdl.Sem_Inst is
 
                when Field_Suspend_State_Chain =>
                   if Kind = Iir_Kind_Suspend_State_Declaration then
+                     --  Clear the fields for suspend state variable.
                      Set_Suspend_State_Chain (Res, Null_Node);
                      Set_Suspend_State_Last (Res, Null_Node);
                   else
+                     --  Link for suspend state statement.
                      declare
                         Decl : constant Node := Get_Suspend_State_Decl (Res);
                         Last : constant Node := Get_Suspend_State_Last (Decl);
                      begin
-                        Set_Suspend_State_Chain (Res, Last);
                         Set_Suspend_State_Last (Decl, Res);
                         if Last = Null_Node then
                            Set_Suspend_State_Chain (Decl, Res);
+                        else
+                           Set_Suspend_State_Chain (Last, Res);
                         end if;
                      end;
                   end if;
@@ -1482,4 +1485,18 @@ package body Vhdl.Sem_Inst is
          return Get_Subprogram_Body_Origin (Orig);
       end if;
    end Get_Subprogram_Body_Origin;
+
+   function Get_Protected_Type_Body_Origin (Atype : Iir) return Iir
+   is
+      Res : constant Iir := Get_Protected_Type_Body (Atype);
+      Orig : Iir;
+   begin
+      if Res /= Null_Iir then
+         return Res;
+      else
+         Orig := Get_Origin (Atype);
+         pragma Assert (Orig /= Null_Iir);
+         return Get_Protected_Type_Body_Origin (Orig);
+      end if;
+   end Get_Protected_Type_Body_Origin;
 end Vhdl.Sem_Inst;

@@ -53,4 +53,8 @@ package Vhdl.Sem_Inst is
    --  instantiated nodes have no bodies.
    --  See comment about Get/Set_Subprogram_body in vhdl-nodes.
    function Get_Subprogram_Body_Origin (Spec : Iir) return Iir;
+
+   --  Likewise for protected type bodies.
+   --  ATYPE is the protected type definition.
+   function Get_Protected_Type_Body_Origin (Atype : Iir) return Iir;
 end Vhdl.Sem_Inst;
