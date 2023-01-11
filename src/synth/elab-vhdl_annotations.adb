@@ -284,7 +284,8 @@ package body Elab.Vhdl_Annotations is
          when Iir_Kind_Access_Subtype_Definition =>
             Create_Object_Info (Block_Info, Def, Kind_Type);
 
-         when Iir_Kind_File_Type_Definition =>
+         when Iir_Kind_File_Type_Definition
+            | Iir_Kind_File_Subtype_Definition =>
             --  For the File type.
             Create_Object_Info (Block_Info, Def, Kind_Type);
 

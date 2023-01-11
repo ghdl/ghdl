@@ -700,6 +700,13 @@ package body Elab.Vhdl_Types is
                  (Syn_Inst, Get_Designated_Type (Atype));
                return Create_Access_Type (Acc_Typ);
             end;
+         when Iir_Kind_File_Subtype_Definition =>
+            --  Same as parent.
+            declare
+               Parent_Type : constant Node := Get_Parent_Type (Atype);
+            begin
+               return Get_Subtype_Object (Syn_Inst, Parent_Type);
+            end;
          when Iir_Kind_Record_Type_Definition
            | Iir_Kind_Array_Type_Definition =>
             return Get_Subtype_Object (Syn_Inst, Atype);
