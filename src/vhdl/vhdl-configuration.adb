@@ -888,10 +888,11 @@ package body Vhdl.Configuration is
       while El /= Null_Iir loop
          case Iir_Kinds_Interface_Declaration (Get_Kind (El)) is
             when Iir_Kinds_Interface_Object_Declaration =>
-               if Get_Default_Value (El) = Null_Iir then
-                  if not (Enable_Override and Allow_Generic_Override (El)) then
-                     Error (El, "(%n has no default value)", +El);
-                  end if;
+               if Get_Default_Value (El) = Null_Iir
+                 and then not Is_Fully_Constrained_Type (Get_Type (El))
+                 and then not (Enable_Override and Allow_Generic_Override (El))
+               then
+                  Error (El, "(%n has no default value)", +El);
                end if;
             when Iir_Kinds_Interface_Subprogram_Declaration =>
                Error (El, "(%n is a subprogram generic)", +El);
