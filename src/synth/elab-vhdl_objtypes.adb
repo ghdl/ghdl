@@ -569,6 +569,9 @@ package body Elab.Vhdl_Objtypes is
       end case;
       if Len < 0 then
          return 0;
+      elsif Len > Int64 (Uns32'Last) then
+         --  Truncate very large lengths, such objects should not exist.
+         return Uns32'Last;
       else
          return Uns32 (Len);
       end if;
