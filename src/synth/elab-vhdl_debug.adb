@@ -561,7 +561,8 @@ package body Elab.Vhdl_Debug is
               | Iir_Kind_Simple_Simultaneous_Statement =>
                null;
             when Iir_Kind_Psl_Default_Clock
-              | Iir_Kind_Psl_Assert_Directive =>
+              | Iir_Kind_Psl_Assert_Directive
+              | Iir_Kind_Psl_Endpoint_Declaration =>
                null;
             when Iir_Kinds_Process_Statement =>
                --  Note: processes are not elaborated.

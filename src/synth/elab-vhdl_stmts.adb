@@ -281,7 +281,8 @@ package body Elab.Vhdl_Stmts is
            | Iir_Kind_Psl_Assume_Directive
            | Iir_Kind_Psl_Assert_Directive
            | Iir_Kind_Psl_Cover_Directive
-           | Iir_Kind_Psl_Declaration =>
+           | Iir_Kind_Psl_Declaration
+           | Iir_Kind_Psl_Endpoint_Declaration =>
             null;
          when Iir_Kind_Component_Instantiation_Statement =>
             if Is_Component_Instantiation (Stmt) then

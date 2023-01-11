@@ -617,10 +617,11 @@ package body Elab.Vhdl_Insts is
            | Iir_Kind_Psl_Assume_Directive
            | Iir_Kind_Psl_Cover_Directive
            | Iir_Kind_Psl_Assert_Directive
+           | Iir_Kind_Psl_Endpoint_Declaration
            | Iir_Kind_Concurrent_Assertion_Statement =>
             null;
          when others =>
-            Error_Kind ("elab_recurse_instantiations_Statement", Stmt);
+            Error_Kind ("elab_recurse_instantiations_statement", Stmt);
       end case;
    end Elab_Recurse_Instantiations_Statement;
 

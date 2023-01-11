@@ -902,7 +902,8 @@ package body Simul.Vhdl_Elab is
             pragma Assert (Is_Expr_Pool_Empty);
             Gather_Process_Sensitivity (Inst, Stmt, Processes_Table.Last);
          when Iir_Kind_Psl_Default_Clock
-            | Iir_Kind_Psl_Declaration =>
+           | Iir_Kind_Psl_Declaration
+           | Iir_Kind_Psl_Endpoint_Declaration =>
             null;
          when Iir_Kind_Psl_Assert_Directive
            | Iir_Kind_Psl_Assume_Directive
