@@ -76,6 +76,7 @@ package body Vhdl.Sem_Assocs is
                   Free_Iir (Old);
                   Set_Index_Constraint_List
                     (N_Actual, List_To_Flist (Indexes));
+                  Set_Has_Array_Constraint_Flag (N_Actual, True);
                   Actual := N_Actual;
                end;
             end if;
