@@ -118,7 +118,8 @@ package body Elab.Vhdl_Objtypes is
    begin
       case Arr.Kind is
          when Type_Vector
-           | Type_Array =>
+            | Type_Array
+            | Type_Array_Unbounded =>
             return Arr.Alast;
          when Type_Unbounded_Vector =>
             return True;

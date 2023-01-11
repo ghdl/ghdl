@@ -266,32 +266,29 @@ package body Elab.Vhdl_Types is
       return Typ;
    end Synth_Array_Type_Definition;
 
-   function Synth_Record_Type_Definition
-     (Syn_Inst : Synth_Instance_Acc; Def : Node) return Type_Acc
+   function Synth_Record_Type_Definition (Syn_Inst : Synth_Instance_Acc;
+                                          Parent_Typ : Type_Acc;
+                                          Def : Node) return Type_Acc
    is
-      Is_Subtype : constant Boolean :=
-        Get_Kind (Def) = Iir_Kind_Record_Subtype_Definition;
       El_List : constant Node_Flist := Get_Elements_Declaration_List (Def);
       Rec_Els : Rec_El_Array_Acc;
       El      : Node;
       El_Type : Node;
       El_Typ  : Type_Acc;
 
-      Parent_Typ : Type_Acc;
       Parent_Els : Rec_El_Array_Acc;
    begin
       Rec_Els := Create_Rec_El_Array
         (Iir_Index32 (Get_Nbr_Elements (El_List)));
 
-      if Is_Subtype then
-         Parent_Typ := Get_Subtype_Object (Syn_Inst, Get_Parent_Type (Def));
+      if Parent_Typ /= null then
          Parent_Els := Parent_Typ.Rec;
       end if;
 
       for I in Flist_First .. Flist_Last (El_List) loop
          El := Get_Nth_Element (El_List, I);
          El_Type := Get_Type (El);
-         if Is_Subtype then
+         if Parent_Typ /= null then
             if Get_Kind (El) = Iir_Kind_Record_Element_Constraint then
                El_Typ := Synth_Subtype_Indication_If_Anonymous
                  (Syn_Inst, El_Type);
@@ -449,7 +446,7 @@ package body Elab.Vhdl_Types is
          when Iir_Kind_File_Type_Definition =>
             Typ := Synth_File_Type_Definition (Syn_Inst, Def);
          when Iir_Kind_Record_Type_Definition =>
-            Typ := Synth_Record_Type_Definition (Syn_Inst, Def);
+            Typ := Synth_Record_Type_Definition (Syn_Inst, null, Def);
          when Iir_Kind_Protected_Type_Declaration =>
             --  TODO...
             Elab.Vhdl_Decls.Elab_Declarations
@@ -558,18 +555,19 @@ package body Elab.Vhdl_Types is
       St_El : Node;
       El_Typ : Type_Acc;
    begin
+      --  Get parent real array element.
+      El_Typ := Parent_Typ;
+      while not Is_Last_Dimension (El_Typ) loop
+         El_Typ := Get_Array_Element (El_Typ);
+      end loop;
+      El_Typ := Get_Array_Element (El_Typ);
+
       --  VHDL08
       if Has_Element_Subtype_Indication (Atype) then
          --  This subtype has created a new anonymous subtype for the
          --  element.
          El_Typ := Synth_Subtype_Indication_With_Parent
-           (Syn_Inst, Get_Array_Element (Parent_Typ), El_Type);
-      else
-         El_Typ := Parent_Typ;
-         while not Is_Last_Dimension (El_Typ) loop
-            El_Typ := Get_Array_Element (El_Typ);
-         end loop;
-         El_Typ := Get_Array_Element (El_Typ);
+           (Syn_Inst, El_Typ, El_Type);
       end if;
 
       if not Get_Index_Constraint_Flag (Atype) then
@@ -646,6 +644,9 @@ package body Elab.Vhdl_Types is
             when Iir_Kind_Array_Subtype_Definition =>
                return Synth_Array_Subtype_Indication
                  (Syn_Inst, Parent_Typ, Atype);
+            when Iir_Kind_Record_Subtype_Definition =>
+               return Synth_Record_Type_Definition
+                 (Syn_Inst, Parent_Typ, Atype);
             when others =>
                return Synth_Subtype_Indication (Syn_Inst, Atype);
          end case;
@@ -671,7 +672,14 @@ package body Elab.Vhdl_Types is
                  (Syn_Inst, Parent_Typ, Atype);
             end;
          when Iir_Kind_Record_Subtype_Definition =>
-            return Synth_Record_Type_Definition (Syn_Inst, Atype);
+            declare
+               Parent_Type : constant Node := Get_Parent_Type (Atype);
+               Parent_Typ : constant Type_Acc :=
+                 Get_Subtype_Object (Syn_Inst, Parent_Type);
+            begin
+               return Synth_Record_Type_Definition
+                 (Syn_Inst, Parent_Typ, Atype);
+            end;
          when Iir_Kind_Integer_Subtype_Definition
            | Iir_Kind_Physical_Subtype_Definition
            | Iir_Kind_Enumeration_Subtype_Definition =>
