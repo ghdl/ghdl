@@ -33,7 +33,8 @@ package Elab.Vhdl_Files is
      (Syn_Inst : Synth_Instance_Acc; Decl : Node) return File_Index;
    procedure Finalize_File (Syn_Inst : Synth_Instance_Acc; Decl : Node);
 
-   function Endfile (F : File_Index; Loc : Node) return Boolean;
+   function Endfile (Syn_Inst : Synth_Instance_Acc; F : File_Index; Loc : Node)
+                    return Boolean;
 
    procedure Synth_File_Open
      (Syn_Inst : Synth_Instance_Acc; Imp : Node; Loc : Node);

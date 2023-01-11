@@ -1965,7 +1965,7 @@ package body Synth.Vhdl_Oper is
             declare
                Res : Boolean;
             begin
-               Res := Elab.Vhdl_Files.Endfile (L.Val.File, Expr);
+               Res := Elab.Vhdl_Files.Endfile (Syn_Inst, L.Val.File, Expr);
                return Create_Value_Memtyp
                  (Create_Memory_U8 (Boolean'Pos (Res), Boolean_Type));
             exception
