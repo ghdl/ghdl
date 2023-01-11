@@ -1002,6 +1002,34 @@ package body Vhdl.Sem_Names is
       end loop;
    end Get_Object_Type_Staticness;
 
+   procedure Finish_Sem_Array_Attribute_Prefix (Attr_Name : Iir; Attr : Iir)
+   is
+      Prefix : Iir;
+      Prefix_Name : Iir;
+   begin
+      --  See Sem_Array_Attribute_Name for comments about the prefix.
+      Prefix_Name := Get_Prefix (Attr_Name);
+      if Is_Type_Name (Prefix_Name) /= Null_Iir then
+         Prefix := Sem_Type_Mark (Prefix_Name);
+      else
+         Prefix := Finish_Sem_Name (Prefix_Name, Get_Prefix (Attr));
+         --  Convert function declaration to call.
+         if Get_Kind (Prefix) in Iir_Kinds_Denoting_Name
+           and then
+           (Get_Kind (Get_Named_Entity (Prefix))
+              = Iir_Kind_Function_Declaration)
+         then
+            Prefix := Function_Declaration_To_Call (Prefix);
+         end if;
+         if not Is_Object_Name (Prefix) then
+            Error_Msg_Sem_Relaxed
+              (Attr, Warnid_Attribute,
+               "prefix of array attribute must be an object name");
+         end if;
+      end if;
+      Set_Prefix (Attr, Prefix);
+   end Finish_Sem_Array_Attribute_Prefix;
+
    procedure Finish_Sem_Array_Attribute
      (Attr_Name : Iir; Attr : Iir; Param : Iir)
    is
@@ -1009,7 +1037,6 @@ package body Vhdl.Sem_Names is
       Prefix_Type : Iir;
       Index_Type : Iir;
       Prefix : Iir;
-      Prefix_Name : Iir;
       Staticness : Iir_Staticness;
    begin
       --  LRM93 14.1
@@ -1032,28 +1059,9 @@ package body Vhdl.Sem_Names is
          end if;
       end if;
 
-      --  See Sem_Array_Attribute_Name for comments about the prefix.
-      Prefix_Name := Get_Prefix (Attr_Name);
-      if Is_Type_Name (Prefix_Name) /= Null_Iir then
-         Prefix := Sem_Type_Mark (Prefix_Name);
-      else
-         Prefix := Finish_Sem_Name (Prefix_Name, Get_Prefix (Attr));
-         --  Convert function declaration to call.
-         if Get_Kind (Prefix) in Iir_Kinds_Denoting_Name
-           and then
-           (Get_Kind (Get_Named_Entity (Prefix))
-              = Iir_Kind_Function_Declaration)
-         then
-            Prefix := Function_Declaration_To_Call (Prefix);
-         end if;
-         if not Is_Object_Name (Prefix) then
-            Error_Msg_Sem_Relaxed
-              (Attr, Warnid_Attribute,
-               "prefix of array attribute must be an object name");
-         end if;
-      end if;
-      Set_Prefix (Attr, Prefix);
+      Finish_Sem_Array_Attribute_Prefix (Attr_Name, Attr);
 
+      Prefix := Get_Prefix (Attr);
       Prefix_Type := Get_Type (Prefix);
       if Is_Error (Prefix_Type) then
          return;
@@ -2024,6 +2032,8 @@ package body Vhdl.Sem_Names is
             Free_Iir (Name);
             return Res;
          when Iir_Kind_Element_Attribute =>
+            pragma Assert (Get_Kind (Name) = Iir_Kind_Attribute_Name);
+            Finish_Sem_Array_Attribute_Prefix (Name, Res);
             Set_Base_Name (Res, Res);
             Set_Name_Staticness (Res, Get_Name_Staticness (Get_Prefix (Res)));
             Set_Type_Staticness (Res, Get_Type_Staticness (Get_Type (Res)));
