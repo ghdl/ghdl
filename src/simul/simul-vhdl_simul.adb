@@ -2718,8 +2718,13 @@ package body Simul.Vhdl_Simul is
            and then Get_Kind (Sig_Type) in Iir_Kinds_Subtype_Definition
          then
             Resolv_Func := Get_Resolution_Indication (Sig_Type);
-            if Resolv_Func /= Null_Node then
+            if Resolv_Func /= Null_Node
+              and then
+              Get_Kind (Resolv_Func) /= Iir_Kind_Array_Element_Resolution
+            then
                Resolv_Func := Get_Named_Entity (Resolv_Func);
+            else
+               Resolv_Func := Null_Node;
             end if;
             if Resolv_Func /= Null_Node
               and then
