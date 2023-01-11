@@ -52,6 +52,7 @@ with Synth.Errors; use Synth.Errors;
 with Synth.Vhdl_Decls; use Synth.Vhdl_Decls;
 with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
 with Synth.Vhdl_Insts; use Synth.Vhdl_Insts;
+with Synth.Vhdl_Eval;
 with Synth.Source;
 with Synth.Vhdl_Static_Proc;
 with Synth.Flags;
@@ -2285,7 +2286,18 @@ package body Synth.Vhdl_Stmts is
    begin
       case Get_Kind (Func) is
          when Iir_Kind_Function_Call =>
-            Res := Exec_Resolution_Call (Inst, Get_Implementation (Func), Val);
+            declare
+               Imp : constant Node := Get_Implementation (Func);
+               Mt : Memtyp;
+            begin
+               if Get_Implicit_Definition (Imp) = Iir_Predefined_None then
+                  Res := Exec_Resolution_Call (Inst, Imp, Val);
+               else
+                  Mt := Synth.Vhdl_Eval.Eval_Static_Predefined_Function_Call
+                    (Inst, Get_Memtyp (Val), Null_Memtyp, Res_Typ, Func);
+                  Res := Create_Value_Memtyp (Mt);
+               end if;
+            end;
          when Iir_Kind_Type_Conversion =>
             declare
                Conv_Typ : constant Type_Acc :=
