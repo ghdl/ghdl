@@ -189,41 +189,41 @@ package Synth.Ieee.Std_Logic_1164 is
 
    Match_Lt_Table : constant Table_2d :=
    --  UX01ZWLH-
-     ("UUUUUUUU1",   -- U
-      "UXXXXXXX1",   -- X
-      "UX01XX011",   -- 0
-      "UX00XX001",   -- 1
-      "UXXXXXXX1",   -- Z
-      "UXXXXXXX1",   -- W
-      "UX01XX011",   -- L
-      "UX00XX001",   -- H
-      "111111111"    -- -
+     ("UUUUUUUUX",   -- U
+      "UXXXXXXXX",   -- X
+      "UX01XX01X",   -- 0
+      "UX00XX00X",   -- 1
+      "UXXXXXXXX",   -- Z
+      "UXXXXXXXX",   -- W
+      "UX01XX01X",   -- L
+      "UX00XX00X",   -- H
+      "XXXXXXXXX"    -- -
      );
 
    Match_Ge_Table : constant Table_2d :=
    --  UX01ZWLH-
-     ("UUUUUUUU1",   -- U
-      "UXXXXXXX1",   -- X
-      "UX10XX101",   -- 0
-      "UX11XX111",   -- 1
-      "UXXXXXXX1",   -- Z
-      "UXXXXXXX1",   -- W
-      "UX10XX101",   -- L
-      "UX11XX111",   -- H
-      "111111111"    -- -
+     ("UUUUUUUUX",   -- U
+      "UXXXXXXXX",   -- X
+      "UX10XX10X",   -- 0
+      "UX11XX11X",   -- 1
+      "UXXXXXXXX",   -- Z
+      "UXXXXXXXX",   -- W
+      "UX10XX10X",   -- L
+      "UX11XX11X",   -- H
+      "XXXXXXXXX"    -- -
      );
 
    Match_Gt_Table : constant Table_2d :=
    --  UX01ZWLH-
-     ("UUUUUUUU1",   -- U
-      "UXXXXXXX1",   -- X
-      "UX00XX001",   -- 0
-      "UX10XX101",   -- 1
-      "UXXXXXXX1",   -- Z
-      "UXXXXXXX1",   -- W
-      "UX00XX001",   -- L
-      "UX10XX101",   -- H
-      "111111111"    -- -
+     ("UUUUUUUU0",   -- U
+      "UXXXXXXX0",   -- X
+      "UX00XX000",   -- 0
+      "UX10XX100",   -- 1
+      "UXXXXXXX0",   -- Z
+      "UXXXXXXX0",   -- W
+      "UX00XX000",   -- L
+      "UX10XX100",   -- H
+      "000000000"    -- -
      );
 
 end Synth.Ieee.Std_Logic_1164;
