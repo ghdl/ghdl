@@ -2386,15 +2386,6 @@ package body Vhdl.Sem_Assocs is
       Has_Individual := False;
       Last_Assoc := Null_Iir;
 
-      --  Clear associated type of interface type.
-      Inter := Interface_Chain;
-      while Inter /= Null_Iir loop
-         if Get_Kind (Inter) = Iir_Kind_Interface_Type_Declaration then
-            Set_Associated_Type (Get_Type (Inter), Null_Iir);
-         end if;
-         Inter := Get_Chain (Inter);
-      end loop;
-
       --  Loop on every assoc element, try to match it.
       Inter := Interface_Chain;
       Last_Individual := Null_Iir;

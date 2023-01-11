@@ -445,6 +445,12 @@ package body Vhdl.Sem is
 
       Sem_Association_Chain
         (Inter_Chain, Assoc_Chain, True, Miss, Assoc_Parent, Match);
+
+      --  Clear associated type of interface type.
+      --  Should be part of Sem_Association_Chain, but needed only for
+      --  generics.
+      Clear_Interface_Associated (Inter_Chain);
+
       Set_Generic_Map_Aspect_Chain (Assoc_Parent, Assoc_Chain);
       if Match = Not_Compatible then
          return False;

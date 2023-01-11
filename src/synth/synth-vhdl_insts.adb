@@ -1058,6 +1058,7 @@ package body Synth.Vhdl_Insts is
       Arch : Node;
       Config : Node)
    is
+      Generic_Chain : constant Node := Get_Generic_Chain (Ent);
       Inst_Obj : Inst_Object;
       Inst : Instance;
       Enc : Name_Encoding;
@@ -1069,6 +1070,10 @@ package body Synth.Vhdl_Insts is
          --  For blackboxes: define the parameters.
          Enc := Name_Parameters;
       end if;
+
+      --  Interning needs access to the actual types of interface types.
+      Set_Interface_Associated
+        (Generic_Chain, Get_Generic_Map_Aspect_Chain (Stmt));
 
       --  Search if corresponding module has already been used.
       --  If not create a new module
@@ -1082,6 +1087,8 @@ package body Synth.Vhdl_Insts is
                                   Encoding => Enc));
 
       pragma Assert (Is_Expr_Pool_Empty);
+
+      Clear_Interface_Associated (Generic_Chain);
 
       --  Do the instantiation.
       Inst := New_Instance

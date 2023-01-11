@@ -691,6 +691,65 @@ package body Vhdl.Utils is
       end if;
    end Is_Copyback_Parameter;
 
+   procedure Set_Interface_Associated (Inter_Chain : Iir; Assoc_Chain : Iir)
+   is
+      Inter, Assoc_Inter, Assoc : Iir;
+   begin
+      Assoc := Assoc_Chain;
+      Assoc_Inter := Inter_Chain;
+      while Assoc /= Null_Node loop
+         Inter := Get_Association_Interface (Assoc, Assoc_Inter);
+         case Iir_Kinds_Interface_Declaration (Get_Kind (Inter)) is
+            when Iir_Kind_Interface_Type_Declaration =>
+               declare
+                  Tdef : constant Iir := Get_Interface_Type_Definition (Inter);
+               begin
+                  pragma Assert (Get_Associated_Type (Tdef) = Null_Iir);
+                  Set_Associated_Type (Tdef, Get_Actual_Type (Assoc));
+               end;
+               --  TODO: subprograms ?
+            when Iir_Kind_Interface_Package_Declaration =>
+               pragma Assert (Get_Associated_Package (Inter) = Null_Iir);
+               Set_Associated_Package
+                 (Inter, Get_Named_Entity (Get_Actual (Assoc)));
+            when Iir_Kinds_Interface_Subprogram_Declaration =>
+               pragma Assert (Get_Associated_Subprogram (Inter) = Null_Iir);
+               Set_Associated_Subprogram
+                 (Inter, Get_Named_Entity (Get_Actual (Assoc)));
+            when Iir_Kinds_Interface_Object_Declaration
+               | Iir_Kind_Interface_Terminal_Declaration =>
+               null;
+         end case;
+         Next_Association_Interface (Assoc, Assoc_Inter);
+      end loop;
+   end Set_Interface_Associated;
+
+   procedure Clear_Interface_Associated (Inter_Chain : Iir)
+   is
+      Inter : Iir;
+   begin
+      Inter := Inter_Chain;
+      while Inter /= Null_Node loop
+         case Iir_Kinds_Interface_Declaration (Get_Kind (Inter)) is
+            when Iir_Kind_Interface_Type_Declaration =>
+               declare
+                  Tdef : constant Iir := Get_Interface_Type_Definition (Inter);
+               begin
+                  Set_Associated_Type (Tdef, Null_Iir);
+               end;
+               --  TODO: subprograms ?
+            when Iir_Kind_Interface_Package_Declaration =>
+               Set_Associated_Package (Inter, Null_Iir);
+            when Iir_Kinds_Interface_Subprogram_Declaration =>
+               Set_Associated_Subprogram (Inter, Null_Iir);
+            when Iir_Kinds_Interface_Object_Declaration
+               | Iir_Kind_Interface_Terminal_Declaration =>
+               null;
+         end case;
+         Inter := Get_Chain (Inter);
+      end loop;
+   end Clear_Interface_Associated;
+
    function Find_Name_In_Flist (List : Iir_Flist; Lit : Name_Id) return Iir
    is
       El : Iir;

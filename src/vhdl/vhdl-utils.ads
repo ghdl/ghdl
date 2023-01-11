@@ -94,6 +94,18 @@ package Vhdl.Utils is
    --  interface (initialized to the association chain and interface chain).
    --  The function Get_Association_Interface return the interface associated
    --  to ASSOC,and Next_Association_Interface updates ASSOC and INTER.
+   --
+   --  Usage:
+   --    Assoc := Get_xxx_Association_Chain (X);
+   --    Assoc_Inter := Get_xxx_Declaration_Chain (Y);
+   --    while Assoc /= Null_Iir loop
+   --       Inter := Get_Association_Interface (Assoc, Assoc_Inter);
+   --       ...
+   --       Next_Association_Interface (Assoc, Assoc_Inter);
+   --    end loop;
+   --
+   --  Note: This iterates over association, so unassociated interfaces are
+   --   not iterated.
    function Get_Association_Interface (Assoc : Iir; Inter : Iir) return Iir;
    procedure Next_Association_Interface
      (Assoc : in out Iir; Inter : in out Iir);
@@ -115,6 +127,12 @@ package Vhdl.Utils is
    --  Return True iff parameter INTER should be copied back (for out/inout
    --  variable).
    function Is_Copyback_Parameter (Inter : Iir) return Boolean;
+
+   --  Set/clear the Associated_XXX fields of type, package and subprogram
+   --  interfaces.
+   --  For set, check they were previously cleared.
+   procedure Set_Interface_Associated (Inter_Chain : Iir; Assoc_Chain : Iir);
+   procedure Clear_Interface_Associated (Inter_Chain : Iir);
 
    --  Duplicate enumeration literal LIT.
    function Copy_Enumeration_Literal (Lit : Iir) return Iir;
