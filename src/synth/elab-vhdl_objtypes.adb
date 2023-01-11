@@ -216,6 +216,16 @@ package body Elab.Vhdl_Objtypes is
       end case;
    end In_Range;
 
+   function In_Float_Range (Rng : Float_Range_Type; V : Fp64) return Boolean is
+   begin
+      case Rng.Dir is
+         when Dir_To =>
+            return V >= Rng.Left and then V <= Rng.Right;
+         when Dir_Downto =>
+            return V <= Rng.Left and then V >= Rng.Right;
+      end case;
+   end In_Float_Range;
+
    function Build_Discrete_Range_Type
      (L : Int64; R : Int64; Dir : Direction_Type) return Discrete_Range_Type is
    begin

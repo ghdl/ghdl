@@ -624,8 +624,20 @@ package body Synth.Vhdl_Expr is
             end case;
          when Type_Float =>
             pragma Assert (Vtype.Kind = Type_Float);
-            --  TODO: check range
-            return Vt;
+            if Vt.Val.Kind = Value_Memory then
+               declare
+                  Val : constant Fp64 := Read_Fp64 (Vt);
+               begin
+                  if not In_Float_Range (Dtype.Frange, Val) then
+                     Error_Msg_Synth (Syn_Inst, Loc, "value out of range");
+                     return No_Valtyp;
+                  end if;
+                  return Create_Value_Float (Val, Dtype);
+               end;
+            else
+               --  Is it possible ?  Only const ?
+               return Vt;
+            end if;
          when Type_Vector =>
             pragma Assert (Vtype.Kind = Type_Vector
                              or Vtype.Kind = Type_Slice);

@@ -283,6 +283,7 @@ package Elab.Vhdl_Objtypes is
 
    function In_Bounds (Bnd : Bound_Type; V : Int32) return Boolean;
    function In_Range (Rng : Discrete_Range_Type; V : Int64) return Boolean;
+   function In_Float_Range (Rng : Float_Range_Type; V : Fp64) return Boolean;
 
    --  Create an Type_Array from an Type_Array_Unbounded by replacing the
    --  element type.
