@@ -156,7 +156,7 @@ class CompileOrder(Designs):
                 toplevel=", ".join(toplevel)
             )
         )
-        for i, vertex in enumerate(design.GetCompileOrder()):
+        for i, vertex in enumerate(design.IterateDocumentsInCompileOrder()):
             print(f"  {i:<2}: {vertex.Value.Path.relative_to(Path.cwd())}")
 
         graphML = Path("dependencies.graphml")

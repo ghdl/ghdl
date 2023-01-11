@@ -21,7 +21,8 @@ class DependencyGraphFormatter:
         DependencyGraphVertexKind.Configuration: "#ff9900",
     }
     EDGE_COLORS = {
-        DependencyGraphEdgeKind.Document: "#000000",
+        DependencyGraphEdgeKind.SourceFile: "#000000",
+        DependencyGraphEdgeKind.CompileOrder: "#ff0000",
         DependencyGraphEdgeKind.LibraryClause: "#000000",
         DependencyGraphEdgeKind.UseClause: "#000000",
         DependencyGraphEdgeKind.ContextReference: "#000000",
@@ -126,7 +127,8 @@ class HierarchyGraphFormatter:
         DependencyGraphVertexKind.Configuration: "#ff9900",
     }
     EDGE_COLORS = {
-        DependencyGraphEdgeKind.Document: "#000000",
+        DependencyGraphEdgeKind.SourceFile: "#000000",
+        DependencyGraphEdgeKind.CompileOrder: "#ff0000",
         DependencyGraphEdgeKind.LibraryClause: "#000000",
         DependencyGraphEdgeKind.UseClause: "#000000",
         DependencyGraphEdgeKind.ContextReference: "#000000",
@@ -210,7 +212,8 @@ class CompileOrderGraphFormatter:
         DependencyGraphVertexKind.Configuration: "#ff9900",
     }
     EDGE_COLORS = {
-        DependencyGraphEdgeKind.Document: "#000000",
+        DependencyGraphEdgeKind.SourceFile: "#000000",
+        DependencyGraphEdgeKind.CompileOrder: "#ff0000",
         DependencyGraphEdgeKind.LibraryClause: "#000000",
         DependencyGraphEdgeKind.UseClause: "#000000",
         DependencyGraphEdgeKind.ContextReference: "#000000",
