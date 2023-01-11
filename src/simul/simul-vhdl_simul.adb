@@ -575,7 +575,12 @@ package body Simul.Vhdl_Simul is
 
       Mark_Expr_Pool (Mark);
       Cond_Val := Synth.Vhdl_Expr.Synth_Expression (Inst, Cond);
-      Res := Read_Discrete (Cond_Val) = 1;
+      if Cond_Val /= No_Valtyp then
+         Res := Read_Discrete (Cond_Val) = 1;
+      else
+         --  What could we do ?
+         Res := False;
+      end if;
       Release_Expr_Pool (Mark);
 
       return Res;
