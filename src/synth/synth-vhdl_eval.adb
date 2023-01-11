@@ -1118,6 +1118,13 @@ package body Synth.Vhdl_Eval is
                Check_Integer_Overflow (Inst, Res, Res_Typ, Expr);
                return Create_Memory_Discrete (Res, Res_Typ);
             end;
+         when Iir_Predefined_Universal_I_R_Mul =>
+            return Create_Memory_Fp64
+              (Fp64 (Read_Discrete (Param1)) * Read_Fp64 (Param2), Res_Typ);
+         when Iir_Predefined_Universal_R_I_Mul =>
+            return Create_Memory_Fp64
+              (Read_Fp64 (Param1) * Fp64 (Read_Discrete (Param2)), Res_Typ);
+
          when Iir_Predefined_Integer_Div
             | Iir_Predefined_Physical_Physical_Div
             | Iir_Predefined_Physical_Integer_Div =>
@@ -1134,7 +1141,8 @@ package body Synth.Vhdl_Eval is
                Check_Integer_Overflow (Inst, Res, Res_Typ, Expr);
                return Create_Memory_Discrete (Res, Res_Typ);
             end;
-         when Iir_Predefined_Integer_Mod =>
+         when Iir_Predefined_Integer_Mod
+            | Iir_Predefined_Physical_Mod =>
             declare
                Res : Int64;
                Div : Int64;
