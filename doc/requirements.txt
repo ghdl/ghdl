@@ -2,13 +2,13 @@
 
 sphinx >=5.3, <6.0
 #recommonmark>=0.7.1
-python-dateutil>=2.8.3
+python-dateutil>=2.8.2
 
 # Sphinx Extenstions
 # sphinxcontrib-textstyle>=0.2.1
 # sphinxcontrib-spelling>=2.2.0
 # changelog>=0.3.5
-autoapi
+autoapi>=2.0.1
 sphinx_fontawesome>=0.0.6
 sphinx_autodoc_typehints>=1.19.5
 
