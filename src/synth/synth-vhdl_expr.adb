@@ -759,9 +759,25 @@ package body Synth.Vhdl_Expr is
             | Iir_Kind_Object_Alias_Declaration
             | Iir_Kind_Non_Object_Alias_Declaration
             | Iir_Kind_File_Declaration
-            | Iir_Kind_Interface_File_Declaration
-            | Iir_Kind_Attribute_Value =>
+            | Iir_Kind_Interface_File_Declaration =>
             return Get_Value (Syn_Inst, Name);
+         when  Iir_Kind_Attribute_Value =>
+            --  It's a little bit complex for attribute of an entity or
+            --  of an architecture as there might be no instances for them.
+            --  Simply recompute it in that case; the expression is locally
+            --  static.
+            case Get_Kind (Get_Designated_Entity (Name)) is
+               when Iir_Kind_Entity_Declaration
+                 | Iir_Kind_Architecture_Body =>
+                  declare
+                     Spec : constant Node :=
+                       Get_Attribute_Specification (Name);
+                  begin
+                     return Synth_Expression (Syn_Inst, Get_Expression (Spec));
+                  end;
+               when others =>
+                  return Get_Value (Syn_Inst, Name);
+            end case;
          when Iir_Kind_Enumeration_Literal =>
             declare
                Typ : constant Type_Acc :=
