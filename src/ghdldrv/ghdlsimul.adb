@@ -122,11 +122,19 @@ package body Ghdlsimul is
          end if;
       end;
 
+      --  Handle automatic time resolution.
+      --  Must be done before elaboration, as time value could be computed.
+      if Time_Resolution = 'a' then
+         Time_Resolution := Vhdl.Std_Package.Get_Minimal_Time_Resolution;
+         if Time_Resolution = '?' then
+            Time_Resolution := 'f';
+         end if;
+      end if;
+      Vhdl.Std_Package.Set_Time_Resolution (Time_Resolution);
+
+      --  Set flags.
       Synth.Flags.Flag_Simulation := True;
       Synth.Errors.Debug_Handler := Elab.Debugger.Debug_Error'Access;
-
-      Lib_Unit := Get_Library_Unit (Config);
-      pragma Assert (Get_Kind (Lib_Unit) /= Iir_Kind_Foreign_Module);
 
       --  Generic overriding.
       Top := Vhdl.Utils.Get_Entity_From_Configuration (Config);
@@ -137,13 +145,18 @@ package body Ghdlsimul is
          raise Errorout.Compilation_Error;
       end if;
 
-      --  The elaboration.
+      --  *THE* elaboration.
+      --  Compute values, instantiate..
+      Lib_Unit := Get_Library_Unit (Config);
+      pragma Assert (Get_Kind (Lib_Unit) /= Iir_Kind_Foreign_Module);
       Inst := Elab.Vhdl_Insts.Elab_Top_Unit (Lib_Unit);
 
       if Errorout.Nbr_Errors > 0 then
          raise Errorout.Compilation_Error;
       end if;
 
+      --  Finish elaboration: gather processes, signals.
+      --  Compute drivers, sources...
       Simul.Vhdl_Elab.Gather_Processes (Inst);
       Simul.Vhdl_Elab.Elab_Processes;
       Simul.Vhdl_Elab.Compute_Sources;
@@ -196,14 +209,6 @@ package body Ghdlsimul is
          Set_Exit_Status (Exit_Status (Grt.Errors.Exit_Status));
          return;
       end if;
-
-      if Time_Resolution = 'a' then
-         Time_Resolution := Vhdl.Std_Package.Get_Minimal_Time_Resolution;
-         if Time_Resolution = '?' then
-            Time_Resolution := 'f';
-         end if;
-      end if;
-      Vhdl.Std_Package.Set_Time_Resolution (Time_Resolution);
 
       --  Overwrite time resolution in flag string.
       Flags.Flag_String (5) := Time_Resolution;
