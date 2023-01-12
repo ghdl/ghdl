@@ -35,6 +35,7 @@ with PSL.Nodes;
 with PSL.NFAs;
 with PSL.NFAs.Utils;
 with PSL.Errors;
+with PSL.Subsets;
 
 with Elab.Debugger;
 with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
@@ -2028,11 +2029,34 @@ package body Simul.Vhdl_Simul is
       end case;
    end Execute_Psl_Expr;
 
+   --  Execute the boolean condition of PROP.
+   function Execute_Psl_Abort_Condition (Inst : Synth_Instance_Acc;
+                                         Prop : PSL_Node) return Boolean
+   is
+      Marker : Mark_Type;
+      V : Boolean;
+   begin
+      Mark_Expr_Pool (Marker);
+      V := Execute_Psl_Expr (Inst, PSL.Nodes.Get_Boolean (Prop), False);
+      Release_Expr_Pool (Marker);
+      return V;
+   end Execute_Psl_Abort_Condition;
+
+   procedure Reset_PSL_State (E : Process_State_Acc) is
+   begin
+      E.States.all := (others => False);
+      E.States (0) := True;
+   end Reset_PSL_State;
+
    procedure PSL_Process_Executer (Self : Grt.Processes.Instance_Acc)
    is
       use PSL.NFAs;
 
       E : constant Process_State_Acc := To_Process_State_Acc (Self);
+      Has_Abort : constant Boolean :=
+        Get_Kind (E.Proc) in Iir_Kinds_Psl_Property_Directive
+        and then Get_PSL_Abort_Flag (E.Proc);
+      Prop : PSL_Node;
       Nvec : Boolean_Vector (E.States.all'Range);
       Marker : Mark_Type;
       V : Boolean;
@@ -2052,10 +2076,31 @@ package body Simul.Vhdl_Simul is
       Instance_Pool := Process_Pool'Access;
 --      Current_Process := No_Process;
 
+      if Has_Abort then
+         Prop := Get_Psl_Property (E.Proc);
+         if PSL.Subsets.Is_Async_Abort (Prop) then
+            if Execute_Psl_Abort_Condition (E.Instance, Prop) then
+               Reset_PSL_State (E);
+
+               Instance_Pool := null;
+               return;
+            end if;
+         end if;
+      end if;
+
       Mark_Expr_Pool (Marker);
       V := Execute_Psl_Expr (E.Instance, Get_PSL_Clock (E.Proc), False);
       Release_Expr_Pool (Marker);
       if V then
+         if Has_Abort and then not PSL.Subsets.Is_Async_Abort (Prop) then
+            if Execute_Psl_Abort_Condition (E.Instance, Prop) then
+               Reset_PSL_State (E);
+
+               Instance_Pool := null;
+               return;
+            end if;
+         end if;
+
          Nvec := (others => False);
          case Get_Kind (E.Proc) is
             when Iir_Kind_Psl_Cover_Directive

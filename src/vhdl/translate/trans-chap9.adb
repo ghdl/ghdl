@@ -389,9 +389,13 @@ package body Trans.Chap9 is
    begin
       Start_Declare_Stmt;
       New_Var_Decl (Var_I, Wki_I, O_Storage_Local, Ghdl_Index_Type);
+
+      --  Set true to the first state.
       New_Assign_Stmt (New_Indexed_Element (Get_Var (Info.Psl_Vect_Var),
                                             New_Lit (Ghdl_Index_0)),
                        New_Lit (Std_Boolean_True_Node));
+
+      --  Set flase to the other states.
       New_Assign_Stmt (New_Obj (Var_I), New_Lit (Ghdl_Index_1));
       Start_Loop_Stmt (Label);
       Gen_Exit_When

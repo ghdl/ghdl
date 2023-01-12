@@ -21,6 +21,11 @@ with Areapools;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Canon;
+with Vhdl.Canon_PSL;
+
+with PSL.Nodes;
+with PSL.Subsets;
+with PSL.Types;
 
 with Synth.Vhdl_Stmts;
 with Synth.Vhdl_Decls;
@@ -621,6 +626,23 @@ package body Simul.Vhdl_Elab is
             | Iir_Kind_Psl_Cover_Directive =>
             List := Get_PSL_Clock_Sensitivity (Proc);
             Gather_Sensitivity (Inst, Proc_Idx, List);
+            if Get_Kind (Proc) in Iir_Kinds_Psl_Property_Directive
+              and then Get_PSL_Abort_Flag (Proc)
+            then
+               declare
+                  use PSL.Types;
+                  use PSL.Nodes;
+                  Prop : constant PSL_Node := Get_Psl_Property (Proc);
+               begin
+                  if PSL.Subsets.Is_Async_Abort (Prop) then
+                     List := Create_Iir_List;
+                     Vhdl.Canon_PSL.Canon_Extract_Sensitivity
+                       (Get_Boolean (Prop), List);
+                     Gather_Sensitivity (Inst, Proc_Idx, List);
+                     Destroy_Iir_List (List);
+                  end if;
+               end;
+            end if;
             return;
          when Iir_Kind_Concurrent_Break_Statement =>
             List := Get_Sensitivity_List (Proc);
