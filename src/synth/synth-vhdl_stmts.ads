@@ -155,7 +155,8 @@ package Synth.Vhdl_Stmts is
 
    --  For simulation.
    function Exec_Resolution_Call (Syn_Inst : Synth_Instance_Acc;
-                                  Func : Node;
+                                  Imp : Node;
+                                  Obj : Node;
                                   Arg : Valtyp) return Valtyp;
 
    --  Return the associated choice from CHOICES chain selected by SEL.

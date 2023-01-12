@@ -2715,7 +2715,8 @@ package body Simul.Vhdl_Simul is
       end loop;
 
       --  Call resolution function
-      Res := Exec_Resolution_Call (R.Inst, R.Func, Create_Value_Memtyp (Arr));
+      Res := Exec_Resolution_Call
+        (R.Inst, R.Func, Null_Node, Create_Value_Memtyp (Arr));
 
       --  Set driving value.
       Exec_Write_Signal (R.Sig, (Res.Typ, Res.Val.Mem),

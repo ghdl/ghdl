@@ -2288,10 +2288,11 @@ package body Synth.Vhdl_Stmts is
          when Iir_Kind_Function_Call =>
             declare
                Imp : constant Node := Get_Implementation (Func);
+               Obj : constant Node := Get_Method_Object (Func);
                Mt : Memtyp;
             begin
                if Get_Implicit_Definition (Imp) = Iir_Predefined_None then
-                  Res := Exec_Resolution_Call (Inst, Imp, Val);
+                  Res := Exec_Resolution_Call (Inst, Imp, Obj, Val);
                else
                   Mt := Synth.Vhdl_Eval.Eval_Static_Predefined_Function_Call
                     (Inst, Get_Memtyp (Val), Null_Memtyp, Res_Typ, Func);
@@ -2802,16 +2803,22 @@ package body Synth.Vhdl_Stmts is
    end Synth_Procedure_Call;
 
    function Exec_Resolution_Call (Syn_Inst : Synth_Instance_Acc;
-                                  Func : Node;
+                                  Imp : Node;
+                                  Obj : Node;
                                   Arg : Valtyp) return Valtyp
    is
-      Bod : constant Node := Vhdl.Sem_Inst.Get_Subprogram_Body_Origin (Func);
-      Inter : constant Node := Get_Interface_Declaration_Chain (Func);
+      Bod : constant Node := Vhdl.Sem_Inst.Get_Subprogram_Body_Origin (Imp);
+      Inter : constant Node := Get_Interface_Declaration_Chain (Imp);
       Init : Association_Iterator_Init;
       Res : Valtyp;
       Sub_Inst : Synth_Instance_Acc;
    begin
-      Sub_Inst := Synth_Subprogram_Call_Instance (Syn_Inst, Func, Bod);
+      if Obj /= Null_Node then
+         Sub_Inst := Synth_Protected_Call_Instance (Syn_Inst, Obj, Imp, Bod);
+      else
+         Sub_Inst := Synth_Subprogram_Call_Instance (Syn_Inst, Imp, Bod);
+      end if;
+
       Set_Instance_Const (Sub_Inst, True);
 
       Create_Object (Sub_Inst, Inter, Arg);
@@ -2819,7 +2826,7 @@ package body Synth.Vhdl_Stmts is
       Init := Association_Iterator_Build (Inter, Null_Node);
 
       Res := Synth_Static_Subprogram_Call
-        (Syn_Inst, Sub_Inst, Func, Bod, Init, Func);
+        (Syn_Inst, Sub_Inst, Imp, Bod, Init, Imp);
 
       Free_Instance (Sub_Inst);
 
