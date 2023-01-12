@@ -35,13 +35,12 @@ from textwrap import dedent
 from typing import TypeVar, Dict
 from unittest import TestCase
 
-from pyVHDLModel.SyntaxModel import ExpressionUnion
-
-from pyGHDL.dom.DesignUnit import Package
+from pyVHDLModel.Base import ExpressionUnion
 
 from pyGHDL.dom.NonStandard import Design, Document
 from pyGHDL.dom.Object import Constant
 from pyGHDL.dom.Literal import IntegerLiteral
+from pyGHDL.dom.DesignUnit import Package
 
 
 if __name__ == "__main__":

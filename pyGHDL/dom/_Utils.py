@@ -34,6 +34,13 @@ from typing import Union
 
 from pyTooling.Decorators import export
 
+from pyVHDLModel.Base import Mode
+
+from pyGHDL.libghdl import LibGHDLException, name_table, errorout_memory, files_map, file_comments
+from pyGHDL.libghdl._types import Iir
+from pyGHDL.libghdl.vhdl import nodes, utils
+from pyGHDL.libghdl.vhdl.nodes import Null_Iir
+from pyGHDL.dom import DOMException, Position
 from pyGHDL.dom.Symbol import (
     LibraryReferenceSymbol,
     PackageReferenceSymbol,
@@ -44,13 +51,7 @@ from pyGHDL.dom.Symbol import (
     ComponentInstantiationSymbol,
     ConfigurationInstantiationSymbol,
 )
-from pyVHDLModel.SyntaxModel import Mode
 
-from pyGHDL.libghdl import LibGHDLException, name_table, errorout_memory, files_map, file_comments
-from pyGHDL.libghdl._types import Iir
-from pyGHDL.libghdl.vhdl import nodes, utils
-from pyGHDL.libghdl.vhdl.nodes import Null_Iir
-from pyGHDL.dom import DOMException, Position
 
 __MODE_TRANSLATION = {
     nodes.Iir_Mode.In_Mode: Mode.In,

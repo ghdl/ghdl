@@ -42,13 +42,10 @@ from typing import Any
 
 from pyTooling.Decorators import export
 
-from pyGHDL.dom.Names import SimpleName
 from pyVHDLModel import VHDLVersion
-from pyVHDLModel.SyntaxModel import (
-    Design as VHDLModel_Design,
-    Library as VHDLModel_Library,
-    Document as VHDLModel_Document,
-)
+from pyVHDLModel import Design as VHDLModel_Design
+from pyVHDLModel import Library as VHDLModel_Library
+from pyVHDLModel import Document as VHDLModel_Document
 
 from pyGHDL.libghdl import (
     ENCODING,
@@ -70,7 +67,7 @@ from pyGHDL.libghdl.vhdl import nodes, sem_lib
 from pyGHDL.libghdl.vhdl.parse import Flag_Parse_Parenthesis
 from pyGHDL.dom import DOMException, Position
 from pyGHDL.dom._Utils import GetIirKindOfNode, CheckForErrors, GetNameOfNode, GetDocumentationOfNode
-from pyGHDL.dom.Names import SimpleName
+from pyGHDL.dom.Symbol import LibraryReferenceSymbol
 from pyGHDL.dom.DesignUnit import (
     Entity,
     Architecture,
@@ -83,7 +80,6 @@ from pyGHDL.dom.DesignUnit import (
     UseClause,
     ContextReference,
 )
-from pyGHDL.dom.Symbol import LibraryReferenceSymbol
 from pyGHDL.dom.PSL import VerificationUnit, VerificationProperty, VerificationMode
 
 

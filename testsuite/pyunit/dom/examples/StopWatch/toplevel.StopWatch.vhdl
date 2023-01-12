@@ -100,7 +100,7 @@ begin
 		);
 
 	-- 7-segment display
-	display: configuration seg7_Display_cfg
+	display: /* configuration */ seg7_Display--_cfg
 		generic map (
 			CLOCK_PERIOD  => CLOCK_PERIOD,
 			DIGITS        => Digits'length

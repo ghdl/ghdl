@@ -34,6 +34,15 @@ from typing import List, Union
 
 from pyTooling.Decorators import export
 
+from pyVHDLModel.Base import NamedEntityMixin
+from pyVHDLModel.Interface import GenericInterfaceItem, PortInterfaceItem
+from pyVHDLModel.Subprogram import Function
+from pyVHDLModel.Object import BaseConstant, WithDefaultExpressionMixin
+from pyVHDLModel.Type import BaseType, FullType
+from pyVHDLModel.Concurrent import ConcurrentStatement
+
+from pyGHDL import GHDLBaseException
+from pyGHDL.dom.NonStandard import Document, Design, Library
 from pyGHDL.dom.Concurrent import (
     ConcurrentBlockStatement,
     ProcessStatement,
@@ -45,20 +54,6 @@ from pyGHDL.dom.Concurrent import (
     EntityInstantiation,
     ConcurrentProcedureCall,
 )
-from pyVHDLModel.SyntaxModel import (
-    GenericInterfaceItem,
-    NamedEntityMixin,
-    PortInterfaceItem,
-    WithDefaultExpressionMixin,
-    Function,
-    BaseType,
-    FullType,
-    BaseConstant,
-    ConcurrentStatement,
-)
-
-from pyGHDL import GHDLBaseException
-from pyGHDL.dom.NonStandard import Document, Design, Library
 from pyGHDL.dom.DesignUnit import (
     Entity,
     Architecture,
@@ -70,10 +65,7 @@ from pyGHDL.dom.DesignUnit import (
     UseClause,
     PackageInstantiation,
 )
-from pyGHDL.dom.Symbol import (
-    SimpleSubtypeSymbol,
-    ConstrainedCompositeSubtypeSymbol,
-)
+from pyGHDL.dom.Symbol import SimpleSubtypeSymbol, ConstrainedCompositeSubtypeSymbol
 from pyGHDL.dom.Type import (
     IntegerType,
     Subtype,

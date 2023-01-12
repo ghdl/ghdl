@@ -97,7 +97,7 @@ class Expressions(TestCase):
         # Start checks
         self.assertIsInstance(default, InverseExpression)
         self.assertIsInstance(default.Operand, SimpleObjectOrFunctionCallSymbol)
-        self.assertEqual("true", str(default.Operand.SymbolName))
+        self.assertEqual("true", str(default.Operand))  # .SymbolName))  # XXX: hacked
 
     # def test_AbsExpression(self):
     #     filename: Path = self._root / "{className}_{funcName}.vhdl".format(

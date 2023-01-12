@@ -41,12 +41,10 @@ This module contains all DOM classes for VHDL's design units (:class:`context <E
 """
 from pyTooling.Decorators import export
 
-from pyVHDLModel.PSLModel import (
-    VerificationUnit as VHDLModel_VerificationUnit,
-    VerificationProperty as VHDLModel_VerificationProperty,
-    VerificationMode as VHDLModel_VerificationMode,
-    DefaultClock as VHDLModel_DefaultClock,
-)
+from pyVHDLModel.PSLModel import VerificationUnit as VHDLModel_VerificationUnit
+from pyVHDLModel.PSLModel import VerificationProperty as VHDLModel_VerificationProperty
+from pyVHDLModel.PSLModel import VerificationMode as VHDLModel_VerificationMode
+from pyVHDLModel.PSLModel import DefaultClock as VHDLModel_DefaultClock
 
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.dom import DOMMixin

@@ -37,9 +37,8 @@
 """
 from pyTooling.Decorators import export
 
-from pyVHDLModel.SyntaxModel import (
-    Alias as VHDLModel_Alias,
-)
+from pyVHDLModel.Declaration import Alias as VHDLModel_Alias
+
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.dom import DOMMixin
 from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode

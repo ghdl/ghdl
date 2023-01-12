@@ -30,11 +30,20 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+from time import perf_counter_ns as time_perf_counter
 from pathlib import Path
+from textwrap import dedent
+from typing import Dict, List
 from unittest import TestCase
 
+from pyTooling.Graph import Vertex
+
+import pyVHDLModel
+import pyVHDLModel.DesignUnit
 from pyGHDL.dom.NonStandard import Design, Document
+from pyGHDL.dom.formatting.GraphML import DependencyGraphFormatter, HierarchyGraphFormatter, CompileOrderGraphFormatter
 from pyGHDL.dom.formatting.prettyprint import PrettyPrint
+from pyVHDLModel import DependencyGraphVertexKind, DependencyGraphEdgeKind, Library
 
 if __name__ == "__main__":
     print("ERROR: you called a testcase declaration file as an executable module.")
@@ -106,19 +115,65 @@ class Display(Designs):
 
 class CompileOrder(Designs):
     def test_Encoder(self):
+        print()
         design = Design()
-        design.LoadStdLibrary()
-        design.LoadIEEELibrary()
-        for lib, file in self._encoderFiles:
+        design.LoadDefaultLibraries()
+        t1 = time_perf_counter()
+        for lib, file in self._stopwatchFiles:
             library = design.GetLibrary(lib)
             document = Document(self._sourceDirectory / file)
             design.AddDocument(document, library)
+            print(dedent("""\
+                file: {}
+                  libghdl processing time: {:5.3f} us
+                  DOM translation time:    {:5.3f} us
+                """
+                ).format(
+                    document.Path,
+                    document.LibGHDLProcessingTime * 10**6,
+                    document.DOMTranslationTime * 10**6,
+                )
+            )
+        pyGHDLTime = time_perf_counter() - t1
 
         design.Analyze()
 
-        PP = PrettyPrint()
-        buffer = []
-        buffer.append("Design:")
-        for line in PP.formatDesign(design, 1):
-            buffer.append(line)
-        print("\n".join(buffer))
+        toplevel = [root.Value.Identifier for root in design.HierarchyGraph.IterateRoots()]
+
+        print(dedent("""
+            pyGHDL:
+              sum:                       {:5.3f} us
+            Analysis:
+              default library load time: {:5.3f} us
+              dependency analysis time:  {:5.3f} us
+            Toplevel:                    {toplevel}
+            Compile order:\
+            """
+            ).format(
+                pyGHDLTime * 10**6,
+                design._loadDefaultLibraryTime * 10**6,
+                design._analyzeTime * 10**6,
+                toplevel=", ".join(toplevel)
+            )
+        )
+        for i, vertex in enumerate(design.IterateDocumentsInCompileOrder()):
+            print(f"  {i:<2}: {vertex.Value.Path.relative_to(Path.cwd())}")
+
+        graphML = Path("dependencies.graphml")
+        dependencyFormatter = DependencyGraphFormatter(design.DependencyGraph)
+        dependencyFormatter.WriteGraphML(graphML)
+
+        graphML = Path("hierarchy.graphml")
+        hierarchyFormatter = HierarchyGraphFormatter(design.HierarchyGraph)
+        hierarchyFormatter.WriteGraphML(graphML)
+
+        graphML = Path("compileorder.graphml")
+        compileOrderFormatter = CompileOrderGraphFormatter(design.CompileOrderGraph)
+        compileOrderFormatter.WriteGraphML(graphML)
+
+        # PP = PrettyPrint()
+        # buffer = []
+        # buffer.append("Design:")
+        # for line in PP.formatDesign(design, 1):
+        #     buffer.append(line)
+        # print("\n".join(buffer))

@@ -8,11 +8,11 @@ python-dateutil>=2.8.2
 # sphinxcontrib-textstyle>=0.2.1
 # sphinxcontrib-spelling>=2.2.0
 # changelog>=0.3.5
-autoapi
+autoapi>=2.0.1
 sphinx_fontawesome>=0.0.6
 sphinx_autodoc_typehints>=1.19.5
 
 # BuildTheDocs Extensions (mostly patched Sphinx extensions)
-btd.sphinx.autoprogram>=0.1.6.post1
+btd.sphinx.autoprogram>=0.1.7.post1
 btd.sphinx.graphviz>=2.3.1.post1
 btd.sphinx.inheritance_diagram>=2.3.1.post1

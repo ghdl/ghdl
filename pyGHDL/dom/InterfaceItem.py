@@ -34,21 +34,18 @@ from typing import List, Iterable
 
 from pyTooling.Decorators import export
 
-from pyVHDLModel.SyntaxModel import (
-    GenericConstantInterfaceItem as VHDLModel_GenericConstantInterfaceItem,
-    GenericTypeInterfaceItem as VHDLModel_GenericTypeInterfaceItem,
-    GenericPackageInterfaceItem as VHDLModel_GenericPackageInterfaceItem,
-    GenericProcedureInterfaceItem as VHDLModel_GenericProcedureInterfaceItem,
-    GenericFunctionInterfaceItem as VHDLModel_GenericFunctionInterfaceItem,
-    PortSignalInterfaceItem as VHDLModel_PortSignalInterfaceItem,
-    ParameterConstantInterfaceItem as VHDLModel_ParameterConstantInterfaceItem,
-    ParameterVariableInterfaceItem as VHDLModel_ParameterVariableInterfaceItem,
-    ParameterSignalInterfaceItem as VHDLModel_ParameterSignalInterfaceItem,
-    ParameterFileInterfaceItem as VHDLModel_ParameterFileInterfaceItem,
-    Mode,
-    SubtypeOrSymbol,
-    ExpressionUnion,
-)
+from pyVHDLModel.Base import Mode, ExpressionUnion
+from pyVHDLModel.Symbol import Symbol
+from pyVHDLModel.Interface import GenericConstantInterfaceItem as VHDLModel_GenericConstantInterfaceItem
+from pyVHDLModel.Interface import GenericTypeInterfaceItem as VHDLModel_GenericTypeInterfaceItem
+from pyVHDLModel.Interface import GenericProcedureInterfaceItem as VHDLModel_GenericProcedureInterfaceItem
+from pyVHDLModel.Interface import GenericFunctionInterfaceItem as VHDLModel_GenericFunctionInterfaceItem
+from pyVHDLModel.Interface import GenericPackageInterfaceItem as VHDLModel_GenericPackageInterfaceItem
+from pyVHDLModel.Interface import PortSignalInterfaceItem as VHDLModel_PortSignalInterfaceItem
+from pyVHDLModel.Interface import ParameterConstantInterfaceItem as VHDLModel_ParameterConstantInterfaceItem
+from pyVHDLModel.Interface import ParameterVariableInterfaceItem as VHDLModel_ParameterVariableInterfaceItem
+from pyVHDLModel.Interface import ParameterSignalInterfaceItem as VHDLModel_ParameterSignalInterfaceItem
+from pyVHDLModel.Interface import ParameterFileInterfaceItem as VHDLModel_ParameterFileInterfaceItem
 
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
@@ -64,7 +61,7 @@ class GenericConstantInterfaceItem(VHDLModel_GenericConstantInterfaceItem, DOMMi
         node: Iir,
         identifiers: List[str],
         mode: Mode,
-        subtype: SubtypeOrSymbol,
+        subtype: Symbol,
         defaultExpression: ExpressionUnion,
         documentation: str = None,
     ):
@@ -149,7 +146,7 @@ class PortSignalInterfaceItem(VHDLModel_PortSignalInterfaceItem, DOMMixin):
         node: Iir,
         identifiers: List[str],
         mode: Mode,
-        subtype: SubtypeOrSymbol,
+        subtype: Symbol,
         defaultExpression: ExpressionUnion = None,
         documentation: str = None,
     ):
@@ -179,7 +176,7 @@ class ParameterConstantInterfaceItem(VHDLModel_ParameterConstantInterfaceItem, D
         node: Iir,
         identifiers: List[str],
         mode: Mode,
-        subtype: SubtypeOrSymbol,
+        subtype: Symbol,
         defaultExpression: ExpressionUnion = None,
         documentation: str = None,
     ):
@@ -209,7 +206,7 @@ class ParameterVariableInterfaceItem(VHDLModel_ParameterVariableInterfaceItem, D
         node: Iir,
         identifiers: List[str],
         mode: Mode,
-        subtype: SubtypeOrSymbol,
+        subtype: Symbol,
         defaultExpression: ExpressionUnion = None,
         documentation: str = None,
     ):
@@ -239,7 +236,7 @@ class ParameterSignalInterfaceItem(VHDLModel_ParameterSignalInterfaceItem, DOMMi
         node: Iir,
         identifiers: List[str],
         mode: Mode,
-        subtype: SubtypeOrSymbol,
+        subtype: Symbol,
         defaultExpression: ExpressionUnion = None,
         documentation: str = None,
     ):
@@ -264,7 +261,7 @@ class ParameterSignalInterfaceItem(VHDLModel_ParameterSignalInterfaceItem, DOMMi
 
 @export
 class ParameterFileInterfaceItem(VHDLModel_ParameterFileInterfaceItem, DOMMixin):
-    def __init__(self, node: Iir, identifiers: List[str], subtype: SubtypeOrSymbol, documentation: str = None):
+    def __init__(self, node: Iir, identifiers: List[str], subtype: Symbol, documentation: str = None):
         super().__init__(identifiers, subtype, documentation)
         DOMMixin.__init__(self, node)
 

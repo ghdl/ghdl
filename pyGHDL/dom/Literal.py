@@ -32,16 +32,15 @@
 # ============================================================================
 from pyTooling.Decorators import export
 
-from pyVHDLModel.SyntaxModel import (
-    NullLiteral as VHDLModel_NullLiteral,
-    EnumerationLiteral as VHDLModel_EnumerationLiteral,
-    IntegerLiteral as VHDLModel_IntegerLiteral,
-    FloatingPointLiteral as VHDLModel_FloatingPointLiteral,
-    PhysicalIntegerLiteral as VHDLModel_PhysicalIntegerLiteral,
-    PhysicalFloatingLiteral as VHDLModel_PhysicalFloatingLiteral,
-    CharacterLiteral as VHDLModel_CharacterLiteral,
-    StringLiteral as VHDLModel_StringLiteral,
-)
+from pyVHDLModel.Expression import NullLiteral as VHDLModel_NullLiteral
+from pyVHDLModel.Expression import EnumerationLiteral as VHDLModel_EnumerationLiteral
+from pyVHDLModel.Expression import IntegerLiteral as VHDLModel_IntegerLiteral
+from pyVHDLModel.Expression import FloatingPointLiteral as VHDLModel_FloatingPointLiteral
+from pyVHDLModel.Expression import PhysicalIntegerLiteral as VHDLModel_PhysicalIntegerLiteral
+from pyVHDLModel.Expression import PhysicalFloatingLiteral as VHDLModel_PhysicalFloatingLiteral
+from pyVHDLModel.Expression import CharacterLiteral as VHDLModel_CharacterLiteral
+from pyVHDLModel.Expression import StringLiteral as VHDLModel_StringLiteral
+
 from pyGHDL.libghdl import name_table, str_table
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
