@@ -147,12 +147,17 @@ package body Elab.Vhdl_Insts is
 
             when Iir_Kind_Interface_Package_Declaration =>
                declare
-                  Actual : constant Iir :=
-                    Strip_Denoting_Name (Get_Actual (Assoc));
+                  Actual : Node;
                   Pkg_Inst : Synth_Instance_Acc;
                begin
-                  Pkg_Inst := Get_Package_Object (Sub_Inst, Actual);
-                  Create_Package_Interface (Sub_Inst, Inter, Pkg_Inst);
+                  if Get_Kind (Assoc) = Iir_Kind_Association_Element_Open
+                  then
+                     Elab_Package_Instantiation (Sub_Inst, Inter);
+                  else
+                     Actual := Strip_Denoting_Name (Get_Actual (Assoc));
+                     Pkg_Inst := Get_Package_Object (Sub_Inst, Actual);
+                     Create_Package_Interface (Sub_Inst, Inter, Pkg_Inst);
+                  end if;
                end;
 
             when Iir_Kind_Interface_Type_Declaration =>
@@ -233,7 +238,7 @@ package body Elab.Vhdl_Insts is
    procedure Elab_Package_Instantiation
      (Parent_Inst : Synth_Instance_Acc; Pkg : Node)
    is
-      Bod : constant Node := Get_Instance_Package_Body (Pkg);
+      Bod : Node;
       Sub_Inst : Synth_Instance_Acc;
    begin
       Sub_Inst := Create_Package_Instance (Parent_Inst, Pkg);
@@ -243,6 +248,13 @@ package body Elab.Vhdl_Insts is
          Get_Generic_Chain (Pkg), Get_Generic_Map_Aspect_Chain (Pkg));
 
       Elab_Declarations (Sub_Inst, Get_Declaration_Chain (Pkg));
+
+      if Get_Kind (Pkg) = Iir_Kind_Interface_Package_Declaration then
+         --  Not yet implemented: macro-expanded body for mapped package.
+         Bod := Null_Node;
+      else
+         Bod := Get_Instance_Package_Body (Pkg);
+      end if;
 
       if Bod /= Null_Node then
          --  Macro expanded package instantiation.
