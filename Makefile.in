@@ -236,7 +236,7 @@ install.mcode.libs.true: install.dirs
 	$(INSTALL_PROGRAM) $(MINGW_PREFIX)/bin/libwinpthread-1.dll $(DESTDIR)$(bindir)/
 	$(INSTALL_PROGRAM) $(MINGW_PREFIX)/bin/zlib1.dll $(DESTDIR)$(bindir)/
 	$(INSTALL_PROGRAM) $(MINGW_PREFIX)/bin/libgcc_s_$(LIBGCC_KIND)-1.dll $(DESTDIR)$(libdir)/
-	$(INSTALL_PROGRAM) $(MINGW_PREFIX)/bin/libgnat-12.dll $(DESTDIR)$(libdir)/
+	$(INSTALL_PROGRAM) $(MINGW_PREFIX)/bin/libgnat-*.dll $(DESTDIR)$(libdir)/
 	$(INSTALL_PROGRAM) $(MINGW_PREFIX)/bin/libwinpthread-1.dll $(DESTDIR)$(libdir)/
 
 uninstall.mcode.program:
@@ -249,7 +249,7 @@ uninstall.mcode.libs.true:
 	$(RM) $(DESTDIR)$(bindir)/libwinpthread-1.dll
 	$(RM) $(DESTDIR)$(bindir)/zlib1.dll
 	$(RM) $(DESTDIR)$(libdir)/libgcc_s_$(LIBGCC_KIND)-1.dll
-	$(RM) $(DESTDIR)$(libdir)/libgnat-12.dll
+	$(RM) $(DESTDIR)$(libdir)/libgnat-*.dll
 	$(RM) $(DESTDIR)$(libdir)/libwinpthread-1.dll
 
 install.mcode: install.mcode.program install.mcode.libs.$(enable_standalone) install.vhdllib
@@ -453,11 +453,23 @@ install.llvm.program: install.dirs ghdl1-llvm$(EXEEXT) ghdl_llvm$(EXEEXT)
 	$(INSTALL_PROGRAM) ghdl_llvm$(EXEEXT) $(DESTDIR)$(bindir)/ghdl$(EXEEXT)
 	$(INSTALL_PROGRAM) ghdl1-llvm$(EXEEXT) $(DESTDIR)$(bindir)/ghdl1-llvm$(EXEEXT)
 
-install.llvm_jit.program: install.dirs ghdl_llvm_jit$(EXEEXT)
-	$(INSTALL_PROGRAM) ghdl_llvm_jit$(EXEEXT) $(DESTDIR)$(bindir)/ghdl$(EXEEXT)
-
-uninstall.llvm_jit.program:
-	$(RM) $(DESTDIR)$(bindir)/ghdl$(EXEEXT)
+# PL: How to get the GNAT version? -> here 12
+# PL: How to get the LLVM version? -> here 14
+install.llvm.libs.false:
+install.llvm.libs.true: install.dirs
+	$(INSTALL_PROGRAM) $(MINGW_PREFIX)/bin/libffi-*.dll $(DESTDIR)$(bindir)/
+	$(INSTALL_PROGRAM) $(MINGW_PREFIX)/bin/libgcc_s_$(LIBGCC_KIND)-*.dll $(DESTDIR)$(bindir)/
+	$(INSTALL_PROGRAM) $(MINGW_PREFIX)/bin/libiconv-*.dll $(DESTDIR)$(bindir)/
+	$(INSTALL_PROGRAM) $(MINGW_PREFIX)/bin/libLLVM-*.dll $(DESTDIR)$(bindir)/
+	$(INSTALL_PROGRAM) $(MINGW_PREFIX)/bin/liblzma-*.dll $(DESTDIR)$(bindir)/
+	$(INSTALL_PROGRAM) $(MINGW_PREFIX)/bin/libstdc++-*.dll $(DESTDIR)$(bindir)/
+	$(INSTALL_PROGRAM) $(MINGW_PREFIX)/bin/libwinpthread-*.dll $(DESTDIR)$(bindir)/
+	$(INSTALL_PROGRAM) $(MINGW_PREFIX)/bin/libxml2-*.dll $(DESTDIR)$(bindir)/
+	$(INSTALL_PROGRAM) $(MINGW_PREFIX)/bin/libzstd.dll $(DESTDIR)$(bindir)/
+	$(INSTALL_PROGRAM) $(MINGW_PREFIX)/bin/zlib1.dll $(DESTDIR)$(bindir)/
+	$(INSTALL_PROGRAM) $(MINGW_PREFIX)/bin/libgcc_s_$(LIBGCC_KIND)-1.dll $(DESTDIR)$(libdir)/
+	$(INSTALL_PROGRAM) $(MINGW_PREFIX)/bin/libgnat-*.dll $(DESTDIR)$(libdir)/
+	$(INSTALL_PROGRAM) $(MINGW_PREFIX)/bin/libwinpthread-*.dll $(DESTDIR)$(libdir)/
 
 test.llvm: ghdl_llvm$(EXEEXT)
 	cd $(srcdir)/testsuite; GHDL=$(CURDIR)/ghdl_llvm$(EXEEXT) ./testsuite.sh
@@ -466,9 +478,26 @@ uninstall.llvm.program:
 	$(RM) $(DESTDIR)$(bindir)/ghdl1-llvm$(EXEEXT)
 	$(RM) $(DESTDIR)$(bindir)/ghdl$(EXEEXT)
 
-install.llvm: install.llvm.program install.grt
+# PL: How to get the GNAT version? -> here 12
+uninstall.llvm.libs.false:
+uninstall.llvm.libs.true:
+	$(RM) $(DESTDIR)$(bindir)/libffi-*.dll
+	$(RM) $(DESTDIR)$(bindir)/libgcc_s_$(LIBGCC_KIND)-1.dll
+	$(RM) $(DESTDIR)$(bindir)/libiconv-*.dll
+	$(RM) $(DESTDIR)$(bindir)/libLLVM-*.dll
+	$(RM) $(DESTDIR)$(bindir)/liblzma-*.dll
+	$(RM) $(DESTDIR)$(bindir)/libstdc++-*.dll
+	$(RM) $(DESTDIR)$(bindir)/libwinpthread-*.dll
+	$(RM) $(DESTDIR)$(bindir)/libxml2-*.dll
+	$(RM) $(DESTDIR)$(bindir)/libzstd.dll
+	$(RM) $(DESTDIR)$(bindir)/zlib1.dll
+	$(RM) $(DESTDIR)$(libdir)/libgcc_s_$(LIBGCC_KIND)-*.dll
+	$(RM) $(DESTDIR)$(libdir)/libgnat-*.dll
+	$(RM) $(DESTDIR)$(libdir)/libwinpthread-*.dll
 
-uninstall.llvm: uninstall.llvm.program uninstall.grt
+install.llvm: install.llvm.program install.llvm.libs.$(enable_standalone) install.grt
+
+uninstall.llvm: uninstall.llvm.program uninstall.llvm.libs.$(enable_standalone) uninstall.grt
 
 install.llvm_jit: install.llvm_jit.program
 
