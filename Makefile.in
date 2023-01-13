@@ -150,6 +150,8 @@ install: install.$(backend) install.vhdllib install.vpi install.libghdl install.
 	"$(DESTDIR)$(bindir)/ghdl$(EXEEXT)" --disp-standard --std=93 > "$(DESTDIR)$(VHDL_LIB_DIR)/src/std/v93/standard.vhdl"
 	"$(DESTDIR)$(bindir)/ghdl$(EXEEXT)" --disp-standard --std=08 > "$(DESTDIR)$(VHDL_LIB_DIR)/src/std/v08/standard.vhdl"
 
+standalone: install standalone.$(backend)
+
 uninstall: uninstall.$(backend) uninstall.vhdllib uninstall.vpi uninstall.libghdl uninstall.ghw
 
 test: test.$(backend)
@@ -227,17 +229,47 @@ libs.vhdl.mcode: ghdl_mcode$(EXEEXT)
 install.mcode.program: install.dirs ghdl_mcode$(EXEEXT)
 	$(INSTALL_PROGRAM) ghdl_mcode$(EXEEXT) "$(DESTDIR)$(bindir)/ghdl$(EXEEXT)"
 
+# PL: How to get the GNAT version? -> here 12
+# PL: How to distinguish mingw32 from mingw64/ucrt64 for libgcc_seh vs. libgcc_s_dw2
+install.mcode.libs: install.dirs
+	# copy MSYS2 libraries to bin directory
+	$(INSTALL_PROGRAM) $(MINGW_PREFIX)/bin/libgcc_s_dw2-1.dll $(DESTDIR)$(bindir)/
+#	$(INSTALL_PROGRAM) $(MINGW_PREFIX)/bin/libgcc_s_seh-1.dll $(DESTDIR)$(bindir)/
+	$(INSTALL_PROGRAM) $(MINGW_PREFIX)/bin/libwinpthread-1.dll $(DESTDIR)$(bindir)/
+	$(INSTALL_PROGRAM) $(MINGW_PREFIX)/bin/zlib1.dll $(DESTDIR)$(bindir)/
+
+	# copy MSYS2 libraries to lib directory
+	$(INSTALL_PROGRAM) $(MINGW_PREFIX)/bin/libgcc_s_dw2-1.dll $(DESTDIR)$(libdir)/
+#	$(INSTALL_PROGRAM) $(MINGW_PREFIX)/bin/libgcc_s_seh-1.dll $(DESTDIR)$(libdir)/
+	$(INSTALL_PROGRAM) $(MINGW_PREFIX)/bin/libgnat-12.dll $(DESTDIR)$(libdir)/
+	$(INSTALL_PROGRAM) $(MINGW_PREFIX)/bin/libwinpthread-1.dll $(DESTDIR)$(libdir)/
+
 uninstall.mcode.program:
 	$(RM) "$(DESTDIR)$(bindir)/ghdl$(EXEEXT)"
 
-install.mcode: install.mcode.program install
+# PL: How to get the GNAT version? -> here 12
+# PL: How to distinguish mingw32 from mingw64/ucrt64 for libgcc_seh vs. libgcc_s_dw2
+uninstall.mcode.libs:
+	# removing MSYS2 libraries from bin directory
+	$(RM) $(DESTDIR)$(bindir)/libgcc_s_dw2-1.dll
+#	$(RM) $(DESTDIR)$(bindir)/libgcc_s_seh-1.dll
+	$(RM) $(DESTDIR)$(bindir)/libwinpthread-1.dll
+	$(RM) $(DESTDIR)$(bindir)/zlib1.dll
+
+	# removing MSYS2 libraries from lib directory
+	$(RM) $(DESTDIR)$(bindir)/libgcc_s_dw2-1.dll
+#	$(RM) $(DESTDIR)$(bindir)/libgcc_s_seh-1.dll
+	$(RM) $(DESTDIR)$(bindir)/libgnat-12.dll
+	$(RM) $(DESTDIR)$(bindir)/libwinpthread-1.dll
+
+install.mcode: install.mcode.program install.vhdllib
 
 install.mcode.deps.dll:
 	for f in $$($(PYTHON) $(srcdir)/scripts/win-dll.py ghdl_mcode$(EXEEXT)); do \
 	  $(INSTALL_PROGRAM) -p $$f "$(DESTDIR)$(bindir)/"; \
 	done
 
-uninstall.mcode: uninstall.mcode.program
+uninstall.mcode: uninstall.mcode.program uninstall.vhdllib
 
 test.mcode: ghdl_mcode$(EXEEXT)
 	cd $(srcdir)/testsuite; GHDL=$(CURDIR)/ghdl_mcode$(EXEEXT) ./testsuite.sh
