@@ -275,6 +275,7 @@ package body Elab.Vhdl_Types is
       El      : Node;
       El_Type : Node;
       El_Typ  : Type_Acc;
+      Bounded : Boolean;
 
       Parent_Els : Rec_El_Array_Acc;
    begin
@@ -285,6 +286,7 @@ package body Elab.Vhdl_Types is
          Parent_Els := Parent_Typ.Rec;
       end if;
 
+      Bounded := True;
       for I in Flist_First .. Flist_Last (El_List) loop
          El := Get_Nth_Element (El_List, I);
          El_Type := Get_Type (El);
@@ -299,13 +301,16 @@ package body Elab.Vhdl_Types is
             El_Typ := Synth_Subtype_Indication_If_Anonymous
               (Syn_Inst, El_Type);
          end if;
+         if Bounded and then not Is_Bounded_Type (El_Typ) then
+            Bounded := False;
+         end if;
          Rec_Els.E (Iir_Index32 (I + 1)).Typ := El_Typ;
       end loop;
 
-      if not Is_Fully_Constrained_Type (Def) then
-         return Create_Unbounded_Record (Rec_Els);
-      else
+      if Bounded then
          return Create_Record_Type (Rec_Els);
+      else
+         return Create_Unbounded_Record (Rec_Els);
       end if;
    end Synth_Record_Type_Definition;
 
