@@ -1320,8 +1320,8 @@ package body Elab.Vhdl_Debug is
       Expr : Iir;
       Res : Valtyp;
       P : Natural;
-      Opt_Value : Boolean := False;
       Opt_Name : Boolean := False;
+      Opt_Type : Boolean := False;
       Marker : Mark_Type;
       Cur_Scope : Node;
    begin
@@ -1329,8 +1329,8 @@ package body Elab.Vhdl_Debug is
       P := Line'First;
       loop
          P := Skip_Blanks (Line (P .. Line'Last));
-         if P + 2 < Line'Last and then Line (P .. P + 1) = "/v" then
-            Opt_Value := True;
+         if P + 2 < Line'Last and then Line (P .. P + 1) = "/t" then
+            Opt_Type := True;
             P := P + 2;
          elsif P + 2 < Line'Last and then Line (P .. P + 1) = "/n" then
             Opt_Name := True;
@@ -1339,8 +1339,6 @@ package body Elab.Vhdl_Debug is
             exit;
          end if;
       end loop;
-
-      pragma Unreferenced (Opt_Value);
 
       Buffer_Index := Buffer_Index + 1;
       Index_Str (Index_Str'First) := '*';
@@ -1405,6 +1403,9 @@ package body Elab.Vhdl_Debug is
             Elab.Vhdl_Values.Debug.Debug_Valtyp (Res);
          end if;
          New_Line;
+         if Opt_Type then
+            Debug_Typ (Res.Typ);
+         end if;
       end if;
 
       --  Free value
