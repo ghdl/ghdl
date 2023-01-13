@@ -453,6 +453,11 @@ install.llvm.program: install.dirs ghdl1-llvm$(EXEEXT) ghdl_llvm$(EXEEXT)
 	$(INSTALL_PROGRAM) ghdl_llvm$(EXEEXT) $(DESTDIR)$(bindir)/ghdl$(EXEEXT)
 	$(INSTALL_PROGRAM) ghdl1-llvm$(EXEEXT) $(DESTDIR)$(bindir)/ghdl1-llvm$(EXEEXT)
 
+install.llvm.program.false:
+install.llvm.program.true: install.dirs
+	$(INSTALL_PROGRAM) $(MINGW_PREFIX)/bin/gcc$(EXEEXT) $(DESTDIR)$(bindir)/
+	$(INSTALL_PROGRAM) $(MINGW_PREFIX)/bin/ld$(EXEEXT) $(DESTDIR)$(bindir)/
+
 # PL: How to get the GNAT version? -> here 12
 # PL: How to get the LLVM version? -> here 14
 install.llvm.libs.false:
@@ -478,6 +483,11 @@ uninstall.llvm.program:
 	$(RM) $(DESTDIR)$(bindir)/ghdl1-llvm$(EXEEXT)
 	$(RM) $(DESTDIR)$(bindir)/ghdl$(EXEEXT)
 
+uninstall.llvm.program.false:
+uninstall.llvm.program.true:
+	$(RM) $(DESTDIR)$(bindir)/gcc$(EXEEXT)
+	$(RM) $(DESTDIR)$(bindir)/ld$(EXEEXT)
+
 # PL: How to get the GNAT version? -> here 12
 uninstall.llvm.libs.false:
 uninstall.llvm.libs.true:
@@ -495,9 +505,9 @@ uninstall.llvm.libs.true:
 	$(RM) $(DESTDIR)$(libdir)/libgnat-*.dll
 	$(RM) $(DESTDIR)$(libdir)/libwinpthread-*.dll
 
-install.llvm: install.llvm.program install.llvm.libs.$(enable_standalone) install.grt
+install.llvm: install.llvm.program install.llvm.program.$(enable_standalone) install.llvm.libs.$(enable_standalone) install.grt
 
-uninstall.llvm: uninstall.llvm.program uninstall.llvm.libs.$(enable_standalone) uninstall.grt
+uninstall.llvm: uninstall.llvm.program uninstall.llvm.program.$(enable_standalone) uninstall.llvm.libs.$(enable_standalone) uninstall.grt
 
 install.llvm_jit: install.llvm_jit.program
 
