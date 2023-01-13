@@ -45,6 +45,7 @@ enable_werror=@enable_werror@
 enable_checks=@enable_checks@
 enable_gplcompat=@enable_gplcompat@
 enable_libghdl=@enable_libghdl@
+enable_standalone=@enable_standalone@
 default_pic=@default_pic@
 with_sundials=@with_sundials@
 sundials_incflags=@sundials_incflags@
@@ -150,8 +151,6 @@ install: install.$(backend) install.vhdllib install.vpi install.libghdl install.
 	"$(DESTDIR)$(bindir)/ghdl$(EXEEXT)" --disp-standard --std=93 > "$(DESTDIR)$(VHDL_LIB_DIR)/src/std/v93/standard.vhdl"
 	"$(DESTDIR)$(bindir)/ghdl$(EXEEXT)" --disp-standard --std=08 > "$(DESTDIR)$(VHDL_LIB_DIR)/src/std/v08/standard.vhdl"
 
-standalone: install standalone.$(backend)
-
 uninstall: uninstall.$(backend) uninstall.vhdllib uninstall.vpi uninstall.libghdl uninstall.ghw
 
 test: test.$(backend)
@@ -231,7 +230,8 @@ install.mcode.program: install.dirs ghdl_mcode$(EXEEXT)
 
 # PL: How to get the GNAT version? -> here 12
 # PL: How to distinguish mingw32 from mingw64/ucrt64 for libgcc_seh vs. libgcc_s_dw2
-install.mcode.libs: install.dirs
+install.mcode.libs.false:
+install.mcode.libs.true: install.dirs
 	# copy MSYS2 libraries to bin directory
 	$(INSTALL_PROGRAM) $(MINGW_PREFIX)/bin/libgcc_s_dw2-1.dll $(DESTDIR)$(bindir)/
 #	$(INSTALL_PROGRAM) $(MINGW_PREFIX)/bin/libgcc_s_seh-1.dll $(DESTDIR)$(bindir)/
@@ -249,7 +249,8 @@ uninstall.mcode.program:
 
 # PL: How to get the GNAT version? -> here 12
 # PL: How to distinguish mingw32 from mingw64/ucrt64 for libgcc_seh vs. libgcc_s_dw2
-uninstall.mcode.libs:
+uninstall.mcode.libs.false:
+uninstall.mcode.libs.true:
 	# removing MSYS2 libraries from bin directory
 	$(RM) $(DESTDIR)$(bindir)/libgcc_s_dw2-1.dll
 #	$(RM) $(DESTDIR)$(bindir)/libgcc_s_seh-1.dll
@@ -262,6 +263,8 @@ uninstall.mcode.libs:
 	$(RM) $(DESTDIR)$(bindir)/libgnat-12.dll
 	$(RM) $(DESTDIR)$(bindir)/libwinpthread-1.dll
 
+install.mcode: install.mcode.program install.mcode.libs.$(enable_standalone) install.vhdllib
+
 install.mcode: install.mcode.program install.vhdllib
 
 install.mcode.deps.dll:
@@ -269,7 +272,7 @@ install.mcode.deps.dll:
 	  $(INSTALL_PROGRAM) -p $$f "$(DESTDIR)$(bindir)/"; \
 	done
 
-uninstall.mcode: uninstall.mcode.program uninstall.vhdllib
+uninstall.mcode: uninstall.mcode.program uninstall.mcode.libs.$(enable_standalone) uninstall.vhdllib
 
 test.mcode: ghdl_mcode$(EXEEXT)
 	cd $(srcdir)/testsuite; GHDL=$(CURDIR)/ghdl_mcode$(EXEEXT) ./testsuite.sh
