@@ -248,9 +248,9 @@ uninstall.mcode.libs.true:
 	$(RM) $(DESTDIR)$(bindir)/libgcc_s_$(LIBGCC_KIND)-1.dll
 	$(RM) $(DESTDIR)$(bindir)/libwinpthread-1.dll
 	$(RM) $(DESTDIR)$(bindir)/zlib1.dll
-	$(RM) $(DESTDIR)$(bindir)/libgcc_s_$(LIBGCC_KIND)-1.dll
-	$(RM) $(DESTDIR)$(bindir)/libgnat-12.dll
-	$(RM) $(DESTDIR)$(bindir)/libwinpthread-1.dll
+	$(RM) $(DESTDIR)$(libdir)/libgcc_s_$(LIBGCC_KIND)-1.dll
+	$(RM) $(DESTDIR)$(libdir)/libgnat-12.dll
+	$(RM) $(DESTDIR)$(libdir)/libwinpthread-1.dll
 
 install.mcode: install.mcode.program install.mcode.libs.$(enable_standalone) install.vhdllib
 
