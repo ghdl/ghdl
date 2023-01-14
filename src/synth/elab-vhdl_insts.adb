@@ -238,16 +238,11 @@ package body Elab.Vhdl_Insts is
    procedure Elab_Package_Instantiation
      (Parent_Inst : Synth_Instance_Acc; Pkg : Node)
    is
+      Uninst : constant Node := Get_Uninstantiated_Package_Decl (Pkg);
       Bod : Node;
       Sub_Inst : Synth_Instance_Acc;
    begin
       Sub_Inst := Create_Package_Instance (Parent_Inst, Pkg);
-
-      Elab_Generics_Association
-        (Sub_Inst, Parent_Inst,
-         Get_Generic_Chain (Pkg), Get_Generic_Map_Aspect_Chain (Pkg));
-
-      Elab_Declarations (Sub_Inst, Get_Declaration_Chain (Pkg));
 
       if Get_Kind (Pkg) = Iir_Kind_Interface_Package_Declaration then
          --  Not yet implemented: macro-expanded body for mapped package.
@@ -256,6 +251,21 @@ package body Elab.Vhdl_Insts is
          Bod := Get_Instance_Package_Body (Pkg);
       end if;
 
+      --  Set uninstantiated scope.
+      --  Technically this can be done later as it is needed only when
+      --  the body is used.  However some designs do access before elaboration,
+      --  and we need to detect that.
+      if Bod = Null_Node then
+         --  Shared body
+         Set_Uninstantiated_Scope (Sub_Inst, Uninst);
+      end if;
+
+      Elab_Generics_Association
+        (Sub_Inst, Parent_Inst,
+         Get_Generic_Chain (Pkg), Get_Generic_Map_Aspect_Chain (Pkg));
+
+      Elab_Declarations (Sub_Inst, Get_Declaration_Chain (Pkg));
+
       if Bod /= Null_Node then
          --  Macro expanded package instantiation.
          Elab_Declarations
@@ -263,10 +273,8 @@ package body Elab.Vhdl_Insts is
       else
          --  Shared body
          declare
-            Uninst : constant Node := Get_Uninstantiated_Package_Decl (Pkg);
             Uninst_Bod : constant Node := Get_Package_Body (Uninst);
          begin
-            Set_Uninstantiated_Scope (Sub_Inst, Uninst);
             --  Synth declarations of (optional) body.
             if Uninst_Bod /= Null_Node then
                Elab_Declarations
