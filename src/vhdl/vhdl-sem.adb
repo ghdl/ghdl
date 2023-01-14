@@ -2890,8 +2890,10 @@ package body Vhdl.Sem is
       return False;
    end Is_Package_Macro_Expanded;
 
-   --  Mark declarations of HDR as elaborated.
-   procedure Mark_Declarations_Elaborated (Hdr : Iir)
+   --  Mark declarations of HDR elaboration status to FLAG.
+   --  Set to true at then end of a package declaration, but reset at the
+   --  beginning of body analysis.
+   procedure Mark_Declarations_Elaborated (Hdr : Iir; Flag : Boolean)
    is
       Decl : Iir;
    begin
@@ -2899,7 +2901,14 @@ package body Vhdl.Sem is
       while Decl /= Null_Iir loop
          case Get_Kind (Decl) is
             when Iir_Kinds_Subprogram_Declaration =>
-               Set_Elaborated_Flag (Decl, True);
+               --  The flag can always be set, but not cleared on implicit
+               --  subprograms.
+               if Flag
+                 or else
+                 Get_Implicit_Definition (Decl) not in Iir_Predefined_Implicit
+               then
+                  Set_Elaborated_Flag (Decl, Flag);
+               end if;
             when Iir_Kind_Type_Declaration =>
                declare
                   Def : constant Iir := Get_Type_Definition (Decl);
@@ -2907,8 +2916,8 @@ package body Vhdl.Sem is
                   if Get_Kind (Def) = Iir_Kind_Protected_Type_Declaration then
                      --  Mark the protected type as elaborated.
                      --  Mark the methods as elaborated.
-                     Set_Elaborated_Flag (Def, True);
-                     Mark_Declarations_Elaborated (Def);
+                     Set_Elaborated_Flag (Def, Flag);
+                     Mark_Declarations_Elaborated (Def, Flag);
                   end if;
                end;
             when others =>
@@ -2992,7 +3001,7 @@ package body Vhdl.Sem is
       end if;
 
       Sem_Declaration_Chain (Pkg);
-      Mark_Declarations_Elaborated (Pkg);
+      Mark_Declarations_Elaborated (Pkg, True);
       --  GHDL: subprogram bodies appear in package body.
 
       Pop_Signals_Declarative_Part (Implicit);
@@ -3077,6 +3086,10 @@ package body Vhdl.Sem is
       Xref_Body (Decl, Package_Decl);
       Set_Package_Body (Package_Decl, Decl);
       Set_Is_Within_Flag (Package_Decl, True);
+
+      --  Unmark subprograms from the specifications: they are not elaborated
+      --  before body elaboration.
+      Mark_Declarations_Elaborated (Package_Decl, False);
 
       --  LRM93 10.1 Declarative Region
       --  4. A package declaration, together with the corresponding
