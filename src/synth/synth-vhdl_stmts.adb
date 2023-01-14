@@ -102,6 +102,121 @@ package body Synth.Vhdl_Stmts is
       end if;
    end Synth_Waveform;
 
+   procedure Synth_Assignment_Prefix_Indexed_Name
+     (Syn_Inst : Synth_Instance_Acc;
+      Pfx : Node;
+      Dest_Base : in out Valtyp;
+      Dest_Typ : in out Type_Acc;
+      Dest_Off : in out Value_Offsets;
+      Dest_Dyn : in out Dyn_Name)
+   is
+      El_Typ : Type_Acc;
+      Voff : Net;
+      Off : Value_Offsets;
+      Err : Boolean;
+   begin
+      if Dest_Base.Val /= null then
+         --  For individual associations, only the typ can be set.
+         Strip_Const (Dest_Base);
+      end if;
+      Synth_Indexed_Name (Syn_Inst, Pfx, Dest_Typ, El_Typ, Voff, Off, Err);
+
+      if Err then
+         Dest_Base := No_Valtyp;
+      elsif Voff = No_Net then
+         --  Static index.
+         Dest_Off := Dest_Off + Off;
+      else
+         --  Dynamic index.
+         if Dest_Dyn.Voff = No_Net then
+            --  The first one.
+            Dest_Dyn := (Pfx_Off => Dest_Off,
+                         Pfx_Typ => Dest_Typ,
+                         Voff => Voff);
+            Dest_Off := Off;
+         else
+            --  Nested one.
+            --  FIXME
+            Dest_Off := Dest_Off + Off;
+            --  if Dest_Off /= (0, 0) then
+            --     Error_Msg_Synth (+Pfx, "nested memory not supported");
+            --  end if;
+
+            Dest_Dyn.Voff := Build_Addidx
+              (Get_Build (Syn_Inst), Dest_Dyn.Voff, Voff);
+            Set_Location (Dest_Dyn.Voff, Pfx);
+         end if;
+      end if;
+
+      Dest_Typ := El_Typ;
+   end Synth_Assignment_Prefix_Indexed_Name;
+
+   procedure Synth_Assignment_Prefix_Selected_Name
+     (Syn_Inst : Synth_Instance_Acc;
+      Pfx : Node;
+      Dest_Base : in out Valtyp;
+      Dest_Typ : in out Type_Acc;
+      Dest_Off : in out Value_Offsets;
+      Dest_Dyn : in out Dyn_Name)
+   is
+      pragma Unreferenced (Syn_Inst, Dest_Base, Dest_Dyn);
+      Idx : constant Iir_Index32 :=
+        Get_Element_Position (Get_Named_Entity (Pfx));
+   begin
+      Dest_Off := Dest_Off + Dest_Typ.Rec.E (Idx + 1).Offs;
+      Dest_Typ := Dest_Typ.Rec.E (Idx + 1).Typ;
+   end Synth_Assignment_Prefix_Selected_Name;
+
+   procedure Synth_Assignment_Prefix_Slice_Name
+     (Syn_Inst : Synth_Instance_Acc;
+      Pfx : Node;
+      Dest_Base : in out Valtyp;
+      Dest_Typ : in out Type_Acc;
+      Dest_Off : in out Value_Offsets;
+      Dest_Dyn : in out Dyn_Name)
+   is
+      Pfx_Bnd : Bound_Type;
+      El_Typ : Type_Acc;
+      Res_Bnd : Bound_Type;
+      Sl_Voff : Net;
+      Sl_Off : Value_Offsets;
+   begin
+      if Dest_Base.Val /= null then
+         Strip_Const (Dest_Base);
+      end if;
+
+      Get_Onedimensional_Array_Bounds (Dest_Typ, Pfx_Bnd, El_Typ);
+      Synth_Slice_Suffix (Syn_Inst, Pfx, Pfx_Bnd, El_Typ,
+                          Res_Bnd, Sl_Voff, Sl_Off);
+
+      if Sl_Voff = No_Net then
+         --  Fixed slice.
+         Dest_Typ := Create_Onedimensional_Array_Subtype
+           (Dest_Typ, Res_Bnd, El_Typ);
+         Dest_Off.Net_Off := Dest_Off.Net_Off + Sl_Off.Net_Off;
+         Dest_Off.Mem_Off := Dest_Off.Mem_Off + Sl_Off.Mem_Off;
+      else
+         --  Variable slice.
+         if Dest_Dyn.Voff = No_Net then
+            --  First one.
+            Dest_Dyn := (Pfx_Off => Dest_Off,
+                         Pfx_Typ => Dest_Typ,
+                         Voff => Sl_Voff);
+            Dest_Off := Sl_Off;
+         else
+            --  Nested.
+            if Dest_Off /= (0, 0) then
+               Error_Msg_Synth (Syn_Inst, Pfx, "nested memory not supported");
+            end if;
+
+            Dest_Dyn.Voff := Build_Addidx
+              (Get_Build (Syn_Inst), Dest_Dyn.Voff, Sl_Voff);
+            Set_Location (Dest_Dyn.Voff, Pfx);
+         end if;
+         Dest_Typ := Create_Slice_Type (Res_Bnd.Len, El_Typ);
+      end if;
+   end Synth_Assignment_Prefix_Slice_Name;
+
    procedure Synth_Assignment_Prefix (Syn_Inst : Synth_Instance_Acc;
                                       Inter_Inst : Synth_Instance_Acc;
                                       Pfx : Node;
@@ -154,113 +269,26 @@ package body Synth.Vhdl_Stmts is
             Assign_Base (Syn_Inst);
 
          when Iir_Kind_Indexed_Name =>
-            declare
-               El_Typ : Type_Acc;
-               Voff : Net;
-               Off : Value_Offsets;
-               Err : Boolean;
-            begin
-               Synth_Assignment_Prefix
-                 (Syn_Inst, Inter_Inst, Get_Prefix (Pfx),
-                  Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
-               if Dest_Base.Val /= null then
-                  --  For individual associations, only the typ can be set.
-                  Strip_Const (Dest_Base);
-               end if;
-               Synth_Indexed_Name (Syn_Inst, Pfx, Dest_Typ,
-                                   El_Typ, Voff, Off, Err);
-
-               if Err then
-                  Dest_Base := No_Valtyp;
-               elsif Voff = No_Net then
-                  --  Static index.
-                  Dest_Off := Dest_Off + Off;
-               else
-                  --  Dynamic index.
-                  if Dest_Dyn.Voff = No_Net then
-                     --  The first one.
-                     Dest_Dyn := (Pfx_Off => Dest_Off,
-                                  Pfx_Typ => Dest_Typ,
-                                  Voff => Voff);
-                     Dest_Off := Off;
-                  else
-                     --  Nested one.
-                     --  FIXME
-                     Dest_Off := Dest_Off + Off;
-                  --  if Dest_Off /= (0, 0) then
-                  --     Error_Msg_Synth (+Pfx, "nested memory not supported");
-                  --  end if;
-
-                     Dest_Dyn.Voff := Build_Addidx
-                       (Get_Build (Syn_Inst), Dest_Dyn.Voff, Voff);
-                     Set_Location (Dest_Dyn.Voff, Pfx);
-                  end if;
-               end if;
-
-               Dest_Typ := El_Typ;
-            end;
+            Synth_Assignment_Prefix
+              (Syn_Inst, Inter_Inst, Get_Prefix (Pfx),
+               Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
+            Synth_Assignment_Prefix_Indexed_Name
+              (Syn_Inst, Pfx, Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
 
          when Iir_Kind_Selected_Element =>
-            declare
-               Idx : constant Iir_Index32 :=
-                 Get_Element_Position (Get_Named_Entity (Pfx));
-            begin
-               Synth_Assignment_Prefix
-                 (Syn_Inst, Inter_Inst, Get_Prefix (Pfx),
-                  Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
-               Dest_Off := Dest_Off + Dest_Typ.Rec.E (Idx + 1).Offs;
-
-               Dest_Typ := Dest_Typ.Rec.E (Idx + 1).Typ;
-            end;
+            Synth_Assignment_Prefix
+              (Syn_Inst, Inter_Inst, Get_Prefix (Pfx),
+               Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
+            Synth_Assignment_Prefix_Selected_Name
+              (Syn_Inst, Pfx, Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
 
          when Iir_Kind_Slice_Name =>
-            declare
-               Pfx_Bnd : Bound_Type;
-               El_Typ : Type_Acc;
-               Res_Bnd : Bound_Type;
-               Sl_Voff : Net;
-               Sl_Off : Value_Offsets;
-            begin
-               Synth_Assignment_Prefix
-                 (Syn_Inst, Inter_Inst, Get_Prefix (Pfx),
-                  Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
+            Synth_Assignment_Prefix
+              (Syn_Inst, Inter_Inst, Get_Prefix (Pfx),
+               Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
+            Synth_Assignment_Prefix_Slice_Name
+              (Syn_Inst, Pfx, Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
 
-               if Dest_Base.Val /= null then
-                  Strip_Const (Dest_Base);
-               end if;
-
-               Get_Onedimensional_Array_Bounds (Dest_Typ, Pfx_Bnd, El_Typ);
-               Synth_Slice_Suffix (Syn_Inst, Pfx, Pfx_Bnd, El_Typ,
-                                   Res_Bnd, Sl_Voff, Sl_Off);
-
-               if Sl_Voff = No_Net then
-                  --  Fixed slice.
-                  Dest_Typ := Create_Onedimensional_Array_Subtype
-                    (Dest_Typ, Res_Bnd, El_Typ);
-                  Dest_Off.Net_Off := Dest_Off.Net_Off + Sl_Off.Net_Off;
-                  Dest_Off.Mem_Off := Dest_Off.Mem_Off + Sl_Off.Mem_Off;
-               else
-                  --  Variable slice.
-                  if Dest_Dyn.Voff = No_Net then
-                     --  First one.
-                     Dest_Dyn := (Pfx_Off => Dest_Off,
-                                  Pfx_Typ => Dest_Typ,
-                                  Voff => Sl_Voff);
-                     Dest_Off := Sl_Off;
-                  else
-                     --  Nested.
-                     if Dest_Off /= (0, 0) then
-                        Error_Msg_Synth
-                          (Syn_Inst, Pfx, "nested memory not supported");
-                     end if;
-
-                     Dest_Dyn.Voff := Build_Addidx
-                       (Get_Build (Syn_Inst), Dest_Dyn.Voff, Sl_Voff);
-                     Set_Location (Dest_Dyn.Voff, Pfx);
-                  end if;
-                  Dest_Typ := Create_Slice_Type (Res_Bnd.Len, El_Typ);
-               end if;
-            end;
 
          when Iir_Kind_Implicit_Dereference
            | Iir_Kind_Dereference =>
@@ -2117,7 +2145,7 @@ package body Synth.Vhdl_Stmts is
                Act_Dyn := No_Dyn_Name;
             else
                Synth_Assignment_Prefix
-                 (Caller_Inst, Subprg_Inst,
+                 (Caller_Inst, Caller_Inst,
                   Actual, Act_Base, Act_Typ, Act_Off, Act_Dyn);
             end if;
             if Get_Actual_Conversion (Assoc) /= Null_Node then
