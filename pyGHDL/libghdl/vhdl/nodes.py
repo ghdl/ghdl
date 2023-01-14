@@ -6527,6 +6527,19 @@ def Set_Use_Flag(obj: Iir, value: Boolean) -> None:
 
 
 @export
+@BindToLibGHDL("vhdl__nodes__get_elaborated_flag")
+def Get_Elaborated_Flag(obj: Iir) -> Boolean:
+    """"""
+    return 0
+
+
+@export
+@BindToLibGHDL("vhdl__nodes__set_elaborated_flag")
+def Set_Elaborated_Flag(obj: Iir, value: Boolean) -> None:
+    """"""
+
+
+@export
 @BindToLibGHDL("vhdl__nodes__get_end_has_reserved_id")
 def Get_End_Has_Reserved_Id(obj: Iir) -> Boolean:
     """"""

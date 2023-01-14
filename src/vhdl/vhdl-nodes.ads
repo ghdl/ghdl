@@ -1652,6 +1652,10 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Use_Flag (Flag6)
    --
+   --  Immediately set on predefined operators, set at then end of the package,
+   --  also set when the body is analyzed.
+   --   Get/Set_Elaborated_Flag (Flag7)
+   --
    -- Only for Iir_Kind_Function_Declaration:
    --   Get/Set_Resolution_Function_Flag (Flag13)
    --
@@ -1960,6 +1964,10 @@ package Vhdl.Nodes is
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Use_Flag (Flag6)
+   --
+   --  Set if not deferred, at end of the package.
+   -- Only for Iir_Kind_Constant_Declaration:
+   --   Get/Set_Elaborated_Flag (Flag7)
    --
    --   Get/Set_Is_Ref (Flag12)
    --
@@ -2775,6 +2783,9 @@ package Vhdl.Nodes is
    --   Get/Set_Resolved_Flag (Flag1)
    --
    --   Get/Set_Signal_Type_Flag (Flag2)
+   --
+   --  Set at end of the package or when the body is analyzed.
+   --   Get/Set_Elaborated_Flag (Flag7)
    --
    --   Get/Set_End_Has_Reserved_Id (Flag8)
    --
@@ -9480,6 +9491,12 @@ package Vhdl.Nodes is
    --  Field: Flag6
    function Get_Use_Flag (Decl : Iir) return Boolean;
    procedure Set_Use_Flag (Decl : Iir; Val : Boolean);
+
+   --  For a subprogram declaration, constant declaration or protected type.
+   --  Set when it could be used because fully elaborated.
+   --  Field: Flag7
+   function Get_Elaborated_Flag (Decl : Iir) return Boolean;
+   procedure Set_Elaborated_Flag (Decl : Iir; Val : Boolean);
 
    --  Layout flag: true if 'end' is followed by the reserved identifier.
    --  Field: Flag8

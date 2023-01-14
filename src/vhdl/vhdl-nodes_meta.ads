@@ -410,6 +410,7 @@ package Vhdl.Nodes_Meta is
       Field_Protected_Type_Body,
       Field_Protected_Type_Declaration,
       Field_Use_Flag,
+      Field_Elaborated_Flag,
       Field_End_Has_Reserved_Id,
       Field_End_Has_Identifier,
       Field_End_Has_Postponed,
@@ -1017,6 +1018,7 @@ package Vhdl.Nodes_Meta is
    function Has_Protected_Type_Body (K : Iir_Kind) return Boolean;
    function Has_Protected_Type_Declaration (K : Iir_Kind) return Boolean;
    function Has_Use_Flag (K : Iir_Kind) return Boolean;
+   function Has_Elaborated_Flag (K : Iir_Kind) return Boolean;
    function Has_End_Has_Reserved_Id (K : Iir_Kind) return Boolean;
    function Has_End_Has_Identifier (K : Iir_Kind) return Boolean;
    function Has_End_Has_Postponed (K : Iir_Kind) return Boolean;

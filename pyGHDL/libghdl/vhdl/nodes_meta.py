@@ -466,44 +466,45 @@ class fields(IntEnum):
     Protected_Type_Body = 346
     Protected_Type_Declaration = 347
     Use_Flag = 348
-    End_Has_Reserved_Id = 349
-    End_Has_Identifier = 350
-    End_Has_Postponed = 351
-    Has_Label = 352
-    Has_Begin = 353
-    Has_End = 354
-    Has_Is = 355
-    Has_Pure = 356
-    Has_Body = 357
-    Has_Parameter = 358
-    Has_Component = 359
-    Has_Identifier_List = 360
-    Has_Mode = 361
-    Has_Class = 362
-    Has_Delay_Mechanism = 363
-    Suspend_Flag = 364
-    Stop_Flag = 365
-    Is_Ref = 366
-    Is_Forward_Ref = 367
-    Psl_Property = 368
-    Psl_Sequence = 369
-    Psl_Declaration = 370
-    Psl_Expression = 371
-    Psl_Boolean = 372
-    PSL_Clock = 373
-    PSL_NFA = 374
-    PSL_Nbr_States = 375
-    PSL_Clock_Sensitivity = 376
-    PSL_EOS_Flag = 377
-    PSL_Abort_Flag = 378
-    Count_Expression = 379
-    Clock_Expression = 380
-    Default_Clock = 381
-    Foreign_Node = 382
-    Suspend_State_Index = 383
-    Suspend_State_Chain = 384
-    Suspend_State_Last = 385
-    Suspend_State_Decl = 386
+    Elaborated_Flag = 349
+    End_Has_Reserved_Id = 350
+    End_Has_Identifier = 351
+    End_Has_Postponed = 352
+    Has_Label = 353
+    Has_Begin = 354
+    Has_End = 355
+    Has_Is = 356
+    Has_Pure = 357
+    Has_Body = 358
+    Has_Parameter = 359
+    Has_Component = 360
+    Has_Identifier_List = 361
+    Has_Mode = 362
+    Has_Class = 363
+    Has_Delay_Mechanism = 364
+    Suspend_Flag = 365
+    Stop_Flag = 366
+    Is_Ref = 367
+    Is_Forward_Ref = 368
+    Psl_Property = 369
+    Psl_Sequence = 370
+    Psl_Declaration = 371
+    Psl_Expression = 372
+    Psl_Boolean = 373
+    PSL_Clock = 374
+    PSL_NFA = 375
+    PSL_Nbr_States = 376
+    PSL_Clock_Sensitivity = 377
+    PSL_EOS_Flag = 378
+    PSL_Abort_Flag = 379
+    Count_Expression = 380
+    Clock_Expression = 381
+    Default_Clock = 382
+    Foreign_Node = 383
+    Suspend_State_Index = 384
+    Suspend_State_Chain = 385
+    Suspend_State_Last = 386
+    Suspend_State_Decl = 387
 
 
 def Get_Boolean(node, field):
@@ -2729,6 +2730,12 @@ def Has_Protected_Type_Declaration(kind: IirKind) -> bool:
 @export
 @BindToLibGHDL("vhdl__nodes_meta__has_use_flag")
 def Has_Use_Flag(kind: IirKind) -> bool:
+    """"""
+
+
+@export
+@BindToLibGHDL("vhdl__nodes_meta__has_elaborated_flag")
+def Has_Elaborated_Flag(kind: IirKind) -> bool:
     """"""
 
 

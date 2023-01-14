@@ -7028,6 +7028,22 @@ package body Vhdl.Nodes is
       Set_Flag6 (Decl, Val);
    end Set_Use_Flag;
 
+   function Get_Elaborated_Flag (Decl : Iir) return Boolean is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Elaborated_Flag (Get_Kind (Decl)),
+                     "no field Elaborated_Flag");
+      return Get_Flag7 (Decl);
+   end Get_Elaborated_Flag;
+
+   procedure Set_Elaborated_Flag (Decl : Iir; Val : Boolean) is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Elaborated_Flag (Get_Kind (Decl)),
+                     "no field Elaborated_Flag");
+      Set_Flag7 (Decl, Val);
+   end Set_Elaborated_Flag;
+
    function Get_End_Has_Reserved_Id (Decl : Iir) return Boolean is
    begin
       pragma Assert (Decl /= Null_Iir);
