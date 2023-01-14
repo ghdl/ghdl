@@ -142,9 +142,9 @@ all: Makefile all.$(backend) all.libghdl all.ghw
 
 install: install.$(backend) install.vhdllib install.vpi install.libghdl install.ghw
 #       Generate std.standard package VHDL source
-	$(DESTDIR)$(bindir)/ghdl$(EXEEXT) --disp-standard --std=87 > $(DESTDIR)$(VHDL_LIB_DIR)/src/std/v87/standard.vhdl
-	$(DESTDIR)$(bindir)/ghdl$(EXEEXT) --disp-standard --std=93 > $(DESTDIR)$(VHDL_LIB_DIR)/src/std/v93/standard.vhdl
-	$(DESTDIR)$(bindir)/ghdl$(EXEEXT) --disp-standard --std=08 > $(DESTDIR)$(VHDL_LIB_DIR)/src/std/v08/standard.vhdl
+	"$(DESTDIR)$(bindir)/ghdl$(EXEEXT)" --disp-standard --std=87 > "$(DESTDIR)$(VHDL_LIB_DIR)/src/std/v87/standard.vhdl"
+	"$(DESTDIR)$(bindir)/ghdl$(EXEEXT)" --disp-standard --std=93 > "$(DESTDIR)$(VHDL_LIB_DIR)/src/std/v93/standard.vhdl"
+	"$(DESTDIR)$(bindir)/ghdl$(EXEEXT)" --disp-standard --std=08 > "$(DESTDIR)$(VHDL_LIB_DIR)/src/std/v08/standard.vhdl"
 
 uninstall: uninstall.$(backend) uninstall.vhdllib uninstall.vpi uninstall.libghdl uninstall.ghw
 
@@ -218,10 +218,10 @@ libs.vhdl.mcode: ghdl_mcode$(EXEEXT)
 	$(MAKE) -f $(srcdir)/libraries/Makefile.inc $(LIBVHDL_FLAGS_TO_PASS) GHDL=$(PWD)/ghdl_mcode$(EXEEXT) GHDL_FLAGS="" VHDL_COPY_OBJS=no vhdl.libs.all
 
 install.mcode.program: install.dirs ghdl_mcode$(EXEEXT)
-	$(INSTALL_PROGRAM) ghdl_mcode$(EXEEXT) $(DESTDIR)$(bindir)/ghdl$(EXEEXT)
+	$(INSTALL_PROGRAM) ghdl_mcode$(EXEEXT) "$(DESTDIR)$(bindir)/ghdl$(EXEEXT)"
 
 uninstall.mcode.program:
-	$(RM) $(DESTDIR)$(bindir)/ghdl$(EXEEXT)
+	$(RM) "$(DESTDIR)$(bindir)/ghdl$(EXEEXT)"
 
 install.mcode: install.mcode.program install.vhdllib
 
@@ -484,8 +484,8 @@ all.libghdl.false:
 all.libghdl: all.libghdl.$(enable_libghdl)
 
 install.libghdl.include: install.dirs $(srcdir)/src/synth/include/synth_gates.h
-	$(INSTALL_DATA) -p $(srcdir)/src/synth/include/synth.h $(DESTDIR)$(incdir)/
-	$(INSTALL_DATA) -p $(srcdir)/src/synth/include/synth_gates.h $(DESTDIR)$(incdir)/
+	$(INSTALL_DATA) -p $(srcdir)/src/synth/include/synth.h "$(DESTDIR)$(incdir)/"
+	$(INSTALL_DATA) -p $(srcdir)/src/synth/include/synth_gates.h "$(DESTDIR)$(incdir)/"
 
 test.$(backend): install.libghdl.local
 install.libghdl.local: all.libghdl $(srcdir)/src/synth/include/synth_gates.h
@@ -494,9 +494,9 @@ install.libghdl.local: all.libghdl $(srcdir)/src/synth/include/synth_gates.h
 	$(INSTALL_DATA) -p $(srcdir)/src/synth/include/synth_gates.h $(incdirsuffix)/ghdl/
 
 install.libghdl.lib:
-	$(INSTALL_PROGRAM) -p lib/$(libghdl_name) $(DESTDIR)$(libdir)/
-	$(INSTALL_PROGRAM) -p libghdl.a $(DESTDIR)$(libdir)/
-	$(INSTALL_DATA) -p libghdl.link $(DESTDIR)$(libdir)/
+	$(INSTALL_PROGRAM) -p lib/$(libghdl_name) "$(DESTDIR)$(libdir)/"
+	$(INSTALL_PROGRAM) -p libghdl.a "$(DESTDIR)$(libdir)/"
+	$(INSTALL_DATA) -p libghdl.link "$(DESTDIR)$(libdir)/"
 
 install.libghdl.true: install.libghdl.lib install.libghdl.include
 
@@ -530,14 +530,14 @@ libghw.o: $(srcdir)/ghw/libghw.c $(srcdir)/ghw/libghw.h
 all.ghw: ghwdump$(EXEEXT) lib/libghw$(SOEXT)
 
 install.ghw:
-	$(INSTALL_PROGRAM) -p ghwdump$(EXEEXT) $(DESTDIR)$(bindir)/
-	$(INSTALL_PROGRAM) -p lib/libghw$(SOEXT) $(DESTDIR)$(libdir)/
-	$(INSTALL_DATA) -p $(srcdir)/ghw/libghw.h $(DESTDIR)$(incdir)/
+	$(INSTALL_PROGRAM) -p ghwdump$(EXEEXT) "$(DESTDIR)$(bindir)/"
+	$(INSTALL_PROGRAM) -p lib/libghw$(SOEXT) "$(DESTDIR)$(libdir)/"
+	$(INSTALL_DATA) -p $(srcdir)/ghw/libghw.h "$(DESTDIR)$(incdir)/"
 
 uninstall.ghw:
-	$(RM) $(DESTDIR)$(bindir)/ghwdump$(EXEEXT)
-	$(RM) $(DESTDIR)$(libdir)/libghw$(EXEEXT)
-	$(RM) -f $(DESTDIR)$(incdir)/libghw.h
+	$(RM) "$(DESTDIR)$(bindir)/ghwdump$(EXEEXT)"
+	$(RM) "$(DESTDIR)$(libdir)/libghw$(EXEEXT)"
+	$(RM) "$(DESTDIR)$(incdir)/libghw.h"
 
 ############### grt #####################################################
 
@@ -578,14 +578,14 @@ $(libdirsuffix)/libghdlvpi$(SOEXT): vpi_thunk.o vhpi_thunk.o
 all.vpi: $(libdirsuffix)/libghdlvpi$(SOEXT)
 
 install.vpi: all.vpi install.dirs
-	$(INSTALL_PROGRAM) -p $(libdirsuffix)/libghdlvpi$(SOEXT) $(DESTDIR)$(libdir)/
-	$(INSTALL_DATA) -p $(GRTSRCDIR)/vpi_user.h $(DESTDIR)$(incdir)/
-	$(INSTALL_DATA) -p $(GRTSRCDIR)/vhpi_user.h $(DESTDIR)$(incdir)/
+	$(INSTALL_PROGRAM) -p $(libdirsuffix)/libghdlvpi$(SOEXT) "$(DESTDIR)$(libdir)/"
+	$(INSTALL_DATA) -p $(GRTSRCDIR)/vpi_user.h "$(DESTDIR)$(incdir)/"
+	$(INSTALL_DATA) -p $(GRTSRCDIR)/vhpi_user.h "$(DESTDIR)$(incdir)/"
 
 uninstall.vpi:
-	$(RM) -f $(DESTDIR)$(libdir)/libghdlvpi$(SOEXT)
-	$(RM) -f $(DESTDIR)$(incdir)/vpi_user.h
-	$(RM) -f $(DESTDIR)$(incdir)/vhpi_user.h
+	$(RM) -f "$(DESTDIR)$(libdir)/libghdlvpi$(SOEXT)"
+	$(RM) -f "$(DESTDIR)$(incdir)/vpi_user.h"
+	$(RM) -f "$(DESTDIR)$(incdir)/vhpi_user.h"
 
 test.$(backend): install.vpi.local
 install.vpi.local: all.vpi
@@ -620,28 +620,28 @@ endif
 
 install.dirs:
 #	Use -p to create parents and to avoid error if existing.
-	$(MKDIR) -p $(DESTDIR)$(prefix)
-	$(MKDIR) -p $(DESTDIR)$(bindir)
-	$(MKDIR) -p $(DESTDIR)$(libdir)
-	$(MKDIR) -p $(DESTDIR)$(libghdldir)
-	$(MKDIR) -p $(DESTDIR)$(incdir)
+	$(MKDIR) -p "$(DESTDIR)$(prefix)"
+	$(MKDIR) -p "$(DESTDIR)$(bindir)"
+	$(MKDIR) -p "$(DESTDIR)$(libdir)"
+	$(MKDIR) -p "$(DESTDIR)$(libghdldir)"
+	$(MKDIR) -p "$(DESTDIR)$(incdir)"
 
 install.vhdllib: install.dirs
 #	Libraries (only if not empty)
 	for d in $(VHDLLIB_SUBDIRS); do \
-	  $(MKDIR) -p $(DESTDIR)$(VHDL_LIB_DIR)/$$d; \
+	  $(MKDIR) -p "$(DESTDIR)$(VHDL_LIB_DIR)/$$d"; \
 	  $(INSTALL_DATA) -p \
-	    $(LIBDST_DIR)/$$d/* $(DESTDIR)$(VHDL_LIB_DIR)/$$d; \
+	    $(LIBDST_DIR)/$$d/* "$(DESTDIR)$(VHDL_LIB_DIR)/$$d"; \
 	done
 #	ANSI color
 	$(INSTALL_DATA) -p \
-	    $(srcdir)/scripts/ansi_color.sh $(DESTDIR)$(VHDL_LIB_DIR)/;
+	    $(srcdir)/scripts/ansi_color.sh "$(DESTDIR)$(VHDL_LIB_DIR)/";
 #	Vendors scripts
-	$(MKDIR) -p $(DESTDIR)$(VHDL_LIB_DIR)/vendors
+	$(MKDIR) -p "$(DESTDIR)$(VHDL_LIB_DIR)/vendors"
 	$(INSTALL_DATA) -p \
-	    $(srcdir)/scripts/vendors/* $(DESTDIR)$(VHDL_LIB_DIR)/vendors/
+	    $(srcdir)/scripts/vendors/* "$(DESTDIR)$(VHDL_LIB_DIR)/vendors/"
 	$(INSTALL_PROGRAM) -p \
-	    $(srcdir)/scripts/vendors/*.sh $(DESTDIR)$(VHDL_LIB_DIR)/vendors/
+	    $(srcdir)/scripts/vendors/*.sh "$(DESTDIR)$(VHDL_LIB_DIR)/vendors/"
 
 uninstall.vhdllib:
 	$(RM) -rf $(DESTDIR)$(VHDL_LIB_DIR)
