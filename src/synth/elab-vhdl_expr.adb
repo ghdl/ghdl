@@ -480,11 +480,15 @@ package body Elab.Vhdl_Expr is
                Res_Bnd : Bound_Type;
                Sl_Off : Value_Offsets;
                Inp : Net;
+               Err : Boolean;
             begin
                Pfx_Typ := Exec_Name_Subtype (Syn_Inst, Get_Prefix (Name));
                Get_Onedimensional_Array_Bounds (Pfx_Typ, Pfx_Bnd, El_Typ);
                Synth_Slice_Suffix (Syn_Inst, Name, Pfx_Bnd, El_Typ,
-                                   Res_Bnd, Inp, Sl_Off);
+                                   Res_Bnd, Inp, Sl_Off, Err);
+               if Err then
+                  return null;
+               end if;
                pragma Assert (Inp = No_Net);
                return Create_Onedimensional_Array_Subtype
                  (Pfx_Typ, Res_Bnd, El_Typ);

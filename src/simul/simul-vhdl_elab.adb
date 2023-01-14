@@ -536,7 +536,10 @@ package body Simul.Vhdl_Elab is
          exit when El = Null_Node;
          Sig := Compute_Sub_Signal (Inst, El);
 
-         Add_Process_Driver (Proc_Idx, Sig, El);
+         if Sig.Base /= No_Signal_Index then
+            --  Only if no error.
+            Add_Process_Driver (Proc_Idx, Sig, El);
+         end if;
 
          Next (It);
       end loop;

@@ -121,7 +121,8 @@ package Synth.Vhdl_Expr is
                                  El_Typ : Type_Acc;
                                  Res_Bnd : out Bound_Type;
                                  Inp : out Net;
-                                 Off : out Value_Offsets);
+                                 Off : out Value_Offsets;
+                                 Error : out Boolean);
 
    --  If VOFF is No_Net then OFF is valid, if VOFF is not No_Net then
    --  OFF is 0.

@@ -1229,7 +1229,8 @@ package body Synth.Vhdl_Expr is
                                        Dir : Direction_Type;
                                        El_Typ : Type_Acc;
                                        Res_Bnd : out Bound_Type;
-                                       Off : out Value_Offsets)
+                                       Off : out Value_Offsets;
+                                       Error : out Boolean)
    is
       Is_Null : Boolean;
       Len : Uns32;
@@ -1243,6 +1244,7 @@ package body Synth.Vhdl_Expr is
          else
             Res_Bnd := (Dir => Dir_Downto, Left => 0, Right => 1, Len => 0);
          end if;
+         Error := True;
          return;
       end if;
 
@@ -1260,11 +1262,13 @@ package body Synth.Vhdl_Expr is
          if not In_Bounds (Pfx_Bnd, Int32 (L)) then
             Bound_Error (Syn_Inst, Expr, Pfx_Bnd, Int32 (L));
             Off := (0, 0);
+            Error := True;
             return;
          end if;
          if not In_Bounds (Pfx_Bnd, Int32 (R)) then
             Bound_Error (Syn_Inst, Expr, Pfx_Bnd, Int32 (R));
             Off := (0, 0);
+            Error := True;
             return;
          end if;
 
@@ -1283,6 +1287,7 @@ package body Synth.Vhdl_Expr is
                   Len => Len,
                   Left => Int32 (L),
                   Right => Int32 (R));
+      Error := False;
    end Synth_Slice_Const_Suffix;
 
    procedure Synth_Slice_Suffix (Syn_Inst : Synth_Instance_Acc;
@@ -1291,7 +1296,8 @@ package body Synth.Vhdl_Expr is
                                  El_Typ : Type_Acc;
                                  Res_Bnd : out Bound_Type;
                                  Inp : out Net;
-                                 Off : out Value_Offsets)
+                                 Off : out Value_Offsets;
+                                 Error : out Boolean)
    is
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Expr : constant Node := Get_Suffix (Name);
@@ -1319,7 +1325,7 @@ package body Synth.Vhdl_Expr is
             Synth_Slice_Const_Suffix (Syn_Inst, Expr,
                                       Name, Pfx_Bnd,
                                       Rng.Left, Rng.Right, Rng.Dir,
-                                      El_Typ, Res_Bnd, Off);
+                                      El_Typ, Res_Bnd, Off, Error);
             return;
          end;
       end if;
@@ -1330,7 +1336,7 @@ package body Synth.Vhdl_Expr is
                                    Get_Static_Discrete (Left),
                                    Get_Static_Discrete (Right),
                                    Dir,
-                                   El_Typ, Res_Bnd, Off);
+                                   El_Typ, Res_Bnd, Off, Error);
       else
          if Pfx_Bnd.Dir /= Dir then
             Error_Msg_Synth (Syn_Inst, Name, "direction mismatch in slice");
@@ -1339,6 +1345,7 @@ package body Synth.Vhdl_Expr is
             else
                Res_Bnd := (Dir => Dir_Downto, Left => 0, Right => 1, Len => 0);
             end if;
+            Error := True;
             return;
          end if;
 
@@ -1346,6 +1353,7 @@ package body Synth.Vhdl_Expr is
             Error_Msg_Synth
               (Syn_Inst, Name, "left and right bounds of a slice must be "
                  & "either constant or dynamic");
+            Error := True;
             return;
          end if;
 
@@ -1353,6 +1361,7 @@ package body Synth.Vhdl_Expr is
                                    Get_Net (Ctxt, Left), Get_Net (Ctxt, Right),
                                    Inp, Step, Off.Net_Off, Res_Bnd.Len);
          if Inp = No_Net then
+            Error := True;
             return;
          end if;
          Inp_W := Get_Width (Inp);
@@ -1371,6 +1380,7 @@ package body Synth.Vhdl_Expr is
            (Ctxt, Inp, Step * El_Typ.W, Max,
             Inp_W + Width (Clog2 (Uns64 (Step * El_Typ.W))));
          Set_Location (Inp, Name);
+         Error := False;
       end if;
    end Synth_Slice_Suffix;
 

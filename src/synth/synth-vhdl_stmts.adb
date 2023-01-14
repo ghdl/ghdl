@@ -180,6 +180,7 @@ package body Synth.Vhdl_Stmts is
       Res_Bnd : Bound_Type;
       Sl_Voff : Net;
       Sl_Off : Value_Offsets;
+      Err : Boolean;
    begin
       if Dest_Base.Val /= null then
          Strip_Const (Dest_Base);
@@ -187,9 +188,12 @@ package body Synth.Vhdl_Stmts is
 
       Get_Onedimensional_Array_Bounds (Dest_Typ, Pfx_Bnd, El_Typ);
       Synth_Slice_Suffix (Syn_Inst, Pfx, Pfx_Bnd, El_Typ,
-                          Res_Bnd, Sl_Voff, Sl_Off);
+                          Res_Bnd, Sl_Voff, Sl_Off, Err);
 
-      if Sl_Voff = No_Net then
+      if Err then
+         Dest_Base := No_Valtyp;
+         Dest_Typ := null;
+      elsif Sl_Voff = No_Net then
          --  Fixed slice.
          Dest_Typ := Create_Onedimensional_Array_Subtype
            (Dest_Typ, Res_Bnd, El_Typ);
