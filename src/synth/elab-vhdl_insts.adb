@@ -412,12 +412,14 @@ package body Elab.Vhdl_Insts is
                                         Inter : Node;
                                         Assoc : Node) return Type_Acc
    is
+      Inter_Type : constant Node := Get_Type (Inter);
+      Ind : Node;
       Marker : Mark_Type;
       Inter_Typ : Type_Acc;
       Val : Valtyp;
       Res : Type_Acc;
    begin
-      if not Is_Fully_Constrained_Type (Get_Type (Inter)) then
+      if not Is_Fully_Constrained_Type (Inter_Type) then
          --  TODO
          --  Find the association for this interface
          --  * if individual assoc: get type
@@ -436,6 +438,9 @@ package body Elab.Vhdl_Insts is
             Val := Synth_Expression_With_Type
               (Syn_Inst, Get_Actual (Assoc), Inter_Typ);
             Res := Val.Typ;
+            if Res /= null then
+               Res := Unshare (Res, Global_Pool'Access);
+            end if;
          else
             case Iir_Kinds_Association_Element_Parameters (Get_Kind (Assoc)) is
                when Iir_Kinds_Association_Element_By_Actual =>
@@ -447,11 +452,21 @@ package body Elab.Vhdl_Insts is
                   Res := Exec_Name_Subtype
                     (Syn_Inst, Get_Default_Value (Inter));
             end case;
+
+            if Res /= null then
+               Res := Unshare (Res, Global_Pool'Access);
+            end if;
+
+            Ind := Get_Subtype_Indication (Inter);
+            if Res /= null
+              and then Ind /= Null_Iir
+              and then Get_Kind (Ind) in Iir_Kinds_Subtype_Definition
+              and then not Get_Is_Ref (Inter)
+            then
+               Create_Subtype_Object (Sub_Inst, Inter_Type, Res);
+            end if;
          end if;
 
-         if Res /= null then
-            Res := Unshare (Res, Global_Pool'Access);
-         end if;
          Release_Expr_Pool (Marker);
          return Res;
       else
