@@ -297,6 +297,12 @@ package body Elab.Vhdl_Values.Debug is
 
    procedure Debug_Valtyp (V : Valtyp) is
    begin
+      if V.Val = null then
+         Put ("*null*");
+         New_Line;
+         return;
+      end if;
+
       case V.Val.Kind is
          when Value_Memory
            | Value_Const =>

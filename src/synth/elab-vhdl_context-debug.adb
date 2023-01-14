@@ -73,4 +73,17 @@ package body Elab.Vhdl_Context.Debug is
    begin
       Debug_Elab_Tree_1 (Inst, 0);
    end Debug_Elab_Tree;
+
+   procedure Debug_Backtrace (First : Synth_Instance_Acc)
+   is
+      Inst : Synth_Instance_Acc;
+   begin
+      Inst := First;
+      while Inst /= null loop
+         Debug_Synth_Instance (Inst);
+         Inst := Inst.Caller;
+      end loop;
+   end Debug_Backtrace;
+
+   pragma Unreferenced (Debug_Backtrace);
 end Elab.Vhdl_Context.Debug;
