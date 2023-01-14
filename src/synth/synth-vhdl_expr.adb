@@ -2267,8 +2267,7 @@ package body Synth.Vhdl_Expr is
 
                Dyn : Dyn_Name;
             begin
-               Synth_Assignment_Prefix
-                 (Syn_Inst, Syn_Inst, Expr, Base, Typ, Off, Dyn);
+               Synth_Assignment_Prefix (Syn_Inst, Expr, Base, Typ, Off, Dyn);
                if Base = No_Valtyp then
                   --  Propagate error.
                   return No_Valtyp;

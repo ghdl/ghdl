@@ -102,7 +102,7 @@ package body Elab.Vhdl_Insts is
                            Dyn : Dyn_Name;
                         begin
                            Synth_Assignment_Prefix
-                             (Syn_Inst, Sub_Inst, Formal,
+                             (Syn_Inst, Formal,
                               Formal_Base, Formal_Typ, Formal_Offs, Dyn);
                            pragma Assert (Dyn = No_Dyn_Name);
                         end;

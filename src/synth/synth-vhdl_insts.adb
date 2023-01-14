@@ -36,6 +36,7 @@ with Netlists.Folds;
 
 with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
 with Elab.Vhdl_Values; use Elab.Vhdl_Values;
+with Elab.Vhdl_Types;
 
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Errors;
@@ -715,12 +716,13 @@ package body Synth.Vhdl_Insts is
    end Sort_Value_Offset;
 
    function Synth_Individual_Input_Assoc (Syn_Inst : Synth_Instance_Acc;
-                                          Assoc : Node;
-                                          Inter_Inst : Synth_Instance_Acc)
-                                         return Net
+                                          Inter_Typ : Type_Acc;
+                                          Assoc : Node) return Net
    is
+      pragma Unreferenced (Inter_Typ);
       use Netlists.Concats;
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
+      Formal_Typ : Type_Acc;
       Iassoc : Node;
       V : Valtyp;
       Typ : Type_Acc;
@@ -728,11 +730,13 @@ package body Synth.Vhdl_Insts is
       Concat : Concat_Type;
       N_Off : Uns32;
       N : Net;
-      Base : Valtyp;
       Offs : Value_Offsets;
-      Dyn : Dyn_Name;
    begin
       Value_Offset_Tables.Init (Els, 16);
+
+      --  FIXME: should it be unshared ?
+      Formal_Typ := Elab.Vhdl_Types.Synth_Subtype_Indication
+        (Syn_Inst, Get_Actual_Type (Assoc));
 
       Iassoc := Get_Chain (Assoc);
       while Iassoc /= Null_Node
@@ -740,9 +744,8 @@ package body Synth.Vhdl_Insts is
       loop
          --  For each individual assoc:
          --   1. compute type and offset
-         Synth_Assignment_Prefix
-           (Syn_Inst, Inter_Inst, Get_Formal (Iassoc), Base, Typ, Offs, Dyn);
-         pragma Assert (Dyn = No_Dyn_Name);
+         Synth_Individual_Formal
+           (Syn_Inst, Formal_Typ, Get_Formal (Iassoc), Typ, Offs);
 
          --   2. synth expression
          V := Synth_Single_Input_Assoc
@@ -753,8 +756,6 @@ package body Synth.Vhdl_Insts is
 
          Iassoc := Get_Chain (Iassoc);
       end loop;
-
-      pragma Unreferenced (Base);
 
       --  Then:
       --   1. sort table by offset
@@ -799,7 +800,7 @@ package body Synth.Vhdl_Insts is
               (Syn_Inst, Inter_Typ, Syn_Inst, Get_Actual (Assoc), Assoc);
          when Iir_Kind_Association_Element_By_Individual =>
             Res_Net := Synth_Individual_Input_Assoc
-              (Syn_Inst, Assoc, Inter_Inst);
+              (Syn_Inst, Inter_Typ, Assoc);
             Release_Expr_Pool (Marker);
             return Res_Net;
       end case;
@@ -815,8 +816,8 @@ package body Synth.Vhdl_Insts is
 
    procedure Synth_Individual_Output_Assoc (Outp : Net;
                                             Syn_Inst : Synth_Instance_Acc;
-                                            Assoc : Node;
-                                            Inter_Inst : Synth_Instance_Acc)
+                                            Inter_Typ : Type_Acc;
+                                            Assoc : Node)
    is
       Marker : Mark_Type;
       Iassoc : Node;
@@ -824,8 +825,6 @@ package body Synth.Vhdl_Insts is
       Typ : Type_Acc;
       O : Net;
       Port : Net;
-      Base : Valtyp;
-      Dyn : Dyn_Name;
       Offs : Value_Offsets;
    begin
       Mark_Expr_Pool (Marker);
@@ -839,9 +838,8 @@ package body Synth.Vhdl_Insts is
       loop
          --  For each individual assoc:
          --   1. compute type and offset
-         Synth_Assignment_Prefix
-           (Syn_Inst, Inter_Inst, Get_Formal (Iassoc), Base, Typ, Offs, Dyn);
-         pragma Assert (Dyn = No_Dyn_Name);
+         Synth_Individual_Formal
+           (Syn_Inst, Inter_Typ, Get_Formal (Iassoc), Typ, Offs);
 
          --   2. Extract the value.
          O := Build_Extract (Get_Build (Syn_Inst), Port, Offs.Net_Off, Typ.W);
@@ -868,6 +866,8 @@ package body Synth.Vhdl_Insts is
       Port : Net;
       O : Valtyp;
    begin
+      Formal_Typ := Get_Value (Inter_Inst, Inter).Typ;
+
       case Get_Kind (Assoc) is
          when Iir_Kind_Association_Element_Open =>
             --  Not connected.
@@ -876,11 +876,9 @@ package body Synth.Vhdl_Insts is
             Actual := Get_Actual (Assoc);
          when others =>
             Synth_Individual_Output_Assoc
-              (Outp, Syn_Inst, Assoc, Inter_Inst);
+              (Outp, Syn_Inst, Formal_Typ, Assoc);
             return;
       end case;
-
-      Formal_Typ := Get_Value (Inter_Inst, Inter).Typ;
 
       Mark_Expr_Pool (Marker);
       --  Create a port gate (so that is has a name).
