@@ -2083,6 +2083,109 @@ package body Synth.Vhdl_Stmts is
       return Count;
    end Count_Individual_Associations;
 
+   function Copy_Unbounded_Type (Typ : Type_Acc; Base : Type_Acc)
+                                return Type_Acc is
+   begin
+      case Typ.Kind is
+         when Type_All_Discrete
+           | Type_Float
+           | Type_Vector
+           | Type_Array
+           | Type_Record
+           | Type_Access
+           | Type_File
+           | Type_Protected =>
+            return Unshare_Type_Instance (Typ, Base);
+         when Type_Unbounded_Record =>
+            declare
+               Els : Rec_El_Array_Acc;
+            begin
+               Els := Create_Rec_El_Array (Typ.Rec.Len);
+               for I in Els.E'Range loop
+                  Els.E (I) :=
+                    (Offs => Typ.Rec.E (I).Offs,
+                     Typ => Copy_Unbounded_Type (Typ.Rec.E (I).Typ,
+                                                 Base.Rec.E (I).Typ));
+               end loop;
+               return Create_Unbounded_Record (Els);
+            end;
+         when Type_Unbounded_Array =>
+            return Create_Unbounded_Array
+              (Typ.Uarr_Idx, Typ.Ulast, Copy_Unbounded_Type (Typ.Uarr_El,
+                                                             Base.Uarr_El));
+         when Type_Array_Unbounded =>
+            return Create_Array_Unbounded_Type
+              (Typ.Abound, Typ.Alast, Copy_Unbounded_Type (Typ.Uarr_El,
+                                                           Base.Uarr_El));
+         when Type_Unbounded_Vector =>
+            return Create_Unbounded_Vector (Typ.Uarr_Idx, Typ.Uarr_El);
+         when Type_Slice =>
+            raise Internal_Error;
+      end case;
+   end Copy_Unbounded_Type;
+
+   procedure Synth_Individual_Formal (Syn_Inst : Synth_Instance_Acc;
+                                      Formal : Valtyp;
+                                      Pfx : Node;
+                                      Dest_Typ : out Type_Acc;
+                                      Dest_Off : out Value_Offsets) is
+   begin
+      case Get_Kind (Pfx) is
+         when Iir_Kind_Simple_Name
+            | Iir_Kind_Selected_Name =>
+            Synth_Individual_Formal
+              (Syn_Inst, Formal, Get_Named_Entity (Pfx), Dest_Typ, Dest_Off);
+         when Iir_Kind_Interface_Signal_Declaration
+           | Iir_Kind_Interface_Variable_Declaration
+           | Iir_Kind_Interface_Constant_Declaration
+           | Iir_Kind_Interface_File_Declaration =>
+            Dest_Typ := Formal.Typ;
+            Dest_Off := No_Value_Offsets;
+
+         when Iir_Kind_Indexed_Name =>
+            Synth_Individual_Formal
+              (Syn_Inst, Formal, Get_Prefix (Pfx), Dest_Typ, Dest_Off);
+            declare
+               Dest_Base : Valtyp;
+               Dest_Dyn : Dyn_Name;
+            begin
+               Dest_Dyn := No_Dyn_Name;
+               Synth_Assignment_Prefix_Indexed_Name
+                 (Syn_Inst, Pfx, Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
+               pragma Assert (Dest_Dyn = No_Dyn_Name);
+            end;
+
+         when Iir_Kind_Selected_Element =>
+            Synth_Individual_Formal
+              (Syn_Inst, Formal, Get_Prefix (Pfx), Dest_Typ, Dest_Off);
+            declare
+               Dest_Base : Valtyp;
+               Dest_Dyn : Dyn_Name;
+            begin
+               Dest_Dyn := No_Dyn_Name;
+               Synth_Assignment_Prefix_Selected_Name
+                 (Syn_Inst, Pfx, Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
+               pragma Assert (Dest_Dyn = No_Dyn_Name);
+            end;
+
+         when Iir_Kind_Slice_Name =>
+            Synth_Individual_Formal
+              (Syn_Inst, Formal, Get_Prefix (Pfx), Dest_Typ, Dest_Off);
+            declare
+               Dest_Base : Valtyp;
+               Dest_Dyn : Dyn_Name;
+            begin
+               Dest_Dyn := No_Dyn_Name;
+               Synth_Assignment_Prefix_Slice_Name
+                 (Syn_Inst, Pfx, Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
+               pragma Assert (Dest_Dyn = No_Dyn_Name);
+            end;
+
+         when others =>
+            Error_Kind ("synth_individual_formal", Pfx);
+      end case;
+   end Synth_Individual_Formal;
+
    type Assoc_Array_Acc is access Assoc_Array;
    procedure Free_Assoc_Array is new Ada.Unchecked_Deallocation
      (Assoc_Array, Assoc_Array_Acc);
@@ -2111,9 +2214,10 @@ package body Synth.Vhdl_Stmts is
 
       Formal_Typ := Synth_Subtype_Indication
         (Caller_Inst, Get_Actual_Type (First_Assoc));
+      --  Formal_Typ := Copy_Unbounded_Type (Formal_Typ, Inter_Typ);
       Formal_Typ := Unshare_Type_Instance (Formal_Typ, Inter_Typ);
 
-      Create_Object (Subprg_Inst, Inter, (Formal_Typ, null));
+      Res := (Formal_Typ, null);
 
       Assoc := Get_Chain (First_Assoc);
       Static := True;
@@ -2121,21 +2225,16 @@ package body Synth.Vhdl_Stmts is
          declare
             Actual : constant Node := Get_Actual (Assoc);
             Formal : constant Node := Get_Formal (Assoc);
-            Form_Base : Valtyp;
             Form_Typ : Type_Acc;
             Form_Off : Value_Offsets;
-            Dyn : Dyn_Name;
             Act_Base : Valtyp;
             Act_Typ : Type_Acc;
             Act_Off : Value_Offsets;
             Act_Dyn : Dyn_Name;
             Cb_Val : Valtyp;
          begin
-            Synth_Assignment_Prefix
-              (Caller_Inst, Subprg_Inst,
-               Formal, Form_Base, Form_Typ, Form_Off, Dyn);
-            pragma Assert (Dyn = No_Dyn_Name);
-            pragma Assert (Form_Base = (Formal_Typ, null));
+            Synth_Individual_Formal
+              (Caller_Inst, Res, Formal, Form_Typ, Form_Off);
 
             if Inter_Kind = Iir_Kind_Interface_Constant_Declaration then
                Act_Base := Synth_Expression_With_Type
@@ -2194,16 +2293,6 @@ package body Synth.Vhdl_Stmts is
          Res := No_Valtyp;
          raise Internal_Error;
       end if;
-
-      --  Destroy the object.  It will be recreated by
-      --  Synth_Subprogram_Association.
-      declare
-         D : Destroy_Type;
-      begin
-         Destroy_Init (D, Subprg_Inst);
-         Destroy_Object (D, Inter);
-         Destroy_Finish (D);
-      end;
 
       Free_Assoc_Array (Assocs);
 
