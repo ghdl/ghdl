@@ -4128,7 +4128,11 @@ package body Simul.Vhdl_Simul is
       pragma Assert (Areapools.Is_Empty (Expr_Pool));
       pragma Assert (Areapools.Is_Empty (Process_Pool));
 
+      --  Copy flag.
       Synth.Flags.Severity_Level := Grt.Options.Severity_Level;
+
+      --  Not supported.
+      Grt.Options.Trace_Signals := False;
 
       if Flag_Interractive then
          Elab.Debugger.Debug_Elab (Vhdl_Elab.Top_Instance);
