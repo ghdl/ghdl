@@ -225,6 +225,11 @@ uninstall.mcode.program:
 
 install.mcode: install.mcode.program install.vhdllib
 
+install.mcode.dll_deps:
+	for f in $$(ldd ghdl_mcode$(EXEEXT) | sed -n -e '/Windows/d' -e 's/.*=> \(.*\) .*/\1/p'); do \
+	 $(INSTALL_PROGRAM) -p $$f "$(DESTDIR)$(bindir)/"; \
+	done
+
 uninstall.mcode: uninstall.mcode.program uninstall.vhdllib
 
 test.mcode: ghdl_mcode$(EXEEXT)
@@ -502,6 +507,11 @@ install.libghdl.true: install.libghdl.lib install.libghdl.include
 
 install.libghdl.false:
 install.libghdl: install.libghdl.$(enable_libghdl)
+
+install.libghdl.dll_deps:
+	for f in $$(ldd lib/$(libghdl_name) | sed -n -e '/Windows/d' -e 's/.*=> \(.*\) .*/\1/p'); do \
+	 $(INSTALL_PROGRAM) -p $$f "$(DESTDIR)$(libdir)/"; \
+	done
 
 uninstall.libghdl:
 	$(RM) $(DESTDIR)$(libdir)/$(libghdl_name)
