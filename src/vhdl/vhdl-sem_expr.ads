@@ -24,7 +24,14 @@ package Vhdl.Sem_Expr is
    --  Set type to nodes,
    --  Resolve overloading
 
+   --  If set, use of deferred constants is allowed.
+   --  Set during analysis of default value of subprogram parameters.
    Deferred_Constant_Allowed : Boolean := False;
+
+   --  If set, use of unelaborated constructs is allowed.
+   --  This is set while analyzing subprograms body (and default parameters
+   --  values), as a subprogram may be called way after elaboration.
+   Unelaborated_Use_Allowed : Boolean := False;
 
    --  Analyze an expression (other than a range) with a possible overloading.
    --  Sem_expression_ov (and therefore sem_expression) must be called *once*

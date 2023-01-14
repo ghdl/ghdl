@@ -1262,6 +1262,15 @@ package body Vhdl.Sem_Expr is
       Set_Function_Call_Staticness (Expr, Imp);
       Sem_Decls.Mark_Subprogram_Used (Imp);
 
+      --  Check the subprogram is not called before its elaboration.
+      if not Unelaborated_Use_Allowed
+        and then Get_Kind (Imp) in Iir_Kinds_Subprogram_Declaration
+        and then not Get_Elaborated_Flag (Imp)
+      then
+         Warning_Msg_Sem (Warnid_Elaboration, +Expr,
+                          "%n is called before elaborated of its body", +Imp);
+      end if;
+
       --  Check purity/wait/passive.
 
       if Subprg = Null_Iir then

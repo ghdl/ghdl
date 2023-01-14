@@ -654,6 +654,8 @@ package body Vhdl.Sem_Types is
 
    procedure Sem_Protected_Type_Body (Bod : Iir)
    is
+      Prev_Unelaborated_Use_Allowed : constant Boolean :=
+        Unelaborated_Use_Allowed;
       Inter : Name_Interpretation_Type;
       Type_Decl : Iir;
       Decl : Iir;
@@ -686,6 +688,7 @@ package body Vhdl.Sem_Types is
         and then Get_Kind (Decl) = Iir_Kind_Protected_Type_Declaration
       then
          Set_Protected_Type_Declaration (Bod, Decl);
+         Set_Elaborated_Flag (Decl, True);
          if Get_Protected_Type_Body (Decl) /= Null_Iir then
             Report_Start_Group;
             Error_Msg_Sem
@@ -718,6 +721,10 @@ package body Vhdl.Sem_Types is
       --     body.
       Open_Declarative_Region;
 
+      --  The body is called when a variable is created, so possibly all
+      --  used constructs are elaborated.
+      Unelaborated_Use_Allowed := True;
+
       if Decl /= Null_Iir then
          Xref_Body (Bod, Decl);
          Add_Protected_Type_Declarations (Decl);
@@ -734,6 +741,8 @@ package body Vhdl.Sem_Types is
       if Decl /= Null_Iir then
          Sem_Decls.Check_Full_Declaration (Decl, Bod);
       end if;
+
+      Unelaborated_Use_Allowed := Prev_Unelaborated_Use_Allowed;
 
       Close_Declarative_Region;
    end Sem_Protected_Type_Body;

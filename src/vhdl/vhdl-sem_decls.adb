@@ -203,6 +203,7 @@ package body Vhdl.Sem_Decls is
    procedure Sem_Interface_Object_Declaration
      (Inter, Last : Iir; Interface_Kind : Interface_Kind_Type)
    is
+      Prev_Unelaborated_Use_Allowed : Boolean;
       A_Type: Iir;
       Default_Value: Iir;
    begin
@@ -229,12 +230,20 @@ package body Vhdl.Sem_Decls is
 
          Default_Value := Get_Default_Value (Inter);
          if Default_Value /= Null_Iir and then not Is_Error (A_Type) then
+
             Deferred_Constant_Allowed := True;
+            Prev_Unelaborated_Use_Allowed := Unelaborated_Use_Allowed;
+            if Interface_Kind in Parameter_Interface_List then
+               Unelaborated_Use_Allowed := True;
+            end if;
+
             Default_Value := Sem_Expression_Wildcard
               (Default_Value, A_Type, Is_Object_Fully_Constrained (Inter));
             Default_Value :=
               Eval_Expr_Check_If_Static (Default_Value, A_Type);
+
             Deferred_Constant_Allowed := False;
+            Unelaborated_Use_Allowed := Prev_Unelaborated_Use_Allowed;
             Check_Read (Default_Value);
          end if;
       end if;
@@ -1119,6 +1128,15 @@ package body Vhdl.Sem_Decls is
                   then
                      Error_Msg_Sem (+Decl, "variable type must not be of the "
                                       & "protected type body");
+                  end if;
+
+                  --  Check elaboration.
+                  if Is_Protected
+                    and then not Get_Elaborated_Flag (Base_Type)
+                  then
+                     Warning_Msg_Sem
+                       (Warnid_Elaboration, +Decl,
+                        "declaration of a protected type before the body");
                   end if;
                end;
             end if;

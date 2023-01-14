@@ -346,6 +346,7 @@ package body Vhdl.Std_Package is
          Set_Std_Identifier (Decl, Name);
          Set_Return_Type (Decl, String_Type_Definition);
          Set_Pure_Flag (Decl, True);
+         Set_Elaborated_Flag (Decl, True);
          Set_Implicit_Definition (Decl, Imp);
 
          Inter := Create_Iir (Iir_Kind_Interface_Constant_Declaration);
@@ -380,6 +381,7 @@ package body Vhdl.Std_Package is
          Set_Std_Identifier (Decl, Name);
          Set_Return_Type (Decl, Boolean_Type_Definition);
          Set_Pure_Flag (Decl, True);
+         Set_Elaborated_Flag (Decl, True);
          Set_Implicit_Definition (Decl, Func);
 
          Inter := Create_Iir (Iir_Kind_Interface_Signal_Declaration);
@@ -1066,6 +1068,7 @@ package body Vhdl.Std_Package is
          end case;
          Set_Pure_Flag (Function_Now, Pure);
          Set_Implicit_Definition (Function_Now, Iir_Predefined_Now_Function);
+         Set_Elaborated_Flag (Function_Now, True);
          Vhdl.Sem_Utils.Compute_Subprogram_Hash (Function_Now);
          Add_Decl (Function_Now);
       end;
@@ -1080,6 +1083,7 @@ package body Vhdl.Std_Package is
             Set_Std_Identifier (Function_Now, Std_Names.Name_Now);
             Set_Return_Type (Function_Now, Real_Subtype_Definition);
             Set_Pure_Flag (Function_Now, False);
+            Set_Elaborated_Flag (Function_Now, True);
             Set_Implicit_Definition
               (Function_Now, Iir_Predefined_Real_Now_Function);
             Vhdl.Sem_Utils.Compute_Subprogram_Hash (Function_Now);
@@ -1095,6 +1099,7 @@ package body Vhdl.Std_Package is
             Set_Std_Identifier (Function_Freq, Std_Names.Name_Frequency);
             Set_Return_Type (Function_Freq, Real_Subtype_Definition);
             Set_Pure_Flag (Function_Freq, False);
+            Set_Elaborated_Flag (Function_Freq, True);
             Set_Implicit_Definition
               (Function_Freq, Iir_Predefined_Frequency_Function);
             Vhdl.Sem_Utils.Compute_Subprogram_Hash (Function_Freq);

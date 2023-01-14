@@ -2114,9 +2114,12 @@ package body Vhdl.Sem is
    is
       Spec : constant Iir := Get_Subprogram_Specification (Subprg);
       Warn_Hide_Enabled : constant Boolean := Is_Warning_Enabled (Warnid_Hide);
+      Prev_Unelaborated_Use_Allowed : constant Boolean :=
+        Unelaborated_Use_Allowed;
       El : Iir;
    begin
       Set_Impure_Depth (Subprg, Iir_Depth_Pure);
+      Set_Elaborated_Flag (Spec, True);
 
       --  LRM 10.1  Declarative regions
       --  3.  A subprogram declaration, together with the corresponding
@@ -2155,10 +2158,14 @@ package body Vhdl.Sem is
          end;
       end if;
 
+      Unelaborated_Use_Allowed := True;
+
       Sem_Sequential_Statements (Spec, Subprg);
 
       Set_Is_Within_Flag (Spec, False);
       Close_Declarative_Region;
+
+      Unelaborated_Use_Allowed := Prev_Unelaborated_Use_Allowed;
 
       case Get_Kind (Spec) is
          when Iir_Kind_Procedure_Declaration =>
@@ -2883,6 +2890,34 @@ package body Vhdl.Sem is
       return False;
    end Is_Package_Macro_Expanded;
 
+   --  Mark declarations of HDR as elaborated.
+   procedure Mark_Declarations_Elaborated (Hdr : Iir)
+   is
+      Decl : Iir;
+   begin
+      Decl := Get_Declaration_Chain (Hdr);
+      while Decl /= Null_Iir loop
+         case Get_Kind (Decl) is
+            when Iir_Kinds_Subprogram_Declaration =>
+               Set_Elaborated_Flag (Decl, True);
+            when Iir_Kind_Type_Declaration =>
+               declare
+                  Def : constant Iir := Get_Type_Definition (Decl);
+               begin
+                  if Get_Kind (Def) = Iir_Kind_Protected_Type_Declaration then
+                     --  Mark the protected type as elaborated.
+                     --  Mark the methods as elaborated.
+                     Set_Elaborated_Flag (Def, True);
+                     Mark_Declarations_Elaborated (Def);
+                  end if;
+               end;
+            when others =>
+               null;
+         end case;
+         Decl := Get_Chain (Decl);
+      end loop;
+   end Mark_Declarations_Elaborated;
+
    --  LRM 2.5  Package Declarations.
    procedure Sem_Package_Declaration (Pkg : Iir_Package_Declaration)
    is
@@ -2957,6 +2992,7 @@ package body Vhdl.Sem is
       end if;
 
       Sem_Declaration_Chain (Pkg);
+      Mark_Declarations_Elaborated (Pkg);
       --  GHDL: subprogram bodies appear in package body.
 
       Pop_Signals_Declarative_Part (Implicit);

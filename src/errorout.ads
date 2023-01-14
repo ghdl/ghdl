@@ -132,12 +132,15 @@ package Errorout is
       --  Lexical conformance
       Warnid_Conformance,
 
-      -- Attributes in the netlist is not kept during synthesis
+      --  Attributes in the netlist is not kept during synthesis
       Warnid_Unkept_Attribute,
       Warnid_Unhandled_Attribute,
 
       --  Violation of staticness rules
       Warnid_Static,
+
+      --  Use before elaboration.
+      Warnid_Elaboration,
 
       --  Any warning
       Msgid_Warning,
@@ -151,7 +154,7 @@ package Errorout is
 
    --  All specific warning messages.
    subtype Msgid_Warnings is Msgid_Type
-     range Warnid_Library .. Warnid_Static;
+     range Warnid_Library .. Warnid_Elaboration;
 
    subtype Msgid_All_Warnings is Msgid_Type
      range Msgid_Warnings'First .. Msgid_Warning;
@@ -331,9 +334,8 @@ private
         | Warnid_Runtime_Error | Warnid_Pure | Warnid_Specs | Warnid_Hide
         | Warnid_Pragma | Warnid_Analyze_Assert | Warnid_Attribute
         | Warnid_Deprecated_Option | Warnid_Unexpected_Option
-        | Warnid_Nowrite
-        | Warnid_No_Wait | Warnid_Useless
-        | Warnid_Conformance
+        | Warnid_Nowrite | Warnid_No_Wait | Warnid_Useless
+        | Warnid_Elaboration | Warnid_Conformance
         | Warnid_Unkept_Attribute | Warnid_Unhandled_Attribute
         | Msgid_Warning  => (Enabled => True, Error => False),
       Warnid_Delta_Cycle | Warnid_Body | Warnid_Static | Warnid_Nested_Comment

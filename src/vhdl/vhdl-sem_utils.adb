@@ -125,6 +125,7 @@ package body Vhdl.Sem_Utils is
       Set_Implicit_Definition (Operation, Def);
       Set_Identifier (Operation, Name);
       Set_Visible_Flag (Operation, True);
+      Set_Elaborated_Flag (Operation, True);
       Compute_Subprogram_Hash (Operation);
       return Operation;
    end Create_Implicit_Function;
@@ -154,6 +155,7 @@ package body Vhdl.Sem_Utils is
             Set_Parent (Proc, Get_Parent (Decl));
             Set_Identifier (Proc, Std_Names.Name_File_Open);
             Set_Visible_Flag (Proc, True);
+            Set_Elaborated_Flag (Proc, True);
             Set_Wait_State (Proc, False);
             Chain_Init (First_Interface, Last_Interface);
             case I is
@@ -214,6 +216,7 @@ package body Vhdl.Sem_Utils is
          Set_Implicit_Definition (Proc, Iir_Predefined_File_Close);
          Set_Visible_Flag (Proc, True);
          Set_Wait_State (Proc, False);
+         Set_Elaborated_Flag (Proc, True);
          Inter := Create_Iir (Iir_Kind_Interface_File_Declaration);
          Set_Identifier (Inter, Std_Names.Name_F);
          Set_Location (Inter, Loc);
@@ -239,6 +242,7 @@ package body Vhdl.Sem_Utils is
       Set_Parent (Proc, Get_Parent (Decl));
       Set_Visible_Flag (Proc, True);
       Set_Wait_State (Proc, False);
+      Set_Elaborated_Flag (Proc, True);
       Chain_Init (First_Interface, Last_Interface);
       Inter := Create_Iir (File_Interface_Kind);
       Set_Identifier (Inter, Std_Names.Name_F);
@@ -281,6 +285,7 @@ package body Vhdl.Sem_Utils is
       Set_Parent (Proc, Get_Parent (Decl));
       Set_Visible_Flag (Proc, True);
       Set_Wait_State (Proc, False);
+      Set_Elaborated_Flag (Proc, True);
       Chain_Init (First_Interface, Last_Interface);
       Inter := Create_Iir (File_Interface_Kind);
       Set_Identifier (Inter, Std_Names.Name_F);
@@ -313,6 +318,7 @@ package body Vhdl.Sem_Utils is
          Set_Parent (Proc, Get_Parent (Decl));
          Set_Visible_Flag (Proc, True);
          Set_Wait_State (Proc, False);
+         Set_Elaborated_Flag (Proc, True);
          Inter := Create_Iir (File_Interface_Kind);
          Set_Identifier (Inter, Std_Names.Name_F);
          Set_Location (Inter, Loc);
@@ -333,6 +339,7 @@ package body Vhdl.Sem_Utils is
       Set_Location (Func, Loc);
       Set_Parent (Func, Get_Parent (Decl));
       Set_Visible_Flag (Func, True);
+      Set_Elaborated_Flag (Func, True);
       Inter := Create_Iir (File_Interface_Kind);
       Set_Identifier (Inter, Std_Names.Name_F);
       Set_Location (Inter, Loc);
@@ -759,6 +766,7 @@ package body Vhdl.Sem_Utils is
                Set_Implicit_Definition
                  (Deallocate_Proc, Iir_Predefined_Deallocate);
                Set_Parent (Deallocate_Proc, Get_Parent (Decl));
+               Set_Elaborated_Flag (Deallocate_Proc, True);
 
                Var_Interface :=
                  Create_Iir (Iir_Kind_Interface_Variable_Declaration);
