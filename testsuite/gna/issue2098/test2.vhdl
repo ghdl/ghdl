@@ -1,7 +1,7 @@
 library std;
    use std.textio.all;
 
-package log is
+package log_pkg is
 
    type t_level is (TRACE, DEBUG, INFO, WARN, ERROR);
 
@@ -14,8 +14,6 @@ package log is
       separator     : string(1 to 3);
    end record;
 
-   procedure set_config(cfg : t_config);
-
    type t_logger is protected
       procedure set_config(c : t_config);
 
@@ -26,12 +24,6 @@ package log is
       procedure error(msg : string);
    end protected;
 
-   procedure trace(msg : string);
-   procedure debug(msg : string);
-   procedure info(msg : string);
-   procedure warn(msg : string);
-   procedure error(msg : string);
-
    function config(
       level         : t_level := INFO;
       time_unit     : time := ns;
@@ -41,10 +33,24 @@ package log is
       show_sim_time : boolean := true
    ) return t_config;
 
+end log_pkg;
+
+use work.log_pkg.all;
+
+package log is
+   shared variable logger : t_logger;
+
+   procedure set_config(cfg : t_config);
+
+   procedure trace(msg : string);
+   procedure debug(msg : string);
+   procedure info(msg : string);
+   procedure warn(msg : string);
+   procedure error(msg : string);
+
 end package;
 
-package body log is
-
+package body log_pkg is
    type t_logger is protected body
 
       variable cfg : t_config := config;
@@ -88,17 +94,6 @@ package body log is
 
    end protected body;
 
-   shared variable logger : t_logger;
-
-   procedure trace(msg : string) is begin logger.trace(msg); end procedure;
-   procedure debug(msg : string) is begin logger.debug(msg); end procedure;
-   procedure info(msg : string) is begin logger.info(msg); end procedure;
-   procedure warn(msg : string) is begin logger.warn(msg); end procedure;
-   procedure error(msg : string) is begin logger.error(msg); end procedure;
-
-
-   procedure set_config(cfg : t_config) is begin logger.set_config(cfg); end procedure;
-
    function config(
       level         : t_level := INFO;
       time_unit     : time := ns;
@@ -117,27 +112,39 @@ package body log is
       cfg.separator := separator;
       return cfg;
    end function;
-
 end package body;
+
+package body log is
+
+   procedure trace(msg : string) is begin logger.trace(msg); end procedure;
+   procedure debug(msg : string) is begin logger.debug(msg); end procedure;
+   procedure info(msg : string) is begin logger.info(msg); end procedure;
+   procedure warn(msg : string) is begin logger.warn(msg); end procedure;
+   procedure error(msg : string) is begin logger.error(msg); end procedure;
+
+   procedure set_config(cfg : t_config) is begin logger.set_config(cfg); end procedure;
+end package body;
+
 library ieee;
    use ieee.std_logic_1164.all;
    use ieee.numeric_std.all;
 
 library work;
+   use work.log_pkg;
    use work.log;
 
-entity test is
+entity test2 is
 end entity;
 
-architecture tb of test is
+architecture tb of test2 is
 
 begin
    main : process is
-      variable l : log.t_logger;
+      variable l : log_pkg.t_logger;
    begin
       wait for 7.5 ns;
 
-      log.set_config(log.config(log.TRACE));
+      log.set_config(log_pkg.config(log_pkg.TRACE));
 
       log.trace("TRACE");
       log.debug("DEBUG");
@@ -145,7 +152,7 @@ begin
       log.warn("WARN");
       log.error("ERROR" & LF);
 
-      l.set_config(log.config(log.TRACE));
+      l.set_config(log_pkg.config(log_pkg.TRACE));
       l.trace("TRACE");
       l.debug("DEBUG");
       l.info("INFO");

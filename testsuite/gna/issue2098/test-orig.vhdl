@@ -14,8 +14,6 @@ package log is
       separator     : string(1 to 3);
    end record;
 
-   procedure set_config(cfg : t_config);
-
    type t_logger is protected
       procedure set_config(c : t_config);
 
@@ -25,6 +23,10 @@ package log is
       procedure warn(msg : string);
       procedure error(msg : string);
    end protected;
+
+   shared variable logger : t_logger;
+
+   procedure set_config(cfg : t_config);
 
    procedure trace(msg : string);
    procedure debug(msg : string);
@@ -44,6 +46,12 @@ package log is
 end package;
 
 package body log is
+
+   procedure trace(msg : string) is begin logger.trace(msg); end procedure;
+   procedure debug(msg : string) is begin logger.debug(msg); end procedure;
+   procedure info(msg : string) is begin logger.info(msg); end procedure;
+   procedure warn(msg : string) is begin logger.warn(msg); end procedure;
+   procedure error(msg : string) is begin logger.error(msg); end procedure;
 
    type t_logger is protected body
 
@@ -87,15 +95,6 @@ package body log is
       end procedure;
 
    end protected body;
-
-   shared variable logger : t_logger;
-
-   procedure trace(msg : string) is begin logger.trace(msg); end procedure;
-   procedure debug(msg : string) is begin logger.debug(msg); end procedure;
-   procedure info(msg : string) is begin logger.info(msg); end procedure;
-   procedure warn(msg : string) is begin logger.warn(msg); end procedure;
-   procedure error(msg : string) is begin logger.error(msg); end procedure;
-
 
    procedure set_config(cfg : t_config) is begin logger.set_config(cfg); end procedure;
 
