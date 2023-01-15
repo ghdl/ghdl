@@ -52,6 +52,7 @@ class Msgid(IntEnum):
     Warnid_Unkept_Attribute = 33
     Warnid_Unhandled_Attribute = 34
     Warnid_Static = 35
-    Msgid_Warning = 36
-    Msgid_Error = 37
-    Msgid_Fatal = 38
+    Warnid_Elaboration = 36
+    Msgid_Warning = 37
+    Msgid_Error = 38
+    Msgid_Fatal = 39
