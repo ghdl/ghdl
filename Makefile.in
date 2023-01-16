@@ -225,7 +225,7 @@ uninstall.mcode.program:
 
 install.mcode: install.mcode.program install.vhdllib
 
-install.mcode.dll_deps:
+install.mcode.deps.dll:
 	for f in $$(ldd ghdl_mcode$(EXEEXT) | sed -n -e '/Windows/d' -e 's/.*=> \(.*\) .*/\1/p'); do \
 	 $(INSTALL_PROGRAM) -p $$f "$(DESTDIR)$(bindir)/"; \
 	done
@@ -509,10 +509,13 @@ install.libghdl.true: install.libghdl.lib install.libghdl.include
 install.libghdl.false:
 install.libghdl: install.libghdl.$(enable_libghdl)
 
-install.libghdl.dll_deps:
+install.libghdl.deps.dll:
 	for f in $$(ldd lib/$(libghdl_name) | sed -n -e '/Windows/d' -e 's/.*=> \(.*\) .*/\1/p'); do \
 	 $(INSTALL_PROGRAM) -p $$f "$(DESTDIR)$(libdir)/"; \
 	done
+
+install.libghdl.deps.dylib:
+install.libghdl.deps.so:
 
 uninstall.libghdl:
 	$(RM) $(DESTDIR)$(libdir)/$(libghdl_name)
@@ -656,6 +659,32 @@ install.vhdllib: install.dirs
 
 uninstall.vhdllib:
 	$(RM) -rf $(DESTDIR)$(VHDL_LIB_DIR)
+
+####################### pyGHDL standalone ################################
+
+setup-standalone.py: $(srcdir)/setup-standalone.in
+	( \
+	sed -n -e '1,/^#@__init__/p' < $<; \
+	sed -n -e '/__author__/,/^$$/p' < $(srcdir)/pyGHDL/__init__.py; \
+	echo 'srcdir = "$(srcdir)"' ; \
+	echo 'soext = "$(SOEXT)"'; \
+	sed -n -e '/^#@__init__/,$$p' < $< ; \
+	) > $@
+
+python-bwheel: setup-standalone.py lib/$(libghdl_name) libs install.libghdl.deps$(SOEXT)
+	rm -rf dist-wheel
+	mkdir dist-wheel
+#	Copy pyGHDL
+	$(CP) -Rp $(srcdir)/pyGHDL dist-wheel/
+#	Copy libraries
+	for d in $(VHDLLIB_SUBDIRS); do \
+	  $(MKDIR) -p dist-wheel/pyGHDL/lib/ghdl/$$d; \
+	  $(INSTALL_DATA) -p \
+	    $(LIBDST_DIR)/$$d/* dist-wheel/pyGHDL/lib/ghdl/$$d; \
+	done
+#	Copy libghdl
+	$(INSTALL_PROGRAM) -p lib/lib*$(SOEXT) dist-wheel/pyGHDL/lib/
+
 
 ####################### clean ############################################
 
