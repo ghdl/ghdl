@@ -14,6 +14,7 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 with Vhdl.Nodes; use Vhdl.Nodes;
+with Vhdl.Back_End;
 with Ortho_Nodes;
 
 package Translation is
@@ -77,39 +78,13 @@ package Translation is
    --  defined by the value.
    Flag_Check_Stack_Allocation : Natural := 32 * 1024;
 
-   type Foreign_Kind_Type is (Foreign_Unknown,
-                              Foreign_Vhpidirect,
-                              Foreign_Intrinsic);
-
-   type Foreign_Info_Type (Kind : Foreign_Kind_Type := Foreign_Unknown)
-   is record
-      case Kind is
-         when Foreign_Unknown =>
-            null;
-         when Foreign_Vhpidirect =>
-            Lib_Name : String (1 .. 32);
-            Lib_Len : Natural;
-            Subprg_Name : String (1 .. 64);
-            Subprg_Len : Natural;
-         when Foreign_Intrinsic =>
-            null;
-      end case;
-   end record;
-
-   Foreign_Bad : constant Foreign_Info_Type := (Kind => Foreign_Unknown);
-
-   --  Return a foreign_info for DECL.
-   --  Can generate error messages, if the attribute expression is ill-formed.
-   --  If EXTRACT_NAME is set, internal fields of foreign_info are set.
-   --  Otherwise, only KIND discriminent is set.
-   --  EXTRACT_NAME should be set only inside translation itself, since the
-   --  name can be based on the prefix.
-   function Translate_Foreign_Id (Decl : Iir) return Foreign_Info_Type;
+   procedure Register_Translation_Back_End;
 
    --  If not null, this procedure is called when a foreign subprogram is
    --  created.
-   type Foreign_Hook_Access is access procedure (Decl : Iir;
-                                                 Info : Foreign_Info_Type;
-                                                 Ortho : Ortho_Nodes.O_Dnode);
+   type Foreign_Hook_Access is access
+     procedure (Decl : Iir;
+                Info : Vhdl.Back_End.Foreign_Info_Type;
+                Ortho : Ortho_Nodes.O_Dnode);
    Foreign_Hook : Foreign_Hook_Access := null;
 end Translation;

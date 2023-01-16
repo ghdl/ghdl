@@ -23,10 +23,13 @@ with Hash;
 with Interning;
 with Flags;
 with Libraries;
+
 with Vhdl.Nodes; use Vhdl.Nodes;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Std_Package;
 with Vhdl.Configuration;
+with Vhdl.Back_End;
+
 with Translation;
 with Vhdl.Sem;
 with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
@@ -34,7 +37,6 @@ with Errorout; use Errorout;
 with Errorout.Console;
 with Vhdl.Errors; use Vhdl.Errors;
 with Bug;
-with Trans_Be;
 with Options; use Options;
 
 package body Ortho_Front is
@@ -85,7 +87,7 @@ package body Ortho_Front is
       Errorout.Console.Install_Handler;
 
       -- Initialize.
-      Trans_Be.Register_Translation_Back_End;
+      Translation.Register_Translation_Back_End;
 
       Options.Initialize;
 
@@ -451,10 +453,10 @@ package body Ortho_Front is
       Equal => Shlib_Equal);
 
    procedure Sem_Foreign_Hook
-     (Decl : Iir; Info : Translation.Foreign_Info_Type)
+     (Decl : Iir; Info : Vhdl.Back_End.Foreign_Info_Type)
    is
       pragma Unreferenced (Decl);
-      use Translation;
+      use Vhdl.Back_End;
    begin
       case Info.Kind is
          when Foreign_Vhpidirect =>
@@ -579,7 +581,7 @@ package body Ortho_Front is
             end if;
 
             --  Be sure to collect libraries used for vhpidirect.
-            Trans_Be.Sem_Foreign_Hook := Sem_Foreign_Hook'Access;
+            Vhdl.Back_End.Sem_Foreign_Hook := Sem_Foreign_Hook'Access;
             Shlib_Interning.Init;
 
             Config := Vhdl.Configuration.Configure

@@ -20,6 +20,7 @@ with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Sem_Inst;
 with Vhdl.Nodes_Meta;
 with Vhdl.Utils; use Vhdl.Utils;
+with Vhdl.Back_End;
 with Trans.Chap3;
 with Trans.Chap4;
 with Trans.Chap5;
@@ -216,6 +217,7 @@ package body Trans.Chap2 is
 
    procedure Translate_Subprogram_Declaration (Spec : Iir)
    is
+      use Vhdl.Back_End;
       Info : constant Subprg_Info_Acc := Get_Info (Spec);
       Is_Func : constant Boolean :=
         Get_Kind (Spec) = Iir_Kind_Function_Declaration;

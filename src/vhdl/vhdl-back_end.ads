@@ -29,4 +29,40 @@ package Vhdl.Back_End is
    --  May be NULL for no additionnal checks.
    type Sem_Foreign_Acc is access procedure (Decl : Iir);
    Sem_Foreign : Sem_Foreign_Acc := null;
+
+   --  Utils for foreign analysis.
+
+   type Foreign_Kind_Type is (Foreign_Unknown,
+                              Foreign_Vhpidirect,
+                              Foreign_Intrinsic);
+
+   type Foreign_Info_Type (Kind : Foreign_Kind_Type := Foreign_Unknown)
+   is record
+      case Kind is
+         when Foreign_Unknown =>
+            null;
+         when Foreign_Vhpidirect =>
+            Lib_Name : String (1 .. 32);
+            Lib_Len : Natural;
+            Subprg_Name : String (1 .. 64);
+            Subprg_Len : Natural;
+         when Foreign_Intrinsic =>
+            null;
+      end case;
+   end record;
+
+   Foreign_Bad : constant Foreign_Info_Type := (Kind => Foreign_Unknown);
+
+   --  Return a foreign_info for DECL.
+   --  Can generate error messages, if the attribute expression is ill-formed.
+   function Translate_Foreign_Id (Decl : Iir) return Foreign_Info_Type;
+
+   --  Wrapper for Sem_Foreign: call the hook.
+   procedure Sem_Foreign_Wrapper (Decl : Iir);
+
+   type Sem_Foreign_Hook_Type is access
+     procedure (Decl : Iir; Info : Vhdl.Back_End.Foreign_Info_Type);
+
+   --  Hook called by Sem_Foreign.
+   Sem_Foreign_Hook : Sem_Foreign_Hook_Type := null;
 end Vhdl.Back_End;

@@ -38,10 +38,10 @@ with Vhdl.Std_Package;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Canon;
 with Vhdl.Ieee.Std_Logic_1164;
+with Vhdl.Back_End;
 with Ortho_Jit;
 with Ortho_Nodes; use Ortho_Nodes;
 with Trans_Decls;
-with Trans_Be;
 with Translation;
 
 with Grt.Main;
@@ -110,7 +110,7 @@ package body Ghdlrun is
       Equal => Shlib_Equal);
 
    procedure Foreign_Hook (Decl : Iir;
-                           Info : Translation.Foreign_Info_Type;
+                           Info : Vhdl.Back_End.Foreign_Info_Type;
                            Ortho : O_Dnode);
 
    subtype F64_C_Arr_Ptr is Grt.Analog_Solver.F64_C_Arr_Ptr;
@@ -258,10 +258,10 @@ package body Ghdlrun is
      renames Ortho_Jit.Set_Address;
 
    procedure Foreign_Hook (Decl : Iir;
-                           Info : Translation.Foreign_Info_Type;
+                           Info : Vhdl.Back_End.Foreign_Info_Type;
                            Ortho : O_Dnode)
    is
-      use Translation;
+      use Vhdl.Back_End;
       Res : Address;
    begin
       case Info.Kind is
@@ -867,6 +867,6 @@ package body Ghdlrun is
                          Ortho_Jit.Disp_Help'Access);
       Ghdlcomp.Register_Commands;
       Register_Command (new Command_Run_Help);
-      Trans_Be.Register_Translation_Back_End;
+      Translation.Register_Translation_Back_End;
    end Register_Commands;
 end Ghdlrun;
