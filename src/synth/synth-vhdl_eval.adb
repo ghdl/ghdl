@@ -1176,6 +1176,7 @@ package body Synth.Vhdl_Eval is
                Lv : Ghdl_I64;
                Rv : Std_Integer;
                Res : Ghdl_I64;
+               R : Int64;
                Ovf : Boolean;
             begin
                Lv := Ghdl_I64 (Read_Discrete (Param1));
@@ -1183,9 +1184,12 @@ package body Synth.Vhdl_Eval is
                Grt.Arith.Exp_I64 (Lv, Rv, Res, Ovf);
                if Ovf then
                   Error_Msg_Synth (Inst, Expr, "exponentiation overflow");
-                  Res := 0;
+                  R := 0;
+               else
+                  R := Int64 (Res);
+                  Check_Integer_Overflow (Inst, R, Res_Typ, Expr);
                end if;
-               return Create_Memory_Discrete (Int64 (Res), Res_Typ);
+               return Create_Memory_Discrete (R, Res_Typ);
             end;
 
          when Iir_Predefined_Integer_Less_Equal
