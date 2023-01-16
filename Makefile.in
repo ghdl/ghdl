@@ -430,6 +430,7 @@ uninstall.llvm: uninstall.llvm.program uninstall.grt
 
 GHDL_SIMUL_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/simul -aI$(srcdir)/src/synth
 
+ghdl_simul$(EXEEXT): GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
 ghdl_simul$(EXEEXT): $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) version.ads force
 	$(GNATMAKE) $(GHDL_SIMUL_INCFLAGS) $(GNATFLAGS) -gnat12 ghdl_simul $(GNAT_BARGS) -largs $(LDFLAGS) $(GRT_C_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB)) $(sundials_ldflags)
 
