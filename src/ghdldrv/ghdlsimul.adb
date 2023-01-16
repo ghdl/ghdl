@@ -35,6 +35,7 @@ with Vhdl.Sem;
 with Vhdl.Canon;
 with Vhdl.Configuration;
 with Vhdl.Utils;
+with Vhdl.Back_End;
 
 with Grt.Options;
 with Grt.Types;
@@ -58,12 +59,12 @@ package body Ghdlsimul is
    procedure Compile_Init (Analyze_Only : Boolean) is
    begin
       Common_Compile_Init (Analyze_Only);
+
+      Vhdl.Back_End.Sem_Foreign := Vhdl.Back_End.Sem_Foreign_Wrapper'Access;
+
       if Analyze_Only then
          return;
       end if;
-
-      --  FIXME: add a flag to force unnesting.
-      --  Translation.Flag_Unnest_Subprograms := True;
 
       --  The design is always analyzed in whole.
       Flags.Flag_Whole_Analyze := True;
