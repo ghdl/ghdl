@@ -2189,6 +2189,95 @@ package body Synth.Vhdl_Stmts is
       end case;
    end Synth_Individual_Formal;
 
+   --  INTER_TYP is the interface type.
+   function Synth_Individual_Get_Formal_Type
+     (Inter_Typ : Type_Acc; Pfx : Node) return Type_Acc
+   is
+      Parent_Typ : Type_Acc;
+   begin
+      case Get_Kind (Pfx) is
+         when Iir_Kind_Simple_Name
+            | Iir_Kind_Selected_Name =>
+            return Synth_Individual_Get_Formal_Type
+              (Inter_Typ, Get_Named_Entity (Pfx));
+         when Iir_Kind_Interface_Signal_Declaration
+           | Iir_Kind_Interface_Variable_Declaration
+           | Iir_Kind_Interface_Constant_Declaration
+           | Iir_Kind_Interface_File_Declaration =>
+            return Inter_Typ;
+
+         when Iir_Kind_Indexed_Name =>
+            Parent_Typ := Synth_Individual_Get_Formal_Type
+              (Inter_Typ, Get_Prefix (Pfx));
+            return Get_Array_Element (Parent_Typ);
+
+         when Iir_Kind_Selected_Element =>
+            declare
+               Idx : constant Iir_Index32 :=
+                 Get_Element_Position (Get_Named_Entity (Pfx));
+            begin
+               Parent_Typ := Synth_Individual_Get_Formal_Type
+                 (Inter_Typ, Get_Prefix (Pfx));
+               return Parent_Typ.Rec.E (Idx + 1).Typ;
+            end;
+
+         when Iir_Kind_Slice_Name =>
+            Parent_Typ := Synth_Individual_Get_Formal_Type
+              (Inter_Typ, Get_Prefix (Pfx));
+            return Parent_Typ;
+
+         when others =>
+            Error_Kind ("synth_individual_get_formal_type", Pfx);
+      end case;
+   end Synth_Individual_Get_Formal_Type;
+
+   --  If TOP, substitute or check.
+   --  INTER_TYP is initially the interface type.
+   procedure Synth_Individual_Formal_Type (Syn_Inst : Synth_Instance_Acc;
+                                           Inter_Typ : Type_Acc;
+                                           Pfx : Node;
+                                           Pfx_Typ : Type_Acc)
+   is
+      pragma Unreferenced (Syn_Inst);
+      Parent_Typ : Type_Acc;
+   begin
+      Parent_Typ := Synth_Individual_Get_Formal_Type
+        (Inter_Typ, Get_Prefix (Pfx));
+
+      case Get_Kind (Pfx) is
+         when Iir_Kind_Indexed_Name
+            | Iir_Kind_Slice_Name =>
+            declare
+               Sub_Inter : constant Type_Acc :=
+                 Get_Array_Element (Parent_Typ);
+            begin
+               if not Is_Bounded_Type (Sub_Inter) then
+                  Parent_Typ.Arr_El := Pfx_Typ;
+               else
+                  --  Check shape ?
+                  null;
+               end if;
+            end;
+
+         when Iir_Kind_Selected_Element =>
+            declare
+               Idx : constant Iir_Index32 :=
+                 Get_Element_Position (Get_Named_Entity (Pfx));
+               Sub_Inter : constant Type_Acc := Parent_Typ.Rec.E (Idx + 1).Typ;
+            begin
+               if not Is_Bounded_Type (Sub_Inter) then
+                  Parent_Typ.Rec.E (Idx + 1).Typ := Pfx_Typ;
+               else
+                  --  check shape ?
+                  null;
+               end if;
+            end;
+
+         when others =>
+            Error_Kind ("synth_individual_formal_type", Pfx);
+      end case;
+   end Synth_Individual_Formal_Type;
+
    type Assoc_Array_Acc is access Assoc_Array;
    procedure Free_Assoc_Array is new Ada.Unchecked_Deallocation
      (Assoc_Array, Assoc_Array_Acc);
@@ -2217,8 +2306,8 @@ package body Synth.Vhdl_Stmts is
 
       Formal_Typ := Synth_Subtype_Indication
         (Caller_Inst, Get_Actual_Type (First_Assoc));
-      --  Formal_Typ := Copy_Unbounded_Type (Formal_Typ, Inter_Typ);
-      Formal_Typ := Unshare_Type_Instance (Formal_Typ, Inter_Typ);
+      Formal_Typ := Copy_Unbounded_Type (Formal_Typ, Inter_Typ);
+--      Formal_Typ := Unshare_Type_Instance (Formal_Typ, Inter_Typ);
 
       Res := (Formal_Typ, null);
 
@@ -2253,10 +2342,9 @@ package body Synth.Vhdl_Stmts is
                --  TODO
                raise Internal_Error;
             end if;
-            if Act_Typ.Kind in Type_Composite then
-               --  TODO: reshape
-               null;
-            end if;
+            --  Reshape or add bounds to the formal type.
+            Synth_Individual_Formal_Type
+              (Caller_Inst, Formal_Typ, Formal, Act_Typ);
             Assocs (I) := (Formal => Formal,
                            Form_Off => Form_Off,
                            Act_Base => Act_Base,
@@ -2275,6 +2363,42 @@ package body Synth.Vhdl_Stmts is
          end;
          Assoc := Get_Chain (Assoc);
       end loop;
+
+      if not Is_Bounded_Type (Formal_Typ) then
+         case Type_Composite (Formal_Typ.Kind) is
+            when Type_Unbounded_Record =>
+               --  TODO: unbounded record with unbounded elements.
+               Formal_Typ := Create_Record_Type (Formal_Typ.Rec);
+            when Type_Unbounded_Array
+              | Type_Unbounded_Vector =>
+               raise Internal_Error;
+            when Type_Array_Unbounded =>
+               pragma Assert (Formal_Typ.Alast); --  TODO.
+               Formal_Typ := Create_Array_Type
+                 (Formal_Typ.Abound, Formal_Typ.Alast, Formal_Typ.Arr_El);
+            when Type_Array
+              | Type_Vector
+              | Type_Record =>
+               raise Internal_Error;
+         end case;
+
+         --  Re-evaluate the formals to re-compute the offset.
+         Assoc := Get_Chain (First_Assoc);
+         for I in 1 .. Count loop
+            declare
+               Formal : constant Node := Get_Formal (Assoc);
+               Form_Typ : Type_Acc;
+               Form_Off : Value_Offsets;
+            begin
+               Synth_Individual_Formal
+                 (Caller_Inst, Formal_Typ, Formal, Form_Typ, Form_Off);
+               Assocs (I).Form_Off := Form_Off;
+            end;
+            Assoc := Get_Chain (Assoc);
+         end loop;
+      end if;
+
+      Formal_Typ := Unshare_Type_Instance (Formal_Typ, Inter_Typ);
 
       --  4. If static: build mem, if in: build net, if out: build concat
       if Static then
