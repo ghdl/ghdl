@@ -2656,6 +2656,12 @@ package body Synth.Vhdl_Stmts is
       Wire_Mark : Wire_Id;
       Subprg_Phi : Phi_Type;
    begin
+      if Get_Foreign_Flag (Imp) then
+         Error_Msg_Synth
+           (Syn_Inst, Call, "cannot synthesize FOREIGN %n", +Imp);
+         return No_Valtyp;
+      end if;
+
       Mark (Wire_Mark);
       C := (Mode => Mode_Dynamic,
             Inst => Sub_Inst,
@@ -2766,6 +2772,11 @@ package body Synth.Vhdl_Stmts is
       Res : Valtyp;
       C : Seq_Context (Mode_Static);
    begin
+      if Get_Foreign_Flag (Imp) then
+         Error_Msg_Synth (Syn_Inst, Loc, "cannot call FOREIGN %n", +Imp);
+         return No_Valtyp;
+      end if;
+
       C := (Mode_Static,
             Inst => Sub_Inst,
             Cur_Loop => null,
