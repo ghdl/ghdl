@@ -161,10 +161,12 @@ def _initialize():
     _libghdl_path = _get_libghdl_path()
 
     # Add DLL search path(s)
+    print("libghdl_path: {}".format(_libghdl_path))
     if sys_platform == "win32" and sys_version_info.major == 3 and sys_version_info.minor >= 8:
         from os import add_dll_directory as os_add_dll_directory
 
-        p1 = _libghdl_path.parent.parent / "bin"
+        p1 = _libghdl_path.parent
+        print("add_dll_directory: {}".format(p1))
         os_add_dll_directory(str(p1))
 
     # Load libghdl shared object
