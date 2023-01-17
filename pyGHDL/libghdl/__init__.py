@@ -164,7 +164,7 @@ def _initialize():
     if sys_platform == "win32" and sys_version_info.major == 3 and sys_version_info.minor >= 8:
         from os import add_dll_directory as os_add_dll_directory
 
-        p1 = _libghdl_path.parent.parent / "bin"
+        p1 = _libghdl_path.parent.parent / "lib"
         os_add_dll_directory(str(p1))
 
     # Load libghdl shared object
