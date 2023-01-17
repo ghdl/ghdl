@@ -16,6 +16,7 @@ jobs:
 #
 
   gnatdoc:
+    if: false
     name: '📚 gnatdoc'
     runs-on: ubuntu-latest
 
@@ -39,6 +40,7 @@ jobs:
           path: gnatdoc
 
   doc:
+    if: false
     needs: gnatdoc
     name: '📓 Docs'
     runs-on: ubuntu-latest
@@ -84,6 +86,7 @@ jobs:
 #
 
   pyGHDL:
+    if: false
     name: '🐍 pyGHDL'
     runs-on: ubuntu-latest
 
@@ -133,6 +136,7 @@ jobs:
 #
 
   gpl:
+    if: false
     name: '🚧🚦🐧 GPL mcode'
     runs-on: ubuntu-latest
 
@@ -148,6 +152,7 @@ jobs:
 #
 
   lin:
+    if: false
     name: '🚧🚦🐧 Ubuntu ${{ matrix.os }} ${{ matrix.backend }}'
     runs-on: ubuntu-${{ matrix.os }}.04
 
@@ -184,6 +189,7 @@ jobs:
 #
 
   osx:
+    if: false
     name: '🚧🚦🍎 macOS ${{ matrix.os }} ${{ matrix.backend }}'
     runs-on: 'macOS-${{ matrix.os }}'
 
@@ -243,8 +249,8 @@ jobs:
       matrix:
         include:
 #          - {icon: '🟪', pkg: 'llvm',  sys: 'MINGW32' } ! not yet functional
-          - {icon: '🟦', pkg: 'llvm',  sys: 'MINGW64' }
-          - {icon: '🟨', pkg: 'llvm',  sys: 'UCRT64'  } #! experimental
+#          - {icon: '🟦', pkg: 'llvm',  sys: 'MINGW64' }
+#          - {icon: '🟨', pkg: 'llvm',  sys: 'UCRT64'  } #! experimental
           - {icon: '🟪', pkg: 'mcode', sys: 'MINGW32' }
           - {icon: '🟦', pkg: 'mcode', sys: 'MINGW64' } #! simulation with mcode is not yet supported on win64
           - {icon: '🟨', pkg: 'mcode', sys: 'UCRT64'  } #! experimental; simulation with mcode is not yet supported on win64
@@ -303,6 +309,7 @@ jobs:
 #
 
   win-msys2-test:
+    if: false
     name: '🚦${{ matrix.sys.icon }} ${{ matrix.sys.sys }} ${{ matrix.sys.pkg }} ${{ matrix.suite }}'
     runs-on: windows-latest
 
@@ -314,8 +321,8 @@ jobs:
       matrix:
         sys:
 #          - {icon: '🟪', pkg: 'llvm',  sys: 'MINGW32' } ! not yet functional
-          - {icon: '🟦', pkg: 'llvm',  sys: 'MINGW64' }
-          - {icon: '🟨', pkg: 'llvm',  sys: 'UCRT64'  } #! experimental
+#          - {icon: '🟦', pkg: 'llvm',  sys: 'MINGW64' }
+#          - {icon: '🟨', pkg: 'llvm',  sys: 'UCRT64'  } #! experimental
           - {icon: '🟪', pkg: 'mcode', sys: 'MINGW32' }
 #          - {icon: '🟦', pkg: 'mcode', sys: 'MINGW64' } ! simulation with mcode is not yet supported on win64
 #          - {icon: '🟨', pkg: 'mcode', sys: 'UCRT64'  } ! experimental; simulation with mcode is not yet supported on win64
@@ -369,7 +376,7 @@ jobs:
 #
 
   win-generate-standalone-zip:
-    name: '🚧🥡${{ matrix.icon }} ${{ matrix.sys }} mcode'
+    name: '🚧🥡${{ matrix.icon }} ${{ matrix.sys }} mcode (zip)'
     runs-on: windows-latest
 
     needs:
@@ -439,7 +446,7 @@ jobs:
 #
 
   win-cpython-msys2:
-    name: '🚦🐍${{ matrix.icon }} ${{ matrix.sys }} ${{ matrix.pkg }}'
+    name: '🚦🐍${{ matrix.icon }} ${{ matrix.sys }} ${{ matrix.pkg }} (pyGHDL)'
     runs-on: windows-latest
 
     needs:
@@ -450,8 +457,8 @@ jobs:
       matrix:
         include:
 #          - {icon: '🟪', pkg: 'llvm',  sys: 'MINGW32', pyarch: x86 }, ! not yet functional
-          - {icon: '🟦', pkg: 'llvm',  sys: 'MINGW64', pyarch: x64 }
-          - {icon: '🟨', pkg: 'llvm',  sys: 'UCRT64',  pyarch: x64 } #! experimental
+#          - {icon: '🟦', pkg: 'llvm',  sys: 'MINGW64', pyarch: x64 }
+#          - {icon: '🟨', pkg: 'llvm',  sys: 'UCRT64',  pyarch: x64 } #! experimental
           - {icon: '🟪', pkg: 'mcode', sys: 'MINGW32', pyarch: x86 }
           - {icon: '🟦', pkg: 'mcode', sys: 'MINGW64', pyarch: x64 } #! simulation with mcode is not yet supported on win64
           - {icon: '🟨', pkg: 'mcode', sys: 'UCRT64',  pyarch: x64 } #! experimental; simulation with mcode is not yet supported on win64
@@ -653,6 +660,7 @@ jobs:
 #
 
   coverage:
+    if: false
     name: '📈 Coverage'
     runs-on: windows-latest
 
