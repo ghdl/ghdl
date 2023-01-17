@@ -421,7 +421,7 @@ jobs:
           _zipdir='${{ matrix.sys }}-mcode-standalone'
           mkdir -p "${_zipdir}"-extract
           tar xf artifact/mingw-w64-*-ghdl-mcode-*.zst -C "${_zipdir}"-extract
-          cd "${_zipdir}-extract/${{ matrix.sys }}"/lib
+          cd "${_zipdir}-extract/${{ matrix.sys }}"/bin
           ../../../scripts/msys2-mcode/GetStandaloneDeps.sh
           cd ../../..
           mv "${_zipdir}"-extract/${{ matrix.sys }} "${_zipdir}"
