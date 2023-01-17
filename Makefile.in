@@ -509,13 +509,13 @@ install.libghdl.true: install.libghdl.lib install.libghdl.include
 install.libghdl.false:
 install.libghdl: install.libghdl.$(enable_libghdl)
 
-install.libghdl.deps.dll:
+copy.libghdl.deps.dll:
 	for f in $$(ldd lib/$(libghdl_name) | sed -n -e '/Windows/d' -e 's/.*=> \(.*\) .*/\1/p'); do \
-	 $(INSTALL_PROGRAM) -p $$f "$(DESTDIR)$(libdir)/"; \
+	  $(INSTALL_PROGRAM) -p $$f "lib/"; \
 	done
 
-install.libghdl.deps.dylib:
-install.libghdl.deps.so:
+copy.libghdl.deps.dylib:
+copy.libghdl.deps.so:
 
 uninstall.libghdl:
 	$(RM) $(DESTDIR)$(libdir)/$(libghdl_name)
@@ -671,7 +671,7 @@ setup-standalone.py: $(srcdir)/setup-standalone.in
 	sed -n -e '/^#@__init__/,$$p' < $< ; \
 	) > $@
 
-python-bwheel: setup-standalone.py lib/$(libghdl_name) libs install.libghdl.deps$(SOEXT)
+python-wheel: setup-standalone.py lib/$(libghdl_name) libs copy.libghdl.deps$(SOEXT)
 	rm -rf dist-wheel
 	mkdir dist-wheel
 #	Copy pyGHDL
