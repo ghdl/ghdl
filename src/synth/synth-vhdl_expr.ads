@@ -95,6 +95,7 @@ package Synth.Vhdl_Expr is
    Hook_Last_Event_Attribute : Hook_Attribute_Acc;
    Hook_Last_Active_Attribute : Hook_Attribute_Acc;
    Hook_Dot_Attribute : Hook_Attribute_Acc;
+   Hook_Endpoint : Hook_Attribute_Acc;
 
    --  Use base type of EXPR to synthesize EXPR.  Useful when the type of
    --  EXPR is defined by itself or a range.

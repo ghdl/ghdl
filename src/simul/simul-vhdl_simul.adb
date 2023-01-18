@@ -562,6 +562,12 @@ package body Simul.Vhdl_Simul is
       return Hook_Quantity_Expr (Pfx.Obj);
    end Exec_Dot_Attribute;
 
+   function Exec_Endpoint (Inst : Synth_Instance_Acc;
+                           Expr : Node) return Valtyp is
+   begin
+      return Get_Value (Inst, Expr);
+   end Exec_Endpoint;
+
    procedure Execute_Sequential_Statements (Process : Process_State_Acc);
 
    function Execute_Condition (Inst : Synth_Instance_Acc;
@@ -2160,12 +2166,13 @@ package body Simul.Vhdl_Simul is
                   end if;
                   E.Done := True;
                end if;
---            when Iir_Kind_Psl_Endpoint_Declaration =>
---               declare
---                  Info : constant Sim_Info_Acc := Get_Info (E.Stmt);
---               begin
---                E.Instance.Objects (Info.Slot).B1 := Ghdl_B1 (Nvec (S_Num));
---               end;
+            when Iir_Kind_Psl_Endpoint_Declaration =>
+               declare
+                  Var : Valtyp;
+               begin
+                  Var := Get_Value (E.Instance, E.Proc);
+                  Write_U8 (Var.Val.Mem, Boolean'Pos (Nvec (S_Num)));
+               end;
             when others =>
                Vhdl.Errors.Error_Kind ("PSL_Process_Executer", E.Proc);
          end case;
@@ -2231,6 +2238,15 @@ package body Simul.Vhdl_Simul is
          when Iir_Kind_Psl_Cover_Directive =>
             --  TODO
             null;
+         when Iir_Kind_Psl_Endpoint_Declaration =>
+            declare
+               Val : Valtyp;
+            begin
+               Val := Create_Value_Memory (Bit_Type, Global_Pool'Access);
+               Write_Discrete (Val, 0);
+               --  TODO: create the object/signal during elaboration
+               Create_Object (Proc.Instance, Proc.Proc, Val);
+            end;
          when others =>
             null;
       end case;
@@ -2307,7 +2323,8 @@ package body Simul.Vhdl_Simul is
                Create_Process_Drivers (I);
 
             when Iir_Kind_Psl_Assert_Directive
-              | Iir_Kind_Psl_Cover_Directive =>
+               | Iir_Kind_Psl_Cover_Directive
+               | Iir_Kind_Psl_Endpoint_Declaration =>
                Processes_State (I) := (Kind => Kind_PSL,
                                        Has_State => False,
                                        Top_Instance => Instance,
@@ -4110,6 +4127,7 @@ package body Simul.Vhdl_Simul is
         Exec_Last_Event_Attribute'Access;
       Synth.Vhdl_Expr.Hook_Last_Active_Attribute :=
         Exec_Last_Active_Attribute'Access;
+      Synth.Vhdl_Expr.Hook_Endpoint := Exec_Endpoint'Access;
 
       Synth.Vhdl_Oper.Hook_Bit_Rising_Edge := Exec_Bit_Rising_Edge'Access;
       Synth.Vhdl_Oper.Hook_Bit_Falling_Edge := Exec_Bit_Falling_Edge'Access;

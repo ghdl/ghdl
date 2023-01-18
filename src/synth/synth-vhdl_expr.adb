@@ -812,6 +812,8 @@ package body Synth.Vhdl_Expr is
                Obj := Elab.Vhdl_Heap.Synth_Dereference (Acc);
                return Create_Value_Memtyp (Obj);
             end;
+         when Iir_Kind_Psl_Endpoint_Declaration =>
+            return Synth_Expression (Syn_Inst, Name);
          when others =>
             Error_Kind ("synth_name", Name);
       end case;
@@ -2620,6 +2622,12 @@ package body Synth.Vhdl_Expr is
                return Hook_Dot_Attribute (Syn_Inst, Expr);
             end if;
             Error_Msg_Synth (Syn_Inst, Expr, "dot attribute not allowed");
+            return No_Valtyp;
+         when Iir_Kind_Psl_Endpoint_Declaration =>
+            if Hook_Endpoint /= null then
+               return Hook_Endpoint (Syn_Inst, Expr);
+            end if;
+            Error_Msg_Synth (Syn_Inst, Expr, "endpoint read not allowed");
             return No_Valtyp;
          when others =>
             Error_Kind ("synth_expression_with_type", Expr);

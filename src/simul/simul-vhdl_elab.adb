@@ -626,7 +626,8 @@ package body Simul.Vhdl_Elab is
             end if;
          when Iir_Kind_Psl_Assert_Directive
             | Iir_Kind_Psl_Assume_Directive
-            | Iir_Kind_Psl_Cover_Directive =>
+            | Iir_Kind_Psl_Cover_Directive
+            | Iir_Kind_Psl_Endpoint_Declaration =>
             List := Get_PSL_Clock_Sensitivity (Proc);
             Gather_Sensitivity (Inst, Proc_Idx, List);
             if Get_Kind (Proc) in Iir_Kinds_Psl_Property_Directive
@@ -935,12 +936,12 @@ package body Simul.Vhdl_Elab is
             --  Do not yet compute drivers or sensitivity as it may depends
             --  on declarations within the process.
          when Iir_Kind_Psl_Default_Clock
-           | Iir_Kind_Psl_Declaration
-           | Iir_Kind_Psl_Endpoint_Declaration =>
+           | Iir_Kind_Psl_Declaration =>
             null;
          when Iir_Kind_Psl_Assert_Directive
            | Iir_Kind_Psl_Assume_Directive
            | Iir_Kind_Psl_Cover_Directive
+           | Iir_Kind_Psl_Endpoint_Declaration
            | Iir_Kind_Concurrent_Break_Statement =>
             Processes_Table.Append ((Proc => Stmt,
                                      Inst => Inst,
