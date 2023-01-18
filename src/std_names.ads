@@ -406,9 +406,29 @@ package Std_Names is
    Name_Until_With :     constant Name_Id := Name_First_SV2009 + 3;
    Name_Last_SV2009 :    constant Name_Id := Name_First_SV2009 + 3;
 
+   Name_First_Vams :     constant Name_Id := Name_Last_SV2009 + 1;
+   Name_Analog :         constant Name_Id := Name_First_Vams + 0;
+   Name_Discipline :     constant Name_Id := Name_First_Vams + 1;
+   Name_Enddiscipline :  constant Name_Id := Name_First_Vams + 2;
+   Name_Endnature :      constant Name_Id := Name_First_Vams + 3;
+   Name_Potential :      constant Name_Id := Name_First_Vams + 4;
+   Name_Flow :           constant Name_Id := Name_First_Vams + 5;
+   Name_Discrete :       constant Name_Id := Name_First_Vams + 6;
+   Name_Continuous :     constant Name_Id := Name_First_Vams + 7;
+   Name_Abstol :         constant Name_Id := Name_First_Vams + 8;
+   Name_Ddt_Nature :     constant Name_Id := Name_First_Vams + 9;
+   Name_Idt_Nature :     constant Name_Id := Name_First_Vams + 10;
+   Name_Branch :         constant Name_Id := Name_First_Vams + 11;
+   Name_From :           constant Name_Id := Name_First_Vams + 12;
+   Name_Exclude :        constant Name_Id := Name_First_Vams + 13;
+   Name_Ddt :            constant Name_Id := Name_First_Vams + 14;
+   Name_Idt :            constant Name_Id := Name_First_Vams + 15;
+   Name_White_Noise :    constant Name_Id := Name_First_Vams + 16;
+   Name_Last_Vams :      constant Name_Id := Name_First_Vams + 16;
+
    --  VHDL operators.  Used as identifiers for declaration of overloaded
    --  operators.
-   Name_First_Operator :         constant Name_Id := Name_Last_SV2009 + 1;
+   Name_First_Operator :         constant Name_Id := Name_Last_Vams + 1;
    Name_Op_Equality :            constant Name_Id := Name_First_Operator + 000;
    Name_Op_Inequality :          constant Name_Id := Name_First_Operator + 001;
    Name_Op_Less :                constant Name_Id := Name_First_Operator + 002;

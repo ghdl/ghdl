@@ -366,6 +366,25 @@ package body Std_Names is
       Def ("s_until_with",        Name_S_Until_With);
       Def ("until_with",          Name_Until_With);
 
+      --  Verilog AMS
+      Def ("analog",              Name_Analog);
+      Def ("discipline",          Name_Discipline);
+      Def ("enddiscipline",       Name_Enddiscipline);
+      Def ("endnature",           Name_Endnature);
+      Def ("potential",           Name_Potential);
+      Def ("flow",                Name_Flow);
+      Def ("discrete",            Name_Discrete);
+      Def ("continuous",          Name_Continuous);
+      Def ("abstol",              Name_Abstol);
+      Def ("ddt_nature",          Name_Ddt_Nature);
+      Def ("idt_nature",          Name_Idt_Nature);
+      Def ("branch",              Name_Branch);
+      Def ("from",                Name_From);
+      Def ("exclude",             Name_Exclude);
+      Def ("ddt",                 Name_Ddt);
+      Def ("idt",                 Name_Idt);
+      Def ("white_noise",         Name_White_Noise);
+
       -- Create operators.
       Def ("=",  Name_Op_Equality);
       Def ("/=", Name_Op_Inequality);
