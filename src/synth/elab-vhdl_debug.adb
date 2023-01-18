@@ -570,6 +570,16 @@ package body Elab.Vhdl_Debug is
                   Put_Indent (Cfg.Indent);
                   Put (Image (Get_Label (Stmt)));
                   Put_Line (": process");
+                  declare
+                     Sub_Inst : constant Synth_Instance_Acc :=
+                       Get_Sub_Instance (Inst, Stmt);
+                  begin
+                     if Sub_Inst /= null then
+                        Disp_Declaration_Objects
+                          (Sub_Inst, Get_Declaration_Chain (Stmt),
+                           Cfg.Indent + 1);
+                     end if;
+                  end;
                end if;
             when others =>
                Vhdl.Errors.Error_Kind ("disp_hierarchy_statement", Stmt);
