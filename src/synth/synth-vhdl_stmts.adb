@@ -53,6 +53,7 @@ with Synth.Vhdl_Decls; use Synth.Vhdl_Decls;
 with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
 with Synth.Vhdl_Insts; use Synth.Vhdl_Insts;
 with Synth.Vhdl_Eval;
+with Synth.Vhdl_Foreign;
 with Synth.Source;
 with Synth.Vhdl_Static_Proc;
 with Synth.Flags;
@@ -2773,8 +2774,8 @@ package body Synth.Vhdl_Stmts is
       C : Seq_Context (Mode_Static);
    begin
       if Get_Foreign_Flag (Imp) then
-         Error_Msg_Synth (Syn_Inst, Loc, "cannot call FOREIGN %n", +Imp);
-         return No_Valtyp;
+         return Synth.Vhdl_Foreign.Call_Subprogram
+           (Syn_Inst, Sub_Inst, Imp, Loc);
       end if;
 
       C := (Mode_Static,

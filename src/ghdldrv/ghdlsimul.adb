@@ -52,6 +52,7 @@ with Elab.Debugger;
 
 with Synth.Flags;
 with Synth.Errors;
+with Synth.Vhdl_Foreign;
 with Simul.Vhdl_Elab;
 with Simul.Vhdl_Simul;
 
@@ -136,6 +137,7 @@ package body Ghdlsimul is
       --  Set flags.
       Synth.Flags.Flag_Simulation := True;
       Synth.Errors.Debug_Handler := Elab.Debugger.Debug_Error'Access;
+      Synth.Vhdl_Foreign.Initialize;
 
       --  Generic overriding.
       Top := Vhdl.Utils.Get_Entity_From_Configuration (Config);

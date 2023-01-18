@@ -1,5 +1,10 @@
 #if defined(__WIN32__)
 #include <windows.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void *
 grt_dynload_open (const char *path)
 {
@@ -28,9 +33,17 @@ grt_dynload_error (void)
   return msg;
 }
 
+#ifdef __cplusplus
+}
+#endif
+
 #else
 
 #include <dlfcn.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 void *
 grt_dynload_open (const char *path)
@@ -49,4 +62,8 @@ grt_dynload_error (void)
 {
   return dlerror ();
 }
+
+#ifdef __cplusplus
+}
+#endif
 #endif

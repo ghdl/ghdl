@@ -136,7 +136,7 @@ LIBVHDL_FLAGS_TO_PASS=\
  LN="$(LN)" CP="$(CP)" MKDIR="$(MKDIR)"
 
 # Object files from grt for the synthesis.
-GRT_SYNTH_OBJS=grt-cstdio.o
+GRT_SYNTH_OBJS=grt-cstdio.o grt-cdynload.o
 
 all: Makefile all.$(backend) all.libghdl all.ghw
 
@@ -277,6 +277,8 @@ copy-sources.gcc: version.ads scripts/gcc/Make-lang.in
 	$(CP) -p $(srcdir)/src/grt/grt-strings.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/grt/grt-severity.ads $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/grt/grt-readline_*.ad? $(gcc_vhdl_dir)
+	$(CP) -p $(srcdir)/src/grt/grt-dynload.ad? $(gcc_vhdl_dir)
+	$(CP) -p $(srcdir)/src/grt/grt-cdynload.c $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/ortho/*.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/ortho/gcc/*.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/ortho/gcc/*.c $(gcc_vhdl_dir)
@@ -430,9 +432,11 @@ uninstall.llvm: uninstall.llvm.program uninstall.grt
 
 GHDL_SIMUL_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/simul -aI$(srcdir)/src/synth
 
+GRT_SIMUL_OBJS=$(GRT_C_OBJS) grt-cdynload.o
+
 ghdl_simul$(EXEEXT): GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
-ghdl_simul$(EXEEXT): $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) version.ads force
-	$(GNATMAKE) $(GHDL_SIMUL_INCFLAGS) $(GNATFLAGS) -gnat12 ghdl_simul $(GNAT_BARGS) -largs $(LDFLAGS) $(GRT_C_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB)) $(sundials_ldflags)
+ghdl_simul$(EXEEXT): $(GRT_SIMUL_OBJS) $(GRT_SRC_DEPS) version.ads force
+	$(GNATMAKE) $(GHDL_SIMUL_INCFLAGS) $(GNATFLAGS) -gnat12 ghdl_simul $(GNAT_BARGS) -largs $(LDFLAGS) $(GRT_SIMUL_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB)) $(sundials_ldflags)
 
 libs.vhdl.simul: ghdl_simul$(EXEEXT)
 	$(MAKE) -f $(srcdir)/libraries/Makefile.inc $(LIBVHDL_FLAGS_TO_PASS) GHDL=$(PWD)/ghdl_simul$(EXEEXT) GHDL_FLAGS="" VHDLLIBS_COPY_OBJS=no vhdl.libs.all
@@ -454,7 +458,7 @@ LIBGHDL_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/synth -aI$(srcdir)/src
 
 libghdl_name=libghdl-$(libghdl_version)$(SOEXT)
 
-LIBGHDL_GRT_OBJS= pic/grt-cstdio.o
+LIBGHDL_GRT_OBJS= pic/grt-cstdio.o pic/grt-cdynload.o
 
 lib/$(libghdl_name): $(GRT_SRC_DEPS) $(LIBGHDL_GRT_OBJS) version.ads force
 #	Use -g for gnatlink so that the binder file is not removed.  We need

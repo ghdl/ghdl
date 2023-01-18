@@ -51,7 +51,7 @@ vhdl VHDL: ghdl1$(exeext) ghdl$(exeext)
 # Tell GNU Make to ignore these, if they exist.
 .PHONY: vhdl VHDL
 
-GHDL1_OBJS = attribs.o vhdl/ortho-lang.o vhdl/grt-cstdio.o
+GHDL1_OBJS = attribs.o vhdl/ortho-lang.o vhdl/grt-cstdio.o vhdl/grt-cdynload.o
 
 # To be put in ALL_HOST_FRONTEND_OBJS, so that generated files are created
 # before.
@@ -117,7 +117,7 @@ vhdl/default_paths.ads: Makefile
 	echo "end Default_Paths;" >> tmp-dpaths.ads
 	$(srcdir)/../move-if-change tmp-dpaths.ads $@
 
-GHDL_GRT_OBJS=vhdl/grt-cstdio.o
+GHDL_GRT_OBJS=vhdl/grt-cstdio.o vhdl/grt-cdynload.o
 
 # The driver for ghdl.  Depends on ghdl1 to use object files in vhdl/ subdir.
 ghdl$(exeext): ghdl1$(exeext) $(GHDL_GRT_OBJS) vhdl/default_paths.ads force

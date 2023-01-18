@@ -55,6 +55,7 @@ with Synthesis;
 with Synth.Disp_Vhdl;
 with Synth.Vhdl_Context;
 with Synth.Flags; use Synth.Flags;
+with Synth.Vhdl_Foreign;
 
 package body Ghdlsynth is
    type Out_Format is
@@ -566,6 +567,7 @@ package body Ghdlsynth is
          Res := No_Module;
       else
          Netlists.Errors.Initialize;
+         Synth.Vhdl_Foreign.Initialize;
          Res := Synthesis.Synth_Design (Config, Inst, Cmd.Top_Encoding);
       end if;
 
@@ -597,5 +599,6 @@ package body Ghdlsynth is
       Errorout.Console.Install_Handler;
       Options.Initialize;
       Netlists.Errors.Initialize;
+      Synth.Vhdl_Foreign.Initialize;
    end Init_For_Ghdl_Synth;
 end Ghdlsynth;
