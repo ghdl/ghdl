@@ -100,7 +100,7 @@ package body Elab.Vhdl_Annotations is
            | Kind_Extra =>
             raise Internal_Error;
       end case;
-      Set_Info (Obj, Info);
+      Set_Ann (Obj, Info);
    end Create_Object_Info;
 
    -- Add an annotation to SIGNAL.
@@ -131,7 +131,7 @@ package body Elab.Vhdl_Annotations is
                                  Inst_Slot => Block_Info.Nbr_Objects,
                                  Nbr_Objects => 0,
                                  Nbr_Instances => 0);
-      Set_Info (Blk, Info);
+      Set_Ann (Blk, Info);
       return Info;
    end Create_Block_Info;
 
@@ -173,7 +173,7 @@ package body Elab.Vhdl_Annotations is
       Prot_Info := new Sim_Info_Type'(Kind => Kind_Protected,
                                       Ref => Prot,
                                       Nbr_Objects => 0);
-      Set_Info (Prot, Prot_Info);
+      Set_Ann (Prot, Prot_Info);
 
       Decl := Get_Declaration_Chain (Prot);
       while Decl /= Null_Iir loop
@@ -195,9 +195,9 @@ package body Elab.Vhdl_Annotations is
    is
       pragma Unreferenced (Block_Info);
       Prot_Info : constant Sim_Info_Acc :=
-        Get_Info (Get_Protected_Type_Declaration (Prot));
+        Get_Ann (Get_Protected_Type_Declaration (Prot));
    begin
-      Set_Info (Prot, Prot_Info);
+      Set_Ann (Prot, Prot_Info);
 
       Annotate_Declaration_List (Prot_Info, Get_Declaration_Chain (Prot));
    end Annotate_Protected_Type_Body;
@@ -230,7 +230,7 @@ package body Elab.Vhdl_Annotations is
                      then
                         null;
                         --  FIXME
-                        --  Convert_Int_To_Phys (Get_Info (El).Value);
+                        --  Convert_Int_To_Phys (Get_Ann (El).Value);
                      end if;
                   when Iir_Kind_Range_Array_Attribute
                     | Iir_Kind_Reverse_Range_Array_Attribute =>
@@ -353,7 +353,7 @@ package body Elab.Vhdl_Annotations is
          Nbr_Objects => 0,
          Pkg_Slot => Block_Info.Nbr_Objects,
          Pkg_Parent => Block_Info);
-      Set_Info (Inter, Package_Info);
+      Set_Ann (Inter, Package_Info);
 
       Annotate_Interface_List
         (Package_Info, Get_Generic_Chain (Inter), True);
@@ -424,7 +424,7 @@ package body Elab.Vhdl_Annotations is
       Subprg_Info := new Sim_Info_Type'(Kind => Kind_Frame,
                                         Ref => Subprg,
                                         Nbr_Objects => 0);
-      Set_Info (Subprg, Subprg_Info);
+      Set_Ann (Subprg, Subprg_Info);
 
       Annotate_Interface_List (Subprg_Info, Interfaces, False);
    end Annotate_Subprogram_Specification;
@@ -434,9 +434,9 @@ package body Elab.Vhdl_Annotations is
    is
       pragma Unreferenced (Block_Info);
       Spec : constant Iir := Get_Subprogram_Specification (Subprg);
-      Subprg_Info : constant Sim_Info_Acc := Get_Info (Spec);
+      Subprg_Info : constant Sim_Info_Acc := Get_Ann (Spec);
    begin
-      Set_Info (Subprg, Subprg_Info);
+      Set_Ann (Subprg, Subprg_Info);
 
       --  Do not annotate body of foreign subprograms.
       if Get_Foreign_Flag (Spec) then
@@ -460,7 +460,7 @@ package body Elab.Vhdl_Annotations is
                                  Inst_Slot => Invalid_Object_Slot,
                                  Nbr_Objects => 0,
                                  Nbr_Instances => 1); --  For the instance.
-      Set_Info (Comp, Info);
+      Set_Ann (Comp, Info);
 
       Annotate_Interface_List (Info, Get_Generic_Chain (Comp), True);
       Annotate_Interface_List (Info, Get_Port_Chain (Comp), True);
@@ -493,7 +493,7 @@ package body Elab.Vhdl_Annotations is
          Nbr_Objects => 0,
          Pkg_Slot => Invalid_Object_Slot,
          Pkg_Parent => null);
-      Set_Info (Decl, Package_Info);
+      Set_Ann (Decl, Package_Info);
 
       if Is_Inst or else not Is_Uninstantiated_Package (Decl) then
          --  Allocate a slot in the parent block.
@@ -522,14 +522,14 @@ package body Elab.Vhdl_Annotations is
             Bod : constant Iir := Get_Instance_Package_Body (Decl);
          begin
             if Bod /= Null_Iir then
-               Set_Info (Bod, Package_Info);
+               Set_Ann (Bod, Package_Info);
                Annotate_Declaration_List
                  (Package_Info, Get_Declaration_Chain (Bod));
             else
                declare
                   Uninst : constant Iir :=
                     Get_Uninstantiated_Package_Decl (Decl);
-                  Uninst_Info : constant Sim_Info_Acc := Get_Info (Uninst);
+                  Uninst_Info : constant Sim_Info_Acc := Get_Ann (Uninst);
                begin
                   --  There is not corresponding body for an instantiation, so
                   --  also add objects for the shared body.
@@ -545,7 +545,7 @@ package body Elab.Vhdl_Annotations is
    procedure Annotate_Package_Body (Bod: Iir)
    is
       Pkg : constant Node := Get_Package (Bod);
-      Package_Info : constant Sim_Info_Acc := Get_Info (Pkg);
+      Package_Info : constant Sim_Info_Acc := Get_Ann (Pkg);
    begin
       if Is_Uninstantiated_Package (Pkg)
         and then Get_Macro_Expanded_Flag (Pkg)
@@ -555,7 +555,7 @@ package body Elab.Vhdl_Annotations is
       end if;
 
       --  Set info field of package body declaration.
-      Set_Info (Bod, Package_Info);
+      Set_Ann (Bod, Package_Info);
 
       -- declarations
       Annotate_Declaration_List (Package_Info, Get_Declaration_Chain (Bod));
@@ -978,7 +978,7 @@ package body Elab.Vhdl_Annotations is
                                  Inst_Slot => Block_Info.Nbr_Objects,
                                  Nbr_Objects => 0,
                                  Nbr_Instances => 1);
-      Set_Info (Stmt, Info);
+      Set_Ann (Stmt, Info);
    end Annotate_Component_Instantiation_Statement;
 
    procedure Annotate_Process_Statement (Block_Info : Sim_Info_Acc; Stmt : Iir)
@@ -989,7 +989,7 @@ package body Elab.Vhdl_Annotations is
       Info := new Sim_Info_Type'(Kind => Kind_Process,
                                  Ref => Stmt,
                                  Nbr_Objects => 0);
-      Set_Info (Stmt, Info);
+      Set_Ann (Stmt, Info);
 
       Annotate_Declaration_List
         (Info, Get_Declaration_Chain (Stmt));
@@ -1051,7 +1051,7 @@ package body Elab.Vhdl_Annotations is
                Info := new Sim_Info_Type'(Kind => Kind_Process,
                                           Ref => Stmt,
                                           Nbr_Objects => 0);
-               Set_Info (Stmt, Info);
+               Set_Ann (Stmt, Info);
                Annotate_Procedure_Call_Statement (Info, Stmt);
             end;
 
@@ -1081,7 +1081,7 @@ package body Elab.Vhdl_Annotations is
                                         Inst_Slot => Invalid_Object_Slot,
                                         Nbr_Objects => 0,
                                         Nbr_Instances => 0);
-      Set_Info (Decl, Entity_Info);
+      Set_Ann (Decl, Entity_Info);
 
       Annotate_Interface_List (Entity_Info, Get_Generic_Chain (Decl), True);
       Annotate_Interface_List (Entity_Info, Get_Port_Chain (Decl), True);
@@ -1093,7 +1093,7 @@ package body Elab.Vhdl_Annotations is
 
    procedure Annotate_Architecture (Decl: Iir_Architecture_Body)
    is
-      Entity_Info : constant Sim_Info_Acc := Get_Info (Get_Entity (Decl));
+      Entity_Info : constant Sim_Info_Acc := Get_Ann (Get_Entity (Decl));
       Saved_Info : constant Sim_Info_Type (Kind_Block) := Entity_Info.all;
       Arch_Info: Sim_Info_Acc;
    begin
@@ -1109,7 +1109,7 @@ package body Elab.Vhdl_Annotations is
 
       Arch_Info := new Sim_Info_Type'(Entity_Info.all);
       Entity_Info.all := Saved_Info;
-      Set_Info (Decl, Arch_Info);
+      Set_Ann (Decl, Arch_Info);
    end Annotate_Architecture;
 
    procedure Annotate_Vunit_Declaration (Decl : Iir)
@@ -1122,7 +1122,7 @@ package body Elab.Vhdl_Annotations is
                                        Inst_Slot => Invalid_Object_Slot,
                                        Nbr_Objects => 0,
                                        Nbr_Instances => 0);
-      Set_Info (Decl, Vunit_Info);
+      Set_Ann (Decl, Vunit_Info);
 
       Item := Get_Vunit_Item_Chain (Decl);
       while Item /= Null_Iir loop
@@ -1173,7 +1173,7 @@ package body Elab.Vhdl_Annotations is
                                  Inst_Slot => Invalid_Object_Slot,
                                  Nbr_Objects => 0,
                                  Nbr_Instances => 0);
-      Set_Info (Decl, Info);
+      Set_Ann (Decl, Info);
 
       Annotate_Interface_List (Info, Get_Generic_Chain (Decl), True);
       Annotate_Interface_List (Info, Get_Port_Chain (Decl), True);
@@ -1222,7 +1222,7 @@ package body Elab.Vhdl_Annotations is
          Nbr_Objects => 0,
          Pkg_Slot => Block_Info.Nbr_Objects,
          Pkg_Parent => Block_Info);
-      Set_Info (Decl, Config_Info);
+      Set_Ann (Decl, Config_Info);
 
       Annotate_Declaration_List (Config_Info, Get_Declaration_Chain (Decl));
       Annotate_Block_Configuration (Get_Block_Configuration (Decl));
@@ -1274,9 +1274,9 @@ package body Elab.Vhdl_Annotations is
                   Annotate_Package_Declaration (Global_Info, El);
                   --  These types are not in std.standard!
                   Annotate_Type_Definition
-                    (Get_Info (El), Convertible_Integer_Type_Definition);
+                    (Get_Ann (El), Convertible_Integer_Type_Definition);
                   Annotate_Type_Definition
-                    (Get_Info (El), Convertible_Real_Type_Definition);
+                    (Get_Ann (El), Convertible_Real_Type_Definition);
                else
                   pragma Assert (Global_Info /= null);
                   Annotate_Package_Declaration (Global_Info, El);
@@ -1329,7 +1329,7 @@ package body Elab.Vhdl_Annotations is
    procedure Disp_Vhdl_Info (Node: Iir)
    is
       use Simple_IO;
-      Info : constant Sim_Info_Acc := Get_Info (Node);
+      Info : constant Sim_Info_Acc := Get_Ann (Node);
    begin
       if Info = null then
          return;
@@ -1393,17 +1393,17 @@ package body Elab.Vhdl_Annotations is
 
    procedure Disp_Tree_Info (Node: Iir) is
    begin
-      Disp_Info (Get_Info (Node));
+      Disp_Info (Get_Ann (Node));
    end Disp_Tree_Info;
 
-   procedure Set_Info (Target: Iir; Info: Sim_Info_Acc) is
+   procedure Set_Ann (Target: Iir; Info: Sim_Info_Acc) is
    begin
       pragma Assert (Info_Node.Table (Target) = null);
       Info_Node.Table (Target) := Info;
-   end Set_Info;
+   end Set_Ann;
 
-   function Get_Info (Target: Iir) return Sim_Info_Acc is
+   function Get_Ann (Target: Iir) return Sim_Info_Acc is
    begin
       return Info_Node.Table (Target);
-   end Get_Info;
+   end Get_Ann;
 end Elab.Vhdl_Annotations;

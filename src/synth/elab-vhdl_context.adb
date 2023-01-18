@@ -82,7 +82,7 @@ package body Elab.Vhdl_Context is
                                 Config : Node)
      return Synth_Instance_Acc
    is
-      Info : constant Sim_Info_Acc := Get_Info (Blk);
+      Info : constant Sim_Info_Acc := Get_Ann (Blk);
       Scope : constant Sim_Info_Acc := Get_Info_Scope (Blk);
       Nbr_Objs : Object_Slot_Type;
       Res : Synth_Instance_Acc;
@@ -135,7 +135,7 @@ package body Elab.Vhdl_Context is
      (Parent : Synth_Instance_Acc; Blk : Node; Config : Node; Len : Natural)
      return Synth_Instance_Acc
    is
-      Info : constant Sim_Info_Acc := Get_Info (Blk);
+      Info : constant Sim_Info_Acc := Get_Ann (Blk);
       Res : Synth_Instance_Acc;
    begin
       Res := new Synth_Instance_Type'(Max_Objs => Object_Slot_Type (Len),
@@ -305,7 +305,7 @@ package body Elab.Vhdl_Context is
    procedure Create_Object_Force
      (Syn_Inst : Synth_Instance_Acc; Decl : Node; Vt : Valtyp)
    is
-      Info : constant Sim_Info_Acc := Get_Info (Decl);
+      Info : constant Sim_Info_Acc := Get_Ann (Decl);
    begin
       pragma Assert
         (Syn_Inst.Objects (Info.Slot).Kind = Obj_None
@@ -319,7 +319,7 @@ package body Elab.Vhdl_Context is
      (Syn_Inst : Synth_Instance_Acc; N : Node; Pool : Areapools.Areapool_Acc)
    is
       use Areapools;
-      Info : constant Sim_Info_Acc := Get_Info (N);
+      Info : constant Sim_Info_Acc := Get_Ann (N);
    begin
       Create_Object (Syn_Inst, Info.Slot, 1);
       Syn_Inst.Objects (Info.Slot) := (Kind => Obj_Marker,
@@ -330,7 +330,7 @@ package body Elab.Vhdl_Context is
    procedure Create_Object
      (Syn_Inst : Synth_Instance_Acc; Decl : Node; Vt : Valtyp)
    is
-      Info : constant Sim_Info_Acc := Get_Info (Decl);
+      Info : constant Sim_Info_Acc := Get_Ann (Decl);
    begin
       Create_Object (Syn_Inst, Info.Slot, 1);
       Create_Object_Force (Syn_Inst, Decl, Vt);
@@ -341,7 +341,7 @@ package body Elab.Vhdl_Context is
                             Typ : Type_Acc;
                             Init : Value_Acc)
    is
-      Info : constant Sim_Info_Acc := Get_Info (Decl);
+      Info : constant Sim_Info_Acc := Get_Ann (Decl);
       Vt : Valtyp;
    begin
       Create_Object (Syn_Inst, Info.Slot, 1);
@@ -353,7 +353,7 @@ package body Elab.Vhdl_Context is
    procedure Replace_Signal
      (Syn_Inst : Synth_Instance_Acc; Decl : Node; Vt : Valtyp)
    is
-      Info : constant Sim_Info_Acc := Get_Info (Decl);
+      Info : constant Sim_Info_Acc := Get_Ann (Decl);
       Obj : Obj_Type renames Syn_Inst.Objects (Info.Slot);
    begin
       pragma Assert (Obj.Kind = Obj_Object);
@@ -368,7 +368,7 @@ package body Elab.Vhdl_Context is
    procedure Mutate_Object
      (Syn_Inst : Synth_Instance_Acc; Decl : Node; Vt : Valtyp)
    is
-      Info : constant Sim_Info_Acc := Get_Info (Decl);
+      Info : constant Sim_Info_Acc := Get_Ann (Decl);
       Obj : Obj_Type renames Syn_Inst.Objects (Info.Slot);
    begin
       pragma Assert (Obj.Kind = Obj_Object);
@@ -381,7 +381,7 @@ package body Elab.Vhdl_Context is
                                   Stmt : Node;
                                   Sub_Inst : Synth_Instance_Acc)
    is
-      Info : constant Sim_Info_Acc := Get_Info (Stmt);
+      Info : constant Sim_Info_Acc := Get_Ann (Stmt);
    begin
       Create_Object (Syn_Inst, Info.Inst_Slot, 1);
       pragma Assert (Syn_Inst.Objects (Info.Inst_Slot).Kind = Obj_None);
@@ -405,7 +405,7 @@ package body Elab.Vhdl_Context is
      (Syn_Inst : Synth_Instance_Acc; Decl : Node; Typ : Type_Acc)
    is
       pragma Assert (Typ /= null);
-      Info : constant Sim_Info_Acc := Get_Info (Decl);
+      Info : constant Sim_Info_Acc := Get_Ann (Decl);
    begin
       Create_Object (Syn_Inst, Info.Slot, 1);
       pragma Assert (Syn_Inst.Objects (Info.Slot).Kind = Obj_None);
@@ -417,7 +417,7 @@ package body Elab.Vhdl_Context is
                                     Inst : Synth_Instance_Acc;
                                     Is_Global : Boolean)
    is
-      Info : constant Sim_Info_Acc := Get_Info (Decl);
+      Info : constant Sim_Info_Acc := Get_Ann (Decl);
    begin
       if Is_Global then
          pragma Assert (Syn_Inst.Objects (Info.Pkg_Slot).Kind = Obj_None);
@@ -435,7 +435,7 @@ package body Elab.Vhdl_Context is
                                        Decl     : Node;
                                        Inst     : Synth_Instance_Acc)
    is
-      Info : constant Sim_Info_Acc := Get_Info (Decl);
+      Info : constant Sim_Info_Acc := Get_Ann (Decl);
    begin
       pragma Assert (Syn_Inst.Up_Block /= null);
       Create_Object (Syn_Inst, Info.Pkg_Slot, 1);
@@ -456,7 +456,7 @@ package body Elab.Vhdl_Context is
    function Get_Package_Object
      (Syn_Inst : Synth_Instance_Acc; Pkg : Node) return Synth_Instance_Acc is
    begin
-      return Get_Package_Object (Syn_Inst, Get_Info (Pkg));
+      return Get_Package_Object (Syn_Inst, Get_Ann (Pkg));
    end Get_Package_Object;
 
    function Create_Package_Instance (Parent_Inst : Synth_Instance_Acc;
@@ -479,7 +479,7 @@ package body Elab.Vhdl_Context is
    function Get_Sub_Instance
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node) return Synth_Instance_Acc
    is
-      Info : constant Sim_Info_Acc := Get_Info (Stmt);
+      Info : constant Sim_Info_Acc := Get_Ann (Stmt);
    begin
       return Syn_Inst.Objects (Info.Inst_Slot).I_Inst;
    end Get_Sub_Instance;
@@ -495,7 +495,7 @@ package body Elab.Vhdl_Context is
    procedure Set_Uninstantiated_Scope
      (Syn_Inst : Synth_Instance_Acc; Bod : Node) is
    begin
-      Syn_Inst.Uninst_Scope := Get_Info (Bod);
+      Syn_Inst.Uninst_Scope := Get_Ann (Bod);
    end Set_Uninstantiated_Scope;
 
    procedure Destroy_Init (D : out Destroy_Type;
@@ -529,7 +529,7 @@ package body Elab.Vhdl_Context is
 
    procedure Destroy_Object (D : in out Destroy_Type; Decl : Node)
    is
-      Info : constant Sim_Info_Acc := Get_Info (Decl);
+      Info : constant Sim_Info_Acc := Get_Ann (Decl);
    begin
       Destroy_Check (D, Info);
       D.Inst.Objects (Info.Slot) := (Kind => Obj_None);
@@ -539,7 +539,7 @@ package body Elab.Vhdl_Context is
      (D : in out Destroy_Type; N : Node; Pool : Areapools.Areapool_Acc)
    is
       use Areapools;
-      Info : constant Sim_Info_Acc := Get_Info (N);
+      Info : constant Sim_Info_Acc := Get_Ann (N);
       Slot : constant Object_Slot_Type := Info.Slot;
    begin
       Destroy_Check (D, Info);
@@ -627,7 +627,7 @@ package body Elab.Vhdl_Context is
       else
          N := Blk;
       end if;
-      return Get_Info (N);
+      return Get_Ann (N);
    end Get_Info_Scope;
 
    function Get_Parent_Scope (Blk : Node) return Sim_Info_Acc is
@@ -638,7 +638,7 @@ package body Elab.Vhdl_Context is
    function Get_Value (Syn_Inst: Synth_Instance_Acc; Obj : Node)
                       return Valtyp
    is
-      Info : constant Sim_Info_Acc := Get_Info (Obj);
+      Info : constant Sim_Info_Acc := Get_Ann (Obj);
       Obj_Inst : Synth_Instance_Acc;
    begin
       Obj_Inst := Get_Instance_By_Scope (Syn_Inst, Info.Obj_Scope);
@@ -648,7 +648,7 @@ package body Elab.Vhdl_Context is
    function Get_Subtype_Object
      (Syn_Inst : Synth_Instance_Acc; Decl : Node) return Type_Acc
    is
-      Info : constant Sim_Info_Acc := Get_Info (Decl);
+      Info : constant Sim_Info_Acc := Get_Ann (Decl);
       Obj_Inst : Synth_Instance_Acc;
    begin
       Obj_Inst := Get_Instance_By_Scope (Syn_Inst, Info.Obj_Scope);

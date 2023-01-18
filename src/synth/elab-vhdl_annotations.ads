@@ -107,16 +107,17 @@ package Elab.Vhdl_Annotations is
    procedure Disp_Vhdl_Info (Node : Iir);
    procedure Disp_Tree_Info (Node : Iir);
 
+   --  Infos for top-level packages.
    Global_Info : Sim_Info_Acc;
 
    -- Annotations are used to collect informations for elaboration and to
    -- locate iir_value_literal for signals, variables or constants.
 
    -- Get/Set annotation fied from/to an iir.
-   procedure Set_Info (Target : Iir; Info : Sim_Info_Acc);
-   pragma Inline (Set_Info);
-   function Get_Info (Target : Iir) return Sim_Info_Acc;
-   pragma Inline (Get_Info);
+   procedure Set_Ann (Target : Iir; Info : Sim_Info_Acc);
+   pragma Inline (Set_Ann);
+   function Get_Ann (Target : Iir) return Sim_Info_Acc;
+   pragma Inline (Get_Ann);
 
    --  Expand the annotation table.  This is automatically done by Annotate,
    --  to be used only by debugger.

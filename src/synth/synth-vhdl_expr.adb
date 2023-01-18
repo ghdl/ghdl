@@ -474,7 +474,7 @@ package body Synth.Vhdl_Expr is
                                 Dim : Dim_Type) return Bound_Type
    is
       use Elab.Vhdl_Annotations;
-      Info : constant Sim_Info_Acc := Get_Info (Atype);
+      Info : constant Sim_Info_Acc := Get_Ann (Atype);
    begin
       if Info = null then
          pragma Assert (Get_Type_Declarator (Atype) = Null_Node);
