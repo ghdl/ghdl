@@ -21,6 +21,7 @@ with Ada.Unchecked_Conversion;
 
 with Simple_IO;
 with Utils_IO;
+with Flags;
 
 with Vhdl.Types;
 with Vhdl.Errors;
@@ -2378,9 +2379,105 @@ package body Simul.Vhdl_Simul is
       end case;
    end Resolver_Read_Value;
 
+   type Read_Signal_Last_Enum is
+     (
+      Read_Signal_Last_Event,
+      Read_Signal_Last_Active
+     );
+
+   function Exec_Read_Signal_Last (Sig: Memory_Ptr;
+                                   Typ : Type_Acc;
+                                   Attr : Read_Signal_Last_Enum)
+                                  return Std_Time
+   is
+      Res, T : Std_Time;
+      S : Ghdl_Signal_Ptr;
+   begin
+      case Typ.Kind is
+         when Type_Scalars =>
+            S := Read_Sig (Sig);
+            case Attr is
+               when Read_Signal_Last_Event =>
+                  return S.Last_Event;
+               when Read_Signal_Last_Active =>
+                  return S.Last_Active;
+            end case;
+         when Type_Vector
+           | Type_Array =>
+            declare
+               Len : constant Uns32 := Typ.Abound.Len;
+               Sigel : Memory_Ptr;
+            begin
+               Res := Std_Time'First;
+               for I in 1 .. Len loop
+                  Sigel := Sig_Index (Sig, (Len - I) * Typ.Arr_El.W);
+                  T := Exec_Read_Signal_Last (Sigel, Typ.Arr_El, Attr);
+                  Res := Std_Time'Max (Res, T);
+               end loop;
+               return Res;
+            end;
+         when Type_Record =>
+            Res := Std_Time'First;
+            for I in Typ.Rec.E'Range loop
+               declare
+                  E : Rec_El_Type renames Typ.Rec.E (I);
+                  Sigel : Memory_Ptr;
+               begin
+                  Sigel := Sig_Index (Sig, E.Offs.Net_Off);
+                  T := Exec_Read_Signal_Last (Sigel, E.Typ, Attr);
+                  Res := Std_Time'Max (Res, T);
+               end;
+            end loop;
+            return Res;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Exec_Read_Signal_Last;
+
+   function Exec_Signal_Last_Attribute (Inst : Synth_Instance_Acc;
+                                        Expr : Node;
+                                        Attr : Read_Signal_Last_Enum)
+                                       return Valtyp
+   is
+      Pfx : Target_Info;
+      Res : Valtyp;
+      T : Std_Time;
+      S : Memory_Ptr;
+   begin
+      Pfx := Synth_Target (Inst, Get_Prefix (Expr));
+
+      S := Sig_Index (Signals_Table.Table (Pfx.Obj.Val.S).Sig,
+                      Pfx.Off.Net_Off);
+
+      T := Exec_Read_Signal_Last (S, Pfx.Targ_Type, Attr);
+      if T < 0 then
+         T := Std_Time'Last;
+      else
+         T := Current_Time - T;
+      end if;
+
+      Res := Create_Value_Memory (Get_Subtype_Object (Inst, Get_Type (Expr)),
+                                  Expr_Pool'Access);
+      Write_I64 (Res.Val.Mem, Ghdl_I64 (T));
+      return Res;
+   end Exec_Signal_Last_Attribute;
+
+   function Exec_Last_Event_Attribute (Inst : Synth_Instance_Acc;
+                                       Expr : Node) return Valtyp is
+   begin
+      return Exec_Signal_Last_Attribute (Inst, Expr, Read_Signal_Last_Event);
+   end Exec_Last_Event_Attribute;
+
+   function Exec_Last_Active_Attribute (Inst : Synth_Instance_Acc;
+                                        Expr : Node) return Valtyp is
+   begin
+      return Exec_Signal_Last_Attribute (Inst, Expr, Read_Signal_Last_Active);
+   end Exec_Last_Active_Attribute;
+
    type Read_Signal_Enum is
      (
       Read_Signal_Last_Value,
+      Read_Signal_Last_Value_87,
 
       --  For conversion functions.
       Read_Signal_Driving_Value,
@@ -2390,25 +2487,38 @@ package body Simul.Vhdl_Simul is
       Read_Signal_Driver_Value
      );
 
+   --  T is used only for last_value.
    procedure Exec_Read_Signal (Sig: Memory_Ptr;
                                Val : Memtyp;
-                               Attr : Read_Signal_Enum)
+                               Attr : Read_Signal_Enum;
+                               T : Std_Time)
    is
-      S : Ghdl_Signal_Ptr;
    begin
       case Val.Typ.Kind is
          when Type_Scalars =>
-            S := Read_Sig (Sig);
-            case Attr is
-               when Read_Signal_Driving_Value =>
-                  Write_Ghdl_Value (Val, S.Driving_Value);
-               when Read_Signal_Effective_Value =>
-                  Write_Ghdl_Value (Val, S.Value_Ptr.all);
-               when Read_Signal_Last_Value =>
-                  Write_Ghdl_Value (Val, S.Last_Value);
-               when Read_Signal_Driver_Value =>
-                  Write_Ghdl_Value (Val, Ghdl_Signal_Driving_Value (S));
-            end case;
+            declare
+               S : Ghdl_Signal_Ptr;
+               V : Value_Union;
+            begin
+               S := Read_Sig (Sig);
+               case Attr is
+                  when Read_Signal_Driving_Value =>
+                     V := S.Driving_Value;
+                  when Read_Signal_Effective_Value =>
+                     V := S.Value_Ptr.all;
+                  when Read_Signal_Last_Value_87 =>
+                     V := S.Last_Value;
+                  when Read_Signal_Last_Value =>
+                     if S.Last_Event < T then
+                        V := S.Value_Ptr.all;
+                     else
+                        V := S.Last_Value;
+                     end if;
+                  when Read_Signal_Driver_Value =>
+                     V := Ghdl_Signal_Driving_Value (S);
+               end case;
+               Write_Ghdl_Value (Val, V);
+            end;
          when Type_Vector
            | Type_Array =>
             declare
@@ -2419,7 +2529,7 @@ package body Simul.Vhdl_Simul is
                   Exec_Read_Signal
                     (Sig_Index (Sig, (Len - I) * Typ.Arr_El.W),
                      (Typ.Arr_El, Val.Mem + Size_Type (I - 1) * Typ.Arr_El.Sz),
-                     Attr);
+                     Attr, T);
                end loop;
             end;
          when Type_Record =>
@@ -2429,7 +2539,7 @@ package body Simul.Vhdl_Simul is
                begin
                   Exec_Read_Signal (Sig_Index (Sig, E.Offs.Net_Off),
                                     (E.Typ, Val.Mem + E.Offs.Mem_Off),
-                                    Attr);
+                                    Attr, T);
                end;
             end loop;
          when others =>
@@ -2452,14 +2562,40 @@ package body Simul.Vhdl_Simul is
       S := Sig_Index (Signals_Table.Table (Pfx.Obj.Val.S).Sig,
                       Pfx.Off.Net_Off);
 
-      Exec_Read_Signal (S, Get_Memtyp (Res), Kind);
+      Exec_Read_Signal (S, Get_Memtyp (Res), Kind, 0);
       return Res;
    end Exec_Signal_Value_Attribute;
 
    function Exec_Last_Value_Attribute (Inst : Synth_Instance_Acc;
-                                       Expr : Node) return Valtyp is
+                                       Expr : Node) return Valtyp
+   is
+      use Flags;
+      T : Std_Time;
    begin
-      return Exec_Signal_Value_Attribute (Inst, Expr, Read_Signal_Last_Value);
+      if Vhdl_Std >= Vhdl_93 then
+         declare
+            Pfx : Target_Info;
+            Res : Valtyp;
+            S : Memory_Ptr;
+         begin
+            Pfx := Synth_Target (Inst, Get_Prefix (Expr));
+
+            S := Sig_Index (Signals_Table.Table (Pfx.Obj.Val.S).Sig,
+                            Pfx.Off.Net_Off);
+
+            T := Exec_Read_Signal_Last
+              (S, Pfx.Targ_Type, Read_Signal_Last_Event);
+
+            Res := Create_Value_Memory (Pfx.Targ_Type, Expr_Pool'Access);
+
+            Exec_Read_Signal
+              (S, Get_Memtyp (Res), Read_Signal_Last_Value, T);
+            return Res;
+         end;
+      else
+         return Exec_Signal_Value_Attribute
+           (Inst, Expr, Read_Signal_Last_Value_87);
+      end if;
    end Exec_Last_Value_Attribute;
 
    function Exec_Driving_Value_Attribute (Inst : Synth_Instance_Acc;
@@ -2468,104 +2604,6 @@ package body Simul.Vhdl_Simul is
       return Exec_Signal_Value_Attribute
         (Inst, Expr, Read_Signal_Driver_Value);
    end Exec_Driving_Value_Attribute;
-
-   type Read_Signal_Last_Enum is
-     (
-      Read_Signal_Last_Event,
-      Read_Signal_Last_Active
-     );
-
-   function Exec_Read_Signal_Last (Sig: Memory_Ptr;
-                                   Val : Memtyp;
-                                   Attr : Read_Signal_Last_Enum)
-                                  return Std_Time
-   is
-      Res, T : Std_Time;
-      S : Ghdl_Signal_Ptr;
-   begin
-      case Val.Typ.Kind is
-         when Type_Scalars =>
-            S := Read_Sig (Sig);
-            case Attr is
-               when Read_Signal_Last_Event =>
-                  return S.Last_Event;
-               when Read_Signal_Last_Active =>
-                  return S.Last_Active;
-            end case;
-         when Type_Vector
-           | Type_Array =>
-            declare
-               Typ : constant Type_Acc := Val.Typ;
-               Len : constant Uns32 := Typ.Abound.Len;
-            begin
-               Res := Std_Time'First;
-               for I in 1 .. Len loop
-                  T := Exec_Read_Signal_Last
-                    (Sig_Index (Sig, (Len - I) * Typ.Arr_El.W),
-                     (Typ.Arr_El, Val.Mem + Size_Type (I - 1) * Typ.Arr_El.Sz),
-                     Attr);
-                  Res := Std_Time'Max (Res, T);
-               end loop;
-               return Res;
-            end;
-         when Type_Record =>
-            Res := Std_Time'First;
-            for I in Val.Typ.Rec.E'Range loop
-               declare
-                  E : Rec_El_Type renames Val.Typ.Rec.E (I);
-               begin
-                  T := Exec_Read_Signal_Last
-                    (Sig_Index (Sig, E.Offs.Net_Off),
-                     (E.Typ, Val.Mem + E.Offs.Mem_Off),
-                     Attr);
-                  Res := Std_Time'Max (Res, T);
-               end;
-            end loop;
-            return Res;
-         when others =>
-            raise Internal_Error;
-      end case;
-   end Exec_Read_Signal_Last;
-
-   function Exec_Signal_Last_Attribute (Inst : Synth_Instance_Acc;
-                                        Expr : Node;
-                                        Attr : Read_Signal_Last_Enum)
-                                       return Valtyp
-   is
-      Pfx : Target_Info;
-      Res : Valtyp;
-      T : Std_Time;
-      S : Memory_Ptr;
-   begin
-      Pfx := Synth_Target (Inst, Get_Prefix (Expr));
-
-      Res := Create_Value_Memory (Get_Subtype_Object (Inst, Get_Type (Expr)),
-                                  Expr_Pool'Access);
-
-      S := Sig_Index (Signals_Table.Table (Pfx.Obj.Val.S).Sig,
-                      Pfx.Off.Net_Off);
-
-      T := Exec_Read_Signal_Last (S, Get_Memtyp (Res), Attr);
-      if T < 0 then
-         T := Std_Time'Last;
-      else
-         T := Current_Time - T;
-      end if;
-      Write_I64 (Res.Val.Mem, Ghdl_I64 (T));
-      return Res;
-   end Exec_Signal_Last_Attribute;
-
-   function Exec_Last_Event_Attribute (Inst : Synth_Instance_Acc;
-                                       Expr : Node) return Valtyp is
-   begin
-      return Exec_Signal_Last_Attribute (Inst, Expr, Read_Signal_Last_Event);
-   end Exec_Last_Event_Attribute;
-
-   function Exec_Last_Active_Attribute (Inst : Synth_Instance_Acc;
-                                        Expr : Node) return Valtyp is
-   begin
-      return Exec_Signal_Last_Attribute (Inst, Expr, Read_Signal_Last_Active);
-   end Exec_Last_Active_Attribute;
 
    type Write_Signal_Enum is
      (Write_Signal_Driving_Value,
@@ -3378,9 +3416,11 @@ package body Simul.Vhdl_Simul is
       Val := Create_Memory (Conv.Src_Typ);
       case Conv.Mode is
          when Convert_In =>
-            Exec_Read_Signal (Conv.Src_Sig, Val, Read_Signal_Effective_Value);
+            Exec_Read_Signal
+              (Conv.Src_Sig, Val, Read_Signal_Effective_Value, 0);
          when Convert_Out =>
-            Exec_Read_Signal (Conv.Src_Sig, Val, Read_Signal_Driving_Value);
+            Exec_Read_Signal
+              (Conv.Src_Sig, Val, Read_Signal_Driving_Value, 0);
       end case;
 
       Dst_Val := Create_Value_Memory (Val, Current_Pool);

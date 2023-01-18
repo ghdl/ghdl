@@ -227,6 +227,8 @@ package body Simul.Vhdl_Debug is
       Disp_Value (Sig.Value_Ptr, Sig.Mode, Stype);
       Put ("; drv=");
       Disp_Value (Sig.Driving_Value, Sig.Mode, Stype);
+      Put ("; last_val=");
+      Disp_Value (Sig.Last_Value, Sig.Mode, Stype);
       if Sig.Nbr_Ports > 0 then
          Put (';');
          Put_Int32 (Int32 (Sig.Nbr_Ports));
