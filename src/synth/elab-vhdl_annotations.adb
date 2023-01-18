@@ -983,13 +983,9 @@ package body Elab.Vhdl_Annotations is
 
    procedure Annotate_Process_Statement (Block_Info : Sim_Info_Acc; Stmt : Iir)
    is
-      pragma Unreferenced (Block_Info);
       Info : Sim_Info_Acc;
    begin
-      Info := new Sim_Info_Type'(Kind => Kind_Process,
-                                 Ref => Stmt,
-                                 Nbr_Objects => 0);
-      Set_Ann (Stmt, Info);
+      Info := Create_Block_Info (Block_Info, Stmt);
 
       Annotate_Declaration_List
         (Info, Get_Declaration_Chain (Stmt));

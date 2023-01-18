@@ -484,6 +484,16 @@ package body Elab.Vhdl_Context is
       return Syn_Inst.Objects (Info.Inst_Slot).I_Inst;
    end Get_Sub_Instance;
 
+   procedure Set_Sub_Instance (Syn_Inst : Synth_Instance_Acc;
+                               Stmt : Node;
+                               Sub_Inst : Synth_Instance_Acc)
+   is
+      Info : constant Sim_Info_Acc := Get_Ann (Stmt);
+   begin
+      pragma Assert (Syn_Inst.Objects (Info.Inst_Slot).I_Inst = null);
+      Syn_Inst.Objects (Info.Inst_Slot).I_Inst := Sub_Inst;
+   end Set_Sub_Instance;
+
    function Get_Component_Instance
      (Syn_Inst : Synth_Instance_Acc) return Synth_Instance_Acc
    is

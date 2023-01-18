@@ -268,7 +268,7 @@ package body Elab.Vhdl_Stmts is
    begin
       case Get_Kind (Stmt) is
          when Iir_Kinds_Process_Statement =>
-            null;
+            Create_Sub_Instance (Syn_Inst, Stmt, null);
          when Iir_Kind_Concurrent_Simple_Signal_Assignment
            | Iir_Kind_Concurrent_Selected_Signal_Assignment
            | Iir_Kind_Concurrent_Conditional_Signal_Assignment
