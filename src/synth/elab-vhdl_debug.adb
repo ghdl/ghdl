@@ -621,10 +621,10 @@ package body Elab.Vhdl_Debug is
                        (Inst, Get_Generic_Chain (Ent), Cfg.Indent);
                      Disp_Declaration_Objects
                        (Inst, Get_Port_Chain (Ent), Cfg.Indent);
-                     Put_Indent (Cfg.Indent);
-                     Put_Line ("[architecture]");
                      Disp_Declaration_Objects
                        (Inst, Get_Declaration_Chain (Ent), Cfg.Indent);
+                     Put_Indent (Cfg.Indent);
+                     Put_Line ("[architecture]");
                      Disp_Declaration_Objects
                        (Inst, Get_Declaration_Chain (N), Cfg.Indent);
                   end if;
@@ -644,6 +644,8 @@ package body Elab.Vhdl_Debug is
                Put ("generate statement body");
                --  TODO: disp label or index ?
                New_Line;
+               Disp_Declaration_Objects
+                 (Inst, Get_Declaration_Chain (N), Cfg.Indent + 1);
                Disp_Hierarchy_Statements
                  (Inst, Get_Concurrent_Statement_Chain (N), Cfg);
             when Iir_Kind_Block_Statement =>
