@@ -4,6 +4,7 @@ from unittest import TestCase, expectedFailure
 import pyGHDL.libghdl as libghdl
 from pyGHDL.libghdl import name_table, files_map, errorout_console, flags
 from pyGHDL.libghdl import file_comments
+from pyGHDL.libghdl.flags import Flags
 from pyGHDL.libghdl.vhdl import nodes, flists, sem_lib, utils
 
 
@@ -28,7 +29,7 @@ class Base(TestCase):
         errorout_console.Install_Handler()
 
         # Set options. This must be done before analyze_init()
-        flags.Flag_Gather_Comments.value = True
+        Flags.Gather_Comments = True
         libghdl.set_option("--std=08")
 
         # Finish initialization. This will load the standard package.

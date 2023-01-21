@@ -32,24 +32,14 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
 
-from ctypes import c_bool, sizeof
+from ctypes import c_bool, sizeof, c_int
 from enum import unique, IntEnum
 
 from pyTooling.Decorators import export
+from pyTooling.MetaClasses import ExtendedType
 
 from pyGHDL.libghdl import libghdl
 
-__all__ = [
-    "Flag_Elocations",
-    "Verbose",
-    "MB_Comment",
-    "Explicit",
-    "Relaxed",
-    "Flag_Elaborate_With_Outdated",
-    "Flag_Force_Analysis",
-    "AMS_Vhdl",
-    "Flag_Gather_Comments",
-]
 
 assert sizeof(c_bool) == 1
 
@@ -67,19 +57,140 @@ class VhdlStandard(IntEnum):
     Vhdl_19 = 5  #: VHDL'2019
 
 
-Flag_Elocations = c_bool.in_dll(libghdl, "flags__flag_elocations")
+@export
+class Flags(metaclass=ExtendedType, singleton=True):
+    __Elocations = c_bool.in_dll(libghdl, "flags__flag_elocations")
+    __Verbose = c_bool.in_dll(libghdl, "flags__verbose")
+    __MB_Comment = c_bool.in_dll(libghdl, "flags__mb_comment")
+    __Explicit = c_bool.in_dll(libghdl, "flags__flag_explicit")
+    __Relaxed = c_bool.in_dll(libghdl, "flags__flag_relaxed_rules")
 
-Verbose = c_bool.in_dll(libghdl, "flags__verbose")  #: Internal boolean flag representing :option:`-v`.
-MB_Comment = c_bool.in_dll(libghdl, "flags__mb_comment")  #: Internal boolean flag representing :option:`--mb-comment`.
-Explicit = c_bool.in_dll(libghdl, "flags__flag_explicit")  #: Internal boolean flag representing :option:`-fexplicit`.
-Relaxed = c_bool.in_dll(
-    libghdl, "flags__flag_relaxed_rules"
-)  #: Internal boolean flag representing :option:`-frelaxed`.
+    __Elaborate_With_Outdated = c_bool.in_dll(libghdl, "flags__flag_elaborate_with_outdated")
+    __Force_Analysis = c_bool.in_dll(libghdl, "flags__flag_force_analysis")
+    __Vhdl_Std = c_int.in_dll(libghdl, "flags__vhdl_std")
+    __AMS_Vhdl = c_bool.in_dll(libghdl, "flags__ams_vhdl")
 
-Flag_Elaborate_With_Outdated = c_bool.in_dll(libghdl, "flags__flag_elaborate_with_outdated")
+    __Gather_Comments = c_bool.in_dll(libghdl, "flags__flag_gather_comments")
 
-Flag_Force_Analysis = c_bool.in_dll(libghdl, "flags__flag_force_analysis")
+    @property
+    def Elocations(self) -> bool:
+        """
+        If set to true, the parser builds extended locations (defined in Ada package elocations). This saves possibly many
+        locations per node, so it uses more memory.  Useful when a tool (like a style checker) wants to know the precise layout.
+        Not used to report errors.
+        """
+        return self.__Elocations.value
 
-AMS_Vhdl = c_bool.in_dll(libghdl, "flags__ams_vhdl")  #: Internal boolean flag representing :option:`-ams`.
+    @Elocations.setter
+    def Elocations(self, value: bool):
+        self.__Elocations.value = value
 
-Flag_Gather_Comments = c_bool.in_dll(libghdl, "flags__flag_gather_comments")
+    @property
+    def Verbose(self) -> bool:
+        """Internal boolean flag representing :option:`-v`."""
+        return self.__Verbose.value
+
+    @Verbose.setter
+    def Verbose(self, value: bool):
+        self.__Verbose.value = value
+
+    @property
+    def MB_Comment(self) -> bool:
+        """
+        If set, a multi-bytes sequence can appear in a comment, i.e. all characters except ``VT``, ``CR``, ``LF`` and ``FF`` are allowed in a comment.
+
+        Internal boolean flag representing CLI option :option:`--mb-comment`.
+        """
+        return self.__MB_Comment.value
+
+    @MB_Comment.setter
+    def MB_Comment(self, value: bool):
+        self.__MB_Comment.value = value
+
+    @property
+    def Explicit(self) -> bool:
+        """
+        If set, explicit subprogram declarations take precedence over implicit declarations, even through use clauses.
+
+        Internal boolean flag representing CLI option :option:`-fexplicit`.
+        """
+        return self.__Explicit.value
+
+    @Explicit.setter
+    def Explicit(self, value: bool):
+        self.__Explicit.value = value
+
+    @property
+    def Relaxed(self) -> bool:
+        """
+        If true, relax some rules:
+
+         * the scope of an object declaration names start after the declaration, so that it is possible to use the old name in the default expression:
+
+           .. code-block:: vhdl
+
+              constant x : xtype := x;
+
+        Internal boolean flag representing CLI option :option:`-frelaxed`.
+        """
+        return self.__Relaxed.value
+
+    @Relaxed.setter
+    def Relaxed(self, value: bool):
+        self.__Relaxed.value = value
+
+    @property
+    def Elaborate_With_Outdated(self) -> bool:
+        """If set, a default aspect entity aspect might be an outdated unit. Used by ghdldrv."""
+        return self.__Elaborate_With_Outdated.value
+
+    @Elaborate_With_Outdated.setter
+    def Elaborate_With_Outdated(self, value: bool):
+        self.__Elaborate_With_Outdated.value = value
+
+    @property
+    def Force_Analysis(self) -> bool:
+        """
+        Set if analysis is done even after parsing errors. The analysis code that handles and tolerates incorrect parse tree
+        should check that this flag is set.
+        """
+        return self.__Force_Analysis.value
+
+    @Force_Analysis.setter
+    def Force_Analysis(self, value: bool):
+        self.__Force_Analysis.value = value
+
+    @property
+    def Vhdl_Std(self) -> VhdlStandard:
+        """
+        Standard accepted.
+
+        Internal boolean flag representing CLI option :option:`--std=<STANDARD>`.
+        """
+        return VhdlStandard(self.__Vhdl_Std.value)
+
+    @Vhdl_Std.setter
+    def Vhdl_Std(self, value: VhdlStandard):
+        self.__Vhdl_Std.value = int(value)
+
+    @property
+    def AMS_Vhdl(self) -> bool:
+        """
+        Enable VHDL-AMS extensions.
+
+        Internal boolean flag representing CLI option :option:`--ams`.
+        """
+        return self.__AMS_Vhdl.value
+
+    @AMS_Vhdl.setter
+    def AMS_Vhdl(self, value: bool):
+        self.__AMS_Vhdl.value = value
+
+    @property
+    def Gather_Comments(self) -> bool:
+        """Enable collection and association of comments to IIR nodes."""
+        return self.__Gather_Comments.value
+
+    @Gather_Comments.setter
+    def Gather_Comments(self, value: bool):
+        self.__Gather_Comments.value = value
