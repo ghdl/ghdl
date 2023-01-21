@@ -42,6 +42,7 @@ with Vhdl.Sem_Expr;
 with Vhdl.Canon;
 with Vhdl.Std_Package;
 with Vhdl.Prints;
+with Vhdl.Configuration;
 
 package body Elab.Vhdl_Debug is
    procedure Put_Stmt_Trace (Stmt : Iir)
@@ -1441,6 +1442,75 @@ package body Elab.Vhdl_Debug is
       Debug_Memtyp (Mt);
    end Print_Heap_Proc;
 
+   procedure Info_Lib_Proc (Line : String)
+   is
+      use Libraries;
+      F, L : Natural;
+      Lib : Node;
+      Id : Name_Id;
+   begin
+      Lib := Get_Libraries_Chain;
+
+      F := Skip_Blanks (Line, Line'First);
+      L := Get_Word (Line, F);
+      if F >= Line'Last then
+         --  No arguments, disp all libraries.
+         while Lib /= Null_Node loop
+            Put (Name_Table.Image (Get_Identifier (Lib)));
+            if Lib = Work_Library then
+               Put (" (work)");
+            end if;
+            New_Line;
+            Lib := Get_Chain (Lib);
+         end loop;
+      else
+         Id := Get_Identifier_No_Create (Line (F .. L));
+         if Id = Null_Identifier then
+            Put ("no library '");
+            Put (Line (F .. L));
+            Put_Line ("'");
+            return;
+         end if;
+         while Lib /= Null_Node loop
+            if Get_Identifier (Lib) = Id then
+               declare
+                  File : Node;
+                  Unit : Node;
+               begin
+                  File := Get_Design_File_Chain (Lib);
+                  while File /= Null_Node loop
+                     Unit := Get_First_Design_Unit (File);
+                     while Unit /= Null_Node loop
+                        Put_Line
+                          (Vhdl.Errors.Disp_Node (Get_Library_Unit (Unit)));
+                        Unit := Get_Chain (Unit);
+                     end loop;
+                     File := Get_Chain (File);
+                  end loop;
+               end;
+               return;
+            end if;
+            Lib := Get_Chain (Lib);
+         end loop;
+         Put ("library '");
+         Put (Line (F .. L));
+         Put ("' is not known, try 'info lib'");
+         New_Line;
+      end if;
+   end Info_Lib_Proc;
+
+   procedure Info_Units_Proc (Line : String)
+   is
+      pragma Unreferenced (Line);
+      use Vhdl.Configuration;
+      Unit : Node;
+   begin
+      for I in Design_Units.First .. Design_Units.Last loop
+         Unit := Design_Units.Table (I);
+         Put_Line (Vhdl.Errors.Disp_Node (Get_Library_Unit (Unit)));
+      end loop;
+   end Info_Units_Proc;
+
    procedure Append_Commands is
    begin
       Append_Menu_Command
@@ -1451,6 +1521,14 @@ package body Elab.Vhdl_Debug is
         (Name => new String'("ph*eap"),
          Help => new String'("print heap index"),
          Proc => Print_Heap_Proc'Access);
+      Append_Info_Command
+        (new String'("lib*raries"),
+         new String'("display libraries"),
+         Info_Lib_Proc'Access);
+      Append_Info_Command
+        (new String'("units"),
+         new String'("display units used in the design"),
+         Info_Units_Proc'Access);
    end Append_Commands;
 
 end Elab.Vhdl_Debug;
