@@ -1,4 +1,4 @@
-# =============================================================================
+# == -*- python -*- ===========================================================
 #               ____ _   _ ____  _
 #  _ __  _   _ / ___| | | |  _ \| |
 # | '_ \| | | | |  _| |_| | | | | |
@@ -33,7 +33,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
 #
-from setuptools import setup, find_packages, Distribution
+from setuptools import setup, find_namespace_packages, Distribution
 
 from pathlib             import Path
 from pyTooling.Packaging import loadRequirementsFile
@@ -55,6 +55,7 @@ package_data=[]
 package_data.extend(glob.glob(dist_dir+"/lib/ghdl/**/*.vhdl", recursive=True))
 package_data.extend(glob.glob(dist_dir+"/lib/ghdl/**/*.cf", recursive=True))
 package_data.extend(glob.glob(dist_dir+"/lib/lib*" + soext))
+package_data.extend(glob.glob(dist_dir+"/bin/lib*" + soext))
 package_data=[x[len(dist_dir)+1:] for x in package_data]
 
 setup(
@@ -70,7 +71,7 @@ setup(
     project_urls={"Documentation": "https://ghdl.github.io/ghdl",
                   "Source Code": "https://github.com/ghdl/ghdl",
                   "Issue Tracker": "https://github.com/ghdl/ghdl/issues"},
-    packages=find_packages("dist-wheel"),
+    packages=find_namespace_packages("dist-wheel"),
     package_dir={"": "dist-wheel"},
     classifiers=[
         "Programming Language :: Python :: 3 :: Only",

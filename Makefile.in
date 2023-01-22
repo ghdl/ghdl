@@ -50,6 +50,7 @@ sundials_ldflags=@sundials_ldflags@
 
 INSTALL_PROGRAM=install -m 755
 INSTALL_DATA=install -m 644
+PYTHON=python3
 PWD=$(CURDIR)
 DESTDIR=
 bindir=$(prefix)/bin
@@ -226,8 +227,8 @@ uninstall.mcode.program:
 install.mcode: install.mcode.program install.vhdllib
 
 install.mcode.deps.dll:
-	for f in $$(ldd ghdl_mcode$(EXEEXT) | sed -n -e '/Windows/d' -e 's/.*=> \(.*\) .*/\1/p'); do \
-	 $(INSTALL_PROGRAM) -p $$f "$(DESTDIR)$(bindir)/"; \
+	for f in $$($(PYTHON) $(srcdir)/scripts/win-dll.py ghdl_mcode$(EXEEXT)); do \
+	  $(INSTALL_PROGRAM) -p $$f "$(DESTDIR)$(bindir)/"; \
 	done
 
 uninstall.mcode: uninstall.mcode.program uninstall.vhdllib
@@ -514,8 +515,12 @@ install.libghdl.false:
 install.libghdl: install.libghdl.$(enable_libghdl)
 
 copy.libghdl.deps.dll:
-	for f in $$(ldd lib/$(libghdl_name) | sed -n -e '/Windows/d' -e 's/.*=> \(.*\) .*/\1/p'); do \
-	  $(INSTALL_PROGRAM) -p $$f "lib/"; \
+	$(MKDIR) -p bin
+	ldd lib/$(libghdl_name)
+#       Set IFS to handle CR-LF end of lines
+	IFS=$$'\r\n\t '; \
+	for f in $$($(PYTHON) $(srcdir)/scripts/win-dll.py lib/$(libghdl_name)); do\
+	  $(INSTALL_PROGRAM) -p $$f "bin/"; \
 	done
 
 copy.libghdl.deps.dylib:
@@ -676,8 +681,8 @@ setup-standalone.py: $(srcdir)/setup-standalone.in
 	) > $@
 
 python-wheel: setup-standalone.py lib/$(libghdl_name) libs copy.libghdl.deps$(SOEXT)
-	rm -rf dist-wheel
-	mkdir dist-wheel
+	$(RM) -rf dist-wheel
+	$(MKDIR) dist-wheel
 #	Copy pyGHDL
 	$(CP) -Rp $(srcdir)/pyGHDL dist-wheel/
 #	Copy libraries
@@ -687,8 +692,12 @@ python-wheel: setup-standalone.py lib/$(libghdl_name) libs copy.libghdl.deps$(SO
 	    $(LIBDST_DIR)/$$d/* dist-wheel/pyGHDL/lib/ghdl/$$d; \
 	done
 #	Copy libghdl
-	$(INSTALL_PROGRAM) -p lib/lib*$(SOEXT) dist-wheel/pyGHDL/lib/
-
+	$(INSTALL_PROGRAM) -p lib/$(libghdl_name) dist-wheel/pyGHDL/lib/
+#	Copy dll
+	if ls bin/lib*.dll 2> /dev/null; then \
+	  $(MKDIR) -p dist-wheel/pyGHDL/bin; \
+	  $(INSTALL_PROGRAM) -p bin/lib*.dll dist-wheel/pyGHDL/bin; \
+	fi
 
 ####################### clean ############################################
 
