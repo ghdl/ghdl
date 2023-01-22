@@ -529,11 +529,6 @@ copy.libghdl.deps.so:
 uninstall.libghdl:
 	$(RM) $(DESTDIR)$(libdir)/$(libghdl_name)
 
-libghdl-py.tgz:
-	[ -d pythonb ] || $(MKDIR) pythonb
-	$(CP) -r $(srcdir)/pyGHDL/libghdl $(srcdir)/setup.py pythonb
-	tar -zcvf $@ -C pythonb .
-
 ################ ghwdump #################################################
 
 GHWDUMP_OBJS=ghwdump.o libghw.o
