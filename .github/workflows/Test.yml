@@ -11,16 +11,18 @@ env:
 
 jobs:
 
-#
-# Doc
-#
+# Convention for the names:
+# lin, osx, win, msys2: build package for the platform
+# *-test: test on the platform
 
+#
+# Generate and upload doc
+#
   gnatdoc:
     name: '📚 gnatdoc'
     runs-on: ubuntu-latest
 
     steps:
-
       - name: '🧰 Checkout'
         uses: actions/checkout@v3
 
@@ -38,6 +40,9 @@ jobs:
           name: gnatdoc
           path: gnatdoc
 
+#
+# Upload Build The Doc
+#
   doc:
     needs: gnatdoc
     name: '📓 Docs'
@@ -80,15 +85,13 @@ jobs:
             doc/_build/man
 
 #
-# pyGHDL Bindings, Formatting and Wheel
+# pyGHDL Bindings, Formatting and pure wheel
 #
-
   pyGHDL:
     name: '🐍 pyGHDL'
     runs-on: ubuntu-latest
 
     steps:
-
       - name: '🧰 Checkout'
         uses: actions/checkout@v3
 
@@ -133,6 +136,7 @@ jobs:
 #
 
   gpl:
+    if: false
     name: '🚧🚦🐧 GPL mcode'
     runs-on: ubuntu-latest
 
@@ -144,9 +148,8 @@ jobs:
       - run: TASK=bullseye+mcode ./scripts/ci-run.sh -c --gplcompat
 
 #
-# GNU/Linux
+# Build for GNU/Linux
 #
-
   lin:
     name: '🚧🚦🐧 Ubuntu ${{ matrix.os }} ${{ matrix.backend }}'
     runs-on: ubuntu-${{ matrix.os }}.04
@@ -163,7 +166,6 @@ jobs:
           - { os: 22, backend: gcc-11.2.0 }
 
     steps:
-
       - name: '🧰 Checkout'
         uses: actions/checkout@v3
 
@@ -180,9 +182,8 @@ jobs:
           if-no-files-found: error
 
 #
-# MacOS
+# Build for MacOS
 #
-
   osx:
     name: '🚧🚦🍎 macOS ${{ matrix.os }} ${{ matrix.backend }}'
     runs-on: 'macOS-${{ matrix.os }}'
@@ -198,7 +199,6 @@ jobs:
           - llvm
 
     steps:
-
       - name: '🧰 Checkout'
         uses: actions/checkout@v3
 
@@ -231,11 +231,291 @@ jobs:
           if-no-files-found: error
 
 #
+# Pure Windows Build (on MSYS2) - create zip (and also pre-wheel zip)
+#
+  win:
+    name: '🚧${{ matrix.icon }} ${{ matrix.sys }} (pure-build)'
+    runs-on: windows-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {icon: '🟪', pkg: 'mcode', sys: 'MINGW32', arch: 'i686' }
+#          - {icon: '🟦', pkg: 'mcode', sys: 'MINGW64', arch: 'x86_64' } #! simulation with mcode is not yet supported on win64
+          - {icon: '🟨', pkg: 'mcode', sys: 'UCRT64', arch: 'ucrt-x86_64'  } #! experimental; simulation with mcode is not yet supported on win64
+
+    env:
+      MINGW_ARCH: ${{ matrix.sys }}
+    defaults:
+      run:
+        shell: msys2 {0}
+
+    steps:
+      - name: '${{ matrix.icon }} Setup MSYS2'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ matrix.sys }}
+          update: true
+          install: base-devel git mingw-w64-${{matrix.arch}}-gcc-ada mingw-w64-${{matrix.arch}}-zlib zip
+          pacboy: >
+            toolchain:p
+            python-pip:p
+
+      - name: '⚙ git config'
+        run: git config --global core.autocrlf input
+        shell: bash
+
+      - name: '🧰 Checkout'
+        uses: actions/checkout@v3
+        with:
+          # The command 'git describe' (used for version) needs the history.
+          fetch-depth: 0
+
+      - name: '🚧 Build package'
+        run: |
+          pip3 install pefile
+          mkdir builddir
+          cd builddir
+          ../configure --prefix='/GHDL' LDFLAGS="-static -Wl,--stack=8388608" --enable-libghdl
+          make
+          mkdir -p 'GHDL'
+          make install DESTDIR=.
+          # No need to add dll dependencies for ghdl, as it is compiled
+          # with -static
+          make python-wheel
+          zip pre-wheel-${{matrix.sys}}.zip -r dist-wheel setup-standalone.py
+          zip ghdl-${{matrix.sys}}.zip -r GHDL
+
+      - name: '📤 Upload artifact: pre-wheel'
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.sys }}-pre-wheel
+          path: |
+            builddir/pre-wheel-${{matrix.sys}}.zip
+
+      - name: '📤 Upload artifact: zip pure-win'
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.sys }}-zip-win
+          path: |
+            builddir/ghdl-${{matrix.sys}}.zip
+
+#
+# Create pure-Windows CPython pyGHDL platform wheel (from the pre-wheel zip)
+#
+  win-wheel:
+    name: '🚦🐍${{ matrix.icon }} ${{ matrix.sys }} (pyGHDL-wheel)'
+    runs-on: windows-latest
+
+    needs:
+      - win
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {icon: '🟪', sys: 'MINGW32', pyarch: x86 }
+#          - {icon: '🟦', sys: 'MINGW64', pyarch: x64 }
+          - {icon: '🟨', sys: 'UCRT64',  pyarch: x64 }
+
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - name: '🐍 Setup Python'
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          architecture: ${{ matrix.pyarch }}
+
+      - name: '📥 Download artifact: package'
+        uses: actions/download-artifact@v3
+        with:
+          path: artifact
+          name: ${{ matrix.sys }}-pre-wheel
+
+      - name: '🐍 Build python wheel'
+        run: |
+          pip3 install wheel
+          pip3 install pyTooling
+          unzip artifact/pre-wheel-${{ matrix.sys }}.zip
+          python3 ./setup-standalone.py bdist_wheel
+          dir dist
+
+      - name: '🐍 Sanity check of the python wheel'
+        run: |
+          pip3 install -v (get-item dist\pyGHDL-*.whl)
+          dir -r ${env:Python3_ROOT_DIR}\Lib\site-packages\pyGHDL
+          python3 -m pyGHDL.cli.lsp --version
+          python3 -m pyGHDL.cli.dom version
+
+      - name: '📤 Upload artifact: wheel'
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.sys }}-wheel
+          path: |
+            dist/pyGHDL-*.whl
+
+      - name: '${{ matrix.icon }} Setup MSYS2'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ matrix.sys }}
+          update: true
+
+#
+# Windows Test of standalone zip
+#
+  win-test:
+    name: '🚦🐍🥡${{ matrix.icon }} ${{ matrix.sys }} (test sa)'
+    runs-on: windows-latest
+
+    needs:
+      - win
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {icon: '🟪', sys: 'MINGW32' }
+#          - {icon: '🟦', sys: 'MINGW64' } #! simulation with mcode is not yet supported on win64
+#          - {icon: '🟨', sys: 'UCRT64' } #! experimental; simulation with mcode is not yet supported on win64
+
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - name: '📥 Download artifact: package'
+        uses: actions/download-artifact@v3
+        with:
+          path: artifact
+          name: ${{ matrix.sys }}-zip-win
+
+      - name: '⚙ Extract package'
+        run: |
+          dir
+          unzip artifact\ghdl-${{matrix.sys}}.zip
+          dir
+
+      - name: '🛠 Set envvars'
+        run: |
+          $GHDL_DIR = (pwd).Path + '\GHDL\bin'
+          echo "GHDL=${GHDL_DIR}\ghdl.exe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "$GHDL_DIR" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          dir $GHDL_DIR
+
+
+      - name: '🛠 Sanity check'
+        run: |
+          echo "GHDL is ${env:GHDL}"
+          dir ${env:GHDL}
+          & ${env:GHDL} version
+          echo "sha: ${{github.sha}}"
+          echo "head_ref: ${{github.head_ref}}"
+          echo "ref_name: ${{github.ref_name}}"
+
+      - name: '⚙ git config'
+        run: |
+           dir
+           dir ${env:GHDL}
+           git config --global core.autocrlf input
+
+      - name: '🧰 Checkout'
+        uses: actions/checkout@v3
+        with:
+          path: checkout
+
+      - name: '${{ matrix.icon }} Setup MSYS2'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ matrix.sys }}
+          update: true
+          pacboy: >
+            diffutils:p
+            gcc:p
+
+      - name: '🚦 Testsuite for ghdl'
+        shell: msys2 {0}
+        run: |
+          set -x
+          pwd
+          ls -l
+          echo "PATH: $PATH"
+          echo "GHDL: $GHDL"
+          cygghdl="$(cygpath -u $GHDL)"
+          echo "cyg GHDL: $cygghdl"
+          $cygghdl -v
+          GHDL="$cygghdl"
+          PATH="$PATH:$(dirname $cygghdl)"
+          echo "PATH: $PATH"
+          ghdl version
+          cd checkout
+          ./testsuite/testsuite.sh gna
+
+#
+# Windows Test of pyGHDL platform wheel
+#
+  win-test-wheel:
+    name: '🚦🐍🥡${{ matrix.icon }} ${{ matrix.sys }} (test sa py)'
+    runs-on: windows-latest
+
+    needs:
+      - win-wheel
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {icon: '🟪', sys: 'MINGW32', pyarch: x86 }
+#          - {icon: '🟦', sys: 'MINGW64', pyarch: x64 }
+          - {icon: '🟨', sys: 'UCRT64',  pyarch: x64 }
+
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - name: '🐍 Setup Python'
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          architecture: ${{ matrix.pyarch }}
+
+      - name: '📥 Download artifact: package'
+        uses: actions/download-artifact@v3
+        with:
+          path: artifact
+          name: ${{ matrix.sys }}-wheel
+
+      - name: '🐍 Sanity check of the python wheel'
+        run: |
+          pip3 install -v (get-item artifact\pyGHDL-*.whl)
+
+      - name: '⚙ git config'
+        run: |
+           dir
+           dir ${env:GHDL}
+           git config --global core.autocrlf input
+
+      - name: '🧰 Checkout'
+        uses: actions/checkout@v3
+        with:
+          path: checkout
+
+      - name: '🚦 pyunit tests'
+        run: |
+          pip3 install pytest
+          dir checkout
+          cd checkout/testsuite
+          python3 -m pytest pyunit
+
+#
 # Windows MSYS2 Build
 #
-
-  win-msys2-build-package:
-    name: '🚧${{ matrix.icon }} ${{ matrix.sys }} ${{ matrix.pkg }}'
+  msys2:
+    name: '🚧${{ matrix.icon }} ${{ matrix.sys }} ${{ matrix.pkg }} (build)'
     runs-on: windows-latest
 
     strategy:
@@ -244,9 +524,9 @@ jobs:
         include:
 #          - {icon: '🟪', pkg: 'llvm',  sys: 'MINGW32' } ! not yet functional
           - {icon: '🟦', pkg: 'llvm',  sys: 'MINGW64' }
-          - {icon: '🟨', pkg: 'llvm',  sys: 'UCRT64'  } #! experimental
+#          - {icon: '🟨', pkg: 'llvm',  sys: 'UCRT64'  } #! experimental
           - {icon: '🟪', pkg: 'mcode', sys: 'MINGW32' }
-          - {icon: '🟦', pkg: 'mcode', sys: 'MINGW64' } #! simulation with mcode is not yet supported on win64
+#          - {icon: '🟦', pkg: 'mcode', sys: 'MINGW64' } #! simulation with mcode is not yet supported on win64
           - {icon: '🟨', pkg: 'mcode', sys: 'UCRT64'  } #! experimental; simulation with mcode is not yet supported on win64
 
     env:
@@ -256,7 +536,6 @@ jobs:
         shell: msys2 {0}
 
     steps:
-
       - name: '${{ matrix.icon }} Setup MSYS2'
         uses: msys2/setup-msys2@v2
         with:
@@ -301,21 +580,20 @@ jobs:
 #
 # Windows MSYS2 Test
 #
-
-  win-msys2-test:
+  msys2-test:
     name: '🚦${{ matrix.sys.icon }} ${{ matrix.sys.sys }} ${{ matrix.sys.pkg }} ${{ matrix.suite }}'
     runs-on: windows-latest
 
     needs:
-      - win-msys2-build-package
+      - msys2
 
     strategy:
       fail-fast: false
       matrix:
         sys:
 #          - {icon: '🟪', pkg: 'llvm',  sys: 'MINGW32' } ! not yet functional
-          - {icon: '🟦', pkg: 'llvm',  sys: 'MINGW64' }
-          - {icon: '🟨', pkg: 'llvm',  sys: 'UCRT64'  } #! experimental
+#          - {icon: '🟦', pkg: 'llvm',  sys: 'MINGW64' }
+#          - {icon: '🟨', pkg: 'llvm',  sys: 'UCRT64'  } #! experimental
           - {icon: '🟪', pkg: 'mcode', sys: 'MINGW32' }
 #          - {icon: '🟦', pkg: 'mcode', sys: 'MINGW64' } ! simulation with mcode is not yet supported on win64
 #          - {icon: '🟨', pkg: 'mcode', sys: 'UCRT64'  } ! experimental; simulation with mcode is not yet supported on win64
@@ -331,7 +609,6 @@ jobs:
         shell: msys2 {0}
 
     steps:
-
       - name: '${{ matrix.sys.icon }} Setup MSYS2'
         uses: msys2/setup-msys2@v2
         with:
@@ -365,237 +642,6 @@ jobs:
         run: GHDL=ghdl ./testsuite/testsuite.sh ${{ matrix.suite }}
 
 #
-# Windows Generate Standalone ZipFile
-#
-
-  win-generate-standalone-zip:
-    name: '🚧🥡${{ matrix.icon }} ${{ matrix.sys }} mcode'
-    runs-on: windows-latest
-
-    needs:
-      - win-msys2-build-package
-
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - {icon: '🟪', sys: 'MINGW32' }
-          - {icon: '🟦', sys: 'MINGW64' } #! simulation with mcode is not yet supported on win64
-          - {icon: '🟨', sys: 'UCRT64'  } #! experimental; simulation with mcode is not yet supported on win64
-
-    defaults:
-      run:
-        shell: msys2 {0}
-
-    steps:
-
-      - name: '${{ matrix.icon }} Setup MSYS2'
-        uses: msys2/setup-msys2@v2
-        with:
-          msystem: ${{ matrix.sys }}
-          update: true
-          install: >-
-            tree
-            zstd
-            zip
-            tar
-
-      - name: '⚙ git config'
-        run: git config --global core.autocrlf input
-        shell: bash
-
-      - name: '🧰 Checkout'
-        uses: actions/checkout@v3
-
-      - name: '📥 Download artifact: package'
-        uses: actions/download-artifact@v3
-        with:
-          path: artifact
-          name: ${{ matrix.sys }}-mcode
-
-      - name: '🛠 Install package'
-        run: pacman --noconfirm -U artifact/mingw-w64-*-ghdl-mcode-*.zst
-
-      - name: '🥡 Generate standalone zipfile'
-        run: |
-          _zipdir='${{ matrix.sys }}-mcode-standalone'
-          mkdir -p "${_zipdir}"-extract
-          tar xf artifact/mingw-w64-*-ghdl-mcode-*.zst -C "${_zipdir}"-extract
-          cd "${_zipdir}-extract/${{ matrix.sys }}"/bin
-          ../../../scripts/msys2-mcode/GetStandaloneDeps.sh
-          cd ../../..
-          mv "${_zipdir}"-extract/${{ matrix.sys }} "${_zipdir}"
-          tree "${_zipdir}"
-          zip "${_zipdir}".zip -r "${_zipdir}"
-
-      - name: '📤 Upload artifact: zipfile'
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ matrix.sys }}-mcode-standalone
-          path: ${{ matrix.sys }}-mcode-standalone.zip
-
-#
-# Windows CPython pyGHDL Test with MSYS2 installation
-#
-
-  win-cpython-msys2:
-    name: '🚦🐍${{ matrix.icon }} ${{ matrix.sys }} ${{ matrix.pkg }}'
-    runs-on: windows-latest
-
-    needs:
-      - win-msys2-build-package
-
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-#          - {icon: '🟪', pkg: 'llvm',  sys: 'MINGW32', pyarch: x86 }, ! not yet functional
-          - {icon: '🟦', pkg: 'llvm',  sys: 'MINGW64', pyarch: x64 }
-          - {icon: '🟨', pkg: 'llvm',  sys: 'UCRT64',  pyarch: x64 } #! experimental
-          - {icon: '🟪', pkg: 'mcode', sys: 'MINGW32', pyarch: x86 }
-          - {icon: '🟦', pkg: 'mcode', sys: 'MINGW64', pyarch: x64 } #! simulation with mcode is not yet supported on win64
-          - {icon: '🟨', pkg: 'mcode', sys: 'UCRT64',  pyarch: x64 } #! experimental; simulation with mcode is not yet supported on win64
-
-    defaults:
-      run:
-        shell: pwsh
-
-    steps:
-
-      - name: '${{ matrix.icon }} Setup MSYS2'
-        uses: msys2/setup-msys2@v2
-        with:
-          msystem: ${{ matrix.sys }}
-          update: true
-
-      - name: '⚙ git config'
-        run: git config --global core.autocrlf input
-
-      - name: '🧰 Checkout'
-        uses: actions/checkout@v3
-
-      - name: '📥 Download artifact: package'
-        uses: actions/download-artifact@v3
-        with:
-          path: artifact
-          name: ${{ matrix.sys }}-${{ matrix.pkg }}
-
-      - name: '🛠 Install package'
-        shell: msys2 {0}
-        run: |
-          pacman --noconfirm -U artifact/mingw-w64-*-ghdl-${{ matrix.pkg }}-*.zst
-
-      - name: '🛠 Set envvars'
-        run: |
-          $GHDL = (& msys2 -c 'cygpath -w /') + '${{ matrix.sys }}\bin\ghdl.exe'
-          $GHDL_HASH = (& $GHDL version hash)
-          echo "GHDL_HASH=$GHDL_HASH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          $GHDL_PREFIX = (& msys2 -c 'cygpath -w /') + '${{ matrix.sys }}\lib\ghdl\'
-          echo "GHDL_PREFIX=$GHDL_PREFIX" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-
-      - name: '🐍 Setup Python'
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-          architecture: ${{ matrix.pyarch }}
-
-      - name: '🐍 Install Python dependencies'
-        run: pip3 install -r testsuite/requirements.txt
-
-      - name: '🚦 Test installation of pyGHDL through pip'
-        run: pip install ("git+https://github.com/ghdl/ghdl.git@" + $env:GHDL_HASH)
-
-      - name: '🚦 Test pyGHDL entrypoints'
-        run: |
-          ghdl-dom help
-          ghdl-ls --help
-
-      - name: '🚦 Test pyunit testsuite'
-        run: |
-          cd testsuite
-          python3 -m pytest -vsrA pyunit
-
-#
-# Windows CPython pyGHDL Test with standalone zipfile and pyGHDL wheel
-#
-
-  win-cpython-standalone:
-    name: '🚦🐍🥡${{ matrix.icon }} ${{ matrix.sys }} ${{ matrix.pkg }}'
-    runs-on: windows-latest
-
-    needs:
-      - win-generate-standalone-zip
-      - pyGHDL
-
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-#          - {icon: '🟪', pkg: 'llvm',  sys: 'MINGW32', pyarch: x86 }, ! not yet functional
-#          - {icon: '🟦', pkg: 'llvm',  sys: 'MINGW64', pyarch: x64 }
-#          - {icon: '🟨', pkg: 'llvm',  sys: 'UCRT64',  pyarch: x64 } #! experimental
-#          - {icon: '🟪', pkg: 'mcode', sys: 'MINGW32', pyarch: x86 }
-          - {icon: '🟦', pkg: 'mcode', sys: 'MINGW64', pyarch: x64 } #! simulation with mcode is not yet supported on win64
-          - {icon: '🟨', pkg: 'mcode', sys: 'UCRT64',  pyarch: x64 } #! experimental; simulation with mcode is not yet supported on win64
-
-    defaults:
-      run:
-        shell: pwsh
-
-    steps:
-
-      - name: '⚙ git config'
-        run: git config --global core.autocrlf input
-
-      - name: '🧰 Checkout'
-        uses: actions/checkout@v3
-
-      - name: '📥 Download artifact: package'
-        uses: actions/download-artifact@v3
-        with:
-          path: artifact
-          name: ${{ matrix.sys }}-${{ matrix.pkg }}-standalone
-
-      - name: '⚙ Extract package'
-        run: |
-          unzip artifact\${{ matrix.sys }}-${{ matrix.pkg }}-standalone.zip
-          mv '${{ matrix.sys }}-${{ matrix.pkg }}-standalone\' GHDL-standalone
-
-      - name: '🛠 Set envvars'
-        run: |
-          $GHDL = (pwd).Path + '\GHDL-standalone\bin\ghdl.exe'
-          $GHDL_HASH = (& $GHDL version hash)
-          echo "GHDL_HASH=$GHDL_HASH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          $GHDL_PREFIX = (pwd).Path + '\GHDL-standalone\lib\ghdl'
-          echo "GHDL_PREFIX=$GHDL_PREFIX" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-
-      - name: '🐍 Setup Python'
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-          architecture: ${{ matrix.pyarch }}
-
-      - name: '📥 Download artifact: pyGHDL'
-        uses: actions/download-artifact@v3
-        with:
-          name: pyGHDL
-
-      - name: '🐍 Install pyGHDL'
-        run: |
-          python -m pip install --disable-pip-version-check wheel (& ls *.whl)
-          python -m pip install --disable-pip-version-check -r testsuite/requirements.txt
-
-      - name: '🚦 Test pyGHDL entrypoints'
-        run: |
-          ghdl-dom help
-          ghdl-ls --help
-
-      - name: '🚦 Test pyunit testsuite'
-        run: |
-          cd testsuite
-          python3 -m pytest -vsrA pyunit
-
-#
 # Release
 #
 
@@ -607,10 +653,10 @@ jobs:
       - doc
       - lin
       - osx
-      - win-msys2-test
-      - win-generate-standalone-zip
-      - win-cpython-msys2
-      - win-cpython-standalone
+      - win
+      - win-wheel
+      - win-test
+      - msys2-test
 
     if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/master' || contains(github.ref, 'refs/tags/'))
 
@@ -629,7 +675,7 @@ jobs:
         run: |
           print('None'
               if '${{ github.ref }}'.startswith('refs/tags/')
-              else'::set-output name=list::**/*.zst **/*.tgz **/*-standalone.zip **/man/ghdl.1'
+              else'::set-output name=list::**/*.zst **/*.tgz **/ghdl-*.zip **/man/ghdl.1'
           )
 
       # Tagged: create a pre-release or a release (semver)
@@ -649,7 +695,7 @@ jobs:
           --data '{"event_type": "ghdl"}'
 
 #
-# Coverage (MINGW64)
+# pyGHDL Coverage (MINGW64)
 #
 
   coverage:
@@ -657,7 +703,7 @@ jobs:
     runs-on: windows-latest
 
     needs:
-      - win-msys2-build-package
+      - msys2
 
     defaults:
       run:
