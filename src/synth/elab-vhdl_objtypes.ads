@@ -384,9 +384,6 @@ package Elab.Vhdl_Objtypes is
    function Create_Memory_Discrete (Val : Int64; Vtype : Type_Acc)
                                    return Memtyp;
 
-   --  For states.
-   function Create_Memory_U32 (Val : Uns32) return Memtyp;
-
    function Alloc_Memory (Vtype : Type_Acc; Pool : Areapool_Acc)
                          return Memory_Ptr;
    function Create_Memory (Vtype : Type_Acc) return Memtyp;

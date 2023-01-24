@@ -1203,15 +1203,6 @@ package body Elab.Vhdl_Objtypes is
       return (Vtype, Res);
    end Create_Memory_Discrete;
 
-   function Create_Memory_U32 (Val : Uns32) return Memtyp
-   is
-      Res : Memory_Ptr;
-   begin
-      Res := Alloc_Memory (4, 2, Current_Pool);
-      Write_U32 (Res, Ghdl_U32 (Val));
-      return (null, Res);
-   end Create_Memory_U32;
-
    function Is_Equal (L, R : Memtyp) return Boolean is
    begin
       if L = R then

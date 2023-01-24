@@ -790,9 +790,13 @@ package body Synth.Vhdl_Decls is
          when Iir_Kind_Suspend_State_Declaration =>
             declare
                Val : Valtyp;
+               Typ : Type_Acc;
             begin
+               --  Use Integer for suspend state.  Just to get a size.
+               Typ := Get_Subtype_Object
+                 (Syn_Inst, Vhdl.Std_Package.Integer_Subtype_Definition);
                Current_Pool := Instance_Pool;
-               Val := Create_Value_Memtyp (Create_Memory_U32 (0));
+               Val := Create_Value_Memtyp (Create_Memory_Zero (Typ));
                Current_Pool := Expr_Pool'Access;
                Create_Object (Syn_Inst, Decl, Val);
             end;
