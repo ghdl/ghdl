@@ -140,6 +140,11 @@ package body Errorout is
       return (Kind => Earg_Int32, Val_Int32 => V);
    end "+";
 
+   function "+" (V : Int64) return Earg_Type is
+   begin
+      return (Kind => Earg_Int64, Val_Int64 => V);
+   end "+";
+
    function "+" (V : String8_Len_Type) return Earg_Type is
    begin
       return (Kind => Earg_String8, Val_Str8 => V);
@@ -225,6 +230,18 @@ package body Errorout is
       end if;
       Report_Handler.Message (S (F .. S'Last));
    end Output_Int32;
+
+   procedure Output_Int64 (V : Int64)
+   is
+      S : constant String := Int64'Image (V);
+      F : Positive;
+   begin
+      F := 1;
+      if S (F) = ' ' then
+         F := 2;
+      end if;
+      Report_Handler.Message (S (F .. S'Last));
+   end Output_Int64;
 
    procedure Output_String8 (Str : String8_Len_Type) is
    begin
@@ -362,6 +379,12 @@ package body Errorout is
                         when Earg_Int32 =>
                            if Format = 'v' then
                               Output_Int32 (Arg.Val_Int32);
+                           else
+                              raise Internal_Error;
+                           end if;
+                        when Earg_Int64 =>
+                           if Format = 'v' then
+                              Output_Int64 (Arg.Val_Int64);
                            else
                               raise Internal_Error;
                            end if;

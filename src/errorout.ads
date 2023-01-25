@@ -204,6 +204,7 @@ package Errorout is
    function "+" (V : String8_Len_Type) return Earg_Type;
    function "+" (V : Uns32) return Earg_Type;
    function "+" (V : Int32) return Earg_Type;
+   function "+" (V : Int64) return Earg_Type;
 
    --  Convert location.
    function "+" (L : Location_Type) return Source_Coord_Type;
@@ -273,7 +274,7 @@ package Errorout is
    type Earg_Kind is
      (Earg_None,
       Earg_Location, Earg_Id,
-      Earg_Char, Earg_String8, Earg_Uns32, Earg_Int32,
+      Earg_Char, Earg_String8, Earg_Uns32, Earg_Int32, Earg_Int64,
       Earg_Vhdl_Node, Earg_Vhdl_Token,
       Earg_Verilog_Node, Earg_Verilog_Token,
       Earg_Synth_Instance, Earg_Synth_Net, Earg_Synth_Name);
@@ -315,6 +316,8 @@ private
             Val_Uns32 : Uns32;
          when Earg_Int32 =>
             Val_Int32 : Int32;
+         when Earg_Int64 =>
+            Val_Int64 : Int64;
          when Earg_Lang_Kind =>
             Val_Lang : Uns32;
       end case;
