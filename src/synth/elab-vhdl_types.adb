@@ -18,6 +18,7 @@
 
 with Types; use Types;
 with Mutils; use Mutils;
+with Errorout;
 
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Std_Package;
@@ -31,6 +32,7 @@ with Elab.Vhdl_Decls;
 with Elab.Vhdl_Errors; use Elab.Vhdl_Errors;
 
 with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
+with Synth.Errors;
 
 package body Elab.Vhdl_Types is
    function Synth_Subtype_Indication_With_Parent
@@ -550,6 +552,30 @@ package body Elab.Vhdl_Types is
               = Iir_Kind_Array_Element_Resolution));
    end Has_Element_Subtype_Indication;
 
+   procedure Check_Bound_Compatibility (Syn_Inst : Synth_Instance_Acc;
+                                        Loc : Node;
+                                        Bnd : Bound_Type;
+                                        Typ : Type_Acc)
+   is
+      use Synth.Errors;
+      use Errorout;
+   begin
+      --  A null range is always compatible (see LRM08 5.2.1).
+      if Bnd.Len = 0 then
+         return;
+      end if;
+
+      if not In_Range (Typ.Drange, Int64 (Bnd.Left)) then
+         Error_Msg_Synth (Syn_Inst, Loc,
+                          "left bound (%v) not in range (%v to %v)",
+                          (+Bnd.Left, +Typ.Drange.Left, +Typ.Drange.Right));
+      elsif not In_Range (Typ.Drange, Int64 (Bnd.Right)) then
+         Error_Msg_Synth (Syn_Inst, Loc,
+                          "right bound (%v) not in range (%v to %v)",
+                          (+Bnd.Right, +Typ.Drange.Left, +Typ.Drange.Right));
+      end if;
+   end Check_Bound_Compatibility;
+
    function Synth_Array_Subtype_Indication (Syn_Inst : Synth_Instance_Acc;
                                             Parent_Typ : Type_Acc;
                                             Atype : Node) return Type_Acc
@@ -557,7 +583,6 @@ package body Elab.Vhdl_Types is
       Parent_Type : constant Node := Get_Parent_Type (Atype);
       El_Type : constant Node := Get_Element_Subtype (Atype);
       St_Indexes : constant Node_Flist := Get_Index_Subtype_List (Atype);
-      St_El : Node;
       El_Typ : Type_Acc;
    begin
       --  Get parent real array element.
@@ -588,9 +613,16 @@ package body Elab.Vhdl_Types is
       case Parent_Typ.Kind is
          when Type_Unbounded_Vector =>
             if Get_Index_Constraint_Flag (Atype) then
-               St_El := Get_Index_Type (St_Indexes, 0);
-               return Create_Vector_Type
-                 (Synth_Bounds_From_Range (Syn_Inst, St_El), El_Typ);
+               declare
+                  St_El : Node;
+                  Bnd : Bound_Type;
+               begin
+                  St_El := Get_Index_Type (St_Indexes, 0);
+                  Bnd := Synth_Bounds_From_Range (Syn_Inst, St_El);
+                  Check_Bound_Compatibility
+                    (Syn_Inst, St_El, Bnd, Parent_Typ.Uarr_Idx);
+                  return Create_Vector_Type (Bnd, El_Typ);
+               end;
             else
                --  An alias.
                --  Handle vhdl08 definition of std_logic_vector from
@@ -602,6 +634,7 @@ package body Elab.Vhdl_Types is
             if Get_Index_Constraint_Flag (Atype) then
                declare
                   El_Bounded : constant Boolean := Is_Bounded_Type (El_Typ);
+                  St_El : Node;
                   Res_Typ : Type_Acc;
                   Bnd : Bound_Type;
                begin
@@ -609,6 +642,8 @@ package body Elab.Vhdl_Types is
                   for I in reverse Flist_First .. Flist_Last (St_Indexes) loop
                      St_El := Get_Index_Type (St_Indexes, I);
                      Bnd := Synth_Bounds_From_Range (Syn_Inst, St_El);
+                     Check_Bound_Compatibility
+                       (Syn_Inst, St_El, Bnd, Parent_Typ.Uarr_Idx);
                      if El_Bounded then
                         Res_Typ := Create_Array_Type
                           (Bnd, Res_Typ = El_Typ, Res_Typ);
