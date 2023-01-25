@@ -848,6 +848,7 @@ package body Vhdl.Sem_Decls is
 
       if not Is_Anonymous_Type_Definition (Def)
         and then Get_Kind (Def) /= Iir_Kind_Protected_Type_Declaration
+        and then Get_Kind (Def) /= Iir_Kind_Interface_Type_Definition
       then
          --  There is no added constraints and therefore the subtype
          --  declaration is in fact an alias of the type.  Create a copy so
