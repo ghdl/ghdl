@@ -552,8 +552,7 @@ package body Vhdl.Sem_Expr is
    -- FIXME: avoid to run it on an already analyzed node, be careful
    --  with range_type_expr.
    function Sem_Simple_Range_Expression
-     (Expr: Iir_Range_Expression; A_Type: Iir; Any_Dir : Boolean)
-      return Iir_Range_Expression
+     (Expr: Iir_Range_Expression; A_Type: Iir) return Iir_Range_Expression
    is
       Base_Type: Iir;
       Left, Right: Iir;
@@ -710,13 +709,6 @@ package body Vhdl.Sem_Expr is
          return Null_Iir;
       end if;
 
-      if Get_Expr_Staticness (Expr) = Locally
-        and then Get_Type_Staticness (Expr_Type) = Locally
-        and then Get_Kind (Expr_Type) in Iir_Kinds_Subtype_Definition
-      then
-         Eval_Check_Range (Expr, Expr_Type, Any_Dir);
-      end if;
-
       return Expr;
    end Sem_Simple_Range_Expression;
 
@@ -727,15 +719,14 @@ package body Vhdl.Sem_Expr is
    -- LRM93 3.2.1.1
    -- FIXME: avoid to run it on an already analyzed node, be careful
    --  with range_type_expr.
-   function Sem_Range_Expression (Expr: Iir; A_Type: Iir; Any_Dir : Boolean)
-                                 return Iir
+   function Sem_Range_Expression (Expr: Iir; A_Type: Iir) return Iir
    is
       Res : Iir;
       Res_Type : Iir;
    begin
       case Get_Kind (Expr) is
          when Iir_Kind_Range_Expression =>
-            Res := Sem_Simple_Range_Expression (Expr, A_Type, Any_Dir);
+            Res := Sem_Simple_Range_Expression (Expr, A_Type);
             return Res;
 
          when Iir_Kinds_Denoting_Name
@@ -781,21 +772,10 @@ package body Vhdl.Sem_Expr is
          return Null_Iir;
       end if;
 
-      Res := Eval_Range_If_Static (Res);
-
-      if A_Type /= Null_Iir
-        and then Get_Type_Staticness (A_Type) = Locally
-        and then Get_Kind (A_Type) in Iir_Kinds_Subtype_Definition
-      then
-         if Get_Expr_Staticness (Res) = Locally then
-            Eval_Check_Range (Res, A_Type, Any_Dir);
-         end if;
-      end if;
-      return Res;
+      return Eval_Range_If_Static (Res);
    end Sem_Range_Expression;
 
-   function Sem_Discrete_Range (Expr: Iir; A_Type: Iir; Any_Dir : Boolean)
-                               return Iir
+   function Sem_Discrete_Range (Expr: Iir; A_Type: Iir) return Iir
    is
       Res : Iir;
       Res_Type : Iir;
@@ -819,7 +799,7 @@ package body Vhdl.Sem_Expr is
             --  FIXME: override type of RES ?
          end if;
       else
-         Res := Sem_Range_Expression (Expr, A_Type, Any_Dir);
+         Res := Sem_Range_Expression (Expr, A_Type);
 
          if Res = Null_Iir then
             return Null_Iir;
@@ -850,7 +830,7 @@ package body Vhdl.Sem_Expr is
       Res : Iir;
       Range_Type : Iir;
    begin
-      Res := Sem_Discrete_Range (Expr, Null_Iir, True);
+      Res := Sem_Discrete_Range (Expr, Null_Iir);
       if Res = Null_Iir then
          return Null_Iir;
       end if;
@@ -871,7 +851,7 @@ package body Vhdl.Sem_Expr is
          --  FIXME: catch phys/phys.
          Set_Type (Res, Integer_Type_Definition);
          if Get_Expr_Staticness (Res) = Locally then
-            Eval_Check_Range (Res, Integer_Subtype_Definition, True);
+            Check_Range_Compatibility (Res, Integer_Subtype_Definition);
          end if;
       elsif Range_Type = Universal_Integer_Type_Definition then
          if Vhdl_Std >= Vhdl_08 then
@@ -897,6 +877,9 @@ package body Vhdl.Sem_Expr is
                              & "literal or attribute");
          end if;
          Set_Type (Res, Integer_Type_Definition);
+         if Get_Expr_Staticness (Res) = Locally then
+            Check_Range_Compatibility (Res, Integer_Subtype_Definition);
+         end if;
       end if;
       return Res;
    end Sem_Discrete_Range_Integer;
@@ -2734,7 +2717,7 @@ package body Vhdl.Sem_Expr is
                      null;
                end case;
                if not Ok then
-                  Error_Msg_Sem (+Choice, "%n out of index range", +Expr);
+                  Error_Msg_Sem (+Choice, "choice is out of index range");
                   Has_Err := True;
                end if;
                Choice := Get_Chain (Choice);
@@ -2955,10 +2938,11 @@ package body Vhdl.Sem_Expr is
       is
          Expr : Iir;
          Ent : Iir;
+         Static : Iir_Staticness;
       begin
          if Get_Kind (El) = Iir_Kind_Choice_By_Range then
             Expr := Get_Choice_Range (El);
-            Expr := Sem_Discrete_Range (Expr, Choice_Type, True);
+            Expr := Sem_Discrete_Range (Expr, Choice_Type);
             if Expr = Null_Iir then
                return False;
             end if;
@@ -2966,13 +2950,16 @@ package body Vhdl.Sem_Expr is
                when Iir_Kind_Range_Expression
                  | Iir_Kinds_Range_Attribute
                  | Iir_Kinds_Denoting_Name =>
-                  Expr := Eval_Range_If_Static (Expr);
-                  Set_Choice_Staticness (El, Get_Expr_Staticness (Expr));
+                  Static := Get_Expr_Staticness (Expr);
                when Iir_Kinds_Scalar_Subtype_Definition =>
-                  Set_Choice_Staticness (El, Get_Type_Staticness (Expr));
+                  Static := Get_Type_Staticness (Expr);
                when others =>
                   Error_Kind ("sem_sime_choice(1)", Expr);
             end case;
+            Set_Choice_Staticness (El, Static);
+            if Static = Locally then
+               Expr := Eval_Range (Expr);
+            end if;
             Set_Choice_Range (El, Expr);
          else
             Expr := Get_Choice_Expression (El);
@@ -5345,7 +5332,7 @@ package body Vhdl.Sem_Expr is
             declare
                Res : Iir;
             begin
-               Res := Sem_Simple_Range_Expression (Expr, A_Type, True);
+               Res := Sem_Simple_Range_Expression (Expr, A_Type);
                return Create_Error_Expr (Res, A_Type);
             end;
 

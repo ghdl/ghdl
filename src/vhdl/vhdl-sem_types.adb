@@ -150,6 +150,9 @@ package body Vhdl.Sem_Types is
          return Null_Iir;
       end if;
 
+      Left := Eval_Expr_If_Static (Left);
+      Right := Eval_Expr_If_Static (Right);
+
       --  Emit error message for overflow and replace with a value to avoid
       --  error storm.
       if Get_Kind (Left) = Iir_Kind_Overflow_Literal then
@@ -1259,7 +1262,7 @@ package body Vhdl.Sem_Types is
             declare
                Res : Iir;
             begin
-               Res := Sem_Discrete_Range (Def, Null_Iir, True);
+               Res := Sem_Discrete_Range (Def, Null_Iir);
                if Res = Null_Iir then
                   return Null_Iir;
                end if;
@@ -1296,6 +1299,7 @@ package body Vhdl.Sem_Types is
    is
       Sub_Type: Iir;
       Range_Type : Iir;
+      Rng : Iir;
    begin
       case Get_Kind (A_Range) is
          when Iir_Kind_Range_Expression
@@ -1314,6 +1318,15 @@ package body Vhdl.Sem_Types is
             return Null_Iir;
       end case;
 
+      if Get_Expr_Staticness (A_Range) = Locally then
+         Rng := Eval_Range (A_Range);
+         if Get_Kind (Range_Type) in Iir_Kinds_Range_Type_Definition then
+            Check_Range_Compatibility (Rng, Range_Type);
+         end if;
+      else
+         Rng := A_Range;
+      end if;
+
       case Get_Kind (Range_Type) is
          when Iir_Kind_Enumeration_Type_Definition
            | Iir_Kind_Enumeration_Subtype_Definition =>
@@ -1327,11 +1340,12 @@ package body Vhdl.Sem_Types is
          when others =>
             raise Internal_Error;
       end case;
-      Location_Copy (Sub_Type, A_Range);
-      Set_Range_Constraint (Sub_Type, A_Range);
+      Location_Copy (Sub_Type, Rng);
+      Set_Range_Constraint (Sub_Type, Rng);
       Set_Parent_Type (Sub_Type, Get_Base_Type (Range_Type));
-      Set_Type_Staticness (Sub_Type, Get_Expr_Staticness (A_Range));
+      Set_Type_Staticness (Sub_Type, Get_Expr_Staticness (Rng));
       Set_Signal_Type_Flag (Sub_Type, True);
+
       return Sub_Type;
    end Range_To_Subtype_Indication;
 
@@ -1630,6 +1644,8 @@ package body Vhdl.Sem_Types is
       Type_Index_List : Iir_Flist;
       Subtype_Index_List : Iir_Flist;
       Subtype_Index_List2 : Iir_Flist;
+      Static : Iir_Staticness;
+      Parent_Type : Iir;
    begin
       Index_Staticness := Locally;
       Type_Index_List := Get_Index_Subtype_Definition_List (Base_Def);
@@ -1648,75 +1664,78 @@ package body Vhdl.Sem_Types is
          Set_Index_Constraint_Flag (Def, Get_Index_Constraint_Flag (Mark_Def));
          Set_Index_Subtype_List (Def, Get_Index_Subtype_List (Mark_Def));
          Index_Staticness := Get_Type_Staticness (Mark_Def);
-      else
-         if Get_Index_Constraint_Flag (Mark_Def) then
-            Error_Msg_Sem (+Def, "constrained array cannot be re-constrained");
-         end if;
-         Type_Nbr_Dim := Get_Nbr_Elements (Type_Index_List);
-         Subtype_Nbr_Dim := Get_Nbr_Elements (Subtype_Index_List);
+         return;
+      end if;
 
-         if Subtype_Nbr_Dim /= Type_Nbr_Dim then
-            --  Number of dimension mismatch.  Create an index with the right
-            --  length.
-            Subtype_Index_List2 := Create_Iir_Flist (Type_Nbr_Dim);
-            for I in 1 .. Natural'Min (Subtype_Nbr_Dim, Type_Nbr_Dim) loop
-               Set_Nth_Element
-                 (Subtype_Index_List2, I - 1,
-                  Get_Nth_Element (Subtype_Index_List, I - 1));
-            end loop;
+      if Get_Index_Constraint_Flag (Mark_Def) then
+         Error_Msg_Sem (+Def, "constrained array cannot be re-constrained");
+      end if;
+      Type_Nbr_Dim := Get_Nbr_Elements (Type_Index_List);
+      Subtype_Nbr_Dim := Get_Nbr_Elements (Subtype_Index_List);
 
-            if Subtype_Nbr_Dim < Type_Nbr_Dim then
-               Error_Msg_Sem
-                 (+Def,
-                  "subtype has less indexes than %n defined at %l",
-                  (+Mark_Def, +Mark_Def));
-
-               --  Clear extra indexes.
-               for I in Subtype_Nbr_Dim + 1 .. Type_Nbr_Dim loop
-                  Set_Nth_Element (Subtype_Index_List2, I - 1, Null_Iir);
-               end loop;
-            else
-               Error_Msg_Sem
-                 (+Get_Nth_Element (Subtype_Index_List, Type_Nbr_Dim),
-                  "subtype has more indexes than %n defined at %l",
-                  (+Mark_Def, +Mark_Def));
-
-               --  Forget extra indexes.
-            end if;
-            Destroy_Iir_Flist (Subtype_Index_List);
-            Subtype_Index_List := Subtype_Index_List2;
-         end if;
-
-         for I in 1 .. Type_Nbr_Dim loop
-            Type_Index := Get_Nth_Element (Type_Index_List, I - 1);
-
-            if I <= Subtype_Nbr_Dim then
-               Subtype_Index := Get_Nth_Element (Subtype_Index_List, I - 1);
-               Subtype_Index := Sem_Discrete_Range
-                 (Subtype_Index, Get_Index_Type (Type_Index), True);
-               if Subtype_Index /= Null_Iir then
-                  Subtype_Index :=
-                    Range_To_Subtype_Indication (Subtype_Index);
-                  Index_Staticness := Min
-                    (Index_Staticness,
-                     Get_Type_Staticness (Get_Type_Of_Subtype_Indication
-                                            (Subtype_Index)));
-               end if;
-            else
-               Subtype_Index := Null_Iir;
-            end if;
-            if Subtype_Index = Null_Iir then
-               --  Create a fake subtype from type_index.
-               --  FIXME: It is too fake.
-               Subtype_Index := Type_Index;
-               Index_Staticness := None;
-            end if;
-            Set_Nth_Element (Subtype_Index_List, I - 1, Subtype_Index);
+      if Subtype_Nbr_Dim /= Type_Nbr_Dim then
+         --  Number of dimension mismatch.  Create an index with the right
+         --  length.
+         Subtype_Index_List2 := Create_Iir_Flist (Type_Nbr_Dim);
+         for I in 1 .. Natural'Min (Subtype_Nbr_Dim, Type_Nbr_Dim) loop
+            Set_Nth_Element
+              (Subtype_Index_List2, I - 1,
+               Get_Nth_Element (Subtype_Index_List, I - 1));
          end loop;
 
-         Set_Index_Subtype_List (Def, Subtype_Index_List);
-         Set_Index_Constraint_Flag (Def, True);
+         if Subtype_Nbr_Dim < Type_Nbr_Dim then
+            Error_Msg_Sem (+Def,
+                           "subtype has less indexes than %n defined at %l",
+                           (+Mark_Def, +Mark_Def));
+
+            --  Clear extra indexes.
+            for I in Subtype_Nbr_Dim + 1 .. Type_Nbr_Dim loop
+               Set_Nth_Element (Subtype_Index_List2, I - 1, Null_Iir);
+            end loop;
+         else
+            Error_Msg_Sem (+Get_Nth_Element (Subtype_Index_List, Type_Nbr_Dim),
+                           "subtype has more indexes than %n defined at %l",
+                           (+Mark_Def, +Mark_Def));
+
+            --  Forget extra indexes.
+         end if;
+         Destroy_Iir_Flist (Subtype_Index_List);
+         Subtype_Index_List := Subtype_Index_List2;
       end if;
+
+      for I in 1 .. Type_Nbr_Dim loop
+         Type_Index := Get_Nth_Element (Type_Index_List, I - 1);
+
+         if I <= Subtype_Nbr_Dim then
+            Subtype_Index := Get_Nth_Element (Subtype_Index_List, I - 1);
+            Parent_Type := Get_Index_Type (Type_Index);
+            Subtype_Index := Sem_Discrete_Range (Subtype_Index, Parent_Type);
+            if Subtype_Index /= Null_Iir then
+               Subtype_Index := Range_To_Subtype_Indication (Subtype_Index);
+               Static := Get_Type_Staticness
+                 (Get_Type_Of_Subtype_Indication (Subtype_Index));
+               Index_Staticness := Min (Index_Staticness, Static);
+               if Static = Locally
+                 and then Get_Type_Staticness (Parent_Type) = Locally
+               then
+                  Check_Discrete_Range_Compatibility
+                    (Subtype_Index, Parent_Type);
+               end if;
+            end if;
+         else
+            Subtype_Index := Null_Iir;
+         end if;
+         if Subtype_Index = Null_Iir then
+            --  Create a fake subtype from type_index.
+            --  FIXME: It is too fake.
+            Subtype_Index := Type_Index;
+            Index_Staticness := None;
+         end if;
+         Set_Nth_Element (Subtype_Index_List, I - 1, Subtype_Index);
+      end loop;
+
+      Set_Index_Subtype_List (Def, Subtype_Index_List);
+      Set_Index_Constraint_Flag (Def, True);
    end Sem_Array_Constraint_Indexes;
 
    --  DEF is an array_subtype_definition.
@@ -2265,16 +2284,21 @@ package body Vhdl.Sem_Types is
          Location_Copy (Res, Def);
          Set_Parent_Type (Res, Type_Mark);
          Set_Resolution_Indication (Res, Get_Resolution_Indication (Def));
+
          A_Range := Get_Range_Constraint (Def);
          if A_Range = Null_Iir then
             A_Range := Get_Range_Constraint (Type_Mark);
             Set_Is_Ref (Res, True);
          else
-            A_Range := Sem_Range_Expression (A_Range, Type_Mark, True);
+            A_Range := Sem_Range_Expression (A_Range, Type_Mark);
             if A_Range = Null_Iir then
                --  Avoid error propagation.
                A_Range := Get_Range_Constraint (Type_Mark);
                Set_Is_Ref (Res, True);
+            elsif Get_Expr_Staticness (A_Range) = Locally then
+               A_Range := Eval_Range (A_Range);
+               Check_Range_Compatibility
+                 (A_Range, Get_Range_Constraint (Type_Mark));
             end if;
          end if;
          Set_Range_Constraint (Res, A_Range);

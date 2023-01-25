@@ -114,19 +114,15 @@ package Vhdl.Sem_Expr is
    --  handled in this package.
    procedure Sem_Procedure_Call (Call : Iir_Procedure_Call; Stmt : Iir);
 
-   --  Analyze a range (ie a range attribute or a range expression).  If
-   --  ANY_DIR is true, the range can't be a null range (slice vs subtype,
-   --  used in static evaluation). A_TYPE may be Null_Iir.
+   --  Analyze a range (ie a range attribute or a range expression).
+   --  A_TYPE may be Null_Iir.
    --  Return Null_Iir in case of error, or EXPR analyzed (and evaluated if
    --  possible).
-   function Sem_Range_Expression (Expr: Iir; A_Type: Iir; Any_Dir : Boolean)
-     return Iir;
+   function Sem_Range_Expression (Expr: Iir; A_Type: Iir) return Iir;
 
-   --  Analyze a discrete range.  If ANY_DIR is true, the range can't be a
-   --  null range (slice vs subtype -- used in static evaluation). A_TYPE may
-   --  be Null_Iir. Return Null_Iir in case of error.
-   function Sem_Discrete_Range (Expr: Iir; A_Type: Iir; Any_Dir: Boolean)
-                               return Iir;
+   --  Analyze a discrete range. A_TYPE may be Null_Iir.
+   --  Return Null_Iir in case of error.
+   function Sem_Discrete_Range (Expr: Iir; A_Type: Iir) return Iir;
 
    --  Analyze a discrete range and convert to integer if both bounds are
    --  universal integer types, according to rules of LRM 3.2.1.1

@@ -335,21 +335,6 @@ package body Vhdl.Evaluation is
       return Get_Nth_Element (Enum_List, Boolean'Pos (Val));
    end Build_Enumeration;
 
-   function Build_Constant_Range (Range_Expr : Iir; Origin : Iir) return Iir
-   is
-      Res : Iir;
-   begin
-      Res := Create_Iir (Iir_Kind_Range_Expression);
-      Location_Copy (Res, Origin);
-      Set_Type (Res, Get_Type (Range_Expr));
-      Set_Left_Limit (Res, Get_Left_Limit (Range_Expr));
-      Set_Right_Limit (Res, Get_Right_Limit (Range_Expr));
-      Set_Direction (Res, Get_Direction (Range_Expr));
-      Set_Range_Origin (Res, Origin);
-      Set_Expr_Staticness (Res, Locally);
-      return Res;
-   end Build_Constant_Range;
-
    function Build_Extreme_Value (Is_Pos : Boolean; Origin : Iir) return Iir
    is
       Orig_Type : constant Iir := Get_Base_Type (Get_Type (Origin));
@@ -4209,6 +4194,17 @@ package body Vhdl.Evaluation is
       end if;
    end Eval_Expr_Check_If_Static;
 
+   function Int_In_Range (Val : Int64;
+                          Dir : Direction_Type; L, R : Int64) return Boolean is
+   begin
+      case Dir is
+         when Dir_To =>
+            return Val >= L and then Val <= R;
+         when Dir_Downto =>
+            return Val <= L and then Val >= R;
+      end case;
+   end Int_In_Range;
+
    function Eval_Int_In_Range (Val : Int64; Bound : Iir) return Boolean
    is
       L, R : Iir;
@@ -4222,12 +4218,8 @@ package body Vhdl.Evaluation is
             then
                return True;
             end if;
-            case Get_Direction (Bound) is
-               when Dir_To =>
-                  return Val >= Eval_Pos (L) and then Val <= Eval_Pos (R);
-               when Dir_Downto =>
-                  return Val <= Eval_Pos (L) and then Val >= Eval_Pos (R);
-            end case;
+            return Int_In_Range
+              (Val, Get_Direction (Bound), Eval_Pos (L), Eval_Pos (R));
          when others =>
             Error_Kind ("eval_int_in_range", Bound);
       end case;
@@ -4291,6 +4283,44 @@ package body Vhdl.Evaluation is
       end case;
       return True;
    end Eval_Fp_In_Range;
+
+   function Eval_In_Range (Val : Iir; Dir : Direction_Type; L, R : Iir)
+                          return Boolean
+   is
+      Vtype : constant Iir := Get_Type (Val);
+   begin
+      case Iir_Kinds_Scalar_Type_And_Subtype_Definition (Get_Kind (Vtype)) is
+         when Iir_Kind_Floating_Subtype_Definition
+           | Iir_Kind_Floating_Type_Definition =>
+            declare
+               Lv : constant Fp64 := Get_Fp_Value (L);
+               Rv : constant Fp64 := Get_Fp_Value (R);
+               V : constant Fp64 := Get_Fp_Value (Val);
+            begin
+               case Dir is
+                  when Dir_To =>
+                     return V >= Lv and V <= Rv;
+                  when Dir_Downto =>
+                     return V <= Lv and V >= Rv;
+               end case;
+            end;
+         when Iir_Kinds_Discrete_Type_Definition
+           | Iir_Kind_Physical_Type_Definition
+           | Iir_Kind_Physical_Subtype_Definition =>
+            declare
+               Lv : constant Int64 := Eval_Pos (L);
+               Rv : constant Int64 := Eval_Pos (R);
+               V : constant Int64 := Eval_Pos (Val);
+            begin
+               case Dir is
+                  when Dir_To =>
+                     return V >= Lv and V <= Rv;
+                  when Dir_Downto =>
+                     return V <= Lv and V >= Rv;
+               end case;
+            end;
+      end case;
+   end Eval_In_Range;
 
    --  Return FALSE if literal EXPR is not in SUB_TYPE bounds.
    function Eval_Is_In_Bound
@@ -4464,18 +4494,67 @@ package body Vhdl.Evaluation is
       pragma Unreferenced (Res);
    end Eval_Check_Bound;
 
-   function Eval_Is_Range_In_Bound
-     (A_Range : Iir; Sub_Type : Iir; Any_Dir : Boolean)
-     return Boolean
+   function Is_Null_Range (Dir : Direction_Type; L_Expr, R_Expr : Iir)
+                          return Boolean
    is
-      Type_Range : Iir;
-      Range_Constraint : constant Iir := Eval_Static_Range (A_Range);
+      Ltype : constant Iir := Get_Type (L_Expr);
    begin
-      Type_Range := Get_Range_Constraint (Sub_Type);
-      if not Any_Dir
-        and then Get_Direction (Type_Range) /= Get_Direction (Range_Constraint)
+      case Iir_Kinds_Scalar_Type_And_Subtype_Definition (Get_Kind (Ltype)) is
+         when Iir_Kinds_Discrete_Type_Definition
+           | Iir_Kind_Physical_Type_Definition
+           | Iir_Kind_Physical_Subtype_Definition =>
+            declare
+               L, R : Int64;
+            begin
+               L := Eval_Pos (L_Expr);
+               R := Eval_Pos (R_Expr);
+               case Dir is
+                  when Dir_To =>
+                     return L > R;
+                  when Dir_Downto =>
+                     return L < R;
+               end case;
+            end;
+         when Iir_Kind_Floating_Subtype_Definition
+           | Iir_Kind_Floating_Type_Definition =>
+            declare
+               L, R : Fp64;
+            begin
+               L := Get_Fp_Value (L_Expr);
+               R := Get_Fp_Value (R_Expr);
+               case Dir is
+                  when Dir_To =>
+                     return L > R;
+                  when Dir_Downto =>
+                     return L < R;
+               end case;
+            end;
+      end case;
+   end Is_Null_Range;
+
+   --  Check range expression A_RANGE.
+   procedure Eval_Check_Range_In_Bound (A_Range : Iir;
+                                        Sub_Type : Iir;
+                                        Dir_Ok : out Boolean;
+                                        Left_Ok : out Boolean;
+                                        Right_Ok : out Boolean)
+   is
+      Range_Constraint : constant Iir := Eval_Static_Range (A_Range);
+      L_Expr : constant Iir := Get_Left_Limit (Range_Constraint);
+      R_Expr : constant Iir := Get_Right_Limit (Range_Constraint);
+      Dir : constant Direction_Type := Get_Direction (Range_Constraint);
+      Type_Range : constant Iir := Get_Range_Constraint (Sub_Type);
+   begin
+      Dir_Ok := Get_Direction (Type_Range) = Dir;
+
+      Left_Ok := True;
+      Right_Ok := True;
+
+      --  In case of overflow, assume ok.
+      if Is_Overflow_Literal (L_Expr)
+        or else Is_Overflow_Literal (R_Expr)
       then
-         return True;
+         return;
       end if;
 
       case Get_Kind (Sub_Type) is
@@ -4484,63 +4563,64 @@ package body Vhdl.Evaluation is
            | Iir_Kind_Enumeration_Subtype_Definition
            | Iir_Kind_Enumeration_Type_Definition =>
             declare
-               L_Expr : constant Iir := Get_Left_Limit (Range_Constraint);
-               R_Expr : constant Iir := Get_Right_Limit (Range_Constraint);
                L, R : Int64;
             begin
-               if Is_Overflow_Literal (L_Expr)
-                 or else Is_Overflow_Literal (R_Expr)
-               then
-                  return False;
-               end if;
                --  Check for null range.
                L := Eval_Pos (L_Expr);
                R := Eval_Pos (R_Expr);
-               case Get_Direction (Range_Constraint) is
+               case Dir is
                   when Dir_To =>
                      if L > R then
-                        return True;
+                        return;
                      end if;
                   when Dir_Downto =>
                      if L < R then
-                        return True;
+                        return;
                      end if;
                end case;
-               return Eval_Int_In_Range (L, Type_Range)
-                 and then Eval_Int_In_Range (R, Type_Range);
+               Left_Ok := Eval_Int_In_Range (L, Type_Range);
+               Right_Ok := Eval_Int_In_Range (R, Type_Range);
             end;
          when Iir_Kind_Floating_Subtype_Definition =>
             declare
                L, R : Fp64;
             begin
                --  Check for null range.
-               L := Get_Fp_Value (Get_Left_Limit (Range_Constraint));
-               R := Get_Fp_Value (Get_Right_Limit (Range_Constraint));
-               case Get_Direction (Range_Constraint) is
+               L := Get_Fp_Value (L_Expr);
+               R := Get_Fp_Value (R_Expr);
+               case Dir is
                   when Dir_To =>
                      if L > R then
-                        return True;
+                        return;
                      end if;
                   when Dir_Downto =>
                      if L < R then
-                        return True;
+                        return;
                      end if;
                end case;
-               return Eval_Fp_In_Range (L, Type_Range)
-                 and then Eval_Fp_In_Range (R, Type_Range);
+               Left_Ok := Eval_Fp_In_Range (L, Type_Range);
+               Right_Ok := Eval_Fp_In_Range (R, Type_Range);
             end;
          when others =>
-            Error_Kind ("eval_is_range_in_bound", Sub_Type);
+            Error_Kind ("eval_check_range_in_bound", Sub_Type);
       end case;
+   end Eval_Check_Range_In_Bound;
 
-      --  Should check L <= R or L >= R according to direction.
-      --return Eval_Is_In_Bound (Get_Left_Limit (A_Range), Sub_Type)
-      --  and then Eval_Is_In_Bound (Get_Right_Limit (A_Range), Sub_Type);
+   function Eval_Is_Range_In_Bound
+     (A_Range : Iir; Sub_Type : Iir; Any_Dir : Boolean) return Boolean
+   is
+      L_Ok, R_Ok, Dir_Ok : Boolean;
+   begin
+      Eval_Check_Range_In_Bound (A_Range, Sub_Type, Dir_Ok, L_Ok, R_Ok);
+      if not Any_Dir and then not Dir_Ok then
+         return True;
+      end if;
+
+      return L_Ok and R_Ok;
    end Eval_Is_Range_In_Bound;
 
    procedure Eval_Check_Range
-     (A_Range : Iir; Sub_Type : Iir; Any_Dir : Boolean)
-   is
+     (A_Range : Iir; Sub_Type : Iir; Any_Dir : Boolean) is
    begin
       if not Eval_Is_Range_In_Bound (A_Range, Sub_Type, Any_Dir) then
          Warning_Msg_Sem (Warnid_Runtime_Error, +A_Range,
@@ -4630,62 +4710,40 @@ package body Vhdl.Evaluation is
       end case;
    end Eval_Pos;
 
-   function Eval_Static_Range (Rng : Iir) return Iir
+   procedure Eval_Range_Bounds (Rng : Iir;
+                                Dir : out Direction_Type;
+                                Left, Right : out Iir)
    is
       Expr : Iir;
-      Kind : Iir_Kind;
    begin
       Expr := Rng;
       loop
-         Kind := Get_Kind (Expr);
-         case Kind is
+         case Get_Kind (Expr) is
             when Iir_Kind_Range_Expression =>
-               if Get_Expr_Staticness (Expr) /= Locally then
-                  return Null_Iir;
-               end if;
+               Dir := Get_Direction (Expr);
+               Left := Get_Left_Limit (Expr);
+               Right := Get_Right_Limit (Expr);
+               return;
 
-               --  Normalize the range expression.
-               declare
-                  Left : Iir;
-                  Right : Iir;
-               begin
-                  Left := Get_Left_Limit_Expr (Expr);
-                  if Is_Valid (Left) then
-                     Left := Eval_Expr_Keep_Orig (Left, False);
-                     Set_Left_Limit_Expr (Expr, Left);
-                     Set_Left_Limit (Expr, Left);
-                  end if;
-                  Right := Get_Right_Limit_Expr (Expr);
-                  if Is_Valid (Right) then
-                     Right := Eval_Expr_Keep_Orig (Right, False);
-                     Set_Right_Limit_Expr (Expr, Right);
-                     Set_Right_Limit (Expr, Right);
-                  end if;
-               end;
-               return Expr;
-            when Iir_Kind_Integer_Subtype_Definition
-              | Iir_Kind_Floating_Subtype_Definition
-              | Iir_Kind_Enumeration_Type_Definition
-              | Iir_Kind_Enumeration_Subtype_Definition
-              | Iir_Kind_Physical_Subtype_Definition =>
-               Expr := Get_Range_Constraint (Expr);
             when Iir_Kind_Range_Array_Attribute
               | Iir_Kind_Reverse_Range_Array_Attribute =>
                declare
+                  Orig : constant Iir := Expr;
                   Indexes_List : Iir_Flist;
                   Prefix : Iir;
-                  Res : Iir;
                   Dim : Natural;
                begin
                   Prefix := Get_Prefix (Expr);
                   if Get_Kind (Prefix) /= Iir_Kind_Array_Subtype_Definition
                   then
+                     --  If the prefix is not a subtype, it's an object.
+                     --  Get its type.
                      Prefix := Get_Type (Prefix);
                   end if;
                   if Get_Kind (Prefix) /= Iir_Kind_Array_Subtype_Definition
                   then
                      --  Unconstrained object.
-                     return Null_Iir;
+                     raise Internal_Error;
                   end if;
                   Indexes_List := Get_Index_Subtype_List (Prefix);
                   Dim := Eval_Attribute_Parameter_Or_1 (Expr);
@@ -4696,26 +4754,112 @@ package body Vhdl.Evaluation is
                      Dim := 1;
                   end if;
                   Expr := Get_Nth_Element (Indexes_List, Dim - 1);
-                  if Kind = Iir_Kind_Reverse_Range_Array_Attribute then
-                     Expr := Eval_Static_Range (Expr);
 
-                     Res := Create_Iir (Iir_Kind_Range_Expression);
-                     Location_Copy (Res, Expr);
-                     Set_Type (Res, Get_Type (Expr));
-                     case Get_Direction (Expr) is
-                        when Dir_To =>
-                           Set_Direction (Res, Dir_Downto);
-                        when Dir_Downto =>
-                           Set_Direction (Res, Dir_To);
-                     end case;
-                     Set_Left_Limit (Res, Get_Right_Limit (Expr));
-                     Set_Right_Limit (Res, Get_Left_Limit (Expr));
-                     Set_Range_Origin (Res, Rng);
-                     Set_Expr_Staticness (Res, Get_Expr_Staticness (Expr));
-                     return Res;
+                  --  For reverse, recurse and reverse.
+                  if Get_Kind (Orig) = Iir_Kind_Reverse_Range_Array_Attribute
+                  then
+                     declare
+                        R_Dir : Direction_Type;
+                        R_Left, R_Right : Iir;
+                     begin
+                        Eval_Range_Bounds (Expr, R_Dir, R_Left, R_Right);
+                        case R_Dir is
+                           when Dir_To =>
+                              Dir := Dir_Downto;
+                           when Dir_Downto =>
+                              Dir := Dir_To;
+                        end case;
+                        Left := R_Right;
+                        Right := R_Left;
+                        return;
+                     end;
                   end if;
+
+                  --  For normal, just recurse.
                end;
 
+            when Iir_Kind_Integer_Subtype_Definition
+              | Iir_Kind_Floating_Subtype_Definition
+              | Iir_Kind_Enumeration_Type_Definition
+              | Iir_Kind_Enumeration_Subtype_Definition
+              | Iir_Kind_Physical_Subtype_Definition =>
+               Expr := Get_Range_Constraint (Expr);
+
+            when Iir_Kind_Subtype_Declaration
+              | Iir_Kind_Base_Attribute
+              | Iir_Kind_Subtype_Attribute
+              | Iir_Kind_Element_Attribute =>
+               Expr := Get_Type (Expr);
+            when Iir_Kind_Type_Declaration =>
+               Expr := Get_Type_Definition (Expr);
+            when Iir_Kind_Simple_Name
+              | Iir_Kind_Selected_Name =>
+               Expr := Get_Named_Entity (Expr);
+            when others =>
+               Error_Kind ("eval_range_bounds", Expr);
+         end case;
+      end loop;
+   end Eval_Range_Bounds;
+
+   function Eval_Range (Arange : Iir) return Iir
+   is
+      L, R : Iir;
+      Dir : Direction_Type;
+      Res : Iir;
+   begin
+      if Get_Kind (Arange) = Iir_Kind_Range_Expression then
+         --  Range expressions are always evaluated by
+         --  sem_simple_range_expression.
+         return Arange;
+      end if;
+
+      --  ARANGE is a range attribute or a type mark.
+      Eval_Range_Bounds (Arange, Dir, L, R);
+
+      L := Eval_Static_Expr (L);
+      R := Eval_Static_Expr (R);
+
+      Res := Create_Iir (Iir_Kind_Range_Expression);
+      Location_Copy (Res, Arange);
+      Set_Range_Origin (Res, Arange);
+
+      case Get_Kind (Arange) is
+         when Iir_Kind_Integer_Subtype_Definition
+           | Iir_Kind_Enumeration_Subtype_Definition =>
+            Set_Type (Res, Get_Parent_Type (Arange));
+         when others =>
+            Set_Type (Res, Get_Type (Arange));
+      end case;
+      Set_Left_Limit (Res, L);
+      Set_Right_Limit (Res, R);
+      Set_Direction (Res, Dir);
+      Set_Expr_Staticness (Res, Locally);
+      return Res;
+   end Eval_Range;
+
+   function Eval_Static_Range (Rng : Iir) return Iir
+   is
+      Expr : Iir;
+      Kind : Iir_Kind;
+   begin
+      Expr := Rng;
+      loop
+         Kind := Get_Kind (Expr);
+         case Kind is
+            when Iir_Kind_Range_Expression
+               | Iir_Kind_Range_Array_Attribute
+               | Iir_Kind_Reverse_Range_Array_Attribute =>
+               if Get_Expr_Staticness (Expr) /= Locally then
+                  return Null_Iir;
+               end if;
+
+               return Eval_Range (Expr);
+            when Iir_Kind_Integer_Subtype_Definition
+              | Iir_Kind_Floating_Subtype_Definition
+              | Iir_Kind_Enumeration_Type_Definition
+              | Iir_Kind_Enumeration_Subtype_Definition
+              | Iir_Kind_Physical_Subtype_Definition =>
+               Expr := Get_Range_Constraint (Expr);
             when Iir_Kind_Subtype_Declaration
               | Iir_Kind_Base_Attribute
               | Iir_Kind_Subtype_Attribute
@@ -4732,18 +4876,90 @@ package body Vhdl.Evaluation is
       end loop;
    end Eval_Static_Range;
 
-   function Eval_Range (Arange : Iir) return Iir is
-      Res : Iir;
+   procedure Check_Range_Compatibility (Inner : Iir; Outer : Iir)
+   is
+      pragma Assert (Get_Kind (Inner) = Iir_Kind_Range_Expression);
+      pragma Assert (Get_Expr_Staticness (Inner) = Locally);
+      I_Dir : constant Direction_Type := Get_Direction (Inner);
+      I_L : constant Iir := Get_Left_Limit (Inner);
+      I_R : constant Iir := Get_Right_Limit (Inner);
+      O_L, O_R : Iir;
+      O_Dir : Direction_Type;
+      B : Iir;
    begin
-      Res := Eval_Static_Range (Arange);
-      if Res /= Arange
-        and then Get_Range_Origin (Res) /= Arange
+      Eval_Range_Bounds (Outer, O_Dir, O_L, O_R);
+
+      --  Avoid cascade error in case of overflow.
+      if Is_Overflow_Literal (I_L)
+        or else Is_Overflow_Literal (I_R)
+        or else Is_Overflow_Literal (O_L)
+        or else Is_Overflow_Literal (O_R)
       then
-         return Build_Constant_Range (Res, Arange);
-      else
-         return Res;
+         return;
       end if;
-   end Eval_Range;
+
+      --  LRM08 5.2 Scalar types
+      --  A range constraint is compatible with a subtype if each bound of the
+      --  range belongs to the subtype or if the range constraint defines a
+      --  null range.
+      --
+      --  GHDL: Bounds of a null range don't have to be within the limits.
+      if Is_Null_Range (I_Dir, I_L, I_R) then
+         return;
+      end if;
+      if Is_Null_Range (O_Dir, O_L, O_R) then
+         Error_Msg_Sem (+Inner, "range incompatible with null-range");
+         return;
+      end if;
+
+      if not Eval_In_Range (I_L, O_Dir, O_L, O_R) then
+         --  Improve location of the message.
+         B := Get_Left_Limit_Expr (Inner);
+         if B = Null_Node then
+            B := Inner;
+         end if;
+         Warning_Msg_Sem (Warnid_Runtime_Error, +B,
+                          "left bound incompatible with range");
+         B := Build_Overflow (I_L, Get_Type (Inner));
+         if Get_Left_Limit_Expr (Inner) = Null_Iir then
+            Set_Literal_Origin (B, Null_Iir);
+         end if;
+         Set_Left_Limit_Expr (Inner, B);
+         Set_Left_Limit (Inner, B);
+         Set_Expr_Staticness (Inner, None);
+      end if;
+      if not Eval_In_Range (I_R, O_Dir, O_L, O_R) then
+         --  Improve location of the message.
+         B := Get_Right_Limit_Expr (Inner);
+         if B = Null_Node then
+            B := Inner;
+         end if;
+         Warning_Msg_Sem (Warnid_Runtime_Error, +B,
+                          "right bound incompatible with range");
+         B := Build_Overflow (I_R, Get_Type (Inner));
+         if Get_Right_Limit_Expr (Inner) = Null_Iir then
+            Set_Literal_Origin (B, Null_Iir);
+         end if;
+         Set_Right_Limit_Expr (Inner, B);
+         Set_Right_Limit (Inner, B);
+         Set_Expr_Staticness (Inner, None);
+      end if;
+   end Check_Range_Compatibility;
+
+   procedure Check_Discrete_Range_Compatibility (Inner : Iir; Outer : Iir) is
+   begin
+      case Get_Kind (Inner) is
+         when Iir_Kind_Range_Expression =>
+            Check_Range_Compatibility (Inner, Outer);
+         when Iir_Kinds_Discrete_Type_Definition =>
+            Check_Discrete_Range_Compatibility
+              (Get_Range_Constraint (Inner), Outer);
+         when others =>
+            --  Can this happen ? As INNER is locally static it should have
+            --  been transformed into a range.
+            Error_Kind ("check_discrete_range_compatibility", Inner);
+      end case;
+   end Check_Discrete_Range_Compatibility;
 
    function Eval_Range_If_Static (Arange : Iir) return Iir is
    begin

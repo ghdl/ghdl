@@ -720,7 +720,6 @@ package body Vhdl.Sem_Names is
       end if;
 
       Index_Type := Get_Index_Type (Index_List, 0);
-      Prefix_Rng := Eval_Static_Range (Index_Type);
 
       --  LRM93 6.5
       --  It is an error if either the bounds of the discrete range does not
@@ -734,7 +733,7 @@ package body Vhdl.Sem_Names is
       --  The bounds of the discrete range [...] must be of the
       --  type of the index of the array.
       Suffix := Get_Suffix (Name);
-      Suffix := Sem_Discrete_Range (Suffix, Index_Type, False);
+      Suffix := Sem_Discrete_Range (Suffix, Index_Type);
       if Suffix = Null_Iir then
          return;
       end if;
@@ -766,16 +765,22 @@ package body Vhdl.Sem_Names is
       if Get_Kind (Prefix_Type) = Iir_Kind_Array_Subtype_Definition
         and then Get_Index_Constraint_Flag (Prefix_Type)
         and then Staticness = Locally
-        and then Prefix_Rng /= Null_Iir
-        and then Get_Direction (Suffix_Rng) /= Get_Direction (Prefix_Rng)
+        and then Get_Type_Staticness (Index_Type) = Locally
       then
-         if False and then Flags.Vhdl_Std = Vhdl_87 then
-            -- emit a warning for a null slice.
-            Warning_Msg_Sem (Warnid_Runtime_Error, +Name,
-                             "direction mismatch results in a null slice");
+         Prefix_Rng := Eval_Static_Range (Index_Type);
+         if Get_Direction (Suffix_Rng) /= Get_Direction (Prefix_Rng) then
+            if False and then Flags.Vhdl_Std = Vhdl_87 then
+               -- emit a warning for a null slice.
+               Warning_Msg_Sem (Warnid_Runtime_Error, +Name,
+                                "direction mismatch results in a null slice");
 
+            end if;
+            Error_Msg_Sem (+Name, "direction of the range mismatch");
+         else
+            Check_Range_Compatibility (Suffix_Rng, Prefix_Rng);
+            --  May have changed in case of overflow.
+            Staticness := Get_Expr_Staticness (Suffix_Rng);
          end if;
-         Error_Msg_Sem (+Name, "direction of the range mismatch");
       end if;
 
       --  LRM93 7.4.1
@@ -2769,7 +2774,7 @@ package body Vhdl.Sem_Names is
             Set_Index_List (Res, Create_Iir_Flist (1));
             Set_Nth_Element (Get_Index_List (Res), 0, Actual);
          when Iir_Kind_Slice_Name =>
-            Actual := Sem_Discrete_Range (Actual, Itype, False);
+            Actual := Sem_Discrete_Range (Actual, Itype);
             if Actual = Null_Iir then
                return Null_Iir;
             end if;

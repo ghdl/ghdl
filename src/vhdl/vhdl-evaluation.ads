@@ -102,6 +102,15 @@ package Vhdl.Evaluation is
    --  Return a locally static range expression with the origin set for ARANGE.
    function Eval_Range (Arange : Iir) return Iir;
 
+   --  Check that static range INNER is compatible (ie inside) with static
+   --  range OUTER.
+   --  Both INNER and OUTER must be ranges (ie range expression or attribute).
+   procedure Check_Range_Compatibility (Inner : Iir; Outer : Iir);
+
+   --  Check that static discrete range INNER is compatible with static
+   --  discrete range OUTER.
+   procedure Check_Discrete_Range_Compatibility (Inner : Iir; Outer : Iir);
+
    --  If ARANGE is a locally static range, return locally static range
    --  expression (with the origin set), else return ARANGE.
    function Eval_Range_If_Static (Arange : Iir) return Iir;
