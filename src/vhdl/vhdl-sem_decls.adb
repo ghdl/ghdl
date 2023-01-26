@@ -203,7 +203,8 @@ package body Vhdl.Sem_Decls is
    procedure Sem_Interface_Object_Declaration
      (Inter, Last : Iir; Interface_Kind : Interface_Kind_Type)
    is
-      Prev_Unelaborated_Use_Allowed : Boolean;
+      Prev_Unelaborated_Use_Allowed : constant Boolean :=
+        Unelaborated_Use_Allowed;
       A_Type: Iir;
       Default_Value: Iir;
    begin
@@ -223,17 +224,22 @@ package body Vhdl.Sem_Decls is
             Set_Subtype_Indication (Inter, Get_Subtype_Indication (Last));
          end if;
       else
+         if Interface_Kind = Port_Interface_List then
+            Unelaborated_Use_Allowed := True;
+         end if;
+
          A_Type := Sem_Subtype_Indication (A_Type);
          Set_Subtype_Indication (Inter, A_Type);
          A_Type := Get_Type_Of_Subtype_Indication (A_Type);
          Set_Type (Inter, A_Type);
 
+         Unelaborated_Use_Allowed := Prev_Unelaborated_Use_Allowed;
+
          Default_Value := Get_Default_Value (Inter);
          if Default_Value /= Null_Iir and then not Is_Error (A_Type) then
 
             Deferred_Constant_Allowed := True;
-            Prev_Unelaborated_Use_Allowed := Unelaborated_Use_Allowed;
-            if Interface_Kind in Parameter_Interface_List then
+            if Interface_Kind /= Generic_Interface_List then
                Unelaborated_Use_Allowed := True;
             end if;
 
