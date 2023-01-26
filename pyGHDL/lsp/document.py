@@ -197,7 +197,7 @@ class Document(object):
         pos = files_map.File_Line_To_Position(self._fe, position["line"] + 1)
         return files_map.File_Pos_To_Location(self._fe, pos) + position["character"]
 
-    def goto_definition(self, position):
+    def find_definition(self, position):
         loc = self.position_to_location(position)
         return references.find_definition_by_loc(self._tree, loc)
 

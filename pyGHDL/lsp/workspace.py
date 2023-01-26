@@ -388,19 +388,32 @@ class Workspace(object):
         return res
 
     def goto_definition(self, doc_uri, position):
-        decl = self._docs[doc_uri].goto_definition(position)
+        decl = self._docs[doc_uri].find_definition(position)
         if decl is None:
             return None
         decl_loc = self.declaration_to_location(decl)
         if decl_loc is None:
             return None
-        res = [decl_loc]
-        # If the declaration is a component, also add the entity.
-        if nodes.Get_Kind(decl) == nodes.Iir_Kind.Component_Declaration:
+        return [decl_loc]
+
+    def goto_implementation(self, doc_uri, position):
+        decl = self._docs[doc_uri].find_definition(position)
+        if decl is None:
+            return None
+        k = nodes.Get_Kind(decl)
+        if k == nodes.Iir_Kind.Component_Declaration:
             ent = libraries.Find_Entity_For_Component(nodes.Get_Identifier(decl))
             if ent != nodes.Null_Iir:
-                res.append(self.declaration_to_location(nodes.Get_Library_Unit(ent)))
-        return res
+                decl = nodes.Get_Library_Unit(ent)
+        elif k in nodes.Iir_Kinds.Subprogram_Declaration:
+            bod = nodes.Get_Subprogram_Body(decl)
+            if bod != nodes.Null_Iir:
+                decl = bod
+
+        decl_loc = self.declaration_to_location(decl)
+        if decl_loc is None:
+            return None
+        return [decl_loc]
 
     def hover(self, doc_uri, position):
         return self._docs[doc_uri].hover(position)

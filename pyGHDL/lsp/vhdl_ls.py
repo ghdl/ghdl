@@ -24,6 +24,7 @@ class VhdlLanguageServer(object):
             "textDocument/didSave": self.textDocument_didSave,
             "textDocument/hover": self.textDocument_hover,
             "textDocument/definition": self.textDocument_definition,
+            "textDocument/implementation": self.textDocument_implementation,
             "textDocument/documentSymbol": self.textDocument_documentSymbol,
             # 'textDocument/completion': self.completion,
             "textDocument/rangeFormatting": self.textDocument_rangeFormatting,
@@ -60,6 +61,7 @@ class VhdlLanguageServer(object):
             #                'triggerCharacters': ['(', ',']
             #            },
             "definitionProvider": True,
+            "implementationProvider": True,
             "referencesProvider": False,
             "documentHighlightProvider": False,
             "documentSymbolProvider": True,
@@ -115,6 +117,9 @@ class VhdlLanguageServer(object):
 
     def textDocument_definition(self, textDocument=None, position=None):
         return self.workspace.goto_definition(textDocument["uri"], position)
+
+    def textDocument_implementation(self, textDocument=None, position=None):
+        return self.workspace.goto_implementation(textDocument["uri"], position)
 
     def textDocument_documentSymbol(self, textDocument=None):
         doc = self.workspace.get_or_create_document(textDocument["uri"])
