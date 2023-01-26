@@ -26,6 +26,7 @@ class VhdlLanguageServer(object):
             "textDocument/definition": self.textDocument_definition,
             "textDocument/implementation": self.textDocument_implementation,
             "textDocument/documentSymbol": self.textDocument_documentSymbol,
+            "textDocument/codeAction": self.textDocument_codeAction,
             # 'textDocument/completion': self.completion,
             "textDocument/rangeFormatting": self.textDocument_rangeFormatting,
             "workspace/xShowAllFiles": self.workspace_xShowAllFiles,
@@ -136,6 +137,13 @@ class VhdlLanguageServer(object):
 
     def textDocument_hover(self, textDocument=None, position=None):
         return self.workspace.hover(textDocument["uri"], position)
+
+    def textDocument_codeAction(self, textDocument=None, range=None, context=None):
+        # Not yet implemented.
+        # * reorder associations (but keep comments !)
+        # * add missing associations (all or only IN)
+        # * add formal in assocs
+        return None
 
     def m_workspace__did_change_configuration(self, _settings=None):
         for doc_uri in self.workspace.documents:
