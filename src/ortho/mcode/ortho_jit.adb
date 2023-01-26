@@ -14,8 +14,6 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with System.Storage_Elements; use System.Storage_Elements;
-
 with GNAT.OS_Lib; use GNAT.OS_Lib;
 with Ada.Text_IO;
 
@@ -47,6 +45,12 @@ package body Ortho_Jit is
    --  Get address of a global.
    function Get_Address (Decl : O_Dnode) return Address
      renames Ortho_Mcode.Jit.Get_Address;
+
+   function Get_Byte_Size (Typ : O_Tnode) return Storage_Count
+     renames Ortho_Mcode.Jit.Get_Type_Size;
+
+   function Get_Field_Offset (Field : O_Fnode) return Storage_Count
+     renames Ortho_Mcode.Jit.Get_Field_Offset;
 
    --  Do link.
    procedure Link (Status : out Boolean) is

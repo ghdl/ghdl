@@ -204,9 +204,12 @@ package body Binary_File.Memory is
       end if;
    end Write_Memory_Relocate;
 
-   function Get_Section_Addr (Sect : Section_Acc) return System.Address is
+   function Get_Section_Addr (Sect : Section_Acc) return System.Address
+   is
+      function To_Address is new Ada.Unchecked_Conversion
+        (Source => Byte_Array_Acc, Target => System.Address);
    begin
-      return Sect.Data (0)'Address;
+      return To_Address (Sect.Data);
    end Get_Section_Addr;
 
    function Get_Section_Size (Sect : Section_Acc) return Pc_Type is

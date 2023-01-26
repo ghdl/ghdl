@@ -15,6 +15,7 @@
 --  along with this program.  If not, see <gnu.org/licenses>.
 
 with System; use System;
+with System.Storage_Elements; use System.Storage_Elements;
 with Ortho_Nodes; use Ortho_Nodes;
 
 package Ortho_Jit is
@@ -25,6 +26,9 @@ package Ortho_Jit is
    procedure Set_Address (Decl : O_Dnode; Addr : Address);
    --  Get address of a global.
    function Get_Address (Decl : O_Dnode) return Address;
+
+   function Get_Byte_Size (Typ : O_Tnode) return Storage_Count;
+   function Get_Field_Offset (Field : O_Fnode) return Storage_Count;
 
    --  Do link.
    procedure Link (Status : out Boolean);
