@@ -17,6 +17,8 @@
 with Vhdl.Nodes; use Vhdl.Nodes;
 with Vhdl.Tokens; use Vhdl.Tokens;
 with PSL.Types; use PSL.Types;
+with Grt.Vstrings;
+with Grt.Types;
 
 package Vhdl.Prints is
    --  Vertical alignment
@@ -78,4 +80,22 @@ package Vhdl.Prints is
    --  Used for debugging.
    procedure Disp_Expression (Expr: Iir);
    procedure Disp_PSL_Expr (N : PSL_Node);
+
+   --  Buffer of characters.
+   type Vstring_Acc is access Grt.Vstrings.Vstring;
+
+   --  Allocate a buffer.
+   function Allocate_Handle return Vstring_Acc;
+
+   --  Get the length of the buffer.
+   function Get_Length (Handle : Vstring_Acc) return Natural;
+
+   --  Get the buffer as a C string.
+   function Get_C_String (Handle : Vstring_Acc) return Grt.Types.Ghdl_C_String;
+
+   --  Free the buffer.
+   procedure Free_Handle (Handle : Vstring_Acc);
+
+   --  Print node N into buffer BUF.
+   procedure Print_String (N : Iir; Buf : Vstring_Acc);
 end Vhdl.Prints;

@@ -18,6 +18,8 @@
 --  sequence of tokens displayed is the same as the sequence of tokens in the
 --  input file.  If parenthesis are kept by the parser, the only differences
 --  are comments and layout.
+with Ada.Unchecked_Deallocation;
+
 with Types; use Types;
 with Simple_IO;
 with Flags; use Flags;
@@ -1184,7 +1186,7 @@ package body Vhdl.Prints is
          --  For implicit subprogram
          Disp_Type (Ctxt, Get_Type (Inter));
       else
-         Disp_Subtype_Indication (Ctxt, Get_Subtype_Indication (Inter));
+         Disp_Subtype_Indication (Ctxt, Ind);
       end if;
       if Get_Kind (Inter) = Iir_Kind_Interface_Signal_Declaration then
          Disp_Signal_Kind (Ctxt, Inter);
@@ -5379,5 +5381,132 @@ package body Vhdl.Prints is
       Disp_Psl_Expression (Ctxt, N);
       OOB.New_Line;
    end Disp_PSL_Expr;
+
+   package Vstring_Disp_Ctxt is
+      type Vstring_Ctxt is new Disp_Ctxt with record
+         Buf : Vstring_Acc;
+
+         --  Previous token, to decided whether or not a blank must be added.
+         Prev_Tok : Token_Type;
+      end record;
+
+      procedure Init (Ctxt : out Vstring_Ctxt; Buf : Vstring_Acc);
+      procedure Start_Hbox (Ctxt : in out Vstring_Ctxt) is null;
+      procedure Close_Hbox (Ctxt : in out Vstring_Ctxt) is null;
+      procedure Start_Vbox (Ctxt : in out Vstring_Ctxt) is null;
+      procedure Close_Vbox (Ctxt : in out Vstring_Ctxt) is null;
+      procedure Start_Node (Ctxt : in out Vstring_Ctxt; N : Iir) is null;
+      procedure Valign (Ctxt : in out Vstring_Ctxt; Point : Valign_Type)
+        is null;
+      procedure Disp_Token (Ctxt : in out Vstring_Ctxt; Tok : Token_Type);
+      procedure Start_Lit (Ctxt : in out Vstring_Ctxt; Tok : Token_Type);
+      procedure Disp_Char (Ctxt : in out Vstring_Ctxt; C : Character);
+      procedure Close_Lit (Ctxt : in out Vstring_Ctxt) is null;
+   private
+      procedure Put (Ctxt : in out Vstring_Ctxt; C : Character);
+   end Vstring_Disp_Ctxt;
+
+   package body Vstring_Disp_Ctxt is
+      procedure Init (Ctxt : out Vstring_Ctxt; Buf : Vstring_Acc) is
+      begin
+         Ctxt := (Buf => Buf,
+                  Prev_Tok => Tok_Newline);
+      end Init;
+
+      procedure Put (Ctxt : in out Vstring_Ctxt; C : Character) is
+      begin
+         Grt.Vstrings.Append (Ctxt.Buf.all, C);
+      end Put;
+
+      procedure Disp_Space (Ctxt : in out Vstring_Ctxt; Tok : Token_Type)
+      is
+         Prev_Tok : constant Token_Type := Ctxt.Prev_Tok;
+      begin
+         if Need_Space (Tok, Prev_Tok) then
+            Put (Ctxt, ' ');
+         end if;
+         Ctxt.Prev_Tok := Tok;
+      end Disp_Space;
+
+      procedure Disp_Token (Ctxt : in out Vstring_Ctxt; Tok : Token_Type) is
+      begin
+         Disp_Space (Ctxt, Tok);
+         Disp_Str (Ctxt, Image (Tok));
+      end Disp_Token;
+
+      procedure Start_Lit (Ctxt : in out Vstring_Ctxt; Tok : Token_Type) is
+      begin
+         Disp_Space (Ctxt, Tok);
+      end Start_Lit;
+
+      procedure Disp_Char (Ctxt : in out Vstring_Ctxt; C : Character) is
+      begin
+         Put (Ctxt, C);
+      end Disp_Char;
+   end Vstring_Disp_Ctxt;
+
+   procedure Print_String (N : Iir; Buf : Vstring_Acc)
+   is
+      use Vstring_Disp_Ctxt;
+      Ctxt : Vstring_Ctxt;
+   begin
+      Init (Ctxt, Buf);
+
+      case Get_Kind (N) is
+         when Iir_Kind_File_Declaration
+            | Iir_Kind_Signal_Declaration
+            | Iir_Kind_Constant_Declaration
+            | Iir_Kind_Variable_Declaration
+            | Iir_Kind_Free_Quantity_Declaration
+            | Iir_Kinds_Source_Quantity_Declaration =>
+            Disp_Object_Declaration (Ctxt, N);
+         when Iir_Kind_Type_Declaration =>
+            Disp_Type_Declaration (Ctxt, N);
+         when Iir_Kind_Subtype_Declaration =>
+            Disp_Subtype_Declaration (Ctxt, N);
+         when Iir_Kinds_Interface_Object_Declaration =>
+            Disp_Interface_Class (Ctxt, N);
+            Disp_Name_Of (Ctxt, N);
+            --  FIXME: need first interface.
+            Disp_Interface_Mode_And_Type (Ctxt, N);
+         when Iir_Kind_Function_Declaration
+           | Iir_Kind_Procedure_Declaration =>
+            Disp_Subprogram_Declaration (Ctxt, N, False);
+         when Iir_Kind_Element_Declaration =>
+            Disp_Identifier (Ctxt, N);
+            Disp_Token (Ctxt, Tok_Colon);
+            Disp_Subtype_Indication
+              (Ctxt, Or_Else (Get_Subtype_Indication (N), Get_Type (N)));
+         when others =>
+            null;
+      end case;
+   end Print_String;
+
+   function Allocate_Handle return Vstring_Acc is
+   begin
+      return new Grt.Vstrings.Vstring;
+   end Allocate_Handle;
+
+   function Get_Length (Handle : Vstring_Acc) return Natural is
+   begin
+      return Grt.Vstrings.Length (Handle.all);
+   end Get_Length;
+
+   function Get_C_String (Handle : Vstring_Acc)
+                         return Grt.Types.Ghdl_C_String is
+   begin
+      return Grt.Vstrings.Get_C_String (Handle.all);
+   end Get_C_String;
+
+   procedure Free_Handle (Handle : Vstring_Acc)
+   is
+      procedure Deallocate is new Ada.Unchecked_Deallocation
+        (Grt.Vstrings.Vstring, Vstring_Acc);
+      Handle1 : Vstring_Acc;
+   begin
+      Grt.Vstrings.Free (Handle.all);
+      Handle1 := Handle;
+      Deallocate (Handle1);
+   end Free_Handle;
 
 end Vhdl.Prints;

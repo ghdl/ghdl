@@ -14,7 +14,6 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with Ada.Unchecked_Deallocation;
 with Ada.Unchecked_Conversion;
 
 with Types; use Types;
@@ -27,6 +26,8 @@ with Flags;
 with Vhdl.Tokens; use Vhdl.Tokens;
 with Vhdl.Scanner; use Vhdl.Scanner;
 with Vhdl.Prints; use Vhdl.Prints;
+
+with Grt.Vstrings;
 
 package body Vhdl.Formatters is
    --  Check token TOK with the one from the scanner.  Deal with irregular
@@ -900,33 +901,6 @@ package body Vhdl.Formatters is
    end Dump_Fmt;
 
    pragma Unreferenced (Dump_Fmt);
-
-   function Allocate_Handle return Vstring_Acc is
-   begin
-      return new Grt.Vstrings.Vstring;
-   end Allocate_Handle;
-
-   function Get_Length (Handle : Vstring_Acc) return Natural is
-   begin
-      return Grt.Vstrings.Length (Handle.all);
-   end Get_Length;
-
-   function Get_C_String (Handle : Vstring_Acc)
-                         return Grt.Types.Ghdl_C_String is
-   begin
-      return Grt.Vstrings.Get_C_String (Handle.all);
-   end Get_C_String;
-
-   procedure Free_Handle (Handle : Vstring_Acc)
-   is
-      procedure Deallocate is new Ada.Unchecked_Deallocation
-        (Grt.Vstrings.Vstring, Vstring_Acc);
-      Handle1 : Vstring_Acc;
-   begin
-      Grt.Vstrings.Free (Handle.all);
-      Handle1 := Handle;
-      Deallocate (Handle1);
-   end Free_Handle;
 
    type Vstring_Printer_Ctxt is new Format_Disp_Ctxt.Printer_Ctxt with record
       Handle : Vstring_Acc;

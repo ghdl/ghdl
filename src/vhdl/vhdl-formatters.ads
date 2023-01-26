@@ -14,9 +14,8 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with Grt.Vstrings;
-with Grt.Types;
 with Vhdl.Nodes; use Vhdl.Nodes;
+with Vhdl.Prints;
 
 package Vhdl.Formatters is
    type Format_Level is
@@ -39,17 +38,9 @@ package Vhdl.Formatters is
                      First_Line : Positive := 1;
                      Last_Line : Positive := Positive'Last);
 
-   type Vstring_Acc is access Grt.Vstrings.Vstring;
-
    --  Reindent all lines of F between [First_Line; Last_Line] to HANDLE.
    procedure Indent_String (F : Iir_Design_File;
-                            Handle : Vstring_Acc;
+                            Handle : Vhdl.Prints.Vstring_Acc;
                             First_Line : Positive := 1;
                             Last_Line : Positive := Positive'Last);
-
-   function Allocate_Handle return Vstring_Acc;
-   function Get_Length (Handle : Vstring_Acc) return Natural;
-   function Get_C_String (Handle : Vstring_Acc)
-                         return Grt.Types.Ghdl_C_String;
-   procedure Free_Handle (Handle : Vstring_Acc);
 end Vhdl.Formatters;
