@@ -32,7 +32,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
 
-from ctypes import c_int32, c_char_p
+from ctypes import c_int32, c_char_p, c_void_p
 
 from pyTooling.Decorators import export
 
@@ -41,8 +41,8 @@ from pyGHDL.libghdl._decorator import BindToLibGHDL
 
 
 @export
-@BindToLibGHDL("vhdl__formatters__indent_string")
-def Indent_String(File: int, Handle: int, FirstLine: int, LastLine: int) -> None:
+@BindToLibGHDL("vhdl__prints__print_string")
+def Print_String(File: int, Handle: c_void_p) -> None:
     """
     Reindent all lines of F between [First_Line; Last_Line] to :obj:`Handle`.
 
@@ -50,4 +50,46 @@ def Indent_String(File: int, Handle: int, FirstLine: int, LastLine: int) -> None
     :param Handle:    undocumented. Type: ``Vstring_Acc``
     :param FirstLine: undocumented.
     :param LastLine:  undocumented.
+    """
+
+
+@export
+@BindToLibGHDL("vhdl__prints__allocate_handle")
+def Allocate_Handle() -> c_void_p:
+    """
+    .. todo:: Undocumented in Ada code.
+
+    :return: undocumented. Type: ``Vstring_Acc``
+    """
+
+
+@export
+@BindToLibGHDL("vhdl__prints__get_length")
+def Get_Length(Handle : c_void_p) -> int:
+    """
+    .. todo:: Undocumented in Ada code.
+
+    :param Handle: undocumented. Type: ``Vstring_Acc``
+    :return:       undocumented.
+    """
+
+
+@export
+@BindToLibGHDL("vhdl__prints__get_c_string")
+def Get_C_String(Handle : c_void_p) -> c_char_p:
+    """
+    .. todo:: Undocumented in Ada code.
+
+    :param Handle: undocumented. Type: ``Vstring_Acc``
+    :return:       Type: ``Grt.Types.Ghdl_C_String``
+    """
+
+
+@export
+@BindToLibGHDL("vhdl__prints__free_handle")
+def Free_Handle(Handle : c_void_p) -> None:
+    """
+    .. todo:: Undocumented in Ada code.
+
+    :param Handle: undocumented. Type: ``Vstring_Acc``
     """
