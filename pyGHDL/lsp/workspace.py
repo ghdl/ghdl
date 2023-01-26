@@ -46,6 +46,8 @@ class Workspace(object):
         errorout_memory.Install_Handler()
         flags.Flag_Elocations.value = True
         # flags.Verbose.value = True
+        # Gather comments
+        flags.Flag_Gather_Comments.value = True
         # We do analysis even in case of errors.
         parse.Flag_Parse_Parenthesis.value = True
         # Force analysis to get more feedback + navigation even in case
@@ -393,11 +395,15 @@ class Workspace(object):
         if decl_loc is None:
             return None
         res = [decl_loc]
+        # If the declaration is a component, also add the entity.
         if nodes.Get_Kind(decl) == nodes.Iir_Kind.Component_Declaration:
             ent = libraries.Find_Entity_For_Component(nodes.Get_Identifier(decl))
             if ent != nodes.Null_Iir:
                 res.append(self.declaration_to_location(nodes.Get_Library_Unit(ent)))
         return res
+
+    def hover(self, doc_uri, position):
+        return self._docs[doc_uri].hover(position)
 
     def x_show_all_files(self):
         res = []

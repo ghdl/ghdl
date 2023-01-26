@@ -126,7 +126,7 @@ class LanguageProtocolServer(object):
             log.error("Unexpected reply for %s", tid)
             return
         params = msg.get("params", None)
-        # Fix capitalization issues on windws.
+        # Fix capitalization issues on windows.
         if is_windows:
             normalize_rpc_file_uris(msg)
         fmethod = self.handler.dispatcher.get(method, None)

@@ -21,7 +21,7 @@ class VhdlLanguageServer(object):
             "textDocument/didChange": self.textDocument_didChange,
             "textDocument/didClose": self.textDocument_didClose,
             "textDocument/didSave": self.textDocument_didSave,
-            # 'textDocument/hover': self.hover,
+            "textDocument/hover": self.textDocument_hover,
             "textDocument/definition": self.textDocument_definition,
             "textDocument/documentSymbol": self.textDocument_documentSymbol,
             # 'textDocument/completion': self.completion,
@@ -50,7 +50,7 @@ class VhdlLanguageServer(object):
                 "change": lsp.TextDocumentSyncKind.INCREMENTAL,
                 "save": {"includeText": True},
             },
-            "hoverProvider": False,
+            "hoverProvider": True,
             #            'completionProvider': False,
             #            'signatureHelpProvider': {
             #                'triggerCharacters': ['(', ',']
@@ -124,6 +124,9 @@ class VhdlLanguageServer(object):
         if res is not None:
             self.lint(doc_uri)
         return res
+
+    def textDocument_hover(self, textDocument=None, position=None):
+        return self.workspace.hover(textDocument["uri"], position)
 
     def m_workspace__did_change_configuration(self, _settings=None):
         for doc_uri in self.workspace.documents:

@@ -22,14 +22,14 @@ def find_def(n, loc):
     if n == nodes.Null_Iir:
         return None
     k = nodes.Get_Kind(n)
-    if k in [
+    if k in (
         nodes.Iir_Kind.Simple_Name,
         nodes.Iir_Kind.Character_Literal,
         nodes.Iir_Kind.Operator_Symbol,
         nodes.Iir_Kind.Selected_Name,
         nodes.Iir_Kind.Attribute_Name,
         nodes.Iir_Kind.Selected_Element,
-    ]:
+    ):
         n_loc = nodes.Get_Location(n)
         if loc >= n_loc:
             ident = nodes.Get_Identifier(n)
@@ -48,6 +48,57 @@ def find_def(n, loc):
             return res
         unit = nodes.Get_Library_Unit(n)
         return find_def(unit, loc)
+    elif k in (
+        nodes.Iir_Kind.Identity_Operator,
+        nodes.Iir_Kind.Negation_Operator,
+        nodes.Iir_Kind.Addition_Operator,
+        nodes.Iir_Kind.Substraction_Operator,
+        nodes.Iir_Kind.Multiplication_Operator,
+        nodes.Iir_Kind.Division_Operator,
+        nodes.Iir_Kind.Concatenation_Operator,
+        nodes.Iir_Kind.Equality_Operator,
+        nodes.Iir_Kind.Less_Than_Operator,
+        nodes.Iir_Kind.Greater_Than_Operator,
+    ):
+        n_loc = nodes.Get_Location(n)
+        if loc == n_loc:
+            return n
+    elif k in (
+        nodes.Iir_Kind.Or_Operator,
+        nodes.Iir_Kind.Inequality_Operator,
+        nodes.Iir_Kind.Less_Than_Or_Equal_Operator,
+        nodes.Iir_Kind.Greater_Than_Or_Equal_Operator,
+        nodes.Iir_Kind.Condition_Operator,
+        nodes.Iir_Kind.Exponentiation_Operator,
+    ):
+        n_loc = nodes.Get_Location(n)
+        if n_loc <= loc <= n_loc + 1:
+            return n
+    elif k in (
+        nodes.Iir_Kind.Absolute_Operator,
+        nodes.Iir_Kind.Not_Operator,
+        nodes.Iir_Kind.And_Operator,
+        nodes.Iir_Kind.Nor_Operator,
+        nodes.Iir_Kind.Xor_Operator,
+        nodes.Iir_Kind.Sll_Operator,
+        nodes.Iir_Kind.Sla_Operator,
+        nodes.Iir_Kind.Srl_Operator,
+        nodes.Iir_Kind.Sra_Operator,
+        nodes.Iir_Kind.Rol_Operator,
+        nodes.Iir_Kind.Ror_Operator,
+        nodes.Iir_Kind.Modulus_Operator,
+        nodes.Iir_Kind.Remainder_Operator,
+    ):
+        n_loc = nodes.Get_Location(n)
+        if n_loc <= loc <= n_loc + 2:
+            return n
+    elif k in (
+        nodes.Iir_Kind.Nand_Operator,
+        nodes.Iir_Kind.Xnor_Operator,
+    ):
+        n_loc = nodes.Get_Location(n)
+        if n_loc <= loc <= n_loc + 3:
+            return n
 
     # This is *much* faster than using node_iter!
     for f in pyutils.fields_iter(n):
@@ -84,17 +135,20 @@ def find_def(n, loc):
 
     return None
 
-
-def goto_definition(n, loc):
-    """Return the declaration (as a node) under :param loc: or None."""
+def find_node_by_loc(n, loc):
+    """Return the denoting node for :param loc: or None."""
     ref = find_def(n, loc)
     log.debug("for loc %u found node %s", loc, ref)
+    return ref
+
+def find_definition_by_loc(n, loc):
+    """Return the declaration (as a node) under :param loc: or None."""
+    ref = find_node_by_loc(n, loc)
     if ref is None:
         return None
-    log.debug(
-        "for loc %u id=%s",
-        loc,
-        name_table.Get_Name_Ptr(nodes.Get_Identifier(ref)),
-    )
-    ent = nodes.Get_Named_Entity(ref)
+    k = nodes.Get_Kind(ref)
+    if k in nodes.Iir_Kinds.Denoting_Name or k == nodes.Iir_Kind.Selected_Element:
+        ent = nodes.Get_Named_Entity(ref)
+    else:
+        ent = nodes.Get_Implementation(ref)
     return None if ent == nodes.Null_Iir else ent
