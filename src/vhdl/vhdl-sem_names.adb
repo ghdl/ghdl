@@ -3767,6 +3767,7 @@ package body Vhdl.Sem_Names is
       --  If the prefix is an object, we know its type is constrained.
       if not Is_Prefix_Object
         and then not Get_Index_Constraint_Flag (Prefix_Type)
+        and then Get_Identifier (Attr) /= Name_Element
       then
          Error_Msg_Sem (+Attr, "prefix type is not constrained");
          --  We continue using the unconstrained array type.
