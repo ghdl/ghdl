@@ -4205,6 +4205,17 @@ package body Vhdl.Evaluation is
       end case;
    end Int_In_Range;
 
+   function Fp_In_Range (Val : Fp64;
+                         Dir : Direction_Type; L, R : Fp64) return Boolean is
+   begin
+      case Dir is
+         when Dir_To =>
+            return Val >= L and then Val <= R;
+         when Dir_Downto =>
+            return Val <= L and then Val >= R;
+      end case;
+   end Fp_In_Range;
+
    function Eval_Int_In_Range (Val : Int64; Bound : Iir) return Boolean
    is
       L, R : Iir;
@@ -4244,40 +4255,22 @@ package body Vhdl.Evaluation is
                when others =>
                   Error_Kind ("eval_phys_in_range(1)", Get_Type (Bound));
             end case;
-            case Get_Direction (Bound) is
-               when Dir_To =>
-                  if Val < Left or else Val > Right then
-                     return False;
-                  end if;
-               when Dir_Downto =>
-                  if Val > Left or else Val < Right then
-                     return False;
-                  end if;
-            end case;
+            return Int_In_Range (Val, Get_Direction (Bound), Left, Right);
          when others =>
             Error_Kind ("eval_phys_in_range", Bound);
       end case;
       return True;
    end Eval_Phys_In_Range;
 
-   function Eval_Fp_In_Range (Val : Fp64; Bound : Iir) return Boolean is
+   function Eval_Fp_In_Range (Val : Fp64; Bound : Iir) return Boolean
+   is
+      L, R : Fp64;
    begin
       case Get_Kind (Bound) is
          when Iir_Kind_Range_Expression =>
-            case Get_Direction (Bound) is
-               when Dir_To =>
-                  if Val < Get_Fp_Value (Get_Left_Limit (Bound))
-                    or else Val > Get_Fp_Value (Get_Right_Limit (Bound))
-                  then
-                     return False;
-                  end if;
-               when Dir_Downto =>
-                  if Val > Get_Fp_Value (Get_Left_Limit (Bound))
-                    or else Val < Get_Fp_Value (Get_Right_Limit (Bound))
-                  then
-                     return False;
-                  end if;
-            end case;
+            L := Get_Fp_Value (Get_Left_Limit (Bound));
+            R := Get_Fp_Value (Get_Right_Limit (Bound));
+            return Fp_In_Range (Val, Get_Direction (Bound), L, R);
          when others =>
             Error_Kind ("eval_fp_in_range", Bound);
       end case;
@@ -4292,33 +4285,13 @@ package body Vhdl.Evaluation is
       case Iir_Kinds_Scalar_Type_And_Subtype_Definition (Get_Kind (Vtype)) is
          when Iir_Kind_Floating_Subtype_Definition
            | Iir_Kind_Floating_Type_Definition =>
-            declare
-               Lv : constant Fp64 := Get_Fp_Value (L);
-               Rv : constant Fp64 := Get_Fp_Value (R);
-               V : constant Fp64 := Get_Fp_Value (Val);
-            begin
-               case Dir is
-                  when Dir_To =>
-                     return V >= Lv and V <= Rv;
-                  when Dir_Downto =>
-                     return V <= Lv and V >= Rv;
-               end case;
-            end;
+            return Fp_In_Range
+              (Get_Fp_Value (Val), Dir, Get_Fp_Value (L), Get_Fp_Value (R));
          when Iir_Kinds_Discrete_Type_Definition
            | Iir_Kind_Physical_Type_Definition
            | Iir_Kind_Physical_Subtype_Definition =>
-            declare
-               Lv : constant Int64 := Eval_Pos (L);
-               Rv : constant Int64 := Eval_Pos (R);
-               V : constant Int64 := Eval_Pos (Val);
-            begin
-               case Dir is
-                  when Dir_To =>
-                     return V >= Lv and V <= Rv;
-                  when Dir_Downto =>
-                     return V <= Lv and V >= Rv;
-               end case;
-            end;
+            return Int_In_Range
+              (Eval_Pos (Val), Dir, Eval_Pos (L), Eval_Pos (R));
       end case;
    end Eval_In_Range;
 
