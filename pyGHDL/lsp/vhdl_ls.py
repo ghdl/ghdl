@@ -17,6 +17,7 @@ class VhdlLanguageServer(object):
             "shutdown": self.shutdown,
             "$/setTraceNotification": self.setTraceNotification,
             "$/setTrace": self.setTrace,
+            "$/cancelRequest": self.cancelRequest,
             "textDocument/didOpen": self.textDocument_didOpen,
             "textDocument/didChange": self.textDocument_didChange,
             "textDocument/didClose": self.textDocument_didClose,
@@ -41,6 +42,9 @@ class VhdlLanguageServer(object):
         pass
 
     def setTrace(self, value):
+        pass
+
+    def cancelRequest(self, id):
         pass
 
     def capabilities(self):
