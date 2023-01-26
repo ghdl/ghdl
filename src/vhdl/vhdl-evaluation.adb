@@ -4194,6 +4194,17 @@ package body Vhdl.Evaluation is
       end if;
    end Eval_Expr_Check_If_Static;
 
+   function Null_Int_Range
+     (Dir : Direction_Type; L, R : Int64) return Boolean is
+   begin
+      case Dir is
+         when Dir_To =>
+            return L > R;
+         when Dir_Downto =>
+            return L < R;
+      end case;
+   end Null_Int_Range;
+
    function Int_In_Range (Val : Int64;
                           Dir : Direction_Type; L, R : Int64) return Boolean is
    begin
@@ -4476,18 +4487,7 @@ package body Vhdl.Evaluation is
          when Iir_Kinds_Discrete_Type_Definition
            | Iir_Kind_Physical_Type_Definition
            | Iir_Kind_Physical_Subtype_Definition =>
-            declare
-               L, R : Int64;
-            begin
-               L := Eval_Pos (L_Expr);
-               R := Eval_Pos (R_Expr);
-               case Dir is
-                  when Dir_To =>
-                     return L > R;
-                  when Dir_Downto =>
-                     return L < R;
-               end case;
-            end;
+            return Null_Int_Range (Dir, Eval_Pos (L_Expr), Eval_Pos (R_Expr));
          when Iir_Kind_Floating_Subtype_Definition
            | Iir_Kind_Floating_Type_Definition =>
             declare
@@ -4657,12 +4657,7 @@ package body Vhdl.Evaluation is
    begin
       Left := Eval_Pos (Get_Left_Limit (Rng));
       Right := Eval_Pos (Get_Right_Limit (Rng));
-      case Get_Direction (Rng) is
-         when Dir_To =>
-            return Right < Left;
-         when Dir_Downto =>
-            return Left < Right;
-      end case;
+      return Null_Int_Range (Get_Direction (Rng), Left, Right);
    end Eval_Is_Null_Discrete_Range;
 
    function Eval_Pos (Expr : Iir) return Int64 is
