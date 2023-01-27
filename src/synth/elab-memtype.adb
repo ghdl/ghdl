@@ -122,4 +122,21 @@ package body Elab.Memtype is
       return V;
    end Read_Fp64;
 
+   procedure Write_Ptr (Mem : Memory_Ptr; Val : Memory_Ptr)
+   is
+      V : Memory_Ptr;
+      for V'Address use To_Address (Mem);
+      pragma Import (Ada, V);
+   begin
+      V := Val;
+   end Write_Ptr;
+
+   function Read_Ptr (Mem : Memory_Ptr) return Memory_Ptr
+   is
+      V : Memory_Ptr;
+      for V'Address use To_Address (Mem);
+      pragma Import (Ada, V);
+   begin
+      return V;
+   end Read_Ptr;
 end Elab.Memtype;
