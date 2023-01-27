@@ -28,7 +28,7 @@ with Grt.Main;
 with Grt.Lib;
 with Grt.Processes;
 with Grt.Rtis;
-with Grt.Files;
+with Grt.Files_Lib;
 with Grt.Signals;
 with Grt.Vhdl_Types; use Grt.Vhdl_Types;
 with Grt.Images;
@@ -347,39 +347,39 @@ package body Trans_Link is
            Grt.Processes.Ghdl_Protected_Fini'Address);
 
       Def (Trans_Decls.Ghdl_Text_File_Elaborate,
-           Grt.Files.Ghdl_Text_File_Elaborate'Address);
+           Grt.Files_Lib.Ghdl_Text_File_Elaborate'Address);
       Def (Trans_Decls.Ghdl_Text_File_Finalize,
-           Grt.Files.Ghdl_Text_File_Finalize'Address);
+           Grt.Files_Lib.Ghdl_Text_File_Finalize'Address);
       Def (Trans_Decls.Ghdl_Text_File_Open,
-           Grt.Files.Ghdl_Text_File_Open'Address);
+           Grt.Files_Lib.Ghdl_Text_File_Open'Address);
       Def (Trans_Decls.Ghdl_Text_File_Open_Status,
-           Grt.Files.Ghdl_Text_File_Open_Status'Address);
+           Grt.Files_Lib.Ghdl_Text_File_Open_Status'Address);
       Def (Trans_Decls.Ghdl_Text_Write,
-           Grt.Files.Ghdl_Text_Write'Address);
+           Grt.Files_Lib.Ghdl_Text_Write'Address);
       Def (Trans_Decls.Ghdl_Text_Read_Length,
-           Grt.Files.Ghdl_Text_Read_Length'Address);
+           Grt.Files_Lib.Ghdl_Text_Read_Length'Address);
       Def (Trans_Decls.Ghdl_Text_File_Close,
-           Grt.Files.Ghdl_Text_File_Close'Address);
+           Grt.Files_Lib.Ghdl_Text_File_Close'Address);
 
       Def (Trans_Decls.Ghdl_File_Elaborate,
-           Grt.Files.Ghdl_File_Elaborate'Address);
+           Grt.Files_Lib.Ghdl_File_Elaborate'Address);
       Def (Trans_Decls.Ghdl_File_Finalize,
-           Grt.Files.Ghdl_File_Finalize'Address);
+           Grt.Files_Lib.Ghdl_File_Finalize'Address);
       Def (Trans_Decls.Ghdl_File_Open,
-           Grt.Files.Ghdl_File_Open'Address);
+           Grt.Files_Lib.Ghdl_File_Open'Address);
       Def (Trans_Decls.Ghdl_File_Open_Status,
-           Grt.Files.Ghdl_File_Open_Status'Address);
+           Grt.Files_Lib.Ghdl_File_Open_Status'Address);
       Def (Trans_Decls.Ghdl_File_Close,
-           Grt.Files.Ghdl_File_Close'Address);
+           Grt.Files_Lib.Ghdl_File_Close'Address);
       Def (Trans_Decls.Ghdl_File_Flush,
-           Grt.Files.Ghdl_File_Flush'Address);
+           Grt.Files_Lib.Ghdl_File_Flush'Address);
       Def (Trans_Decls.Ghdl_Write_Scalar,
-           Grt.Files.Ghdl_Write_Scalar'Address);
+           Grt.Files_Lib.Ghdl_Write_Scalar'Address);
       Def (Trans_Decls.Ghdl_Read_Scalar,
-           Grt.Files.Ghdl_Read_Scalar'Address);
+           Grt.Files_Lib.Ghdl_Read_Scalar'Address);
 
       Def (Trans_Decls.Ghdl_File_Endfile,
-           Grt.Files.Ghdl_File_Endfile'Address);
+           Grt.Files_Lib.Ghdl_File_Endfile'Address);
 
       Def (Trans_Decls.Ghdl_Image_B1,
            Grt.Images.Ghdl_Image_B1'Address);

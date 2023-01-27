@@ -34,7 +34,7 @@ with Grt.Change_Generics;
 --  These are subprograms called only from GHDL generated code.
 --  They are with'ed in order to be present in the binary.
 pragma Warnings (Off);
-with Grt.Files;
+with Grt.Files_Lib;
 with Grt.Types;
 with Grt.Lib;
 with Grt.Shadow_Ieee;

@@ -20,9 +20,10 @@
 --  covered by the GNU General Public License. This exception does not
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
-with Grt.Types; use Grt.Types;
-with Grt.Vhdl_Types; use Grt.Vhdl_Types;
 with Interfaces;
+
+with Grt.Types; use Grt.Types;
+with Grt.Stdio;
 
 package Grt.Files is
    type Ghdl_File_Index is new Interfaces.Integer_32;
@@ -38,76 +39,32 @@ package Grt.Files is
    Name_Error   : constant Ghdl_I32 := 2;
    Mode_Error   : constant Ghdl_I32 := 3;
 
-   --  General files.
-   function Ghdl_File_Endfile (File : Ghdl_File_Index) return Boolean;
+   subtype C_Files is Grt.Stdio.FILEs;
 
-   --  Elaboration.
-   function Ghdl_Text_File_Elaborate return Ghdl_File_Index;
-   function Ghdl_File_Elaborate (Sig : Ghdl_C_String) return Ghdl_File_Index;
+   --  Create a file entry (add an entry to the table).
+   --  The file is not named and not opened.
+   function Create_File (Is_Text : Boolean;
+                         Kind : Character;
+                         Sig : Ghdl_C_String) return Ghdl_File_Index;
 
-   --  Finalization.
-   procedure Ghdl_Text_File_Finalize (File : Ghdl_File_Index);
-   procedure Ghdl_File_Finalize (File : Ghdl_File_Index);
 
-   --  Subprograms.
-   procedure Ghdl_Text_File_Open
-     (File : Ghdl_File_Index; Mode : Ghdl_I32; Str : Std_String_Ptr);
-   function Ghdl_Text_File_Open_Status
-     (File : Ghdl_File_Index; Mode : Ghdl_I32; Str : Std_String_Ptr)
-     return Ghdl_I32;
+   --  Check INDEX is a valid index.
+   function Check_File_Index (Index : Ghdl_File_Index) return Boolean;
 
-   procedure Ghdl_File_Open
-     (File : Ghdl_File_Index; Mode : Ghdl_I32; Str : Std_String_Ptr);
-   function Ghdl_File_Open_Status
-     (File : Ghdl_File_Index; Mode : Ghdl_I32; Str : Std_String_Ptr)
-     return Ghdl_I32;
+   --  Return the file for INDEX.
+   function Get_File_Stream (Index : Ghdl_File_Index) return C_Files;
+   procedure Set_File_Stream (Index : Ghdl_File_Index;
+                              Stream : C_Files; Kind : Character);
 
-   procedure Ghdl_Text_Write (File : Ghdl_File_Index; Str : Std_String_Ptr);
-   procedure Ghdl_Write_Scalar (File : Ghdl_File_Index;
-                                Ptr : Ghdl_Ptr;
-                                Length : Ghdl_Index_Type);
+   --  Get the file signature.
+   function Get_File_Signature (Index : Ghdl_File_Index) return Ghdl_C_String;
 
-   procedure Ghdl_Read_Scalar (File : Ghdl_File_Index;
-                               Ptr : Ghdl_Ptr;
-                               Length : Ghdl_Index_Type);
+   --  Return True iff file for INDEX is open.
+   function Is_Open (Index : Ghdl_File_Index) return Boolean;
 
-   function Ghdl_Text_Read_Length
-     (File : Ghdl_File_Index; Str : Std_String_Ptr) return Std_Integer;
+   function Get_Kind (Index : Ghdl_File_Index) return Character;
 
-   procedure Ghdl_Untruncated_Text_Read
-     (File : Ghdl_File_Index; Str : Std_String_Ptr; Len : Std_Integer_Acc);
+   function Is_Text_File (Index : Ghdl_File_Index) return Boolean;
 
-   procedure Ghdl_Text_File_Close (File : Ghdl_File_Index);
-   procedure Ghdl_File_Close (File : Ghdl_File_Index);
-
-   procedure Ghdl_File_Flush (File : Ghdl_File_Index);
-private
-   pragma Export (Ada, Ghdl_File_Endfile, "__ghdl_file_endfile");
-
-   pragma Export (C, Ghdl_Text_File_Elaborate, "__ghdl_text_file_elaborate");
-   pragma Export (C, Ghdl_File_Elaborate, "__ghdl_file_elaborate");
-
-   pragma Export (C, Ghdl_Text_File_Finalize, "__ghdl_text_file_finalize");
-   pragma Export (C, Ghdl_File_Finalize, "__ghdl_file_finalize");
-
-   pragma Export (C, Ghdl_Text_File_Open, "__ghdl_text_file_open");
-   pragma Export (C, Ghdl_Text_File_Open_Status,
-                  "__ghdl_text_file_open_status");
-
-   pragma Export (C, Ghdl_File_Open, "__ghdl_file_open");
-   pragma Export (C, Ghdl_File_Open_Status, "__ghdl_file_open_status");
-
-   pragma Export (C, Ghdl_Text_Write, "__ghdl_text_write");
-   pragma Export (C, Ghdl_Write_Scalar, "__ghdl_write_scalar");
-
-   pragma Export (C, Ghdl_Read_Scalar, "__ghdl_read_scalar");
-
-   pragma Export (C, Ghdl_Text_Read_Length, "__ghdl_text_read_length");
-   pragma Export (C, Ghdl_Untruncated_Text_Read,
-                  "std__textio__untruncated_text_read");
-
-   pragma Export (C, Ghdl_Text_File_Close, "__ghdl_text_file_close");
-   pragma Export (C, Ghdl_File_Close, "__ghdl_file_close");
-
-   pragma Export (C, Ghdl_File_Flush, "__ghdl_file_flush");
+   procedure Destroy_File (Index : Ghdl_File_Index);
 end Grt.Files;

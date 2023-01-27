@@ -9,7 +9,7 @@ with Vhdl.Errors; use Vhdl.Errors;
 with Grt.Types; use Grt.Types;
 with Grt.Dynload; use Grt.Dynload;
 with Grt.Lib;
-with Grt.Files;
+with Grt.Files_Lib;
 
 package body Trans_Foreign is
    --  Elaboration mode.
@@ -99,7 +99,7 @@ package body Trans_Foreign is
                  Name_Table.Image (Get_Identifier (Decl));
             begin
                if Name = "untruncated_text_read" then
-                  Res := Grt.Files.Ghdl_Untruncated_Text_Read'Address;
+                  Res := Grt.Files_Lib.Ghdl_Untruncated_Text_Read'Address;
                elsif Name = "textio_read_real" then
                   Res := Grt.Lib.Textio_Read_Real'Address;
                elsif Name = "textio_write_real" then
