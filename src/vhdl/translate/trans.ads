@@ -1855,12 +1855,13 @@ package Trans is
             Object_Rti      : O_Dnode := O_Dnode_Null;
 
          when Kind_Signal =>
-            --  The current value of the signal.
+            --  The current value of the signal, for signal declarations.
             --  Also the initial value of collapsed ports.
             Signal_Val      : Var_Type := Null_Var;
             --  Pointer to the value, for ports.
             Signal_Valp     : Var_Type := Null_Var;
             --  A pointer to the signal (contains meta data).
+            --  Always present.
             Signal_Sig      : Var_Type;
             --  Direct driver for signal (if any).
             Signal_Driver   : Var_Type := Null_Var;
