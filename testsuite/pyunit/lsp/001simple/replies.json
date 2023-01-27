@@ -11,9 +11,10 @@
             "includeText": true
           }
         },
-        "hoverProvider": false,
+        "hoverProvider": true,
         "definitionProvider": true,
         "referencesProvider": false,
+        "implementationProvider": true,
         "documentHighlightProvider": false,
         "documentSymbolProvider": true,
         "codeActionProvider": false,
