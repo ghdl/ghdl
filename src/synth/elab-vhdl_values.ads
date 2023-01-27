@@ -21,7 +21,7 @@ with Ada.Unchecked_Deallocation;
 with Types; use Types;
 with Areapools; use Areapools;
 
-with Grt.Files_Operations;
+with Grt.Files;
 
 with Vhdl.Nodes; use Vhdl.Nodes;
 
@@ -76,7 +76,7 @@ package Elab.Vhdl_Values is
    type Protected_Index is new Uns32;
    No_Protected_Index : constant Protected_Index := 0;
 
-   subtype File_Index is Grt.Files_Operations.Ghdl_File_Index;
+   subtype File_Index is Grt.Files.Ghdl_File_Index;
 
    type Signal_Index_Type is new Uns32;
    No_Signal_Index : constant Signal_Index_Type := 0;

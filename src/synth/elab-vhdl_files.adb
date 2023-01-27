@@ -25,6 +25,7 @@ with Vhdl.Utils; use Vhdl.Utils;
 
 with Grt.Types; use Grt.Types;
 with Grt.Vhdl_Types; use Grt.Vhdl_Types;
+with Grt.Files;
 with Grt.Files_Operations; use Grt.Files_Operations;
 with Grt.Stdio;
 
@@ -224,9 +225,9 @@ package body Elab.Vhdl_Files is
       else
          case Get_Mode (Decl) is
             when Iir_In_Mode =>
-               File_Mode := Read_Mode;
+               File_Mode := Grt.Files.Read_Mode;
             when Iir_Out_Mode =>
-               File_Mode := Write_Mode;
+               File_Mode := Grt.Files.Write_Mode;
             when others =>
                raise Internal_Error;
          end case;

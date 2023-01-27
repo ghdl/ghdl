@@ -21,20 +21,12 @@
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
 
-with Interfaces;
-
 with Grt.Types; use Grt.Types;
 with Grt.Vhdl_Types; use Grt.Vhdl_Types;
 with Grt.Stdio;
+with Grt.Files; use Grt.Files;
 
 package Grt.Files_Operations is
-   type Ghdl_File_Index is new Interfaces.Integer_32;
-
-   --  File open mode.
-   Read_Mode   : constant Ghdl_I32 := 0;
-   Write_Mode  : constant Ghdl_I32 := 1;
-   Append_Mode : constant Ghdl_I32 := 2;
-
    --  file_open_status.
    Open_Ok      : constant Ghdl_I32 := 0;
    Status_Error : constant Ghdl_I32 := 1;

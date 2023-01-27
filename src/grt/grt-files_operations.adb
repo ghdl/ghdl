@@ -20,70 +20,34 @@
 --  covered by the GNU General Public License. This exception does not
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
+with System; use System;
+
 with Grt.Stdio; use Grt.Stdio;
 with Grt.C; use Grt.C;
-with Grt.Table;
-with System; use System;
-pragma Elaborate_All (Grt.Table);
 
 package body Grt.Files_Operations is
-   subtype C_Files is Grt.Stdio.FILEs;
-
    --  The end of lines
    C_LF : constant int := 10;   --  \n
    C_CR : constant int := 13;   --  \r
 
    Auto_Flush : constant Boolean := False;
 
-   type File_Entry_Type is record
-      --  The corresponding C stream.
-      Stream : C_Files;
-
-      Signature : Ghdl_C_String;
-
-      --  Open kind: r, a or w.
-      Kind : Character;
-
-      Is_Text : Boolean;
-
-      --  True if the file entry is used.
-      Is_Alive : Boolean;
-   end record;
-
-   package Files_Table is new Grt.Table
-     (Table_Component_Type => File_Entry_Type,
-      Table_Index_Type => Ghdl_File_Index,
-      Table_Low_Bound => 1,
-      Table_Initial => 2);
-
    --  Get the C stream for INDEX.
    procedure Get_File
      (Index : Ghdl_File_Index; Res : out C_Files; Status : out Op_Status) is
    begin
-      if Index not in Files_Table.First .. Files_Table.Last then
+      if not Check_File_Index (Index) then
          Status := Op_Bad_Index;
       else
          Status := Op_Ok;
-         Res := Files_Table.Table (Index).Stream;
+         Res := Get_File_Stream (Index);
       end if;
    end Get_File;
-
-   --  Assume INDEX is correct.
-   function Is_Open (Index : Ghdl_File_Index) return Boolean is
-   begin
-      return Files_Table.Table (Index).Stream /= NULL_Stream;
-   end Is_Open;
-
-   --  Assume INDEX is correct.
-   function Get_Kind (Index : Ghdl_File_Index) return Character is
-   begin
-      return Files_Table.Table (Index).Kind;
-   end Get_Kind;
 
    procedure Check_File_Mode
      (Index : Ghdl_File_Index; Is_Text : Boolean; Status : out Op_Status) is
    begin
-      if Files_Table.Table (Index).Is_Text /= Is_Text then
+      if Is_Text_File (Index) /= Is_Text then
          Status := Op_Bad_Mode;
       else
          Status := Op_Ok;
@@ -136,18 +100,6 @@ package body Grt.Files_Operations is
       Status := Op_Ok;
    end Check_Write;
 
-   function Create_File
-     (Is_Text : Boolean; Kind : Character; Sig : Ghdl_C_String)
-     return Ghdl_File_Index is
-   begin
-      Files_Table.Append ((Stream => NULL_Stream,
-                           Signature => Sig,
-                           Kind => Kind,
-                           Is_Text => Is_Text,
-                           Is_Alive => True));
-      return Files_Table.Last;
-   end Create_File;
-
    procedure Destroy_File
      (Is_Text : Boolean; Index : Ghdl_File_Index; Status : out Op_Status)
    is
@@ -167,14 +119,7 @@ package body Grt.Files_Operations is
       end if;
 
       --  Cleanup.
-      Files_Table.Table (Index).Is_Alive := False;
-      if Index = Files_Table.Last then
-         while Files_Table.Last >= Files_Table.First
-           and then Files_Table.Table (Files_Table.Last).Is_Alive = False
-         loop
-            Files_Table.Decrement_Last;
-         end loop;
-      end if;
+      Destroy_File (Index);
    end Destroy_File;
 
    function Ghdl_Text_File_Elaborate return Ghdl_File_Index is
@@ -307,7 +252,7 @@ package body Grt.Files_Operations is
          F := stdout;
       else
          Str_Mode (1) := Kind;
-         if Files_Table.Table (File).Is_Text then
+         if Is_Text_File (File) then
             Str_Mode (2) := NUL;
          else
             Str_Mode (2) := 'b';
@@ -323,7 +268,7 @@ package body Grt.Files_Operations is
          -- end if;
       end if;
 
-      Sig := Files_Table.Table (File).Signature;
+      Sig := Get_File_Signature (File);
       if Sig /= null then
          Sig_Len := strlen (Sig);
          case Mode is
@@ -371,8 +316,7 @@ package body Grt.Files_Operations is
          end case;
       end if;
 
-      Files_Table.Table (File).Stream := F;
-      Files_Table.Table (File).Kind := Kind;
+      Set_File_Stream (File, F, Kind);
 
       Status := Op_Ok;
    end File_Open;
@@ -614,7 +558,8 @@ package body Grt.Files_Operations is
          Status := Op_Close_Error;
          return;
       end if;
-      Files_Table.Table (File).Stream := NULL_Stream;
+      Set_File_Stream (File, NULL_Stream, ' ');
+
       Status := Op_Ok;
    end File_Close;
 
