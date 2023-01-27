@@ -215,21 +215,21 @@ class Document(object):
         if buf_len == 0:
             res = None
         else:
-            txt = ''
+            txt = ""
             # Extract comments
             t_loc = nodes.Get_Location(t)
             t_fe = files_map.Location_To_File(t_loc)
             comm = file_comments.Find_First_Comment(t_fe, t)
             while comm != file_comments.No_Comment_Index:
                 # Add a comment in 'preformatted' mode
-                txt += '    ' + file_comments.Get_Comment(t_fe, comm) + '\n'
+                txt += "    " + file_comments.Get_Comment(t_fe, comm) + "\n"
                 comm = file_comments.Get_Next_Comment(t_fe, comm)
             if txt:
                 # Add a separation line between comments and declaration.
-                txt += '---\n'
+                txt += "---\n"
             newtext = buffer[:buf_len].decode(Document.encoding)
             txt += "```vhdl\n" + newtext + "\n```"
-            res = {'contents': { 'kind': 'markdown', 'value': txt }}
+            res = {"contents": {"kind": "markdown", "value": txt}}
         prints.Free_Handle(hand)
         return res
 

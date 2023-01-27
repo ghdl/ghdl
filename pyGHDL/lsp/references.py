@@ -135,11 +135,13 @@ def find_def(n, loc):
 
     return None
 
+
 def find_node_by_loc(n, loc):
     """Return the denoting node for :param loc: or None."""
     ref = find_def(n, loc)
     log.debug("for loc %u found node %s", loc, ref)
     return ref
+
 
 def find_definition_by_loc(n, loc):
     """Return the declaration (as a node) under :param loc: or None."""

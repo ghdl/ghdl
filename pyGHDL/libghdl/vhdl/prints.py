@@ -65,7 +65,7 @@ def Allocate_Handle() -> c_void_p:
 
 @export
 @BindToLibGHDL("vhdl__prints__get_length")
-def Get_Length(Handle : c_void_p) -> int:
+def Get_Length(Handle: c_void_p) -> int:
     """
     .. todo:: Undocumented in Ada code.
 
@@ -76,7 +76,7 @@ def Get_Length(Handle : c_void_p) -> int:
 
 @export
 @BindToLibGHDL("vhdl__prints__get_c_string")
-def Get_C_String(Handle : c_void_p) -> c_char_p:
+def Get_C_String(Handle: c_void_p) -> c_char_p:
     """
     .. todo:: Undocumented in Ada code.
 
@@ -87,7 +87,7 @@ def Get_C_String(Handle : c_void_p) -> c_char_p:
 
 @export
 @BindToLibGHDL("vhdl__prints__free_handle")
-def Free_Handle(Handle : c_void_p) -> None:
+def Free_Handle(Handle: c_void_p) -> None:
     """
     .. todo:: Undocumented in Ada code.
 
