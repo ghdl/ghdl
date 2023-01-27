@@ -26,16 +26,12 @@ with Ghdlmain; use Ghdlmain;
 with Ghdllocal; use Ghdllocal;
 with Simple_IO; use Simple_IO;
 
-with Hash;
-with Interning;
-with Name_Table;
 with Flags;
 with Options;
 with Errorout; use Errorout;
 
 with Vhdl.Nodes; use Vhdl.Nodes;
 with Vhdl.Std_Package;
-with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Canon;
 with Vhdl.Ieee.Std_Logic_1164;
 with Vhdl.Back_End;
@@ -44,12 +40,10 @@ with Ortho_Nodes; use Ortho_Nodes;
 with Trans_Decls;
 with Translation;
 with Trans_Link;
+with Trans_Foreign;
 
 with Grt.Main;
 with Grt.Modules;
-with Grt.Dynload; use Grt.Dynload;
-with Grt.Lib;
-with Grt.Files;
 with Grt.Options;
 with Grt.Types;
 with Grt.Errors;
@@ -57,41 +51,9 @@ with Grt.Backtraces.Jit;
 with Grt.Analog_Solver;
 
 with Ghdlcomp; use Ghdlcomp;
-with Foreigns;
 with Grtlink;
 
 package body Ghdlrun is
-   --  Elaboration mode.
-   type Shlib_Object_Type is record
-      Name : String_Access;
-      Handler : Address;
-   end record;
-
-   function Shlib_Build (Name : String) return Shlib_Object_Type
-   is
-      Name_Acc : constant String_Access := new String'(Name);
-      C_Name : constant String := Name & Nul;
-      Handler : Address;
-   begin
-      Handler :=
-        Grt_Dynload_Open (Grt.Types.To_Ghdl_C_String (C_Name'Address));
-      return (Name => Name_Acc,
-              Handler => Handler);
-   end Shlib_Build;
-
-   function Shlib_Equal (Obj : Shlib_Object_Type; Param : String)
-                        return Boolean is
-   begin
-      return Obj.Name.all = Param;
-   end Shlib_Equal;
-
-   package Shlib_Interning is new Interning
-     (Params_Type => String,
-      Object_Type => Shlib_Object_Type,
-      Hash => Hash.String_Hash,
-      Build => Shlib_Build,
-      Equal => Shlib_Equal);
-
    procedure Foreign_Hook (Decl : Iir;
                            Info : Vhdl.Back_End.Foreign_Info_Type;
                            Ortho : O_Dnode);
@@ -128,7 +90,7 @@ package body Ghdlrun is
       end if;
 
       Translation.Foreign_Hook := Foreign_Hook'Access;
-      Shlib_Interning.Init;
+      Trans_Foreign.Init;
 
       --  FIXME: add a flag to force unnesting.
       --  Translation.Flag_Unnest_Subprograms := True;
@@ -231,76 +193,12 @@ package body Ghdlrun is
                            Info : Vhdl.Back_End.Foreign_Info_Type;
                            Ortho : O_Dnode)
    is
-      use Vhdl.Back_End;
       Res : Address;
    begin
-      case Info.Kind is
-         when Foreign_Vhpidirect =>
-            declare
-               Name : constant String :=
-                 Info.Subprg_Name (1 .. Info.Subprg_Len);
-               Lib : constant String :=
-                 Info.Lib_Name (1 .. Info.Lib_Len);
-               Shlib : Shlib_Object_Type;
-            begin
-               if Info.Lib_Len = 0
-                 or else Lib = "null"
-               then
-                  Res := Foreigns.Find_Foreign (Name);
-                  if Res = Null_Address then
-                     Error_Msg_Sem
-                       (+Decl, "unknown foreign VHPIDIRECT '" & Name & "'");
-                     return;
-                  end if;
-               else
-                  Shlib := Shlib_Interning.Get (Lib);
-                  if Shlib.Handler = Null_Address then
-                     Error_Msg_Sem
-                       (+Decl, "cannot load VHPIDIRECT shared library '" &
-                          Lib & "'");
-                     return;
-                  end if;
-
-                  declare
-                     C_Name : constant String := Name & Nul;
-                  begin
-                     Res := Grt_Dynload_Symbol
-                       (Shlib.Handler,
-                        Grt.Types.To_Ghdl_C_String (C_Name'Address));
-                  end;
-                  if Res = Null_Address then
-                     Error_Msg_Sem
-                       (+Decl, "cannot resolve VHPIDIRECT symbol '"
-                          & Name & "'");
-                     return;
-                  end if;
-               end if;
-               Def (Ortho, Res);
-            end;
-         when Foreign_Intrinsic =>
-
-            declare
-               Name : constant String :=
-                 Name_Table.Image (Get_Identifier (Decl));
-            begin
-               if Name = "untruncated_text_read" then
-                  Def (Ortho, Grt.Files.Ghdl_Untruncated_Text_Read'Address);
-               elsif Name = "textio_read_real" then
-                  Def (Ortho, Grt.Lib.Textio_Read_Real'Address);
-               elsif Name = "textio_write_real" then
-                  Def (Ortho, Grt.Lib.Textio_Write_Real'Address);
-               elsif Name = "control_simulation" then
-                  Def (Ortho, Grt.Lib.Ghdl_Control_Simulation'Address);
-               elsif Name = "get_resolution_limit" then
-                  Def (Ortho, Grt.Lib.Ghdl_Get_Resolution_Limit'Address);
-               else
-                  Error_Msg_Sem
-                    (+Decl, "unknown foreign intrinsic %i", +Decl);
-               end if;
-            end;
-         when Foreign_Unknown =>
-            null;
-      end case;
+      Res := Trans_Foreign.Get_Foreign_Address (Decl, Info);
+      if Res /= Null_Address then
+         Def (Ortho, Res);
+      end if;
    end Foreign_Hook;
 
    procedure Run
