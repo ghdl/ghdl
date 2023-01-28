@@ -852,22 +852,28 @@ package body Vhdl.Sem_Decls is
          return;
       end if;
 
-      if not Is_Anonymous_Type_Definition (Def)
-        and then Get_Kind (Def) /= Iir_Kind_Protected_Type_Declaration
-        and then Get_Kind (Def) /= Iir_Kind_Interface_Type_Definition
-      then
-         --  There is no added constraints and therefore the subtype
-         --  declaration is in fact an alias of the type.  Create a copy so
-         --  that it has its own type declarator.
-         --  (Except for protected types).
-         Def := Copy_Subtype_Indication (Def);
-         Location_Copy (Def, Decl);
-         Set_Subtype_Type_Mark (Def, Ind);
-         Set_Subtype_Indication (Decl, Def);
+      if not Is_Anonymous_Type_Definition (Def) then
+         if Get_Kind (Def) /= Iir_Kind_Protected_Type_Declaration
+           and then Get_Kind (Def) /= Iir_Kind_Interface_Type_Definition
+         then
+            --  There is no added constraints and therefore the subtype
+            --  declaration is in fact an alias of the type.  Create a copy so
+            --  that it has its own type declarator.
+            --  (Except for protected types).
+            Def := Copy_Subtype_Indication (Def);
+            Location_Copy (Def, Decl);
+            Set_Subtype_Type_Mark (Def, Ind);
+            Set_Subtype_Indication (Decl, Def);
+            Set_Type_Declarator (Def, Decl);
+         else
+            --  Do not set type_declarator, as there is no copy.
+            null;
+         end if;
+      else
+         Set_Type_Declarator (Def, Decl);
       end if;
 
       Set_Type (Decl, Def);
-      Set_Type_Declarator (Def, Decl);
       Name_Visible (Decl);
       if Is_Global then
          Set_Type_Has_Signal (Def);
