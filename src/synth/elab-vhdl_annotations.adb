@@ -221,24 +221,6 @@ package body Elab.Vhdl_Annotations is
            | Iir_Kind_Physical_Subtype_Definition =>
             Annotate_Anonymous_Type_Definition
               (Block_Info, Get_Base_Type (Def));
-            El := Get_Range_Constraint (Def);
-            if El /= Null_Iir then
-               case Get_Kind (El) is
-                  when Iir_Kind_Range_Expression =>
-                     --  A physical subtype may be defined by an integer range.
-                     if Get_Kind (Def) = Iir_Kind_Physical_Subtype_Definition
-                     then
-                        null;
-                        --  FIXME
-                        --  Convert_Int_To_Phys (Get_Ann (El).Value);
-                     end if;
-                  when Iir_Kind_Range_Array_Attribute
-                    | Iir_Kind_Reverse_Range_Array_Attribute =>
-                     null;
-                  when others =>
-                     Error_Kind ("annotate_type_definition (rc)", El);
-               end case;
-            end if;
             Create_Object_Info (Block_Info, Def, Kind_Type);
 
          when Iir_Kind_Integer_Type_Definition =>
