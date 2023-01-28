@@ -2296,6 +2296,11 @@ package body Vhdl.Canon is
 
             if Canon_Flag_Concurrent_Stmts then
                Stmt := Canon_Concurrent_Procedure_Call (Stmt);
+               if Canon_Flag_Add_Suspend_State
+                 and then Get_Kind (Stmt) = Iir_Kind_Process_Statement
+               then
+                  Canon_Add_Suspend_State (Stmt);
+               end if;
             end if;
 
          when Iir_Kind_Sensitized_Process_Statement

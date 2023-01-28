@@ -681,6 +681,11 @@ package body Trans is
                               Var.I_Field, Otype);
       end Get_Var_Offset;
 
+      function Get_Var_Field (Var : Var_Type) return O_Fnode is
+      begin
+         return Var.I_Field;
+      end Get_Var_Field;
+
       function Get_Var_Label (Var : Var_Type) return O_Dnode is
       begin
          case Var.Kind is

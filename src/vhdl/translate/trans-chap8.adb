@@ -74,8 +74,8 @@ package body Trans.Chap8 is
    function Get_State_Var (Info : Ortho_Info_Acc) return O_Lnode is
    begin
       case Info.Kind is
-         when Kind_Process =>
-            return Get_Var (Info.Process_State);
+         when Kind_Object =>
+            return Get_Var (Info.Object_Var);
          when Kind_Subprg =>
             return New_Selected_Acc_Value
               (New_Obj (Info.Res_Interface), Info.Subprg_State_Field);
@@ -109,7 +109,6 @@ package body Trans.Chap8 is
    procedure State_Leave (Parent : Iir) is
    begin
       pragma Assert (State_Enabled);
-      pragma Assert (Get_Info (Parent) = State_Info);
 
       if State_Debug then
          Start_Choice (State_Case);
@@ -4988,6 +4987,9 @@ package body Trans.Chap8 is
       New_Debug_Line_Stmt (Get_Line_Number (Stmt));
       Open_Temp;
       case Get_Kind (Stmt) is
+         when Iir_Kind_Suspend_State_Statement =>
+            null;
+
          when Iir_Kind_Return_Statement =>
             Translate_Return_Statement (Stmt);
 

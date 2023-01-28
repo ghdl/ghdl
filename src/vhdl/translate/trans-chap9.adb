@@ -102,6 +102,15 @@ package body Trans.Chap9 is
       end loop;
    end Reset_Direct_Drivers;
 
+   function Get_Suspend_State_Info (Proc : Iir) return Object_Info_Acc
+   is
+      State_Decl : constant Iir := Get_Declaration_Chain (Proc);
+   begin
+      pragma Assert
+        (Get_Kind (State_Decl) = Iir_Kind_Suspend_State_Declaration);
+      return Get_Info (State_Decl);
+   end Get_Suspend_State_Info;
+
    procedure Translate_Process_Statement (Proc : Iir; Base : Block_Info_Acc)
    is
       use Trans.Chap8;
@@ -123,7 +132,7 @@ package body Trans.Chap9 is
       Set_Scope_Via_Param_Ptr (Base.Block_Scope, Instance);
 
       if Is_Non_Sensitized then
-         Chap8.State_Entry (Info);
+         Chap8.State_Entry (Get_Suspend_State_Info (Proc));
       end if;
 
       Chap8.Translate_Statements_Chain
@@ -278,10 +287,6 @@ package body Trans.Chap9 is
       Chap4.Translate_Declaration_Chain (Proc);
 
       if Get_Kind (Proc) = Iir_Kind_Process_Statement then
-         --  The state variable.
-         Info.Process_State := Create_Var (Create_Var_Identifier ("STATE"),
-                                           Ghdl_Index_Type, O_Storage_Local);
-
          --  Add declarations for statements (iterator, call) and state.
          Chap4.Translate_Statements_Chain_State_Declaration
            (Get_Sequential_Statement_Chain (Proc),
@@ -1993,8 +1998,13 @@ package body Trans.Chap9 is
          end if;
       else
          --  Initialize state.
-         New_Assign_Stmt
-           (Get_Var (Info.Process_State), New_Lit (Ghdl_Index_0));
+         declare
+            State_Info : constant Object_Info_Acc :=
+              Get_Suspend_State_Info (Proc);
+         begin
+            New_Assign_Stmt
+              (Get_Var (State_Info.Object_Var), New_Lit (Ghdl_Index_0));
+         end;
       end if;
    end Elab_Process;
 

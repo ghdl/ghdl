@@ -444,6 +444,7 @@ package Trans is
       --  Used only to generate RTI.
       function Is_Var_Field (Var : Var_Type) return Boolean;
       function Get_Var_Offset (Var : Var_Type; Otype : O_Tnode) return O_Cnode;
+      function Get_Var_Field (Var : Var_Type) return O_Fnode;
       function Get_Var_Label (Var : Var_Type) return O_Dnode;
 
       --  For package instantiation.
@@ -1921,10 +1922,6 @@ package Trans is
 
             --  Subprogram for the process.
             Process_Subprg : O_Dnode;
-
-            --  Variable (in the frame) containing the current state (a
-            --  number) used to resume the process.
-            Process_State : Var_Type := Null_Var;
 
             --  Union containing local declarations for statements.
             Process_Locvar_Scope : aliased Var_Scope_Type;

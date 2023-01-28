@@ -279,6 +279,7 @@ package body Ghdlsynth is
 
       --  Do not canon concurrent statements.
       Vhdl.Canon.Canon_Flag_Concurrent_Stmts := False;
+      Vhdl.Canon.Canon_Flag_Add_Suspend_State := False;
 
       if Ghdlcomp.Init_Verilog_Options /= null then
          Ghdlcomp.Init_Verilog_Options.all (False);

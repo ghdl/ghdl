@@ -2179,6 +2179,8 @@ package body Trans.Rtis is
          case Get_Kind (Decl) is
             when Iir_Kind_Use_Clause =>
                null;
+            when Iir_Kind_Suspend_State_Declaration =>
+               null;
             when Iir_Kind_Type_Declaration =>
                --  FIXME: physicals ?
                if Get_Kind (Get_Type_Definition (Decl))
@@ -2303,6 +2305,8 @@ package body Trans.Rtis is
             when Iir_Kind_Type_Declaration
                | Iir_Kind_Subtype_Declaration =>
                Add_Rti_Node (Generate_Type_Decl (Decl));
+            when Iir_Kind_Suspend_State_Declaration =>
+               null;
             when Iir_Kind_Constant_Declaration =>
                --  Do not generate RTIs for full declarations.
                --  (RTI will be generated for the deferred declaration).

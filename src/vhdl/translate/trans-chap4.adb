@@ -1890,8 +1890,17 @@ package body Trans.Chap4 is
       Pop_Identifier_Prefix (Mark);
    end Translate_Component_Declaration;
 
-   procedure Translate_Declaration (Decl : Iir)
+   procedure Create_Suspend_State (Decl : Iir)
    is
+      Info : Object_Info_Acc;
+   begin
+      Info := Add_Info (Decl, Kind_Object);
+
+      Info.Object_Var := Create_Var (Create_Var_Identifier ("STATE"),
+                                     Ghdl_Index_Type, O_Storage_Local);
+   end Create_Suspend_State;
+
+   procedure Translate_Declaration (Decl : Iir) is
    begin
       case Get_Kind (Decl) is
          when Iir_Kind_Use_Clause =>
@@ -1930,6 +1939,9 @@ package body Trans.Chap4 is
             --when Iir_Kind_Signal_Declaration
             --  | Iir_Kind_Interface_Signal_Declaration =>
             --   Chap4.Create_Object (Decl);
+
+         when Iir_Kind_Suspend_State_Declaration =>
+            Create_Suspend_State (Decl);
 
          when Iir_Kind_Variable_Declaration
             | Iir_Kind_Constant_Declaration =>
@@ -2675,6 +2687,9 @@ package body Trans.Chap4 is
                null;
             when Iir_Kind_Disconnection_Specification =>
                Chap5.Elab_Disconnection_Specification (Decl);
+
+            when Iir_Kind_Suspend_State_Declaration =>
+               null;
 
             when Iir_Kind_Type_Declaration
                | Iir_Kind_Anonymous_Type_Declaration =>

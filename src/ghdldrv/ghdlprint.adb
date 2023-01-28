@@ -1123,6 +1123,7 @@ package body Ghdlprint is
       Vhdl.Canon.Canon_Flag_Configurations := False;
       Vhdl.Canon.Canon_Flag_Specification_Lists := False;
       Vhdl.Canon.Canon_Flag_Associations := False;
+      Vhdl.Canon.Canon_Flag_Add_Suspend_State := False;
 
       Flags.Flag_Gather_Comments := Cmd.Flag_Comments;
 

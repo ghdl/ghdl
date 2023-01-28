@@ -43,7 +43,7 @@ package Vhdl.Canon is
    Canon_Flag_All_Sensitivity : Boolean := False;
 
    --  Add suspend state variables and statements.
-   Canon_Flag_Add_Suspend_State : Boolean := False;
+   Canon_Flag_Add_Suspend_State : Boolean := True;
 
    --  Do canonicalization:
    --  Transforms concurrent statements into sensitized process statements
