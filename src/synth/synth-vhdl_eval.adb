@@ -2482,24 +2482,6 @@ package body Synth.Vhdl_Eval is
                return Create_Memory_U8 (Std_Ulogic'Pos (Res), Res_Typ);
             end;
 
-         when Iir_Predefined_Ieee_Math_Real_Pow_Real_Real =>
-            declare
-               function Pow (L, R : Fp64) return Fp64;
-               pragma Import (C, Pow);
-            begin
-               return Create_Memory_Fp64
-                 (Pow (Read_Fp64 (Param1), Read_Fp64 (Param2)), Res_Typ);
-            end;
-
-         when Iir_Predefined_Ieee_Math_Real_Mod =>
-            declare
-               function Fmod (L, R : Fp64) return Fp64;
-               pragma Import (C, Fmod);
-            begin
-               return Create_Memory_Fp64
-                 (Fmod (Read_Fp64 (Param1), Read_Fp64 (Param2)), Res_Typ);
-            end;
-
          when Iir_Predefined_Physical_Minimum
            | Iir_Predefined_Integer_Minimum
            | Iir_Predefined_Enum_Minimum =>
@@ -2968,6 +2950,24 @@ package body Synth.Vhdl_Eval is
          when Iir_Predefined_Ieee_Std_Logic_Misc_Xnor_Reduce_Slv
             | Iir_Predefined_Ieee_Std_Logic_Misc_Xnor_Reduce_Suv =>
             return Eval_Vector_Reduce ('0', Param1, Xor_Table, True);
+
+         when Iir_Predefined_Ieee_Math_Real_Pow_Real_Real =>
+            declare
+               function Pow (L, R : Fp64) return Fp64;
+               pragma Import (C, Pow);
+            begin
+               return Create_Memory_Fp64
+                 (Pow (Read_Fp64 (Param1), Read_Fp64 (Param2)), Res_Typ);
+            end;
+
+         when Iir_Predefined_Ieee_Math_Real_Mod =>
+            declare
+               function Fmod (L, R : Fp64) return Fp64;
+               pragma Import (C, Fmod);
+            begin
+               return Create_Memory_Fp64
+                 (Fmod (Read_Fp64 (Param1), Read_Fp64 (Param2)), Res_Typ);
+            end;
 
          when Iir_Predefined_Ieee_Math_Real_Sign =>
             declare
