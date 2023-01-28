@@ -2985,6 +2985,7 @@ package body Vhdl.Sem_Expr is
                         return Replace_By_Range_Choice (Expr, Ent);
                      when Iir_Kind_Subtype_Declaration
                        | Iir_Kind_Type_Declaration =>
+                        Set_Type (Expr, Get_Type (Ent));
                         Ent := Is_Type_Name (Expr);
                         Set_Expr_Staticness (Expr, Get_Type_Staticness (Ent));
                         return Replace_By_Range_Choice (Expr, Ent);
