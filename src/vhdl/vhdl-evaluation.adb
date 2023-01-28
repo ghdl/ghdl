@@ -4216,6 +4216,17 @@ package body Vhdl.Evaluation is
       end case;
    end Int_In_Range;
 
+   function Null_Fp_Range
+     (Dir : Direction_Type; L, R : Fp64) return Boolean is
+   begin
+      case Dir is
+         when Dir_To =>
+            return L > R;
+         when Dir_Downto =>
+            return L < R;
+      end case;
+   end Null_Fp_Range;
+
    function Fp_In_Range (Val : Fp64;
                          Dir : Direction_Type; L, R : Fp64) return Boolean is
    begin
@@ -4490,116 +4501,10 @@ package body Vhdl.Evaluation is
             return Null_Int_Range (Dir, Eval_Pos (L_Expr), Eval_Pos (R_Expr));
          when Iir_Kind_Floating_Subtype_Definition
            | Iir_Kind_Floating_Type_Definition =>
-            declare
-               L, R : Fp64;
-            begin
-               L := Get_Fp_Value (L_Expr);
-               R := Get_Fp_Value (R_Expr);
-               case Dir is
-                  when Dir_To =>
-                     return L > R;
-                  when Dir_Downto =>
-                     return L < R;
-               end case;
-            end;
+            return Null_Fp_Range
+              (Dir, Get_Fp_Value (L_Expr), Get_Fp_Value (R_Expr));
       end case;
    end Is_Null_Range;
-
-   --  Check range expression A_RANGE.
-   procedure Eval_Check_Range_In_Bound (A_Range : Iir;
-                                        Sub_Type : Iir;
-                                        Dir_Ok : out Boolean;
-                                        Left_Ok : out Boolean;
-                                        Right_Ok : out Boolean)
-   is
-      Range_Constraint : constant Iir := Eval_Static_Range (A_Range);
-      L_Expr : constant Iir := Get_Left_Limit (Range_Constraint);
-      R_Expr : constant Iir := Get_Right_Limit (Range_Constraint);
-      Dir : constant Direction_Type := Get_Direction (Range_Constraint);
-      Type_Range : constant Iir := Get_Range_Constraint (Sub_Type);
-   begin
-      Dir_Ok := Get_Direction (Type_Range) = Dir;
-
-      Left_Ok := True;
-      Right_Ok := True;
-
-      --  In case of overflow, assume ok.
-      if Is_Overflow_Literal (L_Expr)
-        or else Is_Overflow_Literal (R_Expr)
-      then
-         return;
-      end if;
-
-      case Get_Kind (Sub_Type) is
-         when Iir_Kind_Integer_Subtype_Definition
-           | Iir_Kind_Physical_Subtype_Definition
-           | Iir_Kind_Enumeration_Subtype_Definition
-           | Iir_Kind_Enumeration_Type_Definition =>
-            declare
-               L, R : Int64;
-            begin
-               --  Check for null range.
-               L := Eval_Pos (L_Expr);
-               R := Eval_Pos (R_Expr);
-               case Dir is
-                  when Dir_To =>
-                     if L > R then
-                        return;
-                     end if;
-                  when Dir_Downto =>
-                     if L < R then
-                        return;
-                     end if;
-               end case;
-               Left_Ok := Eval_Int_In_Range (L, Type_Range);
-               Right_Ok := Eval_Int_In_Range (R, Type_Range);
-            end;
-         when Iir_Kind_Floating_Subtype_Definition =>
-            declare
-               L, R : Fp64;
-            begin
-               --  Check for null range.
-               L := Get_Fp_Value (L_Expr);
-               R := Get_Fp_Value (R_Expr);
-               case Dir is
-                  when Dir_To =>
-                     if L > R then
-                        return;
-                     end if;
-                  when Dir_Downto =>
-                     if L < R then
-                        return;
-                     end if;
-               end case;
-               Left_Ok := Eval_Fp_In_Range (L, Type_Range);
-               Right_Ok := Eval_Fp_In_Range (R, Type_Range);
-            end;
-         when others =>
-            Error_Kind ("eval_check_range_in_bound", Sub_Type);
-      end case;
-   end Eval_Check_Range_In_Bound;
-
-   function Eval_Is_Range_In_Bound
-     (A_Range : Iir; Sub_Type : Iir; Any_Dir : Boolean) return Boolean
-   is
-      L_Ok, R_Ok, Dir_Ok : Boolean;
-   begin
-      Eval_Check_Range_In_Bound (A_Range, Sub_Type, Dir_Ok, L_Ok, R_Ok);
-      if not Any_Dir and then not Dir_Ok then
-         return True;
-      end if;
-
-      return L_Ok and R_Ok;
-   end Eval_Is_Range_In_Bound;
-
-   procedure Eval_Check_Range
-     (A_Range : Iir; Sub_Type : Iir; Any_Dir : Boolean) is
-   begin
-      if not Eval_Is_Range_In_Bound (A_Range, Sub_Type, Any_Dir) then
-         Warning_Msg_Sem (Warnid_Runtime_Error, +A_Range,
-                          "static range violates bounds");
-      end if;
-   end Eval_Check_Range;
 
    function Eval_Discrete_Range_Length (Constraint : Iir) return Int64
    is
@@ -4843,6 +4748,87 @@ package body Vhdl.Evaluation is
          end case;
       end loop;
    end Eval_Static_Range;
+
+   --  Check range expression A_RANGE.
+   procedure Eval_Check_Range_In_Bound (A_Range : Iir;
+                                        Sub_Type : Iir;
+                                        Dir_Ok : out Boolean;
+                                        Left_Ok : out Boolean;
+                                        Right_Ok : out Boolean)
+   is
+      Type_Range : constant Iir := Get_Range_Constraint (Sub_Type);
+      L_Expr, R_Expr : Iir;
+      Dir : Direction_Type;
+   begin
+      Eval_Range_Bounds (A_Range, Dir, L_Expr, R_Expr);
+      Dir_Ok := Get_Direction (Type_Range) = Dir;
+
+      Left_Ok := True;
+      Right_Ok := True;
+
+      --  In case of overflow, assume ok.
+      if Is_Overflow_Literal (L_Expr)
+        or else Is_Overflow_Literal (R_Expr)
+      then
+         return;
+      end if;
+
+      case Get_Kind (Sub_Type) is
+         when Iir_Kind_Integer_Subtype_Definition
+           | Iir_Kind_Physical_Subtype_Definition
+           | Iir_Kind_Enumeration_Subtype_Definition
+           | Iir_Kind_Enumeration_Type_Definition =>
+            declare
+               L, R : Int64;
+            begin
+               --  Check for null range.
+               L := Eval_Pos (L_Expr);
+               R := Eval_Pos (R_Expr);
+               if Null_Int_Range (Dir, L, R) then
+                  return;
+               end if;
+               Left_Ok := Eval_Int_In_Range (L, Type_Range);
+               Right_Ok := Eval_Int_In_Range (R, Type_Range);
+            end;
+         when Iir_Kind_Floating_Subtype_Definition =>
+            declare
+               L, R : Fp64;
+            begin
+               --  Check for null range.
+               L := Get_Fp_Value (L_Expr);
+               R := Get_Fp_Value (R_Expr);
+               if Null_Fp_Range (Dir, L, R) then
+                  return;
+               end if;
+               Left_Ok := Eval_Fp_In_Range (L, Type_Range);
+               Right_Ok := Eval_Fp_In_Range (R, Type_Range);
+            end;
+         when others =>
+            Error_Kind ("eval_check_range_in_bound", Sub_Type);
+      end case;
+   end Eval_Check_Range_In_Bound;
+
+   function Eval_Is_Range_In_Bound
+     (A_Range : Iir; Sub_Type : Iir; Any_Dir : Boolean) return Boolean
+   is
+      L_Ok, R_Ok, Dir_Ok : Boolean;
+   begin
+      Eval_Check_Range_In_Bound (A_Range, Sub_Type, Dir_Ok, L_Ok, R_Ok);
+      if not Any_Dir and then not Dir_Ok then
+         return True;
+      end if;
+
+      return L_Ok and R_Ok;
+   end Eval_Is_Range_In_Bound;
+
+   procedure Eval_Check_Range
+     (A_Range : Iir; Sub_Type : Iir; Any_Dir : Boolean) is
+   begin
+      if not Eval_Is_Range_In_Bound (A_Range, Sub_Type, Any_Dir) then
+         Warning_Msg_Sem (Warnid_Runtime_Error, +A_Range,
+                          "static range violates bounds");
+      end if;
+   end Eval_Check_Range;
 
    procedure Check_Range_Compatibility (Inner : Iir; Outer : Iir)
    is
