@@ -260,7 +260,7 @@ package body Elab.Vhdl_Types is
       else
          Typ := El_Typ;
          for I in reverse 1 .. Ndims loop
-            Idx := Get_Index_Type (Def, 0);
+            Idx := Get_Index_Type (Def, Flist_First + (I - 1));
             Idx_Typ := Get_Subtype_Object (Syn_Inst, Idx);
             Typ := Create_Unbounded_Array (Idx_Typ, I = Ndims, Typ);
          end loop;
@@ -637,13 +637,19 @@ package body Elab.Vhdl_Types is
                   St_El : Node;
                   Res_Typ : Type_Acc;
                   Bnd : Bound_Type;
+                  P : Type_Acc;
                begin
                   Res_Typ := El_Typ;
                   for I in reverse Flist_First .. Flist_Last (St_Indexes) loop
                      St_El := Get_Index_Type (St_Indexes, I);
                      Bnd := Synth_Bounds_From_Range (Syn_Inst, St_El);
+                     --  Get parent index.
+                     P := Parent_Typ;
+                     for J in Flist_First + 1 .. I loop
+                        P := P.Uarr_El;
+                     end loop;
                      Check_Bound_Compatibility
-                       (Syn_Inst, St_El, Bnd, Parent_Typ.Uarr_Idx);
+                       (Syn_Inst, St_El, Bnd, P.Uarr_Idx);
                      if El_Bounded then
                         Res_Typ := Create_Array_Type
                           (Bnd, Res_Typ = El_Typ, Res_Typ);
