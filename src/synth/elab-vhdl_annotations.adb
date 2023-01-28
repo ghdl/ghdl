@@ -342,6 +342,44 @@ package body Elab.Vhdl_Annotations is
       Annotate_Declaration_List (Package_Info, Get_Declaration_Chain (Inter));
    end Annotate_Interface_Package_Declaration;
 
+   --  If WITH_TYPES is true, also annotate interface object subtypes. This is
+   --  set except for parameters (as the interface subtypes are elaborated
+   --  with the subprogram declaration).
+   procedure Annotate_Interface_Declaration
+     (Block_Info : Sim_Info_Acc; Decl : Iir; With_Types : Boolean) is
+   begin
+      if With_Types
+        and then Get_Kind (Decl) in Iir_Kinds_Interface_Object_Declaration
+        and then not Get_Is_Ref (Decl)
+      then
+         Annotate_Anonymous_Type_Definition (Block_Info, Get_Type (Decl));
+      end if;
+      case Get_Kind (Decl) is
+         when Iir_Kind_Interface_Signal_Declaration =>
+            Create_Signal_Info (Block_Info, Decl);
+         when Iir_Kind_Interface_Variable_Declaration
+           | Iir_Kind_Interface_Constant_Declaration
+           | Iir_Kind_Interface_File_Declaration =>
+            Create_Object_Info (Block_Info, Decl);
+         when Iir_Kind_Interface_Package_Declaration =>
+            Annotate_Interface_Package_Declaration (Block_Info, Decl);
+         when Iir_Kind_Interface_Type_Declaration =>
+            --  Create an info on the interface_type_definition.
+            --  This is needed for a generic type in an entity, as the
+            --  nodes are not instantiated.
+            Create_Object_Info
+              (Block_Info, Get_Interface_Type_Definition (Decl));
+         when Iir_Kinds_Interface_Subprogram_Declaration =>
+            --  Macro-expanded
+            null;
+         when others =>
+            Error_Kind ("annotate_interface_list", Decl);
+      end case;
+   end Annotate_Interface_Declaration;
+
+   --  If WITH_TYPES is true, also annotate interface object subtypes. This is
+   --  set except for parameters (as the interface subtypes are elaborated
+   --  with the subprogram declaration).
    procedure Annotate_Interface_List
      (Block_Info: Sim_Info_Acc; Decl_Chain: Iir; With_Types : Boolean)
    is
@@ -349,33 +387,7 @@ package body Elab.Vhdl_Annotations is
    begin
       Decl := Decl_Chain;
       while Decl /= Null_Iir loop
-         if With_Types
-           and then Get_Kind (Decl) in Iir_Kinds_Interface_Object_Declaration
-           and then not Get_Is_Ref (Decl)
-         then
-            Annotate_Anonymous_Type_Definition (Block_Info, Get_Type (Decl));
-         end if;
-         case Get_Kind (Decl) is
-            when Iir_Kind_Interface_Signal_Declaration =>
-               Create_Signal_Info (Block_Info, Decl);
-            when Iir_Kind_Interface_Variable_Declaration
-              | Iir_Kind_Interface_Constant_Declaration
-              | Iir_Kind_Interface_File_Declaration =>
-               Create_Object_Info (Block_Info, Decl);
-            when Iir_Kind_Interface_Package_Declaration =>
-               Annotate_Interface_Package_Declaration (Block_Info, Decl);
-            when Iir_Kind_Interface_Type_Declaration =>
-               --  Create an info on the interface_type_definition.
-               --  This is needed for a generic type in an entity, as the
-               --  nodes are not instantiated.
-               Create_Object_Info
-                 (Block_Info, Get_Interface_Type_Definition (Decl));
-            when Iir_Kinds_Interface_Subprogram_Declaration =>
-               --  Macro-expanded
-               null;
-            when others =>
-               Error_Kind ("annotate_interface_list", Decl);
-         end case;
+         Annotate_Interface_Declaration (Block_Info, Decl, With_Types);
          Decl := Get_Chain (Decl);
       end loop;
    end Annotate_Interface_List;
@@ -486,8 +498,39 @@ package body Elab.Vhdl_Annotations is
       end if;
 
       if Is_Inst then
-         Annotate_Interface_List
-           (Package_Info, Get_Generic_Chain (Decl), True);
+         --  Annotate the interfaces, but specially handle interface type.
+         declare
+            use Elab.Vhdl_Utils;
+            Init : Association_Iterator_Init;
+            It : Association_Iterator;
+            Assoc : Iir;
+            Inter : Iir;
+            Act : Iir;
+         begin
+            Init := Association_Iterator_Build
+              (Get_Generic_Chain (Decl),
+               Get_Generic_Map_Aspect_Chain (Decl));
+
+            --  Need to use iterators so that associations are processed in the
+            --  order of the interfaces.
+            Association_Iterate_Init (It, Init);
+            Association_Iterate_Next (It, Inter, Assoc);
+            while Inter /= Null_Node loop
+               Annotate_Interface_Declaration (Package_Info, Inter, True);
+
+               if Get_Kind (Inter) = Iir_Kind_Interface_Type_Declaration then
+                  --  For anonymous subtype, re-use the annotation of the
+                  --  interface type definition.
+                  --  If it is named, the definition will be reachable.
+                  Act := Get_Actual (Assoc);
+                  if Get_Kind (Act) not in Iir_Kinds_Denoting_Name then
+                     Set_Ann
+                       (Act, Get_Ann (Get_Interface_Type_Definition (Inter)));
+                  end if;
+               end if;
+               Association_Iterate_Next (It, Inter, Assoc);
+            end loop;
+         end;
       else
          Header := Get_Package_Header (Decl);
          if Header /= Null_Iir then
@@ -616,7 +659,14 @@ package body Elab.Vhdl_Annotations is
            | Iir_Kind_Anonymous_Type_Declaration =>
             Annotate_Type_Definition (Block_Info, Get_Type_Definition (Decl));
          when Iir_Kind_Subtype_Declaration =>
-            Annotate_Type_Definition (Block_Info, Get_Type (Decl));
+            declare
+               Ind : constant Iir := Get_Subtype_Indication (Decl);
+            begin
+               --  No annotation for aliases.
+               if Get_Kind (Ind) not in Iir_Kinds_Denoting_Name then
+                  Annotate_Type_Definition (Block_Info, Get_Type (Decl));
+               end if;
+            end;
 
          when Iir_Kind_Protected_Type_Body =>
             Annotate_Protected_Type_Body (Block_Info, Decl);

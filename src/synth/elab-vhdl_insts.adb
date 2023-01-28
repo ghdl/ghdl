@@ -170,8 +170,10 @@ package body Elab.Vhdl_Insts is
                      Act := Get_Type (Act);
                   end if;
                   if Get_Kind (Act) in Iir_Kinds_Subtype_Definition then
+                     --  Need to elaborate the subtype.
                      Act_Typ := Synth_Subtype_Indication (Syn_Inst, Act);
                   else
+                     --  An existing type.
                      Act_Typ := Get_Subtype_Object (Syn_Inst, Act);
                   end if;
                   Act_Typ := Unshare (Act_Typ, Instance_Pool);
