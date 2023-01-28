@@ -5,7 +5,7 @@ end repro2;
 architecture behav of repro2 is
 begin
    process
-     variable v : string (0 to l);
+     variable v : string (1 to l);
      alias a : string is v;
    begin
      v := (others => ' ');
