@@ -292,7 +292,6 @@ package body Elab.Vhdl_Annotations is
      (Block_Info: Sim_Info_Acc; Decl_Chain: Iir)
    is
       El: Iir;
-      Ind : Iir;
    begin
       El := Decl_Chain;
       while El /= Null_Iir loop
@@ -301,21 +300,11 @@ package body Elab.Vhdl_Annotations is
               | Iir_Kind_Interface_Variable_Declaration
               | Iir_Kind_Interface_Constant_Declaration
               | Iir_Kind_Interface_File_Declaration =>
-               Ind := Get_Subtype_Indication (El);
-               if Ind /= Null_Iir and then not Get_Is_Ref (El) then
-                  case Get_Kind (Ind) is
-                     when Iir_Kinds_Subtype_Definition =>
-                        Annotate_Type_Definition (Block_Info, Ind);
-                     when Iir_Kinds_Denoting_Name
-                       | Iir_Kind_Element_Attribute
-                       | Iir_Kind_Subtype_Attribute =>
-                        null;
-                     when others =>
-                        Error_Kind ("annotate_interface_list_subtype(1)", Ind);
-                  end case;
+               --  Elaborate the subtype indication only if it not shared.
+               if Is_Owned_Subtype_Indication (El) then
+                  Annotate_Type_Definition
+                    (Block_Info, Get_Subtype_Indication (El));
                end if;
-               --  Annotate_Anonymous_Type_Definition
-               --   (Block_Info, Get_Type (El));
             when others =>
                Error_Kind ("annotate_interface_list_subtype", El);
          end case;
@@ -348,18 +337,18 @@ package body Elab.Vhdl_Annotations is
    procedure Annotate_Interface_Declaration
      (Block_Info : Sim_Info_Acc; Decl : Iir; With_Types : Boolean) is
    begin
-      if With_Types
-        and then Get_Kind (Decl) in Iir_Kinds_Interface_Object_Declaration
-        and then not Get_Is_Ref (Decl)
-      then
-         Annotate_Anonymous_Type_Definition (Block_Info, Get_Type (Decl));
-      end if;
       case Get_Kind (Decl) is
          when Iir_Kind_Interface_Signal_Declaration =>
+            if With_Types and then Is_Owned_Subtype_Indication (Decl) then
+               Annotate_Type_Definition (Block_Info, Get_Type (Decl));
+            end if;
             Create_Signal_Info (Block_Info, Decl);
          when Iir_Kind_Interface_Variable_Declaration
            | Iir_Kind_Interface_Constant_Declaration
            | Iir_Kind_Interface_File_Declaration =>
+            if With_Types and then Is_Owned_Subtype_Indication (Decl) then
+               Annotate_Type_Definition (Block_Info, Get_Type (Decl));
+            end if;
             Create_Object_Info (Block_Info, Decl);
          when Iir_Kind_Interface_Package_Declaration =>
             Annotate_Interface_Package_Declaration (Block_Info, Decl);

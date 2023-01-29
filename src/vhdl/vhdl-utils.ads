@@ -258,6 +258,10 @@ package Vhdl.Utils is
    --  skip over denoting names.
    function Get_Type_Of_Subtype_Indication (Ind : Iir) return Iir;
 
+   --  Return True iff the subtype indication of DECL is defined/owned by
+   --  DECL.
+   function Is_Owned_Subtype_Indication (Decl : Iir) return Boolean;
+
    --  Get the type of an index_subtype_definition or of a discrete_range from
    --  an index_constraint.
    function Get_Index_Type (Index_Type : Iir) return Iir

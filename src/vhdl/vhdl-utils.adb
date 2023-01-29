@@ -1323,6 +1323,35 @@ package body Vhdl.Utils is
       end case;
    end Get_Nature_Of_Subnature_Indication;
 
+   function Is_Owned_Subtype_Indication (Decl : Iir) return Boolean
+   is
+      Def : Iir;
+   begin
+      --  Subtype indication is shared with a previous declaration, like in:
+      --    signal a, b : std_logic_vector (7 downto 0);
+      if Get_Is_Ref (Decl) then
+         return False;
+      end if;
+
+      Def := Get_Subtype_Indication (Decl);
+      --  Implicit functions don't have subtype indication.
+      --  TODO: make them regular ?
+      if Def = Null_Iir then
+         return False;
+      end if;
+
+      case Get_Kind (Def) is
+         when Iir_Kinds_Subtype_Definition =>
+            return True;
+         when Iir_Kinds_Denoting_Name
+           | Iir_Kind_Element_Attribute
+           | Iir_Kind_Subtype_Attribute =>
+            return False;
+         when others =>
+            Error_Kind ("is_owned_subtype_indication", Def);
+      end case;
+   end Is_Owned_Subtype_Indication;
+
    function Get_Index_Type (Indexes : Iir_Flist; Idx : Natural) return Iir
    is
       Index : constant Iir := Get_Nth_Element (Indexes, Idx);
