@@ -302,7 +302,7 @@ package body Elab.Vhdl_Annotations is
               | Iir_Kind_Interface_Constant_Declaration
               | Iir_Kind_Interface_File_Declaration =>
                Ind := Get_Subtype_Indication (El);
-               if Ind /= Null_Iir then
+               if Ind /= Null_Iir and then not Get_Is_Ref (El) then
                   case Get_Kind (Ind) is
                      when Iir_Kinds_Subtype_Definition =>
                         Annotate_Type_Definition (Block_Info, Ind);
