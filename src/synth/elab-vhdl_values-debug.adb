@@ -20,6 +20,7 @@ with Simple_IO; use Simple_IO;
 with Utils_IO; use Utils_IO;
 
 with Vhdl.Nodes; use Vhdl.Nodes;
+with Elab.Vhdl_Heap;
 
 package body Elab.Vhdl_Values.Debug is
    procedure Put_Dir (Dir : Direction_Type) is
@@ -273,7 +274,7 @@ package body Elab.Vhdl_Values.Debug is
             Put_Int64 (Read_Discrete (M));
          when Type_Access =>
             Put ("access: ");
-            Put_Uns32 (Uns32 (Read_Access (M)));
+            Put_Uns32 (Uns32 (Elab.Vhdl_Heap.Get_Index (Read_Access (M))));
          when Type_File =>
             Put ("file");
          when Type_Float =>

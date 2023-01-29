@@ -357,25 +357,25 @@ package body Elab.Vhdl_Values is
       return Res;
    end Unshare;
 
-   procedure Write_Access (Mem : Memory_Ptr; Val : Heap_Index)
+   procedure Write_Access (Mem : Memory_Ptr; Val : Heap_Ptr)
    is
-      V : Heap_Index;
+      V : Heap_Ptr;
       for V'Address use Mem.all'Address;
       pragma Import (Ada, V);
    begin
       V := Val;
    end Write_Access;
 
-   function Read_Access (Mem : Memory_Ptr) return Heap_Index
+   function Read_Access (Mem : Memory_Ptr) return Heap_Ptr
    is
-      V : Heap_Index;
+      V : Heap_Ptr;
       for V'Address use Mem.all'Address;
       pragma Import (Ada, V);
    begin
       return V;
    end Read_Access;
 
-   function Read_Access (Mt : Memtyp) return Heap_Index is
+   function Read_Access (Mt : Memtyp) return Heap_Ptr is
    begin
       return Read_Access (Mt.Mem);
    end Read_Access;
@@ -430,7 +430,7 @@ package body Elab.Vhdl_Values is
       return Read_Fp64 (Vt.Val.Mem);
    end Read_Fp64;
 
-   function Read_Access (Vt : Valtyp) return Heap_Index is
+   function Read_Access (Vt : Valtyp) return Heap_Ptr is
    begin
       pragma Assert (Vt.Typ.Kind = Type_Access);
       return Read_Access (Get_Memory (Vt));
@@ -526,7 +526,7 @@ package body Elab.Vhdl_Values is
                                     Typ.Rec.E (I).Typ);
             end loop;
          when Type_Access =>
-            Write_Access (M, Null_Heap_Index);
+            Write_Access (M, Null_Heap_Ptr);
          when Type_File
            |  Type_Protected =>
             raise Internal_Error;
@@ -542,7 +542,7 @@ package body Elab.Vhdl_Values is
       return Res;
    end Create_Value_Default;
 
-   function Create_Value_Access (Val : Heap_Index; Acc_Typ : Type_Acc)
+   function Create_Value_Access (Val : Heap_Ptr; Acc_Typ : Type_Acc)
                                 return Valtyp
    is
       Res : Valtyp;

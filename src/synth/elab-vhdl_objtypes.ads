@@ -217,6 +217,16 @@ package Elab.Vhdl_Objtypes is
 
    Null_Memtyp : constant Memtyp := (null, null);
 
+   --  Representation of an access: a pointer inside the heap.
+   type Heap_Ptr is new Memory_Ptr;
+   Null_Heap_Ptr : constant Heap_Ptr := null;
+
+   Heap_Ptr_Sz : constant Size_Type := Size_Type (Heap_Ptr'Size / 8);
+
+   Heap_Ptr_Al : constant Palign_Type :=
+     2 * Boolean'Pos (Heap_Ptr_Sz = 4)
+     + 3 * Boolean'Pos (Heap_Ptr_Sz = 8);
+
    --  Memory pools, which defines where the memory is allocated for data,
    --  types, values...
 

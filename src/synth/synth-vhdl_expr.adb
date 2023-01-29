@@ -800,12 +800,12 @@ package body Synth.Vhdl_Expr is
            | Iir_Kind_Dereference =>
             declare
                Val : Valtyp;
-               Acc : Heap_Index;
+               Acc : Heap_Ptr;
                Obj : Memtyp;
             begin
                Val := Synth_Expression (Syn_Inst, Get_Prefix (Name));
                Acc := Read_Access (Val);
-               if Acc = Null_Heap_Index then
+               if Acc = Null_Heap_Ptr then
                   Error_Msg_Synth (Syn_Inst, Name, "NULL access dereferenced");
                   return No_Valtyp;
                end if;
@@ -2531,13 +2531,13 @@ package body Synth.Vhdl_Expr is
                return Create_Value_Memtyp (Mt);
             end;
          when Iir_Kind_Null_Literal =>
-            return Create_Value_Access (Null_Heap_Index, Expr_Type);
+            return Create_Value_Access (Null_Heap_Ptr, Expr_Type);
          when Iir_Kind_Allocator_By_Subtype =>
             declare
                Acc_Typ : constant Type_Acc :=
                  Get_Subtype_Object (Syn_Inst, Get_Type (Expr));
                T : Type_Acc;
-               Acc : Heap_Index;
+               Acc : Heap_Ptr;
             begin
                T := Synth_Subtype_Indication
                  (Syn_Inst, Get_Subtype_Indication (Expr));
@@ -2549,7 +2549,7 @@ package body Synth.Vhdl_Expr is
                Acc_Typ : constant Type_Acc :=
                  Get_Subtype_Object (Syn_Inst, Get_Type (Expr));
                V : Valtyp;
-               Acc : Heap_Index;
+               Acc : Heap_Ptr;
             begin
                V := Synth_Expression_With_Type
                  (Syn_Inst, Get_Expression (Expr), Expr_Type.Acc_Acc);

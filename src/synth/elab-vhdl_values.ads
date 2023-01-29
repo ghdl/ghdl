@@ -70,9 +70,6 @@ package Elab.Vhdl_Values is
 
    type Value_Acc is access Value_Type;
 
-   type Heap_Index is new Uns32;
-   Null_Heap_Index : constant Heap_Index := 0;
-
    type Protected_Index is new Uns32;
    No_Protected_Index : constant Protected_Index := 0;
 
@@ -164,7 +161,7 @@ package Elab.Vhdl_Values is
    function Create_Value_Discrete (Val : Int64; Vtype : Type_Acc)
                                   return Valtyp;
 
-   function Create_Value_Access (Val : Heap_Index; Acc_Typ : Type_Acc)
+   function Create_Value_Access (Val : Heap_Ptr; Acc_Typ : Type_Acc)
                                 return Valtyp;
 
    function Create_Value_Float (Val : Fp64; Vtype : Type_Acc) return Valtyp;
@@ -228,9 +225,9 @@ package Elab.Vhdl_Values is
    procedure Write_Discrete (Vt : Valtyp; Val : Int64);
    function Read_Discrete (Vt : Valtyp) return Int64;
 
-   procedure Write_Access (Mem : Memory_Ptr; Val : Heap_Index);
-   function Read_Access (Mt : Memtyp) return Heap_Index;
-   function Read_Access (Vt : Valtyp) return Heap_Index;
+   procedure Write_Access (Mem : Memory_Ptr; Val : Heap_Ptr);
+   function Read_Access (Mt : Memtyp) return Heap_Ptr;
+   function Read_Access (Vt : Valtyp) return Heap_Ptr;
 
    procedure Write_Protected (Mem : Memory_Ptr; Idx : Protected_Index);
    function Read_Protected (Mem : Memory_Ptr) return Protected_Index;

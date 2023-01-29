@@ -28,6 +28,13 @@ package body Elab.Memtype is
       return To_Memory_Ptr (To_Address (Base) + Storage_Offset (Off));
    end "+";
 
+   function "-" (Base : Memory_Ptr; Off : Size_Type) return Memory_Ptr
+   is
+      use System.Storage_Elements;
+   begin
+      return To_Memory_Ptr (To_Address (Base) - Storage_Offset (Off));
+   end "-";
+
    type Ghdl_U8_Ptr is access all Ghdl_U8;
    function To_U8_Ptr is
       new Ada.Unchecked_Conversion (Address, Ghdl_U8_Ptr);

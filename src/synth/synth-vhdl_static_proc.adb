@@ -24,6 +24,7 @@ with Vhdl.Errors; use Vhdl.Errors;
 
 with Elab.Memtype;
 with Elab.Vhdl_Values; use Elab.Vhdl_Values;
+with Elab.Vhdl_Objtypes;
 with Elab.Vhdl_Heap;
 with Elab.Vhdl_Files; use Elab.Vhdl_Files;
 with Elab.Debugger;
@@ -36,18 +37,19 @@ package body Synth.Vhdl_Static_Proc is
 
    procedure Synth_Deallocate (Syn_Inst : Synth_Instance_Acc; Imp : Node)
    is
+      use Elab.Vhdl_Objtypes;
       Inter : constant Node := Get_Interface_Declaration_Chain (Imp);
       Param : constant Valtyp := Get_Value (Syn_Inst, Inter);
-      Val : Heap_Index;
+      Val : Heap_Ptr;
    begin
       if not Is_Static (Param.Val) then
          --  Certainly an error (and certainly already reported).
          return;
       end if;
       Val := Read_Access (Param);
-      if Val /= Null_Heap_Index then
+      if Val /= Null_Heap_Ptr then
          Elab.Vhdl_Heap.Synth_Deallocate (Val);
-         Write_Access (Param.Val.Mem, Null_Heap_Index);
+         Write_Access (Param.Val.Mem, Null_Heap_Ptr);
       end if;
    end Synth_Deallocate;
 

@@ -42,6 +42,7 @@ package Elab.Memtype is
    --  Low-level functions.
 
    function "+" (Base : Memory_Ptr; Off : Size_Type) return Memory_Ptr;
+   function "-" (Base : Memory_Ptr; Off : Size_Type) return Memory_Ptr;
 
    procedure Write_U8 (Mem : Memory_Ptr; Val : Ghdl_U8);
    function Read_U8 (Mem : Memory_Ptr) return Ghdl_U8;

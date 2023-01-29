@@ -16,6 +16,8 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
+with Types; use Types;
+
 with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
 with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 
@@ -23,11 +25,16 @@ package Elab.Vhdl_Heap is
 
    --  Allocate a value.
    function Allocate_By_Type (Acc_Typ : Type_Acc; T : Type_Acc)
-                             return Heap_Index;
+                             return Heap_Ptr;
    function Allocate_By_Value (Acc_Typ : Type_Acc; V : Valtyp)
-                              return Heap_Index;
+                              return Heap_Ptr;
 
-   function Synth_Dereference (Idx : Heap_Index) return Memtyp;
+   function Synth_Dereference (Ptr : Heap_Ptr) return Memtyp;
 
-   procedure Synth_Deallocate (Idx : Heap_Index);
+   procedure Synth_Deallocate (Ptr : Heap_Ptr);
+
+   type Heap_Slot is new Uns32;
+
+   function Get_Index (Ptr : Heap_Ptr) return Heap_Slot;
+   function Get_Pointer (Idx : Heap_Slot) return Heap_Ptr;
 end Elab.Vhdl_Heap;
