@@ -37,7 +37,7 @@ package body Synthesis is
       Ctxt : Context_Acc;
    begin
       Top_Module :=
-        New_Design (New_Sname_Artificial (Get_Identifier ("top"), No_Sname));
+        New_Design (New_Sname_Artificial (Get_Identifier ("top")));
       Ctxt := Build_Builders (Top_Module);
 
       Base := new Base_Instance_Type'(Builder => Ctxt,

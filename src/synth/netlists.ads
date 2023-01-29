@@ -55,7 +55,7 @@ package Netlists is
    --  is no check that the name already exists, so these routines may create
    --  a duplicate name.  Callers must ensure they create uniq names.
    function New_Sname_User (Id : Name_Id; Prefix : Sname) return Sname;
-   function New_Sname_Artificial (Id : Name_Id; Prefix : Sname) return Sname;
+   function New_Sname_Artificial (Id : Name_Id) return Sname;
    function New_Sname_Version (Ver : Uns32; Prefix : Sname) return Sname;
 
    --  Read the content of an Sname.

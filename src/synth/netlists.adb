@@ -43,10 +43,10 @@ package body Netlists is
       return Snames_Table.Last;
    end New_Sname_User;
 
-   function New_Sname_Artificial (Id : Name_Id; Prefix : Sname) return Sname is
+   function New_Sname_Artificial (Id : Name_Id) return Sname is
    begin
       Snames_Table.Append ((Kind => Sname_Artificial,
-                            Prefix => Prefix,
+                            Prefix => No_Sname,
                             Suffix => Uns32 (Id)));
       return Snames_Table.Last;
    end New_Sname_Artificial;
@@ -1541,8 +1541,7 @@ begin
    pragma Assert (Modules_Table.Last = No_Module);
 
    Modules_Table.Append ((Parent => No_Module,
-                          Name => New_Sname_Artificial (Std_Names.Name_None,
-                                                        No_Sname),
+                          Name => New_Sname_Artificial (Std_Names.Name_None),
                           Id => Id_Free,
                           First_Port_Desc => No_Port_Desc_Idx,
                           Nbr_Inputs => 0,
