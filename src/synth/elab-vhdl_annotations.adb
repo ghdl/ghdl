@@ -44,10 +44,6 @@ package body Elab.Vhdl_Annotations is
 
    procedure Annotate_Type_Definition (Block_Info: Sim_Info_Acc; Def: Iir);
 
-   --  Annotate type definition DEF only if it is anonymous.
-   procedure Annotate_Anonymous_Type_Definition
-     (Block_Info: Sim_Info_Acc; Def: Iir);
-
    -- Add an annotation to object OBJ.
    procedure Create_Object_Info (Block_Info : Sim_Info_Acc;
                                  Obj : Iir;
@@ -135,16 +131,6 @@ package body Elab.Vhdl_Annotations is
       return Info;
    end Create_Block_Info;
 
-   --  Annotate type definition DEF only if it is anonymous.
-   procedure Annotate_Anonymous_Type_Definition
-     (Block_Info: Sim_Info_Acc; Def: Iir) is
-   begin
-      if Is_Anonymous_Type_Definition (Def) then
-         Annotate_Type_Definition (Block_Info, Def);
-      end if;
-   end Annotate_Anonymous_Type_Definition;
-
-
    procedure Annotate_Protected_Type_Declaration (Block_Info : Sim_Info_Acc;
                                                   Prot: Iir)
    is
@@ -219,8 +205,6 @@ package body Elab.Vhdl_Annotations is
            | Iir_Kind_Floating_Subtype_Definition
            | Iir_Kind_Enumeration_Subtype_Definition
            | Iir_Kind_Physical_Subtype_Definition =>
-            Annotate_Anonymous_Type_Definition
-              (Block_Info, Get_Base_Type (Def));
             Create_Object_Info (Block_Info, Def, Kind_Type);
 
          when Iir_Kind_Integer_Type_Definition =>
@@ -241,7 +225,7 @@ package body Elab.Vhdl_Annotations is
                --  But only if it is a proper new subtype definition
                --  (ie not a denoting name, or attributes like 'subtype).
                El := Get_Element_Subtype (Def);
-               Annotate_Anonymous_Type_Definition (Block_Info, El);
+               Annotate_Type_Definition (Block_Info, El);
             end if;
 
             --  Then for the array.
@@ -390,11 +374,7 @@ package body Elab.Vhdl_Annotations is
       --  of the interfaces are elaborated in the outer context.
       Annotate_Interface_List_Subtype (Block_Info, Interfaces);
 
-      if Get_Kind (Subprg) = Iir_Kind_Function_Declaration then
-         --  FIXME: can this create a new annotation ?
-         Annotate_Anonymous_Type_Definition
-           (Block_Info, Get_Return_Type (Subprg));
-      end if;
+      --  The return type is a type mark, so already annotated.
    end Annotate_Subprogram_Interfaces_Type;
 
    procedure Annotate_Subprogram_Specification
@@ -575,18 +555,13 @@ package body Elab.Vhdl_Annotations is
       Annotate_Declaration_List (Package_Info, Get_Declaration_Chain (Bod));
    end Annotate_Package_Body;
 
-   procedure Annotate_Declaration_Type (Block_Info: Sim_Info_Acc; Decl: Iir)
-   is
-      Ind : Iir;
+   procedure Annotate_Declaration_Type (Block_Info: Sim_Info_Acc; Decl: Iir) is
    begin
-      if Get_Is_Ref (Decl) then
-         return;
+      if Is_Owned_Subtype_Indication (Decl) then
+         --  Really annotate the subtype indication, which might be different
+         --  from the type (for constant declarations).
+         Annotate_Type_Definition (Block_Info, Get_Subtype_Indication (Decl));
       end if;
-      Ind := Get_Subtype_Indication (Decl);
-      if Get_Kind (Ind) in Iir_Kinds_Denoting_Name then
-         return;
-      end if;
-      Annotate_Type_Definition (Block_Info, Ind);
    end Annotate_Declaration_Type;
 
    procedure Annotate_Declaration (Block_Info: Sim_Info_Acc; Decl: Iir) is
@@ -677,9 +652,8 @@ package body Elab.Vhdl_Annotations is
             Annotate_Subprogram_Body (Block_Info, Decl);
 
          when Iir_Kind_Object_Alias_Declaration =>
-            if Get_Subtype_Indication (Decl) /= Null_Iir then
-               Annotate_Anonymous_Type_Definition
-                 (Block_Info, Get_Type (Decl));
+            if Is_Owned_Subtype_Indication (Decl) then
+               Annotate_Type_Definition (Block_Info, Get_Type (Decl));
             end if;
             Create_Object_Info (Block_Info, Decl);
 

@@ -1336,6 +1336,7 @@ package body Vhdl.Utils is
       Def := Get_Subtype_Indication (Decl);
       --  Implicit functions don't have subtype indication.
       --  TODO: make them regular ?
+      --  Also, object aliases may not have a subtype indication.
       if Def = Null_Iir then
          return False;
       end if;
