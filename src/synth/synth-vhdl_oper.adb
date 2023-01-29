@@ -887,7 +887,8 @@ package body Synth.Vhdl_Oper is
       begin
          Error_Msg_Synth
            (Get_Caller_Instance (Syn_Inst), Expr,
-            "unhandled function: " & Iir_Predefined_Functions'Image (Def));
+            "unhandled dyn operation: "
+              & Iir_Predefined_Functions'Image (Def));
          return No_Valtyp;
       end Error_Unhandled;
    begin
@@ -958,27 +959,33 @@ package body Synth.Vhdl_Oper is
             | Iir_Predefined_Ieee_Std_Logic_Signed_Abs_Slv =>
             return Synth_Vec_Monadic (Id_Abs);
 
-         when Iir_Predefined_Ieee_1164_And_Suv
+         when Iir_Predefined_TF_Reduction_And
+            | Iir_Predefined_Ieee_1164_And_Suv
             | Iir_Predefined_Ieee_Numeric_Std_And_Sgn
             | Iir_Predefined_Ieee_Numeric_Std_And_Uns =>
             return Synth_Vec_Reduce_Monadic (Id_Red_And);
-         when Iir_Predefined_Ieee_1164_Nand_Suv
+         when Iir_Predefined_TF_Reduction_Nand
+            | Iir_Predefined_Ieee_1164_Nand_Suv
             | Iir_Predefined_Ieee_Numeric_Std_Nand_Sgn
             | Iir_Predefined_Ieee_Numeric_Std_Nand_Uns =>
             return Synth_Vec_Reduce_Monadic (Id_Red_And, True);
-         when Iir_Predefined_Ieee_1164_Or_Suv
+         when Iir_Predefined_TF_Reduction_Or
+            | Iir_Predefined_Ieee_1164_Or_Suv
             | Iir_Predefined_Ieee_Numeric_Std_Or_Sgn
             | Iir_Predefined_Ieee_Numeric_Std_Or_Uns =>
             return Synth_Vec_Reduce_Monadic (Id_Red_Or);
-         when Iir_Predefined_Ieee_1164_Nor_Suv
+         when Iir_Predefined_TF_Reduction_Nor
+            | Iir_Predefined_Ieee_1164_Nor_Suv
             | Iir_Predefined_Ieee_Numeric_Std_Nor_Sgn
             | Iir_Predefined_Ieee_Numeric_Std_Nor_Uns =>
             return Synth_Vec_Reduce_Monadic (Id_Red_Or, True);
-         when Iir_Predefined_Ieee_1164_Xor_Suv
+         when Iir_Predefined_TF_Reduction_Xor
+            | Iir_Predefined_Ieee_1164_Xor_Suv
             | Iir_Predefined_Ieee_Numeric_Std_Xor_Sgn
             | Iir_Predefined_Ieee_Numeric_Std_Xor_Uns =>
             return Synth_Vec_Reduce_Monadic (Id_Red_Xor);
-         when Iir_Predefined_Ieee_1164_Xnor_Suv
+         when Iir_Predefined_TF_Reduction_Xnor
+            | Iir_Predefined_Ieee_1164_Xnor_Suv
             | Iir_Predefined_Ieee_Numeric_Std_Xnor_Sgn
             | Iir_Predefined_Ieee_Numeric_Std_Xnor_Uns =>
             return Synth_Vec_Reduce_Monadic (Id_Red_Xor, True);
