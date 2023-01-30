@@ -313,20 +313,21 @@ package body Elab.Vhdl_Insts is
            and then not Get_Elab_Flag (Dep)
          then
             Set_Elab_Flag (Dep, True);
-            Elab_Dependencies (Parent_Inst, Dep);
             Dep_Unit := Get_Library_Unit (Dep);
             case Iir_Kinds_Library_Unit (Get_Kind (Dep_Unit)) is
                when Iir_Kind_Entity_Declaration =>
                   null;
                when Iir_Kind_Configuration_Declaration =>
+                  Elab_Dependencies (Parent_Inst, Dep);
                   Elab_Configuration_Declaration (Parent_Inst, Dep_Unit);
                when Iir_Kind_Context_Declaration =>
-                  null;
+                  Elab_Dependencies (Parent_Inst, Dep);
                when Iir_Kind_Package_Declaration =>
                   declare
                      Bod : constant Node := Get_Package_Body (Dep_Unit);
                      Bod_Unit : Node;
                   begin
+                     Elab_Dependencies (Parent_Inst, Dep);
                      Elab_Package_Declaration (Parent_Inst, Dep_Unit);
                      --  Do not try to elaborate math_real body: there are
                      --  functions with loop.  Currently, try create signals,
@@ -338,6 +339,7 @@ package body Elab.Vhdl_Insts is
                      end if;
                   end;
                when Iir_Kind_Package_Instantiation_Declaration =>
+                  Elab_Dependencies (Parent_Inst, Dep);
                   Elab_Package_Instantiation (Parent_Inst, Dep_Unit);
                when Iir_Kind_Package_Body =>
                   null;
