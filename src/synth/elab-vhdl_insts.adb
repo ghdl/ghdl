@@ -697,7 +697,7 @@ package body Elab.Vhdl_Insts is
          return;
       end if;
 
-      pragma Assert (Areapools.Is_Empty (Expr_Pool));
+      pragma Assert (Is_Expr_Pool_Empty);
 
       Entity := Get_Entity (Arch);
       Apply_Block_Configuration (Config, Arch);
@@ -705,29 +705,39 @@ package body Elab.Vhdl_Insts is
       Elab.Vhdl_Files.Set_Design_Unit (Arch);
 
       Elab_Declarations (Syn_Inst, Get_Declaration_Chain (Entity));
-      Elab_Concurrent_Statements
-        (Syn_Inst, Get_Concurrent_Statement_Chain (Entity));
+      pragma Assert (Is_Expr_Pool_Empty);
 
-      pragma Assert (Areapools.Is_Empty (Expr_Pool));
+      if not Is_Error (Syn_Inst) then
+         Elab_Concurrent_Statements
+           (Syn_Inst, Get_Concurrent_Statement_Chain (Entity));
+         pragma Assert (Is_Expr_Pool_Empty);
+      end if;
 
-      Elab_Verification_Units (Syn_Inst, Entity);
+      if not Is_Error (Syn_Inst) then
+         Elab_Verification_Units (Syn_Inst, Entity);
+         pragma Assert (Is_Expr_Pool_Empty);
+      end if;
 
-      pragma Assert (Areapools.Is_Empty (Expr_Pool));
+      if not Is_Error (Syn_Inst) then
+         Elab_Declarations (Syn_Inst, Get_Declaration_Chain (Arch));
+         pragma Assert (Is_Expr_Pool_Empty);
+      end if;
 
-      Elab_Declarations (Syn_Inst, Get_Declaration_Chain (Arch));
-      pragma Assert (Areapools.Is_Empty (Expr_Pool));
-      Elab_Concurrent_Statements
-        (Syn_Inst, Get_Concurrent_Statement_Chain (Arch));
+      if not Is_Error (Syn_Inst) then
+         Elab_Concurrent_Statements
+           (Syn_Inst, Get_Concurrent_Statement_Chain (Arch));
+         pragma Assert (Is_Expr_Pool_Empty);
+      end if;
 
-      pragma Assert (Areapools.Is_Empty (Expr_Pool));
+      if not Is_Error (Syn_Inst) then
+         Elab_Recurse_Instantiations (Syn_Inst, Arch);
+         pragma Assert (Areapools.Is_Empty (Expr_Pool));
+      end if;
 
-      Elab_Recurse_Instantiations (Syn_Inst, Arch);
-
-      pragma Assert (Areapools.Is_Empty (Expr_Pool));
-
-      Elab_Verification_Units (Syn_Inst, Arch);
-
-      pragma Assert (Areapools.Is_Empty (Expr_Pool));
+      if not Is_Error (Syn_Inst) then
+         Elab_Verification_Units (Syn_Inst, Arch);
+         pragma Assert (Areapools.Is_Empty (Expr_Pool));
+      end if;
    end Elab_Instance_Body;
 
    procedure Elab_Direct_Instantiation_Statement
