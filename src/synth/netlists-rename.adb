@@ -31,9 +31,11 @@ package body Netlists.Rename is
       Res : String (1 .. 12);
       Len : Positive;
    begin
+      --  Only user names can clash.
       if Get_Sname_Kind (Name) /= Sname_User then
          return Name;
       end if;
+      --  If prefixed, it cannot clash with a reserved identifier.
       if Get_Sname_Prefix (Name) /= No_Sname then
          return Name;
       end if;
