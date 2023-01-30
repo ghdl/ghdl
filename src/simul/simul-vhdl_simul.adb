@@ -276,7 +276,7 @@ package body Simul.Vhdl_Simul is
                      Smem := Val.Mem + Size_Type (I - 1) * El.Sz;
                   end if;
                   Assign_Value_To_Signal
-                    ((El, Sig_Index (Target.Mem, (Len - I) * El.W)),
+                    ((El, Sig_Index (Target.Mem, (I - 1) * El.W)),
                      Is_Start, Rej, After, (Val.Typ.Arr_El, Smem));
                end loop;
             end;
@@ -349,7 +349,7 @@ package body Simul.Vhdl_Simul is
                      Smem := Val.Mem + Size_Type (I - 1) * El.Sz;
                   end if;
                   Force_Signal_Value
-                    ((El, Sig_Index (Target.Mem, (Len - I) * El.W)),
+                    ((El, Sig_Index (Target.Mem, (I - 1) * El.W)),
                      Kind, Mode, (Val.Typ.Arr_El, Smem));
                end loop;
             end;
@@ -390,7 +390,7 @@ package body Simul.Vhdl_Simul is
             begin
                for I in 1 .. Len loop
                   Add_Source (Typ.Arr_El,
-                              Sig_Index (Sig, (Len - I) * Typ.Arr_El.W),
+                              Sig_Index (Sig, (I - 1) * Typ.Arr_El.W),
                               Val + Size_Type (I - 1) * Typ.Arr_El.Sz);
                end loop;
             end;
@@ -483,7 +483,7 @@ package body Simul.Vhdl_Simul is
                Sub : Memory_Ptr;
             begin
                for I in 1 .. Len loop
-                  Sub := Sig_Index (Sig.Mem, (Len - I) * Sig.Typ.Arr_El.W);
+                  Sub := Sig_Index (Sig.Mem, (I - 1) * Sig.Typ.Arr_El.W);
                   if Read_Signal_Flag ((Sig.Typ.Arr_El, Sub), Kind) then
                      return True;
                   end if;
@@ -768,7 +768,7 @@ package body Simul.Vhdl_Simul is
             begin
                for I in 1 .. Len loop
                   Add_Wait_Sensitivity
-                    (Typ.Arr_El, Sig_Index (Sig, (Len - I) * Typ.Arr_El.W));
+                    (Typ.Arr_El, Sig_Index (Sig, (I - 1) * Typ.Arr_El.W));
                end loop;
             end;
          when Type_Record =>
@@ -1175,7 +1175,7 @@ package body Simul.Vhdl_Simul is
             begin
                for I in 1 .. Len loop
                   Disconnect_Signal
-                    ((El, Sig_Index (Sig.Mem, (Len - I) * El.W)));
+                    ((El, Sig_Index (Sig.Mem, (I - 1) * El.W)));
                end loop;
             end;
          when Type_Record =>
@@ -1933,7 +1933,7 @@ package body Simul.Vhdl_Simul is
             begin
                for I in 1 .. Len loop
                   Add_Sensitivity
-                    (Typ.Arr_El, Sig_Index (Sig, (Len - I) * Typ.Arr_El.W));
+                    (Typ.Arr_El, Sig_Index (Sig, (I - 1) * Typ.Arr_El.W));
                end loop;
             end;
          when Type_Record =>
@@ -2377,7 +2377,7 @@ package body Simul.Vhdl_Simul is
                for I in 1 .. Len loop
                   Resolver_Read_Value
                     ((Typ.Arr_El, Dst.Mem + Size_Type (I - 1) * Typ.Arr_El.Sz),
-                     Sig_Index (Sig, (Len - I) * Typ.Arr_El.W),
+                     Sig_Index (Sig, (I - 1) * Typ.Arr_El.W),
                      Mode, Index);
                end loop;
             end;
@@ -2427,7 +2427,7 @@ package body Simul.Vhdl_Simul is
             begin
                Res := Std_Time'First;
                for I in 1 .. Len loop
-                  Sigel := Sig_Index (Sig, (Len - I) * Typ.Arr_El.W);
+                  Sigel := Sig_Index (Sig, (I - 1) * Typ.Arr_El.W);
                   T := Exec_Read_Signal_Last (Sigel, Typ.Arr_El, Attr);
                   Res := Std_Time'Max (Res, T);
                end loop;
@@ -2544,7 +2544,7 @@ package body Simul.Vhdl_Simul is
             begin
                for I in 1 .. Len loop
                   Exec_Read_Signal
-                    (Sig_Index (Sig, (Len - I) * Typ.Arr_El.W),
+                    (Sig_Index (Sig, (I - 1) * Typ.Arr_El.W),
                      (Typ.Arr_El, Val.Mem + Size_Type (I - 1) * Typ.Arr_El.Sz),
                      Attr, T);
                end loop;
@@ -2671,7 +2671,7 @@ package body Simul.Vhdl_Simul is
             begin
                for I in 1 .. Len loop
                   Exec_Write_Signal
-                    (Sig_Index (Sig, (Len - I) * Typ.Arr_El.W),
+                    (Sig_Index (Sig, (I - 1) * Typ.Arr_El.W),
                      (Typ.Arr_El, Val.Mem + Size_Type (I - 1) * Typ.Arr_El.Sz),
                      Attr);
                end loop;
@@ -2885,7 +2885,7 @@ package body Simul.Vhdl_Simul is
                   end if;
                   for I in 1 .. Len loop
                      Create_Signal (Val + Size_Type (I - 1) * Typ.Arr_El.Sz,
-                                    Sig_Off + (Len - I) * Typ.Arr_El.W,
+                                    Sig_Off + (I - 1) * Typ.Arr_El.W,
                                     El_Type, Typ.Arr_El,
                                     Vec, Sub_Resolved);
                   end loop;
@@ -3051,9 +3051,9 @@ package body Simul.Vhdl_Simul is
             begin
                for I in 1 .. Len loop
                   Create_Delayed_Signal
-                    (Sig_Index (Sig,  (Len - I) * Typ.Arr_El.W),
+                    (Sig_Index (Sig,  (I - 1) * Typ.Arr_El.W),
                      Val + Size_Type (I - 1) * Typ.Arr_El.Sz,
-                     Sig_Index (Pfx, (Len - I) * Typ.Arr_El.W),
+                     Sig_Index (Pfx, (I - 1) * Typ.Arr_El.W),
                      Typ.Arr_El, Time);
                end loop;
             end;
@@ -3094,7 +3094,7 @@ package body Simul.Vhdl_Simul is
             begin
                for I in 1 .. Len loop
                   Register_Prefix
-                    (Typ.Arr_El, Sig_Index (Sig, (Len - I) * Typ.Arr_El.W));
+                    (Typ.Arr_El, Sig_Index (Sig, (I - 1) * Typ.Arr_El.W));
                end loop;
             end;
          when Type_Record =>
@@ -3196,7 +3196,7 @@ package body Simul.Vhdl_Simul is
             begin
                for I in 1 .. Len loop
                   Set_Disconnect (Typ.Arr_El,
-                                  Sig_Index (Sig, (Len - I) * Typ.Arr_El.W),
+                                  Sig_Index (Sig, (I - 1) * Typ.Arr_El.W),
                                   Val);
                end loop;
             end;
@@ -3247,9 +3247,9 @@ package body Simul.Vhdl_Simul is
             begin
                for I in 1 .. Len loop
                   Add_Extra_Driver_To_Signal
-                    (Sig_Index (Sig, (Len - I) * El.W), El,
+                    (Sig_Index (Sig, (I - 1) * El.W), El,
                      Init + Size_Type (I - 1) * El.Sz,
-                     Off + (Len - I) * El.W, Vec);
+                     Off + (I - 1) * El.W, Vec);
                end loop;
             end;
          when Type_Record =>
@@ -3320,9 +3320,9 @@ package body Simul.Vhdl_Simul is
                   raise Internal_Error;
                end if;
                for I in 1 .. Len loop
-                  Connect ((Etyp, Sig_Index (Dst.Mem, (Len - I) * Etyp.W)),
+                  Connect ((Etyp, Sig_Index (Dst.Mem, (I - 1) * Etyp.W)),
                            (Src.Typ.Arr_El,
-                            Sig_Index (Src.Mem, (Len - I) * Etyp.W)),
+                            Sig_Index (Src.Mem, (I - 1) * Etyp.W)),
                            Mode);
                end loop;
             end;
@@ -3380,7 +3380,7 @@ package body Simul.Vhdl_Simul is
             begin
                for I in 1 .. Len loop
                   Create_Shadow_Signal
-                    (Sig_Index (Sig, (Len - I) * Typ.Arr_El.W),
+                    (Sig_Index (Sig, (I - 1) * Typ.Arr_El.W),
                      Val + Size_Type (I - 1) * Typ.Arr_El.Sz,
                      Typ.Arr_El);
                end loop;
@@ -3476,9 +3476,7 @@ package body Simul.Vhdl_Simul is
             return Read_Sig (Sig);
          when Type_Vector
            | Type_Array =>
-            return Get_Leftest_Signal
-              (Sig_Index (Sig, (Typ.Abound.Len - 1) * Typ.Arr_El.W),
-               Typ.Arr_El);
+            return Get_Leftest_Signal (Sig, Typ.Arr_El);
          when Type_Record =>
             declare
                E : Rec_El_Type renames Typ.Rec.E (1);
@@ -3628,7 +3626,7 @@ package body Simul.Vhdl_Simul is
             begin
                for I in 1 .. Len loop
                   Signal_Associate_Cst
-                    (Sig_Index (Sig, (Len - I) * Typ.Arr_El.W),
+                    (Sig_Index (Sig, (I - 1) * Typ.Arr_El.W),
                      Typ.Arr_El,
                      Val + Size_Type (I - 1) * Typ.Arr_El.Sz);
                end loop;
@@ -3690,7 +3688,7 @@ package body Simul.Vhdl_Simul is
             begin
                for I in 1 .. Len loop
                   Update_Sig_Val (El,
-                                  Sig_Index (Sigs, (Len - I) * El.W),
+                                  Sig_Index (Sigs, (I - 1) * El.W),
                                   Vals + Size_Type (I - 1) * El.Sz);
                end loop;
             end;

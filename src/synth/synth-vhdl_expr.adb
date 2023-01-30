@@ -838,9 +838,11 @@ package body Synth.Vhdl_Expr is
 
    --  Convert index IDX in PFX to an offset.
    --  SYN_INST and LOC are used in case of error.
-   function Index_To_Offset
-     (Syn_Inst : Synth_Instance_Acc; Bnd : Bound_Type; Idx : Int64; Loc : Node)
-     return Value_Offsets
+   function Index_To_Offset (Syn_Inst : Synth_Instance_Acc;
+                             Bnd : Bound_Type;
+                             Order : Wkind_Type;
+                             Idx : Int64;
+                             Loc : Node) return Value_Offsets
    is
       Res : Value_Offsets;
    begin
@@ -852,10 +854,22 @@ package body Synth.Vhdl_Expr is
       --  The offset is from the LSB (bit 0).  Bit 0 is the rightmost one.
       case Bnd.Dir is
          when Dir_To =>
-            Res.Net_Off := Uns32 (Bnd.Right - Int32 (Idx));
+            case Order is
+               when Wkind_Undef
+                 | Wkind_Net =>
+                  Res.Net_Off := Uns32 (Bnd.Right - Int32 (Idx));
+               when Wkind_Sim =>
+                  Res.Net_Off := Uns32 (Int32 (Idx) - Bnd.Left);
+            end case;
             Res.Mem_Off := Size_Type (Int32 (Idx) - Bnd.Left);
          when Dir_Downto =>
-            Res.Net_Off := Uns32 (Int32 (Idx) - Bnd.Right);
+            case Order is
+               when Wkind_Undef
+                 | Wkind_Net =>
+                  Res.Net_Off := Uns32 (Int32 (Idx) - Bnd.Right);
+               when Wkind_Sim =>
+                  Res.Net_Off := Uns32 (Bnd.Left - Int32 (Idx));
+            end case;
             Res.Mem_Off := Size_Type (Bnd.Left - Int32 (Idx));
       end case;
 
@@ -945,7 +959,8 @@ package body Synth.Vhdl_Expr is
             Bound_Error (Syn_Inst, Idx_Expr, Bnd, Int32 (Idx));
             Error := True;
          else
-            Idx_Off := Index_To_Offset (Syn_Inst, Bnd, Idx, Idx_Expr);
+            Idx_Off := Index_To_Offset (Syn_Inst, Bnd, Arr_Typ.Wkind,
+                                        Idx, Idx_Expr);
             Off.Net_Off := Off.Net_Off
               + Idx_Off.Net_Off * Stride * El_Typ.W;
             Off.Mem_Off := Off.Mem_Off
@@ -1227,6 +1242,7 @@ package body Synth.Vhdl_Expr is
                                        Expr : Node;
                                        Name : Node;
                                        Pfx_Bnd : Bound_Type;
+                                       Order : Wkind_Type;
                                        L, R : Int64;
                                        Dir : Direction_Type;
                                        El_Typ : Type_Acc;
@@ -1277,11 +1293,27 @@ package body Synth.Vhdl_Expr is
          case Pfx_Bnd.Dir is
             when Dir_To =>
                Len := Uns32 (R - L + 1);
-               Off.Net_Off := Uns32 (Pfx_Bnd.Right - Int32 (R)) * El_Typ.W;
+               case Order is
+                  when Wkind_Undef
+                    | Wkind_Net =>
+                     Off.Net_Off :=
+                       Uns32 (Pfx_Bnd.Right - Int32 (R)) * El_Typ.W;
+                  when Wkind_Sim =>
+                     Off.Net_Off :=
+                       Uns32 (Int32 (L) - Pfx_Bnd.Left) * El_Typ.W;
+               end case;
                Off.Mem_Off := Size_Type (Int32 (L) - Pfx_Bnd.Left) * El_Typ.Sz;
             when Dir_Downto =>
                Len := Uns32 (L - R + 1);
-               Off.Net_Off := Uns32 (Int32 (R) - Pfx_Bnd.Right) * El_Typ.W;
+               case Order is
+                  when Wkind_Undef
+                    | Wkind_Net =>
+                     Off.Net_Off :=
+                       Uns32 (Int32 (R) - Pfx_Bnd.Right) * El_Typ.W;
+                  when Wkind_Sim =>
+                     Off.Net_Off :=
+                       Uns32 (Pfx_Bnd.Left - Int32 (L)) * El_Typ.W;
+               end case;
                Off.Mem_Off := Size_Type (Pfx_Bnd.Left - Int32 (L)) * El_Typ.Sz;
          end case;
       end if;
@@ -1295,6 +1327,7 @@ package body Synth.Vhdl_Expr is
    procedure Synth_Slice_Suffix (Syn_Inst : Synth_Instance_Acc;
                                  Name : Node;
                                  Pfx_Bnd : Bound_Type;
+                                 Order : Wkind_Type;
                                  El_Typ : Type_Acc;
                                  Res_Bnd : out Bound_Type;
                                  Inp : out Net;
@@ -1325,7 +1358,7 @@ package body Synth.Vhdl_Expr is
          begin
             Synth_Discrete_Range (Syn_Inst, Expr, Rng);
             Synth_Slice_Const_Suffix (Syn_Inst, Expr,
-                                      Name, Pfx_Bnd,
+                                      Name, Pfx_Bnd, Order,
                                       Rng.Left, Rng.Right, Rng.Dir,
                                       El_Typ, Res_Bnd, Off, Error);
             return;
@@ -1334,7 +1367,7 @@ package body Synth.Vhdl_Expr is
 
       if Is_Static_Val (Left.Val) and then Is_Static_Val (Right.Val) then
          Synth_Slice_Const_Suffix (Syn_Inst, Expr,
-                                   Name, Pfx_Bnd,
+                                   Name, Pfx_Bnd, Order,
                                    Get_Static_Discrete (Left),
                                    Get_Static_Discrete (Right),
                                    Dir,

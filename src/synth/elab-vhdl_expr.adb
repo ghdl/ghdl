@@ -484,8 +484,8 @@ package body Elab.Vhdl_Expr is
             begin
                Pfx_Typ := Exec_Name_Subtype (Syn_Inst, Get_Prefix (Name));
                Get_Onedimensional_Array_Bounds (Pfx_Typ, Pfx_Bnd, El_Typ);
-               Synth_Slice_Suffix (Syn_Inst, Name, Pfx_Bnd, El_Typ,
-                                   Res_Bnd, Inp, Sl_Off, Err);
+               Synth_Slice_Suffix (Syn_Inst, Name, Pfx_Bnd, Pfx_Typ.Wkind,
+                                   El_Typ, Res_Bnd, Inp, Sl_Off, Err);
                if Err then
                   return null;
                end if;

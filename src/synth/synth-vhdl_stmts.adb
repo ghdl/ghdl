@@ -188,7 +188,7 @@ package body Synth.Vhdl_Stmts is
       end if;
 
       Get_Onedimensional_Array_Bounds (Dest_Typ, Pfx_Bnd, El_Typ);
-      Synth_Slice_Suffix (Syn_Inst, Pfx, Pfx_Bnd, El_Typ,
+      Synth_Slice_Suffix (Syn_Inst, Pfx, Pfx_Bnd, Dest_Typ.Wkind, El_Typ,
                           Res_Bnd, Sl_Voff, Sl_Off, Err);
 
       if Err then

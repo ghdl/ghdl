@@ -119,6 +119,7 @@ package Synth.Vhdl_Expr is
    procedure Synth_Slice_Suffix (Syn_Inst : Synth_Instance_Acc;
                                  Name : Node;
                                  Pfx_Bnd : Bound_Type;
+                                 Order : Wkind_Type;
                                  El_Typ : Type_Acc;
                                  Res_Bnd : out Bound_Type;
                                  Inp : out Net;

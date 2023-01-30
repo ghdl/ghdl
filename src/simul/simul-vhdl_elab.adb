@@ -104,7 +104,7 @@ package body Simul.Vhdl_Elab is
                end if;
                for I in 1 .. Len loop
                   Mark_Resolved_Signals
-                    (Sig_Off + (Len - I) * Typ.Arr_El.W,
+                    (Sig_Off + (I - 1) * Typ.Arr_El.W,
                      El_Type, Typ.Arr_El,
                      Vec, Already_Resolved);
                end loop;
