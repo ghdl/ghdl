@@ -1329,7 +1329,6 @@ package body Elab.Vhdl_Debug is
    is
       use Vhdl.Tokens;
       use Errorout;
-      Cur_Inst : constant Synth_Instance_Acc := Debug_Current_Instance;
       Prev_Nbr_Errors : constant Natural := Nbr_Errors;
       Index_Str : String := Natural'Image (Buffer_Index);
       File : Source_File_Entry;
@@ -1339,6 +1338,7 @@ package body Elab.Vhdl_Debug is
       Opt_Name : Boolean := False;
       Opt_Type : Boolean := False;
       Marker : Mark_Type;
+      Cur_Inst : Synth_Instance_Acc;
       Cur_Scope : Node;
    begin
       --  Decode options: /v
@@ -1374,7 +1374,13 @@ package body Elab.Vhdl_Debug is
          return;
       end if;
 
-      Cur_Scope := Elab.Vhdl_Context.Get_Source_Scope (Cur_Inst);
+      Get_Debug_Loc (Cur_Inst, Cur_Scope);
+      if Cur_Scope = Null_Node
+        or else Get_Kind (Cur_Scope) not in Iir_Kinds_Sequential_Statement
+      then
+         Cur_Scope := Elab.Vhdl_Context.Get_Source_Scope (Cur_Inst);
+      end if;
+
       Enter_Scope (Cur_Scope);
       Expr := Vhdl.Sem_Expr.Sem_Expression_Universal (Expr);
       Leave_Scope (Cur_Scope);

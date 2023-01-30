@@ -45,10 +45,12 @@ package body Elab.Debugger is
       Reason_Error
      );
 
-   function Debug_Current_Instance return Synth_Instance_Acc is
+   procedure Get_Debug_Loc (Inst : out Synth_Instance_Acc;
+                            Loc : out Node) is
    begin
-      return Current_Instance;
-   end Debug_Current_Instance;
+      Inst := Current_Instance;
+      Loc := Current_Loc;
+   end Get_Debug_Loc;
 
    package Breakpoints is new Tables
      (Table_Index_Type => Natural,
@@ -610,6 +612,7 @@ package body Elab.Debugger is
          end if;
       end if;
       Current_Instance := Res;
+      Current_Loc := Null_Node;
    end Change_Hierarchy;
 
    procedure Print_Hierarchy_Path (Line : String)

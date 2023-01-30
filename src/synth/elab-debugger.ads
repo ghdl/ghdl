@@ -53,7 +53,9 @@ package Elab.Debugger is
    pragma Convention (C, Error_Hook_Type);
    Error_Hook : Error_Hook_Type;
 
-   function Debug_Current_Instance return Synth_Instance_Acc;
+   --  Get the current location.
+   procedure Get_Debug_Loc (Inst : out Synth_Instance_Acc;
+                            Loc : out Node);
 
    type Menu_Procedure is access procedure (Line : String);
    type Cst_String_Acc is access constant String;
