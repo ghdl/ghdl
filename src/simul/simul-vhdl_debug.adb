@@ -361,6 +361,9 @@ package body Simul.Vhdl_Debug is
 
    type Info_Signal_Options is record
       Value : Boolean;
+      Conn : Boolean;
+      Types : Boolean;
+      Sources : Boolean;
       Drivers : Boolean;
       Actions : Boolean;
    end record;
@@ -411,66 +414,75 @@ package body Simul.Vhdl_Debug is
          when others =>
             raise Internal_Error;
       end case;
+
+      if Opts.Value = False then
+         Put (" = ");
+         Disp_Memtyp ((S.Typ, S.Val), Get_Type (S.Decl));
+      end if;
       New_Line;
 
-      Put ("  type: ");
-      Debug_Type_Short (S.Typ);
-      Put (", len: ");
-      Put_Uns32 (S.Typ.W);
-      New_Line;
-
-      if S.Kind in Mode_Signal_User then
-         Nbr_Conn_Drv := 0;
-         Conn := S.Connect;
-         while Conn /= No_Connect_Index loop
-            declare
-               C : Connect_Entry renames Connect_Table.Table (Conn);
-            begin
-               if C.Formal.Base = Idx then
-                  if C.Drive_Formal then
-                     Nbr_Conn_Drv := Nbr_Conn_Drv + 1;
-                  end if;
-                  Conn := C.Formal_Link;
-               else
-                  pragma Assert (C.Actual.Base = Idx);
-                  if C.Drive_Actual then
-                     Nbr_Conn_Drv := Nbr_Conn_Drv + 1;
-                  end if;
-                  Conn := C.Actual_Link;
-               end if;
-            end;
-         end loop;
-
-         Nbr_Drv := 0;
-         Driver := S.Drivers;
-         while Driver /= No_Driver_Index loop
-            Nbr_Drv := Nbr_Drv + 1;
-            Driver := Drivers_Table.Table (Driver).Prev_Sig;
-         end loop;
-         Put ("  nbr drivers: ");
-         Put_Int32 (Nbr_Drv);
-         Put (", nbr conn srcs: ");
-         Put_Int32 (Nbr_Conn_Drv);
-         Put (", ");
-      else
-         Put ("  ");
+      if Opts.Types then
+         Put ("  type: ");
+         Debug_Type_Short (S.Typ);
+         Put (", len: ");
+         Put_Uns32 (S.Typ.W);
+         New_Line;
       end if;
 
-      Nbr_Sens := 0;
-      Sens := S.Sensitivity;
-      while Sens /= No_Sensitivity_Index loop
-         Nbr_Sens := Nbr_Sens + 1;
-         Sens := Sensitivity_Table.Table (Sens).Prev_Sig;
-      end loop;
+      if Opts.Conn then
+         if S.Kind in Mode_Signal_User then
+            Nbr_Conn_Drv := 0;
+            Conn := S.Connect;
+            while Conn /= No_Connect_Index loop
+               declare
+                  C : Connect_Entry renames Connect_Table.Table (Conn);
+               begin
+                  if C.Formal.Base = Idx then
+                     if C.Drive_Formal then
+                        Nbr_Conn_Drv := Nbr_Conn_Drv + 1;
+                     end if;
+                     Conn := C.Formal_Link;
+                  else
+                     pragma Assert (C.Actual.Base = Idx);
+                     if C.Drive_Actual then
+                        Nbr_Conn_Drv := Nbr_Conn_Drv + 1;
+                     end if;
+                     Conn := C.Actual_Link;
+                  end if;
+               end;
+            end loop;
 
-      Put ("nbr sensitivity: ");
-      Put_Int32 (Nbr_Sens);
+            Nbr_Drv := 0;
+            Driver := S.Drivers;
+            while Driver /= No_Driver_Index loop
+               Nbr_Drv := Nbr_Drv + 1;
+               Driver := Drivers_Table.Table (Driver).Prev_Sig;
+            end loop;
+            Put ("  nbr drivers: ");
+            Put_Int32 (Nbr_Drv);
+            Put (", nbr conn srcs: ");
+            Put_Int32 (Nbr_Conn_Drv);
+            Put (", ");
+         else
+            Put ("  ");
+         end if;
 
-      Put (", collapsed_by: ");
-      Put_Uns32 (Uns32 (S.Collapsed_By));
-      New_Line;
+         Nbr_Sens := 0;
+         Sens := S.Sensitivity;
+         while Sens /= No_Sensitivity_Index loop
+            Nbr_Sens := Nbr_Sens + 1;
+            Sens := Sensitivity_Table.Table (Sens).Prev_Sig;
+         end loop;
 
-      if Boolean'(True) and then S.Kind in Mode_Signal_User then
+         Put ("nbr sensitivity: ");
+         Put_Int32 (Nbr_Sens);
+
+         Put (", collapsed_by: ");
+         Put_Uns32 (Uns32 (S.Collapsed_By));
+         New_Line;
+      end if;
+
+      if Opts.Sources and then S.Kind in Mode_Signal_User then
          Put ("  nbr sources (drv + conn : total):");
          New_Line;
          for I in 0 .. S.Typ.W - 1 loop
@@ -486,7 +498,7 @@ package body Simul.Vhdl_Debug is
          end loop;
       end if;
 
-      if Opts.Value then
+      if Opts.Conn then
          if S.Kind in Mode_Signal_User then
             Driver := S.Drivers;
             while Driver /= No_Driver_Index loop
@@ -531,7 +543,9 @@ package body Simul.Vhdl_Debug is
                Sens := D.Prev_Sig;
             end;
          end loop;
+      end if;
 
+      if Opts.Value then
          Put ("value (");
          Put_Addr (S.Val.all'Address);
          Put ("): ");
@@ -582,6 +596,9 @@ package body Simul.Vhdl_Debug is
             Put_Line (" -v   disp values");
             Put_Line (" -d   disp drivers");
             Put_Line (" -a   disp actions");
+            Put_Line (" -c   disp connections");
+            Put_Line (" -t   disp types");
+            Put_Line (" -s   disp sources");
             return;
          elsif Line (F .. L) = "-v" then
             Opts.Value := True;
@@ -589,6 +606,12 @@ package body Simul.Vhdl_Debug is
             Opts.Drivers := True;
          elsif Line (F .. L) = "-a" then
             Opts.Actions := True;
+         elsif Line (F .. L) = "-c" then
+            Opts.Conn := True;
+         elsif Line (F .. L) = "-s" then
+            Opts.Sources := True;
+         elsif Line (F .. L) = "-t" then
+            Opts.Types := True;
          elsif Line (F) in '0' .. '9' then
             To_Num (Line (F .. L), Idx, Valid);
             if not Valid
@@ -747,6 +770,9 @@ package body Simul.Vhdl_Debug is
          Put ("  ");
          Put_Fp64 (Fp64 (Current_Time_AMS));
       end if;
+      New_Line;
+      Put ("delta: ");
+      Put_Uns32 (Uns32 (Current_Delta));
       New_Line;
       Put ("next time: ");
       Put_Time (Grt.Processes.Next_Time);
