@@ -656,6 +656,9 @@ package body Elab.Vhdl_Debug is
                New_Line;
                Disp_Hierarchy_Statements
                  (Inst, Get_Concurrent_Statement_Chain (N), Cfg);
+            when Iir_Kind_Process_Statement
+              | Iir_Kind_Sensitized_Process_Statement =>
+               Disp_Hierarchy_Statement (Inst, N, Cfg);
             when others =>
                Vhdl.Errors.Error_Kind ("disp_hierarchy", N);
          end case;
