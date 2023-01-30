@@ -666,6 +666,7 @@ package body Simul.Vhdl_Elab is
    end Gather_Process_Sensitivity;
 
    --  Increment the number of sources for EP.
+   --  (Called for actual of an non-in association).
    procedure Increment_Nbr_Sources (Ep : Sub_Signal_Type) is
    begin
       if Ep.Typ.W = 0 then
@@ -1087,7 +1088,10 @@ package body Simul.Vhdl_Elab is
                   declare
                      Ns : Nbr_Sources_Type renames E.Nbr_Sources (J - 1);
                   begin
+                     --  Total number of sources.  (It was set to 1 to know
+                     --  if it is resolved).
                      Ns.Total := Ns.Nbr_Drivers + Ns.Nbr_Conns;
+                     --  Undriven out ports have a default source.
                      if Ns.Total = 0 and then Is_Out then
                         Ns.Total := 1;
                      end if;
@@ -1101,8 +1105,9 @@ package body Simul.Vhdl_Elab is
                              Signals_Table.Table (E.Collapsed_By)
                              .Nbr_Sources (J - 1);
                         begin
-                           --  Remove 1 for the connection.
-                           C_Ns.Total := C_Ns.Total + Ns.Total - 1;
+                           --  Remove 1 for out connection.
+                           C_Ns.Total :=
+                             C_Ns.Total + Ns.Total - Boolean'Pos (Is_Out);
                         end;
                      end if;
                   end;
