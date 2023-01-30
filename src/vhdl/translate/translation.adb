@@ -55,15 +55,13 @@ package body Translation is
 
    function Get_Resolv_Ortho_Decl (Func : Iir) return O_Dnode
    is
-      Info : Subprg_Resolv_Info_Acc;
+      Info : constant Subprg_Info_Acc := Get_Info (Func);
    begin
-      Info := Get_Info (Func).Subprg_Resolv;
-      if Info = null then
+      if Info = null or else Info.Subprg_Resolv = null then
          --  Maybe the resolver is not used.
          return O_Dnode_Null;
-      else
-         return Info.Resolv_Func;
       end if;
+      return Info.Subprg_Resolv.Resolv_Func;
    end Get_Resolv_Ortho_Decl;
 
    procedure Gen_Filename (Design_File : Iir)
