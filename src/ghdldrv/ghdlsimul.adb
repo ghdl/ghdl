@@ -53,8 +53,10 @@ with Elab.Debugger;
 with Synth.Flags;
 with Synth.Errors;
 with Synth.Vhdl_Foreign;
+
 with Simul.Vhdl_Elab;
 with Simul.Vhdl_Simul;
+with Simul.Main;
 
 package body Ghdlsimul is
    procedure Compile_Init (Analyze_Only : Boolean) is
@@ -234,9 +236,9 @@ package body Ghdlsimul is
       elsif Option = "-t" then
          Synth.Flags.Flag_Trace_Statements := True;
       elsif Option = "-i" then
-         Simul.Vhdl_Simul.Flag_Interractive := True;
+         Simul.Main.Flag_Interractive := True;
       elsif Option = "-ge" then
-         Simul.Vhdl_Simul.Flag_Debug_Elab := True;
+         Simul.Main.Flag_Debug_Elab := True;
       elsif Option'Last > 3
         and then Option (Option'First + 1) = 'g'
         and then Is_Generic_Override_Option (Option)

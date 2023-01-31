@@ -22,8 +22,6 @@ with Areapools;
 
 with Vhdl.Nodes; use Vhdl.Nodes;
 
-with Grt.Vhdl_Types; use Grt.Vhdl_Types;
-
 with Elab.Memtype; use Elab.Memtype;
 with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 
@@ -32,14 +30,6 @@ with Simul.Vhdl_Elab; use Simul.Vhdl_Elab;
 with Grt.Signals;
 
 package Simul.Vhdl_Simul is
-   Break_Time : Std_Time;
-   Break_Step : Boolean;
-
-   Trace_Simulation : Boolean := False;
-
-   Flag_Interractive : Boolean := False;
-   Flag_Debug_Elab : Boolean := False;
-
    Trace_Residues : Boolean := False;
 
    type Process_Kind is (Kind_Process, Kind_PSL);
@@ -84,8 +74,6 @@ package Simul.Vhdl_Simul is
 
    -- If true, disp current time in assert message.
    Disp_Time_Before_Values: Boolean := False;
-
-   Simulation_Finished : exception;
 
    procedure Simulation;
 

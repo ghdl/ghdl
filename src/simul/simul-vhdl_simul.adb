@@ -53,14 +53,13 @@ with Synth.Vhdl_Static_Proc;
 with Synth.Flags;
 with Synth.Ieee.Std_Logic_1164; use Synth.Ieee.Std_Logic_1164;
 
-with Simul.Vhdl_Debug;
+with Simul.Main;
 
 with Grt.Types; use Grt.Types;
+with Grt.Vhdl_Types; use Grt.Vhdl_Types;
 with Grt.Signals; use Grt.Signals;
 with Grt.Options;
-with Grt.Stdio;
 with Grt.Processes;
-with Grt.Main;
 with Grt.Errors;
 with Grt.Severity;
 with Grt.Lib;
@@ -4141,103 +4140,18 @@ package body Simul.Vhdl_Simul is
       Synth.Vhdl_Stmts.Hook_Create_Value_For_Signal_Individual_Assocs :=
         Hook_Create_Value_For_Signal_Individual_Assocs'Access;
 
+      Assertion_Report_Handler := Assertion_Report_Msg'Access;
+
       -- if Flag_Interractive then
       --    Debug (Reason_Elab);
       -- end if;
    end Runtime_Elaborate;
 
-   procedure Ghdl_Elaborate;
-   pragma Export (C, Ghdl_Elaborate, "__ghdl_ELABORATE");
-
-   procedure Ghdl_Elaborate is
+   procedure Simulation is
    begin
-      Runtime_Elaborate;
-   end Ghdl_Elaborate;
+      Simul.Main.Elaborate_Proc := Runtime_Elaborate'Access;
 
-   Ghdl_Progname : constant String := "ghdl" & ASCII.Nul;
-
-   procedure Simulation
-   is
-      Ok : C_Boolean;
-      Status : Integer;
-   begin
-      Break_Time := Std_Time'Last;
-      Break_Step := False;
-
-      Grt.Options.Progname := To_Ghdl_C_String (Ghdl_Progname'Address);
-      Grt.Errors.Set_Error_Stream (Grt.Stdio.stdout);
-
-      Elab.Debugger.Error_Hook := Grt.Errors.Fatal_Error'Access;
-      Simul.Vhdl_Debug.Init;
-
-      pragma Assert (Areapools.Is_Empty (Expr_Pool));
-
-      if Flag_Debug_Elab then
-         Elab.Debugger.Debug_Elab (Vhdl_Elab.Top_Instance);
-      end if;
-
-      Ok := Grt.Main.Run_Elab;
-      if not Ok then
-         return;
-      end if;
-
-      pragma Assert (Areapools.Is_Empty (Expr_Pool));
-      pragma Assert (Areapools.Is_Empty (Process_Pool));
-
-      --  Copy flag.
-      Synth.Flags.Severity_Level := Grt.Options.Severity_Level;
-
-      --  Not supported.
-      Grt.Options.Trace_Signals := False;
-
-      if Flag_Interractive then
-         Elab.Debugger.Debug_Elab (Vhdl_Elab.Top_Instance);
-      end if;
-
-      Grt.Errors.Set_Error_Stream (Grt.Stdio.stdout);
-      Assertion_Report_Handler := Assertion_Report_Msg'Access;
-
-      Status := Grt.Main.Run_Through_Longjump
-        (Grt.Processes.Simulation_Init'Access);
-
-      if Status = 0 then
-         if Grt.Processes.Flag_AMS then
-            Grt.Analog_Solver.Start;
-         end if;
-
-         pragma Assert (Areapools.Is_Empty (Expr_Pool));
-         pragma Assert (Areapools.Is_Empty (Process_Pool));
-
-         loop
-            if Break_Time < Grt.Processes.Next_Time then
-               Grt.Processes.Next_Time := Break_Time;
-            end if;
-
-            Status := Grt.Main.Run_Through_Longjump
-              (Grt.Processes.Simulation_Cycle'Access);
-            exit when Status < 0
-              or Status = Grt.Errors.Run_Stop
-              or Status = Grt.Errors.Run_Finished;
-
-            if Break_Step
-              or else (Current_Time >= Break_Time
-                         and then Break_Time /= Std_Time'Last)
-            then
-               --  No not break anymore on time,
-               Break_Time := Std_Time'Last;
-               Break_Step := False;
-               Elab.Debugger.Debug_Time;
-            end if;
-
-            exit when Grt.Processes.Has_Simulation_Timeout;
-         end loop;
-      end if;
-
-      Grt.Main.Run_Finish (Status);
-   exception
---      when Debugger_Quit =>
---         null;
-      when Simulation_Finished =>
-         null;
+      Simul.Main.Simulation;
    end Simulation;
+
 end Simul.Vhdl_Simul;

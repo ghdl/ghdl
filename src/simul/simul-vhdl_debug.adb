@@ -38,6 +38,7 @@ with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 with Elab.Vhdl_Values.Debug; use Elab.Vhdl_Values.Debug;
 with Simul.Vhdl_Elab; use Simul.Vhdl_Elab;
 with Simul.Vhdl_Simul;
+with Simul.Main;
 
 with Grt.Types; use Grt.Types;
 with Grt.Vhdl_Types; use Grt.Vhdl_Types;
@@ -788,14 +789,14 @@ package body Simul.Vhdl_Debug is
       if P <= Line'Last then
          L := Get_Word (Line, P);
          if Line (P .. L) = "-s" then
-            Simul.Vhdl_Simul.Break_Step := True;
+            Simul.Main.Break_Step := True;
          else
             Delta_Time := Grt.Options.Parse_Time (Line (P .. L));
             if Delta_Time = -1 then
                --  Error, ignore command.
                return;
             end if;
-            Simul.Vhdl_Simul.Break_Time := Current_Time + Delta_Time;
+            Simul.Main.Break_Time := Current_Time + Delta_Time;
             Grt.Processes.Next_Time := Current_Time + Delta_Time;
          end if;
       end if;
