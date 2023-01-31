@@ -115,7 +115,7 @@ package body Simul.Main is
                --  No not break anymore on time,
                Break_Time := Std_Time'Last;
                Break_Step := False;
-               Elab.Debugger.Debug_Time;
+               Elab.Debugger.Debug_Time (Vhdl_Elab.Top_Instance);
             end if;
 
             exit when Grt.Processes.Has_Simulation_Timeout;

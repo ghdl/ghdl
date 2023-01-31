@@ -41,7 +41,7 @@ package Elab.Debugger is
    procedure Debug_Leave (Inst : Synth_Instance_Acc);
 
    --  Debug on a time breakpoint.
-   procedure Debug_Time;
+   procedure Debug_Time (Top : Synth_Instance_Acc);
 
    --  To be called in case of execution error, like:
    --  * index out of bounds.

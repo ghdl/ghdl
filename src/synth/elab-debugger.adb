@@ -1035,9 +1035,9 @@ package body Elab.Debugger is
       Debug (Reason_Break);
    end Debug_Break;
 
-   procedure Debug_Time is
+   procedure Debug_Time (Top : Synth_Instance_Acc) is
    begin
-      Current_Instance := Root_Instance;
+      Current_Instance := Top;
       Current_Loc := Null_Node;
 
       Debug (Reason_Time);
