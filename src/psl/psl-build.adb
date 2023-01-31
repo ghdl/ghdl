@@ -405,6 +405,7 @@ package body PSL.Build is
          S := Add_State (Res);
          Set_Start_State (Res, S);
          Set_Final_State (Res, S);
+         Set_Epsilon_NFA (Res, True);
          return Res;
       end if;
       Res := Build_SERE_FA (Seq);
