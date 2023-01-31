@@ -4075,39 +4075,41 @@ package body Vhdl.Prints is
       S : NFA_State;
       E : NFA_Edge;
    begin
-      if N /= No_NFA then
-         OOB.Put ("-- start: ");
-         Disp_State (Get_Start_State (N));
-         OOB.Put (", final: ");
-         Disp_State (Get_Final_State (N));
-         OOB.Put (", active: ");
-         S := Get_Active_State (N);
-         if S = No_State then
-            OOB.Put ("-");
-         else
-            Disp_State (S);
-         end if;
-         if Get_Epsilon_NFA (N) then
-            OOB.Put (", epsilon");
-         end if;
-         OOB.New_Line;
-
-         S := Get_First_State (N);
-         while S /= No_State loop
-            E := Get_First_Src_Edge (S);
-            while E /= No_Edge loop
-               OOB.Put ("-- ");
-               Disp_State (S);
-               OOB.Put (" -> ");
-               Disp_State (Get_Edge_Dest (E));
-               Disp_Token (Ctxt, Tok_Colon);  --  To display ": "
-               Disp_Psl_Expression (Ctxt, Get_Edge_Expr (E));
-               OOB.New_Line;
-               E := Get_Next_Src_Edge (E);
-            end loop;
-            S := Get_Next_State (S);
-         end loop;
+      if N = No_NFA then
+         return;
       end if;
+
+      OOB.Put ("-- start: ");
+      Disp_State (Get_Start_State (N));
+      OOB.Put (", final: ");
+      Disp_State (Get_Final_State (N));
+      OOB.Put (", active: ");
+      S := Get_Active_State (N);
+      if S = No_State then
+         OOB.Put ("-");
+      else
+         Disp_State (S);
+      end if;
+      if Get_Epsilon_NFA (N) then
+         OOB.Put (", epsilon");
+      end if;
+      OOB.New_Line;
+
+      S := Get_First_State (N);
+      while S /= No_State loop
+         E := Get_First_Src_Edge (S);
+         while E /= No_Edge loop
+            OOB.Put ("-- ");
+            Disp_State (S);
+            OOB.Put (" -> ");
+            Disp_State (Get_Edge_Dest (E));
+            Disp_Token (Ctxt, Tok_Colon);  --  To display ": "
+            Disp_Psl_Expression (Ctxt, Get_Edge_Expr (E));
+            OOB.New_Line;
+            E := Get_Next_Src_Edge (E);
+         end loop;
+         S := Get_Next_State (S);
+      end loop;
    end Disp_PSL_NFA;
 
    procedure Disp_Psl_Assert_Directive
