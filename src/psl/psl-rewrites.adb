@@ -111,7 +111,9 @@ package body PSL.Rewrites is
             return N;
          when N_HDL_Expr =>
             return Get_HDL_Hash (N);
-         when N_HDL_Bool =>
+         when N_HDL_Bool
+           | N_True
+           | N_False =>
             return N;
          when others =>
             Error_Kind ("rewrite_boolean", N);
@@ -198,8 +200,13 @@ package body PSL.Rewrites is
    is
       Res : Node;
    begin
-      --  b[->]  -->  {(~b)[*];b}
-      Res := Build_Concat (Build_Star (Build_Bool_Not (B)), B);
+      if B /= True_Node then
+         --  b[->]  -->  {(~b)[*];b}
+         Res := Build_Concat (Build_Star (Build_Bool_Not (B)), B);
+      else
+         --  TRUE[->]  -->  TRUE
+         Res := True_Node;
+      end if;
 
       if Lo = Null_Node then
          return Res;
@@ -213,8 +220,13 @@ package body PSL.Rewrites is
    is
       Res : Node;
    begin
-      --  b[->]  -->  {(~b)[*];b}
-      Res := Build_Concat (Build_Star (Build_Bool_Not (B)), B);
+      if B /= True_Node then
+         --  b[->]  -->  {(~b)[*];b}
+         Res := Build_Concat (Build_Star (Build_Bool_Not (B)), B);
+      else
+         --  TRUE[->]  -->  TRUE
+         Res := True_Node;
+      end if;
 
       --  b[->l:h]  -->  {b[->]}[*l:h]
       return Rewrite_Star_Repeat_Seq (Res, Lo, Hi);
