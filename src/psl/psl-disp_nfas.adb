@@ -16,6 +16,7 @@
 
 with Ada.Text_IO; use Ada.Text_IO;
 with Types; use Types;
+with PSL.Types;
 with PSL.Prints; use PSL.Prints;
 
 package body PSL.Disp_NFAs is
@@ -124,4 +125,57 @@ package body PSL.Disp_NFAs is
    end Debug_NFA;
 
    pragma Unreferenced (Debug_NFA);
+
+   procedure Dump_NFA (N : NFA)
+   is
+      use PSL.Types;
+      procedure Disp_State (S : NFA_State)
+      is
+         Str : constant String := Int32'Image (Get_State_Label (S));
+         S1 : constant String := NFA_State'Image (S);
+      begin
+         Put (Str (2 .. Str'Last));
+         Put ("[");
+         Put (S1 (2 .. S1'Last));
+         Put ("]");
+      end Disp_State;
+
+      S : NFA_State;
+      E : NFA_Edge;
+   begin
+      if N = No_NFA then
+         return;
+      end if;
+
+      Put ("start: ");
+      Disp_State (Get_Start_State (N));
+      Put (", final: ");
+      Disp_State (Get_Final_State (N));
+      Put (", active: ");
+      S := Get_Active_State (N);
+      if S = No_State then
+         Put ("-");
+      else
+         Disp_State (S);
+      end if;
+      if Get_Epsilon_NFA (N) then
+         Put (", epsilon");
+      end if;
+      New_Line;
+
+      S := Get_First_State (N);
+      while S /= No_State loop
+         E := Get_First_Src_Edge (S);
+         while E /= No_Edge loop
+            Disp_State (S);
+            Put (" -> ");
+            Disp_State (Get_Edge_Dest (E));
+            Put (": ");
+            Print_Expr (Get_Edge_Expr (E));
+            New_Line;
+            E := Get_Next_Src_Edge (E);
+         end loop;
+         S := Get_Next_State (S);
+      end loop;
+   end Dump_NFA;
 end PSL.Disp_NFAs;

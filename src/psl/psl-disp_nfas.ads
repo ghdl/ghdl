@@ -25,4 +25,7 @@ package PSL.Disp_NFAs is
    procedure Disp_State (S : NFA_State);
 
    procedure Disp_NFA (N : NFA; Name : String := "nfa");
+
+   --  For debug.
+   procedure Dump_NFA (N : NFA);
 end PSL.Disp_NFAs;
