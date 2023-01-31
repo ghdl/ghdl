@@ -78,6 +78,9 @@ package Translation is
    --  defined by the value.
    Flag_Check_Stack_Allocation : Natural := 32 * 1024;
 
+   --  If true, generate subprograms for design elaboration.
+   Flag_Elaboration : Boolean := True;
+
    procedure Register_Translation_Back_End;
 
    --  If not null, this procedure is called when a foreign subprogram is

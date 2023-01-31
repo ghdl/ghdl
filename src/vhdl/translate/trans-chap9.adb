@@ -1325,8 +1325,10 @@ package body Trans.Chap9 is
                  (Stmt, Block, Base_Block,
                   Get_Entity_From_Entity_Aspect
                     (Get_Instantiated_Unit (Stmt)));
-               Translate_Component_Instantiation_Subprogram
-                 (Stmt, Base_Info);
+               if Flag_Elaboration then
+                  Translate_Component_Instantiation_Subprogram
+                    (Stmt, Base_Info);
+               end if;
             when Iir_Kind_Block_Statement =>
                declare
                   Guard : constant Iir := Get_Guard_Decl (Stmt);
