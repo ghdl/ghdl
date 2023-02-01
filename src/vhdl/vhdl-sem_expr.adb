@@ -6071,7 +6071,7 @@ package body Vhdl.Sem_Expr is
       Cond_Type : Iir;
    begin
       Cond_Type := Get_Type (Cond);
-      if Cond_Type = Null_Iir then
+      if Cond_Type = Null_Iir or else Is_Error (Cond_Type) then
          --  Error.
          return Cond;
       end if;
