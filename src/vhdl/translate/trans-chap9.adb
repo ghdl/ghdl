@@ -400,7 +400,7 @@ package body Trans.Chap9 is
                                             New_Lit (Ghdl_Index_0)),
                        New_Lit (Std_Boolean_True_Node));
 
-      --  Set flase to the other states.
+      --  Set false to the other states.
       New_Assign_Stmt (New_Obj (Var_I), New_Lit (Ghdl_Index_1));
       Start_Loop_Stmt (Label);
       Gen_Exit_When

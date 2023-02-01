@@ -1011,6 +1011,10 @@ package body Trans.Chap2 is
       Final  : Boolean;
       Constr : O_Assoc_List;
    begin
+      if not Flag_Elaboration and not Is_Nested then
+         return;
+      end if;
+
       if not Is_Nested then
          Start_Subprogram_Body (Info.Package_Elab_Spec_Subprg);
          Push_Local_Factory;
@@ -1044,7 +1048,7 @@ package body Trans.Chap2 is
       Chap4.Elab_Declaration_Chain (Spec, Final);
       pragma Unreferenced (Final);
 
-      if not Is_Nested then
+      if not Is_Nested and then Flag_Elaboration then
          Close_Temp;
 
          Subprgs.Finish_Subprg_Instance_Use (Info.Package_Elab_Spec_Instance);
@@ -1064,6 +1068,10 @@ package body Trans.Chap2 is
       Final  : Boolean;
    begin
       if Is_Spec_Decl and then Get_Macro_Expanded_Flag (Spec) then
+         return;
+      end if;
+
+      if not Flag_Elaboration and not Is_Nested_Package (Spec) then
          return;
       end if;
 
