@@ -193,7 +193,10 @@ package body Trans.Chap4 is
       Type_Info    : Type_Info_Acc;
       Info         : Signal_Info_Acc;
    begin
-      Chap3.Translate_Object_Subtype_Indication (Decl);
+      if Get_Kind (Decl) /= Iir_Kind_Guard_Signal_Declaration then
+         --  No subtype indication for guard signals (and its type is boolean).
+         Chap3.Translate_Object_Subtype_Indication (Decl);
+      end if;
 
       Type_Info := Get_Info (Sig_Type_Def);
       Info := Add_Info (Decl, Kind_Signal);
@@ -730,6 +733,7 @@ package body Trans.Chap4 is
 
          if Get_Info (Obj).Object_Static then
             --  A static object is pre-initialized.
+            Chap3.Elab_Object_Subtype_Indication (Obj);
             return;
          end if;
 
@@ -1698,6 +1702,23 @@ package body Trans.Chap4 is
          Info.Alias_Kind := Mode_Value;
       end if;
 
+      if Get_Kind (Name) = Iir_Kind_Slice_Name then
+         --  The name subtype will be evaluated once at elaboration, as it is
+         --  needed when direct drivers are used (in that case, the name is
+         --  evaluated once again).
+         --  FIXME: only when the subtype indication is not set ?
+         declare
+            Name_Type : constant Iir := Get_Type (Name);
+            Mark1, Mark2 : Id_Mark_Type;
+         begin
+            Push_Identifier_Prefix (Mark1, Get_Identifier (Decl));
+            Push_Identifier_Prefix (Mark2, "AT");
+            Chap3.Translate_Array_Subtype (Name_Type);
+            Pop_Identifier_Prefix (Mark2);
+            Pop_Identifier_Prefix (Mark1);
+         end;
+      end if;
+
       Tinfo := Get_Info (Decl_Type);
       for Mode in Mode_Value .. Info.Alias_Kind loop
          case Tinfo.Type_Mode is
@@ -1731,24 +1752,6 @@ package body Trans.Chap4 is
          end if;
          Info.Alias_Var (Mode) := Create_Var (Id, Atype);
       end loop;
-
-      if Get_Kind (Name) = Iir_Kind_Slice_Name
-        and then Info.Alias_Kind = Mode_Signal
-      then
-         --  The name subtype will be evaluated once at elaboration, as it is
-         --  needed when direct drivers are used (in that case, the name is
-         --  evaluated once again).
-         declare
-            Name_Type : constant Iir := Get_Type (Name);
-            Mark1, Mark2 : Id_Mark_Type;
-         begin
-            Push_Identifier_Prefix (Mark1, Get_Identifier (Decl));
-            Push_Identifier_Prefix (Mark2, "AT");
-            Chap3.Translate_Array_Subtype (Name_Type);
-            Pop_Identifier_Prefix (Mark2);
-            Pop_Identifier_Prefix (Mark1);
-         end;
-      end if;
    end Translate_Object_Alias_Declaration;
 
    procedure Elab_Object_Alias_Declaration
@@ -1767,9 +1770,7 @@ package body Trans.Chap4 is
 
       Open_Temp;
 
-      if Get_Kind (Name) = Iir_Kind_Slice_Name
-        and then Alias_Info.Alias_Kind = Mode_Signal
-      then
+      if Get_Kind (Name) = Iir_Kind_Slice_Name then
          --  See Translate_Object_Alias_Declaration.
          Chap3.Elab_Array_Subtype (Name_Type);
       end if;

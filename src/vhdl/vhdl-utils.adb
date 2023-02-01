@@ -1323,7 +1323,21 @@ package body Vhdl.Utils is
       end case;
    end Get_Nature_Of_Subnature_Indication;
 
-   function Is_Owned_Subtype_Indication (Decl : Iir) return Boolean
+   function Is_Proper_Subtype_Indication (Def : Iir) return Boolean is
+   begin
+      case Get_Kind (Def) is
+         when Iir_Kinds_Subtype_Definition =>
+            return True;
+         when Iir_Kinds_Denoting_Name
+           | Iir_Kind_Element_Attribute
+           | Iir_Kind_Subtype_Attribute =>
+            return False;
+         when others =>
+            Error_Kind ("is_proper_subtype_indication", Def);
+      end case;
+   end Is_Proper_Subtype_Indication;
+
+   function Has_Owned_Subtype_Indication (Decl : Iir) return Boolean
    is
       Def : Iir;
    begin
@@ -1341,17 +1355,8 @@ package body Vhdl.Utils is
          return False;
       end if;
 
-      case Get_Kind (Def) is
-         when Iir_Kinds_Subtype_Definition =>
-            return True;
-         when Iir_Kinds_Denoting_Name
-           | Iir_Kind_Element_Attribute
-           | Iir_Kind_Subtype_Attribute =>
-            return False;
-         when others =>
-            Error_Kind ("is_owned_subtype_indication", Def);
-      end case;
-   end Is_Owned_Subtype_Indication;
+      return Is_Proper_Subtype_Indication (Def);
+   end Has_Owned_Subtype_Indication;
 
    function Get_Index_Type (Indexes : Iir_Flist; Idx : Natural) return Iir
    is

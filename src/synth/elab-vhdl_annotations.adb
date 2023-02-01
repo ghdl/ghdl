@@ -285,7 +285,7 @@ package body Elab.Vhdl_Annotations is
               | Iir_Kind_Interface_Constant_Declaration
               | Iir_Kind_Interface_File_Declaration =>
                --  Elaborate the subtype indication only if it not shared.
-               if Is_Owned_Subtype_Indication (El) then
+               if Has_Owned_Subtype_Indication (El) then
                   Annotate_Type_Definition
                     (Block_Info, Get_Subtype_Indication (El));
                end if;
@@ -323,14 +323,14 @@ package body Elab.Vhdl_Annotations is
    begin
       case Get_Kind (Decl) is
          when Iir_Kind_Interface_Signal_Declaration =>
-            if With_Types and then Is_Owned_Subtype_Indication (Decl) then
+            if With_Types and then Has_Owned_Subtype_Indication (Decl) then
                Annotate_Type_Definition (Block_Info, Get_Type (Decl));
             end if;
             Create_Signal_Info (Block_Info, Decl);
          when Iir_Kind_Interface_Variable_Declaration
            | Iir_Kind_Interface_Constant_Declaration
            | Iir_Kind_Interface_File_Declaration =>
-            if With_Types and then Is_Owned_Subtype_Indication (Decl) then
+            if With_Types and then Has_Owned_Subtype_Indication (Decl) then
                Annotate_Type_Definition (Block_Info, Get_Type (Decl));
             end if;
             Create_Object_Info (Block_Info, Decl);
@@ -557,7 +557,7 @@ package body Elab.Vhdl_Annotations is
 
    procedure Annotate_Declaration_Type (Block_Info: Sim_Info_Acc; Decl: Iir) is
    begin
-      if Is_Owned_Subtype_Indication (Decl) then
+      if Has_Owned_Subtype_Indication (Decl) then
          --  Really annotate the subtype indication, which might be different
          --  from the type (for constant declarations).
          Annotate_Type_Definition (Block_Info, Get_Subtype_Indication (Decl));
@@ -652,7 +652,7 @@ package body Elab.Vhdl_Annotations is
             Annotate_Subprogram_Body (Block_Info, Decl);
 
          when Iir_Kind_Object_Alias_Declaration =>
-            if Is_Owned_Subtype_Indication (Decl) then
+            if Has_Owned_Subtype_Indication (Decl) then
                Annotate_Type_Definition (Block_Info, Get_Type (Decl));
             end if;
             Create_Object_Info (Block_Info, Decl);
