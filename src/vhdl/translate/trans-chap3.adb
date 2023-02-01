@@ -3295,7 +3295,7 @@ package body Trans.Chap3 is
 
    procedure Elab_Array_Subtype (Arr_Type : Iir) is
    begin
-      Chap3.Elab_Composite_Subtype_Layout (Arr_Type);
+      Elab_Composite_Subtype_Layout (Arr_Type);
    end Elab_Array_Subtype;
 
    procedure Create_Composite_Subtype (Sub_Type : Iir; Elab : Boolean := True)
