@@ -921,8 +921,10 @@ package body Trans.Chap5 is
                      Body_Addr);
                   Set_Map_Env (Actual_Env);
                end;
-            when Iir_Kind_Association_Element_Type
-              | Iir_Kind_Association_Element_Subprogram =>
+            when Iir_Kind_Association_Element_Type =>
+               --  TODO: also elaborate the type ??
+               null;
+            when Iir_Kind_Association_Element_Subprogram =>
                null;
             when others =>
                Error_Kind ("elab_generic_map_aspect(1)", Assoc);

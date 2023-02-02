@@ -1838,6 +1838,17 @@ package body Trans.Chap4 is
       end loop;
    end Translate_Port_Chain;
 
+   procedure Translate_Interface_Package (Decl : Iir) is
+   begin
+      if Get_Generic_Map_Aspect_Chain (Decl) /= Null_Iir then
+         --  The package is instantiated by the interface.
+         Chap2.Translate_Package_Instantiation_Declaration (Decl);
+      else
+         --  Need a formal
+         Create_Package_Interface (Decl);
+      end if;
+   end Translate_Interface_Package;
+
    procedure Translate_Generic_Chain (Parent : Iir)
    is
       Decl : Iir;
@@ -1848,15 +1859,10 @@ package body Trans.Chap4 is
             when Iir_Kinds_Interface_Object_Declaration =>
                Create_Object (Decl);
             when Iir_Kind_Interface_Package_Declaration =>
-               if Get_Generic_Map_Aspect_Chain (Decl) /= Null_Iir then
-                  --  The package is instantiated by the interface.
-                  Chap2.Translate_Package_Instantiation_Declaration (Decl);
-               else
-                  --  Need a formal
-                  Create_Package_Interface (Decl);
-               end if;
-            when Iir_Kind_Interface_Type_Declaration
-              | Iir_Kinds_Interface_Subprogram_Declaration =>
+               Translate_Interface_Package (Decl);
+            when Iir_Kind_Interface_Type_Declaration =>
+               null;
+            when Iir_Kinds_Interface_Subprogram_Declaration =>
                null;
             when others =>
                Error_Kind ("translate_generic_chain", Decl);
@@ -1864,6 +1870,39 @@ package body Trans.Chap4 is
          Decl := Get_Chain (Decl);
       end loop;
    end Translate_Generic_Chain;
+
+   procedure Translate_Generic_Association_Chain (Parent : Iir)
+   is
+      Assoc : Iir;
+      Inter : Iir;
+      Assoc_Inter : Iir;
+   begin
+      Assoc := Get_Generic_Map_Aspect_Chain (Parent);
+      Assoc_Inter := Get_Generic_Chain (Parent);
+      while Is_Valid (Assoc) loop
+         Inter := Get_Association_Interface (Assoc, Assoc_Inter);
+         case Iir_Kinds_Interface_Declaration (Get_Kind (Inter)) is
+            when Iir_Kinds_Interface_Object_Declaration =>
+               Create_Object (Inter);
+            when Iir_Kind_Interface_Package_Declaration =>
+               Translate_Interface_Package (Inter);
+            when Iir_Kind_Interface_Type_Declaration =>
+               declare
+                  Def : Iir;
+               begin
+                  Def := Get_Actual (Assoc);
+                  if Is_Proper_Subtype_Indication (Def) then
+                     Chap3.Translate_Subtype_Definition (Def, True);
+                  end if;
+               end;
+            when Iir_Kinds_Interface_Subprogram_Declaration =>
+               null;
+            when others =>
+               Error_Kind ("translate_generic_association_chain", Inter);
+         end case;
+         Next_Association_Interface (Assoc, Assoc_Inter);
+      end loop;
+   end Translate_Generic_Association_Chain;
 
    --  Create instance record for a component.
    procedure Translate_Component_Declaration (Decl : Iir)

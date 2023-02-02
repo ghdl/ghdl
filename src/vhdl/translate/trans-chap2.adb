@@ -816,7 +816,7 @@ package body Trans.Chap2 is
          end if;
       else
          if Header /= Null_Iir then
-            Chap4.Translate_Generic_Chain (Header);
+            Chap4.Translate_Generic_Association_Chain (Header);
          end if;
          Chap4.Translate_Declaration_Chain (Decl);
          if not Is_Nested then

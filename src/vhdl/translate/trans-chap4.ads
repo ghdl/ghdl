@@ -88,6 +88,9 @@ package Trans.Chap4 is
    procedure Translate_Port_Chain (Parent : Iir);
    procedure Translate_Generic_Chain (Parent : Iir);
 
+   --  Also handle interface type.
+   procedure Translate_Generic_Association_Chain (Parent : Iir);
+
    --  Elaborate signal subtypes and allocate the storage for the object.
    --  If HAS_COPY is true, do not allocate storage for values, as the values
    --  will be directly referenced from the association.
