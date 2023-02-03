@@ -852,7 +852,7 @@ package body Vhdl.Sem_Decls is
          return;
       end if;
 
-      if Is_Proper_Subtype_Indication (Ind) then
+      if not Is_Proper_Subtype_Indication (Ind) then
          if Get_Kind (Def) /= Iir_Kind_Protected_Type_Declaration
            and then Get_Kind (Def) /= Iir_Kind_Interface_Type_Definition
          then
