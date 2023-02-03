@@ -4571,7 +4571,8 @@ package body Vhdl.Sem_Expr is
    --  Analyze an allocator by expression or an allocator by subtype.
    function Sem_Allocator (Expr : Iir; A_Type : Iir) return Iir
    is
-      Arg: Iir;
+      Arg : Iir;
+      Ind : Iir;
       Arg_Type : Iir;
    begin
       Set_Expr_Staticness (Expr, None);
@@ -4594,15 +4595,13 @@ package body Vhdl.Sem_Expr is
 
             when Iir_Kind_Allocator_By_Subtype =>
                --  Analyze subtype indication.
-               Arg := Get_Subtype_Indication (Expr);
-               Arg := Sem_Types.Sem_Subtype_Indication (Arg);
-               Set_Subtype_Indication (Expr, Arg);
-               Arg := Get_Type_Of_Subtype_Indication (Arg);
+               Ind := Get_Subtype_Indication (Expr);
+               Ind := Sem_Types.Sem_Subtype_Indication (Ind);
+               Set_Subtype_Indication (Expr, Ind);
+               Set_Allocator_Subtype (Expr, Ind);
+               Arg := Get_Type_Of_Subtype_Indication (Ind);
                if Arg = Null_Iir or else Is_Error (Arg) then
                   return Null_Iir;
-               end if;
-               if Is_Anonymous_Type_Definition (Arg) then
-                  Set_Allocator_Subtype (Expr, Get_Subtype_Indication (Expr));
                end if;
 
                --  LRM93 7.3.6
@@ -4618,7 +4617,7 @@ package body Vhdl.Sem_Expr is
                --  LRM93 7.3.6
                --  A subtype indication that is part of an allocator must
                --  not include a resolution function.
-               if Is_Anonymous_Type_Definition (Arg)
+               if Is_Proper_Subtype_Indication (Ind)
                  and then Get_Kind (Arg) /= Iir_Kind_Access_Subtype_Definition
                  and then Get_Resolution_Indication (Arg) /= Null_Iir
                then

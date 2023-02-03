@@ -4417,8 +4417,7 @@ package Vhdl.Nodes is
    --   Get/Set_Subtype_Indication (Field5)
    --
    -- Only for Iir_Kind_Allocator_By_Subtype:
-   --  Same as subtype indication but set when the allocator defines a new
-   --  subtype.  Used to track when an anonymous subtype is created.
+   --  Same as subtype indication but owned.
    --   Get/Set_Allocator_Subtype (Field3)
    --
    --  To ease analysis: set to the designated type (either the type of the

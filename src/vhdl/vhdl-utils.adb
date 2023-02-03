@@ -1124,11 +1124,6 @@ package body Vhdl.Utils is
       return Get_Type_Declarator (Def) = Null_Iir;
    end Is_Anonymous_Type_Definition;
 
-   function Is_Anonymous_Nature_Definition (Def : Iir) return Boolean is
-   begin
-      return Get_Nature_Declarator (Def) = Null_Iir;
-   end Is_Anonymous_Nature_Definition;
-
    function Is_Array_Type (Def : Iir) return Boolean is
    begin
       return Get_Kind (Def) in Iir_Kinds_Array_Type_Definition;
@@ -1336,6 +1331,18 @@ package body Vhdl.Utils is
             Error_Kind ("is_proper_subtype_indication", Def);
       end case;
    end Is_Proper_Subtype_Indication;
+
+   function Is_Proper_Subnature_Indication (Def : Iir) return Boolean is
+   begin
+      case Get_Kind (Def) is
+         when Iir_Kinds_Subnature_Definition =>
+            return True;
+         when Iir_Kinds_Denoting_Name =>
+            return False;
+         when others =>
+            Error_Kind ("is_proper_subnature_indication", Def);
+      end case;
+   end Is_Proper_Subnature_Indication;
 
    function Has_Owned_Subtype_Indication (Decl : Iir) return Boolean
    is

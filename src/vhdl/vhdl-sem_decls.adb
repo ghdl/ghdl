@@ -852,7 +852,7 @@ package body Vhdl.Sem_Decls is
          return;
       end if;
 
-      if not Is_Anonymous_Type_Definition (Def) then
+      if Is_Proper_Subtype_Indication (Ind) then
          if Get_Kind (Def) /= Iir_Kind_Protected_Type_Declaration
            and then Get_Kind (Def) /= Iir_Kind_Interface_Type_Definition
          then
@@ -2128,15 +2128,17 @@ package body Vhdl.Sem_Decls is
          return;
       end if;
 
-      if not Is_Anonymous_Nature_Definition (Def) then
+      if not Is_Proper_Subnature_Indication (Ind) then
          --  There is no added constraints and therefore the subtype
          --  declaration is in fact an alias of the type.  Create a copy so
          --  that it has its own type declarator.
-         raise Internal_Error;
+         --  FIXME: is it needed ?
+         null;
+      else
+         Set_Nature_Declarator (Def, Decl);
       end if;
 
       Set_Nature (Decl, Def);
-      Set_Nature_Declarator (Def, Decl);
       Name_Visible (Decl);
    end Sem_Subnature_Declaration;
 

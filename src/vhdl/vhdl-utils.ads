@@ -190,10 +190,6 @@ package Vhdl.Utils is
    function Is_Anonymous_Type_Definition (Def : Iir) return Boolean;
    pragma Inline (Is_Anonymous_Type_Definition);
 
-   --  Likewise but for natures.
-   function Is_Anonymous_Nature_Definition (Def : Iir) return Boolean;
-   pragma Inline (Is_Anonymous_Nature_Definition);
-
    --  Return TRUE iff DEF is a fully constrained type (or subtype) definition.
    function Is_Fully_Constrained_Type (Def : Iir) return Boolean;
 
@@ -261,6 +257,7 @@ package Vhdl.Utils is
    --  Return True iff DEF defines a new subtype indication, not just an
    --  existing name (like a name).
    function Is_Proper_Subtype_Indication (Def : Iir) return Boolean;
+   function Is_Proper_Subnature_Indication (Def : Iir) return Boolean;
 
    --  Return True iff the subtype indication of DECL is defined/owned by
    --  DECL.

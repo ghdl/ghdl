@@ -74,7 +74,7 @@ package body Vhdl.Canon is
                                         Conf : Iir_Block_Configuration);
 
    procedure Canon_Subtype_Indication (Def : Iir);
-   procedure Canon_Subtype_Indication_If_Anonymous (Def : Iir);
+   procedure Canon_Subtype_Indication_If_Owned (Decl : Iir);
 
    function Canon_Conditional_Signal_Assignment
      (Conc_Stmt : Iir; Proc : Iir; Parent : Iir; Clear : Boolean) return Iir;
@@ -3143,12 +3143,14 @@ package body Vhdl.Canon is
       case Get_Kind (Def) is
          when Iir_Kind_Array_Subtype_Definition =>
             declare
-               Indexes : constant Iir_Flist := Get_Index_Subtype_List (Def);
+               Indexes : constant Iir_Flist := Get_Index_Constraint_List (Def);
                Index : Iir;
             begin
                for I in Flist_First .. Flist_Last (Indexes) loop
-                  Index := Get_Index_Type (Indexes, I);
-                  Canon_Subtype_Indication_If_Anonymous (Index);
+                  Index := Get_Nth_Element (Indexes, I);
+                  if Is_Proper_Subtype_Indication (Index) then
+                     Canon_Subtype_Indication (Index);
+                  end if;
                end loop;
             end;
          when Iir_Kind_Integer_Subtype_Definition
@@ -3172,12 +3174,12 @@ package body Vhdl.Canon is
       end case;
    end Canon_Subtype_Indication;
 
-   procedure Canon_Subtype_Indication_If_Anonymous (Def : Iir) is
+   procedure Canon_Subtype_Indication_If_Owned (Decl : Iir) is
    begin
-      if Is_Anonymous_Type_Definition (Def) then
-         Canon_Subtype_Indication (Def);
+      if Has_Owned_Subtype_Indication (Decl) then
+         Canon_Subtype_Indication (Get_Subtype_Indication (Decl));
       end if;
-   end Canon_Subtype_Indication_If_Anonymous;
+   end Canon_Subtype_Indication_If_Owned;
 
    --  Return the new package declaration (if any).
    function Canon_Package_Instantiation_Declaration (Decl : Iir) return Iir
@@ -3262,7 +3264,7 @@ package body Vhdl.Canon is
             | Iir_Kind_Signal_Declaration
             | Iir_Kind_Constant_Declaration =>
             if Canon_Flag_Expressions then
-               Canon_Subtype_Indication_If_Anonymous (Get_Type (Decl));
+               Canon_Subtype_Indication_If_Owned (Decl);
                Canon_Expression (Get_Default_Value (Decl));
             end if;
 
@@ -3657,7 +3659,7 @@ package body Vhdl.Canon is
       if Canon_Flag_Expressions then
          Inter := Chain;
          while Inter /= Null_Iir loop
-            Canon_Subtype_Indication_If_Anonymous (Get_Type (Inter));
+            Canon_Subtype_Indication_If_Owned (Inter);
             Canon_Expression (Get_Default_Value (Inter));
             Inter := Get_Chain (Inter);
          end loop;
