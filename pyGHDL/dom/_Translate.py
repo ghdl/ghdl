@@ -502,7 +502,6 @@ def GetGenericsFromChainedNodes(
 def GetPortsFromChainedNodes(
     nodeChain: Iir,
 ) -> Generator[PortInterfaceItem, None, None]:
-
     furtherIdentifiers = []
     port = nodeChain
     while port != nodes.Null_Iir:
@@ -544,7 +543,6 @@ def GetPortsFromChainedNodes(
 def GetParameterFromChainedNodes(
     nodeChain: Iir,
 ) -> Generator[ParameterInterfaceItem, None, None]:
-
     identifiers = []
     parameter = nodeChain
     while parameter != nodes.Null_Iir:
