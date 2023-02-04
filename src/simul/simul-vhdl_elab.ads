@@ -21,6 +21,7 @@ with Tables;
 
 with Grt.Types; use Grt.Types;
 with Grt.Vhdl_Types; use Grt.Vhdl_Types;
+with Grt.Signals; use Grt.Signals;
 
 with Vhdl.Nodes; use Vhdl.Nodes;
 
@@ -257,4 +258,11 @@ package Simul.Vhdl_Elab is
       Table_Index_Type => Terminal_Index_Type,
       Table_Low_Bound => No_Terminal_Index + 1,
       Table_Initial => 32);
+
+   --  Mapping.
+   type Iir_Kind_To_Kind_Signal_Type is
+     array (Iir_Signal_Kind) of Kind_Signal_Type;
+   Iir_Kind_To_Kind_Signal : constant Iir_Kind_To_Kind_Signal_Type :=
+     (Iir_Register_Kind  => Kind_Signal_Register,
+      Iir_Bus_Kind       => Kind_Signal_Bus);
 end Simul.Vhdl_Elab;

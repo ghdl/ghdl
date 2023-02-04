@@ -39,10 +39,9 @@ with PSL.Errors;
 with PSL.Subsets;
 
 with Elab.Debugger;
-with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
-with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 with Elab.Vhdl_Types;
 with Elab.Vhdl_Debug;
+with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
 
 with Synth.Errors;
 with Synth.Vhdl_Stmts; use Synth.Vhdl_Stmts;
@@ -57,7 +56,6 @@ with Simul.Main;
 
 with Grt.Types; use Grt.Types;
 with Grt.Vhdl_Types; use Grt.Vhdl_Types;
-with Grt.Signals; use Grt.Signals;
 with Grt.Options;
 with Grt.Processes;
 with Grt.Errors;
@@ -78,8 +76,6 @@ package body Simul.Vhdl_Simul is
    type Ghdl_Signal_Ptr_Ptr is access all Ghdl_Signal_Ptr;
    function To_Ghdl_Signal_Ptr_Ptr is
       new Ada.Unchecked_Conversion (Memory_Ptr, Ghdl_Signal_Ptr_Ptr);
-
-   Sig_Size : constant Size_Type := Ghdl_Signal_Ptr'Size / 8;
 
    subtype F64_C_Arr_Ptr is Grt.Analog_Solver.F64_C_Arr_Ptr;
 
@@ -2814,10 +2810,8 @@ package body Simul.Vhdl_Simul is
       end case;
    end Create_Scalar_Signal;
 
-   procedure Create_User_Signal (Idx : Signal_Index_Type)
+   procedure Create_User_Signal (E : Signal_Entry)
    is
-      E : Signal_Entry renames Signals_Table.Table (Idx);
-
       procedure Create_Signal (Val : Memory_Ptr;
                                Sig_Off : Uns32;
                                Sig_Type: Iir;
@@ -2919,12 +2913,6 @@ package body Simul.Vhdl_Simul is
 
       Sig_Type: constant Iir := Get_Type (E.Decl);
       Kind : Kind_Signal_Type;
-
-      type Iir_Kind_To_Kind_Signal_Type is
-        array (Iir_Signal_Kind) of Kind_Signal_Type;
-      Iir_Kind_To_Kind_Signal : constant Iir_Kind_To_Kind_Signal_Type :=
-        (Iir_Register_Kind  => Kind_Signal_Register,
-         Iir_Bus_Kind       => Kind_Signal_Bus);
    begin
       if Get_Guarded_Signal_Flag (E.Decl) then
          Kind := Iir_Kind_To_Kind_Signal (Get_Signal_Kind (E.Decl));
@@ -3159,7 +3147,7 @@ package body Simul.Vhdl_Simul is
          when Mode_Above =>
             raise Internal_Error;
          when Mode_Signal_User =>
-            Create_User_Signal (Idx);
+            Create_User_Signal (Signals_Table.Table (Idx));
          when Mode_Conv_In | Mode_Conv_Out | Mode_End =>
             raise Internal_Error;
       end case;
@@ -3266,6 +3254,29 @@ package body Simul.Vhdl_Simul is
       end case;
    end Add_Extra_Driver_To_Signal;
 
+   procedure Collapse_Signal (E : in out Signal_Entry)
+   is
+      Ec : Signal_Entry renames Signals_Table.Table (E.Collapsed_By);
+   begin
+      if Get_Mode (E.Decl) in Iir_Out_Modes then
+         --  As an out connection creates a source, if a signal is
+         --  collapsed and has no source, an extra source needs to be
+         --  created.
+         Add_Extra_Driver_To_Signal
+           (Ec.Sig, E.Typ, E.Val, 0, E.Nbr_Sources.all);
+
+         --  The signal value is the value of the collapsed signal.
+         --  Keep default value.
+         Copy_Memory (Ec.Val, E.Val, E.Typ.Sz);
+         Exec_Write_Signal
+           (Ec.Sig, (E.Typ, E.Val), Write_Signal_Driving_Value);
+      end if;
+
+      E.Val := Ec.Val;
+      --  Already done for simulation but not for compilation.
+      E.Sig := Ec.Sig;
+   end Collapse_Signal;
+
    procedure Collapse_Signals is
    begin
       for I in Signals_Table.First .. Signals_Table.Last loop
@@ -3273,25 +3284,7 @@ package body Simul.Vhdl_Simul is
             E : Signal_Entry renames Signals_Table.Table (I);
          begin
             if E.Collapsed_By /= No_Signal_Index then
-               if Get_Mode (E.Decl) in Iir_Out_Modes then
-                  --  As an out connection creates a source, if a signal is
-                  --  collapsed and has no source, an extra source needs to be
-                  --  created.
-                  Add_Extra_Driver_To_Signal
-                    (E.Sig, E.Typ, E.Val, 0, E.Nbr_Sources.all);
-               end if;
-               --  The signal value is the value of the collapsed signal.
-               if Get_Mode (E.Decl) in Iir_Out_Modes then
-                  --  Keep default value.
-                  Copy_Memory (Signals_Table.Table (E.Collapsed_By).Val,
-                               E.Val,
-                               E.Typ.Sz);
-                  Exec_Write_Signal
-                    (Signals_Table.Table (E.Collapsed_By).Sig,
-                     (E.Typ, E.Val), Write_Signal_Driving_Value);
-               end if;
-
-               E.Val := Signals_Table.Table (E.Collapsed_By).Val;
+               Collapse_Signal (E);
             end if;
          end;
       end loop;

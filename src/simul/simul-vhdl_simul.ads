@@ -24,10 +24,11 @@ with Vhdl.Nodes; use Vhdl.Nodes;
 
 with Elab.Memtype; use Elab.Memtype;
 with Elab.Vhdl_Context; use Elab.Vhdl_Context;
+with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 
 with Simul.Vhdl_Elab; use Simul.Vhdl_Elab;
 
-with Grt.Signals;
+with Grt.Signals; use Grt.Signals;
 
 package Simul.Vhdl_Simul is
    Trace_Residues : Boolean := False;
@@ -80,7 +81,17 @@ package Simul.Vhdl_Simul is
    --  Low level functions, for debugger.
    function Sig_Index (Base : Memory_Ptr; Idx : Uns32) return Memory_Ptr;
    function Read_Sig (Mem : Memory_Ptr) return Grt.Signals.Ghdl_Signal_Ptr;
+   function Hook_Signal_Expr (Val : Valtyp) return Valtyp;
 
+   --  Used by simul-vhdl_compile.
+   Sig_Size : constant Size_Type := Ghdl_Signal_Ptr'Size / 8;
+
+   procedure Write_Sig (Mem : Memory_Ptr; Val : Ghdl_Signal_Ptr);
+   procedure Create_User_Signal (E : Signal_Entry);
+   procedure Collapse_Signal (E : in out Signal_Entry);
+   procedure Create_Process_Drivers (Proc : Process_Index_Type);
+   procedure Register_Sensitivity (Proc_Idx : Process_Index_Type);
+   procedure Create_Connects;
 
    --  Tables visible to the debugger.
 
