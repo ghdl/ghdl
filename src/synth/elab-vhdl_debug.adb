@@ -398,6 +398,19 @@ package body Elab.Vhdl_Debug is
            | Iir_Kind_Procedure_Body
            | Iir_Kind_Component_Declaration =>
             null;
+         when Iir_Kind_Package_Declaration
+           | Iir_Kind_Package_Body =>
+            declare
+               Sub_Inst : constant Synth_Instance_Acc :=
+                 Get_Package_Object (Instance, Decl);
+            begin
+               Put_Indent (Indent);
+               Put (Vhdl.Errors.Disp_Node (Decl));
+               Put (":");
+               New_Line;
+               Disp_Declaration_Objects
+                 (Sub_Inst, Get_Declaration_Chain (Decl), Indent + 1);
+            end;
          when Iir_Kind_Suspend_State_Declaration =>
             declare
                Val : constant Valtyp := Get_Value (Instance, Decl);
