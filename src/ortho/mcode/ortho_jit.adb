@@ -103,7 +103,7 @@ package body Ortho_Jit is
    is
       Opt : constant String (1 .. Option'Length) := Option;
    begin
-      if Opt = "-g" then
+      if Opt = "-g" or else Opt = "--be-g" then
          Flag_Debug := Debug_Dwarf;
          return True;
       elsif Opt = "-g0" then
