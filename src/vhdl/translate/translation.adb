@@ -2110,6 +2110,8 @@ package body Translation is
          Translation.Flag_Index_Checks := False;
       elsif Opt = "--no-identifiers" then
          Translation.Flag_Discard_Identifiers := True;
+      elsif Opt = "--no-elaboration" then
+         Translation.Flag_Elaboration := False;
       else
          return False;
       end if;

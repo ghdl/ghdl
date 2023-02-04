@@ -302,6 +302,11 @@ package body Trans is
          Set_Scope_Via_Field (Child, Field, Inst_Build.Scope);
       end Add_Scope_Field;
 
+      function Get_Scope_Field (Child : Var_Scope_Type) return O_Fnode is
+      begin
+         return Child.Field;
+      end Get_Scope_Field;
+
       function Get_Scope_Offset (Child : Var_Scope_Type; Otype : O_Tnode)
                                  return O_Cnode is
       begin

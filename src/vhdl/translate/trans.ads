@@ -289,6 +289,7 @@ package Trans is
       --  Return the offset of field for CHILD in its parent scope.
       function Get_Scope_Offset (Child : Var_Scope_Type; Otype : O_Tnode)
                                  return O_Cnode;
+      function Get_Scope_Field (Child : Var_Scope_Type) return O_Fnode;
 
       --  Finish the building of the current instance and return the type
       --  built.

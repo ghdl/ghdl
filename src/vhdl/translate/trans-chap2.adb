@@ -1649,7 +1649,7 @@ package body Trans.Chap2 is
 
       Instantiate_Info_Package (Inst);
 
-      if Is_Nested_Package (Inst) then
+      if Is_Nested_Package (Inst) or else not Flag_Elaboration then
          return;
       end if;
 

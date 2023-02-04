@@ -272,7 +272,7 @@ package body Trans.Chap9 is
    procedure Translate_Process_Declarations (Proc : Iir)
    is
       Mark : Id_Mark_Type;
-      Info : Ortho_Info_Acc;
+      Info : Proc_Info_Acc;
 
       Drivers     : Iir_List;
       It          : List_Iterator;
