@@ -3937,20 +3937,19 @@ package body Vhdl.Prints is
       Has_Beg : constant Boolean := Get_Has_Begin (Bod);
       Has_End : constant Boolean := Get_Has_End (Bod);
    begin
+      Start_Vbox (Ctxt);
       Disp_Declaration_Chain (Ctxt, Bod);
+      Close_Vbox (Ctxt);
+
       if Has_Beg then
          Start_Hbox (Ctxt);
          Disp_Token (Ctxt, Tok_Begin);
          Close_Hbox (Ctxt);
       end if;
 
-      if Has_Beg or Has_End then
-         Start_Vbox (Ctxt);
-      end if;
+      Start_Vbox (Ctxt);
       Disp_Concurrent_Statement_Chain (Ctxt, Bod);
-      if Has_Beg or Has_End then
-         Close_Vbox (Ctxt);
-      end if;
+      Close_Vbox (Ctxt);
 
       if Has_End then
          Start_Hbox (Ctxt);
@@ -3973,10 +3972,8 @@ package body Vhdl.Prints is
       Disp_Token (Ctxt, Tok_Generate);
       Close_Hbox (Ctxt);
 
-      Start_Vbox (Ctxt);
       Disp_Generate_Statement_Body
         (Ctxt, Get_Generate_Statement_Body (Stmt));
-      Close_Vbox (Ctxt);
 
       Disp_End (Ctxt, Stmt, Tok_Generate);
    end Disp_For_Generate_Statement;
@@ -4004,9 +4001,7 @@ package body Vhdl.Prints is
          Disp_Token (Ctxt, Tok_Generate);
          Close_Hbox (Ctxt);
 
-         Start_Vbox (Ctxt);
          Disp_Generate_Statement_Body (Ctxt, Bod);
-         Close_Vbox (Ctxt);
 
          Clause := Get_Generate_Else_Clause (Clause);
          exit when Clause = Null_Iir;
@@ -4049,9 +4044,7 @@ package body Vhdl.Prints is
          Disp_Token (Ctxt, Tok_Double_Arrow);
          Close_Hbox (Ctxt);
 
-         Start_Vbox (Ctxt);
          Disp_Generate_Statement_Body (Ctxt, Bod);
-         Close_Vbox (Ctxt);
       end loop;
       Close_Vbox (Ctxt);
       Disp_End (Ctxt, Stmt, Tok_Generate);
