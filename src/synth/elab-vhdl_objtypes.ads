@@ -200,8 +200,9 @@ package Elab.Vhdl_Objtypes is
             Rec : Rec_El_Array_Acc;
          when Type_Access =>
             Acc_Acc : Type_Acc;
-            --  Memory size to store the type.
+            --  Memory size to store the type and its bounds.
             Acc_Type_Sz : Size_Type;
+            Acc_Bnd_Sz : Size_Type;
          when Type_File =>
             File_Typ  : Type_Acc;
             File_Signature : String_Acc;
@@ -226,6 +227,10 @@ package Elab.Vhdl_Objtypes is
    Heap_Ptr_Al : constant Palign_Type :=
      2 * Boolean'Pos (Heap_Ptr_Sz = 4)
      + 3 * Boolean'Pos (Heap_Ptr_Sz = 8);
+
+   --  Ghdl_Index_Type is a 32b unsigned type.
+   Ghdl_Index_Sz : constant Size_Type := 4;
+   Ghdl_Index_Al : constant Palign_Type := 2;
 
    --  Memory pools, which defines where the memory is allocated for data,
    --  types, values...

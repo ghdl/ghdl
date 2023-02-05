@@ -325,6 +325,7 @@ package body Elab.Vhdl_Types is
       Des_Typ : Type_Acc;
       Typ : Type_Acc;
    begin
+      --  Need to handle incomplete access type.
       if Get_Kind (Des_Ind) in Iir_Kinds_Denoting_Name then
          T := Get_Named_Entity (Des_Ind);
          if Get_Kind (T) = Iir_Kind_Type_Declaration
