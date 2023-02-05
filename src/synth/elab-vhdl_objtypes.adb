@@ -679,13 +679,13 @@ package body Elab.Vhdl_Objtypes is
    is
       subtype Access_Type_Type is Type_Type (Type_Access);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Access_Type_Type);
-      Bnd_Sz : Size_Type;
+      Type_Sz : Size_Type;
    begin
       if Acc_Type = null then
          --  For incomplete type.
-         Bnd_Sz := 0;
+         Type_Sz := 0;
       else
-         Bnd_Sz := Compute_Size_Type (Acc_Type);
+         Type_Sz := Compute_Size_Type (Acc_Type);
       end if;
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Access,
                                                 Wkind => Wkind_Sim,
@@ -694,13 +694,13 @@ package body Elab.Vhdl_Objtypes is
                                                 Sz => Heap_Ptr_Sz,
                                                 W => 1,
                                                 Acc_Acc => Acc_Type,
-                                                Acc_Bnd_Sz => Bnd_Sz)));
+                                                Acc_Type_Sz => Type_Sz)));
    end Create_Access_Type;
 
    procedure Complete_Access_Type (Acc_Type : Type_Acc; Des_Typ : Type_Acc) is
    begin
       Acc_Type.Acc_Acc := Des_Typ;
-      Acc_Type.Acc_Bnd_Sz := Compute_Size_Type (Des_Typ);
+      Acc_Type.Acc_Type_Sz := Compute_Size_Type (Des_Typ);
    end Complete_Access_Type;
 
    function Create_File_Type (File_Type : Type_Acc) return Type_Acc

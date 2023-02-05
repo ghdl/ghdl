@@ -201,7 +201,7 @@ package Elab.Vhdl_Objtypes is
          when Type_Access =>
             Acc_Acc : Type_Acc;
             --  Memory size to store the type.
-            Acc_Bnd_Sz : Size_Type;
+            Acc_Type_Sz : Size_Type;
          when Type_File =>
             File_Typ  : Type_Acc;
             File_Signature : String_Acc;

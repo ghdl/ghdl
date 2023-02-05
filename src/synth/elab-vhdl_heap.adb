@@ -63,7 +63,7 @@ package body Elab.Vhdl_Heap is
                        Obj_Typ : Type_Acc;
                        Res : out Memory_Ptr)
    is
-      Typ_Sz : constant Size_Type := Acc_Typ.Acc_Bnd_Sz;
+      Typ_Sz : constant Size_Type := Acc_Typ.Acc_Type_Sz;
       E : Heap_Entry;
    begin
       pragma Assert (Acc_Typ.Kind = Type_Access);
