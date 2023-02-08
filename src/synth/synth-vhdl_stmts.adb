@@ -4695,6 +4695,21 @@ package body Synth.Vhdl_Stmts is
       end if;
    end Synth_Psl_Assert_Directive;
 
+   procedure Synth_Psl_Endpoint_Declaration
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
+   is
+      pragma Unreferenced (Syn_Inst, Stmt);
+   begin
+      if not Flags.Flag_Formal then
+         return;
+      end if;
+
+      --  TODO
+      --  Mutate object to a net
+      --  Assign the net.
+      raise Internal_Error;
+   end Synth_Psl_Endpoint_Declaration;
+
    procedure Synth_Generate_Statement_Body
      (Syn_Inst : Synth_Instance_Acc; Bod : Node)
    is
@@ -4990,6 +5005,8 @@ package body Synth.Vhdl_Stmts is
                Synth_Psl_Restrict_Directive (Syn_Inst, Item);
             when Iir_Kind_Psl_Cover_Directive =>
                Synth_Psl_Cover_Directive (Syn_Inst, Item);
+            when Iir_Kind_Psl_Endpoint_Declaration =>
+               Synth_Psl_Endpoint_Declaration (Syn_Inst, Item);
             when Iir_Kind_Signal_Declaration
                | Iir_Kind_Constant_Declaration
                | Iir_Kind_Function_Declaration
