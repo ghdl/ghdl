@@ -997,6 +997,22 @@ package body Simul.Vhdl_Simul is
       procedure Execute_Aggregate_Signal_Assignment is
          new Assign_Aggregate (Execute_Signal_Assignment);
 
+      function Value_To_Sig (Val : Value_Acc) return Memory_Ptr is
+      begin
+         case Val.Kind is
+            when Value_Signal =>
+               declare
+                  E : Signal_Entry renames Signals_Table.Table (Val.S);
+               begin
+                  return E.Sig;
+               end;
+            when Value_Sig_Val =>
+               return Val.I_Sigs;
+            when others =>
+               raise Internal_Error;
+         end case;
+      end Value_To_Sig;
+
       procedure Execute_Signal_Assignment (Inst : Synth_Instance_Acc;
                                            Target : Target_Info;
                                            Val : Valtyp;
@@ -1011,14 +1027,9 @@ package body Simul.Vhdl_Simul is
                  (Inst, Target.Aggr, Target.Targ_Type, Val, Loc);
 
             when Target_Simple =>
-               declare
-                  E : Signal_Entry renames
-                    Signals_Table.Table (Target.Obj.Val.S);
-               begin
-                  Sig := (Target.Targ_Type,
-                          Sig_Index (E.Sig, Target.Off.Net_Off));
-               end;
-
+               Sig := (Target.Targ_Type,
+                       Sig_Index (Value_To_Sig (Target.Obj.Val),
+                                  Target.Off.Net_Off));
                if Val /= No_Valtyp then
                   Mem := Get_Value_Memtyp (Val);
                else
