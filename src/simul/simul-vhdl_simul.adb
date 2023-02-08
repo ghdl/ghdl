@@ -2245,14 +2245,7 @@ package body Simul.Vhdl_Simul is
             --  TODO
             null;
          when Iir_Kind_Psl_Endpoint_Declaration =>
-            declare
-               Val : Valtyp;
-            begin
-               Val := Create_Value_Memory (Bit_Type, Global_Pool'Access);
-               Write_Discrete (Val, 0);
-               --  TODO: create the object/signal during elaboration
-               Create_Object (Proc.Instance, Proc.Proc, Val);
-            end;
+            null;
          when others =>
             null;
       end case;
