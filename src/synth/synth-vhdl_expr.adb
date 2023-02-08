@@ -2309,9 +2309,9 @@ package body Synth.Vhdl_Expr is
                   --  Propagate error.
                   return No_Valtyp;
                end if;
-               if (Base.Val.Kind = Value_Signal
-                     or else Base.Val.Kind = Value_Sig_Val)
-                 and then Hook_Signal_Expr /= null
+               if Hook_Signal_Expr /= null
+                 and then (Base.Val.Kind = Value_Signal
+                             or else Base.Val.Kind = Value_Sig_Val)
                then
                   Base := Hook_Signal_Expr (Base);
                end if;
