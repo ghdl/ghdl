@@ -2849,7 +2849,9 @@ package body Trans.Chap8 is
 
       --  References to the formals (for copy-out), and variables for whole
       --  actual of individual associations.
+      --  ALT_PARAMS is for values of signal parameters.
       Params : Mnode_Array (0 .. Nbr_Assoc - 1);
+      Alt_Params : Mnode_Array (0 .. Nbr_Assoc - 1);
 
       --  The values of actuals.
       E_Params : O_Enode_Array (0 .. Nbr_Assoc - 1);
@@ -2884,30 +2886,44 @@ package body Trans.Chap8 is
          Act : constant Iir := Get_Actual (Assoc);
          Assoc_Info : Call_Assoc_Info_Acc;
          Param : Mnode;
+         E : O_Enode;
       begin
          Param := Translate_Individual_Association_Formal
            (Formal, Formal_Info, Params (Last_Individual),
             Formal_Object_Kind);
-         if Formal_Object_Kind = Mode_Value then
-            Chap7.Translate_Assign (Param, M2E (Val), Act, Formal_Type, Assoc);
-         else
-            Chap3.Translate_Object_Copy (Param, Sig, Formal_Type);
-            if Is_Suspendable then
-               --  Keep reference to the value to update the whole object
-               --  at each call.
-               Assoc_Info := Get_Info (Assoc);
-               New_Assign_Stmt
-                 (Get_Var (Assoc_Info.Call_Assoc_Value (Mode_Value)),
-                  M2E (Val));
-            else
-               --  Assign the value to the whole object, as there is
-               --  only one call.
-               Param := Translate_Individual_Association_Formal
-                 (Formal, Formal_Info, Params (Last_Individual),
-                  Mode_Value);
-               Chap3.Translate_Object_Copy (Param, Val, Formal_Type);
-            end if;
-         end if;
+         case Formal_Object_Kind is
+            when Mode_Value =>
+               Chap7.Translate_Assign
+                 (Param, M2E (Val), Act, Formal_Type, Assoc);
+            when Mode_Signal =>
+               Chap3.Translate_Object_Copy (Param, Sig, Formal_Type);
+               if Is_Suspendable then
+                  --  Keep reference to the value to update the whole object
+                  --  at each call.
+                  Assoc_Info := Get_Info (Assoc);
+                  New_Assign_Stmt
+                    (Get_Var (Assoc_Info.Call_Assoc_Value (Mode_Value)),
+                     M2E (Val));
+               else
+                  --  Assign the value to the whole object, as there is
+                  --  only one call.
+                  Param := Translate_Individual_Association_Formal
+                    (Formal, Formal_Info, Alt_Params (Last_Individual),
+                     Mode_Value);
+                  E := M2E (Val);
+                  --  Signal values are always passed by pointers (ie even
+                  --  scalars). But for assignment, the ortho node must be
+                  --  a value for scalar types.
+                  --  TODO: Do not get the address of a scalar in case of
+                  --   individual assoc.
+                  if Get_Type_Info (Val).Type_Mode in Type_Mode_Pass_By_Copy
+                  then
+                     E := New_Value (New_Access_Element (E));
+                  end if;
+                  Chap7.Translate_Assign
+                    (Param, E, Act, Formal_Type, Assoc);
+               end if;
+         end case;
       end Trans_Individual_Assign;
 
       --  Evaluate the actual of ASSOC/INTER (whose index is POS), do the
@@ -3037,8 +3053,11 @@ package body Trans.Chap8 is
                      Chap4.Allocate_Complex_Object (Formal_Type, Alloc, Param);
                   end if;
 
-                  --  In case of signals, don't keep value, only keep
-                  --  signal (so override the value).
+                  if Mode = Mode_Signal then
+                     Alt_Params (Pos) := Params (Pos);
+                  else
+                     Alt_Params (Pos) := Mnode_Null;
+                  end if;
                   Params (Pos) := Param;
 
                   if Formal_Info.Interface_Field (Mode) /= O_Fnode_Null then
@@ -3557,6 +3576,9 @@ package body Trans.Chap8 is
                if Get_Kind (El) = Iir_Kind_Association_Element_By_Individual
                then
                   --  Pass the whole data for an individual association.
+                  if Alt_Params (Pos) /= Mnode_Null then
+                     New_Association (Constr, M2E (Alt_Params (Pos)));
+                  end if;
                   New_Association (Constr, M2E (Params (Pos)));
                elsif Base_Formal = Formal then
                   --  Whole association.
