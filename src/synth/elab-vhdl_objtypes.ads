@@ -164,6 +164,11 @@ package Elab.Vhdl_Objtypes is
       --  unshared.
       Is_Global : Boolean;
 
+      --  True if the size of an object is known at compile time.
+      --  Used for layout of records.
+      Is_Static : Boolean;
+      Is_Bnd_Static : Boolean;
+
       --  Number of bytes (when in memory) for this type.
       Sz : Size_Type;
 
@@ -196,6 +201,8 @@ package Elab.Vhdl_Objtypes is
             Uarr_Idx : Type_Acc;
          when Type_Record
             | Type_Unbounded_Record =>
+            --  The base type, used to have compatible layouts.
+            Rec_Base : Type_Acc;
             --  The first elements is in the LSBs of the net.
             Rec : Rec_El_Array_Acc;
          when Type_Access =>
@@ -270,23 +277,32 @@ package Elab.Vhdl_Objtypes is
    function Create_Float_Type (Rng : Float_Range_Type) return Type_Acc;
    function Create_Vec_Type_By_Length (Len : Uns32; El : Type_Acc)
                                       return Type_Acc;
-   function Create_Vector_Type (Bnd : Bound_Type; El_Type : Type_Acc)
-                               return Type_Acc;
+   function Create_Vector_Type (Bnd : Bound_Type;
+                                Static_Bnd : Boolean;
+                                El_Type : Type_Acc) return Type_Acc;
    function Create_Unbounded_Vector (El_Type : Type_Acc; Idx : Type_Acc)
                                     return Type_Acc;
    function Create_Slice_Type (Len : Uns32; El_Type : Type_Acc)
                               return Type_Acc;
-   function Create_Array_Type
-     (Bnd : Bound_Type; Last : Boolean; El_Type : Type_Acc) return Type_Acc;
-   function Create_Array_Unbounded_Type
-     (Bnd : Bound_Type; Last : Boolean; El_Type : Type_Acc) return Type_Acc;
+   function Create_Array_Type (Bnd : Bound_Type;
+                               Static_Bnd : Boolean;
+                               Last : Boolean;
+                               El_Type : Type_Acc) return Type_Acc;
+   function Create_Array_Unbounded_Type (Bnd : Bound_Type;
+                                         Static_Bnd : Boolean;
+                                         Last : Boolean;
+                                         El_Type : Type_Acc) return Type_Acc;
    function Create_Unbounded_Array
      (Idx : Type_Acc; Last : Boolean; El_Type : Type_Acc) return Type_Acc;
 
    function Create_Rec_El_Array (Nels : Iir_Index32) return Rec_El_Array_Acc;
 
-   function Create_Record_Type (Els : Rec_El_Array_Acc) return Type_Acc;
-   function Create_Unbounded_Record (Els : Rec_El_Array_Acc) return Type_Acc;
+   --  PARENT_TYP is a parent type or null to create a base type.
+   --  Used to have the same layout.
+   function Create_Record_Type (Parent_Typ : Type_Acc;
+                                Els : Rec_El_Array_Acc) return Type_Acc;
+   function Create_Unbounded_Record (Parent_Typ : Type_Acc;
+                                     Els : Rec_El_Array_Acc) return Type_Acc;
 
    --  ACC_TYPE can be null for an incomplete type.
    function Create_Access_Type (Acc_Type : Type_Acc) return Type_Acc;

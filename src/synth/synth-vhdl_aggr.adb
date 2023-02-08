@@ -614,9 +614,9 @@ package body Synth.Vhdl_Aggr is
         (Aggr_Typ.Uarr_Idx.Drange, Iir_Index32 (Len));
       case Aggr_Typ.Kind is
          when Type_Unbounded_Vector =>
-            Res_Typ := Create_Vector_Type (Bnd, El_Typ);
+            Res_Typ := Create_Vector_Type (Bnd, False, El_Typ);
          when Type_Unbounded_Array =>
-            Res_Typ := Create_Array_Type (Bnd, True, El_Typ);
+            Res_Typ := Create_Array_Type (Bnd, False, True, El_Typ);
          when others =>
             raise Internal_Error;
       end case;
@@ -661,7 +661,7 @@ package body Synth.Vhdl_Aggr is
                      Els_Typ.E (I).Typ :=
                        Tab_Res (Tab_Res'Last - Nat32 (I) + 1).Typ;
                   end loop;
-                  Res_Typ := Create_Record_Type (Els_Typ);
+                  Res_Typ := Create_Record_Type (Aggr_Type, Els_Typ);
                end;
             when Type_Record =>
                Res_Typ := Aggr_Type;

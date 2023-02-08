@@ -539,9 +539,11 @@ package body Synth.Vhdl_Expr is
       then
          case Utype.Kind is
             when Type_Unbounded_Array =>
-               return Create_Array_Type (Stype.Abound, Utype.Ulast, Res_El);
+               return Create_Array_Type
+                 (Stype.Abound, False, Utype.Ulast, Res_El);
             when Type_Unbounded_Vector =>
-               return Create_Vector_Type (Stype.Abound, Res_El);
+               return Create_Vector_Type
+                 (Stype.Abound, False, Res_El);
             when others =>
                raise Internal_Error;
          end case;

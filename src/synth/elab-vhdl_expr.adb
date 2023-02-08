@@ -423,18 +423,18 @@ package body Elab.Vhdl_Expr is
       case Btyp.Kind is
          when Type_Vector =>
             pragma Assert (El_Typ.Kind in Type_Nets);
-            Res := Create_Vector_Type (Bnd, Btyp.Arr_El);
+            Res := Create_Vector_Type (Bnd, False, Btyp.Arr_El);
          when Type_Unbounded_Vector =>
             pragma Assert (El_Typ.Kind in Type_Nets);
-            Res := Create_Vector_Type (Bnd, Btyp.Uarr_El);
+            Res := Create_Vector_Type (Bnd, False, Btyp.Uarr_El);
          when Type_Array =>
             pragma Assert (Btyp.Alast);
             pragma Assert (Is_Bounded_Type (Btyp.Arr_El));
-            Res := Create_Array_Type (Bnd, True, Btyp.Arr_El);
+            Res := Create_Array_Type (Bnd, False, True, Btyp.Arr_El);
          when Type_Unbounded_Array =>
             pragma Assert (Btyp.Ulast);
             pragma Assert (Is_Bounded_Type (El_Typ));
-            Res := Create_Array_Type (Bnd, True, El_Typ);
+            Res := Create_Array_Type (Bnd, False, True, El_Typ);
          when others =>
             raise Internal_Error;
       end case;
@@ -584,9 +584,9 @@ package body Elab.Vhdl_Expr is
 
       El_Type := Get_Array_Element (Str_Typ);
       if El_Type.Kind in Type_Nets then
-         Res_Type := Create_Vector_Type (Bounds, El_Type);
+         Res_Type := Create_Vector_Type (Bounds, True, El_Type);
       else
-         Res_Type := Create_Array_Type (Bounds, True, El_Type);
+         Res_Type := Create_Array_Type (Bounds, True, True, El_Type);
       end if;
       Res := Create_Value_Memory (Res_Type, Current_Pool);
 

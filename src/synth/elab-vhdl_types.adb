@@ -310,9 +310,9 @@ package body Elab.Vhdl_Types is
       end loop;
 
       if Bounded then
-         return Create_Record_Type (Rec_Els);
+         return Create_Record_Type (Parent_Typ, Rec_Els);
       else
-         return Create_Unbounded_Record (Rec_Els);
+         return Create_Unbounded_Record (Parent_Typ, Rec_Els);
       end if;
    end Synth_Record_Type_Definition;
 
@@ -617,12 +617,14 @@ package body Elab.Vhdl_Types is
                declare
                   St_El : Node;
                   Bnd : Bound_Type;
+                  Bnd_Static : Boolean;
                begin
                   St_El := Get_Index_Type (St_Indexes, 0);
                   Bnd := Synth_Bounds_From_Range (Syn_Inst, St_El);
+                  Bnd_Static := Get_Type_Staticness (St_El) = Locally;
                   Check_Bound_Compatibility
                     (Syn_Inst, St_El, Bnd, Parent_Typ.Uarr_Idx);
-                  return Create_Vector_Type (Bnd, El_Typ);
+                  return Create_Vector_Type (Bnd, Bnd_Static, El_Typ);
                end;
             else
                --  An alias.
@@ -639,11 +641,13 @@ package body Elab.Vhdl_Types is
                   Res_Typ : Type_Acc;
                   Bnd : Bound_Type;
                   P : Type_Acc;
+                  Bnd_Static : Boolean;
                begin
                   Res_Typ := El_Typ;
                   for I in reverse Flist_First .. Flist_Last (St_Indexes) loop
                      St_El := Get_Index_Type (St_Indexes, I);
                      Bnd := Synth_Bounds_From_Range (Syn_Inst, St_El);
+                     Bnd_Static := Get_Type_Staticness (St_El) = Locally;
                      --  Get parent index.
                      P := Parent_Typ;
                      for J in Flist_First + 1 .. I loop
@@ -653,10 +657,10 @@ package body Elab.Vhdl_Types is
                        (Syn_Inst, St_El, Bnd, P.Uarr_Idx);
                      if El_Bounded then
                         Res_Typ := Create_Array_Type
-                          (Bnd, Res_Typ = El_Typ, Res_Typ);
+                          (Bnd, Bnd_Static, Res_Typ = El_Typ, Res_Typ);
                      else
                         Res_Typ := Create_Array_Unbounded_Type
-                          (Bnd, Res_Typ = El_Typ, Res_Typ);
+                          (Bnd, Bnd_Static, Res_Typ = El_Typ, Res_Typ);
                      end if;
                   end loop;
                   return Res_Typ;

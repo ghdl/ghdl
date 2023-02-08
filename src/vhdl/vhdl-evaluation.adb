@@ -841,7 +841,7 @@ package body Vhdl.Evaluation is
                   Res_Rng := Convert_Discrete_Range
                     (Get_Range_Constraint (Idx));
                   return Create_Vector_Type
-                    (Synth_Bounds_From_Range (Res_Rng), El_Typ);
+                    (Synth_Bounds_From_Range (Res_Rng), True, El_Typ);
                end;
 
             when others =>

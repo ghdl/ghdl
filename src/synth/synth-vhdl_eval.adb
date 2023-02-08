@@ -751,7 +751,7 @@ package body Synth.Vhdl_Eval is
    begin
       Bnd := (Dir => Dir_To, Left => 1, Right => Int32 (Len),
               Len => Uns32 (Len));
-      Typ := Create_Array_Type (Bnd, True, Styp.Uarr_El);
+      Typ := Create_Array_Type (Bnd, True, True, Styp.Uarr_El);
 
       Res := Create_Memory (Typ);
       for I in Str'Range loop

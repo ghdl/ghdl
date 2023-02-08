@@ -411,10 +411,10 @@ package body Synth.Vhdl_Stmts is
       --  Compute the type.
       case Base_Typ.Kind is
          when Type_Unbounded_Vector =>
-            Res := Create_Vector_Type (Bnd, Base_Typ.Uarr_El);
+            Res := Create_Vector_Type (Bnd, False, Base_Typ.Uarr_El);
          when Type_Unbounded_Array =>
             pragma Assert (Base_Typ.Ulast);
-            Res := Create_Array_Type (Bnd, True, Base_Typ.Uarr_El);
+            Res := Create_Array_Type (Bnd, False, True, Base_Typ.Uarr_El);
          when others =>
             raise Internal_Error;
       end case;
@@ -2111,7 +2111,7 @@ package body Synth.Vhdl_Stmts is
                      Typ => Copy_Unbounded_Type (Typ.Rec.E (I).Typ,
                                                  Base.Rec.E (I).Typ));
                end loop;
-               return Create_Unbounded_Record (Els);
+               return Create_Unbounded_Record (Typ.Rec_Base, Els);
             end;
          when Type_Unbounded_Array =>
             return Create_Unbounded_Array
@@ -2119,8 +2119,8 @@ package body Synth.Vhdl_Stmts is
                                                              Base.Uarr_El));
          when Type_Array_Unbounded =>
             return Create_Array_Unbounded_Type
-              (Typ.Abound, Typ.Alast, Copy_Unbounded_Type (Typ.Uarr_El,
-                                                           Base.Uarr_El));
+              (Typ.Abound, Typ.Is_Bnd_Static, Typ.Alast,
+               Copy_Unbounded_Type (Typ.Uarr_El, Base.Uarr_El));
          when Type_Unbounded_Vector =>
             return Create_Unbounded_Vector (Typ.Uarr_Idx, Typ.Uarr_El);
          when Type_Slice =>
@@ -2369,14 +2369,15 @@ package body Synth.Vhdl_Stmts is
          case Type_Composite (Formal_Typ.Kind) is
             when Type_Unbounded_Record =>
                --  TODO: unbounded record with unbounded elements.
-               Formal_Typ := Create_Record_Type (Formal_Typ.Rec);
+               Formal_Typ := Create_Record_Type (Formal_Typ, Formal_Typ.Rec);
             when Type_Unbounded_Array
               | Type_Unbounded_Vector =>
                raise Internal_Error;
             when Type_Array_Unbounded =>
                pragma Assert (Formal_Typ.Alast); --  TODO.
                Formal_Typ := Create_Array_Type
-                 (Formal_Typ.Abound, Formal_Typ.Alast, Formal_Typ.Arr_El);
+                 (Formal_Typ.Abound, False, Formal_Typ.Alast,
+                  Formal_Typ.Arr_El);
             when Type_Array
               | Type_Vector
               | Type_Record =>

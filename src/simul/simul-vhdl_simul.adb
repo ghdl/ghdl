@@ -2742,7 +2742,7 @@ package body Simul.Vhdl_Simul is
 
       --  Create the type.
       Bnd := Elab.Vhdl_Types.Create_Bounds_From_Length (R.Idx_Typ.Drange, Len);
-      Arr_Typ := Create_Array_Type (Bnd, True, El_Typ);
+      Arr_Typ := Create_Array_Type (Bnd, False, True, El_Typ);
 
       --  Allocate the array.
       Arr := Create_Memory (Arr_Typ);
