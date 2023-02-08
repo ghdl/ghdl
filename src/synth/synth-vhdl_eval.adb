@@ -2872,13 +2872,29 @@ package body Synth.Vhdl_Eval is
 
          when Iir_Predefined_Ieee_1164_To_Hstring
             | Iir_Predefined_Ieee_Numeric_Std_To_Hstring_Uns =>
+            if Param1.Typ.Abound.Len = 0 then
+               Error_Msg_Synth
+                 (Inst, Expr, "to_hstring fails with a null-vector");
+            end if;
             return Eval_Logic_Vector_To_String (Param1, Res_Typ, False, 4);
          when Iir_Predefined_Ieee_Numeric_Std_To_Hstring_Sgn =>
+            if Param1.Typ.Abound.Len = 0 then
+               Error_Msg_Synth
+                 (Inst, Expr, "to_hstring fails with a null-vector");
+            end if;
             return Eval_Logic_Vector_To_String (Param1, Res_Typ, True, 4);
          when Iir_Predefined_Ieee_1164_To_Ostring
             | Iir_Predefined_Ieee_Numeric_Std_To_Ostring_Uns =>
+            if Param1.Typ.Abound.Len = 0 then
+               Error_Msg_Synth
+                 (Inst, Expr, "to_ostring fails with a null-vector");
+            end if;
             return Eval_Logic_Vector_To_String (Param1, Res_Typ, False, 3);
          when Iir_Predefined_Ieee_Numeric_Std_To_Ostring_Sgn =>
+            if Param1.Typ.Abound.Len = 0 then
+               Error_Msg_Synth
+                 (Inst, Expr, "to_ostring fails with a null-vector");
+            end if;
             return Eval_Logic_Vector_To_String (Param1, Res_Typ, True, 3);
 
          when Iir_Predefined_Ieee_Numeric_Std_Max_Uns_Uns =>
