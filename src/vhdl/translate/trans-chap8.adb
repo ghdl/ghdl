@@ -4081,7 +4081,7 @@ package body Trans.Chap8 is
       end if;
       Res := Signal_Assign_Data'
         (Expr => Chap3.Index_Base (Chap3.Get_Composite_Base (Val.Expr),
-         Targ_Type, New_Obj_Value (Index)),
+                                   Targ_Type, New_Obj_Value (Index)),
          Reject => Val.Reject,
          After => Val.After);
       return Res;
