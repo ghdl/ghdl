@@ -696,7 +696,49 @@ package body Vhdl.Canon is
       Set_Seen_Flag (Proc, True);
       Clear_Seen_Flag (Proc);
 
-      return Res;
+      --  Filter out signal parameters.
+      declare
+         It, It2 : List_Iterator;
+         Res2 : Iir_List;
+         El, El2 : Iir;
+         Base : Iir;
+      begin
+         Res2 := Null_Iir_List;
+
+         It := List_Iterate_Safe (Res);
+         while Is_Valid (It) loop
+            El := Get_Element (It);
+            Base := Get_Object_Prefix (El);
+            if Is_Signal_Parameter (Base) then
+               --  Discard
+               if Res2 = Null_Iir_List then
+                  --  So we need a different list to discard some elements.
+                  --  Duplicate the list until EL.
+                  Res2 := Create_Iir_List;
+                  It2 := List_Iterate (Res);
+                  loop
+                     El2 := Get_Element (It2);
+                     exit when El2 = El;
+                     Append_Element (Res2, El2);
+                     Next (It2);
+                  end loop;
+               end if;
+            else
+               if Res2 /= Null_Iir_List then
+                  Append_Element (Res2, El);
+               end if;
+            end if;
+            Next (It);
+         end loop;
+
+         if Res2 /= Null_Iir_List then
+            Destroy_Iir_List (Res);
+            return Res2;
+         else
+            --  No element removed.
+            return Res;
+         end if;
+      end;
    end Canon_Extract_Sensitivity_Process;
 
    procedure Canon_Aggregate_Expression (Expr: Iir)

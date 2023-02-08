@@ -64,7 +64,6 @@ package Vhdl.Utils is
    function Get_Object_Prefix (Name: Iir; With_Alias : Boolean := True)
                               return Iir;
 
-
    --  Return TRUE if NAME is a name that designate an object (ie a constant,
    --  a variable, a signal or a file).
    function Is_Object_Name (Name : Iir) return Boolean;
@@ -84,6 +83,10 @@ package Vhdl.Utils is
 
    --  Return TRUE iff EXPR is a quantity name.
    function Is_Quantity_Name (Expr : Iir) return Boolean;
+
+   --  Return TRUE iff OBJ is a signal parameter (an interface signal of a
+   --  subprogram).  Works only for base names.
+   function Is_Signal_Parameter (Obj : Iir) return Boolean;
 
    --  Get the interface corresponding to the formal name FORMAL.  This is
    --  always an interface, even if the formal is a name.

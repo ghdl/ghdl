@@ -562,6 +562,13 @@ package body Vhdl.Utils is
       end if;
    end Is_Quantity_Name;
 
+   function Is_Signal_Parameter (Obj : Iir) return Boolean is
+   begin
+      return Get_Kind (Obj) = Iir_Kind_Interface_Signal_Declaration
+        and then
+        Get_Kind (Get_Parent (Obj)) in Iir_Kinds_Subprogram_Declaration;
+   end Is_Signal_Parameter;
+
    function Get_Interface_Of_Formal (Formal : Iir) return Iir
    is
       El : Iir;

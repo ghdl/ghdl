@@ -4731,13 +4731,6 @@ package body Vhdl.Sem_Expr is
       return Expr;
    end Sem_Qualified_Expression;
 
-   function Is_Signal_Parameter (Obj : Iir) return Boolean is
-   begin
-      return Get_Kind (Obj) = Iir_Kind_Interface_Signal_Declaration
-        and then
-        Get_Kind (Get_Parent (Obj)) in Iir_Kinds_Subprogram_Declaration;
-   end Is_Signal_Parameter;
-
    function Can_Interface_Be_Read (Inter : Iir) return Boolean is
    begin
       case Get_Mode (Inter) is
