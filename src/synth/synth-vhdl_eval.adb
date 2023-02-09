@@ -2710,6 +2710,13 @@ package body Synth.Vhdl_Eval is
                return Resize_Vec (Param1, Uns32 (Len), True);
             end;
 
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Sgn =>
+            return Conv_Slv
+              (Param1, Uns32 (Read_Discrete (Param2)), True, +Expr);
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Uns =>
+            return Conv_Slv
+              (Param1, Uns32 (Read_Discrete (Param2)), False, +Expr);
+
          when Iir_Predefined_Ieee_1164_To_Stdulogic =>
             declare
                B : Std_Ulogic;

@@ -67,4 +67,10 @@ package Synth.Ieee.Std_Logic_Arith is
    function Compare_Sgn_Int (L : Memtyp; R : Int64; Loc : Location_Type)
                             return Order_Type;
 
+   --  Conversion from signed/unsigned to std_logic_vector.
+   function Conv_Slv (Arg : Memtyp;
+                      Size : Uns32;
+                      Signed : Boolean;
+                      Loc : Location_Type) return Memtyp;
+
 end Synth.Ieee.Std_Logic_Arith;

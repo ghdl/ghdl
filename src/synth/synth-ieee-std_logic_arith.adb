@@ -519,4 +519,34 @@ package body Synth.Ieee.Std_Logic_Arith is
       return Compare_Vec (L.Mem, Rmem, Len, Rlen, True, True);
    end Compare_Sgn_Int;
 
+   function Conv_Slv (Arg : Memtyp;
+                      Size : Uns32;
+                      Signed : Boolean;
+                      Loc : Location_Type) return Memtyp
+   is
+      Alen : constant Uns32 := Arg.Typ.Abound.Len;
+      Res : Memtyp;
+      V : Sl_X01;
+   begin
+      Res.Typ := Create_Res_Type (Arg.Typ, Size);
+      Res := Create_Memory (Res.Typ);
+      V := '0';
+      for I in 1 .. Size loop
+         if I <= Alen then
+            V := Sl_To_X01 (Read_Std_Logic (Arg.Mem, Alen - I));
+            if V = 'X' then
+               Warn_X (Loc);
+               Fill (Res.Mem, Size, 'X');
+               return Res;
+            end if;
+         else
+            if not Signed then
+               V := '0';
+            end if;
+         end if;
+         Write_Std_Logic (Res.Mem, Size - I, V);
+      end loop;
+      return Res;
+   end Conv_Slv;
+
 end Synth.Ieee.Std_Logic_Arith;
