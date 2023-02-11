@@ -297,6 +297,8 @@ package body Vhdl.Sem_Lib is
       while Is_Valid (It) loop
          El := Get_Element (It);
          if Get_Kind (El) = Iir_Kind_Design_Unit then
+            --  TODO: If both units are in the same library, a better check
+            --  would be comparing dates.
             U_Ts := Get_Analysis_Time_Stamp (Get_Design_File (El));
             if Files_Map.Is_Gt (U_Ts, Du_Ts) then
                Error_Obsolete
@@ -353,6 +355,10 @@ package body Vhdl.Sem_Lib is
       if Get_Date (Design_Unit) = Date_Replacing then
          Error_Msg_Sem (+Loc, "circular reference of %n", +Design_Unit);
          return;
+      elsif not Flags.Flag_Elaborate_With_Outdated
+        and then Get_Date (Design_Unit) = Date_Parsed
+      then
+         Error_Msg_Sem (+Loc, "unit %n has not been analyzed", +Design_Unit);
       end if;
 
       --  Save and clear Nbr_Errors so that the unit is fully analyzed even
