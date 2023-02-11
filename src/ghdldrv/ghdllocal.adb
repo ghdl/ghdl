@@ -1044,6 +1044,9 @@ package body Ghdllocal is
    is
       Error : Boolean;
    begin
+      --  Allow syntax checking with simply imported dependencies.
+      Flags.Flag_Elaborate_With_Outdated := True;
+
       Analyze_Files (Args, False, Error);
       if Error xor Cmd.Flag_Expect_Failure then
          raise Errorout.Compilation_Error;

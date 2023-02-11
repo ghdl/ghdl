@@ -18,6 +18,7 @@ with GNAT.OS_Lib; use GNAT.OS_Lib;
 with Simple_IO; use Simple_IO;
 
 with Types; use Types;
+with Flags;
 with Name_Table; use Name_Table;
 with Vhdl.Nodes_Meta; use Vhdl.Nodes_Meta;
 with Files_Map;
@@ -556,6 +557,8 @@ package body Ghdlxml is
       if not Setup_Libraries (True) then
          return;
       end if;
+
+      Flags.Flag_Elaborate_With_Outdated := True;
 
       --  Parse all files.
       for I in Files'Range loop
