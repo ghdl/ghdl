@@ -3130,8 +3130,7 @@ package body Vhdl.Sem_Expr is
    -- A_TYPE.
    -- return FALSE is case of failure
    function Sem_Record_Aggregate
-     (Aggr : Iir_Aggregate; A_Type : Iir; Constrained : Boolean)
-     return boolean
+     (Aggr : Iir_Aggregate; A_Type : Iir; Constrained : Boolean) return Iir
    is
       El_List : constant Iir_Flist := Get_Elements_Declaration_List (A_Type);
 
@@ -3140,6 +3139,7 @@ package body Vhdl.Sem_Expr is
 
       Matches: Iir_Array (0 .. Get_Nbr_Elements (El_List) - 1);
       Ok : Boolean;
+      Ovf : Boolean;
 
       --  Add a choice for element REC_EL.
       --  Checks the element is not already associated.
@@ -3219,6 +3219,7 @@ package body Vhdl.Sem_Expr is
       Set_Aggregate_Expand_Flag (Aggr, True);
 
       Ok := True;
+      Ovf := False;
       Assoc_Chain := Get_Association_Choices_Chain (Aggr);
       Matches := (others => Null_Iir);
       Expr_Staticness := Locally;
@@ -3295,11 +3296,10 @@ package body Vhdl.Sem_Expr is
          if not Get_Same_Alternative_Flag (El) then
             if El_Type /= Null_Iir then
                --  Analyze the expression only if the choice is correct.
-               Expr := Sem_Expression_Wildcard
-                 (Expr, El_Type, Constrained);
+               Expr := Sem_Expression_Wildcard (Expr, El_Type, Constrained);
                if Expr /= Null_Iir then
-                  Set_Associated_Expr
-                    (El, Eval_Expr_Check_If_Static (Expr, El_Type));
+                  Expr := Eval_Expr_Check_If_Static (Expr, El_Type);
+                  Set_Associated_Expr (El, Expr);
                   Expr_Staticness := Min (Expr_Staticness,
                                           Get_Expr_Staticness (Expr));
                   if not Add_Constraints
@@ -3310,6 +3310,15 @@ package body Vhdl.Sem_Expr is
                   end if;
                   if not Is_Static_Construct (Expr) then
                      Set_Aggregate_Expand_Flag (Aggr, False);
+                  end if;
+                  --  Check constraints.
+                  if Get_Kind (Expr) /= Iir_Kind_Overflow_Literal
+                    and then not Eval_Is_In_Bound (Expr, El_Type)
+                  then
+                     Warning_Msg_Sem
+                       (Warnid_Runtime_Error, +Expr,
+                        "expression constraints don't match record element");
+                     Ovf := True;
                   end if;
                else
                   Ok := False;
@@ -3392,7 +3401,13 @@ package body Vhdl.Sem_Expr is
          end;
       end if;
 
-      return Ok;
+      if Ovf then
+         return Build_Overflow (Aggr, Get_Type (Aggr));
+      elsif not Ok then
+         return Null_Iir;
+      else
+         return Aggr;
+      end if;
    end Sem_Record_Aggregate;
 
    --  Information for each dimension of an aggregate.
@@ -4463,10 +4478,7 @@ package body Vhdl.Sem_Expr is
             return Sem_Array_Aggregate (Expr, A_Type, Constrained);
          when Iir_Kind_Record_Type_Definition
             | Iir_Kind_Record_Subtype_Definition =>
-            if not Sem_Record_Aggregate (Expr, A_Type, Constrained) then
-               return Null_Iir;
-            end if;
-            return Expr;
+            return Sem_Record_Aggregate (Expr, A_Type, Constrained);
          when Iir_Kind_Error =>
             return Null_Iir;
          when others =>
