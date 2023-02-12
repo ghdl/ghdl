@@ -114,6 +114,8 @@ vhdl/default_paths.ads: Makefile
 	echo "   Shared_Library_Extension : constant String :=">> tmp-dpaths.ads
 	echo "     \"$(VHDL_SOEXT)\";" >> tmp-dpaths.ads
 	echo "   Default_Pie : constant Boolean := False;" >> tmp-dpaths.ads
+	echo "   Backend_Version : constant String :=" >> tmp-dpaths.ads
+	echo "     \"@backend_version@\";" >> tmp-dpaths.ads
 	echo "end Default_Paths;" >> tmp-dpaths.ads
 	$(srcdir)/../move-if-change tmp-dpaths.ads $@
 
