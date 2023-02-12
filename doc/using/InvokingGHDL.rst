@@ -747,7 +747,11 @@ Diagnostics Control
 .. option:: -fcolor-diagnostics
 .. option:: -fno-color-diagnostics
 
-  Control whether diagnostic messages are displayed in color. The default is on when the standard output is a terminal.
+  Control whether diagnostic messages are displayed in color. The
+  default is on when the standard output is a terminal.  For
+  compatibility with other tools, when colors are enabled the
+  diagnostic level is always displayed.  When colors are not enabled,
+  level ``error`` is not displayed.
 
 .. option:: -fdiagnostics-show-option
 .. option:: -fno-diagnostics-show-option
