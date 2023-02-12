@@ -21,12 +21,14 @@ with Ghdlvpi;
 with Ghdlxml;
 with Ghdllib;
 with Ghdlsynth_Maybe;
+with Default_Paths;
 
 procedure Ghdl_Gcc is
 begin
    --  Manual elaboration so that the order is known (because it is the order
    --  used to display help).
-   Ghdlmain.Version_String := new String'("GCC back-end code generator");
+   Ghdlmain.Version_String :=
+     new String'("GCC " & Default_Paths.Backend_Version & " code generator");
    Ghdldrv.Backend := Ghdldrv.Backend_Gcc;
    Ghdldrv.Register_Commands;
    Ghdlsynth_Maybe.Register_Commands;

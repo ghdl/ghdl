@@ -41,4 +41,7 @@ package Default_Paths is
 
    Shared_Library_Extension : constant String := "@SOEXT@";
    Default_Pie : constant Boolean := "@default_pic@" = String'("true");
+
+   Backend_Version : constant String :=
+     "@backend_version@";
 end Default_Paths;
