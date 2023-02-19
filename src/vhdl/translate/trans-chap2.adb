@@ -941,6 +941,10 @@ package body Trans.Chap2 is
          Chap4.Translate_Declaration_Chain (Bod);
 
          Pop_Package_Instance_Factory (Spec);
+      else
+         Restore_Local_Identifier (Info.Package_Local_Id);
+
+         Chap4.Translate_Declaration_Chain (Bod);
       end if;
 
       --  May be called during elaboration to generate RTI.
@@ -949,12 +953,6 @@ package body Trans.Chap2 is
             Pop_Identifier_Prefix (Mark);
          end if;
          return;
-      end if;
-
-      if not (Is_Spec_Decl and then Is_Uninstantiated_Package (Spec)) then
-         Restore_Local_Identifier (Info.Package_Local_Id);
-
-         Chap4.Translate_Declaration_Chain (Bod);
       end if;
 
       Global_Storage := O_Storage_Private;
@@ -1613,22 +1611,21 @@ package body Trans.Chap2 is
          Translate_Package (Inst, Inst);
 
          --  Generate code for the body.
-         if Global_Storage /= O_Storage_External then
-            declare
-               Bod : constant Iir := Get_Instance_Package_Body (Inst);
-            begin
-               if Is_Valid (Bod) then
-                  Translate_Package_Body (Bod);
-               else
-                  --  As an elaboration subprogram for the body is always
-                  --  needed, generate it.
+         declare
+            Bod : constant Iir := Get_Instance_Package_Body (Inst);
+         begin
+            if Is_Valid (Bod) then
+               Translate_Package_Body (Bod);
+            else
+               --  As an elaboration subprogram for the body is always
+               --  needed, generate it.
+               if Global_Storage /= O_Storage_External then
                   if not Is_Nested_Package (Inst) then
                      Elab_Package_Body (Inst, Null_Iir);
                   end if;
                end if;
-            end;
-         end if;
-
+            end if;
+         end;
          return;
       end if;
 
@@ -1688,7 +1685,29 @@ package body Trans.Chap2 is
    begin
       --  Macro-expanded instances are handled like a regular package.
       if Get_Macro_Expanded_Flag (Spec) then
-         Elab_Package (Inst, Inst);
+         declare
+            Bod : constant Iir := Get_Package_Body (Spec);
+            Inst_Bod : constant Iir := Get_Instance_Package_Body (Inst);
+            Final : Boolean;
+            pragma Unreferenced (Final);
+         begin
+            --  There are no routines generated to elaborate macro-expanded
+            --  packages, but dependencies still need to be elaborated.
+            Elab_Dependence (Get_Design_Unit (Spec));
+            if Bod /= Null_Iir then
+               Elab_Dependence (Get_Design_Unit (Bod));
+            end if;
+
+            Elab_Package (Inst, Inst);
+
+            if Inst_Bod /= Null_Iir then
+               --  Humm, if BOD is present then INST_BOD should also be
+               --  present.  But this is true only if the spec needs a body.
+               Open_Temp;
+               Chap4.Elab_Declaration_Chain (Inst_Bod, Final);
+               Close_Temp;
+            end if;
+         end;
          return;
       end if;
 
