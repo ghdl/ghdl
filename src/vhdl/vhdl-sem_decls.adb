@@ -924,17 +924,32 @@ package body Vhdl.Sem_Decls is
       return Deferred_Const;
    end Get_Deferred_Constant;
 
+   --  Merge constraints from the subtype indication and the type of the
+   --  default value for constant declarations.
+   --  See LRM08 5.3.2.2 Index constraints and discrete ranges
    procedure Sem_Object_Type_From_Value (Decl : Iir; Value : Iir)
    is
       Atype : constant Iir := Get_Type (Decl);
       Value_Type : constant Iir := Get_Type (Value);
    begin
-      if not Is_Fully_Constrained_Type (Atype)
-        and then not Is_Error (Value_Type)
+      if Is_Fully_Constrained_Type (Atype) then
+         --  No discussion, the type is defined by the subtype indication.
+         return;
+      end if;
+      if Is_Error (Value_Type) then
+         --  Don't try to merge types.
+         return;
+      end if;
+
+      --  Only use value type in the case of a vhdl-93 array completion.
+      if Get_Type_Staticness (Value_Type) >= Globally
+        and then Get_Kind (Value_Type) = Iir_Kind_Array_Subtype_Definition
+        and then Get_Element_Subtype (Atype) = Get_Element_Subtype (Value_Type)
+        and then Get_Index_Constraint_Flag (Value_Type)
+        and then (Get_Kind (Atype) = Iir_Kind_Array_Type_Definition
+                    or else not Get_Index_Constraint_Flag (Atype))
       then
-         if Get_Type_Staticness (Value_Type) >= Globally then
-            Set_Type (Decl, Value_Type);
-         end if;
+         Set_Type (Decl, Value_Type);
       end if;
    end Sem_Object_Type_From_Value;
 
