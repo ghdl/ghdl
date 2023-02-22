@@ -159,7 +159,7 @@ def BindToLibGHDL(subprogramName):
             raise TypeError(f"Unsupported return type '{returnType!s}' in function '{func.__name__}'.")
 
         functionPointer = getattr(libghdl, subprogramName)
-        functionPointer.parameterTypes = parameterTypes
+        functionPointer.argtypes = parameterTypes
         functionPointer.restype = resultType
 
         if isinstance(returnType, type) and issubclass(returnType, IntEnum):
