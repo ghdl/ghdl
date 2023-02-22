@@ -553,6 +553,147 @@ package body Synth.Vhdl_Expr is
       end if;
    end Convert_Array_Indexes;
 
+   pragma Unreferenced (Convert_Array_Indexes);
+
+   --  Convert OBJ to T, assuming matching indexes.
+   function Convert_Indexes (T : Type_Acc; Obj : Type_Acc) return Type_Acc is
+   begin
+      if Obj = T then
+         return Obj;
+      end if;
+      case T.Kind is
+         when Type_Scalars
+           | Type_Access
+           | Type_File
+           | Type_Protected
+           | Type_Slice =>
+            raise Internal_Error;
+         when Type_Unbounded_Vector =>
+            return Obj;
+         when Type_Vector =>
+            return T;
+         when Type_Array =>
+            return T;
+         when Type_Array_Unbounded =>
+            --  Element is unbounded.
+            declare
+               El : Type_Acc;
+            begin
+               El := Convert_Indexes (T.Arr_El, Obj.Arr_El);
+               return Create_Array_Type (T.Abound, T.Is_Bnd_Static,
+                                         T.Alast, El);
+            end;
+         when Type_Unbounded_Array =>
+            declare
+               El : Type_Acc;
+            begin
+               El := Convert_Indexes (T.Uarr_El, Obj.Arr_El);
+               return Create_Array_Type (Obj.Abound, Obj.Is_Bnd_Static,
+                                         T.Ulast, El);
+            end;
+         when Type_Record =>
+            return T;
+         when Type_Unbounded_Record =>
+            declare
+               Els : Rec_El_Array_Acc;
+            begin
+               Els := Create_Rec_El_Array (T.Rec.Len);
+               for I in Els.E'Range loop
+                  Els.E (I).Typ := Convert_Indexes
+                    (T.Rec.E (I).Typ, Obj.Rec.E (I).Typ);
+                  --  Offsets don't change, only bounds do.
+                  Els.E (I).Offs := Obj.Rec.E (I).Offs;
+               end loop;
+               return Create_Record_Type (T.Rec_Base, Els);
+            end;
+      end case;
+   end Convert_Indexes;
+
+   --  Return True iff bounds of T and OBJ matches.
+   --  Return False and emit an error message if not.
+   function Check_Matching_Bounds (Syn_Inst : Synth_Instance_Acc;
+                                   T : Type_Acc;
+                                   Obj : Type_Acc;
+                                   Loc : Node) return Boolean
+   is
+   begin
+      if T = Obj then
+         return True;
+      end if;
+      case T.Kind is
+         when Type_Scalars
+           | Type_Access
+           | Type_File
+           | Type_Protected =>
+            return True;
+         when Type_Unbounded_Vector =>
+            pragma Assert (Obj.Kind = Type_Vector
+                             or else Obj.Kind = Type_Slice);
+            return True;
+         when Type_Vector =>
+            pragma Assert (Obj.Kind = Type_Vector
+                             or Obj.Kind = Type_Slice);
+            if T.W /= Obj.W then
+               Error_Msg_Synth (Syn_Inst, Loc,
+                                "mismatching vector length; got %v, expect %v",
+                                (+Obj.W, +T.W));
+               return False;
+            end if;
+         when Type_Array
+            | Type_Array_Unbounded =>
+            pragma Assert (Obj.Kind = Type_Array);
+            --  Check bounds.
+            declare
+               Src_Typ, Dst_Typ : Type_Acc;
+            begin
+               Src_Typ := T;
+               Dst_Typ := Obj;
+               loop
+                  pragma Assert (Src_Typ.Alast = Dst_Typ.Alast);
+                  if Src_Typ.Abound.Len /= Dst_Typ.Abound.Len then
+                     Error_Msg_Synth
+                       (Syn_Inst, Loc, "mismatching array bounds");
+                     return False;
+                  end if;
+                  exit when Src_Typ.Alast;
+                  Src_Typ := Src_Typ.Arr_El;
+                  Dst_Typ := Dst_Typ.Arr_El;
+               end loop;
+               return Check_Matching_Bounds
+                 (Syn_Inst, Src_Typ.Arr_El, Dst_Typ.Arr_El, Loc);
+            end;
+         when Type_Unbounded_Array =>
+            pragma Assert (Obj.Kind = Type_Array);
+            declare
+               T1, O1 : Type_Acc;
+            begin
+               T1 := T;
+               O1 := Obj;
+               loop
+                  pragma Assert (T1.Ulast = O1.Alast);
+                  exit when T1.Ulast;
+                  T1 := T1.Uarr_El;
+                  O1 := O1.Arr_El;
+               end loop;
+               return Check_Matching_Bounds
+                 (Syn_Inst, T1.Uarr_El, O1.Arr_El, Loc);
+            end;
+         when Type_Record
+           | Type_Unbounded_Record =>
+            pragma Assert (Obj.Kind = Type_Record);
+            for I in T.Rec.E'Range loop
+               if not Check_Matching_Bounds
+                 (Syn_Inst, T.Rec.E (I).Typ, Obj.Rec.E (I).Typ, Loc)
+               then
+                  return False;
+               end if;
+            end loop;
+         when Type_Slice =>
+            raise Internal_Error;
+      end case;
+      return True;
+   end Check_Matching_Bounds;
+
    function Synth_Subtype_Conversion (Syn_Inst : Synth_Instance_Acc;
                                       Vt : Valtyp;
                                       Dtype : Type_Acc;
@@ -640,94 +781,44 @@ package body Synth.Vhdl_Expr is
                --  Is it possible ?  Only const ?
                return Vt;
             end if;
-         when Type_Vector =>
+         when Type_Vector
+           | Type_Unbounded_Vector =>
             pragma Assert (Vtype.Kind = Type_Vector
                              or Vtype.Kind = Type_Slice);
-            if Dtype.W /= Vtype.W then
-               Error_Msg_Synth (Syn_Inst, Loc,
-                                "mismatching vector length; got %v, expect %v",
-                                (+Vtype.W, +Dtype.W));
+            if not Check_Matching_Bounds(Syn_Inst, Dtype, Vtype, Loc) then
                return No_Valtyp;
             end if;
             if Bounds then
-               return Reshape_Value (Vt, Dtype);
+               return Reshape_Value (Vt, Convert_Indexes (Dtype, Vtype));
             else
                return Vt;
             end if;
          when Type_Slice =>
             --  TODO: check width
             return Vt;
-         when Type_Array =>
+         when Type_Array
+           | Type_Array_Unbounded
+           | Type_Unbounded_Array =>
             pragma Assert (Vtype.Kind = Type_Array);
-            --  Check bounds.
-            declare
-               Src_Typ, Dst_Typ : Type_Acc;
-            begin
-               Src_Typ := Vtype;
-               Dst_Typ := Dtype;
-               loop
-                  pragma Assert (Src_Typ.Alast = Dst_Typ.Alast);
-                  if Src_Typ.Abound.Len /= Dst_Typ.Abound.Len then
-                     Error_Msg_Synth
-                       (Syn_Inst, Loc, "mismatching array bounds");
-                     return No_Valtyp;
-                  end if;
-                  exit when Src_Typ.Alast;
-                  Src_Typ := Src_Typ.Arr_El;
-                  Dst_Typ := Dst_Typ.Arr_El;
-               end loop;
-               --  TODO: check element.
-               if Bounds then
-                  return Reshape_Value (Vt, Dtype);
-               else
-                  return Vt;
-               end if;
-            end;
-         when Type_Array_Unbounded =>
-            pragma Assert (Vtype.Kind = Type_Array);
-            --  TODO: check element.
-            return Vt;
-         when Type_Unbounded_Array =>
-            pragma Assert (Vtype.Kind = Type_Array);
-            declare
-               Rtype : Type_Acc;
-            begin
-               Rtype := Convert_Array_Indexes (Syn_Inst, Dtype, Vtype, Loc);
-               if Bounds then
-                  return Reshape_Value (Vt, Rtype);
-               else
-                  return Vt;
-               end if;
-            end;
-         when Type_Unbounded_Vector =>
-            pragma Assert (Vtype.Kind = Type_Vector
-                             or else Vtype.Kind = Type_Slice);
-            if Vtype.Kind = Type_Slice then
-               --  Cannot be converted.
-               return Vt;
+            if not Check_Matching_Bounds(Syn_Inst, Dtype, Vtype, Loc) then
+               return No_Valtyp;
             end if;
-            declare
-               Rtype : Type_Acc;
-            begin
-               Rtype := Convert_Array_Indexes (Syn_Inst, Dtype, Vtype, Loc);
-               if Bounds then
-                  return Reshape_Value (Vt, Rtype);
-               else
-                  return Vt;
-               end if;
-            end;
-         when Type_Record =>
-            pragma Assert (Vtype.Kind = Type_Record);
-            --  TODO: check elements.
             if Bounds then
-               return Reshape_Value (Vt, Dtype);
+               return Reshape_Value (Vt, Convert_Indexes (Dtype, Vtype));
             else
                return Vt;
             end if;
-         when Type_Unbounded_Record =>
+         when Type_Record
+           | Type_Unbounded_Record =>
             pragma Assert (Vtype.Kind = Type_Record);
-            --  TODO: check elements
-            return Vt;
+            if not Check_Matching_Bounds(Syn_Inst, Dtype, Vtype, Loc) then
+               return No_Valtyp;
+            end if;
+            if Bounds then
+               return Reshape_Value (Vt, Convert_Indexes (Dtype, Vtype));
+            else
+               return Vt;
+            end if;
          when Type_Access =>
             return Vt;
          when Type_File
