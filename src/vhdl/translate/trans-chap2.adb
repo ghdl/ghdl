@@ -1689,7 +1689,6 @@ package body Trans.Chap2 is
             Bod : constant Iir := Get_Package_Body (Spec);
             Inst_Bod : constant Iir := Get_Instance_Package_Body (Inst);
             Final : Boolean;
-            pragma Unreferenced (Final);
          begin
             --  There are no routines generated to elaborate macro-expanded
             --  packages, but dependencies still need to be elaborated.
