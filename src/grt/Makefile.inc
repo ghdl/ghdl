@@ -80,7 +80,10 @@ else
     GRT_EXTRA_LIB=-ldl -lm
     GRT_EXEC_OPTS=$(GRT_ELF_EXEC_OPTS)
   endif
-  ifeq ($(filter-out netbsd freebsd% dragonfly%,$(osys)),)
+  ifeq ($(filter-out freebsd%,$(osys)),)
+    GRT_EXTRA_LIB=-lm
+  endif
+  ifeq ($(filter-out netbsd dragonfly%,$(osys)),)
     GRT_EXTRA_LIB=-lm
     GRT_EXEC_OPTS=$(GRT_ELF_EXEC_OPTS)
   endif
