@@ -85,11 +85,11 @@ package body Synth.Vhdl_Stmts is
          raise Internal_Error;
       end if;
       if Get_Chain (Wf) /= Null_Node then
-         --  Warning.
+         --  TODO: warning for multiple waveform elements.
          null;
       end if;
       if Get_Time (Wf) /= Null_Node then
-         --  Warning
+         --  TODO: warning for a time value.
          null;
       end if;
       if Targ_Type = null then
@@ -833,14 +833,19 @@ package body Synth.Vhdl_Stmts is
    procedure Synth_Simple_Signal_Assignment
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
+      Wf : constant Node := Get_Waveform_Chain (Stmt);
       Marker : Mark_Type;
       Targ : Target_Info;
       Val : Valtyp;
    begin
+      if Get_Kind (Wf) = Iir_Kind_Unaffected_Waveform then
+         --  Ignore this useless statement.
+         return;
+      end if;
+
       Mark_Expr_Pool (Marker);
       Targ := Synth_Target (Syn_Inst, Get_Target (Stmt));
-      Val := Synth_Waveform
-        (Syn_Inst, Get_Waveform_Chain (Stmt), Targ.Targ_Type);
+      Val := Synth_Waveform (Syn_Inst, Wf, Targ.Targ_Type);
       Synth_Assignment (Syn_Inst, Targ, Val, Stmt);
       Release_Expr_Pool (Marker);
    end Synth_Simple_Signal_Assignment;
