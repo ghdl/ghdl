@@ -14,5 +14,3 @@ sphinx_autodoc_typehints>=1.19.5
 
 # BuildTheDocs Extensions (mostly patched Sphinx extensions)
 btd.sphinx.autoprogram>=0.1.7.post1
-btd.sphinx.graphviz>=2.3.1.post1
-btd.sphinx.inheritance_diagram>=2.3.1.post1
