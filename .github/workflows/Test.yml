@@ -673,10 +673,14 @@ jobs:
         id: files
         shell: python
         run: |
-          print('None'
-              if '${{ github.ref }}'.startswith('refs/tags/')
-              else'::set-output name=list::**/*.zst **/*.tgz **/ghdl-*.zip **/man/ghdl.1'
+          from os import environ
+          list = (
+            'None'
+            if '${{ github.ref }}'.startswith('refs/tags/') else
+            '**/*.zst **/*.tgz **/ghdl-*.zip **/man/ghdl.1'
           )
+          with open(environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as gho:
+            gho.write(f'list={list}\n')
 
       # Tagged: create a pre-release or a release (semver)
       # Untagged: update the assets of pre-release 'nightly'
