@@ -682,17 +682,9 @@ jobs:
       # Untagged: update the assets of pre-release 'nightly'
       - uses: pyTooling/Actions/releaser@r0
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ github.token }}
           tag: 'nightly'
           files: ${{ steps.files.outputs.list }}
-
-      - name: '🔔 Trigger ghdl/docker'
-        run: |
-          curl -X POST https://api.github.com/repos/ghdl/docker/dispatches \
-          -H 'Content-Type: application/json' \
-          -H 'Accept: application/vnd.github.everest-preview+json' \
-          -H "Authorization: token ${{ secrets.GHDL_BOT }}" \
-          --data '{"event_type": "ghdl"}'
 
 #
 # pyGHDL Coverage (MINGW64)
