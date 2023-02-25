@@ -45,8 +45,6 @@ master_doc = 'index'
 # The suffix(es) of source filenames.
 source_suffix = {
     '.rst': 'restructuredtext',
-#    '.txt': 'markdown',
-#    '.md': 'markdown',
 }
 
 # Add any paths that contain templates here, relative to this directory.
