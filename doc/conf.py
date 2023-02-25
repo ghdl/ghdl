@@ -249,11 +249,11 @@ coverage_show_missing_items = True
 # Sphinx.Ext.ExtLinks
 # ==============================================================================
 extlinks = {
-   'wikipedia': ('https://en.wikipedia.org/wiki/%s', ''),
-   'ghdlsharp': ('https://github.com/ghdl/ghdl/issues/%s', '#'),
-   'ghdlissue': ('https://github.com/ghdl/ghdl/issues/%s', 'issue #'),
-   'ghdlpull':  ('https://github.com/ghdl/ghdl/pull/%s', 'pull request #'),
-   'ghdlsrc':   ('https://github.com/ghdl/ghdl/blob/master/src/%s', '')
+   'wikipedia': ('https://en.wikipedia.org/wiki/%s', 'w:%s'),
+   'ghdlsharp': ('https://github.com/ghdl/ghdl/issues/%s', '#%s'),
+   'ghdlissue': ('https://github.com/ghdl/ghdl/issues/%s', 'issue #%s'),
+   'ghdlpull':  ('https://github.com/ghdl/ghdl/pull/%s', 'pull request #%s'),
+   'ghdlsrc':   ('https://github.com/ghdl/ghdl/blob/master/src/%s', '%s')
 }
 
 
