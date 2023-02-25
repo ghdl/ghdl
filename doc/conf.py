@@ -56,10 +56,10 @@ templates_path = ['_templates']
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = [
-	"_build",
-	"_theme",
-	"Thumbs.db",
-	".DS_Store"
+    "_build",
+    "_theme",
+    "Thumbs.db",
+    ".DS_Store"
 ]
 
 # The name of the Pygments (syntax highlighting) style to use.
@@ -140,31 +140,31 @@ texinfo_documents = [(
 from textwrap import dedent
 
 latex_elements = {
-	# The paper size ('letterpaper' or 'a4paper').
-	'papersize': 'a4paper',
+    # The paper size ('letterpaper' or 'a4paper').
+    'papersize': 'a4paper',
 
-	# The font size ('10pt', '11pt' or '12pt').
-	#'pointsize': '10pt',
+    # The font size ('10pt', '11pt' or '12pt').
+    #'pointsize': '10pt',
 
-	# Additional stuff for the LaTeX preamble.
-	'preamble': dedent(r"""
-		% ================================================================================
-		% User defined additional preamble code
-		% ================================================================================
-		% Add more Unicode characters for pdfLaTeX.
-		% - Alternatively, compile with XeLaTeX or LuaLaTeX.
-		% - https://github.com/sphinx-doc/sphinx/issues/3511
-		%
-		\ifdefined\DeclareUnicodeCharacter
-			\DeclareUnicodeCharacter{2265}{$\geq$}
-			\DeclareUnicodeCharacter{21D2}{$\Rightarrow$}
-		\fi
+    # Additional stuff for the LaTeX preamble.
+    'preamble': dedent(r"""
+        % ================================================================================
+        % User defined additional preamble code
+        % ================================================================================
+        % Add more Unicode characters for pdfLaTeX.
+        % - Alternatively, compile with XeLaTeX or LuaLaTeX.
+        % - https://github.com/sphinx-doc/sphinx/issues/3511
+        %
+        \ifdefined\DeclareUnicodeCharacter
+            \DeclareUnicodeCharacter{2265}{$\geq$}
+            \DeclareUnicodeCharacter{21D2}{$\Rightarrow$}
+        \fi
 
-		% ================================================================================
-		"""),
+        % ================================================================================
+        """),
 
-	# Latex figure (float) alignment
-	#'figure_align': 'htbp',
+    # Latex figure (float) alignment
+    #'figure_align': 'htbp',
 }
 
 # ==============================================================================
@@ -224,11 +224,11 @@ graphviz_output_format = "svg"
 # Sphinx.Ext.Inheritance_Diagram
 # ==============================================================================
 inheritance_node_attrs = {
-#	"shape": "ellipse",
-#	"fontsize": 14,
-#	"height": 0.75,
-	"color": "dodgerblue1",
-	"style": "filled"
+#    "shape": "ellipse",
+#    "fontsize": 14,
+#    "height": 0.75,
+    "color": "dodgerblue1",
+    "style": "filled"
 }
 
 # ==============================================================================
