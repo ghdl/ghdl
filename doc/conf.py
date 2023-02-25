@@ -174,7 +174,7 @@ extensions = [
     # Standard Sphinx extensions
     'sphinx.ext.autodoc',
     'sphinx.ext.extlinks',
-	  'sphinx.ext.inheritance_diagram',
+    'sphinx.ext.inheritance_diagram',
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',
     'sphinx.ext.graphviz',
@@ -184,8 +184,6 @@ extensions = [
 
     # BuildTheDocs extensions
     'btd.sphinx.autoprogram',
-#    'btd.sphinx.graphviz',
-#    'btd.sphinx.inheritance_diagram',
 
     # Other extensions
 #    'recommonmark',
