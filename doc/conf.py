@@ -77,7 +77,6 @@ except Exception as ex:
     rst_prolog = ""
 
 
-
 # ==============================================================================
 # Options for HTML output
 # ==============================================================================
@@ -86,19 +85,7 @@ ctx = ROOT / "context.json"
 if ctx.is_file():
     html_context.update(json_loads(ctx.open("r").read()))
 
-if (ROOT / "_theme").is_dir():
-    html_theme_path = ["."]
-    html_theme = "_theme"
-    html_theme_options = {
-        "logo_only": True,
-        "home_breadcrumbs": False,
-        "vcs_pageview_mode": "blob",
-    }
-    html_css_files = [
-        "theme_overrides.css",
-    ]
-else:
-    html_theme = "alabaster"
+html_theme = "furo"
 
 html_static_path = ['_static']
 # '/public' will contain the output from gnatdoc

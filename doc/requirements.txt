@@ -11,5 +11,8 @@ autoapi>=2.0.1
 sphinx_fontawesome>=0.0.6
 sphinx_autodoc_typehints>=1.19.5
 
+# Theme
+furo
+
 # BuildTheDocs Extensions (mostly patched Sphinx extensions)
 btd.sphinx.autoprogram>=0.1.7.post1
