@@ -1,6 +1,6 @@
 -r ../pyGHDL/requirements.txt
 
-sphinx >=5.3, <6.0
+sphinx
 python-dateutil>=2.8.2
 
 # Sphinx Extenstions
