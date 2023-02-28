@@ -1,0 +1,93 @@
+name: Coverage
+
+on:
+  workflow_call:
+
+jobs:
+
+
+#
+# pyGHDL Coverage (MINGW64)
+#
+  coverage:
+    name: '📈 Coverage'
+    runs-on: windows-latest
+
+    defaults:
+      run:
+        shell: msys2 {0}
+
+    steps:
+
+      - name: '🟪 Setup MSYS2'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          pacboy: >
+            python-pip:p
+            python-setuptools:p
+
+      - name: '⚙ git config'
+        run: git config --global core.autocrlf input
+        shell: bash
+
+      - name: '🧰 Checkout'
+        uses: actions/checkout@v3
+
+      - name: '📥 Download artifact: package'
+        uses: actions/download-artifact@v3
+        with:
+          path: artifact
+          name: MINGW64-llvm
+
+      - name: '🛠 Install package and 🐍 Python dependencies'
+        run: |
+          pacman --noconfirm -U artifact/mingw-w64-*-ghdl-llvm-*.zst
+          pip3 install --disable-pip-version-check -r testsuite/requirements.txt
+
+      - name: '🚦 Run tests to generate coverage report'
+        run: PYTHONPATH=$(pwd) python3 -m pytest -rA --cov=.. --cov-config=.coveragerc testsuite/pyunit
+
+      - name: Generate XML coverage report
+        if: always()
+        run: coverage xml
+
+      - name: '📤 Upload artifact: coverage report'
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage
+          path: coverage.xml
+
+#
+# Coverage Publish (Ubuntu)
+#
+  coverage-publish:
+    name: '📮 Publish coverage report'
+    runs-on: ubuntu-latest
+
+    needs:
+      - coverage
+
+    if: always() && github.repository == 'ghdl/ghdl' && github.event_name != 'pull_request'
+
+    steps:
+
+      - name: '📥 Download artifact: coverage report'
+        uses: actions/download-artifact@v3
+        with:
+          path: .
+          name: coverage
+
+      - name: CodeCov
+        uses: codecov/codecov-action@v3
+        with:
+          file: coverage.xml
+          flags: unittests
+
+      - name: Codacy
+        uses: codacy/codacy-coverage-reporter-action@v1
+        with:
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          coverage-reports: coverage.xml
