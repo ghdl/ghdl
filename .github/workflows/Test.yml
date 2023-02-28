@@ -592,7 +592,7 @@ jobs:
       matrix:
         sys:
 #          - {icon: '🟪', pkg: 'llvm',  sys: 'MINGW32' } ! not yet functional
-#          - {icon: '🟦', pkg: 'llvm',  sys: 'MINGW64' }
+          - {icon: '🟦', pkg: 'llvm',  sys: 'MINGW64' }
           - {icon: '🟨', pkg: 'llvm',  sys: 'UCRT64'  } #! experimental
           - {icon: '🟪', pkg: 'mcode', sys: 'MINGW32' }
 #          - {icon: '🟦', pkg: 'mcode', sys: 'MINGW64' } ! simulation with mcode is not yet supported on win64
