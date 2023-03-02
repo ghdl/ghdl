@@ -857,7 +857,7 @@ package body Synth.Vhdl_Stmts is
       Marker : Mark_Type;
       Targ : Target_Info;
       Cond : Node;
-      Cwf : Node;
+      Cwf, Wf : Node;
       Inp : Input;
       Val, Cond_Val : Valtyp;
       Cond_Net : Net;
@@ -870,8 +870,13 @@ package body Synth.Vhdl_Stmts is
       Cwf := Get_Conditional_Waveform_Chain (Stmt);
       Cond := Null_Node;
       while Cwf /= Null_Node loop
-         Val := Synth_Waveform
-           (Syn_Inst, Get_Waveform_Chain (Cwf), Targ.Targ_Type);
+         Wf := Get_Waveform_Chain (Cwf);
+         if Get_Kind (Wf) = Iir_Kind_Unaffected_Waveform then
+            --  For unaffected, read the current value.
+            Val := Synth_Read (Syn_Inst, Targ, Stmt);
+         else
+            Val := Synth_Waveform (Syn_Inst, Wf, Targ.Targ_Type);
+         end if;
          if Val = No_Valtyp then
             --  Mark the error, but try to continue.
             Set_Error (Syn_Inst);
@@ -879,6 +884,7 @@ package body Synth.Vhdl_Stmts is
             V := Get_Net (Ctxt, Val);
             Cond := Get_Condition (Cwf);
             if Cond /= Null_Node then
+               --  Add a mux to make it conditional.
                Cond_Val := Synth_Expression (Syn_Inst, Cond);
                if Cond_Val = No_Valtyp then
                   Cond_Net := Build_Const_UB32 (Ctxt, 0, 1);
@@ -890,6 +896,7 @@ package body Synth.Vhdl_Stmts is
                Set_Location (V, Cwf);
             end if;
 
+            --  Append
             if Last /= No_Net then
                Inp := Get_Input (Get_Net_Parent (Last), 1);
                Connect (Inp, V);
@@ -901,6 +908,7 @@ package body Synth.Vhdl_Stmts is
          Cwf := Get_Chain (Cwf);
       end loop;
       if Cond /= Null_Node then
+         --  If the last waveform has a condition, set the else branch.
          pragma Assert (Last /= No_Net);
          Inp := Get_Input (Get_Net_Parent (Last), 1);
          if Get_Driver (Inp) = No_Net then
