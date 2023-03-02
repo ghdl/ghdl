@@ -883,6 +883,15 @@ package body Synth.Vhdl_Oper is
          return Synth_Resize (Ctxt, L, Size, Is_Signed, Expr);
       end Synth_Conv_Vector;
 
+      function Synth_Posedge return Valtyp
+      is
+         Edge : Net;
+      begin
+         Edge := Build_Posedge (Ctxt, Get_Net (Ctxt, L));
+         Set_Location (Edge, Expr);
+         return Create_Value_Net (Edge, Res_Typ);
+      end Synth_Posedge;
+
       function Error_Unhandled return Valtyp is
       begin
          Error_Msg_Synth
@@ -906,7 +915,7 @@ package body Synth.Vhdl_Oper is
                return Create_Value_Memtyp
                  (Hook_Bit_Rising_Edge.all (L, Res_Typ));
             end if;
-            raise Internal_Error;
+            return Synth_Posedge;
          when Iir_Predefined_Bit_Falling_Edge =>
             if Hook_Bit_Falling_Edge /= null then
                return Create_Value_Memtyp
@@ -918,13 +927,7 @@ package body Synth.Vhdl_Oper is
                return Create_Value_Memtyp
                  (Hook_Std_Rising_Edge.all (L, Res_Typ));
             end if;
-            declare
-               Edge : Net;
-            begin
-               Edge := Build_Posedge (Ctxt, Get_Net (Ctxt, L));
-               Set_Location (Edge, Expr);
-               return Create_Value_Net (Edge, Res_Typ);
-            end;
+            return Synth_Posedge;
          when Iir_Predefined_Ieee_1164_Falling_Edge =>
             if Hook_Std_Falling_Edge /= null then
                return Create_Value_Memtyp
