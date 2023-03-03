@@ -189,12 +189,9 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
-
     # BuildTheDocs extensions
     'btd.sphinx.autoprogram',
-
     # Other extensions
-#    'recommonmark',
     'exec',
     'sphinx_fontawesome',
     'sphinx_autodoc_typehints',

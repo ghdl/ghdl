@@ -4,9 +4,6 @@ sphinx
 python-dateutil>=2.8.2
 
 # Sphinx Extenstions
-# sphinxcontrib-textstyle>=0.2.1
-# sphinxcontrib-spelling>=2.2.0
-# changelog>=0.3.5
 autoapi>=2.0.1
 sphinx_fontawesome>=0.0.6
 sphinx_autodoc_typehints>=1.19.5
