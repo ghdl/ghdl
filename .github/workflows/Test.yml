@@ -293,3 +293,4 @@ jobs:
   Coverage:
     needs: Windows-MSYS2
     uses: ./.github/workflows/Coverage.yml
+    secrets: inherit
