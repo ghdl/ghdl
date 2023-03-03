@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import sys
+from os import environ
 from os.path import abspath
 from pathlib import Path
 from json import loads as json_loads
@@ -86,6 +87,28 @@ if ctx.is_file():
     html_context.update(json_loads(ctx.open("r").read()))
 
 html_theme = "furo"
+
+html_css_files = [
+      "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css",
+      "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/solid.min.css",
+      "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css",
+]
+
+html_theme_options = {
+    "source_repository": "https://github.com/ghdl/ghdl",
+    "source_branch": environ.get("GITHUB_REF_NAME", "main"),
+    "source_directory": "doc",
+    "footer_icons": [
+        {
+            "name": "GitHub ghdl/ghdl",
+            "url": "https://github.com/ghdl/ghdl",
+            "html": "",
+            "class": "fa-solid fa-brands fa-github",
+        },
+    ],
+}
+
+html_title = release
 
 html_static_path = ['_static']
 # '/public' will contain the output from gnatdoc
