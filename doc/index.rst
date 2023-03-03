@@ -70,11 +70,10 @@ GHDL
 
    The major changes are:
 
-      * Experimental support of synthesis (either with --synth or with
-	the Yosys plugin).
-      * Fixes and improved support of vhdl 2008.
-      * Last version that supports the Mentor variation of
-	std_logic_arith.  The Synopsys one is still available.
+   * Experimental support of synthesis (either with --synth or with the Yosys plugin).
+   * Fixes and improved support of vhdl 2008.
+   * Last version that supports the Mentor variation of std_logic_arith.
+     The Synopsys one is still available.
 
    03.03.2019 - `GHDL v0.36 was released <https://github.com/ghdl/ghdl/milestone/7?closed=1>`__
    ============================================================================================
@@ -84,8 +83,8 @@ GHDL
 
    The major improvements are:
 
-      * more support of unbounded arrays and records
-      * support of UVVM and Vunit
+   * more support of unbounded arrays and records
+   * support of UVVM and Vunit
 
    29.11.2018 - GHDL 20181129 was released
    =======================================
