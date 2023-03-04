@@ -29,13 +29,13 @@ GHDL
    News
    ****
 
-   28.02.2022 - `GHDL v2.0 was released <https://github.com/ghdl/ghdl/milestone/10?closed=1>`__
+   2022.02.28 - `GHDL v2.0 was released <https://github.com/ghdl/ghdl/milestone/10?closed=1>`__
    ============================================================================================
 
-   02.02.2021 - `GHDL v1.0 was released <https://github.com/ghdl/ghdl/milestone/9?closed=1>`__
+   2021.02.02 - `GHDL v1.0 was released <https://github.com/ghdl/ghdl/milestone/9?closed=1>`__
    ============================================================================================
 
-   31.01.2021 - GHDL v1.0.0rc1 was tagged
+   2021.01.31 - GHDL v1.0.0rc1 was tagged
    ======================================
 
    * Python bindings were overhauled and renamed to ``pyGHDL``. Three modules are included: ``libghdl``, ``lsp`` and ``dom``.
@@ -48,14 +48,14 @@ GHDL
 
    * Assets are not added to releases or pre-releases anymore. Users should use package managers or nightly assets.
 
-   21.05.2020 - Nightly build assets available
+   2020.05.21 - Nightly build assets available
    ===========================================
 
    * After each successful CI run of branch ``master``, packages are published as assets of pre-release `nightly <https://github.com/ghdl/ghdl/releases/tag/nightly>`__.
    * GitHub Action `ghdl/setup-ghdl-ci <https://github.com/ghdl/setup-ghdl-ci>`__ was created, to allow easy installation of
      nightly GHDL assets in GitHub Actions workflows.
 
-   09.05.2020 - New repositories and a wiki were created
+   2020.05.09 - New repositories and a wiki were created
    =====================================================
 
    * The plugin for Yosys was moved from `tgingold/ghdlsynth-beta <https://github.com/tgingold/ghdlsynth-beta>`__ to
@@ -65,73 +65,72 @@ GHDL
    * A `Wiki <https://github.com/ghdl/ghdl/wiki>`__ was created. The roadmap and ideas for documentation and internship
      programs were moved there. If you want to contribute anyhow, `have a look <https://github.com/ghdl/ghdl/wiki>`__!
 
-   28.02.2020 - `GHDL v0.37 was released <https://github.com/ghdl/ghdl/milestone/8?closed=1>`__
+   2020.02.28 - `GHDL v0.37 was released <https://github.com/ghdl/ghdl/milestone/8?closed=1>`__
    ============================================================================================
 
    The major changes are:
 
-      * Experimental support of synthesis (either with --synth or with
-	the Yosys plugin).
-      * Fixes and improved support of vhdl 2008.
-      * Last version that supports the Mentor variation of
-	std_logic_arith.  The Synopsys one is still available.
+   * Experimental support of synthesis (either with --synth or with the Yosys plugin).
+   * Fixes and improved support of vhdl 2008.
+   * Last version that supports the Mentor variation of std_logic_arith.
+     The Synopsys one is still available.
 
-   03.03.2019 - `GHDL v0.36 was released <https://github.com/ghdl/ghdl/milestone/7?closed=1>`__
+   2019.03.03 - `GHDL v0.36 was released <https://github.com/ghdl/ghdl/milestone/7?closed=1>`__
    ============================================================================================
 
-   23.02.2019 - GHDL v0.36-rc1 was released
+   2019.02.23 - GHDL v0.36-rc1 was released
    ========================================
 
    The major improvements are:
 
-      * more support of unbounded arrays and records
-      * support of UVVM and Vunit
+   * more support of unbounded arrays and records
+   * support of UVVM and Vunit
 
-   29.11.2018 - GHDL 20181129 was released
+   2018.11.29 - GHDL 20181129 was released
    =======================================
 
-   20.12.2017 - A new GitHub organization was created
+   2017.12.20 - A new GitHub organization was created
    ==================================================
 
    A new GitHub organization is created and the main repo is moved from `github.com/tgingold/ghdl <https://github.com/tgingold/ghdl>`__ to
    `github.com/ghdl/ghdl <https://github.com/ghdl/ghdl>`__. Old refs will continue working, because permanent redirects are set up. However, we suggest
    every contributor to update the remote URLs in their local clones.
 
-   14.12.2017 - `GHDL 0.35 was released <https://github.com/ghdl/ghdl/milestone/3?closed=1>`__
+   2017.12.14 - `GHDL 0.35 was released <https://github.com/ghdl/ghdl/milestone/3?closed=1>`__
    ===========================================================================================
 
-   15.08.2017 - `GHDL 0.34 was released <https://github.com/ghdl/ghdl/milestone/1?closed=1>`__
+   2017.08.15 - `GHDL 0.34 was released <https://github.com/ghdl/ghdl/milestone/1?closed=1>`__
    ===========================================================================================
 
-   23.10.2015 - GHDL 0.33 was released
+   2015.10.23 - GHDL 0.33 was released
    ===================================
 
 .. only:: latex
 
-   .. rubric:: 28.02.2022 - GHDL v2.0 was released.
+   .. rubric:: 2022.02.28 - GHDL v2.0 was released.
 
-   .. rubric:: 02.02.2021 - GHDL v1.0 was released.
+   .. rubric:: 2021.02.02 - GHDL v1.0 was released.
 
-   .. rubric:: 31.01.2021 - GHDL v1.0.0rc1 was tagged.
+   .. rubric:: 2021.01.31 - GHDL v1.0.0rc1 was tagged.
 
-   .. rubric:: 21.05.2020 - Nightly build assets available.
+   .. rubric:: 2020.05.21 - Nightly build assets available.
 
-   .. rubric:: 09.05.2020 - New repositories and a wiki were created.
+   .. rubric:: 2020.05.09 - New repositories and a wiki were created.
 
-   .. rubric:: 28.02.2020 - GHDL v0.37 was released.
+   .. rubric:: 2020.02.28 - GHDL v0.37 was released.
 
-   .. rubric:: 03.03.2019 - GHDL v0.36 was released.
+   .. rubric:: 2019.03.03 - GHDL v0.36 was released.
 
-   .. rubric:: 23.02.2019 - GHDL v0.36-rc1 was released.
+   .. rubric:: 2019.02.23 - GHDL v0.36-rc1 was released.
 
-   .. rubric:: 29.11.2018 - GHDL 20181129 was released.
+   .. rubric:: 2018.11.29 - GHDL 20181129 was released.
 
-   .. rubric:: 20.12.2017 - A new GitHub organization was created.
+   .. rubric:: 2017.12.20 - A new GitHub organization was created.
 
-   .. rubric:: 14.12.2017 - GHDL 0.35 was released.
+   .. rubric:: 2017.12.14 - GHDL 0.35 was released.
 
-   .. rubric:: 15.08.2017 - GHDL 0.34 was released.
+   .. rubric:: 2017.08.15 - GHDL 0.34 was released.
 
-   .. rubric:: 23.10.2015 - GHDL 0.33 was released.
+   .. rubric:: 2015.10.23 - GHDL 0.33 was released.
 
 .. include:: toc.rst
