@@ -283,16 +283,16 @@ jobs:
       - name: Set tag
         id: tag
         run: |
-	  echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
+          echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
 
       # Untagged: update the assets of pre-release 'nightly'
       - name: ' update nightly'
         if: "!contains(github.ref, 'refs/tags/')"
         uses: pyTooling/Actions/releaser@r0
-          with:
-            token: ${{ github.token }}
-            tag: 'nightly'
-            files: ${{ steps.files.outputs.list }}
+        with:
+          token: ${{ github.token }}
+          tag: 'nightly'
+          files: ${{ steps.files.outputs.list }}
 
       # tagged: Create a draft release
       - name: ' create release'
