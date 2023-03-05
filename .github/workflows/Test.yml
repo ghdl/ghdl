@@ -262,24 +262,9 @@ jobs:
     steps:
 
       - name: '📥 Download artifacts'
-        if: "!contains(github.ref, 'refs/tags/')"
         uses: actions/download-artifact@v3
         with:
           path: artifacts
-
-      # Do not upload assets to tagged releases
-      - name: Set list of files for uploading
-        id: files
-        shell: python
-        run: |
-          from os import environ
-          list = (
-            'None'
-            if '${{ github.ref }}'.startswith('refs/tags/') else
-            '**/*.zst **/*.tgz **/ghdl-*.zip **/man/ghdl.1'
-          )
-          with open(environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as gho:
-            gho.write(f'list={list}\n')
 
       # Tagged: create a pre-release or a release (semver)
       # Untagged: update the assets of pre-release 'nightly'
@@ -287,7 +272,12 @@ jobs:
         with:
           token: ${{ github.token }}
           tag: 'nightly'
-          files: ${{ steps.files.outputs.list }}
+          snapshots: false
+          files: |
+            **/*.zst
+            **/*.tgz
+            **/ghdl-*.zip
+            **/man/ghdl.1
 
 
   Coverage:
