@@ -1,6 +1,9 @@
-**3.0-dev** (XXXX-XX-XX)
+**4.0-dev** (XXXX-XX-XX)
+
+**3.0** (2023-03-05)
 
 - Handle ieee operators for static expressions.
+- Improved support of VHDL 2008 (still!)
 
 **2.0** (2022-02-28)
 
