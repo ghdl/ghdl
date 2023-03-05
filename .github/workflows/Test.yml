@@ -262,7 +262,6 @@ jobs:
     steps:
 
       - name: '📥 Download artifacts'
-        if: "!contains(github.ref, 'refs/tags/')"
         uses: actions/download-artifact@v3
         with:
           path: artifacts
@@ -281,14 +280,26 @@ jobs:
           with open(environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as gho:
             gho.write(f'list={list}\n')
 
-      # Tagged: create a pre-release or a release (semver)
-      # Untagged: update the assets of pre-release 'nightly'
-      - uses: pyTooling/Actions/releaser@r0
-        with:
-          token: ${{ github.token }}
-          tag: 'nightly'
-          files: ${{ steps.files.outputs.list }}
+      - name: Set tag
+        id: tag
+        run: |
+	  echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
 
+      # Untagged: update the assets of pre-release 'nightly'
+      - name: ' update nightly'
+        if: "!contains(github.ref, 'refs/tags/')"
+        uses: pyTooling/Actions/releaser@r0
+          with:
+            token: ${{ github.token }}
+            tag: 'nightly'
+            files: ${{ steps.files.outputs.list }}
+
+      # tagged: Create a draft release
+      - name: ' create release'
+        if: "contains(github.ref, 'refs/tags/')"
+        run: gh release create ${{ steps.tag.outputs.tag }} -d **/*.zst **/*.tgz **/ghdl-*.zip **/man/ghdl1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   Coverage:
     needs: Windows-MSYS2
