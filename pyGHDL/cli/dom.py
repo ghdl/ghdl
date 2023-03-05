@@ -15,7 +15,7 @@
 #
 # License:
 # ============================================================================
-#  Copyright (C) 2019-2021 Tristan Gingold
+#  Copyright (C) 2019-2023 Tristan Gingold
 #
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -57,7 +57,7 @@ from pyGHDL.dom.NonStandard import Design, Document
 from pyGHDL.dom.formatting.prettyprint import PrettyPrint, PrettyPrintException
 
 __author__ = "Tristan Gingold"
-__copyright__ = "Copyright (C) 2019-2021 Tristan Gingold"
+__copyright__ = "Copyright (C) 2019-2023 Tristan Gingold"
 __maintainer__ = "Tristan Gingold"
 __email__ = ""
 __version__ = "0.0.0"
