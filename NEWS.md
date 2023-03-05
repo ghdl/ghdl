@@ -1,8 +1,15 @@
 # News
 
-## 3.0-dev (XXXX-XX-XX)
+## 3.0-dev (2023-03-XX)
 
-- Handle ieee operators for static expressions.
+- Handle IEEE operators for static expressions.
+- Improved support of VHDL 2008 (still!).
+- Start support of VHDL 2019 (`--std=19`).
+- pyGHDL:
+  - Experimental support to preserve VHDL code comments for documentation extraction.
+  - Experimental packaging with a platform-specific shared library for standalone installation using PIP.
+  - DOM: dependency graphs, instantiation graphs (design hierarchy), file dependencies (compile order).
+- Pre-releases are published to GitHub Releases and assets are uploaded to pre-releases and releases.
 
 ## 2.0 (2022-02-28)
 
