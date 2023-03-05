@@ -2021,6 +2021,7 @@ package body Synth.Vhdl_Oper is
             --  A no-op (with change of bounds).
             return Create_Value_Net (Get_Net (Ctxt, L), Create_Res_Bound (L));
          when Iir_Predefined_Ieee_1164_To_Bit
+            | Iir_Predefined_Ieee_1164_To_01_Log_Log
             | Iir_Predefined_Ieee_1164_To_X01_Log
             | Iir_Predefined_Ieee_1164_To_UX01_Log
             | Iir_Predefined_Ieee_1164_To_X01Z_Log
