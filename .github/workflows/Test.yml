@@ -284,6 +284,7 @@ jobs:
         id: tag
         run: |
           echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
+          ls -R
 
       # Untagged: update the assets of pre-release 'nightly'
       - name: ' update nightly'
@@ -297,7 +298,7 @@ jobs:
       # tagged: Create a draft release
       - name: ' create release'
         if: "contains(github.ref, 'refs/tags/')"
-        run: gh release create ${{ steps.tag.outputs.tag }} -d **/*.zst **/*.tgz **/ghdl-*.zip **/man/ghdl1
+        run: gh release create ${{ steps.tag.outputs.tag }} --draft --repo ${{ github.repository }} artifacts/*/*.zst artifacts/*/*.tgz artifacts/*/ghdl-*.zip artifacts/doc/man/ghdl.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
