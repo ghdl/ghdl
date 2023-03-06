@@ -5,6 +5,7 @@ python-dateutil>=2.8.2
 
 # Sphinx Extenstions
 autoapi>=2.0.1
+myst-parser
 sphinx_fontawesome>=0.0.6
 sphinx_autodoc_typehints>=1.19.5
 

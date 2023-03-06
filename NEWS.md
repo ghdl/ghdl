@@ -1,54 +1,113 @@
-# News
+## [Next] 3.0-dev
 
-## 3.0-dev (2023-03-XX)
+[Milestone v3.0 ➚](https://github.com/ghdl/ghdl/milestone/11)
+
+## [2023-03-06] 3.0.0-rc.4
 
 - Handle IEEE operators for static expressions.
 - Improved support of VHDL 2008 (still!).
 - Start support of VHDL 2019 (`--std=19`).
 - pyGHDL:
-  - Experimental support to preserve VHDL code comments for documentation extraction.
-  - Experimental packaging with a platform-specific shared library for standalone installation using PIP.
-  - DOM: dependency graphs, instantiation graphs (design hierarchy), file dependencies (compile order).
-- Pre-releases are published to GitHub Releases and assets are uploaded to pre-releases and releases.
+  - Experimental support to preserve VHDL code comments for documentation
+	  extraction.
+  - Experimental packaging with a platform-specific shared library for
+	  standalone installation using PIP.
+  - DOM: dependency graphs, instantiation graphs (design hierarchy),
+	  file dependencies (compile order).
+- Pre-releases are published to GitHub Releases and assets are uploaded to
+  pre-releases and releases.
 
-## 2.0 (2022-02-28)
+## [2022-02-28] 2.0
+
+[Milestone v2.0 ➚](https://github.com/ghdl/ghdl/milestone/10?closed=1)
 
 - Improvements to VHDL 2008 supports and synthesis.
 
-## 1.0 (2021-02-02)
+## [2021-02-02] 1.0
 
-- Plugin for Yosys moved from [tgingold/ghdlsynth-beta](https://github.com/tgingold/ghdlsynth-beta) to [ghdl/ghdl-yosys-plugin](https://github.com/ghdl/ghdl-yosys-plugin).
-- Python bindings overhauled and renamed to `pyGHDL`. Three modules are included: `libghdl`, `lsp` and `dom`.
-- The utility scripts in the codebase moved into subdir `scripts`: CI, binding generation, vendors, etc.
-- Repository [ghdl/ghdl-cosim](https://github.com/ghdl/ghdl-cosim) created. It contains documentation and code examples related to VHPIDIRECT, VPI and SystemC.
-- Repository [ghdl/extended-tests](https://github.com/ghdl/extended-tests) created for testing `vendors` build scripts.
-- GitHub Action [ghdl/setup-ghdl-ci](https://github.com/ghdl/setup-ghdl-ci) created, to allow easy installation of nightly GHDL assets in GitHub Actions workflows.
-- A [wiki](https://github.com/ghdl/ghdl/wiki) was created. The roadmap and ideas for documentation and internship programs were moved there.
+[Milestone v1.0 ➚](https://github.com/ghdl/ghdl/milestone/9?closed=1)
+
+- Repository [ghdl/ghdl-cosim](https://github.com/ghdl/ghdl-cosim) created.
+  It contains documentation and code examples related to VHPIDIRECT, VPI and SystemC.
+- GitHub Action [ghdl/setup-ghdl-ci](https://github.com/ghdl/setup-ghdl-ci)
+  created, to allow easy installation of nightly GHDL assets in GitHub Actions
+	workflows.
+- Main documentation site(s) moved to [ghdl.github.io/ghdl](https://ghdl.github.io/ghdl/)
+  and [ghdl.github.io/ghdl-cosim](https://ghdl.github.io/ghdl-cosim/).
+
+## [2021-01-31] 1.0.0rc1
+
+- Python bindings overhauled and renamed to `pyGHDL`. Three modules are included:
+  `libghdl`, `lsp` and `dom`.
+- Utility scripts in the codebase moved into subdir `scripts`: CI, binding
+  generation, vendors, etc.
+- Repository [ghdl/extended-tests](https://github.com/ghdl/extended-tests)
+  created for testing `vendors` build scripts.
 - Logo updated (org, ghdl/ghdl, ghdl/docker and ghdl/ghdl-cosim).
-- Assets not added to releases or pre-releases anymore. Users should use package managers or nightly assets (updated after each successful CI run of branch `master`): [nightly](https://github.com/ghdl/ghdl/releases/tag/nightly).
-- Main documentation site(s) moved to [ghdl.github.io/ghdl](https://ghdl.github.io/ghdl/) and [ghdl.github.io/ghdl-cosim](https://ghdl.github.io/ghdl-cosim/).
+- Assets not added to releases or pre-releases anymore.
+  Users should use package managers or nightly assets (updated after each
+	successful CI run of branch `master`):
+	[nightly](https://github.com/ghdl/ghdl/releases/tag/nightly).
 
-## 0.37 (2020-02-28)
+## [2020-05-21] Nightly build assets
+
+- After each successful CI run of branch `master`, packages are published as assets of pre-release [nightly](https://github.com/ghdl/ghdl/releases/tag/nightly).
+- GitHub Action [ghdl/setup-ghdl-ci](https://github.com/ghdl/setup-ghdl-ci) was created, to allow easy installation of nightly GHDL assets in GitHub Actions workflows.
+
+## [2020-05-09] New repositories and a wiki
+
+- The plugin for Yosys was moved from [tgingold/ghdlsynth-beta](https://github.com/tgingold/ghdlsynth-beta)
+  to [ghdl/ghdl-yosys-plugin](https://github.com/ghdl/ghdl-yosys-plugin).
+- Repository [ghdl/ghdl-cosim](https://github.com/ghdl/ghdl-cosim) was created.
+  It contains documentation and code examples related to VHPIDIRECT, VPI and SystemC.
+	See {ref}`COSIM` and [Previous work and future ideas](https://github.com/ghdl/ghdl-cosim/issues/1).
+- A [Wiki](https://github.com/ghdl/ghdl/wiki) was created.
+  The roadmap and ideas for documentation and internship programs were moved there.
+	If you want to contribute anyhow, [have a look](https://github.com/ghdl/ghdl/wiki)!
+
+## [2020-02-28] 0.37
+
+[Milestone v0.37 ➚](https://github.com/ghdl/ghdl/milestone/8?closed=1)
 
 - Python binding added
 - Experimental support of synthesis (either with --synth or with the Yosys plugin)
 - Fixes and improved support of VHDL 2008
   - PSL keywords are directly handled in VHDL 2008
 - Add support for assume.
-- Last version that supports the Mentor variation of `std_logic_arith`. The Synopsys one is still available.
+- Last version that supports the Mentor variation of `std_logic_arith`.
+  The Synopsys one is still available.
 
-## 0.36 (2019-03-03)
+## [2019-03-03] 0.36
 
-- A new GitHub organization is created and the main repo is moved from [github.com/tgingold/ghdl](https://github.com/tgingold/ghdl) to [github.com/ghdl/ghdl](https://github.com/ghdl/ghdl). Old refs will continue working, because permanent redirects are set up. However, we suggest every contributor to update the remote URLs in their local clones.
+[Milestone v0.36 ➚](https://github.com/ghdl/ghdl/milestone/7?closed=1)
+
 - Add support for unbounded arrays.
 
-## 0.35 (2017-12-14)
+## [2019-02-23] 0.36-rc1
+
+- More support of unbounded arrays and records.
+- Support of UVVM and VUnit.
+
+## [2018-11-29] 20181129
+
+## [2017-12-20] GitHub organization
+
+A new GitHub organization is created and the main repo is moved from
+[github.com/tgingold/ghdl](https://github.com/tgingold/ghdl) to [github.com/ghdl/ghdl](https://github.com/ghdl/ghdl).
+Old refs will continue working, because permanent redirects are set up.
+However, we suggest every contributor to update the remote URLs in their local clones.
+
+## [2017-12-14] 0.35
+
+[Milestone v0.35 ➚](https://github.com/ghdl/ghdl/milestone/3?closed=1)
 
 - Assert and report messages are sent to stdout (#394)
 - Improve support for unbounded records
 - Bugs fixed
 
-## 0.34 (2017-08-15)
+## [2017-08-15] 0.34
+
+[Milestone v0.34 ➚](https://github.com/ghdl/ghdl/milestone/1?closed=1)
 
 - Display stack backtraces on errors or assert failures
 - Compile scripts for vendor libraries (Xilinx, Altera, osvvm, vunit)
@@ -61,14 +120,14 @@
 - New option `--psl-report`, to report status of PSL assert and cover.
 - VHDL2008: support nested package
 
-## 0.33 (2015-10-04)
+## [2015-10-23] 0.33
 
 - Improve support of VHDL2008
 - Support [OSVVM](http://osvvm.org) 2015
 - Support VUnit: [LarsAsplund/vunit](https://github.com/LarsAsplund/vunit)
 - Many bugs fixed
 
-## 0.32 (2014-11-XX)
+## [2014-11-XX] 0.32
 
 - Updated to build with `gcc-4.9.2`.
 - support:
@@ -85,7 +144,7 @@
 	- OSVVM 2014_01
 - Bugs fixed
 
-## 0.31 (2014-01-XX)
+## [2014-01-XX] 0.31
 
 - Updated to build with `gcc-4.8.2`.
 - Supports OSVVM (Open-Source VHDL Verification Methodology) (see [osvvm.org](http://osvvm.org)) in its VHDL-2002 form.
@@ -93,11 +152,11 @@
 - Many bugs and support issues fixed.
 - New home on `https://sourceforge.net/projects/ghdl-updates/`
 
-## 0.30 (-)
+## 0.30
 
 Never released, swith to Dunoon Edition.
 
-## 0.29 (2010-01-09)
+## [2010-01-09] 0.29
 
 - Initial implementation of embedded PSL assertions.
 - Improve:
@@ -108,7 +167,7 @@ Never released, swith to Dunoon Edition.
 	- when the bound of a string literal type is not locally static.
 	- gcov crash
 
-## 0.28 (2009-09-17)
+## [2009-09-17] 0.28
 
 - Add `--std=08` to enable VHDL2008 features.
 - Support all-sensitized processes from VHDL2008.
@@ -119,7 +178,7 @@ Never released, swith to Dunoon Edition.
   - direct drivers elaboration for unconstrained array signals.
   - many minor bugs.
 
-## 0.27 (2008-07-01)
+## [2008-07-01] 0.27
 
 - Improve SDF annotation (handles much more annotations)
 - Add `--ieee-asserts=` option to control assert messages from ieee packages.
@@ -132,7 +191,7 @@ Never released, swith to Dunoon Edition.
   - clear timeout in wait for.
   - minor bugs.
 
-## 0.26 (2007-04-08)
+## [2007-04-08] 0.26
 
 - `GHDL_PREFIX` environment variable overrides default installation prefix.
 - simulation speed improved with 'direct drivers'.
@@ -149,7 +208,7 @@ Never released, swith to Dunoon Edition.
 	- crash when bad array prefix
 	- correctly extract sensitivity of record aggregate
 
-## 0.25 (2006-08-11)
+## [2006-08-11] 0.25
 
 - VPI functions to schedules values.
 - `math_real` now works under windows.
@@ -169,7 +228,7 @@ Never released, swith to Dunoon Edition.
 	- handle in-conversion for signal associated with an expression.
 	- emit an error when a function tries to exit without a return.
 
-## 0.24 (2006-06-25)
+## [2006-06-25] 0.24
 
 - Handle enums with more than 256 elements.
 - Relax expr static rules in 93c to analyze Xilinx core lib from 8.1
@@ -189,14 +248,14 @@ Never released, swith to Dunoon Edition.
 	- time and character read procedure of std.textio.
 	- initialize by value parameters (instead of copy-in).
 
-## 0.23 (2006-05-16)
+## [2006-05-16] 0.23
 
 - bug fix:
 	- handle implicit conversion in resolution functions.
 	- missing implicit conversion added.
 	- avoid a crash in error.
 
-## 0.22 (2006-03-28)
+## [2006-03-28] 0.22
 
 - direntry added in `ghdl.texi`
 - updated:
@@ -212,7 +271,7 @@ Never released, swith to Dunoon Edition.
 	- configuration issue
 	- `--warn-no-vital-generic` is now working
 
-## 0.21 (2005-12-18)
+## [2005-12-18] 0.21
 
 - local optimizations (loops, indexed name).
 - simulation speed improved by 20% due to processes mngt optimizations.
@@ -234,7 +293,7 @@ Never released, swith to Dunoon Edition.
 	- handle missing `EOL` for `readline`.
 	- for `x86_64`
 
-## 0.20 (2005-10-15)
+## 0.20 [2005-10-15]
 
 - stack memory usage improved for shortcurt operations.
 - gtkwave now displays nice waves for bit and std_ulogic signals.
@@ -254,7 +313,7 @@ Never released, swith to Dunoon Edition.
 	- for reading `.ghw` files.
 	- in `--xref`.
 
-## 0.19 (2005-08-17)
+## [2005-08-17] 0.19
 
 - `ADAFLAGS` has been replaced by `GHDL_ADAFLAGS` to ease compilation.
 - `ieee.math_real` and `ieee.math_complex` added (only partially, based on a
@@ -287,7 +346,7 @@ Never released, swith to Dunoon Edition.
 	- allow conversion in component configuration.
 	- conversion in associations with not statically defined array signals.
 
-## 0.18 (2005-03-12)
+## [2005-03-12] 0.18
 
 - Keep last line number to speed-up line number look-up (improvement).
 - `--warn-default-binding` added, `--warn-binding` rewritten.
@@ -300,7 +359,7 @@ Never released, swith to Dunoon Edition.
 	- correctly set the default value of collapsed ports.
 	- handling of stack2 (aka large concatenation bug).
 
-## 0.17 (2005-02-26)
+## [2005-02-26] 0.17
 
 - command `--elab-run` added.
 - Code generation for aggregate improved.
@@ -320,7 +379,7 @@ Never released, swith to Dunoon Edition.
 	- non-object name in sensitivity list crashed.
 	- correctly handle alias of signals in processes.
 
-## 0.16 (2005-01-02)
+## [2005-01-02] 0.16
 
 - `std.textio`: readline has no limits on line length.
 - command `-r` (run) added.
@@ -330,13 +389,13 @@ Never released, swith to Dunoon Edition.
 	- parse error: `begin` in aggregates.
 	- bad `unused subprogram` warnings.
 
-## 0.15 (2004-10-13)
+## [2004-10-13] 0.15
 
 - library file format modified to handle relative pathes.
 - install fixed to use relative pathes.
 - internal change: ortho API modified (constant are not anymore expressions).
 
-## 0.14 (2004-08-29)
+## [2004-08-29] 0.14
 
 - pretty printing in HTML command, `--pp-html`, added.
 - xref generation in HTML command, `--xref-html`, added.
@@ -364,7 +423,7 @@ Never released, swith to Dunoon Edition.
 	- parameters of protected type: handled and checked.
 	- `gen_tree.c` modified to work with sparc.
 
-## 0.13 (2004-06-26)
+## [2004-06-26] 0.13
 
 - support of 64bits integers and 32bits time (not yet user available)
 - handle `'high` and `'low` attributes on non-locally static types and subtypes.
@@ -387,7 +446,7 @@ Never released, swith to Dunoon Edition.
 	- multiple visibility of declarations (eg: direct and alias).
 	- names attribute of non-object aliases.
 
-## 0.12 (2004-05-30)
+## [2004-05-30] 0.12
 
 - simulation speed improved (2 fold) due to reduced activity optimization.
 - type conversion handled in associations
@@ -403,14 +462,14 @@ Never released, swith to Dunoon Edition.
 	- association of an unconstrained port with an expression.
 	- declaring an uncons. array subtype of an uncons. array subtype.
 
-## 0.11.1 (2004-04-24)
+## [2004-04-24] 0.11.1
 
 - bug fix:
 	- corner case of signal not updated
 	- handle `'stable`, `'quiet` with a paramater > 0
 	- typos (missing `+ `) in sparc.S
 
-## 0.11 (2004-04-17)
+## [2004-04-17] 0.11
 
 - signal collapsing improved.
 - simulation kernel speed improved (maybe 5x faster).
@@ -424,7 +483,7 @@ Never released, swith to Dunoon Edition.
 	- implicit conversion in formal function convertor.
 	- return type is a type mark.
 
-## 0.10 (2004-02-28)
+## [2004-02-28] 0.10
 
 - architecture with many instances can be compiled with less memory.
 - `--stats` option added to the simulator, to evaluate performance.
@@ -437,7 +496,7 @@ Never released, swith to Dunoon Edition.
 	- absolute source files.
 	- empty sequence of statements in case alternatives.
 
-## 0.9 (2004-02-01)
+## [2004-02-01] 0.9
 
 - VITAL level 0 restrictions checks added.
 - VITAL 2000 packages provided.
@@ -451,7 +510,7 @@ Never released, swith to Dunoon Edition.
 	- concurrent procedure call creates a non-sensitized process.
 	- effective value of non-scalar resolved signal might not be set.
 
-## 0.8 (2003-11-05)
+## [2003-11-05] 0.8
 
 - protected types (from 1076a/1076-2000) implemented.
 - file declarations are finalized in subprograms.
@@ -465,7 +524,7 @@ Never released, swith to Dunoon Edition.
 	- signal declaration not allowed in processes.
 	- several bugs fixed.
 
-## 0.7 (2003-08-02)
+## [2003-08-02] 0.7
 
 - layout of internal nodes improved.
 - incremental binding (vhdl93).
@@ -480,7 +539,7 @@ Never released, swith to Dunoon Edition.
 	- correctly handle operators names at function call.
 	- several small bugs fixed.
 
-## 0.6 (2003-06-09)
+## [2003-06-09] 0.6
 
 - internal modifications (single linked list used instead of arrays).
 - Mentor version of std_logic_arith is provided.
@@ -493,7 +552,7 @@ Never released, swith to Dunoon Edition.
 	- `selected_name` list in use clauses.
 	- many other small bug fixes.
 
-## 0.5 (2003-05-10)
+## [2003-05-10] 0.5
 
 - foreign attribute handled.  You can now call subprograms defined in a foreign
   language (such as C or Ada).
@@ -503,11 +562,11 @@ Never released, swith to Dunoon Edition.
 	- triple use.
 	- incomplete types
 
-## 0.4.1 (2003-04-07)
+## [2003-04-07] 0.4.1
 
 - bug fix: in the vcd output.
 
-## 0.4 (2003-04-02)
+## [2003-04-02] 0.4
 
 - `libgrt` does not depend on GNAT library anymore.
   Installation requirements are reduced.
