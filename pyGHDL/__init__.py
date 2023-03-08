@@ -51,7 +51,7 @@ __author__ = "Tristan Gingold and contributors"
 __email__ = "tgingold@free.fr"
 __copyright__ = "2002-2023, Tristan Gingold and contributors"
 __license__ = "GNU General Public License v2"
-__version__ = "3.0.0-rc.4"
+__version__ = "3.0.0"
 __keywords__ = ["vhdl", "parser", "compiler", "simulator", "ghdl"]
 
 from pyTooling.Decorators import export

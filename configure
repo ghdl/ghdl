@@ -21,7 +21,7 @@
 # place.
 # Note the absence of spaces and the quotes.
 # Suffix "-dev" is used during development.
-ghdl_version="3.0.0-rc.4"
+ghdl_version="3.0.0"
 
 backend=mcode
 backend_version="none"
