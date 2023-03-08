@@ -418,17 +418,29 @@ package body PSL.Build is
       return Res;
    end Build_Star_Repeat;
 
-   function Build_Plus_Repeat (N : Node) return NFA is
+   function Build_Plus_Repeat (N : Node) return NFA
+   is
       Res : NFA;
-      Start, Final : NFA_State;
+      Start, Final, Src : NFA_State;
       T : NFA_Edge;
    begin
       Res := Build_SERE_FA (Get_Sequence (N));
       Start := Get_Start_State (Res);
       Final := Get_Final_State (Res);
+
+      --  Create edges from pre-final to start.
       T := Get_First_Dest_Edge (Final);
       while T /= No_Edge loop
-         Add_Edge (Get_Edge_Src (T), Start, Get_Edge_Expr (T));
+         Src := Get_Edge_Src (T);
+         if Src /= Start then
+            --  Normal before-final to start.
+            Add_Edge (Src, Start, Get_Edge_Expr (T));
+         else
+            --  Do not create edges from start to start, as this is not the
+            --  correct sequence (it will accept words like 001, while
+            --  the first letter must be 1).
+            Add_Edge (Final, Final, Get_Edge_Expr (T));
+         end if;
          T := Get_Next_Src_Edge (T);
       end loop;
       return Res;
