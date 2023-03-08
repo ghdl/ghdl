@@ -14,7 +14,8 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with Ada.Text_IO; use Ada.Text_IO;
+with Simple_IO; use Simple_IO;
+with Utils_IO; use Utils_IO;
 with Types; use Types;
 with PSL.Types;
 with PSL.Prints; use PSL.Prints;
@@ -129,14 +130,11 @@ package body PSL.Disp_NFAs is
    procedure Dump_NFA (N : NFA)
    is
       use PSL.Types;
-      procedure Disp_State (S : NFA_State)
-      is
-         Str : constant String := Int32'Image (Get_State_Label (S));
-         S1 : constant String := NFA_State'Image (S);
+      procedure Disp_State (S : NFA_State) is
       begin
-         Put (Str (2 .. Str'Last));
+         Put_Trim (Int32'Image (Get_State_Label (S)));
          Put ("[");
-         Put (S1 (2 .. S1'Last));
+         Put_Trim (NFA_State'Image (S));
          Put ("]");
       end Disp_State;
 
@@ -161,12 +159,16 @@ package body PSL.Disp_NFAs is
       if Get_Epsilon_NFA (N) then
          Put (", epsilon");
       end if;
+
+      Put ("  notation: label[state]");
       New_Line;
 
       S := Get_First_State (N);
       while S /= No_State loop
          E := Get_First_Src_Edge (S);
          while E /= No_Edge loop
+            Put_Trim (NFA_Edge'Image (E));
+            Put (": ");
             Disp_State (S);
             Put (" -> ");
             Disp_State (Get_Edge_Dest (E));
