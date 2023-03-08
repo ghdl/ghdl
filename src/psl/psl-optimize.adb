@@ -246,7 +246,8 @@ package body PSL.Optimize is
                Next_E_State := Get_Edge_State (Next_E);
                Next_Next_E := Get_Next_Edge_Reverse (Next_E);
                if Next_E_State = E_State then
-                  --  Identical edge: remove the duplicate.
+                  --  Identical edge (same edge expression, same states):
+                  --  remove the duplicate.
                   Remove_Edge (Next_E);
                elsif Are_States_Identical (E_State, Next_E_State) then
                   Merge_State_Reverse (N, E_State, Next_E_State);
@@ -308,12 +309,16 @@ package body PSL.Optimize is
          while S /= No_State loop
 
             Edges := (others => No_Edge);
+
+            --  Iterate on edges whose source is S.
             E := Get_First_Src_Edge (S);
             while E /= No_Edge loop
                Next_E := Get_Next_Src_Edge (E);
                D := Get_Edge_Dest (E);
                L_D := Get_State_Label (D);
                if Edges (L_D) /= No_Edge then
+                  --  There is already an edge with the same source and the
+                  --  same destination label.
                   Set_Edge_Expr
                     (Edges (L_D),
                      Build_Bool_Or (Get_Edge_Expr (Edges (L_D)),
