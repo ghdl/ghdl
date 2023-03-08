@@ -1,8 +1,8 @@
-## [Next] 3.0-dev
+## [Next] 4.0
 
-[Milestone v3.0 ➚](https://github.com/ghdl/ghdl/milestone/11)
+## [2023-03-08] 3.0.0
 
-## [2023-03-06] 3.0.0-rc.4
+[Milestone v3.0 ➚](https://github.com/ghdl/ghdl/milestone/11?closed=1)
 
 - Handle IEEE operators for static expressions.
 - Improved support of VHDL 2008 (still!).
