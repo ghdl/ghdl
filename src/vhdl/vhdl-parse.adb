@@ -7087,7 +7087,7 @@ package body Vhdl.Parse is
    end Parse_Case_Expression;
 
    --  precond : WITH
-   --  postcond: next token
+   --  postcond: ';'
    --
    --  [ LRM93 9.5.2 ]
    --  selected_signal_assignment ::=
@@ -7098,7 +7098,12 @@ package body Vhdl.Parse is
    --  selected_waveforms ::=
    --      { waveform WHEN choices , }
    --      waveform WHEN choices
-   function Parse_Selected_Signal_Assignment return Iir
+   --
+   --  [ LRM08 10.5.4 ]
+   --  selected_waveform_assignment ::=
+   --     WITH expression SELECT [?]
+   --        target <= [ delay_mechanism ] selected_waveforms ;
+   function Parse_Selected_Signal_Assignment (Kind : Iir_Kind) return Iir
    is
       Res : Iir;
       Assoc : Iir;
@@ -7110,7 +7115,7 @@ package body Vhdl.Parse is
       --  Skip 'with'.
       Scan;
 
-      Res := Create_Iir (Iir_Kind_Concurrent_Selected_Signal_Assignment);
+      Res := Create_Iir (Kind);
       Set_Location (Res);
       Set_Expression (Res, Parse_Case_Expression);
 
@@ -7124,7 +7129,14 @@ package body Vhdl.Parse is
       Set_Target (Res, Target);
       Expect_Scan (Tok_Less_Equal);
 
-      Parse_Options (Res);
+      case Kind is
+         when Iir_Kind_Concurrent_Selected_Signal_Assignment =>
+            Parse_Options (Res);
+         when Iir_Kind_Selected_Waveform_Assignment_Statement =>
+            Parse_Delay_Mechanism (Res);
+         when others =>
+            raise Internal_Error;
+      end case;
 
       Chain_Init (First, Last);
       loop
@@ -7143,8 +7155,6 @@ package body Vhdl.Parse is
          Scan;
       end loop;
       Set_Selected_Waveform_Chain (Res, First);
-
-      Expect_Scan (Tok_Semi_Colon, "';' expected at end of signal assignment");
 
       return Res;
    end Parse_Selected_Signal_Assignment;
@@ -8172,6 +8182,9 @@ package body Vhdl.Parse is
                      return First_Stmt;
                   end if;
                end;
+            when Tok_With =>
+               Stmt := Parse_Selected_Signal_Assignment
+                 (Iir_Kind_Selected_Waveform_Assignment_Statement);
 
             when Tok_Return =>
                Stmt := Create_Iir (Iir_Kind_Return_Statement);
@@ -10385,7 +10398,11 @@ package body Vhdl.Parse is
                   Expect_Scan (Tok_Semi_Colon);
                end if;
             when Tok_With =>
-               Stmt := Parse_Selected_Signal_Assignment;
+               Stmt := Parse_Selected_Signal_Assignment
+                 (Iir_Kind_Concurrent_Selected_Signal_Assignment);
+               Expect_Scan (Tok_Semi_Colon,
+                            "';' expected at end of signal assignment");
+
             when Tok_Block =>
                Postponed_Not_Allowed;
                Stmt := Parse_Block_Statement (Label, Loc);

@@ -515,6 +515,9 @@ package body Vhdl.Canon is
          when Iir_Kind_Conditional_Signal_Assignment_Statement =>
             Canon_Extract_Sensitivity_Conditional_Signal_Assignment
               (Stmt, List);
+         when Iir_Kind_Selected_Waveform_Assignment_Statement =>
+            Canon_Extract_Sensitivity_Selected_Signal_Assignment
+              (Stmt, List);
          when Iir_Kind_If_Statement =>
             --  LRM08 11.3
             --  * For each if statement, apply the rule of 10.2 to the
@@ -590,8 +593,7 @@ package body Vhdl.Canon is
             --    construct the union of the resulting sets.
             Canon_Extract_Sensitivity_Procedure_Call
               (Get_Procedure_Call (Stmt), List);
-         when Iir_Kind_Selected_Waveform_Assignment_Statement
-           | Iir_Kind_Signal_Force_Assignment_Statement
+         when Iir_Kind_Signal_Force_Assignment_Statement
            | Iir_Kind_Signal_Release_Assignment_Statement
            | Iir_Kind_Break_Statement
            | Iir_Kind_Wait_Statement

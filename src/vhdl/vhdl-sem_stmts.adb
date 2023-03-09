@@ -41,6 +41,8 @@ package body Vhdl.Sem_Stmts is
    procedure Sem_Sequential_Statements_Internal (First_Stmt : Iir);
 
    procedure Sem_Simultaneous_Statements (First : Iir);
+   procedure Sem_Case_Choices
+     (Choice : Iir; Chain : in out Iir; Loc : Location_Type);
 
    -- Access to the current subprogram or process.
    Current_Subprogram: Iir := Null_Iir;
@@ -688,6 +690,32 @@ package body Vhdl.Sem_Stmts is
       end loop;
    end Sem_Check_Waveform_Chain;
 
+   procedure Sem_Selected_Signal_Assignment_Expression (Stmt : Iir)
+   is
+      Expr: Iir;
+      Chain : Iir;
+   begin
+      --  LRM 9.5  Concurrent Signal Assignment Statements.
+      --  The process statement equivalent to a concurrent signal assignment
+      --  statement [...] is constructed as follows: [...]
+      --
+      --  LRM 9.5.2  Selected Signal Assignment
+      --  The characteristics of the selected expression, the waveforms and
+      --  the choices in the selected assignment statement must be such that
+      --  the case statement in the equivalent statement is a legal
+      --  statement
+
+      --  The choices.
+      Chain := Get_Selected_Waveform_Chain (Stmt);
+      Expr := Sem_Case_Expression (Get_Expression (Stmt));
+      if Expr /= Null_Iir then
+         Check_Read (Expr);
+         Set_Expression (Stmt, Expr);
+         Sem_Case_Choices (Expr, Chain, Get_Location (Stmt));
+         Set_Selected_Waveform_Chain (Stmt, Chain);
+      end if;
+   end Sem_Selected_Signal_Assignment_Expression;
+
    procedure Sem_Guard (Stmt: Iir)
    is
       Guard: Iir;
@@ -782,7 +810,7 @@ package body Vhdl.Sem_Stmts is
 
          case Get_Kind (Stmt) is
             when Iir_Kind_Concurrent_Simple_Signal_Assignment
-              | Iir_Kind_Simple_Signal_Assignment_Statement =>
+               | Iir_Kind_Simple_Signal_Assignment_Statement =>
                Wf_Chain := Get_Waveform_Chain (Stmt);
                Sem_Waveform_Chain (Wf_Chain, Constrained, Target_Type);
                if Done then
@@ -790,7 +818,7 @@ package body Vhdl.Sem_Stmts is
                end if;
 
             when Iir_Kind_Concurrent_Conditional_Signal_Assignment
-              | Iir_Kind_Conditional_Signal_Assignment_Statement =>
+               | Iir_Kind_Conditional_Signal_Assignment_Statement =>
                Cond_Wf := Get_Conditional_Waveform_Chain (Stmt);
                while Cond_Wf /= Null_Iir loop
                   Wf_Chain := Get_Waveform_Chain (Cond_Wf);
@@ -805,7 +833,8 @@ package body Vhdl.Sem_Stmts is
                   Cond_Wf := Get_Chain (Cond_Wf);
                end loop;
 
-            when Iir_Kind_Concurrent_Selected_Signal_Assignment =>
+            when Iir_Kind_Concurrent_Selected_Signal_Assignment
+               | Iir_Kind_Selected_Waveform_Assignment_Statement =>
                declare
                   El : Iir;
                begin
@@ -836,8 +865,18 @@ package body Vhdl.Sem_Stmts is
       end loop;
 
       case Get_Kind (Stmt) is
+         when Iir_Kind_Concurrent_Selected_Signal_Assignment
+            | Iir_Kind_Selected_Waveform_Assignment_Statement =>
+            --  The choices.
+            Sem_Selected_Signal_Assignment_Expression (Stmt);
+         when others =>
+            null;
+      end case;
+
+      case Get_Kind (Stmt) is
          when Iir_Kind_Concurrent_Simple_Signal_Assignment
-           | Iir_Kind_Concurrent_Conditional_Signal_Assignment =>
+           | Iir_Kind_Concurrent_Conditional_Signal_Assignment
+           | Iir_Kind_Concurrent_Selected_Signal_Assignment =>
             Sem_Guard (Stmt);
          when others =>
             null;
@@ -1841,7 +1880,8 @@ package body Vhdl.Sem_Stmts is
                Sem_Sequential_Statements_Internal
                  (Get_Sequential_Statement_Chain (Stmt));
             when Iir_Kind_Simple_Signal_Assignment_Statement
-               | Iir_Kind_Conditional_Signal_Assignment_Statement =>
+               | Iir_Kind_Conditional_Signal_Assignment_Statement
+               | Iir_Kind_Selected_Waveform_Assignment_Statement =>
                Sem_Passive_Statement (Stmt);
                Sem_Signal_Assignment (Stmt);
             when Iir_Kind_Signal_Force_Assignment_Statement
@@ -2383,37 +2423,6 @@ package body Vhdl.Sem_Stmts is
       Sem_Process_Statement (Proc);
    end Sem_Sensitized_Process_Statement;
 
-   procedure Sem_Concurrent_Selected_Signal_Assignment (Stmt: Iir)
-   is
-      Expr: Iir;
-      Chain : Iir;
-   begin
-      --  LRM 9.5  Concurrent Signal Assgnment Statements.
-      --  The process statement equivalent to a concurrent signal assignment
-      --  statement [...] is constructed as follows: [...]
-      --
-      --  LRM 9.5.2  Selected Signal Assignment
-      --  The characteristics of the selected expression, the waveforms and
-      --  the choices in the selected assignment statement must be such that
-      --  the case statement in the equivalent statement is a legal
-      --  statement
-
-      --  Target and waveforms.
-      Sem_Signal_Assignment (Stmt);
-
-      --  The choices.
-      Chain := Get_Selected_Waveform_Chain (Stmt);
-      Expr := Sem_Case_Expression (Get_Expression (Stmt));
-      if Expr /= Null_Iir then
-         Check_Read (Expr);
-         Set_Expression (Stmt, Expr);
-         Sem_Case_Choices (Expr, Chain, Get_Location (Stmt));
-         Set_Selected_Waveform_Chain (Stmt, Chain);
-      end if;
-
-      Sem_Guard (Stmt);
-   end Sem_Concurrent_Selected_Signal_Assignment;
-
    procedure Sem_Concurrent_Break_Statement (Stmt : Iir)
    is
       Sensitivity_List : Iir_List;
@@ -2571,16 +2580,12 @@ package body Vhdl.Sem_Stmts is
 
       case Get_Kind (Stmt) is
          when Iir_Kind_Concurrent_Simple_Signal_Assignment
-           | Iir_Kind_Concurrent_Conditional_Signal_Assignment =>
+            | Iir_Kind_Concurrent_Conditional_Signal_Assignment
+            | Iir_Kind_Concurrent_Selected_Signal_Assignment =>
             if Is_Passive then
                Error_Msg_Sem (+Stmt, "signal assignment forbidden in entity");
             end if;
             Sem_Signal_Assignment (Stmt);
-         when Iir_Kind_Concurrent_Selected_Signal_Assignment =>
-            if Is_Passive then
-               Error_Msg_Sem (+Stmt, "signal assignment forbidden in entity");
-            end if;
-            Sem_Concurrent_Selected_Signal_Assignment (Stmt);
          when Iir_Kind_Sensitized_Process_Statement =>
             Set_Passive_Flag (Stmt, Is_Passive);
             Sem_Sensitized_Process_Statement (Stmt);
