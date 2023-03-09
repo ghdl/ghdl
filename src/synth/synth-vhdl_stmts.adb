@@ -3951,6 +3951,8 @@ package body Synth.Vhdl_Stmts is
                Synth_Simple_Signal_Assignment (C.Inst, Stmt);
             when Iir_Kind_Conditional_Signal_Assignment_Statement =>
                Synth_Conditional_Signal_Assignment (C.Inst, Stmt);
+            when Iir_Kind_Selected_Waveform_Assignment_Statement =>
+               Synth_Selected_Signal_Assignment (C.Inst, Stmt);
             when Iir_Kind_Variable_Assignment_Statement =>
                Synth_Variable_Assignment (C.Inst, Stmt);
             when Iir_Kind_Conditional_Variable_Assignment_Statement =>
