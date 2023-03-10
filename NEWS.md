@@ -1,8 +1,10 @@
 ## [Next] 4.0
 
-## [2023-03-08] 3.0.0
+[![GitHub v4.0 milestone](https://img.shields.io/github/milestones/progress/ghdl/ghdl/12?style=flat-square)](https://github.com/ghdl/ghdl/milestone/12)
 
-[Milestone v3.0 ➚](https://github.com/ghdl/ghdl/milestone/11?closed=1)
+## [2023-03-08] 3.0
+
+[![GitHub v3.0 milestone](https://img.shields.io/github/milestones/progress/ghdl/ghdl/11?style=flat-square)](https://github.com/ghdl/ghdl/milestone/11?closed=1)
 
 - Handle IEEE operators for static expressions.
 - Improved support of VHDL 2008 (still!).
@@ -17,37 +19,42 @@
 - Pre-releases are published to GitHub Releases and assets are uploaded to
   pre-releases and releases.
 
+## [2023-03-06] 3.0.0-rc.4
+
+See `3.0`.
+
 ## [2022-02-28] 2.0
 
-[Milestone v2.0 ➚](https://github.com/ghdl/ghdl/milestone/10?closed=1)
+[![GitHub v2.0 milestone](https://img.shields.io/github/milestones/progress/ghdl/ghdl/10?style=flat-square)](https://github.com/ghdl/ghdl/milestone/10?closed=1)
 
 - Improvements to VHDL 2008 supports and synthesis.
 
 ## [2021-02-02] 1.0
 
-[Milestone v1.0 ➚](https://github.com/ghdl/ghdl/milestone/9?closed=1)
-
-- Repository [ghdl/ghdl-cosim](https://github.com/ghdl/ghdl-cosim) created.
-  It contains documentation and code examples related to VHPIDIRECT, VPI and SystemC.
-- GitHub Action [ghdl/setup-ghdl-ci](https://github.com/ghdl/setup-ghdl-ci)
-  created, to allow easy installation of nightly GHDL assets in GitHub Actions
-	workflows.
-- Main documentation site(s) moved to [ghdl.github.io/ghdl](https://ghdl.github.io/ghdl/)
-  and [ghdl.github.io/ghdl-cosim](https://ghdl.github.io/ghdl-cosim/).
-
-## [2021-01-31] 1.0.0rc1
+[![GitHub v1.0 milestone](https://img.shields.io/github/milestones/progress/ghdl/ghdl/9?style=flat-square)](https://github.com/ghdl/ghdl/milestone/9?closed=1)
 
 - Python bindings overhauled and renamed to `pyGHDL`. Three modules are included:
   `libghdl`, `lsp` and `dom`.
 - Utility scripts in the codebase moved into subdir `scripts`: CI, binding
   generation, vendors, etc.
+- Repository [ghdl/ghdl-cosim](https://github.com/ghdl/ghdl-cosim) created.
+  It contains documentation and code examples related to VHPIDIRECT, VPI and SystemC.
+- GitHub Action [ghdl/setup-ghdl-ci](https://github.com/ghdl/setup-ghdl-ci)
+  created, to allow easy installation of nightly GHDL assets in GitHub Actions
+  workflows.
+- Main documentation site(s) moved to [ghdl.github.io/ghdl](https://ghdl.github.io/ghdl/)
+  and [ghdl.github.io/ghdl-cosim](https://ghdl.github.io/ghdl-cosim/).
 - Repository [ghdl/extended-tests](https://github.com/ghdl/extended-tests)
   created for testing `vendors` build scripts.
 - Logo updated (org, ghdl/ghdl, ghdl/docker and ghdl/ghdl-cosim).
 - Assets not added to releases or pre-releases anymore.
   Users should use package managers or nightly assets (updated after each
-	successful CI run of branch `master`):
-	[nightly](https://github.com/ghdl/ghdl/releases/tag/nightly).
+  successful CI run of branch `master`):
+  [nightly](https://github.com/ghdl/ghdl/releases/tag/nightly).
+
+## [2021-01-31] 1.0.0rc1
+
+See `1.0`.
 
 ## [2020-05-21] Nightly build assets
 
@@ -67,7 +74,7 @@
 
 ## [2020-02-28] 0.37
 
-[Milestone v0.37 ➚](https://github.com/ghdl/ghdl/milestone/8?closed=1)
+[![GitHub v0.37 milestone](https://img.shields.io/github/milestones/progress/ghdl/ghdl/8?style=flat-square)](https://github.com/ghdl/ghdl/milestone/8?closed=1)
 
 - Python binding added
 - Experimental support of synthesis (either with --synth or with the Yosys plugin)
@@ -79,14 +86,14 @@
 
 ## [2019-03-03] 0.36
 
-[Milestone v0.36 ➚](https://github.com/ghdl/ghdl/milestone/7?closed=1)
-
-- Add support for unbounded arrays.
-
-## [2019-02-23] 0.36-rc1
+[![GitHub v0.36 milestone](https://img.shields.io/github/milestones/progress/ghdl/ghdl/7?style=flat-square)](https://github.com/ghdl/ghdl/milestone/7?closed=1)
 
 - More support of unbounded arrays and records.
 - Support of UVVM and VUnit.
+
+## [2019-02-23] 0.36-rc1
+
+See `0.36`.
 
 ## [2018-11-29] 20181129
 
@@ -99,7 +106,7 @@ However, we suggest every contributor to update the remote URLs in their local c
 
 ## [2017-12-14] 0.35
 
-[Milestone v0.35 ➚](https://github.com/ghdl/ghdl/milestone/3?closed=1)
+[![GitHub v0.35 milestone](https://img.shields.io/github/milestones/progress/ghdl/ghdl/3?style=flat-square)](https://github.com/ghdl/ghdl/milestone/3?closed=1)
 
 - Assert and report messages are sent to stdout (#394)
 - Improve support for unbounded records
@@ -107,7 +114,7 @@ However, we suggest every contributor to update the remote URLs in their local c
 
 ## [2017-08-15] 0.34
 
-[Milestone v0.34 ➚](https://github.com/ghdl/ghdl/milestone/1?closed=1)
+[![GitHub v0.34 milestone](https://img.shields.io/github/milestones/progress/ghdl/ghdl/1?style=flat-square)](https://github.com/ghdl/ghdl/milestone/1?closed=1)
 
 - Display stack backtraces on errors or assert failures
 - Compile scripts for vendor libraries (Xilinx, Altera, osvvm, vunit)
