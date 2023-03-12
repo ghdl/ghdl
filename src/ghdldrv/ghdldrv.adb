@@ -1659,18 +1659,19 @@ package body Ghdldrv is
             if Flag_Verbose then
                Put_Line (":");
                declare
-                  Dep_List : constant Iir_List :=
-                    Get_File_Dependence_List (File);
+                  Dep_List : Iir_List;
                   Dep_It : List_Iterator;
                   Dep_File : Iir;
                begin
-                  Dep_It := List_Iterate_Safe (Dep_List);
+                  Dep_List := Build_File_Dependences (File);
+                  Dep_It := List_Iterate (Dep_List);
                   while Is_Valid (Dep_It) loop
                      Put ("    ");
                      Dep_File := Get_Element (Dep_It);
                      Put_Line (Image (Get_Design_File_Filename (Dep_File)));
                      Next (Dep_It);
                   end loop;
+                  Destroy_Iir_List (Dep_List);
                end;
             else
                New_Line;
@@ -2004,8 +2005,8 @@ package body Ghdldrv is
          if Is_Makeable_File (File) then
             Put (Get_Object_Filename (File));
             Put (": ");
-            Dep_List := Get_File_Dependence_List (File);
-            Dep_It := List_Iterate_Safe (Dep_List);
+            Dep_List := Build_File_Dependences (File);
+            Dep_It := List_Iterate (Dep_List);
             while Is_Valid (Dep_It) loop
                Dep_File := Get_Element (Dep_It);
                if Dep_File /= File and then Is_Makeable_File (Dep_File)
@@ -2015,6 +2016,7 @@ package body Ghdldrv is
                end if;
                Next (Dep_It);
             end loop;
+            Destroy_Iir_List (Dep_List);
             New_Line;
          end if;
          Next (Files_It);

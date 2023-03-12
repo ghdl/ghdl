@@ -2081,19 +2081,6 @@ def Set_Library(obj: Iir, value: Iir) -> None:
 
 
 @export
-@BindToLibGHDL("vhdl__nodes__get_file_dependence_list")
-def Get_File_Dependence_List(obj: Iir) -> Iir:
-    """"""
-    return 0
-
-
-@export
-@BindToLibGHDL("vhdl__nodes__set_file_dependence_list")
-def Set_File_Dependence_List(obj: Iir, value: Iir) -> None:
-    """"""
-
-
-@export
 @BindToLibGHDL("vhdl__nodes__get_design_file_filename")
 def Get_Design_File_Filename(obj: Iir) -> NameId:
     """"""

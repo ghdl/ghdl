@@ -1532,31 +1532,73 @@ package body Ghdllocal is
       end loop;
    end Check_No_Elab_Flag;
 
+   --  Append all the file on which FILE depends.
+   procedure Append_File_Dependences (File : Iir_Design_File; List : Iir_List)
+   is
+      Unit : Iir;
+      List_It : List_Iterator;
+      Dep_Unit : Iir;
+      Dep_Unit_File : Iir;
+   begin
+      --  Prepend the dependencies.
+      Unit := Get_First_Design_Unit (File);
+      while Unit /= Null_Iir loop
+         List_It := List_Iterate_Safe (Get_Dependence_List (Unit));
+         while Is_Valid (List_It) loop
+            Dep_Unit := Get_Element (List_It);
+            --  TODO: exclude anonymous configurations ?
+            --  A dependency could be an entity aspect.
+            Dep_Unit := Libraries.Find_Design_Unit (Dep_Unit);
+            if Dep_Unit /= Null_Iir then
+               case Get_Kind (Dep_Unit) is
+                  when Iir_Kind_Design_Unit =>
+                     Dep_Unit_File := Get_Parent (Dep_Unit);
+                     if not Get_Elab_Flag (Dep_Unit_File) then
+                        --  Add if not already in the list.
+                        Set_Elab_Flag (Dep_Unit_File, True);
+                        Append_File_Dependences (Dep_Unit_File, List);
+                        Append_Element (List, Dep_Unit_File);
+                     end if;
+                  when Iir_Kind_Foreign_Module =>
+                     null;
+                  when others =>
+                     raise Internal_Error;
+               end case;
+            end if;
+            Next (List_It);
+         end loop;
+         Unit := Get_Chain (Unit);
+      end loop;
+   end Append_File_Dependences;
+
+   procedure Clear_Elab_Flag (List : Iir_List)
+   is
+      It : List_Iterator;
+   begin
+      It := List_Iterate (List);
+      while Is_Valid (It) loop
+         Set_Elab_Flag (Get_Element (It), False);
+         Next (It);
+      end loop;
+   end Clear_Elab_Flag;
+
+   function Build_File_Dependences (File : Iir) return Iir_List
+   is
+      Res : Iir_List;
+   begin
+      Res := Create_Iir_List;
+      Set_Elab_Flag (File, True);
+      Append_File_Dependences (File, Res);
+
+      Clear_Elab_Flag (Res);
+      Set_Elab_Flag (File, False);
+
+      return Res;
+   end Build_File_Dependences;
+
    function Build_Dependence (Lib : Name_Id; Prim : Name_Id; Sec : Name_Id)
                              return Iir_List
    is
-      procedure Build_Dependence_List (File : Iir_Design_File; List : Iir_List)
-      is
-         El : Iir_Design_File;
-         Depend_List : Iir_List;
-         Depend_It : List_Iterator;
-      begin
-         if Get_Elab_Flag (File) then
-            return;
-         end if;
-
-         Set_Elab_Flag (File, True);
-         Depend_List := Get_File_Dependence_List (File);
-         if Depend_List /= Null_Iir_List then
-            Depend_It := List_Iterate (Depend_List);
-            while Is_Valid (Depend_It) loop
-               El := Get_Element (Depend_It);
-               Build_Dependence_List (El, List);
-               Next (Depend_It);
-            end loop;
-         end if;
-         Append_Element (List, File);
-      end Build_Dependence_List;
 
       use Vhdl.Configuration;
 
@@ -1652,8 +1694,14 @@ package body Ghdllocal is
       for I in Design_Units.First .. Design_Units.Last loop
          Unit := Design_Units.Table (I);
          File := Get_Design_File (Unit);
-         Build_Dependence_List (File, Files_List);
+         if not Get_Elab_Flag (File) then
+            Set_Elab_Flag (File, True);
+            Append_File_Dependences (File, Files_List);
+            Append_Element (Files_List, File);
+         end if;
       end loop;
+
+      Clear_Elab_Flag (Files_List);
 
       return Files_List;
    end Build_Dependence;

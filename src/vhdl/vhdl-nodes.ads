@@ -187,8 +187,6 @@ package Vhdl.Nodes is
    --   Get/Set_Library (Field0)
    --   Get/Set_Parent (Alias Field0)
    --
-   --   Get/Set_File_Dependence_List (Field1)
-   --
    --   Get/Set_Chain (Field2)
    --
    --  Time when the whole file has been analyzed.  This allows ordering
@@ -7759,11 +7757,6 @@ package Vhdl.Nodes is
    --  Field: Field0 Ref
    function Get_Library (File : Iir_Design_File) return Iir;
    procedure Set_Library (File : Iir_Design_File; Lib : Iir);
-
-   --  List of files which this design file depends on.
-   --  Field: Field1 (uc)
-   function Get_File_Dependence_List (File : Iir_Design_File) return Iir_List;
-   procedure Set_File_Dependence_List (File : Iir_Design_File; Lst : Iir_List);
 
    --  Identifier for the design file file name.
    --  Field: Field12 (pos)

@@ -68,7 +68,6 @@ package Vhdl.Nodes_Meta is
       Field_Analysis_Time_Stamp,
       Field_Design_File_Source,
       Field_Library,
-      Field_File_Dependence_List,
       Field_Design_File_Filename,
       Field_Design_File_Directory,
       Field_Design_File,
@@ -667,7 +666,6 @@ package Vhdl.Nodes_Meta is
    function Has_Analysis_Time_Stamp (K : Iir_Kind) return Boolean;
    function Has_Design_File_Source (K : Iir_Kind) return Boolean;
    function Has_Library (K : Iir_Kind) return Boolean;
-   function Has_File_Dependence_List (K : Iir_Kind) return Boolean;
    function Has_Design_File_Filename (K : Iir_Kind) return Boolean;
    function Has_Design_File_Directory (K : Iir_Kind) return Boolean;
    function Has_Design_File (K : Iir_Kind) return Boolean;

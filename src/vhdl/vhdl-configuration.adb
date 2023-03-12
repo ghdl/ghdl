@@ -35,7 +35,6 @@ package body Vhdl.Configuration is
    procedure Add_Design_Block_Configuration (Blk : Iir_Block_Configuration);
    procedure Add_Design_Aspect (Aspect : Iir; Add_Default : Boolean);
 
-   Current_File_Dependence : Iir_List := Null_Iir_List;
    Current_Configuration : Iir_Configuration_Declaration := Null_Iir;
 
    --  UNIT is a design unit of a configuration declaration.
@@ -48,18 +47,7 @@ package body Vhdl.Configuration is
       It : List_Iterator;
       El : Iir;
       Lib_Unit : Iir;
-      File : Iir_Design_File;
-      Prev_File_Dependence : Iir_List;
    begin
-      if Flag_Build_File_Dependence then
-         --  The current file depends on unit.
-         File := Get_Design_File (Unit);
-         if Current_File_Dependence /= Null_Iir_List then
-            --  (There is no dependency for default configuration).
-            Add_Element (Current_File_Dependence, File);
-         end if;
-      end if;
-
       --  If already in the table, then nothing to do.
       if Get_Configuration_Mark_Flag (Unit) then
          --  There might be some direct recursions:
@@ -81,26 +69,6 @@ package body Vhdl.Configuration is
       end if;
 
       Lib_Unit := Get_Library_Unit (Unit);
-
-      if Flag_Build_File_Dependence then
-         --  Switch current_file_dependence to the design file of Unit.
-         Prev_File_Dependence := Current_File_Dependence;
-
-         if Get_Kind (Lib_Unit) = Iir_Kind_Configuration_Declaration
-           and then Get_Identifier (Lib_Unit) = Null_Identifier
-         then
-            --  Do not add dependence for default configuration.
-            Current_File_Dependence := Null_Iir_List;
-         else
-            File := Get_Design_File (Unit);
-            Current_File_Dependence := Get_File_Dependence_List (File);
-            --  Create a list if not yet created.
-            if Current_File_Dependence = Null_Iir_List then
-               Current_File_Dependence := Create_Iir_List;
-               Set_File_Dependence_List (File, Current_File_Dependence);
-            end if;
-         end if;
-      end if;
 
       if Flag_Load_All_Design_Units then
          --  Load and analyze UNIT.
@@ -197,15 +165,6 @@ package body Vhdl.Configuration is
       Design_Units.Append (Unit);
 
       Set_Configuration_Done_Flag (Unit, True);
-
-      --  Restore now the file dependence.
-      --  Indeed, we may add a package body when we are in a package
-      --  declaration.  However, the later does not depend on the former.
-      --  The file which depends on the package declaration also depends on
-      --  the package body.
-      if Flag_Build_File_Dependence then
-         Current_File_Dependence := Prev_File_Dependence;
-      end if;
 
       if Get_Kind (Lib_Unit) = Iir_Kind_Package_Declaration then
          --  Add body (if any).

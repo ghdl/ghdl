@@ -1424,24 +1424,6 @@ package body Vhdl.Nodes is
       Set_Field0 (File, Lib);
    end Set_Library;
 
-   function Get_File_Dependence_List (File : Iir_Design_File) return Iir_List
-   is
-   begin
-      pragma Assert (File /= Null_Iir);
-      pragma Assert (Has_File_Dependence_List (Get_Kind (File)),
-                     "no field File_Dependence_List");
-      return Iir_To_Iir_List (Get_Field1 (File));
-   end Get_File_Dependence_List;
-
-   procedure Set_File_Dependence_List (File : Iir_Design_File; Lst : Iir_List)
-   is
-   begin
-      pragma Assert (File /= Null_Iir);
-      pragma Assert (Has_File_Dependence_List (Get_Kind (File)),
-                     "no field File_Dependence_List");
-      Set_Field1 (File, Iir_List_To_Iir (Lst));
-   end Set_File_Dependence_List;
-
    function Get_Design_File_Filename (File : Iir_Design_File) return Name_Id
    is
    begin
