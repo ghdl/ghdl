@@ -1,1 +1,1 @@
-pyTooling>=2.13.0, <3.0
+pyTooling>=2.13.0, <4.0
