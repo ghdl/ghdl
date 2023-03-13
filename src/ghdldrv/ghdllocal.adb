@@ -1533,7 +1533,8 @@ package body Ghdllocal is
    end Check_No_Elab_Flag;
 
    --  Append all the file on which FILE depends.
-   procedure Append_File_Dependences (File : Iir_Design_File; List : Iir_List)
+   procedure Append_File_Dependences
+     (File : Iir_Design_File; List : Iir_List; Recurse : Boolean)
    is
       Unit : Iir;
       List_It : List_Iterator;
@@ -1556,7 +1557,10 @@ package body Ghdllocal is
                      if not Get_Elab_Flag (Dep_Unit_File) then
                         --  Add if not already in the list.
                         Set_Elab_Flag (Dep_Unit_File, True);
-                        Append_File_Dependences (Dep_Unit_File, List);
+                        if Recurse then
+                           Append_File_Dependences
+                             (Dep_Unit_File, List, Recurse);
+                        end if;
                         Append_Element (List, Dep_Unit_File);
                      end if;
                   when Iir_Kind_Foreign_Module =>
@@ -1582,19 +1586,19 @@ package body Ghdllocal is
       end loop;
    end Clear_Elab_Flag;
 
-   function Build_File_Dependences (File : Iir) return Iir_List
+   function Build_File_Direct_Dependences (File : Iir) return Iir_List
    is
       Res : Iir_List;
    begin
       Res := Create_Iir_List;
       Set_Elab_Flag (File, True);
-      Append_File_Dependences (File, Res);
+      Append_File_Dependences (File, Res, False);
 
       Clear_Elab_Flag (Res);
       Set_Elab_Flag (File, False);
 
       return Res;
-   end Build_File_Dependences;
+   end Build_File_Direct_Dependences;
 
    function Build_Dependence (Lib : Name_Id; Prim : Name_Id; Sec : Name_Id)
                              return Iir_List
@@ -1696,7 +1700,7 @@ package body Ghdllocal is
          File := Get_Design_File (Unit);
          if not Get_Elab_Flag (File) then
             Set_Elab_Flag (File, True);
-            Append_File_Dependences (File, Files_List);
+            Append_File_Dependences (File, Files_List, True);
             Append_Element (Files_List, File);
          end if;
       end loop;

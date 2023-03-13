@@ -131,11 +131,13 @@ package Ghdllocal is
    procedure Load_All_Libraries_And_Files;
 
    --  Return an ordered list of design_files to build LIB.PRIM.SEC.
+   --  Use Elab_Flag.
    function Build_Dependence (Lib : Name_Id; Prim : Name_Id; Sec : Name_Id)
                              return Iir_List;
 
-   --  Return a list of design_file on which FILE depends.
-   function Build_File_Dependences (File : Iir) return Iir_List;
+   --  Return a list of design_file on which FILE directly depends.
+   --  Use Elab_Flag.
+   function Build_File_Direct_Dependences (File : Iir) return Iir_List;
 
    --  Return True iff file FILE has been modified (the file time stamp does
    --  no correspond to what was recorded in the library).

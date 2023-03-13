@@ -1663,7 +1663,7 @@ package body Ghdldrv is
                   Dep_It : List_Iterator;
                   Dep_File : Iir;
                begin
-                  Dep_List := Build_File_Dependences (File);
+                  Dep_List := Build_File_Direct_Dependences (File);
                   Dep_It := List_Iterate (Dep_List);
                   while Is_Valid (Dep_It) loop
                      Put ("    ");
@@ -2005,7 +2005,7 @@ package body Ghdldrv is
          if Is_Makeable_File (File) then
             Put (Get_Object_Filename (File));
             Put (": ");
-            Dep_List := Build_File_Dependences (File);
+            Dep_List := Build_File_Direct_Dependences (File);
             Dep_It := List_Iterate (Dep_List);
             while Is_Valid (Dep_It) loop
                Dep_File := Get_Element (Dep_It);
