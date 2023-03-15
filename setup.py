@@ -65,5 +65,8 @@ DescribePythonPackageHostedOnGitHub(
     consoleScripts={
         "ghdl-ls": "pyGHDL.cli.lsp:main",
         "ghdl-dom": "pyGHDL.cli.dom:main"
+    },
+    dataFiles={
+        packageName: ["py.typed"]
     }
 )
