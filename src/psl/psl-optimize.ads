@@ -24,6 +24,10 @@ package PSL.Optimize is
    --  O(N) algorithm.
    procedure Remove_Unreachable_States (N : NFA);
 
+   --  Return true iff there is an edge from start to start (a loop) with
+   --  the true expression.
+   function Has_Loop_On_Start (N : NFA) return Boolean;
+
    --  Remove single prefix, ie edges to a state S that is also from start
    --  to S.
    --  O(M) algorithm.

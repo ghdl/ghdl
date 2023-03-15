@@ -127,6 +127,23 @@ package body PSL.Optimize is
       end loop;
    end Remove_Unreachable_States;
 
+   function Has_Loop_On_Start (N : NFA) return Boolean
+   is
+      Start : constant NFA_State := Get_Start_State (N);
+      E : NFA_Edge;
+   begin
+      E := Get_First_Src_Edge (Start);
+      while E /= No_Edge loop
+         if Get_Edge_Dest (E) = Start
+           and then Get_Edge_Expr (E) = True_Node
+         then
+            return True;
+         end if;
+         E := Get_Next_Src_Edge (E);
+      end loop;
+      return False;
+   end Has_Loop_On_Start;
+
    procedure Remove_Simple_Prefix (N : NFA)
    is
       Start : NFA_State;

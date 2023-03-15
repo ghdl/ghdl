@@ -1061,7 +1061,9 @@ package body PSL.Build is
          pragma Debug (Check_NFA (Res));
 
          Remove_Unreachable_States (Res);
-         Remove_Simple_Prefix (Res);
+         if Has_Loop_On_Start (Res) then
+            Remove_Simple_Prefix (Res);
+         end if;
          Merge_Identical_States (Res);
          Merge_Edges (Res);
       end if;
