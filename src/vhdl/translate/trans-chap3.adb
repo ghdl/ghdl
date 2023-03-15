@@ -2103,7 +2103,8 @@ package body Trans.Chap3 is
                   return V = 0;
                end if;
             end;
-         when Type_Mode_E8 =>
+         when Type_Mode_E8
+            | Type_Mode_E32 =>
             declare
                V         : Iir_Int32;
                Base_Type : Iir;
