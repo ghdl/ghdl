@@ -277,6 +277,7 @@ jobs:
             **/*.zst
             **/*.tgz
             **/ghdl-*.zip
+            **/*.whl
             **/man/ghdl.1
 
 
