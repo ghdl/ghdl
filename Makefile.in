@@ -667,11 +667,14 @@ uninstall.vhdllib:
 ####################### pyGHDL standalone ################################
 
 setup-standalone.py: $(srcdir)/setup-standalone.in
+# Replace #@__init__ with the variables from __init__.py
+	case "$(ghdl_version)" in *dev*) version="$(ghdl_version).$$(date +%Y%m%d.%H%M)";; *) version="$(ghdl_version)";; esac; \
 	( \
 	sed -n -e '1,/^#@__init__/p' < $<; \
 	sed -n -e '/__author__/,/^$$/p' < $(srcdir)/pyGHDL/__init__.py; \
 	echo 'srcdir = "$(srcdir)"' ; \
 	echo 'soext = "$(SOEXT)"'; \
+	echo __version__ = \"$$version\"; \
 	sed -n -e '/^#@__init__/,$$p' < $< ; \
 	) > $@
 
