@@ -906,25 +906,38 @@ package body Trans.Chap7 is
       Close_Temp;
    end Convert_To_Constrained_Check;
 
+   --  Return true iff ATYPE is derived from PARENT_TYPE
+   --  (or to say the same, if PARENT_TYPE is a parent of ATYPE).
+   function Is_A_Derived_Type (Atype : Iir; Parent_Type : Iir) return Boolean
+   is
+      Ptype : Iir;
+   begin
+      --  If ATYPE is a parent type of EXPR_TYPE, then all the constrained
+      --  are inherited and there is nothing to check.
+      Ptype := Atype;
+      loop
+         if Ptype = Parent_Type then
+            return True;
+         end if;
+         exit when (Get_Kind (Ptype)
+                    not in Iir_Kinds_Composite_Subtype_Definition);
+         Ptype := Get_Parent_Type (Ptype);
+      end loop;
+      return False;
+   end Is_A_Derived_Type;
+
    function Convert_To_Constrained
      (Expr : Mnode; Expr_Type : Iir; Atype : Iir; Loc : Iir) return Mnode
    is
-      Parent_Type : Iir;
       Expr_Stable   : Mnode;
       Success_Label : O_Snode;
       Failure_Label : O_Snode;
    begin
       --  If ATYPE is a parent type of EXPR_TYPE, then all the constrained
       --  are inherited and there is nothing to check.
-      Parent_Type := Expr_Type;
-      loop
-         if Parent_Type = Atype then
-            return Expr;
-         end if;
-         exit when (Get_Kind (Parent_Type)
-                    not in Iir_Kinds_Composite_Subtype_Definition);
-         Parent_Type := Get_Parent_Type (Parent_Type);
-      end loop;
+      if Is_A_Derived_Type (Expr_Type, Atype) then
+         return Expr;
+      end if;
 
       Expr_Stable := Stabilize (Expr);
 
@@ -957,12 +970,107 @@ package body Trans.Chap7 is
       end;
    end Convert_To_Constrained;
 
+   function Convert_To_Partially_Constrained
+     (Expr : Mnode; Expr_Type : Iir; Res_Type : Iir) return Mnode
+   is
+      Res_Tinfo : constant Type_Info_Acc := Get_Info (Res_Type);
+      Kind : constant Object_Kind_Type := Get_Object_Kind (Expr);
+      Stable_Expr : Mnode;
+      Res  : Mnode;
+      Bnd : Mnode;
+--      Res_Bnd : Mnode;
+      Expr_Bnd : Mnode;
+   begin
+      if Is_A_Derived_Type (Expr_Type, Res_Type) then
+         return Expr;
+      end if;
+
+      Stable_Expr := Stabilize (Expr);
+
+      --  Allocate result (the fat pointer).
+      --  TODO: could we reuse EXPR (also a fat pointer) ?
+      Res := Create_Temp (Res_Tinfo, Kind);
+
+      --  Copy pointer to the data.
+      New_Assign_Stmt
+        (M2Lp (Chap3.Get_Composite_Base (Res)),
+         New_Convert_Ov (M2Addr (Chap3.Get_Composite_Base (Stable_Expr)),
+                         Res_Tinfo.B.Base_Ptr_Type (Kind)));
+
+      --  Allocate new bounds.
+      Bnd := Create_Temp_Bounds (Res_Tinfo);
+      New_Assign_Stmt
+        (M2Lp (Chap3.Get_Composite_Bounds (Res)), M2Addr (Bnd));
+
+      --  Copy existing bounds
+      --  Most of them (in particular offsets and sizes) are correct.
+      Expr_Bnd := Chap3.Get_Composite_Bounds (Stable_Expr);
+      Gen_Memcpy (M2Addr (Bnd), M2Addr (Expr_Bnd),
+                  New_Lit (New_Sizeof (Res_Tinfo.B.Bounds_Type,
+                                       Ghdl_Index_Type)));
+
+      --  Copy/check bounds.
+--      Res_Bnd := Chap3.Get_Composite_Type_Bounds (Res_Type);
+--      Copy_Check_Bounds (Bnd, Expr_Type, Res_Bnd, Res_Type);
+
+      return Res;
+   end Convert_To_Partially_Constrained;
+
+   function Convert_Constrained_To_Partially_Constrained
+     (Expr : Mnode; Expr_Type : Iir; Res_Type : Iir) return Mnode
+   is
+      Res_Tinfo : constant Type_Info_Acc := Get_Info (Res_Type);
+      Kind : constant Object_Kind_Type := Get_Object_Kind (Expr);
+      Stable_Expr : Mnode;
+      Res  : Mnode;
+      Bnd : Mnode;
+--      Res_Bnd : Mnode;
+      Expr_Bnd : Mnode;
+   begin
+      Stable_Expr := Stabilize (Expr);
+
+      --  Allocate result (the fat pointer).
+      --  TODO: could we reuse EXPR (also a fat pointer) ?
+      Res := Create_Temp (Res_Tinfo, Kind);
+
+      --  Copy pointer to the data.
+      New_Assign_Stmt
+        (M2Lp (Chap3.Get_Composite_Base (Res)),
+         New_Convert_Ov (M2Addr (Chap3.Get_Composite_Base (Stable_Expr)),
+                         Res_Tinfo.B.Base_Ptr_Type (Kind)));
+
+      if Is_A_Derived_Type (Expr_Type, Res_Type) then
+         --  Copy existing bounds
+         Expr_Bnd := Chap3.Get_Composite_Bounds (Stable_Expr);
+         New_Assign_Stmt
+           (M2Lp (Chap3.Get_Composite_Bounds (Res)), M2Addr (Expr_Bnd));
+      else
+         --  Allocate new bounds.
+         Bnd := Create_Temp_Bounds (Res_Tinfo);
+         New_Assign_Stmt
+           (M2Lp (Chap3.Get_Composite_Bounds (Res)), M2Addr (Bnd));
+
+         --  Copy existing bounds
+         --  Most of them (in particular offsets and sizes) are correct.
+         Expr_Bnd := Chap3.Get_Composite_Bounds (Stable_Expr);
+         Gen_Memcpy (M2Addr (Bnd), M2Addr (Expr_Bnd),
+                     New_Lit (New_Sizeof (Res_Tinfo.B.Bounds_Type,
+                                          Ghdl_Index_Type)));
+
+         --  Copy/check bounds.
+         --      Res_Bnd := Chap3.Get_Composite_Type_Bounds (Res_Type);
+         --      Copy_Check_Bounds (Bnd, Expr_Type, Res_Bnd, Res_Type);
+      end if;
+      return Res;
+   end Convert_Constrained_To_Partially_Constrained;
+
    function Translate_Implicit_Array_Conversion
      (Expr : Mnode; Expr_Type : Iir; Res_Type : Iir; Loc : Iir) return Mnode
    is
       Res_Tinfo : Type_Info_Acc;
       Einfo : Type_Info_Acc;
       Mode  : Object_Kind_Type;
+      Expr_State, Res_State : Iir_Constraint;
    begin
       pragma Assert
         (Get_Kind (Expr_Type) in Iir_Kinds_Array_Type_Definition);
@@ -971,47 +1079,59 @@ package body Trans.Chap7 is
          return Expr;
       end if;
 
-      Res_Tinfo := Get_Info (Res_Type);
-      Einfo := Get_Info (Expr_Type);
-      case Res_Tinfo.Type_Mode is
-         when Type_Mode_Unbounded_Array =>
-            --  X to unconstrained.
-            case Einfo.Type_Mode is
-               when Type_Mode_Unbounded_Array =>
-                  --  unconstrained to unconstrained.
-                  return Expr;
-               when Type_Mode_Bounded_Arrays =>
-                  --  constrained to unconstrained.
-                  return Convert_Constrained_To_Unconstrained
-                    (Expr, Res_Tinfo);
-               when others =>
-                  raise Internal_Error;
+      Expr_State := Get_Constraint_State (Expr_Type);
+      Res_State := Get_Constraint_State (Res_Type);
+      case Expr_State is
+         when Fully_Constrained =>
+            case Res_State is
+               when Fully_Constrained =>
+                  --  Fully to fully.
+                  Einfo := Get_Info (Expr_Type);
+                  Res_Tinfo := Get_Info (Res_Type);
+                  if Einfo.Type_Mode = Type_Mode_Static_Array
+                    and then Res_Tinfo.Type_Mode = Type_Mode_Static_Array
+                  then
+                     --  FIXME: optimize static vs non-static
+                     --  constrained to constrained.
+                     if Chap3.Locally_Types_Match (Expr_Type, Res_Type) /= True
+                     then
+                        --  FIXME: generate a bound error ?
+                        --  Even if this is caught at compile-time,
+                        --  the code is not required to run.
+                        Chap6.Gen_Bound_Error (Loc);
+                     end if;
+                     --  Convert.  For subtypes of arrays with
+                     --  unbounded elements, the subtype can be the
+                     --  same but the ortho type can be different.
+                     Mode := Get_Object_Kind (Expr);
+                     return E2M
+                       (New_Convert_Ov (M2Addr (Expr),
+                                        Res_Tinfo.Ortho_Ptr_Type (Mode)),
+                        Res_Tinfo, Mode);
+                  else
+                     --  Unbounded/bounded array to bounded array.
+                     return Convert_To_Constrained
+                       (Expr, Expr_Type, Res_Type, Loc);
+                  end if;
+               when Unconstrained
+                 | Partially_Constrained =>
+                  return Convert_Constrained_To_Partially_Constrained
+                    (Expr, Expr_Type, Res_Type);
             end case;
-         when Type_Mode_Static_Array =>
-            if Einfo.Type_Mode = Type_Mode_Static_Array then
-               --  FIXME: optimize static vs non-static
-               --  constrained to constrained.
-               if Chap3.Locally_Types_Match (Expr_Type, Res_Type) /= True then
-                  --  FIXME: generate a bound error ?
-                  --  Even if this is caught at compile-time,
-                  --  the code is not required to run.
-                  Chap6.Gen_Bound_Error (Loc);
-               end if;
-               --  Convert.  For subtypes of arrays with unbounded elements,
-               --  the subtype can be the same but the ortho type can be
-               --  different.
-               Mode := Get_Object_Kind (Expr);
-               return E2M (New_Convert_Ov (M2Addr (Expr),
-                                           Res_Tinfo.Ortho_Ptr_Type (Mode)),
-                           Res_Tinfo, Mode);
-            else
-               --  Unbounded/bounded array to bounded array.
-               return Convert_To_Constrained (Expr, Expr_Type, Res_Type, Loc);
-            end if;
-         when Type_Mode_Complex_Array =>
-            return Convert_To_Constrained (Expr, Expr_Type, Res_Type, Loc);
-         when others =>
-            raise Internal_Error;
+         when Partially_Constrained
+           | Unconstrained =>
+            case Res_State is
+               when Unconstrained =>
+                  --  Not constrained to unconstrained.
+                  --  Already a fat pointer.
+                  return Expr;
+               when Partially_Constrained =>
+                  return Convert_To_Partially_Constrained
+                    (Expr, Expr_Type, Res_Type);
+               when Fully_Constrained =>
+                  return Convert_To_Constrained
+                    (Expr, Expr_Type, Res_Type, Loc);
+            end case;
       end case;
    end Translate_Implicit_Array_Conversion;
 
