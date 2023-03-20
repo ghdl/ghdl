@@ -1647,7 +1647,7 @@ package body Vhdl.Scanner is
                when Special_Character =>
                   -- The current character is legal in an identifier.
                   if C = '_' then
-                     if I = 1 then
+                     if I = F then
                         Error_Msg_Option
                           ("an identifier cannot start with an underscore");
                         return;
