@@ -1686,15 +1686,18 @@ package body Trans.Chap2 is
       --  Macro-expanded instances are handled like a regular package.
       if Get_Macro_Expanded_Flag (Spec) then
          declare
+            Spec_Parent : constant Iir := Get_Parent (Spec);
             Bod : constant Iir := Get_Package_Body (Spec);
             Inst_Bod : constant Iir := Get_Instance_Package_Body (Inst);
             Final : Boolean;
          begin
             --  There are no routines generated to elaborate macro-expanded
             --  packages, but dependencies still need to be elaborated.
-            Elab_Dependence (Get_Design_Unit (Spec));
-            if Bod /= Null_Iir then
-               Elab_Dependence (Get_Design_Unit (Bod));
+            if Get_Kind (Spec_Parent) = Iir_Kind_Design_Unit then
+               Elab_Dependence (Get_Design_Unit (Spec));
+               if Bod /= Null_Iir then
+                  Elab_Dependence (Get_Design_Unit (Bod));
+               end if;
             end if;
 
             Elab_Package (Inst, Inst);

@@ -2596,6 +2596,23 @@ package body Trans.Chap4 is
       Create_Union_Scope (State_Scope.all, Scope_Type);
    end Translate_Statements_Chain_State_Declaration;
 
+   --  PKG is a nested package declaration or package body
+   --  Translate only if non-generic or non-macro expanded.
+   --  SPEC is the corresponding package declaration.
+   procedure Translate_Declaration_Chain_Subprograms_Package
+     (Pkg : Iir; Spec : Iir; What : Subprg_Translate_Kind)
+   is
+      Mark  : Id_Mark_Type;
+   begin
+      if Get_Package_Header (Spec) = Null_Iir
+        or else not Get_Macro_Expanded_Flag (Spec)
+      then
+         Push_Identifier_Prefix (Mark, Get_Identifier (Pkg));
+         Translate_Declaration_Chain_Subprograms (Pkg, What);
+         Pop_Identifier_Prefix (Mark);
+      end if;
+   end Translate_Declaration_Chain_Subprograms_Package;
+
    procedure Translate_Declaration_Chain_Subprograms
      (Parent : Iir; What : Subprg_Translate_Kind)
    is
@@ -2677,15 +2694,11 @@ package body Trans.Chap4 is
                   Chap3.Translate_Protected_Type_Body_Subprograms_Spec (El);
                   Chap3.Translate_Protected_Type_Body_Subprograms_Body (El);
                end if;
-            when Iir_Kind_Package_Declaration
-              | Iir_Kind_Package_Body =>
-               declare
-                  Mark  : Id_Mark_Type;
-               begin
-                  Push_Identifier_Prefix (Mark, Get_Identifier (El));
-                  Translate_Declaration_Chain_Subprograms (El, What);
-                  Pop_Identifier_Prefix (Mark);
-               end;
+            when Iir_Kind_Package_Declaration =>
+               Translate_Declaration_Chain_Subprograms_Package (El, El, What);
+            when Iir_Kind_Package_Body =>
+               Translate_Declaration_Chain_Subprograms_Package
+                 (El, Get_Package (El), What);
             when Iir_Kind_Package_Instantiation_Declaration =>
                if Get_Macro_Expanded_Flag
                  (Get_Uninstantiated_Package_Decl (El))
