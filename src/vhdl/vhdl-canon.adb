@@ -44,8 +44,8 @@ package body Vhdl.Canon is
    procedure Canon_Declarations (Top : Iir_Design_Unit;
                                  Decl_Parent : Iir;
                                  Parent : Iir);
-   function Canon_Declaration (Top : Iir_Design_Unit; Decl : Iir; Parent : Iir)
-                              return Iir;
+   procedure Canon_Declaration
+     (Top : Iir_Design_Unit; Decl : Iir; Parent : Iir);
 
    procedure Canon_Concurrent_Stmts (Top : Iir_Design_Unit; Parent : Iir);
    procedure Canon_Simultaneous_Stmts (Top : Iir_Design_Unit; Chain : Iir);
@@ -2483,10 +2483,8 @@ package body Vhdl.Canon is
          when Iir_Kind_For_Generate_Statement =>
             declare
                Decl : constant Iir := Get_Parameter_Specification (Stmt);
-               New_Decl : Iir;
             begin
-               New_Decl := Canon_Declaration (Top, Decl, Null_Iir);
-               pragma Assert (New_Decl = Decl);
+               Canon_Declaration (Top, Decl, Null_Iir);
 
                Canon_Generate_Statement_Body
                  (Top, Get_Generate_Statement_Body (Stmt));
@@ -3226,7 +3224,7 @@ package body Vhdl.Canon is
    end Canon_Subtype_Indication_If_Owned;
 
    --  Return the new package declaration (if any).
-   function Canon_Package_Instantiation_Declaration (Decl : Iir) return Iir
+   procedure Canon_Package_Instantiation_Declaration (Decl : Iir)
    is
       Pkg : constant Iir := Get_Uninstantiated_Package_Decl (Decl);
       Bod : Iir;
@@ -3250,12 +3248,10 @@ package body Vhdl.Canon is
          Set_Parent (Bod, Get_Parent (Decl));
          Set_Instance_Package_Body (Decl, Bod);
       end if;
-
-      return Decl;
    end Canon_Package_Instantiation_Declaration;
 
-   function Canon_Declaration (Top : Iir_Design_Unit; Decl : Iir; Parent : Iir)
-                              return Iir
+   procedure Canon_Declaration
+     (Top : Iir_Design_Unit; Decl : Iir; Parent : Iir)
    is
       Stmts : Iir;
    begin
@@ -3353,12 +3349,12 @@ package body Vhdl.Canon is
             end if;
 
          when Iir_Kind_Package_Declaration =>
-            Canon_Declarations (Top, Decl, Parent);
+            Canon_Declarations (Top, Decl, Null_Iir);
          when Iir_Kind_Package_Body =>
             Canon_Declarations (Top, Decl, Parent);
 
          when Iir_Kind_Package_Instantiation_Declaration =>
-            return Canon_Package_Instantiation_Declaration (Decl);
+            Canon_Package_Instantiation_Declaration (Decl);
 
          when Iir_Kind_Attribute_Implicit_Declaration =>
             null;
@@ -3380,7 +3376,6 @@ package body Vhdl.Canon is
          when others =>
             Error_Kind ("canon_declaration", Decl);
       end case;
-      return Decl;
    end Canon_Declaration;
 
    procedure Canon_Declarations (Top : Iir_Design_Unit;
@@ -3388,29 +3383,15 @@ package body Vhdl.Canon is
                                  Parent : Iir)
    is
       Decl : Iir;
-      Prev_Decl : Iir;
-      New_Decl : Iir;
    begin
       if Parent /= Null_Iir then
          Clear_Instantiation_Configuration (Parent);
       end if;
 
       Decl := Get_Declaration_Chain (Decl_Parent);
-      Prev_Decl := Null_Iir;
       while Decl /= Null_Iir loop
-         New_Decl := Canon_Declaration (Top, Decl, Parent);
-
-         if New_Decl /= Decl then
-            --  Replace declaration
-            if Prev_Decl = Null_Iir then
-               Set_Declaration_Chain (Decl_Parent, New_Decl);
-            else
-               Set_Chain (Prev_Decl, New_Decl);
-            end if;
-         end if;
-
-         Prev_Decl := New_Decl;
-         Decl := Get_Chain (New_Decl);
+         Canon_Declaration (Top, Decl, Parent);
+         Decl := Get_Chain (Decl);
       end loop;
    end Canon_Declarations;
 
@@ -3714,7 +3695,6 @@ package body Vhdl.Canon is
    is
       Decl       : constant Iir := Get_Library_Unit (Unit);
       Item       : Iir;
-      Prev_Item  : Iir;
       Blk_Cfg    : Iir;
       First_Conf : Iir;
       Last_Conf  : Iir;
@@ -3729,7 +3709,6 @@ package body Vhdl.Canon is
       First_Conf := Null_Iir;
       Last_Conf := Null_Iir;
 
-      Prev_Item := Null_Iir;
       Item := Get_Vunit_Item_Chain (Decl);
       while Item /= Null_Iir loop
          case Get_Kind (Item) is
@@ -3759,7 +3738,7 @@ package body Vhdl.Canon is
                | Iir_Kind_Attribute_Specification
                | Iir_Kind_Object_Alias_Declaration
                | Iir_Kind_Non_Object_Alias_Declaration =>
-               Item := Canon_Declaration (Unit, Item, Null_Iir);
+               Canon_Declaration (Unit, Item, Null_Iir);
             when Iir_Kinds_Concurrent_Signal_Assignment
                | Iir_Kinds_Process_Statement
                | Iir_Kinds_Generate_Statement
@@ -3774,12 +3753,6 @@ package body Vhdl.Canon is
                Error_Kind ("canon_psl_verification_unit", Item);
          end case;
 
-         if Prev_Item = Null_Iir then
-            Set_Vunit_Item_Chain (Decl, Item);
-         else
-            Set_Chain (Prev_Item, Item);
-         end if;
-         Prev_Item := Item;
          Item := Get_Chain (Item);
       end loop;
 
@@ -3829,8 +3802,7 @@ package body Vhdl.Canon is
                Canon_Block_Configuration (Unit, Get_Block_Configuration (El));
             end if;
          when Iir_Kind_Package_Instantiation_Declaration =>
-            El := Canon_Package_Instantiation_Declaration (El);
-            Set_Library_Unit (Unit, El);
+            Canon_Package_Instantiation_Declaration (El);
          when Iir_Kind_Context_Declaration =>
             null;
          when Iir_Kind_Vunit_Declaration =>
