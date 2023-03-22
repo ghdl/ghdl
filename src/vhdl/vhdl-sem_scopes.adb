@@ -1333,8 +1333,11 @@ package body Vhdl.Sem_Scopes is
    procedure Add_Package_Declarations
      (Decl: Iir_Package_Declaration; Potentially : Boolean)
    is
+      Prev_Hide : constant Boolean := Is_Warning_Enabled (Warnid_Hide);
       Header : constant Iir := Get_Package_Header (Decl);
    begin
+      Enable_Warning (Warnid_Hide, False);
+
       --  LRM08 12.1 Declarative region
       --  d) A package declaration together with the corresponding body
       --
@@ -1347,6 +1350,8 @@ package body Vhdl.Sem_Scopes is
       end if;
 
       Add_Declarations (Get_Declaration_Chain (Decl), Potentially);
+
+      Enable_Warning (Warnid_Hide, Prev_Hide);
    end Add_Package_Declarations;
 
    procedure Add_Package_Instantiation_Declarations
