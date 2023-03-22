@@ -1074,6 +1074,8 @@ package Vhdl.Nodes is
    -- Iir_Kind_Package_Instantiation_Body (Short)
    --  Note: a body is not a declaration, that's the reason why there is no
    --  _declaration suffix in the name.
+   --  Note: Package_Instantiation_Body represent the place of the body when
+   --  it is not immediately after the instantiation.
    --
    --   Get/Set_Parent (Field0)
    --   Get/Set_Design_Unit (Alias Field0)
@@ -1123,6 +1125,9 @@ package Vhdl.Nodes is
    --
    --  For macro-expanded packages: the body.
    --   Get/Set_Instance_Package_Body (Field4)
+   --
+   --  For macro-expanded packages: true if the body appears immediately after.
+   --   Get/Set_Immediate_Body_Flag (Flag5)
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
@@ -8151,6 +8156,10 @@ package Vhdl.Nodes is
    --  Field: Flag1
    function Get_Need_Body (Decl : Iir_Package_Declaration) return Boolean;
    procedure Set_Need_Body (Decl : Iir_Package_Declaration; Flag : Boolean);
+
+   --  Field: Flag5
+   function Get_Immediate_Body_Flag (Decl : Iir) return Boolean;
+   procedure Set_Immediate_Body_Flag (Decl : Iir; Flag : Boolean);
 
    --  Field: Flag2
    function Get_Macro_Expanded_Flag (Decl : Iir) return Boolean;

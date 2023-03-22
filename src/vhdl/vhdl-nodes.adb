@@ -2679,6 +2679,22 @@ package body Vhdl.Nodes is
       Set_Flag1 (Decl, Flag);
    end Set_Need_Body;
 
+   function Get_Immediate_Body_Flag (Decl : Iir) return Boolean is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Immediate_Body_Flag (Get_Kind (Decl)),
+                     "no field Immediate_Body_Flag");
+      return Get_Flag5 (Decl);
+   end Get_Immediate_Body_Flag;
+
+   procedure Set_Immediate_Body_Flag (Decl : Iir; Flag : Boolean) is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Immediate_Body_Flag (Get_Kind (Decl)),
+                     "no field Immediate_Body_Flag");
+      Set_Flag5 (Decl, Flag);
+   end Set_Immediate_Body_Flag;
+
    function Get_Macro_Expanded_Flag (Decl : Iir) return Boolean is
    begin
       pragma Assert (Decl /= Null_Iir);

@@ -3044,6 +3044,19 @@ def Set_Need_Body(obj: Iir, value: Boolean) -> None:
 
 
 @export
+@BindToLibGHDL("vhdl__nodes__get_immediate_body_flag")
+def Get_Immediate_Body_Flag(obj: Iir) -> Boolean:
+    """"""
+    return 0
+
+
+@export
+@BindToLibGHDL("vhdl__nodes__set_immediate_body_flag")
+def Set_Immediate_Body_Flag(obj: Iir, value: Boolean) -> None:
+    """"""
+
+
+@export
 @BindToLibGHDL("vhdl__nodes__get_macro_expanded_flag")
 def Get_Macro_Expanded_Flag(obj: Iir) -> Boolean:
     """"""
