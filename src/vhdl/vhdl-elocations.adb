@@ -276,6 +276,7 @@ package body Vhdl.Elocations is
            | Iir_Kind_Vmode_Declaration
            | Iir_Kind_Vprop_Declaration
            | Iir_Kind_Vunit_Declaration
+           | Iir_Kind_Package_Instantiation_Body
            | Iir_Kind_Nature_Declaration
            | Iir_Kind_Subnature_Declaration
            | Iir_Kind_Unit_Declaration

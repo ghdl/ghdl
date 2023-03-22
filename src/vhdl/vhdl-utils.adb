@@ -336,6 +336,7 @@ package body Vhdl.Utils is
                | Iir_Kinds_Subprogram_Body
                | Iir_Kind_Protected_Type_Body
                | Iir_Kind_Generate_Statement_Body
+               | Iir_Kind_Package_Instantiation_Body
                | Iir_Kind_Procedure_Call
                | Iir_Kind_Aggregate_Info
                | Iir_Kind_Entity_Class

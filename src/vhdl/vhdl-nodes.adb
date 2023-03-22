@@ -1054,6 +1054,7 @@ package body Vhdl.Nodes is
            | Iir_Kind_Configuration_Declaration
            | Iir_Kind_Context_Declaration
            | Iir_Kind_Package_Body
+           | Iir_Kind_Package_Instantiation_Body
            | Iir_Kind_Type_Declaration
            | Iir_Kind_Anonymous_Type_Declaration
            | Iir_Kind_Subtype_Declaration

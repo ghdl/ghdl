@@ -2631,6 +2631,12 @@ package body Vhdl.Prints is
                Disp_Token (Ctxt, Tok_Semi_Colon);
                Close_Hbox (Ctxt);
 
+            when Iir_Kind_Package_Instantiation_Body =>
+               Start_Hbox (Ctxt);
+               OOB.Put ("-- body for instantiation ");
+               Disp_Ident (Ctxt, Get_Identifier (Get_Package (Decl)));
+               Close_Hbox (Ctxt);
+
             when others =>
                Error_Kind ("disp_declaration_chain", Decl);
          end case;

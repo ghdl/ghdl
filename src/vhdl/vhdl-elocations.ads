@@ -173,6 +173,8 @@ package Vhdl.Elocations is
    --
    --   Get/Set_End_Location (Field2)
 
+   -- Iir_Kind_Package_Instantiation_Body (None)
+
    -- Iir_Kind_Package_Instantiation_Declaration (L3)
    --
    --   Get/Set_Start_Location (Field1)

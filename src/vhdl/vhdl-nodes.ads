@@ -1071,6 +1071,7 @@ package Vhdl.Nodes is
    --   Get/Set_End_Has_Identifier (Flag9)
 
    -- Iir_Kind_Package_Body (Short)
+   -- Iir_Kind_Package_Instantiation_Body (Short)
    --  Note: a body is not a declaration, that's the reason why there is no
    --  _declaration suffix in the name.
    --
@@ -5071,6 +5072,8 @@ package Vhdl.Nodes is
       Iir_Kind_Vunit_Declaration,
       Iir_Kind_Package_Body,
       Iir_Kind_Architecture_Body,
+
+      Iir_Kind_Package_Instantiation_Body,
 
       Iir_Kind_Type_Declaration,
       Iir_Kind_Anonymous_Type_Declaration,

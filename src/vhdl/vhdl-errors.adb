@@ -528,6 +528,8 @@ package body Vhdl.Errors is
             return Disp_Identifier (Node, "package");
          when Iir_Kind_Package_Body =>
             return Disp_Identifier (Node, "package body");
+         when Iir_Kind_Package_Instantiation_Body =>
+            return "package instantiation body";
          when Iir_Kind_Entity_Declaration =>
             return Disp_Identifier (Node, "entity");
          when Iir_Kind_Architecture_Body =>
