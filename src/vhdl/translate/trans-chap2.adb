@@ -1614,16 +1614,15 @@ package body Trans.Chap2 is
          declare
             Bod : constant Iir := Get_Instance_Package_Body (Inst);
          begin
-            if Is_Valid (Bod) then
+            if Get_Immediate_Body_Flag (Inst) then
                Translate_Package_Body (Bod);
-            else
+            elsif not Get_Need_Body (Spec)
+              and then not Is_Nested_Package (Inst)
+              and then Global_Storage /= O_Storage_External
+            then
                --  As an elaboration subprogram for the body is always
                --  needed, generate it.
-               if Global_Storage /= O_Storage_External then
-                  if not Is_Nested_Package (Inst) then
-                     Elab_Package_Body (Inst, Null_Iir);
-                  end if;
-               end if;
+               Elab_Package_Body (Inst, Null_Iir);
             end if;
          end;
          return;

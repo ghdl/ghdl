@@ -2026,6 +2026,8 @@ package body Trans.Chap4 is
             Chap2.Translate_Package_Body (Decl);
          when Iir_Kind_Package_Instantiation_Declaration =>
             Chap2.Translate_Package_Instantiation_Declaration (Decl);
+         when Iir_Kind_Package_Instantiation_Body =>
+            Chap2.Translate_Package_Body (Decl);
 
          when Iir_Kind_Group_Template_Declaration =>
             null;
@@ -2711,12 +2713,21 @@ package body Trans.Chap4 is
                      Translate_Declaration_Chain_Subprograms (El, What);
                      if Is_Valid (Bod)
                        and then Global_Storage /= O_Storage_External
+                       and then Get_Immediate_Body_Flag (El)
                      then
                         Translate_Declaration_Chain_Subprograms (Bod, What);
                      end if;
                      Pop_Identifier_Prefix (Mark);
                   end;
                end if;
+            when Iir_Kind_Package_Instantiation_Body =>
+               declare
+                  Mark  : Id_Mark_Type;
+               begin
+                  Push_Identifier_Prefix (Mark, Get_Identifier (El));
+                  Translate_Declaration_Chain_Subprograms (El, What);
+                  Pop_Identifier_Prefix (Mark);
+               end;
             when others =>
                null;
          end case;
@@ -2834,6 +2845,10 @@ package body Trans.Chap4 is
             when Iir_Kind_Package_Instantiation_Declaration =>
                --  FIXME: finalizers ?
                Chap2.Elab_Package_Instantiation_Declaration (Decl);
+
+            when Iir_Kind_Package_Instantiation_Body =>
+               --  No elaboration code for nested package.
+               null;
 
             when Iir_Kind_Psl_Default_Clock =>
                null;

@@ -2414,7 +2414,8 @@ package body Trans.Rtis is
                end if;
 
             when Iir_Kind_Package_Instantiation_Declaration
-              |  Iir_Kind_Interface_Package_Declaration =>
+              |  Iir_Kind_Interface_Package_Declaration
+              | Iir_Kind_Package_Instantiation_Body =>
                --  FIXME: todo
                null;
 
@@ -2908,6 +2909,9 @@ package body Trans.Rtis is
       case Get_Kind (Lib_Unit) is
          when Iir_Kind_Configuration_Declaration =>
             --  No RTI for configurations.
+            return;
+         when Iir_Kind_Package_Instantiation_Body =>
+            --  No RTI for instantiation bodies.
             return;
          when Iir_Kind_Architecture_Body =>
             if Info.Block_Rti_Const /= O_Dnode_Null then

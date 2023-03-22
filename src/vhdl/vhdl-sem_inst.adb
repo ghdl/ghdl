@@ -1219,6 +1219,7 @@ package body Vhdl.Sem_Inst is
       Pkg : constant Iir := Get_Uninstantiated_Package_Decl (Inst);
       Prev_Instance_File : constant Source_File_Entry := Instance_File;
       Mark : constant Instance_Index_Type := Prev_Instance_Table.Last;
+      Bod : constant Iir := Get_Package_Body (Pkg);
       Res : Iir;
    begin
       Create_Relocation (Inst, Pkg);
@@ -1302,7 +1303,14 @@ package body Vhdl.Sem_Inst is
         (Get_Declaration_Chain (Pkg), Get_Declaration_Chain (Inst));
 
       --  Instantiate the body.
-      Res := Instantiate_Iir (Get_Package_Body (Pkg), False);
+
+      Res := Create_Iir (Iir_Kind_Package_Instantiation_Body);
+      Location_Copy (Res, Inst);
+      Set_Declaration_Chain
+        (Res, Instantiate_Iir_Chain (Get_Declaration_Chain (Bod)));
+      Set_Attribute_Value_Chain
+        (Res, Instantiate_Iir_Chain (Get_Attribute_Value_Chain (Bod)));
+      Set_Package (Res, Inst);
       Set_Identifier (Res, Get_Identifier (Inst));
 
       --  Restore.

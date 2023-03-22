@@ -3223,6 +3223,20 @@ package body Vhdl.Canon is
       end if;
    end Canon_Subtype_Indication_If_Owned;
 
+   function Instantiation_Needs_Immediate_Body_P (Decl : Iir) return Boolean
+   is
+      Parent : constant Iir := Get_Parent (Decl);
+   begin
+      if Get_Kind (Parent) /= Iir_Kind_Package_Declaration then
+         --  TODO: also package instantiation ?
+         return True;
+      end if;
+      if not Get_Need_Body (Parent) then
+         return True;
+      end if;
+      return False;
+   end Instantiation_Needs_Immediate_Body_P;
+
    --  Return the new package declaration (if any).
    procedure Canon_Package_Instantiation_Declaration (Decl : Iir)
    is
@@ -3243,12 +3257,69 @@ package body Vhdl.Canon is
       --  FIXME: generate only if generating code for this unit.
       if Get_Macro_Expanded_Flag (Pkg)
         and then Get_Need_Body (Pkg)
+        and then Instantiation_Needs_Immediate_Body_P (Decl)
       then
+         Set_Immediate_Body_Flag (Decl, True);
          Bod := Sem_Inst.Instantiate_Package_Body (Decl);
          Set_Parent (Bod, Get_Parent (Decl));
          Set_Instance_Package_Body (Decl, Bod);
       end if;
    end Canon_Package_Instantiation_Declaration;
+
+   procedure Canon_Package_Body (Bod : Iir)
+   is
+      Decl : Iir;
+      Prev_Decl : Iir;
+   begin
+      Decl := Get_Declaration_Chain (Bod);
+      Prev_Decl := Null_Iir;
+      while Decl /= Null_Iir loop
+         Canon_Declaration (Null_Iir, Decl, Null_Iir);
+         Prev_Decl := Decl;
+         Decl := Get_Chain (Prev_Decl);
+      end loop;
+
+      --  Add bodies of package instantiations.
+      if Vhdl_Std >= Vhdl_08 then
+         declare
+            Pkg : constant Iir := Get_Package (Bod);
+            Pkg_Decl : Iir;
+            Pkg_Spec : Iir;
+            Inst_Bod : Iir;
+         begin
+            --  For each declaration of the package
+            Pkg_Decl := Get_Declaration_Chain (Pkg);
+            while Pkg_Decl /= Null_Iir loop
+               if (Get_Kind (Pkg_Decl)
+                     = Iir_Kind_Package_Instantiation_Declaration)
+               then
+                  --  This is a package instantiation...
+                  Pkg_Spec := Get_Uninstantiated_Package_Decl (Pkg_Decl);
+                  if Get_Need_Body (Pkg_Spec)
+                    and then Get_Macro_Expanded_Flag (Pkg_Spec)
+                  then
+                     --  ... that needs a body.  Create the body.
+                     Inst_Bod := Sem_Inst.Instantiate_Package_Body (Pkg_Decl);
+                     Set_Parent (Inst_Bod, Bod);
+                     pragma Assert
+                       (Get_Instance_Package_Body (Pkg_Decl) = Null_Iir);
+                     Set_Instance_Package_Body (Pkg_Decl, Inst_Bod);
+
+                     --  Append.
+                     if Prev_Decl = Null_Iir then
+                        Set_Declaration_Chain (Bod, Inst_Bod);
+                     else
+                        Set_Chain (Prev_Decl, Inst_Bod);
+                     end if;
+                     Prev_Decl := Inst_Bod;
+                  end if;
+               end if;
+
+               Pkg_Decl := Get_Chain (Pkg_Decl);
+            end loop;
+         end;
+      end if;
+   end Canon_Package_Body;
 
    procedure Canon_Declaration
      (Top : Iir_Design_Unit; Decl : Iir; Parent : Iir)
@@ -3351,7 +3422,7 @@ package body Vhdl.Canon is
          when Iir_Kind_Package_Declaration =>
             Canon_Declarations (Top, Decl, Null_Iir);
          when Iir_Kind_Package_Body =>
-            Canon_Declarations (Top, Decl, Parent);
+            Canon_Package_Body (Decl);
 
          when Iir_Kind_Package_Instantiation_Declaration =>
             Canon_Package_Instantiation_Declaration (Decl);
@@ -3795,7 +3866,7 @@ package body Vhdl.Canon is
          when Iir_Kind_Package_Declaration =>
             Canon_Declarations (Unit, El, Null_Iir);
          when Iir_Kind_Package_Body =>
-            Canon_Declarations (Unit, El, Null_Iir);
+            Canon_Package_Body (El);
          when Iir_Kind_Configuration_Declaration =>
             Canon_Declarations (Unit, El, Null_Iir);
             if Canon_Flag_Configurations then
