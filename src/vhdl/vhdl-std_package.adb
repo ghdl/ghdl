@@ -114,6 +114,8 @@ package body Vhdl.Std_Package is
                         Wildcard_Psl_Bitvector_Type);
       Create_Known_Iir (Iir_Kind_Wildcard_Type_Definition,
                         Wildcard_Psl_Boolean_Type);
+      --  NOTE: if a wildcard type definition is added, it should also be
+      --  declared below.
    end Create_First_Nodes;
 
    procedure Create_Std_Standard_Package (Parent : Iir_Library_Declaration)
@@ -1389,6 +1391,11 @@ package body Vhdl.Std_Package is
       Create_Wildcard_Type (Wildcard_Any_Aggregate_Type, "any aggregate type");
       Create_Wildcard_Type (Wildcard_Any_String_Type, "any string type");
       Create_Wildcard_Type (Wildcard_Any_Access_Type, "any access type");
+      Create_Wildcard_Type (Wildcard_Any_Integer_Type, "any integer type");
+      Create_Wildcard_Type (Wildcard_Psl_Bit_Type, "a PSL bit type");
+      Create_Wildcard_Type (Wildcard_Psl_Bitvector_Type,
+                            "a PSL bitvector type");
+      Create_Wildcard_Type (Wildcard_Psl_Boolean_Type, "a PSL boolean type");
 
       Error_Type := Utils.Create_Error_Type (Wildcard_Any_Type);
       Set_Error_Origin (Error_Type, Null_Iir);
