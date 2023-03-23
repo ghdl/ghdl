@@ -195,7 +195,6 @@ package body Vhdl.Configuration is
                end if;
             end if;
             if Bod /= Null_Iir then
-               Set_Package (Get_Library_Unit (Bod), Lib_Unit);
                Add_Design_Unit (Bod, Loc);
             end if;
          end;

@@ -2012,7 +2012,7 @@ package body Vhdl.Nodes_Meta is
          when Field_Package_Body =>
             return Attr_Forward_Ref;
          when Field_Instance_Package_Body =>
-            return Attr_None;
+            return Attr_Forward_Ref;
          when Field_Need_Body =>
             return Attr_None;
          when Field_Immediate_Body_Flag =>

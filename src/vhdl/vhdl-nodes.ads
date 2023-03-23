@@ -8149,7 +8149,7 @@ package Vhdl.Nodes is
    procedure Set_Package_Body (Pkg : Iir; Decl : Iir);
 
    --  The package body corresponding to the package declaration.
-   --  Field: Field4
+   --  Field: Field4 Forward_Ref
    function Get_Instance_Package_Body (Pkg : Iir) return Iir;
    procedure Set_Instance_Package_Body (Pkg : Iir; Decl : Iir);
 

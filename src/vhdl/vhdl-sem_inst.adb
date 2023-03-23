@@ -614,7 +614,9 @@ package body Vhdl.Sem_Inst is
                   --  Do not instantiate the body of a package while
                   --  instantiating a shared package.
                   if not Is_Within_Shared_Instance then
-                     Instantiate_Iir_Field (Res, N, F);
+                     Set_Instance_Package_Body
+                       (Res, Instantiate_Iir (Get_Instance_Package_Body (N),
+                                              False));
                   end if;
 
                when Field_Subtype_Definition =>
