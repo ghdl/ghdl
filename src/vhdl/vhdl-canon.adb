@@ -3952,7 +3952,7 @@ package body Vhdl.Canon is
       Set_Location (Config, Loc);
       Set_Library_Unit (Res, Config);
       Set_Design_Unit (Config, Res);
-      Set_Entity_Name (Config, Get_Entity_Name (Arch));
+      Set_Entity_Name (Config, Build_Simple_Name (Get_Entity (Arch), Loc));
       Set_Dependence_List (Res, Create_Iir_List);
       Add_Dependence (Res, Get_Design_Unit (Get_Entity (Config)));
       Add_Dependence (Res, Get_Design_Unit (Arch));
