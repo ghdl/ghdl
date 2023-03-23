@@ -4149,6 +4149,7 @@ package body Vhdl.Sem_Expr is
                   --  Avoid error propagation.
                   Set_Range_Constraint (Info.Index_Subtype,
                                         Get_Range_Constraint (Index_Type));
+                  Set_Is_Ref (Info.Index_Subtype, True);
                   Free_Iir (Index_Subtype_Constraint);
                else
                   Set_Direction (Index_Subtype_Constraint, Dir);
@@ -4345,6 +4346,24 @@ package body Vhdl.Sem_Expr is
             end;
          else
             Set_Aggregate_Expand_Flag (Aggr, False);
+         end if;
+
+         if Get_Literal_Subtype (Aggr) = Null_Iir then
+            --  Free the index range info if not used to create the literal
+            --  subtype.
+            for I in Infos'Range loop
+               declare
+                  St : constant Iir := Infos (I).Index_Subtype;
+                  Rng : constant Iir := Get_Range_Constraint (St);
+               begin
+                  if not Get_Is_Ref (St) then
+                     Free_Iir (Get_Left_Limit_Expr (Rng));
+                     Free_Iir (Get_Right_Limit_Expr (Rng));
+                     Free_Iir (Rng);
+                  end if;
+                  Free_Iir (St);
+               end;
+            end loop;
          end if;
       else
          --  If the array is not constrained, expression cannot be more
