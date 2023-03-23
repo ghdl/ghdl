@@ -234,6 +234,7 @@ package body Ghdlcomp is
          Libraries.Add_Design_Unit_Into_Library (Design);
          Design := Next_Design;
       end loop;
+      Free_Iir (Res);
    end Compile_Load_Vhdl_File;
 
    function Compile_Analyze_File (File : String) return Iir
