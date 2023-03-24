@@ -3031,6 +3031,19 @@ def Set_Instance_Package_Body(obj: Iir, value: Iir) -> None:
 
 
 @export
+@BindToLibGHDL("vhdl__nodes__get_owned_instance_package_body")
+def Get_Owned_Instance_Package_Body(obj: Iir) -> Iir:
+    """"""
+    return 0
+
+
+@export
+@BindToLibGHDL("vhdl__nodes__set_owned_instance_package_body")
+def Set_Owned_Instance_Package_Body(obj: Iir, value: Iir) -> None:
+    """"""
+
+
+@export
 @BindToLibGHDL("vhdl__nodes__get_need_body")
 def Get_Need_Body(obj: Iir) -> Boolean:
     """"""

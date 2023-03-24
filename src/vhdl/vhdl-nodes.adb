@@ -2663,6 +2663,22 @@ package body Vhdl.Nodes is
       Set_Field4 (Pkg, Decl);
    end Set_Instance_Package_Body;
 
+   function Get_Owned_Instance_Package_Body (Pkg : Iir) return Iir is
+   begin
+      pragma Assert (Pkg /= Null_Iir);
+      pragma Assert (Has_Owned_Instance_Package_Body (Get_Kind (Pkg)),
+                     "no field Owned_Instance_Package_Body");
+      return Get_Field11 (Pkg);
+   end Get_Owned_Instance_Package_Body;
+
+   procedure Set_Owned_Instance_Package_Body (Pkg : Iir; Decl : Iir) is
+   begin
+      pragma Assert (Pkg /= Null_Iir);
+      pragma Assert (Has_Owned_Instance_Package_Body (Get_Kind (Pkg)),
+                     "no field Owned_Instance_Package_Body");
+      Set_Field11 (Pkg, Decl);
+   end Set_Owned_Instance_Package_Body;
+
    function Get_Need_Body (Decl : Iir_Package_Declaration) return Boolean is
    begin
       pragma Assert (Decl /= Null_Iir);

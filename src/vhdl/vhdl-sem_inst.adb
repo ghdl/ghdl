@@ -605,19 +605,31 @@ package body Vhdl.Sem_Inst is
                      --  case set the forward link.
                      --  Or it can be the body of an instantiated package; in
                      --  that case there is no forward link.
-                     if Get_Kind (Pkg) = Iir_Kind_Package_Declaration then
-                        Set_Package_Body (Get_Package (Res), Res);
-                     end if;
+                     case Get_Kind (Pkg) is
+                        when Iir_Kind_Package_Declaration =>
+                           Set_Package_Body (Pkg, Res);
+                        when Iir_Kind_Package_Instantiation_Declaration =>
+                           Set_Instance_Package_Body (Pkg, Res);
+                        when others =>
+                           raise Internal_Error;
+                     end case;
                   end;
 
-               when Field_Instance_Package_Body =>
+               when Field_Owned_Instance_Package_Body =>
                   --  Do not instantiate the body of a package while
                   --  instantiating a shared package.
                   if not Is_Within_Shared_Instance then
-                     Set_Instance_Package_Body
-                       (Res, Instantiate_Iir (Get_Instance_Package_Body (N),
-                                              False));
+                     declare
+                        Bod : Iir;
+                     begin
+                        Bod := Instantiate_Iir (Get_Instance_Package_Body (N),
+                                                False);
+                        Set_Owned_Instance_Package_Body (Res, Bod);
+                     end;
                   end if;
+
+               when Field_Instance_Package_Body =>
+                  null;
 
                when Field_Subtype_Definition =>
                   --  TODO

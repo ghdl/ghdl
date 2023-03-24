@@ -1123,6 +1123,10 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Attribute_Value_Chain (Field5)
    --
+   --  For macro-expanded packages: the body, if owned.
+   --  Set only iff Immediate_Body_Flag is true.
+   --   Get/Set_Owned_Instance_Package_Body (Field11)
+   --
    --  For macro-expanded packages: the body.
    --   Get/Set_Instance_Package_Body (Field4)
    --
@@ -8152,6 +8156,10 @@ package Vhdl.Nodes is
    --  Field: Field4 Forward_Ref
    function Get_Instance_Package_Body (Pkg : Iir) return Iir;
    procedure Set_Instance_Package_Body (Pkg : Iir; Decl : Iir);
+
+   --  Field: Field11
+   function Get_Owned_Instance_Package_Body (Pkg : Iir) return Iir;
+   procedure Set_Owned_Instance_Package_Body (Pkg : Iir; Decl : Iir);
 
    --  Field: Flag1
    function Get_Need_Body (Decl : Iir_Package_Declaration) return Boolean;

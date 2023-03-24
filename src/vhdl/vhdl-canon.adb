@@ -3263,6 +3263,7 @@ package body Vhdl.Canon is
          Bod := Sem_Inst.Instantiate_Package_Body (Decl);
          Set_Parent (Bod, Get_Parent (Decl));
          Set_Instance_Package_Body (Decl, Bod);
+         Set_Owned_Instance_Package_Body (Decl, Bod);
       end if;
    end Canon_Package_Instantiation_Declaration;
 
