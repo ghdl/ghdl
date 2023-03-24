@@ -2927,6 +2927,23 @@ package body Vhdl.Canon is
          return First;
       end Merge_Association_Chain;
 
+      --  Free the default map aspect chain.
+      procedure Free_Map_Aspect_Chain (Map_Chain : Iir)
+      is
+         Map, Next_Map : Iir;
+      begin
+         Map := Map_Chain;
+         while Map /= Null_Iir loop
+            if Get_Kind (Map) = Iir_Kind_Association_Element_By_Name then
+               Free_Iir (Get_Actual (Map));
+            end if;
+            Free_Iir (Get_Formal (Map));
+            Next_Map := Get_Chain (Map);
+            Free_Iir (Map);
+            Map := Next_Map;
+         end loop;
+      end Free_Map_Aspect_Chain;
+
       Comp_Name : constant Iir := Get_Component_Name (Conf_Spec);
       Comp : constant Iir := Get_Named_Entity (Comp_Name);
       Cs_Binding : constant Iir := Get_Binding_Indication (Conf_Spec);
@@ -2940,6 +2957,7 @@ package body Vhdl.Canon is
       Instance : Iir;
       Instance_Name : Iir;
       N_Nbr : Natural;
+      Free_Chain_P : Boolean;
    begin
       --  Create the new component configuration
       Res := Create_Iir (Iir_Kind_Component_Configuration);
@@ -2955,27 +2973,37 @@ package body Vhdl.Canon is
 
       --  Merge generic map aspect.
       Cs_Chain := Get_Generic_Map_Aspect_Chain (Cs_Binding);
+      Free_Chain_P := False;
       if Cs_Chain = Null_Iir then
          Cs_Chain := Sem_Specs.Create_Default_Map_Aspect
            (Comp, Entity, Sem_Specs.Map_Generic, Cs_Binding);
+         Free_Chain_P := True;
       end if;
       Set_Generic_Map_Aspect_Chain
         (Res_Binding,
          Merge_Association_Chain (Get_Generic_Chain (Entity),
                                   Cs_Chain,
                                   Get_Generic_Map_Aspect_Chain (Cc_Binding)));
+      if Free_Chain_P then
+         Free_Map_Aspect_Chain (Cs_Chain);
+      end if;
 
       --  Merge port map aspect.
       Cs_Chain := Get_Port_Map_Aspect_Chain (Cs_Binding);
+      Free_Chain_P := False;
       if Cs_Chain = Null_Iir then
          Cs_Chain := Sem_Specs.Create_Default_Map_Aspect
            (Comp, Entity, Sem_Specs.Map_Port, Cs_Binding);
+         Free_Chain_P := True;
       end if;
       Set_Port_Map_Aspect_Chain
         (Res_Binding,
          Merge_Association_Chain (Get_Port_Chain (Entity),
                                   Cs_Chain,
                                   Get_Port_Map_Aspect_Chain (Cc_Binding)));
+      if Free_Chain_P then
+         Free_Map_Aspect_Chain (Cs_Chain);
+      end if;
 
       --  Set entity aspect.
       Set_Entity_Aspect
