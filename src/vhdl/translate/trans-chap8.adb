@@ -3769,13 +3769,15 @@ package body Trans.Chap8 is
       Sensitivity : Iir_List;
       Constr      : O_Assoc_List;
       Resume_State : State_Type;
+      Free_List_P : Boolean;
    begin
       Sensitivity := Get_Sensitivity_List (Stmt);
+      Free_List_P := False;
       if Sensitivity = Null_Iir_List and Cond /= Null_Iir then
          --  Extract sensitivity from condition.
          Sensitivity := Create_Iir_List;
          Vhdl.Canon.Canon_Extract_Sensitivity_Expression (Cond, Sensitivity);
-         Set_Sensitivity_List (Stmt, Sensitivity);
+         Free_List_P := True;
       end if;
 
       --  The wait statement must be within a suspendable process/subprogram.
@@ -3831,6 +3833,9 @@ package body Trans.Chap8 is
          Register_Signal_List
            (Sensitivity, Ghdl_Process_Wait_Add_Sensitivity);
          Chap9.Destroy_Types_In_List (Sensitivity);
+         if Free_List_P then
+            Destroy_Iir_List (Sensitivity);
+         end if;
       end if;
 
       --  suspend ();
