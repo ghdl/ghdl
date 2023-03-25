@@ -1741,8 +1741,7 @@ package body Vhdl.Canon is
    function Canon_Wave_Transform (Orig_Stmt : Iir;
                                   Waveform_Chain : Iir_Waveform_Element;
                                   Proc : Iir;
-                                  Is_First : Boolean)
-                                 return Iir
+                                  Is_First : Boolean) return Iir
    is
       Stmt : Iir;
       Sensitivity_List : Iir_List;
@@ -1820,7 +1819,7 @@ package body Vhdl.Canon is
       Stmt : Iir;
       Res1 : Iir;
       Last_Res : Iir;
-      Wf : Iir;
+      Wf, Wf_Stmt : Iir;
       Cond_Wf : Iir_Conditional_Waveform;
       Cond_Wf_Chain : Iir_Conditional_Waveform;
    begin
@@ -1834,7 +1833,7 @@ package body Vhdl.Canon is
 
          --  Canon waveform.
          Wf := Get_Waveform_Chain (Cond_Wf);
-         Wf := Canon_Wave_Transform
+         Wf_Stmt := Canon_Wave_Transform
            (Conc_Stmt, Wf, Proc, False); -- Cond_Wf = Cond_Wf_Chain);
 
          if Expr = Null_Iir and Cond_Wf = Cond_Wf_Chain then
@@ -1842,8 +1841,8 @@ package body Vhdl.Canon is
             --  case for concurrent signal assignment in vhdl 93.
             pragma Assert (Get_Chain (Cond_Wf) = Null_Iir);
 
-            Set_Parent (Wf, Parent);
-            Res1 := Wf;
+            Set_Parent (Wf_Stmt, Parent);
+            Res1 := Wf_Stmt;
             Stmt := Res1;
          else
             --  A real conditional signal assignment.
@@ -1865,14 +1864,16 @@ package body Vhdl.Canon is
             end if;
             Location_Copy (Res1, Cond_Wf);
             Set_Condition (Res1, Expr);
-            Set_Sequential_Statement_Chain (Res1, Wf);
-            Set_Parent (Wf, Stmt);
+            Set_Sequential_Statement_Chain (Res1, Wf_Stmt);
+            Set_Parent (Wf_Stmt, Stmt);
             Last_Res := Res1;
          end if;
 
          if Clear then
             Set_Condition (Cond_Wf, Null_Iir);
-            Set_Waveform_Chain (Cond_Wf, Null_Iir);
+            if Get_Kind (Wf) /= Iir_Kind_Unaffected_Waveform then
+               Set_Waveform_Chain (Cond_Wf, Null_Iir);
+            end if;
          end if;
 
          Cond_Wf := Get_Chain (Cond_Wf);
@@ -1882,14 +1883,20 @@ package body Vhdl.Canon is
    end Canon_Conditional_Signal_Assignment;
 
    --  Create signal_transform for a concurrent conditional signal assignment.
-   procedure Canon_Concurrent_Conditional_Signal_Assignment
-     (Conc_Stmt : Iir; Proc : Iir; Parent : Iir)
+   function Canon_Concurrent_Conditional_Signal_Assignment (Stmt : Iir)
+                                                           return Iir
    is
-      Stmt : Iir;
+      Proc : Iir;
+      Chain_Parent : Iir;
+      Seq_Stmt : Iir;
    begin
-      Stmt := Canon_Conditional_Signal_Assignment
-        (Conc_Stmt, Proc, Parent, True);
-      Set_Sequential_Statement_Chain (Parent, Stmt);
+      Canon_Concurrent_Signal_Assignment (Stmt, Proc, Chain_Parent);
+
+      Seq_Stmt := Canon_Conditional_Signal_Assignment
+        (Stmt, Proc, Chain_Parent, True);
+      Set_Sequential_Statement_Chain (Chain_Parent, Seq_Stmt);
+
+      return Proc;
    end Canon_Concurrent_Conditional_Signal_Assignment;
 
    procedure Canon_Selected_Signal_Assignment_Expression (Stmt : Iir)
@@ -2286,10 +2293,7 @@ package body Vhdl.Canon is
             end if;
 
             if Canon_Flag_Concurrent_Stmts then
-               Canon_Concurrent_Signal_Assignment (Stmt, Proc, Sub_Chain);
-               Canon_Concurrent_Conditional_Signal_Assignment
-                 (Stmt, Proc, Sub_Chain);
-               Stmt := Proc;
+               Stmt := Canon_Concurrent_Conditional_Signal_Assignment (Stmt);
             end if;
 
          when Iir_Kind_Concurrent_Selected_Signal_Assignment =>
