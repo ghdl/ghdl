@@ -3069,7 +3069,8 @@ package body Vhdl.Evaluation is
       return Res;
    end Convert_Range;
 
-   function Eval_Array_Type_Conversion (Conv : Iir; Val : Iir) return Iir
+   function Eval_Array_Type_Conversion (Conv : Iir; Val : Iir; Orig : Iir)
+                                       return Iir
    is
       Conv_Type : constant Iir := Get_Type (Conv);
       Val_Type : constant Iir := Get_Type (Val);
@@ -3081,7 +3082,7 @@ package body Vhdl.Evaluation is
       Rng : Iir;
    begin
       --  The expression is either a simple aggregate or a (bit) string.
-      Res := Build_Constant (Val, Conv);
+      Res := Build_Constant (Val, Orig);
       if Get_Constraint_State (Conv_Type) = Fully_Constrained then
          Set_Type (Res, Conv_Type);
          if not Eval_Is_In_Bound (Val, Conv_Type, True) then
@@ -3113,7 +3114,7 @@ package body Vhdl.Evaluation is
       end if;
    end Eval_Array_Type_Conversion;
 
-   function Eval_Type_Conversion (Conv : Iir) return Iir
+   function Eval_Type_Conversion (Conv : Iir; Orig : Iir) return Iir
    is
       Expr : constant Iir := Get_Expression (Conv);
       Val : Iir;
@@ -3125,31 +3126,31 @@ package body Vhdl.Evaluation is
       Val_Type := Get_Base_Type (Get_Type (Val));
       Conv_Type := Get_Base_Type (Get_Type (Conv));
       if Conv_Type = Val_Type then
-         Res := Build_Constant (Val, Conv);
+         Res := Build_Constant (Val, Orig);
       else
          case Get_Kind (Conv_Type) is
             when Iir_Kind_Integer_Type_Definition =>
                case Get_Kind (Val_Type) is
                   when Iir_Kind_Integer_Type_Definition =>
-                     Res := Build_Integer (Get_Value (Val), Conv);
+                     Res := Build_Integer (Get_Value (Val), Orig);
                   when Iir_Kind_Floating_Type_Definition =>
                      Res := Build_Integer
-                       (Int64 (Get_Fp_Value (Val)), Conv);
+                       (Int64 (Get_Fp_Value (Val)), Orig);
                   when others =>
                      Error_Kind ("eval_type_conversion(1)", Val_Type);
                end case;
             when Iir_Kind_Floating_Type_Definition =>
                case Get_Kind (Val_Type) is
                   when Iir_Kind_Integer_Type_Definition =>
-                     Res := Build_Floating (Fp64 (Get_Value (Val)), Conv);
+                     Res := Build_Floating (Fp64 (Get_Value (Val)), Orig);
                   when Iir_Kind_Floating_Type_Definition =>
-                     Res := Build_Floating (Get_Fp_Value (Val), Conv);
+                     Res := Build_Floating (Get_Fp_Value (Val), Orig);
                   when others =>
                      Error_Kind ("eval_type_conversion(2)", Val_Type);
                end case;
             when Iir_Kind_Array_Type_Definition =>
                --  Not a scalar, do not check bounds.
-               return Eval_Array_Type_Conversion (Conv, Val);
+               return Eval_Array_Type_Conversion (Conv, Val, Orig);
             when others =>
                Error_Kind ("eval_type_conversion(3)", Conv_Type);
          end case;
@@ -3157,7 +3158,7 @@ package body Vhdl.Evaluation is
       if not Eval_Is_In_Bound (Res, Get_Type (Conv), True) then
          Warning_Msg_Sem (Warnid_Runtime_Error, +Conv,
                           "result of conversion out of bounds");
-         Free_Eval_Static_Expr (Res, Conv);
+         Free_Eval_Static_Expr (Res, Orig);
          Res := Build_Overflow (Conv);
       end if;
       return Res;
@@ -3604,14 +3605,14 @@ package body Vhdl.Evaluation is
       end case;
    end Eval_Indexed_Name_By_Offset;
 
-   function Eval_Static_Expr (Expr: Iir) return Iir
+   function Eval_Static_Expr_Orig (Expr: Iir; Orig : Iir) return Iir
    is
       Res : Iir;
       Val : Iir;
    begin
       case Get_Kind (Expr) is
          when Iir_Kinds_Denoting_Name =>
-            return Eval_Static_Expr (Get_Named_Entity (Expr));
+            return Eval_Static_Expr_Orig (Get_Named_Entity (Expr), Orig);
 
          when Iir_Kind_Integer_Literal
            | Iir_Kind_Enumeration_Literal
@@ -3622,7 +3623,7 @@ package body Vhdl.Evaluation is
            | Iir_Kind_Physical_Fp_Literal =>
             return Expr;
          when Iir_Kind_Constant_Declaration =>
-            Val := Eval_Static_Expr (Get_Default_Value (Expr));
+            Val := Eval_Static_Expr_Orig (Get_Default_Value (Expr), Orig);
             --  Type of the expression should be type of the constant
             --  declaration at least in case of array subtype.
             --  If the constant is declared as an unconstrained array, get type
@@ -3631,14 +3632,14 @@ package body Vhdl.Evaluation is
             --    add an implicit subtype conversion node ?
             --  FIXME: this currently creates a node at each evalation.
             if Get_Kind (Get_Type (Val)) = Iir_Kind_Array_Type_Definition then
-               Res := Build_Constant (Val, Expr);
+               Res := Build_Constant (Val, Orig);
                Set_Type (Res, Get_Type (Val));
                return Res;
             else
                return Val;
             end if;
          when Iir_Kind_Object_Alias_Declaration =>
-            return Eval_Static_Expr (Get_Name (Expr));
+            return Eval_Static_Expr_Orig (Get_Name (Expr), Orig);
          when Iir_Kind_Unit_Declaration =>
             return Get_Physical_Literal (Expr);
          when Iir_Kind_Simple_Aggregate =>
@@ -3653,18 +3654,22 @@ package body Vhdl.Evaluation is
             return Eval_Indexed_Name (Expr);
 
          when Iir_Kind_Parenthesis_Expression =>
-            return Eval_Static_Expr (Get_Expression (Expr));
+            return Eval_Static_Expr_Orig (Get_Expression (Expr), Orig);
          when Iir_Kind_Qualified_Expression =>
-            return Eval_Static_Expr (Get_Expression (Expr));
+            return Eval_Static_Expr_Orig (Get_Expression (Expr), Orig);
          when Iir_Kind_Type_Conversion =>
-            return Eval_Type_Conversion (Expr);
+            return Eval_Type_Conversion (Expr, Orig);
 
          when Iir_Kinds_Monadic_Operator =>
             declare
-               Operand : Iir;
+               Operand : constant Iir := Get_Operand (Expr);
+               Operand_Val : Iir;
+               Res : Iir;
             begin
-               Operand := Eval_Static_Expr (Get_Operand (Expr));
-               return Eval_Monadic_Operator (Expr, Operand);
+               Operand_Val := Eval_Static_Expr_Orig (Operand, Orig);
+               Res := Eval_Monadic_Operator (Expr, Operand_Val);
+               Free_Eval_Static_Expr (Operand_Val, Operand);
+               return Res;
             end;
          when Iir_Kinds_Dyadic_Operator =>
             declare
@@ -3679,8 +3684,8 @@ package body Vhdl.Evaluation is
                then
                   return Eval_Concatenation ((1 => Expr));
                else
-                  Left_Val := Eval_Static_Expr (Left);
-                  Right_Val := Eval_Static_Expr (Right);
+                  Left_Val := Eval_Static_Expr_Orig (Left, Left);
+                  Right_Val := Eval_Static_Expr_Orig (Right, Right);
 
                   Res := Eval_Dyadic_Operator (Expr, Imp, Left_Val, Right_Val);
 
@@ -3698,7 +3703,7 @@ package body Vhdl.Evaluation is
                  Get_Attribute_Name_Expression (Expr);
                Val : Iir;
             begin
-               Val := Eval_Static_Expr (Attr_Expr);
+               Val := Eval_Static_Expr_Orig (Attr_Expr, Attr_Expr);
                --  FIXME: see constant_declaration.
                --  Currently, this avoids weird nodes, such as a string literal
                --  whose type is an unconstrained array type.
@@ -3713,7 +3718,7 @@ package body Vhdl.Evaluation is
                Val : Iir;
                Res : Iir;
             begin
-               Val := Eval_Static_Expr (Param);
+               Val := Eval_Static_Expr_Orig (Param, Param);
                --  FIXME: check bounds, handle overflow.
                Res := Build_Integer (Eval_Pos (Val), Expr);
                Free_Eval_Static_Expr (Val, Param);
@@ -3960,8 +3965,13 @@ package body Vhdl.Evaluation is
          when Iir_Kind_Error =>
             return Expr;
          when others =>
-            Error_Kind ("eval_static_expr", Expr);
+            Error_Kind ("eval_static_expr_orig", Expr);
       end case;
+   end Eval_Static_Expr_Orig;
+
+   function Eval_Static_Expr (Expr: Iir) return Iir is
+   begin
+      return Eval_Static_Expr_Orig (Expr, Expr);
    end Eval_Static_Expr;
 
    --  If FORCE is true, always return a literal.
@@ -3972,20 +3982,25 @@ package body Vhdl.Evaluation is
       case Get_Kind (Expr) is
          when Iir_Kinds_Denoting_Name =>
             declare
-               Orig : constant Iir := Get_Named_Entity (Expr);
+               Val : constant Iir := Get_Named_Entity (Expr);
             begin
-               Res := Eval_Static_Expr (Orig);
-               if Res /= Orig or else Force then
+               Res := Eval_Static_Expr (Val);
+               if Force
+                 or else
+                 (Res /= Val and then Get_Literal_Origin (Res) /= Val)
+               then
+                  --  A literal was created.
                   return Build_Constant (Res, Expr);
                else
+                  --  No evaluation (the named entity was already a literal).
+                  --  (Maybe it is just a copy and we can free it).
+                  Free_Eval_Static_Expr (Res, Val);
                   return Expr;
                end if;
             end;
          when others =>
             Res := Eval_Static_Expr (Expr);
-            if Res /= Expr
-              and then Get_Literal_Origin (Res) /= Expr
-            then
+            if Res /= Expr and then Get_Literal_Origin (Res) /= Expr then
                --  Need to build a constant if the result is a different
                --  literal not tied to EXPR.
                return Build_Constant (Res, Expr);
