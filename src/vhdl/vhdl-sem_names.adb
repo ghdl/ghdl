@@ -4616,10 +4616,15 @@ package body Vhdl.Sem_Names is
       --  Clear and free overload lists of Named_entity and type.
       Named_Entity := Get_Named_Entity (Name);
       Set_Named_Entity (Name, Null_Iir);
-      if Named_Entity /= Null_Iir
-        and then Is_Overload_List (Named_Entity)
-      then
-         Free_Iir (Named_Entity);
+      if Named_Entity /= Null_Iir then
+         case Get_Kind (Named_Entity) is
+            when Iir_Kind_Overload_List
+              | Iir_Kind_Selected_Element
+              | Iir_Kind_Indexed_Name =>
+               Free_Iir (Named_Entity);
+            when others =>
+               null;
+         end case;
       end if;
 
       Atype := Get_Type (Name);
