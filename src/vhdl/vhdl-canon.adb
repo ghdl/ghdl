@@ -1792,8 +1792,10 @@ package body Vhdl.Canon is
    begin
       Stmt := Canon_Wave_Transform
         (Conc_Stmt, Get_Waveform_Chain (Conc_Stmt), Proc, True);
-      Set_Waveform_Chain (Conc_Stmt, Null_Iir);
-      Set_Target (Conc_Stmt, Null_Iir);
+      if Get_Kind (Stmt) /= Iir_Kind_Null_Statement then
+         Set_Waveform_Chain (Conc_Stmt, Null_Iir);
+         Set_Target (Conc_Stmt, Null_Iir);
+      end if;
       Set_Parent (Stmt, Parent);
       Set_Sequential_Statement_Chain (Parent, Stmt);
    end Canon_Concurrent_Simple_Signal_Assignment;
