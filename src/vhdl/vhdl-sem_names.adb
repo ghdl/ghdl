@@ -2002,6 +2002,7 @@ package body Vhdl.Sem_Names is
                Prefix := Finish_Sem_Name_1 (Get_Prefix (Name_Prefix), Prefix);
                Set_Prefix (Res, Prefix);
                --  But free it.
+               Free_Iir (Name_Prefix);
                Free_Parenthesis_Name (Name, Res);
             else
                pragma Assert (Get_Parameter (Res) = Null_Iir);
