@@ -51,6 +51,9 @@ package body Vhdl.Evaluation is
    function Eval_Floating_Image (Val : Fp64; Orig : Iir) return Iir;
    function Eval_Floating_To_String_Format (Val : Fp64; Fmt : Iir; Orig : Iir)
                                            return Iir;
+   procedure Eval_Range_Bounds (Rng : Iir;
+                                Dir : out Direction_Type;
+                                Left, Right : out Iir);
 
    function Eval_Scalar_Compare (Left, Right : Iir) return Compare_Type;
 
@@ -3798,21 +3801,57 @@ package body Vhdl.Evaluation is
             end;
 
          when Iir_Kind_Left_Type_Attribute =>
-            return Eval_Static_Expr
-              (Get_Left_Limit (Eval_Static_Range (Get_Prefix (Expr))));
+            declare
+               L, R : Iir;
+               Dir : Direction_Type;
+            begin
+               Eval_Range_Bounds (Get_Prefix (Expr), Dir, L, R);
+               return Eval_Static_Expr (L);
+            end;
          when Iir_Kind_Right_Type_Attribute =>
-            return Eval_Static_Expr
-              (Get_Right_Limit (Eval_Static_Range (Get_Prefix (Expr))));
+            declare
+               L, R : Iir;
+               Dir : Direction_Type;
+            begin
+               Eval_Range_Bounds (Get_Prefix (Expr), Dir, L, R);
+               return Eval_Static_Expr (R);
+            end;
          when Iir_Kind_High_Type_Attribute =>
-            return Eval_Static_Expr
-              (Get_High_Limit (Eval_Static_Range (Get_Prefix (Expr))));
+            declare
+               L, R, Res : Iir;
+               Dir : Direction_Type;
+            begin
+               Eval_Range_Bounds (Get_Prefix (Expr), Dir, L, R);
+               case Dir is
+                  when Dir_To =>
+                     Res := R;
+                  when Dir_Downto =>
+                     Res := L;
+               end case;
+               return Eval_Static_Expr (Res);
+            end;
          when Iir_Kind_Low_Type_Attribute =>
-            return Eval_Static_Expr
-              (Get_Low_Limit (Eval_Static_Range (Get_Prefix (Expr))));
+            declare
+               L, R, Res : Iir;
+               Dir : Direction_Type;
+            begin
+               Eval_Range_Bounds (Get_Prefix (Expr), Dir, L, R);
+               case Dir is
+                  when Dir_To =>
+                     Res := L;
+                  when Dir_Downto =>
+                     Res := R;
+               end case;
+               return Eval_Static_Expr (Res);
+            end;
          when Iir_Kind_Ascending_Type_Attribute =>
-            return Build_Boolean
-              (Get_Direction (Eval_Static_Range (Get_Prefix (Expr))) = Dir_To);
-
+            declare
+               L, R : Iir;
+               Dir : Direction_Type;
+            begin
+               Eval_Range_Bounds (Get_Prefix (Expr), Dir, L, R);
+               return Build_Boolean (Dir = Dir_To);
+            end;
          when Iir_Kind_Length_Array_Attribute =>
             declare
                Index : Iir;
@@ -4725,7 +4764,8 @@ package body Vhdl.Evaluation is
       return Res;
    end Eval_Range;
 
-   function Eval_Static_Range (Rng : Iir) return Iir
+   --  Return a range expression or a range attribute.
+   function Eval_Static_Range_Prefix (Rng : Iir) return Iir
    is
       Expr : Iir;
       Kind : Iir_Kind;
@@ -4737,11 +4777,7 @@ package body Vhdl.Evaluation is
             when Iir_Kind_Range_Expression
                | Iir_Kind_Range_Array_Attribute
                | Iir_Kind_Reverse_Range_Array_Attribute =>
-               if Get_Expr_Staticness (Expr) /= Locally then
-                  return Null_Iir;
-               end if;
-
-               return Eval_Range (Expr);
+               return Expr;
             when Iir_Kind_Integer_Subtype_Definition
               | Iir_Kind_Floating_Subtype_Definition
               | Iir_Kind_Enumeration_Type_Definition
@@ -4762,6 +4798,17 @@ package body Vhdl.Evaluation is
                Error_Kind ("eval_static_range", Expr);
          end case;
       end loop;
+   end Eval_Static_Range_Prefix;
+
+   function Eval_Static_Range (Rng : Iir) return Iir
+   is
+      Expr : Iir;
+   begin
+      Expr := Eval_Static_Range_Prefix (Rng);
+      if Get_Expr_Staticness (Expr) /= Locally then
+         return Null_Iir;
+      end if;
+      return Eval_Range (Expr);
    end Eval_Static_Range;
 
    --  Check range expression A_RANGE.
