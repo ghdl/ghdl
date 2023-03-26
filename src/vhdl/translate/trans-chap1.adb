@@ -109,6 +109,10 @@ package body Trans.Chap1 is
          El := Get_Chain (El);
       end loop;
 
+      if Default /= Null_Iir then
+         Free_Iir (Default);
+      end if;
+
       Pop_Local_Factory;
    end Translate_Entity_Init_Ports;
 
