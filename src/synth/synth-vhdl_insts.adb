@@ -716,6 +716,7 @@ package body Synth.Vhdl_Insts is
    end Sort_Value_Offset;
 
    function Synth_Individual_Input_Assoc (Syn_Inst : Synth_Instance_Acc;
+                                          Inter_Inst : Synth_Instance_Acc;
                                           Inter_Typ : Type_Acc;
                                           Assoc : Node) return Net
    is
@@ -736,7 +737,7 @@ package body Synth.Vhdl_Insts is
 
       --  FIXME: should it be unshared ?
       Formal_Typ := Elab.Vhdl_Types.Synth_Subtype_Indication
-        (Syn_Inst, Get_Actual_Type (Assoc));
+        (Inter_Inst, Get_Actual_Type (Assoc));
 
       Iassoc := Get_Chain (Assoc);
       while Iassoc /= Null_Node
@@ -800,7 +801,7 @@ package body Synth.Vhdl_Insts is
               (Syn_Inst, Inter_Typ, Syn_Inst, Get_Actual (Assoc), Assoc);
          when Iir_Kind_Association_Element_By_Individual =>
             Res_Net := Synth_Individual_Input_Assoc
-              (Syn_Inst, Inter_Typ, Assoc);
+              (Syn_Inst, Inter_Inst, Inter_Typ, Assoc);
             Release_Expr_Pool (Marker);
             return Res_Net;
       end case;
