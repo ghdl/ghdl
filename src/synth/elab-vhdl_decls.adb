@@ -322,6 +322,8 @@ package body Elab.Vhdl_Decls is
 
          when Iir_Kind_Package_Instantiation_Declaration =>
             Vhdl_Insts.Elab_Package_Instantiation (Syn_Inst, Decl);
+         when Iir_Kind_Package_Instantiation_Body =>
+            Vhdl_Insts.Elab_Package_Instantiation_Body (Syn_Inst, Decl);
          when Iir_Kind_Package_Declaration =>
             Vhdl_Insts.Elab_Package_Declaration (Syn_Inst, Decl);
          when Iir_Kind_Package_Body =>

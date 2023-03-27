@@ -516,9 +516,11 @@ package body Elab.Vhdl_Annotations is
             Bod : constant Iir := Get_Instance_Package_Body (Decl);
          begin
             if Bod /= Null_Iir then
-               Set_Ann (Bod, Package_Info);
-               Annotate_Declaration_List
-                 (Package_Info, Get_Declaration_Chain (Bod));
+               if Get_Immediate_Body_Flag (Decl) then
+                  Set_Ann (Bod, Package_Info);
+                  Annotate_Declaration_List
+                    (Package_Info, Get_Declaration_Chain (Bod));
+               end if;
             else
                declare
                   Uninst : constant Iir :=
@@ -538,10 +540,13 @@ package body Elab.Vhdl_Annotations is
 
    procedure Annotate_Package_Body (Bod: Iir)
    is
+      Is_Inst : constant Boolean :=
+        Get_Kind (Bod) = Iir_Kind_Package_Instantiation_Body;
       Pkg : constant Node := Get_Package (Bod);
       Package_Info : constant Sim_Info_Acc := Get_Ann (Pkg);
    begin
-      if Is_Uninstantiated_Package (Pkg)
+      if not Is_Inst
+        and then Is_Uninstantiated_Package (Pkg)
         and then Get_Macro_Expanded_Flag (Pkg)
       then
          --  The body of a macro-expanded flag.
@@ -568,10 +573,11 @@ package body Elab.Vhdl_Annotations is
    begin
       case Get_Kind (Decl) is
          when Iir_Kind_Package_Declaration
-           | Iir_Kind_Package_Instantiation_Declaration =>
+            | Iir_Kind_Package_Instantiation_Declaration =>
             Annotate_Package_Declaration (Block_Info, Decl);
 
-         when Iir_Kind_Package_Body =>
+         when Iir_Kind_Package_Body
+            | Iir_Kind_Package_Instantiation_Body =>
             Annotate_Package_Body (Decl);
 
          when Iir_Kind_Attribute_Implicit_Declaration =>

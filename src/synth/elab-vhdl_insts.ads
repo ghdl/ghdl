@@ -39,6 +39,8 @@ package Elab.Vhdl_Insts is
      (Parent_Inst : Synth_Instance_Acc; Pkg : Node; Bod : Node);
    procedure Elab_Package_Instantiation
      (Parent_Inst : Synth_Instance_Acc; Pkg : Node);
+   procedure Elab_Package_Instantiation_Body
+     (Parent_Inst : Synth_Instance_Acc; Bod : Node);
 
    procedure Elab_Component_Instantiation_Statement
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node);

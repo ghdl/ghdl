@@ -270,8 +270,10 @@ package body Elab.Vhdl_Insts is
 
       if Bod /= Null_Node then
          --  Macro expanded package instantiation.
-         Elab_Declarations
-           (Sub_Inst, Get_Declaration_Chain (Bod));
+         if Get_Immediate_Body_Flag (Pkg) then
+            Elab_Declarations
+              (Sub_Inst, Get_Declaration_Chain (Bod));
+         end if;
       else
          --  Shared body
          declare
@@ -285,6 +287,16 @@ package body Elab.Vhdl_Insts is
          end;
       end if;
    end Elab_Package_Instantiation;
+
+   procedure Elab_Package_Instantiation_Body
+     (Parent_Inst : Synth_Instance_Acc; Bod : Node)
+   is
+      Sub_Inst : Synth_Instance_Acc;
+   begin
+      Sub_Inst := Get_Package_Object (Parent_Inst, Bod);
+      Elab_Declarations
+        (Sub_Inst, Get_Declaration_Chain (Bod));
+   end Elab_Package_Instantiation_Body;
 
    procedure Elab_Dependencies (Parent_Inst : Synth_Instance_Acc; Unit : Node);
 
