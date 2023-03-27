@@ -5009,6 +5009,23 @@ package body Trans.Chap8 is
       Gen_Signal_Force (Targ, Target_Type, M2E (Value));
    end Translate_Signal_Force_Assignment_Statement;
 
+   --  Free the statement createed by Canon for a conditional assignment.
+   procedure Free_Canon_Conditional_Statement (Stmt : Iir)
+   is
+      S : Iir;
+      Els : Iir;
+      Asgn : Iir;
+   begin
+      S := Stmt;
+      while S /= Null_Iir loop
+         Asgn := Get_Sequential_Statement_Chain (S);
+         Free_Iir (Asgn);
+         Els := Get_Else_Clause (S);
+         Free_Iir (S);
+         S := Els;
+      end loop;
+   end Free_Canon_Conditional_Statement;
+
    procedure Translate_Statement (Stmt : Iir) is
    begin
       New_Debug_Line_Stmt (Get_Line_Number (Stmt));
@@ -5045,23 +5062,24 @@ package body Trans.Chap8 is
             Translate_Variable_Assignment_Statement (Stmt);
          when Iir_Kind_Conditional_Variable_Assignment_Statement =>
             declare
+               use Vhdl.Canon;
                C_Stmt : Iir;
             begin
                C_Stmt :=
-                 Vhdl.Canon.Canon_Conditional_Variable_Assignment_Statement
-                 (Stmt);
+                 Canon_Conditional_Variable_Assignment_Statement (Stmt);
                Trans.Update_Node_Infos;
                Translate_If_Statement (C_Stmt);
+               Free_Canon_Conditional_Statement (C_Stmt);
             end;
          when Iir_Kind_Conditional_Signal_Assignment_Statement =>
             declare
+               use Vhdl.Canon;
                C_Stmt : Iir;
             begin
-               C_Stmt :=
-                 Vhdl.Canon.Canon_Conditional_Signal_Assignment_Statement
-                 (Stmt);
+               C_Stmt := Canon_Conditional_Signal_Assignment_Statement (Stmt);
                Trans.Update_Node_Infos;
                Translate_If_Statement (C_Stmt);
+               Free_Canon_Conditional_Statement (C_Stmt);
             end;
          when Iir_Kind_Signal_Release_Assignment_Statement =>
             Translate_Signal_Release_Assignment_Statement (Stmt);
