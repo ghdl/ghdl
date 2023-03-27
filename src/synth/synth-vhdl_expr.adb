@@ -1699,11 +1699,43 @@ package body Synth.Vhdl_Expr is
                return No_Valtyp;
             end if;
          when Type_Vector
-           | Type_Unbounded_Vector =>
-            return Val;
-         when Type_Array
-           | Type_Unbounded_Array =>
-            return Val;
+            | Type_Array =>
+            --  Check length, replace bounds.
+            declare
+               Src_Typ, Dst_Typ : Type_Acc;
+            begin
+               Src_Typ := Val.Typ;
+               Dst_Typ := Conv_Typ;
+               loop
+                  if Src_Typ.Abound.Len /= Dst_Typ.Abound.Len then
+                     Error_Msg_Synth (Syn_Inst, Loc, "array length mismatch");
+                     return No_Valtyp;
+                  end if;
+                  exit when Src_Typ.Alast;
+                  Src_Typ := Src_Typ.Arr_El;
+                  Dst_Typ := Dst_Typ.Arr_El;
+               end loop;
+
+               return (Typ => Conv_Typ, Val => Val.Val);
+            end;
+         when Type_Unbounded_Vector
+            | Type_Unbounded_Array =>
+            --  Check bounds fit in target
+            declare
+               Src_Typ, Dst_Typ : Type_Acc;
+            begin
+               Src_Typ := Val.Typ;
+               Dst_Typ := Conv_Typ;
+               loop
+                  Elab.Vhdl_Types.Check_Bound_Compatibility
+                    (Syn_Inst, Loc, Src_Typ.Abound, Dst_Typ.Uarr_Idx);
+                  exit when Src_Typ.Alast;
+                  Src_Typ := Src_Typ.Arr_El;
+                  Dst_Typ := Dst_Typ.Arr_El;
+               end loop;
+
+               return Val;
+            end;
          when Type_Bit
            | Type_Logic =>
             return Val;

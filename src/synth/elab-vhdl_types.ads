@@ -45,6 +45,11 @@ package Elab.Vhdl_Types is
    function Synth_Bounds_From_Range (Syn_Inst : Synth_Instance_Acc;
                                      Atype : Node) return Bound_Type;
 
+   procedure Check_Bound_Compatibility (Syn_Inst : Synth_Instance_Acc;
+                                        Loc : Node;
+                                        Bnd : Bound_Type;
+                                        Typ : Type_Acc);
+
    function Create_Bounds_From_Length
      (Bounds : Discrete_Range_Type; Len : Iir_Index32) return Bound_Type;
 
