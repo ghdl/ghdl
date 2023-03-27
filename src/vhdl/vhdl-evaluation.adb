@@ -3279,15 +3279,16 @@ package body Vhdl.Evaluation is
    is
       Selected_El : constant Iir := Get_Named_Entity (Expr);
       El_Pos : constant Iir_Index32 := Get_Element_Position (Selected_El);
+      Expr_Prefix : constant Iir := Get_Prefix (Expr);
       Prefix : Iir;
       Cur_Pos : Iir_Index32;
       Assoc : Iir;
       Assoc_Expr : Iir;
       Res : Iir;
    begin
-      Prefix := Get_Prefix (Expr);
-      Prefix := Eval_Static_Expr (Prefix);
+      Prefix := Eval_Static_Expr (Expr_Prefix);
       if Is_Overflow_Literal (Prefix) then
+         Free_Eval_Static_Expr (Prefix, Expr_Prefix);
          return Build_Overflow (Expr, Get_Type (Expr));
       end if;
 
