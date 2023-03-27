@@ -1926,7 +1926,7 @@ package body Vhdl.Sem_Types is
    function Reparse_As_Record_Constraint (Def : Iir) return Iir
    is
       Res : Iir;
-      Chain : Iir;
+      Chain, Next_Chain : Iir;
       El_List : Iir_List;
       El : Iir;
    begin
@@ -1936,6 +1936,7 @@ package body Vhdl.Sem_Types is
       Location_Copy (Res, Def);
       El_List := Create_Iir_List;
       Chain := Get_Association_Chain (Def);
+      Free_Iir (Def);
       while Chain /= Null_Iir loop
          if Get_Kind (Chain) /= Iir_Kind_Association_Element_By_Expression
            or else Get_Formal (Chain) /= Null_Iir
@@ -1949,7 +1950,9 @@ package body Vhdl.Sem_Types is
                Append_Owned_Element_Constraint (Res, El);
             end if;
          end if;
-         Chain := Get_Chain (Chain);
+         Next_Chain := Get_Chain (Chain);
+         Free_Iir (Chain);
+         Chain := Next_Chain;
       end loop;
       Set_Elements_Declaration_List (Res, List_To_Flist (El_List));
       return Res;
@@ -1961,7 +1964,7 @@ package body Vhdl.Sem_Types is
       Name : Iir;
       Prefix : Iir;
       Res : Iir;
-      Chain : Iir;
+      Chain, Chain_Next : Iir;
       El_List : Iir_List;
       Def_El_Type : Iir;
    begin
@@ -1998,8 +2001,11 @@ package body Vhdl.Sem_Types is
             else
                Append_Element (El_List, Get_Actual (Chain));
             end if;
-            Chain := Get_Chain (Chain);
+            Chain_Next := Get_Chain (Chain);
+            Free_Iir (Chain);
+            Chain := Chain_Next;
          end loop;
+         Free_Iir (Name);
          Set_Index_Constraint_List (Res, List_To_Flist (El_List));
       end if;
 
@@ -2054,8 +2060,8 @@ package body Vhdl.Sem_Types is
          when Iir_Kind_Array_Subtype_Definition =>
             --  Record constraints were parsed as array constraints.
             --  Reparse.
-            pragma Assert (Get_Kind (Def) = Iir_Kind_Array_Subtype_Definition);
             Index_List := Get_Index_Constraint_List (Def);
+            Free_Iir (Def);
             El_List := Create_Iir_Flist (Get_Nbr_Elements (Index_List));
             Set_Elements_Declaration_List (Res, El_List);
             for I in Flist_First .. Flist_Last (Index_List) loop
@@ -2103,6 +2109,7 @@ package body Vhdl.Sem_Types is
             Els : Iir_Array (0 .. Nbr_Els - 1) := (others => Null_Iir);
             Res_Els : Iir_Array (0 .. Nbr_Els - 1) := (others => Null_Iir);
             Pos : Natural;
+            El_Ntype : Iir;
             Constraint : Iir_Constraint;
             Composite_Found : Boolean;
             Staticness : Iir_Staticness;
@@ -2212,10 +2219,18 @@ package body Vhdl.Sem_Types is
                      pragma Assert
                        (Get_Kind (El) = Iir_Kind_Record_Element_Constraint);
                   end if;
-                  El_Type := Sem_Subtype_Constraint (El_Type,
-                                                     Get_Type (Tm_El),
-                                                     Res_Els (I));
-                  Set_Type (El, El_Type);
+                  El_Ntype := Sem_Subtype_Constraint (El_Type,
+                                                      Get_Type (Tm_El),
+                                                      Res_Els (I));
+                  Set_Type (El, El_Ntype);
+                  if El_Ntype /= El_Type
+                    and then Get_Subtype_Indication (El) = El_Type
+                  then
+                     --  A new subtype constraint was created to complete it,
+                     --  free the old (and uncomplete) one.
+                     Free_Iir (El_Type);
+                  end if;
+                  El_Type := El_Ntype;
                   Set_Subtype_Indication (El, El_Type);
                   Set_Element_Position (El, Get_Element_Position (Tm_El));
                end if;
