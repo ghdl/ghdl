@@ -17,26 +17,37 @@
 with Ada.Unchecked_Deallocation;
 with Types; use Types;
 with Logging; use Logging;
-with Vhdl.Nodes_Meta; use Vhdl.Nodes_Meta;
+with Vhdl.Nodes_Meta;
 with Vhdl.Errors; use Vhdl.Errors;
 with Libraries;
 with Vhdl.Disp_Tree;
 with Vhdl.Std_Package;
 with PSL.Types; use PSL.Types;
+with PSL.Nodes;
+with PSL.Dump_Tree;
+with PSL.Nodes_Meta;
 
 package body Vhdl.Nodes_GC is
 
-   type Marker_Array is array (Iir range <>) of Boolean;
-   type Marker_Array_Acc is access Marker_Array;
+   type Vhdl_Marker_Array is array (Iir range <>) of Boolean;
+   type Vhdl_Marker_Array_Acc is access Vhdl_Marker_Array;
+
+   type PSL_Marker_Array is array (PSL_Node range <>) of Boolean;
+   type PSL_Marker_Array_Acc is access PSL_Marker_Array;
 
    Has_Error : Boolean := False;
 
-   Markers : Marker_Array_Acc;
+   Markers : Vhdl_Marker_Array_Acc;
+   PSL_Markers : PSL_Marker_Array_Acc;
 
    procedure Free is new Ada.Unchecked_Deallocation
-     (Marker_Array, Marker_Array_Acc);
+     (Vhdl_Marker_Array, Vhdl_Marker_Array_Acc);
+   procedure Free is new Ada.Unchecked_Deallocation
+     (PSL_Marker_Array, PSL_Marker_Array_Acc);
 
-   procedure Report_Early_Reference (N : Iir; F : Nodes_Meta.Fields_Enum) is
+   subtype Vhdl_Fields_Enum is Vhdl.Nodes_Meta.Fields_Enum;
+
+   procedure Report_Early_Reference (N : Iir; F : Vhdl_Fields_Enum) is
    begin
       Log ("early reference to ");
       Log (Nodes_Meta.Get_Field_Image (F));
@@ -51,6 +62,13 @@ package body Vhdl.Nodes_GC is
       Vhdl.Disp_Tree.Disp_Tree (N, True);
       Has_Error := True;
    end Report_Already_Marked;
+
+   procedure Report_PSL_Already_Marked (N : PSL_Node) is
+   begin
+      Log ("Already marked PSL ");
+      PSL.Dump_Tree.Disp_Tree (N, 0, 1);
+      Has_Error := True;
+   end Report_PSL_Already_Marked;
 
    procedure Mark_Iir (N : Iir);
 
@@ -71,7 +89,7 @@ package body Vhdl.Nodes_GC is
       end case;
    end Mark_Iir_List;
 
-   procedure Mark_Iir_List_Ref (N : Iir_List; F : Fields_Enum)
+   procedure Mark_Iir_List_Ref (N : Iir_List; F : Vhdl_Fields_Enum)
    is
       El : Iir;
       It : List_Iterator;
@@ -109,7 +127,7 @@ package body Vhdl.Nodes_GC is
       end case;
    end Mark_Iir_Flist;
 
-   procedure Mark_Iir_Flist_Ref (N : Iir_Flist; F : Fields_Enum)
+   procedure Mark_Iir_Flist_Ref (N : Iir_Flist; F : Vhdl_Fields_Enum)
    is
       El : Iir;
    begin
@@ -128,9 +146,48 @@ package body Vhdl.Nodes_GC is
       end case;
    end Mark_Iir_Flist_Ref;
 
-   procedure Mark_PSL_Node (N : PSL_Node) is
+   procedure Mark_PSL_Node (N : PSL_Node)
+   is
+      use PSL.Nodes;
+      use PSL.Nodes_Meta;
    begin
-      null;
+      if N = Null_PSL_Node then
+         return;
+      end if;
+      if PSL_Markers (N) then
+         Report_PSL_Already_Marked (N);
+         return;
+      end if;
+
+      PSL_Markers (N) := True;
+
+      declare
+         K : constant Nkind := Get_Kind (N);
+         Fields : constant Fields_Array := Get_Fields (K);
+         F : Fields_Enum;
+      begin
+         for I in Fields'Range loop
+            F := Fields (I);
+            case Get_Field_Type (F) is
+               when Type_Boolean
+                 | Type_Int32
+                 | Type_Name_Id
+                 | Type_Uns32
+                 | Type_PSL_Presence_Kind =>
+                  null;
+               when Type_NFA =>
+                  null;
+               when Type_Node =>
+                  Mark_PSL_Node (Get_Node (N, F));
+               when Type_HDL_Node =>
+                  declare
+                     Hn : constant HDL_Node := Get_HDL_Node (N, F);
+                  begin
+                     Mark_Iir (Iir (Hn));
+                  end;
+            end case;
+         end loop;
+      end;
    end Mark_PSL_Node;
 
    procedure Mark_PSL_NFA (N : PSL_NFA) is
@@ -179,16 +236,18 @@ package body Vhdl.Nodes_GC is
       Has_Error := True;
    end Report_Unreferenced_Node;
 
-   procedure Mark_Iir_Ref_Field (N : Iir; F : Fields_Enum)
+   procedure Mark_Iir_Ref_Field (N : Iir; F : Vhdl_Fields_Enum)
    is
-      Nf : constant Iir := Get_Iir (N, F);
+      Nf : constant Iir := Vhdl.Nodes_Meta.Get_Iir (N, F);
    begin
       if Is_Valid (Nf) and then not Markers (Nf) then
          Report_Early_Reference (N, F);
       end if;
    end Mark_Iir_Ref_Field;
 
-   procedure Mark_Iir (N : Iir) is
+   procedure Mark_Iir (N : Iir)
+   is
+      use Vhdl.Nodes_Meta;
    begin
       if N = Null_Iir then
          return;
@@ -375,14 +434,24 @@ package body Vhdl.Nodes_GC is
    is
       use Vhdl.Std_Package;
    begin
-      Markers := new Marker_Array'(Null_Iir .. Nodes.Get_Last_Node => False);
+      Markers :=
+        new Vhdl_Marker_Array'(Null_Iir .. Nodes.Get_Last_Node => False);
 
       Has_Error := False;
 
       --  Node not owned, but used for "/" (time, time).
       Markers (Convertible_Integer_Type_Definition) := True;
       Markers (Convertible_Real_Type_Definition) := True;
+
+      PSL_Markers := new PSL_Marker_Array'
+        (Null_PSL_Node .. PSL.Nodes.Get_Last_Node => False);
    end Mark_Init;
+
+   procedure Mark_Finish is
+   begin
+      Free (Markers);
+      Free (PSL_Markers);
+   end Mark_Finish;
 
    --  Marks known nodes that aren't owned.
    procedure Mark_Not_Owned
@@ -498,7 +567,7 @@ package body Vhdl.Nodes_GC is
          El := Next_Node (El);
       end loop;
 
-      Free (Markers);
+      Mark_Finish;
 
       if Has_Error then
          raise Internal_Error;
@@ -509,7 +578,7 @@ package body Vhdl.Nodes_GC is
    begin
       Mark_Init;
       Mark_Unit (Unit);
-      Free (Markers);
+      Mark_Finish;
       if Has_Error then
          raise Internal_Error;
       end if;
