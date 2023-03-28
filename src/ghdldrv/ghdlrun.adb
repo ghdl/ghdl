@@ -35,6 +35,7 @@ with Vhdl.Std_Package;
 with Vhdl.Canon;
 with Vhdl.Ieee.Std_Logic_1164;
 with Vhdl.Back_End;
+with Vhdl.Nodes_GC;
 with Ortho_Jit;
 with Ortho_Nodes; use Ortho_Nodes;
 with Trans_Decls;
@@ -141,6 +142,10 @@ package body Ghdlrun is
       if Errorout.Nbr_Errors > 0 then
          --  This may happen (bad entity for example).
          raise Compilation_Error;
+      end if;
+
+      if Flags.Check_Ast_Level > 0 then
+         Vhdl.Nodes_GC.Report_Unreferenced;
       end if;
    end Compile_Elab;
 
