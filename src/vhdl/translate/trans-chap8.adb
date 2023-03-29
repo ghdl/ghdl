@@ -4593,19 +4593,29 @@ package body Trans.Chap8 is
 
       Target_Tinfo : Type_Info_Acc;
       Bounds : Mnode;
+      Layout : Mnode;
+      Constrained : Boolean;
    begin
       if Get_Kind (Target) = Iir_Kind_Aggregate then
          --  The target is an aggregate.
-         Chap3.Translate_Anonymous_Subtype_Definition (Target_Type, True);
+         Constrained := Get_Constraint_State (Target_Type) = Fully_Constrained;
+         Chap3.Translate_Anonymous_Subtype_Definition
+           (Target_Type, Constrained);
          Target_Tinfo := Get_Info (Target_Type);
          Targ := Create_Temp (Target_Tinfo, Mode_Signal);
          if Target_Tinfo.Type_Mode in Type_Mode_Unbounded then
+            pragma Assert (not Constrained);
             --  Unbounded array, allocate bounds.
-            Bounds := Dv2M (Create_Temp (Target_Tinfo.B.Bounds_Type),
+            pragma Assert (Target_Tinfo.S.Composite_Layout = Null_Var);
+            Target_Tinfo.S.Composite_Layout :=
+              Create_Var (Create_Uniq_Identifier, Target_Tinfo.B.Layout_Type,
+                          O_Storage_Local);
+            Layout := Lv2M (Get_Var (Target_Tinfo.S.Composite_Layout),
                             Target_Tinfo,
                             Mode_Value,
-                            Target_Tinfo.B.Bounds_Type,
-                            Target_Tinfo.B.Bounds_Ptr_Type);
+                            Target_Tinfo.B.Layout_Type,
+                            Target_Tinfo.B.Layout_Ptr_Type);
+            Bounds := Stabilize (Chap3.Layout_To_Bounds (Layout));
             New_Assign_Stmt (M2Lp (Chap3.Get_Composite_Bounds (Targ)),
                              M2Addr (Bounds));
             --  Build bounds from aggregate.
@@ -4615,6 +4625,7 @@ package body Trans.Chap8 is
             Translate_Signal_Target_Aggr
               (Chap3.Get_Composite_Base (Targ), Target, Target_Type);
          else
+            pragma Assert (Constrained);
             Chap4.Allocate_Complex_Object (Target_Type, Alloc_Stack, Targ);
             Translate_Signal_Target_Aggr (Targ, Target, Target_Type);
          end if;

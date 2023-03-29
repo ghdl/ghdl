@@ -258,6 +258,8 @@ package Trans.Chap3 is
    procedure Copy_Bounds (Dest : O_Enode; Src : O_Enode; Obj_Type : Iir);
    procedure Copy_Bounds (Dest : Mnode; Src : Mnode; Obj_Type : Iir);
 
+   procedure Copy_Range_No_Length (Dest : Mnode; Src : Mnode);
+
    --  Allocate an object of type OBJ_TYPE and set RES.
    --  RES must be a stable access of type ortho_ptr_type.
    --  For an unconstrained array, BOUNDS is a pointer to the boundaries of

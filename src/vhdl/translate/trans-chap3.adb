@@ -3416,6 +3416,16 @@ package body Trans.Chap3 is
       Copy_Bounds (M2Addr (Dest), M2Addr (Src), Obj_Type);
    end Copy_Bounds;
 
+   procedure Copy_Range_No_Length (Dest : Mnode; Src : Mnode) is
+   begin
+      New_Assign_Stmt (M2Lv (Range_To_Left (Dest)),
+                       M2E (Range_To_Left (Src)));
+      New_Assign_Stmt (M2Lv (Range_To_Right (Dest)),
+                       M2E (Range_To_Right (Src)));
+      New_Assign_Stmt (M2Lv (Range_To_Dir (Dest)),
+                       M2E (Range_To_Dir (Src)));
+   end Copy_Range_No_Length;
+
    procedure Translate_Object_Allocation
      (Res        : in out Mnode;
       Alloc_Kind : Allocation_Kind;
