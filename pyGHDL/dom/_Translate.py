@@ -55,6 +55,7 @@ from pyGHDL.dom.Sequential import (
     WaitStatement,
     SequentialSimpleSignalAssignment,
     NullStatement,
+    ExitStatement,
     SequentialProcedureCall,
 )
 
@@ -880,6 +881,8 @@ def GetSequentialStatementsFromChainedNodes(
             yield SequentialAssertStatement.parse(statement, label)
         elif kind == nodes.Iir_Kind.Null_Statement:
             yield NullStatement(statement, label)
+        elif kind == nodes.Iir_Kind.Exit_Statement:
+            yield ExitStatement(statement, label)
         else:
             raise DOMException(f"Unknown statement of kind '{kind.name}' in {entity} '{name}' at {position}.")
 

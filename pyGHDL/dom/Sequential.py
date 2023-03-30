@@ -49,6 +49,7 @@ from pyVHDLModel.Sequential import CaseStatement as VHDLModel_CaseStatement
 from pyVHDLModel.Sequential import ForLoopStatement as VHDLModel_ForLoopStatement
 from pyVHDLModel.Sequential import NullStatement as VHDLModel_NullStatement
 from pyVHDLModel.Sequential import WaitStatement as VHDLModel_WaitStatement
+from pyVHDLModel.Sequential import ExitStatement as VHDLModel_ExitStatement
 from pyVHDLModel.Sequential import SequentialProcedureCall as VHDLModel_SequentialProcedureCall
 from pyVHDLModel.Sequential import SequentialSimpleSignalAssignment as VHDLModel_SequentialSimpleSignalAssignment
 from pyVHDLModel.Sequential import SequentialReportStatement as VHDLModel_SequentialReportStatement
@@ -475,6 +476,17 @@ class NullStatement(VHDLModel_NullStatement, DOMMixin):
     ):
         super().__init__(label)
         DOMMixin.__init__(self, waitNode)
+
+
+@export
+class ExitStatement(VHDLModel_ExitStatement, DOMMixin):
+    def __init__(
+        self,
+        exitNode: Iir,
+        label: str = None,
+    ):
+        super().__init__(label)
+        DOMMixin.__init__(self, exitNode)
 
 
 @export
