@@ -485,8 +485,9 @@ class ExitStatement(VHDLModel_ExitStatement, DOMMixin):
         exitNode: Iir,
         label: str = None,
     ):
-        super().__init__(label)
+        super().__init__(condition=None, loopLabel=label)
         DOMMixin.__init__(self, exitNode)
+        #TODO: parse condition
 
 
 @export
