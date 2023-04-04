@@ -1040,8 +1040,13 @@ new_type_decl(OIdent Ident, OTnode Atype)
         OTnode Ptr = static_cast<OTnodeAccBase*>(Atype)->Acc;
         // Possibly still incomplete
         Atype->Dbg = DBuilder->createPointerType
-          (Ptr ? Ptr->Dbg : nullptr,
-           Atype->getBitSize(), 0, None, StringRef(Ident.cstr));
+          (Ptr ? Ptr->Dbg : nullptr, Atype->getBitSize(), 0,
+#if LLVM_VERSION_MAJOR >= 16
+	   std::nullopt,
+#else
+	   None,
+#endif
+	   StringRef(Ident.cstr));
         break;
       }
 
