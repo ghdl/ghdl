@@ -338,7 +338,7 @@ def GetScalarConstrainedSubtypeFromNode(
     # Check if RangeExpression. Might also be an AttributeName (see §3.1)
     if GetIirKindOfNode(rangeConstraint) == nodes.Iir_Kind.Range_Expression:
         r = GetRangeFromNode(rangeConstraint)
-    #todo: Get actual range from AttributeName node?
+    # todo: Get actual range from AttributeName node?
 
     return ConstrainedScalarSubtypeSymbol(subtypeIndicationNode, str(simpleTypeMark), r)  # XXX: hacked
 
