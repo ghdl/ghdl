@@ -649,7 +649,7 @@ package body Trans.Chap5 is
       Res_Type := Get_Type (Get_Association_Interface (Assoc, Inter));
       Bounds := Get_Actual_Bounds (False);
       Res := Alloc_Bounds (Res_Type, Alloc_System);
-      Chap7.Translate_Type_Conversion_Bounds
+      Chap7.Translate_Type_Conversion_Array_Bounds
         (Res, Bounds, Res_Type, Actual_Type, Assoc);
       return Res;
    end Get_Unconstrained_Port_Bounds;

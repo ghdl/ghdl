@@ -4519,9 +4519,138 @@ package body Trans.Chap7 is
       end case;
    end Translate_Allocator_By_Subtype;
 
+   --  Convert the bounds of an array (and only the bounds).
+   procedure Translate_Type_Conversion_Array_Bounds
+     (Res : Mnode; Src : Mnode; Res_Type : Iir; Src_Type : Iir; Loc : Iir)
+   is
+      Res_Indexes  : constant Iir_Flist := Get_Index_Subtype_List (Res_Type);
+      Src_Indexes  : constant Iir_Flist := Get_Index_Subtype_List (Src_Type);
+      Res_Base_Type    : constant Iir := Get_Base_Type (Res_Type);
+      Src_Base_Type    : constant Iir := Get_Base_Type (Src_Type);
+      Res_Base_Indexes : constant Iir_Flist :=
+        Get_Index_Subtype_List (Res_Base_Type);
+      Src_Base_Indexes : constant Iir_Flist :=
+        Get_Index_Subtype_List (Src_Base_Type);
+   begin
+      --  Convert bounds.
+      for I in Flist_First .. Flist_Last (Src_Indexes) loop
+         declare
+            Res_Idx : constant Iir := Get_Index_Type (Res_Indexes, I);
+            Src_Idx : constant Iir := Get_Index_Type (Src_Indexes, I);
+            Same_Index_Type : constant Boolean :=
+              (Get_Index_Type (Res_Base_Indexes, I)
+               = Get_Index_Type (Src_Base_Indexes, I));
+            Rb_Ptr          : Mnode;
+            Sb_Ptr          : Mnode;
+            Ee              : O_Enode;
+         begin
+            Open_Temp;
+            Rb_Ptr := Stabilize (Chap3.Bounds_To_Range (Res, Res_Type, I + 1));
+            Sb_Ptr := Stabilize (Chap3.Bounds_To_Range (Src, Src_Type, I + 1));
+            --  Convert left and right (unless they have the same type -
+            --  this is an optimization but also this deals with null
+            --  array in common cases).
+            Ee := M2E (Chap3.Range_To_Left (Sb_Ptr));
+            if not Same_Index_Type then
+               Ee := Translate_Type_Conversion (Ee, Src_Idx, Res_Idx, Loc);
+            end if;
+            New_Assign_Stmt (M2Lv (Chap3.Range_To_Left (Rb_Ptr)), Ee);
+            Ee := M2E (Chap3.Range_To_Right (Sb_Ptr));
+            if not Same_Index_Type then
+               Ee := Translate_Type_Conversion (Ee, Src_Idx, Res_Idx, Loc);
+            end if;
+            New_Assign_Stmt (M2Lv (Chap3.Range_To_Right (Rb_Ptr)), Ee);
+            --  Copy Dir and Length.
+            New_Assign_Stmt (M2Lv (Chap3.Range_To_Dir (Rb_Ptr)),
+                             M2E (Chap3.Range_To_Dir (Sb_Ptr)));
+            New_Assign_Stmt (M2Lv (Chap3.Range_To_Length (Rb_Ptr)),
+                             M2E (Chap3.Range_To_Length (Sb_Ptr)));
+            Close_Temp;
+         end;
+      end loop;
+
+      --  TODO: element layout
+      --  array: same sizes, bounds: recurse; but constrained states can be
+      --     different.
+      --  record: no conversion, simply copy ?
+      declare
+         Res_El_Type : constant Iir := Get_Element_Subtype (Res_Type);
+         Src_El_Type : constant Iir := Get_Element_Subtype (Src_Type);
+         Res_El : Mnode;
+         Src_El : Mnode;
+      begin
+         if Is_Fully_Constrained_Type (Res_El_Type)
+           and then Is_Fully_Constrained_Type (Src_El_Type)
+         then
+            --  No need to convert.
+            --  TODO: still check matching length (if not same type).
+            return;
+         end if;
+
+         --  TODO: if the subtype is fully bounded, get the subtype bounds
+         --  directly (and not from the object bounds).
+         Res_El := Stabilize
+           (Chap3.Array_Bounds_To_Element_Layout (Res, Res_Type));
+         Src_El := Stabilize
+           (Chap3.Array_Bounds_To_Element_Layout (Src, Src_Type));
+
+         if Res_El_Type = Src_El_Type then
+            --  TODO: copy layout, no need to check.
+            raise Internal_Error;
+         else
+            --  TODO: copy or convert.
+            --  1. Copy layout size
+            for K in Object_Kind_Type loop
+               New_Assign_Stmt (Chap3.Layout_To_Size (Res_El, K),
+                                New_Value (Chap3.Layout_To_Size (Res_El, K)));
+            end loop;
+
+            --  2. Recurse on bounds
+            Translate_Type_Conversion_Array_Bounds
+              (Stabilize (Chap3.Layout_To_Bounds (Res_El)),
+               Stabilize (Chap3.Layout_To_Bounds (Src_El)),
+               Res_El_Type, Src_El_Type, Loc);
+         end if;
+      end;
+   end Translate_Type_Conversion_Array_Bounds;
+
    function Translate_Fat_Array_Type_Conversion
      (Expr : O_Enode; Expr_Type : Iir; Res_Type : Iir; Loc : Iir)
-     return O_Enode;
+     return O_Enode
+   is
+      Res_Info  : constant Type_Info_Acc := Get_Info (Res_Type);
+      Expr_Info : constant Type_Info_Acc := Get_Info (Expr_Type);
+
+      Res       : Mnode;
+      E         : Mnode;
+      Bounds    : O_Dnode;
+   begin
+      Res := Create_Temp (Res_Info, Mode_Value);
+      Bounds := Create_Temp (Res_Info.B.Bounds_Type);
+
+      Open_Temp;
+      E := Stabilize (E2M (Expr, Expr_Info, Mode_Value));
+
+      --  Set base.
+      New_Assign_Stmt
+        (M2Lp (Chap3.Get_Composite_Base (Res)),
+         New_Convert_Ov (M2Addr (Chap3.Get_Composite_Base (E)),
+           Res_Info.B.Base_Ptr_Type (Mode_Value)));
+      --  Set bounds.
+      New_Assign_Stmt
+        (M2Lp (Chap3.Get_Composite_Bounds (Res)),
+         New_Address (New_Obj (Bounds), Res_Info.B.Bounds_Ptr_Type));
+
+      --  Convert bounds.
+      Translate_Type_Conversion_Array_Bounds
+        (Dv2M (Bounds, Res_Info, Mode_Value,
+               Res_Info.B.Bounds_Type, Res_Info.B.Bounds_Ptr_Type),
+         Stabilize (Chap3.Get_Composite_Bounds (E)),
+         Res_Type, Expr_Type, Loc);
+
+      Close_Temp;
+      return M2E (Res);
+   end Translate_Fat_Array_Type_Conversion;
 
    function Translate_Array_Subtype_Conversion
      (Expr : O_Enode; Expr_Type : Iir; Res_Type : Iir; Loc : Iir)
@@ -4585,97 +4714,6 @@ package body Trans.Chap7 is
             Error_Kind ("translate_type_conversion", Res_Type);
       end case;
    end Translate_Type_Conversion;
-
-   procedure Translate_Type_Conversion_Bounds
-     (Res : Mnode; Src : Mnode; Res_Type : Iir; Src_Type : Iir; Loc : Iir)
-   is
-      Res_Indexes  : constant Iir_Flist := Get_Index_Subtype_List (Res_Type);
-      Src_Indexes  : constant Iir_Flist := Get_Index_Subtype_List (Src_Type);
-      Res_Base_Type    : constant Iir := Get_Base_Type (Res_Type);
-      Src_Base_Type    : constant Iir := Get_Base_Type (Src_Type);
-      Res_Base_Indexes : constant Iir_Flist :=
-        Get_Index_Subtype_List (Res_Base_Type);
-      Src_Base_Indexes : constant Iir_Flist :=
-        Get_Index_Subtype_List (Src_Base_Type);
-
-      R_El              : Iir;
-      S_El              : Iir;
-   begin
-      --  Convert bounds.
-      for I in Flist_First .. Flist_Last (Src_Indexes) loop
-         R_El := Get_Index_Type (Res_Indexes, I);
-         S_El := Get_Index_Type (Src_Indexes, I);
-         declare
-            Rb_Ptr          : Mnode;
-            Sb_Ptr          : Mnode;
-            Ee              : O_Enode;
-            Same_Index_Type : constant Boolean :=
-              (Get_Index_Type (Res_Base_Indexes, I)
-               = Get_Index_Type (Src_Base_Indexes, I));
-         begin
-            Open_Temp;
-            Rb_Ptr := Stabilize (Chap3.Bounds_To_Range (Res, Res_Type, I + 1));
-            Sb_Ptr := Stabilize (Chap3.Bounds_To_Range (Src, Src_Type, I + 1));
-            --  Convert left and right (unless they have the same type -
-            --  this is an optimization but also this deals with null
-            --  array in common cases).
-            Ee := M2E (Chap3.Range_To_Left (Sb_Ptr));
-            if not Same_Index_Type then
-               Ee := Translate_Type_Conversion (Ee, S_El, R_El, Loc);
-            end if;
-            New_Assign_Stmt (M2Lv (Chap3.Range_To_Left (Rb_Ptr)), Ee);
-            Ee := M2E (Chap3.Range_To_Right (Sb_Ptr));
-            if not Same_Index_Type then
-               Ee := Translate_Type_Conversion (Ee, S_El, R_El, Loc);
-            end if;
-            New_Assign_Stmt (M2Lv (Chap3.Range_To_Right (Rb_Ptr)), Ee);
-            --  Copy Dir and Length.
-            New_Assign_Stmt (M2Lv (Chap3.Range_To_Dir (Rb_Ptr)),
-                             M2E (Chap3.Range_To_Dir (Sb_Ptr)));
-            New_Assign_Stmt (M2Lv (Chap3.Range_To_Length (Rb_Ptr)),
-                             M2E (Chap3.Range_To_Length (Sb_Ptr)));
-            Close_Temp;
-         end;
-      end loop;
-   end Translate_Type_Conversion_Bounds;
-
-   function Translate_Fat_Array_Type_Conversion
-     (Expr : O_Enode; Expr_Type : Iir; Res_Type : Iir; Loc : Iir)
-     return O_Enode
-   is
-      Res_Info  : constant Type_Info_Acc := Get_Info (Res_Type);
-      Expr_Info : constant Type_Info_Acc := Get_Info (Expr_Type);
-
-      Res       : Mnode;
-      E         : Mnode;
-      Bounds    : O_Dnode;
-   begin
-      Res := Create_Temp (Res_Info, Mode_Value);
-      Bounds := Create_Temp (Res_Info.B.Bounds_Type);
-
-      Open_Temp;
-      E := Stabilize (E2M (Expr, Expr_Info, Mode_Value));
-
-      --  Set base.
-      New_Assign_Stmt
-        (M2Lp (Chap3.Get_Composite_Base (Res)),
-         New_Convert_Ov (M2Addr (Chap3.Get_Composite_Base (E)),
-           Res_Info.B.Base_Ptr_Type (Mode_Value)));
-      --  Set bounds.
-      New_Assign_Stmt
-        (M2Lp (Chap3.Get_Composite_Bounds (Res)),
-         New_Address (New_Obj (Bounds), Res_Info.B.Bounds_Ptr_Type));
-
-      --  Convert bounds.
-      Translate_Type_Conversion_Bounds
-        (Dv2M (Bounds, Res_Info, Mode_Value,
-               Res_Info.B.Bounds_Type, Res_Info.B.Bounds_Ptr_Type),
-         Stabilize (Chap3.Get_Composite_Bounds (E)),
-         Res_Type, Expr_Type, Loc);
-
-      Close_Temp;
-      return M2E (Res);
-   end Translate_Fat_Array_Type_Conversion;
 
    function Sig2val_Prepare_Composite
      (Targ : Mnode; Targ_Type : Iir; Data : Mnode) return Mnode

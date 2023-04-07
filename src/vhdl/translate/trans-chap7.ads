@@ -87,7 +87,7 @@ package Trans.Chap7 is
      (Res : in out Mnode; Expr : Mnode);
 
    --  Convert bounds SRC (of type SRC_TYPE) to RES (of type RES_TYPE).
-   procedure Translate_Type_Conversion_Bounds
+   procedure Translate_Type_Conversion_Array_Bounds
      (Res : Mnode; Src : Mnode; Res_Type : Iir; Src_Type : Iir; Loc : Iir);
 
    --  Convert range EXPR into ortho tree.
