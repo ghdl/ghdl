@@ -1178,7 +1178,7 @@ package body Trans.Chap8 is
             --  TODO: Because the aggregate is composed only of locally static
             --  variable names, it is possible to compute the bounds and check
             --  matching constraints.
-            Chap3.Translate_Anonymous_Subtype_Definition (Targ_Type, False);
+            Chap3.Translate_Anonymous_Subtype_Definition (Targ_Type, True);
             E := Chap7.Translate_Expression (Expr, Targ_Type);
 
             if Assignment_Overlap (Target, Expr) then
