@@ -1719,13 +1719,25 @@ package body Trans.Chap7 is
             Bnd := Chap3.Get_Composite_Bounds (Dyn_Mnodes (1));
             if Res_Type = Expr_Type then
                Bnd := Chap3.Array_Bounds_To_Element_Layout (Bnd, Expr_Type);
+               Gen_Memcpy
+                 (M2Addr (Chap3.Array_Bounds_To_Element_Layout
+                            (Var_Bounds, Expr_Type)),
+                  M2Addr (Bnd),
+                  New_Lit (New_Sizeof (Get_Info (El_Type).B.Layout_Type,
+                                       Ghdl_Index_Type)));
+            else
+               Gen_Memcpy
+                 (M2Addr (Chap3.Array_Bounds_To_Element_Bounds
+                            (Var_Bounds, Expr_Type)),
+                  M2Addr (Bnd),
+                  New_Lit (New_Sizeof (Get_Info (El_Type).B.Bounds_Type,
+                                       Ghdl_Index_Type)));
+               --  Compute size.
+               Chap3.Gen_Call_Type_Builder
+                 (Chap3.Array_Bounds_To_Element_Layout (Var_Bounds, Expr_Type),
+                  Get_Element_Subtype (Expr_Type),
+                  Mode_Value);
             end if;
-            Gen_Memcpy
-              (M2Addr (Chap3.Array_Bounds_To_Element_Layout
-                         (Var_Bounds, Expr_Type)),
-               M2Addr (Bnd),
-               New_Lit (New_Sizeof (Get_Info (El_Type).B.Layout_Type,
-                                    Ghdl_Index_Type)));
          end if;
       end Eval_One;
 
