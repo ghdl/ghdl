@@ -168,12 +168,6 @@ package body Translation is
             New_Debug_Comment_Decl
               ("package declaration " & Image_Identifier (Lib_Unit));
             Chap2.Translate_Package_Declaration (Lib_Unit);
-            if Get_Package_Origin (Lib_Unit) /= Null_Iir
-              and then Get_Package_Body (Lib_Unit) /= Null_Iir
-            then
-               --  Corresponding body for package instantiation.
-               Chap2.Translate_Package_Body (Get_Package_Body (Lib_Unit));
-            end if;
          when Iir_Kind_Package_Body =>
             New_Debug_Comment_Decl
               ("package body " & Image_Identifier (Lib_Unit));
