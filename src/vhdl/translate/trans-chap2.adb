@@ -1057,6 +1057,7 @@ package body Trans.Chap2 is
 
    procedure Elab_Package_Body (Spec : Iir_Package_Declaration; Bod : Iir)
    is
+      --  SPEC can be a package declaration or a package instantiation.
       Is_Spec_Decl : constant Boolean :=
         Get_Kind (Spec) = Iir_Kind_Package_Declaration;
 
@@ -1066,14 +1067,18 @@ package body Trans.Chap2 is
       Final  : Boolean;
    begin
       if Is_Spec_Decl and then Get_Macro_Expanded_Flag (Spec) then
+         --  Macro-expanded packages are skipped.
          return;
       end if;
 
       if not Flag_Elaboration and not Is_Nested_Package (Spec) then
+         --  No elaboration code generated, except for nested packages
+         --  (could be within a subprogram).
          return;
       end if;
 
       if Is_Spec_Decl and then Is_Uninstantiated_Package (Spec) then
+         --  Make spec reachable.
          Set_Scope_Via_Field (Info.Package_Spec_Scope,
                               Info.Package_Spec_Field,
                               Info.Package_Body_Scope'Access);
