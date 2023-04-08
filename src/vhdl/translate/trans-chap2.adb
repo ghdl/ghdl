@@ -1687,8 +1687,6 @@ package body Trans.Chap2 is
          declare
             Spec_Parent : constant Iir := Get_Parent (Spec);
             Bod : constant Iir := Get_Package_Body (Spec);
-            Inst_Bod : constant Iir := Get_Instance_Package_Body (Inst);
-            Final : Boolean;
          begin
             --  There are no routines generated to elaborate macro-expanded
             --  packages, but dependencies still need to be elaborated.
@@ -1701,12 +1699,17 @@ package body Trans.Chap2 is
 
             Elab_Package (Inst, Inst);
 
-            if Inst_Bod /= Null_Iir then
+            if Get_Immediate_Body_Flag (Inst) then
                --  Humm, if BOD is present then INST_BOD should also be
                --  present.  But this is true only if the spec needs a body.
-               Open_Temp;
-               Chap4.Elab_Declaration_Chain (Inst_Bod, Final);
-               Close_Temp;
+               declare
+                  Inst_Bod : constant Iir := Get_Instance_Package_Body (Inst);
+                  Final : Boolean;
+               begin
+                  Open_Temp;
+                  Chap4.Elab_Declaration_Chain (Inst_Bod, Final);
+                  Close_Temp;
+               end;
             end if;
          end;
          return;
