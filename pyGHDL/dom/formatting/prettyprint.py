@@ -442,13 +442,14 @@ class PrettyPrint:
 
     def formatSubtypeIndication(self, subtypeIndication, entity: str, name: str) -> str:
         if isinstance(subtypeIndication, SimpleSubtypeSymbol):
-            return f"{subtypeIndication.SymbolName}"
+            return f"{subtypeIndication.Identifier}"
         elif isinstance(subtypeIndication, ConstrainedCompositeSubtypeSymbol):
             constraints = []
-            for constraint in subtypeIndication.Constraints:
-                constraints.append(str(constraint))
+            # FIXME: disabled due to problems with symbols
+            # for constraint in subtypeIndication.Constraints:
+            #     constraints.append(str(constraint))
 
-            return f"{subtypeIndication.SymbolName}({', '.join(constraints)})"
+            return f"{subtypeIndication.Identifier}({', '.join(constraints)})"
         else:
             raise PrettyPrintException(
                 f"Unhandled subtype kind '{subtypeIndication.__class__.__name__}' for {entity} '{name}'."
