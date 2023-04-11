@@ -144,7 +144,9 @@ class PrettyPrint:
                 buffer.append(f"{prefix}  - {package.Identifier} instantiate from {package.PackageReference}")
         buffer.append(f"{prefix}Entities ({len(library.Entities)}):")
         for entity in library.Entities.values():
-            buffer.append(f"{prefix}  - {entity.Identifier}({', '.join([a.Identifier for a in entity.Architectures.values()])})")
+            buffer.append(
+                f"{prefix}  - {entity.Identifier}({', '.join([a.Identifier for a in entity.Architectures.values()])})"
+            )
         buffer.append(f"{prefix}Configurations ({len(library.Configurations)}):")
         for configuration in library.Configurations.values():
             buffer.append(f"{prefix}  - {configuration.Identifier}")
