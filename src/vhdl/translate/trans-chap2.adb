@@ -854,8 +854,8 @@ package body Trans.Chap2 is
       Chap2.Declare_Inst_Type_And_Ptr
         (Info.Package_Body_Scope'Access, Info.Package_Body_Ptr_Type);
 
-      --  Each subprogram has a body instance argument (because subprogram
-      --  bodys can access to body declarations).
+      --  Each subprogram has a body instance argument (because subprograms
+      --  body can access body declarations).
       Subprgs.Push_Subprg_Instance
         (Info.Package_Body_Scope'Access, Info.Package_Body_Ptr_Type,
          Wki_Instance, Prev_Subprg_Instance);
@@ -905,6 +905,61 @@ package body Trans.Chap2 is
 
       Save_Local_Identifier (Info.Package_Local_Id);
    end Translate_Package_Uninst_Internal;
+
+   procedure Translate_Package_Declaration_Subprograms
+     (Decl : Iir_Package_Declaration; What : Subprg_Translate_Kind)
+   is
+      Info : constant Ortho_Info_Acc := Get_Info (Decl);
+      Is_Uninst : constant Boolean := Is_Uninstantiated_Package (Decl);
+      Prev_Subprg_Instance : Subprgs.Subprg_Instance_Stack;
+      Mark  : Id_Mark_Type;
+   begin
+      if Is_Uninst and then Get_Macro_Expanded_Flag (Decl) then
+         --  Nothing to do.
+         return;
+      end if;
+
+      Push_Identifier_Prefix (Mark, Get_Identifier (Decl));
+
+      if Is_Uninst then
+         --  An extra parameter for the package instance needs to be added
+         --  to the subprograms.
+         Subprgs.Push_Subprg_Instance
+           (Info.Package_Body_Scope'Access, Info.Package_Body_Ptr_Type,
+            Wki_Instance, Prev_Subprg_Instance);
+      end if;
+
+      Chap4.Translate_Declaration_Chain_Subprograms (Decl, What);
+
+      if Is_Uninst then
+         if What in Subprg_Translate_Spec then
+            --  Also declare elaborator subprograms.
+            Create_Package_Elaborator (Info);
+         end if;
+
+         Subprgs.Pop_Subprg_Instance (Wki_Instance, Prev_Subprg_Instance);
+      end if;
+
+      Pop_Identifier_Prefix (Mark);
+   end Translate_Package_Declaration_Subprograms;
+
+   procedure Translate_Package_Body_Subprograms
+     (Bod : Iir_Package_Body; What : Subprg_Translate_Kind)
+   is
+      Spec : constant Iir := Get_Package (Bod);
+      Mark  : Id_Mark_Type;
+   begin
+      if Is_Uninstantiated_Package (Spec) then
+         if Get_Macro_Expanded_Flag (Spec) then
+            return;
+         end if;
+         raise Internal_Error;
+      else
+         Push_Identifier_Prefix (Mark, Get_Identifier (Spec));
+         Chap4.Translate_Declaration_Chain_Subprograms (Bod, What);
+         Pop_Identifier_Prefix (Mark);
+      end if;
+   end Translate_Package_Body_Subprograms;
 
    procedure Translate_Package_Declaration (Decl : Iir_Package_Declaration)
    is
@@ -1013,7 +1068,7 @@ package body Trans.Chap2 is
          Clear_Scope (Info.Package_Spec_Scope);
       end if;
 
-      if not Is_Nested then
+      if not Is_Nested and Flag_Elaboration then
          Elab_Package_Body (Spec, Bod);
       end if;
 
@@ -1102,24 +1157,23 @@ package body Trans.Chap2 is
       --  SPEC can be a package declaration or a package instantiation.
       Is_Spec_Decl : constant Boolean :=
         Get_Kind (Spec) = Iir_Kind_Package_Declaration;
+      Is_Uninst : constant Boolean :=
+        Is_Spec_Decl and then Is_Uninstantiated_Package (Spec);
 
       Info   : constant Ortho_Info_Acc := Get_Info (Spec);
       If_Blk : O_If_Block;
       Constr : O_Assoc_List;
       Final  : Boolean;
    begin
-      if Is_Spec_Decl and then Get_Macro_Expanded_Flag (Spec) then
-         --  Macro-expanded packages are skipped.
-         return;
-      end if;
+      --  Macro-expanded packages are skipped.
+      pragma Assert
+        (not (Is_Spec_Decl and then Get_Macro_Expanded_Flag (Spec)));
 
-      if not Flag_Elaboration and not Is_Nested_Package (Spec) then
-         --  No elaboration code generated, except for nested packages
-         --  (could be within a subprogram).
-         return;
-      end if;
+      --  No elaboration code generated, except for nested packages
+      --  (could be within a subprogram).
+      pragma Assert (Flag_Elaboration or else Is_Nested_Package (Spec));
 
-      if Is_Spec_Decl and then Is_Uninstantiated_Package (Spec) then
+      if Is_Uninst then
          --  Make spec reachable.
          Set_Scope_Via_Field (Info.Package_Spec_Scope,
                               Info.Package_Spec_Field,
@@ -1155,13 +1209,17 @@ package body Trans.Chap2 is
       Pop_Local_Factory;
       Finish_Subprogram_Body;
 
-      if Is_Spec_Decl and then Is_Uninstantiated_Package (Spec) then
+      if Is_Uninst then
          Clear_Scope (Info.Package_Spec_Scope);
       end if;
    end Elab_Package_Body;
 
    procedure Elab_Package_Unit_Without_Body (Spec : Iir) is
    begin
+      if Get_Macro_Expanded_Flag (Spec) then
+         return;
+      end if;
+
       Elab_Package_Body (Spec, Null_Iir);
    end Elab_Package_Unit_Without_Body;
 
