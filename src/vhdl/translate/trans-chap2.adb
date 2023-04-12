@@ -1118,6 +1118,11 @@ package body Trans.Chap2 is
       end if;
    end Elab_Package_Body;
 
+   procedure Elab_Package_Unit_Without_Body (Spec : Iir) is
+   begin
+      Elab_Package_Body (Spec, Null_Iir);
+   end Elab_Package_Unit_Without_Body;
+
    procedure Instantiate_Iir_Info (N : Iir);
 
    procedure Instantiate_Iir_Chain_Info (Chain : Iir)

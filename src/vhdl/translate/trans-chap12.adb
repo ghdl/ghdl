@@ -654,7 +654,7 @@ package body Trans.Chap12 is
          case Get_Kind (Lib_Unit) is
             when Iir_Kind_Package_Declaration =>
                if not Get_Elab_Flag (Unit) then
-                  Chap2.Elab_Package_Body (Lib_Unit, Null_Iir);
+                  Chap2.Elab_Package_Unit_Without_Body (Lib_Unit);
                end if;
             when Iir_Kind_Entity_Declaration =>
                Gen_Last_Arch (Lib_Unit);
