@@ -167,15 +167,15 @@ package body Translation is
          when Iir_Kind_Package_Declaration =>
             New_Debug_Comment_Decl
               ("package declaration " & Image_Identifier (Lib_Unit));
-            Chap2.Translate_Package_Declaration (Lib_Unit);
+            Chap2.Translate_Package_Declaration_Unit (Lib_Unit);
          when Iir_Kind_Package_Body =>
             New_Debug_Comment_Decl
               ("package body " & Image_Identifier (Lib_Unit));
-            Chap2.Translate_Package_Body (Lib_Unit);
+            Chap2.Translate_Package_Body_Unit (Lib_Unit);
          when Iir_Kind_Package_Instantiation_Declaration =>
             New_Debug_Comment_Decl
               ("package instantiation " & Image_Identifier (Lib_Unit));
-            Chap2.Translate_Package_Instantiation_Declaration (Lib_Unit);
+            Chap2.Translate_Package_Instantiation_Declaration_Unit (Lib_Unit);
          when Iir_Kind_Entity_Declaration =>
             New_Debug_Comment_Decl ("entity " & Image_Identifier (Lib_Unit));
             Chap1.Translate_Entity_Declaration (Lib_Unit);

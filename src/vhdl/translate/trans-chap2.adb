@@ -912,7 +912,18 @@ package body Trans.Chap2 is
       Translate_Package (Decl, Get_Package_Header (Decl));
    end Translate_Package_Declaration;
 
-   procedure Translate_Package_Body (Bod : Iir_Package_Body)
+   procedure Translate_Package_Declaration_Unit
+     (Decl : Iir_Package_Declaration) is
+   begin
+      --  Skip uninstantiated package that have to be macro-expanded.
+      if Get_Macro_Expanded_Flag (Decl) then
+         return;
+      end if;
+
+      Translate_Package (Decl, Get_Package_Header (Decl));
+   end Translate_Package_Declaration_Unit;
+
+   procedure Translate_Package_Body_Internal (Bod : Iir_Package_Body)
    is
       Is_Nested : constant Boolean := Is_Nested_Package (Bod);
       Spec      : constant Iir_Package_Declaration := Get_Package (Bod);
@@ -1001,7 +1012,18 @@ package body Trans.Chap2 is
       if Is_Nested then
          Pop_Identifier_Prefix (Mark);
       end if;
+   end Translate_Package_Body_Internal;
+
+   --  For a nested package body for nested package instantiation body.
+   procedure Translate_Package_Body (Bod : Iir_Package_Body) is
+   begin
+      Translate_Package_Body_Internal (Bod);
    end Translate_Package_Body;
+
+   procedure Translate_Package_Body_Unit (Bod : Iir_Package_Body) is
+   begin
+      Translate_Package_Body (Bod);
+   end Translate_Package_Body_Unit;
 
    --  Elaborate a package or a package instantiation.
    procedure Elab_Package (Spec : Iir; Header : Iir)
@@ -1616,35 +1638,12 @@ package body Trans.Chap2 is
         (Info.Package_Instance_Spec_Scope'Access);
    end Instantiate_Info_Package;
 
-   procedure Translate_Package_Instantiation_Declaration (Inst : Iir)
+   procedure Translate_Package_Instantiation_Declaration_Internal (Inst : Iir)
    is
-      Spec           : constant Iir := Get_Uninstantiated_Package_Decl (Inst);
-      Pkg_Info       : constant Ortho_Info_Acc := Get_Info (Spec);
-      Info           : Ortho_Info_Acc;
-      Interface_List : O_Inter_List;
+      Spec     : constant Iir := Get_Uninstantiated_Package_Decl (Inst);
+      Pkg_Info : constant Ortho_Info_Acc := Get_Info (Spec);
+      Info     : Ortho_Info_Acc;
    begin
-      if Get_Macro_Expanded_Flag (Spec) then
-         --  Macro-expanded instantiations are translated like a package.
-         Translate_Package (Inst, Inst);
-
-         --  Generate code for the body.
-         declare
-            Bod : constant Iir := Get_Instance_Package_Body (Inst);
-         begin
-            if Get_Immediate_Body_Flag (Inst) then
-               Translate_Package_Body (Bod);
-            elsif not Get_Need_Body (Spec)
-              and then not Is_Nested_Package (Inst)
-              and then Global_Storage /= O_Storage_External
-            then
-               --  As an elaboration subprogram for the body is always
-               --  needed, generate it.
-               Elab_Package_Body (Inst, Null_Iir);
-            end if;
-         end;
-         return;
-      end if;
-
       Info := Add_Info (Inst, Kind_Package_Instance);
 
       --  Create the variable containing data for the package instance.
@@ -1661,36 +1660,83 @@ package body Trans.Chap2 is
                            Info.Package_Instance_Body_Scope'Access);
 
       Instantiate_Info_Package (Inst);
+   end Translate_Package_Instantiation_Declaration_Internal;
 
-      if Is_Nested_Package (Inst) or else not Flag_Elaboration then
-         return;
+   procedure Translate_Package_Instantiation_Declaration_Macro (Inst : Iir)
+   is
+      Spec : constant Iir := Get_Uninstantiated_Package_Decl (Inst);
+      Bod  : constant Iir := Get_Instance_Package_Body (Inst);
+   begin
+      --  Macro-expanded instantiations are translated like a package.
+      Translate_Package (Inst, Inst);
+
+      --  Generate code for the body.
+      if Get_Immediate_Body_Flag (Inst) then
+         Translate_Package_Body (Bod);
+      elsif not Get_Need_Body (Spec)
+        and then not Is_Nested_Package (Inst)
+        and then Global_Storage /= O_Storage_External
+      then
+         --  As an elaboration subprogram for the body is always
+         --  needed, generate it.
+         Elab_Package_Body (Inst, Null_Iir);
       end if;
+   end Translate_Package_Instantiation_Declaration_Macro;
 
-      --  Declare elaboration procedure
-      Start_Procedure_Decl
-        (Interface_List, Create_Identifier ("ELAB"), Global_Storage);
-      --  Chap2.Add_Subprg_Instance_Interfaces
-      --   (Interface_List, Info.Package_Instance_Elab_Instance);
-      Finish_Subprogram_Decl
-        (Interface_List, Info.Package_Instance_Elab_Subprg);
-
-      if Global_Storage = O_Storage_External then
-         return;
+   procedure Translate_Package_Instantiation_Declaration (Inst : Iir)
+   is
+      Spec : constant Iir := Get_Uninstantiated_Package_Decl (Inst);
+   begin
+      if Get_Macro_Expanded_Flag (Spec) then
+         Translate_Package_Instantiation_Declaration_Macro (Inst);
+      else
+         Translate_Package_Instantiation_Declaration_Internal (Inst);
       end if;
-
-      --  Elaborator:
-      Start_Subprogram_Body (Info.Package_Instance_Elab_Subprg);
-      --  Chap2.Start_Subprg_Instance_Use
-      --    (Info.Package_Instance_Elab_Instance);
-
-      Elab_Dependence (Get_Design_Unit (Inst));
-
-      Elab_Package_Instantiation_Declaration (Inst);
-
-      --  Chap2.Finish_Subprg_Instance_Use
-      --    (Info.Package_Instance_Elab_Instance);
-      Finish_Subprogram_Body;
    end Translate_Package_Instantiation_Declaration;
+
+   procedure Translate_Package_Instantiation_Declaration_Unit (Inst : Iir)
+   is
+      Spec : constant Iir := Get_Uninstantiated_Package_Decl (Inst);
+      Interface_List : O_Inter_List;
+      Info           : Ortho_Info_Acc;
+   begin
+      if Get_Macro_Expanded_Flag (Spec) then
+         Translate_Package_Instantiation_Declaration_Macro (Inst);
+      else
+         Translate_Package_Instantiation_Declaration_Internal (Inst);
+
+         if not Flag_Elaboration then
+            return;
+         end if;
+
+         Info := Get_Info (Inst);
+
+         --  Declare elaboration procedure
+         Start_Procedure_Decl
+           (Interface_List, Create_Identifier ("ELAB"), Global_Storage);
+         --  Chap2.Add_Subprg_Instance_Interfaces
+         --   (Interface_List, Info.Package_Instance_Elab_Instance);
+         Finish_Subprogram_Decl
+           (Interface_List, Info.Package_Instance_Elab_Subprg);
+
+         if Global_Storage = O_Storage_External then
+            return;
+         end if;
+
+         --  Elaborator:
+         Start_Subprogram_Body (Info.Package_Instance_Elab_Subprg);
+         --  Chap2.Start_Subprg_Instance_Use
+         --    (Info.Package_Instance_Elab_Instance);
+
+         Elab_Dependence (Get_Design_Unit (Inst));
+
+         Elab_Package_Instantiation_Declaration (Inst);
+
+         --  Chap2.Finish_Subprg_Instance_Use
+         --    (Info.Package_Instance_Elab_Instance);
+         Finish_Subprogram_Body;
+      end if;
+   end Translate_Package_Instantiation_Declaration_Unit;
 
    procedure Elab_Package_Instantiation_Declaration (Inst : Iir)
    is
@@ -1702,12 +1748,11 @@ package body Trans.Chap2 is
       --  Macro-expanded instances are handled like a regular package.
       if Get_Macro_Expanded_Flag (Spec) then
          declare
-            Spec_Parent : constant Iir := Get_Parent (Spec);
             Bod : constant Iir := Get_Package_Body (Spec);
          begin
             --  There are no routines generated to elaborate macro-expanded
             --  packages, but dependencies still need to be elaborated.
-            if Get_Kind (Spec_Parent) = Iir_Kind_Design_Unit then
+            if not Is_Nested_Package (Spec) then
                Elab_Dependence (Get_Design_Unit (Spec));
                if Bod /= Null_Iir then
                   Elab_Dependence (Get_Design_Unit (Bod));

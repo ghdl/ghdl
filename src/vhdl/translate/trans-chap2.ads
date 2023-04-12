@@ -29,15 +29,20 @@ package Trans.Chap2 is
    --  overload number if any.
    procedure Push_Subprg_Identifier (Spec : Iir; Mark : out Id_Mark_Type);
 
+   --  Package declaration, body and instantiation when they are design units.
+   procedure Translate_Package_Declaration_Unit
+     (Decl : Iir_Package_Declaration);
+   procedure Translate_Package_Body_Unit (Bod : Iir_Package_Body);
+   procedure Translate_Package_Instantiation_Declaration_Unit (Inst : Iir);
+   procedure Elab_Package_Unit_Without_Body (Spec : Iir);
+
+   --  For nested packages.
    procedure Translate_Package_Declaration (Decl : Iir_Package_Declaration);
    procedure Translate_Package_Body (Bod : Iir_Package_Body);
    procedure Translate_Package_Instantiation_Declaration (Inst : Iir);
-
    procedure Elab_Package_Declaration (Spec : Iir);
    procedure Elab_Package_Body (Spec : Iir_Package_Declaration; Bod : Iir);
-
    procedure Elab_Package_Instantiation_Declaration (Inst : Iir);
-   procedure Elab_Package_Unit_Without_Body (Spec : Iir);
 
    --  Add info for an interface_package_declaration or a
    --  package_instantiation_declaration
