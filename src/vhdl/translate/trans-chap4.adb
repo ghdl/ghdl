@@ -2832,8 +2832,11 @@ package body Trans.Chap4 is
                null;
 
             when Iir_Kind_Package_Declaration =>
-               Chap2.Elab_Package (Decl, Get_Package_Header (Decl));
-               --  FIXME: finalizer
+               if not Is_Uninstantiated_Package (Decl) then
+                  --  Elaborate nested package (unless it is uninstantiated).
+                  Chap2.Elab_Package_Declaration (Decl);
+                  --  FIXME: finalizer
+               end if;
             when Iir_Kind_Package_Body =>
                declare
                   Nested_Final : Boolean;

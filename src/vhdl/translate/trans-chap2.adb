@@ -35,6 +35,8 @@ package body Trans.Chap2 is
    use Trans.Subprgs;
    use Trans.Helpers;
 
+   procedure Elab_Package (Spec : Iir; Header : Iir);
+
    type Name_String_Xlat_Array is array (Name_Id range <>) of String (1 .. 4);
 
    --  Ortho function names are only composed of [A-Za-z0-9_].  For VHDL
@@ -1054,6 +1056,11 @@ package body Trans.Chap2 is
          Finish_Subprogram_Body;
       end if;
    end Elab_Package;
+
+   procedure Elab_Package_Declaration (Spec : Iir) is
+   begin
+      Elab_Package (Spec, Get_Package_Header (Spec));
+   end Elab_Package_Declaration;
 
    procedure Elab_Package_Body (Spec : Iir_Package_Declaration; Bod : Iir)
    is
