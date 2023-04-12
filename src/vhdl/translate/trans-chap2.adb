@@ -35,7 +35,7 @@ package body Trans.Chap2 is
    use Trans.Subprgs;
    use Trans.Helpers;
 
-   procedure Elab_Package (Spec : Iir; Header : Iir);
+   procedure Elab_Package_Internal (Spec : Iir; Header : Iir);
 
    type Name_String_Xlat_Array is array (Name_Id range <>) of String (1 .. 4);
 
@@ -766,22 +766,17 @@ package body Trans.Chap2 is
 
    --  Translate a package declaration or a macro-expanded package
    --  instantiation.  HEADER is the node containing generic and generic_map.
-   procedure Translate_Package (Decl : Iir; Header : Iir)
+   procedure Translate_Package_Internal (Decl : Iir; Header : Iir)
    is
       Is_Nested            : constant Boolean := Is_Nested_Package (Decl);
       Is_Uninstantiated    : constant Boolean :=
         Get_Kind (Decl) = Iir_Kind_Package_Declaration
         and then Is_Uninstantiated_Package (Decl);
-      Mark                 : Id_Mark_Type;
       Info                 : Ortho_Info_Acc;
       Interface_List       : O_Inter_List;
       Prev_Subprg_Instance : Subprgs.Subprg_Instance_Stack;
    begin
       Info := Add_Info (Decl, Kind_Package);
-
-      if Is_Nested then
-         Push_Identifier_Prefix (Mark, Get_Identifier (Decl));
-      end if;
 
       --  Translate declarations.
       if Is_Uninstantiated then
@@ -880,7 +875,7 @@ package body Trans.Chap2 is
                  (Decl, Subprg_Translate_Only_Body);
 
                --  Create elaboration procedure for the spec
-               Elab_Package (Decl, Header);
+               Elab_Package_Internal (Decl, Header);
 
                Clear_Scope (Info.Package_Spec_Scope);
             end if;
@@ -892,24 +887,26 @@ package body Trans.Chap2 is
            and then Global_Storage /= O_Storage_External
          then
             --  Create elaboration procedure for the spec
-            Elab_Package (Decl, Header);
+            Elab_Package_Internal (Decl, Header);
          end if;
       end if;
       Save_Local_Identifier (Info.Package_Local_Id);
+   end Translate_Package_Internal;
 
-      if Is_Nested then
-         Pop_Identifier_Prefix (Mark);
-      end if;
-   end Translate_Package;
-
-   procedure Translate_Package_Declaration (Decl : Iir_Package_Declaration) is
+   procedure Translate_Package_Declaration (Decl : Iir_Package_Declaration)
+   is
+      Mark : Id_Mark_Type;
    begin
       --  Skip uninstantiated package that have to be macro-expanded.
       if Get_Macro_Expanded_Flag (Decl) then
          return;
       end if;
 
-      Translate_Package (Decl, Get_Package_Header (Decl));
+      Push_Identifier_Prefix (Mark, Get_Identifier (Decl));
+
+      Translate_Package_Internal (Decl, Get_Package_Header (Decl));
+
+      Pop_Identifier_Prefix (Mark);
    end Translate_Package_Declaration;
 
    procedure Translate_Package_Declaration_Unit
@@ -920,7 +917,7 @@ package body Trans.Chap2 is
          return;
       end if;
 
-      Translate_Package (Decl, Get_Package_Header (Decl));
+      Translate_Package_Internal (Decl, Get_Package_Header (Decl));
    end Translate_Package_Declaration_Unit;
 
    procedure Translate_Package_Body_Internal (Bod : Iir_Package_Body)
@@ -936,14 +933,9 @@ package body Trans.Chap2 is
       Info      : constant Ortho_Info_Acc := Get_Info (Spec);
       Prev_Storage : constant O_Storage := Global_Storage;
       Prev_Subprg_Instance : Subprgs.Subprg_Instance_Stack;
-      Mark                 : Id_Mark_Type;
    begin
       if Is_Spec_Decl and then Get_Macro_Expanded_Flag (Spec) then
          return;
-      end if;
-
-      if Is_Nested then
-         Push_Identifier_Prefix (Mark, Get_Identifier (Spec));
       end if;
 
       --  Translate declarations.
@@ -962,9 +954,6 @@ package body Trans.Chap2 is
 
       --  May be called during elaboration to generate RTI.
       if Global_Storage = O_Storage_External then
-         if Is_Nested then
-            Pop_Identifier_Prefix (Mark);
-         end if;
          return;
       end if;
 
@@ -998,7 +987,7 @@ package body Trans.Chap2 is
          if not Is_Nested then
             Chap4.Translate_Declaration_Chain_Subprograms
               (Spec, Subprg_Translate_Only_Body);
-            Elab_Package (Spec, Get_Package_Header (Spec));
+            Elab_Package_Internal (Spec, Get_Package_Header (Spec));
          end if;
          Clear_Scope (Info.Package_Spec_Scope);
       end if;
@@ -1008,25 +997,28 @@ package body Trans.Chap2 is
       end if;
 
       Global_Storage := Prev_Storage;
-
-      if Is_Nested then
-         Pop_Identifier_Prefix (Mark);
-      end if;
    end Translate_Package_Body_Internal;
 
    --  For a nested package body for nested package instantiation body.
-   procedure Translate_Package_Body (Bod : Iir_Package_Body) is
+   procedure Translate_Package_Body (Bod : Iir_Package_Body)
+   is
+      Spec : constant Iir_Package_Declaration := Get_Package (Bod);
+      Mark : Id_Mark_Type;
    begin
+      Push_Identifier_Prefix (Mark, Get_Identifier (Spec));
+
       Translate_Package_Body_Internal (Bod);
+
+      Pop_Identifier_Prefix (Mark);
    end Translate_Package_Body;
 
    procedure Translate_Package_Body_Unit (Bod : Iir_Package_Body) is
    begin
-      Translate_Package_Body (Bod);
+      Translate_Package_Body_Internal (Bod);
    end Translate_Package_Body_Unit;
 
    --  Elaborate a package or a package instantiation.
-   procedure Elab_Package (Spec : Iir; Header : Iir)
+   procedure Elab_Package_Internal (Spec : Iir; Header : Iir)
    is
       Is_Nested : constant Boolean := Is_Nested_Package (Spec);
       Info   : constant Ortho_Info_Acc := Get_Info (Spec);
@@ -1077,11 +1069,11 @@ package body Trans.Chap2 is
          Pop_Local_Factory;
          Finish_Subprogram_Body;
       end if;
-   end Elab_Package;
+   end Elab_Package_Internal;
 
    procedure Elab_Package_Declaration (Spec : Iir) is
    begin
-      Elab_Package (Spec, Get_Package_Header (Spec));
+      Elab_Package_Internal (Spec, Get_Package_Header (Spec));
    end Elab_Package_Declaration;
 
    procedure Elab_Package_Body (Spec : Iir_Package_Declaration; Bod : Iir)
@@ -1668,7 +1660,7 @@ package body Trans.Chap2 is
       Bod  : constant Iir := Get_Instance_Package_Body (Inst);
    begin
       --  Macro-expanded instantiations are translated like a package.
-      Translate_Package (Inst, Inst);
+      Translate_Package_Internal (Inst, Inst);
 
       --  Generate code for the body.
       if Get_Immediate_Body_Flag (Inst) then
@@ -1686,12 +1678,17 @@ package body Trans.Chap2 is
    procedure Translate_Package_Instantiation_Declaration (Inst : Iir)
    is
       Spec : constant Iir := Get_Uninstantiated_Package_Decl (Inst);
+      Mark : Id_Mark_Type;
    begin
+      Push_Identifier_Prefix (Mark, Get_Identifier (Inst));
+
       if Get_Macro_Expanded_Flag (Spec) then
          Translate_Package_Instantiation_Declaration_Macro (Inst);
       else
          Translate_Package_Instantiation_Declaration_Internal (Inst);
       end if;
+
+      Pop_Identifier_Prefix (Mark);
    end Translate_Package_Instantiation_Declaration;
 
    procedure Translate_Package_Instantiation_Declaration_Unit (Inst : Iir)
@@ -1759,7 +1756,7 @@ package body Trans.Chap2 is
                end if;
             end if;
 
-            Elab_Package (Inst, Inst);
+            Elab_Package_Internal (Inst, Inst);
 
             if Get_Immediate_Body_Flag (Inst) then
                --  Humm, if BOD is present then INST_BOD should also be
