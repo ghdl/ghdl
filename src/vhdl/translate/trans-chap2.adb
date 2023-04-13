@@ -889,6 +889,8 @@ package body Trans.Chap2 is
 
       Create_Package_Elaborator (Info);
 
+      Subprgs.Pop_Subprg_Instance (Wki_Instance, Prev_Subprg_Instance);
+
       if Flag_Rti then
          --  Generate RTI.
          Rtis.Generate_Unit (Decl);
@@ -909,7 +911,6 @@ package body Trans.Chap2 is
 
          Clear_Scope (Info.Package_Spec_Scope);
       end if;
-      Subprgs.Pop_Subprg_Instance (Wki_Instance, Prev_Subprg_Instance);
 
       Save_Local_Identifier (Info.Package_Local_Id);
    end Translate_Package_Uninst_Unit;
@@ -946,6 +947,26 @@ package body Trans.Chap2 is
          end if;
 
          Subprgs.Pop_Subprg_Instance (Wki_Instance, Prev_Subprg_Instance);
+
+         if What in Subprg_Translate_Body
+           and then Global_Storage /= O_Storage_External
+         then
+            --  For nested package, this will be translated when translating
+            --  subprograms.
+            Set_Scope_Via_Field (Info.Package_Spec_Scope,
+                                 Info.Package_Spec_Field,
+                                 Info.Package_Body_Scope'Access);
+
+            Elab_Package_Internal (Decl, Get_Package_Header (Decl));
+
+            Clear_Scope (Info.Package_Spec_Scope);
+
+            if not Get_Need_Body (Decl)
+              and then Get_Package_Body (Decl) = Null_Iir
+            then
+               Elab_Package_Body (Decl, Null_Iir);
+            end if;
+         end if;
       end if;
 
       Pop_Identifier_Prefix (Mark);
@@ -1114,6 +1135,9 @@ package body Trans.Chap2 is
    procedure Elab_Package_Internal (Spec : Iir; Header : Iir)
    is
       Is_Nested : constant Boolean := Is_Nested_Package (Spec);
+      Is_Uninst : constant Boolean :=
+        Get_Kind (Spec) = Iir_Kind_Package_Declaration
+        and then Is_Uninstantiated_Package (Spec);
       Info   : constant Ortho_Info_Acc := Get_Info (Spec);
       Final  : Boolean;
       Constr : O_Assoc_List;
@@ -1122,16 +1146,16 @@ package body Trans.Chap2 is
          return;
       end if;
 
-      if not Is_Nested then
+      if (not Is_Nested) or else Is_Uninst then
          Start_Subprogram_Body (Info.Package_Elab_Spec_Subprg);
          Push_Local_Factory;
          Subprgs.Start_Subprg_Instance_Use (Info.Package_Elab_Spec_Instance);
 
-         Elab_Dependence (Get_Design_Unit (Spec));
+         if not Is_Nested then
+            Elab_Dependence (Get_Design_Unit (Spec));
+         end if;
 
-         if not (Get_Kind (Spec) = Iir_Kind_Package_Declaration
-                   and then Is_Uninstantiated_Package (Spec))
-         then
+         if not Is_Uninst then
             --  Register the top level package.  This is done dynamically, as
             --  we know only during elaboration that the design depends on a
             --  package (a package maybe referenced by an entity which is never
@@ -1155,7 +1179,7 @@ package body Trans.Chap2 is
       Chap4.Elab_Declaration_Chain (Spec, Final);
       pragma Unreferenced (Final);
 
-      if not Is_Nested and then Flag_Elaboration then
+      if (not Is_Nested) or else Is_Uninst then
          Close_Temp;
 
          Subprgs.Finish_Subprg_Instance_Use (Info.Package_Elab_Spec_Instance);
