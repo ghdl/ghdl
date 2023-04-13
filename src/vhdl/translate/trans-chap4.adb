@@ -2598,6 +2598,19 @@ package body Trans.Chap4 is
       Create_Union_Scope (State_Scope.all, Scope_Type);
    end Translate_Statements_Chain_State_Declaration;
 
+   procedure Translate_Declaration_Chain_Subprograms_Spec_Body (Parent : Iir)
+   is
+      What : Subprg_Translate_Kind;
+   begin
+      if Global_Storage /= O_Storage_External then
+         What := Subprg_Translate_Spec_And_Body;
+      else
+         --  No need and incorrect to generate bodies when external storage.
+         What := Subprg_Translate_Only_Spec;
+      end if;
+      Translate_Declaration_Chain_Subprograms (Parent, What);
+   end Translate_Declaration_Chain_Subprograms_Spec_Body;
+
    procedure Translate_Declaration_Chain_Subprograms
      (Parent : Iir; What : Subprg_Translate_Kind)
    is
@@ -2605,9 +2618,9 @@ package body Trans.Chap4 is
       Do_Specs : constant Boolean := What in Subprg_Translate_Spec;
 
       --  True iff bodies must be translated.
-      Do_Bodies : constant Boolean :=
-        (What in Subprg_Translate_Body
-           and then Global_Storage /= O_Storage_External);
+      Do_Bodies : constant Boolean := What in Subprg_Translate_Body;
+      pragma Assert
+        (not (Do_Bodies and then Global_Storage = O_Storage_External));
 
       El     : Iir;
       Infos  : Chap7.Implicit_Subprogram_Infos;

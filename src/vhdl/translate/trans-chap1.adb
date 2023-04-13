@@ -172,7 +172,7 @@ package body Trans.Chap1 is
          --  Entity declaration subprograms as they can be called by the
          --  architectures.
          Chap4.Translate_Declaration_Chain_Subprograms
-           (Entity, Subprg_Translate_Spec_And_Body);
+           (Entity, Subprg_Translate_Only_Spec);
       else
          --  Entity declaration and process subprograms.
          Chap9.Translate_Block_Subprograms (Entity, Entity);

@@ -812,8 +812,7 @@ package body Trans.Chap2 is
 
       --  For nested package, this will be translated when translating
       --  subprograms.
-      Chap4.Translate_Declaration_Chain_Subprograms
-        (Decl, Subprg_Translate_Spec_And_Body);
+      Chap4.Translate_Declaration_Chain_Subprograms_Spec_Body (Decl);
 
       Create_Package_Elaborator (Info);
 
@@ -948,9 +947,7 @@ package body Trans.Chap2 is
 
          Subprgs.Pop_Subprg_Instance (Wki_Instance, Prev_Subprg_Instance);
 
-         if What in Subprg_Translate_Body
-           and then Global_Storage /= O_Storage_External
-         then
+         if What in Subprg_Translate_Body then
             --  For nested package, this will be translated when translating
             --  subprograms.
             Set_Scope_Via_Field (Info.Package_Spec_Scope,

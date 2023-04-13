@@ -57,6 +57,8 @@ package Trans.Chap4 is
    procedure Translate_Declaration_Chain_Subprograms
      (Parent : Iir; What : Subprg_Translate_Kind);
 
+   procedure Translate_Declaration_Chain_Subprograms_Spec_Body (Parent : Iir);
+
    --  Create subprograms for type/function conversion of signal
    --  associations.
    --  ENTITY is the entity instantiated, which can be either
