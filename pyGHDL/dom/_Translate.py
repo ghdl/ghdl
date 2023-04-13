@@ -166,26 +166,25 @@ from pyGHDL.dom.PSL import DefaultClock
 
 
 @export
-def GetNameFromNode(node: Iir) -> Name:
+def GetName(node: Iir) -> Name:
     kind = GetIirKindOfNode(node)
     if kind == nodes.Iir_Kind.Simple_Name:
         name = GetNameOfNode(node)
         return SimpleName(node, name)
     elif kind == nodes.Iir_Kind.Selected_Name:
         name = GetNameOfNode(node)
-        prefixName = GetNameFromNode(nodes.Get_Prefix(node))
+        prefixName = GetName(nodes.Get_Prefix(node))
         return SelectedName(node, name, prefixName)
+    elif kind == nodes.Iir_Kind.Parenthesis_Name:
+        prefixName = GetName(nodes.Get_Prefix(node))
+        associations = GetAssociations(node)
+        return ParenthesisName(node, prefixName, associations)
     elif kind == nodes.Iir_Kind.Attribute_Name:
         name = GetNameOfNode(node)
-        prefixName = GetNameFromNode(nodes.Get_Prefix(node))
+        prefixName = GetName(nodes.Get_Prefix(node))
         return AttributeName(node, name, prefixName)
-    elif kind == nodes.Iir_Kind.Parenthesis_Name:
-        prefixName = GetNameFromNode(nodes.Get_Prefix(node))
-        associations = GetAssociations(node)
-
-        return ParenthesisName(node, prefixName, associations)
     elif kind == nodes.Iir_Kind.Selected_By_All_Name:
-        prefixName = GetNameFromNode(nodes.Get_Prefix(node))
+        prefixName = GetName(nodes.Get_Prefix(node))
         return AllName(node, prefixName)
     else:
         raise DOMException(f"Unknown name kind '{kind.name}'")
@@ -227,7 +226,7 @@ def GetArrayConstraintsFromSubtypeIndication(
             nodes.Iir_Kind.Selected_Name,
             nodes.Iir_Kind.Attribute_Name,
         ):
-            constraints.append(GetNameFromNode(constraint))
+            constraints.append(GetName(constraint))
         else:
             position = Position.parse(constraint)
             raise DOMException(
@@ -277,7 +276,7 @@ def GetAnonymousTypeFromNode(node: Iir) -> BaseType:
         return IntegerType(node, typeName, r)
 
     elif kind in (nodes.Iir_Kind.Attribute_Name, nodes.Iir_Kind.Parenthesis_Name):
-        n = GetNameFromNode(typeDefinition)
+        n = GetName(typeDefinition)
 
         return IntegerType(node, typeName, n)
     elif kind == nodes.Iir_Kind.Physical_Type_Definition:
@@ -322,7 +321,7 @@ def GetSubtypeIndicationFromIndicationNode(subtypeIndicationNode: Iir, entity: s
 
 @export
 def GetSimpleTypeFromNode(subtypeIndicationNode: Iir) -> SimpleSubtypeSymbol:
-    subtypeName = GetNameFromNode(subtypeIndicationNode)
+    subtypeName = GetName(subtypeIndicationNode)
     return SimpleSubtypeSymbol(subtypeIndicationNode, str(subtypeName))  # XXX: hacked
 
 
@@ -353,7 +352,7 @@ def GetCompositeConstrainedSubtypeFromNode(
     simpleTypeMark = SimpleName(typeMark, typeMarkName)
 
     constraints = GetArrayConstraintsFromSubtypeIndication(subtypeIndicationNode)
-    return ConstrainedCompositeSubtypeSymbol(subtypeIndicationNode, str(simpleTypeMark), constraints)  # XXX: hacked
+    return ConstrainedCompositeSubtypeSymbol(subtypeIndicationNode, simpleTypeMark, constraints)
 
 
 @export
@@ -609,7 +608,7 @@ def GetMapAspect(mapAspect: Iir, cls: Type, entity: str) -> Generator[Associatio
             if formalNode is nodes.Null_Iir:
                 formal = None
             else:
-                formal = GetNameFromNode(formalNode)
+                formal = GetName(formalNode)
 
             actual = GetExpressionFromNode(nodes.Get_Actual(generic))
 
@@ -619,7 +618,7 @@ def GetMapAspect(mapAspect: Iir, cls: Type, entity: str) -> Generator[Associatio
             if formalNode is nodes.Null_Iir:
                 formal = None
             else:
-                formal = GetNameFromNode(formalNode)
+                formal = GetName(formalNode)
 
             yield cls(generic, OpenName(generic), formal)
         else:

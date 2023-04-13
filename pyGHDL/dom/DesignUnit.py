@@ -63,8 +63,8 @@ from pyGHDL.libghdl import utils
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin, Position, DOMException
-from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode, GetPackageMemberSymbol, GetContextSymbol
-from pyGHDL.dom._Translate import GetGenericsFromChainedNodes, GetPortsFromChainedNodes
+from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode, GetPackageMemberSymbol
+from pyGHDL.dom._Translate import GetGenericsFromChainedNodes, GetPortsFromChainedNodes, GetName
 from pyGHDL.dom._Translate import GetDeclaredItemsFromChainedNodes, GetConcurrentStatementsFromChainedNodes
 from pyGHDL.dom.Symbol import EntitySymbol, ContextReferenceSymbol, LibraryReferenceSymbol, PackageSymbol
 
@@ -158,7 +158,7 @@ class Architecture(VHDLModel_Architecture, DOMMixin):
         name = GetNameOfNode(architectureNode)
         documentation = GetDocumentationOfNode(architectureNode)
         entityNameNode = nodes.Get_Entity_Name(architectureNode)
-        entitySymbol = EntitySymbol(entityNameNode, GetNameOfNode(entityNameNode))
+        entitySymbol = EntitySymbol(entityNameNode, GetName(entityNameNode))
         declaredItems = GetDeclaredItemsFromChainedNodes(
             nodes.Get_Declaration_Chain(architectureNode), "architecture", name
         )
@@ -241,7 +241,7 @@ class PackageBody(VHDLModel_PackageBody, DOMMixin):
 
     @classmethod
     def parse(cls, packageBodyNode: Iir, contextItems: Iterable[VHDLModel_ContextUnion]):
-        packageName = GetNameOfNode(packageBodyNode)
+        packageName = GetName(packageBodyNode)
         packageSymbol = PackageSymbol(packageBodyNode, packageName)
         documentation = GetDocumentationOfNode(packageBodyNode)
         declaredItems = GetDeclaredItemsFromChainedNodes(

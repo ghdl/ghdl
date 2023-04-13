@@ -488,7 +488,7 @@ class Aggregate(VHDLModel_Aggregate, DOMMixin):
         from pyGHDL.dom._Translate import (
             GetExpressionFromNode,
             GetRangeFromNode,
-            GetNameFromNode,
+            GetName,
         )
 
         choices = []
@@ -512,7 +512,7 @@ class Aggregate(VHDLModel_Aggregate, DOMMixin):
                     nodes.Iir_Kind.Attribute_Name,
                     nodes.Iir_Kind.Parenthesis_Name,
                 ):
-                    rng = GetNameFromNode(choiceRange)
+                    rng = GetName(choiceRange)
                 else:
                     pos = Position.parse(item)
                     raise DOMException(
@@ -521,7 +521,7 @@ class Aggregate(VHDLModel_Aggregate, DOMMixin):
 
                 choices.append(RangedAggregateElement(item, rng, value))
             elif kind == nodes.Iir_Kind.Choice_By_Name:
-                name = GetNameFromNode(nodes.Get_Choice_Name(item))
+                name = GetName(nodes.Get_Choice_Name(item))
                 symbol = Symbol(item, name)
                 choices.append(NamedAggregateElement(item, symbol, value))
             elif kind == nodes.Iir_Kind.Choice_By_Others:

@@ -45,7 +45,7 @@ from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.libghdl.vhdl.tokens import Tok
 from pyGHDL.dom import DOMMixin, Position, DOMException, Expression
 from pyGHDL.dom._Utils import GetNameOfNode, GetIirKindOfNode, GetDocumentationOfNode
-from pyGHDL.dom._Translate import GetNameFromNode, GetExpressionFromNode
+from pyGHDL.dom._Translate import GetName, GetExpressionFromNode
 from pyGHDL.dom.Names import SimpleName
 from pyGHDL.dom.Symbol import SimpleSubtypeSymbol
 
@@ -109,7 +109,7 @@ class AttributeSpecification(VHDLModel_AttributeSpecification, DOMMixin):
     @classmethod
     def parse(cls, attributeNode: Iir) -> "AttributeSpecification":
         attributeDesignator = nodes.Get_Attribute_Designator(attributeNode)
-        attributeName = GetNameFromNode(attributeDesignator)
+        attributeName = GetName(attributeDesignator)
         documentation = GetDocumentationOfNode(attributeNode)
 
         names = []
