@@ -1780,6 +1780,51 @@ package body Trans.Chap2 is
         (Info.Package_Instance_Spec_Scope'Access);
    end Instantiate_Info_Package;
 
+   procedure Update_Info_Package (Inst : Iir)
+   is
+      Spec     : constant Iir := Get_Uninstantiated_Package_Decl (Inst);
+      Pkg_Info : constant Ortho_Info_Acc := Get_Info (Spec);
+      Info     : constant Ortho_Info_Acc := Get_Info (Inst);
+      El : Iir;
+   begin
+      --  Create the info instances.
+      Push_Instantiate_Var_Scope
+        (Info.Package_Instance_Spec_Scope'Access,
+         Pkg_Info.Package_Spec_Scope'Access);
+      Push_Instantiate_Var_Scope
+        (Info.Package_Instance_Body_Scope'Access,
+         Pkg_Info.Package_Body_Scope'Access);
+
+      El := Get_Declaration_Chain (Inst);
+      while El /= Null_Iir loop
+         case Get_Kind (El) is
+            when Iir_Kind_Function_Declaration
+              | Iir_Kind_Procedure_Declaration =>
+               declare
+                  Orig : constant Iir :=
+                    Vhdl.Sem_Inst.Get_Origin (El);
+                  pragma Assert (Orig /= Null_Iir);
+                  Orig_Info : constant Ortho_Info_Acc :=
+                    Get_Info (Orig);
+                  Info : constant Ortho_Info_Acc := Get_Info (El);
+               begin
+                  if Orig_Info /= null then
+                     Copy_Info (Info, Orig_Info);
+                     Clean_Copy_Info (Info);
+                  end if;
+               end;
+            when others =>
+               null;
+         end case;
+         El := Get_Chain (El);
+      end loop;
+
+      Pop_Instantiate_Var_Scope
+        (Info.Package_Instance_Body_Scope'Access);
+      Pop_Instantiate_Var_Scope
+        (Info.Package_Instance_Spec_Scope'Access);
+   end Update_Info_Package;
+
    procedure Translate_Package_Instantiation_Declaration_Internal (Inst : Iir)
    is
       Spec     : constant Iir := Get_Uninstantiated_Package_Decl (Inst);
@@ -1857,32 +1902,9 @@ package body Trans.Chap2 is
       else
          if What in Subprg_Translate_Spec then
             --  Update info for subprgs.
-            declare
-               El : Iir;
-            begin
-               El := Get_Declaration_Chain (Inst);
-               while El /= Null_Iir loop
-                  case Get_Kind (El) is
-                     when Iir_Kind_Function_Declaration
-                       | Iir_Kind_Procedure_Declaration =>
-                        declare
-                           Orig : constant Iir :=
-                             Vhdl.Sem_Inst.Get_Origin (El);
-                           pragma Assert (Orig /= Null_Iir);
-                           Orig_Info : constant Ortho_Info_Acc :=
-                             Get_Info (Orig);
-                           Info : constant Ortho_Info_Acc := Get_Info (El);
-                        begin
-                           if False then
-                              Info.Subprg_Node := Orig_Info.Subprg_Node;
-                           end if;
-                        end;
-                     when others =>
-                        null;
-                  end case;
-                  El := Get_Chain (El);
-               end loop;
-            end;
+            --  Info have been instantiated but may not be complete as the
+            --  ortho node may be created later.
+            Update_Info_Package (Inst);
          end if;
       end if;
    end Translate_Package_Instantiation_Declaration_Subprograms;
