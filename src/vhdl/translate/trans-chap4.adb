@@ -2697,24 +2697,8 @@ package body Trans.Chap4 is
             when Iir_Kind_Package_Body =>
                Chap2.Translate_Package_Body_Subprograms (El, What);
             when Iir_Kind_Package_Instantiation_Declaration =>
-               if Get_Macro_Expanded_Flag
-                 (Get_Uninstantiated_Package_Decl (El))
-               then
-                  declare
-                     Bod : constant Iir := Get_Instance_Package_Body (El);
-                     Mark  : Id_Mark_Type;
-                  begin
-                     Push_Identifier_Prefix (Mark, Get_Identifier (El));
-                     Translate_Declaration_Chain_Subprograms (El, What);
-                     if Is_Valid (Bod)
-                       and then Global_Storage /= O_Storage_External
-                       and then Get_Immediate_Body_Flag (El)
-                     then
-                        Translate_Declaration_Chain_Subprograms (Bod, What);
-                     end if;
-                     Pop_Identifier_Prefix (Mark);
-                  end;
-               end if;
+               Chap2.Translate_Package_Instantiation_Declaration_Subprograms
+                 (El, What);
             when Iir_Kind_Package_Instantiation_Body =>
                declare
                   Mark  : Id_Mark_Type;

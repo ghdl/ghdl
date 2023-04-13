@@ -844,8 +844,10 @@ package body Trans.Chap2 is
       Push_Instance_Factory (Info.Package_Spec_Scope'Access);
       Chap4.Translate_Generic_Chain (Header);
       Chap4.Translate_Declaration_Chain (Decl);
-      Info.Package_Elab_Var := Create_Var
-        (Create_Var_Identifier ("ELABORATED"), Ghdl_Bool_Type);
+      if not Is_Nested_Package (Decl) then
+         Info.Package_Elab_Var := Create_Var
+           (Create_Var_Identifier ("ELABORATED"), Ghdl_Bool_Type);
+      end if;
       Pop_Instance_Factory (Info.Package_Spec_Scope'Access);
 
       --  Name the spec instance and create a pointer.
@@ -973,18 +975,44 @@ package body Trans.Chap2 is
      (Bod : Iir_Package_Body; What : Subprg_Translate_Kind)
    is
       Spec : constant Iir := Get_Package (Bod);
+      Is_Uninst : constant Boolean := Is_Uninstantiated_Package (Spec);
+      Info : constant Ortho_Info_Acc := Get_Info (Spec);
+      Prev_Subprg_Instance : Subprgs.Subprg_Instance_Stack;
       Mark  : Id_Mark_Type;
    begin
-      if Is_Uninstantiated_Package (Spec) then
-         if Get_Macro_Expanded_Flag (Spec) then
-            return;
-         end if;
-         raise Internal_Error;
-      else
-         Push_Identifier_Prefix (Mark, Get_Identifier (Spec));
-         Chap4.Translate_Declaration_Chain_Subprograms (Bod, What);
-         Pop_Identifier_Prefix (Mark);
+      if Is_Uninst and then Get_Macro_Expanded_Flag (Spec) then
+         --  Nothing to do for macro-expanded packages.
+         return;
       end if;
+
+      Push_Identifier_Prefix (Mark, Get_Identifier (Spec));
+
+      if Is_Uninst then
+         --  An extra parameter for the package instance needs to be added
+         --  to the subprograms.
+         Subprgs.Push_Subprg_Instance
+           (Info.Package_Body_Scope'Access, Info.Package_Body_Ptr_Type,
+            Wki_Instance, Prev_Subprg_Instance);
+
+         --  For nested package, this will be translated when translating
+         --  subprograms.
+         Set_Scope_Via_Field (Info.Package_Spec_Scope,
+                              Info.Package_Spec_Field,
+                              Info.Package_Body_Scope'Access);
+      end if;
+
+      Chap4.Translate_Declaration_Chain_Subprograms (Bod, What);
+
+      if Is_Uninst then
+         Clear_Scope (Info.Package_Spec_Scope);
+         Subprgs.Pop_Subprg_Instance (Wki_Instance, Prev_Subprg_Instance);
+
+         if What in Subprg_Translate_Body then
+            Elab_Package_Body (Spec, Bod);
+         end if;
+      end if;
+
+      Pop_Identifier_Prefix (Mark);
    end Translate_Package_Body_Subprograms;
 
    procedure Translate_Package_Declaration (Decl : Iir_Package_Declaration)
@@ -1224,12 +1252,14 @@ package body Trans.Chap2 is
 
       --  If the package was already elaborated, return now,
       --  else mark the package as elaborated.
-      Start_If_Stmt (If_Blk, New_Value (Get_Var (Info.Package_Elab_Var)));
-      New_Return_Stmt;
-      New_Else_Stmt (If_Blk);
-      New_Assign_Stmt (Get_Var (Info.Package_Elab_Var),
-                       New_Lit (Ghdl_Bool_True_Node));
-      Finish_If_Stmt (If_Blk);
+      if Info.Package_Elab_Var /= Null_Var then
+         Start_If_Stmt (If_Blk, New_Value (Get_Var (Info.Package_Elab_Var)));
+         New_Return_Stmt;
+         New_Else_Stmt (If_Blk);
+         New_Assign_Stmt (Get_Var (Info.Package_Elab_Var),
+                          New_Lit (Ghdl_Bool_True_Node));
+         Finish_If_Stmt (If_Blk);
+      end if;
 
       --  Elab Spec.
       Start_Association (Constr, Info.Package_Elab_Spec_Subprg);
@@ -1237,7 +1267,10 @@ package body Trans.Chap2 is
       New_Procedure_Call (Constr);
 
       if Bod /= Null_Iir then
-         Elab_Dependence (Get_Design_Unit (Bod));
+         if not Is_Nested_Package (Bod) then
+            Elab_Dependence (Get_Design_Unit (Bod));
+         end if;
+
          Open_Temp;
          Chap4.Elab_Declaration_Chain (Bod, Final);
          Close_Temp;
@@ -1802,6 +1835,57 @@ package body Trans.Chap2 is
 
       Pop_Identifier_Prefix (Mark);
    end Translate_Package_Instantiation_Declaration;
+
+   procedure Translate_Package_Instantiation_Declaration_Subprograms
+     (Inst : Iir; What : Subprg_Translate_Kind) is
+   begin
+      if Get_Macro_Expanded_Flag (Get_Uninstantiated_Package_Decl (Inst)) then
+         declare
+            Bod : constant Iir := Get_Instance_Package_Body (Inst);
+            Mark  : Id_Mark_Type;
+         begin
+            Push_Identifier_Prefix (Mark, Get_Identifier (Inst));
+            Chap4.Translate_Declaration_Chain_Subprograms (Inst, What);
+            if Is_Valid (Bod)
+              and then Global_Storage /= O_Storage_External
+              and then Get_Immediate_Body_Flag (Inst)
+            then
+               Chap4.Translate_Declaration_Chain_Subprograms (Bod, What);
+            end if;
+            Pop_Identifier_Prefix (Mark);
+         end;
+      else
+         if What in Subprg_Translate_Spec then
+            --  Update info for subprgs.
+            declare
+               El : Iir;
+            begin
+               El := Get_Declaration_Chain (Inst);
+               while El /= Null_Iir loop
+                  case Get_Kind (El) is
+                     when Iir_Kind_Function_Declaration
+                       | Iir_Kind_Procedure_Declaration =>
+                        declare
+                           Orig : constant Iir :=
+                             Vhdl.Sem_Inst.Get_Origin (El);
+                           pragma Assert (Orig /= Null_Iir);
+                           Orig_Info : constant Ortho_Info_Acc :=
+                             Get_Info (Orig);
+                           Info : constant Ortho_Info_Acc := Get_Info (El);
+                        begin
+                           if False then
+                              Info.Subprg_Node := Orig_Info.Subprg_Node;
+                           end if;
+                        end;
+                     when others =>
+                        null;
+                  end case;
+                  El := Get_Chain (El);
+               end loop;
+            end;
+         end if;
+      end if;
+   end Translate_Package_Instantiation_Declaration_Subprograms;
 
    procedure Translate_Package_Instantiation_Declaration_Unit (Inst : Iir)
    is

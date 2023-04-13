@@ -44,6 +44,8 @@ package Trans.Chap2 is
      (Decl : Iir_Package_Declaration; What : Subprg_Translate_Kind);
    procedure Translate_Package_Body_Subprograms
      (Bod : Iir_Package_Body; What : Subprg_Translate_Kind);
+   procedure Translate_Package_Instantiation_Declaration_Subprograms
+     (Inst : Iir; What : Subprg_Translate_Kind);
    procedure Elab_Package_Declaration (Spec : Iir);
    procedure Elab_Package_Body (Spec : Iir_Package_Declaration; Bod : Iir);
    procedure Elab_Package_Instantiation_Declaration (Inst : Iir);
