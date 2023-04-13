@@ -788,9 +788,8 @@ package body Trans.Chap2 is
 
    --  Translate a non-uninstantiated package declaration.
    --  HEADER is the node containing generic and generic_map.
-   procedure Translate_Package_Concrete_Internal (Decl : Iir; Header : Iir)
+   procedure Translate_Package_Concrete_Common (Decl : Iir; Header : Iir)
    is
-      Is_Nested : constant Boolean := Is_Nested_Package (Decl);
       Info : Ortho_Info_Acc;
    begin
       Info := Add_Info (Decl, Kind_Package);
@@ -801,37 +800,44 @@ package body Trans.Chap2 is
 
       Chap4.Translate_Declaration_Chain (Decl);
 
-      if not Is_Nested then
-         Info.Package_Elab_Var := Create_Var
-           (Create_Var_Identifier ("ELABORATED"), Ghdl_Bool_Type);
-
-         --  For nested package, this will be translated when translating
-         --  subprograms.
-         Chap4.Translate_Declaration_Chain_Subprograms
-           (Decl, Subprg_Translate_Spec_And_Body);
-
-         Create_Package_Elaborator (Info);
-
-         if Flag_Rti then
-            --  Generate RTI.
-            Rtis.Generate_Unit (Decl);
-         end if;
-
-         if Global_Storage /= O_Storage_External then
-            --  Create elaboration procedure for the spec
-            Elab_Package_Internal (Decl, Header);
-         end if;
-      end if;
       Save_Local_Identifier (Info.Package_Local_Id);
-   end Translate_Package_Concrete_Internal;
+   end Translate_Package_Concrete_Common;
+
+   procedure Translate_Package_Concrete_Unit (Decl : Iir; Header : Iir)
+   is
+      Info : constant Ortho_Info_Acc := Get_Info (Decl);
+   begin
+      Info.Package_Elab_Var := Create_Var
+        (Create_Var_Identifier ("ELABORATED"), Ghdl_Bool_Type);
+
+      --  For nested package, this will be translated when translating
+      --  subprograms.
+      Chap4.Translate_Declaration_Chain_Subprograms
+        (Decl, Subprg_Translate_Spec_And_Body);
+
+      Create_Package_Elaborator (Info);
+
+      if Flag_Rti then
+         --  Generate RTI.
+         Rtis.Generate_Unit (Decl);
+      end if;
+
+      if Global_Storage /= O_Storage_External then
+         --  Create elaboration procedure for the spec
+         Elab_Package_Internal (Decl, Header);
+      end if;
+
+      --  Overwrite the value written by Translate_Package_Concrete_Common.
+      Save_Local_Identifier (Info.Package_Local_Id);
+   end Translate_Package_Concrete_Unit;
 
    --  Translate a package declaration or a macro-expanded package
    --  instantiation.  HEADER is the node containing generic and generic_map.
-   procedure Translate_Package_Uninst_Internal (Decl : Iir; Header : Iir)
+   procedure Translate_Package_Uninst_Common (Decl : Iir; Header : Iir)
    is
-      Is_Nested            : constant Boolean := Is_Nested_Package (Decl);
-      Info                 : Ortho_Info_Acc;
-      Prev_Subprg_Instance : Subprgs.Subprg_Instance_Stack;
+      Add_Body : constant Boolean :=
+        not Get_Need_Body (Decl) and then Get_Package_Body (Decl) = Null_Iir;
+      Info : Ortho_Info_Acc;
    begin
       Info := Add_Info (Decl, Kind_Package);
 
@@ -854,57 +860,59 @@ package body Trans.Chap2 is
       Chap2.Declare_Inst_Type_And_Ptr
         (Info.Package_Body_Scope'Access, Info.Package_Body_Ptr_Type);
 
+      if Add_Body then
+         --  Generic package without a body.
+         --  Create an empty body instance.
+         Push_Package_Instance_Factory (Decl);
+         Pop_Package_Instance_Factory (Decl);
+      end if;
+      Save_Local_Identifier (Info.Package_Local_Id);
+   end Translate_Package_Uninst_Common;
+
+   procedure Translate_Package_Uninst_Unit (Decl : Iir; Header : Iir)
+   is
+      Info : constant Ortho_Info_Acc := Get_Info (Decl);
+      Add_Body : constant Boolean :=
+        not Get_Need_Body (Decl) and then Get_Package_Body (Decl) = Null_Iir;
+      Prev_Subprg_Instance : Subprgs.Subprg_Instance_Stack;
+   begin
       --  Each subprogram has a body instance argument (because subprograms
       --  body can access body declarations).
       Subprgs.Push_Subprg_Instance
         (Info.Package_Body_Scope'Access, Info.Package_Body_Ptr_Type,
          Wki_Instance, Prev_Subprg_Instance);
 
-      if not Is_Nested then
+      --  For nested package, this will be translated when translating
+      --  subprograms.
+      Chap4.Translate_Declaration_Chain_Subprograms
+        (Decl, Subprg_Translate_Only_Spec);
+
+      Create_Package_Elaborator (Info);
+
+      if Flag_Rti then
+         --  Generate RTI.
+         Rtis.Generate_Unit (Decl);
+      end if;
+
+      if Add_Body and then Global_Storage /= O_Storage_External then
          --  For nested package, this will be translated when translating
          --  subprograms.
+         Set_Scope_Via_Field (Info.Package_Spec_Scope,
+                              Info.Package_Spec_Field,
+                              Info.Package_Body_Scope'Access);
+
          Chap4.Translate_Declaration_Chain_Subprograms
-           (Decl, Subprg_Translate_Only_Spec);
+           (Decl, Subprg_Translate_Only_Body);
 
-         Create_Package_Elaborator (Info);
+         --  Create elaboration procedure for the spec
+         Elab_Package_Internal (Decl, Header);
 
-         if Flag_Rti then
-            --  Generate RTI.
-            Rtis.Generate_Unit (Decl);
-         end if;
+         Clear_Scope (Info.Package_Spec_Scope);
       end if;
-
-      if not Get_Need_Body (Decl)
-        and then Get_Package_Body (Decl) = Null_Iir
-      then
-         --  Generic package without a body.
-         --  Create an empty body instance.
-         Push_Package_Instance_Factory (Decl);
-         Pop_Package_Instance_Factory (Decl);
-
-         if not Is_Nested
-           and then Global_Storage /= O_Storage_External
-         then
-            --  For nested package, this will be translated when translating
-            --  subprograms.
-            Set_Scope_Via_Field (Info.Package_Spec_Scope,
-                                 Info.Package_Spec_Field,
-                                 Info.Package_Body_Scope'Access);
-
-            Chap4.Translate_Declaration_Chain_Subprograms
-              (Decl, Subprg_Translate_Only_Body);
-
-            --  Create elaboration procedure for the spec
-            Elab_Package_Internal (Decl, Header);
-
-            Clear_Scope (Info.Package_Spec_Scope);
-         end if;
-      end if;
-
       Subprgs.Pop_Subprg_Instance (Wki_Instance, Prev_Subprg_Instance);
 
       Save_Local_Identifier (Info.Package_Local_Id);
-   end Translate_Package_Uninst_Internal;
+   end Translate_Package_Uninst_Unit;
 
    procedure Translate_Package_Declaration_Subprograms
      (Decl : Iir_Package_Declaration; What : Subprg_Translate_Kind)
@@ -915,7 +923,7 @@ package body Trans.Chap2 is
       Mark  : Id_Mark_Type;
    begin
       if Is_Uninst and then Get_Macro_Expanded_Flag (Decl) then
-         --  Nothing to do.
+         --  Nothing to do for macro-expanded packages.
          return;
       end if;
 
@@ -973,26 +981,31 @@ package body Trans.Chap2 is
       Push_Identifier_Prefix (Mark, Get_Identifier (Decl));
 
       if Is_Uninstantiated_Package (Decl) then
-         Translate_Package_Uninst_Internal (Decl, Get_Package_Header (Decl));
+         Translate_Package_Uninst_Common (Decl, Get_Package_Header (Decl));
       else
-         Translate_Package_Concrete_Internal (Decl, Get_Package_Header (Decl));
+         Translate_Package_Concrete_Common (Decl, Get_Package_Header (Decl));
       end if;
 
       Pop_Identifier_Prefix (Mark);
    end Translate_Package_Declaration;
 
    procedure Translate_Package_Declaration_Unit
-     (Decl : Iir_Package_Declaration) is
+     (Decl : Iir_Package_Declaration)
+   is
+      Header : Iir;
    begin
       --  Skip uninstantiated package that have to be macro-expanded.
       if Get_Macro_Expanded_Flag (Decl) then
          return;
       end if;
 
+      Header := Get_Package_Header (Decl);
       if Is_Uninstantiated_Package (Decl) then
-         Translate_Package_Uninst_Internal (Decl, Get_Package_Header (Decl));
+         Translate_Package_Uninst_Common (Decl, Header);
+         Translate_Package_Uninst_Unit (Decl, Header);
       else
-         Translate_Package_Concrete_Internal (Decl, Get_Package_Header (Decl));
+         Translate_Package_Concrete_Common (Decl, Header);
+         Translate_Package_Concrete_Unit (Decl, Header);
       end if;
    end Translate_Package_Declaration_Unit;
 
@@ -1075,7 +1088,7 @@ package body Trans.Chap2 is
       Global_Storage := Prev_Storage;
    end Translate_Package_Body_Internal;
 
-   --  For a nested package body for nested package instantiation body.
+   --  For a nested package body or for a nested package instantiation body.
    procedure Translate_Package_Body (Bod : Iir_Package_Body)
    is
       Spec : constant Iir_Package_Declaration := Get_Package (Bod);
@@ -1090,6 +1103,10 @@ package body Trans.Chap2 is
 
    procedure Translate_Package_Body_Unit (Bod : Iir_Package_Body) is
    begin
+      if not Flag_Elaboration then
+         return;
+      end if;
+
       Translate_Package_Body_Internal (Bod);
    end Translate_Package_Body_Unit;
 
@@ -1733,18 +1750,12 @@ package body Trans.Chap2 is
       Instantiate_Info_Package (Inst);
    end Translate_Package_Instantiation_Declaration_Internal;
 
-   procedure Translate_Package_Instantiation_Declaration_Macro (Inst : Iir)
-   is
-      Spec : constant Iir := Get_Uninstantiated_Package_Decl (Inst);
-      Bod  : constant Iir := Get_Instance_Package_Body (Inst);
+   procedure Translate_Package_Instantiation_Declaration_Macro (Inst : Iir) is
    begin
-      --  Macro-expanded instantiations are translated like a package.
-      Translate_Package_Concrete_Internal (Inst, Inst);
-
       --  Generate code for the body.
       if Get_Immediate_Body_Flag (Inst) then
-         Translate_Package_Body_Internal (Bod);
-      elsif not Get_Need_Body (Spec)
+         Translate_Package_Body_Internal (Get_Instance_Package_Body (Inst));
+      elsif not Get_Need_Body (Get_Uninstantiated_Package_Decl (Inst))
         and then not Is_Nested_Package (Inst)
         and then Global_Storage /= O_Storage_External
       then
@@ -1762,6 +1773,7 @@ package body Trans.Chap2 is
       Push_Identifier_Prefix (Mark, Get_Identifier (Inst));
 
       if Get_Macro_Expanded_Flag (Spec) then
+         Translate_Package_Concrete_Common (Inst, Inst);
          Translate_Package_Instantiation_Declaration_Macro (Inst);
       else
          Translate_Package_Instantiation_Declaration_Internal (Inst);
@@ -1777,6 +1789,8 @@ package body Trans.Chap2 is
       Info           : Ortho_Info_Acc;
    begin
       if Get_Macro_Expanded_Flag (Spec) then
+         Translate_Package_Concrete_Common (Inst, Inst);
+         Translate_Package_Concrete_Unit (Inst, Inst);
          Translate_Package_Instantiation_Declaration_Macro (Inst);
       else
          Translate_Package_Instantiation_Declaration_Internal (Inst);
