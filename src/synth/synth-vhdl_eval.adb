@@ -609,6 +609,7 @@ package body Synth.Vhdl_Eval is
       end case;
    end Eval_Vector_Minimum;
 
+   --  ARG to log-vector, sign extended.
    function Eval_To_Log_Vector (Arg : Uns64; Sz : Int64; Res_Type : Type_Acc)
                                return Memtyp
    is
@@ -2634,7 +2635,8 @@ package body Synth.Vhdl_Eval is
               (Uns64 (Read_Discrete (Param1)), Int64 (Param2.Typ.Abound.Len),
                Res_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Tosgn_Int_Nat_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Int =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Int
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Signed_Int =>
             return Eval_To_Log_Vector
               (To_Uns64 (Read_Discrete (Param1)), Read_Discrete (Param2),
                Res_Typ);

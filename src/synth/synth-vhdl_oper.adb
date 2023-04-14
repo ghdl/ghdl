@@ -2039,7 +2039,8 @@ package body Synth.Vhdl_Oper is
                return Synth_Resize (Ctxt, L, B.Len, False, Expr);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Tosgn_Int_Nat_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Int =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Int
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Signed_Int =>
             return Synth_Conv_Vector (True);
          when Iir_Predefined_Ieee_Numeric_Std_Toint_Uns_Nat
             | Iir_Predefined_Ieee_Numeric_Std_Unsigned_To_Integer_Slv_Nat
@@ -2060,7 +2061,10 @@ package body Synth.Vhdl_Oper is
             | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Uns
             | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Uns
             | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Log
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Signed_Log
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Signed_Uns
             | Iir_Predefined_Ieee_Std_Logic_Arith_Ext =>
+            --  Unsigned to unsigned (resize)
             declare
                W : Width;
             begin
@@ -2090,6 +2094,7 @@ package body Synth.Vhdl_Oper is
          when Iir_Predefined_Ieee_Numeric_Std_Resize_Sgn_Nat
             | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Sgn
             | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Signed_Sgn
             | Iir_Predefined_Ieee_Std_Logic_Arith_Sxt =>
             if not Is_Static (R.Val) then
                Error_Msg_Synth
