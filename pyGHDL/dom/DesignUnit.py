@@ -66,7 +66,7 @@ from pyGHDL.dom import DOMMixin, Position, DOMException
 from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode, GetPackageMemberSymbol
 from pyGHDL.dom._Translate import GetGenericsFromChainedNodes, GetPortsFromChainedNodes, GetName
 from pyGHDL.dom._Translate import GetDeclaredItemsFromChainedNodes, GetConcurrentStatementsFromChainedNodes
-from pyGHDL.dom.Symbol import EntitySymbol, ContextReferenceSymbol, LibraryReferenceSymbol, PackageSymbol
+from pyGHDL.dom.Symbol import EntitySymbol, ContextReferenceSymbol, LibraryReferenceSymbol, PackageSymbol, PackageMemberReferenceSymbol
 
 
 @export
@@ -84,9 +84,11 @@ class UseClause(VHDLModel_UseClause, DOMMixin):
 
     @classmethod
     def parse(cls, useNode: Iir):
-        uses = [GetPackageMemberSymbol(nodes.Get_Selected_Name(useNode))]
+        nameNode = nodes.Get_Selected_Name(useNode)
+        uses = [PackageMemberReferenceSymbol(nameNode, GetName(nameNode))]
         for use in utils.chain_iter(nodes.Get_Use_Clause_Chain(useNode)):
-            uses.append(GetPackageMemberSymbol(nodes.Get_Selected_Name(use)))
+            nameNode = nodes.Get_Selected_Name(use)
+            uses.append(PackageMemberReferenceSymbol(nameNode, GetName(nameNode)))
 
         return cls(useNode, uses)
 
@@ -99,9 +101,11 @@ class ContextReference(VHDLModel_ContextReference, DOMMixin):
 
     @classmethod
     def parse(cls, contextNode: Iir):
-        contexts = [GetContextSymbol(nodes.Get_Selected_Name(contextNode))]
+        nameNode = nodes.Get_Selected_Name(contextNode)
+        contexts = [ContextReferenceSymbol(nameNode, GetName(nameNode))]
         for context in utils.chain_iter(nodes.Get_Context_Reference_Chain(contextNode)):
-            contexts.append(GetContextSymbol(nodes.Get_Selected_Name(context)))
+            nameNode = nodes.Get_Selected_Name(context)
+            contexts.append(ContextReferenceSymbol(nameNode, GetName(nameNode)))
 
         return cls(contextNode, contexts)
 

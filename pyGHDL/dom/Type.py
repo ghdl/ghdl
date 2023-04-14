@@ -114,7 +114,7 @@ class PhysicalType(VHDLModel_PhysicalType, DOMMixin):
     @classmethod
     def parse(cls, typeName: str, typeDefinitionNode: Iir) -> "PhysicalType":
         from pyGHDL.dom._Utils import GetIirKindOfNode, GetNameOfNode
-        from pyGHDL.dom._Translate import GetRangeFromNode, GetNameFromNode
+        from pyGHDL.dom._Translate import GetRangeFromNode, GetName
 
         rangeConstraint = nodes.Get_Range_Constraint(typeDefinitionNode)
         rangeKind = GetIirKindOfNode(rangeConstraint)
@@ -124,7 +124,7 @@ class PhysicalType(VHDLModel_PhysicalType, DOMMixin):
             nodes.Iir_Kind.Attribute_Name,
             nodes.Iir_Kind.Parenthesis_Name,
         ):
-            rng = GetNameFromNode(rangeConstraint)
+            rng = GetName(rangeConstraint)
         else:
             pos = Position.parse(typeDefinitionNode)
             raise DOMException(f"Unknown range kind '{rangeKind.name}' in physical type definition at line {pos.Line}.")

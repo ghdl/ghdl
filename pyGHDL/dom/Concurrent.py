@@ -115,9 +115,9 @@ class ComponentInstantiation(VHDLModel_ComponentInstantiation, DOMMixin):
 
     @classmethod
     def parse(cls, instantiationNode: Iir, instantiatedUnit: Iir, label: str) -> "ComponentInstantiation":
-        from pyGHDL.dom._Translate import GetGenericMapAspect, GetPortMapAspect
+        from pyGHDL.dom._Translate import GetName, GetGenericMapAspect, GetPortMapAspect
 
-        componentSymbol = GetComponentInstantiationSymbol(instantiatedUnit)
+        componentSymbol = ComponentInstantiationSymbol(instantiatedUnit, GetName(instantiatedUnit))
         genericAssociations = GetGenericMapAspect(nodes.Get_Generic_Map_Aspect_Chain(instantiationNode))
         portAssociations = GetPortMapAspect(nodes.Get_Port_Map_Aspect_Chain(instantiationNode))
 
@@ -142,8 +142,8 @@ class EntityInstantiation(VHDLModel_EntityInstantiation, DOMMixin):
     def parse(cls, instantiationNode: Iir, instantiatedUnit: Iir, label: str) -> "EntityInstantiation":
         from pyGHDL.dom._Translate import GetName, GetGenericMapAspect, GetPortMapAspect
 
-        entityId = nodes.Get_Entity_Name(instantiatedUnit)
-        entitySymbol = GetEntityInstantiationSymbol(entityId)
+        entityName = nodes.Get_Entity_Name(instantiatedUnit)
+        entitySymbol = EntityInstantiationSymbol(entityName, GetName(entityName))
 
         architectureSymbol = None
         architectureId = nodes.Get_Architecture(instantiatedUnit)
@@ -171,10 +171,10 @@ class ConfigurationInstantiation(VHDLModel_ConfigurationInstantiation, DOMMixin)
 
     @classmethod
     def parse(cls, instantiationNode: Iir, instantiatedUnit: Iir, label: str) -> "ConfigurationInstantiation":
-        from pyGHDL.dom._Translate import GetGenericMapAspect, GetPortMapAspect
+        from pyGHDL.dom._Translate import GetName, GetGenericMapAspect, GetPortMapAspect
 
-        configurationId = nodes.Get_Configuration_Name(instantiatedUnit)
-        configurationSymbol = GetConfigurationInstantiationSymbol(configurationId)
+        configurationName = nodes.Get_Configuration_Name(instantiatedUnit)
+        configurationSymbol = ConfigurationInstantiationSymbol(configurationName, GetName(configurationName))
 
         genericAssociations = GetGenericMapAspect(nodes.Get_Generic_Map_Aspect_Chain(instantiationNode))
         portAssociations = GetPortMapAspect(nodes.Get_Port_Map_Aspect_Chain(instantiationNode))

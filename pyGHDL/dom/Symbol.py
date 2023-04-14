@@ -83,6 +83,14 @@ class ContextReferenceSymbol(VHDLModel_ContextReferenceSymbol, DOMMixin):
 
 
 @export
+class PackageMemberReferenceSymbol(VHDLModel_PackageMembersReferenceSymbol, DOMMixin):
+    @InheritDocString(VHDLModel_PackageMembersReferenceSymbol)
+    def __init__(self, identifierNode: Iir, name: Name):
+        super().__init__(name)
+        DOMMixin.__init__(self, identifierNode)
+
+
+@export
 class EntityInstantiationSymbol(VHDLModel_EntityInstantiationSymbol, DOMMixin):
     @InheritDocString(VHDLModel_EntityInstantiationSymbol)
     def __init__(self, identifierNode: Iir, name: Name):
