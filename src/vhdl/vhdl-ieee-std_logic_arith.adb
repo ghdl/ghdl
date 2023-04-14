@@ -50,6 +50,12 @@ package body Vhdl.Ieee.Std_Logic_Arith is
       Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Int,
       Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Log);
 
+   Conv_Sgn_Patterns : constant Conv_Pattern_Type :=
+     (Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Signed_Sgn,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Signed_Uns,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Signed_Int,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Signed_Log);
+
    Conv_Int_Patterns : constant Conv_Pattern_Type :=
      (Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Sgn,
       Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Uns,
@@ -521,6 +527,8 @@ package body Vhdl.Ieee.Std_Logic_Arith is
                         Def := Handle_Bin (Mul_Patterns);
                      when Name_Conv_Unsigned =>
                         Def := Handle_Conv (Conv_Uns_Patterns);
+                     when Name_Conv_Signed =>
+                        Def := Handle_Conv (Conv_Sgn_Patterns);
                      when Name_Conv_Std_Logic_Vector =>
                         Def := Handle_Conv (Conv_Vec_Patterns);
                      when Name_Op_Less =>
