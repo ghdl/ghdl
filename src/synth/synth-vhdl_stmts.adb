@@ -990,10 +990,11 @@ package body Synth.Vhdl_Stmts is
       Mark_Expr_Pool (Marker);
       Targ := Synth_Target (Inst, Get_Target (Stmt));
       Targ_Type := Targ.Targ_Type;
+
       First := No_Valtyp;
       Last := No_Net;
       Ce := Get_Conditional_Expression_Chain (Stmt);
-      while Ce /= Null_Node loop
+      loop
          --  First, evaluate the condition.
          Cond := Get_Condition (Ce);
          if Cond /= Null_Node then
@@ -1050,8 +1051,21 @@ package body Synth.Vhdl_Stmts is
          exit when Cond_Tri = True;
 
          Ce := Get_Chain (Ce);
+         exit when Ce = Null_Node;
       end loop;
-      Synth_Assignment (Inst, Targ, First, Stmt);
+
+      if Last /= No_Net then
+         if Cond_Tri /= True then
+            --  There is at least one Mux2, and its input-1 is not connected.
+            --  Implement missing assignment as a self-assignment.
+            Val := Synth_Read (Inst, Targ, Stmt);
+            Connect (Get_Input (Get_Net_Parent (Last), 1),
+                     Get_Net (Ctxt, Val));
+         end if;
+
+         Synth_Assignment (Inst, Targ, First, Stmt);
+      end if;
+
       Release_Expr_Pool (Marker);
    end Synth_Conditional_Variable_Assignment;
 
