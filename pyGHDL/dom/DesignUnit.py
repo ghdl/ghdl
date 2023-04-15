@@ -66,6 +66,7 @@ from pyGHDL.dom import DOMMixin, Position, DOMException
 from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode, GetPackageMemberSymbol
 from pyGHDL.dom._Translate import GetGenericsFromChainedNodes, GetPortsFromChainedNodes, GetName
 from pyGHDL.dom._Translate import GetDeclaredItemsFromChainedNodes, GetConcurrentStatementsFromChainedNodes
+from pyGHDL.dom.Names  import SimpleName
 from pyGHDL.dom.Symbol import EntitySymbol, ContextReferenceSymbol, LibraryReferenceSymbol, PackageSymbol, PackageMemberReferenceSymbol
 
 
@@ -245,11 +246,11 @@ class PackageBody(VHDLModel_PackageBody, DOMMixin):
 
     @classmethod
     def parse(cls, packageBodyNode: Iir, contextItems: Iterable[VHDLModel_ContextUnion]):
-        packageName = GetName(packageBodyNode)
-        packageSymbol = PackageSymbol(packageBodyNode, packageName)
+        packageIdentifier = GetNameOfNode(packageBodyNode)
+        packageSymbol = PackageSymbol(packageBodyNode, SimpleName(packageBodyNode, packageIdentifier))
         documentation = GetDocumentationOfNode(packageBodyNode)
         declaredItems = GetDeclaredItemsFromChainedNodes(
-            nodes.Get_Declaration_Chain(packageBodyNode), "package", packageName
+            nodes.Get_Declaration_Chain(packageBodyNode), "package", packageIdentifier
         )
 
         # FIXME: read use clauses
@@ -309,7 +310,7 @@ class Context(VHDLModel_Context, DOMMixin):
             kind = GetIirKindOfNode(item)
             if kind is nodes.Iir_Kind.Library_Clause:
                 libraryIdentifier = GetNameOfNode(item)
-                names.append(LibraryReferenceSymbol(item, libraryIdentifier))
+                names.append(LibraryReferenceSymbol(item, SimpleName(item, libraryIdentifier)))
                 if nodes.Get_Has_Identifier_List(item):
                     continue
 

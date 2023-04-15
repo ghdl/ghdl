@@ -335,7 +335,7 @@ class ForLoopStatement(VHDLModel_ForLoopStatement, DOMMixin):
 
     @classmethod
     def parse(cls, loopNode: Iir, label: str) -> "ForLoopStatement":
-        from pyGHDL.dom._Utils import GetIirKindOfNode
+        from pyGHDL.dom._Utils import GetNameOfNode, GetIirKindOfNode
         from pyGHDL.dom._Translate import (
             GetSequentialStatementsFromChainedNodes,
             GetRangeFromNode,
@@ -343,7 +343,7 @@ class ForLoopStatement(VHDLModel_ForLoopStatement, DOMMixin):
         )
 
         spec = nodes.Get_Parameter_Specification(loopNode)
-        loopIndex = GetName(spec)
+        loopIndex = GetNameOfNode(spec)
 
         discreteRange = nodes.Get_Discrete_Range(spec)
         rangeKind = GetIirKindOfNode(discreteRange)

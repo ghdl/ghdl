@@ -322,7 +322,7 @@ def GetSubtypeIndicationFromIndicationNode(subtypeIndicationNode: Iir, entity: s
 @export
 def GetSimpleTypeFromNode(subtypeIndicationNode: Iir) -> SimpleSubtypeSymbol:
     subtypeName = GetName(subtypeIndicationNode)
-    return SimpleSubtypeSymbol(subtypeIndicationNode, str(subtypeName))  # XXX: hacked
+    return SimpleSubtypeSymbol(subtypeIndicationNode, subtypeName)
 
 
 @export
@@ -340,7 +340,7 @@ def GetScalarConstrainedSubtypeFromNode(
         r = GetRangeFromNode(rangeConstraint)
     # todo: Get actual range from AttributeName node?
 
-    return ConstrainedScalarSubtypeSymbol(subtypeIndicationNode, str(simpleTypeMark), r)  # XXX: hacked
+    return ConstrainedScalarSubtypeSymbol(subtypeIndicationNode, simpleTypeMark, r)
 
 
 @export

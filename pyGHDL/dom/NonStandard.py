@@ -40,6 +40,7 @@ import time
 from pathlib import Path
 from typing import Any
 
+from pyGHDL.dom.Names import SimpleName
 from pyTooling.Decorators import export, InheritDocString
 
 from pyVHDLModel import VHDLVersion
@@ -208,7 +209,7 @@ class Document(VHDLModel_Document):
                     itemKind = GetIirKindOfNode(item)
                     if itemKind is nodes.Iir_Kind.Library_Clause:
                         libraryIdentifier = GetNameOfNode(item)
-                        contextNames.append(LibraryReferenceSymbol(item, libraryIdentifier))
+                        contextNames.append(LibraryReferenceSymbol(item, SimpleName(item, libraryIdentifier)))
                         if nodes.Get_Has_Identifier_List(item):
                             continue
 

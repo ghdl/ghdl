@@ -144,16 +144,15 @@ class PackageSymbol(VHDLModel_PackageSymbol, DOMMixin):
 
 @export
 class SimpleSubtypeSymbol(VHDLModel_SimpleSubtypeSymbol, DOMMixin):
-    def __init__(self, node: Iir, subtypeName: str):
-        if isinstance(subtypeName, (List, Iterator)):
-            subtypeName = ".".join(subtypeName)
-
+    @InheritDocString(VHDLModel_SimpleSubtypeSymbol)
+    def __init__(self, node: Iir, subtypeName: Name):
         super().__init__(subtypeName)
         DOMMixin.__init__(self, node)
 
 
 @export
 class ConstrainedScalarSubtypeSymbol(VHDLModel_ConstrainedScalarSubtypeSymbol, DOMMixin):
+    @InheritDocString(VHDLModel_ConstrainedScalarSubtypeSymbol)
     def __init__(self, node: Iir, subtypeName: Name, rng: Range = None):
         super().__init__(subtypeName)  # , rng)  # XXX: hacked
         DOMMixin.__init__(self, node)
@@ -165,6 +164,7 @@ class ConstrainedScalarSubtypeSymbol(VHDLModel_ConstrainedScalarSubtypeSymbol, D
 
 @export
 class ConstrainedCompositeSubtypeSymbol(VHDLModel_ConstrainedCompositeSubtypeSymbol, DOMMixin):
+    @InheritDocString(VHDLModel_ConstrainedCompositeSubtypeSymbol)
     def __init__(self, node: Iir, subtypeName: Name, constraints: List = None):
         super().__init__(subtypeName)  # , constraints)  # XXX: hacked
         DOMMixin.__init__(self, node)
@@ -176,6 +176,7 @@ class ConstrainedCompositeSubtypeSymbol(VHDLModel_ConstrainedCompositeSubtypeSym
 
 @export
 class SimpleObjectOrFunctionCallSymbol(VHDLModel_SimpleObjectOrFunctionCallSymbol, DOMMixin):
+    @InheritDocString(VHDLModel_SimpleObjectOrFunctionCallSymbol)
     def __init__(self, node: Iir, name: Name):
         super().__init__(name)
         DOMMixin.__init__(self, node)
@@ -191,6 +192,7 @@ class SimpleObjectOrFunctionCallSymbol(VHDLModel_SimpleObjectOrFunctionCallSymbo
 
 @export
 class IndexedObjectOrFunctionCallSymbol(VHDLModel_IndexedObjectOrFunctionCallSymbol, DOMMixin):
+    @InheritDocString(VHDLModel_IndexedObjectOrFunctionCallSymbol)
     def __init__(self, node: Iir, name: Name):
         super().__init__(name)
         DOMMixin.__init__(self, node)

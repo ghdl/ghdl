@@ -67,6 +67,7 @@ class Function(VHDLModel_Function, DOMMixin):
     @classmethod
     def parse(cls, functionNode: Iir) -> "Function":
         from pyGHDL.dom._Translate import (
+            GetName,
             GetGenericsFromChainedNodes,
             GetParameterFromChainedNodes,
         )
@@ -78,7 +79,7 @@ class Function(VHDLModel_Function, DOMMixin):
         parameters = GetParameterFromChainedNodes(nodes.Get_Interface_Declaration_Chain(functionNode))
 
         returnType = nodes.Get_Return_Type_Mark(functionNode)
-        returnTypeName = GetNameOfNode(returnType)
+        returnTypeName = GetName(returnType)
         returnTypeSymbol = SimpleSubtypeSymbol(returnType, returnTypeName)
 
         return cls(functionNode, functionName, returnTypeSymbol, generics, parameters, documentation)

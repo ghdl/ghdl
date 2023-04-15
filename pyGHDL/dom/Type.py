@@ -32,6 +32,7 @@
 # ============================================================================
 from typing import List, Union, Iterator, Tuple, Iterable
 
+from pyGHDL.dom.Names import SimpleName
 from pyTooling.Decorators import export
 
 from pyVHDLModel.Name import Name
@@ -313,7 +314,7 @@ class FileType(VHDLModel_FileType, DOMMixin):
 
         designatedSubtypeMark = nodes.Get_File_Type_Mark(typeDefinitionNode)
         designatedSubtypeName = GetNameOfNode(designatedSubtypeMark)
-        designatedSubtype = SimpleSubtypeSymbol(typeDefinitionNode, designatedSubtypeName)
+        designatedSubtype = SimpleSubtypeSymbol(typeDefinitionNode, SimpleName(designatedSubtypeName))
 
         return cls(typeDefinitionNode, typeName, designatedSubtype)
 

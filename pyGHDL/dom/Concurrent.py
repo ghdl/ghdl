@@ -574,7 +574,7 @@ class ForGenerateStatement(VHDLModel_ForGenerateStatement, DOMMixin):
 
     @classmethod
     def parse(cls, generateNode: Iir, label: str) -> "ForGenerateStatement":
-        from pyGHDL.dom._Utils import GetIirKindOfNode
+        from pyGHDL.dom._Utils import GetIirKindOfNode, GetNameOfNode
         from pyGHDL.dom._Translate import (
             GetDeclaredItemsFromChainedNodes,
             GetConcurrentStatementsFromChainedNodes,
@@ -583,7 +583,7 @@ class ForGenerateStatement(VHDLModel_ForGenerateStatement, DOMMixin):
         )
 
         spec = nodes.Get_Parameter_Specification(generateNode)
-        loopIndex = GetName(spec)
+        loopIndex = GetNameOfNode(spec)
 
         discreteRange = nodes.Get_Discrete_Range(spec)
         rangeKind = GetIirKindOfNode(discreteRange)
