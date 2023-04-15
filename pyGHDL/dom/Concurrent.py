@@ -224,7 +224,11 @@ class ProcessStatement(VHDLModel_ProcessStatement, DOMMixin):
 
     @classmethod
     def parse(cls, processNode: Iir, label: str, hasSensitivityList: bool) -> "ProcessStatement":
-        from pyGHDL.dom._Translate import GetName, GetDeclaredItemsFromChainedNodes, GetSequentialStatementsFromChainedNodes
+        from pyGHDL.dom._Translate import (
+            GetName,
+            GetDeclaredItemsFromChainedNodes,
+            GetSequentialStatementsFromChainedNodes,
+        )
 
         sensitivityList = None
         if hasSensitivityList:

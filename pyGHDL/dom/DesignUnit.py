@@ -66,8 +66,14 @@ from pyGHDL.dom import DOMMixin, Position, DOMException
 from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode, GetPackageMemberSymbol
 from pyGHDL.dom._Translate import GetGenericsFromChainedNodes, GetPortsFromChainedNodes, GetName
 from pyGHDL.dom._Translate import GetDeclaredItemsFromChainedNodes, GetConcurrentStatementsFromChainedNodes
-from pyGHDL.dom.Names  import SimpleName
-from pyGHDL.dom.Symbol import EntitySymbol, ContextReferenceSymbol, LibraryReferenceSymbol, PackageSymbol, PackageMemberReferenceSymbol
+from pyGHDL.dom.Names import SimpleName
+from pyGHDL.dom.Symbol import (
+    EntitySymbol,
+    ContextReferenceSymbol,
+    LibraryReferenceSymbol,
+    PackageSymbol,
+    PackageMemberReferenceSymbol,
+)
 
 
 @export
