@@ -114,8 +114,8 @@ class Application(LineTerminal, ArgParseMixin):
 
     _design: Design
 
-    def __init__(self, debug=False, verbose=False, quiet=False, sphinx=False):
-        super().__init__(verbose, debug, quiet)
+    def __init__(self):
+        super().__init__()
 
         # Initialize DOM with an empty design
         # --------------------------------------------------------------------------
@@ -154,11 +154,6 @@ class Application(LineTerminal, ArgParseMixin):
             formatter_class=HelpFormatter,
             add_help=False,
         )
-
-        # If executed in Sphinx to auto-document CLI arguments, exit now
-        # --------------------------------------------------------------------------
-        if sphinx:
-            return
 
         # Change error and warning reporting
         # --------------------------------------------------------------------------

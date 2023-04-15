@@ -40,7 +40,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from pyTooling.Decorators import export
+from pyTooling.Decorators import export, InheritDocString
 
 from pyVHDLModel import VHDLVersion
 from pyVHDLModel import Design as VHDLModel_Design
@@ -85,8 +85,9 @@ from pyGHDL.dom.PSL import VerificationUnit, VerificationProperty, VerificationM
 
 @export
 class Design(VHDLModel_Design):
-    def __init__(self):
-        super().__init__()
+    @InheritDocString(VHDLModel_Design)
+    def __init__(self, name: str = None):
+        super().__init__(name)
 
         self.__ghdl_init()
 
