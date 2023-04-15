@@ -39,7 +39,6 @@ from pyVHDLModel.Base import ExpressionUnion
 from pyVHDLModel.Symbol import LibraryReferenceSymbol as VHDLModel_LibraryReferenceSymbol
 from pyVHDLModel.Symbol import PackageReferenceSymbol as VHDLModel_PackageReferenceSymbol
 from pyVHDLModel.Symbol import PackageMembersReferenceSymbol as VHDLModel_PackageMembersReferenceSymbol
-from pyVHDLModel.Symbol import AllPackageMembersReferenceSymbol as VHDLModel_AllPackageMembersReferenceSymbol
 from pyVHDLModel.Symbol import ContextReferenceSymbol as VHDLModel_ContextReferenceSymbol
 from pyVHDLModel.Symbol import EntitySymbol as VHDLModel_EntitySymbol
 from pyVHDLModel.Symbol import ArchitectureSymbol as VHDLModel_ArchitectureSymbol

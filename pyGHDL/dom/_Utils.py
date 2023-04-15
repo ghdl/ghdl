@@ -30,20 +30,15 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-from typing import Union
-
 from pyTooling.Decorators import export
 
 from pyVHDLModel.Base import Mode
-from pyVHDLModel.Name import Name
-from pyVHDLModel.Symbol import PackageMembersReferenceSymbol, AllPackageMembersReferenceSymbol
 
 from pyGHDL.libghdl import LibGHDLException, name_table, errorout_memory, files_map, file_comments
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes, utils
 from pyGHDL.libghdl.vhdl.nodes import Null_Iir
-from pyGHDL.dom import DOMException, Position
-from pyGHDL.dom.Names import SelectedName, AllName, SimpleName
+from pyGHDL.dom import DOMException
 
 __MODE_TRANSLATION = {
     nodes.Iir_Mode.In_Mode: Mode.In,
@@ -139,54 +134,3 @@ def GetModeOfNode(node: Iir) -> Mode:
         return __MODE_TRANSLATION[nodes.Get_Mode(node)]
     except KeyError as ex:
         raise DOMException(f"Unknown mode '{ex.args[0]}'.") from ex
-
-
-def GetLibrarySymbol(node: Iir) -> LibraryReferenceSymbol:
-    kind = GetIirKindOfNode(node)
-    if kind == nodes.Iir_Kind.Simple_Name:
-        name = GetNameOfNode(node)
-        return LibraryReferenceSymbol(node, name)
-    else:
-        raise DOMException(f"{kind} at {Position.parse(node)}")
-
-
-def GetPackageSymbol(node: Iir) -> PackageReferenceSymbol:
-    kind = GetIirKindOfNode(node)
-    name = GetNameOfNode(node)
-    if kind == nodes.Iir_Kind.Selected_Name:
-        prefixName = GetLibrarySymbol(nodes.Get_Prefix(node))
-        return PackageReferenceSymbol(node, name, prefixName)
-    elif kind == nodes.Iir_Kind.Simple_Name:
-        return PackageReferenceSymbol(node, name, None)
-    else:
-        raise DOMException(f"{kind.name} at {Position.parse(node)}")
-
-
-def GetPackageMemberSymbol(
-    node: Iir,
-) -> Union[PackageMembersReferenceSymbol, AllPackageMembersReferenceSymbol]:
-    from pyGHDL.dom._Translate import GetName
-
-    name = GetName(node)
-    if isinstance(name, AllName):
-        return AllPackageMembersReferenceSymbol(name)
-    else:
-        raise DOMException(f"{kind.name} at {Position.parse(node)}")
-
-
-def GetComponentInstantiationSymbol(node: Iir) -> ComponentInstantiationSymbol:
-    kind = GetIirKindOfNode(node)
-    if kind == nodes.Iir_Kind.Simple_Name:
-        name = GetNameOfNode(node)
-        return ComponentInstantiationSymbol(node, name)
-    else:
-        raise DOMException(f"{kind.name} at {Position.parse(node)}")
-
-
-def GetConfigurationInstantiationSymbol(node: Iir) -> ConfigurationInstantiationSymbol:
-    kind = GetIirKindOfNode(node)
-    if kind == nodes.Iir_Kind.Simple_Name:
-        name = GetNameOfNode(node)
-        return ConfigurationInstantiationSymbol(node, name)
-    else:
-        raise DOMException(f"{kind.name} at {Position.parse(node)}")
