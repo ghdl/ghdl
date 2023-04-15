@@ -439,9 +439,9 @@ class QualifiedExpression(VHDLModel_QualifiedExpression, DOMMixin):
 
     @classmethod
     def parse(cls, node: Iir) -> "QualifiedExpression":
-        from pyGHDL.dom._Translate import GetExpressionFromNode, GetNameOfNode
+        from pyGHDL.dom._Translate import GetExpressionFromNode, GetName
 
-        typeMarkName = GetNameOfNode(nodes.Get_Type_Mark(node))
+        typeMarkName = GetName(nodes.Get_Type_Mark(node))
         subtype = SimpleSubtypeSymbol(node, typeMarkName)
         operand = GetExpressionFromNode(nodes.Get_Expression(node))
         return cls(node, subtype, operand)

@@ -314,7 +314,7 @@ class FileType(VHDLModel_FileType, DOMMixin):
 
         designatedSubtypeMark = nodes.Get_File_Type_Mark(typeDefinitionNode)
         designatedSubtypeName = GetNameOfNode(designatedSubtypeMark)
-        designatedSubtype = SimpleSubtypeSymbol(typeDefinitionNode, SimpleName(designatedSubtypeName))
+        designatedSubtype = SimpleSubtypeSymbol(typeDefinitionNode, SimpleName(designatedSubtypeMark, designatedSubtypeName))
 
         return cls(typeDefinitionNode, typeName, designatedSubtype)
 

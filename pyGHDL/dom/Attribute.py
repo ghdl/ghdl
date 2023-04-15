@@ -63,7 +63,7 @@ class Attribute(VHDLModel_Attribute, DOMMixin):
         subtypeMark = nodes.Get_Type_Mark(attributeNode)
         subtypeName = GetNameOfNode(subtypeMark)
 
-        subtype = SimpleSubtypeSymbol(subtypeMark, SimpleName(subtypeName))
+        subtype = SimpleSubtypeSymbol(subtypeMark, SimpleName(subtypeMark, subtypeName))
         return cls(attributeNode, name, subtype, documentation)
 
 
