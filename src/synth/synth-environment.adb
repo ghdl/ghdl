@@ -770,12 +770,19 @@ package body Synth.Environment is
    function Is_Tribuf_Net (N : Net) return Boolean
    is
       use Netlists.Gates;
+      Inst : constant Instance := Get_Net_Parent (N);
    begin
-      case Get_Id (Get_Net_Parent (N)) is
+      case Get_Id (Inst) is
          when Id_Tri
-           | Id_Resolver
-           | Id_Port =>
+            | Id_Resolver
+            | Id_Const_Z =>
             return True;
+         when Id_Port =>
+            --  We don't know, so assume yes.
+            return True;
+         when Id_Signal
+            | Id_Isignal =>
+            return Is_Tribuf_Net (Get_Input_Net (Inst, 0));
          when others =>
             return False;
       end case;
