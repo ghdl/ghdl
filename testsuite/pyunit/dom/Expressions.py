@@ -34,7 +34,7 @@ import ctypes
 from inspect import currentframe
 from pathlib import Path
 from textwrap import dedent
-from typing import TypeVar, Dict
+from typing import TypeVar, Dict, cast
 from unittest import TestCase
 
 
@@ -89,7 +89,7 @@ class Expressions(TestCase):
         )
 
         # Define test data
-        constantDeclartion = "constant c0 : boolean := not true;"
+        constantDeclartion = "constant c0 : boolean := not True;"
 
         # Parse in-memory
         default: Expression = self.parse(filename, constantDeclartion)
@@ -97,7 +97,7 @@ class Expressions(TestCase):
         # Start checks
         self.assertIsInstance(default, InverseExpression)
         self.assertIsInstance(default.Operand, SimpleObjectOrFunctionCallSymbol)
-        self.assertEqual("true", str(default.Operand))  # .SymbolName))  # XXX: hacked
+        self.assertEqual("True", cast(SimpleObjectOrFunctionCallSymbol, default.Operand).Name.Identifier)
 
     # def test_AbsExpression(self):
     #     filename: Path = self._root / "{className}_{funcName}.vhdl".format(
