@@ -38,7 +38,8 @@ from pyVHDLModel import Name
 from pyVHDLModel.Base import ExpressionUnion
 from pyVHDLModel.Symbol import LibraryReferenceSymbol as VHDLModel_LibraryReferenceSymbol
 from pyVHDLModel.Symbol import PackageReferenceSymbol as VHDLModel_PackageReferenceSymbol
-from pyVHDLModel.Symbol import PackageMembersReferenceSymbol as VHDLModel_PackageMembersReferenceSymbol
+from pyVHDLModel.Symbol import PackageMemberReferenceSymbol as VHDLModel_PackageMemberReferenceSymbol
+from pyVHDLModel.Symbol import AllPackageMembersReferenceSymbol as VHDLModel_AllPackageMembersReferenceSymbol
 from pyVHDLModel.Symbol import ContextReferenceSymbol as VHDLModel_ContextReferenceSymbol
 from pyVHDLModel.Symbol import EntitySymbol as VHDLModel_EntitySymbol
 from pyVHDLModel.Symbol import ArchitectureSymbol as VHDLModel_ArchitectureSymbol
@@ -82,8 +83,16 @@ class ContextReferenceSymbol(VHDLModel_ContextReferenceSymbol, DOMMixin):
 
 
 @export
-class PackageMemberReferenceSymbol(VHDLModel_PackageMembersReferenceSymbol, DOMMixin):
-    @InheritDocString(VHDLModel_PackageMembersReferenceSymbol)
+class PackageMemberReferenceSymbol(VHDLModel_PackageMemberReferenceSymbol, DOMMixin):
+    @InheritDocString(VHDLModel_PackageMemberReferenceSymbol)
+    def __init__(self, identifierNode: Iir, name: Name):
+        super().__init__(name)
+        DOMMixin.__init__(self, identifierNode)
+
+
+@export
+class AllPackageMembersReferenceSymbol(VHDLModel_AllPackageMembersReferenceSymbol, DOMMixin):
+    @InheritDocString(VHDLModel_AllPackageMembersReferenceSymbol)
     def __init__(self, identifierNode: Iir, name: Name):
         super().__init__(name)
         DOMMixin.__init__(self, identifierNode)

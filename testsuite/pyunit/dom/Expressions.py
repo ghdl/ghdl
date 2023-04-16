@@ -84,9 +84,7 @@ class Expressions(TestCase):
         return default
 
     def test_NotExpression(self):
-        filename: Path = self._root / "{className}_{funcName}.vhdl".format(
-            className=self.__class__.__name__, funcName= currentframe().f_code.co_name[5:]
-        )
+        filename: Path = self._root / f"{self.__class__.__name__}_{currentframe().f_code.co_name[5:]}.vhdl"
 
         # Define test data
         constantDeclartion = "constant c0 : boolean := not True;"

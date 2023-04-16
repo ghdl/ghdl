@@ -91,7 +91,7 @@ class DependencyGraphFormatter:
 
                 for vertex in vertices:
                     if vertex["kind"] is DependencyGraphVertexKind.Architecture:
-                        value = f"{vertex.Value.Entity.Identifier}({vertex.Value.Identifier})"
+                        value = f"{vertex.Value.Entity.Name.Identifier}({vertex.Value.Identifier})"
                     elif vertex["kind"] is DependencyGraphVertexKind.Document:
                         value = f"{vertex.ID}"
                     else:

@@ -66,13 +66,14 @@ from pyGHDL.dom import DOMMixin, Position, DOMException
 from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode
 from pyGHDL.dom._Translate import GetGenericsFromChainedNodes, GetPortsFromChainedNodes, GetName
 from pyGHDL.dom._Translate import GetDeclaredItemsFromChainedNodes, GetConcurrentStatementsFromChainedNodes
-from pyGHDL.dom.Names import SimpleName
+from pyGHDL.dom.Names import SimpleName, AllName
 from pyGHDL.dom.Symbol import (
     EntitySymbol,
     ContextReferenceSymbol,
     LibraryReferenceSymbol,
     PackageSymbol,
     PackageMemberReferenceSymbol,
+    AllPackageMembersReferenceSymbol
 )
 
 
@@ -92,10 +93,14 @@ class UseClause(VHDLModel_UseClause, DOMMixin):
     @classmethod
     def parse(cls, useNode: Iir):
         nameNode = nodes.Get_Selected_Name(useNode)
-        uses = [PackageMemberReferenceSymbol(nameNode, GetName(nameNode))]
+        name = GetName(nameNode)
+        symbolType = AllPackageMembersReferenceSymbol if isinstance(name, AllName) else PackageMemberReferenceSymbol
+        uses = [symbolType(nameNode, name)]
         for use in utils.chain_iter(nodes.Get_Use_Clause_Chain(useNode)):
             nameNode = nodes.Get_Selected_Name(use)
-            uses.append(PackageMemberReferenceSymbol(nameNode, GetName(nameNode)))
+            name = GetName(nameNode)
+            symbolType = AllPackageMembersReferenceSymbol if isinstance(name, AllName) else PackageMemberReferenceSymbol
+            uses.append(symbolType(nameNode, name))
 
         return cls(useNode, uses)
 
