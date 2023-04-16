@@ -452,10 +452,13 @@ package body Netlists.Memories is
          --  The output of the mux must be connected to one input.
          return False;
       end if;
+
+      --  Check if the mux is before a dff.
       Dff_Inst := Get_Input_Parent (Inp);
       if Get_Id (Dff_Inst) /= Id_Dff then
          return False;
       end if;
+
       Dff_Out := Get_Output (Dff_Inst, 0);
 
       if Mux_Inp = Get_Input (Mux_Inst, 1) then
@@ -480,8 +483,9 @@ package body Netlists.Memories is
    begin
       Inp := Get_First_Sink (Val);
       if Get_Next_Sink (Inp) = No_Input then
-         --  There is a single input.
+         --  The output of INST (a Dyn_Extract) goes to only one gate.
          Iinst := Get_Input_Parent (Inp);
+
          if Get_Id (Iinst) = Id_Dff then
             --  The output of the dyn_extract is directly connected to a dff.
             --  So this is a synchronous read without enable.
