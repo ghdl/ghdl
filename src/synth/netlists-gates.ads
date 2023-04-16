@@ -119,6 +119,10 @@ package Netlists.Gates is
    --  by a gate (and thus the value of the output could be read), but that
    --  driving value may not be available early enough.
    --  Id_Ioutput is an output with an initial value.
+   --
+   --  Inputs: 0: driver
+   --          1: initial value (if any)
+   --  Output: 0: value
    Id_Signal  : constant Module_Id := 52;
    Id_Isignal : constant Module_Id := 53;
    Id_Output  : constant Module_Id := 54;
