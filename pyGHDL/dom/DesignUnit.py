@@ -73,7 +73,7 @@ from pyGHDL.dom.Symbol import (
     LibraryReferenceSymbol,
     PackageSymbol,
     PackageMemberReferenceSymbol,
-    AllPackageMembersReferenceSymbol
+    AllPackageMembersReferenceSymbol,
 )
 
 
