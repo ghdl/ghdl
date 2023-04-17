@@ -1023,89 +1023,43 @@ package body Netlists.Memories is
    --  VAL is the output of the dyn_extract.
    --
    --  Infere a synchronous read if the dyn_extract is connected to a dff.
-   function Create_ROM_Read_Port
-     (Ctxt : Context_Acc; Last : Net; Addr : Net; Val : Net; Step : Width)
-     return Instance
+   function Create_ROM_Read_Port (Ctxt : Context_Acc;
+                                  Last : Net;
+                                  Addr : Net;
+                                  Extr_Inst : Instance;
+                                  Step : Width) return Instance
    is
+      Val : constant Net := Get_Output (Extr_Inst, 0);
       W : constant Width := Get_Width (Val);
       Res : Instance;
-      Inp : Input;
-      Iinst : Instance;
+      Dff_Inst : Instance;
       N : Net;
+      Clk : Net;
+      En : Net;
    begin
-      Inp := Get_First_Sink (Val);
-      if Get_Next_Sink (Inp) = No_Input then
-         --  There is a single input.
-         Iinst := Get_Input_Parent (Inp);
-         if Get_Id (Iinst) = Id_Dff then
-            --  The output of the dyn_extract is directly connected to a dff.
-            --  So this is a synchronous read without enable.
-            declare
-               Clk_Inp : Input;
-               Clk : Net;
-               En : Net;
-            begin
-               Clk_Inp := Get_Input (Iinst, 0);
-               Clk := Get_Driver (Clk_Inp);
-               Disconnect (Clk_Inp);
-               En := Build_Const_UB32 (Ctxt, 1, 1);
-               Disconnect (Inp);
-               Res := Build_Mem_Rd_Sync (Ctxt, Last, Addr, Clk, En, Step);
-
-               --  Slice the output.
-               N := Get_Output (Res, 1);
-               N := Build2_Extract (Ctxt, N, 0, W);
-
-               Redirect_Inputs (Get_Output (Iinst, 0), N);
-               Remove_Instance (Iinst);
-               return Res;
-            end;
-         elsif Get_Id (Iinst) = Id_Mux2 and then Is_Enable_Dff (Inp) then
-            declare
-               Mux_Out : constant Net := Get_Output (Iinst, 0);
-               Mux_En_Inp : constant Input := Get_Input (Iinst, 0);
-               Mux_I0_Inp : constant Input := Get_Input (Iinst, 1);
-               Mux_I1_Inp : constant Input := Get_Input (Iinst, 2);
-               Dff_Din : constant Input := Get_First_Sink (Mux_Out);
-               Dff_Inst : constant Instance := Get_Input_Parent (Dff_Din);
-               Dff_Out : constant Net := Get_Output (Dff_Inst, 0);
-               Clk_Inp : constant Input := Get_Input (Dff_Inst, 0);
-               Clk : constant Net := Get_Driver (Clk_Inp);
-               En : Net;
-            begin
-               En := Get_Driver (Mux_En_Inp);
-               if Dff_Out = Get_Driver (Mux_I1_Inp) then
-                  En := Build_Monadic (Ctxt, Id_Not, En);
-                  Copy_Location (En, Dff_Inst);
-               end if;
-               Disconnect (Mux_En_Inp);
-               Disconnect (Mux_I0_Inp);
-               Disconnect (Mux_I1_Inp);
-               Disconnect (Dff_Din);
-               Disconnect (Clk_Inp);
-               Remove_Instance (Iinst);
-               Res := Build_Mem_Rd_Sync (Ctxt, Last, Addr, Clk, En, Step);
-               Set_Location (Res, Get_Location (Dff_Inst));
-
-               --  Slice the output.
-               N := Get_Output (Res, 1);
-               N := Build2_Extract (Ctxt, N, 0, W);
-
-               Redirect_Inputs (Dff_Out, N);
-               Remove_Instance (Dff_Inst);
-               return Res;
-            end;
+      Extract_Extract_Dff (Ctxt, Extr_Inst, Dff_Inst, Clk, En);
+      if Dff_Inst /= Extr_Inst then
+         --  There was a dff, so the read port is synchronous.
+         if En = No_Net then
+            En := Build_Const_UB32 (Ctxt, 1, 1);
          end if;
-      end if;
 
-      --  Replace Dyn_Extract with mem_rd.
-      Res := Build_Mem_Rd (Ctxt, Last, Addr, Step);
+         Res := Build_Mem_Rd_Sync (Ctxt, Last, Addr, Clk, En, Step);
+      else
+         --  Replace Dyn_Extract with mem_rd (asynchronous read port).
+         Res := Build_Mem_Rd (Ctxt, Last, Addr, Step);
+      end if;
 
       --  Slice the output.
       N := Get_Output (Res, 1);
       N := Build2_Extract (Ctxt, N, 0, W);
 
-      Redirect_Inputs (Val, N);
+      if Dff_Inst /= Extr_Inst then
+         Redirect_Inputs (Get_Output (Dff_Inst, 0), N);
+         Remove_Instance (Dff_Inst);
+      else
+         Redirect_Inputs (Get_Output (Extr_Inst, 0), N);
+      end if;
 
       return Res;
    end Create_ROM_Read_Port;
@@ -1121,7 +1075,6 @@ package body Netlists.Memories is
       Extr_Inst : Instance;
       Addr_Inp : Input;
       Addr : Net;
-      Val : Net;
       Port_Inst : Instance;
    begin
       Last := Get_Output (Mem_Inst, 0);
@@ -1146,11 +1099,11 @@ package body Netlists.Memories is
                Addr_Inp := Get_Input (Extr_Inst, 1);
                Addr := Get_Driver (Addr_Inp);
                Disconnect (Addr_Inp);
-               Val := Get_Output (Extr_Inst, 0);
                Convert_Memidx (Ctxt, Orig, Addr, Step);
 
                --  Replace Dyn_Extract with mem_rd.
-               Port_Inst := Create_ROM_Read_Port (Ctxt, Last, Addr, Val, Step);
+               Port_Inst := Create_ROM_Read_Port
+                 (Ctxt, Last, Addr, Extr_Inst, Step);
 
                Remove_Instance (Extr_Inst);
 
