@@ -74,6 +74,11 @@ package Synth.Flags is
    --  Synthesize PSL and assertions.
    Flag_Formal : Boolean := True;
 
+   --  True to keep hierarchy: an module/entity instantiation is synthesized
+   --  as an instantiation.
+   --  If false, the netlist is flat.
+   Flag_Keep_Hierarchy : Boolean := True;
+
    --  If true, automatically add a cover on PSL asserts to know if the
    --  asserted has been started.
    Flag_Assert_Cover : Boolean := True;
