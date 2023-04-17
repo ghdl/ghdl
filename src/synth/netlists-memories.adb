@@ -438,7 +438,8 @@ package body Netlists.Memories is
    --  Return True iff MUX_INP is a mux2 input whose output is connected to a
    --  dff to create a DFF with enable (the other mux2 input is connected to
    --  the dff output).
-   function Is_Enable_Dff (Mux_Inp : Input) return Boolean
+   procedure Is_Enable_Dff
+     (Mux_Inp : Input; Res : out Boolean; Inv : out Boolean)
    is
       Mux_Inst : constant Instance := Get_Input_Parent (Mux_Inp);
       pragma Assert (Get_Id (Mux_Inst) = Id_Mux2);
@@ -446,40 +447,50 @@ package body Netlists.Memories is
       Inp : Input;
       Dff_Inst : Instance;
       Dff_Out : Net;
+      Prt : Port_Idx;
    begin
+      Inv := False;
+      Res := False;
+
       Inp := Get_First_Sink (Mux_Out);
       if Inp = No_Input or else Get_Next_Sink (Inp) /= No_Input then
          --  The output of the mux must be connected to one input.
-         return False;
+         return;
       end if;
 
       --  Check if the mux is before a dff.
       Dff_Inst := Get_Input_Parent (Inp);
       if Get_Id (Dff_Inst) /= Id_Dff then
-         return False;
+         return;
       end if;
 
       Dff_Out := Get_Output (Dff_Inst, 0);
 
       if Mux_Inp = Get_Input (Mux_Inst, 1) then
-         return Skip_Signal (Get_Input_Net (Mux_Inst, 2)) = Dff_Out;
+         --  Loop on sel = 1 (so enable is inverted).
+         Inv := True;
+         Prt := 2;
       else
-         return Skip_Signal (Get_Input_Net (Mux_Inst, 1)) = Dff_Out;
+         --  Loop on sel = 0.
+         Prt := 1;
       end if;
+      Res := Skip_Signal (Get_Input_Net (Mux_Inst, Prt)) = Dff_Out;
    end Is_Enable_Dff;
 
-   --  INST is a Dyn_Extract.
-   --  If INST is followed by a dff or a dff+enable (with mux2), return the
-   --  dff in LAST_INST, the clock in CLK and the enable in EN.
+   --  EXTR_INST is a Dyn_Extract.
+   --  If EXTR_INST is followed by a dff or a dff+enable (with mux2),
+   --  return the dff in LAST_INST, the clock in CLK and the enable in EN.
    procedure Extract_Extract_Dff (Ctxt : Context_Acc;
-                                  Inst : Instance;
+                                  Extr_Inst : Instance;
                                   Last_Inst : out Instance;
                                   Clk : out Net;
                                   En : out Net)
    is
-      Val : constant Net := Get_Output (Inst, 0);
+      Val : constant Net := Get_Output (Extr_Inst, 0);
       Inp : Input;
       Iinst : Instance;
+      Is_Dff : Boolean;
+      Is_Inv : Boolean;
    begin
       Inp := Get_First_Sink (Val);
       if Get_Next_Sink (Inp) = No_Input then
@@ -500,7 +511,13 @@ package body Netlists.Memories is
                Last_Inst := Iinst;
                return;
             end;
-         elsif Get_Id (Iinst) = Id_Mux2 and then Is_Enable_Dff (Inp) then
+         end if;
+         if Get_Id (Iinst) = Id_Mux2 then
+            Is_Enable_Dff (Inp, Is_Dff, Is_Inv);
+         else
+            Is_Dff := False;
+         end if;
+         if Is_Dff then
             declare
                Mux_Out : constant Net := Get_Output (Iinst, 0);
                Mux_En_Inp : constant Input := Get_Input (Iinst, 0);
@@ -508,12 +525,11 @@ package body Netlists.Memories is
                Mux_I1_Inp : constant Input := Get_Input (Iinst, 2);
                Dff_Din : constant Input := Get_First_Sink (Mux_Out);
                Dff_Inst : constant Instance := Get_Input_Parent (Dff_Din);
-               Dff_Out : constant Net := Get_Output (Dff_Inst, 0);
                Clk_Inp : constant Input := Get_Input (Dff_Inst, 0);
             begin
                Clk := Get_Driver (Clk_Inp);
                En := Get_Driver (Mux_En_Inp);
-               if Dff_Out = Get_Driver (Mux_I1_Inp) then
+               if Is_Inv then
                   En := Build_Monadic (Ctxt, Id_Not, En);
                   Copy_Location (En, Iinst);
                end if;
@@ -529,7 +545,7 @@ package body Netlists.Memories is
          end if;
       end if;
 
-      Last_Inst := Inst;
+      Last_Inst := Extr_Inst;
       Clk := No_Net;
       En := No_Net;
    end Extract_Extract_Dff;
