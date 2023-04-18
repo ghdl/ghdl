@@ -1042,6 +1042,8 @@ package body Elab.Vhdl_Insts is
 
       pragma Assert (Is_Expr_Pool_Empty);
 
+      Top_Instance := Top_Inst;
+
       Elab_Instance_Body (Top_Inst);
 
       pragma Assert (Areapools.Is_Empty (Expr_Pool));
