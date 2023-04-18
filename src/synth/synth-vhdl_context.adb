@@ -384,18 +384,16 @@ package body Synth.Vhdl_Context is
       return (Wtype, Create_Value_Wire (W, Pool));
    end Create_Value_Wire;
 
-   function Create_Value_Net (N : Net) return Value_Acc
+   function Create_Value_Net (N : Net; Pool : Areapool_Acc) return Value_Acc
    is
       function To_Uns32 is new Ada.Unchecked_Conversion (Net, Uns32);
    begin
-      return Create_Value_Net (To_Uns32 (N));
+      return Create_Value_Net (To_Uns32 (N), Pool);
    end Create_Value_Net;
 
-   function Create_Value_Net (N : Net; Ntype : Type_Acc) return Valtyp
-   is
-      pragma Assert (Ntype /= null);
+   function Create_Value_Net (N : Net; Ntype : Type_Acc) return Valtyp is
    begin
-      return (Ntype, Create_Value_Net (N));
+      return (Ntype, Create_Value_Net (N, Current_Pool));
    end Create_Value_Net;
 
    function Create_Value_Dyn_Alias (Obj : Value_Acc;

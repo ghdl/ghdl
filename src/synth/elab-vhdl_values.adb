@@ -105,13 +105,14 @@ package body Elab.Vhdl_Values is
       return To_Value_Acc (Alloc (Pool, (Kind => Value_Wire, N => S)));
    end Create_Value_Wire;
 
-   function Create_Value_Net (S : Uns32) return Value_Acc
+   function Create_Value_Net (S : Uns32; Pool : Areapool_Acc)
+                             return Value_Acc
    is
       subtype Value_Type_Net is Value_Type (Value_Net);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Net);
    begin
       return To_Value_Acc
-        (Alloc (Current_Pool, Value_Type_Net'(Kind => Value_Net, N => S)));
+        (Alloc (Pool, Value_Type_Net'(Kind => Value_Net, N => S)));
    end Create_Value_Net;
 
    function Create_Value_Signal (S : Signal_Index_Type; Init : Value_Acc)
@@ -306,7 +307,7 @@ package body Elab.Vhdl_Values is
             Res := Create_Value_Memory (Src.Typ, Current_Pool);
             Copy_Memory (Res.Val.Mem, Src.Val.Mem, Src.Typ.Sz);
          when Value_Net =>
-            Res := (Src.Typ, Create_Value_Net (Src.Val.N));
+            Res := (Src.Typ, Create_Value_Net (Src.Val.N, Current_Pool));
          when Value_Wire =>
             Res := (Src.Typ, Create_Value_Wire (Src.Val.N, Current_Pool));
          when Value_File =>

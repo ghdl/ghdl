@@ -104,6 +104,7 @@ package Synth.Vhdl_Context is
    pragma Inline (Set_Value_Wire);
 
    --  Create a Value_Net.
+   function Create_Value_Net (N : Net; Pool : Areapool_Acc) return Value_Acc;
    function Create_Value_Net (N : Net; Ntype : Type_Acc) return Valtyp;
 
    --  Create a Value_Wire.  For a bit wire, RNG must be null.

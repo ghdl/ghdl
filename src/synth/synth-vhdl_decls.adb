@@ -659,12 +659,12 @@ package body Synth.Vhdl_Decls is
          if Aval.Val.Kind = Value_Net then
             --  Object is a net if it is not writable.  Extract the
             --  bits for the alias.
-            Current_Pool := Instance_Pool;
-            Aval := Create_Value_Net
-              (Build2_Extract (Get_Build (Syn_Inst), Get_Value_Net (Aval.Val),
-                               Off, Val.Typ.W),
-               Val.Typ);
-            Current_Pool := Expr_Pool'Access;
+            Aval := (Val.Typ,
+                     Create_Value_Net (Build2_Extract
+                                         (Get_Build (Syn_Inst),
+                                          Get_Value_Net (Aval.Val),
+                                          Off, Val.Typ.W),
+                                       Instance_Pool));
             Val.Val.A_Off := (0, 0);
          else
             Aval := Unshare (Aval, Instance_Pool);
