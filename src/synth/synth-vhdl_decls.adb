@@ -844,6 +844,14 @@ package body Synth.Vhdl_Decls is
       Finalize_Assignment (Get_Build (Syn_Inst), W);
 
       Gate_Net := Get_Wire_Gate (W);
+
+      Free_Wire (W);
+
+      --  Replace the wire with a net so that external names can refer to it.
+      Mutate_Object
+        (Syn_Inst, Decl,
+         (Vt.Typ, Create_Value_Net (Gate_Net, Process_Pool'Access)));
+
       Gate := Get_Net_Parent (Gate_Net);
       case Get_Id (Gate) is
          when Id_Signal
@@ -883,8 +891,6 @@ package body Synth.Vhdl_Decls is
          --  The value of an undriven signal is its initial value.
          Connect (Get_Input (Gate, 0), Def_Val);
       end if;
-
-      Free_Wire (W);
    end Finalize_Signal;
 
    procedure Finalize_Declaration

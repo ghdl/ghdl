@@ -41,6 +41,7 @@ with Elab.Vhdl_Annotations;
 with Elab.Vhdl_Heap; use Elab.Vhdl_Heap;
 with Elab.Vhdl_Types; use Elab.Vhdl_Types;
 with Elab.Vhdl_Expr;
+with Elab.Vhdl_Insts;
 
 with Synth.Errors; use Synth.Errors;
 with Synth.Vhdl_Environment;
@@ -830,6 +831,114 @@ package body Synth.Vhdl_Expr is
       end case;
    end Synth_Subtype_Conversion;
 
+   function Synth_Pathname (Loc_Inst : Synth_Instance_Acc;
+                            Name : Node;
+                            Cur_Inst : Synth_Instance_Acc;
+                            Path : Node) return Valtyp
+   is
+      Suffix : constant Node := Get_Pathname_Suffix (Path);
+      Id : constant Name_Id := Get_Identifier (Path);
+      Scope : constant Node := Get_Source_Scope (Cur_Inst);
+      Res : Node;
+   begin
+      if Suffix = Null_Node then
+         --  Object simple name.
+         case Get_Kind (Scope) is
+            when Iir_Kind_Architecture_Body =>
+               Res := Find_Name_In_Chain (Get_Declaration_Chain (Scope), Id);
+            when others =>
+               Error_Kind ("synth_pathname(obj)", Scope);
+         end case;
+         if Res = Null_Node then
+            Error_Msg_Synth
+              (Loc_Inst, Path, "cannot find object %i in %i", (+Id, +Scope));
+            return No_Valtyp;
+         end if;
+         case Get_Kind (Res) is
+            when Iir_Kind_Signal_Declaration =>
+               case Iir_Kinds_External_Name (Get_Kind (Name)) is
+                  when Iir_Kind_External_Signal_Name =>
+                     return Get_Value (Cur_Inst, Res);
+                  when Iir_Kind_External_Constant_Name
+                    | Iir_Kind_External_Variable_Name =>
+                     Error_Msg_Synth
+                       (Loc_Inst, Path, "object name %i is a signal", +Res);
+                     return No_Valtyp;
+               end case;
+            when others =>
+               Error_Kind ("synth_pathname(1)", Res);
+         end case;
+      else
+         --  Find name in concurrent statements.
+         case Get_Kind (Scope) is
+            when Iir_Kind_Architecture_Body =>
+               Res := Find_Name_In_Chain
+                 (Get_Concurrent_Statement_Chain (Scope), Id);
+            when others =>
+               Error_Kind ("synth_pathname(scope)", Scope);
+         end case;
+         if Res = Null_Node then
+            Error_Msg_Synth
+              (Loc_Inst, Path,
+               "cannot find path element %i in %i", (+Id, +Scope));
+            return No_Valtyp;
+         end if;
+         case Get_Kind (Res) is
+            when Iir_Kind_Component_Instantiation_Statement =>
+               if Is_Entity_Instantiation (Res) then
+                  return Synth_Pathname
+                    (Loc_Inst, Name, Get_Sub_Instance (Cur_Inst, Res), Suffix);
+               else
+                  --  TODO: skip component.
+                  raise Internal_Error;
+               end if;
+            when others =>
+               Error_Kind ("synth_pathname(2)", Res);
+         end case;
+      end if;
+   end Synth_Pathname;
+
+   function Synth_Absolute_Pathname
+     (Syn_Inst : Synth_Instance_Acc; Name : Node; Path : Node) return Valtyp
+   is
+      Path_Inst : constant Synth_Instance_Acc := Elab.Vhdl_Insts.Top_Instance;
+      Top_Arch : constant Node := Get_Source_Scope (Path_Inst);
+      Top_Ent : constant Node := Get_Entity (Top_Arch);
+      Suffix : constant Node := Get_Pathname_Suffix (Path);
+   begin
+      if Get_Identifier (Top_Ent) /= Get_Identifier (Suffix) then
+         Error_Msg_Synth
+           (Syn_Inst, Path,
+            "root %i of absolute pathname is not the top entity %i",
+            (+Top_Ent, +Suffix));
+         return No_Valtyp;
+      end if;
+
+      return Synth_Pathname
+        (Syn_Inst, Name, Path_Inst, Get_Pathname_Suffix (Suffix));
+   end Synth_Absolute_Pathname;
+
+   function Synth_External_Name (Syn_Inst : Synth_Instance_Acc; Name : Node)
+                                return Valtyp
+   is
+      Path : Node;
+      Res : Valtyp;
+   begin
+      Path := Get_External_Pathname (Name);
+      case Get_Kind (Path) is
+         when Iir_Kind_Absolute_Pathname =>
+            Res := Synth_Absolute_Pathname (Syn_Inst, Name, Path);
+         when others =>
+            Error_Kind ("synth_external_name", Path);
+      end case;
+      if Res = No_Valtyp then
+         return No_Valtyp;
+      end if;
+
+      --  TODO: type.
+      return Res;
+   end Synth_External_Name;
+
    function Synth_Name (Syn_Inst : Synth_Instance_Acc; Name : Node)
                        return Valtyp is
    begin
@@ -854,6 +963,8 @@ package body Synth.Vhdl_Expr is
             | Iir_Kind_File_Declaration
             | Iir_Kind_Interface_File_Declaration =>
             return Get_Value (Syn_Inst, Name);
+         when Iir_Kind_External_Signal_Name =>
+            return Synth_External_Name (Syn_Inst, Name);
          when  Iir_Kind_Attribute_Value =>
             --  It's a little bit complex for attribute of an entity or
             --  of an architecture as there might be no instances for them.
@@ -2041,7 +2152,6 @@ package body Synth.Vhdl_Expr is
       Set_Location (Res, Call);
 
       return Create_Value_Net (Res, Boolean_Type);
-
    end Synth_Psl_Stable;
 
    function Synth_Psl_Rose (Syn_Inst : Synth_Instance_Acc; Call : Node)
@@ -2072,7 +2182,6 @@ package body Synth.Vhdl_Expr is
       Set_Location (Res, Call);
 
       return Create_Value_Net (Res, Boolean_Type);
-
    end Synth_Psl_Rose;
 
    function Synth_Psl_Fell (Syn_Inst : Synth_Instance_Acc; Call : Node)
@@ -2102,7 +2211,6 @@ package body Synth.Vhdl_Expr is
       Set_Location (Res, Call);
 
       return Create_Value_Net (Res, Boolean_Type);
-
    end Synth_Psl_Fell;
 
    function Synth_Onehot0 (Ctxt : Context_Acc; DffCurr : Net; Call : Node;
@@ -2358,6 +2466,7 @@ package body Synth.Vhdl_Expr is
             | Iir_Kind_Guard_Signal_Declaration
             | Iir_Kind_Object_Alias_Declaration   -- For PSL
             | Iir_Kind_Non_Object_Alias_Declaration   -- For PSL
+            | Iir_Kind_External_Signal_Name
             | Iir_Kind_Implicit_Dereference
             | Iir_Kind_Dereference =>
             declare
